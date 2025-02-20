@@ -13,6 +13,9 @@
 # vs code
 .vscode
 
+# million
+.million
+
 # testing
 /coverage
 
