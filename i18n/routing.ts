@@ -1,12 +1,12 @@
-import { createNavigation } from 'next-intl/navigation';
-import { defineRouting } from 'next-intl/routing';
+import { createNavigation } from "next-intl/navigation";
+import { defineRouting } from "next-intl/routing";
 
 export const routing = defineRouting({
   // A list of all locales that are supported
-  locales: ['id'] as const,
+  locales: ["id"],
 
   // Used when no locale matches
-  defaultLocale: 'id' as const,
+  defaultLocale: "id",
 });
 
 export type Locale = (typeof routing.locales)[number];

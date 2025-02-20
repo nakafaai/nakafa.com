@@ -1,12 +1,12 @@
-'use server';
+"use server";
 
-import { cookies } from 'next/headers';
+import { cookies } from "next/headers";
 
 export async function setCookie({
   name,
   value,
   maxAge,
-  path = '/',
+  path = "/",
   sameSite,
   secure,
 }: {
@@ -14,7 +14,7 @@ export async function setCookie({
   value: string;
   maxAge: number;
   path?: string;
-  sameSite?: 'lax' | 'strict' | 'none';
+  sameSite?: "lax" | "strict" | "none";
   secure?: boolean;
 }) {
   const cookieStore = await cookies();
