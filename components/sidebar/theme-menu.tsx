@@ -4,8 +4,8 @@ import {
   ChevronRightIcon,
   LaptopIcon,
   MoonIcon,
+  PaletteIcon,
   SunIcon,
-  SunMoonIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
@@ -26,7 +26,7 @@ export function ThemeMenu() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton tooltip={t("theme")}>
-            <SunMoonIcon className="size-4" />
+            <PaletteIcon className="size-4" />
             <span className="truncate">{t("theme")}</span>
 
             <ChevronRightIcon className="ml-auto size-4" />
