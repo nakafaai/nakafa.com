@@ -1,5 +1,8 @@
-"use client";
-
+import { Link } from "@/i18n/routing";
+import nakafaLogo from "@/public/logo.svg";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
+import type { ComponentProps } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -9,44 +12,50 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar";
-import type { ComponentProps } from "react";
-
-import { Link } from "@/i18n/routing";
-import nakafaLogo from "@/public/logo.svg";
-import Image from "next/image";
+} from "../ui/sidebar";
+import { AboutMenu } from "./about-menu";
+import { ThemeMenu } from "./theme-menu";
 
 export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
+  const t = useTranslations("Metadata");
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              asChild
-            >
-              <Link href="/">
+            <Link href="/">
+              <SidebarMenuButton
+                size="lg"
+                className="cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              >
                 <div className="relative flex aspect-square size-8 items-center justify-center rounded-lg border">
                   <Image
                     src={nakafaLogo}
-                    alt="Nakafa Logo"
+                    alt="Nakafa"
                     fill
+                    priority
                     className="rounded-lg object-contain"
                   />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Nakafa</span>
-                  <span className="truncate text-xs">Gratis & Berkualitas</span>
+                  <span className="truncate text-xs">
+                    {t("short-description")}
+                  </span>
                 </div>
-              </Link>
-            </SidebarMenuButton>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent />
-      <SidebarFooter />
+      <SidebarFooter>
+        <SidebarMenu>
+          <ThemeMenu />
+          <AboutMenu />
+        </SidebarMenu>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

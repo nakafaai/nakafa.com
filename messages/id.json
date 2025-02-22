@@ -1,6 +1,18 @@
 {
   "Metadata": {
     "title": "Nakafa - Belajar secara gratis dan berkualitas",
-    "description": "Semua harus punya kesempatan untuk belajar secara gratis dan berkualitas."
+    "description": "Semua harus punya kesempatan untuk belajar secara gratis dan berkualitas.",
+    "short-description": "Belajar gratis dan berkualitas."
+  },
+  "Common": {
+    "copyright": "Hak Cipta © {year} PT. Nakafa Tekno Kreatif. Seluruh hak dilindungi.",
+    "made-with-love": "Dibuat dengan ❤️",
+    "version": "Versi {version}",
+    "beta": "Beta",
+    "about": "Tentang",
+    "theme": "Tema",
+    "light": "Cerah",
+    "dark": "Gelap",
+    "system": "Sistem"
   }
 }
