@@ -17,7 +17,7 @@
     "study": "Belajar",
     "home": "Beranda",
     "source": "Sumber",
-    "source-code": "Kode Sumber"
+    "source-code": "Kode sumber"
   },
   "Material": {
     "elementary-school": "SD",
@@ -26,7 +26,7 @@
     "vocational-school": "SMK",
     "university": "Universitas",
     "grade": "Kelas {grade}",
-    "subject": "Mata Pelajaran",
+    "subject": "Mata pelajaran",
     "chapter": "Bab {chapter}",
     "mathematics": "Matematika",
     "physics": "Fisika",

@@ -1,3 +1,6 @@
+"use client";
+
+import { usePathname } from "@/i18n/routing";
 import { ChevronRightIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -19,10 +22,16 @@ import {
 import { studyMenu } from "./data/study";
 
 function MenuItem() {
+  const pathname = usePathname();
   const t = useTranslations("Material");
 
   return studyMenu.map((item) => (
-    <Collapsible key={item.title} asChild className="group/collapsible">
+    <Collapsible
+      key={item.title}
+      asChild
+      defaultOpen={pathname.includes(item.title)}
+      className="group/collapsible"
+    >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip={t(item.title)}>
