@@ -9,7 +9,7 @@ import { HeaderBreadcrumb } from "./header-breadcrumb";
 export function Header() {
   const t = useTranslations("Common");
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
       <div className="flex w-full items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1 size-9 group-has-[[data-collapsible=icon]]/sidebar-wrapper:size-8" />
 
