@@ -15,7 +15,8 @@ import {
 } from "../ui/sidebar";
 import { AboutMenu } from "./about-menu";
 import { LangMenu } from "./lang-menu";
-import { NavStudy } from "./nav-study";
+import { NavArticles } from "./nav-articles";
+import { NavSubject } from "./nav-subject";
 import { ThemeMenu } from "./theme-menu";
 
 export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
@@ -53,7 +54,8 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavStudy />
+        <NavSubject />
+        <NavArticles />
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>

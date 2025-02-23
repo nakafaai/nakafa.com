@@ -19,7 +19,8 @@
     "source": "Sumber",
     "source-code": "Kode sumber",
     "language": "Bahasa",
-    "articles": "Artikel"
+    "articles": "Artikel",
+    "subject": "Mata pelajaran"
   },
   "Material": {
     "elementary-school": "SD",
@@ -28,7 +29,6 @@
     "vocational-school": "SMK",
     "university": "Universitas",
     "grade": "Kelas {grade}",
-    "subject": "Mata pelajaran",
     "chapter": "Bab {chapter}",
     "mathematics": "Matematika",
     "physics": "Fisika",
@@ -37,5 +37,8 @@
     "geography": "Geografi",
     "history": "Sejarah",
     "literature": "Sastra"
+  },
+  "Articles": {
+    "politics": "Politik"
   }
 }

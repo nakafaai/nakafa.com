@@ -19,13 +19,13 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "../ui/sidebar";
-import { studyMenu } from "./data/study";
+import { subjectMenu } from "./data/subject";
 
 function MenuItem() {
   const pathname = usePathname();
   const t = useTranslations("Material");
 
-  return studyMenu.map((item) => (
+  return subjectMenu.map((item) => (
     <Collapsible
       key={item.title}
       asChild
@@ -36,7 +36,7 @@ function MenuItem() {
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip={t(item.title)}>
             {item.icon && <item.icon />}
-            <span>{t(item.title)}</span>
+            <span className="truncate">{t(item.title)}</span>
             <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
@@ -62,12 +62,12 @@ function MenuItem() {
   ));
 }
 
-export function NavStudy() {
+export function NavSubject() {
   const t = useTranslations("Common");
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{t("study")}</SidebarGroupLabel>
+      <SidebarGroupLabel>{t("subject")}</SidebarGroupLabel>
       <SidebarMenu>
         <MenuItem />
       </SidebarMenu>

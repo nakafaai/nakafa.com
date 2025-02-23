@@ -19,7 +19,8 @@
     "source": "Source",
     "source-code": "Source code",
     "language": "Language",
-    "articles": "Articles"
+    "articles": "Articles",
+    "subject": "Subject"
   },
   "Material": {
     "elementary-school": "Elementary School",
@@ -28,7 +29,6 @@
     "vocational-school": "Vocational School",
     "university": "University",
     "grade": "Grade {grade}",
-    "subject": "Subject",
     "chapter": "Chapter {chapter}",
     "mathematics": "Mathematics",
     "physics": "Physics",
@@ -37,5 +37,8 @@
     "geography": "Geography",
     "history": "History",
     "literature": "Literature"
+  },
+  "Articles": {
+    "politics": "Politics"
   }
 }

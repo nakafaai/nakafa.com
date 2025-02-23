@@ -15,8 +15,8 @@ import NavigationLink from "../ui/navigation-link";
 import { Separator } from "../ui/separator";
 
 function getBreadcrumb(pathname: string) {
-  if (pathname.includes("/study")) {
-    return "study";
+  if (pathname.includes("/subject")) {
+    return "subject";
   }
   if (pathname.includes("/articles")) {
     return "articles";
