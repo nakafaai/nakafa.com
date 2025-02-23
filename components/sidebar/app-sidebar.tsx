@@ -14,6 +14,7 @@ import {
   SidebarRail,
 } from "../ui/sidebar";
 import { AboutMenu } from "./about-menu";
+import { LangMenu } from "./lang-menu";
 import { NavStudy } from "./nav-study";
 import { ThemeMenu } from "./theme-menu";
 
@@ -56,6 +57,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <LangMenu />
           <ThemeMenu />
           <AboutMenu />
         </SidebarMenu>
