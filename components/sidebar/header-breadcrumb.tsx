@@ -51,7 +51,9 @@ export function HeaderBreadcrumb() {
             <>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>{t(breadcrumb)}</BreadcrumbPage>
+                <BreadcrumbPage className="truncate">
+                  {t(breadcrumb)}
+                </BreadcrumbPage>
               </BreadcrumbItem>
             </>
           )}
