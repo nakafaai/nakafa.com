@@ -13,6 +13,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import "@/styles/globals.css";
+
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
