@@ -13,6 +13,27 @@
     "theme": "Tema",
     "light": "Cerah",
     "dark": "Gelap",
-    "system": "Sistem"
+    "system": "Sistem",
+    "study": "Belajar",
+    "home": "Beranda",
+    "source": "Sumber",
+    "source-code": "Kode Sumber"
+  },
+  "Material": {
+    "elementary-school": "SD",
+    "junior-high-school": "SMP",
+    "senior-high-school": "SMA",
+    "vocational-school": "SMK",
+    "university": "Universitas",
+    "grade": "Kelas {grade}",
+    "subject": "Mata Pelajaran",
+    "chapter": "Bab {chapter}",
+    "mathematics": "Matematika",
+    "physics": "Fisika",
+    "chemistry": "Kimia",
+    "biology": "Biologi",
+    "geography": "Geografi",
+    "history": "Sejarah",
+    "literature": "Sastra"
   }
 }

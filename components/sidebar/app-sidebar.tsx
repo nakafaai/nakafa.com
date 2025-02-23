@@ -1,8 +1,8 @@
-import { Link } from "@/i18n/routing";
 import nakafaLogo from "@/public/logo.svg";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import type { ComponentProps } from "react";
+import NavigationLink from "../ui/navigation-link";
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +14,7 @@ import {
   SidebarRail,
 } from "../ui/sidebar";
 import { AboutMenu } from "./about-menu";
+import { NavStudy } from "./nav-study";
 import { ThemeMenu } from "./theme-menu";
 
 export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
@@ -24,11 +25,12 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link href="/">
-              <SidebarMenuButton
-                size="lg"
-                className="cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              >
+            <SidebarMenuButton
+              size="lg"
+              className="cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              asChild
+            >
+              <NavigationLink href="/">
                 <div className="relative flex aspect-square size-8 items-center justify-center rounded-lg border">
                   <Image
                     src={nakafaLogo}
@@ -44,12 +46,14 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                     {t("short-description")}
                   </span>
                 </div>
-              </SidebarMenuButton>
-            </Link>
+              </NavigationLink>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent />
+      <SidebarContent>
+        <NavStudy />
+      </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
           <ThemeMenu />

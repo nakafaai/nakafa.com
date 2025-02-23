@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef } from "react";
 import { buttonVariants } from "./components/ui/button";
-import { Link } from "./i18n/routing";
+import NavigationLink from "./components/ui/navigation-link";
 import { cn } from "./lib/utils";
 
 type HeadingProps = ComponentPropsWithoutRef<
@@ -42,9 +42,9 @@ const components = {
     const className = cn(buttonVariants({ variant: "link" }), "px-0");
     if (href?.startsWith("/")) {
       return (
-        <Link href={href} className={className} {...props}>
+        <NavigationLink href={href} className={className} {...props}>
           {children}
-        </Link>
+        </NavigationLink>
       );
     }
     if (href?.startsWith("#")) {
