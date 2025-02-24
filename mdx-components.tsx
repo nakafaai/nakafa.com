@@ -1,5 +1,6 @@
 import { LinkIcon } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
+import Balancer from "react-wrap-balancer";
 import { buttonVariants } from "./components/ui/button";
 import NavigationLink from "./components/ui/navigation-link";
 import { cn } from "./lib/utils";
@@ -24,23 +25,25 @@ function Heading({
 } & HeadingProps) {
   const id = props.children?.toString().toLowerCase().replace(/\s+/g, "-");
   return (
-    <Tag
-      id={id}
-      className={cn(
-        "group mt-10 mb-6 flex items-center font-medium leading-tight tracking-tight",
-        className
-      )}
-      {...props}
-    >
-      <span className="inline-block">{props.children}</span>
-      <a
-        href={`#${id}`}
-        className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
-        aria-label={`Link to ${props.children}`}
+    <Balancer>
+      <Tag
+        id={id}
+        className={cn(
+          "group mt-10 mb-6 flex items-center font-medium leading-tight tracking-tight",
+          className
+        )}
+        {...props}
       >
-        <LinkIcon className="size-4" />
-      </a>
-    </Tag>
+        <span className="inline-block">{props.children}</span>
+        <a
+          href={`#${id}`}
+          className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
+          aria-label={`Link to ${props.children}`}
+        >
+          <LinkIcon className="size-4" />
+        </a>
+      </Tag>
+    </Balancer>
   );
 }
 
