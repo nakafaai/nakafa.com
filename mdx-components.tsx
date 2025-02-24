@@ -79,7 +79,7 @@ const components = {
     <ul className="list-disc space-y-1 pl-5" {...props} />
   ),
   li: (props: ListItemProps) => (
-    <li className="pl-1 text-foreground/80" {...props} />
+    <li className="pl-1 text-foreground/80 leading-relaxed" {...props} />
   ),
   em: (props: EmProps) => <em className="font-medium" {...props} />,
   strong: (props: StrongProps) => (
