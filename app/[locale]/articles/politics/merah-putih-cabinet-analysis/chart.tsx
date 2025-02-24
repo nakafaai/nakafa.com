@@ -170,7 +170,7 @@ export function CompositionChart({ title, description, footnote }: Props) {
             config={chartConfig}
             className="min-h-[200px] w-full md:min-h-[300px]"
           >
-            <BarChart width={300} height={300} data={MinisterChartData}>
+            <BarChart data={MinisterChartData}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="name"
@@ -196,7 +196,7 @@ export function CompositionChart({ title, description, footnote }: Props) {
             config={chartConfig}
             className="min-h-[200px] w-full md:min-h-[300px]"
           >
-            <BarChart width={300} height={300} data={GenderChartData}>
+            <BarChart data={GenderChartData}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="name"
@@ -218,7 +218,7 @@ export function CompositionChart({ title, description, footnote }: Props) {
             config={chartConfig}
             className="min-h-[200px] w-full md:min-h-[300px]"
           >
-            <BarChart width={300} height={300} data={PoliticalStatusChartData}>
+            <BarChart data={PoliticalStatusChartData}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="name"
