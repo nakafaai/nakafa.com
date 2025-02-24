@@ -11,6 +11,8 @@ type ParagraphProps = ComponentPropsWithoutRef<"p">;
 type AnchorProps = ComponentPropsWithoutRef<"a">;
 type EmProps = ComponentPropsWithoutRef<"em">;
 type StrongProps = ComponentPropsWithoutRef<"strong">;
+type ListProps = ComponentPropsWithoutRef<"ul">;
+type ListItemProps = ComponentPropsWithoutRef<"li">;
 
 function Heading({
   Tag,
@@ -84,8 +86,19 @@ const components = {
       {...props}
     />
   ),
+  ol: (props: ListProps) => (
+    <ol className="list-decimal space-y-2 pl-5" {...props} />
+  ),
+  ul: (props: ListProps) => (
+    <ul className="list-disc space-y-1 pl-5" {...props} />
+  ),
+  li: (props: ListItemProps) => (
+    <li className="pl-1 text-foreground/80" {...props} />
+  ),
   em: (props: EmProps) => <em className="font-medium" {...props} />,
-  strong: (props: StrongProps) => <strong className="font-medium" {...props} />,
+  strong: (props: StrongProps) => (
+    <strong className="font-medium text-foreground" {...props} />
+  ),
   a: ({ href, children, ...props }: AnchorProps) => {
     const className = cn(buttonVariants({ variant: "link" }), "px-0");
     if (href?.startsWith("/")) {

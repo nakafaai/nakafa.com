@@ -19,6 +19,7 @@ export async function generateMetadata({
     title: metadata.title,
     description: metadata.description,
     alternates: metadata.alternates,
+    authors: metadata.author,
   };
 }
 
