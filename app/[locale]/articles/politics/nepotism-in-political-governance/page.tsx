@@ -6,10 +6,9 @@ import type { Locale } from "@/i18n/routing";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { references } from "./ref";
 
 const githubUrl =
-  "https://github.com/nabilfatih/nakafa.com/tree/main/app/%5Blocale%5D/articles/politics/merah-putih-cabinet-analysis";
+  "https://github.com/nabilfatih/nakafa.com/tree/main/app/%5Blocale%5D/articles/politics/nepotism-in-political-governance";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -55,7 +54,7 @@ export default async function Page({ params }: Props) {
         <FooterContent>
           <RefContent
             title={metadata.title}
-            references={references}
+            references={[]} // TODO: add references
             githubUrl={githubUrl}
           />
         </FooterContent>
