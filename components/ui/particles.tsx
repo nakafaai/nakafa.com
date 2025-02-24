@@ -252,17 +252,9 @@ export function Particles({
     window.requestAnimationFrame(animate);
   }, [circleParams, clearContext, drawCircle, ease, remapValue, staticity]);
 
-  const renderCanvas = useCallback(() => {
-    return (
-      <div
-        className={cn(className)}
-        ref={canvasContainerRef}
-        aria-hidden="true"
-      >
-        <canvas ref={canvasRef} />
-      </div>
-    );
-  }, [className]);
-
-  return renderCanvas();
+  return (
+    <div className={cn(className)} ref={canvasContainerRef} aria-hidden="true">
+      <canvas ref={canvasRef} />
+    </div>
+  );
 }
