@@ -35,7 +35,7 @@ function Heading({
       <span className="inline-block">{props.children}</span>
       <a
         href={`#${id}`}
-        className="ml-2 flex shrink-0 text-muted-foreground group-hover:inline-block"
+        className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
         aria-label={`Link to ${props.children}`}
       >
         <LinkIcon className="size-4" />
