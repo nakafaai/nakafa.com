@@ -105,7 +105,10 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                     return (
                       <Card key={reference.title}>
                         <CardHeader>
-                          <CardTitle className="line-clamp-1 capitalize">
+                          <CardTitle
+                            title={reference.title}
+                            className="line-clamp-1 capitalize"
+                          >
                             {reference.title.toLowerCase()}
                           </CardTitle>
                           <CardDescription className="flex items-center gap-1">
