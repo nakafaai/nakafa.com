@@ -1,17 +1,24 @@
 import { format } from "date-fns";
-import { CalendarIcon, PencilLineIcon } from "lucide-react";
+import { AtomIcon, CalendarIcon, PencilLineIcon } from "lucide-react";
 import { Particles } from "../ui/particles";
 
 type Props = {
   title: string;
   description?: string;
+  category: string;
   author: {
     name: string;
   }[];
   date: string;
 };
 
-export function HeaderContent({ title, description, author, date }: Props) {
+export function HeaderContent({
+  title,
+  description,
+  category,
+  author,
+  date,
+}: Props) {
   return (
     <div className="relative border-b py-10">
       <Particles className="pointer-events-none absolute inset-0 opacity-50" />
@@ -20,7 +27,7 @@ export function HeaderContent({ title, description, author, date }: Props) {
           {title}
         </h1>
         {description && <p className="text-foreground/80">{description}</p>}
-        <div className="flex items-center justify-between gap-2 pt-2">
+        <div className="flex flex-col justify-between gap-2 pt-2 sm:flex-row sm:items-center sm:gap-4">
           <p className="inline-flex items-center gap-1 text-muted-foreground">
             <PencilLineIcon className="size-4" />
             <span className="text-sm">
@@ -28,12 +35,19 @@ export function HeaderContent({ title, description, author, date }: Props) {
             </span>
           </p>
 
-          <p className="inline-flex items-center gap-1 text-muted-foreground">
-            <CalendarIcon className="size-4" />
-            <span className="text-sm">
-              {format(new Date(date), "d MMM, yyyy")}
-            </span>
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="inline-flex items-center gap-1 text-muted-foreground">
+              <CalendarIcon className="size-4" />
+              <span className="text-sm">
+                {format(new Date(date), "d MMM, yyyy")}
+              </span>
+            </p>
+
+            <p className="inline-flex items-center gap-1 text-muted-foreground">
+              <AtomIcon className="size-4" />
+              <span className="text-sm">{category}</span>
+            </p>
+          </div>
         </div>
       </div>
     </div>

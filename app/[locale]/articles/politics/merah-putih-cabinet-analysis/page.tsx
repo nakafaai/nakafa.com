@@ -26,6 +26,7 @@ export async function generateMetadata({
     description: metadata.description,
     alternates: metadata.alternates,
     authors: metadata.author,
+    category: metadata.category,
   };
 }
 
@@ -48,6 +49,7 @@ export default async function Page({ params }: Props) {
           description={metadata.description}
           author={metadata.author}
           date={metadata.date}
+          category={metadata.category}
         />
         <LayoutContent>
           <Content />

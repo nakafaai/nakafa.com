@@ -1,51 +1,16 @@
-import { LinkIcon } from "lucide-react";
-import type { ComponentPropsWithoutRef } from "react";
-import Balancer from "react-wrap-balancer";
+import { Heading } from "./components/markdown/heading";
 import { buttonVariants } from "./components/ui/button";
 import NavigationLink from "./components/ui/navigation-link";
 import { cn } from "./lib/utils";
-
-type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
-
-type HeadingProps = ComponentPropsWithoutRef<HeadingTag>;
-type ParagraphProps = ComponentPropsWithoutRef<"p">;
-type AnchorProps = ComponentPropsWithoutRef<"a">;
-type EmProps = ComponentPropsWithoutRef<"em">;
-type StrongProps = ComponentPropsWithoutRef<"strong">;
-type ListProps = ComponentPropsWithoutRef<"ul">;
-type ListItemProps = ComponentPropsWithoutRef<"li">;
-
-function Heading({
-  Tag,
-  className,
-  ...props
-}: {
-  Tag: HeadingTag;
-  className: string;
-} & HeadingProps) {
-  const id = props.children?.toString().toLowerCase().replace(/\s+/g, "-");
-  return (
-    <Tag
-      id={id}
-      className={cn(
-        "group mt-10 mb-6 flex scroll-mt-24 items-center font-medium leading-tight tracking-tight",
-        className
-      )}
-      {...props}
-    >
-      <span className="inline-block">
-        <Balancer>{props.children}</Balancer>
-      </span>
-      <a
-        href={`#${id}`}
-        className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
-        aria-label={`Link to ${props.children}`}
-      >
-        <LinkIcon className="size-4" />
-      </a>
-    </Tag>
-  );
-}
+import type {
+  AnchorProps,
+  EmProps,
+  HeadingProps,
+  ListItemProps,
+  ListProps,
+  ParagraphProps,
+  StrongProps,
+} from "./types/markdown";
 
 const components = {
   h1: (props: HeadingProps) => (
