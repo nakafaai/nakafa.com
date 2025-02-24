@@ -1,4 +1,4 @@
-import { CabinetChart } from "./chart";
+import { CabinetChart, CompositionChart } from "./chart";
 
 export const metadata = {
   title:
@@ -56,10 +56,19 @@ only the size but also certain names within the cabinet lineup have drawn attent
 patronage, a large supporting coalition, and political party intervention be the reasons behind this
 oversized cabinet?
 
-<CabinetChart
-  title="Cabinet Structure of the Reform Era"
-  description="Number of cabinet members in the reform era 1998-2024."
-/>
+<div className="grid grid-cols-1 gap-4">
+  <CabinetChart
+    title="Cabinet Structure of the Reform Era"
+    description="Number of cabinet members in the reform era 1998-2024."
+    footnote="The Merah Putih cabinet is the largest cabinet in Indonesia's history, with 48 ministers."
+  />
+
+  <CompositionChart
+    title="Comparison of Position Status, Political Status and Gender of the “Merah Putih” Cabinet"
+    description="Comparison of the composition of the Merah Putih Cabinet."
+    footnote="There is an imbalance between the number of men and women in the Merah Putih Cabinet."
+  />
+</div>
 
 ## Analysis of the Influence of the Presidential and Multiparty System on Ministerial Selection
 

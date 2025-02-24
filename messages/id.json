@@ -20,7 +20,17 @@
     "source-code": "Kode sumber",
     "language": "Bahasa",
     "articles": "Artikel",
-    "subject": "Mata pelajaran"
+    "subject": "Mata pelajaran",
+    "cabinet": "Kabinet",
+    "minister": "Menteri",
+    "gender": "Gender",
+    "political-status": "Status Politik",
+    "politicians": "Politisi",
+    "non-politicians": "Non Politisi",
+    "male": "Laki-laki",
+    "female": "Perempuan",
+    "new": "Baru",
+    "incumbent": "Berpengalaman"
   },
   "Material": {
     "elementary-school": "SD",

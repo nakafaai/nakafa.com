@@ -1,4 +1,4 @@
-import { CabinetChart } from "./chart";
+import { CabinetChart, CompositionChart } from "./chart";
 
 export const metadata = {
   title:
@@ -50,10 +50,19 @@ pemerintahan sebelumnya. Tidak hanya ukuran, beberapa nama dalam susunan kabinet
 patronase politik, koalisi pendukung yang besar, dan intervensi partai politik menjadi alasan di balik kabinet over-size
 ini?
 
-<CabinetChart
-  title="Struktur Kabinet Era Reformasi"
-  description="Jumlah anggota kabinet pada era reformasi 1998-2024."
-/>
+<div className="grid grid-cols-1 gap-4">
+  <CabinetChart
+    title="Struktur Kabinet Era Reformasi"
+    description="Jumlah anggota kabinet pada era reformasi 1998-2024."
+    footnote="Kabinet Merah Putih adalah kabinet terbesar sejak Orde Baru hingga Era Reformasi, dengan 48 menteri."
+  />
+
+  <CompositionChart
+    title="Perbandingan Status Jabatan, Status Politik, dan Gender Kabinet “Merah Putih”"
+    description="Perbandingan komposisi kabinet “Merah Putih”."
+    footnote="Terjadi ketimpangan antara jumlah laki-laki dan perempuan di kabinet “Merah Putih”."
+  />
+</div>
 
 ## Analisis Pengaruh Sistem Presidensial dan Multipartai terhadap Seleksi Menteri
 

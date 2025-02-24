@@ -20,7 +20,17 @@
     "source-code": "Source code",
     "language": "Language",
     "articles": "Articles",
-    "subject": "Subject"
+    "subject": "Subject",
+    "cabinet": "Cabinet",
+    "minister": "Minister",
+    "gender": "Gender",
+    "political-status": "Political Status",
+    "politicians": "Politicians",
+    "non-politicians": "Non Politicians",
+    "male": "Male",
+    "female": "Female",
+    "new": "New",
+    "incumbent": "Incumbent"
   },
   "Material": {
     "elementary-school": "Elementary School",
