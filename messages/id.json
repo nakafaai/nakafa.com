@@ -30,7 +30,11 @@
     "male": "Laki-laki",
     "female": "Perempuan",
     "new": "Baru",
-    "incumbent": "Berpengalaman"
+    "incumbent": "Berpengalaman",
+    "references": "Referensi",
+    "show": "Tampilkan",
+    "hide": "Sembunyikan",
+    "no-website": "Tidak ada website"
   },
   "Material": {
     "elementary-school": "SD",

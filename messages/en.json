@@ -30,7 +30,11 @@
     "male": "Male",
     "female": "Female",
     "new": "New",
-    "incumbent": "Incumbent"
+    "incumbent": "Incumbent",
+    "references": "References",
+    "show": "Show",
+    "hide": "Hide",
+    "no-website": "No website"
   },
   "Material": {
     "elementary-school": "Elementary School",

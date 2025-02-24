@@ -1,9 +1,15 @@
+import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
+import { RefContent } from "@/components/shared/ref-content";
 import type { Locale } from "@/i18n/routing";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { references } from "./ref";
+
+const githubUrl =
+  "https://github.com/nabilfatih/nakafa.com/tree/main/app/%5Blocale%5D/articles/politics/merah-putih-cabinet-analysis";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -46,6 +52,14 @@ export default async function Page({ params }: Props) {
         <LayoutContent>
           <Content />
         </LayoutContent>
+
+        <FooterContent>
+          <RefContent
+            title={metadata.title}
+            references={references}
+            githubUrl={githubUrl}
+          />
+        </FooterContent>
       </>
     );
   } catch {
