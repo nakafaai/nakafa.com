@@ -24,11 +24,18 @@ function Heading({
 } & HeadingProps) {
   const id = props.children?.toString().toLowerCase().replace(/\s+/g, "-");
   return (
-    <Tag id={id} className={cn("group", className)} {...props}>
+    <Tag
+      id={id}
+      className={cn(
+        "group mt-10 mb-6 flex items-center font-medium leading-tight tracking-tight",
+        className
+      )}
+      {...props}
+    >
       <span className="inline-block">{props.children}</span>
       <a
         href={`#${id}`}
-        className="ml-2 hidden text-muted-foreground group-hover:inline-block"
+        className="ml-2 flex shrink-0 text-muted-foreground group-hover:inline-block"
         aria-label={`Link to ${props.children}`}
       >
         <LinkIcon className="size-4" />
@@ -39,46 +46,22 @@ function Heading({
 
 const components = {
   h1: (props: HeadingProps) => (
-    <Heading
-      Tag="h1"
-      className="mt-10 mb-6 font-medium text-3xl tracking-tight"
-      {...props}
-    />
+    <Heading Tag="h1" className="text-3xl" {...props} />
   ),
   h2: (props: HeadingProps) => (
-    <Heading
-      Tag="h2"
-      className="mt-10 mb-6 font-medium text-2xl tracking-tight"
-      {...props}
-    />
+    <Heading Tag="h2" className="text-2xl" {...props} />
   ),
   h3: (props: HeadingProps) => (
-    <Heading
-      Tag="h3"
-      className="mt-10 mb-6 font-medium text-xl tracking-tight"
-      {...props}
-    />
+    <Heading Tag="h3" className="text-xl" {...props} />
   ),
   h4: (props: HeadingProps) => (
-    <Heading
-      Tag="h4"
-      className="mt-10 mb-6 font-medium text-lg tracking-tight"
-      {...props}
-    />
+    <Heading Tag="h4" className="text-lg" {...props} />
   ),
   h5: (props: HeadingProps) => (
-    <Heading
-      Tag="h5"
-      className="mt-10 mb-6 font-medium text-base tracking-tight"
-      {...props}
-    />
+    <Heading Tag="h5" className="text-base" {...props} />
   ),
   h6: (props: HeadingProps) => (
-    <Heading
-      Tag="h6"
-      className="mt-10 mb-6 font-medium text-sm tracking-tight"
-      {...props}
-    />
+    <Heading Tag="h6" className="text-sm" {...props} />
   ),
   p: (props: ParagraphProps) => (
     <p
