@@ -25,25 +25,25 @@ function Heading({
 } & HeadingProps) {
   const id = props.children?.toString().toLowerCase().replace(/\s+/g, "-");
   return (
-    <Balancer>
-      <Tag
-        id={id}
-        className={cn(
-          "group mt-10 mb-6 flex items-center font-medium leading-tight tracking-tight",
-          className
-        )}
-        {...props}
+    <Tag
+      id={id}
+      className={cn(
+        "group mt-10 mb-6 flex scroll-mt-20 items-center font-medium leading-tight tracking-tight",
+        className
+      )}
+      {...props}
+    >
+      <span className="inline-block">
+        <Balancer>{props.children}</Balancer>
+      </span>
+      <a
+        href={`#${id}`}
+        className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
+        aria-label={`Link to ${props.children}`}
       >
-        <span className="inline-block">{props.children}</span>
-        <a
-          href={`#${id}`}
-          className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
-          aria-label={`Link to ${props.children}`}
-        >
-          <LinkIcon className="size-4" />
-        </a>
-      </Tag>
-    </Balancer>
+        <LinkIcon className="size-4" />
+      </a>
+    </Tag>
   );
 }
 
