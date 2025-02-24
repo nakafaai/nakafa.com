@@ -46,7 +46,10 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
   return (
     <>
       <div className={cn("space-y-4", className)}>
-        <h2 className="font-medium text-2xl leading-tight tracking-tight">
+        <h2
+          id={t("references")}
+          className="scroll-mt-24 font-medium text-2xl leading-tight tracking-tight"
+        >
           {t("references")}
         </h2>
 
