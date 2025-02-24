@@ -38,6 +38,11 @@ export async function generateMetadata({
     },
     description: t("description"),
     applicationName: "Nakafa",
+    authors: [
+      {
+        name: "Nabil Akbarazzima Fatih",
+      },
+    ],
     creator: "Nabil Akbarazzima Fatih",
     publisher: "PT. Nakafa Tekno Kreatif",
     referrer: "origin-when-cross-origin",

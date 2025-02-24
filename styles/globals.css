@@ -121,7 +121,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground scroll-smooth selection:bg-primary/10 selection:text-primary;
+    @apply bg-background text-foreground scroll-smooth selection:bg-foreground selection:text-background;
   }
 }
 

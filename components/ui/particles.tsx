@@ -29,8 +29,8 @@ type ParticlesProps = {
 export function Particles({
   className = "",
   quantity = 50,
-  staticity = 50,
-  ease = 50,
+  staticity = 100,
+  ease = 100,
 }: ParticlesProps) {
   const { resolvedTheme } = useTheme();
 
