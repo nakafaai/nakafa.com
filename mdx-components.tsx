@@ -28,7 +28,7 @@ function Heading({
     <Tag
       id={id}
       className={cn(
-        "group mt-10 mb-6 flex scroll-mt-20 items-center font-medium leading-tight tracking-tight",
+        "group mt-10 mb-6 flex scroll-mt-24 items-center font-medium leading-tight tracking-tight",
         className
       )}
       {...props}
