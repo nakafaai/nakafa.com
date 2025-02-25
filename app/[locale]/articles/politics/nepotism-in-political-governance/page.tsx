@@ -6,6 +6,7 @@ import type { Locale } from "@/i18n/routing";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { references } from "./ref";
 
 const githubUrl =
   "https://github.com/nabilfatih/nakafa.com/tree/main/app/%5Blocale%5D/articles/politics/nepotism-in-political-governance";
@@ -56,7 +57,7 @@ export default async function Page({ params }: Props) {
         <FooterContent>
           <RefContent
             title={metadata.title}
-            references={[]} // TODO: add references
+            references={references}
             githubUrl={githubUrl}
           />
         </FooterContent>

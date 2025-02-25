@@ -33,7 +33,7 @@ const components = {
   ),
   p: (props: ParagraphProps) => (
     <p
-      className="mb-4 text-base text-foreground/80 leading-relaxed last:mb-0"
+      className="my-4 text-base text-foreground/80 leading-relaxed first:mt-0 last:mb-0"
       {...props}
     />
   ),

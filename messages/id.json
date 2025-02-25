@@ -34,7 +34,19 @@
     "references": "Referensi",
     "show": "Tampilkan",
     "hide": "Sembunyikan",
-    "no-website": "Tidak ada website"
+    "no-website": "Tidak ada website",
+    "country": "Negara",
+    "judicial-efficiency-index": "Indeks Efisiensi Hukum",
+    "corruption-index": "Indeks Kekorupan",
+    "good-governance-index": "Indeks Good Governance",
+    "governance-quality-category": "Kategori Kualitas Good Governance",
+    "low": "Rendah",
+    "medium": "Sedang",
+    "high": "Tinggi",
+    "good": "Baik",
+    "selection": "Seleksi",
+    "election": "Pemilihan",
+    "delivery": "Pengiriman"
   },
   "Material": {
     "elementary-school": "SD",

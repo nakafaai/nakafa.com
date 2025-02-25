@@ -34,7 +34,19 @@
     "references": "References",
     "show": "Show",
     "hide": "Hide",
-    "no-website": "No website"
+    "no-website": "No website",
+    "country": "Country",
+    "judicial-efficiency-index": "Judicial Efficiency Index",
+    "corruption-index": "Corruption Index",
+    "good-governance-index": "Good Governance Index",
+    "governance-quality-category": "Governance Quality Category",
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "good": "Good",
+    "selection": "Selection",
+    "election": "Election",
+    "delivery": "Delivery"
   },
   "Material": {
     "elementary-school": "Elementary School",
