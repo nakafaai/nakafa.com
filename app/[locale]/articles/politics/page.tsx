@@ -74,7 +74,7 @@ export default async function PoliticsPage({ params }: Props) {
               href={`/articles/politics/${article.slug}`}
               key={article.slug}
             >
-              <Card className="hover:primary/10 transition-colors hover:border-primary/20">
+              <Card className="transition-colors hover:border-primary/50 hover:bg-primary/5">
                 <CardHeader>
                   <CardTitle title={article.title} className="line-clamp-2">
                     {article.title}
