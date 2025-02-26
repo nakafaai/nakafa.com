@@ -1,12 +1,15 @@
 import { format } from "date-fns";
-import { AtomIcon, CalendarIcon, PencilLineIcon } from "lucide-react";
+import { CalendarIcon, type LucideIcon, PencilLineIcon } from "lucide-react";
 import { Particles } from "../ui/particles";
 
 type Props = {
   title: string;
   description?: string;
-  category: string;
-  author: {
+  category: {
+    icon: LucideIcon;
+    name: string;
+  };
+  authors: {
     name: string;
   }[];
   date: string;
@@ -16,7 +19,7 @@ export function HeaderContent({
   title,
   description,
   category,
-  author,
+  authors,
   date,
 }: Props) {
   return (
@@ -31,7 +34,7 @@ export function HeaderContent({
           <p className="inline-flex items-center gap-1 text-muted-foreground">
             <PencilLineIcon className="size-4" />
             <span className="text-sm">
-              {author.map((author) => author.name).join(", ")}
+              {authors.map((author) => author.name).join(", ")}
             </span>
           </p>
 
@@ -44,8 +47,8 @@ export function HeaderContent({
             </p>
 
             <p className="inline-flex items-center gap-1 text-muted-foreground">
-              <AtomIcon className="size-4" />
-              <span className="text-sm">{category}</span>
+              <category.icon className="size-4" />
+              <span className="text-sm">{category.name}</span>
             </p>
           </div>
         </div>

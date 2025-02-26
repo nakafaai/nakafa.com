@@ -3,6 +3,8 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import type { Locale } from "@/i18n/routing";
+import type { ArticleMetadata } from "@/types/articles";
+import { DramaIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -19,13 +21,15 @@ export async function generateMetadata({
   params,
 }: { params: Props["params"] }): Promise<Metadata> {
   const { locale } = await params;
-  const metadata = await import(`./${locale}.mdx`).then((m) => m.metadata);
+  const metadata: ArticleMetadata = await import(`./${locale}.mdx`).then(
+    (m) => m.metadata
+  );
 
   return {
     title: metadata.title,
     description: metadata.description,
     alternates: metadata.alternates,
-    authors: metadata.author,
+    authors: metadata.authors,
     category: metadata.category,
   };
 }
@@ -41,15 +45,18 @@ export default async function Page({ params }: Props) {
     const Content = file.default;
 
     // import metadata from the mdx file based on the locale
-    const metadata = file.metadata;
+    const metadata: ArticleMetadata = file.metadata;
     return (
       <>
         <HeaderContent
           title={metadata.title}
           description={metadata.description}
-          author={metadata.author}
+          authors={metadata.authors}
           date={metadata.date}
-          category={metadata.category}
+          category={{
+            icon: DramaIcon,
+            name: metadata.category,
+          }}
         />
         <LayoutContent>
           <Content />

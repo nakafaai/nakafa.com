@@ -1,12 +1,7 @@
+import type { Article } from "@/types/articles";
 import { compareDesc, parse } from "date-fns";
 import glob from "fast-glob";
-
-type Article = {
-  title: string;
-  description: string;
-  date: string;
-  slug: string;
-};
+import { teams } from "../data/team";
 
 export async function getArticles(
   basePath: string,
@@ -37,11 +32,16 @@ export async function getArticles(
           `@/app/[locale]/articles/${basePath.split("/").at(-1)}/${slug}/${locale}.mdx`
         );
 
+        const authors: string[] = metadata.authors.map(
+          (author: { name: string }) => author.name
+        );
+
         return {
           title: metadata.title,
           description: metadata.description,
           date: metadata.date,
           slug,
+          official: authors.some((author) => teams.has(author)),
         };
       } catch {
         // TODO: Add monitoring for missing articles

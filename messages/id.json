@@ -46,7 +46,8 @@
     "good": "Baik",
     "selection": "Seleksi",
     "election": "Pemilihan",
-    "delivery": "Pengiriman"
+    "delivery": "Pengiriman",
+    "official": "Resmi"
   },
   "Material": {
     "elementary-school": "SD",
@@ -66,6 +67,7 @@
   },
   "Articles": {
     "description": "Penelitian akademik dan publikasi berdasarkan metode ilmiah.",
-    "politics": "Politik"
+    "politics": "Politik",
+    "official": "Resmi"
   }
 }

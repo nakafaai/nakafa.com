@@ -66,6 +66,7 @@
   },
   "Articles": {
     "description": "Academic research and publications based on scientific methods.",
-    "politics": "Politics"
+    "politics": "Politics",
+    "official": "Official"
   }
 }

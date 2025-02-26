@@ -8,10 +8,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Particles } from "@/components/ui/particles";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Link } from "@/i18n/routing";
 import { getArticles } from "@/lib/utils/markdown";
 import { format } from "date-fns";
-import { CalendarIcon, DramaIcon } from "lucide-react";
+import { BadgeCheckIcon, CalendarIcon, DramaIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
@@ -68,7 +73,7 @@ export default async function PoliticsPage({ params }: Props) {
         </div>
       </div>
       <LayoutContent className="py-10">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {articles.map((article) => (
             <Link
               href={`/articles/politics/${article.slug}`}
@@ -87,11 +92,24 @@ export default async function PoliticsPage({ params }: Props) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <div className="flex items-center gap-1">
-                    <CalendarIcon className="size-4 shrink-0" />
-                    <span className="line-clamp-1 text-sm">
-                      {format(new Date(article.date), "d MMM, yyyy")}
-                    </span>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-1">
+                      <CalendarIcon className="size-4 shrink-0" />
+                      <span className="line-clamp-1 text-sm">
+                        {format(new Date(article.date), "d MMM, yyyy")}
+                      </span>
+                    </div>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center">
+                          <BadgeCheckIcon className="size-4 shrink-0" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>{t("official")}</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 </CardContent>
               </Card>
