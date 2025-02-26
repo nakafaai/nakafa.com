@@ -57,7 +57,7 @@ export default async function PoliticsPage({ params }: Props) {
     <>
       <div className="relative border-b py-10">
         <Particles className="pointer-events-none absolute inset-0 opacity-50" />
-        <div className="z-10 mx-auto max-w-4xl space-y-2 px-4">
+        <div className="z-10 mx-auto max-w-3xl space-y-2 px-4">
           <div className="flex items-center gap-2">
             <DramaIcon className="size-6" />
             <h1 className="font-medium text-3xl leading-tight tracking-tight">
@@ -67,7 +67,7 @@ export default async function PoliticsPage({ params }: Props) {
           <p className="text-foreground/80">{t("description")}</p>
         </div>
       </div>
-      <LayoutContent className="max-w-4xl py-10">
+      <LayoutContent className="py-10">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {articles.map((article) => (
             <Link
