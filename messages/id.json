@@ -69,5 +69,13 @@
     "description": "Penelitian akademik dan publikasi berdasarkan metode ilmiah.",
     "politics": "Politik",
     "official": "Resmi"
+  },
+  "Utils": {
+    "search": "Cari",
+    "search-placeholder": "Temukan apa yang kamu inginkan...",
+    "search-not-found": "Tidak ada hasil yang ditemukan.",
+    "search-loading": "Mencari hasil...",
+    "search-help": "Ketik untuk mencari...",
+    "search-error": "Terjadi kesalahan saat mencari."
   }
 }

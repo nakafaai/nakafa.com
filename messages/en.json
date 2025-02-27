@@ -68,5 +68,13 @@
     "description": "Academic research and publications based on scientific methods.",
     "politics": "Politics",
     "official": "Official"
+  },
+  "Utils": {
+    "search": "Search",
+    "search-placeholder": "Find what you want...",
+    "search-not-found": "No results found.",
+    "search-loading": "Finding results...",
+    "search-help": "Type to start searching...",
+    "search-error": "An error occurred while searching."
   }
 }
