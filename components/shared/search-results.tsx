@@ -36,7 +36,7 @@ export function SearchResults({ data }: Props) {
               <p
                 className={cn(
                   "text-muted-foreground text-sm leading-snug",
-                  "[&_mark]:bg-primary [&_mark]:text-primary-foreground"
+                  "[&_mark]:bg-primary/80 [&_mark]:text-primary-foreground"
                 )}
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: we are using a markdown parser
                 dangerouslySetInnerHTML={{ __html: subResult.excerpt }}
