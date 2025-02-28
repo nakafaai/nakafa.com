@@ -71,6 +71,7 @@
   },
   "Utils": {
     "search": "Search",
+    "search-bar-placeholder": "Search content...",
     "search-placeholder": "Find what you want...",
     "search-not-found": "No results found.",
     "search-loading": "Finding results...",

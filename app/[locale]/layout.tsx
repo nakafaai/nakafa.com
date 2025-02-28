@@ -15,11 +15,13 @@ import type { ReactNode } from "react";
 import "@/styles/globals.css";
 import "katex/dist/katex.min.css";
 
+import { AppProviders } from "@/components/providers";
+import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import type { Metadata } from "next";
 
+import type { Metadata } from "next";
 type Props = {
   children: ReactNode;
   params: Promise<{ locale: string }>;
@@ -112,22 +114,25 @@ export default async function LocaleLayout({ children, params }: Props) {
       suppressHydrationWarning
     >
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <NextIntlClientProvider messages={messages}>
-            <SidebarProvider>
-              <AppSidebar />
-              <SidebarInset>
-                <Header />
-                {children}
-              </SidebarInset>
-            </SidebarProvider>
-          </NextIntlClientProvider>
-        </ThemeProvider>
+        <AppProviders>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <NextIntlClientProvider messages={messages}>
+              <SidebarProvider>
+                <AppSidebar />
+                <SidebarInset>
+                  <Header />
+                  <SearchCommand />
+                  {children}
+                </SidebarInset>
+              </SidebarProvider>
+            </NextIntlClientProvider>
+          </ThemeProvider>
+        </AppProviders>
       </body>
     </html>
   );

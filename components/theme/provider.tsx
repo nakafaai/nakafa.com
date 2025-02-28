@@ -2,7 +2,7 @@
 
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import type { ComponentProps } from "react";
-import { Provider } from "react-wrap-balancer";
+import { Provider as BalancerProvider } from "react-wrap-balancer";
 import { TooltipProvider } from "../ui/tooltip";
 
 export function ThemeProvider({
@@ -12,7 +12,7 @@ export function ThemeProvider({
   return (
     <NextThemesProvider {...props}>
       <TooltipProvider>
-        <Provider>{children}</Provider>
+        <BalancerProvider>{children}</BalancerProvider>
       </TooltipProvider>
     </NextThemesProvider>
   );

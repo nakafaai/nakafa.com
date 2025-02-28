@@ -1,6 +1,8 @@
 "use client";
 
+import { searchAtom } from "@/lib/jotai/search";
 import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
+import { useAtom } from "jotai";
 import { HeartCrackIcon, InfoIcon, RocketIcon, SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { addBasePath } from "next/dist/client/add-base-path";
@@ -8,7 +10,13 @@ import { useDeferredValue, useEffect } from "react";
 import type { ReactElement } from "react";
 import { useState } from "react";
 import {} from "../ui/command";
-import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 import { LoaderIcon } from "../ui/icons";
 import { ScrollArea } from "../ui/scroll-area";
 import { SearchResults } from "./search-results";
@@ -108,13 +116,10 @@ function Content({
   );
 }
 
-type Props = {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-};
-
-export function SearchCommand({ open, setOpen }: Props) {
+export function SearchCommand() {
   const t = useTranslations("Utils");
+
+  const [open, setOpen] = useAtom(searchAtom);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ReactElement | string>("");
@@ -175,10 +180,36 @@ export function SearchCommand({ open, setOpen }: Props) {
     handleSearch(deferredSearch);
   }, [deferredSearch]);
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const el = document.activeElement;
+      if (!el || (el as HTMLElement).isContentEditable) {
+        return;
+      }
+      if (
+        event.key === "/" ||
+        (event.key === "k" &&
+          !event.shiftKey &&
+          (navigator.userAgent.includes("Mac") ? event.metaKey : event.ctrlKey))
+      ) {
+        event.preventDefault();
+        setOpen(true);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [setOpen]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent hideClose className="gap-0 p-0">
-        <DialogTitle className="sr-only">{t("search")}</DialogTitle>
+        <DialogHeader className="sr-only">
+          <DialogTitle>{t("search")}</DialogTitle>
+          <DialogDescription>{t("search-help")}</DialogDescription>
+        </DialogHeader>
         <div className="flex items-center gap-2 border-b px-4">
           <SearchIcon className="size-4 shrink-0 opacity-50" />
           <input

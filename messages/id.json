@@ -72,6 +72,7 @@
   },
   "Utils": {
     "search": "Cari",
+    "search-bar-placeholder": "Cari konten...",
     "search-placeholder": "Temukan apa yang kamu inginkan...",
     "search-not-found": "Tidak ada hasil yang ditemukan.",
     "search-loading": "Mencari hasil...",
