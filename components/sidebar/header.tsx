@@ -26,7 +26,7 @@ export function Header() {
                 rel="noopener noreferrer"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "icon" }),
-                  "size-8"
+                  "size-8 shrink-0"
                 )}
               >
                 <GithubIcon className="h-4 w-4" />

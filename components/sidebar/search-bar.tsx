@@ -28,7 +28,7 @@ export function SearchBar() {
       <div className="relative">
         <Input
           id={id}
-          className="h-8 cursor-pointer bg-muted/50 pe-12 shadow-none transition-colors hover:bg-muted"
+          className="h-8 cursor-pointer bg-muted/50 pe-12 shadow-none transition-colors placeholder:text-sm hover:bg-muted"
           placeholder={t("search-bar-placeholder")}
           type="search"
         />
