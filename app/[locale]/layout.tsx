@@ -127,7 +127,7 @@ export default async function LocaleLayout({ children, params }: Props) {
                 <SidebarInset>
                   <Header />
                   <SearchCommand />
-                  {children}
+                  <main data-pagefind-body>{children}</main>
                 </SidebarInset>
               </SidebarProvider>
             </NextIntlClientProvider>
