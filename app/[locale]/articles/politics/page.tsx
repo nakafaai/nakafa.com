@@ -73,7 +73,7 @@ export default async function PoliticsPage({ params }: Props) {
         </div>
       </div>
       <LayoutContent className="py-10">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6">
           {articles.map((article) => (
             <Link
               href={`/articles/politics/${article.slug}`}
@@ -81,12 +81,12 @@ export default async function PoliticsPage({ params }: Props) {
             >
               <Card className="transition-colors hover:border-primary/50 hover:bg-primary/5">
                 <CardHeader>
-                  <CardTitle title={article.title} className="line-clamp-2">
+                  <CardTitle title={article.title} className="line-clamp-1">
                     {article.title}
                   </CardTitle>
                   <CardDescription
                     title={article.description}
-                    className="truncate"
+                    className="line-clamp-1"
                   >
                     {article.description}
                   </CardDescription>
