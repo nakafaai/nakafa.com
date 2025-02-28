@@ -1,6 +1,7 @@
 import { ThemeProvider } from "@/components/theme/provider";
 import { type Locale, routing } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@vercel/analytics/react";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import { NextIntlClientProvider } from "next-intl";
@@ -133,6 +134,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             </NextIntlClientProvider>
           </ThemeProvider>
         </AppProviders>
+        <Analytics />
       </body>
     </html>
   );
