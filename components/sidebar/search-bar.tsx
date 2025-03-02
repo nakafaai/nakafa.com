@@ -11,16 +11,11 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
 type Props = {
-  autoFocus?: boolean;
   className?: string;
   forceOpen?: boolean;
 };
 
-export function SearchBar({
-  autoFocus = false,
-  className,
-  forceOpen = false,
-}: Props) {
+export function SearchBar({ className, forceOpen = false }: Props) {
   const t = useTranslations("Utils");
   const id = useId();
 
@@ -53,7 +48,6 @@ export function SearchBar({
             "h-8 cursor-pointer bg-muted/50 pe-10 pl-9 shadow-none transition-colors placeholder:text-sm hover:bg-muted/80 focus-visible:ring-0 sm:w-80",
             className
           )}
-          autoFocus={autoFocus}
           placeholder={t("search-bar-placeholder")}
           type="search"
         />

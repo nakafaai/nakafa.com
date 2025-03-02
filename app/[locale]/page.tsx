@@ -28,7 +28,6 @@ export default async function IndexPage({ params }: Props) {
           </h1>
           <SearchBar
             forceOpen
-            autoFocus
             className="h-12 rounded-xl border-primary/10 sm:w-full"
           />
 
