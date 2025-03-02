@@ -18,7 +18,7 @@ import { getArticles } from "@/lib/utils/markdown";
 import { format } from "date-fns";
 import { BadgeCheckIcon, CalendarIcon, DramaIcon } from "lucide-react";
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -44,9 +44,6 @@ export async function generateMetadata({
 export default async function PoliticsPage({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("Articles");
-
-  // Enable static rendering
-  setRequestLocale(locale);
 
   // Dynamically get all article directories
   const basePath = path.join(
