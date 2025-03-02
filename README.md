@@ -1,21 +1,20 @@
-<!-- Nakafa: Learn for free and with quality -->
+# Nakafa
 
-<div align="center" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 40px 20px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
-  <img src="public/logo.svg" alt="Nakafa Logo" width="120" height="120" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); border: 4px solid #4a5568; border-radius: 50%; padding: 8px; background-color: rgba(255,255,255,0.8);">
-  
-  <h1 style="margin: 20px 0 10px; color: #2d3748; font-size: 3.5rem; font-weight: 700; letter-spacing: -1px;">Nakafa</h1>
-  
-  <p style="color: #4a5568; font-size: 1.2rem; margin-bottom: 25px; font-style: italic;">Learn for free and with quality</p>
-  
-  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0;">
-    <a href="#about" style="text-decoration: none; color: #4a5568; font-weight: 500; background-color: rgba(255,255,255,0.7); padding: 8px 16px; border-radius: 20px; transition: all 0.3s ease;">About</a>
-    <a href="#features" style="text-decoration: none; color: #4a5568; font-weight: 500; background-color: rgba(255,255,255,0.7); padding: 8px 16px; border-radius: 20px; transition: all 0.3s ease;">Features</a>
-    <a href="#tech-stack" style="text-decoration: none; color: #4a5568; font-weight: 500; background-color: rgba(255,255,255,0.7); padding: 8px 16px; border-radius: 20px; transition: all 0.3s ease;">Tech Stack</a>
-    <a href="#getting-started" style="text-decoration: none; color: #4a5568; font-weight: 500; background-color: rgba(255,255,255,0.7); padding: 8px 16px; border-radius: 20px; transition: all 0.3s ease;">Getting Started</a>
-    <a href="#contributing" style="text-decoration: none; color: #4a5568; font-weight: 500; background-color: rgba(255,255,255,0.7); padding: 8px 16px; border-radius: 20px; transition: all 0.3s ease;">Contributing</a>
-    <a href="#license" style="text-decoration: none; color: #4a5568; font-weight: 500; background-color: rgba(255,255,255,0.7); padding: 8px 16px; border-radius: 20px; transition: all 0.3s ease;">License</a>
-  </div>
-</div>
+<p align="center">
+  <img src="public/logo.svg" alt="Nakafa Logo" width="80" height="80">
+</p>
+
+<h1 align="center">Nakafa</h1>
+<p align="center"><em>Learn for free and with quality</em></p>
+
+<p align="center">
+  <a href="#about">About</a> •
+  <a href="#features">Features</a> •
+  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#getting-started">Getting Started</a> •
+  <a href="#contributing">Contributing</a> •
+  <a href="#license">License</a>
+</p>
 
 ---
 
@@ -56,7 +55,7 @@ The name "Nakafa" represents our commitment to creating a platform where people 
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/nakafa.git
+   git clone https://github.com/nabilfatih/nakafa.git
    cd nakafa
    ```
 
@@ -202,11 +201,5 @@ For questions regarding the license or special use cases, please contact us at <
 
 ---
 
-<div align="center" style="margin-top: 50px; padding: 30px 20px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.03);">
-  <p style="margin: 0; font-size: 1.1rem; color: #4a5568;">
-    Built with <span style="color: #e53e3e; font-size: 1.3rem;">❤️</span> for learners everywhere
-  </p>
-  <p style="color: #718096; font-size: 0.9rem; margin-top: 10px;">
-    © 2024 Nakafa
-  </p>
-</div>
+<p align="center">Built with ❤️ for learners everywhere</p>
+<p align="center">© 2024 Nakafa</p>
