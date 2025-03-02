@@ -10,7 +10,7 @@ import { SearchBar } from "./search-bar";
 export function Header() {
   const t = useTranslations("Common");
   return (
-    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur-sm">
       <div className="flex w-full items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1 size-8" />
 

@@ -78,5 +78,9 @@
     "search-loading": "Mencari hasil...",
     "search-help": "Ketik untuk mencari...",
     "search-error": "Terjadi kesalahan saat mencari."
+  },
+  "Home": {
+    "title": "Apa yang ada di benakmu?",
+    "contribute": "Berkontribusi"
   }
 }

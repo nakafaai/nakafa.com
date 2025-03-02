@@ -1,17 +1,37 @@
 "use client";
 
+import { usePathname } from "@/i18n/routing";
 import { searchAtom } from "@/lib/jotai/search";
+import { cn } from "@/lib/utils";
 import { useSetAtom } from "jotai";
+import { SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
-export function SearchBar() {
+type Props = {
+  autoFocus?: boolean;
+  className?: string;
+  forceOpen?: boolean;
+};
+
+export function SearchBar({
+  autoFocus = false,
+  className,
+  forceOpen = false,
+}: Props) {
   const t = useTranslations("Utils");
   const id = useId();
 
+  const pathname = usePathname();
+
   const setOpen = useSetAtom(searchAtom);
+
+  // If the pathname is /, don't show the search bar
+  if (pathname === "/" && !forceOpen) {
+    return null;
+  }
 
   return (
     <button
@@ -26,9 +46,14 @@ export function SearchBar() {
         {t("search")}
       </Label>
       <div className="relative">
+        <SearchIcon className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
         <Input
           id={id}
-          className="h-8 cursor-pointer bg-muted/50 pe-12 shadow-none transition-colors placeholder:text-sm hover:bg-muted sm:w-80"
+          className={cn(
+            "h-8 cursor-pointer bg-muted/50 pe-10 pl-9 shadow-none transition-colors placeholder:text-sm hover:bg-muted/80 sm:w-80",
+            className
+          )}
+          autoFocus={autoFocus}
           placeholder={t("search-bar-placeholder")}
           type="search"
         />
