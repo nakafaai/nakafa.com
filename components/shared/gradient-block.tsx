@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import tinycolor from "tinycolor2";
 import tinygradient from "tinygradient";
 
-interface GradientBlockProps {
+type Props = {
   keyString: string;
   className?: HTMLAttributes<HTMLDivElement>["className"];
   style?: CSSProperties;
@@ -17,7 +17,7 @@ interface GradientBlockProps {
     | "split-complementary"
     | "vibrant";
   intensity?: "soft" | "medium" | "bold";
-}
+};
 
 export function GradientBlock({
   keyString,
@@ -25,7 +25,7 @@ export function GradientBlock({
   style = {},
   colorScheme = "vibrant",
   intensity = "medium",
-}: GradientBlockProps) {
+}: Props) {
   // Generate a consistent color palette based on the keyString
   const gradientStyle = useMemo(() => {
     // Create a simple hash from the keyString
