@@ -50,7 +50,7 @@ export function SearchBar({
         <Input
           id={id}
           className={cn(
-            "h-8 cursor-pointer bg-muted/50 pe-10 pl-9 shadow-none transition-colors placeholder:text-sm hover:bg-muted/80 sm:w-80",
+            "h-8 cursor-pointer bg-muted/50 pe-10 pl-9 shadow-none transition-colors placeholder:text-sm hover:bg-muted/80 focus-visible:ring-0 sm:w-80",
             className
           )}
           autoFocus={autoFocus}
