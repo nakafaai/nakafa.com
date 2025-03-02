@@ -1,4 +1,4 @@
-# Nakafa
+# ❤️❤️❤️❤️❤️
 
 <p align="center">
   <img src="public/logo.svg" alt="Nakafa Logo" width="80" height="80">
