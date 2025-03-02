@@ -1,6 +1,5 @@
 "use client";
 
-import { setCookie } from "@/app/actions/cookie";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -83,11 +82,8 @@ function SidebarProvider({
       }
 
       // This sets the cookie to keep the sidebar state.
-      setCookie({
-        name: SIDEBAR_COOKIE_NAME,
-        value: openState.toString(),
-        maxAge: SIDEBAR_COOKIE_MAX_AGE,
-      });
+      // biome-ignore lint/nursery/noDocumentCookie: do not use server set cookie, it will break the static page if need to read file
+      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
     },
     [setOpenProp, open]
   );
