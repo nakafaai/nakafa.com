@@ -221,7 +221,7 @@ export function SearchCommand() {
           />
         </div>
 
-        <ScrollArea className="max-h-[calc(100dvh-25rem)]">
+        <ScrollArea className="max-h-[calc(100dvh-15rem)] sm:max-h-[calc(100dvh-25rem)]">
           <Content
             isLoading={isLoading}
             error={error}
