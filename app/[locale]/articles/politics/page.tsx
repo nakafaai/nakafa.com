@@ -50,9 +50,7 @@ async function ArticleList({ locale }: { locale: string }) {
         >
           <GradientBlock
             keyString={article.slug}
-            colorScheme="vibrant"
-            intensity="soft"
-            className="h-48 w-full rounded-xl border opacity-80 shadow transition-all duration-300 group-hover:rounded-3xl group-hover:opacity-100"
+            className="h-48 w-full rounded-xl border shadow transition-all duration-300 group-hover:rounded-3xl"
           />
           {article.official && (
             <Tooltip>

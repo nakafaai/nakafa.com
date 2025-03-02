@@ -17,6 +17,7 @@ type Props = {
     | "split-complementary"
     | "vibrant";
   intensity?: "soft" | "medium" | "bold";
+  gradientType?: "linear" | "radial" | "conic";
 };
 
 export function GradientBlock({
@@ -25,6 +26,7 @@ export function GradientBlock({
   style = {},
   colorScheme = "vibrant",
   intensity = "medium",
+  gradientType = "radial",
 }: Props) {
   // Generate a consistent color palette based on the keyString
   const gradientStyle = useMemo(() => {
@@ -170,24 +172,53 @@ export function GradientBlock({
     // Create a gradient using tinygradient
     const gradient = tinygradient(colors);
 
-    // Generate CSS for a linear gradient
-    // Use a more varied angle for visual interest
+    // Get color stops with more detail for smoother transitions
+    const colorStops = gradient
+      .rgb(7) // Significantly increase color stops for maximum smoothness
+      .map((color) => color.toRgbString())
+      .join(", ");
+
+    // Generate different types of gradients based on gradientType
+    let gradientCss = "";
     const angle = ((hash % 180) + (hash % 60)) % 360; // More variety in angles
 
-    // Apply a subtle pattern overlay for more depth
-    const gradientCss = `linear-gradient(${angle}deg, ${gradient
-      .rgb(5) // Get 5 color stops for smooth transition
-      .map((color) => color.toRgbString())
-      .join(", ")})`;
+    switch (gradientType) {
+      case "radial":
+        // Create a radial gradient
+        gradientCss = `radial-gradient(circle at ${hash % 100}% ${hash % 100}%, ${colorStops})`;
+        break;
+      case "conic":
+        // Create a conic gradient
+        gradientCss = `conic-gradient(from ${angle}deg at 50% 50%, ${colorStops})`;
+        break;
+      default:
+        // Create a linear gradient (default)
+        gradientCss = `linear-gradient(${angle}deg, ${colorStops})`;
+        break;
+    }
+
+    // Create additional styles for conic gradients to assist with anti-aliasing
+    const additionalStyles =
+      gradientType === "conic"
+        ? {
+            // Apply multiple rendering enhancements for conic gradients:
+            transform: "translateZ(0)", // Force GPU acceleration
+            backfaceVisibility: "hidden" as const, // Improve rendering
+            perspective: "1000px", // Help with anti-aliasing
+            // Add a very subtle inner shadow to soften hard edges
+            boxShadow: "inset 0 0 30px rgba(0,0,0,0.05)",
+          }
+        : {};
 
     return {
       backgroundImage: gradientCss,
       backgroundSize: "cover",
       backgroundRepeat: "no-repeat",
       backgroundPosition: "center center",
+      ...additionalStyles,
       ...style,
     };
-  }, [keyString, style, colorScheme, intensity]);
+  }, [keyString, style, colorScheme, intensity, gradientType]);
 
   return (
     <div
