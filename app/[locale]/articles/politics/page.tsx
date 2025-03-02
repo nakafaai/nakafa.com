@@ -1,4 +1,3 @@
-import path from "node:path";
 import { LayoutContent } from "@/components/shared/layout-content";
 import {
   Card,
@@ -18,7 +17,8 @@ import { getArticles } from "@/lib/utils/markdown";
 import { format } from "date-fns";
 import { BadgeCheckIcon, CalendarIcon, DramaIcon } from "lucide-react";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Suspense } from "react";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -41,19 +41,61 @@ export async function generateMetadata({
   };
 }
 
+async function ArticleList({ locale }: { locale: string }) {
+  const t = await getTranslations("Articles");
+  // Statically get all articles
+  const articles = await getArticles("app/[locale]/articles/politics", locale);
+
+  return (
+    <div className="grid grid-cols-1 gap-6">
+      {articles.map((article) => (
+        <Link href={`/articles/politics/${article.slug}`} key={article.slug}>
+          <Card className="transition-colors hover:border-primary/50 hover:bg-primary/5">
+            <CardHeader>
+              <CardTitle title={article.title} className="line-clamp-1">
+                {article.title}
+              </CardTitle>
+              <CardDescription
+                title={article.description}
+                className="line-clamp-1"
+              >
+                {article.description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-1">
+                  <CalendarIcon className="size-4 shrink-0" />
+                  <span className="line-clamp-1 text-sm">
+                    {format(new Date(article.date), "d MMM, yyyy")}
+                  </span>
+                </div>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center">
+                      <BadgeCheckIcon className="size-4 shrink-0" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>{t("official")}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export default async function PoliticsPage({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("Articles");
 
-  // Dynamically get all article directories
-  const basePath = path.join(
-    process.cwd(),
-    "app",
-    "[locale]",
-    "articles",
-    "politics"
-  );
-  const articles = await getArticles(basePath, locale);
+  // Enable static rendering
+  setRequestLocale(locale);
 
   return (
     <>
@@ -70,49 +112,9 @@ export default async function PoliticsPage({ params }: Props) {
         </div>
       </div>
       <LayoutContent className="py-10">
-        <div className="grid grid-cols-1 gap-6">
-          {articles.map((article) => (
-            <Link
-              href={`/articles/politics/${article.slug}`}
-              key={article.slug}
-            >
-              <Card className="transition-colors hover:border-primary/50 hover:bg-primary/5">
-                <CardHeader>
-                  <CardTitle title={article.title} className="line-clamp-1">
-                    {article.title}
-                  </CardTitle>
-                  <CardDescription
-                    title={article.description}
-                    className="line-clamp-1"
-                  >
-                    {article.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-1">
-                      <CalendarIcon className="size-4 shrink-0" />
-                      <span className="line-clamp-1 text-sm">
-                        {format(new Date(article.date), "d MMM, yyyy")}
-                      </span>
-                    </div>
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-center">
-                          <BadgeCheckIcon className="size-4 shrink-0" />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p>{t("official")}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <Suspense>
+          <ArticleList locale={locale} />
+        </Suspense>
       </LayoutContent>
     </>
   );
