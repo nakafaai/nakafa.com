@@ -48,24 +48,25 @@ async function ArticleList({ locale }: { locale: string }) {
           href={`/articles/politics/${article.slug}`}
           className="group relative"
         >
-          <GradientBlock
-            keyString={article.slug}
-            className="h-48 w-full rounded-xl border shadow transition-all duration-300 group-hover:rounded-3xl"
-          />
-          {article.official && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge className="absolute top-4 right-4">
-                  {t("official")}
-                </Badge>
-              </TooltipTrigger>
+          <div className="relative h-[54px] w-full overflow-hidden rounded-xl shadow">
+            <GradientBlock
+              keyString={article.slug}
+              className="absolute inset-0 transition-all duration-600 ease-in-out group-hover:scale-150"
+            />
+            {article.official && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge className="absolute top-4 right-4">
+                    {t("official")}
+                  </Badge>
+                </TooltipTrigger>
 
-              <TooltipContent side="bottom">
-                <p>{t("official-description")}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-
+                <TooltipContent side="bottom">
+                  <p>{t("official-description")}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
           <div className="relative mt-2 grid gap-1.5 break-words">
             <h2
               title={article.title}

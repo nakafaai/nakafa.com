@@ -30,11 +30,11 @@ export function GradientBlock({
 }: Props) {
   // Generate a consistent color palette based on the keyString
   const gradientStyle = useMemo(() => {
-    // Create a simple hash from the keyString
-    const hash = Array.from(keyString).reduce(
-      (acc, char) => acc + char.charCodeAt(0),
-      0
-    );
+    // Create a better hash from the keyString
+    const hash = Array.from(keyString).reduce((acc, char, index) => {
+      // Use prime numbers and character position to create more variation
+      return (acc * 31 + char.charCodeAt(0) * (index + 1)) % 10000;
+    }, 0);
 
     // Use the hash to determine the base hue
     const baseHue = hash % 360;
@@ -57,7 +57,7 @@ export function GradientBlock({
       default: {
         // medium
         baseSaturation = 0.75;
-        baseLightness = 0.5;
+        baseLightness = 0.6;
         break;
       }
     }
@@ -71,12 +71,12 @@ export function GradientBlock({
         colors = [
           tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
           tinycolor({
-            h: (baseHue + 25) % 360,
+            h: (baseHue + 30) % 360,
             s: Math.min(baseSaturation + 0.1, 1),
             l: baseLightness,
           }),
           tinycolor({
-            h: (baseHue + 50) % 360,
+            h: (baseHue + 60) % 360,
             s: baseSaturation,
             l: Math.max(baseLightness - 0.1, 0),
           }),
