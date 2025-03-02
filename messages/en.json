@@ -67,7 +67,8 @@
   "Articles": {
     "description": "Academic research and publications based on scientific methods.",
     "politics": "Politics",
-    "official": "Official"
+    "official": "Official",
+    "official-description": "Made by Nakafa"
   },
   "Utils": {
     "search": "Search",

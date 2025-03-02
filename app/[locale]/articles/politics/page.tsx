@@ -1,11 +1,6 @@
+import { GradientBlock } from "@/components/shared/gradient-block";
 import { LayoutContent } from "@/components/shared/layout-content";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Particles } from "@/components/ui/particles";
 import {
   Tooltip,
@@ -15,7 +10,7 @@ import {
 import { Link } from "@/i18n/routing";
 import { getArticles } from "@/lib/utils/markdown";
 import { format } from "date-fns";
-import { BadgeCheckIcon, CalendarIcon, DramaIcon } from "lucide-react";
+import { DramaIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
@@ -46,43 +41,46 @@ async function ArticleList({ locale }: { locale: string }) {
   const articles = await getArticles("app/[locale]/articles/politics", locale);
 
   return (
-    <div className="grid grid-cols-1 gap-6">
+    <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
       {articles.map((article) => (
-        <Link href={`/articles/politics/${article.slug}`} key={article.slug}>
-          <Card className="transition-colors hover:border-primary/50 hover:bg-primary/5">
-            <CardHeader>
-              <CardTitle title={article.title} className="line-clamp-1">
-                {article.title}
-              </CardTitle>
-              <CardDescription
-                title={article.description}
-                className="line-clamp-1"
-              >
-                {article.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-1">
-                  <CalendarIcon className="size-4 shrink-0" />
-                  <span className="line-clamp-1 text-sm">
-                    {format(new Date(article.date), "d MMM, yyyy")}
-                  </span>
-                </div>
+        <Link
+          key={article.slug}
+          href={`/articles/politics/${article.slug}`}
+          className="group relative"
+        >
+          <GradientBlock
+            keyString={article.slug}
+            colorScheme="vibrant"
+            intensity="soft"
+            className="h-56 w-full rounded-xl border shadow transition-all duration-300 group-hover:rounded-3xl"
+          />
+          {article.official && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge className="absolute top-4 right-4">
+                  {t("official")}
+                </Badge>
+              </TooltipTrigger>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center">
-                      <BadgeCheckIcon className="size-4 shrink-0" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>{t("official")}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </CardContent>
-          </Card>
+              <TooltipContent side="bottom">
+                <p>{t("official")}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          <div className="relative mt-2 grid gap-1.5 break-words">
+            <h2
+              title={article.title}
+              className="line-clamp-2 font-medium text-lg leading-tight tracking-tight"
+            >
+              {article.title}
+            </h2>
+            <div className="flex items-center justify-between">
+              <p className="line-clamp-1 text-muted-foreground text-sm leading-none tracking-tight">
+                {format(new Date(article.date), "d MMM, yyyy")}
+              </p>
+            </div>
+          </div>
         </Link>
       ))}
     </div>

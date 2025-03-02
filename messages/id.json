@@ -68,7 +68,8 @@
   "Articles": {
     "description": "Penelitian akademik dan publikasi berdasarkan metode ilmiah.",
     "politics": "Politik",
-    "official": "Resmi"
+    "official": "Resmi",
+    "official-description": "Dibuat oleh Nakafa"
   },
   "Utils": {
     "search": "Cari",
