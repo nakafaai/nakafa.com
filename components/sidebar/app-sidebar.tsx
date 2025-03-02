@@ -22,7 +22,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const t = useTranslations("Metadata");
 
   return (
-    <Sidebar collapsible="icon" variant="inset" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
