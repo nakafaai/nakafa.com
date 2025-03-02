@@ -11,7 +11,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "../ui/sidebar";
 import { AboutMenu } from "./about-menu";
 import { LangMenu } from "./lang-menu";
@@ -23,7 +22,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const t = useTranslations("Metadata");
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" variant="inset" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -64,7 +63,6 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
           <AboutMenu />
         </SidebarMenu>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 }
