@@ -63,7 +63,7 @@ async function ArticleList({ locale }: { locale: string }) {
               </TooltipTrigger>
 
               <TooltipContent side="bottom">
-                <p>{t("official")}</p>
+                <p>{t("official-description")}</p>
               </TooltipContent>
             </Tooltip>
           )}
