@@ -5,12 +5,13 @@ import { GithubIcon } from "../ui/icons";
 import { SidebarTrigger } from "../ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { HeaderBreadcrumb } from "./header-breadcrumb";
+import { HeaderContainer } from "./header-container";
 import { SearchBar } from "./search-bar";
 
 export function Header() {
   const t = useTranslations("Common");
   return (
-    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 rounded-t-xl border-b bg-background/80 backdrop-blur-sm">
+    <HeaderContainer>
       <div className="flex w-full items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1 size-8" />
 
@@ -38,6 +39,6 @@ export function Header() {
           </Tooltip>
         </div>
       </div>
-    </header>
+    </HeaderContainer>
   );
 }
