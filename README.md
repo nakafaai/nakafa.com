@@ -202,4 +202,4 @@ For questions regarding the license or special use cases, please contact us at <
 ---
 
 <p align="center">Built with ❤️ for learners everywhere</p>
-<p align="center">© 2024 Nakafa</p>
+<p align="center">© 2025 Nakafa</p>
