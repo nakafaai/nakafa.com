@@ -11,6 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
 } from "../ui/sidebar";
 import { AboutMenu } from "./about-menu";
 import { LangMenu } from "./lang-menu";
@@ -63,6 +64,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
           <AboutMenu />
         </SidebarMenu>
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }
