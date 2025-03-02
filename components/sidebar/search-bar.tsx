@@ -41,17 +41,19 @@ export function SearchBar({ className, forceOpen = false }: Props) {
         {t("search")}
       </Label>
       <div className="relative">
-        <SearchIcon className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3">
+          <SearchIcon className="size-4 text-muted-foreground" />
+        </div>
         <Input
           id={id}
           className={cn(
-            "h-8 cursor-pointer bg-muted/50 pe-10 pl-9 shadow-none transition-colors placeholder:text-sm hover:bg-muted/80 focus-visible:ring-0 sm:w-80",
+            "h-8 cursor-pointer bg-muted/50 pe-11 pl-9 shadow-none transition-colors placeholder:text-sm hover:bg-muted/80 focus-visible:ring-0 sm:w-80",
             className
           )}
           placeholder={t("search-bar-placeholder")}
           type="search"
         />
-        <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-2">
+        <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3">
           <kbd className="inline-flex h-5 max-h-full items-center rounded border bg-background px-1 font-[inherit] font-medium text-[0.625rem] text-foreground">
             ⌘ K
           </kbd>
