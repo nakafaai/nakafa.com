@@ -18,7 +18,6 @@ import { format } from "date-fns";
 import { BadgeCheckIcon, CalendarIcon, DramaIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Suspense } from "react";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -112,9 +111,7 @@ export default async function PoliticsPage({ params }: Props) {
         </div>
       </div>
       <LayoutContent className="py-10">
-        <Suspense>
-          <ArticleList locale={locale} />
-        </Suspense>
+        <ArticleList locale={locale} />
       </LayoutContent>
     </>
   );
