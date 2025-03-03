@@ -82,5 +82,11 @@
   "Home": {
     "title": "What is in your mind?",
     "contribute": "Contribute"
+  },
+  "NotFound": {
+    "title": "Page Not Found",
+    "description": "Oops! The page you're looking for doesn't exist or has been moved.",
+    "home-button": "Home",
+    "contribute-button": "Contribute"
   }
 }
