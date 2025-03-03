@@ -1,15 +1,7 @@
-import { GradientBlock } from "@/components/shared/gradient-block";
+import { ArticleCard } from "@/components/shared/article-card";
 import { LayoutContent } from "@/components/shared/layout-content";
-import { Badge } from "@/components/ui/badge";
 import { Particles } from "@/components/ui/particles";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Link } from "@/i18n/routing";
 import { getArticles } from "@/lib/utils/markdown";
-import { format } from "date-fns";
 import { DramaIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -36,51 +28,13 @@ export async function generateMetadata({
 }
 
 async function ArticleList({ locale }: { locale: string }) {
-  const t = await getTranslations("Articles");
   // Statically get all articles
   const articles = await getArticles("app/[locale]/articles/politics", locale);
 
   return (
     <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
       {articles.map((article) => (
-        <Link
-          key={article.slug}
-          href={`/articles/politics/${article.slug}`}
-          className="group relative"
-        >
-          <div className="relative h-[54px] w-full overflow-hidden rounded-xl shadow">
-            <GradientBlock
-              keyString={article.slug}
-              className="absolute inset-0 transition-all duration-600 ease-in-out group-hover:scale-150"
-            />
-            {article.official && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge className="absolute top-4 right-4">
-                    {t("official")}
-                  </Badge>
-                </TooltipTrigger>
-
-                <TooltipContent side="bottom">
-                  <p>{t("official-description")}</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-          <div className="relative mt-2 grid gap-1.5 break-words">
-            <h2
-              title={article.title}
-              className="line-clamp-2 font-medium text-lg leading-tight tracking-tight"
-            >
-              {article.title}
-            </h2>
-            <div className="flex items-center justify-between">
-              <p className="line-clamp-1 text-muted-foreground text-sm leading-none tracking-tight">
-                {format(new Date(article.date), "d MMM, yyyy")}
-              </p>
-            </div>
-          </div>
-        </Link>
+        <ArticleCard key={article.slug} category="politics" article={article} />
       ))}
     </div>
   );

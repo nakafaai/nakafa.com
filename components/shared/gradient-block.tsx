@@ -24,20 +24,36 @@ export function GradientBlock({
   keyString,
   className = "",
   style = {},
-  colorScheme = "vibrant",
+  colorScheme = "monochromatic",
   intensity = "medium",
-  gradientType = "radial",
+  gradientType = "linear",
 }: Props) {
   // Generate a consistent color palette based on the keyString
   const gradientStyle = useMemo(() => {
-    // Create a better hash from the keyString
+    // Create a more unique hash from the keyString that produces better variation
     const hash = Array.from(keyString).reduce((acc, char, index) => {
-      // Use prime numbers and character position to create more variation
-      return (acc * 31 + char.charCodeAt(0) * (index + 1)) % 10000;
-    }, 0);
+      // Use prime numbers, character code, character position, and bitwise operations
+      // to create significantly more variation between similar strings
+      const charCode = char.charCodeAt(0);
+      const position = index + 1;
+      // Use different prime numbers and bitwise operations for more randomness
+      return ((acc * 37) ^ (charCode * position * 17)) % 10000000;
+    }, 23); // Start with a prime seed for better distribution
 
-    // Use the hash to determine the base hue
-    const baseHue = hash % 360;
+    // Create a secondary hash value for additional variation
+    const secondaryHash = Array.from(keyString).reduce((acc, char, index) => {
+      const charCode = char.charCodeAt(0);
+      // Use a different algorithm for this hash
+      return (
+        (acc + (charCode << (index % 5)) + (charCode >> (index % 3))) % 10000000
+      );
+    }, 41); // Different prime seed
+
+    // Use both hashes to determine the base hue with more variation
+    const baseHue = (hash % 360) ^ (secondaryHash % 30);
+
+    // Use the secondary hash for additional color adjustments
+    const hueOffset = secondaryHash % 60;
 
     // Determine saturation and lightness based on intensity
     let baseSaturation = 0.7;
@@ -71,12 +87,12 @@ export function GradientBlock({
         colors = [
           tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
           tinycolor({
-            h: (baseHue + 30) % 360,
+            h: (baseHue + 30 + hueOffset) % 360,
             s: Math.min(baseSaturation + 0.1, 1),
             l: baseLightness,
           }),
           tinycolor({
-            h: (baseHue + 60) % 360,
+            h: (baseHue + 60 + hueOffset * 2) % 360,
             s: baseSaturation,
             l: Math.max(baseLightness - 0.1, 0),
           }),
@@ -88,12 +104,12 @@ export function GradientBlock({
         colors = [
           tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
           tinycolor({
-            h: (baseHue + 150) % 360,
+            h: (baseHue + 150 + hueOffset) % 360,
             s: baseSaturation,
             l: Math.max(baseLightness - 0.1, 0),
           }),
           tinycolor({
-            h: (baseHue + 210) % 360,
+            h: (baseHue + 210 - hueOffset) % 360,
             s: baseSaturation,
             l: Math.max(baseLightness - 0.15, 0),
           }),
@@ -105,12 +121,12 @@ export function GradientBlock({
         colors = [
           tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
           tinycolor({
-            h: (baseHue + 90) % 360,
+            h: (baseHue + 90 + hueOffset / 2) % 360,
             s: Math.min(baseSaturation - 0.1, 1),
             l: Math.min(baseLightness + 0.1, 1),
           }),
           tinycolor({
-            h: (baseHue + 180) % 360,
+            h: (baseHue + 180 + hueOffset) % 360,
             s: baseSaturation,
             l: Math.max(baseLightness - 0.1, 0),
           }),
@@ -122,12 +138,12 @@ export function GradientBlock({
         colors = [
           tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
           tinycolor({
-            h: (baseHue + 120) % 360,
+            h: (baseHue + 120 + hueOffset) % 360,
             s: baseSaturation,
             l: Math.max(baseLightness - 0.1, 0),
           }),
           tinycolor({
-            h: (baseHue + 240) % 360,
+            h: (baseHue + 240 - hueOffset) % 360,
             s: baseSaturation,
             l: Math.max(baseLightness - 0.15, 0),
           }),
@@ -138,13 +154,13 @@ export function GradientBlock({
         // Same hue, varying saturation and lightness
         colors = [
           tinycolor({
-            h: baseHue,
+            h: (baseHue + (hueOffset % 15)) % 360, // Small hue variation for more uniqueness
             s: Math.min(baseSaturation + 0.2, 1),
             l: Math.min(baseLightness + 0.2, 1),
           }),
           tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
           tinycolor({
-            h: baseHue,
+            h: (baseHue - (hueOffset % 15)) % 360, // Small hue variation for more uniqueness
             s: Math.max(baseSaturation - 0.2, 0),
             l: Math.max(baseLightness - 0.2, 0),
           }),
@@ -156,12 +172,12 @@ export function GradientBlock({
         colors = [
           tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
           tinycolor({
-            h: (baseHue + 30) % 360,
+            h: (baseHue + 30 + (hueOffset % 20)) % 360,
             s: Math.min(baseSaturation + 0.05, 1),
             l: Math.max(baseLightness - 0.05, 0),
           }),
           tinycolor({
-            h: (baseHue + 60) % 360,
+            h: (baseHue + 60 + (hueOffset % 30)) % 360,
             s: baseSaturation,
             l: Math.max(baseLightness - 0.1, 0),
           }),
@@ -180,19 +196,26 @@ export function GradientBlock({
 
     // Generate different types of gradients based on gradientType
     let gradientCss = "";
-    const angle = ((hash % 180) + (hash % 60)) % 360; // More variety in angles
+    // Use both hashes for more unique angles
+    const angle = ((hash % 180) + (secondaryHash % 90)) % 360;
 
     switch (gradientType) {
-      case "radial":
-        // Create a radial gradient
-        gradientCss = `radial-gradient(circle at ${hash % 100}% ${hash % 100}%, ${colorStops})`;
+      case "radial": {
+        // Create a radial gradient with more variation in position
+        const posX = (hash % 80) + (secondaryHash % 20);
+        const posY = ((secondaryHash % 80) + (hash % 20)) % 100;
+        gradientCss = `radial-gradient(circle at ${posX}% ${posY}%, ${colorStops})`;
         break;
-      case "conic":
-        // Create a conic gradient
-        gradientCss = `conic-gradient(from ${angle}deg at 50% 50%, ${colorStops})`;
+      }
+      case "conic": {
+        // Create a conic gradient with more unique angle and position
+        const conicX = 50 + ((secondaryHash % 30) - 15);
+        const conicY = 50 + ((hash % 30) - 15);
+        gradientCss = `conic-gradient(from ${angle}deg at ${conicX}% ${conicY}%, ${colorStops})`;
         break;
+      }
       default:
-        // Create a linear gradient (default)
+        // Create a linear gradient (default) with more unique angle
         gradientCss = `linear-gradient(${angle}deg, ${colorStops})`;
         break;
     }

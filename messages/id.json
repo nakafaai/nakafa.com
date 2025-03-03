@@ -69,7 +69,9 @@
     "description": "Penelitian akademik dan publikasi berdasarkan metode ilmiah.",
     "politics": "Politik",
     "official": "Resmi",
-    "official-description": "Dibuat oleh Nakafa"
+    "official-description": "Dibuat oleh Nakafa",
+    "contributor": "Kontributor",
+    "contributor-description": "Dibuat oleh kontributor"
   },
   "Utils": {
     "search": "Cari",
