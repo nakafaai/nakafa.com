@@ -3,6 +3,7 @@ import type { Article } from "@/types/articles";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import { Badge } from "../ui/badge";
+import { Card, CardFooter, CardHeader, CardTitle } from "../ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { GradientBlock } from "./gradient-block";
 
@@ -18,43 +19,42 @@ export function CardArticle({ category, article }: Props) {
     <Link
       key={article.slug}
       href={`/articles/${category}/${article.slug}`}
-      className="group relative"
+      className="group"
     >
-      <div className="relative h-[54px] w-full overflow-hidden rounded-xl shadow">
+      <Card className="relative h-full overflow-hidden pt-8">
         <GradientBlock
           keyString={article.slug}
-          className="absolute inset-0 transition-all duration-600 ease-in-out group-hover:scale-150"
+          className="absolute inset-0 h-3 transition-all duration-500 ease-in-out group-hover:scale-200"
         />
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge className="absolute top-4 right-4">
-              {article.official ? t("official") : t("contributor")}
-            </Badge>
-          </TooltipTrigger>
-
-          <TooltipContent>
-            <p>
-              {article.official
-                ? t("official-description")
-                : t("contributor-description")}
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
-      <div className="relative mt-2 grid gap-1.5 break-words">
-        <h2
-          title={article.title}
-          className="line-clamp-2 font-medium text-lg leading-tight tracking-tight"
-        >
-          {article.title}
-        </h2>
-        <div className="flex items-center justify-between">
-          <p className="line-clamp-1 text-muted-foreground text-sm leading-none tracking-tight">
+        <CardHeader>
+          <CardTitle
+            title={article.title}
+            className="line-clamp-2 font-medium tracking-tight"
+          >
+            {article.title}
+          </CardTitle>
+        </CardHeader>
+        <CardFooter className="flex items-center justify-between">
+          <time className="text-muted-foreground text-sm">
             {format(new Date(article.date), "d MMM, yyyy")}
-          </p>
-        </div>
-      </div>
+          </time>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge>
+                {article.official ? t("official") : t("contributor")}
+              </Badge>
+            </TooltipTrigger>
+
+            <TooltipContent>
+              <p>
+                {article.official
+                  ? t("official-description")
+                  : t("contributor-description")}
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </CardFooter>
+      </Card>
     </Link>
   );
 }
