@@ -9,8 +9,9 @@ import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { references } from "./ref";
 
-const githubUrl =
-  "https://github.com/nabilfatih/nakafa.com/tree/main/app/%5Blocale%5D/articles/politics/nepotism-in-political-governance";
+const SLUG = "nepotism-in-political-governance";
+
+const GITHUB_URL = `https://github.com/nabilfatih/nakafa.com/tree/main/app/%5Blocale%5D/articles/politics/${SLUG}`;
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -49,10 +50,7 @@ export default async function Page({ params }: Props) {
     // Read the raw file content
     // we need to use the full path to the MDX file
     const rawContent = await fs
-      .readFile(
-        `app/[locale]/articles/politics/nepotism-in-political-governance/${locale}.mdx`,
-        "utf-8"
-      )
+      .readFile(`app/[locale]/articles/politics/${SLUG}/${locale}.mdx`, "utf-8")
       .catch(() => {
         return "";
       });
@@ -71,7 +69,7 @@ export default async function Page({ params }: Props) {
           <RefContent
             title={metadata.title}
             references={references}
-            githubUrl={githubUrl}
+            githubUrl={GITHUB_URL}
           />
         }
         onThisPage={headings}
