@@ -1,4 +1,4 @@
-import { ArticleCard } from "@/components/shared/article-card";
+import { CardArticle } from "@/components/shared/card-article";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { Particles } from "@/components/ui/particles";
 import { getArticles } from "@/lib/utils/markdown";
@@ -34,7 +34,7 @@ async function ArticleList({ locale }: { locale: string }) {
   return (
     <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
       {articles.map((article) => (
-        <ArticleCard key={article.slug} category="politics" article={article} />
+        <CardArticle key={article.slug} category="politics" article={article} />
       ))}
     </div>
   );

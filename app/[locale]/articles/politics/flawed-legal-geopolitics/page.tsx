@@ -1,10 +1,9 @@
-import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderContent } from "@/components/shared/header-content";
-import { LayoutContent } from "@/components/shared/layout-content";
+import fs from "node:fs/promises";
+import { LayoutArticle } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
 import type { Locale } from "@/i18n/routing";
+import { getHeadings } from "@/lib/utils/markdown";
 import type { ArticleMetadata } from "@/types/articles";
-import { DramaIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -46,29 +45,37 @@ export default async function Page({ params }: Props) {
 
     // import metadata from the mdx file based on the locale
     const metadata: ArticleMetadata = file.metadata;
+
+    // Read the raw file content
+    // we need to use the full path to the MDX file
+    const rawContent = await fs
+      .readFile(
+        `app/[locale]/articles/politics/flawed-legal-geopolitics/${locale}.mdx`,
+        "utf-8"
+      )
+      .catch(() => {
+        return "";
+      });
+
+    // Extract headings from the raw content
+    const headings = getHeadings(rawContent).map((heading) => ({
+      label: heading,
+      href: `#${heading}`,
+    }));
+
     return (
-      <>
-        <HeaderContent
-          title={metadata.title}
-          description={metadata.description}
-          authors={metadata.authors}
-          date={metadata.date}
-          category={{
-            icon: DramaIcon,
-            name: metadata.category,
-          }}
-        />
-        <LayoutContent>
-          <Content />
-        </LayoutContent>
-        <FooterContent>
+      <LayoutArticle
+        metadata={metadata}
+        content={<Content />}
+        footer={
           <RefContent
             title={metadata.title}
             references={references}
             githubUrl={githubUrl}
           />
-        </FooterContent>
-      </>
+        }
+        onThisPage={headings}
+      />
     );
   } catch {
     notFound();

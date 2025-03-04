@@ -3,6 +3,24 @@ import { compareDesc, parse } from "date-fns";
 import glob from "fast-glob";
 import { teams } from "../data/team";
 
+// This function is still kept for backward compatibility
+export function getHeadings(content: string): string[] {
+  try {
+    // Handle markdown style headings (# Heading)
+    const markdownHeadingRegex = /^(#{1,6})\s+(.*)$/gm;
+    const markdownMatches = Array.from(content.matchAll(markdownHeadingRegex));
+
+    if (markdownMatches && markdownMatches.length > 0) {
+      return markdownMatches.map((match) => match[2].trim());
+    }
+
+    // If we reach here, no headings found with markdown regex
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 export async function getArticles(
   basePath: string,
   locale: string

@@ -11,7 +11,7 @@ type Props = {
   article: Article;
 };
 
-export function ArticleCard({ category, article }: Props) {
+export function CardArticle({ category, article }: Props) {
   const t = useTranslations("Articles");
 
   return (

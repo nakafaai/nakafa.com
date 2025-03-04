@@ -46,7 +46,9 @@
     "good": "Good",
     "selection": "Selection",
     "election": "Election",
-    "delivery": "Delivery"
+    "delivery": "Delivery",
+    "content": "Content",
+    "on-this-page": "On this page"
   },
   "Material": {
     "elementary-school": "Elementary School",
