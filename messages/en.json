@@ -48,7 +48,9 @@
     "election": "Election",
     "delivery": "Delivery",
     "content": "Content",
-    "on-this-page": "On this page"
+    "on-this-page": "On this page",
+    "budget": "Budget",
+    "fund": "Fund"
   },
   "Material": {
     "elementary-school": "Elementary School",

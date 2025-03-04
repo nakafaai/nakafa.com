@@ -170,7 +170,7 @@ export function CompositionChart({ title, description, footnote }: Props) {
             config={chartConfig}
             className="min-h-[200px] w-full md:min-h-[300px]"
           >
-            <BarChart data={MinisterChartData}>
+            <BarChart accessibilityLayer data={MinisterChartData}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="name"

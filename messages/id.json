@@ -49,7 +49,9 @@
     "delivery": "Pengiriman",
     "official": "Resmi",
     "content": "Konten",
-    "on-this-page": "Pada halaman ini"
+    "on-this-page": "Pada halaman ini",
+    "budget": "Anggaran",
+    "fund": "Dana"
   },
   "Material": {
     "elementary-school": "SD",
