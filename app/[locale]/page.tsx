@@ -18,7 +18,7 @@ export default async function IndexPage({ params }: Props) {
   return (
     <div
       data-pagefind-ignore
-      className="relative flex h-[calc(100dvh-4rem)] items-center justify-center md:h-[100dvh]"
+      className="relative flex h-[calc(100dvh-4rem)] items-center justify-center md:h-dvh"
     >
       <Particles className="pointer-events-none absolute inset-0 opacity-50" />
       <div className="mx-auto w-full max-w-xl px-4">
