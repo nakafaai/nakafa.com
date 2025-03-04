@@ -23,7 +23,7 @@ export function LayoutArticle({
   return (
     <>
       <div className="flex">
-        <div className="flex-1 pb-10">
+        <div className="flex-1">
           <HeaderContent
             title={metadata.title}
             description={metadata.description}
@@ -35,13 +35,12 @@ export function LayoutArticle({
             }}
           />
           <LayoutContent>{content}</LayoutContent>
+          <FooterContent>{footer}</FooterContent>
         </div>
         <SidebarRight>
           <OnThisPage data={onThisPage} />
         </SidebarRight>
       </div>
-
-      <FooterContent>{footer}</FooterContent>
     </>
   );
 }
