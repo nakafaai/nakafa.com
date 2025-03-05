@@ -15,8 +15,8 @@ import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-const GITHUB_URL =
-  "https://github.com/nabilfatih/nakafa.com/tree/main/app/%5Blocale%5D/articles/politics";
+const FILE_PATH = "app/[locale]/articles/politics";
+const GITHUB_URL = `https://github.com/nabilfatih/nakafa.com/tree/main/${FILE_PATH}`;
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -41,7 +41,7 @@ export async function generateMetadata({
 
 async function ArticleList({ locale }: { locale: string }) {
   // Statically get all articles
-  const articles = await getArticles("app/[locale]/articles/politics", locale);
+  const articles = await getArticles(FILE_PATH, locale);
 
   return (
     <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">

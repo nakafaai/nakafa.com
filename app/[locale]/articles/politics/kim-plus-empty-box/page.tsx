@@ -10,8 +10,8 @@ import { notFound } from "next/navigation";
 import { references } from "./ref";
 
 const SLUG = "kim-plus-empty-box";
-
-const GITHUB_URL = `https://github.com/nabilfatih/nakafa.com/tree/main/app/%5Blocale%5D/articles/politics/${SLUG}`;
+const FILE_PATH = `app/[locale]/articles/politics/${SLUG}`;
+const GITHUB_URL = `https://github.com/nabilfatih/nakafa.com/tree/main/${FILE_PATH}`;
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -50,7 +50,7 @@ export default async function Page({ params }: Props) {
     // Read the raw file content
     // we need to use the full path to the MDX file
     const rawContent = await fs
-      .readFile(`app/[locale]/articles/politics/${SLUG}/${locale}.mdx`, "utf-8")
+      .readFile(`${FILE_PATH}/${locale}.mdx`, "utf-8")
       .catch(() => {
         return "";
       });
