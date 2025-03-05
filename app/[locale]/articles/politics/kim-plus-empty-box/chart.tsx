@@ -89,7 +89,7 @@ export function ElectabilityChart({ title, description, footnote }: Props) {
             layout="vertical"
             margin={{
               right: 24,
-              left: 72,
+              left: 76,
             }}
           >
             <CartesianGrid horizontal={false} />
