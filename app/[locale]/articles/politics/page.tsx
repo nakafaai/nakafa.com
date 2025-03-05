@@ -16,7 +16,7 @@ import { useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 const GITHUB_URL =
-  "https://github.com/nakafa/nakafa.com/tree/main/app/%5Blocale%5D/articles/politics";
+  "https://github.com/nabilfatih/nakafa.com/tree/main/app/%5Blocale%5D/articles/politics";
 
 type Props = {
   params: Promise<{ locale: string }>;
