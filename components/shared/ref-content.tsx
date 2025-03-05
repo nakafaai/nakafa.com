@@ -66,7 +66,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>{t("show")}</p>
+              <p>{t("bibliography")}</p>
             </TooltipContent>
           </Tooltip>
 
