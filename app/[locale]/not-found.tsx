@@ -1,6 +1,5 @@
 import { buttonVariants } from "@/components/ui/button";
 import { Particles } from "@/components/ui/particles";
-import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
@@ -25,18 +24,12 @@ export default function NotFound() {
             </p>
           </div>
 
-          <div className="mx-auto grid w-fit grid-cols-2 gap-4">
-            <Link
-              href="/"
-              className={cn(buttonVariants({ variant: "outline" }))}
-            >
-              {t("home-button")}
-            </Link>
+          <div className="mx-auto w-fit">
             <a
               href="https://github.com/nabilfatih/nakafa.com"
               target="_blank"
               rel="noopener noreferrer"
-              className={cn(buttonVariants({ variant: "outline" }))}
+              className={cn(buttonVariants({ variant: "secondary" }))}
             >
               {t("contribute-button")}
             </a>
