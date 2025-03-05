@@ -9,7 +9,7 @@ import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { references } from "./ref";
 
-const SLUG = "kim-plus-empty-box-scenario";
+const SLUG = "kim-plus-empty-box";
 
 const GITHUB_URL = `https://github.com/nabilfatih/nakafa.com/tree/main/app/%5Blocale%5D/articles/politics/${SLUG}`;
 

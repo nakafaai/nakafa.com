@@ -50,7 +50,9 @@
     "content": "Content",
     "on-this-page": "On this page",
     "budget": "Budget",
-    "fund": "Fund"
+    "fund": "Fund",
+    "electability": "Electability",
+    "not-answering": "Not Answering"
   },
   "Material": {
     "elementary-school": "Elementary School",
