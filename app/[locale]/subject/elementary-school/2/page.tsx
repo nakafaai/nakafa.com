@@ -1,5 +1,5 @@
 import { HeaderList } from "@/components/shared/header-list";
-import { LibraryIcon } from "lucide-react";
+import { BackpackIcon } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 type Props = {
@@ -18,7 +18,7 @@ export default async function ElementarySchool2Page({ params }: Props) {
       <HeaderList
         title={t("grade", { grade: 2 })}
         description={t("grade-description")}
-        icon={LibraryIcon}
+        icon={BackpackIcon}
       />
     </>
   );
