@@ -23,7 +23,7 @@ import { subjectMenu } from "./data/subject";
 
 function MenuItem() {
   const pathname = usePathname();
-  const t = useTranslations("Material");
+  const t = useTranslations("Subject");
 
   return subjectMenu.map((item) => (
     <Collapsible

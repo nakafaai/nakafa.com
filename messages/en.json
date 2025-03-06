@@ -55,13 +55,14 @@
     "not-answering": "Not Answering",
     "bibliography": "Bibliography"
   },
-  "Material": {
+  "Subject": {
     "elementary-school": "Elementary School",
     "junior-high-school": "Junior High School",
     "senior-high-school": "Senior High School",
     "vocational-school": "Vocational School",
     "university": "University",
     "grade": "Grade {grade}",
+    "grade-description": "Let's learn about what you want to know.",
     "chapter": "Chapter {chapter}",
     "mathematics": "Mathematics",
     "physics": "Physics",

@@ -56,13 +56,14 @@
     "not-answering": "Tidak Menjawab",
     "bibliography": "Daftar pustaka"
   },
-  "Material": {
+  "Subject": {
     "elementary-school": "SD",
     "junior-high-school": "SMP",
     "senior-high-school": "SMA",
     "vocational-school": "SMK",
     "university": "Universitas",
     "grade": "Kelas {grade}",
+    "grade-description": "Mari belajar apa yang kamu ingin tahu.",
     "chapter": "Bab {chapter}",
     "mathematics": "Matematika",
     "physics": "Fisika",

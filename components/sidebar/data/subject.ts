@@ -80,7 +80,7 @@ export const subjectMenu = [
       {
         title: "grade",
         value: 12,
-        href: "/subject/high-school/12",
+        href: "/subject/senior-high-school/12",
       },
     ],
   },
