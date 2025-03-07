@@ -1,6 +1,9 @@
 import {
+  ChartPieIcon,
   DraftingCompassIcon,
+  EarthIcon,
   FlaskConicalIcon,
+  HourglassIcon,
   PawPrintIcon,
   PiIcon,
 } from "lucide-react";
@@ -26,6 +29,21 @@ function getSubjects(grade: number) {
       icon: PawPrintIcon,
       label: "biology",
       href: `/subject/senior-high-school/${grade}/biology`,
+    },
+    {
+      icon: EarthIcon,
+      label: "geography",
+      href: `/subject/senior-high-school/${grade}/geography`,
+    },
+    {
+      icon: ChartPieIcon,
+      label: "economy",
+      href: `/subject/senior-high-school/${grade}/economy`,
+    },
+    {
+      icon: HourglassIcon,
+      label: "history",
+      href: `/subject/senior-high-school/${grade}/history`,
     },
   ] as const;
 }

@@ -70,6 +70,7 @@
     "biology": "Biology",
     "geography": "Geography",
     "history": "History",
+    "economy": "Economy",
     "literature": "Literature"
   },
   "Articles": {
@@ -95,7 +96,7 @@
   },
   "NotFound": {
     "title": "Page Not Found",
-    "description": "Oops! The page you're looking for doesn't exist or has been moved.",
+    "description": "Oops! The page you're looking for doesn't exist or has not been implemented yet.",
     "home-button": "Home",
     "contribute-button": "Contribute"
   }
