@@ -1,43 +1,40 @@
-import { DraftingCompassIcon, PiIcon } from "lucide-react";
+import {
+  DraftingCompassIcon,
+  FlaskConicalIcon,
+  PawPrintIcon,
+  PiIcon,
+} from "lucide-react";
 
-export const grade10Subjects = [
-  {
-    icon: PiIcon,
-    label: "mathematics",
-    href: "/subject/senior-high-school/10/mathematics",
-  },
-  {
-    icon: DraftingCompassIcon,
-    label: "physics",
-    href: "/subject/senior-high-school/10/physics",
-  },
-] as const;
+function getSubjects(grade: number) {
+  return [
+    {
+      icon: PiIcon,
+      label: "mathematics",
+      href: `/subject/senior-high-school/${grade}/mathematics`,
+    },
+    {
+      icon: DraftingCompassIcon,
+      label: "physics",
+      href: `/subject/senior-high-school/${grade}/physics`,
+    },
+    {
+      icon: FlaskConicalIcon,
+      label: "chemistry",
+      href: `/subject/senior-high-school/${grade}/chemistry`,
+    },
+    {
+      icon: PawPrintIcon,
+      label: "biology",
+      href: `/subject/senior-high-school/${grade}/biology`,
+    },
+  ] as const;
+}
 
-export const grade11Subjects = [
-  {
-    icon: PiIcon,
-    label: "mathematics",
-    href: "/subject/senior-high-school/11/mathematics",
-  },
-  {
-    icon: DraftingCompassIcon,
-    label: "physics",
-    href: "/subject/senior-high-school/11/physics",
-  },
-] as const;
+export const grade10Subjects = getSubjects(10);
 
-export const grade12Subjects = [
-  {
-    icon: PiIcon,
-    label: "mathematics",
-    href: "/subject/senior-high-school/12/mathematics",
-  },
-  {
-    icon: DraftingCompassIcon,
-    label: "physics",
-    href: "/subject/senior-high-school/12/physics",
-  },
-] as const;
+export const grade11Subjects = getSubjects(11);
+
+export const grade12Subjects = getSubjects(12);
 
 export const seniorHighSchoolSubjects = {
   grade10: grade10Subjects,
