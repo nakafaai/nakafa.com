@@ -24,7 +24,7 @@ export function CardArticle({ category, article }: Props) {
       <Card className="relative h-full overflow-hidden pt-8">
         <GradientBlock
           keyString={article.slug}
-          className="absolute inset-0 h-3 transition-all duration-500 ease-in-out group-hover:scale-200"
+          className="absolute inset-0 h-3 transition-all duration-500 ease-in-out group-hover:h-5"
         />
         <CardHeader>
           <CardTitle

@@ -248,6 +248,7 @@ export function GradientBlock({
       className={className}
       style={gradientStyle}
       aria-label={`Gradient generated from key: ${keyString}`}
+      aria-hidden
     />
   );
 }
