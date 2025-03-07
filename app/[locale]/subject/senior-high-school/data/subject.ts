@@ -8,42 +8,44 @@ import {
   PiIcon,
 } from "lucide-react";
 
+const BASE_PATH = "/subject/senior-high-school";
+
 function getSubjects(grade: number) {
   return [
     {
       icon: PiIcon,
       label: "mathematics",
-      href: `/subject/senior-high-school/${grade}/mathematics`,
+      href: `${BASE_PATH}/${grade}/mathematics`,
     },
     {
       icon: DraftingCompassIcon,
       label: "physics",
-      href: `/subject/senior-high-school/${grade}/physics`,
+      href: `${BASE_PATH}/${grade}/physics`,
     },
     {
       icon: FlaskConicalIcon,
       label: "chemistry",
-      href: `/subject/senior-high-school/${grade}/chemistry`,
+      href: `${BASE_PATH}/${grade}/chemistry`,
     },
     {
       icon: PawPrintIcon,
       label: "biology",
-      href: `/subject/senior-high-school/${grade}/biology`,
+      href: `${BASE_PATH}/${grade}/biology`,
     },
     {
       icon: EarthIcon,
       label: "geography",
-      href: `/subject/senior-high-school/${grade}/geography`,
+      href: `${BASE_PATH}/${grade}/geography`,
     },
     {
       icon: ChartPieIcon,
       label: "economy",
-      href: `/subject/senior-high-school/${grade}/economy`,
+      href: `${BASE_PATH}/${grade}/economy`,
     },
     {
       icon: HourglassIcon,
       label: "history",
-      href: `/subject/senior-high-school/${grade}/history`,
+      href: `${BASE_PATH}/${grade}/history`,
     },
   ] as const;
 }
