@@ -1,7 +1,7 @@
 import { CardSubject } from "@/components/shared/card-subject";
 import { ContainerList } from "@/components/shared/container-list";
 import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderList } from "@/components/shared/header-list";
+import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { LibraryIcon } from "lucide-react";
@@ -24,7 +24,7 @@ export default async function SeniorHighSchool12Page({ params }: Props) {
 
   return (
     <>
-      <HeaderList
+      <HeaderContent
         title={t("grade", { grade: 12 })}
         description={t("grade-description")}
         icon={LibraryIcon}

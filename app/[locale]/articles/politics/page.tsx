@@ -1,7 +1,7 @@
 import { CardArticle } from "@/components/shared/card-article";
 import { ContainerList } from "@/components/shared/container-list";
 import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderList } from "@/components/shared/header-list";
+import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getArticles } from "@/lib/utils/markdown";
@@ -55,7 +55,7 @@ export default async function PoliticsPage({ params }: Props) {
 
   return (
     <>
-      <HeaderList
+      <HeaderContent
         title={t("politics")}
         description={t("description")}
         icon={DramaIcon}

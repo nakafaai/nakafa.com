@@ -1,4 +1,4 @@
-import { HeaderList } from "@/components/shared/header-list";
+import { HeaderContent } from "@/components/shared/header-content";
 import { NotebookIcon } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
@@ -15,7 +15,7 @@ export default async function JuniorHighSchool9Page({ params }: Props) {
 
   return (
     <>
-      <HeaderList
+      <HeaderContent
         title={t("grade", { grade: 9 })}
         description={t("grade-description")}
         icon={NotebookIcon}
