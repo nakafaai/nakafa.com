@@ -1,9 +1,11 @@
 import {
   ChartPieIcon,
+  CodeIcon,
   DraftingCompassIcon,
   EarthIcon,
   FlaskConicalIcon,
   HourglassIcon,
+  MapIcon,
   PawPrintIcon,
   PiIcon,
 } from "lucide-react";
@@ -46,6 +48,16 @@ function getSubjects(grade: number) {
       icon: HourglassIcon,
       label: "history",
       href: `${BASE_PATH}/${grade}/history`,
+    },
+    {
+      icon: CodeIcon,
+      label: "informatics",
+      href: `${BASE_PATH}/${grade}/informatics`,
+    },
+    {
+      icon: MapIcon,
+      label: "geospatial",
+      href: `${BASE_PATH}/${grade}/geospatial`,
     },
   ] as const;
 }

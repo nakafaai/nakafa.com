@@ -71,7 +71,9 @@
     "geography": "Geography",
     "history": "History",
     "economy": "Economy",
-    "literature": "Literature"
+    "literature": "Literature",
+    "informatics": "Informatics",
+    "geospatial": "Geospatial"
   },
   "Articles": {
     "description": "Academic research and publications based on scientific methods.",

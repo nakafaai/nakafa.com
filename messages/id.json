@@ -72,7 +72,9 @@
     "geography": "Geografi",
     "history": "Sejarah",
     "economy": "Ekonomi",
-    "literature": "Sastra"
+    "literature": "Sastra",
+    "informatics": "Informatika",
+    "geospatial": "Geospasial"
   },
   "Articles": {
     "description": "Penelitian akademik dan publikasi berdasarkan metode ilmiah.",

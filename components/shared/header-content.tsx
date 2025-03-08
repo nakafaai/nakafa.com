@@ -1,12 +1,20 @@
+import { Link } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon, type LucideIcon, PencilLineIcon } from "lucide-react";
+import { buttonVariants } from "../ui/button";
 import { Particles } from "../ui/particles";
 
 type Props = {
   /** The title of the content */
   title: string;
+  /** The link to go some where, it will be shown as a button on top of the title */
+  link?: {
+    href: string;
+    label: string;
+  };
   /** The description of the content */
-  description: string;
+  description?: string;
   /** The icon of the title */
   icon?: LucideIcon;
   /** The category of the content */
@@ -24,6 +32,7 @@ type Props = {
 
 export function HeaderContent({
   title,
+  link,
   description,
   icon: Icon,
   category,
@@ -35,13 +44,22 @@ export function HeaderContent({
     <div className="relative border-b py-10">
       <Particles className="pointer-events-none absolute inset-0 opacity-50" />
       <div className="z-10 mx-auto max-w-3xl space-y-2 px-4">
+        {link && (
+          <Link
+            href={link.href}
+            className={cn(buttonVariants({ variant: "link" }), "h-auto p-0")}
+            aria-label={link.label}
+          >
+            {link.label}
+          </Link>
+        )}
         <div className="flex items-center gap-2">
           {Icon && <Icon className="size-7" />}
           <h1 className="font-medium text-3xl leading-tight tracking-tight">
             {title}
           </h1>
         </div>
-        <p className="text-foreground/80">{description}</p>
+        {description && <p className="text-foreground/80">{description}</p>}
         {showFooter && (
           <div className="flex flex-col justify-between gap-2 pt-2 sm:flex-row sm:items-center sm:gap-4">
             <p className="inline-flex items-center gap-1 text-muted-foreground">
