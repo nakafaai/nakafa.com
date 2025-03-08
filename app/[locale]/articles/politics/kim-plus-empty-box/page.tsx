@@ -56,10 +56,7 @@ export default async function Page({ params }: Props) {
       });
 
     // Extract headings from the raw content
-    const headings = getHeadings(rawContent).map((heading) => ({
-      label: heading,
-      href: `#${heading}`,
-    }));
+    const headings = getHeadings(rawContent);
 
     return (
       <LayoutArticle

@@ -9,16 +9,48 @@ import {
 import { SidebarMenu } from "../ui/sidebar";
 
 import { SidebarGroup } from "../ui/sidebar";
+import { SidebarMenuSub } from "../ui/sidebar";
 
-export type OnThisPageData = {
+export type ParsedHeading = {
   label: string;
   href: string;
-}[];
-
-type Props = {
-  data: OnThisPageData;
+  children?: ParsedHeading[];
 };
 
+type Props = {
+  data: ParsedHeading[];
+};
+
+/**
+ * Recursive component to render nested headings
+ */
+function HeadingItem({
+  heading,
+  depth = 0,
+}: { heading: ParsedHeading; depth?: number }) {
+  return (
+    <SidebarMenuItem key={heading.href}>
+      <SidebarMenuButton tooltip={heading.label} asChild>
+        <NavigationLink href={heading.href}>
+          <span className="truncate">{heading.label}</span>
+        </NavigationLink>
+      </SidebarMenuButton>
+
+      {heading.children && heading.children.length > 0 && (
+        <SidebarMenuSub>
+          {heading.children.map((child) => (
+            <HeadingItem key={child.href} heading={child} depth={depth + 1} />
+          ))}
+        </SidebarMenuSub>
+      )}
+    </SidebarMenuItem>
+  );
+}
+
+/**
+ * A component that displays a list of links to the sections of the page.
+ * @param data - The data to display, typically generated from the `getHeadings` function.
+ */
 export function OnThisPage({ data }: Props) {
   const t = useTranslations("Common");
 
@@ -27,13 +59,7 @@ export function OnThisPage({ data }: Props) {
       <SidebarGroupLabel>{t("on-this-page")}</SidebarGroupLabel>
       <SidebarMenu>
         {data.map((item) => (
-          <SidebarMenuItem key={item.href}>
-            <SidebarMenuButton tooltip={item.label} asChild>
-              <NavigationLink href={item.href.toLowerCase().replace(/ /g, "-")}>
-                <span className="truncate">{item.label}</span>
-              </NavigationLink>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <HeadingItem key={item.href} heading={item} />
         ))}
       </SidebarMenu>
     </SidebarGroup>

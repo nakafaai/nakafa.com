@@ -1,17 +1,85 @@
+import type { ParsedHeading } from "@/components/shared/on-this-page";
 import type { Article } from "@/types/articles";
 import { compareDesc, parse } from "date-fns";
 import glob from "fast-glob";
 import { teams } from "../data/team";
 
-// This function is still kept for backward compatibility
-export function getHeadings(content: string): string[] {
+/**
+ * Parses the headings from the content.
+ * @param content - Markdown content to parse.
+ * @returns The parsed headings.
+ */
+
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: No way to avoid this
+export function getHeadings(content: string): ParsedHeading[] {
   try {
     // Handle markdown style headings (# Heading)
     const markdownHeadingRegex = /^(#{1,6})\s+(.*)$/gm;
     const markdownMatches = Array.from(content.matchAll(markdownHeadingRegex));
 
     if (markdownMatches && markdownMatches.length > 0) {
-      return markdownMatches.map((match) => match[2].trim());
+      const headings: ParsedHeading[] = [];
+      const headingsByLevel: { [level: number]: ParsedHeading[] } = {};
+
+      for (const match of markdownMatches) {
+        const level = match[1].length; // Number of # symbols
+        const text = match[2].trim();
+        const slug = text.toLowerCase().replace(/\s+/g, "-");
+
+        const heading: ParsedHeading = {
+          label: text,
+          href: `#${slug}`,
+          children: [],
+        };
+
+        // Store the heading at its level
+        if (!headingsByLevel[level]) {
+          headingsByLevel[level] = [];
+        }
+        headingsByLevel[level].push(heading);
+
+        if (level === 1) {
+          // Top level headings
+          headings.push(heading);
+        } else {
+          // Find the parent heading
+          let parentLevel = level - 1;
+          while (parentLevel > 0) {
+            const potentialParents = headingsByLevel[parentLevel];
+            if (potentialParents && potentialParents.length > 0) {
+              const parent = potentialParents.at(-1);
+              if (parent) {
+                if (!parent.children) {
+                  parent.children = [];
+                }
+                parent.children.push(heading);
+              }
+              break;
+            }
+            parentLevel--;
+          }
+
+          // If no parent found, add to top level
+          if (parentLevel === 0) {
+            headings.push(heading);
+          }
+        }
+      }
+
+      // Clean up empty children arrays
+      const cleanupChildren = (items: ParsedHeading[]): void => {
+        for (const item of items) {
+          if (item.children && item.children.length === 0) {
+            // Set to undefined instead of using delete
+            item.children = undefined;
+          } else if (item.children) {
+            cleanupChildren(item.children);
+          }
+        }
+      };
+
+      cleanupChildren(headings);
+      return headings;
     }
 
     // If we reach here, no headings found with markdown regex
