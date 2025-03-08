@@ -36,7 +36,7 @@ export function HeaderContent({
       <Particles className="pointer-events-none absolute inset-0 opacity-50" />
       <div className="z-10 mx-auto max-w-3xl space-y-2 px-4">
         <div className="flex items-center gap-2">
-          {Icon && <Icon className="size-6" />}
+          {Icon && <Icon className="size-7" />}
           <h1 className="font-medium text-3xl leading-tight tracking-tight">
             {title}
           </h1>
