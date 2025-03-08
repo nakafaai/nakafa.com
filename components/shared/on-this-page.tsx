@@ -10,13 +10,13 @@ import { SidebarMenu } from "../ui/sidebar";
 
 import { SidebarGroup } from "../ui/sidebar";
 
-export type OnThisPage = {
+export type OnThisPageData = {
   label: string;
   href: string;
 }[];
 
 type Props = {
-  data: OnThisPage;
+  data: OnThisPageData;
 };
 
 export function OnThisPage({ data }: Props) {

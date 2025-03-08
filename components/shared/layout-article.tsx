@@ -4,14 +4,14 @@ import type { ReactNode } from "react";
 import { FooterContent } from "./footer-content";
 import { HeaderContent } from "./header-content";
 import { LayoutContent } from "./layout-content";
-import { OnThisPage } from "./on-this-page";
+import { OnThisPage, type OnThisPageData } from "./on-this-page";
 import { SidebarRight } from "./sidebar-right";
 
 type Props = {
   metadata: ArticleMetadata;
   content: ReactNode;
   footer: ReactNode;
-  onThisPage: OnThisPage;
+  onThisPage: OnThisPageData;
 };
 
 export function LayoutArticle({
