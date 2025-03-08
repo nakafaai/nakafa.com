@@ -3,16 +3,22 @@ import { CalendarIcon, type LucideIcon, PencilLineIcon } from "lucide-react";
 import { Particles } from "../ui/particles";
 
 type Props = {
+  /** The title of the content */
   title: string;
+  /** The description of the content */
   description: string;
+  /** The icon of the title */
   icon?: LucideIcon;
+  /** The category of the content */
   category?: {
     icon: LucideIcon;
     name: string;
   };
+  /** The authors of the content */
   authors?: {
     name: string;
   }[];
+  /** The date of the content creation */
   date?: string;
 };
 
