@@ -32,7 +32,9 @@ function HeadingItem({
     <SidebarMenuItem key={heading.href}>
       <SidebarMenuButton tooltip={heading.label} asChild>
         <NavigationLink href={heading.href}>
-          <span className="truncate">{heading.label}</span>
+          <span title={heading.label} className="truncate">
+            {heading.label}
+          </span>
         </NavigationLink>
       </SidebarMenuButton>
 
