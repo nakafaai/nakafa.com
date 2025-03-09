@@ -19,13 +19,13 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "../ui/sidebar";
-import { subjectMenu } from "./data/subject";
+import { subjectAll } from "./data/subject";
 
 function MenuItem() {
   const pathname = usePathname();
   const t = useTranslations("Subject");
 
-  return subjectMenu.map((item) => (
+  return subjectAll.map((item) => (
     <Collapsible
       key={item.title}
       asChild
@@ -43,13 +43,19 @@ function MenuItem() {
         <CollapsibleContent>
           <SidebarMenuSub>
             {item.items.map((subItem) => {
-              const grade = t(subItem.title, { grade: subItem.value });
+              let title = "";
+              // Only grade that has value
+              if ("value" in subItem) {
+                title = t(subItem.title, { grade: subItem.value });
+              } else {
+                title = t(subItem.title);
+              }
 
               return (
-                <SidebarMenuSubItem key={grade}>
+                <SidebarMenuSubItem key={title}>
                   <SidebarMenuSubButton asChild>
                     <NavigationLink href={subItem.href}>
-                      <span>{grade}</span>
+                      <span>{title}</span>
                     </NavigationLink>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>

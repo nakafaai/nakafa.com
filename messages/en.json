@@ -73,7 +73,13 @@
     "economy": "Economy",
     "literature": "Literature",
     "informatics": "Informatics",
-    "geospatial": "Geospatial"
+    "geospatial": "Geospatial",
+    "game-engineering": "Game Engineering",
+    "ai-ds": "Artificial Intelligence & Data Science",
+    "computer-science": "Computer Science",
+    "bachelor": "Bachelor",
+    "master": "Master",
+    "doctor": "Doctor"
   },
   "Articles": {
     "description": "Academic research and publications based on scientific methods.",

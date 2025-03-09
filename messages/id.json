@@ -74,7 +74,13 @@
     "economy": "Ekonomi",
     "literature": "Sastra",
     "informatics": "Informatika",
-    "geospatial": "Geospasial"
+    "geospatial": "Geospasial",
+    "game-engineering": "Teknik Permainan",
+    "ai-ds": "Kecerdasan Buatan & Sains Data",
+    "computer-science": "Ilmu Komputer",
+    "bachelor": "Sarjana",
+    "master": "Magister",
+    "doctor": "Doktor"
   },
   "Articles": {
     "description": "Penelitian akademik dan publikasi berdasarkan metode ilmiah.",

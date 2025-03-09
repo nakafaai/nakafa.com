@@ -5,7 +5,7 @@ import {
   UniversityIcon,
 } from "lucide-react";
 
-export const subjectMenu = [
+export const subjectAll = [
   {
     title: "elementary-school",
     icon: BackpackIcon,
@@ -87,6 +87,19 @@ export const subjectMenu = [
   {
     title: "university",
     icon: UniversityIcon,
-    items: [],
+    items: [
+      {
+        title: "bachelor",
+        href: "/subject/university/bachelor",
+      },
+    ],
   },
 ] as const;
+
+export const subjectSchool = subjectAll.filter(
+  (item) => item.title !== "university"
+);
+
+export const subjectUniversity = subjectAll.filter(
+  (item) => item.title === "university"
+);
