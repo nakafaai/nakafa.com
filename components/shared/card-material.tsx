@@ -25,7 +25,7 @@ export function CardMaterial({ material }: Props) {
   return (
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-2">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           <CardTitle className="font-medium">{material.title}</CardTitle>
           {material.description && (
             <CardDescription className="line-clamp-1">
