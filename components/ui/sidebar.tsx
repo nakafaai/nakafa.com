@@ -205,6 +205,11 @@ function Sidebar({
     );
   }
 
+  // When the sidebar is in a collapsed state and using the offcanvas mode,
+  // it should be completely removed from the accessibility tree
+  const isHiddenFromScreenReaders =
+    state === "collapsed" && collapsible === "offcanvas";
+
   return (
     <div
       className="group peer hidden text-sidebar-foreground md:block"
@@ -237,6 +242,10 @@ function Sidebar({
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
           className
         )}
+        aria-hidden={isHiddenFromScreenReaders}
+        // When completely hidden, ensure no elements inside can be focused
+        // This prevents keyboard users from focusing hidden elements
+        inert={isHiddenFromScreenReaders}
         {...props}
       >
         <div
