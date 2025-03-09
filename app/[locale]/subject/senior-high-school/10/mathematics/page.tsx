@@ -1,8 +1,10 @@
+import { CardMaterial } from "@/components/shared/card-material";
 import { ContainerList } from "@/components/shared/container-list";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
+import type { MaterialList } from "@/types/subjects";
 import { PiIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -38,6 +40,9 @@ export default async function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
+  const materials: MaterialList[] = (await import(`./data/${locale}-material`))
+    .default;
+
   return (
     <>
       <HeaderContent
@@ -49,8 +54,10 @@ export default async function Page({ params }: Props) {
         }}
       />
       <LayoutContent className="py-10">
-        <ContainerList>
-          <div />
+        <ContainerList className="sm:grid-cols-1">
+          {materials.map((material) => (
+            <CardMaterial key={material.title} material={material} />
+          ))}
         </ContainerList>
       </LayoutContent>
       <FooterContent className="mt-0">
