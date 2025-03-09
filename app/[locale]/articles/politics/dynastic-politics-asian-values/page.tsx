@@ -1,8 +1,7 @@
-import fs from "node:fs/promises";
 import { LayoutArticle } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
 import type { Locale } from "@/i18n/routing";
-import { getHeadings } from "@/lib/utils/markdown";
+import { getHeadings, getRawContent } from "@/lib/utils/markdown";
 import type { ArticleMetadata } from "@/types/articles";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
@@ -49,11 +48,7 @@ export default async function Page({ params }: Props) {
 
     // Read the raw file content
     // we need to use the full path to the MDX file
-    const rawContent = await fs
-      .readFile(`${FILE_PATH}/${locale}.mdx`, "utf-8")
-      .catch(() => {
-        return "";
-      });
+    const rawContent = await getRawContent(`${FILE_PATH}/${locale}.mdx`);
 
     // Extract headings from the raw content
     const headings = getHeadings(rawContent);

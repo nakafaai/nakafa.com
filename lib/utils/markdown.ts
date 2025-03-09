@@ -1,8 +1,20 @@
+import fs from "node:fs/promises";
 import type { ParsedHeading } from "@/components/shared/on-this-page";
 import type { Article } from "@/types/articles";
 import { compareDesc, parse } from "date-fns";
 import glob from "fast-glob";
 import { teams } from "../data/team";
+
+/**
+ * Reads the raw content of a file, use app/[locale] as the base path.
+ * @param path - The path to the file.
+ * @returns The raw content of the file.
+ */
+export async function getRawContent(path: string): Promise<string> {
+  return fs.readFile(`app/[locale]${path}`, "utf8").catch(() => {
+    return "";
+  });
+}
 
 /**
  * Parses the headings from the content.
