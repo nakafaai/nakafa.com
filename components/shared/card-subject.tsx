@@ -17,7 +17,7 @@ export function CardSubject({ icon: Icon, label, href }: Props) {
           <Icon className="size-5" />
           <CardTitle
             title={label}
-            className="line-clamp-1 font-medium tracking-tight"
+            className="line-clamp-1 pr-9 font-medium tracking-tight"
           >
             {label}
           </CardTitle>

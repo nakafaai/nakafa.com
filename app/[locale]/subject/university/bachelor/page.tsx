@@ -1,3 +1,4 @@
+import { CardSubject } from "@/components/shared/card-subject";
 import { ContainerList } from "@/components/shared/container-list";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
@@ -6,6 +7,7 @@ import { RefContent } from "@/components/shared/ref-content";
 import { UniversityIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { bachelorSubjects } from "../data/subject";
 
 const FILE_PATH = "/subject/university/bachelor";
 const GITHUB_URL = `${process.env.GITHUB_URL}${FILE_PATH}`;
@@ -47,7 +49,13 @@ export default async function Page({ params }: Props) {
       />
       <LayoutContent className="py-10">
         <ContainerList>
-          <div />
+          {bachelorSubjects.map((subject) => (
+            <CardSubject
+              key={subject.label}
+              {...subject}
+              label={t(subject.label)}
+            />
+          ))}
         </ContainerList>
       </LayoutContent>
       <FooterContent className="mt-0">
