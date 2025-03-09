@@ -24,7 +24,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function JuniorHighSchool9Page({ params }: Props) {
+export default async function Page({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("Subject");
 

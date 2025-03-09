@@ -95,7 +95,8 @@ export async function getArticles(
 ): Promise<Article[]> {
   // Get all article directories that have a page.tsx file - use a simpler, more reliable pattern
   const articleDirs = await glob("*/page.tsx", {
-    cwd: basePath,
+    // default is app/[locale]
+    cwd: `app/[locale]/${basePath}`,
     absolute: true, // Get absolute paths
   });
 

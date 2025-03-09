@@ -10,8 +10,8 @@ import { notFound } from "next/navigation";
 import { references } from "./ref";
 
 const SLUG = "flawed-legal-geopolitics";
-const FILE_PATH = `app/[locale]/articles/politics/${SLUG}`;
-const GITHUB_URL = `https://github.com/nabilfatih/nakafa.com/tree/main/${FILE_PATH}`;
+const FILE_PATH = `/articles/politics/${SLUG}`;
+const GITHUB_URL = `${process.env.GITHUB_URL}${FILE_PATH}`;
 
 type Props = {
   params: Promise<{ locale: string }>;

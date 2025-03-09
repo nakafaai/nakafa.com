@@ -9,8 +9,8 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { grade10Subjects } from "../data/subject";
 
-const FILE_PATH = "app/[locale]/subject/senior-high-school/10";
-const GITHUB_URL = `https://github.com/nabilfatih/nakafa.com/tree/main/${FILE_PATH}`;
+const FILE_PATH = "/subject/senior-high-school/10";
+const GITHUB_URL = `${process.env.GITHUB_URL}${FILE_PATH}`;
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -33,7 +33,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function SeniorHighSchool10Page({ params }: Props) {
+export default async function Page({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("Subject");
 

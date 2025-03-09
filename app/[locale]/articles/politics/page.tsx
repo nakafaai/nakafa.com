@@ -9,8 +9,8 @@ import { DramaIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-const FILE_PATH = "app/[locale]/articles/politics";
-const GITHUB_URL = `https://github.com/nabilfatih/nakafa.com/tree/main/${FILE_PATH}`;
+const FILE_PATH = "/articles/politics";
+const GITHUB_URL = `${process.env.GITHUB_URL}${FILE_PATH}`;
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -46,7 +46,7 @@ async function ArticleList({ locale }: { locale: string }) {
   );
 }
 
-export default async function PoliticsPage({ params }: Props) {
+export default async function Page({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("Articles");
 
