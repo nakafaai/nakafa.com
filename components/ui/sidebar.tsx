@@ -207,8 +207,9 @@ function Sidebar({
 
   // When the sidebar is in a collapsed state and using the offcanvas mode,
   // it should be completely removed from the accessibility tree
-  const isHiddenFromScreenReaders =
-    state === "collapsed" && collapsible === "offcanvas";
+  const isHiddenFromScreenReaders = Boolean(
+    state === "collapsed" && collapsible === "offcanvas"
+  );
 
   return (
     <div
