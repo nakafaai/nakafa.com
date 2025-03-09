@@ -20,7 +20,7 @@ type Props = {
 };
 
 export function CardMaterial({ material }: Props) {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(true);
 
   return (
     <Card>
