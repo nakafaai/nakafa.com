@@ -2,8 +2,6 @@
 
 import type { CSSProperties, HTMLAttributes } from "react";
 import { useMemo } from "react";
-import tinycolor from "tinycolor2";
-import tinygradient from "tinygradient";
 
 type Props = {
   keyString: string;
@@ -19,6 +17,24 @@ type Props = {
   intensity?: "soft" | "medium" | "bold";
   gradientType?: "linear" | "radial" | "conic";
 };
+
+// Helper function to convert our color to OKLCH string
+function oklch(lightness: number, chroma: number, hue: number): string {
+  return `oklch(${lightness} ${chroma} ${hue})`;
+}
+
+// Helper function to generate interpolated color stops
+function generateColorStops(colors: string[]): string {
+  const result: string[] = [];
+
+  // Add all colors as stops
+  for (let i = 0; i < colors.length; i++) {
+    const percentage = (i / (colors.length - 1)) * 100;
+    result.push(`${colors[i]} ${percentage}%`);
+  }
+
+  return result.join(", ");
+}
 
 export function GradientBlock({
   keyString,
@@ -55,144 +71,129 @@ export function GradientBlock({
     // Use the secondary hash for additional color adjustments
     const hueOffset = secondaryHash % 60;
 
-    // Determine saturation and lightness based on intensity
-    let baseSaturation = 0.7;
-    let baseLightness = 0.5;
+    // OKLCH parameters based on intensity
+    // Lightness (L): 0-1 scale (0 is black, 1 is white)
+    // Chroma (C): 0+ scale (0 is gray, higher is more saturated)
+    // Hue (H): 0-360 scale (same as HSL)
+    let baseL = 0.7; // Default lightness
+    let baseC = 0.15; // Default chroma (saturation)
 
     switch (intensity) {
       case "soft": {
-        baseSaturation = 0.6;
-        baseLightness = 0.6;
+        baseL = 0.75;
+        baseC = 0.1;
         break;
       }
       case "bold": {
-        baseSaturation = 0.85;
-        baseLightness = 0.45;
+        baseL = 0.65;
+        baseC = 0.2;
         break;
       }
       default: {
         // medium
-        baseSaturation = 0.75;
-        baseLightness = 0.6;
+        baseL = 0.7;
+        baseC = 0.15;
         break;
       }
     }
 
-    let colors: tinycolor.Instance[] = [];
+    let colors: string[] = [];
 
     // Generate colors based on the selected color scheme
     switch (colorScheme) {
       case "vibrant":
         // Create a vibrant, modern gradient with strategic color placement
         colors = [
-          tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
-          tinycolor({
-            h: (baseHue + 30 + hueOffset) % 360,
-            s: Math.min(baseSaturation + 0.1, 1),
-            l: baseLightness,
-          }),
-          tinycolor({
-            h: (baseHue + 60 + hueOffset * 2) % 360,
-            s: baseSaturation,
-            l: Math.max(baseLightness - 0.1, 0),
-          }),
+          oklch(baseL, baseC, baseHue),
+          oklch(
+            baseL + 0.05,
+            Math.min(baseC + 0.05, 0.3),
+            (baseHue + 30 + hueOffset) % 360
+          ),
+          oklch(baseL - 0.05, baseC, (baseHue + 60 + hueOffset * 2) % 360),
         ];
         break;
 
       case "split-complementary":
         // Base color and two colors on either side of its complement
         colors = [
-          tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
-          tinycolor({
-            h: (baseHue + 150 + hueOffset) % 360,
-            s: baseSaturation,
-            l: Math.max(baseLightness - 0.1, 0),
-          }),
-          tinycolor({
-            h: (baseHue + 210 - hueOffset) % 360,
-            s: baseSaturation,
-            l: Math.max(baseLightness - 0.15, 0),
-          }),
+          oklch(baseL, baseC, baseHue),
+          oklch(baseL - 0.05, baseC, (baseHue + 150 + hueOffset) % 360),
+          oklch(baseL - 0.1, baseC, (baseHue + 210 - hueOffset) % 360),
         ];
         break;
 
       case "complementary":
         // Base color and its complement (180 degrees apart)
         colors = [
-          tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
-          tinycolor({
-            h: (baseHue + 90 + hueOffset / 2) % 360,
-            s: Math.min(baseSaturation - 0.1, 1),
-            l: Math.min(baseLightness + 0.1, 1),
-          }),
-          tinycolor({
-            h: (baseHue + 180 + hueOffset) % 360,
-            s: baseSaturation,
-            l: Math.max(baseLightness - 0.1, 0),
-          }),
+          oklch(baseL, baseC, baseHue),
+          oklch(
+            Math.min(baseL + 0.05, 0.95),
+            Math.max(baseC - 0.05, 0.05),
+            (baseHue + 90 + hueOffset / 2) % 360
+          ),
+          oklch(
+            Math.max(baseL - 0.05, 0.4),
+            baseC,
+            (baseHue + 180 + hueOffset) % 360
+          ),
         ];
         break;
 
       case "triadic":
         // Three colors evenly spaced (120 degrees apart)
         colors = [
-          tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
-          tinycolor({
-            h: (baseHue + 120 + hueOffset) % 360,
-            s: baseSaturation,
-            l: Math.max(baseLightness - 0.1, 0),
-          }),
-          tinycolor({
-            h: (baseHue + 240 - hueOffset) % 360,
-            s: baseSaturation,
-            l: Math.max(baseLightness - 0.15, 0),
-          }),
+          oklch(baseL, baseC, baseHue),
+          oklch(
+            Math.max(baseL - 0.05, 0.4),
+            baseC,
+            (baseHue + 120 + hueOffset) % 360
+          ),
+          oklch(
+            Math.max(baseL - 0.1, 0.4),
+            baseC,
+            (baseHue + 240 - hueOffset) % 360
+          ),
         ];
         break;
 
       case "monochromatic":
-        // Same hue, varying saturation and lightness
+        // Same hue, varying lightness and chroma
         colors = [
-          tinycolor({
-            h: (baseHue + (hueOffset % 15)) % 360, // Small hue variation for more uniqueness
-            s: Math.min(baseSaturation + 0.2, 1),
-            l: Math.min(baseLightness + 0.2, 1),
-          }),
-          tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
-          tinycolor({
-            h: (baseHue - (hueOffset % 15)) % 360, // Small hue variation for more uniqueness
-            s: Math.max(baseSaturation - 0.2, 0),
-            l: Math.max(baseLightness - 0.2, 0),
-          }),
+          oklch(
+            Math.min(baseL + 0.1, 0.95),
+            Math.min(baseC + 0.05, 0.3),
+            (baseHue + (hueOffset % 15)) % 360
+          ),
+          oklch(baseL, baseC, baseHue),
+          oklch(
+            Math.max(baseL - 0.1, 0.4),
+            Math.max(baseC - 0.05, 0.05),
+            (baseHue - (hueOffset % 15)) % 360
+          ),
         ];
         break;
 
       default:
         // Analogous colors (adjacent on the color wheel)
         colors = [
-          tinycolor({ h: baseHue, s: baseSaturation, l: baseLightness }),
-          tinycolor({
-            h: (baseHue + 30 + (hueOffset % 20)) % 360,
-            s: Math.min(baseSaturation + 0.05, 1),
-            l: Math.max(baseLightness - 0.05, 0),
-          }),
-          tinycolor({
-            h: (baseHue + 60 + (hueOffset % 30)) % 360,
-            s: baseSaturation,
-            l: Math.max(baseLightness - 0.1, 0),
-          }),
+          oklch(baseL, baseC, baseHue),
+          oklch(
+            Math.max(baseL - 0.05, 0.4),
+            Math.min(baseC + 0.02, 0.3),
+            (baseHue + 30 + (hueOffset % 20)) % 360
+          ),
+          oklch(
+            Math.max(baseL - 0.1, 0.4),
+            baseC,
+            (baseHue + 60 + (hueOffset % 30)) % 360
+          ),
         ];
         break;
     }
 
-    // Create a gradient using tinygradient
-    const gradient = tinygradient(colors);
-
-    // Get color stops with more detail for smoother transitions
-    const colorStops = gradient
-      .rgb(7) // Significantly increase color stops for maximum smoothness
-      .map((color) => color.toRgbString())
-      .join(", ");
+    // Generate colorstops for the gradient
+    const colorStops = generateColorStops(colors);
 
     // Generate different types of gradients based on gradientType
     let gradientCss = "";
