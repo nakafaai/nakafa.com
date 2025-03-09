@@ -119,10 +119,10 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply scroll-smooth border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground scroll-smooth selection:bg-foreground selection:text-background;
+    @apply bg-background text-foreground selection:bg-foreground selection:text-background;
   }
 }
 
