@@ -48,11 +48,7 @@ export function CardMaterial({ material }: Props) {
           />
         </Button>
       </CardHeader>
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        className={cn(!isOpen && "hidden")}
-      >
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleContent>
           <CardContent className="px-0">
             {material.items.map((item) => (
