@@ -30,7 +30,8 @@ export function Header() {
                   "size-8 shrink-0"
                 )}
               >
-                <GithubIcon className="h-4 w-4" />
+                <span className="sr-only">{t("source-code")}</span>
+                <GithubIcon className="size-4" />
               </a>
             </TooltipTrigger>
             <TooltipContent side="bottom">
