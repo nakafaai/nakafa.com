@@ -42,6 +42,9 @@ export function CardMaterial({ material }: Props) {
           aria-label={isOpen ? "Close content" : "Open content"}
           className="shrink-0"
         >
+          <span className="sr-only">
+            {isOpen ? "Close content" : "Open content"}
+          </span>
           <ChevronDownIcon
             className={cn(
               "size-4 transition-transform",
