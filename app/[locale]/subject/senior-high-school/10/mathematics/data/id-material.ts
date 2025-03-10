@@ -48,6 +48,14 @@ const idMaterials: MaterialList[] = [
         title: "Merasionalkan Akar",
         href: `${BASE_PATH}/exponential-logarithm/rationalizing-radicals`,
       },
+      {
+        title: "Definisi Logaritma",
+        href: `${BASE_PATH}/exponential-logarithm/logarithm-definition`,
+      },
+      {
+        title: "Sifat Logaritma",
+        href: `${BASE_PATH}/exponential-logarithm/logarithm-properties`,
+      },
     ],
   },
   {

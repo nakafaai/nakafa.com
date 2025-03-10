@@ -48,6 +48,14 @@ const enMaterials: MaterialList[] = [
         title: "Rationalizing Radicals",
         href: `${BASE_PATH}/exponential-logarithm/rationalizing-radicals`,
       },
+      {
+        title: "Logarithm Definition",
+        href: `${BASE_PATH}/exponential-logarithm/logarithm-definition`,
+      },
+      {
+        title: "Logarithm Properties",
+        href: `${BASE_PATH}/exponential-logarithm/logarithm-properties`,
+      },
     ],
   },
   {
