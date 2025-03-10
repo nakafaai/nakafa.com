@@ -26,7 +26,9 @@ export function CardMaterial({ material }: Props) {
     <Card className="pb-0">
       <CardHeader className="flex-row items-start justify-between gap-2">
         <div className="flex flex-col gap-1.5">
-          <CardTitle className="font-medium">{material.title}</CardTitle>
+          <CardTitle className="font-medium">
+            <h2>{material.title}</h2>
+          </CardTitle>
           {material.description && (
             <CardDescription className="line-clamp-1">
               {material.description}
@@ -57,9 +59,9 @@ export function CardMaterial({ material }: Props) {
                 href={item.href}
                 className="group flex w-full items-center gap-2 border-t px-6 py-3 transition-colors last:rounded-b-xl last:pb-6 hover:bg-accent"
               >
-                <span title={item.title} className="truncate">
+                <h3 title={item.title} className="truncate">
                   {item.title}
-                </span>
+                </h3>
                 <ArrowDownIcon className="-rotate-90 size-4 opacity-0 transition-opacity group-hover:opacity-100" />
               </Link>
             ))}

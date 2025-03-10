@@ -19,7 +19,7 @@ export function CardSubject({ icon: Icon, label, href }: Props) {
             title={label}
             className="line-clamp-1 pr-9 font-medium tracking-tight"
           >
-            {label}
+            <h2>{label}</h2>
           </CardTitle>
         </CardHeader>
         <GradientBlock

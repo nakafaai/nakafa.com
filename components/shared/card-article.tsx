@@ -31,7 +31,7 @@ export function CardArticle({ category, article }: Props) {
             title={article.title}
             className="line-clamp-2 font-medium tracking-tight"
           >
-            {article.title}
+            <h2>{article.title}</h2>
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex items-center justify-between">
