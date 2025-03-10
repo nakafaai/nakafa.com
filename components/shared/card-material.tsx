@@ -60,7 +60,7 @@ export function CardMaterial({ material }: Props) {
               <Link
                 key={item.href}
                 href={item.href}
-                className="group flex w-full items-center gap-2 border-t px-6 py-3 transition-colors last:rounded-b-xl last:pb-6 hover:bg-accent"
+                className="group flex w-full items-center gap-2 border-t px-6 py-3 transition-colors last:rounded-b-xl last:pb-6 hover:bg-accent/50"
               >
                 <h3 title={item.title} className="truncate">
                   {item.title}
