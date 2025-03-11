@@ -63,7 +63,60 @@ const idMaterials: MaterialList[] = [
     description:
       "Pola menakjubkan yang menghubungkan angka-angka dalam urutan menarik.",
     href: `${BASE_PATH}/sequence-series`,
-    items: [],
+    items: [
+      {
+        title: "Konsep Barisan",
+        href: `${BASE_PATH}/sequence-series/sequence-concept`,
+      },
+      {
+        title: "Barisan Aritmetika",
+        href: `${BASE_PATH}/sequence-series/arithmetic-sequence`,
+      },
+      {
+        title: "Analogi Barisan Aritmetika",
+        href: `${BASE_PATH}/sequence-series/analogies-arithmetic-sequence`,
+      },
+      {
+        title: "Barisan Geometri",
+        href: `${BASE_PATH}/sequence-series/geometric-sequence`,
+      },
+      {
+        title: "Analogi Barisan Geometri",
+        href: `${BASE_PATH}/sequence-series/analogies-geometric-sequence`,
+      },
+      {
+        title: "Perbedaan Barisan Aritmetika dan Geometri",
+        href: `${BASE_PATH}/sequence-series/difference-arithmetic-geometric-sequence`,
+      },
+      {
+        title: "Konsep Deret",
+        href: `${BASE_PATH}/sequence-series/series-concept`,
+      },
+      {
+        title: "Deret Aritmetika",
+        href: `${BASE_PATH}/sequence-series/arithmetic-series`,
+      },
+      {
+        title: "Deret Geometri",
+        href: `${BASE_PATH}/sequence-series/geometric-series`,
+      },
+      {
+        title: "Deret Geometri Tak Hingga",
+        href: `${BASE_PATH}/sequence-series/infinite-geometric-series`,
+      },
+      {
+        title: "Perbedaan Konvergen dan Divergen",
+        href: `${BASE_PATH}/sequence-series/convergence-divergence`,
+      },
+      {
+        title: "Perbedaan Deret Aritmetika dan Geometri",
+        href: `${BASE_PATH}/sequence-series/difference-arithmetic-geometric-series`,
+      },
+      {
+        title: "Perbedaan Barisan dan Deret",
+        href: `${BASE_PATH}/sequence-series/difference-sequence-series`,
+      },
+    ],
   },
   {
     title: "Vektor dan Operasinya",

@@ -63,7 +63,60 @@ const enMaterials: MaterialList[] = [
     description:
       "Amazing patterns connecting numbers in fascinating sequences.",
     href: `${BASE_PATH}/sequence-series`,
-    items: [],
+    items: [
+      {
+        title: "Sequence Concepts",
+        href: `${BASE_PATH}/sequence-series/sequence-concept`,
+      },
+      {
+        title: "Arithmetic Sequences",
+        href: `${BASE_PATH}/sequence-series/arithmetic-sequence`,
+      },
+      {
+        title: "Arithmetic Sequence Analogies",
+        href: `${BASE_PATH}/sequence-series/analogies-arithmetic-sequence`,
+      },
+      {
+        title: "Geometric Sequences",
+        href: `${BASE_PATH}/sequence-series/geometric-sequence`,
+      },
+      {
+        title: "Geometric Sequence Analogies",
+        href: `${BASE_PATH}/sequence-series/analogies-geometric-sequence`,
+      },
+      {
+        title: "Differences Between Arithmetic and Geometric Sequences",
+        href: `${BASE_PATH}/sequence-series/difference-arithmetic-geometric-sequence`,
+      },
+      {
+        title: "Series Concepts",
+        href: `${BASE_PATH}/sequence-series/series-concept`,
+      },
+      {
+        title: "Arithmetic Series",
+        href: `${BASE_PATH}/sequence-series/arithmetic-series`,
+      },
+      {
+        title: "Geometric Series",
+        href: `${BASE_PATH}/sequence-series/geometric-series`,
+      },
+      {
+        title: "Infinite Geometric Series",
+        href: `${BASE_PATH}/sequence-series/infinite-geometric-series`,
+      },
+      {
+        title: "Convergence and Divergence",
+        href: `${BASE_PATH}/sequence-series/convergence-divergence`,
+      },
+      {
+        title: "Differences Between Arithmetic and Geometric Series",
+        href: `${BASE_PATH}/sequence-series/difference-arithmetic-geometric-series`,
+      },
+      {
+        title: "Differences Between Sequences and Series",
+        href: `${BASE_PATH}/sequence-series/difference-sequence-series`,
+      },
+    ],
   },
   {
     title: "Vectors and Operations",
