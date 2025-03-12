@@ -3,6 +3,7 @@ import type { ParsedHeading } from "@/components/shared/on-this-page";
 import type { Article } from "@/types/articles";
 import { compareDesc, parse } from "date-fns";
 import glob from "fast-glob";
+import type { Locale } from "next-intl";
 import { teams } from "../data/team";
 
 /**
@@ -103,7 +104,7 @@ export function getHeadings(content: string): ParsedHeading[] {
 
 export async function getArticles(
   basePath: string,
-  locale: string
+  locale: Locale
 ): Promise<Article[]> {
   // Get all article directories that have a page.tsx file - use a simpler, more reliable pattern
   const articleDirs = await glob("*/page.tsx", {

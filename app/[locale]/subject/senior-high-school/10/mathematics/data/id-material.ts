@@ -122,7 +122,60 @@ const idMaterials: MaterialList[] = [
     title: "Vektor dan Operasinya",
     description: "Konsep dasar game 3D, fisika, dan navigasi satelit.",
     href: `${BASE_PATH}/vector-operations`,
-    items: [],
+    items: [
+      {
+        title: "Konsep Vektor",
+        href: `${BASE_PATH}/vector-operations/vector-concept`,
+      },
+      {
+        title: "Jenis-jenis Vektor",
+        href: `${BASE_PATH}/vector-operations/vector-types`,
+      },
+      {
+        title: "Vektor dan Sistem Koordinat",
+        href: `${BASE_PATH}/vector-operations/vector-coordinate-system`,
+      },
+      {
+        title: "Vektor Dua Dimensi",
+        href: `${BASE_PATH}/vector-operations/two-dimensional-vector`,
+      },
+      {
+        title: "Komponen Vektor",
+        href: `${BASE_PATH}/vector-operations/vector-components`,
+      },
+      {
+        title: "Vektor Tiga Dimensi",
+        href: `${BASE_PATH}/vector-operations/three-dimensional-vector`,
+      },
+      {
+        title: "Vektor Kolom dan Baris",
+        href: `${BASE_PATH}/vector-operations/column-row-vector`,
+      },
+      {
+        title: "Jenis-jenis Vektor",
+        href: `${BASE_PATH}/vector-operations/types-of-vector`,
+      },
+      {
+        title: "Penjumlahan Vektor",
+        href: `${BASE_PATH}/vector-operations/vector-addition`,
+      },
+      {
+        title: "Pengurangan Vektor",
+        href: `${BASE_PATH}/vector-operations/vector-subtraction`,
+      },
+      {
+        title: "Sifat Operasi Vektor",
+        href: `${BASE_PATH}/vector-operations/vector-properties`,
+      },
+      {
+        title: "Vektor Nol",
+        href: `${BASE_PATH}/vector-operations/zero-vector`,
+      },
+      {
+        title: "Perkalian Skalar Vektor",
+        href: `${BASE_PATH}/vector-operations/scalar-multiplication`,
+      },
+    ],
   },
   {
     title: "Trigonometri",

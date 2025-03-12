@@ -1,9 +1,9 @@
 import { LayoutArticle } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
-import type { Locale } from "@/i18n/routing";
 import { getHeadings, getRawContent } from "@/lib/utils/markdown";
 import type { ArticleMetadata } from "@/types/articles";
 import type { Metadata } from "next";
+import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { references } from "./ref";
@@ -13,7 +13,7 @@ const FILE_PATH = `/articles/politics/${SLUG}`;
 const GITHUB_URL = `${process.env.GITHUB_URL}${FILE_PATH}`;
 
 type Props = {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
 };
 
 export async function generateMetadata({
@@ -34,7 +34,7 @@ export async function generateMetadata({
 }
 
 export default async function Page({ params }: Props) {
-  const locale = (await params).locale as Locale;
+  const { locale } = await params;
 
   // Enable static rendering
   setRequestLocale(locale);

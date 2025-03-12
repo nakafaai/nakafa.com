@@ -1,12 +1,18 @@
-import type en from "./messages/en.json";
-import type id from "./messages/id.json";
 import type { PagefindSearchOptions } from "./types/pagefind";
 
-type Messages = typeof id | typeof en;
+import type { formats } from "@/i18n/request";
+import type { routing } from "@/i18n/routing";
+import type messages from "./messages/en.json";
+
+declare module "next-intl" {
+  interface AppConfig {
+    Locale: (typeof routing.locales)[number];
+    Messages: typeof messages;
+    Formats: typeof formats;
+  }
+}
 
 declare global {
-  // Use type safe message keys with `next-intl`
-  type IntlMessages = Messages;
   interface Window {
     pagefind: {
       options: (options: unknown) => void;

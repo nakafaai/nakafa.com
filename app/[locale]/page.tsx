@@ -2,10 +2,11 @@ import { SearchBar } from "@/components/sidebar/search-bar";
 import { buttonVariants } from "@/components/ui/button";
 import { Particles } from "@/components/ui/particles";
 import { cn } from "@/lib/utils";
+import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 type Props = {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
 };
 
 export default async function Page({ params }: Props) {

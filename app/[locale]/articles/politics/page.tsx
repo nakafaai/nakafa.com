@@ -7,13 +7,14 @@ import { RefContent } from "@/components/shared/ref-content";
 import { getArticles } from "@/lib/utils/markdown";
 import { DramaIcon } from "lucide-react";
 import type { Metadata } from "next";
+import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 const FILE_PATH = "/articles/politics";
 const GITHUB_URL = `${process.env.GITHUB_URL}${FILE_PATH}`;
 
 type Props = {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
 };
 
 export async function generateMetadata({
@@ -33,7 +34,7 @@ export async function generateMetadata({
   };
 }
 
-async function ArticleList({ locale }: { locale: string }) {
+async function ArticleList({ locale }: { locale: Locale }) {
   // Statically get all articles
   const articles = await getArticles(FILE_PATH, locale);
 

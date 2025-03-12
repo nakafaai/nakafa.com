@@ -6,6 +6,7 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { LibraryIcon } from "lucide-react";
 import type { Metadata } from "next";
+import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { grade10Subjects } from "../data/subject";
 
@@ -13,7 +14,7 @@ const FILE_PATH = "/subject/senior-high-school/10";
 const GITHUB_URL = `${process.env.GITHUB_URL}${FILE_PATH}`;
 
 type Props = {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
 };
 
 export async function generateMetadata({

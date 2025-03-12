@@ -1,10 +1,11 @@
 import { HeaderContent } from "@/components/shared/header-content";
 import { BackpackIcon } from "lucide-react";
 import type { Metadata } from "next";
+import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 type Props = {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
 };
 
 export async function generateMetadata({

@@ -123,7 +123,60 @@ const enMaterials: MaterialList[] = [
     description:
       "Core concepts of 3D games, physics, and satellite navigation.",
     href: `${BASE_PATH}/vector-operations`,
-    items: [],
+    items: [
+      {
+        title: "Vector Concept",
+        href: `${BASE_PATH}/vector-operations/vector-concept`,
+      },
+      {
+        title: "Vector Types",
+        href: `${BASE_PATH}/vector-operations/vector-types`,
+      },
+      {
+        title: "Vectors and Coordinate System",
+        href: `${BASE_PATH}/vector-operations/vector-coordinate-system`,
+      },
+      {
+        title: "Two-Dimensional Vector",
+        href: `${BASE_PATH}/vector-operations/two-dimensional-vector`,
+      },
+      {
+        title: "Vector Components",
+        href: `${BASE_PATH}/vector-operations/vector-components`,
+      },
+      {
+        title: "Three-Dimensional Vector",
+        href: `${BASE_PATH}/vector-operations/three-dimensional-vector`,
+      },
+      {
+        title: "Column and Row Vectors",
+        href: `${BASE_PATH}/vector-operations/column-row-vector`,
+      },
+      {
+        title: "Types of Vectors",
+        href: `${BASE_PATH}/vector-operations/types-of-vector`,
+      },
+      {
+        title: "Vector Addition",
+        href: `${BASE_PATH}/vector-operations/vector-addition`,
+      },
+      {
+        title: "Vector Subtraction",
+        href: `${BASE_PATH}/vector-operations/vector-subtraction`,
+      },
+      {
+        title: "Vector Operation Properties",
+        href: `${BASE_PATH}/vector-operations/vector-properties`,
+      },
+      {
+        title: "Zero Vector",
+        href: `${BASE_PATH}/vector-operations/zero-vector`,
+      },
+      {
+        title: "Scalar Vector Multiplication",
+        href: `${BASE_PATH}/vector-operations/scalar-multiplication`,
+      },
+    ],
   },
   {
     title: "Trigonometry",
