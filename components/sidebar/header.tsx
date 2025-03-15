@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
+import { IconBrandGithub, IconBrandYoutube } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { buttonVariants } from "../ui/button";
-import { GithubIcon } from "../ui/icons";
 import { SidebarTrigger } from "../ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { HeaderBreadcrumb } from "./header-breadcrumb";
@@ -31,11 +31,30 @@ export function Header() {
                 )}
               >
                 <span className="sr-only">{t("source-code")}</span>
-                <GithubIcon className="size-4" />
+                <IconBrandGithub className="size-4" />
               </a>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <p>{t("source-code")}</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <a
+                href="https://www.youtube.com/@nakafaa"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "icon" }),
+                  "size-8 shrink-0"
+                )}
+              >
+                <span className="sr-only">{t("videos")}</span>
+                <IconBrandYoutube className="size-4" />
+              </a>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>{t("videos")}</p>
             </TooltipContent>
           </Tooltip>
         </div>

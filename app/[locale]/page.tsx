@@ -32,17 +32,24 @@ export default async function Page({ params }: Props) {
             className="h-12 rounded-xl border-primary/10 sm:w-full"
           />
 
-          <a
-            href="https://github.com/nabilfatih/nakafa.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              buttonVariants({ variant: "secondary" }),
-              "mt-6 w-fit md:mx-auto"
-            )}
-          >
-            {t("contribute")}
-          </a>
+          <div className="mt-6 grid w-fit grid-cols-2 gap-3 md:mx-auto">
+            <a
+              href="https://github.com/nabilfatih/nakafa.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ variant: "secondary" }))}
+            >
+              {t("contribute")}
+            </a>
+            <a
+              href="https://www.youtube.com/@nakafaa"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ variant: "secondary" }))}
+            >
+              {t("videos")}
+            </a>
+          </div>
         </div>
       </div>
     </div>

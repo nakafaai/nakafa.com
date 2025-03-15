@@ -54,7 +54,8 @@
     "fund": "Dana",
     "electability": "Elektabilitas",
     "not-answering": "Tidak Menjawab",
-    "bibliography": "Daftar pustaka"
+    "bibliography": "Daftar pustaka",
+    "videos": "Video"
   },
   "Subject": {
     "elementary-school": "SD",
@@ -101,7 +102,8 @@
   },
   "Home": {
     "title": "Apa yang ada di benakmu?",
-    "contribute": "Kontribusi"
+    "contribute": "Kontribusi",
+    "videos": "Video"
   },
   "NotFound": {
     "title": "Halaman Tidak Ditemukan",

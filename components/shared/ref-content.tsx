@@ -2,6 +2,7 @@
 
 import { cleanupUrl, cn, formatUrl } from "@/lib/utils";
 import type { Reference } from "@/types/articles";
+import { IconBrandGithub, IconBrandYoutube } from "@tabler/icons-react";
 import {
   BookIcon,
   BookOpenIcon,
@@ -20,7 +21,6 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import { GithubIcon } from "../ui/icons";
 import { ScrollArea } from "../ui/scroll-area";
 import { Separator } from "../ui/separator";
 import {
@@ -84,12 +84,30 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
               <Button variant="outline" size="icon" asChild>
                 <a href={githubUrl} target="_blank" rel="noopener noreferrer">
                   <span className="sr-only">{t("source-code")}</span>
-                  <GithubIcon className="size-4" />
+                  <IconBrandGithub className="size-4" />
                 </a>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <p>{t("source-code")}</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" asChild>
+                <a
+                  href="https://www.youtube.com/@nakafaa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="sr-only">{t("videos")}</span>
+                  <IconBrandYoutube className="size-4" />
+                </a>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>{t("videos")}</p>
             </TooltipContent>
           </Tooltip>
         </div>

@@ -53,7 +53,8 @@
     "fund": "Fund",
     "electability": "Electability",
     "not-answering": "Not Answering",
-    "bibliography": "Bibliography"
+    "bibliography": "Bibliography",
+    "videos": "Videos"
   },
   "Subject": {
     "elementary-school": "Elementary School",
@@ -100,7 +101,8 @@
   },
   "Home": {
     "title": "What is in your mind?",
-    "contribute": "Contribute"
+    "contribute": "Contribute",
+    "videos": "Videos"
   },
   "NotFound": {
     "title": "Page Not Found",
