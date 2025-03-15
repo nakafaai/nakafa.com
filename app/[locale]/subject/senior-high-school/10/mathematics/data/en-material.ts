@@ -183,7 +183,36 @@ const enMaterials: MaterialList[] = [
     description:
       "The language of triangles for building structures and exploring space.",
     href: `${BASE_PATH}/trigonometry`,
-    items: [],
+    items: [
+      {
+        title: "Trigonometry Concepts",
+        href: `${BASE_PATH}/trigonometry/trigonometry-concept`,
+      },
+      {
+        title: "Right Triangle Side Naming",
+        href: `${BASE_PATH}/trigonometry/right-triangle-naming`,
+      },
+      {
+        title: "Trigonometric Ratio: Tan θ",
+        href: `${BASE_PATH}/trigonometry/trigonometric-comparison-tan`,
+      },
+      {
+        title: "Applications of Tan θ Trigonometric Ratio",
+        href: `${BASE_PATH}/trigonometry/trigonometric-comparison-tan-usage`,
+      },
+      {
+        title: "Trigonometric Ratios: Sin θ and Cos θ",
+        href: `${BASE_PATH}/trigonometry/trigonometric-comparison-sin-cos`,
+      },
+      {
+        title: "The Three Primary Trigonometric Ratios",
+        href: `${BASE_PATH}/trigonometry/trigonometric-comparison-three-primary`,
+      },
+      {
+        title: "Special Angles in Trigonometric Ratios",
+        href: `${BASE_PATH}/trigonometry/trigonometric-comparison-special-angle`,
+      },
+    ],
   },
   {
     title: "Systems of Linear Equations and Inequalities",

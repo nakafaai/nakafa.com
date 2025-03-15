@@ -182,7 +182,36 @@ const idMaterials: MaterialList[] = [
     description:
       "Bahasa segitiga untuk membangun gedung dan menjelajahi antariksa.",
     href: `${BASE_PATH}/trigonometry`,
-    items: [],
+    items: [
+      {
+        title: "Konsep Trigonometri",
+        href: `${BASE_PATH}/trigonometry/trigonometry-concept`,
+      },
+      {
+        title: "Penamaan Sisi Segitiga Siku-siku",
+        href: `${BASE_PATH}/trigonometry/right-triangle-naming`,
+      },
+      {
+        title: "Perbandingan Trigonometri: Tan θ",
+        href: `${BASE_PATH}/trigonometry/trigonometric-comparison-tan`,
+      },
+      {
+        title: "Kegunaan Perbandingan Trigonometri Tan θ",
+        href: `${BASE_PATH}/trigonometry/trigonometric-comparison-tan-usage`,
+      },
+      {
+        title: "Perbandingan Trigonometri: Sin θ dan Cos θ",
+        href: `${BASE_PATH}/trigonometry/trigonometric-comparison-sin-cos`,
+      },
+      {
+        title: "Tiga Serangkai Perbandingan Trigonometri",
+        href: `${BASE_PATH}/trigonometry/trigonometric-comparison-three-primary`,
+      },
+      {
+        title: "Sudut Istimewa Perbandingan Trigonometri",
+        href: `${BASE_PATH}/trigonometry/trigonometric-comparison-special-angle`,
+      },
+    ],
   },
   {
     title: "Sistem Persamaan dan Pertidaksamaan Linear",
