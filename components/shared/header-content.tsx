@@ -42,7 +42,10 @@ export function HeaderContent({
   const showFooter = authors && date;
   return (
     <div className="relative border-b py-10">
-      <Particles className="pointer-events-none absolute inset-0 opacity-50" />
+      <Particles
+        quantity={25}
+        className="pointer-events-none absolute inset-0 opacity-50"
+      />
       <div className="z-10 mx-auto max-w-3xl space-y-2 px-4">
         {link && (
           <Link
