@@ -26,11 +26,14 @@ export function CardMaterial({ material }: Props) {
     <Card className="pb-0">
       <CardHeader className="flex-row items-start justify-between gap-2">
         <div className="flex flex-col gap-1.5">
-          <CardTitle className="font-medium">
+          <CardTitle title={material.title} className="font-medium">
             <h2>{material.title}</h2>
           </CardTitle>
           {material.description && (
-            <CardDescription className="line-clamp-1">
+            <CardDescription
+              title={material.description}
+              className="line-clamp-1"
+            >
               {material.description}
             </CardDescription>
           )}
