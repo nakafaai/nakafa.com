@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useMousePosition } from "@/hooks/use-mouse";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "usehooks-ts";
 
 type Circle = {
   x: number;
@@ -42,6 +43,8 @@ export function Particles({
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
+
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const isThemeDark = useMemo(() => {
     if (!resolvedTheme) {
@@ -216,12 +219,23 @@ export function Particles({
       }
       circle.x += circle.dx;
       circle.y += circle.dy;
-      circle.translateX +=
-        (mouse.current.x / (staticity / circle.magnetism) - circle.translateX) /
-        ease;
-      circle.translateY +=
-        (mouse.current.y / (staticity / circle.magnetism) - circle.translateY) /
-        ease;
+
+      // Only apply mouse-based movement on non-mobile devices
+      if (isMobile) {
+        // On mobile, gradually reset any existing translation to zero
+        circle.translateX += (0 - circle.translateX) / ease;
+        circle.translateY += (0 - circle.translateY) / ease;
+      } else {
+        circle.translateX +=
+          (mouse.current.x / (staticity / circle.magnetism) -
+            circle.translateX) /
+          ease;
+        circle.translateY +=
+          (mouse.current.y / (staticity / circle.magnetism) -
+            circle.translateY) /
+          ease;
+      }
+
       // circle gets out of the canvas
       if (
         circle.x < -circle.size ||
@@ -250,7 +264,15 @@ export function Particles({
       }
     });
     window.requestAnimationFrame(animate);
-  }, [circleParams, clearContext, drawCircle, ease, remapValue, staticity]);
+  }, [
+    circleParams,
+    clearContext,
+    drawCircle,
+    ease,
+    remapValue,
+    staticity,
+    isMobile,
+  ]);
 
   return (
     <div className={cn(className)} ref={canvasContainerRef} aria-hidden="true">
