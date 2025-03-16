@@ -219,27 +219,143 @@ const enMaterials: MaterialList[] = [
     description:
       "The key to optimizing business and solving real-world problems.",
     href: `${BASE_PATH}/linear-equation-inequality`,
-    items: [],
+    items: [
+      {
+        title: "Linear Equation Systems",
+        href: `${BASE_PATH}/linear-equation-inequality/system-linear-equation`,
+      },
+      {
+        title: "Linear Inequality Systems",
+        href: `${BASE_PATH}/linear-equation-inequality/system-linear-inequality`,
+      },
+    ],
   },
   {
     title: "Quadratic Functions",
     description:
       "Parabolic curves explaining projectile motion and bridge design.",
     href: `${BASE_PATH}/quadratic-function`,
-    items: [],
+    items: [
+      {
+        title: "Quadratic Equations",
+        href: `${BASE_PATH}/quadratic-function/quadratic-equation`,
+      },
+      {
+        title: "Quadratic Equation Factorization",
+        href: `${BASE_PATH}/quadratic-function/quadratic-equation-factorization`,
+      },
+      {
+        title: "Completing the Square",
+        href: `${BASE_PATH}/quadratic-function/quadratic-equation-perfect-square`,
+      },
+      {
+        title: "Quadratic Formula",
+        href: `${BASE_PATH}/quadratic-function/quadratic-equation-formula`,
+      },
+      {
+        title: "Types of Quadratic Equation Roots",
+        href: `${BASE_PATH}/quadratic-function/quadratic-equation-types-of-root`,
+      },
+      {
+        title: "Imaginary or Non-Real Roots",
+        href: `${BASE_PATH}/quadratic-function/quadratic-equation-imaginary-root`,
+      },
+      {
+        title: "Characteristics of Quadratic Functions",
+        href: `${BASE_PATH}/quadratic-function/quadratic-function-characteristics`,
+      },
+      {
+        title: "Constructing Quadratic Functions",
+        href: `${BASE_PATH}/quadratic-function/quadratic-function-construction`,
+      },
+      {
+        title: "Determining Maximum Area",
+        href: `${BASE_PATH}/quadratic-function/quadratic-function-maximum-area`,
+      },
+      {
+        title: "Determining Minimum Area",
+        href: `${BASE_PATH}/quadratic-function/quadratic-function-minimum-area`,
+      },
+    ],
   },
   {
     title: "Statistics",
     description: "The art of data analysis for real-world decision making.",
     href: `${BASE_PATH}/statistics`,
-    items: [],
+    items: [
+      {
+        title: "Histogram",
+        href: `${BASE_PATH}/statistics/histogram`,
+      },
+      {
+        title: "Relative Frequency",
+        href: `${BASE_PATH}/statistics/relative-frequency`,
+      },
+      {
+        title: "Mode and Median",
+        href: `${BASE_PATH}/statistics/mode-median`,
+      },
+      {
+        title: "Mean (Average)",
+        href: `${BASE_PATH}/statistics/mean`,
+      },
+      {
+        title: "Applications of Measures of Central Tendency",
+        href: `${BASE_PATH}/statistics/central-tendency-usage`,
+      },
+      {
+        title: "Mean for Grouped Data",
+        href: `${BASE_PATH}/statistics/mean-group-data`,
+      },
+      {
+        title: "Median and Modal Class for Grouped Data",
+        href: `${BASE_PATH}/statistics/median-mode-group-data`,
+      },
+      {
+        title: "Quartiles for Ungrouped Data",
+        href: `${BASE_PATH}/statistics/quartile-data-single`,
+      },
+      {
+        title: "Percentiles for Grouped Data",
+        href: `${BASE_PATH}/statistics/percentile-data-group`,
+      },
+      {
+        title: "Interquartile Range",
+        href: `${BASE_PATH}/statistics/interquartile-range`,
+      },
+      {
+        title: "Variance and Standard Deviation for Ungrouped Data",
+        href: `${BASE_PATH}/statistics/variance-standard-deviation-data-single`,
+      },
+      {
+        title: "Variance and Standard Deviation for Grouped Data",
+        href: `${BASE_PATH}/statistics/variance-standard-deviation-data-group`,
+      },
+    ],
   },
   {
     title: "Probability",
     description:
       "Mathematics of uncertainty behind AI, weather forecasting, and game strategy.",
     href: `${BASE_PATH}/probability`,
-    items: [],
+    items: [
+      {
+        title: "Probability Distribution",
+        href: `${BASE_PATH}/probability/probability-distribution`,
+      },
+      {
+        title: "Addition Rule",
+        href: `${BASE_PATH}/probability/addition-rule`,
+      },
+      {
+        title: "Mutually Exclusive Events A and B",
+        href: `${BASE_PATH}/probability/two-events-mutually-exclusive`,
+      },
+      {
+        title: "Non-Mutually Exclusive Events A and B",
+        href: `${BASE_PATH}/probability/two-events-not-mutually-exclusive`,
+      },
+    ],
   },
 ] as const;
 

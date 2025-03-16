@@ -218,28 +218,144 @@ const idMaterials: MaterialList[] = [
     description:
       "Kunci untuk mengoptimalkan bisnis dan menyelesaikan masalah nyata.",
     href: `${BASE_PATH}/linear-equation-inequality`,
-    items: [],
+    items: [
+      {
+        title: "Sistem Persamaan Linear",
+        href: `${BASE_PATH}/linear-equation-inequality/system-linear-equation`,
+      },
+      {
+        title: "Sistem Pertidaksamaan Linear",
+        href: `${BASE_PATH}/linear-equation-inequality/system-linear-inequality`,
+      },
+    ],
   },
   {
-    title: "Fungsi Kuadrat",
+    title: "Persamaan dan Fungsi Kuadrat",
     description:
       "Kurva parabola yang menjelaskan lintasan peluru dan desain jembatan.",
     href: `${BASE_PATH}/quadratic-function`,
-    items: [],
+    items: [
+      {
+        title: "Persamaan Kuadrat",
+        href: `${BASE_PATH}/quadratic-function/quadratic-equation`,
+      },
+      {
+        title: "Faktorisasi Persamaan Kuadrat",
+        href: `${BASE_PATH}/quadratic-function/quadratic-equation-factorization`,
+      },
+      {
+        title: "Melengkapi Kuadrat Sempurna",
+        href: `${BASE_PATH}/quadratic-function/quadratic-equation-perfect-square`,
+      },
+      {
+        title: "Rumus Persamaan Kuadrat",
+        href: `${BASE_PATH}/quadratic-function/quadratic-equation-formula`,
+      },
+      {
+        title: "Jenis-Jenis Akar Persamaan Kuadrat",
+        href: `${BASE_PATH}/quadratic-function/quadratic-equation-types-of-root`,
+      },
+      {
+        title: "Akar Tidak Nyata atau Imajiner",
+        href: `${BASE_PATH}/quadratic-function/quadratic-equation-imaginary-root`,
+      },
+      {
+        title: "Karakteristik Fungsi Kuadrat",
+        href: `${BASE_PATH}/quadratic-function/quadratic-function-characteristics`,
+      },
+      {
+        title: "Mengonstruksi Fungsi Kuadrat",
+        href: `${BASE_PATH}/quadratic-function/quadratic-function-construction`,
+      },
+      {
+        title: "Menentukan Luas Maksimum",
+        href: `${BASE_PATH}/quadratic-function/quadratic-function-maximum-area`,
+      },
+      {
+        title: "Menentukan Luas Minimum",
+        href: `${BASE_PATH}/quadratic-function/quadratic-function-minimum-area`,
+      },
+    ],
   },
   {
     title: "Statistika",
     description:
       "Seni analisis data untuk pengambilan keputusan di dunia nyata.",
     href: `${BASE_PATH}/statistics`,
-    items: [],
+    items: [
+      {
+        title: "Histogram",
+        href: `${BASE_PATH}/statistics/histogram`,
+      },
+      {
+        title: "Frekuensi Relatif",
+        href: `${BASE_PATH}/statistics/relative-frequency`,
+      },
+      {
+        title: "Modus dan Median",
+        href: `${BASE_PATH}/statistics/mode-median`,
+      },
+      {
+        title: "Mean (Rerata atau Rata-rata)",
+        href: `${BASE_PATH}/statistics/mean`,
+      },
+      {
+        title: "Penggunaan Ukuran Pemusatan",
+        href: `${BASE_PATH}/statistics/central-tendency-usage`,
+      },
+      {
+        title: "Mean/Rata-Rata Data Kelompok",
+        href: `${BASE_PATH}/statistics/mean-group-data`,
+      },
+      {
+        title: "Median dan Kelas Modus Data Kelompok",
+        href: `${BASE_PATH}/statistics/median-mode-group-data`,
+      },
+      {
+        title: "Kuartil Data Tunggal",
+        href: `${BASE_PATH}/statistics/quartile-data-single`,
+      },
+      {
+        title: "Persentil Data Kelompok",
+        href: `${BASE_PATH}/statistics/percentile-data-group`,
+      },
+      {
+        title: "Jangkauan Interkuartil",
+        href: `${BASE_PATH}/statistics/interquartile-range`,
+      },
+      {
+        title: "Varian dan Simpangan Baku Data Tunggal",
+        href: `${BASE_PATH}/statistics/variance-standard-deviation-data-single`,
+      },
+      {
+        title: "Varian dan Simpangan Baku Data Kelompok",
+        href: `${BASE_PATH}/statistics/variance-standard-deviation-data-group`,
+      },
+    ],
   },
   {
     title: "Peluang",
     description:
       "Matematika ketidakpastian di balik AI, prediksi cuaca, dan strategi game.",
     href: `${BASE_PATH}/probability`,
-    items: [],
+    items: [
+      {
+        title: "Distribusi Peluang",
+        href: `${BASE_PATH}/probability/probability-distribution`,
+      },
+      {
+        title: "Aturan Penjumlahan",
+        href: `${BASE_PATH}/probability/addition-rule`,
+      },
+      {
+        title: "Dua Kejadian A dan B Saling Lepas",
+        href: `${BASE_PATH}/probability/two-events-mutually-exclusive`,
+      },
+      {
+        title: "Dua Kejadian A dan B Tidak Saling Lepas",
+        href: `${BASE_PATH}/probability/two-events-not-mutually-exclusive`,
+      },
+    ],
   },
 ] as const;
 
