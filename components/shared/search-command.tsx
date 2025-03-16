@@ -162,9 +162,8 @@ export function SearchCommand() {
         setError("");
         return;
       }
-
+      setIsLoading(true);
       if (!window.pagefind) {
-        setIsLoading(true);
         setError("");
         try {
           await importPagefind();
