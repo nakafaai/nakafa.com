@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import type { ParsedHeading } from "@/components/shared/on-this-page";
+import type { ParsedHeading } from "@/components/shared/sidebar-tree";
 import type { Article } from "@/types/articles";
 import { compareDesc, parse } from "date-fns";
 import glob from "fast-glob";

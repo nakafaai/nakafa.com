@@ -19,12 +19,13 @@ export type ParsedHeading = {
 
 type Props = {
   data: ParsedHeading[];
+  title?: string;
 };
 
 /**
  * Recursive component to render nested headings
  */
-function HeadingItem({
+function SidebarTreeItem({
   heading,
   depth = 0,
 }: { heading: ParsedHeading; depth?: number }) {
@@ -41,7 +42,11 @@ function HeadingItem({
       {heading.children && heading.children.length > 0 && (
         <SidebarMenuSub>
           {heading.children.map((child) => (
-            <HeadingItem key={child.href} heading={child} depth={depth + 1} />
+            <SidebarTreeItem
+              key={child.href}
+              heading={child}
+              depth={depth + 1}
+            />
           ))}
         </SidebarMenuSub>
       )}
@@ -53,15 +58,15 @@ function HeadingItem({
  * A component that displays a list of links to the sections of the page.
  * @param data - The data to display, typically generated from the `getHeadings` function.
  */
-export function OnThisPage({ data }: Props) {
+export function SidebarTree({ data, title }: Props) {
   const t = useTranslations("Common");
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{t("on-this-page")}</SidebarGroupLabel>
+      <SidebarGroupLabel>{title ?? t("on-this-page")}</SidebarGroupLabel>
       <SidebarMenu>
         {data.map((item) => (
-          <HeadingItem key={item.href} heading={item} />
+          <SidebarTreeItem key={item.href} heading={item} />
         ))}
       </SidebarMenu>
     </SidebarGroup>

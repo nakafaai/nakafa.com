@@ -1,9 +1,5 @@
-import { CardMaterial } from "@/components/shared/card-material";
-import { ContainerList } from "@/components/shared/container-list";
-import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderContent } from "@/components/shared/header-content";
-import { LayoutContent } from "@/components/shared/layout-content";
-import { RefContent } from "@/components/shared/ref-content";
+import { LayoutMaterial } from "@/components/shared/layout-material";
+import type { ParsedHeading } from "@/components/shared/sidebar-tree";
 import type { MaterialList } from "@/types/subjects";
 import { PiIcon } from "lucide-react";
 import type { Metadata } from "next";
@@ -44,26 +40,24 @@ export default async function Page({ params }: Props) {
   const materials: MaterialList[] = (await import(`./data/${locale}-material`))
     .default;
 
+  const chapters: ParsedHeading[] = materials.map((material) => ({
+    label: material.title,
+    href: material.title.toLowerCase().replace(/\s+/g, "-"),
+  }));
+
   return (
-    <>
-      <HeaderContent
-        title={t("mathematics")}
-        icon={PiIcon}
-        link={{
+    <LayoutMaterial
+      header={{
+        title: t("mathematics"),
+        icon: PiIcon,
+        link: {
           href: "/subject/senior-high-school/12",
           label: t("grade", { grade: 12 }),
-        }}
-      />
-      <LayoutContent className="py-10">
-        <ContainerList className="sm:grid-cols-1">
-          {materials.map((material) => (
-            <CardMaterial key={material.title} material={material} />
-          ))}
-        </ContainerList>
-      </LayoutContent>
-      <FooterContent className="mt-0">
-        <RefContent githubUrl={GITHUB_URL} />
-      </FooterContent>
-    </>
+        },
+      }}
+      materials={materials}
+      chapters={chapters}
+      githubUrl={GITHUB_URL}
+    />
   );
 }

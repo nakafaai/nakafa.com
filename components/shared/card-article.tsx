@@ -15,6 +15,8 @@ type Props = {
 export function CardArticle({ category, article }: Props) {
   const t = useTranslations("Articles");
 
+  const id = article.title.toLowerCase().replace(/\s+/g, "-");
+
   return (
     <Link
       key={article.slug}
@@ -28,8 +30,9 @@ export function CardArticle({ category, article }: Props) {
         />
         <CardHeader>
           <CardTitle
+            id={id}
             title={article.title}
-            className="line-clamp-2 font-medium tracking-tight"
+            className="line-clamp-2 scroll-mt-24 font-medium"
           >
             <h2>{article.title}</h2>
           </CardTitle>
