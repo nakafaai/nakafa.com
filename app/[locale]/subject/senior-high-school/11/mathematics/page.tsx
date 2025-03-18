@@ -42,7 +42,7 @@ export default async function Page({ params }: Props) {
 
   const chapters: ParsedHeading[] = materials.map((material) => ({
     label: material.title,
-    href: material.title.toLowerCase().replace(/\s+/g, "-"),
+    href: `#${material.title.toLowerCase().replace(/\s+/g, "-")}`,
   }));
 
   return (
