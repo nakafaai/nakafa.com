@@ -27,7 +27,7 @@
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@tabler/icons-react": "^3.31.0",
-    "@tailwindcss/postcss": "^4.0.14",
+    "@tailwindcss/postcss": "^4.0.15",
     "@types/mdx": "^2.0.13",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
@@ -37,7 +37,7 @@
     "date-fns": "^4.1.0",
     "geist": "^1.3.1",
     "jotai": "^2.12.2",
-    "lucide-react": "^0.482.0",
+    "lucide-react": "^0.483.0",
     "next": "^15.2.3",
     "next-intl": "^4.0.2",
     "next-themes": "^0.4.6",
@@ -65,7 +65,7 @@
     "eslint-config-next": "15.2.3",
     "pagefind": "^1.3.0",
     "postcss": "^8.5.3",
-    "tailwindcss": "^4.0.14",
+    "tailwindcss": "^4.0.15",
     "typescript": "^5",
     "ultracite": "^4.1.21"
   }

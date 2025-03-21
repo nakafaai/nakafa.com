@@ -60,7 +60,6 @@ const idMaterials: MaterialList[] = [
         title: "Lingkaran dan Busur Lingkaran",
         href: `${BASE_PATH}/circle-and-arc-circle`,
       },
-
       {
         title: "Sudut Pusat dan Sudut Keliling",
         href: `${BASE_PATH}/central-angle-and-inscribed-angle`,
@@ -253,6 +252,54 @@ const idMaterials: MaterialList[] = [
         title: "Konsep Matriks",
         href: `${BASE_PATH}/matrix-concept`,
       },
+      {
+        title: "Jenis-Jenis Matriks",
+        href: `${BASE_PATH}/matrix-types`,
+      },
+      {
+        title: "Matriks Transpos",
+        href: `${BASE_PATH}/matrix-transpose`,
+      },
+      {
+        title: "Kesamaan Dua Matriks",
+        href: `${BASE_PATH}/matrix-equality`,
+      },
+      {
+        title: "Penjumlahan Matriks",
+        href: `${BASE_PATH}/matrix-addition`,
+      },
+      {
+        title: "Pengurangan Matriks",
+        href: `${BASE_PATH}/matrix-subtraction`,
+      },
+      {
+        title: "Perkalian Matriks dengan Skalar",
+        href: `${BASE_PATH}/matrix-scalar-multiplication`,
+      },
+      {
+        title: "Perkalian Dua Matriks",
+        href: `${BASE_PATH}/matrix-multiplication`,
+      },
+      {
+        title: "Determinan Matriks",
+        href: `${BASE_PATH}/matrix-determinant`,
+      },
+      {
+        title: "Metode Sarrus",
+        href: `${BASE_PATH}/sarrus-method`,
+      },
+      {
+        title: "Metode Ekspansi Kofaktor",
+        href: `${BASE_PATH}/cofactor-expansion-method`,
+      },
+      {
+        title: "Sifat Determinan Matriks",
+        href: `${BASE_PATH}/properties-determinant-matrix`,
+      },
+      {
+        title: "Invers Matriks",
+        href: `${BASE_PATH}/matrix-inverse`,
+      },
     ],
   },
   {
@@ -260,14 +307,148 @@ const idMaterials: MaterialList[] = [
     description:
       "Pergerakan dan perubahan bentuk yang vital dalam animasi dan desain.",
     href: `${BASE_PATH}/geometric-transformation`,
-    items: [],
+    items: [
+      {
+        title: "Pencerminan terhadap Garis",
+        href: `${BASE_PATH}/reflection-over-line`,
+      },
+      {
+        title: "Pencerminan terhadap Sumbu X",
+        href: `${BASE_PATH}/reflection-over-x-axis`,
+      },
+      {
+        title: "Pencerminan terhadap Sumbu Y",
+        href: `${BASE_PATH}/reflection-over-y-axis`,
+      },
+      {
+        title: "Pencerminan terhadap Garis y = x",
+        href: `${BASE_PATH}/reflection-over-y-equals-x`,
+      },
+      {
+        title: "Pencerminan terhadap Garis y = -x",
+        href: `${BASE_PATH}/reflection-over-y-equals-minus-x`,
+      },
+      {
+        title: "Pencerminan terhadap Garis x = k",
+        href: `${BASE_PATH}/reflection-over-x-equals-k`,
+      },
+      {
+        title: "Pencerminan terhadap Garis y = h",
+        href: `${BASE_PATH}/reflection-over-y-equals-h`,
+      },
+      {
+        title: "Pencerminan terhadap Titik",
+        href: `${BASE_PATH}/reflection-over-point`,
+      },
+      {
+        title: "Translasi",
+        href: `${BASE_PATH}/translation`,
+      },
+      {
+        title: "Rotasi",
+        href: `${BASE_PATH}/rotation`,
+      },
+      {
+        title: "Dilatasi",
+        href: `${BASE_PATH}/dilation`,
+      },
+      {
+        title: "Kaitan Matriks dengan Transformasi",
+        href: `${BASE_PATH}/matrix-transformation`,
+      },
+      {
+        title: "Matriks Pencerminan",
+        href: `${BASE_PATH}/reflection-matrix`,
+      },
+      {
+        title: "Matriks Pencerminan terhadap Titik Pusat",
+        href: `${BASE_PATH}/reflection-matrix-center`,
+      },
+      {
+        title: "Matriks Pencerminan terhadap Sebarang Titik",
+        href: `${BASE_PATH}/reflection-matrix-arbitrary-point`,
+      },
+      {
+        title: "Matriks Translasi",
+        href: `${BASE_PATH}/translation-matrix`,
+      },
+      {
+        title: "Matriks Rotasi",
+        href: `${BASE_PATH}/rotation-matrix`,
+      },
+      {
+        title: "Matriks Dilatasi",
+        href: `${BASE_PATH}/dilation-matrix`,
+      },
+      {
+        title: "Matriks Transformasi Komposisi",
+        href: `${BASE_PATH}/composite-transformation-matrix`,
+      },
+    ],
   },
   {
     title: "Fungsi dan Pemodelannya",
     description:
       "Alat matematis untuk menggambarkan hubungan dan memprediksi perilaku sistem dunia nyata.",
     href: `${BASE_PATH}/function-modeling`,
-    items: [],
+    items: [
+      {
+        title: "Fungsi Trigonometri Sebarang Sudut",
+        href: `${BASE_PATH}/trigonometric-function-arbitrary-angle`,
+      },
+      {
+        title: "Identitas Trigonometri",
+        href: `${BASE_PATH}/trigonometric-identity`,
+      },
+      {
+        title: "Grafik Fungsi Trigonometri",
+        href: `${BASE_PATH}/trigonometric-function-graph`,
+      },
+      {
+        title: "Grafik Fungsi Trigonometri",
+        href: `${BASE_PATH}/trigonometric-function-graph`,
+      },
+      {
+        title: "Konsep Fungsi Logaritma",
+        href: `${BASE_PATH}/logarithmic-function-concept`,
+      },
+      {
+        title: "Grafik Fungsi Logaritma",
+        href: `${BASE_PATH}/logarithmic-function-graph`,
+      },
+      {
+        title: "Identitas Fungsi Logaritma",
+        href: `${BASE_PATH}/logarithmic-function-identity`,
+      },
+      {
+        title: "Fungsi Rasional",
+        href: `${BASE_PATH}/rational-function`,
+      },
+      {
+        title: "Asimtot",
+        href: `${BASE_PATH}/asymptote`,
+      },
+      {
+        title: "Fungsi Akar",
+        href: `${BASE_PATH}/square-root-function`,
+      },
+      {
+        title: "Fungsi Eksponensial",
+        href: `${BASE_PATH}/exponential-function`,
+      },
+      {
+        title: "Fungsi Nilai Mutlak",
+        href: `${BASE_PATH}/absolute-value-function`,
+      },
+      {
+        title: "Pemodelan Fungsi Tangga",
+        href: `${BASE_PATH}/step-function-modeling`,
+      },
+      {
+        title: "Pemodelan Fungsi Piecewise",
+        href: `${BASE_PATH}/piecewise-function-modeling`,
+      },
+    ],
   },
 ];
 
