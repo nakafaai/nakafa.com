@@ -1,3 +1,6 @@
+"use client";
+
+import { usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import NavigationLink from "../ui/navigation-link";
 import {
@@ -11,10 +14,15 @@ import { articlesMenu } from "./data/articles";
 
 function MenuItem() {
   const t = useTranslations("Articles");
+  const pathname = usePathname();
 
   return articlesMenu.map((item) => (
     <SidebarMenuItem key={item.title}>
-      <SidebarMenuButton tooltip={t(item.title)} asChild>
+      <SidebarMenuButton
+        tooltip={t(item.title)}
+        isActive={pathname.includes(item.href)}
+        asChild
+      >
         <NavigationLink href={item.href}>
           {item.icon && <item.icon />}
           <span className="truncate">{t(item.title)}</span>

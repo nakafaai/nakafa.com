@@ -405,10 +405,6 @@ const idMaterials: MaterialList[] = [
         href: `${BASE_PATH}/trigonometric-function-graph`,
       },
       {
-        title: "Grafik Fungsi Trigonometri",
-        href: `${BASE_PATH}/trigonometric-function-graph`,
-      },
-      {
         title: "Konsep Fungsi Logaritma",
         href: `${BASE_PATH}/logarithmic-function-concept`,
       },
