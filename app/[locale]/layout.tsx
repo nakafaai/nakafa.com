@@ -66,6 +66,7 @@ export async function generateMetadata({
         { rel: "apple-touch-icon", url: "/logo.svg" },
       ],
     },
+    manifest: "https://nakafa.com/manifest.json",
     robots: {
       index: true,
       follow: true,
@@ -80,6 +81,78 @@ export async function generateMetadata({
       },
     },
     category: "education",
+    twitter: {
+      card: "summary_large_image",
+      title: t("title"),
+      description: t("description"),
+      images: [
+        {
+          url: "https://nakafa.com/twitter-large.png",
+          alt: t("title"),
+          width: 4096,
+          height: 4096,
+        },
+        {
+          url: "https://nakafa.com/twitter-small.png",
+          alt: t("title"),
+          width: 1200,
+          height: 675,
+        },
+      ],
+      creator: "@nabilfatih_",
+    },
+    openGraph: {
+      title: t("title"),
+      description: t("description"),
+      url: "https://nakafa.com",
+      siteName: "Nakafa",
+      locale: locale,
+      type: "website",
+      images: [
+        {
+          url: "https://nakafa.com/facebook.png",
+          alt: t("title"),
+          width: 1200,
+          height: 630,
+        },
+        {
+          url: "https://nakafa.com/linkedin.png",
+          alt: t("title"),
+          width: 1200,
+          height: 627,
+        },
+        {
+          url: "https://nakafa.com/pinterest.png",
+          alt: t("title"),
+          width: 1000,
+          height: 1500,
+        },
+        {
+          url: "https://nakafa.com/reddit.png",
+          alt: t("title"),
+          width: 1200,
+          height: 1200,
+        },
+        {
+          url: "https://nakafa.com/twitter-large.png",
+          alt: t("title"),
+          width: 4096,
+          height: 4096,
+        },
+        {
+          url: "https://nakafa.com/twitter-small.png",
+          alt: t("title"),
+          width: 1200,
+          height: 675,
+        },
+        {
+          url: "https://nakafa.com/whatsapp.png",
+          alt: t("title"),
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
   };
 }
 
