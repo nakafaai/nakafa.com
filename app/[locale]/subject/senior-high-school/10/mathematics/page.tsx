@@ -37,7 +37,7 @@ export default async function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  const materials: MaterialList[] = (await import(`./data/${locale}-material`))
+  const materials: MaterialList[] = (await import(`./_data/${locale}-material`))
     .default;
 
   const chapters: ParsedHeading[] = materials.map((material) => ({

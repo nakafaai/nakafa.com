@@ -8,7 +8,7 @@ import { LibraryIcon } from "lucide-react";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { grade11Subjects } from "../data/subject";
+import { grade11Subjects } from "../_data/subject";
 
 const FILE_PATH = "/subject/senior-high-school/11";
 const GITHUB_URL = `${process.env.GITHUB_URL}${FILE_PATH}`;

@@ -8,7 +8,7 @@ import { UniversityIcon } from "lucide-react";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { bachelorSubjects } from "../data/subject";
+import { bachelorSubjects } from "../_data/subject";
 
 const FILE_PATH = "/subject/university/bachelor";
 const GITHUB_URL = `${process.env.GITHUB_URL}${FILE_PATH}`;
