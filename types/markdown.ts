@@ -9,3 +9,5 @@ export type EmProps = ComponentPropsWithoutRef<"em">;
 export type StrongProps = ComponentPropsWithoutRef<"strong">;
 export type ListProps = ComponentPropsWithoutRef<"ul">;
 export type ListItemProps = ComponentPropsWithoutRef<"li">;
+export type PreProps = ComponentPropsWithoutRef<"pre">;
+export type CodeProps = ComponentPropsWithoutRef<"code">;
