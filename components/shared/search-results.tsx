@@ -12,9 +12,9 @@ export function SearchResults({ data }: Props) {
   const setOpen = useSetAtom(searchAtom);
 
   return (
-    <div className="space-y-2 border-b px-2 py-3 last:border-b-0">
+    <div className="space-y-2 border-b px-2 py-4 last:border-b-0">
       <div className="px-2">
-        <p className="font-medium text-muted-foreground text-sm leading-tight tracking-tight">
+        <p className="font-medium text-muted-foreground leading-tight tracking-tight">
           {data.meta.title}
         </p>
       </div>
