@@ -3,7 +3,7 @@
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import type { MaterialList } from "@/types/subjects";
-import { ArrowDownIcon, ChevronDownIcon } from "lucide-react";
+import { ArrowDownIcon, ChevronDownIcon, LinkIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import {
@@ -28,12 +28,17 @@ export function CardMaterial({ material }: Props) {
     <Card className="pb-0">
       <CardHeader className="flex-row items-start justify-between gap-2">
         <div className="flex flex-col gap-1.5">
-          <CardTitle
-            id={id}
-            title={material.title}
-            className="scroll-mt-24 font-medium"
-          >
-            <h2>{material.title}</h2>
+          <CardTitle className="group flex scroll-mt-24 items-center font-medium">
+            <h2 id={id} title={material.title} className="inline-block">
+              {material.title}
+            </h2>
+            <a
+              href={`#${id}`}
+              className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
+              aria-label={`Link to ${material.title}`}
+            >
+              <LinkIcon className="size-4" />
+            </a>
           </CardTitle>
           {material.description && (
             <CardDescription

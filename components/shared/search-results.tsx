@@ -15,7 +15,7 @@ export function SearchResults({ data }: Props) {
   return (
     <div className="space-y-2 border-b px-2 py-4 last:border-b-0">
       <div className="px-2">
-        <h1 className="font-medium text-muted-foreground leading-tight tracking-tight">
+        <h1 className="font-medium text-muted-foreground text-sm leading-tight tracking-tight">
           {data.meta.title}
         </h1>
       </div>
@@ -29,9 +29,10 @@ export function SearchResults({ data }: Props) {
               e.stopPropagation();
               setOpen(false);
             }}
+            prefetch
           >
             <div className="group rounded-md p-2 transition-colors hover:bg-primary/5">
-              <div className="mb-2 flex items-center gap-1.5">
+              <div className="mb-1.5 flex items-center gap-1.5">
                 <div className="flex shrink-0 items-center justify-center rounded-sm bg-primary/10 p-1">
                   <FileTextIcon className="size-4 shrink-0 opacity-80" />
                 </div>

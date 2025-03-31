@@ -13,6 +13,11 @@ export default function NavigationLink({
   const isActive = typeof href === "string" && pathname.includes(href);
 
   return (
-    <Link aria-current={isActive ? "page" : undefined} href={href} {...props} />
+    <Link
+      aria-current={isActive ? "page" : undefined}
+      href={href}
+      prefetch
+      {...props}
+    />
   );
 }

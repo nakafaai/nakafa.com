@@ -22,6 +22,7 @@ export function CardArticle({ category, article }: Props) {
       key={article.slug}
       href={`/articles/${category}/${article.slug}`}
       className="group"
+      prefetch
     >
       <Card className="relative h-full overflow-hidden pt-8">
         <GradientBlock
@@ -29,12 +30,10 @@ export function CardArticle({ category, article }: Props) {
           className="absolute inset-0 h-3 transition-all duration-500 ease-in-out group-hover:h-5"
         />
         <CardHeader>
-          <CardTitle
-            id={id}
-            title={article.title}
-            className="line-clamp-2 scroll-mt-24 font-medium"
-          >
-            <h2>{article.title}</h2>
+          <CardTitle className="line-clamp-2 scroll-mt-24 font-medium">
+            <h2 id={id} title={article.title}>
+              {article.title}
+            </h2>
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex items-center justify-between">
