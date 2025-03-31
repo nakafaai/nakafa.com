@@ -30,8 +30,8 @@ export function CardArticle({ category, article }: Props) {
           className="absolute inset-0 h-3 transition-all duration-500 ease-in-out group-hover:h-5"
         />
         <CardHeader>
-          <CardTitle className="line-clamp-2 scroll-mt-24 font-medium">
-            <h2 id={id} title={article.title}>
+          <CardTitle className="line-clamp-2 font-medium leading-snug">
+            <h2 id={id} title={article.title} className="scroll-mt-24">
               {article.title}
             </h2>
           </CardTitle>

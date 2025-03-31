@@ -13,14 +13,16 @@ export function CardSubject({ icon: Icon, label, href }: Props) {
   return (
     <Link href={href} className="group" prefetch>
       <Card className="relative overflow-hidden">
-        <CardHeader className="flex-row items-center gap-2">
-          <Icon className="size-5" />
-          <CardTitle
-            title={label}
-            className="line-clamp-1 pr-9 font-medium tracking-tight"
-          >
-            <h2>{label}</h2>
-          </CardTitle>
+        <CardHeader className="gap-0">
+          <div className="flex items-center gap-2">
+            <Icon className="size-5 shrink-0" />
+            <CardTitle
+              title={label}
+              className="line-clamp-1 pr-9 font-medium tracking-tight"
+            >
+              <h2>{label}</h2>
+            </CardTitle>
+          </div>
         </CardHeader>
         <GradientBlock
           keyString={label}

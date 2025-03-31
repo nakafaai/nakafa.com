@@ -38,20 +38,26 @@ export function RulingTable({
 }: Props) {
   return (
     <div className="grid grid-cols-1">
-      <Table containerClassName="scrollbar-hide">
+      <Table containerClassName="pb-4">
         <TableCaption>{caption}</TableCaption>
         <TableHeader className="border-x border-t bg-muted/50">
           <TableRow>
-            <TableHead className="w-1/4">{headers.category}</TableHead>
-            <TableHead className="w-1/4">{headers.electionLaw}</TableHead>
-            <TableHead className="w-1/4">{headers.courtDecision}</TableHead>
+            <TableHead className="w-1/4 border-r">{headers.category}</TableHead>
+            <TableHead className="w-1/4 border-r">
+              {headers.electionLaw}
+            </TableHead>
+            <TableHead className="w-1/4 border-r">
+              {headers.courtDecision}
+            </TableHead>
             <TableHead className="w-1/4">{headers.dprDecision}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="border-x border-b">
           {tableData.map((row, index) => (
             <TableRow key={index}>
-              <TableCell className="font-medium">{row.category}</TableCell>
+              <TableCell className="border-r bg-muted/50 font-medium">
+                {row.category}
+              </TableCell>
               <TableCell>{row.electionLaw}</TableCell>
               <TableCell>{row.courtDecision}</TableCell>
               <TableCell>{row.dprDecision}</TableCell>

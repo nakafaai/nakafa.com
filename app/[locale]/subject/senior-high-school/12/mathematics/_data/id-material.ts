@@ -70,7 +70,7 @@ const idMaterials: MaterialList[] = [
       },
       {
         title: "Juring",
-        href: `${BASE_PATH}/circle-sector`,
+        href: `${BASE_PATH}/sector`,
       },
       {
         title: "Sudut Pusat pada Juring",

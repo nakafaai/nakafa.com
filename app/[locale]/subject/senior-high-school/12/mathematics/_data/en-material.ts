@@ -69,7 +69,7 @@ const enMaterials: MaterialList[] = [
       },
       {
         title: "Sector",
-        href: `${BASE_PATH}/circle-sector`,
+        href: `${BASE_PATH}/sector`,
       },
       {
         title: "Central Angle on Sector",

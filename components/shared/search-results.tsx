@@ -33,9 +33,7 @@ export function SearchResults({ data }: Props) {
           >
             <div className="group rounded-md p-2 transition-colors hover:bg-primary/5">
               <div className="mb-1.5 flex items-center gap-1.5">
-                <div className="flex shrink-0 items-center justify-center rounded-sm bg-primary/10 p-1">
-                  <FileTextIcon className="size-4 shrink-0 opacity-80" />
-                </div>
+                <FileTextIcon className="size-4 shrink-0 opacity-80" />
                 <h2 className="line-clamp-1 font-medium leading-tight">
                   {subResult.title}
                 </h2>

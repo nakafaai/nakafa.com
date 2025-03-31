@@ -3,7 +3,7 @@
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/index";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
@@ -78,8 +78,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
-  // Compute the CSS string instead of using dangerouslySetInnerHTML
-  const css = Object.entries(THEMES)
+  const styleContent = Object.entries(THEMES)
     .map(
       ([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
@@ -90,14 +89,14 @@ ${colorConfig
       itemConfig.color;
     return color ? `  --color-${key}: ${color};` : null;
   })
-  .filter(Boolean) // filters out any null values
+  .filter(Boolean)
   .join("\n")}
 }
 `
     )
     .join("\n");
 
-  return <style>{css}</style>;
+  return <style>{styleContent}</style>;
 };
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
@@ -132,7 +131,7 @@ function ChartTooltipContent({
     }
 
     const [item] = payload;
-    const key = `${labelKey || item.dataKey || item.name || "value"}`;
+    const key = `${labelKey || item?.dataKey || item?.name || "value"}`;
     const itemConfig = getPayloadConfigFromPayload(config, item, key);
     const value =
       !labelKey && typeof label === "string"
@@ -220,7 +219,7 @@ function ChartTooltipContent({
                   )}
                   <div
                     className={cn(
-                      "flex flex-1 justify-between gap-4 leading-none",
+                      "flex flex-1 justify-between leading-none",
                       nestLabel ? "items-end" : "items-center"
                     )}
                   >
