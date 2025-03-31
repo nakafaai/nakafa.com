@@ -1,3 +1,5 @@
+import { CardMaterial } from "@/components/shared/card-material";
+import { ContainerList } from "@/components/shared/container-list";
 import { LayoutMaterial } from "@/components/shared/layout-material";
 import type { ParsedHeading } from "@/components/shared/sidebar-tree";
 import type { MaterialList } from "@/types/subjects";
@@ -55,8 +57,17 @@ export default async function Page({ params }: Props) {
           label: t("grade", { grade: 12 }),
         },
       }}
-      materials={materials}
-      chapters={chapters}
+      content={
+        <ContainerList className="sm:grid-cols-1">
+          {materials.map((material) => (
+            <CardMaterial key={material.title} material={material} />
+          ))}
+        </ContainerList>
+      }
+      contentClassName="py-10"
+      chapters={{
+        data: chapters,
+      }}
       githubUrl={GITHUB_URL}
     />
   );

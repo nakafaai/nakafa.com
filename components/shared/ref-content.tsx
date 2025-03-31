@@ -1,7 +1,7 @@
 "use client";
 
 import { cleanupUrl, cn, formatUrl } from "@/lib/utils";
-import type { Reference } from "@/types/articles";
+import type { Reference } from "@/types/content";
 import { IconBrandGithub, IconBrandYoutube } from "@tabler/icons-react";
 import {
   BookIcon,

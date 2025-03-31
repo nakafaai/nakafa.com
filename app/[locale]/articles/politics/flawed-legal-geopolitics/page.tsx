@@ -1,8 +1,7 @@
 import { LayoutArticle } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
-
 import { getHeadings, getRawContent } from "@/lib/utils/markdown";
-import type { ArticleMetadata } from "@/types/articles";
+import type { ContentMetadata } from "@/types/content";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
@@ -21,7 +20,7 @@ export async function generateMetadata({
   params,
 }: { params: Props["params"] }): Promise<Metadata> {
   const { locale } = await params;
-  const metadata: ArticleMetadata = await import(`./${locale}.mdx`).then(
+  const metadata: ContentMetadata = await import(`./${locale}.mdx`).then(
     (m) => m.metadata
   );
 
@@ -45,7 +44,7 @@ export default async function Page({ params }: Props) {
     const Content = file.default;
 
     // import metadata from the mdx file based on the locale
-    const metadata: ArticleMetadata = file.metadata;
+    const metadata: ContentMetadata = file.metadata;
 
     // Read the raw file content
     // we need to use the full path to the MDX file

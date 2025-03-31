@@ -16,7 +16,7 @@ export type Reference = {
   details?: string;
 };
 
-export type ArticleMetadata = {
+export type ContentMetadata = {
   title: string;
   description: string;
   authors: {
@@ -26,5 +26,6 @@ export type ArticleMetadata = {
   alternates: {
     canonical: string;
   };
+  subject?: string;
   category: string;
 };

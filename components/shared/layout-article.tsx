@@ -1,4 +1,4 @@
-import type { ArticleMetadata } from "@/types/articles";
+import type { ContentMetadata } from "@/types/content";
 import { DramaIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { FooterContent } from "./footer-content";
@@ -8,7 +8,7 @@ import { SidebarRight } from "./sidebar-right";
 import { type ParsedHeading, SidebarTree } from "./sidebar-tree";
 
 type Props = {
-  metadata: ArticleMetadata;
+  metadata: ContentMetadata;
   content: ReactNode;
   footer: ReactNode;
   onThisPage: ParsedHeading[];

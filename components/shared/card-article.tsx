@@ -1,5 +1,5 @@
 import { Link } from "@/i18n/routing";
-import type { Article } from "@/types/articles";
+import type { Article } from "@/types/content";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import { Badge } from "../ui/badge";

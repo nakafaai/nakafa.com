@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import type { ParsedHeading } from "@/components/shared/sidebar-tree";
-import type { Article } from "@/types/articles";
+import type { Article } from "@/types/content";
 import { compareDesc, parse } from "date-fns";
 import glob from "fast-glob";
 import type { Locale } from "next-intl";

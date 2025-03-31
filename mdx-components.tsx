@@ -1,5 +1,5 @@
 import { BlockMath, InlineMath } from "react-katex";
-import { codeToHtml } from "shiki";
+import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { Heading } from "./components/markdown/heading";
 import { buttonVariants } from "./components/ui/button";
 import NavigationLink from "./components/ui/navigation-link";
@@ -19,6 +19,8 @@ import type {
 const CONSTANTS = {
   CODE_REGEX: /language-/,
 };
+
+const cssVariablesTheme = createCssVariablesTheme({});
 
 const components = {
   h1: (props: HeadingProps) => (
@@ -95,7 +97,7 @@ const components = {
 
       const code = await codeToHtml(props.children, {
         lang,
-        theme: "aurora-x",
+        theme: cssVariablesTheme,
         transformers: [
           {
             // Since we're using dangerouslySetInnerHTML, the code and pre
