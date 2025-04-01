@@ -11,7 +11,13 @@ import {
 } from "@/components/ui/card";
 import { PauseIcon, PlayIcon, TimerResetIcon } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
-import { useCallback, useDeferredValue, useEffect, useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useIntersectionObserver } from "usehooks-ts";
 
 type BacterialGrowthProps = {
@@ -37,6 +43,9 @@ export default function BacterialGrowth({
   const [speed, setSpeed] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
 
+  const deferredPlaying = useDeferredValue(isPlaying);
+  const deferredGeneration = useDeferredValue(generation);
+
   const { ref, isIntersecting } = useIntersectionObserver({
     threshold: 0.1,
   });
@@ -51,22 +60,28 @@ export default function BacterialGrowth({
   }, [isIntersecting]);
 
   // Calculate current bacteria count based on the formula B(t) = B₀ × 2^t
-  const bacteriaCount = initialCount * 2 ** generation;
+  const bacteriaCount = useMemo(
+    () => initialCount * 2 ** deferredGeneration,
+    [initialCount, deferredGeneration]
+  );
 
   // Create an array of bacteria to display
-  const bacteria = Array.from(
-    { length: Math.min(bacteriaCount, 100) },
-    (_, i) => i
+  const bacteria = useMemo(
+    () => Array.from({ length: Math.min(bacteriaCount, 100) }, (_, i) => i),
+    [bacteriaCount]
   );
 
   // Calculate how many bacteria to actually show (cap at 100 for performance)
-  const displayCount = Math.min(bacteriaCount, 100);
+  const displayCount = useMemo(
+    () => Math.min(bacteriaCount, 100),
+    [bacteriaCount]
+  );
 
   // Calculate grid dimensions based on bacteria count
-  const gridCols = Math.min(Math.ceil(Math.sqrt(displayCount)), 10);
-
-  const deferredPlaying = useDeferredValue(isPlaying);
-  const deferredGeneration = useDeferredValue(generation);
+  const gridCols = useMemo(
+    () => Math.min(Math.ceil(Math.sqrt(displayCount)), 10),
+    [displayCount]
+  );
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
