@@ -21,6 +21,10 @@ export function SearchResults({ data }: Props) {
 
       <div className="flex flex-col gap-0.5">
         {data.sub_results.map((subResult) => {
+          if (subResult.title === data.meta.title) {
+            return null;
+          }
+
           return (
             <Link
               key={subResult.url}
