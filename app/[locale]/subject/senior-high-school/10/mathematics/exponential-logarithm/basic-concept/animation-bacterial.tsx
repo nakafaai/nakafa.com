@@ -131,7 +131,7 @@ export default function BacterialGrowth({
                 {bacteria.map((id) => (
                   <motion.div
                     key={id}
-                    layoutId={`bacterial-${id}`}
+                    layout
                     className="relative flex items-center justify-center"
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{
@@ -145,10 +145,9 @@ export default function BacterialGrowth({
                       damping: 30,
                       delay: id * 0.01, // Stagger effect
                     }}
-                    layout
                   >
                     <motion.div
-                      className="aspect-square h-full max-h-[20px] w-full max-w-[20px] rounded-full bg-cyan-300 sm:max-h-[32px] sm:max-w-[32px] dark:bg-cyan-500"
+                      className="aspect-square h-full max-h-[20px] w-full max-w-[20px] rounded-full bg-cyan-300 transition-colors hover:bg-cyan-400 sm:max-h-[32px] sm:max-w-[32px] dark:bg-cyan-500"
                       animate={{
                         scale: [1, 1.1, 1],
                       }}
@@ -159,7 +158,6 @@ export default function BacterialGrowth({
                       }}
                       whileHover={{
                         scale: 1.2,
-                        backgroundColor: "var(--color-cyan-400)",
                       }}
                     />
                   </motion.div>
