@@ -313,27 +313,27 @@ const ElectabilityChartData = [
   },
 ];
 
+const chartConfig = {
+  anies_muhaimin: {
+    label: "Anies Baswedan-Muhaimin Iskandar",
+    color: "var(--chart-1)",
+  },
+  prabowo_gibran: {
+    label: "Prabowo Subianto-Gibran Rakabuming",
+    color: "var(--chart-2)",
+  },
+  ganjar_mahfud: {
+    label: "Ganjar Pranowo-Mahfud MD",
+    color: "var(--chart-3)",
+  },
+} satisfies ChartConfig;
+
 export function ElectabilityChart({
   title,
   description,
   yLabel,
   footnote,
 }: Props) {
-  const chartConfig = {
-    anies_muhaimin: {
-      label: "Anies Baswedan-Muhaimin Iskandar",
-      color: "var(--chart-1)",
-    },
-    prabowo_gibran: {
-      label: "Prabowo Subianto-Gibran Rakabuming",
-      color: "var(--chart-2)",
-    },
-    ganjar_mahfud: {
-      label: "Ganjar Pranowo-Mahfud MD",
-      color: "var(--chart-3)",
-    },
-  } satisfies ChartConfig;
-
   return (
     <Card>
       <CardHeader>
