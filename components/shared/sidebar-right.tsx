@@ -10,7 +10,7 @@ export function SidebarRight({ children, ...props }: Props) {
     <Sidebar
       data-pagefind-ignore
       collapsible="none"
-      className="sticky top-16 hidden h-[calc(100svh-4rem)] border-l lg:flex"
+      className="sticky top-16 hidden h-[calc(100svh-4rem)] border-l xl:flex"
       {...props}
     >
       <SidebarContent>{children}</SidebarContent>

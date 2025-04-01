@@ -18,6 +18,7 @@ import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { TailwindIndicator } from "@/components/ui/tailwind-indicator";
 import type { Metadata } from "next";
 
 type Props = {
@@ -202,6 +203,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         </AppProviders>
         <Analytics />
         <SpeedInsights />
+        <TailwindIndicator />
       </body>
     </html>
   );
