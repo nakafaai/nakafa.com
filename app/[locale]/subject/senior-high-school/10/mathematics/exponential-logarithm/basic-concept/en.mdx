@@ -106,7 +106,14 @@ One bacterium can divide into two, then four, eight, and so on. If <InlineMath m
 
 <BlockMath math="B(t) = B_0 \times 2^t" />
 
-This formula is obtained because the bacterial population doubles at each time interval. The number 2 represents the growth factor. To use it, multiply the initial amount by 2 raised to the power of the number of intervals that have passed. Example: if there are initially 100 bacteria and they divide every 30 minutes, after 2 hours (4 intervals) there will be <InlineMath math="100 \times 2^4 = 100 \times 16 = 1,600" /> bacteria.
+This formula is obtained because the bacterial population doubles at each time interval. The number 2 represents the growth factor.
+To use it, multiply the initial amount by 2 raised to the power of the number of intervals that have passed. Example: if there are
+initially 100 bacteria and they divide every 30 minutes, after 2 hours (4 intervals) there
+will be <InlineMath math="100 \times 2^4 = 100 \times 16 = 1,600" /> bacteria.
+
+import BacterialGrowthAnimation from "./animation-bacterial";
+
+<BacterialGrowthAnimation />
 
 ### Virus Spread
 

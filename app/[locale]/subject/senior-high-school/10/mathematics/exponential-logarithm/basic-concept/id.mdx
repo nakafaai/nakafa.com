@@ -113,6 +113,16 @@ Angka 2 mewakili faktor pertumbuhan. Untuk menggunakannya, kalikan jumlah awal d
 Contoh: jika awalnya ada 100 bakteri dan mereka membelah setiap 30 menit, setelah 2 jam (4 interval)
 akan ada <InlineMath math="100 \times 2^4 = 100 \times 16 = 1.600" /> bakteri.
 
+import BacterialGrowthAnimation from "./animation-bacterial";
+
+<BacterialGrowthAnimation
+  labels={{
+    title: "Pertumbuhan Bakteri",
+    bacterial: "Bakteri",
+    initialBacteria: "Bakteri Awal",
+  }}
+/>
+
 ### Penyebaran Virus
 
 Pola penyebaran virus seperti COVID-19 juga sering mengikuti model eksponensial, terutama pada fase awal. Jika satu orang dapat menularkan virus ke rata-rata <InlineMath math="R" /> orang baru (angka reproduksi), jumlah kasus setelah <InlineMath math="n" /> siklus penularan bisa diperkirakan dengan:
