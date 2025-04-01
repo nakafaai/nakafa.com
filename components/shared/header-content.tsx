@@ -1,7 +1,7 @@
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, type LucideIcon, PencilLineIcon } from "lucide-react";
+import { CalendarIcon, type LucideIcon, UserPenIcon } from "lucide-react";
 import { buttonVariants } from "../ui/button";
 import { Particles } from "../ui/particles";
 
@@ -67,7 +67,7 @@ export function HeaderContent({
         {showFooter && (
           <div className="flex flex-col justify-between gap-2 pt-2 sm:flex-row sm:items-center sm:gap-4">
             <p className="inline-flex items-center gap-1 text-muted-foreground">
-              <PencilLineIcon className="size-4" />
+              <UserPenIcon className="size-4 shrink-0" />
               <span className="text-sm">
                 {authors.map((author) => author.name).join(", ")}
               </span>
@@ -75,7 +75,7 @@ export function HeaderContent({
 
             <div className="flex items-center gap-4">
               <p className="inline-flex items-center gap-1 text-muted-foreground">
-                <CalendarIcon className="size-4" />
+                <CalendarIcon className="size-4 shrink-0" />
                 <span className="text-sm">
                   {format(new Date(date), "d MMM, yyyy")}
                 </span>
@@ -83,7 +83,7 @@ export function HeaderContent({
 
               {category && (
                 <p className="inline-flex items-center gap-1 text-muted-foreground">
-                  <category.icon className="size-4" />
+                  <category.icon className="size-4 shrink-0" />
                   <span className="text-sm">{category.name}</span>
                 </p>
               )}

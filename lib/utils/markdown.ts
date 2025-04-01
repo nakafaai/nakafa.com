@@ -4,6 +4,8 @@ import type { Article } from "@/types/content";
 import { compareDesc, parse } from "date-fns";
 import glob from "fast-glob";
 import type { Locale } from "next-intl";
+import { Children } from "react";
+import type { ReactNode } from "react";
 import { teams } from "../data/team";
 
 /**
@@ -160,4 +162,15 @@ export async function getArticles(
     });
 
   return sortedArticles;
+}
+
+/**
+ * Filters whitespace text nodes from the given children to prevent hydration errors.
+ * @param children - The children to filter.
+ * @returns The filtered children.
+ */
+export function filterWhitespaceNodes(children: ReactNode) {
+  return Children.toArray(children).filter(
+    (child) => !(typeof child === "string" && child.trim() === "")
+  );
 }

@@ -1,3 +1,4 @@
+import {} from "react";
 import { BlockMath, InlineMath, type MathComponentProps } from "react-katex";
 import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { Heading } from "./components/markdown/heading";
@@ -13,6 +14,7 @@ import {
   TableRow,
 } from "./components/ui/table";
 import { cn } from "./lib/utils";
+import { filterWhitespaceNodes } from "./lib/utils/markdown";
 import type {
   AnchorProps,
   CodeProps,
@@ -153,14 +155,34 @@ const components = {
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
   ),
-  table: (props: TableProps) => <Table className="border" {...props} />,
-  thead: (props: TableHeaderProps) => (
-    <TableHeader className="bg-muted/50" {...props} />
+  table: ({ children, ...props }: TableProps) => (
+    <Table className="border" {...props}>
+      {filterWhitespaceNodes(children)}
+    </Table>
   ),
-  tbody: (props: TableBodyProps) => <TableBody {...props} />,
-  tr: (props: TableRowProps) => <TableRow className="border" {...props} />,
-  th: (props: TableHeadProps) => <TableHead className="border" {...props} />,
-  td: (props: TableCellProps) => <TableCell className="border" {...props} />,
+  thead: ({ children, ...props }: TableHeaderProps) => (
+    <TableHeader className="bg-muted/50" {...props}>
+      {filterWhitespaceNodes(children)}
+    </TableHeader>
+  ),
+  tbody: ({ children, ...props }: TableBodyProps) => (
+    <TableBody {...props}>{filterWhitespaceNodes(children)}</TableBody>
+  ),
+  tr: ({ children, ...props }: TableRowProps) => (
+    <TableRow className="border" {...props}>
+      {filterWhitespaceNodes(children)}
+    </TableRow>
+  ),
+  th: ({ children, ...props }: TableHeadProps) => (
+    <TableHead className="border" {...props}>
+      {filterWhitespaceNodes(children)}
+    </TableHead>
+  ),
+  td: ({ children, ...props }: TableCellProps) => (
+    <TableCell className="border" {...props}>
+      {filterWhitespaceNodes(children)}
+    </TableCell>
+  ),
 };
 
 declare global {
