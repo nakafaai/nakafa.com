@@ -27,7 +27,7 @@ export async function generateMetadata({
   );
 
   return {
-    title: metadata.title,
+    title: `${metadata.title} - ${metadata.subject}`,
     alternates: metadata.alternates,
     authors: metadata.authors,
     category: metadata.category,

@@ -8,7 +8,7 @@ import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
-const SLUG = "properties";
+const SLUG = "function-definition";
 const SLUG_SUBJECT = "exponential-logarithm";
 const BASE_PATH = "/subject/senior-high-school/10/mathematics";
 const FILE_PATH = `${BASE_PATH}/${SLUG_SUBJECT}/${SLUG}`;
