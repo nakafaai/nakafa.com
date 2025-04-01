@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import nakafaLogo from "@/public/logo.svg";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -23,7 +24,11 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const t = useTranslations("Metadata");
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar
+      collapsible="icon"
+      className={cn("z-20", props.className)}
+      {...props}
+    >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
