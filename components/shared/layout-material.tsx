@@ -42,7 +42,7 @@ export function LayoutMaterial({
   const t = useTranslations("Subject");
 
   return (
-    <div className="flex">
+    <div className="lg:flex">
       <div className="flex-1">
         <HeaderContent
           title={header.title}

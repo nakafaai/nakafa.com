@@ -21,7 +21,7 @@ export function LayoutArticle({
   onThisPage,
 }: Props) {
   return (
-    <div className="flex">
+    <div className="lg:flex">
       <div className="flex-1">
         <HeaderContent
           title={metadata.title}

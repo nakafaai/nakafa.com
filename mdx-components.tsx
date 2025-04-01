@@ -1,8 +1,9 @@
-import { BlockMath, InlineMath } from "react-katex";
+import { BlockMath, InlineMath, type MathComponentProps } from "react-katex";
 import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { Heading } from "./components/markdown/heading";
 import { buttonVariants } from "./components/ui/button";
 import NavigationLink from "./components/ui/navigation-link";
+import { ScrollArea, ScrollBar } from "./components/ui/scroll-area";
 import { cn } from "./lib/utils";
 import type {
   AnchorProps,
@@ -130,7 +131,14 @@ const components = {
     return <code className="inline" {...props} />;
   },
   InlineMath,
-  BlockMath,
+  BlockMath: (props: MathComponentProps) => (
+    <ScrollArea className="max-w-full rounded-xl border bg-card text-card-foreground shadow-sm">
+      <div className="px-4">
+        <BlockMath {...props} />
+      </div>
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
+  ),
 };
 
 declare global {
