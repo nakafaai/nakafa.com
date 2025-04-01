@@ -80,7 +80,7 @@ export default function BacterialGrowth({
           setIsPlaying(false);
           return prev;
         });
-      }, 2000 / speed);
+      }, 1000 / speed);
     }
 
     return () => clearInterval(interval);
