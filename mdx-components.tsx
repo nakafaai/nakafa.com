@@ -4,6 +4,14 @@ import { Heading } from "./components/markdown/heading";
 import { buttonVariants } from "./components/ui/button";
 import NavigationLink from "./components/ui/navigation-link";
 import { ScrollArea, ScrollBar } from "./components/ui/scroll-area";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./components/ui/table";
 import { cn } from "./lib/utils";
 import type {
   AnchorProps,
@@ -15,6 +23,12 @@ import type {
   ParagraphProps,
   PreProps,
   StrongProps,
+  TableBodyProps,
+  TableCellProps,
+  TableHeadProps,
+  TableHeaderProps,
+  TableProps,
+  TableRowProps,
 } from "./types/markdown";
 
 const CONSTANTS = {
@@ -49,10 +63,10 @@ const components = {
     />
   ),
   ol: (props: ListProps) => (
-    <ol className="list-decimal space-y-2 pl-5" {...props} />
+    <ol className="list-decimal space-y-4 pl-5" {...props} />
   ),
   ul: (props: ListProps) => (
-    <ul className="list-disc space-y-1 pl-5" {...props} />
+    <ul className="list-disc space-y-4 pl-5" {...props} />
   ),
   li: (props: ListItemProps) => (
     <li className="pl-1 text-foreground/80 leading-relaxed" {...props} />
@@ -139,6 +153,14 @@ const components = {
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
   ),
+  table: (props: TableProps) => <Table className="border" {...props} />,
+  thead: (props: TableHeaderProps) => (
+    <TableHeader className="bg-muted/50" {...props} />
+  ),
+  tbody: (props: TableBodyProps) => <TableBody {...props} />,
+  tr: (props: TableRowProps) => <TableRow className="border" {...props} />,
+  th: (props: TableHeadProps) => <TableHead className="border" {...props} />,
+  td: (props: TableCellProps) => <TableCell className="border" {...props} />,
 };
 
 declare global {

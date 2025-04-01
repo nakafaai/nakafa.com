@@ -9,3 +9,107 @@ export const metadata = {
   subject: "Exponents and Logarithms",
   category: "Mathematics",
 };
+
+## Table of Exponent Values for Base 2
+
+| <InlineMath math="2^n" />    | Exponentiation Result |
+| ---------------------------- | --------------------- |
+| <InlineMath math="2^1" />    | 2                     |
+| <InlineMath math="2^2" />    | 4                     |
+| <InlineMath math="2^3" />    | 8                     |
+| <InlineMath math="2^4" />    | 16                    |
+| <InlineMath math="2^5" />    | 32                    |
+| <InlineMath math="2^6" />    | 64                    |
+| <InlineMath math="2^7" />    | 128                   |
+| <InlineMath math="2^8" />    | 256                   |
+| <InlineMath math="2^9" />    | 512                   |
+| <InlineMath math="2^{10}" /> | 1024                  |
+
+## Exponent Properties
+
+There are several exponent properties that need to be understood:
+
+1. <InlineMath math="a^m \cdot a^n = a^{m+n}" />, where <InlineMath math="a \neq 0, m, n" /> are
+   integers
+
+   This means multiplying two exponents with the same base results in a new exponent with the sum of the powers.
+
+2. <InlineMath math="\frac{a^m}{a^n} = a^{m-n}" />, where <InlineMath math="a \neq 0, m, n" /> are
+   integers
+
+   Dividing two exponents with the same base results in a new exponent with the difference of the powers.
+
+3. <InlineMath math="(a^m)^n = a^{m \times n}" />, where <InlineMath math="a \neq 0, m, n" /> are
+   integers
+
+   An exponent of an exponent means multiplying the power by the outer power.
+
+4. <InlineMath math="(ab)^m = a^m \times b^m" />, where <InlineMath math="a, b \neq 0" />
+   , and <InlineMath math="m" /> is an integer
+
+   The exponent of a multiplication equals the multiplication of each base raised to the same power.
+
+5. <InlineMath math="\left(\frac{a}{b}\right)^m = \frac{a^m}{b^m}" />, where <InlineMath math="b \neq 0" />
+   , and <InlineMath math="m" /> is an integer
+
+   The exponent of a division equals the division of each base raised to the same power.
+
+6. <InlineMath math="(a^\frac{m}{n})^p \cdot (a^\frac{p}{n}) = (a)^\frac{m+p}{n}" />
+   , where <InlineMath math="a > 0" />, <InlineMath math="\frac{m}{n}" /> and <InlineMath math="\frac{p}{n}" /> are
+   rational numbers with <InlineMath math="n \neq 0" />
+
+7. <InlineMath math="(a^\frac{m}{n}) \cdot (a^\frac{p}{q}) = (a)^\frac{m \cdot q + p \cdot n}{n \cdot q}" />
+   , where <InlineMath math="a > 0" />, <InlineMath math="\frac{m}{n}" /> and <InlineMath math="\frac{p}{q}" /> are
+   rational numbers with <InlineMath math="n, q \neq 0" />
+
+## Importance of Conditions for Each Property
+
+Each exponent property has specific conditions:
+
+- In properties 1, 2, and 3, the value <InlineMath math="a \neq 0" /> because exponents with base 0 are only defined for positive powers.
+- In property 4, the values <InlineMath math="a, b \neq 0" /> to ensure the exponent is defined.
+- In property 5, the value <InlineMath math="b \neq 0" /> to avoid division by zero.
+- In properties 6 and 7, the value <InlineMath math="a > 0" /> because rational exponents on negative numbers can result in complex numbers.
+
+Understanding these exponent properties is very important as a foundation for advanced mathematics learning, such as logarithms, exponential functions, and calculus.
+
+## Worked Examples
+
+1. **Simplify <InlineMath math="\frac{2^5 \times 2^3}{2^2}" />**
+
+   <BlockMath math="\frac{2^5 \times 2^3}{2^2} = \frac{2^{5+3}}{2^2} = \frac{2^8}{2^2} = 2^{8-2} = 2^6 = 64" />
+
+2. **Simplify <InlineMath math="2^2 \cdot 2^3" />**
+
+   <BlockMath math="2^2 \cdot 2^3 = 2^{2+3} = 2^5 = 32" />
+
+3. **Simplify <InlineMath math="2^5 \cdot 2^2" />**
+
+   <BlockMath math="2^5 \cdot 2^2 = 2^{5+2} = 2^7 = 128" />
+
+4. **Simplify <InlineMath math="2^3 \cdot 2^7" />**
+
+   <BlockMath math="2^3 \cdot 2^7 = 2^{3+7} = 2^{10} = 1024" />
+
+5. **Simplify <InlineMath math="\frac{2^8}{2^6}" />**
+
+   <BlockMath math="\frac{2^8}{2^6} = 2^{8-6} = 2^2 = 4" />
+
+6. **Simplify <InlineMath math="\frac{2^{10}}{2^3}" />**
+
+   <BlockMath math="\frac{2^{10}}{2^3} = 2^{10-3} = 2^7 = 128" />
+
+7. **Simplify <InlineMath math="\frac{2^6}{2^4}" />**
+
+   <BlockMath math="\frac{2^6}{2^4} = 2^{6-4} = 2^2 = 4" />
+
+8. **Simplify <InlineMath math="(2^3)^3" />**
+
+   <BlockMath math="(2^3)^3 = 2^{3 \times 3} = 2^9 = 512" />
+
+9. **Simplify <InlineMath math="(2^4)^2" />**
+
+   <BlockMath math="(2^4)^2 = 2^{4 \times 2} = 2^8 = 256" />
+
+10. **Simplify <InlineMath math="(2^2)^5" />**
+    <BlockMath math="(2^2)^5 = 2^{2 \times 5} = 2^{10} = 1024" />
