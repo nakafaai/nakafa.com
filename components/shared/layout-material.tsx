@@ -27,6 +27,10 @@ type Props = {
   githubUrl: string;
   footerClassName?: string;
   contentClassName?: string;
+  category?: {
+    icon: LucideIcon;
+    name: string;
+  };
   metadata?: ContentMetadata;
 };
 
@@ -36,6 +40,7 @@ export function LayoutMaterial({
   chapters,
   githubUrl,
   metadata,
+  category,
   contentClassName,
   footerClassName,
 }: Props) {
@@ -49,6 +54,7 @@ export function LayoutMaterial({
           icon={header.icon}
           link={header.link}
           description={metadata?.description}
+          category={category}
           date={metadata?.date}
           authors={metadata?.authors}
         />

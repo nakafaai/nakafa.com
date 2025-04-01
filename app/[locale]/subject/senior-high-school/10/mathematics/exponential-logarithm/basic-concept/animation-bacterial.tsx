@@ -10,8 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PauseIcon, PlayIcon, TimerResetIcon } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useState } from "react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { useCallback, useDeferredValue, useEffect, useState } from "react";
 import { useIntersectionObserver } from "usehooks-ts";
 
 type BacterialGrowthProps = {
@@ -65,10 +65,13 @@ export default function BacterialGrowth({
   // Calculate grid dimensions based on bacteria count
   const gridCols = Math.min(Math.ceil(Math.sqrt(displayCount)), 10);
 
+  const deferredPlaying = useDeferredValue(isPlaying);
+  const deferredGeneration = useDeferredValue(generation);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (isPlaying && generation < maxGenerations) {
+    if (deferredPlaying && deferredGeneration < maxGenerations) {
       interval = setInterval(() => {
         setGeneration((prev) => {
           if (prev < maxGenerations) {
@@ -81,7 +84,7 @@ export default function BacterialGrowth({
     }
 
     return () => clearInterval(interval);
-  }, [isPlaying, generation, maxGenerations, speed]);
+  }, [deferredPlaying, deferredGeneration, maxGenerations, speed]);
 
   const resetAnimation = useCallback(() => {
     setGeneration(0);
@@ -112,43 +115,46 @@ export default function BacterialGrowth({
               gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
             }}
           >
-            <AnimatePresence mode="popLayout">
-              {bacteria.map((id) => (
-                <motion.div
-                  key={id}
-                  className="relative flex items-center justify-center"
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{
-                    scale: 1,
-                    opacity: 1,
-                  }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 500,
-                    damping: 30,
-                    delay: id * 0.01, // Stagger effect
-                  }}
-                  layout
-                >
+            <LayoutGroup>
+              <AnimatePresence mode="popLayout">
+                {bacteria.map((id) => (
                   <motion.div
-                    className="aspect-square h-full max-h-[20px] w-full max-w-[20px] rounded-full bg-cyan-300 sm:max-h-[32px] sm:max-w-[32px] dark:bg-cyan-500"
+                    key={id}
+                    layoutId={`bacterial-${id}`}
+                    className="relative flex items-center justify-center"
+                    initial={{ scale: 0, opacity: 0 }}
                     animate={{
-                      scale: [1, 1.1, 1],
+                      scale: 1,
+                      opacity: 1,
                     }}
+                    exit={{ scale: 0, opacity: 0 }}
                     transition={{
-                      duration: 1,
-                      repeat: Number.POSITIVE_INFINITY,
-                      repeatType: "reverse",
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30,
+                      delay: id * 0.01, // Stagger effect
                     }}
-                    whileHover={{
-                      scale: 1.2,
-                      backgroundColor: "var(--color-cyan-400)",
-                    }}
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                    layout
+                  >
+                    <motion.div
+                      className="aspect-square h-full max-h-[20px] w-full max-w-[20px] rounded-full bg-cyan-300 sm:max-h-[32px] sm:max-w-[32px] dark:bg-cyan-500"
+                      animate={{
+                        scale: [1, 1.1, 1],
+                      }}
+                      transition={{
+                        duration: 1,
+                        repeat: Number.POSITIVE_INFINITY,
+                        repeatType: "reverse",
+                      }}
+                      whileHover={{
+                        scale: 1.2,
+                        backgroundColor: "var(--color-cyan-400)",
+                      }}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </LayoutGroup>
           </div>
         </div>
       </CardContent>

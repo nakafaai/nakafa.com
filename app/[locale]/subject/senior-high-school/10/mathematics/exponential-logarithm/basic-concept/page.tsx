@@ -2,13 +2,16 @@ import { LayoutMaterial } from "@/components/shared/layout-material";
 import { getHeadings } from "@/lib/utils/markdown";
 import { getRawContent } from "@/lib/utils/markdown";
 import type { ContentMetadata } from "@/types/content";
+import { PiIcon } from "lucide-react";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 const SLUG = "basic-concept";
-const FILE_PATH = `/subject/senior-high-school/10/mathematics/exponential-logarithm/${SLUG}`;
+const SLUG_SUBJECT = "exponential-logarithm";
+const BASE_PATH = "/subject/senior-high-school/10/mathematics";
+const FILE_PATH = `${BASE_PATH}/${SLUG_SUBJECT}/${SLUG}`;
 const GITHUB_URL = `${process.env.GITHUB_URL}${FILE_PATH}`;
 
 type Props = {
@@ -56,9 +59,13 @@ export default async function Page({ params }: Props) {
         header={{
           title: metadata.title,
           link: {
-            href: `/subject/senior-high-school/10/mathematics#${metadata.subject?.toLowerCase().replace(/\s+/g, "-")}`,
+            href: `/${BASE_PATH}#${metadata.subject?.toLowerCase().replace(/\s+/g, "-")}`,
             label: metadata.subject ?? "",
           },
+        }}
+        category={{
+          icon: PiIcon,
+          name: metadata.category ?? "",
         }}
         metadata={metadata}
         content={<Content />}
