@@ -11,6 +11,7 @@ import {
 import { PauseIcon, PlayIcon, TimerResetIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
+import { useIntersectionObserver } from "usehooks-ts";
 
 type BacterialGrowthProps = {
   initialCount?: number;
@@ -33,7 +34,20 @@ export default function BacterialGrowth({
 }: BacterialGrowthProps) {
   const [generation, setGeneration] = useState(0);
   const [speed, setSpeed] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const { ref, entry } = useIntersectionObserver({
+    threshold: 0.1,
+  });
+
+  // Start playing when component comes into view
+  useEffect(() => {
+    if (entry?.isIntersecting) {
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(false);
+    }
+  }, [entry?.isIntersecting]);
 
   // Calculate current bacteria count based on the formula B(t) = B₀ × 2^t
   const bacteriaCount = initialCount * 2 ** generation;
@@ -87,7 +101,10 @@ export default function BacterialGrowth({
       </CardHeader>
 
       <CardContent>
-        <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950">
+        <div
+          ref={ref}
+          className="relative aspect-square w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950"
+        >
           <div
             className="grid h-full w-full gap-0.5 p-2 sm:px-0"
             style={{
