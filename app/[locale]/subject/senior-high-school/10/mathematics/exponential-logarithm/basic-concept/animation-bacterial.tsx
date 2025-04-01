@@ -71,13 +71,18 @@ export default function BacterialGrowth({
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (deferredPlaying && deferredGeneration < maxGenerations) {
+    // Stop playing when maximum generation is reached
+    if (deferredGeneration >= maxGenerations) {
+      setIsPlaying(false);
+      return;
+    }
+
+    if (deferredPlaying) {
       interval = setInterval(() => {
         setGeneration((prev) => {
           if (prev < maxGenerations) {
             return prev + 1;
           }
-          setIsPlaying(false);
           return prev;
         });
       }, 1000 / speed);
