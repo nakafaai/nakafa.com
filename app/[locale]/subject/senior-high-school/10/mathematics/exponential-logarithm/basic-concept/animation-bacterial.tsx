@@ -97,8 +97,14 @@ export default function BacterialGrowth({
   }, []);
 
   const togglePlayPause = useCallback(() => {
-    setIsPlaying(!isPlaying);
-  }, [isPlaying]);
+    if (!isPlaying && generation >= maxGenerations) {
+      // If at max generation and trying to play, restart from beginning
+      setGeneration(0);
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(!isPlaying);
+    }
+  }, [isPlaying, generation, maxGenerations]);
 
   return (
     <Card>
