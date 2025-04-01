@@ -36,18 +36,18 @@ export default function BacterialGrowth({
   const [speed, setSpeed] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const { ref, entry } = useIntersectionObserver({
+  const { ref, isIntersecting } = useIntersectionObserver({
     threshold: 0.1,
   });
 
   // Start playing when component comes into view
   useEffect(() => {
-    if (entry?.isIntersecting) {
+    if (isIntersecting) {
       setIsPlaying(true);
     } else {
       setIsPlaying(false);
     }
-  }, [entry?.isIntersecting]);
+  }, [isIntersecting]);
 
   // Calculate current bacteria count based on the formula B(t) = B₀ × 2^t
   const bacteriaCount = initialCount * 2 ** generation;
