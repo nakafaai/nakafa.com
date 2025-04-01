@@ -181,7 +181,7 @@ export default function BacterialGrowth({
           </div>
 
           <div className="flex gap-2">
-            {[0.5, 1, 1.5, 2].map((speedValue) => (
+            {[0.25, 0.5, 1, 1.5, 2].map((speedValue) => (
               <Button
                 key={speedValue}
                 variant={speed === speedValue ? "default" : "outline"}
