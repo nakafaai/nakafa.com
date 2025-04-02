@@ -1,4 +1,3 @@
-import {} from "react";
 import { BlockMath, InlineMath, type MathComponentProps } from "react-katex";
 import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { Heading } from "./components/markdown/heading";
