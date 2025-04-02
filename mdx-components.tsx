@@ -71,7 +71,7 @@ const components = {
     <ul className="list-disc space-y-4 pl-5" {...props} />
   ),
   li: (props: ListItemProps) => (
-    <li className="pl-1 text-foreground/80 leading-relaxed" {...props} />
+    <li className="mt-4 pl-1 text-foreground/80 leading-relaxed" {...props} />
   ),
   em: (props: EmProps) => <em className="font-medium" {...props} />,
   strong: (props: StrongProps) => (
