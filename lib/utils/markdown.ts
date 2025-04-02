@@ -24,8 +24,6 @@ export async function getRawContent(path: string): Promise<string> {
  * @param content - Markdown content to parse.
  * @returns The parsed headings.
  */
-
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: No way to avoid this
 export function getHeadings(content: string): ParsedHeading[] {
   try {
     // Handle markdown style headings (# Heading)
@@ -34,7 +32,8 @@ export function getHeadings(content: string): ParsedHeading[] {
 
     if (markdownMatches && markdownMatches.length > 0) {
       const headings: ParsedHeading[] = [];
-      const headingsByLevel: { [level: number]: ParsedHeading[] } = {};
+      // Keep track of the last heading seen at each level
+      const lastHeadingAtLevel: ParsedHeading[] = new Array(7); // 0-6 levels (0 unused)
 
       for (const match of markdownMatches) {
         const level = match[1].length; // Number of # symbols
@@ -47,35 +46,28 @@ export function getHeadings(content: string): ParsedHeading[] {
           children: [],
         };
 
-        // Store the heading at its level
-        if (!headingsByLevel[level]) {
-          headingsByLevel[level] = [];
-        }
-        headingsByLevel[level].push(heading);
+        // Store the current heading at its level
+        lastHeadingAtLevel[level] = heading;
 
         if (level === 1) {
           // Top level headings
           headings.push(heading);
         } else {
-          // Find the parent heading
+          // Find the parent heading (the closest heading with a lower level)
           let parentLevel = level - 1;
-          while (parentLevel > 0) {
-            const potentialParents = headingsByLevel[parentLevel];
-            if (potentialParents && potentialParents.length > 0) {
-              const parent = potentialParents.at(-1);
-              if (parent) {
-                if (!parent.children) {
-                  parent.children = [];
-                }
-                parent.children.push(heading);
-              }
-              break;
-            }
+          while (parentLevel > 0 && !lastHeadingAtLevel[parentLevel]) {
             parentLevel--;
           }
 
-          // If no parent found, add to top level
-          if (parentLevel === 0) {
+          // If a parent was found, add this heading as its child
+          if (parentLevel > 0 && lastHeadingAtLevel[parentLevel]) {
+            const parent = lastHeadingAtLevel[parentLevel];
+            if (!parent.children) {
+              parent.children = [];
+            }
+            parent.children.push(heading);
+          } else {
+            // No parent found, add to top level
             headings.push(heading);
           }
         }
@@ -108,28 +100,25 @@ export async function getArticles(
   basePath: string,
   locale: Locale
 ): Promise<Article[]> {
-  // Get all article directories that have a page.tsx file - use a simpler, more reliable pattern
+  // Get all article directories that have a page.tsx file
   const articleDirs = await glob("*/page.tsx", {
-    // default is app/[locale]
     cwd: `app/[locale]/${basePath}`,
-    absolute: true, // Get absolute paths
+    absolute: true,
   });
 
-  // Extract unique slugs from the paths
-  const articleSlugs = articleDirs
-    .map((dir) => {
-      // Get the parent directory name (slug)
-      const parts = dir.split("/");
-      return parts.at(-2); // Get the directory name before page.tsx
-    })
-    .filter((slug, index, self) => self.indexOf(slug) === index); // Remove duplicates
-
-  // Get all the articles, sort by date and extract the title, description, and date
+  // Process the article data in a single pass
   const articles = await Promise.all(
-    articleSlugs.map(async (slug) => {
+    articleDirs.map(async (dir) => {
       try {
-        // Use template literals with the correct syntax for Next.js dynamic imports
-        // This pattern is more reliable for Next.js production builds
+        // Extract the slug from the path
+        const parts = dir.split("/");
+        const slug = parts.at(-2);
+
+        if (!slug) {
+          return null;
+        }
+
+        // Import the metadata directly
         const { metadata } = await import(
           `@/app/[locale]/articles/${basePath.split("/").at(-1)}/${slug}/${locale}.mdx`
         );
@@ -153,15 +142,13 @@ export async function getArticles(
   );
 
   // Filter out any null values and sort by date (newest first)
-  const sortedArticles = articles
+  return articles
     .filter((article): article is Article => article !== null)
     .sort((a, b) => {
       const dateA = parse(a.date, "MM/dd/yyyy", new Date());
       const dateB = parse(b.date, "MM/dd/yyyy", new Date());
       return compareDesc(dateA, dateB);
     });
-
-  return sortedArticles;
 }
 
 /**
