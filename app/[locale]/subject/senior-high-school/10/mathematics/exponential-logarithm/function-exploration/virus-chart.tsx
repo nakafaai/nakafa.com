@@ -44,7 +44,7 @@ const data = Array.from({ length: 5 }, (_, i) => {
 export function VirusChart({
   labels = {
     title: "Virus Spread",
-    description: "Number of people infected in each phase of the virus spread",
+    description: "Number of people infected in each phase of the virus spread.",
     exponential: "Exponential Function",
     linear: "Linear Function",
     logarithmic: "Logarithmic Function",
@@ -76,10 +76,7 @@ export function VirusChart({
         <CardDescription>{labels.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer
-          className="min-h-[200px] w-full md:min-h-[300px]"
-          config={chartConfig}
-        >
+        <ChartContainer className="min-h-[300px] w-full" config={chartConfig}>
           <LineChart data={data} accessibilityLayer>
             <CartesianGrid />
             <XAxis
