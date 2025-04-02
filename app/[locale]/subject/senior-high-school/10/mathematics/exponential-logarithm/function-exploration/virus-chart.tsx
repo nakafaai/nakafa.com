@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
@@ -67,10 +68,10 @@ export function VirusChart({
       label: labels.logarithmic,
       color: "var(--chart-3)",
     },
-  };
+  } satisfies ChartConfig;
 
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
         <CardTitle>{labels.title}</CardTitle>
         <CardDescription>{labels.description}</CardDescription>
