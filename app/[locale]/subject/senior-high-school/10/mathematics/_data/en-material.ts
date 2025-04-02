@@ -29,12 +29,8 @@ const enMaterials: MaterialList[] = [
         href: `${BASE_PATH}/exponential-logarithm/function-definition`,
       },
       {
-        title: "Function Comparison",
-        href: `${BASE_PATH}/exponential-logarithm/function-comparison`,
-      },
-      {
-        title: "Function Modeling",
-        href: `${BASE_PATH}/exponential-logarithm/function-modeling`,
+        title: "Exponential Growth",
+        href: `${BASE_PATH}/exponential-logarithm/exponential-growth`,
       },
       {
         title: "Exponential Decay",

@@ -29,12 +29,8 @@ const idMaterials: MaterialList[] = [
         href: `${BASE_PATH}/exponential-logarithm/function-definition`,
       },
       {
-        title: "Perbandingan Fungsi",
-        href: `${BASE_PATH}/exponential-logarithm/function-comparison`,
-      },
-      {
-        title: "Pemodelan Fungsi",
-        href: `${BASE_PATH}/exponential-logarithm/function-modeling`,
+        title: "Pertumbuhan Eksponen",
+        href: `${BASE_PATH}/exponential-logarithm/exponential-growth`,
       },
       {
         title: "Peluruhan Eksponen",
