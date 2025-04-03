@@ -4,6 +4,14 @@ import { Link } from "@/i18n/routing";
 import { useSelectedLayoutSegment } from "next/navigation";
 import type { ComponentProps } from "react";
 
+/**
+ * A navigation link component that is styled to look like a button.
+ *
+ * @param href - The href of the link
+ * @param props - The props of the link
+ * @returns A navigation link component
+ * https://next-intl.dev/docs/routing/navigation#link-active
+ */
 export default function NavigationLink({
   href,
   ...props

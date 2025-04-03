@@ -1,5 +1,5 @@
 import { LayoutMaterial } from "@/components/shared/layout-material";
-import { getHeadings } from "@/lib/utils/markdown";
+import { getHeadings, getMaterialsPagination } from "@/lib/utils/markdown";
 import { getRawContent } from "@/lib/utils/markdown";
 import type { ContentMetadata } from "@/types/content";
 import { PiIcon } from "lucide-react";
@@ -42,17 +42,17 @@ export default async function Page({ params }: Props) {
   setRequestLocale(locale);
 
   try {
-    const file = await import(`./${locale}.mdx`);
+    // Get the file, headings, and pagination
+    const [file, headings, pagination] = await Promise.all([
+      import(`./${locale}.mdx`),
+      getRawContent(`${FILE_PATH}/${locale}.mdx`).then(getHeadings),
+      import(`../../_data/${locale}-material.ts`).then((m) =>
+        getMaterialsPagination(FILE_PATH, m.default)
+      ),
+    ]);
+
     const Content = file.default;
-
-    // import metadata from the mdx file based on the locale
     const metadata: ContentMetadata = file.metadata;
-
-    // Read the raw file content
-    const rawContent = await getRawContent(`${FILE_PATH}/${locale}.mdx`);
-
-    // Extract headings from the raw content
-    const headings = getHeadings(rawContent);
 
     return (
       <LayoutMaterial
@@ -75,6 +75,7 @@ export default async function Page({ params }: Props) {
         }}
         footerClassName="mt-10"
         githubUrl={GITHUB_URL}
+        pagination={pagination}
       />
     );
   } catch {

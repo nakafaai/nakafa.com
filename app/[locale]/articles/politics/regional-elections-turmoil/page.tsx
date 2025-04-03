@@ -40,18 +40,14 @@ export default async function Page({ params }: Props) {
   setRequestLocale(locale);
 
   try {
-    const file = await import(`./${locale}.mdx`);
+    // Get the file, headings
+    const [file, headings] = await Promise.all([
+      import(`./${locale}.mdx`),
+      getRawContent(`${FILE_PATH}/${locale}.mdx`).then(getHeadings),
+    ]);
+
     const Content = file.default;
-
-    // import metadata from the mdx file based on the locale
     const metadata: ContentMetadata = file.metadata;
-
-    // Read the raw file content
-    // we need to use the full path to the MDX file
-    const rawContent = await getRawContent(`${FILE_PATH}/${locale}.mdx`);
-
-    // Extract headings from the raw content
-    const headings = getHeadings(rawContent);
 
     return (
       <LayoutArticle

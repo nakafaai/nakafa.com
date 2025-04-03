@@ -1,11 +1,12 @@
 import { cn } from "@/lib/utils";
-import type { ContentMetadata } from "@/types/content";
+import type { ContentMetadata, ContentPagination } from "@/types/content";
 import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { FooterContent } from "./footer-content";
 import { HeaderContent } from "./header-content";
 import { LayoutContent } from "./layout-content";
+import { PaginationContent } from "./pagination-content";
 import { RefContent } from "./ref-content";
 import { SidebarRight } from "./sidebar-right";
 import { type ParsedHeading, SidebarTree } from "./sidebar-tree";
@@ -32,6 +33,7 @@ type Props = {
     name: string;
   };
   metadata?: ContentMetadata;
+  pagination?: ContentPagination;
 };
 
 export function LayoutMaterial({
@@ -43,6 +45,7 @@ export function LayoutMaterial({
   category,
   contentClassName,
   footerClassName,
+  pagination,
 }: Props) {
   const t = useTranslations("Subject");
 
@@ -60,6 +63,7 @@ export function LayoutMaterial({
         />
         <LayoutContent className={cn(contentClassName)}>
           {content}
+          {pagination && <PaginationContent pagination={pagination} />}
         </LayoutContent>
         <FooterContent className={cn("mt-0", footerClassName)}>
           <RefContent githubUrl={githubUrl} />

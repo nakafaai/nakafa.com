@@ -29,3 +29,14 @@ export type ContentMetadata = {
   subject?: string;
   category: string;
 };
+
+export type ContentPagination = {
+  prev: {
+    href: string;
+    title: string;
+  };
+  next: {
+    href: string;
+    title: string;
+  };
+};
