@@ -42,25 +42,33 @@ export function RulingTable({
         <TableCaption>{caption}</TableCaption>
         <TableHeader className="border-x border-t bg-muted/50">
           <TableRow>
-            <TableHead className="w-1/4 border-r">{headers.category}</TableHead>
-            <TableHead className="w-1/4 border-r">
+            <TableHead className="w-1/4 border-r text-center">
+              {headers.category}
+            </TableHead>
+            <TableHead className="w-1/4 border-r text-center">
               {headers.electionLaw}
             </TableHead>
-            <TableHead className="w-1/4 border-r">
+            <TableHead className="w-1/4 border-r text-center">
               {headers.courtDecision}
             </TableHead>
-            <TableHead className="w-1/4">{headers.dprDecision}</TableHead>
+            <TableHead className="w-1/4 text-center">
+              {headers.dprDecision}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="border-x border-b">
           {tableData.map((row, index) => (
             <TableRow key={index}>
-              <TableCell className="border-r bg-muted/50 font-medium">
+              <TableCell className="border-r bg-muted/50 text-center font-medium">
                 {row.category}
               </TableCell>
-              <TableCell>{row.electionLaw}</TableCell>
-              <TableCell>{row.courtDecision}</TableCell>
-              <TableCell>{row.dprDecision}</TableCell>
+              <TableCell className="border-r text-center">
+                {row.electionLaw}
+              </TableCell>
+              <TableCell className="border-r text-center">
+                {row.courtDecision}
+              </TableCell>
+              <TableCell className="text-center">{row.dprDecision}</TableCell>
             </TableRow>
           ))}
         </TableBody>

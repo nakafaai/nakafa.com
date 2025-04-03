@@ -1,3 +1,5 @@
+import { FunctionChart } from "./function-chart";
+
 export const metadata = {
   title: "Pertumbuhan Eksponen",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -9,3 +11,188 @@ export const metadata = {
   subject: "Eksponen dan Logaritma",
   category: "Matematika",
 };
+
+## Definisi Fungsi Pertumbuhan Eksponen
+
+Pertumbuhan eksponen adalah jenis pertumbuhan di mana **tingkat perubahan berbanding lurus dengan nilai kuantitasnya**. Pada pertumbuhan ini, nilai akan bertambah semakin cepat seiring berjalannya waktu.
+
+Fungsi pertumbuhan eksponen ditulis dengan:
+
+<InlineMath math="f(x) = a^x" /> dengan <InlineMath math="a > 1" />
+
+Di mana:
+
+- <InlineMath math="a" /> adalah basis (konstanta pertumbuhan)
+- <InlineMath math="x" /> adalah variabel (waktu)
+
+## Contoh Pertumbuhan Eksponen
+
+Pertumbuhan eksponen sering ditemukan dalam kehidupan nyata, seperti pertumbuhan bakteri yang membelah menjadi dua dalam interval waktu tertentu.
+
+### Pertumbuhan Bakteri
+
+Seorang peneliti mengamati pertumbuhan bakteri pada inang dengan kondisi awal 30 bakteri. Bakteri tersebut membelah menjadi dua setiap 30 menit.
+
+Jika <InlineMath math="x" /> adalah fase pertumbuhan bakteri setiap 30 menit, maka:
+
+| Fase (30 menit) | 0   | 1   | 2   | 3   | 4   | 5   |
+| --------------- | --- | --- | --- | --- | --- | --- |
+| Banyak bakteri  | 30  | 60  | 120 | 240 | 480 | 960 |
+
+Dapat diamati bahwa:
+
+- Untuk <InlineMath math="x = 0" />, banyak bakteri = 30
+- Untuk <InlineMath math="x = 1" />, banyak bakteri = 60
+- Untuk <InlineMath math="x = 2" />, banyak bakteri = 120 = <InlineMath math="2^2 \cdot 30" />
+- Untuk <InlineMath math="x = 3" />, banyak bakteri = 240 = <InlineMath math="2^3 \cdot 30" />
+- Untuk <InlineMath math="x = 4" />, banyak bakteri = 480 = <InlineMath math="2^4 \cdot 30" />
+
+Dari pola tersebut, pertumbuhan bakteri dapat dimodelkan dengan fungsi eksponen:
+
+<BlockMath math="f(x) = 30 \cdot (2^x)" />
+
+### Visualisasi Grafik Pertumbuhan Eksponen
+
+Grafik fungsi <InlineMath math="f(x) = 30 \cdot (2^x)" /> menunjukkan pertumbuhan yang semakin cepat seiring bertambahnya nilai <InlineMath math="x" />. Ciri khas grafik pertumbuhan eksponen adalah kurvanya yang semakin curam.
+
+<FunctionChart
+  p={30}
+  a={2}
+  title="Pertumbuhan Bakteri"
+  description="Pertumbuhan bakteri yang membelah menjadi dua setiap 30 menit."
+/>
+
+### Perhitungan Jumlah Bakteri pada Waktu Tertentu
+
+Jika ingin menghitung jumlah bakteri pada jam ke-5, perlu diketahui bahwa jam ke-5 terjadi pada fase ke-10 (karena setiap fase adalah 30 menit):
+
+<BlockMath math="f(10) = 30 \cdot (2^{10}) = 30 \cdot 1024 = 30.720" />
+
+Jadi, pada jam ke-5 terdapat 30.720 bakteri.
+
+## Variasi Nilai Awal
+
+Pertumbuhan eksponen dapat memiliki nilai awal yang berbeda-beda. Secara umum, jika nilai awal adalah <InlineMath math="P_0" />, maka fungsi pertumbuhan eksponen menjadi:
+
+<BlockMath math="f(x) = P_0 \cdot (a^x)" />
+
+Misalnya:
+
+- Jika banyak bakteri awal adalah 50, maka <InlineMath math="f(x) = 50 \cdot (2^x)" />
+- Jika banyak bakteri awal adalah 100, maka <InlineMath math="f(x) = 100 \cdot (2^x)" />
+- Jika banyak bakteri awal adalah 200, maka <InlineMath math="f(x) = 200 \cdot (2^x)" />
+
+### Menentukan Nilai Awal
+
+Terkadang kita perlu menentukan nilai awal <InlineMath math="x_0" /> dari suatu pertumbuhan eksponen jika diketahui nilainya pada waktu tertentu.
+
+**Contoh kasus**:
+
+Misalkan kita mengetahui bahwa jumlah bakteri pada fase ke-2 adalah 8.000 dan bakteri membelah menjadi dua setiap interval waktu. Berapakah jumlah bakteri awal?
+
+Kita dapat menggunakan persamaan <InlineMath math="x_2 = a^2 \cdot x_0" /> dengan <InlineMath math="a = 2" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x_2 = a^2 \cdot x_0" />
+  <BlockMath math="8000 = 2^2 \cdot x_0" />
+  <BlockMath math="8000 = 4 \cdot x_0" />
+  <BlockMath math="\frac{8000}{4} = x_0" />
+  <BlockMath math="x_0 = 2000" />
+</div>
+
+Jadi, banyaknya bakteri mula-mula adalah 2.000 bakteri.
+
+### Menghitung Pertumbuhan Jangka Panjang
+
+Untuk menghitung jumlah bakteri setelah waktu yang lebih lama, kita tetap menggunakan model yang sama. Misalnya, untuk menghitung jumlah bakteri setelah 10 jam:
+
+<BlockMath math="x_{10} = a^{10} \cdot x_0" />
+
+Substitusikan nilai <InlineMath math="a = 2" /> dan <InlineMath math="x_0 = 2.000" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x_{10} = 2^{10} \cdot 2.000" />
+  <BlockMath math="x_{10} = 1.024 \cdot 2.000" />
+  <BlockMath math="x_{10} = 2.048.000" />
+</div>
+
+Jadi, banyaknya bakteri setelah 10 jam adalah 2.048.000 bakteri.
+
+## Latihan
+
+1. Bakteri E.coli menyebabkan penyakit diare pada manusia. Seorang peneliti mengamati pertumbuhan 50 bakteri ini pada sepotong makanan dan menemukan bahwa bakteri ini membelah menjadi 2 setiap seperempat jam.
+
+   a. Gambarkanlah tabel dan grafik yang menunjukkan pertumbuhan bakteri ini dari fase 0 sampai fase 5.
+
+   b. Modelkan fungsi yang menggambarkan pertumbuhan bakteri E.coli setiap seperempat jam.
+
+   c. Prediksi berapa banyaknya bakteri setelah 3 dan 4 jam pertama.
+
+2. Pada tahun 2015 kasus positif HIV-AIDS berjumlah sekitar 36 juta jiwa. Jumlah ini meningkat rata-rata 2% setiap tahun dari tahun 2010 hingga 2015. Jika peningkatan kasus positif HIV di tahun-tahun berikutnya diprediksi bertambah secara eksponen pada peningkatan 2% setiap tahun, berapa banyak kasus yang terjadi pada tahun 2020?
+
+### Kunci Jawaban Latihan
+
+1. Bakteri E.coli dengan jumlah awal 50 bakteri yang membelah menjadi dua setiap 15 menit.
+
+   a. Pertumbuhan Bakteri:
+
+   | Fase (15 menit) | 0   | 1   | 2   | 3   | 4   | 5     |
+   | --------------- | --- | --- | --- | --- | --- | ----- |
+   | Banyak bakteri  | 50  | 100 | 200 | 400 | 800 | 1.600 |
+
+   <FunctionChart
+     p={50}
+     a={2}
+     n={7}
+     title="Pertumbuhan Bakteri"
+     description="Pertumbuhan bakteri yang membelah menjadi dua setiap 15 menit."
+   />
+
+   b. Fungsi pertumbuhan bakteri E.coli dapat dimodelkan dengan:
+
+   <BlockMath math="f(x) = 50 \cdot (2^x)" />
+
+   c. Setelah 3 jam pertama berarti fase ke-12 (bakteri membelah setiap 15 menit):
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="f(12) = 50 \cdot (2^{12})" />
+     <BlockMath math="f(12) = 50 \cdot 4.096" />
+     <BlockMath math="f(12) = 204.800" />
+   </div>
+
+   Setelah 4 jam pertama berarti fase ke-16 (bakteri membelah setiap 15 menit):
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="f(16) = 50 \cdot (2^{16})" />
+     <BlockMath math="f(16) = 50 \cdot 65.536" />
+     <BlockMath math="f(16) = 3.276.800" />
+   </div>
+
+2. Kasus HIV-AIDS:
+
+   Jumlah kasus pada tahun 2015 adalah 36.000.000 jiwa dengan peningkatan 2% per tahun.
+
+   Model matematika:
+
+   <BlockMath math="f(x) = 36.000.000 \cdot (1 + 0,02)^x" />
+
+   Untuk menghitung kasus pada tahun 2020 (5 tahun setelah 2015):
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="f(5) = 36.000.000 \cdot (1,02)^5" />
+     <BlockMath math="f(5) = 36.000.000 \cdot 1,1040808" />
+     <BlockMath math="f(5) = 39.746.908" />
+   </div>
+
+   Jadi, prediksi jumlah kasus HIV-AIDS pada tahun 2020 adalah sekitar 39.746.908 jiwa.
+
+## Penerapan Lain Pertumbuhan Eksponen
+
+Pertumbuhan eksponen juga ditemukan dalam konteks lain seperti:
+
+- Bunga majemuk dalam investasi
+- Pertumbuhan populasi makhluk hidup
+- Peluruhan radioaktif (pertumbuhan negatif)
+- Penyebaran penyakit menular
+
+Pertumbuhan eksponen sangat penting dalam berbagai bidang seperti biologi, keuangan, dan fisika karena menggambarkan banyak fenomena di dunia nyata.

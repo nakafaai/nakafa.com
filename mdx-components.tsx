@@ -155,12 +155,12 @@ const components = {
     </ScrollArea>
   ),
   table: ({ children, ...props }: TableProps) => (
-    <Table className="border" {...props}>
+    <Table containerClassName="my-4 rounded-xl border shadow-sm" {...props}>
       {filterWhitespaceNodes(children)}
     </Table>
   ),
   thead: ({ children, ...props }: TableHeaderProps) => (
-    <TableHeader className="bg-muted/50" {...props}>
+    <TableHeader className="border-b bg-muted/50" {...props}>
       {filterWhitespaceNodes(children)}
     </TableHeader>
   ),
@@ -168,17 +168,20 @@ const components = {
     <TableBody {...props}>{filterWhitespaceNodes(children)}</TableBody>
   ),
   tr: ({ children, ...props }: TableRowProps) => (
-    <TableRow className="border" {...props}>
+    <TableRow className="border-b last:border-b-0" {...props}>
       {filterWhitespaceNodes(children)}
     </TableRow>
   ),
   th: ({ children, ...props }: TableHeadProps) => (
-    <TableHead className="border" {...props}>
+    <TableHead
+      className="border-r text-center font-medium last:border-r-0"
+      {...props}
+    >
       {filterWhitespaceNodes(children)}
     </TableHead>
   ),
   td: ({ children, ...props }: TableCellProps) => (
-    <TableCell className="border" {...props}>
+    <TableCell className="border-r text-center last:border-r-0" {...props}>
       {filterWhitespaceNodes(children)}
     </TableCell>
   ),
