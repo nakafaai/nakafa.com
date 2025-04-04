@@ -26,7 +26,7 @@ export function Heading({
       </span>
       <a
         href={`#${id}`}
-        className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
+        className="invisible ml-2 shrink-0 text-muted-foreground group-hover:visible"
         aria-label={`Link to ${props.children}`}
       >
         <LinkIcon className="size-4" />
