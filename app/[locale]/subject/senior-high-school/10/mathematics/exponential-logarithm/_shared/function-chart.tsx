@@ -20,24 +20,28 @@ import {
 import { useMemo } from "react";
 
 type Props = {
+  p: number;
   a: number;
   title: string;
   description: string;
+  n?: number;
 };
 
-export function FunctionChart({ a, title, description }: Props) {
-  const data = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => {
-      // Handle the specific case where a=0 and x=0 (mathematically undefined)
-      if (a === 0 && i === 0) {
-        return { x: i, y: null }; // Use null to represent undefined
-      }
-      return {
-        x: i,
-        y: a ** i,
-      };
-    });
-  }, [a]);
+export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
+  const data = useMemo(
+    () =>
+      Array.from({ length: n }, (_, i) => {
+        // Handle the specific case where a=0 and x=0 (mathematically undefined)
+        if (a === 0 && i === 0) {
+          return { x: i, y: null }; // Use null to represent undefined
+        }
+        return {
+          x: i,
+          y: p * a ** i,
+        };
+      }),
+    [a, p, n]
+  );
 
   const chartConfig = {
     y: {

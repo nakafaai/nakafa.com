@@ -1,4 +1,4 @@
-import { FunctionChart } from "./function-chart";
+import { FunctionChart } from "../_shared/function-chart";
 
 export const metadata = {
   title: "Definisi Fungsi",
@@ -49,6 +49,7 @@ Nilai <InlineMath math="1^x" /> selalu bernilai 1 untuk sembarang nilai <InlineM
 
 <FunctionChart
   a={1}
+  p={1}
   title="Fungsi Konstan"
   description="Garis selalu konstan horizontal di y = 1."
 />
@@ -67,6 +68,7 @@ Fungsi ini tidak lagi menjadi fungsi eksponen melainkan konstan di <InlineMath m
 
 <FunctionChart
   a={0}
+  p={1}
   title="Fungsi Konstan"
   description="Garis selalu konstan horizontal di y = 0, tetapi tidak terdefinisi untuk x = 0."
 />

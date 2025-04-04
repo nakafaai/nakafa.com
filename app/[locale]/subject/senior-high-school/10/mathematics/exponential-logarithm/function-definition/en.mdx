@@ -1,4 +1,4 @@
-import { FunctionChart } from "./function-chart";
+import { FunctionChart } from "../_shared/function-chart";
 
 export const metadata = {
   title: "Function Definition",
@@ -49,6 +49,7 @@ The value of <InlineMath math="1^x" /> is always 1 for any value of <InlineMath 
 
 <FunctionChart
   a={1}
+  p={1}
   title="Constant Function"
   description="Line is always horizontal constant at y = 1."
 />
@@ -67,6 +68,7 @@ This function is no longer an exponential function but rather constant at <Inlin
 
 <FunctionChart
   a={0}
+  p={1}
   title="Constant Function"
   description="Line is always horizontal constant at y = 0, but undefined for x = 0."
 />
