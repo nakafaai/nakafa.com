@@ -9,3 +9,62 @@ export const metadata = {
   subject: "Eksponen dan Logaritma",
   category: "Matematika",
 };
+
+## Pengertian Logaritma
+
+Logaritma adalah operasi matematika yang merupakan kebalikan (invers) dari eksponen. Jika kita memiliki persamaan eksponensial <InlineMath math="b = a^c" />, maka bentuk logaritmanya adalah <InlineMath math="^a\log b = c" />.
+
+### Definisi Formal Logaritma
+
+Misalkan <InlineMath math="a" /> adalah bilangan positif dengan <InlineMath math="0 < a < 1" /> atau <InlineMath math="a > 1" />, dan <InlineMath math="b > 0" />, maka:
+
+<BlockMath math="^a\log b = c \text{ jika dan hanya jika } b = a^c" />
+
+Di mana:
+
+- <InlineMath math="a" /> adalah bilangan pokok atau basis logaritma
+- <InlineMath math="b" /> adalah numerus (bilangan yang dicari logaritmanya)
+- <InlineMath math="c" /> adalah hasil logaritma
+
+Kita bisa membaca <InlineMath math="^a\log b = c" /> juga seperti: <InlineMath math="a" /> pangkat berapa supaya menjadi <InlineMath math="b" />, jawabannya adalah <InlineMath math="c" />. Karena <InlineMath math="a^c = b" />.
+
+## Hubungan Eksponen dan Logaritma
+
+Logaritma dan eksponen saling terkait sebagai operasi yang saling berkebalikan. Perhatikan contoh berikut:
+
+| Bentuk Eksponen                             | Bentuk Logaritma                               |
+| ------------------------------------------- | ---------------------------------------------- |
+| <InlineMath math="2^5 = 32" />              | <InlineMath math="^2\log 32 = 5" />            |
+| <InlineMath math="3^2 = 9" />               | <InlineMath math="^3\log 9 = 2" />             |
+| <InlineMath math="5^{-2} = \frac{1}{25}" /> | <InlineMath math="^5\log \frac{1}{25} = -2" /> |
+| <InlineMath math="7^0 = 1" />               | <InlineMath math="^7\log 1 = 0" />             |
+
+## Logaritma Umum (Basis 10)
+
+Logaritma dengan basis 10 disebut sebagai logaritma umum. Penulisannya sering disederhanakan dengan menghilangkan angka 10 sebagai basis:
+
+<BlockMath math="^{10}\log a = \log a" />
+
+## Aplikasi Logaritma dalam Pertumbuhan Eksponensial
+
+### Menentukan Waktu untuk Mencapai Jumlah Tertentu
+
+Sebuah koloni bakteri awalnya terdiri dari 2.000 bakteri dengan kecepatan pembelahan setiap 1 jam. Pertumbuhan bakteri ini mengikuti fungsi eksponensial:
+
+<BlockMath math="f(x) = 2.000(2^x)" />
+
+di mana <InlineMath math="x" /> adalah waktu dalam jam.
+
+Lalu, untuk menentukan waktu yang dibutuhkan agar bakteri mencapai jumlah tertentu, misalnya 100.000 bakteri, kita perlu mencari nilai <InlineMath math="x" /> yang memenuhi:
+
+<BlockMath math="100.000 = 2.000(2^x)" />
+
+Dengan membagi kedua ruas dengan 2.000:
+
+<BlockMath math="50 = 2^x" />
+
+Untuk mencari nilai <InlineMath math="x" />, kita menggunakan konsep logaritma:
+
+<BlockMath math="x = \log_2 50" />
+
+Ini menunjukkan bahwa logaritma adalah alat yang sangat berguna untuk menyelesaikan persamaan eksponensial, terutama saat mencari nilai eksponen yang menghasilkan nilai tertentu.
