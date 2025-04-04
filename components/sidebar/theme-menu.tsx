@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
+import { useMediaQuery } from "usehooks-ts";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,9 +22,11 @@ export function ThemeMenu() {
   const { setTheme } = useTheme();
   const t = useTranslations("Common");
 
+  const isMobile = useMediaQuery("(max-width: 640px)");
+
   return (
-    <SidebarMenuItem>
-      <DropdownMenu>
+    <DropdownMenu>
+      <SidebarMenuItem>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton tooltip={t("theme")}>
             <PaletteIcon className="size-4" />
@@ -33,7 +36,10 @@ export function ThemeMenu() {
           </SidebarMenuButton>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent side="right">
+        <DropdownMenuContent
+          side={isMobile ? "top" : "right"}
+          align={isMobile ? "end" : "center"}
+        >
           <DropdownMenuItem onClick={() => setTheme("light")}>
             <SunIcon className="size-4" />
             <span className="truncate">{t("light")}</span>
@@ -49,7 +55,7 @@ export function ThemeMenu() {
             <span className="truncate">{t("system")}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
-    </SidebarMenuItem>
+      </SidebarMenuItem>
+    </DropdownMenu>
   );
 }

@@ -8,8 +8,8 @@ export function LangMenu() {
   const t = useTranslations("Common");
 
   return (
-    <SidebarMenuItem>
-      <DropdownMenu>
+    <DropdownMenu>
+      <SidebarMenuItem>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton tooltip={t("language")}>
             <LanguagesIcon className="size-4" />
@@ -20,7 +20,7 @@ export function LangMenu() {
         </DropdownMenuTrigger>
 
         <LangMenuSwitcher />
-      </DropdownMenu>
-    </SidebarMenuItem>
+      </SidebarMenuItem>
+    </DropdownMenu>
   );
 }

@@ -3,6 +3,7 @@
 import { type Locale, usePathname, useRouter } from "@/i18n/routing";
 import { useParams } from "next/navigation";
 import { useTransition } from "react";
+import { useMediaQuery } from "usehooks-ts";
 import { DropdownMenuContent, DropdownMenuItem } from "../ui/dropdown-menu";
 
 export function LangMenuSwitcher() {
@@ -10,6 +11,8 @@ export function LangMenuSwitcher() {
   const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
   const params = useParams();
+
+  const isMobile = useMediaQuery("(max-width: 640px)");
 
   function handleChangeLocale(locale: Locale) {
     startTransition(() => {
@@ -24,7 +27,10 @@ export function LangMenuSwitcher() {
   }
 
   return (
-    <DropdownMenuContent side="right">
+    <DropdownMenuContent
+      side={isMobile ? "top" : "right"}
+      align={isMobile ? "end" : "center"}
+    >
       <DropdownMenuItem
         onClick={() => handleChangeLocale("id")}
         disabled={isPending}
