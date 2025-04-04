@@ -1,0 +1,76 @@
+export const metadata = {
+  title: "Bentuk Akar",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/04/2025",
+  alternates: {
+    canonical:
+      "/id/subject/senior-high-school/10/mathematics/exponential-logarithm/radical-form",
+  },
+  subject: "Eksponen dan Logaritma",
+  category: "Matematika",
+};
+
+## Hubungan Bilangan Pangkat dan Akar
+
+Bentuk akar dan bilangan pangkat memiliki hubungan yang sangat erat. Ketika kita memiliki bilangan pangkat dengan eksponen pecahan, kita dapat mengubahnya menjadi bentuk akar.
+
+Perhatikan fungsi eksponen berikut:
+
+<BlockMath math="f(x) = 50(0,5)^x" />
+
+Fungsi tersebut menunjukkan peluruhan dosis obat dalam tubuh pasien, di mana <InlineMath math="x" /> adalah waktu yang dibutuhkan obat untuk meluruh sebanyak setengah dosis dari dosis sebelumnya.
+
+Jika kita ingin mengetahui banyaknya dosis yang meluruh setelah 30 menit, kita substitusikan <InlineMath math="x = 30" /> ke fungsi tersebut.
+
+<BlockMath math="f(30) = 50(0,5)^{30}" />
+
+Untuk waktu setengah jam, kita dapat menuliskan bentuk pangkat pecahan:
+
+<BlockMath math="f\left(\frac{1}{2}\right) = 50(0,5)^{\frac{1}{2}}" />
+
+Pangkat pecahan <InlineMath math="(0,5)^{\frac{1}{2}}" /> merupakan bentuk yang sulit untuk dihitung secara manual. Oleh karena itu, kita perlu bentuk lain yang ekuivalen.
+
+Bentuk lain dari <InlineMath math="(0,5)^{\frac{1}{2}}" /> adalah <InlineMath math="\sqrt{0,5}" />. Inilah yang disebut bentuk akar.
+
+## Definisi Bentuk Akar
+
+Bentuk akar didefinisikan untuk setiap bilangan pangkat rasional <InlineMath math="\frac{m}{n}" />, di mana <InlineMath math="m" /> dan <InlineMath math="n" /> adalah bilangan bulat dan <InlineMath math="n > 0" />:
+
+<BlockMath math="a^{\frac{m}{n}} = (\sqrt[n]{a})^m \text{ atau } a^{\frac{m}{n}} = \sqrt[n]{a^m}" />
+
+Hal ini memungkinkan kita untuk mengubah bilangan dengan pangkat pecahan menjadi bentuk akar dan sebaliknya.
+
+## Penyederhanaan Bentuk Akar
+
+Berikut adalah contoh penyederhanaan perkalian dua bentuk akar:
+
+Sederhanakan bentuk <InlineMath math="(2\sqrt{x})(3\sqrt[3]{x})" /> untuk <InlineMath math="x > 0" />
+
+<BlockMath
+  math="\begin{align}
+(2\sqrt{x})(3\sqrt[3]{x}) &= (2x^{\frac{1}{2}})(3x^{\frac{1}{3}}) \\
+&= 2 \cdot 3 \cdot x^{\frac{1}{2} + \frac{1}{3}} \\
+&= 6x^{\frac{3+2}{6}} \\
+&= 6x^{\frac{5}{6}} \\
+&= 6\sqrt[6]{x^5}
+\end{align}"
+/>
+
+Jadi, bentuk yang disederhanakan adalah <InlineMath math="6x^{\frac{5}{6}}" /> atau <InlineMath math="6\sqrt[6]{x^5}" />.
+
+## Sifat Penting Bentuk Akar
+
+Penting untuk memahami bahwa bentuk <InlineMath math="\sqrt{a+b} = \sqrt{a} + \sqrt{b}" /> tidak benar.
+
+Misalkan kita ambil nilai <InlineMath math="a = 4" /> dan <InlineMath math="b = 9" />, maka:
+
+<BlockMath math="\sqrt{4 + 9} = \sqrt{13} \neq \sqrt{4} + \sqrt{9} = 2 + 3 = 5" />
+
+Contoh lain:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sqrt{16 + 9} = \sqrt{25} = 5" />
+  <BlockMath math="\sqrt{16} + \sqrt{9} = 4 + 3 = 7" />
+</div>
+
+Karena <InlineMath math="5 \neq 7" />, maka jelas bahwa <InlineMath math="\sqrt{a+b} \neq \sqrt{a} + \sqrt{b}" />.

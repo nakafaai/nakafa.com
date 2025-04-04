@@ -1,0 +1,76 @@
+export const metadata = {
+  title: "Radical Form",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/04/2025",
+  alternates: {
+    canonical:
+      "/en/subject/senior-high-school/10/mathematics/exponential-logarithm/radical-form",
+  },
+  subject: "Exponential and Logarithm",
+  category: "Mathematics",
+};
+
+## Relationship Between Exponents and Radicals
+
+Radical forms and exponents are closely related. When we have a number with a fractional exponent, we can convert it to a radical form.
+
+Consider the following exponential function:
+
+<BlockMath math="f(x) = 50(0.5)^x" />
+
+This function represents the decay of drug dosage in a patient's body, where <InlineMath math="x" /> is the time needed for the drug to decay by half of its previous dosage.
+
+If we want to know the amount of dosage that decays after 30 minutes, we substitute <InlineMath math="x = 30" /> into the function.
+
+<BlockMath math="f(30) = 50(0.5)^{30}" />
+
+For a time of half an hour, we can write the fractional exponent form:
+
+<BlockMath math="f\left(\frac{1}{2}\right) = 50(0.5)^{\frac{1}{2}}" />
+
+The fractional exponent <InlineMath math="(0.5)^{\frac{1}{2}}" /> is difficult to calculate manually. Therefore, we need an equivalent form.
+
+Another form of <InlineMath math="(0.5)^{\frac{1}{2}}" /> is <InlineMath math="\sqrt{0.5}" />. This is what we call a radical form.
+
+## Definition of Radical Form
+
+The radical form is defined for any rational exponent <InlineMath math="\frac{m}{n}" />, where <InlineMath math="m" /> and <InlineMath math="n" /> are integers and <InlineMath math="n > 0" />:
+
+<BlockMath math="a^{\frac{m}{n}} = (\sqrt[n]{a})^m \text{ or } a^{\frac{m}{n}} = \sqrt[n]{a^m}" />
+
+This allows us to convert numbers with fractional exponents to radical form and vice versa.
+
+## Simplifying Radical Forms
+
+Here's an example of simplifying the multiplication of two radical forms:
+
+Simplify the expression <InlineMath math="(2\sqrt{x})(3\sqrt[3]{x})" /> for <InlineMath math="x > 0" />
+
+<BlockMath
+  math="\begin{align}
+(2\sqrt{x})(3\sqrt[3]{x}) &= (2x^{\frac{1}{2}})(3x^{\frac{1}{3}}) \\
+&= 2 \cdot 3 \cdot x^{\frac{1}{2} + \frac{1}{3}} \\
+&= 6x^{\frac{3+2}{6}} \\
+&= 6x^{\frac{5}{6}} \\
+&= 6\sqrt[6]{x^5}
+\end{align}"
+/>
+
+Therefore, the simplified form is <InlineMath math="6x^{\frac{5}{6}}" /> or <InlineMath math="6\sqrt[6]{x^5}" />.
+
+## Important Property of Radical Forms
+
+It's important to understand that the form <InlineMath math="\sqrt{a+b} = \sqrt{a} + \sqrt{b}" /> is not correct.
+
+Let's take the values <InlineMath math="a = 4" /> and <InlineMath math="b = 9" />, then:
+
+<BlockMath math="\sqrt{4 + 9} = \sqrt{13} \neq \sqrt{4} + \sqrt{9} = 2 + 3 = 5" />
+
+Another example:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sqrt{16 + 9} = \sqrt{25} = 5" />
+  <BlockMath math="\sqrt{16} + \sqrt{9} = 4 + 3 = 7" />
+</div>
+
+Since <InlineMath math="5 \neq 7" />, it's clear that <InlineMath math="\sqrt{a+b} \neq \sqrt{a} + \sqrt{b}" />.
