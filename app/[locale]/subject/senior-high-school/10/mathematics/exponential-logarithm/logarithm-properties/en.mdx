@@ -9,3 +9,225 @@ export const metadata = {
   subject: "Exponents and Logarithms",
   category: "Mathematics",
 };
+
+## Basic Properties of Logarithms
+
+Like exponents, logarithms also have several important properties that need to be understood. These properties will be very helpful in solving various logarithmic problems.
+
+Let <InlineMath math="a > 0" /> and <InlineMath math="a \neq 1" />, <InlineMath math="b > 0" />, <InlineMath math="c > 0" />, <InlineMath math="m > 0" />, <InlineMath math="m \neq 1" />, where <InlineMath math="a, b, c, m, n" /> are real numbers <InlineMath math="(a, b, c, m, n \in \mathbb{R})" />. The following are **logarithm properties**:
+
+1. <InlineMath math="^a\log a = 1" />
+2. <InlineMath math="^a\log 1 = 0" />
+3. <InlineMath math="^a\log a^n = n" />
+4. <InlineMath math="^a\log (b \times c) = ^a\log b + ^a\log c" />
+5. <InlineMath math="^a\log \left(\frac{b}{c}\right) = ^a\log b - ^a\log c" />
+6. <InlineMath math="^a\log b^n = n \cdot ^a\log b" />
+7. <InlineMath math="^a\log b = \frac{^m\log b}{^m\log a} = \frac{1}{^b\log a}" />
+8. <InlineMath math="^a\log b \times ^b\log c = ^a\log c" />
+
+## Proving Logarithm Properties
+
+### Logarithm of Multiplication
+
+**Property 4**: <InlineMath math="^a\log (b \times c) = ^a\log b + ^a\log c" />
+
+Proof: Let <InlineMath math="^a\log b = m" /> and <InlineMath math="^a\log c = n" />
+
+This means:
+
+<InlineMath math="b = a^m" /> and <InlineMath math="c = a^n" />
+
+Using the property of exponents:
+
+<BlockMath math="b \times c = a^m \times a^n = a^{m+n}" />
+
+Therefore:
+
+<BlockMath math="^a\log (b \times c) = ^a\log (a^{m+n}) = m + n = ^a\log b + ^a\log c" />
+
+### Logarithm of Division
+
+**Property 5**: <InlineMath math="^a\log \left(\frac{b}{c}\right) = ^a\log b - ^a\log c" />
+
+Proof: Let <InlineMath math="^a\log b = m" /> and <InlineMath math="^a\log c = n" />
+
+Then <InlineMath math="b = a^m" /> and <InlineMath math="c = a^n" />
+
+Recall that <InlineMath math="\frac{a^m}{a^n} = a^{m-n}" />, so:
+
+<BlockMath math="\frac{b}{c} = \frac{a^m}{a^n} = a^{m-n}" />
+
+Therefore:
+
+<BlockMath math="^a\log \left(\frac{b}{c}\right) = ^a\log (a^{m-n}) = m - n = ^a\log b - ^a\log c" />
+
+### Logarithm of Power
+
+**Property 6**: <InlineMath math="^a\log b^n = n \cdot ^a\log b" />
+
+Proof: Let <InlineMath math="^a\log b = m" />
+
+<InlineMath math="^a\log b^n" /> means the logarithm of <InlineMath math="b" /> raised
+to the power of <InlineMath math="n" />
+
+<InlineMath math="^a\log b^n = ^a\log (\underbrace{b \times b \times b \times \ldots \times b}_{n \text{ factors}})" />
+
+Using property 4 repeatedly:
+
+<BlockMath math="^a\log b^n = \underbrace{^a\log b + ^a\log b + ^a\log b + \ldots + ^a\log b}_{n \text{ factors}} = n \cdot ^a\log b" />
+
+### Change of Base
+
+**Property 7**: <InlineMath math="^a\log b = \frac{^m\log b}{^m\log a} = \frac{1}{^b\log a}" />
+
+Proof:
+Based on the definition of logarithm, <InlineMath math="^a\log b = c" /> if and only if <InlineMath math="b = a^c" />
+
+Suppose we use base <InlineMath math="m" /> for the logarithm of <InlineMath math="b" />:
+
+<BlockMath math="^m\log b = ^m\log a^c" />
+
+Using property 6:
+
+<BlockMath math="^m\log b = c \cdot ^m\log a" />
+
+Since <InlineMath math="c = ^a\log b" />, then:
+
+<BlockMath math="^m\log b = ^a\log b \cdot ^m\log a" />
+
+Therefore:
+
+<BlockMath math="^a\log b = \frac{^m\log b}{^m\log a}" />
+
+If <InlineMath math="m = b" />, then:
+
+<BlockMath math="^a\log b = \frac{^b\log b}{^b\log a} = \frac{1}{^b\log a}" />
+
+### Chain Rule for Logarithms
+
+**Property 8**: <InlineMath math="^a\log b \times ^b\log c = ^a\log c" />
+
+Proof:
+Based on the definition:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="^a\log b = m \Leftrightarrow b = a^m" />
+  <BlockMath math="^b\log c = n \Leftrightarrow c = b^n" />
+</div>
+
+Substitute the value of <InlineMath math="b" /> into the equation for <InlineMath math="c" />:
+
+<BlockMath math="c = b^n = (a^m)^n = a^{mn}" />
+
+Since <InlineMath math="c = a^{mn}" />, then:
+
+<BlockMath math="^a\log c = ^a\log (a^{mn}) = mn = ^a\log b \times ^b\log c" />
+
+## Application Example
+
+Suppose we want to calculate <InlineMath math="^5\log 125" />.
+
+Using **property 6**:
+
+<BlockMath math="^5\log 125 = ^5\log 5^3 = 3 \cdot ^5\log 5 = 3 \cdot 1 = 3" />
+
+## Exercises
+
+1. Simplify the following expressions:
+
+   a. <InlineMath math="^9\log 81" />
+
+   b. <InlineMath math="^2\log 64 - ^2\log 16" />
+
+   c. <InlineMath math="^4\log 16^{10}" />
+
+2. If <InlineMath math="^5\log 4 = m" />, <InlineMath math="^4\log 3 = n" />, express <InlineMath math="^{12}\log 100" /> in terms of m and n.
+
+3. The population of city A in 2010 was 300,000 people. The average population growth rate is 6% per year. If the population growth is assumed to be the same each year, in how many years will the population of city A become 1 million?
+
+4. How much time is needed for Dini's money, which was initially Rp2,000,000.00, to become Rp6,500,000.00 if she saves it in a bank that gives her an interest rate of 12%?
+
+### Answer Key
+
+1. Determining logarithm values
+
+   a. Answer:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="^9\log 81 = ^9\log 9^2" />
+     <BlockMath math="^9\log 81 = 2 \cdot ^9\log 9" />
+     <BlockMath math="^9\log 81 = 2 \cdot 1 = 2" />
+   </div>
+
+   b. Answer:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="^2\log 64 - ^2\log 16 = ^2\log \frac{64}{16}" />
+     <BlockMath math="^2\log 64 - ^2\log 16 = ^2\log 4" />
+     <BlockMath math="^2\log 64 - ^2\log 16 = 2" />
+   </div>
+
+   c. Answer:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="^4\log 16^{10} = ^4\log (4^2)^{10}" />
+     <BlockMath math="^4\log 16^{10} = ^4\log 4^{20}" />
+     <BlockMath math="^4\log 16^{10} = 20" />
+   </div>
+
+2. Given that <InlineMath math="^5\log 4 = m" />, <InlineMath math="^4\log 3 = n" />
+
+   Then:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="^{12}\log 100 = \frac{^4\log 100}{^4\log 12}" />
+     <BlockMath math="= \frac{^4\log(4 \times 25)}{^4\log(4 \times 3)}" />
+     <BlockMath math="= \frac{^4\log 4 + ^4\log 25}{^4\log 4 + ^4\log 3}" />
+     <BlockMath math="= \frac{^4\log 4 + 2 \cdot ^4\log 5}{^4\log 4 + ^4\log 3}" />
+     <BlockMath math="= \frac{1 + 2 \cdot \frac{1}{m}}{1 + n}" />
+     <BlockMath math="= \frac{1 + \frac{2}{m}}{1 + n}" />
+   </div>
+
+3. Initial population = 300,000 people
+
+   Annual population growth = 6%
+
+   The appropriate function to describe population growth in <InlineMath math="x" /> years is:
+
+   <BlockMath math="f(x) = 300,000(1 + 0.06)^x" />
+
+   For a population of 1,000,000 people:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="1,000,000 = 300,000(1 + 0.06)^x" />
+     <BlockMath math="1,000,000 = 300,000(1.06)^x" />
+     <BlockMath math="\frac{1,000,000}{300,000} = (1.06)^x" />
+     <BlockMath math="3.33 = (1.06)^x" />
+     <BlockMath math="x = ^{1.06}\log 3.33" />
+     <BlockMath math="x = 20.645" />
+   </div>
+
+   Therefore, the population will reach 1,000,000 people in 20 or 21 years.
+
+4. Initial savings = Rp2,000,000.00
+
+   Final savings = Rp6,500,000.00
+
+   Interest rate = 12%
+
+   The appropriate function to describe Dini's savings in <InlineMath math="x" /> years is:
+
+   <BlockMath math="f(x) = 2,000,000(1 + 0.12)^x" />
+
+   For a final saving amount of Rp6,500,000.00:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="6,500,000 = 2,000,000(1 + 0.12)^x" />
+     <BlockMath math="6,500,000 = 2,000,000(1.12)^x" />
+     <BlockMath math="\frac{6,500,000}{2,000,000} = (1.12)^x" />
+     <BlockMath math="3.25 = (1.12)^x" />
+     <BlockMath math="x = ^{1.12}\log 3.25" />
+     <BlockMath math="x = 10.4" />
+   </div>
+
+   Therefore, Dini's savings will reach Rp6,500,000.00 in 10 years.

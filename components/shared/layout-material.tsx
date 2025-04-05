@@ -63,8 +63,8 @@ export function LayoutMaterial({
         />
         <LayoutContent className={cn(contentClassName)}>
           {content}
-          {pagination && <PaginationContent pagination={pagination} />}
         </LayoutContent>
+        {pagination && <PaginationContent pagination={pagination} />}
         <FooterContent className={cn("mt-0", footerClassName)}>
           <RefContent githubUrl={githubUrl} />
         </FooterContent>
