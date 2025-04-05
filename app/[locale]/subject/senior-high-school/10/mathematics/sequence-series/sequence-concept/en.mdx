@@ -1,3 +1,5 @@
+import TableChairsAnimation from "./animation-table";
+
 export const metadata = {
   title: "Sequence Concept",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -9,3 +11,104 @@ export const metadata = {
   subject: "Sequence and Series",
   category: "Mathematics",
 };
+
+## Understanding Number Sequences
+
+A number sequence is an arrangement of numbers that follows a specific pattern. Each number in the sequence is called a term. Note the following notations:
+
+- The 1st term is denoted by <InlineMath math="U_1" />
+- The 2nd term is denoted by <InlineMath math="U_2" />
+- The 3rd term is denoted by <InlineMath math="U_3" />
+- The nth term is denoted by <InlineMath math="U_n" />
+
+By understanding the pattern in a sequence, we can determine the subsequent terms and even find the nth term using a general formula.
+
+## Number Patterns in Everyday Life
+
+### Tables and Chairs Exploration
+
+Let's observe an example of a number pattern formed by the arrangement of tables and chairs:
+
+<TableChairsAnimation
+  labels={{
+    title: "Table and Chair Sequence Pattern",
+    table: "Table",
+    chair: "Chair",
+  }}
+/>
+
+When there is 1 square table, 4 chairs can be placed around it.
+
+If 2 tables are joined together, then 6 chairs can be placed around the combined tables.
+
+We can create a table to observe the pattern:
+
+| Number of tables | 1   | 2   | 3   | 4   | 5   | 6   |
+| ---------------- | --- | --- | --- | --- | --- | --- |
+| Number of chairs | 4   | 6   | 8   | 10  | 12  | 14  |
+
+From the table above, we can observe that:
+
+- When there is 1 table, there are 4 chairs
+- When there are 2 tables, there are 6 chairs
+- When there are 3 tables, there are 8 chairs
+
+When observed, each addition of 1 table results in an addition of 2 chairs. This forms a number pattern with the formula:
+
+<BlockMath math="U_n = 2n + 2" />
+
+Where:
+
+- <InlineMath math="U_n" /> is the number of chairs
+- <InlineMath math="n" /> is the number of tables
+
+## Applications of Sequence Concepts
+
+### Determining the Number of Chairs and Tables
+
+By understanding sequence patterns, we can answer questions such as:
+
+1. If there are 20 people who will sit on chairs, how many tables need to be joined?
+
+We can use the formula <InlineMath math="U_n = 2n + 2" /> where <InlineMath math="U_n = 20" />, so:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="20 = 2n + 2" />
+  <BlockMath math="18 = 2n" />
+  <BlockMath math="n = 9" />
+</div>
+
+Therefore, 9 tables need to be joined to accommodate 20 people.
+
+## Types of Sequences
+
+Based on their patterns, number sequences can be classified into several types:
+
+### Arithmetic Sequence
+
+A number sequence where the difference between two consecutive terms is always constant. This difference is called the common difference (<InlineMath math="b" />).
+
+Example: <InlineMath math="2, 4, 6, 8, 10, \ldots" /> Common difference <InlineMath math="(b) = 2" />
+
+### Geometric Sequence
+
+A number sequence where the ratio between two consecutive terms is always constant. This ratio is called the common ratio (<InlineMath math="r" />).
+
+Example: <InlineMath math="2, 6, 18, 54, \ldots" /> Common ratio <InlineMath math="(r) = 3" />
+
+### Other Sequences
+
+Besides arithmetic and geometric sequences, there are many other types of sequences such as Fibonacci sequences, quadratic sequences, cubic sequences, and more.
+
+Example of a Fibonacci sequence: <InlineMath math="0, 1, 1, 2, 3, 5, 8, 13, \ldots" />
+
+## Finding Patterns
+
+To determine the pattern of a sequence:
+
+1. Observe the differences between consecutive terms
+2. Check if the difference is constant (arithmetic sequence)
+3. If not, check if the ratio is constant (geometric sequence)
+4. If neither, check for other possible patterns
+
+By understanding sequence concepts, we can solve various mathematical problems related to number patterns in everyday life.
