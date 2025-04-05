@@ -186,12 +186,18 @@ export default function BacterialGrowth({
       <CardFooter className="flex flex-col gap-4 px-0">
         <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <div className="flex justify-between gap-2">
-            <Button variant="outline" onClick={resetAnimation} size="icon">
+            <Button
+              variant="outline"
+              aria-label="Reset"
+              onClick={resetAnimation}
+              size="icon"
+            >
               <TimerResetIcon className="size-4 shrink-0" />
               <span className="sr-only">Reset</span>
             </Button>
             <Button
               variant={isPlaying ? "outline" : "default"}
+              aria-label={isPlaying ? "Pause" : "Play"}
               onClick={togglePlayPause}
               size="icon"
             >

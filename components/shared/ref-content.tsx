@@ -68,6 +68,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                   variant="outline"
                   size="icon"
                   onClick={() => setOpen(!open)}
+                  aria-label={t("bibliography")}
                 >
                   <span className="sr-only">{t("bibliography")}</span>
                   <LayersIcon className="size-4" />
@@ -81,7 +82,12 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                asChild
+                aria-label={t("source-code")}
+              >
                 <a href={githubUrl} target="_blank" rel="noopener noreferrer">
                   <span className="sr-only">{t("source-code")}</span>
                   <IconBrandGithub className="size-4" />

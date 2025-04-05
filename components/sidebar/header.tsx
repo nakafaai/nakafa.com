@@ -29,6 +29,7 @@ export function Header() {
                   buttonVariants({ variant: "outline", size: "icon" }),
                   "size-8 shrink-0"
                 )}
+                aria-label={t("source-code")}
               >
                 <span className="sr-only">{t("source-code")}</span>
                 <IconBrandGithub className="size-4" />
@@ -48,6 +49,7 @@ export function Header() {
                   buttonVariants({ variant: "outline", size: "icon" }),
                   "size-8 shrink-0"
                 )}
+                aria-label={t("videos")}
               >
                 <span className="sr-only">{t("videos")}</span>
                 <IconBrandYoutube className="size-4" />
