@@ -9,3 +9,191 @@ export const metadata = {
   subject: "Sequence and Series",
   category: "Mathematics",
 };
+
+## Understanding Arithmetic Sequences
+
+An arithmetic sequence is a sequence of numbers where the difference between consecutive terms is always constant. This difference in an arithmetic sequence is denoted by <InlineMath math="b" />.
+
+## Examples of Arithmetic Sequences
+
+Consider the following number sequence:
+
+<InlineMath math="4, 6, 8, 10, ..." />
+
+In this sequence, we can see that:
+
+- The difference between the second and first term: <InlineMath math="6 - 4 = 2" />
+- The difference between the third and second term: <InlineMath math="8 - 6 = 2" />
+- The difference between the fourth and third term: <InlineMath math="10 - 8 = 2" />
+
+Since the difference between consecutive terms is always 2, this sequence is an arithmetic sequence with common difference <InlineMath math="b = 2" />.
+
+## Common Difference in Arithmetic Sequences
+
+The common difference (<InlineMath math="b" />) in an arithmetic sequence can be calculated by subtracting consecutive terms:
+
+<BlockMath math="b = U_2 - U_1 = U_3 - U_2 = U_4 - U_3 = ... = U_n - U_{n-1}" />
+
+Where:
+
+- <InlineMath math="U_n" /> represents the <InlineMath math="n" />
+  th term
+- <InlineMath math="U_{n-1}" /> represents the (<InlineMath math="n-1" />
+  )th term
+
+## Formula for the nth Term
+
+### General Formula
+
+To determine the <InlineMath math="n" />th term of an arithmetic sequence, we can use the formula:
+
+<BlockMath math="U_n = a + (n-1)b" />
+
+Where:
+
+- <InlineMath math="U_n" /> = the <InlineMath math="n" />
+  th term
+- <InlineMath math="a" /> = first term
+- <InlineMath math="n" /> = term number
+- <InlineMath math="b" /> = common difference
+
+### Deriving the Formula
+
+If we write the first few terms of an arithmetic sequence:
+
+- 1st term: <InlineMath math="U_1 = a" />
+- 2nd term: <InlineMath math="U_2 = a + b" />
+- 3rd term: <InlineMath math="U_3 = a + 2b" />
+- 4th term: <InlineMath math="U_4 = a + 3b" />
+- 5th term: <InlineMath math="U_5 = a + 4b" />
+
+From this pattern, we can see that the <InlineMath math="n" />th term is:
+
+<BlockMath math="U_n = a + (n-1)b" />
+
+## Applications of Arithmetic Sequences
+
+### Performing Arts Theater
+
+Consider the number of seats in a performing arts theater:
+
+- Row 1 = 20 seats
+- Row 2 = 24 seats
+- Row 3 = 28 seats
+- Row 4 = 32 seats
+- Row 5 = 36 seats
+
+To determine the number of seats in a specific row, we need to find the pattern in this data.
+
+**Step 1: Finding the common difference between rows**
+
+- Row 2 - Row 1: <InlineMath math="24 - 20 = 4" />
+- Row 3 - Row 2: <InlineMath math="28 - 24 = 4" />
+- Row 4 - Row 3: <InlineMath math="32 - 28 = 4" />
+- Row 5 - Row 4: <InlineMath math="36 - 32 = 4" />
+
+We can see that the difference between the number of seats in consecutive rows is 4. This means the number of seats in this theater forms an arithmetic sequence with:
+
+- First term (<InlineMath math="a" />) = 20
+- Common difference (<InlineMath math="b" />) = 4
+
+**Step 2: Using the formula to find the number of seats in row 15**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_{15} = a + (n-1)b" />
+  <BlockMath math="U_{15} = 20 + (15-1)4" />
+  <BlockMath math="U_{15} = 20 + (14)4" />
+  <BlockMath math="U_{15} = 20 + 56" />
+  <BlockMath math="U_{15} = 76" />
+</div>
+
+Therefore, there are 76 seats in row 15.
+
+## Exercise 1
+
+Given an arithmetic sequence with the 3rd term = 9 and the 6th term = 18. Find the formula for the nth term.
+
+### Solution to Exercise 1
+
+To determine the formula for the nth term, we need to find the values of the first term <InlineMath math="(a)" /> and the common difference <InlineMath math="(b)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_3 = a + 2b = 9" />
+  <BlockMath math="U_6 = a + 5b = 18" />
+</div>
+
+We eliminate these equations to find the value of b:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_6 - U_3 = (a + 5b) - (a + 2b)" />
+  <BlockMath math="18 - 9 = 3b" />
+  <BlockMath math="9 = 3b" />
+  <BlockMath math="b = 3" />
+</div>
+
+After finding b, we substitute it into the first equation to find a:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="a + 2b = 9" />
+  <BlockMath math="a + 2(3) = 9" />
+  <BlockMath math="a + 6 = 9" />
+  <BlockMath math="a = 9 - 6 = 3" />
+</div>
+
+With a = 3 and b = 3, we can formulate the nth term:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_n = a + (n-1)b" />
+  <BlockMath math="U_n = 3 + (n-1)3" />
+  <BlockMath math="U_n = 3 + 3n - 3" />
+  <BlockMath math="U_n = 3n" />
+</div>
+
+Therefore, the formula for the nth term of this sequence is <InlineMath math="U_n = 3n" />
+
+## Exercise 2
+
+Rudi saves money in a bank with a constant monthly increase. If in the 5th month, he saves Rp70,000.00 and in the 9th month, Rudi saves Rp90,000.00.
+
+a. What is the monthly increase in savings amount?
+
+b. How much money did Rudi save for the first time?
+
+### Solution to Exercise 2
+
+Rudi's savings form an arithmetic sequence because the monthly increase is constant.
+
+**a. Finding the monthly increase in savings**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_5 = 70,000" />
+  <BlockMath math="a + (5-1)b = 70,000" />
+  <BlockMath math="a + 4b = 70,000 \text{ ... (equation 1)}" />
+
+  <BlockMath math="U_9 = 90,000" />
+  <BlockMath math="a + (9-1)b = 90,000" />
+  <BlockMath math="a + 8b = 90,000 \text{ ... (equation 2)}" />
+</div>
+
+Eliminating equations 1 and 2:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4b = 20,000" />
+  <BlockMath math="b = 5,000" />
+</div>
+
+Therefore, the monthly increase in Rudi's savings is Rp5,000.00.
+
+**b. Finding Rudi's initial savings**
+
+We have found b = 5,000, now we substitute it into equation 1 to find a:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="a + 4b = 70,000" />
+  <BlockMath math="a + 4(5,000) = 70,000" />
+  <BlockMath math="a + 20,000 = 70,000" />
+  <BlockMath math="a = 70,000 - 20,000" />
+  <BlockMath math="a = 50,000" />
+</div>
+
+Therefore, Rudi's initial savings was Rp50,000.00.
