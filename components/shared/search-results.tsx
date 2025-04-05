@@ -68,16 +68,16 @@ function getAnchorStyle(
     return null;
   }
   if (anchor.element === "h3") {
-    return "ml-4";
+    return "ml-5";
   }
   if (anchor.element === "h4") {
-    return "ml-8";
+    return "ml-9";
   }
   if (anchor.element === "h5") {
-    return "ml-12";
+    return "ml-13";
   }
   if (anchor.element === "h6") {
-    return "ml-16";
+    return "ml-17";
   }
   return null;
 }
