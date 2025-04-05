@@ -118,15 +118,15 @@ export default function TableChairsAnimation({
     }
   }, [isPlaying, tableCount, maxTables]);
 
+  // Constants for sizing and spacing
+  const tableWidth = 100;
+  const tableHeight = 80;
+  const tableSpacing = 4; // Gap between tables
+  const chairSize = 24;
+  const chairOffset = 8; // Distance of chair from table edge
+
   // Generate arrangement of tables and chairs
   const arrangement = useMemo(() => {
-    // Constants for sizing and spacing
-    const tableWidth = 100;
-    const tableHeight = 80;
-    const tableSpacing = 0; // No gap between tables
-    const chairSize = 24;
-    const chairOffset = 8; // Distance of chair from table edge
-
     const tables: TableItem[] = [];
     const chairs: ChairItem[] = [];
 
@@ -185,7 +185,7 @@ export default function TableChairsAnimation({
       // Add chairs on the left side of the leftmost table
       chairs.push({
         id: 1,
-        x: -chairSize - chairOffset,
+        x: -chairSize - chairOffset, // No need to add spacing between tables for the first chair
         y: tableHeight / 2 - chairSize / 2,
         side: "left",
       });
@@ -193,7 +193,7 @@ export default function TableChairsAnimation({
       // Add chairs on the right side of the rightmost table
       chairs.push({
         id: 2,
-        x: totalWidth + chairOffset,
+        x: totalWidth + chairOffset + (deferredTableCount - 1) * tableSpacing, // Add spacing between tables
         y: tableHeight / 2 - chairSize / 2,
         side: "right",
       });
@@ -242,8 +242,10 @@ export default function TableChairsAnimation({
               <div
                 className="relative"
                 style={{
-                  width: deferredTableCount * 100,
-                  height: 80,
+                  width:
+                    deferredTableCount * tableWidth +
+                    (deferredTableCount - 1) * tableSpacing,
+                  height: tableHeight,
                 }}
               >
                 <LayoutGroup>
