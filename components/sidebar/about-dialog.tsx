@@ -78,7 +78,7 @@ export default function AboutDialog({ open, action }: Props) {
   return (
     <Drawer open={open} onOpenChange={action}>
       <DrawerContent>
-        <DrawerHeader className="sm:text-center">
+        <DrawerHeader className="text-center">
           <DrawerTitle>{t("about")}</DrawerTitle>
           <DrawerDescription>
             {t("version", { version: packageJson.version })}
