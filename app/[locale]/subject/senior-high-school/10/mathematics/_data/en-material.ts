@@ -69,16 +69,8 @@ const enMaterials: MaterialList[] = [
         href: `${BASE_PATH}/sequence-series/arithmetic-sequence`,
       },
       {
-        title: "Arithmetic Sequence Analogies",
-        href: `${BASE_PATH}/sequence-series/analogies-arithmetic-sequence`,
-      },
-      {
         title: "Geometric Sequences",
         href: `${BASE_PATH}/sequence-series/geometric-sequence`,
-      },
-      {
-        title: "Geometric Sequence Analogies",
-        href: `${BASE_PATH}/sequence-series/analogies-geometric-sequence`,
       },
       {
         title: "Differences Between Arithmetic and Geometric Sequences",

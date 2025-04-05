@@ -69,16 +69,8 @@ const idMaterials: MaterialList[] = [
         href: `${BASE_PATH}/sequence-series/arithmetic-sequence`,
       },
       {
-        title: "Analogi Barisan Aritmetika",
-        href: `${BASE_PATH}/sequence-series/analogies-arithmetic-sequence`,
-      },
-      {
         title: "Barisan Geometri",
         href: `${BASE_PATH}/sequence-series/geometric-sequence`,
-      },
-      {
-        title: "Analogi Barisan Geometri",
-        href: `${BASE_PATH}/sequence-series/analogies-geometric-sequence`,
       },
       {
         title: "Perbedaan Barisan Aritmetika dan Geometri",
