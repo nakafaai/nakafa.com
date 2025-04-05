@@ -202,7 +202,7 @@ export default function TableChairsAnimation({
       for (let i = 0; i < deferredTableCount; i++) {
         chairs.push({
           id: 3 + i,
-          x: i * tableWidth + tableWidth / 2 - chairSize / 2,
+          x: i * tableWidth + tableWidth / 2 - chairSize / 2 + i * tableSpacing, // Add spacing between tables
           y: -chairSize - chairOffset,
           side: "top",
         });
@@ -212,7 +212,7 @@ export default function TableChairsAnimation({
       for (let i = 0; i < deferredTableCount; i++) {
         chairs.push({
           id: 3 + deferredTableCount + i,
-          x: i * tableWidth + tableWidth / 2 - chairSize / 2,
+          x: i * tableWidth + tableWidth / 2 - chairSize / 2 + i * tableSpacing, // Add spacing between tables
           y: tableHeight + chairOffset,
           side: "bottom",
         });
