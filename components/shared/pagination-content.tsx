@@ -25,6 +25,7 @@ export function PaginationContent({ pagination, className }: Props) {
                 buttonVariants({ variant: "outline" }),
                 !pagination.prev.href && "pointer-events-none opacity-50"
               )}
+              aria-label={`${t("previous")} - ${pagination.prev.title}`}
             >
               <ArrowLeftIcon className="size-4 shrink-0" />
               {t("previous")}
@@ -43,6 +44,7 @@ export function PaginationContent({ pagination, className }: Props) {
                 buttonVariants({ variant: "outline" }),
                 !pagination.next.href && "pointer-events-none opacity-50"
               )}
+              aria-label={`${t("next")} - ${pagination.next.title}`}
             >
               {t("next")}
               <ArrowRightIcon className="size-4 shrink-0" />
