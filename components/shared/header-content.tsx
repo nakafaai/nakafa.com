@@ -59,7 +59,10 @@ export function HeaderContent({
         )}
         <div className="flex items-center gap-2">
           {Icon && <Icon className="size-7" />}
-          <h1 className="font-medium text-3xl leading-tight tracking-tight">
+          <h1
+            id={title.toLowerCase().replace(/ /g, "-")}
+            className="font-medium text-3xl leading-tight tracking-tight"
+          >
             {title}
           </h1>
         </div>

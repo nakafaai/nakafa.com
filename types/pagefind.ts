@@ -5,6 +5,12 @@ export type PagefindResult = {
   };
   raw_url: string;
   sub_results: {
+    anchor?: {
+      element: string;
+      id: string;
+      location: number;
+      text: string;
+    };
     excerpt: string;
     title: string;
     url: string;
