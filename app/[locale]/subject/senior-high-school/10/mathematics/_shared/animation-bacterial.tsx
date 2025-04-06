@@ -71,7 +71,7 @@ type BacterialGrowthProps = {
   };
 };
 
-export default function BacterialGrowth({
+export function BacterialGrowth({
   ratio = 2,
   initialCount = 1,
   maxGenerations = 6,

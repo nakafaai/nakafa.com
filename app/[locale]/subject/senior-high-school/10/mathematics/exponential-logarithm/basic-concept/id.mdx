@@ -1,4 +1,4 @@
-import BacterialGrowthAnimation from "../../_shared/animation-bacterial";
+import { BacterialGrowth } from "../../_shared/animation-bacterial";
 
 export const metadata = {
   title: "Konsep Eksponen",
@@ -115,7 +115,7 @@ Angka 2 mewakili faktor pertumbuhan. Untuk menggunakannya, kalikan jumlah awal d
 Contoh: jika awalnya ada 100 bakteri dan mereka membelah setiap 30 menit, setelah 2 jam (4 interval)
 akan ada <InlineMath math="100 \times 2^4 = 100 \times 16 = 1.600" /> bakteri.
 
-<BacterialGrowthAnimation
+<BacterialGrowth
   formulaType="exponential"
   ratio={2}
   initialCount={1}

@@ -1,4 +1,4 @@
-import BacterialGrowthAnimation from "../../_shared/animation-bacterial";
+import { BacterialGrowth } from "../../_shared/animation-bacterial";
 
 export const metadata = {
   title: "Barisan Geometri",
@@ -69,7 +69,7 @@ Untuk menentukan jumlah bakteri setelah 20 jam (suku ke-10), kita gunakan rumus:
 
 Jadi, setelah 20 jam, terdapat 39.366 sel bakteri.
 
-<BacterialGrowthAnimation
+<BacterialGrowth
   formulaType="geometric"
   ratio={3}
   initialCount={2}
