@@ -77,10 +77,17 @@ const components = {
     <strong className="font-medium text-foreground" {...props} />
   ),
   a: ({ href, children, ...props }: AnchorProps) => {
-    const className = cn(buttonVariants({ variant: "link" }), "px-0");
+    const className = buttonVariants({ variant: "link" });
     if (href?.startsWith("/")) {
       return (
-        <NavigationLink href={href} className={className} {...props}>
+        <NavigationLink
+          href={href}
+          className={cn(
+            className,
+            "h-auto p-0 text-base underline underline-offset-4"
+          )}
+          {...props}
+        >
           {children}
         </NavigationLink>
       );
