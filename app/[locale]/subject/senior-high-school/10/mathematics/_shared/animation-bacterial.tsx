@@ -20,9 +20,50 @@ import {
 } from "react";
 import { useIntersectionObserver } from "usehooks-ts";
 
+type FormulaType = "geometric" | "exponential" | "custom";
+
 type BacterialGrowthProps = {
+  /**
+   * The ratio of bacterial growth.
+   * @default 2
+   */
+  ratio?: number;
+  /**
+   * The initial count of bacteria.
+   * @default 1
+   */
   initialCount?: number;
+  /**
+   * The maximum number of generations to display.
+   * @default 6
+   */
   maxGenerations?: number;
+  /**
+   * The type of formula to use.
+   * @default "geometric"
+   */
+  formulaType?: FormulaType;
+  /**
+   * The custom formula to use.
+   */
+  customFormula?: (
+    initialCount: number,
+    ratio: number,
+    generation: number
+  ) => number;
+  /**
+   * The time interval in hours.
+   * @default 1
+   */
+  timeInterval?: number;
+  /**
+   * The time unit label (hours, minutes, etc.).
+   * @default "h"
+   */
+  timeUnit?: string;
+  /**
+   * The labels to use for the animation.
+   */
   labels?: {
     title?: string;
     bacterial?: string;
@@ -31,8 +72,13 @@ type BacterialGrowthProps = {
 };
 
 export default function BacterialGrowth({
+  ratio = 2,
   initialCount = 1,
   maxGenerations = 6,
+  formulaType = "geometric",
+  customFormula,
+  timeInterval = 1, // Default: 1 hour
+  timeUnit = "h", // Default: hours
   labels = {
     title: "Bacterial Growth",
     bacterial: "Bacterial",
@@ -59,21 +105,40 @@ export default function BacterialGrowth({
     }
   }, [isIntersecting]);
 
-  // Calculate current bacteria count based on the formula B(t) = B₀ × 2^t
-  const bacteriaCount = useMemo(
-    () => initialCount * 2 ** deferredGeneration,
-    [initialCount, deferredGeneration]
-  );
+  // Calculate current bacteria count based on the selected formula type
+  const bacteriaCount = useMemo(() => {
+    if (customFormula) {
+      return customFormula(initialCount, ratio, deferredGeneration);
+    }
+
+    switch (formulaType) {
+      case "geometric":
+        // U_n = a·r^(n-1) (standard geometric sequence formula)
+        // For bacterial growth: bacteria after n generations = initial × ratio^(generation)
+        // We always start index from 0, so we don't need to subtract 1 from the generation
+        return initialCount * ratio ** deferredGeneration;
+      case "exponential":
+        // B(t) = B₀ × e^(kt) where k = ln(ratio)
+        return initialCount * Math.exp(Math.log(ratio) * deferredGeneration);
+      default:
+        // Default to geometric for backward compatibility
+        return initialCount * ratio ** deferredGeneration;
+    }
+  }, [initialCount, deferredGeneration, ratio, formulaType, customFormula]);
 
   // Create an array of bacteria to display
   const bacteria = useMemo(
-    () => Array.from({ length: Math.min(bacteriaCount, 100) }, (_, i) => i),
+    () =>
+      Array.from(
+        { length: Math.min(Math.round(bacteriaCount), 100) },
+        (_, i) => i
+      ),
     [bacteriaCount]
   );
 
   // Calculate how many bacteria to actually show (cap at 100 for performance)
   const displayCount = useMemo(
-    () => Math.min(bacteriaCount, 100),
+    () => Math.min(Math.round(bacteriaCount), 100),
     [bacteriaCount]
   );
 
@@ -121,12 +186,33 @@ export default function BacterialGrowth({
     }
   }, [isPlaying, generation, maxGenerations]);
 
+  // Generate time buttons
+  const timeButtons = useMemo(() => {
+    return Array.from({ length: maxGenerations + 1 }).map((_, i) => {
+      const time = i * timeInterval;
+      return (
+        <Button
+          key={i}
+          variant={generation === i ? "default" : "outline"}
+          size="sm"
+          onClick={() => {
+            setGeneration(i);
+            setIsPlaying(false);
+          }}
+        >
+          {time}
+          {timeUnit}
+        </Button>
+      );
+    });
+  }, [generation, maxGenerations, timeInterval, timeUnit]);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{labels.title}</CardTitle>
         <CardDescription>
-          {displayCount} {labels.bacterial}
+          {Math.round(bacteriaCount)} {labels.bacterial}
         </CardDescription>
       </CardHeader>
 
@@ -226,19 +312,7 @@ export default function BacterialGrowth({
 
         <div className="w-full border-t px-6 pt-4">
           <div className="flex flex-wrap justify-center gap-2">
-            {Array.from({ length: maxGenerations + 1 }).map((_, i) => (
-              <Button
-                key={i}
-                variant={generation === i ? "default" : "outline"}
-                size="sm"
-                onClick={() => {
-                  setGeneration(i);
-                  setIsPlaying(false);
-                }}
-              >
-                {i}h
-              </Button>
-            ))}
+            {timeButtons}
           </div>
         </div>
       </CardFooter>

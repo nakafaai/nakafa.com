@@ -1,3 +1,5 @@
+import BacterialGrowthAnimation from "../../_shared/animation-bacterial";
+
 export const metadata = {
   title: "Barisan Geometri",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -9,3 +11,154 @@ export const metadata = {
   subject: "Barisan dan Deret",
   category: "Matematika",
 };
+
+## Pengertian Barisan Geometri
+
+Barisan geometri adalah barisan bilangan yang memiliki rasio tetap (konstan) antara dua suku berurutan. Rasio ini dilambangkan dengan huruf <InlineMath math="r" />.
+
+Jika kita memiliki barisan geometri <InlineMath math="U_1, U_2, U_3, ..., U_n" />, maka:
+
+<BlockMath math="\frac{U_2}{U_1} = \frac{U_3}{U_2} = \frac{U_4}{U_3} = ... = r" />
+
+Dengan kata lain, setiap suku dalam barisan geometri diperoleh dengan mengalikan suku sebelumnya dengan rasio <InlineMath math="r" />.
+
+## Eksplorasi Melipat Kertas
+
+Mari kita lakukan eksplorasi sederhana untuk memahami konsep barisan geometri. Siapkan kertas berbentuk persegi panjang, lalu lipat beberapa kali.
+
+Jika kertas dilipat 1 kali, maka kertas akan terbagi menjadi 2 bagian sama besar. Jika dilipat lagi (2 kali), akan terbentuk 4 bagian sama besar. Berikut pola yang terbentuk:
+
+| Jumlah melipat kertas | Banyaknya bagian sama besar |
+| --------------------- | --------------------------- |
+| 1 kali                | 2 bagian                    |
+| 2 kali                | 4 bagian                    |
+| 3 kali                | 8 bagian                    |
+| 4 kali                | 16 bagian                   |
+
+Perhatikan bahwa banyaknya bagian yang terbentuk membentuk barisan bilangan: 2, 4, 8, 16, ...
+
+Dalam barisan ini, setiap suku diperoleh dengan mengalikan suku sebelumnya dengan 2. Dengan kata lain, rasionya adalah 2.
+
+## Rumus Umum Barisan Geometri
+
+Barisan geometri memiliki rumus umum:
+
+<BlockMath math="U_n = a \cdot r^{n-1}" />
+
+Dimana:
+
+- <InlineMath math="U_n" /> = suku ke-n
+- <InlineMath math="a" /> = suku pertama
+- <InlineMath math="r" /> = rasio
+- <InlineMath math="n" /> = nomor suku
+
+## Pembelahan Bakteri
+
+Bakteri berkembang biak dengan cara membelah diri. Dalam waktu dua jam, satu sel bakteri membelah menjadi 3 bagian.
+
+Jika jumlah awal bakteri adalah 2 sel, maka:
+
+- Suku pertama (<InlineMath math="U_1" />) = 2
+- Rasio (<InlineMath math="r" />) = 3
+
+Dalam 20 jam, terjadi pembelahan sebanyak 10 kali (20 jam ÷ 2 jam = 10 kali).
+
+Untuk menentukan jumlah bakteri setelah 20 jam (suku ke-10), kita gunakan rumus:
+
+<BlockMath math="U_{10} = 2 \cdot 3^{10-1} = 2 \cdot 3^9 = 2 \cdot 19.683 = 39.366" />
+
+Jadi, setelah 20 jam, terdapat 39.366 sel bakteri.
+
+<BacterialGrowthAnimation
+  formulaType="geometric"
+  ratio={3}
+  initialCount={2}
+  maxGenerations={3}
+  timeInterval={2}
+  timeUnit="jam"
+  labels={{
+    title: "Pembelahan Bakteri",
+    bacterial: "Bakteri",
+    initialBacteria: "Bakteri Awal",
+  }}
+/>
+
+## Sifat-Sifat Barisan Geometri
+
+### Rasio Barisan Geometri
+
+Rasio (<InlineMath math="r" />) pada barisan geometri selalu tetap dan dapat dihitung dengan membagi suku berikutnya dengan suku sebelumnya:
+
+<BlockMath math="r = \frac{U_2}{U_1} = \frac{U_3}{U_2} = \frac{U_4}{U_3} = ..." />
+
+### Menentukan Suku ke-n
+
+Untuk mencari suku ke-n dari barisan geometri, kita dapat menggunakan rumus:
+
+<BlockMath math="U_n = a \cdot r^{n-1}" />
+
+## Penerapan Barisan Geometri
+
+Barisan geometri banyak diterapkan dalam berbagai bidang, seperti:
+
+1. Pertumbuhan populasi (seperti pada contoh bakteri)
+2. Bunga majemuk dalam ekonomi
+3. Peluruhan radioaktif dalam fisika
+4. Pertumbuhan sel dalam biologi
+
+Dengan memahami konsep barisan geometri, kita dapat memodelkan dan memprediksi berbagai fenomena yang melibatkan pertumbuhan atau penurunan dengan rasio tetap.
+
+## Contoh Soal
+
+### Mencari Rasio
+
+Suku pertama dari suatu barisan geometri adalah 4 dan suku ke-4 adalah 108. Tentukan rasio dari barisan tersebut.
+
+**Penyelesaian**:
+
+Diketahui:
+
+- <InlineMath math="a = 4" /> (suku pertama)
+- <InlineMath math="U_4 = 108" /> (suku ke-4)
+
+Dengan menggunakan rumus umum barisan geometri:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_4 = a \cdot r^{4-1}" />
+  <BlockMath math="108 = 4 \cdot r^3" />
+  <BlockMath math="r^3 = \frac{108}{4} = 27" />
+  <BlockMath math="r = \sqrt[3]{27} = 3" />
+</div>
+
+Jadi, rasio barisan geometri tersebut adalah 3.
+
+### Panjang Potongan Tali
+
+Seutas tali dibagi menjadi 5 bagian dengan ukuran panjang membentuk suatu barisan geometri. Jika tali yang paling pendek adalah 16 cm dan tali yang paling panjang adalah 81 cm, maka tentukan panjang tali pada potongan ketiga.
+
+**Penyelesaian**:
+
+Diketahui:
+
+- <InlineMath math="a = 16" /> (tali paling pendek)
+- <InlineMath math="U_5 = 81" /> (tali paling panjang)
+
+Langkah pertama, menentukan rasio:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_5 = a \cdot r^{5-1}" />
+  <BlockMath math="81 = 16 \cdot r^4" />
+  <BlockMath math="r^4 = \frac{81}{16}" />
+  <BlockMath math="r = \sqrt[4]{\frac{81}{16}} = \frac{3}{2}" />
+</div>
+
+Kemudian, mencari panjang tali ketiga (<InlineMath math="U_3" />):
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_3 = a \cdot r^{3-1}" />
+  <BlockMath math="U_3 = 16 \cdot \left(\frac{3}{2}\right)^2" />
+  <BlockMath math="U_3 = 16 \cdot \frac{9}{4}" />
+  <BlockMath math="U_3 = 36" />
+</div>
+
+Jadi, panjang tali pada potongan ketiga adalah 36 cm.

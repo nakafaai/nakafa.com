@@ -1,3 +1,5 @@
+import BacterialGrowthAnimation from "../../_shared/animation-bacterial";
+
 export const metadata = {
   title: "Exponent Concepts",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -111,8 +113,6 @@ To use it, multiply the initial amount by 2 raised to the power of the number of
 initially 100 bacteria and they divide every 30 minutes, after 2 hours (4 intervals) there
 will be <InlineMath math="100 \times 2^4 = 100 \times 16 = 1,600" /> bacteria.
 
-import BacterialGrowthAnimation from "./animation-bacterial";
-
 <BacterialGrowthAnimation />
 
 ### Virus Spread
@@ -133,4 +133,4 @@ To predict future population numbers, an exponential model can be used with the 
 
 where <InlineMath math="P_0" /> is the initial population, <InlineMath math="r" /> is the growth rate, and <InlineMath math="t" /> is time (usually in years).
 
-This formula is obtained by adding the growth percentage <InlineMath math="r" /> to the population at each time interval. The factor <InlineMath math="(1+r)" /> indicates relative growth. To use it, multiply the initial population by <InlineMath math="(1+r)" /> raised to the power of the number of time intervals. Example: if the initial population is 1 million people with 2% growth per year, after 10 years the population becomes <InlineMath math="1,000,000 \times (1 + 0.02)^{10} = 1,000,000 \times 1.22 = 1,220,000" /> people.
+This formula is obtained by adding the growth percentage <InlineMath math="r" /> to the population at each time interval. The factor <InlineMath math="(1+r)" /> indicates relative growth. To use it, multiply the initial population by <InlineMath math="(1+r)" /> raised to the power of the number of time intervals. Example: if the initial population is 1 million people with 2% growth per year, after 10 years the population becomes <InlineMath math="1,000,000 \times (1 + 0.02)^{10} = 1,000,000 \times 1.22 = 1,220,000" /> people.../../\_shared/animation-bacterial

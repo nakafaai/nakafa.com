@@ -1,3 +1,5 @@
+import BacterialGrowthAnimation from "../../_shared/animation-bacterial";
+
 export const metadata = {
   title: "Konsep Eksponen",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -113,9 +115,13 @@ Angka 2 mewakili faktor pertumbuhan. Untuk menggunakannya, kalikan jumlah awal d
 Contoh: jika awalnya ada 100 bakteri dan mereka membelah setiap 30 menit, setelah 2 jam (4 interval)
 akan ada <InlineMath math="100 \times 2^4 = 100 \times 16 = 1.600" /> bakteri.
 
-import BacterialGrowthAnimation from "./animation-bacterial";
-
 <BacterialGrowthAnimation
+  formulaType="exponential"
+  ratio={2}
+  initialCount={1}
+  maxGenerations={6}
+  timeInterval={1}
+  timeUnit="jam"
   labels={{
     title: "Pertumbuhan Bakteri",
     bacterial: "Bakteri",
@@ -148,4 +154,4 @@ dan <InlineMath math="t" /> adalah waktu (biasanya dalam tahun).
 Rumus ini diperoleh dengan menambahkan persentase pertumbuhan <InlineMath math="r" /> ke populasi pada setiap interval waktu.
 Faktor <InlineMath math="(1+r)" /> menunjukkan pertumbuhan relatif. Untuk menggunakannya,
 kalikan populasi awal dengan <InlineMath math="(1+r)" /> pangkat jumlah interval waktu. Contoh: jika populasi
-awal adalah 1 juta orang dengan pertumbuhan 2% per tahun, setelah 10 tahun populasinya menjadi <InlineMath math="1.000.000 \times (1 + 0,02)^{10} = 1.000.000 \times 1,22 = 1.220.000" /> orang.
+awal adalah 1 juta orang dengan pertumbuhan 2% per tahun, setelah 10 tahun populasinya menjadi <InlineMath math="1.000.000 \times (1 + 0,02)^{10} = 1.000.000 \times 1,22 = 1.220.000" /> orang.../../\_shared/animation-bacterial
