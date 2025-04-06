@@ -227,7 +227,7 @@ export default function TableChairsAnimation({
       <CardHeader>
         <CardTitle>{labels.title}</CardTitle>
         <CardDescription>
-          {deferredTableCount} {labels.table} dan {chairCount} {labels.chair}
+          {deferredTableCount} {labels.table} & {chairCount} {labels.chair}
         </CardDescription>
       </CardHeader>
 
