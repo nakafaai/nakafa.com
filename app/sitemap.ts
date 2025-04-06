@@ -11,7 +11,7 @@ const host = "https://nakafa.com";
 const catchAllPattern = /^\[\.{3}.*\]$/;
 
 // Function to recursively get all directories
-function getAllRoutes(basePath = "", currentPath = ""): string[] {
+export function getAllRoutes(basePath = "", currentPath = ""): string[] {
   const fullPath = path.join(process.cwd(), "app", "[locale]", currentPath);
 
   if (!fs.existsSync(fullPath)) {
@@ -37,15 +37,9 @@ function getAllRoutes(basePath = "", currentPath = ""): string[] {
   return routes;
 }
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = getAllRoutes();
-
-  return routes.flatMap((route) => getEntries(route));
-}
-
 type Href = Parameters<typeof getPathname>[number]["href"];
 
-function getEntries(href: Href): MetadataRoute.Sitemap {
+export function getEntries(href: Href): MetadataRoute.Sitemap {
   return routing.locales.map((locale) => ({
     url: getUrl(href, locale),
     alternates: {
@@ -59,7 +53,13 @@ function getEntries(href: Href): MetadataRoute.Sitemap {
   }));
 }
 
-function getUrl(href: Href, locale: Locale): string {
+export function getUrl(href: Href, locale: Locale): string {
   const pathname = getPathname({ locale, href });
   return host + pathname;
+}
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const routes = getAllRoutes();
+
+  return routes.flatMap((route) => getEntries(route));
 }
