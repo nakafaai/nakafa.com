@@ -92,6 +92,11 @@ async function runIndexNow(): Promise<void> {
   // biome-ignore lint/suspicious/noConsole: For logging
   console.info(`Key file location: ${keyLocation}`);
 
+  // biome-ignore lint/suspicious/noConsole: For logging
+  console.info("Website URL:", host);
+  // biome-ignore lint/suspicious/noConsole: For logging
+  console.info("Host URL:", new URL(host).hostname);
+
   // Get all URLs
   const urls = getAllUrls();
   // biome-ignore lint/suspicious/noConsole: For logging
