@@ -24,6 +24,9 @@ function getAllUrls(): string[] {
     urls.add(entry.url);
   }
 
+  // Uncomment to log all URLs
+  // console.log("URLs:", Array.from(urls));
+
   return Array.from(urls);
 }
 
