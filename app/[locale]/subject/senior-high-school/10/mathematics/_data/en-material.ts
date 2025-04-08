@@ -93,15 +93,15 @@ const enMaterials: MaterialList[] = [
         href: `${BASE_PATH}/sequence-series/infinite-geometric-series`,
       },
       {
-        title: "Difference Between Convergence and Divergence",
+        title: "Difference between Convergence and Divergence",
         href: `${BASE_PATH}/sequence-series/convergence-divergence`,
       },
       {
-        title: "Differences Between Arithmetic and Geometric Series",
+        title: "Difference between Arithmetic and Geometric Series",
         href: `${BASE_PATH}/sequence-series/difference-arithmetic-geometric-series`,
       },
       {
-        title: "Differences Between Sequences and Series",
+        title: "Difference between Sequences and Series",
         href: `${BASE_PATH}/sequence-series/difference-sequence-series`,
       },
     ],
