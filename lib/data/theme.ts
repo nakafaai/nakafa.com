@@ -13,6 +13,10 @@ export const theme = [
   },
   // Custom
   {
+    name: "Caffeine",
+    value: "caffeine",
+  },
+  {
     name: "Claude",
     value: "claude",
   },
@@ -21,11 +25,11 @@ export const theme = [
     value: "ghibli",
   },
   {
-    name: "Sunset",
-    value: "sunset",
-  },
-  {
     name: "Nature",
     value: "nature",
+  },
+  {
+    name: "Sunset",
+    value: "sunset",
   },
 ] as const;

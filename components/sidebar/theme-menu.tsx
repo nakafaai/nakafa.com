@@ -4,6 +4,7 @@ import {
   AsteriskIcon,
   CatIcon,
   ChevronRightIcon,
+  CoffeeIcon,
   LaptopIcon,
   LeafIcon,
   MoonIcon,
@@ -59,6 +60,11 @@ export function ThemeMenu() {
 
           <DropdownMenuSeparator />
 
+          <DropdownMenuItem onClick={() => setTheme("caffeine")}>
+            <CoffeeIcon className="size-4 shrink-0" />
+            <span className="truncate">{t("caffeine")}</span>
+          </DropdownMenuItem>
+
           <DropdownMenuItem onClick={() => setTheme("claude")}>
             <AsteriskIcon className="size-4 shrink-0" />
             <span className="truncate">Claude</span>
@@ -69,14 +75,14 @@ export function ThemeMenu() {
             <span className="truncate">Ghibli</span>
           </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => setTheme("sunset")}>
-            <SunsetIcon className="size-4 shrink-0" />
-            <span className="truncate">{t("sunset")}</span>
-          </DropdownMenuItem>
-
           <DropdownMenuItem onClick={() => setTheme("nature")}>
             <LeafIcon className="size-4 shrink-0" />
             <span className="truncate">{t("nature")}</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => setTheme("sunset")}>
+            <SunsetIcon className="size-4 shrink-0" />
+            <span className="truncate">{t("sunset")}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </SidebarMenuItem>
