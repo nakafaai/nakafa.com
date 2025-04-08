@@ -55,7 +55,7 @@ const enMaterials: MaterialList[] = [
     ],
   },
   {
-    title: "Sequences and Series",
+    title: "Sequence and Series",
     description:
       "Amazing patterns connecting numbers in fascinating sequences.",
     href: `${BASE_PATH}/sequence-series`,
@@ -65,15 +65,15 @@ const enMaterials: MaterialList[] = [
         href: `${BASE_PATH}/sequence-series/sequence-concept`,
       },
       {
-        title: "Arithmetic Sequences",
+        title: "Arithmetic Sequence",
         href: `${BASE_PATH}/sequence-series/arithmetic-sequence`,
       },
       {
-        title: "Geometric Sequences",
+        title: "Geometric Sequence",
         href: `${BASE_PATH}/sequence-series/geometric-sequence`,
       },
       {
-        title: "Differences Between Arithmetic and Geometric Sequences",
+        title: "Difference between Arithmetic and Geometric Sequence",
         href: `${BASE_PATH}/sequence-series/difference-arithmetic-geometric-sequence`,
       },
       {
@@ -101,7 +101,7 @@ const enMaterials: MaterialList[] = [
         href: `${BASE_PATH}/sequence-series/difference-arithmetic-geometric-series`,
       },
       {
-        title: "Difference between Sequences and Series",
+        title: "Difference between Sequence and Series",
         href: `${BASE_PATH}/sequence-series/difference-sequence-series`,
       },
     ],
