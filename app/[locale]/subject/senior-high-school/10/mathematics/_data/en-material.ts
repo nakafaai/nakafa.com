@@ -93,7 +93,7 @@ const enMaterials: MaterialList[] = [
         href: `${BASE_PATH}/sequence-series/infinite-geometric-series`,
       },
       {
-        title: "Convergence and Divergence",
+        title: "Difference Between Convergence and Divergence",
         href: `${BASE_PATH}/sequence-series/convergence-divergence`,
       },
       {
