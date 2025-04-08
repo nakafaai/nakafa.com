@@ -77,7 +77,7 @@ const enMaterials: MaterialList[] = [
         href: `${BASE_PATH}/sequence-series/difference-arithmetic-geometric-sequence`,
       },
       {
-        title: "Series Concepts",
+        title: "Series Concept",
         href: `${BASE_PATH}/sequence-series/series-concept`,
       },
       {
