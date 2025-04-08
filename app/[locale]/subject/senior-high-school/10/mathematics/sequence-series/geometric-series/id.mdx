@@ -9,3 +9,106 @@ export const metadata = {
   subject: "Barisan dan Deret",
   category: "Matematika",
 };
+
+## Konsep Deret Geometri
+
+Perhatikan data jumlah pasien terinfeksi Covid-19 dalam tabel berikut:
+
+| Bulan         | Januari | Februari | Maret | April | Mei |
+| :------------ | :------ | :------- | :---- | :---- | :-- |
+| Jumlah pasien | 4       | 12       | 36    | 108   | 324 |
+
+Data di atas menunjukkan pola peningkatan jumlah pasien setiap bulannya. Jika kita jumlahkan jumlah pasien dari bulan pertama hingga bulan tertentu, kita akan membentuk sebuah **Deret Geometri**.
+
+Deret Geometri adalah jumlahan suku-suku dari suatu barisan geometri. Barisan geometri adalah barisan bilangan yang perbandingan antara dua suku berurutan selalu tetap (konstan). Perbandingan ini disebut **rasio** (dilambangkan dengan <InlineMath math="r" />).
+
+Pada data pasien Covid-19:
+
+- Suku pertama (<InlineMath math="a" /> atau <InlineMath math="U_1" />) adalah 4.
+- Rasio <InlineMath math="(r)" /> = <InlineMath math="\frac{12}{4} = \frac{36}{12} = \frac{108}{36} = \frac{324}{108} = 3" />.
+
+Jadi, barisan jumlah pasiennya adalah <InlineMath math="4, 12, 36, 108, 324" />.
+Deret geometrinya adalah jumlahan suku-suku barisan tersebut:
+
+- Jumlah 2 bulan pertama <InlineMath math="(S_2)" /> = <InlineMath math="4 + 12 = 16" />
+- Jumlah 3 bulan pertama <InlineMath math="(S_3)" /> = <InlineMath math="4 + 12 + 36 = 52" />
+- Jumlah 4 bulan pertama <InlineMath math="(S_4)" /> = <InlineMath math="4 + 12 + 36 + 108 = 160" />
+- dan seterusnya.
+
+## Menemukan Rumus Jumlah n Suku Pertama
+
+Bagaimana cara menghitung jumlah <InlineMath math="n" /> suku pertama <InlineMath math="(S_n)" /> tanpa harus menjumlahkan satu per satu? Mari kita temukan rumusnya.
+
+Perhatikan tabel ini yang menunjukkan proses menemukan kembali rumus jumlah deret geometri:
+
+| Notasi                       | Penjumlahan Langsung                          | Menggunakan <InlineMath math="U_{n+1}" /> dan <InlineMath math="U_1" /> | Bentuk Umum                                             |
+| :--------------------------- | :-------------------------------------------- | :---------------------------------------------------------------------- | :------------------------------------------------------ |
+| <InlineMath math="S_2" />    | <InlineMath math="4 + 12 = 16" />             | <InlineMath math="S_2 = \frac{36 - 4}{3 - 1} = \frac{32}{2} = 16" />    | <InlineMath math="S_2 = \frac{U_3 - U_1}{r - 1}" />     |
+| <InlineMath math="S_3" />    | <InlineMath math="4 + 12 + 36 = 52" />        | <InlineMath math="S_3 = \frac{108 - 4}{3 - 1} = \frac{104}{2} = 52" />  | <InlineMath math="S_3 = \frac{U_4 - U_1}{r - 1}" />     |
+| <InlineMath math="S_4" />    | <InlineMath math="4 + 12 + 36 + 108 = 160" /> | <InlineMath math="S_4 = \frac{324 - 4}{3 - 1} = \frac{320}{2} = 160" /> | <InlineMath math="S_4 = \frac{U_5 - U_1}{r - 1}" />     |
+| <InlineMath math="\vdots" /> | <InlineMath math="\dots" />                   | <InlineMath math="\dots" />                                             | <InlineMath math="\dots" />                             |
+| <InlineMath math="S_n" />    | <InlineMath math="\dots" />                   | <InlineMath math="\dots" />                                             | <InlineMath math="S_n = \frac{U_{n+1} - U_1}{r - 1}" /> |
+
+Dari kanan bawah di tabel, kita dapatkan bentuk umum:
+
+<BlockMath math="S_n = \frac{U_{n+1} - U_1}{r - 1}" />
+
+Kita tahu bahwa rumus suku ke-<InlineMath math="n" /> pada barisan geometri adalah <InlineMath math="U_n = ar^{n-1}" />. Maka, <InlineMath math="U_{n+1} = ar^{(n+1)-1} = ar^n" />.
+Substitusikan <InlineMath math="U_{n+1} = ar^n" /> dan <InlineMath math="U_1 = a" /> ke dalam rumus <InlineMath math="S_n" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="S_n = \frac{ar^n - a}{r - 1}" />
+  <BlockMath math="S_n = \frac{a(r^n - 1)}{r - 1}" />
+</div>
+
+Ini adalah rumus jumlah <InlineMath math="n" /> suku pertama deret geometri.
+
+## Rumus Deret Geometri
+
+Secara umum, rumus untuk menghitung jumlah <InlineMath math="n" /> suku pertama deret geometri adalah:
+
+<BlockMath math="S_n = \frac{a(r^n - 1)}{r - 1}, \text{ untuk } r > 1" />
+
+atau
+
+<BlockMath math="S_n = \frac{a(1 - r^n)}{1 - r}, \text{ untuk } r < 1" />
+
+**Keterangan:**
+
+- <InlineMath math="S_n" /> = jumlah <InlineMath math="n" /> suku pertama
+- <InlineMath math="a" /> = suku pertama <InlineMath math="(U_1)" />
+- <InlineMath math="r" /> = rasio <InlineMath math="(r \neq 1)" />
+- <InlineMath math="n" /> = banyaknya suku
+
+## Contoh Penerapan
+
+Sebuah perusahaan sepeda pada tahun 2020 meningkat setiap bulannya dan membentuk barisan geometri. Produksi pada bulan Januari sebanyak 120 unit. Pada bulan April, hasil produksi mencapai 3.240 unit. Berapakah total hasil produksi sepeda hingga bulan Mei?
+
+**Penyelesaian:**
+
+- Produksi Januari <InlineMath math="(U_1)" /> = <InlineMath math="a = 120" />
+- Produksi April <InlineMath math="(U_4)" /> = 3.240
+- Ditanya: Total produksi hingga Mei <InlineMath math="(S_5)" />
+
+**Langkah 1**: Cari rasio <InlineMath math="(r)" />
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_4 = ar^{4-1} = ar^3" />
+  <BlockMath math="3.240 = 120 \cdot r^3" />
+  <BlockMath math="r^3 = \frac{3.240}{120}" />
+  <BlockMath math="r^3 = 27" />
+  <BlockMath math="r = \sqrt[3]{27} = 3" />
+</div>
+
+**Langkah 2**: Hitung <InlineMath math="S_5" /> Karena <InlineMath math="r = 3 > 1" />, gunakan rumus:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="S_n = \frac{a(r^n - 1)}{r - 1}" />
+  <BlockMath math="S_5 = \frac{120(3^5 - 1)}{3 - 1}" />
+  <BlockMath math="S_5 = \frac{120(243 - 1)}{2}" />
+  <BlockMath math="S_5 = \frac{120(242)}{2}" />
+  <BlockMath math="S_5 = 60 \cdot 242" />
+  <BlockMath math="S_5 = 14.520" />
+</div>
+
+Jadi, total hasil produksi sepeda hingga bulan Mei adalah 14.520 unit.
