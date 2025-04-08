@@ -9,3 +9,63 @@ export const metadata = {
   subject: "Sequence and Series",
   category: "Mathematics",
 };
+
+## What Are Convergent and Divergent Series?
+
+In mathematics, when we sum the terms of an infinite sequence, we get an **infinite series**. The important question is: does this infinite sum approach a specific number (**convergent**) or not (**divergent**)?
+
+## Convergent Series
+
+A series is called **convergent** if the sum of its terms approaches a _finite_ value. Imagine a bouncing ball - the total distance it travels stops at one number, not continuing to increase without bound.
+
+### Characteristics of Convergent Series
+
+- Its partial sum (the sum of the first <InlineMath math="n" /> terms, <InlineMath math="S_n" />) approaches a value <InlineMath math="L" /> as <InlineMath math="n" /> approaches infinity (<InlineMath math="\lim_{n \to \infty} S_n = L" />, where <InlineMath math="L" /> is a real number).
+- Necessary condition (but not sufficient): the nth term (<InlineMath math="u_n" />) must approach 0 as <InlineMath math="n" /> approaches infinity (<InlineMath math="\lim_{n \to \infty} u_n = 0" />).
+
+### Examples of Convergent Series
+
+- **Geometric Series with <InlineMath math="|r| < 1" />**: This is the most common example.
+
+  For instance: <InlineMath math="1 + \frac{1}{2} + \frac{1}{4} + \frac{1}{8} + \dots" />. Its sum approaches 2.
+
+  <BlockMath math="S_\infty = \frac{a}{1 - r} = \frac{1}{1 - \frac{1}{2}} = \frac{1}{\frac{1}{2}} = 2" />
+
+## Divergent Series
+
+A series is called **divergent** if the sum of its terms does not approach a finite value. Its sum could:
+
+- Keep growing toward positive infinity (<InlineMath math="\infty" />).
+- Keep decreasing toward negative infinity (<InlineMath math="-\infty" />).
+- Oscillate between several values without ever settling.
+
+### Characteristics of Divergent Series
+
+- Its partial sum (<InlineMath math="S_n" />) does not approach a specific value <InlineMath math="L" /> as <InlineMath math="n" /> approaches infinity.
+- If <InlineMath math="\lim_{n \to \infty} u_n \neq 0" /> (the nth term does not approach 0), then the series is _definitely_ divergent.
+
+### Examples of Divergent Series
+
+- **Arithmetic Series (except <InlineMath math="0 + 0 + \dots" />)**: Their sum always approaches <InlineMath math="\infty" /> or <InlineMath math="-\infty" />.
+
+  For instance: <InlineMath math="1 + 2 + 3 + 4 + \dots" /> (approaches <InlineMath math="\infty" />)
+
+- **Geometric Series with <InlineMath math="|r| \ge 1" />**:
+
+  - If <InlineMath math="r \ge 1" />, its sum approaches <InlineMath math="\pm \infty" /> (depending on the sign of the first term).
+
+    Example: <InlineMath math="2 + 4 + 8 + 16 + \dots" /> (approaches <InlineMath math="\infty" />)
+
+  - If <InlineMath math="r \le -1" />, its sum oscillates.
+
+    Example: <InlineMath math="1 - 2 + 4 - 8 + \dots" /> (Partial sums: <InlineMath math="1, -1, 3, -5, \dots" /> do not approach one value)
+
+- **Harmonic Series**: <InlineMath math="1 + \frac{1}{2} + \frac{1}{3} + \frac{1}{4} + \dots" />. This is an interesting example. Although its nth term (<InlineMath math="u_n = \frac{1}{n}" />) approaches 0, the sum of the series still approaches infinity (<InlineMath math="\infty" />). This shows that the condition <InlineMath math="u_n \to 0" /> alone is not sufficient to guarantee convergence.
+
+## Summary of Key Differences
+
+| Feature      | Convergent Series                                                                         | Divergent Series                                                                                                      |
+| ------------ | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Sum**      | Approaches a _finite_ value (<InlineMath math="L" />); <InlineMath math="S_\infty = L" /> | Does not approach a finite value; <InlineMath math="\pm \infty" /> or oscillates                                      |
+| **nth Term** | <InlineMath math="\lim_{n \to \infty} u_n = 0" /> (Necessary condition)                   | <InlineMath math="\lim_{n \to \infty} u_n \neq 0" /> (Definitely divergent) or can be <InlineMath math="u_n \to 0" /> |
+| **Examples** | Geometric series <InlineMath math="\|r\| < 1" />                                          | Arithmetic series, geometric series <InlineMath math="\|r\| \geq 1" />, harmonic series                               |
