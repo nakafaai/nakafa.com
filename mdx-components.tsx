@@ -72,7 +72,9 @@ const components = {
   li: (props: ListItemProps) => (
     <li className="mt-4 pl-1 text-foreground/80 leading-relaxed" {...props} />
   ),
-  em: (props: EmProps) => <em className="font-medium" {...props} />,
+  em: (props: EmProps) => (
+    <em className="font-medium text-foreground" {...props} />
+  ),
   strong: (props: StrongProps) => (
     <strong className="font-medium text-foreground" {...props} />
   ),

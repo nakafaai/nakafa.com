@@ -9,3 +9,91 @@ export const metadata = {
   subject: "Barisan dan Deret",
   category: "Matematika",
 };
+
+## Bola Memantul
+
+Bayangkan kamu melempar sebuah bola tenis dari ketinggian 1 meter. Bola itu akan memantul, tapi setiap pantulan tingginya hanya <InlineMath math="\frac{1}{4}" /> dari tinggi pantulan sebelumnya.
+
+Ketinggian pantulan bola ini membentuk sebuah **barisan geometri**:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="1, \quad 1 \times \frac{1}{4}, \quad (1 \times \frac{1}{4}) \times \frac{1}{4}, \quad \dots" />
+  <BlockMath math="1, \quad \frac{1}{4}, \quad \frac{1}{16}, \quad \frac{1}{64}, \quad \dots" />
+</div>
+
+Dengan suku pertama (<InlineMath math="a" />) adalah 1 dan rasio (<InlineMath math="r" />) adalah <InlineMath math="\frac{1}{4}" />.
+
+Sekarang, coba pikirkan: berapa _total panjang lintasan_ yang ditempuh bola itu dari awal dilempar sampai akhirnya berhenti?
+
+Bola bergerak turun, lalu naik, turun lagi, naik lagi, dan seterusnya, sampai berhenti. Panjang lintasannya adalah jumlah dari semua lintasan turun dan semua lintasan naik. Karena bola terus memantul (meskipun makin rendah), kita menjumlahkan tak hingga banyaknya lintasan. Inilah yang disebut **Deret Geometri Tak Hingga**.
+
+### Kapan Deretnya Berhenti?
+
+Secara logika, bola akhirnya akan berhenti memantul, kan? Ini terjadi karena tinggi pantulannya semakin kecil dan mendekati nol. Dalam matematika, ini terjadi jika nilai mutlak dari rasio (<InlineMath math="r" />) kurang dari 1.
+
+<BlockMath math="|r| < 1 \quad \text{atau} \quad -1 < r < 1" />
+Deret seperti ini disebut **konvergen**, artinya jumlahnya menuju suatu nilai tertentu
+(tidak tak hingga). Dalam contoh bola, <InlineMath math="r = \frac{1}{4}" />,
+dan karena <InlineMath math="-1 < \frac{1}{4} < 1" />, deretnya konvergen. Bola itu
+akan berhenti dan total lintasannya bisa dihitung.
+
+Jika <InlineMath math="|r| \ge 1" /> (yaitu <InlineMath math="r \ge 1" /> atau <InlineMath math="r \le -1" />), tinggi pantulan tidak akan mengecil atau malah membesar. Deretnya disebut **divergen**, dan jumlahnya tak hingga (<InlineMath math="\pm \infty" />).
+
+## Menghitung Jumlah Deret Tak Hingga
+
+Bagaimana cara menghitung jumlah deret tak hingga yang konvergen? Kita mulai dari rumus jumlah <InlineMath math="n" /> suku pertama deret geometri:
+
+<BlockMath math="S_n = \frac{a(1 - r^n)}{1 - r}" />
+Untuk deret tak hingga, kita mencari nilai <InlineMath math="S_n" /> saat <InlineMath math="n" /> sangat
+besar (mendekati tak hingga). Jika deretnya konvergen (<InlineMath math="-1 < r < 1" />
+), maka nilai <InlineMath math="r^n" /> akan mendekati 0 saat <InlineMath math="n" /> mendekati
+tak hingga. Contoh: <InlineMath math="(\frac{1}{4})^2 = \frac{1}{16}" />, <InlineMath math="(\frac{1}{4})^3 = \frac{1}{64}" />
+, <InlineMath math="(\frac{1}{4})^{10} \approx 0.00000095" />. Semakin besar <InlineMath math="n" />
+, <InlineMath math="(\frac{1}{4})^n" /> semakin dekat ke 0.
+
+Jadi, untuk <InlineMath math="n \to \infty" /> dan <InlineMath math="-1 < r < 1" />, kita punya <InlineMath math="r^n \to 0" />. Rumusnya menjadi:
+
+<BlockMath math="S_\infty = \lim_{n \to \infty} S_n = \lim_{n \to \infty} \frac{a(1 - r^n)}{1 - r} = \frac{a(1 - 0)}{1 - r}" />
+Sehingga, rumus jumlah deret geometri tak hingga yang konvergen adalah:
+<BlockMath math="S_\infty = \frac{a}{1 - r}" />
+Dimana: * <InlineMath math="S_\infty" /> = Jumlah deret tak hingga * <InlineMath math="a" /> =
+Suku pertama * <InlineMath math="r" /> = Rasio (<InlineMath math="-1 < r < 1" />)
+
+## Menghitung Total Lintasan
+
+Kita bisa menghitung total lintasan bola menggunakan rumus <InlineMath math="S_\infty" />. Ada dua bagian lintasan:
+
+1.  **Lintasan Turun:** Bola jatuh dari ketinggian <InlineMath math="a" />, lalu jatuh lagi setelah pantulan pertama (<InlineMath math="ar" />), jatuh lagi setelah pantulan kedua (<InlineMath math="ar^2" />), dan seterusnya.
+
+    - Deret turun: <InlineMath math="a + ar + ar^2 + ar^3 + \dots" />
+    - Suku pertama (<InlineMath math="a_d" />) = <InlineMath math="a" />
+    - Rasio (<InlineMath math="r_d" />) = <InlineMath math="r" />
+    - Jumlah lintasan turun: <InlineMath math="S_{\text{turun}} = \frac{a_d}{1 - r_d} = \frac{a}{1 - r}" />
+
+2.  **Lintasan Naik:** Bola naik setelah pantulan pertama (<InlineMath math="ar" />), naik lagi setelah pantulan kedua (<InlineMath math="ar^2" />), dan seterusnya.
+    - Deret naik: <InlineMath math="ar + ar^2 + ar^3 + \dots" />
+    - Suku pertama (<InlineMath math="a_n" />) = <InlineMath math="ar" />
+    - Rasio (<InlineMath math="r_n" />) = <InlineMath math="r" />
+    - Jumlah lintasan naik: <InlineMath math="S_{\text{naik}} = \frac{a_n}{1 - r_n} = \frac{ar}{1 - r}" />
+
+**Total Panjang Lintasan** = Jumlah Lintasan Turun + Jumlah Lintasan Naik
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Total} = S_{\text{turun}} + S_{\text{naik}} = \frac{a}{1 - r} + \frac{ar}{1 - r}" />
+  <BlockMath math="\text{Total} = \frac{a(1 + r)}{1 - r}" />
+</div>
+
+Untuk contoh bola tenis dengan <InlineMath math="a = 1" /> meter dan <InlineMath math="r = \frac{1}{4}" />:
+
+<BlockMath math="\text{Total} = \frac{1(1 + \frac{1}{4})}{1 - \frac{1}{4}} = \frac{1(\frac{5}{4})}{\frac{3}{4}} = \frac{5/4}{3/4} = \frac{5}{4} \times \frac{4}{3} = \frac{5}{3}" />
+Jadi, total panjang lintasan bola sampai berhenti adalah <InlineMath math="\frac{5}{3}" /> meter.
+
+**Cara Lain (Mengikuti Hint):**
+Total lintasan juga bisa dihitung sebagai: Lintasan jatuh pertama + 2 kali jumlah semua lintasan naik.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Total} = a + 2 \times S_{\text{naik}} = a + 2 \times \left( \frac{ar}{1 - r} \right)" />
+  <BlockMath math="\text{Total} = 1 + 2 \times \left( \frac{1 \times \frac{1}{4}}{1 - \frac{1}{4}} \right) = 1 + 2 \times \left( \frac{1/4}{3/4} \right) = 1 + 2 \times \left( \frac{1}{3} \right) = 1 + \frac{2}{3} = \frac{5}{3}" />
+</div>
+
+Hasilnya sama!
