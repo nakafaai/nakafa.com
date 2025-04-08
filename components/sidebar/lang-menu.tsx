@@ -12,7 +12,7 @@ export function LangMenu() {
       <SidebarMenuItem>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton tooltip={t("language")}>
-            <LanguagesIcon className="size-4" />
+            <LanguagesIcon className="size-4 shrink-0" />
             <span className="truncate">{t("language")}</span>
 
             <ChevronRightIcon className="ml-auto size-4" />

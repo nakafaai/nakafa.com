@@ -27,10 +27,7 @@ export function LangMenuSwitcher() {
   }
 
   return (
-    <DropdownMenuContent
-      side={isMobile ? "top" : "right"}
-      align={isMobile ? "end" : "center"}
-    >
+    <DropdownMenuContent side={isMobile ? "top" : "right"} align="end">
       <DropdownMenuItem
         onClick={() => handleChangeLocale("id")}
         disabled={isPending}

@@ -11,6 +11,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import "@/styles/globals.css";
+import "@/styles/theme.css";
 import "katex/dist/katex.min.css";
 
 import { AppProviders } from "@/components/providers";
@@ -19,6 +20,7 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TailwindIndicator } from "@/components/ui/tailwind-indicator";
+import { theme } from "@/lib/data/theme";
 import type { Metadata } from "next";
 
 type Props = {
@@ -188,6 +190,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
+            themes={theme.map((t) => t.value)}
           >
             <NextIntlClientProvider>
               <SidebarProvider>

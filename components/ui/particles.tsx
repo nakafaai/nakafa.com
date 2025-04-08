@@ -124,8 +124,8 @@ export function Particles({
         context.current.beginPath();
         context.current.arc(x, y, size, 0, 2 * Math.PI);
         context.current.fillStyle = isThemeDark
-          ? `rgba(255, 255, 255, ${alpha})`
-          : `rgba(0, 0, 0, ${alpha})`;
+          ? `oklch(0.985 0 0 / ${alpha})`
+          : `oklch(0.145 0 0 / ${alpha})`;
         context.current.fill();
         context.current.setTransform(dpr, 0, 0, dpr, 0, 0);
 

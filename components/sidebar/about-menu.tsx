@@ -14,7 +14,7 @@ export function AboutMenu() {
     <>
       <SidebarMenuItem>
         <SidebarMenuButton onClick={() => setOpen(!open)} tooltip={t("about")}>
-          <SquareTerminalIcon className="size-4" />
+          <SquareTerminalIcon className="size-4 shrink-0" />
           <span className="truncate">{t("about")}</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
