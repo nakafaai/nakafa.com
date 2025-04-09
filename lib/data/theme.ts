@@ -1,6 +1,7 @@
 import {
   AsteriskIcon,
   CatIcon,
+  CitrusIcon,
   ClockIcon,
   CloudyIcon,
   CoffeeIcon,
@@ -72,5 +73,9 @@ export const themes = [
   {
     value: "sunset",
     icon: SunsetIcon,
+  },
+  {
+    value: "tangerine",
+    icon: CitrusIcon,
   },
 ] as const;
