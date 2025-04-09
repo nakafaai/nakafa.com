@@ -73,3 +73,55 @@ Ada beberapa cara menuliskan vektor:
 1.  **Dua Huruf Kapital dengan Panah di Atas:** Menunjukkan titik pangkal dan titik ujung. Contoh: <InlineMath math="\overrightarrow{AB}" />, artinya vektor dari titik A ke titik B.
 2.  **Satu Huruf Kecil dengan Panah di Atas:** Contoh: <InlineMath math="\vec{a}" />.
 3.  **Huruf Dicetak Tebal:** Contoh: **a** atau **AB**.
+
+## Latihan
+
+Apakah bentuk-bentuk di bawah ini merupakan vektor? Mengapa?
+
+<VectorChart
+  title="Bidang Koordinat Kartesius"
+  description="Sumbu x horizontal dan sumbu y vertikal."
+  vectors={[
+    {
+      id: "bentuk_1",
+      name: "Bentuk 1",
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 9 },
+        { x: 3, y: 4 },
+        { x: 6, y: 8 },
+      ],
+    },
+    {
+      id: "bentuk_2",
+      name: "Bentuk 2",
+      points: [
+        { x: 1, y: 1 },
+        { x: 2, y: 6 },
+        { x: 5, y: 2 },
+      ],
+      direction: "backward",
+    },
+    {
+      id: "bentuk_3",
+      name: "Bentuk 3",
+      points: [
+        { x: 2, y: 0 },
+        { x: 4, y: 7 },
+      ],
+      direction: "both",
+    },
+  ]}
+/>
+
+Bentuk-bentuk ini **bukan merupakan vektor** karena:
+
+1. **Bentuk 1**: karena garisnya lengkung, sedangkan vektor harus digambarkan dengan garis lurus.
+2. **Bentuk 2**: karena garisnya lebih dari satu garis lurus, sedangkan vektor harus digambarkan dengan satu garis lurus tunggal.
+3. **Bentuk 3**: karena garisnya mempunyai dua arah (ditunjukkan dengan panah di kedua ujungnya), sedangkan vektor hanya memiliki satu arah yang jelas.
+
+Vektor yang valid dalam matematika harus memiliki ciri-ciri:
+
+- Berupa garis lurus
+- Memiliki satu arah yang ditunjukkan oleh panah
+- Terdiri dari satu garis lurus tunggal (tidak patah atau berliku)

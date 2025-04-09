@@ -73,3 +73,55 @@ There are several ways to write vectors:
 1.  **Two Capital Letters with an Arrow Above:** Indicating the initial and terminal points. Example: <InlineMath math="\overrightarrow{AB}" />, meaning a vector from point A to point B.
 2.  **One Lowercase Letter with an Arrow Above:** Example: <InlineMath math="\vec{a}" />.
 3.  **Bold Letters:** Example: **a** or **AB**
+
+## Exercise
+
+Are the shapes below vectors? Why?
+
+<VectorChart
+  title="Cartesian Coordinate System"
+  description="Horizontal x-axis and vertical y-axis."
+  vectors={[
+    {
+      id: "shape_1",
+      name: "Shape 1",
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 9 },
+        { x: 3, y: 4 },
+        { x: 6, y: 8 },
+      ],
+    },
+    {
+      id: "shape_2",
+      name: "Shape 2",
+      points: [
+        { x: 1, y: 1 },
+        { x: 2, y: 6 },
+        { x: 5, y: 2 },
+      ],
+      direction: "backward",
+    },
+    {
+      id: "shape_3",
+      name: "Shape 3",
+      points: [
+        { x: 2, y: 0 },
+        { x: 4, y: 7 },
+      ],
+      direction: "both",
+    },
+  ]}
+/>
+
+These shapes are **not vectors** because:
+
+1. **Shape 1**: because its line is curved, whereas vectors must be represented by straight lines.
+2. **Shape 2**: because it consists of more than one straight line, whereas a vector must be represented by a single straight line.
+3. **Shape 3**: because it has two directions (shown by arrows at both ends), whereas a vector must have only one clear direction.
+
+A valid vector in mathematics must have these characteristics:
+
+- It must be a straight line
+- It must have one direction indicated by an arrow
+- It must consist of a single straight line (not broken or curved)
