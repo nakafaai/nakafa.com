@@ -4,7 +4,9 @@ import {
   AsteriskIcon,
   CatIcon,
   ChevronRightIcon,
+  ClockIcon,
   CoffeeIcon,
+  CpuIcon,
   LaptopIcon,
   LeafIcon,
   MoonIcon,
@@ -80,9 +82,19 @@ export function ThemeMenu() {
             <span className="truncate">{t("nature")}</span>
           </DropdownMenuItem>
 
+          <DropdownMenuItem onClick={() => setTheme("neo")}>
+            <CpuIcon className="size-4 shrink-0" />
+            <span className="truncate">Neo</span>
+          </DropdownMenuItem>
+
           <DropdownMenuItem onClick={() => setTheme("sunset")}>
             <SunsetIcon className="size-4 shrink-0" />
             <span className="truncate">{t("sunset")}</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => setTheme("perpetuity")}>
+            <ClockIcon className="size-4 shrink-0" />
+            <span className="truncate">{t("perpetuity")}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </SidebarMenuItem>

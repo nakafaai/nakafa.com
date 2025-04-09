@@ -29,7 +29,15 @@ export const theme = [
     value: "nature",
   },
   {
+    name: "Neo",
+    value: "neo",
+  },
+  {
     name: "Sunset",
     value: "sunset",
+  },
+  {
+    name: "Perpetuity",
+    value: "perpetuity",
   },
 ] as const;
