@@ -1,3 +1,5 @@
+import { VectorChart } from "../../_shared/vector-chart";
+
 export const metadata = {
   title: "Vector Concept",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -9,3 +11,65 @@ export const metadata = {
   subject: "Vector Operations",
   category: "Mathematics",
 };
+
+## What Is a Vector?
+
+To understand vectors, imagine a weather map showing wind direction and speed at various locations. On such maps, arrows are often drawn. These arrows indicate the **direction** of the wind and **how strong** it blows (usually shown by the length or thickness of the arrow).
+
+In mathematics, quantities that have both **magnitude (size)** and **direction** like this are called **vectors**. Thus, the speed and direction of wind on a weather map is a good example of a vector. The length of the arrow represents the _magnitude_ of the wind speed (for example, 30 km/h), and the direction of the arrow shows the _direction_ in which it blows.
+
+## Drawing and Writing Vectors
+
+Vectors are typically drawn as directed line segments (arrows).
+
+<VectorChart
+  title="Vector Graph"
+  description="Vectors in a Cartesian coordinate system with horizontal x and vertical y."
+  vectors={[
+    {
+      id: "vector_1",
+      name: "Vector 1",
+      points: [
+        { x: 0, y: 0 },
+        { x: 6, y: 8 },
+      ],
+    },
+    {
+      id: "vector_2",
+      name: "Vector 2",
+      points: [
+        { x: 1, y: 1 },
+        { x: 5, y: 2 },
+      ],
+      direction: "backward",
+    },
+    {
+      id: "vector_3",
+      name: "Vector 3",
+      points: [
+        { x: 2, y: 0 },
+        { x: 4, y: 7 },
+      ],
+      direction: "backward",
+    },
+  ]}
+/>
+
+- **Vector 1**: Direction of the vector from point <InlineMath math="(0, 0)" /> to point <InlineMath math="(6, 8)" />
+- **Vector 2**: Direction of the vector from point <InlineMath math="(5, 2)" /> to point <InlineMath math="(1, 1)" />
+- **Vector 3**: Direction of the vector from point <InlineMath math="(4, 7)" /> to point <InlineMath math="(2, 0)" />
+
+### Key Components of Vectors
+
+1.  **Initial Point:** The starting point of the vector.
+2.  **Terminal Point:** The ending point of the vector, marked with an arrowhead.
+3.  **Magnitude:** The length of the arrow, representing the value or size of the vector. Often also called _vector length_. The length of vector <InlineMath math="\overrightarrow{AB}" /> is denoted as <InlineMath math="|\overrightarrow{AB}|" />.
+4.  **Direction:** The direction pointed by the arrowhead.
+
+### Vector Notation
+
+There are several ways to write vectors:
+
+1.  **Two Capital Letters with an Arrow Above:** Indicating the initial and terminal points. Example: <InlineMath math="\overrightarrow{AB}" />, meaning a vector from point A to point B.
+2.  **One Lowercase Letter with an Arrow Above:** Example: <InlineMath math="\vec{a}" />.
+3.  **Bold Letters:** Example: **a** or **AB**

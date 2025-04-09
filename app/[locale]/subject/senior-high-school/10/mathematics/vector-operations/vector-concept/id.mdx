@@ -1,3 +1,5 @@
+import { VectorChart } from "../../_shared/vector-chart";
+
 export const metadata = {
   title: "Konsep Vektor",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -9,3 +11,65 @@ export const metadata = {
   subject: "Vektor dan Operasinya",
   category: "Matematika",
 };
+
+## Apa Itu Vektor?
+
+Untuk memahami vektor, coba bayangkan sebuah peta cuaca yang menunjukkan arah dan kecepatan angin di berbagai lokasi. Di peta seperti itu, seringkali digambarkan anak panah. Anak panah ini menunjukkan **arah** hembusan angin dan **seberapa kencang** angin itu bertiup (biasanya ditunjukkan oleh panjang atau ketebalan panahnya).
+
+Dalam matematika, besaran yang punya **nilai (besar)** sekaligus **arah** seperti ini disebut **vektor**. Jadi, kecepatan dan arah angin pada peta cuaca adalah contoh bagus dari vektor. Panjang panah mewakili _besar_ kecepatan angin (misalnya 30 km/jam), dan arah panah menunjukkan _arah_ hembusannya.
+
+## Menggambar dan Menulis Vektor
+
+Vektor biasanya digambarkan sebagai ruas garis berarah (anak panah).
+
+<VectorChart
+  title="Grafik Vektor"
+  description="Vektor berada di bidang koordinat kartesius dengan x horizontal dan y vertikal."
+  vectors={[
+    {
+      id: "vector_1",
+      name: "Vektor 1",
+      points: [
+        { x: 0, y: 0 },
+        { x: 6, y: 8 },
+      ],
+    },
+    {
+      id: "vector_2",
+      name: "Vektor 2",
+      points: [
+        { x: 1, y: 1 },
+        { x: 5, y: 2 },
+      ],
+      direction: "backward",
+    },
+    {
+      id: "vector_3",
+      name: "Vektor 3",
+      points: [
+        { x: 2, y: 0 },
+        { x: 4, y: 7 },
+      ],
+      direction: "backward",
+    },
+  ]}
+/>
+
+- **Vektor 1**: Arah vektor dari titik <InlineMath math="(0, 0)" /> ke titik <InlineMath math="(6, 8)" />
+- **Vektor 2**: Arah vektor dari titik <InlineMath math="(5, 2)" /> ke titik <InlineMath math="(1, 1)" />
+- **Vektor 3**: Arah vektor dari titik <InlineMath math="(4, 7)" /> ke titik <InlineMath math="(2, 0)" />
+
+### Komponen Penting Vektor
+
+1.  **Titik Pangkal (Initial Point):** Titik awal vektor.
+2.  **Titik Ujung (Terminal Point):** Titik akhir vektor, ditandai dengan mata panah.
+3.  **Besar (Magnitude):** Panjang anak panah, melambangkan nilai atau ukuran vektor. Sering disebut juga _panjang vektor_. Panjang vektor <InlineMath math="\overrightarrow{AB}" /> dinotasikan sebagai <InlineMath math="|\overrightarrow{AB}|" />.
+4.  **Arah (Direction):** Arah yang ditunjuk oleh mata panah.
+
+### Notasi Vektor
+
+Ada beberapa cara menuliskan vektor:
+
+1.  **Dua Huruf Kapital dengan Panah di Atas:** Menunjukkan titik pangkal dan titik ujung. Contoh: <InlineMath math="\overrightarrow{AB}" />, artinya vektor dari titik A ke titik B.
+2.  **Satu Huruf Kecil dengan Panah di Atas:** Contoh: <InlineMath math="\vec{a}" />.
+3.  **Huruf Dicetak Tebal:** Contoh: **a** atau **AB**.
