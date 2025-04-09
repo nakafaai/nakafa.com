@@ -1,55 +1,76 @@
-export const theme = [
+import {
+  AsteriskIcon,
+  CatIcon,
+  ClockIcon,
+  CloudyIcon,
+  CoffeeIcon,
+  CpuIcon,
+  HeartIcon,
+  LaptopIcon,
+  LeafIcon,
+  MoonIcon,
+  SparkleIcon,
+  SunIcon,
+  SunsetIcon,
+  TvIcon,
+} from "lucide-react";
+
+export const themes = [
   {
-    name: "Light",
     value: "light",
+    icon: SunIcon,
   },
   {
-    name: "Dark",
     value: "dark",
+    icon: MoonIcon,
   },
   {
-    name: "System",
     value: "system",
+    icon: LaptopIcon,
   },
   // Custom
   {
-    name: "Caffeine",
     value: "caffeine",
+    icon: CoffeeIcon,
   },
   {
-    name: "Claude",
     value: "claude",
+    icon: AsteriskIcon,
   },
   {
-    name: "Dreamy",
+    value: "cosmic",
+    icon: SparkleIcon,
+  },
+  {
     value: "dreamy",
+    icon: CloudyIcon,
   },
   {
-    name: "Ghibli",
     value: "ghibli",
+    icon: CatIcon,
   },
   {
-    name: "Nature",
     value: "nature",
+    icon: LeafIcon,
   },
   {
-    name: "Neo",
     value: "neo",
+    icon: CpuIcon,
   },
   {
-    name: "Perpetuity",
     value: "perpetuity",
+    icon: ClockIcon,
   },
   {
-    name: "Pinky",
     value: "pinky",
+    icon: HeartIcon,
   },
   {
-    name: "Retro",
     value: "retro",
+    icon: TvIcon,
   },
   {
-    name: "Sunset",
     value: "sunset",
+    icon: SunsetIcon,
   },
 ] as const;
