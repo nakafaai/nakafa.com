@@ -41,6 +41,11 @@ type Vector = {
    * Direction of the vector arrow
    */
   direction?: "forward" | "backward" | "both";
+  /**
+   * Type of the vector
+   * @default "monotone"
+   */
+  type?: "monotone" | "step" | "linear";
 };
 
 type Props = {
@@ -218,11 +223,24 @@ export function VectorChart({
               dataKey="x"
               tickMargin={8}
               tickFormatter={(value) => {
-                return value.toString();
+                if (typeof value === "number") {
+                  return Number.isInteger(value)
+                    ? value.toString()
+                    : value.toFixed(2);
+                }
+                return value;
               }}
             />
             <YAxis
               tickMargin={8}
+              tickFormatter={(value) => {
+                if (typeof value === "number") {
+                  return Number.isInteger(value)
+                    ? value.toString()
+                    : value.toFixed(2);
+                }
+                return value;
+              }}
               label={{
                 value: labels.yAxis,
                 angle: -90,
@@ -287,7 +305,7 @@ export function VectorChart({
               return (
                 <Line
                   key={vector.id}
-                  type="monotone"
+                  type={vector.type || "monotone"}
                   dataKey={vector.id}
                   stroke={color}
                   strokeWidth={2}

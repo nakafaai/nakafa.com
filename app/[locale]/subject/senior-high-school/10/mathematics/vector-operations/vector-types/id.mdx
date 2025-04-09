@@ -1,3 +1,5 @@
+import { VectorChart } from "../../_shared/vector-chart";
+
 export const metadata = {
   title: "Jenis-jenis Vektor",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -9,3 +11,138 @@ export const metadata = {
   subject: "Vektor dan Operasinya",
   category: "Matematika",
 };
+
+## Panjang dan Arah Vektor
+
+Setiap vektor memiliki dua komponen utama: **panjang (besar)** dan **arah**.
+
+Perhatikan contoh vektor <InlineMath math="\overrightarrow{CD}" /> di bawah ini.
+
+<VectorChart
+  title="Vektor CD"
+  description="Vektor CD dengan panjang 4 cm dan arah 45 derajat terhadap garis horizontal."
+  vectors={[
+    {
+      id: "cd",
+      name: "CD",
+      points: [
+        { x: 0, y: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4) }, // 4 cm at 45 degrees
+      ],
+    },
+  ]}
+/>
+
+- **Panjang vektor** <InlineMath math="\overrightarrow{CD}" /> adalah 4 cm. Ini menunjukkan _besar_ atau _nilai_ dari vektor tersebut. Panjang vektor <InlineMath math="\vec{v}" /> biasanya dinotasikan sebagai <InlineMath math="|\vec{v}|" />. Jadi, <InlineMath math="|\overrightarrow{CD}| = 4" /> cm.
+- **Arah vektor** <InlineMath math="\overrightarrow{CD}" /> adalah 45° terhadap garis horizontal. Arah ini sangat penting dan membedakan vektor dari besaran skalar (yang hanya punya nilai). Arah bisa dinyatakan dengan sudut, mata angin (seperti Timur Laut), atau acuan lainnya.
+
+## Vektor Negatif (Vektor Lawan)
+
+Vektor negatif atau vektor lawan adalah vektor yang memiliki **panjang sama** tetapi **arahnya berlawanan** dengan vektor aslinya.
+
+Bayangkan Andi berjalan sejauh 100 m dengan arah 30° (kita sebut perpindahan ini sebagai vektor <InlineMath math="\vec{A}" />). Kemudian, Andi kembali ke posisi semula. Perpindahan kedua ini adalah vektor lawan dari <InlineMath math="\vec{A}" />, yang kita tulis sebagai <InlineMath math="-\vec{A}" />.
+
+<VectorChart
+  title="Vektor dan Vektor Lawan"
+  description="Vektor A dan vektor -A memiliki panjang yang sama tetapi arah berlawanan."
+  vectors={[
+    {
+      id: "A",
+      name: "A",
+      points: [
+        { x: 0, y: 0 },
+        { x: 5, y: 2 },
+      ],
+    },
+    {
+      id: "-A",
+      name: "-A",
+      points: [
+        { x: 0, y: 0.5 },
+        { x: 5, y: 2.5 },
+      ],
+      direction: "backward",
+    },
+  ]}
+/>
+
+- Vektor <InlineMath math="\vec{A}" /> dan <InlineMath math="-\vec{A}" /> memiliki panjang yang sama (<InlineMath math="|\vec{A}| = |-\vec{A}|" />).
+- Arah vektor <InlineMath math="-\vec{A}" /> tepat berlawanan dengan arah vektor <InlineMath math="\vec{A}" />. Jika <InlineMath math="\vec{A}" /> menunjuk ke satu arah, <InlineMath math="-\vec{A}" /> menunjuk ke arah sebaliknya (berbeda 180°).
+
+## Vektor Nol
+
+Vektor nol adalah vektor yang istimewa karena memiliki **panjang nol**. Karena panjangnya nol, vektor ini **tidak memiliki arah tertentu**.
+
+Vektor nol bisa dibayangkan sebagai sebuah titik, di mana titik pangkal dan titik ujungnya berimpit. Vektor nol biasanya dinotasikan dengan <InlineMath math="\vec{0}" />.
+
+**Contoh**:
+
+Jika Andi berjalan 100 m ke timur, kemudian berjalan kembali 100 m ke barat, maka total perpindahan Andi adalah nol. Perpindahan total ini dapat direpresentasikan sebagai vektor nol (<InlineMath math="\vec{0}" />).
+
+## Latihan
+
+Perhatikan kedua vektor berikut:
+
+<VectorChart
+  title="Vektor A dan B"
+  description="Perbandingan Vektor A dan Vektor B"
+  vectors={[
+    {
+      id: "A",
+      name: "A",
+      points: [
+        { x: 1, y: 4 }, // Start point for A (visually)
+        { x: 0, y: 0 }, // End point for A (visually, pointing towards origin? Let's adjust)
+      ],
+      direction: "backward", // Arrow points towards the end point specified last
+    },
+    {
+      id: "B",
+      name: "B",
+      points: [
+        { x: 1, y: 4 }, // Start point for B (same as A starts)
+        { x: 5, y: 5 }, // End point for B
+      ],
+    },
+  ]}
+/>
+
+Apakah vektor <InlineMath math="\vec{A}" /> merupakan vektor lawan dari <InlineMath math="\vec{B}" />?
+
+**Jawaban:**
+
+Vektor <InlineMath math="\vec{A}" /> **bukan** merupakan vektor lawan dari <InlineMath math="\vec{B}" />. Agar menjadi vektor lawan, dua syarat harus terpenuhi:
+
+1.  **Panjangnya harus sama:** Secara visual, <InlineMath math="|\vec{A}| \neq |\vec{B}|" /> (panjangnya terlihat berbeda).
+2.  **Arahnya harus tepat berlawanan (180°):** Arah <InlineMath math="\vec{A}" /> tidak berlawanan arah dengan <InlineMath math="\vec{B}" />.
+
+Karena kedua syarat ini tidak terpenuhi, <InlineMath math="\vec{A}" /> bukanlah vektor lawan dari <InlineMath math="\vec{B}" />.
+
+**Bagaimana cara membuat vektor <InlineMath math="\vec{A}" /> dan <InlineMath math="\vec{B}" /> berlawanan?**
+
+Untuk membuat vektor <InlineMath math="\vec{A}" /> dan <InlineMath math="\vec{B}" /> berlawanan, kamu bisa membuat vektor nya seperti ini:
+
+<VectorChart
+  title="Vektor A dan B"
+  description="Vektor A dan B berlawanan"
+  vectors={[
+    {
+      id: "A",
+      name: "A",
+      points: [
+        { x: 1, y: 4 },
+        { x: 0, y: 0 },
+      ],
+      direction: "backward",
+    },
+    {
+      id: "B",
+      name: "B",
+      points: [
+        { x: 1, y: 4 },
+        { x: 4, y: 8 },
+      ],
+      direction: "forward",
+    },
+  ]}
+/>
