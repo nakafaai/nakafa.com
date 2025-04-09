@@ -21,6 +21,10 @@ export const theme = [
     value: "claude",
   },
   {
+    name: "Dreamy",
+    value: "dreamy",
+  },
+  {
     name: "Ghibli",
     value: "ghibli",
   },
@@ -33,11 +37,19 @@ export const theme = [
     value: "neo",
   },
   {
-    name: "Sunset",
-    value: "sunset",
-  },
-  {
     name: "Perpetuity",
     value: "perpetuity",
+  },
+  {
+    name: "Pinky",
+    value: "pinky",
+  },
+  {
+    name: "Retro",
+    value: "retro",
+  },
+  {
+    name: "Sunset",
+    value: "sunset",
   },
 ] as const;
