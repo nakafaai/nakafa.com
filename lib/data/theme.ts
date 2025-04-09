@@ -2,11 +2,11 @@ import {
   AsteriskIcon,
   CatIcon,
   CitrusIcon,
-  ClockIcon,
   CloudyIcon,
   CoffeeIcon,
   CpuIcon,
   HeartIcon,
+  HourglassIcon,
   LaptopIcon,
   LeafIcon,
   MoonIcon,
@@ -60,7 +60,7 @@ export const themes = [
   },
   {
     value: "perpetuity",
-    icon: ClockIcon,
+    icon: HourglassIcon,
   },
   {
     value: "pinky",
