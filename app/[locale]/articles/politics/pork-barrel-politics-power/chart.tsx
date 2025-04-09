@@ -83,7 +83,7 @@ export function BudgetChart({
         <CardDescription>Kemenkeu RI, 2024a.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+        <ChartContainer config={chartConfig}>
           <BarChart
             accessibilityLayer
             data={BudgetChartData}
@@ -171,7 +171,7 @@ export function FundChart({ title, description, yLabel, footnote }: Props) {
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+        <ChartContainer config={chartConfig}>
           <BarChart
             accessibilityLayer
             data={FundChartData}
@@ -335,7 +335,7 @@ export function ElectabilityChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+        <ChartContainer config={chartConfig}>
           <LineChart accessibilityLayer data={ElectabilityChartData}>
             <CartesianGrid vertical={false} />
             <XAxis

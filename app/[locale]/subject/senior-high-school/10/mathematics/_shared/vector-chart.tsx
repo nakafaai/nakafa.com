@@ -163,10 +163,7 @@ export function VectorChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer
-          className="h-full min-h-[300px] w-full"
-          config={chartConfig}
-        >
+        <ChartContainer config={chartConfig}>
           <LineChart data={data} accessibilityLayer>
             <CartesianGrid />
             <defs>

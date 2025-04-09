@@ -165,8 +165,11 @@ export function CompositionChart({ title, description, footnote }: Props) {
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
-          <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-square sm:aspect-square"
+          >
             <BarChart accessibilityLayer data={MinisterChartData}>
               <CartesianGrid vertical={false} />
               <XAxis
@@ -189,7 +192,10 @@ export function CompositionChart({ title, description, footnote }: Props) {
             </BarChart>
           </ChartContainer>
 
-          <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-square sm:aspect-square"
+          >
             <BarChart data={GenderChartData}>
               <CartesianGrid vertical={false} />
               <XAxis
@@ -208,7 +214,10 @@ export function CompositionChart({ title, description, footnote }: Props) {
             </BarChart>
           </ChartContainer>
 
-          <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-square sm:aspect-square"
+          >
             <BarChart data={PoliticalStatusChartData}>
               <CartesianGrid vertical={false} />
               <XAxis

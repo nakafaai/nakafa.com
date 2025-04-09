@@ -77,7 +77,7 @@ export function VirusChart({
         <CardDescription>{labels.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer className="min-h-[300px] w-full" config={chartConfig}>
+        <ChartContainer config={chartConfig}>
           <LineChart data={data} accessibilityLayer>
             <CartesianGrid />
             <XAxis
