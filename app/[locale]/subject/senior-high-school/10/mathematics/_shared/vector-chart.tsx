@@ -40,7 +40,7 @@ type Vector = {
   /**
    * Direction of the vector arrow
    */
-  direction?: "forward" | "backward";
+  direction?: "forward" | "backward" | "both";
 };
 
 type Props = {
@@ -130,6 +130,7 @@ export function VectorChart({
           startPoint: null,
           endPoint: null,
           arrowAtEnd: false,
+          arrowAtStart: false,
         };
       }
 
@@ -143,6 +144,18 @@ export function VectorChart({
           startPoint: vector.points[0],
           endPoint: vector.points.at(-1),
           arrowAtEnd: true,
+          arrowAtStart: false,
+        };
+      }
+
+      if (direction === "both") {
+        // Arrows at both ends
+        return {
+          ...vector,
+          startPoint: vector.points[0],
+          endPoint: vector.points.at(-1),
+          arrowAtEnd: true,
+          arrowAtStart: true,
         };
       }
 
@@ -152,6 +165,7 @@ export function VectorChart({
         startPoint: vector.points.at(-1),
         endPoint: vector.points[0],
         arrowAtEnd: false,
+        arrowAtStart: true,
       };
     });
   }, [vectors]);
@@ -259,10 +273,16 @@ export function VectorChart({
             {processedVectors.map((vector, index) => {
               const color = vector.color || `var(--chart-${index + 1})`;
 
-              // Use different marker depending on direction
-              const markerProps = vector.arrowAtEnd
-                ? { markerEnd: `url(#arrow-end-${vector.id})` }
-                : { markerStart: `url(#arrow-start-${vector.id})` };
+              // Set marker properties based on direction
+              const markerProps: Record<string, string> = {};
+
+              if (vector.arrowAtEnd) {
+                markerProps.markerEnd = `url(#arrow-end-${vector.id})`;
+              }
+
+              if (vector.arrowAtStart) {
+                markerProps.markerStart = `url(#arrow-start-${vector.id})`;
+              }
 
               return (
                 <Line
