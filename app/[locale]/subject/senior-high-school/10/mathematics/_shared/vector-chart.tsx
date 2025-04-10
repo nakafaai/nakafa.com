@@ -40,7 +40,7 @@ type Vector = {
   /**
    * Direction of the vector arrow
    */
-  direction?: "forward" | "backward" | "both";
+  direction?: "forward" | "backward" | "both" | "none";
   /**
    * Type of the vector
    * @default "monotone"
@@ -161,6 +161,17 @@ export function VectorChart({
           endPoint: vector.points.at(-1),
           arrowAtEnd: true,
           arrowAtStart: true,
+        };
+      }
+
+      if (direction === "none") {
+        // No arrows at any end
+        return {
+          ...vector,
+          startPoint: vector.points[0],
+          endPoint: vector.points.at(-1),
+          arrowAtEnd: false,
+          arrowAtStart: false,
         };
       }
 
