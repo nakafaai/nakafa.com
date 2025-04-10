@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
       mdxType: "gfm",
     },
   },
-  transpilePackages: ["shiki"],
+  transpilePackages: ["shiki", "three"],
   images: {
     contentDispositionType: "inline",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

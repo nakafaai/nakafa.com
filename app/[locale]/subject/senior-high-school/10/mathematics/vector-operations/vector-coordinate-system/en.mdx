@@ -1,3 +1,4 @@
+import { Vector3d } from "../../_shared/vector-3d";
 import { VectorChart } from "../../_shared/vector-chart";
 
 export const metadata = {
@@ -40,6 +41,14 @@ The Cartesian Coordinate System uses perpendicular axes to determine the locatio
 - In **three dimensions (3D)**, we add a <InlineMath math="z" /> axis that is perpendicular to the <InlineMath math="xy" /> plane. A point's position is expressed as <InlineMath math="(x, y, z)" />, used for determining the position of objects like aircraft in space.
 
   We can think of <InlineMath math="x" /> as length, <InlineMath math="y" /> as width, and <InlineMath math="z" /> as height.
+
+  <Vector3d
+    title="Position Vector P(3, 4, 5)"
+    description="Origin O(0, 0, 0) to point P(3, 4, 5)"
+    vectors={[
+      { from: [0, 0, 0], to: [3, 4, 5], color: "#8e51ff", label: "P(3, 4, 5)" },
+    ]}
+  />
 
 ## Difference Between Vectors and Coordinates
 

@@ -1,5 +1,5 @@
 import { VectorChart } from "../../_shared/vector-chart";
-
+import { Vector3d } from "../../_shared/vector-3d";
 export const metadata = {
   title: "Vektor dan Sistem Koordinat",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -40,6 +40,19 @@ Sistem Koordinat Kartesius menggunakan sumbu-sumbu yang saling tegak lurus untuk
 - Pada **tiga dimensi (3D)**, kita menambahkan sumbu <InlineMath math="z" /> yang tegak lurus terhadap bidang <InlineMath math="xy" />. Posisi titik dinyatakan sebagai <InlineMath math="(x, y, z)" />, seperti untuk menentukan posisi pesawat di udara.
 
   Kita bisa menganalogikan <InlineMath math="x" /> sebagai panjang, <InlineMath math="y" /> sebagai lebar, dan <InlineMath math="z" /> sebagai tinggi.
+
+  <Vector3d
+    title="Vektor Posisi P(3, 4, 5)"
+    description="Titik asal O(0, 0, 0) menuju titik P(3, 4, 5)"
+    vectors={[
+      {
+        from: [0, 0, 0],
+        to: [3, 4, 5],
+        color: "#8e51ff", // must be hex color
+        label: "P(3, 4, 5)",
+      },
+    ]}
+  />
 
 ## Beda Vektor dan Koordinat
 
