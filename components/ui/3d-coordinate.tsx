@@ -59,7 +59,7 @@ type CoordinateSystemProps = {
   /** Custom camera position */
   cameraPosition?: [number, number, number];
   /** Use mono font for labels and text */
-  useMonoFont?: boolean;
+  font: "mono" | "sans";
   /** Children elements to render inside the coordinate system */
   children?: ReactNode;
   /** Additional class name */
@@ -144,13 +144,13 @@ export function Axes({
   showLabels = true,
   labelSize = 0.5,
   labelOffset = 0.5,
-  useMonoFont = true,
+  font = "mono",
 }: {
   size?: number;
   showLabels?: boolean;
   labelSize?: number;
   labelOffset?: number;
-  useMonoFont?: boolean;
+  font?: CoordinateSystemProps["font"];
 }) {
   // Create points for each axis (now extending in both positive and negative directions)
   const xPoints = useMemo(
@@ -168,7 +168,7 @@ export function Axes({
     [size]
   );
 
-  const fontToUse = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
+  const fontToUse = font === "mono" ? MONO_FONT_PATH : FONT_PATH;
 
   return (
     <group>
@@ -263,7 +263,7 @@ export function ArrowHelper({
   arrowSize = 0.5,
   label,
   labelPosition = "end",
-  useMonoFont = true,
+  font = "mono",
 }: VectorProps) {
   const vectors = useMemo(() => {
     const fromVec = new THREE.Vector3(...from);
@@ -306,7 +306,7 @@ export function ArrowHelper({
     }
   }, [vectors, arrowSize]);
 
-  const fontToUse = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
+  const fontToUse = font === "mono" ? MONO_FONT_PATH : FONT_PATH;
 
   return (
     <group>
@@ -494,7 +494,7 @@ function CoordinateSystemComponent({
   size = 15,
   backgroundColor = "transparent",
   cameraPosition = [12, 8, 12],
-  useMonoFont = true,
+  font = "mono",
   children,
   className,
 }: CoordinateSystemProps) {
@@ -543,9 +543,7 @@ function CoordinateSystemComponent({
         <pointLight position={[10, 10, 10]} intensity={1} castShadow />
 
         {/* Coordinate System */}
-        {showAxes && (
-          <Axes size={size} showLabels={showLabels} useMonoFont={useMonoFont} />
-        )}
+        {showAxes && <Axes size={size} showLabels={showLabels} font={font} />}
         <Origin color={originColor} />
 
         {/* Grid */}
