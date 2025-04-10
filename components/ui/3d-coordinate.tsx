@@ -58,8 +58,11 @@ type CoordinateSystemProps = {
   backgroundColor?: string;
   /** Custom camera position */
   cameraPosition?: [number, number, number];
-  /** Use mono font for labels and text */
-  font: "mono" | "sans";
+  /** Font to use for labels and text
+   *
+   * @default "mono"
+   */
+  font?: "mono" | "sans";
   /** Children elements to render inside the coordinate system */
   children?: ReactNode;
   /** Additional class name */
