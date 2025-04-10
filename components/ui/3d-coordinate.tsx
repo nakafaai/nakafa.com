@@ -28,6 +28,10 @@ const ORIGIN_COLOR = {
   DARK: "#18181b",
 };
 
+// Font path for the 3D text
+const FONT_PATH = "/fonts/Geist-Regular.ttf";
+const MONO_FONT_PATH = "/fonts/GeistMono-Regular.ttf";
+
 // --------------------------------
 // Types
 // --------------------------------
@@ -54,6 +58,8 @@ type CoordinateSystemProps = {
   backgroundColor?: string;
   /** Custom camera position */
   cameraPosition?: [number, number, number];
+  /** Use mono font for labels and text */
+  useMonoFont?: boolean;
   /** Children elements to render inside the coordinate system */
   children?: ReactNode;
   /** Additional class name */
@@ -80,6 +86,8 @@ type VectorProps = {
   label?: string;
   /** Position of the label */
   labelPosition?: "start" | "middle" | "end";
+  /** Use mono font for the label */
+  useMonoFont?: boolean;
   /** Additional props */
   [key: string]: unknown;
 };
@@ -136,11 +144,13 @@ export function Axes({
   showLabels = true,
   labelSize = 0.5,
   labelOffset = 0.5,
+  useMonoFont = true,
 }: {
   size?: number;
   showLabels?: boolean;
   labelSize?: number;
   labelOffset?: number;
+  useMonoFont?: boolean;
 }) {
   // Create points for each axis (now extending in both positive and negative directions)
   const xPoints = useMemo(
@@ -158,6 +168,8 @@ export function Axes({
     [size]
   );
 
+  const fontToUse = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
+
   return (
     <group>
       <Line points={xPoints} color={RED} lineWidth={2} />
@@ -171,6 +183,7 @@ export function Axes({
             color={RED}
             fontSize={labelSize}
             anchorX="left"
+            font={fontToUse}
           >
             X
           </Text>
@@ -179,6 +192,7 @@ export function Axes({
             color={RED}
             fontSize={labelSize}
             anchorX="right"
+            font={fontToUse}
           >
             -X
           </Text>
@@ -187,6 +201,7 @@ export function Axes({
             color={GREEN}
             fontSize={labelSize}
             anchorX="left"
+            font={fontToUse}
           >
             Y
           </Text>
@@ -195,6 +210,7 @@ export function Axes({
             color={GREEN}
             fontSize={labelSize}
             anchorX="left"
+            font={fontToUse}
           >
             -Y
           </Text>
@@ -203,6 +219,7 @@ export function Axes({
             color={BLUE}
             fontSize={labelSize}
             anchorX="left"
+            font={fontToUse}
           >
             Z
           </Text>
@@ -211,6 +228,7 @@ export function Axes({
             color={BLUE}
             fontSize={labelSize}
             anchorX="left"
+            font={fontToUse}
           >
             -Z
           </Text>
@@ -245,6 +263,7 @@ export function ArrowHelper({
   arrowSize = 0.5,
   label,
   labelPosition = "end",
+  useMonoFont = true,
 }: VectorProps) {
   const vectors = useMemo(() => {
     const fromVec = new THREE.Vector3(...from);
@@ -287,6 +306,8 @@ export function ArrowHelper({
     }
   }, [vectors, arrowSize]);
 
+  const fontToUse = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
+
   return (
     <group>
       <primitive
@@ -308,6 +329,7 @@ export function ArrowHelper({
           color={color instanceof THREE.Color ? color.getStyle() : color}
           fontSize={0.5}
           anchorX="left"
+          font={fontToUse}
         >
           {label}
         </Text>
@@ -472,6 +494,7 @@ function CoordinateSystemComponent({
   size = 15,
   backgroundColor = "transparent",
   cameraPosition = [12, 8, 12],
+  useMonoFont = true,
   children,
   className,
 }: CoordinateSystemProps) {
@@ -520,7 +543,9 @@ function CoordinateSystemComponent({
         <pointLight position={[10, 10, 10]} intensity={1} castShadow />
 
         {/* Coordinate System */}
-        {showAxes && <Axes size={size} showLabels={showLabels} />}
+        {showAxes && (
+          <Axes size={size} showLabels={showLabels} useMonoFont={useMonoFont} />
+        )}
         <Origin color={originColor} />
 
         {/* Grid */}
