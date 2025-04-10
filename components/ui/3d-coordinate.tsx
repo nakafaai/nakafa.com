@@ -503,7 +503,7 @@ function CoordinateSystemComponent({
 }: CoordinateSystemProps) {
   const { resolvedTheme } = useTheme();
   const [showGrid, setShowGrid] = useState(initialShowGrid);
-  const [play, setPlay] = useState(true);
+  const [play, setPlay] = useState(false);
 
   // Color mapping based on color scheme
   const gridColors = useMemo(() => {
