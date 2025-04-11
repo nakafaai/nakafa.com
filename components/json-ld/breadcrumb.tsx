@@ -37,11 +37,12 @@ export function BreadcrumbJsonLd({
 
   // Generate breadcrumb items based on the current path
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: No need to refactor
-  const breadcrumbItems = useMemo(() => {
+  const breadcrumbItems: BreadcrumbList["itemListElement"] = useMemo(() => {
     const segments = pathname.split("/").filter(Boolean);
     const items = [
       {
         "@type": "ListItem" as const,
+        "@id": `https://nakafa.com/${locale}#breadcrumb`,
         position: 1,
         name: "Home",
         item: `https://nakafa.com/${locale}`,
@@ -91,6 +92,7 @@ export function BreadcrumbJsonLd({
 
       items.push({
         "@type": "ListItem" as const,
+        "@id": `https://nakafa.com/${locale}${currentPath}#listItem${items.length + 1}`,
         position: items.length + 1,
         name,
         item: `https://nakafa.com/${locale}${currentPath}`,
