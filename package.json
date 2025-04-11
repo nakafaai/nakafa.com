@@ -78,6 +78,7 @@
     "react-wrap-balancer": "^1.1.1",
     "recharts": "^2.15.2",
     "remark-gfm": "^4.0.1",
+    "schema-dts": "^1.1.5",
     "shiki": "^3.2.1",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.2.0",
