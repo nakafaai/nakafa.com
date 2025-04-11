@@ -4,7 +4,7 @@ import { usePathname } from "@/i18n/routing";
 import { type Locale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { BreadcrumbList, WithContext } from "schema-dts";
-import { JsonLd } from "../ui/json-ld";
+import { JsonLd } from ".";
 
 // Define regex at top level
 const NUMERIC_REGEX = /^\d+$/;

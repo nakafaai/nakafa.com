@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 import type { EducationalOrganization, WithContext } from "schema-dts";
-import { JsonLd } from "../ui/json-ld";
+import { JsonLd } from ".";
 
 export function EducationalOrgJsonLd() {
   const t = useTranslations("Metadata");

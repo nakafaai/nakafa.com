@@ -1,6 +1,6 @@
 import { type Locale, useTranslations } from "next-intl";
 import type { WebSite, WithContext } from "schema-dts";
-import { JsonLd } from "../ui/json-ld";
+import { JsonLd } from ".";
 
 type WebsiteJsonLdProps = {
   locale: Locale;
