@@ -4,9 +4,9 @@ import { getAllRoutes, getEntries } from "../app/sitemap";
 
 // Configuration
 const host = "https://nakafa.com";
-const keyFileName = "cf801ba46a4343b39c2df98eaa695927.txt";
+const keyFileName = "e22d548f7fd2482a9022e3b84e944901.txt";
 const keyLocation = `${host}/${keyFileName}`;
-const hardcodedKey = "cf801ba46a4343b39c2df98eaa695927";
+const hardcodedKey = "e22d548f7fd2482a9022e3b84e944901";
 
 // Get API key - using hardcoded key instead of generating a new one
 function getApiKey(): string {
