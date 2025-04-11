@@ -1,3 +1,6 @@
+import { VectorChart } from "../../_shared/vector-chart";
+import { Vector3d } from "../../_shared/vector-3d";
+
 export const metadata = {
   title: "Vektor Dua Dimensi",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -9,3 +12,71 @@ export const metadata = {
   subject: "Vektor dan Operasinya",
   category: "Matematika",
 };
+
+## Konsep Vektor Dua Dimensi
+
+Pada sistem koordinat Kartesius, setiap titik pada bidang dapat dinyatakan dengan pasangan angka <InlineMath math="(x, y)" />, di mana <InlineMath math="x" /> adalah posisi horizontal dan <InlineMath math="y" /> adalah posisi vertikal. Titik pangkal koordinat adalah <InlineMath math="O(0, 0)" />.
+
+Jika kita tarik garis lurus dari titik pangkal <InlineMath math="O" /> ke titik lain, misalnya <InlineMath math="Q(x, y)" />, kita mendapatkan sebuah **vektor**. Vektor ini sering ditulis sebagai <InlineMath math="\vec{OQ}" />. Vektor memiliki **besar** (panjang garis) dan **arah** (ditunjukkan oleh panah).
+
+Untuk memudahkan, kita gunakan **vektor satuan**. Vektor satuan adalah vektor yang panjangnya 1 satuan.
+
+- <InlineMath math="\mathbf{i}" /> adalah vektor satuan searah sumbu-x positif (horizontal).
+- <InlineMath math="\mathbf{j}" /> adalah vektor satuan searah sumbu-y positif (vertikal).
+
+Vektor <InlineMath math="\vec{OQ}" /> dapat dinyatakan sebagai kombinasi dari pergerakan horizontal sejauh <InlineMath math="x" /> dan pergerakan vertikal sejauh <InlineMath math="y" />. Dalam bentuk vektor satuan, kita tulis:
+
+<BlockMath math="\vec{OQ} = x\mathbf{i} + y\mathbf{j}" />
+
+## Komponen dan Panjang Vektor
+
+Nilai <InlineMath math="x" /> dan <InlineMath math="y" /> pada vektor <InlineMath math="\vec{OQ} = x\mathbf{i} + y\mathbf{j}" /> disebut **komponen** vektor.
+
+- <InlineMath math="x" /> adalah **komponen horizontal**. Ini seperti bayangan vektor
+  pada sumbu-x jika disinari dari atas.
+- <InlineMath math="y" /> adalah **komponen vertikal**. Ini seperti bayangan vektor
+  pada sumbu-y jika disinari dari samping.
+
+Vektor yang memiliki dua komponen seperti ini disebut **vektor berdimensi dua**.
+
+**Panjang** atau **besar** vektor <InlineMath math="\vec{OQ}" />, ditulis sebagai <InlineMath math="|\vec{OQ}|" />, adalah jarak dari titik pangkal <InlineMath math="O" /> ke titik ujung <InlineMath math="Q" />. Kita bisa menghitungnya menggunakan teorema Pythagoras pada segitiga siku-siku <InlineMath math="ORQ" /> (lihat gambar kedua):
+
+<BlockMath math="|\vec{OQ}| = \sqrt{x^2 + y^2}" />
+
+## Visualisasi Vektor Dua Dimensi
+
+Perhatikan visualisasi vektor berikut untuk memahami konsep vektor pada bidang Kartesius:
+
+<Vector3d
+  title="Vektor pada Bidang Koordinat"
+  description="Visualisasi vektor OQ = 4i + 3j pada bidang koordinat Kartesius"
+  vectors={[
+    {
+      from: [0, 0, 0],
+      to: [4, 3, 0],
+      color: "#00bc7d",
+      label: "Vektor OQ",
+    },
+    {
+      from: [0, 0, 0],
+      to: [4, 0, 0],
+      color: "#00b8db",
+      label: "Komponen X",
+    },
+    {
+      from: [0, 0, 0],
+      to: [0, 3, 0],
+      color: "#efb100",
+      label: "Komponen Y",
+    },
+  ]}
+/>
+
+Di visualisasi, kita tidak memakai sumbu-<InlineMath math="z" />, karena kita berada pada bidang dua dimensi.
+
+Pada visualisasi di atas:
+
+- Vektor <InlineMath math="\vec{OQ}" /> (hijau muda) memiliki titik awal <InlineMath math="O(0,0)" /> dan titik akhir <InlineMath math="Q(4,3)" />
+- Komponen-<InlineMath math="X" /> (biru muda) adalah proyeksi vektor <InlineMath math="\vec{OQ}" /> pada sumbu-<InlineMath math="X" />, yaitu <InlineMath math="4\mathbf{i}" />
+- Komponen-<InlineMath math="Y" /> (kuning) adalah proyeksi vektor <InlineMath math="\vec{OQ}" /> pada sumbu-<InlineMath math="Y" />, yaitu <InlineMath math="3\mathbf{j}" />
+- Panjang vektor <InlineMath math="|\vec{OQ}| = \sqrt{4^2 + 3^2} = \sqrt{16 + 9} = \sqrt{25} = 5" />
