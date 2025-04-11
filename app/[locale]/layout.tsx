@@ -9,17 +9,18 @@ import { type Locale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import type { EducationalOrganization, WebSite, WithContext } from "schema-dts";
 
 import "@/styles/globals.css";
 import "@/styles/theme.css";
 import "katex/dist/katex.min.css";
 
+import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
+import { EducationalOrgJsonLd } from "@/components/json-ld/educational-org";
+import { WebsiteJsonLd } from "@/components/json-ld/website";
 import { AppProviders } from "@/components/providers";
 import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
-import { JsonLd } from "@/components/ui/json-ld";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TailwindIndicator } from "@/components/ui/tailwind-indicator";
 import { themes } from "@/lib/data/theme";
@@ -34,7 +35,7 @@ export async function generateMetadata({
   params,
 }: { params: Props["params"] }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Metadata" });
+  const t = await getTranslations("Metadata");
 
   return {
     title: {
@@ -178,53 +179,6 @@ export default async function LocaleLayout({ children, params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  const t = await getTranslations({ locale, namespace: "Metadata" });
-
-  // Create JSON-LD with schema-dts for type safety
-  const educationalOrganizationJsonLd: WithContext<EducationalOrganization> = {
-    "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    "@id": "https://nakafa.com",
-    name: t("title"),
-    description: t("description"),
-    url: "https://nakafa.com",
-    logo: "https://nakafa.com/logo.svg",
-    sameAs: [
-      "https://twitter.com/nabilfatih_",
-      "https://www.linkedin.com/company/nakafa",
-      "https://www.instagram.com/nakafa.tv/",
-    ],
-    foundingDate: "2021",
-    founder: {
-      "@type": "Person",
-      name: "Nabil Akbarazzima Fatih",
-    },
-  };
-
-  const websiteJsonLd: WithContext<WebSite> = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "@id": "https://nakafa.com/#website",
-    url: "https://nakafa.com",
-    name: t("title"),
-    description: t("description"),
-    publisher: {
-      "@type": "Organization",
-      name: "PT. Nakafa Tekno Kreatif",
-      logo: "https://nakafa.com/logo.svg",
-    },
-    inLanguage: locale,
-    potentialAction: [
-      {
-        "@type": "SearchAction",
-        target: {
-          "@type": "EntryPoint",
-          urlTemplate: "https://nakafa.com/search?q={search_term_string}",
-        },
-      },
-    ],
-  };
-
   return (
     <html
       lang={locale}
@@ -236,22 +190,20 @@ export default async function LocaleLayout({ children, params }: Props) {
       suppressHydrationWarning
     >
       <body>
-        {/* Add JSON-LD structured data using the JsonLd component */}
-        <JsonLd
-          id="educational-organization-jsonld"
-          jsonLd={educationalOrganizationJsonLd}
-        />
-        <JsonLd id="website-jsonld" jsonLd={websiteJsonLd} />
+        <NextIntlClientProvider>
+          {/* Add JSON-LD structured data using the JsonLd component */}
+          <EducationalOrgJsonLd />
+          <WebsiteJsonLd locale={locale} />
+          <BreadcrumbJsonLd locale={locale} />
 
-        <AppProviders>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-            themes={themes.map((t) => t.value)}
-          >
-            <NextIntlClientProvider>
+          <AppProviders>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+              themes={themes.map((t) => t.value)}
+            >
               <SidebarProvider>
                 <AppSidebar />
                 <SidebarInset>
@@ -260,9 +212,9 @@ export default async function LocaleLayout({ children, params }: Props) {
                   <div data-pagefind-body>{children}</div>
                 </SidebarInset>
               </SidebarProvider>
-            </NextIntlClientProvider>
-          </ThemeProvider>
-        </AppProviders>
+            </ThemeProvider>
+          </AppProviders>
+        </NextIntlClientProvider>
         <Analytics />
         <SpeedInsights />
         <TailwindIndicator />
