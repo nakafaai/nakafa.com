@@ -103,6 +103,7 @@ export function BreadcrumbJsonLd({
   const breadcrumbJsonLd: WithContext<BreadcrumbList> = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
+    "@id": `https://nakafa.com/${locale}#breadcrumb`,
     itemListElement: breadcrumbItems,
   };
 
