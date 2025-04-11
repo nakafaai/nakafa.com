@@ -8,6 +8,103 @@ import { getAllRoutes, getEntries } from "../app/sitemap";
 // - https://www.bing.com/indexnow/getstarted
 // - https://www.bing.com/webmasters/url-submission-api#APIs
 
+// Logger utility for colored output
+const logger = {
+  // Colors and styles
+  reset: "\x1b[0m",
+  bright: "\x1b[1m",
+  dim: "\x1b[2m",
+  underscore: "\x1b[4m",
+  blink: "\x1b[5m",
+  reverse: "\x1b[7m",
+  hidden: "\x1b[8m",
+
+  // Foreground colors
+  fg: {
+    black: "\x1b[30m",
+    red: "\x1b[31m",
+    green: "\x1b[32m",
+    yellow: "\x1b[33m",
+    blue: "\x1b[34m",
+    magenta: "\x1b[35m",
+    cyan: "\x1b[36m",
+    white: "\x1b[37m",
+    crimson: "\x1b[38m",
+  },
+
+  // Background colors
+  bg: {
+    black: "\x1b[40m",
+    red: "\x1b[41m",
+    green: "\x1b[42m",
+    yellow: "\x1b[43m",
+    blue: "\x1b[44m",
+    magenta: "\x1b[45m",
+    cyan: "\x1b[46m",
+    white: "\x1b[47m",
+    crimson: "\x1b[48m",
+  },
+
+  // Log methods
+  info: (message: string): void => {
+    // biome-ignore lint/suspicious/noConsole: For logging
+    console.info(
+      `${logger.fg.blue}${logger.bright}ℹ INFO:${logger.reset} ${message}`
+    );
+  },
+
+  success: (message: string): void => {
+    // biome-ignore lint/suspicious/noConsole: For logging
+    console.info(
+      `${logger.fg.green}${logger.bright}✓ SUCCESS:${logger.reset} ${message}`
+    );
+  },
+
+  warn: (message: string): void => {
+    // biome-ignore lint/suspicious/noConsole: For logging
+    console.warn(
+      `${logger.fg.yellow}${logger.bright}⚠ WARNING:${logger.reset} ${message}`
+    );
+  },
+
+  error: (message: string): void => {
+    // biome-ignore lint/suspicious/noConsole: For logging
+    console.error(
+      `${logger.fg.red}${logger.bright}✗ ERROR:${logger.reset} ${message}`
+    );
+  },
+
+  header: (message: string): void => {
+    // biome-ignore lint/suspicious/noConsole: For logging
+    console.info(
+      `\n${logger.fg.cyan}${logger.bright}═══════════════════════════════════════════════════════════════════${logger.reset}`
+    );
+    // biome-ignore lint/suspicious/noConsole: For logging
+    console.info(
+      `${logger.fg.cyan}${logger.bright}  ${message}${logger.reset}`
+    );
+    // biome-ignore lint/suspicious/noConsole: For logging
+    console.info(
+      `${logger.fg.cyan}${logger.bright}═══════════════════════════════════════════════════════════════════${logger.reset}\n`
+    );
+  },
+
+  stats: (label: string, value: string | number): void => {
+    // biome-ignore lint/suspicious/noConsole: For logging
+    console.info(
+      `${logger.fg.magenta}${logger.bright}▸ ${label}:${logger.reset} ${value}`
+    );
+  },
+
+  progress: (current: number, total: number, label: string): void => {
+    const percentage = Math.round((current / total) * 100);
+    // biome-ignore lint/suspicious/noConsole: For logging
+    console.info(
+      `${logger.fg.cyan}${logger.bright}▸ ${label}:${logger.reset} ${current}/${total} (${percentage}%)`
+    );
+  },
+};
+
 // Configuration
 const host = "https://nakafa.com";
 const keyFileName = "e22d548f7fd2482a9022e3b84e944901.txt";
@@ -24,8 +121,7 @@ const SUBMISSION_HISTORY_FILE = path.join(
 // Ensure data folder exists
 if (!fs.existsSync(DATA_FOLDER)) {
   fs.mkdirSync(DATA_FOLDER, { recursive: true });
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(`Created data folder at: ${DATA_FOLDER}`);
+  logger.info(`Created data folder at: ${DATA_FOLDER}`);
 }
 
 // Regex patterns
@@ -54,8 +150,7 @@ function loadSubmissionHistory(): {
       return parsed;
     }
   } catch (error) {
-    // biome-ignore lint/suspicious/noConsole: For logging
-    console.warn(
+    logger.warn(
       `Error loading submission history: ${error}. Starting with empty history.`
     );
   }
@@ -74,8 +169,7 @@ function saveSubmissionHistory(history: {
       "utf8"
     );
   } catch (error) {
-    // biome-ignore lint/suspicious/noConsole: For logging
-    console.error(`Error saving submission history: ${error}`);
+    logger.error(`Error saving submission history: ${error}`);
   }
 }
 
@@ -100,14 +194,12 @@ function getUnsubmittedUrls(service: "indexNow" | "bing"): {
   // Filter out already submitted URLs for the specific service
   const urls = Array.from(allUrls).filter((url) => !history[service][url]);
 
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(`Total URLs in sitemap: ${allUrls.size}`);
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(
-    `Previously submitted URLs to ${service}: ${Object.keys(history[service]).length}`
+  logger.stats("Total URLs in sitemap", allUrls.size);
+  logger.stats(
+    `Previously submitted URLs to ${service}`,
+    Object.keys(history[service]).length
   );
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(`New URLs to submit to ${service}: ${urls.length}`);
+  logger.stats(`New URLs to submit to ${service}`, urls.length);
 
   return { urls, history };
 }
@@ -136,8 +228,7 @@ async function submitUrlsToIndexNow(
   key: string
 ): Promise<string[]> {
   if (urls.length === 0) {
-    // biome-ignore lint/suspicious/noConsole: For logging
-    console.info("No new URLs to submit to IndexNow.");
+    logger.info("No new URLs to submit to IndexNow.");
     return [];
   }
 
@@ -146,15 +237,23 @@ async function submitUrlsToIndexNow(
   // Split URLs into batches of 100
   const batchSize = 100;
 
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(`Submitting ${urls.length} URLs to IndexNow...`);
+  logger.info(`Submitting ${urls.length} URLs to IndexNow...`);
 
   const successfullySubmitted: string[] = [];
+  let batchCount = 0;
+  const totalBatches = Math.ceil(urls.length / batchSize);
 
   for (let i = 0; i < urls.length; i += batchSize) {
+    batchCount++;
     const batch = urls.slice(i, i + batchSize);
 
     try {
+      logger.progress(
+        batchCount,
+        totalBatches,
+        `Submitting batch ${batchCount} of ${totalBatches}`
+      );
+
       const response = await fetch(apiEndpoint, {
         method: "POST",
         headers: {
@@ -170,17 +269,10 @@ async function submitUrlsToIndexNow(
 
       const status = response.status;
 
-      // biome-ignore lint/suspicious/noConsole: For logging
-      console.info(`Batch ${Math.floor(i / batchSize) + 1} response:`, status);
-
       if (status !== 200) {
-        // biome-ignore lint/suspicious/noConsole: For logging
-        console.error(`Error submitting URLs to IndexNow. Status: ${status}`);
+        logger.error(`Batch ${batchCount} failed with status: ${status}`);
       } else {
-        // biome-ignore lint/suspicious/noConsole: For logging
-        console.info(
-          `Successfully submitted ${batch.length} URLs to IndexNow.`
-        );
+        logger.success(`Batch ${batchCount} completed (${batch.length} URLs)`);
         // Track successfully submitted URLs
         successfullySubmitted.push(...batch);
       }
@@ -190,13 +282,11 @@ async function submitUrlsToIndexNow(
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     } catch (error) {
-      // biome-ignore lint/suspicious/noConsole: For logging
-      console.error("Error submitting URLs:", error);
+      logger.error(`Error submitting batch ${batchCount}: ${error}`);
     }
   }
 
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(
+  logger.info(
     `IndexNow submission completed. Successfully submitted ${successfullySubmitted.length}/${urls.length} URLs.`
   );
 
@@ -217,8 +307,7 @@ function extractRemainingQuota(responseText: string): number | null {
       }
     }
   } catch (parseError) {
-    // biome-ignore lint/suspicious/noConsole: For logging
-    console.error("Error parsing quota information:", parseError);
+    logger.error(`Error parsing quota information: ${parseError}`);
   }
   return null;
 }
@@ -235,19 +324,15 @@ async function processBingResponse(
   const status = response.status;
   const responseText = await response.text();
 
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(`Bing API Batch response status: ${status}`);
+  logger.info(`Bing API response status: ${status}`);
 
   if (status !== 200) {
-    // biome-ignore lint/suspicious/noConsole: For logging
-    console.error(`Error submitting URLs to Bing. Status: ${status}`);
-    // biome-ignore lint/suspicious/noConsole: For logging
-    console.error(`Response: ${responseText}`);
+    logger.error(`Error submitting URLs to Bing. Status: ${status}`);
+    logger.error(`Response: ${responseText}`);
 
     // Check for quota exceeded error
     if (QUOTA_EXCEEDED_REGEX.test(responseText)) {
-      // biome-ignore lint/suspicious/noConsole: For logging
-      console.warn("Daily quota exceeded. Stopping submission.");
+      logger.warn("Daily quota exceeded. Stopping submission.");
       return { success: false, quotaRemaining: null, shouldBreak: true };
     }
 
@@ -255,8 +340,7 @@ async function processBingResponse(
     if (responseText.includes("Quota remaining")) {
       const quotaRemaining = extractRemainingQuota(responseText);
       if (quotaRemaining) {
-        // biome-ignore lint/suspicious/noConsole: For logging
-        console.info(
+        logger.info(
           `Adjusting batch size to respect quota. New batch size: ${quotaRemaining}`
         );
         return { success: false, quotaRemaining, shouldBreak: false };
@@ -266,8 +350,7 @@ async function processBingResponse(
     return { success: false, quotaRemaining: null, shouldBreak: false };
   }
 
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(
+  logger.success(
     `Successfully submitted ${batch.length} URLs to Bing URL Submission API.`
   );
   return { success: true, quotaRemaining: null, shouldBreak: false };
@@ -279,8 +362,7 @@ async function submitUrlsToBing(
   apiKey: string
 ): Promise<string[]> {
   if (urls.length === 0) {
-    // biome-ignore lint/suspicious/noConsole: For logging
-    console.info("No new URLs to submit to Bing.");
+    logger.info("No new URLs to submit to Bing.");
     return [];
   }
 
@@ -290,12 +372,9 @@ async function submitUrlsToBing(
   // Set a safer default batch size to respect Bing's quota
   let batchSize = 100; // Reduced from 500 to 100 to stay within quota
 
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info("Starting Bing URL Submission API process...");
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(
-    `URLs to submit: ${urls.length}, Initial batch size: ${batchSize}`
-  );
+  logger.info("Starting Bing URL Submission API process...");
+  logger.stats("URLs to submit", urls.length);
+  logger.stats("Initial batch size", batchSize);
 
   let submitted = 0;
   let retryCount = 0;
@@ -306,11 +385,12 @@ async function submitUrlsToBing(
     // Calculate how many URLs to submit in this batch
     const currentBatchSize = Math.min(batchSize, urls.length - submitted);
     const batch = urls.slice(submitted, submitted + currentBatchSize);
+    const startIdx = submitted + 1;
+    const endIdx = submitted + batch.length;
 
     try {
-      // biome-ignore lint/suspicious/noConsole: For logging
-      console.info(
-        `Submitting batch of ${batch.length} URLs to Bing (${submitted + 1} to ${submitted + batch.length})`
+      logger.info(
+        `Submitting batch of ${batch.length} URLs to Bing (${startIdx} to ${endIdx})`
       );
 
       const response = await fetch(`${apiEndpoint}?apikey=${apiKey}`, {
@@ -346,8 +426,7 @@ async function submitUrlsToBing(
 
           // If the batch was too large, retry with the smaller batch size
           if (batch.length > result.quotaRemaining) {
-            // biome-ignore lint/suspicious/noConsole: For logging
-            console.info(
+            logger.info(
               `Retrying with smaller batch size of ${result.quotaRemaining}`
             );
             continue;
@@ -357,8 +436,7 @@ async function submitUrlsToBing(
         // Increment retry count on error and exit if max retries reached
         retryCount++;
         if (retryCount >= MAX_RETRIES) {
-          // biome-ignore lint/suspicious/noConsole: For logging
-          console.warn(
+          logger.warn(
             `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`
           );
           break;
@@ -367,20 +445,15 @@ async function submitUrlsToBing(
 
       // Avoid rate limiting with a delay between batches
       if (submitted < urls.length) {
-        // biome-ignore lint/suspicious/noConsole: For logging
-        console.info(
-          `Waiting before submitting next batch. Progress: ${submitted}/${urls.length}`
-        );
+        logger.progress(submitted, urls.length, "Submission progress");
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     } catch (error) {
-      // biome-ignore lint/suspicious/noConsole: For logging
-      console.error("Error submitting URLs to Bing:", error);
+      logger.error(`Error submitting URLs to Bing: ${error}`);
       // Increment retry count and exit if max retries reached
       retryCount++;
       if (retryCount >= MAX_RETRIES) {
-        // biome-ignore lint/suspicious/noConsole: For logging
-        console.warn(
+        logger.warn(
           `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`
         );
         break;
@@ -388,8 +461,7 @@ async function submitUrlsToBing(
     }
   }
 
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(
+  logger.info(
     `Bing URL Submission API process completed. Submitted ${submitted}/${urls.length} URLs.`
   );
 
@@ -398,28 +470,23 @@ async function submitUrlsToBing(
 
 // Main function to run the indexing process
 async function runIndexNow(): Promise<void> {
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info("Starting submission process...");
+  logger.header("Starting URL Submission Process");
 
   // Get API key
   const apiKey = getApiKey();
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(`Using IndexNow key: ${apiKey}`);
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(`Key file location: ${keyLocation}`);
-
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info("Website URL:", host);
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info("Host URL:", new URL(host).hostname);
+  logger.stats("Using IndexNow key", apiKey);
+  logger.stats("Key file location", keyLocation);
+  logger.stats("Website URL", host);
+  logger.stats("Host URL", new URL(host).hostname);
 
   // ========== INDEXNOW SUBMISSION ==========
+  logger.header("IndexNow Submission");
+
   // Get unsubmitted URLs for IndexNow
   const indexNowData = getUnsubmittedUrls("indexNow");
 
   if (indexNowData.urls.length === 0) {
-    // biome-ignore lint/suspicious/noConsole: For logging
-    console.info(
+    logger.info(
       "No new URLs to submit to IndexNow. All URLs have been previously submitted."
     );
   } else {
@@ -428,8 +495,7 @@ async function runIndexNow(): Promise<void> {
       indexNowData.urls,
       apiKey
     );
-    // biome-ignore lint/suspicious/noConsole: For logging
-    console.info("IndexNow submission completed.");
+    logger.success("IndexNow submission completed.");
 
     // Record IndexNow submissions to save progress
     if (indexNowSuccessful.length > 0) {
@@ -439,14 +505,15 @@ async function runIndexNow(): Promise<void> {
         "indexNow"
       );
       saveSubmissionHistory(updatedHistory);
-      // biome-ignore lint/suspicious/noConsole: For logging
-      console.info(
+      logger.success(
         `Submission history updated for IndexNow with ${indexNowSuccessful.length} successfully submitted URLs.`
       );
     }
   }
 
   // ========== BING SUBMISSION ==========
+  logger.header("Bing URL Submission API");
+
   // Check if Bing API key is configured
   if (
     process.env.BING_WEBMASTER_API_KEY &&
@@ -458,8 +525,7 @@ async function runIndexNow(): Promise<void> {
     const bingData = getUnsubmittedUrls("bing");
 
     if (bingData.urls.length === 0) {
-      // biome-ignore lint/suspicious/noConsole: For logging
-      console.info(
+      logger.info(
         "No new URLs to submit to Bing. All URLs have been previously submitted."
       );
     } else {
@@ -474,30 +540,25 @@ async function runIndexNow(): Promise<void> {
           "bing"
         );
         saveSubmissionHistory(updatedHistory);
-        // biome-ignore lint/suspicious/noConsole: For logging
-        console.info(
+        logger.success(
           `Submission history updated for Bing with ${bingSuccessful.length} successfully submitted URLs.`
         );
       }
     }
   } else {
-    // biome-ignore lint/suspicious/noConsole: For logging
-    console.warn(
+    logger.warn(
       "Bing Webmaster API key not configured. Skipping Bing URL Submission."
     );
-    // biome-ignore lint/suspicious/noConsole: For logging
-    console.info(
+    logger.info(
       "To enable Bing URL Submission, add your Bing Webmaster API key to the .env file as BING_WEBMASTER_API_KEY=your_key"
     );
   }
 
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.info("Submission process completed.");
+  logger.header("Submission Process Completed");
 }
 
 // Run the script
 runIndexNow().catch((error) => {
-  // biome-ignore lint/suspicious/noConsole: For logging
-  console.error("Error running script:", error);
+  logger.error(`Error running script: ${error}`);
   process.exit(1);
 });
