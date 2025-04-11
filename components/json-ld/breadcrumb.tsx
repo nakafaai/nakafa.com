@@ -106,6 +106,8 @@ export function BreadcrumbJsonLd({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "@id": `https://nakafa.com/${locale}#breadcrumb`,
+    name: t("Metadata.title"),
+    description: t("Metadata.description"),
     itemListElement: breadcrumbItems,
   };
 
