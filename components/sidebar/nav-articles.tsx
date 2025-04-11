@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "../ui/sidebar";
-import { articlesMenu } from "./data/articles";
+import { articlesMenu } from "./_data/articles";
 
 function MenuItem() {
   const t = useTranslations("Articles");

@@ -19,7 +19,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "../ui/sidebar";
-import { subjectAll } from "./data/subject";
+import { subjectAll } from "./_data/subject";
 
 function MenuItem() {
   const pathname = usePathname();
