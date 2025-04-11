@@ -84,6 +84,9 @@ export async function generateMetadata({
       },
     },
     category: "education",
+    keywords: t("keywords")
+      .split(",")
+      .map((keyword) => keyword.trim()),
     twitter: {
       card: "summary_large_image",
       title: t("title"),
