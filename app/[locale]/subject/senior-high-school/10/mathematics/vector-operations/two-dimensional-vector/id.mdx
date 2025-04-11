@@ -17,31 +17,35 @@ export const metadata = {
 
 Pada sistem koordinat Kartesius, setiap titik pada bidang dapat dinyatakan dengan pasangan angka <InlineMath math="(x, y)" />, di mana <InlineMath math="x" /> adalah posisi horizontal dan <InlineMath math="y" /> adalah posisi vertikal. Titik pangkal koordinat adalah <InlineMath math="O(0, 0)" />.
 
-Jika kita tarik garis lurus dari titik pangkal <InlineMath math="O" /> ke titik lain, misalnya <InlineMath math="Q(x, y)" />, kita mendapatkan sebuah **vektor**. Vektor ini sering ditulis sebagai <InlineMath math="\vec{OQ}" />. Vektor memiliki **besar** (panjang garis) dan **arah** (ditunjukkan oleh panah).
+Jika kita tarik garis lurus dari titik pangkal <InlineMath math="O" /> ke titik lain, misalnya <InlineMath math="Q(x, y)" />, kita mendapatkan sebuah **vektor**. Vektor ini sering ditulis sebagai <InlineMath math="\overrightarrow{OQ}" />. Vektor memiliki **besar** (panjang garis) dan **arah** (ditunjukkan oleh panah).
 
 Untuk memudahkan, kita gunakan **vektor satuan**. Vektor satuan adalah vektor yang panjangnya 1 satuan.
 
-- <InlineMath math="\mathbf{i}" /> adalah vektor satuan searah sumbu-x positif (horizontal).
-- <InlineMath math="\mathbf{j}" /> adalah vektor satuan searah sumbu-y positif (vertikal).
+- <InlineMath math="\mathbf{i}" /> adalah vektor satuan searah sumbu-
+  <InlineMath math="x" /> positif (horizontal).
+- <InlineMath math="\mathbf{j}" /> adalah vektor satuan searah sumbu-
+  <InlineMath math="y" /> positif (vertikal).
 
-Vektor <InlineMath math="\vec{OQ}" /> dapat dinyatakan sebagai kombinasi dari pergerakan horizontal sejauh <InlineMath math="x" /> dan pergerakan vertikal sejauh <InlineMath math="y" />. Dalam bentuk vektor satuan, kita tulis:
+Vektor <InlineMath math="\overrightarrow{OQ}" /> dapat dinyatakan sebagai kombinasi dari pergerakan horizontal sejauh <InlineMath math="x" /> dan pergerakan vertikal sejauh <InlineMath math="y" />. Dalam bentuk vektor satuan, kita tulis:
 
-<BlockMath math="\vec{OQ} = x\mathbf{i} + y\mathbf{j}" />
+<BlockMath math="\overrightarrow{OQ} = x\mathbf{i} + y\mathbf{j}" />
 
 ## Komponen dan Panjang Vektor
 
-Nilai <InlineMath math="x" /> dan <InlineMath math="y" /> pada vektor <InlineMath math="\vec{OQ} = x\mathbf{i} + y\mathbf{j}" /> disebut **komponen** vektor.
+Nilai <InlineMath math="x" /> dan <InlineMath math="y" /> pada vektor <InlineMath math="\overrightarrow{OQ} = x\mathbf{i} + y\mathbf{j}" /> disebut **komponen** vektor.
 
 - <InlineMath math="x" /> adalah **komponen horizontal**. Ini seperti bayangan vektor
-  pada sumbu-x jika disinari dari atas.
+  pada sumbu-
+  <InlineMath math="x" /> jika disinari dari atas.
 - <InlineMath math="y" /> adalah **komponen vertikal**. Ini seperti bayangan vektor
-  pada sumbu-y jika disinari dari samping.
+  pada sumbu-
+  <InlineMath math="y" /> jika disinari dari samping.
 
 Vektor yang memiliki dua komponen seperti ini disebut **vektor berdimensi dua**.
 
-**Panjang** atau **besar** vektor <InlineMath math="\vec{OQ}" />, ditulis sebagai <InlineMath math="|\vec{OQ}|" />, adalah jarak dari titik pangkal <InlineMath math="O" /> ke titik ujung <InlineMath math="Q" />. Kita bisa menghitungnya menggunakan teorema Pythagoras pada segitiga siku-siku <InlineMath math="ORQ" /> (lihat gambar kedua):
+**Panjang** atau **besar** vektor <InlineMath math="\overrightarrow{OQ}" />, ditulis sebagai <InlineMath math="|\overrightarrow{OQ}|" />, adalah jarak dari titik pangkal <InlineMath math="O" /> ke titik ujung <InlineMath math="Q" />. Jika <InlineMath math="Q(x,y)" /> adalah titik ujung vektor dan <InlineMath math="R(x,0)" /> adalah proyeksi titik Q pada sumbu-<InlineMath math="x" />, kita bisa menghitungnya menggunakan teorema Pythagoras pada segitiga siku-siku <InlineMath math="ORQ" />:
 
-<BlockMath math="|\vec{OQ}| = \sqrt{x^2 + y^2}" />
+<BlockMath math="|\overrightarrow{OQ}| = \sqrt{x^2 + y^2}" />
 
 ## Visualisasi Vektor Dua Dimensi
 
@@ -76,7 +80,7 @@ Di visualisasi, kita tidak memakai sumbu-<InlineMath math="z" />, karena kita be
 
 Pada visualisasi di atas:
 
-- Vektor <InlineMath math="\vec{OQ}" /> (hijau muda) memiliki titik awal <InlineMath math="O(0,0)" /> dan titik akhir <InlineMath math="Q(4,3)" />
-- Komponen-<InlineMath math="X" /> (biru muda) adalah proyeksi vektor <InlineMath math="\vec{OQ}" /> pada sumbu-<InlineMath math="X" />, yaitu <InlineMath math="4\mathbf{i}" />
-- Komponen-<InlineMath math="Y" /> (kuning) adalah proyeksi vektor <InlineMath math="\vec{OQ}" /> pada sumbu-<InlineMath math="Y" />, yaitu <InlineMath math="3\mathbf{j}" />
-- Panjang vektor <InlineMath math="|\vec{OQ}| = \sqrt{4^2 + 3^2} = \sqrt{16 + 9} = \sqrt{25} = 5" />
+- Vektor <InlineMath math="\overrightarrow{OQ}" /> (hijau muda) memiliki titik awal <InlineMath math="O(0,0)" /> dan titik akhir <InlineMath math="Q(4,3)" />
+- Komponen-<InlineMath math="X" /> (biru muda) adalah proyeksi vektor <InlineMath math="\overrightarrow{OQ}" /> pada sumbu-<InlineMath math="x" />, yaitu <InlineMath math="4\mathbf{i}" />
+- Komponen-<InlineMath math="Y" /> (kuning) adalah proyeksi vektor <InlineMath math="\overrightarrow{OQ}" /> pada sumbu-<InlineMath math="y" />, yaitu <InlineMath math="3\mathbf{j}" />
+- Panjang vektor <InlineMath math="|\overrightarrow{OQ}| = \sqrt{4^2 + 3^2} = \sqrt{16 + 9} = \sqrt{25} = 5" />
