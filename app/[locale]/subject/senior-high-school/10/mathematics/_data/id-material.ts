@@ -164,10 +164,6 @@ const idMaterials: MaterialList[] = [
         href: `${BASE_PATH}/vector-operations/vector-subtraction`,
       },
       {
-        title: "Sifat Operasi Vektor",
-        href: `${BASE_PATH}/vector-operations/vector-properties`,
-      },
-      {
         title: "Vektor Nol",
         href: `${BASE_PATH}/vector-operations/zero-vector`,
       },

@@ -165,10 +165,6 @@ const enMaterials: MaterialList[] = [
         href: `${BASE_PATH}/vector-operations/vector-subtraction`,
       },
       {
-        title: "Vector Operation Properties",
-        href: `${BASE_PATH}/vector-operations/vector-properties`,
-      },
-      {
         title: "Zero Vector",
         href: `${BASE_PATH}/vector-operations/zero-vector`,
       },
