@@ -5,6 +5,7 @@ import {
   CloudyIcon,
   CoffeeIcon,
   CpuIcon,
+  EclipseIcon,
   HeartIcon,
   HourglassIcon,
   LaptopIcon,
@@ -45,6 +46,10 @@ export const themes = [
   {
     value: "dreamy",
     icon: CloudyIcon,
+  },
+  {
+    value: "solar",
+    icon: EclipseIcon,
   },
   {
     value: "ghibli",
