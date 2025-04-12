@@ -492,9 +492,9 @@ function CoordinateSystemComponent({
   showAxes = true,
   showLabels = true,
   showGizmo = true,
-  gridSize = 15,
-  gridDivisions = 15,
-  size = 15,
+  gridSize = 30,
+  gridDivisions = 30,
+  size = 30,
   backgroundColor = "transparent",
   cameraPosition = [12, 8, 12],
   font = "mono",
@@ -536,7 +536,10 @@ function CoordinateSystemComponent({
       <Canvas
         shadows
         dpr={[1, 2]}
-        gl={{ antialias: true }}
+        gl={{
+          antialias: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+        }}
         style={{ background: backgroundColor }}
       >
         <CameraControls cameraPosition={cameraPosition} autoRotate={play} />
