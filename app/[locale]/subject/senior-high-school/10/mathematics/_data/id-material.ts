@@ -144,10 +144,6 @@ const idMaterials: MaterialList[] = [
         href: `${BASE_PATH}/vector-operations/column-row-vector`,
       },
       {
-        title: "Jenis-jenis Vektor",
-        href: `${BASE_PATH}/vector-operations/types-of-vector`,
-      },
-      {
         title: "Penjumlahan Vektor",
         href: `${BASE_PATH}/vector-operations/vector-addition`,
       },

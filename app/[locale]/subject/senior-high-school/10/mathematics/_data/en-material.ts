@@ -145,10 +145,6 @@ const enMaterials: MaterialList[] = [
         href: `${BASE_PATH}/vector-operations/column-row-vector`,
       },
       {
-        title: "Types of Vectors",
-        href: `${BASE_PATH}/vector-operations/types-of-vector`,
-      },
-      {
         title: "Vector Addition",
         href: `${BASE_PATH}/vector-operations/vector-addition`,
       },
