@@ -145,6 +145,18 @@ const enMaterials: MaterialList[] = [
         href: `${BASE_PATH}/vector-operations/column-row-vector`,
       },
       {
+        title: "Unit Vector from a Vector",
+        href: `${BASE_PATH}/vector-operations/unit-vector`,
+      },
+      {
+        title: "Position Vector",
+        href: `${BASE_PATH}/vector-operations/position-vector`,
+      },
+      {
+        title: "Opposite Vector",
+        href: `${BASE_PATH}/vector-operations/opposite-vector`,
+      },
+      {
         title: "Vector Addition",
         href: `${BASE_PATH}/vector-operations/vector-addition`,
       },

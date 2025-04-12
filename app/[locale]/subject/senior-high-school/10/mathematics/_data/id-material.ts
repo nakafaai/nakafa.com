@@ -144,6 +144,18 @@ const idMaterials: MaterialList[] = [
         href: `${BASE_PATH}/vector-operations/column-row-vector`,
       },
       {
+        title: "Vektor Satuan dari Suatu Vektor",
+        href: `${BASE_PATH}/vector-operations/unit-vector`,
+      },
+      {
+        title: "Vektor Posisi",
+        href: `${BASE_PATH}/vector-operations/position-vector`,
+      },
+      {
+        title: "Vektor Berkebalikan",
+        href: `${BASE_PATH}/vector-operations/opposite-vector`,
+      },
+      {
         title: "Penjumlahan Vektor",
         href: `${BASE_PATH}/vector-operations/vector-addition`,
       },
