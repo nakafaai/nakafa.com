@@ -1,8 +1,7 @@
 import { ThemeProvider } from "@/components/theme/provider";
 import { routing } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import { type Locale, NextIntlClientProvider } from "next-intl";
@@ -21,6 +20,7 @@ import { AppProviders } from "@/components/providers";
 import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
+import { Analytics } from "@/components/ui/analytics";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TailwindIndicator } from "@/components/ui/tailwind-indicator";
 import { themes } from "@/lib/data/theme";
@@ -230,7 +230,6 @@ export default async function LocaleLayout({ children, params }: Props) {
           </AppProviders>
         </NextIntlClientProvider>
         <Analytics />
-        <SpeedInsights />
         <TailwindIndicator />
       </body>
     </html>

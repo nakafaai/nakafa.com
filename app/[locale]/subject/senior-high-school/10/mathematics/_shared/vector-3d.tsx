@@ -15,6 +15,7 @@ type Props = {
     to: [number, number, number];
     color: string;
     label: string;
+    labelPosition?: "start" | "middle" | "end";
   }[];
   cameraPosition?: [number, number, number];
 };
