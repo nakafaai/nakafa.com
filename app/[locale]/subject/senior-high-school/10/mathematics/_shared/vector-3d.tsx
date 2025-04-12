@@ -23,7 +23,7 @@ export function Vector3d({
   title,
   description,
   vectors,
-  cameraPosition,
+  cameraPosition = [10, 6, 10],
 }: Props) {
   return (
     <Card>
