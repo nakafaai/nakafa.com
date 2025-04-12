@@ -132,6 +132,10 @@ const idMaterials: MaterialList[] = [
         href: `${BASE_PATH}/vector-operations/vector-components`,
       },
       {
+        title: "Vektor Ekuivalen",
+        href: `${BASE_PATH}/vector-operations/equivalent-vector`,
+      },
+      {
         title: "Vektor Tiga Dimensi",
         href: `${BASE_PATH}/vector-operations/three-dimensional-vector`,
       },

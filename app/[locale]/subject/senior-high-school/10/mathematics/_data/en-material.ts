@@ -133,6 +133,10 @@ const enMaterials: MaterialList[] = [
         href: `${BASE_PATH}/vector-operations/vector-components`,
       },
       {
+        title: "Equivalent Vectors",
+        href: `${BASE_PATH}/vector-operations/equivalent-vector`,
+      },
+      {
         title: "Three-Dimensional Vector",
         href: `${BASE_PATH}/vector-operations/three-dimensional-vector`,
       },
