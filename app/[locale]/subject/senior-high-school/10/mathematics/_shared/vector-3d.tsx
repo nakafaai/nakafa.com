@@ -16,6 +16,7 @@ type Props = {
     color: string;
     label: string;
     labelPosition?: "start" | "middle" | "end";
+    id?: string;
   }[];
   cameraPosition?: [number, number, number];
 };
@@ -35,7 +36,7 @@ export function Vector3d({
       <CardContent>
         <CoordinateSystem cameraPosition={cameraPosition}>
           {vectors.map((vector) => (
-            <Vector key={vector.label} {...vector} />
+            <Vector key={vector.id ?? vector.label} {...vector} />
           ))}
         </CoordinateSystem>
       </CardContent>
