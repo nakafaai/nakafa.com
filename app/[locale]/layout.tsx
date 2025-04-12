@@ -24,7 +24,7 @@ import { Header } from "@/components/sidebar/header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TailwindIndicator } from "@/components/ui/tailwind-indicator";
 import { themes } from "@/lib/data/theme";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 type Props = {
   children: ReactNode;
@@ -164,6 +164,20 @@ export async function generateMetadata({
     },
   };
 }
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#131313" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-visual",
+};
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
