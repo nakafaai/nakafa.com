@@ -23,6 +23,7 @@ type Props = {
   title: string;
   description: string;
   angle?: number;
+  size?: number;
   labels?: {
     opposite: string;
     adjacent: string;
@@ -30,7 +31,13 @@ type Props = {
   };
 };
 
-export function Triangle({ title, description, angle = 45, labels }: Props) {
+export function Triangle({
+  title,
+  description,
+  angle = 45,
+  size = 2,
+  labels,
+}: Props) {
   const t = useTranslations("Common");
   const [angleValue, setAngleValue] = useState(angle);
 
@@ -46,7 +53,7 @@ export function Triangle({ title, description, angle = 45, labels }: Props) {
           showOrigin={false}
           cameraPosition={[0, 0, 4]}
         >
-          <Triangle3D angle={angleValue} size={2} labels={labels} />
+          <Triangle3D angle={angleValue} size={size} labels={labels} />
         </CoordinateSystem>
       </CardContent>
       <CardFooter className="border-t">
