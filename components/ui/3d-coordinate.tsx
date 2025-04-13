@@ -13,16 +13,33 @@ import {
 import { Canvas } from "@react-three/fiber";
 import { Grid2X2XIcon, PauseIcon, PlayIcon } from "lucide-react";
 import { Grid2x2Icon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import dynamic from "next/dynamic";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Button } from "./button";
 
-const RED = "#e7000b";
-const GREEN = "#00a63e";
-const BLUE = "#155dfc";
-const YELLOW = "#d08700";
+const COLORS = {
+  RED: "#dc2626",
+  ORANGE: "#ea580c",
+  EMBER: "#d97706",
+  YELLOW: "#ca8a04",
+  LIME: "#65a30d",
+  GREEN: "#16a34a",
+  EMERALD: "#059669",
+  TEAL: "#0d9488",
+  CYAN: "#0891b2",
+  SKY: "#0284c7",
+  BLUE: "#2563eb",
+  INDIGO: "#4f46e5",
+  VIOLET: "#7c3aed",
+  PURPLE: "#9333ea",
+  FUCHSIA: "#c026d3",
+  PINK: "#db2777",
+  ROSE: "#e11d48",
+};
+// origin point O(0, 0, 0)
 const ORIGIN_COLOR = {
   LIGHT: "#f4f4f5",
   DARK: "#18181b",
@@ -44,6 +61,10 @@ type CoordinateSystemProps = {
   showGrid?: boolean;
   /** Show the coordinate axes */
   showAxes?: boolean;
+  /** Show the z-axis */
+  showZAxis?: boolean;
+  /** Show the origin point */
+  showOrigin?: boolean;
   /** Show axis labels */
   showLabels?: boolean;
   /** Show the gizmo helper for orientation */
@@ -90,6 +111,24 @@ type VectorProps = {
   /** Position of the label */
   labelPosition?: "start" | "middle" | "end";
   /** Use mono font for the label */
+  useMonoFont?: boolean;
+  /** Additional props */
+  [key: string]: unknown;
+};
+
+/**
+ * Props for the UnitCircle component
+ */
+type UnitCircleProps = {
+  /** Angle in degrees */
+  angle?: number;
+  /** Show labels for trig functions */
+  showLabels?: boolean;
+  /** Display mode for values */
+  displayMode?: "decimal" | "exact";
+  /** Precision for decimal values */
+  precision?: number;
+  /** Use mono font for the labels */
   useMonoFont?: boolean;
   /** Additional props */
   [key: string]: unknown;
@@ -145,12 +184,14 @@ type Function2DProps = {
 export function Axes({
   size = 10,
   showLabels = true,
+  showZAxis = true,
   labelSize = 0.5,
   labelOffset = 0.5,
   font = "mono",
 }: {
   size?: number;
   showLabels?: boolean;
+  showZAxis?: boolean;
   labelSize?: number;
   labelOffset?: number;
   font?: CoordinateSystemProps["font"];
@@ -175,15 +216,15 @@ export function Axes({
 
   return (
     <group>
-      <Line points={xPoints} color={RED} lineWidth={2} />
-      <Line points={yPoints} color={GREEN} lineWidth={2} />
-      <Line points={zPoints} color={BLUE} lineWidth={2} />
+      <Line points={xPoints} color={COLORS.RED} lineWidth={2} />
+      <Line points={yPoints} color={COLORS.GREEN} lineWidth={2} />
+      {showZAxis && <Line points={zPoints} color={COLORS.BLUE} lineWidth={2} />}
 
       {showLabels && (
         <>
           <Text
             position={[size + labelOffset, 0, 0]}
-            color={RED}
+            color={COLORS.RED}
             fontSize={labelSize}
             anchorX="left"
             font={fontToUse}
@@ -192,7 +233,7 @@ export function Axes({
           </Text>
           <Text
             position={[-size - labelOffset, 0, 0]}
-            color={RED}
+            color={COLORS.RED}
             fontSize={labelSize}
             anchorX="right"
             font={fontToUse}
@@ -201,7 +242,7 @@ export function Axes({
           </Text>
           <Text
             position={[0, size + labelOffset, 0]}
-            color={GREEN}
+            color={COLORS.GREEN}
             fontSize={labelSize}
             anchorX="left"
             font={fontToUse}
@@ -210,31 +251,35 @@ export function Axes({
           </Text>
           <Text
             position={[0, -size - labelOffset, 0]}
-            color={GREEN}
+            color={COLORS.GREEN}
             fontSize={labelSize}
             anchorX="left"
             font={fontToUse}
           >
             -Y
           </Text>
-          <Text
-            position={[0, 0, size + labelOffset]}
-            color={BLUE}
-            fontSize={labelSize}
-            anchorX="left"
-            font={fontToUse}
-          >
-            Z
-          </Text>
-          <Text
-            position={[0, 0, -size - labelOffset]}
-            color={BLUE}
-            fontSize={labelSize}
-            anchorX="left"
-            font={fontToUse}
-          >
-            -Z
-          </Text>
+          {showZAxis && (
+            <>
+              <Text
+                position={[0, 0, size + labelOffset]}
+                color={COLORS.BLUE}
+                fontSize={labelSize}
+                anchorX="left"
+                font={fontToUse}
+              >
+                Z
+              </Text>
+              <Text
+                position={[0, 0, -size - labelOffset]}
+                color={COLORS.BLUE}
+                fontSize={labelSize}
+                anchorX="left"
+                font={fontToUse}
+              >
+                -Z
+              </Text>
+            </>
+          )}
         </>
       )}
     </group>
@@ -246,7 +291,7 @@ export function Axes({
  */
 export function Origin({
   size = 0.2,
-  color = "white",
+  color = ORIGIN_COLOR.LIGHT,
 }: { size?: number; color?: string }) {
   return (
     <mesh>
@@ -262,7 +307,7 @@ export function Origin({
 export function ArrowHelper({
   from = [0, 0, 0],
   to,
-  color = YELLOW,
+  color = COLORS.YELLOW,
   arrowSize = 0.5,
   label,
   labelPosition = "end",
@@ -375,7 +420,7 @@ export function CameraControls({
  */
 export function Function3D({
   fn,
-  color = "hotpink",
+  color = COLORS.PINK,
   xRange = [-5, 5],
   yRange = [-5, 5],
   resolution = 50,
@@ -440,7 +485,7 @@ export function Function3D({
 export function Function2D({
   fn,
   plane = "xy",
-  color = "cyan",
+  color = COLORS.CYAN,
   range = [-5, 5],
   resolution = 100,
   lineWidth = 3,
@@ -485,11 +530,225 @@ export function Vector(props: VectorProps) {
 }
 
 /**
+ * Trigonometry component for displaying trigonometric functions
+ */
+export function UnitCircle({
+  angle = 45,
+  showLabels = true,
+  displayMode = "exact",
+  precision = 2,
+  useMonoFont = true,
+  ...props
+}: UnitCircleProps) {
+  const t = useTranslations("Common");
+  const { resolvedTheme } = useTheme();
+
+  const angleInRadians = (angle * Math.PI) / 180;
+  const sin = Math.sin(angleInRadians);
+  const cos = Math.cos(angleInRadians);
+  // Check if cos is close to zero to handle tan(90°), tan(270°), etc.
+  const tan = Math.abs(cos) < 1e-10 ? Number.POSITIVE_INFINITY : sin / cos;
+
+  // Format values according to display mode
+  const formatValue = (value: number) => {
+    if (!Number.isFinite(value)) {
+      return t("undefined");
+    }
+    if (Math.abs(value) < 1e-10) {
+      return "0";
+    }
+
+    if (displayMode === "decimal") {
+      return value.toFixed(precision);
+    }
+
+    const absValue = Math.abs(value);
+    const sign = value < 0 ? "-" : "";
+
+    // More systematic approach for exact mode
+    // Check for common trig values
+
+    // sin(π/6) = cos(π/3) = 1/2
+    if (Math.abs(absValue - 0.5) < 1e-10) {
+      return `${sign}1/2`;
+    }
+
+    // sin(π/4) = cos(π/4) = √2/2
+    if (Math.abs(absValue - Math.SQRT1_2) < 1e-10) {
+      return `${sign}√2/2`;
+    }
+
+    // sin(π/3) = cos(π/6) = √3/2
+    if (Math.abs(absValue - Math.sqrt(3) / 2) < 1e-10) {
+      return `${sign}√3/2`;
+    }
+
+    // sin(0) = 0, sin(π) = 0
+    if (Math.abs(absValue) < 1e-10) {
+      return "0";
+    }
+
+    // sin(π/2) = 1, cos(0) = 1
+    if (Math.abs(absValue - 1) < 1e-10) {
+      return `${sign}1`;
+    }
+
+    // tan(π/3) = √3
+    if (Math.abs(absValue - Math.sqrt(3)) < 1e-10) {
+      return `${sign}√3`;
+    }
+
+    // tan(π/4) = 1
+    // already covered by the absValue === 1 check
+
+    // tan(π/6) = 1/√3 = √3/3
+    if (Math.abs(absValue - Math.sqrt(3) / 3) < 1e-10) {
+      return `${sign}√3/3`;
+    }
+
+    // √2
+    if (Math.abs(absValue - Math.SQRT2) < 1e-10) {
+      return `${sign}√2`;
+    }
+
+    // 1/4 and 3/4 for completeness
+    if (Math.abs(absValue - 0.25) < 1e-10) {
+      return `${sign}1/4`;
+    }
+    if (Math.abs(absValue - 0.75) < 1e-10) {
+      return `${sign}3/4`;
+    }
+
+    return value.toFixed(precision);
+  };
+
+  const sinLabel = `sin(${angle}°) = ${formatValue(sin)}`;
+  const cosLabel = `cos(${angle}°) = ${formatValue(cos)}`;
+  const tanLabel = `tan(${angle}°) = ${formatValue(tan)}`;
+
+  const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
+
+  return (
+    <group {...props}>
+      {/* Unit Circle (XY plane) */}
+      <group rotation={[0, 0, 0]}>
+        {/* Circle outline */}
+        <Line
+          points={Array.from({ length: 101 }).map((_, i) => {
+            const a = (i / 100) * Math.PI * 2;
+            return new THREE.Vector3(Math.cos(a), Math.sin(a), 0);
+          })}
+          color={
+            resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK
+          }
+          lineWidth={2}
+        />
+
+        {/* Angle arc */}
+        <Line
+          points={Array.from({ length: 31 }).map((_, i) => {
+            const a = (i / 30) * angleInRadians;
+            return new THREE.Vector3(Math.cos(a) * 0.3, Math.sin(a) * 0.3, 0);
+          })}
+          color={COLORS.VIOLET}
+          lineWidth={2}
+        />
+
+        {/* Angle label */}
+        {showLabels && (
+          <Text
+            position={[
+              Math.cos(angleInRadians / 2) * 0.5,
+              Math.sin(angleInRadians / 2) * 0.4,
+              0,
+            ]}
+            color={COLORS.VIOLET}
+            fontSize={0.12}
+            font={fontPath}
+          >
+            {`${angle}°`}
+          </Text>
+        )}
+
+        {/* Point on circle */}
+        <mesh position={[cos, sin, 0]}>
+          <sphereGeometry args={[0.05, 16, 16]} />
+          <meshBasicMaterial
+            color={
+              resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK
+            }
+          />
+        </mesh>
+
+        {/* Line from origin to point */}
+        <Line
+          points={[new THREE.Vector3(0, 0, 0), new THREE.Vector3(cos, sin, 0)]}
+          color={COLORS.ROSE}
+          lineWidth={2}
+        />
+
+        {/* Sine line (vertical) */}
+        <Line
+          points={[
+            new THREE.Vector3(cos, 0, 0),
+            new THREE.Vector3(cos, sin, 0),
+          ]}
+          color={COLORS.ORANGE}
+          lineWidth={2}
+        />
+
+        {/* Cosine line (horizontal) */}
+        <Line
+          points={[new THREE.Vector3(0, 0, 0), new THREE.Vector3(cos, 0, 0)]}
+          color={COLORS.CYAN}
+          lineWidth={2}
+        />
+
+        {/* Trig value labels */}
+        {showLabels && (
+          <>
+            <Text
+              position={[cos / 2, -0.2, 0]}
+              color={COLORS.CYAN}
+              fontSize={0.12}
+              font={fontPath}
+              anchorX="center"
+            >
+              {cosLabel}
+            </Text>
+            <Text
+              position={[cos + 0.3, sin / 2, 0]}
+              color={COLORS.ORANGE}
+              fontSize={0.12}
+              font={fontPath}
+              anchorX="left"
+              anchorY="middle"
+            >
+              {sinLabel}
+            </Text>
+            <Text
+              position={[1.1, 1.1, 0]}
+              color={COLORS.ROSE}
+              fontSize={0.12}
+              font={fontPath}
+            >
+              {tanLabel}
+            </Text>
+          </>
+        )}
+      </group>
+    </group>
+  );
+}
+
+/**
  * CoordinateSystem component for creating a 3D coordinate system
  */
 function CoordinateSystemComponent({
   showGrid: initialShowGrid = true,
   showAxes = true,
+  showZAxis = true,
+  showOrigin = true,
   showLabels = true,
   showGizmo = true,
   gridSize = 15,
@@ -504,6 +763,7 @@ function CoordinateSystemComponent({
   const { resolvedTheme } = useTheme();
   const [showGrid, setShowGrid] = useState(initialShowGrid);
   const [play, setPlay] = useState(false);
+  const [sceneReady, setSceneReady] = useState(false);
 
   // Color mapping based on color scheme
   const gridColors = useMemo(() => {
@@ -538,6 +798,7 @@ function CoordinateSystemComponent({
         dpr={[1, 2]}
         gl={{ antialias: true }}
         style={{ background: backgroundColor }}
+        onCreated={() => setTimeout(() => setSceneReady(true), 100)}
       >
         <CameraControls cameraPosition={cameraPosition} autoRotate={play} />
 
@@ -546,9 +807,15 @@ function CoordinateSystemComponent({
         <pointLight position={[10, 10, 10]} intensity={1} castShadow />
 
         {/* Coordinate System */}
-        {showAxes && <Axes size={size} showLabels={showLabels} font={font} />}
-        <Origin color={originColor} />
-
+        {showAxes && (
+          <Axes
+            size={size}
+            showLabels={showLabels}
+            showZAxis={showZAxis}
+            font={font}
+          />
+        )}
+        {showOrigin && <Origin color={originColor} />}
         {/* Grid */}
         {showGrid && (
           <>
@@ -588,13 +855,21 @@ function CoordinateSystemComponent({
         {/* Orientation Helper */}
         {showGizmo && (
           <GizmoHelper alignment="bottom-right" margin={[56, 56]}>
-            <GizmoViewport axisColors={[RED, GREEN, BLUE]} labelColor="white" />
+            <GizmoViewport
+              axisColors={[COLORS.RED, COLORS.GREEN, COLORS.BLUE]}
+              labelColor={ORIGIN_COLOR.LIGHT}
+            />
           </GizmoHelper>
         )}
       </Canvas>
 
       {/* UI Controls */}
-      <div className="absolute bottom-3 left-3 flex gap-2">
+      <div
+        className={cn(
+          "absolute bottom-3 left-3 flex gap-2 transition-opacity duration-300 ease-in-out",
+          sceneReady ? "opacity-100" : "opacity-0"
+        )}
+      >
         <Button
           variant="secondary"
           size="icon"

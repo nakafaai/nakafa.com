@@ -71,7 +71,9 @@
     "bibliography": "Daftar pustaka",
     "videos": "Video",
     "previous": "Sebelumnya",
-    "next": "Selanjutnya"
+    "next": "Selanjutnya",
+    "undefined": "Tidak terdefinisi",
+    "radian": "Radian"
   },
   "Subject": {
     "elementary-school": "SD",

@@ -70,7 +70,9 @@
     "bibliography": "Bibliography",
     "videos": "Videos",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "undefined": "Undefined",
+    "radian": "Radian"
   },
   "Subject": {
     "elementary-school": "Elementary School",
