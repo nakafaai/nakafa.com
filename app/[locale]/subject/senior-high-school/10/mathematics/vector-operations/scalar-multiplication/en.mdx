@@ -9,3 +9,200 @@ export const metadata = {
   subject: "Vector and Operations",
   category: "Mathematics",
 };
+
+## Definition of Scalar Multiplication of Vectors
+
+Scalar multiplication of a vector is an operation involving multiplication between a real number (scalar) and a vector <InlineMath math="\vec{v}" />. The result of this multiplication is a new vector with a length modified according to the scalar value, while its direction may remain the same or opposite depending on the sign of the scalar.
+
+If <InlineMath math="k" /> is a real number (scalar) and <InlineMath math="\vec{v}" /> is a vector, then the scalar multiplication of a vector is denoted as <InlineMath math="k \cdot \vec{v}" /> and results in a new vector.
+
+## Properties of Scalar Multiplication of Vectors
+
+Scalar multiplication of vectors has several important properties:
+
+1. If <InlineMath math="k > 0" /> (positive), then the resulting vector has the same direction as the original vector.
+2. If <InlineMath math="k < 0" /> (negative), then the resulting vector has a direction opposite to the original vector.
+3. If <InlineMath math="k = 0" />, then the resulting vector is a zero vector.
+4. The magnitude (length) of the resulting vector is <InlineMath math="|k|" /> times the magnitude of the original vector.
+
+## Representation of Scalar Multiplication of Vectors
+
+### Geometrically
+
+Geometrically, scalar multiplication of a vector changes the length (magnitude) of the vector by <InlineMath math="|k|" /> times. The direction of the vector depends on the sign of <InlineMath math="k" />:
+
+- If <InlineMath math="k > 0" />, the direction of the vector remains unchanged
+- If <InlineMath math="k < 0" />, the direction of the vector is opposite to the original vector <InlineMath math="|k \cdot \vec{v}| = |k| \cdot |\vec{v}|" />
+
+### Algebraically
+
+If <InlineMath math="\vec{v} = (v_1, v_2, v_3)" /> is a vector in 3-dimensional space, then:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="k \cdot \vec{v} = k(v_1, v_2, v_3) = (k \cdot v_1, k \cdot v_2, k \cdot v_3)" />
+</div>
+
+In unit vector notation:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="k \cdot \vec{v} = k(v_1\vec{i} + v_2\vec{j} + v_3\vec{k}) = k \cdot v_1\vec{i} + k \cdot v_2\vec{j} + k \cdot v_3\vec{k}" />
+</div>
+
+## Examples of Scalar Multiplication of Vectors
+
+### Example 1
+
+Given the vector <InlineMath math="\vec{a} = 2\vec{i} + 3\vec{j} + 5\vec{k}" />. Determine the result of multiplication <InlineMath math="2\vec{a}" />.
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2\vec{a} = 2(2\vec{i} + 3\vec{j} + 5\vec{k})" />
+  <BlockMath math="= 4\vec{i} + 6\vec{j} + 10\vec{k}" />
+</div>
+
+### Example 2
+
+Given the vector <InlineMath math="\vec{v} = (4, -2, 3)" />. Determine the result of <InlineMath math="-3\vec{v}" />.
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="-3\vec{v} = -3(4, -2, 3)" />
+  <BlockMath math="= (-12, 6, -9)" />
+</div>
+
+Note that the direction of the resulting vector is opposite to the original vector because the scalar is negative.
+
+## Applications of Scalar Multiplication of Vectors
+
+Scalar multiplication of vectors has many applications in physics and mathematics, such as:
+
+1. **Force and Acceleration**: If an object with mass <InlineMath math="m" /> experiences acceleration <InlineMath math="\vec{a}" />, then the force acting on the object is <InlineMath math="\vec{F} = m\vec{a}" />.
+
+2. **Velocity**: If an object moves with velocity <InlineMath math="\vec{v}" /> for a time <InlineMath math="t" />, then the displacement of the object is <InlineMath math="\vec{s} = t\vec{v}" />.
+
+3. **Scaling in Computer Graphics**: To change the size of objects in computer graphics, the coordinates of points on the object are multiplied by a scale factor.
+
+## Practice Problems
+
+1. Given the vector <InlineMath math="\vec{a} = 3\vec{i} - 4\vec{j} + 2\vec{k}" />. Determine the result of <InlineMath math="-2\vec{a}" />.
+
+2. Vectors <InlineMath math="\vec{u} = (2, -5, 1)" /> and <InlineMath math="\vec{v} = (-4, 3, 6)" />. Determine the vector <InlineMath math="2\vec{u} - 3\vec{v}" />.
+
+3. Given the vector <InlineMath math="\overrightarrow{BR} = 3.4 \text{ cm}" />. If <InlineMath math="\overrightarrow{BU} = 0.65 \cdot \overrightarrow{BR}" /> and <InlineMath math="\overrightarrow{UR} = 0.35 \cdot \overrightarrow{BR}" />, prove that all three vectors have the same direction.
+
+4. Vector <InlineMath math="\vec{p}" /> has a length of 5 units and vector <InlineMath math="\vec{q} = 3\vec{p}" />. Determine the length of vector <InlineMath math="\vec{q}" />.
+
+5. Given points <InlineMath math="A(2, 3, -1)" />, <InlineMath math="B(5, -2, 4)" />, and <InlineMath math="C" /> lies on the line passing through <InlineMath math="A" /> and <InlineMath math="B" /> such that <InlineMath math="\overrightarrow{AC} = 2\overrightarrow{AB}" />. Determine the coordinates of point <InlineMath math="C" />.
+
+## Answer Key
+
+### Problem 1
+
+Given the vector <InlineMath math="\vec{a} = 3\vec{i} - 4\vec{j} + 2\vec{k}" />. Determine the result of <InlineMath math="-2\vec{a}" />.
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="-2\vec{a} = -2(3\vec{i} - 4\vec{j} + 2\vec{k})" />
+  <BlockMath math="= -6\vec{i} + 8\vec{j} - 4\vec{k}" />
+</div>
+
+Therefore, the result of <InlineMath math="-2\vec{a}" /> is <InlineMath math="-6\vec{i} + 8\vec{j} - 4\vec{k}" />.
+
+### Problem 2
+
+Vectors <InlineMath math="\vec{u} = (2, -5, 1)" /> and <InlineMath math="\vec{v} = (-4, 3, 6)" />. Determine the vector <InlineMath math="2\vec{u} - 3\vec{v}" />.
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2\vec{u} = 2(2, -5, 1) = (4, -10, 2)" />
+  <BlockMath math="3\vec{v} = 3(-4, 3, 6) = (-12, 9, 18)" />
+  <BlockMath math="2\vec{u} - 3\vec{v} = (4, -10, 2) - (-12, 9, 18)" />
+  <BlockMath math="= (4 - (-12), -10 - 9, 2 - 18)" />
+  <BlockMath math="= (4 + 12, -10 - 9, 2 - 18)" />
+  <BlockMath math="= (16, -19, -16)" />
+</div>
+
+Therefore, the vector <InlineMath math="2\vec{u} - 3\vec{v}" /> is <InlineMath math="(16, -19, -16)" /> or <InlineMath math="16\vec{i} - 19\vec{j} - 16\vec{k}" />.
+
+### Problem 3
+
+Given the vector <InlineMath math="\overrightarrow{BR} = 3.4 \text{ cm}" />. If <InlineMath math="\overrightarrow{BU} = 0.65 \cdot \overrightarrow{BR}" /> and <InlineMath math="\overrightarrow{UR} = 0.35 \cdot \overrightarrow{BR}" />, prove that all three vectors have the same direction.
+
+**Solution:**
+To prove that all three vectors have the same direction, we need to show that they are positive scalar multiples of the same vector.
+
+We know:
+
+- <InlineMath math="\overrightarrow{BU} = 0.65 \cdot \overrightarrow{BR}" />
+- <InlineMath math="\overrightarrow{UR} = 0.35 \cdot \overrightarrow{BR}" />
+
+Let's check if <InlineMath math="\overrightarrow{BU} + \overrightarrow{UR} = \overrightarrow{BR}" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\overrightarrow{BU} + \overrightarrow{UR} = 0.65 \cdot \overrightarrow{BR} + 0.35 \cdot \overrightarrow{BR}" />
+  <BlockMath math="= (0.65 + 0.35) \cdot \overrightarrow{BR}" />
+  <BlockMath math="= 1 \cdot \overrightarrow{BR}" />
+  <BlockMath math="= \overrightarrow{BR}" />
+</div>
+
+This result shows that <InlineMath math="\overrightarrow{BU} + \overrightarrow{UR} = \overrightarrow{BR}" />, which aligns with the vector addition law for collinear points B, U, and R.
+
+Since <InlineMath math="\overrightarrow{BU} = 0.65 \cdot \overrightarrow{BR}" /> and <InlineMath math="\overrightarrow{UR} = 0.35 \cdot \overrightarrow{BR}" />, where the scalar factors are positive (<InlineMath math="0.65" /> and <InlineMath math="0.35" />), all three vectors have the same direction. Positive scalar factors mean that these vectors point in the same direction as the reference vector <InlineMath math="\overrightarrow{BR}" />.
+
+Therefore, it is proven that the three vectors <InlineMath math="\overrightarrow{BR}" />, <InlineMath math="\overrightarrow{BU}" />, and <InlineMath math="\overrightarrow{UR}" /> have the same direction.
+
+### Problem 4
+
+Vector <InlineMath math="\vec{p}" /> has a length of 5 units and vector <InlineMath math="\vec{q} = 3\vec{p}" />. Determine the length of vector <InlineMath math="\vec{q}" />.
+
+**Solution:**
+Given <InlineMath math="|\vec{p}| = 5" /> units and <InlineMath math="\vec{q} = 3\vec{p}" />.
+
+To determine the length of vector <InlineMath math="\vec{q}" />, we use the property of scalar multiplication:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="|\vec{q}| = |3\vec{p}|" />
+  <BlockMath math="= |3| \cdot |\vec{p}|" />
+  <BlockMath math="= 3 \cdot 5" />
+  <BlockMath math="= 15" />
+</div>
+
+Therefore, the length of vector <InlineMath math="\vec{q}" /> is 15 units.
+
+### Problem 5
+
+Given points <InlineMath math="A(2, 3, -1)" />, <InlineMath math="B(5, -2, 4)" />, and <InlineMath math="C" /> lies on the line passing through <InlineMath math="A" /> and <InlineMath math="B" /> such that <InlineMath math="\overrightarrow{AC} = 2\overrightarrow{AB}" />. Determine the coordinates of point <InlineMath math="C" />.
+
+**Solution:**
+First, we determine the vector <InlineMath math="\overrightarrow{AB}" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\overrightarrow{AB} = B - A" />
+  <BlockMath math="= (5, -2, 4) - (2, 3, -1)" />
+  <BlockMath math="= (5-2, -2-3, 4-(-1))" />
+  <BlockMath math="= (3, -5, 5)" />
+</div>
+
+Then, we use the relationship <InlineMath math="\overrightarrow{AC} = 2\overrightarrow{AB}" /> to determine the vector <InlineMath math="\overrightarrow{AC}" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\overrightarrow{AC} = 2\overrightarrow{AB}" />
+  <BlockMath math="= 2(3, -5, 5)" />
+  <BlockMath math="= (6, -10, 10)" />
+</div>
+
+Next, we determine the coordinates of point C:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\overrightarrow{AC} = C - A" />
+  <BlockMath math="(6, -10, 10) = C - (2, 3, -1)" />
+  <BlockMath math="C = (6, -10, 10) + (2, 3, -1)" />
+  <BlockMath math="C = (6+2, -10+3, 10+(-1))" />
+  <BlockMath math="C = (8, -7, 9)" />
+</div>
+
+Therefore, the coordinates of point C are <InlineMath math="C(8, -7, 9)" />.
