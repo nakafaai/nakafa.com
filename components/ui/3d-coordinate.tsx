@@ -16,7 +16,7 @@ import { Grid2x2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import dynamic from "next/dynamic";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Button } from "./button";
 
@@ -344,33 +344,55 @@ export function ArrowHelper({
       .add(new THREE.Vector3(0.2, 0.2, 0.2));
   }
 
-  const arrowRef = useRef<THREE.ArrowHelper>(null);
+  // Use a higher segment count for smoother cone
+  const coneGeometry = useMemo(
+    () => new THREE.ConeGeometry(arrowSize / 2, arrowSize, 32, 1),
+    [arrowSize]
+  );
 
-  useEffect(() => {
-    if (arrowRef.current) {
-      arrowRef.current.position.copy(vectors.fromVec);
-      arrowRef.current.setDirection(vectors.direction);
-      arrowRef.current.setLength(vectors.length, arrowSize, arrowSize * 0.7);
-    }
-  }, [vectors, arrowSize]);
+  const material = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: color instanceof THREE.Color ? color : new THREE.Color(color),
+      }),
+    [color]
+  );
+
+  // Define the shaft points - from the start point to just before the cone
+  const points = useMemo(
+    () => [
+      new THREE.Vector3(...from),
+      new THREE.Vector3(
+        vectors.toVec.x - vectors.direction.x * arrowSize,
+        vectors.toVec.y - vectors.direction.y * arrowSize,
+        vectors.toVec.z - vectors.direction.z * arrowSize
+      ),
+    ],
+    [from, vectors.toVec, vectors.direction, arrowSize]
+  );
 
   const fontToUse = font === "mono" ? MONO_FONT_PATH : FONT_PATH;
 
   return (
     <group>
-      <primitive
-        ref={arrowRef}
-        object={
-          new THREE.ArrowHelper(
-            vectors.direction,
-            vectors.fromVec,
-            vectors.length,
-            color instanceof THREE.Color ? color : new THREE.Color(color),
-            arrowSize,
-            arrowSize * 0.7
-          )
-        }
+      {/* Shaft of the arrow */}
+      <Line points={points} color={color} lineWidth={2} />
+
+      {/* Cone arrowhead with smooth segments */}
+      <mesh
+        geometry={coneGeometry}
+        material={material}
+        position={[
+          vectors.toVec.x - (vectors.direction.x * arrowSize) / 2,
+          vectors.toVec.y - (vectors.direction.y * arrowSize) / 2,
+          vectors.toVec.z - (vectors.direction.z * arrowSize) / 2,
+        ]}
+        quaternion={new THREE.Quaternion().setFromUnitVectors(
+          new THREE.Vector3(0, 1, 0),
+          vectors.direction
+        )}
       />
+
       {label && (
         <Text
           position={[labelPos.x, labelPos.y, labelPos.z]}
