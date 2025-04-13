@@ -1,5 +1,5 @@
 import { UnitCircle } from "../../_shared/unit-circle";
-
+import { Triangle } from "../../_shared/triangle";
 export const metadata = {
   title: "Konsep Trigonometri",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -73,6 +73,19 @@ Bayangkan sebuah segitiga siku-siku dengan sudut θ (theta). Kita namakan sisi-s
 - **Sisi miring** (hipotenusa): sisi yang berhadapan dengan sudut siku-siku
 - **Sisi depan**: sisi yang berhadapan dengan sudut θ
 - **Sisi samping**: sisi yang berdekatan dengan sudut θ (selain sisi miring)
+
+<div className="mt-4">
+  <Triangle
+    title="Segitiga Siku-Siku"
+    description="Segitiga siku-siku dengan sudut θ."
+    angle={45}
+    labels={{
+      opposite: "Sisi depan",
+      adjacent: "Sisi samping",
+      hypotenuse: "Sisi miring",
+    }}
+  />
+</div>
 
 Dari ketiga sisi ini, kita mendapatkan enam perbandingan trigonometri dasar:
 

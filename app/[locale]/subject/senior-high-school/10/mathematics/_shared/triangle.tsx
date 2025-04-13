@@ -2,7 +2,7 @@
 
 import {
   CoordinateSystem,
-  UnitCircle as UnitCircle3D,
+  Triangle as Triangle3D,
 } from "@/components/ui/3d-coordinate";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -23,9 +23,14 @@ type Props = {
   title: string;
   description: string;
   angle?: number;
+  labels?: {
+    opposite: string;
+    adjacent: string;
+    hypotenuse: string;
+  };
 };
 
-export function UnitCircle({ title, description, angle = 45 }: Props) {
+export function Triangle({ title, description, angle = 45, labels }: Props) {
   const t = useTranslations("Common");
   const [angleValue, setAngleValue] = useState(angle);
 
@@ -39,9 +44,9 @@ export function UnitCircle({ title, description, angle = 45 }: Props) {
         <CoordinateSystem
           showZAxis={false}
           showOrigin={false}
-          cameraPosition={[0, 0, 3]}
+          cameraPosition={[0, 0, 4]}
         >
-          <UnitCircle3D angle={angleValue} />
+          <Triangle3D angle={angleValue} size={2} labels={labels} />
         </CoordinateSystem>
       </CardContent>
       <CardFooter className="border-t">
