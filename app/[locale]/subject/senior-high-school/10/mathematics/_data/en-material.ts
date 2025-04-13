@@ -181,7 +181,7 @@ const enMaterials: MaterialList[] = [
     href: `${BASE_PATH}/trigonometry`,
     items: [
       {
-        title: "Trigonometry Concepts",
+        title: "Trigonometry Concept",
         href: `${BASE_PATH}/trigonometry/trigonometry-concept`,
       },
       {
