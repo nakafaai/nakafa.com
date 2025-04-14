@@ -189,23 +189,23 @@ const enMaterials: MaterialList[] = [
         href: `${BASE_PATH}/trigonometry/right-triangle-naming`,
       },
       {
-        title: "Trigonometric Ratio: Tan θ",
+        title: "Trigonometric Comparison: Tan θ",
         href: `${BASE_PATH}/trigonometry/trigonometric-comparison-tan`,
       },
       {
-        title: "Applications of Tan θ Trigonometric Ratio",
+        title: "Applications of Tan θ Trigonometric Comparison",
         href: `${BASE_PATH}/trigonometry/trigonometric-comparison-tan-usage`,
       },
       {
-        title: "Trigonometric Ratios: Sin θ and Cos θ",
+        title: "Trigonometric Comparison: Sin θ and Cos θ",
         href: `${BASE_PATH}/trigonometry/trigonometric-comparison-sin-cos`,
       },
       {
-        title: "The Three Primary Trigonometric Ratios",
+        title: "The Three Primary Trigonometric Comparisons",
         href: `${BASE_PATH}/trigonometry/trigonometric-comparison-three-primary`,
       },
       {
-        title: "Special Angles in Trigonometric Ratios",
+        title: "Special Angles in Trigonometric Comparisons",
         href: `${BASE_PATH}/trigonometry/trigonometric-comparison-special-angle`,
       },
     ],
