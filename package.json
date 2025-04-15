@@ -91,7 +91,6 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@eslint/eslintrc": "^3",
-    "@types/eslint__eslintrc": "^2.1.2",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

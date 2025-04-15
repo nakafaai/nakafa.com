@@ -81,13 +81,9 @@ export function CardMaterial({ material }: Props) {
                 key={item.href}
                 href={item.href}
                 prefetch
-                className="group flex w-full items-center gap-2 border-t px-6 py-3 transition-colors last:rounded-b-xl last:pb-6 hover:bg-accent/50"
+                className="group flex w-full scroll-mt-24 items-center gap-2 border-t px-6 py-3 transition-colors last:rounded-b-xl last:pb-6 hover:bg-accent/50"
               >
-                <h3
-                  id={item.title.toLowerCase().replace(/\s+/g, "-")}
-                  title={item.title}
-                  className="scroll-mt-24 truncate"
-                >
+                <h3 title={item.title} className="truncate">
                   {item.title}
                 </h3>
                 <ArrowDownIcon className="-rotate-90 size-4 opacity-0 transition-opacity group-hover:opacity-100" />
