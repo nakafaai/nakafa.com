@@ -1,23 +1,27 @@
 import fs from "node:fs/promises";
+import path from "node:path";
 import type { ParsedHeading } from "@/components/shared/sidebar-tree";
+import type { ArticleCategory } from "@/types/articles/category";
 import type { Article, ContentPagination } from "@/types/content";
 import type { MaterialList } from "@/types/subjects";
 import { compareDesc, parse } from "date-fns";
-import glob from "fast-glob";
 import type { Locale } from "next-intl";
 import { Children } from "react";
 import type { ReactNode } from "react";
 import { teams } from "../data/team";
+import { getFolderChildNames } from "./system";
 
 /**
  * Reads the raw content of a file, use app/[locale] as the base path.
  * @param path - The path to the file.
  * @returns The raw content of the file.
  */
-export async function getRawContent(path: string): Promise<string> {
-  return fs.readFile(`app/[locale]${path}`, "utf8").catch(() => {
-    return "";
-  });
+export async function getRawContent(filePath: string): Promise<string> {
+  return fs
+    .readFile(path.join(process.cwd(), "contents", filePath), "utf8")
+    .catch(() => {
+      return "";
+    });
 }
 
 /**
@@ -98,30 +102,28 @@ export function getHeadings(content: string): ParsedHeading[] {
 }
 
 export async function getArticles(
-  basePath: string,
+  category: ArticleCategory,
   locale: Locale
 ): Promise<Article[]> {
-  // Get all article directories that have a page.tsx file
-  const articleDirs = await glob("*/page.tsx", {
-    cwd: `app/[locale]/${basePath}`,
-    absolute: true,
-  });
+  // Extract the actual category name if a full path is provided
+  const categoryName = category.includes("/")
+    ? category.split("/").pop()
+    : category;
+
+  if (!categoryName) {
+    return [];
+  }
+
+  // Get all article directories under the specified category using the utility function
+  const slugs = getFolderChildNames(`contents/articles/${categoryName}`);
 
   // Process the article data in a single pass
   const articles = await Promise.all(
-    articleDirs.map(async (dir) => {
+    slugs.map(async (slug) => {
       try {
-        // Extract the slug from the path
-        const parts = dir.split("/");
-        const slug = parts.at(-2);
-
-        if (!slug) {
-          return null;
-        }
-
         // Import the metadata directly
         const { metadata } = await import(
-          `@/app/[locale]/articles/${basePath.split("/").at(-1)}/${slug}/${locale}.mdx`
+          `@/contents/articles/${categoryName}/${slug}/${locale}.mdx`
         );
 
         const authors: string[] = metadata.authors.map(

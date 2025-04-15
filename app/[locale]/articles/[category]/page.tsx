@@ -4,68 +4,67 @@ import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
+import {
+  getCategoryIcon,
+  getCategoryPath,
+} from "@/lib/utils/articles/category";
+import { getGithubUrl } from "@/lib/utils/github";
 import { getArticles } from "@/lib/utils/markdown";
-import { DramaIcon } from "lucide-react";
+import type { ArticleCategory } from "@/types/articles/category";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-const FILE_PATH = "/articles/politics";
-const GITHUB_URL = `${process.env.GITHUB_URL}${FILE_PATH}`;
-
 type Props = {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: Locale; category: ArticleCategory }>;
 };
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Props["params"];
-}): Promise<Metadata> {
-  const { locale } = await params;
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale, category } = await params;
   const t = await getTranslations("Articles");
 
   return {
-    title: t("politics"),
+    title: t(category),
     description: t("description"),
     alternates: {
-      canonical: `/${locale}/articles/politics`,
+      canonical: `/${locale}/articles/${category}`,
     },
   };
 }
 
-async function ArticleList({ locale }: { locale: Locale }) {
-  // Statically get all articles
-  const articles = await getArticles(FILE_PATH, locale);
-
-  return (
-    <ContainerList>
-      {articles.map((article) => (
-        <CardArticle key={article.slug} category="politics" article={article} />
-      ))}
-    </ContainerList>
-  );
-}
-
 export default async function Page({ params }: Props) {
-  const { locale } = await params;
+  const { locale, category } = await params;
+
   const t = await getTranslations("Articles");
 
   // Enable static rendering
   setRequestLocale(locale);
 
+  const categoryPath = getCategoryPath(category);
+
+  // Statically get all articles
+  const articles = await getArticles(category, locale);
+
   return (
     <>
       <HeaderContent
-        title={t("politics")}
+        title={t(category)}
         description={t("description")}
-        icon={DramaIcon}
+        icon={getCategoryIcon(category)}
       />
       <LayoutContent className="py-10">
-        <ArticleList locale={locale} />
+        <ContainerList>
+          {articles.map((article) => (
+            <CardArticle
+              key={article.slug}
+              category={category}
+              article={article}
+            />
+          ))}
+        </ContainerList>
       </LayoutContent>
       <FooterContent className="mt-0">
-        <RefContent githubUrl={GITHUB_URL} />
+        <RefContent githubUrl={getGithubUrl(categoryPath)} />
       </FooterContent>
     </>
   );

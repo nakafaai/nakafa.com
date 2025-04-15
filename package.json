@@ -79,6 +79,7 @@
     "recharts": "^2.15.2",
     "remark-gfm": "^4.0.1",
     "schema-dts": "^1.1.5",
+    "server-only": "^0.0.1",
     "shiki": "^3.2.2",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.2.0",
