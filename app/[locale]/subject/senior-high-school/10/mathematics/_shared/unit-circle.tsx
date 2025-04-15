@@ -45,7 +45,7 @@ export function UnitCircle({ title, description, angle = 45 }: Props) {
         </CoordinateSystem>
       </CardContent>
       <CardFooter className="border-t">
-        <div className="mx-auto flex w-full max-w-sm flex-col gap-4">
+        <div className="mx-auto flex w-full max-w-md flex-col gap-4">
           <div className="flex items-center gap-2">
             <Label htmlFor="angle">
               <Badge variant="outline" className="font-mono">
