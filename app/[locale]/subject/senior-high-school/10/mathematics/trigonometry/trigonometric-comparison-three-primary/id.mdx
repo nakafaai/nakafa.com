@@ -9,3 +9,170 @@ export const metadata = {
   subject: "Trigonometri",
   category: "Matematika",
 };
+
+import { Triangle } from "../../_shared/triangle";
+import { UnitCircle } from "../../_shared/unit-circle";
+
+## Pengenalan Tiga Serangkai Perbandingan Trigonometri
+
+Ketika matematikawan zaman kuno mempelajari segitiga, mereka menemukan pola perbandingan (rasio) panjang sisi segitiga siku-siku yang sangat bermanfaat. Ada tiga perbandingan trigonometri utama yang akan kita pelajari yaitu sinus (sin), cosinus (cos), dan tangen (tan).
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sin \theta = \frac{\text{sisi depan}}{\text{sisi miring}}" />
+  <BlockMath math="\cos \theta = \frac{\text{sisi samping}}{\text{sisi miring}}" />
+  <BlockMath math="\tan \theta = \frac{\text{sisi depan}}{\text{sisi samping}}" />
+</div>
+
+### Memahami Sisi-Sisi dalam Segitiga Siku-siku
+
+Sebelum kita melangkah lebih jauh, penting untuk memahami istilah-istilah yang digunakan dalam perbandingan trigonometri:
+
+1. **Sisi miring (hypotenuse)**: Sisi terpanjang pada segitiga siku-siku, selalu berada di seberang sudut siku-siku (90°).
+2. **Sisi depan (opposite)**: Sisi yang berada di seberang sudut θ yang kita tinjau.
+3. **Sisi samping (adjacent)**: Sisi yang berdekatan dengan sudut θ yang kita tinjau (bukan sisi miring).
+
+<div className="mt-4">
+  <Triangle
+    title="Visualisasi Sisi-sisi Segitiga"
+    description="Geser slider untuk melihat bagaimana posisi sisi-sisi berubah sesuai sudut."
+    angle={30}
+    labels={{
+      opposite: "Sisi Depan",
+      adjacent: "Sisi Samping",
+      hypotenuse: "Sisi Miring",
+    }}
+  />
+</div>
+
+## Sinus (sin θ)
+
+Sinus dari sudut θ adalah perbandingan antara panjang sisi depan dengan panjang sisi miring.
+
+<BlockMath math="\sin \theta = \frac{\text{sisi depan}}{\text{sisi miring}}" />
+
+<div className="mt-4">
+  <Triangle
+    title="Visualisasi Sinus (sin θ)"
+    description="Perhatikan bagaimana nilai sinus berubah saat sudut berubah."
+    angle={30}
+    labels={{
+      opposite: "Sisi Depan (menentukan nilai sin θ)",
+      adjacent: "Sisi Samping",
+      hypotenuse: "Sisi Miring (pembagi)",
+    }}
+  />
+</div>
+
+### Contoh Nilai Sinus
+
+| Sudut                     | Nilai Sinus                              | Nilai Desimal              |
+| ------------------------- | ---------------------------------------- | -------------------------- |
+| <InlineMath math="0°" />  | <InlineMath math="0" />                  | <InlineMath math="0" />    |
+| <InlineMath math="30°" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0,5" />  |
+| <InlineMath math="45°" /> | <InlineMath math="\frac{\sqrt{2}}{2}" /> | <InlineMath math="0,71" /> |
+| <InlineMath math="60°" /> | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0,87" /> |
+| <InlineMath math="90°" /> | <InlineMath math="1" />                  | <InlineMath math="1" />    |
+
+## Cosinus (cos θ)
+
+Cosinus dari sudut θ adalah perbandingan antara panjang sisi samping dengan panjang sisi miring.
+
+<BlockMath math="\cos \theta = \frac{\text{sisi samping}}{\text{sisi miring}}" />
+
+<div className="mt-4">
+  <Triangle
+    title="Visualisasi Cosinus (cos θ)"
+    description="Perhatikan bagaimana nilai cosinus berubah saat sudut berubah."
+    angle={60}
+    labels={{
+      opposite: "Sisi Depan",
+      adjacent: "Sisi Samping (menentukan nilai cos θ)",
+      hypotenuse: "Sisi Miring (pembagi)",
+    }}
+  />
+</div>
+
+### Contoh Nilai Cosinus
+
+| Sudut                     | Nilai Cosinus                            | Nilai Desimal              |
+| ------------------------- | ---------------------------------------- | -------------------------- |
+| <InlineMath math="0°" />  | <InlineMath math="1" />                  | <InlineMath math="1" />    |
+| <InlineMath math="30°" /> | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0,87" /> |
+| <InlineMath math="45°" /> | <InlineMath math="\frac{\sqrt{2}}{2}" /> | <InlineMath math="0,71" /> |
+| <InlineMath math="60°" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0,5" />  |
+| <InlineMath math="90°" /> | <InlineMath math="0" />                  | <InlineMath math="0" />    |
+
+## Tangen (tan θ)
+
+Tangen dari sudut θ adalah perbandingan antara panjang sisi depan dengan panjang sisi samping. Ini juga dapat dihitung sebagai perbandingan antara sinus dan cosinus dari sudut yang sama.
+
+<BlockMath math="\tan \theta = \frac{\text{sisi depan}}{\text{sisi samping}} = \frac{\sin \theta}{\cos \theta}" />
+
+<div className="mt-4">
+  <Triangle
+    title="Visualisasi Tangen (tan θ)"
+    description="Perhatikan bagaimana nilai tangen berubah saat sudut berubah."
+    angle={45}
+    labels={{
+      opposite: "Sisi Depan (pembilang)",
+      adjacent: "Sisi Samping (penyebut)",
+      hypotenuse: "Sisi Miring",
+    }}
+  />
+</div>
+
+### Contoh Nilai Tangen
+
+| Sudut                     | Nilai Tangen                             | Nilai Desimal              |
+| ------------------------- | ---------------------------------------- | -------------------------- |
+| <InlineMath math="0°" />  | <InlineMath math="0" />                  | <InlineMath math="0" />    |
+| <InlineMath math="30°" /> | <InlineMath math="\frac{1}{\sqrt{3}}" /> | <InlineMath math="0,58" /> |
+| <InlineMath math="45°" /> | <InlineMath math="1" />                  | <InlineMath math="1" />    |
+| <InlineMath math="60°" /> | <InlineMath math="\sqrt{3}" />           | <InlineMath math="1,73" /> |
+| <InlineMath math="90°" /> | Tidak terdefinisi                        | Tidak terdefinisi          |
+
+## Hubungan antara Sin, Cos, dan Tan dalam Lingkaran Satuan
+
+Untuk memahami bagaimana perbandingan trigonometri ini bekerja untuk semua sudut, kita bisa menggunakan konsep lingkaran satuan (lingkaran dengan jari-jari 1).
+
+<UnitCircle
+  title="Lingkaran Satuan dan Perbandingan Trigonometri"
+  description="Geser slider untuk melihat bagaimana nilai sin, cos, dan tan berubah di lingkaran satuan."
+  angle={45}
+/>
+
+Dalam lingkaran satuan:
+
+- Koordinat x pada lingkaran satuan = cos θ
+- Koordinat y pada lingkaran satuan = sin θ
+- Tan θ adalah kemiringan garis dari pusat ke titik pada lingkaran satuan
+
+## Hubungan antara Ketiga Perbandingan Trigonometri
+
+Ketiga perbandingan trigonometri ini saling berhubungan dengan rumus berikut:
+
+<div className="flex flex-col gap-4 mt-4">
+  <BlockMath math="\tan \theta = \frac{\sin \theta}{\cos \theta}" />
+  <BlockMath math="\sin^2 \theta + \cos^2 \theta = 1" />
+</div>
+
+## Latihan Pemahaman
+
+Perhatikan segitiga berikut dengan sudut 30°:
+
+<Triangle
+  title="Segitiga dengan Sudut 30°"
+  description="Segitiga siku-siku dengan sudut 30°"
+  angle={30}
+  labels={{
+    opposite: "Sisi Depan",
+    adjacent: "Sisi Samping",
+    hypotenuse: "Sisi Miring (= 1)",
+  }}
+/>
+
+Jika panjang sisi miring adalah 1, maka:
+
+- Nilai <InlineMath math="\sin 30°" /> = panjang sisi depan = <InlineMath math="0,5" />
+- Nilai <InlineMath math="\cos 30°" /> = panjang sisi samping = <InlineMath math="0,87" />
+- Nilai <InlineMath math="\tan 30°" /> = <InlineMath math="\frac{\sin 30°}{\cos 30°}" /> = <InlineMath math="\frac{0,5}{0,87}" /> = 0,58

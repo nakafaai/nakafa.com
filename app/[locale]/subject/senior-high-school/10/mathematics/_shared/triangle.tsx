@@ -14,8 +14,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
-import { getRadians } from "@/lib/utils/math";
+import { getCos, getRadians, getSin, getTan } from "@/lib/utils/math";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -56,32 +57,53 @@ export function Triangle({
           <Triangle3D angle={angleValue} size={size} labels={labels} />
         </CoordinateSystem>
       </CardContent>
-      <CardFooter className="border-t">
-        <div className="mx-auto flex w-full max-w-sm flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="angle">
-              <Badge variant="outline" className="font-mono">
-                {angleValue}°
-              </Badge>
-            </Label>
+      <CardFooter className="border-t px-0">
+        <div className="flex w-full flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-2 px-6">
             <Badge variant="outline" className="font-mono">
-              {getRadians(angleValue).toFixed(2)} {t("radian")}
+              Sin ({angleValue}°) = {getSin(angleValue).toFixed(2)}
+            </Badge>
+            <Badge variant="outline" className="font-mono">
+              Cos ({angleValue}°) = {getCos(angleValue).toFixed(2)}
+            </Badge>
+            <Badge variant="outline" className="font-mono">
+              Tan ({angleValue}°) ={" "}
+              {Number.isFinite(getTan(angleValue))
+                ? getTan(angleValue).toFixed(2)
+                : t("undefined")}
             </Badge>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-muted-foreground text-sm">0°</span>
-            <Slider
-              id="angle"
-              value={[angleValue]}
-              onValueChange={(values) => setAngleValue(values[0])}
-              min={0}
-              max={360}
-              step={1}
-            />
-            <span className="font-mono text-muted-foreground text-sm">
-              360°
-            </span>
+          <Separator />
+
+          <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="angle">
+                <Badge variant="outline" className="font-mono">
+                  {angleValue}°
+                </Badge>
+              </Label>
+              <Badge variant="outline" className="font-mono">
+                {getRadians(angleValue).toFixed(2)} {t("radian")}
+              </Badge>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-muted-foreground text-sm">
+                0°
+              </span>
+              <Slider
+                id="angle"
+                value={[angleValue]}
+                onValueChange={(values) => setAngleValue(values[0])}
+                min={0}
+                max={360}
+                step={1}
+              />
+              <span className="font-mono text-muted-foreground text-sm">
+                360°
+              </span>
+            </div>
           </div>
         </div>
       </CardFooter>

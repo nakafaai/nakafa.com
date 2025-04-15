@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { getCos, getRadians, getSin, getTan } from "@/lib/utils/math";
 import {
   GizmoHelper,
   GizmoViewport,
@@ -839,11 +840,10 @@ export function UnitCircle({
   const t = useTranslations("Common");
   const { resolvedTheme } = useTheme();
 
-  const angleInRadians = (angle * Math.PI) / 180;
-  const sin = Math.sin(angleInRadians);
-  const cos = Math.cos(angleInRadians);
-  // Check if cos is close to zero to handle tan(90°), tan(270°), etc.
-  const tan = Math.abs(cos) < 1e-10 ? Number.POSITIVE_INFINITY : sin / cos;
+  const angleInRadians = getRadians(angle);
+  const sin = getSin(angle);
+  const cos = getCos(angle);
+  const tan = getTan(angle);
 
   // Format values according to display mode
   const formatValue = (value: number) => {
