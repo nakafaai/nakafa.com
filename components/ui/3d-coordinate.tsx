@@ -640,7 +640,7 @@ export function Triangle({
           .add(new THREE.Vector3(0, -fontSize * 1.5, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new THREE.Vector3(fontSize * 3.5, 0, 0));
+          .add(new THREE.Vector3(fontSize * 4, 0, 0));
 
         // Hypotenuse label position - place it outside the triangle
         hypotenuseLabelPos
@@ -660,7 +660,7 @@ export function Triangle({
           .add(new THREE.Vector3(0, -fontSize * 1.5, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new THREE.Vector3(-fontSize * 3.5, 0, 0));
+          .add(new THREE.Vector3(-fontSize * 4, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
           .add(new THREE.Vector3(0, fontSize * 2, 0));
@@ -678,7 +678,7 @@ export function Triangle({
           .add(new THREE.Vector3(0, fontSize * 1.5, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new THREE.Vector3(-fontSize * 3.5, 0, 0));
+          .add(new THREE.Vector3(-fontSize * 4, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
           .add(new THREE.Vector3(0, -fontSize * 2, 0));
@@ -696,7 +696,7 @@ export function Triangle({
           .add(new THREE.Vector3(0, fontSize * 1.5, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new THREE.Vector3(fontSize * 3.5, 0, 0));
+          .add(new THREE.Vector3(fontSize * 4, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
           .add(new THREE.Vector3(0, -fontSize * 2, 0));

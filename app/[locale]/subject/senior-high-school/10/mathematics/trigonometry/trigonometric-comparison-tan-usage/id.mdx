@@ -1,3 +1,5 @@
+import { Triangle } from "../../_shared/triangle";
+
 export const metadata = {
   title: "Kegunaan Perbandingan Trigonometri Tan θ",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -9,3 +11,105 @@ export const metadata = {
   subject: "Trigonometri",
   category: "Matematika",
 };
+
+## Apa itu Tangen?
+
+Dalam segitiga siku-siku, tangen sudut θ adalah perbandingan antara panjang sisi depan (opposite) dengan panjang sisi samping (adjacent). Ini sangat berbeda dengan sinus yang membandingkan sisi depan dengan hipotenusa, atau cosinus yang membandingkan sisi samping dengan hipotenusa.
+
+<Triangle
+  title="Visualisasi Tangen (tan θ)"
+  description="Geser slider untuk melihat bagaimana tangen berubah saat sudut berubah."
+  angle={30}
+  labels={{
+    opposite: "Sisi Depan",
+    adjacent: "Sisi Samping",
+    hypotenuse: "Sisi Miring",
+  }}
+/>
+
+Misalnya, jika kita memiliki segitiga siku-siku dengan sudut θ, maka:
+
+<BlockMath math="\tan \theta = \frac{\text{sisi depan}}{\text{sisi samping}}" />
+
+Nilai tangen berubah sesuai dengan besar sudut. Sebagai contoh, <InlineMath math="\tan 30° = 0,57 \text{ atau } \frac{1}{\sqrt{3}}" />.
+
+## Kegunaan Tangen dalam Kehidupan Sehari-hari
+
+Perbandingan trigonometri tangen sangat berguna untuk menyelesaikan berbagai masalah kehidupan nyata, terutama ketika kita ingin menghitung:
+
+1. Tinggi objek yang sulit diukur secara langsung
+2. Jarak antara dua titik yang tidak dapat diakses
+3. Panjang bayangan suatu objek
+4. Kemiringan suatu permukaan
+
+### Mengukur Tinggi melalui Bayangan
+
+Bayangkan kita ingin mengukur tinggi sebuah pohon, gedung, atau objek tinggi lainnya. Kita bisa menggunakan perbandingan tangen dengan langkah-langkah berikut:
+
+1. Ukur panjang bayangan objek (sisi samping)
+2. Ukur atau ketahui sudut elevasi matahari (θ)
+3. Gunakan rumus tan θ untuk menghitung tinggi objek (sisi depan)
+
+<div className="mt-4">
+  <BlockMath math="\text{tinggi objek} = \text{panjang bayangan} \times \tan \theta" />
+</div>
+
+<div className="mt-4">
+  <Triangle
+    title="Aplikasi Tangen dalam Pengukuran"
+    description="Contoh segitiga yang terbentuk saat mengukur tinggi dengan bayangan."
+    angle={30}
+    labels={{
+      opposite: "Tinggi Objek",
+      adjacent: "Panjang Bayangan",
+      hypotenuse: "",
+    }}
+  />
+</div>
+
+## Metode Menghitung dengan Tangen
+
+Ada dua cara yang bisa kita gunakan untuk menyelesaikan masalah menggunakan tangen:
+
+### Perbandingan Segitiga Sebangun
+
+Kita bisa menggunakan prinsip segitiga sebangun untuk menyelesaikan masalah. Jika kita memiliki dua segitiga dengan bentuk yang sama (sebangun), maka perbandingan sisi-sisinya akan sama.
+
+Misalnya, jika kita memiliki bayangan dari tiga objek berbeda tinggi (anak kecil, remaja, dan orang dewasa), kita bisa membuat persamaan:
+
+<BlockMath math="\frac{\text{tinggi anak kecil}}{\text{panjang bayangan anak kecil}} = \frac{\text{tinggi remaja}}{\text{panjang bayangan remaja}} = \frac{\text{tinggi orang dewasa}}{\text{panjang bayangan orang dewasa}}" />
+
+Dengan persamaan ini, jika kita mengetahui tinggi anak kecil (misalnya 114 cm), panjang bayangannya (200 cm), dan tinggi remaja (148 cm), kita bisa menghitung panjang bayangan remaja:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\frac{114 \text{ cm}}{200 \text{ cm}} = \frac{148 \text{ cm}}{x \text{ cm}}" />
+  <BlockMath math="x \text{ cm} = \frac{148 \text{ cm} \times 200 \text{ cm}}{114 \text{ cm}} = \frac{29.600 \text{ cm}}{114 \text{ cm}} = 259,65 \text{ cm}" />
+</div>
+
+### Menggunakan Rumus Tangen
+
+Cara lain yang lebih langsung adalah dengan menggunakan perbandingan trigonometri tangen. Kita tahu bahwa:
+
+<BlockMath math="\tan \theta = \frac{\text{sisi depan}}{\text{sisi samping}}" />
+
+Misalnya, jika kita memiliki sudut elevasi matahari 30° (tan 30° = 0,57) dan ingin menghitung panjang bayangan remaja dengan tinggi 148 cm:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\tan \theta = \frac{\text{tinggi remaja}}{\text{panjang bayangan remaja}}" />
+  <BlockMath math="\tan 30° = \frac{148 \text{ cm}}{x \text{ cm}}" />
+  <BlockMath math="0,57 = \frac{148 \text{ cm}}{x \text{ cm}}" />
+  <BlockMath math="x \text{ cm} = \frac{148 \text{ cm}}{0,57} = 259,65 \text{ cm}" />
+</div>
+
+<div className="mt-4">
+  <Triangle
+    title="Sudut 30 Derajat dengan Tangen 0,57"
+    description="Visualisasi segitiga dengan sudut 30° seperti pada contoh perhitungan."
+    angle={30}
+    labels={{
+      opposite: "Tinggi Remaja",
+      adjacent: "Panjang Bayangan Remaja",
+      hypotenuse: "",
+    }}
+  />
+</div>
