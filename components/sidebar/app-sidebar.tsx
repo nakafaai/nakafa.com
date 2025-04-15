@@ -38,13 +38,13 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
               asChild
             >
               <NavigationLink href="/">
-                <div className="relative flex aspect-square size-8 items-center justify-center rounded-lg border">
+                <div className="relative flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg border">
                   <Image
                     src={nakafaLogo}
                     alt="Nakafa"
                     fill
                     priority
-                    className="rounded-lg object-contain"
+                    className="object-contain"
                   />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">

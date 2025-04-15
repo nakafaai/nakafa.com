@@ -33,13 +33,13 @@ function Content({ className }: { className?: string }) {
   return (
     <div className={cn("grid gap-4 px-4 pb-4 text-center", className)}>
       <div className="flex justify-center">
-        <div className="relative aspect-square size-16 rounded-lg border">
+        <div className="relative aspect-square size-16 overflow-hidden rounded-lg border">
           <Image
             src={nakafaLogo}
             alt="Nakafa"
             fill
             priority
-            className="rounded-lg object-contain"
+            className="object-contain"
           />
         </div>
       </div>
