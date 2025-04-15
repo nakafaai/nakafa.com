@@ -1,31 +1,39 @@
-export type PagefindResult = {
-  excerpt: string;
-  meta: {
-    title: string;
-  };
-  raw_url: string;
-  sub_results: {
-    anchor?: {
-      element: string;
-      id: string;
-      location: number;
-      text: string;
-    };
-    excerpt: string;
-    title: string;
-    url: string;
-  }[];
-  url: string;
-};
+import { z } from "zod";
+
+export const PagefindResultSchema = z.object({
+  excerpt: z.string(),
+  meta: z.object({
+    title: z.string(),
+  }),
+  raw_url: z.string(),
+  sub_results: z.array(
+    z.object({
+      anchor: z
+        .object({
+          element: z.string(),
+          id: z.string(),
+          location: z.number(),
+          text: z.string(),
+        })
+        .optional(),
+      excerpt: z.string(),
+      title: z.string(),
+      url: z.string(),
+    })
+  ),
+  url: z.string(),
+});
+export type PagefindResult = z.infer<typeof PagefindResultSchema>;
 
 /** Options that can be passed to pagefind.search() */
-export type PagefindSearchOptions = {
+export const PagefindSearchOptionsSchema = z.object({
   /** If set, this call will load all assets but return before searching. Prefer using pagefind.preload() instead */
-  preload?: boolean;
+  preload: z.boolean().optional(),
   /** Add more verbose console logging for this search query */
-  verbose?: boolean;
+  verbose: z.boolean().optional(),
   /** The set of filters to execute with this search. Input type is extremely flexible, see the filtering docs for details */
-  filters?: object;
+  filters: z.record(z.unknown()).optional(),
   /** The set of sorts to use for this search, instead of relevancy */
-  sort?: object;
-};
+  sort: z.record(z.unknown()).optional(),
+});
+export type PagefindSearchOptions = z.infer<typeof PagefindSearchOptionsSchema>;

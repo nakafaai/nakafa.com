@@ -1,9 +1,14 @@
-export type MaterialList = {
-  title: string;
-  description?: string;
-  href: string;
-  items: {
-    title: string;
-    href: string;
-  }[];
-};
+import { z } from "zod";
+
+export const MaterialListSchema = z.object({
+  title: z.string(),
+  description: z.string().optional(),
+  href: z.string(),
+  items: z.array(
+    z.object({
+      title: z.string(),
+      href: z.string(),
+    })
+  ),
+});
+export type MaterialList = z.infer<typeof MaterialListSchema>;
