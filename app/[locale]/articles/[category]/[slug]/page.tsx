@@ -20,6 +20,7 @@ type Props = {
   params: Promise<{ locale: Locale; category: ArticleCategory; slug: string }>;
 };
 
+// Generate bottom-up static params
 export function generateStaticParams() {
   const basePath = "contents/articles";
   const categories = getFolderChildNames(basePath);
