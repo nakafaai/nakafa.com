@@ -7,7 +7,10 @@ const withNextIntl = createNextIntlPlugin();
 const withMDX = createMDX();
 
 const nextConfig: NextConfig = {
-  pageExtensions: ["mdx", "ts", "tsx"],
+  pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
+  turbopack: {
+    resolveExtensions: [".mdx", ".tsx", ".ts", ".jsx", ".js", ".mjs", ".json"],
+  },
   experimental: {
     mdxRs: {
       mdxType: "gfm",
