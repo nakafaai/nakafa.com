@@ -1,5 +1,11 @@
-import { LayoutArticle } from "@/components/shared/layout-article";
+import {
+  LayoutArticle,
+  LayoutArticleContent,
+  LayoutArticleFooter,
+  LayoutArticleHeader,
+} from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
+import { getCategoryIcon } from "@/lib/utils/articles/category";
 import { getContent } from "@/lib/utils/contents";
 import { getReferences } from "@/lib/utils/contents";
 import { getGithubUrl } from "@/lib/utils/github";
@@ -53,18 +59,22 @@ export default async function Page({ params }: Props) {
     const { metadata, default: Content } = content;
 
     return (
-      <LayoutArticle
-        metadata={metadata}
-        content={<Content />}
-        footer={
+      <LayoutArticle onThisPage={headings}>
+        <LayoutArticleHeader
+          metadata={metadata}
+          icon={getCategoryIcon(category)}
+        />
+        <LayoutArticleContent>
+          <Content />
+        </LayoutArticleContent>
+        <LayoutArticleFooter>
           <RefContent
             title={metadata.title}
             references={references}
             githubUrl={getGithubUrl(FILE_PATH)}
           />
-        }
-        onThisPage={headings}
-      />
+        </LayoutArticleFooter>
+      </LayoutArticle>
     );
   } catch {
     notFound();
