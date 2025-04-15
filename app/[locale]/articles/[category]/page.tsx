@@ -10,6 +10,7 @@ import {
 } from "@/lib/utils/articles/category";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getArticles } from "@/lib/utils/markdown";
+import { getFolderChildNames } from "@/lib/utils/system";
 import type { ArticleCategory } from "@/types/articles/category";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
@@ -30,6 +31,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       canonical: `/${locale}/articles/${category}`,
     },
   };
+}
+
+// Generate bottom-up static params
+export function generateStaticParams() {
+  const categories = getFolderChildNames("contents/articles");
+  return categories.map((category) => ({ category }));
 }
 
 export default async function Page({ params }: Props) {
