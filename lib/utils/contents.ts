@@ -1,5 +1,6 @@
 import { ContentMetadataSchema, type Reference } from "@/types/content";
 import type { ContentMetadata } from "@/types/content";
+import type { Locale } from "next-intl";
 import type { ComponentType } from "react";
 
 /**
@@ -8,7 +9,10 @@ import type { ComponentType } from "react";
  * @param path - The path to the content file.
  * @returns The content metadata and component.
  */
-export async function getContent(path: string): Promise<{
+export async function getContent(
+  locale: Locale,
+  path: string
+): Promise<{
   metadata: ContentMetadata;
   default: ComponentType<unknown>;
 } | null> {
@@ -18,7 +22,7 @@ export async function getContent(path: string): Promise<{
 
     // Create a dynamic import path that works reliably with Next.js
     // Using a relative path from the location of this file (lib/utils)
-    const contentModule = await import(`@/contents/${cleanPath}`);
+    const contentModule = await import(`@/contents/${cleanPath}/${locale}.mdx`);
 
     const parsedMetadata = ContentMetadataSchema.parse(contentModule.metadata);
 

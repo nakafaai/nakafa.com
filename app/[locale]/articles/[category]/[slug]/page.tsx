@@ -31,7 +31,7 @@ export async function generateMetadata({
 
   const FILE_PATH = getSlugPath(category, slug);
 
-  const content = await getContent(`${FILE_PATH}/${locale}.mdx`);
+  const content = await getContent(locale, FILE_PATH);
 
   const image = {
     url: getOgUrl(locale, FILE_PATH),
@@ -89,7 +89,7 @@ export default async function Page({ params }: Props) {
   try {
     // Get the file, headings
     const [content, references, headings] = await Promise.all([
-      getContent(`${FILE_PATH}/${locale}.mdx`),
+      getContent(locale, FILE_PATH),
       getReferences(FILE_PATH),
       getRawContent(`${FILE_PATH}/${locale}.mdx`).then(getHeadings),
     ]);

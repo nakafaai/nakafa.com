@@ -48,7 +48,7 @@ export async function generateMetadata({
 
   const FILE_PATH = getSlugPath(category, grade, material, slug);
 
-  const content = await getContent(FILE_PATH);
+  const content = await getContent(locale, FILE_PATH);
 
   const image = {
     url: getOgUrl(locale, FILE_PATH),
@@ -72,7 +72,8 @@ export async function generateMetadata({
   const { metadata } = content;
 
   return {
-    title: `${metadata.title} - ${metadata.subject}`,
+    title: metadata.title,
+    description: metadata.description ?? metadata.subject,
     alternates: {
       canonical: `/${locale}${FILE_PATH}`,
     },
@@ -109,7 +110,7 @@ export default async function Page({ params }: Props) {
     const FILE_PATH = getSlugPath(category, grade, material, slug);
 
     const [content, headings, pagination] = await Promise.all([
-      getContent(`${FILE_PATH}/${locale}.mdx`),
+      getContent(locale, FILE_PATH),
       getRawContent(`${FILE_PATH}/${locale}.mdx`).then(getHeadings),
       getMaterials(materialPath, locale).then((materials) =>
         getMaterialsPagination(FILE_PATH, materials)
