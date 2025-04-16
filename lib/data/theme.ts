@@ -15,6 +15,7 @@ import {
   SunIcon,
   SunsetIcon,
   TvIcon,
+  WindIcon,
 } from "lucide-react";
 
 export const themes = [
@@ -82,5 +83,9 @@ export const themes = [
   {
     value: "tangerine",
     icon: CitrusIcon,
+  },
+  {
+    value: "windy",
+    icon: WindIcon,
   },
 ] as const;
