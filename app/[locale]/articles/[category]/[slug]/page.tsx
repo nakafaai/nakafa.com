@@ -5,6 +5,7 @@ import {
   LayoutArticleHeader,
 } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
+import { removeLeadingSlash } from "@/lib/utils";
 import { getCategoryIcon } from "@/lib/utils/articles/category";
 import { getSlugPath } from "@/lib/utils/articles/slug";
 import { getContent } from "@/lib/utils/contents";
@@ -33,7 +34,7 @@ export async function generateMetadata({
   const content = await getContent(`${FILE_PATH}/${locale}.mdx`);
 
   const image = {
-    url: ["/og", FILE_PATH, "image.png"].join("/"),
+    url: ["/og", removeLeadingSlash(FILE_PATH), "image.png"].join("/"),
     width: 1200,
     height: 630,
   };

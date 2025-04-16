@@ -8,6 +8,7 @@ import {
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
 import type { ParsedHeading } from "@/components/shared/sidebar-tree";
+import { removeLeadingSlash } from "@/lib/utils";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getGradePath } from "@/lib/utils/subject/grade";
 import {
@@ -45,7 +46,7 @@ export async function generateMetadata({
   const FILE_PATH = getMaterialPath(category, grade, material);
 
   const image = {
-    url: ["/og", FILE_PATH, "image.png"].join("/"),
+    url: ["/og", removeLeadingSlash(FILE_PATH), "image.png"].join("/"),
     width: 1200,
     height: 630,
   };

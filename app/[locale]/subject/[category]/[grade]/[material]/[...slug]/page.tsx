@@ -6,6 +6,7 @@ import {
   LayoutMaterialPagination,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
+import { removeLeadingSlash } from "@/lib/utils";
 import { getContent } from "@/lib/utils/contents";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getHeadings } from "@/lib/utils/markdown";
@@ -50,7 +51,7 @@ export async function generateMetadata({
   const content = await getContent(FILE_PATH);
 
   const image = {
-    url: ["/og", FILE_PATH, "image.png"].join("/"),
+    url: ["/og", removeLeadingSlash(FILE_PATH), "image.png"].join("/"),
     width: 1200,
     height: 630,
   };
@@ -77,6 +78,10 @@ export async function generateMetadata({
     },
     authors: metadata.authors,
     category: t(material),
+    openGraph: {
+      url: `/${locale}${FILE_PATH}`,
+      images: [image],
+    },
   };
 }
 
