@@ -1,0 +1,122 @@
+import { VectorChart } from "../../_shared/vector-chart";
+
+export const metadata = {
+  title: "Konsep Vektor",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/08/2025",
+  subject: "Vektor dan Operasinya",
+};
+
+## Apa Itu Vektor?
+
+Untuk memahami vektor, coba bayangkan sebuah peta cuaca yang menunjukkan arah dan kecepatan angin di berbagai lokasi. Di peta seperti itu, seringkali digambarkan anak panah. Anak panah ini menunjukkan **arah** hembusan angin dan **seberapa kencang** angin itu bertiup (biasanya ditunjukkan oleh panjang atau ketebalan panahnya).
+
+Dalam matematika, besaran yang punya **nilai (besar)** sekaligus **arah** seperti ini disebut **vektor**. Jadi, kecepatan dan arah angin pada peta cuaca adalah contoh bagus dari vektor. Panjang panah mewakili _besar_ kecepatan angin (misalnya 30 km/jam), dan arah panah menunjukkan _arah_ hembusannya.
+
+## Menggambar dan Menulis Vektor
+
+Vektor biasanya digambarkan sebagai ruas garis berarah (anak panah).
+
+<VectorChart
+  title="Grafik Vektor"
+  description="Vektor berada di bidang koordinat kartesius dengan x horizontal dan y vertikal."
+  vectors={[
+    {
+      id: "vector_1",
+      name: "Vektor 1",
+      points: [
+        { x: 0, y: 0 },
+        { x: 6, y: 8 },
+      ],
+    },
+    {
+      id: "vector_2",
+      name: "Vektor 2",
+      points: [
+        { x: 1, y: 1 },
+        { x: 5, y: 2 },
+      ],
+      direction: "backward",
+    },
+    {
+      id: "vector_3",
+      name: "Vektor 3",
+      points: [
+        { x: 2, y: 0 },
+        { x: 4, y: 7 },
+      ],
+      direction: "backward",
+    },
+  ]}
+/>
+
+- **Vektor 1**: Arah vektor dari titik <InlineMath math="(0, 0)" /> ke titik <InlineMath math="(6, 8)" />
+- **Vektor 2**: Arah vektor dari titik <InlineMath math="(5, 2)" /> ke titik <InlineMath math="(1, 1)" />
+- **Vektor 3**: Arah vektor dari titik <InlineMath math="(4, 7)" /> ke titik <InlineMath math="(2, 0)" />
+
+### Komponen Penting Vektor
+
+1.  **Titik Pangkal (Initial Point):** Titik awal vektor.
+2.  **Titik Ujung (Terminal Point):** Titik akhir vektor, ditandai dengan mata panah.
+3.  **Besar (Magnitude):** Panjang anak panah, melambangkan nilai atau ukuran vektor. Sering disebut juga _panjang vektor_. Panjang vektor <InlineMath math="\overrightarrow{AB}" /> dinotasikan sebagai <InlineMath math="|\overrightarrow{AB}|" />.
+4.  **Arah (Direction):** Arah yang ditunjuk oleh mata panah.
+
+### Notasi Vektor
+
+Ada beberapa cara menuliskan vektor:
+
+1.  **Dua Huruf Kapital dengan Panah di Atas:** Menunjukkan titik pangkal dan titik ujung. Contoh: <InlineMath math="\overrightarrow{AB}" />, artinya vektor dari titik A ke titik B.
+2.  **Satu Huruf Kecil dengan Panah di Atas:** Contoh: <InlineMath math="\vec{a}" />.
+3.  **Huruf Dicetak Tebal:** Contoh: **a** atau **AB**.
+
+## Latihan
+
+Apakah bentuk-bentuk di bawah ini merupakan vektor? Mengapa?
+
+<VectorChart
+  title="Bidang Koordinat Kartesius"
+  description="Sumbu x horizontal dan sumbu y vertikal."
+  vectors={[
+    {
+      id: "bentuk_1",
+      name: "Bentuk 1",
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 9 },
+        { x: 3, y: 4 },
+        { x: 6, y: 8 },
+      ],
+    },
+    {
+      id: "bentuk_2",
+      name: "Bentuk 2",
+      points: [
+        { x: 1, y: 1 },
+        { x: 2, y: 6 },
+        { x: 5, y: 2 },
+      ],
+      direction: "backward",
+    },
+    {
+      id: "bentuk_3",
+      name: "Bentuk 3",
+      points: [
+        { x: 2, y: 0 },
+        { x: 4, y: 7 },
+      ],
+      direction: "both",
+    },
+  ]}
+/>
+
+Bentuk-bentuk ini **bukan merupakan vektor** karena:
+
+1. **Bentuk 1**: karena garisnya lengkung, sedangkan vektor harus digambarkan dengan garis lurus.
+2. **Bentuk 2**: karena garisnya lebih dari satu garis lurus, sedangkan vektor harus digambarkan dengan satu garis lurus tunggal.
+3. **Bentuk 3**: karena garisnya mempunyai dua arah (ditunjukkan dengan panah di kedua ujungnya), sedangkan vektor hanya memiliki satu arah yang jelas.
+
+Vektor yang valid dalam matematika harus memiliki ciri-ciri:
+
+- Berupa garis lurus
+- Memiliki satu arah yang ditunjukkan oleh panah
+- Terdiri dari satu garis lurus tunggal (tidak patah atau berliku)

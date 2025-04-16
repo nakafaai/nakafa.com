@@ -27,7 +27,7 @@ The name "Nakafa" represents our commitment to creating a platform where people 
 ## Features
 
 - **Multilingual Support**: Content available in multiple languages
-- **Educational Content**: Organized by educational levels (Elementary, Junior High, Senior High, University)
+- **Educational Content**: Organized by educational levels (Elementary, Middle School, High School, University)
 - **Articles**: Curated articles on various topics including politics, etc.
 - **Modern Interface**: Clean, accessible, and responsive design
 - **Full-Text Search**: Easily find the content you need

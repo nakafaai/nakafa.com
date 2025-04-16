@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Perbedaan Deret Aritmetika dan Geometri",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/08/2025",
+  subject: "Barisan dan Deret",
+};
+
+## Deret Aritmetika
+
+**Konsep dasar:**
+
+Deret aritmetika adalah **penjumlahan** suku-suku dari suatu **barisan aritmetika**. Ingat, barisan aritmetika itu yang punya **selisih (beda)** tetap antar sukunya (<InlineMath math="b" />).
+
+Jadi, kita menjumlahkan suku-suku yang polanya: <InlineMath math="a, a+b, a+2b, a+3b, \dots" />.
+
+Jumlah <InlineMath math="n" /> suku pertama (<InlineMath math="S_n" />) dari deret aritmetika bisa dihitung dengan rumus:
+
+<BlockMath math="S_n = \frac{n}{2}(2a + (n-1)b)" />
+
+atau
+
+<BlockMath math="S_n = \frac{n}{2}(a + U_n)" />
+
+Di mana <InlineMath math="a" /> adalah suku pertama dan <InlineMath math="U_n" /> adalah suku ke-<InlineMath math="n" />.
+
+**Analogi sederhana:**
+
+Bayangkan kamu menumpuk batu bata. Lapisan pertama 1 bata, lapisan kedua 3 bata, lapisan ketiga 5 bata, dan seterusnya (beda = 2). Deret aritmetika adalah **total** jumlah batu bata yang kamu perlukan untuk membuat tumpukan setinggi <InlineMath math="n" /> lapis.
+
+## Deret Geometri
+
+**Konsep dasar:**
+
+Deret geometri adalah **penjumlahan** suku-suku dari suatu **barisan geometri**. Ingat, barisan geometri itu yang punya **rasio** tetap antar sukunya (<InlineMath math="r" />).
+
+Jadi, kita menjumlahkan suku-suku yang polanya: <InlineMath math="a, ar, ar^2, ar^3, \dots" />.
+
+Jumlah <InlineMath math="n" /> suku pertama (<InlineMath math="S_n" />) dari deret geometri bisa dihitung dengan rumus:
+
+<BlockMath math="S_n = \frac{a(r^n - 1)}{r-1}" />
+
+untuk <InlineMath math="r \neq 1" />, di mana <InlineMath math="a" /> adalah suku pertama dan <InlineMath math="r" /> adalah rasio.
+
+**Analogi sederhana:**
+
+Kembali ke contoh bakteri yang membelah diri (1 jadi 2, 2 jadi 4, dst., rasio = 2). Deret geometri adalah **total** jumlah bakteri setelah <InlineMath math="n" /> kali pembelahan. Misalnya, total bakteri setelah 3 kali pembelahan adalah <InlineMath math="1 + 2 + 4 = 7" />.
+
+## Perbedaan Utama
+
+| Fitur                                      | Deret Aritmetika                                                   | Deret Geometri                                                    |
+| ------------------------------------------ | ------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| **Dasar**                                  | Penjumlahan suku barisan aritmetika (beda <InlineMath math="b" />) | Penjumlahan suku barisan geometri (rasio <InlineMath math="r" />) |
+| **Rumus Jumlah <InlineMath math="S_n" />** | <InlineMath math="\frac{n}{2}(2a + (n-1)b)" />                     | <InlineMath math="\frac{a(r^n - 1)}{r-1}" />                      |
+| **Pola**                                   | Pertambahan/pengurangan tetap                                      | Perkalian/pembagian tetap                                         |

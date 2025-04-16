@@ -1,0 +1,166 @@
+import { FunctionChart } from "../../_shared/function-chart";
+
+export const metadata = {
+  title: "Peluruhan Eksponen",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/04/2025",
+  subject: "Eksponen dan Logaritma",
+};
+
+## Definisi Peluruhan Eksponen
+
+Fungsi eksponen tidak hanya menggambarkan pertumbuhan yang signifikan, tetapi juga menggambarkan penurunan secara konsisten pada periode waktu tertentu. Penurunan yang konsisten ini disebut **peluruhan eksponen**.
+
+Peluruhan eksponen adalah proses pengurangan nilai secara konsisten dengan laju tertentu. Secara matematis, fungsi peluruhan eksponen dapat ditulis sebagai:
+
+<BlockMath math="f(x) = n \times a^x" />
+
+Dengan ketentuan:
+
+- <InlineMath math="0 < a < 1" /> (basis)
+- <InlineMath math="n" /> adalah bilangan real tak nol (koefisien)
+- <InlineMath math="x" /> adalah sebarang bilangan real (variabel)
+
+Ketika <InlineMath math="0 < a < 1" />, maka nilai <InlineMath math="a^x" /> akan semakin kecil seiring bertambahnya nilai <InlineMath math="x" />, sehingga grafik fungsi akan menurun.
+
+## Karakteristik Grafik Peluruhan Eksponen
+
+Grafik fungsi peluruhan eksponen menunjukkan penurunan yang semakin lambat. Pada awalnya, nilai fungsi menurun dengan cepat, kemudian penurunannya semakin melambat mendekati nol tapi tidak pernah mencapai nol.
+
+Berbeda dengan grafik pertumbuhan eksponen yang naik semakin cepat, grafik peluruhan eksponen turun dengan laju yang semakin lambat.
+
+Grafik dibawah ini menunjukkan grafik peluruhan eksponen dengan basis <InlineMath math="a = 0.5" /> dan koefisien <InlineMath math="n = 50" />, yang dapat dinyatakan sebagai:
+
+<BlockMath math="f(x) = 50 \times \left(\frac{1}{2}\right)^x" />
+
+<div className="mt-4">
+  <FunctionChart
+    a={0.5}
+    p={50}
+    title="Grafik Peluruhan Eksponen"
+    description="Grafik turun dengan laju yang semakin lambat."
+  />
+</div>
+
+## Aplikasi Peluruhan Eksponen
+
+Peluruhan eksponen memiliki banyak aplikasi dalam kehidupan nyata. Berikut adalah beberapa contoh:
+
+### Eliminasi Obat dalam Tubuh
+
+Seorang pasien menerima dosis obat penahan rasa sakit sebanyak 50 mikrogram. Setiap jam, setengah dari dosis obat yang tersisa akan luruh dan dikeluarkan dari tubuh.
+
+Jika kita modelkan jumlah obat yang tersisa setelah <InlineMath math="x" /> jam sebagai <InlineMath math="f(x)" />, maka:
+
+<BlockMath math="f(x) = 50 \times \left(\frac{1}{2}\right)^x" />
+
+Perhitungan dosis yang tersisa:
+
+- Dosis awal: <InlineMath math="f(0) = 50" /> mikrogram
+- Setelah 1 jam: <InlineMath math="f(1) = 50 \times \frac{1}{2} = 25" /> mikrogram
+- Setelah 2 jam: <InlineMath math="f(2) = 25 \times \frac{1}{2} = 12,5" /> mikrogram
+- Setelah 3 jam: <InlineMath math="f(3) = 12,5 \times \frac{1}{2} = 6,25" /> mikrogram
+
+Dengan pola ini, kita dapat menghitung bahwa setelah 9 jam, jumlah obat dalam tubuh pasien akan kurang dari 0,1 mikrogram.
+
+### Peluruhan Radioaktif
+
+Zat radioaktif meluruh dengan laju tertentu yang biasa dinyatakan dalam persentase per satuan waktu. Jika kita memiliki massa awal <InlineMath math="M_0" /> dan laju peluruhan <InlineMath math="r" /> per satuan waktu, maka massa yang tersisa setelah waktu <InlineMath math="t" /> dapat dinyatakan sebagai:
+
+<BlockMath math="M(t) = M_0 \times (1-r)^t" />
+
+### Pantulan Bola
+
+Ketika bola dijatuhkan, setiap kali memantul, ketinggian pantulan mencapai sebagian dari ketinggian sebelumnya. Jika tinggi awal adalah <InlineMath math="h_0" /> dan setiap pantulan mencapai proporsi <InlineMath math="p" /> dari ketinggian sebelumnya, maka tinggi pantulan ke-<InlineMath math="n" /> adalah:
+
+<BlockMath math="h_n = h_0 \times p^n" />
+
+Misalnya, jika bola basket dijatuhkan dari ketinggian 3 meter dan setiap pantulan mencapai <InlineMath math="\frac{3}{5}" /> dari tinggi sebelumnya, maka:
+
+- Tinggi awal: <InlineMath math="h_0 = 300" /> cm
+- Pantulan pertama: <InlineMath math="h_1 = 300 \times \frac{3}{5} = 180" /> cm
+- Pantulan kedua: <InlineMath math="h_2 = 180 \times \frac{3}{5} = 108" /> cm
+- Pantulan ketiga: <InlineMath math="h_3 = 108 \times \frac{3}{5} = 64,8" /> cm
+
+Fungsi tinggi pantulan dapat dinyatakan sebagai:
+
+<BlockMath math="h(n) = 300 \times \left(\frac{3}{5}\right)^n" />
+
+Bola akhirnya akan berhenti memantul ketika ketinggian pantulan menjadi sangat kecil, sekitar 0,65 cm pada pantulan ke-12.
+
+## Latihan
+
+Berikut adalah beberapa latihan soal untuk memperdalam pemahaman tentang peluruhan eksponen:
+
+1. Dua ratus mg zat disuntikkan ke dalam tubuh pasien yang menderita penyakit kanker paru-paru. Zat tersebut dikeluarkan dari tubuh melalui ginjal setiap jam. Jika setiap 1 jam 50% zat tersebut dikeluarkan dari tubuh pasien, berapa mg zat yang masih tersisa di dalam tubuh pasien setelah 5 jam?
+
+2. Massa suatu zat radioaktif adalah 0,3 kg pada pukul 10 pagi. Tingkat peluruhan zat radioaktif tersebut adalah 15% setiap jam. Berapakah jumlah zat radioaktif tersebut 8 jam kemudian?
+
+3. Sebuah bola basket dijatuhkan dari ketinggian 3 meter. Bola tersebut menyentuh tanah dan kemudian melambung kembali setinggi <InlineMath math="\frac{3}{5}" /> dari tinggi sebelumnya. Bola tersebut terpantul dan melambung kembali dengan ketinggian yang sama sampai akhirnya benar-benar berhenti melambung dan jatuh ke tanah.
+   a. Gambarkan grafik fungsi perubahan ketinggian lambungan bola hingga akhirnya menyentuh tanah.
+   b. Pada lambungan ke berapa, bola akhirnya berhenti melambung?
+
+### Kunci Jawaban
+
+1. Misalkan <InlineMath math="f(x)" /> adalah jumlah zat yang tersisa setelah <InlineMath math="x" /> jam. Kita memiliki:
+
+   <BlockMath math="f(x) = 200 \times \left(\frac{1}{2}\right)^x" />
+
+   Setelah 5 jam:
+
+   <BlockMath math="f(5) = 200 \times \left(\frac{1}{2}\right)^5 = 200 \times 0,03125 = 6,25" />
+
+   Jadi, zat yang tersisa setelah 5 jam adalah 6,25 mg.
+
+2. Misalkan <InlineMath math="f(x)" /> adalah massa zat radioaktif setelah <InlineMath math="x" /> jam. Kita memiliki:
+
+   <BlockMath math="f(x) = 0,3 \times (0,85)^x" />
+
+   Setelah 8 jam:
+
+   <BlockMath math="f(8) = 0,3 \times (0,85)^8 \approx 0,083 \text{ kg} \text{ atau sekitar } 83 \text{ gram}." />
+
+3. a. Fungsi tinggi pantulan adalah:
+
+   <BlockMath math="h(n) = 300 \times \left(\frac{3}{5}\right)^n" />
+
+   <div className="mt-4">
+     <FunctionChart
+       a={3 / 5}
+       p={300}
+       title="Grafik Peluruhan Eksponen"
+       description="Grafik turun dengan laju yang semakin lambat."
+     />
+   </div>
+
+   b. Bola akan berhenti melambung ketika tingginya mendekati nol. Berdasarkan perhitungan, pada pantulan ke-12, tinggi bola sudah mencapai 0,653035 cm, yang cukup kecil untuk menganggap bola berhenti melambung. Namun, jika mempertimbangkan massa bola, kemungkinan bola sudah berhenti melambung pada pantulan ke-10, saat tingginya sekitar 1,8 cm.
+
+   | Pantulan                     | Tinggi                         |
+   | ---------------------------- | ------------------------------ |
+   | <InlineMath math="n = 0" />  | <InlineMath math="300" />      |
+   | <InlineMath math="n = 1" />  | <InlineMath math="180" />      |
+   | <InlineMath math="n = 2" />  | <InlineMath math="108" />      |
+   | <InlineMath math="n = 3" />  | <InlineMath math="64,8" />     |
+   | <InlineMath math="n = 4" />  | <InlineMath math="38,88" />    |
+   | <InlineMath math="n = 5" />  | <InlineMath math="23,328" />   |
+   | <InlineMath math="n = 6" />  | <InlineMath math="13,9968" />  |
+   | <InlineMath math="n = 7" />  | <InlineMath math="8,39808" />  |
+   | <InlineMath math="n = 8" />  | <InlineMath math="5,038848" /> |
+   | <InlineMath math="n = 9" />  | <InlineMath math="3,023309" /> |
+   | <InlineMath math="n = 10" /> | <InlineMath math="1,813985" /> |
+   | <InlineMath math="n = 11" /> | <InlineMath math="1,088391" /> |
+   | <InlineMath math="n = 12" /> | <InlineMath math="0,653035" /> |
+   | <InlineMath math="n = 13" /> | <InlineMath math="0,391821" /> |
+   | <InlineMath math="n = 14" /> | <InlineMath math="0,235092" /> |
+   | <InlineMath math="n = 15" /> | <InlineMath math="0,141055" /> |
+
+## Penerapan Konsep dalam Kehidupan
+
+Dalam pemodelan matematika, peluruhan eksponen digunakan untuk memodelkan berbagai fenomena seperti:
+
+- Peluruhan radioaktif
+- Pendinginan benda panas
+- Penurunan nilai barang (depresiasi)
+- Peluruhan obat dalam tubuh
+
+Selain aplikasi ilmiah, konsep eksponensial juga dapat ditemukan dalam konteks sosial. Misalnya, hubungan antara sedekah (memberi) dan rezeki (menerima) dapat digambarkan dengan fungsi pertumbuhan eksponensial. Semakin banyak kita berbagi kepada orang lain yang membutuhkan, semakin banyak kebaikan yang akan kembali, dengan laju yang semakin cepat.

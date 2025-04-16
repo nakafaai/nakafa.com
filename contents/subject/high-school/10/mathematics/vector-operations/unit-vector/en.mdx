@@ -1,0 +1,151 @@
+import { Vector3d } from "../../_shared/vector-3d";
+
+export const metadata = {
+  title: "Unit Vector from a Vector",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/12/2025",
+  subject: "Vector and Operations",
+};
+
+## Definition of Unit Vector
+
+A unit vector is a vector that has a length or magnitude equal to 1 unit. Unit vectors are used to indicate the direction of a vector in space. If we have a vector, we can obtain a unit vector with the same direction by dividing the vector by its length.
+
+## Basic Concept
+
+Consider vector <InlineMath math="\overrightarrow{PQ}" /> in a Cartesian coordinate system. The unit vector of <InlineMath math="\overrightarrow{PQ}" /> is defined as vector <InlineMath math="\overrightarrow{PQ}" /> divided by its length.
+
+<BlockMath math="\vec{a}_{PQ} = \frac{\overrightarrow{PQ}}{|\overrightarrow{PQ}|}" />
+
+Where <InlineMath math="|\overrightarrow{PQ}|" /> is the length or magnitude of vector <InlineMath math="\overrightarrow{PQ}" />.
+
+A unit vector always points in the same direction as the original vector but has its length normalized to 1 unit.
+
+<Vector3d
+  title="Vector and Unit Vector"
+  description="Visualization of the original vector (purple) and the unit vector (yellow) that have the same direction but different lengths."
+  vectors={[
+    {
+      from: [0, 0, 0],
+      to: [3, 4, 0],
+      color: "#a855f7", // purple-500
+      label: "v",
+      labelPosition: "end",
+    },
+    {
+      from: [0, 0, 0],
+      to: [0.6, 0.8, 0],
+      color: "#f59e0b", // amber-500
+      label: "v̂",
+      labelPosition: "end",
+    },
+  ]}
+  cameraPosition={[6, 6, 8]}
+/>
+
+## Calculating a Unit Vector
+
+### Calculation Steps
+
+To determine the unit vector of a given vector, follow these steps:
+
+1. Identify the original vector
+2. Calculate the length of the vector
+3. Divide the vector by its length
+
+### Example Application
+
+Let's say we have vector <InlineMath math="\vec{v} = (3, 6, 4)" />
+
+First step, we calculate the length of the vector:
+
+<BlockMath math="|\vec{v}| = \sqrt{3^2 + 6^2 + 4^2} = \sqrt{9 + 36 + 16} = \sqrt{61}" />
+
+Second step, we divide the vector by its length:
+
+<BlockMath math="\hat{v} = \frac{\vec{v}}{|\vec{v}|} = \frac{(3, 6, 4)}{\sqrt{61}}" />
+
+Therefore, we get:
+
+<BlockMath math="\hat{v} = \left(\frac{3}{\sqrt{61}}, \frac{6}{\sqrt{61}}, \frac{4}{\sqrt{61}}\right)" />
+
+<div className="mt-4">
+  <Vector3d
+    title="Example of Unit Vector in 3D Space"
+    description="Visualization of vector v(3,6,4) and its unit vector v̂ pointing in the same direction."
+    vectors={[
+      {
+        from: [0, 0, 0],
+        to: [3, 6, 4],
+        color: "#ec4899", // pink-500
+        label: "v",
+        labelPosition: "end",
+      },
+      {
+        from: [0, 0, 0],
+        to: [3 / Math.sqrt(61), 6 / Math.sqrt(61), 4 / Math.sqrt(61)],
+        color: "#14b8a6", // teal-500
+        label: "v̂",
+        labelPosition: "end",
+      },
+    ]}
+    cameraPosition={[4, 8, 8]}
+  />
+</div>
+
+## Properties of Unit Vectors
+
+### Length of a Unit Vector
+
+A unit vector always has a length equal to 1. This can be proven by calculating the length of the unit vector:
+
+<BlockMath math="|\hat{v}| = \sqrt{\left(\frac{3}{\sqrt{61}}\right)^2 + \left(\frac{6}{\sqrt{61}}\right)^2 + \left(\frac{4}{\sqrt{61}}\right)^2} = \sqrt{\frac{9 + 36 + 16}{61}} = \sqrt{\frac{61}{61}} = 1" />
+
+### Unit Vectors on Coordinate Axes
+
+In a three-dimensional coordinate system, there are three standard unit vectors that are parallel to each coordinate axis:
+
+- <InlineMath math="\hat{\imath}" /> is the unit vector in the direction of the x-axis
+- <InlineMath math="\hat{\jmath}" /> is the unit vector in the direction of the y-axis
+- <InlineMath math="\hat{k}" /> is the unit vector in the direction of the z-axis
+
+Any vector can be expressed as a linear combination of these three unit vectors.
+
+<Vector3d
+  title="Standard Unit Vectors"
+  description="Standard unit vectors on the coordinate axes."
+  vectors={[
+    {
+      from: [0, 0, 0],
+      to: [1, 0, 0],
+      color: "#f43f5e", // rose-500
+      label: "î",
+      labelPosition: "end",
+    },
+    {
+      from: [0, 0, 0],
+      to: [0, 1, 0],
+      color: "#8b5cf6", // violet-500
+      label: "ĵ",
+      labelPosition: "end",
+    },
+    {
+      from: [0, 0, 0],
+      to: [0, 0, 1],
+      color: "#f97316", // orange-500
+      label: "k̂",
+      labelPosition: "end",
+    },
+  ]}
+  cameraPosition={[3, 3, 3]}
+/>
+
+## Applications of Unit Vectors
+
+### Indicating Direction
+
+Unit vectors are very useful for indicating direction without regard to magnitude or length. In physics, for example, unit vectors are often used to indicate the direction of force, velocity, or acceleration.
+
+### Physics Calculations
+
+In physics, when we want to decompose a vector into its components, unit vectors are very helpful. For instance, a force can be decomposed into components along the x, y, and z axes using unit vectors.

@@ -43,44 +43,44 @@ export const subjectAll = [
     ],
   },
   {
-    title: "junior-high-school",
+    title: "middle-school",
     icon: NotebookIcon,
     items: [
       {
         title: "grade",
         value: 7,
-        href: "/subject/junior-high-school/7",
+        href: "/subject/middle-school/7",
       },
       {
         title: "grade",
         value: 8,
-        href: "/subject/junior-high-school/8",
+        href: "/subject/middle-school/8",
       },
       {
         title: "grade",
         value: 9,
-        href: "/subject/junior-high-school/9",
+        href: "/subject/middle-school/9",
       },
     ],
   },
   {
-    title: "senior-high-school",
+    title: "high-school",
     icon: LibraryIcon,
     items: [
       {
         title: "grade",
         value: 10,
-        href: "/subject/senior-high-school/10",
+        href: "/subject/high-school/10",
       },
       {
         title: "grade",
         value: 11,
-        href: "/subject/senior-high-school/11",
+        href: "/subject/high-school/11",
       },
       {
         title: "grade",
         value: 12,
-        href: "/subject/senior-high-school/12",
+        href: "/subject/high-school/12",
       },
     ],
   },

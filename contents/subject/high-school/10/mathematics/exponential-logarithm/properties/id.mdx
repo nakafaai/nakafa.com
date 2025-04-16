@@ -1,0 +1,110 @@
+export const metadata = {
+  title: "Sifat Eksponen",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/01/2025",
+  subject: "Eksponen dan Logaritma",
+};
+
+## Tabel Nilai Eksponen untuk Basis 2
+
+| <InlineMath math="2^n" />    | Hasil Perpangkatan |
+| ---------------------------- | ------------------ |
+| <InlineMath math="2^1" />    | 2                  |
+| <InlineMath math="2^2" />    | 4                  |
+| <InlineMath math="2^3" />    | 8                  |
+| <InlineMath math="2^4" />    | 16                 |
+| <InlineMath math="2^5" />    | 32                 |
+| <InlineMath math="2^6" />    | 64                 |
+| <InlineMath math="2^7" />    | 128                |
+| <InlineMath math="2^8" />    | 256                |
+| <InlineMath math="2^9" />    | 512                |
+| <InlineMath math="2^{10}" /> | 1024               |
+
+## Sifat-Sifat Eksponen
+
+Terdapat beberapa sifat eksponen yang perlu dipahami:
+
+1. <InlineMath math="a^m \cdot a^n = a^{m+n}" />, dengan <InlineMath math="a \neq 0, m, n" /> bilangan
+   bulat
+
+   Ini berarti perkalian dua eksponen dengan basis sama menghasilkan eksponen baru dengan pangkat yang dijumlahkan.
+
+2. <InlineMath math="\frac{a^m}{a^n} = a^{m-n}" />, dengan <InlineMath math="a \neq 0, m, n" /> bilangan
+   bulat
+
+   Pembagian dua eksponen dengan basis sama menghasilkan eksponen baru dengan pangkat yang dikurangkan.
+
+3. <InlineMath math="(a^m)^n = a^{m \times n}" />, dengan <InlineMath math="a \neq 0, m, n" /> bilangan
+   bulat
+
+   Eksponen dari eksponen berarti pangkat dikali dengan pangkat luar.
+
+4. <InlineMath math="(ab)^m = a^m \times b^m" />, dengan <InlineMath math="a, b \neq 0" />
+   , dan <InlineMath math="m" /> bilangan bulat
+
+   Eksponen dari perkalian sama dengan perkalian masing-masing basis berpangkat sama.
+
+5. <InlineMath math="\left(\frac{a}{b}\right)^m = \frac{a^m}{b^m}" />, dengan <InlineMath math="b \neq 0" />
+   , dan <InlineMath math="m" /> bilangan bulat
+
+   Eksponen dari pembagian sama dengan pembagian masing-masing basis berpangkat sama.
+
+6. <InlineMath math="(a^\frac{m}{n})^p \cdot (a^\frac{p}{n}) = (a)^\frac{m+p}{n}" />
+   , dengan <InlineMath math="a > 0" />, <InlineMath math="\frac{m}{n}" /> dan <InlineMath math="\frac{p}{n}" /> bilangan
+   rasional dengan <InlineMath math="n \neq 0" />
+
+7. <InlineMath math="(a^\frac{m}{n}) \cdot (a^\frac{p}{q}) = (a)^\frac{m \cdot q + p \cdot n}{n \cdot q}" />
+   , dengan <InlineMath math="a > 0" />, <InlineMath math="\frac{m}{n}" /> dan <InlineMath math="\frac{p}{q}" /> bilangan
+   rasional dengan <InlineMath math="n, q \neq 0" />
+
+## Pentingnya Syarat pada Setiap Sifat
+
+Setiap sifat eksponen memiliki syarat tertentu:
+
+- Pada sifat 1, 2, dan 3, nilai <InlineMath math="a \neq 0" /> karena eksponen dengan basis 0 hanya terdefinisi untuk pangkat positif.
+- Pada sifat 4, nilai <InlineMath math="a, b \neq 0" /> untuk memastikan eksponen terdefinisi.
+- Pada sifat 5, nilai <InlineMath math="b \neq 0" /> untuk menghindari pembagian dengan nol.
+- Pada sifat 6 dan 7, nilai <InlineMath math="a > 0" /> karena eksponen rasional pada bilangan negatif dapat menghasilkan bilangan kompleks.
+
+Pemahaman sifat-sifat eksponen ini sangat penting sebagai dasar untuk pembelajaran matematika lanjutan, seperti logaritma, fungsi eksponen, dan kalkulus.
+
+## Contoh Penyelesaian
+
+1. **Sederhanakan <InlineMath math="\frac{2^5 \times 2^3}{2^2}" />**
+
+   <BlockMath math="\frac{2^5 \times 2^3}{2^2} = \frac{2^{5+3}}{2^2} = \frac{2^8}{2^2} = 2^{8-2} = 2^6 = 64" />
+
+2. **Sederhanakan <InlineMath math="2^2 \cdot 2^3" />**
+
+   <BlockMath math="2^2 \cdot 2^3 = 2^{2+3} = 2^5 = 32" />
+
+3. **Sederhanakan <InlineMath math="2^5 \cdot 2^2" />**
+
+   <BlockMath math="2^5 \cdot 2^2 = 2^{5+2} = 2^7 = 128" />
+
+4. **Sederhanakan <InlineMath math="2^3 \cdot 2^7" />**
+
+   <BlockMath math="2^3 \cdot 2^7 = 2^{3+7} = 2^{10} = 1024" />
+
+5. **Sederhanakan <InlineMath math="\frac{2^8}{2^6}" />**
+
+   <BlockMath math="\frac{2^8}{2^6} = 2^{8-6} = 2^2 = 4" />
+
+6. **Sederhanakan <InlineMath math="\frac{2^{10}}{2^3}" />**
+
+   <BlockMath math="\frac{2^{10}}{2^3} = 2^{10-3} = 2^7 = 128" />
+
+7. **Sederhanakan <InlineMath math="\frac{2^6}{2^4}" />**
+
+   <BlockMath math="\frac{2^6}{2^4} = 2^{6-4} = 2^2 = 4" />
+
+8. **Sederhanakan <InlineMath math="(2^3)^3" />**
+
+   <BlockMath math="(2^3)^3 = 2^{3 \times 3} = 2^9 = 512" />
+
+9. **Sederhanakan <InlineMath math="(2^4)^2" />**
+
+   <BlockMath math="(2^4)^2 = 2^{4 \times 2} = 2^8 = 256" />
+
+10. **Sederhanakan <InlineMath math="(2^2)^5" />**
+    <BlockMath math="(2^2)^5 = 2^{2 \times 5} = 2^{10} = 1024" />

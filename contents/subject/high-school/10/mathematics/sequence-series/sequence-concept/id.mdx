@@ -1,0 +1,109 @@
+import TableChairsAnimation from "./animation-table";
+
+export const metadata = {
+  title: "Konsep Barisan",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/05/2025",
+  subject: "Barisan dan Deret",
+};
+
+## Pengertian Barisan Bilangan
+
+Barisan bilangan adalah susunan bilangan yang mengikuti pola tertentu. Setiap bilangan dalam barisan disebut sebagai suku. Perhatikan beberapa notasi berikut:
+
+- Suku ke-1 dilambangkan dengan <InlineMath math="U_1" />
+- Suku ke-2 dilambangkan dengan <InlineMath math="U_2" />
+- Suku ke-3 dilambangkan dengan <InlineMath math="U_3" />
+- Suku ke-n dilambangkan dengan <InlineMath math="U_n" />
+
+Dengan mengetahui pola pada barisan, kita dapat menentukan suku-suku berikutnya dan bahkan menemukan suku ke-n menggunakan rumus umum.
+
+## Pola Bilangan dalam Kehidupan Sehari-hari
+
+### Eksplorasi Meja dan Kursi
+
+Mari kita perhatikan contoh pola bilangan yang terbentuk dari susunan meja dan kursi:
+
+<TableChairsAnimation
+  labels={{
+    title: "Pola Barisan Meja dan Kursi",
+    table: "Meja",
+    chair: "Kursi",
+  }}
+/>
+
+Ketika terdapat 1 meja berbentuk segi empat, dapat diletakkan 4 kursi di sekeliling meja tersebut.
+
+Jika 2 meja disatukan, maka dapat diletakkan 6 kursi di sekeliling meja gabungan tersebut.
+
+Kita dapat membuat tabel untuk mengamati polanya:
+
+| Banyak meja  | 1   | 2   | 3   | 4   | 5   | 6   |
+| ------------ | --- | --- | --- | --- | --- | --- |
+| Banyak kursi | 4   | 6   | 8   | 10  | 12  | 14  |
+
+Dari tabel di atas, kita dapat mengamati bahwa:
+
+- Saat ada 1 meja, terdapat 4 kursi
+- Saat ada 2 meja, terdapat 6 kursi
+- Saat ada 3 meja, terdapat 8 kursi
+
+Jika diamati, setiap penambahan 1 meja menghasilkan penambahan 2 kursi. Ini membentuk pola bilangan dengan rumus:
+
+<BlockMath math="U_n = 2n + 2" />
+
+Dimana:
+
+- <InlineMath math="U_n" /> adalah banyak kursi
+- <InlineMath math="n" /> adalah banyak meja
+
+## Aplikasi Konsep Barisan
+
+### Menentukan Jumlah Kursi dan Meja
+
+Dengan memahami pola barisan, kita dapat menjawab pertanyaan seperti:
+
+1. Jika terdapat 20 orang yang akan duduk di kursi, berapa meja yang perlu disatukan?
+
+Kita bisa menggunakan rumus <InlineMath math="U_n = 2n + 2" /> dimana <InlineMath math="U_n = 20" />, sehingga:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="20 = 2n + 2" />
+  <BlockMath math="18 = 2n" />
+  <BlockMath math="n = 9" />
+</div>
+
+Jadi, diperlukan 9 meja yang disatukan untuk menampung 20 orang.
+
+## Jenis-jenis Barisan
+
+Berdasarkan polanya, barisan bilangan dapat dibedakan menjadi beberapa jenis:
+
+### Barisan Aritmetika
+
+Barisan bilangan dimana selisih antara dua suku berurutan selalu tetap. Selisih ini disebut beda (<InlineMath math="b" />).
+
+Contoh: <InlineMath math="2, 4, 6, 8, 10, \ldots" /> Beda <InlineMath math="(b) = 2" />
+
+### Barisan Geometri
+
+Barisan bilangan dimana perbandingan (rasio) antara dua suku berurutan selalu tetap. Rasio ini disebut rasio (<InlineMath math="r" />).
+
+Contoh: <InlineMath math="2, 6, 18, 54, \ldots" /> Rasio <InlineMath math="(r) = 3" />
+
+### Barisan Lainnya
+
+Selain barisan aritmetika dan geometri, terdapat banyak jenis barisan lain seperti barisan Fibonacci, barisan kuadrat, barisan kubik, dan sebagainya.
+
+Contoh barisan Fibonacci: <InlineMath math="0, 1, 1, 2, 3, 5, 8, 13, \ldots" />
+
+## Menemukan Pola
+
+Untuk menentukan pola suatu barisan:
+
+1. Perhatikan selisih antar suku berurutan
+2. Cek apakah selisihnya tetap (barisan aritmetika)
+3. Jika tidak, cek apakah rasionya tetap (barisan geometri)
+4. Jika tidak keduanya, cek kemungkinan pola lainnya
+
+Dengan memahami konsep barisan, kita dapat menyelesaikan berbagai masalah matematika yang berhubungan dengan pola bilangan di kehidupan sehari-hari.

@@ -1,0 +1,81 @@
+import { VectorChart } from "../../_shared/vector-chart";
+import { Vector3d } from "../../_shared/vector-3d";
+
+export const metadata = {
+  title: "Two-Dimensional Vector",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/11/2025",
+  subject: "Vector and Operations",
+};
+
+## Two-Dimensional Vector Concept
+
+In the Cartesian coordinate system, each point on a plane can be represented by a pair of numbers <InlineMath math="(x, y)" />, where <InlineMath math="x" /> is the horizontal position and <InlineMath math="y" /> is the vertical position. The origin point is <InlineMath math="O(0, 0)" />.
+
+If we draw a straight line from the origin <InlineMath math="O" /> to another point, for example <InlineMath math="Q(x, y)" />, we get a **vector**. This vector is often written as <InlineMath math="\overrightarrow{OQ}" />. A vector has both **magnitude** (line length) and **direction** (indicated by the arrow).
+
+To simplify, we use **unit vectors**. Unit vectors have a length of 1 unit.
+
+- <InlineMath math="\mathbf{i}" /> is the unit vector in the positive <InlineMath math="x" />
+  -axis direction (horizontal).
+- <InlineMath math="\mathbf{j}" /> is the unit vector in the positive <InlineMath math="y" />
+  -axis direction (vertical).
+
+Vector <InlineMath math="\overrightarrow{OQ}" /> can be expressed as a combination of horizontal movement of <InlineMath math="x" /> and vertical movement of <InlineMath math="y" />. In unit vector form, we write:
+
+<BlockMath math="\overrightarrow{OQ} = x\mathbf{i} + y\mathbf{j}" />
+
+## Vector Components and Magnitude
+
+The values <InlineMath math="x" /> and <InlineMath math="y" /> in vector <InlineMath math="\overrightarrow{OQ} = x\mathbf{i} + y\mathbf{j}" /> are called the vector **components**.
+
+- <InlineMath math="x" /> is the **horizontal component**. It's like the shadow of
+  the vector on the <InlineMath math="x" />
+  -axis when illuminated from above.
+- <InlineMath math="y" /> is the **vertical component**. It's like the shadow of
+  the vector on the <InlineMath math="y" />
+  -axis when illuminated from the side.
+
+A vector with these two components is called a **two-dimensional vector**.
+
+The **length** or **magnitude** of vector <InlineMath math="\overrightarrow{OQ}" />, written as <InlineMath math="|\overrightarrow{OQ}|" />, is the distance from the origin point <InlineMath math="O" /> to the endpoint <InlineMath math="Q" />. If <InlineMath math="Q(x,y)" /> is the endpoint of the vector and <InlineMath math="R(x,0)" /> is the projection of point Q onto the <InlineMath math="x" />-axis, we can calculate it using the Pythagorean theorem on the right-angled triangle <InlineMath math="ORQ" />:
+
+<BlockMath math="|\overrightarrow{OQ}| = \sqrt{x^2 + y^2}" />
+
+## Two-Dimensional Vector Visualization
+
+Observe the following vector visualization to understand the concept of vectors in the Cartesian plane:
+
+<Vector3d
+  title="Vector in the Coordinate Plane"
+  description="Visualization of vector OQ = 4i + 3j in the Cartesian coordinate system"
+  vectors={[
+    {
+      from: [0, 0, 0],
+      to: [4, 3, 0],
+      color: "#00bc7d",
+      label: "Vector OQ",
+    },
+    {
+      from: [0, 0, 0],
+      to: [4, 0, 0],
+      color: "#00b8db",
+      label: "X Component",
+    },
+    {
+      from: [0, 0, 0],
+      to: [0, 3, 0],
+      color: "#efb100",
+      label: "Y Component",
+    },
+  ]}
+/>
+
+In this visualization, we don't use the <InlineMath math="z" />-axis because we're working in a two-dimensional plane.
+
+In the visualization above:
+
+- Vector <InlineMath math="\overrightarrow{OQ}" /> (light green) has initial point <InlineMath math="O(0,0)" /> and endpoint <InlineMath math="Q(4,3)" />
+- The <InlineMath math="x" />-component (light blue) is the projection of vector <InlineMath math="\overrightarrow{OQ}" /> on the <InlineMath math="x" />-axis, which is <InlineMath math="4\mathbf{i}" />
+- The <InlineMath math="y" />-component (yellow) is the projection of vector <InlineMath math="\overrightarrow{OQ}" /> on the <InlineMath math="y" />-axis, which is <InlineMath math="3\mathbf{j}" />
+- The magnitude of the vector <InlineMath math="|\overrightarrow{OQ}| = \sqrt{4^2 + 3^2} = \sqrt{16 + 9} = \sqrt{25} = 5" />

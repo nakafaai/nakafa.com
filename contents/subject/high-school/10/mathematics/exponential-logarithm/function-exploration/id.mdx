@@ -1,0 +1,91 @@
+import { VirusChart } from "./virus-chart";
+
+export const metadata = {
+  title: "Eksplorasi Fungsi",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/02/2025",
+  subject: "Eksponen dan Logaritma",
+};
+
+## Pengenalan Fungsi Eksponen
+
+Fungsi eksponen adalah fungsi matematika yang dapat menggambarkan pertumbuhan atau peluruhan yang sangat cepat. Mari kita eksplorasi sifat-sifat fungsi eksponen melalui contoh nyata.
+
+## Penyebaran Virus
+
+Bayangkan situasi berikut: Seseorang membawa virus dan menulari 3 orang lainnya. Kemudian, setiap orang tersebut menulari 3 orang lainnya lagi pada fase berikutnya.
+
+### Pola Penyebaran
+
+Jika kita melacak jumlah orang yang tertular pada setiap fase:
+
+- **Fase 1**: <InlineMath math="3 = 3^1"/> orang tertular
+- **Fase 2**: <InlineMath math="9 = 3^2"/> orang tertular
+- **Fase 3**: <InlineMath math="27 = 3^3"/> orang tertular
+- **Fase 4**: <InlineMath math="81 = 3^4"/> orang tertular
+- **Fase 5**: <InlineMath math="243 = 3^5"/> orang tertular
+
+### Pola Matematis
+
+Dari data di atas, terlihat pola yang jelas: jumlah orang yang tertular pada fase ke-<InlineMath math="x"/> adalah <InlineMath math="3^x"/>.
+
+Jika <InlineMath math="f(x)"/> menyatakan banyaknya orang yang tertular pada fase ke-<InlineMath math="x"/>, maka:
+
+<BlockMath math="f(x) = 3^x" />
+
+Ini adalah contoh fungsi eksponen.
+
+### Visualisasi Penyebaran
+
+1. **Grafik Eksponensial**: <InlineMath math="f(x) = 3^x"/>
+2. **Grafik Linear**: <InlineMath math="f(x) = 3x"/>
+3. **Grafik Logaritmik**: <InlineMath math="f(x) = \log(x+1) \cdot 20"/>
+
+Dengan menggunakan persamaan diatas, kita dapat memvisualisasikan penyebaran virus melalui grafik berikut:
+
+<VirusChart
+  labels={{
+    title: "Penyebaran Virus",
+    description: "Jumlah orang yang tertular pada setiap fase.",
+    exponential: "Fungsi Eksponensial",
+    linear: "Fungsi Linear",
+    logarithmic: "Fungsi Logaritmik",
+    yLabel: "Jumlah orang yang tertular",
+    caption:
+      "Virus menyebar secara eksponensial, meningkat secara cepat setelah fase awal.",
+    comparison: "Perbandingan",
+    phase: "Fase",
+  }}
+/>
+
+### Pertanyaan Analisis
+
+1. Berapakah jumlah orang yang tertular pada fase ke-20?
+
+   <BlockMath math="f(20) = 3^{20} = 3.486.784.401" />
+
+2. Fungsi mana yang mewakili penyebaran virus?
+
+   Dari tiga grafik yang ditunjukkan, **grafik eksponensial** paling tepat menggambarkan penyebaran virus ini. Grafik ini menunjukkan pertumbuhan yang lambat di awal namun sangat cepat seiring bertambahnya fase.
+
+## Sifat-sifat Fungsi Eksponen
+
+Dari eksplorasi di atas, kita dapat menyimpulkan beberapa sifat fungsi eksponen <InlineMath math="f(x) = a^x"/> (dengan <InlineMath math="a > 0"/> dan <InlineMath math="a \neq 1"/>):
+
+1. **Pertumbuhan/Peluruhan Cepat**: Nilai fungsi meningkat/menurun dengan sangat cepat.
+2. **Domain dan Range**: Domain semua bilangan real, range semua bilangan positif.
+3. **Titik Potong**: Selalu melalui titik (0,1) karena <InlineMath math="a^0 = 1"/>.
+4. **Sifat Grafik**:
+   - Jika <InlineMath math="a > 1"/>, fungsi meningkat (seperti kasus penyebaran virus dengan <InlineMath math="a = 3"/>)
+   - Jika <InlineMath math="0 < a < 1"/>, fungsi menurun
+
+## Aplikasi Fungsi Eksponen
+
+Fungsi eksponen digunakan dalam berbagai bidang:
+
+- Pertumbuhan populasi
+- Bunga majemuk dalam ekonomi
+- Peluruhan radioaktif
+- Penyebaran penyakit (seperti contoh di atas)
+
+Memahami fungsi eksponen membantu kita menganalisis dan memprediksi fenomena yang menunjukkan pertumbuhan atau peluruhan yang cepat.

@@ -1,0 +1,203 @@
+export const metadata = {
+  title: "Perkalian Skalar Vektor",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/12/2025",
+  subject: "Vektor dan Operasinya",
+};
+
+## Pengertian Perkalian Skalar dengan Vektor
+
+Perkalian skalar dengan vektor adalah operasi perkalian antara sebuah bilangan real (skalar) dengan sebuah vektor <InlineMath math="\vec{v}" />. Hasil dari perkalian ini adalah vektor baru dengan panjang yang diubah sesuai dengan nilai skalar, sementara arahnya dapat tetap sama atau berlawanan tergantung pada tanda dari skalar tersebut.
+
+Jika <InlineMath math="k" /> adalah bilangan real (skalar) dan <InlineMath math="\vec{v}" /> adalah vektor, maka perkalian skalar dengan vektor dilambangkan sebagai <InlineMath math="k \cdot \vec{v}" /> dan hasilnya adalah vektor baru.
+
+## Sifat-sifat Perkalian Skalar dengan Vektor
+
+Perkalian skalar dengan vektor memiliki beberapa sifat penting:
+
+1. Jika <InlineMath math="k > 0" /> (positif), maka vektor hasil memiliki arah yang sama dengan vektor asal.
+2. Jika <InlineMath math="k < 0" /> (negatif), maka vektor hasil memiliki arah yang berlawanan dengan vektor asal.
+3. Jika <InlineMath math="k = 0" />, maka vektor hasil adalah vektor nol.
+4. Besar (magnitudo) vektor hasil adalah <InlineMath math="|k|" /> kali besar vektor asal.
+
+## Representasi Perkalian Skalar dengan Vektor
+
+### Secara Geometris
+
+Secara geometris, perkalian skalar dengan vektor mengubah panjang (magnitudo) vektor tersebut sebanyak <InlineMath math="|k|" /> kali. Arah vektor bergantung pada tanda <InlineMath math="k" />:
+
+- Jika <InlineMath math="k > 0" />, arah vektor tidak berubah
+- Jika <InlineMath math="k < 0" />, arah vektor berlawanan dengan vektor asal <InlineMath math="|k \cdot \vec{v}| = |k| \cdot |\vec{v}|" />
+
+### Secara Aljabar
+
+Jika <InlineMath math="\vec{v} = (v_1, v_2, v_3)" /> adalah vektor di ruang 3 dimensi, maka:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="k \cdot \vec{v} = k(v_1, v_2, v_3) = (k \cdot v_1, k \cdot v_2, k \cdot v_3)" />
+</div>
+
+Dalam notasi vektor satuan:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="k \cdot \vec{v} = k(v_1\vec{i} + v_2\vec{j} + v_3\vec{k}) = k \cdot v_1\vec{i} + k \cdot v_2\vec{j} + k \cdot v_3\vec{k}" />
+</div>
+
+## Contoh Perkalian Skalar dengan Vektor
+
+### Contoh 1
+
+Diketahui vektor <InlineMath math="\vec{a} = 2\vec{i} + 3\vec{j} + 5\vec{k}" />. Tentukan hasil perkalian <InlineMath math="2\vec{a}" />.
+
+**Penyelesaian:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2\vec{a} = 2(2\vec{i} + 3\vec{j} + 5\vec{k})" />
+  <BlockMath math="= 4\vec{i} + 6\vec{j} + 10\vec{k}" />
+</div>
+
+### Contoh 2
+
+Diketahui vektor <InlineMath math="\vec{v} = (4, -2, 3)" />. Tentukan hasil dari <InlineMath math="-3\vec{v}" />.
+
+**Penyelesaian:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="-3\vec{v} = -3(4, -2, 3)" />
+  <BlockMath math="= (-12, 6, -9)" />
+</div>
+
+Perhatikan bahwa arah vektor hasil berlawanan dengan vektor asal karena skalarnya negatif.
+
+## Aplikasi Perkalian Skalar dengan Vektor
+
+Perkalian skalar dengan vektor memiliki banyak aplikasi dalam fisika dan matematika, seperti:
+
+1. **Gaya dan Percepatan**: Jika sebuah benda bermassa <InlineMath math="m" /> mengalami percepatan <InlineMath math="\vec{a}" />, maka gaya yang bekerja pada benda tersebut adalah <InlineMath math="\vec{F} = m\vec{a}" />.
+
+2. **Kecepatan**: Jika sebuah benda bergerak dengan kecepatan <InlineMath math="\vec{v}" /> selama waktu <InlineMath math="t" />, maka perpindahan benda tersebut adalah <InlineMath math="\vec{s} = t\vec{v}" />.
+
+3. **Penskalaan dalam Grafika Komputer**: Untuk mengubah ukuran objek dalam grafika komputer, koordinat titik-titik pada objek dikalikan dengan faktor skala.
+
+## Latihan Soal
+
+1. Diketahui vektor <InlineMath math="\vec{a} = 3\vec{i} - 4\vec{j} + 2\vec{k}" />. Tentukan hasil dari <InlineMath math="-2\vec{a}" />.
+
+2. Vektor <InlineMath math="\vec{u} = (2, -5, 1)" /> dan <InlineMath math="\vec{v} = (-4, 3, 6)" />. Tentukan vektor <InlineMath math="2\vec{u} - 3\vec{v}" />.
+
+3. Diketahui vektor <InlineMath math="\overrightarrow{BR} = 3,4 \text{ cm}" />. Jika <InlineMath math="\overrightarrow{BU} = 0,65 \cdot \overrightarrow{BR}" /> dan <InlineMath math="\overrightarrow{UR} = 0,35 \cdot \overrightarrow{BR}" />, buktikan bahwa ketiga vektor tersebut memiliki arah yang sama.
+
+4. Vektor <InlineMath math="\vec{p}" /> memiliki panjang 5 satuan dan vektor <InlineMath math="\vec{q} = 3\vec{p}" />. Tentukan panjang vektor <InlineMath math="\vec{q}" />.
+
+5. Diketahui titik <InlineMath math="A(2, 3, -1)" />, <InlineMath math="B(5, -2, 4)" />, dan <InlineMath math="C" /> terletak pada garis yang melalui <InlineMath math="A" /> dan <InlineMath math="B" /> sehingga <InlineMath math="\overrightarrow{AC} = 2\overrightarrow{AB}" />. Tentukan koordinat titik <InlineMath math="C" />.
+
+## Kunci Jawaban
+
+### Soal 1
+
+Diketahui vektor <InlineMath math="\vec{a} = 3\vec{i} - 4\vec{j} + 2\vec{k}" />. Tentukan hasil dari <InlineMath math="-2\vec{a}" />.
+
+**Penyelesaian:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="-2\vec{a} = -2(3\vec{i} - 4\vec{j} + 2\vec{k})" />
+  <BlockMath math="= -6\vec{i} + 8\vec{j} - 4\vec{k}" />
+</div>
+
+Jadi, hasil dari <InlineMath math="-2\vec{a}" /> adalah <InlineMath math="-6\vec{i} + 8\vec{j} - 4\vec{k}" />.
+
+### Soal 2
+
+Vektor <InlineMath math="\vec{u} = (2, -5, 1)" /> dan <InlineMath math="\vec{v} = (-4, 3, 6)" />. Tentukan vektor <InlineMath math="2\vec{u} - 3\vec{v}" />.
+
+**Penyelesaian:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2\vec{u} = 2(2, -5, 1) = (4, -10, 2)" />
+  <BlockMath math="3\vec{v} = 3(-4, 3, 6) = (-12, 9, 18)" />
+  <BlockMath math="2\vec{u} - 3\vec{v} = (4, -10, 2) - (-12, 9, 18)" />
+  <BlockMath math="= (4 - (-12), -10 - 9, 2 - 18)" />
+  <BlockMath math="= (4 + 12, -10 - 9, 2 - 18)" />
+  <BlockMath math="= (16, -19, -16)" />
+</div>
+
+Jadi, vektor <InlineMath math="2\vec{u} - 3\vec{v}" /> adalah <InlineMath math="(16, -19, -16)" /> atau <InlineMath math="16\vec{i} - 19\vec{j} - 16\vec{k}" />.
+
+### Soal 3
+
+Diketahui vektor <InlineMath math="\overrightarrow{BR} = 3,4 \text{ cm}" />. Jika <InlineMath math="\overrightarrow{BU} = 0,65 \cdot \overrightarrow{BR}" /> dan <InlineMath math="\overrightarrow{UR} = 0,35 \cdot \overrightarrow{BR}" />, buktikan bahwa ketiga vektor tersebut memiliki arah yang sama.
+
+**Penyelesaian:**
+Untuk membuktikan bahwa ketiga vektor memiliki arah yang sama, kita perlu menunjukkan bahwa mereka merupakan perkalian skalar positif dari vektor yang sama.
+
+Kita tahu:
+
+- <InlineMath math="\overrightarrow{BU} = 0,65 \cdot \overrightarrow{BR}" />
+- <InlineMath math="\overrightarrow{UR} = 0,35 \cdot \overrightarrow{BR}" />
+
+Mari kita periksa apakah <InlineMath math="\overrightarrow{BU} + \overrightarrow{UR} = \overrightarrow{BR}" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\overrightarrow{BU} + \overrightarrow{UR} = 0,65 \cdot \overrightarrow{BR} + 0,35 \cdot \overrightarrow{BR}" />
+  <BlockMath math="= (0,65 + 0,35) \cdot \overrightarrow{BR}" />
+  <BlockMath math="= 1 \cdot \overrightarrow{BR}" />
+  <BlockMath math="= \overrightarrow{BR}" />
+</div>
+
+Hasil ini menunjukkan bahwa <InlineMath math="\overrightarrow{BU} + \overrightarrow{UR} = \overrightarrow{BR}" />, yang sesuai dengan hukum penjumlahan vektor untuk titik-titik B, U, dan R yang segaris.
+
+Karena <InlineMath math="\overrightarrow{BU} = 0,65 \cdot \overrightarrow{BR}" /> dan <InlineMath math="\overrightarrow{UR} = 0,35 \cdot \overrightarrow{BR}" />, dimana faktor skalanya positif <InlineMath math="0,65" /> dan <InlineMath math="0,35" />, maka ketiga vektor memiliki arah yang sama. Faktor skalar positif berarti vektor-vektor tersebut mengarah ke arah yang sama dengan vektor acuan <InlineMath math="\overrightarrow{BR}" />.
+
+Jadi, terbukti bahwa ketiga vektor <InlineMath math="\overrightarrow{BR}" />, <InlineMath math="\overrightarrow{BU}" />, dan <InlineMath math="\overrightarrow{UR}" /> memiliki arah yang sama.
+
+### Soal 4
+
+Vektor <InlineMath math="\vec{p}" /> memiliki panjang 5 satuan dan vektor <InlineMath math="\vec{q} = 3\vec{p}" />. Tentukan panjang vektor <InlineMath math="\vec{q}" />.
+
+**Penyelesaian:**
+Diketahui <InlineMath math="|\vec{p}| = 5" /> satuan dan <InlineMath math="\vec{q} = 3\vec{p}" />.
+
+Untuk menentukan panjang vektor <InlineMath math="\vec{q}" />, kita menggunakan sifat perkalian skalar:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="|\vec{q}| = |3\vec{p}|" />
+  <BlockMath math="= |3| \cdot |\vec{p}|" />
+  <BlockMath math="= 3 \cdot 5" />
+  <BlockMath math="= 15" />
+</div>
+
+Jadi, panjang vektor <InlineMath math="\vec{q}" /> adalah 15 satuan.
+
+### Soal 5
+
+Diketahui titik <InlineMath math="A(2, 3, -1)" />, <InlineMath math="B(5, -2, 4)" />, dan <InlineMath math="C" /> terletak pada garis yang melalui <InlineMath math="A" /> dan <InlineMath math="B" /> sehingga <InlineMath math="\overrightarrow{AC} = 2\overrightarrow{AB}" />. Tentukan koordinat titik <InlineMath math="C" />.
+
+**Penyelesaian:**
+Pertama, kita tentukan vektor <InlineMath math="\overrightarrow{AB}" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\overrightarrow{AB} = B - A" />
+  <BlockMath math="= (5, -2, 4) - (2, 3, -1)" />
+  <BlockMath math="= (5-2, -2-3, 4-(-1))" />
+  <BlockMath math="= (3, -5, 5)" />
+</div>
+
+Kemudian, kita gunakan hubungan <InlineMath math="\overrightarrow{AC} = 2\overrightarrow{AB}" /> untuk menentukan vektor <InlineMath math="\overrightarrow{AC}" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\overrightarrow{AC} = 2\overrightarrow{AB}" />
+  <BlockMath math="= 2(3, -5, 5)" />
+  <BlockMath math="= (6, -10, 10)" />
+</div>
+
+Selanjutnya, kita tentukan koordinat titik C:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\overrightarrow{AC} = C - A" />
+  <BlockMath math="(6, -10, 10) = C - (2, 3, -1)" />
+  <BlockMath math="C = (6, -10, 10) + (2, 3, -1)" />
+  <BlockMath math="C = (6+2, -10+3, 10+(-1))" />
+  <BlockMath math="C = (8, -7, 9)" />
+</div>
+
+Jadi, koordinat titik C adalah <InlineMath math="C(8, -7, 9)" />.

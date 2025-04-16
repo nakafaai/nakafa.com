@@ -10,7 +10,7 @@ import {
 } from "@/lib/utils/articles/category";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getArticles } from "@/lib/utils/markdown";
-import { getFolderChildNames } from "@/lib/utils/system";
+import { getStaticParams } from "@/lib/utils/system";
 import type { ArticleCategory } from "@/types/articles/category";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
@@ -24,19 +24,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, category } = await params;
   const t = await getTranslations("Articles");
 
+  const FILE_PATH = getCategoryPath(category);
+
   return {
     title: t(category),
     description: t("description"),
     alternates: {
-      canonical: `/${locale}/articles/${category}`,
+      canonical: `/${locale}${FILE_PATH}`,
     },
   };
 }
 
 // Generate bottom-up static params
 export function generateStaticParams() {
-  const categories = getFolderChildNames("contents/articles");
-  return categories.map((category) => ({ category }));
+  return getStaticParams({
+    basePath: "contents/articles",
+    paramNames: ["category"],
+  });
 }
 
 export default async function Page({ params }: Props) {
@@ -47,7 +51,7 @@ export default async function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  const categoryPath = getCategoryPath(category);
+  const FILE_PATH = getCategoryPath(category);
 
   // Statically get all articles
   const articles = await getArticles(category, locale);
@@ -71,7 +75,7 @@ export default async function Page({ params }: Props) {
         </ContainerList>
       </LayoutContent>
       <FooterContent className="mt-0">
-        <RefContent githubUrl={getGithubUrl(categoryPath)} />
+        <RefContent githubUrl={getGithubUrl(FILE_PATH)} />
       </FooterContent>
     </>
   );

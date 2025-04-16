@@ -1,0 +1,94 @@
+export const metadata = {
+  title: "Infinite Geometric Series",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/08/2025",
+  subject: "Sequence and Series",
+};
+
+## Bouncing Ball
+
+Imagine throwing a tennis ball from a height of 1 meter. The ball will bounce, but each bounce height is only <InlineMath math="\frac{1}{4}" /> of the previous bounce height.
+
+The bounce heights form a **geometric sequence**:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="1, \quad 1 \times \frac{1}{4}, \quad (1 \times \frac{1}{4}) \times \frac{1}{4}, \quad \dots" />
+  <BlockMath math="1, \quad \frac{1}{4}, \quad \frac{1}{16}, \quad \frac{1}{64}, \quad \dots" />
+</div>
+
+With the first term (<InlineMath math="a" />) being 1 and the ratio (<InlineMath math="r" />) being <InlineMath math="\frac{1}{4}" />.
+
+Now, think about this: what is the _total distance_ traveled by the ball from the moment it's thrown until it finally stops?
+
+The ball moves down, then up, down again, up again, and so on, until it stops. The total distance is the sum of all downward paths and all upward paths. Since the ball keeps bouncing (although lower and lower), we are summing an infinite number of distances. This is called an **Infinite Geometric Series**.
+
+### When Does the Series Stop?
+
+Logically, the ball will eventually stop bouncing, right? This happens because the bounce height gets smaller and smaller, approaching zero. In mathematics, this occurs if the absolute value of the ratio (<InlineMath math="r" />) is less than 1.
+
+<BlockMath math="|r| < 1 \quad \text{or} \quad -1 < r < 1" />
+A series like this is called **convergent**, meaning its sum approaches a specific
+finite value (not infinity). In the ball example, <InlineMath math="r = \frac{1}{4}" />
+, and since <InlineMath math="-1 < \frac{1}{4} < 1" />, the series is
+convergent. The ball will stop, and its total distance can be calculated.
+
+If <InlineMath math="|r| \ge 1" /> (i.e., <InlineMath math="r \ge 1" /> or <InlineMath math="r \le -1" />), the bounce height won't decrease or might even increase. The series is called **divergent**, and its sum is infinite (<InlineMath math="\pm \infty" />).
+
+## Calculating the Sum of an Infinite Series
+
+How do we calculate the sum of a convergent infinite series? We start with the formula for the sum of the first <InlineMath math="n" /> terms of a geometric series:
+
+<BlockMath math="S_n = \frac{a(1 - r^n)}{1 - r}" />
+For an infinite series, we look for the value of <InlineMath math="S_n" /> as <InlineMath math="n" /> becomes
+very large (approaches infinity). If the series is convergent (<InlineMath math="-1 < r < 1" />
+), then the value of <InlineMath math="r^n" /> will approach 0 as <InlineMath math="n" /> approaches
+infinity. Example: <InlineMath math="(\frac{1}{4})^2 = \frac{1}{16}" />, <InlineMath math="(\frac{1}{4})^3 = \frac{1}{64}" />
+, <InlineMath math="(\frac{1}{4})^{10} \approx 0.00000095" />. The larger <InlineMath math="n" /> gets,
+the closer <InlineMath math="(\frac{1}{4})^n" /> gets to 0.
+
+So, for <InlineMath math="n \to \infty" /> and <InlineMath math="-1 < r < 1" />, we have <InlineMath math="r^n \to 0" />. The formula becomes:
+
+<BlockMath math="S_\infty = \lim_{n \to \infty} S_n = \lim_{n \to \infty} \frac{a(1 - r^n)}{1 - r} = \frac{a(1 - 0)}{1 - r}" />
+Thus, the formula for the sum of a convergent infinite geometric series is:
+<BlockMath math="S_\infty = \frac{a}{1 - r}" />
+Where: * <InlineMath math="S_\infty" /> = Sum of the infinite series * <InlineMath math="a" /> =
+First term * <InlineMath math="r" /> = Ratio (<InlineMath math="-1 < r < 1" />)
+
+## Calculating the Total Distance
+
+We can calculate the total distance traveled by the ball using the <InlineMath math="S_\infty" /> formula. There are two parts to the path:
+
+1.  **Downward Path:** The ball falls from height <InlineMath math="a" />, then falls again after the first bounce (<InlineMath math="ar" />), falls again after the second bounce (<InlineMath math="ar^2" />), and so on.
+
+    - Downward series: <InlineMath math="a + ar + ar^2 + ar^3 + \dots" />
+    - First term (<InlineMath math="a_d" />) = <InlineMath math="a" />
+    - Ratio (<InlineMath math="r_d" />) = <InlineMath math="r" />
+    - Sum of downward path: <InlineMath math="S_{\text{down}} = \frac{a_d}{1 - r_d} = \frac{a}{1 - r}" />
+
+2.  **Upward Path:** The ball moves up after the first bounce (<InlineMath math="ar" />), up again after the second bounce (<InlineMath math="ar^2" />), and so on.
+    - Upward series: <InlineMath math="ar + ar^2 + ar^3 + \dots" />
+    - First term (<InlineMath math="a_u" />) = <InlineMath math="ar" />
+    - Ratio (<InlineMath math="r_u" />) = <InlineMath math="r" />
+    - Sum of upward path: <InlineMath math="S_{\text{up}} = \frac{a_u}{1 - r_u} = \frac{ar}{1 - r}" />
+
+**Total Distance** = Sum of Downward Path + Sum of Upward Path
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Total} = S_{\text{down}} + S_{\text{up}} = \frac{a}{1 - r} + \frac{ar}{1 - r}" />
+  <BlockMath math="\text{Total} = \frac{a(1 + r)}{1 - r}" />
+</div>
+
+For the tennis ball example with <InlineMath math="a = 1" /> meter and <InlineMath math="r = \frac{1}{4}" />:
+
+<BlockMath math="\text{Total} = \frac{1(1 + \frac{1}{4})}{1 - \frac{1}{4}} = \frac{1(\frac{5}{4})}{\frac{3}{4}} = \frac{5/4}{3/4} = \frac{5}{4} \times \frac{4}{3} = \frac{5}{3}" />
+So, the total distance traveled by the ball until it stops is <InlineMath math="\frac{5}{3}" /> meters.
+
+**Alternative Method (Following the Hint):**
+The total distance can also be calculated as: First downward path + 2 times the sum of all upward paths.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Total} = a + 2 \times S_{\text{up}} = a + 2 \times \left( \frac{ar}{1 - r} \right)" />
+  <BlockMath math="\text{Total} = 1 + 2 \times \left( \frac{1 \times \frac{1}{4}}{1 - \frac{1}{4}} \right) = 1 + 2 \times \left( \frac{1/4}{3/4} \right) = 1 + 2 \times \left( \frac{1}{3} \right) = 1 + \frac{2}{3} = \frac{5}{3}" />
+</div>
+
+The result is the same!

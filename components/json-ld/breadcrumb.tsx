@@ -14,8 +14,8 @@ const SEGMENT_FALLBACKS: Record<string, string> = {
   subject: "Subject",
   articles: "Articles",
   "elementary-school": "Elementary School",
-  "junior-high-school": "Junior High School",
-  "senior-high-school": "Senior High School",
+  "middle-school": "Middle School",
+  "high-school": "High School",
   university: "University",
   politics: "Politics",
 };
@@ -70,10 +70,10 @@ export function BreadcrumbJsonLd({
           name = t("Common.articles");
         } else if (segment === "elementary-school") {
           name = t("Subject.elementary-school");
-        } else if (segment === "junior-high-school") {
-          name = t("Subject.junior-high-school");
-        } else if (segment === "senior-high-school") {
-          name = t("Subject.senior-high-school");
+        } else if (segment === "middle-school") {
+          name = t("Subject.middle-school");
+        } else if (segment === "high-school") {
+          name = t("Subject.high-school");
         } else if (segment === "university") {
           name = t("Subject.university");
         } else if (segment === "politics") {

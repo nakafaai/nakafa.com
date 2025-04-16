@@ -1,0 +1,153 @@
+import { BacterialGrowth } from "../../_shared/animation-bacterial";
+
+export const metadata = {
+  title: "Konsep Eksponen",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/01/2025",
+  subject: "Eksponen dan Logaritma",
+};
+
+## Dari Kertas hingga Pandemi
+
+Pernahkah kamu membayangkan melipat selembar kertas sebanyak 42 kali? Jika mungkin dilakukan,
+ketebalannya akan melebihi jarak bumi ke bulan! Ini karena setiap lipatan menghasilkan penggandaan
+ketebalan kertas—inilah yang disebut **pertumbuhan eksponensial**.
+
+Pertumbuhan eksponensial terjadi ketika sesuatu bertambah dengan faktor pengali tetap dalam setiap
+interval waktu. Pada awal 2020, dunia mengalami contoh nyata pertumbuhan eksponensial melalui penyebaran
+virus COVID-19. Satu orang terinfeksi dapat menularkan ke dua orang, kemudian empat, delapan, dan seterusnya.
+
+## Definisi Eksponen
+
+Eksponen adalah cara singkat untuk menuliskan perkalian berulang. Bayangkan kamu sedang menghitung berapa
+banyak orang yang tertular virus dalam kasus seperti COVID-19. Pada setiap fase penularan, jumlah orang
+yang tertular akan bertambah dengan pola yang menarik:
+
+<BlockMath math="1 = 2^0 \quad 2 = 2^1 \quad 4 = 2 \times 2 = 2^2 \quad 8 = 2 \times 2 \times 2 = 2^3 \quad 16 = 2 \times 2 \times 2 \times 2 = 2^4" />
+
+Pola ini terus berlanjut, sehingga pada fase ke-<InlineMath math="n" />, jumlah orang yang tertular dapat dinyatakan
+sebagai <InlineMath math="m(n) = 2^n" />.
+
+Misalnya, jika kamu ingin tahu berapa banyak orang yang tertular pada fase ke-5, kamu tinggal menghitung:
+
+<InlineMath math="m(5) = 2^5 = 32" /> orang.
+
+## Makna Simbol Bilangan Berpangkat
+
+Bilangan berpangkat seperti <InlineMath math="a^n" /> memiliki dua komponen penting:
+
+<BlockMath math="a^n" />
+
+Dengan:
+
+- <InlineMath math="a" /> adalah **bilangan pokok** - bilangan yang akan dikalikan
+  berulang kali
+- <InlineMath math="n" /> adalah **pangkat** - menunjukkan berapa kali bilangan pokok
+  dikalikan dengan dirinya sendiri
+
+Secara umum, jika <InlineMath math="a" /> adalah bilangan real dan <InlineMath math="n" /> adalah bilangan bulat positif, maka:
+
+<BlockMath math="a^n = \underbrace{a \times a \times a \times \ldots \times a}_{n \text{ faktor}}" />
+
+## Definisi Penting dalam Eksponen
+
+Berikut adalah beberapa definisi penting yang perlu kamu ketahui:
+
+### Pangkat Nol
+
+Untuk setiap bilangan real <InlineMath math="a" /> dengan <InlineMath math="a \neq 0" />:
+
+<BlockMath math="a^0 = 1" />
+
+Ini mungkin terlihat aneh pada awalnya, tapi definisi ini menjaga konsistensi sifat-sifat eksponen.
+
+### Pangkat Negatif
+
+Untuk setiap bilangan real <InlineMath math="a" /> dengan <InlineMath math="a \neq 0" /> dan bilangan bulat positif <InlineMath math="n" />:
+
+<BlockMath math="a^{-n} = \left(\frac{1}{a}\right)^n = \frac{1}{a^n}" />
+
+Ini berarti pangkat negatif sama dengan satu dibagi bilangan pokok dengan pangkat yang sama (positif). Rumus ini diperoleh dari konsistensi sifat eksponen. Untuk menggunakan rumus ini, kamu cukup membalik bilangan pokok dan mengubah tanda pangkat. Contoh: <InlineMath math="3^{-2} = \frac{1}{3^2} = \frac{1}{9} = 0,111..." />
+
+### Pangkat Pecahan
+
+Jika <InlineMath math="a" /> adalah bilangan real dengan <InlineMath math="a \neq 0" /> dan <InlineMath math="n" /> bilangan bulat positif, maka:
+
+<BlockMath math="a^{\frac{1}{n}} = p" />{" "}
+
+dimana <InlineMath math="p" /> adalah bilangan real positif sedemikian sehingga <InlineMath math="p^n = a" />.
+
+Bilangan <InlineMath math="a^{\frac{1}{n}}" /> juga sering disebut sebagai akar pangkat-<InlineMath math="n" /> dari <InlineMath math="a" />. Rumus ini muncul sebagai kebalikan dari pemangkatan. Untuk menggunakannya, kamu perlu menemukan bilangan yang jika dipangkatkan sebanyak n kali akan menghasilkan a. Contoh: <InlineMath math="16^{\frac{1}{4}} = 2" /> karena <InlineMath math="2^4 = 16" />.
+
+### Pangkat Pecahan Campuran
+
+Jika <InlineMath math="a" /> adalah bilangan real dengan <InlineMath math="a \neq 0" /> dan <InlineMath math="m,n" /> bilangan bulat positif, maka:
+
+<BlockMath math="a^{\frac{m}{n}} = \left(a^{\frac{1}{n}}\right)^m" />
+
+Rumus ini diperoleh dengan mengkombinasikan konsep akar dan pemangkatan. Untuk menghitungnya, kamu harus mencari akar pangkat-n dari a terlebih dahulu, kemudian memangkatkannya dengan m. Contoh: <InlineMath math="8^{\frac{2}{3}} = (8^{\frac{1}{3}})^2 = 2^2 = 4" />.
+
+## Fungsi Eksponensial
+
+Fungsi eksponensial memiliki bentuk <InlineMath math="f(x) = a^x" /> dimana <InlineMath math="a > 0" /> dan <InlineMath math="a \neq 1" />. Ada dua kasus menarik:
+
+1. Jika <InlineMath math="a > 1" />, fungsi akan naik (pertumbuhan)
+2. Jika <InlineMath math="0 < a < 1" />, fungsi akan turun (peluruhan)
+
+Fungsi eksponensial sangat berguna dalam kehidupan nyata karena banyak fenomena alam yang mengikuti pola pertumbuhan atau peluruhan eksponensial.
+
+## Aplikasi dalam Kehidupan Nyata
+
+### Pertumbuhan Bakteri
+
+Satu bakteri dapat membelah menjadi dua, kemudian empat, delapan, dan seterusnya.
+Jika <InlineMath math="B_0" /> adalah jumlah bakteri awal dan setiap bakteri membelah setiap jam, maka jumlah bakteri setelah <InlineMath math="t" /> jam adalah:
+
+<BlockMath math="B(t) = B_0 \times 2^t" />
+
+Rumus ini diperoleh karena populasi bakteri menjadi dua kali lipat pada setiap interval waktu.
+Angka 2 mewakili faktor pertumbuhan. Untuk menggunakannya, kalikan jumlah awal dengan 2 pangkat jumlah interval yang telah berlalu.
+Contoh: jika awalnya ada 100 bakteri dan mereka membelah setiap 30 menit, setelah 2 jam (4 interval)
+akan ada <InlineMath math="100 \times 2^4 = 100 \times 16 = 1.600" /> bakteri.
+
+<BacterialGrowth
+  formulaType="exponential"
+  ratio={2}
+  initialCount={1}
+  maxGenerations={6}
+  timeInterval={1}
+  timeUnit="jam"
+  labels={{
+    title: "Pertumbuhan Bakteri",
+    bacterial: "Bakteri",
+    initialBacteria: "Bakteri Awal",
+  }}
+/>
+
+### Penyebaran Virus
+
+Pola penyebaran virus seperti COVID-19 juga sering mengikuti model eksponensial, terutama pada fase awal. Jika satu orang dapat menularkan virus ke rata-rata <InlineMath math="R" /> orang baru (angka reproduksi), jumlah kasus setelah <InlineMath math="n" /> siklus penularan bisa diperkirakan dengan:
+
+<BlockMath math="C(n) = C_0 \times R^n" />
+
+dimana <InlineMath math="C_0" /> adalah jumlah kasus awal.
+
+Rumus ini mirip dengan pertumbuhan bakteri, tetapi dengan faktor pengali <InlineMath math="R" /> yang bisa bervariasi.
+Rumus ini diperoleh dengan mengalikan jumlah kasus dengan <InlineMath math="R" /> pada setiap siklus penularan. Untuk menggunakannya,
+kalikan jumlah kasus awal dengan <InlineMath math="R" /> pangkat jumlah siklus yang telah berlalu. Contoh: jika <InlineMath math="R = 2,5" /> dan ada 10 kasus awal,
+setelah 3 siklus penularan akan ada <InlineMath math="10 \times 2,5^3 = 10 \times 15,625 = 156,25 \approx 156" /> kasus.
+
+### Pertumbuhan Populasi
+
+Untuk memprediksi jumlah penduduk di masa depan, model eksponensial dapat digunakan dengan rumus:
+
+<BlockMath math="P(t) = P_0 \times (1 + r)^t" />
+
+dimana <InlineMath math="P_0" /> adalah populasi awal, <InlineMath math="r" /> adalah tingkat pertumbuhan,
+dan <InlineMath math="t" /> adalah waktu (biasanya dalam tahun).
+
+Rumus ini diperoleh dengan menambahkan persentase pertumbuhan <InlineMath math="r" /> ke populasi pada setiap interval waktu.
+Faktor <InlineMath math="(1+r)" /> menunjukkan pertumbuhan relatif. Untuk menggunakannya,
+kalikan populasi awal dengan <InlineMath math="(1+r)" /> pangkat jumlah interval waktu. Contoh: jika populasi
+awal adalah 1 juta orang dengan pertumbuhan 2% per tahun, setelah 10 tahun populasinya
+menjadi <InlineMath math="1.000.000 \times (1 + 0,02)^{10} = 1.000.000 \times 1,22 = 1.220.000" /> orang.

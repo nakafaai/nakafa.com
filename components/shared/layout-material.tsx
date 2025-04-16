@@ -7,7 +7,6 @@ import { FooterContent } from "./footer-content";
 import { HeaderContent } from "./header-content";
 import { LayoutContent } from "./layout-content";
 import { PaginationContent } from "./pagination-content";
-import { RefContent } from "./ref-content";
 import { SidebarRight } from "./sidebar-right";
 import { type ParsedHeading, SidebarTree } from "./sidebar-tree";
 
@@ -36,39 +35,72 @@ type Props = {
   pagination?: ContentPagination;
 };
 
-export function LayoutMaterial({
+export function LayoutMaterialHeader({
   header,
-  content,
-  chapters,
-  githubUrl,
   metadata,
   category,
-  contentClassName,
-  footerClassName,
+}: {
+  header: Props["header"];
+  metadata?: Props["metadata"];
+  category?: Props["category"];
+}) {
+  return (
+    <HeaderContent
+      title={header.title}
+      icon={header.icon}
+      link={header.link}
+      description={metadata?.description}
+      category={category}
+      date={metadata?.date}
+      authors={metadata?.authors}
+    />
+  );
+}
+
+export function LayoutMaterialContent({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <LayoutContent className={className}>{children}</LayoutContent>;
+}
+
+export function LayoutMaterialPagination({
   pagination,
-}: Props) {
+}: {
+  pagination: Props["pagination"];
+}) {
+  if (!pagination) {
+    return null;
+  }
+  return <PaginationContent pagination={pagination} />;
+}
+export function LayoutMaterialFooter({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <FooterContent className={cn("mt-0", className)}>{children}</FooterContent>
+  );
+}
+
+export function LayoutMaterial({
+  children,
+  chapters,
+}: {
+  children: ReactNode;
+  chapters: Props["chapters"];
+}) {
   const t = useTranslations("Subject");
 
   return (
     <div className="lg:flex">
-      <div className="flex-1">
-        <HeaderContent
-          title={header.title}
-          icon={header.icon}
-          link={header.link}
-          description={metadata?.description}
-          category={category}
-          date={metadata?.date}
-          authors={metadata?.authors}
-        />
-        <LayoutContent className={cn(contentClassName)}>
-          {content}
-        </LayoutContent>
-        {pagination && <PaginationContent pagination={pagination} />}
-        <FooterContent className={cn("mt-0", footerClassName)}>
-          <RefContent githubUrl={githubUrl} />
-        </FooterContent>
-      </div>
+      <div className="flex-1">{children}</div>
       <SidebarRight>
         <SidebarTree
           title={chapters.label ?? t("chapter")}

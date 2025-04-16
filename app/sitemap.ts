@@ -12,7 +12,7 @@ const catchAllPattern = /^\[\.{3}.*\]$/;
 
 // Function to recursively get all directories
 export function getAllRoutes(basePath = "", currentPath = ""): string[] {
-  const fullPath = path.join(process.cwd(), "app", "[locale]", currentPath);
+  const fullPath = path.join(process.cwd(), "contents", currentPath);
 
   if (!fs.existsSync(fullPath)) {
     return [];

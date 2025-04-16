@@ -3,7 +3,7 @@ import path from "node:path";
 import type { ParsedHeading } from "@/components/shared/sidebar-tree";
 import type { ArticleCategory } from "@/types/articles/category";
 import type { Article, ContentPagination } from "@/types/content";
-import type { MaterialList } from "@/types/subjects";
+import type { MaterialList } from "@/types/subject/material";
 import { compareDesc, parse } from "date-fns";
 import type { Locale } from "next-intl";
 import { Children } from "react";
@@ -176,7 +176,7 @@ export function filterWhitespaceNodes(children: ReactNode) {
  */
 export function getMaterialsPagination(
   currentPath: string,
-  materials: MaterialList[]
+  materials: MaterialList
 ): ContentPagination {
   // Default empty navigation item
   const emptyItem = { href: "", title: "" };

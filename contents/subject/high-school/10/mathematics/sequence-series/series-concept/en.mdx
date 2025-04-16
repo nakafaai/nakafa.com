@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Series Concept",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/08/2025",
+  subject: "Sequence and Series",
+};
+
+## Understanding Number Series
+
+Have you ever thought about how to sum the terms of a number sequence? For example, adding 1 + 2 + 3 + ... and so on? Well, this is what's called a **number series**.
+
+So, a **number series** is the result of sequentially adding the terms of a number sequence. Just like sequences, there are two main types of series: **arithmetic series** (the sum of terms in an arithmetic sequence) and **geometric series** (the sum of terms in a geometric sequence). But don't worry, we'll discuss the detailed formulas later.
+
+Now, let's look at a real-world example of the series concept through a simple exploration.
+
+## Number of Handshakes
+
+Imagine there are several people in a group. If each person shakes hands exactly once with every other person in the group, how many total handshakes occur?
+
+Let's try to count:
+
+- **If there are 2 people:** There is only <InlineMath math="1" /> handshake.
+- **If there are 3 people:** The first person shakes hands with 2 others. The second person has already shaken hands with the first, so they only need to shake hands with the third person. The total is <InlineMath math="2 + 1 = 3" /> handshakes.
+- **If there are 4 people:** Following the same pattern, we get <InlineMath math="3 + 2 + 1 = 6" /> handshakes.
+- **If there are 5 people:** The total is <InlineMath math="4 + 3 + 2 + 1 = 10" /> handshakes.
+
+Notice the pattern! The number of handshakes forms a sequential sum of natural numbers.
+
+| Number of people present | Number of handshakes | Breakdown of handshakes       |
+| :----------------------- | :------------------- | :---------------------------- |
+| Two people               | 1                    | 1                             |
+| Three people             | 3                    | <InlineMath math="1+2" />     |
+| Four people              | 6                    | <InlineMath math="1+2+3" />   |
+| Five people              | 10                   | <InlineMath math="1+2+3+4" /> |
+
+Summations like <InlineMath math="1+2+3+4" /> are examples of a **number series**. In this case, the series is formed from the sum of the terms of the sequence of natural numbers <InlineMath math="(1, 2, 3, 4, ...)" />.
+
+### Does This Form a Sequence?
+
+Interesting question: does the number of handshakes itself <InlineMath math="(1, 3, 6, 10, ...)" /> form an arithmetic or geometric sequence? The answer is no. This sequence does not have a constant difference or ratio between its terms (<InlineMath math="3-1=2" />, <InlineMath math="6-3=3" />, <InlineMath math="10-6=4" />).
+
+However, the **breakdown** of the number of handshakes (<InlineMath math="1" />, <InlineMath math="1+2" />, <InlineMath math="1+2+3" />, <InlineMath math="1+2+3+4" />) clearly represents the sum of the terms of a sequence (specifically, the sequence of natural numbers). This is the core concept of a **series**.
+
+So, this handshake exploration shows how the concept of a series arises from summing the terms of a pattern or number sequence in everyday situations.

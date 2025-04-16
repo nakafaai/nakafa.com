@@ -1,0 +1,194 @@
+export const metadata = {
+  title: "Barisan Aritmetika",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/05/2025",
+  subject: "Barisan dan Deret",
+};
+
+## Pengertian Barisan Aritmetika
+
+Barisan aritmetika adalah suatu barisan bilangan di mana selisih atau beda antara dua suku berurutan selalu tetap atau konstan. Beda pada barisan aritmetika dilambangkan dengan <InlineMath math="b" />.
+
+## Contoh Barisan Aritmetika
+
+Perhatikan barisan bilangan berikut:
+
+<InlineMath math="4, 6, 8, 10, ..." />
+
+Pada barisan ini, kita dapat melihat bahwa:
+
+- Selisih antara suku kedua dan pertama: <InlineMath math="6 - 4 = 2" />
+- Selisih antara suku ketiga dan kedua: <InlineMath math="8 - 6 = 2" />
+- Selisih antara suku keempat dan ketiga: <InlineMath math="10 - 8 = 2" />
+
+Karena selisih antara dua suku berurutan selalu sama yaitu 2, maka barisan ini merupakan barisan aritmetika dengan beda <InlineMath math="b = 2" />.
+
+## Beda pada Barisan Aritmetika
+
+Beda (<InlineMath math="b" />) pada barisan aritmetika dapat dihitung dengan mengurangkan dua suku berurutan:
+
+<BlockMath math="b = U_2 - U_1 = U_3 - U_2 = U_4 - U_3 = ... = U_n - U_{n-1}" />
+
+Di mana:
+
+- <InlineMath math="U_n" /> menyatakan suku ke-
+  <InlineMath math="n" />
+- <InlineMath math="U_{n-1}" /> menyatakan suku ke-(
+  <InlineMath math="n-1" />)
+
+## Rumus Suku ke-n
+
+### Rumus Umum
+
+Untuk menentukan suku ke-<InlineMath math="n" /> pada barisan aritmetika, kita dapat menggunakan rumus:
+
+<BlockMath math="U_n = a + (n-1)b" />
+
+Keterangan:
+
+- <InlineMath math="U_n" /> = suku ke-
+  <InlineMath math="n" />
+- <InlineMath math="a" /> = suku pertama
+- <InlineMath math="n" /> = nomor suku
+- <InlineMath math="b" /> = beda
+
+### Cara Menurunkan Rumus
+
+Jika kita menulis beberapa suku pertama dari barisan aritmetika:
+
+- Suku ke-1: <InlineMath math="U_1 = a" />
+- Suku ke-2: <InlineMath math="U_2 = a + b" />
+- Suku ke-3: <InlineMath math="U_3 = a + 2b" />
+- Suku ke-4: <InlineMath math="U_4 = a + 3b" />
+- Suku ke-5: <InlineMath math="U_5 = a + 4b" />
+
+Dari pola tersebut, kita dapat melihat bahwa suku ke-<InlineMath math="n" /> adalah:
+
+<BlockMath math="U_n = a + (n-1)b" />
+
+## Aplikasi Barisan Aritmetika
+
+### Gedung Pertunjukan Seni
+
+Perhatikan jumlah kursi pada gedung pertunjukan seni berikut:
+
+- Baris ke-1 = 20 kursi
+- Baris ke-2 = 24 kursi
+- Baris ke-3 = 28 kursi
+- Baris ke-4 = 32 kursi
+- Baris ke-5 = 36 kursi
+
+Untuk menentukan banyak kursi pada baris tertentu, kita perlu mencari pola dari data tersebut.
+
+**Langkah 1: Mencari beda antar baris**
+
+- Baris ke-2 - Baris ke-1: <InlineMath math="24 - 20 = 4" />
+- Baris ke-3 - Baris ke-2: <InlineMath math="28 - 24 = 4" />
+- Baris ke-4 - Baris ke-3: <InlineMath math="32 - 28 = 4" />
+- Baris ke-5 - Baris ke-4: <InlineMath math="36 - 32 = 4" />
+
+Terlihat bahwa beda antara jumlah kursi pada baris yang berurutan adalah 4. Ini berarti jumlah kursi di gedung pertunjukan ini membentuk barisan aritmetika dengan:
+
+- Suku pertama (<InlineMath math="a" />) = 20
+- Beda (<InlineMath math="b" />) = 4
+
+**Langkah 2: Menggunakan rumus untuk mencari jumlah kursi pada baris ke-15**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_{15} = a + (n-1)b" />
+  <BlockMath math="U_{15} = 20 + (15-1)4" />
+  <BlockMath math="U_{15} = 20 + (14)4" />
+  <BlockMath math="U_{15} = 20 + 56" />
+  <BlockMath math="U_{15} = 76" />
+</div>
+
+Jadi, jumlah kursi pada baris ke-15 adalah 76 kursi.
+
+## Latihan 1
+
+Diketahui suatu barisan aritmetika, suku ke-3 = 9, suku ke-6 = 18. Tentukan rumus suku ke-n.
+
+### Kunci Jawaban Latihan 1
+
+Untuk menentukan rumus suku ke-n, kita perlu mencari nilai suku pertama <InlineMath math="(a)" /> dan beda <InlineMath math="(b)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_3 = a + 2b = 9" />
+  <BlockMath math="U_6 = a + 5b = 18" />
+</div>
+
+Kita eliminasi persamaan di atas untuk mendapatkan nilai b:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_6 - U_3 = (a + 5b) - (a + 2b)" />
+  <BlockMath math="18 - 9 = 3b" />
+  <BlockMath math="9 = 3b" />
+  <BlockMath math="b = 3" />
+</div>
+
+Setelah mendapatkan nilai b, kita substitusikan ke persamaan pertama untuk mendapatkan nilai a:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="a + 2b = 9" />
+  <BlockMath math="a + 2(3) = 9" />
+  <BlockMath math="a + 6 = 9" />
+  <BlockMath math="a = 9 - 6 = 3" />
+</div>
+
+Setelah mendapatkan nilai a = 3 dan b = 3, kita bisa merumuskan suku ke-n:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_n = a + (n-1)b" />
+  <BlockMath math="U_n = 3 + (n-1)3" />
+  <BlockMath math="U_n = 3 + 3n - 3" />
+  <BlockMath math="U_n = 3n" />
+</div>
+
+Jadi, rumus suku ke-n dari barisan tersebut adalah <InlineMath math="U_n = 3n" />
+
+## Latihan 2
+
+Rudi menabung di bank dengan selisih kenaikan nominal uang yang ditabung antarbulan tetap. Jika pada bulan ke-5, nominal uang yang ditabung Rp70.000,00 dan pada bulan ke-9 Rudi menabung sebesar Rp90.000,00.
+
+a. Berapa rupiah selisih nominal uang yang ditabung antarbulan?
+
+b. Tentukan berapa rupiah uang yang ditabung Rudi untuk pertama kalinya?
+
+### Kunci Jawaban Latihan 2
+
+Tabungan Rudi membentuk barisan aritmetika karena selisih kenaikan nominal antarbulan tetap.
+
+**a. Mencari selisih nominal uang yang ditabung antarbulan**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="U_5 = 70.000" />
+  <BlockMath math="a + (5-1)b = 70.000" />
+  <BlockMath math="a + 4b = 70.000 \text{ ... (persamaan 1)}" />
+
+  <BlockMath math="U_9 = 90.000" />
+  <BlockMath math="a + (9-1)b = 90.000" />
+  <BlockMath math="a + 8b = 90.000 \text{ ... (persamaan 2)}" />
+</div>
+
+Eliminasi persamaan 1 dan 2:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4b = 20.000" />
+  <BlockMath math="b = 5.000" />
+</div>
+
+Jadi, selisih nominal uang yang ditabung Rudi antarbulan adalah Rp5.000,00.
+
+**b. Mencari uang yang ditabung Rudi untuk pertama kalinya**
+
+Kita sudah mendapatkan nilai b = 5.000, selanjutnya kita substitusikan ke persamaan 1 untuk mendapatkan nilai a:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="a + 4b = 70.000" />
+  <BlockMath math="a + 4(5.000) = 70.000" />
+  <BlockMath math="a + 20.000 = 70.000" />
+  <BlockMath math="a = 70.000 - 20.000" />
+  <BlockMath math="a = 50.000" />
+</div>
+
+Jadi, uang yang ditabung Rudi untuk pertama kalinya adalah Rp50.000,00.

@@ -1,0 +1,101 @@
+import { FunctionChart } from "../../_shared/function-chart";
+
+export const metadata = {
+  title: "Function Definition",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/02/2025",
+  subject: "Exponents and Logarithms",
+};
+
+## Exponential Function
+
+An exponential function is a function expressed in the form:
+
+<BlockMath math="f(x) = n \times a^x" />
+
+with the conditions:
+
+- <InlineMath math="a" /> is the base number, where <InlineMath math="a > 0" /> and <InlineMath math="a \neq 1" />
+- <InlineMath math="n" /> is a non-zero real number
+- <InlineMath math="x" /> is any real number
+
+Exponential functions have a special characteristic where the variable <InlineMath math="x" /> is in the exponent position. This is what distinguishes exponential functions from ordinary algebraic functions. In exponential functions, small changes in the value of <InlineMath math="x" /> can result in very large changes in the function's output.
+
+## Properties of Exponential Functions
+
+The exponential function <InlineMath math="f(x) = a^x" /> (for <InlineMath math="n = 1" />) has several important properties:
+
+1. The domain of the function is all real numbers (<InlineMath math="\mathbb{R}" />)
+2. The range of the function is all positive numbers (<InlineMath math="\mathbb{R}^+" />)
+3. It intersects the Y-axis at point <InlineMath math="(0, 1)" /> because <InlineMath math="a^0 = 1" />
+4. The function is always positive for all values of x because <InlineMath math="a > 0" />
+5. If <InlineMath math="a > 1" />, the function increases (monotonically increasing)
+6. If <InlineMath math="0 < a < 1" />, the function decreases (monotonically decreasing)
+
+## Special Cases of Exponential Functions
+
+### When a = 1
+
+If <InlineMath math="a = 1" />, then:
+
+<BlockMath math="f(x) = n \times 1^x = n" />
+
+The value of <InlineMath math="1^x" /> is always 1 for any value of <InlineMath math="x" />. As a result, the function becomes a constant function <InlineMath math="f(x) = n" />, no longer an exponential function. Its graph will be a horizontal line intersecting the Y-axis at point <InlineMath math="(0, n)" />.
+
+<FunctionChart
+  a={1}
+  p={1}
+  title="Constant Function"
+  description="Line is always horizontal constant at y = 1."
+/>
+
+### When a = 0
+
+If <InlineMath math="a = 0" />, then:
+
+<BlockMath math="f(x) = n \times 0^x" />
+
+- For <InlineMath math="x > 0" />, the value of <InlineMath math="0^x = 0" /> so <InlineMath math="f(x) = 0" />
+- For <InlineMath math="x = 0" />, the value of <InlineMath math="0^0" /> is undefined
+- For <InlineMath math="x < 0" />, the value of <InlineMath math="0^x" /> is undefined
+
+This function is no longer an exponential function but rather constant at <InlineMath math="f(x) = 0" /> for <InlineMath math="x > 0" />. Then, because <InlineMath math="0^0" /> and <InlineMath math="0^x" /> for <InlineMath math="x < 0" /> are undefined, this function does not meet the definition of an exponential function.
+
+<FunctionChart
+  a={0}
+  p={1}
+  title="Constant Function"
+  description="Line is always horizontal constant at y = 0, but undefined for x = 0."
+/>
+
+## Examples of Exponential Functions
+
+Here are some examples of exponential functions:
+
+1. <InlineMath math="f(x) = 4^x" />
+
+   This function has base number <InlineMath math="a = 4" /> and <InlineMath math="n = 1" />. Since <InlineMath math="a > 1" />, this function is monotonically increasing. The function value will get larger as x increases. For example, <InlineMath math="f(0) = 4^0 = 1" />, <InlineMath math="f(1) = 4^1 = 4" />, <InlineMath math="f(2) = 4^2 = 16" />.
+
+2. <InlineMath math="f(x) = 3^{x+1}" />
+
+   This function can be rewritten as <InlineMath math="f(x) = 3 \times 3^x" /> with base number <InlineMath math="a = 3" /> and <InlineMath math="n = 3" />. The graph of this function is also monotonically increasing, and the function value will get larger as x increases. For example, <InlineMath math="f(0) = 3^{0+1} = 3^1 = 3" />, <InlineMath math="f(1) = 3^{1+1} = 3^2 = 9" />.
+
+3. <InlineMath math="f(x) = 5^{2x-1}" />
+
+   This function has base number <InlineMath math="a = 5" /> with exponent <InlineMath math="2x-1" />. The function value will change more rapidly because the coefficient of x is 2. For example, <InlineMath math="f(0) = 5^{2(0)-1} = 5^{-1} = \frac{1}{5}" />, <InlineMath math="f(1) = 5^{2(1)-1} = 5^1 = 5" />.
+
+4. <InlineMath math="f(x) = 0.5^x" />
+
+   This function has base number <InlineMath math="a = 0.5" /> where <InlineMath math="0 < a < 1" />. This function is monotonically decreasing. The function value will get smaller as x increases. For example, <InlineMath math="f(0) = 0.5^0 = 1" />, <InlineMath math="f(1) = 0.5^1 = 0.5" />, <InlineMath math="f(2) = 0.5^2 = 0.25" />.
+
+## Applications of Exponential Functions
+
+Exponential functions are widely used in everyday life and various fields:
+
+1. **Population Growth**: The number of bacteria reproducing can be modeled with an exponential function <InlineMath math="P(t) = P_0 \times 2^{t/n}" /> where <InlineMath math="P_0" /> is the initial number, t is time, and n is the time required for the population to double.
+
+2. **Compound Interest**: If someone saves money with compound interest, the amount of savings after t years can be calculated with <InlineMath math="A(t) = P \times (1 + r)^t" /> where P is the initial principal and r is the interest rate.
+
+3. **Radioactive Decay**: The amount of radioactive substance remaining after t years can be calculated with <InlineMath math="A(t) = A_0 \times 0.5^{t/h}" /> where <InlineMath math="A_0" /> is the initial amount and h is the half-life.
+
+4. **Virus Spread**: The spread of disease in a population often follows an exponential model in the early phase.

@@ -1,0 +1,66 @@
+export const metadata = {
+  title: "Perbedaan Konvergen dan Divergen",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/08/2025",
+  subject: "Barisan dan Deret",
+};
+
+## Apa Itu Deret Konvergen dan Divergen?
+
+Dalam matematika, ketika kita menjumlahkan suku-suku suatu barisan tak hingga, kita mendapatkan sebuah **deret tak hingga**. Pertanyaan pentingnya adalah: apakah hasil penjumlahan tak hingga ini menuju suatu angka tertentu (**konvergen**) atau tidak (**divergen**)?
+
+## Deret Konvergen
+
+Sebuah deret disebut **konvergen** jika jumlah suku-sukunya semakin lama semakin mendekati sebuah nilai _terbatas_ tertentu. Bayangkan seperti bola memantul, total lintasannya berhenti di satu angka, tidak terus bertambah tanpa batas.
+
+### Ciri Khas Deret Konvergen
+
+- Jumlah parsialnya (jumlah <InlineMath math="n" /> suku pertama, <InlineMath math="S_n" />) mendekati suatu nilai <InlineMath math="L" /> saat <InlineMath math="n" /> mendekati tak hingga (<InlineMath math="\lim_{n \to \infty} S_n = L" />, dimana <InlineMath math="L" /> adalah bilangan real).
+- Syarat perlu (tapi tidak cukup): suku ke-<InlineMath math="n" /> nya (<InlineMath math="u_n" />) harus mendekati 0 saat <InlineMath math="n" /> mendekati tak hingga (<InlineMath math="\lim_{n \to \infty} u_n = 0" />).
+
+### Contoh Deret Konvergen
+
+- **Deret Geometri dengan <InlineMath math="|r| < 1" />**: Ini adalah contoh paling umum.
+
+  Misalnya: <InlineMath math="1 + \frac{1}{2} + \frac{1}{4} + \frac{1}{8} + \dots" />. Jumlahnya mendekati 2.
+
+  <BlockMath math="S_\infty = \frac{a}{1 - r} = \frac{1}{1 - \frac{1}{2}} = \frac{1}{\frac{1}{2}} = 2" />
+
+## Deret Divergen
+
+Sebuah deret disebut **divergen** jika jumlah suku-sukunya tidak mendekati nilai terbatas tertentu. Jumlahnya bisa jadi:
+
+- Terus membesar menuju tak hingga positif (<InlineMath math="\infty" />).
+- Terus mengecil menuju tak hingga negatif (<InlineMath math="-\infty" />).
+- Berayun (berosilasi) di antara beberapa nilai tanpa pernah menetap.
+
+### Ciri Khas Deret Divergen
+
+- Jumlah parsialnya (<InlineMath math="S_n" />) tidak mendekati satu nilai <InlineMath math="L" /> tertentu saat <InlineMath math="n" /> mendekati tak hingga.
+- Jika <InlineMath math="\lim_{n \to \infty} u_n \neq 0" /> (suku ke-<InlineMath math="n" /> tidak menuju 0), maka deretnya _pasti_ divergen.
+
+### Contoh Deret Divergen
+
+- **Deret Aritmetika (selain <InlineMath math="0 + 0 + \dots" />)**: Jumlahnya pasti menuju <InlineMath math="\infty" /> atau <InlineMath math="-\infty" />.
+
+  Misalnya: <InlineMath math="1 + 2 + 3 + 4 + \dots" /> (menuju <InlineMath math="\infty" />)
+
+- **Deret Geometri dengan <InlineMath math="|r| \ge 1" />**:
+
+  - Jika <InlineMath math="r \ge 1" />, jumlahnya menuju <InlineMath math="\pm \infty" /> (tergantung tanda suku pertama).
+
+    Contoh: <InlineMath math="2 + 4 + 8 + 16 + \dots" /> (menuju <InlineMath math="\infty" />)
+
+  - Jika <InlineMath math="r \le -1" />, jumlahnya berosilasi.
+
+    Contoh: <InlineMath math="1 - 2 + 4 - 8 + \dots" /> (Jumlah parsialnya: <InlineMath math="1, -1, 3, -5, \dots" /> tidak menuju satu nilai)
+
+- **Deret Harmonik**: <InlineMath math="1 + \frac{1}{2} + \frac{1}{3} + \frac{1}{4} + \dots" />. Ini contoh menarik. Meskipun suku ke-<InlineMath math="n" /> nya (<InlineMath math="u_n = \frac{1}{n}" />) mendekati 0, jumlah deretnya tetap menuju tak hingga (<InlineMath math="\infty" />). Ini menunjukkan bahwa syarat <InlineMath math="u_n \to 0" /> saja tidak cukup untuk menjamin konvergensi.
+
+## Ringkasan Perbedaan Utama
+
+| Fitur                               | Deret Konvergen                                                                                | Deret Divergen                                                                                                       |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Jumlah**                          | Menuju nilai _terbatas_ tertentu (<InlineMath math="L" />); <InlineMath math="S_\infty = L" /> | Tidak menuju nilai terbatas; <InlineMath math="\pm \infty" /> atau berosilasi                                        |
+| **Suku ke-<InlineMath math="n" />** | <InlineMath math="\lim_{n \to \infty} u_n = 0" /> (Syarat perlu)                               | <InlineMath math="\lim_{n \to \infty} u_n \neq 0" /> (Pasti divergen) atau bisa juga <InlineMath math="u_n \to 0" /> |
+| **Contoh**                          | Deret geometri <InlineMath math="\|r\| < 1" />                                                 | Deret aritmetika, geometri <InlineMath math="\|r\| \geq 1" />, harmonik                                              |

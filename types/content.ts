@@ -29,11 +29,7 @@ export const ContentMetadataSchema = z.object({
     })
   ),
   date: z.string(),
-  alternates: z.object({
-    canonical: z.string(),
-  }),
   subject: z.string().optional(),
-  category: z.string(),
 });
 export type ContentMetadata = z.infer<typeof ContentMetadataSchema>;
 

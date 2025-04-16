@@ -6,44 +6,70 @@ import {
 } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
 import { getCategoryIcon } from "@/lib/utils/articles/category";
+import { getSlugPath } from "@/lib/utils/articles/slug";
 import { getContent } from "@/lib/utils/contents";
 import { getReferences } from "@/lib/utils/contents";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getHeadings, getRawContent } from "@/lib/utils/markdown";
-import { getFolderChildNames } from "@/lib/utils/system";
+import { getStaticParams } from "@/lib/utils/system";
 import type { ArticleCategory } from "@/types/articles/category";
+import type { Metadata } from "next";
 import type { Locale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 type Props = {
   params: Promise<{ locale: Locale; category: ArticleCategory; slug: string }>;
 };
 
-// Generate bottom-up static params
-export function generateStaticParams() {
-  const basePath = "contents/articles";
-  const categories = getFolderChildNames(basePath);
+export async function generateMetadata({
+  params,
+}: { params: Props["params"] }): Promise<Metadata> {
+  const { locale, category, slug } = await params;
+  const t = await getTranslations("Articles");
 
-  const params: { category: string; slug: string }[] = [];
+  const FILE_PATH = getSlugPath(category, slug);
 
-  for (const category of categories) {
-    const slugs = getFolderChildNames(`${basePath}/${category}`);
-    for (const slug of slugs) {
-      params.push({ category, slug });
-    }
+  const content = await getContent(`${FILE_PATH}/${locale}.mdx`);
+
+  if (!content) {
+    return {
+      title: t(category),
+      alternates: {
+        canonical: `/${locale}${FILE_PATH}`,
+      },
+    };
   }
 
-  return params;
+  const { metadata } = content;
+
+  return {
+    title: metadata.title,
+    description: metadata.description,
+    alternates: {
+      canonical: `/${locale}${FILE_PATH}`,
+    },
+    authors: metadata.authors,
+    category: t(category),
+  };
+}
+
+// Generate bottom-up static params
+export function generateStaticParams() {
+  return getStaticParams({
+    basePath: "contents/articles",
+    paramNames: ["category", "slug"],
+  });
 }
 
 export default async function Page({ params }: Props) {
   const { locale, category, slug } = await params;
+  const t = await getTranslations("Articles");
 
   // Enable static rendering
   setRequestLocale(locale);
 
-  const FILE_PATH = `/articles/${category}/${slug}`;
+  const FILE_PATH = getSlugPath(category, slug);
 
   try {
     // Get the file, headings
@@ -63,7 +89,10 @@ export default async function Page({ params }: Props) {
       <LayoutArticle onThisPage={headings}>
         <LayoutArticleHeader
           metadata={metadata}
-          icon={getCategoryIcon(category)}
+          category={{
+            icon: getCategoryIcon(category),
+            name: t(category),
+          }}
         />
         <LayoutArticleContent>
           <Content />

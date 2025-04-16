@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Konsep Deret",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/08/2025",
+  subject: "Barisan dan Deret",
+};
+
+## Pengertian Deret Bilangan
+
+Pernahkah kalian berpikir bagaimana cara menjumlahkan suku-suku dari suatu barisan bilangan? Misalnya, menjumlahkan 1 + 2 + 3 + ... dan seterusnya? Nah, inilah yang disebut **deret bilangan**.
+
+Jadi, **deret bilangan** adalah hasil penjumlahan berurutan dari suku-suku suatu barisan bilangan. Sama seperti barisan, ada dua jenis deret utama: **deret aritmetika** (penjumlahan suku-suku barisan aritmetika) dan **deret geometri** (penjumlahan suku-suku barisan geometri). Tapi tenang, kita akan bahas detail rumusnya nanti ya.
+
+Sekarang, mari kita lihat contoh nyata konsep deret melalui sebuah eksplorasi sederhana.
+
+## Banyaknya Jabat Tangan
+
+Bayangkan ada beberapa orang dalam satu kelompok. Jika setiap orang berjabat tangan tepat satu kali dengan setiap orang lain di kelompok itu, berapa total jabat tangan yang terjadi?
+
+Mari kita coba hitung:
+
+- **Jika ada 2 orang:** Hanya ada <InlineMath math="1" /> jabat tangan.
+- **Jika ada 3 orang:** Orang pertama berjabat tangan dengan 2 orang lainnya. Orang kedua sudah berjabat tangan dengan orang pertama, jadi tinggal berjabat tangan dengan orang ketiga. Total ada <InlineMath math="2 + 1 = 3" /> jabat tangan.
+- **Jika ada 4 orang:** Dengan pola yang sama, kita akan mendapatkan <InlineMath math="3 + 2 + 1 = 6" /> jabat tangan.
+- **Jika ada 5 orang:** Totalnya adalah <InlineMath math="4 + 3 + 2 + 1 = 10" /> jabat tangan.
+
+Perhatikan polanya! Banyaknya jabat tangan yang terjadi membentuk suatu penjumlahan berurutan dari bilangan asli.
+
+| Banyaknya orang yang hadir | Banyak jabat tangan | Uraian dari banyak jabat tangan |
+| :------------------------- | :------------------ | :------------------------------ |
+| Dua orang                  | 1                   | 1                               |
+| Tiga orang                 | 3                   | <InlineMath math="1+2" />       |
+| Empat orang                | 6                   | <InlineMath math="1+2+3" />     |
+| Lima orang                 | 10                  | <InlineMath math="1+2+3+4" />   |
+
+Penjumlahan seperti <InlineMath math="1+2+3+4" /> ini adalah contoh **deret bilangan**. Dalam kasus ini, deret yang terbentuk berasal dari penjumlahan suku-suku barisan bilangan asli <InlineMath math="(1, 2, 3, 4, ...)" />.
+
+### Apakah Ini Membentuk Barisan?
+
+Pertanyaan menarik: apakah banyaknya jabat tangan <InlineMath math="(1, 3, 6, 10, ...)" /> itu sendiri membentuk barisan aritmetika atau geometri? Jawabannya tidak. Barisan ini tidak memiliki beda atau rasio yang tetap antar sukunya (<InlineMath math="3-1=2" />, <InlineMath math="6-3=3" />, <InlineMath math="10-6=4" />).
+
+Namun, **uraian** dari banyaknya jabat tangan (<InlineMath math="1" />, <InlineMath math="1+2" />, <InlineMath math="1+2+3" />, <InlineMath math="1+2+3+4" />) jelas merupakan bentuk penjumlahan dari suku-suku suatu barisan (yaitu barisan bilangan asli). Inilah inti dari konsep **deret**.
+
+Jadi, eksplorasi jabat tangan ini menunjukkan bagaimana konsep deret muncul dari penjumlahan suku-suku suatu pola atau barisan bilangan dalam situasi sehari-hari.

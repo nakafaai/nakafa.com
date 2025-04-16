@@ -2,7 +2,7 @@
 
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-import type { MaterialList } from "@/types/subjects";
+import type { MaterialList } from "@/types/subject/material";
 import { ArrowDownIcon, ChevronDownIcon, LinkIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../ui/button";
@@ -16,7 +16,7 @@ import {
 import { Collapsible, CollapsibleContent } from "../ui/collapsible";
 
 type Props = {
-  material: MaterialList;
+  material: MaterialList[number];
 };
 
 export function CardMaterial({ material }: Props) {

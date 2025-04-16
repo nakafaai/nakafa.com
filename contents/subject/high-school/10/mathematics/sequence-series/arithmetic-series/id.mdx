@@ -1,0 +1,141 @@
+export const metadata = {
+  title: "Deret Aritmetika",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/08/2025",
+  subject: "Barisan dan Deret",
+};
+
+## Pengertian Deret Aritmetika
+
+Pernah dengar cerita tentang Carl Friedrich Gauss, si jenius matematika? Saat masih SD, gurunya memberi tugas menjumlahkan semua bilangan dari 1 sampai 100: <InlineMath math="1 + 2 + 3 + \dots + 98 + 99 + 100"/>. Gurunya berharap murid-muridnya akan sibuk lama.
+
+Tapi Gauss punya ide cemerlang! Dia tidak menjumlahkan satu per satu. Penjumlahan berurutan dari suku-suku suatu _barisan aritmetika_ (barisan yang punya selisih tetap antar sukunya) inilah yang kita sebut **Deret Aritmetika**.
+
+Contohnya, <InlineMath math="1, 2, 3, \dots, 100"/> adalah barisan aritmetika dengan suku pertama <InlineMath math="a=1"/> dan beda <InlineMath math="b=1"/>. Deret aritmetikanya adalah <InlineMath math="1 + 2 + 3 + \dots + 100"/>.
+
+### Bagaimana Cara Gauss Menghitungnya
+
+Gauss memperhatikan pola yang menarik:
+
+- Jika suku pertama <InlineMath math="(1)" /> dijumlahkan dengan suku terakhir <InlineMath math="(100)" />, hasilnya <InlineMath math="101" />.
+- Jika suku kedua <InlineMath math="(2)" /> dijumlahkan dengan suku kedua terakhir <InlineMath math="(99)" />, hasilnya juga <InlineMath math="101" />.
+- Jika suku ketiga <InlineMath math="(3)" /> dijumlahkan dengan suku ketiga terakhir <InlineMath math="(98)" />, hasilnya tetap <InlineMath math="101" />.
+- Pola ini berlanjut terus!
+
+<div className="flex flex-col mt-4">
+  <BlockMath math="\underbrace{1+100}_{101}, \underbrace{2+99}_{101}, \underbrace{3+98}_{101}, \dots, \underbrace{50+51}_{101}" />
+</div>
+
+Ternyata, ada 50 pasang bilangan yang masing-masing jumlahnya 101. Jadi, total jumlahnya adalah <InlineMath math="50 \times 101 = 5050"/>. Cerdik, kan?
+
+## Menemukan Rumus Umum
+
+Cara Gauss tadi bisa kita pakai untuk membuat rumus umum jumlah <InlineMath math="n"/> suku pertama deret aritmetika, yang biasa disimbolkan dengan <InlineMath math="S_n"/>.
+
+Misalkan kita punya deret aritmetika:
+
+<BlockMath math="S_n = U_1 + U_2 + U_3 + \dots + U_{n-1} + U_n" />
+
+Kalau ditulis lengkap dengan suku pertama <InlineMath math="(a)" /> dan beda <InlineMath math="(b)" />:
+
+<BlockMath math="S_n = a + (a+b) + (a+2b) + \dots + (a+(n-2)b) + (a+(n-1)b)" />
+
+Sekarang, kita tulis ulang deret <InlineMath math="S_n"/> tapi urutannya dibalik, dari suku terakhir ke suku pertama:
+
+<BlockMath math="S_n = U_n + U_{n-1} + \dots + U_2 + U_1" />
+Atau:
+<BlockMath math="S_n = (a+(n-1)b) + (a+(n-2)b) + \dots + (a+b) + a" />
+
+Selanjutnya, kita jumlahkan kedua versi <InlineMath math="S_n"/> tersebut, suku demi suku:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="S_n = a + (a+b) + \dots + (a+(n-2)b) + (a+(n-1)b)" />
+  <BlockMath math="S_n = (a+(n-1)b) + (a+(n-2)b) + \dots + (a+b) + a" />
+  <BlockMath math="2S_n = [2a+(n-1)b] + [2a+(n-1)b] + \dots + [2a+(n-1)b] + [2a+(n-1)b]" />
+</div>
+
+Perhatikan! Setiap pasang suku (atas dan bawah) jika dijumlahkan hasilnya selalu
+sama, yaitu <InlineMath math="2a + (n-1)b" />. Karena ada <InlineMath math="n" /> suku,
+berarti ada <InlineMath math="n" /> pasang penjumlahan yang sama.
+
+Jadi, kita dapatkan:
+
+<BlockMath math="2S_n = n \times (2a + (n-1)b)" />
+
+Dengan membagi kedua sisi dengan 2, kita peroleh rumus jumlah <InlineMath math="n"/> suku pertama deret aritmetika:
+
+<BlockMath math="S_n = \frac{n}{2} (2a + (n-1)b)" />
+
+## Rumus Praktis Deret Aritmetika
+
+Ada dua bentuk rumus yang paling sering digunakan untuk menghitung <InlineMath math="S_n"/>:
+
+1.  Jika diketahui **suku pertama <InlineMath math="(a)" />** dan **beda <InlineMath math="(b)" />**:
+
+    <BlockMath math="S_n = \frac{n}{2}(2a + (n - 1)b)" />
+
+2.  Jika diketahui **suku pertama <InlineMath math="(a)" />** dan **suku ke-<InlineMath math="(n)" /> <InlineMath math="(U_n)" />**:
+    Ingat rumus suku ke-<InlineMath math="n"/> adalah <InlineMath math="U_n = a + (n-1)b"/>. Substitusi ini ke rumus pertama:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="S_n = \frac{n}{2}(a + a + (n - 1)b)" />
+      <BlockMath math="S_n = \frac{n}{2}(a + U_n)" />
+    </div>
+
+    Rumus kedua ini mirip cara Gauss: jumlah suku pertama dan terakhir,
+    dikalikan banyaknya pasangan <InlineMath math="(\frac{n}{2})" />.
+
+**Keterangan:**
+
+- <InlineMath math="S_n" /> = Jumlah <InlineMath math="n" /> suku pertama
+- <InlineMath math="n" /> = Banyaknya suku
+- <InlineMath math="a" /> = Suku pertama (<InlineMath math="U_1" />)
+- <InlineMath math="b" /> = Beda (selisih antar suku)
+- <InlineMath math="U_n" /> = Suku ke-
+  <InlineMath math="n" />
+
+## Contoh Soal
+
+### Soal 1
+
+Hitung kembali jumlah deret <InlineMath math="1 + 2 + 3 + \dots + 98 + 99 + 100"/>.
+
+Diketahui:
+
+- Suku pertama <InlineMath math="a = 1"/>
+- Suku terakhir <InlineMath math="U_n = U_{100} = 100"/>
+- Banyaknya suku <InlineMath math="n = 100"/>
+
+Karena <InlineMath math="a"/> dan <InlineMath math="U_n"/> diketahui, kita pakai rumus kedua:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="S_n = \frac{n}{2}(a + U_n)" />
+  <BlockMath math="S_{100} = \frac{100}{2}(1 + 100)" />
+  <BlockMath math="S_{100} = 50(101)" />
+  <BlockMath math="S_{100} = 5050" />
+</div>
+
+Hasilnya sama persis dengan cara Gauss!
+
+### Soal 2
+
+Diketahui deret aritmetika: <InlineMath math="13 + 16 + 19 + 22 + \dots"/>. Hitunglah jumlah 30 suku pertama <InlineMath math="(S_{30})"/>!
+
+Diketahui:
+
+- Suku pertama <InlineMath math="a = 13"/>
+- Beda <InlineMath math="b = 16 - 13 = 3"/>
+- Banyaknya suku yang dicari <InlineMath math="n = 30"/>
+
+Karena <InlineMath math="a"/> dan <InlineMath math="b"/> diketahui, kita pakai rumus pertama:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="S_n = \frac{n}{2}(2a + (n - 1)b)" />
+  <BlockMath math="S_{30} = \frac{30}{2}[2(13) + (30 - 1)(3)]" />
+  <BlockMath math="S_{30} = 15[26 + (29)(3)]" />
+  <BlockMath math="S_{30} = 15(26 + 87)" />
+  <BlockMath math="S_{30} = 15(113)" />
+  <BlockMath math="S_{30} = 1695" />
+</div>
+
+Jadi, jumlah 30 suku pertama deret tersebut adalah 1695.

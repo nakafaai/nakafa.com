@@ -1,0 +1,81 @@
+export const metadata = {
+  title: "Perbedaan Barisan Aritmetika dan Geometri",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/05/2025",
+  subject: "Barisan dan Deret",
+};
+
+## Pengertian Barisan
+
+Barisan bilangan adalah susunan bilangan yang memiliki pola tertentu. Dan kita sudah mempelajari dua jenis barisan utama: [barisan aritmetika](/subject/senior-high-school/10/mathematics/sequence-series/arithmetic-sequence) dan [barisan geometri](/subject/senior-high-school/10/mathematics/sequence-series/geometric-sequence).
+
+## Barisan Aritmetika
+
+### Pengertian Barisan Aritmetika
+
+Barisan aritmetika adalah barisan bilangan yang memiliki selisih (beda) yang tetap antara dua suku berurutan.
+
+Jika kita memiliki barisan <InlineMath math="a_1, a_2, a_3, ..., a_n" />, maka barisan tersebut adalah barisan aritmetika jika selisih antara suku berurutan selalu sama:
+
+<BlockMath math="a_2 - a_1 = a_3 - a_2 = a_4 - a_3 = ... = a_n - a_{n-1} = b" />
+
+di mana <InlineMath math="b" /> adalah beda (selisih) yang tetap.
+
+### Rumus Suku ke-n Barisan Aritmetika
+
+Untuk barisan aritmetika dengan suku pertama <InlineMath math="a" /> dan beda <InlineMath math="b" />, rumus suku ke-n adalah:
+
+<BlockMath math="U_n = a + (n-1)b" />
+
+## Barisan Geometri
+
+### Pengertian Barisan Geometri
+
+Barisan geometri adalah barisan bilangan yang memiliki rasio (perbandingan) yang tetap antara dua suku berurutan.
+
+Jika kita memiliki barisan <InlineMath math="a_1, a_2, a_3, ..., a_n" />, maka barisan tersebut adalah barisan geometri jika rasio antara suku berurutan selalu sama:
+
+<BlockMath math="\frac{a_2}{a_1} = \frac{a_3}{a_2} = \frac{a_4}{a_3} = ... = \frac{a_n}{a_{n-1}} = r" />
+
+di mana <InlineMath math="r" /> adalah rasio yang tetap.
+
+### Rumus Suku ke-n Barisan Geometri
+
+Untuk barisan geometri dengan suku pertama <InlineMath math="a" /> dan rasio <InlineMath math="r" />, rumus suku ke-n adalah:
+
+<BlockMath math="U_n = a \times r^{n-1}" />
+
+## Perbedaan Utama
+
+### Cara Mengenali Jenis Barisan
+
+Untuk menentukan apakah suatu barisan adalah barisan aritmetika atau geometri:
+
+1. **Barisan Aritmetika**: Hitung selisih antar suku berurutan. Jika selisihnya selalu sama, maka barisan tersebut adalah barisan aritmetika.
+
+   <BlockMath math="b = a_2 - a_1 = a_3 - a_2 = a_4 - a_3 = ..." />
+
+2. **Barisan Geometri**: Hitung rasio antar suku berurutan. Jika rasionya selalu sama, maka barisan tersebut adalah barisan geometri.
+   <BlockMath math="r = \frac{a_2}{a_1} = \frac{a_3}{a_2} = \frac{a_4}{a_3} = ..." />
+
+### Tabel Perbandingan
+
+| Aspek           | Barisan Aritmetika                     | Barisan Geometri                             |
+| --------------- | -------------------------------------- | -------------------------------------------- |
+| Pola            | Selisih (beda) tetap                   | Rasio tetap                                  |
+| Rumus suku ke-n | <InlineMath math="U_n = a + (n-1)b" /> | <InlineMath math="U_n = a \times r^{n-1}" /> |
+| Pertumbuhan     | Linear                                 | Eksponensial                                 |
+
+## Aplikasi dalam Kehidupan Sehari-hari
+
+### Contoh Barisan Aritmetika
+
+1. **Tabungan Berkala**: Seorang siswa menabung di koperasi sekolah dengan pola aritmetika. Bulan pertama menabung Rp5.000, bulan kedua Rp7.000, bulan ketiga Rp9.000, dan seterusnya. Dengan beda Rp2.000, jumlah tabungan pada bulan ke-10 dapat dihitung menggunakan rumus barisan aritmetika.
+
+2. **Pertumbuhan Tanaman**: Tinggi tanaman yang bertambah secara konstan setiap minggu. Jika tanaman bertambah tinggi 3 cm setiap minggu dengan tinggi awal 15 cm, maka tingginya mengikuti barisan aritmetika.
+
+### Contoh Barisan Geometri
+
+1. **Investasi dengan Bunga Majemuk**: Uang Rp1.000.000 diinvestasikan dengan bunga 10% per tahun. Maka nilai investasi akan membentuk barisan geometri dengan rasio 1,1.
+
+2. **Pertumbuhan Populasi**: Bakteri yang berkembang biak menjadi dua kali lipat setiap jam membentuk barisan geometri dengan rasio 2.

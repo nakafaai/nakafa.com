@@ -9,18 +9,21 @@ import { type ParsedHeading, SidebarTree } from "./sidebar-tree";
 
 export function LayoutArticleHeader({
   metadata,
-  icon,
-}: { icon: LucideIcon; metadata: ContentMetadata }) {
+  category,
+}: {
+  metadata: ContentMetadata;
+  category?: {
+    icon: LucideIcon;
+    name: string;
+  };
+}) {
   return (
     <HeaderContent
       title={metadata.title}
       description={metadata.description}
       authors={metadata.authors}
       date={metadata.date}
-      category={{
-        icon,
-        name: metadata.category,
-      }}
+      category={category}
     />
   );
 }
