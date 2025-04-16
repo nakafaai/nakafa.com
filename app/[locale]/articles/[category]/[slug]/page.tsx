@@ -5,13 +5,13 @@ import {
   LayoutArticleHeader,
 } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
-import { removeLeadingSlash } from "@/lib/utils";
 import { getCategoryIcon } from "@/lib/utils/articles/category";
 import { getSlugPath } from "@/lib/utils/articles/slug";
 import { getContent } from "@/lib/utils/contents";
 import { getReferences } from "@/lib/utils/contents";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getHeadings, getRawContent } from "@/lib/utils/markdown";
+import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
 import type { ArticleCategory } from "@/types/articles/category";
 import type { Metadata } from "next";
@@ -34,7 +34,7 @@ export async function generateMetadata({
   const content = await getContent(`${FILE_PATH}/${locale}.mdx`);
 
   const image = {
-    url: ["/og", removeLeadingSlash(FILE_PATH), "image.png"].join("/"),
+    url: getOgUrl(locale, FILE_PATH),
     width: 1200,
     height: 630,
   };

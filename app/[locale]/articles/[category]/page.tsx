@@ -4,13 +4,13 @@ import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
-import { removeLeadingSlash } from "@/lib/utils";
 import {
   getCategoryIcon,
   getCategoryPath,
 } from "@/lib/utils/articles/category";
 import { getArticles } from "@/lib/utils/articles/slug";
 import { getGithubUrl } from "@/lib/utils/github";
+import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
 import type { ArticleCategory } from "@/types/articles/category";
 import type { Metadata } from "next";
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const FILE_PATH = getCategoryPath(category);
 
   const image = {
-    url: ["/og", removeLeadingSlash(FILE_PATH), "image.png"].join("/"),
+    url: getOgUrl(locale, FILE_PATH),
     width: 1200,
     height: 630,
   };

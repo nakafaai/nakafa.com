@@ -6,11 +6,11 @@ import {
   LayoutMaterialPagination,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
-import { removeLeadingSlash } from "@/lib/utils";
 import { getContent } from "@/lib/utils/contents";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getHeadings } from "@/lib/utils/markdown";
 import { getRawContent } from "@/lib/utils/markdown";
+import { getOgUrl } from "@/lib/utils/metadata";
 import {
   getMaterialIcon,
   getMaterialPath,
@@ -51,7 +51,7 @@ export async function generateMetadata({
   const content = await getContent(FILE_PATH);
 
   const image = {
-    url: ["/og", removeLeadingSlash(FILE_PATH), "image.png"].join("/"),
+    url: getOgUrl(locale, FILE_PATH),
     width: 1200,
     height: 630,
   };

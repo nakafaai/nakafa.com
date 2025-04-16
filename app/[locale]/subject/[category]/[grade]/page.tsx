@@ -4,8 +4,8 @@ import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
-import { removeLeadingSlash } from "@/lib/utils";
 import { getGithubUrl } from "@/lib/utils/github";
+import { getOgUrl } from "@/lib/utils/metadata";
 import { getGradePath, getGradeSubjects } from "@/lib/utils/subject/grade";
 import { getStaticParams } from "@/lib/utils/system";
 import type { SubjectCategory } from "@/types/subject/category";
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const FILE_PATH = getGradePath(category, grade);
 
   const image = {
-    url: ["/og", removeLeadingSlash(FILE_PATH), "image.png"].join("/"),
+    url: getOgUrl(locale, FILE_PATH),
     width: 1200,
     height: 630,
   };
