@@ -49,11 +49,21 @@ export async function generateMetadata({
 
   const content = await getContent(FILE_PATH);
 
+  const image = {
+    url: ["/og", FILE_PATH, "image.png"].join("/"),
+    width: 1200,
+    height: 630,
+  };
+
   if (!content) {
     return {
       title: t(material),
       alternates: {
         canonical: `/${locale}${FILE_PATH}`,
+      },
+      openGraph: {
+        url: `/${locale}${FILE_PATH}`,
+        images: [image],
       },
     };
   }

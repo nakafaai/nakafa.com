@@ -46,6 +46,7 @@ const ORIGIN_COLOR = {
   DARK: "#18181b",
 };
 
+// Needs to load the fonts through URLs, not direct file system paths
 // Font path for the 3D text
 const FONT_PATH = "/fonts/Geist-Regular.ttf";
 const MONO_FONT_PATH = "/fonts/GeistMono-Regular.ttf";

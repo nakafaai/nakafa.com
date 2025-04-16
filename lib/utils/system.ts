@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
+import { ContentMetadataSchema } from "@/types/content";
+import { getTranslations } from "next-intl/server";
 
 /**
  * Gets the child names of the folder.
@@ -175,4 +177,43 @@ export function getStaticParams(
       ...nestedParam,
     }));
   });
+}
+
+/**
+ * Gets the title and description from an MDX file based on the slug
+ * @param locale - The locale for the content
+ * @param slug - The slug parts as an array of strings (e.g. ["articles", "politics", "nepotism"])
+ * @returns An object containing the title and description, or default values if not found
+ */
+export async function getMetadataFromSlug(
+  locale: string,
+  slug: string[]
+): Promise<{ title: string; description: string }> {
+  const [tCommon, tMetadata] = await Promise.all([
+    getTranslations("Common"),
+    getTranslations("Metadata"),
+  ]);
+  const defaultTitle = tCommon("made-with-love");
+  try {
+    // Build the path to the MDX file
+    const slugPath = slug.join("/");
+
+    // Dynamically import the MDX file to get its metadata
+    const contentModule = await import(`@/contents/${slugPath}/${locale}.mdx`);
+
+    const parsed = ContentMetadataSchema.parse(contentModule.metadata);
+
+    // Get the title and description from the metadata
+    const title = parsed.title || defaultTitle;
+    const description =
+      parsed.description || parsed.subject || tMetadata("short-description");
+
+    return { title, description };
+  } catch {
+    // Return default values if there's an error
+    return {
+      title: defaultTitle,
+      description: tMetadata("short-description"),
+    };
+  }
 }

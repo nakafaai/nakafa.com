@@ -44,10 +44,20 @@ export async function generateMetadata({
 
   const FILE_PATH = getMaterialPath(category, grade, material);
 
+  const image = {
+    url: ["/og", FILE_PATH, "image.png"].join("/"),
+    width: 1200,
+    height: 630,
+  };
+
   return {
     title: t(material),
     alternates: {
       canonical: `/${locale}${FILE_PATH}`,
+    },
+    openGraph: {
+      url: `/${locale}${FILE_PATH}`,
+      images: [image],
     },
   };
 }
