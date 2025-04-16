@@ -15,7 +15,7 @@ export function LangMenuSwitcher() {
   const isMobile = useMediaQuery("(max-width: 640px)");
 
   function handleChangeLocale(locale: Locale) {
-    startTransition(() => {
+    startTransition(async () => {
       router.replace(
         // @ts-expect-error -- TypeScript will validate that only known `params`
         // are used in combination with a given `pathname`. Since the two will
@@ -23,6 +23,11 @@ export function LangMenuSwitcher() {
         { pathname, params },
         { locale }
       );
+
+      // reboot the pagefind because of the language change
+      if (typeof window !== "undefined") {
+        await window.pagefind.destroy();
+      }
     });
   }
 

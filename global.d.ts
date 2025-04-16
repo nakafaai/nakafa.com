@@ -20,6 +20,8 @@ declare global {
         query: string,
         searchOptions: PagefindSearchOptions
       ) => Promise<T[]>;
+      destroy: () => Promise<void>;
+      init: () => Promise<void>;
     };
   }
 }

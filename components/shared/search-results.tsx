@@ -1,6 +1,7 @@
 import { searchAtom } from "@/lib/jotai/search";
 import { cn } from "@/lib/utils";
 import type { PagefindResult } from "@/types/pagefind";
+import { IconMenu3 } from "@tabler/icons-react";
 import { useSetAtom } from "jotai";
 import { FileTextIcon } from "lucide-react";
 import Link from "next/link";
@@ -25,7 +26,7 @@ export function SearchResults({ data }: Props) {
   return (
     <div className="space-y-2 border-b px-2 py-4 last:border-b-0">
       <div className="px-2">
-        <h1 className="font-medium text-muted-foreground text-sm leading-tight tracking-tight">
+        <h1 className="font-medium text-muted-foreground text-sm">
           {data.meta.title}
         </h1>
       </div>
@@ -43,13 +44,17 @@ export function SearchResults({ data }: Props) {
           >
             <div
               className={cn(
-                "group rounded-md p-2 transition-colors hover:bg-primary/5",
+                "group rounded-md p-2 transition-colors hover:bg-accent",
                 getAnchorStyle(subResult.anchor)
               )}
             >
-              <div className="flex items-center gap-1.5">
-                <FileTextIcon className="size-4 shrink-0 opacity-80" />
-                <h2 className="line-clamp-1 font-medium leading-tight">
+              <div className="flex items-center gap-2">
+                {subResult.anchor?.element === "h2" ? (
+                  <FileTextIcon className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground" />
+                ) : (
+                  <IconMenu3 className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground" />
+                )}
+                <h2 className="line-clamp-1 transition-colors group-hover:text-accent-foreground">
                   {subResult.title}
                 </h2>
               </div>

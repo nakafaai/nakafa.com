@@ -7,7 +7,7 @@ import { HeartCrackIcon, InfoIcon, RocketIcon, SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { addBasePath } from "next/dist/client/add-base-path";
 import { useDeferredValue, useEffect } from "react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { useState } from "react";
 import {
   Dialog,
@@ -39,13 +39,23 @@ const DEV_SEARCH_NOTICE = (
 
 // Fix React Compiler (BuildHIR::lowerExpression) Handle Import expressions
 async function importPagefind() {
-  window.pagefind = await import(
-    /* webpackIgnore: true */ addBasePath("/_pagefind/pagefind.js")
-  );
-  window.pagefind?.options({
-    baseUrl: "/",
-    // ... more search options
-  });
+  try {
+    window.pagefind = await import(
+      /* webpackIgnore: true */ addBasePath("/_pagefind/pagefind.js")
+    );
+    window.pagefind?.options({
+      baseUrl: "/",
+      // ... more search options
+    });
+    await window.pagefind.init();
+  } catch {
+    window.pagefind = {
+      debouncedSearch: () => Promise.resolve([]),
+      destroy: () => Promise.resolve(),
+      init: () => Promise.resolve(),
+      options: () => undefined,
+    };
+  }
 }
 
 function getErrorMessage(error: unknown) {
@@ -59,6 +69,14 @@ function getErrorMessage(error: unknown) {
     return `${error.constructor.name}: ${error.message}`;
   }
   return String(error);
+}
+
+function ContentContainer({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
+      {children}
+    </div>
+  );
 }
 
 function Content({
@@ -76,28 +94,19 @@ function Content({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
+      <ContentContainer>
         <InfoIcon className="size-4" />
         <p>{t("search-error")}</p>
-      </div>
+      </ContentContainer>
     );
   }
 
   if (!search) {
     return (
-      <div className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
+      <ContentContainer>
         <RocketIcon className="size-4" />
         <p>{t("search-help")}</p>
-      </div>
-    );
-  }
-
-  if (isLoading && !results.length) {
-    return (
-      <div className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
-        <LoaderIcon />
-        <p>{t("search-loading")}</p>
-      </div>
+      </ContentContainer>
     );
   }
 
@@ -107,11 +116,20 @@ function Content({
     ));
   }
 
+  if (isLoading) {
+    return (
+      <ContentContainer>
+        <LoaderIcon />
+        <p>{t("search-loading")}</p>
+      </ContentContainer>
+    );
+  }
+
   return (
-    <div className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
+    <ContentContainer>
       <HeartCrackIcon className="size-4" />
       <p>{t("search-not-found")}</p>
-    </div>
+    </ContentContainer>
   );
 }
 
@@ -129,8 +147,7 @@ export function SearchCommand() {
 
   useEffect(() => {
     const getResults = async (value: string) => {
-      // biome-ignore lint/style/noNonNullAssertion: pagefind is initialized after build
-      const response = await window.pagefind!.debouncedSearch<PagefindResult>(
+      const response = await window.pagefind.debouncedSearch<PagefindResult>(
         value,
         SEARCH_OPTIONS
       );
@@ -138,21 +155,27 @@ export function SearchCommand() {
         return;
       }
 
-      // @ts-expect-error: pagefind returns a promise of an array of objects
-      const data = await Promise.all(response.results.map((o) => o.data()));
+      try {
+        // @ts-expect-error: pagefind returns a promise of an array of objects
+        const data = await Promise.all(response.results.map((o) => o.data()));
 
-      setResults(
-        data.map((newData: PagefindResult) => ({
-          ...newData,
-          sub_results: newData.sub_results.map((r) => {
-            const url = r.url
-              .replace(HTML_EXT_REGEX, "")
-              .replace(HTML_ANCHOR_REGEX, "#");
+        setResults(
+          data.map((newData: PagefindResult) => ({
+            ...newData,
+            sub_results: newData.sub_results.map((r) => {
+              const url = r.url
+                .replace(HTML_EXT_REGEX, "")
+                .replace(HTML_ANCHOR_REGEX, "#");
 
-            return { ...r, url };
-          }),
-        }))
-      );
+              return { ...r, url };
+            }),
+          }))
+        );
+      } catch (error) {
+        setError(getErrorMessage(error));
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     const handleSearch = async (value: string) => {
@@ -161,7 +184,9 @@ export function SearchCommand() {
         setError("");
         return;
       }
+
       setIsLoading(true);
+
       if (!window.pagefind) {
         setError("");
         try {
@@ -172,9 +197,10 @@ export function SearchCommand() {
           return;
         }
       }
+
       await getResults(value);
-      setIsLoading(false);
     };
+
     handleSearch(deferredSearch);
   }, [deferredSearch]);
 
@@ -215,7 +241,7 @@ export function SearchCommand() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             autoFocus
-            className="flex h-10 w-full rounded-md bg-transparent py-4 text-sm outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-12 w-full flex-1 rounded-md bg-transparent text-sm outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
 
@@ -224,7 +250,7 @@ export function SearchCommand() {
             isLoading={isLoading}
             error={error}
             results={results}
-            search={search}
+            search={deferredSearch}
           />
         </ScrollArea>
       </DialogContent>
