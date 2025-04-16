@@ -31,7 +31,7 @@ function PaginationButton({
       href={href}
       className={cn(
         buttonVariants({ variant: "outline" }),
-        "group flex h-auto flex-col justify-between py-3",
+        "group flex h-auto flex-col whitespace-normal py-3",
         !href && "pointer-events-none hidden opacity-50 sm:flex",
         className
       )}
@@ -41,7 +41,12 @@ function PaginationButton({
         {label}
         {iconPosition === "right" && icon}
       </div>
-      <p className="font-medium text-foreground transition-colors group-hover:text-accent-foreground">
+      <p
+        className={cn(
+          "w-full font-medium text-foreground transition-colors group-hover:text-accent-foreground",
+          iconPosition === "right" ? "text-right" : ""
+        )}
+      >
         {title}
       </p>
     </NavigationLink>
@@ -53,7 +58,7 @@ export function PaginationContent({ pagination, className }: Props) {
 
   return (
     <div className={cn("mt-10 border-t pt-10", className)}>
-      <div className="mx-auto grid max-w-3xl gap-4 px-4 sm:grid-cols-2">
+      <div className="mx-auto grid max-w-3xl gap-6 px-4 sm:grid-cols-2">
         <PaginationButton
           href={pagination.prev.href}
           title={pagination.prev.title}
