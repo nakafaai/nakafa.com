@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import {
   getFolderChildNames,
   getMetadataFromSlug,
@@ -6,9 +5,6 @@ import {
 } from "@/lib/utils/system";
 import type { Locale } from "next-intl";
 import { generateOGImage } from "./og";
-
-const font = readFileSync("./public/fonts/GeistMono-Regular.ttf");
-const fontBold = readFileSync("./public/fonts/GeistMono-Bold.ttf");
 
 export function generateStaticParams() {
   // Top level directories in contents
@@ -55,6 +51,14 @@ export async function GET(
   // Get metadata from the content path
   const { title, description } = await getMetadataFromSlug(locale, contentSlug);
 
+  // Fetch fonts from public directory
+  const fontData = await fetch(
+    new URL("/fonts/GeistMono-Regular.ttf", _req.url)
+  ).then((res) => res.arrayBuffer());
+  const fontBoldData = await fetch(
+    new URL("/fonts/GeistMono-Bold.ttf", _req.url)
+  ).then((res) => res.arrayBuffer());
+
   return generateOGImage({
     primaryTextColor: "rgb(240,240,240)",
     title,
@@ -62,12 +66,12 @@ export async function GET(
     fonts: [
       {
         name: "GeistMono",
-        data: font,
+        data: fontData,
         weight: 400,
       },
       {
         name: "GeistMono",
-        data: fontBold,
+        data: fontBoldData,
         weight: 600,
       },
     ],
