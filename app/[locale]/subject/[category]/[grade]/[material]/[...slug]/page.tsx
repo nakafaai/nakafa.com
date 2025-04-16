@@ -96,7 +96,7 @@ export default async function Page({ params }: Props) {
     const [content, headings, pagination] = await Promise.all([
       getContent(`${FILE_PATH}/${locale}.mdx`),
       getRawContent(`${FILE_PATH}/${locale}.mdx`).then(getHeadings),
-      getMaterials(FILE_PATH, locale).then((materials) =>
+      getMaterials(materialPath, locale).then((materials) =>
         getMaterialsPagination(FILE_PATH, materials)
       ),
     ]);

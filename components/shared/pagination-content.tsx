@@ -3,57 +3,74 @@ import { cn } from "@/lib/utils";
 import type { ContentPagination } from "@/types/content";
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import NavigationLink from "../ui/navigation-link";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 type Props = {
   pagination: ContentPagination;
   className?: string;
 };
 
+function PaginationButton({
+  href,
+  title,
+  label,
+  icon,
+  className,
+  iconPosition = "right",
+}: {
+  href: string;
+  title: string;
+  label: string;
+  icon: ReactNode;
+  className?: string;
+  iconPosition?: "left" | "right";
+}) {
+  return (
+    <NavigationLink
+      href={href}
+      className={cn(
+        buttonVariants({ variant: "outline" }),
+        "group flex h-auto flex-col justify-between py-3",
+        !href && "pointer-events-none hidden opacity-50 sm:flex",
+        className
+      )}
+    >
+      <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">
+        {iconPosition === "left" && icon}
+        {label}
+        {iconPosition === "right" && icon}
+      </div>
+      <p className="font-medium text-foreground transition-colors group-hover:text-accent-foreground">
+        {title}
+      </p>
+    </NavigationLink>
+  );
+}
+
 export function PaginationContent({ pagination, className }: Props) {
   const t = useTranslations("Common");
 
   return (
     <div className={cn("mt-10 border-t pt-10", className)}>
-      <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <NavigationLink
-              href={pagination.prev.href}
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                !pagination.prev.href && "pointer-events-none opacity-50"
-              )}
-              aria-label={`${t("previous")} - ${pagination.prev.title}`}
-            >
-              <ArrowLeftIcon className="size-4 shrink-0" />
-              {t("previous")}
-            </NavigationLink>
-          </TooltipTrigger>
-          <TooltipContent hidden={!pagination.prev.href}>
-            <p>{pagination.prev.title}</p>
-          </TooltipContent>
-        </Tooltip>
+      <div className="mx-auto grid max-w-3xl gap-4 px-4 sm:grid-cols-2">
+        <PaginationButton
+          href={pagination.prev.href}
+          title={pagination.prev.title}
+          label={t("previous")}
+          icon={<ArrowLeftIcon className="size-4 shrink-0" />}
+          className="items-start"
+          iconPosition="left"
+        />
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <NavigationLink
-              href={pagination.next.href}
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                !pagination.next.href && "pointer-events-none opacity-50"
-              )}
-              aria-label={`${t("next")} - ${pagination.next.title}`}
-            >
-              {t("next")}
-              <ArrowRightIcon className="size-4 shrink-0" />
-            </NavigationLink>
-          </TooltipTrigger>
-          <TooltipContent hidden={!pagination.next.href}>
-            <p>{pagination.next.title}</p>
-          </TooltipContent>
-        </Tooltip>
+        <PaginationButton
+          href={pagination.next.href}
+          title={pagination.next.title}
+          label={t("next")}
+          icon={<ArrowRightIcon className="size-4 shrink-0" />}
+          className="items-end"
+          iconPosition="right"
+        />
       </div>
     </div>
   );
