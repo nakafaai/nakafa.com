@@ -7,12 +7,8 @@ import {
 import type { Locale } from "next-intl";
 import { generateOGImage } from "./og";
 
-const font = readFileSync(
-  "./node_modules/geist/dist/fonts/geist-mono/GeistMono-Regular.ttf"
-);
-const fontBold = readFileSync(
-  "./node_modules/geist/dist/fonts/geist-mono/GeistMono-Bold.ttf"
-);
+const font = readFileSync("./public/fonts/GeistMono-Regular.ttf");
+const fontBold = readFileSync("./public/fonts/GeistMono-Bold.ttf");
 
 export function generateStaticParams() {
   // Top level directories in contents
