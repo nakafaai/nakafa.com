@@ -31,6 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const FILE_PATH = getGradePath(category, grade);
 
+  const path = `/${locale}${FILE_PATH}`;
   const image = {
     url: getOgUrl(locale, FILE_PATH),
     width: 1200,
@@ -41,10 +42,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: t("grade", { grade }),
     description: t("grade-description"),
     alternates: {
-      canonical: `/${locale}${FILE_PATH}`,
+      canonical: path,
     },
     openGraph: {
-      url: `/${locale}${FILE_PATH}`,
+      url: path,
+      images: [image],
+    },
+    twitter: {
       images: [image],
     },
   };

@@ -33,22 +33,28 @@ export async function generateMetadata({
 
   const content = await getContent(locale, FILE_PATH);
 
+  const path = `/${locale}${FILE_PATH}`;
+  const alternates = {
+    canonical: path,
+  };
   const image = {
     url: getOgUrl(locale, FILE_PATH),
     width: 1200,
     height: 630,
   };
+  const twitter = {
+    images: [image],
+  };
 
   if (!content) {
     return {
       title: t(category),
-      alternates: {
-        canonical: `/${locale}${FILE_PATH}`,
-      },
+      alternates,
       openGraph: {
-        url: `/${locale}${FILE_PATH}`,
+        url: path,
         images: [image],
       },
+      twitter,
     };
   }
 
@@ -57,15 +63,14 @@ export async function generateMetadata({
   return {
     title: metadata.title,
     description: metadata.description,
-    alternates: {
-      canonical: `/${locale}${FILE_PATH}`,
-    },
-    openGraph: {
-      url: `/${locale}${FILE_PATH}`,
-      images: [image],
-    },
+    alternates,
     authors: metadata.authors,
     category: t(category),
+    openGraph: {
+      url: path,
+      images: [image],
+    },
+    twitter,
   };
 }
 
