@@ -1,6 +1,4 @@
-import type { ContentMetadata } from "@/types/content";
-import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { FooterContent } from "./footer-content";
 import { HeaderContent } from "./header-content";
 import { LayoutContent } from "./layout-content";
@@ -8,24 +6,9 @@ import { SidebarRight } from "./sidebar-right";
 import { type ParsedHeading, SidebarTree } from "./sidebar-tree";
 
 export function LayoutArticleHeader({
-  metadata,
-  category,
-}: {
-  metadata: ContentMetadata;
-  category?: {
-    icon: LucideIcon;
-    name: string;
-  };
-}) {
-  return (
-    <HeaderContent
-      title={metadata.title}
-      description={metadata.description}
-      authors={metadata.authors}
-      date={metadata.date}
-      category={category}
-    />
-  );
+  ...props
+}: ComponentProps<typeof HeaderContent>) {
+  return <HeaderContent {...props} />;
 }
 
 export function LayoutArticleContent({

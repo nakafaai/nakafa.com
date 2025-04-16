@@ -22,7 +22,7 @@ export type Reference = z.infer<typeof ReferenceSchema>;
 
 export const ContentMetadataSchema = z.object({
   title: z.string(),
-  description: z.string(),
+  description: z.string().optional(),
   authors: z.array(
     z.object({
       name: z.string(),

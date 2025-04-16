@@ -1,4 +1,4 @@
-import type { Reference } from "@/types/content";
+import { ContentMetadataSchema, type Reference } from "@/types/content";
 import type { ContentMetadata } from "@/types/content";
 import type { ComponentType } from "react";
 
@@ -20,8 +20,10 @@ export async function getContent(path: string): Promise<{
     // Using a relative path from the location of this file (lib/utils)
     const contentModule = await import(`@/contents/${cleanPath}`);
 
+    const parsedMetadata = ContentMetadataSchema.parse(contentModule.metadata);
+
     return {
-      metadata: contentModule.metadata,
+      metadata: parsedMetadata,
       default: contentModule.default,
     };
   } catch {

@@ -16,7 +16,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import {} from "@/components/ui/tabs";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 type Props = {

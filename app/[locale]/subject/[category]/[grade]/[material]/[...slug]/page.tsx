@@ -8,14 +8,14 @@ import {
 import { RefContent } from "@/components/shared/ref-content";
 import { getContent } from "@/lib/utils/contents";
 import { getGithubUrl } from "@/lib/utils/github";
-import { getHeadings, getMaterialsPagination } from "@/lib/utils/markdown";
+import { getHeadings } from "@/lib/utils/markdown";
 import { getRawContent } from "@/lib/utils/markdown";
 import {
   getMaterialIcon,
   getMaterialPath,
   getMaterials,
 } from "@/lib/utils/subject/material";
-import { getSlugPath } from "@/lib/utils/subject/slug";
+import { getMaterialsPagination, getSlugPath } from "@/lib/utils/subject/slug";
 import { getStaticParams } from "@/lib/utils/system";
 import type { SubjectCategory } from "@/types/subject/category";
 import type { Grade } from "@/types/subject/grade";
@@ -115,14 +115,15 @@ export default async function Page({ params }: Props) {
         }}
       >
         <LayoutMaterialHeader
-          header={{
-            title: metadata.title,
-            link: {
-              href: `${materialPath}#${metadata.subject?.toLowerCase().replace(/\s+/g, "-")}`,
-              label: metadata.subject ?? "",
-            },
+          title={metadata.title}
+          description={metadata.description}
+          icon={getMaterialIcon(material)}
+          link={{
+            href: `${materialPath}#${metadata.subject?.toLowerCase().replace(/\s+/g, "-")}`,
+            label: metadata.subject ?? "",
           }}
-          metadata={metadata}
+          authors={metadata.authors}
+          date={metadata.date}
           category={{
             icon: getMaterialIcon(material),
             name: tSubject(material),

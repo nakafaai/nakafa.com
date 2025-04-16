@@ -8,8 +8,8 @@ import {
   getCategoryIcon,
   getCategoryPath,
 } from "@/lib/utils/articles/category";
+import { getArticles } from "@/lib/utils/articles/slug";
 import { getGithubUrl } from "@/lib/utils/github";
-import { getArticles } from "@/lib/utils/markdown";
 import { getStaticParams } from "@/lib/utils/system";
 import type { ArticleCategory } from "@/types/articles/category";
 import type { Metadata } from "next";

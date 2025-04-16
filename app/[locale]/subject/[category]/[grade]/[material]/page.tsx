@@ -82,13 +82,11 @@ export default async function Page({ params }: Props) {
       }}
     >
       <LayoutMaterialHeader
-        header={{
-          title: t(material),
-          icon: getMaterialIcon(material),
-          link: {
-            href: gradePath,
-            label: t("grade", { grade }),
-          },
+        title={t(material)}
+        icon={getMaterialIcon(material)}
+        link={{
+          href: gradePath,
+          label: t("grade", { grade }),
         }}
       />
       <LayoutMaterialContent className="py-10">

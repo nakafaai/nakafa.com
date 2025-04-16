@@ -88,7 +88,10 @@ export default async function Page({ params }: Props) {
     return (
       <LayoutArticle onThisPage={headings}>
         <LayoutArticleHeader
-          metadata={metadata}
+          title={metadata.title}
+          description={metadata.description}
+          authors={metadata.authors}
+          date={metadata.date}
           category={{
             icon: getCategoryIcon(category),
             name: t(category),
