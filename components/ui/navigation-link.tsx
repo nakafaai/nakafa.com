@@ -24,8 +24,8 @@ export default function NavigationLink({
     <Link
       aria-current={isActive ? "page" : undefined}
       href={href}
-      prefetch
       {...props}
+      prefetch // always prefetch the link
     />
   );
 }
