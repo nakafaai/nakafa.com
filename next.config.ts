@@ -1,7 +1,12 @@
+import createBundleAnalyzer from "@next/bundle-analyzer";
 import createMDX from "@next/mdx";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { routing } from "./i18n";
+
+const withAnalyzer = createBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const withNextIntl = createNextIntlPlugin();
 
@@ -41,4 +46,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withNextIntl(withMDX(nextConfig));
+export default withAnalyzer(withNextIntl(withMDX(nextConfig)));
