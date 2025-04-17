@@ -58,8 +58,22 @@ export function getUrl(href: Href, locale: Locale): string {
   return host + pathname;
 }
 
+// Return OG routes based on regular routes
+export function getOgRoutes(routes: string[]): string[] {
+  return routes.map((route) => {
+    if (route === "/") {
+      return "/og/image.png";
+    }
+    return `/og${route}/image.png`;
+  });
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const routes = getAllRoutes();
+  const ogRoutes = getOgRoutes(routes);
 
-  return routes.flatMap((route) => getEntries(route));
+  // Combine regular routes and OG routes
+  const allRoutes = [...routes, ...ogRoutes];
+
+  return allRoutes.flatMap((route) => getEntries(route));
 }
