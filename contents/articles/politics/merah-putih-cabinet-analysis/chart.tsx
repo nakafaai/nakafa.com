@@ -49,10 +49,10 @@ export function CabinetChart({ title, description, footnote }: Props) {
   const chartConfig = {
     cabinet: {
       label: t("cabinet"),
-      color: "var(--chart-3)",
+      color: "var(--chart-1)",
     },
     label: {
-      color: "var(--background)",
+      color: "var(--foreground)",
     },
   } satisfies ChartConfig;
 
