@@ -1,5 +1,5 @@
 import { ThemeProvider } from "@/components/theme/provider";
-import { routing } from "@/i18n/routing";
+import { routing } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 import { GeistMono } from "geist/font/mono";

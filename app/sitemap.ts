@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { getPathname, routing } from "@/i18n/routing";
+import { routing } from "@/i18n";
+import { getPathname } from "@/i18n/routing";
 import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
 

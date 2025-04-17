@@ -1,6 +1,7 @@
 "use client";
 
-import { type Locale, usePathname, useRouter } from "@/i18n/routing";
+import { usePathname, useRouter } from "@/i18n/routing";
+import type { Locale } from "next-intl";
 import { useParams } from "next/navigation";
 import { useTransition } from "react";
 import { useMediaQuery } from "usehooks-ts";
