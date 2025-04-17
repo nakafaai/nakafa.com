@@ -2,7 +2,7 @@
 import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
-import { getAllRoutes, getEntries } from "../app/sitemap";
+import { getAllRoutes, getEntries, getOgRoutes } from "../app/sitemap";
 import { logger } from "./utils";
 
 // References:
@@ -87,7 +87,9 @@ function getUnsubmittedUrls(service: "indexNow" | "bing"): {
 
   // Get all URLs from sitemap
   const routes = getAllRoutes();
-  const allEntries = routes.flatMap((route) => getEntries(route));
+  const ogRoutes = getOgRoutes(routes);
+  const allRoutes = [...routes, ...ogRoutes];
+  const allEntries = allRoutes.flatMap((route) => getEntries(route));
 
   // Extract unique URLs
   const allUrls = new Set<string>();
