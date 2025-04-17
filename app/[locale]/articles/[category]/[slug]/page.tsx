@@ -19,6 +19,8 @@ import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+export const revalidate = false;
+
 type Props = {
   params: Promise<{ locale: Locale; category: ArticleCategory; slug: string }>;
 };
