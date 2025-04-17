@@ -18,11 +18,6 @@ const nextConfig: NextConfig = {
     contentDispositionType: "inline",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
-  },
 };
 
 export default withNextIntl(withMDX(nextConfig));
