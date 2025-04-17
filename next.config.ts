@@ -7,10 +7,7 @@ const withNextIntl = createNextIntlPlugin();
 const withMDX = createMDX();
 
 const nextConfig: NextConfig = {
-  pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
-  turbopack: {
-    resolveExtensions: [".mdx", ".tsx", ".ts", ".jsx", ".js", ".mjs", ".json"],
-  },
+  pageExtensions: ["mdx", "ts", "tsx"],
   experimental: {
     mdxRs: {
       mdxType: "gfm",
@@ -20,6 +17,11 @@ const nextConfig: NextConfig = {
   images: {
     contentDispositionType: "inline",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
   },
 };
 

@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev --turbopack",
     "build": "biome check --write . && next build",
     "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
-    "start": "next start --turbo",
+    "start": "next start --turbopack",
     "lint": "next lint && biome check .",
     "lint:fix": "next lint --fix && biome check --write .",
     "preview": "next build && next start",

@@ -17,7 +17,7 @@ import { Grid2x2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import dynamic from "next/dynamic";
-import { type ReactNode, useMemo, useRef, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import * as THREE from "three";
 import { Button } from "./button";
 
@@ -149,46 +149,6 @@ type UnitCircleProps = {
   precision?: number;
   /** Use mono font for the labels */
   useMonoFont?: boolean;
-  /** Additional props */
-  [key: string]: unknown;
-};
-
-/**
- * Props for the Function3D component
- */
-type Function3DProps = {
-  /** Function to plot z = f(x, y) */
-  fn: (x: number, y: number) => number;
-  /** Color of the function plot */
-  color?: string | THREE.Color;
-  /** Range for x axis [start, end] */
-  xRange?: [number, number];
-  /** Range for y axis [start, end] */
-  yRange?: [number, number];
-  /** Resolution/density of points */
-  resolution?: number;
-  /** Render as wireframe */
-  wireframe?: boolean;
-  /** Additional props */
-  [key: string]: unknown;
-};
-
-/**
- * Props for the Function2D component
- */
-type Function2DProps = {
-  /** Function to plot y = f(x) */
-  fn: (x: number) => number;
-  /** Which plane to plot on: 'xy', 'xz', or 'yz' */
-  plane?: "xy" | "xz" | "yz";
-  /** Color of the function plot */
-  color?: string | THREE.Color;
-  /** Range for independent variable [start, end] */
-  range?: [number, number];
-  /** Resolution/density of points */
-  resolution?: number;
-  /** Width of the line */
-  lineWidth?: number;
   /** Additional props */
   [key: string]: unknown;
 };
@@ -453,109 +413,6 @@ export function CameraControls({
         screenSpacePanning={true}
       />
     </>
-  );
-}
-
-/**
- * Function3D component for plotting 3D surfaces
- */
-export function Function3D({
-  fn,
-  color = COLORS.PINK,
-  xRange = [-5, 5],
-  yRange = [-5, 5],
-  resolution = 50,
-  wireframe = false,
-  ...props
-}: Function3DProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  // Create points for the mesh using a PlaneGeometry as base
-  const geometry = useMemo(() => {
-    const [xMin, xMax] = xRange;
-    const [yMin, yMax] = yRange;
-
-    // Create a plane geometry
-    const planeGeometry = new THREE.PlaneGeometry(
-      xMax - xMin,
-      yMax - yMin,
-      resolution,
-      resolution
-    );
-
-    // Update vertices to reflect the function
-    const positionAttribute = planeGeometry.getAttribute("position");
-    const vertex = new THREE.Vector3();
-
-    for (let i = 0; i < positionAttribute.count; i++) {
-      vertex.fromBufferAttribute(positionAttribute, i);
-
-      // Map from local plane space to our desired x,y range
-      const x =
-        xMin + ((vertex.x + (xMax - xMin) / 2) / (xMax - xMin)) * (xMax - xMin);
-      const y =
-        yMin + ((vertex.y + (yMax - yMin) / 2) / (yMax - yMin)) * (yMax - yMin);
-
-      // Compute z value from function
-      const z = fn(x, y);
-
-      // Update the vertex position
-      positionAttribute.setZ(i, z);
-    }
-
-    // Update normals
-    planeGeometry.computeVertexNormals();
-
-    return planeGeometry;
-  }, [fn, xRange, yRange, resolution]);
-
-  return (
-    <mesh ref={meshRef} geometry={geometry} {...props}>
-      <meshStandardMaterial
-        color={color}
-        side={THREE.DoubleSide}
-        wireframe={wireframe}
-      />
-    </mesh>
-  );
-}
-
-/**
- * Function2D component for plotting 2D functions on a specific plane
- */
-export function Function2D({
-  fn,
-  plane = "xy",
-  color = COLORS.CYAN,
-  range = [-5, 5],
-  resolution = 100,
-  lineWidth = 3,
-  ...props
-}: Function2DProps) {
-  // Create points for the curve
-  const points = useMemo(() => {
-    const [min, max] = range;
-    const step = (max - min) / resolution;
-    const pointArray: THREE.Vector3[] = [];
-
-    for (let i = 0; i <= resolution; i++) {
-      const x = min + i * step;
-      const y = fn(x);
-
-      if (plane === "xy") {
-        pointArray.push(new THREE.Vector3(x, y, 0));
-      } else if (plane === "xz") {
-        pointArray.push(new THREE.Vector3(x, 0, y));
-      } else if (plane === "yz") {
-        pointArray.push(new THREE.Vector3(0, x, y));
-      }
-    }
-
-    return pointArray;
-  }, [fn, plane, range, resolution]);
-
-  return (
-    <Line points={points} color={color} lineWidth={lineWidth} {...props} />
   );
 }
 
@@ -1037,6 +894,100 @@ export function UnitCircle({
     </group>
   );
 }
+
+/**
+ * A 3D point in space
+ */
+export type CoordinatePoint = {
+  x: number;
+  y: number;
+  z: number;
+};
+
+/**
+ * Props for the LinearSystem component
+ */
+export type LinearSystemProps = {
+  points: CoordinatePoint[];
+  color?: string | THREE.Color;
+  lineWidth?: number;
+  showPoints?: boolean;
+  /**
+   * Optional array of labels to render along the line. Each can specify the index of the point
+   * at which to render (defaults to midpoint), optional offset, and text styling.
+   */
+  labels?: Array<{
+    /** Text to display */
+    text: string;
+    /** Optional index into the `points` array where this label should appear; defaults to midpoint */
+    at?: number;
+    /** Optional [x,y,z] offset applied on top of the base point position */
+    offset?: [number, number, number];
+    /** Color for the label text */
+    color?: string | THREE.Color;
+    /** Font size of the label text */
+    fontSize?: number;
+  }>;
+};
+
+/**
+ * This component renders a polyline based on an array of 3D points and optionally displays markers at each point.
+ */
+export function LinearSystem({
+  points,
+  color = COLORS.YELLOW,
+  lineWidth = 2,
+  showPoints = true,
+  labels = [],
+}: LinearSystemProps) {
+  const vectorPoints = useMemo(
+    () => points.map((point) => new THREE.Vector3(point.x, point.y, point.z)),
+    [points]
+  );
+  return (
+    <group>
+      {/* Draw a line connecting the provided points */}
+      <Line points={vectorPoints} color={color} lineWidth={lineWidth} />
+      {/* Optionally render a small sphere at each point */}
+      {showPoints &&
+        vectorPoints.map((vec, index) => (
+          <mesh key={index} position={vec}>
+            <sphereGeometry args={[0.1, 16, 16]} />
+            <meshBasicMaterial color={color} />
+          </mesh>
+        ))}
+      {/* Render custom labels at specified indices */}
+      {labels.map((label, idx) => {
+        // Determine label index (default to midpoint)
+        const mid = Math.floor(vectorPoints.length / 2);
+        const index = label.at ?? mid;
+        const base = vectorPoints[index];
+        if (!base) {
+          return null;
+        }
+        const [ox = 0, oy = 0, oz = 0] = label.offset || [0, 0, 0];
+        const pos: [number, number, number] = [
+          base.x + ox,
+          base.y + oy,
+          base.z + oz,
+        ];
+        return (
+          <Text
+            key={`label-${idx}`}
+            position={pos}
+            color={label.color ?? color}
+            fontSize={label.fontSize ?? 0.5}
+            anchorX="center"
+            anchorY="middle"
+          >
+            {label.text}
+          </Text>
+        );
+      })}
+    </group>
+  );
+}
+// ----- END ADDITION -----
 
 /**
  * CoordinateSystem component for creating a 3D coordinate system
