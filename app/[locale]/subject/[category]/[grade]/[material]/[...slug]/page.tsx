@@ -138,17 +138,16 @@ export default async function Page({ params }: Props) {
         <LayoutMaterialHeader
           title={metadata.title}
           description={metadata.description}
-          icon={getMaterialIcon(material)}
           link={{
             href: `${materialPath}#${metadata.subject?.toLowerCase().replace(/\s+/g, "-")}`,
             label: metadata.subject ?? "",
           }}
           authors={metadata.authors}
-          date={metadata.date}
           category={{
             icon: getMaterialIcon(material),
             name: tSubject(material),
           }}
+          // Omitting date to maintain content credibility
         />
         <LayoutMaterialContent>
           <Content />

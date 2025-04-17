@@ -39,7 +39,7 @@ export function HeaderContent({
   authors,
   date,
 }: Props) {
-  const showFooter = authors && date;
+  const showFooter = authors || date;
   return (
     <div className="relative border-b py-10">
       <Particles
@@ -71,21 +71,28 @@ export function HeaderContent({
         </div>
         {description && <p className="text-foreground/80">{description}</p>}
         {showFooter && (
-          <div className="flex flex-col justify-between gap-2 pt-2 sm:flex-row sm:items-center sm:gap-4">
-            <p className="inline-flex items-center gap-1 text-muted-foreground">
-              <UserPenIcon className="size-4 shrink-0" />
-              <span className="text-sm">
-                {authors.map((author) => author.name).join(", ")}
-              </span>
-            </p>
-
-            <div className="flex items-center gap-4">
+          <div
+            data-pagefind-ignore
+            className="flex flex-col justify-between gap-2 pt-2 sm:flex-row sm:items-center sm:gap-4"
+          >
+            {authors && (
               <p className="inline-flex items-center gap-1 text-muted-foreground">
-                <CalendarIcon className="size-4 shrink-0" />
+                <UserPenIcon className="size-4 shrink-0" />
                 <span className="text-sm">
-                  {format(new Date(date), "d MMM, yyyy")}
+                  {authors.map((author) => author.name).join(", ")}
                 </span>
               </p>
+            )}
+
+            <div className="flex items-center gap-4">
+              {date && (
+                <p className="inline-flex items-center gap-1 text-muted-foreground">
+                  <CalendarIcon className="size-4 shrink-0" />
+                  <span className="text-sm">
+                    {format(new Date(date), "d MMM, yyyy")}
+                  </span>
+                </p>
+              )}
 
               {category && (
                 <p className="inline-flex items-center gap-1 text-muted-foreground">
