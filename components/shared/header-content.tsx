@@ -46,28 +46,27 @@ export function HeaderContent({
         quantity={25}
         className="pointer-events-none absolute inset-0 opacity-50"
       />
-      <div className="z-10 mx-auto max-w-3xl space-y-2 px-4">
-        {link && (
-          <Link
-            href={link.href}
-            className={cn(
-              buttonVariants({ variant: "link" }),
-              "h-auto p-0 text-foreground"
-            )}
-            aria-label={link.label}
-            prefetch
-          >
-            {link.label}
-          </Link>
-        )}
-        <div className="flex items-center gap-2">
-          {Icon && <Icon className="size-7" />}
-          <h1
-            id={title.toLowerCase().replace(/ /g, "-")}
-            className="font-medium text-3xl leading-tight tracking-tight"
-          >
-            {title}
-          </h1>
+      <div className="z-10 mx-auto max-w-3xl space-y-4 px-4">
+        <div className="space-y-2">
+          {link && (
+            <Link
+              href={link.href}
+              className={cn(buttonVariants({ variant: "link" }), "h-auto p-0")}
+              aria-label={link.label}
+              prefetch
+            >
+              {link.label}
+            </Link>
+          )}
+          <div className="flex items-center gap-2">
+            {Icon && <Icon className="size-7" />}
+            <h1
+              id={title.toLowerCase().replace(/ /g, "-")}
+              className="font-medium text-3xl leading-tight tracking-tight"
+            >
+              {title}
+            </h1>
+          </div>
         </div>
         {description && <p className="text-foreground/80">{description}</p>}
         {showFooter && (
