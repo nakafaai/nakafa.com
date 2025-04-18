@@ -1,6 +1,249 @@
+import { LinearSystem } from "../../_shared/linear-system";
+
 export const metadata = {
   title: "Linear Equation Systems",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/18/2025",
   subject: "Systems of Linear Equations and Inequalities",
 };
+
+## Understanding Linear Equation Systems
+
+Imagine you're making a cake recipe. You know the cake requires eggs and flour in specific amounts. However, you only know the total ingredients and their ratios. This is similar to a linear equation system - we're looking for unknown values based on related information.
+
+### What Is a Linear Equation System?
+
+A linear equation system is a collection of two or more linear equations that must be satisfied simultaneously. Each linear equation has the form:
+
+<BlockMath math="a_1x_1 + a_2x_2 + ... + a_nx_n = b" />
+
+Where <InlineMath math="a_1, a_2, ..., a_n" /> are coefficients, <InlineMath math="x_1, x_2, ..., x_n" /> are variables, and <InlineMath math="b" /> is a constant.
+
+### Two-Variable Linear Equation Systems
+
+A two-variable linear equation system consists of two equations with two variables (usually <InlineMath math="x" /> and <InlineMath math="y" />). The general form is:
+
+<BlockMath math="\begin{cases} a_1x + b_1y = c_1 \\ a_2x + b_2y = c_2 \end{cases}" />
+
+**Example**:
+
+<BlockMath math="\begin{cases} 2x + 3y = 21 & \ldots (1) \\ x + y = 10 & \ldots (2) \end{cases}" />
+
+The solution to this system is the pair of values <InlineMath math="(x,y)" /> that satisfies both equations.
+
+### Three-Variable Linear Equation Systems
+
+For three variables, we need at least three equations:
+
+<BlockMath math="\begin{cases} a_1x + b_1y + c_1z = d_1 \\ a_2x + b_2y + c_2z = d_2 \\ a_3x + b_3y + c_3z = d_3 \end{cases}" />
+
+**Example**:
+
+<BlockMath math="\begin{cases} x + 2y + 3z = 27 \\ x + y + z = 16 \\ x = 6 \end{cases}" />
+
+## Solving Linear Equation Systems
+
+### Substitution Method
+
+The substitution method works by replacing one variable with another. Let's solve the following example:
+
+<BlockMath math="\begin{cases} 2x + 3y = 21 & \ldots (1) \\ x + y = 10 & \ldots (2) \end{cases}" />
+
+**Step 1**: Express one variable from the simpler equation.
+
+From equation (2): <InlineMath math="x + y = 10" />, we express <InlineMath math="x" /> in terms of <InlineMath math="y" />:
+
+<BlockMath math="x = 10 - y \ldots (3)" />
+
+**Step 2**: Substitute into the other equation.
+
+Insert equation (3) into equation (1):
+
+<BlockMath math="2(10 - y) + 3y = 21" />
+
+**Step 3**: Solve the resulting equation.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="20 - 2y + 3y = 21" />
+  <BlockMath math="20 + y = 21" />
+  <BlockMath math="y = 1 \ldots (4)" />
+</div>
+
+**Step 4**: Back-substitute to find the other variable.
+
+Substitute the value <InlineMath math="y = 1" /> from equation (4) into equation (3):
+
+<BlockMath math="x = 10 - y = 10 - 1 = 9" />
+
+Therefore, the solution is <InlineMath math="x = 9" /> and <InlineMath math="y = 1" />.
+
+### Elimination Method
+
+The elimination method works by eliminating one variable. Let's solve the same example:
+
+<BlockMath math="\begin{cases} 2x + 3y = 21 & \ldots (1) \\ x + y = 10 & \ldots (2) \end{cases}" />
+
+**Step 1**: Match the coefficients of one variable.
+
+Multiply equation (2) by 2 to match the coefficient of <InlineMath math="x" />:
+
+<BlockMath math="\begin{cases} 2x + 3y = 21 & \ldots (1) \\ 2x + 2y = 20 & \ldots (3) \end{cases}" />
+
+**Step 2**: Eliminate the variable by subtracting the equations.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(1) - (3): (2x + 3y) - (2x + 2y) = 21 - 20" />
+  <BlockMath math="y = 1 \ldots (4)" />
+</div>
+
+**Step 3**: Use the value of <InlineMath math="y" /> to find <InlineMath math="x" />.
+
+Substitute the value <InlineMath math="y = 1" /> from equation (4) into equation (2):
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x + 1 = 10" />
+  <BlockMath math="x = 9" />
+</div>
+
+Therefore, the solution is <InlineMath math="x = 9" /> and <InlineMath math="y = 1" />.
+
+Verify:
+
+- Equation (1): <InlineMath math="2(9) + 3(1) = 18 + 3 = 21" /> ✓
+- Equation (2): <InlineMath math="9 + 1 = 10" /> ✓
+
+## Real-Life Applications
+
+### Mathematical Modeling
+
+Mathematical modeling is the process of converting real-world problems into mathematical form. For linear equation systems, we:
+
+1. Identify the variables to use
+2. Create a mathematical model based on the available information
+3. Check if the model is a linear equation system
+4. Solve the model using an appropriate method
+5. Interpret the solution in the context of the original problem
+
+### Basketball Scoring
+
+In basketball, there are three types of shots with different point values: free throws (1 point), two-point shots (2 points), and three-point shots (3 points).
+
+Let's define:
+
+- <InlineMath math="a" /> = number of 1-point shots
+- <InlineMath math="b" /> = number of 2-point shots
+- <InlineMath math="c" /> = number of 3-point shots
+
+If Wijaya scored 27 points, made 16 shots total with 6 of them being free throws, then:
+
+<BlockMath math="\begin{cases} a + 2b + 3c = 27 & \text{(total points)} \\ a + b + c = 16 & \text{(total shots)} \\ a = 6 & \text{(free throws)} \end{cases}" />
+
+Substituting <InlineMath math="a = 6" /> into the second equation:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="6 + b + c = 16" />
+  <BlockMath math="b + c = 10" />
+</div>
+
+Substituting into the first equation:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="6 + 2b + 3c = 27" />
+  <BlockMath math="2b + 3c = 21" />
+</div>
+
+From these two equations:
+
+<BlockMath math="\begin{cases} 2b + 3c = 21 \\ b + c = 10 \end{cases}" />
+
+Using elimination or substitution, we get <InlineMath math="b = 9" /> and <InlineMath math="c = 1" />.
+
+Therefore, Wijaya made 6 free throws, 9 two-point shots, and 1 three-point shot.
+
+## Interpreting Solutions
+
+Linear equation systems have three possible solution types:
+
+1. **Exactly one solution**: When the lines intersect at a single point (or planes intersect at a single point)
+2. **No solution**: When the lines are parallel (or planes do not intersect)
+3. **Infinitely many solutions**: When the lines coincide (or planes intersect along a line or plane)
+
+In three dimensions (three variables), a linear equation is represented as a plane. The intersection of two planes forms a line, and the intersection of three planes can form a point.
+
+### Visualizing Linear Equation Systems
+
+<div className="flex flex-col gap-4">
+  <LinearSystem
+    title="Linear Equation System with One Solution"
+    description="Two lines intersecting at a single point."
+    data={[
+      {
+        points: [
+          { x: -2, y: 8, z: 0 },
+          { x: 3.5, y: 4.5, z: 0 },
+          { x: 9, y: 1, z: 0 },
+        ],
+        labels: [{ text: "2x + 3y = 21", offset: [-1, -1, 0] }],
+        color: "ORANGE",
+      },
+      {
+        points: [
+          { x: -5, y: 15, z: 0 },
+          { x: 5, y: 5, z: 0 },
+          { x: 15, y: -5, z: 0 },
+        ],
+        labels: [{ text: "x + y = 10", offset: [1, 1, 0] }],
+        color: "PURPLE",
+      },
+    ]}
+  />
+  <LinearSystem
+    title="Linear Equation System with No Solution"
+    description="Two parallel lines (no intersection)."
+    data={[
+      {
+        points: [
+          { x: -3, y: 1, z: 0 },
+          { x: 0, y: 4, z: 0 },
+          { x: 3, y: 7, z: 0 },
+        ],
+        labels: [{ text: "3x - 2y = -1", offset: [-2, 0, 0] }],
+        color: "PINK",
+      },
+      {
+        points: [
+          { x: -2, y: -1, z: 0 },
+          { x: 1, y: 2, z: 0 },
+          { x: 4, y: 5, z: 0 },
+        ],
+        labels: [{ text: "6x - 4y = 2", offset: [2, 0, 0] }],
+        color: "YELLOW",
+      },
+    ]}
+  />
+  <LinearSystem
+    title="Linear Equation System with Infinitely Many Solutions"
+    description="Two coincident lines (identical lines)."
+    data={[
+      {
+        points: [
+          { x: -2, y: 1, z: 0 },
+          { x: 0, y: 0, z: 0 },
+          { x: 2, y: -1, z: 0 },
+        ],
+        labels: [{ text: "2x + 3y = 1", offset: [-2, -1, 0] }],
+        color: "VIOLET",
+      },
+      {
+        points: [
+          { x: -2, y: 1, z: 0 },
+          { x: 0, y: 0, z: 0 },
+          { x: 2, y: -1, z: 0 },
+        ],
+        labels: [{ text: "4x + 6y = 2", offset: [2, 1, 0] }],
+        color: "CYAN",
+      },
+    ]}
+    cameraPosition={[6, 4, 6]}
+  />
+</div>

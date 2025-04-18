@@ -21,7 +21,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import * as THREE from "three";
 import { Button } from "./button";
 
-const COLORS = {
+export const COLORS = {
   RED: "#dc2626",
   ORANGE: "#ea580c",
   EMBER: "#d97706",
@@ -41,7 +41,7 @@ const COLORS = {
   ROSE: "#e11d48",
 };
 // origin point O(0, 0, 0)
-const ORIGIN_COLOR = {
+export const ORIGIN_COLOR = {
   LIGHT: "#f4f4f5",
   DARK: "#18181b",
 };
@@ -50,6 +50,40 @@ const ORIGIN_COLOR = {
 // Font path for the 3D text
 const FONT_PATH = "/fonts/Geist-Regular.ttf";
 const MONO_FONT_PATH = "/fonts/GeistMono-Regular.ttf";
+
+// Define a constant array of color keys at module level
+const COLOR_KEYS = Object.keys(COLORS) as Array<keyof typeof COLORS>;
+
+// Utils function
+/**
+ * Get a color from the COLORS object
+ * @param color - The key of the color to get
+ * @returns The color value
+ */
+export function getColor(color: keyof typeof COLORS) {
+  return COLORS[color];
+}
+
+/**
+ * Get a random color from the COLORS object
+ * @param exclude - The keys of the colors to exclude
+ * @returns The random color value
+ */
+export function randomColor(exclude?: (keyof typeof COLORS)[]) {
+  // Filter the keys in a type-safe way
+  const availableKeys = COLOR_KEYS.filter(
+    (key) => !exclude || !exclude.some((excludeKey) => excludeKey === key)
+  );
+
+  // Handle the case where all colors are excluded
+  if (availableKeys.length === 0) {
+    return COLORS[COLOR_KEYS[0]]; // Return first color as fallback
+  }
+
+  return COLORS[
+    availableKeys[Math.floor(Math.random() * availableKeys.length)]
+  ];
+}
 
 // --------------------------------
 // Types

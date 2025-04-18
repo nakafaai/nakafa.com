@@ -1,6 +1,249 @@
+import { LinearSystem } from "../../_shared/linear-system";
+
 export const metadata = {
   title: "Sistem Persamaan Linear",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/18/2025",
   subject: "Sistem Persamaan dan Pertidaksamaan Linear",
 };
+
+## Mengenal Sistem Persamaan Linear
+
+Bayangkan kamu sedang membuat resep kue. Kamu tahu kue tersebut membutuhkan telur dan tepung dengan jumlah tertentu. Namun, kamu hanya tahu total bahan dan perbandingannya. Ini mirip seperti sistem persamaan linear - kita mencari nilai yang tidak diketahui berdasarkan informasi yang saling berhubungan.
+
+### Apa Itu Sistem Persamaan Linear?
+
+Sistem persamaan linear adalah kumpulan dua atau lebih persamaan linear yang harus dipenuhi secara bersamaan. Setiap persamaan linear berbentuk:
+
+<BlockMath math="a_1x_1 + a_2x_2 + ... + a_nx_n = b" />
+
+Dimana <InlineMath math="a_1, a_2, ..., a_n" /> adalah koefisien, <InlineMath math="x_1, x_2, ..., x_n" /> adalah variabel, dan <InlineMath math="b" /> adalah konstanta.
+
+### Sistem Persamaan Linear Dua Variabel
+
+Sistem persamaan linear dengan dua variabel terdiri dari dua persamaan dengan dua variabel (biasanya <InlineMath math="x" /> dan <InlineMath math="y" />). Bentuk umumnya:
+
+<BlockMath math="\begin{cases} a_1x + b_1y = c_1 \\ a_2x + b_2y = c_2 \end{cases}" />
+
+**Contoh**:
+
+<BlockMath math="\begin{cases} 2x + 3y = 21 \\ x + y = 10 \end{cases}" />
+
+Solusi dari sistem ini adalah pasangan nilai <InlineMath math="(x,y)" /> yang memenuhi kedua persamaan tersebut.
+
+### Sistem Persamaan Linear Tiga Variabel
+
+Untuk tiga variabel, kita membutuhkan minimal tiga persamaan:
+
+<BlockMath math="\begin{cases} a_1x + b_1y + c_1z = d_1 \\ a_2x + b_2y + c_2z = d_2 \\ a_3x + b_3y + c_3z = d_3 \end{cases}" />
+
+**Contoh**:
+
+<BlockMath math="\begin{cases} x + 2y + 3z = 27 \\ x + y + z = 16 \\ x = 6 \end{cases}" />
+
+## Metode Penyelesaian Sistem Persamaan Linear
+
+### Metode Substitusi
+
+Metode substitusi bekerja dengan cara mengganti satu variabel dengan variabel lain. Mari kita selesaikan contoh berikut:
+
+<BlockMath math="\begin{cases} 2x + 3y = 21 & \ldots (1) \\ x + y = 10 & \ldots (2) \end{cases}" />
+
+**Langkah 1**: Nyatakan satu variabel dari persamaan yang lebih sederhana.
+
+Dari persamaan (2): <InlineMath math="x + y = 10" />, kita nyatakan <InlineMath math="x" /> dalam bentuk <InlineMath math="y" />:
+
+<BlockMath math="x = 10 - y \ldots (3)" />
+
+**Langkah 2**: Substitusi ke persamaan lain.
+
+Masukkan persamaan (3) ke persamaan (1):
+
+<BlockMath math="2(10 - y) + 3y = 21" />
+
+**Langkah 3**: Selesaikan persamaan hasil substitusi.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="20 - 2y + 3y = 21" />
+  <BlockMath math="20 + y = 21" />
+  <BlockMath math="y = 1 \ldots (4)" />
+</div>
+
+**Langkah 4**: Substitusi balik untuk mendapatkan nilai variabel lainnya.
+
+Substitusi nilai <InlineMath math="y = 1" /> dari persamaan (4) ke persamaan (3):
+
+<BlockMath math="x = 10 - y = 10 - 1 = 9" />
+
+Jadi solusinya adalah <InlineMath math="x = 9" /> dan <InlineMath math="y = 1" />.
+
+### Metode Eliminasi
+
+Metode eliminasi bekerja dengan cara menghilangkan salah satu variabel. Mari kita selesaikan contoh yang sama:
+
+<BlockMath math="\begin{cases} 2x + 3y = 21 & \ldots (1) \\ x + y = 10 & \ldots (2) \end{cases}" />
+
+**Langkah 1**: Samakan koefisien salah satu variabel.
+
+Kalikan persamaan (2) dengan 2 untuk menyamakan koefisien <InlineMath math="x" />:
+
+<BlockMath math="\begin{cases} 2x + 3y = 21 & \ldots (1) \\ 2x + 2y = 20 & \ldots (3) \end{cases}" />
+
+**Langkah 2**: Eliminasi variabel dengan mengurangkan persamaan.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(1) - (3): (2x + 3y) - (2x + 2y) = 21 - 20" />
+  <BlockMath math="y = 1 \ldots (4)" />
+</div>
+
+**Langkah 3**: Gunakan nilai <InlineMath math="y" /> untuk menemukan <InlineMath math="x" />.
+
+Substitusi nilai <InlineMath math="y = 1" /> dari persamaan (4) ke persamaan (2):
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x + 1 = 10" />
+  <BlockMath math="x = 9" />
+</div>
+
+Jadi solusinya adalah <InlineMath math="x = 9" /> dan <InlineMath math="y = 1" />.
+
+Periksa:
+
+- Persamaan (1): <InlineMath math="2(9) + 3(1) = 18 + 3 = 21" /> ✓
+- Persamaan (2): <InlineMath math="9 + 1 = 10" /> ✓
+
+## Aplikasi dalam Kehidupan Sehari-hari
+
+### Pemodelan Matematika
+
+Pemodelan matematika adalah proses mengubah masalah nyata menjadi bentuk matematika. Untuk sistem persamaan linear, kita:
+
+1. Tentukan variabel yang digunakan
+2. Buat model matematika berdasarkan informasi yang ada
+3. Periksa apakah model tersebut merupakan sistem persamaan linear
+4. Selesaikan model dengan metode yang sesuai
+5. Interpretasikan solusi dalam konteks masalah asli
+
+### Skor dalam Basket
+
+Dalam permainan bola basket, ada tiga jenis lemparan yang bernilai berbeda: lemparan bebas (1 poin), lemparan dalam daerah (2 poin), dan lemparan luar daerah (3 poin).
+
+Misalkan:
+
+- <InlineMath math="a" /> = banyaknya lemparan bernilai 1 poin
+- <InlineMath math="b" /> = banyaknya lemparan bernilai 2 poin
+- <InlineMath math="c" /> = banyaknya lemparan bernilai 3 poin
+
+Jika Wijaya mencetak 27 poin, melakukan 16 lemparan dengan 6 di antaranya lemparan bebas, maka:
+
+<BlockMath math="\begin{cases} a + 2b + 3c = 27 & \text{(total nilai)} \\ a + b + c = 16 & \text{(total lemparan)} \\ a = 6 & \text{(lemparan bebas)} \end{cases}" />
+
+Dengan substitusi <InlineMath math="a = 6" /> ke persamaan kedua:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="6 + b + c = 16" />
+  <BlockMath math="b + c = 10" />
+</div>
+
+Substitusi ke persamaan pertama:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="6 + 2b + 3c = 27" />
+  <BlockMath math="2b + 3c = 21" />
+</div>
+
+Dari dua persamaan:
+
+<BlockMath math="\begin{cases} 2b + 3c = 21 \\ b + c = 10 \end{cases}" />
+
+Dengan metode eliminasi atau substitusi, diperoleh <InlineMath math="b = 9" /> dan <InlineMath math="c = 1" />.
+
+Jadi, Wijaya melakukan 6 lemparan bebas, 9 lemparan 2 poin, dan 1 lemparan 3 poin.
+
+## Interpretasi Solusi
+
+Sistem persamaan linear memiliki tiga kemungkinan solusi:
+
+1. **Tepat satu solusi**: Ketika garis-garis berpotongan di satu titik (atau bidang-bidang berpotongan di satu titik)
+2. **Tidak ada solusi**: Ketika garis-garis sejajar (atau bidang-bidang tidak berpotongan)
+3. **Banyak solusi**: Ketika garis-garis berimpit (atau bidang-bidang berpotongan pada garis atau bidang)
+
+Dalam tiga dimensi (tiga variabel), persamaan linear direpresentasikan sebagai bidang. Perpotongan dua bidang menghasilkan garis, dan perpotongan tiga bidang bisa berupa titik.
+
+### Visualisasi Sistem Persamaan Linear
+
+<div className="flex flex-col gap-4">
+  <LinearSystem
+    title="Sistem Persamaan Linear dengan Satu Solusi"
+    description="Dua garis yang berpotongan di satu titik."
+    data={[
+      {
+        points: [
+          { x: -2, y: 8, z: 0 },
+          { x: 3.5, y: 4.5, z: 0 },
+          { x: 9, y: 1, z: 0 },
+        ],
+        labels: [{ text: "2x + 3y = 21", offset: [-1, -1, 0] }],
+        color: "ORANGE",
+      },
+      {
+        points: [
+          { x: -5, y: 15, z: 0 },
+          { x: 5, y: 5, z: 0 },
+          { x: 15, y: -5, z: 0 },
+        ],
+        labels: [{ text: "x + y = 10", offset: [1, 1, 0] }],
+        color: "PURPLE",
+      },
+    ]}
+  />
+  <LinearSystem
+    title="Sistem Persamaan Linear Tanpa Solusi"
+    description="Dua garis yang sejajar (tidak berpotongan)."
+    data={[
+      {
+        points: [
+          { x: -3, y: 1, z: 0 },
+          { x: 0, y: 4, z: 0 },
+          { x: 3, y: 7, z: 0 },
+        ],
+        labels: [{ text: "3x - 2y = -1", offset: [-2, 0, 0] }],
+        color: "PINK",
+      },
+      {
+        points: [
+          { x: -2, y: -1, z: 0 },
+          { x: 1, y: 2, z: 0 },
+          { x: 4, y: 5, z: 0 },
+        ],
+        labels: [{ text: "6x - 4y = 2", offset: [2, 0, 0] }],
+        color: "YELLOW",
+      },
+    ]}
+  />
+  <LinearSystem
+    title="Sistem Persamaan Linear dengan Banyak Solusi"
+    description="Dua garis yang berimpit (sama)."
+    data={[
+      {
+        points: [
+          { x: -2, y: 1, z: 0 },
+          { x: 0, y: 0, z: 0 },
+          { x: 2, y: -1, z: 0 },
+        ],
+        labels: [{ text: "2x + 3y = 1", offset: [-2, -1, 0] }],
+        color: "VIOLET",
+      },
+      {
+        points: [
+          { x: -2, y: 1, z: 0 },
+          { x: 0, y: 0, z: 0 },
+          { x: 2, y: -1, z: 0 },
+        ],
+        labels: [{ text: "4x + 6y = 2", offset: [2, 1, 0] }],
+        color: "CYAN",
+      },
+    ]}
+    cameraPosition={[6, 4, 6]}
+  />
+</div>
