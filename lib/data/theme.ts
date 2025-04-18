@@ -6,6 +6,7 @@ import {
   CloudyIcon,
   CoffeeIcon,
   CpuIcon,
+  Disc3Icon,
   EclipseIcon,
   HeartIcon,
   HourglassIcon,
@@ -88,6 +89,10 @@ export const themes = [
   {
     value: "tangerine",
     icon: CitrusIcon,
+  },
+  {
+    value: "vintage",
+    icon: Disc3Icon,
   },
   {
     value: "windy",
