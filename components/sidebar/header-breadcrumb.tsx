@@ -34,7 +34,7 @@ export function HeaderBreadcrumb() {
     <div className="hidden items-center gap-2 lg:flex">
       <Separator
         orientation="vertical"
-        className={cn("mr-2 data-[orientation=vertical]:h-4", {
+        className={cn("mx-2 data-[orientation=vertical]:h-4", {
           "hidden md:block": !breadcrumb,
         })}
       />

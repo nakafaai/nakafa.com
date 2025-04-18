@@ -12,12 +12,14 @@ export function Header() {
   const t = useTranslations("Common");
   return (
     <HeaderContainer>
-      <div className="flex w-full items-center gap-2 px-4">
-        <SidebarTrigger className="-ml-1 size-8" />
+      <div className="flex w-full items-center justify-between gap-4 px-4">
+        <div className="flex items-center gap-2 sm:w-full">
+          <SidebarTrigger className="size-8" />
 
-        <HeaderBreadcrumb />
+          <HeaderBreadcrumb />
+        </div>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex w-full items-center justify-end gap-2">
           <SearchBar />
           <Tooltip>
             <TooltipTrigger asChild>

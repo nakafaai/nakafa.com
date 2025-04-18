@@ -37,6 +37,7 @@ export function SearchBar({ className, forceOpen = false }: Props) {
         setOpen(true);
       }}
       type="button"
+      className="w-full sm:w-auto"
     >
       <Label htmlFor={id} className="sr-only">
         {t("search")}

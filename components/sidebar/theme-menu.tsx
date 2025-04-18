@@ -10,6 +10,7 @@ import { useMediaQuery } from "usehooks-ts";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -47,30 +48,38 @@ export function ThemeMenu() {
           </SidebarMenuButton>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent side={isMobile ? "top" : "right"} align="end">
-          {themes.slice(0, 3).map((theme) => (
-            <DropdownMenuItem
-              key={theme.value}
-              onClick={() => setTheme(theme.value)}
-            >
-              <theme.icon className="size-4 shrink-0" />
-              <span className="truncate">{t(theme.value)}</span>
-              <CheckerBadge isActive={isActive(theme.value)} />
-            </DropdownMenuItem>
-          ))}
+        <DropdownMenuContent
+          side={isMobile ? "top" : "right"}
+          align="end"
+          className="max-h-96"
+        >
+          <DropdownMenuGroup>
+            {themes.slice(0, 3).map((theme) => (
+              <DropdownMenuItem
+                key={theme.value}
+                onClick={() => setTheme(theme.value)}
+              >
+                <theme.icon className="size-4 shrink-0" />
+                <span className="truncate">{t(theme.value)}</span>
+                <CheckerBadge isActive={isActive(theme.value)} />
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
 
           <DropdownMenuSeparator />
 
-          {themes.slice(3).map((theme) => (
-            <DropdownMenuItem
-              key={theme.value}
-              onClick={() => setTheme(theme.value)}
-            >
-              <theme.icon className="size-4 shrink-0" />
-              <span className="truncate">{t(theme.value)}</span>
-              <CheckerBadge isActive={isActive(theme.value)} />
-            </DropdownMenuItem>
-          ))}
+          <DropdownMenuGroup>
+            {themes.slice(3).map((theme) => (
+              <DropdownMenuItem
+                key={theme.value}
+                onClick={() => setTheme(theme.value)}
+              >
+                <theme.icon className="size-4 shrink-0" />
+                <span className="truncate">{t(theme.value)}</span>
+                <CheckerBadge isActive={isActive(theme.value)} />
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </SidebarMenuItem>
     </DropdownMenu>
