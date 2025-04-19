@@ -10,6 +10,8 @@ import { SidebarMenu } from "../ui/sidebar";
 
 import { SidebarGroup } from "../ui/sidebar";
 import { SidebarMenuSub } from "../ui/sidebar";
+import { TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { Tooltip } from "../ui/tooltip";
 
 export type ParsedHeading = {
   label: string;
@@ -31,13 +33,24 @@ function SidebarTreeItem({
 }: { heading: ParsedHeading; depth?: number }) {
   return (
     <SidebarMenuItem key={heading.href}>
-      <SidebarMenuButton tooltip={heading.label} asChild>
-        <NavigationLink href={heading.href}>
-          <span title={heading.label} className="truncate">
-            {heading.label}
-          </span>
-        </NavigationLink>
-      </SidebarMenuButton>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <SidebarMenuButton asChild>
+            <NavigationLink href={heading.href}>
+              <span title={heading.label} className="truncate">
+                {heading.label}
+              </span>
+            </NavigationLink>
+          </SidebarMenuButton>
+        </TooltipTrigger>
+        <TooltipContent
+          side="left"
+          align="center"
+          className="hidden max-w-xs sm:block"
+        >
+          {heading.label}
+        </TooltipContent>
+      </Tooltip>
 
       {heading.children && heading.children.length > 0 && (
         <SidebarMenuSub>

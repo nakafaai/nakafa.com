@@ -7,7 +7,6 @@ import { GeistSans } from "geist/font/sans";
 import { type Locale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
 
 import "@/styles/globals.css";
 import "@/styles/theme.css";
@@ -25,6 +24,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TailwindIndicator } from "@/components/ui/tailwind-indicator";
 import { themes } from "@/lib/data/theme";
 import type { Metadata, Viewport } from "next";
+import type { ReactNode } from "react";
 
 type Props = {
   children: ReactNode;

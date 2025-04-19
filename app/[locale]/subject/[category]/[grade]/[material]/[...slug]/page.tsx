@@ -3,7 +3,9 @@ import {
   LayoutMaterialContent,
   LayoutMaterialFooter,
   LayoutMaterialHeader,
+  LayoutMaterialMain,
   LayoutMaterialPagination,
+  LayoutMaterialTableOfContents,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
 import { getContent } from "@/lib/utils/contents";
@@ -129,35 +131,46 @@ export default async function Page({ params }: Props) {
     }
 
     const { metadata, default: Content } = content;
+    const icon = getMaterialIcon(material);
+    const href = `${materialPath}#${metadata.subject?.toLowerCase().replace(/\s+/g, "-")}`;
 
     return (
-      <LayoutMaterial
-        chapters={{
-          label: t("on-this-page"),
-          data: headings,
-        }}
-      >
-        <LayoutMaterialHeader
-          title={metadata.title}
-          description={metadata.description}
-          link={{
-            href: `${materialPath}#${metadata.subject?.toLowerCase().replace(/\s+/g, "-")}`,
-            label: metadata.subject ?? "",
-          }}
-          authors={metadata.authors}
-          category={{
-            icon: getMaterialIcon(material),
-            name: tSubject(material),
-          }}
-          // Omitting date to maintain content credibility
-        />
+      <LayoutMaterial>
         <LayoutMaterialContent>
-          <Content />
+          <LayoutMaterialHeader
+            title={metadata.title}
+            description={metadata.description}
+            link={{
+              href,
+              label: metadata.subject ?? "",
+            }}
+            authors={metadata.authors}
+            category={{
+              icon,
+              name: tSubject(material),
+            }}
+            // Omitting date to maintain content credibility
+          />
+          <LayoutMaterialMain>
+            <Content />
+          </LayoutMaterialMain>
+          <LayoutMaterialPagination pagination={pagination} />
+          <LayoutMaterialFooter className="mt-10">
+            <RefContent githubUrl={getGithubUrl(`/contents${FILE_PATH}`)} />
+          </LayoutMaterialFooter>
         </LayoutMaterialContent>
-        <LayoutMaterialPagination pagination={pagination} />
-        <LayoutMaterialFooter className="mt-10">
-          <RefContent githubUrl={getGithubUrl(`/contents${FILE_PATH}`)} />
-        </LayoutMaterialFooter>
+        <LayoutMaterialTableOfContents
+          header={{
+            title: metadata.title,
+            href: FILE_PATH,
+            description: metadata.description ?? metadata.subject,
+            icon,
+          }}
+          chapters={{
+            label: t("on-this-page"),
+            data: headings,
+          }}
+        />
       </LayoutMaterial>
     );
   } catch {

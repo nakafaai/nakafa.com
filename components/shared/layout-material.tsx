@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
 import { FooterContent } from "./footer-content";
 import { HeaderContent } from "./header-content";
@@ -15,6 +14,16 @@ export function LayoutMaterialHeader({
 }
 
 export function LayoutMaterialContent({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <div className={cn("flex-1", className)}>{children}</div>;
+}
+
+export function LayoutMaterialMain({
   children,
   className,
 }: {
@@ -42,27 +51,27 @@ export function LayoutMaterialFooter({
   );
 }
 
-export function LayoutMaterial({
-  children,
+export function LayoutMaterialTableOfContents({
   chapters,
+  header,
 }: {
-  children: ReactNode;
   chapters: {
-    label?: string;
+    label: string;
     data: ParsedHeading[];
   };
+  header?: ComponentProps<typeof SidebarRight>["header"];
 }) {
-  const t = useTranslations("Subject");
-
   return (
-    <div className="lg:flex">
-      <div className="flex-1">{children}</div>
-      <SidebarRight>
-        <SidebarTree
-          title={chapters.label ?? t("chapter")}
-          data={chapters.data}
-        />
-      </SidebarRight>
-    </div>
+    <SidebarRight header={header}>
+      <SidebarTree title={chapters.label} data={chapters.data} />
+    </SidebarRight>
   );
+}
+
+export function LayoutMaterial({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return <div className="lg:flex">{children}</div>;
 }

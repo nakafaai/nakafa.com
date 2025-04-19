@@ -5,6 +5,8 @@ import {
   LayoutMaterialContent,
   LayoutMaterialFooter,
   LayoutMaterialHeader,
+  LayoutMaterialMain,
+  LayoutMaterialTableOfContents,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
 import type { ParsedHeading } from "@/components/shared/sidebar-tree";
@@ -93,29 +95,33 @@ export default async function Page({ params }: Props) {
   }));
 
   return (
-    <LayoutMaterial
-      chapters={{
-        data: chapters,
-      }}
-    >
-      <LayoutMaterialHeader
-        title={t(material)}
-        icon={getMaterialIcon(material)}
-        link={{
-          href: gradePath,
-          label: t("grade", { grade }),
+    <LayoutMaterial>
+      <LayoutMaterialContent>
+        <LayoutMaterialHeader
+          title={t(material)}
+          icon={getMaterialIcon(material)}
+          link={{
+            href: gradePath,
+            label: t("grade", { grade }),
+          }}
+        />
+        <LayoutMaterialMain className="py-10">
+          <ContainerList className="sm:grid-cols-1">
+            {materials.map((material) => (
+              <CardMaterial key={material.title} material={material} />
+            ))}
+          </ContainerList>
+        </LayoutMaterialMain>
+        <LayoutMaterialFooter>
+          <RefContent githubUrl={getGithubUrl(`/contents${FILE_PATH}`)} />
+        </LayoutMaterialFooter>
+      </LayoutMaterialContent>
+      <LayoutMaterialTableOfContents
+        chapters={{
+          label: t("chapter"),
+          data: chapters,
         }}
       />
-      <LayoutMaterialContent className="py-10">
-        <ContainerList className="sm:grid-cols-1">
-          {materials.map((material) => (
-            <CardMaterial key={material.title} material={material} />
-          ))}
-        </ContainerList>
-      </LayoutMaterialContent>
-      <LayoutMaterialFooter>
-        <RefContent githubUrl={getGithubUrl(`/contents${FILE_PATH}`)} />
-      </LayoutMaterialFooter>
     </LayoutMaterial>
   );
 }
