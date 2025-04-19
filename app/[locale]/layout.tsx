@@ -220,10 +220,12 @@ export default async function LocaleLayout({ children, params }: Props) {
             >
               <SidebarProvider>
                 <AppSidebar />
-                <SidebarInset>
+                <SidebarInset className="border lg:border-none">
                   <Header />
                   <SearchCommand />
-                  <div data-pagefind-body>{children}</div>
+                  <div data-pagefind-body className="relative">
+                    {children}
+                  </div>
                 </SidebarInset>
               </SidebarProvider>
             </ThemeProvider>

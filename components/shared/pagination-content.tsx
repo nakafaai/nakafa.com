@@ -58,7 +58,7 @@ export function PaginationContent({ pagination, className }: Props) {
 
   return (
     <div className={cn("mt-10 border-t pt-10", className)}>
-      <div className="mx-auto grid max-w-3xl gap-6 px-4 sm:grid-cols-2">
+      <div className="mx-auto grid max-w-3xl gap-6 px-6 sm:grid-cols-2">
         <PaginationButton
           href={pagination.prev.href}
           title={pagination.prev.title}

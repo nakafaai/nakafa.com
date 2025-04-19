@@ -31,7 +31,7 @@ export function HeaderBreadcrumb() {
   const breadcrumb = getBreadcrumb(pathname);
 
   return (
-    <div className="hidden items-center gap-2 lg:flex">
+    <div className="hidden items-center gap-4 lg:flex">
       <Separator
         orientation="vertical"
         className={cn("mx-2 data-[orientation=vertical]:h-4", {

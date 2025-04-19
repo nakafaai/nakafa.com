@@ -8,7 +8,7 @@ type Props = {
 
 export function LayoutContent({ children, className }: Props) {
   return (
-    <article className={cn("mx-auto max-w-3xl px-4", className)}>
+    <article className={cn("mx-auto max-w-3xl px-6", className)}>
       {children}
     </article>
   );

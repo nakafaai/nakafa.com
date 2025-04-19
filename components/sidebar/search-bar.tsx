@@ -49,13 +49,13 @@ export function SearchBar({ className, forceOpen = false }: Props) {
         <Input
           id={id}
           className={cn(
-            "h-8 cursor-pointer border-border bg-muted/50 pe-11 pl-9 transition-colors placeholder:text-sm hover:bg-muted/80 focus-visible:ring-0 sm:w-80",
+            "h-9 cursor-pointer border-border bg-muted/50 pe-11 pl-9 transition-colors placeholder:text-sm hover:bg-muted/80 focus-visible:ring-0 sm:w-80",
             className
           )}
           placeholder={t("search-bar-placeholder")}
           type="search"
         />
-        <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3">
+        <div className="pointer-events-none absolute inset-y-0 end-0 hidden items-center justify-center pe-3 lg:flex">
           <div className="flex items-center gap-0.5">
             <kbd className="rounded border bg-background p-0.75">
               <IconCommand className="size-3 shrink-0" />

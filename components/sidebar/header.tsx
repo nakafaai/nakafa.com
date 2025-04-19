@@ -4,7 +4,6 @@ import { useTranslations } from "next-intl";
 import { buttonVariants } from "../ui/button";
 import { SidebarTrigger } from "../ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { HeaderBreadcrumb } from "./header-breadcrumb";
 import { HeaderContainer } from "./header-container";
 import { SearchBar } from "./search-bar";
 
@@ -12,11 +11,9 @@ export function Header() {
   const t = useTranslations("Common");
   return (
     <HeaderContainer>
-      <div className="flex w-full items-center justify-between gap-4 px-4">
+      <div className="flex w-full items-center justify-between gap-2 px-6">
         <div className="flex items-center gap-2 sm:w-full">
-          <SidebarTrigger className="size-8" />
-
-          <HeaderBreadcrumb />
+          <SidebarTrigger className="size-9" variant="outline" />
         </div>
 
         <div className="flex w-full items-center justify-end gap-2">
@@ -29,7 +26,7 @@ export function Header() {
                 rel="noopener noreferrer"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "icon" }),
-                  "size-8 shrink-0"
+                  "shrink-0"
                 )}
                 aria-label={t("source-code")}
               >
@@ -49,7 +46,7 @@ export function Header() {
                 rel="noopener noreferrer"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "icon" }),
-                  "size-8 shrink-0"
+                  "shrink-0"
                 )}
                 aria-label={t("videos")}
               >
