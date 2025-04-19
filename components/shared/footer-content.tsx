@@ -15,7 +15,7 @@ export function FooterContent({ children, className }: Props) {
     >
       <Particles
         quantity={25}
-        className="pointer-events-none absolute inset-0 opacity-50"
+        className="pointer-events-none absolute inset-0 opacity-80"
       />
       <div className="z-10 mx-auto max-w-3xl px-6">{children}</div>
     </footer>

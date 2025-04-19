@@ -11,7 +11,7 @@ export default function NotFound() {
       data-pagefind-ignore
       className="relative flex h-[calc(100vh-4rem)] items-center justify-center"
     >
-      <Particles className="pointer-events-none absolute inset-0 opacity-50" />
+      <Particles className="pointer-events-none absolute inset-0 opacity-80" />
       <div className="px-6 text-center">
         <div className="space-y-4">
           <h1 className="font-bold text-6xl">404</h1>

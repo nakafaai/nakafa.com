@@ -44,7 +44,7 @@ export function HeaderContent({
     <div className="relative border-b py-10">
       <Particles
         quantity={25}
-        className="pointer-events-none absolute inset-0 opacity-50"
+        className="pointer-events-none absolute inset-0 opacity-80"
       />
       <div className="z-10 mx-auto max-w-3xl space-y-4 px-6">
         <div className="space-y-2">

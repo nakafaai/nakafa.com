@@ -21,7 +21,7 @@ export default async function Page({ params }: Props) {
       data-pagefind-ignore
       className="relative flex h-[calc(100dvh-4rem)] items-center justify-center md:h-dvh"
     >
-      <Particles className="pointer-events-none absolute inset-0 opacity-50" />
+      <Particles className="pointer-events-none absolute inset-0 opacity-80" />
       <div className="mx-auto w-full max-w-xl px-6">
         <div className="relative flex h-full flex-col">
           <h1 className="mb-8 font-medium text-4xl leading-none tracking-tighter md:text-center">
