@@ -130,5 +130,11 @@
     "description": "Oops! The page you're looking for doesn't exist or has not been implemented yet.",
     "home-button": "Home",
     "contribute-button": "Contribute"
+  },
+  "Error": {
+    "title": "Something went wrong!",
+    "description": "Please report the issue on GitHub.",
+    "retry": "Retry",
+    "report": "Report"
   }
 }
