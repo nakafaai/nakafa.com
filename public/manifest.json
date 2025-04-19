@@ -1,0 +1,18 @@
+{
+  "name": "Nakafa - Learn for free and with quality",
+  "short_name": "Nakafa",
+  "description": "Everyone should have the opportunity to learn for free and with quality.",
+  "start_url": "/",
+  "theme_color": "#f5f5f5",
+  "background_color": "#f5f5f5",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
