@@ -13,6 +13,7 @@ import {
   LaptopIcon,
   LeafIcon,
   MoonIcon,
+  RabbitIcon,
   SparkleIcon,
   SunIcon,
   SunsetIcon,
@@ -49,6 +50,10 @@ export const themes = [
   {
     value: "cosmic",
     icon: SparkleIcon,
+  },
+  {
+    value: "cute",
+    icon: RabbitIcon,
   },
   {
     value: "dreamy",
