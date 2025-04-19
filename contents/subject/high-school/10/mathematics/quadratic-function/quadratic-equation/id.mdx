@@ -1,6 +1,340 @@
+import { ReadingRoomProblem } from "./reading-room-problem";
+
 export const metadata = {
   title: "Persamaan Kuadrat",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/19/2025",
   subject: "Persamaan dan Fungsi Kuadrat",
 };
+
+## Apa itu Persamaan Kuadrat?
+
+Persamaan kuadrat adalah persamaan matematika yang melibatkan bentuk kuadrat. Persamaan ini mengandung variabel dengan pangkat tertinggi adalah 2. Bentuk umum persamaan kuadrat adalah:
+
+<BlockMath math="ax^2 + bx + c = 0" />
+
+dengan syarat <InlineMath math="a \neq 0" /> dan <InlineMath math="a, b, c" /> merupakan bilangan real.
+
+### Asal Usul Istilah Kuadrat
+
+Istilah kuadrat berasal dari kata bahasa Latin, yaitu _quadratus_, yang berarti membuat persegi. Ini berkaitan dengan interpretasi geometris dari bentuk <InlineMath math="x^2" /> yang dapat dilihat sebagai luas persegi dengan sisi <InlineMath math="x" />.
+
+## Cara Menyelesaikan Persamaan Kuadrat
+
+Persamaan kuadrat dapat diselesaikan dengan berbagai cara. Berikut adalah beberapa metode yang sering digunakan:
+
+### Faktorisasi
+
+Metode faktorisasi dilakukan dengan menguraikan persamaan kuadrat menjadi perkalian dua faktor linear. Misalnya:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2x^2 - 3x - 2 = 0" />
+  <BlockMath math="(2x + 1)(x - 2) = 0" />
+</div>
+
+Dari bentuk faktor di atas, kita bisa mendapatkan solusi:
+
+- Jika <InlineMath math="2x + 1 = 0" />, maka <InlineMath math="x = -\frac{1}{2}" />
+- Jika <InlineMath math="x - 2 = 0" />, maka <InlineMath math="x = 2" />
+
+Jadi, akar-akar persamaan kuadrat tersebut adalah <InlineMath math="x = -\frac{1}{2}" /> atau <InlineMath math="x = 2" />.
+
+### Melengkapkan Kuadrat
+
+Cara ini melibatkan proses mengubah persamaan kuadrat menjadi bentuk kuadrat sempurna.
+
+Contoh:
+
+<BlockMath math="2x^2 - 3x - 2 = 0" />
+
+Kita bagi semua suku dengan 2:
+
+<BlockMath math="x^2 - \frac{3}{2}x - 1 = 0" />
+
+Pindahkan konstanta ke ruas kanan:
+
+<BlockMath math="x^2 - \frac{3}{2}x = 1" />
+
+Tambahkan <InlineMath math="\left(\frac{-3/2}{2}\right)^2 = \frac{9}{16}" /> ke kedua ruas:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x^2 - \frac{3}{2}x + \frac{9}{16} = 1 + \frac{9}{16}" />
+  <BlockMath math="\left(x - \frac{3}{4}\right)^2 = \frac{16 + 9}{16} = \frac{25}{16}" />
+  <BlockMath math="\left(x - \frac{3}{4}\right)^2 = \left(\frac{5}{4}\right)^2" />
+</div>
+
+Sehingga:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x - \frac{3}{4} = \pm \frac{5}{4}" />
+  <BlockMath math="x = \frac{3}{4} \pm \frac{5}{4}" />
+  <BlockMath math="x = 2 \text{ atau } x = -\frac{1}{2}" />
+</div>
+
+### Menggunakan Rumus ABC (Rumus Kuadrat)
+
+Untuk persamaan <InlineMath math="ax^2 + bx + c = 0" />, akar-akarnya dapat ditentukan dengan rumus:
+
+<BlockMath math="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+
+Contoh:
+
+<BlockMath math="2x^2 - 3x - 2 = 0" />
+
+Dengan <InlineMath math="a = 2" />, <InlineMath math="b = -3" />, dan <InlineMath math="c = -2" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = \frac{-(-3) \pm \sqrt{(-3)^2 - 4(2)(-2)}}{2(2)}" />
+  <BlockMath math="x = \frac{3 \pm \sqrt{9 + 16}}{4}" />
+  <BlockMath math="x = \frac{3 \pm \sqrt{25}}{4}" />
+  <BlockMath math="x = \frac{3 \pm 5}{4}" />
+</div>
+
+Sehingga:
+
+<BlockMath math="x = \frac{3 + 5}{4} = 2 \text{ atau } x = \frac{3 - 5}{4} = -\frac{1}{2}" />
+
+## Perumusan Masalah dalam Bentuk Persamaan Kuadrat
+
+Banyak masalah dalam kehidupan sehari-hari dapat dimodelkan dengan persamaan kuadrat. Mari kita eksplorasi beberapa contoh:
+
+### Masalah Ruang Baca
+
+Empat sudut baca berukuran sama dibuat dalam sebuah ruang kelas berukuran 4 m × 6 m. Jika setiap sudut berbentuk persegi dengan sisi <InlineMath math="x" /> meter, maka luas ruangan yang tersisa untuk mengatur tempat duduk siswa adalah:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Luas total} - \text{Luas empat sudut}" />
+  <BlockMath math="4 \times 6 - 4x^2 = 24 - 4x^2" />
+</div>
+
+<ReadingRoomProblem />
+
+### Masalah Perkalian Dua Bilangan
+
+Perkalian dua bilangan adalah 63 dan penjumlahannya adalah 16. Kita bisa menyelesaikan ini dengan persamaan kuadrat.
+
+Misalkan kedua bilangan adalah <InlineMath math="p" /> dan <InlineMath math="q" />, maka:
+
+- <InlineMath math="p + q = 16" />, sehingga <InlineMath math="q = 16 - p" />
+- <InlineMath math="p \times q = 63" />
+
+Substitusi nilai <InlineMath math="q" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="p(16 - p) = 63" />
+  <BlockMath math="16p - p^2 = 63" />
+  <BlockMath math="-p^2 + 16p - 63 = 0" />
+  <BlockMath math="p^2 - 16p + 63 = 0" />
+</div>
+
+Dengan memfaktorkan persamaan ini atau menggunakan rumus kuadrat, kita bisa menemukan nilai <InlineMath math="p" /> dan <InlineMath math="q" />.
+
+### Masalah Kecepatan Kendaraan
+
+Sebuah kendaraan menempuh jarak 320 km dengan kelajuan tertentu. Jika kendaraan melaju 24 km/jam lebih cepat, waktu tempuhnya berkurang 3 jam. Kita dapat mencari kelajuan awal dengan persamaan kuadrat.
+
+Misalkan kelajuan awal adalah <InlineMath math="v" /> km/jam dan waktu tempuh awal adalah <InlineMath math="t" /> jam, maka:
+
+- <InlineMath math="v \times t = 320" /> (jarak = kecepatan × waktu)
+- <InlineMath math="(v + 24) \times (t - 3) = 320" /> (kondisi kedua)
+
+Dari persamaan pertama: <InlineMath math="t = \frac{320}{v}" />
+
+Substitusi ke persamaan kedua:
+
+<BlockMath math="(v + 24) \times \left(\frac{320}{v} - 3\right) = 320" />
+
+Proses penyelesaian akan menghasilkan persamaan kuadrat yang bisa diselesaikan untuk menemukan nilai <InlineMath math="v" />.
+
+## Miskonsepsi Umum Tentang Persamaan Kuadrat
+
+Beberapa miskonsepsi yang sering terjadi:
+
+1. Menentukan operasi penjumlahan <InlineMath math="x + 3" /> sebagai <InlineMath math="3x" />.
+
+   **Contoh konkret**: Jika panjang ruangan <InlineMath math="x" /> meter, dan bertambah 3 meter, maka panjangnya menjadi <InlineMath math="x + 3" /> meter, bukan <InlineMath math="3x" /> meter.
+
+2. Menamai suatu persamaan sebagai persamaan kuadrat hanya karena melihat pangkat tertinggi variabel <InlineMath math="x" /> adalah 2, tanpa memperhatikan bentuk keseluruhan persamaan.
+
+   Perlu diingat bahwa persamaan kuadrat merupakan suatu polinom dengan bentuk standar <InlineMath math="ax^2 + bx + c = 0" /> dimana <InlineMath math="a \neq 0" />.
+
+## Bentuk-bentuk Persamaan Kuadrat
+
+Perhatikan bentuk-bentuk berikut, manakah yang merupakan persamaan kuadrat?
+
+1. <InlineMath math="\frac{1}{x} + 2x + 4 = 0" />
+
+   Ini bukan persamaan kuadrat karena mengandung suku <InlineMath math="\frac{1}{x}" />.
+
+2. <InlineMath math="\frac{1}{x-5} + \frac{1}{x-3} = x^2 - 4" />
+
+   Ini bukan persamaan kuadrat dalam bentuk standar, karena memiliki bentuk pecahan dengan variabel di penyebut.
+
+3. <InlineMath math="3x^2 + 2x - 1 = 0" />
+
+   Ini adalah persamaan kuadrat karena berbentuk <InlineMath math="ax^2 + bx + c = 0" /> dengan <InlineMath math="a = 3 \neq 0" />.
+
+4. <InlineMath math="x^2 + \frac{1}{x} + 3 = 0" />
+
+   Ini bukan persamaan kuadrat karena mengandung suku <InlineMath math="\frac{1}{x}" />.
+
+## Latihan Soal
+
+**Identifikasi Persamaan Kuadrat**
+
+Tentukan apakah persamaan-persamaan matematika berikut merupakan persamaan kuadrat:
+
+1. <InlineMath math="x^3 + x^2 + x = 0" />
+2. <InlineMath math="3x^2 + 2x - 1 = 0" />
+3. <InlineMath math="\frac{1}{x} + 5x = 0" />
+4. <InlineMath math="x^2 + \frac{1}{x} + 3 = 0" />
+
+**Faktorisasi**
+
+Jabarkan persamaan-persamaan berikut:
+
+1. <InlineMath math="(x + 2)(x + 3) = 0" />
+2. <InlineMath math="\left(\frac{1}{3}x - 4\right)(x + 9) = 0" />
+3. <InlineMath math="(2x - 8)(x + 5) = 0" />
+
+## Kunci Jawaban
+
+**Identifikasi Persamaan Kuadrat**
+
+1. <InlineMath math="x^3 + x^2 + x = 0" />
+
+   **Jawaban**: Bukan persamaan kuadrat, karena memiliki pangkat tertinggi 3 (<InlineMath math="x^3" />). Persamaan ini adalah persamaan kubik.
+
+2. <InlineMath math="3x^2 + 2x - 1 = 0" />
+
+   **Jawaban**: Persamaan kuadrat, karena berbentuk <InlineMath math="ax^2 + bx + c = 0" /> dengan <InlineMath math="a = 3" />, <InlineMath math="b = 2" />, dan <InlineMath math="c = -1" />.
+
+3. <InlineMath math="\frac{1}{x} + 5x = 0" />
+
+   **Jawaban**: Bukan persamaan kuadrat, karena mengandung suku <InlineMath math="\frac{1}{x}" />. Persamaan ini adalah persamaan pecahan.
+
+4. <InlineMath math="x^2 + \frac{1}{x} + 3 = 0" />
+
+   **Jawaban**: Bukan persamaan kuadrat, karena mengandung suku <InlineMath math="\frac{1}{x}" />. Persamaan ini adalah persamaan campuran.
+
+**Faktorisasi**
+
+1. <InlineMath math="(x + 2)(x + 3) = 0" />
+
+   **Jawaban**:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="(x + 2)(x + 3) = 0" />
+     <BlockMath math="x^2 + 3x + 2x + 6 = 0" />
+     <BlockMath math="x^2 + 5x + 6 = 0" />
+   </div>
+
+   Jadi, hasil perkalian kedua faktor adalah <InlineMath math="x^2 + 5x + 6 = 0" />
+
+2. <InlineMath math="\left(\frac{1}{3}x - 4\right)(x + 9) = 0" />
+
+   **Jawaban**:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\left(\frac{1}{3}x - 4\right)(x + 9) = 0" />
+     <BlockMath math="\frac{1}{3}x \cdot x + \frac{1}{3}x \cdot 9 - 4 \cdot x - 4 \cdot 9 = 0" />
+     <BlockMath math="\frac{1}{3}x^2 + 3x - 4x - 36 = 0" />
+     <BlockMath math="\frac{1}{3}x^2 - x - 36 = 0" />
+   </div>
+
+   Kalikan semua suku dengan 3 untuk menyederhanakan:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 - 3x - 108 = 0" />
+   </div>
+
+   Jadi, hasil perkalian kedua faktor adalah <InlineMath math="x^2 - 3x - 108 = 0" /> atau <InlineMath math="\frac{1}{3}x^2 - x - 36 = 0" />
+
+3. <InlineMath math="(2x - 8)(x + 5) = 0" />
+
+   **Jawaban**:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="(2x - 8)(x + 5) = 0" />
+     <BlockMath math="2x \cdot x + 2x \cdot 5 - 8 \cdot x - 8 \cdot 5 = 0" />
+     <BlockMath math="2x^2 + 10x - 8x - 40 = 0" />
+     <BlockMath math="2x^2 + 2x - 40 = 0" />
+   </div>
+
+   Faktorisasi <InlineMath math="2x - 8" /> menjadi <InlineMath math="2(x - 4)" />:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2(x - 4)(x + 5) = 0" />
+   </div>
+
+   Jadi, hasil perkalian kedua faktor adalah <InlineMath math="2x^2 + 2x - 40 = 0" />
+
+**Penyelesaian Persamaan Kuadrat**
+
+Mari kita selesaikan beberapa persamaan dari hasil faktorisasi di atas:
+
+1. <InlineMath math="x^2 + 5x + 6 = 0" />
+
+   **Jawaban**:
+   Faktorisasi:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + 5x + 6 = 0" />
+     <BlockMath math="(x + 2)(x + 3) = 0" />
+   </div>
+
+   Sehingga:
+
+   - Jika <InlineMath math="x + 2 = 0" />, maka <InlineMath math="x = -2" />
+   - Jika <InlineMath math="x + 3 = 0" />, maka <InlineMath math="x = -3" />
+
+   Akar-akar persamaan: <InlineMath math="x = -2" /> atau <InlineMath math="x = -3" />
+
+2. <InlineMath math="x^2 - 3x - 108 = 0" />
+
+   **Jawaban**:
+   Gunakan rumus ABC:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+     <BlockMath math="x = \frac{3 \pm \sqrt{9 + 432}}{2}" />
+     <BlockMath math="x = \frac{3 \pm \sqrt{441}}{2}" />
+     <BlockMath math="x = \frac{3 \pm 21}{2}" />
+   </div>
+
+   Sehingga:
+
+   - <InlineMath math="x = \frac{3 + 21}{2} = 12" />
+   - <InlineMath math="x = \frac{3 - 21}{2} = -9" />
+
+   Akar-akar persamaan: <InlineMath math="x = 12" /> atau <InlineMath math="x = -9" />
+
+   Verifikasi dengan faktorisasi:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 - 3x - 108 = 0" />
+     <BlockMath math="(x - 12)(x + 9) = 0" />
+   </div>
+
+3. <InlineMath math="2x^2 + 2x - 40 = 0" />
+
+   **Jawaban**:
+   Sederhanakan persamaan dengan membagi semua suku dengan 2:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + x - 20 = 0" />
+   </div>
+
+   Faktorisasi:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + x - 20 = 0" />
+     <BlockMath math="(x + 5)(x - 4) = 0" />
+   </div>
+
+   Sehingga:
+
+   - Jika <InlineMath math="x + 5 = 0" />, maka <InlineMath math="x = -5" />
+   - Jika <InlineMath math="x - 4 = 0" />, maka <InlineMath math="x = 4" />
+
+   Akar-akar persamaan: <InlineMath math="x = -5" /> atau <InlineMath math="x = 4" />

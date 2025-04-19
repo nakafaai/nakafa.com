@@ -1,6 +1,340 @@
+import { ReadingRoomProblem } from "./reading-room-problem";
+
 export const metadata = {
   title: "Quadratic Equations",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/19/2025",
   subject: "Quadratic Functions",
 };
+
+## What is a Quadratic Equation?
+
+A quadratic equation is a mathematical equation involving a quadratic form. This equation contains a variable with the highest power of 2. The general form of a quadratic equation is:
+
+<BlockMath math="ax^2 + bx + c = 0" />
+
+with the condition that <InlineMath math="a \neq 0" /> and <InlineMath math="a, b, c" /> are real numbers.
+
+### Origins of the Term "Quadratic"
+
+The term "quadratic" comes from the Latin word _quadratus_, which means "to make a square." This relates to the geometric interpretation of the form <InlineMath math="x^2" /> which can be viewed as the area of a square with side length <InlineMath math="x" />.
+
+## How to Solve Quadratic Equations
+
+Quadratic equations can be solved in various ways. Here are some commonly used methods:
+
+### Factorization
+
+The factorization method involves breaking down the quadratic equation into a product of two linear factors. For example:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2x^2 - 3x - 2 = 0" />
+  <BlockMath math="(2x + 1)(x - 2) = 0" />
+</div>
+
+From the factored form above, we can get the solutions:
+
+- If <InlineMath math="2x + 1 = 0" />, then <InlineMath math="x = -\frac{1}{2}" />
+- If <InlineMath math="x - 2 = 0" />, then <InlineMath math="x = 2" />
+
+Therefore, the roots of the quadratic equation are <InlineMath math="x = -\frac{1}{2}" /> or <InlineMath math="x = 2" />.
+
+### Completing the Square
+
+This method involves transforming the quadratic equation into a perfect square form.
+
+Example:
+
+<BlockMath math="2x^2 - 3x - 2 = 0" />
+
+We divide all terms by 2:
+
+<BlockMath math="x^2 - \frac{3}{2}x - 1 = 0" />
+
+Move the constant to the right side:
+
+<BlockMath math="x^2 - \frac{3}{2}x = 1" />
+
+Add <InlineMath math="\left(\frac{-3/2}{2}\right)^2 = \frac{9}{16}" /> to both sides:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x^2 - \frac{3}{2}x + \frac{9}{16} = 1 + \frac{9}{16}" />
+  <BlockMath math="\left(x - \frac{3}{4}\right)^2 = \frac{16 + 9}{16} = \frac{25}{16}" />
+  <BlockMath math="\left(x - \frac{3}{4}\right)^2 = \left(\frac{5}{4}\right)^2" />
+</div>
+
+Therefore:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x - \frac{3}{4} = \pm \frac{5}{4}" />
+  <BlockMath math="x = \frac{3}{4} \pm \frac{5}{4}" />
+  <BlockMath math="x = 2 \text{ or } x = -\frac{1}{2}" />
+</div>
+
+### Using the Quadratic Formula
+
+For the equation <InlineMath math="ax^2 + bx + c = 0" />, the roots can be determined using the formula:
+
+<BlockMath math="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+
+Example:
+
+<BlockMath math="2x^2 - 3x - 2 = 0" />
+
+With <InlineMath math="a = 2" />, <InlineMath math="b = -3" />, and <InlineMath math="c = -2" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = \frac{-(-3) \pm \sqrt{(-3)^2 - 4(2)(-2)}}{2(2)}" />
+  <BlockMath math="x = \frac{3 \pm \sqrt{9 + 16}}{4}" />
+  <BlockMath math="x = \frac{3 \pm \sqrt{25}}{4}" />
+  <BlockMath math="x = \frac{3 \pm 5}{4}" />
+</div>
+
+Therefore:
+
+<BlockMath math="x = \frac{3 + 5}{4} = 2 \text{ or } x = \frac{3 - 5}{4} = -\frac{1}{2}" />
+
+## Formulating Problems as Quadratic Equations
+
+Many real-life problems can be modeled using quadratic equations. Let's explore some examples:
+
+### Reading Room Problem
+
+Four reading corners of the same size are created in a classroom measuring 4 m × 6 m. If each corner is a square with side length <InlineMath math="x" /> meters, then the remaining area of the room for arranging student seating is:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Total area} - \text{Area of four corners}" />
+  <BlockMath math="4 \times 6 - 4x^2 = 24 - 4x^2" />
+</div>
+
+<ReadingRoomProblem />
+
+### Problem of Multiplying Two Numbers
+
+The product of two numbers is 63 and their sum is 16. We can solve this using a quadratic equation.
+
+Let's say the two numbers are <InlineMath math="p" /> and <InlineMath math="q" />, then:
+
+- <InlineMath math="p + q = 16" />, so <InlineMath math="q = 16 - p" />
+- <InlineMath math="p \times q = 63" />
+
+Substituting the value of <InlineMath math="q" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="p(16 - p) = 63" />
+  <BlockMath math="16p - p^2 = 63" />
+  <BlockMath math="-p^2 + 16p - 63 = 0" />
+  <BlockMath math="p^2 - 16p + 63 = 0" />
+</div>
+
+By factoring this equation or using the quadratic formula, we can find the values of <InlineMath math="p" /> and <InlineMath math="q" />.
+
+### Vehicle Speed Problem
+
+A vehicle travels a distance of 320 km at a certain speed. If the vehicle travels 24 km/h faster, its travel time is reduced by 3 hours. We can find the initial speed using a quadratic equation.
+
+Let's say the initial speed is <InlineMath math="v" /> km/h and the initial travel time is <InlineMath math="t" /> hours, then:
+
+- <InlineMath math="v \times t = 320" /> (distance = speed × time)
+- <InlineMath math="(v + 24) \times (t - 3) = 320" /> (second condition)
+
+From the first equation: <InlineMath math="t = \frac{320}{v}" />
+
+Substituting into the second equation:
+
+<BlockMath math="(v + 24) \times \left(\frac{320}{v} - 3\right) = 320" />
+
+The solution process will result in a quadratic equation that can be solved to find the value of <InlineMath math="v" />.
+
+## Common Misconceptions About Quadratic Equations
+
+Some common misconceptions include:
+
+1. Identifying the addition operation <InlineMath math="x + 3" /> as <InlineMath math="3x" />.
+
+   **Concrete example**: If a room's length is <InlineMath math="x" /> meters, and increases by 3 meters, then its length becomes <InlineMath math="x + 3" /> meters, not <InlineMath math="3x" /> meters.
+
+2. Labeling an equation as a quadratic equation simply because the highest power of the variable <InlineMath math="x" /> is 2, without considering the overall form of the equation.
+
+   Remember that a quadratic equation is a polynomial with the standard form <InlineMath math="ax^2 + bx + c = 0" /> where <InlineMath math="a \neq 0" />.
+
+## Forms of Quadratic Equations
+
+Consider the following forms, which ones are quadratic equations?
+
+1. <InlineMath math="\frac{1}{x} + 2x + 4 = 0" />
+
+   This is not a quadratic equation because it contains the term <InlineMath math="\frac{1}{x}" />.
+
+2. <InlineMath math="\frac{1}{x-5} + \frac{1}{x-3} = x^2 - 4" />
+
+   This is not a quadratic equation in standard form, because it has a fractional form with variables in the denominator.
+
+3. <InlineMath math="3x^2 + 2x - 1 = 0" />
+
+   This is a quadratic equation because it is in the form <InlineMath math="ax^2 + bx + c = 0" /> with <InlineMath math="a = 3 \neq 0" />.
+
+4. <InlineMath math="x^2 + \frac{1}{x} + 3 = 0" />
+
+   This is not a quadratic equation because it contains the term <InlineMath math="\frac{1}{x}" />.
+
+## Practice Problems
+
+**Identifying Quadratic Equations**
+
+Determine whether the following mathematical equations are quadratic equations:
+
+1. <InlineMath math="x^3 + x^2 + x = 0" />
+2. <InlineMath math="3x^2 + 2x - 1 = 0" />
+3. <InlineMath math="\frac{1}{x} + 5x = 0" />
+4. <InlineMath math="x^2 + \frac{1}{x} + 3 = 0" />
+
+**Factorization**
+
+Expand the following equations:
+
+1. <InlineMath math="(x + 2)(x + 3) = 0" />
+2. <InlineMath math="\left(\frac{1}{3}x - 4\right)(x + 9) = 0" />
+3. <InlineMath math="(2x - 8)(x + 5) = 0" />
+
+## Answer Key
+
+**Identifying Quadratic Equations**
+
+1. <InlineMath math="x^3 + x^2 + x = 0" />
+
+   **Answer**: Not a quadratic equation, because it has the highest power of 3 (<InlineMath math="x^3" />). This is a cubic equation.
+
+2. <InlineMath math="3x^2 + 2x - 1 = 0" />
+
+   **Answer**: Quadratic equation, because it is in the form <InlineMath math="ax^2 + bx + c = 0" /> with <InlineMath math="a = 3" />, <InlineMath math="b = 2" />, and <InlineMath math="c = -1" />.
+
+3. <InlineMath math="\frac{1}{x} + 5x = 0" />
+
+   **Answer**: Not a quadratic equation, because it contains the term <InlineMath math="\frac{1}{x}" />. This is a fractional equation.
+
+4. <InlineMath math="x^2 + \frac{1}{x} + 3 = 0" />
+
+   **Answer**: Not a quadratic equation, because it contains the term <InlineMath math="\frac{1}{x}" />. This is a mixed equation.
+
+**Factorization**
+
+1. <InlineMath math="(x + 2)(x + 3) = 0" />
+
+   **Answer**:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="(x + 2)(x + 3) = 0" />
+     <BlockMath math="x^2 + 3x + 2x + 6 = 0" />
+     <BlockMath math="x^2 + 5x + 6 = 0" />
+   </div>
+
+   So, the product of the two factors is <InlineMath math="x^2 + 5x + 6 = 0" />
+
+2. <InlineMath math="\left(\frac{1}{3}x - 4\right)(x + 9) = 0" />
+
+   **Answer**:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\left(\frac{1}{3}x - 4\right)(x + 9) = 0" />
+     <BlockMath math="\frac{1}{3}x \cdot x + \frac{1}{3}x \cdot 9 - 4 \cdot x - 4 \cdot 9 = 0" />
+     <BlockMath math="\frac{1}{3}x^2 + 3x - 4x - 36 = 0" />
+     <BlockMath math="\frac{1}{3}x^2 - x - 36 = 0" />
+   </div>
+
+   Multiply all terms by 3 to simplify:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 - 3x - 108 = 0" />
+   </div>
+
+   So, the product of the two factors is <InlineMath math="x^2 - 3x - 108 = 0" /> or <InlineMath math="\frac{1}{3}x^2 - x - 36 = 0" />
+
+3. <InlineMath math="(2x - 8)(x + 5) = 0" />
+
+   **Answer**:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="(2x - 8)(x + 5) = 0" />
+     <BlockMath math="2x \cdot x + 2x \cdot 5 - 8 \cdot x - 8 \cdot 5 = 0" />
+     <BlockMath math="2x^2 + 10x - 8x - 40 = 0" />
+     <BlockMath math="2x^2 + 2x - 40 = 0" />
+   </div>
+
+   Factoring <InlineMath math="2x - 8" /> as <InlineMath math="2(x - 4)" />:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2(x - 4)(x + 5) = 0" />
+   </div>
+
+   So, the product of the two factors is <InlineMath math="2x^2 + 2x - 40 = 0" />
+
+**Solving Quadratic Equations**
+
+Let's solve some equations from the factorization results above:
+
+1. <InlineMath math="x^2 + 5x + 6 = 0" />
+
+   **Answer**:
+   Factorization:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + 5x + 6 = 0" />
+     <BlockMath math="(x + 2)(x + 3) = 0" />
+   </div>
+
+   Therefore:
+
+   - If <InlineMath math="x + 2 = 0" />, then <InlineMath math="x = -2" />
+   - If <InlineMath math="x + 3 = 0" />, then <InlineMath math="x = -3" />
+
+   The roots of the equation are: <InlineMath math="x = -2" /> or <InlineMath math="x = -3" />
+
+2. <InlineMath math="x^2 - 3x - 108 = 0" />
+
+   **Answer**:
+   Using the quadratic formula:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+     <BlockMath math="x = \frac{3 \pm \sqrt{9 + 432}}{2}" />
+     <BlockMath math="x = \frac{3 \pm \sqrt{441}}{2}" />
+     <BlockMath math="x = \frac{3 \pm 21}{2}" />
+   </div>
+
+   Therefore:
+
+   - <InlineMath math="x = \frac{3 + 21}{2} = 12" />
+   - <InlineMath math="x = \frac{3 - 21}{2} = -9" />
+
+   The roots of the equation are: <InlineMath math="x = 12" /> or <InlineMath math="x = -9" />
+
+   Verification by factorization:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 - 3x - 108 = 0" />
+     <BlockMath math="(x - 12)(x + 9) = 0" />
+   </div>
+
+3. <InlineMath math="2x^2 + 2x - 40 = 0" />
+
+   **Answer**:
+   Simplify the equation by dividing all terms by 2:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + x - 20 = 0" />
+   </div>
+
+   Factorization:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + x - 20 = 0" />
+     <BlockMath math="(x + 5)(x - 4) = 0" />
+   </div>
+
+   Therefore:
+
+   - If <InlineMath math="x + 5 = 0" />, then <InlineMath math="x = -5" />
+   - If <InlineMath math="x - 4 = 0" />, then <InlineMath math="x = 4" />
+
+   The roots of the equation are: <InlineMath math="x = -5" /> or <InlineMath math="x = 4" />
