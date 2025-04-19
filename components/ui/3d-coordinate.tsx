@@ -1670,7 +1670,6 @@ function CoordinateSystemComponent({
 export const CoordinateSystem = dynamic(
   () => Promise.resolve(CoordinateSystemComponent),
   {
-    ssr: false,
     loading: () => (
       <div className="relative aspect-square overflow-hidden rounded-md sm:aspect-video" />
     ),
