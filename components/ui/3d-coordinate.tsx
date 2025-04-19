@@ -939,9 +939,9 @@ export type CoordinatePoint = {
 };
 
 /**
- * Props for the Equation component
+ * Props for the LineEquation component
  */
-export type EquationProps = {
+export type LineEquationProps = {
   points: CoordinatePoint[];
   color?: string | THREE.Color;
   lineWidth?: number;
@@ -967,13 +967,13 @@ export type EquationProps = {
 /**
  * This component renders a polyline based on an array of 3D points and optionally displays markers at each point.
  */
-export function Equation({
+export function LineEquation({
   points,
   color = randomColor(["YELLOW", "GREEN", "BLUE"]),
   lineWidth = 2,
   showPoints = true,
   labels = [],
-}: EquationProps) {
+}: LineEquationProps) {
   const vectorPoints = useMemo(
     () => points.map((point) => new THREE.Vector3(point.x, point.y, point.z)),
     [points]

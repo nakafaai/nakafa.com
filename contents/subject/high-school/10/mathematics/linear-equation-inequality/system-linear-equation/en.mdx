@@ -1,4 +1,4 @@
-import { Equation } from "../../_shared/equation";
+import { LineEquation } from "../../_shared/line-equation";
 
 export const metadata = {
   title: "Linear Equation Systems",
@@ -173,7 +173,7 @@ In three dimensions (three variables), a linear equation is represented as a pla
 ### Visualizing Linear Equation Systems
 
 <div className="flex flex-col gap-4">
-  <Equation
+  <LineEquation
     title="Linear Equation System with One Solution"
     description="Two lines intersecting at a single point."
     data={[
@@ -197,7 +197,7 @@ In three dimensions (three variables), a linear equation is represented as a pla
       },
     ]}
   />
-  <Equation
+  <LineEquation
     title="Linear Equation System with No Solution"
     description="Two parallel lines (no intersection)."
     data={[
@@ -221,7 +221,7 @@ In three dimensions (three variables), a linear equation is represented as a pla
       },
     ]}
   />
-  <Equation
+  <LineEquation
     title="Linear Equation System with Infinitely Many Solutions"
     description="Two coincident lines (identical lines)."
     data={[

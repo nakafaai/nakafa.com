@@ -1,7 +1,7 @@
 import {
   CoordinateSystem,
-  Equation as Equation3D,
-  type EquationProps,
+  LineEquation as LineEquation3D,
+  type LineEquationProps,
 } from "@/components/ui/3d-coordinate";
 import {
   Card,
@@ -14,11 +14,11 @@ import {
 type Props = {
   title: string;
   description: string;
-  data: EquationProps[];
+  data: LineEquationProps[];
   cameraPosition?: [number, number, number];
 };
 
-export function Equation({
+export function LineEquation({
   title,
   description,
   data,
@@ -33,7 +33,7 @@ export function Equation({
       <CardContent>
         <CoordinateSystem cameraPosition={cameraPosition}>
           {data.map((item, index) => (
-            <Equation3D key={`equation-${index}`} {...item} />
+            <LineEquation3D key={`line-equation-${index}`} {...item} />
           ))}
         </CoordinateSystem>
       </CardContent>
