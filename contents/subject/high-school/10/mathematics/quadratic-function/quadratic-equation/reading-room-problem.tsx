@@ -5,7 +5,7 @@ export function ReadingRoomProblem() {
     <div className="my-6 flex justify-center">
       <div className="relative w-full max-w-md">
         {/* Main container - Classroom */}
-        <div className="relative aspect-[3/2] w-full border shadow-sm">
+        <div className="relative aspect-[3/2] w-full border bg-card shadow-sm">
           {/* Top left corner square */}
           <div className="absolute top-0 left-0 aspect-square w-[12.5%] border-r border-b bg-blue-400" />
 
