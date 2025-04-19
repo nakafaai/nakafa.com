@@ -1,5 +1,3 @@
-"use client";
-
 import {
   CoordinateSystem,
   Inequality as Inequality3D,
