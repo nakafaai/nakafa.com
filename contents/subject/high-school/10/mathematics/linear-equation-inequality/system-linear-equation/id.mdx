@@ -1,4 +1,4 @@
-import { LinearSystem } from "../../_shared/linear-system";
+import { Equation } from "../../_shared/equation";
 
 export const metadata = {
   title: "Sistem Persamaan Linear",
@@ -173,7 +173,7 @@ Dalam tiga dimensi (tiga variabel), persamaan linear direpresentasikan sebagai b
 ### Visualisasi Sistem Persamaan Linear
 
 <div className="flex flex-col gap-4">
-  <LinearSystem
+  <Equation
     title="Sistem Persamaan Linear dengan Satu Solusi"
     description="Dua garis yang berpotongan di satu titik."
     data={[
@@ -197,7 +197,7 @@ Dalam tiga dimensi (tiga variabel), persamaan linear direpresentasikan sebagai b
       },
     ]}
   />
-  <LinearSystem
+  <Equation
     title="Sistem Persamaan Linear Tanpa Solusi"
     description="Dua garis yang sejajar (tidak berpotongan)."
     data={[
@@ -221,7 +221,7 @@ Dalam tiga dimensi (tiga variabel), persamaan linear direpresentasikan sebagai b
       },
     ]}
   />
-  <LinearSystem
+  <Equation
     title="Sistem Persamaan Linear dengan Banyak Solusi"
     description="Dua garis yang berimpit (sama)."
     data={[

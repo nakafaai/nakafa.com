@@ -1,9 +1,7 @@
 import {
-  type COLORS,
   CoordinateSystem,
-  LinearSystem as LinearSystem3D,
-  type LinearSystemProps,
-  randomColor,
+  Equation as Equation3D,
+  type EquationProps,
 } from "@/components/ui/3d-coordinate";
 import {
   Card,
@@ -16,15 +14,11 @@ import {
 type Props = {
   title: string;
   description: string;
-  data: {
-    points: LinearSystemProps["points"];
-    labels: LinearSystemProps["labels"];
-    color?: keyof typeof COLORS;
-  }[];
+  data: EquationProps[];
   cameraPosition?: [number, number, number];
 };
 
-export function LinearSystem({
+export function Equation({
   title,
   description,
   data,
@@ -38,13 +32,8 @@ export function LinearSystem({
       </CardHeader>
       <CardContent>
         <CoordinateSystem cameraPosition={cameraPosition}>
-          {data.map(({ points, labels, color }) => (
-            <LinearSystem3D
-              key={`${points.map((p) => `${p.x},${p.y},${p.z}`).join("-")}-${labels?.map((l) => l.text).join("-")}`}
-              points={points}
-              labels={labels}
-              color={color ?? randomColor(["RED", "GREEN", "BLUE"])}
-            />
+          {data.map((item, index) => (
+            <Equation3D key={`equation-${index}`} {...item} />
           ))}
         </CoordinateSystem>
       </CardContent>

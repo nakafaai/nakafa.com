@@ -1,6 +1,213 @@
+import { Inequality } from "../../_shared/inequality";
+import { condition1, condition2 } from "./inequality-functions";
+
 export const metadata = {
   title: "Linear Inequality Systems",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/18/2025",
   subject: "Systems of Linear Equations and Inequalities",
 };
+
+## Understanding Linear Inequality Systems
+
+In everyday life, we often face situations with various constraints to consider. For example, when baking, we might be limited by the amount of available ingredients and our budget. These types of constraints can often be modeled using linear inequalities.
+
+### What Is a Linear Inequality System?
+
+A linear inequality system is a collection of two or more linear inequalities that must be satisfied simultaneously. Linear inequalities take the form:
+
+<BlockMath math="a_1x_1 + a_2x_2 + ... + a_nx_n \leq b \text{ or } a_1x_1 + a_2x_2 + ... + a_nx_n \geq b" />
+
+Where <InlineMath math="a_1, a_2, ..., a_n" /> are coefficients, <InlineMath math="x_1, x_2, ..., x_n" /> are variables, <InlineMath math="b" /> is a constant, and the inequality sign can be <InlineMath math="\leq, \geq, <, >" />.
+
+The main difference between linear equations and linear inequalities is:
+
+- Linear equations have exactly one equals sign (<InlineMath math="=" />)
+- Linear inequalities have an inequality sign (<InlineMath math="\leq, \geq, <, >" />)
+
+### Linear Inequality Systems with Two Variables
+
+A linear inequality system with two variables consists of two or more inequalities with two variables (usually <InlineMath math="x" /> and <InlineMath math="y" />):
+
+<BlockMath math="\begin{cases} a_1x + b_1y \leq c_1 \\ a_2x + b_2y \leq c_2 \end{cases}" />
+
+**Example**:
+
+<BlockMath math="\begin{cases} 2x + 5y < 10 \\ 6x + 2y > 10 \end{cases}" />
+
+The solution to this system is the set of ordered pairs <InlineMath math="(x,y)" /> that satisfy all inequalities simultaneously.
+
+## Solving Linear Inequality Systems
+
+To solve a linear inequality system with two variables, we use the graphical method with the following steps:
+
+### Step 1: Draw the Boundary Lines
+
+For each inequality, draw its boundary line by changing the inequality sign to an equals sign.
+
+**Example**:
+
+For the system:
+
+<BlockMath math="\begin{cases} 2x + 5y < 10 \\ 6x + 2y > 10 \end{cases}" />
+
+Draw the lines:
+
+<BlockMath math="\begin{cases} 2x + 5y = 10 \\ 6x + 2y = 10 \end{cases}" />
+
+### Step 2: Determine the Solution Regions
+
+To determine the solution region for each inequality:
+
+1. Take a test point (e.g., the origin <InlineMath math="(0,0)" /> if it's not on the line)
+2. Substitute it into the inequality
+3. If the result is true, the region containing the test point is the solution region
+4. If the result is false, the region not containing the test point is the solution region
+
+**Example**:
+
+For <InlineMath math="2x + 5y < 10" />, check point (0,0):
+
+<BlockMath math="2(0) + 5(0) = 0 < 10" />
+
+_(true)_
+
+The solution region is the area containing point (0,0), which is below the line <InlineMath math="2x + 5y = 10" />.
+
+For <InlineMath math="6x + 2y > 10" />, check point (0,0):
+
+<BlockMath math="6(0) + 2(0) = 0 > 10" />
+
+_(false)_
+
+The solution region is the area not containing point (0,0), which is above the line <InlineMath math="6x + 2y = 10" />.
+
+### Step 3: Determine the Intersection of Solution Regions
+
+The solution to the linear inequality system is the intersection (the area satisfied by all constraints) of all the solution regions involved.
+
+### Graphical Representation
+
+When drawing inequality graphs:
+
+- For <InlineMath math="\leq" /> or <InlineMath math="\geq" />: use a solid line (the solution region includes points on the line)
+- For <InlineMath math="<" /> or <InlineMath math=">" />: use a dashed line (the solution region does not include points on the line)
+- The solution region is shaded to show the solution
+
+## Real-life Applications
+
+### Mathematical Modeling
+
+Linear inequality systems are very useful for modeling optimization problems, such as:
+
+- Production problems with resource constraints
+- Budget planning with cost constraints
+- Nutrition planning with calorie constraints
+
+### Activity Planning
+
+Kiki is organizing an independence day celebration in her neighborhood. From the community fund, there is Rp500,000.00 available. For organizing competitions, it costs Rp20,000.00 per child. Prizes for winners are budgeted at Rp40,000.00 for each type of competition. It's expected that more than 13 children will participate.
+
+Let's define:
+
+- <InlineMath math="x" /> = number of participants
+- <InlineMath math="y" /> = number of competitions
+
+The mathematical model is:
+
+<BlockMath math="\begin{cases} 20.000x + 40.000y \leq 500.000 \\ x > 13 \end{cases}" />
+
+If we simplify:
+
+<BlockMath math="\begin{cases} 20x + 40y \leq 500 \\ x > 13 \end{cases}" />
+
+The solution to this system is the region that satisfies both inequalities. From the graph, we can see various combinations of participants and competitions that can be organized within budget constraints.
+
+## Problem-Solving Strategy
+
+To solve linear inequality system problems:
+
+1. Identify the variables to use
+2. Create a mathematical model based on the given constraints
+3. Solve the system using the graphical method
+4. Interpret the solution in the context of the original problem
+
+## Differences Between Linear Equation Systems and Linear Inequality Systems
+
+| Aspect                       | Linear Equation Systems                                   | Linear Inequality Systems                                                                        |
+| ---------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Operation Sign**           | Uses equals sign (<InlineMath math="=" />)                | Uses inequality signs (<InlineMath math="<, >, \leq, \geq" />)                                   |
+| **Solution Form**            | Usually a point or set of points                          | A region on the coordinate plane                                                                 |
+| **Graphical Representation** | Intersection of lines                                     | Intersection of shaded regions                                                                   |
+| **Solution Methods**         | Substitution, elimination, determinants                   | Primarily graphical method                                                                       |
+| **Number of Solutions**      | Can have one solution, infinite solutions, or no solution | Usually has infinite solutions (a region)                                                        |
+| **Drawing**                  | Always uses solid lines                                   | Solid lines for <InlineMath math="\leq, \geq" /> and dashed lines for <InlineMath math="<, >" /> |
+
+## Interactive Visualization of Linear Inequality Systems
+
+Let's imagine a linear inequality system as boundary fences in a garden. Each inequality limits which areas we can enter. When there's more than one inequality, we can only be in areas that satisfy all constraints.
+
+Here's an interactive visualization of a linear inequality system to help us understand this concept better:
+
+### Example of an Inequality System
+
+Consider the following linear inequality system:
+
+<BlockMath math="\begin{cases} x + y \leq 10 \\ 15x + 9y \geq 120 \end{cases}" />
+
+In the visualization below, the blue region shows the solution to <InlineMath math="x + y \leq 10" /> (all points below or on the line <InlineMath math="x + y = 10" />).
+
+The red region shows the solution to <InlineMath math="15x + 9y \geq 120" /> (all points above or on the line <InlineMath math="15x + 9y = 120" />).
+
+The purple region (the intersection of the blue and red areas) is the solution to the linear inequality system.
+
+<Inequality
+  title="Linear Inequality System"
+  description="Visualization of the system of inequalities x + y ≤ 10 and 15x + 9y ≥ 120."
+  data={[
+    {
+      is2D: true,
+      boundaryLine2D: [1, 1, -10],
+      condition: condition1,
+      xRange: [-15, 15],
+      yRange: [-15, 15],
+      zRange: [0, 0],
+      color: "#0891b2", // Cyan
+      boundaryColor: "#2563eb",
+      opacity: 0.3,
+      resolution: 100,
+      label: {
+        text: "x + y ≤ 10",
+        position: [3, 3, 0.1],
+      },
+    },
+    {
+      is2D: true,
+      boundaryLine2D: [-15, -9, 120],
+      condition: condition2,
+      xRange: [-15, 15],
+      yRange: [-15, 15],
+      zRange: [0, 0],
+      color: "#e11d48", // Rose
+      boundaryColor: "#dc2626",
+      opacity: 0.3,
+      resolution: 100,
+      label: {
+        text: "15x + 9y ≥ 120",
+        position: [6, 8, 0.1],
+      },
+    },
+  ]}
+/>
+
+### How to Read the Visualization
+
+In this interactive visualization:
+
+1. **Boundary lines** show the equations (e.g., <InlineMath math="x + y = 10" /> and <InlineMath math="15x + 9y = 120" />)
+2. **Colored regions** show the solution to each inequality
+3. **Intersection region** (the area satisfying all inequalities) is the solution to the inequality system
+
+You can clearly see that the solution to this inequality system forms a region bounded by both lines. From the visualization, we can also determine the intersection point of the two lines, which is an important point in the solution region.
+
+By understanding this visualization, you'll find it easier to solve optimization problems in everyday life involving constraints that can be modeled with linear inequality systems.
