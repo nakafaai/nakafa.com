@@ -13,7 +13,7 @@ export function Header() {
     <HeaderContainer>
       <div className="flex w-full items-center justify-between gap-2 px-6">
         <div className="flex items-center gap-2 sm:w-full">
-          <SidebarTrigger className="size-9" variant="outline" />
+          <SidebarTrigger className="size-8" variant="outline" />
         </div>
 
         <div className="flex w-full items-center justify-end gap-2">
@@ -26,7 +26,7 @@ export function Header() {
                 rel="noopener noreferrer"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "icon" }),
-                  "shrink-0"
+                  "size-8 shrink-0"
                 )}
                 aria-label={t("source-code")}
               >
@@ -46,7 +46,7 @@ export function Header() {
                 rel="noopener noreferrer"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "icon" }),
-                  "shrink-0"
+                  "size-8 shrink-0"
                 )}
                 aria-label={t("videos")}
               >

@@ -29,7 +29,7 @@ export function SidebarRight({ children, ...props }: Props) {
           <Button
             variant="outline"
             size="icon"
-            className="fixed top-[78px] right-6 bg-background/60 backdrop-blur-sm"
+            className="fixed top-20 right-6 size-8 bg-background/60 backdrop-blur-sm"
           >
             <IconMenu />
             <span className="sr-only">Menu</span>
