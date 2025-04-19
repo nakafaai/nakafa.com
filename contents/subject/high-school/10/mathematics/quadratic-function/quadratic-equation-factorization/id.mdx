@@ -4,3 +4,376 @@ export const metadata = {
   date: "04/19/2025",
   subject: "Persamaan dan Fungsi Kuadrat",
 };
+
+## Apa itu Faktorisasi Persamaan Kuadrat?
+
+Faktorisasi persamaan kuadrat adalah proses mengubah bentuk persamaan dari <InlineMath math="ax^2 + bx + c = 0" /> menjadi bentuk <InlineMath math="a(x - p)(x - q) = 0" />, dimana <InlineMath math="p" /> dan <InlineMath math="q" /> adalah akar-akar persamaan kuadrat tersebut.
+
+Perhatikan bahwa akar-akar persamaan kuadrat adalah nilai-nilai <InlineMath math="x" /> yang membuat persamaan tersebut bernilai nol. Ketika kita mengubah persamaan ke bentuk faktor, maka kita dapat dengan mudah menemukan akar-akarnya.
+
+## Prinsip Dasar Faktorisasi
+
+Persamaan kuadrat dalam bentuk standar ditulis sebagai:
+
+<BlockMath math="ax^2 + bx + c = 0" />
+
+dimana <InlineMath math="a" />, <InlineMath math="b" />, dan <InlineMath math="c" /> adalah konstanta dan <InlineMath math="a \neq 0" />.
+
+Faktorisasi berdasarkan pada sifat berikut: Jika suatu perkalian bernilai nol, maka salah satu atau kedua faktornya harus bernilai nol.
+
+Ini berarti jika <InlineMath math="(x - p)(x - q) = 0" />, maka:
+
+- <InlineMath math="x - p = 0" /> atau <InlineMath math="x - q = 0" />
+- Sehingga <InlineMath math="x = p" /> atau <InlineMath math="x = q" />
+
+## Langkah-Langkah Faktorisasi Persamaan Kuadrat
+
+Berikut adalah langkah-langkah umum untuk memfaktorkan persamaan kuadrat <InlineMath math="ax^2 + bx + c = 0" />:
+
+1. Pastikan persamaan sudah dalam bentuk standar dengan ruas kanan bernilai nol
+2. Cari dua bilangan yang jika dikalikan menghasilkan <InlineMath math="ac" /> dan jika dijumlahkan menghasilkan <InlineMath math="b" />
+3. Tulis persamaan dalam bentuk faktor-faktor
+4. Tentukan akar-akar persamaan dari faktor-faktor tersebut
+
+### Contoh memfaktorkan persamaan kuadrat
+
+1. Memfaktorkan persamaan:
+
+   <BlockMath math="x^2 + 5x + 6 = 0" />
+
+   Pada persamaan ini, <InlineMath math="a = 1" />, <InlineMath math="b = 5" />, dan <InlineMath math="c = 6" />.
+
+   **Langkah 1**: Persamaan sudah dalam bentuk standar dengan ruas kanan bernilai nol.
+
+   **Langkah 2**: Kita perlu mencari dua bilangan yang:
+
+   - Jika dikalikan menghasilkan <InlineMath math="ac = 1 \times 6 = 6" />
+   - Jika dijumlahkan menghasilkan <InlineMath math="b = 5" />
+
+   Faktor-faktor dari 6 adalah: 1, 2, 3, dan 6
+   Pasangan faktor yang mungkin: (1, 6) dan (2, 3)
+   Pasangan (2, 3) memberikan jumlah 5, sesuai dengan nilai <InlineMath math="b" />.
+
+   **Langkah 3**: Kita dapat menulis persamaan sebagai:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + 2x + 3x + 6 = 0" />
+     <BlockMath math="x(x + 2) + 3(x + 2) = 0" />
+     <BlockMath math="(x + 3)(x + 2) = 0" />
+   </div>
+
+   **Langkah 4**: Dari bentuk faktor di atas, kita mendapatkan:
+
+   - <InlineMath math="x + 3 = 0" /> → <InlineMath math="x = -3" />
+   - <InlineMath math="x + 2 = 0" /> → <InlineMath math="x = -2" />
+
+   Jadi, akar-akar persamaan adalah <InlineMath math="x = -3" /> dan <InlineMath math="x = -2" />.
+
+2. Memfaktorkan persamaan:
+
+   <BlockMath math="3x^2 + 13x - 10 = 0" />
+
+   Pada persamaan ini, <InlineMath math="a = 3" />, <InlineMath math="b = 13" />, dan <InlineMath math="c = -10" />.
+
+   **Langkah 1**: Persamaan sudah dalam bentuk standar dengan ruas kanan bernilai nol.
+
+   **Langkah 2**: Kita perlu mencari dua bilangan yang:
+
+   - Jika dikalikan menghasilkan <InlineMath math="ac = 3 \times (-10) = -30" />
+   - Jika dijumlahkan menghasilkan <InlineMath math="b = 13" />
+
+   Faktor-faktor dari -30 adalah pasangan bilangan yang berlawanan tanda:
+
+   <InlineMath math="(1, -30), (-1, 30), (2, -15), (-2, 15), (3, -10), (-3, 10), (5, -6), (-5, 6)" />
+
+   Pasangan <InlineMath math="(15, -2)" /> memberikan jumlah 13, sesuai dengan nilai <InlineMath math="b" />.
+
+   **Langkah 3**: Kita dapat menulis persamaan sebagai:
+
+   <BlockMath math="3x^2 + 15x - 2x - 10 = 0" />
+
+   Kita dapat mengelompokkannya:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="3x^2 + 15x - 2x - 10 = 0" />
+     <BlockMath math="3x(x + 5) - 2(x + 5) = 0" />
+     <BlockMath math="(3x - 2)(x + 5) = 0" />
+   </div>
+
+   **Langkah 4**: Dari bentuk faktor di atas, kita mendapatkan:
+
+   - <InlineMath math="3x - 2 = 0" /> → <InlineMath math="x = \frac{2}{3}" />
+   - <InlineMath math="x + 5 = 0" /> → <InlineMath math="x = -5" />
+
+   Jadi, akar-akar persamaan adalah <InlineMath math="x = \frac{2}{3}" /> dan <InlineMath math="x = -5" />.
+
+## Faktorisasi Ketika Koefisien <InlineMath math="a \neq 1" />
+
+Ketika koefisien <InlineMath math="a" /> tidak sama dengan 1, kita perlu sedikit modifikasi dalam langkah-langkah faktorisasi. Ada beberapa pendekatan:
+
+**Metode Faktor dari <InlineMath math="ac" />**
+
+1. Tentukan nilai <InlineMath math="ac" />
+2. Cari pasangan faktor dari <InlineMath math="ac" /> yang jika dijumlahkan menghasilkan <InlineMath math="b" />
+3. Gunakan pasangan faktor untuk memisahkan suku <InlineMath math="bx" /> menjadi dua suku
+4. Faktorkan dengan pengelompokan
+
+### Contoh Faktorisasi
+
+<BlockMath math="2x^2 + 5x - 3 = 0" />
+
+Pada persamaan ini, <InlineMath math="a = 2" />, <InlineMath math="b = 5" />, dan <InlineMath math="c = -3" />.
+
+**Langkah 1**: Hitung <InlineMath math="ac = 2 \times (-3) = -6" />
+
+**Langkah 2**: Cari pasangan faktor dari -6 yang jika dijumlahkan menghasilkan 5:
+
+Faktor-faktor dari -6: <InlineMath math="(1, -6), (-1, 6), (2, -3), (-2, 3)" />
+
+Pasangan <InlineMath math="(6, -1)" /> memberikan jumlah 5, sesuai dengan nilai <InlineMath math="b" />.
+
+**Langkah 3**: Pisahkan suku <InlineMath math="5x" /> menjadi <InlineMath math="6x - x" />:
+
+<BlockMath math="2x^2 + 6x - x - 3 = 0" />
+
+**Langkah 4**: Faktorkan dengan pengelompokan:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2x^2 + 6x - x - 3 = 0" />
+  <BlockMath math="2x(x + 3) - 1(x + 3) = 0" />
+  <BlockMath math="(2x - 1)(x + 3) = 0" />
+</div>
+
+**Langkah 5**: Tentukan akar-akar persamaan:
+
+- <InlineMath math="2x - 1 = 0" /> → <InlineMath math="x = \frac{1}{2}" />
+- <InlineMath math="x + 3 = 0" /> → <InlineMath math="x = -3" />
+
+Jadi, akar-akar persamaan adalah <InlineMath math="x = \frac{1}{2}" /> dan <InlineMath math="x = -3" />.
+
+## Metode Cepat: Ketika Kita Mengetahui Salah Satu Akar
+
+Jika kita mengetahui salah satu akar dari persamaan kuadrat, kita dapat menggunakan informasi ini untuk menemukan faktorisasi lengkap.
+
+**Contoh:** Salah satu akar dari persamaan <InlineMath math="2x^2 - bx - 6 = 0" /> adalah 6
+
+Jika <InlineMath math="x = 6" /> adalah akar persamaan, maka <InlineMath math="(x - 6)" /> adalah salah satu faktornya.
+
+Kita dapat mensubstitusikan <InlineMath math="x = 6" /> ke persamaan asli:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2(6)^2 - b(6) - 6 = 0" />
+  <BlockMath math="2 \times 36 - 6b - 6 = 0" />
+  <BlockMath math="72 - 6b - 6 = 0" />
+  <BlockMath math="66 = 6b" />
+  <BlockMath math="b = 11" />
+</div>
+
+Sekarang kita dapat menulis persamaan sebagai <InlineMath math="2x^2 - 11x - 6 = 0" />.
+
+Menggunakan metode faktorisasi, kita memfaktorkannya sebagai:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2x^2 - 11x - 6 = 0" />
+  <BlockMath math="2x^2 - 12x + x - 6 = 0" />
+  <BlockMath math="2x(x - 6) + 1(x - 6) = 0" />
+  <BlockMath math="(2x + 1)(x - 6) = 0" />
+</div>
+
+Akar-akar persamaan adalah <InlineMath math="x = -\frac{1}{2}" /> dan <InlineMath math="x = 6" />.
+
+## Kasus Khusus Faktorisasi
+
+1. Bentuk <InlineMath math="ax^2 + bx = 0" />
+
+   Untuk persamaan tanpa konstanta, kita dapat memfaktorkan <InlineMath math="x" /> langsung:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="ax^2 + bx = 0" />
+     <BlockMath math="x(ax + b) = 0" />
+   </div>
+
+   Akar-akarnya adalah <InlineMath math="x = 0" /> dan <InlineMath math="x = -\frac{b}{a}" />.
+
+   **Contoh:** <InlineMath math="2x^2 - 18x = 0" />
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2x^2 - 18x = 0" />
+     <BlockMath math="2x(x - 9) = 0" />
+   </div>
+
+   Akar-akarnya adalah <InlineMath math="x = 0" /> dan <InlineMath math="x = 9" />.
+
+2. Bentuk <InlineMath math="ax^2 - c = 0" />
+
+   Untuk persamaan tanpa suku <InlineMath math="x" />, kita dapat menggunakan pola selisih kuadrat:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="ax^2 - c = 0" />
+     <BlockMath math="ax^2 = c" />
+     <BlockMath math="x^2 = \frac{c}{a}" />
+     <BlockMath math="x = \pm \sqrt{\frac{c}{a}}" />
+   </div>
+
+   **Contoh:** <InlineMath math="2x^2 - 18 = 0" />
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2x^2 - 18 = 0" />
+     <BlockMath math="2x^2 = 18" />
+     <BlockMath math="x^2 = 9" />
+     <BlockMath math="x = \pm 3" />
+   </div>
+
+   Akar-akarnya adalah <InlineMath math="x = 3" /> dan <InlineMath math="x = -3" />.
+
+## Persamaan Kuadrat yang Tidak Dapat Difaktorkan
+
+Tidak semua persamaan kuadrat dapat difaktorkan dengan mudah menggunakan bilangan-bilangan rasional. Dalam kasus tersebut, kita dapat menggunakan rumus kuadrat:
+
+<BlockMath math="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+
+Suatu persamaan kuadrat dapat difaktorkan dengan bilangan rasional jika diskriminan <InlineMath math="b^2 - 4ac" /> merupakan bilangan kuadrat sempurna.
+
+## Latihan Soal
+
+Faktorkan persamaan-persamaan kuadrat berikut:
+
+1. <InlineMath math="x^2 + 6x + 5 = 0" />
+2. <InlineMath math="2x^2 + 5x + 2 = 0" />
+3. <InlineMath math="3x^2 - x - 2 = 0" />
+4. <InlineMath math="2x^2 - 8x + 6 = 0" />
+5. <InlineMath math="x^2 - 9 = 0" />
+
+### Kunci Jawaban
+
+1. <InlineMath math="x^2 + 6x + 5 = 0" />
+
+   **Langkah 1**: Identifikasi koefisien
+
+   <BlockMath math="a = 1, b = 6, c = 5" />
+
+   **Langkah 2**: Cari dua bilangan yang jika dikalikan menghasilkan <InlineMath math="ac = 5" /> dan jika dijumlahkan menghasilkan <InlineMath math="b = 6" />
+
+   <BlockMath math="\text{Faktor dari } 5: 1 \times 5 = 5 \text{ dan } 1 + 5 = 6" />
+
+   **Langkah 3**: Faktorisasi
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + 6x + 5 = 0" />
+     <BlockMath math="x^2 + x + 5x + 5 = 0" />
+     <BlockMath math="x(x + 1) + 5(x + 1) = 0" />
+     <BlockMath math="(x + 5)(x + 1) = 0" />
+   </div>
+
+   **Langkah 4**: Tentukan akar-akar persamaan
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x + 5 = 0 \Rightarrow x = -5" />
+     <BlockMath math="x + 1 = 0 \Rightarrow x = -1" />
+   </div>
+
+   Jadi, akar-akar persamaan adalah <InlineMath math="x = -5" /> dan <InlineMath math="x = -1" />.
+
+2. <InlineMath math="2x^2 + 5x + 2 = 0" />
+
+   **Langkah 1**: Identifikasi koefisien
+
+   <BlockMath math="a = 2, b = 5, c = 2" />
+
+   **Langkah 2**: Cari dua bilangan yang jika dikalikan menghasilkan <InlineMath math="ac = 2 \times 2 = 4" /> dan jika dijumlahkan menghasilkan <InlineMath math="b = 5" />
+
+   <BlockMath math="\text{Faktor dari } 4: 1 \times 4 = 4 \text{ dan } 1 + 4 = 5" />
+
+   **Langkah 3**: Faktorisasi
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2x^2 + 5x + 2 = 0" />
+     <BlockMath math="2x^2 + x + 4x + 2 = 0" />
+     <BlockMath math="x(2x + 1) + 2(2x + 1) = 0" />
+     <BlockMath math="(2x + 1)(x + 2) = 0" />
+   </div>
+
+   **Langkah 4**: Tentukan akar-akar persamaan
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2x + 1 = 0 \Rightarrow x = -\frac{1}{2}" />
+     <BlockMath math="x + 2 = 0 \Rightarrow x = -2" />
+   </div>
+
+   Jadi, akar-akar persamaan adalah <InlineMath math="x = -\frac{1}{2}" /> dan <InlineMath math="x = -2" />.
+
+3. <InlineMath math="3x^2 - x - 2 = 0" />
+
+   **Langkah 1**: Identifikasi koefisien
+
+   <BlockMath math="a = 3, b = -1, c = -2" />
+
+   **Langkah 2**: Cari dua bilangan yang jika dikalikan menghasilkan <InlineMath math="ac = 3 \times (-2) = -6" /> dan jika dijumlahkan menghasilkan <InlineMath math="b = -1" />
+
+   <BlockMath math="\text{Faktor dari } -6: (-3) \times 2 = -6 \text{ dan } (-3) + 2 = -1" />
+
+   **Langkah 3**: Faktorisasi
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="3x^2 - x - 2 = 0" />
+     <BlockMath math="3x^2 - 3x + 2x - 2 = 0" />
+     <BlockMath math="3x(x - 1) + 2(x - 1) = 0" />
+     <BlockMath math="(3x + 2)(x - 1) = 0" />
+   </div>
+
+   **Langkah 4**: Tentukan akar-akar persamaan
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="3x + 2 = 0 \Rightarrow x = -\frac{2}{3}" />
+     <BlockMath math="x - 1 = 0 \Rightarrow x = 1" />
+   </div>
+
+   Jadi, akar-akar persamaan adalah <InlineMath math="x = -\frac{2}{3}" /> dan <InlineMath math="x = 1" />.
+
+4. <InlineMath math="2x^2 - 8x + 6 = 0" />
+
+   **Langkah 1**: Identifikasi koefisien
+
+   <BlockMath math="a = 2, b = -8, c = 6" />
+
+   **Langkah 2**: Cari dua bilangan yang jika dikalikan menghasilkan <InlineMath math="ac = 2 \times 6 = 12" /> dan jika dijumlahkan menghasilkan <InlineMath math="b = -8" />
+
+   <BlockMath math="\text{Faktor dari } 12: (-6) \times (-2) = 12 \text{ dan } (-6) + (-2) = -8" />
+
+   **Langkah 3**: Faktorisasi
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2x^2 - 8x + 6 = 0" />
+     <BlockMath math="2x^2 - 6x - 2x + 6 = 0" />
+     <BlockMath math="2x(x - 3) - 2(x - 3) = 0" />
+     <BlockMath math="(2x - 2)(x - 3) = 0" />
+     <BlockMath math="2(x - 1)(x - 3) = 0" />
+   </div>
+
+   **Langkah 4**: Tentukan akar-akar persamaan
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x - 1 = 0 \Rightarrow x = 1" />
+     <BlockMath math="x - 3 = 0 \Rightarrow x = 3" />
+   </div>
+
+   Jadi, akar-akar persamaan adalah <InlineMath math="x = 1" /> dan <InlineMath math="x = 3" />.
+
+5. <InlineMath math="x^2 - 9 = 0" />
+
+   **Langkah 1**: Identifikasi sebagai bentuk selisih kuadrat
+
+   <BlockMath math="x^2 - 9 = x^2 - 3^2" />
+
+   **Langkah 2**: Gunakan rumus selisih kuadrat <InlineMath math="a^2 - b^2 = (a+b)(a-b)" />
+
+   <BlockMath math="x^2 - 3^2 = (x + 3)(x - 3) = 0" />
+
+   **Langkah 3**: Tentukan akar-akar persamaan
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x + 3 = 0 \Rightarrow x = -3" />
+     <BlockMath math="x - 3 = 0 \Rightarrow x = 3" />
+   </div>
+
+   Jadi, akar-akar persamaan adalah <InlineMath math="x = -3" /> dan <InlineMath math="x = 3" />.

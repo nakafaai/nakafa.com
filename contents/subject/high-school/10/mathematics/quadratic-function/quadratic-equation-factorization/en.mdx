@@ -4,3 +4,376 @@ export const metadata = {
   date: "04/19/2025",
   subject: "Quadratic Functions",
 };
+
+## What is Quadratic Equation Factorization?
+
+Quadratic equation factorization is the process of converting an equation from the form <InlineMath math="ax^2 + bx + c = 0" /> to the form <InlineMath math="a(x - p)(x - q) = 0" />, where <InlineMath math="p" /> and <InlineMath math="q" /> are the roots of the quadratic equation.
+
+Note that the roots of a quadratic equation are the values of <InlineMath math="x" /> that make the equation equal to zero. When we convert the equation to its factored form, we can easily find its roots.
+
+## Basic Principles of Factorization
+
+A quadratic equation in standard form is written as:
+
+<BlockMath math="ax^2 + bx + c = 0" />
+
+where <InlineMath math="a" />, <InlineMath math="b" />, and <InlineMath math="c" /> are constants and <InlineMath math="a \neq 0" />.
+
+Factorization is based on the following property: If a product equals zero, then at least one of its factors must equal zero.
+
+This means if <InlineMath math="(x - p)(x - q) = 0" />, then:
+
+- <InlineMath math="x - p = 0" /> or <InlineMath math="x - q = 0" />
+- Therefore <InlineMath math="x = p" /> or <InlineMath math="x = q" />
+
+## Steps for Factoring Quadratic Equations
+
+Here are the general steps to factor a quadratic equation <InlineMath math="ax^2 + bx + c = 0" />:
+
+1. Ensure the equation is in standard form with the right side equal to zero
+2. Find two numbers that when multiplied give <InlineMath math="ac" /> and when added give <InlineMath math="b" />
+3. Write the equation in factored form
+4. Determine the roots of the equation from these factors
+
+### Examples of factoring quadratic equations
+
+1. Factoring the equation:
+
+   <BlockMath math="x^2 + 5x + 6 = 0" />
+
+   In this equation, <InlineMath math="a = 1" />, <InlineMath math="b = 5" />, and <InlineMath math="c = 6" />.
+
+   **Step 1**: The equation is already in standard form with the right side equal to zero.
+
+   **Step 2**: We need to find two numbers that:
+
+   - When multiplied give <InlineMath math="ac = 1 \times 6 = 6" />
+   - When added give <InlineMath math="b = 5" />
+
+   Factors of 6 are: 1, 2, 3, and 6
+   Possible factor pairs: (1, 6) and (2, 3)
+   The pair (2, 3) gives a sum of 5, which matches the value of <InlineMath math="b" />.
+
+   **Step 3**: We can write the equation as:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + 2x + 3x + 6 = 0" />
+     <BlockMath math="x(x + 2) + 3(x + 2) = 0" />
+     <BlockMath math="(x + 3)(x + 2) = 0" />
+   </div>
+
+   **Step 4**: From the factored form above, we get:
+
+   - <InlineMath math="x + 3 = 0" /> → <InlineMath math="x = -3" />
+   - <InlineMath math="x + 2 = 0" /> → <InlineMath math="x = -2" />
+
+   Therefore, the roots of the equation are <InlineMath math="x = -3" /> and <InlineMath math="x = -2" />.
+
+2. Factoring the equation:
+
+   <BlockMath math="3x^2 + 13x - 10 = 0" />
+
+   In this equation, <InlineMath math="a = 3" />, <InlineMath math="b = 13" />, and <InlineMath math="c = -10" />.
+
+   **Step 1**: The equation is already in standard form with the right side equal to zero.
+
+   **Step 2**: We need to find two numbers that:
+
+   - When multiplied give <InlineMath math="ac = 3 \times (-10) = -30" />
+   - When added give <InlineMath math="b = 13" />
+
+   Factors of -30 are pairs of numbers with opposite signs:
+
+   <InlineMath math="(1, -30), (-1, 30), (2, -15), (-2, 15), (3, -10), (-3, 10), (5, -6), (-5, 6)" />
+
+   The pair <InlineMath math="(15, -2)" /> gives a sum of 13, which matches the value of <InlineMath math="b" />.
+
+   **Step 3**: We can write the equation as:
+
+   <BlockMath math="3x^2 + 15x - 2x - 10 = 0" />
+
+   We can group the terms:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="3x^2 + 15x - 2x - 10 = 0" />
+     <BlockMath math="3x(x + 5) - 2(x + 5) = 0" />
+     <BlockMath math="(3x - 2)(x + 5) = 0" />
+   </div>
+
+   **Step 4**: From the factored form above, we get:
+
+   - <InlineMath math="3x - 2 = 0" /> → <InlineMath math="x = \frac{2}{3}" />
+   - <InlineMath math="x + 5 = 0" /> → <InlineMath math="x = -5" />
+
+   Therefore, the roots of the equation are <InlineMath math="x = \frac{2}{3}" /> and <InlineMath math="x = -5" />.
+
+## Factorization When Coefficient <InlineMath math="a \neq 1" />
+
+When the coefficient <InlineMath math="a" /> is not equal to 1, we need some modifications in the factorization steps. There are several approaches:
+
+**Method Using Factors of <InlineMath math="ac" />**
+
+1. Determine the value of <InlineMath math="ac" />
+2. Find a pair of factors of <InlineMath math="ac" /> that when added give <InlineMath math="b" />
+3. Use this factor pair to split the term <InlineMath math="bx" /> into two terms
+4. Factor by grouping
+
+### Example of Factorization
+
+<BlockMath math="2x^2 + 5x - 3 = 0" />
+
+In this equation, <InlineMath math="a = 2" />, <InlineMath math="b = 5" />, and <InlineMath math="c = -3" />.
+
+**Step 1**: Calculate <InlineMath math="ac = 2 \times (-3) = -6" />
+
+**Step 2**: Find a pair of factors of -6 that when added give 5:
+
+Factors of -6: <InlineMath math="(1, -6), (-1, 6), (2, -3), (-2, 3)" />
+
+The pair <InlineMath math="(6, -1)" /> gives a sum of 5, which matches the value of <InlineMath math="b" />.
+
+**Step 3**: Split the term <InlineMath math="5x" /> into <InlineMath math="6x - x" />:
+
+<BlockMath math="2x^2 + 6x - x - 3 = 0" />
+
+**Step 4**: Factor by grouping:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2x^2 + 6x - x - 3 = 0" />
+  <BlockMath math="2x(x + 3) - 1(x + 3) = 0" />
+  <BlockMath math="(2x - 1)(x + 3) = 0" />
+</div>
+
+**Step 5**: Determine the roots of the equation:
+
+- <InlineMath math="2x - 1 = 0" /> → <InlineMath math="x = \frac{1}{2}" />
+- <InlineMath math="x + 3 = 0" /> → <InlineMath math="x = -3" />
+
+Therefore, the roots of the equation are <InlineMath math="x = \frac{1}{2}" /> and <InlineMath math="x = -3" />.
+
+## Quick Method: When We Know One of the Roots
+
+If we know one of the roots of a quadratic equation, we can use this information to find the complete factorization.
+
+**Example:** One of the roots of the equation <InlineMath math="2x^2 - bx - 6 = 0" /> is 6
+
+If <InlineMath math="x = 6" /> is a root of the equation, then <InlineMath math="(x - 6)" /> is one of its factors.
+
+We can substitute <InlineMath math="x = 6" /> into the original equation:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2(6)^2 - b(6) - 6 = 0" />
+  <BlockMath math="2 \times 36 - 6b - 6 = 0" />
+  <BlockMath math="72 - 6b - 6 = 0" />
+  <BlockMath math="66 = 6b" />
+  <BlockMath math="b = 11" />
+</div>
+
+Now we can write the equation as <InlineMath math="2x^2 - 11x - 6 = 0" />.
+
+Using the factorization method, we factor it as:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2x^2 - 11x - 6 = 0" />
+  <BlockMath math="2x^2 - 12x + x - 6 = 0" />
+  <BlockMath math="2x(x - 6) + 1(x - 6) = 0" />
+  <BlockMath math="(2x + 1)(x - 6) = 0" />
+</div>
+
+The roots of the equation are <InlineMath math="x = -\frac{1}{2}" /> and <InlineMath math="x = 6" />.
+
+## Special Cases of Factorization
+
+1. Form <InlineMath math="ax^2 + bx = 0" />
+
+   For equations without a constant term, we can factor out <InlineMath math="x" /> directly:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="ax^2 + bx = 0" />
+     <BlockMath math="x(ax + b) = 0" />
+   </div>
+
+   The roots are <InlineMath math="x = 0" /> and <InlineMath math="x = -\frac{b}{a}" />.
+
+   **Example:** <InlineMath math="2x^2 - 18x = 0" />
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2x^2 - 18x = 0" />
+     <BlockMath math="2x(x - 9) = 0" />
+   </div>
+
+   The roots are <InlineMath math="x = 0" /> and <InlineMath math="x = 9" />.
+
+2. Form <InlineMath math="ax^2 - c = 0" />
+
+   For equations without an <InlineMath math="x" /> term, we can use the difference of squares pattern:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="ax^2 - c = 0" />
+     <BlockMath math="ax^2 = c" />
+     <BlockMath math="x^2 = \frac{c}{a}" />
+     <BlockMath math="x = \pm \sqrt{\frac{c}{a}}" />
+   </div>
+
+   **Example:** <InlineMath math="2x^2 - 18 = 0" />
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2x^2 - 18 = 0" />
+     <BlockMath math="2x^2 = 18" />
+     <BlockMath math="x^2 = 9" />
+     <BlockMath math="x = \pm 3" />
+   </div>
+
+   The roots are <InlineMath math="x = 3" /> and <InlineMath math="x = -3" />.
+
+## Quadratic Equations That Cannot Be Factored
+
+Not all quadratic equations can be easily factored using rational numbers. In such cases, we can use the quadratic formula:
+
+<BlockMath math="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+
+A quadratic equation can be factored with rational numbers if the discriminant <InlineMath math="b^2 - 4ac" /> is a perfect square.
+
+## Practice Problems
+
+Factor the following quadratic equations:
+
+1. <InlineMath math="x^2 + 6x + 5 = 0" />
+2. <InlineMath math="2x^2 + 5x + 2 = 0" />
+3. <InlineMath math="3x^2 - x - 2 = 0" />
+4. <InlineMath math="2x^2 - 8x + 6 = 0" />
+5. <InlineMath math="x^2 - 9 = 0" />
+
+### Answer Key
+
+1. <InlineMath math="x^2 + 6x + 5 = 0" />
+
+   **Step 1**: Identify the coefficients
+
+   <BlockMath math="a = 1, b = 6, c = 5" />
+
+   **Step 2**: Find two numbers that when multiplied give <InlineMath math="ac = 5" /> and when added give <InlineMath math="b = 6" />
+
+   <BlockMath math="\text{Factors of } 5: 1 \times 5 = 5 \text{ and } 1 + 5 = 6" />
+
+   **Step 3**: Factorization
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + 6x + 5 = 0" />
+     <BlockMath math="x^2 + x + 5x + 5 = 0" />
+     <BlockMath math="x(x + 1) + 5(x + 1) = 0" />
+     <BlockMath math="(x + 5)(x + 1) = 0" />
+   </div>
+
+   **Step 4**: Determine the roots of the equation
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x + 5 = 0 \Rightarrow x = -5" />
+     <BlockMath math="x + 1 = 0 \Rightarrow x = -1" />
+   </div>
+
+   Therefore, the roots of the equation are <InlineMath math="x = -5" /> and <InlineMath math="x = -1" />.
+
+2. <InlineMath math="2x^2 + 5x + 2 = 0" />
+
+   **Step 1**: Identify the coefficients
+
+   <BlockMath math="a = 2, b = 5, c = 2" />
+
+   **Step 2**: Find two numbers that when multiplied give <InlineMath math="ac = 2 \times 2 = 4" /> and when added give <InlineMath math="b = 5" />
+
+   <BlockMath math="\text{Factors of } 4: 1 \times 4 = 4 \text{ and } 1 + 4 = 5" />
+
+   **Step 3**: Factorization
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2x^2 + 5x + 2 = 0" />
+     <BlockMath math="2x^2 + x + 4x + 2 = 0" />
+     <BlockMath math="x(2x + 1) + 2(2x + 1) = 0" />
+     <BlockMath math="(2x + 1)(x + 2) = 0" />
+   </div>
+
+   **Step 4**: Determine the roots of the equation
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2x + 1 = 0 \Rightarrow x = -\frac{1}{2}" />
+     <BlockMath math="x + 2 = 0 \Rightarrow x = -2" />
+   </div>
+
+   Therefore, the roots of the equation are <InlineMath math="x = -\frac{1}{2}" /> and <InlineMath math="x = -2" />.
+
+3. <InlineMath math="3x^2 - x - 2 = 0" />
+
+   **Step 1**: Identify the coefficients
+
+   <BlockMath math="a = 3, b = -1, c = -2" />
+
+   **Step 2**: Find two numbers that when multiplied give <InlineMath math="ac = 3 \times (-2) = -6" /> and when added give <InlineMath math="b = -1" />
+
+   <BlockMath math="\text{Factors of } -6: (-3) \times 2 = -6 \text{ and } (-3) + 2 = -1" />
+
+   **Step 3**: Factorization
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="3x^2 - x - 2 = 0" />
+     <BlockMath math="3x^2 - 3x + 2x - 2 = 0" />
+     <BlockMath math="3x(x - 1) + 2(x - 1) = 0" />
+     <BlockMath math="(3x + 2)(x - 1) = 0" />
+   </div>
+
+   **Step 4**: Determine the roots of the equation
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="3x + 2 = 0 \Rightarrow x = -\frac{2}{3}" />
+     <BlockMath math="x - 1 = 0 \Rightarrow x = 1" />
+   </div>
+
+   Therefore, the roots of the equation are <InlineMath math="x = -\frac{2}{3}" /> and <InlineMath math="x = 1" />.
+
+4. <InlineMath math="2x^2 - 8x + 6 = 0" />
+
+   **Step 1**: Identify the coefficients
+
+   <BlockMath math="a = 2, b = -8, c = 6" />
+
+   **Step 2**: Find two numbers that when multiplied give <InlineMath math="ac = 2 \times 6 = 12" /> and when added give <InlineMath math="b = -8" />
+
+   <BlockMath math="\text{Factors of } 12: (-6) \times (-2) = 12 \text{ and } (-6) + (-2) = -8" />
+
+   **Step 3**: Factorization
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2x^2 - 8x + 6 = 0" />
+     <BlockMath math="2x^2 - 6x - 2x + 6 = 0" />
+     <BlockMath math="2x(x - 3) - 2(x - 3) = 0" />
+     <BlockMath math="(2x - 2)(x - 3) = 0" />
+     <BlockMath math="2(x - 1)(x - 3) = 0" />
+   </div>
+
+   **Step 4**: Determine the roots of the equation
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x - 1 = 0 \Rightarrow x = 1" />
+     <BlockMath math="x - 3 = 0 \Rightarrow x = 3" />
+   </div>
+
+   Therefore, the roots of the equation are <InlineMath math="x = 1" /> and <InlineMath math="x = 3" />.
+
+5. <InlineMath math="x^2 - 9 = 0" />
+
+   **Step 1**: Identify as a difference of squares
+
+   <BlockMath math="x^2 - 9 = x^2 - 3^2" />
+
+   **Step 2**: Use the difference of squares formula <InlineMath math="a^2 - b^2 = (a+b)(a-b)" />
+
+   <BlockMath math="x^2 - 3^2 = (x + 3)(x - 3) = 0" />
+
+   **Step 3**: Determine the roots of the equation
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x + 3 = 0 \Rightarrow x = -3" />
+     <BlockMath math="x - 3 = 0 \Rightarrow x = 3" />
+   </div>
+
+   Therefore, the roots of the equation are <InlineMath math="x = -3" /> and <InlineMath math="x = 3" />.
