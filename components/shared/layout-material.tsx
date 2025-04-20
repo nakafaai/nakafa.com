@@ -70,8 +70,10 @@ export function LayoutMaterialTableOfContents({
 
 export function LayoutMaterial({
   children,
+  className,
 }: {
   children: ReactNode;
+  className?: string;
 }) {
-  return <div className="lg:flex">{children}</div>;
+  return <div className={cn("lg:flex", className)}>{children}</div>;
 }

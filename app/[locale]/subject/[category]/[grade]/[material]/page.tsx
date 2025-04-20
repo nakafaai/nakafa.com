@@ -1,7 +1,6 @@
 import { CardMaterial } from "@/components/shared/card-material";
 import { ContainerList } from "@/components/shared/container-list";
 import {
-  LayoutMaterial,
   LayoutMaterialContent,
   LayoutMaterialFooter,
   LayoutMaterialHeader,
@@ -95,7 +94,7 @@ export default async function Page({ params }: Props) {
   }));
 
   return (
-    <LayoutMaterial>
+    <>
       <LayoutMaterialContent>
         <LayoutMaterialHeader
           title={t(material)}
@@ -122,6 +121,6 @@ export default async function Page({ params }: Props) {
           data: chapters,
         }}
       />
-    </LayoutMaterial>
+    </>
   );
 }

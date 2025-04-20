@@ -1,5 +1,4 @@
 import {
-  LayoutMaterial,
   LayoutMaterialContent,
   LayoutMaterialFooter,
   LayoutMaterialHeader,
@@ -135,7 +134,7 @@ export default async function Page({ params }: Props) {
     const href = `${materialPath}#${metadata.subject?.toLowerCase().replace(/\s+/g, "-")}`;
 
     return (
-      <LayoutMaterial>
+      <>
         <LayoutMaterialContent>
           <LayoutMaterialHeader
             title={metadata.title}
@@ -171,7 +170,7 @@ export default async function Page({ params }: Props) {
             data: headings,
           }}
         />
-      </LayoutMaterial>
+      </>
     );
   } catch {
     return notFound();
