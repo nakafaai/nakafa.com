@@ -4,3 +4,421 @@ export const metadata = {
   date: "04/19/2025",
   subject: "Persamaan dan Fungsi Kuadrat",
 };
+
+## Apa Itu Melengkapi Kuadrat Sempurna?
+
+Melengkapi kuadrat sempurna adalah metode untuk menyelesaikan persamaan kuadrat dengan mengubah bentuk persamaan <InlineMath math="ax^2 + bx + c = 0" /> menjadi bentuk <InlineMath math="(x + p)^2 = q" />. Metode ini sangat berguna terutama untuk persamaan kuadrat yang sulit difaktorkan dengan cara faktorisasi biasa.
+
+Ingat bahwa bentuk kuadrat sempurna memiliki pola <InlineMath math="x^2 + 2px + p^2 = (x + p)^2" />. Kita memanfaatkan pola ini untuk mengubah persamaan kuadrat menjadi bentuk yang lebih mudah diselesaikan.
+
+## Mengapa Menggunakan Metode Ini?
+
+Tidak semua persamaan kuadrat mudah difaktorkan. Contohnya, persamaan <InlineMath math="x^2 + 4x + 2 = 0" /> tidak dapat difaktorkan dengan mudah menggunakan bilangan rasional karena tidak ada dua bilangan yang jika dikalikan menghasilkan 2 dan jika dijumlahkan menghasilkan 4.
+
+Dalam kasus seperti ini, metode melengkapi kuadrat sempurna menjadi pilihan yang efektif untuk mendapatkan akar-akar persamaan.
+
+## Langkah-Langkah Melengkapi Kuadrat Sempurna
+
+Berikut adalah langkah-langkah untuk menyelesaikan persamaan kuadrat <InlineMath math="ax^2 + bx + c = 0" /> dengan metode melengkapi kuadrat sempurna:
+
+1. **Pastikan Koefisien x² Bernilai 1**
+
+   Jika koefisien <InlineMath math="a" /> dari <InlineMath math="x^2" /> tidak sama dengan 1, kita harus membagi seluruh persamaan dengan nilai <InlineMath math="a" />.
+
+   **Contoh:** Untuk persamaan <InlineMath math="2x^2 + 6x + 3 = 0" />
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2x^2 + 6x + 3 = 0 \div 2" />
+     <BlockMath math="x^2 + 3x + \frac{3}{2} = 0" />
+   </div>
+
+2. **Pindahkan Konstanta ke Ruas Kanan**
+
+   Pindahkan suku konstanta ke ruas kanan persamaan.
+
+   **Contoh:** Dari persamaan <InlineMath math="x^2 + 3x + \frac{3}{2} = 0" />
+
+   <BlockMath math="x^2 + 3x = -\frac{3}{2}" />
+
+3. **Tambahkan Kuadrat dari Setengah Koefisien x ke Kedua Ruas**
+
+   Tambahkan <InlineMath math="\left(\frac{b}{2}\right)^2" /> ke kedua ruas persamaan. Nilai ini adalah kuadrat dari setengah koefisien <InlineMath math="x" />.
+
+   **Contoh:** Untuk persamaan <InlineMath math="x^2 + 3x = -\frac{3}{2}" />
+
+   Setengah dari koefisien <InlineMath math="x" /> adalah <InlineMath math="\frac{3}{2}" />
+
+   Kuadrat dari nilai tersebut: <InlineMath math="\left(\frac{3}{2}\right)^2 = \frac{9}{4}" />
+
+   Tambahkan ke kedua ruas:
+
+   <BlockMath math="x^2 + 3x + \frac{9}{4} = -\frac{3}{2} + \frac{9}{4}" />
+
+4. **Faktorkan Ruas Kiri Menjadi Bentuk Kuadrat Sempurna**
+
+   Ruas kiri sekarang memiliki bentuk <InlineMath math="x^2 + bx + \left(\frac{b}{2}\right)^2" />, yang dapat difaktorkan menjadi <InlineMath math="\left(x + \frac{b}{2}\right)^2" />.
+
+   **Contoh:** Dari persamaan <InlineMath math="x^2 + 3x + \frac{9}{4} = -\frac{3}{2} + \frac{9}{4}" />
+
+   <BlockMath math="\left(x + \frac{3}{2}\right)^2 = -\frac{3}{2} + \frac{9}{4}" />
+
+5. **Sederhanakan Ruas Kanan**
+
+   Operasikan perhitungan pada ruas kanan untuk mendapatkan bentuk yang lebih sederhana.
+
+   **Contoh:** Untuk <InlineMath math="\left(x + \frac{3}{2}\right)^2 = -\frac{3}{2} + \frac{9}{4}" />
+
+   <BlockMath math="-\frac{3}{2} + \frac{9}{4} = \frac{-6 + 9}{4} = \frac{3}{4}" />
+
+   Sehingga persamaan menjadi:
+
+   <BlockMath math="\left(x + \frac{3}{2}\right)^2 = \frac{3}{4}" />
+
+6. **Ambil Akar Kuadrat dari Kedua Ruas**
+
+   Untuk menghilangkan kuadrat, ambil akar kuadrat dari kedua ruas.
+
+   **Contoh:** Dari persamaan <InlineMath math="\left(x + \frac{3}{2}\right)^2 = \frac{3}{4}" />
+
+   <BlockMath math="x + \frac{3}{2} = \pm\sqrt{\frac{3}{4}} = \pm\frac{\sqrt{3}}{2}" />
+
+7. **Selesaikan untuk Mendapatkan Nilai x**
+
+   Isolasi variabel <InlineMath math="x" /> untuk mendapatkan akar-akar persamaan.
+
+   **Contoh:** Dari <InlineMath math="x + \frac{3}{2} = \pm\frac{\sqrt{3}}{2}" />
+
+   Untuk tanda positif:
+
+   <BlockMath math="x = \frac{\sqrt{3}}{2} - \frac{3}{2} = -\frac{3}{2} + \frac{\sqrt{3}}{2}" />
+
+   Untuk tanda negatif:
+
+   <BlockMath math="x = -\frac{\sqrt{3}}{2} - \frac{3}{2} = -\frac{3}{2} - \frac{\sqrt{3}}{2}" />
+
+   Jadi, akar-akar persamaan adalah <InlineMath math="x = -\frac{3}{2} + \frac{\sqrt{3}}{2}" /> dan <InlineMath math="x = -\frac{3}{2} - \frac{\sqrt{3}}{2}" />.
+
+## Contoh Lengkap Penyelesaian
+
+### Persamaan dengan Koefisien x² = 1
+
+Mari kita selesaikan persamaan: <InlineMath math="x^2 + 5x + 6 = 0" />
+
+**Langkah 1**: Koefisien <InlineMath math="a = 1" />, jadi kita langsung ke langkah berikutnya.
+
+**Langkah 2**: Pindahkan konstanta ke ruas kanan.
+
+<BlockMath math="x^2 + 5x = -6" />
+
+**Langkah 3**: Tambahkan kuadrat dari setengah koefisien <InlineMath math="x" /> ke kedua ruas.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Setengah koefisien } x = \frac{5}{2}" />
+  <BlockMath math="\text{Kuadrat dari nilai tersebut} = \left(\frac{5}{2}\right)^2 = \frac{25}{4}" />
+  <BlockMath math="x^2 + 5x + \frac{25}{4} = -6 + \frac{25}{4}" />
+</div>
+
+**Langkah 4**: Faktorkan ruas kiri menjadi bentuk kuadrat sempurna.
+
+<BlockMath math="\left(x + \frac{5}{2}\right)^2 = -6 + \frac{25}{4}" />
+
+**Langkah 5**: Sederhanakan ruas kanan.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="-6 + \frac{25}{4} = \frac{-24 + 25}{4} = \frac{1}{4}" />
+  <BlockMath math="\left(x + \frac{5}{2}\right)^2 = \frac{1}{4}" />
+</div>
+
+**Langkah 6**: Ambil akar kuadrat dari kedua ruas.
+
+<BlockMath math="x + \frac{5}{2} = \pm\frac{1}{2}" />
+
+**Langkah 7**: Selesaikan untuk mendapatkan nilai <InlineMath math="x" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x + \frac{5}{2} = \frac{1}{2} \quad \text{atau} \quad x + \frac{5}{2} = -\frac{1}{2}" />
+  <BlockMath math="x = \frac{1}{2} - \frac{5}{2} = -2 \quad \text{atau} \quad x = -\frac{1}{2} - \frac{5}{2} = -3" />
+</div>
+
+Jadi, akar-akar persamaan adalah <InlineMath math="x = -2" /> dan <InlineMath math="x = -3" />.
+
+### Persamaan dengan Koefisien x² ≠ 1
+
+Mari kita selesaikan persamaan: <InlineMath math="2x^2 + 6x + 3 = 0" />
+
+**Langkah 1**: Bagi semua suku dengan koefisien <InlineMath math="a = 2" />
+
+<BlockMath math="x^2 + 3x + \frac{3}{2} = 0" />
+
+**Langkah 2**: Pindahkan konstanta ke ruas kanan
+
+<BlockMath math="x^2 + 3x = -\frac{3}{2}" />
+
+**Langkah 3**: Tambahkan kuadrat dari setengah koefisien <InlineMath math="x" /> ke kedua ruas
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Setengah koefisien } x = \frac{3}{2}" />
+  <BlockMath math="\text{Kuadrat dari nilai tersebut} = \left(\frac{3}{2}\right)^2 = \frac{9}{4}" />
+  <BlockMath math="x^2 + 3x + \frac{9}{4} = -\frac{3}{2} + \frac{9}{4}" />
+</div>
+
+**Langkah 4**: Faktorkan ruas kiri menjadi bentuk kuadrat sempurna
+
+<BlockMath math="\left(x + \frac{3}{2}\right)^2 = -\frac{3}{2} + \frac{9}{4}" />
+
+**Langkah 5**: Sederhanakan ruas kanan
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="-\frac{3}{2} + \frac{9}{4} = \frac{-6 + 9}{4} = \frac{3}{4}" />
+  <BlockMath math="\left(x + \frac{3}{2}\right)^2 = \frac{3}{4}" />
+</div>
+
+**Langkah 6**: Ambil akar kuadrat dari kedua ruas
+
+<BlockMath math="x + \frac{3}{2} = \pm\frac{\sqrt{3}}{2}" />
+
+**Langkah 7**: Selesaikan untuk mendapatkan nilai <InlineMath math="x" />
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x + \frac{3}{2} = \frac{\sqrt{3}}{2} \quad \text{atau} \quad x + \frac{3}{2} = -\frac{\sqrt{3}}{2}" />
+  <BlockMath math="x = \frac{\sqrt{3}}{2} - \frac{3}{2} = -\frac{3}{2} + \frac{\sqrt{3}}{2} \quad \text{atau} \quad x = -\frac{\sqrt{3}}{2} - \frac{3}{2} = -\frac{3}{2} - \frac{\sqrt{3}}{2}" />
+</div>
+
+Jadi, akar-akar persamaan adalah <InlineMath math="x = -\frac{3}{2} + \frac{\sqrt{3}}{2}" /> dan <InlineMath math="x = -\frac{3}{2} - \frac{\sqrt{3}}{2}" />.
+
+## Hal-Hal Penting dalam Melengkapi Kuadrat Sempurna
+
+1. **Untuk persamaan dengan koefisien <InlineMath math="x^2" /> bukan 1**: Selalu bagi seluruh persamaan dengan koefisien <InlineMath math="a" /> terlebih dahulu. Contoh: <InlineMath math="3x^2 + 6x + 2 = 0" /> menjadi <InlineMath math="x^2 + 2x + \frac{2}{3} = 0" />
+
+2. **Konstanta yang ditambahkan**: Selalu tambahkan kuadrat dari setengah koefisien <InlineMath math="x" /> ke kedua ruas. Contoh: Untuk <InlineMath math="x^2 + 8x = 5" />, tambahkan <InlineMath math="\left(\frac{8}{2}\right)^2 = 16" /> ke kedua ruas.
+
+3. **Bentuk akhir**: Persamaan akan berubah menjadi bentuk <InlineMath math="\left(x + \frac{b}{2a}\right)^2 = \frac{b^2 - 4ac}{4a^2}" />. Contoh: <InlineMath math="x^2 + 6x + 8 = 0" /> menjadi <InlineMath math="\left(x + 3\right)^2 = 1" />
+
+## Kasus Khusus dan Variasi
+
+### Ketika Diskriminan Negatif
+
+Jika <InlineMath math="b^2 - 4ac < 0" />, maka persamaan tidak memiliki akar real.
+
+**Contoh konkret:** <InlineMath math="x^2 + 2x + 2 = 0" />
+
+Dengan melengkapi kuadrat sempurna:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x^2 + 2x + 1 = -2 + 1 \quad \text{(menambahkan 1 ke kedua ruas)}" />
+  <BlockMath math="(x + 1)^2 = -1" />
+</div>
+
+Karena tidak ada bilangan real yang kuadratnya -1, maka persamaan ini tidak memiliki akar real.
+
+### Pada Persamaan Kuadrat Tidak Lengkap
+
+Untuk persamaan bentuk <InlineMath math="ax^2 + c = 0" />, kita tidak perlu melengkapi kuadrat sempurna.
+
+**Contoh konkret:** <InlineMath math="3x^2 - 12 = 0" />
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="3x^2 = 12" />
+  <BlockMath math="x^2 = 4" />
+  <BlockMath math="x = \pm 2" />
+</div>
+
+Jadi, akar-akar persamaan adalah <InlineMath math="x = 2" /> dan <InlineMath math="x = -2" />.
+
+## Latihan Soal
+
+Selesaikan persamaan-persamaan kuadrat berikut dengan metode melengkapi kuadrat sempurna:
+
+1. <InlineMath math="x^2 + 5x + 6 = 0" />
+2. <InlineMath math="2x^2 + 6x + 3 = 0" />
+3. <InlineMath math="6x^2 + 2x + \frac{1}{6} = 0" />
+4. <InlineMath math="x^2 - 12x - 15 = 0" />
+5. <InlineMath math="\frac{3}{2}x^2 - 8x - 6 = 0" />
+
+### Kunci Jawaban
+
+1. <InlineMath math="x^2 + 5x + 6 = 0" />
+
+   1. Pindahkan konstanta ke ruas kanan:
+
+      <BlockMath math="x^2 + 5x = -6" />
+
+   2. Tambahkan kuadrat dari setengah koefisien <InlineMath math="x" /> ke kedua ruas:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="\text{Setengah koefisien } x = \frac{5}{2}" />
+        <BlockMath math="\text{Kuadrat dari nilai tersebut} = \left(\frac{5}{2}\right)^2 = \frac{25}{4}" />
+        <BlockMath math="x^2 + 5x + \frac{25}{4} = -6 + \frac{25}{4}" />
+      </div>
+
+   3. Faktorkan ruas kiri menjadi bentuk kuadrat sempurna:
+
+      <BlockMath math="\left(x + \frac{5}{2}\right)^2 = -6 + \frac{25}{4}" />
+
+   4. Sederhanakan ruas kanan:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="-6 + \frac{25}{4} = \frac{-24 + 25}{4} = \frac{1}{4}" />
+        <BlockMath math="\left(x + \frac{5}{2}\right)^2 = \frac{1}{4}" />
+      </div>
+
+   5. Ambil akar kuadrat dari kedua ruas:
+
+      <BlockMath math="x + \frac{5}{2} = \pm\frac{1}{2}" />
+
+   6. Selesaikan untuk mendapatkan nilai <InlineMath math="x" />:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="x + \frac{5}{2} = \frac{1}{2} \quad \text{atau} \quad x + \frac{5}{2} = -\frac{1}{2}" />
+        <BlockMath math="x = \frac{1}{2} - \frac{5}{2} = -2 \quad \text{atau} \quad x = -\frac{1}{2} - \frac{5}{2} = -3" />
+      </div>
+
+   Jadi, akar-akar persamaan adalah <InlineMath math="x = -2" /> dan <InlineMath math="x = -3" />.
+
+2. <InlineMath math="2x^2 + 6x + 3 = 0" />
+
+   1. Bagi semua suku dengan koefisien <InlineMath math="a = 2" />:
+
+      <BlockMath math="x^2 + 3x + \frac{3}{2} = 0" />
+
+   2. Pindahkan konstanta ke ruas kanan:
+
+      <BlockMath math="x^2 + 3x = -\frac{3}{2}" />
+
+   3. Tambahkan kuadrat dari setengah koefisien <InlineMath math="x" /> ke kedua ruas:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="\text{Setengah koefisien } x = \frac{3}{2}" />
+        <BlockMath math="\text{Kuadrat dari nilai tersebut} = \left(\frac{3}{2}\right)^2 = \frac{9}{4}" />
+        <BlockMath math="x^2 + 3x + \frac{9}{4} = -\frac{3}{2} + \frac{9}{4}" />
+      </div>
+
+   4. Faktorkan ruas kiri menjadi bentuk kuadrat sempurna:
+
+      <BlockMath math="\left(x + \frac{3}{2}\right)^2 = -\frac{3}{2} + \frac{9}{4}" />
+
+   5. Sederhanakan ruas kanan:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="-\frac{3}{2} + \frac{9}{4} = \frac{-6 + 9}{4} = \frac{3}{4}" />
+        <BlockMath math="\left(x + \frac{3}{2}\right)^2 = \frac{3}{4}" />
+      </div>
+
+   6. Ambil akar kuadrat dari kedua ruas:
+
+      <BlockMath math="x + \frac{3}{2} = \pm\frac{\sqrt{3}}{2}" />
+
+   7. Selesaikan untuk mendapatkan nilai <InlineMath math="x" />:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="x = -\frac{3}{2} + \frac{\sqrt{3}}{2} \quad \text{atau} \quad x = -\frac{3}{2} - \frac{\sqrt{3}}{2}" />
+      </div>
+
+   Jadi, akar-akar persamaan adalah <InlineMath math="x = -\frac{3}{2} + \frac{\sqrt{3}}{2}" /> dan <InlineMath math="x = -\frac{3}{2} - \frac{\sqrt{3}}{2}" />.
+
+3. <InlineMath math="6x^2 + 2x + \frac{1}{6} = 0" />
+
+   1. Bagi semua suku dengan koefisien <InlineMath math="a = 6" />:
+
+      <BlockMath math="x^2 + \frac{1}{3}x + \frac{1}{36} = 0" />
+
+   2. Pindahkan konstanta ke ruas kanan:
+
+      <BlockMath math="x^2 + \frac{1}{3}x = -\frac{1}{36}" />
+
+   3. Tambahkan kuadrat dari setengah koefisien <InlineMath math="x" /> ke kedua ruas:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="\text{Setengah koefisien } x = \frac{1}{6}" />
+        <BlockMath math="\text{Kuadrat dari nilai tersebut} = \left(\frac{1}{6}\right)^2 = \frac{1}{36}" />
+        <BlockMath math="x^2 + \frac{1}{3}x + \frac{1}{36} = -\frac{1}{36} + \frac{1}{36}" />
+      </div>
+
+   4. Faktorkan ruas kiri menjadi bentuk kuadrat sempurna:
+
+      <BlockMath math="\left(x + \frac{1}{6}\right)^2 = -\frac{1}{36} + \frac{1}{36}" />
+
+   5. Sederhanakan ruas kanan:
+
+      <BlockMath math="\left(x + \frac{1}{6}\right)^2 = 0" />
+
+   6. Ambil akar kuadrat dari kedua ruas:
+
+      <BlockMath math="x + \frac{1}{6} = 0" />
+
+   7. Selesaikan untuk mendapatkan nilai <InlineMath math="x" />:
+
+      <BlockMath math="x = -\frac{1}{6}" />
+
+   Jadi, persamaan ini memiliki satu akar (akar ganda), yaitu <InlineMath math="x = -\frac{1}{6}" />.
+
+4. <InlineMath math="x^2 - 12x - 15 = 0" />
+
+   1. Pindahkan konstanta ke ruas kanan:
+
+      <BlockMath math="x^2 - 12x = 15" />
+
+   2. Tambahkan kuadrat dari setengah koefisien <InlineMath math="x" /> ke kedua ruas:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="\text{Setengah koefisien } x = -6" />
+        <BlockMath math="\text{Kuadrat dari nilai tersebut} = (-6)^2 = 36" />
+        <BlockMath math="x^2 - 12x + 36 = 15 + 36" />
+      </div>
+
+   3. Faktorkan ruas kiri menjadi bentuk kuadrat sempurna:
+
+      <BlockMath math="(x - 6)^2 = 51" />
+
+   4. Ambil akar kuadrat dari kedua ruas:
+
+      <BlockMath math="x - 6 = \pm\sqrt{51}" />
+
+   5. Selesaikan untuk mendapatkan nilai <InlineMath math="x" />:
+
+      <BlockMath math="x = 6 \pm \sqrt{51}" />
+
+   Jadi, akar-akar persamaan adalah <InlineMath math="x = 6 + \sqrt{51}" /> dan <InlineMath math="x = 6 - \sqrt{51}" />.
+
+5. <InlineMath math="\frac{3}{2}x^2 - 8x - 6 = 0" />
+
+   1. Bagi semua suku dengan koefisien <InlineMath math="a = \frac{3}{2}" />:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="x^2 - \frac{16}{3}x - 4 = 0" />
+      </div>
+
+   2. Pindahkan konstanta ke ruas kanan:
+
+      <BlockMath math="x^2 - \frac{16}{3}x = 4" />
+
+   3. Tambahkan kuadrat dari setengah koefisien <InlineMath math="x" /> ke kedua ruas:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="\text{Setengah koefisien } x = -\frac{8}{3}" />
+        <BlockMath math="\text{Kuadrat dari nilai tersebut} = \left(-\frac{8}{3}\right)^2 = \frac{64}{9}" />
+        <BlockMath math="x^2 - \frac{16}{3}x + \frac{64}{9} = 4 + \frac{64}{9}" />
+      </div>
+
+   4. Faktorkan ruas kiri menjadi bentuk kuadrat sempurna:
+
+      <BlockMath math="\left(x - \frac{8}{3}\right)^2 = 4 + \frac{64}{9}" />
+
+   5. Sederhanakan ruas kanan:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="4 + \frac{64}{9} = \frac{36 + 64}{9} = \frac{100}{9}" />
+        <BlockMath math="\left(x - \frac{8}{3}\right)^2 = \frac{100}{9}" />
+      </div>
+
+   6. Ambil akar kuadrat dari kedua ruas:
+
+      <BlockMath math="x - \frac{8}{3} = \pm\frac{10}{3}" />
+
+   7. Selesaikan untuk mendapatkan nilai <InlineMath math="x" />:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="x = \frac{8}{3} + \frac{10}{3} = \frac{18}{3} = 6 \quad \text{atau} \quad x = \frac{8}{3} - \frac{10}{3} = -\frac{2}{3}" />
+      </div>
+
+   Jadi, akar-akar persamaan adalah <InlineMath math="x = 6" /> dan <InlineMath math="x = -\frac{2}{3}" />.

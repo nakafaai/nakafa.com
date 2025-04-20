@@ -47,7 +47,7 @@ async function importPagefind() {
       baseUrl: "/",
       // ... more search options
     });
-    await window.pagefind.init();
+    await window.pagefind.init?.();
   } catch {
     window.pagefind = {
       debouncedSearch: () => Promise.resolve([]),
