@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "@/i18n/routing";
-import type { Locale } from "next-intl";
+import { type Locale, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import { useTransition } from "react";
 import { useMediaQuery } from "usehooks-ts";
@@ -12,10 +12,15 @@ export function LangMenuSwitcher() {
   const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
   const params = useParams();
+  const currentLocale = useLocale();
 
   const isMobile = useMediaQuery("(max-width: 640px)");
 
   function handleChangeLocale(locale: Locale) {
+    if (currentLocale === locale) {
+      return;
+    }
+
     startTransition(async () => {
       router.replace(
         // @ts-expect-error -- TypeScript will validate that only known `params`
