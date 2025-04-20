@@ -4,3 +4,60 @@ export const metadata = {
   date: "04/19/2025",
   subject: "Quadratic Functions",
 };
+
+## Understanding Quadratic Equation Roots
+
+In a quadratic equation <InlineMath math="ax^2 + bx + c = 0" /> (where <InlineMath math="a \neq 0" />), the roots of the equation are the values of <InlineMath math="x" /> that make the equation true. A quadratic equation always has two roots that can be found using the formula:
+
+<BlockMath math="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+
+The value <InlineMath math="b^2 - 4ac" /> is called the determinant or discriminant (denoted by <InlineMath math="D" />), which is very important because it determines the type of roots of the quadratic equation.
+
+### Different Real Roots
+
+If <InlineMath math="D > 0" /> (or <InlineMath math="b^2 > 4ac" />), then the quadratic equation has two different real roots.
+
+<BlockMath math="x_1 = \frac{-b + \sqrt{D}}{2a} \quad \text{and} \quad x_2 = \frac{-b - \sqrt{D}}{2a}" />
+
+Example: <InlineMath math="x^2 - 5x + 6 = 0" />
+
+- <InlineMath math="a = 1, b = -5, c = 6" />
+- <InlineMath math="D = (-5)^2 - 4 \cdot 1 \cdot 6 = 25 - 24 = 1 > 0" />
+- The roots are: <InlineMath math="x_1 = 3" /> and <InlineMath math="x_2 = 2" />
+
+### Equal (Repeated) Roots
+
+If <InlineMath math="D = 0" /> (or <InlineMath math="b^2 = 4ac" />), then the quadratic equation has one real repeated root (two roots with the same value).
+
+<BlockMath math="x_1 = x_2 = \frac{-b}{2a}" />
+
+Example: <InlineMath math="x^2 - 6x + 9 = 0" />
+
+- <InlineMath math="a = 1, b = -6, c = 9" />
+- <InlineMath math="D = (-6)^2 - 4 \cdot 1 \cdot 9 = 36 - 36 = 0" />
+- The roots are: <InlineMath math="x_1 = x_2 = 3" />
+
+### Imaginary (Non-Real) Roots
+
+If <InlineMath math="D < 0" /> (or <InlineMath math="b^2 < 4ac" />), then the quadratic equation has two different complex (imaginary) roots.
+
+<BlockMath math="x_1 = \frac{-b + i\sqrt{|D|}}{2a} \quad \text{and} \quad x_2 = \frac{-b - i\sqrt{|D|}}{2a}" />
+
+Where <InlineMath math="i = \sqrt{-1}" /> is the imaginary number.
+
+Example: <InlineMath math="x^2 + 2x + 5 = 0" />
+
+- <InlineMath math="a = 1, b = 2, c = 5" />
+- <InlineMath math="D = 2^2 - 4 \cdot 1 \cdot 5 = 4 - 20 = -16 < 0" />
+- The roots are: <InlineMath math="x_1 = -1 + 2i" /> and <InlineMath math="x_2 = -1 - 2i" />
+
+## Relationship Between Roots and Coefficients
+
+If <InlineMath math="x_1" /> and <InlineMath math="x_2" /> are the roots of the quadratic equation <InlineMath math="ax^2 + bx + c = 0" />, then:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x_1 + x_2 = -\frac{b}{a}" />
+  <BlockMath math="x_1 \times x_2 = \frac{c}{a}" />
+</div>
+
+This is an important relationship that can be used to find the coefficients of a quadratic equation if its roots are known.

@@ -4,3 +4,60 @@ export const metadata = {
   date: "04/19/2025",
   subject: "Persamaan dan Fungsi Kuadrat",
 };
+
+## Pengertian Akar Persamaan Kuadrat
+
+Dalam persamaan kuadrat <InlineMath math="ax^2 + bx + c = 0" /> (dengan <InlineMath math="a \neq 0" />), akar-akar persamaan adalah nilai-nilai <InlineMath math="x" /> yang membuat persamaan tersebut menjadi benar. Persamaan kuadrat selalu memiliki dua akar yang bisa ditemukan dengan rumus:
+
+<BlockMath math="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+
+Nilai <InlineMath math="b^2 - 4ac" /> disebut determinan atau diskriminan (dilambangkan dengan <InlineMath math="D" />), yang sangat penting karena menentukan jenis akar persamaan kuadrat.
+
+### Akar Berbeda dan Real
+
+Jika <InlineMath math="D > 0" /> (atau <InlineMath math="b^2 > 4ac" />), maka persamaan kuadrat memiliki dua akar real yang berbeda.
+
+<BlockMath math="x_1 = \frac{-b + \sqrt{D}}{2a} \quad \text{dan} \quad x_2 = \frac{-b - \sqrt{D}}{2a}" />
+
+Contoh: <InlineMath math="x^2 - 5x + 6 = 0" />
+
+- <InlineMath math="a = 1, b = -5, c = 6" />
+- <InlineMath math="D = (-5)^2 - 4 \cdot 1 \cdot 6 = 25 - 24 = 1 > 0" />
+- Akar-akarnya: <InlineMath math="x_1 = 3" /> dan <InlineMath math="x_2 = 2" />
+
+### Akar Kembar (Sama)
+
+Jika <InlineMath math="D = 0" /> (atau <InlineMath math="b^2 = 4ac" />), maka persamaan kuadrat memiliki satu akar real yang kembar (dua akar yang sama nilainya).
+
+<BlockMath math="x_1 = x_2 = \frac{-b}{2a}" />
+
+Contoh: <InlineMath math="x^2 - 6x + 9 = 0" />
+
+- <InlineMath math="a = 1, b = -6, c = 9" />
+- <InlineMath math="D = (-6)^2 - 4 \cdot 1 \cdot 9 = 36 - 36 = 0" />
+- Akar-akarnya: <InlineMath math="x_1 = x_2 = 3" />
+
+### Akar Imajiner (Tidak Real)
+
+Jika <InlineMath math="D < 0" /> (atau <InlineMath math="b^2 < 4ac" />), maka persamaan kuadrat memiliki dua akar kompleks (imajiner) yang berbeda.
+
+<BlockMath math="x_1 = \frac{-b + i\sqrt{|D|}}{2a} \quad \text{dan} \quad x_2 = \frac{-b - i\sqrt{|D|}}{2a}" />
+
+Dimana <InlineMath math="i = \sqrt{-1}" /> adalah bilangan imajiner.
+
+Contoh: <InlineMath math="x^2 + 2x + 5 = 0" />
+
+- <InlineMath math="a = 1, b = 2, c = 5" />
+- <InlineMath math="D = 2^2 - 4 \cdot 1 \cdot 5 = 4 - 20 = -16 < 0" />
+- Akar-akarnya: <InlineMath math="x_1 = -1 + 2i" /> dan <InlineMath math="x_2 = -1 - 2i" />
+
+## Hubungan Akar-Akar dengan Koefisien
+
+Jika <InlineMath math="x_1" /> dan <InlineMath math="x_2" /> adalah akar-akar persamaan kuadrat <InlineMath math="ax^2 + bx + c = 0" />, maka:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x_1 + x_2 = -\frac{b}{a}" />
+  <BlockMath math="x_1 \times x_2 = \frac{c}{a}" />
+</div>
+
+Ini adalah hubungan penting yang bisa digunakan untuk mencari koefisien persamaan kuadrat jika akar-akarnya diketahui.
