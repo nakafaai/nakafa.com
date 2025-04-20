@@ -4,3 +4,94 @@ export const metadata = {
   date: "04/19/2025",
   subject: "Quadratic Functions",
 };
+
+## What are Non-Real Roots?
+
+Quadratic equations <InlineMath math="ax^2 + bx + c = 0" /> sometimes have solutions that cannot be found in ordinary numbers. These solutions are called "non-real roots" or "imaginary roots."
+
+Imagine we're looking for a number that, when multiplied by itself, gives a negative result. Does such a number exist? No! Because any number multiplied by itself always gives a positive result or zero. This is where the concept of imaginary numbers begins.
+
+## Imaginary Numbers
+
+Imaginary numbers are numbers that contain <InlineMath math="i" />, where <InlineMath math="i = \sqrt{-1}" />. This means <InlineMath math="i^2 = -1" />.
+
+Examples of imaginary numbers:
+
+- <InlineMath math="3i" /> (read as: "three i")
+- <InlineMath math="2 + 5i" /> (read as: "two plus five i")
+- <InlineMath math="-4i" /> (read as: "negative four i")
+
+Numbers like <InlineMath math="2 + 5i" /> are called complex numbers, because they are a combination of a real number <InlineMath math="2" /> and an imaginary number <InlineMath math="5i" />.
+
+## When Does a Quadratic Equation Have Imaginary Roots?
+
+A quadratic equation has imaginary roots when its discriminant is negative. The discriminant is <InlineMath math="D = b^2 - 4ac" />.
+
+If <InlineMath math="D < 0" />, then the quadratic equation will have two different imaginary roots.
+
+## How to Find Imaginary Roots
+
+To find imaginary roots, we still use the formula:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+
+  <BlockMath math="x = \frac{-b \pm \sqrt{-(4ac - b^2)}}{2a}" />
+  <BlockMath math="x = \frac{-b \pm i\sqrt{4ac - b^2}}{2a}" />
+</div>
+
+### Example Problem 1
+
+Let's find the roots of the equation <InlineMath math="x^2 + 4x + 5 = 0" />.
+
+**Step 1**: Identify the values of <InlineMath math="a" />, <InlineMath math="b" />, and <InlineMath math="c" />.
+
+- <InlineMath math="a = 1" />
+- <InlineMath math="b = 4" />
+- <InlineMath math="c = 5" />
+
+**Step 2**: Calculate the discriminant.
+
+<BlockMath math="D = b^2 - 4ac = 4^2 - 4 \cdot 1 \cdot 5 = 16 - 20 = -4" />
+
+Since <InlineMath math="D = -4 < 0" />, this equation has imaginary roots.
+
+**Step 3**: Use the quadratic formula.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = \frac{-b \pm \sqrt{D}}{2a} = \frac{-4 \pm \sqrt{-4}}{2 \cdot 1}" />
+  <BlockMath math="x = \frac{-4 \pm 2i}{2} = -2 \pm i" />
+</div>
+
+Therefore, the roots of the equation <InlineMath math="x^2 + 4x + 5 = 0" /> are <InlineMath math="x_1 = -2 + i" /> and <InlineMath math="x_2 = -2 - i" />.
+
+### Example Problem 2
+
+Determine the type of roots for the equation <InlineMath math="2x^2 + x + 3 = 0" />.
+
+**Step 1**: Identify the values of <InlineMath math="a" />, <InlineMath math="b" />, and <InlineMath math="c" />.
+
+- <InlineMath math="a = 2" />
+- <InlineMath math="b = 1" />
+- <InlineMath math="c = 3" />
+
+**Step 2**: Calculate the discriminant.
+
+<BlockMath math="D = b^2 - 4ac = 1^2 - 4 \cdot 2 \cdot 3 = 1 - 24 = -23" />
+
+Since <InlineMath math="D = -23 < 0" />, this equation has imaginary roots.
+
+**Step 3**: Find the equation's roots.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = \frac{-b \pm \sqrt{D}}{2a} = \frac{-1 \pm \sqrt{-23}}{2 \cdot 2}" />
+  <BlockMath math="x = \frac{-1 \pm i\sqrt{23}}{4}" />
+</div>
+
+Therefore, the roots of the equation are <InlineMath math="x_1 = \frac{-1 + i\sqrt{23}}{4}" /> and <InlineMath math="x_2 = \frac{-1 - i\sqrt{23}}{4}" />.
+
+## Why Do Imaginary Roots Always Come in Pairs?
+
+Imaginary roots always appear in pairs in the form of <InlineMath math="a + bi" /> and <InlineMath math="a - bi" />. These pairs are called "complex conjugates."
+
+This happens because the quadratic formula involves <InlineMath math="\pm\sqrt{D}" />. When <InlineMath math="D < 0" />, we get <InlineMath math="\pm i\sqrt{|D|}" />, which gives us complex conjugate pairs.

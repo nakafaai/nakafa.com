@@ -4,3 +4,96 @@ export const metadata = {
   date: "04/19/2025",
   subject: "Persamaan dan Fungsi Kuadrat",
 };
+
+## Apa itu Akar Tidak Nyata?
+
+Persamaan kuadrat <InlineMath math="ax^2 + bx + c = 0" /> kadang-kadang punya jawaban yang tidak bisa kita temukan di bilangan biasa. Jawaban seperti ini disebut "akar tidak nyata" atau "akar imajiner".
+
+Bayangkan kita sedang mencari angka yang kalau dikali dengan dirinya sendiri hasilnya negatif. Apa ada angka seperti itu? Tidak ada! Karena bilangan apapun kalau dikali dengan dirinya sendiri pasti hasilnya positif atau nol. Inilah yang menjadi awal mula kita mengenal bilangan imajiner.
+
+## Bilangan Imajiner
+
+Bilangan imajiner adalah bilangan yang mengandung <InlineMath math="i" />, di mana <InlineMath math="i = \sqrt{-1}" />. Ini berarti <InlineMath math="i^2 = -1" />.
+
+Contoh bilangan imajiner:
+
+- <InlineMath math="3i" /> (dibaca: "tiga i")
+- <InlineMath math="2 + 5i" /> (dibaca: "dua plus lima i")
+- <InlineMath math="-4i" /> (dibaca: "negatif empat i")
+
+Bilangan seperti <InlineMath math="2 + 5i" /> disebut bilangan kompleks, karena merupakan gabungan dari bilangan real <InlineMath math="2" /> dan bilangan imajiner <InlineMath math="5i" />.
+
+## Kapan Persamaan Kuadrat Punya Akar Imajiner?
+
+Persamaan kuadrat punya akar imajiner ketika nilai diskriminannya negatif. Diskriminan adalah <InlineMath math="D = b^2 - 4ac" />.
+
+Jika <InlineMath math="D < 0" />, maka persamaan kuadrat akan memiliki dua akar imajiner yang berbeda.
+
+## Cara Mencari Akar Imajiner
+
+Untuk mencari akar imajiner, kita tetap menggunakan rumus:
+
+<BlockMath math="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+
+Karena <InlineMath math="b^2 - 4ac" /> bernilai negatif, kita bisa tulis ulang sebagai:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = \frac{-b \pm \sqrt{-(4ac - b^2)}}{2a}" />
+  <BlockMath math="x = \frac{-b \pm i\sqrt{4ac - b^2}}{2a}" />
+</div>
+
+### Contoh Soal 1
+
+Mari kita cari akar-akar dari persamaan <InlineMath math="x^2 + 4x + 5 = 0" />.
+
+**Langkah 1**: Identifikasi nilai <InlineMath math="a" />, <InlineMath math="b" />, dan <InlineMath math="c" />.
+
+- <InlineMath math="a = 1" />
+- <InlineMath math="b = 4" />
+- <InlineMath math="c = 5" />
+
+**Langkah 2**: Hitung diskriminan.
+
+<BlockMath math="D = b^2 - 4ac = 4^2 - 4 \cdot 1 \cdot 5 = 16 - 20 = -4" />
+
+Karena <InlineMath math="D = -4 < 0" />, persamaan ini memiliki akar-akar imajiner.
+
+**Langkah 3**: Gunakan rumus akar-akar persamaan kuadrat.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = \frac{-b \pm \sqrt{D}}{2a} = \frac{-4 \pm \sqrt{-4}}{2 \cdot 1}" />
+  <BlockMath math="x = \frac{-4 \pm 2i}{2} = -2 \pm i" />
+</div>
+
+Jadi, akar-akar dari persamaan <InlineMath math="x^2 + 4x + 5 = 0" /> adalah <InlineMath math="x_1 = -2 + i" /> dan <InlineMath math="x_2 = -2 - i" />.
+
+### Contoh Soal 2
+
+Tentukan jenis akar-akar dari persamaan <InlineMath math="2x^2 + x + 3 = 0" />.
+
+**Langkah 1**: Identifikasi nilai <InlineMath math="a" />, <InlineMath math="b" />, dan <InlineMath math="c" />.
+
+- <InlineMath math="a = 2" />
+- <InlineMath math="b = 1" />
+- <InlineMath math="c = 3" />
+
+**Langkah 2**: Hitung diskriminan.
+
+<BlockMath math="D = b^2 - 4ac = 1^2 - 4 \cdot 2 \cdot 3 = 1 - 24 = -23" />
+
+Karena <InlineMath math="D = -23 < 0" />, persamaan ini memiliki akar-akar imajiner.
+
+**Langkah 3**: Cari akar-akar persamaan.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = \frac{-b \pm \sqrt{D}}{2a} = \frac{-1 \pm \sqrt{-23}}{2 \cdot 2}" />
+  <BlockMath math="x = \frac{-1 \pm i\sqrt{23}}{4}" />
+</div>
+
+Jadi, akar-akar persamaan adalah <InlineMath math="x_1 = \frac{-1 + i\sqrt{23}}{4}" /> dan <InlineMath math="x_2 = \frac{-1 - i\sqrt{23}}{4}" />.
+
+## Mengapa Akar Imajiner Selalu Berpasangan?
+
+Akar-akar imajiner selalu muncul berpasangan dalam bentuk <InlineMath math="a + bi" /> dan <InlineMath math="a - bi" />. Pasangan ini disebut "konjugat kompleks".
+
+Ini terjadi karena rumus persamaan kuadrat melibatkan <InlineMath math="\pm\sqrt{D}" />. Ketika <InlineMath math="D < 0" />, kita mendapatkan <InlineMath math="\pm i\sqrt{|D|}" />, yang memberikan pasangan konjugat kompleks.
