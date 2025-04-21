@@ -17,7 +17,13 @@ import { Grid2X2XIcon, PauseIcon, PlayIcon } from "lucide-react";
 import { Grid2x2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import {
+  type ComponentProps,
+  type ReactNode,
+  Suspense,
+  useMemo,
+  useState,
+} from "react";
 import * as THREE from "three";
 import { ThreeCanvas } from "../three/canvas";
 import { Button } from "./button";
@@ -241,7 +247,7 @@ export function Axes({
   labelSize = 0.5,
   labelOffset = 0.5,
   font = "mono",
-  visible = true,
+  ...props
 }: {
   size?: number;
   showLabels?: boolean;
@@ -249,8 +255,7 @@ export function Axes({
   labelSize?: number;
   labelOffset?: number;
   font?: CoordinateSystemProps["font"];
-  visible?: boolean;
-}) {
+} & ComponentProps<"group">) {
   // Create points for each axis (now extending in both positive and negative directions)
   const xPoints = useMemo(
     () => [new THREE.Vector3(-size, 0, 0), new THREE.Vector3(size, 0, 0)],
@@ -270,7 +275,7 @@ export function Axes({
   const fontToUse = font === "mono" ? MONO_FONT_PATH : FONT_PATH;
 
   return (
-    <group visible={visible}>
+    <group {...props}>
       <Line points={xPoints} color={COLORS.RED} lineWidth={2} />
       <Line points={yPoints} color={COLORS.GREEN} lineWidth={2} />
       <Line
@@ -351,14 +356,13 @@ export function Axes({
 export function Origin({
   size = 0.2,
   color = ORIGIN_COLOR.LIGHT,
-  visible = true,
+  ...props
 }: {
   size?: number;
   color?: string;
-  visible?: boolean;
-}) {
+} & ComponentProps<"mesh">) {
   return (
-    <mesh visible={visible}>
+    <mesh {...props}>
       <sphereGeometry args={[size, 16, 16]} />
       <meshBasicMaterial color={color} />
     </mesh>
@@ -1668,6 +1672,7 @@ export function CoordinateSystem({
         onCreated={() => setTimeout(() => setSceneReady(true), 100)}
       >
         <Suspense fallback={null}>
+          {/* Camera Controls */}
           <CameraControls cameraPosition={cameraPosition} autoRotate={play} />
 
           {/* Lighting */}
@@ -1675,7 +1680,6 @@ export function CoordinateSystem({
           <pointLight position={[10, 10, 10]} intensity={1} castShadow />
 
           {/* Coordinate System */}
-
           <Axes
             visible={showAxes}
             size={size}
