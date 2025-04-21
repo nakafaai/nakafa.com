@@ -4,3 +4,139 @@ export const metadata = {
   date: "04/19/2025",
   subject: "Quadratic Functions",
 };
+
+## What is Minimum Area?
+
+Besides finding the largest value, quadratic functions can also be used to find the _smallest_ value (minimum). When might we need to find the minimum area? For example, when we have limited materials but need to make something with a certain area, and we want to use as little material as possible.
+
+## Getting to Know Quadratic Functions Again
+
+Remember, quadratic functions can look like a smile (<InlineMath math="ax^2 + bx + c" /> when <InlineMath math="a > 0" />) or a frown (<InlineMath math="ax^2 + bx + c" /> when <InlineMath math="a < 0" />).
+
+Now, if we want to find the _smallest_ value (minimum), we use the smile-shaped function, so the value of <InlineMath math="a" /> is positive (<InlineMath math="a > 0" />).
+
+The general form remains the same:
+
+<BlockMath math="f(x) = ax^2 + bx + c" />
+
+(<InlineMath math="a" />, <InlineMath math="b" />, and <InlineMath math="c" /> are numbers, <InlineMath math="a \neq 0" />).
+
+## How to Find the Lowest Point (Valley)
+
+The smallest value is at the lowest point of the smiling graph. This point is also called the vertex (but it's at the bottom).
+
+The formula to find it is exactly the same as finding the highest point!
+
+To find the _position_ of the valley (the <InlineMath math="x" /> value):
+
+<BlockMath math="x_p = -\frac{b}{2a}" />
+
+To find the _smallest value_ (the <InlineMath math="y" /> or <InlineMath math="f(x)" /> value):
+
+<BlockMath math="y_p = f(x_p) = a(x_p)^2 + b(x_p) + c" />
+
+Or use the discriminant shortcut formula:
+
+<BlockMath math="y_p = -\frac{D}{4a}" />
+
+where <InlineMath math="D = b^2 - 4ac" />.
+
+## Example to Understand
+
+Let's say we have a 40 cm long wire. We want to cut this wire into two parts. The first part will be formed into a square, and the second part will also be formed into a square. What should the cuts be so that the _total area_ of both squares is as small as possible (minimum)?
+
+1.  **Name Things:** Let's say the side of the first square is <InlineMath math="x" /> cm, and the side of the second square is <InlineMath math="y" /> cm.
+2.  **Wire Length Relationship:**
+
+    - Wire for the first square: Perimeter is <InlineMath math="4x" /> cm.
+    - Wire for the second square: Perimeter is <InlineMath math="4y" /> cm.
+    - Total wire length:
+
+      <BlockMath math="4x + 4y = 40" />
+
+      Simplify (divide by 4):
+
+      <BlockMath math="x + y = 10" />
+
+      This means:
+
+      <BlockMath math="y = 10 - x" />
+
+3.  **Total Area Formula:** The total area of both squares is <InlineMath math="A = \text{Area}_1 + \text{Area}_2" />.
+
+    <BlockMath math="A(x) = x^2 + y^2" />
+
+    Replace <InlineMath math="y" /> with <InlineMath math="10 - x" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="A(x) = x^2 + (10 - x)^2" />
+      <BlockMath math="A(x) = x^2 + (100 - 20x + x^2)" />
+      <BlockMath math="A(x) = 2x^2 - 20x + 100" />
+    </div>
+
+4.  **Quadratic Function Form:** We now have <InlineMath math="A(x) = 2x^2 - 20x + 100" />.
+
+    This is a quadratic function with <InlineMath math="a = 2" />, <InlineMath math="b = -20" />, <InlineMath math="c = 100" />. Since <InlineMath math="a" /> is positive, the graph is a smile, so there is a minimum value.
+
+5.  **Find Side x for Minimum Area:** Use the formula <InlineMath math="x_p = -b / (2a)" />:
+
+    <BlockMath math="x_p = -\frac{-20}{2 \times 2} = \frac{20}{4} = 5" />
+
+    So, the side of the first square must be 5 cm for the sum of areas to be minimal.
+
+6.  **Find Side y and Minimum Area:**
+
+    - Side of the second square: <InlineMath math="y = 10 - x = 10 - 5 = 5" /> cm.
+    - Minimum Total Area: Plug <InlineMath math="x = 5" /> into <InlineMath math="A(x)" />:
+
+      <BlockMath math="A(5) = 2(5)^2 - 20(5) + 100 = 2(25) - 100 + 100 = 50" />
+
+      The minimum total area is <InlineMath math="50 \text{ cm}^2" />.
+
+7.  **Conclusion:** For the total area of both squares to be minimal (<InlineMath math="50 \text{ cm}^2" />), the wire must be cut so that both squares have the same side length, which is <InlineMath math="5 \text{ cm}" />. (This means the wire is cut into two equal parts, <InlineMath math="20 \text{ cm}" /> and <InlineMath math="20 \text{ cm}" />).
+
+## Where Is It Used?
+
+### Business & Economics
+
+**Example:**
+
+The production cost of <InlineMath math="x" /> units of goods (in thousands of rupiah) is <InlineMath math="C(x) = 3x^2 - 60x + 500" />. How many units should be produced to minimize the cost?
+
+- Cost function: <InlineMath math="C(x) = 3x^2 - 60x + 500" /> (<InlineMath math="a=3, b=-60" />). <InlineMath math="a>0" />, so there is a minimum.
+- Number of units for minimum cost: <InlineMath math="x_p = -b / (2a) = -(-60) / (2 \times 3) = 60 / 6 = 10" /> units.
+- Minimum cost: <InlineMath math="C(10) = 3(10)^2 - 60(10) + 500 = 3(100) - 600 + 500 = 300 - 600 + 500 = 200" /> thousand rupiah (or Rp 200,000).
+
+## Exercise
+
+The sum of two positive numbers is 16. Determine these two numbers so that the sum of their squares is minimum, and calculate the minimum sum of squares!
+
+### Answer Key
+
+1.  Let the first number be <InlineMath math="x" />, the second number be <InlineMath math="y" />. (<InlineMath math="x > 0, y > 0" />).
+2.  Relationship: <InlineMath math="x + y = 16" />. So <InlineMath math="y = 16 - x" />.
+3.  Sum of Squares: <InlineMath math="S = x^2 + y^2" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="S(x) = x^2 + (16 - x)^2" />
+      <BlockMath math="S(x) = x^2 + (256 - 32x + x^2)" />
+      <BlockMath math="S(x) = 2x^2 - 32x + 256" />
+    </div>
+
+4.  Sum of Squares Function: <InlineMath math="S(x) = 2x^2 - 32x + 256" />.
+
+    (<InlineMath math="a = 2, b = -32" />). Since <InlineMath math="a > 0" />, there is a minimum value.
+
+5.  Value of <InlineMath math="x" /> for minimum sum of squares:
+
+    <BlockMath math="x_p = -b / (2a) = -(-32) / (2 \times 2) = 32 / 4 = 8" />.
+
+6.  Value of <InlineMath math="y" />:
+
+    <BlockMath math="y = 16 - x = 16 - 8 = 8" />.
+
+7.  Minimum Sum of Squares:
+
+    <BlockMath math="S(8) = 2(8)^2 - 32(8) + 256 = 2(64) - 256 + 256 = 128" />.
+
+Therefore, the two numbers are 8 and 8 for the sum of their squares to be minimum (which is 128).

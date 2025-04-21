@@ -4,3 +4,149 @@ export const metadata = {
   date: "04/19/2025",
   subject: "Quadratic Functions",
 };
+
+## What is Maximum Area?
+
+Ever seen a garden fence? Sometimes, we have a limited length of fence, but we want to make the garden as big as possible. Well, quadratic functions can help us find the garden dimensions that give the largest area! Magic, right?
+
+## Types of Quadratic Functions
+
+A quadratic function looks like a smile (<InlineMath math="ax^2 + bx + c" /> if <InlineMath math="a > 0" />) or a frown (<InlineMath math="ax^2 + bx + c" /> if <InlineMath math="a < 0" />).
+
+If we want to find the _biggest_ value (maximum), we use the frown shape, so the value of <InlineMath math="a" /> is negative (<InlineMath math="a < 0" />).
+
+The general form is:
+
+<BlockMath math="f(x) = ax^2 + bx + c" />
+
+Here, <InlineMath math="a" />, <InlineMath math="b" />, and <InlineMath math="c" /> are numbers, and <InlineMath math="a" /> cannot be zero (because if it's zero, it becomes linear).
+
+## How to Find the Highest Point (Vertex)
+
+The largest value is at the very top point of the frowning graph. This point is called the vertex.
+
+To find the _position_ of the vertex (the <InlineMath math="x" /> value), we use the formula:
+
+<BlockMath math="x_p = -\frac{b}{2a}" />
+
+After getting <InlineMath math="x_p" />, we plug it back into the quadratic function to get the _largest value_ (the <InlineMath math="y" /> or <InlineMath math="f(x)" /> value):
+
+<BlockMath math="y_p = f(x_p) = a(x_p)^2 + b(x_p) + c" />
+
+Or you can use this shortcut formula:
+
+<BlockMath math="y_p = -\frac{D}{4a}" />
+
+where <InlineMath math="D = b^2 - 4ac" /> (D is called the discriminant).
+
+## Example to Understand
+
+Let's say a farmer has 20 meters of fence. He wants to build a rectangular chicken coop. What are the dimensions of the coop so that the area is maximized?
+
+1.  **Give Names:** Let the length be <InlineMath math="p" /> meters and the width be <InlineMath math="l" /> meters.
+2.  **Fence Length Relation:** The fence is the perimeter.
+
+    <BlockMath math="2p + 2l = 20" />
+
+    Simplify (divide everything by 2):
+
+    <BlockMath math="p + l = 10" />
+
+    Meaning:
+
+    <BlockMath math="p = 10 - l" />
+
+3.  **Area Formula:** The area of the coop is <InlineMath math="A = p \times l" />. Substitute <InlineMath math="p" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="A(l) = (10 - l) \times l" />
+      <BlockMath math="A(l) = 10l - l^2" />
+    </div>
+
+4.  **Quadratic Function Form:** Arrange it neatly:
+
+    <BlockMath math="A(l) = -l^2 + 10l" />
+
+    This is a quadratic function with <InlineMath math="a = -1" />, <InlineMath math="b = 10" />, and <InlineMath math="c = 0" />. Since <InlineMath math="a" /> is negative, the graph is a frown, so there is a maximum value.
+
+5.  **Find Maximum Width (l):** Use the formula <InlineMath math="x_p = -b / (2a)" /> (but replace <InlineMath math="x" /> with <InlineMath math="l" />):
+
+    <BlockMath math="l_p = -\frac{b}{2a} = -\frac{10}{2 \times (-1)} = -\frac{10}{-2} = 5" />
+
+    So, the width must be 5 meters for the maximum area.
+
+6.  **Find Maximum Area (A):** Plug <InlineMath math="l = 5" /> into the area formula <InlineMath math="A(l) = 10l - l^2" />:
+
+    <BlockMath math="A(5) = 10(5) - (5)^2 = 50 - 25 = 25" />
+
+    The largest area is 25 square meters.
+
+7.  **Conclusion:** For the maximum coop area (25 m²), the width <InlineMath math="l=5" /> meters. The length is <InlineMath math="p = 10 - l = 10 - 5 = 5" /> meters. The dimensions must be 5 meters x 5 meters (it turns out to be a square!).
+
+## Where is This Used?
+
+### Business
+
+Finding the biggest profit.
+
+**Example**:
+
+A toy store sells dolls. If they sell <InlineMath math="x" /> dolls, the profit (in thousands of rupiah) is <InlineMath math="P(x) = 100x - 2x^2" />. How many dolls should be sold to maximize profit?
+
+- Profit function: <InlineMath math="P(x) = -2x^2 + 100x" /> (<InlineMath math="a=-2, b=100" />).
+- Number of dolls for max profit: <InlineMath math="x_p = -b / (2a) = -100 / (2 \times -2) = -100 / -4 = 25" /> dolls.
+- Maximum profit: <InlineMath math="P(25) = 100(25) - 2(25^2) = 2500 - 2(625) = 2500 - 1250 = 1250" /> thousand rupiah (or IDR 1,250,000).
+
+### Physics
+
+Calculating the highest point of a thrown object's jump.
+
+**Example**:
+
+A toy rocket flies! Its height after <InlineMath math="t" /> seconds is <InlineMath math="h(t) = 40t - 5t^2" /> meters. When is the rocket highest and what is its maximum height?
+
+- Quadratic function: <InlineMath math="h(t) = -5t^2 + 40t" />. <InlineMath math="a = -5, b = 40" />.
+- Time to reach max height: <InlineMath math="t_p = -b / (2a) = -40 / (2 \times -5) = -40 / -10 = 4" /> seconds.
+- Maximum height: <InlineMath math="h(4) = 40(4) - 5(4^2) = 160 - 5(16) = 160 - 80 = 80" /> meters.
+
+## Exercise
+
+A rectangle has a perimeter of 60 cm. Determine its length and width to maximize its area, and calculate the maximum area!
+
+### Answer Key
+
+1.  Let length be <InlineMath math="p" />, width be <InlineMath math="l" />.
+2.  Perimeter:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="2p + 2l = 60" />
+      <BlockMath math="p + l = 30" />
+      <BlockMath math="p = 30 - l" />
+    </div>
+
+3.  Area:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="L(l) = p \times l = (30 - l)l" />
+      <BlockMath math="L(l) = 30l - l^2" />
+    </div>
+
+4.  Area Function:
+
+    <BlockMath math="L(l) = -l^2 + 30l" />
+
+    (<InlineMath math="a = -1, b = 30" />).
+
+5.  Width for max area (<InlineMath math="l_p" />):
+
+    <BlockMath math="l_p = -b / (2a) = -30 / (2 \times -1) = -30 / -2 = 15 \text{ cm}" />
+
+6.  Length at max area (<InlineMath math="p" />):
+
+    <BlockMath math="p = 30 - l = 30 - 15 = 15 \text{ cm}" />
+
+7.  Maximum area (<InlineMath math="L_{max}" />):
+
+    <BlockMath math="L(15) = 30(15) - (15)^2 = 450 - 225 = 225 \text{ cm}^2" />
+
+So, for the maximum area (<InlineMath math="L_{max} = 225 \text{ cm}^2" />), the dimensions must be 15 cm x 15 cm (a square again!).

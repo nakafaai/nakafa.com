@@ -4,3 +4,150 @@ export const metadata = {
   date: "04/19/2025",
   subject: "Persamaan dan Fungsi Kuadrat",
 };
+
+## Apa itu Luas Maksimum?
+
+Pernah lihat pagar kebun? Kadang, kita punya pagar yang panjangnya terbatas, tapi kita mau bikin kebun seluas-luasnya. Nah, fungsi kuadrat bisa bantu kita cari tahu ukuran kebun biar luasnya paling besar! Ajaib, kan?
+
+## Jenis Fungsi Kuadrat
+
+Fungsi kuadrat itu bentuknya kayak senyum (<InlineMath math="ax^2 + bx + c" /> kalau <InlineMath math="a > 0" />) atau cemberut (<InlineMath math="ax^2 + bx + c" /> kalau <InlineMath math="a < 0" />).
+
+Kalau kita mau cari nilai _paling besar_ (maksimum), kita pakai yang bentuknya cemberut, jadi nilai <InlineMath math="a" /> nya negatif (<InlineMath math="a < 0" />).
+
+Bentuk umumnya:
+
+<BlockMath math="f(x) = ax^2 + bx + c" />
+
+Di sini, <InlineMath math="a" />, <InlineMath math="b" />, dan <InlineMath math="c" /> itu
+angka-angka, dan <InlineMath math="a" /> tidak boleh nol ya (karena kalau nol, bentuknya jadi linear).
+
+## Cara Cari Titik Paling Atas (Puncak)
+
+Nilai paling besar itu ada di titik paling atas dari grafik yang cemberut tadi. Titik ini namanya titik puncak atau vertex.
+
+Untuk mencari _posisi_ titik puncak (nilai <InlineMath math="x" /> nya), kita pakai rumus:
+
+<BlockMath math="x_p = -\frac{b}{2a}" />
+
+Setelah dapat <InlineMath math="x_p" />, kita masukkan lagi ke fungsi kuadratnya untuk dapat nilai _paling besarnya_ (nilai <InlineMath math="y" /> atau <InlineMath math="f(x)" /> nya):
+
+<BlockMath math="y_p = f(x_p) = a(x_p)^2 + b(x_p) + c" />
+
+Atau bisa juga pakai rumus cepat ini:
+
+<BlockMath math="y_p = -\frac{D}{4a}" />
+
+dengan <InlineMath math="D = b^2 - 4ac" /> (D itu namanya diskriminan).
+
+## Contoh Biar Ngerti
+
+Misalnya, Pak Tani punya pagar 20 meter. Dia mau buat kandang ayam bentuk persegi panjang. Berapa ukuran kandang biar luasnya paling besar?
+
+1.  **Bikin Nama:** Misal panjangnya <InlineMath math="p" /> meter dan lebarnya <InlineMath math="l" /> meter.
+2.  **Hubungan Panjang Pagar:** Pagar itu kelilingnya.
+
+    <BlockMath math="2p + 2l = 20" />
+
+    Sederhanakan (dibagi 2 semua):
+
+    <BlockMath math="p + l = 10" />
+
+    Artinya:
+
+    <BlockMath math="p = 10 - l" />
+
+3.  **Rumus Luas:** Luas kandang <InlineMath math="A = p \times l" />. Kita ganti <InlineMath math="p" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="A(l) = (10 - l) \times l" />
+      <BlockMath math="A(l) = 10l - l^2" />
+    </div>
+
+4.  **Bentuk Fungsi Kuadrat:** Urutkan biar rapi:
+
+    <BlockMath math="A(l) = -l^2 + 10l" />
+
+    Ini fungsi kuadrat dengan <InlineMath math="a = -1" />, <InlineMath math="b = 10" /> , dan <InlineMath math="c = 0" />. Karena <InlineMath math="a" /> negatif, grafiknya cemberut, jadi ada nilai maksimum.
+
+5.  **Cari Lebar Maksimum (l):** Pakai rumus <InlineMath math="x_p = -b / (2a)" /> (tapi <InlineMath math="x" /> nya kita ganti <InlineMath math="l" />):
+
+    <BlockMath math="l_p = -\frac{b}{2a} = -\frac{10}{2 \times (-1)} = -\frac{10}{-2} = 5" />
+
+    Jadi, lebarnya harus 5 meter biar luasnya maksimal.
+
+6.  **Cari Luas Maksimum (A):** Masukkan <InlineMath math="l = 5" /> ke rumus luas <InlineMath math="A(l) = 10l - l^2" />:
+
+    <BlockMath math="A(5) = 10(5) - (5)^2 = 50 - 25 = 25" />
+
+    Luas paling besarnya adalah 25 meter persegi.
+
+7.  **Kesimpulan:** Biar luas kandang maksimal (25 m²), lebarnya <InlineMath math="l=5" /> meter. Panjangnya <InlineMath math="p = 10 - l = 10 - 5 = 5" /> meter. Ukurannya harus 5 meter x 5 meter (ternyata bentuknya persegi!).
+
+## Dipakai Dimana Aja Sih?
+
+### Bisnis
+
+Mencari keuntungan paling besar.
+
+**Contoh**:
+
+Sebuah toko mainan menjual boneka. Jika menjual <InlineMath math="x" /> boneka, keuntungannya (dalam ribu rupiah) adalah <InlineMath math="K(x) = 100x - 2x^2" />. Berapa boneka harus dijual agar untungnya maksimal?
+
+- Fungsi keuntungan: <InlineMath math="K(x) = -2x^2 + 100x" /> (<InlineMath math="a=-2, b=100" />).
+- Jumlah boneka agar untung maks: <InlineMath math="x_p = -b / (2a) = -100 / (2 \times -2) = -100 / -4 = 25" /> boneka.
+- Untung maksimalnya: <InlineMath math="K(25) = 100(25) - 2(25^2) = 2500 - 2(625) = 2500 - 1250 = 1250" /> ribu rupiah (atau Rp 1.250.000).
+
+### Fisika
+
+Menghitung tinggi lompatan paling tinggi suatu benda yang dilempar.
+
+**Contoh**:
+
+Roket mainan terbang! Tingginya setelah <InlineMath math="t" /> detik adalah <InlineMath math="h(t) = 40t - 5t^2" /> meter. Kapan roket paling tinggi dan berapa tingginya?
+
+- Fungsi kuadratnya: <InlineMath math="h(t) = -5t^2 + 40t" />. <InlineMath math="a = -5, b = 40" />.
+- Waktu paling tinggi: <InlineMath math="t_p = -b / (2a) = -40 / (2 \times -5) = -40 / -10 = 4" /> detik.
+- Tinggi paling tinggi: <InlineMath math="h(4) = 40(4) - 5(4^2) = 160 - 5(16) = 160 - 80 = 80" /> meter.
+
+## Latihan
+
+Sebuah persegi panjang punya keliling 60 cm. Tentukan ukuran panjang dan lebarnya agar luasnya maksimum, dan hitung luas maksimumnya!
+
+### Kunci Jawaban
+
+1.  Misal panjang <InlineMath math="p" />, lebar <InlineMath math="l" />.
+2.  Keliling:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="2p + 2l = 60" />
+      <BlockMath math="p + l = 30" />
+      <BlockMath math="p = 30 - l" />
+    </div>
+
+3.  Luas:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="L(l) = p \times l = (30 - l)l" />
+      <BlockMath math="L(l) = 30l - l^2" />
+    </div>
+
+4.  Fungsi Luas:
+
+    <BlockMath math="L(l) = -l^2 + 30l" />
+
+    (<InlineMath math="a = -1, b = 30" />).
+
+5.  Lebar untuk luas maks (<InlineMath math="l_p" />):
+
+    <BlockMath math="l_p = -b / (2a) = -30 / (2 \times -1) = -30 / -2 = 15 \text{ cm}" />
+
+6.  Panjang saat luas maks (<InlineMath math="p" />):
+
+    <BlockMath math="p = 30 - l = 30 - 15 = 15 \text{ cm}" />
+
+7.  Luas maksimum (<InlineMath math="L_{maks}" />):
+
+    <BlockMath math="L(15) = 30(15) - (15)^2 = 450 - 225 = 225 \text{ cm}^2" />
+
+Jadi, agar luasnya maksimum (<InlineMath math="L_{maks} = 225 \text{ cm}^2" />), ukurannya harus 15 cm x 15 cm (bentuk persegi lagi!).
