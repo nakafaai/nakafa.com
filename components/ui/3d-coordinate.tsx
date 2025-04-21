@@ -187,6 +187,41 @@ type UnitCircleProps = {
   [key: string]: unknown;
 };
 
+/**
+ * Props for the LineEquation component
+ */
+export type LineEquationProps = {
+  points: CoordinatePoint[];
+  color?: string | THREE.Color;
+  lineWidth?: number;
+  showPoints?: boolean;
+  /**
+   * Whether to render the line as a smooth curve using CatmullRomCurve3
+   */
+  smooth?: boolean;
+  /**
+   * Number of points to use for the curve when smooth is true
+   * Higher values will create a smoother curve but may impact performance
+   */
+  curvePoints?: number;
+  /**
+   * Optional array of labels to render along the line. Each can specify the index of the point
+   * at which to render (defaults to midpoint), optional offset, and text styling.
+   */
+  labels?: Array<{
+    /** Text to display */
+    text: string;
+    /** Optional index into the `points` array where this label should appear; defaults to midpoint */
+    at?: number;
+    /** Optional [x,y,z] offset applied on top of the base point position */
+    offset?: [number, number, number];
+    /** Color for the label text */
+    color?: string | THREE.Color;
+    /** Font size of the label text */
+    fontSize?: number;
+  }>;
+};
+
 // --------------------------------
 // Helper Components
 // --------------------------------
@@ -939,32 +974,6 @@ export type CoordinatePoint = {
 };
 
 /**
- * Props for the LineEquation component
- */
-export type LineEquationProps = {
-  points: CoordinatePoint[];
-  color?: string | THREE.Color;
-  lineWidth?: number;
-  showPoints?: boolean;
-  /**
-   * Optional array of labels to render along the line. Each can specify the index of the point
-   * at which to render (defaults to midpoint), optional offset, and text styling.
-   */
-  labels?: Array<{
-    /** Text to display */
-    text: string;
-    /** Optional index into the `points` array where this label should appear; defaults to midpoint */
-    at?: number;
-    /** Optional [x,y,z] offset applied on top of the base point position */
-    offset?: [number, number, number];
-    /** Color for the label text */
-    color?: string | THREE.Color;
-    /** Font size of the label text */
-    fontSize?: number;
-  }>;
-};
-
-/**
  * This component renders a polyline based on an array of 3D points and optionally displays markers at each point.
  */
 export function LineEquation({
@@ -972,16 +981,32 @@ export function LineEquation({
   color = randomColor(["YELLOW", "GREEN", "BLUE"]),
   lineWidth = 2,
   showPoints = true,
+  smooth = false,
+  curvePoints = 50,
   labels = [],
 }: LineEquationProps) {
   const vectorPoints = useMemo(
     () => points.map((point) => new THREE.Vector3(point.x, point.y, point.z)),
     [points]
   );
+
+  // Generate smooth curve points if smooth is true
+  const linePoints = useMemo(() => {
+    if (!smooth || vectorPoints.length < 2) {
+      return vectorPoints;
+    }
+
+    // Create a smooth curve using CatmullRomCurve3
+    const curve = new THREE.CatmullRomCurve3(vectorPoints);
+
+    // Generate points along the curve
+    return curve.getPoints(curvePoints);
+  }, [vectorPoints, smooth, curvePoints]);
+
   return (
     <group>
       {/* Draw a line connecting the provided points */}
-      <Line points={vectorPoints} color={color} lineWidth={lineWidth} />
+      <Line points={linePoints} color={color} lineWidth={lineWidth} />
       {/* Optionally render a small sphere at each point */}
       {showPoints &&
         vectorPoints.map((vec, index) => (
