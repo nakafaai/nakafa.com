@@ -4,3 +4,77 @@ export const metadata = {
   date: "04/21/2025",
   subject: "Probability",
 };
+
+## What Does Mutually Exclusive Mean?
+
+Imagine you have two choices, but you can only pick **one**, not both at the same time. Well, in the world of probability, this is similar to the concept of **Mutually Exclusive Events** (other cool names: _Disjoint Events_).
+
+Two events (let's call them event A and event B) are said to be **mutually exclusive** if both events **cannot possibly occur at the same time** in a single trial. Simply put, if A happens, B cannot happen. If B happens, A cannot happen.
+
+## Characteristics of Mutually Exclusive Events
+
+The main characteristic is just that: **cannot happen simultaneously**. There's no outcome that can belong to event A and event B at the same time.
+
+### Probability of Event A AND B Occurring Together
+
+Because events A and B cannot happen together if they are mutually exclusive, the probability of both occurring simultaneously is **zero**!
+
+We can write the probability of event "A **and** B" (both occurring) as:
+
+<BlockMath math="P(A \text{ and } B) = 0" />
+
+Or using the intersection symbol:
+
+<BlockMath math="P(A \cap B) = 0" />
+
+Remember, if they are mutually exclusive, their intersection is empty, so the probability is zero!
+
+## Calculating the Probability of A OR B for Mutually Exclusive Events
+
+So, how do we calculate the probability of event A happening **OR** event B happening if A and B are mutually exclusive?
+
+Since they can't happen together, we simply **add** the probabilities of each individual event.
+
+The formula becomes very easy:
+
+<BlockMath math="P(A \text{ or } B) = P(A) + P(B)" />
+
+Or using the union symbol:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B)" />
+
+This is the **Special Addition Rule** which applies ONLY to mutually exclusive events. (If the events are not mutually exclusive, there's a slightly different formula).
+
+## Examples of Mutually Exclusive Events
+
+To understand better, look at these examples:
+
+1.  **Coin Toss:**
+
+    The event of getting "Heads" and the event of getting "Tails". They can't happen together, right?
+
+    - <InlineMath math="P(\text{Heads}) = 1/2" />
+    - <InlineMath math="P(\text{Tails}) = 1/2" />
+    - Probability of getting Heads OR Tails = <InlineMath math="P(\text{Heads}) + P(\text{Tails}) = 1/2 + 1/2 = 1" /> (One of them must occur).
+
+2.  **Rolling a Die (once):**
+
+    - The event of getting a "3" and the event of getting a "5". You can't get both numbers at once.
+      - <InlineMath math="P(3) = 1/6" />
+      - <InlineMath math="P(5) = 1/6" />
+      - Probability of getting a 3 OR 5 = <InlineMath math="P(3) + P(5) = 1/6 + 1/6 = 2/6 = 1/3" />.
+    - The event of getting an "even number" (<InlineMath math="\{2, 4, 6\}" />) and the event of getting an "odd number" (<InlineMath math="\{1, 3, 5\}" />). No number is both even and odd.
+      - <InlineMath math="P(\text{Even}) = 3/6 = 1/2" />
+      - <InlineMath math="P(\text{Odd}) = 3/6 = 1/2" />
+      - Probability of getting Even OR Odd = <InlineMath math="P(\text{Even}) + P(\text{Odd}) = 1/2 + 1/2 = 1" />.
+
+3.  **Drawing a Card (once):**
+
+    - The event of getting a "King" and the event of getting a "Queen". One card cannot be both a King and a Queen.
+      - There are 4 Kings in 52 cards, <InlineMath math="P(\text{King}) = 4/52" />
+      - There are 4 Queens in 52 cards, <InlineMath math="P(\text{Queen}) = 4/52" />
+      - Probability of getting a King OR Queen = <InlineMath math="P(\text{King}) + P(\text{Queen}) = 4/52 + 4/52 = 8/52 = 2/13" />.
+    - The event of getting a "Red card (Hearts/Diamonds)" and the event of getting a "Club (<InlineMath math="\clubsuit" />)". Clubs are black, so a card cannot be red and a club simultaneously.
+      - There are 26 red cards, <InlineMath math="P(\text{Red}) = 26/52" />
+      - There are 13 clubs, <InlineMath math="P(\clubsuit) = 13/52" />
+      - Probability of getting Red OR Club = <InlineMath math="P(\text{Red}) + P(\clubsuit) = 26/52 + 13/52 = 39/52 = 3/4" />.

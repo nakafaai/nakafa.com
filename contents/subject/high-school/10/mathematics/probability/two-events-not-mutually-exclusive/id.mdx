@@ -4,3 +4,71 @@ export const metadata = {
   date: "04/21/2025",
   subject: "Peluang",
 };
+
+## Apa Artinya Kejadian Tidak Saling Lepas?
+
+Kita sudah belajar [kejadian saling lepas](/subject/high-school/10/mathematics/probability/two-events-mutually-exclusive) yang nggak bisa terjadi barengan (kayak belok kiri dan kanan sekaligus), sekarang kita bahas **Kejadian Tidak Saling Lepas**. Ini adalah dua kejadian (atau lebih) yang **BISA terjadi secara bersamaan** dalam satu kali percobaan.
+
+Artinya, ada kemungkinan kamu mendapatkan hasil yang termasuk dalam kejadian A, sekaligus termasuk dalam kejadian B.
+
+**Contoh Gampang:**
+
+1.  **Ambil Kartu:** Kamu ambil satu kartu dari tumpukan kartu bridge.
+
+    - Kejadian A: Dapat kartu **Hati** (<InlineMath math="\heartsuit" />).
+    - Kejadian B: Dapat kartu **King**.
+      Apakah kejadian A dan B bisa terjadi barengan? Tentu bisa! Ada kartu yang merupakan Hati sekaligus King, yaitu kartu **King Hati** (<InlineMath math="K\heartsuit" />). Karena bisa terjadi barengan, kejadian A dan B ini **tidak saling lepas**.
+
+2.  **Lempar Dadu (satu kali):**
+
+    - Kejadian A: Dapat angka **genap** (<InlineMath math="\{2, 4, 6\}" />).
+    - Kejadian B: Dapat angka **lebih dari 3** (<InlineMath math="\{4, 5, 6\}" />).
+      Apakah bisa terjadi barengan? Bisa! Angka <InlineMath math="4" /> dan <InlineMath math="6" /> itu genap sekaligus lebih dari 3. Jadi, kejadian A dan B ini **tidak saling lepas**.
+
+## Irisan Itu Penting!
+
+Pada kejadian tidak saling lepas, ada bagian yang menjadi anggota kedua kejadian sekaligus. Bagian ini disebut **irisan**.
+
+Karena ada irisan, peluang kejadian A **DAN** B terjadi bersamaan itu **lebih dari nol**.
+
+<BlockMath math="P(A \text{ dan } B) > 0" />
+
+Atau pakai simbol irisan:
+
+<BlockMath math="P(A \cap B) > 0" />
+
+Ini beda banget sama kejadian saling lepas yang <InlineMath math="P(A \cap B) = 0" />.
+
+## Menghitung Peluang A ATAU B untuk Kejadian Tidak Saling Lepas
+
+Karena ada kemungkinan kejadian A dan B terjadi barengan, kita nggak bisa asal jumlahin <InlineMath math="P(A) + P(B)" /> untuk mencari <InlineMath math="P(A \text{ atau } B)" />.
+
+Kenapa? Karena kalau langsung dijumlah, bagian irisannya (<InlineMath math="A \cap B" />) jadi **kehitung dua kali**, sekali di <InlineMath math="P(A)" /> dan sekali lagi di <InlineMath math="P(B)" />.
+
+Biar hitungannya benar, kita harus **kurangkan** peluang irisan yang kehitung dobel itu. Jadilah **Aturan Penjumlahan Umum** untuk peluang:
+
+<BlockMath math="P(A \text{ atau } B) = P(A) + P(B) - P(A \cap B)" />
+
+Atau pakai simbol gabungan (union) dan irisan:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
+
+Rumus ini berlaku umum, bisa untuk kejadian saling lepas maupun tidak saling lepas. (Kalau saling lepas, <InlineMath math="P(A \cap B)" /> kan nol, jadi rumusnya kembali jadi <InlineMath math="P(A \cup B) = P(A) + P(B)" />).
+
+## Contoh Hitung
+
+Mari kita pakai contoh kartu:
+
+- Kejadian A: Dapat kartu Hati (<InlineMath math="\heartsuit" />). Ada 13 kartu Hati dari 52 kartu. <InlineMath math="P(A) = 13/52" />.
+- Kejadian B: Dapat kartu King. Ada 4 kartu King dari 52 kartu. <InlineMath math="P(B) = 4/52" />.
+- Kejadian A **dan** B: Dapat kartu King Hati (<InlineMath math="K\heartsuit" />). Cuma ada 1 kartu King Hati. <InlineMath math="P(A \cap B) = 1/52" />.
+
+Maka, peluang dapat kartu Hati ATAU kartu King adalah:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
+  <BlockMath math="= \frac{13}{52} + \frac{4}{52} - \frac{1}{52}" />
+  <BlockMath math="= \frac{16}{52} = \frac{4}{13}" />
+</div>
+
+Lihat kan, kita kurangi <InlineMath math="1/52" /> supaya kartu King Hati nggak kehitung dua kali.

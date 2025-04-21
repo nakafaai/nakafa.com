@@ -5,4 +5,69 @@ export const metadata = {
   subject: "Probability",
 };
 
-;
+## What Does Non-Mutually Exclusive Mean?
+
+We learned about [mutually exclusive events](/subject/high-school/10/mathematics/probability/two-events-mutually-exclusive) that can't happen together (like turning left and right at the same time). Now, let's talk about **Non-Mutually Exclusive Events**. These are two (or more) events that **CAN happen at the same time** in a single experiment.
+
+This means it's possible to get an outcome that belongs to event A and also belongs to event B.
+
+**Simple Examples:**
+
+1.  **Drawing a Card:** You draw one card from a standard deck.
+
+    - Event A: Getting a **Heart** (<InlineMath math="\heartsuit" />).
+    - Event B: Getting a **King**.
+      Can events A and B happen together? Absolutely! There's a card that is both a Heart and a King: the **King of Hearts** (<InlineMath math="K\heartsuit" />). Since they can happen together, events A and B are **non-mutually exclusive**.
+
+2.  **Rolling a Die (once):**
+    - Event A: Getting an **even** number (<InlineMath math="\{2, 4, 6\}" />).
+    - Event B: Getting a number **greater than 3** (<InlineMath math="\{4, 5, 6\}" />).
+      Can these happen together? Yes! The numbers <InlineMath math="4" /> and <InlineMath math="6" /> are both even and greater than 3. So, events A and B are **non-mutually exclusive**.
+
+## The Intersection is Important!
+
+In non-mutually exclusive events, there's a part that belongs to both events simultaneously. This part is called the **intersection**.
+
+Because there is an intersection, the probability of event A **AND** B happening together is **greater than zero**.
+
+<BlockMath math="P(A \text{ and } B) > 0" />
+
+Or using the intersection symbol:
+
+<BlockMath math="P(A \cap B) > 0" />
+
+This is very different from mutually exclusive events, where <InlineMath math="P(A \cap B) = 0" />.
+
+## Calculating P(A OR B) for Non-Mutually Exclusive Events
+
+Since there's a chance that events A and B can happen together, we can't just add <InlineMath math="P(A) + P(B)" /> to find <InlineMath math="P(A \text{ or } B)" />.
+
+Why not? Because if we simply add them, the intersection part (<InlineMath math="A \cap B" />) gets **counted twice**, once in <InlineMath math="P(A)" /> and again in <InlineMath math="P(B)" />.
+
+To get the correct calculation, we must **subtract** the probability of the intersection that was double-counted. This gives us the **General Addition Rule** for probability:
+
+<BlockMath math="P(A \text{ or } B) = P(A) + P(B) - P(A \cap B)" />
+
+Or using the union and intersection symbols:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
+
+This formula works generally, for both mutually exclusive and non-mutually exclusive events. (If they are mutually exclusive, <InlineMath math="P(A \cap B)" /> is zero, so the formula simplifies back to <InlineMath math="P(A \cup B) = P(A) + P(B)" />).
+
+## Calculation Example
+
+Let's use the card example:
+
+- Event A: Getting a Heart (<InlineMath math="\heartsuit" />). There are 13 Hearts in 52 cards. <InlineMath math="P(A) = 13/52" />.
+- Event B: Getting a King. There are 4 Kings in 52 cards. <InlineMath math="P(B) = 4/52" />.
+- Event A **and** B: Getting the King of Hearts (<InlineMath math="K\heartsuit" />). There is only 1 King of Hearts. <InlineMath math="P(A \cap B) = 1/52" />.
+
+So, the probability of getting a Heart OR a King is:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
+  <BlockMath math="= \frac{13}{52} + \frac{4}{52} - \frac{1}{52}" />
+  <BlockMath math="= \frac{16}{52} = \frac{4}{13}" />
+</div>
+
+See? We subtract <InlineMath math="1/52" /> so the King of Hearts isn't counted twice.
