@@ -39,7 +39,7 @@ export function UnitCircle({ title, description, angle = 45 }: Props) {
         <CoordinateSystem
           showZAxis={false}
           showOrigin={false}
-          cameraPosition={[0, 0, 3]}
+          cameraPosition={[0, 0, 4]}
         >
           <UnitCircle3D angle={angleValue} />
         </CoordinateSystem>

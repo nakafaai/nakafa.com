@@ -6,19 +6,20 @@ import {
   GizmoHelper,
   GizmoViewport,
   Grid,
+  Instance,
+  Instances,
   Line,
   OrbitControls,
   PerspectiveCamera,
   Text,
 } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
 import { Grid2X2XIcon, PauseIcon, PlayIcon } from "lucide-react";
 import { Grid2x2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import dynamic from "next/dynamic";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, Suspense, useMemo, useState } from "react";
 import * as THREE from "three";
+import { ThreeCanvas } from "../three/canvas";
 import { Button } from "./button";
 
 export const COLORS = {
@@ -240,6 +241,7 @@ export function Axes({
   labelSize = 0.5,
   labelOffset = 0.5,
   font = "mono",
+  visible = true,
 }: {
   size?: number;
   showLabels?: boolean;
@@ -247,6 +249,7 @@ export function Axes({
   labelSize?: number;
   labelOffset?: number;
   font?: CoordinateSystemProps["font"];
+  visible?: boolean;
 }) {
   // Create points for each axis (now extending in both positive and negative directions)
   const xPoints = useMemo(
@@ -267,73 +270,77 @@ export function Axes({
   const fontToUse = font === "mono" ? MONO_FONT_PATH : FONT_PATH;
 
   return (
-    <group>
+    <group visible={visible}>
       <Line points={xPoints} color={COLORS.RED} lineWidth={2} />
       <Line points={yPoints} color={COLORS.GREEN} lineWidth={2} />
-      {showZAxis && <Line points={zPoints} color={COLORS.BLUE} lineWidth={2} />}
+      <Line
+        visible={showZAxis}
+        points={zPoints}
+        color={COLORS.BLUE}
+        lineWidth={2}
+      />
 
-      {showLabels && (
-        <>
-          <Text
-            position={[size + labelOffset, 0, 0]}
-            color={COLORS.RED}
-            fontSize={labelSize}
-            anchorX="left"
-            font={fontToUse}
-          >
-            X
-          </Text>
-          <Text
-            position={[-size - labelOffset, 0, 0]}
-            color={COLORS.RED}
-            fontSize={labelSize}
-            anchorX="right"
-            font={fontToUse}
-          >
-            -X
-          </Text>
-          <Text
-            position={[0, size + labelOffset, 0]}
-            color={COLORS.GREEN}
-            fontSize={labelSize}
-            anchorX="left"
-            font={fontToUse}
-          >
-            Y
-          </Text>
-          <Text
-            position={[0, -size - labelOffset, 0]}
-            color={COLORS.GREEN}
-            fontSize={labelSize}
-            anchorX="left"
-            font={fontToUse}
-          >
-            -Y
-          </Text>
-          {showZAxis && (
-            <>
-              <Text
-                position={[0, 0, size + labelOffset]}
-                color={COLORS.BLUE}
-                fontSize={labelSize}
-                anchorX="left"
-                font={fontToUse}
-              >
-                Z
-              </Text>
-              <Text
-                position={[0, 0, -size - labelOffset]}
-                color={COLORS.BLUE}
-                fontSize={labelSize}
-                anchorX="left"
-                font={fontToUse}
-              >
-                -Z
-              </Text>
-            </>
-          )}
-        </>
-      )}
+      <Text
+        visible={showLabels}
+        position={[size + labelOffset, 0, 0]}
+        color={COLORS.RED}
+        fontSize={labelSize}
+        anchorX="left"
+        font={fontToUse}
+      >
+        X
+      </Text>
+      <Text
+        visible={showLabels}
+        position={[-size - labelOffset, 0, 0]}
+        color={COLORS.RED}
+        fontSize={labelSize}
+        anchorX="right"
+        font={fontToUse}
+      >
+        -X
+      </Text>
+      <Text
+        visible={showLabels}
+        position={[0, size + labelOffset, 0]}
+        color={COLORS.GREEN}
+        fontSize={labelSize}
+        anchorX="left"
+        font={fontToUse}
+      >
+        Y
+      </Text>
+      <Text
+        visible={showLabels}
+        position={[0, -size - labelOffset, 0]}
+        color={COLORS.GREEN}
+        fontSize={labelSize}
+        anchorX="left"
+        font={fontToUse}
+      >
+        -Y
+      </Text>
+
+      <Text
+        visible={showZAxis && showLabels}
+        position={[0, 0, size + labelOffset]}
+        color={COLORS.BLUE}
+        fontSize={labelSize}
+        anchorX="left"
+        font={fontToUse}
+      >
+        Z
+      </Text>
+      <Text
+        visible={showZAxis && showLabels}
+        position={[0, 0, -size - labelOffset]}
+        color={COLORS.BLUE}
+        fontSize={labelSize}
+        anchorX="left"
+        font={fontToUse}
+      >
+        -Z
+      </Text>
     </group>
   );
 }
@@ -344,9 +351,14 @@ export function Axes({
 export function Origin({
   size = 0.2,
   color = ORIGIN_COLOR.LIGHT,
-}: { size?: number; color?: string }) {
+  visible = true,
+}: {
+  size?: number;
+  color?: string;
+  visible?: boolean;
+}) {
   return (
-    <mesh>
+    <mesh visible={visible}>
       <sphereGeometry args={[size, 16, 16]} />
       <meshBasicMaterial color={color} />
     </mesh>
@@ -445,17 +457,16 @@ export function ArrowHelper({
         )}
       />
 
-      {label && (
-        <Text
-          position={[labelPos.x, labelPos.y, labelPos.z]}
-          color={color instanceof THREE.Color ? color.getStyle() : color}
-          fontSize={0.5}
-          anchorX="left"
-          font={fontToUse}
-        >
-          {label}
-        </Text>
-      )}
+      <Text
+        visible={!!label}
+        position={[labelPos.x, labelPos.y, labelPos.z]}
+        color={color instanceof THREE.Color ? color.getStyle() : color}
+        fontSize={0.5}
+        anchorX="left"
+        font={fontToUse}
+      >
+        {label}
+      </Text>
     </group>
   );
 }
@@ -527,11 +538,6 @@ export function Triangle({
   const adjacent = Math.cos(angleInRadians) * hypotenuse;
   const opposite = Math.sin(angleInRadians) * hypotenuse;
 
-  // Triangle points
-  const originPoint = new THREE.Vector3(0, 0, 0);
-  const adjacentPoint = new THREE.Vector3(adjacent, 0, 0);
-  const oppositePoint = new THREE.Vector3(adjacent, opposite, 0);
-
   // Calculate midpoints for labels
   const adjacentMidpoint = new THREE.Vector3(adjacent / 2, 0, 0);
   const oppositeMidpoint = new THREE.Vector3(adjacent, opposite / 2, 0);
@@ -553,6 +559,43 @@ export function Triangle({
   // Scale the angle arc radius based on triangle size - make it more proportional
   const arcRadius = 0.2 * Math.sqrt(size);
   const angleLabelDistance = 0.3 * Math.sqrt(size);
+
+  // Memoize triangle side segments
+  const triangleSideLines = useMemo(() => {
+    const origin = new THREE.Vector3(0, 0, 0);
+    const adj = new THREE.Vector3(adjacent, 0, 0);
+    const opp = new THREE.Vector3(adjacent, opposite, 0);
+    return [
+      [origin, adj],
+      [adj, opp],
+      [opp, origin],
+    ];
+  }, [adjacent, opposite]);
+
+  // Memoize the angle arc points
+  const triangleArcPoints = useMemo(() => {
+    const pts: THREE.Vector3[] = [];
+    for (let i = 0; i <= 30; i++) {
+      const a = (i / 30) * angleInRadians;
+      pts.push(
+        new THREE.Vector3(Math.cos(a) * arcRadius, Math.sin(a) * arcRadius, 0)
+      );
+    }
+    return pts;
+  }, [angleInRadians, arcRadius]);
+
+  // Vertices for instancing
+  const triangleVertices = useMemo(
+    () => triangleSideLines.map((pts) => pts[0]),
+    [triangleSideLines]
+  );
+
+  // Reuse sphere geometry and material for vertex markers
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 16, 16), []);
+  const sphereMat = useMemo(
+    () => new THREE.MeshBasicMaterial({ color: baseColor }),
+    [baseColor]
+  );
 
   // Determine label positions based on quadrant and angle
   const adjacentLabelPos = new THREE.Vector3();
@@ -645,35 +688,17 @@ export function Triangle({
   return (
     <group {...props}>
       {/* Draw the triangle sides */}
-      <Line
-        points={[originPoint, adjacentPoint]}
-        color={COLORS.CYAN}
-        lineWidth={2}
-      />
-      <Line
-        points={[adjacentPoint, oppositePoint]}
-        color={COLORS.ORANGE}
-        lineWidth={2}
-      />
-      <Line
-        points={[oppositePoint, originPoint]}
-        color={COLORS.ROSE}
-        lineWidth={2}
-      />
+      {triangleSideLines.map((pts, i) => (
+        <Line
+          key={i}
+          points={pts}
+          color={[COLORS.CYAN, COLORS.ORANGE, COLORS.ROSE][i]}
+          lineWidth={2}
+        />
+      ))}
 
       {/* Angle arc */}
-      <Line
-        points={Array.from({ length: 31 }).map((_, i) => {
-          const a = (i / 30) * angleInRadians;
-          return new THREE.Vector3(
-            Math.cos(a) * arcRadius,
-            Math.sin(a) * arcRadius,
-            0
-          );
-        })}
-        color={COLORS.VIOLET}
-        lineWidth={2}
-      />
+      <Line points={triangleArcPoints} color={COLORS.VIOLET} lineWidth={2} />
 
       {/* Angle label */}
       <Text
@@ -739,23 +764,31 @@ export function Triangle({
       </Text>
 
       {/* Points at vertices */}
-      <mesh position={originPoint} scale={vertexSize}>
-        <sphereGeometry args={[1, 16, 16]} />
-        <meshBasicMaterial color={baseColor} />
-      </mesh>
-
-      <mesh position={adjacentPoint} scale={vertexSize}>
-        <sphereGeometry args={[1, 16, 16]} />
-        <meshBasicMaterial color={baseColor} />
-      </mesh>
-
-      <mesh position={oppositePoint} scale={vertexSize}>
-        <sphereGeometry args={[1, 16, 16]} />
-        <meshBasicMaterial color={baseColor} />
-      </mesh>
+      <Instances
+        visible
+        geometry={sphereGeo}
+        material={sphereMat}
+        count={triangleVertices.length}
+      >
+        {triangleVertices.map((v, i) => (
+          <Instance key={i} position={[v.x, v.y, v.z]} scale={vertexSize} />
+        ))}
+      </Instances>
     </group>
   );
 }
+
+// After import * as THREE from "three";
+const UNIT_CIRCLE_SEGMENTS = 64;
+const UNIT_ARC_SEGMENTS = 24;
+const STATIC_CIRCLE_POINTS: THREE.Vector3[] = (() => {
+  const pts: THREE.Vector3[] = [];
+  for (let i = 0; i <= UNIT_CIRCLE_SEGMENTS; i++) {
+    const a = (i / UNIT_CIRCLE_SEGMENTS) * Math.PI * 2;
+    pts.push(new THREE.Vector3(Math.cos(a), Math.sin(a), 0));
+  }
+  return pts;
+})();
 
 /**
  * Trigonometry component for displaying trigonometric functions
@@ -775,6 +808,19 @@ export function UnitCircle({
   const sin = getSin(angle);
   const cos = getCos(angle);
   const tan = getTan(angle);
+
+  // Use precomputed circle outline points (static)
+  const circlePoints = STATIC_CIRCLE_POINTS;
+
+  // Memoize angle arc points
+  const arcPoints = useMemo(() => {
+    const pts: THREE.Vector3[] = [];
+    for (let i = 0; i <= UNIT_ARC_SEGMENTS; i++) {
+      const a = (i / UNIT_ARC_SEGMENTS) * angleInRadians;
+      pts.push(new THREE.Vector3(Math.cos(a) * 0.3, Math.sin(a) * 0.3, 0));
+    }
+    return pts;
+  }, [angleInRadians]);
 
   // Format values according to display mode
   const formatValue = (value: number) => {
@@ -861,10 +907,7 @@ export function UnitCircle({
       <group rotation={[0, 0, 0]}>
         {/* Circle outline */}
         <Line
-          points={Array.from({ length: 101 }).map((_, i) => {
-            const a = (i / 100) * Math.PI * 2;
-            return new THREE.Vector3(Math.cos(a), Math.sin(a), 0);
-          })}
+          points={circlePoints}
           color={
             resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK
           }
@@ -872,30 +915,22 @@ export function UnitCircle({
         />
 
         {/* Angle arc */}
-        <Line
-          points={Array.from({ length: 31 }).map((_, i) => {
-            const a = (i / 30) * angleInRadians;
-            return new THREE.Vector3(Math.cos(a) * 0.3, Math.sin(a) * 0.3, 0);
-          })}
-          color={COLORS.VIOLET}
-          lineWidth={2}
-        />
+        <Line points={arcPoints} color={COLORS.VIOLET} lineWidth={2} />
 
         {/* Angle label */}
-        {showLabels && (
-          <Text
-            position={[
-              Math.cos(angleInRadians / 2) * 0.5,
-              Math.sin(angleInRadians / 2) * 0.4,
-              0,
-            ]}
-            color={COLORS.VIOLET}
-            fontSize={0.12}
-            font={fontPath}
-          >
-            {`${angle}°`}
-          </Text>
-        )}
+        <Text
+          position={[
+            Math.cos(angleInRadians / 2) * 0.5,
+            Math.sin(angleInRadians / 2) * 0.4,
+            0,
+          ]}
+          color={COLORS.VIOLET}
+          fontSize={0.12}
+          font={fontPath}
+          visible={showLabels}
+        >
+          {`${angle}°`}
+        </Text>
 
         {/* Point on circle */}
         <mesh position={[cos, sin, 0]}>
@@ -932,37 +967,36 @@ export function UnitCircle({
         />
 
         {/* Trig value labels */}
-        {showLabels && (
-          <>
-            <Text
-              position={[cos / 2, -0.2, 0]}
-              color={COLORS.CYAN}
-              fontSize={0.12}
-              font={fontPath}
-              anchorX="center"
-            >
-              {cosLabel}
-            </Text>
-            <Text
-              position={[cos + 0.3, sin / 2, 0]}
-              color={COLORS.ORANGE}
-              fontSize={0.12}
-              font={fontPath}
-              anchorX="left"
-              anchorY="middle"
-            >
-              {sinLabel}
-            </Text>
-            <Text
-              position={[1.1, 1.1, 0]}
-              color={COLORS.ROSE}
-              fontSize={0.12}
-              font={fontPath}
-            >
-              {tanLabel}
-            </Text>
-          </>
-        )}
+        <Text
+          visible={showLabels}
+          position={[cos / 2, -0.2, 0]}
+          color={COLORS.CYAN}
+          fontSize={0.12}
+          font={fontPath}
+          anchorX="center"
+        >
+          {cosLabel}
+        </Text>
+        <Text
+          visible={showLabels}
+          position={[cos + 0.2, sin / 2, 0]}
+          color={COLORS.ORANGE}
+          fontSize={0.12}
+          font={fontPath}
+          anchorX="left"
+          anchorY="middle"
+        >
+          {sinLabel}
+        </Text>
+        <Text
+          visible={showLabels}
+          position={[1.1, 1.1, 0]}
+          color={COLORS.ROSE}
+          fontSize={0.12}
+          font={fontPath}
+        >
+          {tanLabel}
+        </Text>
       </group>
     </group>
   );
@@ -1010,18 +1044,29 @@ export function LineEquation({
 
   const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
 
+  const pointGeom = useMemo(() => new THREE.SphereGeometry(0.1, 16, 16), []);
+  const pointMat = useMemo(
+    () => new THREE.MeshBasicMaterial({ color }),
+    [color]
+  );
+
   return (
     <group>
       {/* Draw a line connecting the provided points */}
       <Line points={linePoints} color={color} lineWidth={lineWidth} />
       {/* Optionally render a small sphere at each point */}
-      {showPoints &&
-        vectorPoints.map((vec, index) => (
-          <mesh key={index} position={vec}>
-            <sphereGeometry args={[0.1, 16, 16]} />
-            <meshBasicMaterial color={color} />
-          </mesh>
+
+      <Instances
+        visible={showPoints}
+        geometry={pointGeom}
+        material={pointMat}
+        count={vectorPoints.length}
+      >
+        {vectorPoints.map((v, i) => (
+          <Instance key={i} position={[v.x, v.y, v.z]} />
         ))}
+      </Instances>
+
       {/* Render custom labels at specified indices */}
       {labels.map((label, idx) => {
         // Determine label index (default to midpoint)
@@ -1515,35 +1560,53 @@ export function Inequality({
   // Default boundary color is the same as the region color but more opaque
   const finalBoundaryColor = boundaryColor || color;
 
+  // Combine all boundary lines into a single BufferGeometry for fewer draw calls
+  const boundarySegmentsGeometry = useMemo(() => {
+    if (!showBoundary || boundaryLines.length === 0) {
+      return undefined;
+    }
+    const vertices: number[] = [];
+    for (const line of boundaryLines) {
+      for (let i = 0; i < line.length - 1; i++) {
+        const p1 = line[i];
+        const p2 = line[i + 1];
+        // push each segment as two points
+        vertices.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+      }
+    }
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(vertices, 3)
+    );
+    return geom;
+  }, [boundaryLines, showBoundary]);
+
   return (
     <group>
       {/* Render the shaded region */}
       <mesh geometry={geometry} material={material} />
 
-      {/* Render the boundary lines */}
-      {showBoundary &&
-        boundaryLines.map((linePoints, index) => (
-          <Line
-            key={`boundary-line-${index}`}
-            points={linePoints}
-            color={finalBoundaryColor}
-            lineWidth={boundaryLineWidth}
-          />
-        ))}
+      {/* Render the boundary as one lineSegments for better performance */}
+      <lineSegments visible={showBoundary} geometry={boundarySegmentsGeometry}>
+        <lineBasicMaterial
+          color={finalBoundaryColor}
+          linewidth={boundaryLineWidth}
+        />
+      </lineSegments>
 
       {/* Render label if provided */}
-      {label && (
-        <Text
-          position={label.position}
-          color={label.color ?? color}
-          fontSize={label.fontSize ?? 0.5}
-          anchorX="center"
-          anchorY="middle"
-          font={fontPath}
-        >
-          {label.text}
-        </Text>
-      )}
+      <Text
+        visible={!!label}
+        position={label?.position ?? [0, 0, 0]}
+        color={label?.color ?? color}
+        fontSize={label?.fontSize ?? 0.5}
+        anchorX="center"
+        anchorY="middle"
+        font={fontPath}
+      >
+        {label?.text}
+      </Text>
     </group>
   );
 }
@@ -1551,7 +1614,7 @@ export function Inequality({
 /**
  * CoordinateSystem component for creating a 3D coordinate system
  */
-function CoordinateSystemComponent({
+export function CoordinateSystem({
   showGrid: initialShowGrid = true,
   showAxes = true,
   showZAxis = true,
@@ -1596,79 +1659,82 @@ function CoordinateSystemComponent({
   return (
     <div
       className={cn(
-        "relative aspect-square overflow-hidden rounded-md sm:aspect-video",
+        "relative aspect-square overflow-hidden rounded-md sm:aspect-[1.43/1]", // IMAX aspect ratio
         className
       )}
     >
-      <Canvas
-        shadows
-        dpr={[1, 2]}
-        gl={{ antialias: true }}
+      <ThreeCanvas
         style={{ background: backgroundColor }}
         onCreated={() => setTimeout(() => setSceneReady(true), 100)}
       >
-        <CameraControls cameraPosition={cameraPosition} autoRotate={play} />
+        <Suspense fallback={null}>
+          <CameraControls cameraPosition={cameraPosition} autoRotate={play} />
 
-        {/* Lighting */}
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1} castShadow />
+          {/* Lighting */}
+          <ambientLight intensity={0.5} />
+          <pointLight position={[10, 10, 10]} intensity={1} castShadow />
 
-        {/* Coordinate System */}
-        {showAxes && (
+          {/* Coordinate System */}
+
           <Axes
+            visible={showAxes}
             size={size}
             showLabels={showLabels}
             showZAxis={showZAxis}
             font={font}
           />
-        )}
-        {showOrigin && <Origin color={originColor} />}
-        {/* Grid */}
-        {showGrid && (
-          <>
-            <Grid
-              args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
-              position={[0, 0, 0]}
-              rotation={[0, 0, 0]}
-              cellColor={gridColors.secondary}
-              sectionColor={gridColors.main}
-              fadeDistance={50}
-              fadeStrength={1}
-            />
-            <Grid
-              args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
-              position={[0, 0, 0]}
-              rotation={[Math.PI / 2, 0, 0]}
-              cellColor={gridColors.secondary}
-              sectionColor={gridColors.main}
-              fadeDistance={50}
-              fadeStrength={1}
-            />
-            <Grid
-              args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
-              position={[0, 0, 0]}
-              rotation={[0, 0, Math.PI / 2]}
-              cellColor={gridColors.secondary}
-              sectionColor={gridColors.main}
-              fadeDistance={50}
-              fadeStrength={1}
-            />
-          </>
-        )}
 
-        {/* User Content */}
-        {children}
+          {/* Origin */}
+          <Origin visible={showOrigin} color={originColor} />
 
-        {/* Orientation Helper */}
-        {showGizmo && (
-          <GizmoHelper alignment="bottom-right" margin={[56, 56]}>
+          {/* Grid */}
+          <Grid
+            visible={showGrid}
+            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
+            position={[0, 0, 0]}
+            rotation={[0, 0, 0]}
+            cellColor={gridColors.secondary}
+            sectionColor={gridColors.main}
+            fadeDistance={50}
+            fadeStrength={1}
+          />
+          <Grid
+            visible={showGrid}
+            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
+            position={[0, 0, 0]}
+            rotation={[Math.PI / 2, 0, 0]}
+            cellColor={gridColors.secondary}
+            sectionColor={gridColors.main}
+            fadeDistance={50}
+            fadeStrength={1}
+          />
+          <Grid
+            visible={showGrid}
+            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
+            position={[0, 0, 0]}
+            rotation={[0, 0, Math.PI / 2]}
+            cellColor={gridColors.secondary}
+            sectionColor={gridColors.main}
+            fadeDistance={50}
+            fadeStrength={1}
+          />
+
+          {/* User Content */}
+          {children}
+
+          {/* Orientation Helper */}
+          <GizmoHelper
+            visible={showGizmo}
+            alignment="bottom-right"
+            margin={[56, 56]}
+          >
             <GizmoViewport
               axisColors={[COLORS.RED, COLORS.GREEN, COLORS.BLUE]}
               labelColor={ORIGIN_COLOR.LIGHT}
             />
           </GizmoHelper>
-        )}
-      </Canvas>
+        </Suspense>
+      </ThreeCanvas>
 
       {/* UI Controls */}
       <div
@@ -1705,11 +1771,3 @@ function CoordinateSystemComponent({
     </div>
   );
 }
-export const CoordinateSystem = dynamic(
-  () => Promise.resolve(CoordinateSystemComponent),
-  {
-    loading: () => (
-      <div className="relative aspect-square overflow-hidden rounded-md sm:aspect-video" />
-    ),
-  }
-);
