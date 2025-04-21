@@ -18,6 +18,7 @@ import { Grid2x2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import {
+  type CSSProperties,
   type ComponentProps,
   type ReactNode,
   Suspense,
@@ -119,7 +120,7 @@ type CoordinateSystemProps = {
   /** Size of the coordinate system */
   size?: number;
   /** Background color of the canvas */
-  backgroundColor?: string;
+  backgroundColor?: CSSProperties["backgroundColor"];
   /** Custom camera position */
   cameraPosition?: [number, number, number];
   /** Font to use for labels and text
