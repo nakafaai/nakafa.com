@@ -4,3 +4,137 @@ export const metadata = {
   date: "04/21/2025",
   subject: "Probability",
 };
+
+## What is a Probability Distribution Anyway?
+
+Imagine you're playing a game of rolling dice. A probability distribution is like a complete list of all possible outcomes when you roll the dice, plus it tells you how big the chance (probability) is for each outcome to appear. Simply put, it's a list of possibilities and how often they happen.
+
+## Getting to Know the Sample Space (All Possible Outcomes)
+
+The sample space is like the collection of all outcomes that _can_ happen in an experiment. We usually write it using the symbol <InlineMath math="\Omega" /> (Omega).
+
+For example, if you roll a standard die with <InlineMath math="6" /> sides:
+The numbers that can show up are <InlineMath math="1, 2, 3, 4, 5," /> or <InlineMath math="6" />. Well, all these possibilities gathered together are called the sample space.
+
+<BlockMath math="\Omega = \{1, 2, 3, 4, 5, 6\}" />
+
+There are a total of <InlineMath math="6" /> possible outcomes here.
+
+## Events and Their Probabilities
+
+### What is an Event?
+
+An event is one or more _specific_ outcomes that we are interested in from the sample space. An event is a smaller part of the sample space.
+
+**Example**:
+
+From rolling one die earlier (<InlineMath math="\Omega = \{1, 2, 3, 4, 5, 6\}" />), let's say we want to look at the event "getting an even number".
+The even numbers there are <InlineMath math="2, 4," /> and <InlineMath math="6" />. So, the event of getting an even number (let's call it event A) is:
+
+<BlockMath math="A = \{2, 4, 6\}" />
+
+There are <InlineMath math="3" /> outcomes in this event A.
+
+### Calculating the Probability of an Event
+
+Probability is a number that shows how likely an event is to happen. Calculating it is easy:
+
+<BlockMath math="P(\text{Event}) = \frac{\text{Number of outcomes in that event}}{\text{Total number of outcomes in the sample space}}" />
+
+Using the symbols from our example:
+
+<BlockMath math="P(A) = \frac{|A|}{|\Omega|}" />
+
+Where:
+
+- <InlineMath math="|A|" /> means the number of outcomes in event A (there were <InlineMath math="3" />
+  , right?).
+- <InlineMath math="|\Omega|" /> means the total number of outcomes in the sample
+  space (there were <InlineMath math="6" />, right?).
+
+So, the probability of the event "getting an even number" (event A) is:
+
+<BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+
+This means the chance is half-and-half, or <InlineMath math="50\%" />.
+
+## Rules of the Game for Probability Distributions
+
+Probability distributions have two important rules:
+
+1.  The probability of each outcome (<InlineMath math="P(x)" />) must be a value between <InlineMath math="0" /> and <InlineMath math="1" />. It can't be negative or greater than <InlineMath math="1" />.
+
+    <BlockMath math="0 \leq P(x) \leq 1" />
+
+2.  If you add up all the probabilities for every outcome in the sample space, the total must be exactly <InlineMath math="1" />.
+
+    <BlockMath math="\sum_{x \in \Omega} P(x) = 1" />
+
+## Rolling One Die
+
+If we roll one fair die (meaning each side has an equal chance of showing up), the distribution looks like this:
+
+| Outcome <InlineMath math="x" /> | Probability <InlineMath math="P(x)" /> |
+| :------------------------------ | :------------------------------------- |
+| <InlineMath math="1" />         | <InlineMath math="1/6" />              |
+| <InlineMath math="2" />         | <InlineMath math="1/6" />              |
+| <InlineMath math="3" />         | <InlineMath math="1/6" />              |
+| <InlineMath math="4" />         | <InlineMath math="1/6" />              |
+| <InlineMath math="5" />         | <InlineMath math="1/6" />              |
+| <InlineMath math="6" />         | <InlineMath math="1/6" />              |
+
+**Why are they all <InlineMath math="1/6" />?**
+
+Because there are <InlineMath math="6" /> sides, and the die is fair, so each side has <InlineMath math="1" /> chance out of the total <InlineMath math="6" /> possibilities. Try adding up all the probabilities: <InlineMath math="1/6 + 1/6 + 1/6 + 1/6 + 1/6 + 1/6 = 6/6 = 1" />. It fits the second rule perfectly!
+
+## Rolling Two Dice
+
+Now imagine rolling two dice, say **one red die and one white die**. If we list all the possible pairs of numbers that can appear, there will be <InlineMath math="36" /> possibilities!
+
+**Why <InlineMath math="36" />?**
+
+Because the first die has <InlineMath math="6" /> possibilities, the second die also has <InlineMath math="6" />, so the total is <InlineMath math="6 \times 6 = 36" /> pairs.
+
+The resulting pairs can be written like this:
+
+- Red Die 1, White Die 1 -> (1, 1)
+- Red Die 1, White Die 2 -> (1, 2)
+- ... and so on until ...
+- Red Die 6, White Die 6 -> (6, 6)
+
+Each of these pairs has an equally small probability, which is <InlineMath math="1/36" />.
+
+**Important! Distinguish between (1, 2) and (2, 1)!**
+
+If the dice are different colors (like red and white), getting a <InlineMath math="3" /> on the red die and a <InlineMath math="2" /> on the white die is different from getting a <InlineMath math="2" /> on the red die and a <InlineMath math="3" /> on the white die. So, the order matters if the dice can be distinguished.
+
+### Probability Distribution for the Sum of Two Dice
+
+Often, we are interested in the _sum_ of the numbers on the two dice. The smallest sum is <InlineMath math="1+1=2" />, and the largest is <InlineMath math="6+6=12" />. The probability for each sum varies:
+
+| Sum of Numbers <InlineMath math="j" /> | Possible Pairs                                                 | Number of Pairs         | Probability <InlineMath math="P(j)" /> |
+| :------------------------------------- | :------------------------------------------------------------- | :---------------------- | :------------------------------------- |
+| <InlineMath math="2" />                | <InlineMath math="(1,1)" />                                    | <InlineMath math="1" /> | <InlineMath math="1/36" />             |
+| <InlineMath math="3" />                | <InlineMath math="(1,2), (2,1)" />                             | <InlineMath math="2" /> | <InlineMath math="2/36" />             |
+| <InlineMath math="4" />                | <InlineMath math="(1,3), (2,2), (3,1)" />                      | <InlineMath math="3" /> | <InlineMath math="3/36" />             |
+| <InlineMath math="5" />                | <InlineMath math="(1,4), (2,3), (3,2), (4,1)" />               | <InlineMath math="4" /> | <InlineMath math="4/36" />             |
+| <InlineMath math="6" />                | <InlineMath math="(1,5), (2,4), (3,3), (4,2), (5,1)" />        | <InlineMath math="5" /> | <InlineMath math="5/36" />             |
+| <InlineMath math="7" />                | <InlineMath math="(1,6), (2,5), (3,4), (4,3), (5,2), (6,1)" /> | <InlineMath math="6" /> | <InlineMath math="6/36" />             |
+| <InlineMath math="8" />                | <InlineMath math="(2,6), (3,5), (4,4), (5,3), (6,2)" />        | <InlineMath math="5" /> | <InlineMath math="5/36" />             |
+| <InlineMath math="9" />                | <InlineMath math="(3,6), (4,5), (5,4), (6,3)" />               | <InlineMath math="4" /> | <InlineMath math="4/36" />             |
+| <InlineMath math="10" />               | <InlineMath math="(4,6), (5,5), (6,4)" />                      | <InlineMath math="3" /> | <InlineMath math="3/36" />             |
+| <InlineMath math="11" />               | <InlineMath math="(5,6), (6,5)" />                             | <InlineMath math="2" /> | <InlineMath math="2/36" />             |
+| <InlineMath math="12" />               | <InlineMath math="(6,6)" />                                    | <InlineMath math="1" /> | <InlineMath math="1/36" />             |
+
+Look, the sum <InlineMath math="7" /> is the most common outcome (<InlineMath math="6/36" />), while sums <InlineMath math="2" /> and <InlineMath math="12" /> are the rarest (<InlineMath math="1/36" />). This is very important in many board games!
+
+## Why is Learning Probability Distribution Important?
+
+Probability distributions are useful for many things:
+
+- **Knowing what's more likely:** We can see which outcomes have the biggest chance of happening and which ones have the smallest. Like knowing that a sum of 7 is more likely than a sum of 12.
+- **Playing games:** Many games (like Monopoly, Snakes and Ladders, etc.) use dice. Understanding probability distributions can help us make better strategies (although there's still luck involved!).
+- **Simple predictions:** It can help us make educated guesses. For example, knowing the weather distribution can help predict the chance of rain tomorrow.
+- **Making decisions:** In business or science, probability distributions are used to make decisions based on data, so we don't just guess randomly.
+
+In short, probability distributions help us understand uncertainty using numbers!
