@@ -7,16 +7,16 @@ export function ReadingRoomProblem() {
         {/* Main container - Classroom */}
         <div className="relative aspect-[3/2] w-full border bg-card shadow-sm">
           {/* Top left corner square */}
-          <div className="absolute top-0 left-0 aspect-square w-[12.5%] border-r border-b bg-blue-400" />
+          <div className="absolute top-0 left-0 aspect-square w-[12.5%] border-r border-b bg-chart-1" />
 
           {/* Top right corner square */}
-          <div className="absolute top-0 right-0 aspect-square w-[12.5%] border-b border-l bg-green-400" />
+          <div className="absolute top-0 right-0 aspect-square w-[12.5%] border-b border-l bg-chart-2" />
 
           {/* Bottom left corner square */}
-          <div className="absolute bottom-0 left-0 aspect-square w-[12.5%] border-t border-r bg-red-400" />
+          <div className="absolute bottom-0 left-0 aspect-square w-[12.5%] border-t border-r bg-chart-3" />
 
           {/* Bottom right corner square */}
-          <div className="absolute right-0 bottom-0 aspect-square w-[12.5%] border-t border-l bg-orange-400" />
+          <div className="absolute right-0 bottom-0 aspect-square w-[12.5%] border-t border-l bg-chart-4" />
 
           {/* Red dots at corners */}
           <div className="-translate-x-1 -translate-y-1 absolute top-0 left-0 size-2 transform rounded-full bg-border" />
