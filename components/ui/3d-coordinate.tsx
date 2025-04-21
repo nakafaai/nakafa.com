@@ -194,6 +194,10 @@ export type LineEquationProps = {
   points: CoordinatePoint[];
   color?: string | THREE.Color;
   lineWidth?: number;
+  /**
+   * Whether to use the mono font for the labels
+   */
+  useMonoFont?: boolean;
   showPoints?: boolean;
   /**
    * Whether to render the line as a smooth curve using CatmullRomCurve3
@@ -984,6 +988,7 @@ export function LineEquation({
   smooth = false,
   curvePoints = 50,
   labels = [],
+  useMonoFont = true,
 }: LineEquationProps) {
   const vectorPoints = useMemo(
     () => points.map((point) => new THREE.Vector3(point.x, point.y, point.z)),
@@ -1002,6 +1007,8 @@ export function LineEquation({
     // Generate points along the curve
     return curve.getPoints(curvePoints);
   }, [vectorPoints, smooth, curvePoints]);
+
+  const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
 
   return (
     <group>
@@ -1038,6 +1045,7 @@ export function LineEquation({
             fontSize={label.fontSize ?? 0.5}
             anchorX="center"
             anchorY="middle"
+            font={fontPath}
           >
             {label.text}
           </Text>
@@ -1089,6 +1097,8 @@ export type InequalityProps = {
     /** Font size of the label text */
     fontSize?: number;
   };
+  /** Whether to use the mono font for the labels */
+  useMonoFont?: boolean;
 };
 
 /**
@@ -1109,7 +1119,10 @@ export function Inequality({
   boundaryLineWidth = 2,
   showBoundary = true,
   label,
+  useMonoFont = true,
 }: InequalityProps) {
+  const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
+
   // Create a buffer geometry to hold the vertices of the inequality region
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function, but it's necessary for the inequality visualization
   const geometry = useMemo(() => {
@@ -1526,7 +1539,7 @@ export function Inequality({
           fontSize={label.fontSize ?? 0.5}
           anchorX="center"
           anchorY="middle"
-          font={MONO_FONT_PATH}
+          font={fontPath}
         >
           {label.text}
         </Text>
