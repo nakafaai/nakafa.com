@@ -9,7 +9,12 @@ function CanvasComponent({
   ...props
 }: { children: ReactNode } & CanvasProps) {
   return (
-    <Canvas {...props} shadows dpr={[1, 2]} gl={{ antialias: true }}>
+    <Canvas
+      {...props}
+      shadows
+      dpr={[1, 4]}
+      gl={{ antialias: true, powerPreference: "high-performance" }}
+    >
       {children}
     </Canvas>
   );
