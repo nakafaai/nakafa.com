@@ -39,15 +39,27 @@ export function Triangle({
   size = 2,
   labels,
 }: Props) {
-  const t = useTranslations("Common");
-  const [angleValue, setAngleValue] = useState(angle);
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
+      <Content angle={angle} size={size} labels={labels} />
+    </Card>
+  );
+}
+
+function Content({
+  angle,
+  size,
+  labels,
+}: { angle: number; size: number; labels?: Props["labels"] }) {
+  const t = useTranslations("Common");
+  const [angleValue, setAngleValue] = useState(angle);
+
+  return (
+    <>
       <CardContent>
         <CoordinateSystem
           showZAxis={false}
@@ -107,6 +119,6 @@ export function Triangle({
           </div>
         </div>
       </CardFooter>
-    </Card>
+    </>
   );
 }

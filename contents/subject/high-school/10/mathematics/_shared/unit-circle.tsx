@@ -26,15 +26,23 @@ type Props = {
 };
 
 export function UnitCircle({ title, description, angle = 45 }: Props) {
-  const t = useTranslations("Common");
-  const [angleValue, setAngleValue] = useState(angle);
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
+      <Content angle={angle} />
+    </Card>
+  );
+}
+
+function Content({ angle }: { angle: number }) {
+  const t = useTranslations("Common");
+  const [angleValue, setAngleValue] = useState(angle);
+
+  return (
+    <>
       <CardContent>
         <CoordinateSystem
           showZAxis={false}
@@ -73,6 +81,6 @@ export function UnitCircle({ title, description, angle = 45 }: Props) {
           </div>
         </div>
       </CardFooter>
-    </Card>
+    </>
   );
 }
