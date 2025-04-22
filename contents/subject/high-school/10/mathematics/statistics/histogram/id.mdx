@@ -1,6 +1,122 @@
+import { HistogramChart, BarChart } from "./chart";
+
 export const metadata = {
   title: "Histogram",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/22/2025",
   subject: "Statistika",
 };
+
+## Pengenalan Histogram
+
+Kamu pasti sering melihat diagram batang untuk menyajikan data. Nah, histogram adalah kerabat dekat diagram batang, tapi punya kegunaan yang spesifik. Mari kita bandingkan keduanya dulu supaya paham perbedaannya.
+
+## Diagram Batang vs Histogram
+
+Diagram batang digunakan untuk data kategori (seperti merek HP atau jenis olahraga favorit):
+
+<BarChart
+  title="Diagram Batang Merek HP yang Digunakan Siswa SMA"
+  description="Menunjukkan jumlah siswa per merek HP."
+  data={[
+    { name: "Apple", value: 12, fill: "var(--chart-1)" },
+    { name: "Samsung", value: 10, fill: "var(--chart-2)" },
+    { name: "Xiaomi", value: 8, fill: "var(--chart-3)" },
+    { name: "Oppo", value: 5, fill: "var(--chart-4)" },
+    { name: "Lenovo", value: 5, fill: "var(--chart-5)" },
+  ]}
+  chartConfig={{
+    value: { label: "Jumlah Siswa" },
+    Apple: { label: "Apple", color: "var(--chart-1)" },
+    Samsung: { label: "Samsung", color: "var(--chart-2)" },
+    Xiaomi: { label: "Xiaomi", color: "var(--chart-3)" },
+    Oppo: { label: "Oppo", color: "var(--chart-4)" },
+    Lenovo: { label: "Lenovo", color: "var(--chart-5)" },
+  }}
+  yAxisLabel="Jumlah Siswa"
+/>
+
+Pada diagram batang di atas:
+
+- Merek Apple paling banyak digunakan (12 siswa)
+- Merek Samsung di posisi kedua (10 siswa)
+- Merek Xiaomi di posisi ketiga (8 siswa)
+- Merek Oppo dan Lenovo sama-sama digunakan oleh 5 siswa
+
+Perhatikan bahwa setiap batang **terpisah** satu sama lain karena mewakili kategori yang berbeda.
+
+Histogram, di sisi lain, digunakan untuk data angka yang dikelompokkan dalam interval, seperti lama waktu atau tinggi badan. Batang-batangnya menempel karena interval nilainya berkelanjutan.
+
+<HistogramChart
+  title="Histogram Penggunaan Telepon Genggam oleh Siswa SMA"
+  description="Menunjukkan distribusi lama waktu siswa menggunakan HP per hari."
+  data={[
+    { name: "0-2", value: 10, fill: "var(--chart-1)" },
+    { name: "2-4", value: 12, fill: "var(--chart-2)" },
+    { name: "4-6", value: 32, fill: "var(--chart-3)" },
+    { name: "6-8", value: 28, fill: "var(--chart-4)" },
+    { name: "8-10", value: 8, fill: "var(--chart-5)" },
+  ]}
+  chartConfig={{
+    value: {
+      label: "Frekuensi",
+    },
+    "0-2": {
+      label: "0-2 jam",
+      color: "var(--chart-1)",
+    },
+    "2-4": {
+      label: "2-4 jam",
+      color: "var(--chart-2)",
+    },
+    "4-6": {
+      label: "4-6 jam",
+      color: "var(--chart-3)",
+    },
+    "6-8": {
+      label: "6-8 jam",
+      color: "var(--chart-4)",
+    },
+    "8-10": {
+      label: "8-10 jam",
+      color: "var(--chart-5)",
+    },
+  }}
+  yAxisLabel="Frekuensi"
+/>
+
+Dari histogram di atas, kita bisa melihat pola penggunaan HP siswa SMA:
+
+- 10 siswa menggunakan HP selama 0-2 jam per hari
+- 12 siswa menggunakan HP selama 2-4 jam per hari
+- Terbanyak adalah 32 siswa yang menggunakan HP selama 4-6 jam per hari
+- 28 siswa menggunakan HP selama 6-8 jam per hari
+- 8 siswa menggunakan HP selama 8-10 jam per hari
+
+Dari data ini, kita bisa menyimpulkan bahwa mayoritas siswa menggunakan HP antara 4-8 jam per hari, dengan puncaknya pada rentang 4-6 jam.
+
+## Perbedaan Utama
+
+| Perbedaan     | Histogram                                 | Diagram Batang                               |
+| ------------- | ----------------------------------------- | -------------------------------------------- |
+| Jenis data    | Kuantitatif, dikelompokkan dalam interval | Kategorik, tiap batang untuk satu kategori   |
+| Bentuk batang | Batang saling menempel, tanpa celah       | Ada spasi antar batang                       |
+| Lebar batang  | Area batang mencerminkan frekuensi        | Lebar sama, tinggi batang menunjukkan jumlah |
+
+## Kapan Menggunakan Histogram?
+
+Gunakan histogram ketika:
+
+1. Data berbentuk angka yang bisa diukur (kuantitatif)
+2. Ingin melihat distribusi atau sebaran data
+3. Data dapat dikelompokkan dalam interval
+
+Contoh data yang cocok untuk histogram:
+
+- Tinggi badan siswa
+- Nilai ulangan
+- Waktu tempuh ke sekolah
+- Berat badan
+- Lama penggunaan gadget
+
+Histogram sangat berguna untuk melihat pola distribusi data numerik. Dengan histogram, kita bisa mengetahui nilai yang paling sering muncul, rentang nilai yang dominan, dan bentuk sebaran data (merata, miring ke kiri/kanan, atau terpusat di tengah).

@@ -60,7 +60,7 @@ export function ElectabilityChart({ title, description, footnote }: Props) {
       value: 1,
     },
     {
-      name: t("electability"),
+      name: t("not-answering"),
       value: 16,
     },
   ];
@@ -89,7 +89,7 @@ export function ElectabilityChart({ title, description, footnote }: Props) {
             layout="vertical"
             margin={{
               right: 24,
-              left: 76,
+              left: 81,
             }}
           >
             <CartesianGrid horizontal={false} />
@@ -115,10 +115,10 @@ export function ElectabilityChart({ title, description, footnote }: Props) {
               <LabelList
                 dataKey="name"
                 position="left"
-                offset={8}
+                offset={10}
                 className="fill-foreground"
                 fontSize={12}
-                formatter={(value: string) => value.split(" ")[0]}
+                width={75}
               />
               <LabelList
                 dataKey="value"

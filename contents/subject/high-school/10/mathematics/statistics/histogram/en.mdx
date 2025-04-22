@@ -1,6 +1,122 @@
+import { HistogramChart, BarChart } from "./chart";
+
 export const metadata = {
   title: "Histogram",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/22/2025",
   subject: "Statistics",
 };
+
+## Introduction to Histograms
+
+You've probably seen bar charts used to present data. Well, a histogram is a close relative of the bar chart, but it has a specific purpose. Let's compare the two so we understand their differences.
+
+## Bar Chart vs Histogram
+
+Bar charts are used for categorical data (such as phone brands or favorite sports):
+
+<BarChart
+  title="Bar Chart of Phone Brands Used by High School Students"
+  description="Shows the number of students per phone brand."
+  data={[
+    { name: "Apple", value: 12, fill: "var(--chart-1)" },
+    { name: "Samsung", value: 10, fill: "var(--chart-2)" },
+    { name: "Xiaomi", value: 8, fill: "var(--chart-3)" },
+    { name: "Oppo", value: 5, fill: "var(--chart-4)" },
+    { name: "Lenovo", value: 5, fill: "var(--chart-5)" },
+  ]}
+  chartConfig={{
+    value: { label: "Number of Students" },
+    Apple: { label: "Apple", color: "var(--chart-1)" },
+    Samsung: { label: "Samsung", color: "var(--chart-2)" },
+    Xiaomi: { label: "Xiaomi", color: "var(--chart-3)" },
+    Oppo: { label: "Oppo", color: "var(--chart-4)" },
+    Lenovo: { label: "Lenovo", color: "var(--chart-5)" },
+  }}
+  yAxisLabel="Number of Students"
+/>
+
+In the bar chart above:
+
+- Apple is the most used brand (12 students)
+- Samsung is in second place (10 students)
+- Xiaomi is in third place (8 students)
+- Oppo and Lenovo are both used by 5 students each
+
+Notice that each bar is **separated** from the others because they represent different categories.
+
+Histograms, on the other hand, are used for numerical data grouped into intervals, such as time duration or height. The bars touch each other because the intervals of values are continuous.
+
+<HistogramChart
+  title="Histogram of Mobile Phone Usage by High School Students"
+  description="Shows the distribution of time students spend on their phones daily."
+  data={[
+    { name: "0-2", value: 10, fill: "var(--chart-1)" },
+    { name: "2-4", value: 12, fill: "var(--chart-2)" },
+    { name: "4-6", value: 32, fill: "var(--chart-3)" },
+    { name: "6-8", value: 28, fill: "var(--chart-4)" },
+    { name: "8-10", value: 8, fill: "var(--chart-5)" },
+  ]}
+  chartConfig={{
+    value: {
+      label: "Frequency",
+    },
+    "0-2": {
+      label: "0-2 hours",
+      color: "var(--chart-1)",
+    },
+    "2-4": {
+      label: "2-4 hours",
+      color: "var(--chart-2)",
+    },
+    "4-6": {
+      label: "4-6 hours",
+      color: "var(--chart-3)",
+    },
+    "6-8": {
+      label: "6-8 hours",
+      color: "var(--chart-4)",
+    },
+    "8-10": {
+      label: "8-10 hours",
+      color: "var(--chart-5)",
+    },
+  }}
+  yAxisLabel="Frequency"
+/>
+
+From the histogram above, we can see the pattern of phone usage among high school students:
+
+- 10 students use their phones for 0-2 hours per day
+- 12 students use their phones for 2-4 hours per day
+- The highest number is 32 students who use their phones for 4-6 hours per day
+- 28 students use their phones for 6-8 hours per day
+- 8 students use their phones for 8-10 hours per day
+
+From this data, we can conclude that the majority of students use their phones between 4-8 hours per day, with the peak in the 4-6 hour range.
+
+## Key Differences
+
+| Difference   | Histogram                            | Bar Chart                                   |
+| ------------ | ------------------------------------ | ------------------------------------------- |
+| Type of data | Quantitative, grouped into intervals | Categorical, each bar for a single category |
+| Bar shape    | Bars touch each other, no gaps       | Spaces between bars                         |
+| Bar width    | Bar area represents frequency        | Equal width, bar height shows quantity      |
+
+## When to Use a Histogram?
+
+Use a histogram when:
+
+1. Data consists of measurable numbers (quantitative)
+2. You want to see the distribution or spread of data
+3. Data can be grouped into intervals
+
+Examples of data suitable for histograms:
+
+- Student heights
+- Test scores
+- Travel time to school
+- Body weight
+- Device usage time
+
+Histograms are very useful for viewing patterns in numerical data distribution. With histograms, we can identify the most frequent values, dominant value ranges, and the shape of data distribution (even, skewed left/right, or centered in the middle).
