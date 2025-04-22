@@ -26,7 +26,7 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-
+import { Suspense } from "react";
 export const revalidate = false;
 
 type Params = {
@@ -151,7 +151,9 @@ export default async function Page({ params }: Props) {
             // Omitting date to maintain content credibility
           />
           <LayoutMaterialMain>
-            <Content />
+            <Suspense fallback={null}>
+              <Content />
+            </Suspense>
           </LayoutMaterialMain>
           <LayoutMaterialPagination pagination={pagination} />
           <LayoutMaterialFooter className="mt-10">

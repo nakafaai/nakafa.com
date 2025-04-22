@@ -18,6 +18,7 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 export const revalidate = false;
 
@@ -120,7 +121,9 @@ export default async function Page({ params }: Props) {
           }}
         />
         <LayoutArticleContent>
-          <Content />
+          <Suspense fallback={null}>
+            <Content />
+          </Suspense>
         </LayoutArticleContent>
         <LayoutArticleFooter>
           <RefContent
