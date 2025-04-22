@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { BlockMath, InlineMath, type MathComponentProps } from "react-katex";
 import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { Heading } from "./components/markdown/heading";
@@ -155,17 +154,11 @@ const components = {
 
     return <code className="inline" {...props} />;
   },
-  InlineMath: (props: MathComponentProps) => (
-    <Suspense fallback={null}>
-      <InlineMath {...props} />
-    </Suspense>
-  ),
+  InlineMath,
   BlockMath: (props: MathComponentProps) => (
     <ScrollArea className="max-w-full rounded-xl border bg-card text-card-foreground shadow-sm">
       <div className="px-4">
-        <Suspense fallback={null}>
-          <BlockMath {...props} />
-        </Suspense>
+        <BlockMath {...props} />
       </div>
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
