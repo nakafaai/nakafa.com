@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next lint --fix && biome check --write . && next build --turbopack",
+    "build": "next lint --fix && biome check --write . && next build",
     "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
     "start": "next start --turbopack",
     "lint": "next lint && biome check .",
