@@ -4,3 +4,152 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistika",
 };
+
+## Apa itu Mean?
+
+Selain Median (nilai tengah) dan Modus (nilai paling sering muncul), kita punya satu lagi cara penting untuk melihat "pusat" data, yaitu **Mean** atau **Rata-rata**.
+
+Mean adalah nilai yang kita dapatkan jika kita **membagikan jumlah total semua data secara merata** kepada seluruh anggota data. Bayangkan kamu punya beberapa permen dengan jumlah berbeda, lalu kamu kumpulkan semua dan bagi rata ke semua temanmu, nah itulah konsep Mean.
+
+## Menghitung Mean
+
+Cara menghitung Mean sangat sederhana:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{1. Jumlahkan semua nilai data.}" />
+  <BlockMath math="\text{2. Bagi jumlah total tersebut dengan banyaknya data.}" />
+</div>
+
+**Rumus Mean:**
+
+<BlockMath math="\bar{x} = \frac{\sum x}{n}" />
+
+Keterangan:
+
+- <InlineMath math="\bar{x}" /> (dibaca "x bar") adalah simbol untuk **Mean**.
+- <InlineMath math="\sum x" /> (dibaca "sigma x") artinya **Jumlah total dari semua
+  nilai data** (x).
+- <InlineMath math="n" /> adalah **banyaknya data**.
+
+## Contoh Kasus
+
+Mari kita lihat contoh biar lebih jelas.
+
+### Aksi Sosial OSIS
+
+**Situasi Awal:**
+
+OSIS Sekolah A (10 orang) mengumpulkan pakaian bekas layak pakai. Jumlah baju yang dikumpulkan tiap anggota adalah:
+
+3, 5, 7, 10, 5, 3, 4, 6, 9, 8
+
+**Mencari Mean, Median, dan Modus Awal:**
+
+1.  **Urutkan data** (untuk Median & Modus):
+
+    3, 3, 4, 5, 5, 6, 7, 8, 9, 10 (ada 10 data, <InlineMath math="n=10" />)
+
+2.  **Hitung Mean:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\sum x = 3+3+4+5+5+6+7+8+9+10 = 60" />
+      <BlockMath math="\bar{x} = \frac{\sum x}{n} = \frac{60}{10} = 6" />
+    </div>
+
+    Jadi, Mean awal = 6.
+
+3.  **Cari Median:**
+
+    Jumlah data genap (<InlineMath math="n=10" />). Data tengah ada di urutan ke-<InlineMath math="10/2 = 5" /> dan ke-<InlineMath math="(10/2)+1 = 6" />.
+
+    Nilai urutan ke-5 adalah 5, nilai urutan ke-6 adalah 6.
+
+    <BlockMath math="\text{Median} = \frac{5+6}{2} = 5.5" />
+
+    Jadi, Median awal = 5.5.
+
+4.  **Cari Modus:**
+
+    Nilai yang paling sering muncul adalah 3 (2 kali) dan 5 (2 kali).
+
+    Jadi, Modus awal = 3 dan 5 (bimodal).
+
+**Situasi Baru:**
+
+Keesokan harinya, 2 siswa lain ikut menyumbang 20 dan 22 baju.
+
+Data baru menjadi:
+
+3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 20, 22
+
+**Mencari Mean, Median, dan Modus Baru:**
+
+1.  **Urutkan data**:
+
+    3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 20, 22 (ada 12 data, <InlineMath math="n=12" />)
+
+2.  **Hitung Mean Baru:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\sum x = 60 + 20 + 22 = 102" />
+      <BlockMath math="\bar{x} = \frac{\sum x}{n} = \frac{102}{12} = 8.5" />
+    </div>
+
+    Jadi, Mean baru = 8.5.
+
+3.  **Cari Median Baru:**
+
+    Jumlah data genap (<InlineMath math="n=12" />). Data tengah ada di urutan ke-<InlineMath math="12/2 = 6" /> dan ke-<InlineMath math="(12/2)+1 = 7" />.
+
+    Nilai urutan ke-6 adalah 6, nilai urutan ke-7 adalah 7.
+
+    <BlockMath math="\text{Median} = \frac{6+7}{2} = 6.5" />
+
+    Jadi, Median baru = 6.5.
+
+4.  **Cari Modus Baru:**
+
+    Nilai yang paling sering muncul masih 3 (2 kali) dan 5 (2 kali).
+
+    Jadi, Modus baru = 3 dan 5.
+
+## Pengaruh Penambahan Data
+
+Coba perhatikan perubahan nilai ukuran pemusatan dari situasi awal ke situasi baru:
+
+- **Mean:** Berubah dari 6 menjadi 8.5 (naik 2.5)
+- **Median:** Berubah dari 5.5 menjadi 6.5 (naik 1)
+- **Modus:** Tetap 3 dan 5 (tidak berubah)
+
+Apa yang bisa kita simpulkan? Penambahan dua data baru (20 dan 22) yang nilainya cukup jauh dari data awal ternyata **paling berpengaruh pada Mean**. Nilai Mean "tertarik" oleh nilai data baru yang lebih besar.
+
+Median juga berubah, tapi perubahannya tidak sebesar Mean. Modus malah tidak berubah sama sekali.
+
+## Pengaruh Data Ekstrem (Pencilan)
+
+Bagaimana jika salah satu data baru sangat ekstrem? Misal, siswa ke-12 menyumbang 100 baju, bukan 22.
+
+Data menjadi: 3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 20, 100 (<InlineMath math="n=12" />)
+
+1.  **Hitung Mean Ekstrem:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\sum x = 60 + 20 + 100 = 180" />
+      <BlockMath math="\bar{x} = \frac{\sum x}{n} = \frac{180}{12} = 15" />
+    </div>
+
+    Mean menjadi 15! Jauh sekali dari Mean awal (6) atau Mean sebelumnya (8.5).
+
+2.  **Cari Median Ekstrem:**
+
+    Data urut: 3, 3, 4, 5, 5, **6**, **7**, 8, 9, 10, 20, 100
+
+    Median masih <InlineMath math="(6+7)/2 = 6.5" />. (Sama seperti situasi baru sebelumnya)
+
+3.  **Cari Modus Ekstrem:**
+
+    Modus tetap 3 dan 5.
+
+Data yang sangat ekstrem (disebut **pencilan** atau **outlier**) **sangat mempengaruhi nilai Mean**, tapi **hampir tidak mempengaruhi Median dan Modus**. Inilah kelemahan Mean, ia sensitif terhadap pencilan. Median dan Modus lebih "kebal" terhadap pencilan.
+
+Jadi, Mean adalah rata-rata hitung yang sederhana, tapi kita perlu hati-hati jika ada data yang nilainya sangat jauh berbeda dari data lainnya karena bisa membuat Mean menjadi kurang representatif.

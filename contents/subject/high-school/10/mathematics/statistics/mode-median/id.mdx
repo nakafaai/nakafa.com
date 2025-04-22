@@ -5,4 +5,106 @@ export const metadata = {
   subject: "Statistika",
 };
 
-;
+## Ukuran Pemusatan
+
+Dalam statistika, kita sering ingin tahu "pusat" dari data kita itu ada di mana. Nah, Modus dan Median adalah dua cara untuk melihat pusat atau kecenderungan data tersebut.
+
+## Median: Nilai Tengah
+
+Median itu gampangnya adalah **nilai data yang posisinya paling tengah** setelah semua data diurutkan dari yang terkecil sampai yang terbesar.
+
+**Cara Mencari Median:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{1. Urutkan Data: Dari yang terkecil ke terbesar}" />
+  <BlockMath math="\text{2. Cari Posisi Tengah}" />
+</div>
+
+- **Jika Jumlah Data Ganjil (n ganjil):**
+
+  <BlockMath math="\text{Median} = \text{Nilai data urutan ke-} \frac{n+1}{2}" />
+
+  **Contoh (Data Ganjil):**
+
+  Misal data nilai ulangan 5 siswa: 7, 8, 6, 9, 7
+
+  Urutkan: 6, 7, **7**, 8, 9 (ada 5 data, <InlineMath math="n=5" />)
+
+  Posisi tengah: <InlineMath math="(5+1)/2 = 3" />. Data urutan ke-3 adalah **7**.
+
+  Jadi, Median = 7.
+
+- **Jika Jumlah Data Genap (n genap):**
+
+  <BlockMath math="\text{Median} = \frac{\text{Nilai urutan ke-}(n/2) + \text{Nilai urutan ke-}((n/2)+1)}{2}" />
+
+  **Contoh (Data Genap):**
+
+  Misal data nilai ulangan 6 siswa: 7, 8, 6, 9, 7, 10
+
+  Urutkan: 6, 7, **7**, **8**, 9, 10 (ada 6 data, <InlineMath math="n=6" />)
+
+  Posisi tengah: Urutan ke-<InlineMath math="6/2 = 3" /> dan urutan ke-<InlineMath math="(6/2) + 1 = 4" />.
+
+  Dua angka di tengah adalah **7** dan **8**.
+
+  Median = Rata-rata dari 7 dan 8 = <InlineMath math="(7+8)/2 = 7.5" />.
+
+  Jadi, Median = <InlineMath math="7.5" />.
+
+Median ini bagus karena tidak terlalu terpengaruh oleh nilai yang sangat ekstrem (terlalu besar atau terlalu kecil) di ujung data.
+
+## Modus: Nilai Paling Sering Muncul
+
+Modus itu lebih simpel lagi. Modus adalah **nilai data yang paling sering muncul** atau yang frekuensinya paling tinggi.
+
+**Cara Mencari Modus:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{1. Hitung frekuensi tiap nilai data}" />
+  <BlockMath math="\text{2. Cari nilai data dengan frekuensi terbesar}" />
+</div>
+
+**Contoh:**
+
+Data nilai ulangan: 7, 8, 6, 9, 7, 8, 7
+
+- Nilai 6 muncul 1 kali
+- Nilai 7 muncul 3 kali
+- Nilai 8 muncul 2 kali
+- Nilai 9 muncul 1 kali
+
+Yang paling sering muncul adalah nilai **7** (sebanyak 3 kali).
+
+Jadi, Modus = 7.
+
+**Penting tentang Modus:**
+
+- Sebuah kumpulan data bisa **tidak punya modus** (jika semua nilai muncul sama seringnya).
+- Bisa punya **satu modus** (unimodal).
+- Bisa punya **dua modus** (bimodal), jika ada dua nilai yang frekuensinya sama tinggi dan paling tinggi.
+- Bisa punya **lebih dari dua modus** (multimodal).
+
+Sama seperti median, modus juga tidak terpengaruh oleh nilai-nilai ekstrem (pencilan).
+
+## Sedikit tentang Rentang (Range)
+
+Selain melihat pusat data dengan modus dan median, kadang kita juga perlu tahu seberapa **menyebar** data kita. Salah satu cara paling sederhana adalah dengan melihat **Rentang (Range)** atau **Jangkauan**.
+
+Rentang adalah **selisih antara data terbesar dan data terkecil**.
+
+<BlockMath math="\text{Rentang} = \text{Data Terbesar} - \text{Data Terkecil}" />
+
+**Contoh:**
+
+Data: 6, 7, 7, 8, 9, 10
+
+Data terbesar = 10
+
+Data terkecil = 6
+
+Rentang = <InlineMath math="10 - 6 = 4" />
+
+Rentang memberi kita gambaran cepat tentang seberapa jauh data kita tersebar dari ujung ke ujung.
+
+Jadi, Median dan Modus fokus pada "pusat" data, sedangkan Rentang fokus pada "sebaran" data.

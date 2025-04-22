@@ -4,3 +4,152 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistics",
 };
+
+## What is Mean?
+
+Besides Median (middle value) and Mode (most frequent value), we have another important way to see the "center" of data, which is the **Mean** or **Average**.
+
+The Mean is the value we get if we **distribute the total sum of all data evenly** among all data members. Imagine you have several candies in different amounts, then you collect them all and divide them equally among your friends, that's the concept of Mean.
+
+## Calculating the Mean
+
+Calculating the Mean is very simple:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{1. Sum up all the data values.}" />
+  <BlockMath math="\text{2. Divide the total sum by the number of data points.}" />
+</div>
+
+**Mean Formula:**
+
+<BlockMath math="\bar{x} = \frac{\sum x}{n}" />
+
+Where:
+
+- <InlineMath math="\bar{x}" /> (read "x bar") is the symbol for **Mean**.
+- <InlineMath math="\sum x" /> (read "sigma x") means the **Total sum of all data
+  values** (x).
+- <InlineMath math="n" /> is the **number of data points**.
+
+## Case Study
+
+Let's look at an example to make it clearer.
+
+### OSIS Social Action
+
+**Initial Situation:**
+
+The Student Council (OSIS) of School A (10 members) collected usable used clothes. The number of clothes collected by each member is:
+
+3, 5, 7, 10, 5, 3, 4, 6, 9, 8
+
+**Finding the Initial Mean, Median, and Mode:**
+
+1.  **Sort the data** (for Median & Mode):
+
+    3, 3, 4, 5, 5, 6, 7, 8, 9, 10 (there are 10 data points, <InlineMath math="n=10" />)
+
+2.  **Calculate the Mean:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\sum x = 3+3+4+5+5+6+7+8+9+10 = 60" />
+      <BlockMath math="\bar{x} = \frac{\sum x}{n} = \frac{60}{10} = 6" />
+    </div>
+
+    So, the initial Mean = 6.
+
+3.  **Find the Median:**
+
+    The number of data points is even (<InlineMath math="n=10" />). The middle data are at positions <InlineMath math="10/2 = 5" /> and <InlineMath math="(10/2)+1 = 6" />.
+
+    The value at position 5 is 5, the value at position 6 is 6.
+
+    <BlockMath math="\text{Median} = \frac{5+6}{2} = 5.5" />
+
+    So, the initial Median = 5.5.
+
+4.  **Find the Mode:**
+
+    The most frequent values are 3 (2 times) and 5 (2 times).
+
+    So, the initial Mode = 3 and 5 (bimodal).
+
+**New Situation:**
+
+The next day, 2 other students joined and donated 20 and 22 items of clothing.
+
+The new data becomes:
+
+3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 20, 22
+
+**Finding the New Mean, Median, and Mode:**
+
+1.  **Sort the data**:
+
+    3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 20, 22 (there are 12 data points, <InlineMath math="n=12" />)
+
+2.  **Calculate the New Mean:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\sum x = 60 + 20 + 22 = 102" />
+      <BlockMath math="\bar{x} = \frac{\sum x}{n} = \frac{102}{12} = 8.5" />
+    </div>
+
+    So, the new Mean = 8.5.
+
+3.  **Find the New Median:**
+
+    The number of data points is even (<InlineMath math="n=12" />). The middle data are at positions <InlineMath math="12/2 = 6" /> and <InlineMath math="(12/2)+1 = 7" />.
+
+    The value at position 6 is 6, the value at position 7 is 7.
+
+    <BlockMath math="\text{Median} = \frac{6+7}{2} = 6.5" />
+
+    So, the new Median = 6.5.
+
+4.  **Find the New Mode:**
+
+    The most frequent values are still 3 (2 times) and 5 (2 times).
+
+    So, the new Mode = 3 and 5.
+
+## Impact of Adding Data
+
+Let's observe the changes in the measures of central tendency from the initial to the new situation:
+
+- **Mean:** Changed from 6 to 8.5 (increased by 2.5)
+- **Median:** Changed from 5.5 to 6.5 (increased by 1)
+- **Mode:** Remained 3 and 5 (unchanged)
+
+What can we conclude? Adding two new data points (20 and 22), whose values are quite far from the initial data, had the **most significant impact on the Mean**. The Mean value was "pulled" by the larger new data values.
+
+The Median also changed, but its change was not as large as the Mean's. The Mode didn't change at all.
+
+## Impact of Extreme Data (Outliers)
+
+What if one of the new data points was very extreme? For example, the 12th student donated 100 items, not 22.
+
+Data becomes: 3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 20, 100 (<InlineMath math="n=12" />)
+
+1.  **Calculate the Extreme Mean:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\sum x = 60 + 20 + 100 = 180" />
+      <BlockMath math="\bar{x} = \frac{\sum x}{n} = \frac{180}{12} = 15" />
+    </div>
+
+    The Mean becomes 15! Very far from the initial Mean (6) or the previous new Mean (8.5).
+
+2.  **Find the Extreme Median:**
+
+    Sorted data: 3, 3, 4, 5, 5, **6**, **7**, 8, 9, 10, 20, 100
+
+    Median is still <InlineMath math="(6+7)/2 = 6.5" />. (Same as the previous new situation)
+
+3.  **Find the Extreme Mode:**
+
+    Mode remains 3 and 5.
+
+Very extreme data (called **outliers**) **greatly affect the Mean**, but **hardly affect the Median and Mode**. This is the weakness of the Mean; it is sensitive to outliers. Median and Mode are more "robust" against outliers.
+
+So, the Mean is a simple arithmetic average, but we need to be careful if there are data points with values very different from the rest, as they can make the Mean less representative.
