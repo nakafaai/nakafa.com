@@ -7,6 +7,7 @@ import {
   LayoutMaterialTableOfContents,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
+import { SkeletonText } from "@/components/shared/skeleton-text";
 import { getContent } from "@/lib/utils/contents";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getHeadings } from "@/lib/utils/markdown";
@@ -27,6 +28,8 @@ import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+
+export const experimental_ppr = true;
 export const revalidate = false;
 
 type Params = {
@@ -151,7 +154,7 @@ export default async function Page({ params }: Props) {
             // Omitting date to maintain content credibility
           />
           <LayoutMaterialMain>
-            <Suspense fallback={null}>
+            <Suspense fallback={<SkeletonText />}>
               <Content />
             </Suspense>
           </LayoutMaterialMain>

@@ -5,6 +5,7 @@ import {
   LayoutArticleHeader,
 } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
+import { SkeletonText } from "@/components/shared/skeleton-text";
 import { getCategoryIcon } from "@/lib/utils/articles/category";
 import { getSlugPath } from "@/lib/utils/articles/slug";
 import { getContent } from "@/lib/utils/contents";
@@ -20,6 +21,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+export const experimental_ppr = true;
 export const revalidate = false;
 
 type Props = {
@@ -121,7 +123,7 @@ export default async function Page({ params }: Props) {
           }}
         />
         <LayoutArticleContent>
-          <Suspense fallback={null}>
+          <Suspense fallback={<SkeletonText />}>
             <Content />
           </Suspense>
         </LayoutArticleContent>
