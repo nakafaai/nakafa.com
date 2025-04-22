@@ -77,7 +77,9 @@
     "previous": "Sebelumnya",
     "next": "Selanjutnya",
     "undefined": "Tidak terdefinisi",
-    "radian": "Radian"
+    "radian": "Radian",
+    "share": "Bagikan",
+    "share-copied": "Link berhasil disalin ke papan klip"
   },
   "Subject": {
     "elementary-school": "SD",

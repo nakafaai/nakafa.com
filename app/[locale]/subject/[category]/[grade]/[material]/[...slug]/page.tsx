@@ -163,7 +163,6 @@ export default async function Page({ params }: Props) {
             title: metadata.title,
             href: FILE_PATH,
             description: metadata.description ?? metadata.subject,
-            icon,
           }}
           chapters={{
             label: t("on-this-page"),

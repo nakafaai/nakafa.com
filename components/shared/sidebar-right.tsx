@@ -1,11 +1,6 @@
 import { IconMenu } from "@tabler/icons-react";
-import type {
-  CSSProperties,
-  ComponentProps,
-  ComponentType,
-  ReactNode,
-  SVGProps,
-} from "react";
+import type { CSSProperties, ComponentProps, ReactNode } from "react";
+import { ShareButton } from "../sidebar/share-button";
 import { Button } from "../ui/button";
 import NavigationLink from "../ui/navigation-link";
 import {
@@ -20,6 +15,7 @@ import {
   SIDEBAR_WIDTH_MOBILE,
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -34,7 +30,6 @@ export type SidebarRightProps = {
     title: string;
     href: string;
     description?: string;
-    icon?: ComponentType<SVGProps<SVGSVGElement>>;
   };
 } & ComponentProps<typeof Sidebar>;
 
@@ -80,6 +75,16 @@ function SidebarRightHeader({
   );
 }
 
+function SidebarRightFooter() {
+  return (
+    <SidebarFooter className="border-t">
+      <SidebarMenu>
+        <ShareButton />
+      </SidebarMenu>
+    </SidebarFooter>
+  );
+}
+
 export function SidebarRight({
   children,
   header,
@@ -119,6 +124,7 @@ export function SidebarRight({
           <div className="flex h-full w-full flex-col">
             <SidebarRightHeader header={header} />
             <SidebarContent>{children}</SidebarContent>
+            <SidebarRightFooter />
           </div>
         </SheetContent>
       </Sheet>
@@ -131,6 +137,7 @@ export function SidebarRight({
       >
         <SidebarRightHeader header={header} />
         <SidebarContent>{children}</SidebarContent>
+        <SidebarRightFooter />
       </Sidebar>
     </div>
   );

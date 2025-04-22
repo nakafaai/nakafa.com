@@ -11,6 +11,7 @@ import {
 import NavigationLink from "../ui/navigation-link";
 import {
   SidebarGroup,
+  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
@@ -77,9 +78,11 @@ export function NavSubject() {
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{t("subject")}</SidebarGroupLabel>
-      <SidebarMenu>
-        <MenuItem />
-      </SidebarMenu>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          <MenuItem />
+        </SidebarMenu>
+      </SidebarGroupContent>
     </SidebarGroup>
   );
 }

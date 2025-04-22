@@ -44,3 +44,11 @@ export function cleanupUrl(url: string): string {
 export function removeLeadingSlash(path: string): string {
   return path.startsWith("/") ? path.slice(1) : path;
 }
+
+/**
+ * Gets the app URL
+ * @returns The app URL, defaults to https://nakafa.com
+ */
+export function getAppUrl(): string {
+  return process.env.NEXT_PUBLIC_URL ?? "https://nakafa.com";
+}

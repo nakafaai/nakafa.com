@@ -76,7 +76,9 @@
     "previous": "Previous",
     "next": "Next",
     "undefined": "Undefined",
-    "radian": "Radian"
+    "radian": "Radian",
+    "share": "Share",
+    "share-copied": "Link copied to clipboard"
   },
   "Subject": {
     "elementary-school": "Elementary School",

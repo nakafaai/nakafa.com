@@ -1,17 +1,15 @@
 import { useTranslations } from "next-intl";
 import NavigationLink from "../ui/navigation-link";
 import {
+  SidebarGroup,
+  SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
 } from "../ui/sidebar";
-
-import { SidebarMenu } from "../ui/sidebar";
-
-import { SidebarGroup } from "../ui/sidebar";
-import { SidebarMenuSub } from "../ui/sidebar";
-import { TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { Tooltip } from "../ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export type ParsedHeading = {
   label: string;
@@ -77,11 +75,13 @@ export function SidebarTree({ data, title }: Props) {
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{title ?? t("on-this-page")}</SidebarGroupLabel>
-      <SidebarMenu>
-        {data.map((item) => (
-          <SidebarTreeItem key={item.href} heading={item} />
-        ))}
-      </SidebarMenu>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {data.map((item) => (
+            <SidebarTreeItem key={item.href} heading={item} />
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
     </SidebarGroup>
   );
 }

@@ -21,6 +21,7 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
 import { Analytics } from "@/components/ui/analytics";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 import { TailwindIndicator } from "@/components/ui/tailwind-indicator";
 import { themes } from "@/lib/data/theme";
 import type { Metadata, Viewport } from "next";
@@ -228,6 +229,7 @@ export default async function LocaleLayout({ children, params }: Props) {
                   </div>
                 </SidebarInset>
               </SidebarProvider>
+              <Toaster />
             </ThemeProvider>
           </AppProviders>
         </NextIntlClientProvider>

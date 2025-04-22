@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import NavigationLink from "../ui/navigation-link";
 import {
   SidebarGroup,
+  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
@@ -38,9 +39,11 @@ export function NavArticles() {
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{t("articles")}</SidebarGroupLabel>
-      <SidebarMenu>
-        <MenuItem />
-      </SidebarMenu>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          <MenuItem />
+        </SidebarMenu>
+      </SidebarGroupContent>
     </SidebarGroup>
   );
 }

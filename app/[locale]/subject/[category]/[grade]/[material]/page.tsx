@@ -116,6 +116,11 @@ export default async function Page({ params }: Props) {
         </LayoutMaterialFooter>
       </LayoutMaterialContent>
       <LayoutMaterialTableOfContents
+        header={{
+          title: t(material),
+          href: FILE_PATH,
+          description: t("grade", { grade }),
+        }}
         chapters={{
           label: t("chapter"),
           data: chapters,
