@@ -5,4 +5,45 @@ export const metadata = {
   subject: "Statistika",
 };
 
-;
+## Memilih Ukuran Pemusatan yang Tepat
+
+Kita mengenal tiga ukuran pemusatan utama: Mean (rata-rata), Median (nilai tengah), dan Modus (nilai paling sering muncul). Ketiganya memberi tahu kita tentang "pusat" atau kecenderungan data, tapi mereka punya sifat yang berbeda dan cocok untuk situasi yang berbeda pula.
+
+Memilih ukuran yang salah bisa memberikan gambaran yang kurang tepat tentang data. Jadi, mari kita pahami kapan sebaiknya menggunakan masing-masing ukuran.
+
+## Karakteristik Utama
+
+### Mean (Rata-rata)
+
+- **Cara Hitung:** Jumlahkan semua nilai data, lalu bagi dengan banyaknya data.
+- **Sifat:** Menggunakan _semua_ nilai data dalam perhitungan. Karena itu, Mean **sangat sensitif terhadap nilai ekstrem (pencilan)**. Satu nilai yang sangat besar atau kecil bisa mengubah Mean secara signifikan.
+- **Contoh Sensitivitas:** Jika nilai ulanganmu <InlineMath math="7, 8, 9, 8, 10" /> (Mean = <InlineMath math="8.4" />), lalu ada satu nilai tambahan 1 (pencilan), maka Mean baru menjadi <InlineMath math="(7+8+9+8+10+1)/6 = 7.17" />. Nilai Mean turun drastis karena pencilan.
+
+### Median (Nilai Tengah)
+
+- **Cara Hitung:** Urutkan data, lalu cari nilai yang posisinya tepat di tengah.
+- **Sifat:** Hanya memperhatikan posisi tengah data. Karena itu, Median **tidak sensitif (kebal) terhadap nilai ekstrem (pencilan)**.
+- **Contoh Kekebalan:** Untuk data <InlineMath math="7, 8, 9, 8, 10" /> (Urut: 7, 8, **8**, 9, 10), Median=8. Jika ditambah nilai 1 (Urut: 1, 7, **8**, **8**, 9, 10), Median= <InlineMath math="(8+8)/2=8" />. Nilai Median hampir tidak berubah meskipun ada pencilan.
+
+### Modus (Nilai Paling Sering Muncul)
+
+- **Cara Hitung:** Cari nilai data yang frekuensinya paling tinggi.
+- **Sifat:** Fokus pada nilai yang paling populer. Seperti Median, Modus **tidak sensitif (kebal) terhadap nilai ekstrem (pencilan)**. Juga, Modus adalah satu-satunya ukuran pemusatan yang bisa digunakan untuk **data kualitatif** (bukan angka).
+- **Contoh Kekebalan & Data Kualitatif:** Untuk data 7, 8, 9, 8, 10, Modus=8. Jika ditambah nilai 1, Modus tetap 8. Jika datanya adalah warna favorit (Merah, Biru, Merah, Hijau), Modus=Merah.
+
+## Panduan Penggunaan
+
+Berikut panduan ringkas kapan menggunakan masing-masing ukuran:
+
+| Ukuran     | Jenis Data Terbaik       | Pengaruh Pencilan  | Kapan Digunakan?                                                                                                   |
+| :--------- | :----------------------- | :----------------- | :----------------------------------------------------------------------------------------------------------------- |
+| **Mean**   | Kuantitatif (Angka)      | Sangat Terpengaruh | Ketika data **tidak memiliki pencilan** signifikan & ingin representasi yang melibatkan semua nilai data.          |
+| **Median** | Kuantitatif (Angka)      | Tidak Terpengaruh  | Ketika data **memiliki pencilan** atau distribusi data miring (tidak simetris). Memberikan nilai tengah yang kuat. |
+| **Modus**  | Kualitatif & Kuantitatif | Tidak Terpengaruh  | Ketika ingin mengetahui **nilai/kategori paling populer** atau yang paling sering terjadi.                         |
+
+**Contoh Situasi:**
+
+- **Menghitung rata-rata nilai kelas:** Jika nilai-nilai siswa cenderung merata tanpa ada yang terlalu jauh berbeda, **Mean** cocok digunakan.
+- **Melihat pendapatan rata-rata penduduk di suatu area:** Jika ada beberapa orang dengan pendapatan sangat tinggi (pencilan), **Median** akan memberikan gambaran pendapatan penduduk pada umumnya yang lebih baik daripada Mean.
+- **Menentukan ukuran sepatu paling laris di toko:** Kita ingin tahu ukuran yang paling sering dibeli, jadi **Modus** adalah pilihan yang tepat.
+- **Mengetahui warna favorit siswa:** Karena data berupa kategori (warna), satu-satunya ukuran yang bisa digunakan adalah **Modus**.
