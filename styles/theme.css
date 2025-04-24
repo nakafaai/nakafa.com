@@ -876,3 +876,52 @@
     hsl(20 18% 51% / 0.11);
   --shadow-2xl: 2px 2px 0px 0px hsl(20 18% 51% / 0.28);
 }
+
+.twitter {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.19 0.01 248.51);
+  --card: oklch(0.98 0 197.14);
+  --card-foreground: oklch(0.19 0.01 248.51);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.19 0.01 248.51);
+  --primary: oklch(0.67 0.16 245);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.19 0.01 248.51);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.92 0 286.37);
+  --muted-foreground: oklch(0.19 0.01 248.51);
+  --accent: oklch(0.94 0.02 250.85);
+  --accent-foreground: oklch(0.67 0.16 245);
+  --destructive: oklch(0.62 0.24 25.77);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.93 0.01 231.66);
+  --input: oklch(0.98 0 228.78);
+  --ring: oklch(0.68 0.16 243.35);
+  --chart-1: oklch(0.67 0.16 245);
+  --chart-2: oklch(0.69 0.16 160.35);
+  --chart-3: oklch(0.82 0.16 82.53);
+  --chart-4: oklch(0.71 0.18 151.71);
+  --chart-5: oklch(0.59 0.22 10.58);
+  --sidebar: oklch(0.98 0 197.14);
+  --sidebar-foreground: oklch(0.19 0.01 248.51);
+  --sidebar-primary: oklch(0.67 0.16 245);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.94 0.02 250.85);
+  --sidebar-accent-foreground: oklch(0.67 0.16 245);
+  --sidebar-border: oklch(0.93 0.01 238.52);
+  --sidebar-ring: oklch(0.68 0.16 243.35);
+  --radius: 1.3rem;
+  --shadow-2xs: 0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0);
+  --shadow-xs: 0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0);
+  --shadow-sm: 0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0), 0px 1px 2px -1px
+    hsl(202.82 89.12% 53.14% / 0);
+  --shadow: 0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0), 0px 1px 2px -1px
+    hsl(202.82 89.12% 53.14% / 0);
+  --shadow-md: 0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0), 0px 2px 4px -1px
+    hsl(202.82 89.12% 53.14% / 0);
+  --shadow-lg: 0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0), 0px 4px 6px -1px
+    hsl(202.82 89.12% 53.14% / 0);
+  --shadow-xl: 0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0), 0px 8px 10px -1px
+    hsl(202.82 89.12% 53.14% / 0);
+  --shadow-2xl: 0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0);
+}

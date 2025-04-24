@@ -1,3 +1,4 @@
+import { IconBrandTwitter } from "@tabler/icons-react";
 import {
   AsteriskIcon,
   BeanIcon,
@@ -99,6 +100,10 @@ export const themes = [
   {
     value: "tangerine",
     icon: CitrusIcon,
+  },
+  {
+    value: "twitter",
+    icon: IconBrandTwitter,
   },
   {
     value: "vintage",
