@@ -1,5 +1,6 @@
 import {
   AsteriskIcon,
+  BeanIcon,
   CandyIcon,
   CatIcon,
   CitrusIcon,
@@ -35,6 +36,10 @@ export const themes = [
     icon: LaptopIcon,
   },
   // Custom
+  {
+    value: "bean",
+    icon: BeanIcon,
+  },
   {
     value: "bubblegum",
     icon: CandyIcon,

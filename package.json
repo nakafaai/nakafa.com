@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next lint --fix && biome check --write . && next build --turbopack",
     "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
-    "start": "next start --turbopack",
+    "start": "next start",
     "lint": "next lint && biome check .",
     "lint:fix": "next lint --fix && biome check --write .",
     "preview": "next build && next start",
