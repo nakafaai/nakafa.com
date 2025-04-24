@@ -179,25 +179,15 @@ You can contribute educational content or articles in the following ways:
 
 ## License
 
-Nakafa is an open-source project available under a custom license with the following terms:
+Nakafa is dual-licensed:
 
-- ✅ **Allowed**:
+1.  **GNU Affero General Public License v3.0 (AGPL-3.0)**: This project is freely available under the [AGPL-3.0 license](./LICENSE). This allows for use, modification, and distribution (including for non-commercial purposes), provided that all modifications and distributions are also licensed under AGPL-3.0 and the source code is made available.
 
-  - Fork the repository
-  - Self-host the platform
-  - Modify the code for personal or educational use
-  - Contribute to the original project
-  - Use the platform for learning and teaching
+2.  **Commercial License**: For uses that do not comply with the AGPL-3.0 terms (e.g., inclusion in proprietary/closed-source commercial products without releasing the source code), a separate commercial license must be purchased.
 
-- ❌ **Not Allowed**:
-  - Commercialize the project in any way
-  - Sell access to instances of the platform
-  - Use the codebase to create a commercial product
-  - Monetize the platform through subscriptions, ads, or paywalls
+Please contact us at <nakafaai@gmail.com> for inquiries regarding commercial licensing.
 
-This license is designed to ensure that Nakafa remains free and accessible to everyone. The project can be forked, modified, and self-hosted, but it must not be used to generate income. Any derivative work must maintain these same license restrictions.
-
-For questions regarding the license or special use cases, please contact us at <nakafaai@gmail.com>.
+This model ensures the project remains free and open-source for the community while allowing for commercial usage under different terms.
 
 ---
 
