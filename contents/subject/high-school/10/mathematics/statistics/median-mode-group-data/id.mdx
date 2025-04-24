@@ -5,4 +5,109 @@ export const metadata = {
   subject: "Statistika",
 };
 
-;
+## Kelas Modus Data Kelompok
+
+Untuk data kelompok, kita biasanya tidak mencari satu nilai Modus yang spesifik, tapi kita fokus mencari **Kelas Modus**.
+
+**Kelas Modus** adalah kelas interval yang memiliki **frekuensi tertinggi**. Gampangnya, cari saja kelompok mana yang datanya paling banyak.
+
+**Contoh:**
+
+Data ukuran sepatu Toko A:
+
+| Ukuran Sepatu (Kelas Interval) | Frekuensi (<InlineMath math="f_i" />) |
+| :----------------------------- | :------------------------------------ |
+| 37-39                          | 2                                     |
+| 40-42                          | 11                                    |
+| **43-45**                      | **16** (Frekuensi Tertinggi)          |
+| 46-48                          | 1                                     |
+| **Total**                      | **30**                                |
+
+Lihat kolom frekuensi. Frekuensi paling tinggi adalah **16**. Kelas interval yang memiliki frekuensi 16 adalah **43-45**.
+
+Jadi, **Kelas Modus** dari data tersebut adalah **43-45**. Artinya, ukuran sepatu yang paling banyak terjual kemungkinan besar ada di rentang ukuran ini.
+
+## Median Data Kelompok
+
+Mencari Median (nilai tengah) data kelompok sedikit lebih rumit daripada mencari kelas modus. Karena data sudah dikelompokkan, kita perlu menggunakan rumus estimasi untuk menemukan di mana kira-kira nilai tengahnya berada.
+
+### Cara Mencari Median Data Kelompok
+
+1.  **Hitung Posisi Median:**
+
+    Cari dulu di mana posisi data tengah berada dengan rumus <InlineMath math="n/2" />, di mana <InlineMath math="n" /> adalah jumlah total data.
+
+2.  **Buat Frekuensi Kumulatif:**
+
+    Tambahkan satu kolom pada tabel distribusi frekuensi untuk Frekuensi Kumulatif (<InlineMath math="F_k" />). Frekuensi kumulatif adalah jumlah frekuensi dari kelas pertama sampai kelas tersebut.
+
+3.  **Tentukan Kelas Median:**
+
+    Cari kelas interval di mana data ke-<InlineMath math="n/2" /> berada. Caranya, lihat kolom Frekuensi Kumulatif. Kelas Median adalah kelas pertama yang Frekuensi Kumulatifnya **sama atau lebih besar** dari <InlineMath math="n/2" />.
+
+4.  **Gunakan Rumus Median:**
+
+    Setelah Kelas Median ditemukan, gunakan rumus berikut:
+
+    <BlockMath math="Me = L + \left( \frac{\frac{n}{2} - F}{f_{me}} \right) \times c" />
+
+    Keterangan:
+
+    - <InlineMath math="Me" /> = Median data kelompok
+    - <InlineMath math="L" /> = **Tepi Bawah Kelas Median**. Ini adalah batas bawah
+      sebenarnya dari kelas tempat median berada. Dihitung dengan:{" "}
+
+      <BlockMath math="L = \text{Batas Bawah Kelas Median} - 0.5" />
+
+    - <InlineMath math="n" /> = Jumlah total data (total frekuensi)
+    - <InlineMath math="F" /> = **Frekuensi Kumulatif SEBELUM** Kelas Median
+    - <InlineMath math="f_{me}" /> = **Frekuensi Kelas Median** (frekuensi kelas
+      tempat median berada)
+    - <InlineMath math="c" /> = **Panjang Kelas Interval**. Ini adalah lebar setiap
+      kelas interval. Cara umum menghitungnya:
+
+      <BlockMath math="c = \text{Tepi Atas Kelas} - \text{Tepi Bawah Kelas}" />
+
+      (dimana <InlineMath math="\text{Tepi Atas} = \text{Batas Atas} + 0.5" />).
+
+**Contoh:**
+
+Kita gunakan data ukuran sepatu Toko A.
+
+| Ukuran Sepatu | Frekuensi (<InlineMath math="f_i" />) | Frekuensi Kumulatif (<InlineMath math="F_k" />) |
+| :------------ | :------------------------------------ | :---------------------------------------------- |
+| 37-39         | 2                                     | 2                                               |
+| 40-42         | 11                                    | 2 + 11 = 13                                     |
+| **43-45**     | **16** (<InlineMath math="f_{me}" />) | 13 + 16 = **29**                                |
+| 46-48         | 1                                     | 29 + 1 = 30                                     |
+| **Total**     | **<InlineMath math="n=30" />**        |                                                 |
+
+1.  **Posisi Median:** <InlineMath math="n/2 = 30/2 = 15" />. Kita mencari data ke-15.
+2.  **Frekuensi Kumulatif:** Sudah dibuat di tabel.
+3.  **Kelas Median:** Lihat <InlineMath math="F_k" />. Data ke-15 terletak di mana? <InlineMath math="F_k" /> kelas pertama (2) belum cukup. <InlineMath math="F_k" /> kelas kedua (13) juga belum cukup. <InlineMath math="F_k" /> kelas ketiga (29) sudah melebihi 15. Jadi, **Kelas Median adalah 43-45**.
+4.  **Hitung Komponen Rumus:**
+
+    - Kelas Median = 43-45
+    - <InlineMath math="L" /> (Tepi Bawah) = <InlineMath math="43 - 0.5 = 42.5" />
+    - <InlineMath math="n/2" /> = <InlineMath math="30/2 = 15" />
+    - <InlineMath math="F" /> (<InlineMath math="F_k" /> sebelum kelas median) =
+      13
+    - <InlineMath math="f_{me}" /> (Frekuensi kelas median) = 16
+    - <InlineMath math="c" /> (Panjang kelas) = Tepi Atas - Tepi Bawah
+
+      <BlockMath math="c = (45 + 0.5) - (43 - 0.5) = 45.5 - 42.5 = 3" />
+
+5.  **Masukkan ke Rumus Median:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="Me = 42.5 + \left( \frac{15 - 13}{16} \right) \times 3" />
+      <BlockMath math="Me = 42.5 + \left( \frac{2}{16} \right) \times 3" />
+      <BlockMath math="Me = 42.5 + \left( \frac{1}{8} \right) \times 3" />
+      <BlockMath math="Me = 42.5 + \frac{3}{8}" />
+      <BlockMath math="Me = 42.5 + 0.375" />
+      <BlockMath math="Me = 42.875" />
+    </div>
+
+**Jadi, Median dari data ukuran sepatu tersebut adalah sekitar 42.875.** Ini berarti jika semua data diurutkan, nilai tengahnya diperkirakan ada di 42.875.
+
+Ingat ya, sama seperti [Mean data kelompok](/subject/high-school/10/mathematics/statistics/mean-group-data), Median data kelompok ini juga merupakan **estimasi** atau perkiraan nilai tengah.

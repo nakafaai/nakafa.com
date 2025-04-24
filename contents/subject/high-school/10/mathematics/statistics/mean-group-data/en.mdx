@@ -4,3 +4,82 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistics",
 };
+
+## Mean for Grouped Data
+
+You already know how to calculate the mean for individual data, right? Just sum up all the values and divide by the number of data points.
+
+<BlockMath math="\bar{x} = \frac{\sum x_i}{n}" />
+
+But what if the data is presented in **groups** or **intervals**, like in a frequency distribution table? For example, test scores grouped into 70-79, 80-89, 90-100.
+
+When data is grouped, we **don't know the exact value** of each data point within that group. For instance, if there are 5 students in the 70-79 group, we don't know if their scores are exactly 70, 72, 75, or some other value within that range.
+
+## Using the Class Midpoint
+
+Since we don't know the exact values, we use an **assumption** or **approximation**. We assume that all data points within a group are **represented by the midpoint** of that group (class interval).
+
+The class midpoint (often symbolized as <InlineMath math="x_i" />) is calculated as:
+
+<BlockMath math="x_i = \frac{\text{Lower Class Limit} + \text{Upper Class Limit}}{2}" />
+
+## Formula for Mean of Grouped Data
+
+Once we have the midpoint for each class, we can calculate the mean of the grouped data using the formula:
+
+<BlockMath math="\bar{x} = \frac{\sum (f_i \times x_i)}{\sum f_i}" />
+
+Where:
+
+- <InlineMath math="\bar{x}" /> = Mean of the grouped data
+- <InlineMath math="f_i" /> = Frequency of the <InlineMath math="i" />
+  -th class (how many data points are in that group)
+- <InlineMath math="x_i" /> = Midpoint of the <InlineMath math="i" />
+  -th class
+- <InlineMath math="\sum (f_i \times x_i)" /> = Sum of the products of the frequency
+  and midpoint for each class
+- <InlineMath math="\sum f_i" /> = Sum of all frequencies (equal to the total number
+  of data points, <InlineMath math="n" />)
+
+## Example: Average Shoe Size
+
+Consider the grouped data for shoe sales at Store A:
+
+| Shoe Size (Class Interval) | Frequency (<InlineMath math="f_i" />) |
+| :------------------------- | :------------------------------------ |
+| 37-39                      | 2                                     |
+| 40-42                      | 11                                    |
+| 43-45                      | 16                                    |
+| 46-48                      | 1                                     |
+| **Total**                  | **<InlineMath math="n=30" />**        |
+
+**Steps to calculate the Mean:**
+
+1.  **Find the Midpoint (<InlineMath math="x_i" />) for each class:**
+
+    - Class 37-39: <InlineMath math="x_1 = (37+39)/2 = 38" />
+    - Class 40-42: <InlineMath math="x_2 = (40+42)/2 = 41" />
+    - Class 43-45: <InlineMath math="x_3 = (43+45)/2 = 44" />
+    - Class 46-48: <InlineMath math="x_4 = (46+48)/2 = 47" />
+
+2.  **Multiply Frequency by Midpoint (<InlineMath math="f_i \times x_i" />) for each class:**
+
+    - Class 37-39: <InlineMath math="2 \times 38 = 76" />
+    - Class 40-42: <InlineMath math="11 \times 41 = 451" />
+    - Class 43-45: <InlineMath math="16 \times 44 = 704" />
+    - Class 46-48: <InlineMath math="1 \times 47 = 47" />
+
+3.  **Sum all the products (<InlineMath math="\sum (f_i \times x_i)" />):**
+
+    <BlockMath math="\sum (f_i \times x_i) = 76 + 451 + 704 + 47 = 1278" />
+
+4.  **Sum all frequencies (<InlineMath math="\sum f_i" />):**
+
+    <BlockMath math="\sum f_i = 2 + 11 + 16 + 1 = 30" />
+
+5.  **Calculate the Mean (<InlineMath math="\bar{x}" />):**
+    <BlockMath math="\bar{x} = \frac{\sum (f_i \times x_i)}{\sum f_i} = \frac{1278}{30} = 42.6" />
+
+**Therefore, the average shoe size sold at Store A is 42.6.**
+
+Remember, this result is an **estimate** of the mean because we use midpoints to represent the data within each group. However, this is the standard and most common way to calculate the mean for grouped data.

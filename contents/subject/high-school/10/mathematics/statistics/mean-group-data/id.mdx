@@ -4,3 +4,82 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistika",
 };
+
+## Rata-Rata untuk Data Berkelompok
+
+Kalian sudah tahu cara menghitung rata-rata (Mean) dari data tunggal, kan? Yaitu jumlahkan semua nilai lalu bagi dengan banyaknya data.
+
+<BlockMath math="\bar{x} = \frac{\sum x_i}{n}" />
+
+Tapi, bagaimana jika datanya sudah disajikan dalam bentuk **kelompok** atau **interval** seperti pada tabel distribusi frekuensi? Misalnya, data nilai ulangan dikelompokkan menjadi 70-79, 80-89, 90-100.
+
+Kalau datanya sudah dikelompokkan, kita **tidak tahu persis** nilai asli dari setiap data di dalam kelompok itu. Contohnya, di kelompok 70-79 ada 5 siswa, kita tidak tahu apakah nilai mereka 70, 72, 75, atau berapa persisnya.
+
+## Menggunakan Nilai Tengah Kelas
+
+Karena kita tidak tahu nilai pastinya, kita pakai **asumsi** atau **pendekatan**. Kita anggap semua data dalam satu kelompok itu nilainya **diwakili oleh nilai tengah** dari kelompok (kelas interval) tersebut.
+
+Nilai tengah kelas (sering disimbolkan <InlineMath math="x_i" />) dihitung dengan cara:
+
+<BlockMath math="x_i = \frac{\text{Batas Bawah Kelas} + \text{Batas Atas Kelas}}{2}" />
+
+## Rumus Mean Data Kelompok
+
+Setelah kita punya nilai tengah untuk setiap kelas, kita bisa menghitung Mean data kelompok dengan rumus:
+
+<BlockMath math="\bar{x} = \frac{\sum (f_i \times x_i)}{\sum f_i}" />
+
+Keterangan:
+
+- <InlineMath math="\bar{x}" /> = Mean (Rata-rata) data kelompok
+- <InlineMath math="f_i" /> = Frekuensi kelas ke-
+  <InlineMath math="i" /> (berapa banyak data di kelompok itu)
+- <InlineMath math="x_i" /> = Nilai tengah kelas ke-
+  <InlineMath math="i" />
+- <InlineMath math="\sum (f_i \times x_i)" /> = Jumlah dari hasil perkalian frekuensi
+  tiap kelas dengan nilai tengah kelasnya
+- <InlineMath math="\sum f_i" /> = Jumlah total frekuensi (sama dengan total banyaknya
+  data, <InlineMath math="n" />)
+
+## Rata-Rata Ukuran Sepatu
+
+Perhatikan data penjualan sepatu di Toko A yang sudah dikelompokkan berikut:
+
+| Ukuran Sepatu (Kelas Interval) | Frekuensi (<InlineMath math="f_i" />) |
+| :----------------------------- | :------------------------------------ |
+| 37-39                          | 2                                     |
+| 40-42                          | 11                                    |
+| 43-45                          | 16                                    |
+| 46-48                          | 1                                     |
+| **Total**                      | **<InlineMath math="n=30" />**        |
+
+**Langkah-langkah menghitung Mean:**
+
+1.  **Cari Nilai Tengah (<InlineMath math="x_i" />) setiap kelas:**
+
+    - Kelas 37-39: <InlineMath math="x_1 = (37+39)/2 = 38" />
+    - Kelas 40-42: <InlineMath math="x_2 = (40+42)/2 = 41" />
+    - Kelas 43-45: <InlineMath math="x_3 = (43+45)/2 = 44" />
+    - Kelas 46-48: <InlineMath math="x_4 = (46+48)/2 = 47" />
+
+2.  **Kalikan Frekuensi dengan Nilai Tengah (<InlineMath math="f_i \times x_i" />) untuk setiap kelas:**
+
+    - Kelas 37-39: <InlineMath math="2 \times 38 = 76" />
+    - Kelas 40-42: <InlineMath math="11 \times 41 = 451" />
+    - Kelas 43-45: <InlineMath math="16 \times 44 = 704" />
+    - Kelas 46-48: <InlineMath math="1 \times 47 = 47" />
+
+3.  **Jumlahkan semua hasil (<InlineMath math="\sum (f_i \times x_i)" />):**
+
+    <BlockMath math="\sum (f_i \times x_i) = 76 + 451 + 704 + 47 = 1278" />
+
+4.  **Jumlahkan semua frekuensi (<InlineMath math="\sum f_i" />):**
+
+    <BlockMath math="\sum f_i = 2 + 11 + 16 + 1 = 30" />
+
+5.  **Hitung Mean (<InlineMath math="\bar{x}" />):**
+    <BlockMath math="\bar{x} = \frac{\sum (f_i \times x_i)}{\sum f_i} = \frac{1278}{30} = 42.6" />
+
+**Jadi, rata-rata ukuran sepatu yang terjual di Toko A adalah 42.6.**
+
+Perlu diingat, hasil ini adalah **estimasi** atau perkiraan rata-rata, karena kita menggunakan nilai tengah sebagai wakil dari setiap data dalam kelompok. Namun, ini adalah cara standar dan paling umum untuk menghitung rata-rata dari data yang sudah dikelompokkan.

@@ -4,3 +4,110 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistics",
 };
+
+## Modal Class for Grouped Data
+
+For grouped data, we usually don't find a specific Mode value, but instead, we focus on finding the **Modal Class**.
+
+The **Modal Class** is the class interval that has the **highest frequency**. Simply put, just find the group with the most data points.
+
+**Example:**
+
+Store A's shoe size data:
+
+| Shoe Size (Class Interval) | Frequency (<InlineMath math="f_i" />) |
+| :------------------------- | :------------------------------------ |
+| 37-39                      | 2                                     |
+| 40-42                      | 11                                    |
+| **43-45**                  | **16** (Highest Frequency)            |
+| 46-48                      | 1                                     |
+| **Total**                  | **30**                                |
+
+Look at the frequency column. The highest frequency is **16**. The class interval with this frequency is **43-45**.
+
+Thus, the **Modal Class** for this data is **43-45**. This means the most frequently sold shoe size is likely within this range.
+
+## Median for Grouped Data
+
+Finding the Median (middle value) for grouped data is a bit more complex than finding the modal class. Since the data is grouped, we need to use an estimation formula to find approximately where the middle value lies.
+
+### How to Find the Median for Grouped Data
+
+1.  **Calculate Median Position:**
+
+    First, find the position of the middle data point using the formula <InlineMath math="n/2" />, where <InlineMath math="n" /> is the total number of data points.
+
+2.  **Create Cumulative Frequency:**
+
+    Add a column to the frequency distribution table for Cumulative Frequency (<InlineMath math="F_k" />). Cumulative frequency is the sum of frequencies from the first class up to the current class.
+
+3.  **Determine the Median Class:**
+
+    Find the class interval where the <InlineMath math="n/2" />-th data point lies. Look at the Cumulative Frequency column. The Median Class is the first class whose Cumulative Frequency is **equal to or greater than** <InlineMath math="n/2" />.
+
+4.  **Use the Median Formula:**
+
+    Once the Median Class is found, use the following formula:
+
+    <BlockMath math="Me = L + \left( \frac{\frac{n}{2} - F}{f_{me}} \right) \times c" />
+
+    Where:
+
+    - <InlineMath math="Me" /> = Median of the grouped data
+    - <InlineMath math="L" /> = **Lower Boundary of the Median Class**. This is the
+      true lower limit of the class where the median lies. Calculated as:{" "}
+
+      <BlockMath math="L = \text{Lower Limit of Median Class} - 0.5" />
+
+    - <InlineMath math="n" /> = Total number of data points (total frequency)
+    - <InlineMath math="F" /> = **Cumulative Frequency BEFORE** the Median Class
+    - <InlineMath math="f_{me}" /> = **Frequency of the Median Class** (the frequency
+      of the class containing the median)
+    - <InlineMath math="c" /> = **Class Width**. This is the width of each class
+      interval. Common calculation method:
+
+      <BlockMath math="c = \text{Upper Class Boundary} - \text{Lower Class Boundary}" />
+
+      (where <InlineMath math="\text{Upper Boundary} = \text{Upper Limit} + 0.5" />).
+
+**Example:**
+
+Let's use Store A's shoe size data.
+
+| Shoe Size | Frequency (<InlineMath math="f_i" />) | Cumulative Frequency (<InlineMath math="F_k" />) |
+| :-------- | :------------------------------------ | :----------------------------------------------- |
+| 37-39     | 2                                     | 2                                                |
+| 40-42     | 11                                    | 2 + 11 = 13                                      |
+| **43-45** | **16** (<InlineMath math="f_{me}" />) | 13 + 16 = **29**                                 |
+| 46-48     | 1                                     | 29 + 1 = 30                                      |
+| **Total** | **<InlineMath math="n=30" />**        |                                                  |
+
+1.  **Median Position:** <InlineMath math="n/2 = 30/2 = 15" />. We are looking for the 15th data point.
+2.  **Cumulative Frequency:** Already created in the table.
+3.  **Median Class:** Look at <InlineMath math="F_k" />. Where does the 15th data point fall? The <InlineMath math="F_k" /> of the first class (2) is not enough. The <InlineMath math="F_k" /> of the second class (13) is also not enough. The <InlineMath math="F_k" /> of the third class (29) exceeds 15. So, the **Median Class is 43-45**.
+4.  **Calculate Formula Components:**
+
+    - Median Class = 43-45
+    - <InlineMath math="L" /> (Lower Boundary) = <InlineMath math="43 - 0.5 = 42.5" />
+    - <InlineMath math="n/2" /> = <InlineMath math="30/2 = 15" />
+    - <InlineMath math="F" /> (<InlineMath math="F_k" /> before median class) =
+      13
+    - <InlineMath math="f_{me}" /> (Frequency of median class) = 16
+    - <InlineMath math="c" /> (Class width) = Upper Boundary - Lower Boundary
+
+      <BlockMath math="c = (45 + 0.5) - (43 - 0.5) = 45.5 - 42.5 = 3" />
+
+5.  **Plug into the Median Formula:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="Me = 42.5 + \left( \frac{15 - 13}{16} \right) \times 3" />
+      <BlockMath math="Me = 42.5 + \left( \frac{2}{16} \right) \times 3" />
+      <BlockMath math="Me = 42.5 + \left( \frac{1}{8} \right) \times 3" />
+      <BlockMath math="Me = 42.5 + \frac{3}{8}" />
+      <BlockMath math="Me = 42.5 + 0.375" />
+      <BlockMath math="Me = 42.875" />
+    </div>
+
+**So, the Median of the shoe size data is approximately 42.875.** This means if all the data were sorted, the middle value is estimated to be 42.875.
+
+Remember, just like the [Mean for grouped data](/subject/high-school/10/mathematics/statistics/mean-group-data), the Median for grouped data is also an **estimation** of the true middle value.
