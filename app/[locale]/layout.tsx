@@ -205,7 +205,9 @@ export default async function LocaleLayout({ children, params }: Props) {
       )}
       suppressHydrationWarning
     >
-      <Script src="https://unpkg.com/react-scan/dist/auto.global.js" />
+      {process.env.NODE_ENV === "development" && (
+        <Script src="https://unpkg.com/react-scan/dist/auto.global.js" />
+      )}
       <body>
         <NextIntlClientProvider>
           {/* Add JSON-LD structured data using the JsonLd component */}
