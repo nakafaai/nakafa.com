@@ -18,6 +18,7 @@ import { HeartCrackIcon, InfoIcon, RocketIcon } from "lucide-react";
 import { FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { addBasePath } from "next/dist/client/add-base-path";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useDeferredValue, useEffect } from "react";
 import type { ReactElement } from "react";
@@ -268,23 +269,20 @@ function SearchResults({
             <CommandItem
               key={subResult.url}
               className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
-              onMouseEnter={() => {
-                router.prefetch(subResult.url);
-              }}
-              onFocus={() => {
-                router.prefetch(subResult.url);
-              }}
               onSelect={() => {
                 setClose();
                 router.push(subResult.url);
               }}
+              asChild
             >
-              {subResult.anchor?.element === "h2" ? (
-                <FileTextIcon />
-              ) : (
-                <IconMenu3 />
-              )}
-              <span className="line-clamp-1">{subResult.title}</span>
+              <Link href={subResult.url} prefetch>
+                {subResult.anchor?.element === "h2" ? (
+                  <FileTextIcon />
+                ) : (
+                  <IconMenu3 />
+                )}
+                <span className="line-clamp-1">{subResult.title}</span>
+              </Link>
             </CommandItem>
           ))}
         </CommandGroup>
