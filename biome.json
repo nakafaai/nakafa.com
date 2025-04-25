@@ -16,6 +16,11 @@
             "maxAllowedComplexity": 30
           }
         }
+      },
+      "nursery": {
+        "noUnknownPseudoElement": {
+          "level": "off"
+        }
       }
     }
   }

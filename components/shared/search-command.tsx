@@ -13,7 +13,7 @@ import { searchAtom } from "@/lib/jotai/search";
 import { cn } from "@/lib/utils";
 import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
 import { IconMenu3 } from "@tabler/icons-react";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { HeartCrackIcon, InfoIcon, RocketIcon } from "lucide-react";
 import { FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -76,14 +76,76 @@ function getErrorMessage(error: unknown) {
 }
 
 export function SearchCommand() {
-  const t = useTranslations("Utils");
-
   const [open, setOpen] = useAtom(searchAtom);
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const el = document.activeElement;
+      if (!el || (el as HTMLElement).isContentEditable) {
+        return;
+      }
+      if (
+        event.key === "/" ||
+        (event.key === "k" &&
+          !event.shiftKey &&
+          (navigator.userAgent.includes("Mac") ? event.metaKey : event.ctrlKey))
+      ) {
+        event.preventDefault();
+        setOpen(true);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [setOpen]);
+
+  return (
+    <CommandDialog
+      open={open}
+      onOpenChange={setOpen}
+      commandProps={{
+        shouldFilter: false, // filter by pagefind results
+        loop: true,
+      }}
+    >
+      <SearchMain />
+    </CommandDialog>
+  );
+}
+
+function SearchMain() {
+  const [search, setSearch] = useState("");
+
+  return (
+    <>
+      <SearchInput value={search} onChange={setSearch} />
+      <SearchList search={search} />
+    </>
+  );
+}
+
+function SearchInput({
+  value,
+  onChange,
+}: { value: string; onChange: (value: string) => void }) {
+  const t = useTranslations("Utils");
+
+  return (
+    <CommandInput
+      placeholder={t("search-placeholder")}
+      value={value}
+      onValueChange={onChange}
+      autoFocus
+    />
+  );
+}
+
+function SearchList({ search }: { search: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ReactElement | string>("");
   const [results, setResults] = useState<PagefindResult[]>([]);
-  const [search, setSearch] = useState("");
   // defer pagefind results update for prioritizing user input state
   const deferredSearch = useDeferredValue(search);
 
@@ -146,73 +208,33 @@ export function SearchCommand() {
     handleSearch(deferredSearch);
   }, [deferredSearch]);
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      const el = document.activeElement;
-      if (!el || (el as HTMLElement).isContentEditable) {
-        return;
-      }
-      if (
-        event.key === "/" ||
-        (event.key === "k" &&
-          !event.shiftKey &&
-          (navigator.userAgent.includes("Mac") ? event.metaKey : event.ctrlKey))
-      ) {
-        event.preventDefault();
-        setOpen(true);
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [setOpen]);
-
   return (
-    <CommandDialog
-      open={open}
-      onOpenChange={setOpen}
-      commandProps={{
-        shouldFilter: false, // filter by pagefind results
-        loop: true,
-      }}
-    >
-      <CommandInput
-        placeholder={t("search-placeholder")}
-        value={search}
-        onValueChange={setSearch}
-        autoFocus
+    <CommandList className="h-full max-h-[calc(100dvh-15rem)]">
+      <SearchListItems
+        error={error}
+        deferredSearch={deferredSearch}
+        isLoading={isLoading}
+        results={results}
       />
-      <CommandList className="h-full max-h-[calc(100dvh-15rem)]">
-        <SearchResults
-          error={error}
-          deferredSearch={deferredSearch}
-          isLoading={isLoading}
-          results={results}
-          setClose={() => setOpen(false)}
-        />
-      </CommandList>
-    </CommandDialog>
+    </CommandList>
   );
 }
 
-function SearchResults({
+function SearchListItems({
   error,
   deferredSearch,
   isLoading,
   results,
-  setClose,
 }: {
   error: ReactElement | string;
   deferredSearch: string;
   isLoading: boolean;
   results: PagefindResult[];
-  setClose: () => void;
 }) {
   const t = useTranslations("Utils");
   const router = useRouter();
 
+  const setOpen = useSetAtom(searchAtom);
   const [isPending, startTransition] = useTransition();
 
   if (error) {
@@ -266,35 +288,29 @@ function SearchResults({
     return (
       <Fragment key={result.url}>
         <CommandGroup heading={result.meta.title}>
-          {visibleSubResults.map((subResult) => {
-            router.prefetch(subResult.url);
-            return (
-              <CommandItem
-                key={subResult.url}
-                value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
-                className={cn(
-                  "cursor-pointer",
-                  getAnchorStyle(subResult.anchor)
-                )}
-                onMouseEnter={() => router.prefetch(subResult.url)}
-                onFocus={() => router.prefetch(subResult.url)}
-                onSelect={() => {
-                  startTransition(() => {
-                    router.push(subResult.url);
-                    setClose();
-                  });
-                }}
-                disabled={isPending}
-              >
-                {subResult.anchor?.element === "h2" ? (
-                  <FileTextIcon />
-                ) : (
-                  <IconMenu3 />
-                )}
-                <span className="line-clamp-1">{subResult.title}</span>
-              </CommandItem>
-            );
-          })}
+          {visibleSubResults.map((subResult) => (
+            <CommandItem
+              key={subResult.url}
+              value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
+              className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
+              onMouseEnter={() => router.prefetch(subResult.url)}
+              onFocus={() => router.prefetch(subResult.url)}
+              onSelect={() => {
+                startTransition(() => {
+                  setOpen(false);
+                  router.push(subResult.url);
+                });
+              }}
+              disabled={isPending}
+            >
+              {subResult.anchor?.element === "h2" ? (
+                <FileTextIcon />
+              ) : (
+                <IconMenu3 />
+              )}
+              <span className="line-clamp-1">{subResult.title}</span>
+            </CommandItem>
+          ))}
         </CommandGroup>
 
         <CommandSeparator
