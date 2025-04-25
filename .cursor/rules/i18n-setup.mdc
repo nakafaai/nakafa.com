@@ -1,0 +1,24 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Internationalization (i18n) Setup
+
+This project uses `next-intl` for internationalization.
+
+## Configuration
+- **Supported Locales:** `id` (Indonesian), `en` (English)
+- **Default Locale:** `en`
+- **Locale Detection:** Handled by `next-intl` middleware defined in `middleware.ts`. ([middleware.ts](mdc:middleware.ts))
+- **Routing Configuration:** Defined in `i18n/index.ts` ([i18n/index.ts](mdc:i18n/index.ts)) and used by the middleware.
+
+## Message Files
+- Translation messages are stored in JSON files within the `messages/` directory. ([messages/](mdc:messages))
+- Each locale has its own file (e.g., `messages/en.json`, `messages/id.json`).
+- Messages are loaded dynamically based on the current locale via `i18n/request.ts`. ([i18n/request.ts](mdc:i18n/request.ts))
+
+## Usage
+- Use the locale-aware navigation components exported from `i18n/routing.ts` (e.g., `Link`, `usePathname`) for routing. ([i18n/routing.ts](mdc:i18n/routing.ts))
+- Access translations in Server Components using functions provided by `next-intl/server` (configured in `i18n/request.ts`).
+- Access translations in Client Components using hooks like `useTranslations` from `next-intl`.

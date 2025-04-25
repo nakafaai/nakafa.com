@@ -10,9 +10,6 @@
 !.yarn/releases
 !.yarn/versions
 
-# cursor
-.cursor
-
 # data
 /script/_data
 
