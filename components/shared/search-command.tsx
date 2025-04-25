@@ -1,24 +1,28 @@
 "use client";
 
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { searchAtom } from "@/lib/jotai/search";
+import { cn } from "@/lib/utils";
 import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
+import { IconMenu3 } from "@tabler/icons-react";
 import { useAtom } from "jotai";
-import { HeartCrackIcon, InfoIcon, RocketIcon, SearchIcon } from "lucide-react";
+import { HeartCrackIcon, InfoIcon, RocketIcon } from "lucide-react";
+import { FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { addBasePath } from "next/dist/client/add-base-path";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useDeferredValue, useEffect } from "react";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
 import { LoaderIcon } from "../ui/icons";
-import { ScrollArea } from "../ui/scroll-area";
-import { SearchResults } from "./search-results";
 
 // Define regex patterns at top level for better performance
 const HTML_EXT_REGEX = /\.html$/;
@@ -69,68 +73,6 @@ function getErrorMessage(error: unknown) {
     return `${error.constructor.name}: ${error.message}`;
   }
   return String(error);
-}
-
-function ContentContainer({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
-      {children}
-    </div>
-  );
-}
-
-function Content({
-  isLoading,
-  error,
-  results,
-  search,
-}: {
-  isLoading: boolean;
-  error: ReactElement | string;
-  results: PagefindResult[];
-  search: string;
-}) {
-  const t = useTranslations("Utils");
-
-  if (error) {
-    return (
-      <ContentContainer>
-        <InfoIcon className="size-4" />
-        <p>{t("search-error")}</p>
-      </ContentContainer>
-    );
-  }
-
-  if (!search) {
-    return (
-      <ContentContainer>
-        <RocketIcon className="size-4" />
-        <p>{t("search-help")}</p>
-      </ContentContainer>
-    );
-  }
-
-  if (results.length) {
-    return results.map((result) => (
-      <SearchResults key={result.url} data={result} />
-    ));
-  }
-
-  if (isLoading) {
-    return (
-      <ContentContainer>
-        <LoaderIcon />
-        <p>{t("search-loading")}</p>
-      </ContentContainer>
-    );
-  }
-
-  return (
-    <ContentContainer>
-      <HeartCrackIcon className="size-4" />
-      <p>{t("search-not-found")}</p>
-    </ContentContainer>
-  );
 }
 
 export function SearchCommand() {
@@ -228,32 +170,142 @@ export function SearchCommand() {
   }, [setOpen]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent hideClose className="gap-0 p-0">
-        <DialogHeader className="sr-only">
-          <DialogTitle>{t("search")}</DialogTitle>
-          <DialogDescription>{t("search-help")}</DialogDescription>
-        </DialogHeader>
-        <div className="flex items-center gap-2 border-b px-4">
-          <SearchIcon className="size-4 shrink-0 opacity-50" />
-          <input
-            placeholder={t("search-placeholder")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autoFocus
-            className="h-12 w-full flex-1 rounded-md bg-transparent text-sm outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-          />
-        </div>
-
-        <ScrollArea className="max-h-[calc(100dvh-15rem)] sm:max-h-[calc(100dvh-20rem)]">
-          <Content
-            isLoading={isLoading}
-            error={error}
-            results={results}
-            search={deferredSearch}
-          />
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+    <CommandDialog
+      open={open}
+      onOpenChange={setOpen}
+      commandProps={{
+        shouldFilter: false, // filter by pagefind results
+        loop: true,
+      }}
+    >
+      <CommandInput
+        placeholder={t("search-placeholder")}
+        value={search}
+        onValueChange={setSearch}
+        autoFocus
+      />
+      <CommandList className="h-full max-h-[calc(100dvh-15rem)]">
+        <SearchResults
+          error={error}
+          deferredSearch={deferredSearch}
+          isLoading={isLoading}
+          results={results}
+          setClose={() => setOpen(false)}
+        />
+      </CommandList>
+    </CommandDialog>
   );
+}
+
+function SearchResults({
+  error,
+  deferredSearch,
+  isLoading,
+  results,
+  setClose,
+}: {
+  error: ReactElement | string;
+  deferredSearch: string;
+  isLoading: boolean;
+  results: PagefindResult[];
+  setClose: () => void;
+}) {
+  const t = useTranslations("Utils");
+  const router = useRouter();
+
+  if (error) {
+    return (
+      <CommandEmpty className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
+        <InfoIcon className="size-4" />
+        <p>{t("search-error")}</p>
+      </CommandEmpty>
+    );
+  }
+
+  if (!deferredSearch) {
+    return (
+      <CommandEmpty className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
+        <RocketIcon className="size-4" />
+        <p>{t("search-help")}</p>
+      </CommandEmpty>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <CommandEmpty className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
+        <LoaderIcon />
+        <p>{t("search-loading")}</p>
+      </CommandEmpty>
+    );
+  }
+
+  if (results.length === 0) {
+    return (
+      <CommandEmpty className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
+        <HeartCrackIcon className="size-4" />
+        <p>{t("search-not-found")}</p>
+      </CommandEmpty>
+    );
+  }
+
+  // Render results
+  return results.map((result) => {
+    // Filter out sub_results with titles matching the meta title
+    const visibleSubResults = result.sub_results.filter(
+      (subResult) => subResult.title !== result.meta.title
+    );
+
+    // If there are no visible sub_results, don't render the group
+    if (visibleSubResults.length === 0) {
+      return null;
+    }
+
+    return (
+      <CommandGroup key={result.url} heading={result.meta.title}>
+        {visibleSubResults.map((subResult) => (
+          <CommandItem
+            key={subResult.url}
+            asChild
+            className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
+            onSelect={() => {
+              setClose();
+              // keep router.push because user can use keyboard to navigate
+              router.push(subResult.url);
+            }}
+          >
+            <Link href={subResult.url} prefetch>
+              {subResult.anchor?.element === "h2" ? (
+                <FileTextIcon />
+              ) : (
+                <IconMenu3 />
+              )}
+              <span className="line-clamp-1">{subResult.title}</span>
+            </Link>
+          </CommandItem>
+        ))}
+      </CommandGroup>
+    );
+  });
+}
+
+function getAnchorStyle(
+  anchor: PagefindResult["sub_results"][number]["anchor"]
+) {
+  if (!anchor) {
+    return null;
+  }
+  if (anchor.element === "h3") {
+    return "ml-5";
+  }
+  if (anchor.element === "h4") {
+    return "ml-9";
+  }
+  if (anchor.element === "h5") {
+    return "ml-13";
+  }
+  if (anchor.element === "h6") {
+    return "ml-17";
+  }
+  return null;
 }
