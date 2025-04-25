@@ -268,6 +268,7 @@ function SearchResults({
           {visibleSubResults.map((subResult) => (
             <CommandItem
               key={subResult.url}
+              value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
               className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
               onSelect={() => {
                 setClose();
