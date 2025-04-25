@@ -232,7 +232,7 @@ function SearchResults({
     );
   }
 
-  if (isLoading) {
+  if (isLoading && !results.length) {
     return (
       <CommandEmpty className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
         <LoaderIcon />
