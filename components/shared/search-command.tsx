@@ -18,9 +18,8 @@ import { HeartCrackIcon, InfoIcon, RocketIcon } from "lucide-react";
 import { FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { addBasePath } from "next/dist/client/add-base-path";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useDeferredValue, useEffect } from "react";
+import { Fragment, useDeferredValue, useEffect, useTransition } from "react";
 import type { ReactElement } from "react";
 import { useState } from "react";
 import { LoaderIcon } from "../ui/icons";
@@ -214,6 +213,8 @@ function SearchResults({
   const t = useTranslations("Utils");
   const router = useRouter();
 
+  const [isPending, startTransition] = useTransition();
+
   if (error) {
     return (
       <CommandEmpty className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
@@ -265,27 +266,35 @@ function SearchResults({
     return (
       <Fragment key={result.url}>
         <CommandGroup heading={result.meta.title}>
-          {visibleSubResults.map((subResult) => (
-            <CommandItem
-              key={subResult.url}
-              value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
-              className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
-              onSelect={() => {
-                setClose();
-                router.push(subResult.url);
-              }}
-              asChild
-            >
-              <Link href={subResult.url} prefetch>
+          {visibleSubResults.map((subResult) => {
+            router.prefetch(subResult.url);
+            return (
+              <CommandItem
+                key={subResult.url}
+                value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
+                className={cn(
+                  "cursor-pointer",
+                  getAnchorStyle(subResult.anchor)
+                )}
+                onMouseEnter={() => router.prefetch(subResult.url)}
+                onFocus={() => router.prefetch(subResult.url)}
+                onSelect={() => {
+                  startTransition(() => {
+                    router.push(subResult.url);
+                    setClose();
+                  });
+                }}
+                disabled={isPending}
+              >
                 {subResult.anchor?.element === "h2" ? (
                   <FileTextIcon />
                 ) : (
                   <IconMenu3 />
                 )}
                 <span className="line-clamp-1">{subResult.title}</span>
-              </Link>
-            </CommandItem>
-          ))}
+              </CommandItem>
+            );
+          })}
         </CommandGroup>
 
         <CommandSeparator
