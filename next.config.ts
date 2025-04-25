@@ -24,7 +24,6 @@ const nextConfig: NextConfig = {
     mdxRs: {
       mdxType: "gfm",
     },
-    ppr: "incremental",
     optimizePackageImports: ["three"],
   },
   images: {
