@@ -7,6 +7,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import { searchAtom } from "@/lib/jotai/search";
 import { cn } from "@/lib/utils";
@@ -19,7 +20,7 @@ import { useTranslations } from "next-intl";
 import { addBasePath } from "next/dist/client/add-base-path";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useDeferredValue, useEffect } from "react";
+import { Fragment, useDeferredValue, useEffect } from "react";
 import type { ReactElement } from "react";
 import { useState } from "react";
 import { LoaderIcon } from "../ui/icons";
@@ -250,7 +251,7 @@ function SearchResults({
   }
 
   // Render results
-  return results.map((result) => {
+  return results.map((result, index) => {
     // Filter out sub_results with titles matching the meta title
     const visibleSubResults = result.sub_results.filter(
       (subResult) => subResult.title !== result.meta.title
@@ -262,29 +263,36 @@ function SearchResults({
     }
 
     return (
-      <CommandGroup key={result.url} heading={result.meta.title}>
-        {visibleSubResults.map((subResult) => (
-          <CommandItem
-            key={subResult.url}
-            asChild
-            className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
-            onSelect={() => {
-              setClose();
-              // keep router.push because user can use keyboard to navigate
-              router.push(subResult.url);
-            }}
-          >
-            <Link href={subResult.url} prefetch>
-              {subResult.anchor?.element === "h2" ? (
-                <FileTextIcon />
-              ) : (
-                <IconMenu3 />
-              )}
-              <span className="line-clamp-1">{subResult.title}</span>
-            </Link>
-          </CommandItem>
-        ))}
-      </CommandGroup>
+      <Fragment key={result.url}>
+        <CommandGroup heading={result.meta.title}>
+          {visibleSubResults.map((subResult) => (
+            <CommandItem
+              key={subResult.url}
+              asChild
+              className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
+              onSelect={() => {
+                setClose();
+                // keep router.push because user can use keyboard to navigate
+                router.push(subResult.url);
+              }}
+            >
+              <Link href={subResult.url} prefetch>
+                {subResult.anchor?.element === "h2" ? (
+                  <FileTextIcon />
+                ) : (
+                  <IconMenu3 />
+                )}
+                <span className="line-clamp-1">{subResult.title}</span>
+              </Link>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+
+        <CommandSeparator
+          alwaysRender={index !== results.length - 1}
+          className="my-2"
+        />
+      </Fragment>
     );
   });
 }
