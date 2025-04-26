@@ -82,7 +82,6 @@ export async function generateMetadata({
 
   return {
     title: metadata.title,
-    description: metadata.description,
     alternates,
     authors: metadata.authors,
     category: t(material),
