@@ -9,19 +9,21 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { searchAtom } from "@/lib/jotai/search";
+import { queryAtom, searchAtom } from "@/lib/jotai/search";
 import { cn } from "@/lib/utils";
 import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
 import { IconMenu3 } from "@tabler/icons-react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAtom, useSetAtom } from "jotai";
 import { HeartCrackIcon, InfoIcon, RocketIcon } from "lucide-react";
 import { FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { addBasePath } from "next/dist/client/add-base-path";
 import { useRouter } from "next/navigation";
-import { Fragment, useDeferredValue, useEffect, useTransition } from "react";
+import { Fragment, useEffect, useTransition } from "react";
 import type { ReactElement } from "react";
 import { useState } from "react";
+import { useDebounceValue } from "usehooks-ts";
 import { LoaderIcon } from "../ui/icons";
 
 // Define regex patterns at top level for better performance
@@ -116,7 +118,7 @@ export function SearchCommand() {
 }
 
 function SearchMain() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useAtom(queryAtom);
 
   return (
     <>
@@ -143,77 +145,86 @@ function SearchInput({
 }
 
 function SearchList({ search }: { search: string }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<ReactElement | string>("");
-  const [results, setResults] = useState<PagefindResult[]>([]);
-  // defer pagefind results update for prioritizing user input state
-  const deferredSearch = useDeferredValue(search);
+  const [isPagefindReady, setIsPagefindReady] = useState(false);
+  const [pagefindError, setPagefindError] = useState<ReactElement | string>("");
 
+  const [debouncedSearch] = useDebounceValue(search, 500);
+
+  // Initialize Pagefind on mount
   useEffect(() => {
-    const getResults = async (value: string) => {
-      const response = await window.pagefind.debouncedSearch<PagefindResult>(
-        value,
-        SEARCH_OPTIONS
-      );
-      if (!response) {
+    const init = async () => {
+      setPagefindError(""); // Reset error on attempt
+      if (window.pagefind) {
+        setIsPagefindReady(true);
         return;
       }
-
       try {
-        // @ts-expect-error: pagefind returns a promise of an array of objects
-        const data = await Promise.all(response.results.map((o) => o.data()));
-
-        setResults(
-          data.map((newData: PagefindResult) => ({
-            ...newData,
-            sub_results: newData.sub_results.map((r) => {
-              const url = r.url
-                .replace(HTML_EXT_REGEX, "")
-                .replace(HTML_ANCHOR_REGEX, "#");
-
-              return { ...r, url };
-            }),
-          }))
-        );
-      } catch (error) {
-        setError(getErrorMessage(error));
-      } finally {
-        setIsLoading(false);
+        await importPagefind();
+        setIsPagefindReady(true);
+      } catch (error: unknown) {
+        setPagefindError(getErrorMessage(error));
+        setIsPagefindReady(false); // Explicitly set to false on error
       }
     };
+    init();
+  }, []);
 
-    const handleSearch = async (value: string) => {
-      if (!value) {
-        setResults([]);
-        setError("");
-        return;
-      }
+  const fetchSearchResults = async (
+    query: string
+  ): Promise<PagefindResult[]> => {
+    if (!window.pagefind?.debouncedSearch) {
+      // Should not happen if isPagefindReady is true, but good practice
+      throw new Error("Pagefind not initialized correctly.");
+    }
 
-      setIsLoading(true);
+    const response = await window.pagefind.debouncedSearch<PagefindResult>(
+      query,
+      SEARCH_OPTIONS
+    );
 
-      if (!window.pagefind) {
-        setError("");
-        try {
-          await importPagefind();
-        } catch (error: unknown) {
-          setError(getErrorMessage(error));
-          setIsLoading(false);
-          return;
-        }
-      }
+    if (!response) {
+      return [];
+    }
 
-      await getResults(value);
-    };
+    // @ts-expect-error: pagefind returns a promise of an array of objects
+    const data = await Promise.all(response.results.map((o) => o.data()));
 
-    handleSearch(deferredSearch);
-  }, [deferredSearch]);
+    return data.map((newData: PagefindResult) => ({
+      ...newData,
+      sub_results: newData.sub_results.map((r) => {
+        const url = r.url
+          .replace(HTML_EXT_REGEX, "")
+          .replace(HTML_ANCHOR_REGEX, "#");
+        return { ...r, url };
+      }),
+    }));
+  };
+
+  const {
+    data: results = [],
+    isError,
+    error,
+    isLoading,
+    isPlaceholderData,
+  } = useQuery({
+    queryKey: ["pagefind", debouncedSearch],
+    queryFn: () => fetchSearchResults(debouncedSearch),
+    enabled: isPagefindReady && !!debouncedSearch,
+    refetchOnWindowFocus: false,
+    retry: false,
+    placeholderData: keepPreviousData,
+  });
+
+  // Combine initialization error with query error
+  const hasError = isError || !!pagefindError;
+  const displayError = pagefindError || (error ? getErrorMessage(error) : "");
 
   return (
     <CommandList className="h-full max-h-[calc(100dvh-15rem)]">
       <SearchListItems
-        error={error}
-        deferredSearch={deferredSearch}
-        isLoading={isLoading}
+        error={hasError ? displayError : ""}
+        search={debouncedSearch}
+        isLoading={isLoading && !hasError && !isPlaceholderData}
         results={results}
       />
     </CommandList>
@@ -222,58 +233,59 @@ function SearchList({ search }: { search: string }) {
 
 function SearchListItems({
   error,
-  deferredSearch,
+  search,
   isLoading,
   results,
 }: {
   error: ReactElement | string;
-  deferredSearch: string;
+  search: string;
   isLoading: boolean;
   results: PagefindResult[];
 }) {
   const t = useTranslations("Utils");
   const router = useRouter();
-
   const setOpen = useSetAtom(searchAtom);
   const [isPending, startTransition] = useTransition();
 
   if (error) {
     return (
-      <CommandEmpty className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
+      <CommandEmpty className="flex flex-col items-center justify-center gap-1 p-7.5 text-center text-muted-foreground text-sm">
         <InfoIcon className="size-4" />
-        <p>{t("search-error")}</p>
+        <div className="mt-1">{t("search-error")}</div>
+        {typeof error === "string" || typeof error === "object" ? (
+          <div className="mt-2 max-w-xs break-words text-xs">{error}</div>
+        ) : null}
       </CommandEmpty>
     );
   }
 
-  if (!deferredSearch) {
+  if (!search) {
     return (
-      <CommandEmpty className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
+      <CommandEmpty className="flex items-center justify-center gap-1 p-7.5 text-muted-foreground text-sm">
         <RocketIcon className="size-4" />
         <p>{t("search-help")}</p>
       </CommandEmpty>
     );
   }
 
-  if (isLoading && !results.length) {
+  if (isLoading) {
     return (
-      <CommandEmpty className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
+      <CommandEmpty className="flex items-center justify-center gap-1 p-7.5 text-muted-foreground text-sm">
         <LoaderIcon />
         <p>{t("search-loading")}</p>
       </CommandEmpty>
     );
   }
 
-  if (results.length === 0) {
+  if (results.length === 0 && search) {
     return (
-      <CommandEmpty className="flex items-center justify-center gap-1 p-8 text-muted-foreground text-sm">
+      <CommandEmpty className="flex items-center justify-center gap-1 p-7.5 text-muted-foreground text-sm">
         <HeartCrackIcon className="size-4" />
         <p>{t("search-not-found")}</p>
       </CommandEmpty>
     );
   }
 
-  // Render results
   return results.map((result, index) => {
     // Filter out sub_results with titles matching the meta title
     const visibleSubResults = result.sub_results.filter(
@@ -314,7 +326,7 @@ function SearchListItems({
         </CommandGroup>
 
         <CommandSeparator
-          alwaysRender={index !== results.length - 1}
+          hidden={index === results.length - 1}
           className="my-2"
         />
       </Fragment>
