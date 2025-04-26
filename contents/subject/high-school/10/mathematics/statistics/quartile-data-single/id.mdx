@@ -4,3 +4,122 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistika",
 };
+
+## Apa Itu Kuartil?
+
+Median itu kayak penggaris yang membagi data jadi dua bagian sama besar, pas di tengah (50%). Nah, ada lagi nih temannya median, namanya **kuartil**.
+
+Kalau median membagi data jadi dua, kuartil ini lebih jago lagi, dia membagi data yang sudah diurutin jadi **empat** bagian yang sama besar! Bayangin kamu punya coklat batang, terus kamu patahin jadi empat potong sama rata. Nah, kuartil itu titik-titik patahannya.
+
+Ada tiga titik patahan kuartil:
+
+1.  **Kuartil Bawah (<InlineMath math="Q_1" />):** Ini patahan pertama. Dia misahin 25% data yang paling kecil dari yang lainnya. Kayak seperempat coklat pertama.
+2.  **Kuartil Tengah (<InlineMath math="Q_2" />):** Ini dia si **median**! Dia ada di tengah-tengah persis, membagi data jadi dua (50% kiri, 50% kanan). Kayak patahan di tengah coklat.
+3.  **Kuartil Atas (<InlineMath math="Q_3" />):** Ini patahan terakhir. Dia misahin 75% data yang kecil dari 25% data yang paling gede. Kayak batas setelah tiga perempat coklat.
+
+Jadi, <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" /> membagi data kita jadi empat kelompok kecil yang isinya sama banyak (masing-masing 25%).
+
+## Cara Mencari Letak Kuartil
+
+Oke, sekarang gimana caranya kita tahu si <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" /> ini ada di urutan data ke berapa?
+
+Anggap kita punya <InlineMath math="n" /> data yang sudah kita urutin dari yang paling kecil sampai paling besar.
+
+### Q1 (Kuartil Bawah)
+
+Rumusnya gampang:
+
+<BlockMath math="\text{Letak } Q_1 = \text{Data ke-}\frac{1}{4}(n+1)" />
+
+- **Kalau hasilnya angka bulat**, misalnya 5, berarti <InlineMath math="Q_1" /> itu ya nilai data di urutan ke-5.
+- **Kalau hasilnya angka pakai koma**, misalnya <InlineMath math="5,25" />, berarti <InlineMath math="Q_1" /> itu ada di antara data urutan ke-5 dan data urutan ke-6. (Nanti ada cara hitung nilainya, tapi sekarang kita cari letaknya dulu).
+
+**Contoh Gampang:**
+
+Misalnya kita punya 20 data (<InlineMath math="n=20" />).
+
+Letak <InlineMath math="Q_1" /> = Data ke-<InlineMath math="\frac{1}{4}(20+1)" /> = Data ke-<InlineMath math="\frac{21}{4}" /> = Data ke-5.25.
+
+Artinya, <InlineMath math="Q_1" /> ada di antara data ke-5 dan data ke-6.
+
+### Q2 (Median atau Kuartil Tengah)
+
+Ini kan median, jadi rumusnya:
+
+<BlockMath math="\text{Letak } Q_2 = \text{Data ke-}\frac{1}{2}(n+1)" />
+
+Aturannya sama kayak <InlineMath math="Q_1" />:
+
+- **Kalau hasilnya angka bulat**, misal 10, <InlineMath math="Q_2" /> itu nilai data ke-10.
+- **Kalau hasilnya angka pakai koma**, misal 10,5, <InlineMath math="Q_2" /> ada di antara data ke-10 dan data ke-11.
+
+**Contoh Gampang (<InlineMath math="n=20" />):**
+
+Letak <InlineMath math="Q_2" /> = Data ke-<InlineMath math="\frac{1}{2}(20+1)" /> = Data ke-<InlineMath math="\frac{21}{2}" /> = Data ke-10,5.
+
+Artinya, <InlineMath math="Q_2" /> (median) ada di antara data ke-10 dan data ke-11.
+
+### Q3 (Kuartil Atas)
+
+Rumusnya mirip lagi:
+
+<BlockMath math="\text{Letak } Q_3 = \text{Data ke-}\frac{3}{4}(n+1)" />
+
+Aturannya juga sama persis:
+
+- **Kalau hasilnya angka bulat**, misal 15, <InlineMath math="Q_3" /> itu nilai data ke-15.
+- **Kalau hasilnya angka pakai koma**, misal 15,75, <InlineMath math="Q_3" /> ada di antara data ke-15 dan data ke-16.
+
+**Contoh Gampang (<InlineMath math="n=20" />):**
+
+Letak <InlineMath math="Q_3" /> = Data ke-<InlineMath math="\frac{3}{4}(20+1)" /> = Data ke-<InlineMath math="\frac{63}{4}" /> = Data ke-15,75.
+
+Artinya, <InlineMath math="Q_3" /> ada di antara data ke-15 dan data ke-16.
+
+## Latihan
+
+Coba cari letak <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" /> dari data nilai ulangan matematika 7 anak ini:
+
+**Nilai:** 7, 5, 8, 6, 9, 7, 10
+
+**Langkah 1: Urutkan data dulu!**
+
+Data terurut: 5, 6, 7, 7, 8, 9, 10
+
+Banyak data (<InlineMath math="n" />) = 7
+
+**Langkah 2: Cari letak kuartil pakai rumus**
+
+- **Letak <InlineMath math="Q_1" />:**
+
+  <InlineMath math="\text{Data ke-}\frac{1}{4}(n+1) = \text{Data ke-}\frac{1}{4}(7+1) = \text{Data ke-}\frac{8}{4} = \text{Data ke-}2" />
+
+  Hasilnya bulat (2), jadi <InlineMath math="Q_1" /> adalah data ke-2.
+
+- **Letak <InlineMath math="Q_2" /> (Median):**
+
+  <InlineMath math="\text{Data ke-}\frac{1}{2}(n+1) = \text{Data ke-}\frac{1}{2}(7+1) = \text{Data ke-}\frac{8}{2} = \text{Data ke-}4" />
+
+  Hasilnya bulat (4), jadi <InlineMath math="Q_2" /> adalah data ke-4.
+
+- **Letak <InlineMath math="Q_3" />:**
+
+  <InlineMath math="\text{Data ke-}\frac{3}{4}(n+1) = \text{Data ke-}\frac{3}{4}(7+1) = \text{Data ke-}\frac{24}{4} = \text{Data ke-}6" />
+
+  Hasilnya bulat (6), jadi <InlineMath math="Q_3" /> adalah data ke-6.
+
+**Langkah 3: Tentukan nilai kuartilnya**
+
+Lihat data terurut: 5, 6, 7, 7, 8, 9, 10
+
+- <InlineMath math="Q_1" /> = Data ke-2 = **6**
+- <InlineMath math="Q_2" /> = Data ke-4 = **7**
+- <InlineMath math="Q_3" /> = Data ke-6 = **9**
+
+## Kuartil Keempat (Q4)
+
+Mungkin kamu bertanya-tanya, "Kalau ada <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" />, apakah ada <InlineMath math="Q_4" />?"
+
+Secara teknis, konsep kuartil membagi data menjadi empat bagian. <InlineMath math="Q_1" /> adalah batas 25% pertama, <InlineMath math="Q_2" /> (median) adalah batas 50%, dan <InlineMath math="Q_3" /> adalah batas 75%. Batas terakhir, yang mencakup 100% data, sebenarnya adalah **nilai maksimum** dari data tersebut.
+
+Jadi, meskipun kita bisa menyebut nilai maksimum sebagai "<InlineMath math="Q_4" />", dalam analisis statistik kita biasanya tidak secara eksplisit menggunakan istilah <InlineMath math="Q_4" />. Fokus utamanya adalah pada <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" /> karena mereka memberikan informasi penting tentang penyebaran dan pusat data di bagian bawah, tengah, dan atas. Nilai minimum kadang disebut "<InlineMath math="Q_0" />", tapi sama seperti <InlineMath math="Q_4" />, ini kurang umum digunakan dibandingkan <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" />.

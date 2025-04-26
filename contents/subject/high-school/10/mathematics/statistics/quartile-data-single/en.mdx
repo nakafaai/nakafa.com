@@ -4,3 +4,122 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistics",
 };
+
+## What Are Quartiles?
+
+The median is like a ruler that divides data into two equal parts, right in the middle (50%). Well, there's another friend of the median, called **quartiles**.
+
+If the median divides data into two, quartiles are even better; they divide the sorted data into **four** equal parts! Imagine you have a chocolate bar, and you break it into four equal pieces. Quartiles are the breaking points.
+
+There are three quartile breaking points:
+
+1.  **Lower Quartile (<InlineMath math="Q_1" />):** This is the first break. It separates the smallest 25% of the data from the rest. Like the first quarter of the chocolate.
+2.  **Middle Quartile (<InlineMath math="Q_2" />):** This is the **median**! It's exactly in the middle, dividing the data in half (50% left, 50% right). Like the break in the middle of the chocolate.
+3.  **Upper Quartile (<InlineMath math="Q_3" />):** This is the last break. It separates the smallest 75% of the data from the largest 25%. Like the boundary after three-quarters of the chocolate.
+
+So, <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" /> divide our data into four small groups with the same number of data points (25% each).
+
+## How to Find the Position of Quartiles
+
+Okay, now how do we know the position (rank) of <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" /> in our ordered data?
+
+Assume we have <InlineMath math="n" /> data points that we have sorted from smallest to largest.
+
+### Q1 (Lower Quartile)
+
+The formula is simple:
+
+<BlockMath math="\text{Position of } Q_1 = \text{Data point at }\frac{1}{4}(n+1)" />
+
+- **If the result is a whole number**, for example 5, then <InlineMath math="Q_1" /> is the value of the 5th data point.
+- **If the result has a decimal**, for example <InlineMath math="5.25" />, then <InlineMath math="Q_1" /> lies between the 5th and 6th data points. (There's a way to calculate its value later, but for now, we're just finding the position).
+
+**Simple Example:**
+
+Suppose we have 20 data points (<InlineMath math="n=20" />).
+
+Position of <InlineMath math="Q_1" /> = Data point at <InlineMath math="\frac{1}{4}(20+1)" /> = Data point at <InlineMath math="\frac{21}{4}" /> = Data point at 5.25.
+
+This means <InlineMath math="Q_1" /> is between the 5th and 6th data points.
+
+### Q2 (Median or Middle Quartile)
+
+This is the median, so the formula is:
+
+<BlockMath math="\text{Position of } Q_2 = \text{Data point at }\frac{1}{2}(n+1)" />
+
+The rules are the same as for <InlineMath math="Q_1" />:
+
+- **If the result is a whole number**, say 10, <InlineMath math="Q_2" /> is the value of the 10th data point.
+- **If the result has a decimal**, say 10.5, <InlineMath math="Q_2" /> is between the 10th and 11th data points.
+
+**Simple Example (<InlineMath math="n=20" />):**
+
+Position of <InlineMath math="Q_2" /> = Data point at <InlineMath math="\frac{1}{2}(20+1)" /> = Data point at <InlineMath math="\frac{21}{2}" /> = Data point at 10.5.
+
+This means <InlineMath math="Q_2" /> (the median) is between the 10th and 11th data points.
+
+### Q3 (Upper Quartile)
+
+The formula is similar again:
+
+<BlockMath math="\text{Position of } Q_3 = \text{Data point at }\frac{3}{4}(n+1)" />
+
+The rules are exactly the same:
+
+- **If the result is a whole number**, say 15, <InlineMath math="Q_3" /> is the value of the 15th data point.
+- **If the result has a decimal**, say 15.75, <InlineMath math="Q_3" /> is between the 15th and 16th data points.
+
+**Simple Example (<InlineMath math="n=20" />):**
+
+Position of <InlineMath math="Q_3" /> = Data point at <InlineMath math="\frac{3}{4}(20+1)" /> = Data point at <InlineMath math="\frac{63}{4}" /> = Data point at 15.75.
+
+This means <InlineMath math="Q_3" /> is between the 15th and 16th data points.
+
+## Exercise
+
+Try to find the position of <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" /> from the math test scores of these 7 children:
+
+**Scores:** 7, 5, 8, 6, 9, 7, 10
+
+**Step 1: Sort the data first!**
+
+Sorted data: 5, 6, 7, 7, 8, 9, 10
+
+Number of data points (<InlineMath math="n" />) = 7
+
+**Step 2: Find the quartile positions using the formulas**
+
+- **Position of <InlineMath math="Q_1" />:**
+
+  <InlineMath math="\text{Data point at }\frac{1}{4}(n+1) = \text{Data point at }\frac{1}{4}(7+1) = \text{Data point at }\frac{8}{4} = \text{Data point at }2" />
+
+  The result is a whole number (2), so <InlineMath math="Q_1" /> is the 2nd data point.
+
+- **Position of <InlineMath math="Q_2" /> (Median):**
+
+  <InlineMath math="\text{Data point at }\frac{1}{2}(n+1) = \text{Data point at }\frac{1}{2}(7+1) = \text{Data point at }\frac{8}{2} = \text{Data point at }4" />
+
+  The result is a whole number (4), so <InlineMath math="Q_2" /> is the 4th data point.
+
+- **Position of <InlineMath math="Q_3" />:**
+
+  <InlineMath math="\text{Data point at }\frac{3}{4}(n+1) = \text{Data point at }\frac{3}{4}(7+1) = \text{Data point at }\frac{24}{4} = \text{Data point at }6" />
+
+  The result is a whole number (6), so <InlineMath math="Q_3" /> is the 6th data point.
+
+**Step 3: Determine the quartile values**
+
+Look at the sorted data: 5, 6, 7, 7, 8, 9, 10
+
+- <InlineMath math="Q_1" /> = 2nd data point = **6**
+- <InlineMath math="Q_2" /> = 4th data point = **7**
+- <InlineMath math="Q_3" /> = 6th data point = **9**
+
+## The Fourth Quartile (Q4)
+
+You might be wondering, "If there's <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" />, is there a <InlineMath math="Q_4" />?"
+
+Technically, the concept of quartiles divides the data into four parts. <InlineMath math="Q_1" /> is the boundary for the first 25%, <InlineMath math="Q_2" /> (the median) is the 50% boundary, and <InlineMath math="Q_3" /> is the 75% boundary. The final boundary, which encompasses 100% of the data, is actually the **maximum value** of the dataset.
+
+So, while we could refer to the maximum value as "<InlineMath math="Q_4" />", in statistical analysis, we don't typically use the term <InlineMath math="Q_4" /> explicitly. The main focus is on <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" /> because they provide important information about the spread and center of the data in the lower, middle, and upper sections. The minimum value is sometimes called "<InlineMath math="Q_0" />", but like <InlineMath math="Q_4" />, it's less commonly used than <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" />.
