@@ -1,7 +1,7 @@
 "use client";
 
 import { Command as CommandPrimitive } from "cmdk";
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "lucide-react";
 import type * as React from "react";
 
 import {
@@ -76,6 +76,20 @@ function CommandInput({
         )}
         {...props}
       />
+      <button
+        type="button"
+        onClick={() => {
+          props.onValueChange?.("");
+        }}
+        className="group relative h-full"
+      >
+        <XIcon
+          className={cn(
+            "size-4 shrink-0 opacity-50 transition-opacity group-hover:opacity-100",
+            !props.value && "opacity-0"
+          )}
+        />
+      </button>
     </div>
   );
 }
