@@ -312,6 +312,10 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/statistics/quartile-data-single`,
       },
       {
+        title: "Kuartil Data Kelompok",
+        href: `${BASE_PATH}/statistics/quartile-data-group`,
+      },
+      {
         title: "Persentil Data Kelompok",
         href: `${BASE_PATH}/statistics/percentile-data-group`,
       },

@@ -312,6 +312,10 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/statistics/quartile-data-single`,
       },
       {
+        title: "Quartiles for Grouped Data",
+        href: `${BASE_PATH}/statistics/quartile-data-group`,
+      },
+      {
         title: "Percentiles for Grouped Data",
         href: `${BASE_PATH}/statistics/percentile-data-group`,
       },
