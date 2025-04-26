@@ -11,7 +11,7 @@ import { RefContent } from "@/components/shared/ref-content";
 import type { ParsedHeading } from "@/components/shared/sidebar-tree";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
-import { getGradePath } from "@/lib/utils/subject/grade";
+import { getGradeNonNumeric, getGradePath } from "@/lib/utils/subject/grade";
 import {
   getMaterialIcon,
   getMaterialPath,
@@ -99,7 +99,7 @@ export default async function Page({ params }: Props) {
           icon={getMaterialIcon(material)}
           link={{
             href: gradePath,
-            label: t("grade", { grade }),
+            label: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
           }}
         />
         <LayoutMaterialMain className="py-10">

@@ -6,7 +6,11 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
-import { getGradePath, getGradeSubjects } from "@/lib/utils/subject/grade";
+import {
+  getGradeNonNumeric,
+  getGradePath,
+  getGradeSubjects,
+} from "@/lib/utils/subject/grade";
 import { getStaticParams } from "@/lib/utils/system";
 import type { SubjectCategory } from "@/types/subject/category";
 import type { Grade } from "@/types/subject/grade";
@@ -75,7 +79,7 @@ export default async function Page({ params }: Props) {
   return (
     <>
       <HeaderContent
-        title={t("grade", { grade })}
+        title={t(getGradeNonNumeric(grade) ?? "grade", { grade })}
         description={t("grade-description")}
         icon={LibraryIcon}
       />

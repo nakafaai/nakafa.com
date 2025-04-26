@@ -106,7 +106,7 @@
     "computer-science": "Computer Science",
     "bachelor": "Bachelor",
     "master": "Master",
-    "doctor": "Doctor"
+    "phd": "PhD"
   },
   "Articles": {
     "description": "Academic research and publications based on scientific methods.",
