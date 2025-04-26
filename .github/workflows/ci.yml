@@ -42,7 +42,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run linters # Assumes 'lint' script exists in package.json
-        run: bun run lint
+        run: bun run lint:fix
 
       - name: Run tests # Assumes 'test' script exists in package.json
         run: bun run test --if-present # Use --if-present to run only if script exists
