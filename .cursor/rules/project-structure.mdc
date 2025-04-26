@@ -8,6 +8,7 @@ alwaysApply: true
 This is a Next.js project using the App Router.
 
 ## Key Directories
+
 - `app/`: Contains the main application routes and UI components. ([app/](mdc:app))
 - `components/`: Shared UI components used across the application. ([components/](mdc:components))
 - `lib/`: Utility functions and shared logic. ([lib/](mdc:lib))
@@ -17,6 +18,7 @@ This is a Next.js project using the App Router.
 - `i18n/`: Internationalization configuration and locale files. ([i18n/](mdc:i18n))
 
 ## Key Configuration Files
+
 - `next.config.ts`: Next.js configuration. ([next.config.ts](mdc:next.config.ts))
 - `tailwind.config.ts`: Tailwind CSS configuration. ([tailwind.config.ts](mdc:tailwind.config.ts))
 - `tsconfig.json`: TypeScript configuration. ([tsconfig.json](mdc:tsconfig.json))
@@ -24,6 +26,7 @@ This is a Next.js project using the App Router.
 - `components.json`: Configuration for shadcn/ui components. ([components.json](mdc:components.json))
 
 ## Content & Styling
+
 - Content is primarily written in MDX format within the `contents/` directory.
 - Custom MDX components are defined in `mdx-components.tsx`. ([mdx-components.tsx](mdc:mdx-components.tsx))
 - Styling is primarily handled by Tailwind CSS and potentially CSS modules or styled components within the `components/` and `app/` directories. Global styles are in `styles/globals.css`. ([styles/globals.css](mdc:styles/globals.css))

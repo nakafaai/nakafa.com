@@ -27,7 +27,7 @@ alwaysApply: false
 
 ## Mathematical Content
 
-- Always use the KaTeX components provided in `mdx-components.tsx` ([mdx-components.tsx](mdc:mdx-components.tsx)) (BUT you dont need to import from it, you can use it directly) for mathematical expressions:
+- Always use the KaTeX components provided in `mdx-components.tsx` ([mdx-components.tsx](mdc:mdx-components.tsx)) (BUT you dont need to import that in mdx file, you can use it directly) for mathematical expressions:
   - `<InlineMath math="equation" />` for inline formulas.
   - `<BlockMath math="equation" />` for standalone equations.
 - Include parentheses _inside_ the `math` attribute: `<InlineMath math="(a+b)" />` NOT `(<InlineMath math="a+b" />)`.
