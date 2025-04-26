@@ -325,7 +325,7 @@ function SearchListItems({
           ))}
         </CommandGroup>
         {results.length > 1 && index !== results.length - 1 && (
-          <CommandSeparator className="my-2" />
+          <CommandSeparator alwaysRender className="my-2" />
         )}
       </Fragment>
     );
