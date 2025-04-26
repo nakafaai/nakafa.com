@@ -4,3 +4,136 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistics",
 };
+
+## What Are Percentiles?
+
+You're already familiar with [quartiles](/subject/high-school/10/mathematics/statistics/quartile-data-group), which divide data into 4 equal parts, right? Well, **percentiles** are like quartiles' sibling, but they're even more detailed!
+
+If quartiles divide data into 4 chunks, percentiles divide ordered data into **100 equal chunks**. That's a lot, huh? Like dividing a chocolate bar into 100 tiny squares.
+
+Each chunk is separated by a percentile value. There are 99 percentile values, starting from <InlineMath math="P_1" />, <InlineMath math="P_2" />, <InlineMath math="P_3" />, ..., up to <InlineMath math="P_{99}" />.
+
+- <InlineMath math="P_{10}" /> (10th Percentile) means this value separates the smallest
+  10% of the data from the remaining 90%.
+- <InlineMath math="P_{50}" /> (50th Percentile) is exactly the same as the **Median**
+  or the **Second Quartile (<InlineMath math="Q_2" />
+  )**, because it divides the data right in the middle (50% below, 50% above).
+- <InlineMath math="P_{85}" /> (85th Percentile) means this value separates the smallest
+  85% of the data from the largest 15%.
+
+Percentiles are very useful for seeing the position of a specific value relative to the entire dataset, like class rankings for test scores or a child's growth compared to peers of the same age.
+
+## How to Find Percentile Values for Grouped Data
+
+Just like finding quartiles for grouped data, we also use **interpolation** to find the value of a percentile (<InlineMath math="P_i" />) when the data is grouped.
+
+The steps are very similar:
+
+### Find the Percentile Class Position
+
+First, we determine which data point corresponds to the i-th percentile. The formula is:
+
+<BlockMath math="\text{Position of } P_i = \text{the } \frac{i}{100} \times n \text{-th data point}" />
+
+- <InlineMath math="i" /> = Which percentile are we looking for? (e.g., 10, 50, 85)
+- <InlineMath math="n" /> = Total number of data points
+
+Once we have the position, we look at the cumulative frequency table (<InlineMath math="F_k" />) to find out which class interval this percentile falls into.
+
+### Calculate the Percentile Value using the Interpolation Formula
+
+Once we know the class, we use this magic interpolation formula:
+
+<BlockMath math="P_i = T_b + \left( \frac{\frac{i}{100}n - F_{kum}}{f_i} \right) p" />
+
+Where:
+
+- <InlineMath math="P_i" /> = Value of the i-th Percentile (what we're looking for)
+- <InlineMath math="T_b" /> = Lower boundary of the i-th percentile class
+- <InlineMath math="i" /> = Which percentile (e.g., 10, 85)
+- <InlineMath math="n" /> = Total frequency
+- <InlineMath math="F_{kum}" /> = Cumulative frequency **BEFORE** the i-th percentile
+  class
+- <InlineMath math="f_i" /> = Frequency of the i-th percentile class
+- <InlineMath math="p" /> = Class width
+
+Notice, the formula is very similar to the quartile formula, the only difference is the <InlineMath math="\frac{i}{100}n" /> part (quartiles use <InlineMath math="\frac{i}{4}n" />).
+
+## Finding Math Test Scores
+
+For example, let's say we have the math test scores of 40 students:
+
+| Test Score | Frequency (<InlineMath math="f" />) | Cumulative Frequency (<InlineMath math="F_k" />) | Lower Boundary (<InlineMath math="T_b" />) | Class Width (<InlineMath math="p" />) |
+| :--------: | :---------------------------------: | :----------------------------------------------: | :----------------------------------------: | :-----------------------------------: |
+|   61-70    |                  4                  |                        4                         |      <InlineMath math="\leq 60.5" />       |                  10                   |
+|   71-80    |                 10                  |                        14                        |      <InlineMath math="\leq 70.5" />       |                  10                   |
+|   81-90    |                 16                  |                        30                        |      <InlineMath math="\leq 80.5" />       |                  10                   |
+|   91-100   |                 10                  |                        40                        |      <InlineMath math="\leq 90.5" />       |                  10                   |
+| **Total**  |               **40**                |                                                  |                                            |                                       |
+
+We want to find the value of the 85th Percentile (<InlineMath math="P_{85}" />).
+
+1.  **Find the Position of <InlineMath math="P_{85}" />:**
+
+    Position of <InlineMath math="P_{85}" /> = the <InlineMath math="\frac{85}{100} \times 40 = \frac{3400}{100} = 34" />-th data point.
+
+2.  **Determine the Class of <InlineMath math="P_{85}" />:**
+
+    Look at the <InlineMath math="F_k" /> column. Where is the 34th data point? The 81-90 class has <InlineMath math="F_k = 30" /> (not enough). The 91-100 class has <InlineMath math="F_k = 40" /> (data points 31 through 40 are here). So, the <InlineMath math="P_{85}" /> class is **91-100**.
+
+3.  **Gather Ingredients for the Formula:**
+
+    - <InlineMath math="T_b" /> (Lower boundary of class 91-100) = 90.5
+    - <InlineMath math="i" /> = 85
+    - <InlineMath math="n" /> = 40
+    - <InlineMath math="F_{kum}" /> (Cumulative frequency before class 91-100) =
+      30
+    - <InlineMath math="f_{85}" /> (Frequency of class 91-100) = 10
+    - <InlineMath math="p" /> (Class width) = 10
+
+4.  **Calculate <InlineMath math="P_{85}" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P_{85} = T_b + \left( \frac{\frac{85}{100}n - F_{kum}}{f_{85}} \right) p" />
+      <BlockMath math="P_{85} = 90.5 + \left( \frac{34 - 30}{10} \right) 10" />
+      <BlockMath math="P_{85} = 90.5 + \left( \frac{4}{10} \right) 10" />
+      <BlockMath math="P_{85} = 90.5 + 4" />
+      <BlockMath math="P_{85} = 94.5" />
+    </div>
+
+So, the 85th Percentile value is 94.5. This means 85% of the students scored 94.5 or less, and 15% scored above 94.5.
+
+## Exercise
+
+Try calculating the value of the 20th Percentile (<InlineMath math="P_{20}" />) from the math test score data above!
+
+### Answer Key
+
+1.  **Position of <InlineMath math="P_{20}" />:**
+
+    Position of <InlineMath math="P_{20}" /> = the <InlineMath math="\frac{20}{100} \times 40 = \frac{800}{100} = 8" />-th data point.
+
+2.  **Class of <InlineMath math="P_{20}" />:**
+
+    Look at <InlineMath math="F_k" />. The 8th data point is in the **71-80** class (because the previous class's <InlineMath math="F_k" /> is 4, and this class's <InlineMath math="F_k" /> is 14).
+
+3.  **Formula Ingredients:**
+
+    - <InlineMath math="T_b" /> = 70.5
+    - <InlineMath math="i" /> = 20
+    - <InlineMath math="n" /> = 40
+    - <InlineMath math="F_{kum}" /> = 4
+    - <InlineMath math="f_{20}" /> = 10
+    - <InlineMath math="p" /> = 10
+
+4.  **Calculate <InlineMath math="P_{20}" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P_{20} = T_b + \left( \frac{\frac{20}{100}n - F_{kum}}{f_{20}} \right) p" />
+      <BlockMath math="P_{20} = 70.5 + \left( \frac{8 - 4}{10} \right) 10" />
+      <BlockMath math="P_{20} = 70.5 + \left( \frac{4}{10} \right) 10" />
+      <BlockMath math="P_{20} = 70.5 + 4" />
+      <BlockMath math="P_{20} = 74.5" />
+    </div>
+
+The 20th Percentile value is 74.5.

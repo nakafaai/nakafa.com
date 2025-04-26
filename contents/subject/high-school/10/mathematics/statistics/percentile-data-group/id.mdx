@@ -5,4 +5,139 @@ export const metadata = {
   subject: "Statistika",
 };
 
-;
+## Apa Itu Persentil?
+
+Kamu sudah kenal [kuartil](/subject/high-school/10/mathematics/statistics/quartile-data-group) yang membagi data jadi 4 bagian sama besar, kan? Nah, **persentil** ini saudaranya kuartil, tapi dia lebih detail lagi!
+
+Kalau kuartil membagi data jadi 4 potong, persentil membagi data yang sudah diurutin jadi **100 potong** yang sama besar. Banyak banget, ya? Kayak coklat batang dibagi jadi 100 kotak kecil.
+
+Setiap potongan itu dibatasi oleh nilai persentil. Ada 99 nilai persentil, mulai dari <InlineMath math="P_1" />, <InlineMath math="P_2" />, <InlineMath math="P_3" />, ..., sampai <InlineMath math="P_{99}" />.
+
+- <InlineMath math="P_{10}" /> (Persentil ke-10) artinya nilai ini membatasi 10%
+  data terkecil dari 90% data sisanya.
+- <InlineMath math="P_{50}" /> (Persentil ke-50) ini sama persis dengan **Median**
+  atau **Kuartil ke-2 (<InlineMath math="Q_2" />
+  )**, karena dia membagi data pas di tengah (50% di bawah, 50% di atas).
+- <InlineMath math="P_{85}" /> (Persentil ke-85) artinya nilai ini membatasi 85%
+  data terkecil dari 15% data terbesar.
+
+Persentil ini berguna banget buat lihat posisi suatu nilai dibanding keseluruhan data, misalnya ranking nilai ujian di kelas atau pertumbuhan anak dibanding anak seusianya.
+
+## Cara Mencari Nilai Persentil Data Kelompok
+
+Sama seperti mencari kuartil data kelompok, kita pakai cara **interpolasi** juga buat mencari nilai persentil (<InlineMath math="P_i" />) kalo datanya dikelompokkan.
+
+Langkahnya mirip banget:
+
+### Cari Letak Kelas Persentil
+
+Kita tentukan dulu persentil ke-<InlineMath math="i" /> itu ada di data urutan ke berapa. Rumusnya:
+
+<BlockMath math="\text{Letak } P_i = \text{data ke } \frac{i}{100} \times n" />
+
+- <InlineMath math="i" /> = Persentil ke berapa yang mau dicari (misal: 10, 50, 85)
+- <InlineMath math="n" /> = Jumlah total data
+
+Setelah dapat letaknya, kita lihat tabel frekuensi kumulatif (<InlineMath math="F_k" />) buat tahu si persentil ini jatuh di kelas interval yang mana.
+
+### Hitung Nilai Persentil dengan Rumus Interpolasi
+
+Kalau sudah tahu kelasnya, kita pakai rumus sakti interpolasi ini:
+
+<BlockMath math="P_i = T_b + \left( \frac{\frac{i}{100}n - F_{kum}}{f_i} \right) p" />
+
+Di mana:
+
+- <InlineMath math="P_i" /> = Nilai Persentil ke-
+  <InlineMath math="i" /> (yang kita cari)
+- <InlineMath math="T_b" /> = Tepi bawah kelas persentil ke-
+  <InlineMath math="i" />
+- <InlineMath math="i" /> = Persentil ke berapa (misal: 10, 85)
+- <InlineMath math="n" /> = Jumlah seluruh frekuensi
+- <InlineMath math="F_{kum}" /> = Frekuensi kumulatif **SEBELUM** kelas persentil
+  ke-
+  <InlineMath math="i" />
+- <InlineMath math="f_i" /> = Frekuensi kelas persentil ke-
+  <InlineMath math="i" />
+- <InlineMath math="p" /> = Panjang kelas interval
+
+Perhatikan deh, rumusnya mirip banget sama rumus kuartil, bedanya cuma di bagian <InlineMath math="\frac{i}{100}n" /> (kuartil pakai <InlineMath math="\frac{i}{4}n" />).
+
+## Mencari Nilai Ujian Matematika
+
+Misalnya, kita punya data nilai ujian matematika 40 siswa:
+
+| Nilai Ujian | Frekuensi (<InlineMath math="f" />) | Frekuensi Kumulatif (<InlineMath math="F_k" />) | Tepi Bawah (<InlineMath math="T_b" />) | Panjang Kelas (<InlineMath math="p" />) |
+| :---------: | :---------------------------------: | :---------------------------------------------: | :------------------------------------: | :-------------------------------------: |
+|    61-70    |                  4                  |                        4                        |    <InlineMath math="\leq 60.5" />     |                   10                    |
+|    71-80    |                 10                  |                       14                        |    <InlineMath math="\leq 70.5" />     |                   10                    |
+|    81-90    |                 16                  |                       30                        |    <InlineMath math="\leq 80.5" />     |                   10                    |
+|   91-100    |                 10                  |                       40                        |    <InlineMath math="\leq 90.5" />     |                   10                    |
+| **Jumlah**  |               **40**                |                                                 |                                        |                                         |
+
+Kita mau cari nilai Persentil ke-85 (<InlineMath math="P_{85}" />).
+
+1.  **Cari Letak <InlineMath math="P_{85}" />:**
+
+    Letak <InlineMath math="P_{85}" /> = data ke <InlineMath math="\frac{85}{100} \times 40 = \frac{3400}{100} = 34" />.
+
+2.  **Tentukan Kelas <InlineMath math="P_{85}" />:**
+
+    Lihat kolom <InlineMath math="F_k" />. Data ke-34 ada di mana? Kelas 81-90 <InlineMath math="F_k" />-nya 30 (belum cukup). Kelas 91-100 <InlineMath math="F_k" />-nya 40 (data ke-31 sampai ke-40 ada di sini). Jadi, kelas <InlineMath math="P_{85}" /> adalah **91-100**.
+
+3.  **Kumpulkan Bahan untuk Rumus:**
+
+    - <InlineMath math="T_b" /> (Tepi bawah kelas 91-100) = 90,5
+    - <InlineMath math="i" /> = 85
+    - <InlineMath math="n" /> = 40
+    - <InlineMath math="F_{kum}" /> (Frekuensi kumulatif sebelum kelas 91-100) =
+      30
+    - <InlineMath math="f_{85}" /> (Frekuensi kelas 91-100) = 10
+    - <InlineMath math="p" /> (Panjang kelas) = 10
+
+4.  **Hitung <InlineMath math="P_{85}" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P_{85} = T_b + \left( \frac{\frac{85}{100}n - F_{kum}}{f_{85}} \right) p" />
+      <BlockMath math="P_{85} = 90,5 + \left( \frac{34 - 30}{10} \right) 10" />
+      <BlockMath math="P_{85} = 90,5 + \left( \frac{4}{10} \right) 10" />
+      <BlockMath math="P_{85} = 90,5 + 4" />
+      <BlockMath math="P_{85} = 94,5" />
+    </div>
+
+Jadi, nilai Persentil ke-85 adalah 94,5. Artinya, 85% siswa mendapat nilai 94,5 atau kurang, dan 15% siswa mendapat nilai di atas 94,5.
+
+## Latihan
+
+Coba kamu hitung nilai Persentil ke-20 (<InlineMath math="P_{20}" />) dari data nilai ujian matematika di atas!
+
+### Kunci Jawaban
+
+1.  **Letak <InlineMath math="P_{20}" />:**
+
+    Letak <InlineMath math="P_{20}" /> = data ke <InlineMath math="\frac{20}{100} \times 40 = \frac{800}{100} = 8" />.
+
+2.  **Kelas <InlineMath math="P_{20}" />:**
+
+    Lihat <InlineMath math="F_k" />. Data ke-8 ada di kelas **71-80** (karena <InlineMath math="F_k" /> kelas sebelumnya 4, dan <InlineMath math="F_k" /> kelas ini 14).
+
+3.  **Bahan Rumus:**
+
+    - <InlineMath math="T_b" /> = 70,5
+    - <InlineMath math="i" /> = 20
+    - <InlineMath math="n" /> = 40
+    - <InlineMath math="F_{kum}" /> = 4
+    - <InlineMath math="f_{20}" /> = 10
+    - <InlineMath math="p" /> = 10
+
+4.  **Hitung <InlineMath math="P_{20}" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P_{20} = T_b + \left( \frac{\frac{20}{100}n - F_{kum}}{f_{20}} \right) p" />
+      <BlockMath math="P_{20} = 70,5 + \left( \frac{8 - 4}{10} \right) 10" />
+      <BlockMath math="P_{20} = 70,5 + \left( \frac{4}{10} \right) 10" />
+      <BlockMath math="P_{20} = 70,5 + 4" />
+      <BlockMath math="P_{20} = 74,5" />
+    </div>
+
+Nilai Persentil ke-20 adalah 74,5.
