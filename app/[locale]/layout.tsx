@@ -41,7 +41,7 @@ export async function generateMetadata({
 
   return {
     title: {
-      template: "%s - Nakafa",
+      template: `%s - ${t("title")}`,
       default: t("title"),
     },
     description: t("description"),
