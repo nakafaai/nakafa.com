@@ -1,7 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { HeadingProps, HeadingTag } from "@/types/markdown";
 import { LinkIcon } from "lucide-react";
-import Balancer from "react-wrap-balancer";
 
 export function Heading({
   Tag,
@@ -21,9 +20,7 @@ export function Heading({
       )}
       {...props}
     >
-      <span className="inline-block">
-        <Balancer>{props.children}</Balancer>
-      </span>
+      <span className="inline-block text-balance">{props.children}</span>
       <a
         href={`#${id}`}
         className="invisible ml-2 shrink-0 text-muted-foreground group-hover:visible"
