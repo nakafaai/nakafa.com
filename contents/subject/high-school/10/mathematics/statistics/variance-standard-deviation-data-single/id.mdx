@@ -4,3 +4,145 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistika",
 };
+
+## Mengukur Sebaran dengan Varian dan Simpangan Baku
+
+Ada cara ampuh untuk mengukur seberapa menyebar data kita, yaitu **Varian** (atau Ragam) dan **Simpangan Baku** (atau Deviasi Standar).
+
+Kedua ukuran ini memberi tahu kita seberapa jauh, rata-rata, setiap data menyimpang dari nilai **mean** (rata-rata) kelompoknya.
+
+- Kalau **Varian** atau **Simpangan Baku** nilainya **kecil**, artinya data-data dalam kelompok itu cenderung **seragam** atau **mirip-mirip**, dan berkumpul **dekat** dengan nilai mean-nya.
+- Kalau nilainya **besar**, artinya data-datanya lebih **bervariasi** atau **beragam**, dan **menyebar lebih jauh** dari nilai mean-nya.
+
+## Rumus Varian dan Simpangan Baku
+
+1.  **Varian (<InlineMath math="\sigma^2" />)**
+
+    Varian adalah rata-rata dari kuadrat selisih setiap data dengan mean. Bingung? Gampangnya gini: hitung selisih tiap data dengan mean, kuadratkan hasilnya, baru dirata-rata.
+
+    Rumusnya:
+
+    <BlockMath math="\sigma^2 = \frac{\sum_{i=1}^{n}(x_i - \bar{x})^2}{n}" />
+
+    Di mana:
+
+    - <InlineMath math="\sigma^2" /> = Varian
+    - <InlineMath math="x_i" /> = Nilai data ke-
+      <InlineMath math="i" />
+    - <InlineMath math="\bar{x}" /> = Mean (rata-rata) dari data
+    - <InlineMath math="n" /> = Banyaknya data
+    - <InlineMath math="\sum" /> = Jumlahkan semua hasil perhitungan
+
+2.  **Simpangan Baku (<InlineMath math="\sigma" />)**
+
+    Simpangan baku ini lebih sering dipakai karena satuannya sama dengan satuan data aslinya (kalau varian satuannya jadi kuadrat). Caranya gampang, tinggal akar kuadrat dari varian.
+
+    Rumusnya:
+
+    <BlockMath math="\sigma = \sqrt{\sigma^2} = \sqrt{\frac{\sum_{i=1}^{n}(x_i - \bar{x})^2}{n}}" />
+
+## Membandingkan Varian Umur Dua Kelompok
+
+Mari kita gunakan contoh dua kelompok data umur berikut untuk melihat bagaimana varian dan simpangan baku bekerja. Kedua kelompok ini menarik karena memiliki **mean (<InlineMath math="\bar{x}" />) yang sama, yaitu 16**, namun sebaran datanya berbeda.
+
+- **Kelompok Pertama (<InlineMath math="n=12" />):** 13, 14, 15, 15, 16, 16, 17, 17, 17, 17, 17, 18
+- **Kelompok Kedua (<InlineMath math="n=12" />):** 1, 3, 4, 5, 7, 8, 12, 27, 28, 29, 32, 36
+
+Sekarang, kita hitung Varian dan Simpangan Baku untuk masing-masing kelompok.
+
+### Perhitungan Kelompok 1
+
+Kita hitung <InlineMath math="(x_i - \bar{x})^2" /> untuk setiap data di Kelompok 1 (<InlineMath math="\bar{x}=16" />):
+
+- <InlineMath math="(13-16)^2 = (-3)^2 = 9" />
+- <InlineMath math="(14-16)^2 = (-2)^2 = 4" />
+- <InlineMath math="(15-16)^2 = (-1)^2 = 1" /> (ada 2 data)
+- <InlineMath math="(16-16)^2 = (0)^2 = 0" /> (ada 2 data)
+- <InlineMath math="(17-16)^2 = (1)^2 = 1" /> (ada 5 data)
+- <InlineMath math="(18-16)^2 = (2)^2 = 4" />
+
+Sekarang jumlahkan semua hasil kuadrat itu (<InlineMath math="\sum(x_i - \bar{x})^2" />):
+
+<BlockMath math="9 + 4 + (1 \times 2) + (0 \times 2) + (1 \times 5) + 4 = 9 + 4 + 2 + 0 + 5 + 4 = 24" />
+
+Hitung Variannya:
+
+<BlockMath math="\sigma^2_{\text{Kelompok 1}} = \frac{\sum(x_i - \bar{x})^2}{n} = \frac{24}{12} = 2" />
+
+Hitung Simpangan Bakunya:
+
+<BlockMath math="\sigma_{\text{Kelompok 1}} = \sqrt{2} \approx 1,41" />
+
+### Perhitungan Kelompok 2
+
+Kita hitung <InlineMath math="(x_i - \bar{x})^2" /> untuk setiap data di Kelompok 2 (<InlineMath math="\bar{x}=16" />):
+
+- <InlineMath math="(1-16)^2 = (-15)^2 = 225" />
+- <InlineMath math="(3-16)^2 = (-13)^2 = 169" />
+- <InlineMath math="(4-16)^2 = (-12)^2 = 144" />
+- <InlineMath math="(5-16)^2 = (-11)^2 = 121" />
+- <InlineMath math="(7-16)^2 = (-9)^2 = 81" />
+- <InlineMath math="(8-16)^2 = (-8)^2 = 64" />
+- <InlineMath math="(12-16)^2 = (-4)^2 = 16" />
+- <InlineMath math="(27-16)^2 = (11)^2 = 121" />
+- <InlineMath math="(28-16)^2 = (12)^2 = 144" />
+- <InlineMath math="(29-16)^2 = (13)^2 = 169" />
+- <InlineMath math="(32-16)^2 = (16)^2 = 256" />
+- <InlineMath math="(36-16)^2 = (20)^2 = 400" />
+
+Jumlahkan semua hasil kuadrat itu (<InlineMath math="\sum(x_i - \bar{x})^2" />):
+
+<BlockMath math="225 + 169 + 144 + 121 + 81 + 64 + 16 + 121 + 144 + 169 + 256 + 400 = 1910" />
+
+Hitung Variannya:
+
+<BlockMath math="\sigma^2_{\text{Kelompok 2}} = \frac{\sum(x_i - \bar{x})^2}{n} = \frac{1910}{12} \approx 159,17" />
+
+Hitung Simpangan Bakunya:
+
+<BlockMath math="\sigma_{\text{Kelompok 2}} = \sqrt{159,17} \approx 12,62" />
+
+### Interpretasi Hasil
+
+- Varian Kelompok 1 (<InlineMath math="\sigma^2 = 2" />) **jauh lebih kecil** dari Varian Kelompok 2 (<InlineMath math="\sigma^2 \approx 159,17" />).
+- Simpangan Baku Kelompok 1 (<InlineMath math="\sigma \approx 1,41" />) juga **jauh lebih kecil** dari Simpangan Baku Kelompok 2 (<InlineMath math="\sigma \approx 12,62" />).
+
+Hasil ini menunjukkan bahwa data umur di **Kelompok 1 sangat rapat dan seragam** di sekitar mean 16, sedangkan data umur di **Kelompok 2 sangat menyebar jauh** dari mean 16.
+
+## Rumus Alternatif untuk Varian
+
+Ada cara lain untuk menghitung varian yang kadang lebih mudah kalau pakai kalkulator atau komputer, terutama untuk data yang banyak. Rumusnya:
+
+<BlockMath math="\sigma^2 = \frac{\sum x_i^2}{n} - \left( \frac{\sum x_i}{n} \right)^2" />
+
+Rumus ini bilang:
+
+"Hitung kuadrat setiap data lalu jumlahkan (<InlineMath math="\sum x_i^2" />), bagi dengan n. Lalu kurangi dengan kuadrat dari mean (<InlineMath math="(\bar{x})^2 = (\frac{\sum x_i}{n})^2" />)".
+
+Mari kita coba hitung ulang varian Kelompok 1 pakai rumus ini:
+
+1.  Hitung <InlineMath math="\sum x_i^2" /> untuk Kelompok 1:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="13^2 + 14^2 + 15^2 + 15^2 + 16^2 + 16^2 + 17^2 + 17^2 + 17^2 + 17^2 + 17^2 + 18^2" />
+      <BlockMath math="= 169 + 196 + 225 + 225 + 256 + 256 + 289 + 289 + 289 + 289 + 289 + 324 = 3096" />
+    </div>
+
+2.  Hitung <InlineMath math="\sum x_i" /> untuk Kelompok 1:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="13 + 14 + 15 + 15 + 16 + 16 + 17 + 17 + 17 + 17 + 17 + 18" />
+      <BlockMath math="= 192" />
+    </div>
+
+    Kita juga tahu <InlineMath math="n=12" />.
+
+3.  Masukkan ke rumus alternatif:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\sigma^2 = \frac{3096}{12} - \left( \frac{192}{12} \right)^2" />
+      <BlockMath math="\sigma^2 = 258 - (16)^2" />
+      <BlockMath math="\sigma^2 = 258 - 256 = 2" />
+    </div>
+
+Hasilnya **sama persis** dengan cara pertama! (<InlineMath math="\sigma^2 = 2" />).

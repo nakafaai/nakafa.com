@@ -4,3 +4,142 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistics",
 };
+
+## Measuring Spread with Variance and Standard Deviation
+
+There's a powerful way to measure how spread out our data is: **Variance** and **Standard Deviation**.
+
+These two measures tell us how far, on average, each data point deviates from the group's **mean** (average).
+
+- If the **Variance** or **Standard Deviation** value is **small**, it means the data points in the group tend to be **uniform** or **similar**, clustering **close** to the mean value.
+- If the value is **large**, it means the data points are more **varied** or **diverse**, spreading **further away** from the mean value.
+
+## Formulas for Variance and Standard Deviation
+
+1.  **Variance (<InlineMath math="\sigma^2" />)**
+
+    Variance is the average of the squared differences of each data point from the mean. Confused? Simply put: calculate the difference between each data point and the mean, square the result, then average those squared differences.
+
+    The formula is:
+
+    <BlockMath math="\sigma^2 = \frac{\sum_{i=1}^{n}(x_i - \bar{x})^2}{n}" />
+
+    Where:
+
+    - <InlineMath math="\sigma^2" /> = Variance
+    - <InlineMath math="x_i" /> = Value of the i-th data point
+    - <InlineMath math="\bar{x}" /> = Mean (average) of the data
+    - <InlineMath math="n" /> = Number of data points
+    - <InlineMath math="\sum" /> = Sum all the calculated results
+
+2.  **Standard Deviation (<InlineMath math="\sigma" />)**
+
+    Standard deviation is more commonly used because its unit is the same as the original data unit (variance has squared units). It's simple: just take the square root of the variance.
+
+    The formula is:
+
+    <BlockMath math="\sigma = \sqrt{\sigma^2} = \sqrt{\frac{\sum_{i=1}^{n}(x_i - \bar{x})^2}{n}}" />
+
+## Comparing Variance in Two Age Groups
+
+Let's use an example of two groups of age data to see how variance and standard deviation work. These groups are interesting because they have the **same mean (<InlineMath math="\bar{x}" />), which is 16**, but their data spreads are different.
+
+- **Group One (<InlineMath math="n=12" />):** 13, 14, 15, 15, 16, 16, 17, 17, 17, 17, 17, 18
+- **Group Two (<InlineMath math="n=12" />):** 1, 3, 4, 5, 7, 8, 12, 27, 28, 29, 32, 36
+
+Now, let's calculate the Variance and Standard Deviation for each group.
+
+### Calculation for Group 1
+
+We calculate <InlineMath math="(x_i - \bar{x})^2" /> for each data point in Group 1 (<InlineMath math="\bar{x}=16" />):
+
+- <InlineMath math="(13-16)^2 = (-3)^2 = 9" />
+- <InlineMath math="(14-16)^2 = (-2)^2 = 4" />
+- <InlineMath math="(15-16)^2 = (-1)^2 = 1" /> (2 data points)
+- <InlineMath math="(16-16)^2 = (0)^2 = 0" /> (2 data points)
+- <InlineMath math="(17-16)^2 = (1)^2 = 1" /> (5 data points)
+- <InlineMath math="(18-16)^2 = (2)^2 = 4" />
+
+Now sum all these squared results (<InlineMath math="\sum(x_i - \bar{x})^2" />):
+
+<BlockMath math="9 + 4 + (1 \times 2) + (0 \times 2) + (1 \times 5) + 4 = 9 + 4 + 2 + 0 + 5 + 4 = 24" />
+
+Calculate the Variance:
+
+<BlockMath math="\sigma^2_{\text{Group 1}} = \frac{\sum(x_i - \bar{x})^2}{n} = \frac{24}{12} = 2" />
+
+Calculate the Standard Deviation:
+
+<BlockMath math="\sigma_{\text{Group 1}} = \sqrt{2} \approx 1.41" />
+
+### Calculation for Group 2
+
+We calculate <InlineMath math="(x_i - \bar{x})^2" /> for each data point in Group 2 (<InlineMath math="\bar{x}=16" />):
+
+- <InlineMath math="(1-16)^2 = (-15)^2 = 225" />
+- <InlineMath math="(3-16)^2 = (-13)^2 = 169" />
+- <InlineMath math="(4-16)^2 = (-12)^2 = 144" />
+- <InlineMath math="(5-16)^2 = (-11)^2 = 121" />
+- <InlineMath math="(7-16)^2 = (-9)^2 = 81" />
+- <InlineMath math="(8-16)^2 = (-8)^2 = 64" />
+- <InlineMath math="(12-16)^2 = (-4)^2 = 16" />
+- <InlineMath math="(27-16)^2 = (11)^2 = 121" />
+- <InlineMath math="(28-16)^2 = (12)^2 = 144" />
+- <InlineMath math="(29-16)^2 = (13)^2 = 169" />
+- <InlineMath math="(32-16)^2 = (16)^2 = 256" />
+- <InlineMath math="(36-16)^2 = (20)^2 = 400" />
+
+Sum all these squared results (<InlineMath math="\sum(x_i - \bar{x})^2" />):
+
+<BlockMath math="225 + 169 + 144 + 121 + 81 + 64 + 16 + 121 + 144 + 169 + 256 + 400 = 1910" />
+
+Calculate the Variance:
+
+<BlockMath math="\sigma^2_{\text{Group 2}} = \frac{\sum(x_i - \bar{x})^2}{n} = \frac{1910}{12} \approx 159.17" />
+
+Calculate the Standard Deviation:
+
+<BlockMath math="\sigma_{\text{Group 2}} = \sqrt{159.17} \approx 12.62" />
+
+### Interpreting the Results
+
+- Variance of Group 1 (<InlineMath math="\sigma^2 = 2" />) is **much smaller** than the Variance of Group 2 (<InlineMath math="\sigma^2 \approx 159.17" />).
+- Standard Deviation of Group 1 (<InlineMath math="\sigma \approx 1.41" />) is also **much smaller** than the Standard Deviation of Group 2 (<InlineMath math="\sigma \approx 12.62" />).
+
+These results show that the age data in **Group 1 is very clustered and uniform** around the mean of 16, whereas the age data in **Group 2 is widely spread out** far from the mean of 16.
+
+## Alternative Formula for Variance
+
+There's another way to calculate variance that is sometimes easier with a calculator or computer, especially for large datasets. The formula is:
+
+<BlockMath math="\sigma^2 = \frac{\sum x_i^2}{n} - \left( \frac{\sum x_i}{n} \right)^2" />
+
+This formula says: "Calculate the square of each data point and sum them up (<InlineMath math="\sum x_i^2" />), divide by n. Then subtract the square of the mean (<InlineMath math="(\bar{x})^2 = (\frac{\sum x_i}{n})^2" />)".
+
+Let's recalculate the variance for Group 1 using this formula:
+
+1.  Calculate <InlineMath math="\sum x_i^2" /> for Group 1:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="13^2 + 14^2 + 15^2 + 15^2 + 16^2 + 16^2 + 17^2 + 17^2 + 17^2 + 17^2 + 17^2 + 18^2" />
+      <BlockMath math="= 169 + 196 + 225 + 225 + 256 + 256 + 289 + 289 + 289 + 289 + 289 + 324 = 3096" />
+    </div>
+
+2.  Calculate <InlineMath math="\sum x_i" /> for Group 1:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="13 + 14 + 15 + 15 + 16 + 16 + 17 + 17 + 17 + 17 + 17 + 18" />
+      <BlockMath math="= 192" />
+    </div>
+
+    We also know <InlineMath math="n=12" />.
+
+3.  Plug into the alternative formula:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\sigma^2 = \frac{3096}{12} - \left( \frac{192}{12} \right)^2" />
+      <BlockMath math="\sigma^2 = 258 - (16)^2" />
+      <BlockMath math="\sigma^2 = 258 - 256 = 2" />
+    </div>
+
+The result is **exactly the same** as the first method! (<InlineMath math="\sigma^2 = 2" />).
