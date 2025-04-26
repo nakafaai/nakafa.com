@@ -324,11 +324,9 @@ function SearchListItems({
             </CommandItem>
           ))}
         </CommandGroup>
-
-        <CommandSeparator
-          hidden={index === results.length - 1}
-          className="my-2"
-        />
+        {results.length > 1 && index !== results.length - 1 && (
+          <CommandSeparator className="my-2" />
+        )}
       </Fragment>
     );
   });
