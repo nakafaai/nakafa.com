@@ -117,7 +117,7 @@ export default async function Page({ params }: Props) {
         header={{
           title: t(material),
           href: FILE_PATH,
-          description: t("grade", { grade }),
+          description: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
         }}
         chapters={{
           label: t("chapter"),
