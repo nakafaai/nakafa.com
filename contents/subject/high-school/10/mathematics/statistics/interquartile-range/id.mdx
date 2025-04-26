@@ -4,3 +4,119 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistika",
 };
+
+## Apa Itu Jangkauan Interkuartil?
+
+Kita sudah tahu cara mencari [rata-rata (mean)](/subject/high-school/10/mathematics/statistics/mean) dari data. Tapi, rata-rata saja kadang nggak cukup buat menggambarkan data lho. Bayangin ada dua kelompok teman, rata-rata umurnya sama, tapi pas dilihat, anggota kelompoknya beda banget sebaran umurnya.
+
+Nah, di sinilah **Jangkauan Interkuartil** atau **Interquartile Range (IQR)** berperan! IQR ini adalah ukuran penyebaran data yang fokus pada **50% data yang ada di tengah**, setelah data diurutkan.
+
+Kenapa fokus ke tengah? Karena kadang ada data yang nilainya jauh banget di ujung (terlalu kecil atau terlalu besar, disebut pencilan/outlier), yang bisa bikin ukuran sebaran lain (kayak Jangkauan/Range) jadi kurang akurat. IQR ini lebih "kebal" sama data-data ekstrem itu.
+
+Rumus IQR gampang banget:
+
+<BlockMath math="IQR = Q_3 - Q_1" />
+
+- <InlineMath math="Q_3" /> adalah Kuartil Atas (nilai yang membatasi 75% data terbawah).
+- <InlineMath math="Q_1" /> adalah Kuartil Bawah (nilai yang membatasi 25% data terbawah).
+
+Jadi, IQR itu selisih antara kuartil atas dan kuartil bawah.
+
+## Membandingkan Sebaran Umur
+
+Biar lebih jelas, mari kita lihat sebuah contoh.
+
+Ada dua kelompok, masing-masing 12 orang. Kita lihat data umurnya dalam tabel berikut:
+
+| Data ke- | Kelompok Pertama | Kelompok Kedua |
+| :------: | :--------------: | :------------: |
+|    1     |        13        |       1        |
+|    2     |        14        |       3        |
+|    3     |        15        |       4        |
+|    4     |        15        |       5        |
+|    5     |        16        |       7        |
+|    6     |        16        |       8        |
+|    7     |        17        |       12       |
+|    8     |        17        |       27       |
+|    9     |        17        |       28       |
+|    10    |        17        |       29       |
+|    11    |        17        |       32       |
+|    12    |        18        |       36       |
+
+Coba kita hitung beberapa ukuran statistik buat kedua kelompok ini.
+
+### Menghitung Mean, Q1, dan Q3
+
+1.  **Mean (Rata-rata):**
+
+    Kalau kamu hitung rata-rata umur kedua kelompok, hasilnya **sama persis**, yaitu 16 tahun.
+
+    Kelompok 1:
+
+    <BlockMath math="\frac{13+14+15+15+16+16+17+17+17+17+17+18}{12} = \frac{192}{12} = 16" />
+
+    Kelompok 2:
+
+    <BlockMath math="\frac{1+3+4+5+7+8+12+27+28+29+32+36}{12} = \frac{192}{12} = 16" />
+
+2.  **Kuartil (<InlineMath math="Q_1" /> dan <InlineMath math="Q_3" />):**
+
+    Setelah data diurutkan (seperti dalam tabel di atas), kita cari posisi kuartil.
+
+    **Kelompok Pertama (<InlineMath math="n=12" />):**
+
+    Letak <InlineMath math="Q_1" /> ada di data ke-<InlineMath math="\frac{1}{4}(12+1) = 3,25" />. Ini berarti <InlineMath math="Q_1" /> ada di antara data ke-3 (15) dan data ke-4 (15). Karena kedua data sama, maka
+
+    <BlockMath math="Q_1 = 15" />
+
+    Letak <InlineMath math="Q_3" /> ada di data ke-<InlineMath math="\frac{3}{4}(12+1) = 9,75" />. Ini berarti <InlineMath math="Q_3" /> ada di antara data ke-9 (17) dan data ke-10 (17). Karena kedua data sama, maka
+
+    <BlockMath math="Q_3 = 17" />
+
+    **Kelompok Kedua (<InlineMath math="n=12" />):**
+
+    Letak <InlineMath math="Q_1" /> ada di data ke-3,25. Ini berarti <InlineMath math="Q_1" /> ada di antara data ke-3 (4) dan data ke-4 (5). Untuk kasus ini, kita bisa mengambil rata-rata kedua data tersebut:
+
+    <BlockMath math="Q_1 = \frac{4+5}{2} = 4,5" />
+
+    Letak <InlineMath math="Q_3" /> ada di data ke-9,75. Ini berarti <InlineMath math="Q_3" /> ada di antara data ke-9 (28) dan data ke-10 (29). Dengan cara yang sama, kita ambil rata-ratanya:
+
+    <BlockMath math="Q_3 = \frac{28+29}{2} = 28,5" />
+
+### Menghitung Jangkauan (Range) dan IQR
+
+Sekarang kita hitung ukuran penyebarannya.
+
+1.  **Jangkauan (Range):**
+
+    Range = Nilai Maksimum - Nilai Minimum
+
+    - Range Kelompok Pertama = 18 - 13 = **5**
+    - Range Kelompok Kedua = 36 - 1 = **35**
+
+      Wah, jangkauannya beda jauh! Kelompok kedua lebih menyebar datanya kalau dilihat dari nilai ekstremnya.
+
+2.  **Jangkauan Interkuartil (IQR):**
+
+    IQR = <InlineMath math="Q_3 - Q_1" />
+
+    - IQR Kelompok Pertama = 17 - 15 = **2**
+    - IQR Kelompok Kedua = 28,5 - 4,5 = **24**
+
+      IQR-nya juga beda jauh!
+
+### Interpretasi Hasil
+
+Mari kita rangkum dalam tabel agar mudah dibandingkan:
+
+| Kelompok | Mean | <InlineMath math="Q_1"/> | <InlineMath math="Q_3"/> | Range | Jangkauan Interkuartil (IQR) |
+| :------: | :--: | :----------------------: | :----------------------: | :---: | :--------------------------: |
+| Pertama  |  16  |            15            |            17            |   5   |              2               |
+|  Kedua   |  16  |           4,5            |           28,5           |  35   |              24              |
+
+- Kedua kelompok punya **Mean (rata-rata) umur yang sama**, yaitu 16.
+- Tapi **Range** dan **IQR** nya **beda banget**.
+- **Kelompok Pertama** punya Range kecil (5) dan IQR sangat kecil (2). Ini artinya, umur orang-orang di kelompok pertama itu **sangat berdekatan**, terutama yang 50% di tengah, umurnya cuma beda 2 tahun (<InlineMath math="Q_1=15, Q_3=17" />). Datanya **rapat** di sekitar rata-rata.
+- **Kelompok Kedua** punya Range besar (35) dan IQR besar (24). Ini artinya, umur orang-orang di kelompok kedua itu **jauh lebih menyebar**. Yang 50% di tengah saja rentang umurnya 24 tahun (<InlineMath math="Q_1=4,5, Q_3=28,5" />). Datanya **tidak serapat** kelompok pertama.
+
+Walaupun rata-ratanya sama, sebaran data bisa sangat berbeda. IQR membantu kita melihat seberapa menyebar data di bagian tengah, memberikan gambaran yang lebih baik tentang variasi data dibandingkan hanya melihat mean atau range saja, terutama jika ada data ekstrem.

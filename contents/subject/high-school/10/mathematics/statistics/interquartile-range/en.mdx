@@ -4,3 +4,119 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistics",
 };
+
+## What Is the Interquartile Range (IQR)?
+
+We already know how to find the [mean](/subject/high-school/10/mathematics/statistics/mean) of data. But sometimes, the mean alone isn't enough to describe the data. Imagine two groups of friends with the same average age, but when you look closer, the age spread within each group is very different.
+
+This is where the **Interquartile Range (IQR)** comes in handy! The IQR is a measure of data spread that focuses on the **middle 50% of the data** after it has been sorted.
+
+Why focus on the middle? Sometimes data has values at the extremes (too small or too large, called outliers) that can make other spread measures (like the Range) less accurate. The IQR is more "resistant" to these extreme values.
+
+The IQR formula is super simple:
+
+<BlockMath math="IQR = Q_3 - Q_1" />
+
+- <InlineMath math="Q_3" /> is the Upper Quartile (the value marking the bottom 75%
+  of the data).
+- <InlineMath math="Q_1" /> is the Lower Quartile (the value marking the bottom 25%
+  of the data).
+
+So, the IQR is the difference between the upper and lower quartiles.
+
+## Comparing Age Spreads
+
+To make it clearer, let's look at an example.
+
+There are two groups, each with 12 people. Let's look at their age data in the table below:
+
+| Data Point # | Group One | Group Two |
+| :----------: | :-------: | :-------: |
+|      1       |    13     |     1     |
+|      2       |    14     |     3     |
+|      3       |    15     |     4     |
+|      4       |    15     |     5     |
+|      5       |    16     |     7     |
+|      6       |    16     |     8     |
+|      7       |    17     |    12     |
+|      8       |    17     |    27     |
+|      9       |    17     |    28     |
+|      10      |    17     |    29     |
+|      11      |    17     |    32     |
+|      12      |    18     |    36     |
+
+Let's calculate some statistics for these two groups.
+
+### Calculating Mean, Q1, and Q3
+
+1.  **Mean (Average):**
+
+    If you calculate the average age for both groups, the result is **exactly the same**, 16 years old.
+
+    Group 1:
+
+    <BlockMath math="\frac{13+14+15+15+16+16+17+17+17+17+17+18}{12} = \frac{192}{12} = 16" />
+
+    Group 2:
+
+    <BlockMath math="\frac{1+3+4+5+7+8+12+27+28+29+32+36}{12} = \frac{192}{12} = 16" />
+
+2.  **Quartiles (<InlineMath math="Q_1" /> and <InlineMath math="Q_3" />):**
+
+    After sorting the data (as in the table above), we find the positions of the quartiles.
+
+    **Group One (<InlineMath math="n=12" />):**
+    The position of <InlineMath math="Q_1" /> is at data point <InlineMath math="\frac{1}{4}(12+1) = 3.25" />. This means <InlineMath math="Q_1" /> is between the 3rd (15) and 4th (15) data points. Since both values are the same, then
+
+    <BlockMath math="Q_1 = 15" />
+
+    The position of <InlineMath math="Q_3" /> is at data point <InlineMath math="\frac{3}{4}(12+1) = 9.75" />. This means <InlineMath math="Q_3" /> is between the 9th (17) and 10th (17) data points. Since both values are the same, then
+
+    <BlockMath math="Q_3 = 17" />
+
+    **Group Two (<InlineMath math="n=12" />):**
+    The position of <InlineMath math="Q_1" /> is at data point 3.25. This means <InlineMath math="Q_1" /> is between the 3rd (4) and 4th (5) data points. In this case, we can take the average of these two data points:
+
+    <BlockMath math="Q_1 = \frac{4+5}{2} = 4.5" />
+
+    The position of <InlineMath math="Q_3" /> is at data point 9.75. This means <InlineMath math="Q_3" /> is between the 9th (28) and 10th (29) data points. Similarly, we take their average:
+
+    <BlockMath math="Q_3 = \frac{28+29}{2} = 28.5" />
+
+### Calculating Range and IQR
+
+Now let's calculate the measures of spread.
+
+1.  **Range:**
+
+    Range = Maximum Value - Minimum Value
+
+    - Range Group One = 18 - 13 = **5**
+    - Range Group Two = 36 - 1 = **35**
+
+      Wow, the ranges are very different! Group Two's data is much more spread out when looking at the extreme values.
+
+2.  **Interquartile Range (IQR):**
+
+    IQR = <InlineMath math="Q_3 - Q_1" />
+
+    - IQR Group One = 17 - 15 = **2**
+    - IQR Group Two = 28.5 - 4.5 = **24**
+
+      The IQRs are also very different!
+
+### Interpreting the Results
+
+Let's summarize in a table for easy comparison:
+
+| Group | Mean | <InlineMath math="Q_1"/> | <InlineMath math="Q_3"/> | Range | Interquartile Range (IQR) |
+| :---: | :--: | :----------------------: | :----------------------: | :---: | :-----------------------: |
+|  One  |  16  |            15            |            17            |   5   |             2             |
+|  Two  |  16  |           4.5            |           28.5           |  35   |            24             |
+
+- Both groups have the **same Mean (average) age**, which is 16.
+- But their **Range** and **IQR** are **very different**.
+- **Group One** has a small Range (5) and a very small IQR (2). This means the ages of people in Group One are **very close together**, especially the middle 50%, whose ages only differ by 2 years (<InlineMath math="Q_1=15, Q_3=17" />). The data is **clustered** around the mean.
+- **Group Two** has a large Range (35) and a large IQR (24). This means the ages of people in Group Two are **much more spread out**. Even the middle 50% spans 24 years (<InlineMath math="Q_1=4.5, Q_3=28.5" />). The data is **not as clustered** as Group One.
+
+Even if the average is the same, the spread of the data can be very different. IQR helps us see how spread out the middle part of the data is, giving a better picture of data variation than just looking at the mean or range, especially when there are extreme values.
