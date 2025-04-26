@@ -4,3 +4,139 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistics",
 };
+
+## How to Find Quartiles in Grouped Data
+
+For single data, we just sort it and find the middle position. Now, if the data is grouped in a frequency table (like test scores grouped as 70-79, 80-89, etc.), the method is slightly different. We don't know the exact value of each data point, only how many data points are in each group (class interval).
+
+Similar to the [median for grouped data](/subject/high-school/10/mathematics/statistics/median-mode-group-data), to find quartiles (<InlineMath math="Q_1" />, <InlineMath math="Q_2" />, <InlineMath math="Q_3" />), we also use **interpolation**. Essentially, we "estimate" the quartile's position within the class interval where it falls.
+
+We determine the position of the quartile using this formula:
+
+- Position of <InlineMath math="Q_1" /> = the <InlineMath math="\frac{1}{4}n" />-th data point
+- Position of <InlineMath math="Q_2" /> = the <InlineMath math="\frac{2}{4}n" />-th data point (or <InlineMath math="\frac{1}{2}n" />-th)
+- Position of <InlineMath math="Q_3" /> = the <InlineMath math="\frac{3}{4}n" />-th data point
+
+Where <InlineMath math="n" /> is the total number of data points.
+
+## Steps to Find the Value of Quartiles for Grouped Data
+
+Let's assume we have shoe sales data from Store A in a grouped frequency table format.
+
+### Create a Cumulative Frequency Table
+
+First, we need a frequency table with a cumulative frequency column (<InlineMath math="F_k" />). Cumulative frequency is the sum of frequencies from the first class up to that class. This is important to know which class the quartile falls into.
+
+For example, here is the shoe sales table:
+
+| Shoe Size | Frequency (<InlineMath math="f" />) | Cumulative Frequency (<InlineMath math="F_k" />) | Lower Boundary (<InlineMath math="T_b" />) | Upper Boundary (<InlineMath math="T_a" />) | Class Width (<InlineMath math="p" />) |
+| :-------: | :---------------------------------: | :----------------------------------------------: | :----------------------------------------: | :----------------------------------------: | :-----------------------------------: |
+|   37-39   |                  2                  |                        2                         |      <InlineMath math="\leq 36.5" />       |      <InlineMath math="\leq 39.5" />       |                   3                   |
+|   40-42   |                 11                  |                        13                        |      <InlineMath math="\leq 39.5" />       |      <InlineMath math="\leq 42.5" />       |                   3                   |
+|   43-45   |                 10                  |                        23                        |      <InlineMath math="\leq 42.5" />       |      <InlineMath math="\leq 45.5" />       |                   3                   |
+|   46-48   |                  5                  |                        28                        |      <InlineMath math="\leq 45.5" />       |      <InlineMath math="\leq 48.5" />       |                   3                   |
+|   49-51   |                  2                  |                        30                        |      <InlineMath math="\leq 48.5" />       |      <InlineMath math="\leq 51.5" />       |                   3                   |
+| **Total** |               **30**                |                                                  |                                            |                                            |                                       |
+
+Lower boundary = lower limit - 0.5
+
+Upper boundary = upper limit + 0.5
+
+Class width = Upper boundary - Lower boundary
+
+### Determine the Quartile Class Position
+
+First, let's find the position of the data point for the quartile.
+
+Total data (<InlineMath math="n" />) = 30.
+
+- **Position of <InlineMath math="Q_1" />:** the <InlineMath math="\frac{1}{4} \times 30 = 7.5" />-th data point.
+
+  Look at the <InlineMath math="F_k" /> column. Which class contains the 7.5th data point? The first class has <InlineMath math="F_k = 2" /> (not enough). The second class has <InlineMath math="F_k = 13" /> (data points 3 through 13 are here). So, the 7.5th data point is in the **40-42** class.
+
+- **Position of <InlineMath math="Q_2" /> (Median):** the <InlineMath math="\frac{1}{2} \times 30 = 15" />-th data point.
+
+  Look at <InlineMath math="F_k" />. The 15th data point is in the **43-45** class (because the previous <InlineMath math="F_k" /> was 13, and this class's <InlineMath math="F_k" /> is 23).
+
+- **Position of <InlineMath math="Q_3" />:** the <InlineMath math="\frac{3}{4} \times 30 = 22.5" />-th data point.
+
+  Look at <InlineMath math="F_k" />. The 22.5th data point is also in the **43-45** class (because the previous <InlineMath math="F_k" /> was 13, and this class's <InlineMath math="F_k" /> is 23).
+
+### Calculate the Quartile Value using the Interpolation Formula
+
+Once we know the class, we use this formula to find the exact value:
+
+<BlockMath math="Q_i = T_b + \left( \frac{\frac{i}{4}n - F_{kum}}{f_i} \right) p" />
+
+Where:
+
+- <InlineMath math="Q_i" /> = Value of the i-th Quartile (what we're looking for)
+- <InlineMath math="T_b" /> = Lower boundary of the i-th quartile class
+- <InlineMath math="n" /> = Total frequency
+- <InlineMath math="F_{kum}" /> = Cumulative frequency **BEFORE** the i-th quartile
+  class
+- <InlineMath math="f_i" /> = Frequency of the i-th quartile class
+- <InlineMath math="p" /> = Class width
+
+## Finding Q1 for Shoe Sales
+
+Let's calculate <InlineMath math="Q_1" /> from the table above.
+
+1.  **Position of <InlineMath math="Q_1" />:** 7.5th data point.
+2.  **Class of <InlineMath math="Q_1" />:** 40-42.
+3.  **Let's gather the ingredients:**
+    - Lower boundary of <InlineMath math="Q_1" /> class (<InlineMath math="T_b" />) = 39.5
+    - Total data (<InlineMath math="n" />) = 30
+    - Cumulative frequency before <InlineMath math="Q_1" /> class (<InlineMath math="F_{kum}" />) = 2 (see <InlineMath math="F_k" /> for class 37-39)
+    - Frequency of <InlineMath math="Q_1" /> class (<InlineMath math="f_1" />) = 11
+    - Class width (<InlineMath math="p" />) = 3
+4.  **Plug into the formula:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="Q_1 = T_b + \left( \frac{\frac{1}{4}n - F_{kum}}{f_1} \right) p" />
+      <BlockMath math="Q_1 = 39.5 + \left( \frac{7.5 - 2}{11} \right) 3" />
+      <BlockMath math="Q_1 = 39.5 + \left( \frac{5.5}{11} \right) 3" />
+      <BlockMath math="Q_1 = 39.5 + (0.5) \times 3" />
+      <BlockMath math="Q_1 = 39.5 + 1.5" />
+      <BlockMath math="Q_1 = 41" />
+    </div>
+
+So, the value of <InlineMath math="Q_1" /> is 41. This means about 25% of the shoes sold are size 41 or smaller.
+
+## Exercise
+
+Try calculating <InlineMath math="Q_3" /> from the shoe sales data in the table above.
+
+After getting the result, compare it with the method for finding quartiles for single data learned earlier. What's the difference, and why might the results be similar or different?
+
+### Answer Key
+
+1.  **Position of <InlineMath math="Q_3" />:** 22.5th data point.
+2.  **Class of <InlineMath math="Q_3" />:** 43-45.
+3.  **Gather the ingredients:**
+
+    - <InlineMath math="T_b" /> = 42.5 (lower boundary of <InlineMath math="Q_3" /> class)
+    - <InlineMath math="n" /> = 30 (total data)
+    - <InlineMath math="F_{kum}" /> = 13 (see <InlineMath math="F_k" /> for class
+      40-42)
+    - <InlineMath math="f_3" /> = 10 (frequency of <InlineMath math="Q_3" /> class)
+    - <InlineMath math="p" /> = 3 (class width)
+
+4.  **Plug into the formula:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="Q_3 = T_b + \left( \frac{\frac{3}{4}n - F_{kum}}{f_3} \right) p" />
+      <BlockMath math="Q_3 = 42.5 + \left( \frac{22.5 - 13}{10} \right) 3" />
+      <BlockMath math="Q_3 = 42.5 + \left( \frac{9.5}{10} \right) 3" />
+      <BlockMath math="Q_3 = 42.5 + (0.95) \times 3" />
+      <BlockMath math="Q_3 = 42.5 + 2.85" />
+      <BlockMath math="Q_3 = 45.35" />
+    </div>
+
+So, the value of <InlineMath math="Q_3" /> is 45.35. This means about 75% of the shoes sold are size 45.35 or smaller (or 25% are sold in sizes larger than 45.35).
+
+**Comparison with Single Data:**
+
+Finding quartiles for grouped data uses **interpolation** because we don't know the exact value of each data point, only its range. The result is an estimated quartile value.
+
+For single data, we can directly point to which data point is the quartile (or the average of two data points), so the result is more precise (if the data is indeed single). Quartiles for grouped data provide a good overview for large datasets that have already been grouped.

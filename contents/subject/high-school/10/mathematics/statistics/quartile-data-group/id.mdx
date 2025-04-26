@@ -4,3 +4,140 @@ export const metadata = {
   date: "04/22/2025",
   subject: "Statistika",
 };
+
+## Cara Mencari Kuartil di Data Kelompok
+
+Kalau datanya tunggal, kita tinggal urutin terus cari posisi tengahnya. Nah, kalau datanya dikelompokkan dalam tabel frekuensi (kayak nilai ulangan yang dikelompokkan 70-79, 80-89, dst.), caranya sedikit beda nih. Kita nggak tahu nilai pastinya satu per satu, cuma tahu ada berapa data di tiap kelompok (kelas interval).
+
+Sama kayak [median data kelompok](/subject/high-school/10/mathematics/statistics/median-mode-group-data), buat cari kuartil (<InlineMath math="Q_1" />, <InlineMath math="Q_2" />, <InlineMath math="Q_3" />), kita juga pakai cara **interpolasi**. Intinya, kita "menebak" posisi kuartil di dalam kelas interval tempat dia berada.
+
+Letak kuartilnya kita tentukan pakai rumus ini:
+
+- Letak <InlineMath math="Q_1" /> = data ke <InlineMath math="\frac{1}{4}n" />
+- Letak <InlineMath math="Q_2" /> = data ke <InlineMath math="\frac{2}{4}n" /> (atau <InlineMath math="\frac{1}{2}n" />)
+- Letak <InlineMath math="Q_3" /> = data ke <InlineMath math="\frac{3}{4}n" />
+
+Di mana <InlineMath math="n" /> itu jumlah semua data.
+
+## Langkah Mencari Nilai Kuartil Data Kelompok
+
+Anggap kita punya data penjualan sepatu di Toko A dalam bentuk tabel frekuensi berkelompok.
+
+### Buat Tabel Frekuensi Kumulatif
+
+Pertama, kita butuh tabel frekuensi yang ada kolom frekuensi kumulatif (<InlineMath math="F_k" />). Frekuensi kumulatif itu jumlah frekuensi dari kelas pertama sampai kelas tersebut. Ini penting buat tahu kuartilnya jatuh di kelas mana.
+
+Misalnya, ini tabel penjualan sepatu:
+
+| Ukuran Sepatu | Frekuensi (<InlineMath math="f" />) | Frekuensi Kumulatif (<InlineMath math="F_k" />) | Tepi Bawah (<InlineMath math="T_b" />) | Tepi Atas (<InlineMath math="T_a" />) | Panjang Kelas (<InlineMath math="p" />) |
+| :-----------: | :---------------------------------: | :---------------------------------------------: | :------------------------------------: | :-----------------------------------: | :-------------------------------------: |
+|     37-39     |                  2                  |                        2                        |    <InlineMath math="\leq 36,5" />     |    <InlineMath math="\leq 39,5" />    |                    3                    |
+|     40-42     |                 11                  |                       13                        |    <InlineMath math="\leq 42,5" />     |    <InlineMath math="\leq 45,5" />    |                    3                    |
+|     43-45     |                 10                  |                       23                        |    <InlineMath math="\leq 45,5" />     |    <InlineMath math="\leq 48,5" />    |                    3                    |
+|     46-48     |                  5                  |                       28                        |    <InlineMath math="\leq 48,5" />     |    <InlineMath math="\leq 51,5" />    |                    3                    |
+|     49-51     |                  2                  |                       30                        |    <InlineMath math="\leq 51,5" />     |    <InlineMath math="\leq 54,5" />    |                    3                    |
+|  **Jumlah**   |               **30**                |                                                 |                                        |                                       |                                         |
+
+Tepi bawah = batas bawah - 0,5
+
+Tepi atas = batas atas + 0,5
+
+Panjang kelas = Tepi atas - Tepi bawah
+
+### Tentukan Letak Kelas Kuartil
+
+Kita cari dulu posisi data ke berapa si kuartil itu.
+
+Total data (<InlineMath math="n" />) = 30.
+
+- **Letak <InlineMath math="Q_1" />:** data ke <InlineMath math="\frac{1}{4} \times 30 = 7,5" />.
+
+  Lihat kolom <InlineMath math="F_k" />. Data ke-7,5 ada di kelas mana? Kelas pertama <InlineMath math="F_k" />-nya 2 (belum cukup). Kelas kedua <InlineMath math="F_k" />-nya 13 (data ke-3 sampai ke-13 ada di sini). Nah, berarti data ke-7,5 ada di kelas **40-42**.
+
+- **Letak <InlineMath math="Q_2" /> (Median):** data ke <InlineMath math="\frac{1}{2} \times 30 = 15" />.
+
+  Lihat <InlineMath math="F_k" />. Data ke-15 ada di kelas **43-45** (karena <InlineMath math="F_k" /> sebelumnya 13, dan <InlineMath math="F_k" /> kelas ini 23).
+
+- **Letak <InlineMath math="Q_3" />:** data ke <InlineMath math="\frac{3}{4} \times 30 = 22,5" />.
+
+  Lihat <InlineMath math="F_k" />. Data ke-22,5 ada di kelas **43-45** juga (karena <InlineMath math="F_k" /> sebelumnya 13, dan <InlineMath math="F_k" /> kelas ini 23).
+
+### Hitung Nilai Kuartil dengan Rumus Interpolasi
+
+Setelah tahu kelasnya, kita pakai rumus ini buat cari nilai pastinya:
+
+<BlockMath math="Q_i = T_b + \left( \frac{\frac{i}{4}n - F_{kum}}{f_i} \right) p" />
+
+Di mana:
+
+- <InlineMath math="Q_i" /> = Nilai Kuartil ke-i (yang kita cari)
+- <InlineMath math="T_b" /> = Tepi bawah kelas kuartil ke-i
+- <InlineMath math="n" /> = Jumlah seluruh frekuensi
+- <InlineMath math="F_{kum}" /> = Frekuensi kumulatif **SEBELUM** kelas kuartil ke-i
+- <InlineMath math="f_i" /> = Frekuensi kelas kuartil ke-i
+- <InlineMath math="p" /> = Panjang kelas interval
+
+## Mencari Q1 Penjualan Sepatu
+
+Kita hitung <InlineMath math="Q_1" /> dari tabel di atas.
+
+1.  **Letak <InlineMath math="Q_1" />:** Data ke-7,5.
+2.  **Kelas <InlineMath math="Q_1" />:** 40-42.
+3.  **Kita kumpulkan bahan-bahannya:**
+    - Tepi bawah kelas <InlineMath math="Q_1" /> (<InlineMath math="T_b" />) = 39,5
+    - Jumlah data (<InlineMath math="n" />) = 30
+    - Frekuensi kumulatif sebelum kelas <InlineMath math="Q_1" /> (<InlineMath math="F_{kum}" />) = 2 (lihat <InlineMath math="F_k" /> kelas 37-39)
+    - Frekuensi kelas <InlineMath math="Q_1" /> (<InlineMath math="f_1" />) = 11
+    - Panjang kelas (<InlineMath math="p" />) = 3
+4.  **Masukkan ke rumus:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="Q_1 = T_b + \left( \frac{\frac{1}{4}n - F_{kum}}{f_1} \right) p" />
+      <BlockMath math="Q_1 = 39,5 + \left( \frac{7,5 - 2}{11} \right) 3" />
+      <BlockMath math="Q_1 = 39,5 + \left( \frac{5,5}{11} \right) 3" />
+      <BlockMath math="Q_1 = 39,5 + (0,5) \times 3" />
+      <BlockMath math="Q_1 = 39,5 + 1,5" />
+      <BlockMath math="Q_1 = 41" />
+    </div>
+
+Jadi, nilai <InlineMath math="Q_1" /> adalah 41. Artinya, sekitar 25% sepatu yang terjual ukurannya 41 atau lebih kecil.
+
+## Latihan
+
+Coba hitung <InlineMath math="Q_3" /> dari data penjualan sepatu di Toko A pada tabel di atas tadi.
+
+Setelah dapat hasilnya, coba bandingkan dengan cara mencari kuartil data tunggal yang sudah dipelajari sebelumnya. Kira-kira apa bedanya dan kenapa hasilnya bisa mirip atau beda?
+
+### Kunci Jawaban
+
+1.  **Letak <InlineMath math="Q_3" />:** Data ke-22,5.
+2.  **Kelas <InlineMath math="Q_3" />:** 43-45.
+3.  **Kumpulkan bahan:**
+
+    - <InlineMath math="T_b" /> = 42,5 (tepi bawah kelas <InlineMath math="Q_3" />
+      )
+    - <InlineMath math="n" /> = 30 (jumlah data)
+    - <InlineMath math="F_{kum}" /> = 13 (lihat <InlineMath math="F_k" /> kelas 40-42)
+    - <InlineMath math="f_3" /> = 10 (frekuensi kelas <InlineMath math="Q_3" />)
+    - <InlineMath math="p" /> = 3 (panjang kelas)
+
+4.  **Masukkan ke rumus:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="Q_3 = T_b + \left( \frac{\frac{3}{4}n - F_{kum}}{f_3} \right) p" />
+      <BlockMath math="Q_3 = 42,5 + \left( \frac{22,5 - 13}{10} \right) 3" />
+      <BlockMath math="Q_3 = 42,5 + \left( \frac{9,5}{10} \right) 3" />
+      <BlockMath math="Q_3 = 42,5 + (0,95) \times 3" />
+      <BlockMath math="Q_3 = 42,5 + 2,85" />
+      <BlockMath math="Q_3 = 45,35" />
+    </div>
+
+Jadi, nilai <InlineMath math="Q_3" /> adalah 45,35. Artinya, sekitar 75% sepatu yang terjual ukurannya 45,35 atau lebih kecil (atau 25% terjual ukurannya lebih besar dari 45,35).
+
+**Perbandingan dengan Data Tunggal:**
+
+Mencari kuartil data kelompok menggunakan **interpolasi** karena kita tidak tahu nilai pasti tiap data, hanya rentangnya. Hasilnya adalah perkiraan nilai kuartil.
+
+Kalau data tunggal, kita bisa langsung menunjuk data ke berapa yang jadi kuartil (atau rata-rata dua data), jadi hasilnya lebih pasti (jika datanya memang tunggal).
+
+Kuartil data kelompok memberikan gambaran bagus untuk data yang banyak dan sudah dikelompokkan.
