@@ -1,6 +1,119 @@
+import { Diagram, RelationVisualizer } from "./diagram";
+
 export const metadata = {
   title: "Function and Non-Function",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/27/2025",
   subject: "Function Composition and Inverse Function",
 };
+
+## Relations Between Sets
+
+In mathematics, a **relation** from a set <InlineMath math="A" /> to a set <InlineMath math="B" /> is a rule that connects members of set <InlineMath math="A" /> with members of set <InlineMath math="B" />. This pairing can be in any form.
+
+**Example:**
+
+The "less than" relation between <InlineMath math="A = \{1, 2, 3\}" /> and <InlineMath math="B = \{1, 2, 3, 4\}" /> yields the pairs <InlineMath math="(1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)" />.
+
+**Explanation:**
+
+We look for all pairs <InlineMath math="(a, b)" /> with <InlineMath math="a \in A" /> and <InlineMath math="b \in B" /> where <InlineMath math="a < b" />.
+
+- For <InlineMath math="a=1" /> -> <InlineMath math="1 < 2" />, <InlineMath math="1 < 3" />, <InlineMath math="1 < 4" />. Pairs: <InlineMath math="(1, 2), (1, 3), (1, 4)" />.
+- For <InlineMath math="a=2" /> -> <InlineMath math="2 < 3" />, <InlineMath math="2 < 4" />. Pairs: <InlineMath math="(2, 3), (2, 4)" />.
+- For <InlineMath math="a=3" /> -> <InlineMath math="3 < 4" />. Pair: <InlineMath math="(3, 4)" />.
+
+The combination of all these pairs is <InlineMath math="\{(1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)\}" />.
+
+## Functions as Special Relations
+
+A **function** (or mapping) <InlineMath math="f" /> from a set <InlineMath math="A" /> to a set <InlineMath math="B" />, written <InlineMath math="f: A \to B" />, is a special relation that satisfies two conditions:
+
+1.  **Every** element <InlineMath math="x \in A" /> must have a pair <InlineMath math="y \in B" />.
+
+    <BlockMath math="\forall x \in A, \exists y \in B \text{ such that } (x, y) \in f" />
+
+2.  Every element <InlineMath math="x \in A" /> has **exactly one** pair <InlineMath math="y \in B" />.
+
+    <BlockMath math="\text{If } (x, y_1) \in f \text{ and } (x, y_2) \in f, \text{ then } y_1 = y_2" />
+
+This means every member of the domain must be connected, and cannot have more than one connection.
+
+## Arrow Diagram Examples
+
+Here are visual examples of relations using arrow diagrams to distinguish between functions and non-functions.
+
+### Relations That Are Not Functions
+
+<div className="flex flex-col gap-4">
+  <Diagram
+    title="One to Many"
+    description="Element b has more than one pair (m and n)."
+  >
+    <RelationVisualizer
+      domain={[
+        { id: "a", label: "a" },
+        { id: "b", label: "b" },
+        { id: "c", label: "c" },
+      ]}
+      codomain={[
+        { id: "m", label: "m" },
+        { id: "n", label: "n" },
+      ]}
+      mappings={[
+        { from: "a", to: "m" },
+        { from: "b", to: "m" },
+        { from: "b", to: "n" },
+        { from: "c", to: "n" },
+      ]}
+    />
+  </Diagram>
+
+  <Diagram
+    title="Domain Element Without a Pair"
+    description="Element c does not have a pair in the codomain."
+  >
+    <RelationVisualizer
+      domain={[
+        { id: "a", label: "a" },
+        { id: "b", label: "b" },
+        { id: "c", label: "c" },
+      ]}
+      codomain={[
+        { id: "m", label: "m" },
+        { id: "n", label: "n" },
+        { id: "o", label: "o" },
+      ]}
+      mappings={[
+        { from: "a", to: "m" },
+        { from: "b", to: "o" },
+        // 'c' has no mapping
+      ]}
+    />
+  </Diagram>
+</div>
+
+### Relations That Are Functions
+
+<Diagram
+  title="Exactly One Pair"
+  description="Each domain element (p, q, r) has exactly one pair."
+>
+  <RelationVisualizer
+    domain={[
+      { id: "p", label: "p" },
+      { id: "q", label: "q" },
+      { id: "r", label: "r" },
+    ]}
+    codomain={[
+      { id: "x", label: "x" },
+      { id: "y", label: "y" },
+      { id: "z", label: "z" },
+    ]}
+    mappings={[
+      { from: "p", to: "x" },
+      { from: "q", to: "y" },
+      { from: "r", to: "y" }, // Many-to-one is allowed for functions
+    ]}
+  />
+</Diagram>

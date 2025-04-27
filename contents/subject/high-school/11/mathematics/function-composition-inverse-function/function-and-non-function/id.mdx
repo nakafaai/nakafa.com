@@ -1,6 +1,119 @@
+import { Diagram, RelationVisualizer } from "./diagram";
+
 export const metadata = {
   title: "Fungsi dan Bukan Fungsi",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/27/2025",
   subject: "Fungsi Komposisi dan Fungsi Invers",
 };
+
+## Relasi Antar Himpunan
+
+Dalam matematika, **relasi** dari himpunan <InlineMath math="A" /> ke himpunan <InlineMath math="B" /> adalah suatu aturan yang menghubungkan anggota himpunan <InlineMath math="A" /> dengan anggota himpunan <InlineMath math="B" />. Pemasangan ini bisa dalam bentuk apapun.
+
+**Contoh:**
+
+Relasi "kurang dari" antara <InlineMath math="A = \{1, 2, 3\}" /> dan <InlineMath math="B = \{1, 2, 3, 4\}" /> menghasilkan pasangan <InlineMath math="(1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)" />.
+
+**Penjelasan:**
+
+Kita mencari semua pasangan <InlineMath math="(a, b)" /> dengan <InlineMath math="a \in A" /> dan <InlineMath math="b \in B" /> dimana <InlineMath math="a < b" />.
+
+- Untuk <InlineMath math="a=1" /> -> <InlineMath math="1 < 2" />, <InlineMath math="1 < 3" />, <InlineMath math="1 < 4" />. Pasangan: <InlineMath math="(1, 2), (1, 3), (1, 4)" />.
+- Untuk <InlineMath math="a=2" /> -> <InlineMath math="2 < 3" />, <InlineMath math="2 < 4" />. Pasangan: <InlineMath math="(2, 3), (2, 4)" />.
+- Untuk <InlineMath math="a=3" /> -> <InlineMath math="3 < 4" />. Pasangan: <InlineMath math="(3, 4)" />.
+
+Gabungan semua pasangan ini adalah <InlineMath math="\{(1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)\}" />.
+
+## Fungsi Sebagai Relasi Khusus
+
+**Fungsi** (atau pemetaan) <InlineMath math="f" /> dari himpunan <InlineMath math="A" /> ke himpunan <InlineMath math="B" />, ditulis <InlineMath math="f: A \to B" />, adalah relasi khusus yang memenuhi dua syarat:
+
+1.  **Setiap** elemen <InlineMath math="x \in A" /> harus memiliki pasangan <InlineMath math="y \in B" />.
+
+    <BlockMath math="\forall x \in A, \exists y \in B \text{ sehingga } (x, y) \in f" />
+
+2.  Setiap elemen <InlineMath math="x \in A" /> memiliki **tepat satu** pasangan <InlineMath math="y \in B" />.
+
+    <BlockMath math="\text{Jika } (x, y_1) \in f \text{ dan } (x, y_2) \in f, \text{ maka } y_1 = y_2" />
+
+Artinya, setiap anggota domain harus terhubung, dan tidak boleh memiliki lebih dari satu hubungan.
+
+## Contoh Diagram Panah
+
+Berikut adalah contoh visualisasi relasi menggunakan diagram panah untuk membedakan mana yang fungsi dan mana yang bukan.
+
+### Relasi Bukan Fungsi
+
+<div className="flex flex-col gap-4">
+  <Diagram
+    title="Satu ke Banyak"
+    description="Elemen b memiliki lebih dari satu pasangan (m dan n)."
+  >
+    <RelationVisualizer
+      domain={[
+        { id: "a", label: "a" },
+        { id: "b", label: "b" },
+        { id: "c", label: "c" },
+      ]}
+      codomain={[
+        { id: "m", label: "m" },
+        { id: "n", label: "n" },
+      ]}
+      mappings={[
+        { from: "a", to: "m" },
+        { from: "b", to: "m" },
+        { from: "b", to: "n" },
+        { from: "c", to: "n" },
+      ]}
+    />
+  </Diagram>
+
+  <Diagram
+    title="Ada Domain Tanpa Pasangan"
+    description="Elemen c tidak memiliki pasangan di kodomain."
+  >
+    <RelationVisualizer
+      domain={[
+        { id: "a", label: "a" },
+        { id: "b", label: "b" },
+        { id: "c", label: "c" },
+      ]}
+      codomain={[
+        { id: "m", label: "m" },
+        { id: "n", label: "n" },
+        { id: "o", label: "o" },
+      ]}
+      mappings={[
+        { from: "a", to: "m" },
+        { from: "b", to: "o" },
+        // 'c' has no mapping
+      ]}
+    />
+  </Diagram>
+</div>
+
+### Relasi yang Merupakan Fungsi
+
+<Diagram
+  title="Tepat Satu Pasangan"
+  description="Setiap elemen domain (p, q, r) memiliki tepat satu pasangan."
+>
+  <RelationVisualizer
+    domain={[
+      { id: "p", label: "p" },
+      { id: "q", label: "q" },
+      { id: "r", label: "r" },
+    ]}
+    codomain={[
+      { id: "x", label: "x" },
+      { id: "y", label: "y" },
+      { id: "z", label: "z" },
+    ]}
+    mappings={[
+      { from: "p", to: "x" },
+      { from: "q", to: "y" },
+      { from: "r", to: "y" }, // Many-to-one is allowed for functions
+    ]}
+  />
+</Diagram>
