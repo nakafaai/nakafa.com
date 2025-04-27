@@ -1,6 +1,45 @@
+import { FunctionAnalogy } from "./analogy";
+
 export const metadata = {
   title: "Function Concept",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/27/2025",
   subject: "Function Composition and Inverse Function",
 };
+
+## What is a Function?
+
+Imagine you have a magic machine. This machine has a special task: every time you put something in (let's call it *input*), the machine will produce *exactly one* other item (let's call it *output*) according to a specific rule. Well, this magic machine is what we call a **function** in mathematics!
+
+So, a function is a special rule that connects each member of one group (set) to **exactly one** member in another group. The key is the phrase "exactly one". Each input can only have one output.
+
+## Function Notation
+
+Usually, a function is written in the form <InlineMath math="f(x) = y" />.
+
+-   <InlineMath math="f" /> -> This is the **name of the function** (think of it as the name of the machine). You can also use other letters like <InlineMath math="g" /> or <InlineMath math="h" />.
+
+-   <InlineMath math="x" /> -> This is the **input variable**. Think of this as the item you put into the machine.
+
+-   <InlineMath math="y" /> -> This is the **output variable**. This is the item that comes out of the machine after processing. The value of <InlineMath math="y" /> depends on the value of <InlineMath math="x" /> entered and the rule <InlineMath math="f" />. So, <InlineMath math="y" /> is often written as <InlineMath math="f(x)" /> (read: "f of x").
+
+## Analogy
+
+To make it easier to imagine, look at this analogy:
+
+<FunctionAnalogy
+  title="Function Machine Analogy"
+  description="Input a number into the machine, and the machine will output the result."
+/>
+
+Above is an example of an interactive function machine. Try changing the input value (<InlineMath math="x" />) at the bottom, and observe how the output value (<InlineMath math="f(x)" />) changes according to the function rule <InlineMath math="f(x) = 2x + 1" />.
+
+### Simple Example
+
+Suppose we have the function <InlineMath math="f(x) = x + 2" />. This means the rule of the machine <InlineMath math="f" /> is "add 2" to every input <InlineMath math="x" />.
+
+-   If the input is <InlineMath math="x=3" />, the output is <InlineMath math="f(3) = 3 + 2 = 5" />.
+-   If the input is <InlineMath math="x=-1" />, the output is <InlineMath math="f(-1) = -1 + 2 = 1" />.
+-   If the input is <InlineMath math="x=0" />, the output is <InlineMath math="f(0) = 0 + 2 = 2" />.
+
+Each input (3, -1, 0) has **exactly one** output (5, 1, 2). This is the hallmark of a function!

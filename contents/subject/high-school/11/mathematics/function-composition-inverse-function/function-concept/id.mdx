@@ -1,6 +1,46 @@
+import { FunctionAnalogy } from "./analogy";
+
 export const metadata = {
   title: "Konsep Fungsi",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/27/2025",
   subject: "Fungsi Komposisi dan Fungsi Invers",
 };
+
+## Apa Itu Fungsi?
+
+Bayangkan kamu punya mesin ajaib. Mesin ini punya tugas khusus: setiap kali kamu memasukkan sesuatu (kita sebut *masukan* atau *input*), mesin itu akan mengeluarkan *tepat satu* barang lain (kita sebut *keluaran* atau *output*) sesuai aturan tertentu. Nah, mesin ajaib inilah yang kita sebut **fungsi** dalam matematika!
+
+Jadi, fungsi adalah aturan khusus yang menghubungkan setiap anggota dari satu kelompok (himpunan) ke **tepat satu** anggota di kelompok lain. Kuncinya ada di kata "tepat satu". Setiap masukan hanya boleh punya satu keluaran.
+
+## Notasi Fungsi
+
+Biasanya, fungsi ditulis dalam bentuk <InlineMath math="f(x) = y" />.
+
+-   <InlineMath math="f" /> -> Ini adalah nama **fungsinya** (anggap saja sebagai nama mesin). Bisa juga pakai huruf lain seperti <InlineMath math="g" /> atau <InlineMath math="h" />.
+
+-   <InlineMath math="x" /> -> Ini adalah **variabel masukan** (input). Anggap saja ini barang yang kamu masukkan ke mesin.
+
+-   <InlineMath math="y" /> -> Ini adalah **variabel keluaran** (output). Ini barang yang keluar dari mesin setelah diproses. Nilai <InlineMath math="y" /> ini bergantung pada nilai <InlineMath math="x" /> yang dimasukkan dan aturan <InlineMath math="f" />. Jadi, <InlineMath math="y" /> sering juga ditulis sebagai <InlineMath math="f(x)" /> (dibaca: "f dari x").
+
+## Analogi
+
+Agar lebih mudah membayangkannya, lihat analogi ini:
+
+<FunctionAnalogy
+  title="Analogi Mesin Fungsi"
+  description="Masukkan angka ke dalam mesin, dan mesin akan mengeluarkan hasilnya."
+/>
+
+Di atas adalah contoh mesin fungsi interaktif. Coba ganti nilai masukan (<InlineMath math="x" />) di bagian bawah, dan perhatikan bagaimana nilai keluaran (<InlineMath math="f(x)" />) berubah sesuai aturan fungsi <InlineMath math="f(x) = 2x + 1" />.
+
+### Contoh Sederhana
+
+Misalkan kita punya fungsi <InlineMath math="f(x) = x + 2" />. Ini artinya, aturan mesin <InlineMath math="f" /> adalah "tambahkan 2" pada setiap masukan <InlineMath math="x" />.
+
+-   Jika masukannya <InlineMath math="x=3" />, keluarannya adalah <InlineMath math="f(3) = 3 + 2 = 5" />.
+-   Jika masukannya <InlineMath math="x=-1" />, keluarannya adalah <InlineMath math="f(-1) = -1 + 2 = 1" />.
+-   Jika masukannya <InlineMath math="x=0" />, keluarannya adalah <InlineMath math="f(0) = 0 + 2 = 2" />.
+
+Setiap masukan (3, -1, 0) hanya punya **tepat satu** keluaran (5, 1, 2). Inilah ciri khas fungsi!
+
