@@ -89,7 +89,7 @@ function Machine() {
             >
               <MinusIcon className="size-4" aria-hidden="true" />
             </Button>
-            <Input className="w-full grow bg-background px-3 py-2 text-center text-foreground tabular-nums" />
+            <Input className="w-full grow bg-background px-3 py-2 text-center font-mono text-foreground tabular-nums" />
             <Button
               slot="increment"
               className="-me-px flex aspect-square h-[inherit] items-center justify-center rounded-e-md border border-input bg-background text-muted-foreground/80 text-sm transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
