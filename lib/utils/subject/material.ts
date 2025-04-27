@@ -6,6 +6,7 @@ import {
   BrainCircuitIcon,
   ChartPieIcon,
   CodeIcon,
+  CodeXmlIcon,
   DraftingCompassIcon,
   EarthIcon,
   FlaskConicalIcon,
@@ -15,6 +16,7 @@ import {
   MapPinIcon,
   PawPrintIcon,
   PiIcon,
+  ScaleIcon,
 } from "lucide-react";
 import type { Locale } from "next-intl";
 
@@ -88,6 +90,10 @@ export function getMaterialIcon(material: MaterialGrade) {
       return BrainCircuitIcon;
     case "game-engineering":
       return Gamepad2Icon;
+    case "political-science":
+      return ScaleIcon;
+    case "computer-science":
+      return CodeXmlIcon;
     default:
       return LightbulbIcon;
   }
