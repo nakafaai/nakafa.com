@@ -13,6 +13,10 @@
 # data
 /script/_data
 
+# ai
+.cursor
+.trae
+
 # pagefind
 _pagefind/
 
