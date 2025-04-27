@@ -1,14 +1,9 @@
-import {
-  BackpackIcon,
-  LibraryIcon,
-  NotebookIcon,
-  UniversityIcon,
-} from "lucide-react";
+import { getCategoryIcon } from "@/lib/utils/subject/category";
 
 export const subjectAll = [
   {
     title: "elementary-school",
-    icon: BackpackIcon,
+    icon: getCategoryIcon("elementary-school"),
     items: [
       {
         title: "grade",
@@ -44,7 +39,7 @@ export const subjectAll = [
   },
   {
     title: "middle-school",
-    icon: NotebookIcon,
+    icon: getCategoryIcon("middle-school"),
     items: [
       {
         title: "grade",
@@ -65,7 +60,7 @@ export const subjectAll = [
   },
   {
     title: "high-school",
-    icon: LibraryIcon,
+    icon: getCategoryIcon("high-school"),
     items: [
       {
         title: "grade",
@@ -86,7 +81,7 @@ export const subjectAll = [
   },
   {
     title: "university",
-    icon: UniversityIcon,
+    icon: getCategoryIcon("university"),
     items: [
       {
         title: "bachelor",

@@ -6,6 +6,7 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
+import { getCategoryIcon } from "@/lib/utils/subject/category";
 import {
   getGradeNonNumeric,
   getGradePath,
@@ -14,7 +15,6 @@ import {
 import { getStaticParams } from "@/lib/utils/system";
 import type { SubjectCategory } from "@/types/subject/category";
 import type { Grade } from "@/types/subject/grade";
-import { LibraryIcon } from "lucide-react";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -81,7 +81,7 @@ export default async function Page({ params }: Props) {
       <HeaderContent
         title={t(getGradeNonNumeric(grade) ?? "grade", { grade })}
         description={t("grade-description")}
-        icon={LibraryIcon}
+        icon={getCategoryIcon(category)}
       />
       <LayoutContent className="py-10">
         <ContainerList>

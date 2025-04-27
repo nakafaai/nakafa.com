@@ -1,9 +1,9 @@
-import { DramaIcon } from "lucide-react";
+import { getCategoryIcon } from "@/lib/utils/articles/category";
 
 export const articlesMenu = [
   {
     title: "politics",
-    icon: DramaIcon,
+    icon: getCategoryIcon("politics"),
     href: "/articles/politics",
   },
 ] as const;
