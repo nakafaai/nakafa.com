@@ -4,3 +4,110 @@ export const metadata = {
   date: "04/27/2025",
   subject: "Fungsi Komposisi dan Fungsi Invers",
 };
+
+## Domain
+
+Domain itu seperti daftar tamu VIP untuk mesin fungsi kita. Ini adalah **kumpulan semua nilai input yang boleh dimasukkan** ke dalam fungsi. Kalau suatu nilai tidak ada di daftar (domain), dia tidak bisa masuk ke mesin fungsi.
+
+### Contoh Mencari Domain
+
+Misalkan kita punya fungsi seperti ini:
+
+<BlockMath math="f(x) = \frac{1}{x}" />
+
+Mesin ini bekerja dengan cara membagi 1 dengan angka yang kamu masukkan. Bolehkah kita memasukkan semua angka? Coba masukkan angka 0.
+
+<BlockMath math="f(0) = \frac{1}{0}" />
+
+Wah, kita tidak bisa membagi dengan nol! Itu tidak boleh dalam matematika. Jadi, angka 0 tidak termasuk dalam daftar tamu (domain) fungsi ini. Semua angka lain boleh masuk.
+
+Jadi, domain fungsi <InlineMath math="f(x) = \frac{1}{x}" /> adalah semua bilangan nyata kecuali 0.
+
+Contoh lain:
+
+<BlockMath math="g(x) = \sqrt{x}" />
+
+Mesin ini mencari akar kuadrat dari input. Bolehkah kita memasukkan angka negatif, misalnya -4?
+
+<BlockMath math="g(-4) = \sqrt{-4}" />
+
+Di dunia bilangan nyata, kita tidak bisa mengakarkuadratkan bilangan negatif. Jadi, semua bilangan negatif tidak boleh masuk. Hanya angka 0 dan angka positif yang boleh.
+
+Jadi, domain fungsi <InlineMath math="g(x) = \sqrt{x}" /> adalah semua bilangan nyata yang lebih besar dari atau sama dengan 0 (<InlineMath math="x \ge 0" />).
+
+## Kodomain
+
+Kodomain itu seperti **katalog semua kemungkinan output** yang bisa dikeluarkan oleh mesin fungsi. Ini adalah kumpulan nilai tempat kita _mengharapkan_ outputnya berada. Kita yang menentukan katalog ini saat mendefinisikan fungsi.
+
+Misalnya, kita definisikan sebuah fungsi <InlineMath math="f(x) = 2x" />.
+
+Kita tentukan **Domain** (input) adalah himpunan bilangan asli:
+
+<BlockMath math="\{1, 2, 3, ...\}" />
+
+Lalu, kita tentukan **Kodomain** (kemungkinan output) adalah himpunan bilangan bulat:
+
+<BlockMath math="\{..., -2, -1, 0, 1, 2, ...\}" />
+
+Dengan menentukan kodomain sebagai bilangan bulat, kita menyatakan bahwa kita _berharap_ hasil dari fungsi <InlineMath math="f(x)=2x" /> ini adalah bilangan bulat. Meskipun kita tahu bahwa jika inputnya bilangan asli, outputnya pasti bilangan genap positif (yang merupakan Range):
+
+<BlockMath math="\{2, 4, 6, ...\}" />
+
+Kodomain yang kita tentukan (bilangan bulat) tetap valid karena semua hasil aktualnya (range) termasuk dalam kodomain tersebut.
+
+Kodomain memberi tahu kita 'jenis' nilai apa yang mungkin keluar, bahkan jika tidak semua nilai dalam kodomain itu benar-benar muncul sebagai hasil.
+
+## Range
+
+Range (atau daerah hasil) adalah **kumpulan semua nilai output yang _benar-benar_ dihasilkan** oleh fungsi ketika kita memasukkan semua anggota domain. Range adalah bagian dari (atau kadang sama persis dengan) kodomain.
+
+**Contoh:**
+
+Kita gunakan lagi fungsi <InlineMath math="f(x) = x^2" />.
+
+Misalkan Domainnya adalah bilangan bulat:
+
+<BlockMath math="\{..., -2, -1, 0, 1, 2, ...\}" />
+
+dan Kodomainnya juga bilangan bulat.
+
+Saat kita masukkan nilai-nilai dari domain:
+
+- <InlineMath math="f(-2) = 4" />
+- <InlineMath math="f(-1) = 1" />
+- <InlineMath math="f(0) = 0" />
+- <InlineMath math="f(1) = 1" />
+- <InlineMath math="f(2) = 4" />
+- dan seterusnya...
+
+Nilai-nilai yang _benar-benar_ keluar sebagai output adalah 0, 1, 4, 9, 16, dan seterusnya (bilangan kuadrat non-negatif).
+
+Jadi, **Range** dari fungsi ini (dengan domain tersebut) adalah himpunan:
+
+<BlockMath math="\{0, 1, 4, 9, 16, ...\}" />
+
+Perhatikan bahwa range ini (<InlineMath math="\{0, 1, 4, 9, ...\}" />) merupakan bagian (subset) dari kodomain yang kita tentukan (bilangan bulat):
+
+<BlockMath math="\{..., -1, 0, 1, 2, ...\}" />
+
+Tidak semua anggota kodomain menjadi bagian dari range.
+
+## Kenapa Ini Penting?
+
+Memahami domain, kodomain, dan range sangat penting karena membantu kita mendefinisikan fungsi dengan benar dan memahami batasan-batasannya. Tanpa domain yang jelas, kita mungkin mencoba memasukkan nilai yang "merusak" fungsi (seperti membagi dengan nol). Tanpa kodomain dan range, kita tidak tahu persis seperti apa output yang bisa diharapkan.
+
+## Hubungan Matematis
+
+Secara matematis, fungsi <InlineMath math="f" /> memetakan setiap elemen dari himpunan Domain (<InlineMath math="D" />) ke satu elemen dalam himpunan Kodomain (<InlineMath math="K" />). Ini sering ditulis sebagai:
+
+<BlockMath math="f: D \to K" />
+
+Range (<InlineMath math="R" />) adalah himpunan semua hasil aktual <InlineMath math="f(x)" /> untuk setiap <InlineMath math="x" /> dalam Domain. Dengan kata lain:
+
+<BlockMath math="R = \{ f(x) \mid x \in D \}" />
+
+Hubungan penting antara ketiganya adalah bahwa Range selalu merupakan himpunan bagian (subset) dari Kodomain:
+
+<BlockMath math="R \subseteq K" />
+
+Artinya, semua nilai yang benar-benar keluar dari fungsi (Range) pasti termasuk dalam kumpulan nilai yang _mungkin_ keluar (Kodomain), tetapi tidak semua nilai dalam Kodomain harus menjadi hasil.

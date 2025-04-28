@@ -4,3 +4,106 @@ export const metadata = {
   date: "04/27/2025",
   subject: "Function Composition and Inverse Function",
 };
+
+## Domain
+
+The Domain is like the VIP guest list for our function machine. It is the **collection of all input values that are allowed** into the function. If a value is not on the list (domain), it cannot enter the function machine.
+
+### Finding the Domain Example
+
+Suppose we have a function like this:
+
+<BlockMath math="f(x) = \frac{1}{x}" />
+
+This machine works by dividing 1 by the number you input. Can we input all numbers? Try inputting the number 0.
+
+<BlockMath math="f(0) = \frac{1}{0}" />
+
+Oops, we cannot divide by zero! That's not allowed in mathematics. So, the number 0 is not included in the guest list (domain) for this function. All other numbers are allowed.
+
+So, the domain of the function <InlineMath math="f(x) = \frac{1}{x}" /> is all real numbers except 0.
+
+Another example:
+
+<BlockMath math="g(x) = \sqrt{x}" />
+
+This machine finds the square root of the input. Can we input negative numbers, for example -4?
+
+<BlockMath math="g(-4) = \sqrt{-4}" />
+
+In the realm of real numbers, we cannot take the square root of a negative number. So, all negative numbers are not allowed. Only 0 and positive numbers are allowed.
+
+So, the domain of the function <InlineMath math="g(x) = \sqrt{x}" /> is all real numbers greater than or equal to 0 (<InlineMath math="x \ge 0" />).
+
+## Codomain
+
+The Codomain is like a **catalog of all possible outputs** that the function machine can produce. It is the set of values where we _expect_ the output to be. We determine this catalog when defining the function.
+
+For example, let's define a function <InlineMath math="f(x) = 2x" />.
+We specify the **Domain** (input) as the set of natural numbers:
+
+<BlockMath math="\{1, 2, 3, ...\}" />
+
+Then, we specify the **Codomain** (possible output) as the set of integers:
+
+<BlockMath math="\{..., -2, -1, 0, 1, 2, ...\}" />
+
+By defining the codomain as integers, we are stating that we _expect_ the result of the function <InlineMath math="f(x)=2x" /> to be an integer. Although we know that if the input is a natural number, the output will definitely be a positive even number (which is the Range):
+
+<BlockMath math="\{2, 4, 6, ...\}" />
+The codomain we defined (integers) is still valid because all the actual results
+(range) are included in the codomain.
+
+The codomain tells us what 'type' of value might come out, even if not all values in the codomain actually appear as results.
+
+## Range
+
+The Range is the **collection of all output values that are _actually_ produced** by the function when we input all members of the domain. The Range is part of (or sometimes exactly the same as) the Codomain.
+
+**Example:**
+Let's use the function <InlineMath math="f(x) = x^2" /> again.
+
+Suppose the Domain is the set of integers:
+
+<BlockMath math="\{..., -2, -1, 0, 1, 2, ...\}" />
+and the Codomain is also the set of integers.
+
+When we input values from the domain:
+
+- <InlineMath math="f(-2) = 4" />
+- <InlineMath math="f(-1) = 1" />
+- <InlineMath math="f(0) = 0" />
+- <InlineMath math="f(1) = 1" />
+- <InlineMath math="f(2) = 4" />
+- and so on...
+
+The values that _actually_ come out as output are 0, 1, 4, 9, 16, and so on (non-negative square numbers).
+So, the **Range** of this function (with this domain) is the set:
+
+<BlockMath math="\{0, 1, 4, 9, 16, ...\}" />
+
+Notice that this range (<InlineMath math="\{0, 1, 4, 9, ...\}" />) is a part (subset) of the codomain we defined (integers):
+
+<BlockMath math="\{..., -1, 0, 1, 2, ...\}" />
+Not all members of the codomain are part of the range.
+
+## Why Is This Important?
+
+Understanding domain, codomain, and range is very important because it helps us define functions correctly and understand their limitations. Without a clear domain, we might try to input values that "break" the function (like dividing by zero). Without codomain and range, we don't know exactly what kind of output to expect.
+
+## Mathematical Relationship
+
+Mathematically, a function <InlineMath math="f" /> maps every element from the set Domain (<InlineMath math="D" />) to one element in the set Codomain (<InlineMath math="K" />). This is often written as:
+
+<BlockMath math="f: D \to K" />
+
+The Range (<InlineMath math="R" />) is the set of all actual results <InlineMath math="f(x)" /> for every <InlineMath math="x" /> in the Domain. In other words:
+
+<BlockMath math="R = \{ f(x) \mid x \in D \}" />
+
+The important relationship between the three is that the Range is always a subset of the Codomain:
+
+<BlockMath math="R \subseteq K" />
+This means all values that actually come out of the function (Range) must be included
+in the set of values that *might* come out (Codomain), but not all values in the
+Codomain must be results.
