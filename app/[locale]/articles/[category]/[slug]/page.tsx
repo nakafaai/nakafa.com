@@ -119,11 +119,11 @@ export default async function Page({ params }: Props) {
             name: t(category),
           }}
         />
-        <LayoutArticleContent>
-          <Suspense fallback={<SkeletonText />}>
+        <Suspense fallback={<SkeletonText />}>
+          <LayoutArticleContent>
             <Content />
-          </Suspense>
-        </LayoutArticleContent>
+          </LayoutArticleContent>
+        </Suspense>
         <LayoutArticleFooter>
           <RefContent
             title={metadata.title}

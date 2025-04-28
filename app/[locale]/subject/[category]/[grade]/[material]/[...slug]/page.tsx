@@ -149,11 +149,11 @@ export default async function Page({ params }: Props) {
             }}
             // Omitting date to maintain content credibility
           />
-          <LayoutMaterialMain>
-            <Suspense fallback={<SkeletonText />}>
+          <Suspense fallback={<SkeletonText />}>
+            <LayoutMaterialMain>
               <Content />
-            </Suspense>
-          </LayoutMaterialMain>
+            </LayoutMaterialMain>
+          </Suspense>
           <LayoutMaterialPagination pagination={pagination} />
           <LayoutMaterialFooter className="mt-10">
             <RefContent githubUrl={getGithubUrl(`/contents${FILE_PATH}`)} />
