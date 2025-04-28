@@ -102,7 +102,7 @@ export default async function Page({ params }: Props) {
             label: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
           }}
         />
-        <LayoutMaterialMain className="py-10">
+        <LayoutMaterialMain scrollIndicator={false} className="py-10">
           <ContainerList className="sm:grid-cols-1">
             {materials.map((material) => (
               <CardMaterial key={material.title} material={material} />

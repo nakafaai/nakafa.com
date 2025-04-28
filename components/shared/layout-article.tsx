@@ -14,11 +14,16 @@ export function LayoutArticleHeader({
 export function LayoutArticleContent({
   children,
   className,
+  ...props
 }: {
   children: ReactNode;
   className?: string;
-}) {
-  return <LayoutContent className={className}>{children}</LayoutContent>;
+} & ComponentProps<typeof LayoutContent>) {
+  return (
+    <LayoutContent {...props} className={className}>
+      {children}
+    </LayoutContent>
+  );
 }
 
 export function LayoutArticleFooter({
