@@ -247,6 +247,16 @@ function SearchListItems({
   const setOpen = useSetAtom(searchAtom);
   const [isPending, startTransition] = useTransition();
 
+  useEffect(() => {
+    const subResultsToPrefetch = results.flatMap(
+      (result) => result.sub_results
+    );
+    for (const subResult of subResultsToPrefetch) {
+      // router prefetch will manage that it will not prefetch the same url twice
+      router.prefetch(subResult.url);
+    }
+  }, [results, router]);
+
   if (error) {
     return (
       <CommandEmpty className="flex flex-col items-center justify-center gap-1 p-7.5 text-center text-muted-foreground text-sm">
@@ -305,8 +315,6 @@ function SearchListItems({
               key={subResult.url}
               value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
               className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
-              onMouseEnter={() => router.prefetch(subResult.url)}
-              onFocus={() => router.prefetch(subResult.url)}
               onSelect={() => {
                 startTransition(() => {
                   setOpen(false);
