@@ -80,11 +80,11 @@ export async function generateMetadata({
       ],
       apple: [{ url: "/logo.svg" }, new URL("/logo.svg", "https://nakafa.com")],
       other: [
-        { rel: "manifest", url: "/manifest.json" },
+        { rel: "manifest", url: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", url: "/logo.svg" },
       ],
     },
-    manifest: "https://nakafa.com/manifest.json",
+    manifest: "https://nakafa.com/manifest.webmanifest",
     robots: {
       index: true,
       follow: true,
