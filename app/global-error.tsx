@@ -7,9 +7,18 @@ import { themes } from "@/lib/data/theme";
 import { cn } from "@/lib/utils";
 import "@/styles/globals.css";
 import "@/styles/theme.css";
-import { GeistMono } from "geist/font/mono";
-import { GeistSans } from "geist/font/sans";
+import { Geist, Geist_Mono } from "next/font/google";
 import { useEffect } from "react";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export default function GlobalError({
   error,
@@ -30,8 +39,8 @@ export default function GlobalError({
       lang="en"
       className={cn(
         "font-sans antialiased",
-        GeistSans.variable,
-        GeistMono.variable
+        geistSans.variable,
+        geistMono.variable
       )}
       suppressHydrationWarning
     >

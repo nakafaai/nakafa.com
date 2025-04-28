@@ -2,11 +2,21 @@
 
 import { ThemeProvider } from "@/components/theme/provider";
 import { cn } from "@/lib/utils";
-import { GeistMono } from "geist/font/mono";
-import { GeistSans } from "geist/font/sans";
 import NextError from "next/error";
+import { Geist, Geist_Mono } from "next/font/google";
 
 import "@/styles/globals.css";
+import "@/styles/theme.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export default function NotFound() {
   return (
@@ -14,8 +24,8 @@ export default function NotFound() {
       lang="en"
       className={cn(
         "font-sans antialiased",
-        GeistSans.variable,
-        GeistMono.variable
+        geistSans.variable,
+        geistMono.variable
       )}
       suppressHydrationWarning
     >
