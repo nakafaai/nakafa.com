@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "@/i18n/routing";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { languages } from "@/lib/data/lang";
 import { cn } from "@/lib/utils";
 import { IconCircleFilled } from "@tabler/icons-react";

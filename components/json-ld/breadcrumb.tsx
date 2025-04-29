@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "@/i18n/routing";
+import { usePathname } from "@/i18n/navigation";
 import { type Locale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { BreadcrumbList, WithContext } from "schema-dts";

@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "@/i18n/routing";
+import { usePathname } from "@/i18n/navigation";
 import { searchAtom } from "@/lib/jotai/search";
 import { cn } from "@/lib/utils";
 import { IconCommand, IconLetterK } from "@tabler/icons-react";

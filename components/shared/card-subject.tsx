@@ -1,4 +1,4 @@
-import { Link } from "@/i18n/routing";
+import { Link } from "@/i18n/navigation";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "../ui/card";
 import { GradientBlock } from "./gradient-block";

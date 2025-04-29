@@ -1,6 +1,6 @@
 "use client";
 
-import { Link } from "@/i18n/routing";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import type { MaterialList } from "@/types/subject/material";
 import { ArrowDownIcon, ChevronDownIcon, LinkIcon } from "lucide-react";

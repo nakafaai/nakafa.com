@@ -1,4 +1,4 @@
-import { Link } from "@/i18n/routing";
+import { Link } from "@/i18n/navigation";
 import type { Article } from "@/types/content";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";

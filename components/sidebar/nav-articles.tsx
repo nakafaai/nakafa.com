@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "@/i18n/routing";
+import { usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import NavigationLink from "../ui/navigation-link";
 import {

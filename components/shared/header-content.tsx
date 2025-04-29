@@ -1,4 +1,4 @@
-import { Link } from "@/i18n/routing";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon, type LucideIcon, UserPenIcon } from "lucide-react";

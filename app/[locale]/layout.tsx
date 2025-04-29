@@ -1,5 +1,5 @@
 import { ThemeProvider } from "@/components/theme/provider";
-import { routing } from "@/i18n";
+import { routing } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
 import { type Locale, NextIntlClientProvider, hasLocale } from "next-intl";
