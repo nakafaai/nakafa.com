@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import { languages } from "@/lib/data/lang";
 import { cn } from "@/lib/utils";
 import { IconCircleFilled } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { type Locale, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import { useTransition } from "react";
@@ -16,6 +17,8 @@ export function LangMenuSwitcher() {
   const pathname = usePathname();
   const params = useParams();
   const currentLocale = useLocale();
+
+  const queryClient = useQueryClient();
 
   const isMobile = useMediaQuery("(max-width: 640px)");
 
@@ -46,6 +49,8 @@ export function LangMenuSwitcher() {
       // reboot the pagefind because of the language change
       if (typeof window !== "undefined" && window.pagefind) {
         await window.pagefind.destroy?.();
+
+        queryClient.invalidateQueries({ queryKey: ["search"] });
       }
     });
   }

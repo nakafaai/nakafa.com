@@ -81,12 +81,12 @@ function CommandInput({
         onClick={() => {
           props.onValueChange?.("");
         }}
-        className="group relative h-full"
+        className="group relative h-full cursor-pointer"
       >
         <XIcon
           className={cn(
-            "size-4 shrink-0 opacity-50 transition-opacity group-hover:opacity-100",
-            !props.value && "opacity-0"
+            "size-4 shrink-0 opacity-0 transition-opacity",
+            props.value && "opacity-50 group-hover:opacity-100"
           )}
         />
       </button>

@@ -10,10 +10,10 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { queryAtom, searchAtom } from "@/lib/jotai/search";
+import { useSearch } from "@/lib/react-query/use-search";
 import { cn } from "@/lib/utils";
-import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
+import type { PagefindResult } from "@/types/pagefind";
 import { IconMenu3 } from "@tabler/icons-react";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAtom, useSetAtom } from "jotai";
 import { HeartCrackIcon, InfoIcon, RocketIcon } from "lucide-react";
 import { FileTextIcon } from "lucide-react";
@@ -26,10 +26,6 @@ import { useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { LoaderIcon } from "../ui/icons";
 
-// Define regex patterns at top level for better performance
-const HTML_EXT_REGEX = /\.html$/;
-const HTML_ANCHOR_REGEX = /\.html#/;
-const SEARCH_OPTIONS: PagefindSearchOptions = {};
 const DEV_SEARCH_NOTICE = (
   <>
     <p>
@@ -169,50 +165,15 @@ function SearchList({ search }: { search: string }) {
     init();
   }, []);
 
-  const fetchSearchResults = async (
-    query: string
-  ): Promise<PagefindResult[]> => {
-    if (!window.pagefind?.debouncedSearch) {
-      // Should not happen if isPagefindReady is true, but good practice
-      throw new Error("Pagefind not initialized correctly.");
-    }
-
-    const response = await window.pagefind.debouncedSearch<PagefindResult>(
-      query,
-      SEARCH_OPTIONS
-    );
-
-    if (!response) {
-      return [];
-    }
-
-    // @ts-expect-error: pagefind returns a promise of an array of objects
-    const data = await Promise.all(response.results.map((o) => o.data()));
-
-    return data.map((newData: PagefindResult) => ({
-      ...newData,
-      sub_results: newData.sub_results.map((r) => {
-        const url = r.url
-          .replace(HTML_EXT_REGEX, "")
-          .replace(HTML_ANCHOR_REGEX, "#");
-        return { ...r, url };
-      }),
-    }));
-  };
-
   const {
     data: results = [],
     isError,
     error,
     isLoading,
     isPlaceholderData,
-  } = useQuery({
-    queryKey: ["pagefind", debouncedSearch],
-    queryFn: () => fetchSearchResults(debouncedSearch),
+  } = useSearch({
+    query: debouncedSearch,
     enabled: isPagefindReady && !!debouncedSearch,
-    refetchOnWindowFocus: false,
-    retry: false,
-    placeholderData: keepPreviousData,
   });
 
   // Combine initialization error with query error
