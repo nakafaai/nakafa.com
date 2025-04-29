@@ -1,6 +1,7 @@
 import { BlockMath, InlineMath, type MathComponentProps } from "react-katex";
 import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { Heading } from "./components/markdown/heading";
+import { Paragraph } from "./components/markdown/paragraph";
 import { buttonVariants } from "./components/ui/button";
 import NavigationLink from "./components/ui/navigation-link";
 import { ScrollArea, ScrollBar } from "./components/ui/scroll-area";
@@ -57,12 +58,7 @@ const components = {
   h6: (props: HeadingProps) => (
     <Heading Tag="h6" className="text-sm" {...props} />
   ),
-  p: (props: ParagraphProps) => (
-    <p
-      className="my-4 text-pretty text-base text-foreground/80 leading-relaxed first:mt-0 last:mb-0"
-      {...props}
-    />
-  ),
+  p: (props: ParagraphProps) => <Paragraph {...props} />,
   ol: (props: ListProps) => (
     <ol className="list-decimal space-y-4 pl-5" {...props} />
   ),
