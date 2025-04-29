@@ -4,3 +4,102 @@ export const metadata = {
   date: "04/27/2025",
   subject: "Function Composition and Inverse Function",
 };
+
+## Properties of Function Composition
+
+Function composition, which involves combining functions sequentially, has several important properties we need to know. Let's study these properties using the following example functions:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="f(x) = 2x + 1" />
+  <BlockMath math="g(x) = x^2 + 4" />
+  <BlockMath math="h(x) = \frac{1}{x+1}" />
+</div>
+
+### Non-Commutative Property
+
+The first and most common property is that the order in which functions are composed **matters**. Changing the order of functions usually results in a different composite function.
+
+In general, <InlineMath math="(f \circ g)(x)" /> is **not equal to** <InlineMath math="(g \circ f)(x)" />.
+
+**Example:**
+
+Let's compare <InlineMath math="(g \circ f)(x)" /> and <InlineMath math="(f \circ g)(x)" />.
+
+1.  **Calculating <InlineMath math="(g \circ f)(x)" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(g \circ f)(x) = g(f(x)) = g(2x+1)" />
+      <BlockMath math="g(2x+1) = (2x+1)^2 + 4 = (4x^2 + 4x + 1) + 4 = 4x^2 + 4x + 5" />
+    </div>
+
+2.  **Calculating <InlineMath math="(f \circ g)(x)" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(f \circ g)(x) = f(g(x)) = f(x^2+4)" />
+      <BlockMath math="f(x^2+4) = 2(x^2+4) + 1 = (2x^2 + 8) + 1 = 2x^2 + 9" />
+    </div>
+
+Since <InlineMath math="4x^2 + 4x + 5 \neq 2x^2 + 9" />, it is proven that <InlineMath math="(g \circ f)(x) \neq (f \circ g)(x)" />. This property also applies to other compositions, for example <InlineMath math="(f \circ h)(x) \neq (h \circ f)(x)" /> and <InlineMath math="(g \circ h)(x) \neq (h \circ g)(x)" />.
+
+### Associative Property
+
+If we compose three or more functions, the order of **performing** the composition does not affect the final result, as long as the order of the **functions** remains the same.
+
+Mathematically, for functions <InlineMath math="f" />, <InlineMath math="g" />, and <InlineMath math="h" />, the following holds:
+
+<BlockMath math="((f \circ g) \circ h)(x) = (f \circ (g \circ h))(x)" />
+
+This means we can compose <InlineMath math="f" /> with <InlineMath math="g" /> first, and then compose the result with <InlineMath math="h" />. Alternatively, we can compose <InlineMath math="g" /> with <InlineMath math="h" /> first, and then compose <InlineMath math="f" /> with the result. The outcome will be the same.
+
+**Example:**
+
+Let's check if <InlineMath math="((f \circ g) \circ h)(x) = (f \circ (g \circ h))(x)" />.
+
+1.  **Calculating <InlineMath math="((f \circ g) \circ h)(x)" />:**
+
+    We already know <InlineMath math="(f \circ g)(x) = 2x^2 + 9" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="((f \circ g) \circ h)(x) = (f \circ g)(h(x)) = (f \circ g)(\frac{1}{x+1})" />
+      <BlockMath math="(f \circ g)(\frac{1}{x+1}) = 2\left(\frac{1}{x+1}\right)^2 + 9 = \frac{2}{(x+1)^2} + 9" />
+    </div>
+
+2.  **Calculating <InlineMath math="(f \circ (g \circ h))(x)" />:**
+
+    First, find <InlineMath math="(g \circ h)(x)" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(g \circ h)(x) = g(h(x)) = g(\frac{1}{x+1})" />
+      <BlockMath math="g(\frac{1}{x+1}) = \left(\frac{1}{x+1}\right)^2 + 4 = \frac{1}{(x+1)^2} + 4" />
+    </div>
+
+    Now, compose <InlineMath math="f" /> with this result:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(f \circ (g \circ h))(x) = f((g \circ h)(x)) = f\left(\frac{1}{(x+1)^2} + 4\right)" />
+      <BlockMath math="f\left(\frac{1}{(x+1)^2} + 4\right) = 2\left(\frac{1}{(x+1)^2} + 4\right) + 1 = \frac{2}{(x+1)^2} + 8 + 1 = \frac{2}{(x+1)^2} + 9" />
+    </div>
+
+Since both results are the same (<InlineMath math="\frac{2}{(x+1)^2} + 9" />), the associative property is proven to hold: <InlineMath math="((f \circ g) \circ h)(x) = (f \circ (g \circ h))(x)" />.
+
+This associative property also applies to other combinations of function order, such as <InlineMath math="((h \circ f) \circ g)(x) = (h \circ (f \circ g))(x)" /> and <InlineMath math="((g \circ f) \circ h)(x) = (g \circ (f \circ h))(x)" />.
+
+### Identity Element
+
+There is a special function called the **identity function**, denoted by <InlineMath math="I(x)" />, which is defined as <InlineMath math="I(x) = x" />. This function does not change its input.
+
+If a function <InlineMath math="f" /> is composed with the identity function <InlineMath math="I" /> (from either the left or the right), the result is the function <InlineMath math="f" /> itself.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(f \circ I)(x) = f(I(x)) = f(x)" />
+  <BlockMath math="(I \circ f)(x) = I(f(x)) = f(x)" />
+</div>
+
+**Example:**
+
+With <InlineMath math="f(x) = 2x + 1" />:
+
+- <InlineMath math="(f \circ I)(x) = f(I(x)) = f(x) = 2x + 1" />
+- <InlineMath math="(I \circ f)(x) = I(f(x)) = I(2x+1) = 2x + 1" />
+
+Both result in the function <InlineMath math="f(x)" /> again.

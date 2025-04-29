@@ -4,3 +4,102 @@ export const metadata = {
   date: "04/27/2025",
   subject: "Komposisi Fungsi dan Fungsi Invers",
 };
+
+## Sifat-sifat Komposisi Fungsi
+
+Komposisi fungsi, yaitu menggabungkan fungsi secara berurutan, memiliki beberapa sifat penting yang perlu kita ketahui. Mari kita pelajari sifat-sifat ini dengan menggunakan contoh fungsi berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="f(x) = 2x + 1" />
+  <BlockMath math="g(x) = x^2 + 4" />
+  <BlockMath math="h(x) = \frac{1}{x+1}" />
+</div>
+
+### Sifat Tidak Komutatif
+
+Sifat pertama dan yang paling sering ditemui adalah bahwa urutan dalam mengkomposisikan fungsi itu **penting**. Mengubah urutan fungsi biasanya akan menghasilkan fungsi komposisi yang berbeda.
+
+Secara umum, <InlineMath math="(f \circ g)(x)" /> **tidak sama dengan** <InlineMath math="(g \circ f)(x)" />.
+
+**Contoh:**
+
+Mari kita bandingkan <InlineMath math="(g \circ f)(x)" /> dan <InlineMath math="(f \circ g)(x)" />.
+
+1.  **Menghitung <InlineMath math="(g \circ f)(x)" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(g \circ f)(x) = g(f(x)) = g(2x+1)" />
+      <BlockMath math="g(2x+1) = (2x+1)^2 + 4 = (4x^2 + 4x + 1) + 4 = 4x^2 + 4x + 5" />
+    </div>
+
+2.  **Menghitung <InlineMath math="(f \circ g)(x)" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(f \circ g)(x) = f(g(x)) = f(x^2+4)" />
+      <BlockMath math="f(x^2+4) = 2(x^2+4) + 1 = (2x^2 + 8) + 1 = 2x^2 + 9" />
+    </div>
+
+Karena <InlineMath math="4x^2 + 4x + 5 \neq 2x^2 + 9" />, maka terbukti bahwa <InlineMath math="(g \circ f)(x) \neq (f \circ g)(x)" />. Sifat ini berlaku juga untuk komposisi lain, misalnya <InlineMath math="(f \circ h)(x) \neq (h \circ f)(x)" /> dan <InlineMath math="(g \circ h)(x) \neq (h \circ g)(x)" />.
+
+### Sifat Asosiatif
+
+Jika kita mengkomposisikan tiga fungsi atau lebih, urutan **pengerjaan** komposisinya tidak mempengaruhi hasil akhir, asalkan urutan **fungsinya** tetap sama.
+
+Secara matematis, untuk fungsi <InlineMath math="f" />, <InlineMath math="g" />, dan <InlineMath math="h" />, berlaku:
+
+<BlockMath math="((f \circ g) \circ h)(x) = (f \circ (g \circ h))(x)" />
+
+Ini berarti, kita bisa mengkomposisikan <InlineMath math="f" /> dengan <InlineMath math="g" /> terlebih dahulu, baru hasilnya dikomposisikan dengan <InlineMath math="h" />. Atau, kita bisa mengkomposisikan <InlineMath math="g" /> dengan <InlineMath math="h" /> terlebih dahulu, baru <InlineMath math="f" /> dikomposisikan dengan hasilnya. Hasilnya akan sama.
+
+**Contoh:**
+
+Mari kita cek apakah <InlineMath math="((f \circ g) \circ h)(x) = (f \circ (g \circ h))(x)" />.
+
+1.  **Menghitung <InlineMath math="((f \circ g) \circ h)(x)" />:**
+
+    Kita sudah tahu <InlineMath math="(f \circ g)(x) = 2x^2 + 9" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="((f \circ g) \circ h)(x) = (f \circ g)(h(x)) = (f \circ g)(\frac{1}{x+1})" />
+      <BlockMath math="(f \circ g)(\frac{1}{x+1}) = 2\left(\frac{1}{x+1}\right)^2 + 9 = \frac{2}{(x+1)^2} + 9" />
+    </div>
+
+2.  **Menghitung <InlineMath math="(f \circ (g \circ h))(x)" />:**
+
+    Pertama, cari <InlineMath math="(g \circ h)(x)" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(g \circ h)(x) = g(h(x)) = g(\frac{1}{x+1})" />
+      <BlockMath math="g(\frac{1}{x+1}) = \left(\frac{1}{x+1}\right)^2 + 4 = \frac{1}{(x+1)^2} + 4" />
+    </div>
+
+    Sekarang, komposisikan <InlineMath math="f" /> dengan hasil ini:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(f \circ (g \circ h))(x) = f((g \circ h)(x)) = f\left(\frac{1}{(x+1)^2} + 4\right)" />
+      <BlockMath math="f\left(\frac{1}{(x+1)^2} + 4\right) = 2\left(\frac{1}{(x+1)^2} + 4\right) + 1 = \frac{2}{(x+1)^2} + 8 + 1 = \frac{2}{(x+1)^2} + 9" />
+    </div>
+
+Karena hasil keduanya sama (<InlineMath math="\frac{2}{(x+1)^2} + 9" />), maka terbukti sifat asosiatif berlaku: <InlineMath math="((f \circ g) \circ h)(x) = (f \circ (g \circ h))(x)" />.
+
+Sifat asosiatif ini berlaku untuk kombinasi urutan fungsi lainnya juga, seperti <InlineMath math="((h \circ f) \circ g)(x) = (h \circ (f \circ g))(x)" /> dan <InlineMath math="((g \circ f) \circ h)(x) = (g \circ (f \circ h))(x)" />.
+
+### Elemen Identitas
+
+Ada sebuah fungsi khusus yang disebut **fungsi identitas**, dilambangkan dengan <InlineMath math="I(x)" />, yang didefinisikan sebagai <InlineMath math="I(x) = x" />. Fungsi ini tidak mengubah inputnya.
+
+Jika fungsi <InlineMath math="f" /> dikomposisikan dengan fungsi identitas <InlineMath math="I" /> (baik dari kiri maupun kanan), hasilnya adalah fungsi <InlineMath math="f" /> itu sendiri.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(f \circ I)(x) = f(I(x)) = f(x)" />
+  <BlockMath math="(I \circ f)(x) = I(f(x)) = f(x)" />
+</div>
+
+**Contoh:**
+
+Dengan <InlineMath math="f(x) = 2x + 1" />:
+
+- <InlineMath math="(f \circ I)(x) = f(I(x)) = f(x) = 2x + 1" />
+- <InlineMath math="(I \circ f)(x) = I(f(x)) = I(2x+1) = 2x + 1" />
+
+Keduanya menghasilkan fungsi <InlineMath math="f(x)" /> kembali.
