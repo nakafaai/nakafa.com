@@ -1,6 +1,175 @@
+import { LineEquation } from "@/components/contents/line-equation";
+import { getColor } from "@/lib/utils/color";
 export const metadata = {
   title: "Penjumlahan dan Pengurangan Fungsi",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/27/2025",
   subject: "Fungsi Komposisi dan Fungsi Invers",
 };
+
+## Menggabungkan Fungsi
+
+Bayangkan kamu punya dua mesin fungsi, sebut saja mesin <InlineMath math="f" /> dan mesin <InlineMath math="g" />. Setiap mesin punya aturan mainnya sendiri, yaitu fungsinya (<InlineMath math="f(x)" /> dan <InlineMath math="g(x)" />) dan bahan baku yang bisa diolah (domainnya, <InlineMath math="D_f" /> dan <InlineMath math="D_g" />). Nah, kita bisa menggabungkan kedua mesin ini untuk membuat mesin baru dengan operasi penjumlahan atau pengurangan.
+
+<LineEquation
+  title="Visualisasi Penjumlahan Fungsi"
+  description="Perhatikan bagaimana garis f(x)=x (hijau) dan g(x)=2 (biru) dijumlahkan menjadi (f+g)(x)=x+2 (ungu)."
+  data={[
+    {
+      points: Array.from({ length: 11 }, (_, i) => ({
+        x: i - 5,
+        y: i - 5,
+        z: 0,
+      })),
+      color: getColor("ORANGE"),
+      labels: [{ text: "f(x)=x", at: 6, offset: [1, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 11 }, (_, i) => ({ x: i - 5, y: 2, z: 0 })),
+      color: getColor("SKY"),
+      labels: [{ text: "g(x)=2", at: 8, offset: [1, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 11 }, (_, i) => ({
+        x: i - 5,
+        y: i - 5 + 2,
+        z: 0,
+      })),
+      color: getColor("ROSE"),
+      labels: [{ text: "(f+g)(x)=x+2", at: 9, offset: [1.5, -0.5, 0] }],
+    },
+  ]}
+/>
+
+## Penjumlahan Dua Fungsi
+
+Kalau kita mau menjumlahkan fungsi <InlineMath math="f" /> dan fungsi <InlineMath math="g" />, kita tinggal jumlahkan saja hasil dari masing-masing fungsi untuk nilai <InlineMath math="x" /> yang sama. Hasilnya adalah fungsi baru yang kita sebut <InlineMath math="(f+g)" />.
+
+<BlockMath math="(f+g)(x) = f(x) + g(x)" />
+
+**Penting diingat:** Mesin gabungan <InlineMath math="(f+g)" /> hanya bisa mengolah bahan baku (nilai <InlineMath math="x" />) yang bisa diolah oleh _kedua_ mesin asli, <InlineMath math="f" /> dan <InlineMath math="g" />. Jadi, domain (daerah asal) dari fungsi <InlineMath math="(f+g)" /> adalah irisan (intersection) dari domain <InlineMath math="f" /> dan domain <InlineMath math="g" />.
+
+<BlockMath math="D_{f+g} = D_f \cap D_g" />
+
+Artinya, <InlineMath math="x" /> harus merupakan anggota dari <InlineMath math="D_f" /> **DAN** juga anggota dari <InlineMath math="D_g" />.
+
+### Contoh Penjumlahan
+
+Misalkan kita punya dua fungsi:
+
+1.  <InlineMath math="f(x) = x^2" />, dengan domain <InlineMath math="D_f = \{x | x \in \mathbb{R}\}" /> (semua
+    bilangan real).
+2.  <InlineMath math="g(x) = \sqrt{x+2}" />, dengan domain <InlineMath math="D_g = \{x | x \ge -2, x \in \mathbb{R}\}" /> (semua
+    bilangan real yang lebih besar atau sama dengan -2, karena akar tidak boleh
+    negatif).
+
+**Langkah 1: Tentukan fungsi hasil penjumlahan**
+
+<BlockMath math="(f+g)(x) = f(x) + g(x) = x^2 + \sqrt{x+2}" />
+
+**Langkah 2: Tentukan domain fungsi hasil penjumlahan**
+
+Kita cari irisan dari <InlineMath math="D_f" /> dan <InlineMath math="D_g" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="D_{f+g} = D_f \cap D_g = \{x | x \in \mathbb{R}\} \cap \{x | x \ge -2, x \in \mathbb{R}\}" />
+  <BlockMath math="D_{f+g} = \{x | x \ge -2, x \in \mathbb{R}\}" />
+</div>
+
+Jadi, fungsi hasil penjumlahannya adalah <InlineMath math="(f+g)(x) = x^2 + \sqrt{x+2}" /> dengan domain <InlineMath math="\{x | x \ge -2, x \in \mathbb{R}\}" />.
+
+## Pengurangan Dua Fungsi
+
+Cara kerjanya mirip dengan penjumlahan. Untuk mengurangkan fungsi <InlineMath math="g" /> dari fungsi <InlineMath math="f" />, kita kurangkan hasil <InlineMath math="g(x)" /> dari <InlineMath math="f(x)" /> untuk nilai <InlineMath math="x" /> yang sama. Hasilnya adalah fungsi baru <InlineMath math="(f-g)" />.
+
+<BlockMath math="(f-g)(x) = f(x) - g(x)" />
+
+Domainnya juga sama seperti penjumlahan, yaitu irisan dari domain <InlineMath math="f" /> dan domain <InlineMath math="g" />. Kenapa? Karena lagi-lagi, nilai <InlineMath math="x" /> tersebut harus bisa diolah oleh kedua fungsi awal sebelum bisa dikurangkan.
+
+<BlockMath math="D_{f-g} = D_f \cap D_g" />
+
+### Contoh Pengurangan
+
+Kita pakai fungsi yang sama seperti contoh penjumlahan:
+
+1.  <InlineMath math="f(x) = x^2" />, <InlineMath math="D_f = \{x | x \in \mathbb{R}\}" />
+2.  <InlineMath math="g(x) = \sqrt{x+2}" />, <InlineMath math="D_g = \{x | x \ge -2, x \in \mathbb{R}\}" />
+
+**Langkah 1: Tentukan fungsi hasil pengurangan**
+
+<BlockMath math="(f-g)(x) = f(x) - g(x) = x^2 - \sqrt{x+2}" />
+
+**Langkah 2: Tentukan domain fungsi hasil pengurangan**
+Domainnya sama dengan domain hasil penjumlahan karena aturan irisannya sama:
+
+<BlockMath math="D_{f-g} = D_f \cap D_g = \{x | x \ge -2, x \in \mathbb{R}\}" />
+
+Jadi, fungsi hasil pengurangannya adalah <InlineMath math="(f-g)(x) = x^2 - \sqrt{x+2}" /> dengan domain <InlineMath math="\{x | x \ge -2, x \in \mathbb{R}\}" />.
+
+## Latihan Soal
+
+Diketahui fungsi <InlineMath math="f(x) = 2x - 1" /> dengan <InlineMath math="D_f = \{x | x \in \mathbb{R}\}" /> dan fungsi <InlineMath math="g(x) = x^2 + 3" /> dengan <InlineMath math="D_g = \{x | x \in \mathbb{R}\}" />.
+
+1.  Tentukan <InlineMath math="(f+g)(x)" /> dan domainnya <InlineMath math="D_{f+g}" />.
+2.  Tentukan <InlineMath math="(f-g)(x)" /> dan domainnya <InlineMath math="D_{f-g}" />.
+3.  Hitung nilai <InlineMath math="(f+g)(2)" />.
+4.  Hitung nilai <InlineMath math="(f-g)(-1)" />.
+
+### Kunci Jawaban
+
+1.  **Mencari <InlineMath math="(f+g)(x)" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(f+g)(x) = f(x) + g(x)" />
+      <BlockMath math="= (2x - 1) + (x^2 + 3)" />
+      <BlockMath math="= x^2 + 2x + 2" />
+    </div>
+
+    **Mencari Domain <InlineMath math="D_{f+g}" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="D_{f+g} = D_f \cap D_g" />
+      <BlockMath math="= \{x | x \in \mathbb{R}\} \cap \{x | x \in \mathbb{R}\}" />
+      <BlockMath math="= \{x | x \in \mathbb{R}\}" />
+    </div>
+
+    Jadi, <InlineMath math="(f+g)(x) = x^2 + 2x + 2" /> dengan domain semua bilangan real.
+
+2.  **Mencari <InlineMath math="(f-g)(x)" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(f-g)(x) = f(x) - g(x)" />
+      <BlockMath math="= (2x - 1) - (x^2 + 3)" />
+      <BlockMath math="= 2x - 1 - x^2 - 3" />
+      <BlockMath math="= -x^2 + 2x - 4" />
+    </div>
+
+    **Mencari Domain <InlineMath math="D_{f-g}" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="D_{f-g} = D_f \cap D_g" />
+      <BlockMath math="= \{x | x \in \mathbb{R}\} \cap \{x | x \in \mathbb{R}\}" />
+      <BlockMath math="= \{x | x \in \mathbb{R}\}" />
+    </div>
+
+    Jadi, <InlineMath math="(f-g)(x) = -x^2 + 2x - 4" /> dengan domain semua bilangan real.
+
+3.  **Menghitung <InlineMath math="(f+g)(2)" />:**
+
+    Kita gunakan hasil dari nomor 1: <InlineMath math="(f+g)(x) = x^2 + 2x + 2" />
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(f+g)(2) = (2)^2 + 2(2) + 2" />
+      <BlockMath math="= 4 + 4 + 2" />
+      <BlockMath math="= 10" />
+    </div>
+
+4.  **Menghitung <InlineMath math="(f-g)(-1)" />:**
+
+    Kita gunakan hasil dari nomor 2: <InlineMath math="(f-g)(x) = -x^2 + 2x - 4" />
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(f-g)(-1) = -(-1)^2 + 2(-1) - 4" />
+      <BlockMath math="= -(1) - 2 - 4" />
+      <BlockMath math="= -7" />
+    </div>
