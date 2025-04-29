@@ -12,6 +12,7 @@ import {
   EclipseIcon,
   HeartIcon,
   HourglassIcon,
+  JapaneseYenIcon,
   LaptopIcon,
   LeafIcon,
   MoonIcon,
@@ -101,6 +102,10 @@ export const themes = [
   {
     value: "tangerine",
     icon: CitrusIcon,
+  },
+  {
+    value: "tokyo",
+    icon: JapaneseYenIcon,
   },
   {
     value: "tree",

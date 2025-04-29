@@ -974,3 +974,52 @@
     10px -1px rgb(from var(--shadow-color) r g b / 1);
   --shadow-2xl: 1px 2px 0px 0px rgb(from var(--shadow-color) r g b / 1);
 }
+
+.tokyo {
+  --radius: 0.25rem;
+  --background: oklch(0.929 0.008 278.631);
+  --foreground: oklch(0.36 0.053 273.422);
+  --card: oklch(0.883 0.01 273.343);
+  --card-foreground: oklch(0.36 0.053 273.422);
+  --popover: oklch(0.929 0.008 278.631);
+  --popover-foreground: oklch(0.36 0.053 273.422);
+  --primary: oklch(0.466 0.23 290.144);
+  --primary-foreground: oklch(0.929 0.008 278.631);
+  --secondary: oklch(0.562 0.213 9.975);
+  --secondary-foreground: oklch(0.97 0 0);
+  --muted: oklch(0.798 0.064 264.989);
+  --muted-foreground: oklch(0.409 0.055 267.705);
+  --accent: oklch(0.782 0.1 19.553);
+  --accent-foreground: oklch(0.296 0.084 23.83);
+  --destructive: oklch(0.48 0.1 9.516);
+  --border: oklch(0.808 0.017 271.198);
+  --input: oklch(0.764 0.028 269.585);
+  --ring: oklch(0.466 0.23 290.144);
+  --chart-1: oklch(0.476 0.14 260.216);
+  --chart-2: oklch(0.795 0.139 130.136);
+  --chart-3: oklch(0.523 0.104 71.022);
+  --chart-4: oklch(0.493 0.091 222.057);
+  --chart-5: oklch(0.436 0.128 296.922);
+  --sidebar: oklch(0.883 0.01 273.343);
+  --sidebar-foreground: oklch(0.36 0.053 273.422);
+  --sidebar-primary: oklch(0.466 0.23 290.144);
+  --sidebar-primary-foreground: oklch(0.929 0.008 278.631);
+  --sidebar-accent: oklch(0.782 0.1 19.553);
+  --sidebar-accent-foreground: oklch(0.296 0.084 23.83);
+  --sidebar-border: oklch(0.808 0.017 271.198);
+  --sidebar-ring: oklch(0.466 0.23 290.144);
+  --shadow-color: oklch(0.44 0.116 132.668);
+  --shadow-2xs: 1px 1px 6px 0px rgb(from var(--shadow-color) r g b / 0.05);
+  --shadow-xs: 1px 1px 6px 0px rgb(from var(--shadow-color) r g b / 0.05);
+  --shadow-sm: 1px 1px 6px 0px rgb(from var(--shadow-color) r g b / 0.1), 1px
+    1px 2px -1px rgb(from var(--shadow-color) r g b / 0.1);
+  --shadow: 1px 1px 6px 0px rgb(from var(--shadow-color) r g b / 0.1), 1px 1px
+    2px -1px rgb(from var(--shadow-color) r g b / 0.1);
+  --shadow-md: 1px 1px 6px 0px rgb(from var(--shadow-color) r g b / 0.1), 1px
+    2px 4px -1px rgb(from var(--shadow-color) r g b / 0.1);
+  --shadow-lg: 1px 1px 6px 0px rgb(from var(--shadow-color) r g b / 0.1), 1px
+    4px 6px -1px rgb(from var(--shadow-color) r g b / 0.1);
+  --shadow-xl: 1px 1px 6px 0px rgb(from var(--shadow-color) r g b / 0.1), 1px
+    8px 10px -1px rgb(from var(--shadow-color) r g b / 0.1);
+  --shadow-2xl: 1px 1px 6px 0px rgb(from var(--shadow-color) r g b / 0.1);
+}
