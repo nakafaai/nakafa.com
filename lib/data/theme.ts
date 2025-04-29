@@ -19,6 +19,7 @@ import {
   SparkleIcon,
   SunIcon,
   SunsetIcon,
+  TreePineIcon,
   TvIcon,
   WindIcon,
 } from "lucide-react";
@@ -66,10 +67,6 @@ export const themes = [
     icon: CloudyIcon,
   },
   {
-    value: "solar",
-    icon: EclipseIcon,
-  },
-  {
     value: "ghibli",
     icon: CatIcon,
   },
@@ -94,12 +91,20 @@ export const themes = [
     icon: TvIcon,
   },
   {
+    value: "solar",
+    icon: EclipseIcon,
+  },
+  {
     value: "sunset",
     icon: SunsetIcon,
   },
   {
     value: "tangerine",
     icon: CitrusIcon,
+  },
+  {
+    value: "tree",
+    icon: TreePineIcon,
   },
   {
     value: "twitter",

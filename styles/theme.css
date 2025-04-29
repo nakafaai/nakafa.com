@@ -46,7 +46,7 @@
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
 }
 
-.ghibli {
+.tree {
   --background: oklch(0.88 0.05 91.79);
   --foreground: oklch(0.43 0.03 59.22);
   --card: oklch(0.89 0.04 87.57);
@@ -924,4 +924,53 @@
   --shadow-xl: 0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0), 0px 8px 10px -1px
     hsl(202.82 89.12% 53.14% / 0);
   --shadow-2xl: 0px 2px 0px 0px hsl(202.82 89.12% 53.14% / 0);
+}
+
+.ghibli {
+  --radius: 0.625rem;
+  --background: oklch(0.91 0.048 83.6);
+  --foreground: oklch(0.41 0.077 78.9);
+  --card: oklch(0.92 0.042 83.6);
+  --card-foreground: oklch(0.41 0.077 74.3);
+  --popover: oklch(0.92 0.042 83.6);
+  --popover-foreground: oklch(0.41 0.077 74.3);
+  --primary: oklch(0.71 0.097 111.7);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.88 0.055 83.6);
+  --secondary-foreground: oklch(0.465 0.067 79.908);
+  --muted: oklch(0.86 0.064 83.7);
+  --muted-foreground: oklch(0.465 0.067 79.908);
+  --accent: oklch(0.86 0.055 83.6);
+  --accent-foreground: oklch(0.26 0.016 0);
+  --destructive: oklch(0.572 0.184 27.387);
+  --border: oklch(0.74 0.063 80.8);
+  --input: oklch(0.74 0.063 80.8);
+  --ring: oklch(0.51 0.077 74.3);
+  --chart-1: oklch(0.71 0.097 111.7);
+  --chart-2: oklch(0.41 0.077 78.9);
+  --chart-3: oklch(0.66 0.19 41.6);
+  --chart-4: oklch(0.59 0.096 111.8);
+  --chart-5: oklch(0.74 0.063 80.8);
+  --sidebar: oklch(0.87 0.059 83.7);
+  --sidebar-foreground: oklch(0.41 0.077 78.9);
+  --sidebar-primary: oklch(0.61 0.097 111.7);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.83 0.058 83.6);
+  --sidebar-accent-foreground: oklch(0.26 0.016 0);
+  --sidebar-border: oklch(0.7 0.063 80.8);
+  --sidebar-ring: oklch(0.61 0.097 111.7);
+  --shadow-color: oklch(0.74 0.063 80.8);
+  --shadow-2xs: 1px 2px 0px 0px rgb(from var(--shadow-color) r g b / 0.5);
+  --shadow-xs: 1px 2px 0px 0px rgb(from var(--shadow-color) r g b / 0.5);
+  --shadow-sm: 1px 2px 0px 0px rgb(from var(--shadow-color) r g b / 1), 1px 1px
+    2px -1px rgb(from var(--shadow-color) r g b / 1);
+  --shadow: 1px 2px 0px 0px rgb(from var(--shadow-color) r g b / 1), 1px 1px 2px
+    -1px rgb(from var(--shadow-color) r g b / 1);
+  --shadow-md: 1px 2px 0px 0px rgb(from var(--shadow-color) r g b / 1), 1px 2px
+    4px -1px rgb(from var(--shadow-color) r g b / 1);
+  --shadow-lg: 1px 2px 0px 0px rgb(from var(--shadow-color) r g b / 1), 1px 4px
+    6px -1px rgb(from var(--shadow-color) r g b / 1);
+  --shadow-xl: 1px 2px 0px 0px rgb(from var(--shadow-color) r g b / 1), 1px 8px
+    10px -1px rgb(from var(--shadow-color) r g b / 1);
+  --shadow-2xl: 1px 2px 0px 0px rgb(from var(--shadow-color) r g b / 1);
 }
