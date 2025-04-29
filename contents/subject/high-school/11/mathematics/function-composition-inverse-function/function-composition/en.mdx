@@ -4,3 +4,92 @@ export const metadata = {
   date: "04/27/2025",
   subject: "Function Composition and Inverse Function",
 };
+
+## Understanding Function Composition
+
+Imagine you are shopping at a store that offers two attractive promos:
+
+1.  **Promo A:** 20% discount, then another deduction of Rp25,000.00.
+2.  **Promo B:** Price reduction of Rp25,000.00, then a 20% discount.
+
+Do both promos result in the same final price? Which promo is more beneficial? To answer this, we need to understand the concept of **function composition**.
+
+### Definition of Function Composition
+
+Function composition is the sequential combination of two or more functions to produce a new function.
+
+If we have a function <InlineMath math="g: A \to B" /> and a function <InlineMath math="f: B \to C" />, then their composition, written as <InlineMath math="(f \circ g)(x)" />, is a new function that maps directly from the domain <InlineMath math="A" /> to the codomain <InlineMath math="C" />.
+
+This means we apply function <InlineMath math="g" /> first, and then we input its result into function <InlineMath math="f" />.
+
+Mathematically, this is written as:
+
+<BlockMath math="(f \circ g)(x) = f(g(x))" />
+
+### Promo Calculation
+
+Let's calculate the final price for an item worth Rp200,000.00 using both promos with the concept of functions.
+
+Let <InlineMath math="x" /> be the initial price of the item.
+
+- **20% discount function:** <InlineMath math="d(x) = x - 0.20x = 0.80x" />
+- **Rp25,000.00 reduction function:** <InlineMath math="p(x) = x - 25000" />
+
+Now let's compose these two functions according to the promo sequence:
+
+1.  **Promo A (Discount first, then price reduction):** We are looking for <InlineMath math="(p \circ d)(x)" />
+
+    <BlockMath math="(p \circ d)(x) = p(d(x)) = p(0.80x) = 0.80x - 25000" />
+
+    For <InlineMath math="x = 200000" />:
+
+    <BlockMath math="(p \circ d)(200000) = 0.80(200000) - 25000 = 160000 - 25000 = 135000" />
+
+    So, the final price with Promo A is Rp135,000.00.
+
+2.  **Promo B (Price reduction first, then discount):** We are looking for <InlineMath math="(d \circ p)(x)" />
+
+    <BlockMath math="(d \circ p)(x) = d(p(x)) = d(x - 25000) = 0.80(x - 25000) = 0.80x - 20000" />
+
+    For <InlineMath math="x = 200000" />:
+
+    <BlockMath math="(d \circ p)(200000) = 0.80(200000) - 20000 = 160000 - 20000 = 140000" />
+
+    So, the final price with Promo B is Rp140,000.00.
+
+It turns out that the order of applying the functions (discount and price reduction) affects the final result. Promo A (<InlineMath math="p \circ d" />) is more beneficial for the buyer than Promo B (<InlineMath math="d \circ p" />) for an item priced at Rp200,000.00. This demonstrates that, generally, <InlineMath math="(f \circ g)(x) \neq (g \circ f)(x)" />.
+
+## Another Example
+
+Suppose we have two functions:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="f(x) = 2x + 1" />
+  <BlockMath math="g(x) = x^2 - 3" />
+</div>
+
+Determine <InlineMath math="(f \circ g)(x)" /> and <InlineMath math="(g \circ f)(x)" />.
+
+**Solution:**
+
+1.  **Finding <InlineMath math="(f \circ g)(x)" />:**
+
+    <BlockMath math="(f \circ g)(x) = f(g(x)) = f(x^2 - 3)" />
+
+    Substitute <InlineMath math="x" /> in <InlineMath math="f(x)" /> with <InlineMath math="g(x)" />:
+
+    <BlockMath math="f(x^2 - 3) = 2(x^2 - 3) + 1 = 2x^2 - 6 + 1 = 2x^2 - 5" />
+
+    So, <InlineMath math="(f \circ g)(x) = 2x^2 - 5" />.
+
+2.  **Finding <InlineMath math="(g \circ f)(x)" />:**
+
+    <BlockMath math="(g \circ f)(x) = g(f(x)) = g(2x + 1)" />
+
+    Substitute <InlineMath math="x" /> in <InlineMath math="g(x)" /> with <InlineMath math="f(x)" />:
+
+    <BlockMath math="g(2x + 1) = (2x + 1)^2 - 3 = (4x^2 + 4x + 1) - 3 = 4x^2 + 4x - 2" />
+
+    So, <InlineMath math="(g \circ f)(x) = 4x^2 + 4x - 2" />.
+
+Note that <InlineMath math="(f \circ g)(x) \neq (g \circ f)(x)" />, illustrating the non-commutative property.

@@ -4,3 +4,92 @@ export const metadata = {
   date: "04/27/2025",
   subject: "Fungsi Komposisi dan Fungsi Invers",
 };
+
+## Memahami Komposisi Fungsi
+
+Bayangkan kamu sedang berbelanja di sebuah toko yang menawarkan dua promo menarik:
+
+1.  **Promo A:** Diskon 20%, lalu dipotong lagi Rp25.000,00.
+2.  **Promo B:** Potongan harga Rp25.000,00, lalu didiskon 20%.
+
+Apakah kedua promo ini memberikan hasil akhir yang sama? Promo mana yang lebih menguntungkan? Untuk menjawabnya, kita perlu memahami konsep **komposisi fungsi**.
+
+### Definisi Komposisi Fungsi
+
+Komposisi fungsi adalah penggabungan dua fungsi atau lebih secara berurutan sehingga menghasilkan fungsi baru.
+
+Jika kita punya fungsi <InlineMath math="g: A \to B" /> dan fungsi <InlineMath math="f: B \to C" />, maka komposisi keduanya, yang ditulis sebagai <InlineMath math="(f \circ g)(x)" />, adalah fungsi baru yang memetakan langsung dari domain <InlineMath math="A" /> ke kodomain <InlineMath math="C" />.
+
+Artinya, kita menerapkan fungsi <InlineMath math="g" /> terlebih dahulu, lalu hasilnya kita masukkan ke fungsi <InlineMath math="f" />.
+
+Secara matematis, ini ditulis sebagai:
+
+<BlockMath math="(f \circ g)(x) = f(g(x))" />
+
+### Perhitungan Promo
+
+Mari kita hitung hasil akhir untuk barang seharga Rp200.000,00 dengan kedua promo di atas menggunakan konsep fungsi.
+
+Misalkan <InlineMath math="x" /> adalah harga awal barang.
+
+- **Fungsi diskon 20%:** <InlineMath math="d(x) = x - 0.20x = 0.80x" />
+- **Fungsi potongan Rp25.000,00:** <InlineMath math="p(x) = x - 25000" />
+
+Sekarang kita komposisikan kedua fungsi sesuai urutan promo:
+
+1.  **Promo A (Diskon dulu, baru potong harga):** Kita mencari <InlineMath math="(p \circ d)(x)" />
+
+    <BlockMath math="(p \circ d)(x) = p(d(x)) = p(0.80x) = 0.80x - 25000" />
+
+    Untuk <InlineMath math="x = 200000" />:
+
+    <BlockMath math="(p \circ d)(200000) = 0.80(200000) - 25000 = 160000 - 25000 = 135000" />
+
+    Jadi, harga akhir dengan Promo A adalah Rp135.000,00.
+
+2.  **Promo B (Potong harga dulu, baru diskon):** Kita mencari <InlineMath math="(d \circ p)(x)" />
+
+    <BlockMath math="(d \circ p)(x) = d(p(x)) = d(x - 25000) = 0.80(x - 25000) = 0.80x - 20000" />
+
+    Untuk <InlineMath math="x = 200000" />:
+
+    <BlockMath math="(d \circ p)(200000) = 0.80(200000) - 20000 = 160000 - 20000 = 140000" />
+
+    Jadi, harga akhir dengan Promo B adalah Rp140.000,00.
+
+Ternyata, urutan penerapan fungsi (diskon dan potongan harga) memengaruhi hasil akhir. Promo A (<InlineMath math="p \circ d" />) lebih menguntungkan pembeli daripada Promo B (<InlineMath math="d \circ p" />) untuk barang seharga Rp200.000,00. Ini menunjukkan bahwa secara umum, <InlineMath math="(f \circ g)(x) \neq (g \circ f)(x)" />.
+
+## Contoh Lain
+
+Misalkan kita punya dua fungsi:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="f(x) = 2x + 1" />
+  <BlockMath math="g(x) = x^2 - 3" />
+</div>
+
+Tentukan <InlineMath math="(f \circ g)(x)" /> dan <InlineMath math="(g \circ f)(x)" />.
+
+**Penyelesaian:**
+
+1.  **Mencari <InlineMath math="(f \circ g)(x)" />:**
+
+    <BlockMath math="(f \circ g)(x) = f(g(x)) = f(x^2 - 3)" />
+
+    Gantikan <InlineMath math="x" /> dalam <InlineMath math="f(x)" /> dengan <InlineMath math="g(x)" />:
+
+    <BlockMath math="f(x^2 - 3) = 2(x^2 - 3) + 1 = 2x^2 - 6 + 1 = 2x^2 - 5" />
+
+    Jadi, <InlineMath math="(f \circ g)(x) = 2x^2 - 5" />.
+
+2.  **Mencari <InlineMath math="(g \circ f)(x)" />:**
+
+    <BlockMath math="(g \circ f)(x) = g(f(x)) = g(2x + 1)" />
+
+    Gantikan <InlineMath math="x" /> dalam <InlineMath math="g(x)" /> dengan <InlineMath math="f(x)" />:
+
+    <BlockMath math="g(2x + 1) = (2x + 1)^2 - 3 = (4x^2 + 4x + 1) - 3 = 4x^2 + 4x - 2" />
+
+    Jadi, <InlineMath math="(g \circ f)(x) = 4x^2 + 4x - 2" />.
+
+Perhatikan bahwa <InlineMath math="(f \circ g)(x) \neq (g \circ f)(x)" />, sesuai dengan sifat tidak komutatif.
