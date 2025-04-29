@@ -1,6 +1,202 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Perkalian dan Pembagian Fungsi",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/27/2025",
   subject: "Fungsi Komposisi dan Fungsi Invers",
 };
+
+## Perkalian Dua Fungsi
+
+Mengalikan dua fungsi, <InlineMath math="f" /> dan <InlineMath math="g" />, sama mudahnya seperti mengalikan dua bilangan. Kita tinggal kalikan saja hasil <InlineMath math="f(x)" /> dengan <InlineMath math="g(x)" /> untuk nilai <InlineMath math="x" /> yang sama. Hasilnya adalah fungsi baru <InlineMath math="(f \cdot g)" />.
+
+<div className="flex flex-col gap-4">
+  <LineEquation
+    title="Visualisasi Perkalian Fungsi"
+    description="Perhatikan bagaimana garis f(x)=x (oranye) dan g(x)=2 (biru langit) dikalikan menjadi (f⋅g)(x)=2x (mawar). Garis hasil kali menjadi lebih curam."
+    data={[
+      {
+        points: Array.from({ length: 11 }, (_, i) => ({
+          x: i - 5,
+          y: i - 5,
+          z: 0,
+        })),
+        color: getColor("ORANGE"),
+        labels: [{ text: "f(x)=x", at: 6, offset: [1, -0.5, 0] }],
+      },
+      {
+        points: Array.from({ length: 11 }, (_, i) => ({ x: i - 5, y: 2, z: 0 })),
+        color: getColor("SKY"),
+        labels: [{ text: "g(x)=2", at: 8, offset: [1, 0.5, 0] }],
+      },
+      {
+        points: Array.from({ length: 11 }, (_, i) => ({
+          x: i - 5,
+          y: 2 * (i - 5),
+          z: 0,
+        })),
+        color: getColor("ROSE"),
+        labels: [{ text: "(f⋅g)(x)=2x", at: 7, offset: [-1.5, 1, 0] }],
+      },
+    ]}
+  />
+
+  <BlockMath math="(f \cdot g)(x) = f(x) \cdot g(x)" />
+</div>
+
+Sama seperti penjumlahan dan pengurangan, mesin perkalian <InlineMath math="(f \cdot g)" /> ini hanya bisa mengolah bahan baku (nilai <InlineMath math="x" />) yang bisa diolah oleh _kedua_ mesin asli, <InlineMath math="f" /> dan <InlineMath math="g" />. Jadi, domainnya adalah irisan dari domain <InlineMath math="f" /> dan domain <InlineMath math="g" />.
+
+<BlockMath math="D_{f \cdot g} = D_f \cap D_g" />
+
+### Contoh Perkalian
+
+Mari kita pakai fungsi yang sedikit berbeda kali ini:
+
+1.  <InlineMath math="f(x) = x^2" />, dengan domain <InlineMath math="D_f = \{x | x \in \mathbb{R}\}" /> (semua
+    bilangan real).
+2.  <InlineMath math="g(x) = x - 1" />, dengan domain <InlineMath math="D_g = \{x | x \in \mathbb{R}\}" /> (semua
+    bilangan real).
+
+**Langkah 1: Tentukan fungsi hasil perkalian**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(f \cdot g)(x) = f(x) \cdot g(x)" />
+  <BlockMath math="= (x^2) \cdot (x - 1)" />
+  <BlockMath math="= x^3 - x^2" />
+</div>
+
+**Langkah 2: Tentukan domain fungsi hasil perkalian**
+
+Kita cari irisan dari <InlineMath math="D_f" /> dan <InlineMath math="D_g" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="D_{f \cdot g} = D_f \cap D_g" />
+  <BlockMath math="= \{x | x \in \mathbb{R}\} \cap \{x | x \in \mathbb{R}\}" />
+  <BlockMath math="= \{x | x \in \mathbb{R}\}" />
+</div>
+
+Jadi, fungsi hasil perkaliannya adalah <InlineMath math="(f \cdot g)(x) = x^3 - x^2" /> dengan domain semua bilangan real.
+
+## Pembagian Dua Fungsi
+
+Pembagian fungsi <InlineMath math="f" /> oleh fungsi <InlineMath math="g" /> juga mirip: kita bagi hasil <InlineMath math="f(x)" /> dengan <InlineMath math="g(x)" />. Hasilnya adalah fungsi baru <InlineMath math="(\frac{f}{g})" />.
+
+<BlockMath math="\left(\frac{f}{g}\right)(x) = \frac{f(x)}{g(x)}" />
+
+Nah, di sini ada **aturan tambahan yang sangat penting!** Kita tahu bahwa pembagian dengan nol itu tidak boleh. Jadi, selain nilai <InlineMath math="x" /> harus ada di domain <InlineMath math="f" /> dan <InlineMath math="g" />, nilai <InlineMath math="g(x)" /> (fungsi pembagi) **tidak boleh sama dengan nol**.
+
+Oleh karena itu, domain dari fungsi pembagian <InlineMath math="(\frac{f}{g})" /> adalah irisan domain <InlineMath math="D_f" /> dan <InlineMath math="D_g" />, tetapi kita harus _membuang_ semua nilai <InlineMath math="x" /> yang menyebabkan <InlineMath math="g(x) = 0" />.
+
+<BlockMath math="D_{\frac{f}{g}} = D_f \cap D_g - \{x | g(x) = 0\}" />
+
+Tanda <InlineMath math="-" /> di sini artinya "dikurangi" atau "dikecualikan".
+
+### Contoh Pembagian
+
+Kita pakai fungsi yang sama seperti contoh perkalian:
+
+1.  <InlineMath math="f(x) = x^2" />, <InlineMath math="D_f = \{x | x \in \mathbb{R}\}" />
+2.  <InlineMath math="g(x) = x - 1" />, <InlineMath math="D_g = \{x | x \in \mathbb{R}\}" />
+
+**Langkah 1: Tentukan fungsi hasil pembagian**
+
+<BlockMath math="\left(\frac{f}{g}\right)(x) = \frac{f(x)}{g(x)} = \frac{x^2}{x-1}" />
+
+**Langkah 2: Tentukan domain fungsi hasil pembagian**
+
+Pertama, kita cari irisan <InlineMath math="D_f" /> dan <InlineMath math="D_g" />:
+
+<BlockMath math="D_f \cap D_g = \{x | x \in \mathbb{R}\}" />
+
+Kedua, kita cari nilai <InlineMath math="x" /> yang membuat <InlineMath math="g(x) = 0" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="g(x) = 0" />
+  <BlockMath math="x - 1 = 0" />
+  <BlockMath math="x = 1" />
+</div>
+
+Ketiga, kita kecualikan nilai <InlineMath math="x=1" /> dari irisan domain:
+
+<BlockMath math="D_{\frac{f}{g}} = \{x | x \in \mathbb{R}\} - \{1\}" />
+
+Atau bisa ditulis juga sebagai:
+
+<BlockMath math="D_{\frac{f}{g}} = \{x | x \in \mathbb{R}, x \neq 1\}" />
+
+Jadi, fungsi hasil pembagiannya adalah <InlineMath math="(\frac{f}{g})(x) = \frac{x^2}{x-1}" /> dengan domain semua bilangan real kecuali <InlineMath math="x=1" />.
+
+## Latihan Soal
+
+Diketahui fungsi <InlineMath math="f(x) = \sqrt{x+4}" /> dengan <InlineMath math="D_f = \{x | x \ge -4, x \in \mathbb{R}\}" /> dan fungsi <InlineMath math="g(x) = x^2 - 9" /> dengan <InlineMath math="D_g = \{x | x \in \mathbb{R}\}" />.
+
+1.  Tentukan <InlineMath math="(f \cdot g)(x)" /> dan domainnya <InlineMath math="D_{f \cdot g}" />.
+2.  Tentukan <InlineMath math="(\frac{f}{g})(x)" /> dan domainnya <InlineMath math="D_{\frac{f}{g}}" />.
+3.  Hitung nilai <InlineMath math="(f \cdot g)(5)" />.
+4.  Apakah <InlineMath math="(\frac{f}{g})(3)" /> terdefinisi? Jelaskan.
+
+### Kunci Jawaban
+
+1.  **Mencari <InlineMath math="(f \cdot g)(x)" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(f \cdot g)(x) = f(x) \cdot g(x)" />
+      <BlockMath math="= (\sqrt{x+4}) \cdot (x^2 - 9)" />
+      <BlockMath math="= (x^2 - 9)\sqrt{x+4}" />
+    </div>
+
+    **Mencari Domain <InlineMath math="D_{f \cdot g}" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="D_{f \cdot g} = D_f \cap D_g" />
+      <BlockMath math="= \{x | x \ge -4, x \in \mathbb{R}\} \cap \{x | x \in \mathbb{R}\}" />
+      <BlockMath math="= \{x | x \ge -4, x \in \mathbb{R}\}" />
+    </div>
+
+    Jadi, <InlineMath math="(f \cdot g)(x) = (x^2 - 9)\sqrt{x+4}" /> dengan domain <InlineMath math="\{x | x \ge -4, x \in \mathbb{R}\}" />.
+
+2.  **Mencari <InlineMath math="(\frac{f}{g})(x)" />:**
+
+    <BlockMath math="\left(\frac{f}{g}\right)(x) = \frac{f(x)}{g(x)} = \frac{\sqrt{x+4}}{x^2 - 9}" />
+
+    **Mencari Domain <InlineMath math="D_{\frac{f}{g}}" />:**
+
+    Irisan domain: <InlineMath math="D_f \cap D_g = \{x | x \ge -4, x \in \mathbb{R}\}" />.
+
+    Cari <InlineMath math="x" /> yang membuat <InlineMath math="g(x)=0" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="g(x) = 0" />
+      <BlockMath math="x^2 - 9 = 0" />
+      <BlockMath math="(x-3)(x+3) = 0" />
+      <BlockMath math="x = 3 \text{ atau } x = -3" />
+    </div>
+
+    Kecualikan <InlineMath math="x=3" /> dan <InlineMath math="x=-3" /> dari irisan domain:
+
+    <BlockMath math="D_{\frac{f}{g}} = \{x | x \ge -4, x \in \mathbb{R}\} - \{-3, 3\}" />
+
+    Atau bisa ditulis:
+
+    <BlockMath math="D_{\frac{f}{g}} = \{x | x \ge -4, x \in \mathbb{R}, x \neq -3, x \neq 3\}" />
+
+    Jadi, <InlineMath math="(\frac{f}{g})(x) = \frac{\sqrt{x+4}}{x^2 - 9}" /> dengan domain <InlineMath math="\{x | x \ge -4, x \neq -3, x \neq 3\}" />.
+
+3.  **Menghitung <InlineMath math="(f \cdot g)(5)" />:**
+
+    Kita gunakan hasil dari nomor 1: <InlineMath math="(f \cdot g)(x) = (x^2 - 9)\sqrt{x+4}" />.
+
+    Karena <InlineMath math="5 \ge -4" />, <InlineMath math="x=5" /> ada di dalam domain <InlineMath math="D_{f \cdot g}" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(f \cdot g)(5) = (5^2 - 9)\sqrt{5+4}" />
+      <BlockMath math="= (25 - 9)\sqrt{9}" />
+      <BlockMath math="= (16)(3)" />
+      <BlockMath math="= 48" />
+    </div>
+
+4.  **Apakah <InlineMath math="(\frac{f}{g})(3)" /> terdefinisi?**
+
+    Tidak terdefinisi. Kita lihat domain dari <InlineMath math="(\frac{f}{g})(x)" /> pada nomor 2, yaitu <InlineMath math="\{x | x \ge -4, x \neq -3, x \neq 3\}" />. Nilai <InlineMath math="x=3" /> secara eksplisit dikecualikan dari domain karena akan menyebabkan penyebut <InlineMath math="g(x) = x^2 - 9" /> menjadi nol (<InlineMath math="3^2 - 9 = 0" />). Pembagian dengan nol tidak diperbolehkan dalam matematika.
