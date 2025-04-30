@@ -4,3 +4,57 @@ export const metadata = {
   date: "04/30/2025",
   subject: "Statistika",
 };
+
+## Apa Itu Analisis Korelasi?
+
+Kita sering ingin tahu apakah ada hubungan antara dua hal yang bisa diukur dengan angka (dua variabel kuantitatif). Misalnya:
+
+- Apakah ada hubungan antara tinggi badan dan berat badan siswa?
+- Apakah jam belajar mempengaruhi nilai ujian?
+- Apakah usia mobil berkaitan dengan harganya?
+
+**Analisis Korelasi** adalah cara dalam statistika untuk mengukur **seberapa kuat** dan **apa arah** hubungan linear (pola lurus) antara dua variabel tersebut.
+
+## Koefisien Korelasi
+
+Mengatakan "ada hubungan" saja tidak cukup. Kita butuh ukuran yang pasti agar semua orang punya pemahaman yang sama. Ukuran standar ini disebut **Koefisien Korelasi**, biasanya dilambangkan dengan huruf <InlineMath math="r" />.
+
+Koefisien korelasi (<InlineMath math="r" />) memberi kita dua informasi penting:
+
+1.  **Arah Hubungan:**
+    - **Positif (<InlineMath math="r > 0" />):** Jika satu variabel naik, variabel lainnya _cenderung_ ikut naik (dan sebaliknya). Contoh: Semakin tinggi badan, _biasanya_ semakin berat badannya.
+    - **Negatif (<InlineMath math="r < 0" />):** Jika satu variabel naik, variabel lainnya _cenderung_ turun (dan sebaliknya). Contoh: Semakin tua usia mobil, _biasanya_ semakin rendah harganya.
+2.  **Kekuatan Hubungan:**
+    - Seberapa dekat nilai <InlineMath math="r" /> ke **+1** atau **-1** menunjukkan seberapa kuat hubungan linearnya. Semakin dekat ke +1 atau -1, semakin kuat hubungannya (titik-titik data semakin mendekati pola garis lurus).
+    - Jika nilai <InlineMath math="r" /> dekat dengan **0**, artinya hubungan linearnya **lemah** atau bahkan **tidak ada** (titik-titik data menyebar acak).
+
+**Rentang Nilai <InlineMath math="r" />:**
+Nilai koefisien korelasi selalu berada di antara -1 dan +1.
+
+<BlockMath math="-1 \le r \le +1" />
+
+- <InlineMath math="r = +1" />: Korelasi linear positif sempurna.
+- <InlineMath math="r = -1" />: Korelasi linear negatif sempurna.
+- <InlineMath math="r = 0" />: Tidak ada korelasi linear.
+
+## Koefisien Determinasi
+
+Kadang, kita ingin tahu seberapa besar bagian dari variasi (naik-turunnya nilai) satu variabel bisa dijelaskan oleh variabel lainnya. Ukuran ini disebut **Koefisien Determinasi**, yang nilainya adalah kuadrat dari koefisien korelasi (<InlineMath math="r^2" />).
+
+Misalnya, jika <InlineMath math="r = 0.8" /> antara jam belajar dan nilai ujian, maka <InlineMath math="r^2 = (0.8)^2 = 0.64" />. Ini berarti sekitar 64% variasi nilai ujian siswa _bisa dijelaskan_ oleh perbedaan jam belajar mereka. Sisanya (36%) mungkin dipengaruhi faktor lain (kecerdasan, cara belajar, dll.).
+
+Nilai <InlineMath math="r^2" /> selalu antara 0 dan 1.
+
+<BlockMath math="0 \le r^2 \le 1" />
+
+Semakin dekat <InlineMath math="r^2" /> ke 1, semakin baik variabel X menjelaskan variasi pada variabel Y.
+
+## Korelasi bukan berarti sebab-akibat
+
+Hanya karena dua variabel berkorelasi kuat, bukan berarti satu variabel _menyebabkan_ perubahan pada variabel lainnya. Mungkin ada faktor lain yang tidak kita ukur yang mempengaruhi keduanya.
+
+**Contoh:**
+
+Penjualan es krim dan jumlah kasus tenggelam mungkin berkorelasi positif (keduanya naik di musim panas), tapi bukan berarti makan es krim menyebabkan tenggelam. Faktor penyebabnya adalah musim panas (cuaca panas).
+
+Jadi, analisis korelasi membantu kita memahami _kekuatan_ dan _arah_ hubungan linear, tapi tidak menjelaskan _mengapa_ hubungan itu ada.

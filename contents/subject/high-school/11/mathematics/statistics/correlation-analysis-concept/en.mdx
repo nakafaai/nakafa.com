@@ -4,3 +4,57 @@ export const metadata = {
   date: "04/30/2025",
   subject: "Statistics",
 };
+
+## What Is Correlation Analysis?
+
+We often want to know if there's a relationship between two things we can measure with numbers (two quantitative variables). For example:
+
+- Is there a relationship between students' height and weight?
+- Do study hours affect exam scores?
+- Is the age of a car related to its price?
+
+**Correlation Analysis** is a statistical method used to measure **how strong** and in **what direction** the linear relationship (straight-line pattern) is between two such variables.
+
+## Correlation Coefficient
+
+Just saying "there's a relationship" isn't enough. We need a definite measure so everyone has the same understanding. This standard measure is called the **Correlation Coefficient**, usually denoted by the letter <InlineMath math="r" />.
+
+The correlation coefficient (<InlineMath math="r" />) gives us two important pieces of information:
+
+1.  **Direction of the Relationship:**
+    - **Positive (<InlineMath math="r > 0" />):** If one variable increases, the other variable _tends_ to increase as well (and vice versa). Example: Taller people _usually_ weigh more.
+    - **Negative (<InlineMath math="r < 0" />):** If one variable increases, the other variable _tends_ to decrease (and vice versa). Example: The older a car is, the _usually_ lower its price.
+2.  **Strength of the Relationship:**
+    - How close the value of <InlineMath math="r" /> is to **+1** or **-1** indicates how strong the linear relationship is. The closer to +1 or -1, the stronger the relationship (the data points cluster more closely around a straight line).
+    - If the value of <InlineMath math="r" /> is close to **0**, it means the linear relationship is **weak** or even **non-existent** (the data points are scattered randomly).
+
+**Range of <InlineMath math="r" /> Values:**
+The value of the correlation coefficient always lies between -1 and +1.
+
+<BlockMath math="-1 \le r \le +1" />
+
+- <InlineMath math="r = +1" />: Perfect positive linear correlation.
+- <InlineMath math="r = -1" />: Perfect negative linear correlation.
+- <InlineMath math="r = 0" />: No linear correlation.
+
+## Coefficient of Determination
+
+Sometimes, we want to know how much of the variation (ups and downs in value) in one variable can be explained by the other variable. This measure is called the **Coefficient of Determination**, which is the square of the correlation coefficient (<InlineMath math="r^2" />).
+
+For example, if <InlineMath math="r = 0.8" /> between study hours and exam scores, then <InlineMath math="r^2 = (0.8)^2 = 0.64" />. This means about 64% of the variation in students' exam scores _can be explained_ by the differences in their study hours. The rest (36%) might be influenced by other factors (intelligence, study methods, etc.).
+
+The value of <InlineMath math="r^2" /> is always between 0 and 1.
+
+<BlockMath math="0 \le r^2 \le 1" />
+
+The closer <InlineMath math="r^2" /> is to 1, the better variable X explains the variation in variable Y.
+
+## Correlation Does Not Imply Causation
+
+Just because two variables are strongly correlated doesn't mean one variable _causes_ the change in the other. There might be other unmeasured factors affecting both.
+
+**Example:**
+
+Ice cream sales and drowning incidents might be positively correlated (both increase in the summer), but it doesn't mean eating ice cream causes drowning. The underlying cause is the summer season (hot weather).
+
+So, correlation analysis helps us understand the _strength_ and _direction_ of a linear relationship, but it doesn't explain _why_ that relationship exists.
