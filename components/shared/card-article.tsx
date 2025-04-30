@@ -38,7 +38,7 @@ export function CardArticle({ category, article }: Props) {
         </CardHeader>
         <CardFooter className="flex items-center justify-between">
           <time className="text-muted-foreground text-sm">
-            {format(new Date(article.date), "d MMM, yyyy")}
+            {format(article.date, "d MMM, yyyy")}
           </time>
           <Tooltip>
             <TooltipTrigger asChild>

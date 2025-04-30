@@ -87,9 +87,7 @@ export function HeaderContent({
               {date && (
                 <p className="inline-flex items-center gap-1 text-muted-foreground">
                   <CalendarIcon className="size-4 shrink-0" />
-                  <span className="text-sm">
-                    {format(new Date(date), "d MMM, yyyy")}
-                  </span>
+                  <span className="text-sm">{format(date, "d MMM, yyyy")}</span>
                 </p>
               )}
 
