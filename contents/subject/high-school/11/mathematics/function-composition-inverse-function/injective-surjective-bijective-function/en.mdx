@@ -4,3 +4,72 @@ export const metadata = {
   date: "04/27/2025",
   subject: "Function Composition and Inverse Function",
 };
+
+## Understanding Function Mapping Properties
+
+In mathematics, functions map elements from one set (the domain) to another set (the codomain). This mapping can be classified into several types based on how domain and codomain elements are connected. The three main types are injective, surjective, and bijective functions.
+
+Let's assume we have a function <InlineMath math="f: X \to Y" />.
+
+## Injective Function (One-to-One)
+
+A function is called **injective** or **one-to-one** if every distinct element in the domain <InlineMath math="X" /> maps to a distinct element in the codomain <InlineMath math="Y" />. In other words, no two different domain elements can have the same image (output) in the codomain.
+
+**Formal Definition:**
+
+A function <InlineMath math="f: X \to Y" /> is injective if for every <InlineMath math="x_1, x_2 \in X" />, the following holds:
+
+<BlockMath math="f(x_1) = f(x_2) \implies x_1 = x_2" />
+
+Or, equivalently (using the contrapositive):
+
+<BlockMath math="x_1 \neq x_2 \implies f(x_1) \neq f(x_2)" />
+
+**Analogy:** Imagine every student in a class (domain) must have a unique student ID number (codomain). No two students can have the same ID number. The mapping function from students to ID numbers is an injective function.
+
+**Examples:**
+
+- The function <InlineMath math="f(x) = 2x" /> for <InlineMath math="x \in \mathbb{R}" /> is injective, because every distinct value of <InlineMath math="x" /> will produce a distinct <InlineMath math="2x" />.
+- The function <InlineMath math="g(x) = x^2" /> for <InlineMath math="x \in \mathbb{R}" /> is **not** injective, because <InlineMath math="g(2) = 4" /> and <InlineMath math="g(-2) = 4" />. There are two different inputs (<InlineMath math="2" /> and <InlineMath math="-2" />) that produce the same output (<InlineMath math="4" />).
+
+## Surjective Function (Onto)
+
+A function is called **surjective** or **onto** if every element in the codomain <InlineMath math="Y" /> is the image of **at least one** element in the domain <InlineMath math="X" />. In other words, there are no "unreachable" elements in the codomain that don't have a corresponding element in the domain. The range of a surjective function is equal to its codomain.
+
+**Formal Definition:**
+
+A function <InlineMath math="f: X \to Y" /> is surjective if for every <InlineMath math="y \in Y" />, there exists **at least one** <InlineMath math="x \in X" /> such that:
+
+<BlockMath math="f(x) = y" />
+
+**Analogy:** Imagine every seat in a movie theater (codomain) must be occupied by at least one audience member (domain) when the movie starts. The mapping function from audience members to seats is surjective if all seats are filled.
+
+**Examples:**
+
+- The function <InlineMath math="f(x) = x^3" /> from <InlineMath math="\mathbb{R} \to \mathbb{R}" /> is surjective, because every real number <InlineMath math="y" /> in the codomain is the cube of some real number <InlineMath math="x" /> (specifically, <InlineMath math="x = \sqrt[3]{y}" />).
+- The function <InlineMath math="g(x) = x^2" /> from <InlineMath math="\mathbb{R} \to \mathbb{R}" /> is **not** surjective, because there is no real number <InlineMath math="x" /> that yields <InlineMath math="g(x) = -1" /> (or any other negative number). Negative elements in the codomain have no corresponding element in the domain.
+- However, if we restrict the codomain to <InlineMath math="g(x) = x^2" /> from <InlineMath math="\mathbb{R} \to [0, \infty)" /> (non-negative real numbers), then this function becomes surjective.
+
+## Bijective Function (One-to-One Correspondence)
+
+A function is called **bijective** if it is both **injective and surjective**. This means that every element in the domain maps to a unique element in the codomain, and every element in the codomain has exactly one corresponding element in the domain.
+
+A bijective function creates a perfect **one-to-one correspondence** between the elements of the domain and the codomain.
+
+**Formal Definition:**
+
+A function <InlineMath math="f: X \to Y" /> is bijective if for every <InlineMath math="y \in Y" />, there exists **exactly one** <InlineMath math="x \in X" /> such that:
+
+<BlockMath math="f(x) = y" />
+
+**Analogy:** Imagine a perfect pairing between an equal number of men (domain) and women (codomain). Each man is paired with exactly one unique woman, and each woman is paired with exactly one unique man. This pairing function is bijective.
+
+**Important:** A function can only have an **inverse function** if it is **bijective**.
+
+**Examples:**
+
+- The function <InlineMath math="f(x) = 2x" /> from <InlineMath math="\mathbb{R} \to \mathbb{R}" /> is bijective (injective and surjective).
+- The function <InlineMath math="f(x) = x^3" /> from <InlineMath math="\mathbb{R} \to \mathbb{R}" /> is bijective (injective and surjective).
+- The function <InlineMath math="g(x) = x^2" /> from <InlineMath math="\mathbb{R} \to \mathbb{R}" /> is not bijective (neither injective nor surjective).
+- The function <InlineMath math="h(x) = e^x" /> from <InlineMath math="\mathbb{R} \to \mathbb{R}" /> is not bijective (injective but not surjective).
+- The function <InlineMath math="k(x) = x^3 - x" /> from <InlineMath math="\mathbb{R} \to \mathbb{R}" /> is not bijective (surjective but not injective).

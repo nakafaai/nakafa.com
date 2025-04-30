@@ -4,3 +4,72 @@ export const metadata = {
   date: "04/27/2025",
   subject: "Fungsi Komposisi dan Fungsi Invers",
 };
+
+## Mengenal Sifat-sifat Pemetaan Fungsi
+
+Dalam matematika, fungsi memetakan elemen dari satu himpunan (domain) ke himpunan lain (kodomain). Cara pemetaan ini bisa diklasifikasikan menjadi beberapa jenis berdasarkan bagaimana elemen domain dan kodomain dihubungkan. Tiga jenis utama adalah fungsi injektif, surjektif, dan bijektif.
+
+Misalkan kita memiliki fungsi <InlineMath math="f: X \to Y" />.
+
+## Fungsi Injektif (Satu-ke-Satu)
+
+Sebuah fungsi disebut **injektif** atau **satu-ke-satu** jika setiap elemen yang berbeda di domain <InlineMath math="X" /> dipetakan ke elemen yang berbeda pula di kodomain <InlineMath math="Y" />. Dengan kata lain, tidak boleh ada dua elemen domain berbeda yang memiliki hasil pemetaan (bayangan) yang sama di kodomain.
+
+**Definisi Formal:**
+
+Fungsi <InlineMath math="f: X \to Y" /> adalah injektif jika untuk setiap <InlineMath math="x_1, x_2 \in X" />, berlaku:
+
+<BlockMath math="f(x_1) = f(x_2) \implies x_1 = x_2" />
+
+Atau, secara ekuivalen (menggunakan kontraposisi):
+
+<BlockMath math="x_1 \neq x_2 \implies f(x_1) \neq f(x_2)" />
+
+**Analogi:** Bayangkan setiap siswa di kelas (domain) harus memiliki nomor induk siswa (kodomain) yang unik. Tidak boleh ada dua siswa yang nomor induknya sama. Fungsi pemetaan dari siswa ke nomor induk ini adalah fungsi injektif.
+
+**Contoh:**
+
+- Fungsi <InlineMath math="f(x) = 2x" /> untuk <InlineMath math="x \in \mathbb{R}" /> adalah injektif, karena setiap nilai <InlineMath math="x" /> yang berbeda akan menghasilkan <InlineMath math="2x" /> yang berbeda.
+- Fungsi <InlineMath math="g(x) = x^2" /> untuk <InlineMath math="x \in \mathbb{R}" /> **bukan** injektif, karena <InlineMath math="g(2) = 4" /> dan <InlineMath math="g(-2) = 4" />. Ada dua input berbeda (<InlineMath math="2" /> dan <InlineMath math="-2" />) yang menghasilkan output yang sama (<InlineMath math="4" />).
+
+## Fungsi Surjektif (Pada / Onto)
+
+Sebuah fungsi disebut **surjektif** atau **pada** (_onto_) jika setiap elemen di kodomain <InlineMath math="Y" /> merupakan hasil pemetaan (bayangan) dari **setidaknya satu** elemen di domain <InlineMath math="X" />. Dengan kata lain, tidak ada elemen di kodomain yang "tidak terjangkau" atau tidak memiliki pasangan di domain. Range (daerah hasil) dari fungsi surjektif sama dengan kodomainnya.
+
+**Definisi Formal:**
+
+Fungsi <InlineMath math="f: X \to Y" /> adalah surjektif jika untuk setiap <InlineMath math="y \in Y" />, terdapat **setidaknya satu** <InlineMath math="x \in X" /> sehingga:
+
+<BlockMath math="f(x) = y" />
+
+**Analogi:** Bayangkan setiap kursi di bioskop (kodomain) harus terisi oleh setidaknya satu penonton (domain) saat pemutaran film dimulai. Fungsi pemetaan dari penonton ke kursi adalah surjektif jika semua kursi terisi.
+
+**Contoh:**
+
+- Fungsi <InlineMath math="f(x) = x^3" /> dari <InlineMath math="\mathbb{R} \to \mathbb{R}" /> adalah surjektif, karena setiap bilangan real <InlineMath math="y" /> di kodomain adalah hasil pangkat tiga dari suatu bilangan real <InlineMath math="x" /> (yaitu <InlineMath math="x = \sqrt[3]{y}" />).
+- Fungsi <InlineMath math="g(x) = x^2" /> dari <InlineMath math="\mathbb{R} \to \mathbb{R}" /> **bukan** surjektif, karena tidak ada bilangan real <InlineMath math="x" /> yang menghasilkan <InlineMath math="g(x) = -1" /> (atau bilangan negatif lainnya). Elemen negatif di kodomain tidak memiliki pasangan di domain.
+- Namun, jika kita batasi kodomainnya menjadi <InlineMath math="g(x) = x^2" /> dari <InlineMath math="\mathbb{R} \to [0, \infty)" /> (bilangan real non-negatif), maka fungsi ini menjadi surjektif.
+
+## Fungsi Bijektif (Korespondensi Satu-ke-Satu)
+
+Sebuah fungsi disebut **bijektif** jika ia bersifat **injektif dan surjektif sekaligus**. Artinya, setiap elemen di domain dipetakan ke elemen yang unik di kodomain, dan setiap elemen di kodomain memiliki tepat satu pasangan elemen di domain.
+
+Fungsi bijektif menciptakan **korespondensi satu-ke-satu** yang sempurna antara elemen domain dan kodomain.
+
+**Definisi Formal:**
+
+Fungsi <InlineMath math="f: X \to Y" /> adalah bijektif jika untuk setiap <InlineMath math="y \in Y" />, terdapat **tepat satu** <InlineMath math="x \in X" /> sehingga:
+
+<BlockMath math="f(x) = y" />
+
+**Analogi:** Bayangkan perjodohan sempurna antara sejumlah pria (domain) dan sejumlah wanita (kodomain) yang jumlahnya sama. Setiap pria dipasangkan dengan tepat satu wanita unik, dan setiap wanita dipasangkan dengan tepat satu pria unik. Fungsi pemetaan perjodohan ini adalah bijektif.
+
+**Penting:** Fungsi hanya bisa memiliki **fungsi invers** jika fungsi tersebut bersifat **bijektif**.
+
+**Contoh:**
+
+- Fungsi <InlineMath math="f(x) = 2x" /> dari <InlineMath math="\mathbb{R} \to \mathbb{R}" /> adalah bijektif (injektif dan surjektif).
+- Fungsi <InlineMath math="f(x) = x^3" /> dari <InlineMath math="\mathbb{R} \to \mathbb{R}" /> adalah bijektif (injektif dan surjektif).
+- Fungsi <InlineMath math="g(x) = x^2" /> dari <InlineMath math="\mathbb{R} \to \mathbb{R}" /> bukan bijektif (tidak injektif dan tidak surjektif).
+- Fungsi <InlineMath math="h(x) = e^x" /> dari <InlineMath math="\mathbb{R} \to \mathbb{R}" /> bukan bijektif (injektif tapi tidak surjektif).
+- Fungsi <InlineMath math="k(x) = x^3 - x" /> dari <InlineMath math="\mathbb{R} \to \mathbb{R}" /> bukan bijektif (surjektif tapi tidak injektif).
