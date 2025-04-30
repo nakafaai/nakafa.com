@@ -168,6 +168,7 @@ export function ScatterDiagram({
                         { x: point.x, y: yPredicted },
                       ]}
                       stroke={dataset.color}
+                      strokeDasharray="2 2"
                       ifOverflow="visible"
                     />
                   );
