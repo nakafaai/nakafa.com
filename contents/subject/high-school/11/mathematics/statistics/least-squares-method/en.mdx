@@ -1,0 +1,103 @@
+import { ScatterDiagram } from "../../_shared/scatter-diagram";
+
+export const metadata = {
+  title: "Least Squares Method",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/30/2025",
+  subject: "Statistics",
+};
+
+## What Is the Least Squares Method?
+
+Imagine we have a set of data from observations or experiments consisting of pairs of values (x, y). If we plot these data points on a scatter diagram, we sometimes see a pattern or trend that resembles a straight line.
+
+The question is, out of the many straight lines we could draw through these points, which is the **best straight line** that best represents the entire dataset?
+
+The Least Squares Method is a **mathematical procedure** used to find **one unique straight line** that is considered the best fit for the set of data points.
+
+## Minimizing Squared Errors
+
+The main idea is to minimize the **error** or **residual** from each data point to the prediction line. So how do we determine the "best fit" line?
+
+1.  **Prediction Line:** We try drawing a straight line (<InlineMath math="\hat{y} = a + bx" />) among the data points.
+2.  **Error (Residual):** For each original data point (<InlineMath math="y_i" />), there will be a vertical distance to the predicted line (<InlineMath math="\hat{y}_i" />). This distance is called the **error** or **residual**:
+
+    <BlockMath math="e_i = y_i - \hat{y}_i" />
+
+3.  **Minimize Sum of Squared Errors:** The Least Squares Method works by finding the straight line that makes the **sum of the squares of all errors** (<InlineMath math="\sum e_i^2" />) as **small as possible**. This is why it's called "Least Squares".
+
+**Why square the errors?**
+
+- Squaring the errors makes all values positive, so errors above and below the line don't cancel each other out.
+- Larger errors contribute much more to the total sum (because they are squared), so this method strongly tries to minimize large errors.
+
+## Visualization Example
+
+For example, a company wants to see the relationship between the advertising costs they incur (in millions of rupiah) and the number of products sold (in thousands of units). The data they collected is as follows:
+
+<ScatterDiagram
+  title="Line Resulting from Least Squares Method (Ads vs Sales)"
+  description="The line shows the linear trend relationship between advertising costs and sales, minimizing squared errors."
+  xAxisLabel="Advertising Cost (Millions of Rupiah)"
+  yAxisLabel="Product Sales (Thousands of Units)"
+  datasets={[
+    {
+      name: "Marketing Data",
+      color: "var(--chart-1)",
+      points: [
+        { x: 2, y: 50 },
+        { x: 3, y: 65 },
+        { x: 4, y: 62 },
+        { x: 4.5, y: 75 },
+        { x: 5, y: 70 },
+        { x: 6, y: 90 },
+        { x: 7, y: 85 },
+        { x: 7.5, y: 95 },
+        { x: 8, y: 92 },
+        { x: 9, y: 115 },
+        { x: 10, y: 105 },
+        { x: 11, y: 125 },
+      ],
+    },
+  ]}
+  calculateRegressionLine
+  showResiduals
+  regressionLineStyle={{
+    color: "var(--chart-4)",
+  }}
+/>
+
+The straight line drawn on the diagram above is the _best-fit_ line found using the Least Squares Method for this advertising cost and sales data. This line represents the general linear trend that most closely approximates all data points, and the dashed lines show the residuals being minimized.
+
+## Mathematical Basis
+
+Mathematically, we are looking for the line with the equation:
+
+<BlockMath math="\hat{y} = a + bx" />
+
+Where the values of <InlineMath math="a" /> (intercept) and <InlineMath math="b" /> (slope) are chosen such that the value of:
+
+<BlockMath math="\sum e_i^2 = \sum (y_i - \hat{y}_i)^2 = \sum (y_i - (a + bx_i))^2" />
+
+is minimized.
+
+Through calculus (which we don't need to derive here), formulas are found to obtain the values of <InlineMath math="a" /> and <InlineMath math="b" /> that satisfy this condition:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="b = \frac{n(\sum xy) - (\sum x)(\sum y)}{n(\sum x^2) - (\sum x)^2}" />
+  <BlockMath math="a = \bar{y} - b\bar{x}" />
+</div>
+
+Formula key:
+
+- <InlineMath math="n" /> = Number of data pairs.
+- <InlineMath math="\sum x" />, <InlineMath math="\sum y" /> = Sum of all x and
+  y values.
+- <InlineMath math="\sum xy" /> = Sum of the product of each x and y pair.
+- <InlineMath math="\sum x^2" /> = Sum of the square of each x value.
+- <InlineMath math="\bar{x}" /> = Mean of x (<InlineMath math="\frac{\sum x}{n}" />
+  ).
+- <InlineMath math="\bar{y}" /> = Mean of y (<InlineMath math="\frac{\sum y}{n}" />
+  ).
+
+Thus, the Least Squares Method provides a systematic and objective way to find the best straight line representing the linear trend in the data based on the principle of minimizing the sum of squared errors.

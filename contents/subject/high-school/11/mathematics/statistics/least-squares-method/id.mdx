@@ -1,0 +1,103 @@
+import { ScatterDiagram } from "../../_shared/scatter-diagram";
+
+export const metadata = {
+  title: "Metode Kuadrat Terkecil",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/30/2025",
+  subject: "Statistika",
+};
+
+## Apa Itu Metode Kuadrat Terkecil?
+
+Bayangkan kita punya sekumpulan data hasil pengamatan atau eksperimen yang terdiri dari pasangan nilai (x, y). Jika kita plot titik-titik data ini di diagram pencar, kadang kita melihat adanya pola atau tren yang menyerupai garis lurus.
+
+Pertanyaannya, dari sekian banyak garis lurus yang bisa kita gambar melewati titik-titik itu, mana **garis lurus terbaik** yang paling mewakili keseluruhan data?
+
+Metode Kuadrat Terkecil (Least Squares Method) adalah sebuah **prosedur matematis** untuk menemukan **satu garis lurus unik** yang dianggap paling "pas" atau "cocok" (_best fit_) dengan kumpulan titik data tersebut.
+
+## Meminimalkan Kesalahan Kuadrat
+
+Ide utamanya adalah meminimalkan **kesalahan** atau **residu** dari setiap titik data ke garis prediksi. Lalu bagaimana cara menentukan garis "yang paling pas"?
+
+1.  **Garis Prediksi:** Kita coba gambar sebuah garis lurus (<InlineMath math="\hat{y} = a + bx" />) di antara titik-titik data.
+2.  **Kesalahan (Residual):** Untuk setiap titik data asli (<InlineMath math="y_i" />), akan ada jarak vertikal ke garis prediksi (<InlineMath math="\hat{y}_i" />). Jarak ini disebut **kesalahan** atau **residu**:
+
+    <BlockMath math="e_i = y_i - \hat{y}_i" />
+
+3.  **Minimalkan Jumlah Kuadrat Kesalahan:** Metode Kuadrat Terkecil bekerja dengan mencari garis lurus yang membuat **jumlah dari kuadrat semua kesalahan** (<InlineMath math="\sum e_i^2" />) menjadi **sekecil mungkin**. Inilah mengapa disebut "Kuadrat Terkecil".
+
+**Kenapa dikuadratkan?**
+
+- Mengkuadratkan kesalahan membuat semua nilai menjadi positif, sehingga kesalahan di atas garis dan di bawah garis tidak saling meniadakan.
+- Kesalahan yang lebih besar akan memberikan kontribusi yang jauh lebih besar pada jumlah total (karena dikuadratkan), sehingga metode ini sangat berusaha untuk meminimalkan kesalahan-kesalahan besar.
+
+## Contoh Visualisasi
+
+Misalnya, sebuah perusahaan ingin melihat hubungan antara biaya iklan yang mereka keluarkan (dalam jutaan rupiah) dengan jumlah produk yang terjual (dalam ribuan unit). Data yang mereka kumpulkan adalah sebagai berikut:
+
+<ScatterDiagram
+  title="Garis Hasil Metode Kuadrat Terkecil (Iklan vs Penjualan)"
+  description="Garis menunjukkan tren hubungan linear antara biaya iklan dan penjualan."
+  xAxisLabel="Biaya Iklan (Juta Rupiah)"
+  yAxisLabel="Penjualan Produk (Ribuan Unit)"
+  datasets={[
+    {
+      name: "Data Pemasaran",
+      color: "var(--chart-1)",
+      points: [
+        { x: 2, y: 50 },
+        { x: 3, y: 65 },
+        { x: 4, y: 62 },
+        { x: 4.5, y: 75 },
+        { x: 5, y: 70 },
+        { x: 6, y: 90 },
+        { x: 7, y: 85 },
+        { x: 7.5, y: 95 },
+        { x: 8, y: 92 },
+        { x: 9, y: 115 },
+        { x: 10, y: 105 },
+        { x: 11, y: 125 },
+      ],
+    },
+  ]}
+  calculateRegressionLine
+  showResiduals
+  regressionLineStyle={{
+    color: "var(--chart-4)",
+  }}
+/>
+
+Garis lurus yang tergambar pada diagram di atas adalah garis _best-fit_ yang ditemukan menggunakan Metode Kuadrat Terkecil untuk data biaya iklan dan penjualan ini. Garis ini mewakili tren linear umum yang paling mendekati semua titik data.
+
+## Dasar Matematis
+
+Secara matematis, kita mencari garis dengan persamaan:
+
+<BlockMath math="\hat{y} = a + bx" />
+
+Di mana nilai <InlineMath math="a" /> (intercept) dan <InlineMath math="b" /> (slope) dipilih sedemikian rupa sehingga nilai dari:
+
+<BlockMath math="\sum e_i^2 = \sum (y_i - \hat{y}_i)^2 = \sum (y_i - (a + bx_i))^2" />
+
+menjadi minimum.
+
+Melalui proses kalkulus (yang tidak perlu kita turunkan di sini), ditemukan rumus untuk mendapatkan nilai <InlineMath math="a" /> dan <InlineMath math="b" /> yang memenuhi syarat tersebut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="b = \frac{n(\sum xy) - (\sum x)(\sum y)}{n(\sum x^2) - (\sum x)^2}" />
+  <BlockMath math="a = \bar{y} - b\bar{x}" />
+</div>
+
+Keterangan rumus:
+
+- <InlineMath math="n" /> = Jumlah pasangan data.
+- <InlineMath math="\sum x" />, <InlineMath math="\sum y" /> = Jumlah semua
+  nilai x dan y.
+- <InlineMath math="\sum xy" /> = Jumlah hasil kali setiap pasangan x dan y.
+- <InlineMath math="\sum x^2" /> = Jumlah kuadrat setiap nilai x.
+- <InlineMath math="\bar{x}" /> = Rata-rata x (<InlineMath math="\frac{\sum x}{n}" />
+  ).
+- <InlineMath math="\bar{y}" /> = Rata-rata y (<InlineMath math="\frac{\sum y}{n}" />
+  ).
+
+Jadi, Metode Kuadrat Terkecil memberikan cara yang sistematis dan objektif untuk menemukan garis lurus terbaik yang mewakili tren linear dalam data berdasarkan prinsip meminimalkan jumlah kuadrat kesalahan.

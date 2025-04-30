@@ -1,6 +1,100 @@
+import { ScatterDiagram } from "../../_shared/scatter-diagram";
+
 export const metadata = {
   title: "Linear Regression Concept",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/30/2025",
   subject: "Statistics",
 };
+
+## What Is Linear Regression?
+
+With [Scatter Diagrams](/subject/high-school/11/mathematics/statistics/scatter-diagram/en), we can see the relationship between two variables (X data and Y data).
+
+Now, if the points on the scatter diagram seem to form a straight pattern (there's a linear correlation, whether positive or negative), we can try to draw a straight line that best fits through the middle of that cluster of points. This line is called the **Linear Regression Line**. The process of finding this line is called **Linear Regression**.
+
+## The "Best-Fit" Line
+
+The Linear Regression Line is often called the _best-fit_ line. Why? Because out of the many possible straight lines that could be drawn, this is the line whose position is "closest" to all the data points overall. This line attempts to summarize the trend or linear pattern present in the data.
+
+## Example of a Regression Line
+
+Let's say we have data on study time (hours) and exam scores again. The points tend to rise (positive correlation).
+
+<ScatterDiagram
+  title="Regression Line for the Relationship Between Study Time and Exam Scores"
+  description="The line shows the linear trend (regression line) of the data."
+  xAxisLabel="Study Time (Hours)"
+  yAxisLabel="Exam Score"
+  datasets={[
+    {
+      name: "Student",
+      color: "var(--chart-1)",
+      points: [
+        { x: 1, y: 60 },
+        { x: 1.5, y: 68 },
+        { x: 2, y: 65 },
+        { x: 2.5, y: 75 },
+        { x: 3, y: 72 },
+        { x: 3.5, y: 80 },
+        { x: 4, y: 85 },
+        { x: 4, y: 82 },
+        { x: 4.5, y: 90 },
+        { x: 5, y: 88 },
+        { x: 5.5, y: 95 },
+        { x: 6, y: 92 },
+      ],
+    },
+  ]}
+  calculateRegressionLine
+  regressionLineStyle={{
+    color: "var(--chart-3)",
+  }}
+/>
+
+See the line above? That is the linear regression line. The line shows the **general trend**: the longer the study time (X increases), the exam score (Y) also tends to increase following the direction of the line.
+
+## What is the use of this regression line?
+
+One of its main uses is for **prediction**. For example, if a new student studies for 7 hours, we can use this regression line to estimate what their exam score might be, even though we don't have exact data for 7 hours.
+
+(The precise calculation to get the values of `m` and `b` will be learned later! Our focus now is to understand the concept of the regression line first.)
+
+## Mathematical Concept
+
+The linear regression line (the _best-fit_ line) is found using a method called the **Least Squares Method**. The idea is to find the straight line that **minimizes the sum of the squared vertical distances** from each data point to the line.
+
+Mathematically, the linear regression line has the form:
+
+<BlockMath math="\hat{y} = a + bx" />
+
+Where:
+
+- <InlineMath math="\hat{y}" /> (read: y-hat) is the **predicted value of y** by
+  the regression line.
+- <InlineMath math="x" /> is the value of the independent variable.
+- <InlineMath math="b" /> is the **slope** of the line, indicating how much <InlineMath math="\hat{y}" /> changes
+  for each one-unit change in <InlineMath math="x" />.
+- <InlineMath math="a" /> is the **y-intercept**, which is the predicted value of <InlineMath math="\hat{y}" /> when <InlineMath math="x = 0" />
+  .
+
+The values of <InlineMath math="b" /> and <InlineMath math="a" /> are calculated from the <InlineMath math="(x, y)" /> data we have using the following formulas:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="b = \frac{n(\sum xy) - (\sum x)(\sum y)}{n(\sum x^2) - (\sum x)^2}" />
+  <BlockMath math="a = \bar{y} - b\bar{x}" />
+</div>
+
+Formula key:
+
+- <InlineMath math="n" /> is the number of data pairs.
+- <InlineMath math="\sum x" /> is the sum of all x values.
+- <InlineMath math="\sum y" /> is the sum of all y values.
+- <InlineMath math="\sum xy" /> is the sum of the product of each x and y pair.
+- <InlineMath math="\sum x^2" /> is the sum of the square of each x value.
+- <InlineMath math="\bar{x}" /> is the mean of the x values (<InlineMath math="\frac{\sum x}{n}" />
+  ).
+- <InlineMath math="\bar{y}" /> is the mean of the y values (<InlineMath math="\frac{\sum y}{n}" />
+  ).
+
+With these formulas, we can obtain the single straight line that is considered to best represent the linear relationship pattern in our data.

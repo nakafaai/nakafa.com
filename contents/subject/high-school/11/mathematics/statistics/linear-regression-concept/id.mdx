@@ -1,6 +1,102 @@
+import { ScatterDiagram } from "../../_shared/scatter-diagram";
+
 export const metadata = {
   title: "Konsep Regresi Linear",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/30/2025",
   subject: "Statistika",
 };
+
+## Apa Itu Regresi Linear?
+
+Dengan [Diagram Pencar](/subject/high-school/11/mathematics/statistics/scatter-diagram), kita bisa melihat hubungan antara dua variabel (data X dan data Y).
+
+Nah, kalau titik-titik di diagram pencar itu kelihatannya membentuk pola lurus (ada korelasi linear, entah positif atau negatif), kita bisa coba gambar satu garis lurus yang paling pas melewati tengah-tengah kumpulan titik itu. Garis inilah yang disebut **Garis Regresi Linear**. Proses menemukan garis ini namanya **Regresi Linear**.
+
+## Garis "Best-Fit"
+
+Garis Regresi Linear sering juga disebut garis _best-fit_ (paling pas). Kenapa? Karena dari sekian banyak kemungkinan garis lurus yang bisa digambar, garis inilah yang posisinya paling "dekat" dengan semua titik data secara keseluruhan. Garis ini mencoba merangkum tren atau pola lurus yang ada pada data.
+
+## Contoh Garis Regresi
+
+Misalnya kita punya data lama belajar (jam) dan nilai ujian. Titik-titiknya kan cenderung naik (korelasi positif).
+
+<ScatterDiagram
+  title="Garis Regresi untuk Hubungan Lama Belajar dan Nilai Ujian"
+  description="Garis menunjukkan tren linear (garis regresi) dari data."
+  xAxisLabel="Lama Belajar (Jam)"
+  yAxisLabel="Nilai Ujian"
+  datasets={[
+    {
+      name: "Siswa",
+      color: "var(--chart-1)",
+      points: [
+        { x: 1, y: 60 },
+        { x: 1.5, y: 68 },
+        { x: 2, y: 65 },
+        { x: 2.5, y: 75 },
+        { x: 3, y: 72 },
+        { x: 3.5, y: 80 },
+        { x: 4, y: 85 },
+        { x: 4, y: 82 },
+        { x: 4.5, y: 90 },
+        { x: 5, y: 88 },
+        { x: 5.5, y: 95 },
+        { x: 6, y: 92 },
+      ],
+    },
+  ]}
+  calculateRegressionLine
+  regressionLineStyle={{
+    color: "var(--chart-3)",
+  }}
+/>
+
+Lihat garis di atas? Itu adalah garis regresi linearnya. Garis itu menunjukkan **tren umum**: semakin lama belajar (X naik), nilai ujian (Y) juga cenderung naik mengikuti arah garis tersebut.
+
+## Apa gunanya garis regresi?
+
+Salah satu kegunaan utamanya adalah untuk **prediksi**. Misalnya, kalau ada siswa baru yang belajar selama 7 jam, kita bisa gunakan garis regresi ini untuk memperkirakan berapa kira-kira nilai ujian yang akan dia dapat, meskipun kita tidak punya data pasti untuk 7 jam.
+
+(Perhitungan persis untuk mendapatkan nilai `m` dan `b` akan dipelajari nanti, ya! Fokus kita sekarang adalah memahami konsep garis regresinya dulu.)
+
+## Konsep Matematis
+
+Garis regresi linear (garis _best-fit_) dicari menggunakan metode yang disebut **Metode Kuadrat Terkecil (Least Squares Method)**. Idenya adalah mencari garis lurus yang **meminimalkan jumlah kuadrat jarak vertikal** dari setiap titik data ke garis tersebut.
+
+Secara matematis, garis regresi linear memiliki bentuk:
+
+<BlockMath math="\hat{y} = a + bx" />
+
+Keterangan:
+
+- <InlineMath math="\hat{y}" /> (dibaca: y-topi) adalah **nilai y yang diprediksi**
+  oleh garis regresi.
+- <InlineMath math="x" /> adalah nilai variabel independen.
+- <InlineMath math="b" /> adalah **kemiringan (slope)** garis, menunjukkan seberapa
+  besar perubahan <InlineMath math="\hat{y}" /> untuk setiap satu satuan perubahan <InlineMath math="x" />
+  .
+- <InlineMath math="a" /> adalah **perpotongan sumbu y (intercept)**, yaitu nilai
+  prediksi <InlineMath math="\hat{y}" /> ketika <InlineMath math="x = 0" />.
+
+Nilai <InlineMath math="b" /> dan <InlineMath math="a" /> dihitung dari data <InlineMath math="(x, y)" /> yang kita punya menggunakan rumus berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="b = \frac{n(\sum xy) - (\sum x)(\sum y)}{n(\sum x^2) - (\sum x)^2}" />
+  <BlockMath math="a = \bar{y} - b\bar{x}" />
+</div>
+
+Keterangan rumus:
+
+- <InlineMath math="n" /> adalah banyaknya pasangan data.
+- <InlineMath math="\sum x" /> adalah jumlah semua nilai x.
+- <InlineMath math="\sum y" /> adalah jumlah semua nilai y.
+- <InlineMath math="\sum xy" /> adalah jumlah dari hasil perkalian setiap pasangan
+  x dan y.
+- <InlineMath math="\sum x^2" /> adalah jumlah dari kuadrat setiap nilai x.
+- <InlineMath math="\bar{x}" /> adalah rata-rata nilai x (<InlineMath math="\frac{\sum x}{n}" />
+  ).
+- <InlineMath math="\bar{y}" /> adalah rata-rata nilai y (<InlineMath math="\frac{\sum y}{n}" />
+  ).
+
+Dengan rumus ini, kita bisa mendapatkan satu garis lurus yang dianggap paling mewakili pola hubungan linear pada data kita.

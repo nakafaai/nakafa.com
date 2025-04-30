@@ -97,8 +97,8 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/statistics/linear-regression-concept`,
       },
       {
-        title: "Least Square Method",
-        href: `${BASE_PATH}/statistics/least-square-method`,
+        title: "Least Squares Method",
+        href: `${BASE_PATH}/statistics/least-squares-method`,
       },
       {
         title: "Correlation Analysis Concept",

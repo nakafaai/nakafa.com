@@ -98,7 +98,7 @@ const idMaterials: MaterialList = [
       },
       {
         title: "Metode Kuadrat Terkecil",
-        href: `${BASE_PATH}/statistics/least-square-method`,
+        href: `${BASE_PATH}/statistics/least-squares-method`,
       },
       {
         title: "Konsep Analisis Korelasi",
