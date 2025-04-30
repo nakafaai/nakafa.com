@@ -4,3 +4,82 @@ export const metadata = {
   date: "04/27/2025",
   subject: "Fungsi Komposisi dan Fungsi Invers",
 };
+
+## Sifat Komposisi dengan Invers
+
+Sifat ini adalah inti dari definisi fungsi invers: fungsi invers "membatalkan" efek dari fungsi aslinya, dan sebaliknya. Jika kita mengkomposisikan suatu fungsi dengan inversnya (dalam urutan apapun), kita akan mendapatkan fungsi identitas <InlineMath math="I(x) = x" />.
+
+1.  **Komposisi <InlineMath math="f" /> dengan <InlineMath math="f^{-1}" />:**
+
+    <BlockMath math="(f \circ f^{-1})(x) = f(f^{-1}(x)) = x" />
+
+    Ini berlaku untuk semua <InlineMath math="x" /> dalam domain <InlineMath math="f^{-1}" /> (yang merupakan range dari <InlineMath math="f" />).
+
+2.  **Komposisi <InlineMath math="f^{-1}" /> dengan <InlineMath math="f" />:**
+
+    <BlockMath math="(f^{-1} \circ f)(x) = f^{-1}(f(x)) = x" />
+
+    Ini berlaku untuk semua <InlineMath math="x" /> dalam domain <InlineMath math="f" />.
+
+**Contoh:**
+
+Kita tahu bahwa jika <InlineMath math="f(x) = 2x + 3" />, maka inversnya adalah <InlineMath math="f^{-1}(x) = \frac{x - 3}{2}" />. Mari kita verifikasi sifat komposisi:
+
+- <InlineMath math="f(f^{-1}(x)) = f\left(\frac{x - 3}{2}\right) = 2\left(\frac{x - 3}{2}\right) + 3 = (x - 3) + 3 = x" />
+- <InlineMath math="f^{-1}(f(x)) = f^{-1}(2x + 3) = \frac{(2x + 3) - 3}{2} = \frac{2x}{2} = x" />
+
+Kedua komposisi menghasilkan <InlineMath math="x" />, sesuai dengan sifatnya.
+
+## Sifat Invers dari Invers
+
+Jika kita mencari invers dari suatu fungsi invers, kita akan kembali ke fungsi aslinya.
+
+<BlockMath math="(f^{-1})^{-1}(x) = f(x)" />
+
+Ini masuk akal karena proses mencari invers adalah proses "membalikkan". Jika kita membalikkan sesuatu dua kali, kita akan kembali ke keadaan semula.
+
+## Sifat Invers dari Komposisi Fungsi
+
+Jika kita memiliki komposisi dua fungsi yang keduanya memiliki invers, invers dari komposisi tersebut adalah komposisi dari invers-inversnya, tetapi dalam **urutan terbalik**.
+
+Misalkan <InlineMath math="f" /> dan <InlineMath math="g" /> adalah dua fungsi yang memiliki invers <InlineMath math="f^{-1}" /> dan <InlineMath math="g^{-1}" />. Maka invers dari komposisi <InlineMath math="f \circ g" /> adalah:
+
+<BlockMath math="(f \circ g)^{-1}(x) = (g^{-1} \circ f^{-1})(x)" />
+
+Perhatikan urutannya terbalik: <InlineMath math="g^{-1}" /> diterapkan terlebih dahulu, baru <InlineMath math="f^{-1}" />.
+
+**Analogi:** Bayangkan memakai kaos kaki (<InlineMath math="g" />) lalu sepatu (<InlineMath math="f" />). Untuk membatalkannya (inversnya), kamu harus melepas sepatu (<InlineMath math="f^{-1}" />) dulu, baru melepas kaos kaki (<InlineMath math="g^{-1}" />). Urutannya dibalik.
+
+**Contoh:**
+
+Misalkan <InlineMath math="f(x) = x + 1" /> (inversnya <InlineMath math="f^{-1}(x) = x - 1" />) dan <InlineMath math="g(x) = 3x" /> (inversnya <InlineMath math="g^{-1}(x) = \frac{x}{3}" />).
+
+1.  **Cari <InlineMath math="(f \circ g)(x)" />:**
+
+    <BlockMath math="(f \circ g)(x) = f(g(x)) = f(3x) = 3x + 1" />
+
+2.  **Cari invers dari <InlineMath math="(f \circ g)(x)" />:**
+
+    Misalkan <InlineMath math="y = 3x + 1" />. Tukar <InlineMath math="x" /> dan <InlineMath math="y" />: <InlineMath math="x = 3y + 1" />.
+
+    Selesaikan untuk <InlineMath math="y" />: <InlineMath math="x - 1 = 3y \implies y = \frac{x - 1}{3}" />.
+
+    Jadi, <InlineMath math="(f \circ g)^{-1}(x) = \frac{x - 1}{3}" />.
+
+3.  **Cari <InlineMath math="(g^{-1} \circ f^{-1})(x)" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(g^{-1} \circ f^{-1})(x) = g^{-1}(f^{-1}(x)) = g^{-1}(x - 1)" />
+      <BlockMath math="g^{-1}(x - 1) = \frac{x - 1}{3}" />
+    </div>
+
+Karena hasil dari langkah 2 dan 3 sama, terbukti bahwa <InlineMath math="(f \circ g)^{-1}(x) = (g^{-1} \circ f^{-1})(x)" />.
+
+## Hubungan Domain dan Range
+
+Domain dari fungsi asli <InlineMath math="f" /> menjadi range dari fungsi inversnya <InlineMath math="f^{-1}" />, dan range dari fungsi asli <InlineMath math="f" /> menjadi domain dari fungsi inversnya <InlineMath math="f^{-1}" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Domain}(f) = \text{Range}(f^{-1})" />
+  <BlockMath math="\text{Range}(f) = \text{Domain}(f^{-1})" />
+</div>
