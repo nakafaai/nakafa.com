@@ -72,7 +72,12 @@ Therefore, we get:
 <div className="mt-4">
   <Vector3d
     title="Example of Unit Vector in 3D Space"
-    description="Visualization of vector v(3,6,4) and its unit vector v̂ pointing in the same direction."
+    description={
+      <>
+        Visualization of vector <InlineMath math="v(3,6,4)" /> and its unit
+        vector <InlineMath math="v̂" /> pointing in the same direction.
+      </>
+    }
     vectors={[
       {
         from: [0, 0, 0],

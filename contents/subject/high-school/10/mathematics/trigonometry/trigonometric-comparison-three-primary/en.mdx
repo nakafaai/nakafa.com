@@ -47,7 +47,11 @@ The sine of angle θ is the ratio between the length of the opposite side and th
 
 <div className="mt-4">
   <Triangle
-    title="Visualization of Sine (sin θ)"
+    title={
+      <>
+        Visualization of Sine (<InlineMath math="\sin \theta" />)
+      </>
+    }
     description="Notice how the sine value changes as the angle changes."
     angle={30}
     labels={{
@@ -76,7 +80,11 @@ The cosine of angle θ is the ratio between the length of the adjacent side and 
 
 <div className="mt-4">
   <Triangle
-    title="Visualization of Cosine (cos θ)"
+    title={
+      <>
+        Visualization of Cosine (<InlineMath math="\cos \theta" />)
+      </>
+    }
     description="Notice how the cosine value changes as the angle changes."
     angle={60}
     labels={{
@@ -105,7 +113,11 @@ The tangent of angle θ is the ratio between the length of the opposite side and
 
 <div className="mt-4">
   <Triangle
-    title="Visualization of Tangent (tan θ)"
+    title={
+      <>
+        Visualization of Tangent (<InlineMath math="\tan \theta" />)
+      </>
+    }
     description="Notice how the tangent value changes as the angle changes."
     angle={45}
     labels={{
@@ -153,11 +165,19 @@ These three trigonometric ratios are related by the following formulas:
 
 ## Exercise
 
-Consider the following triangle with a 30° angle:
+Consider the following triangle with a <InlineMath math="30°" /> angle:
 
 <Triangle
-  title="Triangle with 30° Angle"
-  description="Right triangle with a 30° angle"
+  title={
+    <>
+      Triangle with <InlineMath math="30°" /> Angle
+    </>
+  }
+  description={
+    <>
+      Right triangle with a <InlineMath math="30°" /> angle
+    </>
+  }
   angle={30}
   labels={{
     opposite: "Opposite Side",

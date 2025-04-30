@@ -12,7 +12,11 @@ export const metadata = {
 In a right triangle, the tangent of angle θ is the ratio between the length of the opposite side and the adjacent side. This is very different from sine, which compares the opposite side to the hypotenuse, or cosine, which compares the adjacent side to the hypotenuse.
 
 <Triangle
-  title="Visualization of Tangent (tan θ)"
+  title={
+    <>
+      Visualization of Tangent (<InlineMath math="\tan \theta" />)
+    </>
+  }
   description="Slide the slider to see how tangent changes as the angle changes."
   angle={30}
   labels={{
@@ -87,7 +91,7 @@ Another more direct way is to use the tangent trigonometric ratio. We know that:
 
 <BlockMath math="\tan \theta = \frac{\text{opposite side}}{\text{adjacent side}}" />
 
-For example, if we have a sun elevation angle of 30° (tan 30° = 0.57) and want to calculate the shadow length of a teenager with height 148 cm:
+For example, if we have a sun elevation angle of 30° (<InlineMath math="\tan 30° = 0.57" />) and want to calculate the shadow length of a teenager with height 148 cm:
 
 <div className="flex flex-col gap-4">
   <BlockMath math="\tan \theta = \frac{\text{teenager's height}}{\text{teenager's shadow length}}" />
@@ -99,7 +103,12 @@ For example, if we have a sun elevation angle of 30° (tan 30° = 0.57) and want
 <div className="mt-4">
   <Triangle
     title="30 Degree Angle with Tangent 0.57"
-    description="Visualization of a triangle with a 30° angle as in the calculation example."
+    description={
+      <>
+        Visualization of a triangle with a <InlineMath math="30°" /> angle as in
+        the calculation example.
+      </>
+    }
     angle={30}
     labels={{
       opposite: "Teenager's Height",

@@ -13,7 +13,13 @@ Bayangkan kamu punya dua mesin fungsi, sebut saja mesin <InlineMath math="f" /> 
 
 <LineEquation
   title="Visualisasi Penjumlahan Fungsi"
-  description="Perhatikan bagaimana garis f(x)=x dan g(x)=2 dijumlahkan menjadi (f+g)(x)=x+2."
+  description={
+    <>
+      Perhatikan bagaimana garis <InlineMath math="f(x)=x" /> dan{" "}
+      <InlineMath math="g(x)=2" /> dijumlahkan menjadi{" "}
+      <InlineMath math="(f+g)(x)=x+2" />.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 11 }, (_, i) => ({

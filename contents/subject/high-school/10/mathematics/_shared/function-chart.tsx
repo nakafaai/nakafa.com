@@ -18,12 +18,13 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { useMemo } from "react";
+import type { ReactNode } from "react";
 
 type Props = {
   p: number;
   a: number;
-  title: string;
-  description: string;
+  title: ReactNode;
+  description: ReactNode;
   n?: number;
 };
 

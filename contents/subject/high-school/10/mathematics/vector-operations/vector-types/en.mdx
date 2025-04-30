@@ -14,8 +14,17 @@ Every vector has two main components: **magnitude (length)** and **direction**.
 Consider the example vector <InlineMath math="\overrightarrow{CD}" /> below.
 
 <VectorChart
-  title="Vector CD"
-  description="Vector CD with a length of 4 cm and a direction of 45 degrees relative to the horizontal line."
+  title={
+    <>
+      Vector <InlineMath math="CD" />
+    </>
+  }
+  description={
+    <>
+      Vector <InlineMath math="CD" /> with a length of 4 cm and a direction of{" "}
+      45 degrees relative to the horizontal line.
+    </>
+  }
   vectors={[
     {
       id: "cd",
@@ -39,7 +48,12 @@ Imagine Andi walks 100 m in a direction of 30° (let's call this displacement ve
 
 <VectorChart
   title="Vector and Opposite Vector"
-  description="Vector A and vector -A have the same magnitude but opposite directions."
+  description={
+    <>
+      Vector <InlineMath math="A" /> and vector <InlineMath math="-A" /> have
+      the same magnitude but opposite directions.
+    </>
+  }
   vectors={[
     {
       id: "A",
@@ -82,7 +96,12 @@ Consider the graph below showing three equivalent vectors: <InlineMath math="\ov
 
 <VectorChart
   title="Equivalent Vectors"
-  description="Vectors CD, EF, and KL have the same magnitude and direction."
+  description={
+    <>
+      Vectors <InlineMath math="CD" />, <InlineMath math="EF" />, and{" "}
+      <InlineMath math="KL" /> have the same magnitude and direction.
+    </>
+  }
   vectors={[
     {
       id: "CD",
@@ -122,8 +141,18 @@ A vector is said to be equivalent to another vector if it has the same magnitude
 Consider the two vectors below:
 
 <VectorChart
-  title="Vector A and B"
-  description="Comparison of Vector A and Vector B"
+  title={
+    <>
+      Comparison of Vector <InlineMath math="A" /> and Vector{" "}
+      <InlineMath math="B" />
+    </>
+  }
+  description={
+    <>
+      Comparison of Vector <InlineMath math="A" /> and Vector{" "}
+      <InlineMath math="B" />
+    </>
+  }
   vectors={[
     {
       id: "A",
@@ -161,8 +190,16 @@ Since these two conditions are not met, <InlineMath math="\vec{A}" /> is not the
 To make vectors <InlineMath math="\vec{A}" /> and <InlineMath math="\vec{B}" /> opposite, you could define them like this:
 
 <VectorChart
-  title="Opposite Vectors A and B"
-  description="Vector A and B are opposite"
+  title={
+    <>
+      Opposite Vectors <InlineMath math="A" /> and <InlineMath math="B" />
+    </>
+  }
+  description={
+    <>
+      Vector <InlineMath math="A" /> and <InlineMath math="B" /> are opposite
+    </>
+  }
   vectors={[
     {
       id: "A",

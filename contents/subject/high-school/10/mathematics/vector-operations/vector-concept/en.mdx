@@ -19,7 +19,12 @@ Vectors are typically drawn as directed line segments (arrows).
 
 <VectorChart
   title="Vector Graph"
-  description="Vectors in a Cartesian coordinate system with horizontal x and vertical y."
+  description={
+    <>
+      Vectors in a Cartesian coordinate system with horizontal{" "}
+      <InlineMath math="x" /> and vertical <InlineMath math="y" />.
+    </>
+  }
   vectors={[
     {
       id: "vector_1",
@@ -75,7 +80,13 @@ Are the shapes below vectors? Why?
 
 <VectorChart
   title="Cartesian Coordinate System"
-  description="Horizontal x-axis and vertical y-axis."
+  description={
+    <>
+      Horizontal <InlineMath math="x" />
+      -axis and vertical <InlineMath math="y" />
+      -axis.
+    </>
+  }
   vectors={[
     {
       id: "shape_1",

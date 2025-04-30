@@ -6,10 +6,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { ReactNode } from "react";
 
 type Props = {
-  title: string;
-  description: string;
+  title: ReactNode;
+  description: ReactNode;
   vectors: {
     from: [number, number, number];
     to: [number, number, number];

@@ -1,6 +1,154 @@
+import { FunctionIllustration } from "./illustration";
+import { LineEquation } from "@/components/contents/line-equation";
+import { getColor } from "@/lib/utils/color";
+
 export const metadata = {
   title: "Fungsi Invers",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/27/2025",
   subject: "Fungsi Komposisi dan Fungsi Invers",
 };
+
+## Memahami Fungsi Invers
+
+Kalian pasti sering menerjemahkan kata atau kalimat dari Bahasa Inggris ke Bahasa Indonesia, misalnya saat menonton film atau membaca berita. Proses menerjemahkan ini mirip dengan cara kerja sebuah fungsi: ada masukan (kata Bahasa Inggris) dan keluaran (kata Bahasa Indonesia).
+
+Perhatikan ilustrasi berikut:
+
+<FunctionIllustration
+  title="Mesin Penerjemah"
+  description="Mesin penerjemah mengubah kata atau kalimat dari Bahasa Inggris ke Bahasa Indonesia."
+  machineLabel="Mesin Penerjemah"
+  content={{ input: "Mathematics", output: "Matematika" }}
+/>
+
+Di sini, "Mesin Penerjemah" bertindak seperti fungsi yang mengubah "Mathematics" (masukan) menjadi "Matematika" (keluaran).
+
+Sekarang, bagaimana jika kita ingin melakukan kebalikannya? Menerjemahkan "Matematika" kembali menjadi "Mathematics"?
+
+Proses kebalikan inilah yang menjadi dasar konsep **fungsi invers**.
+
+## Definisi Fungsi Invers
+
+Fungsi invers, atau fungsi kebalikan, adalah fungsi yang "membalikkan" operasi dari suatu fungsi awal. Jika fungsi <InlineMath math="f" /> memetakan elemen <InlineMath math="x" /> dari domain <InlineMath math="A" /> ke elemen <InlineMath math="y" /> di kodomain <InlineMath math="B" />, maka fungsi inversnya, yang dinotasikan sebagai <InlineMath math="f^{-1}" /> (dibaca "f invers"), akan memetakan elemen <InlineMath math="y" /> dari <InlineMath math="B" /> kembali ke elemen <InlineMath math="x" /> di <InlineMath math="A" />.
+
+Secara matematis:
+
+<BlockMath math="y = f(x) \iff x = f^{-1}(y)" />
+
+Dengan kata lain, jika <InlineMath math="f" /> mengubah <InlineMath math="x" /> menjadi <InlineMath math="y" />, maka <InlineMath math="f^{-1}" /> mengubah <InlineMath math="y" /> kembali menjadi <InlineMath math="x" />. Fungsi invers "membatalkan" efek dari fungsi aslinya.
+
+**Penting:** Notasi <InlineMath math="f^{-1}(x)" /> **bukan** berarti <InlineMath math="\frac{1}{f(x)}" /> (kebalikan perkalian atau resiprokal). Ini adalah notasi khusus untuk fungsi invers.
+
+## Syarat Fungsi Memiliki Invers
+
+Tidak semua fungsi memiliki fungsi invers. Agar suatu fungsi <InlineMath math="f" /> memiliki fungsi invers <InlineMath math="f^{-1}" />, fungsi <InlineMath math="f" /> tersebut haruslah **fungsi bijektif**. Fungsi bijektif adalah fungsi yang bersifat **injektif** (satu-ke-satu) dan **surjektif** (pada) sekaligus.
+
+- **Injektif (Satu-ke-satu):** Setiap elemen berbeda di domain dipetakan ke elemen yang berbeda di kodomain. Tidak ada dua input berbeda yang menghasilkan output yang sama.
+- **Surjektif (Pada):** Setiap elemen di kodomain merupakan hasil pemetaan dari setidaknya satu elemen di domain. Semua output mungkin terjadi.
+
+Jika fungsi <InlineMath math="f" /> bukan bijektif, maka relasi kebalikannya mungkin ada, tetapi relasi tersebut bukanlah sebuah fungsi.
+
+## Menentukan Rumus Fungsi Invers
+
+Untuk mencari rumus fungsi invers <InlineMath math="f^{-1}(x)" /> dari suatu fungsi <InlineMath math="f(x)" />, kita bisa mengikuti langkah-langkah berikut:
+
+1.  Ganti <InlineMath math="f(x)" /> dengan <InlineMath math="y" />.
+2.  Tukar posisi variabel <InlineMath math="x" /> dan <InlineMath math="y" /> dalam persamaan.
+3.  Selesaikan persamaan tersebut untuk mendapatkan <InlineMath math="y" /> dalam bentuk <InlineMath math="x" />.
+4.  Ganti <InlineMath math="y" /> dengan <InlineMath math="f^{-1}(x)" /> untuk mendapatkan rumus fungsi invers.
+
+**Contoh:**
+
+Tentukan fungsi invers dari <InlineMath math="f(x) = 2x + 3" />.
+
+1.  Ganti <InlineMath math="f(x)" /> dengan <InlineMath math="y" />:
+
+    <BlockMath math="y = 2x + 3" />
+
+2.  Tukar <InlineMath math="x" /> dan <InlineMath math="y" />:
+
+    <BlockMath math="x = 2y + 3" />
+
+3.  Selesaikan untuk <InlineMath math="y" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x - 3 = 2y" />
+      <BlockMath math="\frac{x - 3}{2} = y" />
+    </div>
+
+4.  Ganti <InlineMath math="y" /> dengan <InlineMath math="f^{-1}(x)" />:
+
+    <BlockMath math="f^{-1}(x) = \frac{x - 3}{2}" />
+
+Jadi, fungsi invers dari <InlineMath math="f(x) = 2x + 3" /> adalah <InlineMath math="f^{-1}(x) = \frac{x - 3}{2}" />.
+
+## Grafik Fungsi dan Inversnya
+
+Grafik fungsi invers <InlineMath math="f^{-1}(x)" /> merupakan pencerminan (refleksi) dari grafik fungsi aslinya <InlineMath math="f(x)" /> terhadap garis <InlineMath math="y = x" />.
+
+Sebagai contoh, mari kita lihat grafik dari <InlineMath math="f(x) = 2x + 3" />, inversnya <InlineMath math="f^{-1}(x) = \frac{x - 3}{2}" />, dan garis identitas <InlineMath math="y=x" />.
+
+<LineEquation
+  title={
+    <>
+      Grafik <InlineMath math="f(x)" /> dan Inversnya
+    </>
+  }
+  description={
+    <>
+      Grafik menunjukkan fungsi <InlineMath math="f(x)" />, inversnya{" "}
+      <InlineMath math="f^{-1}(x)" />, dan garis <InlineMath math="y=x" />{" "}
+      sebagai garis cermin.
+    </>
+  }
+  data={[
+    {
+      // f(x) = 2x + 3
+      points: Array.from({ length: 11 }, (_, i) => {
+        const x = i - 5;
+        return { x, y: 2 * x + 3, z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      labels: [
+        {
+          text: "f(x) = 2x + 3",
+          at: 5,
+          offset: [-2.5, 0, 0],
+        },
+      ],
+    },
+    {
+      // f⁻¹(x) = (x - 3) / 2
+      points: Array.from({ length: 11 }, (_, i) => {
+        const x = i - 5;
+        return { x, y: (x - 3) / 2, z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      labels: [
+        {
+          text: "f^{-1}(x) = (x-3)/2",
+          at: 10,
+          offset: [0.5, 0.5, 0],
+        },
+      ],
+    },
+    {
+      // y = x (Garis Identitas)
+      points: Array.from({ length: 11 }, (_, i) => {
+        const x = i - 5;
+        return { x, y: x, z: 0 };
+      }),
+      color: getColor("PINK"),
+      lineWidth: 1,
+      labels: [
+        {
+          text: "y = x",
+          at: 10,
+          offset: [0.5, 0.5, 0],
+          fontSize: 0.4,
+        },
+      ],
+    },
+  ]}
+/>

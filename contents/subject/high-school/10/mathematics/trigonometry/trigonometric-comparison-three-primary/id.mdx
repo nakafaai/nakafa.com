@@ -47,7 +47,11 @@ Sinus dari sudut θ adalah perbandingan antara panjang sisi depan dengan panjang
 
 <div className="mt-4">
   <Triangle
-    title="Visualisasi Sinus (sin θ)"
+    title={
+      <>
+        Visualisasi Sinus (<InlineMath math="\sin \theta" />)
+      </>
+    }
     description="Perhatikan bagaimana nilai sinus berubah saat sudut berubah."
     angle={30}
     labels={{
@@ -76,7 +80,11 @@ Cosinus dari sudut θ adalah perbandingan antara panjang sisi samping dengan pan
 
 <div className="mt-4">
   <Triangle
-    title="Visualisasi Cosinus (cos θ)"
+    title={
+      <>
+        Visualisasi Cosinus (<InlineMath math="\cos \theta" />)
+      </>
+    }
     description="Perhatikan bagaimana nilai cosinus berubah saat sudut berubah."
     angle={60}
     labels={{
@@ -105,7 +113,11 @@ Tangen dari sudut θ adalah perbandingan antara panjang sisi depan dengan panjan
 
 <div className="mt-4">
   <Triangle
-    title="Visualisasi Tangen (tan θ)"
+    title={
+      <>
+        Visualisasi Tangen (<InlineMath math="\tan \theta" />)
+      </>
+    }
     description="Perhatikan bagaimana nilai tangen berubah saat sudut berubah."
     angle={45}
     labels={{
@@ -153,11 +165,19 @@ Ketiga perbandingan trigonometri ini saling berhubungan dengan rumus berikut:
 
 ## Latihan
 
-Perhatikan segitiga berikut dengan sudut 30°:
+Perhatikan segitiga berikut dengan sudut <InlineMath math="30°" />:
 
 <Triangle
-  title="Segitiga dengan Sudut 30°"
-  description="Segitiga siku-siku dengan sudut 30°"
+  title={
+    <>
+      Segitiga dengan Sudut <InlineMath math="30°" />
+    </>
+  }
+  description={
+    <>
+      Segitiga siku-siku dengan sudut <InlineMath math="30°" />
+    </>
+  }
   angle={30}
   labels={{
     opposite: "Sisi Depan",

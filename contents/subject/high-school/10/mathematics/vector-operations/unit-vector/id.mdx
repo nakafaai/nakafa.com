@@ -72,7 +72,12 @@ Sehingga diperoleh:
 <div className="mt-4">
   <Vector3d
     title="Contoh Vektor Satuan dalam Ruang 3D"
-    description="Visualisasi vektor v(3,6,4) dan vektor satuan v̂ yang searah."
+    description={
+      <>
+        Visualisasi vektor <InlineMath math="v(3,6,4)" /> dan vektor satuan{" "}
+        <InlineMath math="v̂" /> yang searah.
+      </>
+    }
     vectors={[
       {
         from: [0, 0, 0],

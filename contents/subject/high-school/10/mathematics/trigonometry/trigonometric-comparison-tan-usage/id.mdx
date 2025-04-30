@@ -12,7 +12,11 @@ export const metadata = {
 Dalam segitiga siku-siku, tangen sudut θ adalah perbandingan antara panjang sisi depan (opposite) dengan panjang sisi samping (adjacent). Ini sangat berbeda dengan sinus yang membandingkan sisi depan dengan hipotenusa, atau cosinus yang membandingkan sisi samping dengan hipotenusa.
 
 <Triangle
-  title="Visualisasi Tangen (tan θ)"
+  title={
+    <>
+      Visualization of Tangent (<InlineMath math="\tan \theta" />)
+    </>
+  }
   description="Geser slider untuk melihat bagaimana tangen berubah saat sudut berubah."
   angle={30}
   labels={{
@@ -87,7 +91,7 @@ Cara lain yang lebih langsung adalah dengan menggunakan perbandingan trigonometr
 
 <BlockMath math="\tan \theta = \frac{\text{sisi depan}}{\text{sisi samping}}" />
 
-Misalnya, jika kita memiliki sudut elevasi matahari 30° (tan 30° = 0,57) dan ingin menghitung panjang bayangan remaja dengan tinggi 148 cm:
+Misalnya, jika kita memiliki sudut elevasi matahari 30° (<InlineMath math="\tan 30° = 0,57" />) dan ingin menghitung panjang bayangan remaja dengan tinggi 148 cm:
 
 <div className="flex flex-col gap-4">
   <BlockMath math="\tan \theta = \frac{\text{tinggi remaja}}{\text{panjang bayangan remaja}}" />
@@ -99,7 +103,12 @@ Misalnya, jika kita memiliki sudut elevasi matahari 30° (tan 30° = 0,57) dan i
 <div className="mt-4">
   <Triangle
     title="Sudut 30 Derajat dengan Tangen 0,57"
-    description="Visualisasi segitiga dengan sudut 30° seperti pada contoh perhitungan."
+    description={
+      <>
+        Visualisasi segitiga dengan sudut <InlineMath math="30°" /> seperti pada
+        contoh perhitungan.
+      </>
+    }
     angle={30}
     labels={{
       opposite: "Tinggi Remaja",

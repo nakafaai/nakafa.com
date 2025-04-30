@@ -15,7 +15,13 @@ Multiplying two functions, <InlineMath math="f" /> and <InlineMath math="g" />, 
 <div className="flex flex-col gap-4">
   <LineEquation
     title="Function Multiplication Visualization"
-    description="Observe how the lines f(x)=x and g(x)=2 are multiplied to become (f⋅g)(x)=2x."
+    description={
+      <>
+        Observe how the lines <InlineMath math="f(x)=x" /> and{" "}
+        <InlineMath math="g(x)=2" /> are multiplied to become{" "}
+        <InlineMath math="(f \cdot g)(x)=2x" />.
+      </>
+    }
     data={[
       {
         points: Array.from({ length: 11 }, (_, i) => ({

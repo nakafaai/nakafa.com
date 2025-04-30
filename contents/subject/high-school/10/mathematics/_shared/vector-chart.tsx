@@ -14,7 +14,7 @@ import {
   ChartLegendContent,
   ChartTooltip,
 } from "@/components/ui/chart";
-import { Fragment, useMemo } from "react";
+import { Fragment, type ReactNode, useMemo } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 type Vector = {
@@ -52,11 +52,11 @@ type Props = {
   /**
    * Title of the chart
    */
-  title: string;
+  title: ReactNode;
   /**
    * Description of the chart
    */
-  description: string;
+  description: ReactNode;
   /**
    * Vectors to display in the chart
    */

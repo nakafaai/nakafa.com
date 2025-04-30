@@ -29,7 +29,13 @@ Vektor yang dihasilkan, yaitu <InlineMath math="\vec{a} - \vec{b}" />, juga dapa
 
 <Vector3d
   title="Visualisasi Pengurangan Vektor di Ruang 3D"
-  description="Pengurangan vektor a - b (warna ungu) adalah sama dengan vektor a (warna biru) ditambah dengan negatif vektor b (warna merah)."
+  description={
+    <>
+      Pengurangan vektor <InlineMath math="a - b" /> (warna ungu) adalah sama
+      dengan vektor <InlineMath math="a" /> (warna biru) ditambah dengan negatif
+      vektor <InlineMath math="b" /> (warna merah).
+    </>
+  }
   vectors={[
     {
       from: [0, 0, 0],
@@ -101,7 +107,12 @@ Perhatikan bahwa <InlineMath math="\vec{a} - \vec{b} \neq \vec{b} - \vec{a}" /> 
 
 <Vector3d
   title="Contoh Pengurangan Vektor"
-  description="Visualisasi pengurangan vektor a - b = (3,4,0) - (1,2,0) = (2,2,0)."
+  description={
+    <>
+      Visualisasi pengurangan vektor{" "}
+      <InlineMath math="a - b = (3,4,0) - (1,2,0) = (2,2,0)" />.
+    </>
+  }
   vectors={[
     {
       from: [0, 0, 0],

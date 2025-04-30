@@ -128,7 +128,12 @@ Untuk menjumlahkan lebih dari dua vektor, kita dapat menggunakan metode poligon.
 
 <Vector3d
   title="Penjumlahan Tiga Vektor dengan Metode Poligon"
-  description="Penjumlahan vektor a + b + c menggunakan metode poligon."
+  description={
+    <>
+      Penjumlahan vektor <InlineMath math="a + b + c" /> menggunakan metode
+      poligon.
+    </>
+  }
   vectors={[
     {
       from: [0, 0, 0],
@@ -178,7 +183,11 @@ Untuk menjumlahkan tiga vektor dengan metode jajar genjang, kita dapat:
 <div className="mt-4">
   <Vector3d
     title="Sifat Asosiatif Penjumlahan Vektor"
-    description="A + (B + C) = (A + B) + C."
+    description={
+      <>
+        <InlineMath math="A + (B + C) = (A + B) + C" />
+      </>
+    }
     vectors={[
       {
         from: [0, 0, 0],
@@ -247,7 +256,12 @@ Selain secara grafis, vektor juga dapat dijumlahkan secara komponen. Dalam siste
 
 <Vector3d
   title="Penjumlahan Vektor secara Komponen"
-  description="Komponen vektor pada sumbu x, y, dan z."
+  description={
+    <>
+      Komponen vektor pada sumbu <InlineMath math="x" />,{" "}
+      <InlineMath math="y" />, dan <InlineMath math="z" />.
+    </>
+  }
   vectors={[
     {
       from: [0, 0, 0],

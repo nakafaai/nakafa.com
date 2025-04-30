@@ -26,7 +26,12 @@ In a right triangle, the naming of sides is always related to the angle we're fo
 <div className="mt-4">
   <Triangle
     title="Right Triangle"
-    description="Right triangle with angle θ and opposite side, adjacent side, and hypotenuse."
+    description={
+      <>
+        Right triangle with angle <InlineMath math="\theta" /> and opposite
+        side, adjacent side, and hypotenuse.
+      </>
+    }
     angle={30}
     labels={{
       opposite: "Opposite Side",

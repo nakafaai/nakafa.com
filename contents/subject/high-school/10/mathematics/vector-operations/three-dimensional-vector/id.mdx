@@ -13,7 +13,13 @@ Vektor tiga dimensi adalah besaran yang memiliki nilai dan arah dalam ruang tiga
 
 <Vector3d
   title="Vektor dalam Ruang Tiga Dimensi"
-  description="Visualisasi vektor dalam ruang tiga dimensi dengan komponen x, y, dan z."
+  description={
+    <>
+      Visualisasi vektor dalam ruang tiga dimensi dengan komponen{" "}
+      <InlineMath math="x" />, <InlineMath math="y" />, dan{" "}
+      <InlineMath math="z" />.
+    </>
+  }
   vectors={[
     {
       from: [0, 0, 0],
@@ -43,16 +49,21 @@ Vektor dalam ruang tiga dimensi terdiri dari tiga komponen yang menunjukkan proy
 
 dimana:
 
-- <InlineMath math="a_x" /> adalah komponen vektor pada sumbu x
-- <InlineMath math="a_y" /> adalah komponen vektor pada sumbu y
-- <InlineMath math="a_z" /> adalah komponen vektor pada sumbu z
+- <InlineMath math="a_x" /> adalah komponen vektor pada sumbu <InlineMath math="x" />
+- <InlineMath math="a_y" /> adalah komponen vektor pada sumbu <InlineMath math="y" />
+- <InlineMath math="a_z" /> adalah komponen vektor pada sumbu <InlineMath math="z" />
 - <InlineMath math="\vec{i}, \vec{j}, \vec{k}" /> adalah vektor satuan pada sumbu
-  x, y, dan z
+  <InlineMath math="x" />, <InlineMath math="y" />, dan <InlineMath math="z" />
 
 <div className="mt-4">
   <Vector3d
     title="Komponen Vektor Tiga Dimensi"
-    description="Vektor tiga dimensi dengan komponen pada sumbu x, y, dan z."
+    description={
+      <>
+        Vektor tiga dimensi dengan komponen pada sumbu <InlineMath math="x" />,
+        <InlineMath math="y" />, dan <InlineMath math="z" />.
+      </>
+    }
     vectors={[
       {
         from: [0, 0, 0],
@@ -111,7 +122,13 @@ Jika <InlineMath math="\vec{a} = (a_x, a_y, a_z)" /> dan <InlineMath math="\vec{
 <div className="mt-4">
   <Vector3d
     title="Penjumlahan Vektor Tiga Dimensi"
-    description="Visualisasi penjumlahan vektor a dan b menghasilkan vektor c = a + b."
+    description={
+      <>
+        Visualisasi penjumlahan vektor <InlineMath math="a" /> dan{" "}
+        <InlineMath math="b" /> menghasilkan vektor{" "}
+        <InlineMath math="c = a + b" />.
+      </>
+    }
     vectors={[
       {
         from: [0, 0, 0],
@@ -146,7 +163,12 @@ Perkalian skalar <InlineMath math="k" /> dengan vektor <InlineMath math="\vec{a}
 <div className="mt-4">
   <Vector3d
     title="Perkalian Skalar dengan Vektor"
-    description="Visualisasi perkalian skalar k dengan vektor a, dimana k = 2."
+    description={
+      <>
+        Visualisasi perkalian skalar <InlineMath math="k" /> dengan vektor{" "}
+        <InlineMath math="a" />, dimana <InlineMath math="k = 2" />.
+      </>
+    }
     vectors={[
       {
         from: [0, 0, 0],

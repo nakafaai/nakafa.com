@@ -128,7 +128,12 @@ To add more than two vectors, we can use the polygon method. The principle is th
 
 <Vector3d
   title="Adding Three Vectors Using the Polygon Method"
-  description="Addition of vectors a + b + c using the polygon method."
+  description={
+    <>
+      Addition of vectors <InlineMath math="a + b + c" /> using the polygon
+      method.
+    </>
+  }
   vectors={[
     {
       from: [0, 0, 0],
@@ -178,7 +183,11 @@ To add three vectors using the parallelogram method, we can:
 <div className="mt-4">
   <Vector3d
     title="Associative Property of Vector Addition"
-    description="A + (B + C) = (A + B) + C."
+    description={
+      <>
+        <InlineMath math="A + (B + C) = (A + B) + C" />
+      </>
+    }
     vectors={[
       {
         from: [0, 0, 0],
@@ -247,7 +256,12 @@ Besides graphical methods, vectors can also be added by their components. In a c
 
 <Vector3d
   title="Vector Addition by Components"
-  description="Vector components on the x, y, and z axes."
+  description={
+    <>
+      Vector components on the <InlineMath math="x" />, <InlineMath math="y" />,
+      and <InlineMath math="z" /> axes.
+    </>
+  }
   vectors={[
     {
       from: [0, 0, 0],

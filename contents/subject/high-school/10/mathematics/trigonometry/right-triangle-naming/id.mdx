@@ -26,7 +26,12 @@ Dalam segitiga siku-siku, penamaan sisi selalu terkait dengan sudut yang kita pe
 <div className="mt-4">
   <Triangle
     title="Segitiga Siku-siku"
-    description="Segitiga siku-siku dengan sudut θ dan sisi depan, sisi samping, dan sisi miring."
+    description={
+      <>
+        Segitiga siku-siku dengan sudut <InlineMath math="\theta" /> dan sisi
+        depan, sisi samping, dan sisi miring.
+      </>
+    }
     angle={30}
     labels={{
       opposite: "Sisi Depan",

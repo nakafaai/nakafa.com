@@ -19,8 +19,17 @@ The Cartesian Coordinate System uses perpendicular axes to determine the locatio
   This means that point <InlineMath math="P" /> is located <InlineMath math="3" /> units to the right (positive <InlineMath math="x" /> axis) and <InlineMath math="4" /> units upward (positive <InlineMath math="y" /> axis) from the origin <InlineMath math="O(0, 0)" />.
 
   <VectorChart
-    title="Position Vector P(3, 4)"
-    description="Origin O(0, 0) to point P(3, 4)"
+    title={
+      <>
+        Position Vector <InlineMath math="P(3, 4)" />
+      </>
+    }
+    description={
+      <>
+        Origin <InlineMath math="O(0, 0)" /> to point{" "}
+        <InlineMath math="P(3, 4)" />
+      </>
+    }
     vectors={[
       {
         id: "OP",
@@ -38,8 +47,17 @@ The Cartesian Coordinate System uses perpendicular axes to determine the locatio
   We can think of <InlineMath math="x" /> as length, <InlineMath math="y" /> as width, and <InlineMath math="z" /> as height.
 
   <Vector3d
-    title="Position Vector P(3, 4, 5)"
-    description="Origin O(0, 0, 0) to point P(3, 4, 5)"
+    title={
+      <>
+        Position Vector <InlineMath math="P(3, 4, 5)" />
+      </>
+    }
+    description={
+      <>
+        Origin <InlineMath math="O(0, 0, 0)" /> to point{" "}
+        <InlineMath math="P(3, 4, 5)" />
+      </>
+    }
     vectors={[
       { from: [0, 0, 0], to: [3, 4, 5], color: "#8e51ff", label: "P(3, 4, 5)" },
     ]}
@@ -59,7 +77,13 @@ Unlike coordinates which represent the _position_ of a point, a **vector** is a 
 
   <VectorChart
     title="Displacement Vectors"
-    description="Displacement vectors from P to Q or from Q to R"
+    description={
+      <>
+        Displacement vectors from <InlineMath math="P" /> to{" "}
+        <InlineMath math="Q" /> or from <InlineMath math="Q" /> to{" "}
+        <InlineMath math="R" />
+      </>
+    }
     vectors={[
       {
         id: "QR",

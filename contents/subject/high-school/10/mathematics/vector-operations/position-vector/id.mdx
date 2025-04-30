@@ -115,7 +115,12 @@ Vektor perpindahan dapat diperoleh dari selisih dua vektor posisi. Jika kita mem
 <div className="mt-4">
   <Vector3d
     title="Hubungan Vektor Posisi dan Vektor Perpindahan"
-    description="Vektor perpindahan AB diperoleh dari selisih vektor posisi OB dan OA."
+    description={
+      <>
+        Vektor perpindahan <InlineMath math="AB" /> diperoleh dari selisih
+        vektor posisi <InlineMath math="OB" /> dan <InlineMath math="OA" />.
+      </>
+    }
     vectors={[
       {
         from: [0, 0, 0],

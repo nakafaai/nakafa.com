@@ -115,7 +115,13 @@ Displacement vectors can be obtained from the difference between two position ve
 <div className="mt-4">
   <Vector3d
     title="Relationship Between Position Vectors and Displacement Vector"
-    description="Displacement vector AB is obtained from the difference between position vectors OB and OA."
+    description={
+      <>
+        Displacement vector <InlineMath math="AB" /> is obtained from the
+        difference between position vectors <InlineMath math="OB" /> and{" "}
+        <InlineMath math="OA" />.
+      </>
+    }
     vectors={[
       {
         from: [0, 0, 0],

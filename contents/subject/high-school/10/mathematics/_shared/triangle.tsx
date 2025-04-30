@@ -19,10 +19,10 @@ import { Slider } from "@/components/ui/slider";
 import { getCos, getRadians, getSin, getTan } from "@/lib/utils/math";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-
+import type { ReactNode } from "react";
 type Props = {
-  title: string;
-  description: string;
+  title: ReactNode;
+  description: ReactNode;
   angle?: number;
   size?: number;
   labels?: {

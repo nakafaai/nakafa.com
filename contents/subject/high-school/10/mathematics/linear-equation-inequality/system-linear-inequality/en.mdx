@@ -163,7 +163,13 @@ The purple region (the intersection of the blue and red areas) is the solution t
 
 <Inequality
   title="Linear Inequality System"
-  description="Visualization of the system of inequalities x + y ≤ 10 and 15x + 9y ≥ 120."
+  description={
+    <>
+      Visualization of the system of inequalities{" "}
+      <InlineMath math="x + y \leq 10" /> and{" "}
+      <InlineMath math="15x + 9y \geq 120" />.
+    </>
+  }
   data={[
     {
       is2D: true,

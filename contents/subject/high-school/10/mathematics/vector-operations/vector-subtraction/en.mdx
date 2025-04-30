@@ -29,7 +29,13 @@ The resulting vector, <InlineMath math="\vec{a} - \vec{b}" />, can also be obtai
 
 <Vector3d
   title="Visualization of Vector Subtraction in 3D Space"
-  description="Vector subtraction a - b (purple color) is equivalent to vector a (blue color) added to the negative of vector b (red color)."
+  description={
+    <>
+      Vector subtraction <InlineMath math="a - b" /> (purple color) is
+      equivalent to vector <InlineMath math="a" /> (blue color) added to the
+      negative of vector <InlineMath math="b" /> (red color).
+    </>
+  }
   vectors={[
     {
       from: [0, 0, 0],
@@ -101,7 +107,12 @@ Note that <InlineMath math="\vec{a} - \vec{b} \neq \vec{b} - \vec{a}" /> in gene
 
 <Vector3d
   title="Example of Vector Subtraction"
-  description="Visualization of vector subtraction a - b = (3,4,0) - (1,2,0) = (2,2,0)."
+  description={
+    <>
+      Visualization of vector subtraction{" "}
+      <InlineMath math="a - b = (3,4,0) - (1,2,0) = (2,2,0)" />.
+    </>
+  }
   vectors={[
     {
       from: [0, 0, 0],

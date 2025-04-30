@@ -19,7 +19,12 @@ Vektor biasanya digambarkan sebagai ruas garis berarah (anak panah).
 
 <VectorChart
   title="Grafik Vektor"
-  description="Vektor berada di bidang koordinat kartesius dengan x horizontal dan y vertikal."
+  description={
+    <>
+      Vektor berada di bidang koordinat kartesius dengan <InlineMath math="x" />{" "}
+      horizontal dan <InlineMath math="y" /> vertikal.
+    </>
+  }
   vectors={[
     {
       id: "vector_1",
@@ -75,7 +80,12 @@ Apakah bentuk-bentuk di bawah ini merupakan vektor? Mengapa?
 
 <VectorChart
   title="Bidang Koordinat Kartesius"
-  description="Sumbu x horizontal dan sumbu y vertikal."
+  description={
+    <>
+      Sumbu <InlineMath math="x" /> horizontal dan sumbu <InlineMath math="y" />{" "}
+      vertikal.
+    </>
+  }
   vectors={[
     {
       id: "bentuk_1",

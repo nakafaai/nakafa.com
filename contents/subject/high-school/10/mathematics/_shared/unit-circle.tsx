@@ -17,11 +17,11 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { getRadians } from "@/lib/utils/math";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 type Props = {
-  title: string;
-  description: string;
+  title: ReactNode;
+  description: ReactNode;
   angle?: number;
 };
 

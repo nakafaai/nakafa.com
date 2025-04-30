@@ -72,7 +72,11 @@ Bayangkan sebuah segitiga siku-siku dengan sudut θ (theta). Kita namakan sisi-s
 <div className="mt-4">
   <Triangle
     title="Segitiga Siku-Siku"
-    description="Segitiga siku-siku dengan sudut θ."
+    description={
+      <>
+        Segitiga siku-siku dengan sudut <InlineMath math="\theta" />.
+      </>
+    }
     angle={45}
     labels={{
       opposite: "Sisi depan",

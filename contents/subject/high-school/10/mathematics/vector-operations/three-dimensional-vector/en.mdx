@@ -13,7 +13,13 @@ A three-dimensional vector is a quantity that has both magnitude and direction i
 
 <Vector3d
   title="Vector in Three-Dimensional Space"
-  description="Visualization of a vector in three-dimensional space with x, y, and z components."
+  description={
+    <>
+      Visualization of a vector in three-dimensional space with{" "}
+      <InlineMath math="x" />, <InlineMath math="y" />, and{" "}
+      <InlineMath math="z" /> components.
+    </>
+  }
   vectors={[
     {
       from: [0, 0, 0],
@@ -43,16 +49,25 @@ A vector in three-dimensional space consists of three components that represent 
 
 where:
 
-- <InlineMath math="a_x" /> is the vector component on the x-axis
-- <InlineMath math="a_y" /> is the vector component on the y-axis
-- <InlineMath math="a_z" /> is the vector component on the z-axis
-- <InlineMath math="\vec{i}, \vec{j}, \vec{k}" /> are the unit vectors on the x,
-  y, and z axes
+- <InlineMath math="a_x" /> is the vector component on the <InlineMath math="x" />
+  -axis
+- <InlineMath math="a_y" /> is the vector component on the <InlineMath math="y" />
+  -axis
+- <InlineMath math="a_z" /> is the vector component on the <InlineMath math="z" />
+  -axis
+- <InlineMath math="\vec{i}, \vec{j}, \vec{k}" /> are the unit vectors on the <InlineMath math="x" />
+  ,
+  <InlineMath math="y" />, and <InlineMath math="z" /> axes
 
 <div className="mt-4">
   <Vector3d
     title="Components of a Three-Dimensional Vector"
-    description="Three-dimensional vector with components on the x, y, and z axes."
+    description={
+      <>
+        Three-dimensional vector with components on the <InlineMath math="x" />,
+        <InlineMath math="y" />, and <InlineMath math="z" /> axes.
+      </>
+    }
     vectors={[
       {
         from: [0, 0, 0],
@@ -111,7 +126,13 @@ If <InlineMath math="\vec{a} = (a_x, a_y, a_z)" /> and <InlineMath math="\vec{b}
 <div className="mt-4">
   <Vector3d
     title="Vector Addition in Three Dimensions"
-    description="Visualization of adding vectors a and b to produce vector c = a + b."
+    description={
+      <>
+        Visualization of adding vectors <InlineMath math="a" /> and{" "}
+        <InlineMath math="b" /> to produce vector{" "}
+        <InlineMath math="c = a + b" />.
+      </>
+    }
     vectors={[
       {
         from: [0, 0, 0],
@@ -146,7 +167,12 @@ Multiplying a scalar <InlineMath math="k" /> with a vector <InlineMath math="\ve
 <div className="mt-4">
   <Vector3d
     title="Scalar Multiplication of a Vector"
-    description="Visualization of scalar multiplication k times vector a, where k = 2."
+    description={
+      <>
+        Visualization of scalar multiplication <InlineMath math="k" /> times
+        vector <InlineMath math="a" />, where <InlineMath math="k = 2" />.
+      </>
+    }
     vectors={[
       {
         from: [0, 0, 0],
