@@ -1,6 +1,134 @@
+import { ScatterDiagram } from "./chart";
+
 export const metadata = {
   title: "Scatter Diagram",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/30/2025",
   subject: "Statistics",
 };
+
+## What Is a Scatter Diagram?
+
+A Scatter Diagram is like a map that shows the relationship between two types of data. For example, we might want to see the relationship between study time (X-axis) and exam scores (Y-axis).
+
+Each point on the diagram represents one pair of data (e.g., one student's data). By looking at the pattern of the points, we can understand their relationship.
+
+### When Should a Scatter Diagram Be Used?
+
+A Scatter Diagram is most suitable when we want to:
+
+- See if there is a **relationship (correlation)** between **two numerical variables (numbers)**. (Example: the relationship between height and weight, or study time and scores.)
+- See the **pattern** of that relationship (whether it's positive, negative, or no pattern).
+
+This differs from other diagrams:
+
+- **Bar Chart:** Good for comparing quantities or values between **categories** (e.g., number of students per class).
+- **Line Chart:** Good for seeing **trends** in data over **time** or a specific sequence (e.g., daily temperature changes).
+- **Pie Chart:** Good for showing **proportions** or parts of a whole (e.g., percentage of favorite fruit types).
+
+So, if your main focus is **seeing the relationship between two sets of numbers**, a scatter diagram is the right choice!
+
+## Scatter Diagram Examples and Correlation Patterns
+
+Let's look at some examples of scatter diagrams with different patterns:
+
+### Positive Correlation
+
+If the points tend to rise from the bottom left to the top right, it means there is a **positive correlation**. As the value of X increases, the value of Y also tends to increase.
+
+<ScatterDiagram
+  title="Relationship Between Study Time (Hours) and Exam Scores"
+  description="Example of positive correlation: The longer the study time, the higher the exam scores tend to be, although not always perfectly."
+  xAxisLabel="Study Time (Hours)"
+  yAxisLabel="Exam Score"
+  datasets={[
+    {
+      name: "Student",
+      color: "var(--chart-1)",
+      points: [
+        { x: 1, y: 60 },
+        { x: 1.5, y: 68 },
+        { x: 2, y: 65 },
+        { x: 2.5, y: 75 },
+        { x: 3, y: 72 },
+        { x: 3.5, y: 80 },
+        { x: 4, y: 85 },
+        { x: 4, y: 82 },
+        { x: 4.5, y: 90 },
+        { x: 5, y: 88 },
+        { x: 5.5, y: 95 },
+        { x: 6, y: 92 },
+      ],
+    },
+  ]}
+/>
+
+### Negative Correlation
+
+If the points tend to fall from the top left to the bottom right, it means there is a **negative correlation**. As the value of X increases, the value of Y tends to decrease.
+
+<ScatterDiagram
+  title="Relationship Between Car Age (Years) and Selling Price (Tens of Millions)"
+  description="Example of negative correlation: The older the car, the lower its selling price tends to be."
+  xAxisLabel="Car Age (Years)"
+  yAxisLabel="Selling Price (Tens of Millions Rupiah)"
+  datasets={[
+    {
+      name: "Used Car",
+      color: "var(--chart-2)",
+      points: [
+        { x: 1, y: 25 },
+        { x: 2, y: 22 },
+        { x: 2, y: 23 },
+        { x: 3, y: 20 },
+        { x: 4, y: 18 },
+        { x: 4, y: 19 },
+        { x: 5, y: 15 },
+        { x: 6, y: 14 },
+        { x: 7, y: 12 },
+        { x: 8, y: 10 },
+      ],
+    },
+  ]}
+/>
+
+### No Correlation (with 2 Groups)
+
+If the points are scattered randomly without a clear pattern, it means there is **no correlation** or the correlation is very weak. We can also display different groups in one diagram.
+
+<ScatterDiagram
+  title="Relationship Between Height (cm) and 100m Run Time (seconds) for Two Schools"
+  description="Example of no correlation between height and running speed, with data from two different schools."
+  xAxisLabel="Height (cm)"
+  yAxisLabel="100m Run Time (seconds)"
+  datasets={[
+    {
+      name: "School A",
+      color: "var(--chart-3)",
+      points: [
+        { x: 165, y: 13.5 },
+        { x: 170, y: 13.1 },
+        { x: 172, y: 13.8 },
+        { x: 175, y: 12.9 },
+        { x: 178, y: 13.3 },
+        { x: 180, y: 12.8 },
+        { x: 182, y: 13.6 },
+      ],
+    },
+    {
+      name: "School B",
+      color: "var(--chart-5)",
+      points: [
+        { x: 168, y: 13.9 },
+        { x: 171, y: 13.0 },
+        { x: 174, y: 13.5 },
+        { x: 176, y: 13.2 },
+        { x: 179, y: 12.7 },
+        { x: 181, y: 14.0 },
+        { x: 185, y: 13.1 },
+      ],
+    },
+  ]}
+/>
+
+So, by looking at the distribution pattern of the points on a scatter diagram, we can get an initial idea of how two variables are related, even for different groups of data.

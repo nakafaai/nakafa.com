@@ -1,6 +1,134 @@
+import { ScatterDiagram } from "./chart";
+
 export const metadata = {
   title: "Diagram Pencar atau Diagram Scatter",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/30/2025",
   subject: "Statistika",
 };
+
+## Apa Itu Diagram Pencar?
+
+Diagram Pencar (Scatter Diagram) itu seperti peta yang menunjukkan hubungan antara dua jenis data. Misalnya, kita mau lihat hubungan antara lama waktu belajar (sumbu X) dengan nilai ujian (sumbu Y).
+
+Setiap titik di diagram mewakili satu pasangan data (misalnya, data satu siswa). Dengan melihat pola titik-titiknya, kita bisa mengerti hubungannya.
+
+### Kapan Diagram Pencar Digunakan?
+
+Diagram Pencar paling cocok dipakai kalau kita ingin:
+
+- Melihat apakah ada **hubungan (korelasi)** antara **dua variabel numerik (angka)**. (Contoh: hubungan antara tinggi badan dan berat badan, atau lama belajar dan nilai.)
+- Melihat **pola** dari hubungan tersebut (apakah positif, negatif, atau tidak ada pola).
+
+Ini berbeda dengan diagram lain:
+
+- **Diagram Batang:** Bagus untuk membandingkan jumlah atau nilai antar **kategori** (misal: jumlah siswa per kelas).
+- **Diagram Garis:** Bagus untuk melihat **tren** data seiring **waktu** atau urutan tertentu (misal: perubahan suhu harian).
+- **Diagram Lingkaran (Pie Chart):** Bagus untuk menunjukkan **proporsi** atau bagian dari keseluruhan (misal: persentase jenis buah favorit).
+
+Jadi, kalau fokus utamamu adalah **melihat hubungan antara dua set angka**, diagram pencar adalah pilihan yang tepat!
+
+## Contoh Diagram Pencar dan Pola Korelasi
+
+Mari kita lihat beberapa contoh diagram pencar dengan pola yang berbeda:
+
+### Korelasi Positif
+
+Kalau titik-titik cenderung naik dari kiri bawah ke kanan atas, itu artinya ada **korelasi positif**. Semakin besar nilai X, nilai Y juga cenderung semakin besar.
+
+<ScatterDiagram
+  title="Hubungan Lama Belajar (Jam) dan Nilai Ujian"
+  description="Semakin lama belajar, nilai ujian cenderung semakin tinggi, meskipun tidak selalu sempurna."
+  xAxisLabel="Lama Belajar (Jam)"
+  yAxisLabel="Nilai Ujian"
+  datasets={[
+    {
+      name: "Siswa",
+      color: "var(--chart-1)",
+      points: [
+        { x: 1, y: 60 },
+        { x: 1.5, y: 68 },
+        { x: 2, y: 65 },
+        { x: 2.5, y: 75 },
+        { x: 3, y: 72 },
+        { x: 3.5, y: 80 },
+        { x: 4, y: 85 },
+        { x: 4, y: 82 },
+        { x: 4.5, y: 90 },
+        { x: 5, y: 88 },
+        { x: 5.5, y: 95 },
+        { x: 6, y: 92 },
+      ],
+    },
+  ]}
+/>
+
+### Korelasi Negatif
+
+Kalau titik-titik cenderung turun dari kiri atas ke kanan bawah, itu artinya ada **korelasi negatif**. Semakin besar nilai X, nilai Y malah cenderung semakin kecil.
+
+<ScatterDiagram
+  title="Hubungan Usia Mobil (Tahun) dan Harga Jual (Puluh Juta)"
+  description="Semakin tua usia mobil, harga jualnya cenderung semakin rendah."
+  xAxisLabel="Usia Mobil (Tahun)"
+  yAxisLabel="Harga Jual (Puluh Juta Rupiah)"
+  datasets={[
+    {
+      name: "Mobil Bekas",
+      color: "var(--chart-2)",
+      points: [
+        { x: 1, y: 25 },
+        { x: 2, y: 22 },
+        { x: 2, y: 23 },
+        { x: 3, y: 20 },
+        { x: 4, y: 18 },
+        { x: 4, y: 19 },
+        { x: 5, y: 15 },
+        { x: 6, y: 14 },
+        { x: 7, y: 12 },
+        { x: 8, y: 10 },
+      ],
+    },
+  ]}
+/>
+
+### Tidak Ada Korelasi (dengan 2 Grup)
+
+Kalau titik-titiknya tersebar acak tanpa pola yang jelas, itu artinya **tidak ada korelasi** atau korelasinya sangat lemah. Kita juga bisa menampilkan grup yang berbeda dalam satu diagram.
+
+<ScatterDiagram
+  title="Hubungan Tinggi Badan (cm) dan Waktu Lari 100m (detik) untuk Dua Sekolah"
+  description="Tidak ada korelasi antara tinggi badan dan kecepatan lari, dengan data dari dua sekolah berbeda."
+  xAxisLabel="Tinggi Badan (cm)"
+  yAxisLabel="Waktu Lari 100m (detik)"
+  datasets={[
+    {
+      name: "Sekolah A",
+      color: "var(--chart-3)", // Warna untuk Sekolah A
+      points: [
+        { x: 165, y: 13.5 },
+        { x: 170, y: 13.1 },
+        { x: 172, y: 13.8 },
+        { x: 175, y: 12.9 },
+        { x: 178, y: 13.3 },
+        { x: 180, y: 12.8 },
+        { x: 182, y: 13.6 },
+      ],
+    },
+    {
+      name: "Sekolah B",
+      color: "var(--chart-5)", // Warna untuk Sekolah B
+      points: [
+        { x: 168, y: 13.9 },
+        { x: 171, y: 13.0 },
+        { x: 174, y: 13.5 },
+        { x: 176, y: 13.2 },
+        { x: 179, y: 12.7 },
+        { x: 181, y: 14.0 },
+        { x: 185, y: 13.1 },
+      ],
+    },
+  ]}
+/>
+
+Jadi, dengan melihat arah sebaran titik-titik pada diagram pencar, kita bisa mendapatkan gambaran awal tentang bagaimana dua variabel saling berhubungan, bahkan untuk grup data yang berbeda sekalipun.
