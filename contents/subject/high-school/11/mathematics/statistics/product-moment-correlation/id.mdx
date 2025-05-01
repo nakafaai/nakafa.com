@@ -1,6 +1,231 @@
+import { ScatterDiagram } from "../../_shared/scatter-diagram";
+
 export const metadata = {
   title: "Korelasi Product Moment",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/30/2025",
   subject: "Statistika",
 };
+
+## Apa Itu Korelasi Product Moment?
+
+Korelasi Product Moment, yang sering juga disebut **Korelasi Pearson** atau cukup dilambangkan dengan **<InlineMath math="r" />**, adalah ukuran statistik yang paling umum digunakan untuk mengetahui seberapa kuat dan ke mana arah **hubungan linear** (pola garis lurus) antara dua variabel kuantitatif (angka).
+
+Nilai <InlineMath math="r" /> ini akan memberi tahu kita apakah kedua variabel bergerak searah (positif), berlawanan arah (negatif), atau tidak ada hubungan linear sama sekali.
+
+## Korelasi dari Diagram Pencar
+
+Cara paling intuitif memahami nilai <InlineMath math="r" /> adalah dengan melihat bagaimana titik-titik data tersebar pada diagram pencar:
+
+### Korelasi Positif Kuat
+
+<InlineMath math="r" /> mendekati +1 berarti kedua variabel cenderung bergerak ke
+arah yang sama.
+
+<ScatterDiagram
+  title="Contoh Korelasi Positif Kuat"
+  description="Titik-titik data mengelompok sangat dekat membentuk pola garis lurus yang naik."
+  xAxisLabel="Variabel X"
+  yAxisLabel="Variabel Y"
+  datasets={[
+    {
+      name: "Data",
+      color: "var(--chart-1)",
+      points: [
+        { x: 1, y: 2 },
+        { x: 2, y: 3.1 },
+        { x: 3, y: 3.9 },
+        { x: 4, y: 5.2 },
+        { x: 5, y: 6.1 },
+        { x: 6, y: 6.8 },
+        { x: 7, y: 8.1 },
+        { x: 8, y: 9.0 },
+      ],
+    },
+  ]}
+  calculateRegressionLine
+  showResiduals
+  regressionLineStyle={{ color: "var(--chart-4)" }}
+/>
+
+Jika titik-titik data kamu terlihat seperti ini (naik dari kiri bawah ke kanan atas dan sangat rapat membentuk garis), nilai <InlineMath math="r" />-nya akan mendekati +1.
+
+### Korelasi Positif Lemah
+
+<InlineMath math="r" /> positif tapi mendekati 0 berarti kedua variabel cenderung
+bergerak ke arah yang sama, tapi tidak terlalu kuat.
+
+<ScatterDiagram
+  title="Contoh Korelasi Positif Lemah"
+  description="Titik-titik cenderung naik, tapi tersebar lebih jauh dari garis lurus."
+  xAxisLabel="Variabel X"
+  yAxisLabel="Variabel Y"
+  datasets={[
+    {
+      name: "Data",
+      color: "var(--chart-2)",
+      points: [
+        { x: 1, y: 1 },
+        { x: 2, y: 4 },
+        { x: 3, y: 2 },
+        { x: 4, y: 6 },
+        { x: 5, y: 5 },
+        { x: 6, y: 8 },
+        { x: 7, y: 6 },
+        { x: 8, y: 9 },
+      ],
+    },
+  ]}
+  calculateRegressionLine
+  showResiduals
+  regressionLineStyle={{ color: "var(--chart-4)" }}
+/>
+
+Kalau titik-titiknya masih menunjukkan kecenderungan naik tapi lebih menyebar seperti ini, nilai <InlineMath math="r" />-nya positif, tapi lebih kecil (mendekati 0).
+
+### Korelasi Negatif Kuat
+
+<InlineMath math="r" /> mendekati -1 berarti kedua variabel cenderung bergerak ke
+arah yang berlawanan.
+
+<ScatterDiagram
+  title="Contoh Korelasi Negatif Kuat"
+  description="Titik-titik data mengelompok sangat dekat membentuk pola garis lurus yang turun."
+  xAxisLabel="Variabel X"
+  yAxisLabel="Variabel Y"
+  datasets={[
+    {
+      name: "Data",
+      color: "var(--chart-3)",
+      points: [
+        { x: 1, y: 10 },
+        { x: 2, y: 8.9 },
+        { x: 3, y: 8.1 },
+        { x: 4, y: 6.8 },
+        { x: 5, y: 6.0 },
+        { x: 6, y: 5.1 },
+        { x: 7, y: 4.0 },
+        { x: 8, y: 3.1 },
+      ],
+    },
+  ]}
+  calculateRegressionLine
+  showResiduals
+  regressionLineStyle={{ color: "var(--chart-4)" }}
+/>
+
+Jika titik-titiknya turun dari kiri atas ke kanan bawah dan sangat rapat, nilai <InlineMath math="r" />-nya akan mendekati -1.
+
+### Tidak Ada Korelasi Linear
+
+<InlineMath math="r" /> mendekati 0 berarti kedua variabel tidak memiliki hubungan
+linear.
+
+<ScatterDiagram
+  title="Contoh Tidak Ada Korelasi Linear"
+  description="Titik-titik data tersebar acak tanpa membentuk pola garis lurus."
+  xAxisLabel="Variabel X"
+  yAxisLabel="Variabel Y"
+  datasets={[
+    {
+      name: "Data",
+      color: "var(--chart-5)",
+      points: [
+        { x: 1, y: 5 },
+        { x: 2, y: 2 },
+        { x: 3, y: 7 },
+        { x: 4, y: 4 },
+        { x: 5, y: 9 },
+        { x: 6, y: 3 },
+        { x: 7, y: 8 },
+        { x: 8, y: 1 },
+      ],
+    },
+  ]}
+  calculateRegressionLine
+  showResiduals
+  regressionLineStyle={{ color: "var(--chart-4)" }}
+/>
+
+Ketika titik-titik menyebar acak tanpa pola lurus yang jelas, nilai <InlineMath math="r" />-nya akan mendekati 0.
+
+## Bagaimana Menghitung r?
+
+Koefisien korelasi Pearson (<InlineMath math="r" />) pada dasarnya mengukur seberapa **sinkron** pergerakan dua variabel (X dan Y) relatif terhadap variasi masing-masing.
+
+**Bayangkan begini:**
+
+1.  **Variasi Sendiri:**
+
+    Setiap variabel (X dan Y) punya variasinya sendiri. Ada yang nilainya naik-turun banyak (variasi besar), ada yang stabil (variasi kecil). Ini diukur oleh <InlineMath math="SS_{xx}" /> untuk X dan <InlineMath math="SS_{yy}" /> untuk Y (yang akan kita lihat rumusnya di bawah).
+
+2.  **Variasi Bersama (Kovariasi):**
+
+    Kita juga perlu tahu bagaimana X dan Y bervariasi _bersama-sama_. Apakah saat X naik, Y juga cenderung naik? Atau malah turun? Ukuran variasi bersama ini disebut **kovariasi**, dan dihitung menggunakan <InlineMath math="SS_{xy}" />.
+
+    - Jika <InlineMath math="SS_{xy}" /> positif besar: X dan Y sering bergerak searah.
+    - Jika <InlineMath math="SS_{xy}" /> negatif besar: X dan Y sering bergerak berlawanan arah.
+    - Jika <InlineMath math="SS_{xy}" /> dekat nol: Tidak ada pola pergerakan bersama yang jelas.
+
+3.  **Menstandarkan Ukuran:**
+
+    Masalahnya, nilai <InlineMath math="SS_{xy}" /> (kovariasi) ini sangat dipengaruhi oleh satuan data. Misalnya, kovariasi antara tinggi (cm) dan berat (kg) akan punya nilai yang berbeda jika kita ukur tinggi dalam meter dan berat dalam gram, meskipun hubungannya sama.
+
+    Untuk mengatasi ini, kita perlu **menstandarkan** ukuran kovariasi. Caranya adalah dengan **membagi kovariasi (<InlineMath math="SS_{xy}" />) dengan ukuran variasi masing-masing variabel** (yang sudah disesuaikan dalam bentuk akar kuadrat: <InlineMath math="\sqrt{SS_{xx} SS_{yy}}" />).
+
+    <BlockMath math="r = \frac{\text{Seberapa banyak X dan Y bervariasi bersama}}{\text{Ukuran standar dari variasi X dan Y masing-masing}} = \frac{SS_{xy}}{\sqrt{SS_{xx} SS_{yy}}}" />
+
+Hasil pembagian inilah yang menjadi **<InlineMath math="r" />**, Koefisien Korelasi Pearson. Karena sudah distandarkan, nilainya akan selalu antara -1 dan +1, tidak peduli satuan asli datanya. Ini memungkinkan kita membandingkan kekuatan hubungan linear antar variabel yang berbeda-beda.
+
+Jadi, nilai <InlineMath math="r" /> ditentukan dengan membandingkan seberapa kuat X dan Y bergerak bersama, relatif terhadap seberapa banyak mereka bergerak secara individual.
+
+## Rumus Korelasi Product Moment
+
+Untuk menghitung nilai <InlineMath math="r" /> secara pasti, kita gunakan rumus yang melibatkan **Jumlah Kuadrat (Sum of Squares)**:
+
+<BlockMath math="r = \frac{SS_{xy}}{\sqrt{SS_{xx} SS_{yy}}}" />
+
+**Apa itu <InlineMath math="SS_{xy}" />, <InlineMath math="SS_{xx}" />, dan <InlineMath math="SS_{yy}" />?**
+
+Ini adalah cara mengukur seberapa bervariasi data kita:
+
+1.  **<InlineMath math="SS_{xx}" /> (Sum of Squares for x):** Mengukur seberapa menyebar data x dari rata-ratanya.
+
+    <BlockMath math="SS_{xx} = \sum (x - \bar{x})^2 = \sum x^2 - \frac{(\sum x)^2}{n}" />
+
+2.  **<InlineMath math="SS_{yy}" /> (Sum of Squares for y):** Mengukur seberapa menyebar data y dari rata-ratanya.
+
+    <BlockMath math="SS_{yy} = \sum (y - \bar{y})^2 = \sum y^2 - \frac{(\sum y)^2}{n}" />
+
+3.  **<InlineMath math="SS_{xy}" /> (Sum of Products of deviations for x and y):** Mengukur bagaimana x dan y bervariasi _bersama-sama_.
+
+    <BlockMath math="SS_{xy} = \sum (x - \bar{x})(y - \bar{y}) = \sum xy - \frac{(\sum x)(\sum y)}{n}" />
+
+Keterangan:
+
+- <InlineMath math="n" />: Banyaknya pasangan data (x, y).
+- <InlineMath math="\sum x" />, <InlineMath math="\sum y" />: Jumlah semua nilai
+  x dan y.
+- <InlineMath math="\sum x^2" />, <InlineMath math="\sum y^2" />: Jumlah kuadrat
+  dari setiap nilai x dan y.
+- <InlineMath math="\sum xy" />: Jumlah dari hasil kali setiap pasangan x dan y.
+- <InlineMath math="\bar{x}" />, <InlineMath math="\bar{y}" />: Rata-rata nilai x
+  dan y.
+
+Dengan menghitung ketiga nilai SS ini dan memasukkannya ke rumus <InlineMath math="r" />, kita akan mendapatkan nilai Koefisien Korelasi Product Moment.
+
+## Interpretasi Nilai r
+
+Setelah mendapatkan nilai <InlineMath math="r" />, kita bisa interpretasikan kekuatannya dan arahnya menggunakan panduan umum berikut:
+
+| Nilai <InlineMath math="r" />         | Tingkat Korelasi          | Keterangan                                |
+| :------------------------------------ | :------------------------ | :---------------------------------------- |
+| <InlineMath math="1" />               | Positif Sempurna          | Semua titik tepat pada garis lurus naik.  |
+| <InlineMath math="0.7 \le r < 1" />   | Positif Kuat              | Hubungan linear positif jelas dan kuat.   |
+| <InlineMath math="0.3 < r < 0.7" />   | Positif Sedang/Cukup      | Hubungan linear positif cukup terlihat.   |
+| <InlineMath math="0 < r \le 0.3" />   | Positif Lemah             | Hubungan linear positif sangat rendah.    |
+| <InlineMath math="0" />               | Tidak ada Korelasi Linear | Tidak ada hubungan linear sama sekali.    |
+| <InlineMath math="-0.3 \le r < 0" />  | Negatif Lemah             | Hubungan linear negatif sangat rendah.    |
+| <InlineMath math="-0.7 < r < -0.3" /> | Negatif Sedang/Cukup      | Hubungan linear negatif cukup terlihat.   |
+| <InlineMath math="-1 < r \le -0.7" /> | Negatif Kuat              | Hubungan linear negatif jelas dan kuat.   |
+| <InlineMath math="-1" />              | Negatif Sempurna          | Semua titik tepat pada garis lurus turun. |

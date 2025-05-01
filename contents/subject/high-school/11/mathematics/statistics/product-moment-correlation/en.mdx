@@ -1,6 +1,228 @@
+import { ScatterDiagram } from "../../_shared/scatter-diagram";
+
 export const metadata = {
   title: "Product Moment Correlation",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/30/2025",
   subject: "Statistics",
 };
+
+## What Is Product Moment Correlation?
+
+Product Moment Correlation, often called **Pearson Correlation** or simply denoted by **<InlineMath math="r" />**, is the most commonly used statistical measure to determine how strong and in what direction the **linear relationship** (straight-line pattern) is between two quantitative variables (numbers).
+
+The value of <InlineMath math="r" /> tells us whether the two variables tend to move in the same direction (positive), opposite directions (negative), or if there is no linear relationship at all.
+
+## Correlation from Scatter Diagrams
+
+The most intuitive way to understand the value of <InlineMath math="r" /> is by looking at how the data points are scattered on a diagram:
+
+### Strong Positive Correlation
+
+<InlineMath math="r" /> approaching +1 means both variables tend to move in the same
+direction.
+
+<ScatterDiagram
+  title="Example of Strong Positive Correlation"
+  description="Data points cluster very closely forming an upward-sloping straight line pattern."
+  xAxisLabel="Variable X"
+  yAxisLabel="Variable Y"
+  datasets={[
+    {
+      name: "Data",
+      color: "var(--chart-1)",
+      points: [
+        { x: 1, y: 2 },
+        { x: 2, y: 3.1 },
+        { x: 3, y: 3.9 },
+        { x: 4, y: 5.2 },
+        { x: 5, y: 6.1 },
+        { x: 6, y: 6.8 },
+        { x: 7, y: 8.1 },
+        { x: 8, y: 9.0 },
+      ],
+    },
+  ]}
+  calculateRegressionLine
+  showResiduals
+  regressionLineStyle={{ color: "var(--chart-4)" }}
+/>
+
+If your data points look like this (rising from bottom left to top right and tightly clustered), the <InlineMath math="r" /> value will be close to +1.
+
+### Weak Positive Correlation
+
+<InlineMath math="r" /> being positive but close to 0 means both variables tend to
+move in the same direction, but not very strongly.
+
+<ScatterDiagram
+  title="Example of Weak Positive Correlation"
+  description="Points tend to rise, but are more spread out from the straight line."
+  xAxisLabel="Variable X"
+  yAxisLabel="Variable Y"
+  datasets={[
+    {
+      name: "Data",
+      color: "var(--chart-2)",
+      points: [
+        { x: 1, y: 1 },
+        { x: 2, y: 4 },
+        { x: 3, y: 2 },
+        { x: 4, y: 6 },
+        { x: 5, y: 5 },
+        { x: 6, y: 8 },
+        { x: 7, y: 6 },
+        { x: 8, y: 9 },
+      ],
+    },
+  ]}
+  calculateRegressionLine
+  showResiduals
+  regressionLineStyle={{ color: "var(--chart-4)" }}
+/>
+
+If the points still show an upward trend but are more scattered like this, the <InlineMath math="r" /> value is positive but smaller (closer to 0).
+
+### Strong Negative Correlation
+
+<InlineMath math="r" /> approaching -1 means both variables tend to move in opposite
+directions.
+
+<ScatterDiagram
+  title="Example of Strong Negative Correlation"
+  description="Data points cluster very closely forming a downward-sloping straight line pattern."
+  xAxisLabel="Variable X"
+  yAxisLabel="Variable Y"
+  datasets={[
+    {
+      name: "Data",
+      color: "var(--chart-3)",
+      points: [
+        { x: 1, y: 10 },
+        { x: 2, y: 8.9 },
+        { x: 3, y: 8.1 },
+        { x: 4, y: 6.8 },
+        { x: 5, y: 6.0 },
+        { x: 6, y: 5.1 },
+        { x: 7, y: 4.0 },
+        { x: 8, y: 3.1 },
+      ],
+    },
+  ]}
+  calculateRegressionLine
+  showResiduals
+  regressionLineStyle={{ color: "var(--chart-4)" }}
+/>
+
+If the points fall from top left to bottom right and are very tightly clustered, the <InlineMath math="r" /> value will be close to -1.
+
+### No Linear Correlation
+
+<InlineMath math="r" /> approaching 0 means the two variables have no linear relationship.
+
+<ScatterDiagram
+  title="Example of No Linear Correlation"
+  description="Data points are scattered randomly without forming a straight line pattern."
+  xAxisLabel="Variable X"
+  yAxisLabel="Variable Y"
+  datasets={[
+    {
+      name: "Data",
+      color: "var(--chart-5)",
+      points: [
+        { x: 1, y: 5 },
+        { x: 2, y: 2 },
+        { x: 3, y: 7 },
+        { x: 4, y: 4 },
+        { x: 5, y: 9 },
+        { x: 6, y: 3 },
+        { x: 7, y: 8 },
+        { x: 8, y: 1 },
+      ],
+    },
+  ]}
+  calculateRegressionLine
+  showResiduals
+  regressionLineStyle={{ color: "var(--chart-4)" }}
+/>
+
+When the points are scattered randomly without a clear linear pattern, the <InlineMath math="r" /> value will be close to 0.
+
+## How is r Calculated?
+
+The Pearson correlation coefficient (<InlineMath math="r" />) essentially measures how **synchronously** two variables (X and Y) move relative to their own variations.
+
+**Imagine this:**
+
+1.  **Individual Variation:**
+
+    Each variable (X and Y) has its own variability. Some values fluctuate a lot (large variation), while others are stable (small variation). This is measured by <InlineMath math="SS_{xx}" /> for X and <InlineMath math="SS_{yy}" /> for Y (formulas below).
+
+2.  **Joint Variation (Covariance):**
+
+    We also need to know how X and Y vary _together_. When X increases, does Y also tend to increase? Or decrease? This measure of joint variation is called **covariance**, calculated using <InlineMath math="SS_{xy}" />.
+
+    - If <InlineMath math="SS_{xy}" /> is large and positive: X and Y often move in the same direction.
+    - If <InlineMath math="SS_{xy}" /> is large and negative: X and Y often move in opposite directions.
+    - If <InlineMath math="SS_{xy}" /> is close to zero: No clear pattern of joint movement.
+
+3.  **Standardizing the Measure:**
+
+    The problem is that the value of <InlineMath math="SS_{xy}" /> (covariance) is heavily influenced by the units of the data. For example, the covariance between height (cm) and weight (kg) will have a different value if we measure height in meters and weight in grams, even if the relationship is the same.
+
+    To overcome this, we need to **standardize** the covariance measure. This is done by **dividing the covariance (<InlineMath math="SS_{xy}" />) by a measure of the individual variations** (adjusted using square roots: <InlineMath math="\sqrt{SS_{xx} SS_{yy}}" />).
+
+    <BlockMath math="r = \frac{\text{How much X and Y vary together}}{\text{Standardized measure of individual X and Y variations}} = \frac{SS_{xy}}{\sqrt{SS_{xx} SS_{yy}}}" />
+
+The result of this division is **<InlineMath math="r" />**, the Pearson Correlation Coefficient. Because it's standardized, its value will always be between -1 and +1, regardless of the original data units. This allows us to compare the strength of linear relationships between different pairs of variables.
+
+So, the value of <InlineMath math="r" /> is determined by comparing how strongly X and Y move together relative to how much they move individually.
+
+## Product Moment Correlation Formula
+
+To calculate the value of <InlineMath math="r" /> precisely, we use formulas involving the **Sum of Squares**:
+
+<BlockMath math="r = \frac{SS_{xy}}{\sqrt{SS_{xx} SS_{yy}}}" />
+
+**What are <InlineMath math="SS_{xy}" />, <InlineMath math="SS_{xx}" />, and <InlineMath math="SS_{yy}" />?**
+
+These measure how varied our data is:
+
+1.  **<InlineMath math="SS_{xx}" /> (Sum of Squares for x):** Measures how spread out the x data is from its mean.
+
+    <BlockMath math="SS_{xx} = \sum (x - \bar{x})^2 = \sum x^2 - \frac{(\sum x)^2}{n}" />
+
+2.  **<InlineMath math="SS_{yy}" /> (Sum of Squares for y):** Measures how spread out the y data is from its mean.
+
+    <BlockMath math="SS_{yy} = \sum (y - \bar{y})^2 = \sum y^2 - \frac{(\sum y)^2}{n}" />
+
+3.  **<InlineMath math="SS_{xy}" /> (Sum of Products of deviations for x and y):** Measures how x and y vary _together_.
+    <BlockMath math="SS_{xy} = \sum (x - \bar{x})(y - \bar{y}) = \sum xy - \frac{(\sum x)(\sum y)}{n}" />
+
+Key:
+
+- <InlineMath math="n" />: Number of data pairs (x, y).
+- <InlineMath math="\sum x" />, <InlineMath math="\sum y" />: Sum of all x and y
+  values.
+- <InlineMath math="\sum x^2" />, <InlineMath math="\sum y^2" />: Sum of the squares
+  of each x and y value.
+- <InlineMath math="\sum xy" />: Sum of the product of each x and y pair.
+- <InlineMath math="\bar{x}" />, <InlineMath math="\bar{y}" />: Mean of x and y values.
+
+By calculating these three SS values and plugging them into the formula for <InlineMath math="r" />, we get the Product Moment Correlation Coefficient.
+
+## Interpreting the Value of r
+
+Once we have the value of <InlineMath math="r" />, we can interpret its strength and direction using the following general guidelines:
+
+| Value of <InlineMath math="r" />      | Correlation Strength  | Description                                        |
+| :------------------------------------ | :-------------------- | :------------------------------------------------- |
+| <InlineMath math="1" />               | Perfect Positive      | All points lie exactly on an upward sloping line.  |
+| <InlineMath math="0.7 \le r < 1" />   | Strong Positive       | Clear and strong positive linear relationship.     |
+| <InlineMath math="0.3 < r < 0.7" />   | Moderate Positive     | Moderately visible positive linear relationship.   |
+| <InlineMath math="0 < r \le 0.3" />   | Weak Positive         | Very low positive linear relationship.             |
+| <InlineMath math="0" />               | No Linear Correlation | No linear relationship at all.                     |
+| <InlineMath math="-0.3 \le r < 0" />  | Weak Negative         | Very low negative linear relationship.             |
+| <InlineMath math="-0.7 < r < -0.3" /> | Moderate Negative     | Moderately visible negative linear relationship.   |
+| <InlineMath math="-1 < r \le -0.7" /> | Strong Negative       | Clear and strong negative linear relationship.     |
+| <InlineMath math="-1" />              | Perfect Negative      | All points lie exactly on a downward sloping line. |
