@@ -1,6 +1,115 @@
+import { ScatterDiagram } from "../../_shared/scatter-diagram";
+
 export const metadata = {
   title: "Koefisien Determinasi",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/30/2025",
   subject: "Statistika",
 };
+
+## Apa Itu Koefisien Determinasi?
+
+Setelah kita menemukan garis regresi linear yang paling pas (_best-fit_) untuk data kita, pertanyaan selanjutnya adalah: **seberapa baik garis tersebut benar-benar mewakili atau menjelaskan data kita?**
+
+Ukuran yang menjawab pertanyaan ini adalah **Koefisien Determinasi**, yang dilambangkan dengan **<InlineMath math="r^2" />** (dibaca: r-kuadrat).
+
+Sederhananya, <InlineMath math="r^2" /> memberitahu kita **proporsi atau persentase** dari variasi (naik-turunnya nilai) pada variabel dependen (Y) yang **dapat dijelaskan** oleh variasi pada variabel independen (X) menggunakan model regresi linear kita.
+
+## Koefisien Determinasi dari Diagram Pencar
+
+Nilai <InlineMath math="r^2" /> sangat berkaitan dengan seberapa dekat titik-titik data mengumpul di sekitar garis regresi:
+
+1. **<InlineMath math="r^2" /> Tinggi (mendekati 1 atau 100%)**
+
+   <ScatterDiagram
+     title={
+       <>
+         <InlineMath math="r^2" /> Tinggi
+       </>
+     }
+     description="Titik-titik data sangat dekat dengan garis regresi."
+     xAxisLabel="Variabel X"
+     yAxisLabel="Variabel Y"
+     datasets={[
+       {
+         name: "Data",
+         color: "var(--chart-1)",
+         points: [
+           { x: 1, y: 2 },
+           { x: 2, y: 3.1 },
+           { x: 3, y: 3.9 },
+           { x: 4, y: 5.2 },
+           { x: 5, y: 6.1 },
+           { x: 6, y: 6.8 },
+           { x: 7, y: 8.1 },
+           { x: 8, y: 9.0 },
+         ],
+       },
+     ]}
+     calculateRegressionLine
+     showResiduals
+     regressionLineStyle={{ color: "var(--chart-4)" }}
+   />
+
+   Lihat bagaimana titik-titik data di atas sangat rapat dan dekat dengan garis regresi? Ini menunjukkan nilai <InlineMath math="r^2" /> yang tinggi (misalnya, mungkin sekitar 0.95 atau 95%). Artinya, sebagian besar variasi nilai Y _dapat dijelaskan_ dengan baik oleh garis regresi (atau oleh variabel X).
+
+2. **<InlineMath math="r^2" /> Rendah (mendekati 0 atau 0%)**
+
+   <ScatterDiagram
+     title={
+       <>
+         <InlineMath math="r^2" /> Rendah
+       </>
+     }
+     description="Titik-titik data tersebar jauh dari garis regresi."
+     xAxisLabel="Variabel X"
+     yAxisLabel="Variabel Y"
+     datasets={[
+       {
+         name: "Data",
+         color: "var(--chart-2)",
+         points: [
+           { x: 1, y: 1 },
+           { x: 2, y: 4 },
+           { x: 3, y: 2 },
+           { x: 4, y: 6 },
+           { x: 5, y: 5 },
+           { x: 6, y: 8 },
+           { x: 7, y: 6 },
+           { x: 8, y: 9 },
+         ],
+       },
+     ]}
+     calculateRegressionLine
+     showResiduals
+     regressionLineStyle={{ color: "var(--chart-4)" }}
+   />
+
+   Bandingkan dengan diagram ini. Titik-titiknya lebih tersebar jauh dari garis regresi (garis residunya lebih panjang-panjang). Ini menandakan nilai <InlineMath math="r^2" /> yang rendah (misalnya, mungkin sekitar 0.40 atau 40%). Artinya, garis regresi ini _kurang baik_ dalam menjelaskan variasi nilai Y; hanya sebagian kecil variasi Y yang bisa dijelaskan oleh X melalui model ini.
+
+## Menghitung Koefisien Determinasi
+
+Cara paling mudah menghitung <InlineMath math="r^2" /> adalah dengan **mengkuadratkan Koefisien Korelasi (<InlineMath math="r" />)** yang sudah kita pelajari sebelumnya.
+
+<BlockMath math="r^2 = (r)^2" />
+
+Jadi, jika kamu sudah menghitung nilai <InlineMath math="r" />, tinggal kuadratkan saja!
+
+Karena nilai <InlineMath math="r" /> selalu antara -1 dan +1 (<InlineMath math="-1 \le r \le 1" />), maka nilai <InlineMath math="r^2" /> akan selalu berada di antara 0 dan 1.
+
+<BlockMath math="0 \le r^2 \le 1" />
+
+**Secara Matematis (menggunakan Sum of Squares):**
+
+Nilai <InlineMath math="r^2" /> juga bisa dihitung langsung menggunakan nilai-nilai Jumlah Kuadrat (Sum of Squares) yang digunakan untuk menghitung <InlineMath math="r" />:
+
+<BlockMath math="r^2 = \frac{(SS_{xy})^2}{SS_{xx} SS_{yy}}" />
+
+## Interpretasi sebagai Persentase
+
+Nilai <InlineMath math="r^2" /> sering diubah menjadi persentase (dengan dikalikan 100) untuk interpretasi yang lebih mudah.
+
+- Jika <InlineMath math="r^2 = 0.81" />, artinya **81%** dari total variasi variabel Y dapat dijelaskan oleh variasi variabel X melalui model regresi linear.
+- Sisa variasinya (<InlineMath math="1 - r^2" /> atau 19% dalam contoh ini) dijelaskan oleh faktor-faktor lain yang tidak ada dalam model (bisa jadi variabel lain, atau _random error_).
+
+Semakin tinggi persentase <InlineMath math="r^2" />, semakin baik model regresi linear kita dalam menjelaskan hubungan antara X dan Y.

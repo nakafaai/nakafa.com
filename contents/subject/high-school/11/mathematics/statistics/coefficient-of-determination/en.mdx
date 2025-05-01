@@ -1,6 +1,115 @@
+import { ScatterDiagram } from "../../_shared/scatter-diagram";
+
 export const metadata = {
   title: "Coefficient of Determination",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/30/2025",
   subject: "Statistics",
 };
+
+## What is the Coefficient of Determination?
+
+After finding the best-fit linear regression line for our data, the next question is: **how well does that line actually represent or explain our data?**
+
+The measure that answers this question is the **Coefficient of Determination**, denoted as **<InlineMath math="r^2" />** (read: r-squared).
+
+Simply put, <InlineMath math="r^2" /> tells us the **proportion or percentage** of the variation (ups and downs in values) in the dependent variable (Y) that **can be explained** by the variation in the independent variable (X) using our linear regression model.
+
+## Coefficient of Determination from a Scatter Diagram
+
+The value of <InlineMath math="r^2" /> is closely related to how tightly the data points cluster around the regression line:
+
+1. **High <InlineMath math="r^2" /> (approaching 1 or 100%)**
+
+   <ScatterDiagram
+     title={
+       <>
+         High <InlineMath math="r^2" />
+       </>
+     }
+     description="Data points are very close to the regression line."
+     xAxisLabel="Variable X"
+     yAxisLabel="Variable Y"
+     datasets={[
+       {
+         name: "Data",
+         color: "var(--chart-1)",
+         points: [
+           { x: 1, y: 2 },
+           { x: 2, y: 3.1 },
+           { x: 3, y: 3.9 },
+           { x: 4, y: 5.2 },
+           { x: 5, y: 6.1 },
+           { x: 6, y: 6.8 },
+           { x: 7, y: 8.1 },
+           { x: 8, y: 9.0 },
+         ],
+       },
+     ]}
+     calculateRegressionLine
+     showResiduals
+     regressionLineStyle={{ color: "var(--chart-4)" }}
+   />
+
+   See how the data points above are very tightly packed and close to the regression line? This indicates a high <InlineMath math="r^2" /> value (for example, maybe around 0.95 or 95%). This means that most of the variation in Y values _can be explained_ well by the regression line (or by variable X).
+
+2. **Low <InlineMath math="r^2" /> (approaching 0 or 0%)**
+
+   <ScatterDiagram
+     title={
+       <>
+         Low <InlineMath math="r^2" />
+       </>
+     }
+     description="Data points are scattered far from the regression line."
+     xAxisLabel="Variable X"
+     yAxisLabel="Variable Y"
+     datasets={[
+       {
+         name: "Data",
+         color: "var(--chart-2)",
+         points: [
+           { x: 1, y: 1 },
+           { x: 2, y: 4 },
+           { x: 3, y: 2 },
+           { x: 4, y: 6 },
+           { x: 5, y: 5 },
+           { x: 6, y: 8 },
+           { x: 7, y: 6 },
+           { x: 8, y: 9 },
+         ],
+       },
+     ]}
+     calculateRegressionLine
+     showResiduals
+     regressionLineStyle={{ color: "var(--chart-4)" }}
+   />
+
+   Compare this with this diagram. The points are more spread out from the regression line (the residual lines are longer). This indicates a low <InlineMath math="r^2" /> value (for example, maybe around 0.40 or 40%). This means that this regression line is _not very good_ at explaining the variation in Y values; only a small portion of the variation in Y can be explained by X through this model.
+
+## Calculating the Coefficient of Determination
+
+The easiest way to calculate <InlineMath math="r^2" /> is by **squaring the Correlation Coefficient (<InlineMath math="r" />)** that we learned about earlier.
+
+<BlockMath math="r^2 = (r)^2" />
+
+So, if you've already calculated the value of <InlineMath math="r" />, just square it!
+
+Since the value of <InlineMath math="r" /> is always between -1 and +1 (<InlineMath math="-1 \le r \le 1" />), the value of <InlineMath math="r^2" /> will always be between 0 and 1.
+
+<BlockMath math="0 \le r^2 \le 1" />
+
+**Mathematically (using Sum of Squares):**
+
+The value of <InlineMath math="r^2" /> can also be calculated directly using the Sum of Squares values used to calculate <InlineMath math="r" />:
+
+<BlockMath math="r^2 = \frac{(SS_{xy})^2}{SS_{xx} SS_{yy}}" />
+
+## Interpretation as a Percentage
+
+The value of <InlineMath math="r^2" /> is often converted into a percentage (by multiplying by 100) for easier interpretation.
+
+- If <InlineMath math="r^2 = 0.81" />, it means that **81%** of the total variation in variable Y can be explained by the variation in variable X through the linear regression model.
+- The remaining variation (<InlineMath math="1 - r^2" /> or 19% in this example) is explained by other factors not included in the model (could be other variables, or _random error_).
+
+The higher the percentage of <InlineMath math="r^2" />, the better our linear regression model is at explaining the relationship between X and Y.
