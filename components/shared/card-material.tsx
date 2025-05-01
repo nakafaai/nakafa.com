@@ -46,10 +46,7 @@ export function CardMaterial({ material }: Props) {
               </a>
             </CardTitle>
             {material.description && (
-              <CardDescription
-                title={material.description}
-                className="line-clamp-1"
-              >
+              <CardDescription title={material.description}>
                 {material.description}
               </CardDescription>
             )}
