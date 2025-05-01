@@ -105,38 +105,40 @@ Jika vektor <InlineMath math="\vec{a}" /> ekuivalen dengan vektor <InlineMath ma
 
 Jika vektor <InlineMath math="\vec{a}" /> ekuivalen dengan vektor <InlineMath math="\vec{b}" /> dan vektor <InlineMath math="\vec{b}" /> ekuivalen dengan vektor <InlineMath math="\vec{c}" />, maka vektor <InlineMath math="\vec{a}" /> ekuivalen dengan vektor <InlineMath math="\vec{c}" />.
 
-<BlockMath math="\text{Jika } \vec{a} \equiv \vec{b} \text{ dan } \vec{b} \equiv \vec{c} \text{, maka } \vec{a} \equiv \vec{c}" />
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Jika } \vec{a} \equiv \vec{b} \text{ dan } \vec{b} \equiv \vec{c} \text{, maka } \vec{a} \equiv \vec{c}" />
 
-<Vector3d
-  title="Sifat Transitif Vektor Ekuivalen"
-  description={
-    <>
-      Tiga vektor yang ekuivalen: jika <InlineMath math="a \equiv b" /> dan{" "}
-      <InlineMath math="b \equiv c" />, maka <InlineMath math="a \equiv c" />.
-    </>
-  }
-  vectors={[
-    {
-      from: [0, 0, 0],
-      to: [2, 2, 0],
-      color: "#f59e0b", // Amber-500
-      label: "a",
-    },
-    {
-      from: [1, 1, 2],
-      to: [3, 3, 2],
-      color: "#10b981", // Emerald-500
-      label: "b",
-    },
-    {
-      from: [2, 0, 1],
-      to: [4, 2, 1],
-      color: "#ec4899", // Pink-500
-      label: "c",
-    },
-  ]}
-  cameraPosition={[7, 5, 7]}
-/>
+  <Vector3d
+    title="Sifat Transitif Vektor Ekuivalen"
+    description={
+      <>
+        Tiga vektor yang ekuivalen: jika <InlineMath math="a \equiv b" /> dan{" "}
+        <InlineMath math="b \equiv c" />, maka <InlineMath math="a \equiv c" />.
+      </>
+    }
+    vectors={[
+      {
+        from: [0, 0, 0],
+        to: [2, 2, 0],
+        color: "#f59e0b", // Amber-500
+        label: "a",
+      },
+      {
+        from: [1, 1, 2],
+        to: [3, 3, 2],
+        color: "#10b981", // Emerald-500
+        label: "b",
+      },
+      {
+        from: [2, 0, 1],
+        to: [4, 2, 1],
+        color: "#ec4899", // Pink-500
+        label: "c",
+      },
+    ]}
+    cameraPosition={[7, 5, 7]}
+  />
+</div>
 
 ## Contoh Vektor Ekuivalen
 

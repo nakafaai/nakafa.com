@@ -105,38 +105,40 @@ If vector <InlineMath math="\vec{a}" /> is equivalent to vector <InlineMath math
 
 If vector <InlineMath math="\vec{a}" /> is equivalent to vector <InlineMath math="\vec{b}" /> and vector <InlineMath math="\vec{b}" /> is equivalent to vector <InlineMath math="\vec{c}" />, then vector <InlineMath math="\vec{a}" /> is equivalent to vector <InlineMath math="\vec{c}" />.
 
-<BlockMath math="\text{If } \vec{a} \equiv \vec{b} \text{ and } \vec{b} \equiv \vec{c} \text{, then } \vec{a} \equiv \vec{c}" />
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{If } \vec{a} \equiv \vec{b} \text{ and } \vec{b} \equiv \vec{c} \text{, then } \vec{a} \equiv \vec{c}" />
 
-<Vector3d
-  title="Transitive Property of Equivalent Vectors"
-  description={
-    <>
-      Three equivalent vectors: if <InlineMath math="a \equiv b" /> and{" "}
-      <InlineMath math="b \equiv c" />, then <InlineMath math="a \equiv c" />.
-    </>
-  }
-  vectors={[
-    {
-      from: [0, 0, 0],
-      to: [2, 2, 0],
-      color: "#f59e0b", // Amber-500
-      label: "a",
-    },
-    {
-      from: [1, 1, 2],
-      to: [3, 3, 2],
-      color: "#10b981", // Emerald-500
-      label: "b",
-    },
-    {
-      from: [2, 0, 1],
-      to: [4, 2, 1],
-      color: "#ec4899", // Pink-500
-      label: "c",
-    },
-  ]}
-  cameraPosition={[7, 5, 7]}
-/>
+  <Vector3d
+    title="Transitive Property of Equivalent Vectors"
+    description={
+      <>
+        Three equivalent vectors: if <InlineMath math="a \equiv b" /> and{" "}
+        <InlineMath math="b \equiv c" />, then <InlineMath math="a \equiv c" />.
+      </>
+    }
+    vectors={[
+      {
+        from: [0, 0, 0],
+        to: [2, 2, 0],
+        color: "#f59e0b", // Amber-500
+        label: "a",
+      },
+      {
+        from: [1, 1, 2],
+        to: [3, 3, 2],
+        color: "#10b981", // Emerald-500
+        label: "b",
+      },
+      {
+        from: [2, 0, 1],
+        to: [4, 2, 1],
+        color: "#ec4899", // Pink-500
+        label: "c",
+      },
+    ]}
+    cameraPosition={[7, 5, 7]}
+  />
+</div>
 
 ## Examples of Equivalent Vectors
 
