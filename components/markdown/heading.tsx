@@ -15,18 +15,18 @@ export function Heading({
     <Tag
       id={id}
       className={cn(
-        "group mt-10 mb-6 flex scroll-mt-24 items-center font-medium leading-tight tracking-tight",
+        "mt-10 mb-6 flex scroll-mt-24 items-center font-medium leading-tight tracking-tight",
         className
       )}
       {...props}
     >
-      <span className="inline-block text-balance">{props.children}</span>
       <a
         href={`#${id}`}
-        className="invisible ml-2 shrink-0 text-muted-foreground group-hover:visible"
+        className="group inline-flex items-center gap-2"
         aria-label={`Link to ${props.children}`}
       >
-        <LinkIcon className="size-4" />
+        <span className="text-pretty">{props.children}</span>
+        <LinkIcon className="invisible size-4 text-muted-foreground group-hover:visible" />
       </a>
     </Tag>
   );
