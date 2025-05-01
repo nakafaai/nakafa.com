@@ -115,7 +115,7 @@ const enMaterials: MaterialList = [
     ],
   },
   {
-    title: "Complex Numbers",
+    title: "Complex Number",
     description:
       "Mathematical extension that enables modern electronics and signal processing.",
     href: `${BASE_PATH}/complex-number`,
