@@ -33,7 +33,7 @@ export function CardMaterial({ material }: Props) {
               <h2
                 id={id}
                 title={material.title}
-                className="inline-block scroll-mt-24"
+                className="inline-block scroll-mt-28"
               >
                 {material.title}
               </h2>
@@ -78,7 +78,7 @@ export function CardMaterial({ material }: Props) {
                 key={item.href}
                 href={item.href}
                 prefetch
-                className="group flex w-full scroll-mt-24 items-center gap-2 border-t px-6 py-3 transition-colors last:rounded-b-xl last:pb-6 hover:bg-accent/50"
+                className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-3 transition-colors last:rounded-b-xl last:pb-6 hover:bg-accent/50"
               >
                 <h3 title={item.title} className="truncate">
                   {item.title}
