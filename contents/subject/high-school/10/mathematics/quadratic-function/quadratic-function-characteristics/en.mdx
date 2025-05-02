@@ -26,7 +26,11 @@ Examples of functions with <InlineMath math="a > 0" />:
 
 <div className="mt-4">
   <LineEquation
-    title="Quadratic Function Graph with a > 0"
+    title={
+      <>
+        Quadratic Function Graph with <InlineMath math="a > 0" />
+      </>
+    }
     description="Graph opens upward and has a minimum point."
     smooth={true}
     cameraPosition={[5, 5, 12]}
@@ -60,7 +64,11 @@ Examples of functions with <InlineMath math="a < 0" />:
 
 <div className="mt-4">
   <LineEquation
-    title="Quadratic Function Graph with a < 0"
+    title={
+      <>
+        Quadratic Function Graph with <InlineMath math="a < 0" />
+      </>
+    }
     description="Graph opens downward and has a maximum point."
     smooth={true}
     cameraPosition={[2, 2, 12]}
@@ -159,8 +167,18 @@ Let's graph the function <InlineMath math="f(x) = x^2 - 2x - 3" />:
 
 <div className="mt-4">
   <LineEquation
-    title="Graph of f(x) = x² - 2x - 3"
-    description="Parabola opens upward with vertex at (1, -4) and x-intercepts at (-1, 0) and (3, 0)."
+    title={
+      <>
+        Graph of <InlineMath math="f(x) = x^2 - 2x - 3" />
+      </>
+    }
+    description={
+      <>
+        Parabola opens upward with vertex at <InlineMath math="(1, -4)" /> and
+        x-intercepts at <InlineMath math="(-1, 0)" /> and{" "}
+        <InlineMath math="(3, 0)" />.
+      </>
+    }
     smooth={true}
     cameraPosition={[2, 1, 15]}
     data={[
@@ -227,8 +245,16 @@ Let's graph the function <InlineMath math="f(x) = -x^2" />:
 
 <div className="mt-4">
   <LineEquation
-    title="Graph of f(x) = -x²"
-    description="Parabola opens downward with vertex at (0, 0)."
+    title={
+      <>
+        Graph of <InlineMath math="f(x) = -x²" />
+      </>
+    }
+    description={
+      <>
+        Parabola opens downward with vertex at <InlineMath math="(0, 0)" />.
+      </>
+    }
     smooth={true}
     cameraPosition={[2, 2, 12]}
     data={[

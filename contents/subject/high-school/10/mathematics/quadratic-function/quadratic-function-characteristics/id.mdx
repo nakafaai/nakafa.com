@@ -26,7 +26,11 @@ Contoh fungsi dengan <InlineMath math="a > 0" />:
 
 <div className="mt-4">
   <LineEquation
-    title="Grafik Fungsi Kuadrat dengan a > 0"
+    title={
+      <>
+        Grafik Fungsi Kuadrat dengan <InlineMath math="a > 0" />
+      </>
+    }
     description="Grafik terbuka ke atas dan memiliki titik minimum."
     smooth={true}
     cameraPosition={[5, 5, 12]}
@@ -60,7 +64,11 @@ Contoh fungsi dengan <InlineMath math="a < 0" />:
 
 <div className="mt-4">
   <LineEquation
-    title="Grafik Fungsi Kuadrat dengan a < 0"
+    title={
+      <>
+        Grafik Fungsi Kuadrat dengan <InlineMath math="a < 0" />
+      </>
+    }
     description="Grafik terbuka ke bawah dan memiliki titik maksimum."
     smooth={true}
     cameraPosition={[2, 2, 12]}
@@ -159,10 +167,18 @@ Mari kita gambar grafik fungsi <InlineMath math="f(x) = x^2 - 2x - 3" />:
 
 <div className="mt-4">
   <LineEquation
-    title="Grafik f(x) = x² - 2x - 3"
-    description="Parabola terbuka ke atas dengan titik puncak (1, -4) dan titik potong dengan sumbu X (-1, 0) dan (3, 0)."
-    smooth={true}
-    cameraPosition={[2, 1, 15]}
+    title={
+      <>
+        Grafik <InlineMath math="f(x) = x^2 - 2x - 3" />
+      </>
+    }
+    description={
+      <>
+        Parabola terbuka ke atas dengan titik puncak{" "}
+        <InlineMath math="(1, -4)" /> dan titik potong dengan sumbu X{" "}
+        <InlineMath math="(-1, 0)" /> dan <InlineMath math="(3, 0)" />.
+      </>
+    }
     data={[
       {
         points: Array.from({ length: 7 }, (_, i) => {
@@ -227,10 +243,17 @@ Mari kita gambar grafik fungsi <InlineMath math="f(x) = -x^2" />:
 
 <div className="mt-4">
   <LineEquation
-    title="Grafik f(x) = -x²"
-    description="Parabola terbuka ke bawah dengan titik puncak (0, 0)."
-    smooth={true}
-    cameraPosition={[2, 2, 12]}
+    title={
+      <>
+        Grafik <InlineMath math="f(x) = -x^2" />
+      </>
+    }
+    description={
+      <>
+        Parabola terbuka ke bawah dengan titik puncak{" "}
+        <InlineMath math="(0, 0)" />.
+      </>
+    }
     data={[
       {
         points: Array.from({ length: 7 }, (_, i) => {

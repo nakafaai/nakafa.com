@@ -84,8 +84,17 @@ The resulting quadratic function is:
 
 <div className="mt-4">
   <LineEquation
-    title="Graph of f(x) = x² - 2x - 3"
-    description="Parabola passing through points K(-1, 0), L(0, -3), and M(1, -4)"
+    title={
+      <>
+        Graph of <InlineMath math="f(x) = x^2 - 2x - 3" />
+      </>
+    }
+    description={
+      <>
+        Parabola passing through points <InlineMath math="K(-1, 0)" />,{" "}
+        <InlineMath math="L(0, -3)" />, and <InlineMath math="M(1, -4)" />.
+      </>
+    }
     smooth={true}
     cameraPosition={[2, 3, 8]}
     data={[
@@ -152,8 +161,17 @@ The resulting quadratic function is:
 
 <div className="mt-4">
   <LineEquation
-    title="Graph of f(x) = (x - 2)²"
-    description="Parabola with vertex at (2, 0) and passing through point (4, 4)"
+    title={
+      <>
+        Graph of <InlineMath math="f(x) = (x - 2)^2" />
+      </>
+    }
+    description={
+      <>
+        Parabola with vertex at <InlineMath math="(2, 0)" /> and passing through
+        point <InlineMath math="(4, 4)" />.
+      </>
+    }
     smooth={true}
     cameraPosition={[6, 6, 8]}
     data={[
@@ -215,8 +233,18 @@ The resulting quadratic function is:
 
 <div className="mt-4">
   <LineEquation
-    title="Graph of f(x) = (x + 2)(x - 3)"
-    description="Parabola with roots at x = -2 and x = 3, passing through point (1, -6)"
+    title={
+      <>
+        Graph of <InlineMath math="f(x) = (x + 2)(x - 3)" />
+      </>
+    }
+    description={
+      <>
+        Parabola with roots at <InlineMath math="x = -2" /> and{" "}
+        <InlineMath math="x = 3" />, passing through point{" "}
+        <InlineMath math="(1, -6)" />.
+      </>
+    }
     smooth={true}
     cameraPosition={[4, 5, 10]}
     data={[
@@ -318,10 +346,17 @@ The resulting quadratic function is:
 
 <div className="mt-4">
   <LineEquation
-    title="Graph of f(x) = (1/16)x²"
-    description="Parabola passing through points (0, 0), (4, 1), and (-4, 1)"
-    smooth={true}
-    cameraPosition={[0, 0.5, 8]}
+    title={
+      <>
+        Graph of <InlineMath math="f(x) = \frac{1}{16}x^2" />
+      </>
+    }
+    description={
+      <>
+        Parabola passing through points <InlineMath math="(0, 0)" />,{" "}
+        <InlineMath math="(4, 1)" />, and <InlineMath math="(-4, 1)" />.
+      </>
+    }
     data={[
       {
         points: Array.from({ length: 13 }, (_, i) => {
