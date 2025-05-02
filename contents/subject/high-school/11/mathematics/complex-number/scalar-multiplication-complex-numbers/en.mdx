@@ -1,6 +1,205 @@
+import { LineEquation } from "@/components/contents/line-equation";
+import { getColor } from "@/lib/utils/color";
+
 export const metadata = {
   title: "Scalar Multiplication of Complex Numbers",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/01/2025",
   subject: "Complex Number",
 };
+
+## What is Scalar Multiplication?
+
+Scalar multiplication involves multiplying a complex number by a real number (a scalar).
+
+<LineEquation
+  title="Visualization of Scalar Multiplication"
+  description={
+    <>
+      Notice how the vector <InlineMath math="z = 1+2i" /> changes when
+      multiplied by the scalar <InlineMath math="c=2" /> and{" "}
+      <InlineMath math="c=-0.5" />.
+    </>
+  }
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    // Original vector z
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 1, y: 2, z: 0 },
+      ],
+      color: getColor("SKY"),
+      labels: [{ text: "z", at: 1, offset: [0.5, 0.5, 0] }],
+      cone: { position: "end" },
+    },
+    // Vector 2z
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2, y: 4, z: 0 }, // 2 * (1+2i) = 2+4i
+      ],
+      color: getColor("EMERALD"),
+      labels: [{ text: "2z", at: 1, offset: [0.5, 0.5, 0] }],
+      cone: { position: "end" },
+    },
+    // Vector -0.5z
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: -0.5, y: -1, z: 0 }, // -0.5 * (1+2i) = -0.5 - i
+      ],
+      color: getColor("ROSE"),
+      labels: [{ text: "-0.5z", at: 1, offset: [-0.5, -0.5, 0] }],
+      cone: { position: "end" },
+    },
+  ]}
+/>
+
+From the visualization above, we can see:
+
+- Multiplying <InlineMath math="z" /> by a scalar <InlineMath math="c > 1" /> (like 2) will **stretch** the vector <InlineMath math="z" /> in the same direction.
+- Multiplying <InlineMath math="z" /> by a scalar <InlineMath math="0 < c < 1" /> will **shrink** the vector <InlineMath math="z" /> in the same direction.
+- Multiplying <InlineMath math="z" /> by a scalar <InlineMath math="c < 0" /> (like -0.5) will **reverse the direction** of the vector <InlineMath math="z" /> (by 180 degrees) and change its length according to the value of <InlineMath math="|c|" />.
+
+## Mathematical Definition
+
+If <InlineMath math="z = x + iy" /> is a complex number and <InlineMath math="c" /> is a scalar (a real number), then their scalar multiplication is:
+
+<BlockMath math="cz = c(x + iy) = (cx) + i(cy)" />
+
+This means we simply multiply the scalar <InlineMath math="c" /> by the real part (<InlineMath math="x" />) and the imaginary part (<InlineMath math="y" />) separately.
+
+### Calculation Examples
+
+If <InlineMath math="z = -3 + 4i" /> and <InlineMath math="c = 3" />, then:
+
+<BlockMath math="cz = 3(-3 + 4i) = 3(-3) + i(3 \times 4) = -9 + 12i" />
+
+If <InlineMath math="z = 5 - i" /> and <InlineMath math="c = -2" />, then:
+
+<BlockMath math="cz = -2(5 - i) = -2(5) + i(-2 \times -1) = -10 + 2i" />
+
+## Visualization Examples
+
+Let's look at a few more examples to clarify the effect of scalar multiplication.
+
+### Positive Scalar (> 1)
+
+<LineEquation
+  title={
+    <>
+      Multiplication by Scalar <InlineMath math="c = 1.5" />
+    </>
+  }
+  description={
+    <>
+      Vector <InlineMath math="z = -2 + i" /> is stretched in the same direction
+      when multiplied by <InlineMath math="c = 1.5" />, becoming{" "}
+      <InlineMath math="1.5z = -3 + 1.5i" />.
+    </>
+  }
+  cameraPosition={[0, 0, 8]}
+  showZAxis={false}
+  data={[
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: -2, y: 1, z: 0 },
+      ],
+      color: getColor("VIOLET"),
+      labels: [{ text: "z", at: 1, offset: [0.5, 0.5, 0] }],
+      cone: { position: "end" },
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: -3, y: 1.5, z: 0 }, // 1.5 * (-2+i)
+      ],
+      color: getColor("LIME"),
+      labels: [{ text: "1.5z", at: 1, offset: [-0.5, 0.5, 0] }],
+      cone: { position: "end" },
+    },
+  ]}
+/>
+
+### Positive Scalar (0 < c < 1)
+
+<LineEquation
+  title={
+    <>
+      Multiplication by Scalar <InlineMath math="c = 0.75" />
+    </>
+  }
+  description={
+    <>
+      Vector <InlineMath math="z = 3 - 2i" /> is shrunk in the same direction
+      when multiplied by <InlineMath math="c = 0.75" />, becoming{" "}
+      <InlineMath math="0.75z = 2.25 - 1.5i" />.
+    </>
+  }
+  cameraPosition={[0, 0, 8]}
+  showZAxis={false}
+  data={[
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: -2, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      labels: [{ text: "z", at: 1, offset: [-0.5, -0.5, 0] }],
+      cone: { position: "end" },
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2.25, y: -1.5, z: 0 }, // 0.75 * (3-2i)
+      ],
+      color: getColor("TEAL"),
+      labels: [{ text: "0.75z", at: 1, offset: [0.5, 1, 0] }],
+      cone: { position: "end" },
+    },
+  ]}
+/>
+
+### Negative Scalar (c = -1)
+
+Multiplication by -1 yields the additive inverse (negative) of the complex number.
+
+<LineEquation
+  title={
+    <>
+      Multiplication by Scalar <InlineMath math="c = -1" /> (Additive Inverse)
+    </>
+  }
+  description={
+    <>
+      Vector <InlineMath math="z = -1 - 3i" /> reverses direction (180°) when
+      multiplied by <InlineMath math="c = -1" />, becoming{" "}
+      <InlineMath math="-z = 1 + 3i" />.
+    </>
+  }
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+  data={[
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: -1, y: -3, z: 0 },
+      ],
+      color: getColor("FUCHSIA"),
+      labels: [{ text: "z", at: 1, offset: [-0.5, -0.5, 0] }],
+      cone: { position: "end" },
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 1, y: 3, z: 0 }, // -1 * (-1-3i)
+      ],
+      color: getColor("YELLOW"),
+      labels: [{ text: "-z", at: 1, offset: [0.5, 0.5, 0] }],
+      cone: { position: "end" },
+    },
+  ]}
+/>
