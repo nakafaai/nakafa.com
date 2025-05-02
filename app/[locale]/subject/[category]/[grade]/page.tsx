@@ -83,10 +83,10 @@ export default async function Page({ params }: Props) {
         locale={locale}
         breadcrumbItems={subjects.map((subject, index) => ({
           "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}${FILE_PATH}`,
+          "@id": `https://nakafa.com/${locale}${subject.href}`,
           position: index + 1,
           name: t(subject.label),
-          item: `https://nakafa.com/${locale}${FILE_PATH}`,
+          item: `https://nakafa.com/${locale}${subject.href}`,
         }))}
       />
       <HeaderContent

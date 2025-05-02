@@ -98,10 +98,10 @@ export default async function Page({ params }: Props) {
         locale={locale}
         breadcrumbItems={materials.map((mat, index) => ({
           "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}${FILE_PATH}`,
+          "@id": `https://nakafa.com/${locale}${mat.href}`,
           position: index + 1,
           name: mat.title,
-          item: `https://nakafa.com/${locale}${FILE_PATH}`,
+          item: `https://nakafa.com/${locale}${mat.href}`,
         }))}
       />
       <LayoutMaterialContent>
