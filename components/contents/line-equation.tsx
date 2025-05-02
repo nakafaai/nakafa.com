@@ -17,6 +17,7 @@ type Props = {
   description: ReactNode;
   data: LineEquationProps[];
   cameraPosition?: [number, number, number];
+  showZAxis?: boolean;
 };
 
 export function LineEquation({
@@ -24,6 +25,7 @@ export function LineEquation({
   description,
   data,
   cameraPosition = [10, 6, 10],
+  showZAxis = true,
 }: Props) {
   return (
     <Card>
@@ -32,7 +34,7 @@ export function LineEquation({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <CoordinateSystem cameraPosition={cameraPosition}>
+        <CoordinateSystem cameraPosition={cameraPosition} showZAxis={showZAxis}>
           {data.map((item, index) => (
             <LineEquation3D key={`line-equation-${index}`} {...item} />
           ))}
