@@ -153,10 +153,6 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/complex-number/inverse-complex-numbers`,
       },
       {
-        title: "Properties of Complex Number Operations",
-        href: `${BASE_PATH}/complex-number/properties-operation-complex-numbers`,
-      },
-      {
         title: "Complex Number Conjugate",
         href: `${BASE_PATH}/complex-number/conjugate-complex-numbers`,
       },

@@ -4,3 +4,112 @@ export const metadata = {
   date: "05/01/2025",
   subject: "Complex Number",
 };
+
+## Basic Operation Properties
+
+Addition and scalar multiplication operations on complex numbers have interesting properties, similar to those of real numbers. These properties help us in performing calculations.
+
+Let <InlineMath math="z_1" />, <InlineMath math="z_2" />, and <InlineMath math="z_3" /> be any complex numbers, and let <InlineMath math="c" /> and <InlineMath math="d" /> be any scalars (real numbers).
+
+## Properties Related to Addition
+
+### Commutativity
+
+The order of addition does not matter; the result remains the same.
+
+<BlockMath math="z_1 + z_2 = z_2 + z_1" />
+
+Example: <InlineMath math="(2+i) + (1-3i) = (1-3i) + (2+i) = 3-2i" />
+
+### Associativity
+
+When adding three complex numbers, the grouping of the addition does not affect the result.
+
+<BlockMath math="(z_1 + z_2) + z_3 = z_1 + (z_2 + z_3)" />
+
+### Additive Identity (Zero Element)
+
+There exists a complex number <InlineMath math="0 = 0 + 0i" /> (zero) such that when added to any complex number <InlineMath math="z_1" />, the result is <InlineMath math="z_1" /> itself.
+
+<BlockMath math="z_1 + 0 = z_1" />
+
+### Additive Inverse (Opposite)
+
+Every complex number <InlineMath math="z_1 = x + iy" /> has an additive inverse (opposite), denoted by <InlineMath math="-z_1 = -x - iy" />, such that their sum is the zero element (0).
+
+<BlockMath math="z_1 + (-z_1) = 0" />
+
+Example:
+
+If <InlineMath math="z_1 = 5-2i" />, then <InlineMath math="-z_1 = -5+2i" />.
+
+Then <InlineMath math="(5-2i) + (-5+2i) = (5-5) + i(-2+2) = 0 + 0i = 0" />.
+
+## Properties Related to Scalar Multiplication and Addition
+
+### Associativity of Scalar Multiplication
+
+The grouping of scalar multiplication does not affect the result.
+
+<BlockMath math="c(dz_1) = (cd)z_1" />
+
+### Distributivity of Scalar over Scalar Addition
+
+A scalar can be distributed over the addition of scalars.
+
+<BlockMath math="(c + d)z_1 = cz_1 + dz_1" />
+
+### Distributivity of Scalar over Complex Addition
+
+A scalar can be distributed over the addition of complex numbers.
+
+<BlockMath math="c(z_1 + z_2) = cz_1 + cz_2" />
+
+### Scalar Multiplicative Identity
+
+Multiplying a complex number by the scalar 1 does not change the complex number.
+
+<BlockMath math="1 z_1 = z_1" />
+
+### Multiplication by Zero Scalar
+
+Multiplying a complex number by the scalar 0 results in the complex number zero.
+
+<BlockMath math="0 z_1 = 0" />
+
+## Using the Operation Properties
+
+These properties can be used to simplify or prove expressions involving complex numbers.
+
+### Example of Using Properties
+
+Show that for any complex number <InlineMath math="z" />, <InlineMath math="4z + (-4)z = 0" /> holds.
+
+**Solution:**
+
+We can use the distributivity of scalar over scalar addition (property f) and the multiplication by zero scalar property (property i).
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4z + (-4)z = (4 + (-4))z \quad \text{(Distributive Property)}" />
+  <BlockMath math="= (0)z \quad \text{(Scalar addition)}" />
+  <BlockMath math="= 0 \quad \text{(Multiplication by Zero Scalar Property)}" />
+</div>
+
+Thus, it is proven that <InlineMath math="4z + (-4)z = 0" />.
+
+## Exercise
+
+Using the properties above, prove that <InlineMath math="3z - \frac{1}{2}(2z) = 2z" /> for any complex number <InlineMath math="z" />.
+
+### Answer Key
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="3z - \frac{1}{2}(2z) = 3z + (-\frac{1}{2})(2z) \quad \text{(Definition of subtraction)}" />
+  <BlockMath math="= 3z + ((-\frac{1}{2}) \times 2)z \quad \text{(Associativity of Scalar Multiplication)}" />
+  <BlockMath math="= 3z + (-1)z \quad \text{(Scalar multiplication)}" />
+  <BlockMath math="= (3 + (-1))z \quad \text{(Distributive Property)}" />
+  <BlockMath math="= (2)z \quad \text{(Scalar addition)}" />
+  <BlockMath math="= 2z" />
+</div>
+
+Thus, it is proven that <InlineMath math="3z - \frac{1}{2}(2z) = 2z" />.

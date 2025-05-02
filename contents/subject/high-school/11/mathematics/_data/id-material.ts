@@ -153,10 +153,6 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/complex-number/inverse-complex-numbers`,
       },
       {
-        title: "Sifat Operasi Bilangan Kompleks",
-        href: `${BASE_PATH}/complex-number/properties-operation-complex-numbers`,
-      },
-      {
         title: "Konjugat Bilangan Kompleks",
         href: `${BASE_PATH}/complex-number/conjugate-complex-numbers`,
       },

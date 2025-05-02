@@ -4,3 +4,112 @@ export const metadata = {
   date: "05/01/2025",
   subject: "Bilangan Kompleks",
 };
+
+## Sifat-sifat Operasi Dasar
+
+Operasi penjumlahan dan perkalian skalar pada bilangan kompleks ternyata punya sifat-sifat menarik, mirip seperti pada bilangan real lho. Sifat-sifat ini membantu kita dalam melakukan perhitungan.
+
+Misalkan <InlineMath math="z_1" />, <InlineMath math="z_2" />, dan <InlineMath math="z_3" /> adalah bilangan kompleks sembarang, serta <InlineMath math="c" /> dan <InlineMath math="d" /> adalah skalar (bilangan real) sembarang.
+
+## Sifat Terkait Penjumlahan
+
+### Komutatif
+
+Urutan penjumlahan tidak penting, hasilnya tetap sama.
+
+<BlockMath math="z_1 + z_2 = z_2 + z_1" />
+
+Contoh: <InlineMath math="(2+i) + (1-3i) = (1-3i) + (2+i) = 3-2i" />
+
+### Asosiatif
+
+Saat menjumlahkan tiga bilangan kompleks, pengelompokan penjumlahannya tidak memengaruhi hasil.
+
+<BlockMath math="(z_1 + z_2) + z_3 = z_1 + (z_2 + z_3)" />
+
+### Identitas Penjumlahan (Elemen Nol)
+
+Ada bilangan kompleks <InlineMath math="0 = 0 + 0i" /> (nol) yang jika dijumlahkan dengan bilangan kompleks <InlineMath math="z_1" /> mana pun, hasilnya adalah <InlineMath math="z_1" /> itu sendiri.
+
+<BlockMath math="z_1 + 0 = z_1" />
+
+### Invers Penjumlahan (Lawan)
+
+Setiap bilangan kompleks <InlineMath math="z_1 = x + iy" /> punya invers penjumlahan (lawan), yaitu <InlineMath math="-z_1 = -x - iy" />, sehingga jika dijumlahkan hasilnya adalah elemen nol (0).
+
+<BlockMath math="z_1 + (-z_1) = 0" />
+
+Contoh:
+
+Jika <InlineMath math="z_1 = 5-2i" />, maka <InlineMath math="-z_1 = -5+2i" />.
+
+Maka <InlineMath math="(5-2i) + (-5+2i) = (5-5) + i(-2+2) = 0 + 0i = 0" />.
+
+## Sifat Terkait Perkalian Skalar dan Penjumlahan
+
+### Asosiatif
+
+Pengelompokan perkalian skalar tidak memengaruhi hasil.
+
+<BlockMath math="c(dz_1) = (cd)z_1" />
+
+### Distributif Skalar terhadap Penjumlahan Skalar
+
+Skalar bisa didistribusikan terhadap penjumlahan skalar.
+
+<BlockMath math="(c + d)z_1 = cz_1 + dz_1" />
+
+### Distributif Skalar terhadap Penjumlahan Kompleks
+
+Skalar bisa didistribusikan terhadap penjumlahan bilangan kompleks.
+
+<BlockMath math="c(z_1 + z_2) = cz_1 + cz_2" />
+
+### Identitas Perkalian Skalar
+
+Mengalikan bilangan kompleks dengan skalar 1 tidak mengubah bilangan kompleks tersebut.
+
+<BlockMath math="1 z_1 = z_1" />
+
+### Perkalian dengan Skalar Nol
+
+Mengalikan bilangan kompleks dengan skalar 0 menghasilkan bilangan kompleks nol.
+
+<BlockMath math="0 z_1 = 0" />
+
+## Menggunakan Sifat-sifat Operasi
+
+Sifat-sifat ini bisa kita gunakan untuk menyederhanakan atau membuktikan ekspresi yang melibatkan bilangan kompleks.
+
+### Contoh Penggunaan Sifat
+
+Tunjukkan bahwa untuk sembarang bilangan kompleks <InlineMath math="z" />, berlaku <InlineMath math="4z + (-4)z = 0" />.
+
+**Penyelesaian:**
+
+Kita bisa gunakan sifat distributif skalar terhadap penjumlahan skalar (sifat f) dan sifat perkalian dengan skalar nol (sifat i).
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4z + (-4)z = (4 + (-4))z \quad \text{(Sifat Distributif)}" />
+  <BlockMath math="= (0)z \quad \text{(Penjumlahan skalar)}" />
+  <BlockMath math="= 0 \quad \text{(Sifat Perkalian Skalar Nol)}" />
+</div>
+
+Jadi, terbukti bahwa <InlineMath math="4z + (-4)z = 0" />.
+
+## Latihan
+
+Dengan menggunakan sifat-sifat di atas, buktikan bahwa <InlineMath math="3z - \frac{1}{2}(2z) = 2z" /> untuk sembarang bilangan kompleks <InlineMath math="z" />.
+
+### Kunci Jawaban
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="3z - \frac{1}{2}(2z) = 3z + (-\frac{1}{2})(2z) \quad \text{(Definisi pengurangan)}" />
+  <BlockMath math="= 3z + ((-\frac{1}{2}) \times 2)z \quad \text{(Sifat Asosiatif Perkalian Skalar)}" />
+  <BlockMath math="= 3z + (-1)z \quad \text{(Perkalian skalar)}" />
+  <BlockMath math="= (3 + (-1))z \quad \text{(Sifat Distributif)}" />
+  <BlockMath math="= (2)z \quad \text{(Penjumlahan skalar)}" />
+  <BlockMath math="= 2z" />
+</div>
+
+Jadi, terbukti bahwa <InlineMath math="3z - \frac{1}{2}(2z) = 2z" />.
