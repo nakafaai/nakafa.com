@@ -1,6 +1,368 @@
+import { LineEquation } from "@/components/contents/line-equation";
+import { getColor } from "@/lib/utils/color";
+
 export const metadata = {
   title: "Bentuk Bilangan Kompleks",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/01/2025",
   subject: "Bilangan Kompleks",
 };
+
+## Bentuk Kartesius
+
+Bilangan kompleks itu bentuknya <InlineMath math="z = x + iy" />, di mana <InlineMath math="x" /> itu bagian real dan <InlineMath math="y" /> itu bagian imajiner. Nah, bentuk <InlineMath math="z = x + iy" /> ini disebut **bentuk Kartesius** atau bentuk persegi panjang.
+
+<BlockMath math="z = x + iy" />
+
+- <InlineMath math="x = \text{Re}(z)" /> (Bagian Real)
+- <InlineMath math="y = \text{Im}(z)" /> (Bagian Imajiner)
+
+Kita juga bisa melihat bilangan kompleks <InlineMath math="z = x + iy" /> sebagai pasangan terurut <InlineMath math="(x, y)" /> pada bidang koordinat. Bidang ini spesial lho, namanya **bidang kompleks** atau diagram Argand.
+
+- Sumbu horizontal (sumbu-x) merepresentasikan bagian **real**.
+- Sumbu vertikal (sumbu-y) merepresentasikan bagian **imajiner**.
+
+### Visualisasi pada Bidang Kompleks
+
+Kita coba gambarkan beberapa bilangan kompleks di bidang kompleks. Setiap bilangan <InlineMath math="z = x + iy" /> digambarkan sebagai titik <InlineMath math="(x, y)" /> dan biasanya direpresentasikan sebagai vektor (panah) dari titik asal (0,0) ke titik tersebut.
+
+<LineEquation
+  title="Bilangan Kompleks di Bidang Kompleks"
+  description="Visualisasi beberapa bilangan kompleks sebagai titik dan vektor pada bidang kompleks."
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+  data={[
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 2, z: 0 },
+      ],
+      color: getColor("ROSE"),
+      labels: [{ text: "z₁ = 3 + 2i", at: 1, offset: [0.5, 0.5, 0] }],
+      showPoints: true,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: -1, y: -1, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      labels: [{ text: "z₂ = -1 - i", at: 1, offset: [-1, -0.5, 0] }],
+      showPoints: true,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2, y: 0, z: 0 },
+      ],
+      color: getColor("VIOLET"),
+      labels: [{ text: "z₃ = 2", at: 1, offset: [0.5, 0.5, 0] }],
+      showPoints: true,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 1, z: 0 },
+      ],
+      color: getColor("AMBER"),
+      labels: [{ text: "z₄ = i", at: 1, offset: [-1, 0.5, 0] }],
+      showPoints: true,
+    },
+  ]}
+/>
+
+## Bentuk Polar (Kutub)
+
+Selain Kartesius, ada cara lain buat menyatakan bilangan kompleks, yaitu **bentuk polar** atau bentuk kutub. Bentuk ini menggunakan:
+
+1.  **Modulus (<InlineMath math="r" />):** Jarak dari titik asal (0,0) ke titik <InlineMath math="(x, y)" /> di bidang kompleks. Nilainya selalu non-negatif.
+2.  **Argumen (<InlineMath math="\theta" />):** Sudut yang dibentuk oleh garis dari titik asal ke titik <InlineMath math="(x, y)" /> dengan sumbu real positif. Sudut ini biasanya diukur dalam radian atau derajat.
+
+Hubungan antara bentuk Kartesius (<InlineMath math="x, y" />) dan bentuk Polar (<InlineMath math="r, \theta" />) bisa kita lihat dari trigonometri dasar:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = r \cos \theta" />
+  <BlockMath math="y = r \sin \theta" />
+</div>
+
+Dari sini, kita bisa cari <InlineMath math="r" /> dan <InlineMath math="\theta" /> jika <InlineMath math="x" /> dan <InlineMath math="y" /> diketahui:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="r = |z| = \sqrt{x^2 + y^2}" />
+  <BlockMath math="\tan \theta = \frac{y}{x}" />
+</div>
+
+Saat mencari <InlineMath math="\theta" /> dari <InlineMath math="\tan \theta" />, perhatikan kuadran tempat titik <InlineMath math="(x, y)" /> berada untuk menentukan sudut yang tepat.
+
+Dengan substitusi <InlineMath math="x" /> dan <InlineMath math="y" /> ke bentuk Kartesius, kita dapatkan **bentuk polar**:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="z = x + iy = (r \cos \theta) + i(r \sin \theta)" />
+  <BlockMath math="z = r (\cos \theta + i \sin \theta)" />
+</div>
+
+Kadang, bentuk <InlineMath math="(\cos \theta + i \sin \theta)" /> disingkat jadi <InlineMath math="\text{cis } \theta" />.
+
+<BlockMath math="z = r \text{ cis } \theta" />
+
+### Contoh Konversi ke Bentuk Polar
+
+Misal kita punya <InlineMath math="z = 1 + i" />.
+
+- Bagian real <InlineMath math="x = 1" />.
+- Bagian imajiner <InlineMath math="y = 1" />.
+
+Cari <InlineMath math="r" />:
+
+<BlockMath math="r = \sqrt{1^2 + 1^2} = \sqrt{2}" />
+
+Cari <InlineMath math="\theta" />:
+
+<BlockMath math="\tan \theta = \frac{1}{1} = 1" />
+
+Karena <InlineMath math="x" /> dan <InlineMath math="y" /> positif, titik <InlineMath math="(1, 1)" /> ada
+di kuadran <InlineMath math="I" />. Sudut yang <InlineMath math="\tan" />-nya 1 di kuadran <InlineMath math="I" /> adalah <InlineMath math="45^\circ" /> atau <InlineMath math="\pi/4" /> radian.
+
+Jadi, bentuk polarnya:
+
+<BlockMath math="z = \sqrt{2} (\cos 45^\circ + i \sin 45^\circ)" />
+
+### Latihan Bentuk Polar
+
+Nyatakan bilangan kompleks berikut dalam bentuk polar:
+
+1.  <InlineMath math="z = 1 + i\sqrt{3}" />
+2.  <InlineMath math="z = -i" />
+
+**Kunci Jawaban:**
+
+1.  Untuk <InlineMath math="z = 1 + i\sqrt{3}" />:
+
+    - Identifikasi <InlineMath math="x = 1" /> dan <InlineMath math="y = \sqrt{3}" />.
+    - Hitung modulus <InlineMath math="r" />:
+
+      <BlockMath math="r = \sqrt{1^2 + (\sqrt{3})^2} = \sqrt{1 + 3} = \sqrt{4} = 2" />
+
+    - Hitung argumen <InlineMath math="\theta" />:
+
+      <BlockMath math="\tan \theta = \frac{\sqrt{3}}{1} = \sqrt{3}" />
+
+      Karena <InlineMath math="x" /> dan <InlineMath math="y" /> positif, titik <InlineMath math="(1, \sqrt{3})" /> ada
+      di kuadran <InlineMath math="I" />, jadi <InlineMath math="\theta = 60^\circ" />.
+
+    - Bentuk Polar:
+
+      <BlockMath math="z = 2(\cos 60^\circ + i \sin 60^\circ)" />
+
+2.  Untuk <InlineMath math="z = -i" />:
+
+    - Identifikasi <InlineMath math="x = 0" /> dan <InlineMath math="y = -1" />.
+    - Hitung modulus <InlineMath math="r" />:
+
+      <BlockMath math="r = \sqrt{0^2 + (-1)^2} = \sqrt{1} = 1" />
+
+    - Tentukan argumen <InlineMath math="\theta" />:
+
+      Titik <InlineMath math="(0, -1)" /> berada pada sumbu imajiner negatif. Sudutnya adalah <InlineMath math="\theta = 270^\circ" /> atau bisa juga ditulis <InlineMath math="\theta = -90^\circ" />.
+
+    - Bentuk Polar (pilih salah satu sudut):
+
+      <BlockMath math="z = 1(\cos 270^\circ + i \sin 270^\circ)" />
+
+      atau
+
+      <BlockMath math="z = 1(\cos (-90^\circ) + i \sin (-90^\circ))" />
+
+## Bentuk Eksponen
+
+Ada satu lagi bentuk penting, yaitu **bentuk eksponen**. Bentuk ini berasal dari **Formula Euler** yang ajaib:
+
+<BlockMath math="e^{i\theta} = \cos \theta + i \sin \theta" />
+
+Di sini, <InlineMath math="e \approx 2.71828..." /> adalah bilangan Euler (basis logaritma natural).
+
+Kalau kita substitusi Formula Euler ke bentuk polar <InlineMath math="z = r(\cos \theta + i \sin \theta)" />, kita dapatkan **bentuk eksponen**:
+
+<BlockMath math="z = r e^{i\theta}" />
+
+Bentuk ini sangat berguna dalam perkalian dan pembagian bilangan kompleks.
+
+### Contoh Konversi ke Bentuk Eksponen
+
+Ambil contoh sebelumnya:
+
+1.  Untuk <InlineMath math="z = 1 + i" />, kita sudah punya bentuk polar <InlineMath math="\sqrt{2}(\cos 45^\circ + i \sin 45^\circ)" />.
+
+    - Modulus <InlineMath math="r = \sqrt{2}" />.
+    - Argumen <InlineMath math="\theta = 45^\circ = \pi/4" /> radian.
+    - Bentuk Eksponen:
+
+      <BlockMath math="z = r e^{i\theta} = \sqrt{2} e^{i \pi/4}" />
+
+2.  Untuk <InlineMath math="z = \sqrt{2}(\cos 315^\circ + i \sin 315^\circ)" />:
+
+    - Modulus <InlineMath math="r = \sqrt{2}" />.
+    - Argumen <InlineMath math="\theta = 315^\circ" />. Kita ubah ke radian:
+
+      <BlockMath math="315^\circ = 315 \times \frac{\pi}{180} = \frac{7 \times 45 \times \pi}{4 \times 45} = \frac{7\pi}{4}" />
+
+      Atau bisa juga pakai sudut negatif <InlineMath math="315^\circ - 360^\circ = -45^\circ = -\pi/4" /> radian.
+
+    - Bentuk Eksponen (pilih salah satu sudut):
+
+      <BlockMath math="z = \sqrt{2} e^{i 7\pi/4}" />
+
+      atau
+
+      <BlockMath math="z = \sqrt{2} e^{-i \pi/4}" />
+
+### Latihan Bentuk Eksponen
+
+Nyatakan bilangan kompleks berikut dalam bentuk eksponen (gunakan sudut radian):
+
+1.  <InlineMath math="z = 2(\cos 60^\circ + i \sin 60^\circ)" />
+2.  <InlineMath math="z = \cos 15^\circ + i \sin 15^\circ" />
+
+**Kunci Jawaban:**
+
+1.  Untuk <InlineMath math="z = 2(\cos 60^\circ + i \sin 60^\circ)" />:
+
+    - Modulus <InlineMath math="r = 2" />.
+    - Argumen <InlineMath math="\theta = 60^\circ" />. Ubah ke radian:
+
+      <BlockMath math="\theta = 60^\circ = 60 \times \frac{\pi}{180} = \frac{\pi}{3}" />
+
+    - Bentuk Eksponen:
+
+      <BlockMath math="z = 2 e^{i \pi/3}" />
+
+2.  Untuk <InlineMath math="z = \cos 15^\circ + i \sin 15^\circ" />:
+
+    - Modulus <InlineMath math="r = 1" /> (karena tidak ada koefisien di depan <InlineMath math="\cos" /> dan <InlineMath math="\sin" />).
+    - Argumen <InlineMath math="\theta = 15^\circ" />. Ubah ke radian:
+
+      <BlockMath math="\theta = 15^\circ = 15 \times \frac{\pi}{180} = \frac{\pi}{12}" />
+
+    - Bentuk Eksponen:
+
+      <BlockMath math="z = e^{i \pi/12}" />
+
+## Kesamaan Dua Bilangan Kompleks
+
+Dua bilangan kompleks <InlineMath math="z_1 = x_1 + iy_1" /> dan <InlineMath math="z_2 = x_2 + iy_2" /> dikatakan **sama** jika dan hanya jika bagian real keduanya sama DAN bagian imajiner keduanya juga sama.
+
+<BlockMath math="z_1 = z_2 \quad \iff \quad x_1 = x_2 \text{ dan } y_1 = y_2" />
+
+### Contoh Kesamaan
+
+- <InlineMath math="z_1 = 3 - 2i" /> dan <InlineMath math="z_2 = 4 + 2i" /> adalah
+  **berbeda**.
+
+  karena <InlineMath math="\text{Re}(z_1) = 3 \neq \text{Re}(z_2) = 4" /> (walaupun <InlineMath math="|\text{Im}(z_1)| = |-2| = 2 = |\text{Im}(z_2)| = |2|" />, tanda imajinernya berbeda).
+
+- <InlineMath math="z_1 = -1 + i" /> dan <InlineMath math="z_2 = i - 1" /> adalah
+  **sama**.
+
+  karena <InlineMath math="\text{Re}(z_1) = -1 = \text{Re}(z_2) = -1" /> dan <InlineMath math="\text{Im}(z_1) = 1 = \text{Im}(z_2) = 1" />.
+
+### Latihan Kesamaan
+
+Tentukan apakah pasangan bilangan kompleks berikut sama atau berbeda:
+
+1.  <InlineMath math="z_1 = 4 - (-2i)" /> dan <InlineMath math="z_2 = 4 + 2i" />
+2.  <InlineMath math="z_1 = i" /> dan <InlineMath math="z_2 = 1 - i" />
+3.  <InlineMath math="z_1 = -1 + i" /> dan <InlineMath math="z_2 = i + 1" />
+
+**Kunci Jawaban:**
+
+1.  <InlineMath math="z_1 = 4 - (-2i) = 4 + 2i" />.
+
+    Jadi, <InlineMath math="z_1" /> **sama** dengan <InlineMath math="z_2 = 4 + 2i" />.
+
+2.  <InlineMath math="z_1 = 0 + 1i" /> dan <InlineMath math="z_2 = 1 - 1i" />.
+
+    Bagian real berbeda (<InlineMath math="0 \neq 1" />) dan bagian imajiner berbeda (<InlineMath math="1 \neq -1" />).
+
+    Jadi, <InlineMath math="z_1" /> **berbeda** dengan <InlineMath math="z_2" />.
+
+3.  <InlineMath math="z_1 = -1 + 1i" /> dan <InlineMath math="z_2 = 1 + 1i" />.
+
+    Bagian real berbeda (<InlineMath math="-1 \neq 1" />).
+
+    Jadi, <InlineMath math="z_1" /> **berbeda** dengan <InlineMath math="z_2" />.
+
+## Latihan
+
+1.  **Benar atau Salah.** Setiap bilangan real adalah bilangan kompleks.
+2.  **Benar atau Salah.** Bilangan kompleks mempunyai 3 bentuk yakni bentuk kartesius, bentuk eksponen, dan bentuk logaritma.
+3.  **Benar atau Salah.** Bilangan kompleks <InlineMath math="z = 1 - 3i" /> jika digambarkan pada bidang kompleks, maka berada di kuadran III.
+4.  Nyatakan bilangan kompleks <InlineMath math="2+2i" /> dalam bentuk polar dan eksponen.
+5.  Tentukan bilangan <InlineMath math="x" /> dan <InlineMath math="y" /> dengan <InlineMath math="z_1 = x + 3i" /> dan <InlineMath math="z_2 = 3 - yi" /> agar <InlineMath math="z_1 = z_2" />!
+6.  Tentukan solusi dari persamaan kuadrat <InlineMath math="x^2 - 2x + 6 = 0" />!
+7.  Tentukan persamaan kuadrat yang mempunyai solusi <InlineMath math="x_1 = 1 + i" /> dan <InlineMath math="x_2 = 1 - i" />!
+
+### Kunci Jawaban
+
+1.  **Benar.** Bilangan real <InlineMath math="a" /> dapat ditulis sebagai <InlineMath math="a + 0i" />.
+2.  **Salah.** Bentuk umum bilangan kompleks adalah Kartesius, Polar, dan Eksponen. Bentuk logaritma kompleks ada, tapi biasanya tidak termasuk 3 bentuk utama yang dipelajari di level ini.
+3.  **Salah.** <InlineMath math="z = 1 - 3i" /> memiliki bagian real positif (<InlineMath math="x=1" />) dan bagian imajiner negatif (<InlineMath math="y=-3" />). Titik <InlineMath math="(1, -3)" /> berada di **Kuadran IV**.
+4.  Untuk <InlineMath math="z = 2 + 2i" />:
+
+    - Hitung modulus <InlineMath math="r" />:
+
+      <BlockMath math="r = \sqrt{x^2+y^2} = \sqrt{2^2+2^2} = \sqrt{4+4} = \sqrt{8} = 2\sqrt{2}" />
+
+    - Hitung argumen <InlineMath math="\theta" />:
+
+      <BlockMath math="\tan \theta = \frac{y}{x} = \frac{2}{2} = 1" />
+
+      Karena <InlineMath math="x=2" /> dan <InlineMath math="y=2" /> (keduanya positif), titik berada di Kuadran I. Maka, <InlineMath math="\theta = 45^\circ" /> atau <InlineMath math="\pi/4" /> radian.
+
+    - Bentuk Polar:
+
+      <BlockMath math="z = r(\cos \theta + i \sin \theta) = 2\sqrt{2}(\cos 45^\circ + i \sin 45^\circ)" />
+
+    - Bentuk Eksponen:
+
+      <BlockMath math="z = r e^{i\theta} = 2\sqrt{2} e^{i \pi/4}" />
+
+5.  Agar <InlineMath math="z_1 = x + 3i" /> sama dengan <InlineMath math="z_2 = 3 - yi" />, bagian real harus sama dan bagian imajiner harus sama:
+
+    - Bagian Real: <InlineMath math="x = 3" />
+    - Bagian Imajiner: <InlineMath math="3 = -y \implies y = -3" />
+
+      Jadi, <InlineMath math="x=3" /> dan <InlineMath math="y=-3" />.
+
+6.  Untuk menyelesaikan <InlineMath math="x^2 - 2x + 6 = 0" />, gunakan rumus kuadratik (rumus ABC):
+
+    <BlockMath math="x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}" />
+
+    dengan <InlineMath math="a=1, b=-2, c=6" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x = \frac{-(-2) \pm \sqrt{(-2)^2 - 4(1)(6)}}{2(1)}" />
+      <BlockMath math="x = \frac{2 \pm \sqrt{4 - 24}}{2}" />
+      <BlockMath math="x = \frac{2 \pm \sqrt{-20}}{2}" />
+      <BlockMath math="x = \frac{2 \pm \sqrt{20}\sqrt{-1}}{2}" />
+      <BlockMath math="x = \frac{2 \pm 2\sqrt{5}i}{2}" />
+      <BlockMath math="x = 1 \pm i\sqrt{5}" />
+    </div>
+
+    Solusinya adalah <InlineMath math="x_1 = 1 + i\sqrt{5}" /> dan <InlineMath math="x_2 = 1 - i\sqrt{5}" />.
+
+7.  Jika akar-akar persamaan kuadrat adalah <InlineMath math="x_1 = 1 + i" /> dan <InlineMath math="x_2 = 1 - i" />, persamaan dapat dibentuk dari <InlineMath math="(x - x_1)(x - x_2) = 0" /> atau <InlineMath math="x^2 - (x_1 + x_2)x + (x_1 x_2) = 0" />.
+
+    - Hitung jumlah akar:
+
+      <BlockMath math="x_1 + x_2 = (1+i) + (1-i) = 1 + i + 1 - i = 2" />
+
+    - Hitung hasil kali akar:
+
+      <BlockMath math="x_1 x_2 = (1+i)(1-i) = 1^2 - i^2 = 1 - (-1) = 1 + 1 = 2" />
+
+    - Susun persamaan kuadrat:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="x^2 - (2)x + (2) = 0" />
+        <BlockMath math="x^2 - 2x + 2 = 0" />
+      </div>
