@@ -58,8 +58,10 @@ export function HeaderContent({
               {link.label}
             </Link>
           )}
-          <div className="flex items-center gap-2">
-            {Icon && <Icon className="size-7" />}
+          <div className="flex items-start gap-2">
+            {Icon && (
+              <Icon className="hidden size-7 shrink-0 translate-y-1 sm:block" />
+            )}
             <h1
               id={title.toLowerCase().replace(/ /g, "-")}
               className="font-medium text-3xl leading-tight tracking-tight"

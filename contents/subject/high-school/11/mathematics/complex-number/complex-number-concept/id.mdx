@@ -4,3 +4,106 @@ export const metadata = {
   date: "05/01/2025",
   subject: "Bilangan Kompleks",
 };
+
+## Kebutuhan Bilangan Kompleks
+
+Kamu pasti pernah mencoba mencari solusi persamaan kuadrat. Misalnya, persamaan <InlineMath math="x^2 - 1 = 0" />. Gampang kan? Kita bisa faktorkan jadi <InlineMath math="(x-1)(x+1) = 0" />, sehingga solusinya adalah <InlineMath math="x=1" /> atau <InlineMath math="x=-1" />. Keduanya adalah bilangan real.
+
+Nah, bagaimana dengan persamaan <InlineMath math="x^2 + 1 = 0" />? Kalau kita coba cari solusinya di himpunan bilangan real, kita tidak akan menemukannya. Kenapa? Karena persamaan itu akan menghasilkan <InlineMath math="x^2 = -1" />. Tidak ada bilangan real yang jika dikuadratkan hasilnya negatif.
+
+Untuk mengatasi masalah ini, matematikawan memperkenalkan jenis bilangan baru yang disebut **bilangan kompleks**.
+
+## Bilangan Imajiner
+
+Inti dari bilangan kompleks adalah adanya **satuan imajiner**, yang dilambangkan dengan <InlineMath math="i" />. Satuan imajiner ini didefinisikan sebagai akar kuadrat dari -1.
+
+<BlockMath math="i = \sqrt{-1}" />
+
+Dengan definisi ini, kita mendapatkan sifat penting:
+
+<BlockMath math="i^2 = -1" />
+
+Dengan adanya <InlineMath math="i" />, kita sekarang bisa mencari akar kuadrat dari bilangan negatif. Contohnya:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sqrt{-4} = \sqrt{4 \times (-1)} = \sqrt{4} \times \sqrt{-1} = 2i" />
+  <BlockMath math="\sqrt{-9} = \sqrt{9 \times (-1)} = \sqrt{9} \times \sqrt{-1} = 3i" />
+</div>
+
+Bilangan seperti <InlineMath math="2i" /> dan <InlineMath math="3i" /> disebut **bilangan imajiner murni**.
+
+## Bentuk Umum
+
+Bilangan kompleks secara umum ditulis dalam bentuk <InlineMath math="z = a + bi" />, di mana:
+
+- <InlineMath math="a" /> adalah **bagian real** (bilangan real).
+- <InlineMath math="b" /> adalah **bagian imajiner** (bilangan real).
+- <InlineMath math="i" /> adalah satuan imajiner (<InlineMath math="\sqrt{-1}" />
+  ).
+
+Bagian <InlineMath math="bi" /> secara keseluruhan disebut bagian imajiner dari bilangan kompleks.
+
+### Contoh
+
+Mari kita lihat beberapa contoh dan tentukan bagian real serta imajinernya:
+
+1.  **<InlineMath math="2 + 3i" />**
+
+    - Bagian real (<InlineMath math="a" />): <InlineMath math="2" />
+    - Bagian imajiner (<InlineMath math="b" />): <InlineMath math="3" />
+
+2.  **<InlineMath math="5 - 4i" />**
+    Ini sama dengan <InlineMath math="5 + (-4)i" />.
+
+    - Bagian real (<InlineMath math="a" />): <InlineMath math="5" />
+    - Bagian imajiner (<InlineMath math="b" />): <InlineMath math="-4" />
+
+3.  **<InlineMath math="\sqrt{2}" />**
+    Ini adalah bilangan real biasa, tapi bisa juga dianggap bilangan kompleks dengan bagian imajiner 0. Bentuknya <InlineMath math="\sqrt{2} + 0i" />.
+
+    - Bagian real (<InlineMath math="a" />): <InlineMath math="\sqrt{2}" />
+    - Bagian imajiner (<InlineMath math="b" />): <InlineMath math="0" />
+
+4.  **<InlineMath math="-7i" />**
+    Ini adalah bilangan imajiner murni. Bentuknya <InlineMath math="0 + (-7)i" />.
+    - Bagian real (<InlineMath math="a" />): <InlineMath math="0" />
+    - Bagian imajiner (<InlineMath math="b" />): <InlineMath math="-7" />
+
+## Latihan
+
+Tentukan bagian real dan imajiner dari bilangan kompleks berikut:
+
+1. <InlineMath math="2 + \sqrt{(-2)^2}" />
+2. <InlineMath math="2 + i^2" />
+3. <InlineMath math="1 + \sqrt{-9}" />
+4. <InlineMath math="1 + 2i" />
+
+### Kunci Jawaban
+
+1. <InlineMath math="2 + \sqrt{(-2)^2} = 2 + \sqrt{4} = 2 + 2 = 4" />.{" "}
+
+   Ini bisa ditulis sebagai <InlineMath math="4 + 0i" />.
+
+   - Bagian real: <InlineMath math="4" />
+   - Bagian imajiner: <InlineMath math="0" />
+
+2. <InlineMath math="2 + i^2 = 2 + (-1) = 1" />.{" "}
+
+   Ini bisa ditulis sebagai <InlineMath math="1 + 0i" />.
+
+   - Bagian real: <InlineMath math="1" />
+   - Bagian imajiner: <InlineMath math="0" />
+
+3. <InlineMath math="1 + \sqrt{-9} = 1 + \sqrt{9 \times (-1)} = 1 + 3i" />.{" "}
+
+   Ini bisa ditulis sebagai <InlineMath math="1 + 3i" />.
+
+   - Bagian real: <InlineMath math="1" />
+   - Bagian imajiner: <InlineMath math="3" />
+
+4. <InlineMath math="1 + 2i" />.
+
+   Ini bisa ditulis sebagai <InlineMath math="1 + 2i" />.
+
+   - Bagian real: <InlineMath math="1" />
+   - Bagian imajiner: <InlineMath math="2" />

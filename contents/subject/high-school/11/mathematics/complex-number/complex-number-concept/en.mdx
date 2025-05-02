@@ -4,3 +4,106 @@ export const metadata = {
   date: "05/01/2025",
   subject: "Complex Number",
 };
+
+## The Need for Complex Numbers
+
+You've probably tried solving quadratic equations. For example, the equation <InlineMath math="x^2 - 1 = 0" />. Easy, right? We can factor it into <InlineMath math="(x-1)(x+1) = 0" />, so the solutions are <InlineMath math="x=1" /> or <InlineMath math="x=-1" />. Both are real numbers.
+
+Now, what about the equation <InlineMath math="x^2 + 1 = 0" />? If we try to find its solution in the set of real numbers, we won't find one. Why? Because the equation leads to <InlineMath math="x^2 = -1" />. There is no real number that, when squared, results in a negative number.
+
+To overcome this problem, mathematicians introduced a new type of number called **complex numbers**.
+
+## Imaginary Numbers
+
+The core of complex numbers is the **imaginary unit**, denoted by <InlineMath math="i" />. This imaginary unit is defined as the square root of -1.
+
+<BlockMath math="i = \sqrt{-1}" />
+
+With this definition, we get an important property:
+
+<BlockMath math="i^2 = -1" />
+
+With <InlineMath math="i" />, we can now find the square root of negative numbers. For example:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sqrt{-4} = \sqrt{4 \times (-1)} = \sqrt{4} \times \sqrt{-1} = 2i" />
+  <BlockMath math="\sqrt{-9} = \sqrt{9 \times (-1)} = \sqrt{9} \times \sqrt{-1} = 3i" />
+</div>
+
+Numbers like <InlineMath math="2i" /> and <InlineMath math="3i" /> are called **purely imaginary numbers**.
+
+## General Form
+
+Complex numbers are generally written in the form <InlineMath math="z = a + bi" />, where:
+
+- <InlineMath math="a" /> is the **real part** (a real number).
+- <InlineMath math="b" /> is the **imaginary part** (a real number).
+- <InlineMath math="i" /> is the imaginary unit (<InlineMath math="\sqrt{-1}" />
+  ).
+
+The term <InlineMath math="bi" /> as a whole is called the imaginary part of the complex number.
+
+### Examples
+
+Let's look at some examples and identify their real and imaginary parts:
+
+1.  **<InlineMath math="2 + 3i" />**
+
+    - Real part (<InlineMath math="a" />): <InlineMath math="2" />
+    - Imaginary part (<InlineMath math="b" />): <InlineMath math="3" />
+
+2.  **<InlineMath math="5 - 4i" />**
+    This is the same as <InlineMath math="5 + (-4)i" />.
+
+    - Real part (<InlineMath math="a" />): <InlineMath math="5" />
+    - Imaginary part (<InlineMath math="b" />): <InlineMath math="-4" />
+
+3.  **<InlineMath math="\sqrt{2}" />**
+    This is an ordinary real number, but it can also be considered a complex number with an imaginary part of 0. Its form is <InlineMath math="\sqrt{2} + 0i" />.
+
+    - Real part (<InlineMath math="a" />): <InlineMath math="\sqrt{2}" />
+    - Imaginary part (<InlineMath math="b" />): <InlineMath math="0" />
+
+4.  **<InlineMath math="-7i" />**
+    This is a purely imaginary number. Its form is <InlineMath math="0 + (-7)i" />.
+    - Real part (<InlineMath math="a" />): <InlineMath math="0" />
+    - Imaginary part (<InlineMath math="b" />): <InlineMath math="-7" />
+
+## Exercise
+
+Determine the real and imaginary parts of the following complex numbers:
+
+1. <InlineMath math="2 + \sqrt{(-2)^2}" />
+2. <InlineMath math="2 + i^2" />
+3. <InlineMath math="1 + \sqrt{-9}" />
+4. <InlineMath math="1 + 2i" />
+
+### Answer Key
+
+1. <InlineMath math="2 + \sqrt{(-2)^2} = 2 + \sqrt{4} = 2 + 2 = 4" />.{" "}
+
+   This can be written as <InlineMath math="4 + 0i" />.
+
+   - Real part: <InlineMath math="4" />
+   - Imaginary part: <InlineMath math="0" />
+
+2. <InlineMath math="2 + i^2 = 2 + (-1) = 1" />.{" "}
+
+   This can be written as <InlineMath math="1 + 0i" />.
+
+   - Real part: <InlineMath math="1" />
+   - Imaginary part: <InlineMath math="0" />
+
+3. <InlineMath math="1 + \sqrt{-9} = 1 + \sqrt{9 \times (-1)} = 1 + 3i" />.{" "}
+
+   This can be written as <InlineMath math="1 + 3i" />.
+
+   - Real part: <InlineMath math="1" />
+   - Imaginary part: <InlineMath math="3" />
+
+4. <InlineMath math="1 + 2i" />.
+
+   This can be written as <InlineMath math="1 + 2i" />.
+
+   - Real part: <InlineMath math="1" />
+   - Imaginary part: <InlineMath math="2" />

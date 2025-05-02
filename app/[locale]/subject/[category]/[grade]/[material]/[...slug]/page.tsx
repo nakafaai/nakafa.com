@@ -104,10 +104,7 @@ export function generateStaticParams() {
 
 export default async function Page({ params }: Props) {
   const { locale, category, grade, material, slug } = await params;
-  const [t, tSubject] = await Promise.all([
-    getTranslations("Common"),
-    getTranslations("Subject"),
-  ]);
+  const t = await getTranslations("Common");
 
   // Enable static rendering
   setRequestLocale(locale);
@@ -137,17 +134,11 @@ export default async function Page({ params }: Props) {
         <LayoutMaterialContent>
           <LayoutMaterialHeader
             title={metadata.title}
-            description={metadata.description}
+            icon={icon}
             link={{
               href,
               label: metadata.subject ?? "",
             }}
-            authors={metadata.authors}
-            category={{
-              icon,
-              name: tSubject(material),
-            }}
-            // Omitting date to maintain content credibility
           />
           <Suspense fallback={<SkeletonText />}>
             <LayoutMaterialMain>
