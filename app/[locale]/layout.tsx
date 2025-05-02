@@ -215,17 +215,18 @@ export default async function LocaleLayout({ children, params }: Props) {
       )}
       suppressHydrationWarning
     >
-      <head>
-        {/* Add JSON-LD structured data using the JsonLd component */}
-        <EducationalOrgJsonLd />
-        <WebsiteJsonLd locale={locale} />
-        <BreadcrumbJsonLd locale={locale} />
-      </head>
       {process.env.NODE_ENV === "development" && (
         <Script src="https://unpkg.com/react-scan/dist/auto.global.js" />
       )}
-      <body>
-        <NextIntlClientProvider>
+      <NextIntlClientProvider>
+        <head>
+          {/* Add JSON-LD structured data using the JsonLd component */}
+          <EducationalOrgJsonLd />
+          <WebsiteJsonLd locale={locale} />
+          <BreadcrumbJsonLd locale={locale} />
+        </head>
+
+        <body>
           <AppProviders>
             <ThemeProvider
               attribute="class"
@@ -247,10 +248,10 @@ export default async function LocaleLayout({ children, params }: Props) {
               <Toaster />
             </ThemeProvider>
           </AppProviders>
-        </NextIntlClientProvider>
-        <Analytics />
-        <TailwindIndicator />
-      </body>
+        </body>
+      </NextIntlClientProvider>
+      <Analytics />
+      <TailwindIndicator />
     </html>
   );
 }
