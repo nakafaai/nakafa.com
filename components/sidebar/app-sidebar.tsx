@@ -50,7 +50,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Nakafa</span>
                   <span className="truncate text-xs">
-                    {t("short-description")}
+                    {t("very-short-description")}
                   </span>
                 </div>
               </NavigationLink>
