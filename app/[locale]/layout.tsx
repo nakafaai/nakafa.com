@@ -215,16 +215,17 @@ export default async function LocaleLayout({ children, params }: Props) {
       )}
       suppressHydrationWarning
     >
+      <head>
+        {/* Add JSON-LD structured data using the JsonLd component */}
+        <EducationalOrgJsonLd />
+        <WebsiteJsonLd locale={locale} />
+        <BreadcrumbJsonLd locale={locale} />
+      </head>
       {process.env.NODE_ENV === "development" && (
         <Script src="https://unpkg.com/react-scan/dist/auto.global.js" />
       )}
       <body>
         <NextIntlClientProvider>
-          {/* Add JSON-LD structured data using the JsonLd component */}
-          <EducationalOrgJsonLd />
-          <WebsiteJsonLd locale={locale} />
-          <BreadcrumbJsonLd locale={locale} />
-
           <AppProviders>
             <ThemeProvider
               attribute="class"
