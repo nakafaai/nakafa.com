@@ -24,9 +24,6 @@ export function SearchBar({ className, forceOpen = false }: Props) {
 
   const setOpen = useSetAtom(searchAtom);
 
-  const isMac =
-    typeof window !== "undefined" && window.navigator.userAgent.includes("Mac");
-
   // If the pathname is /, don't show the search bar
   if (pathname === "/" && !forceOpen) {
     return null;
@@ -61,7 +58,7 @@ export function SearchBar({ className, forceOpen = false }: Props) {
         <div className="pointer-events-none absolute inset-y-0 end-0 hidden items-center justify-center pe-3 lg:flex">
           <div className="flex items-center gap-0.5">
             <kbd className="rounded border bg-background p-0.75">
-              {isMac ? <IconCommand className="size-3 shrink-0" /> : <>Ctrl</>}
+              <IconCommand className="size-3 shrink-0" />
               <span className="sr-only">Command/Ctrl</span>
             </kbd>
             <kbd className="rounded border bg-background p-0.75">
