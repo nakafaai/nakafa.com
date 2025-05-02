@@ -11,7 +11,6 @@ import "@/styles/globals.css";
 import "@/styles/theme.css";
 import "katex/dist/katex.min.css";
 
-import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
 import { EducationalOrgJsonLd } from "@/components/json-ld/educational-org";
 import { WebsiteJsonLd } from "@/components/json-ld/website";
 import { AppProviders } from "@/components/providers";
@@ -223,7 +222,6 @@ export default async function LocaleLayout({ children, params }: Props) {
           {/* Add JSON-LD structured data using the JsonLd component */}
           <EducationalOrgJsonLd />
           <WebsiteJsonLd locale={locale} />
-          <BreadcrumbJsonLd locale={locale} />
         </head>
         <body>
           <AppProviders>

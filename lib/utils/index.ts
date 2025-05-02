@@ -52,3 +52,12 @@ export function removeLeadingSlash(path: string): string {
 export function getAppUrl(): string {
   return process.env.NEXT_PUBLIC_URL ?? "https://nakafa.com";
 }
+
+/**
+ * Sanitizes a slug, usually for use in URLs
+ * @param slug - The slug to sanitize
+ * @returns The sanitized slug
+ */
+export function sanitizeSlug(slug: string): string {
+  return slug.toLowerCase().replace(/\s+/g, "-");
+}

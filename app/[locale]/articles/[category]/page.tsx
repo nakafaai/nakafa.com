@@ -1,3 +1,4 @@
+import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
 import { CardArticle } from "@/components/shared/card-article";
 import { ContainerList } from "@/components/shared/container-list";
 import { FooterContent } from "@/components/shared/footer-content";
@@ -69,6 +70,16 @@ export default async function Page({ params }: Props) {
 
   return (
     <>
+      <BreadcrumbJsonLd
+        locale={locale}
+        breadcrumbItems={articles.map((article, index) => ({
+          "@type": "ListItem",
+          "@id": `https://nakafa.com/${locale}${FILE_PATH}/${article.slug}`,
+          position: index + 1,
+          name: article.title,
+          item: `https://nakafa.com/${locale}${FILE_PATH}/${article.slug}`,
+        }))}
+      />
       <HeaderContent
         title={t(category)}
         description={t("description")}

@@ -1,3 +1,4 @@
+import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
 import {
   LayoutArticle,
   LayoutArticleContent,
@@ -6,6 +7,7 @@ import {
 } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
 import { SkeletonText } from "@/components/shared/skeleton-text";
+import { sanitizeSlug } from "@/lib/utils";
 import { getCategoryIcon } from "@/lib/utils/articles/category";
 import { getSlugPath } from "@/lib/utils/articles/slug";
 import { getContent } from "@/lib/utils/contents";
@@ -108,30 +110,42 @@ export default async function Page({ params }: Props) {
     const { metadata, default: Content } = content;
 
     return (
-      <LayoutArticle onThisPage={headings}>
-        <LayoutArticleHeader
-          title={metadata.title}
-          description={metadata.description}
-          authors={metadata.authors}
-          date={metadata.date}
-          category={{
-            icon: getCategoryIcon(category),
-            name: t(category),
-          }}
+      <>
+        <BreadcrumbJsonLd
+          locale={locale}
+          breadcrumbItems={headings.map((heading, index) => ({
+            "@type": "ListItem",
+            "@id": `https://nakafa.com/${locale}${FILE_PATH}#${sanitizeSlug(heading.label)}`,
+            position: index + 1,
+            name: heading.label,
+            item: `https://nakafa.com/${locale}${FILE_PATH}#${sanitizeSlug(heading.label)}`,
+          }))}
         />
-        <Suspense fallback={<SkeletonText />}>
-          <LayoutArticleContent>
-            <Content />
-          </LayoutArticleContent>
-        </Suspense>
-        <LayoutArticleFooter>
-          <RefContent
+        <LayoutArticle onThisPage={headings}>
+          <LayoutArticleHeader
             title={metadata.title}
-            references={references}
-            githubUrl={getGithubUrl(`/contents${FILE_PATH}`)}
+            description={metadata.description}
+            authors={metadata.authors}
+            date={metadata.date}
+            category={{
+              icon: getCategoryIcon(category),
+              name: t(category),
+            }}
           />
-        </LayoutArticleFooter>
-      </LayoutArticle>
+          <Suspense fallback={<SkeletonText />}>
+            <LayoutArticleContent>
+              <Content />
+            </LayoutArticleContent>
+          </Suspense>
+          <LayoutArticleFooter>
+            <RefContent
+              title={metadata.title}
+              references={references}
+              githubUrl={getGithubUrl(`/contents${FILE_PATH}`)}
+            />
+          </LayoutArticleFooter>
+        </LayoutArticle>
+      </>
     );
   } catch {
     notFound();

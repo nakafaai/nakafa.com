@@ -1,3 +1,4 @@
+import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
 import { CardMaterial } from "@/components/shared/card-material";
 import { ContainerList } from "@/components/shared/container-list";
 import {
@@ -93,6 +94,16 @@ export default async function Page({ params }: Props) {
 
   return (
     <>
+      <BreadcrumbJsonLd
+        locale={locale}
+        breadcrumbItems={materials.map((mat, index) => ({
+          "@type": "ListItem",
+          "@id": `https://nakafa.com/${locale}${FILE_PATH}`,
+          position: index + 1,
+          name: mat.title,
+          item: `https://nakafa.com/${locale}${FILE_PATH}`,
+        }))}
+      />
       <LayoutMaterialContent>
         <LayoutMaterialHeader
           title={t(material)}

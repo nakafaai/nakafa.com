@@ -1,3 +1,4 @@
+import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
 import {
   LayoutMaterialContent,
   LayoutMaterialFooter,
@@ -8,6 +9,7 @@ import {
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
 import { SkeletonText } from "@/components/shared/skeleton-text";
+import { sanitizeSlug } from "@/lib/utils";
 import { getContent } from "@/lib/utils/contents";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getHeadings } from "@/lib/utils/markdown";
@@ -126,17 +128,25 @@ export default async function Page({ params }: Props) {
     }
 
     const { metadata, default: Content } = content;
-    const icon = getMaterialIcon(material);
-    const href = `${materialPath}#${metadata.subject?.toLowerCase().replace(/\s+/g, "-")}`;
 
     return (
       <>
+        <BreadcrumbJsonLd
+          locale={locale}
+          breadcrumbItems={headings.map((heading, index) => ({
+            "@type": "ListItem",
+            "@id": `https://nakafa.com/${locale}${FILE_PATH}#${sanitizeSlug(heading.label)}`,
+            position: index + 1,
+            name: heading.label,
+            item: `https://nakafa.com/${locale}${FILE_PATH}#${sanitizeSlug(heading.label)}`,
+          }))}
+        />
         <LayoutMaterialContent>
           <LayoutMaterialHeader
             title={metadata.title}
-            icon={icon}
+            icon={getMaterialIcon(material)}
             link={{
-              href,
+              href: `${materialPath}#${sanitizeSlug(metadata.subject ?? "")}`,
               label: metadata.subject ?? "",
             }}
           />
