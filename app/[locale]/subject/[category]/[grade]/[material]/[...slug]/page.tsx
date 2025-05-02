@@ -143,10 +143,10 @@ export default async function Page({ params }: Props) {
           // this will only work for the first heading, not for the nested headings
           breadcrumbItems={headings.map((heading, index) => ({
             "@type": "ListItem",
-            "@id": `https://nakafa.com/${locale}${FILE_PATH}#${heading.href}`,
+            "@id": `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
             position: index + 1,
             name: heading.label,
-            item: `https://nakafa.com/${locale}${FILE_PATH}#${heading.href}`,
+            item: `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
           }))}
         />
         <LayoutMaterialContent>

@@ -7,7 +7,6 @@ import {
 } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
 import { SkeletonText } from "@/components/shared/skeleton-text";
-import { sanitizeSlug } from "@/lib/utils";
 import { getCategoryIcon } from "@/lib/utils/articles/category";
 import { getSlugPath } from "@/lib/utils/articles/slug";
 import { getContent } from "@/lib/utils/contents";
@@ -115,10 +114,10 @@ export default async function Page({ params }: Props) {
           locale={locale}
           breadcrumbItems={headings.map((heading, index) => ({
             "@type": "ListItem",
-            "@id": `https://nakafa.com/${locale}${FILE_PATH}#${sanitizeSlug(heading.label)}`,
+            "@id": `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
             position: index + 1,
             name: heading.label,
-            item: `https://nakafa.com/${locale}${FILE_PATH}#${sanitizeSlug(heading.label)}`,
+            item: `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
           }))}
         />
         <LayoutArticle onThisPage={headings}>
