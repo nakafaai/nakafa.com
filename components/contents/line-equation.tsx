@@ -17,8 +17,6 @@ type Props = {
   description: ReactNode;
   data: LineEquationProps[];
   cameraPosition?: [number, number, number];
-  /** Whether to render the lines as smooth curves */
-  smooth?: boolean;
 };
 
 export function LineEquation({
@@ -26,7 +24,6 @@ export function LineEquation({
   description,
   data,
   cameraPosition = [10, 6, 10],
-  smooth = true,
 }: Props) {
   return (
     <Card>
@@ -37,11 +34,7 @@ export function LineEquation({
       <CardContent>
         <CoordinateSystem cameraPosition={cameraPosition}>
           {data.map((item, index) => (
-            <LineEquation3D
-              key={`line-equation-${index}`}
-              {...item}
-              smooth={item.smooth !== undefined ? item.smooth : smooth}
-            />
+            <LineEquation3D key={`line-equation-${index}`} {...item} />
           ))}
         </CoordinateSystem>
       </CardContent>

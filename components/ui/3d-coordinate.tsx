@@ -972,7 +972,7 @@ export function LineEquation({
   color = randomColor(["YELLOW", "GREEN", "BLUE"]),
   lineWidth = 2,
   showPoints = true,
-  smooth = false,
+  smooth = true,
   curvePoints = 50,
   labels = [],
   useMonoFont = true,
