@@ -225,7 +225,6 @@ export default async function LocaleLayout({ children, params }: Props) {
           <WebsiteJsonLd locale={locale} />
           <BreadcrumbJsonLd locale={locale} />
         </head>
-
         <body>
           <AppProviders>
             <ThemeProvider
@@ -248,10 +247,11 @@ export default async function LocaleLayout({ children, params }: Props) {
               <Toaster />
             </ThemeProvider>
           </AppProviders>
+
+          <Analytics />
+          <TailwindIndicator />
         </body>
       </NextIntlClientProvider>
-      <Analytics />
-      <TailwindIndicator />
     </html>
   );
 }
