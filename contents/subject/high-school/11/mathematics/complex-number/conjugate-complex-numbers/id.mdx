@@ -120,6 +120,55 @@ Karena <InlineMath math="i \neq 0" />, maka haruslah <InlineMath math="y=0" />.
 
 Jadi, suatu bilangan kompleks sama dengan konjugatnya **jika dan hanya jika bagian imajinernya adalah nol**, atau dengan kata lain, **jika bilangan kompleks tersebut adalah bilangan real**.
 
+## Sifat-Sifat Operasi Konjugat
+
+Operasi konjugat memiliki beberapa sifat menarik yang berguna dalam perhitungan. Misalkan <InlineMath math="z, z_1," /> dan <InlineMath math="z_2" /> adalah sembarang bilangan kompleks.
+
+### Penjumlahan dan Pengurangan
+
+Konjugat dari hasil penjumlahan (atau pengurangan) dua bilangan kompleks sama dengan penjumlahan (atau pengurangan) dari masing-masing konjugatnya.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\overline{z_1 + z_2} = \bar{z_1} + \bar{z_2}" />
+  <BlockMath math="\overline{z_1 - z_2} = \bar{z_1} - \bar{z_2}" />
+</div>
+
+### Perkalian dan Pembagian
+
+Konjugat dari hasil perkalian (atau pembagian) dua bilangan kompleks sama dengan perkalian (atau pembagian) dari masing-masing konjugatnya.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\overline{z_1 \times z_2} = \bar{z_1} \times \bar{z_2}" />
+  <BlockMath math="\overline{\left( \frac{z_1}{z_2} \right)} = \frac{\bar{z_1}}{\bar{z_2}}, \quad \text{untuk } z_2 \neq 0" />
+</div>
+
+### Invers
+
+Konjugat dari invers suatu bilangan kompleks sama dengan invers dari konjugatnya.
+
+<BlockMath math="\overline{z^{-1}} = (\bar{z})^{-1}" />
+
+### Ganda
+
+Mengambil konjugat dua kali akan mengembalikan bilangan kompleks ke bentuk aslinya.
+
+<BlockMath math="\overline{(\bar{z})} = z" />
+
+### Hubungan dengan Bagian Real dan Imajiner
+
+Penjumlahan dan pengurangan bilangan kompleks dengan konjugatnya menghasilkan hubungan menarik dengan bagian real dan imajinernya:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="z + \bar{z} = 2 \text{Re}(z)" />
+  <BlockMath math="z - \bar{z} = 2i \text{Im}(z)" />
+</div>
+
+### Perkalian dengan Konjugat
+
+Perkalian suatu bilangan kompleks dengan konjugatnya menghasilkan kuadrat dari modulusnya (sebuah bilangan real non-negatif).
+
+<BlockMath math="z \times \bar{z} = (\text{Re}(z))^2 + (\text{Im}(z))^2 = |z|^2" />
+
 ## Latihan
 
 Tentukan sekawan (konjugat) dari setiap bilangan kompleks berikut!

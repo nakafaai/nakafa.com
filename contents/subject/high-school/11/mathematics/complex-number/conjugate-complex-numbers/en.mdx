@@ -120,6 +120,55 @@ Since <InlineMath math="i \neq 0" />, it must be that <InlineMath math="y=0" />.
 
 So, a complex number is equal to its conjugate **if and only if its imaginary part is zero**, or in other words, **if the complex number is a real number**.
 
+## Properties of Conjugate Operations
+
+The conjugate operation has several interesting properties that are useful in calculations. Let <InlineMath math="z, z_1," /> and <InlineMath math="z_2" /> be any complex numbers.
+
+### Sum and Difference
+
+The conjugate of the sum (or difference) of two complex numbers is equal to the sum (or difference) of their conjugates.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\overline{z_1 + z_2} = \bar{z_1} + \bar{z_2}" />
+  <BlockMath math="\overline{z_1 - z_2} = \bar{z_1} - \bar{z_2}" />
+</div>
+
+### Product and Quotient
+
+The conjugate of the product (or quotient) of two complex numbers is equal to the product (or quotient) of their conjugates.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\overline{z_1 \times z_2} = \bar{z_1} \times \bar{z_2}" />
+  <BlockMath math="\overline{\left( \frac{z_1}{z_2} \right)} = \frac{\bar{z_1}}{\bar{z_2}}, \quad \text{for } z_2 \neq 0" />
+</div>
+
+### Inverse
+
+The conjugate of the inverse of a complex number is equal to the inverse of its conjugate.
+
+<BlockMath math="\overline{z^{-1}} = (\bar{z})^{-1}" />
+
+### Double Conjugate
+
+Taking the conjugate twice returns the complex number to its original form.
+
+<BlockMath math="\overline{(\bar{z})} = z" />
+
+### Relationship with Real and Imaginary Parts
+
+Adding and subtracting a complex number with its conjugate yields interesting relationships with its real and imaginary parts:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="z + \bar{z} = 2 \text{Re}(z)" />
+  <BlockMath math="z - \bar{z} = 2i \text{Im}(z)" />
+</div>
+
+### Multiplication by Conjugate
+
+Multiplying a complex number by its conjugate yields the square of its modulus (a non-negative real number).
+
+<BlockMath math="z \times \bar{z} = (\text{Re}(z))^2 + (\text{Im}(z))^2 = |z|^2" />
+
 ## Exercise
 
 Find the conjugate of each of the following complex numbers!
