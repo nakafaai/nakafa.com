@@ -28,7 +28,7 @@ import type { MaterialGrade } from "@/types/subject/material";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
 type Params = {
@@ -111,10 +111,17 @@ export default async function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  try {
-    const materialPath = getMaterialPath(category, grade, material);
-    const FILE_PATH = getSlugPath(category, grade, material, slug);
+  const materialPath = getMaterialPath(category, grade, material);
+  const FILE_PATH = getSlugPath(category, grade, material, slug);
 
+  // Means it only contains the chapter name, not the section name
+  // The slugs usually have 2 items, chapter and section
+  // In the future, we can add a new page specifically for the section
+  if (slug.length === 1) {
+    redirect(materialPath);
+  }
+
+  try {
     const [content, headings, pagination] = await Promise.all([
       getContent(locale, FILE_PATH),
       getRawContent(`${FILE_PATH}/${locale}.mdx`).then(getHeadings),
