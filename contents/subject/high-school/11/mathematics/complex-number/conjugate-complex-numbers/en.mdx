@@ -1,6 +1,153 @@
+import { LineEquation } from "@/components/contents/line-equation";
+import { getColor } from "@/lib/utils/color";
+
 export const metadata = {
   title: "Complex Number Conjugate",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/01/2025",
   subject: "Complex Number",
 };
+
+## What is a Complex Number Conjugate?
+
+Every complex number <InlineMath math="z = x + iy" /> has a "pair" called the **conjugate**. The conjugate of <InlineMath math="z" /> is written with the symbol <InlineMath math="\bar{z}" />.
+
+Getting the conjugate is very easy: **just change the sign of the imaginary part**.
+
+## Formal Definition
+
+If <InlineMath math="z = x + iy" /> is a complex number, with <InlineMath math="x" /> as the real part and <InlineMath math="y" /> as the imaginary part, then its conjugate is:
+
+<BlockMath math="\bar{z} = x - iy" />
+
+This means the real part (<InlineMath math="x" />) stays the same, while the sign of the imaginary part (<InlineMath math="y" />) is flipped (positive becomes negative, negative becomes positive).
+
+## Examples of Finding the Conjugate
+
+Let's look at some examples:
+
+1.  **If** <InlineMath math="z = 2 + i" />
+
+    Here, <InlineMath math="x=2" /> and <InlineMath math="y=1" />.
+
+    Then its conjugate is <InlineMath math="\bar{z} = 2 - i" />. (The sign of the imaginary part <InlineMath math="+1" /> becomes <InlineMath math="-1" />)
+
+2.  **If** <InlineMath math="z = 2" />
+
+    We can write <InlineMath math="z = 2 + 0i" />. Here, <InlineMath math="x=2" /> and <InlineMath math="y=0" />.
+
+    Then its conjugate is <InlineMath math="\bar{z} = 2 - 0i = 2" />. (The imaginary part is 0, its sign doesn't change)
+
+    The conjugate of a real number is the real number itself.
+
+3.  **If** <InlineMath math="z = 3 - 2i" />
+
+    Here, <InlineMath math="x=3" /> and <InlineMath math="y=-2" />.
+
+    Then its conjugate is <InlineMath math="\bar{z} = 3 - (-2i) = 3 + 2i" />. (The sign of the imaginary part <InlineMath math="-2" /> becomes <InlineMath math="+2" />)
+
+4.  **If** <InlineMath math="z = 3i" />
+
+    We can write <InlineMath math="z = 0 + 3i" />. Here, <InlineMath math="x=0" /> and <InlineMath math="y=3" />.
+
+    Then its conjugate is <InlineMath math="\bar{z} = 0 - 3i = -3i" />. (The sign of the imaginary part <InlineMath math="+3" /> becomes <InlineMath math="-3" />)
+
+    The conjugate of a purely imaginary number is its negative.
+
+## Visualization of the Conjugate
+
+Geometrically, the conjugate <InlineMath math="\bar{z}" /> is the **reflection** of <InlineMath math="z" /> across the **real axis (X-axis)** in the complex plane.
+
+<LineEquation
+  title={
+    <>
+      Visualization of <InlineMath math="z = 3+2i" /> and its Conjugate{" "}
+      <InlineMath math="\bar{z} = 3-2i" />
+    </>
+  }
+  description={
+    <>
+      Notice how <InlineMath math="z" /> and <InlineMath math="\bar{z}" /> are
+      like reflections across the real axis.
+    </>
+  }
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+  data={[
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 2, z: 0 },
+      ],
+      color: getColor("SKY"),
+      labels: [{ text: "z = 3+2i", at: 1, offset: [0.5, 0.5, 0] }],
+      cone: { position: "end" },
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: -2, z: 0 },
+      ],
+      color: getColor("LIME"),
+      labels: [{ text: "z̄ = 3-2i", at: 1, offset: [0.5, -0.5, 0] }],
+      cone: { position: "end" },
+    },
+    // Real axis line as mirror (optional)
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+        { x: 5, y: 0, z: 0 },
+      ],
+      color: getColor("AMBER"),
+      lineWidth: 1,
+    },
+  ]}
+/>
+
+## Complex Number Congruence
+
+Is it possible for a complex number <InlineMath math="z=x+iy" /> to be equal to its conjugate <InlineMath math="\bar{z}=x-iy" />? If so, what is the condition?
+
+**Answer:**
+
+Yes, it's possible. For <InlineMath math="z = \bar{z}" />, then:
+
+<BlockMath math="x+iy = x-iy" />
+
+This can only happen if <InlineMath math="iy = -iy" />, which means <InlineMath math="2iy = 0" />.
+
+Since <InlineMath math="i \neq 0" />, it must be that <InlineMath math="y=0" />.
+
+So, a complex number is equal to its conjugate **if and only if its imaginary part is zero**, or in other words, **if the complex number is a real number**.
+
+## Exercise
+
+Find the conjugate of each of the following complex numbers!
+
+1. <InlineMath math="2+i^2" />
+2. <InlineMath math="1+\frac{1}{i}" />
+3. <InlineMath math="1+2i" />
+
+### Answer Key
+
+1. First, simplify the complex number:
+
+   <InlineMath math="z = 2+i^2 = 2+(-1) = 1" />. Since <InlineMath math="z=1" /> is
+   a real number (<InlineMath math="1+0i" />
+   ),
+
+   its conjugate is <InlineMath math="\bar{z} = 1" />.
+
+2. Simplify first:
+
+   Remember that
+
+   <BlockMath math="\frac{1}{i} = \frac{1}{i} \times \frac{-i}{-i} = \frac{-i}{-i^2} = \frac{-i}{-(-1)} = \frac{-i}{1} = -i" />
+
+   So, <InlineMath math="z = 1 + \frac{1}{i} = 1 - i" />.
+
+   Its conjugate is <InlineMath math="\bar{z} = 1 - (-i) = 1 + i" />.
+
+3. <InlineMath math="z = 1+2i" />.
+
+   Directly use the definition: <InlineMath math="\bar{z} = 1 - 2i" />.
