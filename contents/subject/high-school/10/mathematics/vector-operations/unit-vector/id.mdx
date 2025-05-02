@@ -1,4 +1,5 @@
 import { Vector3d } from "../../_shared/vector-3d";
+import { getColor } from "@/lib/utils/color";
 
 export const metadata = {
   title: "Vektor Satuan dari Suatu Vektor",
@@ -28,14 +29,14 @@ Vektor satuan selalu menunjukkan arah dari vektor aslinya, tetapi memiliki panja
     {
       from: [0, 0, 0],
       to: [3, 4, 0],
-      color: "#a855f7", // purple-500
+      color: getColor("PURPLE"),
       label: "v",
       labelPosition: "end",
     },
     {
       from: [0, 0, 0],
       to: [0.6, 0.8, 0],
-      color: "#f59e0b", // amber-500
+      color: getColor("AMBER"),
       label: "v̂",
       labelPosition: "end",
     },
@@ -82,14 +83,14 @@ Sehingga diperoleh:
       {
         from: [0, 0, 0],
         to: [3, 6, 4],
-        color: "#ec4899", // pink-500
+        color: getColor("PINK"),
         label: "v",
         labelPosition: "end",
       },
       {
         from: [0, 0, 0],
         to: [3 / Math.sqrt(61), 6 / Math.sqrt(61), 4 / Math.sqrt(61)],
-        color: "#14b8a6", // teal-500
+        color: getColor("TEAL"),
         label: "v̂",
         labelPosition: "end",
       },
@@ -123,21 +124,21 @@ Setiap vektor dapat dinyatakan sebagai kombinasi linear dari ketiga vektor satua
     {
       from: [0, 0, 0],
       to: [1, 0, 0],
-      color: "#f43f5e", // rose-500
+      color: getColor("ROSE"),
       label: "î",
       labelPosition: "end",
     },
     {
       from: [0, 0, 0],
       to: [0, 1, 0],
-      color: "#8b5cf6", // violet-500
+      color: getColor("VIOLET"),
       label: "ĵ",
       labelPosition: "end",
     },
     {
       from: [0, 0, 0],
       to: [0, 0, 1],
-      color: "#f97316", // orange-500
+      color: getColor("ORANGE"),
       label: "k̂",
       labelPosition: "end",
     },

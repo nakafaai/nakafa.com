@@ -1,5 +1,7 @@
 import { VectorChart } from "../../_shared/vector-chart";
 import { Vector3d } from "../../_shared/vector-3d";
+import { getColor } from "@/lib/utils/color";
+
 export const metadata = {
   title: "Vektor dan Sistem Koordinat",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
@@ -61,7 +63,7 @@ Sistem Koordinat Kartesius menggunakan sumbu-sumbu yang saling tegak lurus untuk
       {
         from: [0, 0, 0],
         to: [3, 4, 5],
-        color: "#8e51ff", // must be hex color
+        color: getColor("PURPLE"),
         label: "P(3, 4, 5)",
       },
     ]}

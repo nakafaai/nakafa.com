@@ -1,5 +1,6 @@
 import { Inequality } from "../../_shared/inequality";
 import { condition1, condition2 } from "./inequality-functions";
+import { getColor } from "@/lib/utils/color";
 
 export const metadata = {
   title: "Linear Inequality Systems",
@@ -178,8 +179,8 @@ The purple region (the intersection of the blue and red areas) is the solution t
       xRange: [-15, 15],
       yRange: [-15, 15],
       zRange: [-0.05, 0.05],
-      color: "#0891b2", // Cyan
-      boundaryColor: "#2563eb",
+      color: getColor("CYAN"),
+      boundaryColor: getColor("BLUE"),
       label: {
         text: "x + y ≤ 10",
         position: [3, 3, 0.15],
@@ -192,8 +193,8 @@ The purple region (the intersection of the blue and red areas) is the solution t
       xRange: [-15, 15],
       yRange: [-15, 15],
       zRange: [-0.05, 0.05],
-      color: "#e11d48", // Rose
-      boundaryColor: "#dc2626",
+      color: getColor("ROSE"),
+      boundaryColor: getColor("RED"),
       label: {
         text: "15x + 9y ≥ 120",
         position: [6, 8, 0.15],

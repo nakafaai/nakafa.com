@@ -1,4 +1,5 @@
 import { Vector3d } from "../../_shared/vector-3d";
+import { getColor } from "@/lib/utils/color";
 
 export const metadata = {
   title: "Pengurangan Vektor",
@@ -40,28 +41,28 @@ Vektor yang dihasilkan, yaitu <InlineMath math="\vec{a} - \vec{b}" />, juga dapa
     {
       from: [0, 0, 0],
       to: [3, 2, 1],
-      color: "#3b82f6",
+      color: getColor("TEAL"),
       label: "a",
       id: "vector-a",
     },
     {
       from: [0, 0, 0],
       to: [1, 2, 2],
-      color: "#ef4444",
+      color: getColor("ROSE"),
       label: "b",
       id: "vector-b",
     },
     {
       from: [0, 0, 0],
       to: [-1, -2, -2],
-      color: "#f97316",
+      color: getColor("ORANGE"),
       label: "-b",
       id: "vector-negative-b",
     },
     {
       from: [0, 0, 0],
       to: [2, 0, -1],
-      color: "#a855f7",
+      color: getColor("PINK"),
       label: "a - b",
       id: "vector-result",
     },
@@ -117,21 +118,21 @@ Perhatikan bahwa <InlineMath math="\vec{a} - \vec{b} \neq \vec{b} - \vec{a}" /> 
     {
       from: [0, 0, 0],
       to: [3, 4, 0],
-      color: "#3b82f6",
+      color: getColor("TEAL"),
       label: "a",
       id: "example-vector-a",
     },
     {
       from: [0, 0, 0],
       to: [1, 2, 0],
-      color: "#ef4444",
+      color: getColor("ROSE"),
       label: "b",
       id: "example-vector-b",
     },
     {
       from: [0, 0, 0],
       to: [2, 2, 0],
-      color: "#22c55e",
+      color: getColor("LIME"),
       label: "a - b",
       id: "example-vector-result",
     },

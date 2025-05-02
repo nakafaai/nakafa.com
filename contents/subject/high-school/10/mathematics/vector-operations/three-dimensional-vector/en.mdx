@@ -1,4 +1,5 @@
 import { Vector3d } from "../../_shared/vector-3d";
+import { getColor } from "@/lib/utils/color";
 
 export const metadata = {
   title: "Three-Dimensional Vector",
@@ -24,7 +25,7 @@ A three-dimensional vector is a quantity that has both magnitude and direction i
     {
       from: [0, 0, 0],
       to: [3, 4, 2],
-      color: "#8b5cf6", // Violet-500
+      color: getColor("VIOLET"),
       label: "v",
     },
   ]}
@@ -72,25 +73,25 @@ where:
       {
         from: [0, 0, 0],
         to: [4, 0, 0],
-        color: "#a855f7", // Purple-500
+        color: getColor("PURPLE"),
         label: "a_x",
       },
       {
         from: [0, 0, 0],
         to: [0, 3, 0],
-        color: "#06b6d4", // Cyan-500
+        color: getColor("TEAL"),
         label: "a_y",
       },
       {
         from: [0, 0, 0],
         to: [0, 0, 2],
-        color: "#f59e0b", // Amber-500
+        color: getColor("AMBER"),
         label: "a_z",
       },
       {
         from: [0, 0, 0],
         to: [4, 3, 2],
-        color: "#ec4899", // Pink-500
+        color: getColor("PINK"),
         label: "a",
       },
     ]}
@@ -137,21 +138,21 @@ If <InlineMath math="\vec{a} = (a_x, a_y, a_z)" /> and <InlineMath math="\vec{b}
       {
         from: [0, 0, 0],
         to: [2, 3, 1],
-        color: "#14b8a6", // Teal-500
+        color: getColor("TEAL"),
         label: "a",
         labelPosition: "middle",
       },
       {
         from: [2, 3, 1],
         to: [5, 4, 3],
-        color: "#f97316", // Orange-500
+        color: getColor("ORANGE"),
         label: "b",
         labelPosition: "middle",
       },
       {
         from: [0, 0, 0],
         to: [5, 4, 3],
-        color: "#eab308", // Yellow-500
+        color: getColor("YELLOW"),
         label: "c = a + b",
       },
     ]}
@@ -177,13 +178,13 @@ Multiplying a scalar <InlineMath math="k" /> with a vector <InlineMath math="\ve
       {
         from: [0, 0, 0],
         to: [2, 1, 2],
-        color: "#10b981", // Emerald-500
+        color: getColor("EMERALD"),
         label: "a",
       },
       {
         from: [0, 0, 0],
         to: [4, 2, 4],
-        color: "#d946ef", // Fuchsia-500
+        color: getColor("FUCHSIA"),
         label: "2a",
       },
     ]}
@@ -225,19 +226,19 @@ where <InlineMath math="\theta" /> is the angle between the two vectors.
     {
       from: [0, 0, 0],
       to: [2, 0, 0],
-      color: "#0ea5e9", // Sky-500
+      color: getColor("TEAL"),
       label: "a",
     },
     {
       from: [0, 0, 0],
       to: [0, 2, 0],
-      color: "#f43f5e", // Rose-500
+      color: getColor("ROSE"),
       label: "b",
     },
     {
       from: [0, 0, 0],
       to: [0, 0, 4],
-      color: "#84cc16", // Lime-500
+      color: getColor("LIME"),
       label: "a × b",
     },
   ]}

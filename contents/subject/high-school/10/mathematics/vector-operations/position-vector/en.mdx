@@ -1,4 +1,5 @@
 import { Vector3d } from "../../_shared/vector-3d";
+import { getColor } from "@/lib/utils/color";
 
 export const metadata = {
   title: "Position Vector",
@@ -18,14 +19,14 @@ A position vector is a vector that starts from point O (origin) in a coordinate 
     {
       from: [0, 0, 0],
       to: [-3, 2, 0],
-      color: "#ec4899",
+      color: getColor("PINK"),
       label: "OA",
       labelPosition: "end",
     },
     {
       from: [0, 0, 0],
       to: [7, 5, 0],
-      color: "#8b5cf6",
+      color: getColor("VIOLET"),
       label: "OB",
       labelPosition: "end",
     },
@@ -56,28 +57,28 @@ In the visualization below, we use the notation OA, OB, OC, and OD to indicate p
     {
       from: [0, 0, 0],
       to: [4, 0, 0],
-      color: "#ef4444",
+      color: getColor("ROSE"),
       label: "OA",
       labelPosition: "end",
     },
     {
       from: [0, 0, 0],
       to: [0, 4, 0],
-      color: "#22c55e",
+      color: getColor("GREEN"),
       label: "OB",
       labelPosition: "end",
     },
     {
       from: [0, 0, 0],
       to: [0, 0, 4],
-      color: "#3b82f6",
+      color: getColor("BLUE"),
       label: "OC",
       labelPosition: "end",
     },
     {
       from: [0, 0, 0],
       to: [3, 3, 3],
-      color: "#f59e0b",
+      color: getColor("YELLOW"),
       label: "OD",
       labelPosition: "end",
     },
@@ -126,21 +127,21 @@ Displacement vectors can be obtained from the difference between two position ve
       {
         from: [0, 0, 0],
         to: [-3, 2, 0],
-        color: "#ec4899",
+        color: getColor("PINK"),
         label: "OA",
         labelPosition: "end",
       },
       {
         from: [0, 0, 0],
         to: [7, 5, 0],
-        color: "#8b5cf6",
+        color: getColor("VIOLET"),
         label: "OB",
         labelPosition: "end",
       },
       {
         from: [-3, 2, 0],
         to: [7, 5, 0],
-        color: "#06b6d4",
+        color: getColor("TEAL"),
         label: "AB",
         labelPosition: "middle",
       },

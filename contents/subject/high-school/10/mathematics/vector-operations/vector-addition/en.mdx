@@ -1,4 +1,5 @@
 import { Vector3d } from "../../_shared/vector-3d";
+import { getColor } from "@/lib/utils/color";
 
 export const metadata = {
   title: "Vector Addition",
@@ -29,7 +30,7 @@ Vector addition can be performed graphically using the triangle method. The prin
       {
         from: [0, 0, 0],
         to: [4, 1, 0],
-        color: "#ef4444",
+        color: getColor("ROSE"),
         label: "vector a",
         labelPosition: "end",
         id: "triangle-vector-a",
@@ -37,7 +38,7 @@ Vector addition can be performed graphically using the triangle method. The prin
       {
         from: [4, 1, 0],
         to: [6, 4, 0],
-        color: "#3b82f6",
+        color: getColor("TEAL"),
         label: "vector b",
         labelPosition: "middle",
         id: "triangle-vector-b",
@@ -45,7 +46,7 @@ Vector addition can be performed graphically using the triangle method. The prin
       {
         from: [0, 0, 0],
         to: [6, 4, 0],
-        color: "#84cc16",
+        color: getColor("LIME"),
         label: "vector a+b",
         labelPosition: "end",
         id: "triangle-vector-sum",
@@ -78,7 +79,7 @@ Another method for adding vectors is the parallelogram method. The steps are:
       {
         from: [0, 0, 0],
         to: [5, 1, 0],
-        color: "#ef4444",
+        color: getColor("ROSE"),
         label: "vector a",
         labelPosition: "end",
         id: "parallelogram-vector-a1",
@@ -86,7 +87,7 @@ Another method for adding vectors is the parallelogram method. The steps are:
       {
         from: [0, 0, 0],
         to: [2, 5, 0],
-        color: "#3b82f6",
+        color: getColor("TEAL"),
         label: "vector b",
         labelPosition: "middle",
         id: "parallelogram-vector-b2",
@@ -94,7 +95,7 @@ Another method for adding vectors is the parallelogram method. The steps are:
       {
         from: [5, 1, 0],
         to: [7, 6, 0],
-        color: "#3b82f6",
+        color: getColor("TEAL"),
         label: "vector b",
         labelPosition: "middle",
         id: "parallelogram-vector-b1",
@@ -102,7 +103,7 @@ Another method for adding vectors is the parallelogram method. The steps are:
       {
         from: [2, 5, 0],
         to: [7, 6, 0],
-        color: "#ef4444",
+        color: getColor("ROSE"),
         label: "vector a",
         labelPosition: "start",
         id: "parallelogram-vector-a2",
@@ -110,7 +111,7 @@ Another method for adding vectors is the parallelogram method. The steps are:
       {
         from: [0, 0, 0],
         to: [7, 6, 0],
-        color: "#84cc16",
+        color: getColor("LIME"),
         label: "a+b = b+a",
         labelPosition: "end",
         id: "parallelogram-vector-sum",
@@ -138,7 +139,7 @@ To add more than two vectors, we can use the polygon method. The principle is th
     {
       from: [0, 0, 0],
       to: [3, 1, 0],
-      color: "#ef4444",
+      color: getColor("ROSE"),
       label: "vector a",
       labelPosition: "end",
       id: "polygon-vector-a",
@@ -146,7 +147,7 @@ To add more than two vectors, we can use the polygon method. The principle is th
     {
       from: [3, 1, 0],
       to: [5, 4, 0],
-      color: "#3b82f6",
+      color: getColor("TEAL"),
       label: "vector b",
       labelPosition: "middle",
       id: "polygon-vector-b",
@@ -154,7 +155,7 @@ To add more than two vectors, we can use the polygon method. The principle is th
     {
       from: [5, 4, 0],
       to: [7, 3, 2],
-      color: "#84cc16",
+      color: getColor("LIME"),
       label: "vector c",
       labelPosition: "middle",
       id: "polygon-vector-c",
@@ -162,7 +163,7 @@ To add more than two vectors, we can use the polygon method. The principle is th
     {
       from: [0, 0, 0],
       to: [7, 3, 2],
-      color: "#f97316",
+      color: getColor("ORANGE"),
       label: "vector a+b+c",
       labelPosition: "end",
       id: "polygon-vector-sum",
@@ -192,7 +193,7 @@ To add three vectors using the parallelogram method, we can:
       {
         from: [0, 0, 0],
         to: [3, 1, 0],
-        color: "#ef4444",
+        color: getColor("ROSE"),
         label: "A",
         labelPosition: "end",
         id: "assoc-vector-a",
@@ -200,7 +201,7 @@ To add three vectors using the parallelogram method, we can:
       {
         from: [0, 0, 0],
         to: [1, 3, 0],
-        color: "#3b82f6",
+        color: getColor("TEAL"),
         label: "B",
         labelPosition: "end",
         id: "assoc-vector-b",
@@ -208,7 +209,7 @@ To add three vectors using the parallelogram method, we can:
       {
         from: [0, 0, 0],
         to: [0, 1, 3],
-        color: "#84cc16",
+        color: getColor("LIME"),
         label: "C",
         labelPosition: "end",
         id: "assoc-vector-c",
@@ -216,7 +217,7 @@ To add three vectors using the parallelogram method, we can:
       {
         from: [1, 3, 0],
         to: [1, 4, 3],
-        color: "#84cc16",
+        color: getColor("LIME"),
         label: "C",
         labelPosition: "end",
         id: "assoc-vector-c2",
@@ -224,7 +225,7 @@ To add three vectors using the parallelogram method, we can:
       {
         from: [0, 0, 0],
         to: [1, 4, 3],
-        color: "#f97316",
+        color: getColor("ORANGE"),
         label: "B+C",
         labelPosition: "middle",
         id: "assoc-vector-bc1",
@@ -232,7 +233,7 @@ To add three vectors using the parallelogram method, we can:
       {
         from: [3, 1, 0],
         to: [4, 5, 3],
-        color: "#f97316",
+        color: getColor("ORANGE"),
         label: "B+C",
         labelPosition: "middle",
         id: "assoc-vector-bc2",
@@ -240,7 +241,7 @@ To add three vectors using the parallelogram method, we can:
       {
         from: [0, 0, 0],
         to: [4, 5, 3],
-        color: "#a855f7",
+        color: getColor("PINK"),
         label: "A+(B+C)",
         labelPosition: "end",
         id: "assoc-vector-sum",
@@ -266,7 +267,7 @@ Besides graphical methods, vectors can also be added by their components. In a c
     {
       from: [0, 0, 0],
       to: [3, 2, 1],
-      color: "#ef4444",
+      color: getColor("ROSE"),
       label: "vector a",
       labelPosition: "end",
       id: "comp-vector-a",
@@ -274,7 +275,7 @@ Besides graphical methods, vectors can also be added by their components. In a c
     {
       from: [0, 0, 0],
       to: [3, 0, 0],
-      color: "#3b82f6",
+      color: getColor("TEAL"),
       label: "a_x",
       labelPosition: "end",
       id: "comp-vector-ax",
@@ -282,7 +283,7 @@ Besides graphical methods, vectors can also be added by their components. In a c
     {
       from: [0, 0, 0],
       to: [0, 2, 0],
-      color: "#84cc16",
+      color: getColor("LIME"),
       label: "a_y",
       labelPosition: "end",
       id: "comp-vector-ay",
@@ -290,7 +291,7 @@ Besides graphical methods, vectors can also be added by their components. In a c
     {
       from: [0, 0, 0],
       to: [0, 0, 1],
-      color: "#f97316",
+      color: getColor("ORANGE"),
       label: "a_z",
       labelPosition: "end",
       id: "comp-vector-az",
@@ -298,7 +299,7 @@ Besides graphical methods, vectors can also be added by their components. In a c
     {
       from: [0, 0, 0],
       to: [2, 4, 2],
-      color: "#a855f7",
+      color: getColor("PINK"),
       label: "vector b",
       labelPosition: "end",
       id: "comp-vector-b",
@@ -306,7 +307,7 @@ Besides graphical methods, vectors can also be added by their components. In a c
     {
       from: [0, 0, 0],
       to: [5, 6, 3],
-      color: "#ec4899",
+      color: getColor("FUCHSIA"),
       label: "a+b",
       labelPosition: "end",
       id: "comp-vector-sum",
@@ -340,7 +341,7 @@ One example of vector addition application is in the movement of a boat crossing
       {
         from: [0, 0, 0],
         to: [0, 4, 0],
-        color: "#3b82f6",
+        color: getColor("TEAL"),
         label: "boat velocity",
         labelPosition: "middle",
         id: "boat-vector-velocity",
@@ -348,7 +349,7 @@ One example of vector addition application is in the movement of a boat crossing
       {
         from: [0, 0, 0],
         to: [3, 0, 0],
-        color: "#84cc16",
+        color: getColor("LIME"),
         label: "river current",
         labelPosition: "end",
         id: "boat-vector-current",
@@ -356,7 +357,7 @@ One example of vector addition application is in the movement of a boat crossing
       {
         from: [0, 0, 0],
         to: [3, 4, 0],
-        color: "#ef4444",
+        color: getColor("ROSE"),
         label: "resultant motion",
         labelPosition: "end",
         id: "boat-vector-resultant",
