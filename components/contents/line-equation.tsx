@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { ReactNode } from "react";
+
 type Props = {
   title: ReactNode;
   description: ReactNode;
@@ -25,7 +26,7 @@ export function LineEquation({
   description,
   data,
   cameraPosition = [10, 6, 10],
-  smooth = false,
+  smooth = true,
 }: Props) {
   return (
     <Card>

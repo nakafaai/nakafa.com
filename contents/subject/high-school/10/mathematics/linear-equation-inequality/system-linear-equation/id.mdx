@@ -1,4 +1,5 @@
 import { LineEquation } from "@/components/contents/line-equation";
+import { getColor } from "@/lib/utils/color";
 
 export const metadata = {
   title: "Sistem Persamaan Linear",
@@ -184,7 +185,7 @@ Dalam tiga dimensi (tiga variabel), persamaan linear direpresentasikan sebagai b
           { x: 9, y: 1, z: 0 },
         ],
         labels: [{ text: "2x + 3y = 21", offset: [-1, -1, 0] }],
-        color: "ORANGE",
+        color: getColor("ORANGE"),
       },
       {
         points: [
@@ -193,7 +194,7 @@ Dalam tiga dimensi (tiga variabel), persamaan linear direpresentasikan sebagai b
           { x: 15, y: -5, z: 0 },
         ],
         labels: [{ text: "x + y = 10", offset: [1, 1, 0] }],
-        color: "PURPLE",
+        color: getColor("PURPLE"),
       },
     ]}
   />
@@ -208,7 +209,7 @@ Dalam tiga dimensi (tiga variabel), persamaan linear direpresentasikan sebagai b
           { x: 3, y: 7, z: 0 },
         ],
         labels: [{ text: "3x - 2y = -1", offset: [-2, 0, 0] }],
-        color: "PINK",
+        color: getColor("PINK"),
       },
       {
         points: [
@@ -217,7 +218,7 @@ Dalam tiga dimensi (tiga variabel), persamaan linear direpresentasikan sebagai b
           { x: 4, y: 5, z: 0 },
         ],
         labels: [{ text: "6x - 4y = 2", offset: [2, 0, 0] }],
-        color: "YELLOW",
+        color: getColor("YELLOW"),
       },
     ]}
   />
@@ -232,7 +233,7 @@ Dalam tiga dimensi (tiga variabel), persamaan linear direpresentasikan sebagai b
           { x: 2, y: -1, z: 0 },
         ],
         labels: [{ text: "2x + 3y = 1", offset: [-2, -1, 0] }],
-        color: "VIOLET",
+        color: getColor("VIOLET"),
       },
       {
         points: [
@@ -241,7 +242,7 @@ Dalam tiga dimensi (tiga variabel), persamaan linear direpresentasikan sebagai b
           { x: 2, y: -1, z: 0 },
         ],
         labels: [{ text: "4x + 6y = 2", offset: [2, 1, 0] }],
-        color: "CYAN",
+        color: getColor("CYAN"),
       },
     ]}
     cameraPosition={[6, 4, 6]}

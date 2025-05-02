@@ -1,4 +1,5 @@
 import { LineEquation } from "@/components/contents/line-equation";
+import { getColor } from "@/lib/utils/color";
 
 export const metadata = {
   title: "Constructing Quadratic Functions",
@@ -95,7 +96,6 @@ The resulting quadratic function is:
         <InlineMath math="L(0, -3)" />, and <InlineMath math="M(1, -4)" />.
       </>
     }
-    smooth={true}
     cameraPosition={[2, 3, 8]}
     data={[
       {
@@ -103,7 +103,7 @@ The resulting quadratic function is:
           const x = i - 3; // x values from -3 to 3
           return { x, y: x * x - 2 * x - 3, z: 0 };
         }),
-        color: "#14b8a6",
+        color: getColor("TEAL"),
         labels: [
           {
             text: "f(x) = x² - 2x - 3",
@@ -172,7 +172,6 @@ The resulting quadratic function is:
         point <InlineMath math="(4, 4)" />.
       </>
     }
-    smooth={true}
     cameraPosition={[6, 6, 8]}
     data={[
       {
@@ -180,7 +179,7 @@ The resulting quadratic function is:
           const x = i - 1; // x values from -1 to 7
           return { x, y: Math.pow(x - 2, 2), z: 0 };
         }),
-        color: "#6366f1",
+        color: getColor("INDIGO"),
         labels: [
           {
             text: "f(x) = (x - 2)²",
@@ -245,7 +244,6 @@ The resulting quadratic function is:
         <InlineMath math="(1, -6)" />.
       </>
     }
-    smooth={true}
     cameraPosition={[4, 5, 10]}
     data={[
       {
@@ -253,7 +251,7 @@ The resulting quadratic function is:
           const x = i - 4; // x values from -4 to 6
           return { x, y: (x + 2) * (x - 3), z: 0 };
         }),
-        color: "#f97316",
+        color: getColor("ORANGE"),
         labels: [
           {
             text: "f(x) = (x + 2)(x - 3)",
@@ -363,7 +361,7 @@ The resulting quadratic function is:
           const x = i - 6; // x values from -6 to 6
           return { x, y: (1 / 16) * x * x, z: 0 };
         }),
-        color: "#14b8a6",
+        color: getColor("TEAL"),
         labels: [
           {
             text: "f(x) = (1/16)x²",
