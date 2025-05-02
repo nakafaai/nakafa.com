@@ -3,11 +3,7 @@
 import { usePathname } from "@/i18n/navigation";
 import { searchAtom } from "@/lib/jotai/search";
 import { cn } from "@/lib/utils";
-import {
-  IconBrandWindows,
-  IconCommand,
-  IconLetterK,
-} from "@tabler/icons-react";
+import { IconCommand, IconLetterK } from "@tabler/icons-react";
 import { useSetAtom } from "jotai";
 import { SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -65,11 +61,7 @@ export function SearchBar({ className, forceOpen = false }: Props) {
         <div className="pointer-events-none absolute inset-y-0 end-0 hidden items-center justify-center pe-3 lg:flex">
           <div className="flex items-center gap-0.5">
             <kbd className="rounded border bg-background p-0.75">
-              {isMac ? (
-                <IconCommand className="size-3 shrink-0" />
-              ) : (
-                <IconBrandWindows className="size-3 shrink-0" />
-              )}
+              {isMac ? <IconCommand className="size-3 shrink-0" /> : <>Ctrl</>}
               <span className="sr-only">Command/Ctrl</span>
             </kbd>
             <kbd className="rounded border bg-background p-0.75">
