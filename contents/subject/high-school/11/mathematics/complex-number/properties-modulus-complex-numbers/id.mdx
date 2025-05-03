@@ -4,3 +4,133 @@ export const metadata = {
   date: "05/01/2025",
   subject: "Bilangan Kompleks",
 };
+
+## Sifat-sifat Operasi Modulus
+
+Misalkan <InlineMath math="z_1" /> dan <InlineMath math="z_2" /> adalah bilangan kompleks.
+
+### Modulus Bilangan, Negatifnya, dan Konjugatnya
+
+Modulus dari suatu bilangan kompleks sama dengan modulus dari negatifnya, dan juga sama dengan modulus dari konjugatnya.
+
+<BlockMath math="|z_1| = |-z_1| = |\bar{z_1}|" />
+
+**Penjelasan:**
+
+Ingat bahwa jika <InlineMath math="z_1 = x + iy" />, maka <InlineMath math="-z_1 = -x - iy" /> dan <InlineMath math="\bar{z_1} = x - iy" />.
+
+- <InlineMath math="|z_1| = \sqrt{x^2 + y^2}" />
+- <InlineMath math="|-z_1| = \sqrt{(-x)^2 + (-y)^2} = \sqrt{x^2 + y^2}" />
+- <InlineMath math="|\bar{z_1}| = \sqrt{x^2 + (-y)^2} = \sqrt{x^2 + y^2}" />
+
+Ketiganya menghasilkan nilai yang sama.
+
+### Modulus Selisih
+
+Modulus dari selisih dua bilangan kompleks sama urutannya dibalik.
+
+<BlockMath math="|z_1 - z_2| = |z_2 - z_1|" />
+
+**Penjelasan:**
+
+Ini adalah akibat langsung dari sifat pertama. Kita tahu <InlineMath math="z_1 - z_2 = -(z_2 - z_1)" />. Maka:
+
+<BlockMath math="|z_1 - z_2| = |-(z_2 - z_1)| = |z_2 - z_1|" />
+
+### Kuadrat Modulus
+
+Kuadrat dari modulus suatu bilangan kompleks sama dengan bilangan kompleks tersebut dikalikan dengan konjugatnya.
+
+<BlockMath math="|z_1|^2 = z_1 \times \bar{z_1}" />
+
+**Penjelasan:**
+
+Jika <InlineMath math="z_1 = x + iy" />, maka <InlineMath math="\bar{z_1} = x - iy" />.
+
+<BlockMath math="z_1 \times \bar{z_1} = (x + iy)(x - iy) = x^2 - (iy)^2 = x^2 - i^2y^2 = x^2 - (-1)y^2 = x^2 + y^2" />
+
+Kita juga tahu bahwa <InlineMath math="|z_1| = \sqrt{x^2 + y^2}" />, sehingga <InlineMath math="|z_1|^2 = (\sqrt{x^2 + y^2})^2 = x^2 + y^2" />. Jadi, kedua sisi sama.
+
+### Modulus Hasil Kali
+
+Modulus dari hasil kali dua bilangan kompleks sama dengan hasil kali modulus masing-masing bilangan kompleks.
+
+<BlockMath math="|z_1 \times z_2| = |z_1| \times |z_2|" />
+
+### Modulus Hasil Bagi
+
+Modulus dari hasil bagi dua bilangan kompleks sama dengan hasil bagi modulus masing-masing bilangan kompleks (dengan penyebut tidak nol).
+
+<BlockMath math="\left| \frac{z_1}{z_2} \right| = \frac{|z_1|}{|z_2|}, \quad \text{untuk } z_2 \neq 0" />
+
+### Ketaksamaan Segitiga
+
+Modulus dari jumlah dua bilangan kompleks kurang dari atau sama dengan jumlah modulus masing-masing bilangan kompleks.
+
+<BlockMath math="|z_1 + z_2| \leq |z_1| + |z_2|" />
+
+**Penjelasan:**
+
+Secara geometris, jika kita menganggap <InlineMath math="z_1" />, <InlineMath math="z_2" />, dan <InlineMath math="z_1 + z_2" /> sebagai sisi-sisi segitiga pada bidang kompleks, sifat ini menyatakan bahwa panjang satu sisi (<InlineMath math="|z_1 + z_2|" />) tidak mungkin lebih besar dari jumlah panjang dua sisi lainnya (<InlineMath math="|z_1| + |z_2|" />).
+
+## Penggunaan Sifat Modulus
+
+Misalkan diberikan bilangan kompleks <InlineMath math="z = \frac{1 - 2i}{3 + 4i}" />. Tentukanlah <InlineMath math="|z|" />!
+
+**Penyelesaian:**
+
+Kita bisa memandang <InlineMath math="z = \frac{z_1}{z_2}" /> dengan <InlineMath math="z_1 = 1 - 2i" /> dan <InlineMath math="z_2 = 3 + 4i" />.
+
+Menggunakan sifat **Modulus Hasil Bagi**:
+
+<BlockMath math="|z| = \left| \frac{1 - 2i}{3 + 4i} \right| = \frac{|1 - 2i|}{|3 + 4i|}" />
+
+Sekarang kita hitung modulus <InlineMath math="z_1" /> dan <InlineMath math="z_2" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="|z_1| = |1 - 2i| = \sqrt{1^2 + (-2)^2} = \sqrt{1 + 4} = \sqrt{5}" />
+  <BlockMath math="|z_2| = |3 + 4i| = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5" />
+</div>
+
+Sehingga,
+
+<BlockMath math="|z| = \frac{\sqrt{5}}{5}" />
+
+Ini jauh lebih mudah daripada mengalikan dengan konjugat penyebut terlebih dahulu, baru menghitung modulusnya.
+
+## Latihan
+
+1.  Jika <InlineMath math="z_1 = 6 + 8i" /> dan <InlineMath math="z_2 = 3 - i" />, hitunglah <InlineMath math="|z_1 \times z_2|" /> menggunakan sifat modulus.
+2.  Jika <InlineMath math="z = 5 - 12i" />, buktikan bahwa <InlineMath math="|z|^2 = z \times \bar{z}" />.
+
+### Kunci Jawaban
+
+1.  Kita gunakan sifat <InlineMath math="|z_1 \times z_2| = |z_1| \times |z_2|" />.
+
+    Hitung modulus masing-masing:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="|z_1| = |6 + 8i| = \sqrt{6^2 + 8^2} = \sqrt{36 + 64} = \sqrt{100} = 10" />
+      <BlockMath math="|z_2| = |3 - i| = \sqrt{3^2 + (-1)^2} = \sqrt{9 + 1} = \sqrt{10}" />
+    </div>
+
+    Maka:
+
+    <BlockMath math="|z_1 \times z_2| = |z_1| \times |z_2| = 10 \times \sqrt{10} = 10\sqrt{10}" />
+
+2.  Diketahui <InlineMath math="z = 5 - 12i" />.
+
+    Hitung sisi kiri (<InlineMath math="|z|^2" />):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="|z| = |5 - 12i| = \sqrt{5^2 + (-12)^2} = \sqrt{25 + 144} = \sqrt{169} = 13" />
+      <BlockMath math="|z|^2 = 13^2 = 169" />
+    </div>
+
+    Hitung sisi kanan (<InlineMath math="z \times \bar{z}" />):
+
+    Konjugat dari <InlineMath math="z" /> adalah <InlineMath math="\bar{z} = 5 + 12i" />.
+
+    <BlockMath math="z \times \bar{z} = (5 - 12i)(5 + 12i) = 5^2 - (12i)^2 = 25 - 144i^2 = 25 - 144(-1) = 25 + 144 = 169" />
+
+    Karena sisi kiri (169) sama dengan sisi kanan (169), maka terbukti <InlineMath math="|z|^2 = z \times \bar{z}" />.

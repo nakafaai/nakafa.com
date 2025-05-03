@@ -4,3 +4,135 @@ export const metadata = {
   date: "05/01/2025",
   subject: "Complex Number",
 };
+
+## Properties of Modulus Operations
+
+Let <InlineMath math="z_1" /> and <InlineMath math="z_2" /> be complex numbers.
+
+### Modulus of a Number, its Negative, and its Conjugate
+
+The modulus of a complex number is equal to the modulus of its negative, and also equal to the modulus of its conjugate.
+
+<BlockMath math="|z_1| = |-z_1| = |\bar{z_1}|" />
+
+**Explanation:**
+
+Recall that if <InlineMath math="z_1 = x + iy" />, then <InlineMath math="-z_1 = -x - iy" /> and <InlineMath math="\bar{z_1} = x - iy" />.
+
+- <InlineMath math="|z_1| = \sqrt{x^2 + y^2}" />
+- <InlineMath math="|-z_1| = \sqrt{(-x)^2 + (-y)^2} = \sqrt{x^2 + y^2}" />
+- <InlineMath math="|\bar{z_1}| = \sqrt{x^2 + (-y)^2} = \sqrt{x^2 + y^2}" />
+
+All three yield the same value.
+
+### Modulus of Difference
+
+The modulus of the difference of two complex numbers is the same if the order is reversed.
+
+<BlockMath math="|z_1 - z_2| = |z_2 - z_1|" />
+
+**Explanation:**
+
+This is a direct consequence of the first property. We know <InlineMath math="z_1 - z_2 = -(z_2 - z_1)" />. Then:
+
+<BlockMath math="|z_1 - z_2| = |-(z_2 - z_1)| = |z_2 - z_1|" />
+
+### Square of Modulus
+
+The square of the modulus of a complex number is equal to the complex number multiplied by its conjugate.
+
+<BlockMath math="|z_1|^2 = z_1 \times \bar{z_1}" />
+
+**Explanation:**
+
+If <InlineMath math="z_1 = x + iy" />, then <InlineMath math="\bar{z_1} = x - iy" />.
+
+<BlockMath math="z_1 \times \bar{z_1} = (x + iy)(x - iy) = x^2 - (iy)^2 = x^2 - i^2y^2 = x^2 - (-1)y^2 = x^2 + y^2" />
+
+We also know that <InlineMath math="|z_1| = \sqrt{x^2 + y^2}" />, so <InlineMath math="|z_1|^2 = (\sqrt{x^2 + y^2})^2 = x^2 + y^2" />.
+
+Thus, both sides are equal.
+
+### Modulus of Product
+
+The modulus of the product of two complex numbers is equal to the product of their individual moduli.
+
+<BlockMath math="|z_1 \times z_2| = |z_1| \times |z_2|" />
+
+### Modulus of Quotient
+
+The modulus of the quotient of two complex numbers is equal to the quotient of their individual moduli (provided the denominator is non-zero).
+
+<BlockMath math="\left| \frac{z_1}{z_2} \right| = \frac{|z_1|}{|z_2|}, \quad \text{for } z_2 \neq 0" />
+
+### Triangle Inequality
+
+The modulus of the sum of two complex numbers is less than or equal to the sum of their individual moduli.
+
+<BlockMath math="|z_1 + z_2| \leq |z_1| + |z_2|" />
+
+**Explanation:**
+
+Geometrically, if we consider <InlineMath math="z_1" />, <InlineMath math="z_2" />, and <InlineMath math="z_1 + z_2" /> as sides of a triangle on the complex plane, this property states that the length of one side (<InlineMath math="|z_1 + z_2|" />) cannot be greater than the sum of the lengths of the other two sides (<InlineMath math="|z_1| + |z_2|" />).
+
+## Using Modulus Properties
+
+Suppose we are given the complex number <InlineMath math="z = \frac{1 - 2i}{3 + 4i}" />. Find <InlineMath math="|z|" />!
+
+**Solution:**
+
+We can view <InlineMath math="z = \frac{z_1}{z_2}" /> with <InlineMath math="z_1 = 1 - 2i" /> and <InlineMath math="z_2 = 3 + 4i" />.
+
+Using the **Modulus of Quotient** property:
+
+<BlockMath math="|z| = \left| \frac{1 - 2i}{3 + 4i} \right| = \frac{|1 - 2i|}{|3 + 4i|}" />
+
+Now we calculate the moduli of <InlineMath math="z_1" /> and <InlineMath math="z_2" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="|z_1| = |1 - 2i| = \sqrt{1^2 + (-2)^2} = \sqrt{1 + 4} = \sqrt{5}" />
+  <BlockMath math="|z_2| = |3 + 4i| = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5" />
+</div>
+
+Therefore,
+
+<BlockMath math="|z| = \frac{\sqrt{5}}{5}" />
+
+This is much easier than first multiplying by the conjugate of the denominator and then calculating the modulus.
+
+## Exercise
+
+1.  If <InlineMath math="z_1 = 6 + 8i" /> and <InlineMath math="z_2 = 3 - i" />, calculate <InlineMath math="|z_1 \times z_2|" /> using the modulus properties.
+2.  If <InlineMath math="z = 5 - 12i" />, prove that <InlineMath math="|z|^2 = z \times \bar{z}" />.
+
+### Answer Key
+
+1.  We use the property <InlineMath math="|z_1 \times z_2| = |z_1| \times |z_2|" />.
+
+    Calculate each modulus:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="|z_1| = |6 + 8i| = \sqrt{6^2 + 8^2} = \sqrt{36 + 64} = \sqrt{100} = 10" />
+      <BlockMath math="|z_2| = |3 - i| = \sqrt{3^2 + (-1)^2} = \sqrt{9 + 1} = \sqrt{10}" />
+    </div>
+
+    Then:
+
+    <BlockMath math="|z_1 \times z_2| = |z_1| \times |z_2| = 10 \times \sqrt{10} = 10\sqrt{10}" />
+
+2.  Given <InlineMath math="z = 5 - 12i" />.
+
+    Calculate the left side (<InlineMath math="|z|^2" />):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="|z| = |5 - 12i| = \sqrt{5^2 + (-12)^2} = \sqrt{25 + 144} = \sqrt{169} = 13" />
+      <BlockMath math="|z|^2 = 13^2 = 169" />
+    </div>
+
+    Calculate the right side (<InlineMath math="z \times \bar{z}" />):
+
+    The conjugate of <InlineMath math="z" /> is <InlineMath math="\bar{z} = 5 + 12i" />.
+
+    <BlockMath math="z \times \bar{z} = (5 - 12i)(5 + 12i) = 5^2 - (12i)^2 = 25 - 144i^2 = 25 - 144(-1) = 25 + 144 = 169" />
+
+    Since the left side (169) equals the right side (169), the statement <InlineMath math="|z|^2 = z \times \bar{z}" /> is proven.
