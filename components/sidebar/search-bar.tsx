@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "@/i18n/navigation";
 import { searchAtom } from "@/lib/jotai/search";
 import { cn } from "@/lib/utils";
 import { IconCommand, IconLetterK } from "@tabler/icons-react";
@@ -13,21 +12,13 @@ import { Label } from "../ui/label";
 
 type Props = {
   className?: string;
-  forceOpen?: boolean;
 };
 
-export function SearchBar({ className, forceOpen = false }: Props) {
+export function SearchBar({ className }: Props) {
   const t = useTranslations("Utils");
   const id = useId();
 
-  const pathname = usePathname();
-
   const setOpen = useSetAtom(searchAtom);
-
-  // If the pathname is /, don't show the search bar
-  if (pathname === "/" && !forceOpen) {
-    return null;
-  }
 
   return (
     <button

@@ -6,7 +6,7 @@ import { SidebarTrigger } from "../ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { HeaderBreadcrumb } from "./header-breadcrumb";
 import { HeaderContainer } from "./header-container";
-import { SearchBar } from "./search-bar";
+import { HeaderSearch } from "./header-search";
 
 export function Header() {
   const t = useTranslations("Common");
@@ -20,7 +20,7 @@ export function Header() {
         </div>
 
         <div className="flex w-full items-center justify-end gap-2">
-          <SearchBar />
+          <HeaderSearch />
           <Tooltip>
             <TooltipTrigger asChild>
               <a

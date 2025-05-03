@@ -66,7 +66,7 @@ export default async function Page({ params }: Props) {
             <h1 className="mb-8 font-medium text-4xl leading-none tracking-tighter md:text-center">
               {tHome("title")}
             </h1>
-            <SearchBar forceOpen className="h-12 rounded-xl sm:w-full" />
+            <SearchBar className="h-12 rounded-xl sm:w-full" />
 
             <div className="mt-6 grid w-fit grid-cols-2 gap-3 md:mx-auto">
               <a

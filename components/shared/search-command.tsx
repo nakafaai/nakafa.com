@@ -9,69 +9,22 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
 import { queryAtom, searchAtom } from "@/lib/jotai/search";
 import { useSearch } from "@/lib/react-query/use-search";
 import { cn } from "@/lib/utils";
+import { getAnchorStyle } from "@/lib/utils/search";
 import type { PagefindResult } from "@/types/pagefind";
 import { IconMenu3 } from "@tabler/icons-react";
 import { useAtom, useSetAtom } from "jotai";
 import { HeartCrackIcon, InfoIcon, RocketIcon } from "lucide-react";
 import { FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { addBasePath } from "next/dist/client/add-base-path";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useTransition } from "react";
 import type { ReactElement } from "react";
-import { useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { LoaderIcon } from "../ui/icons";
-
-const DEV_SEARCH_NOTICE = (
-  <>
-    <p>
-      Search isn&apos;t available in development because Nakafa uses Pagefind
-      package, which indexes built `.html` files instead of `.md`/`.mdx`.
-    </p>
-    <p className="x:mt-2">
-      To test search during development, run `next build` and then restart your
-      app with `next dev`.
-    </p>
-  </>
-);
-
-// Fix React Compiler (BuildHIR::lowerExpression) Handle Import expressions
-async function importPagefind() {
-  try {
-    window.pagefind = await import(
-      /* webpackIgnore: true */ addBasePath("/_pagefind/pagefind.js")
-    );
-    window.pagefind?.options({
-      baseUrl: "/",
-      // ... more search options
-    });
-    await window.pagefind.init?.();
-  } catch {
-    window.pagefind = {
-      debouncedSearch: () => Promise.resolve([]),
-      destroy: () => Promise.resolve(),
-      init: () => Promise.resolve(),
-      options: () => undefined,
-    };
-  }
-}
-
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    if (
-      process.env.NODE_ENV !== "production" &&
-      error.message.includes("Failed to fetch")
-    ) {
-      return DEV_SEARCH_NOTICE; // This error will be tree-shaked in production
-    }
-    return `${error.constructor.name}: ${error.message}`;
-  }
-  return String(error);
-}
 
 export function SearchCommand() {
   const [open, setOpen] = useAtom(searchAtom);
@@ -141,29 +94,9 @@ function SearchInput({
 }
 
 function SearchList({ search }: { search: string }) {
-  const [isPagefindReady, setIsPagefindReady] = useState(false);
-  const [pagefindError, setPagefindError] = useState<ReactElement | string>("");
+  const pagefindError = usePagefind((context) => context.error);
 
-  const [debouncedSearch] = useDebounceValue(search, 500);
-
-  // Initialize Pagefind on mount
-  useEffect(() => {
-    const init = async () => {
-      setPagefindError(""); // Reset error on attempt
-      if (window.pagefind) {
-        setIsPagefindReady(true);
-        return;
-      }
-      try {
-        await importPagefind();
-        setIsPagefindReady(true);
-      } catch (error: unknown) {
-        setPagefindError(getErrorMessage(error));
-        setIsPagefindReady(false); // Explicitly set to false on error
-      }
-    };
-    init();
-  }, []);
+  const [debouncedSearch] = useDebounceValue(search, 300);
 
   const {
     data: results = [],
@@ -173,7 +106,7 @@ function SearchList({ search }: { search: string }) {
     isPlaceholderData,
   } = useSearch({
     query: debouncedSearch,
-    enabled: isPagefindReady && !!debouncedSearch,
+    enabled: !!debouncedSearch,
   });
 
   // Combine initialization error with query error
@@ -299,25 +232,4 @@ function SearchListItems({
       </Fragment>
     );
   });
-}
-
-function getAnchorStyle(
-  anchor: PagefindResult["sub_results"][number]["anchor"]
-) {
-  if (!anchor) {
-    return null;
-  }
-  if (anchor.element === "h3") {
-    return "ml-5";
-  }
-  if (anchor.element === "h4") {
-    return "ml-9";
-  }
-  if (anchor.element === "h5") {
-    return "ml-13";
-  }
-  if (anchor.element === "h6") {
-    return "ml-17";
-  }
-  return null;
 }

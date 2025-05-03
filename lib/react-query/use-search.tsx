@@ -1,5 +1,6 @@
 import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { usePagefind } from "../context/use-pagefind";
 
 const HTML_EXT_REGEX = /\.html$/;
 const HTML_ANCHOR_REGEX = /\.html#/;
@@ -41,10 +42,12 @@ export function useSearch({
   query: string;
   enabled: boolean;
 }) {
+  const pagefindReady = usePagefind((context) => context.ready);
+
   return useQuery({
     queryKey: ["search", query],
     queryFn: () => fetchSearchResults(query),
-    enabled,
+    enabled: pagefindReady && enabled,
     refetchOnWindowFocus: false,
     retry: false,
     placeholderData: keepPreviousData,

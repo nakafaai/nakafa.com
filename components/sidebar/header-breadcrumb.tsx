@@ -19,6 +19,9 @@ function getBreadcrumb(pathname: string) {
   if (pathname.includes("/articles")) {
     return "articles";
   }
+  if (pathname.includes("/search")) {
+    return "search";
+  }
   return null;
 }
 
