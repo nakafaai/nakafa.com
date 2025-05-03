@@ -4,3 +4,125 @@ export const metadata = {
   date: "05/01/2025",
   subject: "Complex Number",
 };
+
+## Argument Properties in Complex Number Operations
+
+How does the argument behave when complex numbers are multiplied or divided?
+
+These properties are very useful, especially when working with polar or exponential forms.
+
+Suppose we have two complex numbers:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="z_1 = r_1(\cos \theta_1 + i\sin \theta_1)" />
+  <BlockMath math="z_2 = r_2(\cos \theta_2 + i\sin \theta_2)" />
+</div>
+
+Where <InlineMath math="\theta_1" /> is one argument of <InlineMath math="z_1" /> and <InlineMath math="\theta_2" /> is one argument of <InlineMath math="z_2" />.
+
+### Argument of Product
+
+The argument of the product of two complex numbers (<InlineMath math="z_1 \times z_2" />) is the **sum** of the arguments of the individual complex numbers.
+
+Mathematically, the relationship between the sets of arguments is:
+
+<BlockMath math="\arg(z_1 z_2) = \arg(z_1) + \arg(z_2)" />
+
+This means if <InlineMath math="\theta_1" /> is an argument of <InlineMath math="z_1" /> and <InlineMath math="\theta_2" /> is an argument of <InlineMath math="z_2" />,
+
+then <InlineMath math="\theta_1 + \theta_2" /> is one of the arguments of <InlineMath math="z_1 z_2" />.
+
+**To find the Principal Argument <InlineMath math="\text{Arg}(z_1 z_2)" />:**
+
+1.  Calculate <InlineMath math="\text{Arg}(z_1) + \text{Arg}(z_2)" />.
+2.  If the result is already within the range <InlineMath math="[0^\circ, 360^\circ)" /> (or <InlineMath math="[0, 2\pi)" />), that is the Principal Argument.
+3.  If the result is outside the range, add or subtract multiples of <InlineMath math="360^\circ" /> (or <InlineMath math="2\pi" />) to bring it into the range.
+
+### Argument of Quotient
+
+The argument of the quotient of two complex numbers (<InlineMath math="\frac{z_1}{z_2}" />, with <InlineMath math="z_2 \neq 0" />) is the **difference** between the argument of the numerator complex number (<InlineMath math="z_1" />) and the argument of the denominator complex number (<InlineMath math="z_2" />).
+
+The relationship between the sets of arguments:
+
+<BlockMath math="\arg\left(\frac{z_1}{z_2}\right) = \arg(z_1) - \arg(z_2)" />
+
+This means if <InlineMath math="\theta_1" /> is an argument of <InlineMath math="z_1" /> and <InlineMath math="\theta_2" /> is an argument of <InlineMath math="z_2" />,
+
+then <InlineMath math="\theta_1 - \theta_2" /> is one of the arguments of <InlineMath math="\frac{z_1}{z_2}" />.
+
+**To find the Principal Argument <InlineMath math="\text{Arg}\left(\frac{z_1}{z_2}\right)" />:**
+
+1.  Calculate <InlineMath math="\text{Arg}(z_1) - \text{Arg}(z_2)" />.
+2.  If the result is already within the range <InlineMath math="[0^\circ, 360^\circ)" /> (or <InlineMath math="[0, 2\pi)" />), that is the Principal Argument.
+3.  If the result is outside the range, add or subtract multiples of <InlineMath math="360^\circ" /> (or <InlineMath math="2\pi" />) to bring it into the range.
+
+## Using Argument Properties
+
+Given two complex numbers:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="z_1 = 2(\cos 45^\circ + i\sin 45^\circ)" />
+  <BlockMath math="z_2 = 3(\cos 95^\circ + i\sin 95^\circ)" />
+</div>
+
+Find the Principal Argument of <InlineMath math="z_1 \times z_2" /> and <InlineMath math="\frac{z_1}{z_2}" />.
+
+**Solution:**
+
+We know the Principal Arguments are:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Arg}(z_1) = 45^\circ" />
+  <BlockMath math="\text{Arg}(z_2) = 95^\circ" />
+</div>
+
+1.  **Argument of Product (<InlineMath math="z_1 \times z_2" />):**
+
+    Sum of Principal Arguments:
+
+    <BlockMath math="\text{Arg}(z_1) + \text{Arg}(z_2) = 45^\circ + 95^\circ = 140^\circ" />
+
+    Since <InlineMath math="140^\circ" /> is already within the range <InlineMath math="[0^\circ, 360^\circ)" />, then:
+
+    <BlockMath math="\text{Arg}(z_1 \times z_2) = 140^\circ" />
+
+    The set of all arguments is <InlineMath math="\{140^\circ + k \cdot 360^\circ : k \in \mathbb{Z}\}" />
+
+2.  **Argument of Quotient (<InlineMath math="\frac{z_1}{z_2}" />):**
+
+    Difference of Principal Arguments:
+
+    <BlockMath math="\text{Arg}(z_1) - \text{Arg}(z_2) = 45^\circ - 95^\circ = -50^\circ" />
+
+    Since <InlineMath math="-50^\circ" /> is outside the range <InlineMath math="[0^\circ, 360^\circ)" />, we need to add <InlineMath math="360^\circ" />:
+
+    <BlockMath math="-50^\circ + 360^\circ = 310^\circ" />
+
+    Therefore:
+
+    <BlockMath math="\text{Arg}\left(\frac{z_1}{z_2}\right) = 310^\circ" />
+
+    The set of all arguments is <InlineMath math="\{-50^\circ + k \cdot 360^\circ : k \in \mathbb{Z}\}" />, which is the same as <InlineMath math="\{310^\circ + k \cdot 360^\circ : k \in \mathbb{Z}\}" />.
+
+## Exercise
+
+Given <InlineMath math="z_a = 4(\cos 120^\circ + i\sin 120^\circ)" /> and <InlineMath math="z_b = 2(\cos 50^\circ + i\sin 50^\circ)" />. Find:
+
+1.  <InlineMath math="\text{Arg}(z_a \times z_b)" />
+2.  <InlineMath math="\text{Arg}\left(\frac{z_a}{z_b}\right)" />
+
+### Answer Key
+
+Given <InlineMath math="\text{Arg}(z_a) = 120^\circ" /> and <InlineMath math="\text{Arg}(z_b) = 50^\circ" />.
+
+1.  **Argument of Product:**
+
+    <BlockMath math="\text{Arg}(z_a) + \text{Arg}(z_b) = 120^\circ + 50^\circ = 170^\circ" />
+
+    Since <InlineMath math="170^\circ \in [0^\circ, 360^\circ)" />, then <InlineMath math="\text{Arg}(z_a z_b) = 170^\circ" />.
+
+2.  **Argument of Quotient:**
+
+    <BlockMath math="\text{Arg}(z_a) - \text{Arg}(z_b) = 120^\circ - 50^\circ = 70^\circ" />
+
+    Since <InlineMath math="70^\circ \in [0^\circ, 360^\circ)" />, then <InlineMath math="\text{Arg}\left(\frac{z_a}{z_b}\right) = 70^\circ" />.

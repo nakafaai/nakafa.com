@@ -4,3 +4,125 @@ export const metadata = {
   date: "05/01/2025",
   subject: "Bilangan Kompleks",
 };
+
+## Sifat Argumen pada Operasi Bilangan Kompleks
+
+Bagaimana argumen berperilaku ketika bilangan kompleks dikalikan atau dibagi?
+
+Sifat-sifat ini sangat berguna, terutama saat bekerja dengan bentuk polar atau eksponensial.
+
+Misalkan kita punya dua bilangan kompleks:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="z_1 = r_1(\cos \theta_1 + i\sin \theta_1)" />
+  <BlockMath math="z_2 = r_2(\cos \theta_2 + i\sin \theta_2)" />
+</div>
+
+Di mana <InlineMath math="\theta_1" /> adalah salah satu argumen dari <InlineMath math="z_1" /> dan <InlineMath math="\theta_2" /> adalah salah satu argumen dari <InlineMath math="z_2" />.
+
+### Argumen Hasil Kali
+
+Argumen dari hasil kali dua bilangan kompleks (<InlineMath math="z_1 \times z_2" />) adalah **jumlah** dari argumen masing-masing bilangan kompleks.
+
+Secara matematis, hubungan antara himpunan argumennya adalah:
+
+<BlockMath math="\arg(z_1 z_2) = \arg(z_1) + \arg(z_2)" />
+
+Ini berarti jika <InlineMath math="\theta_1" /> adalah argumen <InlineMath math="z_1" /> dan <InlineMath math="\theta_2" /> adalah argumen <InlineMath math="z_2" />,
+
+maka <InlineMath math="\theta_1 + \theta_2" /> adalah salah satu argumen dari <InlineMath math="z_1 z_2" />.
+
+**Untuk mencari Argumen Utama <InlineMath math="\text{Arg}(z_1 z_2)" />:**
+
+1.  Hitung <InlineMath math="\text{Arg}(z_1) + \text{Arg}(z_2)" />.
+2.  Jika hasilnya sudah berada dalam rentang <InlineMath math="[0^\circ, 360^\circ)" /> (atau <InlineMath math="[0, 2\pi)" />), itulah Argumen Utamanya.
+3.  Jika hasilnya di luar rentang, tambahkan atau kurangkan kelipatan <InlineMath math="360^\circ" /> (atau <InlineMath math="2\pi" />) agar masuk ke dalam rentang tersebut.
+
+### Argumen Hasil Bagi
+
+Argumen dari hasil bagi dua bilangan kompleks (<InlineMath math="\frac{z_1}{z_2}" />, dengan <InlineMath math="z_2 \neq 0" />) adalah **selisih** dari argumen bilangan kompleks pembilang (<InlineMath math="z_1" />) dikurangi argumen bilangan kompleks penyebut (<InlineMath math="z_2" />).
+
+Hubungan antara himpunan argumennya:
+
+<BlockMath math="\arg\left(\frac{z_1}{z_2}\right) = \arg(z_1) - \arg(z_2)" />
+
+Ini berarti jika <InlineMath math="\theta_1" /> adalah argumen <InlineMath math="z_1" /> dan <InlineMath math="\theta_2" /> adalah argumen <InlineMath math="z_2" />,
+
+maka <InlineMath math="\theta_1 - \theta_2" /> adalah salah satu argumen dari <InlineMath math="\frac{z_1}{z_2}" />.
+
+**Untuk mencari Argumen Utama <InlineMath math="\text{Arg}\left(\frac{z_1}{z_2}\right)" />:**
+
+1.  Hitung <InlineMath math="\text{Arg}(z_1) - \text{Arg}(z_2)" />.
+2.  Jika hasilnya sudah berada dalam rentang <InlineMath math="[0^\circ, 360^\circ)" /> (atau <InlineMath math="[0, 2\pi)" />), itulah Argumen Utamanya.
+3.  Jika hasilnya di luar rentang, tambahkan atau kurangkan kelipatan <InlineMath math="360^\circ" /> (atau <InlineMath math="2\pi" />) agar masuk ke dalam rentang tersebut.
+
+## Penggunaan Sifat Argumen
+
+Diberikan dua bilangan kompleks:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="z_1 = 2(\cos 45^\circ + i\sin 45^\circ)" />
+  <BlockMath math="z_2 = 3(\cos 95^\circ + i\sin 95^\circ)" />
+</div>
+
+Tentukan Argumen Utama dari <InlineMath math="z_1 \times z_2" /> dan <InlineMath math="\frac{z_1}{z_2}" />.
+
+**Penyelesaian:**
+
+Kita tahu Argumen Utama dari masing-masing adalah:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Arg}(z_1) = 45^\circ" />
+  <BlockMath math="\text{Arg}(z_2) = 95^\circ" />
+</div>
+
+1. **Argumen Hasil Kali (<InlineMath math="z_1 \times z_2" />):**
+
+   Jumlah Argumen Utama:
+
+   <BlockMath math="\text{Arg}(z_1) + \text{Arg}(z_2) = 45^\circ + 95^\circ = 140^\circ" />
+
+   Karena <InlineMath math="140^\circ" /> sudah berada dalam rentang <InlineMath math="[0^\circ, 360^\circ)" />, maka:
+
+   <BlockMath math="\text{Arg}(z_1 \times z_2) = 140^\circ" />
+
+   Himpunan semua argumennya adalah <InlineMath math="\{140^\circ + k \cdot 360^\circ : k \in \mathbb{Z}\}" />
+
+2. **Argumen Hasil Bagi (<InlineMath math="\frac{z_1}{z_2}" />):**
+
+   Selisih Argumen Utama:
+
+   <BlockMath math="\text{Arg}(z_1) - \text{Arg}(z_2) = 45^\circ - 95^\circ = -50^\circ" />
+
+   Karena <InlineMath math="-50^\circ" /> berada di luar rentang <InlineMath math="[0^\circ, 360^\circ)" />, kita perlu menambahkan <InlineMath math="360^\circ" />:
+
+   <BlockMath math="-50^\circ + 360^\circ = 310^\circ" />
+
+   Maka:
+
+   <BlockMath math="\text{Arg}\left(\frac{z_1}{z_2}\right) = 310^\circ" />
+
+   Himpunan semua argumennya adalah <InlineMath math="\{-50^\circ + k \cdot 360^\circ : k \in \mathbb{Z}\}" />, yang sama dengan <InlineMath math="\{310^\circ + k \cdot 360^\circ : k \in \mathbb{Z}\}" />.
+
+## Latihan
+
+Diketahui <InlineMath math="z_a = 4(\cos 120^\circ + i\sin 120^\circ)" /> dan <InlineMath math="z_b = 2(\cos 50^\circ + i\sin 50^\circ)" />. Tentukan:
+
+1.  <InlineMath math="\text{Arg}(z_a \times z_b)" />
+2.  <InlineMath math="\text{Arg}\left(\frac{z_a}{z_b}\right)" />
+
+### Kunci Jawaban
+
+Diketahui <InlineMath math="\text{Arg}(z_a) = 120^\circ" /> dan <InlineMath math="\text{Arg}(z_b) = 50^\circ" />.
+
+1.  **Argumen Hasil Kali:**
+
+    <BlockMath math="\text{Arg}(z_a) + \text{Arg}(z_b) = 120^\circ + 50^\circ = 170^\circ" />
+
+    Karena <InlineMath math="170^\circ \in [0^\circ, 360^\circ)" />, maka <InlineMath math="\text{Arg}(z_a z_b) = 170^\circ" />.
+
+2.  **Argumen Hasil Bagi:**
+
+    <BlockMath math="\text{Arg}(z_a) - \text{Arg}(z_b) = 120^\circ - 50^\circ = 70^\circ" />
+
+    Karena <InlineMath math="70^\circ \in [0^\circ, 360^\circ)" />, maka <InlineMath math="\text{Arg}\left(\frac{z_a}{z_b}\right) = 70^\circ" />.
