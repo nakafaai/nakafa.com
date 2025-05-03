@@ -88,7 +88,7 @@ function getUnsubmittedUrls(service: "indexNow" | "bing"): {
   // Get all URLs from sitemap
   const routes = getAllRoutes();
   const ogRoutes = getOgRoutes(routes);
-  const allRoutes = [...routes, ...ogRoutes];
+  const allRoutes = ["/search", ...routes, ...ogRoutes];
   const allEntries = allRoutes.flatMap((route) => getEntries(route));
 
   // Extract unique URLs

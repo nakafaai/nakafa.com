@@ -74,7 +74,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const ogRoutes = getOgRoutes(routes);
 
   // Combine regular routes and OG routes
-  const allRoutes = [...routes, ...ogRoutes];
+  const allRoutes = ["/search", ...routes, ...ogRoutes];
 
   return allRoutes.flatMap((route) => getEntries(route));
 }
