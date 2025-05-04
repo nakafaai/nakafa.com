@@ -4,3 +4,123 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polinomial",
 };
+
+## Apa Itu Identitas Polinomial?
+
+Pernahkah kamu melihat persamaan matematika yang selalu benar, tidak peduli berapa pun nilai variabel yang kita masukkan? Itulah yang disebut **identitas**. Nah, **Identitas Polinomial** adalah identitas yang melibatkan bentuk polinomial.
+
+Berbeda dengan persamaan biasa yang hanya benar untuk nilai variabel tertentu (misalnya, <InlineMath math="x + 2 = 5" /> hanya benar jika <InlineMath math="x=3" />), identitas polinomial berlaku untuk *semua* kemungkinan nilai variabel.
+
+## Identitas Polinomial yang Sering Digunakan
+
+Berikut adalah beberapa contoh identitas polinomial yang penting dan sering muncul:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="a^2 - b^2 = (a + b)(a - b)" />
+  <BlockMath math="(a + b)^2 = a^2 + 2ab + b^2" />
+  <BlockMath math="(a - b)^2 = a^2 - 2ab + b^2" />
+  <BlockMath math="a^3 + b^3 = (a + b)(a^2 - ab + b^2)" />
+  <BlockMath math="a^3 - b^3 = (a - b)(a^2 + ab + b^2)" />
+  <BlockMath math="(a + b)^3 = a^3 + 3a^2b + 3ab^2 + b^3" />
+  <BlockMath math="(a - b)^3 = a^3 - 3a^2b + 3ab^2 - b^3" />
+</div>
+
+Identitas ini sangat berguna untuk menyederhanakan atau memfaktorkan ekspresi polinomial.
+
+## Membuktikan Suatu Persamaan adalah Identitas
+
+Bagaimana cara kita tahu kalau suatu persamaan itu benar-benar identitas atau bukan?
+
+1.  **Cara Membuktikan (Jika BENAR identitas):**
+
+    Kita harus menunjukkan bahwa bentuk di ruas kiri persamaan **selalu sama** dengan bentuk di ruas kanan setelah disederhanakan. Caranya adalah dengan menguraikan salah satu ruas (biasanya yang lebih kompleks) menggunakan operasi aljabar sampai bentuknya sama persis dengan ruas lainnya.
+
+2.  **Cara Membuktikan (Jika BUKAN identitas):**
+
+    Cukup temukan **satu contoh nilai variabel** yang membuat ruas kiri tidak sama dengan ruas kanan. Jika kita bisa menemukan satu saja nilai yang membuat persamaan itu salah, maka persamaan itu bukanlah identitas.
+
+### Pembuktian Identitas
+
+Buktikan apakah persamaan berikut merupakan identitas polinomial atau bukan.
+
+1. <InlineMath math="(2x^2 - y^2)^2 = 4x^4 - 4x^2y^2 + y^4" />
+2. <InlineMath math="(2a - 5)(2a + 5) = 4a^2 - 20a + 25" />
+
+**Penyelesaian:**
+
+1. Kita akan uraikan ruas kiri menggunakan identitas <InlineMath math="(A - B)^2 = A^2 - 2AB + B^2" />, dengan <InlineMath math="A = 2x^2" /> dan <InlineMath math="B = y^2" />.
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="(2x^2 - y^2)^2 = (2x^2)^2 - 2(2x^2)(y^2) + (y^2)^2" />
+     <BlockMath math="= 4x^4 - 4x^2y^2 + y^4" />
+   </div>
+
+   Karena hasil penguraian ruas kiri (<InlineMath math="4x^4 - 4x^2y^2 + y^4" />) sama persis dengan ruas kanan, maka persamaan ini **terbukti merupakan identitas polinomial**.
+
+2. Kita coba masukkan satu nilai variabel, misalnya <InlineMath math="a = 0" />, ke kedua ruas.
+
+   - **Ruas Kiri:**
+
+     <div className="flex flex-col gap-4">
+       <BlockMath math="(2a - 5)(2a + 5) = (2(0) - 5)(2(0) + 5)" />
+       <BlockMath math="= (0 - 5)(0 + 5)" />
+       <BlockMath math="= (-5)(5)" />
+       <BlockMath math="= -25" />
+     </div>
+
+   - **Ruas Kanan:**
+
+     <div className="flex flex-col gap-4">
+       <BlockMath math="4a^2 - 20a + 25 = 4(0)^2 - 20(0) + 25" />
+       <BlockMath math="= 4(0) - 0 + 25" />
+       <BlockMath math="= 0 - 0 + 25" />
+       <BlockMath math="= 25" />
+     </div>
+
+   Karena untuk <InlineMath math="a = 0" />, ruas kiri (<InlineMath math="-25" />) tidak sama dengan ruas kanan (<InlineMath math="25" />), maka persamaan ini **bukan merupakan identitas polinomial**.
+
+   Sebenarnya, identitas yang benar untuk <InlineMath math="(2a-5)(2a+5)" /> adalah <InlineMath math="(2a)^2 - 5^2 = 4a^2 - 25" />, menggunakan identitas <InlineMath math="(A-B)(A+B) = A^2-B^2" />.
+
+## Latihan
+
+Buktikan apakah setiap persamaan polinomial berikut merupakan identitas polinomial atau bukan.
+
+1. <InlineMath math="(2m - 3)^3 = 8m^3 - 27" />
+2. <InlineMath math="(2x - 3)^2 + 5 = 4x^2 - 12x + 14" />
+
+### Kunci Jawaban
+
+1. Kita uji dengan nilai <InlineMath math="m = 1" />.
+
+   - **Ruas Kiri:**
+
+     <div className="flex flex-col gap-4">
+       <BlockMath math="(2m - 3)^3 = (2(1) - 3)^3" />
+       <BlockMath math="= (2 - 3)^3" />
+       <BlockMath math="= (-1)^3" />
+       <BlockMath math="= -1" />
+     </div>
+
+   - **Ruas Kanan:**
+
+     <div className="flex flex-col gap-4">
+       <BlockMath math="8m^3 - 27 = 8(1)^3 - 27" />
+       <BlockMath math="= 8(1) - 27" />
+       <BlockMath math="= 8 - 27" />
+       <BlockMath math="= -19" />
+     </div>
+
+   Karena untuk <InlineMath math="m=1" />, ruas kiri (<InlineMath math="-1" />) <InlineMath math="\neq" /> ruas kanan (<InlineMath math="-19" />), maka persamaan ini **bukan identitas polinomial**.
+   
+   Identitas yang benar adalah <InlineMath math="(2m-3)^3 = (2m)^3 - 3(2m)^2(3) + 3(2m)(3)^2 - 3^3 = 8m^3 - 36m^2 + 54m - 27" />.
+
+2. Kita uraikan ruas kiri menggunakan identitas <InlineMath math="(A - B)^2 = A^2 - 2AB + B^2" />, dengan <InlineMath math="A = 2x" /> dan <InlineMath math="B = 3" />.
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="(2x - 3)^2 + 5 = [(2x)^2 - 2(2x)(3) + (3)^2] + 5" />
+     <BlockMath math="= [4x^2 - 12x + 9] + 5" />
+     <BlockMath math="= 4x^2 - 12x + 9 + 5" />
+     <BlockMath math="= 4x^2 - 12x + 14" />
+   </div>
+
+   Karena hasil penguraian ruas kiri (<InlineMath math="4x^2 - 12x + 14" />) sama persis dengan ruas kanan, maka persamaan ini **terbukti merupakan identitas polinomial**.
