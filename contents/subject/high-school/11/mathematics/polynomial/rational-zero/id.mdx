@@ -4,3 +4,161 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polinomial",
 };
+
+## Mencari Akar Rasional Polinomial
+
+Setelah mengetahui [Teorema Faktor](/subject/high-school/11/mathematics/polynomial/factor-theorem), kita tahu bahwa mencari faktor <InlineMath math="(x-c)" /> sama saja dengan mencari pembuat nol (akar) <InlineMath math="c" /> dari polinomial <InlineMath math="P(x)" />. Namun, bagaimana cara kita menemukan nilai <InlineMath math="c" /> tersebut, terutama jika polinomialnya berderajat tinggi?
+
+Mencoba-coba semua bilangan tentu tidak efisien. Di sinilah **Teorema Pembuat Nol Rasional** (atau Teorema Akar Rasional) berperan. Teorema ini membantu kita mempersempit daftar kemungkinan akar rasional dari suatu polinomial.
+
+## Teorema Pembuat Nol Rasional
+
+Misalkan <InlineMath math="P(x) = a_n x^n + a_{n-1} x^{n-1} + \dots + a_1 x + a_0" /> adalah polinomial dengan koefisien-koefisien (<InlineMath math="a_n, a_{n-1}, \dots, a_1, a_0" />) yang semuanya merupakan **bilangan bulat**, dengan <InlineMath math="a_n \neq 0" /> dan <InlineMath math="a_0 \neq 0" />.
+
+Jika polinomial <InlineMath math="P(x)" /> tersebut memiliki pembuat nol (akar) rasional berbentuk <InlineMath math="\frac{p}{q}" /> (di mana <InlineMath math="p" /> dan <InlineMath math="q" /> adalah bilangan bulat, <InlineMath math="q \neq 0" />, dan <InlineMath math="\frac{p}{q}" /> adalah pecahan paling sederhana), maka:
+
+- <InlineMath math="p" /> pasti merupakan faktor dari konstanta <InlineMath math="a_0" />.
+- <InlineMath math="q" /> pasti merupakan faktor dari koefisien utama <InlineMath math="a_n" />.
+
+Teorema ini hanya memberikan daftar **kemungkinan** akar rasional. Belum tentu semua nilai <InlineMath math="\frac{p}{q}" /> dari daftar tersebut benar-benar akar dari polinomialnya. Kita masih perlu mengujinya.
+
+## Langkah-langkah Teorema Pembuat Nol Rasional
+
+Berikut langkah-langkah untuk menemukan akar rasional menggunakan teorema ini, seringkali dikombinasikan dengan Teorema Faktor:
+
+1.  **Identifikasi Koefisien:** Pastikan semua koefisien (<InlineMath math="a_n, \dots, a_0" />) adalah bilangan bulat. Identifikasi konstanta <InlineMath math="a_0" /> dan koefisien utama <InlineMath math="a_n" />.
+2.  **Daftar Faktor <InlineMath math="p" />:** Buat daftar semua faktor bilangan bulat (positif dan negatif) dari konstanta <InlineMath math="a_0" />.
+3.  **Daftar Faktor <InlineMath math="q" />:** Buat daftar semua faktor bilangan bulat (positif dan negatif) dari koefisien utama <InlineMath math="a_n" />.
+4.  **Daftar Kemungkinan Akar <InlineMath math="\frac{p}{q}" />:** Buat daftar semua kemungkinan nilai <InlineMath math="\frac{p}{q}" /> dengan membagi setiap faktor <InlineMath math="p" /> dengan setiap faktor <InlineMath math="q" />. Sederhanakan pecahan dan hilangkan duplikat.
+5.  **Uji Kemungkinan Akar:** Uji setiap nilai <InlineMath math="\frac{p}{q}" /> dari daftar kemungkinan dengan mensubstitusikannya ke <InlineMath math="P(x)" /> (menggunakan Teorema Sisa) atau menggunakan metode Horner. Jika hasilnya <InlineMath math="P(\frac{p}{q}) = 0" />, maka <InlineMath math="\frac{p}{q}" /> adalah akar rasional, dan <InlineMath math="(x - \frac{p}{q})" /> (atau bentuk <InlineMath math="(qx - p)" />) adalah faktornya (Teorema Faktor).
+6.  **Faktorkan Lebih Lanjut:** Setelah menemukan satu akar rasional <InlineMath math="c" />, gunakan hasil bagi dari metode Horner untuk mencari akar-akar lainnya dari polinomial yang derajatnya sudah lebih rendah.
+
+### Penggunaan Teorema Faktor dan Pembuat Nol Rasional
+
+Faktorkan polinomial <InlineMath math="P(x) = x^3 + 2x^2 - 9x - 18" /> secara komplet.
+
+1.  **Identifikasi Koefisien:**
+    
+    Koefisien adalah bilangan bulat. <InlineMath math="a_0 = -18" /> dan <InlineMath math="a_n = 1" />.
+
+2.  **Faktor <InlineMath math="p" /> (dari <InlineMath math="a_0 = -18" />):**
+
+    <BlockMath math="\pm 1, \pm 2, \pm 3, \pm 6, \pm 9, \pm 18" />
+
+3.  **Faktor <InlineMath math="q" /> (dari <InlineMath math="a_n = 1" />):**
+
+    <BlockMath math="\pm 1" />
+
+4.  **Kemungkinan Akar <InlineMath math="\frac{p}{q}" />:**
+
+    Membagi semua <InlineMath math="p" /> dengan <InlineMath math="q = \pm 1" /> menghasilkan:
+
+    <BlockMath math="\pm 1, \pm 2, \pm 3, \pm 6, \pm 9, \pm 18" />
+
+5.  **Uji Kemungkinan Akar:** Kita coba beberapa nilai dari daftar ini.
+
+    - Coba <InlineMath math="x = 1" />:
+
+      <BlockMath math="P(1) = 1 + 2 - 9 - 18 = -24 \neq 0" />
+
+    - Coba <InlineMath math="x = -1" />:
+
+      <BlockMath math="P(-1) = -1 + 2 + 9 - 18 = -8 \neq 0" />
+
+    - Coba <InlineMath math="x = 2" />:
+
+      <BlockMath math="P(2) = 8 + 8 - 18 - 18 = -20 \neq 0" />
+
+    - Coba <InlineMath math="x = -2" />:
+
+      <BlockMath math="P(-2) = -8 + 8 + 18 - 18 = 0" />.
+      
+      Berhasil! Jadi, <InlineMath math="x = -2" /> adalah akar, dan <InlineMath math="(x+2)" /> adalah faktor.
+
+    - Atau dicoba <InlineMath math="x = 3" />:
+
+      <BlockMath math="P(3) = (3)^3 + 2(3)^2 - 9(3) - 18 = 27 + 18 - 27 - 18 = 0" />
+      
+      Berhasil! Jadi, <InlineMath math="x = 3" /> adalah akar, dan <InlineMath math="(x-3)" /> adalah faktor.
+
+6.  **Faktorkan Lebih Lanjut (menggunakan akar <InlineMath math="x = 3" />):**
+
+    Bagi <InlineMath math="P(x)" /> dengan <InlineMath math="(x-3)" /> menggunakan Horner (<InlineMath math="c = 3" />).
+
+    <BlockMath
+      math="
+    \begin{array}{c|cccc}
+    3 & 1 & 2 & -9 & -18 \\
+      &   & 3 & 15 & 18 \\
+    \hline
+      & 1 & 5 & 6 & \boxed{0} \\
+    \end{array}
+    "
+    />
+
+    Hasil baginya <InlineMath math="H(x) = x^2 + 5x + 6" />.
+    
+    Maka, <InlineMath math="P(x) = (x-3)(x^2 + 5x + 6)" />.
+
+7.  **Faktorkan Hasil Bagi:**
+
+    Faktorkan <InlineMath math="x^2 + 5x + 6" />.
+
+    <BlockMath math="x^2 + 5x + 6 = (x+2)(x+3)" />
+
+8.  **Faktorisasi Lengkap:**
+
+    <BlockMath math="P(x) = (x-3)(x+2)(x+3)" />
+
+## Latihan
+
+Faktorkan <InlineMath math="P(x) = 2x^3 - 3x^2 - 12x + 20" /> secara komplet menggunakan Teorema Pembuat Nol Rasional dan Teorema Faktor.
+
+### Kunci Jawaban
+
+1.  **Identifikasi Koefisien:** <InlineMath math="a_0 = 20" />, <InlineMath math="a_n = 2" />.
+2.  **Faktor <InlineMath math="p" /> (dari 20):** <InlineMath math="\pm 1, \pm 2, \pm 4, \pm 5, \pm 10, \pm 20" />.
+3.  **Faktor <InlineMath math="q" /> (dari 2):** <InlineMath math="\pm 1, \pm 2" />.
+4.  **Kemungkinan Akar <InlineMath math="\frac{p}{q}" />:** <InlineMath math="\pm 1, \pm 2, \pm 4, \pm 5, \pm 10, \pm 20, \pm 1/2, \pm 5/2" />.
+5.  **Uji Akar:**
+    
+    Coba <InlineMath math="x = 2" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P(2) = 2(2)^3 - 3(2)^2 - 12(2) + 20" />
+      <BlockMath math="P(2) = 2(8) - 3(4) - 24 + 20" />
+      <BlockMath math="P(2) = 16 - 12 - 24 + 20" />
+      <BlockMath math="P(2) = 4 - 4 = 0" />
+    </div>
+
+    Karena <InlineMath math="P(2)=0" />, maka <InlineMath math="x=2" /> adalah akar dan <InlineMath math="(x-2)" /> adalah faktor.
+
+6.  **Bagi dengan Horner (<InlineMath math="c = 2" />):**
+
+    <BlockMath
+      math="
+    \begin{array}{c|cccc}
+    2 & 2 & -3 & -12 & 20 \\
+      &   & 4 & 2 & -20 \\
+    \hline
+      & 2 & 1 & -10 & \boxed{0} \\
+    \end{array}
+    "
+    />
+
+    Hasil bagi <InlineMath math="H(x) = 2x^2 + x - 10" />.
+
+    <InlineMath math="P(x) = (x-2)(2x^2 + x - 10)" />.
+
+7.  **Faktorkan Hasil Bagi:**
+
+    Faktorkan <InlineMath math="2x^2 + x - 10" />.
+
+    <BlockMath math="2x^2 + x - 10 = (2x+5)(x-2)" />
+
+8.  **Faktorisasi Lengkap:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P(x) = (x-2)(2x+5)(x-2)" />
+      <BlockMath math="P(x) = (x-2)^2 (2x+5)" />
+    </div>
