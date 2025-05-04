@@ -4,3 +4,107 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polynomial",
 };
+
+## Understanding the Remainder Theorem
+
+Have you ever wondered if there's a quick way to find the remainder of a polynomial division without performing long division or the lengthy Horner's method? The answer lies in the **Remainder Theorem**!
+
+The Remainder Theorem provides an interesting relationship between the remainder of a polynomial division and the value of the polynomial itself.
+
+### Statement of the Remainder Theorem
+
+If a polynomial <InlineMath math="P(x)" /> is divided by <InlineMath math="(x - c)" />, then the remainder is <InlineMath math="S = P(c)" />.
+
+This means that to find the remainder when <InlineMath math="P(x)" /> is divided by <InlineMath math="(x - c)" />, we simply need to evaluate the polynomial <InlineMath math="P(x)" /> at <InlineMath math="x = c" />.
+
+### Why Does the Remainder Theorem Work?
+
+This theorem stems directly from the polynomial division algorithm we already know:
+
+<BlockMath math="P(x) = (x - c) \cdot H(x) + S" />
+
+Where:
+
+- <InlineMath math="P(x)" /> is the dividend polynomial.
+- <InlineMath math="(x - c)" /> is the divisor polynomial (degree 1).
+- <InlineMath math="H(x)" /> is the quotient.
+- <InlineMath math="S" /> is the remainder (a constant, since the divisor is degree 1).
+
+Now, let's substitute <InlineMath math="x = c" /> into the division algorithm equation:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P(c) = (c - c) \cdot H(c) + S" />
+  <BlockMath math="P(c) = (0) \cdot H(c) + S" />
+  <BlockMath math="P(c) = 0 + S" />
+  <BlockMath math="P(c) = S" />
+</div>
+
+This proves that the value of the polynomial <InlineMath math="P(x)" /> at <InlineMath math="x = c" /> is equal to the remainder <InlineMath math="S" /> when <InlineMath math="P(x)" /> is divided by <InlineMath math="(x - c)" />.
+
+## Calculating with the Remainder Theorem
+
+The Remainder Theorem is very useful for quickly determining the remainder of a division or for evaluating a polynomial at a specific point.
+
+Find the remainder if <InlineMath math="P(x) = 2x^5 + 5x^4 - 10x^3 + 9x^2 - 10" /> is divided by <InlineMath math="x + 4" />.
+
+### Using Horner's Method
+
+The divisor is <InlineMath math="x + 4" />, or <InlineMath math="x - (-4)" />, so <InlineMath math="c = -4" />.
+
+Coefficients of <InlineMath math="P(x)" /> (completing the x term): <InlineMath math="2, 5, -10, 9, 0, -10" />.
+
+<BlockMath
+  math="
+\begin{array}{c|cccccc}
+-4 & 2 & 5 & -10 & 9 & 0 & -10 \\
+  &   & -8 & 12 & -8 & -4 & 16 \\
+\hline
+  & 2 & -3 & 2 & 1 & -4 & \boxed{6} \\
+\end{array}
+"
+/>
+
+From Horner's method, we get:
+
+- Quotient: <InlineMath math="H(x) = 2x^4 - 3x^3 + 2x^2 + x - 4" />
+- Remainder: <InlineMath math="S = \boxed{6}" />
+
+### Using the Remainder Theorem
+
+According to the Remainder Theorem, the remainder when <InlineMath math="P(x)" /> is divided by <InlineMath math="x - (-4)" /> is <InlineMath math="P(-4)" />.
+
+Let's calculate <InlineMath math="P(-4)" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P(-4) = 2(-4)^5 + 5(-4)^4 - 10(-4)^3 + 9(-4)^2 - 10" />
+  <BlockMath math="P(-4) = 2(-1024) + 5(256) - 10(-64) + 9(16) - 10" />
+  <BlockMath math="P(-4) = -2048 + 1280 + 640 + 144 - 10" />
+  <BlockMath math="P(-4) = -2048 + 1920 + 144 - 10" />
+  <BlockMath math="P(-4) = -128 + 144 - 10" />
+  <BlockMath math="P(-4) = 16 - 10" />
+  <BlockMath math="P(-4) = 6" />
+</div>
+
+The result is the same! Using the Remainder Theorem, we found the remainder is 6, just like with Horner's method, but without performing the full division process.
+
+This shows that evaluating <InlineMath math="P(c)" /> is another way to find the remainder of division by <InlineMath math="(x-c)" />.
+
+## Exercise
+
+If <InlineMath math="P(x) = 3x^5 - 20x^4 - 6x^3 - 48x - 8" /> is divided by <InlineMath math="x - 7" />, determine the remainder using the Remainder Theorem.
+
+### Answer Key
+
+According to the Remainder Theorem, the remainder when <InlineMath math="P(x)" /> is divided by <InlineMath math="x - 7" /> is <InlineMath math="P(7)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P(7) = 3(7)^5 - 20(7)^4 - 6(7)^3 - 48(7) - 8" />
+  <BlockMath math="P(7) = 3(16807) - 20(2401) - 6(343) - 336 - 8" />
+  <BlockMath math="P(7) = 50421 - 48020 - 2058 - 336 - 8" />
+  <BlockMath math="P(7) = 2401 - 2058 - 336 - 8" />
+  <BlockMath math="P(7) = 343 - 336 - 8" />
+  <BlockMath math="P(7) = 7 - 8" />
+  <BlockMath math="P(7) = -1" />
+</div>
+
+So, the remainder is <InlineMath math="-1" />.

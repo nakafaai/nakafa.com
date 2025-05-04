@@ -4,3 +4,107 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polinomial",
 };
+
+## Memahami Teorema Sisa
+
+Pernahkah kamu berpikir, adakah cara cepat untuk mengetahui sisa pembagian suatu polinomial tanpa perlu melakukan pembagian bersusun atau metode Horner yang panjang? Jawabannya ada pada **Teorema Sisa**!
+
+Teorema Sisa memberikan hubungan menarik antara sisa pembagian polinomial dengan nilai polinomial itu sendiri.
+
+### Pernyataan Teorema Sisa
+
+Jika suatu polinomial <InlineMath math="P(x)" /> dibagi oleh <InlineMath math="(x - c)" />, maka sisa pembagiannya adalah <InlineMath math="S = P(c)" />.
+
+Artinya, untuk mencari sisa pembagian <InlineMath math="P(x)" /> oleh <InlineMath math="(x - c)" />, kita cukup menghitung nilai <InlineMath math="P(x)" /> ketika <InlineMath math="x = c" />.
+
+### Mengapa Teorema Sisa Berlaku?
+
+Teorema ini berasal langsung dari algoritma pembagian polinomial yang sudah kita kenal:
+
+<BlockMath math="P(x) = (x - c) \cdot H(x) + S" />
+
+Di mana:
+
+- <InlineMath math="P(x)" /> adalah polinomial yang dibagi.
+- <InlineMath math="(x - c)" /> adalah polinomial pembagi (berderajat 1).
+- <InlineMath math="H(x)" /> adalah hasil bagi.
+- <InlineMath math="S" /> adalah sisa pembagian (berupa konstanta, karena pembagi berderajat 1).
+
+Sekarang, coba kita substitusikan <InlineMath math="x = c" /> ke dalam persamaan algoritma pembagian tersebut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P(c) = (c - c) \cdot H(c) + S" />
+  <BlockMath math="P(c) = (0) \cdot H(c) + S" />
+  <BlockMath math="P(c) = 0 + S" />
+  <BlockMath math="P(c) = S" />
+</div>
+
+Terbukti bahwa nilai polinomial <InlineMath math="P(x)" /> saat <InlineMath math="x = c" /> sama dengan sisa <InlineMath math="S" /> ketika <InlineMath math="P(x)" /> dibagi oleh <InlineMath math="(x - c)" />.
+
+## Menghitung Teorema Sisa
+
+Teorema Sisa sangat berguna untuk menentukan sisa pembagian secara cepat atau untuk menghitung nilai suatu polinomial pada titik tertentu.
+
+Tentukan sisa pembagian jika <InlineMath math="P(x) = 2x^5 + 5x^4 - 10x^3 + 9x^2 - 10" /> dibagi oleh <InlineMath math="x + 4" />.
+
+### Menggunakan Metode Horner
+
+Pembagi adalah <InlineMath math="x + 4" />, atau <InlineMath math="x - (-4)" />, jadi <InlineMath math="c = -4" />.
+
+Koefisien <InlineMath math="P(x)" /> (lengkapi suku x): <InlineMath math="2, 5, -10, 9, 0, -10" />.
+
+<BlockMath
+  math="
+\begin{array}{c|cccccc}
+-4 & 2 & 5 & -10 & 9 & 0 & -10 \\
+  &   & -8 & 12 & -8 & -4 & 16 \\
+\hline
+  & 2 & -3 & 2 & 1 & -4 & \boxed{6} \\
+\end{array}
+"
+/>
+
+Dari metode Horner, kita dapatkan:
+
+- Hasil Bagi: <InlineMath math="H(x) = 2x^4 - 3x^3 + 2x^2 + x - 4" />
+- Sisa: <InlineMath math="S = \boxed{6}" />
+
+### Menggunakan Teorema Sisa
+
+Menurut Teorema Sisa, sisa pembagian <InlineMath math="P(x)" /> oleh <InlineMath math="x - (-4)" /> adalah <InlineMath math="P(-4)" />.
+
+Mari kita hitung <InlineMath math="P(-4)" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P(-4) = 2(-4)^5 + 5(-4)^4 - 10(-4)^3 + 9(-4)^2 - 10" />
+  <BlockMath math="P(-4) = 2(-1024) + 5(256) - 10(-64) + 9(16) - 10" />
+  <BlockMath math="P(-4) = -2048 + 1280 + 640 + 144 - 10" />
+  <BlockMath math="P(-4) = -2048 + 1920 + 144 - 10" />
+  <BlockMath math="P(-4) = -128 + 144 - 10" />
+  <BlockMath math="P(-4) = 16 - 10" />
+  <BlockMath math="P(-4) = 6" />
+</div>
+
+Hasilnya sama! Dengan Teorema Sisa, kita menemukan bahwa sisanya adalah 6, sama seperti hasil dari metode Horner, tetapi tanpa perlu melakukan proses pembagian lengkap.
+
+Ini menunjukkan bahwa menghitung <InlineMath math="P(c)" /> adalah cara lain untuk menemukan sisa pembagian oleh <InlineMath math="(x-c)" />.
+
+## Latihan
+
+Jika <InlineMath math="P(x) = 3x^5 - 20x^4 - 6x^3 - 48x - 8" /> dibagi dengan <InlineMath math="x - 7" />, tentukan sisanya menggunakan Teorema Sisa.
+
+### Kunci Jawaban
+
+Menurut Teorema Sisa, sisa pembagian <InlineMath math="P(x)" /> oleh <InlineMath math="x - 7" /> adalah <InlineMath math="P(7)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P(7) = 3(7)^5 - 20(7)^4 - 6(7)^3 - 48(7) - 8" />
+  <BlockMath math="P(7) = 3(16807) - 20(2401) - 6(343) - 336 - 8" />
+  <BlockMath math="P(7) = 50421 - 48020 - 2058 - 336 - 8" />
+  <BlockMath math="P(7) = 2401 - 2058 - 336 - 8" />
+  <BlockMath math="P(7) = 343 - 336 - 8" />
+  <BlockMath math="P(7) = 7 - 8" />
+  <BlockMath math="P(7) = -1" />
+</div>
+
+Jadi, sisa pembagiannya adalah <InlineMath math="-1" />.
