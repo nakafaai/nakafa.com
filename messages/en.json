@@ -147,5 +147,9 @@
     "description": "Please report the issue on GitHub.",
     "retry": "Retry",
     "report": "Report"
+  },
+  "Contributor": {
+    "title": "Contributor",
+    "description": "Meet the people who made Nakafa possible."
   }
 }

@@ -76,6 +76,7 @@
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.56.1",
     "react-katex": "^3.0.1",
+    "react-nice-avatar": "^1.5.0",
     "react-resizable-panels": "^3.0.0",
     "react-spring": "^9.7.5",
     "recharts": "^2.15.3",

@@ -148,5 +148,9 @@
     "description": "Silakan laporkan masalah di GitHub.",
     "retry": "Ulangi",
     "report": "Laporkan"
+  },
+  "Contributor": {
+    "title": "Kontributor",
+    "description": "Temui orang-orang yang membuat Nakafa menjadi mungkin."
   }
 }
