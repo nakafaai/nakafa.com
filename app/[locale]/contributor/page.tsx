@@ -10,6 +10,8 @@ import type { Metadata } from "next";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 
+export const revalidate = false;
+
 type Props = {
   params: Promise<{ locale: Locale }>;
 };
