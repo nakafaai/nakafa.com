@@ -1,6 +1,147 @@
 export const metadata = {
-  title: "Polynomial Factorization",
+  title: "Complete Polynomial Factorization",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/04/2025",
   subject: "Polynomial",
 };
+
+## Understanding Complete Factorization
+
+We have learned to factor polynomials, for example using the [Factor Theorem](/subject/high-school/11/mathematics/polynomial/factor-theorem). However, sometimes the factorization result still leaves factors that are not linear (like quadratic factors) which cannot be factored further using real numbers.
+
+**Complete Factorization** (or Complete Linear Factorization) is the process of factoring a polynomial into a product of linear factors, where these factors may involve complex numbers.
+
+This concept is based on the Fundamental Theorem of Algebra, which states that every polynomial of degree <InlineMath math="n \ge 1" /> has exactly <InlineMath math="n" /> roots (zeros) in the set of complex numbers (including real roots and repeated roots).
+
+### Complete Factorization Property of Polynomials
+
+If <InlineMath math="P(x)" /> is a polynomial of degree <InlineMath math="n \ge 1" /> with leading coefficient <InlineMath math="a_n \neq 0" />, then there exist complex numbers <InlineMath math="c_1, c_2, \dots, c_n" /> (which are the roots of <InlineMath math="P(x)" />) such that:
+
+<BlockMath math="P(x) = a_n(x - c_1)(x - c_2)\dots(x - c_n)" />
+
+This means that every polynomial of degree <InlineMath math="n" /> can be broken down into exactly <InlineMath math="n" /> linear factors <InlineMath math="(x - \text{root})" /> multiplied by its leading coefficient.
+
+## Steps for Complete Factorization
+
+To perform a complete factorization of a polynomial <InlineMath math="P(x)" />:
+
+1. **Find All Complex Roots:** Find all <InlineMath math="n" /> complex roots (zeros) of <InlineMath math="P(x) = 0" />. This might involve:
+
+   - Factoring directly (grouping, etc.).
+   - Using the Rational Zero Theorem to find rational roots.
+   - Using division (Horner/long division) to reduce the degree of the polynomial after a root is found.
+   - Solving quadratic equations (using the quadratic formula) which might yield complex roots <InlineMath math="a \pm bi" />.
+
+2. **Apply the Factor Theorem:** For each root <InlineMath math="c_i" /> found, form its linear factor, which is <InlineMath math="(x - c_i)" />.
+3. **Write the Complete Factorization:** Multiply all the obtained linear factors by the leading coefficient <InlineMath math="a_n" /> of <InlineMath math="P(x)" />.
+
+   <BlockMath math="P(x) = a_n(x - c_1)(x - c_2)\dots(x - c_n)" />
+
+### Using Complete Factorization
+
+Find all complex zeros of <InlineMath math="P(x) = x^3 - x^2 + x - 1" /> and factor the polynomial completely.
+
+**Solution:**
+
+1. **Find Roots:** Let's try to factor <InlineMath math="P(x)" /> first.
+
+    - Factor by grouping:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="P(x) = (x^3 - x^2) + (x - 1)" />
+        <BlockMath math="P(x) = x^2(x - 1) + 1(x - 1)" />
+        <BlockMath math="P(x) = (x^2 + 1)(x - 1)" />
+      </div>
+
+    - Now, find the roots by setting <InlineMath math="P(x) = 0" />:
+
+      <BlockMath math="(x^2 + 1)(x - 1) = 0" />
+
+    - This gives two possibilities:
+
+      - <InlineMath math="x - 1 = 0 \implies x = 1" />
+      - <InlineMath math="x^2 + 1 = 0 \implies x^2 = -1 \implies x = \pm\sqrt{-1} \implies x = \pm i" />
+
+    So, the complex roots are <InlineMath math="1, i, -i" />.
+
+2. **Form Linear Factors:**
+
+    - From the root <InlineMath math="1" />, the factor is <InlineMath math="(x - 1)" />.
+    - From the root <InlineMath math="i" />, the factor is <InlineMath math="(x - i)" />.
+    - From the root <InlineMath math="-i" />, the factor is <InlineMath math="(x - (-i)) = (x + i)" />.
+
+3. **Write Complete Factorization:**
+
+    The leading coefficient of <InlineMath math="P(x)" /> is <InlineMath math="a_3 = 1" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P(x) = 1 \cdot (x - 1)(x - i)(x + i)" />
+      <BlockMath math="P(x) = (x - 1)(x - i)(x + i)" />
+    </div>
+
+## Exercise
+
+Find all complex zeros of <InlineMath math="P(x) = x^3 - 3x^2 + x + 5" />, then factor <InlineMath math="P(x)" /> completely.
+
+### Answer Key
+
+1. **Find Rational Roots (Rational Zero Theorem):**
+
+    - <InlineMath math="a_0 = 5" />, factors <InlineMath math="p" />: <InlineMath math="\pm 1, \pm 5" />.
+    - <InlineMath math="a_n = 1" />, factors <InlineMath math="q" />: <InlineMath math="\pm 1" />.
+    - Possible roots <InlineMath math="p/q" />: <InlineMath math="\pm 1, \pm 5" />.
+    - Test <InlineMath math="x = -1" />:
+
+      <BlockMath math="P(-1) = (-1)^3 - 3(-1)^2 + (-1) + 5 = -1 - 3(1) - 1 + 5 = -1 - 3 - 1 + 5 = 0" />
+
+      So, <InlineMath math="x = -1" /> is a root, and <InlineMath math="(x+1)" /> is a factor.
+
+2. **Divide using Horner's Method (<InlineMath math="c = -1" />):**
+
+   <BlockMath
+     math="
+        \begin{array}{c|cccc}
+        -1 & 1 & -3 & 1 & 5 \\
+          &   & -1 & 4 & -5 \\
+        \hline
+          & 1 & -4 & 5 & \boxed{0} \\
+        \end{array}
+        "
+   />
+
+   Quotient <InlineMath math="H(x) = x^2 - 4x + 5" />.
+
+   <InlineMath math="P(x) = (x+1)(x^2 - 4x + 5)" />.
+
+3. **Find Roots of the Quotient:** Solve <InlineMath math="x^2 - 4x + 5 = 0" /> using the quadratic formula.
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x = \frac{-(-4) \pm \sqrt{(-4)^2 - 4(1)(5)}}{2(1)}" />
+     <BlockMath math="x = \frac{4 \pm \sqrt{16 - 20}}{2}" />
+     <BlockMath math="x = \frac{4 \pm \sqrt{-4}}{2}" />
+     <BlockMath math="x = \frac{4 \pm 2i}{2}" />
+     <BlockMath math="x = 2 \pm i" />
+   </div>
+
+   The other roots are <InlineMath math="2 + i" /> and <InlineMath math="2 - i" />.
+
+4. **All Complex Roots:** The roots are <InlineMath math="-1, 2+i, 2-i" />.
+
+5. **Complete Factorization (<InlineMath math="a_n = 1" />):**
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="P(x) = 1 \cdot (x - (-1))(x - (2+i))(x - (2-i))" />
+     <BlockMath math="P(x) = (x + 1)(x - 2 - i)(x - 2 + i)" />
+   </div>
+
+## Complex Conjugate Root Pairs
+
+An important question arises: Is it possible for a polynomial with all real coefficients and constant term to have **exactly one** complex zero that is not a real number?
+
+The answer is **impossible**.
+
+This is due to the property of complex conjugate pairs. If a polynomial has real coefficients, then its non-real complex roots (<InlineMath math="a + bi" /> with <InlineMath math="b \neq 0" />) **always** occur in conjugate pairs.
+
+This means that if <InlineMath math="a + bi" /> is a root, then its conjugate, <InlineMath math="a - bi" />, **must** also be a root of the polynomial.
+
+Therefore, non-real complex roots cannot appear alone; they always come in pairs. Thus, it is impossible to have _exactly one_ non-real complex root for a polynomial with real coefficients.

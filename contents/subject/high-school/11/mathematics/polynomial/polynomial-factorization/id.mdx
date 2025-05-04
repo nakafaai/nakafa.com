@@ -4,3 +4,144 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polinomial",
 };
+
+## Memahami Faktorisasi Penuh
+
+Kita telah belajar memfaktorkan polinomial, misalnya menggunakan [Teorema Faktor](/subject/high-school/11/mathematics/polynomial/factor-theorem). Namun, terkadang hasil pemfaktoran masih menyisakan faktor yang bukan linier (seperti faktor kuadrat) yang tidak dapat difaktorkan lebih lanjut menggunakan bilangan real.
+
+**Faktorisasi Penuh** (atau Faktorisasi Linier Penuh) adalah proses memfaktorkan suatu polinomial hingga menjadi perkalian faktor-faktor linier, di mana faktor-faktor ini bisa melibatkan bilangan kompleks.
+
+Konsep ini didasarkan pada Teorema Fundamental Aljabar yang menyatakan bahwa setiap polinomial berderajat <InlineMath math="n \ge 1" /> memiliki tepat <InlineMath math="n" /> akar (pembuat nol) dalam himpunan bilangan kompleks (termasuk akar real dan akar yang berulang).
+
+### Sifat Faktorisasi Penuh Polinomial
+
+Jika <InlineMath math="P(x)" /> adalah polinomial berderajat <InlineMath math="n \ge 1" /> dengan koefisien utama <InlineMath math="a_n \neq 0" />, maka ada bilangan-bilangan kompleks <InlineMath math="c_1, c_2, \dots, c_n" /> (yang merupakan akar-akar dari <InlineMath math="P(x)" />) sedemikian sehingga:
+
+<BlockMath math="P(x) = a_n(x - c_1)(x - c_2)\dots(x - c_n)" />
+
+Artinya, setiap polinomial berderajat <InlineMath math="n" /> dapat dipecah menjadi tepat <InlineMath math="n" /> faktor linier <InlineMath math="(x - \text{akar})" /> dikalikan dengan koefisien utamanya.
+
+## Langkah-langkah Faktorisasi Penuh
+
+Untuk melakukan faktorisasi penuh suatu polinomial <InlineMath math="P(x)" />:
+
+1. **Cari Semua Akar Kompleks:** Temukan semua <InlineMath math="n" /> akar (pembuat nol) kompleks dari <InlineMath math="P(x) = 0" />. Ini mungkin melibatkan:
+
+   - Memfaktorkan secara langsung (grouping, dll.).
+   - Menggunakan Teorema Pembuat Nol Rasional untuk menemukan akar rasional.
+   - Menggunakan pembagian (Horner/bersusun) untuk menurunkan derajat polinomial setelah satu akar ditemukan.
+   - Menyelesaikan persamaan kuadrat (dengan rumus kuadratik) yang mungkin menghasilkan akar kompleks <InlineMath math="a \pm bi" />.
+
+2. **Terapkan Teorema Faktor:** Untuk setiap akar <InlineMath math="c_i" /> yang ditemukan, bentuk faktor liniernya, yaitu <InlineMath math="(x - c_i)" />.
+3. **Tulis Faktorisasi Penuh:** Kalikan semua faktor linier yang didapat dengan koefisien utama <InlineMath math="a_n" /> dari <InlineMath math="P(x)" />.
+
+   <BlockMath math="P(x) = a_n(x - c_1)(x - c_2)\dots(x - c_n)" />
+
+### Menggunakan Faktorisasi Penuh
+
+Tentukan semua pembuat nol kompleks dari <InlineMath math="P(x) = x^3 - x^2 + x - 1" /> dan faktorkan polinomial tersebut secara penuh.
+
+**Penyelesaian:**
+
+1. **Cari Akar:** Kita coba faktorkan <InlineMath math="P(x)" /> terlebih dahulu.
+
+    - Faktorkan dengan pengelompokan (grouping):
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="P(x) = (x^3 - x^2) + (x - 1)" />
+        <BlockMath math="P(x) = x^2(x - 1) + 1(x - 1)" />
+        <BlockMath math="P(x) = (x^2 + 1)(x - 1)" />
+      </div>
+
+    - Sekarang, cari akar dengan menyetarakan <InlineMath math="P(x) = 0" />:
+
+      <BlockMath math="(x^2 + 1)(x - 1) = 0" />
+
+    - Ini memberikan dua kemungkinan:
+
+      - <InlineMath math="x - 1 = 0 \implies x = 1" />
+      - <InlineMath math="x^2 + 1 = 0 \implies x^2 = -1 \implies x = \pm\sqrt{-1} \implies x = \pm i" />
+
+    Jadi, akar-akar kompleksnya adalah <InlineMath math="1, i, -i" />.
+
+2. **Bentuk Faktor Linier:**
+
+    - Dari akar <InlineMath math="1" />, faktornya <InlineMath math="(x - 1)" />.
+    - Dari akar <InlineMath math="i" />, faktornya <InlineMath math="(x - i)" />.
+    - Dari akar <InlineMath math="-i" />, faktornya <InlineMath math="(x - (-i)) = (x + i)" />.
+
+3. **Tulis Faktorisasi Penuh:**
+
+    Koefisien utama <InlineMath math="P(x)" /> adalah <InlineMath math="a_3 = 1" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P(x) = 1 \cdot (x - 1)(x - i)(x + i)" />
+      <BlockMath math="P(x) = (x - 1)(x - i)(x + i)" />
+    </div>
+
+## Latihan
+
+Tentukan semua pembuat nol kompleks dari <InlineMath math="P(x) = x^3 - 3x^2 + x + 5" />, kemudian faktorkan <InlineMath math="P(x)" /> tersebut secara penuh.
+
+### Kunci Jawaban
+
+1. **Cari Akar Rasional (Teorema Pembuat Nol Rasional):**
+
+    - <InlineMath math="a_0 = 5" />, faktor <InlineMath math="p" />: <InlineMath math="\pm 1, \pm 5" />.
+    - <InlineMath math="a_n = 1" />, faktor <InlineMath math="q" />: <InlineMath math="\pm 1" />.
+    - Kemungkinan akar <InlineMath math="p/q" />: <InlineMath math="\pm 1, \pm 5" />.
+    - Uji <InlineMath math="x = -1" />:
+
+      <BlockMath math="P(-1) = (-1)^3 - 3(-1)^2 + (-1) + 5 = -1 - 3(1) - 1 + 5 = -1 - 3 - 1 + 5 = 0" />
+
+      Jadi, <InlineMath math="x = -1" /> adalah akar, dan <InlineMath math="(x+1)" /> adalah faktor.
+
+2. **Bagi dengan Horner (<InlineMath math="c = -1" />):**
+
+   <BlockMath
+     math="
+        \begin{array}{c|cccc}
+        -1 & 1 & -3 & 1 & 5 \\
+          &   & -1 & 4 & -5 \\
+        \hline
+          & 1 & -4 & 5 & \boxed{0} \\
+        \end{array}
+        "
+   />
+
+   Hasil bagi <InlineMath math="H(x) = x^2 - 4x + 5" />.
+
+   <InlineMath math="P(x) = (x+1)(x^2 - 4x + 5)" />.
+
+3. **Cari Akar dari Hasil Bagi:** Selesaikan <InlineMath math="x^2 - 4x + 5 = 0" /> dengan rumus kuadratik.
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x = \frac{-(-4) \pm \sqrt{(-4)^2 - 4(1)(5)}}{2(1)}" />
+     <BlockMath math="x = \frac{4 \pm \sqrt{16 - 20}}{2}" />
+     <BlockMath math="x = \frac{4 \pm \sqrt{-4}}{2}" />
+     <BlockMath math="x = \frac{4 \pm 2i}{2}" />
+     <BlockMath math="x = 2 \pm i" />
+   </div>
+
+   Akar lainnya adalah <InlineMath math="2 + i" /> dan <InlineMath math="2 - i" />.
+
+4. **Semua Akar Kompleks:** Akar-akarnya adalah <InlineMath math="-1, 2+i, 2-i" />.
+
+5. **Faktorisasi Penuh (<InlineMath math="a_n = 1" />):**
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="P(x) = 1 \cdot (x - (-1))(x - (2+i))(x - (2-i))" />
+     <BlockMath math="P(x) = (x + 1)(x - 2 - i)(x - 2 + i)" />
+   </div>
+
+## Pasangan Akar Konjugat Kompleks
+
+Sebuah pertanyaan penting muncul: Apakah mungkin suatu polinomial yang semua koefisien dan konstantanya berupa bilangan real memiliki **tepat satu** pembuat nol bilangan kompleks yang bukan bilangan real?
+
+Jawabannya adalah **tidak mungkin**.
+
+Ini disebabkan oleh sifat pasangan akar konjugat. Jika sebuah polinomial memiliki koefisien-koefisien real, maka akar-akar kompleks non-realnya (<InlineMath math="a + bi" /> dengan <InlineMath math="b \neq 0" />) **selalu** muncul dalam pasangan konjugat.
+
+Artinya, jika <InlineMath math="a + bi" /> adalah akar, maka konjugatnya, <InlineMath math="a - bi" />, juga **pasti** merupakan akar dari polinomial tersebut.
+
+Oleh karena itu, akar kompleks non-real tidak bisa muncul sendirian; mereka selalu datang berpasangan. Jadi, tidak mungkin ada _tepat satu_ akar kompleks non-real untuk polinomial berkoefisien real.
