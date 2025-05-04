@@ -3,10 +3,12 @@
 import Image from "next/image";
 import { useMediaQuery } from "usehooks-ts";
 
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import packageJson from "@/package.json";
 import nakafaLogo from "@/public/logo.svg";
 import { useTranslations } from "next-intl";
+import { buttonVariants } from "../ui/button";
 import {
   Dialog,
   DialogContent,
@@ -27,22 +29,44 @@ type Props = {
   action: (open: boolean) => void;
 };
 
-function Content({ className }: { className?: string }) {
+function Content({
+  onOpenChange,
+  className,
+}: {
+  onOpenChange: (open: boolean) => void;
+  className?: string;
+}) {
   const t = useTranslations("Common");
 
   return (
-    <div className={cn("grid gap-4 px-4 pb-4 text-center", className)}>
-      <div className="flex justify-center">
-        <div className="relative aspect-square size-16 overflow-hidden rounded-lg border">
-          <Image
-            src={nakafaLogo}
-            alt="Nakafa"
-            fill
-            priority
-            className="object-contain"
-          />
-        </div>
+    <div
+      className={cn(
+        "grid justify-center gap-4 px-4 pb-4 text-center",
+        className
+      )}
+    >
+      <div className="relative mx-auto aspect-square size-16 overflow-hidden rounded-lg border">
+        <Image
+          src={nakafaLogo}
+          alt="Nakafa"
+          fill
+          priority
+          className="object-contain"
+        />
       </div>
+      <Link
+        href="/contributor"
+        prefetch
+        className={cn(
+          buttonVariants({ variant: "outline", size: "sm" }),
+          "mx-auto w-fit"
+        )}
+        onClick={() => {
+          setTimeout(() => onOpenChange(false), 200);
+        }}
+      >
+        {t("contributor")}
+      </Link>
       <div className="flex flex-col justify-center gap-1">
         <span className="text-muted-foreground text-xs">
           {t("made-with-love")}
@@ -69,7 +93,7 @@ export default function AboutDialog({ open, action }: Props) {
               {t("version", { version: packageJson.version })}
             </DialogDescription>
           </DialogHeader>
-          <Content className="pb-0" />
+          <Content onOpenChange={action} className="pb-0" />
         </DialogContent>
       </Dialog>
     );
@@ -84,7 +108,7 @@ export default function AboutDialog({ open, action }: Props) {
             {t("version", { version: packageJson.version })}
           </DrawerDescription>
         </DrawerHeader>
-        <Content />
+        <Content onOpenChange={action} />
       </DrawerContent>
     </Drawer>
   );
