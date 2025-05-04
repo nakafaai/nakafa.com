@@ -8,6 +8,8 @@ import type { Locale } from "next-intl";
 // Adapt this as necessary
 const host = "https://nakafa.com";
 
+export const baseRoutes = ["/search", "/contributor"];
+
 // Regex pattern for catch-all routes like [...rest]
 const catchAllPattern = /^\[\.{3}.*\]$/;
 
@@ -74,7 +76,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const ogRoutes = getOgRoutes(routes);
 
   // Combine regular routes and OG routes
-  const allRoutes = ["/search", ...routes, ...ogRoutes];
+  const allRoutes = [...baseRoutes, ...routes, ...ogRoutes];
 
   return allRoutes.flatMap((route) => getEntries(route));
 }
