@@ -61,9 +61,7 @@ function Content({
           buttonVariants({ variant: "outline", size: "sm" }),
           "mx-auto w-fit"
         )}
-        onClick={() => {
-          setTimeout(() => onOpenChange(false), 200);
-        }}
+        onClick={() => onOpenChange(false)}
       >
         {t("contributor")}
       </Link>
