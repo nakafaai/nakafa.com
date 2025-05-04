@@ -4,6 +4,7 @@ export const contributors: Contributor[] = [
   {
     name: "Nabil Akbarazzima Fatih",
     username: "nabilfatih",
+    official: true,
     social: {
       twitter: "https://x.com/nabilfatih_",
       github: "https://github.com/nabilfatih",
@@ -13,5 +14,6 @@ export const contributors: Contributor[] = [
   {
     name: "Juju",
     username: "juju",
+    official: false,
   },
 ];

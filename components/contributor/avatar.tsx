@@ -3,10 +3,13 @@ import type { Contributor } from "@/types/contributor";
 import { IconBrandLinkedin } from "@tabler/icons-react";
 import { IconBrandGithub } from "@tabler/icons-react";
 import { IconBrandTwitter } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
+import { Badge } from "../ui/badge";
 import { buttonVariants } from "../ui/button";
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
@@ -19,6 +22,8 @@ type Props = {
 };
 
 export function Avatar({ contributor }: Props) {
+  const t = useTranslations("Common");
+
   return (
     <Drawer>
       <Tooltip>
@@ -38,6 +43,11 @@ export function Avatar({ contributor }: Props) {
       <DrawerContent className="mx-auto sm:max-w-xs">
         <DrawerHeader>
           <DrawerTitle className="text-center">{contributor.name}</DrawerTitle>
+          {contributor.official && (
+            <DrawerDescription className="text-center">
+              <Badge variant="outline">{t("official")}</Badge>
+            </DrawerDescription>
+          )}
         </DrawerHeader>
         <DrawerFooter>
           {contributor.social && (

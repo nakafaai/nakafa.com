@@ -3,6 +3,7 @@ import { z } from "zod";
 export const contributorSchema = z.object({
   name: z.string(),
   username: z.string(),
+  official: z.boolean(),
   social: z
     .object({
       twitter: z.string().url().optional(),
