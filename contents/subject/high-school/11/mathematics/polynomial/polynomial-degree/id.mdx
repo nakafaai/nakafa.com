@@ -4,3 +4,108 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polinomial",
 };
+
+## Memahami Derajat Monomial
+
+Setiap monomial dalam polinomial memiliki karakteristik yang disebut **derajat**. Derajat ini ditentukan oleh pangkat (eksponen) dari variabel-variabelnya.
+
+### Derajat Monomial Satu Variabel
+
+Jika monomial hanya memiliki satu variabel, seperti <InlineMath math="ax^n" />, derajatnya adalah pangkat dari variabel tersebut, yaitu <InlineMath math="n" />.
+
+**Contoh:**
+
+- Monomial <InlineMath math="4x^5" /> memiliki derajat 5.
+- Monomial <InlineMath math="0,12x" /> (atau <InlineMath math="0,12x^1" />) memiliki derajat 1.
+
+### Derajat Monomial Banyak Variabel
+
+Jika monomial memiliki lebih dari satu variabel, derajatnya adalah **jumlah** dari semua pangkat variabelnya.
+
+**Contoh:**
+
+- Monomial <InlineMath math="\frac{3}{4}x^2y^7" /> memiliki derajat <InlineMath math="2 + 7 = 9" />.
+- Monomial <InlineMath math="2,17x^3yz^3" /> (ingat <InlineMath math="y = y^1" />) memiliki derajat <InlineMath math="3 + 1 + 3 = 7" />.
+
+### Derajat Konstanta
+
+Bagaimana dengan konstanta (bilangan tanpa variabel), misalnya 5? Konstanta tak nol dianggap memiliki **derajat 0**, karena kita bisa menuliskannya sebagai <InlineMath math="5x^0" /> (mengingat <InlineMath math="x^0 = 1" />).
+
+Berikut rangkuman contoh derajat monomial dalam tabel:
+
+| Monomial                                | Derajat | Penjelasan                                                   |
+| :-------------------------------------- | :------ | :----------------------------------------------------------- |
+| <InlineMath math="4x^5" />              | 5       | Pangkat <InlineMath math="x" /> adalah 5.                    |
+| <InlineMath math="\frac{3}{4}x^2y^7" /> | 9       | Jumlah pangkat <InlineMath math="2+7=9" />.                  |
+| <InlineMath math="0,12x" />             | 1       | Pangkat <InlineMath math="x" /> adalah 1.                    |
+| <InlineMath math="2,17x^3yz^3" />       | 7       | Jumlah pangkat <InlineMath math="3+1+3=7" />.                |
+| <InlineMath math="10" />                | 0       | Konstanta tak nol. Bisa ditulis <InlineMath math="10x^0" />. |
+
+### Definisi Derajat Monomial
+
+Derajat suatu monomial (dengan koefisien tak nol) adalah jumlah dari eksponen semua variabelnya. Untuk monomial <InlineMath math="ax^n" />, derajatnya adalah <InlineMath math="n" />.
+
+## Menentukan Derajat Polinomial
+
+Setelah kita tahu cara menentukan derajat setiap monomial (suku), menentukan derajat polinomial menjadi lebih mudah.
+
+**Derajat suatu polinomial** adalah **derajat tertinggi** dari suku-suku (monomial) yang menyusun polinomial tersebut.
+
+**Langkah-langkah menentukan derajat polinomial:**
+
+1.  Identifikasi semua suku (monomial) dalam polinomial.
+2.  Tentukan derajat dari setiap suku.
+3.  Pilih derajat tertinggi di antara semua suku tersebut. Itulah derajat polinomialnya.
+
+**Contoh 1:**
+
+Tentukan derajat dari polinomial berikut:
+
+<BlockMath math="8x^3 - 36x^2 + 54x - 27" />
+
+- Suku <InlineMath math="8x^3" /> memiliki derajat 3.
+- Suku <InlineMath math="-36x^2" /> memiliki derajat 2.
+- Suku <InlineMath math="54x" /> (atau <InlineMath math="54x^1" />) memiliki derajat 1.
+- Suku <InlineMath math="-27" /> (konstanta) memiliki derajat 0.
+
+Derajat tertinggi dari suku-sukunya adalah 3. Jadi, derajat polinomial tersebut adalah **3**.
+
+**Contoh 2:**
+
+Tentukan derajat dari polinomial berikut:
+
+<BlockMath math="5x^4y^2 + xy^2 - 2x^5y^6" />
+
+- Suku <InlineMath math="5x^4y^2" /> memiliki derajat <InlineMath math="4 + 2 = 6" />.
+- Suku <InlineMath math="xy^2" /> (atau <InlineMath math="x^1y^2" />) memiliki derajat <InlineMath math="1 + 2 = 3" />.
+- Suku <InlineMath math="-2x^5y^6" /> memiliki derajat <InlineMath math="5 + 6 = 11" />.
+
+Derajat tertinggi dari suku-sukunya adalah 11. Jadi, derajat polinomial tersebut adalah **11**.
+
+**Contoh 3:**
+
+Tentukan derajat dari polinomial berikut:
+
+<BlockMath math="0,13x^3 + 1,56x^2 - 2,24x + 1,72" />
+
+- Suku <InlineMath math="0,13x^3" /> derajat 3.
+- Suku <InlineMath math="1,56x^2" /> derajat 2.
+- Suku <InlineMath math="-2,24x" /> derajat 1.
+- Suku <InlineMath math="1,72" /> derajat 0.
+
+Derajat tertinggi adalah 3. Jadi, derajat polinomial tersebut adalah **3**.
+
+### Definisi Derajat Polinomial
+
+Derajat suatu polinomial adalah derajat tertinggi dari suku-sukunya.
+
+### Bagaimana dengan Derajat Nol?
+
+Apakah derajat dari 0 adalah 0, karena 0 bisa ditulis sebagai <InlineMath math="0x^0" />?
+
+Secara umum dalam matematika:
+
+- Konstanta **tak nol** (seperti 5, -27, 1.72) memiliki derajat **0**.
+- Polinomial **nol** (yaitu angka 0 itu sendiri) seringkali dianggap **tidak memiliki derajat** atau kadang disebut memiliki derajat **negatif tak hingga** (<InlineMath math="-\infty" />). Alasannya sedikit rumit, tetapi intinya adalah agar sifat-sifat derajat (seperti derajat hasil kali dua polinomial) tetap konsisten.
+
+Namun, untuk level SMA, memahami bahwa konstanta tak nol berderajat 0 dan derajat polinomial adalah derajat suku tertingginya sudah cukup.
