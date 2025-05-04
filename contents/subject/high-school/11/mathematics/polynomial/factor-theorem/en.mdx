@@ -4,3 +4,149 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polynomial",
 };
+
+## Understanding the Factor Theorem
+
+When we divide a polynomial <InlineMath math="P(x)" /> by <InlineMath math="(x - c)" />, sometimes the remainder is zero. We know from the Remainder Theorem that if the remainder is zero, then <InlineMath math="P(c) = 0" />. So, what does it mean if <InlineMath math="P(c) = 0" />?
+
+The value <InlineMath math="c" /> that causes <InlineMath math="P(c) = 0" /> is called a **zero** or a **root** of the polynomial <InlineMath math="P(x)" />. The Factor Theorem explains the close relationship between these zeros and the factors of the polynomial.
+
+### Statement of the Factor Theorem
+
+Let <InlineMath math="P(x)" /> be a polynomial and <InlineMath math="c" /> be a real number.
+
+<InlineMath math="(x - c)" /> is a **factor** of <InlineMath math="P(x)" /> **if and only if** <InlineMath math="P(c) = 0" />.
+
+This is a two-way statement:
+
+1.  **If <InlineMath math="(x - c)" /> is a factor of <InlineMath math="P(x)" />, then <InlineMath math="P(c) = 0" />.**
+
+    (If a number is perfectly divisible by another number, the remainder must be zero).
+
+2.  **If <InlineMath math="P(c) = 0" />, then <InlineMath math="(x - c)" /> is a factor of <InlineMath math="P(x)" />.**
+
+    (If the value of the polynomial at <InlineMath math="x=c" /> is zero, it means <InlineMath math="(x-c)" /> divides the polynomial exactly).
+
+### Connection to the Remainder Theorem
+
+The Factor Theorem is actually a special case of the Remainder Theorem. Recall the division algorithm:
+
+<BlockMath math="P(x) = (x - c) \cdot H(x) + S" />
+
+And from the Remainder Theorem, we know <InlineMath math="S = P(c)" />.
+
+<BlockMath math="P(x) = (x - c) \cdot H(x) + P(c)" />
+
+- If <InlineMath math="(x - c)" /> is a factor, it means <InlineMath math="P(x)" /> is divisible by <InlineMath math="(x - c)" />. This only happens if the remainder is zero. Thus, <InlineMath math="S = P(c) = 0" />.
+- If <InlineMath math="P(c) = 0" />, then <InlineMath math="S = 0" />. The equation becomes <InlineMath math="P(x) = (x - c) \cdot H(x) + 0" />, or <InlineMath math="P(x) = (x - c) \cdot H(x)" />. This shows that <InlineMath math="(x - c)" /> is a factor of <InlineMath math="P(x)" />.
+
+## Using the Factor Theorem to Factor Polynomials
+
+The Factor Theorem is very useful for finding linear factors of a polynomial and then factoring it completely.
+
+**General Steps:**
+
+1.  **Find a Zero:** Try guessing or using clues (like the sum of coefficients) to find a value <InlineMath math="c" /> such that <InlineMath math="P(c) = 0" />.
+2.  **Confirm Factor:** If <InlineMath math="P(c) = 0" />, then according to the Factor Theorem, <InlineMath math="(x - c)" /> is a factor of <InlineMath math="P(x)" />.
+3.  **Divide the Polynomial:** Use Horner's method or long division to divide <InlineMath math="P(x)" /> by the factor <InlineMath math="(x - c)" /> found. The quotient is <InlineMath math="H(x)" />.
+
+    <BlockMath math="P(x) = (x - c) \cdot H(x)" />
+
+4.  **Factor the Quotient:** If <InlineMath math="H(x)" /> can still be factored (e.g., if <InlineMath math="H(x)" /> is a quadratic or cubic polynomial whose roots can be found), repeat the process starting from step 1 on <InlineMath math="H(x)" />.
+5.  **Complete Factorization:** Write <InlineMath math="P(x)" /> as the product of all the linear factors found.
+
+### Factoring a Polynomial
+
+Let <InlineMath math="P(x) = x^3 + 2x^2 - 13x + 10" />. We notice that the sum of all coefficients and the constant (<InlineMath math="1 + 2 - 13 + 10" />) is 0. This indicates that <InlineMath math="P(1) = 0" />.
+
+1.  **Confirm Zero:**
+
+    Calculate <InlineMath math="P(1)" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P(1) = (1)^3 + 2(1)^2 - 13(1) + 10" />
+      <BlockMath math="P(1) = 1 + 2 - 13 + 10" />
+      <BlockMath math="P(1) = 0" />
+    </div>
+
+2.  **Confirm Factor:**
+    
+    Since <InlineMath math="P(1) = 0" />, <InlineMath math="(x - 1)" /> is a factor of <InlineMath math="P(x)" />.
+
+3.  **Divide Polynomial:**
+
+    We use Horner's method to divide <InlineMath math="P(x)" /> by <InlineMath math="(x - 1)" /> (<InlineMath math="c = 1" />).
+
+    <BlockMath
+      math="
+    \begin{array}{c|cccc}
+    1 & 1 & 2 & -13 & 10 \\
+      &   & 1 & 3 & -10 \\
+    \hline
+      & 1 & 3 & -10 & \boxed{0} \\
+    \end{array}
+    "
+    />
+
+    The quotient is <InlineMath math="H(x) = 1x^2 + 3x - 10 = x^2 + 3x - 10" />. The remainder is 0, as expected.
+
+    So, <InlineMath math="P(x) = (x - 1)(x^2 + 3x - 10)" />.
+
+4.  **Factor the Quotient:**
+
+    Factor the quadratic polynomial <InlineMath math="H(x) = x^2 + 3x - 10" />.
+
+    <BlockMath math="x^2 + 3x - 10 = (x - 2)(x + 5)" />
+
+5.  **Complete Factorization:**
+
+    Combine all factors.
+
+    <BlockMath math="P(x) = (x - 1)(x - 2)(x + 5)" />
+
+## Exercise
+
+Let <InlineMath math="P(x) = x^3 - 2x^2 - 21x - 18" />. Show that <InlineMath math="P(-1) = 0" />, and use this to factor <InlineMath math="P(x)" /> completely.
+
+### Answer Key
+
+1.  **Show <InlineMath math="P(-1) = 0" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P(-1) = (-1)^3 - 2(-1)^2 - 21(-1) - 18" />
+      <BlockMath math="P(-1) = -1 - 2(1) + 21 - 18" />
+      <BlockMath math="P(-1) = -1 - 2 + 21 - 18" />
+      <BlockMath math="P(-1) = -3 + 3 = 0" />
+    </div>
+    Proven <InlineMath math="P(-1) = 0" />.
+
+2.  **Confirm Factor:**
+    
+    Since <InlineMath math="P(-1) = 0" />, <InlineMath math="(x - (-1)) = (x + 1)" /> is a factor of <InlineMath math="P(x)" />.
+
+3.  **Divide Polynomial (Horner's Method with <InlineMath math="c = -1" />):**
+
+    <BlockMath
+      math="
+    \begin{array}{c|cccc}
+    -1 & 1 & -2 & -21 & -18 \\
+       &   & -1 & 3 & 18 \\
+    \hline
+       & 1 & -3 & -18 & \boxed{0} \\
+    \end{array}
+    "
+    />
+
+    The quotient is <InlineMath math="H(x) = x^2 - 3x - 18" />.
+
+    So, <InlineMath math="P(x) = (x + 1)(x^2 - 3x - 18)" />.
+
+4.  **Factor the Quotient:**
+
+    Factor <InlineMath math="H(x) = x^2 - 3x - 18" />.
+
+    <BlockMath math="x^2 - 3x - 18 = (x - 6)(x + 3)" />
+
+5.  **Complete Factorization:**
+
+    <BlockMath math="P(x) = (x + 1)(x - 6)(x + 3)" />

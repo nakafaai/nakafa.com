@@ -4,3 +4,149 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polinomial",
 };
+
+## Memahami Teorema Faktor
+
+Ketika kita membagi suatu polinomial <InlineMath math="P(x)" /> dengan <InlineMath math="(x - c)" />, terkadang sisa pembagiannya adalah nol. Kita tahu dari Teorema Sisa bahwa jika sisa pembagiannya nol, maka <InlineMath math="P(c) = 0" />. Nah, apa artinya jika <InlineMath math="P(c) = 0" />?
+
+Nilai <InlineMath math="c" /> yang menyebabkan <InlineMath math="P(c) = 0" /> disebut sebagai **pembuat nol** atau **akar** dari polinomial <InlineMath math="P(x)" />. Teorema Faktor menjelaskan hubungan erat antara pembuat nol ini dengan faktor dari polinomial tersebut.
+
+### Pernyataan Teorema Faktor
+
+Misalkan <InlineMath math="P(x)" /> adalah suatu polinomial dan <InlineMath math="c" /> adalah bilangan real.
+
+<InlineMath math="(x - c)" /> merupakan **faktor** dari <InlineMath math="P(x)" /> **jika dan hanya jika** <InlineMath math="P(c) = 0" />.
+
+Ini adalah pernyataan dua arah:
+
+1.  **Jika <InlineMath math="(x - c)" /> adalah faktor dari <InlineMath math="P(x)" />, maka <InlineMath math="P(c) = 0" />.**
+
+    (Jika suatu bilangan habis dibagi oleh bilangan lain, sisanya pasti nol).
+
+2.  **Jika <InlineMath math="P(c) = 0" />, maka <InlineMath math="(x - c)" /> adalah faktor dari <InlineMath math="P(x)" />.**
+
+    (Jika nilai polinomial di <InlineMath math="x=c" /> adalah nol, berarti <InlineMath math="(x-c)" /> membagi habis polinomial tersebut).
+
+### Kaitan dengan Teorema Sisa
+
+Teorema Faktor sebenarnya adalah kasus khusus dari Teorema Sisa. Ingat algoritma pembagian:
+
+<BlockMath math="P(x) = (x - c) \cdot H(x) + S" />
+
+Dan dari Teorema Sisa, kita tahu <InlineMath math="S = P(c)" />.
+
+<BlockMath math="P(x) = (x - c) \cdot H(x) + P(c)" />
+
+- Jika <InlineMath math="(x - c)" /> adalah faktor, artinya <InlineMath math="P(x)" /> habis dibagi <InlineMath math="(x - c)" />. Ini hanya terjadi jika sisa pembagiannya nol. Maka, <InlineMath math="S = P(c) = 0" />.
+- Jika <InlineMath math="P(c) = 0" />, maka <InlineMath math="S = 0" />. Persamaan menjadi <InlineMath math="P(x) = (x - c) \cdot H(x) + 0" />, atau <InlineMath math="P(x) = (x - c) \cdot H(x)" />. Ini menunjukkan bahwa <InlineMath math="(x - c)" /> adalah faktor dari <InlineMath math="P(x)" />.
+
+## Menggunakan Teorema Faktor untuk Memfaktorkan Polinomial
+
+Teorema Faktor sangat berguna untuk mencari faktor-faktor linier dari suatu polinomial dan kemudian memfaktorkannya secara lengkap.
+
+**Langkah-langkah Umum:**
+
+1.  **Cari Pembuat Nol:** Coba tebak atau gunakan petunjuk (seperti jumlah koefisien) untuk menemukan nilai <InlineMath math="c" /> sehingga <InlineMath math="P(c) = 0" />.
+2.  **Konfirmasi Faktor:** Jika <InlineMath math="P(c) = 0" />, maka berdasarkan Teorema Faktor, <InlineMath math="(x - c)" /> adalah salah satu faktor dari <InlineMath math="P(x)" />.
+3.  **Bagi Polinomial:** Gunakan metode Horner atau pembagian bersusun untuk membagi <InlineMath math="P(x)" /> dengan faktor <InlineMath math="(x - c)" /> yang sudah ditemukan. Hasil baginya adalah <InlineMath math="H(x)" />.
+
+    <BlockMath math="P(x) = (x - c) \cdot H(x)" />
+
+4.  **Faktorkan Hasil Bagi:** Jika <InlineMath math="H(x)" /> masih bisa difaktorkan (misalnya jika <InlineMath math="H(x)" /> adalah polinomial kuadrat atau kubik yang masih bisa dicari akarnya), ulangi proses dari langkah 1 pada <InlineMath math="H(x)" />.
+5.  **Faktorisasi Lengkap:** Tulis <InlineMath math="P(x)" /> sebagai perkalian dari semua faktor linier yang ditemukan.
+
+### Memfaktorkan Polinomial
+
+Misalkan <InlineMath math="P(x) = x^3 + 2x^2 - 13x + 10" />. Kita perhatikan bahwa jumlah semua koefisien dan konstanta (<InlineMath math="1 + 2 - 13 + 10" />) adalah 0. Ini menandakan bahwa <InlineMath math="P(1) = 0" />.
+
+1.  **Konfirmasi Pembuat Nol:**
+
+    Hitung <InlineMath math="P(1)" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P(1) = (1)^3 + 2(1)^2 - 13(1) + 10" />
+      <BlockMath math="P(1) = 1 + 2 - 13 + 10" />
+      <BlockMath math="P(1) = 0" />
+    </div>
+
+2.  **Konfirmasi Faktor:**
+    
+    Karena <InlineMath math="P(1) = 0" />, maka <InlineMath math="(x - 1)" /> adalah faktor dari <InlineMath math="P(x)" />.
+
+3.  **Bagi Polinomial:**
+
+    Kita gunakan metode Horner untuk membagi <InlineMath math="P(x)" /> dengan <InlineMath math="(x - 1)" /> (<InlineMath math="c = 1" />).
+
+    <BlockMath
+      math="
+    \begin{array}{c|cccc}
+    1 & 1 & 2 & -13 & 10 \\
+      &   & 1 & 3 & -10 \\
+    \hline
+      & 1 & 3 & -10 & \boxed{0} \\
+    \end{array}
+    "
+    />
+
+    Hasil baginya adalah <InlineMath math="H(x) = 1x^2 + 3x - 10 = x^2 + 3x - 10" />. Sisa pembagian adalah 0, sesuai dugaan.
+
+    Jadi, <InlineMath math="P(x) = (x - 1)(x^2 + 3x - 10)" />.
+
+4.  **Faktorkan Hasil Bagi:**
+
+    Faktorkan polinomial kuadrat <InlineMath math="H(x) = x^2 + 3x - 10" />.
+
+    <BlockMath math="x^2 + 3x - 10 = (x - 2)(x + 5)" />
+
+5.  **Faktorisasi Lengkap:**
+
+    Gabungkan semua faktor.
+
+    <BlockMath math="P(x) = (x - 1)(x - 2)(x + 5)" />
+
+## Latihan
+
+Misalkan <InlineMath math="P(x) = x^3 - 2x^2 - 21x - 18" />. Tunjukkan bahwa <InlineMath math="P(-1) = 0" />, dan gunakan hal tersebut untuk memfaktorkan <InlineMath math="P(x)" /> secara komplet.
+
+### Kunci Jawaban
+
+1.  **Tunjukkan <InlineMath math="P(-1) = 0" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P(-1) = (-1)^3 - 2(-1)^2 - 21(-1) - 18" />
+      <BlockMath math="P(-1) = -1 - 2(1) + 21 - 18" />
+      <BlockMath math="P(-1) = -1 - 2 + 21 - 18" />
+      <BlockMath math="P(-1) = -3 + 3 = 0" />
+    </div>
+    Terbukti <InlineMath math="P(-1) = 0" />.
+
+2.  **Konfirmasi Faktor:**
+    
+    Karena <InlineMath math="P(-1) = 0" />, maka <InlineMath math="(x - (-1)) = (x + 1)" /> adalah faktor dari <InlineMath math="P(x)" />.
+
+3.  **Bagi Polinomial (Metode Horner dengan <InlineMath math="c = -1" />):**
+
+    <BlockMath
+      math="
+    \begin{array}{c|cccc}
+    -1 & 1 & -2 & -21 & -18 \\
+       &   & -1 & 3 & 18 \\
+    \hline
+       & 1 & -3 & -18 & \boxed{0} \\
+    \end{array}
+    "
+    />
+
+    Hasil baginya adalah <InlineMath math="H(x) = x^2 - 3x - 18" />.
+
+    Jadi, <InlineMath math="P(x) = (x + 1)(x^2 - 3x - 18)" />.
+
+4.  **Faktorkan Hasil Bagi:**
+
+    Faktorkan <InlineMath math="H(x) = x^2 - 3x - 18" />.
+
+    <BlockMath math="x^2 - 3x - 18 = (x - 6)(x + 3)" />
+
+5.  **Faktorisasi Lengkap:**
+
+    <BlockMath math="P(x) = (x + 1)(x - 6)(x + 3)" />
