@@ -4,3 +4,56 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polinomial",
 };
+
+## Memahami Fungsi Polinomial
+
+Pada dasarnya, fungsi polinomial adalah aturan yang memetakan suatu nilai input (variabel) ke nilai output menggunakan ekspresi polinomial.
+
+## Bentuk Umum Fungsi Polinomial
+
+Sebuah fungsi polinomial dalam variabel <InlineMath math="x" /> umumnya ditulis dalam bentuk:
+
+<BlockMath math="P(x) = a_n x^n + a_{n-1} x^{n-1} + a_{n-2} x^{n-2} + \dots + a_1 x + a_0" />
+
+Mari kita bedah komponen-komponen penting dari bentuk umum ini:
+
+- **<InlineMath math="P(x)" />**:
+
+  Notasi fungsi, dibaca "P dari x", yang menunjukkan nilai fungsi bergantung pada nilai <InlineMath math="x" />.
+
+- **<InlineMath math="x" />**:
+
+  Variabel dari fungsi polinomial.
+
+- **<InlineMath math="n" />**:
+
+  Pangkat tertinggi dari variabel <InlineMath math="x" />. Nilai <InlineMath math="n" /> ini harus merupakan **bilangan cacah** (0, 1, 2, 3, ...). Bilangan cacah <InlineMath math="n" /> ini juga menentukan **derajat** dari fungsi polinomial tersebut.
+
+- **<InlineMath math="a_n, a_{n-1}, \dots, a_1, a_0" />**:
+
+  Koefisien-koefisien dari fungsi polinomial. Koefisien ini merupakan **bilangan real**.
+
+- **<InlineMath math="a_n x^n" />**:
+
+  Suku dengan pangkat tertinggi. Suku ini disebut **suku utama** (leading term).
+
+- **<InlineMath math="a_n" />**:
+
+  Koefisien dari suku utama. Ini disebut **koefisien utama** (leading coefficient). Penting untuk dicatat bahwa koefisien utama <InlineMath math="a_n" /> **tidak boleh nol** (<InlineMath math="a_n \neq 0" />) agar fungsi tersebut benar-benar memiliki derajat <InlineMath math="n" />.
+
+- **<InlineMath math="a_0" />**:
+
+  Suku yang tidak memiliki variabel <InlineMath math="x" /> (atau bisa dianggap <InlineMath math="a_0 x^0" />). Suku ini disebut **suku tetap** atau **konstanta**.
+
+## Contoh Fungsi Polinomial
+
+Misalkan kita punya fungsi: <InlineMath math="f(x) = 5x^3 - 2x^2 + 7x - 1" />
+
+- Ini adalah fungsi polinomial dalam variabel <InlineMath math="x" />.
+- Derajatnya adalah 3 (pangkat tertinggi dari <InlineMath math="x" />).
+- Suku utamanya adalah <InlineMath math="5x^3" />.
+- Koefisien utamanya adalah 5 (<InlineMath math="a_3 = 5" />).
+- Koefisien lainnya adalah <InlineMath math="a_2 = -2" />, <InlineMath math="a_1 = 7" />.
+- Suku tetapnya adalah -1 (<InlineMath math="a_0 = -1" />).
+
+Jadi, sebuah fungsi bisa disebut fungsi polinomial jika ia mengikuti bentuk umum tersebut, dengan syarat utama pangkat variabelnya harus bilangan cacah dan koefisien utamanya tidak nol.
