@@ -213,7 +213,7 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/polynomial/synthetic-division`,
       },
       {
-        title: "Horner Method",
+        title: "Horner's Method",
         href: `${BASE_PATH}/polynomial/horner-method`,
       },
       {
