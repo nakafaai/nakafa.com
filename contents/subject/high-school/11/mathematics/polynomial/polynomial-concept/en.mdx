@@ -4,3 +4,104 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polynomial",
 };
+
+## Getting to Know Monomials
+
+Before we delve into the definition of polynomials, let's first get acquainted with their building blocks: **monomials**. Consider the following algebraic expressions:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sqrt[3]{p} \quad \text{(not a monomial)}" />
+  <BlockMath math="2x^2y \quad \text{(monomial)}" />
+  <BlockMath math="-8 \quad \text{(monomial)}" />
+  <BlockMath math="\frac{2}{m} \quad \text{(not a monomial)}" />
+  <BlockMath math="1.24k^4 \quad \text{(monomial)}" />
+  <BlockMath math="5a^{-6} \quad \text{(not a monomial)}" />
+</div>
+
+From the expressions above, we can group them into two:
+
+1.  **Group 1 (Monomials):** <InlineMath math="2x^2y" />, <InlineMath math="-8" />, <InlineMath math="1.24k^4" />
+2.  **Group 2 (Not Monomials):** <InlineMath math="\sqrt[3]{p}" />, <InlineMath math="\frac{2}{m}" />, <InlineMath math="5a^{-6}" />
+
+The algebraic expressions in Group 1 are what we call **monomials**.
+
+### What is a Monomial?
+
+**A monomial** is a number, a variable raised to a non-negative integer power (0, 1, 2, 3, ...), or the product of a number and one or more variables raised to non-negative integer powers.
+
+Let's break down why Group 1 consists of monomials and Group 2 does not:
+
+- **Group 1 (Monomials):**
+
+  - <InlineMath math="2x^2y" />:
+
+    The product of a number (2) and variables (<InlineMath math="x" />, <InlineMath math="y" />) with non-negative integer powers (2 and 1).
+
+  - <InlineMath math="-8" />:
+
+    A constant (just a number). Or this is the same as <InlineMath math="-8x^0" />.
+
+  - <InlineMath math="1.24k^4" />:
+
+    The product of a number (1.24) and a variable (<InlineMath math="k" />) with a non-negative integer power (4).
+
+- **Group 2 (Not Monomials):**
+
+  - <InlineMath math="\sqrt[3]{p} = p^{1/3}" />:
+
+    The power of the variable <InlineMath math="p" /> is not a non-negative integer (<InlineMath math="1/3" />).
+
+  - <InlineMath math="\frac{2}{m} = 2m^{-1}" />:
+
+    The power of the variable <InlineMath math="m" /> is not a non-negative integer (-1).
+
+  - <InlineMath math="5a^{-6} = 5a^{-6}" />:
+
+    The power of the variable <InlineMath math="a" /> is not a non-negative integer (-6).
+
+So, the key characteristic of a monomial is that **the exponents of the variables must be non-negative integers**. The number multiplying the variable (like <InlineMath math="2" /> in <InlineMath math="2x^2y" />) is called the **coefficient**.
+
+## Definition of Polynomial
+
+After understanding monomials, we can now define a **polynomial**.
+
+**A polynomial** is an algebraic expression that is a monomial or the sum (and subtraction) of two or more monomials.
+
+Consider the following examples:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4x^3y - 3x^2" />
+  <BlockMath math="x + 2\sqrt{x}" />
+  <BlockMath math="2x^3 - 5x^{-2} + 1" />
+</div>
+
+Let's identify which are polynomials and which are not:
+
+1.  <InlineMath math="4x^3y - 3x^2" />
+
+    - The term <InlineMath math="4x^3y" /> is a monomial.
+    - The term <InlineMath math="-3x^2" /> is a monomial.
+    - Conclusion: **Polynomial** (subtraction of two monomials).
+
+2.  <InlineMath math="x + 2\sqrt{x}" />
+
+    - The term <InlineMath math="x" /> is a monomial.
+    - The term <InlineMath math="2\sqrt{x} = 2x^{1/2}" /> is not a monomial (exponent is not a non-negative integer).
+    - Conclusion: **Not a Polynomial**.
+
+3.  <InlineMath math="2x^3 - 5x^{-2} + 1" />
+
+    - The term <InlineMath math="2x^3" /> is a monomial.
+    - The term <InlineMath math="-5x^{-2}" /> is not a monomial (exponent is not a non-negative integer).
+    - The term <InlineMath math="1" /> is a monomial (constant).
+    - Conclusion: **Not a Polynomial**.
+
+### Addition and Subtraction in Polynomials
+
+You might ask, "The definition of a polynomial involves the _sum_ of monomials, but example 1 has _subtraction_ (<InlineMath math="4x^3y - 3x^2" />). How does that work?"
+
+Recall that subtraction can be viewed as adding the negative. So, <InlineMath math="4x^3y - 3x^2" /> is the same as <InlineMath math="4x^3y + (-3x^2)" />.
+
+Since both <InlineMath math="4x^3y" /> and <InlineMath math="-3x^2" /> are monomials, their sum is still a polynomial. This is why subtraction between monomials also results in a polynomial.
+
+In essence, an algebraic expression is called a polynomial if all its terms are monomials (variables have non-negative integer exponents).

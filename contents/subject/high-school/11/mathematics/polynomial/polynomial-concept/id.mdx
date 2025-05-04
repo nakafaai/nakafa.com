@@ -4,3 +4,104 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polinomial",
 };
+
+## Mengenal Monomial
+
+Sebelum kita masuk ke definisi polinomial, mari kita kenali dulu komponen penyusunnya, yaitu **monomial**. Coba perhatikan beberapa bentuk aljabar berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sqrt[3]{p} \quad \text{(bukan monomial)}" />
+  <BlockMath math="2x^2y \quad \text{(monomial)}" />
+  <BlockMath math="-8 \quad \text{(monomial)}" />
+  <BlockMath math="\frac{2}{m} \quad \text{(bukan monomial)}" />
+  <BlockMath math="1,24k^4 \quad \text{(monomial)}" />
+  <BlockMath math="5a^{-6} \quad \text{(bukan monomial)}" />
+</div>
+
+Dari bentuk-bentuk di atas, kita bisa mengelompokkannya menjadi dua:
+
+1.  **Kelompok 1 (Monomial):** <InlineMath math="2x^2y" />, <InlineMath math="-8" />, <InlineMath math="1,24k^4" />
+2.  **Kelompok 2 (Bukan Monomial):** <InlineMath math="\sqrt[3]{p}" />, <InlineMath math="\frac{2}{m}" />, <InlineMath math="5a^{-6}" />
+
+Bentuk aljabar pada Kelompok 1 inilah yang kita sebut sebagai **monomial**.
+
+### Apa itu Monomial?
+
+**Monomial** adalah suatu bilangan, suatu variabel berpangkat bilangan cacah (0, 1, 2, 3, ...), atau perkalian antara bilangan dan satu atau lebih variabel berpangkat bilangan cacah.
+
+Mari kita bedah mengapa Kelompok 1 adalah monomial dan Kelompok 2 bukan:
+
+- **Kelompok 1 (Monomial):**
+
+  - <InlineMath math="2x^2y" />:
+
+    Perkalian bilangan (2) dan variabel (<InlineMath math="x" />, <InlineMath math="y" />) dengan pangkat bilangan cacah (2 dan 1).
+
+  - <InlineMath math="-8" />:
+
+    Konstanta (bilangan saja). Atau ini sama saja dengan <InlineMath math="-8x^0" />.
+
+  - <InlineMath math="1,24k^4" />:
+
+    Perkalian bilangan (1,24) dan variabel (<InlineMath math="k" />) dengan pangkat bilangan cacah (4).
+
+- **Kelompok 2 (Bukan Monomial):**
+
+  - <InlineMath math="\sqrt[3]{p} = p^{1/3}" />:
+
+    Pangkat variabel <InlineMath math="p" /> bukan bilangan cacah (<InlineMath math="1/3" />).
+
+  - <InlineMath math="\frac{2}{m} = 2m^{-1}" />:
+
+    Pangkat variabel <InlineMath math="m" /> bukan bilangan cacah (-1).
+
+  - <InlineMath math="5a^{-6} = 5a^{-6}" />:
+
+    Pangkat variabel <InlineMath math="a" /> bukan bilangan cacah (-6).
+
+Jadi, kunci utama monomial adalah **pangkat variabelnya harus bilangan cacah**. Bilangan yang mengalikan variabel (seperti <InlineMath math="2" /> pada <InlineMath math="2x^2y" />) disebut **koefisien**.
+
+## Definisi Polinomial
+
+Setelah memahami monomial, sekarang kita bisa mendefinisikan **polinomial**.
+
+**Polinomial** adalah bentuk aljabar yang berupa monomial atau penjumlahan (dan pengurangan) dari dua atau lebih monomial.
+
+Perhatikan contoh berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4x^3y - 3x^2" />
+  <BlockMath math="x + 2\sqrt{x}" />
+  <BlockMath math="2x^3 - 5x^{-2} + 1" />
+</div>
+
+Mari kita identifikasi mana yang polinomial dan mana yang bukan:
+
+1. <InlineMath math="4x^3y - 3x^2" />
+
+   - Suku <InlineMath math="4x^3y" /> adalah monomial.
+   - Suku <InlineMath math="-3x^2" /> adalah monomial.
+   - Kesimpulan: **Polinomial** (pengurangan dua monomial).
+
+2. <InlineMath math="x + 2\sqrt{x}" />
+
+   - Suku <InlineMath math="x" /> adalah monomial.
+   - Suku <InlineMath math="2\sqrt{x} = 2x^{1/2}" /> bukan monomial (pangkat bukan bilangan cacah).
+   - Kesimpulan: **Bukan Polinomial**.
+
+3. <InlineMath math="2x^3 - 5x^{-2} + 1" />
+
+   - Suku <InlineMath math="2x^3" /> adalah monomial.
+   - Suku <InlineMath math="-5x^{-2}" /> bukan monomial (pangkat bukan bilangan cacah).
+   - Suku <InlineMath math="1" /> adalah monomial (konstanta).
+   - Kesimpulan: **Bukan Polinomial**.
+
+### Penjumlahan dan Pengurangan dalam Polinomial
+
+Mungkin kamu bertanya, "Definisi polinomial adalah _penjumlahan_ monomial", tapi di contoh <InlineMath math="4x^3y - 3x^2" /> ada _pengurangan_ monomial. Kok bisa?
+
+Ingat kembali bahwa pengurangan bisa kita pandang sebagai penjumlahan dengan bilangan negatif. Jadi, <InlineMath math="4x^3y - 3x^2" /> itu sama saja dengan <InlineMath math="4x^3y + (-3x^2)" />.
+
+Karena <InlineMath math="4x^3y" /> dan <InlineMath math="-3x^2" /> keduanya adalah monomial, maka penjumlahannya tetap merupakan polinomial. Itulah mengapa operasi pengurangan antar monomial juga menghasilkan polinomial.
+
+Intinya, sebuah ekspresi aljabar disebut polinomial jika semua suku-sukunya adalah monomial (variabelnya berpangkat bilangan cacah).
