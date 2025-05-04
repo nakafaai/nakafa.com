@@ -31,6 +31,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
+export const revalidate = false;
+
 type Params = {
   locale: Locale;
   category: SubjectCategory;

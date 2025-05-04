@@ -22,6 +22,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+export const revalidate = false;
+
 type Props = {
   params: Promise<{ locale: Locale; category: ArticleCategory; slug: string }>;
 };

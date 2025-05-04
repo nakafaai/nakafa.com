@@ -5,6 +5,8 @@ import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { useTranslations } from "next-intl";
 
+export const revalidate = false;
+
 export default function Page() {
   const t = useTranslations("Home");
 
