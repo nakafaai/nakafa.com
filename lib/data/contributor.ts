@@ -12,6 +12,22 @@ export const contributors: Contributor[] = [
     },
   },
   {
+    name: "Nur Sita Utami",
+    username: "utamisita",
+    official: true,
+    social: {
+      linkedin: "https://www.linkedin.com/in/nursitautami",
+    },
+  },
+  {
+    name: "Shifna Zihdatal Haq",
+    username: "shifnahaq",
+    official: true,
+    social: {
+      linkedin: "https://www.linkedin.com/in/shifnazihdatalhaq",
+    },
+  },
+  {
     name: "Juju",
     username: "juju",
     official: false,
