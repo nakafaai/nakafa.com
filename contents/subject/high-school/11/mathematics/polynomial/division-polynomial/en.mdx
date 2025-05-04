@@ -4,3 +4,80 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polynomial",
 };
+
+## Basic Concept of Polynomial Division
+
+Polynomial division is similar to the division of integers we are familiar with. When we divide one number by another, we get a quotient and a remainder.
+
+For example, when dividing 7 by 4:
+
+- <InlineMath math="\frac{7}{4}" /> can be written as <InlineMath math="1 \frac{3}{4}" /> (1
+  remainder 3)
+- This can also be written as <InlineMath math="7 = 4 \cdot 1 + 3" />
+
+Here:
+
+- 7 is the **dividend**
+- 4 is the **divisor**
+- 1 is the **quotient**
+- 3 is the **remainder**
+
+The same concept applies to polynomials.
+
+## Polynomial Division Algorithm
+
+The division algorithm states the relationship between the dividend polynomial, the divisor, the quotient, and the remainder.
+
+If <InlineMath math="P(x)" /> (the dividend) and <InlineMath math="Q(x)" /> (the divisor) are two polynomials, with <InlineMath math="Q(x) \neq 0" />, then there exist unique polynomials <InlineMath math="H(x)" /> (the quotient) and <InlineMath math="S(x)" /> (the remainder) such that:
+
+<BlockMath math="P(x) = Q(x) \cdot H(x) + S(x)" />
+
+or it can be written as:
+
+<BlockMath math="\frac{P(x)}{Q(x)} = H(x) + \frac{S(x)}{Q(x)}" />
+
+with the condition that the degree of <InlineMath math="S(x)" /> is less than the degree of <InlineMath math="Q(x)" />, or <InlineMath math="S(x) = 0" /> (zero remainder).
+
+**Terminology:**
+
+- <InlineMath math="P(x)" />: Dividend Polynomial
+- <InlineMath math="Q(x)" />: Divisor Polynomial
+- <InlineMath math="H(x)" />: Quotient Polynomial
+- <InlineMath math="S(x)" />: Remainder Polynomial
+
+**Illustrative Example:**
+
+The division of <InlineMath math="x^3 + 4x^2 + 5x + 8" /> by <InlineMath math="x + 3" /> yields:
+
+- Quotient <InlineMath math="H(x) = x^2 + x + 2" />
+- Remainder <InlineMath math="S(x) = 2" />
+
+This can be written in two forms according to the algorithm:
+
+1.  Fractional form:
+
+    <BlockMath math="\frac{x^3 + 4x^2 + 5x + 8}{x + 3} = x^2 + x + 2 + \frac{2}{x + 3}" />
+
+2.  Multiplication form:
+
+    <BlockMath math="x^3 + 4x^2 + 5x + 8 = (x + 3)(x^2 + x + 2) + 2" />
+
+Note that the degree of the remainder (<InlineMath math="S(x)=2" />, degree 0) is less than the degree of the divisor (<InlineMath math="x+3" />, degree 1).
+
+### Verifying the Division Algorithm
+
+We can prove the correctness of the second form above by multiplying the quotient by the divisor and then adding the remainder.
+
+Prove that <InlineMath math="x^3 + 4x^2 + 5x + 8 = (x + 3)(x^2 + x + 2) + 2" />.
+
+Let's expand the right side:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(x + 3)(x^2 + x + 2) + 2" />
+  <BlockMath math="= [x(x^2 + x + 2) + 3(x^2 + x + 2)] + 2 \quad \text{(Distribute } (x+3))" />
+  <BlockMath math="= [x^3 + x^2 + 2x + 3x^2 + 3x + 6] + 2 \quad \text{(Distribute } x \text{ and } 3)" />
+  <BlockMath math="= x^3 + (x^2 + 3x^2) + (2x + 3x) + 6 + 2 \quad \text{(Group like terms)}" />
+  <BlockMath math="= x^3 + 4x^2 + 5x + 8 \quad \text{(Final result)}" />
+</div>
+
+Since the right side equals the left side, the equation is proven true.

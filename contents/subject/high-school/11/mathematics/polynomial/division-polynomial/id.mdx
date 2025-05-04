@@ -4,3 +4,80 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polinomial",
 };
+
+## Konsep Dasar Pembagian Polinomial
+
+Pembagian polinomial mirip dengan pembagian bilangan bulat yang sudah kita kenal. Saat kita membagi satu bilangan dengan bilangan lain, kita mendapatkan hasil bagi dan sisa.
+
+Misalnya, saat membagi 7 dengan 4:
+
+- <InlineMath math="\frac{7}{4}" /> dapat ditulis sebagai <InlineMath math="1 \frac{3}{4}" /> (1
+  sisa 3)
+- Ini juga bisa ditulis sebagai <InlineMath math="7 = 4 \cdot 1 + 3" />
+
+Di sini:
+
+- 7 adalah **bilangan yang dibagi** (dividend)
+- 4 adalah **pembagi** (divisor)
+- 1 adalah **hasil bagi** (quotient)
+- 3 adalah **sisa** (remainder)
+
+Konsep yang sama berlaku untuk polinomial.
+
+## Algoritma Pembagian Polinomial
+
+Algoritma pembagian menyatakan hubungan antara polinomial yang dibagi, pembagi, hasil bagi, dan sisa.
+
+Jika <InlineMath math="P(x)" /> (polinomial yang dibagi) dan <InlineMath math="Q(x)" /> (polinomial pembagi) adalah dua polinomial, dengan <InlineMath math="Q(x) \neq 0" />, maka ada polinomial-polinomial <InlineMath math="H(x)" /> (hasil bagi) dan <InlineMath math="S(x)" /> (sisa) yang tunggal, sedemikian sehingga:
+
+<BlockMath math="P(x) = Q(x) \cdot H(x) + S(x)" />
+
+atau dapat ditulis sebagai:
+
+<BlockMath math="\frac{P(x)}{Q(x)} = H(x) + \frac{S(x)}{Q(x)}" />
+
+Dengan syarat derajat <InlineMath math="S(x)" /> lebih rendah dari derajat <InlineMath math="Q(x)" />, atau <InlineMath math="S(x) = 0" /> (sisanya nol).
+
+**Istilah:**
+
+- <InlineMath math="P(x)" />: Polinomial yang dibagi (Dividend)
+- <InlineMath math="Q(x)" />: Polinomial pembagi (Divisor)
+- <InlineMath math="H(x)" />: Hasil bagi (Quotient)
+- <InlineMath math="S(x)" />: Sisa pembagian (Remainder)
+
+**Contoh Ilustrasi:**
+
+Pembagian <InlineMath math="x^3 + 4x^2 + 5x + 8" /> oleh <InlineMath math="x + 3" /> menghasilkan:
+
+- Hasil bagi <InlineMath math="H(x) = x^2 + x + 2" />
+- Sisa <InlineMath math="S(x) = 2" />
+
+Ini dapat ditulis dalam dua bentuk sesuai algoritma:
+
+1.  Bentuk pecahan:
+
+    <BlockMath math="\frac{x^3 + 4x^2 + 5x + 8}{x + 3} = x^2 + x + 2 + \frac{2}{x + 3}" />
+
+2.  Bentuk perkalian:
+
+    <BlockMath math="x^3 + 4x^2 + 5x + 8 = (x + 3)(x^2 + x + 2) + 2" />
+
+Perhatikan bahwa derajat sisa (<InlineMath math="S(x)=2" />, derajat 0) lebih rendah dari derajat pembagi (<InlineMath math="x+3" />, derajat 1).
+
+### Verifikasi Algoritma Pembagian
+
+Kita bisa membuktikan kebenaran bentuk kedua di atas dengan mengalikan hasil bagi dengan pembagi, lalu menambahkan sisanya.
+
+Buktikan bahwa <InlineMath math="x^3 + 4x^2 + 5x + 8 = (x + 3)(x^2 + x + 2) + 2" />.
+
+Kita jabarkan ruas kanan:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(x + 3)(x^2 + x + 2) + 2" />
+  <BlockMath math="= [x(x^2 + x + 2) + 3(x^2 + x + 2)] + 2 \quad \text{(Distribusi } (x+3))" />
+  <BlockMath math="= [x^3 + x^2 + 2x + 3x^2 + 3x + 6] + 2 \quad \text{(Distribusi } x \text{ dan } 3)" />
+  <BlockMath math="= x^3 + (x^2 + 3x^2) + (2x + 3x) + 6 + 2 \quad \text{(Kelompokkan suku sejenis)}" />
+  <BlockMath math="= x^3 + 4x^2 + 5x + 8 \quad \text{(Hasil akhir)}" />
+</div>
+
+Karena ruas kanan sama dengan ruas kiri, maka persamaan terbukti benar.
