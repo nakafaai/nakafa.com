@@ -303,7 +303,7 @@ Match the following functions with their likely end behavior:
         data={[
           {
             points: Array.from({ length: 51 }, (_, i) => {
-              const x = -3 + i * 0.12;
+              const x = -2.5 + i * (4.3 / 50);
               const y = x ** 4 + 2 * x ** 3 - 2 * x - 3;
               return { x, y, z: 0 };
             }),
@@ -350,7 +350,7 @@ Match the following functions with their likely end behavior:
       />
     </div>
 
-3.  <InlineMath math="h(x) = -x^6 - \frac{11}{4}x^4 + x + 5x^3 + 2" />
+3.  <InlineMath math="h(x) = -x^6 - \frac{11}{4}x^5 + x^4 + 5x^3 + 2" />
 
     - Leading term: <InlineMath math="-x^6" />
     - Degree <InlineMath math="n=6" /> (Even)
@@ -362,7 +362,7 @@ Match the following functions with their likely end behavior:
         title={
           <>
             Graph of{" "}
-            <InlineMath math="h(x) = -x^6 - \frac{11}{4}x^4 + x + 5x^3 + 2" />
+            <InlineMath math="h(x) = -x^6 - \frac{11}{4}x^5 + x^4 + 5x^3 + 2" />
           </>
         }
         description={
@@ -375,9 +375,9 @@ Match the following functions with their likely end behavior:
         cameraPosition={[0, 0, 15]}
         data={[
           {
-            points: Array.from({ length: 61 }, (_, i) => {
-              const x = -2.2 + i * 0.075;
-              const y = -(x ** 6) - (11 / 4) * x ** 4 + 5 * x ** 3 + x + 2;
+            points: Array.from({ length: 111 }, (_, i) => {
+              const x = -2.5 + i * (4.1 / 110);
+              const y = -(x ** 6) - (11 / 4) * x ** 5 + x ** 4 + 5 * x ** 3 + 2;
               return { x, y, z: 0 };
             }),
             color: getColor("FUCHSIA"),
