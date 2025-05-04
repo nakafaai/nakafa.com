@@ -4,3 +4,104 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polynomial",
 };
+
+## Basic Principle of Polynomial Multiplication
+
+Similar to the [operations of addition and subtraction of polynomials](/subject/high-school/11/mathematics/polynomial/addition-subtraction-polynomial), the operation of multiplication on polynomials can also be understood through the basic concepts of number multiplication and the distributive property.
+
+The main principle in multiplying two polynomials is: **multiply each term in the first polynomial by each term in the second polynomial.**
+
+After performing all the multiplications between terms, the next step is to **combine (add or subtract) like terms** to simplify the result.
+
+## Multiplication Methods
+
+There are several ways to perform polynomial multiplication, but all are based on the distributive property.
+
+### Horizontal Distribution Method
+
+This method involves distributing each term of the first polynomial to all terms of the second polynomial.
+
+**Example 1:**
+
+Find the product of <InlineMath math="(x - 5)(x^2 + 3x - 1)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(x - 5)(x^2 + 3x - 1)" />
+  <BlockMath math="= x(x^2 + 3x - 1) - 5(x^2 + 3x - 1) \quad \text{(Distribute } (x-5))" />
+  <BlockMath math="= (x \cdot x^2 + x \cdot 3x + x \cdot (-1)) + (-5 \cdot x^2 - 5 \cdot 3x - 5 \cdot (-1)) \quad \text{(Distribute } x \text{ and } -5)" />
+  <BlockMath math="= (x^3 + 3x^2 - x) + (-5x^2 - 15x + 5) \quad \text{(Result of term multiplication)}" />
+  <BlockMath math="= x^3 + 3x^2 - x - 5x^2 - 15x + 5 \quad \text{(Remove parentheses)}" />
+  <BlockMath math="= x^3 + (3x^2 - 5x^2) + (-x - 15x) + 5 \quad \text{(Group like terms)}" />
+  <BlockMath math="= x^3 - 2x^2 - 16x + 5 \quad \text{(Final result)}" />
+</div>
+
+**Example 2:**
+
+Find the product of <InlineMath math="(x^2 - 2x + 7)(2x - 5)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(x^2 - 2x + 7)(2x - 5)" />
+  <BlockMath math="= x^2(2x - 5) - 2x(2x - 5) + 7(2x - 5) \quad \text{(Distribute } (x^2-2x+7))" />
+  <BlockMath math="= (x^2 \cdot 2x + x^2 \cdot (-5)) + (-2x \cdot 2x - 2x \cdot (-5)) + (7 \cdot 2x + 7 \cdot (-5)) \quad \text{(Distribute } x^2, -2x, \text{ and } 7)" />
+  <BlockMath math="= (2x^3 - 5x^2) + (-4x^2 + 10x) + (14x - 35) \quad \text{(Result of term multiplication)}" />
+  <BlockMath math="= 2x^3 - 5x^2 - 4x^2 + 10x + 14x - 35 \quad \text{(Remove parentheses)}" />
+  <BlockMath math="= 2x^3 + (-5x^2 - 4x^2) + (10x + 14x) - 35 \quad \text{(Group like terms)}" />
+  <BlockMath math="= 2x^3 - 9x^2 + 24x - 35 \quad \text{(Final result)}" />
+</div>
+
+### Table Method (Area Model Analogy)
+
+This method organizes the multiplication of each term using a table, similar to finding the area when multiplying two numbers.
+
+For example, the multiplication <InlineMath math="16 \times 12" /> can be seen as the area of a rectangle with sides <InlineMath math="10+6" /> and <InlineMath math="10+2" />.
+
+|        | 10  | 6   |
+| :----- | :-- | :-- |
+| **10** | 100 | 60  |
+| **2**  | 20  | 12  |
+
+Total area = <InlineMath math="100 + 60 + 20 + 12 = 192" />.
+
+The same approach can be applied to polynomials.
+
+**Example 3:**
+
+Find the product of <InlineMath math="(x + 6)(x + 2)" /> using the table method.
+
+|                             |  <InlineMath math="x" />  | +6                        |
+| :-------------------------- | :-----------------------: | :------------------------ |
+| **<InlineMath math="x" />** | <InlineMath math="x^2" /> | <InlineMath math="+6x" /> |
+| **+2**                      | <InlineMath math="+2x" /> | <InlineMath math="+12" /> |
+
+Now, sum all the results inside the table cells:
+
+<BlockMath math="x^2 + 6x + 2x + 12" />
+
+Combine like terms:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="= x^2 + (6x + 2x) + 12" />
+  <BlockMath math="= x^2 + 8x + 12" />
+</div>
+
+**Example 4:**
+
+Find the product of <InlineMath math="(x - 5)(x^2 + 3x - 1)" /> using the table method.
+
+|                             |  <InlineMath math="x^2" />  |  <InlineMath math="+3x" />  | <InlineMath math="-1" /> |
+| :-------------------------- | :-------------------------: | :-------------------------: | :----------------------: |
+| **<InlineMath math="x" />** |  <InlineMath math="x^3" />  | <InlineMath math="+3x^2" /> | <InlineMath math="-x" /> |
+| **-5**                      | <InlineMath math="-5x^2" /> | <InlineMath math="-15x" />  | <InlineMath math="+5" /> |
+
+Sum all the results inside the table cells:
+
+<BlockMath math="x^3 + 3x^2 - x - 5x^2 - 15x + 5" />
+
+Combine like terms:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="= x^3 + (3x^2 - 5x^2) + (-x - 15x) + 5" />
+  <BlockMath math="= x^3 - 2x^2 - 16x + 5" />
+</div>
+
+Notice that the result from the table method is the same as the result from the horizontal distribution method. The table method is just another way to organize the multiplication of each term.

@@ -4,3 +4,104 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polinomial",
 };
+
+## Prinsip Dasar Perkalian Polinomial
+
+Sama seperti [operasi penjumlahan dan pengurangan polinomial](/subject/high-school/11/mathematics/polynomial/addition-subtraction-polynomial), operasi perkalian pada polinomial juga dapat kita pahami melalui konsep dasar perkalian bilangan dan sifat distributif.
+
+Prinsip utama dalam mengalikan dua polinomial adalah: **kalikan setiap suku pada polinomial pertama dengan setiap suku pada polinomial kedua.**
+
+Setelah melakukan semua perkalian antar suku, langkah selanjutnya adalah **menggabungkan (menjumlahkan atau mengurangkan) suku-suku sejenis** untuk menyederhanakan hasilnya.
+
+## Metode Perkalian
+
+Ada beberapa cara untuk melakukan perkalian polinomial, namun semuanya berdasar pada sifat distributif.
+
+### Metode Distribusi Horizontal
+
+Metode ini melibatkan pendistribusian setiap suku dari polinomial pertama ke semua suku pada polinomial kedua.
+
+**Contoh 1:**
+
+Tentukan hasil perkalian <InlineMath math="(x - 5)(x^2 + 3x - 1)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(x - 5)(x^2 + 3x - 1)" />
+  <BlockMath math="= x(x^2 + 3x - 1) - 5(x^2 + 3x - 1) \quad \text{(Distribusi } (x-5))" />
+  <BlockMath math="= (x \cdot x^2 + x \cdot 3x + x \cdot (-1)) + (-5 \cdot x^2 - 5 \cdot 3x - 5 \cdot (-1)) \quad \text{(Distribusi } x \text{ dan } -5)" />
+  <BlockMath math="= (x^3 + 3x^2 - x) + (-5x^2 - 15x + 5) \quad \text{(Hasil perkalian suku)}" />
+  <BlockMath math="= x^3 + 3x^2 - x - 5x^2 - 15x + 5 \quad \text{(Hilangkan kurung)}" />
+  <BlockMath math="= x^3 + (3x^2 - 5x^2) + (-x - 15x) + 5 \quad \text{(Kelompokkan suku sejenis)}" />
+  <BlockMath math="= x^3 - 2x^2 - 16x + 5 \quad \text{(Hasil akhir)}" />
+</div>
+
+**Contoh 2:**
+
+Tentukan hasil perkalian <InlineMath math="(x^2 - 2x + 7)(2x - 5)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(x^2 - 2x + 7)(2x - 5)" />
+  <BlockMath math="= x^2(2x - 5) - 2x(2x - 5) + 7(2x - 5) \quad \text{(Distribusi } (x^2-2x+7))" />
+  <BlockMath math="= (x^2 \cdot 2x + x^2 \cdot (-5)) + (-2x \cdot 2x - 2x \cdot (-5)) + (7 \cdot 2x + 7 \cdot (-5)) \quad \text{(Distribusi } x^2, -2x, \text{ dan } 7)" />
+  <BlockMath math="= (2x^3 - 5x^2) + (-4x^2 + 10x) + (14x - 35) \quad \text{(Hasil perkalian suku)}" />
+  <BlockMath math="= 2x^3 - 5x^2 - 4x^2 + 10x + 14x - 35 \quad \text{(Hilangkan kurung)}" />
+  <BlockMath math="= 2x^3 + (-5x^2 - 4x^2) + (10x + 14x) - 35 \quad \text{(Kelompokkan suku sejenis)}" />
+  <BlockMath math="= 2x^3 - 9x^2 + 24x - 35 \quad \text{(Hasil akhir)}" />
+</div>
+
+### Metode Tabel (Analogi Luas Daerah)
+
+Metode ini mengorganisir perkalian setiap suku menggunakan tabel, mirip dengan cara mencari luas daerah saat mengalikan dua bilangan.
+
+Misalnya, perkalian <InlineMath math="16 \times 12" /> bisa dilihat sebagai luas persegi panjang dengan sisi <InlineMath math="10+6" /> dan <InlineMath math="10+2" />.
+
+|        | 10  | 6   |
+| :----- | :-- | :-- |
+| **10** | 100 | 60  |
+| **2**  | 20  | 12  |
+
+Total luas = <InlineMath math="100 + 60 + 20 + 12 = 192" />.
+
+Cara yang sama bisa diterapkan pada polinomial.
+
+**Contoh 3:**
+
+Tentukan hasil kali <InlineMath math="(x + 6)(x + 2)" /> menggunakan metode tabel.
+
+|                             |  <InlineMath math="x" />  | +6                        |
+| :-------------------------- | :-----------------------: | :------------------------ |
+| **<InlineMath math="x" />** | <InlineMath math="x^2" /> | <InlineMath math="+6x" /> |
+| **+2**                      | <InlineMath math="+2x" /> | <InlineMath math="+12" /> |
+
+Sekarang, jumlahkan semua hasil di dalam sel tabel:
+
+<BlockMath math="x^2 + 6x + 2x + 12" />
+
+Gabungkan suku sejenis:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="= x^2 + (6x + 2x) + 12" />
+  <BlockMath math="= x^2 + 8x + 12" />
+</div>
+
+**Contoh 4:**
+
+Tentukan hasil kali <InlineMath math="(x - 5)(x^2 + 3x - 1)" /> menggunakan metode tabel.
+
+|                             |  <InlineMath math="x^2" />  |  <InlineMath math="+3x" />  | <InlineMath math="-1" /> |
+| :-------------------------- | :-------------------------: | :-------------------------: | :----------------------: |
+| **<InlineMath math="x" />** |  <InlineMath math="x^3" />  | <InlineMath math="+3x^2" /> | <InlineMath math="-x" /> |
+| **-5**                      | <InlineMath math="-5x^2" /> | <InlineMath math="-15x" />  | <InlineMath math="+5" /> |
+
+Jumlahkan semua hasil di dalam sel tabel:
+
+<BlockMath math="x^3 + 3x^2 - x - 5x^2 - 15x + 5" />
+
+Gabungkan suku sejenis:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="= x^3 + (3x^2 - 5x^2) + (-x - 15x) + 5" />
+  <BlockMath math="= x^3 - 2x^2 - 16x + 5" />
+</div>
+
+Perhatikan bahwa hasil dari metode tabel sama dengan hasil dari metode distribusi horizontal. Metode tabel hanyalah cara lain untuk mengorganisir perkalian setiap suku.
