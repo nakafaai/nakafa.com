@@ -1,6 +1,200 @@
 export const metadata = {
-  title: "Horner Method",
+  title: "Horner's Method",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/04/2025",
   subject: "Polynomial",
 };
+
+## Understanding Horner's Method
+
+Horner's method is a more efficient and simpler way to perform polynomial division, especially when the divisor is linear, like <InlineMath math="(x-c)" />. This method can be considered a simplification of long division because it only involves writing coefficients and more concise multiplication and addition operations.
+
+### Comparison with Long Division
+
+To see how Horner's method simplifies the process, let's compare the division of <InlineMath math="P(x) = x^3 - 7x + 8" /> (or <InlineMath math="x^3 + 0x^2 - 7x + 8" />) by <InlineMath math="x-2" /> using both methods:
+
+**Long Division:**
+
+<BlockMath
+  math="
+\begin{array}{l}
+\qquad\quad\space\space x^2 + 2x - 3 \\
+x-2\overline{\big)x^3 + 0x^2 - 7x + 8} \\
+\quad\space\space \underline{-(x^3 - 2x^2)} \\
+\qquad\qquad 2x^2 - 7x \\
+\qquad\quad \underline{-(2x^2 - 4x)} \\
+\qquad\qquad\qquad -3x + 8 \\
+\qquad\qquad\quad \underline{-(-3x + 6)} \\
+\qquad\qquad\qquad\qquad\quad 2 \\
+\end{array}
+"
+/>
+
+**Horner's Method:**
+
+<BlockMath
+  math="
+\begin{array}{c|cccc}
+2 & 1 & 0 & -7 & 8 \\
+  &   & 2 & 4 & -6 \\
+\hline
+  & 1 & 2 & -3 & \boxed{2} \\
+\end{array}
+"
+/>
+
+Notice how Horner's method only focuses on the coefficients <InlineMath math="(1, 0, -7, 8)" /> and the value <InlineMath math="c=2" />. The bottom row in Horner's method <InlineMath math="(1, 2, -3)" /> directly gives the coefficients of the quotient <InlineMath math="1x^2 + 2x - 3" />, and the last number <InlineMath math="\boxed{2}" /> is the remainder.
+
+This is much more concise than writing out all the variables and powers as in long division.
+
+This method can only be directly used if the divisor is a linear polynomial of degree one, i.e., in the form <InlineMath math="(x-c)" /> or <InlineMath math="(ax-b)" /> (which can be transformed).
+
+## Preparing to Use Horner's Method
+
+Before performing division with Horner's method, there are several preparation steps:
+
+1.  **Identify Coefficients of the Dividend (<InlineMath math="P(x)" />):**
+
+    Write down all coefficients of the polynomial to be divided in order, starting from the term with the highest power down to the constant. Ensure no power is skipped. If a term with a certain power is missing, its coefficient is written as 0.
+    
+    **Example:**
+    
+    For <InlineMath math="P(x) = 2x^3 + 5x^2 + 6" />, the coefficient of the <InlineMath math="x" /> term is 0. So, the coefficients we write in order are: <InlineMath math="2, 5, 0, 6" />.
+
+2.  **Identify the Value <InlineMath math="c" /> from the Divisor (<InlineMath math="x-c" />):**
+
+    Determine the value of <InlineMath math="c" /> from the divisor polynomial. Remember, if the divisor is <InlineMath math="x-c" />, the value used is <InlineMath math="c" />. If the divisor is <InlineMath math="x+c" />, it is equivalent to <InlineMath math="x - (-c)" />, so the value used is <InlineMath math="-c" />.
+
+    **Example:**
+    
+    If the divisor is <InlineMath math="x+3" />, then <InlineMath math="x - (-3)" />, so <InlineMath math="c = -3" />.
+
+3.  **Set Up the Horner Scheme:**
+
+    Draw the Horner scheme or diagram. Place the value <InlineMath math="c" /> on the left and write the coefficients of <InlineMath math="P(x)" /> in the top row.
+
+## Division Process with Horner's Method
+
+Here are the steps to perform division using the Horner scheme:
+
+1.  **Bring Down the First Coefficient:** Bring down the first coefficient (<InlineMath math="a_n" />) directly to the result row (the bottom row).
+2.  **Multiply and Place:** Multiply the coefficient just brought down by the value <InlineMath math="c" />. Place the result under the second coefficient (<InlineMath math="a_{n-1}" />).
+3.  **Add:** Add the second coefficient (<InlineMath math="a_{n-1}" />) to the result from the previous step. Write the sum in the result row, directly below it.
+4.  **Repeat:** Repeat step 2 (multiply by <InlineMath math="c" />) and step 3 (add to the coefficient above it) for all remaining coefficients.
+5.  **Final Result:** The last number in the result row is the **remainder (<InlineMath math="S" />)**. The other numbers in the result row, from left to right, are the **coefficients of the quotient polynomial (<InlineMath math="H(x)" />)**, starting from the power <InlineMath math="n-1" />.
+
+## Using Horner's Method
+
+Let's divide <InlineMath math="P(x) = 2x^3 + 5x^2 + 6" /> by <InlineMath math="x+3" /> using both methods.
+
+**Long Division:**
+
+<BlockMath
+  math="
+\begin{array}{l}
+\qquad\quad\space 2x^2 - x + 3 \\
+x+3\overline{\big)2x^3 + 5x^2 + 0x + 6} \\
+\quad\space \underline{-(2x^3 + 6x^2)} \\
+\qquad\qquad -x^2 + 0x \\
+\qquad\quad \underline{-(-x^2 - 3x)} \\
+\qquad\qquad\qquad 3x + 6 \\
+\qquad\qquad\quad \underline{-(3x + 9)} \\
+\qquad\qquad\qquad\qquad -3 \\
+\end{array}
+"
+/>
+
+**Horner's Method:**
+
+1.  **Preparation:**
+
+    - Coefficients of <InlineMath math="P(x)" />: <InlineMath math="2, 5, 0" /> (for <InlineMath math="x^1" />), <InlineMath math="6" /> (constant).
+    - The divisor is <InlineMath math="x+3" />, so <InlineMath math="x - (-3)" />, thus <InlineMath math="c = -3" />.
+
+2.  **Horner Process:**
+
+    <BlockMath
+      math="
+    \begin{array}{c|cccc}
+    -3 & 2 & 5 & 0 & 6 \\
+      &   & -6 & 3 & -9 \\
+    \hline
+      & 2 & -1 & 3 & \boxed{-3} \\
+    \end{array}
+    "
+    />
+
+3.  **Scheme Explanation:**
+
+    - Bring down the number 2 (coefficient of <InlineMath math="x^3" />).
+    - <InlineMath math="2 \times (-3) = -6" />. Place -6 under 5.
+    - <InlineMath math="5 + (-6) = -1" />. Write -1 in the result row.
+    - <InlineMath math="-1 \times (-3) = 3" />. Place 3 under 0.
+    - <InlineMath math="0 + 3 = 3" />. Write 3 in the result row.
+    - <InlineMath math="3 \times (-3) = -9" />. Place -9 under 6.
+    - <InlineMath math="6 + (-9) = -3" />. Write -3 (remainder) in the result row on the far right.
+
+4.  **Result:**
+
+    - The last number in the result row is <InlineMath math="\boxed{-3}" />. This is the **Remainder (<InlineMath math="S" />)**.
+    - The other numbers are 2, -1, 3. These are the coefficients of the **Quotient (<InlineMath math="H(x)" />)**. Since <InlineMath math="P(x)" /> is degree 3, <InlineMath math="H(x)" /> is degree 2.
+    - Thus, <InlineMath math="H(x) = 2x^2 - 1x + 3 = 2x^2 - x + 3" />.
+
+5.  **Writing in Division Algorithm Form:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P(x) = (x-c) H(x) + S" />
+      <BlockMath math="2x^3 + 5x^2 + 6 = (x+3)(2x^2 - x + 3) - 3" />
+    </div>
+
+## Exercise
+
+Find the quotient and remainder from the division of <InlineMath math="x^4 + 4" /> by <InlineMath math="x - 1" /> using Horner's method and long division.
+
+State the result in the form <InlineMath math="P(x) = Q(x) \cdot H(x) + S(x)" />.
+
+### Answer Key
+
+- Dividend: <InlineMath math="P(x) = x^4 + 4 = x^4 + 0x^3 + 0x^2 + 0x + 4" />.
+- Divisor: <InlineMath math="Q(x) = x - 1" />, so <InlineMath math="c = 1" />.
+
+**Long Division:**
+
+<BlockMath
+  math="
+\begin{array}{l}
+\qquad\quad\space\space x^3 + x^2 + x + 1 \\
+x-1\overline{\big)x^4 + 0x^3 + 0x^2 + 0x + 4} \\
+\quad\space\space \underline{-(x^4 - x^3)} \\
+\qquad\qquad x^3 + 0x^2 \\
+\qquad\quad \underline{-(x^3 - x^2)} \\
+\qquad\qquad\qquad x^2 + 0x \\
+\qquad\qquad\quad \underline{-(x^2 - x)} \\
+\qquad\qquad\qquad\qquad x + 4 \\
+\qquad\qquad\qquad\quad \underline{-(x - 1)} \\
+\qquad\qquad\qquad\qquad\qquad 5 \\
+\end{array}
+"
+/>
+
+**Horner's Method:**
+
+<BlockMath
+  math="
+\begin{array}{c|ccccc}
+1 & 1 & 0 & 0 & 0 & 4 \\
+  &   & 1 & 1 & 1 & 1 \\
+\hline
+  & 1 & 1 & 1 & 1 & \boxed{5} \\
+\end{array}
+"
+/>
+
+**Result:**
+
+- Quotient: <InlineMath math="H(x) = x^3 + x^2 + x + 1" />.
+- Remainder: <InlineMath math="S = \boxed{5}" />.
+
+**Writing in Division Algorithm Form:**
+
+<BlockMath math="x^4 + 4 = (x-1)(x^3 + x^2 + x + 1) + 5" />

@@ -4,3 +4,197 @@ export const metadata = {
   date: "05/04/2025",
   subject: "Polinomial",
 };
+
+## Mengenal Metode Horner
+
+Metode Horner adalah cara yang lebih efisien dan sederhana untuk melakukan pembagian polinomial, terutama ketika polinomial pembaginya berbentuk linier seperti <InlineMath math="(x-c)" />. Metode ini bisa dianggap sebagai penyederhanaan dari pembagian bersusun, karena hanya melibatkan penulisan koefisien dan operasi perkalian serta penjumlahan yang lebih ringkas.
+
+### Perbandingan dengan Pembagian Bersusun
+
+Untuk melihat bagaimana Metode Horner menyederhanakan proses, mari bandingkan pembagian <InlineMath math="P(x) = x^3 - 7x + 8" /> (atau <InlineMath math="x^3 + 0x^2 - 7x + 8" />) dengan <InlineMath math="x-2" /> menggunakan kedua cara:
+
+**Pembagian Bersusun:**
+
+<BlockMath
+  math="
+\begin{array}{l}
+\qquad\quad\space\space x^2 + 2x - 3 \\
+x-2\overline{\big)x^3 + 0x^2 - 7x + 8} \\
+\quad\space\space \underline{-(x^3 - 2x^2)} \\
+\qquad\qquad 2x^2 - 7x \\
+\qquad\quad \underline{-(2x^2 - 4x)} \\
+\qquad\qquad\qquad -3x + 8 \\
+\qquad\qquad\quad \underline{-(-3x + 6)} \\
+\qquad\qquad\qquad\qquad\quad 2 \\
+\end{array}
+"
+/>
+
+**Metode Horner:**
+
+<BlockMath
+  math="
+\begin{array}{c|cccc}
+2 & 1 & 0 & -7 & 8 \\
+  &   & 2 & 4 & -6 \\
+\hline
+  & 1 & 2 & -3 & \boxed{2} \\
+\end{array}
+"
+/>
+
+Perhatikan bagaimana Metode Horner hanya fokus pada koefisien <InlineMath math="(1, 0, -7, 8)" /> dan nilai <InlineMath math="c=2" />. Baris bawah pada Metode Horner <InlineMath math="(1, 2, -3)" /> langsung memberikan koefisien hasil bagi <InlineMath math="1x^2 + 2x - 3" /> dan angka terakhir <InlineMath math="\boxed{2}" /> adalah sisanya.
+
+Ini jauh lebih ringkas daripada menuliskan semua variabel dan pangkat seperti pada pembagian bersusun.
+
+Metode ini hanya bisa langsung digunakan jika pembaginya adalah polinomial linier derajat satu, yaitu berbentuk <InlineMath math="(x-c)" /> atau <InlineMath math="(ax-b)" /> (yang bisa diubah bentuk).
+
+## Persiapan Menggunakan Metode Horner
+
+Sebelum melakukan pembagian dengan metode Horner, ada beberapa langkah persiapan:
+
+1.  **Identifikasi Koefisien Polinomial yang Dibagi (<InlineMath math="P(x)" />):**
+
+    Tuliskan semua koefisien dari polinomial yang akan dibagi secara berurutan, dimulai dari suku dengan pangkat tertinggi hingga konstanta. Pastikan tidak ada pangkat yang terlewat. Jika ada suku dengan pangkat tertentu yang tidak ada, koefisiennya ditulis sebagai 0.
+    
+    **Contoh:**
+    
+    Untuk <InlineMath math="P(x) = 2x^3 + 5x^2 + 6" />, koefisien suku <InlineMath math="x" /> adalah 0. Maka, koefisien yang kita tulis berurutan adalah: <InlineMath math="2, 5, 0, 6" />.
+
+2.  **Identifikasi Nilai <InlineMath math="c" /> dari Pembagi (<InlineMath math="x-c" />):**
+
+    Tentukan nilai <InlineMath math="c" /> dari polinomial pembagi. Ingat, jika pembagi adalah <InlineMath math="x-c" />, nilai yang digunakan adalah <InlineMath math="c" />. Jika pembagi adalah <InlineMath math="x+c" />, maka bentuknya sama dengan <InlineMath math="x - (-c)" />, sehingga nilai yang digunakan adalah <InlineMath math="-c" />.
+
+    **Contoh:**
+    
+    Jika pembagi adalah <InlineMath math="x+3" />, maka <InlineMath math="x - (-3)" />, sehingga <InlineMath math="c = -3" />.
+
+3.  **Buat Skema Horner:**
+
+    Gambarkan skema atau bagan Horner. Letakkan nilai <InlineMath math="c" /> di sebelah kiri dan tuliskan koefisien <InlineMath math="P(x)" /> di baris atas.
+
+## Proses Pembagian dengan Metode Horner
+
+Berikut adalah langkah-langkah melakukan pembagian menggunakan skema Horner:
+
+1.  **Turunkan Koefisien Pertama:** Turunkan koefisien pertama (<InlineMath math="a_n" />) langsung ke baris hasil (baris paling bawah).
+2.  **Kali dan Letakkan:** Kalikan koefisien yang baru saja diturunkan dengan nilai <InlineMath math="c" />. Letakkan hasilnya di bawah koefisien kedua (<InlineMath math="a_{n-1}" />).
+3.  **Jumlahkan:** Jumlahkan koefisien kedua (<InlineMath math="a_{n-1}" />) dengan hasil perkalian dari langkah sebelumnya. Tuliskan hasilnya di baris hasil, tepat di bawahnya.
+4.  **Ulangi:** Ulangi langkah 2 (kali dengan <InlineMath math="c" />) dan langkah 3 (jumlahkan dengan koefisien di atasnya) untuk semua koefisien yang tersisa.
+5.  **Hasil Akhir:** Angka terakhir di baris hasil adalah **sisa pembagian (<InlineMath math="S" />)**. Angka-angka lainnya di baris hasil, dari kiri ke kanan, adalah **koefisien dari polinomial hasil bagi (<InlineMath math="H(x)" />)**, dimulai dari pangkat <InlineMath math="n-1" />.
+
+## Penggunaan Metode Horner
+
+Mari kita bagi <InlineMath math="P(x) = 2x^3 + 5x^2 + 6" /> dengan <InlineMath math="x+3" /> menggunakan kedua metode.
+
+**Pembagian Bersusun:**
+
+<BlockMath
+  math="
+\begin{array}{l}
+\qquad\quad\space 2x^2 - x + 3 \\
+x+3\overline{\big)2x^3 + 5x^2 + 0x + 6} \\
+\quad\space \underline{-(2x^3 + 6x^2)} \\
+\qquad\qquad -x^2 + 0x \\
+\qquad\quad \underline{-(-x^2 - 3x)} \\
+\qquad\qquad\qquad 3x + 6 \\
+\qquad\qquad\quad \underline{-(3x + 9)} \\
+\qquad\qquad\qquad\qquad -3 \\
+\end{array}
+"
+/>
+
+**Metode Horner:**
+
+1.  **Persiapan:**
+
+    - Koefisien <InlineMath math="P(x)" />: <InlineMath math="2, 5, 0" /> (untuk <InlineMath math="x^1" />), <InlineMath math="6" /> (konstanta).
+    - Pembagi adalah <InlineMath math="x+3" />, maka <InlineMath math="x - (-3)" />, jadi <InlineMath math="c = -3" />.
+
+2.  **Proses Horner:**
+
+    <BlockMath
+      math="
+    \begin{array}{c|cccc}
+    -3 & 2 & 5 & 0 & 6 \\
+      &   & -6 & 3 & -9 \\
+    \hline
+      & 2 & -1 & 3 & \boxed{-3} \\
+    \end{array}
+    "
+    />
+
+3.  **Penjelasan Skema:**
+
+    - Angka 2 (koefisien <InlineMath math="x^3" />) diturunkan.
+    - <InlineMath math="2 \times (-3) = -6" />. Letakkan -6 di bawah 5.
+    - <InlineMath math="5 + (-6) = -1" />. Tulis -1 di baris hasil.
+    - <InlineMath math="-1 \times (-3) = 3" />. Letakkan 3 di bawah 0.
+    - <InlineMath math="0 + 3 = 3" />. Tulis 3 di baris hasil.
+    - <InlineMath math="3 \times (-3) = -9" />. Letakkan -9 di bawah 6.
+    - <InlineMath math="6 + (-9) = -3" />. Tulis -3 (sisa) di baris hasil paling kanan.
+
+4.  **Hasil:**
+
+    - Angka terakhir di baris hasil adalah <InlineMath math="\boxed{-3}" />. Ini adalah **Sisa Pembagian (<InlineMath math="S" />)**.
+    - Angka-angka lainnya adalah 2, -1, 3. Ini adalah koefisien **Hasil Bagi (<InlineMath math="H(x)" />)**. Karena <InlineMath math="P(x)" /> berderajat 3, maka <InlineMath math="H(x)" /> berderajat 2.
+    - Jadi, <InlineMath math="H(x) = 2x^2 - 1x + 3 = 2x^2 - x + 3" />.
+
+5.  **Penulisan Algoritma Pembagian:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="P(x) = (x-c) H(x) + S" />
+      <BlockMath math="2x^3 + 5x^2 + 6 = (x+3)(2x^2 - x + 3) - 3" />
+    </div>
+
+## Latihan
+
+Tentukan hasil bagi dan sisa dari pembagian <InlineMath math="x^4 + 4" /> oleh <InlineMath math="x - 1" /> dengan menggunakan metode Horner dan pembagian bersusun.
+
+Nyatakan hasilnya ke dalam bentuk <InlineMath math="P(x) = Q(x) \cdot H(x) + S(x)" />.
+
+### Kunci Jawaban
+
+- Polinomial yang dibagi: <InlineMath math="P(x) = x^4 + 4 = x^4 + 0x^3 + 0x^2 + 0x + 4" />.
+- Pembagi: <InlineMath math="Q(x) = x - 1" />, maka <InlineMath math="c = 1" />.
+
+**Pembagian Bersusun:**
+
+<BlockMath
+  math="
+\begin{array}{l}
+\qquad\quad\space\space x^3 + x^2 + x + 1 \\
+x-1\overline{\big)x^4 + 0x^3 + 0x^2 + 0x + 4} \\
+\quad\space\space \underline{-(x^4 - x^3)} \\
+\qquad\qquad x^3 + 0x^2 \\
+\qquad\quad \underline{-(x^3 - x^2)} \\
+\qquad\qquad\qquad x^2 + 0x \\
+\qquad\qquad\quad \underline{-(x^2 - x)} \\
+\qquad\qquad\qquad\qquad x + 4 \\
+\qquad\qquad\qquad\quad \underline{-(x - 1)} \\
+\qquad\qquad\qquad\qquad\qquad 5 \\
+\end{array}
+"
+/>
+
+**Metode Horner:**
+
+<BlockMath
+  math="
+\begin{array}{c|ccccc}
+1 & 1 & 0 & 0 & 0 & 4 \\
+  &   & 1 & 1 & 1 & 1 \\
+\hline
+  & 1 & 1 & 1 & 1 & \boxed{5} \\
+\end{array}
+"
+/>
+
+**Hasil:**
+
+- Hasil Bagi: <InlineMath math="H(x) = x^3 + x^2 + x + 1" />.
+- Sisa: <InlineMath math="S = \boxed{5}" />.
+
+**Penulisan Algoritma Pembagian:**
+
+<BlockMath math="x^4 + 4 = (x-1)(x^3 + x^2 + x + 1) + 5" />
