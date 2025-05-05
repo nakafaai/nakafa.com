@@ -4,6 +4,7 @@ import type { MaterialGrade, MaterialList } from "@/types/subject/material";
 import { MaterialListSchema } from "@/types/subject/material";
 import {
   BrainCircuitIcon,
+  CableIcon,
   ChartPieIcon,
   CodeIcon,
   CodeXmlIcon,
@@ -94,6 +95,8 @@ export function getMaterialIcon(material: MaterialGrade) {
       return ScaleIcon;
     case "computer-science":
       return CodeXmlIcon;
+    case "technology-electro-medical":
+      return CableIcon;
     default:
       return LightbulbIcon;
   }

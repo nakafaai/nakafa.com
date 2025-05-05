@@ -10,7 +10,7 @@ export function ComingSoon({ className }: { className?: string }) {
   const t = useTranslations("ComingSoon");
 
   return (
-    <div className={cn(className)}>
+    <div data-pagefind-ignore className={cn(className)}>
       <Heading Tag="h2" className="text-2xl">
         {t("title")}
       </Heading>

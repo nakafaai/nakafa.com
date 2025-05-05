@@ -20,6 +20,11 @@ export function getSubjects(label: "bachelor" | "master") {
       href: `${BASE_PATH}/${label}/computer-science`,
     },
     {
+      icon: getMaterialIcon("technology-electro-medical"),
+      label: "technology-electro-medical",
+      href: `${BASE_PATH}/${label}/technology-electro-medical`,
+    },
+    {
       icon: getMaterialIcon("political-science"),
       label: "political-science",
       href: `${BASE_PATH}/${label}/political-science`,
