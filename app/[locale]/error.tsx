@@ -27,8 +27,8 @@ export default function ErrorPage({
     <div
       data-pagefind-ignore
       className={cn(
-        "relative flex h-[calc(100vh-4rem)] items-center justify-center",
-        pathname === "/" && "h-dvh"
+        "relative flex h-[calc(100svh-4rem)] items-center justify-center",
+        pathname === "/" && "lg:h-svh"
       )}
     >
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />
