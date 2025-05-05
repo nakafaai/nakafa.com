@@ -1,5 +1,6 @@
 import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
 import { CardMaterial } from "@/components/shared/card-material";
+import { ComingSoon } from "@/components/shared/coming-soon";
 import { ContainerList } from "@/components/shared/container-list";
 import {
   LayoutMaterialContent,
@@ -116,11 +117,15 @@ export default async function Page({ params }: Props) {
           }}
         />
         <LayoutMaterialMain scrollIndicator={false} className="py-10">
-          <ContainerList className="sm:grid-cols-1">
-            {materials.map((material) => (
-              <CardMaterial key={material.title} material={material} />
-            ))}
-          </ContainerList>
+          {materials.length === 0 ? (
+            <ComingSoon className="pb-10" />
+          ) : (
+            <ContainerList className="sm:grid-cols-1">
+              {materials.map((material) => (
+                <CardMaterial key={material.title} material={material} />
+              ))}
+            </ContainerList>
+          )}
         </LayoutMaterialMain>
         <LayoutMaterialFooter>
           <RefContent githubUrl={getGithubUrl(`/contents${FILE_PATH}`)} />

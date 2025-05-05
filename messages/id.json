@@ -152,5 +152,10 @@
   "Contributor": {
     "title": "Kontributor",
     "description": "Temui orang-orang yang membuat Nakafa menjadi mungkin."
+  },
+  "ComingSoon": {
+    "title": "Segera Hadir",
+    "description": "Fitur ini belum tersedia. Silakan periksa kembali nanti atau berkontribusi pada proyek.",
+    "contribute": "Berkontribusi"
   }
 }

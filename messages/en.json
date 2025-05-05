@@ -152,5 +152,10 @@
   "Contributor": {
     "title": "Contributor",
     "description": "Meet the people who made Nakafa possible."
+  },
+  "ComingSoon": {
+    "title": "Coming Soon",
+    "description": "This feature is not available yet. Please check back later or contribute to the project.",
+    "contribute": "Contribute"
   }
 }
