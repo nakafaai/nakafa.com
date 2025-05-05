@@ -40,11 +40,11 @@ export function SearchBar({ className }: Props) {
         <Input
           id={id}
           className={cn(
-            "h-8 cursor-pointer border-border bg-muted/50 pe-11 pl-9 transition-colors placeholder:text-sm hover:bg-muted/80 focus-visible:ring-0 sm:w-80",
+            "h-8 cursor-pointer border-border bg-muted/50 pl-9 transition-colors placeholder:text-sm hover:bg-muted/80 focus-visible:ring-0 sm:w-80",
             className
           )}
           placeholder={t("search-bar-placeholder")}
-          type="search"
+          type="text"
         />
         <div className="pointer-events-none absolute inset-y-0 end-0 hidden items-center justify-center pe-3 lg:flex">
           <div className="flex items-center gap-0.5">
