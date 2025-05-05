@@ -70,7 +70,7 @@ export function HeaderContent({
             </h1>
           </div>
         </div>
-        {description && <p className="text-foreground/80">{description}</p>}
+        {description && <p className="text-muted-foreground">{description}</p>}
         {showFooter && (
           <div
             data-pagefind-ignore
