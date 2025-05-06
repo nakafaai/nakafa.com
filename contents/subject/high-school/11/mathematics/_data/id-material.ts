@@ -273,7 +273,7 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/matrix/matrix-scalar-multiplication`,
       },
       {
-        title: "Perkalian Dua Matriks",
+        title: "Perkalian Matriks",
         href: `${BASE_PATH}/matrix/matrix-multiplication`,
       },
       {
