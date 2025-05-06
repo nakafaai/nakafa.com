@@ -1,9 +1,8 @@
 "use client";
 
-import { searchAtom } from "@/lib/jotai/search";
+import { useSearchStore } from "@/lib/store/search";
 import { cn } from "@/lib/utils";
 import { IconCommand, IconLetterK } from "@tabler/icons-react";
-import { useSetAtom } from "jotai";
 import { SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
@@ -18,7 +17,7 @@ export function SearchBar({ className }: Props) {
   const t = useTranslations("Utils");
   const id = useId();
 
-  const setOpen = useSetAtom(searchAtom);
+  const setOpen = useSearchStore((state) => state.setOpen);
 
   return (
     <button

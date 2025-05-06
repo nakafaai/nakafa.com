@@ -10,13 +10,12 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
-import { queryAtom, searchAtom } from "@/lib/jotai/search";
 import { useSearch } from "@/lib/react-query/use-search";
+import { useSearchStore } from "@/lib/store/search";
 import { cn } from "@/lib/utils";
 import { getAnchorStyle } from "@/lib/utils/search";
 import type { PagefindResult } from "@/types/pagefind";
 import { IconMenu3 } from "@tabler/icons-react";
-import { useAtom, useSetAtom } from "jotai";
 import { HeartCrackIcon, InfoIcon, RocketIcon } from "lucide-react";
 import { FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -27,7 +26,8 @@ import { useDebounceValue } from "usehooks-ts";
 import { LoaderIcon } from "../ui/icons";
 
 export function SearchCommand() {
-  const [open, setOpen] = useAtom(searchAtom);
+  const open = useSearchStore((state) => state.open);
+  const setOpen = useSearchStore((state) => state.setOpen);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -67,12 +67,13 @@ export function SearchCommand() {
 }
 
 function SearchMain() {
-  const [search, setSearch] = useAtom(queryAtom);
+  const query = useSearchStore((state) => state.query);
+  const setQuery = useSearchStore((state) => state.setQuery);
 
   return (
     <>
-      <SearchInput value={search} onChange={setSearch} />
-      <SearchList search={search} />
+      <SearchInput value={query} onChange={setQuery} />
+      <SearchList search={query} />
     </>
   );
 }
@@ -138,7 +139,7 @@ function SearchListItems({
 }) {
   const t = useTranslations("Utils");
   const router = useRouter();
-  const setOpen = useSetAtom(searchAtom);
+  const setOpen = useSearchStore((state) => state.setOpen);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {

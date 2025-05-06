@@ -1,9 +1,8 @@
 "use client";
 
-import { queryAtom } from "@/lib/jotai/search";
 import { searchParsers } from "@/lib/nuqs/search";
+import { useSearchStore } from "@/lib/store/search";
 import { cn } from "@/lib/utils";
-import { useSetAtom } from "jotai";
 import { SearchIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
@@ -15,7 +14,7 @@ export function SearchInput() {
   const t = useTranslations("Utils");
   const id = useId();
 
-  const setQuery = useSetAtom(queryAtom);
+  const setQuery = useSearchStore((state) => state.setQuery);
 
   const [{ q }, setSearch] = useQueryStates(searchParsers);
 
