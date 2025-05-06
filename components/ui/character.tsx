@@ -13,5 +13,11 @@ type Props = {
 export function Character({ name, className, style }: Props) {
   const config = genConfig(name);
 
-  return <Avatar {...config} className={cn(className)} style={{ ...style }} />;
+  return (
+    <Avatar
+      {...config}
+      className={cn("shrink-0 border", className)}
+      style={{ ...style }}
+    />
+  );
 }
