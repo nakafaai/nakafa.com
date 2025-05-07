@@ -27,7 +27,7 @@ export function SearchBar({ className }: Props) {
         setOpen(true);
       }}
       type="button"
-      className="w-full sm:w-auto"
+      className="w-full cursor-pointer sm:w-auto"
     >
       <Label htmlFor={id} className="sr-only">
         {t("search")}
@@ -39,7 +39,7 @@ export function SearchBar({ className }: Props) {
         <Input
           id={id}
           className={cn(
-            "h-8 cursor-pointer border-border bg-muted/50 pl-9 transition-colors placeholder:text-sm hover:bg-muted/80 focus-visible:ring-0 sm:w-80",
+            "pointer-events-none h-8 border-border bg-muted/50 pl-9 transition-colors placeholder:text-sm hover:bg-muted/80 focus-visible:ring-0 sm:w-80",
             className
           )}
           placeholder={t("search-bar-placeholder")}
