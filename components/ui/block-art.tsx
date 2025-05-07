@@ -5,16 +5,16 @@ type Props = {
   className?: string;
 };
 
-export default function BlockArt({ length = 23, className }: Props) {
+export default function BlockArt({ length = 20, className }: Props) {
   return (
-    <section className={cn("mt-24 bg-card-foreground pb-36", className)}>
+    <section className={cn("bg-foreground pb-30", className)}>
       {Array.from({ length }).map((_, i) => (
         <div
           key={Math.random()}
-          className="bg-card"
+          className="bg-background"
           style={{
             marginTop: `${0 + i}px`,
-            height: `${23 - i}px`,
+            height: `${20 - i}px`,
           }}
         />
       ))}

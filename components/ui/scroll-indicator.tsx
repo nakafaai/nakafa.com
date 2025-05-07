@@ -14,6 +14,10 @@ export function ScrollIndicator({ hidden }: Props) {
     restDelta: 0.001,
   });
 
+  if (hidden) {
+    return null;
+  }
+
   return (
     <>
       <motion.div
@@ -28,9 +32,6 @@ export function ScrollIndicator({ hidden }: Props) {
           height: 2.5,
           originX: 0,
           backgroundColor: "var(--primary)",
-          ...(hidden && {
-            display: "none",
-          }),
         }}
       />
     </>
