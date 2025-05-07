@@ -20,4 +20,6 @@ function CanvasComponent({
   );
 }
 
-export const ThreeCanvas = dynamic(() => Promise.resolve(CanvasComponent));
+export const ThreeCanvas = dynamic(() => Promise.resolve(CanvasComponent), {
+  ssr: false,
+});

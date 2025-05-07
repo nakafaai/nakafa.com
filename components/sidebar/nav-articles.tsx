@@ -17,20 +17,24 @@ function MenuItem() {
   const t = useTranslations("Articles");
   const pathname = usePathname();
 
-  return articlesMenu.map((item) => (
-    <SidebarMenuItem key={item.title}>
-      <SidebarMenuButton
-        tooltip={t(item.title)}
-        isActive={pathname.includes(item.href)}
-        asChild
-      >
-        <NavigationLink href={item.href}>
-          {item.icon && <item.icon />}
-          <span className="truncate">{t(item.title)}</span>
-        </NavigationLink>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  ));
+  return (
+    <SidebarMenu>
+      {articlesMenu.map((item) => (
+        <SidebarMenuItem key={item.title}>
+          <SidebarMenuButton
+            tooltip={t(item.title)}
+            isActive={pathname.includes(item.href)}
+            asChild
+          >
+            <NavigationLink href={item.href}>
+              {item.icon && <item.icon />}
+              <span className="truncate">{t(item.title)}</span>
+            </NavigationLink>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  );
 }
 
 export function NavArticles() {
@@ -40,9 +44,7 @@ export function NavArticles() {
     <SidebarGroup>
       <SidebarGroupLabel>{t("articles")}</SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu>
-          <MenuItem />
-        </SidebarMenu>
+        <MenuItem />
       </SidebarGroupContent>
     </SidebarGroup>
   );
