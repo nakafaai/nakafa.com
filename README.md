@@ -1,65 +1,103 @@
 # ❤️❤️❤️❤️❤️
 
 <p align="center">
-  <img src="public/logo.svg" alt="Nakafa Logo" width="80" height="80">
+  <img src="public/logo.svg" alt="Nakafa Logo" width="100" height="100">
 </p>
 
 <h1 align="center">Nakafa</h1>
-<p align="center"><em>Learn for free and with quality</em></p>
 
 <p align="center">
-  <a href="#about">About</a> •
-  <a href="#features">Features</a> •
-  <a href="#tech-stack">Tech Stack</a> •
+  <em>Learn for free, with quality, for everyone.</em>
+</p>
+
+<p align="center">
+  <a href="https://nakafa.com"><strong>Website</strong></a> •
+  <a href="https://github.com/nabilfatih/nakafa.com/issues">Report Bug</a> •
+  <a href="https://github.com/nabilfatih/nakafa.com/discussions">Request Feature</a>
+</p>
+
+<p align="center">
+  <a href="#about-the-project">About</a> •
+  <a href="#key-features">Features</a> •
+  <a href="#built-with">Tech Stack</a> •
   <a href="#getting-started">Getting Started</a> •
   <a href="#contributing">Contributing</a> •
-  <a href="#license">License</a>
+  <a href="#license">License</a> •
+  <a href="#contact">Contact</a>
 </p>
 
 ---
 
-## About
+## About The Project
 
-Nakafa is an open-source educational platform designed to democratize knowledge and make learning accessible to everyone. Our mission is to provide high-quality educational content across various subjects and topics, from elementary school to university level, as well as articles on current affairs.
+**Nakafa** is an open-source educational platform dedicated to democratizing knowledge and making learning accessible to everyone, everywhere. Our core mission is to provide high-quality, comprehensive educational content across a wide spectrum of subjects and topics. We cater to learners of all ages and levels, from elementary school fundamentals to advanced university-level material, alongside insightful articles on current affairs and diverse topics of interest.
 
-The name "Nakafa" represents our commitment to creating a platform where people can learn for free and with quality that transcends geographical, linguistic, and socioeconomic barriers to education.
+The name "Nakafa" (نافعة) is an Arabic word meaning "beneficial" or "useful." It embodies our commitment to creating a platform that empowers individuals through education, transcending geographical, linguistic, and socio-economic barriers.
 
-## Features
+We believe that education is a fundamental right, and Nakafa aims to be a valuable resource for self-learners, educators, and anyone passionate about acquiring knowledge.
 
-- **Multilingual Support**: Content available in multiple languages
-- **Educational Content**: Organized by educational levels (Elementary, Middle School, High School, University)
-- **Articles**: Curated articles on various topics including politics, etc.
-- **Modern Interface**: Clean, accessible, and responsive design
-- **Full-Text Search**: Easily find the content you need
+## Key Features
 
-## Tech Stack
+Nakafa offers a rich learning experience with features designed for accessibility and engagement:
 
-- **Framework**: Next.js 15 with React 19
-- **Styling**: Tailwind CSS
-- **Components**: Radix UI primitives
-- **Languages**: TypeScript
-- **Internationalization**: next-intl
-- **Content**: MDX
-- **Search**: Pagefind
+- 🌍 **Multilingual Support**: Content is planned to be available in multiple languages, starting with English and Arabic, to reach a global audience.
+- 📚 **Comprehensive Educational Content**: Structured learning paths covering various educational levels:
+  - Elementary School
+  - Middle School
+  - High School
+  - University Courses
+- 📰 **Insightful Articles**: A curated collection of articles on diverse topics, including current events, science, technology, arts, and culture.
+- 🎨 **Modern & Accessible Interface**: A clean, intuitive, and responsive design built with accessibility in mind, ensuring a seamless experience across all devices.
+- 🔍 **Full-Text Search**: Powered by Pagefind, allowing users to quickly and efficiently find the exact content they need.
+- 🚀 **Fast & Performant**: Built with Next.js and Turbopack for a speedy and smooth user experience.
+- 🌙 **Theme Customization**: Light and dark mode support for comfortable viewing.
+- 🤝 **Community-Driven**: Open to contributions for both content and platform development.
+
+## Built With
+
+Nakafa leverages a modern and robust technology stack to deliver a high-quality educational experience:
+
+- **Framework**: [Next.js](https://nextjs.org/) 15 (with App Router & Turbopack)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **UI Library**: [React](https://react.dev/) 19
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components**: [Shadcn UI](https://ui.shadcn.com/) & [Radix UI](https://www.radix-ui.com/) Primitives
+- **Internationalization (i18n)**: [next-intl](https://next-intl-docs.vercel.app/)
+- **Content Format**: [MDX](https://mdxjs.com/)
+- **Client-Side Search**: [Pagefind](https://pagefind.app/)
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/), [Immer](https://immerjs.github.io/immer/)
+- **Form Handling**: [React Hook Form](https://react-hook-form.com/) with [Zod](https://zod.dev/) for validation
+- **Data Fetching/Caching**: [TanStack Query (React Query)](https://tanstack.com/query/latest)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/), [React Spring](https://www.react-spring.dev/)
+- **Icons**: [Lucide React](https://lucide.dev/), [Tabler Icons](https://tabler-icons.io/)
+- **Linting & Formatting**: [BiomeJS](https://biomejs.dev/), [ESLint](https://eslint.org/)
+- **Analytics**: [Vercel Analytics](https://vercel.com/analytics) & [Speed Insights](https://vercel.com/speed-insights)
+- **Deployment**: [Vercel](https://vercel.com/)
 
 ## Getting Started
 
+To get a local copy up and running, follow these simple steps.
+
 ### Prerequisites
 
-- Node.js 18+ or Bun
+Ensure you have the following installed on your system:
+
+- Node.js (v18 or higher recommended) or Bun
 - Git
-- Package manager (npm, Yarn, pnpm, or Bun)
+- A package manager: npm, Yarn, pnpm, or Bun
 
 ### Installation
 
-1. Clone the repository:
+1. **Clone the repository:**
 
    ```bash
    git clone https://github.com/nabilfatih/nakafa.git
    cd nakafa
    ```
 
-2. Install dependencies:
+2. **Install dependencies:**
+
+   Choose your preferred package manager:
 
    ```bash
    # Using npm
@@ -75,7 +113,17 @@ The name "Nakafa" represents our commitment to creating a platform where people 
    bun install
    ```
 
-3. Run the development server:
+3. **Set up environment variables:**
+
+   Copy the example environment file and customize it as needed:
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   Fill in any necessary API keys or configuration settings in `.env.local`.
+
+4. **Run the development server:**
 
    ```bash
    # Using npm
@@ -91,19 +139,25 @@ The name "Nakafa" represents our commitment to creating a platform where people 
    bun dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-### Environment Setup
+### Available Scripts
 
-1. Copy the example environment file:
+This project includes several helpful scripts (see `package.json` for a full list):
 
-   ```bash
-   cp .env.example .env.local
-   ```
-
-2. Update the environment variables as needed.
+- `dev`: Starts the development server with Turbopack.
+- `build`: Lints, checks, and builds the application for production.
+- `start`: Starts the production server after a build.
+- `lint`: Runs linter checks using Next.js lint and Biome.
+- `lint:fix`: Automatically fixes linting and formatting issues.
+- `format`: Checks formatting with Biome.
+- `format:fix`: Fixes formatting issues with Biome.
+- `type-check`: Runs TypeScript compiler to check for type errors.
+- `postbuild`: Generates search index using Pagefind.
 
 ### Build for Production
+
+To build the application for production and start the server:
 
 ```bash
 # Using npm
@@ -125,71 +179,98 @@ bun run start
 
 ## Contributing
 
-We welcome contributions from everyone! Here's how you can help:
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**!
 
-### Code Contributions
+We welcome contributions in various forms:
 
-1. Fork the repository
-2. Create a new branch:
+- Reporting bugs and issues
+- Suggesting new features or enhancements
+- Improving documentation
+- Adding or translating educational content
+- Developing new platform features
+
+### How to Contribute Code
+
+1. **Fork the Project:** Click the "Fork" button at the top right of this page.
+2. **Create your Feature Branch:**
 
    ```bash
-   git checkout -b feature/your-feature-name
+   git checkout -b feature/AmazingFeature
    ```
 
-3. Make your changes
-4. Run tests and linting:
+   Or for bug fixes:
 
    ```bash
-   npm run lint
+   git checkout -b fix/SomeBug
+   ```
+
+3. **Make your Changes:** Implement your feature or bug fix.
+4. **Commit your Changes:** Write clear, concise commit messages.
+
+   ```bash
+   git commit -m 'Add some AmazingFeature'
+   ```
+
+5. **Lint and Test your Changes:**
+
+   ```bash
+   npm run lint:fix
    npm run type-check
+   # Add tests if applicable and run them
    ```
 
-5. Commit your changes:
+6. **Push to the Branch:**
 
    ```bash
-   git commit -m "Add feature: your feature description"
+   git push origin feature/AmazingFeature
    ```
 
-6. Push to your branch:
-
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-7. Open a Pull Request
+7. **Open a Pull Request:** Go to the Nakafa GitHub repository and open a new Pull Request from your forked branch.
+   Please provide a clear description of the changes and any relevant issue numbers.
 
 ### Content Contributions
 
-You can contribute educational content or articles in the following ways:
+If you're passionate about education and want to contribute content:
 
-- **For developers**: Follow the code contribution process above and add content using MDX in the appropriate directories.
-- **For non-developers**: Email your content suggestions or submissions to <nakafaai@gmail.com> with:
-  - Subject line: "[Content Submission] - Brief Title"
-  - Your name/handle for attribution
-  - The content you'd like to contribute
-  - Any references or sources
+- **For Developers:** You can add content directly by creating MDX files in the appropriate `contents/` subdirectories. Follow the coding contribution process outlined above.
+- **For Non-Developers/Educators:** We'd love to hear from you! Please email your content suggestions, drafts, or completed materials to <nakafaai@gmail.com> with:
+  - **Subject:** `[Content Submission] - <Brief Title of Content>`
+  - Your name or preferred handle for attribution.
+  - The content itself (e.g., as a document, MDX, or plain text).
+  - Any relevant sources or references.
 
 ### Contribution Guidelines
 
-- Follow the code style of the project
-- Write clear, concise commit messages
-- Add tests when applicable
-- Update documentation for significant changes
-- Respect the code of conduct
+To ensure a smooth collaboration process, please:
+
+- Adhere to the project's coding style and conventions (enforced by Biome and ESLint).
+- Write clear, descriptive commit messages and Pull Request titles.
+- Ensure your code is well-documented, especially for complex logic.
+- Update existing documentation if your changes affect it.
+- Be respectful and constructive in all communications.
+- Consider opening an issue to discuss significant changes before starting work.
 
 ## License
 
-Nakafa is dual-licensed:
+Nakafa is distributed under a dual-license model:
 
-1.  **GNU Affero General Public License v3.0 (AGPL-3.0)**: This project is freely available under the [AGPL-3.0 license](./LICENSE). This allows for use, modification, and distribution (including for non-commercial purposes), provided that all modifications and distributions are also licensed under AGPL-3.0 and the source code is made available.
+1. **GNU Affero General Public License v3.0 (AGPL-3.0):**
+   The project is freely available under the [AGPL-3.0 license](./LICENSE). This license permits use, modification, and distribution (including for non-commercial and commercial purposes), provided that all modifications and distributions are also licensed under AGPL-3.0 and the complete corresponding source code is made available.
 
-2.  **Commercial License**: For uses that do not comply with the AGPL-3.0 terms (e.g., inclusion in proprietary/closed-source commercial products without releasing the source code), a separate commercial license must be purchased.
+2. **Commercial License:**
+   For uses that do not comply with the AGPL-3.0 terms (e.g., inclusion in proprietary/closed-source commercial products without releasing the source code, or if you require different terms and conditions), a separate commercial license must be obtained.
 
 Please contact us at <nakafaai@gmail.com> for inquiries regarding commercial licensing.
 
-This model ensures the project remains free and open-source for the community while allowing for commercial usage under different terms.
+This dual-licensing model ensures that Nakafa remains free and open-source for the community while providing a path for commercial applications that may not align with the copyleft provisions of the AGPL-3.0.
+
+## Contact
+
+Nabil Fatih - [@nabilfatih](https://twitter.com/nabilfatih_) - <nakafaai@gmail.com>
+
+Project Link: [https://github.com/nabilfatih/nakafa.com](https://github.com/nabilfatih/nakafa.com)
 
 ---
 
-<p align="center">Built with ❤️ for learners everywhere</p>
-<p align="center">© 2025 Nakafa</p>
+<p align="center">Built with ❤️ for learners everywhere.</p>
+<p align="center">© 2024 Nakafa. All rights reserved (unless otherwise stated under the AGPL-3.0 license).</p>
