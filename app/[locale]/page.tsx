@@ -1,8 +1,11 @@
+import { LangSwitcher } from "@/components/home/lang-switcher";
 import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
 import { SearchBar } from "@/components/sidebar/search-bar";
 import { buttonVariants } from "@/components/ui/button";
 import { Particles } from "@/components/ui/particles";
 import { cn } from "@/lib/utils";
+import { IconBrandYoutube } from "@tabler/icons-react";
+import { HeartHandshakeIcon } from "lucide-react";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
@@ -65,28 +68,35 @@ export default async function Page({ params }: Props) {
         <Particles className="pointer-events-none absolute inset-0 opacity-80" />
         <div className="mx-auto w-full max-w-xl px-6">
           <div className="relative flex h-full flex-col">
-            <h1 className="mb-8 font-medium text-4xl leading-none tracking-tighter md:text-center">
+            <h1 className="mb-10 font-medium text-4xl leading-none tracking-tighter md:text-center">
               {tHome("title")}
             </h1>
+
             <SearchBar className="h-12 rounded-xl sm:w-full" />
 
-            <div className="mt-6 grid w-fit grid-cols-2 gap-3 md:mx-auto">
-              <a
-                href="https://github.com/nabilfatih/nakafa.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(buttonVariants({ variant: "secondary" }))}
-              >
-                {tHome("contribute")}
-              </a>
-              <a
-                href="https://www.youtube.com/@nakafaa"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(buttonVariants({ variant: "secondary" }))}
-              >
-                {tHome("videos")}
-              </a>
+            <div className="mt-8 flex flex-wrap items-center justify-between gap-6 gap-y-3">
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://github.com/nabilfatih/nakafa.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(buttonVariants({ variant: "outline" }))}
+                >
+                  <HeartHandshakeIcon className="size-4" />
+                  {tHome("contribute")}
+                </a>
+                <a
+                  href="https://www.youtube.com/@nakafaa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(buttonVariants({ variant: "outline" }))}
+                >
+                  <IconBrandYoutube className="size-4" />
+                  {tHome("videos")}
+                </a>
+              </div>
+
+              <LangSwitcher />
             </div>
           </div>
         </div>

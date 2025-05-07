@@ -39,7 +39,7 @@ export function SearchBar({ className }: Props) {
         <Input
           id={id}
           className={cn(
-            "pointer-events-none h-8 border-border bg-muted/50 pl-9 transition-colors placeholder:text-sm hover:bg-muted/80 focus-visible:ring-0 sm:w-80",
+            "pointer-events-none h-8 border bg-background pl-9 shadow-xs transition-colors placeholder:text-sm hover:bg-accent hover:text-accent-foreground focus-visible:ring-0 sm:w-80 dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
             className
           )}
           placeholder={t("search-bar-placeholder")}
