@@ -41,7 +41,7 @@ export function SearchInput() {
       </div>
       <Input
         id={id}
-        className="h-12 rounded-xl px-9 sm:w-full"
+        className="h-12 rounded-xl border-border px-9 sm:w-full"
         placeholder={t("search-bar-placeholder")}
         type="text"
         value={q}
