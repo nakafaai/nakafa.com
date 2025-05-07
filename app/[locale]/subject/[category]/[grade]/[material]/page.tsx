@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
 import { CardMaterial } from "@/components/shared/card-material";
 import { ComingSoon } from "@/components/shared/coming-soon";
@@ -50,9 +52,19 @@ export async function generateMetadata({
 
   const FILE_PATH = getMaterialPath(category, grade, material);
 
-  const path = `/${locale}${FILE_PATH}`;
+  let ogUrl = getOgUrl(locale, FILE_PATH);
+
+  const publicPath = `/subject/${locale}-${material}.png`;
+  const fullPathToCheck = path.join(process.cwd(), `public${publicPath}`);
+
+  // if the og image exists in public directory, use it
+  if (fs.existsSync(fullPathToCheck)) {
+    ogUrl = publicPath;
+  }
+
+  const urlPath = `/${locale}${FILE_PATH}`;
   const image = {
-    url: getOgUrl(locale, FILE_PATH),
+    url: ogUrl,
     width: 1200,
     height: 630,
   };
@@ -60,10 +72,10 @@ export async function generateMetadata({
   return {
     title: t(material),
     alternates: {
-      canonical: path,
+      canonical: urlPath,
     },
     openGraph: {
-      url: path,
+      url: urlPath,
       images: [image],
     },
     twitter: {
