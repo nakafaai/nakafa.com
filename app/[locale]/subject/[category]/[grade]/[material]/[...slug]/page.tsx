@@ -162,6 +162,7 @@ export default async function Page({ params }: Props) {
           author={metadata.authors.map((author) => ({
             "@type": "Person",
             name: author.name,
+            url: `https://nakafa.com/${locale}/contributor`,
           }))}
           image={getOgUrl(locale, FILE_PATH)}
           description={metadata.description ?? metadata.subject ?? ""}
@@ -174,6 +175,7 @@ export default async function Page({ params }: Props) {
           author={metadata.authors.map((author) => ({
             "@type": "Person",
             name: author.name,
+            url: `https://nakafa.com/${locale}/contributor`,
           }))}
         />
         <LayoutMaterialContent>
