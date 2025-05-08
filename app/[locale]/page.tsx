@@ -72,7 +72,7 @@ export default async function Page({ params }: Props) {
               {tHome("title")}
             </h1>
 
-            <SearchBar className="h-12 rounded-xl sm:w-full" />
+            <SearchBar className="h-12 sm:w-full" />
 
             <div className="mt-4 flex justify-between gap-6 gap-y-3 sm:items-center">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
