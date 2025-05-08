@@ -147,6 +147,7 @@ export default async function Page({ params }: Props) {
       <>
         <BreadcrumbJsonLd
           locale={locale}
+          name={metadata.title}
           // this will only work for the first heading, not for the nested headings
           breadcrumbItems={headings.map((heading, index) => ({
             "@type": "ListItem",

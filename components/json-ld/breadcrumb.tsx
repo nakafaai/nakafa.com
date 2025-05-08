@@ -6,12 +6,16 @@ type Props = {
   id?: string;
   locale: Locale;
   breadcrumbItems: BreadcrumbList["itemListElement"];
+  name?: string;
+  description?: string;
 };
 
 export function BreadcrumbJsonLd({
   id = "breadcrumb-jsonld",
   locale,
   breadcrumbItems,
+  name,
+  description,
 }: Props) {
   const t = useTranslations("Metadata");
 
@@ -20,8 +24,8 @@ export function BreadcrumbJsonLd({
     "@type": "BreadcrumbList",
     "@id": `https://nakafa.com/${locale}#breadcrumb`,
     url: `https://nakafa.com/${locale}`,
-    name: t("title"),
-    description: t("description"),
+    name: name ?? t("title"),
+    description: description ?? t("description"),
     potentialAction: [
       {
         "@type": "SearchAction",

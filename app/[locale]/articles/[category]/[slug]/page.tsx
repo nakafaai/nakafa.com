@@ -117,6 +117,8 @@ export default async function Page({ params }: Props) {
       <>
         <BreadcrumbJsonLd
           locale={locale}
+          name={metadata.title}
+          description={metadata.description ?? ""}
           breadcrumbItems={headings.map((heading, index) => ({
             "@type": "ListItem",
             "@id": `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
