@@ -1,4 +1,6 @@
+import { ArticleJsonLd } from "@/components/json-ld/article";
 import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
+import { LearningResourceJsonLd } from "@/components/json-ld/learning-resource";
 import {
   LayoutMaterialContent,
   LayoutMaterialFooter,
@@ -15,6 +17,7 @@ import { getGithubUrl } from "@/lib/utils/github";
 import { getHeadings } from "@/lib/utils/markdown";
 import { getRawContent } from "@/lib/utils/markdown";
 import { getOgUrl } from "@/lib/utils/metadata";
+import { getGradeNonNumeric } from "@/lib/utils/subject/grade";
 import {
   getMaterialIcon,
   getMaterialPath,
@@ -109,6 +112,7 @@ export function generateStaticParams() {
 export default async function Page({ params }: Props) {
   const { locale, category, grade, material, slug } = await params;
   const t = await getTranslations("Common");
+  const tSubject = await getTranslations("Subject");
 
   // Enable static rendering
   setRequestLocale(locale);
@@ -149,6 +153,26 @@ export default async function Page({ params }: Props) {
             position: index + 1,
             name: heading.label,
             item: `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
+          }))}
+        />
+        <ArticleJsonLd
+          headline={metadata.title}
+          datePublished={metadata.date}
+          author={metadata.authors.map((author) => ({
+            "@type": "Person",
+            name: author.name,
+          }))}
+          image={getOgUrl(locale, FILE_PATH)}
+          description={metadata.description ?? metadata.subject ?? ""}
+        />
+        <LearningResourceJsonLd
+          name={metadata.title}
+          description={metadata.description ?? metadata.subject ?? ""}
+          educationalLevel={tSubject(getGradeNonNumeric(grade) ?? "grade")}
+          datePublished={metadata.date}
+          author={metadata.authors.map((author) => ({
+            "@type": "Person",
+            name: author.name,
           }))}
         />
         <LayoutMaterialContent>

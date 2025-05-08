@@ -2,11 +2,11 @@ import { type Locale, useTranslations } from "next-intl";
 import type { WebSite, WithContext } from "schema-dts";
 import { JsonLd } from ".";
 
-type WebsiteJsonLdProps = {
+type Props = {
   locale: Locale;
 };
 
-export function WebsiteJsonLd({ locale }: WebsiteJsonLdProps) {
+export function WebsiteJsonLd({ locale }: Props) {
   const t = useTranslations("Metadata");
 
   const websiteJsonLd: WithContext<WebSite> = {
@@ -20,6 +20,13 @@ export function WebsiteJsonLd({ locale }: WebsiteJsonLdProps) {
       "@type": "Organization",
       name: "PT. Nakafa Tekno Kreatif",
       logo: "https://nakafa.com/logo.svg",
+      url: "https://nakafa.com",
+    },
+    maintainer: {
+      "@type": "Organization",
+      name: "PT. Nakafa Tekno Kreatif",
+      logo: "https://nakafa.com/logo.svg",
+      url: "https://nakafa.com",
     },
     inLanguage: locale,
     potentialAction: [

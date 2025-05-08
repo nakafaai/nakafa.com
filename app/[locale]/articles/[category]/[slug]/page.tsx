@@ -1,4 +1,6 @@
+import { ArticleJsonLd } from "@/components/json-ld/article";
 import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
+import { LearningResourceJsonLd } from "@/components/json-ld/learning-resource";
 import {
   LayoutArticle,
   LayoutArticleContent,
@@ -120,6 +122,26 @@ export default async function Page({ params }: Props) {
             position: index + 1,
             name: heading.label,
             item: `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
+          }))}
+        />
+        <ArticleJsonLd
+          headline={metadata.title}
+          datePublished={metadata.date}
+          author={metadata.authors.map((author) => ({
+            "@type": "Person",
+            name: author.name,
+          }))}
+          image={getOgUrl(locale, FILE_PATH)}
+          description={metadata.description ?? ""}
+        />
+        <LearningResourceJsonLd
+          name={metadata.title}
+          description={metadata.description ?? ""}
+          educationalLevel={t(category)}
+          datePublished={metadata.date}
+          author={metadata.authors.map((author) => ({
+            "@type": "Person",
+            name: author.name,
           }))}
         />
         <LayoutArticle onThisPage={headings}>

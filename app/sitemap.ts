@@ -72,11 +72,35 @@ export function getOgRoutes(routes: string[]): string[] {
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = getAllRoutes();
-  const ogRoutes = getOgRoutes(routes);
+  const contentRoutes = getAllRoutes(); // Get routes from 'contents' directory
+  const allBaseRoutes = [...baseRoutes, ...contentRoutes];
 
-  // Combine regular routes and OG routes
-  const allRoutes = [...baseRoutes, ...routes, ...ogRoutes];
+  // Generate sitemap entries for all routes, including localized versions
+  const sitemapEntries = allBaseRoutes.flatMap((route) => {
+    // The getEntries function already creates entries for all locales
+    return getEntries(route as Href);
+  });
 
-  return allRoutes.flatMap((route) => getEntries(route));
+  // Add the main homepage entry separately if not covered by getAllRoutes("/")
+  const homeEntry: MetadataRoute.Sitemap = [
+    {
+      url: host,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 1,
+      alternates: {
+        languages: Object.fromEntries(
+          routing.locales.map((cur) => [cur, getUrl("/" as Href, cur)])
+        ),
+      },
+    },
+  ];
+
+  // You might want to filter out duplicates if getAllRoutes can return "/"
+  // and also handle OG routes if they should be in the sitemap explicitly.
+  // For now, this focuses on content page discoverability.
+
+  return [...homeEntry, ...sitemapEntries].filter(
+    (entry, index, self) => index === self.findIndex((e) => e.url === entry.url)
+  ); // Basic deduplication
 }

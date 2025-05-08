@@ -2,7 +2,7 @@ import { type Locale, useTranslations } from "next-intl";
 import type { BreadcrumbList, WithContext } from "schema-dts";
 import { JsonLd } from ".";
 
-type BreadcrumbJsonLdProps = {
+type Props = {
   id?: string;
   locale: Locale;
   breadcrumbItems: BreadcrumbList["itemListElement"];
@@ -12,7 +12,7 @@ export function BreadcrumbJsonLd({
   id = "breadcrumb-jsonld",
   locale,
   breadcrumbItems,
-}: BreadcrumbJsonLdProps) {
+}: Props) {
   const t = useTranslations("Metadata");
 
   const breadcrumbJsonLd: WithContext<BreadcrumbList> = {
