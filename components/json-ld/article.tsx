@@ -30,6 +30,7 @@ export function ArticleJsonLd({
   const articleJsonLd: WithContext<Article> = {
     "@context": "https://schema.org",
     "@type": "Article",
+    name: headline,
     headline,
     datePublished,
     dateModified: dateModified || datePublished,
