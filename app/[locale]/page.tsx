@@ -74,8 +74,8 @@ export default async function Page({ params }: Props) {
 
             <SearchBar className="h-12 rounded-xl sm:w-full" />
 
-            <div className="mt-8 flex flex-wrap items-center justify-between gap-6 gap-y-3">
-              <div className="flex items-center gap-3">
+            <div className="mt-8 flex justify-between gap-6 gap-y-3 sm:items-center">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <a
                   href="https://github.com/nabilfatih/nakafa.com"
                   target="_blank"
