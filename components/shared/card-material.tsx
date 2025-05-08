@@ -56,14 +56,14 @@ export function CardMaterial({ material }: Props) {
             size="icon"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? "Close content" : "Open content"}
-            className="shrink-0"
+            className="group shrink-0"
           >
             <span className="sr-only">
               {isOpen ? "Close content" : "Open content"}
             </span>
             <ChevronDownIcon
               className={cn(
-                "size-4 transition-transform",
+                "size-4 text-muted-foreground transition-all group-hover:text-foreground",
                 isOpen ? "" : "rotate-180"
               )}
             />
