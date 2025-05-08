@@ -68,13 +68,13 @@ export default async function Page({ params }: Props) {
         <Particles className="pointer-events-none absolute inset-0 opacity-80" />
         <div className="mx-auto w-full max-w-xl px-6">
           <div className="relative flex h-full flex-col">
-            <h1 className="mb-10 font-medium text-4xl leading-none tracking-tighter md:text-center">
+            <h1 className="mb-8 font-medium text-4xl leading-none tracking-tighter md:text-center">
               {tHome("title")}
             </h1>
 
             <SearchBar className="h-12 rounded-xl sm:w-full" />
 
-            <div className="mt-8 flex justify-between gap-6 gap-y-3 sm:items-center">
+            <div className="mt-4 flex justify-between gap-6 gap-y-3 sm:items-center">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <a
                   href="https://github.com/nabilfatih/nakafa.com"
