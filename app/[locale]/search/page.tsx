@@ -17,7 +17,7 @@ export default function Page() {
         className="relative min-h-[calc(100svh-4rem)] py-10 lg:min-h-svh lg:py-26"
       >
         <div className="mx-auto w-full max-w-xl px-6">
-          <h1 className="mb-10 font-medium text-4xl leading-none tracking-tighter md:text-center">
+          <h1 className="mb-8 font-medium text-4xl leading-none tracking-tighter md:text-center">
             {t("title")}
           </h1>
         </div>
