@@ -18,6 +18,7 @@ import { getHeadings, getRawContent } from "@/lib/utils/markdown";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
 import type { ArticleCategory } from "@/types/articles/category";
+import { formatISO } from "date-fns";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -126,7 +127,7 @@ export default async function Page({ params }: Props) {
         />
         <ArticleJsonLd
           headline={metadata.title}
-          datePublished={metadata.date}
+          datePublished={formatISO(metadata.date)}
           author={metadata.authors.map((author) => ({
             "@type": "Person",
             name: author.name,
@@ -138,7 +139,7 @@ export default async function Page({ params }: Props) {
           name={metadata.title}
           description={metadata.description ?? ""}
           educationalLevel={t(category)}
-          datePublished={metadata.date}
+          datePublished={formatISO(metadata.date)}
           author={metadata.authors.map((author) => ({
             "@type": "Person",
             name: author.name,
