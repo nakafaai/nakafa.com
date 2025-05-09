@@ -4,7 +4,7 @@ import { SquareTerminalIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { SidebarMenuButton, SidebarMenuItem } from "../ui/sidebar";
-import AboutDialog from "./about-dialog";
+import { AboutDialog } from "./about-dialog";
 
 export function AboutMenu() {
   const t = useTranslations("Common");

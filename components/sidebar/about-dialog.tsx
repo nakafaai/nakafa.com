@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import packageJson from "@/package.json";
 import nakafaLogo from "@/public/logo.svg";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 import { buttonVariants } from "../ui/button";
 import {
   Dialog,
@@ -77,7 +78,7 @@ function Content({
   );
 }
 
-export default function AboutDialog({ open, action }: Props) {
+function AboutDialogComponent({ open, action }: Props) {
   const t = useTranslations("Common");
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -111,3 +112,8 @@ export default function AboutDialog({ open, action }: Props) {
     </Drawer>
   );
 }
+
+export const AboutDialog = dynamic(
+  () => Promise.resolve(AboutDialogComponent),
+  { ssr: false }
+);
