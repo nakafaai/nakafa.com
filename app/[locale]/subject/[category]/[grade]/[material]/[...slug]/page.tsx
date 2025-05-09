@@ -171,7 +171,9 @@ export default async function Page({ params }: Props) {
         <LearningResourceJsonLd
           name={metadata.title}
           description={metadata.description ?? metadata.subject ?? ""}
-          educationalLevel={tSubject(getGradeNonNumeric(grade) ?? "grade")}
+          educationalLevel={tSubject(getGradeNonNumeric(grade) ?? "grade", {
+            grade,
+          })}
           datePublished={formatISO(metadata.date)}
           author={metadata.authors.map((author) => ({
             "@type": "Person",
