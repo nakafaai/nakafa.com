@@ -10,7 +10,7 @@ export default function BlockArt({ length = 20, className }: Props) {
     <section className={cn("bg-foreground pb-30", className)}>
       {Array.from({ length }).map((_, i) => (
         <div
-          key={Math.random()}
+          key={i}
           className="bg-background"
           style={{
             marginTop: `${0 + i}px`,

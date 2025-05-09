@@ -1,7 +1,7 @@
 import { teams } from "@/lib/data/team";
 import type { ArticleCategory } from "@/types/articles/category";
 import { type Article, ContentMetadataSchema } from "@/types/content";
-import { compareDesc, parse } from "date-fns";
+import { formatISO } from "date-fns";
 import type { Locale } from "next-intl";
 import { getFolderChildNames } from "../system";
 
@@ -49,7 +49,7 @@ export async function getArticles(
         return {
           title: parsedMetadata.title,
           description: parsedMetadata.description,
-          date: parsedMetadata.date,
+          date: formatISO(parsedMetadata.date),
           slug,
           official: authors.some((author) => teams.has(author)),
         };
@@ -63,9 +63,5 @@ export async function getArticles(
   // Filter out any null values and sort by date (newest first)
   return articles
     .filter((article): article is Article => article !== null)
-    .sort((a, b) => {
-      const dateA = parse(a.date, "MM/dd/yyyy", new Date());
-      const dateB = parse(b.date, "MM/dd/yyyy", new Date());
-      return compareDesc(dateA, dateB);
-    });
+    .sort((a, b) => b.date.localeCompare(a.date));
 }

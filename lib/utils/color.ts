@@ -39,20 +39,32 @@ export function getColor(color: keyof typeof COLORS) {
 /**
  * Get a random color from the COLORS object
  * @param exclude - The keys of the colors to exclude
+ * @param seed - A seed for deterministic selection
  * @returns The random color value
  */
-export function randomColor(exclude?: (keyof typeof COLORS)[]) {
-  // Filter the keys in a type-safe way
+export function randomColor(
+  exclude?: (keyof typeof COLORS)[],
+  seed?: string | number
+) {
   const availableKeys = COLOR_KEYS.filter(
     (key) => !exclude || !exclude.some((excludeKey) => excludeKey === key)
   );
 
-  // Handle the case where all colors are excluded
   if (availableKeys.length === 0) {
-    return COLORS[COLOR_KEYS[0]]; // Return first color as fallback
+    return COLORS[COLOR_KEYS[0]];
   }
 
-  return COLORS[
-    availableKeys[Math.floor(Math.random() * availableKeys.length)]
-  ];
+  // Deterministic hash-based selection
+  let seedNum = 0;
+  if (typeof seed === "number") {
+    seedNum = seed;
+  } else if (seed) {
+    seedNum = Array.from(seed).reduce(
+      (acc, char) => acc + char.charCodeAt(0),
+      0
+    );
+  }
+  const index = seedNum % availableKeys.length;
+
+  return COLORS[availableKeys[index]];
 }

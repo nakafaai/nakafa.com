@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useMousePosition } from "@/hooks/use-mouse";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import { useMediaQuery } from "usehooks-ts";
 
 type Circle = {
@@ -27,7 +28,7 @@ type ParticlesProps = {
   ease?: number;
 };
 
-export function Particles({
+function ParticlesComponent({
   className = "",
   quantity = 50,
   staticity = 100,
@@ -280,3 +281,7 @@ export function Particles({
     </div>
   );
 }
+
+export const Particles = dynamic(() => Promise.resolve(ParticlesComponent), {
+  ssr: false,
+});
