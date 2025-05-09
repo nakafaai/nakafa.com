@@ -4,3 +4,110 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Apa Itu Matriks?
+
+Pernahkah kamu melihat daftar nilai ulangan yang disusun dalam tabel? Atau mungkin jadwal piket kelas? Tanpa sadar, kita sering menjumpai penyajian data dalam bentuk baris dan kolom. Nah, susunan angka atau informasi dalam bentuk baris dan kolom inilah yang menjadi dasar dari konsep matriks.
+
+Matriks adalah kumpulan bilangan yang disusun secara khusus dalam baris dan
+kolom sehingga membentuk suatu susunan persegi panjang. Bilangan-bilangan yang
+menyusun matriks ini disebut **elemen matriks**. Matriks biasanya dituliskan
+di dalam tanda kurung biasa <InlineMath math="()" /> atau kurung siku <InlineMath math="[]" />.
+
+Sebagai contoh, perhatikan data nilai ulangan Matematika dan Bahasa Inggris dari tiga siswa berikut:
+
+| Nama Siswa | Nilai Matematika | Nilai Bahasa Inggris |
+| :--------- | :--------------- | :------------------- |
+| Aisyah     | 80               | 75                   |
+| Alex       | 70               | 95                   |
+| Wayan      | 95               | 75                   |
+
+Data di atas dapat kita sajikan dalam bentuk matriks. Jika kita hanya mengambil angka-angkanya saja, maka matriksnya akan terlihat seperti ini:
+
+<BlockMath math="A = \begin{bmatrix} 80 & 75 \\ 70 & 95 \\ 95 & 75 \end{bmatrix}" />
+
+Atau bisa juga ditulis dengan kurung biasa:
+
+<BlockMath math="A = \begin{pmatrix} 80 & 75 \\ 70 & 95 \\ 95 & 75 \end{pmatrix}" />
+
+Dalam contoh ini, angka 80, 75, 70, 95, 95, dan 75 adalah elemen-elemen dari matriks A.
+
+## Baris, Kolom, dan Elemen Matriks
+
+Dalam sebuah matriks, ada beberapa istilah penting yang perlu kamu ketahui:
+
+1.  **Baris**: Susunan elemen-elemen yang mendatar (horizontal).
+2.  **Kolom**: Susunan elemen-elemen yang menurun (vertikal).
+3.  **Elemen Matriks**: Setiap angka atau entri yang ada di dalam matriks.
+
+Mari kita lihat kembali matriks A dari contoh sebelumnya:
+
+<BlockMath math="A = \begin{bmatrix} 80 & 75 \\ 70 & 95 \\ 95 & 75 \end{bmatrix}" />
+
+- **Baris ke-1** adalah <InlineMath math="[80 \ 75]" />
+- **Baris ke-2** adalah <InlineMath math="[70 \ 95]" />
+- **Baris ke-3** adalah <InlineMath math="[95 \ 75]" />
+
+- **Kolom ke-1** adalah <InlineMath math="\begin{bmatrix} 80 \\ 70 \\ 95 \end{bmatrix}" />
+- **Kolom ke-2** adalah <InlineMath math="\begin{bmatrix} 75 \\ 95 \\ 75 \end{bmatrix}" />
+
+Elemen matriks biasanya dinotasikan dengan huruf kecil yang sama dengan nama matriksnya dan diberi dua indeks, misalnya <InlineMath math="a_{ij}" />. Indeks pertama (<InlineMath math="i" />) menunjukkan posisi baris, dan indeks kedua (<InlineMath math="j" />) menunjukkan posisi kolom.
+
+Jadi, untuk matriks A di atas:
+
+- <InlineMath math="a_{11}" /> adalah elemen pada baris ke-1, kolom ke-1, yaitu 80.
+- <InlineMath math="a_{12}" /> adalah elemen pada baris ke-1, kolom ke-2, yaitu 75.
+- <InlineMath math="a_{21}" /> adalah elemen pada baris ke-2, kolom ke-1, yaitu 70.
+- <InlineMath math="a_{22}" /> adalah elemen pada baris ke-2, kolom ke-2, yaitu 95.
+- <InlineMath math="a_{31}" /> adalah elemen pada baris ke-3, kolom ke-1, yaitu 95.
+- <InlineMath math="a_{32}" /> adalah elemen pada baris ke-3, kolom ke-2, yaitu 75.
+
+## Ordo Matriks
+
+Setiap matriks memiliki ukuran yang disebut **ordo**. Ordo matriks ditentukan oleh banyaknya baris dan banyaknya kolom pada matriks tersebut. Jika sebuah matriks memiliki <InlineMath math="m" /> baris dan <InlineMath math="n" /> kolom, maka matriks tersebut dikatakan berordo <InlineMath math="m \times n" /> (dibaca "m kali n").
+
+Perhatikan matriks A kita tadi:
+
+<BlockMath math="A = \underbrace{\begin{bmatrix} 80 & 75 \\ 70 & 95 \\ 95 & 75 \end{bmatrix}}_{\text{2 kolom}} \hspace{0.1em} \left. \vphantom{\begin{bmatrix} 80 \\ 70 \\ 95 \end{bmatrix}} \right\} \hspace{0.1em} \text{3 baris}" />
+
+Matriks A memiliki 3 baris (ditunjukkan oleh kurung kurawal di sisi kanan) dan 2 kolom (ditunjukkan oleh kurung kurawal di bawah). Jadi, ordo matriks A adalah <InlineMath math="3 \times 2" />. Kita bisa menuliskannya sebagai <InlineMath math="A_{3 \times 2}" />.
+
+**Contoh lain:**
+
+Misalkan kita punya data absensi siswa dalam satu semester:
+
+| Nama Siswa | Izin | Sakit | Tanpa Keterangan |
+| :--------- | :--- | :---- | :--------------- |
+| Aisyah     | 2    | 1     | 0                |
+| Alex       | 3    | 1     | 1                |
+| Wayan      | 1    | 2     | 1                |
+
+Jika kita ubah menjadi matriks B:
+
+<BlockMath math="B = \underbrace{\begin{bmatrix} 2 & 1 & 0 \\ 3 & 1 & 1 \\ 1 & 2 & 1 \end{bmatrix}}_{\text{3 kolom}} \hspace{0.1em} \left. \vphantom{\begin{bmatrix} 2 \\ 3 \\ 1 \end{bmatrix}} \right\} \hspace{0.1em} \text{3 baris}" />
+
+Matriks B memiliki 3 baris (ditunjukkan oleh kurung kurawal di sisi kanan) dan 3 kolom (ditunjukkan oleh kurung kurawal di bawah). Maka, ordo matriks B adalah <InlineMath math="3 \times 3" />. Kita bisa menuliskannya sebagai <InlineMath math="B_{3 \times 3}" />.
+
+Elemen-elemen matriks B, misalnya:
+
+- <InlineMath math="b_{11} = 2" /> (elemen baris 1, kolom 1)
+- <InlineMath math="b_{23} = 1" /> (elemen baris 2, kolom 3)
+- <InlineMath math="b_{32} = 2" /> (elemen baris 3, kolom 2)
+
+## Notasi Umum Matriks
+
+Secara umum, sebuah matriks A dengan `m` baris dan `n` kolom dapat dituliskan sebagai berikut:
+
+<BlockMath math="A_{m \times n} = \underbrace{\begin{bmatrix} a_{11} & a_{12} & \dots & a_{1n} \\ a_{21} & a_{22} & \dots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ a_{m1} & a_{m2} & \dots & a_{mn} \end{bmatrix}}_{\text{n kolom}} \hspace{0.1em} \left. \vphantom{\begin{bmatrix} a_{11} \\ a_{21} \\ \vdots \\ a_{m1} \end{bmatrix}} \right\} \hspace{0.1em} \text{m baris}" />
+
+Keterangan:
+
+- <InlineMath math="A_{m \times n}" /> : Matriks A berordo <InlineMath math="m \times n" />
+  .
+- <InlineMath math="m" /> : Banyaknya baris.
+- <InlineMath math="n" /> : Banyaknya kolom.
+- <InlineMath math="a_{ij}" /> : Elemen matriks A pada baris ke-
+  <InlineMath math="i" /> dan kolom ke-
+  <InlineMath math="j" />.
+
+Dengan memahami konsep dasar ini, kamu sudah siap untuk mempelajari lebih lanjut tentang jenis-jenis matriks dan operasi-operasi yang bisa dilakukan pada matriks. Matriks adalah alat yang sangat berguna dalam berbagai bidang, lho, mulai dari matematika, fisika, komputer, hingga ekonomi!
