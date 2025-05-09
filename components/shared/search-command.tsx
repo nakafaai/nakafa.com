@@ -115,7 +115,7 @@ function SearchList({ search }: { search: string }) {
   const displayError = pagefindError || (error ? getErrorMessage(error) : "");
 
   return (
-    <CommandList className="h-full sm:max-h-[500px]">
+    <CommandList className="h-full lg:max-h-[500px]">
       <SearchListItems
         error={hasError ? displayError : ""}
         search={debouncedSearch}
