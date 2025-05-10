@@ -4,3 +4,218 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matrix",
 };
+
+## Definition of Matrix Equality
+
+In the world of matrices, we often need to compare two or more matrices. One important concept in this comparison is matrix equality. Two matrices are said to be equal if they meet certain conditions.
+
+Two matrices, let's say matrix <InlineMath math="A" /> and matrix <InlineMath math="B" />, are said to be **equal** (written as <InlineMath math="A=B" />) if and only if both of the following conditions are met:
+
+1.  **Same Order**: Matrix <InlineMath math="A" /> and matrix <InlineMath math="B" /> must have the same order (number of rows and columns). If matrix <InlineMath math="A" /> has an order of <InlineMath math="m \times n" />, then matrix <InlineMath math="B" /> must also have an order of <InlineMath math="m \times n" />.
+2.  **Corresponding Elements are Equal**: Every corresponding element (located in the same row and column position) in matrix <InlineMath math="A" /> and matrix <InlineMath math="B" /> must have the same value. If <InlineMath math="A = [a_{ij}]" /> and <InlineMath math="B = [b_{ij}]" />, then <InlineMath math="a_{ij} = b_{ij}" /> for all values of <InlineMath math="i" /> (row index) and <InlineMath math="j" /> (column index).
+
+If one of these two conditions is not met, then matrix <InlineMath math="A" /> is not equal to matrix <InlineMath math="B" /> (written as <InlineMath math="A \neq B" />).
+
+## Examples of Matrix Equality
+
+### Equal Matrices
+
+Given two matrices:
+
+<BlockMath math="P = \begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix} \quad \text{and} \quad Q = \begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}" />
+
+Matrix <InlineMath math="P" /> and matrix <InlineMath math="Q" /> are equal (<InlineMath math="P=Q" />) because:
+
+- Both have an order of <InlineMath math="2 \times 2" />.
+- Corresponding elements have the same value:
+
+  <InlineMath math="p_{11} = q_{11} = 1" />, <InlineMath math="p_{12} = q_{12} = 2" />
+  , <InlineMath math="p_{21} = q_{21} = 3" />, <InlineMath math="p_{22} = q_{22} = 4" />
+  .
+
+### Unequal Matrices (Different Order)
+
+Given two matrices:
+
+<BlockMath math="R = \begin{bmatrix} 4 & -9 \\ 7 & 1 \end{bmatrix} \quad \text{and} \quad C = \begin{bmatrix} 4 & -9 \\ 7 & 1 \\ 0 & 0 \end{bmatrix}" />
+
+Matrix <InlineMath math="R" /> is not equal to matrix <InlineMath math="C" /> (<InlineMath math="R \neq C" />) because the order of matrix <InlineMath math="R" /> is <InlineMath math="2 \times 2" />, while the order of matrix <InlineMath math="C" /> is <InlineMath math="3 \times 2" />.
+
+### Unequal Matrices (Different Corresponding Elements)
+
+Given two matrices:
+
+<BlockMath math="S = \begin{bmatrix} 5 & 0 \\ -2 & 8 \end{bmatrix} \quad \text{and} \quad T = \begin{bmatrix} 5 & 0 \\ 2 & 8 \end{bmatrix}" />
+
+Although matrix <InlineMath math="S" /> and matrix <InlineMath math="T" /> have the same order (<InlineMath math="2 \times 2" />), they are not equal (<InlineMath math="S \neq T" />) because the element in the 2nd row and 1st column is not the same (<InlineMath math="s_{21} = -2" /> while <InlineMath math="t_{21} = 2" />).
+
+### Determining Variable Values from Matrix Equality
+
+Given matrices <InlineMath math="A = \begin{bmatrix} -x & 2 \\ -3y & z^2 \end{bmatrix}" /> and <InlineMath math="B = \begin{bmatrix} -1 & 2 \\ 6 & 9 \end{bmatrix}" />.
+
+If matrix <InlineMath math="A" /> is equal to matrix <InlineMath math="B" /> (<InlineMath math="A=B" />), determine the values of <InlineMath math="x" />, <InlineMath math="y" />, and <InlineMath math="z" />.
+
+**Solution:**
+
+Since <InlineMath math="A=B" />, the corresponding elements must be equal:
+
+1.  <InlineMath math="a_{11} = b_{11} \implies -x = -1 \implies x = 1" />
+2.  <InlineMath math="a_{12} = b_{12} \implies 2 = 2" /> (already equal)
+3.  <InlineMath math="a_{21} = b_{21} \implies -3y = 6 \implies y = \frac{6}{-3} \implies y = -2" />
+4.  <InlineMath math="a_{22} = b_{22} \implies z^2 = 9 \implies z = \pm\sqrt{9} \implies z = 3 \text{ or } z = -3" />
+
+Thus, the values are <InlineMath math="x=1" />, <InlineMath math="y=-2" />, and <InlineMath math="z = \pm 3" />.
+
+## Exercises
+
+Answer the following questions with **True** or **False**.
+
+1.  Two matrices having the same order is one of the conditions for the two matrices to be equal.
+2.  Two different matrices always have different orders.
+3.  If given matrix <InlineMath math="K = \begin{bmatrix} 2 & 0 \\ 0 & 2 \end{bmatrix}" /> and matrix <InlineMath math="L = \begin{bmatrix} 2 & 0 \\ 0 & 2 \\ 0 & 0 \end{bmatrix}" />, then matrix <InlineMath math="K" /> is equal to matrix <InlineMath math="L" />.
+4.  Given matrices <InlineMath math="P = \begin{bmatrix} 2x & 4 \\ -1 & y+3 \end{bmatrix}" /> and <InlineMath math="Q = \begin{bmatrix} -10 & 4 \\ -1 & 2 \end{bmatrix}" />. If <InlineMath math="P=Q" />, determine the values of <InlineMath math="x" /> and <InlineMath math="y" />.
+5.  If matrix <InlineMath math="A = \begin{bmatrix} -x-3y & 0 \\ (x-2y)^2 & 1 \end{bmatrix}" /> and <InlineMath math="I" /> is the identity matrix of order <InlineMath math="2 \times 2" />. If <InlineMath math="A = I" />, determine the value of <InlineMath math="x+y" />.
+6.  Calculate the value of <InlineMath math="a+b+c+d" /> that satisfies the following matrix equality:
+
+    <BlockMath math="\begin{bmatrix} a+2b & 2a+b \\ c+d & 2c+d \end{bmatrix} = \begin{bmatrix} 3 & -3 \\ 7 & 1 \end{bmatrix}" />
+
+## Answer Key
+
+1.  **True**. Having the same order is the first condition for two matrices to be equal.
+2.  **False**. Two different matrices can have the same order, but their corresponding elements are different (see Example 3).
+3.  **False**. Matrix <InlineMath math="K" /> has an order of <InlineMath math="2 \times 2" /> while matrix <InlineMath math="L" /> has an order of <InlineMath math="3 \times 2" />. Since their orders are different, the two matrices are not equal.
+4.  Given <InlineMath math="P=Q" />:
+
+    <BlockMath math="\begin{bmatrix} 2x & 4 \\ -1 & y+3 \end{bmatrix} = \begin{bmatrix} -10 & 4 \\ -1 & 2 \end{bmatrix}" />
+
+    From the equality of corresponding elements:
+
+    - <InlineMath math="2x = -10 \implies x = -5" />
+    - <InlineMath math="y+3 = 2 \implies y = 2-3 \implies y = -1" />
+
+      Thus, <InlineMath math="x=-5" /> and <InlineMath math="y=-1" />.
+
+5.  The identity matrix <InlineMath math="I" /> of order <InlineMath math="2 \times 2" /> is <InlineMath math="I = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />.
+
+    Given <InlineMath math="A=I" />:
+
+    <BlockMath math="\begin{bmatrix} -x-3y & 0 \\ (x-2y)^2 & 1 \end{bmatrix} = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
+
+    From the equality of corresponding elements, we obtain a system of equations:
+
+    1.  <InlineMath math="-x-3y = 1" /> (Equation 1)
+    2.  <InlineMath math="(x-2y)^2 = 0" /> (Equation 2)
+
+    Solve Equation 2 first:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(x-2y)^2 = 0" />
+      <BlockMath math="x-2y = \sqrt{0}" />
+      <BlockMath math="x-2y = 0" />
+      <BlockMath math="x = 2y \quad \text{(Equation 2')}" />
+    </div>
+
+    Substitute Equation 2' into Equation 1:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="-(2y)-3y = 1" />
+      <BlockMath math="-2y-3y = 1" />
+      <BlockMath math="-5y = 1" />
+      <BlockMath math="y = -\frac{1}{5}" />
+    </div>
+
+    Substitute the value of <InlineMath math="y = -\frac{1}{5}" /> into Equation 2':
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x = 2\left(-\frac{1}{5}\right)" />
+      <BlockMath math="x = -\frac{2}{5}" />
+    </div>
+
+    Then, the value of <InlineMath math="x+y" /> is:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x+y = \left(-\frac{2}{5}\right) + \left(-\frac{1}{5}\right)" />
+      <BlockMath math="= -\frac{2}{5} - \frac{1}{5}" />
+      <BlockMath math="= \frac{-2-1}{5}" />
+      <BlockMath math="= -\frac{3}{5}" />
+    </div>
+
+6.  Given the matrix equality:
+
+    <BlockMath math="\begin{bmatrix} a+2b & 2a+b \\ c+d & 2c+d \end{bmatrix} = \begin{bmatrix} 3 & -3 \\ 7 & 1 \end{bmatrix}" />
+
+    From the equality of corresponding elements, we obtain a system of equations:
+
+    1.  <InlineMath math="a+2b = 3" />
+    2.  <InlineMath math="2a+b = -3" />
+    3.  <InlineMath math="c+d = 7" />
+    4.  <InlineMath math="2c+d = 1" />
+
+    Solve the system of equations for <InlineMath math="a" /> and <InlineMath math="b" /> (equations 1 and 2):
+
+    Initial equations:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="a+2b = 3 \quad \text{(1)}" />
+      <BlockMath math="2a+b = -3 \quad \text{(2)}" />
+    </div>
+
+    To eliminate <InlineMath math="b" />, multiply equation (2) by 2:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="2(2a+b) = 2(-3)" />
+      <BlockMath math="4a+2b = -6 \quad \text{(2')}" />
+    </div>
+
+    Subtract equation (1) from equation (2'):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(4a+2b) - (a+2b) = -6 - 3" />
+      <BlockMath math="4a - a + 2b - 2b = -9" />
+      <BlockMath math="3a = -9" />
+      <BlockMath math="a = \frac{-9}{3}" />
+      <BlockMath math="a = -3" />
+    </div>
+
+    Substitute the value of <InlineMath math="a=-3" /> into equation (1):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="-3+2b=3" />
+      <BlockMath math="2b=3+3" />
+      <BlockMath math="2b=6" />
+      <BlockMath math="b = \frac{6}{2}" />
+      <BlockMath math="b = 3" />
+    </div>
+
+    Solve the system of equations for <InlineMath math="c" /> and <InlineMath math="d" /> (equations 3 and 4):
+
+    Initial equations:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="c+d = 7 \quad \text{(3)}" />
+      <BlockMath math="2c+d = 1 \quad \text{(4)}" />
+    </div>
+
+    Subtract equation (3) from equation (4) to eliminate <InlineMath math="d" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(2c+d) - (c+d) = 1 - 7" />
+      <BlockMath math="2c - c + d - d = -6" />
+      <BlockMath math="c = -6" />
+    </div>
+
+    Substitute the value of <InlineMath math="c=-6" /> into equation (3):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="-6+d=7" />
+      <BlockMath math="d=7+6" />
+      <BlockMath math="d=13" />
+    </div>
+
+    Then, the value of <InlineMath math="a+b+c+d" /> is:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="a+b+c+d = (-3) + 3 + (-6) + 13" />
+      <BlockMath math="= 0 - 6 + 13" />
+      <BlockMath math="= 7" />
+    </div>

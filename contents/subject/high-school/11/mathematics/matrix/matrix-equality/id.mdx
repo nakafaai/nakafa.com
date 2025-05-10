@@ -4,3 +4,218 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Definisi Kesamaan Dua Matriks
+
+Dalam dunia matriks, kita seringkali perlu membandingkan dua matriks atau lebih. Salah satu konsep penting dalam perbandingan ini adalah kesamaan dua matriks. Dua matriks dikatakan sama jika memenuhi syarat-syarat tertentu.
+
+Dua matriks, katakanlah matriks <InlineMath math="A" /> dan matriks <InlineMath math="B" />, dikatakan **sama** (ditulis <InlineMath math="A=B" />) jika dan hanya jika kedua syarat berikut terpenuhi:
+
+1.  **Ordo Sama**: Matriks <InlineMath math="A" /> dan matriks <InlineMath math="B" /> harus memiliki ordo (jumlah baris dan kolom) yang sama. Jika matriks <InlineMath math="A" /> berordo <InlineMath math="m \times n" />, maka matriks <InlineMath math="B" /> juga harus berordo <InlineMath math="m \times n" />.
+2.  **Elemen Seletak Sama**: Setiap elemen yang seletak (berada pada posisi baris dan kolom yang sama) pada matriks <InlineMath math="A" /> dan matriks <InlineMath math="B" /> harus memiliki nilai yang sama. Jika <InlineMath math="A = [a_{ij}]" /> dan <InlineMath math="B = [b_{ij}]" />, maka <InlineMath math="a_{ij} = b_{ij}" /> untuk semua nilai <InlineMath math="i" /> (indeks baris) dan <InlineMath math="j" /> (indeks kolom).
+
+Jika salah satu dari kedua syarat di atas tidak terpenuhi, maka matriks <InlineMath math="A" /> tidak sama dengan matriks <InlineMath math="B" /> (ditulis <InlineMath math="A \neq B" />).
+
+## Contoh Kesamaan Dua Matriks
+
+### Matriks yang Sama
+
+Diberikan dua matriks:
+
+<BlockMath math="P = \begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix} \quad \text{dan} \quad Q = \begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}" />
+
+Matriks <InlineMath math="P" /> dan <InlineMath math="Q" /> adalah sama (<InlineMath math="P=Q" />) karena:
+
+- Keduanya berordo <InlineMath math="2 \times 2" />.
+- Elemen-elemen yang seletak bernilai sama:
+
+  <InlineMath math="p_{11} = q_{11} = 1" />, <InlineMath math="p_{12} = q_{12} = 2" />
+  , <InlineMath math="p_{21} = q_{21} = 3" />, <InlineMath math="p_{22} = q_{22} = 4" />
+  .
+
+### Matriks yang Tidak Sama (Beda Ordo)
+
+Diberikan dua matriks:
+
+<BlockMath math="R = \begin{bmatrix} 4 & -9 \\ 7 & 1 \end{bmatrix} \quad \text{dan} \quad C = \begin{bmatrix} 4 & -9 \\ 7 & 1 \\ 0 & 0 \end{bmatrix}" />
+
+Matriks <InlineMath math="R" /> tidak sama dengan matriks <InlineMath math="C" /> (<InlineMath math="R \neq C" />) karena ordo matriks <InlineMath math="R" /> adalah <InlineMath math="2 \times 2" />, sedangkan ordo matriks <InlineMath math="C" /> adalah <InlineMath math="3 \times 2" />.
+
+### Matriks yang Tidak Sama (Elemen Seletak Berbeda)
+
+Diberikan dua matriks:
+
+<BlockMath math="S = \begin{bmatrix} 5 & 0 \\ -2 & 8 \end{bmatrix} \quad \text{dan} \quad T = \begin{bmatrix} 5 & 0 \\ 2 & 8 \end{bmatrix}" />
+
+Meskipun matriks <InlineMath math="S" /> dan <InlineMath math="T" /> berordo sama(<InlineMath math="2 \times 2" />), keduanya tidak sama (<InlineMath math="S \neq T" />) karena elemen pada baris ke-2 kolom ke-1 tidak sama (<InlineMath math="s_{21} = -2" /> sedangkan <InlineMath math="t_{21} = 2" />).
+
+### Menentukan Nilai Variabel dari Kesamaan Matriks
+
+Diketahui matriks <InlineMath math="A = \begin{bmatrix} -x & 2 \\ -3y & z^2 \end{bmatrix}" /> dan <InlineMath math="B = \begin{bmatrix} -1 & 2 \\ 6 & 9 \end{bmatrix}" />.
+
+Jika matriks <InlineMath math="A" /> sama dengan matriks <InlineMath math="B" /> (<InlineMath math="A=B" />), tentukan nilai <InlineMath math="x" />, <InlineMath math="y" />, dan <InlineMath math="z" />.
+
+**Penyelesaian:**
+
+Karena <InlineMath math="A=B" />, maka elemen-elemen yang seletak harus sama:
+
+1.  <InlineMath math="a_{11} = b_{11} \implies -x = -1 \implies x = 1" />
+2.  <InlineMath math="a_{12} = b_{12} \implies 2 = 2" /> (sudah sama)
+3.  <InlineMath math="a_{21} = b_{21} \implies -3y = 6 \implies y = \frac{6}{-3} \implies y = -2" />
+4.  <InlineMath math="a_{22} = b_{22} \implies z^2 = 9 \implies z = \pm\sqrt{9} \implies z = 3 \text{ atau } z = -3" />
+
+Jadi, nilai <InlineMath math="x=1" />, <InlineMath math="y=-2" />, dan <InlineMath math="z = \pm 3" />.
+
+## Latihan
+
+Jawablah pertanyaan berikut dengan **Benar** atau **Salah**.
+
+1.  Dua matriks yang mempunyai ordo yang sama merupakan salah satu syarat agar kedua matriks tersebut sama.
+2.  Dua matriks yang berbeda selalu memiliki ordo yang berbeda.
+3.  Jika diketahui matriks <InlineMath math="K = \begin{bmatrix} 2 & 0 \\ 0 & 2 \end{bmatrix}" /> dan matriks <InlineMath math="L = \begin{bmatrix} 2 & 0 \\ 0 & 2 \\ 0 & 0 \end{bmatrix}" />, maka matriks <InlineMath math="K" /> sama dengan matriks <InlineMath math="L" />.
+4.  Diketahui matriks <InlineMath math="P = \begin{bmatrix} 2x & 4 \\ -1 & y+3 \end{bmatrix}" /> dan <InlineMath math="Q = \begin{bmatrix} -10 & 4 \\ -1 & 2 \end{bmatrix}" />. Jika <InlineMath math="P=Q" />, tentukan nilai <InlineMath math="x" /> dan <InlineMath math="y" />.
+5.  Jika matriks <InlineMath math="A = \begin{bmatrix} -x-3y & 0 \\ (x-2y)^2 & 1 \end{bmatrix}" /> dan <InlineMath math="I" /> adalah matriks identitas berordo <InlineMath math="2 \times 2" />. Jika <InlineMath math="A = I" />, tentukan nilai <InlineMath math="x+y" />.
+6.  Hitunglah nilai <InlineMath math="a+b+c+d" /> yang memenuhi kesamaan matriks berikut:
+
+    <BlockMath math="\begin{bmatrix} a+2b & 2a+b \\ c+d & 2c+d \end{bmatrix} = \begin{bmatrix} 3 & -3 \\ 7 & 1 \end{bmatrix}" />
+
+## Kunci Jawaban
+
+1.  **Benar**. Memiliki ordo yang sama adalah syarat pertama kesamaan dua matriks.
+2.  **Salah**. Dua matriks yang berbeda bisa saja memiliki ordo yang sama, tetapi elemen seletaknya berbeda (lihat Contoh 3).
+3.  **Salah**. Matriks <InlineMath math="K" /> berordo <InlineMath math="2 \times 2" /> sedangkan matriks <InlineMath math="L" /> berordo <InlineMath math="3 \times 2" />. Karena ordonya berbeda, kedua matriks tidak sama.
+4.  Diketahui <InlineMath math="P=Q" />:
+
+    <BlockMath math="\begin{bmatrix} 2x & 4 \\ -1 & y+3 \end{bmatrix} = \begin{bmatrix} -10 & 4 \\ -1 & 2 \end{bmatrix}" />
+
+    Dari kesamaan elemen seletak:
+
+    - <InlineMath math="2x = -10 \implies x = -5" />
+    - <InlineMath math="y+3 = 2 \implies y = 2-3 \implies y = -1" />
+
+      Jadi, <InlineMath math="x=-5" /> dan <InlineMath math="y=-1" />.
+
+5.  Matriks identitas <InlineMath math="I" /> berordo <InlineMath math="2 \times 2" /> adalah <InlineMath math="I = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />.
+
+    Diketahui <InlineMath math="A=I" />:
+
+    <BlockMath math="\begin{bmatrix} -x-3y & 0 \\ (x-2y)^2 & 1 \end{bmatrix} = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
+
+    Dari kesamaan elemen seletak, kita peroleh sistem persamaan:
+
+    1.  <InlineMath math="-x-3y = 1" /> (Persamaan 1)
+    2.  <InlineMath math="(x-2y)^2 = 0" /> (Persamaan 2)
+
+    Selesaikan Persamaan 2 terlebih dahulu:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(x-2y)^2 = 0" />
+      <BlockMath math="x-2y = \sqrt{0}" />
+      <BlockMath math="x-2y = 0" />
+      <BlockMath math="x = 2y \quad \text{(Persamaan 2')}" />
+    </div>
+
+    Substitusikan Persamaan 2' ke Persamaan 1:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="-(2y)-3y = 1" />
+      <BlockMath math="-2y-3y = 1" />
+      <BlockMath math="-5y = 1" />
+      <BlockMath math="y = -\frac{1}{5}" />
+    </div>
+
+    Substitusikan nilai <InlineMath math="y = -\frac{1}{5}" /> ke Persamaan 2':
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x = 2\left(-\frac{1}{5}\right)" />
+      <BlockMath math="x = -\frac{2}{5}" />
+    </div>
+
+    Maka, nilai <InlineMath math="x+y" /> adalah:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x+y = \left(-\frac{2}{5}\right) + \left(-\frac{1}{5}\right)" />
+      <BlockMath math="= -\frac{2}{5} - \frac{1}{5}" />
+      <BlockMath math="= \frac{-2-1}{5}" />
+      <BlockMath math="= -\frac{3}{5}" />
+    </div>
+
+6.  Diketahui kesamaan matriks:
+
+    <BlockMath math="\begin{bmatrix} a+2b & 2a+b \\ c+d & 2c+d \end{bmatrix} = \begin{bmatrix} 3 & -3 \\ 7 & 1 \end{bmatrix}" />
+
+    Dari kesamaan elemen seletak, kita peroleh sistem persamaan:
+
+    1.  <InlineMath math="a+2b = 3" />
+    2.  <InlineMath math="2a+b = -3" />
+    3.  <InlineMath math="c+d = 7" />
+    4.  <InlineMath math="2c+d = 1" />
+
+    Selesaikan sistem persamaan untuk <InlineMath math="a" /> dan <InlineMath math="b" /> (persamaan 1 dan 2):
+
+    Persamaan awal:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="a+2b = 3 \quad \text{(1)}" />
+      <BlockMath math="2a+b = -3 \quad \text{(2)}" />
+    </div>
+
+    Untuk mengeliminasi <InlineMath math="b" />, kalikan persamaan (2) dengan 2:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="2(2a+b) = 2(-3)" />
+      <BlockMath math="4a+2b = -6 \quad \text{(2')}" />
+    </div>
+
+    Kurangkan persamaan (1) dari persamaan (2'):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(4a+2b) - (a+2b) = -6 - 3" />
+      <BlockMath math="4a - a + 2b - 2b = -9" />
+      <BlockMath math="3a = -9" />
+      <BlockMath math="a = \frac{-9}{3}" />
+      <BlockMath math="a = -3" />
+    </div>
+
+    Substitusikan nilai <InlineMath math="a=-3" /> ke persamaan (1):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="-3+2b=3" />
+      <BlockMath math="2b=3+3" />
+      <BlockMath math="2b=6" />
+      <BlockMath math="b = \frac{6}{2}" />
+      <BlockMath math="b = 3" />
+    </div>
+
+    Selesaikan sistem persamaan untuk <InlineMath math="c" /> dan <InlineMath math="d" /> (persamaan 3 dan 4):
+
+    Persamaan awal:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="c+d = 7 \quad \text{(3)}" />
+      <BlockMath math="2c+d = 1 \quad \text{(4)}" />
+    </div>
+
+    Kurangkan persamaan (3) dari persamaan (4) untuk mengeliminasi <InlineMath math="d" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(2c+d) - (c+d) = 1 - 7" />
+      <BlockMath math="2c - c + d - d = -6" />
+      <BlockMath math="c = -6" />
+    </div>
+
+    Substitusikan nilai <InlineMath math="c=-6" /> ke persamaan (3):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="-6+d=7" />
+      <BlockMath math="d=7+6" />
+      <BlockMath math="d=13" />
+    </div>
+
+    Maka, nilai <InlineMath math="a+b+c+d" /> adalah:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="a+b+c+d = (-3) + 3 + (-6) + 13" />
+      <BlockMath math="= 0 - 6 + 13" />
+      <BlockMath math="= 7" />
+    </div>
