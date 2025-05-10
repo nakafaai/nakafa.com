@@ -112,8 +112,11 @@ export function generateStaticParams() {
 
 export default async function Page({ params }: Props) {
   const { locale, category, grade, material, slug } = await params;
-  const t = await getTranslations("Common");
-  const tSubject = await getTranslations("Subject");
+
+  const [tCommon, tSubject] = await Promise.all([
+    getTranslations("Common"),
+    getTranslations("Subject"),
+  ]);
 
   // Enable static rendering
   setRequestLocale(locale);
@@ -207,7 +210,7 @@ export default async function Page({ params }: Props) {
             description: metadata.description ?? metadata.subject,
           }}
           chapters={{
-            label: t("on-this-page"),
+            label: tCommon("on-this-page"),
             data: headings,
           }}
         />
