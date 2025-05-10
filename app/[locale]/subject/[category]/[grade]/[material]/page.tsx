@@ -70,7 +70,7 @@ export async function generateMetadata({
   };
 
   return {
-    title: t(material),
+    title: `${t(material)} - ${t(getGradeNonNumeric(grade) ?? "grade", { grade })}`,
     alternates: {
       canonical: urlPath,
     },
