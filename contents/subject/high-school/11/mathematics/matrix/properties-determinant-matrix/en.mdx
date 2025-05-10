@@ -4,3 +4,101 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matrix",
 };
+
+## Discovering Properties of Matrix Determinants
+
+Suppose we have two matrices, A and B, as follows:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A = \begin{bmatrix} -5 & 2 \\ 1 & -3 \end{bmatrix}" />
+  <BlockMath math="B = \begin{bmatrix} 9 & -4 \\ 1 & -1 \end{bmatrix}" />
+</div>
+
+### Determinant of the Product of Two Matrices
+
+Let's investigate the relationship between the determinant of the product of two matrices (<InlineMath math="|AB|" />) and the product of their individual determinants (<InlineMath math="|A||B|" />).
+
+**Step 1: Calculate the Determinant of Matrix A (<InlineMath math="|A|" />)**
+
+The determinant of matrix A is:
+
+<BlockMath math="|A| = (-5 \cdot -3) - (2 \cdot 1) = 15 - 2 = 13" />
+
+**Step 2: Calculate the Determinant of Matrix B (<InlineMath math="|B|" />)**
+
+The determinant of matrix B is:
+
+<BlockMath math="|B| = (9 \cdot -1) - (-4 \cdot 1) = -9 - (-4) = -9 + 4 = -5" />
+
+**Step 3: Determine the Product of Matrix A and B (<InlineMath math="AB" />)**
+
+Matrix AB is obtained by multiplying matrix A and B:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="AB = \begin{bmatrix} -5 & 2 \\ 1 & -3 \end{bmatrix} \begin{bmatrix} 9 & -4 \\ 1 & -1 \end{bmatrix}" />
+  <BlockMath math="AB = \begin{bmatrix} (-5)(9) + (2)(1) & (-5)(-4) + (2)(-1) \\ (1)(9) + (-3)(1) & (1)(-4) + (-3)(-1) \end{bmatrix}" />
+  <BlockMath math="AB = \begin{bmatrix} -45 + 2 & 20 - 2 \\ 9 - 3 & -4 + 3 \end{bmatrix}" />
+  <BlockMath math="AB = \begin{bmatrix} -43 & 18 \\ 6 & -1 \end{bmatrix}" />
+</div>
+
+**Step 4: Calculate the Determinant of Matrix AB (<InlineMath math="|AB|" />)**
+
+Now, let's calculate the determinant of the product matrix AB:
+
+<BlockMath math="|AB| = (-43 \cdot -1) - (18 \cdot 6) = 43 - 108 = -65" />
+
+**Step 5: Compare <InlineMath math="|AB|" /> with <InlineMath math="|A||B|" />**
+
+We have obtained <InlineMath math="|A| = 13" />, <InlineMath math="|B| = -5" />, and <InlineMath math="|AB| = -65" />.
+
+Let's calculate <InlineMath math="|A||B|" />:
+
+<BlockMath math="|A||B| = 13 \cdot (-5) = -65" />
+
+Notice that the value of <InlineMath math="|AB|" /> is the same as the value of <InlineMath math="|A||B|" />.
+
+**Formula for the Property of Determinant of Matrix Product**
+
+If A and B are two square matrices of the same order, then the determinant of the product of matrices A and B is equal to the product of their individual determinants.
+
+<BlockMath math="|AB| = |A||B|" />
+
+### Determinant of a Matrix with Scalar Multiplication
+
+Now, let's investigate what happens to the determinant of a matrix if each element of the matrix is multiplied by a scalar (constant).
+
+Suppose we use matrix A from the previous example and a scalar <InlineMath math="k=2" />.
+
+<BlockMath math="A = \begin{bmatrix} -5 & 2 \\ 1 & -3 \end{bmatrix}" />
+
+We already know that <InlineMath math="|A| = 13" />. Matrix A is a <InlineMath math="2 \times 2" /> order matrix, so <InlineMath math="n=2" />.
+
+**Step 1: Determine Matrix <InlineMath math="kA" />**
+
+Multiply each element of matrix A by the scalar <InlineMath math="k=2" />:
+
+<BlockMath math="kA = 2A = 2\begin{bmatrix} -5 & 2 \\ 1 & -3 \end{bmatrix} = \begin{bmatrix} 2(-5) & 2(2) \\ 2(1) & 2(-3) \end{bmatrix} = \begin{bmatrix} -10 & 4 \\ 2 & -6 \end{bmatrix}" />
+
+**Step 2: Calculate the Determinant of Matrix <InlineMath math="kA" /> (<InlineMath math="|kA|" />)**
+
+The determinant of matrix <InlineMath math="kA" /> is:
+
+<BlockMath math="|kA| = (-10 \cdot -6) - (4 \cdot 2) = 60 - 8 = 52" />
+
+**Step 3: Compare <InlineMath math="|kA|" /> with <InlineMath math="k^n|A|" />**
+
+We have <InlineMath math="|kA| = 52" />. The scalar <InlineMath math="k=2" />, the order of the matrix <InlineMath math="n=2" />, and <InlineMath math="|A|=13" />.
+
+Let's calculate <InlineMath math="k^n|A|" />:
+
+<BlockMath math="k^n|A| = 2^2 \cdot 13 = 4 \cdot 13 = 52" />
+
+Notice that the value of <InlineMath math="|kA|" /> is the same as the value of <InlineMath math="k^n|A|" />.
+
+**Formula for the Property of Determinant of Scalar Multiplication**
+
+If A is a square matrix of order <InlineMath math="n \times n" /> and <InlineMath math="k" /> is a scalar, then the determinant of matrix <InlineMath math="kA" /> is <InlineMath math="k^n" /> multiplied by the determinant of matrix A.
+
+<BlockMath math="|kA| = k^n |A|" />
+
+Here, <InlineMath math="n" /> is the order (number of rows or columns) of the square matrix A.

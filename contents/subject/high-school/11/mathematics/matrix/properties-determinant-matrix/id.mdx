@@ -4,3 +4,101 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Menemukan Sifat Determinan Matriks
+
+Misalkan kita memiliki dua matriks, A dan B, sebagai berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A = \begin{bmatrix} -5 & 2 \\ 1 & -3 \end{bmatrix}" />
+  <BlockMath math="B = \begin{bmatrix} 9 & -4 \\ 1 & -1 \end{bmatrix}" />
+</div>
+
+### Determinan dari Perkalian Dua Matriks
+
+Kita selidiki hubungan antara determinan dari perkalian dua matriks (<InlineMath math="|AB|" />) dengan perkalian dari masing-masing determinannya (<InlineMath math="|A||B|" />).
+
+**Langkah 1: Hitung Determinan Matriks A (<InlineMath math="|A|" />)**
+
+Determinan dari matriks A adalah:
+
+<BlockMath math="|A| = (-5 \cdot -3) - (2 \cdot 1) = 15 - 2 = 13" />
+
+**Langkah 2: Hitung Determinan Matriks B (<InlineMath math="|B|" />)**
+
+Determinan dari matriks B adalah:
+
+<BlockMath math="|B| = (9 \cdot -1) - (-4 \cdot 1) = -9 - (-4) = -9 + 4 = -5" />
+
+**Langkah 3: Tentukan Hasil Perkalian Matriks A dan B (<InlineMath math="AB" />)**
+
+Matriks AB diperoleh dengan mengalikan matriks A dan B:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="AB = \begin{bmatrix} -5 & 2 \\ 1 & -3 \end{bmatrix} \begin{bmatrix} 9 & -4 \\ 1 & -1 \end{bmatrix}" />
+  <BlockMath math="AB = \begin{bmatrix} (-5)(9) + (2)(1) & (-5)(-4) + (2)(-1) \\ (1)(9) + (-3)(1) & (1)(-4) + (-3)(-1) \end{bmatrix}" />
+  <BlockMath math="AB = \begin{bmatrix} -45 + 2 & 20 - 2 \\ 9 - 3 & -4 + 3 \end{bmatrix}" />
+  <BlockMath math="AB = \begin{bmatrix} -43 & 18 \\ 6 & -1 \end{bmatrix}" />
+</div>
+
+**Langkah 4: Hitung Determinan Matriks AB (<InlineMath math="|AB|" />)**
+
+Sekarang, kita hitung determinan dari matriks hasil perkalian AB:
+
+<BlockMath math="|AB| = (-43 \cdot -1) - (18 \cdot 6) = 43 - 108 = -65" />
+
+**Langkah 5: Bandingkan <InlineMath math="|AB|" /> dengan <InlineMath math="|A||B|" />**
+
+Kita telah mendapatkan <InlineMath math="|A| = 13" />, <InlineMath math="|B| = -5" />, dan <InlineMath math="|AB| = -65" />.
+
+Mari kita hitung <InlineMath math="|A||B|" />:
+
+<BlockMath math="|A||B| = 13 \cdot (-5) = -65" />
+
+Perhatikan bahwa nilai <InlineMath math="|AB|" /> sama dengan nilai <InlineMath math="|A||B|" />.
+
+**Rumusan Sifat Determinan Perkalian Matriks**
+
+Jika A dan B adalah dua matriks persegi berordo sama, maka determinan dari hasil kali matriks A dan B sama dengan hasil kali determinan masing-masing matriks.
+
+<BlockMath math="|AB| = |A||B|" />
+
+### Determinan Matriks dengan Perkalian Skalar
+
+Sekarang, mari kita selidiki apa yang terjadi pada determinan sebuah matriks jika setiap elemen matriks tersebut dikalikan dengan sebuah skalar (konstanta).
+
+Misalkan kita gunakan matriks A dari contoh sebelumnya dan sebuah skalar <InlineMath math="k=2" />.
+
+<BlockMath math="A = \begin{bmatrix} -5 & 2 \\ 1 & -3 \end{bmatrix}" />
+
+Kita sudah tahu bahwa <InlineMath math="|A| = 13" />. Matriks A adalah matriks berordo <InlineMath math="2 \times 2" />, sehingga <InlineMath math="n=2" />.
+
+**Langkah 1: Tentukan Matriks <InlineMath math="kA" />**
+
+Kalikan setiap elemen matriks A dengan skalar <InlineMath math="k=2" />:
+
+<BlockMath math="kA = 2A = 2\begin{bmatrix} -5 & 2 \\ 1 & -3 \end{bmatrix} = \begin{bmatrix} 2(-5) & 2(2) \\ 2(1) & 2(-3) \end{bmatrix} = \begin{bmatrix} -10 & 4 \\ 2 & -6 \end{bmatrix}" />
+
+**Langkah 2: Hitung Determinan Matriks <InlineMath math="kA" /> (<InlineMath math="|kA|" />)**
+
+Determinan dari matriks <InlineMath math="kA" /> adalah:
+
+<BlockMath math="|kA| = (-10 \cdot -6) - (4 \cdot 2) = 60 - 8 = 52" />
+
+**Langkah 3: Bandingkan <InlineMath math="|kA|" /> dengan <InlineMath math="k^n|A|" />**
+
+Kita memiliki <InlineMath math="|kA| = 52" />. Skalar <InlineMath math="k=2" />, ordo matriks <InlineMath math="n=2" />, dan <InlineMath math="|A|=13" />.
+
+Mari kita hitung <InlineMath math="k^n|A|" />:
+
+<BlockMath math="k^n|A| = 2^2 \cdot 13 = 4 \cdot 13 = 52" />
+
+Perhatikan bahwa nilai <InlineMath math="|kA|" /> sama dengan nilai <InlineMath math="k^n|A|" />.
+
+**Rumusan Sifat Determinan Perkalian Skalar**
+
+Jika A adalah matriks persegi berordo <InlineMath math="n \times n" /> dan <InlineMath math="k" /> adalah suatu skalar, maka determinan dari matriks <InlineMath math="kA" /> adalah <InlineMath math="k^n" /> dikalikan dengan determinan matriks A.
+
+<BlockMath math="|kA| = k^n |A|" />
+
+Di sini, <InlineMath math="n" /> adalah ordo (jumlah baris atau kolom) dari matriks persegi A.
