@@ -40,7 +40,7 @@ We believe that education is a fundamental right, and Nakafa aims to be a valuab
 
 Nakafa offers a rich learning experience with features designed for accessibility and engagement:
 
-- 🌍 **Multilingual Support**: Content is planned to be available in multiple languages, starting with English and Arabic, to reach a global audience.
+- 🌍 **Multilingual Support**: Content is planned to be available in multiple languages.
 - 📚 **Comprehensive Educational Content**: Structured learning paths covering various educational levels:
   - Elementary School
   - Middle School
