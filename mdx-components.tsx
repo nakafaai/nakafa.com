@@ -152,7 +152,10 @@ const components = {
   },
   InlineMath,
   BlockMath: (props: MathComponentProps) => (
-    <ScrollArea className="max-w-full rounded-xl border bg-card text-card-foreground shadow-sm">
+    <ScrollArea
+      className="max-w-full rounded-xl border bg-card text-card-foreground shadow-sm"
+      type="hover"
+    >
       <div className="px-4">
         <BlockMath {...props} />
       </div>
