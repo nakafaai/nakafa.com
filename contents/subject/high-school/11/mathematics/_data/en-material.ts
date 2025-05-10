@@ -304,35 +304,35 @@ const enMaterials: MaterialList = [
     href: `${BASE_PATH}/geometric-transformation`,
     items: [
       {
-        title: "Reflection Over Line",
+        title: "Reflection over Line",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-line`,
       },
       {
-        title: "Reflection Over X Axis",
+        title: "Reflection over X Axis",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-x-axis`,
       },
       {
-        title: "Reflection Over Y Axis",
+        title: "Reflection over Y Axis",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-y-axis`,
       },
       {
-        title: "Reflection Over Line y = x",
+        title: "Reflection over Line y = x",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-y-equals-x`,
       },
       {
-        title: "Reflection Over Line y = -x",
+        title: "Reflection over Line y = -x",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-y-equals-minus-x`,
       },
       {
-        title: "Reflection Over Line x = k",
+        title: "Reflection over Line x = k",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-x-equals-k`,
       },
       {
-        title: "Reflection Over Line y = h",
+        title: "Reflection over Line y = h",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-y-equals-h`,
       },
       {
-        title: "Reflection Over Point",
+        title: "Reflection over Point",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-point`,
       },
       {
@@ -356,11 +356,11 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/geometric-transformation/reflection-matrix`,
       },
       {
-        title: "Reflection Matrix Over Center Point",
+        title: "Reflection Matrix over Center Point",
         href: `${BASE_PATH}/geometric-transformation/reflection-matrix-center`,
       },
       {
-        title: "Reflection Matrix Over Arbitrary Point",
+        title: "Reflection Matrix over Arbitrary Point",
         href: `${BASE_PATH}/geometric-transformation/reflection-matrix-arbitrary-point`,
       },
       {
