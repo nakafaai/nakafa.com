@@ -4,3 +4,217 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matrix",
 };
+
+## Understanding the Multiplication of Two Matrices
+
+Matrix multiplication is a fundamental operation in linear algebra. Unlike matrix addition or subtraction where elements are operated on directly, matrix multiplication has its own specific rules.
+
+### Condition for Matrix Multiplication
+
+Two matrices, let's say matrix <InlineMath math="A" /> and matrix <InlineMath math="B" />, can be multiplied (<InlineMath math="A \times B" />) only if **the number of columns in matrix <InlineMath math="A" /> is equal to the number of rows in matrix <InlineMath math="B" />**.
+
+Suppose matrix <InlineMath math="A" /> has an order of <InlineMath math="m \times n" /> (meaning <InlineMath math="m" /> rows and <InlineMath math="n" /> columns) and matrix <InlineMath math="B" /> has an order of <InlineMath math="n \times p" /> (meaning <InlineMath math="n" /> rows and <InlineMath math="p" /> columns).
+
+Since the number of columns in matrix <InlineMath math="A" /> (<InlineMath math="n" />) is equal to the number of rows in matrix <InlineMath math="B" /> (<InlineMath math="n" />), then matrix <InlineMath math="A" /> and <InlineMath math="B" /> can be multiplied.
+
+The result of the multiplication, let's call it matrix <InlineMath math="C = AB" />, will have an order of <InlineMath math="m \times p" />.
+
+### How to Calculate the Elements of the Resultant Matrix
+
+The element <InlineMath math="c_{ij}" /> in matrix <InlineMath math="C" /> (i.e., the element in the <InlineMath math="i" />-th row and <InlineMath math="j" />-th column) is calculated by multiplying each element in the <InlineMath math="i" />-th row of matrix <InlineMath math="A" /> by the corresponding element in the <InlineMath math="j" />-th column of matrix <InlineMath math="B" />, and then summing all these products.
+
+Mathematically, if <InlineMath math="A = [a_{ik}]" /> and <InlineMath math="B = [b_{kj}]" />, then the element <InlineMath math="c_{ij}" /> of matrix <InlineMath math="C = AB" /> is:
+
+<BlockMath math="c_{ij} = \sum_{k=1}^{n} a_{ik}b_{kj} = a_{i1}b_{1j} + a_{i2}b_{2j} + \dots + a_{in}b_{nj}" />
+
+The notation <InlineMath math="\sum" /> (sigma) means summation.
+
+In the formula above, we sum the products <InlineMath math="a_{ik}b_{kj}" /> for all values of <InlineMath math="k" /> from 1 to <InlineMath math="n" />.
+
+## Steps to Multiply Matrices
+
+Let's look at a simple example to understand the process.
+
+Suppose we have matrices <InlineMath math="P = \begin{bmatrix} p_{11} & p_{12} \\ p_{21} & p_{22} \end{bmatrix}" /> and <InlineMath math="Q = \begin{bmatrix} q_{11} & q_{12} \\ q_{21} & q_{22} \end{bmatrix}" />.
+
+Matrix <InlineMath math="P" /> has an order of <InlineMath math="2 \times 2" /> and matrix <InlineMath math="Q" /> also has an order of <InlineMath math="2 \times 2" />. The number of columns in <InlineMath math="P" /> (which is 2) is equal to the number of rows in <InlineMath math="Q" /> (which is 2), so we can multiply them. The result, <InlineMath math="R = PQ" />, will have an order of <InlineMath math="2 \times 2" />.
+
+<BlockMath math="R = \begin{bmatrix} r_{11} & r_{12} \\ r_{21} & r_{22} \end{bmatrix}" />
+
+The elements of matrix <InlineMath math="R" /> are calculated as follows:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="r_{11} = (\text{row 1 of } P) \cdot (\text{column 1 of } Q) = p_{11}q_{11} + p_{12}q_{21}" />
+  <BlockMath math="r_{12} = (\text{row 1 of } P) \cdot (\text{column 2 of } Q) = p_{11}q_{12} + p_{12}q_{22}" />
+  <BlockMath math="r_{21} = (\text{row 2 of } P) \cdot (\text{column 1 of } Q) = p_{21}q_{11} + p_{22}q_{21}" />
+  <BlockMath math="r_{22} = (\text{row 2 of } P) \cdot (\text{column 2 of } Q) = p_{21}q_{12} + p_{22}q_{22}" />
+</div>
+
+## Example of Multiplying Two Matrices
+
+Given two matrices:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A = \begin{bmatrix} -7 & 2 & -2 \\ 1 & 0 & -1 \\ 2 & 3 & -1 \end{bmatrix}" />
+  <BlockMath math="B = \begin{bmatrix} 1 & 2 \\ -1 & 3 \\ 2 & 0 \end{bmatrix}" />
+</div>
+
+Matrix <InlineMath math="A" /> has an order of <InlineMath math="3 \times 3" /> and matrix <InlineMath math="B" /> has an order of <InlineMath math="3 \times 2" />.
+
+The number of columns in matrix <InlineMath math="A" /> (which is 3) is equal to the number of rows in matrix <InlineMath math="B" /> (which is 3).
+
+So, <InlineMath math="AB" /> can be calculated and will result in a matrix of order <InlineMath math="3 \times 2" />.
+
+Let's calculate <InlineMath math="C = AB" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="C = \begin{bmatrix} c_{11} & c_{12} \\ c_{21} & c_{22} \\ c_{31} & c_{32} \end{bmatrix}" />
+  <BlockMath math="c_{11} = (-7)(1) + (2)(-1) + (-2)(2) = -7 - 2 - 4 = -13" />
+  <BlockMath math="c_{12} = (-7)(2) + (2)(3) + (-2)(0) = -14 + 6 + 0 = -8" />
+  <BlockMath math="c_{21} = (1)(1) + (0)(-1) + (-1)(2) = 1 + 0 - 2 = -1" />
+  <BlockMath math="c_{22} = (1)(2) + (0)(3) + (-1)(0) = 2 + 0 + 0 = 2" />
+  <BlockMath math="c_{31} = (2)(1) + (3)(-1) + (-1)(2) = 2 - 3 - 2 = -3" />
+  <BlockMath math="c_{32} = (2)(2) + (3)(3) + (-1)(0) = 4 + 9 + 0 = 13" />
+</div>
+
+So, the result of the matrix multiplication <InlineMath math="AB" /> is:
+
+<BlockMath math="AB = \begin{bmatrix} -13 & -8 \\ -1 & 2 \\ -3 & 13 \end{bmatrix}" />
+
+Now, what about <InlineMath math="BA" />?
+
+Matrix <InlineMath math="B" /> has an order of <InlineMath math="3 \times 2" /> and matrix <InlineMath math="A" /> has an order of <InlineMath math="3 \times 3" />.
+
+The number of columns in matrix <InlineMath math="B" /> (which is 2) is **not equal** to the number of rows in matrix <InlineMath math="A" /> (which is 3).
+
+Therefore, the multiplication <InlineMath math="BA" /> is **undefined**. This illustrates one of the important properties of matrix multiplication.
+
+## Properties of Matrix Multiplication
+
+Matrix multiplication has several important properties:
+
+1.  **Generally Not Commutative**:
+
+    This means <InlineMath math="AB \neq BA" />. We have already seen an example above where <InlineMath math="AB" /> is defined but <InlineMath math="BA" /> is not. Even if both are defined, the results are not necessarily the same.
+
+2.  **Associative**:
+
+    If the matrix multiplications <InlineMath math="A, B," /> and <InlineMath math="C" /> are defined, then <InlineMath math="(AB)C = A(BC)" /> holds. This means the order of grouping the multiplication does not change the final result.
+
+3.  **Distributive**:
+
+    Matrix multiplication is distributive over matrix addition or subtraction:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="A(B + C) = AB + AC" />
+      <BlockMath math="(A + B)C = AC + BC" />
+    </div>
+
+    This holds if all involved addition and multiplication operations are defined.
+
+4.  **Multiplication by Identity Matrix (<InlineMath math="I" />)**:
+
+    If <InlineMath math="A" /> is a square matrix of order <InlineMath math="n \times n" /> and <InlineMath math="I" /> is the identity matrix of order <InlineMath math="n \times n" />, then:
+
+    <BlockMath math="AI = IA = A" />
+
+    The identity matrix acts like the number 1 in ordinary number multiplication.
+
+5.  **Multiplication by a Scalar (<InlineMath math="k" />)**:
+
+    If <InlineMath math="k" /> is a scalar (real number), then:
+
+    <BlockMath math="k(AB) = (kA)B = A(kB)" />
+
+## Calculating Revenue
+
+Matrix multiplication is very useful in various fields, one of which is for managing data and calculating aggregate values.
+
+Imagine a home industry produces three types of food: tempeh chips, banana chips, and potato chips.
+
+These foods are marketed in three places: Place A, Place B, and Place C.
+
+The number of chips (in jars) sold in each place is presented in matrix <InlineMath math="P" />. The columns in matrix <InlineMath math="P" /> respectively represent Place A, Place B, and Place C, while the rows respectively represent tempeh chips, banana chips, and potato chips.
+
+<BlockMath math="P = \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix} \begin{matrix} \text{Tempeh Chips} \\ \text{Banana Chips} \\ \text{Potato Chips} \end{matrix}" />
+
+The first row (<InlineMath math="\begin{bmatrix} 15 & 12 & 20 \end{bmatrix}" />) means 15 jars of tempeh chips were sold in Place A, 12 in Place B, and 20 in Place C.
+
+The price for each jar of chips (in rupiah) is stated in the column matrix <InlineMath math="Q" /> below:
+
+<BlockMath math="Q = \begin{bmatrix} 20,000 \\ 15,000 \\ 30,000 \end{bmatrix} \begin{matrix} \text{Price of Tempeh Chips} \\ \text{Price of Banana Chips} \\ \text{Price of Potato Chips} \end{matrix}" />
+
+To determine the total revenue from each type of chip across all places, we can multiply matrix <InlineMath math="P" /> by matrix <InlineMath math="Q" />.
+
+However, pay attention to the order of the matrices. Matrix <InlineMath math="P" /> has an order of <InlineMath math="3 \times 3" /> and matrix <InlineMath math="Q" /> has an order of <InlineMath math="3 \times 1" />. The number of columns in <InlineMath math="P" /> (3) is equal to the number of rows in <InlineMath math="Q" /> (3), so <InlineMath math="PQ" /> can be calculated and will result in a matrix <InlineMath math="R" /> of order <InlineMath math="3 \times 1" />.
+
+Matrix <InlineMath math="R = PQ" /> will show the total revenue for each type of chip.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="R = PQ = \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix} \begin{bmatrix} 20,000 \\ 15,000 \\ 30,000 \end{bmatrix}" />
+  <BlockMath math="R = \begin{bmatrix} (15)(20,000) + (12)(15,000) + (20)(30,000) \\ (25)(20,000) + (10)(15,000) + (15)(30,000) \\ (15)(20,000) + (15)(15,000) + (20)(30,000) \end{bmatrix}" />
+  <BlockMath math="R = \begin{bmatrix} 300,000 + 180,000 + 600,000 \\ 500,000 + 150,000 + 450,000 \\ 300,000 + 225,000 + 600,000 \end{bmatrix}" />
+  <BlockMath math="R = \begin{bmatrix} 1,080,000 \\ 1,100,000 \\ 1,125,000 \end{bmatrix} \begin{matrix} \text{Total Revenue from Tempeh Chips} \\ \text{Total Revenue from Banana Chips} \\ \text{Total Revenue from Potato Chips} \end{matrix}" />
+</div>
+
+From matrix <InlineMath math="R" />, we can see that the total revenue from the sale of tempeh chips is Rp1,080,000, banana chips Rp1,100,000, and potato chips Rp1,125,000.
+
+If the question is "determine the revenue matrix for each place", then we need to arrange the price matrix <InlineMath math="Q" /> differently or perform multiplication with the transpose of <InlineMath math="P" />.
+
+Suppose we want to find the total revenue in Place A, Place B, and Place C. We can use the price matrix as a row matrix <InlineMath math="Q^T = \begin{bmatrix} 20,000 & 15,000 & 30,000 \end{bmatrix}" /> and multiply it by matrix <InlineMath math="P" />: <InlineMath math="S = Q^T P" />.
+
+Matrix <InlineMath math="Q^T" /> has an order of <InlineMath math="1 \times 3" /> and <InlineMath math="P" /> has an order of <InlineMath math="3 \times 3" />. The result <InlineMath math="S" /> will have an order of <InlineMath math="1 \times 3" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="S = \begin{bmatrix} 20,000 & 15,000 & 30,000 \end{bmatrix} \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix}" />
+  <BlockMath math="s_{11} = (20,000)(15) + (15,000)(25) + (30,000)(15) = 300,000 + 375,000 + 450,000 = 1,125,000" />
+  <BlockMath math="s_{12} = (20,000)(12) + (15,000)(10) + (30,000)(15) = 240,000 + 150,000 + 450,000 = 840,000" />
+  <BlockMath math="s_{13} = (20,000)(20) + (15,000)(15) + (30,000)(20) = 400,000 + 225,000 + 600,000 = 1,225,000" />
+</div>
+
+Thus, <InlineMath math="S = \begin{bmatrix} 1,125,000 & 840,000 & 1,225,000 \end{bmatrix}" />.
+
+This means the total revenue from Place A is Rp1,125,000, from Place B is Rp840,000, and from Place C is Rp1,225,000.
+
+The interpretation of the elements of the resulting matrix greatly depends on how the initial matrices are defined and how the multiplication is performed.
+
+## Exercises
+
+Given the following matrices:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="C = \begin{bmatrix} 1 & -3 \\ 1 & 2 \end{bmatrix}" />
+  <BlockMath math="D = \begin{bmatrix} 1 & -4 \\ 8 & 2 \end{bmatrix}" />
+</div>
+
+Determine the matrices <InlineMath math="CD" /> and <InlineMath math="DC" />.
+
+Is <InlineMath math="CD = DC" />?
+
+### Answer Key
+
+1.  Calculating <InlineMath math="CD" />:
+
+    Matrix <InlineMath math="C" /> has an order of <InlineMath math="2 \times 2" /> and <InlineMath math="D" /> has an order of <InlineMath math="2 \times 2" />. The result will have an order of <InlineMath math="2 \times 2" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="CD = \begin{bmatrix} 1 & -3 \\ 1 & 2 \end{bmatrix} \begin{bmatrix} 1 & -4 \\ 8 & 2 \end{bmatrix}" />
+      <BlockMath math="CD = \begin{bmatrix} (1)(1) + (-3)(8) & (1)(-4) + (-3)(2) \\ (1)(1) + (2)(8) & (1)(-4) + (2)(2) \end{bmatrix}" />
+      <BlockMath math="CD = \begin{bmatrix} 1 - 24 & -4 - 6 \\ 1 + 16 & -4 + 4 \end{bmatrix}" />
+      <BlockMath math="CD = \begin{bmatrix} -23 & -10 \\ 17 & 0 \end{bmatrix}" />
+    </div>
+
+2.  Calculating <InlineMath math="DC" />:
+
+    Matrix <InlineMath math="D" /> has an order of <InlineMath math="2 \times 2" /> and <InlineMath math="C" /> has an order of <InlineMath math="2 \times 2" />. The result will have an order of <InlineMath math="2 \times 2" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="DC = \begin{bmatrix} 1 & -4 \\ 8 & 2 \end{bmatrix} \begin{bmatrix} 1 & -3 \\ 1 & 2 \end{bmatrix}" />
+      <BlockMath math="DC = \begin{bmatrix} (1)(1) + (-4)(1) & (1)(-3) + (-4)(2) \\ (8)(1) + (2)(1) & (8)(-3) + (2)(2) \end{bmatrix}" />
+      <BlockMath math="DC = \begin{bmatrix} 1 - 4 & -3 - 8 \\ 8 + 2 & -24 + 4 \end{bmatrix}" />
+      <BlockMath math="DC = \begin{bmatrix} -3 & -11 \\ 10 & -20 \end{bmatrix}" />
+    </div>
+
+From the results above, it is clear that <InlineMath math="CD = \begin{bmatrix} -23 & -10 \\ 17 & 0 \end{bmatrix}" /> and <InlineMath math="DC = \begin{bmatrix} -3 & -11 \\ 10 & -20 \end{bmatrix}" />.
+
+So, <InlineMath math="CD \neq DC" />. This is another example showing that matrix multiplication is generally not commutative.

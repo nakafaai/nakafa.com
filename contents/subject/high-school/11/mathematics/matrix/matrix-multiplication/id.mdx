@@ -4,3 +4,217 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Memahami Perkalian Dua Matriks
+
+Perkalian matriks adalah operasi fundamental dalam aljabar linear. Berbeda dengan penjumlahan atau pengurangan matriks yang elemennya langsung dioperasikan, perkalian matriks memiliki aturan tersendiri.
+
+### Syarat Perkalian Matriks
+
+Dua matriks, katakanlah matriks <InlineMath math="A" /> dan matriks <InlineMath math="B" />, dapat dikalikan (<InlineMath math="A \times B" />) hanya jika **jumlah kolom pada matriks <InlineMath math="A" /> sama dengan jumlah baris pada matriks <InlineMath math="B" />**.
+
+Misalkan matriks <InlineMath math="A" /> memiliki ordo <InlineMath math="m \times n" /> (artinya <InlineMath math="m" /> baris dan <InlineMath math="n" /> kolom) dan matriks <InlineMath math="B" /> memiliki ordo <InlineMath math="n \times p" /> (artinya <InlineMath math="n" /> baris dan <InlineMath math="p" /> kolom).
+
+Karena jumlah kolom matriks <InlineMath math="A" /> (<InlineMath math="n" />) sama dengan jumlah baris matriks <InlineMath math="B" /> (<InlineMath math="n" />), maka matriks <InlineMath math="A" /> dan <InlineMath math="B" /> dapat dikalikan.
+
+Hasil perkaliannya, sebut saja matriks <InlineMath math="C = AB" />, akan memiliki ordo <InlineMath math="m \times p" />.
+
+### Cara Menghitung Elemen Hasil Perkalian
+
+Elemen <InlineMath math="c_{ij}" /> pada matriks <InlineMath math="C" /> (yaitu elemen pada baris ke-<InlineMath math="i" /> dan kolom ke-<InlineMath math="j" />) dihitung dengan mengalikan setiap elemen pada baris ke-<InlineMath math="i" /> dari matriks <InlineMath math="A" /> dengan elemen yang bersesuaian pada kolom ke-<InlineMath math="j" /> dari matriks <InlineMath math="B" />, kemudian menjumlahkan semua hasil perkalian tersebut.
+
+Secara matematis, jika <InlineMath math="A = [a_{ik}]" /> dan <InlineMath math="B = [b_{kj}]" />, maka elemen <InlineMath math="c_{ij}" /> dari matriks <InlineMath math="C = AB" /> adalah:
+
+<BlockMath math="c_{ij} = \sum_{k=1}^{n} a_{ik}b_{kj} = a_{i1}b_{1j} + a_{i2}b_{2j} + \dots + a_{in}b_{nj}" />
+
+Notasi <InlineMath math="\sum" /> (sigma) berarti penjumlahan.
+
+Dalam rumus di atas, kita menjumlahkan hasil perkalian <InlineMath math="a_{ik}b_{kj}" /> untuk semua nilai <InlineMath math="k" /> dari 1 sampai <InlineMath math="n" />.
+
+## Langkah-Langkah Mengalikan Matriks
+
+Mari kita lihat contoh sederhana untuk memahami prosesnya.
+
+Misalkan kita punya matriks <InlineMath math="P = \begin{bmatrix} p_{11} & p_{12} \\ p_{21} & p_{22} \end{bmatrix}" /> dan <InlineMath math="Q = \begin{bmatrix} q_{11} & q_{12} \\ q_{21} & q_{22} \end{bmatrix}" />.
+
+Matriks <InlineMath math="P" /> berordo <InlineMath math="2 \times 2" /> dan matriks <InlineMath math="Q" /> juga berordo <InlineMath math="2 \times 2" />. Jumlah kolom <InlineMath math="P" /> (yaitu 2) sama dengan jumlah baris <InlineMath math="Q" /> (yaitu 2), jadi kita bisa mengalikannya. Hasilnya, <InlineMath math="R = PQ" />, akan berordo <InlineMath math="2 \times 2" />.
+
+<BlockMath math="R = \begin{bmatrix} r_{11} & r_{12} \\ r_{21} & r_{22} \end{bmatrix}" />
+
+Elemen-elemen matriks <InlineMath math="R" /> dihitung sebagai berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="r_{11} = (\text{baris 1 dari } P) \cdot (\text{kolom 1 dari } Q) = p_{11}q_{11} + p_{12}q_{21}" />
+  <BlockMath math="r_{12} = (\text{baris 1 dari } P) \cdot (\text{kolom 2 dari } Q) = p_{11}q_{12} + p_{12}q_{22}" />
+  <BlockMath math="r_{21} = (\text{baris 2 dari } P) \cdot (\text{kolom 1 dari } Q) = p_{21}q_{11} + p_{22}q_{21}" />
+  <BlockMath math="r_{22} = (\text{baris 2 dari } P) \cdot (\text{kolom 2 dari } Q) = p_{21}q_{12} + p_{22}q_{22}" />
+</div>
+
+## Contoh Perkalian Dua Matriks
+
+Diberikan dua matriks:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A = \begin{bmatrix} -7 & 2 & -2 \\ 1 & 0 & -1 \\ 2 & 3 & -1 \end{bmatrix}" />
+  <BlockMath math="B = \begin{bmatrix} 1 & 2 \\ -1 & 3 \\ 2 & 0 \end{bmatrix}" />
+</div>
+
+Matriks <InlineMath math="A" /> berordo <InlineMath math="3 \times 3" /> dan matriks <InlineMath math="B" /> berordo <InlineMath math="3 \times 2" />.
+
+Jumlah kolom matriks <InlineMath math="A" /> (yaitu 3) sama dengan jumlah baris matriks <InlineMath math="B" /> (yaitu 3).
+
+Jadi, <InlineMath math="AB" /> dapat dihitung dan akan menghasilkan matriks berordo <InlineMath math="3 \times 2" />.
+
+Mari kita hitung <InlineMath math="C = AB" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="C = \begin{bmatrix} c_{11} & c_{12} \\ c_{21} & c_{22} \\ c_{31} & c_{32} \end{bmatrix}" />
+  <BlockMath math="c_{11} = (-7)(1) + (2)(-1) + (-2)(2) = -7 - 2 - 4 = -13" />
+  <BlockMath math="c_{12} = (-7)(2) + (2)(3) + (-2)(0) = -14 + 6 + 0 = -8" />
+  <BlockMath math="c_{21} = (1)(1) + (0)(-1) + (-1)(2) = 1 + 0 - 2 = -1" />
+  <BlockMath math="c_{22} = (1)(2) + (0)(3) + (-1)(0) = 2 + 0 + 0 = 2" />
+  <BlockMath math="c_{31} = (2)(1) + (3)(-1) + (-1)(2) = 2 - 3 - 2 = -3" />
+  <BlockMath math="c_{32} = (2)(2) + (3)(3) + (-1)(0) = 4 + 9 + 0 = 13" />
+</div>
+
+Jadi, hasil perkalian matriks <InlineMath math="AB" /> adalah:
+
+<BlockMath math="AB = \begin{bmatrix} -13 & -8 \\ -1 & 2 \\ -3 & 13 \end{bmatrix}" />
+
+Sekarang, bagaimana dengan <InlineMath math="BA" />?
+
+Matriks <InlineMath math="B" /> berordo <InlineMath math="3 \times 2" /> dan matriks <InlineMath math="A" /> berordo <InlineMath math="3 \times 3" />.
+
+Jumlah kolom matriks <InlineMath math="B" /> (yaitu 2) **tidak sama** dengan jumlah baris matriks <InlineMath math="A" /> (yaitu 3).
+
+Oleh karena itu, perkalian <InlineMath math="BA" /> **tidak terdefinisi**. Ini menunjukkan salah satu sifat penting perkalian matriks.
+
+## Sifat-Sifat Perkalian Matriks
+
+Perkalian matriks memiliki beberapa sifat penting:
+
+1.  **Umumnya Tidak Komutatif**:
+
+    Artinya, <InlineMath math="AB \neq BA" />. Kita sudah melihat contoh di atas di mana <InlineMath math="AB" /> terdefinisi tetapi <InlineMath math="BA" /> tidak. Bahkan jika keduanya terdefinisi, hasilnya belum tentu sama.
+
+2.  **Asosiatif**:
+
+    Jika perkalian matriks <InlineMath math="A, B," /> dan <InlineMath math="C" /> terdefinisi, maka berlaku <InlineMath math="(AB)C = A(BC)" />. Artinya, urutan pengelompokan perkalian tidak mengubah hasil akhir.
+
+3.  **Distributif**:
+
+    Perkalian matriks bersifat distributif terhadap penjumlahan atau pengurangan matriks:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="A(B + C) = AB + AC" />
+      <BlockMath math="(A + B)C = AC + BC" />
+    </div>
+
+    Ini berlaku jika semua operasi penjumlahan dan perkalian yang terlibat terdefinisi.
+
+4.  **Perkalian dengan Matriks Identitas (<InlineMath math="I" />)**:
+
+    Jika <InlineMath math="A" /> adalah matriks persegi berordo <InlineMath math="n \times n" /> dan <InlineMath math="I" /> adalah matriks identitas berordo <InlineMath math="n \times n" />, maka berlaku:
+
+    <BlockMath math="AI = IA = A" />
+
+    Matriks identitas berperan seperti angka 1 dalam perkalian bilangan biasa.
+
+5.  **Perkalian dengan Skalar (<InlineMath math="k" />)**:
+
+    Jika <InlineMath math="k" /> adalah sebuah skalar (bilangan riil), maka:
+
+    <BlockMath math="k(AB) = (kA)B = A(kB)" />
+
+## Menghitung Pendapatan
+
+Perkalian matriks sangat berguna dalam berbagai bidang, salah satunya untuk mengelola data dan menghitung nilai agregat.
+
+Bayangkan sebuah industri rumahan memproduksi tiga jenis makanan: keripik tempe, keripik pisang, dan keripik kentang.
+
+Makanan tersebut dipasarkan ke tiga tempat: Tempat A, Tempat B, dan Tempat C.
+
+Banyaknya keripik (dalam toples) yang terjual di setiap tempat disajikan dalam matriks <InlineMath math="P" />. Kolom-kolom pada matriks <InlineMath math="P" /> berturut-turut menunjukkan Tempat A, Tempat B, dan Tempat C, sedangkan baris-barisnya berturut-turut menunjukkan keripik tempe, keripik pisang, dan keripik kentang.
+
+<BlockMath math="P = \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix} \begin{matrix} \text{Keripik Tempe} \\ \text{Keripik Pisang} \\ \text{Keripik Kentang} \end{matrix}" />
+
+Baris pertama (<InlineMath math="\begin{bmatrix} 15 & 12 & 20 \end{bmatrix}" />) berarti 15 toples keripik tempe terjual di Tempat A, 12 di Tempat B, dan 20 di Tempat C.
+
+Harga untuk setiap toples keripik (dalam rupiah) dinyatakan dalam matriks kolom <InlineMath math="Q" /> berikut:
+
+<BlockMath math="Q = \begin{bmatrix} 20.000 \\ 15.000 \\ 30.000 \end{bmatrix} \begin{matrix} \text{Harga Keripik Tempe} \\ \text{Harga Keripik Pisang} \\ \text{Harga Keripik Kentang} \end{matrix}" />
+
+Untuk menentukan total pendapatan dari setiap jenis keripik di semua tempat, kita bisa mengalikan matriks <InlineMath math="P" /> dengan matriks <InlineMath math="Q" />.
+
+Namun, perhatikan ordo matriks. Matriks <InlineMath math="P" /> berordo <InlineMath math="3 \times 3" /> dan matriks <InlineMath math="Q" /> berordo <InlineMath math="3 \times 1" />. Jumlah kolom <InlineMath math="P" /> (3) sama dengan jumlah baris <InlineMath math="Q" /> (3), sehingga <InlineMath math="PQ" /> dapat dihitung dan akan menghasilkan matriks <InlineMath math="R" /> berordo <InlineMath math="3 \times 1" />.
+
+Matriks <InlineMath math="R = PQ" /> akan menunjukkan total pendapatan untuk setiap jenis keripik.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="R = PQ = \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix} \begin{bmatrix} 20.000 \\ 15.000 \\ 30.000 \end{bmatrix}" />
+  <BlockMath math="R = \begin{bmatrix} (15)(20.000) + (12)(15.000) + (20)(30.000) \\ (25)(20.000) + (10)(15.000) + (15)(30.000) \\ (15)(20.000) + (15)(15.000) + (20)(30.000) \end{bmatrix}" />
+  <BlockMath math="R = \begin{bmatrix} 300.000 + 180.000 + 600.000 \\ 500.000 + 150.000 + 450.000 \\ 300.000 + 225.000 + 600.000 \end{bmatrix}" />
+  <BlockMath math="R = \begin{bmatrix} 1.080.000 \\ 1.100.000 \\ 1.125.000 \end{bmatrix} \begin{matrix} \text{Total Pendapatan Keripik Tempe} \\ \text{Total Pendapatan Keripik Pisang} \\ \text{Total Pendapatan Keripik Kentang} \end{matrix}" />
+</div>
+
+Dari matriks <InlineMath math="R" />, kita bisa melihat bahwa total pendapatan dari penjualan keripik tempe adalah Rp1.080.000, keripik pisang Rp1.100.000, dan keripik kentang Rp1.125.000.
+
+Jika pertanyaannya adalah "tentukan matriks pendapatan untuk setiap tempat", maka kita perlu mengatur matriks harga <InlineMath math="Q" /> secara berbeda atau melakukan perkalian dengan transpos dari <InlineMath math="P" />.
+
+Misalkan kita ingin mencari total pendapatan di Tempat A, Tempat B, dan Tempat C. Kita bisa menggunakan matriks harga sebagai matriks baris <InlineMath math="Q^T = \begin{bmatrix} 20.000 & 15.000 & 30.000 \end{bmatrix}" /> dan mengalikannya dengan matriks <InlineMath math="P" />: <InlineMath math="S = Q^T P" />.
+
+Matriks <InlineMath math="Q^T" /> berordo <InlineMath math="1 \times 3" /> dan <InlineMath math="P" /> berordo <InlineMath math="3 \times 3" />. Hasilnya <InlineMath math="S" /> akan berordo <InlineMath math="1 \times 3" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="S = \begin{bmatrix} 20.000 & 15.000 & 30.000 \end{bmatrix} \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix}" />
+  <BlockMath math="s_{11} = (20.000)(15) + (15.000)(25) + (30.000)(15) = 300.000 + 375.000 + 450.000 = 1.125.000" />
+  <BlockMath math="s_{12} = (20.000)(12) + (15.000)(10) + (30.000)(15) = 240.000 + 150.000 + 450.000 = 840.000" />
+  <BlockMath math="s_{13} = (20.000)(20) + (15.000)(15) + (30.000)(20) = 400.000 + 225.000 + 600.000 = 1.225.000" />
+</div>
+
+Maka, <InlineMath math="S = \begin{bmatrix} 1.125.000 & 840.000 & 1.225.000 \end{bmatrix}" />.
+
+Ini berarti total pendapatan dari Tempat A adalah Rp1.125.000, dari Tempat B adalah Rp840.000, dan dari Tempat C adalah Rp1.225.000.
+
+Interpretasi elemen matriks hasil perkalian sangat bergantung pada bagaimana matriks awal didefinisikan dan bagaimana perkalian dilakukan.
+
+## Latihan
+
+Diberikan matriks-matriks berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="C = \begin{bmatrix} 1 & -3 \\ 1 & 2 \end{bmatrix}" />
+  <BlockMath math="D = \begin{bmatrix} 1 & -4 \\ 8 & 2 \end{bmatrix}" />
+</div>
+
+Tentukan matriks <InlineMath math="CD" /> dan matriks <InlineMath math="DC" />.
+
+Apakah <InlineMath math="CD = DC" />?
+
+### Kunci Jawaban
+
+1.  Menghitung <InlineMath math="CD" />:
+
+    Matriks <InlineMath math="C" /> berordo <InlineMath math="2 \times 2" /> dan <InlineMath math="D" /> berordo <InlineMath math="2 \times 2" />. Hasilnya akan berordo <InlineMath math="2 \times 2" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="CD = \begin{bmatrix} 1 & -3 \\ 1 & 2 \end{bmatrix} \begin{bmatrix} 1 & -4 \\ 8 & 2 \end{bmatrix}" />
+      <BlockMath math="CD = \begin{bmatrix} (1)(1) + (-3)(8) & (1)(-4) + (-3)(2) \\ (1)(1) + (2)(8) & (1)(-4) + (2)(2) \end{bmatrix}" />
+      <BlockMath math="CD = \begin{bmatrix} 1 - 24 & -4 - 6 \\ 1 + 16 & -4 + 4 \end{bmatrix}" />
+      <BlockMath math="CD = \begin{bmatrix} -23 & -10 \\ 17 & 0 \end{bmatrix}" />
+    </div>
+
+2.  Menghitung <InlineMath math="DC" />:
+
+    Matriks <InlineMath math="D" /> berordo <InlineMath math="2 \times 2" /> dan <InlineMath math="C" /> berordo <InlineMath math="2 \times 2" />. Hasilnya akan berordo <InlineMath math="2 \times 2" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="DC = \begin{bmatrix} 1 & -4 \\ 8 & 2 \end{bmatrix} \begin{bmatrix} 1 & -3 \\ 1 & 2 \end{bmatrix}" />
+      <BlockMath math="DC = \begin{bmatrix} (1)(1) + (-4)(1) & (1)(-3) + (-4)(2) \\ (8)(1) + (2)(1) & (8)(-3) + (2)(2) \end{bmatrix}" />
+      <BlockMath math="DC = \begin{bmatrix} 1 - 4 & -3 - 8 \\ 8 + 2 & -24 + 4 \end{bmatrix}" />
+      <BlockMath math="DC = \begin{bmatrix} -3 & -11 \\ 10 & -20 \end{bmatrix}" />
+    </div>
+
+Dari hasil di atas, terlihat bahwa <InlineMath math="CD = \begin{bmatrix} -23 & -10 \\ 17 & 0 \end{bmatrix}" /> dan <InlineMath math="DC = \begin{bmatrix} -3 & -11 \\ 10 & -20 \end{bmatrix}" />.
+
+Jadi, <InlineMath math="CD \neq DC" />. Ini adalah contoh lain yang menunjukkan bahwa perkalian matriks umumnya tidak bersifat komutatif.

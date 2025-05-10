@@ -16,6 +16,7 @@ import {
   LaptopIcon,
   LeafIcon,
   MoonIcon,
+  NotebookPenIcon,
   RabbitIcon,
   SparkleIcon,
   SunIcon,
@@ -78,6 +79,10 @@ export const themes = [
   {
     value: "neo",
     icon: CpuIcon,
+  },
+  {
+    value: "notebook",
+    icon: NotebookPenIcon,
   },
   {
     value: "perpetuity",
