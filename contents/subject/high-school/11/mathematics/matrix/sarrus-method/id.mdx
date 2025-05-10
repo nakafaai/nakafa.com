@@ -4,3 +4,89 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Konsep Dasar Metode Sarrus
+
+Metode Sarrus adalah cara praktis untuk menghitung determinan matriks berordo 3x3. Metode ini dinamai dari Pierre Frédéric Sarrus. Untuk memahaminya, mari kita ingat kembali cara menghitung determinan matriks 2x2.
+
+Jika kita memiliki matriks 2x2:
+
+<BlockMath math="M = \begin{bmatrix} a & b \\ c & d \end{bmatrix}" />
+
+Determinannya, <InlineMath math="\det(M)" /> atau <InlineMath math="|M|" />, dihitung sebagai berikut:
+
+<BlockMath math="\det(M) = ad - bc" />
+
+Ini adalah selisih antara perkalian elemen diagonal utama (<InlineMath math="ad" />) dan perkalian elemen diagonal sekunder (<InlineMath math="bc" />). Metode Sarrus mengadaptasi prinsip ini untuk matriks 3x3.
+
+## Langkah Menghitung Determinan Matriks 3x3 dengan Metode Sarrus
+
+Misalkan kita memiliki matriks A berordo 3x3:
+
+<BlockMath math="A = \begin{bmatrix} a_{11} & a_{12} & a_{13} \\ a_{21} & a_{22} & a_{23} \\ a_{31} & a_{32} & a_{33} \end{bmatrix}" />
+
+Elemen <InlineMath math="a_{ij}" /> adalah elemen pada baris ke-<InlineMath math="i" /> dan kolom ke-<InlineMath math="j" />.
+
+**Langkah 1: Salin Dua Kolom Pertama**
+
+Tuliskan kembali dua kolom pertama matriks A di sebelah kanan kolom ketiga:
+
+<BlockMath math="\begin{array}{|ccc|cc} a_{11} & a_{12} & a_{13} & a_{11} & a_{12} \\ a_{21} & a_{22} & a_{23} & a_{21} & a_{22} \\ a_{31} & a_{32} & a_{33} & a_{31} & a_{32} \end{array}" />
+
+Ini membantu kita memvisualisasikan diagonal-diagonal yang akan dikalikan.
+
+**Langkah 2: Hitung Jumlah Hasil Perkalian Diagonal Positif**
+
+Kalikan elemen-elemen di sepanjang tiga diagonal dari kiri atas ke kanan bawah. Jumlahkan hasil perkalian ini, kita sebut <InlineMath math="D_{\text{positif}}" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="D_{\text{positif}} = (a_{11} \cdot a_{22} \cdot a_{33}) + (a_{12} \cdot a_{23} \cdot a_{31}) + (a_{13} \cdot a_{21} \cdot a_{32})" />
+</div>
+
+Suku pertama adalah perkalian diagonal utama. Suku kedua dan ketiga adalah perkalian diagonal sejajar yang melibatkan elemen dari kolom yang disalin.
+
+**Langkah 3: Hitung Jumlah Hasil Perkalian Diagonal Negatif**
+
+Kalikan elemen-elemen di sepanjang tiga diagonal dari kanan atas ke kiri bawah. Jumlahkan hasil perkalian ini, kita sebut <InlineMath math="D_{\text{negatif}}" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="D_{\text{negatif}} = (a_{13} \cdot a_{22} \cdot a_{31}) + (a_{11} \cdot a_{23} \cdot a_{32}) + (a_{12} \cdot a_{21} \cdot a_{33})" />
+</div>
+
+Suku pertama adalah perkalian diagonal sekunder (anti-diagonal). Suku kedua dan ketiga adalah perkalian diagonal sejajar yang melibatkan elemen dari kolom yang disalin, bergerak ke arah kiri bawah.
+
+**Langkah 4: Hitung Determinan Akhir**
+
+Determinan matriks A, <InlineMath math="\det(A)" />, adalah selisih antara <InlineMath math="D_{\text{positif}}" /> dan <InlineMath math="D_{\text{negatif}}" />:
+
+<BlockMath math="\det(A) = D_{\text{positif}} - D_{\text{negatif}}" />
+
+Substitusikan nilai <InlineMath math="D_{\text{positif}}" /> dan <InlineMath math="D_{\text{negatif}}" />:
+
+<BlockMath math="\det(A) = (a_{11}a_{22}a_{33} + a_{12}a_{23}a_{31} + a_{13}a_{21}a_{32}) - (a_{13}a_{22}a_{31} + a_{11}a_{23}a_{32} + a_{12}a_{21}a_{33})" />
+
+Atau, setelah tanda negatif didistribusikan:
+
+<BlockMath math="\det(A) = a_{11}a_{22}a_{33} + a_{12}a_{23}a_{31} + a_{13}a_{21}a_{32} - a_{13}a_{22}a_{31} - a_{11}a_{23}a_{32} - a_{12}a_{21}a_{33}" />
+
+### Visualisasi Metode Sarrus
+
+Untuk memvisualisasikan proses ini, kita bisa menuliskan:
+
+<BlockMath math="\det(A) = \left| \begin{matrix} a_{11} & a_{12} & a_{13} \\ a_{21} & a_{22} & a_{23} \\ a_{31} & a_{32} & a_{33} \end{matrix} \right|" />
+
+Kemudian, dengan Metode Sarrus, kita perluas matriks dan identifikasi jalur perkalian:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{array}{ccc|cc} a_{11} & a_{12} & a_{13} & a_{11} & a_{12} \\ a_{21} & a_{22} & a_{23} & a_{21} & a_{22} \\ a_{31} & a_{32} & a_{33} & a_{31} & a_{32} \end{array}" />
+  <BlockMath math="\begin{array}{l} \text{Jalur Positif } (\searrow): \\ \quad + (a_{11} \cdot a_{22} \cdot a_{33}) \\ \quad + (a_{12} \cdot a_{23} \cdot a_{31}) \\ \quad + (a_{13} \cdot a_{21} \cdot a_{32}) \end{array}" />
+  <BlockMath math="\begin{array}{l} \text{Jalur Negatif } (\swarrow): \\ \quad - (a_{13} \cdot a_{22} \cdot a_{31}) \\ \quad - (a_{11} \cdot a_{23} \cdot a_{32}) \quad (\text{dari } a_{11} \text{ kol. 4}) \\ \quad - (a_{12} \cdot a_{21} \cdot a_{33}) \quad (\text{dari } a_{12} \text{ kol. 5}) \end{array}" />
+</div>
+
+Sehingga, formula lengkapnya menjadi:
+
+<BlockMath math="\det(A) = (a_{11}a_{22}a_{33} + a_{12}a_{23}a_{31} + a_{13}a_{21}a_{32}) - (a_{13}a_{22}a_{31} + a_{11}a_{23}a_{32} + a_{12}a_{21}a_{33})" />
+
+## Batasan Penting Metode Sarrus
+
+Metode Sarrus **hanya berlaku untuk matriks berordo 2x2 dan 3x3**. Untuk matriks dengan ordo lebih tinggi (misalnya 4x4), metode ini tidak dapat digunakan. Metode lain seperti ekspansi kofaktor atau reduksi baris diperlukan untuk kasus tersebut.

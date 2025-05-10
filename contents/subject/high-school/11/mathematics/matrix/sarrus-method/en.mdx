@@ -4,3 +4,89 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matrix",
 };
+
+## Basic Concept of Sarrus Method
+
+Sarrus' method is a practical way to calculate the determinant of a 3x3 matrix. This method is named after Pierre Frédéric Sarrus. To understand it, let's recall how to calculate the determinant of a 2x2 matrix.
+
+If we have a 2x2 matrix:
+
+<BlockMath math="M = \begin{bmatrix} a & b \\ c & d \end{bmatrix}" />
+
+Its determinant, <InlineMath math="\det(M)" /> or <InlineMath math="|M|" />, is calculated as follows:
+
+<BlockMath math="\det(M) = ad - bc" />
+
+This is the difference between the product of the main diagonal elements (<InlineMath math="ad" />) and the product of the secondary diagonal elements (<InlineMath math="bc" />). Sarrus' method adapts this principle for 3x3 matrices.
+
+## Steps to Calculate the Determinant of a 3x3 Matrix using Sarrus Method
+
+Suppose we have a 3x3 matrix A:
+
+<BlockMath math="A = \begin{bmatrix} a_{11} & a_{12} & a_{13} \\ a_{21} & a_{22} & a_{23} \\ a_{31} & a_{32} & a_{33} \end{bmatrix}" />
+
+The element <InlineMath math="a_{ij}" /> is the element in the <InlineMath math="i" />-th row and <InlineMath math="j" />-th column.
+
+**Step 1: Copy the First Two Columns**
+
+Rewrite the first two columns of matrix A to the right of the third column:
+
+<BlockMath math="\begin{array}{|ccc|cc} a_{11} & a_{12} & a_{13} & a_{11} & a_{12} \\ a_{21} & a_{22} & a_{23} & a_{21} & a_{22} \\ a_{31} & a_{32} & a_{33} & a_{31} & a_{32} \end{array}" />
+
+This helps us visualize the diagonals that will be multiplied.
+
+**Step 2: Calculate the Sum of the Products of the Positive Diagonals**
+
+Multiply the elements along the three diagonals from the top-left to the bottom-right. Sum these products, let's call it <InlineMath math="D_{\text{positive}}" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="D_{\text{positive}} = (a_{11} \cdot a_{22} \cdot a_{33}) + (a_{12} \cdot a_{23} \cdot a_{31}) + (a_{13} \cdot a_{21} \cdot a_{32})" />
+</div>
+
+The first term is the product of the main diagonal. The second and third terms are products of parallel diagonals involving elements from the copied columns.
+
+**Step 3: Calculate the Sum of the Products of the Negative Diagonals**
+
+Multiply the elements along the three diagonals from the top-right to the bottom-left. Sum these products, let's call it <InlineMath math="D_{\text{negative}}" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="D_{\text{negative}} = (a_{13} \cdot a_{22} \cdot a_{31}) + (a_{11} \cdot a_{23} \cdot a_{32}) + (a_{12} \cdot a_{21} \cdot a_{33})" />
+</div>
+
+The first term is the product of the secondary diagonal (anti-diagonal). The second and third terms are products of parallel diagonals involving elements from the copied columns, moving towards the bottom-left.
+
+**Step 4: Calculate the Final Determinant**
+
+The determinant of matrix A, <InlineMath math="\det(A)" />, is the difference between <InlineMath math="D_{\text{positive}}" /> and <InlineMath math="D_{\text{negative}}" />:
+
+<BlockMath math="\det(A) = D_{\text{positive}} - D_{\text{negative}}" />
+
+Substitute the values of <InlineMath math="D_{\text{positive}}" /> and <InlineMath math="D_{\text{negative}}" />:
+
+<BlockMath math="\det(A) = (a_{11}a_{22}a_{33} + a_{12}a_{23}a_{31} + a_{13}a_{21}a_{32}) - (a_{13}a_{22}a_{31} + a_{11}a_{23}a_{32} + a_{12}a_{21}a_{33})" />
+
+Or, after distributing the negative sign:
+
+<BlockMath math="\det(A) = a_{11}a_{22}a_{33} + a_{12}a_{23}a_{31} + a_{13}a_{21}a_{32} - a_{13}a_{22}a_{31} - a_{11}a_{23}a_{32} - a_{12}a_{21}a_{33}" />
+
+### Visualizing Sarrus Method
+
+To visualize this process, we can write:
+
+<BlockMath math="\det(A) = \left| \begin{matrix} a_{11} & a_{12} & a_{13} \\ a_{21} & a_{22} & a_{23} \\ a_{31} & a_{32} & a_{33} \end{matrix} \right|" />
+
+Then, using Sarrus' Method, we expand the matrix and identify the multiplication paths:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{array}{ccc|cc} a_{11} & a_{12} & a_{13} & a_{11} & a_{12} \\ a_{21} & a_{22} & a_{23} & a_{21} & a_{22} \\ a_{31} & a_{32} & a_{33} & a_{31} & a_{32} \end{array}" />
+  <BlockMath math="\begin{array}{l} \text{Positive Paths } (\searrow): \\ \quad + (a_{11} \cdot a_{22} \cdot a_{33}) \\ \quad + (a_{12} \cdot a_{23} \cdot a_{31}) \\ \quad + (a_{13} \cdot a_{21} \cdot a_{32}) \end{array}" />
+  <BlockMath math="\begin{array}{l} \text{Negative Paths } (\swarrow): \\ \quad - (a_{13} \cdot a_{22} \cdot a_{31}) \\ \quad - (a_{11} \cdot a_{23} \cdot a_{32}) \quad (\text{from } a_{11} \text{ col. 4}) \\ \quad - (a_{12} \cdot a_{21} \cdot a_{33}) \quad (\text{from } a_{12} \text{ col. 5}) \end{array}" />
+</div>
+
+Thus, the complete formula becomes:
+
+<BlockMath math="\det(A) = (a_{11}a_{22}a_{33} + a_{12}a_{23}a_{31} + a_{13}a_{21}a_{32}) - (a_{13}a_{22}a_{31} + a_{11}a_{23}a_{32} + a_{12}a_{21}a_{33})" />
+
+## Important Limitation of Sarrus Method
+
+Sarrus' method is **only applicable to 2x2 and 3x3 matrices**. For matrices of higher order (e.g., 4x4), this method cannot be used. Other methods such as cofactor expansion or row reduction are required for such cases.
