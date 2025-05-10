@@ -34,6 +34,7 @@ export const MaterialGradeBachelorSchema = z.enum([
   "computer-science",
   "technology-electro-medical",
   "political-science",
+  "informatics-engineering",
 ]);
 export type MaterialGradeBachelor = z.infer<typeof MaterialGradeBachelorSchema>;
 

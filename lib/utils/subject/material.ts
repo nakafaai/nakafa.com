@@ -8,6 +8,7 @@ import {
   ChartPieIcon,
   CodeIcon,
   CodeXmlIcon,
+  ComputerIcon,
   DraftingCompassIcon,
   EarthIcon,
   FlaskConicalIcon,
@@ -97,6 +98,8 @@ export function getMaterialIcon(material: MaterialGrade) {
       return CodeXmlIcon;
     case "technology-electro-medical":
       return CableIcon;
+    case "informatics-engineering":
+      return ComputerIcon;
     default:
       return LightbulbIcon;
   }
