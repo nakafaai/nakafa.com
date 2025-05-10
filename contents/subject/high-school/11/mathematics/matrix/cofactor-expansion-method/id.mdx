@@ -4,3 +4,147 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Apa itu Ekspansi Kofaktor?
+
+Metode ekspansi kofaktor adalah salah satu cara untuk menghitung nilai determinan dari sebuah matriks persegi, terutama untuk matriks yang ukurannya lebih besar dari <InlineMath math="2 \times 2" />.
+
+Metode ini bekerja dengan cara menguraikan perhitungan determinan matriks besar menjadi penjumlahan dari perkalian elemen-elemen matriks dengan kofaktornya masing-masing, yang melibatkan determinan dari matriks-matriks yang lebih kecil.
+
+## Minor Elemen Matriks
+
+Setiap elemen dalam sebuah matriks persegi memiliki apa yang disebut sebagai "minor". Minor dari elemen <InlineMath math="a_{ij}" /> (yaitu elemen yang terletak pada baris ke-<InlineMath math="i" /> dan kolom ke-<InlineMath math="j" />) biasanya dituliskan sebagai <InlineMath math="M_{ij}" />.
+
+Untuk menentukan minor <InlineMath math="M_{ij}" />, kita perlu menghilangkan (mencoret) seluruh baris ke-<InlineMath math="i" /> dan seluruh kolom ke-<InlineMath math="j" /> dari matriks aslinya. Determinan dari sub-matriks yang tersisa inilah yang disebut sebagai minor <InlineMath math="M_{ij}" />.
+
+### Mencari Minor
+
+Misalkan kita memiliki matriks <InlineMath math="A" /> berordo <InlineMath math="3 \times 3" /> sebagai berikut:
+
+<BlockMath math="A = \begin{bmatrix} a_{11} & a_{12} & a_{13} \\ a_{21} & a_{22} & a_{23} \\ a_{31} & a_{32} & a_{33} \end{bmatrix}" />
+
+Jika kita ingin mencari minor dari elemen <InlineMath math="a_{22}" /> (yaitu <InlineMath math="M_{22}" />), kita hilangkan baris kedua dan kolom kedua dari matriks <InlineMath math="A" />:
+
+Bayangkan kita mencoretnya seperti ini:
+
+<BlockMath math="A = \begin{bmatrix} a_{11} & \cancel{a_{12}} & a_{13} \\ \cancel{a_{21}} & \cancel{a_{22}} & \cancel{a_{23}} \\ a_{31} & \cancel{a_{32}} & a_{33} \end{bmatrix}" />
+
+Matriks yang tersisa setelah pencoretan adalah:
+
+<BlockMath math="\begin{bmatrix} a_{11} & a_{13} \\ a_{31} & a_{33} \end{bmatrix}" />
+
+Maka, minor <InlineMath math="M_{22}" /> adalah determinan dari matriks sisa ini:
+
+<BlockMath math="M_{22} = \det \begin{pmatrix} a_{11} & a_{13} \\ a_{31} & a_{33} \end{pmatrix} = (a_{11} \times a_{33}) - (a_{13} \times a_{31})" />
+
+## Kofaktor Elemen Matriks
+
+Setelah kita memahami apa itu minor, langkah selanjutnya adalah memahami "kofaktor". Kofaktor dari elemen <InlineMath math="a_{ij}" />, yang biasa dinotasikan sebagai <InlineMath math="k_{ij}" /> atau <InlineMath math="C_{ij}" />, dihitung menggunakan minornya dengan rumus:
+
+<BlockMath math="k_{ij} = (-1)^{i+j} M_{ij}" />
+
+Bagian <InlineMath math="(-1)^{i+j}" /> dalam rumus ini menentukan tanda (positif atau negatif) dari kofaktor tersebut. Aturannya sederhana:
+
+- Jika hasil penjumlahan <InlineMath math="i+j" /> adalah bilangan genap, maka <InlineMath math="(-1)^{i+j} = 1" />. Ini berarti <InlineMath math="k_{ij} = M_{ij}" /> (kofaktor sama dengan minornya).
+- Jika hasil penjumlahan <InlineMath math="i+j" /> adalah bilangan ganjil, maka <InlineMath math="(-1)^{i+j} = -1" />. Ini berarti <InlineMath math="k_{ij} = -M_{ij}" /> (kofaktor adalah negatif dari minornya).
+
+Untuk matriks <InlineMath math="3 \times 3" />, pola tanda <InlineMath math="(-1)^{i+j}" /> akan terlihat seperti ini:
+
+<BlockMath math="\begin{pmatrix} + & - & + \\ - & + & - \\ + & - & + \end{pmatrix}" />
+
+Tanda ini menunjukkan apakah kofaktor akan sama dengan minornya (tanda <InlineMath math="+" />) atau negatif dari minornya (tanda <InlineMath math="-" />).
+
+### Mencari Kofaktor
+
+Mari kita lanjutkan dengan contoh matriks <InlineMath math="A" /> dan minor <InlineMath math="M_{22}" /> yang sudah kita hitung.
+
+Kofaktor untuk elemen <InlineMath math="a_{22}" /> adalah <InlineMath math="k_{22}" />.
+
+Karena <InlineMath math="i=2" /> dan <InlineMath math="j=2" />, maka <InlineMath math="i+j = 2+2 = 4" /> (genap).
+
+<BlockMath math="k_{22} = (-1)^{2+2} M_{22} = (1) M_{22} = M_{22}" />
+
+Sekarang, coba kita cari kofaktor untuk elemen <InlineMath math="a_{12}" />, yaitu <InlineMath math="k_{12}" />.
+
+Pertama, kita cari minornya, <InlineMath math="M_{12}" />, dengan menghilangkan baris pertama dan kolom kedua dari matriks <InlineMath math="A" />:
+
+<BlockMath math="M_{12} = \det \begin{pmatrix} a_{21} & a_{23} \\ a_{31} & a_{33} \end{pmatrix} = (a_{21} \times a_{33}) - (a_{23} \times a_{31})" />
+
+Kemudian, kita hitung kofaktornya. Untuk <InlineMath math="a_{12}" />, <InlineMath math="i=1" /> dan <InlineMath math="j=2" />, jadi <InlineMath math="i+j = 1+2 = 3" /> (ganjil).
+
+<BlockMath math="k_{12} = (-1)^{1+2} M_{12} = (-1) M_{12} = -M_{12}" />
+
+## Menghitung Determinan dengan Ekspansi Kofaktor
+
+Inti dari metode ekspansi kofaktor adalah menghitung determinan matriks <InlineMath math="A" /> (dinotasikan <InlineMath math="\det(A)" /> atau <InlineMath math="|A|" />) dengan cara memilih satu baris atau satu kolom dari matriks tersebut.
+
+Kemudian, setiap elemen pada baris atau kolom yang dipilih dikalikan dengan kofaktornya masing-masing, dan semua hasil perkalian tersebut dijumlahkan.
+
+**Rumus Ekspansi Kofaktor Sepanjang Baris ke-<InlineMath math="i" />:**
+
+<BlockMath math="\det(A) = |A| = \sum_{j=1}^{n} a_{ij}k_{ij} = a_{i1}k_{i1} + a_{i2}k_{i2} + \dots + a_{in}k_{in}" />
+
+Artinya, kita pilih baris ke-<InlineMath math="i" />. Lalu, untuk setiap kolom <InlineMath math="j" /> pada baris tersebut, kita kalikan elemen <InlineMath math="a_{ij}" /> dengan kofaktornya <InlineMath math="k_{ij}" />, dan jumlahkan semuanya.
+
+**Rumus Ekspansi Kofaktor Sepanjang Kolom ke-<InlineMath math="j" />:**
+
+<BlockMath math="\det(A) = |A| = \sum_{i=1}^{n} a_{ij}k_{ij} = a_{1j}k_{1j} + a_{2j}k_{2j} + \dots + a_{nj}k_{nj}" />
+
+Artinya, kita pilih kolom ke-<InlineMath math="j" />. Lalu, untuk setiap baris <InlineMath math="i" /> pada kolom tersebut, kita kalikan elemen <InlineMath math="a_{ij}" /> dengan kofaktornya <InlineMath math="k_{ij}" />, dan jumlahkan semuanya.
+
+Kabar baiknya, kamu bisa memilih baris atau kolom mana saja untuk melakukan ekspansi, hasilnya akan selalu sama!
+
+Untuk mempermudah perhitungan, biasanya dipilih baris atau kolom yang memiliki banyak elemen bernilai nol, karena perkalian dengan nol akan menghasilkan nol dan mengurangi jumlah suku yang perlu dihitung.
+
+## Contoh Perhitungan Determinan
+
+Mari kita hitung determinan dari matriks <InlineMath math="P" /> berikut menggunakan metode ekspansi kofaktor:
+
+<BlockMath math="P = \begin{bmatrix} 1 & 3 & 2 \\ 2 & 6 & 2 \\ 5 & 9 & 4 \end{bmatrix}" />
+
+Kita akan melakukan ekspansi kofaktor sepanjang baris pertama (yaitu, <InlineMath math="i=1" />).
+
+Berdasarkan rumus, determinan <InlineMath math="P" /> adalah:
+
+<BlockMath math="\det(P) = a_{11}k_{11} + a_{12}k_{12} + a_{13}k_{13}" />
+
+Dari matriks <InlineMath math="P" />, elemen-elemen baris pertama adalah:
+
+- <InlineMath math="a_{11} = 1" />
+- <InlineMath math="a_{12} = 3" />
+- <InlineMath math="a_{13} = 2" />
+
+Sekarang, kita perlu menghitung kofaktor <InlineMath math="k_{11}" />, <InlineMath math="k_{12}" />, dan <InlineMath math="k_{13}" />.
+
+1.  **Menghitung <InlineMath math="k_{11}" />** (<InlineMath math="i=1, j=1" />, maka <InlineMath math="i+j=2" />, genap):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="M_{11} = \det \begin{pmatrix} 6 & 2 \\ 9 & 4 \end{pmatrix} = (6 \times 4) - (2 \times 9) = 24 - 18 = 6" />
+      <BlockMath math="k_{11} = (-1)^{1+1} M_{11} = (1)(6) = 6" />
+    </div>
+
+2.  **Menghitung <InlineMath math="k_{12}" />** (<InlineMath math="i=1, j=2" />, maka <InlineMath math="i+j=3" />, ganjil):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="M_{12} = \det \begin{pmatrix} 2 & 2 \\ 5 & 4 \end{pmatrix} = (2 \times 4) - (2 \times 5) = 8 - 10 = -2" />
+      <BlockMath math="k_{12} = (-1)^{1+2} M_{12} = (-1)(-2) = 2" />
+    </div>
+
+3.  **Menghitung <InlineMath math="k_{13}" />** (<InlineMath math="i=1, j=3" />, maka <InlineMath math="i+j=4" />, genap):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="M_{13} = \det \begin{pmatrix} 2 & 6 \\ 5 & 9 \end{pmatrix} = (2 \times 9) - (6 \times 5) = 18 - 30 = -12" />
+      <BlockMath math="k_{13} = (-1)^{1+3} M_{13} = (1)(-12) = -12" />
+    </div>
+
+Setelah semua kofaktor didapatkan, kita masukkan kembali ke rumus determinan:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\det(P) = a_{11}k_{11} + a_{12}k_{12} + a_{13}k_{13}" />
+  <BlockMath math="\det(P) = (1)(6) + (3)(2) + (2)(-12)" />
+  <BlockMath math="\det(P) = 6 + 6 - 24" />
+  <BlockMath math="\det(P) = 12 - 24" />
+  <BlockMath math="\det(P) = -12" />
+</div>
+
+Jadi, determinan dari matriks <InlineMath math="P" /> adalah <InlineMath math="-12" />.

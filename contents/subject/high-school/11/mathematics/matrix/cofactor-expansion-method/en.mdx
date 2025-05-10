@@ -4,3 +4,147 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matrix",
 };
+
+## What is Cofactor Expansion?
+
+The cofactor expansion method is one way to calculate the determinant of a square matrix, especially for matrices larger than <InlineMath math="2 \times 2" />.
+
+This method works by breaking down the calculation of a large matrix's determinant into a sum of the products of the matrix elements with their respective cofactors, which involves the determinants of smaller matrices.
+
+## Minor of a Matrix Element
+
+Each element in a square matrix has what is called a "minor". The minor of an element <InlineMath math="a_{ij}" /> (i.e., the element located in the <InlineMath math="i" />-th row and <InlineMath math="j" />-th column) is usually written as <InlineMath math="M_{ij}" />.
+
+To determine the minor <InlineMath math="M_{ij}" />, we need to remove (cross out) the entire <InlineMath math="i" />-th row and the entire <InlineMath math="j" />-th column from the original matrix. The determinant of the remaining sub-matrix is what is called the minor <InlineMath math="M_{ij}" />.
+
+### Finding the Minor
+
+Suppose we have a <InlineMath math="3 \times 3" /> matrix <InlineMath math="A" /> as follows:
+
+<BlockMath math="A = \begin{bmatrix} a_{11} & a_{12} & a_{13} \\ a_{21} & a_{22} & a_{23} \\ a_{31} & a_{32} & a_{33} \end{bmatrix}" />
+
+If we want to find the minor of the element <InlineMath math="a_{22}" /> (i.e., <InlineMath math="M_{22}" />), we remove the second row and second column from matrix <InlineMath math="A" />:
+
+Imagine we cross it out like this:
+
+<BlockMath math="A = \begin{bmatrix} a_{11} & \cancel{a_{12}} & a_{13} \\ \cancel{a_{21}} & \cancel{a_{22}} & \cancel{a_{23}} \\ a_{31} & \cancel{a_{32}} & a_{33} \end{bmatrix}" />
+
+The matrix remaining after the removal is:
+
+<BlockMath math="\begin{bmatrix} a_{11} & a_{13} \\ a_{31} & a_{33} \end{bmatrix}" />
+
+Thus, the minor <InlineMath math="M_{22}" /> is the determinant of this remaining matrix:
+
+<BlockMath math="M_{22} = \det \begin{pmatrix} a_{11} & a_{13} \\ a_{31} & a_{33} \end{pmatrix} = (a_{11} \times a_{33}) - (a_{13} \times a_{31})" />
+
+## Cofactor of a Matrix Element
+
+After understanding what a minor is, the next step is to understand the "cofactor". The cofactor of an element <InlineMath math="a_{ij}" />, usually denoted as <InlineMath math="k_{ij}" /> or <InlineMath math="C_{ij}" />, is calculated using its minor with the formula:
+
+<BlockMath math="k_{ij} = (-1)^{i+j} M_{ij}" />
+
+The <InlineMath math="(-1)^{i+j}" /> part in this formula determines the sign (positive or negative) of the cofactor. The rule is simple:
+
+- If the sum <InlineMath math="i+j" /> is an even number, then <InlineMath math="(-1)^{i+j} = 1" />. This means <InlineMath math="k_{ij} = M_{ij}" /> (the cofactor is equal to its minor).
+- If the sum <InlineMath math="i+j" /> is an odd number, then <InlineMath math="(-1)^{i+j} = -1" />. This means <InlineMath math="k_{ij} = -M_{ij}" /> (the cofactor is the negative of its minor).
+
+For a <InlineMath math="3 \times 3" /> matrix, the sign pattern of <InlineMath math="(-1)^{i+j}" /> will look like this:
+
+<BlockMath math="\begin{pmatrix} + & - & + \\ - & + & - \\ + & - & + \end{pmatrix}" />
+
+This sign indicates whether the cofactor will be equal to its minor (sign <InlineMath math="+" />) or the negative of its minor (sign <InlineMath math="-" />).
+
+### Finding the Cofactor
+
+Let's continue with the example of matrix <InlineMath math="A" /> and the minor <InlineMath math="M_{22}" /> that we have already calculated.
+
+The cofactor for element <InlineMath math="a_{22}" /> is <InlineMath math="k_{22}" />.
+
+Since <InlineMath math="i=2" /> and <InlineMath math="j=2" />, then <InlineMath math="i+j = 2+2 = 4" /> (even).
+
+<BlockMath math="k_{22} = (-1)^{2+2} M_{22} = (1) M_{22} = M_{22}" />
+
+Now, let's try to find the cofactor for element <InlineMath math="a_{12}" />, which is <InlineMath math="k_{12}" />.
+
+First, we find its minor, <InlineMath math="M_{12}" />, by removing the first row and second column from matrix <InlineMath math="A" />:
+
+<BlockMath math="M_{12} = \det \begin{pmatrix} a_{21} & a_{23} \\ a_{31} & a_{33} \end{pmatrix} = (a_{21} \times a_{33}) - (a_{23} \times a_{31})" />
+
+Then, we calculate its cofactor. For <InlineMath math="a_{12}" />, <InlineMath math="i=1" /> and <InlineMath math="j=2" />, so <InlineMath math="i+j = 1+2 = 3" /> (odd).
+
+<BlockMath math="k_{12} = (-1)^{1+2} M_{12} = (-1) M_{12} = -M_{12}" />
+
+## Calculating the Determinant using Cofactor Expansion
+
+The core of the cofactor expansion method is to calculate the determinant of matrix <InlineMath math="A" /> (denoted <InlineMath math="\det(A)" /> or <InlineMath math="|A|" />) by choosing one row or one column from the matrix.
+
+Then, each element in the chosen row or column is multiplied by its respective cofactor, and all these products are summed up.
+
+**Formula for Cofactor Expansion Along the <InlineMath math="i" />-th Row:**
+
+<BlockMath math="\det(A) = |A| = \sum_{j=1}^{n} a_{ij}k_{ij} = a_{i1}k_{i1} + a_{i2}k_{i2} + \dots + a_{in}k_{in}" />
+
+This means we choose the <InlineMath math="i" />-th row. Then, for each column <InlineMath math="j" /> in that row, we multiply the element <InlineMath math="a_{ij}" /> by its cofactor <InlineMath math="k_{ij}" />, and sum them all.
+
+**Formula for Cofactor Expansion Along the <InlineMath math="j" />-th Column:**
+
+<BlockMath math="\det(A) = |A| = \sum_{i=1}^{n} a_{ij}k_{ij} = a_{1j}k_{1j} + a_{2j}k_{2j} + \dots + a_{nj}k_{nj}" />
+
+This means we choose the <InlineMath math="j" />-th column. Then, for each row <InlineMath math="i" /> in that column, we multiply the element <InlineMath math="a_{ij}" /> by its cofactor <InlineMath math="k_{ij}" />, and sum them all.
+
+The good news is, you can choose any row or column for the expansion, and the result will always be the same!
+
+To simplify calculations, it is usually best to choose a row or column that contains many zero elements, as multiplication by zero will result in zero and reduce the number of terms to be calculated.
+
+## Example of Determinant Calculation
+
+Let's calculate the determinant of the following matrix <InlineMath math="P" /> using the cofactor expansion method:
+
+<BlockMath math="P = \begin{bmatrix} 1 & 3 & 2 \\ 2 & 6 & 2 \\ 5 & 9 & 4 \end{bmatrix}" />
+
+We will perform cofactor expansion along the first row (i.e., <InlineMath math="i=1" />).
+
+Based on the formula, the determinant of <InlineMath math="P" /> is:
+
+<BlockMath math="\det(P) = a_{11}k_{11} + a_{12}k_{12} + a_{13}k_{13}" />
+
+From matrix <InlineMath math="P" />, the elements of the first row are:
+
+- <InlineMath math="a_{11} = 1" />
+- <InlineMath math="a_{12} = 3" />
+- <InlineMath math="a_{13} = 2" />
+
+Now, we need to calculate the cofactors <InlineMath math="k_{11}" />, <InlineMath math="k_{12}" />, and <InlineMath math="k_{13}" />.
+
+1.  **Calculating <InlineMath math="k_{11}" />** (<InlineMath math="i=1, j=1" />, so <InlineMath math="i+j=2" />, even):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="M_{11} = \det \begin{pmatrix} 6 & 2 \\ 9 & 4 \end{pmatrix} = (6 \times 4) - (2 \times 9) = 24 - 18 = 6" />
+      <BlockMath math="k_{11} = (-1)^{1+1} M_{11} = (1)(6) = 6" />
+    </div>
+
+2.  **Calculating <InlineMath math="k_{12}" />** (<InlineMath math="i=1, j=2" />, so <InlineMath math="i+j=3" />, odd):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="M_{12} = \det \begin{pmatrix} 2 & 2 \\ 5 & 4 \end{pmatrix} = (2 \times 4) - (2 \times 5) = 8 - 10 = -2" />
+      <BlockMath math="k_{12} = (-1)^{1+2} M_{12} = (-1)(-2) = 2" />
+    </div>
+
+3.  **Calculating <InlineMath math="k_{13}" />** (<InlineMath math="i=1, j=3" />, so <InlineMath math="i+j=4" />, even):
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="M_{13} = \det \begin{pmatrix} 2 & 6 \\ 5 & 9 \end{pmatrix} = (2 \times 9) - (6 \times 5) = 18 - 30 = -12" />
+      <BlockMath math="k_{13} = (-1)^{1+3} M_{13} = (1)(-12) = -12" />
+    </div>
+
+After all cofactors are obtained, we substitute them back into the determinant formula:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\det(P) = a_{11}k_{11} + a_{12}k_{12} + a_{13}k_{13}" />
+  <BlockMath math="\det(P) = (1)(6) + (3)(2) + (2)(-12)" />
+  <BlockMath math="\det(P) = 6 + 6 - 24" />
+  <BlockMath math="\det(P) = 12 - 24" />
+  <BlockMath math="\det(P) = -12" />
+</div>
+
+So, the determinant of matrix <InlineMath math="P" /> is <InlineMath math="-12" />.
