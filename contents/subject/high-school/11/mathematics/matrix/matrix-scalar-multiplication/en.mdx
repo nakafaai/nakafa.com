@@ -4,3 +4,165 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matrix",
 };
+
+## Understanding Matrix Scalar Multiplication
+
+In the world of matrices, we not only deal with operations between matrices but also operations between a matrix and a single number. This single number is commonly referred to as a **scalar**.
+
+Matrix scalar multiplication is one of the fundamental operations that is important to understand. Imagine you have a cake recipe, and you want to make twice as much. You would naturally multiply each ingredient's measurement by the number 2, right?
+
+A similar concept applies to matrix scalar multiplication.
+
+## What is Matrix Scalar Multiplication?
+
+Matrix scalar multiplication is the operation of multiplying every element in a matrix by a scalar number.
+
+If we have a matrix <InlineMath math="A" /> and a scalar <InlineMath math="k" />, then the result of the scalar multiplication of <InlineMath math="k" /> by matrix <InlineMath math="A" /> (written as <InlineMath math="kA" />) is a new matrix where each element is the product of the corresponding element of matrix <InlineMath math="A" /> and the scalar <InlineMath math="k" />.
+
+Mathematically, if matrix <InlineMath math="A" /> has an order of <InlineMath math="m \times n" />:
+
+<BlockMath math="A = \begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ a_{m1} & a_{m2} & \cdots & a_{mn} \end{bmatrix}" />
+
+Then the multiplication of matrix <InlineMath math="A" /> by scalar <InlineMath math="k" /> is:
+
+<BlockMath math="kA = k \begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ a_{m1} & a_{m2} & \cdots & a_{mn} \end{bmatrix} = \begin{bmatrix} k \cdot a_{11} & k \cdot a_{12} & \cdots & k \cdot a_{1n} \\ k \cdot a_{21} & k \cdot a_{22} & \cdots & k \cdot a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ k \cdot a_{m1} & k \cdot a_{m2} & \cdots & k \cdot a_{mn} \end{bmatrix}" />
+
+The resulting matrix, <InlineMath math="kA" />, will have the same order as matrix <InlineMath math="A" />.
+
+This concept is similar to repeated addition. For example, <InlineMath math="2A" /> is the same as <InlineMath math="A + A" />. If we add matrix <InlineMath math="A" /> <InlineMath math="k" /> times, the result is <InlineMath math="kA" />.
+
+<BlockMath math="\underbrace{A + A + \cdots + A}_{k \text{ times}} = kA" />
+
+## Matrix Scalar Multiplication Examples
+
+To better understand this concept, let's look at some examples.
+
+**Example 1:**
+
+Suppose we have matrix <InlineMath math="P" /> as in the reference image:
+
+<BlockMath math="P = \begin{bmatrix} 9 & 7 \\ 3 & 1 \end{bmatrix}" />
+
+Determine <InlineMath math="2P" />!
+
+**Solution:**
+
+To calculate <InlineMath math="2P" />, we multiply each element of matrix <InlineMath math="P" /> by the scalar 2.
+
+<BlockMath math="2P = 2 \begin{bmatrix} 9 & 7 \\ 3 & 1 \end{bmatrix} = \begin{bmatrix} 2 \times 9 & 2 \times 7 \\ 2 \times 3 & 2 \times 1 \end{bmatrix} = \begin{bmatrix} 18 & 14 \\ 6 & 2 \end{bmatrix}" />
+
+So, the result of <InlineMath math="2P" /> is <InlineMath math="\begin{bmatrix} 18 & 14 \\ 6 & 2 \end{bmatrix}" />.
+
+**Example 2:**
+
+Given matrix <InlineMath math="Q = \begin{bmatrix} -1 & \frac{1}{2} & 1 \\ 4 & -\frac{1}{4} & 2 \\ -6 & 1 & -4 \end{bmatrix}" /> and scalar <InlineMath math="k=4" />. Determine <InlineMath math="4Q" />!
+
+**Solution:**
+
+We will multiply each element in matrix <InlineMath math="Q" /> by the scalar 4.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4Q = 4 \begin{bmatrix} -1 & \frac{1}{2} & 1 \\ 4 & -\frac{1}{4} & 2 \\ -6 & 1 & -4 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 4 \times (-1) & 4 \times \frac{1}{2} & 4 \times 1 \\ 4 \times 4 & 4 \times (-\frac{1}{4}) & 4 \times 2 \\ 4 \times (-6) & 4 \times 1 & 4 \times (-4) \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} -4 & 2 & 4 \\ 16 & -1 & 8 \\ -24 & 4 & -16 \end{bmatrix}" />
+</div>
+
+Thus, <InlineMath math="4Q = \begin{bmatrix} -4 & 2 & 4 \\ 16 & -1 & 8 \\ -24 & 4 & -16 \end{bmatrix}" />.
+
+## Properties of Matrix Scalar Multiplication
+
+Matrix scalar multiplication has several important properties to be aware of. Let <InlineMath math="A" /> and <InlineMath math="B" /> be matrices of the same order, <InlineMath math="h" /> and <InlineMath math="k" /> be scalars, and <InlineMath math="O" /> be the zero matrix.
+
+1.  **Distributive over Matrix Addition:**
+
+    <BlockMath math="k(A + B) = kA + kB" />
+
+    This means multiplying a scalar by the sum of two matrices is the same as summing the
+    products of the scalar with each matrix.
+
+2.  **Distributive over Scalar Addition:**
+
+    <BlockMath math="(h + k)A = hA + kA" />
+
+    This means multiplying the sum of two scalars by a matrix is the same as
+    summing the products of each scalar with the matrix.
+
+3.  **Associative with Scalar Multiplication:**
+
+    <BlockMath math="(hk)A = h(kA) = k(hA)" />
+
+    This means multiplying a matrix by the product of two scalars is the same as
+    multiplying the first scalar by the product of the second scalar and the matrix.
+
+4.  **Scalar Multiplication Identity:**
+
+    <BlockMath math="1A = A" />
+
+    Multiplying a matrix by the scalar 1 does not change the matrix.
+
+5.  **Multiplication by Zero Scalar:**
+
+    <BlockMath math="0A = O" />
+
+    Multiplying a matrix by the scalar 0 results in the zero matrix (<InlineMath math="O" />), which is a matrix where all elements are 0.
+
+6.  **Multiplication of Zero Matrix by a Scalar:**
+
+    <BlockMath math="kO = O" />
+
+    Multiplying the zero matrix by any scalar results in the zero matrix.
+
+7.  **Multiplication by Scalar -1:**
+
+    <BlockMath math="(-1)A = -A" />
+
+    Multiplying a matrix by the scalar -1 results in the negative of the matrix.
+
+These properties help simplify calculations and provide a deeper understanding of matrix algebra.
+
+## Exercises
+
+1.  Given matrix <InlineMath math="X = \begin{bmatrix} 5 & -2 \\ 0 & 4 \\ -1 & 7 \end{bmatrix}" />. Calculate <InlineMath math="3X" />!
+2.  If <InlineMath math="Y = \begin{bmatrix} 10 & 20 \\ -30 & 0 \end{bmatrix}" />, determine <InlineMath math="\frac{1}{10}Y" />!
+3.  Given matrices <InlineMath math="A = \begin{bmatrix} 2 & 1 \\ 3 & 4 \end{bmatrix}" /> and <InlineMath math="B = \begin{bmatrix} 0 & 5 \\ 6 & -2 \end{bmatrix}" />. Show that <InlineMath math="3(A+B) = 3A + 3B" />!
+
+### Answer Key
+
+1.  Solution:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="3X = 3 \begin{bmatrix} 5 & -2 \\ 0 & 4 \\ -1 & 7 \end{bmatrix}" />
+      <BlockMath math="= \begin{bmatrix} 3 \times 5 & 3 \times (-2) \\ 3 \times 0 & 3 \times 4 \\ 3 \times (-1) & 3 \times 7 \end{bmatrix}" />
+      <BlockMath math="= \begin{bmatrix} 15 & -6 \\ 0 & 12 \\ -3 & 21 \end{bmatrix}" />
+    </div>
+
+2.  Solution:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\frac{1}{10}Y = \frac{1}{10} \begin{bmatrix} 10 & 20 \\ -30 & 0 \end{bmatrix}" />
+      <BlockMath math="= \begin{bmatrix} \frac{1}{10} \times 10 & \frac{1}{10} \times 20 \\ \frac{1}{10} \times (-30) & \frac{1}{10} \times 0 \end{bmatrix}" />
+      <BlockMath math="= \begin{bmatrix} 1 & 2 \\ -3 & 0 \end{bmatrix}" />
+    </div>
+
+3.  To show <InlineMath math="3(A+B) = 3A + 3B" />:
+
+    First, calculate the left side of the equation, <InlineMath math="3(A+B)" />.
+
+    <BlockMath math="A+B = \begin{bmatrix} 2 & 1 \\ 3 & 4 \end{bmatrix} + \begin{bmatrix} 0 & 5 \\ 6 & -2 \end{bmatrix} = \begin{bmatrix} 2+0 & 1+5 \\ 3+6 & 4+(-2) \end{bmatrix} = \begin{bmatrix} 2 & 6 \\ 9 & 2 \end{bmatrix}" />
+
+    Then,
+
+    <BlockMath math="3(A+B) = 3 \begin{bmatrix} 2 & 6 \\ 9 & 2 \end{bmatrix} = \begin{bmatrix} 6 & 18 \\ 27 & 6 \end{bmatrix}" />
+
+    Next, calculate the right side of the equation, <InlineMath math="3A + 3B" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="3A = 3 \begin{bmatrix} 2 & 1 \\ 3 & 4 \end{bmatrix} = \begin{bmatrix} 6 & 3 \\ 9 & 12 \end{bmatrix}" />
+      <BlockMath math="3B = 3 \begin{bmatrix} 0 & 5 \\ 6 & -2 \end{bmatrix} = \begin{bmatrix} 0 & 15 \\ 18 & -6 \end{bmatrix}" />
+    </div>
+
+    Then,
+
+    <BlockMath math="3A + 3B = \begin{bmatrix} 6 & 3 \\ 9 & 12 \end{bmatrix} + \begin{bmatrix} 0 & 15 \\ 18 & -6 \end{bmatrix} = \begin{bmatrix} 6+0 & 3+15 \\ 9+18 & 12+(-6) \end{bmatrix} = \begin{bmatrix} 6 & 18 \\ 27 & 6 \end{bmatrix}" />
+
+    Since the result of the left side calculation (<InlineMath math="\begin{bmatrix} 6 & 18 \\ 27 & 6 \end{bmatrix}" />) is the same as the result of the right side calculation (<InlineMath math="\begin{bmatrix} 6 & 18 \\ 27 & 6 \end{bmatrix}" />), it is proven that <InlineMath math="3(A+B) = 3A + 3B" />.

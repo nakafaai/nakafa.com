@@ -4,3 +4,165 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Memahami Perkalian Matriks dengan Skalar
+
+Dalam dunia matriks, kita tidak hanya berurusan dengan operasi antar matriks, tetapi juga operasi antara matriks dengan sebuah bilangan tunggal. Bilangan tunggal ini biasa kita sebut sebagai **skalar**.
+
+Perkalian matriks dengan skalar adalah salah satu operasi dasar yang penting untuk dipahami. Bayangkan kamu memiliki sebuah resep kue, dan kamu ingin membuat resep tersebut dua kali lipat lebih banyak. Kamu tentu akan mengalikan setiap takaran bahan dengan angka 2, bukan?
+
+Konsep serupa berlaku pada perkalian matriks dengan skalar.
+
+## Apa itu Perkalian Matriks dengan Skalar?
+
+Perkalian matriks dengan skalar adalah operasi mengalikan setiap elemen dalam matriks dengan sebuah bilangan skalar.
+
+Jika kita memiliki matriks <InlineMath math="A" /> dan sebuah skalar <InlineMath math="k" />, maka hasil perkalian skalar <InlineMath math="k" /> dengan matriks <InlineMath math="A" /> (ditulis sebagai <InlineMath math="kA" />) adalah sebuah matriks baru di mana setiap elemennya merupakan hasil perkalian elemen matriks <InlineMath math="A" /> yang bersesuaian dengan skalar <InlineMath math="k" />.
+
+Secara matematis, jika matriks <InlineMath math="A" /> berordo <InlineMath math="m \times n" />:
+
+<BlockMath math="A = \begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ a_{m1} & a_{m2} & \cdots & a_{mn} \end{bmatrix}" />
+
+Maka perkalian matriks <InlineMath math="A" /> dengan skalar <InlineMath math="k" /> adalah:
+
+<BlockMath math="kA = k \begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ a_{m1} & a_{m2} & \cdots & a_{mn} \end{bmatrix} = \begin{bmatrix} k \cdot a_{11} & k \cdot a_{12} & \cdots & k \cdot a_{1n} \\ k \cdot a_{21} & k \cdot a_{22} & \cdots & k \cdot a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ k \cdot a_{m1} & k \cdot a_{m2} & \cdots & k \cdot a_{mn} \end{bmatrix}" />
+
+Matriks hasil, yaitu <InlineMath math="kA" />, akan memiliki ordo yang sama dengan matriks <InlineMath math="A" />.
+
+Konsep ini mirip dengan penjumlahan berulang. Misalnya, <InlineMath math="2A" /> sama dengan <InlineMath math="A + A" />. Jika kita menjumlahkan matriks <InlineMath math="A" /> sebanyak <InlineMath math="k" /> kali, maka hasilnya adalah <InlineMath math="kA" />.
+
+<BlockMath math="\underbrace{A + A + \cdots + A}_{k \text{ kali}} = kA" />
+
+## Perkalian Matriks dengan Skalar
+
+Untuk lebih memahami konsep ini, mari kita lihat beberapa contoh.
+
+**Contoh 1:**
+
+Misalkan kita memiliki matriks <InlineMath math="P" /> seperti pada gambar referensi:
+
+<BlockMath math="P = \begin{bmatrix} 9 & 7 \\ 3 & 1 \end{bmatrix}" />
+
+Tentukan <InlineMath math="2P" />!
+
+**Penyelesaian:**
+
+Untuk menghitung <InlineMath math="2P" />, kita kalikan setiap elemen matriks <InlineMath math="P" /> dengan skalar 2.
+
+<BlockMath math="2P = 2 \begin{bmatrix} 9 & 7 \\ 3 & 1 \end{bmatrix} = \begin{bmatrix} 2 \times 9 & 2 \times 7 \\ 2 \times 3 & 2 \times 1 \end{bmatrix} = \begin{bmatrix} 18 & 14 \\ 6 & 2 \end{bmatrix}" />
+
+Jadi, hasil dari <InlineMath math="2P" /> adalah <InlineMath math="\begin{bmatrix} 18 & 14 \\ 6 & 2 \end{bmatrix}" />.
+
+**Contoh 2:**
+
+Diberikan matriks <InlineMath math="Q = \begin{bmatrix} -1 & \frac{1}{2} & 1 \\ 4 & -\frac{1}{4} & 2 \\ -6 & 1 & -4 \end{bmatrix}" /> dan skalar <InlineMath math="k=4" />. Tentukan <InlineMath math="4Q" />!
+
+**Penyelesaian:**
+
+Kita akan mengalikan setiap elemen dalam matriks <InlineMath math="Q" /> dengan skalar 4.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4Q = 4 \begin{bmatrix} -1 & \frac{1}{2} & 1 \\ 4 & -\frac{1}{4} & 2 \\ -6 & 1 & -4 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 4 \times (-1) & 4 \times \frac{1}{2} & 4 \times 1 \\ 4 \times 4 & 4 \times (-\frac{1}{4}) & 4 \times 2 \\ 4 \times (-6) & 4 \times 1 & 4 \times (-4) \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} -4 & 2 & 4 \\ 16 & -1 & 8 \\ -24 & 4 & -16 \end{bmatrix}" />
+</div>
+
+Dengan demikian, <InlineMath math="4Q = \begin{bmatrix} -4 & 2 & 4 \\ 16 & -1 & 8 \\ -24 & 4 & -16 \end{bmatrix}" />.
+
+## Sifat-Sifat Perkalian Matriks dengan Skalar
+
+Perkalian matriks dengan skalar memiliki beberapa sifat penting yang perlu diketahui. Misalkan <InlineMath math="A" /> dan <InlineMath math="B" /> adalah matriks-matriks yang berordo sama, serta <InlineMath math="h" /> dan <InlineMath math="k" /> adalah skalar, dan <InlineMath math="O" /> adalah matriks nol.
+
+1.  **Distributif terhadap Penjumlahan Matriks:**
+
+    <BlockMath math="k(A + B) = kA + kB" />
+
+    Artinya, mengalikan skalar dengan jumlah dua matriks sama hasilnya dengan menjumlahkan
+    hasil perkalian skalar dengan masing-masing matriks.
+
+2.  **Distributif terhadap Penjumlahan Skalar:**
+
+    <BlockMath math="(h + k)A = hA + kA" />
+
+    Artinya, mengalikan jumlah dua skalar dengan sebuah matriks sama hasilnya dengan
+    menjumlahkan hasil perkalian masing-masing skalar dengan matriks tersebut.
+
+3.  **Asosiatif terhadap Perkalian Skalar:**
+
+    <BlockMath math="(hk)A = h(kA) = k(hA)" />
+
+    Artinya, mengalikan matriks dengan hasil kali dua skalar sama hasilnya dengan
+    mengalikan skalar pertama dengan hasil kali skalar kedua dan matriks.
+
+4.  **Identitas Perkalian Skalar:**
+
+    <BlockMath math="1A = A" />
+
+    Mengalikan matriks dengan skalar 1 tidak mengubah matriks tersebut.
+
+5.  **Perkalian dengan Skalar Nol:**
+
+    <BlockMath math="0A = O" />
+
+    Mengalikan matriks dengan skalar 0 menghasilkan matriks nol (<InlineMath math="O" />), yaitu matriks yang semua elemennya adalah 0.
+
+6.  **Perkalian Matriks Nol dengan Skalar:**
+
+    <BlockMath math="kO = O" />
+
+    Mengalikan matriks nol dengan skalar apapun akan menghasilkan matriks nol.
+
+7.  **Perkalian dengan Skalar -1:**
+
+    <BlockMath math="(-1)A = -A" />
+
+    Mengalikan matriks dengan skalar -1 menghasilkan negatif dari matriks tersebut.
+
+Sifat-sifat ini membantu menyederhanakan perhitungan dan memahami struktur aljabar matriks lebih dalam.
+
+## Latihan
+
+1.  Diberikan matriks <InlineMath math="X = \begin{bmatrix} 5 & -2 \\ 0 & 4 \\ -1 & 7 \end{bmatrix}" />. Hitunglah <InlineMath math="3X" />!
+2.  Jika <InlineMath math="Y = \begin{bmatrix} 10 & 20 \\ -30 & 0 \end{bmatrix}" />, tentukan <InlineMath math="\frac{1}{10}Y" />!
+3.  Diketahui matriks <InlineMath math="A = \begin{bmatrix} 2 & 1 \\ 3 & 4 \end{bmatrix}" /> dan <InlineMath math="B = \begin{bmatrix} 0 & 5 \\ 6 & -2 \end{bmatrix}" />. Tunjukkan bahwa <InlineMath math="3(A+B) = 3A + 3B" />!
+
+### Kunci Jawaban
+
+1.  Penyelesaian:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="3X = 3 \begin{bmatrix} 5 & -2 \\ 0 & 4 \\ -1 & 7 \end{bmatrix}" />
+      <BlockMath math="= \begin{bmatrix} 3 \times 5 & 3 \times (-2) \\ 3 \times 0 & 3 \times 4 \\ 3 \times (-1) & 3 \times 7 \end{bmatrix}" />
+      <BlockMath math="= \begin{bmatrix} 15 & -6 \\ 0 & 12 \\ -3 & 21 \end{bmatrix}" />
+    </div>
+
+2.  Penyelesaian:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\frac{1}{10}Y = \frac{1}{10} \begin{bmatrix} 10 & 20 \\ -30 & 0 \end{bmatrix}" />
+      <BlockMath math="= \begin{bmatrix} \frac{1}{10} \times 10 & \frac{1}{10} \times 20 \\ \frac{1}{10} \times (-30) & \frac{1}{10} \times 0 \end{bmatrix}" />
+      <BlockMath math="= \begin{bmatrix} 1 & 2 \\ -3 & 0 \end{bmatrix}" />
+    </div>
+
+3.  Untuk menunjukkan <InlineMath math="3(A+B) = 3A + 3B" />:
+
+    Pertama, kita hitung sisi kiri persamaan, yaitu <InlineMath math="3(A+B)" />.
+
+    <BlockMath math="A+B = \begin{bmatrix} 2 & 1 \\ 3 & 4 \end{bmatrix} + \begin{bmatrix} 0 & 5 \\ 6 & -2 \end{bmatrix} = \begin{bmatrix} 2+0 & 1+5 \\ 3+6 & 4+(-2) \end{bmatrix} = \begin{bmatrix} 2 & 6 \\ 9 & 2 \end{bmatrix}" />
+
+    Maka,
+
+    <BlockMath math="3(A+B) = 3 \begin{bmatrix} 2 & 6 \\ 9 & 2 \end{bmatrix} = \begin{bmatrix} 6 & 18 \\ 27 & 6 \end{bmatrix}" />
+
+    Selanjutnya, kita hitung sisi kanan persamaan, yaitu <InlineMath math="3A + 3B" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="3A = 3 \begin{bmatrix} 2 & 1 \\ 3 & 4 \end{bmatrix} = \begin{bmatrix} 6 & 3 \\ 9 & 12 \end{bmatrix}" />
+      <BlockMath math="3B = 3 \begin{bmatrix} 0 & 5 \\ 6 & -2 \end{bmatrix} = \begin{bmatrix} 0 & 15 \\ 18 & -6 \end{bmatrix}" />
+    </div>
+
+    Maka,
+
+    <BlockMath math="3A + 3B = \begin{bmatrix} 6 & 3 \\ 9 & 12 \end{bmatrix} + \begin{bmatrix} 0 & 15 \\ 18 & -6 \end{bmatrix} = \begin{bmatrix} 6+0 & 3+15 \\ 9+18 & 12+(-6) \end{bmatrix} = \begin{bmatrix} 6 & 18 \\ 27 & 6 \end{bmatrix}" />
+
+    Karena hasil perhitungan sisi kiri (<InlineMath math="\begin{bmatrix} 6 & 18 \\ 27 & 6 \end{bmatrix}" />) sama dengan hasil perhitungan sisi kanan (<InlineMath math="\begin{bmatrix} 6 & 18 \\ 27 & 6 \end{bmatrix}" />), maka terbukti bahwa <InlineMath math="3(A+B) = 3A + 3B" />.
