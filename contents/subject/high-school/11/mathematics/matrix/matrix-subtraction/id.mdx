@@ -4,3 +4,260 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Apa Itu Pengurangan Matriks?
+
+Pengurangan matriks adalah operasi untuk menemukan selisih antara dua matriks. Sama seperti penjumlahan matriks, operasi pengurangan hanya dapat dilakukan jika kedua matriks yang terlibat memiliki ukuran atau ordo yang sama.
+
+Hasil dari pengurangan matriks adalah sebuah matriks baru yang juga memiliki ordo yang sama, di mana setiap elemennya merupakan hasil pengurangan elemen-elemen yang bersesuaian dari kedua matriks awal.
+
+## Definisi Formal Pengurangan Matriks
+
+Ada dua cara umum untuk mendefinisikan pengurangan matriks, yang keduanya mengarah pada hasil yang sama.
+
+**Pengurangan sebagai Penjumlahan dengan Lawan**
+
+Pengurangan matriks <InlineMath math="A" /> dengan matriks <InlineMath math="B" /> dapat didefinisikan sebagai penjumlahan matriks <InlineMath math="A" /> dengan matriks lawan dari <InlineMath math="B" /> (yaitu, <InlineMath math="-B" />).
+
+<BlockMath math="A - B = A + (-B)" />
+
+Matriks <InlineMath math="-B" /> adalah matriks yang diperoleh dengan mengalikan setiap elemen matriks <InlineMath math="B" /> dengan <InlineMath math="-1" />. Jadi, jika <InlineMath math="B = [b_{ij}]" />, maka <InlineMath math="-B = [-b_{ij}]" />.
+
+**Pengurangan Elemen Seletak**
+
+Jika matriks <InlineMath math="A = [a_{ij}]" /> dan matriks <InlineMath math="B = [b_{ij}]" /> keduanya memiliki ordo <InlineMath math="m \times n" />, maka hasil pengurangan matriks <InlineMath math="C = A - B" /> juga akan berordo <InlineMath math="m \times n" />.
+
+Setiap elemen <InlineMath math="c_{ij}" /> dari matriks <InlineMath math="C" /> dihitung dengan mengurangkan elemen matriks <InlineMath math="B" /> yang seletak dari elemen matriks <InlineMath math="A" /> yang seletak:
+
+<BlockMath math="c_{ij} = a_{ij} - b_{ij}" />
+
+Ini berarti kita mengurangkan elemen-elemen yang berada pada posisi baris dan kolom yang sama.
+
+Kedua definisi ini ekuivalen dan akan menghasilkan matriks selisih yang sama.
+
+## Cara Melakukan Pengurangan Matriks
+
+Untuk mengurangkan dua matriks, ikuti langkah-langkah berikut:
+
+1.  **Pastikan Ordo Sama**: Langkah pertama dan paling penting adalah memeriksa apakah kedua matriks memiliki jumlah baris dan kolom yang sama. Jika ordonya berbeda, pengurangan tidak dapat dilakukan.
+2.  **Kurangkan Elemen Seletak**: Jika ordonya sama, kurangkan setiap elemen matriks kedua (pengurang) dari elemen matriks pertama yang posisinya bersesuaian (seletak).
+3.  **Bentuk Matriks Hasil**: Susun hasil pengurangan elemen-elemen tersebut ke dalam sebuah matriks baru. Matriks baru ini akan memiliki ordo yang sama dengan matriks-matriks awal.
+
+### Contoh Pengurangan Matriks
+
+Misalkan kita memiliki dua matriks, <InlineMath math="P" /> dan <InlineMath math="Q" />, sebagai berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P = \begin{bmatrix} 8 & 5 \\ 3 & 7 \end{bmatrix}" />
+  <BlockMath math="Q = \begin{bmatrix} 2 & 1 \\ -1 & 4 \end{bmatrix}" />
+</div>
+
+Kedua matriks ini berordo <InlineMath math="2 \times 2" />, sehingga dapat dikurangkan.
+
+Menggunakan metode pengurangan elemen seletak:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P - Q = \begin{bmatrix} 8 & 5 \\ 3 & 7 \end{bmatrix} - \begin{bmatrix} 2 & 1 \\ -1 & 4 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 8-2 & 5-1 \\ 3-(-1) & 7-4 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 6 & 4 \\ 3+1 & 3 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 6 & 4 \\ 4 & 3 \end{bmatrix}" />
+</div>
+
+Menggunakan metode penjumlahan dengan lawan (<InlineMath math="P + (-Q)" />):
+
+Pertama, tentukan <InlineMath math="-Q" />:
+
+<BlockMath math="-Q = \begin{bmatrix} -2 & -1 \\ -(-1) & -4 \end{bmatrix} = \begin{bmatrix} -2 & -1 \\ 1 & -4 \end{bmatrix}" />
+
+Kemudian, jumlahkan <InlineMath math="P" /> dengan <InlineMath math="-Q" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P + (-Q) = \begin{bmatrix} 8 & 5 \\ 3 & 7 \end{bmatrix} + \begin{bmatrix} -2 & -1 \\ 1 & -4 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 8+(-2) & 5+(-1) \\ 3+1 & 7+(-4) \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 6 & 4 \\ 4 & 3 \end{bmatrix}" />
+</div>
+
+Kedua metode menghasilkan matriks yang sama.
+
+### Contoh Matriks yang Tidak Dapat Dikurangkan
+
+Misalkan matriks <InlineMath math="K = \begin{bmatrix} 1 & 0 \\ -2 & 5 \\ 3 & 1 \end{bmatrix}" /> dan matriks <InlineMath math="L = \begin{bmatrix} 4 & 2 \\ 0 & 7 \end{bmatrix}" />.
+
+Matriks <InlineMath math="K" /> berordo <InlineMath math="3 \times 2" />, sedangkan matriks <InlineMath math="L" /> berordo <InlineMath math="2 \times 2" />. Karena ordo kedua matriks ini berbeda, maka pengurangan <InlineMath math="K-L" /> (atau <InlineMath math="L-K" />) tidak dapat dilakukan atau tidak terdefinisi.
+
+## Sifat-Sifat Pengurangan Matriks
+
+Berbeda dengan penjumlahan matriks yang memiliki beberapa sifat penting seperti komutatif dan asosiatif, pengurangan matriks umumnya tidak memiliki sifat-sifat tersebut.
+
+1.  **Tidak Komutatif**: Secara umum, urutan pengurangan matriks sangat berpengaruh. Artinya, <InlineMath math="A - B" /> tidak sama dengan <InlineMath math="B - A" />, kecuali dalam kasus-kasus khusus (misalnya jika <InlineMath math="A=B" />).
+
+    <BlockMath math="A - B \neq B - A \quad (\text{secara umum})" />
+
+    Sebagai contoh, dari matriks <InlineMath math="P" /> dan <InlineMath math="Q" /> di atas:
+
+    <InlineMath math="P-Q = \begin{bmatrix} 6 & 4 \\ 4 & 3 \end{bmatrix}" />
+
+    Sedangkan,
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="Q-P = \begin{bmatrix} 2 & 1 \\ -1 & 4 \end{bmatrix} - \begin{bmatrix} 8 & 5 \\ 3 & 7 \end{bmatrix}" />
+      <BlockMath math="= \begin{bmatrix} 2-8 & 1-5 \\ -1-3 & 4-7 \end{bmatrix}" />
+      <BlockMath math="= \begin{bmatrix} -6 & -4 \\ -4 & -3 \end{bmatrix}" />
+    </div>
+
+    Terlihat jelas bahwa <InlineMath math="P-Q \neq Q-P" />.
+
+2.  **Tidak Asosiatif**: Pengelompokan dalam pengurangan tiga matriks atau lebih juga berpengaruh pada hasil akhir. Secara umum, <InlineMath math="(A - B) - C" /> tidak sama dengan <InlineMath math="A - (B - C)" />.
+
+    <BlockMath math="(A - B) - C \neq A - (B - C) \quad (\text{secara umum})" />
+
+    Ini karena <InlineMath math="(A - B) - C = A - B - C" />, sedangkan <InlineMath math="A - (B - C) = A - B + C" />.
+
+Satu-satunya "sifat" yang penting untuk diingat adalah hubungannya dengan penjumlahan, yaitu <InlineMath math="A - B = A + (-B)" />.
+
+Dengan mengubah operasi pengurangan menjadi penjumlahan dengan matriks lawan, kita dapat memanfaatkan sifat-sifat penjumlahan jika diperlukan.
+
+## Latihan
+
+**Soal 1**
+
+Diketahui matriks-matriks berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="M = \begin{bmatrix} 4 & -2 & 0 \\ 1 & 5 & 3 \end{bmatrix}" />
+  <BlockMath math="N = \begin{bmatrix} -1 & 1 & -2 \\ 6 & 0 & 7 \end{bmatrix}" />
+</div>
+
+Tentukan hasil dari <InlineMath math="M-N" />.
+
+**Soal 2**
+
+Tentukan nilai <InlineMath math="x, y," /> dan <InlineMath math="z" /> dari persamaan matriks berikut:
+
+<BlockMath math="\begin{bmatrix} 2x & 7 \\ y-1 & 5 \end{bmatrix} - \begin{bmatrix} 3 & z \\ 4 & -2x \end{bmatrix} = \begin{bmatrix} 5 & 10 \\ -3 & 1 \end{bmatrix}" />
+
+**Soal 3**
+
+Diberikan tiga matriks:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
+  <BlockMath math="B = \begin{bmatrix} 3 & -2 \\ 5 & 1 \end{bmatrix}" />
+  <BlockMath math="C = \begin{bmatrix} -4 & 0 \\ 2 & -3 \end{bmatrix}" />
+</div>
+
+Hitunglah <InlineMath math="(A-B)-C" /> dan <InlineMath math="A-(B-C)" />. Apakah hasilnya sama?
+
+### Kunci Jawaban
+
+**Soal 1**
+
+Diketahui:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="M = \begin{bmatrix} 4 & -2 & 0 \\ 1 & 5 & 3 \end{bmatrix}" />
+  <BlockMath math="N = \begin{bmatrix} -1 & 1 & -2 \\ 6 & 0 & 7 \end{bmatrix}" />
+</div>
+
+Maka, <InlineMath math="M-N" /> adalah:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="M-N = \begin{bmatrix} 4 & -2 & 0 \\ 1 & 5 & 3 \end{bmatrix} - \begin{bmatrix} -1 & 1 & -2 \\ 6 & 0 & 7 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 4-(-1) & -2-1 & 0-(-2) \\ 1-6 & 5-0 & 3-7 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 4+1 & -3 & 0+2 \\ -5 & 5 & -4 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 5 & -3 & 2 \\ -5 & 5 & -4 \end{bmatrix}" />
+</div>
+
+**Soal 2**
+
+Diketahui persamaan matriks:
+
+<BlockMath math="\begin{bmatrix} 2x & 7 \\ y-1 & 5 \end{bmatrix} - \begin{bmatrix} 3 & z \\ 4 & -2x \end{bmatrix} = \begin{bmatrix} 5 & 10 \\ -3 & 1 \end{bmatrix}" />
+
+Lakukan operasi pengurangan pada ruas kiri:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{bmatrix} 2x-3 & 7-z \\ (y-1)-4 & 5-(-2x) \end{bmatrix} = \begin{bmatrix} 5 & 10 \\ -3 & 1 \end{bmatrix}" />
+  <BlockMath math="\begin{bmatrix} 2x-3 & 7-z \\ y-5 & 5+2x \end{bmatrix} = \begin{bmatrix} 5 & 10 \\ -3 & 1 \end{bmatrix}" />
+</div>
+
+Berdasarkan kesamaan dua matriks, elemen-elemen yang seletak harus sama:
+
+Dari elemen baris 1,kolom 1: <InlineMath math="2x-3 = 5" />
+
+<div className="flex flex-col gap-4 mt-2">
+  <BlockMath math="2x = 5+3" />
+  <BlockMath math="2x = 8" />
+  <BlockMath math="x = 4" />
+</div>
+
+Dari elemen baris 1, kolom 2: <InlineMath math="7-z = 10" />
+
+<div className="flex flex-col gap-4 mt-2">
+  <BlockMath math="-z = 10-7" />
+  <BlockMath math="-z = 3" />
+  <BlockMath math="z = -3" />
+</div>
+
+Dari elemen baris 2, kolom 1: <InlineMath math="y-5 = -3" />
+
+<div className="flex flex-col gap-4 mt-2">
+  <BlockMath math="y = -3+5" />
+  <BlockMath math="y = 2" />
+</div>
+
+Dari elemen baris 2, kolom 2: <InlineMath math="5+2x = 1" />.
+
+Jika kita substitusikan <InlineMath math="x=4" /> (dari persamaan pertama), kita dapatkan <InlineMath math="5+2(4) = 13" />. Karena <InlineMath math="13 \neq 1" />, terdapat inkonsistensi pada elemen terakhir di soal ini.
+
+Untuk tujuan pembelajaran, kita akan menggunakan nilai <InlineMath math="x, y, z" /> yang diperoleh dari tiga persamaan pertama yang konsisten.
+
+Jadi, nilai yang diperoleh adalah <InlineMath math="x=4" />, <InlineMath math="y=2" />, dan <InlineMath math="z=-3" />.
+
+Dalam situasi ujian, inkonsistensi seperti ini sebaiknya dikonfirmasi kepada pengawas.
+
+**Soal 3**
+
+Diberikan:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
+  <BlockMath math="B = \begin{bmatrix} 3 & -2 \\ 5 & 1 \end{bmatrix}" />
+  <BlockMath math="C = \begin{bmatrix} -4 & 0 \\ 2 & -3 \end{bmatrix}" />
+</div>
+
+Hitung <InlineMath math="(A-B)-C" />:
+
+Pertama, <InlineMath math="A-B" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A-B = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} - \begin{bmatrix} 3 & -2 \\ 5 & 1 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 1-3 & 0-(-2) \\ 0-5 & 1-1 \end{bmatrix} = \begin{bmatrix} -2 & 2 \\ -5 & 0 \end{bmatrix}" />
+</div>
+
+Kemudian, <InlineMath math="(A-B)-C" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(A-B)-C = \begin{bmatrix} -2 & 2 \\ -5 & 0 \end{bmatrix} - \begin{bmatrix} -4 & 0 \\ 2 & -3 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} -2-(-4) & 2-0 \\ -5-2 & 0-(-3) \end{bmatrix} = \begin{bmatrix} -2+4 & 2 \\ -7 & 0+3 \end{bmatrix} = \begin{bmatrix} 2 & 2 \\ -7 & 3 \end{bmatrix}" />
+</div>
+
+Hitung <InlineMath math="A-(B-C)" />:
+
+Pertama, <InlineMath math="B-C" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="B-C = \begin{bmatrix} 3 & -2 \\ 5 & 1 \end{bmatrix} - \begin{bmatrix} -4 & 0 \\ 2 & -3 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 3-(-4) & -2-0 \\ 5-2 & 1-(-3) \end{bmatrix} = \begin{bmatrix} 3+4 & -2 \\ 3 & 1+3 \end{bmatrix} = \begin{bmatrix} 7 & -2 \\ 3 & 4 \end{bmatrix}" />
+</div>
+
+Kemudian, <InlineMath math="A-(B-C)" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A-(B-C) = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} - \begin{bmatrix} 7 & -2 \\ 3 & 4 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 1-7 & 0-(-2) \\ 0-3 & 1-4 \end{bmatrix} = \begin{bmatrix} -6 & 2 \\ -3 & -3 \end{bmatrix}" />
+</div>
+
+Hasilnya tidak sama: <InlineMath math="\begin{bmatrix} 2 & 2 \\ -7 & 3 \end{bmatrix} \neq \begin{bmatrix} -6 & 2 \\ -3 & -3 \end{bmatrix}" />.
+
+Ini menunjukkan bahwa pengurangan matriks tidak bersifat asosiatif.

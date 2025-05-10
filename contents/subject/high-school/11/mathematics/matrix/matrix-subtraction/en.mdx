@@ -4,3 +4,260 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matrix",
 };
+
+## What Is Matrix Subtraction?
+
+Matrix subtraction is an operation to find the difference between two matrices. Just like matrix addition, the subtraction operation can only be performed if both matrices involved have the same size or order.
+
+The result of matrix subtraction is a new matrix that also has the same order, where each element is the result of subtracting the corresponding elements from the two initial matrices.
+
+## Formal Definition of Matrix Subtraction
+
+There are two common ways to define matrix subtraction, both of which lead to the same result.
+
+**Subtraction as Addition with the Opposite**
+
+The subtraction of matrix <InlineMath math="B" /> from matrix <InlineMath math="A" /> can be defined as the addition of matrix <InlineMath math="A" /> with the opposite matrix of <InlineMath math="B" /> (i.e., <InlineMath math="-B" />).
+
+<BlockMath math="A - B = A + (-B)" />
+
+Matrix <InlineMath math="-B" /> is the matrix obtained by multiplying each element of matrix <InlineMath math="B" /> by <InlineMath math="-1" />. So, if <InlineMath math="B = [b_{ij}]" />, then <InlineMath math="-B = [-b_{ij}]" />.
+
+**Subtraction of Corresponding Elements**
+
+If matrix <InlineMath math="A = [a_{ij}]" /> and matrix <InlineMath math="B = [b_{ij}]" /> both have the order <InlineMath math="m \times n" />, then the result of the subtraction <InlineMath math="C = A - B" /> will also be of order <InlineMath math="m \times n" />.
+
+Each element <InlineMath math="c_{ij}" /> of matrix <InlineMath math="C" /> is calculated by subtracting the corresponding element of matrix <InlineMath math="B" /> from the corresponding element of matrix <InlineMath math="A" />:
+
+<BlockMath math="c_{ij} = a_{ij} - b_{ij}" />
+
+This means we subtract the elements that are in the same row and column position.
+
+Both definitions are equivalent and will produce the same difference matrix.
+
+## How to Perform Matrix Subtraction
+
+To subtract two matrices, follow these steps:
+
+1.  **Ensure Same Order**: The first and most important step is to check if both matrices have the same number of rows and columns. If their orders are different, subtraction cannot be performed.
+2.  **Subtract Corresponding Elements**: If the orders are the same, subtract each element of the second matrix (subtrahend) from the corresponding element of the first matrix.
+3.  **Form the Resultant Matrix**: Arrange the results of these subtractions into a new matrix. This new matrix will have the same order as the initial matrices.
+
+### Example of Matrix Subtraction
+
+Suppose we have two matrices, <InlineMath math="P" /> and <InlineMath math="Q" />, as follows:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P = \begin{bmatrix} 8 & 5 \\ 3 & 7 \end{bmatrix}" />
+  <BlockMath math="Q = \begin{bmatrix} 2 & 1 \\ -1 & 4 \end{bmatrix}" />
+</div>
+
+Both matrices are of order <InlineMath math="2 \times 2" />, so they can be subtracted.
+
+Using the method of subtracting corresponding elements:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P - Q = \begin{bmatrix} 8 & 5 \\ 3 & 7 \end{bmatrix} - \begin{bmatrix} 2 & 1 \\ -1 & 4 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 8-2 & 5-1 \\ 3-(-1) & 7-4 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 6 & 4 \\ 3+1 & 3 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 6 & 4 \\ 4 & 3 \end{bmatrix}" />
+</div>
+
+Using the method of addition with the opposite (<InlineMath math="P + (-Q)" />):
+
+First, determine <InlineMath math="-Q" />:
+
+<BlockMath math="-Q = \begin{bmatrix} -2 & -1 \\ -(-1) & -4 \end{bmatrix} = \begin{bmatrix} -2 & -1 \\ 1 & -4 \end{bmatrix}" />
+
+Then, add <InlineMath math="P" /> to <InlineMath math="-Q" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P + (-Q) = \begin{bmatrix} 8 & 5 \\ 3 & 7 \end{bmatrix} + \begin{bmatrix} -2 & -1 \\ 1 & -4 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 8+(-2) & 5+(-1) \\ 3+1 & 7+(-4) \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 6 & 4 \\ 4 & 3 \end{bmatrix}" />
+</div>
+
+Both methods yield the same matrix.
+
+### Example of Matrices That Cannot Be Subtracted
+
+Suppose matrix <InlineMath math="K = \begin{bmatrix} 1 & 0 \\ -2 & 5 \\ 3 & 1 \end{bmatrix}" /> and matrix <InlineMath math="L = \begin{bmatrix} 4 & 2 \\ 0 & 7 \end{bmatrix}" />.
+
+Matrix <InlineMath math="K" /> is of order <InlineMath math="3 \times 2" />, while matrix <InlineMath math="L" /> is of order <InlineMath math="2 \times 2" />. Since the orders of these two matrices are different, the subtraction <InlineMath math="K-L" /> (or <InlineMath math="L-K" />) cannot be performed or is undefined.
+
+## Properties of Matrix Subtraction
+
+Unlike matrix addition, which has several important properties like commutativity and associativity, matrix subtraction generally does not possess these properties.
+
+1.  **Not Commutative**: In general, the order of matrix subtraction significantly affects the result. This means <InlineMath math="A - B" /> is not equal to <InlineMath math="B - A" />, except in special cases (e.g., if <InlineMath math="A=B" />).
+
+    <BlockMath math="A - B \neq B - A \quad (\text{in general})" />
+
+    For example, from matrices <InlineMath math="P" /> and <InlineMath math="Q" /> above:
+
+    <InlineMath math="P-Q = \begin{bmatrix} 6 & 4 \\ 4 & 3 \end{bmatrix}" />
+
+    Whereas,
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="Q-P = \begin{bmatrix} 2 & 1 \\ -1 & 4 \end{bmatrix} - \begin{bmatrix} 8 & 5 \\ 3 & 7 \end{bmatrix}" />
+      <BlockMath math="= \begin{bmatrix} 2-8 & 1-5 \\ -1-3 & 4-7 \end{bmatrix}" />
+      <BlockMath math="= \begin{bmatrix} -6 & -4 \\ -4 & -3 \end{bmatrix}" />
+    </div>
+
+    It is clear that <InlineMath math="P-Q \neq Q-P" />.
+
+2.  **Not Associative**: The grouping in the subtraction of three or more matrices also affects the final result. In general, <InlineMath math="(A - B) - C" /> is not equal to <InlineMath math="A - (B - C)" />.
+
+    <BlockMath math="(A - B) - C \neq A - (B - C) \quad (\text{in general})" />
+
+    This is because <InlineMath math="(A - B) - C = A - B - C" />, whereas <InlineMath math="A - (B - C) = A - B + C" />.
+
+The only "property" important to remember is its relationship with addition, i.e., <InlineMath math="A - B = A + (-B)" />.
+
+By converting the subtraction operation into addition with the opposite matrix, we can leverage the properties of addition if needed.
+
+## Exercises
+
+**Problem 1**
+
+Given the following matrices:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="M = \begin{bmatrix} 4 & -2 & 0 \\ 1 & 5 & 3 \end{bmatrix}" />
+  <BlockMath math="N = \begin{bmatrix} -1 & 1 & -2 \\ 6 & 0 & 7 \end{bmatrix}" />
+</div>
+
+Determine the result of <InlineMath math="M-N" />.
+
+**Problem 2**
+
+Determine the values of <InlineMath math="x, y," /> and <InlineMath math="z" /> from the following matrix equation:
+
+<BlockMath math="\begin{bmatrix} 2x & 7 \\ y-1 & 5 \end{bmatrix} - \begin{bmatrix} 3 & z \\ 4 & -2x \end{bmatrix} = \begin{bmatrix} 5 & 10 \\ -3 & 1 \end{bmatrix}" />
+
+**Problem 3**
+
+Given three matrices:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
+  <BlockMath math="B = \begin{bmatrix} 3 & -2 \\ 5 & 1 \end{bmatrix}" />
+  <BlockMath math="C = \begin{bmatrix} -4 & 0 \\ 2 & -3 \end{bmatrix}" />
+</div>
+
+Calculate <InlineMath math="(A-B)-C" /> and <InlineMath math="A-(B-C)" />. Are the results the same?
+
+### Answer Key
+
+**Problem 1**
+
+Given:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="M = \begin{bmatrix} 4 & -2 & 0 \\ 1 & 5 & 3 \end{bmatrix}" />
+  <BlockMath math="N = \begin{bmatrix} -1 & 1 & -2 \\ 6 & 0 & 7 \end{bmatrix}" />
+</div>
+
+Then, <InlineMath math="M-N" /> is:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="M-N = \begin{bmatrix} 4 & -2 & 0 \\ 1 & 5 & 3 \end{bmatrix} - \begin{bmatrix} -1 & 1 & -2 \\ 6 & 0 & 7 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 4-(-1) & -2-1 & 0-(-2) \\ 1-6 & 5-0 & 3-7 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 4+1 & -3 & 0+2 \\ -5 & 5 & -4 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 5 & -3 & 2 \\ -5 & 5 & -4 \end{bmatrix}" />
+</div>
+
+**Problem 2**
+
+Given the matrix equation:
+
+<BlockMath math="\begin{bmatrix} 2x & 7 \\ y-1 & 5 \end{bmatrix} - \begin{bmatrix} 3 & z \\ 4 & -2x \end{bmatrix} = \begin{bmatrix} 5 & 10 \\ -3 & 1 \end{bmatrix}" />
+
+Perform the subtraction operation on the left side:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{bmatrix} 2x-3 & 7-z \\ (y-1)-4 & 5-(-2x) \end{bmatrix} = \begin{bmatrix} 5 & 10 \\ -3 & 1 \end{bmatrix}" />
+  <BlockMath math="\begin{bmatrix} 2x-3 & 7-z \\ y-5 & 5+2x \end{bmatrix} = \begin{bmatrix} 5 & 10 \\ -3 & 1 \end{bmatrix}" />
+</div>
+
+Based on the equality of two matrices, corresponding elements must be equal:
+
+From the element in row 1, column 1: <InlineMath math="2x-3 = 5" />
+
+<div className="flex flex-col gap-4 mt-2">
+  <BlockMath math="2x = 5+3" />
+  <BlockMath math="2x = 8" />
+  <BlockMath math="x = 4" />
+</div>
+
+From the element in row 1, column 2: <InlineMath math="7-z = 10" />
+
+<div className="flex flex-col gap-4 mt-2">
+  <BlockMath math="-z = 10-7" />
+  <BlockMath math="-z = 3" />
+  <BlockMath math="z = -3" />
+</div>
+
+From the element in row 2, column 1: <InlineMath math="y-5 = -3" />
+
+<div className="flex flex-col gap-4 mt-2">
+  <BlockMath math="y = -3+5" />
+  <BlockMath math="y = 2" />
+</div>
+
+From the element in row 2, column 2: <InlineMath math="5+2x = 1" />.
+
+If we substitute <InlineMath math="x=4" /> (from the first equation), we get <InlineMath math="5+2(4) = 13" />. Since <InlineMath math="13 \neq 1" />, there is an inconsistency in the last element of this problem.
+
+For learning purposes, we will use the values of <InlineMath math="x, y, z" /> obtained from the first three consistent equations.
+
+Thus, the values obtained are <InlineMath math="x=4" />, <InlineMath math="y=2" />, and <InlineMath math="z=-3" />.
+
+In an exam situation, such inconsistencies should be confirmed with the examiner.
+
+**Problem 3**
+
+Given:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
+  <BlockMath math="B = \begin{bmatrix} 3 & -2 \\ 5 & 1 \end{bmatrix}" />
+  <BlockMath math="C = \begin{bmatrix} -4 & 0 \\ 2 & -3 \end{bmatrix}" />
+</div>
+
+Calculate <InlineMath math="(A-B)-C" />:
+
+First, <InlineMath math="A-B" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A-B = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} - \begin{bmatrix} 3 & -2 \\ 5 & 1 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 1-3 & 0-(-2) \\ 0-5 & 1-1 \end{bmatrix} = \begin{bmatrix} -2 & 2 \\ -5 & 0 \end{bmatrix}" />
+</div>
+
+Then, <InlineMath math="(A-B)-C" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(A-B)-C = \begin{bmatrix} -2 & 2 \\ -5 & 0 \end{bmatrix} - \begin{bmatrix} -4 & 0 \\ 2 & -3 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} -2-(-4) & 2-0 \\ -5-2 & 0-(-3) \end{bmatrix} = \begin{bmatrix} -2+4 & 2 \\ -7 & 0+3 \end{bmatrix} = \begin{bmatrix} 2 & 2 \\ -7 & 3 \end{bmatrix}" />
+</div>
+
+Calculate <InlineMath math="A-(B-C)" />:
+
+First, <InlineMath math="B-C" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="B-C = \begin{bmatrix} 3 & -2 \\ 5 & 1 \end{bmatrix} - \begin{bmatrix} -4 & 0 \\ 2 & -3 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 3-(-4) & -2-0 \\ 5-2 & 1-(-3) \end{bmatrix} = \begin{bmatrix} 3+4 & -2 \\ 3 & 1+3 \end{bmatrix} = \begin{bmatrix} 7 & -2 \\ 3 & 4 \end{bmatrix}" />
+</div>
+
+Then, <InlineMath math="A-(B-C)" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A-(B-C) = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} - \begin{bmatrix} 7 & -2 \\ 3 & 4 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 1-7 & 0-(-2) \\ 0-3 & 1-4 \end{bmatrix} = \begin{bmatrix} -6 & 2 \\ -3 & -3 \end{bmatrix}" />
+</div>
+
+The results are not the same: <InlineMath math="\begin{bmatrix} 2 & 2 \\ -7 & 3 \end{bmatrix} \neq \begin{bmatrix} -6 & 2 \\ -3 & -3 \end{bmatrix}" />.
+
+This shows that matrix subtraction is not associative.
