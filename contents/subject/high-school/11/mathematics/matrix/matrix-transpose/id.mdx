@@ -4,3 +4,104 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Apa Itu Matriks Transpos?
+
+Matriks transpos adalah sebuah matriks baru yang diperoleh dengan cara menukar elemen-elemen baris menjadi elemen-elemen kolom, dan sebaliknya, elemen-elemen kolom menjadi elemen-elemen baris dari matriks asalnya.
+
+Jika kita memiliki matriks <InlineMath math="A" />, maka transpos dari matriks <InlineMath math="A" /> biasanya dinotasikan dengan <InlineMath math="A^T" /> atau <InlineMath math="A'" />.
+
+Secara formal, jika matriks <InlineMath math="A" /> memiliki ordo <InlineMath math="m \times n" /> dengan elemen <InlineMath math="a_{ij}" /> (elemen pada baris ke-<InlineMath math="i" /> dan kolom ke-<InlineMath math="j" />), maka matriks transposnya, <InlineMath math="A^T" />, akan memiliki ordo <InlineMath math="n \times m" /> dengan elemen <InlineMath math="a_{ji}^T = a_{ij}" />.
+
+Artinya, elemen pada baris ke-<InlineMath math="j" /> dan kolom ke-<InlineMath math="i" /> dari <InlineMath math="A^T" /> adalah sama dengan elemen pada baris ke-<InlineMath math="i" /> dan kolom ke-<InlineMath math="j" /> dari <InlineMath math="A" />.
+
+## Cara Menentukan Matriks Transpos
+
+Untuk mendapatkan matriks transpos, ikuti langkah berikut:
+
+1.  Tuliskan baris pertama dari matriks asli sebagai kolom pertama dari matriks transpos.
+2.  Tuliskan baris kedua dari matriks asli sebagai kolom kedua dari matriks transpos.
+3.  Lanjutkan proses ini untuk semua baris pada matriks asli.
+
+### Matriks Umum
+
+Misalkan kita memiliki matriks <InlineMath math="A" />:
+
+<BlockMath math="A = \begin{bmatrix} a & b \\ c & d \end{bmatrix}" />
+
+Maka, transpos dari matriks <InlineMath math="A" /> adalah:
+
+<BlockMath math="A^T = \begin{bmatrix} a & c \\ b & d \end{bmatrix}" />
+
+Perhatikan bagaimana baris pertama <InlineMath math="\begin{bmatrix} a & b \end{bmatrix}" /> menjadi
+kolom pertama <InlineMath math="\begin{bmatrix} a \\ b \end{bmatrix}" />, dan
+baris kedua <InlineMath math="\begin{bmatrix} c & d \end{bmatrix}" /> menjadi
+kolom kedua <InlineMath math="\begin{bmatrix} c \\ d \end{bmatrix}" />.
+
+### Matriks dengan Ordo Berbeda
+
+Diberikan matriks <InlineMath math="B" /> dengan ordo <InlineMath math="2 \times 3" />:
+
+<BlockMath math="B = \begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{bmatrix}" />
+
+Transpos dari matriks <InlineMath math="B" />, yaitu <InlineMath math="B^T" />, akan berordo <InlineMath math="3 \times 2" />:
+
+<BlockMath math="B^T = \begin{bmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{bmatrix}" />
+
+- Baris pertama <InlineMath math="B" /> (<InlineMath math="\begin{bmatrix} 1 & 2 & 3 \end{bmatrix}" />) menjadi kolom pertama <InlineMath math="B^T" />.
+- Baris kedua <InlineMath math="B" /> (<InlineMath math="\begin{bmatrix} 4 & 5 & 6 \end{bmatrix}" />) menjadi kolom kedua <InlineMath math="B^T" />.
+
+### Matriks Kolom menjadi Matriks Baris
+
+Jika <InlineMath math="C" /> adalah matriks kolom:
+
+<BlockMath math="C = \begin{bmatrix} 2 \\ 3 \end{bmatrix}" />
+
+Maka transposnya, <InlineMath math="C^T" />, adalah matriks baris:
+
+<BlockMath math="C^T = \begin{bmatrix} 2 & 3 \end{bmatrix}" />
+
+### Transpos dari Matriks Persegi
+
+Diberikan matriks persegi <InlineMath math="D" />:
+
+<BlockMath math="D = \begin{bmatrix} -7 & 8 & 1 & 3 \\ 5 & 9 & 7 & 2 \\ 2 & 2 & 1 & 3 \\ 1 & -6 & 0 & 1 \end{bmatrix}" />
+
+Maka transposnya, <InlineMath math="D^T" />, juga merupakan matriks persegi:
+
+<BlockMath math="D^T = \begin{bmatrix} -7 & 5 & 2 & 1 \\ 8 & 9 & 2 & -6 \\ 1 & 7 & 1 & 0 \\ 3 & 2 & 3 & 1 \end{bmatrix}" />
+
+## Sifat-Sifat Matriks Transpos
+
+Beberapa sifat penting dari matriks transpos adalah:
+
+1.  <InlineMath math="(A^T)^T = A" /> (Transpos dari matriks transpos adalah matriks
+    itu sendiri)
+2.  <InlineMath math="(A + B)^T = A^T + B^T" /> (Transpos dari penjumlahan dua matriks)
+3.  <InlineMath math="(A - B)^T = A^T - B^T" /> (Transpos dari pengurangan dua matriks)
+4.  <InlineMath math="(kA)^T = kA^T" />, dengan <InlineMath math="k" /> adalah
+    skalar
+5.  <InlineMath math="(AB)^T = B^T A^T" /> (Transpos dari perkalian dua matriks,
+    perhatikan urutannya terbalik)
+
+## Latihan
+
+Tentukan transpos dari matriks-matriks berikut dan sebutkan jenis matriks hasilnya (misalnya, matriks baris, matriks kolom, matriks persegi).
+
+1.  <InlineMath math="A = \begin{bmatrix} 1 & 3 & -5 \end{bmatrix}" />
+2.  <InlineMath math="B = \begin{bmatrix} 9 & -1 \\ 3 & 0 \\ 1 & 5 \end{bmatrix}" />
+3.  <InlineMath math="C = \begin{bmatrix} 2 & 3 & 1 \\ 1 & 6 & -2 \\ 4 & 5 & -7 \end{bmatrix}" />
+
+## Kunci Jawaban
+
+1.  <InlineMath math="A^T = \begin{bmatrix} 1 \\ 3 \\ -5 \end{bmatrix}" />
+
+    <InlineMath math="A^T" /> adalah matriks kolom.
+
+2.  <InlineMath math="B^T = \begin{bmatrix} 9 & 3 & 1 \\ -1 & 0 & 5 \end{bmatrix}" />
+
+    <InlineMath math="B^T" /> adalah matriks persegi panjang (matriks datar).
+
+3.  <InlineMath math="C^T = \begin{bmatrix} 2 & 1 & 4 \\ 3 & 6 & 5 \\ 1 & -2 & -7 \end{bmatrix}" />
+
+    <InlineMath math="C^T" /> adalah matriks persegi.

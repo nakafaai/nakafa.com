@@ -4,3 +4,104 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matrix",
 };
+
+## What Is a Matrix Transpose?
+
+A matrix transpose is a new matrix obtained by interchanging the rows and columns of the original matrix. The elements of the rows become the elements of the columns, and conversely, the elements of the columns become the elements of the rows.
+
+If we have a matrix <InlineMath math="A" />, then the transpose of matrix <InlineMath math="A" /> is usually denoted by <InlineMath math="A^T" /> or <InlineMath math="A'" />.
+
+Formally, if matrix <InlineMath math="A" /> has an order of <InlineMath math="m \times n" /> with elements <InlineMath math="a_{ij}" /> (element in the <InlineMath math="i" />-th row and <InlineMath math="j" />-th column), then its transpose, <InlineMath math="A^T" />, will have an order of <InlineMath math="n \times m" /> with elements <InlineMath math="a_{ji}^T = a_{ij}" />.
+
+This means that the element in the <InlineMath math="j" />-th row and <InlineMath math="i" />-th column of <InlineMath math="A^T" /> is the same as the element in the <InlineMath math="i" />-th row and <InlineMath math="j" />-th column of <InlineMath math="A" />.
+
+## How to Determine the Matrix Transpose
+
+To obtain the matrix transpose, follow these steps:
+
+1.  Write the first row of the original matrix as the first column of the transpose matrix.
+2.  Write the second row of the original matrix as the second column of the transpose matrix.
+3.  Continue this process for all rows in the original matrix.
+
+### General Matrix
+
+Suppose we have matrix <InlineMath math="A" />:
+
+<BlockMath math="A = \begin{bmatrix} a & b \\ c & d \end{bmatrix}" />
+
+Then, the transpose of matrix <InlineMath math="A" /> is:
+
+<BlockMath math="A^T = \begin{bmatrix} a & c \\ b & d \end{bmatrix}" />
+
+Notice how the first row <InlineMath math="\begin{bmatrix} a & b \end{bmatrix}" /> becomes
+the first column <InlineMath math="\begin{bmatrix} a \\ b \end{bmatrix}" />, and
+the second row <InlineMath math="\begin{bmatrix} c & d \end{bmatrix}" /> becomes
+the second column <InlineMath math="\begin{bmatrix} c \\ d \end{bmatrix}" />.
+
+### Matrix with Different Order
+
+Given matrix <InlineMath math="B" /> with order <InlineMath math="2 \times 3" />:
+
+<BlockMath math="B = \begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{bmatrix}" />
+
+The transpose of matrix <InlineMath math="B" />, denoted <InlineMath math="B^T" />, will have order <InlineMath math="3 \times 2" />:
+
+<BlockMath math="B^T = \begin{bmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{bmatrix}" />
+
+- The first row of <InlineMath math="B" /> (<InlineMath math="\begin{bmatrix} 1 & 2 & 3 \end{bmatrix}" />) becomes the first column of <InlineMath math="B^T" />.
+- The second row of <InlineMath math="B" /> (<InlineMath math="\begin{bmatrix} 4 & 5 & 6 \end{bmatrix}" />) becomes the second column of <InlineMath math="B^T" />.
+
+### Column Matrix to Row Matrix
+
+If <InlineMath math="C" /> is a column matrix:
+
+<BlockMath math="C = \begin{bmatrix} 2 \\ 3 \end{bmatrix}" />
+
+Then its transpose, <InlineMath math="C^T" />, is a row matrix:
+
+<BlockMath math="C^T = \begin{bmatrix} 2 & 3 \end{bmatrix}" />
+
+### Transpose of a Square Matrix
+
+Given a square matrix <InlineMath math="D" />:
+
+<BlockMath math="D = \begin{bmatrix} -7 & 8 & 1 & 3 \\ 5 & 9 & 7 & 2 \\ 2 & 2 & 1 & 3 \\ 1 & -6 & 0 & 1 \end{bmatrix}" />
+
+Then its transpose, <InlineMath math="D^T" />, is also a square matrix:
+
+<BlockMath math="D^T = \begin{bmatrix} -7 & 5 & 2 & 1 \\ 8 & 9 & 2 & -6 \\ 1 & 7 & 1 & 0 \\ 3 & 2 & 3 & 1 \end{bmatrix}" />
+
+## Properties of Matrix Transpose
+
+Some important properties of matrix transpose are:
+
+1.  <InlineMath math="(A^T)^T = A" /> (The transpose of a transpose matrix is the matrix
+    itself)
+2.  <InlineMath math="(A + B)^T = A^T + B^T" /> (Transpose of the sum of two matrices)
+3.  <InlineMath math="(A - B)^T = A^T - B^T" /> (Transpose of the subtraction of two matrices)
+4.  <InlineMath math="(kA)^T = kA^T" />, where <InlineMath math="k" /> is a
+    scalar
+5.  <InlineMath math="(AB)^T = B^T A^T" /> (Transpose of the product of two matrices,
+    note the reversed order)
+
+## Exercises
+
+Determine the transpose of the following matrices and state the type of the resulting matrix (e.g., row matrix, column matrix, square matrix).
+
+1.  <InlineMath math="A = \begin{bmatrix} 1 & 3 & -5 \end{bmatrix}" />
+2.  <InlineMath math="B = \begin{bmatrix} 9 & -1 \\ 3 & 0 \\ 1 & 5 \end{bmatrix}" />
+3.  <InlineMath math="C = \begin{bmatrix} 2 & 3 & 1 \\ 1 & 6 & -2 \\ 4 & 5 & -7 \end{bmatrix}" />
+
+## Answer Key
+
+1.  <InlineMath math="A^T = \begin{bmatrix} 1 \\ 3 \\ -5 \end{bmatrix}" />
+
+    <InlineMath math="A^T" /> is a column matrix.
+
+2.  <InlineMath math="B^T = \begin{bmatrix} 9 & 3 & 1 \\ -1 & 0 & 5 \end{bmatrix}" />
+
+    <InlineMath math="B^T" /> is a rectangular matrix (horizontal matrix).
+
+3.  <InlineMath math="C^T = \begin{bmatrix} 2 & 1 & 4 \\ 3 & 6 & 5 \\ 1 & -2 & -7 \end{bmatrix}" />
+
+    <InlineMath math="C^T" /> is a square matrix.
