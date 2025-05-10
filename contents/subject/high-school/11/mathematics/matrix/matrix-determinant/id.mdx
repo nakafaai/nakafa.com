@@ -4,3 +4,172 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Memahami Determinan Matriks
+
+Determinan matriks adalah sebuah nilai skalar (angka tunggal) yang dapat dihitung dari elemen-elemen sebuah matriks persegi. Konsep determinan sangat penting dalam aljabar linear, salah satunya adalah untuk membantu menyelesaikan sistem persamaan linear. Setiap matriks persegi memiliki nilai determinan yang unik.
+
+## Menghitung Determinan Matriks Ordo 2x2
+
+Matriks ordo 2x2 adalah matriks yang memiliki dua baris dan dua kolom. Misalkan kita memiliki matriks A sebagai berikut:
+
+<BlockMath math="A = \begin{bmatrix} a & b \\ c & d \end{bmatrix}" />
+
+Determinan dari matriks A, yang biasa ditulis sebagai <InlineMath math="\det(A)" /> atau <InlineMath math="|A|" />, dihitung dengan mengurangkan hasil perkalian elemen-elemen diagonal utama dengan hasil perkalian elemen-elemen diagonal kedua.
+
+Rumusnya adalah:
+
+<BlockMath math="\det(A) = |A| = \begin{vmatrix} a & b \\ c & d \end{vmatrix} = ad - bc" />
+
+Perhatikan bahwa notasi <InlineMath math="\begin{vmatrix} a & b \\ c & d \end{vmatrix}" /> menggunakan garis lurus, yang menandakan determinan, berbeda dengan kurung siku <InlineMath math="\begin{bmatrix} a & b \\ c & d \end{bmatrix}" /> yang menandakan matriks itu sendiri.
+
+### Perhitungan Determinan Matriks 2x2
+
+Misalkan kita memiliki matriks B:
+
+<BlockMath math="B = \begin{bmatrix} -1 & 3 \\ -7 & -5 \end{bmatrix}" />
+
+Untuk menghitung determinannya, kita identifikasi <InlineMath math="a = -1" />, <InlineMath math="b = 3" />, <InlineMath math="c = -7" />, dan <InlineMath math="d = -5" />.
+
+Maka, determinan matriks B adalah:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\det(B) = (-1 \times -5) - (3 \times -7)" />
+  <BlockMath math="\det(B) = 5 - (-21)" />
+  <BlockMath math="\det(B) = 5 + 21" />
+  <BlockMath math="\det(B) = 26" />
+</div>
+
+Jadi, nilai determinan dari matriks B adalah 26.
+
+## Menyelesaikan Sistem Persamaan Linear Dua Variabel (SPLDV) dengan Determinan
+
+Salah satu aplikasi penting dari determinan adalah untuk menyelesaikan sistem persamaan linear. Metode ini sering disebut sebagai Aturan Cramer.
+
+Perhatikan sistem persamaan linear dua variabel (SPLDV) berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="a_{11}x + a_{12}y = b_1" />
+  <BlockMath math="a_{21}x + a_{22}y = b_2" />
+</div>
+
+Dalam sistem ini, <InlineMath math="x" /> dan <InlineMath math="y" /> adalah variabel yang ingin kita cari nilainya. Koefisien-koefisien <InlineMath math="a_{11}, a_{12}, a_{21}, a_{22}" /> dan konstanta <InlineMath math="b_1, b_2" /> adalah bilangan yang diketahui.
+
+Sistem persamaan ini dapat kita ubah ke dalam bentuk perkalian matriks:
+
+<BlockMath math="\begin{bmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix} = \begin{bmatrix} b_1 \\ b_2 \end{bmatrix}" />
+
+Langkah pertama adalah menghitung determinan dari matriks koefisien, yang kita sebut <InlineMath math="D" />:
+
+<BlockMath math="D = \begin{vmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \end{vmatrix} = a_{11}a_{22} - a_{12}a_{21}" />
+
+Sistem persamaan linear akan memiliki solusi unik jika dan hanya jika <InlineMath math="D \neq 0" />.
+
+Selanjutnya, kita hitung dua determinan lainnya:
+
+1.  <InlineMath math="D_x" />, yaitu determinan matriks koefisien di mana kolom
+    pertama (koefisien <InlineMath math="x" />) diganti dengan kolom konstanta (<InlineMath math="b_1, b_2" />
+    ):
+
+    <BlockMath math="D_x = \begin{vmatrix} b_1 & a_{12} \\ b_2 & a_{22} \end{vmatrix} = b_1a_{22} - a_{12}b_2" />
+
+2.  <InlineMath math="D_y" />, yaitu determinan matriks koefisien di mana kolom
+    kedua (koefisien <InlineMath math="y" />) diganti dengan kolom konstanta (<InlineMath math="b_1, b_2" />
+    ):
+
+    <BlockMath math="D_y = \begin{vmatrix} a_{11} & b_1 \\ a_{21} & b_2 \end{vmatrix} = a_{11}b_2 - b_1a_{21}" />
+
+Setelah mendapatkan nilai <InlineMath math="D" />, <InlineMath math="D_x" />, dan <InlineMath math="D_y" />, kita dapat menemukan nilai <InlineMath math="x" /> dan <InlineMath math="y" /> dengan rumus:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = \frac{D_x}{D}" />
+  <BlockMath math="y = \frac{D_y}{D}" />
+</div>
+
+Rumus ini hanya berlaku jika <InlineMath math="D \neq 0" />.
+
+### Penyelesaian SPLDV dengan Determinan
+
+Tentukan penyelesaian dari sistem persamaan linear berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2x - y = 7" />
+  <BlockMath math="x - 4y = 14" />
+</div>
+
+Dari sistem di atas, kita dapatkan:
+
+<InlineMath math="a_{11} = 2" />, <InlineMath math="a_{12} = -1" />, <InlineMath math="b_1 = 7" />
+
+<InlineMath math="a_{21} = 1" />, <InlineMath math="a_{22} = -4" />, <InlineMath math="b_2 = 14" />
+
+**Langkah 1**: Hitung determinan <InlineMath math="D" />.
+
+<BlockMath math="D = \begin{vmatrix} 2 & -1 \\ 1 & -4 \end{vmatrix} = (2 \times -4) - (-1 \times 1) = -8 - (-1) = -8 + 1 = -7" />
+Karena <InlineMath math="D = -7 \neq 0" />, sistem ini memiliki solusi unik.
+
+**Langkah 2**: Hitung determinan <InlineMath math="D_x" />.
+
+<BlockMath math="D_x = \begin{vmatrix} 7 & -1 \\ 14 & -4 \end{vmatrix} = (7 \times -4) - (-1 \times 14) = -28 - (-14) = -28 + 14 = -14" />
+
+**Langkah 3**: Hitung determinan <InlineMath math="D_y" />.
+
+<BlockMath math="D_y = \begin{vmatrix} 2 & 7 \\ 1 & 14 \end{vmatrix} = (2 \times 14) - (7 \times 1) = 28 - 7 = 21" />
+
+**Langkah 4**: Hitung nilai <InlineMath math="x" /> dan <InlineMath math="y" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = \frac{D_x}{D} = \frac{-14}{-7} = 2" />
+  <BlockMath math="y = \frac{D_y}{D} = \frac{21}{-7} = -3" />
+</div>
+
+Jadi, himpunan penyelesaian dari sistem persamaan linear tersebut adalah <InlineMath math="x=2" /> dan <InlineMath math="y=-3" />, atau dapat ditulis sebagai pasangan berurutan <InlineMath math="(2, -3)" />.
+
+## Latihan
+
+1.  Diketahui matriks <InlineMath math="M = \begin{bmatrix} 9 & x \\ 8 & -7 \end{bmatrix}" /> dan <InlineMath math="\det(M) = 9" />. Tentukan nilai <InlineMath math="x" />.
+2.  Tentukan penyelesaian dari sistem persamaan linear berikut:
+
+    <BlockMath math="\begin{cases} 2x - y = 8 \\ x + 3y = -10 \end{cases}" />
+
+### Kunci Jawaban
+
+1.  Untuk matriks <InlineMath math="M = \begin{bmatrix} 9 & x \\ 8 & -7 \end{bmatrix}" />, determinannya adalah:
+
+    <BlockMath math="\det(M) = (9 \times -7) - (x \times 8) = -63 - 8x" />
+
+    Diketahui <InlineMath math="\det(M) = 9" />, maka:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="-63 - 8x = 9" />
+      <BlockMath math="-8x = 9 + 63" />
+      <BlockMath math="-8x = 72" />
+      <BlockMath math="x = \frac{72}{-8}" />
+      <BlockMath math="x = -9" />
+    </div>
+
+    Jadi, nilai <InlineMath math="x" /> adalah -9.
+
+2.  Sistem persamaan linear:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="2x - y = 8" />
+      <BlockMath math="x + 3y = -10" />
+    </div>
+
+    Kita tentukan <InlineMath math="D, D_x," /> dan <InlineMath math="D_y" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="D = \begin{vmatrix} 2 & -1 \\ 1 & 3 \end{vmatrix} = (2 \times 3) - (-1 \times 1) = 6 - (-1) = 6 + 1 = 7" />
+      <BlockMath math="D_x = \begin{vmatrix} 8 & -1 \\ -10 & 3 \end{vmatrix} = (8 \times 3) - (-1 \times -10) = 24 - 10 = 14" />
+      <BlockMath math="D_y = \begin{vmatrix} 2 & 8 \\ 1 & -10 \end{vmatrix} = (2 \times -10) - (8 \times 1) = -20 - 8 = -28" />
+    </div>
+
+    Maka, nilai <InlineMath math="x" /> dan <InlineMath math="y" /> adalah:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x = \frac{D_x}{D} = \frac{14}{7} = 2" />
+      <BlockMath math="y = \frac{D_y}{D} = \frac{-28}{7} = -4" />
+    </div>
+
+    Jadi, penyelesaian dari sistem persamaan linear tersebut adalah <InlineMath math="x=2" /> dan <InlineMath math="y=-4" />, atau pasangan berurutan <InlineMath math="(2, -4)" />.

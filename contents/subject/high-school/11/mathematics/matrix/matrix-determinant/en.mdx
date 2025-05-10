@@ -4,3 +4,174 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matrix",
 };
+
+## Understanding Matrix Determinants
+
+The determinant of a matrix is a scalar value (a single number) that can be calculated from the elements of a square matrix. The concept of a determinant is very important in linear algebra, one of its uses being to help solve systems of linear equations. Every square matrix has a unique determinant value.
+
+## Calculating the Determinant of a 2x2 Order Matrix
+
+A 2x2 order matrix is a matrix that has two rows and two columns. Suppose we have matrix A as follows:
+
+<BlockMath math="A = \begin{bmatrix} a & b \\ c & d \end{bmatrix}" />
+
+The determinant of matrix A, usually written as <InlineMath math="\det(A)" /> or <InlineMath math="|A|" />, is calculated by subtracting the product of the elements of the main diagonal from the product of the elements of the second diagonal.
+
+The formula is:
+
+<BlockMath math="\det(A) = |A| = \begin{vmatrix} a & b \\ c & d \end{vmatrix} = ad - bc" />
+
+Note that the notation <InlineMath math="\begin{vmatrix} a & b \\ c & d \end{vmatrix}" /> uses straight lines, which denote the determinant, as opposed to square brackets <InlineMath math="\begin{bmatrix} a & b \\ c & d \end{bmatrix}" /> which denote the matrix itself.
+
+### Calculation of a 2x2 Matrix Determinant
+
+Suppose we have matrix B:
+
+<BlockMath math="B = \begin{bmatrix} -1 & 3 \\ -7 & -5 \end{bmatrix}" />
+
+To calculate its determinant, we identify <InlineMath math="a = -1" />, <InlineMath math="b = 3" />, <InlineMath math="c = -7" />, and <InlineMath math="d = -5" />.
+
+Then, the determinant of matrix B is:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\det(B) = (-1 \times -5) - (3 \times -7)" />
+  <BlockMath math="\det(B) = 5 - (-21)" />
+  <BlockMath math="\det(B) = 5 + 21" />
+  <BlockMath math="\det(B) = 26" />
+</div>
+
+So, the determinant value of matrix B is 26.
+
+## Solving Systems of Linear Equations with Two Variables (SPLDV) using Determinants
+
+One important application of determinants is to solve systems of linear equations. This method is often called Cramer's Rule.
+
+Consider the following system of linear equations with two variables (SPLDV):
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="a_{11}x + a_{12}y = b_1" />
+  <BlockMath math="a_{21}x + a_{22}y = b_2" />
+</div>
+
+In this system, <InlineMath math="x" /> and <InlineMath math="y" /> are the variables whose values we want to find. The coefficients <InlineMath math="a_{11}, a_{12}, a_{21}, a_{22}" /> and constants <InlineMath math="b_1, b_2" /> are known numbers.
+
+This system of equations can be converted into matrix multiplication form:
+
+<BlockMath math="\begin{bmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix} = \begin{bmatrix} b_1 \\ b_2 \end{bmatrix}" />
+
+The first step is to calculate the determinant of the coefficient matrix, which we call <InlineMath math="D" />:
+
+<BlockMath math="D = \begin{vmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \end{vmatrix} = a_{11}a_{22} - a_{12}a_{21}" />
+
+A system of linear equations will have a unique solution if and only if <InlineMath math="D \neq 0" />.
+
+Next, we calculate two other determinants:
+
+1.  <InlineMath math="D_x" />, which is the determinant of the coefficient
+    matrix where the first column (coefficients of <InlineMath math="x" />) is replaced
+    by the constant column (<InlineMath math="b_1, b_2" />
+    ):
+
+    <BlockMath math="D_x = \begin{vmatrix} b_1 & a_{12} \\ b_2 & a_{22} \end{vmatrix} = b_1a_{22} - a_{12}b_2" />
+
+2.  <InlineMath math="D_y" />, which is the determinant of the coefficient
+    matrix where the second column (coefficients of <InlineMath math="y" />) is replaced
+    by the constant column (<InlineMath math="b_1, b_2" />
+    ):
+
+    <BlockMath math="D_y = \begin{vmatrix} a_{11} & b_1 \\ a_{21} & b_2 \end{vmatrix} = a_{11}b_2 - b_1a_{21}" />
+
+After obtaining the values of <InlineMath math="D" />, <InlineMath math="D_x" />, and <InlineMath math="D_y" />, we can find the values of <InlineMath math="x" /> and <InlineMath math="y" /> using the formulas:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = \frac{D_x}{D}" />
+  <BlockMath math="y = \frac{D_y}{D}" />
+</div>
+
+These formulas are only valid if <InlineMath math="D \neq 0" />.
+
+### Solving SPLDV with Determinants
+
+Determine the solution of the following system of linear equations:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2x - y = 7" />
+  <BlockMath math="x - 4y = 14" />
+</div>
+
+From the system above, we get:
+
+<InlineMath math="a_{11} = 2" />, <InlineMath math="a_{12} = -1" />, <InlineMath math="b_1 = 7" />
+
+<InlineMath math="a_{21} = 1" />, <InlineMath math="a_{22} = -4" />, <InlineMath math="b_2 = 14" />
+
+**Step 1**: Calculate the determinant <InlineMath math="D" />.
+
+<BlockMath math="D = \begin{vmatrix} 2 & -1 \\ 1 & -4 \end{vmatrix} = (2 \times -4) - (-1 \times 1) = -8 - (-1) = -8 + 1 = -7" />
+Since <InlineMath math="D = -7 \neq 0" />, this system has a unique solution.
+
+**Step 2**: Calculate the determinant <InlineMath math="D_x" />.
+
+<BlockMath math="D_x = \begin{vmatrix} 7 & -1 \\ 14 & -4 \end{vmatrix} = (7 \times -4) - (-1 \times 14) = -28 - (-14) = -28 + 14 = -14" />
+
+**Step 3**: Calculate the determinant <InlineMath math="D_y" />.
+
+<BlockMath math="D_y = \begin{vmatrix} 2 & 7 \\ 1 & 14 \end{vmatrix} = (2 \times 14) - (7 \times 1) = 28 - 7 = 21" />
+
+**Step 4**: Calculate the values of <InlineMath math="x" /> and <InlineMath math="y" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = \frac{D_x}{D} = \frac{-14}{-7} = 2" />
+  <BlockMath math="y = \frac{D_y}{D} = \frac{21}{-7} = -3" />
+</div>
+
+So, the solution set of the system of linear equations is <InlineMath math="x=2" /> and <InlineMath math="y=-3" />, or can be written as the ordered pair <InlineMath math="(2, -3)" />.
+
+## Exercises
+
+1.  Given matrix <InlineMath math="M = \begin{bmatrix} 9 & x \\ 8 & -7 \end{bmatrix}" /> and <InlineMath math="\det(M) = 9" />. Determine the value of <InlineMath math="x" />.
+2.  Determine the solution of the following system of linear equations:
+
+    <BlockMath math="\begin{cases} 2x - y = 8 \\ x + 3y = -10 \end{cases}" />
+
+### Answer Key
+
+1.  For matrix <InlineMath math="M = \begin{bmatrix} 9 & x \\ 8 & -7 \end{bmatrix}" />, its determinant is:
+
+    <BlockMath math="\det(M) = (9 \times -7) - (x \times 8) = -63 - 8x" />
+
+    Given <InlineMath math="\det(M) = 9" />, then:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="-63 - 8x = 9" />
+      <BlockMath math="-8x = 9 + 63" />
+      <BlockMath math="-8x = 72" />
+      <BlockMath math="x = \frac{72}{-8}" />
+      <BlockMath math="x = -9" />
+    </div>
+
+    So, the value of <InlineMath math="x" /> is -9.
+
+2.  System of linear equations:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="2x - y = 8" />
+      <BlockMath math="x + 3y = -10" />
+    </div>
+
+    We determine <InlineMath math="D, D_x," /> and <InlineMath math="D_y" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="D = \begin{vmatrix} 2 & -1 \\ 1 & 3 \end{vmatrix} = (2 \times 3) - (-1 \times 1) = 6 - (-1) = 6 + 1 = 7" />
+      <BlockMath math="D_x = \begin{vmatrix} 8 & -1 \\ -10 & 3 \end{vmatrix} = (8 \times 3) - (-1 \times -10) = 24 - 10 = 14" />
+      <BlockMath math="D_y = \begin{vmatrix} 2 & 8 \\ 1 & -10 \end{vmatrix} = (2 \times -10) - (8 \times 1) = -20 - 8 = -28" />
+    </div>
+
+    Then, the values of <InlineMath math="x" /> and <InlineMath math="y" /> are:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x = \frac{D_x}{D} = \frac{14}{7} = 2" />
+      <BlockMath math="y = \frac{D_y}{D} = \frac{-28}{7} = -4" />
+    </div>
+
+    So, the solution of the system of linear equations is <InlineMath math="x=2" /> and <InlineMath math="y=-4" />, or the ordered pair <InlineMath math="(2, -4)" />.
