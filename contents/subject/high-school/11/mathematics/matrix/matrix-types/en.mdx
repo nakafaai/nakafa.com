@@ -4,3 +4,176 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matrix",
 };
+
+## Row Matrix
+
+A row matrix is a matrix that consists of only one row.
+
+The order of a row matrix is <InlineMath math="1 \times n" />, where <InlineMath math="n" /> is the number of columns.
+
+Its general form is:
+
+<BlockMath math="A_{1 \times n} = \begin{bmatrix} a_{11} & a_{12} & \dots & a_{1n} \end{bmatrix}" />
+
+Example:
+
+<BlockMath math="P = \begin{bmatrix} 3 & -1 & 0 & 7 \end{bmatrix}" />
+
+Matrix <InlineMath math="P" /> is a row matrix of order <InlineMath math="1 \times 4" />.
+
+## Column Matrix
+
+A column matrix is a matrix that consists of only one column.
+
+The order of a column matrix is <InlineMath math="m \times 1" />, where <InlineMath math="m" /> is the number of rows.
+
+Its general form is:
+
+<BlockMath math="B_{m \times 1} = \begin{bmatrix} a_{11} \\ a_{21} \\ \vdots \\ a_{m1} \end{bmatrix}" />
+
+Example:
+
+<BlockMath math="Q = \begin{bmatrix} 2 \\ 5 \\ -4 \end{bmatrix}" />
+
+Matrix <InlineMath math="Q" /> is a column matrix of order <InlineMath math="3 \times 1" />.
+
+## Square Matrix
+
+A square matrix is a matrix that has the same number of rows and columns.
+
+If the number of rows = number of columns = <InlineMath math="n" />, then the matrix is of order <InlineMath math="n \times n" />.
+
+Its general form is:
+
+<BlockMath
+  math="A_{n \times n} = \begin{bmatrix}
+a_{11} & a_{12} & \dots & a_{1n} \\
+a_{21} & a_{22} & \dots & a_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{n1} & a_{n2} & \dots & a_{nn}
+\end{bmatrix}"
+/>
+
+In a square matrix, there are:
+
+1. **Main Diagonal** (or Principal Diagonal):
+
+   The elements <InlineMath math="a_{11}, a_{22}, \dots, a_{nn}" /> (i.e., <InlineMath math="a_{ij}" /> where <InlineMath math="i=j" />).
+
+2. **Anti-diagonal** (or Counter-diagonal):
+
+   The elements <InlineMath math="a_{1n}, a_{2,n-1}, \dots, a_{n1}" /> (i.e., <InlineMath math="a_{ij}" /> where <InlineMath math="i+j=n+1" />).
+
+Example:
+
+<BlockMath math="M = \begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{bmatrix}" />
+
+Matrix <InlineMath math="M" /> is a square matrix of order <InlineMath math="3 \times 3" />. Its main diagonal elements are <InlineMath math="1, 5, 9" />. Its anti-diagonal elements are <InlineMath math="3, 5, 7" />.
+
+## Rectangular Matrix
+
+A rectangular matrix is a matrix where the number of rows and columns are not equal (<InlineMath math="m \neq n" />).
+
+General example:
+
+<BlockMath math="C = \begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{bmatrix}" />
+
+Matrix <InlineMath math="C" /> above has 2 rows and 3 columns, so its order is <InlineMath math="2 \times 3" />. Since the number of rows is not equal to the number of columns (<InlineMath math="2 \neq 3" />), matrix <InlineMath math="C" /> is a rectangular matrix.
+
+Rectangular matrices can be further distinguished into horizontal matrices and vertical matrices.
+
+### Horizontal Matrix
+
+A horizontal matrix is a rectangular matrix with more columns than rows (<InlineMath math="n > m" />).
+
+Example:
+
+<BlockMath math="D = \begin{bmatrix} 1 & 0 & 4 \\ -2 & 3 & 5 \end{bmatrix}" />
+
+Matrix <InlineMath math="D" /> is a horizontal matrix of order <InlineMath math="2 \times 3" />.
+
+### Vertical Matrix
+
+A vertical matrix is a rectangular matrix with more rows than columns (<InlineMath math="m > n" />).
+
+Example:
+
+<BlockMath math="T = \begin{bmatrix} 7 & 1 \\ 0 & -3 \\ 4 & 2 \end{bmatrix}" />
+
+Matrix <InlineMath math="T" /> is a vertical matrix of order <InlineMath math="3 \times 2" />.
+
+## Triangular Matrix
+
+A triangular matrix is a square matrix where the elements below or above the main diagonal are zero.
+
+### Upper Triangular Matrix
+
+An upper triangular matrix is a square matrix where all elements below the main diagonal are zero.
+
+This means <InlineMath math="a_{ij} = 0" /> for every <InlineMath math="i > j" />.
+
+Example:
+
+<BlockMath math="U = \begin{bmatrix} 5 & 2 & -1 \\ 0 & 3 & 7 \\ 0 & 0 & 1 \end{bmatrix}" />
+
+### Lower Triangular Matrix
+
+A lower triangular matrix is a square matrix where all elements above the main diagonal are zero.
+
+This means <InlineMath math="a_{ij} = 0" /> for every <InlineMath math="i < j" />.
+
+Example:
+
+<BlockMath math="L = \begin{bmatrix} 2 & 0 & 0 \\ 4 & 6 & 0 \\ -3 & 1 & 9 \end{bmatrix}" />
+
+## Diagonal Matrix
+
+A diagonal matrix is a square matrix where all elements outside the main diagonal are zero.
+
+This means <InlineMath math="a_{ij} = 0" /> for every <InlineMath math="i \neq j" />. Elements on the main diagonal can be zero or non-zero.
+
+Example:
+
+<BlockMath math="X = \begin{bmatrix} 7 & 0 & 0 \\ 0 & -2 & 0 \\ 0 & 0 & 0 \end{bmatrix}" />
+
+Matrix <InlineMath math="X" /> is a diagonal matrix of order <InlineMath math="3 \times 3" />.
+
+## Identity Matrix
+
+An identity matrix (denoted by <InlineMath math="I" /> or <InlineMath math="I_n" />) is a diagonal matrix where all elements on the main diagonal are 1.
+
+Example:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="I_2 = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
+  <BlockMath math="I_3 = \begin{bmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix}" />
+</div>
+
+The identity matrix acts as the neutral element in matrix multiplication.
+
+## Zero Matrix
+
+A zero matrix (denoted by <InlineMath math="O" /> or <InlineMath math="O_{m \times n}" />) is a matrix where all elements are zero.
+
+Example:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="O_{2 \times 2} = \begin{bmatrix} 0 & 0 \\ 0 & 0 \end{bmatrix}" />
+  <BlockMath math="O_{2 \times 3} = \begin{bmatrix} 0 & 0 & 0 \\ 0 & 0 & 0 \end{bmatrix}" />
+</div>
+
+## Symmetric Matrix
+
+A symmetric matrix is a square matrix that is equal to its transpose (<InlineMath math="A^T = A" />).
+
+This means the element <InlineMath math="a_{ij} = a_{ji}" /> for all <InlineMath math="i" /> and <InlineMath math="j" />. Its elements are symmetric with respect to the main diagonal.
+
+Example:
+
+<BlockMath math="S = \begin{bmatrix} 1 & 7 & -3 \\ 7 & 2 & 0 \\ -3 & 0 & 5 \end{bmatrix}" />
+
+In matrix <InlineMath math="S" />:
+
+- <InlineMath math="s_{12} = s_{21} = 7" />
+- <InlineMath math="s_{13} = s_{31} = -3" />
+- <InlineMath math="s_{23} = s_{32} = 0" />

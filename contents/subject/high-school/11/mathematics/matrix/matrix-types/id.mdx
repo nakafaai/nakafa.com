@@ -4,3 +4,176 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Matriks Baris
+
+Matriks baris adalah matriks yang hanya terdiri dari satu baris.
+
+Ordo matriks baris adalah <InlineMath math="1 \times n" />, dengan <InlineMath math="n" /> adalah banyaknya kolom.
+
+Bentuk umumnya:
+
+<BlockMath math="A_{1 \times n} = \begin{bmatrix} a_{11} & a_{12} & \dots & a_{1n} \end{bmatrix}" />
+
+Contoh:
+
+<BlockMath math="P = \begin{bmatrix} 3 & -1 & 0 & 7 \end{bmatrix}" />
+
+Matriks <InlineMath math="P" /> adalah matriks baris berordo <InlineMath math="1 \times 4" />.
+
+## Matriks Kolom
+
+Matriks kolom adalah matriks yang hanya terdiri dari satu kolom.
+
+Ordo matriks kolom adalah <InlineMath math="m \times 1" />, dengan <InlineMath math="m" /> adalah banyaknya baris.
+
+Bentuk umumnya:
+
+<BlockMath math="B_{m \times 1} = \begin{bmatrix} a_{11} \\ a_{21} \\ \vdots \\ a_{m1} \end{bmatrix}" />
+
+Contoh:
+
+<BlockMath math="Q = \begin{bmatrix} 2 \\ 5 \\ -4 \end{bmatrix}" />
+
+Matriks <InlineMath math="Q" /> adalah matriks kolom berordo <InlineMath math="3 \times 1" />.
+
+## Matriks Persegi
+
+Matriks persegi adalah matriks yang memiliki jumlah baris dan jumlah kolom yang sama.
+
+Jika jumlah baris = jumlah kolom = <InlineMath math="n" />, maka matriks tersebut berordo <InlineMath math="n \times n" />.
+
+Bentuk umumnya:
+
+<BlockMath
+  math="A_{n \times n} = \begin{bmatrix}
+a_{11} & a_{12} & \dots & a_{1n} \\
+a_{21} & a_{22} & \dots & a_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{n1} & a_{n2} & \dots & a_{nn}
+\end{bmatrix}"
+/>
+
+Pada matriks persegi, terdapat:
+
+1. **Diagonal Utama**:
+
+   Elemen-elemen <InlineMath math="a_{11}, a_{22}, \dots, a_{nn}" /> (yaitu <InlineMath math="a_{ij}" /> dimana <InlineMath math="i=j" />).
+
+2. **Diagonal Samping**:
+
+   Elemen-elemen <InlineMath math="a_{1n}, a_{2,n-1}, \dots, a_{n1}" /> (yaitu <InlineMath math="a_{ij}" /> dimana <InlineMath math="i+j=n+1" />).
+
+Contoh:
+
+<BlockMath math="M = \begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{bmatrix}" />
+
+Matriks <InlineMath math="M" /> adalah matriks persegi berordo <InlineMath math="3 \times 3" />. Elemen diagonal utamanya adalah <InlineMath math="1, 5, 9" />. Elemen diagonal sampingnya adalah <InlineMath math="3, 5, 7" />.
+
+## Matriks Persegi Panjang
+
+Matriks persegi panjang adalah matriks yang jumlah baris dan jumlah kolomnya tidak sama (<InlineMath math="m \neq n" />).
+
+Contoh umum:
+
+<BlockMath math="C = \begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{bmatrix}" />
+
+Matriks <InlineMath math="C" /> di atas memiliki 2 baris dan 3 kolom, sehingga ordonya adalah <InlineMath math="2 \times 3" />. Karena jumlah baris tidak sama dengan jumlah kolom (<InlineMath math="2 \neq 3" />), maka matriks <InlineMath math="C" /> adalah matriks persegi panjang.
+
+Matriks persegi panjang dapat dibedakan lebih lanjut menjadi matriks datar dan matriks tegak.
+
+### Matriks Datar
+
+Matriks datar adalah matriks persegi panjang dengan jumlah kolom lebih banyak daripada jumlah baris (<InlineMath math="n > m" />).
+
+Contoh:
+
+<BlockMath math="D = \begin{bmatrix} 1 & 0 & 4 \\ -2 & 3 & 5 \end{bmatrix}" />
+
+Matriks <InlineMath math="D" /> adalah matriks datar berordo <InlineMath math="2 \times 3" />.
+
+### Matriks Tegak
+
+Matriks tegak adalah matriks persegi panjang dengan jumlah baris lebih banyak daripada jumlah kolom (<InlineMath math="m > n" />).
+
+Contoh:
+
+<BlockMath math="T = \begin{bmatrix} 7 & 1 \\ 0 & -3 \\ 4 & 2 \end{bmatrix}" />
+
+Matriks <InlineMath math="T" /> adalah matriks tegak berordo <InlineMath math="3 \times 2" />.
+
+## Matriks Segitiga
+
+Matriks segitiga adalah matriks persegi yang elemen-elemen di bawah atau di atas diagonal utamanya bernilai nol.
+
+### Matriks Segitiga Atas
+
+Matriks segitiga atas adalah matriks persegi yang semua elemen di bawah diagonal utamanya bernilai nol.
+
+Artinya, <InlineMath math="a_{ij} = 0" /> untuk setiap <InlineMath math="i > j" />.
+
+Contoh:
+
+<BlockMath math="U = \begin{bmatrix} 5 & 2 & -1 \\ 0 & 3 & 7 \\ 0 & 0 & 1 \end{bmatrix}" />
+
+### Matriks Segitiga Bawah
+
+Matriks segitiga bawah adalah matriks persegi yang semua elemen di atas diagonal utamanya bernilai nol.
+
+Artinya, <InlineMath math="a_{ij} = 0" /> untuk setiap <InlineMath math="i < j" />.
+
+Contoh:
+
+<BlockMath math="L = \begin{bmatrix} 2 & 0 & 0 \\ 4 & 6 & 0 \\ -3 & 1 & 9 \end{bmatrix}" />
+
+## Matriks Diagonal
+
+Matriks diagonal adalah matriks persegi yang semua elemen di luar diagonal utamanya bernilai nol.
+
+Artinya, <InlineMath math="a_{ij} = 0" /> untuk setiap <InlineMath math="i \neq j" />. Elemen pada diagonal utama bisa bernilai nol atau tidak.
+
+Contoh:
+
+<BlockMath math="X = \begin{bmatrix} 7 & 0 & 0 \\ 0 & -2 & 0 \\ 0 & 0 & 0 \end{bmatrix}" />
+
+Matriks <InlineMath math="X" /> adalah matriks diagonal berordo <InlineMath math="3 \times 3" />.
+
+## Matriks Identitas
+
+Matriks identitas (dilambangkan dengan <InlineMath math="I" /> atau <InlineMath math="I_n" />) adalah matriks diagonal yang semua elemen pada diagonal utamanya bernilai 1.
+
+Contoh:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="I_2 = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
+  <BlockMath math="I_3 = \begin{bmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix}" />
+</div>
+
+Matriks identitas berperan sebagai elemen netral dalam perkalian matriks.
+
+## Matriks Nol
+
+Matriks nol (dilambangkan dengan <InlineMath math="O" /> atau <InlineMath math="O_{m \times n}" />) adalah matriks yang semua elemennya bernilai nol.
+
+Contoh:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="O_{2 \times 2} = \begin{bmatrix} 0 & 0 \\ 0 & 0 \end{bmatrix}" />
+  <BlockMath math="O_{2 \times 3} = \begin{bmatrix} 0 & 0 & 0 \\ 0 & 0 & 0 \end{bmatrix}" />
+</div>
+
+## Matriks Simetris
+
+Matriks simetris adalah matriks persegi yang transposnya sama dengan matriks itu sendiri (<InlineMath math="A^T = A" />).
+
+Ini berarti elemen <InlineMath math="a_{ij} = a_{ji}" /> untuk semua <InlineMath math="i" /> dan <InlineMath math="j" />. Elemen-elemennya simetris (seperti cermin) terhadap diagonal utama.
+
+Contoh:
+
+<BlockMath math="S = \begin{bmatrix} 1 & 7 & -3 \\ 7 & 2 & 0 \\ -3 & 0 & 5 \end{bmatrix}" />
+
+Pada matriks <InlineMath math="S" />:
+
+- <InlineMath math="s_{12} = s_{21} = 7" />
+- <InlineMath math="s_{13} = s_{31} = -3" />
+- <InlineMath math="s_{23} = s_{32} = 0" />
