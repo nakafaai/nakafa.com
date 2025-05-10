@@ -4,3 +4,164 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Pengertian Invers Matriks
+
+Dalam himpunan bilangan real, setiap bilangan <InlineMath math="a" /> (yang bukan nol) memiliki kebalikan, yaitu bilangan <InlineMath math="a^{-1}" />, yang memenuhi sifat <InlineMath math="a \cdot a^{-1} = a^{-1} \cdot a = 1" />. Konsep serupa juga berlaku pada matriks.
+
+Jika <InlineMath math="A" /> adalah sebuah matriks persegi (misalnya, berordo <InlineMath math="n \times n" />) dan <InlineMath math="I" /> adalah matriks identitas dengan ordo yang sama, maka invers dari matriks <InlineMath math="A" />, yang dinotasikan sebagai <InlineMath math="A^{-1}" />, adalah matriks yang memenuhi sifat:
+
+<BlockMath math="A \cdot A^{-1} = A^{-1} \cdot A = I" />
+
+Matriks identitas <InlineMath math="I" /> adalah matriks persegi yang semua elemen diagonal utamanya adalah 1 dan elemen lainnya adalah 0. Contohnya, untuk ordo 2x2: <InlineMath math="I = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />.
+
+## Matriks Nonsingular dan Singular
+
+Tidak semua matriks persegi memiliki invers. Sebuah matriks <InlineMath math="A" /> memiliki invers jika dan hanya jika determinan dari matriks tersebut tidak sama dengan nol (<InlineMath math="\det(A) \neq 0" /> atau <InlineMath math="|A| \neq 0" />).
+
+- Matriks <InlineMath math="A" /> disebut **matriks nonsingular** jika <InlineMath math="\det(A) \neq 0" />. Matriks nonsingular selalu memiliki invers.
+- Matriks <InlineMath math="A" /> disebut **matriks singular** jika <InlineMath math="\det(A) = 0" />. Matriks singular tidak memiliki invers.
+
+## Invers Matriks Ordo 2x2
+
+Untuk matriks <InlineMath math="A" /> berordo 2x2, misalkan:
+
+<BlockMath math="A = \begin{bmatrix} a & b \\ c & d \end{bmatrix}" />
+
+Invers matriks <InlineMath math="A" /> dapat ditemukan menggunakan rumus berikut, asalkan <InlineMath math="\det(A) \neq 0" />:
+
+<BlockMath math="A^{-1} = \frac{1}{\det(A)} \text{Adj}(A)" />
+
+Mari kita pahami setiap komponen rumus ini:
+
+1.  **Determinan Matriks A (<InlineMath math="\det(A)" /> atau <InlineMath math="|A|" />)**:
+
+    Dihitung sebagai:
+
+    <BlockMath math="|A| = ad - bc" />
+
+2.  **Adjoin Matriks A (<InlineMath math="\text{Adj}(A)" />)**:
+
+    Diperoleh dengan menukar elemen diagonal utama dan mengubah tanda elemen diagonal lainnya:
+
+    <BlockMath math="\text{Adj}(A) = \begin{bmatrix} d & -b \\ -c & a \end{bmatrix}" />
+
+Jadi, rumus lengkap untuk invers matriks ordo 2x2 adalah:
+
+<BlockMath math="A^{-1} = \frac{1}{ad-bc} \begin{bmatrix} d & -b \\ -c & a \end{bmatrix}" />
+
+### Contoh Invers Matriks Ordo 2x2
+
+Tentukan invers dari matriks <InlineMath math="P = \begin{bmatrix} 3 & -7 \\ -1 & 2 \end{bmatrix}" />.
+
+**Penyelesaian:**
+
+Langkah 1: Identifikasi elemen-elemen matriks <InlineMath math="P" />.
+
+<InlineMath math="a=3, b=-7, c=-1, d=2" />
+
+Langkah 2: Hitung determinan matriks <InlineMath math="P" />.
+
+<BlockMath math="\det(P) = (3)(2) - (-7)(-1) = 6 - 7 = -1" />
+
+Karena <InlineMath math="\det(P) \neq 0" />, matriks <InlineMath math="P" /> memiliki invers.
+
+Langkah 3: Tentukan adjoin matriks <InlineMath math="P" />.
+
+<BlockMath math="\text{Adj}(P) = \begin{bmatrix} 2 & -(-7) \\ -(-1) & 3 \end{bmatrix} = \begin{bmatrix} 2 & 7 \\ 1 & 3 \end{bmatrix}" />
+
+Langkah 4: Hitung invers matriks <InlineMath math="P" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P^{-1} = \frac{1}{\det(P)} \text{Adj}(P)" />
+  <BlockMath math="P^{-1} = \frac{1}{-1} \begin{bmatrix} 2 & 7 \\ 1 & 3 \end{bmatrix}" />
+  <BlockMath math="P^{-1} = -1 \begin{bmatrix} 2 & 7 \\ 1 & 3 \end{bmatrix}" />
+  <BlockMath math="P^{-1} = \begin{bmatrix} -2 & -7 \\ -1 & -3 \end{bmatrix}" />
+</div>
+
+Jadi, invers dari matriks <InlineMath math="P" /> adalah <InlineMath math="P^{-1} = \begin{bmatrix} -2 & -7 \\ -1 & -3 \end{bmatrix}" />.
+
+## Invers Matriks Ordo 3x3
+
+Konsep dasar untuk mencari invers matriks ordo 3x3 sama dengan matriks ordo 2x2, yaitu menggunakan rumus:
+
+<BlockMath math="A^{-1} = \frac{1}{\det(A)} \text{Adj}(A)" />
+
+Namun, perhitungan determinan (<InlineMath math="\det(A)" />) dan adjoin (<InlineMath math="\text{Adj}(A)" />) untuk matriks 3x3 lebih kompleks.
+
+- **Determinan matriks 3x3** dapat dihitung menggunakan Metode Sarrus atau metode ekspansi kofaktor.
+- **Adjoin matriks 3x3** diperoleh dari transpos matriks kofaktornya.
+
+Pembahasan mendalam mengenai cara menghitung determinan dan adjoin matriks 3x3 biasanya akan dipelajari secara terpisah karena melibatkan lebih banyak langkah.
+
+## Sifat Invers Matriks
+
+Salah satu kegunaan penting dari invers matriks adalah untuk menyelesaikan sistem persamaan linear. Jika sebuah sistem persamaan linear dapat dinyatakan dalam bentuk perkalian matriks:
+
+<BlockMath math="AX = B" />
+
+di mana <InlineMath math="A" /> adalah matriks koefisien, <InlineMath math="X" /> adalah matriks variabel, dan <InlineMath math="B" /> adalah matriks konstanta. Jika matriks <InlineMath math="A" /> memiliki invers (<InlineMath math="A^{-1}" />), maka solusi untuk <InlineMath math="X" /> dapat ditemukan dengan:
+
+<BlockMath math="X = A^{-1}B" />
+
+Ini adalah sifat yang sangat berguna dalam berbagai aplikasi matematika dan rekayasa.
+
+## Latihan
+
+Diketahui matriks <InlineMath math="X = \begin{bmatrix} 1 & -3 \\ -1 & 4 \end{bmatrix}" /> dan <InlineMath math="Y = \begin{bmatrix} -4 & 2 \\ 3 & -2 \end{bmatrix}" />.
+
+1. Tentukan matriks <InlineMath math="X^{-1}" /> dan <InlineMath math="Y^{-1}" />.
+2. Tentukan matriks <InlineMath math="X^{-1} + Y^{-1}" />.
+3. Tentukan matriks <InlineMath math="(X+Y)^{-1}" />.
+4. Apakah matriks <InlineMath math="X^{-1} + Y^{-1}" /> sama dengan matriks <InlineMath math="(X+Y)^{-1}" />? Jelaskan jawabanmu.
+
+### Kunci Jawaban
+
+1.  **Menentukan <InlineMath math="X^{-1}" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="X = \begin{bmatrix} 1 & -3 \\ -1 & 4 \end{bmatrix}" />
+      <BlockMath math="\det(X) = (1)(4) - (-3)(-1) = 4 - 3 = 1" />
+      <BlockMath math="\text{Adj}(X) = \begin{bmatrix} 4 & 3 \\ 1 & 1 \end{bmatrix}" />
+      <BlockMath math="X^{-1} = \frac{1}{1} \begin{bmatrix} 4 & 3 \\ 1 & 1 \end{bmatrix} = \begin{bmatrix} 4 & 3 \\ 1 & 1 \end{bmatrix}" />
+    </div>
+
+    **Menentukan <InlineMath math="Y^{-1}" />:**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="Y = \begin{bmatrix} -4 & 2 \\ 3 & -2 \end{bmatrix}" />
+      <BlockMath math="\det(Y) = (-4)(-2) - (2)(3) = 8 - 6 = 2" />
+      <BlockMath math="\text{Adj}(Y) = \begin{bmatrix} -2 & -2 \\ -3 & -4 \end{bmatrix}" />
+      <BlockMath math="Y^{-1} = \frac{1}{2} \begin{bmatrix} -2 & -2 \\ -3 & -4 \end{bmatrix} = \begin{bmatrix} -1 & -1 \\ -3/2 & -2 \end{bmatrix}" />
+    </div>
+
+2.  **Menentukan <InlineMath math="X^{-1} + Y^{-1}" />:**
+
+    <BlockMath math="X^{-1} + Y^{-1} = \begin{bmatrix} 4 & 3 \\ 1 & 1 \end{bmatrix} + \begin{bmatrix} -1 & -1 \\ -3/2 & -2 \end{bmatrix} = \begin{bmatrix} 4-1 & 3-1 \\ 1-3/2 & 1-2 \end{bmatrix} = \begin{bmatrix} 3 & 2 \\ -1/2 & -1 \end{bmatrix}" />
+
+3.  **Menentukan <InlineMath math="(X+Y)^{-1}" />:**
+
+    Pertama, hitung <InlineMath math="X+Y" />:
+
+    <BlockMath math="X+Y = \begin{bmatrix} 1 & -3 \\ -1 & 4 \end{bmatrix} + \begin{bmatrix} -4 & 2 \\ 3 & -2 \end{bmatrix} = \begin{bmatrix} 1-4 & -3+2 \\ -1+3 & 4-2 \end{bmatrix} = \begin{bmatrix} -3 & -1 \\ 2 & 2 \end{bmatrix}" />
+
+    Misalkan <InlineMath math="Z = X+Y = \begin{bmatrix} -3 & -1 \\ 2 & 2 \end{bmatrix}" />. Sekarang, hitung <InlineMath math="Z^{-1}" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\det(Z) = (-3)(2) - (-1)(2) = -6 - (-2) = -6 + 2 = -4" />
+      <BlockMath math="\text{Adj}(Z) = \begin{bmatrix} 2 & 1 \\ -2 & -3 \end{bmatrix}" />
+      <BlockMath math="(X+Y)^{-1} = Z^{-1} = \frac{1}{-4} \begin{bmatrix} 2 & 1 \\ -2 & -3 \end{bmatrix} = \begin{bmatrix} -2/4 & -1/4 \\ 2/4 & 3/4 \end{bmatrix} = \begin{bmatrix} -1/2 & -1/4 \\ 1/2 & 3/4 \end{bmatrix}" />
+    </div>
+
+4.  **Perbandingan <InlineMath math="X^{-1} + Y^{-1}" /> dan <InlineMath math="(X+Y)^{-1}" />:**
+
+    Dari hasil perhitungan:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="X^{-1} + Y^{-1} = \begin{bmatrix} 3 & 2 \\ -1/2 & -1 \end{bmatrix}" />
+      <BlockMath math="(X+Y)^{-1} = \begin{bmatrix} -1/2 & -1/4 \\ 1/2 & 3/4 \end{bmatrix}" />
+    </div>
+
+    Jelas bahwa <InlineMath math="X^{-1} + Y^{-1} \neq (X+Y)^{-1}" />. Ini menunjukkan bahwa invers dari penjumlahan dua matriks umumnya tidak sama dengan penjumlahan dari invers masing-masing matriks.
+
+    Sifat ini berbeda dengan beberapa operasi aljabar pada bilangan real.
