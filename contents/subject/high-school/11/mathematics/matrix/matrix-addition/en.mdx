@@ -4,3 +4,212 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matrix",
 };
+
+## What Is Matrix Addition?
+
+Matrix addition is a fundamental operation in matrix algebra where two or more matrices are combined to produce a new matrix. This operation can only be performed if the matrices being added have the same size or order.
+
+The result of the addition is a new matrix of the same order, where each element is the sum of the corresponding elements (elements in the same position) from the original matrices.
+
+## Formal Definition of Matrix Addition
+
+Two matrices, let's say matrix <InlineMath math="A" /> and matrix <InlineMath math="B" />, can be added if and only if both matrices have the same order.
+
+Suppose matrix <InlineMath math="A" /> is of order <InlineMath math="m \times n" /> with elements <InlineMath math="a_{ij}" /> (element in the <InlineMath math="i" />-th row and <InlineMath math="j" />-th column), and matrix <InlineMath math="B" /> is also of order <InlineMath math="m \times n" /> with elements <InlineMath math="b_{ij}" />.
+
+Then, the sum of matrix <InlineMath math="A" /> and matrix <InlineMath math="B" />, which we call matrix <InlineMath math="C" />, is written as <InlineMath math="C = A + B" />. Matrix <InlineMath math="C" /> will also be of order <InlineMath math="m \times n" />, with elements <InlineMath math="c_{ij}" /> defined as:
+
+<BlockMath math="c_{ij} = a_{ij} + b_{ij}" />
+
+This means that each element in the resulting matrix is obtained by adding the elements that are in the same position from the two matrices being added.
+
+## How to Perform Matrix Addition
+
+To add two matrices, follow these steps:
+
+1.  **Ensure Same Order**: Check if both matrices have the same number of rows and columns. If not, addition cannot be performed.
+2.  **Add Corresponding Elements**: Add the elements that are in the same row and column position from both matrices.
+3.  **Form the Resultant Matrix**: Arrange the sums of these elements into a new matrix of the same order.
+
+### Example of Matrix Addition
+
+Suppose we have two matrices, <InlineMath math="P" /> and <InlineMath math="Q" />, as follows:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P = \begin{bmatrix} 1 & 5 \\ -2 & 0 \\ 4 & 7 \end{bmatrix}" />
+  <BlockMath math="Q = \begin{bmatrix} 6 & -3 \\ 8 & 1 \\ -2 & 9 \end{bmatrix}" />
+</div>
+
+Both matrices are of order <InlineMath math="3 \times 2" /> (3 rows and 2 columns), so they can be added.
+
+Then, <InlineMath math="P+Q" /> is:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P+Q = \begin{bmatrix} 1 & 5 \\ -2 & 0 \\ 4 & 7 \end{bmatrix} + \begin{bmatrix} 6 & -3 \\ 8 & 1 \\ -2 & 9 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 1+6 & 5+(-3) \\ -2+8 & 0+1 \\ 4+(-2) & 7+9 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 7 & 2 \\ 6 & 1 \\ 2 & 16 \end{bmatrix}" />
+</div>
+
+Thus, the sum of matrix <InlineMath math="P" /> and matrix <InlineMath math="Q" /> is the matrix <InlineMath math="\begin{bmatrix} 7 & 2 \\ 6 & 1 \\ 2 & 16 \end{bmatrix}" />.
+
+### Matrices That Cannot Be Added
+
+Suppose matrix <InlineMath math="X = \begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}" /> and matrix <InlineMath math="Y = \begin{bmatrix} 5 & 6 & 7 \\ 8 & 9 & 10 \end{bmatrix}" />.
+
+Matrix <InlineMath math="X" /> is of order <InlineMath math="2 \times 2" />, while matrix <InlineMath math="Y" /> is of order <InlineMath math="2 \times 3" />. Since their orders are different, matrix <InlineMath math="X" /> and matrix <InlineMath math="Y" /> cannot be added.
+
+## Properties of Matrix Addition
+
+Matrix addition has several important properties, similar to the properties of addition for real numbers. Let <InlineMath math="A" />, <InlineMath math="B" />, and <InlineMath math="C" /> be matrices of the same order, and <InlineMath math="O" /> be the zero matrix (a matrix where all elements are zero) of the same order as <InlineMath math="A" />, <InlineMath math="B" />, and <InlineMath math="C" />.
+
+1.  **Commutative Property**: The order of matrix addition does not affect the result.
+
+    <BlockMath math="A + B = B + A" />
+
+    This means that adding matrix <InlineMath math="A" /> to <InlineMath math="B" /> will produce the same matrix as adding matrix <InlineMath math="B" /> to <InlineMath math="A" />.
+
+2.  **Associative Property**: The grouping in the addition of three or more matrices does not affect the result.
+
+    <BlockMath math="(A + B) + C = A + (B + C)" />
+
+    This means you can add <InlineMath math="A" /> and <InlineMath math="B" /> first,
+    then add the result to <InlineMath math="C" />, or
+    add <InlineMath math="B" /> and <InlineMath math="C" /> first,
+    then add <InlineMath math="A" /> to the result. The final
+    outcome will be the same.
+
+3.  **Existence of an Identity Element (Zero Matrix)**: There exists a zero matrix <InlineMath math="O" /> that acts as the identity element in addition.
+
+    <BlockMath math="A + O = O + A = A" />
+
+    This means that if a matrix is added to a zero matrix (of the same order), the result
+    is the matrix itself.
+
+    This zero matrix plays a role similar to the number 0 in the addition of numbers.
+
+4.  **Existence of an Additive Inverse (Opposite of a Matrix)**: Every matrix <InlineMath math="A" /> has an additive inverse, denoted as <InlineMath math="-A" />, which when added to <InlineMath math="A" /> results in the zero matrix <InlineMath math="O" />.
+
+    <BlockMath math="A + (-A) = O" />
+
+    The matrix <InlineMath math="-A" /> is a matrix where each element is the
+    opposite (negative) of the corresponding elements of matrix <InlineMath math="A" />.
+
+    For example, if <InlineMath math="a_{ij}" /> is an element of <InlineMath math="A" />, then <InlineMath math="-a_{ij}" /> is an element of <InlineMath math="-A" />.
+
+## Exercises
+
+**Problem 1**
+
+Given the following matrices:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A = \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix}" />
+  <BlockMath math="B = \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix}" />
+  <BlockMath math="C = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
+</div>
+
+Calculate <InlineMath math="A+B" /> and <InlineMath math="B+A" />. Then, determine if <InlineMath math="A+C" /> can be calculated and provide your explanation.
+
+**Problem 2**
+
+Determine the values of <InlineMath math="x, y," /> and <InlineMath math="z" /> from the following matrix addition:
+
+<BlockMath math="\begin{bmatrix} 2x & 5 \\ -1 & 3y \end{bmatrix} + \begin{bmatrix} 4 & -2 \\ z & 7 \end{bmatrix} = \begin{bmatrix} 10 & 3 \\ 6 & 1 \end{bmatrix}" />
+
+**Problem 3**
+
+If <InlineMath math="P = \begin{bmatrix} 1 & -2 \\ 3 & 0 \end{bmatrix}" />, determine the matrix <InlineMath math="-P" /> (the additive inverse of <InlineMath math="P" />) and prove that <InlineMath math="P + (-P) = O" />, where <InlineMath math="O" /> is the zero matrix of the same order.
+
+### Answer Key
+
+**Problem 1**
+
+Given matrices:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A = \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix}" />
+  <BlockMath math="B = \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix}" />
+  <BlockMath math="C = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
+</div>
+
+Addition of matrix <InlineMath math="A" /> and <InlineMath math="B" /> (<InlineMath math="A+B" />):
+
+<div className="flex flex-col gap-4 mt-4">
+  <BlockMath math="A+B = \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix} + \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 3+(-2) & -1+9 & 7+(-4) \\ 0+6 & 5+(-3) & 2+1 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 1 & 8 & 3 \\ 6 & 2 & 3 \end{bmatrix}" />
+</div>
+
+Addition of matrix <InlineMath math="B" /> and <InlineMath math="A" /> (<InlineMath math="B+A" />):
+
+<div className="flex flex-col gap-4 mt-4">
+  <BlockMath math="B+A = \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix} + \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} -2+3 & 9+(-1) & -4+7 \\ 6+0 & -3+5 & 1+2 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 1 & 8 & 3 \\ 6 & 2 & 3 \end{bmatrix}" />
+</div>
+
+(Commutative property proven: <InlineMath math="A+B = B+A" />)
+
+Addition of matrix <InlineMath math="A" /> and <InlineMath math="C" /> (<InlineMath math="A+C" />):
+
+Cannot be calculated. Matrix <InlineMath math="A" /> is of order <InlineMath math="2 \times 3" />, while matrix <InlineMath math="C" /> is of order <InlineMath math="2 \times 2" />. Since their orders are different, the addition <InlineMath math="A+C" /> cannot be performed.
+
+**Problem 2**
+
+Given the matrix addition:
+
+<BlockMath math="\begin{bmatrix} 2x & 5 \\ -1 & 3y \end{bmatrix} + \begin{bmatrix} 4 & -2 \\ z & 7 \end{bmatrix} = \begin{bmatrix} 10 & 3 \\ 6 & 1 \end{bmatrix}" />
+
+Perform matrix addition on the left side:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{bmatrix} 2x+4 & 5+(-2) \\ -1+z & 3y+7 \end{bmatrix} = \begin{bmatrix} 10 & 3 \\ 6 & 1 \end{bmatrix}" />
+  <BlockMath math="\begin{bmatrix} 2x+4 & 3 \\ -1+z & 3y+7 \end{bmatrix} = \begin{bmatrix} 10 & 3 \\ 6 & 1 \end{bmatrix}" />
+</div>
+
+Based on the equality of two matrices, corresponding elements must be equal:
+
+For the element in row 1, column 1: <InlineMath math="2x+4 = 10" />
+
+<div className="flex flex-col gap-4 mt-4">
+  <BlockMath math="2x = 10-4" />
+  <BlockMath math="2x = 6" />
+  <BlockMath math="x = 3" />
+</div>
+
+For the element in row 1, column 2: <InlineMath math="3 = 3" /> (already consistent).
+
+For the element in row 2, column 1: <InlineMath math="-1+z = 6" />
+
+<div className="flex flex-col gap-4 mt-4">
+  <BlockMath math="z = 6+1" />
+  <BlockMath math="z = 7" />
+</div>
+
+For the element in row 2, column 2: <InlineMath math="3y+7 = 1" />
+
+<div className="flex flex-col gap-4 mt-4">
+  <BlockMath math="3y = 1-7" />
+  <BlockMath math="3y = -6" />
+  <BlockMath math="y = -2" />
+</div>
+
+Thus, the values are <InlineMath math="x=3" />, <InlineMath math="y=-2" />, and <InlineMath math="z=7" />.
+
+**Problem 3**
+
+Given matrix <InlineMath math="P = \begin{bmatrix} 1 & -2 \\ 3 & 0 \end{bmatrix}" />.
+
+The additive inverse of <InlineMath math="P" />, which is <InlineMath math="-P" />, is:
+
+<BlockMath math="-P = \begin{bmatrix} -1 & -(-2) \\ -3 & -0 \end{bmatrix} = \begin{bmatrix} -1 & 2 \\ -3 & 0 \end{bmatrix}" />
+
+Proof that <InlineMath math="P + (-P) = O" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P + (-P) = \begin{bmatrix} 1 & -2 \\ 3 & 0 \end{bmatrix} + \begin{bmatrix} -1 & 2 \\ -3 & 0 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 1+(-1) & -2+2 \\ 3+(-3) & 0+0 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 0 & 0 \\ 0 & 0 \end{bmatrix}" />
+</div>
+
+The result is the zero matrix <InlineMath math="O" /> of order <InlineMath math="2 \times 2" />. Proven.

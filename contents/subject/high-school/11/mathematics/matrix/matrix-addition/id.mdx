@@ -4,3 +4,212 @@ export const metadata = {
   date: "06/05/2025",
   subject: "Matriks",
 };
+
+## Apa Itu Penjumlahan Matriks?
+
+Penjumlahan matriks adalah operasi dasar dalam aljabar matriks di mana dua matriks atau lebih digabungkan untuk menghasilkan matriks baru. Operasi ini hanya dapat dilakukan jika matriks-matriks yang dijumlahkan memiliki ukuran atau ordo yang sama.
+
+Hasil penjumlahannya adalah matriks baru dengan ordo yang sama, di mana setiap elemennya merupakan hasil penjumlahan elemen-elemen yang bersesuaian (seletak) dari matriks-matriks awal.
+
+## Definisi Formal Penjumlahan Matriks
+
+Dua matriks, katakanlah matriks <InlineMath math="A" /> dan matriks <InlineMath math="B" />, dapat dijumlahkan jika dan hanya jika kedua matriks tersebut memiliki ordo yang sama.
+
+Misalkan matriks <InlineMath math="A" /> berordo <InlineMath math="m \times n" /> dengan elemen-elemen <InlineMath math="a_{ij}" /> (elemen pada baris ke-<InlineMath math="i" /> dan kolom ke-<InlineMath math="j" />), dan matriks <InlineMath math="B" /> juga berordo <InlineMath math="m \times n" /> dengan elemen-elemen <InlineMath math="b_{ij}" />.
+
+Maka, hasil penjumlahan matriks <InlineMath math="A" /> dan <InlineMath math="B" />, yang kita sebut matriks <InlineMath math="C" />, ditulis sebagai <InlineMath math="C = A + B" />. Matriks <InlineMath math="C" /> juga akan berordo <InlineMath math="m \times n" />, dengan elemen-elemen <InlineMath math="c_{ij}" /> yang didefinisikan sebagai:
+
+<BlockMath math="c_{ij} = a_{ij} + b_{ij}" />
+
+Ini berarti setiap elemen pada matriks hasil penjumlahan diperoleh dengan menjumlahkan elemen-elemen yang posisinya sama dari kedua matriks yang dijumlahkan.
+
+## Cara Melakukan Penjumlahan Matriks
+
+Untuk menjumlahkan dua matriks, ikuti langkah-langkah berikut:
+
+1.  **Pastikan Ordo Sama**: Periksa apakah kedua matriks memiliki jumlah baris dan kolom yang sama. Jika tidak, penjumlahan tidak dapat dilakukan.
+2.  **Jumlahkan Elemen Seletak**: Jumlahkan elemen-elemen yang berada pada posisi baris dan kolom yang sama dari kedua matriks.
+3.  **Bentuk Matriks Hasil**: Susun hasil penjumlahan elemen-elemen tersebut ke dalam matriks baru dengan ordo yang sama.
+
+### Contoh Penjumlahan Matriks
+
+Misalkan kita memiliki dua matriks, <InlineMath math="P" /> dan <InlineMath math="Q" />, sebagai berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P = \begin{bmatrix} 1 & 5 \\ -2 & 0 \\ 4 & 7 \end{bmatrix}" />
+  <BlockMath math="Q = \begin{bmatrix} 6 & -3 \\ 8 & 1 \\ -2 & 9 \end{bmatrix}" />
+</div>
+
+Kedua matriks ini berordo <InlineMath math="3 \times 2" /> (3 baris dan 2 kolom), sehingga dapat dijumlahkan.
+
+Maka, <InlineMath math="P+Q" /> adalah:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P+Q = \begin{bmatrix} 1 & 5 \\ -2 & 0 \\ 4 & 7 \end{bmatrix} + \begin{bmatrix} 6 & -3 \\ 8 & 1 \\ -2 & 9 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 1+6 & 5+(-3) \\ -2+8 & 0+1 \\ 4+(-2) & 7+9 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 7 & 2 \\ 6 & 1 \\ 2 & 16 \end{bmatrix}" />
+</div>
+
+Jadi, hasil penjumlahan matriks <InlineMath math="P" /> dan <InlineMath math="Q" /> adalah matriks <InlineMath math="\begin{bmatrix} 7 & 2 \\ 6 & 1 \\ 2 & 16 \end{bmatrix}" />.
+
+### Matriks yang Tidak Dapat Dijumlahkan
+
+Misalkan matriks <InlineMath math="X = \begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}" /> dan matriks <InlineMath math="Y = \begin{bmatrix} 5 & 6 & 7 \\ 8 & 9 & 10 \end{bmatrix}" />.
+
+Matriks <InlineMath math="X" /> berordo <InlineMath math="2 \times 2" />, sedangkan matriks <InlineMath math="Y" /> berordo <InlineMath math="2 \times 3" />. Karena ordonya berbeda, matriks <InlineMath math="X" /> dan <InlineMath math="Y" /> tidak dapat dijumlahkan.
+
+## Sifat-Sifat Penjumlahan Matriks
+
+Penjumlahan matriks memiliki beberapa sifat penting, mirip dengan sifat penjumlahan pada bilangan real. Misalkan <InlineMath math="A" />, <InlineMath math="B" />, dan <InlineMath math="C" /> adalah matriks-matriks yang berordo sama, dan <InlineMath math="O" /> adalah matriks nol (matriks yang semua elemennya nol) yang berordo sama dengan <InlineMath math="A" />, <InlineMath math="B" />, dan <InlineMath math="C" />.
+
+1.  **Sifat Komutatif**: Urutan penjumlahan matriks tidak mempengaruhi hasilnya.
+
+    <BlockMath math="A + B = B + A" />
+
+    Artinya, menjumlahkan matriks <InlineMath math="A" /> dengan <InlineMath math="B" /> akan menghasilkan matriks yang sama dengan menjumlahkan matriks <InlineMath math="B" /> dengan <InlineMath math="A" />.
+
+2.  **Sifat Asosiatif**: Pengelompokan dalam penjumlahan tiga matriks atau lebih tidak mempengaruhi hasilnya.
+
+    <BlockMath math="(A + B) + C = A + (B + C)" />
+
+    Artinya, Anda bisa menjumlahkan <InlineMath math="A" /> dan <InlineMath math="B" /> terlebih
+    dahulu, kemudian hasilnya dijumlahkan dengan <InlineMath math="C" />, atau
+    menjumlahkan <InlineMath math="B" /> dan <InlineMath math="C" /> terlebih
+    dahulu, kemudian <InlineMath math="A" /> dijumlahkan dengan hasilnya. Hasil
+    akhirnya akan sama.
+
+3.  **Memiliki Elemen Identitas (Matriks Nol)**: Terdapat matriks nol <InlineMath math="O" /> yang bersifat sebagai elemen identitas dalam penjumlahan.
+
+    <BlockMath math="A + O = O + A = A" />
+
+    Artinya, jika suatu matriks dijumlahkan dengan matriks nol (yang seordo), hasilnya
+    adalah matriks itu sendiri.
+
+    Matriks nol ini berperan seperti angka 0 dalam penjumlahan bilangan.
+
+4.  **Memiliki Invers Aditif (Lawan Suatu Matriks)**: Setiap matriks <InlineMath math="A" /> memiliki invers aditif, yaitu matriks <InlineMath math="-A" />, yang jika dijumlahkan dengan <InlineMath math="A" /> akan menghasilkan matriks nol <InlineMath math="O" />.
+
+    <BlockMath math="A + (-A) = O" />
+
+    Matriks <InlineMath math="-A" /> adalah matriks yang setiap elemennya merupakan
+    lawan (negatif) dari elemen-elemen matriks <InlineMath math="A" /> yang seletak.
+
+    Misalnya, jika <InlineMath math="a_{ij}" /> adalah elemen dari <InlineMath math="A" /> , maka <InlineMath math="-a_{ij}" /> adalah elemen dari <InlineMath math="-A" />.
+
+## Latihan
+
+**Soal 1**
+
+Diketahui matriks-matriks berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A = \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix}" />
+  <BlockMath math="B = \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix}" />
+  <BlockMath math="C = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
+</div>
+
+Hitunglah <InlineMath math="A+B" /> dan <InlineMath math="B+A" />. Kemudian, tentukan apakah <InlineMath math="A+C" /> dapat dihitung dan berikan penjelasanmu.
+
+**Soal 2**
+
+Tentukan nilai <InlineMath math="x, y," /> dan <InlineMath math="z" /> dari penjumlahan matriks berikut:
+
+<BlockMath math="\begin{bmatrix} 2x & 5 \\ -1 & 3y \end{bmatrix} + \begin{bmatrix} 4 & -2 \\ z & 7 \end{bmatrix} = \begin{bmatrix} 10 & 3 \\ 6 & 1 \end{bmatrix}" />
+
+**Soal 3**
+
+Jika <InlineMath math="P = \begin{bmatrix} 1 & -2 \\ 3 & 0 \end{bmatrix}" />, tentukan matriks <InlineMath math="-P" /> (invers aditif dari <InlineMath math="P" />) dan buktikan bahwa <InlineMath math="P + (-P) = O" />, di mana <InlineMath math="O" /> adalah matriks nol yang seordo.
+
+### Kunci Jawaban
+
+**Soal 1**
+
+Diketahui matriks-matriks:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="A = \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix}" />
+  <BlockMath math="B = \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix}" />
+  <BlockMath math="C = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
+</div>
+
+Penjumlahan matriks <InlineMath math="A" /> dan <InlineMath math="B" /> (<InlineMath math="A+B" />):
+
+<div className="flex flex-col gap-4 mt-4">
+  <BlockMath math="A+B = \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix} + \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 3+(-2) & -1+9 & 7+(-4) \\ 0+6 & 5+(-3) & 2+1 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 1 & 8 & 3 \\ 6 & 2 & 3 \end{bmatrix}" />
+</div>
+
+Penjumlahan matriks <InlineMath math="B" /> dan <InlineMath math="A" /> (<InlineMath math="B+A" />):
+
+<div className="flex flex-col gap-4 mt-4">
+  <BlockMath math="B+A = \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix} + \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} -2+3 & 9+(-1) & -4+7 \\ 6+0 & -3+5 & 1+2 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 1 & 8 & 3 \\ 6 & 2 & 3 \end{bmatrix}" />
+</div>
+
+(Terbukti sifat komutatif: <InlineMath math="A+B = B+A" />)
+
+Penjumlahan matriks <InlineMath math="A" /> dan <InlineMath math="C" /> (<InlineMath math="A+C" />):
+
+Tidak dapat dihitung. Matriks <InlineMath math="A" /> berordo <InlineMath math="2 \times 3" />, sedangkan matriks <InlineMath math="C" /> berordo <InlineMath math="2 \times 2" />. Karena ordonya berbeda, penjumlahan <InlineMath math="A+C" /> tidak dapat dilakukan.
+
+**Soal 2**
+
+Diketahui penjumlahan matriks:
+
+<BlockMath math="\begin{bmatrix} 2x & 5 \\ -1 & 3y \end{bmatrix} + \begin{bmatrix} 4 & -2 \\ z & 7 \end{bmatrix} = \begin{bmatrix} 10 & 3 \\ 6 & 1 \end{bmatrix}" />
+
+Lakukan penjumlahan matriks di ruas kiri:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{bmatrix} 2x+4 & 5+(-2) \\ -1+z & 3y+7 \end{bmatrix} = \begin{bmatrix} 10 & 3 \\ 6 & 1 \end{bmatrix}" />
+  <BlockMath math="\begin{bmatrix} 2x+4 & 3 \\ -1+z & 3y+7 \end{bmatrix} = \begin{bmatrix} 10 & 3 \\ 6 & 1 \end{bmatrix}" />
+</div>
+
+Berdasarkan kesamaan dua matriks, elemen-elemen yang seletak harus sama:
+
+Untuk elemen baris 1, kolom 1: <InlineMath math="2x+4 = 10" />
+
+<div className="flex flex-col gap-4 mt-4">
+  <BlockMath math="2x = 10-4" />
+  <BlockMath math="2x = 6" />
+  <BlockMath math="x = 3" />
+</div>
+
+Untuk elemen baris 1, kolom 2: <InlineMath math="3 = 3" /> (sudah sesuai).
+
+Untuk elemen baris 2, kolom 1: <InlineMath math="-1+z = 6" />
+
+<div className="flex flex-col gap-4 mt-4">
+  <BlockMath math="z = 6+1" />
+  <BlockMath math="z = 7" />
+</div>
+
+Untuk elemen baris 2, kolom 2: <InlineMath math="3y+7 = 1" />
+
+<div className="flex flex-col gap-4 mt-4">
+  <BlockMath math="3y = 1-7" />
+  <BlockMath math="3y = -6" />
+  <BlockMath math="y = -2" />
+</div>
+
+Jadi, nilai <InlineMath math="x=3" />, <InlineMath math="y=-2" />, dan <InlineMath math="z=7" />.
+
+**Soal 3**
+
+Diberikan matriks <InlineMath math="P = \begin{bmatrix} 1 & -2 \\ 3 & 0 \end{bmatrix}" />.
+
+Invers aditif dari <InlineMath math="P" />, yaitu <InlineMath math="-P" />, adalah:
+
+<BlockMath math="-P = \begin{bmatrix} -1 & -(-2) \\ -3 & -0 \end{bmatrix} = \begin{bmatrix} -1 & 2 \\ -3 & 0 \end{bmatrix}" />
+
+Pembuktian bahwa <InlineMath math="P + (-P) = O" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="P + (-P) = \begin{bmatrix} 1 & -2 \\ 3 & 0 \end{bmatrix} + \begin{bmatrix} -1 & 2 \\ -3 & 0 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 1+(-1) & -2+2 \\ 3+(-3) & 0+0 \end{bmatrix}" />
+  <BlockMath math="= \begin{bmatrix} 0 & 0 \\ 0 & 0 \end{bmatrix}" />
+</div>
+
+Hasilnya adalah matriks nol <InlineMath math="O" /> berordo <InlineMath math="2 \times 2" />. Terbukti.
