@@ -304,7 +304,7 @@ const enMaterials: MaterialList = [
     href: `${BASE_PATH}/geometric-transformation`,
     items: [
       {
-        title: "Reflection over Line",
+        title: "Reflection over a Line",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-line`,
       },
       {
