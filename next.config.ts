@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
       mdxType: "gfm",
     },
     optimizePackageImports: ["three"],
+    reactCompiler: true,
   },
   images: {
     contentDispositionType: "inline",
