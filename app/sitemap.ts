@@ -73,7 +73,8 @@ export function getOgRoutes(routes: string[]): string[] {
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const contentRoutes = getAllRoutes(); // Get routes from 'contents' directory
-  const allBaseRoutes = [...baseRoutes, ...contentRoutes];
+  const ogRoutes = getOgRoutes(contentRoutes);
+  const allBaseRoutes = [...baseRoutes, ...contentRoutes, ...ogRoutes];
 
   // Generate sitemap entries for all routes, including localized versions
   const sitemapEntries = allBaseRoutes.flatMap((route) => {
