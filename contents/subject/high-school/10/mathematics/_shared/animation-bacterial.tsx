@@ -92,18 +92,19 @@ export function BacterialGrowth({
   const deferredPlaying = useDeferredValue(isPlaying);
   const deferredGeneration = useDeferredValue(generation);
 
-  const { ref, isIntersecting } = useIntersectionObserver({
+  const { ref } = useIntersectionObserver({
     threshold: 0.1,
+    // Start playing when component comes into view
+    onChange: (entry) => {
+      if (entry) {
+        setIsPlaying(true);
+      } else {
+        setIsPlaying(false);
+      }
+    },
   });
 
   // Start playing when component comes into view
-  useEffect(() => {
-    if (isIntersecting) {
-      setIsPlaying(true);
-    } else {
-      setIsPlaying(false);
-    }
-  }, [isIntersecting]);
 
   // Calculate current bacteria count based on the selected formula type
   const bacteriaCount = useMemo(() => {

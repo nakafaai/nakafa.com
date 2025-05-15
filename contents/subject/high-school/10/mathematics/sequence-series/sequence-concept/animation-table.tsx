@@ -59,18 +59,17 @@ export default function TableChairsAnimation({
 
   const isMobile = useMediaQuery("(max-width: 640px)");
 
-  const { ref, isIntersecting } = useIntersectionObserver({
+  const { ref } = useIntersectionObserver({
     threshold: 0.1,
+    // Start playing when component comes into view
+    onChange: (entry) => {
+      if (entry) {
+        setIsPlaying(true);
+      } else {
+        setIsPlaying(false);
+      }
+    },
   });
-
-  // Start playing when component comes into view
-  useEffect(() => {
-    if (isIntersecting) {
-      setIsPlaying(true);
-    } else {
-      setIsPlaying(false);
-    }
-  }, [isIntersecting]);
 
   const maxTables = isMobile ? 2 : 3;
 
