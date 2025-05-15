@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export const PagefindResultSchema = z.object({
   excerpt: z.string(),
@@ -32,8 +32,8 @@ export const PagefindSearchOptionsSchema = z.object({
   /** Add more verbose console logging for this search query */
   verbose: z.boolean().optional(),
   /** The set of filters to execute with this search. Input type is extremely flexible, see the filtering docs for details */
-  filters: z.record(z.unknown()).optional(),
+  filters: z.record(z.string(), z.unknown()).optional(),
   /** The set of sorts to use for this search, instead of relevancy */
-  sort: z.record(z.unknown()).optional(),
+  sort: z.record(z.string(), z.unknown()).optional(),
 });
 export type PagefindSearchOptions = z.infer<typeof PagefindSearchOptionsSchema>;
