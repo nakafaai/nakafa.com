@@ -284,4 +284,5 @@ function ParticlesComponent({
 
 export const Particles = dynamic(() => Promise.resolve(ParticlesComponent), {
   ssr: false,
+  loading: () => null,
 });

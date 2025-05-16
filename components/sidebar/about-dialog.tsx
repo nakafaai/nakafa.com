@@ -115,5 +115,5 @@ function AboutDialogComponent({ open, action }: Props) {
 
 export const AboutDialog = dynamic(
   () => Promise.resolve(AboutDialogComponent),
-  { ssr: false }
+  { ssr: false, loading: () => null }
 );

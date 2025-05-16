@@ -22,4 +22,5 @@ function CanvasComponent({
 
 export const ThreeCanvas = dynamic(() => Promise.resolve(CanvasComponent), {
   ssr: false,
+  loading: () => null,
 });

@@ -134,5 +134,6 @@ export const SearchResults = dynamic(
   () => Promise.resolve(SearchResultsContent),
   {
     ssr: false,
+    loading: () => null,
   }
 );
