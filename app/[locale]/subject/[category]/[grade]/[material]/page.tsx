@@ -28,6 +28,7 @@ import type { MaterialGrade } from "@/types/subject/material";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Suspense } from "react";
 
 export const revalidate = false;
 
@@ -108,7 +109,7 @@ export default async function Page({ params }: Props) {
   }));
 
   return (
-    <>
+    <Suspense fallback={null}>
       <BreadcrumbJsonLd
         locale={locale}
         breadcrumbItems={materials.map((mat, index) => ({
@@ -154,6 +155,6 @@ export default async function Page({ params }: Props) {
           data: chapters,
         }}
       />
-    </>
+    </Suspense>
   );
 }
