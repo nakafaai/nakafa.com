@@ -13,7 +13,8 @@
 <p align="center">
   <a href="https://nakafa.com"><strong>Website</strong></a> •
   <a href="https://github.com/nabilfatih/nakafa.com/issues">Report Bug</a> •
-  <a href="https://github.com/nabilfatih/nakafa.com/discussions">Request Feature</a>
+  <a href="https://github.com/nabilfatih/nakafa.com/discussions">Request Feature</a> •
+  <a href="https://deepwiki.com/nabilfatih/nakafa.com"><img src="https://deepwiki.com/api/badge?mainText=DeepWiki&owner=nabilfatih&repo=nakafa.com" alt="Documentation on DeepWiki"></a>
 </p>
 
 <p align="center">
@@ -35,6 +36,18 @@
 The name "Nakafa" (نافعة) is an Arabic word meaning "beneficial" or "useful." It embodies our commitment to creating a platform that empowers individuals through education, transcending geographical, linguistic, and socio-economic barriers.
 
 We believe that education is a fundamental right, and Nakafa aims to be a valuable resource for self-learners, educators, and anyone passionate about acquiring knowledge.
+
+## Project Architecture & DeepWiki
+
+For those interested in the technical "behind-the-scenes" of Nakafa, we maintain a detailed breakdown of our project architecture, design choices, and development process on DeepWiki. This serves as a living document that provides a deeper understanding of how Nakafa is built and how its various components interact.
+
+You can access the Nakafa DeepWiki here: [![Documentation on DeepWiki](https://deepwiki.com/api/badge?mainText=DeepWiki&owner=nabilfatih&repo=nakafa.com)](https://deepwiki.com/nabilfatih/nakafa.com)
+
+This resource is particularly useful for:
+
+- Developers looking to contribute to the Nakafa platform.
+- Individuals curious about our technology stack and architectural patterns.
+- Anyone wanting a comprehensive overview of the project's technical foundations.
 
 ## Key Features
 
