@@ -19,12 +19,12 @@ import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
 import { Analytics } from "@/components/ui/analytics";
+import { ReactScan } from "@/components/ui/react-scan";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { TailwindIndicator } from "@/components/ui/tailwind-indicator";
 import { themes } from "@/lib/data/theme";
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import type { ReactNode } from "react";
 
 type Props = {
@@ -215,11 +215,9 @@ export default async function LocaleLayout({ children, params }: Props) {
       )}
       suppressHydrationWarning
     >
-      {process.env.NODE_ENV === "development" && (
-        <Script src="https://unpkg.com/react-scan/dist/auto.global.js" />
-      )}
       <NextIntlClientProvider>
         <head>
+          <ReactScan />
           {/* Add JSON-LD structured data using the JsonLd component */}
           <EducationalOrgJsonLd />
           <OrganizationJsonLd />
