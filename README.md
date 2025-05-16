@@ -14,7 +14,7 @@
   <a href="https://nakafa.com"><strong>Website</strong></a> •
   <a href="https://github.com/nabilfatih/nakafa.com/issues">Report Bug</a> •
   <a href="https://github.com/nabilfatih/nakafa.com/discussions">Request Feature</a> •
-  <a href="https://deepwiki.com/nabilfatih/nakafa.com"><img src="https://deepwiki.com/api/badge?mainText=DeepWiki&owner=nabilfatih&repo=nakafa.com" alt="Documentation on DeepWiki"></a>
+  <a href="https://deepwiki.com/nabilfatih/nakafa.com"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
 </p>
 
 <p align="center">
@@ -41,7 +41,7 @@ We believe that education is a fundamental right, and Nakafa aims to be a valuab
 
 For those interested in the technical "behind-the-scenes" of Nakafa, we maintain a detailed breakdown of our project architecture, design choices, and development process on DeepWiki. This serves as a living document that provides a deeper understanding of how Nakafa is built and how its various components interact.
 
-You can access the Nakafa DeepWiki here: [![Documentation on DeepWiki](https://deepwiki.com/api/badge?mainText=DeepWiki&owner=nabilfatih&repo=nakafa.com)](https://deepwiki.com/nabilfatih/nakafa.com)
+You can access the Nakafa DeepWiki here: <a href="https://deepwiki.com/nabilfatih/nakafa.com"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
 
 This resource is particularly useful for:
 
