@@ -133,6 +133,7 @@ function SidebarProvider({
       <TooltipProvider delayDuration={0}>
         <div
           data-slot="sidebar-wrapper"
+          tabIndex={-1}
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH,
