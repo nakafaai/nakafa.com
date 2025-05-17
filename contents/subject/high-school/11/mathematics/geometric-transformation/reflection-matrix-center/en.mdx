@@ -1,6 +1,148 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Reflection Matrix over Center Point",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "10/05/2025",
   subject: "Geometric Transformation",
 };
+
+## Finding the Reflection Matrix over the Origin
+
+Reflecting a point <InlineMath math="(x,y)" /> over the origin <InlineMath math="O(0,0)" /> results in the image <InlineMath math="(-x,-y)" />. This is equivalent to a <InlineMath math="180^\circ" /> rotation about the origin.
+
+Now, we will find the <InlineMath math="2 \times 2" /> matrix, let's say <InlineMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix}" />, that represents this transformation.
+
+We want to find <InlineMath math="r, s, t, u" /> such that:
+
+<BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} -x \\ -y \end{pmatrix}" />
+
+From matrix multiplication, we can write:
+
+<BlockMath math="\begin{pmatrix} rx + sy \\ tx + uy \end{pmatrix} = \begin{pmatrix} -1x + 0y \\ 0x - 1y \end{pmatrix}" />
+
+By equating the corresponding coefficients, we get:
+
+- For the first row: <InlineMath math="rx + sy = -1x + 0y" />. This means <InlineMath math="r = -1" /> and <InlineMath math="s = 0" />.
+- For the second row: <InlineMath math="tx + uy = 0x - 1y" />. This means <InlineMath math="t = 0" /> and <InlineMath math="u = -1" />.
+
+### Reflection Matrix over the Origin
+
+The matrix associated with reflection over the origin <InlineMath math="O(0,0)" /> is:
+
+<BlockMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />
+
+## Application of Reflection Matrix over the Origin
+
+## Finding the Image of Points
+
+Determine the images of points <InlineMath math="A(-1,1)" /> and <InlineMath math="B(3,-2)" /> when reflected over the origin!
+
+**Alternative Solution:**
+
+Using the transformation matrix <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />:
+
+For point <InlineMath math="A(-1,1)" />:
+
+<BlockMath math="\begin{pmatrix} x'_A \\ y'_A \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} -1 \\ 1 \end{pmatrix} = \begin{pmatrix} (-1)(-1) + (0)(1) \\ (0)(-1) + (-1)(1) \end{pmatrix} = \begin{pmatrix} 1 \\ -1 \end{pmatrix}" />
+
+The image of point A is <InlineMath math="A'(1,-1)" />.
+
+For point <InlineMath math="B(3,-2)" />:
+
+<BlockMath math="\begin{pmatrix} x'_B \\ y'_B \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 3 \\ -2 \end{pmatrix} = \begin{pmatrix} (-1)(3) + (0)(-2) \\ (0)(3) + (-1)(-2) \end{pmatrix} = \begin{pmatrix} -3 \\ 2 \end{pmatrix}" />
+
+The image of point B is <InlineMath math="B'(-3,2)" />.
+
+<LineEquation
+  title={
+    <>
+      Reflection of Points <InlineMath math="A" /> and <InlineMath math="B" />{" "}
+      over the Origin
+    </>
+  }
+  description={
+    <>
+      Visualization of reflecting point <InlineMath math="A(-1,1)" /> to{" "}
+      <InlineMath math="A'(1,-1)" /> and <InlineMath math="B(3,-2)" /> to{" "}
+      <InlineMath math="B'(-3,2)" /> over the origin{" "}
+      <InlineMath math="O(0,0)" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [0.3, -0.3, 0] }],
+    }, // Origin
+    // Point A and A'
+    {
+      points: [{ x: -1, y: 1, z: 0 }],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "A(-1,1)", at: 0, offset: [-0.7, 0.3, 0] }],
+    },
+    {
+      points: [{ x: 1, y: -1, z: 0 }],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "A'(1,-1)", at: 0, offset: [0.3, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: -1, y: 1, z: 0 },
+        { x: 1, y: -1, z: 0 },
+      ],
+      color: getColor("INDIGO"),
+    }, // Line AA'
+    // Point B and B'
+    {
+      points: [{ x: 3, y: -2, z: 0 }],
+      color: getColor("PURPLE"),
+      showPoints: true,
+      labels: [{ text: "B(3,-2)", at: 0, offset: [0.3, -0.3, 0] }],
+    },
+    {
+      points: [{ x: -3, y: 2, z: 0 }],
+      color: getColor("PURPLE"),
+      showPoints: true,
+      labels: [{ text: "B'(-3,2)", at: 0, offset: [-0.7, 0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 3, y: -2, z: 0 },
+        { x: -3, y: 2, z: 0 },
+      ],
+      color: getColor("INDIGO"),
+    }, // Line BB'
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 10]}
+/>
+
+## Exercises
+
+1.  Determine the images of points <InlineMath math="A(1,-7)" /> and <InlineMath math="B(-7,-2)" /> when reflected over the origin!
+2.  A triangle <InlineMath math="PQR" /> has vertices <InlineMath math="P(2,2)" />, <InlineMath math="Q(5,2)" />, and <InlineMath math="R(3,5)" />. Determine the coordinates of the image triangle <InlineMath math="P'Q'R'" /> after reflection over the origin using matrix multiplication.
+
+### Key Answers
+
+1.  The reflection matrix over the origin is: <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+
+    For <InlineMath math="A(1,-7)" />:
+
+    <BlockMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 1 \\ -7 \end{pmatrix} = \begin{pmatrix} -1 \\ 7 \end{pmatrix}" />
+
+    Image <InlineMath math="A'(-1,7)" />. For <InlineMath math="B(-7,-2)" />:
+
+    <BlockMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} -7 \\ -2 \end{pmatrix} = \begin{pmatrix} 7 \\ 2 \end{pmatrix}" />
+
+    Image <InlineMath math="B'(7,2)" />.
+
+2.  Matrix of PQR vertices: <InlineMath math="\begin{pmatrix} 2 & 5 & 3 \\ 2 & 2 & 5 \end{pmatrix}" />.
+
+    <BlockMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 2 & 5 & 3 \\ 2 & 2 & 5 \end{pmatrix} = \begin{pmatrix} -2 & -5 & -3 \\ -2 & -2 & -5 \end{pmatrix}" />
+
+    Image: <InlineMath math="P'(-2,-2)" />, <InlineMath math="Q'(-5,-2)" />, <InlineMath math="R'(-3,-5)" />.

@@ -1,6 +1,192 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Matrix and Transformation Connection",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "10/05/2025",
   subject: "Geometric Transformation",
 };
+
+## What is the Connection between Matrices and Geometric Transformations?
+
+A <InlineMath math="2 \times 2" /> matrix can be associated with transformation operations on any point in the Cartesian plane.
+
+A point in the Cartesian plane, often symbolized by the ordered pair <InlineMath math="(x,y)" />, can also be symbolized by the position vector <InlineMath math="\begin{pmatrix} x \\ y \end{pmatrix}" />. This position vector notation will be frequently used in discussing the connection between matrices and transformations.
+
+If a point <InlineMath math="P(x,y)" /> is transformed by the matrix <InlineMath math="M = \begin{pmatrix} a & b \\ c & d \end{pmatrix}" />, its image <InlineMath math="P'(x',y')" /> is obtained from matrix multiplication:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} a & b \\ c & d \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} ax + by \\ cx + dy \end{pmatrix}" />
+
+Thus, <InlineMath math="x' = ax + by" /> and <InlineMath math="y' = cx + dy" />.
+
+## Multiplying a Matrix by a Position Vector
+
+If <InlineMath math="\begin{pmatrix} x \\ y \end{pmatrix}" /> represents any point in the Cartesian plane, find the product of <InlineMath math="\begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix}" />.
+
+**Alternative Solution:**
+
+The matrix product is:
+
+<BlockMath math="\begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} (0)(x) + (-1)(y) \\ (1)(x) + (0)(y) \end{pmatrix} = \begin{pmatrix} -y \\ x \end{pmatrix}" />
+
+It can be observed that the point <InlineMath math="(x,y)" /> is transformed by the matrix <InlineMath math="\begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" /> into the point <InlineMath math="(-y,x)" />. This is the formula for a <InlineMath math="90^\circ" /> counter-clockwise rotation about the origin.
+
+<LineEquation
+  title={
+    <>
+      Transformation of Point <InlineMath math="P(2,3)" /> by Matrix{" "}
+      <InlineMath math="\begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" />
+    </>
+  }
+  description={
+    <>
+      Point <InlineMath math="P(2,3)" /> is transformed into{" "}
+      <InlineMath math="P'(-3,2)" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [0.3, -0.3, 0] }],
+    },
+    {
+      points: [{ x: 2, y: 3, z: 0 }],
+      color: getColor("SKY"),
+      showPoints: true,
+      labels: [{ text: "P(2,3)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: [{ x: -3, y: 2, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "P'(-3,2)", at: 0, offset: [-0.7, 0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2, y: 3, z: 0 },
+      ],
+      color: getColor("INDIGO"),
+      lineWidth: 1,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: -3, y: 2, z: 0 },
+      ],
+      color: getColor("INDIGO"),
+      lineWidth: 1,
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 10]}
+/>
+
+## Multiplying a Matrix by Three Points Simultaneously
+
+Find the image of <InlineMath math="\triangle ABC" />, with vertices <InlineMath math="A(1,1)" />, <InlineMath math="B(4,1)" />, and <InlineMath math="C(4,2)" /> transformed by the matrix <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+
+**Alternative Solution:**
+
+First, we can write the coordinates of the points as columns of a matrix, i.e., <InlineMath math="\begin{pmatrix} 1 & 4 & 4 \\ 1 & 1 & 2 \end{pmatrix}" /> (Columns A, B, C).
+
+Next, multiply this matrix from the left by <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 1 & 4 & 4 \\ 1 & 1 & 2 \end{pmatrix} = \begin{pmatrix} (-1)(1)+(0)(1) & (-1)(4)+(0)(1) & (-1)(4)+(0)(2) \\ (0)(1)+(-1)(1) & (0)(4)+(-1)(1) & (0)(4)+(-1)(2) \end{pmatrix}" />
+  <BlockMath math="= \begin{pmatrix} -1 & -4 & -4 \\ -1 & -1 & -2 \end{pmatrix}" />
+</div>
+
+The result of the transformation is a new triangle <InlineMath math="\triangle A'B'C'" /> with vertices <InlineMath math="A'(-1,-1)" />, <InlineMath math="B'(-4,-1)" />, and <InlineMath math="C'(-4,-2)" />.
+
+The matrix <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" /> represents a <InlineMath math="180^\circ" /> rotation about the origin.
+
+<LineEquation
+  title={
+    <>
+      Transformation of <InlineMath math="\triangle ABC" /> by Matrix{" "}
+      <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />
+    </>
+  }
+  description={
+    <>
+      Triangle <InlineMath math="ABC" /> is transformed into{" "}
+      <InlineMath math="A'B'C'" />.
+    </>
+  }
+  data={[
+    // Triangle ABC (Original)
+    ...[
+      {
+        from: { x: 1, y: 1, z: 0, label: "A(1,1)" },
+        to: { x: 4, y: 1, z: 0, label: "B(4,1)" },
+      },
+      {
+        from: { x: 4, y: 1, z: 0, label: "B(4,1)" },
+        to: { x: 4, y: 2, z: 0, label: "C(4,2)" },
+      },
+      {
+        from: { x: 4, y: 2, z: 0, label: "C(4,2)" },
+        to: { x: 1, y: 1, z: 0, label: "A(1,1)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [{ text: segment.from.label, at: 0, offset: [0.3, 0.3, 0] }],
+    })),
+    // Triangle A'B'C' (Image)
+    ...[
+      {
+        from: { x: -1, y: -1, z: 0, label: "A'(-1,-1)" },
+        to: { x: -4, y: -1, z: 0, label: "B'(-4,-1)" },
+      },
+      {
+        from: { x: -4, y: -1, z: 0, label: "B'(-4,-1)" },
+        to: { x: -4, y: -2, z: 0, label: "C'(-4,-2)" },
+      },
+      {
+        from: { x: -4, y: -2, z: 0, label: "C'(-4,-2)" },
+        to: { x: -1, y: -1, z: 0, label: "A'(-1,-1)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: segment.from.label, at: 0, offset: [0.3, 0.3, 0] }],
+    })),
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 12]}
+/>
+
+## Exercises
+
+1.  Find the product of <InlineMath math="\begin{pmatrix} 0 & 1 \\ -1 & 0 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix}" />. What transformation does this matrix represent?
+2.  A transformation is associated with the matrix <InlineMath math="\begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}" />. Find the image of a triangle with vertices <InlineMath math="A(2,0)" />, <InlineMath math="B(2,1)" />, and <InlineMath math="C(0,1)" /> under this transformation!
+
+### Key Answers
+
+1.  <BlockMath math="\begin{pmatrix} 0 & 1 \\ -1 & 0 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} (0)(x) + (1)(y) \\ (-1)(x) + (0)(y) \end{pmatrix} = \begin{pmatrix} y \\ -x \end{pmatrix}" />
+
+    The point <InlineMath math="(x,y)" /> is transformed into <InlineMath math="(y,-x)" />.
+
+    This is a <InlineMath math="-90^\circ" /> (or <InlineMath math="270^\circ" />) clockwise rotation about the origin.
+
+2.  Transformation matrix <InlineMath math="M = \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}" />.
+
+    Vertices: <InlineMath math="A(2,0)" />, <InlineMath math="B(2,1)" />, <InlineMath math="C(0,1)" />.
+
+    Point matrix: <InlineMath math="\begin{pmatrix} 2 & 2 & 0 \\ 0 & 1 & 1 \end{pmatrix}" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix} \begin{pmatrix} 2 & 2 & 0 \\ 0 & 1 & 1 \end{pmatrix} = \begin{pmatrix} (1)(2)+(2)(0) & (1)(2)+(2)(1) & (1)(0)+(2)(1) \\ (0)(2)+(1)(0) & (0)(2)+(1)(1) & (0)(0)+(1)(1) \end{pmatrix}" />
+      <BlockMath math="= \begin{pmatrix} 2+0 & 2+2 & 0+2 \\ 0+0 & 0+1 & 0+1 \end{pmatrix} = \begin{pmatrix} 2 & 4 & 2 \\ 0 & 1 & 1 \end{pmatrix}" />
+    </div>
+
+    Image vertices: <InlineMath math="A'(2,0)" />, <InlineMath math="B'(4,1)" />, <InlineMath math="C'(2,1)" />.
+
+    (This transformation is known as a shear)

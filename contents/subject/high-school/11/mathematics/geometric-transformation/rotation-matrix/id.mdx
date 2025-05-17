@@ -1,6 +1,151 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Matriks Rotasi",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "10/05/2025",
   subject: "Transformasi Geometri",
 };
+
+## Menemukan Matriks Rotasi terhadap Titik Asal
+
+Peta dari titik <InlineMath math="(x,y)" /> yang dirotasikan terhadap titik asal <InlineMath math="(0,0)" /> sebesar <InlineMath math="\theta" /> adalah <InlineMath math="(x \cos \theta - y \sin \theta, x \sin \theta + y \cos \theta)" />.
+
+Kita ingin menemukan matriks <InlineMath math="2 \times 2" />, misalkan <InlineMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix}" />, yang merepresentasikan transformasi rotasi ini.
+
+Matriks ini harus memenuhi:
+
+<BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} x \cos \theta - y \sin \theta \\ x \sin \theta + y \cos \theta \end{pmatrix}" />
+
+Dari perkalian matriks di sisi kiri, kita mendapatkan:
+
+<BlockMath math="\begin{pmatrix} rx + sy \\ tx + uy \end{pmatrix} = \begin{pmatrix} x \cos \theta - y \sin \theta \\ x \sin \theta + y \cos \theta \end{pmatrix}" />
+
+Dengan menyamakan komponen-komponen yang bersesuaian:
+
+- Baris pertama: <InlineMath math="rx + sy = x \cos \theta - y \sin \theta" />.
+
+  Agar persamaan ini berlaku untuk semua <InlineMath math="x" /> dan <InlineMath math="y" />, maka koefisien <InlineMath math="x" /> harus sama dan koefisien <InlineMath math="y" /> harus sama. Jadi, <InlineMath math="r = \cos \theta" /> dan <InlineMath math="s = -\sin \theta" />.
+
+- Baris kedua: <InlineMath math="tx + uy = x \sin \theta + y \cos \theta" />.
+
+  Dengan cara yang sama, <InlineMath math="t = \sin \theta" /> dan <InlineMath math="u = \cos \theta" />.
+
+### Matriks Rotasi terhadap Titik Asal
+
+Matriks yang terkait dengan rotasi sebesar <InlineMath math="\theta" /> radian terhadap titik pusat <InlineMath math="O(0,0)" /> adalah:
+
+<BlockMath math="R_\theta = \begin{pmatrix} \cos \theta & -\sin \theta \\ \sin \theta & \cos \theta \end{pmatrix}" />
+
+## Operasi Matriks terkait Rotasi terhadap Titik Sebarang
+
+Untuk merotasikan titik <InlineMath math="(x,y)" /> terhadap titik sebarang <InlineMath math="P(a,b)" /> sebesar sudut <InlineMath math="\theta" />, kita lakukan tiga langkah:
+
+1. Translasikan titik <InlineMath math="(x,y)" /> sehingga <InlineMath math="P(a,b)" /> menjadi titik asal: <InlineMath math="(x-a, y-b)" />.
+2. Rotasikan titik hasil translasi terhadap titik asal sebesar <InlineMath math="\theta" /> menggunakan matriks <InlineMath math="R_\theta" />.
+3. Translasikan kembali titik hasil rotasi dengan menambahkan <InlineMath math="(a,b)" />.
+
+### Operasi Matriks Rotasi terhadap Titik Sebarang
+
+Matriks yang terkait dengan rotasi sebesar <InlineMath math="\theta" /> radian terhadap titik <InlineMath math="(a,b)" /> adalah:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} \cos \theta & -\sin \theta \\ \sin \theta & \cos \theta \end{pmatrix} \begin{pmatrix} x-a \\ y-b \end{pmatrix} + \begin{pmatrix} a \\ b \end{pmatrix}" />
+
+## Mencari Matriks Rotasi Tertentu
+
+Matriks yang terkait dengan rotasi sebesar <InlineMath math="\theta = \frac{1}{4}\pi" /> radian (<InlineMath math="45^\circ" />) terhadap titik pusat adalah:
+
+Kita tahu <InlineMath math="\cos(\frac{\pi}{4}) = \frac{1}{\sqrt{2}}" /> dan <InlineMath math="\sin(\frac{\pi}{4}) = \frac{1}{\sqrt{2}}" />.
+
+<BlockMath math="R_{\frac{\pi}{4}} = \begin{pmatrix} \cos(\frac{\pi}{4}) & -\sin(\frac{\pi}{4}) \\ \sin(\frac{\pi}{4}) & \cos(\frac{\pi}{4}) \end{pmatrix} = \begin{pmatrix} \frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{2}} \\ \frac{1}{\sqrt{2}} & \frac{1}{\sqrt{2}} \end{pmatrix}" />
+
+Ini adalah matriks yang dicari.
+
+<LineEquation
+  title={
+    <>
+      Visualisasi Rotasi Titik (2,0) sebesar <InlineMath math="45^\circ" />{" "}
+      terhadap Titik Asal
+    </>
+  }
+  description={
+    <>
+      Titik <InlineMath math="A(2,0)" /> dirotasi <InlineMath math="45^\circ" />{" "}
+      menjadi <InlineMath math="A'(\sqrt{2}, \sqrt{2})" />.
+      <InlineMath math="\sqrt{2} \approx 1.414" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [0.3, -0.3, 0] }],
+    },
+    {
+      points: [{ x: 2, y: 0, z: 0 }],
+      color: getColor("SKY"),
+      showPoints: true,
+      labels: [{ text: "A(2,0)", at: 0, offset: [0.3, -0.3, 0] }],
+    },
+    {
+      points: [{ x: Math.sqrt(2), y: Math.sqrt(2), z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "A'(√2, √2)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2, y: 0, z: 0 },
+      ],
+      color: getColor("INDIGO"),
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: Math.sqrt(2), y: Math.sqrt(2), z: 0 },
+      ],
+      color: getColor("INDIGO"),
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 8]}
+/>
+
+## Latihan
+
+1.  Tentukan matriks-matriks yang berkaitan dengan rotasi terhadap titik pusat <InlineMath math="O(0,0)" /> sebesar <InlineMath math="\frac{1}{6}\pi" /> radian.
+2.  Tentukan peta dari titik <InlineMath math="P(4,2)" /> jika dirotasikan terhadap titik asal <InlineMath math="O(0,0)" /> sebesar <InlineMath math="60^\circ" />.
+3.  Tentukan peta dari titik <InlineMath math="Q(3,1)" /> jika dirotasikan terhadap titik <InlineMath math="C(1,-2)" /> sebesar <InlineMath math="90^\circ" />.
+
+### Kunci Jawaban
+
+1.  Diketahui <InlineMath math="\theta = \frac{\pi}{6}" /> atau <InlineMath math="30^\circ" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\cos(\frac{\pi}{6}) = \frac{\sqrt{3}}{2}" />
+      <BlockMath math="\sin(\frac{\pi}{6}) = \frac{1}{2}" />
+    </div>
+
+    Matriks rotasi:
+
+    <BlockMath math="\begin{pmatrix} \frac{\sqrt{3}}{2} & -\frac{1}{2} \\ \frac{1}{2} & \frac{\sqrt{3}}{2} \end{pmatrix}" />
+
+2.  Titik <InlineMath math="P(4,2)" />, <InlineMath math="\theta = 60^\circ" />. <InlineMath math="\cos 60^\circ = \frac{1}{2}" />, <InlineMath math="\sin 60^\circ = \frac{\sqrt{3}}{2}" />.
+
+    <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} \frac{1}{2} & -\frac{\sqrt{3}}{2} \\ \frac{\sqrt{3}}{2} & \frac{1}{2} \end{pmatrix} \begin{pmatrix} 4 \\ 2 \end{pmatrix} = \begin{pmatrix} (4)(\frac{1}{2}) - (2)(\frac{\sqrt{3}}{2}) \\ (4)(\frac{\sqrt{3}}{2}) + (2)(\frac{1}{2}) \end{pmatrix} = \begin{pmatrix} 2 - \sqrt{3} \\ 2\sqrt{3} + 1 \end{pmatrix}" />
+
+    Peta: <InlineMath math="P'(2-\sqrt{3}, 2\sqrt{3}+1)" />.
+
+3.  Diketahui titik <InlineMath math="Q(3,1)" />, pusat <InlineMath math="C(1,-2)" />, <InlineMath math="\theta = 90^\circ" />. <InlineMath math="(a,b)=(1,-2)" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\cos 90^\circ = 0" />
+      <BlockMath math="\sin 90^\circ = 1" />
+      <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} 3-1 \\ 1-(-2) \end{pmatrix} + \begin{pmatrix} 1 \\ -2 \end{pmatrix}" />
+      <BlockMath math="= \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} 2 \\ 3 \end{pmatrix} + \begin{pmatrix} 1 \\ -2 \end{pmatrix} = \begin{pmatrix} -3 \\ 2 \end{pmatrix} + \begin{pmatrix} 1 \\ -2 \end{pmatrix} = \begin{pmatrix} -2 \\ 0 \end{pmatrix}" />
+    </div>
+
+    Peta: <InlineMath math="Q'(-2,0)" />.

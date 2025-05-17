@@ -1,6 +1,184 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Matriks Pencerminan",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "10/05/2025",
   subject: "Transformasi Geometri",
 };
+
+## Matriks Pencerminan terhadap Sumbu X
+
+Ingat kembali bahwa pencerminan titik <InlineMath math="(x,y)" /> terhadap sumbu X menghasilkan bayangan <InlineMath math="(x,-y)" />.
+
+Kita mencari matriks <InlineMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix}" /> sedemikian sehingga:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} x \\ -y \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} rx + sy \\ tx + uy \end{pmatrix} = \begin{pmatrix} 1x + 0y \\ 0x - 1y \end{pmatrix}" />
+</div>
+
+Dengan menyamakan koefisien, kita peroleh:
+
+- <InlineMath math="rx + sy = 1x + 0y \implies r=1, s=0" />
+- <InlineMath math="tx + uy = 0x - 1y \implies t=0, u=-1" />
+
+Jadi, matriks pencerminan terhadap sumbu X adalah <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+
+## Matriks Pencerminan terhadap Sumbu Y
+
+Pencerminan titik <InlineMath math="(x,y)" /> terhadap sumbu Y menghasilkan <InlineMath math="(-x,y)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} -x \\ y \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} rx + sy \\ tx + uy \end{pmatrix} = \begin{pmatrix} -1x + 0y \\ 0x + 1y \end{pmatrix}" />
+</div>
+
+Diperoleh <InlineMath math="r=-1, s=0, t=0, u=1" />.
+
+Matriksnya adalah <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
+
+## Matriks Pencerminan terhadap Garis y = x
+
+Pencerminan titik <InlineMath math="(x,y)" /> terhadap garis <InlineMath math="y=x" /> menghasilkan <InlineMath math="(y,x)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} y \\ x \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} rx + sy \\ tx + uy \end{pmatrix} = \begin{pmatrix} 0x + 1y \\ 1x + 0y \end{pmatrix}" />
+</div>
+
+Diperoleh <InlineMath math="r=0, s=1, t=1, u=0" />.
+
+Matriksnya adalah <InlineMath math="\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />.
+
+## Matriks Pencerminan terhadap Garis y = -x
+
+Pencerminan titik <InlineMath math="(x,y)" /> terhadap garis <InlineMath math="y=-x" /> menghasilkan <InlineMath math="(-y,-x)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} -y \\ -x \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} rx + sy \\ tx + uy \end{pmatrix} = \begin{pmatrix} 0x - 1y \\ -1x + 0y \end{pmatrix}" />
+</div>
+
+Diperoleh <InlineMath math="r=0, s=-1, t=-1, u=0" />.
+
+Matriksnya adalah <InlineMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />.
+
+## Matriks-Matriks Pencerminan Dasar
+
+- Matriks pencerminan terhadap sumbu X: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
+- Matriks pencerminan terhadap sumbu Y: <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />
+- Matriks pencerminan terhadap garis <InlineMath math="y=x" />: <InlineMath math="\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />
+- Matriks pencerminan terhadap garis <InlineMath math="y=-x" />: <InlineMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />
+
+## Mencari Peta Titik dengan Matriks
+
+Carilah peta dari <InlineMath math="(3,-4)" /> yang dicerminkan terhadap sumbu X.
+
+**Alternatif Penyelesaian:**
+
+Menggunakan matriks pencerminan terhadap sumbu X:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 3 \\ -4 \end{pmatrix} = \begin{pmatrix} (1)(3) + (0)(-4) \\ (0)(3) + (-1)(-4) \end{pmatrix} = \begin{pmatrix} 3 \\ 4 \end{pmatrix}" />
+
+Jadi, petanya adalah <InlineMath math="(3,4)" />.
+
+## Mencari Peta Segitiga dengan Matriks
+
+Tentukan peta dari segitiga ABC dengan <InlineMath math="A(3,1)" />, <InlineMath math="B(-2,3)" />, dan <InlineMath math="C(2,-1)" /> yang dicerminkan terhadap sumbu Y!
+
+**Alternatif Penyelesaian:**
+
+Matriks pencerminan terhadap sumbu Y adalah <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
+
+Matriks titik-titik sudut segitiga ABC: <InlineMath math="\begin{pmatrix} 3 & -2 & 2 \\ 1 & 3 & -1 \end{pmatrix}" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} x'_A & x'_B & x'_C \\ y'_A & y'_B & y'_C \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix} \begin{pmatrix} 3 & -2 & 2 \\ 1 & 3 & -1 \end{pmatrix}" />
+  <BlockMath math="= \begin{pmatrix} (-1)(3)+0 & (-1)(-2)+0 & (-1)(2)+0 \\ 0+(1)(1) & 0+(1)(3) & 0+(1)(-1) \end{pmatrix} = \begin{pmatrix} -3 & 2 & -2 \\ 1 & 3 & -1 \end{pmatrix}" />
+</div>
+
+Sehingga, petanya adalah segitiga <InlineMath math="A'B'C'" /> dengan <InlineMath math="A'(-3,1)" />, <InlineMath math="B'(2,3)" />, dan <InlineMath math="C'(-2,-1)" />.
+
+<LineEquation
+  title={
+    <>
+      Pencerminan <InlineMath math="\triangle ABC" /> terhadap sumbu Y dengan
+      Matriks
+    </>
+  }
+  description={
+    <>
+      Segitiga <InlineMath math="ABC" /> dicerminkan menjadi{" "}
+      <InlineMath math="A'B'C'" /> terhadap sumbu Y.
+    </>
+  }
+  data={[
+    ...[
+      {
+        from: { x: 3, y: 1, z: 0, label: "A(3,1)" },
+        to: { x: -2, y: 3, z: 0, label: "B(-2,3)" },
+      },
+      {
+        from: { x: -2, y: 3, z: 0, label: "B(-2,3)" },
+        to: { x: 2, y: -1, z: 0, label: "C(2,-1)" },
+      },
+      {
+        from: { x: 2, y: -1, z: 0, label: "C(2,-1)" },
+        to: { x: 3, y: 1, z: 0, label: "A(3,1)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [{ text: segment.from.label, at: 0, offset: [0.3, 0.3, 0] }],
+    })),
+    ...[
+      {
+        from: { x: -3, y: 1, z: 0, label: "A'(-3,1)" },
+        to: { x: 2, y: 3, z: 0, label: "B'(2,3)" },
+      },
+      {
+        from: { x: 2, y: 3, z: 0, label: "B'(2,3)" },
+        to: { x: -2, y: -1, z: 0, label: "C'(-2,-1)" },
+      },
+      {
+        from: { x: -2, y: -1, z: 0, label: "C'(-2,-1)" },
+        to: { x: -3, y: 1, z: 0, label: "A'(-3,1)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: segment.from.label, at: 0, offset: [0.3, 0.3, 0] }],
+    })),
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 12]}
+/>
+
+## Latihan
+
+1.  Carilah peta dari titik <InlineMath math="(3,5)" /> yang dicerminkan terhadap sumbu X dengan menggunakan perkalian matriks <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+2.  Tentukan peta dari segitiga ABC dengan <InlineMath math="A(3,1)" />, <InlineMath math="B(-2,3)" />, dan <InlineMath math="C(2,-1)" /> yang dicerminkan terhadap garis <InlineMath math="y=-x" />!
+
+### Kunci Jawaban
+
+1.  Peta dari titik <InlineMath math="(3,5)" /> yang dicerminkan terhadap sumbu X dengan menggunakan perkalian matriks <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" /> adalah:
+
+    <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 3 \\ 5 \end{pmatrix} = \begin{pmatrix} 3 \\ -5 \end{pmatrix}" />
+
+    Peta: <InlineMath math="(3,-5)" />.
+
+2.  Matriks pencerminan terhadap <InlineMath math="y=-x" /> adalah <InlineMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />.
+
+    Matriks titik ABC: <InlineMath math="\begin{pmatrix} 3 & -2 & 2 \\ 1 & 3 & -1 \end{pmatrix}" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix} \begin{pmatrix} 3 & -2 & 2 \\ 1 & 3 & -1 \end{pmatrix}" />
+      <BlockMath math="= \begin{pmatrix} (0)(3)+(-1)(1) & (0)(-2)+(-1)(3) & (0)(2)+(-1)(-1) \\ (-1)(3)+(0)(1) & (-1)(-2)+(0)(3) & (-1)(2)+(0)(-1) \end{pmatrix}" />
+      <BlockMath math="= \begin{pmatrix} -1 & -3 & 1 \\ -3 & 2 & -2 \end{pmatrix}" />
+    </div>
+
+    Peta: <InlineMath math="A'(-1,-3)" />, <InlineMath math="B'(-3,2)" />, <InlineMath math="C'(1,-2)" />.

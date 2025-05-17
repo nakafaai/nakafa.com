@@ -1,6 +1,158 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Matriks Pencerminan terhadap Sebarang Titik",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "10/05/2025",
   subject: "Transformasi Geometri",
 };
+
+## Menemukan Matriks Pencerminan terhadap Sebarang Titik
+
+Peta dari titik <InlineMath math="(x,y)" /> yang dicerminkan terhadap titik <InlineMath math="(a,b)" /> adalah <InlineMath math="(-x+2a, -y+2b)" /> atau <InlineMath math="(2a-x, 2b-y)" />.
+
+Operasi matriks yang terkait dengan transformasi ini tidak dapat direpresentasikan hanya dengan satu matriks perkalian <InlineMath math="2 \times 2" /> saja, karena melibatkan penjumlahan (translasi) yang disebabkan oleh titik pusat <InlineMath math="(a,b)" /> yang bukan titik asal.
+
+Namun, kita bisa merepresentasikan transformasi ini sebagai kombinasi operasi matriks:
+
+1. Translasikan titik <InlineMath math="(x,y)" /> sehingga pusat pencerminan <InlineMath math="(a,b)" /> seolah-olah menjadi titik asal. Ini berarti kita bekerja dengan <InlineMath math="(x-a, y-b)" />.
+2. Cerminkan titik yang sudah ditranslasikan ini terhadap titik asal menggunakan matriks <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+3. Translasikan kembali hasilnya dengan menambahkan koordinat pusat pencerminan <InlineMath math="(a,b)" />.
+
+Secara matematis, jika <InlineMath math="(x', y')" /> adalah bayangan dari <InlineMath math="(x,y)" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} x-a \\ y-b \end{pmatrix} + \begin{pmatrix} a \\ b \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -(x-a) \\ -(y-b) \end{pmatrix} + \begin{pmatrix} a \\ b \end{pmatrix} = \begin{pmatrix} -x+a \\ -y+b \end{pmatrix} + \begin{pmatrix} a \\ b \end{pmatrix} = \begin{pmatrix} -x+2a \\ -y+2b \end{pmatrix}" />
+</div>
+
+Ini sesuai dengan rumus yang sudah kita kenal.
+
+### Operasi Matriks Pencerminan terhadap Titik
+
+Operasi matriks yang terkait dengan pencerminan terhadap titik <InlineMath math="P(a,b)" /> untuk sembarang titik <InlineMath math="(x,y)" /> adalah:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} + 2 \begin{pmatrix} a \\ b \end{pmatrix}" />
+
+Atau, lebih tepatnya, dapat ditulis sebagai kombinasi:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \left( \begin{pmatrix} x \\ y \end{pmatrix} - \begin{pmatrix} a \\ b \end{pmatrix} \right) + \begin{pmatrix} a \\ b \end{pmatrix}" />
+
+Bentuk yang disajikan pada Sifat 4.11 di buku (<InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} + 2 \begin{pmatrix} a \\ b \end{pmatrix}" />) adalah hasil penyederhanaan dari <InlineMath math="\begin{pmatrix} -x+2a \\ -y+2b \end{pmatrix}" />.
+
+## Mencari Peta Titik
+
+Tentukan peta dari titik <InlineMath math="(2,3)" /> oleh pencerminan terhadap titik <InlineMath math="(1,1)" />.
+
+**Alternatif Penyelesaian:**
+
+Titik <InlineMath math="(x,y) = (2,3)" />. Pusat <InlineMath math="(a,b) = (1,1)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 2 \\ 3 \end{pmatrix} + 2 \begin{pmatrix} 1 \\ 1 \end{pmatrix}" />
+  <BlockMath math="= \begin{pmatrix} (-1)(2) + (0)(3) \\ (0)(2) + (-1)(3) \end{pmatrix} + \begin{pmatrix} 2 \\ 2 \end{pmatrix}" />
+  <BlockMath math="= \begin{pmatrix} -2 \\ -3 \end{pmatrix} + \begin{pmatrix} 2 \\ 2 \end{pmatrix} = \begin{pmatrix} -2+2 \\ -3+2 \end{pmatrix} = \begin{pmatrix} 0 \\ -1 \end{pmatrix}" />
+</div>
+
+Visualisasi:
+
+<LineEquation
+  title={
+    <>
+      Pencerminan Titik <InlineMath math="Q(2,3)" /> terhadap{" "}
+      <InlineMath math="P(1,1)" />
+    </>
+  }
+  description={
+    <>
+      Titik <InlineMath math="Q(2,3)" /> dicerminkan terhadap{" "}
+      <InlineMath math="P(1,1)" /> menjadi <InlineMath math="Q'(0,-1)" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 1, y: 1, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "P(1,1) - Pusat", at: 0, offset: [0.3, -0.5, 0] }],
+    },
+    {
+      points: [{ x: 2, y: 3, z: 0 }],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "Q(2,3) - Asli", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: [{ x: 0, y: -1, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "Q'(0,-1) - Peta", at: 0, offset: [-0.8, -0.2, 0] }],
+    },
+    {
+      points: [
+        { x: 2, y: 3, z: 0 },
+        { x: 0, y: -1, z: 0 },
+      ],
+      color: getColor("INDIGO"),
+    }, // Garis QQ'
+  ]}
+  showZAxis={false}
+  cameraPosition={[1, 1, 10]}
+/>
+
+## Latihan
+
+1.  Tentukan peta dari titik <InlineMath math="(3,1)" /> oleh pencerminan terhadap titik <InlineMath math="(-2,-1)" />.
+2.  Sebuah garis melalui titik <InlineMath math="A(1,2)" /> dan <InlineMath math="B(3,4)" />. Tentukan persamaan bayangan garis tersebut setelah dicerminkan terhadap titik <InlineMath math="C(0,1)" />.
+
+### Kunci Jawaban
+
+1.  Titik <InlineMath math="(x,y) = (3,1)" />. Pusat <InlineMath math="(a,b) = (-2,-1)" />.
+
+    Menggunakan rumus <InlineMath math="x' = 2a-x" /> dan <InlineMath math="y' = 2b-y" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = 2(-2) - 3 = -4 - 3 = -7" />
+      <BlockMath math="y' = 2(-1) - 1 = -2 - 1 = -3" />
+    </div>
+
+    Petanya adalah <InlineMath math="(-7,-3)" />. Atau menggunakan operasi matriks:
+
+    <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 3 \\ 1 \end{pmatrix} + 2 \begin{pmatrix} -2 \\ -1 \end{pmatrix} = \begin{pmatrix} -3 \\ -1 \end{pmatrix} + \begin{pmatrix} -4 \\ -2 \end{pmatrix} = \begin{pmatrix} -7 \\ -3 \end{pmatrix}" />
+
+2.  Pusat pencerminan <InlineMath math="C(0,1)" />. (<InlineMath math="a=0, b=1" />)
+
+    Bayangan titik <InlineMath math="A(1,2)" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x'_A = 2(0)-1 = -1" />
+      <BlockMath math="y'_A = 2(1)-2 = 0" />.
+    </div>
+
+    Jadi <InlineMath math="A'(-1,0)" />.
+
+    Bayangan titik <InlineMath math="B(3,4)" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x'_B = 2(0)-3 = -3" />
+      <BlockMath math="y'_B = 2(1)-4 = -2" />.
+    </div>
+
+    Jadi <InlineMath math="B'(-3,-2)" />.
+
+    Garis bayangan melalui <InlineMath math="A'(-1,0)" /> dan <InlineMath math="B'(-3,-2)" />.
+
+    Gradien <InlineMath math="m' = \frac{-2 - 0}{-3 - (-1)} = \frac{-2}{-2} = 1" />.
+
+    Persamaan garis:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="y - y'_A = m'(x - x'_A)" />
+      <BlockMath math="y - 0 = 1(x - (-1))" />
+      <BlockMath math="y = x + 1" />
+    </div>
+
+    atau
+
+    <BlockMath math="x - y + 1 = 0" />

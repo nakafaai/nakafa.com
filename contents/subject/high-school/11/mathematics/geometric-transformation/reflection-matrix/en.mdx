@@ -1,6 +1,183 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Reflection Matrix",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "10/05/2025",
   subject: "Geometric Transformation",
 };
+
+## Reflection Matrix for X-axis
+
+Recall that reflecting a point <InlineMath math="(x,y)" /> across the X-axis results in the image <InlineMath math="(x,-y)" />.
+
+We are looking for a matrix <InlineMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix}" /> such that:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} x \\ -y \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} rx + sy \\ tx + uy \end{pmatrix} = \begin{pmatrix} 1x + 0y \\ 0x - 1y \end{pmatrix}" />
+</div>
+
+By equating the coefficients, we get:
+
+- <InlineMath math="rx + sy = 1x + 0y \implies r=1, s=0" />
+- <InlineMath math="tx + uy = 0x - 1y \implies t=0, u=-1" />
+
+Thus, the reflection matrix for the X-axis is <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+
+## Reflection Matrix for Y-axis
+
+Reflecting a point <InlineMath math="(x,y)" /> across the Y-axis results in <InlineMath math="(-x,y)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} -x \\ y \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} rx + sy \\ tx + uy \end{pmatrix} = \begin{pmatrix} -1x + 0y \\ 0x + 1y \end{pmatrix}" />
+</div>
+
+This gives <InlineMath math="r=-1, s=0, t=0, u=1" />.
+
+The matrix is <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
+
+## Reflection Matrix for Line y = x
+
+Reflecting a point <InlineMath math="(x,y)" /> across the line <InlineMath math="y=x" /> results in <InlineMath math="(y,x)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} y \\ x \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} rx + sy \\ tx + uy \end{pmatrix} = \begin{pmatrix} 0x + 1y \\ 1x + 0y \end{pmatrix}" />
+</div>
+
+This gives <InlineMath math="r=0, s=1, t=1, u=0" />.
+
+The matrix is <InlineMath math="\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />.
+
+## Reflection Matrix for Line y = -x
+
+Reflecting a point <InlineMath math="(x,y)" /> across the line <InlineMath math="y=-x" /> results in <InlineMath math="(-y,-x)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} -y \\ -x \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} rx + sy \\ tx + uy \end{pmatrix} = \begin{pmatrix} 0x - 1y \\ -1x + 0y \end{pmatrix}" />
+</div>
+
+This gives <InlineMath math="r=0, s=-1, t=-1, u=0" />.
+
+The matrix is <InlineMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />.
+
+## Basic Reflection Matrices
+
+- Reflection matrix for X-axis: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
+- Reflection matrix for Y-axis: <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />
+- Reflection matrix for line <InlineMath math="y=x" />: <InlineMath math="\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />
+- Reflection matrix for line <InlineMath math="y=-x" />: <InlineMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />
+
+## Finding the Image of a Point using Matrix
+
+Find the image of <InlineMath math="(3,-4)" /> reflected across the X-axis.
+
+**Alternative Solution:**
+
+Using the reflection matrix for the X-axis:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 3 \\ -4 \end{pmatrix} = \begin{pmatrix} (1)(3) + (0)(-4) \\ (0)(3) + (-1)(-4) \end{pmatrix} = \begin{pmatrix} 3 \\ 4 \end{pmatrix}" />
+
+Thus, the image is <InlineMath math="(3,4)" />.
+
+## Finding the Image of a Triangle using Matrix
+
+Determine the image of triangle ABC with vertices <InlineMath math="A(3,1)" />, <InlineMath math="B(-2,3)" />, and <InlineMath math="C(2,-1)" /> reflected across the Y-axis!
+
+**Alternative Solution:**
+
+The reflection matrix for the Y-axis is <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
+
+The matrix of the triangle's vertices ABC: <InlineMath math="\begin{pmatrix} 3 & -2 & 2 \\ 1 & 3 & -1 \end{pmatrix}" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} x'_A & x'_B & x'_C \\ y'_A & y'_B & y'_C \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix} \begin{pmatrix} 3 & -2 & 2 \\ 1 & 3 & -1 \end{pmatrix}" />
+  <BlockMath math="= \begin{pmatrix} (-1)(3)+0 & (-1)(-2)+0 & (-1)(2)+0 \\ 0+(1)(1) & 0+(1)(3) & 0+(1)(-1) \end{pmatrix} = \begin{pmatrix} -3 & 2 & -2 \\ 1 & 3 & -1 \end{pmatrix}" />
+</div>
+
+Thus, the image is triangle <InlineMath math="A'B'C'" /> with vertices <InlineMath math="A'(-3,1)" />, <InlineMath math="B'(2,3)" />, and <InlineMath math="C'(-2,-1)" />.
+
+<LineEquation
+  title={
+    <>
+      Reflection of <InlineMath math="\triangle ABC" /> over Y-axis using Matrix
+    </>
+  }
+  description={
+    <>
+      Triangle <InlineMath math="ABC" /> is reflected to become{" "}
+      <InlineMath math="A'B'C'" /> over the Y-axis.
+    </>
+  }
+  data={[
+    ...[
+      {
+        from: { x: 3, y: 1, z: 0, label: "A(3,1)" },
+        to: { x: -2, y: 3, z: 0, label: "B(-2,3)" },
+      },
+      {
+        from: { x: -2, y: 3, z: 0, label: "B(-2,3)" },
+        to: { x: 2, y: -1, z: 0, label: "C(2,-1)" },
+      },
+      {
+        from: { x: 2, y: -1, z: 0, label: "C(2,-1)" },
+        to: { x: 3, y: 1, z: 0, label: "A(3,1)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [{ text: segment.from.label, at: 0, offset: [0.3, 0.3, 0] }],
+    })),
+    ...[
+      {
+        from: { x: -3, y: 1, z: 0, label: "A'(-3,1)" },
+        to: { x: 2, y: 3, z: 0, label: "B'(2,3)" },
+      },
+      {
+        from: { x: 2, y: 3, z: 0, label: "B'(2,3)" },
+        to: { x: -2, y: -1, z: 0, label: "C'(-2,-1)" },
+      },
+      {
+        from: { x: -2, y: -1, z: 0, label: "C'(-2,-1)" },
+        to: { x: -3, y: 1, z: 0, label: "A'(-3,1)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: segment.from.label, at: 0, offset: [0.3, 0.3, 0] }],
+    })),
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 12]}
+/>
+
+## Exercises
+
+1.  Find the image of point <InlineMath math="(3,5)" /> reflected across the X-axis using the matrix multiplication <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+2.  Determine the image of triangle ABC with vertices <InlineMath math="A(3,1)" />, <InlineMath math="B(-2,3)" />, and <InlineMath math="C(2,-1)" /> reflected across the line <InlineMath math="y=-x" />!
+
+### Key Answers
+
+1.  The image of point <InlineMath math="(3,5)" /> reflected across the X-axis using the matrix multiplication <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" /> is:
+
+    <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 3 \\ 5 \end{pmatrix} = \begin{pmatrix} 3 \\ -5 \end{pmatrix}" />
+
+    Image: <InlineMath math="(3,-5)" />.
+
+2.  The reflection matrix for <InlineMath math="y=-x" /> is <InlineMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />.
+
+    Matrix of ABC vertices: <InlineMath math="\begin{pmatrix} 3 & -2 & 2 \\ 1 & 3 & -1 \end{pmatrix}" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix} \begin{pmatrix} 3 & -2 & 2 \\ 1 & 3 & -1 \end{pmatrix}" />
+      <BlockMath math="= \begin{pmatrix} (0)(3)+(-1)(1) & (0)(-2)+(-1)(3) & (0)(2)+(-1)(-1) \\ (-1)(3)+(0)(1) & (-1)(-2)+(0)(3) & (-1)(2)+(0)(-1) \end{pmatrix}" />
+      <BlockMath math="= \begin{pmatrix} -1 & -3 & 1 \\ -3 & 2 & -2 \end{pmatrix}" />
+    </div>
+
+    Image: <InlineMath math="A'(-1,-3)" />, <InlineMath math="B'(-3,2)" />, <InlineMath math="C'(1,-2)" />.

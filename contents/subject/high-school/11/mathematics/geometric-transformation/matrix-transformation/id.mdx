@@ -1,6 +1,192 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Kaitan Matriks dengan Transformasi",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "10/05/2025",
   subject: "Transformasi Geometri",
 };
+
+## Apa Hubungan Matriks dengan Transformasi Geometri?
+
+Matriks <InlineMath math="2 \times 2" /> dapat dikaitkan dengan operasi transformasi terhadap sembarang titik pada bidang Kartesius.
+
+Sebuah titik pada bidang Kartesius yang seringkali disimbolkan dengan pasangan terurut <InlineMath math="(x,y)" /> dapat juga disimbolkan dengan vektor posisi <InlineMath math="\begin{pmatrix} x \\ y \end{pmatrix}" />. Notasi vektor posisi inilah yang akan banyak digunakan dalam pembahasan kaitan matriks dengan transformasi.
+
+Jika titik <InlineMath math="P(x,y)" /> ditransformasikan oleh matriks <InlineMath math="M = \begin{pmatrix} a & b \\ c & d \end{pmatrix}" />, maka bayangannya <InlineMath math="P'(x',y')" /> diperoleh dari perkalian matriks:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} a & b \\ c & d \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} ax + by \\ cx + dy \end{pmatrix}" />
+
+Sehingga, <InlineMath math="x' = ax + by" /> dan <InlineMath math="y' = cx + dy" />.
+
+## Mengalikan Sebuah Matriks dengan Sebuah Vektor Posisi
+
+Jika <InlineMath math="\begin{pmatrix} x \\ y \end{pmatrix}" /> merepresentasikan sembarang titik di bidang Kartesius, carilah hasil kali <InlineMath math="\begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix}" />.
+
+**Alternatif Penyelesaian:**
+
+Hasil kali matriks tersebut adalah:
+
+<BlockMath math="\begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} (0)(x) + (-1)(y) \\ (1)(x) + (0)(y) \end{pmatrix} = \begin{pmatrix} -y \\ x \end{pmatrix}" />
+
+Jika diperhatikan, titik <InlineMath math="(x,y)" /> ditransformasikan oleh matriks <InlineMath math="\begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" /> menjadi titik <InlineMath math="(-y,x)" />. Ini adalah rumus untuk rotasi <InlineMath math="90^\circ" /> berlawanan arah jarum jam terhadap titik asal.
+
+<LineEquation
+  title={
+    <>
+      Transformasi Titik <InlineMath math="P(2,3)" /> oleh Matriks{" "}
+      <InlineMath math="\begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" />
+    </>
+  }
+  description={
+    <>
+      Titik <InlineMath math="P(2,3)" /> ditransformasi menjadi{" "}
+      <InlineMath math="P'(-3,2)" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [0.3, -0.3, 0] }],
+    },
+    {
+      points: [{ x: 2, y: 3, z: 0 }],
+      color: getColor("SKY"),
+      showPoints: true,
+      labels: [{ text: "P(2,3)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: [{ x: -3, y: 2, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "P'(-3,2)", at: 0, offset: [-0.7, 0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2, y: 3, z: 0 },
+      ],
+      color: getColor("INDIGO"),
+      lineWidth: 1,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: -3, y: 2, z: 0 },
+      ],
+      color: getColor("INDIGO"),
+      lineWidth: 1,
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 10]}
+/>
+
+## Mengalikan Sebuah Matriks dengan Tiga Buah Titik Sekaligus
+
+Carilah peta dari <InlineMath math="\triangle ABC" />, dengan titik sudut <InlineMath math="A(1,1)" />, <InlineMath math="B(4,1)" />, dan <InlineMath math="C(4,2)" /> yang ditransformasikan dengan matriks <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+
+**Alternatif Penyelesaian:**
+
+Pertama-tama, kita dapat menuliskan koordinat titik-titik itu sebagai kolom-kolom matriks, yakni <InlineMath math="\begin{pmatrix} 1 & 4 & 4 \\ 1 & 1 & 2 \end{pmatrix}" /> (Kolom A, B, C).
+
+Selanjutnya, kalikan dari kiri matriks itu dengan <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 1 & 4 & 4 \\ 1 & 1 & 2 \end{pmatrix} = \begin{pmatrix} (-1)(1)+(0)(1) & (-1)(4)+(0)(1) & (-1)(4)+(0)(2) \\ (0)(1)+(-1)(1) & (0)(4)+(-1)(1) & (0)(4)+(-1)(2) \end{pmatrix}" />
+  <BlockMath math="= \begin{pmatrix} -1 & -4 & -4 \\ -1 & -1 & -2 \end{pmatrix}" />
+</div>
+
+Hasil transformasinya adalah sebuah segitiga baru <InlineMath math="\triangle A'B'C'" /> dengan titik-titik sudut <InlineMath math="A'(-1,-1)" />, <InlineMath math="B'(-4,-1)" />, dan <InlineMath math="C'(-4,-2)" />.
+
+Matriks <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" /> merepresentasikan rotasi <InlineMath math="180^\circ" /> terhadap titik asal.
+
+<LineEquation
+  title={
+    <>
+      Transformasi <InlineMath math="\triangle ABC" /> oleh Matriks{" "}
+      <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />
+    </>
+  }
+  description={
+    <>
+      Segitiga <InlineMath math="ABC" /> ditransformasi menjadi{" "}
+      <InlineMath math="A'B'C'" />.
+    </>
+  }
+  data={[
+    // Segitiga ABC (Asli)
+    ...[
+      {
+        from: { x: 1, y: 1, z: 0, label: "A(1,1)" },
+        to: { x: 4, y: 1, z: 0, label: "B(4,1)" },
+      },
+      {
+        from: { x: 4, y: 1, z: 0, label: "B(4,1)" },
+        to: { x: 4, y: 2, z: 0, label: "C(4,2)" },
+      },
+      {
+        from: { x: 4, y: 2, z: 0, label: "C(4,2)" },
+        to: { x: 1, y: 1, z: 0, label: "A(1,1)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [{ text: segment.from.label, at: 0, offset: [0.3, 0.3, 0] }],
+    })),
+    // Segitiga A'B'C' (Bayangan)
+    ...[
+      {
+        from: { x: -1, y: -1, z: 0, label: "A'(-1,-1)" },
+        to: { x: -4, y: -1, z: 0, label: "B'(-4,-1)" },
+      },
+      {
+        from: { x: -4, y: -1, z: 0, label: "B'(-4,-1)" },
+        to: { x: -4, y: -2, z: 0, label: "C'(-4,-2)" },
+      },
+      {
+        from: { x: -4, y: -2, z: 0, label: "C'(-4,-2)" },
+        to: { x: -1, y: -1, z: 0, label: "A'(-1,-1)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: segment.from.label, at: 0, offset: [0.3, 0.3, 0] }],
+    })),
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 12]}
+/>
+
+## Latihan
+
+1.  Carilah hasil kali dari <InlineMath math="\begin{pmatrix} 0 & 1 \\ -1 & 0 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix}" />. Transformasi apakah yang direpresentasikan oleh matriks ini?
+2.  Suatu transformasi berkaitan dengan matriks <InlineMath math="\begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}" />. Carilah peta dari suatu segitiga dengan titik sudut <InlineMath math="A(2,0)" />, <InlineMath math="B(2,1)" />, dan <InlineMath math="C(0,1)" /> oleh transformasi tersebut!
+
+### Kunci Jawaban
+
+1.  <BlockMath math="\begin{pmatrix} 0 & 1 \\ -1 & 0 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} (0)(x) + (1)(y) \\ (-1)(x) + (0)(y) \end{pmatrix} = \begin{pmatrix} y \\ -x \end{pmatrix}" />
+
+    Titik <InlineMath math="(x,y)" /> ditransformasikan menjadi <InlineMath math="(y,-x)" />.
+
+    Ini adalah rotasi <InlineMath math="-90^\circ" /> (atau <InlineMath math="270^\circ" />) searah jarum jam terhadap titik asal.
+
+2.  Matriks transformasi <InlineMath math="M = \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}" />.
+
+    Titik-titik sudut: <InlineMath math="A(2,0)" />, <InlineMath math="B(2,1)" />, <InlineMath math="C(0,1)" />.
+
+    Matriks titik: <InlineMath math="\begin{pmatrix} 2 & 2 & 0 \\ 0 & 1 & 1 \end{pmatrix}" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix} \begin{pmatrix} 2 & 2 & 0 \\ 0 & 1 & 1 \end{pmatrix} = \begin{pmatrix} (1)(2)+(2)(0) & (1)(2)+(2)(1) & (1)(0)+(2)(1) \\ (0)(2)+(1)(0) & (0)(2)+(1)(1) & (0)(0)+(1)(1) \end{pmatrix}" />
+      <BlockMath math="= \begin{pmatrix} 2+0 & 2+2 & 0+2 \\ 0+0 & 0+1 & 0+1 \end{pmatrix} = \begin{pmatrix} 2 & 4 & 2 \\ 0 & 1 & 1 \end{pmatrix}" />
+    </div>
+
+    Titik-titik bayangan: <InlineMath math="A'(2,0)" />, <InlineMath math="B'(4,1)" />, <InlineMath math="C'(2,1)" />.
+
+    (Transformasi ini dikenal sebagai geseran/shear)
