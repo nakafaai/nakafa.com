@@ -1,6 +1,223 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Pencerminan terhadap Sumbu Y",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "10/05/2025",
   subject: "Transformasi Geometri",
 };
+
+## Memahami Pencerminan terhadap Sumbu Y
+
+Pencerminan terhadap sumbu Y adalah salah satu jenis transformasi geometri yang memindahkan setiap titik pada suatu objek ke posisi baru. Bayangkan sumbu Y sebagai cermin. Setiap titik akan memiliki bayangan di sisi berlawanan dari sumbu Y dengan jarak yang sama dari sumbu Y.
+
+### Aturan Pencerminan terhadap Sumbu Y
+
+Jika sebuah titik <InlineMath math="P(x, y)" /> dicerminkan terhadap sumbu Y, maka koordinat bayangannya, <InlineMath math="P'(x', y')" />, akan mengikuti aturan:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = -x" />
+  <BlockMath math="y' = y" />
+</div>
+
+Sehingga, peta dari titik <InlineMath math="P(x, y)" /> adalah <InlineMath math="P'(-x, y)" />.
+
+Perhatikan bahwa nilai koordinat y tidak berubah, sedangkan nilai koordinat x menjadi lawannya (negatifnya jika positif, positifnya jika negatif).
+
+## Mencerminkan Titik
+
+Misalkan kita memiliki titik <InlineMath math="A(3, 4)" />. Jika titik A dicerminkan terhadap sumbu Y, maka bayangannya, <InlineMath math="A'" />, dapat ditentukan sebagai berikut:
+
+Koordinat x asli adalah 3, maka <InlineMath math="x' = -3" />.
+
+Koordinat y asli adalah 4, maka <InlineMath math="y' = 4" />.
+
+Jadi, bayangan titik A adalah <InlineMath math="A'(-3, 4)" />.
+
+Mari kita visualisasikan ini:
+
+<LineEquation
+  title={
+    <>
+      Titik <InlineMath math="A(3,4)" /> dan Bayangannya{" "}
+      <InlineMath math="A'(-3,4)" />
+    </>
+  }
+  description="Visualisasi pencerminan titik A terhadap sumbu Y."
+  data={[
+    {
+      points: [{ x: 3, y: 4, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "A(3,4)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: [{ x: -3, y: 4, z: 0 }],
+      color: getColor("SKY"),
+      showPoints: true,
+      labels: [{ text: "A'(-3,4)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 12]}
+/>
+
+## Mencerminkan Segitiga
+
+Sekarang, mari kita cerminkan sebuah segitiga <InlineMath math="PQR" /> dengan titik-titik sudut <InlineMath math="P(1, 2)" />, <InlineMath math="Q(4, 4)" />, dan <InlineMath math="R(2, 0)" /> terhadap sumbu Y.
+
+Untuk mencerminkan segitiga, kita perlu mencerminkan setiap titik sudutnya.
+
+1.  Titik <InlineMath math="P(1, 2)" />: Bayangannya adalah <InlineMath math="P'(-1, 2)" />.
+2.  Titik <InlineMath math="Q(4, 4)" />: Bayangannya adalah <InlineMath math="Q'(-4, 4)" />.
+3.  Titik <InlineMath math="R(2, 0)" />: Bayangannya adalah <InlineMath math="R'(-2, 0)" />.
+
+Dengan menghubungkan titik-titik bayangan <InlineMath math="P'Q'R'" />, kita mendapatkan segitiga bayangan.
+
+<LineEquation
+  title={
+    <>
+      Segitiga <InlineMath math="PQR" /> dan Bayangannya{" "}
+      <InlineMath math="P'Q'R'" />
+    </>
+  }
+  description="Visualisasi pencerminan segitiga PQR terhadap sumbu Y."
+  data={[
+    ...[
+      {
+        from: { x: 1, y: 2, z: 0, label: "P(1,2)" },
+        to: { x: 4, y: 4, z: 0, label: "Q(4,4)" },
+      },
+      {
+        from: { x: 4, y: 4, z: 0, label: "Q(4,4)" },
+        to: { x: 2, y: 0, z: 0, label: "R(2,0)" },
+      },
+      {
+        from: { x: 2, y: 0, z: 0, label: "R(2,0)" },
+        to: { x: 1, y: 2, z: 0, label: "P(1,2)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [
+        { text: segment.from.label, at: 0, offset: [0.5, 0.5, 0] },
+        { text: segment.to.label, at: 1, offset: [0.5, 0.5, 0] },
+      ],
+    })),
+    ...[
+      {
+        from: { x: -1, y: 2, z: 0, label: "P'(-1,2)" },
+        to: { x: -4, y: 4, z: 0, label: "Q'(-4,4)" },
+      },
+      {
+        from: { x: -4, y: 4, z: 0, label: "Q'(-4,4)" },
+        to: { x: -2, y: 0, z: 0, label: "R'(-2,0)" },
+      },
+      {
+        from: { x: -2, y: 0, z: 0, label: "R'(-2,0)" },
+        to: { x: -1, y: 2, z: 0, label: "P'(-1,2)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: segment.from.label, at: 0, offset: [-0.5, 0.5, 0] },
+        { text: segment.to.label, at: 1, offset: [-0.5, 0.5, 0] },
+      ],
+    })),
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 12]}
+/>
+
+## Mencerminkan Persamaan Garis
+
+Misalkan kita memiliki garis dengan persamaan <InlineMath math="y = x + 2" />. Untuk mencari persamaan bayangannya setelah dicerminkan terhadap sumbu Y, kita substitusikan <InlineMath math="x" /> dengan <InlineMath math="-x" /> (karena <InlineMath math="x' = -x" />) dan <InlineMath math="y" /> dengan <InlineMath math="y" /> (karena <InlineMath math="y' = y" />) ke dalam persamaan asli.
+
+Persamaan asli:
+
+<BlockMath math="y = x + 2" />
+
+Substitusikan <InlineMath math="x \rightarrow -x" />:
+
+<BlockMath math="y = (-x) + 2" />
+
+Persamaan bayangannya adalah:
+
+<BlockMath math="y = -x + 2" />
+
+Mari kita visualisasikan kedua garis ini:
+
+<LineEquation
+  title={
+    <>
+      Garis <InlineMath math="y = x + 2" /> dan Bayangannya{" "}
+      <InlineMath math="y = -x + 2" />
+    </>
+  }
+  description="Pencerminan garis terhadap sumbu Y."
+  data={[
+    {
+      // Original Line y = x + 2
+      points: Array.from({ length: 11 }, (_, i) => {
+        const x = (i - 5) * 0.8; // x from -4 to 4 for better fit
+        return { x, y: x + 2, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      smooth: true,
+      labels: [{ text: "y=x+2", at: 9, offset: [0.7, -0.5, 0] }],
+    },
+    {
+      // Reflected Line y = -x + 2
+      points: Array.from({ length: 11 }, (_, i) => {
+        const x = (i - 5) * 0.8; // x from -4 to 4
+        return { x, y: -x + 2, z: 0 };
+      }),
+      color: getColor("PINK"),
+      smooth: true,
+      labels: [{ text: "y=-x+2", at: 1, offset: [-0.7, -0.5, 0] }],
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 15]}
+/>
+
+## Latihan
+
+1.  Tentukan koordinat bayangan dari titik <InlineMath math="K(-5, 8)" /> jika dicerminkan terhadap sumbu Y!
+2.  Sebuah segitiga <InlineMath math="ABC" /> memiliki titik sudut <InlineMath math="A(2, 1)" />, <InlineMath math="B(5, 3)" />, dan <InlineMath math="C(3, 6)" />. Tentukan koordinat bayangan segitiga <InlineMath math="A'B'C'" /> setelah dicerminkan terhadap sumbu Y!
+3.  Tentukan persamaan bayangan dari garis <InlineMath math="3x - 2y + 6 = 0" /> jika dicerminkan terhadap sumbu Y!
+4.  Sebuah garis memiliki persamaan <InlineMath math="y = -3x - 4" />. Tentukan persamaan bayangannya setelah dicerminkan terhadap sumbu Y.
+
+### Kunci Jawaban
+
+1.  Bayangan titik <InlineMath math="K(-5, 8)" /> adalah <InlineMath math="K'(5, 8)" />.
+
+    **Penjelasan:** <InlineMath math="x' = -(-5) = 5" />, <InlineMath math="y' = 8" />.
+
+2.  Koordinat bayangan segitiga <InlineMath math="A'B'C'" /> adalah:
+
+    - <InlineMath math="A'(-2, 1)" />
+    - <InlineMath math="B'(-5, 3)" />
+    - <InlineMath math="C'(-3, 6)" />
+
+3.  Persamaan bayangan garis <InlineMath math="3x - 2y + 6 = 0" /> adalah <InlineMath math="-3x - 2y + 6 = 0" />.
+
+    **Penjelasan:** Substitusi <InlineMath math="x" /> dengan <InlineMath math="-x" /> ke dalam persamaan asli:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="3(-x) - 2y + 6 = 0" />
+      <BlockMath math="-3x - 2y + 6 = 0" />
+    </div>
+
+4.  Persamaan bayangan garis <InlineMath math="y = -3x - 4" /> adalah <InlineMath math="y = 3x - 4" />.
+
+    **Penjelasan:** Substitusi <InlineMath math="x" /> dengan <InlineMath math="-x" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="y = -3(-x) - 4" />
+      <BlockMath math="y = 3x - 4" />
+    </div>

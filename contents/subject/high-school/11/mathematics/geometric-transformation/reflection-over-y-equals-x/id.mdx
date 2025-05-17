@@ -1,0 +1,283 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+export const metadata = {
+  title: "Pencerminan terhadap Garis y = x",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/05/2025",
+  subject: "Transformasi Geometri",
+};
+
+## Memahami Pencerminan terhadap Garis y = x
+
+Pencerminan terhadap garis <InlineMath math="y = x" /> adalah transformasi geometri yang memetakan setiap titik suatu objek ke posisi baru dengan garis <InlineMath math="y = x" /> bertindak sebagai cermin.
+
+Jarak titik asli ke garis cermin sama dengan jarak titik bayangan ke garis cermin, dan garis yang menghubungkan titik asli dengan bayangannya akan tegak lurus terhadap garis <InlineMath math="y = x" />.
+
+### Aturan Pencerminan terhadap Garis y = x
+
+Jika sebuah titik <InlineMath math="P(x, y)" /> dicerminkan terhadap garis <InlineMath math="y = x" />, maka koordinat bayangannya, <InlineMath math="P'(x', y')" />, akan mengikuti aturan sederhana:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = y" />
+  <BlockMath math="y' = x" />
+</div>
+
+Sehingga, peta dari titik <InlineMath math="P(x, y)" /> adalah <InlineMath math="P'(y, x)" />. Perhatikan bahwa koordinat x dan y saling bertukar posisi.
+
+## Mencerminkan Titik
+
+Misalkan kita memiliki titik <InlineMath math="A(1, 4)" />. Jika titik A dicerminkan terhadap garis <InlineMath math="y = x" />, maka bayangannya, <InlineMath math="A'" />, dapat ditentukan dengan menukar koordinatnya:
+
+Koordinat x asli adalah 1, menjadi koordinat y baru.
+
+Koordinat y asli adalah 4, menjadi koordinat x baru.
+
+Jadi, bayangan titik A adalah <InlineMath math="A'(4, 1)" />.
+
+Mari kita visualisasikan ini beserta beberapa titik lain:
+
+<LineEquation
+  title={
+    <>
+      Peta Titik terhadap Garis <InlineMath math="y=x" />
+    </>
+  }
+  description={
+    <>
+      Visualisasi pencerminan beberapa titik terhadap garis{" "}
+      <InlineMath math="y=x" />.
+    </>
+  }
+  data={[
+    {
+      points: [
+        { x: -6, y: -6, z: 0 },
+        { x: 6, y: 6, z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      labels: [{ text: "y=x", at: 1, offset: [0.5, -0.5, 0] }],
+    }, // Garis y=x
+    // Titik A dan A'
+    {
+      points: [{ x: 1, y: 4, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "A(1,4)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: [{ x: 4, y: 1, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "A'(4,1)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    // Titik B dan B'
+    {
+      points: [{ x: -2, y: 2, z: 0 }],
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [{ text: "B(-2,2)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: [{ x: 2, y: -2, z: 0 }],
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [{ text: "B'(2,-2)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    // Titik C dan C'
+    {
+      points: [{ x: -1, y: -3, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "C(-1,-3)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: [{ x: -3, y: -1, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "C'(-3,-1)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 15]}
+/>
+
+## Mencerminkan Segitiga
+
+Tentukan peta dari segitiga ABC dengan titik sudut <InlineMath math="A(-2,4)" />, <InlineMath math="B(3,1)" />, dan <InlineMath math="C(-3,-1)" /> yang dicerminkan terhadap garis <InlineMath math="y=x" />.
+
+Untuk mencerminkan segitiga, kita cerminkan setiap titik sudutnya terhadap garis <InlineMath math="y=x" />:
+
+1.  Titik <InlineMath math="A(-2, 4)" />: Bayangannya adalah <InlineMath math="A'(4, -2)" />.
+2.  Titik <InlineMath math="B(3, 1)" />: Bayangannya adalah <InlineMath math="B'(1, 3)" />.
+3.  Titik <InlineMath math="C(-3, -1)" />: Bayangannya adalah <InlineMath math="C'(-1, -3)" />.
+
+Segitiga bayangan <InlineMath math="A'B'C'" /> terbentuk dengan menghubungkan titik-titik <InlineMath math="A'(4, -2)" />, <InlineMath math="B'(1, 3)" />, dan <InlineMath math="C'(-1, -3)" />.
+
+<LineEquation
+  title={
+    <>
+      Segitiga <InlineMath math="ABC" /> dan Bayangannya{" "}
+      <InlineMath math="A'B'C'" /> terhadap <InlineMath math="y=x" />
+    </>
+  }
+  description={
+    <>
+      Visualisasi pencerminan segitiga <InlineMath math="ABC" /> terhadap garis{" "}
+      <InlineMath math="y=x" />.
+    </>
+  }
+  data={[
+    {
+      points: [
+        { x: -7, y: -7, z: 0 },
+        { x: 7, y: 7, z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      labels: [{ text: "y=x", at: 1, offset: [0.5, -0.5, 0] }],
+    }, // Garis y=x
+    // Segitiga ABC (Asli)
+    ...[
+      {
+        from: { x: -2, y: 4, z: 0, label: "A(-2,4)" },
+        to: { x: 3, y: 1, z: 0, label: "B(3,1)" },
+      },
+      {
+        from: { x: 3, y: 1, z: 0, label: "B(3,1)" },
+        to: { x: -3, y: -1, z: 0, label: "C(-3,-1)" },
+      },
+      {
+        from: { x: -3, y: -1, z: 0, label: "C(-3,-1)" },
+        to: { x: -2, y: 4, z: 0, label: "A(-2,4)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [{ text: segment.from.label, at: 0, offset: [0.4, 0.4, 0] }],
+    })),
+    // Segitiga A'B'C' (Bayangan)
+    ...[
+      {
+        from: { x: 4, y: -2, z: 0, label: "A'(4,-2)" },
+        to: { x: 1, y: 3, z: 0, label: "B'(1,3)" },
+      },
+      {
+        from: { x: 1, y: 3, z: 0, label: "B'(1,3)" },
+        to: { x: -1, y: -3, z: 0, label: "C'(-1,-3)" },
+      },
+      {
+        from: { x: -1, y: -3, z: 0, label: "C'(-1,-3)" },
+        to: { x: 4, y: -2, z: 0, label: "A'(4,-2)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: segment.from.label, at: 0, offset: [0.4, 0.4, 0] }],
+    })),
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 18]}
+/>
+
+## Mencerminkan Persamaan Garis
+
+Jika sebuah garis memiliki persamaan <InlineMath math="y = 2x + 3" /> dicerminkan terhadap garis <InlineMath math="y=x" />, tentukan persamaan garis bayangannya.
+
+Untuk mencari persamaan bayangan, kita gunakan aturan <InlineMath math="x' = y" /> dan <InlineMath math="y' = x" />. Ini berarti kita mengganti setiap <InlineMath math="x" /> dalam persamaan asli dengan <InlineMath math="y" /> (atau <InlineMath math="y'" />) dan setiap <InlineMath math="y" /> dengan <InlineMath math="x" /> (atau <InlineMath math="x'" />).
+
+Persamaan asli:
+
+<BlockMath math="y = 2x + 3" />
+
+Substitusikan <InlineMath math="x \rightarrow y" /> dan <InlineMath math="y \rightarrow x" /> (menggunakan <InlineMath math="x" /> dan <InlineMath math="y" /> untuk variabel baru agar lebih sederhana):
+
+<BlockMath math="x = 2y + 3" />
+
+Ini adalah persamaan garis bayangan. Biasanya, kita menulis ulang persamaan ini dalam bentuk <InlineMath math="y" /> sebagai fungsi dari <InlineMath math="x" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x - 3 = 2y" />
+  <BlockMath math="y = \frac{1}{2}x - \frac{3}{2}" />
+</div>
+
+Jadi, persamaan bayangan dari garis <InlineMath math="y = 2x + 3" /> setelah dicerminkan terhadap <InlineMath math="y=x" /> adalah <InlineMath math="y = \frac{1}{2}x - \frac{3}{2}" />.
+
+<LineEquation
+  title={
+    <>
+      Garis <InlineMath math="y=2x+3" /> dan Bayangannya terhadap{" "}
+      <InlineMath math="y=x" />
+    </>
+  }
+  description={
+    <>
+      Pencerminan garis <InlineMath math="y=2x+3" /> terhadap garis{" "}
+      <InlineMath math="y=x" />.
+    </>
+  }
+  data={[
+    {
+      points: [
+        { x: -7, y: -7, z: 0 },
+        { x: 7, y: 7, z: 0 },
+      ],
+      color: getColor("INDIGO"),
+      labels: [{ text: "y=x", at: 1, offset: [0.5, -0.5, 0] }],
+    }, // Garis y=x
+    {
+      // Garis Asli y = 2x + 3
+      points: Array.from({ length: 11 }, (_, i) => {
+        const xVal = i - 5;
+        return { x: xVal, y: 2 * xVal + 3, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      smooth: true,
+      labels: [{ text: "y=2x+3", at: 4, offset: [-1, 0.5, 0] }],
+    },
+    {
+      // Garis Bayangan y = (1/2)x - 3/2
+      points: Array.from({ length: 11 }, (_, i) => {
+        const xVal = i - 5;
+        return { x: xVal, y: (1 / 2) * xVal - 3 / 2, z: 0 };
+      }),
+      color: getColor("PINK"),
+      smooth: true,
+      labels: [{ text: "y=(1/2)x-3/2", at: 9, offset: [0.5, -1, 0] }],
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 18]}
+/>
+
+## Latihan
+
+1.  Tentukan koordinat bayangan dari titik <InlineMath math="M(-4, 7)" /> jika dicerminkan terhadap garis <InlineMath math="y = x" />!
+2.  Tentukan peta dari segitiga ABC dengan titik sudut <InlineMath math="A(1, -2)" />, <InlineMath math="B(2, 3)" />, dan <InlineMath math="C(-2, 0)" /> yang dicerminkan terhadap garis <InlineMath math="y = x" />.
+3.  Jika sebuah garis memiliki persamaan <InlineMath math="y = -3x + 5" /> dicerminkan terhadap garis <InlineMath math="y = x" />, tentukan persamaan garis bayangannya.
+
+### Kunci Jawaban
+
+1.  Bayangan titik <InlineMath math="M(-4, 7)" /> adalah <InlineMath math="M'(7, -4)" />.
+
+    **Penjelasan:** Koordinat x dan y ditukar: <InlineMath math="x' = 7" />, <InlineMath math="y' = -4" />.
+
+2.  Koordinat bayangan segitiga <InlineMath math="A'B'C'" /> adalah:
+
+    - <InlineMath math="A'(-2, 1)" /> (dari <InlineMath math="A(1, -2)" />)
+    - <InlineMath math="B'(3, 2)" /> (dari <InlineMath math="B(2, 3)" />)
+    - <InlineMath math="C'(0, -2)" /> (dari <InlineMath math="C(-2, 0)" />)
+
+3.  Persamaan bayangan garis <InlineMath math="y = -3x + 5" /> adalah <InlineMath math="x = -3y + 5" />.
+
+    **Penjelasan:** Substitusi <InlineMath math="x \rightarrow y" /> dan <InlineMath math="y \rightarrow x" /> ke dalam persamaan asli:
+
+    <BlockMath math="x = -3y + 5" />
+
+    Jika diubah ke bentuk <InlineMath math="y = mx+c" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="3y = -x + 5" />
+      <BlockMath math="y = -\frac{1}{3}x + \frac{5}{3}" />
+    </div>

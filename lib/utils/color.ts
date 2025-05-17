@@ -33,7 +33,7 @@ const COLOR_KEYS = Object.keys(COLORS) as Array<keyof typeof COLORS>;
  * @returns The color value
  */
 export function getColor(color: keyof typeof COLORS) {
-  return COLORS[color];
+  return COLORS[color.toUpperCase() as keyof typeof COLORS];
 }
 
 /**
