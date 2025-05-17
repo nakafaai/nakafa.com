@@ -322,25 +322,25 @@ function Footer() {
     <div className="flex items-center justify-between border-t p-3 text-muted-foreground text-sm">
       <div className="flex items-center gap-1">
         <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
-          <CornerDownLeftIcon className="size-3" />
+          <CornerDownLeftIcon className="size-3 text-muted-foreground" />
         </kbd>
         <span>{t("select")}</span>
       </div>
       <div className="flex items-center gap-1">
         <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
-          <ArrowUpIcon className="size-3" />
+          <ArrowUpIcon className="size-3 text-muted-foreground" />
         </kbd>
         <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
-          <ArrowDownIcon className="size-3" />
+          <ArrowDownIcon className="size-3 text-muted-foreground" />
         </kbd>
         <span>{t("navigate")}</span>
       </div>
       <div className="flex items-center gap-1">
         <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
-          <IconCommand className="size-3" />
+          <IconCommand className="size-3 text-muted-foreground" />
         </kbd>
         <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
-          <IconLetterK className="size-3" />
+          <IconLetterK className="size-3 text-muted-foreground" />
         </kbd>
         <span>{t("close")}</span>
       </div>
