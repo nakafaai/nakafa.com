@@ -1,6 +1,264 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Matriks Dilatasi",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "10/05/2025",
   subject: "Transformasi Geometri",
 };
+
+## Mencari Matriks yang Berkaitan dengan Dilatasi
+
+Bagaimana menemukan matriks yang berkaitan dengan operasi dilatasi? Ingat kembali bahwa titik <InlineMath math="(x,y)" /> dipetakan oleh dilatasi dengan faktor <InlineMath math="k \neq 0" /> dan pusat <InlineMath math="O" /> ke <InlineMath math="(kx,ky)" />.
+
+Misalkan, matriks yang ingin kita cari adalah <InlineMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix}" />.
+
+Carilah <InlineMath math="r, s, t, u" /> sedemikian rupa sehingga memenuhi
+
+<BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} kx \\ ky \end{pmatrix}" />
+
+Dari perkalian matriks di sisi kiri, kita dapatkan:
+
+<BlockMath math="\begin{pmatrix} rx + sy \\ tx + uy \end{pmatrix} = \begin{pmatrix} kx \\ ky \end{pmatrix}" />
+
+Dengan menyamakan komponen yang bersesuaian:
+
+- **Baris pertama:** <InlineMath math="rx + sy = kx" />. Agar persamaan ini berlaku untuk semua <InlineMath math="x" /> dan <InlineMath math="y" />, maka koefisien <InlineMath math="x" /> harus sama dan koefisien <InlineMath math="y" /> harus sama. Jadi, <InlineMath math="r = k" /> dan <InlineMath math="s = 0" />.
+- **Baris kedua:** <InlineMath math="tx + uy = ky" />. Dengan cara yang sama, <InlineMath math="t = 0" /> dan <InlineMath math="u = k" />.
+
+## Matriks Dilatasi terhadap Titik Pusat
+
+Matriks yang terkait dengan dilatasi dengan faktor <InlineMath math="k \neq 0" /> oleh titik pusat <InlineMath math="O(0,0)" /> adalah
+
+<BlockMath math="\begin{pmatrix} k & 0 \\ 0 & k \end{pmatrix}" />
+
+## Operasi Matriks terkait Dilatasi terhadap Sebarang Titik
+
+Titik <InlineMath math="(x,y)" /> yang didilatasikan dengan faktor <InlineMath math="k \neq 0" /> dan pusat <InlineMath math="(a,b)" /> akan dipetakan ke <InlineMath math="(k(x-a)+a,\, k(y-b)+b)" />.
+
+Temukan kombinasi operasi matriks terhadap vektor posisi <InlineMath math="\begin{pmatrix} x-a \\ y-b \end{pmatrix}" /> sehingga hasilnya menjadi <InlineMath math="\begin{pmatrix} k(x-a)+a \\ k(y-b)+b \end{pmatrix}" />.
+
+Operasi matriks yang terkait dengan dilatasi dengan faktor <InlineMath math="k \neq 0" /> oleh titik <InlineMath math="(a,b)" /> adalah
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} k & 0 \\ 0 & k \end{pmatrix} \begin{pmatrix} x-a \\ y-b \end{pmatrix} + \begin{pmatrix} a \\ b \end{pmatrix}" />
+
+atau dapat juga ditulis sebagai:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} - \begin{pmatrix} a \\ b \end{pmatrix} = \begin{pmatrix} k & 0 \\ 0 & k \end{pmatrix} \left( \begin{pmatrix} x \\ y \end{pmatrix} - \begin{pmatrix} a \\ b \end{pmatrix} \right)" />
+
+## Mencari Peta dari Sebuah Dilatasi dengan Bantuan Matriks
+
+Tentukan peta dari titik <InlineMath math="A(2,4)" /> yang ditransformasikan oleh dilatasi dengan faktor <InlineMath math="2" /> oleh titik pusat <InlineMath math="P(1,1)" />!
+
+**Alternatif Penyelesaian:**
+
+Diketahui <InlineMath math="x=2, y=4, k=2, a=1, b=1" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} \begin{pmatrix} 2-1 \\ 4-1 \end{pmatrix} + \begin{pmatrix} 1 \\ 1 \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} \begin{pmatrix} 1 \\ 3 \end{pmatrix} + \begin{pmatrix} 1 \\ 1 \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} (2)(1) + (0)(3) \\ (0)(1) + (2)(3) \end{pmatrix} + \begin{pmatrix} 1 \\ 1 \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 2 \\ 6 \end{pmatrix} + \begin{pmatrix} 1 \\ 1 \end{pmatrix} = \begin{pmatrix} 3 \\ 7 \end{pmatrix}" />
+</div>
+
+Jadi, peta dari titik <InlineMath math="A(2,4)" /> adalah <InlineMath math="A'(3,7)" />.
+
+<LineEquation
+  title={
+    <>
+      Visualisasi Dilatasi Titik <InlineMath math="A(2,4)" /> dengan Pusat{" "}
+      <InlineMath math="P(1,1)" /> dan Faktor Skala <InlineMath math="k=2" />
+    </>
+  }
+  description={
+    <>
+      Titik <InlineMath math="A(2,4)" /> didilatasikan terhadap pusat{" "}
+      <InlineMath math="P(1,1)" /> dengan faktor skala <InlineMath math="k=2" />{" "}
+      menghasilkan bayangan <InlineMath math="A'(3,7)" />. Garis dari pusat ke
+      titik asli dan dari pusat ke bayangan berada pada garis yang sama, dan
+      jarak <InlineMath math="PA'" /> adalah dua kali jarak{" "}
+      <InlineMath math="PA" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 1, y: 1, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "P(1,1)", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [{ x: 2, y: 4, z: 0 }],
+      color: getColor("SKY"),
+      showPoints: true,
+      labels: [{ text: "A(2,4)", at: 0, offset: [1.5, 0.2, 0] }],
+    },
+    {
+      points: [{ x: 3, y: 7, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "A'(3,7)", at: 0, offset: [0.5, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 1, y: 1, z: 0 }, // P
+        { x: 2, y: 4, z: 0 }, // A
+      ],
+      color: getColor("AMBER"),
+    },
+    {
+      points: [
+        { x: 1, y: 1, z: 0 }, // P
+        { x: 3, y: 7, z: 0 }, // A'
+      ],
+      color: getColor("SKY"),
+      cone: { position: "end", size: 0.3 },
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 18]}
+/>
+
+## Latihan
+
+1.  Carilah koordinat peta dari titik <InlineMath math="(a,b)" /> oleh dilatasi <InlineMath math="[O,3]" />!
+2.  Tentukan matriks yang bersesuaian dengan dilatasi dengan faktor skala <InlineMath math="-2" /> dan pusat di <InlineMath math="O(0,0)" />.
+3.  Sebuah titik <InlineMath math="B(-1, 5)" /> didilatasikan dengan pusat <InlineMath math="P(2, -3)" /> dan faktor skala <InlineMath math="k = \frac{1}{2}" />. Tentukan koordinat bayangan titik <InlineMath math="B" />!
+4.  Sebuah segitiga <InlineMath math="KLM" /> dengan titik sudut <InlineMath math="K(1,1)" />, <InlineMath math="L(5,1)" />, dan <InlineMath math="M(3,4)" /> didilatasikan dengan pusat <InlineMath math="O(0,0)" /> dan faktor skala <InlineMath math="2" />. Gambarkan segitiga asli dan bayangannya, lalu tentukan koordinat titik-titik bayangannya!
+
+### Kunci Jawaban
+
+1.  Dilatasi <InlineMath math="[O,3]" /> berarti pusat dilatasi adalah <InlineMath math="O(0,0)" /> dan faktor skala <InlineMath math="k=3" />.
+
+    Misalkan titiknya adalah <InlineMath math="Q(a,b)" />.
+
+    Maka <InlineMath math="x=a, y=b, k=3" />.
+
+    <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 3 & 0 \\ 0 & 3 \end{pmatrix} \begin{pmatrix} a \\ b \end{pmatrix} = \begin{pmatrix} 3a \\ 3b \end{pmatrix}" />
+
+    Jadi, koordinat peta dari titik <InlineMath math="(a,b)" /> adalah <InlineMath math="(3a, 3b)" />.
+
+2.  Faktor skala <InlineMath math="k=-2" />, pusat <InlineMath math="O(0,0)" />.
+
+    Matriks dilatasinya adalah:
+
+    <BlockMath math="\begin{pmatrix} -2 & 0 \\ 0 & -2 \end{pmatrix}" />.
+
+3.  Titik <InlineMath math="B(-1, 5)" />, pusat <InlineMath math="P(2, -3)" />, faktor skala <InlineMath math="k = \frac{1}{2}" />.
+
+    <InlineMath math="x=-1, y=5, a=2, b=-3, k=\frac{1}{2}" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} \frac{1}{2} & 0 \\ 0 & \frac{1}{2} \end{pmatrix} \begin{pmatrix} -1-2 \\ 5-(-3) \end{pmatrix} + \begin{pmatrix} 2 \\ -3 \end{pmatrix}" />
+      <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} \frac{1}{2} & 0 \\ 0 & \frac{1}{2} \end{pmatrix} \begin{pmatrix} -3 \\ 8 \end{pmatrix} + \begin{pmatrix} 2 \\ -3 \end{pmatrix}" />
+      <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} (\frac{1}{2})(-3) + (0)(8) \\ (0)(-3) + (\frac{1}{2})(8) \end{pmatrix} + \begin{pmatrix} 2 \\ -3 \end{pmatrix}" />
+      <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -\frac{3}{2} \\ 4 \end{pmatrix} + \begin{pmatrix} 2 \\ -3 \end{pmatrix} = \begin{pmatrix} -\frac{3}{2} + \frac{4}{2} \\ 4 - 3 \end{pmatrix} = \begin{pmatrix} \frac{1}{2} \\ 1 \end{pmatrix}" />
+    </div>
+
+    Koordinat bayangan titik <InlineMath math="B" /> adalah <InlineMath math="B'(\frac{1}{2}, 1)" />.
+
+4.  Segitiga <InlineMath math="KLM" /> dengan <InlineMath math="K(1,1)" />, <InlineMath math="L(5,1)" />, <InlineMath math="M(3,4)" />.
+
+    Pusat <InlineMath math="O(0,0)" />, <InlineMath math="k=2" />.
+
+    Bayangan titik <InlineMath math="K(1,1)" />:
+
+    <BlockMath math="\begin{pmatrix} x_K' \\ y_K' \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} \begin{pmatrix} 1 \\ 1 \end{pmatrix} = \begin{pmatrix} 2 \\ 2 \end{pmatrix} \implies K'(2,2)" />
+
+    Bayangan titik <InlineMath math="L(5,1)" />:
+
+    <BlockMath math="\begin{pmatrix} x_L' \\ y_L' \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} \begin{pmatrix} 5 \\ 1 \end{pmatrix} = \begin{pmatrix} 10 \\ 2 \end{pmatrix} \implies L'(10,2)" />
+
+    Bayangan titik <InlineMath math="M(3,4)" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\begin{pmatrix} x_M' \\ y_M' \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} \begin{pmatrix} 3 \\ 4 \end{pmatrix} = \begin{pmatrix} 6 \\ 8 \end{pmatrix} \implies M'(6,8)" />
+      <LineEquation
+        title={
+          <>
+            Visualisasi Dilatasi Segitiga <InlineMath math="KLM" /> dengan Pusat{" "}
+            <InlineMath math="O(0,0)" /> dan Faktor Skala{" "}
+            <InlineMath math="k=2" />
+          </>
+        }
+        description={
+          <>
+            Segitiga <InlineMath math="KLM" /> didilatasikan menjadi segitiga{" "}
+            <InlineMath math="K'L'M'" />. Titik pusat dilatasi{" "}
+            <InlineMath math="O(0,0)" />.
+          </>
+        }
+        data={[
+          // Original Triangle KLM
+          {
+            points: [
+              { x: 1, y: 1, z: 0 }, // K
+              { x: 5, y: 1, z: 0 }, // L
+            ],
+            color: getColor("SKY"),
+            labels: [
+              { text: "K(1,1)", at: 0, offset: [-0.7, -0.2, 0] },
+              { text: "L(5,1)", at: 1, offset: [0.7, -0.2, 0] },
+            ],
+            showPoints: true,
+          },
+          {
+            points: [
+              { x: 5, y: 1, z: 0 }, // L
+              { x: 3, y: 4, z: 0 }, // M
+            ],
+            color: getColor("ORANGE"),
+            labels: [{ text: "M(3,4)", at: 1, offset: [0, 0.5, 0] }],
+            showPoints: true,
+          },
+          {
+            points: [
+              { x: 3, y: 4, z: 0 }, // M
+              { x: 1, y: 1, z: 0 }, // K
+            ],
+            color: getColor("PURPLE"),
+            showPoints: true,
+          },
+          // Dilated Triangle K'L'M'
+          {
+            points: [
+              { x: 2, y: 2, z: 0 }, // K'
+              { x: 10, y: 2, z: 0 }, // L'
+            ],
+            color: getColor("TEAL"),
+            labels: [
+              { text: "K'(2,2)", at: 0, offset: [-0.8, -0.3, 0] },
+              { text: "L'(10,2)", at: 1, offset: [0.8, -0.3, 0] },
+            ],
+            showPoints: true,
+          },
+          {
+            points: [
+              { x: 10, y: 2, z: 0 }, // L'
+              { x: 6, y: 8, z: 0 }, // M'
+            ],
+            color: getColor("PINK"),
+            labels: [{ text: "M'(6,8)", at: 1, offset: [0, 0.6, 0] }],
+            showPoints: true,
+          },
+          {
+            points: [
+              { x: 6, y: 8, z: 0 }, // M'
+              { x: 2, y: 2, z: 0 }, // K'
+            ],
+            color: getColor("INDIGO"),
+            showPoints: true,
+          },
+          // Origin
+          {
+            points: [{ x: 0, y: 0, z: 0 }],
+            color: getColor("INDIGO"),
+            showPoints: true,
+            labels: [{ text: "O", at: 0, offset: [-0.3, -0.3, 0] }],
+          },
+        ]}
+        showZAxis={false}
+        cameraPosition={[0, 0, 20]}
+      />
+    </div>
