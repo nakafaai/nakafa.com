@@ -1,9 +1,10 @@
 "use client";
 
 import { Canvas, type CanvasProps } from "@react-three/fiber";
+import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
 
-export function ThreeCanvas({
+function ThreeCanvasComponent({
   children,
   ...props
 }: { children: ReactNode } & CanvasProps) {
@@ -18,3 +19,10 @@ export function ThreeCanvas({
     </Canvas>
   );
 }
+
+export const ThreeCanvas = dynamic(
+  () => Promise.resolve(ThreeCanvasComponent),
+  {
+    ssr: false,
+  }
+);
