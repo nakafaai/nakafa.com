@@ -131,43 +131,7 @@ export async function generateMetadata({
       type: "website",
       images: [
         {
-          url: "https://nakafa.com/facebook.png",
-          alt: t("title"),
-          width: 1200,
-          height: 630,
-        },
-        {
-          url: "https://nakafa.com/linkedin.png",
-          alt: t("title"),
-          width: 1200,
-          height: 627,
-        },
-        {
-          url: "https://nakafa.com/pinterest.png",
-          alt: t("title"),
-          width: 1000,
-          height: 1500,
-        },
-        {
-          url: "https://nakafa.com/reddit.png",
-          alt: t("title"),
-          width: 1200,
-          height: 1200,
-        },
-        {
-          url: "https://nakafa.com/twitter-large.png",
-          alt: t("title"),
-          width: 4096,
-          height: 4096,
-        },
-        {
-          url: "https://nakafa.com/twitter-small.png",
-          alt: t("title"),
-          width: 1200,
-          height: 675,
-        },
-        {
-          url: "https://nakafa.com/whatsapp.png",
+          url: "https://nakafa.com/og.png",
           alt: t("title"),
           width: 1200,
           height: 630,
