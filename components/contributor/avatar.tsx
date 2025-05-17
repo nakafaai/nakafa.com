@@ -42,7 +42,7 @@ export function Avatar({ contributor }: Props) {
           <DrawerTitle className="text-center">{contributor.name}</DrawerTitle>
           {contributor.official && (
             <DrawerDescription className="text-center">
-              <Badge variant="outline">{t("official")}</Badge>
+              <Badge>{t("official")}</Badge>
             </DrawerDescription>
           )}
         </DrawerHeader>
