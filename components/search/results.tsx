@@ -13,7 +13,6 @@ import {
   RocketIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useQueryStates } from "nuqs";
 import { Fragment } from "react";
@@ -21,7 +20,7 @@ import { useDebounceValue } from "usehooks-ts";
 import { LoaderIcon } from "../ui/icons";
 import { Separator } from "../ui/separator";
 
-function SearchResultsContent() {
+export function SearchResults() {
   const t = useTranslations("Utils");
 
   const pagefindError = usePagefind((context) => context.error);
@@ -128,12 +127,3 @@ function SearchResultsContent() {
     );
   });
 }
-
-// Use dynamic import to avoid hydration errors
-export const SearchResults = dynamic(
-  () => Promise.resolve(SearchResultsContent),
-  {
-    ssr: false,
-    loading: () => null,
-  }
-);

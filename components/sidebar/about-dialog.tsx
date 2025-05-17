@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import packageJson from "@/package.json";
 import nakafaLogo from "@/public/logo.svg";
 import { useTranslations } from "next-intl";
-import dynamic from "next/dynamic";
 import { buttonVariants } from "../ui/button";
 import {
   Dialog,
@@ -30,7 +29,7 @@ type Props = {
   action: (open: boolean) => void;
 };
 
-function Content({
+function AboutDialogContent({
   onOpenChange,
   className,
 }: {
@@ -78,7 +77,7 @@ function Content({
   );
 }
 
-function AboutDialogComponent({ open, action }: Props) {
+export function AboutDialog({ open, action }: Props) {
   const t = useTranslations("Common");
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -92,7 +91,7 @@ function AboutDialogComponent({ open, action }: Props) {
               {t("version", { version: packageJson.version })}
             </DialogDescription>
           </DialogHeader>
-          <Content onOpenChange={action} className="pb-0" />
+          <AboutDialogContent onOpenChange={action} className="pb-0" />
         </DialogContent>
       </Dialog>
     );
@@ -107,13 +106,8 @@ function AboutDialogComponent({ open, action }: Props) {
             {t("version", { version: packageJson.version })}
           </DrawerDescription>
         </DrawerHeader>
-        <Content onOpenChange={action} />
+        <AboutDialogContent onOpenChange={action} />
       </DrawerContent>
     </Drawer>
   );
 }
-
-export const AboutDialog = dynamic(
-  () => Promise.resolve(AboutDialogComponent),
-  { ssr: false, loading: () => null }
-);
