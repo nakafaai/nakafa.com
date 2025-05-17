@@ -4,3 +4,207 @@ export const metadata = {
   date: "10/05/2025",
   subject: "Geometric Transformation",
 };
+
+## Composition of Transformations Using Matrices
+
+In geometry, a transformation is an operation that moves or changes the shape of an object. When multiple transformations are applied sequentially to an object, this is called a composition of transformations.
+
+We can use matrices to represent many geometric transformations and also to find the result of the composition of these transformations.
+
+We will focus on transformations that can be represented by <InlineMath math="2 \times 2" /> matrices. For example, reflection across the X-axis can be represented by the matrix <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />. If the point <InlineMath math="(x,y)" /> is reflected across the X-axis, its image can be found by multiplying this matrix by the position vector of the point: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix}" />.
+
+Here are some basic transformations along with their matrices that are often used in the composition of transformations:
+
+1.  Reflection across the X-axis: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
+2.  Reflection across the Y-axis: <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />
+3.  Reflection across the line <InlineMath math="y=x" />: <InlineMath math="\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />
+4.  Reflection across the line <InlineMath math="y=-x" />: <InlineMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />
+5.  Reflection across the origin <InlineMath math="O(0,0)" /> (equivalent to a <InlineMath math="180^\circ" /> rotation): <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />
+6.  Rotation about the origin <InlineMath math="(0,0)" /> by an angle <InlineMath math="\theta" />: <InlineMath math="\begin{pmatrix} \cos \theta & -\sin \theta \\ \sin \theta & \cos \theta \end{pmatrix}" />
+7.  Dilation about the origin <InlineMath math="(0,0)" /> with a scale factor <InlineMath math="k" />: <InlineMath math="\begin{pmatrix} k & 0 \\ 0 & k \end{pmatrix}" />
+
+### Operating Composition of Transformations Using Matrices
+
+Composition of transformations means performing several transformations in sequence. If transformation <InlineMath math="T_1" /> is followed by transformation <InlineMath math="T_2" />, we denote it as <InlineMath math="T_2 \circ T_1" />. This means <InlineMath math="T_1" /> is applied first, then its result is transformed by <InlineMath math="T_2" />.
+
+Suppose the matrix corresponding to <InlineMath math="T_1" /> is <InlineMath math="M_1" />, and the matrix corresponding to <InlineMath math="T_2" /> is <InlineMath math="M_2" />. To find the image of point <InlineMath math="P(x,y)" /> under the composition <InlineMath math="T_2 \circ T_1" />, there are two equivalent methods:
+
+1.  **Applying Transformations Sequentially to the Point:**
+
+    - Calculate the image <InlineMath math="P'(x',y')" /> of <InlineMath math="P(x,y)" /> under <InlineMath math="T_1" />: <InlineMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = M_1 \begin{pmatrix} x \\ y \end{pmatrix}" />.
+    - Then, calculate the image <InlineMath math="P''(x'',y'')" /> of <InlineMath math="P'(x',y')" /> under <InlineMath math="T_2" />: <InlineMath math="\begin{pmatrix} x'' \\ y'' \end{pmatrix} = M_2 \begin{pmatrix} x' \\ y' \end{pmatrix}" />.
+
+    If we substitute step (a) into (b), we get: <InlineMath math="\begin{pmatrix} x'' \\ y'' \end{pmatrix} = M_2 \left( M_1 \begin{pmatrix} x \\ y \end{pmatrix} \right)" />.
+
+2.  **Finding the Composite Matrix First:**
+
+    - Determine the matrix <InlineMath math="M" /> that represents the composite transformation <InlineMath math="T_2 \circ T_1" />. This matrix is the product <InlineMath math="M_2 M_1" />.
+
+      **Note the order:** the matrix of the second transformation (<InlineMath math="M_2" />) is multiplied from the left by the matrix of the first transformation (<InlineMath math="M_1" />).
+
+    - Calculate the image <InlineMath math="P''(x'',y'')" /> of <InlineMath math="P(x,y)" /> using the composite matrix <InlineMath math="M" />: <InlineMath math="\begin{pmatrix} x'' \\ y'' \end{pmatrix} = M \begin{pmatrix} x \\ y \end{pmatrix} = (M_2 M_1) \begin{pmatrix} x \\ y \end{pmatrix}" />.
+
+Both methods yield the same final image due to the associative property of matrix multiplication, i.e., <InlineMath math="M_2 (M_1 P) = (M_2 M_1) P" />, where <InlineMath math="P" /> is the column vector <InlineMath math="\begin{pmatrix} x \\ y \end{pmatrix}" />.
+
+**Illustrative Example:**
+
+Suppose <InlineMath math="T_1" /> is a reflection across the Y-axis, and <InlineMath math="T_2" /> is a rotation about the origin <InlineMath math="O" /> by <InlineMath math="\frac{1}{2}\pi" /> radians (<InlineMath math="90^\circ" />). We want to find the image of point <InlineMath math="P(x,y)" /> under <InlineMath math="T_2 \circ T_1" />.
+
+The matrix for <InlineMath math="T_1" /> (reflection across Y-axis) is <InlineMath math="M_1 = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
+
+The matrix for <InlineMath math="T_2" /> (rotation <InlineMath math="90^\circ" />) is <InlineMath math="M_2 = \begin{pmatrix} \cos 90^\circ & -\sin 90^\circ \\ \sin 90^\circ & \cos 90^\circ \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" />.
+
+**Method 1: Sequential Transformation on the Point**
+
+- Image of <InlineMath math="P(x,y)" /> under <InlineMath math="T_1" />:
+
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = M_1 \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} -x \\ y \end{pmatrix}" />
+
+  So <InlineMath math="P'(-x,y)" />.
+
+- Image of <InlineMath math="P'(-x,y)" /> under <InlineMath math="T_2" />:
+
+  <BlockMath math="\begin{pmatrix} x'' \\ y'' \end{pmatrix} = M_2 \begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} -x \\ y \end{pmatrix} = \begin{pmatrix} (0)(-x)+(-1)(y) \\ (1)(-x)+(0)(y) \end{pmatrix} = \begin{pmatrix} -y \\ -x \end{pmatrix}" />
+
+- The final image is <InlineMath math="P''(-y,-x)" />.
+
+**Method 2: Composite Matrix First**
+
+- Composite matrix <InlineMath math="M = M_2 M_1" />:
+
+  <BlockMath math="M = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix} = \begin{pmatrix} (0)(-1)+(-1)(0) & (0)(0)+(-1)(1) \\ (1)(-1)+(0)(0) & (1)(0)+(0)(1) \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />
+
+- Image of <InlineMath math="P(x,y)" /> under <InlineMath math="M" />:
+
+  <BlockMath math="\begin{pmatrix} x'' \\ y'' \end{pmatrix} = M \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} (0)(x)+(-1)(y) \\ (-1)(x)+(0)(y) \end{pmatrix} = \begin{pmatrix} -y \\ -x \end{pmatrix}" />
+
+- The final image is <InlineMath math="P''(-y,-x)" />.
+
+Both methods give the same result. Using the composite matrix (<InlineMath math="M_2 M_1" />) is often more efficient if we need to transform many points with the same composition.
+
+## Composite Matrix Rule
+
+Suppose the matrices related to transformations <InlineMath math="T_1" /> and <InlineMath math="T_2" /> are <InlineMath math="M_1 = \begin{pmatrix} p & q \\ r & s \end{pmatrix}" /> and <InlineMath math="M_2 = \begin{pmatrix} t & u \\ v & w \end{pmatrix}" /> respectively.
+
+Then, the matrix related to the composition of transformations <InlineMath math="T_2 \circ T_1" /> (Transformation <InlineMath math="T_1" /> followed by <InlineMath math="T_2" />) is <InlineMath math="M_2 M_1 = \begin{pmatrix} t & u \\ v & w \end{pmatrix} \begin{pmatrix} p & q \\ r & s \end{pmatrix}" />.
+
+Remember that the order of matrix multiplication is important. The matrix for the transformation performed first (<InlineMath math="M_1" />) is written on the right.
+
+## Application Examples
+
+### Composition of Two Reflections
+
+Determine the image of the point <InlineMath math="(2,5)" /> reflected across the X-axis and then reflected across the Y-axis.
+
+**Alternative Solution:**
+
+Let <InlineMath math="T_1" /> be the reflection across the X-axis, and <InlineMath math="T_2" /> be the reflection across the Y-axis.
+
+The matrix for <InlineMath math="T_1" /> (<InlineMath math="M_1" />) is <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+
+The matrix for <InlineMath math="T_2" /> (<InlineMath math="M_2" />) is <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
+
+The composition of transformations <InlineMath math="T_2 \circ T_1" /> has the matrix <InlineMath math="M = M_2 M_1" />.
+
+<BlockMath math="M = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix} \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} = \begin{pmatrix} (-1)(1)+(0)(0) & (-1)(0)+(0)(-1) \\ (0)(1)+(1)(0) & (0)(0)+(1)(-1) \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />
+
+The image of the point <InlineMath math="(2,5)" /> is:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = M \begin{pmatrix} 2 \\ 5 \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 2 \\ 5 \end{pmatrix} = \begin{pmatrix} (-1)(2)+(0)(5) \\ (0)(2)+(-1)(5) \end{pmatrix} = \begin{pmatrix} -2 \\ -5 \end{pmatrix}" />
+
+So, the image of the point is <InlineMath math="(-2,-5)" />.
+
+### Composition of Reflection and Rotation
+
+Determine the image of the point <InlineMath math="(-2,3)" /> transformed by the composition of a reflection across the Y-axis followed by a <InlineMath math="180^\circ" /> rotation about the origin.
+
+**Alternative Solution:**
+
+Let <InlineMath math="T_1" /> be the reflection across the Y-axis, and <InlineMath math="T_2" /> be the <InlineMath math="180^\circ" /> rotation about the origin.
+
+The matrix for <InlineMath math="T_1" /> (<InlineMath math="M_1" />) is <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
+
+The matrix for <InlineMath math="T_2" /> (<InlineMath math="M_2" />) is <InlineMath math="\begin{pmatrix} \cos 180^\circ & -\sin 180^\circ \\ \sin 180^\circ & \cos 180^\circ \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+
+The composition of transformations <InlineMath math="T_2 \circ T_1" /> has the matrix <InlineMath math="M = M_2 M_1" />.
+
+<BlockMath math="M = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix} = \begin{pmatrix} (-1)(-1)+(0)(0) & (-1)(0)+(0)(1) \\ (0)(-1)+(-1)(0) & (0)(0)+(-1)(1) \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
+
+The image of the point <InlineMath math="(-2,3)" /> is:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = M \begin{pmatrix} -2 \\ 3 \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} -2 \\ 3 \end{pmatrix} = \begin{pmatrix} (1)(-2)+(0)(3) \\ (0)(-2)+(-1)(3) \end{pmatrix} = \begin{pmatrix} -2 \\ -3 \end{pmatrix}" />
+
+So, the image of the point is <InlineMath math="(-2,-3)" />.
+
+### Composition of Three Transformations
+
+Suppose you want to perform three transformations on a point <InlineMath math="P(2,5)" />, namely reflection across the X-axis, rotation <InlineMath math="90^\circ" /> about the origin, and a half turn (<InlineMath math="180^\circ" /> rotation about the origin). Determine its image!
+
+**Alternative Solution:**
+
+Let:
+
+- <InlineMath math="T_1" />: Reflection across the X-axis.
+
+  Matrix <InlineMath math="M_1 = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
+
+- <InlineMath math="T_2" />: Rotation <InlineMath math="90^\circ" /> about the
+  origin.
+
+  Matrix <InlineMath math="M_2 = \begin{pmatrix} \cos 90^\circ & -\sin 90^\circ \\ \sin 90^\circ & \cos 90^\circ \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" />
+
+- <InlineMath math="T_3" />: Half turn (<InlineMath math="180^\circ" /> rotation
+  about the origin).
+
+  Matrix <InlineMath math="M_3 = \begin{pmatrix} \cos 180^\circ & -\sin 180^\circ \\ \sin 180^\circ & \cos 180^\circ \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />
+
+The composition of transformations is <InlineMath math="T_3 \circ T_2 \circ T_1" />. Its matrix is <InlineMath math="M = M_3 M_2 M_1" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="M_2 M_1 = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} = \begin{pmatrix} (0)(1)+(-1)(0) & (0)(0)+(-1)(-1) \\ (1)(1)+(0)(0) & (1)(0)+(0)(-1) \end{pmatrix} = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />
+  <BlockMath math="M = M_3 (M_2 M_1) = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix} = \begin{pmatrix} (-1)(0)+(0)(1) & (-1)(1)+(0)(0) \\ (0)(0)+(-1)(1) & (0)(1)+(-1)(0) \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />
+</div>
+
+The image of <InlineMath math="P(2,5)" /> is:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = M \begin{pmatrix} 2 \\ 5 \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix} \begin{pmatrix} 2 \\ 5 \end{pmatrix} = \begin{pmatrix} (0)(2)+(-1)(5) \\ (-1)(2)+(0)(5) \end{pmatrix} = \begin{pmatrix} -5 \\ -2 \end{pmatrix}" />
+
+So, the image of the point is <InlineMath math="(-5,-2)" />.
+
+## Exercise
+
+Suppose we want to perform three transformations on a point <InlineMath math="P(2,5)" />, namely reflection across the Y-axis, rotation <InlineMath math="180^\circ" /> about the origin, and reflection across the line <InlineMath math="y=x" />. Determine its image!
+
+### Answer Key
+
+Let:
+
+- <InlineMath math="T_1" />: Reflection across the Y-axis.
+
+  Matrix <InlineMath math="M_1 = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
+
+- <InlineMath math="T_2" />: Rotation <InlineMath math="180^\circ" /> about the
+  origin.
+
+  Matrix <InlineMath math="M_2 = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+
+- <InlineMath math="T_3" />: Reflection across the line <InlineMath math="y=x" />
+  .
+
+  Matrix <InlineMath math="M_3 = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />
+
+The composition of transformations is <InlineMath math="T_3 \circ T_2 \circ T_1" />. Its matrix is <InlineMath math="M = M_3 M_2 M_1" />.
+
+**Step 1:** Calculate <InlineMath math="M_2 M_1" />.
+
+<BlockMath math="M_2 M_1 = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix} = \begin{pmatrix} (-1)(-1)+(0)(0) & (-1)(0)+(0)(1) \\ (0)(-1)+(-1)(0) & (0)(0)+(-1)(1) \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
+
+**Step 2:** Calculate <InlineMath math="M = M_3 (M_2 M_1)" />.
+
+<BlockMath math="M = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} = \begin{pmatrix} (0)(1)+(1)(0) & (0)(0)+(1)(-1) \\ (1)(1)+(0)(0) & (1)(0)+(0)(-1) \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" />
+
+The image of <InlineMath math="P(2,5)" /> is:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = M \begin{pmatrix} 2 \\ 5 \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} 2 \\ 5 \end{pmatrix} = \begin{pmatrix} (0)(2)+(-1)(5) \\ (1)(2)+(0)(5) \end{pmatrix} = \begin{pmatrix} -5 \\ 2 \end{pmatrix}" />
+
+So, the image of the point is <InlineMath math="(-5,2)" />.
