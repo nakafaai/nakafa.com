@@ -32,4 +32,9 @@ export const contributors: Contributor[] = [
     username: "juju",
     official: false,
   },
+  {
+    name: "Alfeus Xiesi Delroy",
+    username: "alfeus",
+    official: false,
+  },
 ];
