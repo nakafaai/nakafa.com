@@ -1,6 +1,203 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Pencerminan terhadap Titik",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "10/05/2025",
   subject: "Transformasi Geometri",
 };
+
+## Memahami Pencerminan terhadap Titik
+
+Pencerminan terhadap titik, sering juga disebut rotasi setengah putar (<InlineMath math="180^\circ" />), adalah transformasi geometri di mana setiap titik pada objek dipetakan ke posisi baru sedemikian rupa sehingga titik pusat pencerminan menjadi titik tengah antara titik asli dan bayangannya.
+
+Misalkan titik pusat pencerminan adalah <InlineMath math="P(a,b)" />. Jika sebuah titik <InlineMath math="Q(x,y)" /> dicerminkan terhadap titik <InlineMath math="P" />, maka bayangannya <InlineMath math="Q'(x',y')" /> akan berada pada garis yang melalui <InlineMath math="Q" /> dan <InlineMath math="P" />, dengan <InlineMath math="P" /> sebagai titik tengah segmen <InlineMath math="QQ'" />.
+
+### Aturan Pencerminan terhadap Titik
+
+Jika sebuah titik <InlineMath math="Q(x, y)" /> dicerminkan terhadap titik <InlineMath math="P(a, b)" />, maka koordinat bayangannya, <InlineMath math="Q'(x', y')" />, ditentukan oleh rumus:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = 2a - x" />
+  <BlockMath math="y' = 2b - y" />
+</div>
+
+Atau bisa juga ditulis:
+
+<BlockMath math="Q'(-x + 2a, -y + 2b)" />
+
+Ini berarti koordinat x bayangan adalah dua kali koordinat x pusat dikurangi koordinat x asli, dan hal yang sama berlaku untuk koordinat y.
+
+## Mencerminkan Titik terhadap Titik Lain
+
+Tentukan titik peta dari setengah putar <InlineMath math="\sigma_{(2,3)}" /> untuk titik <InlineMath math="(5, 4)" />.
+
+Ini berarti kita mencerminkan titik <InlineMath math="Q(5,4)" /> terhadap titik pusat <InlineMath math="P(2,3)" />.
+
+Di sini, <InlineMath math="x=5" />, <InlineMath math="y=4" />, <InlineMath math="a=2" />, dan <InlineMath math="b=3" />.
+
+Menggunakan rumus:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = 2a - x = 2(2) - 5 = 4 - 5 = -1" />
+  <BlockMath math="y' = 2b - y = 2(3) - 4 = 6 - 4 = 2" />
+</div>
+
+Jadi, bayangan titik <InlineMath math="(5,4)" /> adalah <InlineMath math="(-1,2)" />.
+
+<LineEquation
+  title={
+    <>
+      Peta Titik <InlineMath math="Q(5,4)" /> terhadap Titik{" "}
+      <InlineMath math="P(2,3)" />
+    </>
+  }
+  description={
+    <>
+      Visualisasi pencerminan titik <InlineMath math="Q(5,4)" /> terhadap titik
+      pusat <InlineMath math="P(2,3)" /> menghasilkan{" "}
+      <InlineMath math="Q'(-1,2)" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 2, y: 3, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "P(2,3) - Pusat", at: 0, offset: [1.5, -0.5, 0] }],
+    },
+    {
+      points: [{ x: 5, y: 4, z: 0 }],
+      color: getColor("SKY"),
+      showPoints: true,
+      labels: [{ text: "Q(5,4) - Asli", at: 0, offset: [0.3, 0.5, 0] }],
+    },
+    {
+      points: [{ x: -1, y: 2, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "Q'(-1,2) - Bayangan", at: 0, offset: [-0.7, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 5, y: 4, z: 0 },
+        { x: -1, y: 2, z: 0 },
+      ],
+      color: getColor("PINK"),
+    }, // Garis penghubung Q ke Q'
+  ]}
+  showZAxis={false}
+/>
+
+## Mencerminkan Garis terhadap Titik
+
+Tentukan titik peta dari setengah putar <InlineMath math="\sigma_{(1,3)}" /> untuk garis <InlineMath math="l" /> dengan persamaan <InlineMath math="2x - y + 3 = 0" />.
+
+Ambil sembarang titik <InlineMath math="(x,y)" /> pada garis <InlineMath math="l" />. Bayangannya, <InlineMath math="(x',y')" />, setelah dicerminkan terhadap titik <InlineMath math="P(1,3)" /> adalah:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = 2(1) - x = 2 - x \implies x = 2 - x'" />
+  <BlockMath math="y' = 2(3) - y = 6 - y \implies y = 6 - y'" />
+</div>
+
+Substitusikan <InlineMath math="x = 2 - x'" /> dan <InlineMath math="y = 6 - y'" /> ke dalam persamaan garis <InlineMath math="l" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2(2 - x') - (6 - y') + 3 = 0" />
+  <BlockMath math="4 - 2x' - 6 + y' + 3 = 0" />
+  <BlockMath math="-2x' + y' + 1 = 0" />
+</div>
+
+Mengganti <InlineMath math="x'" /> dan <InlineMath math="y'" /> kembali ke <InlineMath math="x" /> dan <InlineMath math="y" />, persamaan garis bayangan <InlineMath math="l'" /> adalah:
+
+<BlockMath math="-2x + y + 1 = 0" />
+
+Atau bisa ditulis sebagai <InlineMath math="2x - y - 1 = 0" />.
+
+<LineEquation
+  title={
+    <>
+      Peta Garis <InlineMath math="2x-y+3=0" /> terhadap Titik{" "}
+      <InlineMath math="P(1,3)" />
+    </>
+  }
+  description={
+    <>
+      Garis asli <InlineMath math="2x-y+3=0" /> dicerminkan terhadap titik{" "}
+      <InlineMath math="P(1,3)" /> menghasilkan garis bayangan{" "}
+      <InlineMath math="2x-y-1=0" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 1, y: 3, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "P(1,3) - Pusat", at: 0, offset: [0.5, -0.5, 0] }],
+    },
+    {
+      // Garis Asli: 2x - y + 3 = 0  => y = 2x + 3
+      points: Array.from({ length: 11 }, (_, i) => {
+        const xVal = i - 5;
+        return { x: xVal, y: 2 * xVal + 3, z: 0 };
+      }),
+      color: getColor("SKY"),
+      labels: [{ text: "2x-y+3=0", at: 5, offset: [-2, 0.5, 0] }],
+    },
+    {
+      // Garis Bayangan: 2x - y - 1 = 0 => y = 2x - 1
+      points: Array.from({ length: 11 }, (_, i) => {
+        const xVal = i - 5;
+        return { x: xVal, y: 2 * xVal - 1, z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      labels: [{ text: "2x-y-1=0", at: 5, offset: [2, -0.5, 0] }],
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[1, 2, 15]}
+/>
+
+## Latihan
+
+1.  Tentukan titik peta dari setengah putar <InlineMath math="\sigma_{(-2,3)}" /> untuk titik <InlineMath math="(3, -4)" />.
+2.  Titik <InlineMath math="K(-5, 1)" /> dicerminkan terhadap titik asal <InlineMath math="O(0,0)" />. Tentukan koordinat bayangannya!
+3.  Tentukan titik peta dari setengah putar <InlineMath math="\sigma_{(1,-3)}" /> untuk garis <InlineMath math="l" /> dengan persamaan <InlineMath math="2x + 5y + 6 = 0" />.
+
+### Kunci Jawaban
+
+1.  Pusat <InlineMath math="P(-2,3)" />, titik <InlineMath math="Q(3,-4)" />. Maka <InlineMath math="a=-2, b=3, x=3, y=-4" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = 2a - x = 2(-2) - 3 = -4 - 3 = -7" />
+      <BlockMath math="y' = 2b - y = 2(3) - (-4) = 6 + 4 = 10" />
+    </div>
+
+    Jadi, bayangan titik <InlineMath math="Q(3,-4)" /> adalah <InlineMath math="(-7,10)" />.
+
+2.  Pusat <InlineMath math="O(0,0)" />, titik <InlineMath math="K(-5,1)" />. Maka <InlineMath math="a=0, b=0, x=-5, y=1" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = 2(0) - (-5) = 0 + 5 = 5" />
+      <BlockMath math="y' = 2(0) - 1 = 0 - 1 = -1" />
+    </div>
+
+    Jadi, bayangan titik <InlineMath math="K(-5,1)" /> adalah <InlineMath math="K'(5,-1)" />.
+
+3.  Pusat <InlineMath math="P(1,-3)" />. Garis <InlineMath math="2x + 5y + 6 = 0" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = 2(1) - x = 2 - x \implies x = 2 - x'" />
+      <BlockMath math="y' = 2(-3) - y = -6 - y \implies y = -6 - y'" />
+    </div>
+
+    Substitusi ke persamaan garis:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="2(2 - x') + 5(-6 - y') + 6 = 0" />
+      <BlockMath math="4 - 2x' - 30 - 5y' + 6 = 0" />
+      <BlockMath math="-2x' - 5y' - 20 = 0" />
+    </div>
+
+    Persamaan garis bayangan: <InlineMath math="-2x - 5y - 20 = 0" /> atau <InlineMath math="2x + 5y + 20 = 0" />.

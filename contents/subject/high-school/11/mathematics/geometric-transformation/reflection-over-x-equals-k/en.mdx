@@ -1,6 +1,138 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Reflection over Line x = k",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "10/05/2025",
   subject: "Geometric Transformation",
 };
+
+## Understanding Reflection over the Line x = k
+
+Reflection over the vertical line <InlineMath math="x = k" /> is a geometric transformation where each point of an object is mapped to a new position. The line <InlineMath math="x = k" /> acts as a mirror.
+
+The horizontal distance from the original point to the mirror line is equal to the horizontal distance from the image point to the mirror line. The y-coordinate of the point does not change.
+
+### Rule for Reflection over the Line x = k
+
+If a point <InlineMath math="P(x, y)" /> is reflected over the line <InlineMath math="x = k" />, its image's coordinates, <InlineMath math="P'(x', y')" />, are determined by the rule:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = 2k - x" />
+  <BlockMath math="y' = y" />
+</div>
+
+Thus, the image of point <InlineMath math="P(x, y)" /> is <InlineMath math="P'(2k - x, y)" />. Note that the y-coordinate remains the same, while the x-coordinate changes based on its distance from the line <InlineMath math="x=k" />.
+
+## Reflecting a Point over the Line x = k
+
+Determine the image of point <InlineMath math="P(3,2)" /> by reflection over the line <InlineMath math="x=3" />.
+
+In this case, <InlineMath math="x=3" />, <InlineMath math="y=2" />, and <InlineMath math="k=3" />.
+
+Using the rule <InlineMath math="P'(2k - x, y)" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = 2(3) - 3 = 6 - 3 = 3" />
+  <BlockMath math="y' = 2" />
+</div>
+
+Thus, the image of point <InlineMath math="P(3,2)" /> is <InlineMath math="P'(3,2)" />. The point lies on the mirror line, so its image is the point itself.
+
+Now, let's try another example. Determine the image of point <InlineMath math="A(1,4)" /> if it is reflected over the line <InlineMath math="x=3" />.
+
+Here, <InlineMath math="x=1" />, <InlineMath math="y=4" />, and <InlineMath math="k=3" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = 2(3) - 1 = 6 - 1 = 5" />
+  <BlockMath math="y' = 4" />
+</div>
+
+Thus, the image of point <InlineMath math="A(1,4)" /> is <InlineMath math="A'(5,4)" />.
+
+<LineEquation
+  title={
+    <>
+      Image of a Point over the Line <InlineMath math="x=k" />
+    </>
+  }
+  description={
+    <>
+      Visualization of the reflection of point <InlineMath math="A(1,4)" /> over
+      the line <InlineMath math="x=3" /> resulting in{" "}
+      <InlineMath math="A'(5,4)" />.
+    </>
+  }
+  data={[
+    {
+      points: [
+        { x: 3, y: -5, z: 0 },
+        { x: 3, y: 5, z: 0 },
+      ],
+      color: getColor("INDIGO"),
+      labels: [{ text: "x=3", at: 1, offset: [0.5, 0.5, 0] }],
+    }, // Line x=3
+    {
+      points: [{ x: 1, y: 4, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "A(1,4)", at: 0, offset: [-0.5, 0.3, 0] }],
+    },
+    {
+      points: [{ x: 5, y: 4, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "A'(5,4)", at: 0, offset: [0.2, 0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 1, y: 4, z: 0 },
+        { x: 5, y: 4, z: 0 },
+      ],
+      color: getColor("PINK"),
+    }, // Horizontal helper line
+  ]}
+  showZAxis={false}
+/>
+
+## Exercises
+
+1.  Determine the image of point <InlineMath math="P(3,2)" /> by reflection over the line <InlineMath math="x=5" />.
+2.  A point <InlineMath math="B(-2, 5)" /> is reflected over the line <InlineMath math="x=1" />. Determine the coordinates of its image!
+3.  The image of a point <InlineMath math="C(x,y)" /> after reflection over the line <InlineMath math="x=-2" /> is <InlineMath math="C'(0,3)" />. Determine the coordinates of point C!
+
+### Key Answers
+
+1.  Given <InlineMath math="P(3,2)" /> and the mirror line <InlineMath math="x=5" />. So <InlineMath math="x=3, y=2, k=5" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = 2k - x = 2(5) - 3 = 10 - 3 = 7" />
+      <BlockMath math="y' = y = 2" />
+    </div>
+
+    Thus, the image of point P is <InlineMath math="P'(7,2)" />.
+
+2.  Given <InlineMath math="B(-2, 5)" /> and the mirror line <InlineMath math="x=1" />. So <InlineMath math="x=-2, y=5, k=1" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = 2k - x = 2(1) - (-2) = 2 + 2 = 4" />
+      <BlockMath math="y' = y = 5" />
+    </div>
+
+    Thus, the image of point B is <InlineMath math="B'(4,5)" />.
+
+3.  Given the image <InlineMath math="C'(0,3)" /> and the mirror line <InlineMath math="x=-2" />. So <InlineMath math="x'=0, y'=3, k=-2" />.
+
+    We know <InlineMath math="x' = 2k - x" /> and <InlineMath math="y' = y" />.
+
+    From <InlineMath math="y' = y" />, then <InlineMath math="y = 3" />.
+
+    From <InlineMath math="x' = 2k - x" />, then <InlineMath math="0 = 2(-2) - x" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="0 = -4 - x" />
+      <BlockMath math="x = -4" />
+    </div>
+
+    Thus, the coordinates of point C are <InlineMath math="C(-4,3)" />.
