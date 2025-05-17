@@ -321,25 +321,25 @@ function Footer() {
   return (
     <div className="flex items-center justify-between border-t p-3 text-muted-foreground text-sm">
       <div className="flex items-center gap-1">
-        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium font-mono text-[10px] opacity-100">
+        <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
           <CornerDownLeftIcon className="size-3" />
         </kbd>
         <span>{t("select")}</span>
       </div>
       <div className="flex items-center gap-1">
-        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium font-mono text-[10px] opacity-100">
+        <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
           <ArrowUpIcon className="size-3" />
         </kbd>
-        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium font-mono text-[10px] opacity-100">
+        <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
           <ArrowDownIcon className="size-3" />
         </kbd>
         <span>{t("navigate")}</span>
       </div>
       <div className="flex items-center gap-1">
-        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium font-mono text-[10px] opacity-100">
+        <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
           <IconCommand className="size-3" />
         </kbd>
-        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium font-mono text-[10px] opacity-100">
+        <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
           <IconLetterK className="size-3" />
         </kbd>
         <span>{t("close")}</span>
