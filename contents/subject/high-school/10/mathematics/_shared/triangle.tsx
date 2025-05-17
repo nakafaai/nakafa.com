@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  CoordinateSystem,
-  Triangle as Triangle3D,
-} from "@/components/ui/3d-coordinate";
+import { CoordinateSystem } from "@/components/three/coordinate-system";
+import { Triangle as Triangle3D } from "@/components/three/triangle";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -20,6 +18,7 @@ import { getCos, getRadians, getSin, getTan } from "@/lib/utils/math";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { ReactNode } from "react";
+
 type Props = {
   title: ReactNode;
   description: ReactNode;

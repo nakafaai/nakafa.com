@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  CoordinateSystem,
-  UnitCircle as UnitCircle3D,
-} from "@/components/ui/3d-coordinate";
+import { CoordinateSystem } from "@/components/three/coordinate-system";
+import { UnitCircle as UnitCircle3D } from "@/components/three/unit-circle";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,

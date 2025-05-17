@@ -1,4 +1,5 @@
-import { CoordinateSystem, Vector } from "@/components/ui/3d-coordinate";
+import { CoordinateSystem } from "@/components/three/coordinate-system";
+import { Vector } from "@/components/three/vector";
 import {
   Card,
   CardContent,

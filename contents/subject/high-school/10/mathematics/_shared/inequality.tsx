@@ -1,8 +1,5 @@
-import {
-  CoordinateSystem,
-  Inequality as Inequality3D,
-  type InequalityProps,
-} from "@/components/ui/3d-coordinate";
+import { CoordinateSystem } from "@/components/three/coordinate-system";
+import { Inequality as Inequality3D } from "@/components/three/inequality";
 import {
   Card,
   CardContent,
@@ -10,11 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
+
 type Props = {
   title: ReactNode;
   description: ReactNode;
-  data: InequalityProps[];
+  data: ComponentProps<typeof Inequality3D>[];
 };
 
 export function Inequality({ title, description, data }: Props) {

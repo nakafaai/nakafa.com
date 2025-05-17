@@ -1,21 +1,18 @@
 import {
-  CoordinateSystem,
-  LineEquation as LineEquation3D,
-  type LineEquationProps,
-} from "@/components/ui/3d-coordinate";
-import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { CoordinateSystem } from "../three/coordinate-system";
+import { LineEquation as LineEquation3D } from "../three/line-equation";
 
 type Props = {
   title: ReactNode;
   description: ReactNode;
-  data: LineEquationProps[];
+  data: ComponentProps<typeof LineEquation3D>[];
   cameraPosition?: [number, number, number];
   showZAxis?: boolean;
 };
