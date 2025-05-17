@@ -29,7 +29,10 @@ export function Avatar({ contributor }: Props) {
       <Tooltip>
         <TooltipTrigger asChild>
           <DrawerTrigger className="cursor-pointer">
-            <Character name={contributor.name} className="size-16 shadow-xs" />
+            <Character
+              name={`${contributor.name} - ${contributor.username}`}
+              className="size-16 shadow-xs"
+            />
           </DrawerTrigger>
         </TooltipTrigger>
         <TooltipContent>

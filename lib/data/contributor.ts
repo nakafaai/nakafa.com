@@ -33,6 +33,11 @@ export const contributors: Contributor[] = [
     official: false,
   },
   {
+    name: "Eliezer Rizky",
+    username: "eliezerrizky",
+    official: false,
+  },
+  {
     name: "Alfeus Xiesi Delroy",
     username: "alfeus",
     official: false,
