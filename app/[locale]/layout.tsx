@@ -108,16 +108,10 @@ export async function generateMetadata({
       description: t("description"),
       images: [
         {
-          url: "https://nakafa.com/twitter-large.png",
-          alt: t("title"),
-          width: 4096,
-          height: 4096,
-        },
-        {
-          url: "https://nakafa.com/twitter-small.png",
+          url: "https://nakafa.com/og.png",
           alt: t("title"),
           width: 1200,
-          height: 675,
+          height: 630,
         },
       ],
       creator: "@nabilfatih_",
