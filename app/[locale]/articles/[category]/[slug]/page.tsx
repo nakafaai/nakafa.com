@@ -69,7 +69,7 @@ export async function generateMetadata({
   const { metadata } = content;
 
   return {
-    title: metadata.title,
+    title: `${metadata.title} - ${t(category)}`,
     description: metadata.description,
     alternates,
     authors: metadata.authors,
