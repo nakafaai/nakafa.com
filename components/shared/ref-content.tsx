@@ -2,7 +2,11 @@
 
 import { cleanupUrl, cn, formatUrl } from "@/lib/utils";
 import type { Reference } from "@/types/content";
-import { IconBrandGithub, IconBrandYoutube } from "@tabler/icons-react";
+import {
+  IconBrandDiscord,
+  IconBrandGithub,
+  IconBrandYoutube,
+} from "@tabler/icons-react";
 import {
   BookIcon,
   BookOpenIcon,
@@ -114,6 +118,24 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <p>{t("videos")}</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" asChild>
+                <a
+                  href="https://discord.gg/EW9VN4gWzf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="sr-only">{t("community")}</span>
+                  <IconBrandDiscord className="size-4" />
+                </a>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>{t("community")}</p>
             </TooltipContent>
           </Tooltip>
         </div>
