@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 
   return {
-    title: t("grade", { grade }),
+    title: `${t("grade", { grade })} - ${t(category)}`,
     description: t("grade-description"),
     alternates: {
       canonical: path,

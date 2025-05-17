@@ -71,7 +71,7 @@ export async function generateMetadata({
   };
 
   return {
-    title: `${t(material)} - ${t(getGradeNonNumeric(grade) ?? "grade", { grade })}`,
+    title: `${t(material)} - ${t(getGradeNonNumeric(grade) ?? "grade", { grade })} - ${t(category)}`,
     alternates: {
       canonical: urlPath,
     },
