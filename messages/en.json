@@ -87,7 +87,10 @@
     "share": "Share",
     "share-copied": "Link copied to clipboard",
     "contributor": "Contributor",
-    "search": "Search"
+    "search": "Search",
+    "select": "Select",
+    "navigate": "Navigate",
+    "close": "Close"
   },
   "Subject": {
     "elementary-school": "Elementary School",
@@ -124,7 +127,8 @@
     "official": "Official",
     "official-description": "Made by Nakafa",
     "contributor": "Contributor",
-    "contributor-description": "Made by contributor"
+    "contributor-description": "Made by contributor",
+    "articles": "Articles"
   },
   "Utils": {
     "search": "Search",

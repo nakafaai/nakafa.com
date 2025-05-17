@@ -15,14 +15,22 @@ import { useSearchStore } from "@/lib/store/search";
 import { cn } from "@/lib/utils";
 import { getAnchorStyle } from "@/lib/utils/search";
 import type { PagefindResult } from "@/types/pagefind";
-import { IconMenu3 } from "@tabler/icons-react";
-import { HeartCrackIcon, InfoIcon, RocketIcon } from "lucide-react";
+import { IconCommand, IconLetterK, IconMenu3 } from "@tabler/icons-react";
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  CornerDownLeftIcon,
+  HeartCrackIcon,
+  InfoIcon,
+} from "lucide-react";
 import { FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useTransition } from "react";
+import { Fragment, startTransition, useEffect, useTransition } from "react";
 import type { ReactElement } from "react";
 import { useDebounceValue } from "usehooks-ts";
+import { articlesMenu } from "../sidebar/_data/articles";
+import { subjectAll } from "../sidebar/_data/subject";
 import { LoaderIcon } from "../ui/icons";
 
 export function SearchCommand() {
@@ -42,7 +50,7 @@ export function SearchCommand() {
           (navigator.userAgent.includes("Mac") ? event.metaKey : event.ctrlKey))
       ) {
         event.preventDefault();
-        setOpen(true);
+        setOpen(!open);
       }
     }
 
@@ -50,7 +58,7 @@ export function SearchCommand() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [setOpen]);
+  }, [setOpen, open]);
 
   return (
     <CommandDialog
@@ -62,6 +70,7 @@ export function SearchCommand() {
       }}
     >
       <SearchMain />
+      <Footer />
     </CommandDialog>
   );
 }
@@ -115,7 +124,7 @@ function SearchList({ search }: { search: string }) {
   const displayError = pagefindError || (error ? getErrorMessage(error) : "");
 
   return (
-    <CommandList className="h-full lg:max-h-[500px]">
+    <CommandList className="h-full md:max-h-[500px]">
       <SearchListItems
         error={hasError ? displayError : ""}
         search={debouncedSearch}
@@ -165,12 +174,7 @@ function SearchListItems({
   }
 
   if (!search) {
-    return (
-      <CommandEmpty className="flex items-center justify-center gap-1 p-7.5 text-muted-foreground text-sm">
-        <RocketIcon className="size-4" />
-        <p>{t("search-help")}</p>
-      </CommandEmpty>
-    );
+    return <DefaultItems />;
   }
 
   if (isLoading) {
@@ -233,4 +237,113 @@ function SearchListItems({
       </Fragment>
     );
   });
+}
+
+function DefaultItems() {
+  const t = useTranslations("Subject");
+  const tArticles = useTranslations("Articles");
+  const router = useRouter();
+  const setOpen = useSearchStore((state) => state.setOpen);
+
+  useEffect(() => {
+    // prefetch all the links
+    for (const item of subjectAll) {
+      for (const subItem of item.items) {
+        router.prefetch(subItem.href);
+      }
+    }
+
+    for (const item of articlesMenu) {
+      router.prefetch(item.href);
+    }
+  }, [router]);
+
+  return (
+    <>
+      {subjectAll.map((item) => (
+        <CommandGroup key={item.title} heading={t(item.title)}>
+          {item.items.map((subItem) => {
+            let title = "";
+            // Only grade that has value
+            if ("value" in subItem) {
+              title = t(subItem.title, { grade: subItem.value });
+            } else {
+              title = t(subItem.title);
+            }
+
+            return (
+              <CommandItem
+                key={title}
+                value={title}
+                className="cursor-pointer"
+                onSelect={() => {
+                  startTransition(() => {
+                    setOpen(false);
+                    router.push(subItem.href);
+                  });
+                }}
+              >
+                <item.icon />
+                <span className="line-clamp-1">{title}</span>
+              </CommandItem>
+            );
+          })}
+        </CommandGroup>
+      ))}
+
+      <CommandSeparator alwaysRender className="my-2" />
+
+      <CommandGroup heading={tArticles("articles")}>
+        {articlesMenu.map((item) => (
+          <CommandItem
+            key={item.title}
+            value={tArticles(item.title)}
+            className="cursor-pointer"
+            onSelect={() => {
+              startTransition(() => {
+                setOpen(false);
+                router.push(item.href);
+              });
+            }}
+          >
+            <item.icon />
+            <span className="line-clamp-1">{tArticles(item.title)}</span>
+          </CommandItem>
+        ))}
+      </CommandGroup>
+    </>
+  );
+}
+
+function Footer() {
+  const t = useTranslations("Common");
+
+  return (
+    <div className="flex items-center justify-between border-t p-3 text-muted-foreground text-sm">
+      <div className="flex items-center gap-1">
+        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium font-mono text-[10px] opacity-100">
+          <CornerDownLeftIcon className="size-3" />
+        </kbd>
+        <span>{t("select")}</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium font-mono text-[10px] opacity-100">
+          <ArrowUpIcon className="size-3" />
+        </kbd>
+        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium font-mono text-[10px] opacity-100">
+          <ArrowDownIcon className="size-3" />
+        </kbd>
+        <span>{t("navigate")}</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium font-mono text-[10px] opacity-100">
+          <IconCommand className="size-3" />
+        </kbd>
+        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium font-mono text-[10px] opacity-100">
+          <IconLetterK className="size-3" />
+        </kbd>
+        <span>{t("close")}</span>
+      </div>
+    </div>
+  );
 }

@@ -87,7 +87,10 @@
     "share": "Bagikan",
     "share-copied": "Link berhasil disalin ke papan klip",
     "contributor": "Kontributor",
-    "search": "Cari"
+    "search": "Cari",
+    "select": "Memilih",
+    "navigate": "Navigasi",
+    "close": "Menutup"
   },
   "Subject": {
     "elementary-school": "SD",
@@ -124,7 +127,8 @@
     "official": "Resmi",
     "official-description": "Dibuat oleh Nakafa",
     "contributor": "Kontributor",
-    "contributor-description": "Dibuat oleh kontributor"
+    "contributor-description": "Dibuat oleh kontributor",
+    "articles": "Artikel"
   },
   "Utils": {
     "search": "Cari",

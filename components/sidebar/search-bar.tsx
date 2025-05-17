@@ -46,7 +46,7 @@ export function SearchBar({ className }: Props) {
           type="text"
         />
         <div className="pointer-events-none absolute inset-y-0 end-0 hidden items-center justify-center pe-3 lg:flex">
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-1">
             <kbd className="rounded border bg-background p-0.75">
               <IconCommand className="size-3 shrink-0" />
               <span className="sr-only">Command/Ctrl</span>
