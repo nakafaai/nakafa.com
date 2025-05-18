@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 type State = {
@@ -18,7 +18,6 @@ export const useSearchStore = create<State & Actions>()(
       query: "",
       open: false,
 
-      // Actions are functions and not saved to localStorage.
       setQuery: (query: string) => {
         set((state) => {
           state.query = query;
@@ -32,6 +31,7 @@ export const useSearchStore = create<State & Actions>()(
     })),
     {
       name: "nakafa-search",
+      storage: createJSONStorage(() => sessionStorage),
     }
   )
 );
