@@ -1,5 +1,4 @@
-import dynamic from "next/dynamic";
-import type { MathComponentProps } from "react-katex";
+import { BlockMath, InlineMath, type MathComponentProps } from "react-katex";
 import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { Heading } from "./components/markdown/heading";
 import { Paragraph } from "./components/markdown/paragraph";
@@ -39,32 +38,6 @@ const CONSTANTS = {
 };
 
 const cssVariablesTheme = createCssVariablesTheme({});
-
-const DynamicInlineMath = dynamic(
-  () => import("react-katex").then((mod) => mod.InlineMath),
-  {
-    loading: () => <span style={{ fontStyle: "italic" }}>...</span>,
-    ssr: true,
-  }
-);
-
-const DynamicBlockMathComponent = dynamic(
-  () => import("react-katex").then((mod) => mod.BlockMath),
-  {
-    loading: () => (
-      <div
-        style={{
-          padding: "1rem",
-          border: "1px dashed #ccc",
-          fontStyle: "italic",
-        }}
-      >
-        Loading math...
-      </div>
-    ),
-    ssr: true,
-  }
-);
 
 const components = {
   h1: (props: HeadingProps) => (
@@ -177,14 +150,14 @@ const components = {
 
     return <code className="inline" {...props} />;
   },
-  InlineMath: DynamicInlineMath,
+  InlineMath,
   BlockMath: (props: MathComponentProps) => (
     <ScrollArea
       className="max-w-full rounded-xl border bg-card text-card-foreground shadow-sm"
       type="hover"
     >
       <div className="px-4">
-        <DynamicBlockMathComponent {...props} />
+        <BlockMath {...props} />
       </div>
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
