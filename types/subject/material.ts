@@ -15,7 +15,7 @@ export const MaterialListSchema = z.array(
 );
 export type MaterialList = z.infer<typeof MaterialListSchema>;
 
-export const MaterialGrade10Schema = z.enum([
+export const MaterialHighSchoolSchema = z.enum([
   "mathematics",
   "physics",
   "chemistry",
@@ -26,9 +26,9 @@ export const MaterialGrade10Schema = z.enum([
   "informatics",
   "geospatial",
 ]);
-export type MaterialGrade10 = z.infer<typeof MaterialGrade10Schema>;
+export type MaterialHighSchool = z.infer<typeof MaterialHighSchoolSchema>;
 
-export const MaterialGradeBachelorSchema = z.enum([
+export const MaterialBachelorSchema = z.enum([
   "ai-ds",
   "game-engineering",
   "computer-science",
@@ -36,10 +36,10 @@ export const MaterialGradeBachelorSchema = z.enum([
   "political-science",
   "informatics-engineering",
 ]);
-export type MaterialGradeBachelor = z.infer<typeof MaterialGradeBachelorSchema>;
+export type MaterialBachelor = z.infer<typeof MaterialBachelorSchema>;
 
-export const MaterialGradeSchema = z.union([
-  MaterialGrade10Schema,
-  MaterialGradeBachelorSchema,
+export const MaterialSchema = z.union([
+  MaterialHighSchoolSchema,
+  MaterialBachelorSchema,
 ]);
-export type MaterialGrade = z.infer<typeof MaterialGradeSchema>;
+export type MaterialGrade = z.infer<typeof MaterialSchema>;

@@ -58,12 +58,14 @@ export default function GlobalError({
               className="relative flex h-svh items-center justify-center"
             >
               <Particles className="pointer-events-none absolute inset-0 opacity-80" />
-              <div className="px-6 text-center">
-                <div className="space-y-4">
-                  <h1 className="font-bold text-6xl">5XX</h1>
+              <div className="mx-6 rounded-xl border bg-card/80 p-6 shadow-sm backdrop-blur-xs">
+                <div className="space-y-4 text-center">
+                  <h1 className="font-bold font-mono text-6xl text-primary">
+                    5XX
+                  </h1>
 
                   <div className="space-y-2">
-                    <h2 className="font-semibold text-lg">
+                    <h2 className="font-mono font-semibold text-lg tracking-tight">
                       Something went wrong!
                     </h2>
 

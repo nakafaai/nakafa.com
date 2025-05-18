@@ -12,12 +12,14 @@ export default function NotFound() {
       className="relative flex h-[calc(100svh-4rem)] items-center justify-center"
     >
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />
-      <div className="px-6 text-center">
-        <div className="space-y-4">
-          <h1 className="font-bold text-6xl">404</h1>
+      <div className="mx-6 rounded-xl border bg-card/80 p-6 shadow-sm backdrop-blur-xs">
+        <div className="space-y-4 text-center">
+          <h1 className="font-bold font-mono text-6xl text-primary">404</h1>
 
           <div className="space-y-2">
-            <h2 className="font-semibold text-lg">{t("title")}</h2>
+            <h2 className="font-mono font-semibold text-lg tracking-tight">
+              {t("title")}
+            </h2>
 
             <p className="mx-auto max-w-md text-muted-foreground text-sm">
               {t("description")}
