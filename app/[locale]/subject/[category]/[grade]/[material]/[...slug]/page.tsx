@@ -217,6 +217,6 @@ export default async function Page({ params }: Props) {
       </Suspense>
     );
   } catch {
-    return notFound();
+    notFound();
   }
 }
