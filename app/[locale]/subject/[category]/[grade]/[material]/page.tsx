@@ -129,7 +129,7 @@ export default async function Page({ params }: Props) {
             label: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
           }}
         />
-        <LayoutMaterialMain scrollIndicator={false} className="py-10">
+        <LayoutMaterialMain scrollIndicator={false} className="py-20">
           {materials.length === 0 ? (
             <ComingSoon className="pb-10" />
           ) : (
