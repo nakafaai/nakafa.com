@@ -9,7 +9,7 @@ export function CommunityMenu() {
     <SidebarMenuItem>
       <SidebarMenuButton tooltip={t("community")} asChild>
         <a
-          href="https://discord.gg/EW9VN4gWzf"
+          href="https://discord.gg/CPCSfKhvfQ"
           target="_blank"
           rel="noopener noreferrer"
         >

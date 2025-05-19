@@ -125,7 +125,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
             <TooltipTrigger asChild>
               <Button variant="outline" size="icon" asChild>
                 <a
-                  href="https://discord.gg/EW9VN4gWzf"
+                  href="https://discord.gg/CPCSfKhvfQ"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
