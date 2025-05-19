@@ -195,48 +195,36 @@ function SearchListItems({
     );
   }
 
-  return results.map((result, index) => {
-    // Filter out sub_results with titles matching the meta title
-    const visibleSubResults = result.sub_results.filter(
-      (subResult) => subResult.title !== result.meta.title
-    );
-
-    // If there are no visible sub_results, don't render the group
-    if (visibleSubResults.length === 0) {
-      return null;
-    }
-
-    return (
-      <Fragment key={result.url}>
-        <CommandGroup heading={result.meta.title}>
-          {visibleSubResults.map((subResult) => (
-            <CommandItem
-              key={subResult.url}
-              value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
-              className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
-              onSelect={() => {
-                startTransition(() => {
-                  setOpen(false);
-                  router.push(subResult.url);
-                });
-              }}
-              disabled={isPending}
-            >
-              {subResult.anchor?.element === "h2" ? (
-                <FileTextIcon />
-              ) : (
-                <IconMenu3 />
-              )}
-              <span className="line-clamp-1">{subResult.title}</span>
-            </CommandItem>
-          ))}
-        </CommandGroup>
-        {results.length > 1 && index !== results.length - 1 && (
-          <CommandSeparator alwaysRender className="my-2" />
-        )}
-      </Fragment>
-    );
-  });
+  return results.map((result, index) => (
+    <Fragment key={result.url}>
+      <CommandGroup heading={result.meta.title}>
+        {result.sub_results.map((subResult) => (
+          <CommandItem
+            key={subResult.url}
+            value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
+            className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
+            onSelect={() => {
+              startTransition(() => {
+                setOpen(false);
+                router.push(subResult.url);
+              });
+            }}
+            disabled={isPending}
+          >
+            {subResult.anchor?.element === "h2" ? (
+              <FileTextIcon />
+            ) : (
+              <IconMenu3 />
+            )}
+            <span className="line-clamp-1">{subResult.title}</span>
+          </CommandItem>
+        ))}
+      </CommandGroup>
+      {results.length > 1 && index !== results.length - 1 && (
+        <CommandSeparator alwaysRender className="my-2" />
+      )}
+    </Fragment>
+  ));
 }
 
 function DefaultItems() {

@@ -41,7 +41,7 @@ export function HeaderContent({
 }: Props) {
   const showFooter = authors || date;
   return (
-    <div className="relative border-b py-10">
+    <div data-pagefind-ignore className="relative border-b py-10">
       <Particles
         quantity={25}
         className="pointer-events-none absolute inset-0 opacity-80"
@@ -72,10 +72,7 @@ export function HeaderContent({
         </div>
         {description && <p className="text-muted-foreground">{description}</p>}
         {showFooter && (
-          <div
-            data-pagefind-ignore
-            className="flex flex-col justify-between gap-2 pt-2 sm:flex-row sm:items-center sm:gap-4"
-          >
+          <div className="flex flex-col justify-between gap-2 pt-2 sm:flex-row sm:items-center sm:gap-4">
             {authors && (
               <p className="inline-flex items-center gap-1 text-muted-foreground">
                 <UserPenIcon className="size-4 shrink-0" />
