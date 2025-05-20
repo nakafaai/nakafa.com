@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
-import BlockArt from "../ui/block-art";
+import { BlockArt } from "../ui/block-art";
 import { Particles } from "../ui/particles";
 
 type Props = {
