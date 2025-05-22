@@ -27,7 +27,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar
       collapsible="icon"
-      className={cn("z-20", props.className)}
+      className={cn("z-20 border-y border-l", props.className)}
       {...props}
     >
       <SidebarHeader>

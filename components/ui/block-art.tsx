@@ -60,9 +60,7 @@ export function BlockArt({
   }, [totalCells, animatedCellCount, animationInterval]);
 
   return (
-    <section
-      className={cn("h-full w-full bg-border pt-px lg:py-px", className)}
-    >
+    <section className={cn("h-full w-full bg-border pt-px", className)}>
       <div
         className="h-full w-full"
         style={{
