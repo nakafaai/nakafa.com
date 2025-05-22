@@ -1,6 +1,267 @@
+import { UnitCircle } from "@/components/contents/unit-circle";
+import { Triangle } from "@/components/contents/triangle";
+
 export const metadata = {
   title: "Trigonometric Identity",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Functions and Their Modeling",
 };
+
+## Understanding Trigonometric Identities
+
+Have you ever noticed that some mathematical equations are always true for any value of their variables? For example, <InlineMath math="(a + b)^2 = a^2 + 2ab + b^2" /> is always true for any values of a and b. Equations like this are called identities.
+
+In trigonometry, we also have equations that are always true for any angle value. These are called **trigonometric identities**. These identities are very useful for simplifying trigonometric expressions and solving equations.
+
+## Basic Trigonometric Identities
+
+### Pythagorean Identity
+
+Let's start with the most fundamental identity. Consider a unit circle with point <InlineMath math="P(x, y)" /> that forms angle <InlineMath math="\theta" /> with the positive x-axis.
+
+<UnitCircle
+  title="Unit Circle and Pythagorean Identity"
+  description="Notice how the coordinates of point P change as the angle changes. These coordinates are the values of cos θ and sin θ."
+  angle={45}
+/>
+
+On the unit circle:
+
+- Radius = 1
+- x-coordinate = <InlineMath math="\cos \theta" />
+- y-coordinate = <InlineMath math="\sin \theta" />
+
+Using the Pythagorean theorem for point P:
+
+<BlockMath math="x^2 + y^2 = 1^2" />
+
+Substituting the values of x and y:
+
+<BlockMath math="(\cos \theta)^2 + (\sin \theta)^2 = 1" />
+
+Or can be written as:
+
+<BlockMath math="\sin^2 \theta + \cos^2 \theta = 1" />
+
+This is the **Pythagorean identity**, the most fundamental identity in trigonometry.
+
+**Other Forms of Pythagorean Identity:**
+
+From the basic identity above, we can derive two other forms:
+
+**Second form:** Divide both sides by <InlineMath math="\cos^2 \theta" /> (for <InlineMath math="\cos \theta \neq 0" />)
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\frac{\sin^2 \theta}{\cos^2 \theta} + \frac{\cos^2 \theta}{\cos^2 \theta} = \frac{1}{\cos^2 \theta}" />
+  <BlockMath math="\tan^2 \theta + 1 = \sec^2 \theta" />
+</div>
+
+**Third form:** Divide both sides by <InlineMath math="\sin^2 \theta" /> (for <InlineMath math="\sin \theta \neq 0" />)
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\frac{\sin^2 \theta}{\sin^2 \theta} + \frac{\cos^2 \theta}{\sin^2 \theta} = \frac{1}{\sin^2 \theta}" />
+  <BlockMath math="1 + \cot^2 \theta = \csc^2 \theta" />
+</div>
+
+### Reciprocal Identities
+
+Each trigonometric function has its reciprocal. This relationship forms reciprocal identities:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sin \theta = \frac{1}{\csc \theta}" />
+  <BlockMath math="\cos \theta = \frac{1}{\sec \theta}" />
+  <BlockMath math="\tan \theta = \frac{1}{\cot \theta}" />
+</div>
+
+Or in the opposite form:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\csc \theta = \frac{1}{\sin \theta}" />
+  <BlockMath math="\sec \theta = \frac{1}{\cos \theta}" />
+  <BlockMath math="\cot \theta = \frac{1}{\tan \theta}" />
+</div>
+
+### Quotient Identities
+
+Quotient identities relate tangent and cotangent to sine and cosine:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\tan \theta = \frac{\sin \theta}{\cos \theta}" />
+  <BlockMath math="\cot \theta = \frac{\cos \theta}{\sin \theta}" />
+  <Triangle
+    title="Trigonometric Function Visualization"
+    description="Observe how the ratios of triangle sides give sin, cos, and tan values. Also notice how these values change as the angle changes."
+    angle={30}
+    labels={{
+      opposite: "Opposite Side",
+      adjacent: "Adjacent Side",
+      hypotenuse: "Hypotenuse",
+    }}
+  />
+</div>
+
+Both identities can be proven directly from the definition of trigonometric functions on the unit circle.
+
+### Even and Odd Function Identities
+
+When angles are negative, trigonometric functions have special properties:
+
+**Even function (symmetry about y-axis):**
+
+<BlockMath math="\cos(-\theta) = \cos \theta" />
+
+**Odd functions (symmetry about origin):**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sin(-\theta) = -\sin \theta" />
+  <BlockMath math="\tan(-\theta) = -\tan \theta" />
+  <UnitCircle
+    title="Exploring Even and Odd Properties"
+    description="Try moving the slider to negative and positive values. Notice how cos, sin, and tan values change for opposite angles."
+    angle={60}
+  />
+</div>
+
+## Using Identities in Proofs
+
+Let's see how trigonometric identities are used to prove other equations.
+
+### Simplifying Expressions
+
+Simplify <InlineMath math="\frac{\sin^2 \theta}{\cos \theta} + \cos \theta" />
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\frac{\sin^2 \theta}{\cos \theta} + \cos \theta = \frac{\sin^2 \theta}{\cos \theta} + \frac{\cos^2 \theta}{\cos \theta}" />
+  <BlockMath math="= \frac{\sin^2 \theta + \cos^2 \theta}{\cos \theta}" />
+  <BlockMath math="= \frac{1}{\cos \theta} \quad \text{(using Pythagorean identity)}" />
+  <BlockMath math="= \sec \theta" />
+</div>
+
+### Proving Identities
+
+Prove that <InlineMath math="\frac{1 + \tan^2 \theta}{\sec \theta} = \sec \theta" />
+
+**Solution:**
+
+We start from the left side:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\frac{1 + \tan^2 \theta}{\sec \theta} = \frac{\sec^2 \theta}{\sec \theta} \quad \text{(using } 1 + \tan^2 \theta = \sec^2 \theta \text{)}" />
+  <BlockMath math="= \sec \theta" />
+</div>
+
+It is proven that the left side equals the right side.
+
+## Determining Trigonometric Function Values
+
+Trigonometric identities are very useful for determining the values of all trigonometric functions when one of them is known.
+
+### Identity Applications
+
+If <InlineMath math="\sin \theta = \frac{3}{5}" /> and <InlineMath math="90° < \theta < 180°" /> (quadrant II), determine the values of other trigonometric functions.
+
+**Solution:**
+
+Use the Pythagorean identity to find <InlineMath math="\cos \theta" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sin^2 \theta + \cos^2 \theta = 1" />
+  <BlockMath math="\left(\frac{3}{5}\right)^2 + \cos^2 \theta = 1" />
+  <BlockMath math="\frac{9}{25} + \cos^2 \theta = 1" />
+  <BlockMath math="\cos^2 \theta = 1 - \frac{9}{25} = \frac{16}{25}" />
+  <BlockMath math="\cos \theta = \pm \frac{4}{5}" />
+</div>
+
+Since <InlineMath math="\theta" /> is in quadrant II, then <InlineMath math="\cos \theta < 0" />.
+Therefore, <InlineMath math="\cos \theta = -\frac{4}{5}" />
+
+Next, calculate the other trigonometric functions:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\tan \theta = \frac{\sin \theta}{\cos \theta} = \frac{3/5}{-4/5} = -\frac{3}{4}" />
+  <BlockMath math="\csc \theta = \frac{1}{\sin \theta} = \frac{5}{3}" />
+  <BlockMath math="\sec \theta = \frac{1}{\cos \theta} = -\frac{5}{4}" />
+  <BlockMath math="\cot \theta = \frac{1}{\tan \theta} = -\frac{4}{3}" />
+</div>
+
+## Exercises
+
+1. Simplify the expression <InlineMath math="\frac{\tan \theta \cdot \cos \theta}{\sin \theta}" />
+
+2. Prove the identity <InlineMath math="\frac{\sin \theta}{1 + \cos \theta} = \frac{1 - \cos \theta}{\sin \theta}" />
+
+3. If <InlineMath math="\cos \theta = \frac{5}{13}" /> and <InlineMath math="270° < \theta < 360°" />, determine the values of all trigonometric functions.
+
+4. Simplify <InlineMath math="\sin^4 \theta - \cos^4 \theta" />
+
+5. If <InlineMath math="\tan \theta = \frac{4}{3}" /> and <InlineMath math="\sin \theta < 0" />, determine the values of <InlineMath math="\sin \theta" /> and <InlineMath math="\cos \theta" />.
+
+### Answer Key
+
+1. Let's simplify step by step:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\frac{\tan \theta \cdot \cos \theta}{\sin \theta} = \frac{\frac{\sin \theta}{\cos \theta} \cdot \cos \theta}{\sin \theta}" />
+     <BlockMath math="= \frac{\sin \theta}{\sin \theta} = 1" />
+   </div>
+
+2. To prove the identity, we will transform the left side:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\frac{\sin \theta}{1 + \cos \theta} = \frac{\sin \theta}{1 + \cos \theta} \cdot \frac{1 - \cos \theta}{1 - \cos \theta}" />
+     <BlockMath math="= \frac{\sin \theta (1 - \cos \theta)}{(1 + \cos \theta)(1 - \cos \theta)}" />
+     <BlockMath math="= \frac{\sin \theta (1 - \cos \theta)}{1 - \cos^2 \theta}" />
+     <BlockMath math="= \frac{\sin \theta (1 - \cos \theta)}{\sin^2 \theta}" />
+     <BlockMath math="= \frac{1 - \cos \theta}{\sin \theta}" />
+   </div>
+
+3. Given <InlineMath math="\cos \theta = \frac{5}{13}" /> in quadrant IV.
+
+   Finding <InlineMath math="\sin \theta" />:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\sin^2 \theta = 1 - \cos^2 \theta = 1 - \frac{25}{169} = \frac{144}{169}" />
+     <BlockMath math="\sin \theta = -\frac{12}{13} \text{ (negative in quadrant IV)}" />
+   </div>
+
+   Other trigonometric functions:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\tan \theta = \frac{-12/13}{5/13} = -\frac{12}{5}" />
+     <BlockMath math="\csc \theta = -\frac{13}{12}" />
+     <BlockMath math="\sec \theta = \frac{13}{5}" />
+     <BlockMath math="\cot \theta = -\frac{5}{12}" />
+   </div>
+
+4. Use difference of squares factoring:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\sin^4 \theta - \cos^4 \theta = (\sin^2 \theta)^2 - (\cos^2 \theta)^2" />
+     <BlockMath math="= (\sin^2 \theta + \cos^2 \theta)(\sin^2 \theta - \cos^2 \theta)" />
+     <BlockMath math="= 1 \cdot (\sin^2 \theta - \cos^2 \theta)" />
+     <BlockMath math="= \sin^2 \theta - \cos^2 \theta" />
+   </div>
+
+5. Given <InlineMath math="\tan \theta = \frac{4}{3}" /> and <InlineMath math="\sin \theta < 0" />.
+
+   Since <InlineMath math="\tan \theta > 0" /> and <InlineMath math="\sin \theta < 0" />, then <InlineMath math="\cos \theta < 0" /> (quadrant III).
+
+   Use the identity <InlineMath math="1 + \tan^2 \theta = \sec^2 \theta" />:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="1 + \frac{16}{9} = \sec^2 \theta" />
+     <BlockMath math="\sec^2 \theta = \frac{25}{9}" />
+     <BlockMath math="\sec \theta = -\frac{5}{3} \text{ (negative in quadrant III)}" />
+     <BlockMath math="\cos \theta = -\frac{3}{5}" />
+   </div>
+
+   For <InlineMath math="\sin \theta" />:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\tan \theta = \frac{\sin \theta}{\cos \theta}" />
+     <BlockMath math="\frac{4}{3} = \frac{\sin \theta}{-3/5}" />
+     <BlockMath math="\sin \theta = \frac{4}{3} \cdot \left(-\frac{3}{5}\right) = -\frac{4}{5}" />
+   </div>
