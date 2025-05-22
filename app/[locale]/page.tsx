@@ -64,7 +64,7 @@ export default async function Page({ params }: Props) {
       />
       <div
         data-pagefind-ignore
-        className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh"
+        className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh lg:border-y"
       >
         <Particles className="pointer-events-none absolute inset-0 opacity-80" />
         <div className="mx-auto w-full max-w-xl px-6">
