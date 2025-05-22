@@ -76,7 +76,7 @@ export function BlockArt({
           <div
             key={i}
             className={cn(
-              "transition-colors duration-300 ease-in-out hover:bg-primary",
+              "transition-colors ease-in-out hover:bg-primary",
               activeIndices.has(i) ? animationColor : "bg-background"
             )}
             style={{ aspectRatio: "1 / 1" }}
