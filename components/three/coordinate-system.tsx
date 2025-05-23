@@ -10,7 +10,6 @@ import {
   type CSSProperties,
   type ReactNode,
   Suspense,
-  memo,
   useCallback,
   useMemo,
   useState,
@@ -55,87 +54,6 @@ type Props = {
   /** Additional class name */
   className?: string;
 };
-
-// Memoized grid component to prevent unnecessary re-renders
-const MemoizedGrid = memo(
-  ({
-    visible,
-    position,
-    rotation,
-    gridSize,
-    gridDivisions,
-    cellColor,
-    sectionColor,
-  }: {
-    visible: boolean;
-    position: [number, number, number];
-    rotation: [number, number, number];
-    gridSize: number;
-    gridDivisions: number;
-    cellColor: string;
-    sectionColor: string;
-  }) => (
-    <Grid
-      visible={visible}
-      args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
-      position={position}
-      rotation={rotation}
-      cellColor={cellColor}
-      sectionColor={sectionColor}
-      fadeDistance={50}
-      fadeStrength={1}
-    />
-  )
-);
-
-MemoizedGrid.displayName = "MemoizedGrid";
-
-// Memoized controls to prevent unnecessary re-renders
-const MemoizedControls = memo(
-  ({
-    showGrid,
-    play,
-    onToggleGrid,
-    onTogglePlay,
-    sceneReady,
-  }: {
-    showGrid: boolean;
-    play: boolean;
-    onToggleGrid: () => void;
-    onTogglePlay: () => void;
-    sceneReady: boolean;
-  }) => (
-    <div
-      className={cn(
-        "absolute bottom-3 left-3 flex gap-2 transition-opacity duration-300 ease-in-out",
-        sceneReady ? "opacity-100" : "opacity-0"
-      )}
-    >
-      <Button variant="secondary" size="icon" onClick={onToggleGrid}>
-        {showGrid ? (
-          <Grid2x2Icon className="size-4" />
-        ) : (
-          <Grid2X2XIcon className="size-4" />
-        )}
-        <span className="sr-only">Toggle Grid</span>
-      </Button>
-      <Button
-        variant={play ? "secondary" : "default"}
-        size="icon"
-        onClick={onTogglePlay}
-      >
-        {play ? (
-          <PauseIcon className="size-4" />
-        ) : (
-          <PlayIcon className="size-4" />
-        )}
-        <span className="sr-only">Toggle Play</span>
-      </Button>
-    </div>
-  )
-);
-
-MemoizedControls.displayName = "MemoizedControls";
 
 export function CoordinateSystem({
   showGrid: initialShowGrid = true,
@@ -234,32 +152,35 @@ export function CoordinateSystem({
           <Origin visible={showOrigin} color={originColor} />
 
           {/* Grid - using memoized components */}
-          <MemoizedGrid
+          <Grid
             visible={showGrid}
             position={[0, 0, 0]}
             rotation={[0, 0, 0]}
-            gridSize={gridSize}
-            gridDivisions={gridDivisions}
+            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
             cellColor={gridColors.secondary}
             sectionColor={gridColors.main}
+            fadeDistance={50}
+            fadeStrength={1}
           />
-          <MemoizedGrid
+          <Grid
             visible={showGrid}
             position={[0, 0, 0]}
             rotation={[Math.PI / 2, 0, 0]}
-            gridSize={gridSize}
-            gridDivisions={gridDivisions}
+            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
             cellColor={gridColors.secondary}
             sectionColor={gridColors.main}
+            fadeDistance={50}
+            fadeStrength={1}
           />
-          <MemoizedGrid
+          <Grid
             visible={showGrid}
             position={[0, 0, 0]}
             rotation={[0, 0, Math.PI / 2]}
-            gridSize={gridSize}
-            gridDivisions={gridDivisions}
+            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
             cellColor={gridColors.secondary}
             sectionColor={gridColors.main}
+            fadeDistance={50}
+            fadeStrength={1}
           />
 
           {/* User Content */}
@@ -280,13 +201,33 @@ export function CoordinateSystem({
       </ThreeCanvas>
 
       {/* UI Controls - memoized */}
-      <MemoizedControls
-        showGrid={showGrid}
-        play={play}
-        onToggleGrid={handleToggleGrid}
-        onTogglePlay={handleTogglePlay}
-        sceneReady={sceneReady}
-      />
+      <div
+        className={cn(
+          "absolute bottom-3 left-3 flex gap-2 transition-opacity duration-300 ease-in-out",
+          sceneReady ? "opacity-100" : "opacity-0"
+        )}
+      >
+        <Button variant="secondary" size="icon" onClick={handleToggleGrid}>
+          {showGrid ? (
+            <Grid2x2Icon className="size-4" />
+          ) : (
+            <Grid2X2XIcon className="size-4" />
+          )}
+          <span className="sr-only">Toggle Grid</span>
+        </Button>
+        <Button
+          variant={play ? "secondary" : "default"}
+          size="icon"
+          onClick={handleTogglePlay}
+        >
+          {play ? (
+            <PauseIcon className="size-4" />
+          ) : (
+            <PlayIcon className="size-4" />
+          )}
+          <span className="sr-only">Toggle Play</span>
+        </Button>
+      </div>
     </div>
   );
 }
