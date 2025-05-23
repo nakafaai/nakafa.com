@@ -21,6 +21,7 @@ export function CardArticle({ category, article }: Props) {
     <Link
       key={article.slug}
       href={`/articles/${category}/${article.slug}`}
+      title={article.title}
       className="group"
       prefetch
     >

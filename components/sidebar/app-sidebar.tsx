@@ -38,7 +38,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
               className="cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               asChild
             >
-              <NavigationLink href="/">
+              <NavigationLink href="/" title="Nakafa">
                 <div className="relative aspect-square size-8">
                   <Image
                     src={nakafaLogo}

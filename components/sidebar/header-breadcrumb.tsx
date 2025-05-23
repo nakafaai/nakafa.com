@@ -37,7 +37,9 @@ export function HeaderBreadcrumb() {
         <BreadcrumbList>
           <BreadcrumbItem className="hidden md:block">
             <BreadcrumbLink asChild>
-              <NavigationLink href="/">{t("home")}</NavigationLink>
+              <NavigationLink href="/" title={t("home")}>
+                {t("home")}
+              </NavigationLink>
             </BreadcrumbLink>
           </BreadcrumbItem>
 

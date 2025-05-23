@@ -11,7 +11,7 @@ type Props = {
 
 export function CardSubject({ icon: Icon, label, href }: Props) {
   return (
-    <Link href={href} className="group" prefetch>
+    <Link href={href} className="group" title={label} prefetch>
       <Card className="relative overflow-hidden">
         <CardHeader className="gap-0">
           <div className="flex items-center gap-2">

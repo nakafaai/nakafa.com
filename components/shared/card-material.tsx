@@ -39,6 +39,7 @@ export function CardMaterial({ material }: Props) {
               </h2>
               <a
                 href={`#${id}`}
+                title={material.title}
                 className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
                 aria-label={`Link to ${material.title}`}
               >
@@ -77,6 +78,7 @@ export function CardMaterial({ material }: Props) {
               <Link
                 key={item.href}
                 href={item.href}
+                title={item.title}
                 prefetch
                 className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-3 transition-colors last:rounded-b-xl last:pb-6 hover:bg-accent/50"
               >

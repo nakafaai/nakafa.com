@@ -58,6 +58,7 @@ function AboutDialogContent({
       <Link
         href="/contributor"
         prefetch
+        title={t("contributor")}
         className={cn(
           buttonVariants({ variant: "outline", size: "sm" }),
           "mx-auto w-fit"

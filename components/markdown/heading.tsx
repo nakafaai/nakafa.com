@@ -22,6 +22,7 @@ export function Heading({
     >
       <a
         href={`#${id}`}
+        title={props.children?.toString()}
         className="group inline-flex items-center gap-2"
         aria-label={`Link to ${props.children}`}
       >

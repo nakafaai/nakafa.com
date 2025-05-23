@@ -111,6 +111,7 @@ export function SearchResults() {
                   getAnchorStyle(subResult.anchor),
                   "group flex items-center gap-2 rounded-sm p-2 transition-colors hover:bg-accent hover:text-accent-foreground"
                 )}
+                title={subResult.title}
               >
                 {subResult.anchor?.element === "h2" ? (
                   <FileTextIcon className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground" />

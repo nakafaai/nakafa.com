@@ -34,7 +34,7 @@ function SidebarTreeItem({
       <Tooltip>
         <TooltipTrigger asChild>
           <SidebarMenuButton asChild>
-            <NavigationLink href={heading.href}>
+            <NavigationLink href={heading.href} title={heading.label}>
               <span title={heading.label} className="truncate">
                 {heading.label}
               </span>

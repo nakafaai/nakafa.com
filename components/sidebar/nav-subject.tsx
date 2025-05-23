@@ -58,7 +58,7 @@ function MenuItem() {
                         isActive={pathname.includes(subItem.href)}
                         asChild
                       >
-                        <NavigationLink href={subItem.href}>
+                        <NavigationLink href={subItem.href} title={title}>
                           <span>{title}</span>
                         </NavigationLink>
                       </SidebarMenuSubButton>

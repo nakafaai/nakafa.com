@@ -26,7 +26,7 @@ function MenuItem() {
             isActive={pathname.includes(item.href)}
             asChild
           >
-            <NavigationLink href={item.href}>
+            <NavigationLink href={item.href} title={t(item.title)}>
               {item.icon && <item.icon />}
               <span className="truncate">{t(item.title)}</span>
             </NavigationLink>

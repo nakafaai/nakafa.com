@@ -92,7 +92,12 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                 asChild
                 aria-label={t("source-code")}
               >
-                <a href={githubUrl} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={githubUrl}
+                  title={t("source-code")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <span className="sr-only">{t("source-code")}</span>
                   <IconBrandGithub className="size-4" />
                 </a>

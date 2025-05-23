@@ -53,6 +53,7 @@ export function HeaderContent({
               href={link.href}
               className={cn(buttonVariants({ variant: "link" }), "h-auto p-0")}
               aria-label={link.label}
+              title={link.label}
               prefetch
             >
               {link.label}

@@ -80,6 +80,7 @@ const components = {
       return (
         <NavigationLink
           href={href}
+          title={href}
           className={cn(
             className,
             "h-auto p-0 text-base underline underline-offset-4"
@@ -92,7 +93,7 @@ const components = {
     }
     if (href?.startsWith("#")) {
       return (
-        <a href={href} className={className} {...props}>
+        <a href={href} title={href} className={className} {...props}>
           {children}
         </a>
       );
@@ -100,6 +101,7 @@ const components = {
     return (
       <a
         href={href}
+        title={href}
         target="_blank"
         rel="noopener noreferrer"
         className={className}
