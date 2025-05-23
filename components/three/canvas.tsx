@@ -65,7 +65,7 @@ function ThreeCanvasComponent({
     <Canvas
       {...props}
       shadows={false} // Disable shadows by default for performance
-      dpr={[0.5, pixelRatio]} // Allow dynamic downscaling
+      dpr={[1, pixelRatio]} // Allow dynamic downscaling
       gl={glSettings}
       camera={{
         fov: 50,
