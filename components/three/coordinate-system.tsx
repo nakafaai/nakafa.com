@@ -10,7 +10,6 @@ import {
   type CSSProperties,
   type ReactNode,
   Suspense,
-  useCallback,
   useMemo,
   useState,
 } from "react";
@@ -81,13 +80,13 @@ export function CoordinateSystem({
     switch (resolvedTheme) {
       case "dark":
         return {
-          main: "#3f3f46",
-          secondary: "#52525c",
+          main: "#404040",
+          secondary: "#262626",
         };
       default:
         return {
-          main: "#d4d4d8",
-          secondary: "#9f9fa9",
+          main: "#d4d4d4",
+          secondary: "#e5e5e5",
         };
     }
   }, [resolvedTheme]);
@@ -96,23 +95,6 @@ export function CoordinateSystem({
   const originColor = useMemo(() => {
     return resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
   }, [resolvedTheme]);
-
-  const gizmoAxisColors: [string, string, string] = useMemo(
-    () => [COLORS.RED, COLORS.GREEN, COLORS.BLUE],
-    []
-  );
-
-  const handleToggleGrid = useCallback(() => {
-    setShowGrid((prev) => !prev);
-  }, []);
-
-  const handleTogglePlay = useCallback(() => {
-    setPlay((prev) => !prev);
-  }, []);
-
-  const handleCanvasCreated = useCallback(() => {
-    setTimeout(() => setSceneReady(true), 100);
-  }, []);
 
   return (
     <div
@@ -123,7 +105,7 @@ export function CoordinateSystem({
     >
       <ThreeCanvas
         style={{ background: backgroundColor }}
-        onCreated={handleCanvasCreated}
+        onCreated={() => setTimeout(() => setSceneReady(true), 100)}
       >
         <Suspense fallback={null}>
           {/* Camera Controls */}
@@ -148,9 +130,9 @@ export function CoordinateSystem({
           {/* Grid */}
           <Grid
             visible={showGrid}
+            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
             position={[0, 0, 0]}
             rotation={[0, 0, 0]}
-            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
             cellColor={gridColors.secondary}
             sectionColor={gridColors.main}
             fadeDistance={50}
@@ -158,9 +140,9 @@ export function CoordinateSystem({
           />
           <Grid
             visible={showGrid}
+            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
             position={[0, 0, 0]}
             rotation={[Math.PI / 2, 0, 0]}
-            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
             cellColor={gridColors.secondary}
             sectionColor={gridColors.main}
             fadeDistance={50}
@@ -168,9 +150,9 @@ export function CoordinateSystem({
           />
           <Grid
             visible={showGrid}
+            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
             position={[0, 0, 0]}
             rotation={[0, 0, Math.PI / 2]}
-            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
             cellColor={gridColors.secondary}
             sectionColor={gridColors.main}
             fadeDistance={50}
@@ -187,7 +169,7 @@ export function CoordinateSystem({
             margin={[56, 56]}
           >
             <GizmoViewport
-              axisColors={gizmoAxisColors}
+              axisColors={[COLORS.RED, COLORS.GREEN, COLORS.BLUE]}
               labelColor={ORIGIN_COLOR.LIGHT}
             />
           </GizmoHelper>
@@ -201,7 +183,11 @@ export function CoordinateSystem({
           sceneReady ? "opacity-100" : "opacity-0"
         )}
       >
-        <Button variant="secondary" size="icon" onClick={handleToggleGrid}>
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={() => setShowGrid(!showGrid)}
+        >
           {showGrid ? (
             <Grid2x2Icon className="size-4" />
           ) : (
@@ -212,7 +198,7 @@ export function CoordinateSystem({
         <Button
           variant={play ? "secondary" : "default"}
           size="icon"
-          onClick={handleTogglePlay}
+          onClick={() => setPlay(!play)}
         >
           {play ? (
             <PauseIcon className="size-4" />
