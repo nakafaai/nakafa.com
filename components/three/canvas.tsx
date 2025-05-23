@@ -1,6 +1,5 @@
 "use client";
 
-import { isMobileDevice } from "@/lib/utils";
 import { Canvas, type CanvasProps } from "@react-three/fiber";
 import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
@@ -21,9 +20,6 @@ function ThreeCanvasComponent({
       // Check device pixel ratio and cap it for performance
       const devicePixelRatio = window.devicePixelRatio || 1;
 
-      // Check if device is mobile
-      const isMobile = isMobileDevice();
-
       // Check available memory (if supported)
       // @ts-expect-error - experimental API
       const memory = navigator.deviceMemory;
@@ -32,11 +28,7 @@ function ThreeCanvasComponent({
       const cores = navigator.hardwareConcurrency || 4;
 
       // Determine performance profile
-      if (isMobile || memory < 4 || cores < 4) {
-        // Low-end device settings
-        setPixelRatio(Math.min(devicePixelRatio, 1));
-        setPowerPreference("low-power");
-      } else if (memory >= 8 && cores >= 8) {
+      if (memory >= 8 && cores >= 8) {
         // High-end device settings
         setPixelRatio(Math.min(devicePixelRatio, 2));
         setPowerPreference("high-performance");
