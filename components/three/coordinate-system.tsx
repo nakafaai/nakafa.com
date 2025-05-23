@@ -76,7 +76,7 @@ export function CoordinateSystem({
   const [play, setPlay] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
 
-  // Color mapping based on color scheme - memoized
+  // Color mapping based on color scheme
   const gridColors = useMemo(() => {
     switch (resolvedTheme) {
       case "dark":
@@ -92,12 +92,16 @@ export function CoordinateSystem({
     }
   }, [resolvedTheme]);
 
-  // Origin point color based on theme - memoized
+  // Origin point color based on theme
   const originColor = useMemo(() => {
     return resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
   }, [resolvedTheme]);
 
-  // Memoize callbacks to prevent child re-renders
+  const gizmoAxisColors: [string, string, string] = useMemo(
+    () => [COLORS.RED, COLORS.GREEN, COLORS.BLUE],
+    []
+  );
+
   const handleToggleGrid = useCallback(() => {
     setShowGrid((prev) => !prev);
   }, []);
@@ -109,12 +113,6 @@ export function CoordinateSystem({
   const handleCanvasCreated = useCallback(() => {
     setTimeout(() => setSceneReady(true), 100);
   }, []);
-
-  // Memoize gizmo colors
-  const gizmoAxisColors: [string, string, string] = useMemo(
-    () => [COLORS.RED, COLORS.GREEN, COLORS.BLUE],
-    []
-  );
 
   return (
     <div
@@ -131,13 +129,9 @@ export function CoordinateSystem({
           {/* Camera Controls */}
           <CameraControls cameraPosition={cameraPosition} autoRotate={play} />
 
-          {/* Lighting - optimized with lower shadow resolution */}
+          {/* Lighting */}
           <ambientLight intensity={0.5} />
-          <pointLight
-            position={[10, 10, 10]}
-            intensity={1}
-            castShadow={false} // Disable shadows for performance
-          />
+          <pointLight position={[10, 10, 10]} intensity={1} castShadow />
 
           {/* Coordinate System */}
           <Axes
@@ -151,7 +145,7 @@ export function CoordinateSystem({
           {/* Origin */}
           <Origin visible={showOrigin} color={originColor} />
 
-          {/* Grid - using memoized components */}
+          {/* Grid */}
           <Grid
             visible={showGrid}
             position={[0, 0, 0]}
@@ -200,7 +194,7 @@ export function CoordinateSystem({
         </Suspense>
       </ThreeCanvas>
 
-      {/* UI Controls - memoized */}
+      {/* UI Controls */}
       <div
         className={cn(
           "absolute bottom-3 left-3 flex gap-2 transition-opacity duration-300 ease-in-out",
