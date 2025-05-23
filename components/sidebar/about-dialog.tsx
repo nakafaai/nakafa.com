@@ -49,6 +49,7 @@ function AboutDialogContent({
         <Image
           src={nakafaLogo}
           alt="Nakafa"
+          title="Nakafa"
           fill
           priority
           className="object-contain"

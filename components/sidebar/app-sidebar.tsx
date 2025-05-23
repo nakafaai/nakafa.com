@@ -43,6 +43,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                   <Image
                     src={nakafaLogo}
                     alt="Nakafa"
+                    title="Nakafa"
                     fill
                     priority
                     className="rounded-lg border object-contain"
