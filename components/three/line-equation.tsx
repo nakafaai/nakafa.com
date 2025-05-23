@@ -2,9 +2,58 @@
 
 import { randomColor } from "@/lib/utils/color";
 import { Instance, Instances, Line, Text } from "@react-three/drei";
-import { useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
+
+// Shared geometry cache
+let sharedSphereGeometry: THREE.SphereGeometry | null = null;
+const sharedConeGeometries = new Map<string, THREE.ConeGeometry>();
+const sharedMaterials = new Map<string, THREE.MeshBasicMaterial>();
+
+function getSharedSphereGeometry(): THREE.SphereGeometry {
+  if (!sharedSphereGeometry) {
+    // Reduced segments for better performance
+    sharedSphereGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+  }
+  return sharedSphereGeometry;
+}
+
+function getSharedConeGeometry(size: number): THREE.ConeGeometry {
+  const key = `cone-${size}`;
+  if (!sharedConeGeometries.has(key)) {
+    // Reduced segments for better performance
+    sharedConeGeometries.set(
+      key,
+      new THREE.ConeGeometry(size / 2, size, 16, 1)
+    );
+  }
+  const geometry = sharedConeGeometries.get(key);
+  if (!geometry) {
+    throw new Error(`Cone geometry not found for size: ${size}`);
+  }
+  return geometry;
+}
+
+function getSharedMaterial(
+  color: string | THREE.Color
+): THREE.MeshBasicMaterial {
+  const colorKey = color instanceof THREE.Color ? color.getHexString() : color;
+  if (!sharedMaterials.has(colorKey)) {
+    sharedMaterials.set(
+      colorKey,
+      new THREE.MeshBasicMaterial({
+        color: color instanceof THREE.Color ? color : new THREE.Color(color),
+      })
+    );
+  }
+  const material = sharedMaterials.get(colorKey);
+  if (!material) {
+    throw new Error(`Material not found for color: ${colorKey}`);
+  }
+  return material;
+}
 
 export type Props = {
   points: {
@@ -61,11 +110,13 @@ export function LineEquation({
   lineWidth = 2,
   showPoints = true,
   smooth = true,
-  curvePoints = 50,
+  curvePoints = 30, // Reduced default from 50 for better performance
   labels = [],
   useMonoFont = true,
   cone,
 }: Props) {
+  const groupRef = useRef<THREE.Group>(null);
+
   const vectorPoints = useMemo(
     () => points.map((point) => new THREE.Vector3(point.x, point.y, point.z)),
     [points]
@@ -129,23 +180,18 @@ export function LineEquation({
 
   const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
 
-  const pointGeom = useMemo(() => new THREE.SphereGeometry(0.1, 16, 16), []);
-  const pointMat = useMemo(
-    () => new THREE.MeshBasicMaterial({ color }),
-    [color]
-  );
+  // Use shared geometry and materials
+  const pointGeom = getSharedSphereGeometry();
+  const pointMat = getSharedMaterial(color);
 
   // Cone geometry and material (reused from ArrowHelper logic)
   const coneGeometry = useMemo(
-    () => new THREE.ConeGeometry(arrowSize / 2, arrowSize, 32, 1),
-    [arrowSize]
+    () => (cone ? getSharedConeGeometry(arrowSize) : null),
+    [cone, arrowSize]
   );
   const coneMaterial = useMemo(
-    () =>
-      new THREE.MeshBasicMaterial({
-        color: color instanceof THREE.Color ? color : new THREE.Color(color),
-      }),
-    [color]
+    () => (cone ? getSharedMaterial(color) : null),
+    [cone, color]
   );
 
   // Calculate cone position and orientation
@@ -202,36 +248,17 @@ export function LineEquation({
     return { position: conePosition, quaternion };
   }, [cone, vectorPoints, arrowSize]);
 
-  return (
-    <group>
-      {/* Draw a line connecting the provided points */}
-      <Line points={linePoints} color={color} lineWidth={lineWidth} />
-      {/* Optionally render a small sphere at each point */}
+  // Enable frustum culling for the entire group
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.frustumCulled = true;
+    }
+  });
 
-      {/* Render the cone if configured */}
-      {coneData && (
-        <mesh
-          geometry={coneGeometry}
-          material={coneMaterial}
-          position={coneData.position}
-          quaternion={coneData.quaternion}
-        />
-      )}
-
-      <Instances
-        visible={showPoints}
-        geometry={pointGeom}
-        material={pointMat}
-        count={vectorPoints.length}
-      >
-        {vectorPoints.map((v, i) => (
-          <Instance key={i} position={[v.x, v.y, v.z]} />
-        ))}
-      </Instances>
-
-      {/* Render custom labels at specified indices */}
-      {labels.map((label, idx) => {
-        // Determine label index (default to midpoint)
+  // Pre-calculate label data to avoid recreating in render
+  const labelData = useMemo(() => {
+    return labels
+      .map((label, idx) => {
         const mid = Math.floor(vectorPoints.length / 2);
         const index = label.at ?? mid;
         const base = vectorPoints[index];
@@ -244,17 +271,68 @@ export function LineEquation({
           base.y + oy,
           base.z + oz,
         ];
+        return {
+          key: `label-${idx}`,
+          position: pos,
+          color: label.color ?? color,
+          fontSize: label.fontSize ?? 0.5,
+          text: label.text,
+        };
+      })
+      .filter(Boolean);
+  }, [labels, vectorPoints, color]);
+
+  return (
+    <group ref={groupRef}>
+      {/* Draw a line connecting the provided points */}
+      <Line
+        points={linePoints}
+        color={color}
+        lineWidth={lineWidth}
+        frustumCulled
+      />
+
+      {/* Render the cone if configured */}
+      {coneData && coneGeometry && coneMaterial && (
+        <mesh
+          geometry={coneGeometry}
+          material={coneMaterial}
+          position={coneData.position}
+          quaternion={coneData.quaternion}
+          frustumCulled
+        />
+      )}
+
+      {/* Optionally render a small sphere at each point */}
+      <Instances
+        visible={showPoints}
+        geometry={pointGeom}
+        material={pointMat}
+        count={vectorPoints.length}
+        frustumCulled
+      >
+        {vectorPoints.map((v, i) => (
+          <Instance key={i} position={[v.x, v.y, v.z]} />
+        ))}
+      </Instances>
+
+      {/* Render custom labels at specified indices */}
+      {labelData.map((data) => {
+        if (!data) {
+          return null;
+        }
         return (
           <Text
-            key={`label-${idx}`}
-            position={pos}
-            color={label.color ?? color}
-            fontSize={label.fontSize ?? 0.5}
+            key={data.key}
+            position={data.position}
+            color={data.color}
+            fontSize={data.fontSize}
             anchorX="center"
             anchorY="middle"
             font={fontPath}
+            frustumCulled
           >
-            {label.text}
+            {data.text}
           </Text>
         );
       })}

@@ -1,14 +1,14 @@
 "use client";
 
+import { isMobileDevice } from "@/lib/utils";
 import { COLORS } from "@/lib/utils/color";
 import { Text } from "@react-three/drei";
-import { useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
 
 type Props = {
-  /** Function that determines if a point satisfies the inequality */
-  condition: (x: number, y: number, z: number) => boolean;
   /** Function that determines the boundary of the inequality (where the inequality becomes equality) */
   boundaryFunction?: (x: number, y: number) => number;
   /** Indicates if this is a 2D inequality (like x + y <= 10) that should be extruded along z-axis */
@@ -49,8 +49,22 @@ type Props = {
   useMonoFont?: boolean;
 };
 
+// Performance optimization: Adaptive resolution based on device capabilities
+function getAdaptiveResolution(requestedResolution: number): number {
+  // Check device capabilities
+  const isMobile = isMobileDevice();
+  const cores = navigator.hardwareConcurrency || 4;
+
+  if (isMobile || cores < 4) {
+    return Math.min(requestedResolution, 50);
+  }
+  if (cores >= 8) {
+    return requestedResolution;
+  }
+  return Math.min(requestedResolution, 100);
+}
+
 export function Inequality({
-  condition,
   boundaryFunction,
   is2D = false,
   boundaryLine2D,
@@ -67,40 +81,69 @@ export function Inequality({
   useMonoFont = true,
 }: Props) {
   const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
+  const groupRef = useRef<THREE.Group>(null);
 
-  // Create a buffer geometry to hold the vertices of the inequality region
+  // Adaptive resolution for performance
+  const adaptiveResolution = getAdaptiveResolution(resolution);
+
+  // Create optimized buffer geometry for the inequality region
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function, but it's necessary for the inequality visualization
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
-    const vertices: number[] = [];
-    const indices: number[] = [];
+    const vertices: Float32Array = new Float32Array(
+      adaptiveResolution * adaptiveResolution * 36 * 3
+    ); // Pre-allocate
+    const indices: Uint32Array = new Uint32Array(
+      adaptiveResolution * adaptiveResolution * 36
+    ); // Pre-allocate
+    let vertexIndex = 0;
+    let indexOffset = 0;
 
     // Define the step size based on resolution
-    const xStep = (xRange[1] - xRange[0]) / resolution;
-    const yStep = (yRange[1] - yRange[0]) / resolution;
-    const zStep = (zRange[1] - zRange[0]) / resolution;
+    const xStep = (xRange[1] - xRange[0]) / adaptiveResolution;
+    const yStep = (yRange[1] - yRange[0]) / adaptiveResolution;
 
-    // Helper function to add a quad (two triangles) to the geometry
+    // Helper function to add a quad (two triangles) to the geometry - optimized
     const addQuad = (
-      p1: THREE.Vector3,
-      p2: THREE.Vector3,
-      p3: THREE.Vector3,
-      p4: THREE.Vector3
+      p1x: number,
+      p1y: number,
+      p1z: number,
+      p2x: number,
+      p2y: number,
+      p2z: number,
+      p3x: number,
+      p3y: number,
+      p3z: number,
+      p4x: number,
+      p4y: number,
+      p4z: number
     ) => {
-      const index = vertices.length / 3;
+      const index = vertexIndex / 3;
 
-      // Add vertices
-      vertices.push(p1.x, p1.y, p1.z);
-      vertices.push(p2.x, p2.y, p2.z);
-      vertices.push(p3.x, p3.y, p3.z);
-      vertices.push(p4.x, p4.y, p4.z);
+      // Add vertices directly to array
+      vertices[vertexIndex++] = p1x;
+      vertices[vertexIndex++] = p1y;
+      vertices[vertexIndex++] = p1z;
+      vertices[vertexIndex++] = p2x;
+      vertices[vertexIndex++] = p2y;
+      vertices[vertexIndex++] = p2z;
+      vertices[vertexIndex++] = p3x;
+      vertices[vertexIndex++] = p3y;
+      vertices[vertexIndex++] = p3z;
+      vertices[vertexIndex++] = p4x;
+      vertices[vertexIndex++] = p4y;
+      vertices[vertexIndex++] = p4z;
 
       // Add indices for two triangles
-      indices.push(index, index + 1, index + 2);
-      indices.push(index, index + 2, index + 3);
+      indices[indexOffset++] = index;
+      indices[indexOffset++] = index + 1;
+      indices[indexOffset++] = index + 2;
+      indices[indexOffset++] = index;
+      indices[indexOffset++] = index + 2;
+      indices[indexOffset++] = index + 3;
     };
 
-    // Helper function to create all faces of a complete cell
+    // Helper function to create all faces of a complete cell - optimized
     const addCompleteCell = (
       x1: number,
       y1: number,
@@ -109,404 +152,318 @@ export function Inequality({
       z1: number,
       z2: number
     ) => {
-      // Create bottom face (at minimum z)
-      addQuad(
-        new THREE.Vector3(x1, y1, z1),
-        new THREE.Vector3(x2, y1, z1),
-        new THREE.Vector3(x2, y2, z1),
-        new THREE.Vector3(x1, y2, z1)
-      );
+      // Only add visible faces for performance (basic culling)
+      // Bottom face (at minimum z)
+      addQuad(x1, y1, z1, x2, y1, z1, x2, y2, z1, x1, y2, z1);
 
-      // Create top face (at maximum z)
-      addQuad(
-        new THREE.Vector3(x1, y1, z2),
-        new THREE.Vector3(x1, y2, z2),
-        new THREE.Vector3(x2, y2, z2),
-        new THREE.Vector3(x2, y1, z2)
-      );
+      // Top face (at maximum z)
+      addQuad(x1, y1, z2, x1, y2, z2, x2, y2, z2, x2, y1, z2);
 
-      // Create side faces
-      // Front face (y = y1)
-      addQuad(
-        new THREE.Vector3(x1, y1, z1),
-        new THREE.Vector3(x2, y1, z1),
-        new THREE.Vector3(x2, y1, z2),
-        new THREE.Vector3(x1, y1, z2)
-      );
-
-      // Back face (y = y2)
-      addQuad(
-        new THREE.Vector3(x1, y2, z1),
-        new THREE.Vector3(x1, y2, z2),
-        new THREE.Vector3(x2, y2, z2),
-        new THREE.Vector3(x2, y2, z1)
-      );
-
-      // Left face (x = x1)
-      addQuad(
-        new THREE.Vector3(x1, y1, z1),
-        new THREE.Vector3(x1, y1, z2),
-        new THREE.Vector3(x1, y2, z2),
-        new THREE.Vector3(x1, y2, z1)
-      );
-
-      // Right face (x = x2)
-      addQuad(
-        new THREE.Vector3(x2, y1, z1),
-        new THREE.Vector3(x2, y2, z1),
-        new THREE.Vector3(x2, y2, z2),
-        new THREE.Vector3(x2, y1, z2)
-      );
+      // Side faces - only if on boundary
+      if (Math.abs(x1 - xRange[0]) < xStep) {
+        // Left face
+        addQuad(x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1);
+      }
+      if (Math.abs(x2 - xRange[1]) < xStep) {
+        // Right face
+        addQuad(x2, y1, z1, x2, y2, z1, x2, y2, z2, x2, y1, z2);
+      }
+      if (Math.abs(y1 - yRange[0]) < yStep) {
+        // Front face
+        addQuad(x1, y1, z1, x2, y1, z1, x2, y1, z2, x1, y1, z2);
+      }
+      if (Math.abs(y2 - yRange[1]) < yStep) {
+        // Back face
+        addQuad(x1, y2, z1, x1, y2, z2, x2, y2, z2, x2, y2, z1);
+      }
     };
 
     if (is2D && boundaryLine2D) {
       // Handle 2D inequality (like x + y <= 10) visualized as extruded along z-axis
       const [a, b, c] = boundaryLine2D;
 
-      // Create a grid for the x-y plane, and extrude it along the z-axis
-      for (let ix = 0; ix < resolution; ix++) {
-        for (let iy = 0; iy < resolution; iy++) {
+      // Optimized grid traversal with early termination
+      for (let ix = 0; ix < adaptiveResolution; ix++) {
+        for (let iy = 0; iy < adaptiveResolution; iy++) {
           const x1 = xRange[0] + ix * xStep;
           const x2 = xRange[0] + (ix + 1) * xStep;
           const y1 = yRange[0] + iy * yStep;
           const y2 = yRange[0] + (iy + 1) * yStep;
 
-          // Check if this grid cell satisfies the inequality
-          // We check all four corners to see if they satisfy the condition
-          const corner1Satisfies = a * x1 + b * y1 + c <= 0;
-          const corner2Satisfies = a * x2 + b * y1 + c <= 0;
-          const corner3Satisfies = a * x2 + b * y2 + c <= 0;
-          const corner4Satisfies = a * x1 + b * y2 + c <= 0;
+          // Quick check using center point for better performance
+          const centerX = (x1 + x2) / 2;
+          const centerY = (y1 + y2) / 2;
+          const centerValue = a * centerX + b * centerY + c;
 
-          // Count the number of satisfied corners for a more nuanced approach
-          const satisfiedCorners =
-            (corner1Satisfies ? 1 : 0) +
-            (corner2Satisfies ? 1 : 0) +
-            (corner3Satisfies ? 1 : 0) +
-            (corner4Satisfies ? 1 : 0);
+          // If center is far from boundary, we can make a quick decision
+          const cellDiagonal = Math.sqrt(
+            (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)
+          );
+          const distanceToLine =
+            Math.abs(centerValue) / Math.sqrt(a * a + b * b);
 
-          // Cell is on the boundary (some corners satisfy, some don't)
-          if (satisfiedCorners > 0) {
-            // For ultra-high resolutions, we need a completely different approach
-            if (resolution >= 170) {
-              // Only consider cells that are entirely inside the inequality region
-              // This ensures absolute precision at the boundary
-              if (satisfiedCorners === 4) {
-                addCompleteCell(x1, y1, x2, y2, zRange[0], zRange[1]);
-              }
-              // For boundary cells, use a much stricter criterion based on distance
-              else if (satisfiedCorners >= 3) {
-                // Calculate the exact position on the boundary
-                // For ax + by + c = 0, distance = |ax + by + c| / sqrt(a² + b²)
-                const centerX = (x1 + x2) / 2;
-                const centerY = (y1 + y2) / 2;
-                const distanceToLine =
-                  Math.abs(a * centerX + b * centerY + c) /
-                  Math.sqrt(a * a + b * b);
+          if (centerValue <= 0 && distanceToLine > cellDiagonal) {
+            // Fully inside - add cell
+            addCompleteCell(x1, y1, x2, y2, zRange[0], zRange[1]);
+          } else if (centerValue <= 0 || distanceToLine < cellDiagonal * 2) {
+            // Near boundary - check corners
+            const corner1Satisfies = a * x1 + b * y1 + c <= 0;
+            const corner2Satisfies = a * x2 + b * y1 + c <= 0;
+            const corner3Satisfies = a * x2 + b * y2 + c <= 0;
+            const corner4Satisfies = a * x1 + b * y2 + c <= 0;
 
-                // Cell diagonal length (distance from corner to corner)
-                const cellDiagonal = Math.sqrt(
-                  (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)
-                );
+            const satisfiedCorners =
+              (corner1Satisfies ? 1 : 0) +
+              (corner2Satisfies ? 1 : 0) +
+              (corner3Satisfies ? 1 : 0) +
+              (corner4Satisfies ? 1 : 0);
 
-                // Apply an additional buffer near the boundary for perfect pixel alignment
-                // This creates a small inset from the mathematical boundary to ensure precision
-                const boundaryBuffer = 0.5; // Increased buffer for perfect edge
-
-                // Only include cells that are very clearly inside the inequality region
-                // This ensures no pixels extend beyond the boundary
-                if (distanceToLine > cellDiagonal * (0.3 + boundaryBuffer)) {
-                  addCompleteCell(x1, y1, x2, y2, zRange[0], zRange[1]);
-                }
-              }
-            }
-            // Super precise approach for high resolutions
-            else if (resolution >= 120) {
-              // For high resolution, only include cells that are almost entirely inside
-              if (satisfiedCorners >= 3) {
-                // Calculate how close the cell is to the boundary
-                const centerX = (x1 + x2) / 2;
-                const centerY = (y1 + y2) / 2;
-                const distanceToLine =
-                  Math.abs(a * centerX + b * centerY + c) /
-                  Math.sqrt(a * a + b * b);
-
-                // Cell diagonal length (distance from corner to corner)
-                const cellDiagonal = Math.sqrt(
-                  (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)
-                );
-
-                // If the cell center is far enough from the boundary (compared to the cell size),
-                // we can safely include it without any pixels extending beyond the boundary
-                if (distanceToLine > cellDiagonal * 0.1) {
-                  addCompleteCell(x1, y1, x2, y2, zRange[0], zRange[1]);
-                }
-              }
-            }
-            // High resolution but not ultra-high
-            else if (resolution >= 80) {
-              // For high resolutions, include cells with at least 2 corners inside
-              if (satisfiedCorners >= 2) {
-                addCompleteCell(x1, y1, x2, y2, zRange[0], zRange[1]);
-              }
-            }
-            // For lower resolutions, we need more flexibility to avoid gaps
-            else if (satisfiedCorners >= 2) {
+            if (
+              satisfiedCorners >= 3 ||
+              (satisfiedCorners >= 2 && adaptiveResolution < 80)
+            ) {
               addCompleteCell(x1, y1, x2, y2, zRange[0], zRange[1]);
             }
           }
         }
       }
     } else if (boundaryFunction) {
-      // Handle 3D inequality (like z > f(x,y))
-      // Create visualization for z-dependent inequalities
-      // This approach works well for inequalities like z > f(x,y)
-      for (let ix = 0; ix < resolution; ix++) {
-        for (let iy = 0; iy < resolution; iy++) {
+      // Handle 3D inequality (like z > f(x,y)) - simplified for performance
+      for (let ix = 0; ix < adaptiveResolution; ix += 2) {
+        // Skip every other cell for performance
+        for (let iy = 0; iy < adaptiveResolution; iy += 2) {
           const x1 = xRange[0] + ix * xStep;
-          const x2 = xRange[0] + (ix + 1) * xStep;
+          const x2 = xRange[0] + (ix + 2) * xStep;
           const y1 = yRange[0] + iy * yStep;
-          const y2 = yRange[0] + (iy + 1) * yStep;
+          const y2 = yRange[0] + (iy + 2) * yStep;
 
-          // For each (x,y) pair, find the z where the condition changes from true to false
-          // This is a simplification - more complex inequalities might need different approaches
-          let z = zRange[0];
-          while (z <= zRange[1] && !condition(x1, y1, z)) {
-            z += zStep;
-          }
+          // Sample the center point
+          const centerX = (x1 + x2) / 2;
+          const centerY = (y1 + y2) / 2;
+          const zBoundary = boundaryFunction(centerX, centerY);
 
-          if (z <= zRange[1]) {
-            // We found a point where the condition is true
-            // Create a quad at this height
-            const p1 = new THREE.Vector3(x1, y1, z);
-            const p2 = new THREE.Vector3(x2, y1, z);
-            const p3 = new THREE.Vector3(x2, y2, z);
-            const p4 = new THREE.Vector3(x1, y2, z);
-
-            addQuad(p1, p2, p3, p4);
+          if (zBoundary >= zRange[0] && zBoundary <= zRange[1]) {
+            // Create a quad at the boundary
+            addQuad(
+              x1,
+              y1,
+              zBoundary,
+              x2,
+              y1,
+              zBoundary,
+              x2,
+              y2,
+              zBoundary,
+              x1,
+              y2,
+              zBoundary
+            );
           }
         }
       }
     }
 
-    geo.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
-    geo.setIndex(indices);
+    // Trim arrays to actual size used
+    const finalVertices = new Float32Array(vertices.buffer, 0, vertexIndex);
+    const finalIndices = new Uint32Array(indices.buffer, 0, indexOffset);
+
+    geo.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(finalVertices, 3)
+    );
+    geo.setIndex(new THREE.BufferAttribute(finalIndices, 1));
     geo.computeVertexNormals();
 
     return geo;
   }, [
-    condition,
     is2D,
     boundaryLine2D,
     boundaryFunction,
     xRange,
     yRange,
     zRange,
-    resolution,
+    adaptiveResolution,
   ]);
 
-  // Material for the inequality region
+  // Material for the inequality region with performance optimizations
   const material = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
+    return new THREE.MeshBasicMaterial({
       color: color instanceof THREE.Color ? color : new THREE.Color(color),
       transparent: true,
       opacity: opacity,
       side: THREE.DoubleSide,
+      depthWrite: false, // Better transparency handling
     });
   }, [color, opacity]);
 
-  // Generate boundary lines for rendering
+  // Generate boundary lines for rendering - optimized
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function, but it's necessary for the inequality visualization
-  const boundaryLines = useMemo(() => {
+  const boundarySegmentsGeometry = useMemo(() => {
     if ((!boundaryFunction && !boundaryLine2D) || !showBoundary) {
-      return [];
+      return undefined;
     }
 
-    const lines: THREE.Vector3[][] = [];
-    const xStep = (xRange[1] - xRange[0]) / resolution;
-    const yStep = (yRange[1] - yRange[0]) / resolution;
+    const vertices: number[] = [];
+    const lineResolution = Math.min(adaptiveResolution, 50); // Lower resolution for lines
+    const xStep = (xRange[1] - xRange[0]) / lineResolution;
+    const yStep = (yRange[1] - yRange[0]) / lineResolution;
 
     if (is2D && boundaryLine2D) {
       // For 2D inequalities, create a vertical boundary plane
       const [a, b, c] = boundaryLine2D;
 
-      // Handle different cases based on the coefficients
+      // Create boundary lines more efficiently
       if (Math.abs(b) > 1e-10) {
-        // If b ≠ 0, we can express y as a function of x: y = -(a/b)x - c/b
-        const linePoints1: THREE.Vector3[] = [];
-        const linePoints2: THREE.Vector3[] = [];
-
-        for (let ix = 0; ix <= resolution; ix++) {
+        // Express y as a function of x
+        for (let ix = 0; ix <= lineResolution; ix++) {
           const x = xRange[0] + ix * xStep;
           const y = (-a * x - c) / b;
 
-          // Check if y is within the y-range
-          if (y >= yRange[0] && y <= yRange[1]) {
-            // Create two points at min and max z for this (x,y)
-            linePoints1.push(new THREE.Vector3(x, y, zRange[0]));
-            linePoints2.push(new THREE.Vector3(x, y, zRange[1]));
+          if (y >= yRange[0] && y <= yRange[1] && ix > 0) {
+            const prevX = xRange[0] + (ix - 1) * xStep;
+            const prevY = (-a * prevX - c) / b;
+            if (prevY >= yRange[0] && prevY <= yRange[1]) {
+              // Bottom edge
+              vertices.push(prevX, prevY, zRange[0], x, y, zRange[0]);
+              // Top edge
+              vertices.push(prevX, prevY, zRange[1], x, y, zRange[1]);
+            }
           }
         }
 
-        if (linePoints1.length > 1) {
-          lines.push(linePoints1);
-        }
-
-        if (linePoints2.length > 1) {
-          lines.push(linePoints2);
-        }
-
-        // Add vertical lines connecting min z to max z at regular intervals
+        // Add vertical connectors
         for (
           let i = 0;
-          i < linePoints1.length;
-          i += Math.max(1, Math.floor(linePoints1.length / 5))
+          i <= lineResolution;
+          i += Math.floor(lineResolution / 4)
         ) {
-          if (i < linePoints1.length && i < linePoints2.length) {
-            lines.push([linePoints1[i], linePoints2[i]]);
+          const x = xRange[0] + i * xStep;
+          const y = (-a * x - c) / b;
+          if (y >= yRange[0] && y <= yRange[1]) {
+            vertices.push(x, y, zRange[0], x, y, zRange[1]);
           }
         }
       } else if (Math.abs(a) > 1e-10) {
-        // If a ≠ 0, we can express x as a function of y: x = -(b/a)y - c/a
-        const linePoints1: THREE.Vector3[] = [];
-        const linePoints2: THREE.Vector3[] = [];
-
-        for (let iy = 0; iy <= resolution; iy++) {
+        // Express x as a function of y
+        for (let iy = 0; iy <= lineResolution; iy++) {
           const y = yRange[0] + iy * yStep;
           const x = (-b * y - c) / a;
 
-          // Check if x is within the x-range
-          if (x >= xRange[0] && x <= xRange[1]) {
-            // Create two points at min and max z for this (x,y)
-            linePoints1.push(new THREE.Vector3(x, y, zRange[0]));
-            linePoints2.push(new THREE.Vector3(x, y, zRange[1]));
-          }
-        }
-
-        if (linePoints1.length > 1) {
-          lines.push(linePoints1);
-        }
-
-        if (linePoints2.length > 1) {
-          lines.push(linePoints2);
-        }
-
-        // Add vertical lines connecting min z to max z at regular intervals
-        for (
-          let i = 0;
-          i < linePoints1.length;
-          i += Math.max(1, Math.floor(linePoints1.length / 5))
-        ) {
-          if (i < linePoints1.length && i < linePoints2.length) {
-            lines.push([linePoints1[i], linePoints2[i]]);
+          if (x >= xRange[0] && x <= xRange[1] && iy > 0) {
+            const prevY = yRange[0] + (iy - 1) * yStep;
+            const prevX = (-b * prevY - c) / a;
+            if (prevX >= xRange[0] && prevX <= xRange[1]) {
+              vertices.push(prevX, prevY, zRange[0], x, y, zRange[0]);
+              vertices.push(prevX, prevY, zRange[1], x, y, zRange[1]);
+            }
           }
         }
       }
     } else if (boundaryFunction) {
-      // For 3D inequalities with z = f(x,y)
-      // Create lines along the x-axis at different y values
-      for (let iy = 0; iy <= resolution; iy++) {
+      // For 3D inequalities - create a wireframe grid
+      const gridStep = Math.floor(lineResolution / 10);
+
+      // Lines along x-axis
+      for (let iy = 0; iy <= lineResolution; iy += gridStep) {
         const y = yRange[0] + iy * yStep;
-        const linePoints: THREE.Vector3[] = [];
-
-        for (let ix = 0; ix <= resolution; ix++) {
+        for (let ix = 1; ix <= lineResolution; ix++) {
           const x = xRange[0] + ix * xStep;
+          const prevX = xRange[0] + (ix - 1) * xStep;
           const z = boundaryFunction(x, y);
+          const prevZ = boundaryFunction(prevX, y);
 
-          // Check if z is within range
-          if (z >= zRange[0] && z <= zRange[1]) {
-            linePoints.push(new THREE.Vector3(x, y, z));
+          if (
+            z >= zRange[0] &&
+            z <= zRange[1] &&
+            prevZ >= zRange[0] &&
+            prevZ <= zRange[1]
+          ) {
+            vertices.push(prevX, y, prevZ, x, y, z);
           }
-        }
-
-        if (linePoints.length > 1) {
-          lines.push(linePoints);
         }
       }
 
-      // Create lines along the y-axis at different x values
-      for (let ix = 0; ix <= resolution; ix++) {
+      // Lines along y-axis
+      for (let ix = 0; ix <= lineResolution; ix += gridStep) {
         const x = xRange[0] + ix * xStep;
-        const linePoints: THREE.Vector3[] = [];
-
-        for (let iy = 0; iy <= resolution; iy++) {
+        for (let iy = 1; iy <= lineResolution; iy++) {
           const y = yRange[0] + iy * yStep;
+          const prevY = yRange[0] + (iy - 1) * yStep;
           const z = boundaryFunction(x, y);
+          const prevZ = boundaryFunction(x, prevY);
 
-          // Check if z is within range
-          if (z >= zRange[0] && z <= zRange[1]) {
-            linePoints.push(new THREE.Vector3(x, y, z));
+          if (
+            z >= zRange[0] &&
+            z <= zRange[1] &&
+            prevZ >= zRange[0] &&
+            prevZ <= zRange[1]
+          ) {
+            vertices.push(x, prevY, prevZ, x, y, z);
           }
-        }
-
-        if (linePoints.length > 1) {
-          lines.push(linePoints);
         }
       }
     }
 
-    return lines;
-  }, [
-    boundaryFunction,
-    boundaryLine2D,
-    is2D,
-    showBoundary,
-    xRange,
-    yRange,
-    zRange,
-    resolution,
-  ]);
-
-  // Default boundary color is the same as the region color but more opaque
-  const finalBoundaryColor = boundaryColor || color;
-
-  // Combine all boundary lines into a single BufferGeometry for fewer draw calls
-  const boundarySegmentsGeometry = useMemo(() => {
-    if (!showBoundary || boundaryLines.length === 0) {
+    if (vertices.length === 0) {
       return undefined;
     }
-    const vertices: number[] = [];
-    for (const line of boundaryLines) {
-      for (let i = 0; i < line.length - 1; i++) {
-        const p1 = line[i];
-        const p2 = line[i + 1];
-        // push each segment as two points
-        vertices.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
-      }
-    }
+
     const geom = new THREE.BufferGeometry();
     geom.setAttribute(
       "position",
       new THREE.Float32BufferAttribute(vertices, 3)
     );
     return geom;
-  }, [boundaryLines, showBoundary]);
+  }, [
+    showBoundary,
+    adaptiveResolution,
+    boundaryFunction,
+    boundaryLine2D,
+    is2D,
+    xRange,
+    yRange,
+    zRange,
+  ]);
+
+  // Default boundary color is the same as the region color but more opaque
+  const finalBoundaryColor = boundaryColor || color;
+
+  // Use frustum culling
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.frustumCulled = true;
+    }
+  });
 
   return (
-    <group>
+    <group ref={groupRef}>
       {/* Render the shaded region */}
-      <mesh geometry={geometry} material={material} />
+      <mesh geometry={geometry} material={material} frustumCulled />
 
       {/* Render the boundary as one lineSegments for better performance */}
-      <lineSegments visible={showBoundary} geometry={boundarySegmentsGeometry}>
-        <lineBasicMaterial
-          color={finalBoundaryColor}
-          linewidth={boundaryLineWidth}
-        />
-      </lineSegments>
+      {showBoundary && boundarySegmentsGeometry && (
+        <lineSegments geometry={boundarySegmentsGeometry} frustumCulled>
+          <lineBasicMaterial
+            color={finalBoundaryColor}
+            linewidth={boundaryLineWidth}
+          />
+        </lineSegments>
+      )}
 
       {/* Render label if provided */}
-      <Text
-        visible={!!label}
-        position={label?.position ?? [0, 0, 0]}
-        color={label?.color ?? color}
-        fontSize={label?.fontSize ?? 0.5}
-        anchorX="center"
-        anchorY="middle"
-        font={fontPath}
-      >
-        {label?.text}
-      </Text>
+      {label && (
+        <Text
+          position={label.position}
+          color={label.color || finalBoundaryColor}
+          fontSize={label.fontSize || 0.5}
+          font={fontPath}
+          anchorX="center"
+          anchorY="middle"
+          frustumCulled
+        >
+          {label.text}
+        </Text>
+      )}
     </group>
   );
 }

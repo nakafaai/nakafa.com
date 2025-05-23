@@ -10,6 +10,8 @@ import {
   type CSSProperties,
   type ReactNode,
   Suspense,
+  memo,
+  useCallback,
   useMemo,
   useState,
 } from "react";
@@ -54,6 +56,87 @@ type Props = {
   className?: string;
 };
 
+// Memoized grid component to prevent unnecessary re-renders
+const MemoizedGrid = memo(
+  ({
+    visible,
+    position,
+    rotation,
+    gridSize,
+    gridDivisions,
+    cellColor,
+    sectionColor,
+  }: {
+    visible: boolean;
+    position: [number, number, number];
+    rotation: [number, number, number];
+    gridSize: number;
+    gridDivisions: number;
+    cellColor: string;
+    sectionColor: string;
+  }) => (
+    <Grid
+      visible={visible}
+      args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
+      position={position}
+      rotation={rotation}
+      cellColor={cellColor}
+      sectionColor={sectionColor}
+      fadeDistance={50}
+      fadeStrength={1}
+    />
+  )
+);
+
+MemoizedGrid.displayName = "MemoizedGrid";
+
+// Memoized controls to prevent unnecessary re-renders
+const MemoizedControls = memo(
+  ({
+    showGrid,
+    play,
+    onToggleGrid,
+    onTogglePlay,
+    sceneReady,
+  }: {
+    showGrid: boolean;
+    play: boolean;
+    onToggleGrid: () => void;
+    onTogglePlay: () => void;
+    sceneReady: boolean;
+  }) => (
+    <div
+      className={cn(
+        "absolute bottom-3 left-3 flex gap-2 transition-opacity duration-300 ease-in-out",
+        sceneReady ? "opacity-100" : "opacity-0"
+      )}
+    >
+      <Button variant="secondary" size="icon" onClick={onToggleGrid}>
+        {showGrid ? (
+          <Grid2x2Icon className="size-4" />
+        ) : (
+          <Grid2X2XIcon className="size-4" />
+        )}
+        <span className="sr-only">Toggle Grid</span>
+      </Button>
+      <Button
+        variant={play ? "secondary" : "default"}
+        size="icon"
+        onClick={onTogglePlay}
+      >
+        {play ? (
+          <PauseIcon className="size-4" />
+        ) : (
+          <PlayIcon className="size-4" />
+        )}
+        <span className="sr-only">Toggle Play</span>
+      </Button>
+    </div>
+  )
+);
+
+MemoizedControls.displayName = "MemoizedControls";
+
 export function CoordinateSystem({
   showGrid: initialShowGrid = true,
   showAxes = true,
@@ -75,7 +158,7 @@ export function CoordinateSystem({
   const [play, setPlay] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
 
-  // Color mapping based on color scheme
+  // Color mapping based on color scheme - memoized
   const gridColors = useMemo(() => {
     switch (resolvedTheme) {
       case "dark":
@@ -91,10 +174,29 @@ export function CoordinateSystem({
     }
   }, [resolvedTheme]);
 
-  // Origin point color based on theme
+  // Origin point color based on theme - memoized
   const originColor = useMemo(() => {
     return resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
   }, [resolvedTheme]);
+
+  // Memoize callbacks to prevent child re-renders
+  const handleToggleGrid = useCallback(() => {
+    setShowGrid((prev) => !prev);
+  }, []);
+
+  const handleTogglePlay = useCallback(() => {
+    setPlay((prev) => !prev);
+  }, []);
+
+  const handleCanvasCreated = useCallback(() => {
+    setTimeout(() => setSceneReady(true), 100);
+  }, []);
+
+  // Memoize gizmo colors
+  const gizmoAxisColors: [string, string, string] = useMemo(
+    () => [COLORS.RED, COLORS.GREEN, COLORS.BLUE],
+    []
+  );
 
   return (
     <div
@@ -105,15 +207,19 @@ export function CoordinateSystem({
     >
       <ThreeCanvas
         style={{ background: backgroundColor }}
-        onCreated={() => setTimeout(() => setSceneReady(true), 100)}
+        onCreated={handleCanvasCreated}
       >
         <Suspense fallback={null}>
           {/* Camera Controls */}
           <CameraControls cameraPosition={cameraPosition} autoRotate={play} />
 
-          {/* Lighting */}
+          {/* Lighting - optimized with lower shadow resolution */}
           <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} intensity={1} castShadow />
+          <pointLight
+            position={[10, 10, 10]}
+            intensity={1}
+            castShadow={false} // Disable shadows for performance
+          />
 
           {/* Coordinate System */}
           <Axes
@@ -127,36 +233,33 @@ export function CoordinateSystem({
           {/* Origin */}
           <Origin visible={showOrigin} color={originColor} />
 
-          {/* Grid */}
-          <Grid
+          {/* Grid - using memoized components */}
+          <MemoizedGrid
             visible={showGrid}
-            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
             position={[0, 0, 0]}
             rotation={[0, 0, 0]}
+            gridSize={gridSize}
+            gridDivisions={gridDivisions}
             cellColor={gridColors.secondary}
             sectionColor={gridColors.main}
-            fadeDistance={50}
-            fadeStrength={1}
           />
-          <Grid
+          <MemoizedGrid
             visible={showGrid}
-            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
             position={[0, 0, 0]}
             rotation={[Math.PI / 2, 0, 0]}
+            gridSize={gridSize}
+            gridDivisions={gridDivisions}
             cellColor={gridColors.secondary}
             sectionColor={gridColors.main}
-            fadeDistance={50}
-            fadeStrength={1}
           />
-          <Grid
+          <MemoizedGrid
             visible={showGrid}
-            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
             position={[0, 0, 0]}
             rotation={[0, 0, Math.PI / 2]}
+            gridSize={gridSize}
+            gridDivisions={gridDivisions}
             cellColor={gridColors.secondary}
             sectionColor={gridColors.main}
-            fadeDistance={50}
-            fadeStrength={1}
           />
 
           {/* User Content */}
@@ -169,45 +272,21 @@ export function CoordinateSystem({
             margin={[56, 56]}
           >
             <GizmoViewport
-              axisColors={[COLORS.RED, COLORS.GREEN, COLORS.BLUE]}
+              axisColors={gizmoAxisColors}
               labelColor={ORIGIN_COLOR.LIGHT}
             />
           </GizmoHelper>
         </Suspense>
       </ThreeCanvas>
 
-      {/* UI Controls */}
-      <div
-        className={cn(
-          "absolute bottom-3 left-3 flex gap-2 transition-opacity duration-300 ease-in-out",
-          sceneReady ? "opacity-100" : "opacity-0"
-        )}
-      >
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={() => setShowGrid(!showGrid)}
-        >
-          {showGrid ? (
-            <Grid2x2Icon className="size-4" />
-          ) : (
-            <Grid2X2XIcon className="size-4" />
-          )}
-          <span className="sr-only">Toggle Grid</span>
-        </Button>
-        <Button
-          variant={play ? "secondary" : "default"}
-          size="icon"
-          onClick={() => setPlay(!play)}
-        >
-          {play ? (
-            <PauseIcon className="size-4" />
-          ) : (
-            <PlayIcon className="size-4" />
-          )}
-          <span className="sr-only">Toggle Play</span>
-        </Button>
-      </div>
+      {/* UI Controls - memoized */}
+      <MemoizedControls
+        showGrid={showGrid}
+        play={play}
+        onToggleGrid={handleToggleGrid}
+        onTogglePlay={handleTogglePlay}
+        sceneReady={sceneReady}
+      />
     </div>
   );
 }
