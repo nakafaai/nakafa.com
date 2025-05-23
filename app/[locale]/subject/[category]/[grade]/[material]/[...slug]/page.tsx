@@ -74,9 +74,13 @@ export async function generateMetadata({
     images: [image],
   };
 
+  const defaultTitle = `${t(material)} - ${t(getGradeNonNumeric(grade) ?? "grade", { grade })} - ${t(category)}`;
+
   if (!content) {
     return {
-      title: t(material),
+      title: {
+        absolute: defaultTitle,
+      },
       alternates,
       openGraph: {
         url: path,
@@ -89,7 +93,9 @@ export async function generateMetadata({
   const { metadata } = content;
 
   return {
-    title: `${metadata.title} - ${metadata.subject} - ${t(category)}`,
+    title: {
+      absolute: `${metadata.title} - ${metadata.subject} - ${defaultTitle}`,
+    },
     alternates,
     authors: metadata.authors,
     category: t(material),
