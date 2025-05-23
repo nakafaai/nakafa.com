@@ -98,7 +98,7 @@ export type Props = {
    */
   cone?: {
     /** Position of the cone arrowhead */
-    position: "start" | "end";
+    position: "start" | "end" | "both";
     /** Size of the arrowhead */
     size?: number;
   };
@@ -150,14 +150,22 @@ export function LineEquation({
 
     // Adjust line end points to account for the cone size to prevent overlap
     if (cone) {
-      if (cone.position === "start" && basePoints.length >= 2) {
+      if (
+        (cone.position === "start" || cone.position === "both") &&
+        basePoints.length >= 2
+      ) {
         const startPoint = basePoints[0];
         const nextPoint = basePoints[1];
         const direction = new THREE.Vector3()
           .subVectors(nextPoint, startPoint)
           .normalize();
         basePoints[0] = startPoint.add(direction.multiplyScalar(arrowSize)); // Move start point forward
-      } else if (cone.position === "end" && basePoints.length >= 2) {
+      }
+
+      if (
+        (cone.position === "end" || cone.position === "both") &&
+        basePoints.length >= 2
+      ) {
         const endPoint = basePoints.at(-1);
         const prevPoint = basePoints.at(-2);
         // Ensure points exist
@@ -200,52 +208,53 @@ export function LineEquation({
       return null;
     }
 
-    let targetPoint: THREE.Vector3 | undefined;
-    let direction: THREE.Vector3;
-    let conePosition: THREE.Vector3;
-    let quaternion: THREE.Quaternion;
+    const cones: { position: THREE.Vector3; quaternion: THREE.Quaternion }[] =
+      [];
 
-    if (cone.position === "start") {
-      targetPoint = vectorPoints[0];
+    // Add start cone if position is "start" or "both"
+    if (cone.position === "start" || cone.position === "both") {
+      const targetPoint = vectorPoints[0];
       const nextPoint = vectorPoints[1];
       // Ensure points exist (should always be true here due to length check)
-      if (!targetPoint || !nextPoint) {
-        return null;
+      if (targetPoint && nextPoint) {
+        const direction = new THREE.Vector3()
+          .subVectors(nextPoint, targetPoint)
+          .normalize();
+        // For start cone: position it so its tip is at the original start point
+        // The cone points backwards (opposite to line direction)
+        const conePosition = new THREE.Vector3()
+          .copy(targetPoint)
+          .add(direction.clone().multiplyScalar(arrowSize / 2));
+        const quaternion = new THREE.Quaternion().setFromUnitVectors(
+          new THREE.Vector3(0, 1, 0),
+          direction.clone().negate()
+        );
+        cones.push({ position: conePosition, quaternion });
       }
+    }
 
-      direction = new THREE.Vector3()
-        .subVectors(nextPoint, targetPoint)
-        .normalize();
-      conePosition = new THREE.Vector3()
-        .copy(targetPoint)
-        .sub(direction.clone().multiplyScalar(arrowSize / 2));
-      quaternion = new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        direction.clone().negate()
-      );
-    } else {
-      // Default to 'end'
-      targetPoint = vectorPoints.at(-1);
+    // Add end cone if position is "end" or "both"
+    if (cone.position === "end" || cone.position === "both") {
+      const targetPoint = vectorPoints.at(-1);
       const prevPoint = vectorPoints.at(-2);
 
       // Ensure both points exist before proceeding
-      if (!targetPoint || !prevPoint) {
-        return null; // Should not happen due to initial length check, but satisfies TypeScript
+      if (targetPoint && prevPoint) {
+        const direction = new THREE.Vector3()
+          .subVectors(targetPoint, prevPoint)
+          .normalize();
+        const conePosition = new THREE.Vector3()
+          .copy(targetPoint)
+          .sub(direction.clone().multiplyScalar(arrowSize / 2));
+        const quaternion = new THREE.Quaternion().setFromUnitVectors(
+          new THREE.Vector3(0, 1, 0),
+          direction
+        );
+        cones.push({ position: conePosition, quaternion });
       }
-
-      direction = new THREE.Vector3()
-        .subVectors(targetPoint, prevPoint)
-        .normalize();
-      conePosition = new THREE.Vector3()
-        .copy(targetPoint)
-        .sub(direction.clone().multiplyScalar(arrowSize / 2));
-      quaternion = new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        direction
-      );
     }
 
-    return { position: conePosition, quaternion };
+    return cones.length > 0 ? cones : null;
   }, [cone, vectorPoints, arrowSize]);
 
   // Enable frustum culling for the entire group
@@ -292,16 +301,20 @@ export function LineEquation({
         frustumCulled
       />
 
-      {/* Render the cone if configured */}
-      {coneData && coneGeometry && coneMaterial && (
-        <mesh
-          geometry={coneGeometry}
-          material={coneMaterial}
-          position={coneData.position}
-          quaternion={coneData.quaternion}
-          frustumCulled
-        />
-      )}
+      {/* Render the cone(s) if configured */}
+      {coneData &&
+        coneGeometry &&
+        coneMaterial &&
+        coneData.map((data, index) => (
+          <mesh
+            key={`cone-${index}`}
+            geometry={coneGeometry}
+            material={coneMaterial}
+            position={data.position}
+            quaternion={data.quaternion}
+            frustumCulled
+          />
+        ))}
 
       {/* Optionally render a small sphere at each point */}
       <Instances
