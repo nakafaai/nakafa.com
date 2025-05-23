@@ -79,6 +79,7 @@ export default async function Page({ params }: Props) {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <a
                   href="https://github.com/nabilfatih/nakafa.com"
+                  title={tHome("contribute")}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(buttonVariants({ variant: "outline" }))}
@@ -88,6 +89,7 @@ export default async function Page({ params }: Props) {
                 </a>
                 <a
                   href="https://www.youtube.com/@nakafaa"
+                  title={tHome("videos")}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(buttonVariants({ variant: "outline" }))}

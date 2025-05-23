@@ -80,6 +80,7 @@ export default function GlobalError({
                     </Button>
                     <a
                       href="https://github.com/nabilfatih/nakafa.com/issues"
+                      title="Report"
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cn(buttonVariants({ variant: "secondary" }))}

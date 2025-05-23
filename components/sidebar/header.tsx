@@ -25,6 +25,7 @@ export function Header() {
             <TooltipTrigger asChild>
               <a
                 href="https://github.com/nabilfatih/nakafa.com"
+                title={t("source-code")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
@@ -45,6 +46,7 @@ export function Header() {
             <TooltipTrigger asChild>
               <a
                 href="https://www.youtube.com/@nakafaa"
+                title={t("videos")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(

@@ -19,6 +19,7 @@ export function ComingSoon({ className }: { className?: string }) {
 
       <a
         href={GITHUB_URL}
+        title={t("contribute")}
         target="_blank"
         rel="noopener noreferrer"
         className={buttonVariants({ variant: "default" })}

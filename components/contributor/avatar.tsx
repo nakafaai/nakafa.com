@@ -55,6 +55,7 @@ export function Avatar({ contributor }: Props) {
               {contributor.social.twitter && (
                 <a
                   href={contributor.social.twitter}
+                  title="Twitter"
                   target="_blank"
                   rel="noreferrer"
                   className={buttonVariants({
@@ -69,6 +70,7 @@ export function Avatar({ contributor }: Props) {
               {contributor.social.github && (
                 <a
                   href={contributor.social.github}
+                  title="GitHub"
                   target="_blank"
                   rel="noreferrer"
                   className={buttonVariants({
@@ -83,6 +85,7 @@ export function Avatar({ contributor }: Props) {
               {contributor.social.linkedin && (
                 <a
                   href={contributor.social.linkedin}
+                  title="LinkedIn"
                   target="_blank"
                   rel="noreferrer"
                   className={buttonVariants({

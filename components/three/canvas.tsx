@@ -36,6 +36,7 @@ function ErrorFallback({
           </Button>
           <a
             href="https://github.com/nabilfatih/nakafa.com/issues"
+            title={t("report")}
             target="_blank"
             rel="noopener noreferrer"
             className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}

@@ -10,6 +10,7 @@ export function CommunityMenu() {
       <SidebarMenuButton tooltip={t("community")} asChild>
         <a
           href="https://discord.gg/CPCSfKhvfQ"
+          title={t("community")}
           target="_blank"
           rel="noopener noreferrer"
         >

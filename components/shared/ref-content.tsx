@@ -113,6 +113,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
               <Button variant="outline" size="icon" asChild>
                 <a
                   href="https://www.youtube.com/@nakafaa"
+                  title={t("videos")}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -131,6 +132,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
               <Button variant="outline" size="icon" asChild>
                 <a
                   href="https://discord.gg/CPCSfKhvfQ"
+                  title={t("community")}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
