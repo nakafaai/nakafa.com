@@ -24,8 +24,7 @@ export function Heading({
         handleIntersect({ isIntersecting, entry });
       }
     },
-    threshold: [0, 0.25, 0.5, 0.75, 1], // Multiple thresholds for smooth tracking
-    rootMargin: "-20% 0px -70% 0px", // Adjust for better detection of the "active" section
+    rootMargin: "-20% 0px -70% 0px",
   });
 
   return (
