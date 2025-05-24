@@ -1,6 +1,14 @@
 "use client";
 
-import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
+import { useRouteChange } from "@/hooks/use-route-change";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 type TocContextType = {
@@ -98,6 +106,29 @@ export function TocProvider({ children }: { children: ReactNode }) {
     },
     [updateActiveHeading]
   );
+
+  // Handle route changes (including browser back/forward)
+  useRouteChange(() => {
+    // Clear existing intersections and reset state when route changes
+    intersectingHeadings.current.clear();
+    setActiveHeading(null);
+
+    // Small delay to ensure DOM is ready after navigation
+    setTimeout(() => {
+      // Force all headings to re-check their intersection status
+      // by dispatching a scroll event which will trigger observers
+      window.dispatchEvent(new Event("scroll"));
+    }, 100);
+  });
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+    };
+  }, []);
 
   const values = useMemo(
     () => ({ handleIntersect, activeHeading }),
