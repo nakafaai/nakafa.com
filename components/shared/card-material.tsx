@@ -38,16 +38,12 @@ export function CardMaterial({ material }: Props) {
   });
 
   return (
-    <Card ref={ref} id={id} className="pb-0">
+    <Card ref={ref} id={id} className="scroll-mt-20 pb-0">
       <CardHeader className="gap-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-1.5">
             <CardTitle className="group flex items-center font-medium">
-              <h2
-                id={id}
-                title={material.title}
-                className="inline-block scroll-mt-28"
-              >
+              <h2 title={material.title} className="inline-block">
                 {material.title}
               </h2>
               <a

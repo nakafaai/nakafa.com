@@ -13,6 +13,7 @@ import { createContext, useContextSelector } from "use-context-selector";
 
 type TocContextType = {
   activeHeading: string | null;
+  setActiveHeading: (heading: string | null) => void;
   handleIntersect: (data: {
     isIntersecting: boolean;
     entry: IntersectionObserverEntry;
@@ -30,7 +31,6 @@ export function TocProvider({ children }: { children: ReactNode }) {
     undefined
   );
 
-  // Debounced function to update active heading
   const updateActiveHeading = useCallback(() => {
     const headings = Array.from(intersectingHeadings.current.values());
 
@@ -131,7 +131,7 @@ export function TocProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const values = useMemo(
-    () => ({ handleIntersect, activeHeading }),
+    () => ({ handleIntersect, activeHeading, setActiveHeading }),
     [handleIntersect, activeHeading]
   );
 

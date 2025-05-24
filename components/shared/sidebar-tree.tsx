@@ -33,7 +33,12 @@ function SidebarTreeItem({
   heading,
   depth = 0,
 }: { heading: ParsedHeading; depth?: number }) {
-  const activeHeading = useToc((context) => context.activeHeading);
+  const { setActiveHeading, activeHeading } = useToc((context) => ({
+    setActiveHeading: context.setActiveHeading,
+    activeHeading: context.activeHeading,
+  }));
+
+  const id = slugify(heading.label);
 
   return (
     <SidebarMenuItem key={heading.href}>
@@ -41,7 +46,8 @@ function SidebarTreeItem({
         <TooltipTrigger asChild>
           <SidebarMenuButton
             asChild
-            isActive={activeHeading === slugify(heading.label)}
+            isActive={activeHeading === id}
+            onClick={() => setActiveHeading(id)}
           >
             <NavigationLink href={heading.href} title={heading.label}>
               <span title={heading.label} className="truncate">
