@@ -24,7 +24,7 @@ export function Heading({
         handleIntersect({ isIntersecting, entry });
       }
     },
-    rootMargin: "-20% 0px -70% 0px",
+    rootMargin: "-20% 0px -60% 0px",
   });
 
   return (

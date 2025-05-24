@@ -112,13 +112,6 @@ export function TocProvider({ children }: { children: ReactNode }) {
     // Clear existing intersections and reset state when route changes
     intersectingHeadings.current.clear();
     setActiveHeading(null);
-
-    // Small delay to ensure DOM is ready after navigation
-    setTimeout(() => {
-      // Force all headings to re-check their intersection status
-      // by dispatching a scroll event which will trigger observers
-      window.dispatchEvent(new Event("scroll"));
-    }, 100);
   });
 
   // Cleanup on unmount
