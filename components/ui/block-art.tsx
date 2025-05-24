@@ -234,17 +234,26 @@ export function BlockArt({
           const rippleIntensity = rippleAffectedCells.get(i) || 0;
           const isActive = activeIndices.has(i);
 
+          const getCellColor = () => {
+            if (rippleIntensity > 0) {
+              return waveColor;
+            }
+            if (isActive) {
+              return animationColor;
+            }
+            return "bg-background";
+          };
+
           return (
             <div
               key={i}
               className={cn(
                 "transition-all duration-300 ease-out",
-                isActive && !rippleIntensity ? animationColor : "bg-background",
+                getCellColor(),
                 "hover:scale-95 hover:bg-primary"
               )}
               style={{
                 aspectRatio: "1 / 1",
-                backgroundColor: rippleIntensity > 0 ? undefined : undefined,
                 opacity: rippleIntensity > 0 ? 0.8 + 0.2 * rippleIntensity : 1,
                 transform:
                   rippleIntensity > 0
@@ -252,19 +261,13 @@ export function BlockArt({
                     : undefined,
                 boxShadow:
                   rippleIntensity > 0
-                    ? `0 0 ${20 * rippleIntensity}px rgba(var(--primary-rgb, 59, 130, 246), ${0.6 * rippleIntensity})`
+                    ? `0 0 ${20 * rippleIntensity}px color-mix(in oklch, var(--primary) ${60 * rippleIntensity}%, transparent)`
                     : undefined,
                 transition:
                   rippleIntensity > 0
                     ? "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
                     : undefined,
               }}
-              {...(rippleIntensity > 0 && {
-                className: cn(
-                  "transition-all duration-300 ease-out",
-                  waveColor
-                ),
-              })}
             />
           );
         })}
