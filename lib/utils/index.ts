@@ -67,3 +67,7 @@ const MOBILE_REGEX =
 export function isMobileDevice(): boolean {
   return MOBILE_REGEX.test(navigator.userAgent);
 }
+
+export function slugify(text: string): string {
+  return text.toLowerCase().replace(/\s+/g, "-");
+}

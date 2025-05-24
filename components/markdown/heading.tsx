@@ -1,6 +1,10 @@
-import { cn } from "@/lib/utils";
+"use client";
+
+import { useToc } from "@/lib/context/use-toc";
+import { cn, slugify } from "@/lib/utils";
 import type { HeadingProps, HeadingTag } from "@/types/markdown";
 import { LinkIcon } from "lucide-react";
+import { useIntersectionObserver } from "usehooks-ts";
 
 export function Heading({
   Tag,
@@ -10,9 +14,23 @@ export function Heading({
   Tag: HeadingTag;
   className: string;
 } & HeadingProps) {
-  const id = props.children?.toString().toLowerCase().replace(/\s+/g, "-");
+  const id = slugify(props.children?.toString() ?? "");
+
+  const handleIntersect = useToc((context) => context.handleIntersect);
+
+  const { ref } = useIntersectionObserver({
+    onChange(isIntersecting, entry) {
+      if (entry) {
+        handleIntersect({ isIntersecting, entry });
+      }
+    },
+    threshold: [0, 0.25, 0.5, 0.75, 1], // Multiple thresholds for smooth tracking
+    rootMargin: "-20% 0px -70% 0px", // Adjust for better detection of the "active" section
+  });
+
   return (
     <Tag
+      ref={ref}
       id={id}
       className={cn(
         "mt-10 mb-6 flex scroll-mt-28 items-center font-medium leading-tight tracking-tight",

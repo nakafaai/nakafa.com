@@ -1,3 +1,7 @@
+"use client";
+
+import { useToc } from "@/lib/context/use-toc";
+import { slugify } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import NavigationLink from "../ui/navigation-link";
 import {
@@ -29,11 +33,16 @@ function SidebarTreeItem({
   heading,
   depth = 0,
 }: { heading: ParsedHeading; depth?: number }) {
+  const activeHeading = useToc((context) => context.activeHeading);
+
   return (
     <SidebarMenuItem key={heading.href}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <SidebarMenuButton asChild>
+          <SidebarMenuButton
+            asChild
+            isActive={activeHeading === slugify(heading.label)}
+          >
             <NavigationLink href={heading.href} title={heading.label}>
               <span title={heading.label} className="truncate">
                 {heading.label}

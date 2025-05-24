@@ -1,10 +1,12 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
-import { cn } from "@/lib/utils";
+import { useToc } from "@/lib/context/use-toc";
+import { cn, slugify } from "@/lib/utils";
 import type { MaterialList } from "@/types/subject/material";
 import { ArrowDownIcon, ChevronDownIcon, LinkIcon } from "lucide-react";
 import { useState } from "react";
+import { useIntersectionObserver } from "usehooks-ts";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -22,10 +24,22 @@ type Props = {
 export function CardMaterial({ material }: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(true);
 
-  const id = material.title.toLowerCase().replace(/\s+/g, "-");
+  const id = slugify(material.title);
+
+  const handleIntersect = useToc((context) => context.handleIntersect);
+
+  const { ref } = useIntersectionObserver({
+    onChange(isIntersecting, entry) {
+      if (entry) {
+        handleIntersect({ isIntersecting, entry });
+      }
+    },
+    threshold: [0, 0.25, 0.5, 0.75, 1], // Multiple thresholds for smooth tracking
+    rootMargin: "-40% 0px -70% 0px", // Adjust for better detection of the "active" section
+  });
 
   return (
-    <Card className="pb-0">
+    <Card ref={ref} id={id} className="pb-0">
       <CardHeader className="gap-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-1.5">
