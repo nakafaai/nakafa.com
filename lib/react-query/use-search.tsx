@@ -21,10 +21,9 @@ const fetchSearchResults = async (query: string): Promise<PagefindResult[]> => {
     return [];
   }
 
-  // @ts-expect-error: pagefind returns a promise of an array of objects
   const data = await Promise.all(response.results.map((o) => o.data()));
 
-  return data.map((newData: PagefindResult) => ({
+  return data.map((newData) => ({
     ...newData,
     sub_results: newData.sub_results.map((r) => {
       const url = r.url
@@ -48,8 +47,6 @@ export function useSearch({
     queryKey: ["search", query],
     queryFn: () => fetchSearchResults(query),
     enabled: pagefindReady && enabled,
-    refetchOnWindowFocus: false,
-    retry: false,
     placeholderData: keepPreviousData,
   });
 }

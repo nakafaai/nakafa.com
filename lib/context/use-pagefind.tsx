@@ -91,17 +91,23 @@ async function importPagefind() {
     window.pagefind = await import(
       /* webpackIgnore: true */ addBasePath("/_pagefind/pagefind.js")
     );
+    if (!window.pagefind) {
+      throw new Error("Pagefind not initialized correctly.");
+    }
     window.pagefind?.options({
       baseUrl: "/",
       // ... more search options
     });
-    await window.pagefind.init?.();
+    if (!window.pagefind.init) {
+      throw new Error("Pagefind init not found.");
+    }
+    await window.pagefind.init();
   } catch {
     window.pagefind = {
-      debouncedSearch: () => Promise.resolve([]),
+      debouncedSearch: () => Promise.resolve(null),
       destroy: () => Promise.resolve(),
       init: () => Promise.resolve(),
-      options: () => undefined,
+      options: () => Promise.resolve(),
     };
   }
 }

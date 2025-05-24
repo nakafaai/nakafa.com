@@ -52,7 +52,7 @@ export default function GlobalError({
           disableTransitionOnChange
           themes={themes.map((t) => t.value)}
         >
-          <div data-pagefind-body className="relative">
+          <div className="relative">
             <div
               data-pagefind-ignore
               className="relative flex h-svh items-center justify-center"
