@@ -32,7 +32,7 @@ const DEFAULT_ANIMATION_COLOR = "bg-secondary";
 const DEFAULT_ANIMATED_CELL_COUNT = 15;
 const DEFAULT_ANIMATION_INTERVAL = 1000; // ms
 const DEFAULT_WAVE_COLOR = "bg-primary";
-const DEFAULT_WAVE_DURATION = 1500; // ms
+const DEFAULT_WAVE_DURATION = 2000; // ms
 const MAX_CONCURRENT_RIPPLES = 5; // Limit concurrent ripples
 
 export function BlockArt({
@@ -250,7 +250,7 @@ export function BlockArt({
               className={cn(
                 "transition-all duration-300 ease-out",
                 getCellColor(),
-                "hover:scale-95 hover:bg-primary"
+                "hover:bg-primary"
               )}
               style={{
                 aspectRatio: "1 / 1",
