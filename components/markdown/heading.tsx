@@ -16,7 +16,10 @@ export function Heading({
 } & HeadingProps) {
   const id = slugify(props.children?.toString() ?? "");
 
-  const handleIntersect = useToc((context) => context.handleIntersect);
+  const { handleIntersect, setActiveHeading } = useToc((context) => ({
+    handleIntersect: context.handleIntersect,
+    setActiveHeading: context.setActiveHeading,
+  }));
 
   const { ref } = useIntersectionObserver({
     onChange(isIntersecting, entry) {
@@ -42,6 +45,7 @@ export function Heading({
         title={props.children?.toString()}
         className="group inline-flex items-center gap-2"
         aria-label={`Link to ${props.children}`}
+        onClick={() => setActiveHeading(id)}
       >
         <span className="text-pretty">{props.children}</span>
         <LinkIcon className="invisible size-4 text-muted-foreground group-hover:visible" />
