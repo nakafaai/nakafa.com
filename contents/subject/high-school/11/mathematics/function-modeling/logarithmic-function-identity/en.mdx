@@ -4,3 +4,214 @@ export const metadata = {
   date: "05/18/2025",
   subject: "Functions and Their Modeling",
 };
+
+## Understanding Logarithmic Identities
+
+Logarithmic identities are special properties that apply to all logarithmic functions. These properties are very helpful in simplifying calculations and solving complex logarithmic equations.
+
+Before discussing logarithmic identities, let's recall that logarithms are the inverse of exponents. If <InlineMath math="b^x = a" />, then <InlineMath math="^b\log a = x" />.
+
+## Basic Logarithmic Identities
+
+### Product Identity
+
+<BlockMath math="^b\log(MN) = {^b\log M} + {^b\log N}" />
+
+The logarithm of a product equals the sum of the logarithms of each number.
+
+**Example:**
+
+<BlockMath math="^2\log(8 \times 4) = {^2\log 8} + {^2\log 4} = 3 + 2 = 5" />
+
+### Quotient Identity
+
+<BlockMath math="^b\log\left(\frac{M}{N}\right) = {^b\log M} - {^b\log N}" />
+
+The logarithm of a quotient equals the difference between the logarithm of the numerator and the logarithm of the denominator.
+
+**Example:**
+
+<BlockMath math="^3\log\left(\frac{81}{9}\right) = {^3\log 81} - {^3\log 9} = 4 - 2 = 2" />
+
+### Power Identity
+
+<BlockMath math="^b\log(M^p) = p \cdot {^b\log M}" />
+
+The logarithm of a number raised to a power equals the power multiplied by the logarithm of that number.
+
+**Example:**
+
+<BlockMath math="^2\log(4^3) = 3 \cdot {^2\log 4} = 3 \times 2 = 6" />
+
+## Special Logarithmic Identities
+
+### Change of Base
+
+<BlockMath math="^b\log M = \frac{^a\log M}{^a\log b}" />
+
+This identity allows us to change the logarithm base as needed.
+
+**Example:**
+
+<BlockMath math="^3\log 9 = \frac{^{10}\log 9}{^{10}\log 3} = \frac{0.954}{0.477} = 2" />
+
+### Equality Identity
+
+If <InlineMath math="^b\log M = {^b\log N}" />, then <InlineMath math="M = N" />
+
+Two numbers that have the same logarithmic value (with the same base) must be the same number.
+
+### Inequality Identity
+
+- If <InlineMath math="b > 1" /> and <InlineMath math="^b\log M < {^b\log N}" />, then <InlineMath math="M < N" />
+- If <InlineMath math="0 < b < 1" /> and <InlineMath math="^b\log M < {^b\log N}" />, then <InlineMath math="M > N" />
+
+## Applications of Logarithmic Identities
+
+### Simplifying Expressions
+
+Simplify <InlineMath math="^2\log 32 + {^2\log 8} - {^2\log 4}" />
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="^2\log 32 + {^2\log 8} - {^2\log 4}" />
+  <BlockMath math="= {^2\log(32 \times 8)} - {^2\log 4}" />
+  <BlockMath math="= {^2\log 256} - {^2\log 4}" />
+  <BlockMath math="= {^2\log\left(\frac{256}{4}\right)}" />
+  <BlockMath math="= {^2\log 64} = 6" />
+</div>
+
+### Solving Equations
+
+Find the value of <InlineMath math="x" /> if <InlineMath math="^3\log x + {^3\log 9} = {^3\log 81}" />
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="^3\log x + {^3\log 9} = {^3\log 81}" />
+  <BlockMath math="^3\log(x \times 9) = {^3\log 81}" />
+  <BlockMath math="x \times 9 = 81" />
+  <BlockMath math="x = \frac{81}{9} = 9" />
+</div>
+
+## Real-Life Applications
+
+### Richter Scale
+
+Earthquake strength is measured using the Richter scale which is based on logarithms:
+
+<BlockMath math="R = \log\left(\frac{I}{I_0}\right)" />
+
+Where:
+
+- <InlineMath math="R" /> = Richter scale value
+- <InlineMath math="I" /> = earthquake intensity
+- <InlineMath math="I_0" /> = reference intensity (zero level)
+
+**Example:** An earthquake that occurred in Haiti in 2010 had an intensity of <InlineMath math="10^7" /> times compared to zero-level earthquakes. What is the Richter scale strength of that earthquake?
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="R = \log\left(\frac{I}{I_0}\right)" />
+  <BlockMath math="= \log\left(\frac{10^7 I_0}{I_0}\right)" />
+  <BlockMath math="= \log(10^7)" />
+  <BlockMath math="= 7" />
+</div>
+
+Therefore, the earthquake in Haiti in 2010 had a strength of 7 on the Richter scale.
+
+### Battery Charging
+
+Battery charging time can be calculated using the logarithmic formula:
+
+<BlockMath math="t = -\frac{1}{k}\ln\left(1 - \frac{C}{C_0}\right)" />
+
+Where:
+
+- <InlineMath math="t" /> = charging time (in minutes)
+- <InlineMath math="k" /> = charging constant
+- <InlineMath math="C" /> = desired capacity
+- <InlineMath math="C_0" /> = maximum capacity
+
+**Example:** Determine the time required to charge a battery from empty to 90% full. Assume <InlineMath math="k = 0.02" />.
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="t = -\frac{1}{k}\ln\left(1 - \frac{C}{C_0}\right)" />
+  <BlockMath math="= -\frac{1}{0.02}\ln\left(1 - \frac{0.9C_0}{C_0}\right)" />
+  <BlockMath math="= -50\ln(1 - 0.9)" />
+  <BlockMath math="= -50\ln(0.1)" />
+  <BlockMath math="\approx 115.13" />
+</div>
+
+Therefore, the charging time is approximately 115 minutes.
+
+### Car Price Depreciation
+
+Logarithmic functions are also used for modeling decay/depreciation with the formula:
+
+<BlockMath math="H(t) = ce^{kt}" />
+
+where <InlineMath math="H(t)" /> is the value at time <InlineMath math="t" />.
+
+**Example:** At any given time, the price of a used car is not proportional to its current price. If a new car costs 200 million rupiah and after 5 years becomes 100 million rupiah, determine the car's price after 10 years of use.
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="H(0) = 200 \text{ million, so } 200 = ce^0 = c" />
+  <BlockMath math="H(5) = 100 \text{ million, so } 100 = 200e^{5k}" />
+  <BlockMath math="e^{5k} = \frac{1}{2} \text{, therefore } 5k = \ln\left(\frac{1}{2}\right)" />
+  <BlockMath math="k = \frac{1}{5}\ln\left(\frac{1}{2}\right) = -0.1386" />
+</div>
+
+From these results, the car's price at any time <InlineMath math="t" /> is:
+
+<BlockMath math="H(t) = 200e^{-0.1386t}" />
+
+Therefore, the car's price after 10 years of use is:
+
+<BlockMath math="H(10) = 200e^{-0.1386(10)} = 200e^{-1.386} \approx 50 \text{ million rupiah}" />
+
+## Exercises
+
+**Problem 1**
+
+Simplify: <InlineMath math="^5\log 125 + {^5\log 25} - {^5\log 5}" />
+
+**Problem 2**
+
+If <InlineMath math="^2\log x = 3" /> and <InlineMath math="^2\log y = 5" />, find the value of <InlineMath math="^2\log(xy)" />
+
+**Problem 3**
+
+Find the value of <InlineMath math="x" /> if <InlineMath math="^4\log(x-1) = {^4\log 16} - {^4\log 2}" />
+
+### Answer Key
+
+**Answer 1**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="^5\log 125 + {^5\log 25} - {^5\log 5}" />
+  <BlockMath math="= 3 + 2 - 1 = 4" />
+</div>
+
+**Answer 2**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="^2\log(xy) = {^2\log x} + {^2\log y}" />
+  <BlockMath math="= 3 + 5 = 8" />
+</div>
+
+**Answer 3**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="^4\log(x-1) = {^4\log 16} - {^4\log 2}" />
+  <BlockMath math="^4\log(x-1) = {^4\log\left(\frac{16}{2}\right)}" />
+  <BlockMath math="^4\log(x-1) = {^4\log 8}" />
+  <BlockMath math="x - 1 = 8" />
+  <BlockMath math="x = 9" />
+</div>

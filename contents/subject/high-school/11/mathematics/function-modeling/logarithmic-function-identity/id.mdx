@@ -4,3 +4,214 @@ export const metadata = {
   date: "05/18/2025",
   subject: "Fungsi dan Pemodelannya",
 };
+
+## Pengertian Identitas Logaritma
+
+Identitas logaritma adalah sifat-sifat khusus yang berlaku untuk semua fungsi logaritma. Sifat-sifat ini sangat membantu kita dalam menyederhanakan perhitungan dan menyelesaikan persamaan logaritma yang rumit.
+
+Sebelum membahas identitas logaritma, mari ingat kembali bahwa logaritma adalah kebalikan dari eksponen. Jika <InlineMath math="b^x = a" />, maka <InlineMath math="^b\log a = x" />.
+
+## Identitas Dasar Logaritma
+
+### Identitas Perkalian
+
+<BlockMath math="^b\log(MN) = {^b\log M} + {^b\log N}" />
+
+Logaritma dari perkalian sama dengan penjumlahan logaritma masing-masing bilangan.
+
+**Contoh:**
+
+<BlockMath math="^2\log(8 \times 4) = {^2\log 8} + {^2\log 4} = 3 + 2 = 5" />
+
+### Identitas Pembagian
+
+<BlockMath math="^b\log\left(\frac{M}{N}\right) = {^b\log M} - {^b\log N}" />
+
+Logaritma dari pembagian sama dengan pengurangan logaritma pembilang dengan logaritma penyebut.
+
+**Contoh:**
+
+<BlockMath math="^3\log\left(\frac{81}{9}\right) = {^3\log 81} - {^3\log 9} = 4 - 2 = 2" />
+
+### Identitas Perpangkatan
+
+<BlockMath math="^b\log(M^p) = p \cdot {^b\log M}" />
+
+Logaritma dari suatu bilangan berpangkat sama dengan pangkat dikali logaritma bilangan tersebut.
+
+**Contoh:**
+
+<BlockMath math="^2\log(4^3) = 3 \cdot {^2\log 4} = 3 \times 2 = 6" />
+
+## Identitas Khusus Logaritma
+
+### Perubahan Basis
+
+<BlockMath math="^b\log M = \frac{^a\log M}{^a\log b}" />
+
+Identitas ini memungkinkan kita mengubah basis logaritma sesuai kebutuhan.
+
+**Contoh:**
+
+<BlockMath math="^3\log 9 = \frac{^{10}\log 9}{^{10}\log 3} = \frac{0,954}{0,477} = 2" />
+
+### Identitas Kesamaan
+
+Jika <InlineMath math="^b\log M = {^b\log N}" />, maka <InlineMath math="M = N" />
+
+Dua bilangan yang memiliki nilai logaritma sama (dengan basis sama) pasti merupakan bilangan yang sama.
+
+### Identitas Ketaksamaan
+
+- Jika <InlineMath math="b > 1" /> dan <InlineMath math="^b\log M < {^b\log N}" />, maka <InlineMath math="M < N" />
+- Jika <InlineMath math="0 < b < 1" /> dan <InlineMath math="^b\log M < {^b\log N}" />, maka <InlineMath math="M > N" />
+
+## Penerapan Identitas Logaritma
+
+### Menyederhanakan Ekspresi
+
+Sederhanakan <InlineMath math="^2\log 32 + {^2\log 8} - {^2\log 4}" />
+
+**Penyelesaian:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="^2\log 32 + {^2\log 8} - {^2\log 4}" />
+  <BlockMath math="= {^2\log(32 \times 8)} - {^2\log 4}" />
+  <BlockMath math="= {^2\log 256} - {^2\log 4}" />
+  <BlockMath math="= {^2\log\left(\frac{256}{4}\right)}" />
+  <BlockMath math="= {^2\log 64} = 6" />
+</div>
+
+### Menyelesaikan Persamaan
+
+Tentukan nilai <InlineMath math="x" /> jika <InlineMath math="^3\log x + {^3\log 9} = {^3\log 81}" />
+
+**Penyelesaian:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="^3\log x + {^3\log 9} = {^3\log 81}" />
+  <BlockMath math="^3\log(x \times 9) = {^3\log 81}" />
+  <BlockMath math="x \times 9 = 81" />
+  <BlockMath math="x = \frac{81}{9} = 9" />
+</div>
+
+## Aplikasi dalam Kehidupan Nyata
+
+### Skala Richter
+
+Kekuatan gempa bumi diukur menggunakan skala Richter yang berbasis logaritma:
+
+<BlockMath math="R = \log\left(\frac{I}{I_0}\right)" />
+
+Di mana:
+
+- <InlineMath math="R" /> = nilai skala Richter
+- <InlineMath math="I" /> = intensitas gempa
+- <InlineMath math="I_0" /> = intensitas referensi (tingkat nol)
+
+**Contoh:** Gempa bumi yang terjadi di Haiti pada tahun 2010 memiliki intensitas <InlineMath math="10^7" /> kali dibandingkan gempa bumi tingkat nol. Berapa skala Richter kekuatan gempa tersebut?
+
+**Penyelesaian:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="R = \log\left(\frac{I}{I_0}\right)" />
+  <BlockMath math="= \log\left(\frac{10^7 I_0}{I_0}\right)" />
+  <BlockMath math="= \log(10^7)" />
+  <BlockMath math="= 7" />
+</div>
+
+Jadi, gempa bumi di Haiti pada tahun 2010 tersebut memiliki kekuatan 7 skala Richter.
+
+### Pengisian Baterai
+
+Waktu pengisian baterai dapat dihitung dengan rumus logaritma:
+
+<BlockMath math="t = -\frac{1}{k}\ln\left(1 - \frac{C}{C_0}\right)" />
+
+Di mana:
+
+- <InlineMath math="t" /> = waktu pengisian (dalam menit)
+- <InlineMath math="k" /> = konstanta pengisian
+- <InlineMath math="C" /> = kapasitas yang diinginkan
+- <InlineMath math="C_0" /> = kapasitas maksimum
+
+**Contoh:** Tentukan waktu yang diperlukan untuk mengisi daya baterai yang dayanya kosong menjadi 90% penuh. Anggap <InlineMath math="k = 0,02" />.
+
+**Penyelesaian:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="t = -\frac{1}{k}\ln\left(1 - \frac{C}{C_0}\right)" />
+  <BlockMath math="= -\frac{1}{0,02}\ln\left(1 - \frac{0,9C_0}{C_0}\right)" />
+  <BlockMath math="= -50\ln(1 - 0,9)" />
+  <BlockMath math="= -50\ln(0,1)" />
+  <BlockMath math="\approx 115,13" />
+</div>
+
+Jadi, waktu pengisian daya tersebut ialah sekitar 115 menit.
+
+### Depresiasi Harga Mobil
+
+Fungsi logaritma juga digunakan untuk pemodelan peluruhan/penurunan nilai dengan formula:
+
+<BlockMath math="H(t) = ce^{kt}" />
+
+dengan <InlineMath math="H(t)" /> adalah nilai pada saat waktu <InlineMath math="t" />.
+
+**Contoh:** Pada setiap saat, harga sebuah mobil setelah digunakan tidak sebanding dengan harga saat itu. Jika harga mobil baru adalah 200 juta rupiah dan setelah 5 tahun menjadi 100 juta rupiah, tentukan harga mobil setelah 10 tahun digunakan.
+
+**Penyelesaian:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="H(0) = 200 \text{ juta, maka } 200 = ce^0 = c" />
+  <BlockMath math="H(5) = 100 \text{ juta, maka } 100 = 200e^{5k}" />
+  <BlockMath math="e^{5k} = \frac{1}{2} \text{, sehingga } 5k = \ln\left(\frac{1}{2}\right)" />
+  <BlockMath math="k = \frac{1}{5}\ln\left(\frac{1}{2}\right) = -0,1386" />
+</div>
+
+Dari hasil tersebut, diperoleh harga mobil setiap saat <InlineMath math="t" /> adalah:
+
+<BlockMath math="H(t) = 200e^{-0,1386t}" />
+
+Jadi, harga mobil setelah 10 tahun digunakan adalah:
+
+<BlockMath math="H(10) = 200e^{-0,1386(10)} = 200e^{-1,386} \approx 50 \text{ juta rupiah}" />
+
+## Latihan
+
+**Soal 1**
+
+Sederhanakan: <InlineMath math="^5\log 125 + {^5\log 25} - {^5\log 5}" />
+
+**Soal 2**
+
+Jika <InlineMath math="^2\log x = 3" /> dan <InlineMath math="^2\log y = 5" />, tentukan nilai <InlineMath math="^2\log(xy)" />
+
+**Soal 3**
+
+Tentukan nilai <InlineMath math="x" /> jika <InlineMath math="^4\log(x-1) = {^4\log 16} - {^4\log 2}" />
+
+### Kunci Jawaban
+
+**Jawaban 1**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="^5\log 125 + {^5\log 25} - {^5\log 5}" />
+  <BlockMath math="= 3 + 2 - 1 = 4" />
+</div>
+
+**Jawaban 2**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="^2\log(xy) = {^2\log x} + {^2\log y}" />
+  <BlockMath math="= 3 + 5 = 8" />
+</div>
+
+**Jawaban 3**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="^4\log(x-1) = {^4\log 16} - {^4\log 2}" />
+  <BlockMath math="^4\log(x-1) = {^4\log\left(\frac{16}{2}\right)}" />
+  <BlockMath math="^4\log(x-1) = {^4\log 8}" />
+  <BlockMath math="x - 1 = 8" />
+  <BlockMath math="x = 9" />
+</div>

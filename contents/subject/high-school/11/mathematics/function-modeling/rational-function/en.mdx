@@ -4,3 +4,188 @@ export const metadata = {
   date: "05/18/2025",
   subject: "Functions and Their Modeling",
 };
+
+## What is a Rational Function?
+
+Have you ever seen fractions in mathematics? Well, rational functions are similar to fractions, but more interesting because they involve variables!
+
+A rational function is a function in the form of a fraction, where both the numerator and denominator are polynomial functions. Simply put, a rational function can be written as:
+
+<BlockMath math="f(x) = \frac{P(x)}{Q(x)}" />
+
+Where:
+
+- <InlineMath math="P(x)" /> is a polynomial in the numerator
+- <InlineMath math="Q(x)" /> is a polynomial in the denominator
+- <InlineMath math="Q(x) \neq 0" /> (denominator cannot be zero)
+
+## Examples of Rational Functions in Life
+
+Let's look at a real example to better understand rational functions.
+
+**Chicken Coop Problem:**
+
+Mr. Budi wants to build a rectangular chicken coop with an area of 100 m². He wants to know the relationship between the length and width of the coop.
+
+If the length of the coop is <InlineMath math="x" /> meters, then:
+
+- Area = length × width = 100
+- <InlineMath math="x \times \text{width} = 100" />
+- Width = <InlineMath math="\frac{100}{x}" />
+
+The function <InlineMath math="f(x) = \frac{100}{x}" /> is an example of a rational function!
+
+## Types of Rational Functions
+
+### Simple Rational Function
+
+The simplest form of a rational function:
+
+<BlockMath math="f(x) = \frac{k}{x}" />
+
+Where <InlineMath math="k" /> is a constant. Example: <InlineMath math="f(x) = \frac{5}{x}" />
+
+### Linear Rational Function
+
+Both numerator and denominator are linear functions:
+
+<BlockMath math="f(x) = \frac{ax + b}{cx + d}" />
+
+Example: <InlineMath math="f(x) = \frac{2x + 3}{x - 1}" />
+
+### Quadratic Rational Function
+
+Involves quadratic functions in the numerator or denominator:
+
+<BlockMath math="f(x) = \frac{x^2 + 2x + 1}{x - 3}" />
+
+## Domain of Rational Functions
+
+The domain of a rational function is all values of <InlineMath math="x" /> that make the function defined. Remember, the denominator cannot be zero!
+
+**How to find the domain:**
+
+1. Find values of <InlineMath math="x" /> that make the denominator = 0
+2. The domain is all real numbers except those values
+
+**Example:** Determine the domain of <InlineMath math="f(x) = \frac{x + 2}{x - 3}" />
+
+**Solution:**
+
+- Denominator is zero when: <InlineMath math="x - 3 = 0" />
+- So: <InlineMath math="x = 3" />
+- Domain: <InlineMath math="D_f = \{x | x \neq 3, x \in \mathbb{R}\}" />
+
+## Simplifying Rational Functions
+
+Rational functions can be simplified by finding common factors in the numerator and denominator.
+
+### Without Factoring
+
+Simplify: <InlineMath math="f(x) = \frac{6x^2}{3x}" />
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="f(x) = \frac{6x^2}{3x}" />
+  <BlockMath math="= \frac{6x \cdot x}{3x}" />
+  <BlockMath math="= \frac{6x}{3} \cdot \frac{x}{x}" />
+  <BlockMath math="= 2x" />
+</div>
+
+### With Factoring
+
+Simplify: <InlineMath math="f(x) = \frac{x^2 - 4}{x - 2}" />
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="f(x) = \frac{x^2 - 4}{x - 2}" />
+  <BlockMath math="= \frac{(x + 2)(x - 2)}{x - 2}" />
+  <BlockMath math="= x + 2" />
+</div>
+
+Note: <InlineMath math="x \neq 2" /> (from the original domain)
+
+## Operations on Rational Functions
+
+### Addition and Subtraction
+
+Just like regular fractions, we need to find a common denominator first!
+
+**Example:** <InlineMath math="\frac{2}{x} + \frac{3}{x + 1}" />
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\frac{2}{x} + \frac{3}{x + 1}" />
+  <BlockMath math="= \frac{2(x + 1)}{x(x + 1)} + \frac{3x}{x(x + 1)}" />
+  <BlockMath math="= \frac{2(x + 1) + 3x}{x(x + 1)}" />
+  <BlockMath math="= \frac{2x + 2 + 3x}{x(x + 1)}" />
+  <BlockMath math="= \frac{5x + 2}{x(x + 1)}" />
+</div>
+
+### Multiplication
+
+Multiply numerator with numerator, denominator with denominator:
+
+<BlockMath math="\frac{a}{b} \times \frac{c}{d} = \frac{ac}{bd}" />
+
+**Example:** <InlineMath math="\frac{x + 1}{x} \times \frac{2x}{x - 1}" />
+
+**Solution:**
+
+<BlockMath math="\frac{x + 1}{x} \times \frac{2x}{x - 1} = \frac{2x(x + 1)}{x(x - 1)} = \frac{2(x + 1)}{x - 1}" />
+
+### Division
+
+Remember, dividing = multiplying by the reciprocal:
+
+<BlockMath math="\frac{a}{b} \div \frac{c}{d} = \frac{a}{b} \times \frac{d}{c} = \frac{ad}{bc}" />
+
+## Exercises
+
+1. Determine the domain of <InlineMath math="f(x) = \frac{x + 3}{x^2 - 9}" />
+
+2. Simplify <InlineMath math="f(x) = \frac{x^2 - 1}{x + 1}" />
+
+3. Calculate <InlineMath math="\frac{1}{x - 1} - \frac{2}{x + 1}" />
+
+4. A car travels 300 km. If the average speed is <InlineMath math="v" /> km/h, write the travel time function in terms of <InlineMath math="v" />.
+
+### Answer Key
+
+**Answer 1:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x^2 - 9 = 0" />
+  <BlockMath math="(x + 3)(x - 3) = 0" />
+  <BlockMath math="x = -3 \text{ or } x = 3" />
+</div>
+
+Domain: <InlineMath math="D_f = \{x | x \neq -3, x \neq 3, x \in \mathbb{R}\}" />
+
+**Answer 2:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="f(x) = \frac{x^2 - 1}{x + 1}" />
+  <BlockMath math="= \frac{(x + 1)(x - 1)}{x + 1}" />
+  <BlockMath math="= x - 1" />
+</div>
+
+With the condition <InlineMath math="x \neq -1" />
+
+**Answer 3:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\frac{1}{x - 1} - \frac{2}{x + 1}" />
+  <BlockMath math="= \frac{(x + 1) - 2(x - 1)}{(x - 1)(x + 1)}" />
+  <BlockMath math="= \frac{x + 1 - 2x + 2}{(x - 1)(x + 1)}" />
+  <BlockMath math="= \frac{-x + 3}{(x - 1)(x + 1)}" />
+</div>
+
+**Answer 4:**
+
+Time = Distance ÷ Speed
+
+<BlockMath math="t(v) = \frac{300}{v}" />
