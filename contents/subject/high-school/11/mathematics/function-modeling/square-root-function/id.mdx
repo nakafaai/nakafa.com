@@ -1,6 +1,308 @@
+import { LineEquation } from "@/components/contents/line-equation";
+import { getColor } from "@/lib/utils/color";
+
 export const metadata = {
   title: "Fungsi Akar",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Fungsi dan Pemodelannya",
 };
+
+## Pengertian Fungsi Akar
+
+Fungsi akar merupakan salah satu jenis fungsi yang melibatkan operasi akar kuadrat. Fungsi ini memiliki bentuk umum <InlineMath math="f(x) = \sqrt{g(x)}" /> di mana <InlineMath math="g(x)" /> adalah fungsi di dalam tanda akar.
+
+Bentuk paling sederhana dari fungsi akar adalah <InlineMath math="f(x) = \sqrt{x}" />. Fungsi ini mengambil nilai input <InlineMath math="x" /> dan menghasilkan akar kuadrat dari nilai tersebut.
+
+### Karakteristik Fungsi Akar
+
+Fungsi akar memiliki beberapa karakteristik khusus yang membedakannya dari fungsi lainnya:
+
+1. **Domain terbatas**: Karena akar kuadrat dari bilangan negatif tidak terdefinisi dalam bilangan real, domain fungsi akar terbatas pada nilai-nilai yang membuat ekspresi di dalam akar bernilai non-negatif.
+
+2. **Grafik berbentuk kurva**: Grafik fungsi akar berbentuk kurva yang dimulai dari suatu titik dan terus naik dengan kecepatan yang semakin lambat.
+
+3. **Nilai selalu non-negatif**: Hasil dari fungsi akar selalu bernilai non-negatif (≥ 0).
+
+## Domain dan Range Fungsi Akar
+
+Untuk memahami fungsi akar dengan baik, penting untuk menentukan domain dan range-nya.
+
+### Menentukan Domain
+
+Domain fungsi akar <InlineMath math="f(x) = \sqrt{g(x)}" /> adalah semua nilai <InlineMath math="x" /> yang membuat <InlineMath math="g(x) \geq 0" />.
+
+**Langkah-langkah menentukan domain:**
+
+| Langkah | Penjelasan                                            | Contoh: <InlineMath math="f(x) = \sqrt{x-2}" />                   |
+| ------- | ----------------------------------------------------- | ----------------------------------------------------------------- |
+| 1       | Identifikasi ekspresi dalam akar                      | <InlineMath math="g(x) = x-2" />                                  |
+| 2       | Buat pertidaksamaan <InlineMath math="g(x) \geq 0" /> | <InlineMath math="x-2 \geq 0" />                                  |
+| 3       | Selesaikan pertidaksamaan                             | <InlineMath math="x \geq 2" />                                    |
+| 4       | Tuliskan domain                                       | <InlineMath math="D_f = \{x \mid x \geq 2, x \in \mathbb{R}\}" /> |
+
+### Menentukan Range
+
+Range fungsi akar adalah semua nilai output yang mungkin dihasilkan oleh fungsi tersebut.
+
+Untuk fungsi <InlineMath math="f(x) = \sqrt{x-2}" />, karena akar kuadrat selalu menghasilkan nilai non-negatif, maka:
+
+<BlockMath math="R_f = \{y \mid y \geq 0, y \in \mathbb{R}\}" />
+
+## Grafik Fungsi Akar Dasar
+
+Mari kita visualisasikan fungsi akar dasar <InlineMath math="f(x) = \sqrt{x}" />.
+
+<LineEquation
+  title={
+    <>
+      Fungsi Akar Dasar: <InlineMath math="f(x) = \sqrt{x}" />
+    </>
+  }
+  description="Grafik fungsi akar dasar dimulai dari titik (0,0) dan naik dengan kecepatan yang semakin lambat."
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i * 0.5;
+        return { x, y: Math.sqrt(x), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = √x", at: 5, offset: [0, 1, 0] }],
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[10, 6, 10]}
+/>
+
+## Transformasi Fungsi Akar
+
+Fungsi akar dapat mengalami berbagai transformasi yang mengubah bentuk dan posisi grafiknya.
+
+### Translasi Horizontal
+
+Fungsi <InlineMath math="f(x) = \sqrt{x-h}" /> menggeser grafik fungsi akar dasar sejauh <InlineMath math="h" /> satuan ke kanan (jika <InlineMath math="h > 0" />) atau ke kiri (jika <InlineMath math="h < 0" />).
+
+<LineEquation
+  title="Translasi Horizontal Fungsi Akar"
+  description={
+    <>
+      Perbandingan <InlineMath math="f(x) = \sqrt{x}" />,{" "}
+      <InlineMath math="g(x) = \sqrt{x-2}" />, dan{" "}
+      <InlineMath math="h(x) = \sqrt{x+2}" />.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i * 0.5;
+        return { x, y: Math.sqrt(x), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "√x", at: 5, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = 2 + i * 0.5;
+        return { x, y: Math.sqrt(x - 2), z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [{ text: "√(x-2)", at: 10, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = -2 + i * 0.5;
+        return { x, y: Math.sqrt(x + 2), z: 0 };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "√(x+2)", at: 10, offset: [0, 0.5, 0] }],
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[10, 6, 10]}
+/>
+
+### Translasi Vertikal
+
+Fungsi <InlineMath math="f(x) = \sqrt{x} + k" /> menggeser grafik fungsi akar dasar sejauh <InlineMath math="k" /> satuan ke atas (jika <InlineMath math="k > 0" />) atau ke bawah (jika <InlineMath math="k < 0" />).
+
+| Fungsi                                    | Transformasi            | Domain                         | Range                           |
+| ----------------------------------------- | ----------------------- | ------------------------------ | ------------------------------- |
+| <InlineMath math="f(x) = \sqrt{x}" />     | Fungsi dasar            | <InlineMath math="x \geq 0" /> | <InlineMath math="y \geq 0" />  |
+| <InlineMath math="f(x) = \sqrt{x} + 2" /> | Geser 2 satuan ke atas  | <InlineMath math="x \geq 0" /> | <InlineMath math="y \geq 2" />  |
+| <InlineMath math="f(x) = \sqrt{x} - 3" /> | Geser 3 satuan ke bawah | <InlineMath math="x \geq 0" /> | <InlineMath math="y \geq -3" /> |
+
+### Dilatasi
+
+Fungsi <InlineMath math="f(x) = a\sqrt{x}" /> dengan <InlineMath math="a > 0" /> menyebabkan dilatasi vertikal pada grafik fungsi akar.
+
+<LineEquation
+  title="Dilatasi Vertikal Fungsi Akar"
+  description={
+    <>
+      Perbandingan <InlineMath math="f(x) = \sqrt{x}" />,{" "}
+      <InlineMath math="g(x) = 2\sqrt{x}" />, dan{" "}
+      <InlineMath math="h(x) = \frac{1}{2}\sqrt{x}" />.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i * 0.5;
+        return { x, y: Math.sqrt(x), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "√x", at: 5, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i * 0.5;
+        return { x, y: 2 * Math.sqrt(x), z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      showPoints: false,
+      labels: [{ text: "2√x", at: 10, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i * 0.5;
+        return { x, y: 0.5 * Math.sqrt(x), z: 0 };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "½√x", at: 10, offset: [0, 0.5, 0] }],
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[10, 6, 10]}
+/>
+
+## Fungsi Akar Bentuk Umum
+
+Bentuk umum fungsi akar yang mengalami transformasi adalah:
+
+<BlockMath math="f(x) = a\sqrt{b(x-h)} + k" />
+
+Di mana:
+
+- <InlineMath math="a" /> menentukan dilatasi vertikal dan refleksi (jika <InlineMath math="a < 0" />
+  )
+- <InlineMath math="b" /> menentukan dilatasi horizontal
+- <InlineMath math="h" /> menentukan translasi horizontal
+- <InlineMath math="k" /> menentukan translasi vertikal
+
+**Langkah-langkah menggambar grafik:**
+
+| Langkah | Tindakan            | Contoh: <InlineMath math="f(x) = 2\sqrt{x-1} + 3" />                                           |
+| ------- | ------------------- | ---------------------------------------------------------------------------------------------- |
+| 1       | Tentukan titik awal | <InlineMath math="x-1 = 0 \Rightarrow x = 1" />, <InlineMath math="f(1) = 3" />, Titik: (1, 3) |
+| 2       | Tentukan domain     | <InlineMath math="x-1 \geq 0 \Rightarrow x \geq 1" />                                          |
+| 3       | Buat tabel nilai    | Pilih beberapa nilai <InlineMath math="x \geq 1" />                                            |
+| 4       | Hitung nilai fungsi | Untuk <InlineMath math="x = 2" />: <InlineMath math="f(2) = 2\sqrt{1} + 3 = 5" />              |
+| 5       | Plot titik-titik    | Plot (1,3), (2,5), (5,7), dst.                                                                 |
+| 6       | Hubungkan titik     | Buat kurva mulus melalui titik-titik                                                           |
+
+## Persamaan Fungsi Akar
+
+Untuk menyelesaikan persamaan yang melibatkan fungsi akar, ikuti langkah-langkah berikut:
+
+| Langkah | Penjelasan            | Contoh: <InlineMath math="\sqrt{2x+3} = 5" />          |
+| ------- | --------------------- | ------------------------------------------------------ |
+| 1       | Isolasi akar          | Sudah terisolasi                                       |
+| 2       | Kuadratkan kedua ruas | <InlineMath math="(\sqrt{2x+3})^2 = 5^2" />            |
+| 3       | Sederhanakan          | <InlineMath math="2x+3 = 25" />                        |
+| 4       | Selesaikan            | <InlineMath math="2x = 22 \Rightarrow x = 11" />       |
+| 5       | Verifikasi            | <InlineMath math="\sqrt{2(11)+3} = \sqrt{25} = 5" /> ✓ |
+
+## Pertidaksamaan Fungsi Akar
+
+Untuk menyelesaikan pertidaksamaan fungsi akar, perhatikan domain dan sifat fungsi akar.
+
+**Contoh:** Selesaikan <InlineMath math="\sqrt{x-1} < 3" />
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Syarat: } x-1 \geq 0 \Rightarrow x \geq 1" />
+  <BlockMath math="\sqrt{x-1} < 3" />
+  <BlockMath math="x-1 < 9" />
+  <BlockMath math="x < 10" />
+</div>
+
+Dengan menggabungkan syarat domain: <InlineMath math="1 \leq x < 10" />
+
+## Latihan Soal
+
+1. Tentukan domain dan range dari fungsi <InlineMath math="f(x) = \sqrt{3x-6}" />
+
+2. Gambarkan grafik fungsi <InlineMath math="g(x) = -\sqrt{x+4} + 2" />
+
+3. Selesaikan persamaan <InlineMath math="\sqrt{x+5} + \sqrt{x} = 5" />
+
+4. Sebuah roket diluncurkan vertikal. Ketinggiannya setelah <InlineMath math="t" /> detik diberikan oleh <InlineMath math="h(t) = 100\sqrt{t}" /> meter. Berapa ketinggian roket setelah 9 detik?
+
+5. Tentukan nilai <InlineMath math="x" /> yang memenuhi <InlineMath math="2\sqrt{x-3} \geq 6" />
+
+### Kunci Jawaban
+
+1. Domain: <InlineMath math="D_f = \{x \mid x \geq 2, x \in \mathbb{R}\}" />
+
+   Range: <InlineMath math="R_f = \{y \mid y \geq 0, y \in \mathbb{R}\}" />
+
+2. **Menggambar grafik** <InlineMath math="g(x) = -\sqrt{x+4} + 2" />
+
+   **Langkah-langkah menggambar:**
+
+   | Langkah | Penjelasan                | Detail untuk <InlineMath math="g(x) = -\sqrt{x+4} + 2" />                                                                                                             |
+   | ------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | 1       | Identifikasi transformasi | <InlineMath math="a = -1" /> (refleksi terhadap sumbu x), <InlineMath math="h = -4" /> (geser 4 satuan ke kiri), <InlineMath math="k = 2" /> (geser 2 satuan ke atas) |
+   | 2       | Tentukan titik awal       | <InlineMath math="x+4 = 0 \Rightarrow x = -4" />, <InlineMath math="g(-4) = 0 + 2 = 2" />, Titik awal: (-4, 2)                                                        |
+   | 3       | Tentukan domain           | <InlineMath math="x+4 \geq 0 \Rightarrow x \geq -4" />                                                                                                                |
+   | 4       | Tentukan range            | Karena <InlineMath math="a = -1 < 0" />, grafik turun dari titik awal, sehingga <InlineMath math="y \leq 2" />                                                        |
+   | 5       | Buat tabel nilai          | Pilih nilai <InlineMath math="x \geq -4" />                                                                                                                           |
+
+   **Tabel nilai:**
+
+   | <InlineMath math="x" /> | <InlineMath math="x+4" /> | <InlineMath math="\sqrt{x+4}" /> | <InlineMath math="-\sqrt{x+4}" /> | <InlineMath math="g(x) = -\sqrt{x+4} + 2" /> |
+   | ----------------------- | ------------------------- | -------------------------------- | --------------------------------- | -------------------------------------------- |
+   | -4                      | 0                         | 0                                | 0                                 | 2                                            |
+   | -3                      | 1                         | 1                                | -1                                | 1                                            |
+   | 0                       | 4                         | 2                                | -2                                | 0                                            |
+   | 5                       | 9                         | 3                                | -3                                | -1                                           |
+   | 12                      | 16                        | 4                                | -4                                | -2                                           |
+
+   <LineEquation
+     title={
+       <>
+         Grafik <InlineMath math="g(x) = -\sqrt{x+4} + 2" />
+       </>
+     }
+     description="Grafik fungsi akar yang mengalami refleksi terhadap sumbu x dan translasi."
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = -4 + i * 0.8;
+           const y = -Math.sqrt(x + 4) + 2;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         showPoints: false,
+         labels: [
+           { text: "g(x) = -√(x+4) + 2", at: 8, offset: [0, -1, 0] },
+           { text: "(-4, 2)", at: 0, offset: [0.5, 0.5, 0] },
+         ],
+       },
+     ]}
+     showZAxis={false}
+     cameraPosition={[10, 6, 10]}
+   />
+
+3. <InlineMath math="x = 4" /> (Misalkan <InlineMath math="u = \sqrt{x}" /> dan <InlineMath math="v = \sqrt{x+5}" />
+   )
+
+4. <InlineMath math="h(9) = 100\sqrt{9} = 100 \times 3 = 300" /> meter
+
+5. <InlineMath math="x \geq 12" /> (dari <InlineMath math="\sqrt{x-3} \geq 3" /> dan
+   syarat <InlineMath math="x \geq 3" />)
