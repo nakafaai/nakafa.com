@@ -66,7 +66,7 @@ const idMaterials: MaterialList = [
       },
       {
         title: "Busur Lingkaran",
-        href: `${BASE_PATH}/circle-arc-sector/arc`,
+        href: `${BASE_PATH}/circle-arc-sector/circle-arc`,
       },
       {
         title: "Juring",
@@ -78,7 +78,7 @@ const idMaterials: MaterialList = [
       },
       {
         title: "Juring Lingkaran",
-        href: `${BASE_PATH}/circle-arc-sector/sector`,
+        href: `${BASE_PATH}/circle-arc-sector/circle-sector`,
       },
       {
         title: "Hubungan Panjang Busur dan Luas Juring",
