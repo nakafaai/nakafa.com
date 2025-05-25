@@ -1,6 +1,1067 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "External Tangent Line and Internal Tangent Line",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Circle",
 };
+
+## Definition of Common Tangent Lines
+
+A common tangent line is a line that touches two circles simultaneously. There are two types of common tangent lines:
+
+1. **External Common Tangent Line**: A line that touches both circles from the same side
+2. **Internal Common Tangent Line**: A line that touches both circles from opposite sides
+
+## Concept of External Common Tangent Line
+
+An external common tangent line is a line that touches both circles and does not intersect the line connecting the two circle centers.
+
+<LineEquation
+  title="External Common Tangent Line"
+  description="Two external common tangent lines on two circles."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: -4 + 2 * Math.cos(angle),
+          y: 2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 + 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "B", at: 1, offset: [0.5, -0.5, 0] },
+      ],
+    },
+        {
+      points: (() => {
+        const O1 = { x: -4, y: 0 };
+        const O2 = { x: 4, y: 0 };
+        const r1 = 2;
+        const r2 = 3;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        // Calculate the angle for external tangent
+        const sin_alpha = (r2 - r1) / d;
+        const cos_alpha = Math.sqrt(1 - sin_alpha * sin_alpha);
+
+        // Direction from O1 to O2
+        const dx = O2.x - O1.x;
+        const dy = O2.y - O1.y;
+
+        // Normalize direction
+        const ux = dx / d;
+        const uy = dy / d;
+
+        // Perpendicular direction (rotated 90 degrees)
+        const vx = -uy;
+        const vy = ux;
+
+        // First tangent line (upper)
+        // Tangent point on first circle
+        const T1x = O1.x + r1 * (sin_alpha * ux + cos_alpha * vx);
+        const T1y = O1.y + r1 * (sin_alpha * uy + cos_alpha * vy);
+
+        // Tangent point on second circle
+        const T2x = O2.x + r2 * (sin_alpha * ux + cos_alpha * vx);
+        const T2y = O2.y + r2 * (sin_alpha * uy + cos_alpha * vy);
+
+        // Extend the line
+        const tdx = T2x - T1x;
+        const tdy = T2y - T1y;
+        const tlen = Math.sqrt(tdx * tdx + tdy * tdy);
+        const tux = tdx / tlen;
+        const tuy = tdy / tlen;
+
+        return [
+          { x: T1x - 4 * tux, y: T1y - 4 * tuy, z: 0 },
+          { x: T2x + 4 * tux, y: T2y + 4 * tuy, z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "g₁", at: 1, offset: [0, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -4, y: 0 };
+        const O2 = { x: 4, y: 0 };
+        const r1 = 2;
+        const r2 = 3;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        // Calculate the angle for external tangent
+        const sin_alpha = (r2 - r1) / d;
+        const cos_alpha = Math.sqrt(1 - sin_alpha * sin_alpha);
+
+        // Direction from O1 to O2
+        const dx = O2.x - O1.x;
+        const dy = O2.y - O1.y;
+
+        // Normalize direction
+        const ux = dx / d;
+        const uy = dy / d;
+
+        // Perpendicular direction (rotated 90 degrees)
+        const vx = -uy;
+        const vy = ux;
+
+        // Second tangent line (lower)
+        // Tangent point on first circle
+        const T1x = O1.x + r1 * (sin_alpha * ux - cos_alpha * vx);
+        const T1y = O1.y + r1 * (sin_alpha * uy - cos_alpha * vy);
+
+        // Tangent point on second circle
+        const T2x = O2.x + r2 * (sin_alpha * ux - cos_alpha * vx);
+        const T2y = O2.y + r2 * (sin_alpha * uy - cos_alpha * vy);
+
+        // Extend the line
+        const tdx = T2x - T1x;
+        const tdy = T2y - T1y;
+        const tlen = Math.sqrt(tdx * tdx + tdy * tdy);
+        const tux = tdx / tlen;
+        const tuy = tdy / tlen;
+
+        return [
+          { x: T1x - 4 * tux, y: T1y - 4 * tuy, z: 0 },
+          { x: T2x + 4 * tux, y: T2y + 4 * tuy, z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: false,
+      labels: [{ text: "g₂", at: 1, offset: [0, -0.5, 0] }],
+    },
+
+]}
+cameraPosition={[0, 0, 15]}
+showZAxis={false}
+/>
+
+### Formula for External Common Tangent Line Length
+
+For two circles with:
+
+- First circle center: <InlineMath math="O_1" />
+- Second circle center: <InlineMath math="O_2" />
+- First circle radius: <InlineMath math="r_1" />
+- Second circle radius: <InlineMath math="r_2" />
+- Distance between centers: <InlineMath math="d" />
+
+Length of external common tangent line:
+
+<BlockMath math="l = \sqrt{d^2 - (r_2 - r_1)^2}" />
+
+### Finding the Length of External Common Tangent Line
+
+Two circles are centered at <InlineMath math="A(-3, 0)" /> with radius 1.5 and <InlineMath math="B(3, 0)" /> with radius 2.5. Find the length of the external common tangent line!
+
+<LineEquation
+  title={
+    <>
+      Circles with <InlineMath math="r_1 = 1.5" /> and{" "}
+      <InlineMath math="r_2 = 2.5" />
+    </>
+  }
+  description="Visualization of external common tangent line."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: -3 + 1.5 * Math.cos(angle),
+          y: 1.5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 + 2.5 * Math.cos(angle),
+          y: 2.5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "B", at: 1, offset: [0.5, -0.5, 0] },
+      ],
+    },
+        {
+      points: (() => {
+        const O1 = { x: -3, y: 0 };
+        const O2 = { x: 3, y: 0 };
+        const r1 = 1.5;
+        const r2 = 2.5;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        // Calculate the angle for external tangent
+        const sin_alpha = (r2 - r1) / d;
+        const cos_alpha = Math.sqrt(1 - sin_alpha * sin_alpha);
+
+        // Direction from O1 to O2
+        const dx = O2.x - O1.x;
+        const dy = O2.y - O1.y;
+
+        // Normalize direction
+        const ux = dx / d;
+        const uy = dy / d;
+
+        // Perpendicular direction (rotated 90 degrees)
+        const vx = -uy;
+        const vy = ux;
+
+        // First tangent line (upper)
+        // Tangent point on first circle
+        const T1x = O1.x + r1 * (sin_alpha * ux + cos_alpha * vx);
+        const T1y = O1.y + r1 * (sin_alpha * uy + cos_alpha * vy);
+
+        // Tangent point on second circle
+        const T2x = O2.x + r2 * (sin_alpha * ux + cos_alpha * vx);
+        const T2y = O2.y + r2 * (sin_alpha * uy + cos_alpha * vy);
+
+        return [
+          // hard code little bit to make it look better
+          { x: T1x - 0.25, y: T1y, z: 0 },
+          { x: T2x - 0.45, y: T2y, z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "P", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "Q", at: 1, offset: [0.5, 0.5, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -3, y: 0 };
+        const O2 = { x: 3, y: 0 };
+        const r1 = 1.5;
+        const r2 = 2.5;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        // Calculate the angle for external tangent
+        const sin_alpha = (r2 - r1) / d;
+        const cos_alpha = Math.sqrt(1 - sin_alpha * sin_alpha);
+
+        // Direction from O1 to O2
+        const dx = O2.x - O1.x;
+        const dy = O2.y - O1.y;
+
+        // Normalize direction
+        const ux = dx / d;
+        const uy = dy / d;
+
+        // Perpendicular direction (rotated 90 degrees)
+        const vx = -uy;
+        const vy = ux;
+
+        // Second tangent line (lower)
+        // Tangent point on first circle
+        const T1x = O1.x + r1 * (sin_alpha * ux - cos_alpha * vx);
+        const T1y = O1.y + r1 * (sin_alpha * uy - cos_alpha * vy);
+
+        // Tangent point on second circle
+        const T2x = O2.x + r2 * (sin_alpha * ux - cos_alpha * vx);
+        const T2y = O2.y + r2 * (sin_alpha * uy - cos_alpha * vy);
+
+        return [
+          // hard code little bit to make it look better
+          { x: T1x - 0.25, y: T1y, z: 0 },
+          { x: T2x - 0.45, y: T2y, z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: "R", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "S", at: 1, offset: [0.5, -0.5, 0] },
+      ],
+    },
+
+]}
+cameraPosition={[0, 0, 12]}
+showZAxis={false}
+/>
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="d = \sqrt{(3-(-3))^2 + (0-0)^2} = \sqrt{36} = 6" />
+  <BlockMath math="l = \sqrt{d^2 - (r_2 - r_1)^2}" />
+  <BlockMath math="l = \sqrt{6^2 - (2.5 - 1.5)^2}" />
+  <BlockMath math="l = \sqrt{36 - 1}" />
+  <BlockMath math="l = \sqrt{35}" />
+</div>
+
+Therefore, the length of the external common tangent line is <InlineMath math="\sqrt{35}" /> units.
+
+## Concept of Internal Common Tangent Line
+
+An internal common tangent line is a line that touches both circles from opposite sides and intersects the line connecting the two circle centers.
+
+<LineEquation
+  title="Internal Common Tangent Line"
+  description="Two internal common tangent lines on two circles."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: -4 + 2 * Math.cos(angle),
+          y: 2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 + 2 * Math.cos(angle),
+          y: 2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "B", at: 1, offset: [0.5, -0.5, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -4, y: 0 };
+        const O2 = { x: 4, y: 0 };
+        const r1 = 2;
+        const r2 = 2;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        const alpha = Math.asin((r1 + r2) / d);
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+
+        const T1x = O1.x + r1 * Math.cos(theta + Math.PI / 2 - alpha);
+        const T1y = O1.y + r1 * Math.sin(theta + Math.PI / 2 - alpha);
+
+        const T2x = O2.x + r2 * Math.cos(theta + Math.PI / 2 - alpha + Math.PI);
+        const T2y = O2.y + r2 * Math.sin(theta + Math.PI / 2 - alpha + Math.PI);
+
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+
+        return [
+          { x: T1x - 3 * ux, y: T1y - 3 * uy, z: 0 },
+          { x: T2x + 3 * ux, y: T2y + 3 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "h₁", at: 0, offset: [-1, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -4, y: 0 };
+        const O2 = { x: 4, y: 0 };
+        const r1 = 2;
+        const r2 = 2;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        const alpha = Math.asin((r1 + r2) / d);
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+
+        const T1x = O1.x + r1 * Math.cos(theta - Math.PI / 2 + alpha);
+        const T1y = O1.y + r1 * Math.sin(theta - Math.PI / 2 + alpha);
+
+        const T2x = O2.x + r2 * Math.cos(theta - Math.PI / 2 + alpha + Math.PI);
+        const T2y = O2.y + r2 * Math.sin(theta - Math.PI / 2 + alpha + Math.PI);
+
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+
+        return [
+          { x: T1x - 3 * ux, y: T1y - 3 * uy, z: 0 },
+          { x: T2x + 3 * ux, y: T2y + 3 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "h₂", at: 0, offset: [-1, -0.5, 0] }],
+    },
+
+]}
+cameraPosition={[0, 0, 15]}
+showZAxis={false}
+/>
+
+### Formula for Internal Common Tangent Line Length
+
+Length of internal common tangent line:
+
+<BlockMath math="l = \sqrt{d^2 - (r_1 + r_2)^2}" />
+
+**Condition:** Internal common tangent lines exist only if <InlineMath math="d > r_1 + r_2" /> (the two circles do not intersect).
+
+### Finding the Length of Internal Common Tangent Line
+
+Two circles are centered at <InlineMath math="P(-5, 0)" /> with radius 2 and <InlineMath math="Q(5, 0)" /> with radius 3. Find the length of the internal common tangent line!
+
+<LineEquation
+  title={
+    <>
+      Circles with <InlineMath math="r_1 = 2" /> and{" "}
+      <InlineMath math="r_2 = 3" />
+    </>
+  }
+  description="Visualization of internal common tangent line."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: -5 + 2 * Math.cos(angle),
+          y: 2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 5 + 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+        { x: 5, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "P", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "Q", at: 1, offset: [0.5, -0.5, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -5, y: 0 };
+        const O2 = { x: 5, y: 0 };
+        const r1 = 2;
+        const r2 = 3;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        const alpha = Math.asin((r1 + r2) / d);
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+
+        const T1x = O1.x + r1 * Math.cos(theta + Math.PI / 2 - alpha);
+        const T1y = O1.y + r1 * Math.sin(theta + Math.PI / 2 - alpha);
+
+        const T2x = O2.x + r2 * Math.cos(theta + Math.PI / 2 - alpha + Math.PI);
+        const T2y = O2.y + r2 * Math.sin(theta + Math.PI / 2 - alpha + Math.PI);
+
+        return [
+          { x: T1x, y: T1y, z: 0 },
+          { x: T2x, y: T2y, z: 0 },
+        ];
+      })(),
+      color: getColor("PINK"),
+      showPoints: true,
+      labels: [
+        { text: "E", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "F", at: 1, offset: [0.5, -0.5, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -5, y: 0 };
+        const O2 = { x: 5, y: 0 };
+        const r1 = 2;
+        const r2 = 3;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        const alpha = Math.asin((r1 + r2) / d);
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+
+        const T1x = O1.x + r1 * Math.cos(theta - Math.PI / 2 + alpha);
+        const T1y = O1.y + r1 * Math.sin(theta - Math.PI / 2 + alpha);
+
+        const T2x = O2.x + r2 * Math.cos(theta - Math.PI / 2 + alpha + Math.PI);
+        const T2y = O2.y + r2 * Math.sin(theta - Math.PI / 2 + alpha + Math.PI);
+
+        return [
+          { x: T1x, y: T1y, z: 0 },
+          { x: T2x, y: T2y, z: 0 },
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [
+        { text: "G", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "H", at: 1, offset: [0.5, 0.5, 0] },
+      ],
+    },
+
+]}
+cameraPosition={[0, 0, 18]}
+showZAxis={false}
+/>
+
+**Solution:**
+
+First, check if internal common tangent lines exist:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="d = \sqrt{(5-(-5))^2 + (0-0)^2} = \sqrt{100} = 10" />
+  <BlockMath math="r_1 + r_2 = 2 + 3 = 5" />
+  <BlockMath math="d = 10 > 5 = r_1 + r_2 \space \checkmark" />
+</div>
+
+Since the condition is satisfied, then:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="l = \sqrt{d^2 - (r_1 + r_2)^2}" />
+  <BlockMath math="l = \sqrt{10^2 - 5^2}" />
+  <BlockMath math="l = \sqrt{100 - 25}" />
+  <BlockMath math="l = \sqrt{75}" />
+  <BlockMath math="l = 5\sqrt{3}" />
+</div>
+
+Therefore, the length of the internal common tangent line is <InlineMath math="5\sqrt{3}" /> units.
+
+## Circles with Equal Radii
+
+When two circles have equal radii (<InlineMath math="r_1 = r_2 = r" />), there are special properties:
+
+### External Common Tangent Line
+
+<LineEquation
+  title="External Common Tangent Line for Equal Radii"
+  description="External common tangent lines are parallel to the line of centers."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: -3 + 2 * Math.cos(angle),
+          y: 2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 + 2 * Math.cos(angle),
+          y: 2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O₁", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "O₂", at: 1, offset: [0.5, -0.5, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 2, z: 0 },
+        { x: 3, y: 2, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: -3, y: -2, z: 0 },
+        { x: 3, y: -2, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+For <InlineMath math="r_1 = r_2" />:
+
+- External common tangent lines are **parallel** to the line connecting the two centers
+- Length of external common tangent line = <InlineMath math="d" /> (distance between centers)
+
+## Cases of Various Circle Positions
+
+Determine the length of external and internal common tangent lines for the following circles:
+
+### Distant Circles
+
+The first circle is centered at <InlineMath math="(-6, 0)" /> with radius 1, the second circle is centered at <InlineMath math="(6, 0)" /> with radius 2.
+
+<LineEquation
+  title="Case: Distant Circles"
+  description="Both types of common tangent lines exist."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: -6 + 1 * Math.cos(angle),
+          y: 1 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 6 + 2 * Math.cos(angle),
+          y: 2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+        {
+      points: (() => {
+        const O1 = { x: -6, y: 0 };
+        const O2 = { x: 6, y: 0 };
+        const r1 = 1;
+        const r2 = 2;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        // Calculate the angle for external tangent
+        const sin_alpha = (r2 - r1) / d;
+        const cos_alpha = Math.sqrt(1 - sin_alpha * sin_alpha);
+
+        // Direction from O1 to O2
+        const dx = O2.x - O1.x;
+        const dy = O2.y - O1.y;
+
+        // Normalize direction
+        const ux = dx / d;
+        const uy = dy / d;
+
+        // Perpendicular direction (rotated 90 degrees)
+        const vx = -uy;
+        const vy = ux;
+
+        // First tangent line (upper)
+        // Tangent point on first circle
+        const T1x = O1.x + r1 * (sin_alpha * ux + cos_alpha * vx);
+        const T1y = O1.y + r1 * (sin_alpha * uy + cos_alpha * vy);
+
+        // Tangent point on second circle
+        const T2x = O2.x + r2 * (sin_alpha * ux + cos_alpha * vx);
+        const T2y = O2.y + r2 * (sin_alpha * uy + cos_alpha * vy);
+
+        const tdx = T2x - T1x;
+        const tdy = T2y - T1y;
+        const tlen = Math.sqrt(tdx * tdx + tdy * tdy);
+        const tux = tdx / tlen;
+        const tuy = tdy / tlen;
+
+        return [
+          { x: T1x - 2 * tux, y: T1y - 2 * tuy, z: 0 },
+          { x: T2x + 2 * tux, y: T2y + 2 * tuy, z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const O1 = { x: -6, y: 0 };
+        const O2 = { x: 6, y: 0 };
+        const r1 = 1;
+        const r2 = 2;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        // Calculate the angle for external tangent
+        const sin_alpha = (r2 - r1) / d;
+        const cos_alpha = Math.sqrt(1 - sin_alpha * sin_alpha);
+
+        // Direction from O1 to O2
+        const dx = O2.x - O1.x;
+        const dy = O2.y - O1.y;
+
+        // Normalize direction
+        const ux = dx / d;
+        const uy = dy / d;
+
+        // Perpendicular direction (rotated 90 degrees)
+        const vx = -uy;
+        const vy = ux;
+
+        // Second tangent line (lower)
+        // Tangent point on first circle
+        const T1x = O1.x + r1 * (sin_alpha * ux - cos_alpha * vx);
+        const T1y = O1.y + r1 * (sin_alpha * uy - cos_alpha * vy);
+
+        // Tangent point on second circle
+        const T2x = O2.x + r2 * (sin_alpha * ux - cos_alpha * vx);
+        const T2y = O2.y + r2 * (sin_alpha * uy - cos_alpha * vy);
+
+        const tdx = T2x - T1x;
+        const tdy = T2y - T1y;
+        const tlen = Math.sqrt(tdx * tdx + tdy * tdy);
+        const tux = tdx / tlen;
+        const tuy = tdy / tlen;
+
+        return [
+          { x: T1x - 2 * tux, y: T1y - 2 * tuy, z: 0 },
+          { x: T2x + 2 * tux, y: T2y + 2 * tuy, z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const O1 = { x: -6, y: 0 };
+        const O2 = { x: 6, y: 0 };
+        const r1 = 1;
+        const r2 = 2;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        const alpha = Math.asin((r1 + r2) / d);
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+
+        const T1x = O1.x + r1 * Math.cos(theta + Math.PI / 2 - alpha);
+        const T1y = O1.y + r1 * Math.sin(theta + Math.PI / 2 - alpha);
+
+        const T2x = O2.x + r2 * Math.cos(theta + Math.PI / 2 - alpha + Math.PI);
+        const T2y = O2.y + r2 * Math.sin(theta + Math.PI / 2 - alpha + Math.PI);
+
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+
+        return [
+          { x: T1x - 1 * ux, y: T1y - 1 * uy, z: 0 },
+          { x: T2x + 1 * ux, y: T2y + 1 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("PINK"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const O1 = { x: -6, y: 0 };
+        const O2 = { x: 6, y: 0 };
+        const r1 = 1;
+        const r2 = 2;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        const alpha = Math.asin((r1 + r2) / d);
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+
+        const T1x = O1.x + r1 * Math.cos(theta - Math.PI / 2 + alpha);
+        const T1y = O1.y + r1 * Math.sin(theta - Math.PI / 2 + alpha);
+
+        const T2x = O2.x + r2 * Math.cos(theta - Math.PI / 2 + alpha + Math.PI);
+        const T2y = O2.y + r2 * Math.sin(theta - Math.PI / 2 + alpha + Math.PI);
+
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+
+        return [
+          { x: T1x - 1 * ux, y: T1y - 1 * uy, z: 0 },
+          { x: T2x + 1 * ux, y: T2y + 1 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+    },
+
+]}
+cameraPosition={[0, 0, 18]}
+showZAxis={false}
+/>
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="d = \sqrt{(6-(-6))^2 + (0-0)^2} = 12" />
+  <BlockMath math="l_{external} = \sqrt{12^2 - (2-1)^2} = \sqrt{144 - 1} = \sqrt{143}" />
+  <BlockMath math="l_{internal} = \sqrt{12^2 - (1+2)^2} = \sqrt{144 - 9} = \sqrt{135} = 3\sqrt{15}" />
+</div>
+
+### Close Circles
+
+The first circle is centered at <InlineMath math="(-2, 0)" /> with radius 1.5, the second circle is centered at <InlineMath math="(2, 0)" /> with radius 1.5.
+
+<LineEquation
+  title="Case: Close Circles with Equal Radii"
+  description="External common tangent lines are parallel, internal ones intersect at the center."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: -2 + 1.5 * Math.cos(angle),
+          y: 1.5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 2 + 1.5 * Math.cos(angle),
+          y: 1.5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -5, y: 1.5, z: 0 },
+        { x: 5, y: 1.5, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: -5, y: -1.5, z: 0 },
+        { x: 5, y: -1.5, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: (() => {
+        const O1 = { x: -2, y: 0 };
+        const O2 = { x: 2, y: 0 };
+        const r1 = 1.5;
+        const r2 = 1.5;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        const alpha = Math.asin((r1 + r2) / d);
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+
+        const T1x = O1.x + r1 * Math.cos(theta + Math.PI / 2 - alpha);
+        const T1y = O1.y + r1 * Math.sin(theta + Math.PI / 2 - alpha);
+
+        const T2x = O2.x + r2 * Math.cos(theta + Math.PI / 2 - alpha + Math.PI);
+        const T2y = O2.y + r2 * Math.sin(theta + Math.PI / 2 - alpha + Math.PI);
+
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+
+        return [
+          { x: T1x - 2 * ux, y: T1y - 2 * uy, z: 0 },
+          { x: T2x + 2 * ux, y: T2y + 2 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("PINK"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const O1 = { x: -2, y: 0 };
+        const O2 = { x: 2, y: 0 };
+        const r1 = 1.5;
+        const r2 = 1.5;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+
+        const alpha = Math.asin((r1 + r2) / d);
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+
+        const T1x = O1.x + r1 * Math.cos(theta - Math.PI / 2 + alpha);
+        const T1y = O1.y + r1 * Math.sin(theta - Math.PI / 2 + alpha);
+
+        const T2x = O2.x + r2 * Math.cos(theta - Math.PI / 2 + alpha + Math.PI);
+        const T2y = O2.y + r2 * Math.sin(theta - Math.PI / 2 + alpha + Math.PI);
+
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+
+        return [
+          { x: T1x - 2 * ux, y: T1y - 2 * uy, z: 0 },
+          { x: T2x + 2 * ux, y: T2y + 2 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+    },
+
+]}
+cameraPosition={[0, 0, 10]}
+showZAxis={false}
+/>
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="d = \sqrt{(2-(-2))^2 + (0-0)^2} = 4" />
+  <BlockMath math="r_1 = r_2 = 1.5" />
+  <BlockMath math="l_{external} = d = 4" />
+  <BlockMath math="l_{internal} = \sqrt{4^2 - (1.5+1.5)^2} = \sqrt{16 - 9} = \sqrt{7}" />
+</div>
+
+## Practice Problems
+
+1. Two circles are centered at <InlineMath math="A(-4, 0)" /> with radius 2 and <InlineMath math="B(4, 0)" /> with radius 3. Determine:
+
+   - Length of external common tangent line
+   - Length of internal common tangent line
+
+2. The first circle has center <InlineMath math="(0, 0)" /> with radius 4, the second circle has center <InlineMath math="(10, 0)" /> with radius 2. Calculate the length of both types of common tangent lines!
+
+3. Two identical circles each have radius 3 cm. If the length of the internal common tangent line is 8 cm, determine the distance between the two circle centers!
+
+4. Circle <InlineMath math="A" /> is centered at <InlineMath math="(-5, 0)" /> with radius <InlineMath math="r" />, and circle <InlineMath math="B" /> is centered at <InlineMath math="(7, 0)" /> with radius <InlineMath math="2r" />. If the length of the external common tangent line is <InlineMath math="4\sqrt{8}" />, determine the value of <InlineMath math="r" />!
+
+5. Determine the conditions for two circles to have:
+   - Exactly two common tangent lines
+   - Exactly three common tangent lines
+   - Exactly four common tangent lines
+
+### Answer Key
+
+1. **Calculating common tangent line lengths**
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="d = \sqrt{(4-(-4))^2 + (0-0)^2} = 8" />
+     <BlockMath math="l_{external} = \sqrt{8^2 - (3-2)^2} = \sqrt{64 - 1} = \sqrt{63} = 3\sqrt{7}" />
+     <BlockMath math="l_{internal} = \sqrt{8^2 - (2+3)^2} = \sqrt{64 - 25} = \sqrt{39}" />
+   </div>
+
+2. **Circles with different centers**
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="d = \sqrt{(10-0)^2 + (0-0)^2} = 10" />
+     <BlockMath math="l_{external} = \sqrt{10^2 - (4-2)^2} = \sqrt{100 - 4} = \sqrt{96} = 4\sqrt{6}" />
+     <BlockMath math="l_{internal} = \sqrt{10^2 - (4+2)^2} = \sqrt{100 - 36} = \sqrt{64} = 8" />
+   </div>
+
+3. **Finding center distance from internal tangent length**
+
+   Given: <InlineMath math="r_1 = r_2 = 3" />, <InlineMath math="l_{internal} = 8" />
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="l = \sqrt{d^2 - (r_1 + r_2)^2}" />
+     <BlockMath math="8 = \sqrt{d^2 - 6^2}" />
+     <BlockMath math="64 = d^2 - 36" />
+     <BlockMath math="d^2 = 100" />
+     <BlockMath math="d = 10 \text{ cm}" />
+   </div>
+
+4. **Finding the value of r**
+
+   Given: <InlineMath math="d = 12" />, <InlineMath math="r_1 = r" />, <InlineMath math="r_2 = 2r" />, <InlineMath math="l_{external} = 4\sqrt{8}" />
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="4\sqrt{8} = \sqrt{12^2 - (2r - r)^2}" />
+     <BlockMath math="16 \cdot 8 = 144 - r^2" />
+     <BlockMath math="128 = 144 - r^2" />
+     <BlockMath math="r^2 = 16" />
+     <BlockMath math="r = 4" />
+   </div>
+
+5. **Conditions for number of common tangent lines**
+
+   - **Exactly 2 tangent lines**: The two circles intersect at two points
+   - **Exactly 3 tangent lines**: The two circles are tangent (internally or externally)
+   - **Exactly 4 tangent lines**: The two circles are separate (do not intersect)
