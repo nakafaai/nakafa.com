@@ -1,6 +1,819 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Lingkaran dan Tali Busur",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Lingkaran",
 };
+
+## Pengertian Tali Busur
+
+Tali busur adalah ruas garis yang menghubungkan dua titik pada lingkaran. Berbeda dengan diameter yang melewati pusat lingkaran, tali busur dapat berada di posisi mana saja asalkan kedua ujungnya terletak pada lingkaran.
+
+<LineEquation
+  title="Tali Busur pada Lingkaran"
+  description="Berbagai tali busur dengan panjang berbeda pada sebuah lingkaran."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.3, -0.3, 0] }],
+    },
+    {
+      points: (() => {
+        const angle1 = Math.PI / 6;
+        const angle2 = Math.PI / 3;
+        return [
+          { x: 3 * Math.cos(angle1), y: 3 * Math.sin(angle1), z: 0 },
+          { x: 3 * Math.cos(angle2), y: 3 * Math.sin(angle2), z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.3, 0.3, 0] },
+        { text: "B", at: 1, offset: [0.3, 0.3, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const angle1 = (2 * Math.PI) / 3;
+        const angle2 = (5 * Math.PI) / 6;
+        return [
+          { x: 3 * Math.cos(angle1), y: 3 * Math.sin(angle1), z: 0 },
+          { x: 3 * Math.cos(angle2), y: 3 * Math.sin(angle2), z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: "C", at: 0, offset: [-0.3, 0.3, 0] },
+        { text: "D", at: 1, offset: [-0.3, 0.3, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const angle1 = (7 * Math.PI) / 6;
+        const angle2 = (3 * Math.PI) / 2;
+        return [
+          { x: 3 * Math.cos(angle1), y: 3 * Math.sin(angle1), z: 0 },
+          { x: 3 * Math.cos(angle2), y: 3 * Math.sin(angle2), z: 0 },
+        ];
+      })(),
+      color: getColor("PINK"),
+      showPoints: true,
+      labels: [
+        { text: "E", at: 0, offset: [-0.3, -0.3, 0] },
+        { text: "F", at: 1, offset: [0, -0.5, 0] },
+      ],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+Pada gambar di atas, <InlineMath math="AB" />, <InlineMath math="CD" />, dan <InlineMath math="EF" /> adalah tali busur dengan panjang yang berbeda-beda.
+
+## Sifat-Sifat Tali Busur
+
+### Tali Busur Sama Panjang
+
+Dua tali busur yang sama panjang memiliki jarak yang sama dari pusat lingkaran.
+
+<LineEquation
+  title="Tali Busur Sama Panjang"
+  description="Dua tali busur dengan panjang sama memiliki jarak sama dari pusat."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.3, -0.3, 0] }],
+    },
+    {
+      points: (() => {
+        const y = 2;
+        const x = Math.sqrt(16 - y * y);
+        return [
+          { x: -x, y: y, z: 0 },
+          { x: x, y: y, z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "P", at: 0, offset: [-0.3, 0.3, 0] },
+        { text: "Q", at: 1, offset: [0.3, 0.3, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const y = -2;
+        const x = Math.sqrt(16 - y * y);
+        return [
+          { x: -x, y: y, z: 0 },
+          { x: x, y: y, z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: "R", at: 0, offset: [-0.3, -0.3, 0] },
+        { text: "S", at: 1, offset: [0.3, -0.3, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 2, z: 0 },
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "d₁", at: 1, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: -2, z: 0 },
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "d₂", at: 1, offset: [0.5, 0, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Jika <InlineMath math="PQ = RS" />, maka jarak dari pusat <InlineMath math="O" /> ke tali busur <InlineMath math="PQ" /> sama dengan jarak dari <InlineMath math="O" /> ke tali busur <InlineMath math="RS" />, yaitu <InlineMath math="d_1 = d_2" />.
+
+### Garis dari Pusat Tegak Lurus Tali Busur
+
+Garis yang ditarik dari pusat lingkaran tegak lurus terhadap tali busur akan membagi tali busur tersebut menjadi dua bagian yang sama panjang.
+
+<LineEquation
+  title="Garis Tegak Lurus dari Pusat"
+  description="Garis dari pusat yang tegak lurus tali busur membaginya sama panjang."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 5 * Math.cos(angle),
+          y: 5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.3, -0.3, 0] }],
+    },
+    {
+      points: (() => {
+        const angle1 = Math.PI / 4;
+        const angle2 = (3 * Math.PI) / 4;
+        return [
+          { x: 5 * Math.cos(angle1), y: 5 * Math.sin(angle1), z: 0 },
+          { x: 5 * Math.cos(angle2), y: 5 * Math.sin(angle2), z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.3, 0.3, 0] },
+        { text: "B", at: 1, offset: [-0.3, 0.3, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const midAngle = (Math.PI / 4 + (3 * Math.PI) / 4) / 2;
+        const midX = 5 * Math.cos(midAngle);
+        const midY = 5 * Math.sin(midAngle);
+        const chordMidX =
+          (5 * Math.cos(Math.PI / 4) + 5 * Math.cos((3 * Math.PI) / 4)) / 2;
+        const chordMidY =
+          (5 * Math.sin(Math.PI / 4) + 5 * Math.sin((3 * Math.PI) / 4)) / 2;
+        return [
+          { x: 0, y: 0, z: 0 },
+          { x: chordMidX, y: chordMidY, z: 0 },
+        ];
+      })(),
+      color: getColor("PINK"),
+      showPoints: true,
+      smooth: false,
+      labels: [{ text: "M", at: 1, offset: [0, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const chordMidX =
+          (5 * Math.cos(Math.PI / 4) + 5 * Math.cos((3 * Math.PI) / 4)) / 2;
+        const chordMidY =
+          (5 * Math.sin(Math.PI / 4) + 5 * Math.sin((3 * Math.PI) / 4)) / 2;
+        const perpX = chordMidX + 0.5;
+        const perpY = chordMidY;
+        return [
+          { x: chordMidX - 0.3, y: chordMidY, z: 0 },
+          { x: chordMidX - 0.3, y: chordMidY + 0.3, z: 0 },
+          { x: chordMidX, y: chordMidY + 0.3, z: 0 },
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+Pada gambar di atas, <InlineMath math="OM \perp AB" /> dan <InlineMath math="M" /> adalah titik tengah tali busur <InlineMath math="AB" />, sehingga <InlineMath math="AM = MB" />.
+
+## Panjang Tali Busur
+
+### Rumus Panjang Tali Busur
+
+Untuk menghitung panjang tali busur, kita dapat menggunakan rumus:
+
+<BlockMath math="AB = 2r \sin\left(\frac{\theta}{2}\right)" />
+
+Di mana:
+
+- <InlineMath math="r" /> = jari-jari lingkaran
+- <InlineMath math="\theta" /> = sudut pusat yang menghadap tali busur (dalam radian)
+
+Hubungan antara sudut pusat dan panjang tali busur dapat kita visualisasikan sebagai berikut:
+
+<LineEquation
+  title="Sudut Pusat dan Tali Busur"
+  description="Hubungan antara sudut pusat dan panjang tali busur."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.3, -0.3, 0] }],
+    },
+    {
+      points: (() => {
+        const angle1 = Math.PI / 6;
+        const angle2 = (2 * Math.PI) / 3;
+        return [
+          { x: 4 * Math.cos(angle1), y: 4 * Math.sin(angle1), z: 0 },
+          { x: 4 * Math.cos(angle2), y: 4 * Math.sin(angle2), z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "P", at: 0, offset: [0.3, 0.3, 0] },
+        { text: "Q", at: 1, offset: [-0.3, 0.3, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const angle1 = Math.PI / 6;
+        return [
+          { x: 0, y: 0, z: 0 },
+          { x: 4 * Math.cos(angle1), y: 4 * Math.sin(angle1), z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: (() => {
+        const angle2 = (2 * Math.PI) / 3;
+        return [
+          { x: 0, y: 0, z: 0 },
+          { x: 4 * Math.cos(angle2), y: 4 * Math.sin(angle2), z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: (() => {
+        const startAngle = Math.PI / 6;
+        const endAngle = (2 * Math.PI) / 3;
+        const numPoints = 20;
+        return Array.from({ length: numPoints + 1 }, (_, i) => {
+          const angle = startAngle + (endAngle - startAngle) * (i / numPoints);
+          return {
+            x: 1.5 * Math.cos(angle),
+            y: 1.5 * Math.sin(angle),
+            z: 0,
+          };
+        });
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "θ", at: 10, offset: [0, -0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+### Jarak Tali Busur dari Pusat
+
+Jarak tali busur dari pusat lingkaran dapat dihitung dengan rumus:
+
+<BlockMath math="d = r \cos\left(\frac{\theta}{2}\right)" />
+
+Atau jika diketahui panjang tali busur <InlineMath math="l" />:
+
+<BlockMath math="d = \sqrt{r^2 - \left(\frac{l}{2}\right)^2}" />
+
+## Teorema Perpotongan Tali Busur
+
+Jika dua tali busur berpotongan di dalam lingkaran, maka hasil kali segmen-segmen dari satu tali busur sama dengan hasil kali segmen-segmen dari tali busur lainnya.
+
+<LineEquation
+  title="Perpotongan Dua Tali Busur"
+  description={
+    <>
+      Teorema perpotongan tali busur: <InlineMath math="PA \times PB = PC \times PD" />.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 5 * Math.cos(angle),
+          y: 5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const angle1 = Math.PI / 3;
+        const angle2 = (4 * Math.PI) / 3;
+        return [
+          { x: 5 * Math.cos(angle1), y: 5 * Math.sin(angle1), z: 0 },
+          { x: 5 * Math.cos(angle2), y: 5 * Math.sin(angle2), z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.3, 0.3, 0] },
+        { text: "B", at: 1, offset: [-0.3, -0.3, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const angle1 = (5 * Math.PI) / 6;
+        const angle2 = (11 * Math.PI) / 6;
+        return [
+          { x: 5 * Math.cos(angle1), y: 5 * Math.sin(angle1), z: 0 },
+          { x: 5 * Math.cos(angle2), y: 5 * Math.sin(angle2), z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: "C", at: 0, offset: [-0.3, 0.3, 0] },
+        { text: "D", at: 1, offset: [0.3, -0.3, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        // Calculate intersection point P
+        const A = {
+          x: 5 * Math.cos(Math.PI / 3),
+          y: 5 * Math.sin(Math.PI / 3),
+        };
+        const B = {
+          x: 5 * Math.cos((4 * Math.PI) / 3),
+          y: 5 * Math.sin((4 * Math.PI) / 3),
+        };
+        const C = {
+          x: 5 * Math.cos((5 * Math.PI) / 6),
+          y: 5 * Math.sin((5 * Math.PI) / 6),
+        };
+        const D = {
+          x: 5 * Math.cos((11 * Math.PI) / 6),
+          y: 5 * Math.sin((11 * Math.PI) / 6),
+        };
+
+        // Line AB: parametric form
+        // Line CD: parametric form
+        // Solve for intersection
+        const denominator =
+          (A.x - B.x) * (C.y - D.y) - (A.y - B.y) * (C.x - D.x);
+        const t =
+          ((A.x - C.x) * (C.y - D.y) - (A.y - C.y) * (C.x - D.x)) / denominator;
+
+        const P = {
+          x: A.x + t * (B.x - A.x),
+          y: A.y + t * (B.y - A.y),
+        };
+
+        return [{ x: P.x, y: P.y, z: 0 }];
+      })(),
+      color: getColor("PINK"),
+      showPoints: true,
+      labels: [{ text: "P", at: 0, offset: [0.3, 0, 0] }],
+    },
+
+]}
+cameraPosition={[0, 0, 15]}
+showZAxis={false}
+/>
+
+Pada gambar di atas berlaku: <InlineMath math="PA \times PB = PC \times PD" />
+
+## Sudut Keliling yang Menghadap Tali Busur Sama
+
+Sudut-sudut keliling yang menghadap tali busur yang sama memiliki besar yang sama.
+
+<LineEquation
+  title="Sudut Keliling Menghadap Tali Busur Sama"
+  description="Sudut keliling yang menghadap tali busur AB memiliki besar yang sama."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const angleA = 0;
+        const angleB = Math.PI / 2;
+        return [
+          { x: 4 * Math.cos(angleA), y: 4 * Math.sin(angleA), z: 0 },
+          { x: 4 * Math.cos(angleB), y: 4 * Math.sin(angleB), z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.5, 0, 0] },
+        { text: "B", at: 1, offset: [0, 0.5, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const angleC = (3 * Math.PI) / 4;
+        const angleA = 0;
+        const angleB = Math.PI / 2;
+        return [
+          { x: 4 * Math.cos(angleC), y: 4 * Math.sin(angleC), z: 0 },
+          { x: 4 * Math.cos(angleA), y: 4 * Math.sin(angleA), z: 0 },
+          { x: 4 * Math.cos(angleB), y: 4 * Math.sin(angleB), z: 0 },
+          { x: 4 * Math.cos(angleC), y: 4 * Math.sin(angleC), z: 0 },
+        ];
+      })(),
+      color: getColor("PINK"),
+      showPoints: true,
+      smooth: false,
+      labels: [{ text: "C", at: 0, offset: [-0.3, 0.3, 0] }],
+    },
+    {
+      points: (() => {
+        const angleD = (5 * Math.PI) / 4;
+        const angleA = 0;
+        const angleB = Math.PI / 2;
+        return [
+          { x: 4 * Math.cos(angleD), y: 4 * Math.sin(angleD), z: 0 },
+          { x: 4 * Math.cos(angleA), y: 4 * Math.sin(angleA), z: 0 },
+          { x: 4 * Math.cos(angleB), y: 4 * Math.sin(angleB), z: 0 },
+          { x: 4 * Math.cos(angleD), y: 4 * Math.sin(angleD), z: 0 },
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: true,
+      smooth: false,
+      labels: [{ text: "D", at: 0, offset: [-0.3, -0.3, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Pada gambar di atas, <InlineMath math="\angle ACB = \angle ADB" /> karena keduanya menghadap tali busur <InlineMath math="AB" /> yang sama.
+
+## Apotema
+
+Apotema adalah jarak terpendek dari pusat lingkaran ke tali busur, yaitu garis yang tegak lurus dari pusat ke tali busur.
+
+<LineEquation
+  title="Apotema pada Tali Busur"
+  description="Apotema adalah garis tegak lurus dari pusat ke tali busur."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 5 * Math.cos(angle),
+          y: 5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.3, -0.3, 0] }],
+    },
+    {
+      points: (() => {
+        const y = 3;
+        const x = Math.sqrt(25 - y * y);
+        return [
+          { x: -x, y: y, z: 0 },
+          { x: x, y: y, z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "P", at: 0, offset: [-0.3, 0.3, 0] },
+        { text: "Q", at: 1, offset: [0.3, 0.3, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 3, z: 0 },
+      ],
+      color: getColor("PINK"),
+      showPoints: true,
+      smooth: false,
+      labels: [
+        { text: "M", at: 1, offset: [0.5, 0, 0] },
+        { text: "apotema", at: 0.5, offset: [1.2, 0, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: -0.3, y: 3, z: 0 },
+        { x: -0.3, y: 2.7, z: 0 },
+        { x: 0, y: 2.7, z: 0 },
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+Panjang apotema dapat dihitung dengan rumus:
+
+<BlockMath math="a = r \cos\left(\frac{\theta}{2}\right) = \sqrt{r^2 - \left(\frac{l}{2}\right)^2}" />
+
+Di mana:
+
+- <InlineMath math="a" /> = panjang apotema
+- <InlineMath math="r" /> = jari-jari lingkaran
+- <InlineMath math="l" /> = panjang tali busur
+- <InlineMath math="\theta" /> = sudut pusat
+
+## Tali Busur Sejajar
+
+Dua tali busur yang sejajar dalam lingkaran memiliki sifat khusus.
+
+<LineEquation
+  title="Tali Busur Sejajar"
+  description="Busur di antara tali busur sejajar memiliki panjang yang sama."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const y = 2;
+        const x = Math.sqrt(16 - y * y);
+        return [
+          { x: -x, y: y, z: 0 },
+          { x: x, y: y, z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [-0.3, 0.3, 0] },
+        { text: "B", at: 1, offset: [0.3, 0.3, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const y = -2;
+        const x = Math.sqrt(16 - y * y);
+        return [
+          { x: -x, y: y, z: 0 },
+          { x: x, y: y, z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: "C", at: 0, offset: [-0.3, -0.3, 0] },
+        { text: "D", at: 1, offset: [0.3, -0.3, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const y1 = 2;
+        const x1 = Math.sqrt(16 - y1 * y1);
+        const angle1 = Math.atan2(y1, -x1);
+        const y2 = -2;
+        const x2 = Math.sqrt(16 - y2 * y2);
+        const angle2 = Math.atan2(y2, -x2);
+        const numPoints = 20;
+        return Array.from({ length: numPoints + 1 }, (_, i) => {
+          const angle = angle1 + (angle2 - angle1) * (i / numPoints);
+          return {
+            x: 4 * Math.cos(angle),
+            y: 4 * Math.sin(angle),
+            z: 0,
+          };
+        });
+      })(),
+      color: getColor("PINK"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const y1 = 2;
+        const x1 = Math.sqrt(16 - y1 * y1);
+        const angle1 = Math.atan2(y1, x1);
+        const y2 = -2;
+        const x2 = Math.sqrt(16 - y2 * y2);
+        const angle2 = Math.atan2(y2, x2);
+        const numPoints = 20;
+        return Array.from({ length: numPoints + 1 }, (_, i) => {
+          const angle = angle1 + (angle2 - angle1) * (i / numPoints);
+          return {
+            x: 4 * Math.cos(angle),
+            y: 4 * Math.sin(angle),
+            z: 0,
+          };
+        });
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Jika <InlineMath math="AB \parallel CD" />, maka busur <InlineMath math="AC" /> sama panjang dengan busur <InlineMath math="BD" />.
+
+## Latihan Soal
+
+1. Sebuah lingkaran memiliki jari-jari 10 cm. Jika sudut pusat yang menghadap tali busur adalah 60°, tentukan:
+
+   - Panjang tali busur
+   - Jarak tali busur dari pusat lingkaran
+
+2. Dua tali busur <InlineMath math="AB" /> dan <InlineMath math="CD" /> berpotongan di titik <InlineMath math="P" /> di dalam lingkaran. Jika <InlineMath math="PA = 4" /> cm, <InlineMath math="PB = 6" /> cm, dan <InlineMath math="PC = 3" /> cm, tentukan panjang <InlineMath math="PD" />.
+
+3. Dalam lingkaran berjari-jari 13 cm, terdapat tali busur sepanjang 24 cm. Hitunglah jarak tali busur tersebut dari pusat lingkaran.
+
+4. Dua tali busur sejajar dalam lingkaran masing-masing berjarak 3 cm dan 4 cm dari pusat lingkaran. Jika jari-jari lingkaran 5 cm, tentukan panjang kedua tali busur tersebut.
+
+5. Buktikan bahwa tali busur terpanjang dalam lingkaran adalah diameter.
+
+### Kunci Jawaban
+
+1. **Menghitung panjang tali busur dan jaraknya dari pusat**
+
+   Diketahui: <InlineMath math="r = 10" /> cm, <InlineMath math="\theta = 60° = \frac{\pi}{3}" /> rad
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="l = 2r \sin\left(\frac{\theta}{2}\right) = 2 \times 10 \times \sin\left(\frac{\pi/3}{2}\right)" />
+     <BlockMath math="l = 20 \times \sin(30°) = 20 \times 0.5 = 10 \text{ cm}" />
+     <BlockMath math="d = r \cos\left(\frac{\theta}{2}\right) = 10 \times \cos(30°)" />
+     <BlockMath math="d = 10 \times \frac{\sqrt{3}}{2} = 5\sqrt{3} \text{ cm}" />
+   </div>
+
+2. **Teorema perpotongan tali busur**
+
+   Diketahui: <InlineMath math="PA = 4" /> cm, <InlineMath math="PB = 6" /> cm, <InlineMath math="PC = 3" /> cm
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="PA \times PB = PC \times PD" />
+     <BlockMath math="4 \times 6 = 3 \times PD" />
+     <BlockMath math="24 = 3 \times PD" />
+     <BlockMath math="PD = 8 \text{ cm}" />
+   </div>
+
+3. **Menghitung jarak tali busur dari pusat**
+
+   Diketahui: <InlineMath math="r = 13" /> cm, <InlineMath math="l = 24" /> cm
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="d = \sqrt{r^2 - \left(\frac{l}{2}\right)^2}" />
+     <BlockMath math="d = \sqrt{13^2 - 12^2}" />
+     <BlockMath math="d = \sqrt{169 - 144}" />
+     <BlockMath math="d = \sqrt{25} = 5 \text{ cm}" />
+   </div>
+
+4. **Tali busur sejajar**
+
+   Diketahui: <InlineMath math="r = 5" /> cm, <InlineMath math="d_1 = 3" /> cm, <InlineMath math="d_2 = 4" /> cm
+
+   Untuk tali busur pertama:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="l_1 = 2\sqrt{r^2 - d_1^2} = 2\sqrt{25 - 9} = 2\sqrt{16} = 8 \text{ cm}" />
+   </div>
+
+   Untuk tali busur kedua:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="l_2 = 2\sqrt{r^2 - d_2^2} = 2\sqrt{25 - 16} = 2\sqrt{9} = 6 \text{ cm}" />
+   </div>
+
+5. **Bukti diameter adalah tali busur terpanjang**
+
+   Untuk sebarang tali busur dengan sudut pusat <InlineMath math="\theta" />:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="l = 2r \sin\left(\frac{\theta}{2}\right)" />
+   </div>
+
+   Nilai maksimum <InlineMath math="\sin\left(\frac{\theta}{2}\right) = 1" /> tercapai ketika <InlineMath math="\frac{\theta}{2} = 90°" />, yaitu <InlineMath math="\theta = 180°" />.
+
+   Saat <InlineMath math="\theta = 180°" />, tali busur melewati pusat lingkaran (diameter) dengan panjang:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="l_{max} = 2r \times 1 = 2r" />
+   </div>
+
+   Terbukti bahwa diameter adalah tali busur terpanjang.
