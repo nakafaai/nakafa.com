@@ -15,8 +15,12 @@ export function ShareButton() {
   const pathname = usePathname();
 
   const handleShare = () => {
-    navigator.clipboard.writeText(`${getAppUrl()}${pathname}`);
-    toast.success(t("share-copied"));
+    const url = `${getAppUrl()}${pathname}`;
+    navigator.clipboard.writeText(url);
+    toast.success(t("share-copied"), {
+      description: url,
+      position: "bottom-center",
+    });
   };
 
   return (
