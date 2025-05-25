@@ -1,6 +1,218 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Exponential Function",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Functions and Their Modeling",
 };
+
+## Understanding Exponential Functions
+
+An exponential function is a mathematical function that has a variable as the exponent of a constant number. The general form of an exponential function is <InlineMath math="f(x) = a \cdot b^x" /> with <InlineMath math="a \neq 0" />, <InlineMath math="b > 0" />, and <InlineMath math="b \neq 1" />.
+
+**Components of exponential functions:**
+
+In the function <InlineMath math="f(x) = a \cdot b^x" />:
+
+- <InlineMath math="a" /> is the multiplier constant that determines the initial
+  value of the function
+- <InlineMath math="b" /> is the exponential base that determines the rate of growth
+  or decay
+- <InlineMath math="x" /> is the independent variable (exponent)
+
+## Characteristics of Exponential Functions
+
+Exponential functions have several special properties that distinguish them from other functions:
+
+### Basic Properties
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="f(0) = a \cdot b^0 = a \cdot 1 = a" />
+  <BlockMath math="f(x_1 + x_2) = a \cdot b^{x_1 + x_2} = a \cdot b^{x_1} \cdot b^{x_2}" />
+  <BlockMath math="f(x_1 - x_2) = a \cdot b^{x_1 - x_2} = \frac{a \cdot b^{x_1}}{b^{x_2}}" />
+</div>
+
+### Types of Exponential Functions
+
+**Exponential Growth Function** (<InlineMath math="b > 1" />):
+
+- Function values increase as <InlineMath math="x" /> increases
+- Graph rises from left to right
+- Example: <InlineMath math="f(x) = 2^x" />
+
+**Exponential Decay Function** (<InlineMath math="0 < b < 1" />):
+
+- Function values decrease as <InlineMath math="x" /> increases
+- Graph falls from left to right
+- Example: <InlineMath math="f(x) = (0.5)^x" />
+
+## Graphs of Exponential Functions
+
+The following is a visualization of various exponential functions:
+
+<LineEquation
+  title={<>Comparison of Exponential Functions</>}
+  description={
+    <>
+      The graph shows the growth function <InlineMath math="f(x) = 2^x" /> and
+      decay function <InlineMath math="g(x) = (0.5)^x" />.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i * 0.2 - 2;
+        return { x, y: Math.pow(2, x), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = 2^x", at: 15, offset: [2, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i * 0.2 - 2;
+        return { x, y: Math.pow(0.5, x), z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [{ text: "g(x) = (0.5)^x", at: 5, offset: [-2, -0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+Comparison of function values <InlineMath math="f(x) = 2^x" /> and <InlineMath math="g(x) = (0.5)^x" />:
+
+| x                                    | -2   | -1  | 0   | 1   | 2    | 3     |
+| ------------------------------------ | ---- | --- | --- | --- | ---- | ----- |
+| <InlineMath math="f(x) = 2^x" />     | 0.25 | 0.5 | 1   | 2   | 4    | 8     |
+| <InlineMath math="g(x) = (0.5)^x" /> | 4    | 2   | 1   | 0.5 | 0.25 | 0.125 |
+
+## Transformations of Exponential Functions
+
+Exponential functions can be transformed in various ways:
+
+### Vertical Translation
+
+The function <InlineMath math="f(x) = a \cdot b^x + c" /> shifts the graph upward (if <InlineMath math="c > 0" />) or downward (if <InlineMath math="c < 0" />).
+
+<LineEquation
+  title={<>Vertical Translation</>}
+  description={
+    <>
+      Comparison of <InlineMath math="f(x) = 2^x" /> with{" "}
+      <InlineMath math="g(x) = 2^x + 2" />.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i * 0.2 - 2;
+        return { x, y: Math.pow(2, x), z: 0 };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "f(x) = 2^x", at: 15, offset: [1.5, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i * 0.2 - 2;
+        return { x, y: Math.pow(2, x) + 2, z: 0 };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "g(x) = 2^x + 2", at: 15, offset: [0, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[8, 5, 8]}
+  showZAxis={false}
+/>
+
+### Horizontal Translation
+
+The function <InlineMath math="f(x) = a \cdot b^{x-h}" /> shifts the graph to the right (if <InlineMath math="h > 0" />) or to the left (if <InlineMath math="h < 0" />).
+
+## Applications of Exponential Functions
+
+Exponential functions are widely used in daily life:
+
+### Population Growth
+
+Living organism populations often follow exponential growth patterns. If the initial population is <InlineMath math="P_0" /> and the growth rate is <InlineMath math="r" /> per time period, then:
+
+<BlockMath math="P(t) = P_0 \cdot (1 + r)^t" />
+
+**Example:** Bacterial population that reproduces every hour at a rate of 20%:
+
+- Initial population: 1000 bacteria
+- Growth rate: <InlineMath math="r = 0.2" />
+- Function: <InlineMath math="P(t) = 1000 \cdot (1.2)^t" />
+
+### Bacterial Growth Table
+
+| Time (hours) | 0    | 1    | 2    | 3    | 4    | 5    |
+| ------------ | ---- | ---- | ---- | ---- | ---- | ---- |
+| Population   | 1000 | 1200 | 1440 | 1728 | 2074 | 2488 |
+
+### Radioactive Decay
+
+Radioactive substances decay following exponential functions. If the initial mass is <InlineMath math="M_0" /> and the half-life is <InlineMath math="t_{1/2}" />, then:
+
+<BlockMath math="M(t) = M_0 \cdot \left(\frac{1}{2}\right)^{t/t_{1/2}}" />
+
+### Compound Interest
+
+Investments with compound interest grow exponentially. If the initial capital is <InlineMath math="P" />, interest rate is <InlineMath math="r" /> per year, and time is <InlineMath math="t" /> years:
+
+<BlockMath math="A = P \cdot \left(1 + \frac{r}{n}\right)^{nt}" />
+
+where <InlineMath math="n" /> is the frequency of interest compounding per year.
+
+## Exponential Equations
+
+An exponential equation is an equation that contains a variable in the exponent. General form:
+
+<BlockMath math="b^x = c" />
+
+**Method 1: Equalizing Bases**
+
+If <InlineMath math="b^{f(x)} = b^{g(x)}" />, then <InlineMath math="f(x) = g(x)" />
+
+**Example:** Solve <InlineMath math="2^{x+1} = 8" />
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2^{x+1} = 8" />
+  <BlockMath math="2^{x+1} = 2^3" />
+  <BlockMath math="x + 1 = 3" />
+  <BlockMath math="x = 2" />
+</div>
+
+**Method 2: Using Logarithms**
+
+To solve <InlineMath math="b^x = c" />, use logarithms:
+
+<BlockMath math="x = \log_b c = \frac{\log c}{\log b}" />
+
+## Exercises
+
+1. Determine the value of <InlineMath math="f(3)" /> if <InlineMath math="f(x) = 5 \cdot 2^x" />
+
+2. Solve the equation <InlineMath math="3^{2x-1} = 27" />
+
+3. A city's population is 50,000 people and grows 3% per year. What will the population be after 10 years?
+
+4. A radioactive substance has a half-life of 5 years. If the initial mass is 100 grams, how much mass remains after 15 years?
+
+### Answer Key
+
+1. <InlineMath math="f(3) = 5 \cdot 2^3 = 5 \cdot 8 = 40" />
+
+2. <InlineMath math="3^{2x-1} = 27 = 3^3" />, so <InlineMath math="2x - 1 = 3" />
+   , therefore <InlineMath math="x = 2" />
+
+3. <InlineMath math="P(10) = 50000 \cdot (1.03)^{10} = 50000 \cdot 1.344 = 67.195" /> people
+
+4. <InlineMath math="M(15) = 100 \cdot \left(\frac{1}{2}\right)^{15/5} = 100 \cdot \left(\frac{1}{2}\right)^3 = 100 \cdot \frac{1}{8} = 12.5" /> grams
