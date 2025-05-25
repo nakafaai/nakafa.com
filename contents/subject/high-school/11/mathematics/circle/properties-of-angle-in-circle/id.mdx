@@ -4,3 +4,783 @@ export const metadata = {
   date: "05/18/2025",
   subject: "Lingkaran",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Sudut Keliling yang Menghadap Busur yang Sama
+
+Sudut-sudut keliling yang menghadap busur yang sama memiliki besar yang sama, tidak peduli di mana posisi titik sudutnya pada lingkaran.
+
+<LineEquation
+  title="Sudut Keliling Menghadap Busur yang Sama"
+  description="Semua sudut keliling yang menghadap busur yang sama besarnya sama."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: 2.83, y: 2.83, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.5, 0, 0] },
+        { text: "B", at: 1, offset: [0.3, 0.3, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: -2.83, y: -2.83, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "C", at: 1, offset: [-0.5, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 2.83, y: 2.83, z: 0 },
+        { x: -2.83, y: -2.83, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: -2.83, y: 2.83, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: "D", at: 1, offset: [-0.5, 0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 2.83, y: 2.83, z: 0 },
+        { x: -2.83, y: 2.83, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 46 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "Busur AB", at: 22, offset: [1.5, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+**Sifat:** <InlineMath math="\angle ACB = \angle ADB" />
+
+Kedua sudut keliling ACB dan ADB menghadap busur AB yang sama, sehingga besarnya sama.
+
+## Sudut Pusat dan Sudut Keliling
+
+Sudut pusat besarnya dua kali sudut keliling yang menghadap busur yang sama.
+
+<LineEquation
+  title="Hubungan Sudut Pusat dan Sudut Keliling"
+  description="Sudut pusat = 2 × sudut keliling untuk busur yang sama."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "A", at: 1, offset: [0.5, 0, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2.83, y: 2.83, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "B", at: 1, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: -2.83, y: -2.83, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "C", at: 1, offset: [-0.5, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 2.83, y: 2.83, z: 0 },
+        { x: -2.83, y: -2.83, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 46 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 1.2 * Math.cos(angle),
+          y: 1.2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "2θ", at: 22, offset: [0.3, 0.2, 0] }],
+    },
+    {
+      points: Array.from({ length: 23 }, (_, i) => {
+        const angle = ((225 - i * 2) * Math.PI) / 180;
+        return {
+          x: 0.8 * Math.cos(angle),
+          y: 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "θ", at: 11, offset: [-0.3, -0.2, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+**Sifat:** <InlineMath math="\angle AOB = 2 \times \angle ACB" />
+
+## Sudut Keliling yang Menghadap Diameter
+
+Setiap sudut keliling yang menghadap diameter lingkaran selalu merupakan sudut siku-siku (90°).
+
+<LineEquation
+  title="Sudut Keliling Menghadap Diameter"
+  description="Sudut keliling yang menghadap diameter selalu 90°."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [-0.5, 0, 0] },
+        { text: "B", at: 1, offset: [0.5, 0, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 0, y: 4, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "C", at: 1, offset: [0, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: 0, y: 4, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+    },
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 16 }, (_, i) => {
+        const angle = ((90 - (i * 90) / 15) * Math.PI) / 180;
+        return {
+          x: 0.8 * Math.cos(angle),
+          y: 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "90°", at: 7, offset: [0.5, 0.2, 0] }],
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: -2.83, y: -2.83, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: "D", at: 1, offset: [-0.5, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: -2.83, y: -2.83, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+**Sifat:** Jika AB adalah diameter, maka <InlineMath math="\angle ACB = \angle ADB = 90°" />
+
+Ini dikenal sebagai **Teorema Thales**.
+
+## Sudut-sudut dalam Segiempat Tali Busur
+
+Segiempat tali busur adalah segiempat yang keempat titik sudutnya terletak pada lingkaran. Jumlah sudut-sudut yang berhadapan adalah 180°.
+
+<LineEquation
+  title="Segiempat Tali Busur"
+  description="Jumlah sudut-sudut yang berhadapan = 180°."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: 0, y: 4, z: 0 },
+        { x: -4, y: 0, z: 0 },
+        { x: 0, y: -4, z: 0 },
+        { x: 4, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.5, 0, 0] },
+        { text: "B", at: 1, offset: [0, 0.5, 0] },
+        { text: "C", at: 2, offset: [-0.5, 0, 0] },
+        { text: "D", at: 3, offset: [0, -0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 16 }, (_, i) => {
+        const angle = (((i * 90) / 15) * Math.PI) / 180;
+        return {
+          x: 0.8 * Math.cos(angle),
+          y: 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "α", at: 7, offset: [0.3, 0.2, 0] }],
+    },
+    {
+      points: Array.from({ length: 16 }, (_, i) => {
+        const angle = ((180 + (i * 90) / 15) * Math.PI) / 180;
+        return {
+          x: 0.8 * Math.cos(angle),
+          y: 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "γ", at: 7, offset: [-0.3, -0.2, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+**Sifat:** <InlineMath math="\alpha + \gamma = 180°" /> dan <InlineMath math="\beta + \delta = 180°" />
+
+## Sudut Luar Sama dengan Sudut Dalam Berseberangan
+
+Pada segiempat tali busur, sudut luar di suatu titik sama dengan sudut dalam di titik yang berseberangan.
+
+<LineEquation
+  title="Sudut Luar Segiempat Tali Busur"
+  description="Sudut luar = sudut dalam berseberangan."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 3.46, y: 2, z: 0 },
+        { x: -2, y: 3.46, z: 0 },
+        { x: -3.46, y: -2, z: 0 },
+        { x: 2, y: -3.46, z: 0 },
+        { x: 3.46, y: 2, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.5, 0.3, 0] },
+        { text: "B", at: 1, offset: [-0.3, 0.5, 0] },
+        { text: "C", at: 2, offset: [-0.5, -0.3, 0] },
+        { text: "D", at: 3, offset: [0.3, -0.5, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 3.46, y: 2, z: 0 },
+        { x: 6, y: 3.46, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "E", at: 1, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: (() => {
+        // Calculate angle DAE dynamically
+        const A = { x: 3.46, y: 2 };
+        const D = { x: 2, y: -3.46 };
+        const E = { x: 6, y: 3.46 };
+
+        // Calculate angles from A to D and A to E
+        const angleAD = Math.atan2(D.y - A.y, D.x - A.x);
+        const angleAE = Math.atan2(E.y - A.y, E.x - A.x);
+
+        // Generate arc from D to E around A
+        const startAngle = angleAD;
+        const endAngle = angleAE;
+        const angleRange = endAngle - startAngle;
+
+        return Array.from({ length: 16 }, (_, i) => {
+          const t = i / 15;
+          const angle = startAngle + t * angleRange;
+          return {
+            x: A.x + 0.8 * Math.cos(angle),
+            y: A.y + 0.8 * Math.sin(angle),
+            z: 0,
+          };
+        });
+      })(),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "∠DAE", at: 7, offset: [1, 0, 0] }],
+    },
+    {
+      points: (() => {
+        // Calculate angle BCD dynamically
+        const C = { x: -3.46, y: -2 };
+        const B = { x: -2, y: 3.46 };
+        const D = { x: 2, y: -3.46 };
+
+        // Calculate angles from C to B and C to D
+        const angleCB = Math.atan2(B.y - C.y, B.x - C.x);
+        const angleCD = Math.atan2(D.y - C.y, D.x - C.x);
+
+        // Generate arc from B to D around C
+        const startAngle = angleCB;
+        const endAngle = angleCD;
+        let angleRange = endAngle - startAngle;
+
+        // Ensure we take the smaller angle
+        if (angleRange < 0) angleRange += 2 * Math.PI;
+        if (angleRange > Math.PI) angleRange = angleRange - 2 * Math.PI;
+
+        return Array.from({ length: 16 }, (_, i) => {
+          const t = i / 15;
+          const angle = startAngle + t * angleRange;
+          return {
+            x: C.x + 0.8 * Math.cos(angle),
+            y: C.y + 0.8 * Math.sin(angle),
+            z: 0,
+          };
+        });
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "∠BCD", at: 7, offset: [0.8, 0.3, 0] }],
+    },
+
+]}
+cameraPosition={[0, 0, 12]}
+showZAxis={false}
+/>
+
+**Sifat:** <InlineMath math="\angle DAE = \angle BCD" /> (sudut luar di A = sudut dalam di C)
+
+## Penerapan Sifat-sifat Sudut dalam Lingkaran
+
+### Menentukan Besar Sudut
+
+Pada lingkaran dengan pusat O, diketahui sudut pusat AOB = 100°. Tentukan besar sudut keliling ACB!
+
+**Penyelesaian:**
+
+Menggunakan sifat sudut pusat dan sudut keliling:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\angle ACB = \frac{1}{2} \times \angle AOB" />
+  <BlockMath math="\angle ACB = \frac{1}{2} \times 100°" />
+  <BlockMath math="\angle ACB = 50°" />
+</div>
+
+### Sudut dalam Segiempat Tali Busur
+
+Dalam segiempat tali busur ABCD, diketahui <InlineMath math="\angle A = 75°" />. Tentukan besar <InlineMath math="\angle C" />!
+
+**Penyelesaian:**
+
+Menggunakan sifat segiempat tali busur:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\angle A + \angle C = 180°" />
+  <BlockMath math="75° + \angle C = 180°" />
+  <BlockMath math="\angle C = 180° - 75°" />
+  <BlockMath math="\angle C = 105°" />
+</div>
+
+### Sudut Keliling Menghadap Diameter
+
+Titik C terletak pada lingkaran dengan AB sebagai diameter. Tentukan besar <InlineMath math="\angle ACB" />!
+
+**Penyelesaian:**
+
+Karena AB adalah diameter dan C terletak pada lingkaran, maka berdasarkan Teorema Thales:
+
+<BlockMath math="\angle ACB = 90°" />
+
+## Latihan Soal
+
+1. Pada lingkaran dengan pusat O, sudut pusat AOB = 140°. Jika C dan D adalah dua titik berbeda pada lingkaran, tentukan:
+
+   - Besar sudut ACB
+   - Besar sudut ADB
+
+2. Dalam segiempat tali busur PQRS, diketahui:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\angle P = 85°" />
+     <BlockMath math="\angle Q = 110°" />
+   </div>
+
+   Tentukan besar <InlineMath math="\angle R" /> dan <InlineMath math="\angle S" />!
+
+3. Titik A, B, dan C terletak pada lingkaran. Jika AB adalah diameter dan BC = AC, tentukan besar <InlineMath math="\angle BAC" />!
+
+4. Pada lingkaran, sudut keliling APB = 35°. Tentukan besar sudut pusat AOB!
+
+5. Dalam segiempat tali busur KLMN, sudut luar di titik K adalah 65°. Tentukan besar sudut dalam di titik M!
+
+### Kunci Jawaban
+
+1. **Menentukan sudut keliling yang menghadap busur yang sama**
+
+   <LineEquation
+     title="Visualisasi"
+     description="Sudut pusat AOB = 140° dan sudut-sudut keliling yang menghadap busur AB"
+     data={[
+       {
+         points: Array.from({ length: 361 }, (_, i) => {
+           const angle = (i * Math.PI) / 180;
+           return {
+             x: 4 * Math.cos(angle),
+             y: 4 * Math.sin(angle),
+             z: 0,
+           };
+         }),
+         color: getColor("PURPLE"),
+         showPoints: false,
+       },
+       {
+         points: [
+           { x: 0, y: 0, z: 0 },
+           { x: 4, y: 0, z: 0 },
+         ],
+         color: getColor("ORANGE"),
+         showPoints: true,
+         labels: [
+           { text: "O", at: 0, offset: [-0.5, -0.5, 0] },
+           { text: "A", at: 1, offset: [0.5, 0, 0] },
+         ],
+       },
+       {
+         points: [
+           { x: 0, y: 0, z: 0 },
+           { x: -1.37, y: 3.76, z: 0 },
+         ],
+         color: getColor("ORANGE"),
+         showPoints: true,
+         labels: [{ text: "B", at: 1, offset: [-0.3, 0.5, 0] }],
+       },
+       {
+         points: [
+           { x: 4, y: 0, z: 0 },
+           { x: -2.83, y: -2.83, z: 0 },
+         ],
+         color: getColor("CYAN"),
+         showPoints: true,
+         labels: [{ text: "C", at: 1, offset: [-0.5, -0.3, 0] }],
+       },
+       {
+         points: [
+           { x: -1.37, y: 3.76, z: 0 },
+           { x: -2.83, y: -2.83, z: 0 },
+         ],
+         color: getColor("CYAN"),
+         showPoints: false,
+       },
+       {
+         points: [
+           { x: 4, y: 0, z: 0 },
+           { x: 2, y: -3.46, z: 0 },
+         ],
+         color: getColor("TEAL"),
+         showPoints: true,
+         labels: [{ text: "D", at: 1, offset: [0.3, -0.5, 0] }],
+       },
+       {
+         points: [
+           { x: -1.37, y: 3.76, z: 0 },
+           { x: 2, y: -3.46, z: 0 },
+         ],
+         color: getColor("TEAL"),
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 25 }, (_, i) => {
+           const angle = (((i * 140) / 30) * Math.PI) / 180;
+           return {
+             x: 1.2 * Math.cos(angle),
+             y: 1.2 * Math.sin(angle),
+             z: 0,
+           };
+         }),
+         color: getColor("PINK"),
+         showPoints: false,
+         labels: [{ text: "140°", at: 15, offset: [0.3, 0.5, 0] }],
+       },
+     ]}
+     cameraPosition={[0, 0, 12]}
+     showZAxis={false}
+   />
+
+   **Penyelesaian:**
+
+   Menggunakan sifat hubungan sudut pusat dan sudut keliling:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\text{Sudut keliling} = \frac{1}{2} \times \text{Sudut pusat}" />
+     <BlockMath math="\angle ACB = \frac{1}{2} \times \angle AOB" />
+     <BlockMath math="\angle ACB = \frac{1}{2} \times 140°" />
+     <BlockMath math="\angle ACB = 70°" />
+   </div>
+
+   Karena sudut keliling yang menghadap busur yang sama besarnya sama:
+
+   <BlockMath math="\angle ADB = \angle ACB = 70°" />
+
+2. **Menentukan sudut-sudut dalam segiempat tali busur**
+
+   **Penyelesaian:**
+
+   Dalam segiempat tali busur, jumlah sudut-sudut yang berhadapan = 180°
+
+   Untuk sudut R (berhadapan dengan P):
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\angle P + \angle R = 180°" />
+     <BlockMath math="85° + \angle R = 180°" />
+     <BlockMath math="\angle R = 180° - 85°" />
+     <BlockMath math="\angle R = 95°" />
+   </div>
+
+   Untuk sudut S (berhadapan dengan Q):
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\angle Q + \angle S = 180°" />
+     <BlockMath math="110° + \angle S = 180°" />
+     <BlockMath math="\angle S = 180° - 110°" />
+     <BlockMath math="\angle S = 70°" />
+   </div>
+
+3. **Menentukan sudut dalam segitiga sama kaki dengan diameter**
+
+   <LineEquation
+     title="Visualisasi"
+     description="AB adalah diameter, BC = AC (segitiga sama kaki)"
+     data={[
+       {
+         points: Array.from({ length: 361 }, (_, i) => {
+           const angle = (i * Math.PI) / 180;
+           return {
+             x: 4 * Math.cos(angle),
+             y: 4 * Math.sin(angle),
+             z: 0,
+           };
+         }),
+         color: getColor("PURPLE"),
+         showPoints: false,
+       },
+       {
+         points: [
+           { x: -4, y: 0, z: 0 },
+           { x: 4, y: 0, z: 0 },
+         ],
+         color: getColor("ORANGE"),
+         showPoints: true,
+         labels: [
+           { text: "A", at: 0, offset: [-0.5, 0, 0] },
+           { text: "B", at: 1, offset: [0.5, 0, 0] },
+         ],
+       },
+       {
+         points: [
+           { x: -4, y: 0, z: 0 },
+           { x: 0, y: 4, z: 0 },
+         ],
+         color: getColor("CYAN"),
+         showPoints: true,
+         labels: [{ text: "C", at: 1, offset: [0, 0.5, 0] }],
+       },
+       {
+         points: [
+           { x: 4, y: 0, z: 0 },
+           { x: 0, y: 4, z: 0 },
+         ],
+         color: getColor("CYAN"),
+         showPoints: false,
+       },
+       {
+         points: [{ x: 0, y: 0, z: 0 }],
+         color: getColor("AMBER"),
+         showPoints: true,
+         labels: [{ text: "O", at: 0, offset: [0, -0.5, 0] }],
+       },
+       {
+         points: Array.from({ length: 16 }, (_, i) => {
+           const angle = ((90 - (i * 90) / 15) * Math.PI) / 180;
+           return {
+             x: 0.8 * Math.cos(angle),
+             y: 0.8 * Math.sin(angle),
+             z: 0,
+           };
+         }),
+         color: getColor("PINK"),
+         showPoints: false,
+         labels: [{ text: "90°", at: 7, offset: [0.5, 0.2, 0] }],
+       },
+     ]}
+     cameraPosition={[0, 0, 12]}
+     showZAxis={false}
+   />
+
+   **Penyelesaian:**
+
+   Karena AB adalah diameter, maka berdasarkan Teorema Thales:
+
+   <BlockMath math="\angle ACB = 90°" />
+
+   Karena BC = AC, maka segitiga ABC adalah segitiga siku-siku sama kaki.
+
+   Dalam segitiga siku-siku sama kaki, kedua sudut alasnya sama besar:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\angle BAC + \angle ABC + \angle ACB = 180°" />
+     <BlockMath math="\angle BAC + \angle ABC + 90° = 180°" />
+     <BlockMath math="\angle BAC + \angle ABC = 90°" />
+   </div>
+
+   Karena <InlineMath math="\angle BAC = \angle ABC" /> (sudut alas segitiga sama kaki):
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2 \times \angle BAC = 90°" />
+     <BlockMath math="\angle BAC = 45°" />
+   </div>
+
+4. **Menentukan sudut pusat dari sudut keliling**
+
+   **Penyelesaian:**
+
+   Menggunakan hubungan sudut pusat dan sudut keliling:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\text{Sudut pusat} = 2 \times \text{Sudut keliling}" />
+     <BlockMath math="\angle AOB = 2 \times \angle APB" />
+     <BlockMath math="\angle AOB = 2 \times 35°" />
+     <BlockMath math="\angle AOB = 70°" />
+   </div>
+
+5. **Menentukan sudut dalam dari sudut luar segiempat tali busur**
+
+   **Penyelesaian:**
+
+   Dalam segiempat tali busur, sudut luar di suatu titik sama dengan sudut dalam di titik yang berseberangan.
+
+   Jika sudut luar di K = 65°, maka:
+
+   <BlockMath math="\angle \text{dalam di M} = \angle \text{luar di K} = 65°" />
+
+   Ini karena titik K dan M berseberangan dalam segiempat tali busur KLMN.

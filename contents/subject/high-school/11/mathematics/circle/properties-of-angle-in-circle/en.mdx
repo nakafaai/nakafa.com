@@ -4,3 +4,783 @@ export const metadata = {
   date: "05/18/2025",
   subject: "Circle",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Inscribed Angles Subtending the Same Arc
+
+Inscribed angles that subtend the same arc have equal measures, regardless of where the vertex is positioned on the circle.
+
+<LineEquation
+  title="Inscribed Angles Subtending the Same Arc"
+  description="All inscribed angles subtending the same arc have equal measures."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: 2.83, y: 2.83, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.5, 0, 0] },
+        { text: "B", at: 1, offset: [0.3, 0.3, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: -2.83, y: -2.83, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "C", at: 1, offset: [-0.5, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 2.83, y: 2.83, z: 0 },
+        { x: -2.83, y: -2.83, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: -2.83, y: 2.83, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: "D", at: 1, offset: [-0.5, 0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 2.83, y: 2.83, z: 0 },
+        { x: -2.83, y: 2.83, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 46 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "Arc AB", at: 22, offset: [1.5, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+**Property:** <InlineMath math="\angle ACB = \angle ADB" />
+
+Both inscribed angles ACB and ADB subtend the same arc AB, so they have equal measures.
+
+## Central Angle and Inscribed Angle
+
+The central angle is twice the inscribed angle that subtends the same arc.
+
+<LineEquation
+  title="Relationship Between Central Angle and Inscribed Angle"
+  description="Central angle = 2 × inscribed angle for the same arc."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "A", at: 1, offset: [0.5, 0, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2.83, y: 2.83, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "B", at: 1, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: -2.83, y: -2.83, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "C", at: 1, offset: [-0.5, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 2.83, y: 2.83, z: 0 },
+        { x: -2.83, y: -2.83, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 46 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 1.2 * Math.cos(angle),
+          y: 1.2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "2θ", at: 22, offset: [0.3, 0.2, 0] }],
+    },
+    {
+      points: Array.from({ length: 23 }, (_, i) => {
+        const angle = ((225 - i * 2) * Math.PI) / 180;
+        return {
+          x: 0.8 * Math.cos(angle),
+          y: 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "θ", at: 11, offset: [-0.3, -0.2, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+**Property:** <InlineMath math="\angle AOB = 2 \times \angle ACB" />
+
+## Inscribed Angle Subtending a Diameter
+
+Every inscribed angle that subtends a diameter of the circle is always a right angle (90°).
+
+<LineEquation
+  title="Inscribed Angle Subtending a Diameter"
+  description="Inscribed angle subtending a diameter is always 90°."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [-0.5, 0, 0] },
+        { text: "B", at: 1, offset: [0.5, 0, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 0, y: 4, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "C", at: 1, offset: [0, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: 0, y: 4, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+    },
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 16 }, (_, i) => {
+        const angle = ((90 - (i * 90) / 15) * Math.PI) / 180;
+        return {
+          x: 0.8 * Math.cos(angle),
+          y: 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "90°", at: 7, offset: [0.5, 0.2, 0] }],
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: -2.83, y: -2.83, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: "D", at: 1, offset: [-0.5, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: -2.83, y: -2.83, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+**Property:** If AB is a diameter, then <InlineMath math="\angle ACB = \angle ADB = 90°" />
+
+This is known as **Thales' Theorem**.
+
+## Angles in a Cyclic Quadrilateral
+
+A cyclic quadrilateral is a quadrilateral whose four vertices lie on a circle. The sum of opposite angles is 180°.
+
+<LineEquation
+  title="Cyclic Quadrilateral"
+  description="Sum of opposite angles = 180°."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: 0, y: 4, z: 0 },
+        { x: -4, y: 0, z: 0 },
+        { x: 0, y: -4, z: 0 },
+        { x: 4, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.5, 0, 0] },
+        { text: "B", at: 1, offset: [0, 0.5, 0] },
+        { text: "C", at: 2, offset: [-0.5, 0, 0] },
+        { text: "D", at: 3, offset: [0, -0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 16 }, (_, i) => {
+        const angle = (((i * 90) / 15) * Math.PI) / 180;
+        return {
+          x: 0.8 * Math.cos(angle),
+          y: 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "α", at: 7, offset: [0.3, 0.2, 0] }],
+    },
+    {
+      points: Array.from({ length: 16 }, (_, i) => {
+        const angle = ((180 + (i * 90) / 15) * Math.PI) / 180;
+        return {
+          x: 0.8 * Math.cos(angle),
+          y: 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "γ", at: 7, offset: [-0.3, -0.2, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+**Property:** <InlineMath math="\alpha + \gamma = 180°" /> and <InlineMath math="\beta + \delta = 180°" />
+
+## Exterior Angle Equals Opposite Interior Angle
+
+In a cyclic quadrilateral, an exterior angle at a vertex equals the interior angle at the opposite vertex.
+
+<LineEquation
+  title="Exterior Angle of Cyclic Quadrilateral"
+  description="Exterior angle = opposite interior angle."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 3.46, y: 2, z: 0 },
+        { x: -2, y: 3.46, z: 0 },
+        { x: -3.46, y: -2, z: 0 },
+        { x: 2, y: -3.46, z: 0 },
+        { x: 3.46, y: 2, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.5, 0.3, 0] },
+        { text: "B", at: 1, offset: [-0.3, 0.5, 0] },
+        { text: "C", at: 2, offset: [-0.5, -0.3, 0] },
+        { text: "D", at: 3, offset: [0.3, -0.5, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 3.46, y: 2, z: 0 },
+        { x: 6, y: 3.46, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "E", at: 1, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: (() => {
+        // Calculate angle DAE dynamically
+        const A = { x: 3.46, y: 2 };
+        const D = { x: 2, y: -3.46 };
+        const E = { x: 6, y: 3.46 };
+
+        // Calculate angles from A to D and A to E
+        const angleAD = Math.atan2(D.y - A.y, D.x - A.x);
+        const angleAE = Math.atan2(E.y - A.y, E.x - A.x);
+
+        // Generate arc from D to E around A
+        const startAngle = angleAD;
+        const endAngle = angleAE;
+        const angleRange = endAngle - startAngle;
+
+        return Array.from({ length: 16 }, (_, i) => {
+          const t = i / 15;
+          const angle = startAngle + t * angleRange;
+          return {
+            x: A.x + 0.8 * Math.cos(angle),
+            y: A.y + 0.8 * Math.sin(angle),
+            z: 0,
+          };
+        });
+      })(),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "∠DAE", at: 7, offset: [1, 0, 0] }],
+    },
+    {
+      points: (() => {
+        // Calculate angle BCD dynamically
+        const C = { x: -3.46, y: -2 };
+        const B = { x: -2, y: 3.46 };
+        const D = { x: 2, y: -3.46 };
+
+        // Calculate angles from C to B and C to D
+        const angleCB = Math.atan2(B.y - C.y, B.x - C.x);
+        const angleCD = Math.atan2(D.y - C.y, D.x - C.x);
+
+        // Generate arc from B to D around C
+        const startAngle = angleCB;
+        const endAngle = angleCD;
+        let angleRange = endAngle - startAngle;
+
+        // Ensure we take the smaller angle
+        if (angleRange < 0) angleRange += 2 * Math.PI;
+        if (angleRange > Math.PI) angleRange = angleRange - 2 * Math.PI;
+
+        return Array.from({ length: 16 }, (_, i) => {
+          const t = i / 15;
+          const angle = startAngle + t * angleRange;
+          return {
+            x: C.x + 0.8 * Math.cos(angle),
+            y: C.y + 0.8 * Math.sin(angle),
+            z: 0,
+          };
+        });
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "∠BCD", at: 7, offset: [0.8, 0.3, 0] }],
+    },
+
+]}
+cameraPosition={[0, 0, 12]}
+showZAxis={false}
+/>
+
+**Property:** <InlineMath math="\angle DAE = \angle BCD" /> (exterior angle at A = interior angle at C)
+
+## Applications of Angle Properties in Circles
+
+### Determining Angle Measures
+
+In a circle with center O, the central angle AOB = 100°. Find the measure of inscribed angle ACB!
+
+**Solution:**
+
+Using the property of central and inscribed angles:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\angle ACB = \frac{1}{2} \times \angle AOB" />
+  <BlockMath math="\angle ACB = \frac{1}{2} \times 100°" />
+  <BlockMath math="\angle ACB = 50°" />
+</div>
+
+### Angles in a Cyclic Quadrilateral
+
+In cyclic quadrilateral ABCD, given <InlineMath math="\angle A = 75°" />. Find the measure of <InlineMath math="\angle C" />!
+
+**Solution:**
+
+Using the property of cyclic quadrilaterals:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\angle A + \angle C = 180°" />
+  <BlockMath math="75° + \angle C = 180°" />
+  <BlockMath math="\angle C = 180° - 75°" />
+  <BlockMath math="\angle C = 105°" />
+</div>
+
+### Inscribed Angle Subtending a Diameter
+
+Point C lies on a circle with AB as the diameter. Find the measure of <InlineMath math="\angle ACB" />!
+
+**Solution:**
+
+Since AB is a diameter and C lies on the circle, by Thales' Theorem:
+
+<BlockMath math="\angle ACB = 90°" />
+
+## Practice Problems
+
+1. In a circle with center O, central angle AOB = 140°. If C and D are two different points on the circle, find:
+
+   - The measure of angle ACB
+   - The measure of angle ADB
+
+2. In cyclic quadrilateral PQRS, given:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\angle P = 85°" />
+     <BlockMath math="\angle Q = 110°" />
+   </div>
+
+   Find the measures of <InlineMath math="\angle R" /> and <InlineMath math="\angle S" />!
+
+3. Points A, B, and C lie on a circle. If AB is a diameter and BC = AC, find the measure of <InlineMath math="\angle BAC" />!
+
+4. In a circle, inscribed angle APB = 35°. Find the measure of central angle AOB!
+
+5. In cyclic quadrilateral KLMN, the exterior angle at vertex K is 65°. Find the measure of the interior angle at vertex M!
+
+### Answer Key
+
+1. **Finding inscribed angles subtending the same arc**
+
+   <LineEquation
+     title="Visualization"
+     description="Central angle AOB = 140° and inscribed angles subtending arc AB"
+     data={[
+       {
+         points: Array.from({ length: 361 }, (_, i) => {
+           const angle = (i * Math.PI) / 180;
+           return {
+             x: 4 * Math.cos(angle),
+             y: 4 * Math.sin(angle),
+             z: 0,
+           };
+         }),
+         color: getColor("PURPLE"),
+         showPoints: false,
+       },
+       {
+         points: [
+           { x: 0, y: 0, z: 0 },
+           { x: 4, y: 0, z: 0 },
+         ],
+         color: getColor("ORANGE"),
+         showPoints: true,
+         labels: [
+           { text: "O", at: 0, offset: [-0.5, -0.5, 0] },
+           { text: "A", at: 1, offset: [0.5, 0, 0] },
+         ],
+       },
+       {
+         points: [
+           { x: 0, y: 0, z: 0 },
+           { x: -1.37, y: 3.76, z: 0 },
+         ],
+         color: getColor("ORANGE"),
+         showPoints: true,
+         labels: [{ text: "B", at: 1, offset: [-0.3, 0.5, 0] }],
+       },
+       {
+         points: [
+           { x: 4, y: 0, z: 0 },
+           { x: -2.83, y: -2.83, z: 0 },
+         ],
+         color: getColor("CYAN"),
+         showPoints: true,
+         labels: [{ text: "C", at: 1, offset: [-0.5, -0.3, 0] }],
+       },
+       {
+         points: [
+           { x: -1.37, y: 3.76, z: 0 },
+           { x: -2.83, y: -2.83, z: 0 },
+         ],
+         color: getColor("CYAN"),
+         showPoints: false,
+       },
+       {
+         points: [
+           { x: 4, y: 0, z: 0 },
+           { x: 2, y: -3.46, z: 0 },
+         ],
+         color: getColor("TEAL"),
+         showPoints: true,
+         labels: [{ text: "D", at: 1, offset: [0.3, -0.5, 0] }],
+       },
+       {
+         points: [
+           { x: -1.37, y: 3.76, z: 0 },
+           { x: 2, y: -3.46, z: 0 },
+         ],
+         color: getColor("TEAL"),
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 25 }, (_, i) => {
+           const angle = (((i * 140) / 30) * Math.PI) / 180;
+           return {
+             x: 1.2 * Math.cos(angle),
+             y: 1.2 * Math.sin(angle),
+             z: 0,
+           };
+         }),
+         color: getColor("PINK"),
+         showPoints: false,
+         labels: [{ text: "140°", at: 15, offset: [0.3, 0.5, 0] }],
+       },
+     ]}
+     cameraPosition={[0, 0, 12]}
+     showZAxis={false}
+   />
+
+   **Solution:**
+
+   Using the relationship between central and inscribed angles:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\text{Inscribed angle} = \frac{1}{2} \times \text{Central angle}" />
+     <BlockMath math="\angle ACB = \frac{1}{2} \times \angle AOB" />
+     <BlockMath math="\angle ACB = \frac{1}{2} \times 140°" />
+     <BlockMath math="\angle ACB = 70°" />
+   </div>
+
+   Since inscribed angles subtending the same arc have equal measures:
+
+   <BlockMath math="\angle ADB = \angle ACB = 70°" />
+
+2. **Finding angles in a cyclic quadrilateral**
+
+   **Solution:**
+
+   In a cyclic quadrilateral, the sum of opposite angles = 180°
+
+   For angle R (opposite to P):
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\angle P + \angle R = 180°" />
+     <BlockMath math="85° + \angle R = 180°" />
+     <BlockMath math="\angle R = 180° - 85°" />
+     <BlockMath math="\angle R = 95°" />
+   </div>
+
+   For angle S (opposite to Q):
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\angle Q + \angle S = 180°" />
+     <BlockMath math="110° + \angle S = 180°" />
+     <BlockMath math="\angle S = 180° - 110°" />
+     <BlockMath math="\angle S = 70°" />
+   </div>
+
+3. **Finding angle in an isosceles triangle with diameter**
+
+   <LineEquation
+     title="Visualization"
+     description="AB is a diameter, BC = AC (isosceles triangle)"
+     data={[
+       {
+         points: Array.from({ length: 361 }, (_, i) => {
+           const angle = (i * Math.PI) / 180;
+           return {
+             x: 4 * Math.cos(angle),
+             y: 4 * Math.sin(angle),
+             z: 0,
+           };
+         }),
+         color: getColor("PURPLE"),
+         showPoints: false,
+       },
+       {
+         points: [
+           { x: -4, y: 0, z: 0 },
+           { x: 4, y: 0, z: 0 },
+         ],
+         color: getColor("ORANGE"),
+         showPoints: true,
+         labels: [
+           { text: "A", at: 0, offset: [-0.5, 0, 0] },
+           { text: "B", at: 1, offset: [0.5, 0, 0] },
+         ],
+       },
+       {
+         points: [
+           { x: -4, y: 0, z: 0 },
+           { x: 0, y: 4, z: 0 },
+         ],
+         color: getColor("CYAN"),
+         showPoints: true,
+         labels: [{ text: "C", at: 1, offset: [0, 0.5, 0] }],
+       },
+       {
+         points: [
+           { x: 4, y: 0, z: 0 },
+           { x: 0, y: 4, z: 0 },
+         ],
+         color: getColor("CYAN"),
+         showPoints: false,
+       },
+       {
+         points: [{ x: 0, y: 0, z: 0 }],
+         color: getColor("AMBER"),
+         showPoints: true,
+         labels: [{ text: "O", at: 0, offset: [0, -0.5, 0] }],
+       },
+       {
+         points: Array.from({ length: 16 }, (_, i) => {
+           const angle = ((90 - (i * 90) / 15) * Math.PI) / 180;
+           return {
+             x: 0.8 * Math.cos(angle),
+             y: 0.8 * Math.sin(angle),
+             z: 0,
+           };
+         }),
+         color: getColor("PINK"),
+         showPoints: false,
+         labels: [{ text: "90°", at: 7, offset: [0.5, 0.2, 0] }],
+       },
+     ]}
+     cameraPosition={[0, 0, 12]}
+     showZAxis={false}
+   />
+
+   **Solution:**
+
+   Since AB is a diameter, by Thales' Theorem:
+
+   <BlockMath math="\angle ACB = 90°" />
+
+   Since BC = AC, triangle ABC is a right isosceles triangle.
+
+   In a right isosceles triangle, both base angles are equal:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\angle BAC + \angle ABC + \angle ACB = 180°" />
+     <BlockMath math="\angle BAC + \angle ABC + 90° = 180°" />
+     <BlockMath math="\angle BAC + \angle ABC = 90°" />
+   </div>
+
+   Since <InlineMath math="\angle BAC = \angle ABC" /> (base angles of isosceles triangle):
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="2 \times \angle BAC = 90°" />
+     <BlockMath math="\angle BAC = 45°" />
+   </div>
+
+4. **Finding central angle from inscribed angle**
+
+   **Solution:**
+
+   Using the relationship between central and inscribed angles:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\text{Central angle} = 2 \times \text{Inscribed angle}" />
+     <BlockMath math="\angle AOB = 2 \times \angle APB" />
+     <BlockMath math="\angle AOB = 2 \times 35°" />
+     <BlockMath math="\angle AOB = 70°" />
+   </div>
+
+5. **Finding interior angle from exterior angle in cyclic quadrilateral**
+
+   **Solution:**
+
+   In a cyclic quadrilateral, an exterior angle at a vertex equals the interior angle at the opposite vertex.
+
+   If the exterior angle at K = 65°, then:
+
+   <BlockMath math="\angle \text{interior at M} = \angle \text{exterior at K} = 65°" />
+
+   This is because vertices K and M are opposite in cyclic quadrilateral KLMN.

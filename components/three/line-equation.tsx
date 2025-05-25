@@ -131,22 +131,16 @@ export function LineEquation({
       return vectorPoints;
     }
 
-    // Get start and end points safely
-    const startPoint = vectorPoints[0];
-    const endPoint = vectorPoints.at(-1);
+    let basePoints: THREE.Vector3[];
 
-    // This check satisfies TS, even though endPoint is guaranteed by the length check above
-    if (!endPoint) {
-      return vectorPoints; // Should be unreachable
+    if (smooth) {
+      // Use CatmullRomCurve3 for smooth curves
+      const curve = new THREE.CatmullRomCurve3(vectorPoints);
+      basePoints = curve.getPoints(curvePoints);
+    } else {
+      // For non-smooth lines, use the original points directly
+      basePoints = [...vectorPoints];
     }
-
-    const curve = smooth
-      ? new THREE.CatmullRomCurve3(vectorPoints)
-      : new THREE.LineCurve3(startPoint, endPoint);
-
-    const basePoints = smooth
-      ? curve.getPoints(curvePoints)
-      : curve.getPoints(1); // Get fewer points if not smooth
 
     // Adjust line end points to account for the cone size to prevent overlap
     if (cone) {
@@ -159,7 +153,9 @@ export function LineEquation({
         const direction = new THREE.Vector3()
           .subVectors(nextPoint, startPoint)
           .normalize();
-        basePoints[0] = startPoint.add(direction.multiplyScalar(arrowSize)); // Move start point forward
+        basePoints[0] = startPoint
+          .clone()
+          .add(direction.multiplyScalar(arrowSize)); // Move start point forward
       }
 
       if (
@@ -178,9 +174,9 @@ export function LineEquation({
           .normalize();
         // Find the index of the last point to modify it directly
         const lastIndex = basePoints.length - 1;
-        basePoints[lastIndex] = endPoint.sub(
-          direction.multiplyScalar(arrowSize)
-        ); // Move end point backward
+        basePoints[lastIndex] = endPoint
+          .clone()
+          .sub(direction.multiplyScalar(arrowSize)); // Move end point backward
       }
     }
     return basePoints;
