@@ -1,6 +1,352 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Absolute Value Function",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Functions and Their Modeling",
 };
+
+## Understanding Absolute Value Functions
+
+An absolute value function is a function that produces positive or zero values from any input, regardless of the original sign of the input. Geometrically, absolute value can be understood as the distance of a number from the zero point on the number line.
+
+### Mathematical Definition
+
+For any real number <InlineMath math="x" />, the absolute value function is defined as:
+
+<BlockMath math="f(x) = |x| = \begin{cases} x, & \text{if } x \geq 0 \\ -x, & \text{if } x < 0 \end{cases}" />
+
+**Components of absolute value functions:**
+
+- The symbol <InlineMath math="|x|" /> is read as "absolute value of x"
+- The function result is always non-negative (<InlineMath math="|x| \geq 0" />)
+- This function is even: <InlineMath math="|-x| = |x|" />
+
+## Properties of Absolute Value Functions
+
+Absolute value functions have several important properties that need to be understood:
+
+**Basic properties:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="|x| \geq 0 \text{ for all } x \in \mathbb{R}" />
+  <BlockMath math="|-x| = |x|" />
+  <BlockMath math="|x|^2 = x^2" />
+  <BlockMath math="|xy| = |x| \cdot |y|" />
+  <BlockMath math="\left|\frac{x}{y}\right| = \frac{|x|}{|y|}, \text{ with } y \neq 0" />
+</div>
+
+**Triangle inequality properties:**
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="|x + y| \leq |x| + |y|" />
+  <BlockMath math="||x| - |y|| \leq |x - y|" />
+</div>
+
+## Graphs of Absolute Value Functions
+
+The following is a visualization of the basic absolute value function:
+
+<LineEquation
+  title={
+    <>
+      Graph of Function <InlineMath math="f(x) = |x|" />
+    </>
+  }
+  description={
+    <>
+      The graph shows the characteristic shape of an absolute value function
+      that forms the letter V.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        return { x, y: Math.abs(x), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = |x|", at: 15, offset: [1, -1, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+**Value table for function <InlineMath math="f(x) = |x|" />:**
+
+| x                        | -4  | -3   | -2  | -1  | 0   | 1   | 2   | 3   | 4   |
+| ------------------------ | --- | ---- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| <InlineMath math="f(x) = | x   | " /> | 4   | 3   | 2   | 1   | 0   | 1   | 2   | 3   | 4   |
+
+## Transformations of Absolute Value Functions
+
+Absolute value functions can be transformed in various ways:
+
+### Vertical Translation
+
+The function <InlineMath math="f(x) = |x| + k" /> shifts the graph upward (if <InlineMath math="k > 0" />) or downward (if <InlineMath math="k < 0" />).
+
+<LineEquation
+  title={<>Vertical Translation</>}
+  description={
+    <>
+      Comparison of <InlineMath math="f(x) = |x|" /> with{" "}
+      <InlineMath math="g(x) = |x| + 2" /> and{" "}
+      <InlineMath math="h(x) = |x| - 2" />.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        return { x, y: Math.abs(x), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = |x|", at: 12, offset: [1, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        return { x, y: Math.abs(x) + 2, z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [{ text: "g(x) = |x| + 2", at: 12, offset: [1, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        return { x, y: Math.abs(x) - 2, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "h(x) = |x| - 2", at: 12, offset: [1, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+### Horizontal Translation
+
+The function <InlineMath math="f(x) = |x - h|" /> shifts the graph to the right (if <InlineMath math="h > 0" />) or to the left (if <InlineMath math="h < 0" />).
+
+<LineEquation
+  title={<>Horizontal Translation</>}
+  description={
+    <>
+      Comparison of <InlineMath math="f(x) = |x|" /> with{" "}
+      <InlineMath math="g(x) = |x - 3|" /> and{" "}
+      <InlineMath math="h(x) = |x + 3|" />.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        return { x, y: Math.abs(x), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = |x|", at: 12, offset: [1, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        return { x, y: Math.abs(x - 3), z: 0 };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "g(x) = |x - 3|", at: 12, offset: [3, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        return { x, y: Math.abs(x + 3), z: 0 };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "h(x) = |x + 3|", at: 12, offset: [1, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+### Stretching and Compression
+
+The function <InlineMath math="f(x) = a|x|" /> changes the slope of the graph:
+
+- If <InlineMath math="a > 1" />: the graph becomes steeper
+- If <InlineMath math="0 < a < 1" />: the graph becomes gentler
+- If <InlineMath math="a < 0" />: the graph is inverted (reflection across the x-axis)
+
+To make it easier to understand, let's look at the following example:
+
+<LineEquation
+  title={<>Stretching and Compression</>}
+  description={
+    <>
+      Comparison of <InlineMath math="f(x) = |x|" /> with{" "}
+      <InlineMath math="g(x) = 2|x|" /> and <InlineMath math="h(x) = 0.5|x|" />.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        return { x, y: Math.abs(x), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = |x|", at: 12, offset: [1, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        return { x, y: 2 * Math.abs(x), z: 0 };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      labels: [{ text: "g(x) = 2|x|", at: 12, offset: [1, 1, 0] }],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        return { x, y: 0.5 * Math.abs(x), z: 0 };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      labels: [{ text: "h(x) = 0.5|x|", at: 12, offset: [3, 0.2, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+## General Form of Absolute Value Functions
+
+The general form of an absolute value function is:
+
+<BlockMath math="f(x) = a|x - h| + k" />
+
+where:
+
+- <InlineMath math="a" />: stretching/compression factor and reflection
+- <InlineMath math="h" />: horizontal translation
+- <InlineMath math="k" />: vertical translation
+- The vertex is located at <InlineMath math="(h, k)" />
+
+**Transformation table:**
+
+| Parameter                       | Value        | Effect on Graph       |
+| ------------------------------- | ------------ | --------------------- |
+| <InlineMath math="a > 1" />     | Positive > 1 | Graph becomes steeper |
+| <InlineMath math="0 < a < 1" /> | Positive < 1 | Graph becomes gentler |
+| <InlineMath math="a < 0" />     | Negative     | Graph is inverted     |
+| <InlineMath math="h > 0" />     | Positive     | Shift to the right    |
+| <InlineMath math="h < 0" />     | Negative     | Shift to the left     |
+| <InlineMath math="k > 0" />     | Positive     | Shift upward          |
+| <InlineMath math="k < 0" />     | Negative     | Shift downward        |
+
+## Absolute Value Equations and Inequalities
+
+**Solving absolute value equations:**
+
+To solve <InlineMath math="|x| = a" /> with <InlineMath math="a \geq 0" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="|x| = a \Rightarrow x = a \text{ or } x = -a" />
+</div>
+
+**Example:** Solve <InlineMath math="|x - 3| = 5" />
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="|x - 3| = 5" />
+  <BlockMath math="x - 3 = 5 \text{ or } x - 3 = -5" />
+  <BlockMath math="x = 8 \text{ or } x = -2" />
+</div>
+
+**Solving absolute value inequalities:**
+
+For <InlineMath math="|x| < a" /> with <InlineMath math="a > 0" />:
+
+<BlockMath math="|x| < a \Rightarrow -a < x < a" />
+
+For <InlineMath math="|x| > a" /> with <InlineMath math="a > 0" />:
+
+<BlockMath math="|x| > a \Rightarrow x < -a \text{ or } x > a" />
+
+## Exercises
+
+1. Determine the value of <InlineMath math="f(x) = |2x - 6|" /> for <InlineMath math="x = -1, 0, 3, 5" />
+
+2. Solve the equation <InlineMath math="|3x + 1| = 7" />
+
+3. Solve the inequality <InlineMath math="|x - 2| < 4" />
+
+4. Determine the vertex of the function <InlineMath math="f(x) = 2|x - 3| + 1" />
+
+5. The distance between two cities is 150 km. If city A is located at coordinate -50 km, where is city B located?
+
+### Answer Key
+
+1. **Calculating function values for various inputs:**
+
+   Substitute each value of x into the function <InlineMath math="f(x) = |2x - 6|" />:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="f(-1) = |2(-1) - 6| = |-2 - 6| = |-8| = 8" />
+     <BlockMath math="f(0) = |2(0) - 6| = |0 - 6| = |-6| = 6" />
+     <BlockMath math="f(3) = |2(3) - 6| = |6 - 6| = |0| = 0" />
+     <BlockMath math="f(5) = |2(5) - 6| = |10 - 6| = |4| = 4" />
+   </div>
+
+2. **Solving absolute value equations:**
+
+   For the equation <InlineMath math="|3x + 1| = 7" />, we use the definition of absolute value which produces two possibilities:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="3x + 1 = 7 \quad \text{or} \quad 3x + 1 = -7" />
+     <BlockMath math="3x = 6 \quad \text{or} \quad 3x = -8" />
+     <BlockMath math="x = 2 \quad \text{or} \quad x = -\frac{8}{3}" />
+   </div>
+
+3. **Solving absolute value inequalities:**
+
+   For <InlineMath math="|x - 2| < 4" />, we use the property that <InlineMath math="|a| < b" /> is equivalent to <InlineMath math="-b < a < b" />:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="-4 < x - 2 < 4" />
+     <BlockMath math="-4 + 2 < x < 4 + 2" />
+     <BlockMath math="-2 < x < 6" />
+   </div>
+
+   So the solution set is <InlineMath math="x \in (-2, 6)" />.
+
+4. **Determining the vertex:**
+
+   From the function <InlineMath math="f(x) = 2|x - 3| + 1" />, we can identify the parameters:
+
+   - <InlineMath math="a = 2" /> (stretching factor)
+   - <InlineMath math="h = 3" /> (horizontal translation)
+   - <InlineMath math="k = 1" /> (vertical translation)
+
+   The vertex is located at <InlineMath math="(h, k) = (3, 1)" />.
+
+5. **Calculating position based on distance:**
+
+   Given that the distance between cities A and B is 150 km, with city A at coordinate -50 km. Let city B be at coordinate <InlineMath math="x_B" />:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="|-50 - x_B| = 150" />
+     <BlockMath math="-50 - x_B = 150 \quad \text{or} \quad -50 - x_B = -150" />
+     <BlockMath math="x_B = -50 - 150 = -200 \quad \text{or} \quad x_B = -50 + 150 = 100" />
+   </div>
+
+   So city B can be located at coordinate 100 km or -200 km.
