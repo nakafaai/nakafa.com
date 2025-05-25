@@ -32,7 +32,7 @@ function MenuItem() {
         <Collapsible
           key={item.title}
           asChild
-          defaultOpen={pathname.includes(item.title)}
+          defaultOpen
           className="group/collapsible"
         >
           <SidebarMenuItem>
