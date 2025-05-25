@@ -26,7 +26,10 @@ export function CardMaterial({ material }: Props) {
 
   const id = slugify(material.title);
 
-  const handleIntersect = useToc((context) => context.handleIntersect);
+  const { handleIntersect, setActiveHeading } = useToc((context) => ({
+    handleIntersect: context.handleIntersect,
+    setActiveHeading: context.setActiveHeading,
+  }));
 
   const { ref } = useIntersectionObserver({
     onChange(isIntersecting, entry) {
@@ -51,6 +54,7 @@ export function CardMaterial({ material }: Props) {
                 title={material.title}
                 className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
                 aria-label={`Link to ${material.title}`}
+                onClick={() => setActiveHeading(id)}
               >
                 <LinkIcon className="size-4" />
               </a>
