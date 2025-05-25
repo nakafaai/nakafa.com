@@ -1,6 +1,581 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Lingkaran dan Garis Singgung",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Lingkaran",
 };
+
+## Pengertian Garis Singgung Lingkaran
+
+Garis singgung lingkaran adalah garis yang memotong lingkaran tepat di satu titik. Titik perpotongan antara garis singgung dan lingkaran disebut titik singgung.
+
+<LineEquation
+  title="Garis Singgung Lingkaran"
+  description="Garis singgung memotong lingkaran tepat di satu titik."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "P", at: 1, offset: [0.5, 0, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 3, y: -3, z: 0 },
+        { x: 3, y: 3, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "Garis singgung", at: 1, offset: [1.5, 0, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+**Sifat penting:** Garis singgung selalu tegak lurus dengan jari-jari lingkaran di titik singgung.
+
+## Persamaan Garis Singgung Lingkaran
+
+### Garis Singgung Melalui Titik pada Lingkaran
+
+Jika titik <InlineMath math="(x_1, y_1)" /> terletak pada lingkaran <InlineMath math="x^2 + y^2 = r^2" />, maka persamaan garis singgung di titik tersebut adalah:
+
+<BlockMath math="x_1 \cdot x + y_1 \cdot y = r^2" />
+
+Untuk lingkaran dengan pusat <InlineMath math="(a, b)" />:
+
+<BlockMath math="(x_1 - a)(x - a) + (y_1 - b)(y - b) = r^2" />
+
+### Garis Singgung dengan Gradien Tertentu
+
+Persamaan garis singgung lingkaran <InlineMath math="x^2 + y^2 = r^2" /> dengan gradien <InlineMath math="m" /> adalah:
+
+<BlockMath math="y = mx \pm r\sqrt{1 + m^2}" />
+
+Untuk lingkaran dengan pusat <InlineMath math="(a, b)" />:
+
+<BlockMath math="y - b = m(x - a) \pm r\sqrt{1 + m^2}" />
+
+## Garis Singgung dari Titik di Luar Lingkaran
+
+Dari sebuah titik di luar lingkaran, dapat ditarik dua garis singgung ke lingkaran tersebut.
+
+<LineEquation
+  title="Dua Garis Singgung dari Titik Luar"
+  description="Dari titik P di luar lingkaran dapat ditarik dua garis singgung."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 2.5 * Math.cos(angle),
+          y: 2.5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [{ x: 5, y: 0, z: 0 }],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "P", at: 0, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: (() => {
+        const P = { x: 5, y: 0 };
+        const O = { x: 0, y: 0 };
+        const r = 2.5;
+        const d = Math.sqrt((P.x - O.x) ** 2 + (P.y - O.y) ** 2);
+
+        // Angle from center to external point
+        const theta = Math.atan2(P.y - O.y, P.x - O.x);
+
+        // Angle of tangent line from center
+        const alpha = Math.asin(r / d);
+
+        // First tangent point
+        const T1x = O.x + r * Math.cos(theta + Math.PI / 2 - alpha);
+        const T1y = O.y + r * Math.sin(theta + Math.PI / 2 - alpha);
+
+        return [
+          { x: P.x, y: P.y, z: 0 },
+          { x: T1x, y: T1y, z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: "T₁", at: 1, offset: [0.3, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const P = { x: 5, y: 0 };
+        const O = { x: 0, y: 0 };
+        const r = 2.5;
+        const d = Math.sqrt((P.x - O.x) ** 2 + (P.y - O.y) ** 2);
+
+        // Angle from center to external point
+        const theta = Math.atan2(P.y - O.y, P.x - O.x);
+
+        // Angle of tangent line from center
+        const alpha = Math.asin(r / d);
+
+        // Second tangent point
+        const T2x = O.x + r * Math.cos(theta - Math.PI / 2 + alpha);
+        const T2y = O.y + r * Math.sin(theta - Math.PI / 2 + alpha);
+
+        return [
+          { x: P.x, y: P.y, z: 0 },
+          { x: T2x, y: T2y, z: 0 },
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [{ text: "T₂", at: 1, offset: [0.3, -0.5, 0] }],
+    },
+
+]}
+cameraPosition={[0, 0, 10]}
+showZAxis={false}
+/>
+
+### Panjang Garis Singgung
+
+Jika <InlineMath math="P(x_1, y_1)" /> adalah titik di luar lingkaran dengan pusat <InlineMath math="O(a, b)" /> dan jari-jari <InlineMath math="r" />, maka panjang garis singgung dari P ke lingkaran adalah:
+
+<BlockMath math="PT = \sqrt{(x_1 - a)^2 + (y_1 - b)^2 - r^2}" />
+
+## Garis Singgung Persekutuan Dua Lingkaran
+
+### Garis Singgung Persekutuan Luar
+
+Garis singgung persekutuan luar adalah garis yang menyinggung kedua lingkaran dan tidak memotong garis yang menghubungkan kedua pusat lingkaran.
+
+<LineEquation
+  title="Garis Singgung Persekutuan Luar"
+  description="Garis yang menyinggung kedua lingkaran dari sisi yang sama."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: -3 + 1.5 * Math.cos(angle),
+          y: 1.5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 + 2 * Math.cos(angle),
+          y: 2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O₁", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "O₂", at: 1, offset: [0.5, -0.5, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -3, y: 0 };
+        const O2 = { x: 3, y: 0 };
+        const r1 = 1.5;
+        const r2 = 2;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+        
+        // Angle between center line and common tangent
+        const alpha = Math.asin((r2 - r1) / d);
+        
+        // Angle from O1 to O2
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+        
+        // Tangent points on first circle
+        const T1x = O1.x + r1 * Math.cos(theta + Math.PI/2 - alpha);
+        const T1y = O1.y + r1 * Math.sin(theta + Math.PI/2 - alpha);
+        
+        // Tangent points on second circle
+        const T2x = O2.x + r2 * Math.cos(theta + Math.PI/2 - alpha);
+        const T2y = O2.y + r2 * Math.sin(theta + Math.PI/2 - alpha);
+        
+        // Extend the line beyond the tangent points
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+        
+        return [
+          { x: T1x - 3 * ux, y: T1y - 3 * uy, z: 0 },
+          { x: T2x + 3 * ux, y: T2y + 3 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "GSPL", at: 1, offset: [0, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -3, y: 0 };
+        const O2 = { x: 3, y: 0 };
+        const r1 = 1.5;
+        const r2 = 2;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+        
+        // Angle between center line and common tangent
+        const alpha = Math.asin((r2 - r1) / d);
+        
+        // Angle from O1 to O2
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+        
+        // Tangent points on first circle
+        const T1x = O1.x + r1 * Math.cos(theta - Math.PI/2 + alpha);
+        const T1y = O1.y + r1 * Math.sin(theta - Math.PI/2 + alpha);
+        
+        // Tangent points on second circle
+        const T2x = O2.x + r2 * Math.cos(theta - Math.PI/2 + alpha);
+        const T2y = O2.y + r2 * Math.sin(theta - Math.PI/2 + alpha);
+        
+        // Extend the line beyond the tangent points
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+        
+        return [
+          { x: T1x - 3 * ux, y: T1y - 3 * uy, z: 0 },
+          { x: T2x + 3 * ux, y: T2y + 3 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: false,
+      labels: [{ text: "GSPL", at: 1, offset: [0, -0.5, 0] }],
+    },
+
+]}
+cameraPosition={[0, 0, 12]}
+showZAxis={false}
+/>
+
+Panjang garis singgung persekutuan luar:
+
+<BlockMath math="l = \sqrt{d^2 - (r_1 - r_2)^2}" />
+
+di mana <InlineMath math="d" /> adalah jarak antara kedua pusat lingkaran.
+
+### Garis Singgung Persekutuan Dalam
+
+Garis singgung persekutuan dalam adalah garis yang menyinggung kedua lingkaran dan memotong garis yang menghubungkan kedua pusat lingkaran.
+
+<LineEquation
+  title="Garis Singgung Persekutuan Dalam"
+  description="Garis yang menyinggung kedua lingkaran dari sisi yang berlawanan."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: -3 + 1.5 * Math.cos(angle),
+          y: 1.5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 + 1.5 * Math.cos(angle),
+          y: 1.5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O₁", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "O₂", at: 1, offset: [0.5, -0.5, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -3, y: 0 };
+        const O2 = { x: 3, y: 0 };
+        const r1 = 1.5;
+        const r2 = 1.5;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+        
+        // For internal common tangent, we need to find the angle
+        const alpha = Math.asin((r1 + r2) / d);
+        
+        // Angle from O1 to O2
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+        
+        // For internal tangent, tangent points are on opposite sides
+        // First circle: top side
+        const T1x = O1.x + r1 * Math.cos(theta + Math.PI/2 - alpha);
+        const T1y = O1.y + r1 * Math.sin(theta + Math.PI/2 - alpha);
+        
+        // Second circle: bottom side (add PI to flip to opposite side)
+        const T2x = O2.x + r2 * Math.cos(theta + Math.PI/2 - alpha + Math.PI);
+        const T2y = O2.y + r2 * Math.sin(theta + Math.PI/2 - alpha + Math.PI);
+        
+        // Extend the line beyond the tangent points
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+        
+        return [
+          { x: T1x - 2 * ux, y: T1y - 2 * uy, z: 0 },
+          { x: T2x + 2 * ux, y: T2y + 2 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "GSPD", at: 0, offset: [-1, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -3, y: 0 };
+        const O2 = { x: 3, y: 0 };
+        const r1 = 1.5;
+        const r2 = 1.5;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+        
+        // For internal common tangent, we need to find the angle
+        const alpha = Math.asin((r1 + r2) / d);
+        
+        // Angle from O1 to O2
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+        
+        // For internal tangent, tangent points are on opposite sides
+        // First circle: bottom side
+        const T1x = O1.x + r1 * Math.cos(theta - Math.PI/2 + alpha);
+        const T1y = O1.y + r1 * Math.sin(theta - Math.PI/2 + alpha);
+        
+        // Second circle: top side (add PI to flip to opposite side)
+        const T2x = O2.x + r2 * Math.cos(theta - Math.PI/2 + alpha + Math.PI);
+        const T2y = O2.y + r2 * Math.sin(theta - Math.PI/2 + alpha + Math.PI);
+        
+        // Extend the line beyond the tangent points
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+        
+        return [
+          { x: T1x - 2 * ux, y: T1y - 2 * uy, z: 0 },
+          { x: T2x + 2 * ux, y: T2y + 2 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "GSPD", at: 0, offset: [-1, -0.5, 0] }],
+    },
+
+]}
+cameraPosition={[0, 0, 12]}
+showZAxis={false}
+/>
+
+Panjang garis singgung persekutuan dalam:
+
+<BlockMath math="l = \sqrt{d^2 - (r_1 + r_2)^2}" />
+
+## Menentukan Persamaan Garis Singgung
+
+### Menentukan Garis Singgung Melalui Titik pada Lingkaran
+
+Tentukan persamaan garis singgung lingkaran <InlineMath math="x^2 + y^2 = 25" /> di titik <InlineMath math="(3, 4)" />.
+
+**Penyelesaian:**
+
+Karena titik <InlineMath math="(3, 4)" /> terletak pada lingkaran (dapat diverifikasi: <InlineMath math="3^2 + 4^2 = 9 + 16 = 25" />), maka persamaan garis singgungnya:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x_1 \cdot x + y_1 \cdot y = r^2" />
+  <BlockMath math="3x + 4y = 25" />
+</div>
+
+### Menentukan Garis Singgung dengan Gradien Tertentu
+
+Tentukan persamaan garis singgung lingkaran <InlineMath math="x^2 + y^2 = 16" /> yang sejajar dengan garis <InlineMath math="3x - 4y + 5 = 0" />.
+
+**Penyelesaian:**
+
+Gradien garis <InlineMath math="3x - 4y + 5 = 0" /> adalah <InlineMath math="m = \frac{3}{4}" />.
+
+Persamaan garis singgung dengan gradien <InlineMath math="m = \frac{3}{4}" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="y = mx \pm r\sqrt{1 + m^2}" />
+  <BlockMath math="y = \frac{3}{4}x \pm 4\sqrt{1 + \left(\frac{3}{4}\right)^2}" />
+  <BlockMath math="y = \frac{3}{4}x \pm 4\sqrt{1 + \frac{9}{16}}" />
+  <BlockMath math="y = \frac{3}{4}x \pm 4\sqrt{\frac{25}{16}}" />
+  <BlockMath math="y = \frac{3}{4}x \pm 4 \cdot \frac{5}{4}" />
+  <BlockMath math="y = \frac{3}{4}x \pm 5" />
+</div>
+
+Jadi, persamaan garis singgungnya adalah:
+
+- <InlineMath math="y = \frac{3}{4}x + 5" /> atau <InlineMath math="3x - 4y + 20 = 0" />
+- <InlineMath math="y = \frac{3}{4}x - 5" /> atau <InlineMath math="3x - 4y - 20 = 0" />
+
+### Menghitung Panjang Garis Singgung dari Titik Luar
+
+Tentukan panjang garis singgung dari titik <InlineMath math="P(7, 1)" /> ke lingkaran <InlineMath math="x^2 + y^2 = 25" />.
+
+**Penyelesaian:**
+
+Pusat lingkaran <InlineMath math="O(0, 0)" /> dan jari-jari <InlineMath math="r = 5" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="PT = \sqrt{(x_1 - a)^2 + (y_1 - b)^2 - r^2}" />
+  <BlockMath math="PT = \sqrt{(7 - 0)^2 + (1 - 0)^2 - 25}" />
+  <BlockMath math="PT = \sqrt{49 + 1 - 25}" />
+  <BlockMath math="PT = \sqrt{25}" />
+  <BlockMath math="PT = 5" />
+</div>
+
+## Latihan Soal
+
+1. Tentukan persamaan garis singgung lingkaran <InlineMath math="x^2 + y^2 = 36" /> di titik <InlineMath math="(-3, 3\sqrt{3})" />!
+
+2. Tentukan persamaan garis singgung lingkaran <InlineMath math="(x - 2)^2 + (y + 3)^2 = 25" /> yang tegak lurus dengan garis <InlineMath math="2x + y - 5 = 0" />!
+
+3. Dari titik <InlineMath math="A(10, 0)" /> ditarik garis singgung ke lingkaran <InlineMath math="x^2 + y^2 = 36" />. Tentukan:
+
+   - Panjang garis singgung
+   - Koordinat titik-titik singgung
+
+4. Dua lingkaran masing-masing berpusat di <InlineMath math="O_1(-4, 0)" /> dengan jari-jari 2 dan <InlineMath math="O_2(4, 0)" /> dengan jari-jari 3. Tentukan panjang garis singgung persekutuan luar!
+
+5. Tentukan persamaan garis singgung lingkaran <InlineMath math="x^2 + y^2 - 6x + 4y - 12 = 0" /> yang melalui titik <InlineMath math="(8, -2)" />!
+
+### Kunci Jawaban
+
+1. **Persamaan garis singgung di titik pada lingkaran**
+
+   Verifikasi titik pada lingkaran:
+
+   <BlockMath math="(-3)^2 + (3\sqrt{3})^2 = 9 + 27 = 36 \space \checkmark" />
+
+   Persamaan garis singgung:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x_1 \cdot x + y_1 \cdot y = r^2" />
+     <BlockMath math="-3x + 3\sqrt{3}y = 36" />
+     <BlockMath math="-x + \sqrt{3}y = 12" />
+     <BlockMath math="x - \sqrt{3}y + 12 = 0" />
+   </div>
+
+2. **Garis singgung tegak lurus dengan garis tertentu**
+
+   Gradien garis <InlineMath math="2x + y - 5 = 0" /> adalah <InlineMath math="m_1 = -2" />.
+
+   Karena tegak lurus, maka <InlineMath math="m_2 = \frac{1}{2}" />.
+
+   Persamaan garis singgung:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="y - b = m(x - a) \pm r\sqrt{1 + m^2}" />
+     <BlockMath math="y + 3 = \frac{1}{2}(x - 2) \pm 5\sqrt{1 + \frac{1}{4}}" />
+     <BlockMath math="y + 3 = \frac{1}{2}(x - 2) \pm 5 \cdot \frac{\sqrt{5}}{2}" />
+     <BlockMath math="y + 3 = \frac{1}{2}x - 1 \pm \frac{5\sqrt{5}}{2}" />
+   </div>
+
+   Jadi: <InlineMath math="x - 2y - 4 \pm 5\sqrt{5} = 0" />
+
+3. **Garis singgung dari titik luar**
+
+   - Panjang garis singgung:
+
+     <div className="flex flex-col gap-4">
+       <BlockMath math="AT = \sqrt{10^2 + 0^2 - 36} = \sqrt{100 - 36} = \sqrt{64} = 8" />
+     </div>
+
+   - Koordinat titik singgung dapat dicari dengan persamaan garis singgung dari titik luar.
+
+4. **Garis singgung persekutuan luar**
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="d = \sqrt{(4-(-4))^2 + (0-0)^2} = 8" />
+     <BlockMath math="l = \sqrt{d^2 - (r_2 - r_1)^2} = \sqrt{64 - 1} = \sqrt{63} = 3\sqrt{7}" />
+   </div>
+
+5. **Garis singgung melalui titik luar**
+
+   Lingkaran: <InlineMath math="(x - 3)^2 + (y + 2)^2 = 25" />
+
+   Pusat <InlineMath math="(3, -2)" />, jari-jari <InlineMath math="r = 5" />
+
+   Verifikasi titik <InlineMath math="(8, -2)" /> di luar lingkaran:
+
+   <BlockMath math="(8-3)^2 + (-2+2)^2 = 25 + 0 = 25" />
+
+   Titik tepat pada lingkaran! Maka persamaan garis singgungnya:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="(8-3)(x-3) + (-2+2)(y+2) = 25" />
+     <BlockMath math="5(x-3) + 0 = 25" />
+     <BlockMath math="x - 3 = 5" />
+     <BlockMath math="x = 8" />
+   </div>

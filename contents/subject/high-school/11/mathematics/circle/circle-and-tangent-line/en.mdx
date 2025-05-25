@@ -1,6 +1,581 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Circle and Tangent Line",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Circle",
 };
+
+## Definition of Circle Tangent Line
+
+A circle tangent line is a line that intersects the circle at exactly one point. The intersection point between the tangent line and the circle is called the point of tangency.
+
+<LineEquation
+  title="Circle Tangent Line"
+  description="A tangent line intersects the circle at exactly one point."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "P", at: 1, offset: [0.5, 0, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 3, y: -3, z: 0 },
+        { x: 3, y: 3, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "Tangent line", at: 1, offset: [1.5, 0, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+**Important property:** A tangent line is always perpendicular to the radius of the circle at the point of tangency.
+
+## Equation of Circle Tangent Line
+
+### Tangent Line Through a Point on the Circle
+
+If point <InlineMath math="(x_1, y_1)" /> lies on the circle <InlineMath math="x^2 + y^2 = r^2" />, then the equation of the tangent line at that point is:
+
+<BlockMath math="x_1 \cdot x + y_1 \cdot y = r^2" />
+
+For a circle with center <InlineMath math="(a, b)" />:
+
+<BlockMath math="(x_1 - a)(x - a) + (y_1 - b)(y - b) = r^2" />
+
+### Tangent Line with a Given Gradient
+
+The equation of the tangent line to circle <InlineMath math="x^2 + y^2 = r^2" /> with gradient <InlineMath math="m" /> is:
+
+<BlockMath math="y = mx \pm r\sqrt{1 + m^2}" />
+
+For a circle with center <InlineMath math="(a, b)" />:
+
+<BlockMath math="y - b = m(x - a) \pm r\sqrt{1 + m^2}" />
+
+## Tangent Lines from an External Point
+
+From a point outside the circle, two tangent lines can be drawn to the circle.
+
+<LineEquation
+  title="Two Tangent Lines from External Point"
+  description="From point P outside the circle, two tangent lines can be drawn."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 2.5 * Math.cos(angle),
+          y: 2.5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [{ x: 5, y: 0, z: 0 }],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "P", at: 0, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: (() => {
+        const P = { x: 5, y: 0 };
+        const O = { x: 0, y: 0 };
+        const r = 2.5;
+        const d = Math.sqrt((P.x - O.x) ** 2 + (P.y - O.y) ** 2);
+
+        // Angle from center to external point
+        const theta = Math.atan2(P.y - O.y, P.x - O.x);
+
+        // Angle of tangent line from center
+        const alpha = Math.asin(r / d);
+
+        // First tangent point
+        const T1x = O.x + r * Math.cos(theta + Math.PI / 2 - alpha);
+        const T1y = O.y + r * Math.sin(theta + Math.PI / 2 - alpha);
+
+        return [
+          { x: P.x, y: P.y, z: 0 },
+          { x: T1x, y: T1y, z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: "T₁", at: 1, offset: [0.3, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const P = { x: 5, y: 0 };
+        const O = { x: 0, y: 0 };
+        const r = 2.5;
+        const d = Math.sqrt((P.x - O.x) ** 2 + (P.y - O.y) ** 2);
+
+        // Angle from center to external point
+        const theta = Math.atan2(P.y - O.y, P.x - O.x);
+
+        // Angle of tangent line from center
+        const alpha = Math.asin(r / d);
+
+        // Second tangent point
+        const T2x = O.x + r * Math.cos(theta - Math.PI / 2 + alpha);
+        const T2y = O.y + r * Math.sin(theta - Math.PI / 2 + alpha);
+
+        return [
+          { x: P.x, y: P.y, z: 0 },
+          { x: T2x, y: T2y, z: 0 },
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [{ text: "T₂", at: 1, offset: [0.3, -0.5, 0] }],
+    },
+
+]}
+cameraPosition={[0, 0, 10]}
+showZAxis={false}
+/>
+
+### Length of Tangent Line
+
+If <InlineMath math="P(x_1, y_1)" /> is a point outside the circle with center <InlineMath math="O(a, b)" /> and radius <InlineMath math="r" />, then the length of the tangent line from P to the circle is:
+
+<BlockMath math="PT = \sqrt{(x_1 - a)^2 + (y_1 - b)^2 - r^2}" />
+
+## Common Tangent Lines of Two Circles
+
+### External Common Tangent Lines
+
+External common tangent lines are lines that touch both circles and do not intersect the line connecting the two circle centers.
+
+<LineEquation
+  title="External Common Tangent Lines"
+  description="Lines that touch both circles from the same side."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: -3 + 1.5 * Math.cos(angle),
+          y: 1.5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 + 2 * Math.cos(angle),
+          y: 2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O₁", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "O₂", at: 1, offset: [0.5, -0.5, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -3, y: 0 };
+        const O2 = { x: 3, y: 0 };
+        const r1 = 1.5;
+        const r2 = 2;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+        
+        // Angle between center line and common tangent
+        const alpha = Math.asin((r2 - r1) / d);
+        
+        // Angle from O1 to O2
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+        
+        // Tangent points on first circle
+        const T1x = O1.x + r1 * Math.cos(theta + Math.PI/2 - alpha);
+        const T1y = O1.y + r1 * Math.sin(theta + Math.PI/2 - alpha);
+        
+        // Tangent points on second circle
+        const T2x = O2.x + r2 * Math.cos(theta + Math.PI/2 - alpha);
+        const T2y = O2.y + r2 * Math.sin(theta + Math.PI/2 - alpha);
+        
+        // Extend the line beyond the tangent points
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+        
+        return [
+          { x: T1x - 3 * ux, y: T1y - 3 * uy, z: 0 },
+          { x: T2x + 3 * ux, y: T2y + 3 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "ECT", at: 1, offset: [0, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -3, y: 0 };
+        const O2 = { x: 3, y: 0 };
+        const r1 = 1.5;
+        const r2 = 2;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+        
+        // Angle between center line and common tangent
+        const alpha = Math.asin((r2 - r1) / d);
+        
+        // Angle from O1 to O2
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+        
+        // Tangent points on first circle
+        const T1x = O1.x + r1 * Math.cos(theta - Math.PI/2 + alpha);
+        const T1y = O1.y + r1 * Math.sin(theta - Math.PI/2 + alpha);
+        
+        // Tangent points on second circle
+        const T2x = O2.x + r2 * Math.cos(theta - Math.PI/2 + alpha);
+        const T2y = O2.y + r2 * Math.sin(theta - Math.PI/2 + alpha);
+        
+        // Extend the line beyond the tangent points
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+        
+        return [
+          { x: T1x - 3 * ux, y: T1y - 3 * uy, z: 0 },
+          { x: T2x + 3 * ux, y: T2y + 3 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: false,
+      labels: [{ text: "ECT", at: 1, offset: [0, -0.5, 0] }],
+    },
+
+]}
+cameraPosition={[0, 0, 12]}
+showZAxis={false}
+/>
+
+Length of external common tangent line:
+
+<BlockMath math="l = \sqrt{d^2 - (r_1 - r_2)^2}" />
+
+where <InlineMath math="d" /> is the distance between the two circle centers.
+
+### Internal Common Tangent Lines
+
+Internal common tangent lines are lines that touch both circles and intersect the line connecting the two circle centers.
+
+<LineEquation
+  title="Internal Common Tangent Lines"
+  description="Lines that touch both circles from opposite sides."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: -3 + 1.5 * Math.cos(angle),
+          y: 1.5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 + 1.5 * Math.cos(angle),
+          y: 1.5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O₁", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "O₂", at: 1, offset: [0.5, -0.5, 0] },
+      ],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -3, y: 0 };
+        const O2 = { x: 3, y: 0 };
+        const r1 = 1.5;
+        const r2 = 1.5;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+        
+        // For internal common tangent, we need to find the angle
+        const alpha = Math.asin((r1 + r2) / d);
+        
+        // Angle from O1 to O2
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+        
+        // For internal tangent, tangent points are on opposite sides
+        // First circle: top side
+        const T1x = O1.x + r1 * Math.cos(theta + Math.PI/2 - alpha);
+        const T1y = O1.y + r1 * Math.sin(theta + Math.PI/2 - alpha);
+        
+        // Second circle: bottom side (add PI to flip to opposite side)
+        const T2x = O2.x + r2 * Math.cos(theta + Math.PI/2 - alpha + Math.PI);
+        const T2y = O2.y + r2 * Math.sin(theta + Math.PI/2 - alpha + Math.PI);
+        
+        // Extend the line beyond the tangent points
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+        
+        return [
+          { x: T1x - 2 * ux, y: T1y - 2 * uy, z: 0 },
+          { x: T2x + 2 * ux, y: T2y + 2 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "ICT", at: 0, offset: [-1, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const O1 = { x: -3, y: 0 };
+        const O2 = { x: 3, y: 0 };
+        const r1 = 1.5;
+        const r2 = 1.5;
+        const d = Math.sqrt((O2.x - O1.x) ** 2 + (O2.y - O1.y) ** 2);
+        
+        // For internal common tangent, we need to find the angle
+        const alpha = Math.asin((r1 + r2) / d);
+        
+        // Angle from O1 to O2
+        const theta = Math.atan2(O2.y - O1.y, O2.x - O1.x);
+        
+        // For internal tangent, tangent points are on opposite sides
+        // First circle: bottom side
+        const T1x = O1.x + r1 * Math.cos(theta - Math.PI/2 + alpha);
+        const T1y = O1.y + r1 * Math.sin(theta - Math.PI/2 + alpha);
+        
+        // Second circle: top side (add PI to flip to opposite side)
+        const T2x = O2.x + r2 * Math.cos(theta - Math.PI/2 + alpha + Math.PI);
+        const T2y = O2.y + r2 * Math.sin(theta - Math.PI/2 + alpha + Math.PI);
+        
+        // Extend the line beyond the tangent points
+        const dx = T2x - T1x;
+        const dy = T2y - T1y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / len;
+        const uy = dy / len;
+        
+        return [
+          { x: T1x - 2 * ux, y: T1y - 2 * uy, z: 0 },
+          { x: T2x + 2 * ux, y: T2y + 2 * uy, z: 0 },
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "ICT", at: 0, offset: [-1, -0.5, 0] }],
+    },
+
+]}
+cameraPosition={[0, 0, 12]}
+showZAxis={false}
+/>
+
+Length of internal common tangent line:
+
+<BlockMath math="l = \sqrt{d^2 - (r_1 + r_2)^2}" />
+
+## Determining Tangent Line Equations
+
+### Determining Tangent Line Through a Point on the Circle
+
+Find the equation of the tangent line to circle <InlineMath math="x^2 + y^2 = 25" /> at point <InlineMath math="(3, 4)" />.
+
+**Solution:**
+
+Since point <InlineMath math="(3, 4)" /> lies on the circle (can be verified: <InlineMath math="3^2 + 4^2 = 9 + 16 = 25" />), the equation of the tangent line is:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x_1 \cdot x + y_1 \cdot y = r^2" />
+  <BlockMath math="3x + 4y = 25" />
+</div>
+
+### Determining Tangent Line with a Given Gradient
+
+Find the equation of the tangent line to circle <InlineMath math="x^2 + y^2 = 16" /> that is parallel to line <InlineMath math="3x - 4y + 5 = 0" />.
+
+**Solution:**
+
+The gradient of line <InlineMath math="3x - 4y + 5 = 0" /> is <InlineMath math="m = \frac{3}{4}" />.
+
+Equation of tangent line with gradient <InlineMath math="m = \frac{3}{4}" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="y = mx \pm r\sqrt{1 + m^2}" />
+  <BlockMath math="y = \frac{3}{4}x \pm 4\sqrt{1 + \left(\frac{3}{4}\right)^2}" />
+  <BlockMath math="y = \frac{3}{4}x \pm 4\sqrt{1 + \frac{9}{16}}" />
+  <BlockMath math="y = \frac{3}{4}x \pm 4\sqrt{\frac{25}{16}}" />
+  <BlockMath math="y = \frac{3}{4}x \pm 4 \cdot \frac{5}{4}" />
+  <BlockMath math="y = \frac{3}{4}x \pm 5" />
+</div>
+
+Therefore, the equations of the tangent lines are:
+
+- <InlineMath math="y = \frac{3}{4}x + 5" /> or <InlineMath math="3x - 4y + 20 = 0" />
+- <InlineMath math="y = \frac{3}{4}x - 5" /> or <InlineMath math="3x - 4y - 20 = 0" />
+
+### Calculating the Length of Tangent Line from External Point
+
+Find the length of the tangent line from point <InlineMath math="P(7, 1)" /> to circle <InlineMath math="x^2 + y^2 = 25" />.
+
+**Solution:**
+
+Circle center <InlineMath math="O(0, 0)" /> and radius <InlineMath math="r = 5" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="PT = \sqrt{(x_1 - a)^2 + (y_1 - b)^2 - r^2}" />
+  <BlockMath math="PT = \sqrt{(7 - 0)^2 + (1 - 0)^2 - 25}" />
+  <BlockMath math="PT = \sqrt{49 + 1 - 25}" />
+  <BlockMath math="PT = \sqrt{25}" />
+  <BlockMath math="PT = 5" />
+</div>
+
+## Practice Problems
+
+1. Find the equation of the tangent line to circle <InlineMath math="x^2 + y^2 = 36" /> at point <InlineMath math="(-3, 3\sqrt{3})" />!
+
+2. Find the equation of the tangent line to circle <InlineMath math="(x - 2)^2 + (y + 3)^2 = 25" /> that is perpendicular to line <InlineMath math="2x + y - 5 = 0" />!
+
+3. From point <InlineMath math="A(10, 0)" /> tangent lines are drawn to circle <InlineMath math="x^2 + y^2 = 36" />. Find:
+
+   - Length of tangent line
+   - Coordinates of tangent points
+
+4. Two circles are centered at <InlineMath math="O_1(-4, 0)" /> with radius 2 and <InlineMath math="O_2(4, 0)" /> with radius 3. Find the length of the external common tangent line!
+
+5. Find the equation of the tangent line to circle <InlineMath math="x^2 + y^2 - 6x + 4y - 12 = 0" /> that passes through point <InlineMath math="(8, -2)" />!
+
+### Answer Key
+
+1.  **Tangent line equation at a point on the circle**
+
+    Verify point on circle:
+
+    <BlockMath math="(-3)^2 + (3\sqrt{3})^2 = 9 + 27 = 36 \space \checkmark" />
+
+    Tangent line equation:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x_1 \cdot x + y_1 \cdot y = r^2" />
+      <BlockMath math="-3x + 3\sqrt{3}y = 36" />
+      <BlockMath math="-x + \sqrt{3}y = 12" />
+      <BlockMath math="x - \sqrt{3}y + 12 = 0" />
+    </div>
+
+2.  **Tangent line perpendicular to a given line**
+
+    Gradient of line <InlineMath math="2x + y - 5 = 0" /> is <InlineMath math="m_1 = -2" />.
+
+    Since perpendicular, then <InlineMath math="m_2 = \frac{1}{2}" />.
+
+    Tangent line equation:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="y - b = m(x - a) \pm r\sqrt{1 + m^2}" />
+      <BlockMath math="y + 3 = \frac{1}{2}(x - 2) \pm 5\sqrt{1 + \frac{1}{4}}" />
+      <BlockMath math="y + 3 = \frac{1}{2}(x - 2) \pm 5 \cdot \frac{\sqrt{5}}{2}" />
+      <BlockMath math="y + 3 = \frac{1}{2}x - 1 \pm \frac{5\sqrt{5}}{2}" />
+    </div>
+
+    Therefore: <InlineMath math="x - 2y - 4 \pm 5\sqrt{5} = 0" />
+
+3.  **Tangent line from external point**
+
+    - Length of tangent line:
+
+      <div className="flex flex-col gap-4">
+        <BlockMath math="AT = \sqrt{10^2 + 0^2 - 36} = \sqrt{100 - 36} = \sqrt{64} = 8" />
+      </div>
+
+    - Coordinates of tangent points can be found using the tangent line equation from external point.
+
+4.  **External common tangent line**
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="d = \sqrt{(4-(-4))^2 + (0-0)^2} = 8" />
+      <BlockMath math="l = \sqrt{d^2 - (r_2 - r_1)^2} = \sqrt{64 - 1} = \sqrt{63} = 3\sqrt{7}" />
+    </div>
+
+5.  **Tangent line through external point**
+
+    Circle: <InlineMath math="(x - 3)^2 + (y + 2)^2 = 25" />
+
+    Center <InlineMath math="(3, -2)" />, radius <InlineMath math="r = 5" />
+
+    Verify point <InlineMath math="(8, -2)" /> outside circle:
+
+    <BlockMath math="(8-3)^2 + (-2+2)^2 = 25 + 0 = 25" />
+
+    Point is exactly on the circle! Therefore the tangent line equation is:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="(8-3)(x-3) + (-2+2)(y+2) = 25" />
+      <BlockMath math="5(x-3) + 0 = 25" />
+      <BlockMath math="x - 3 = 5" />
+      <BlockMath math="x = 8" />
+    </div>
