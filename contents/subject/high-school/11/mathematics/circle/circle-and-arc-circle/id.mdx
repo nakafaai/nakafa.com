@@ -4,3 +4,560 @@ export const metadata = {
   date: "05/18/2025",
   subject: "Lingkaran",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Pengertian Lingkaran
+
+Lingkaran adalah himpunan semua titik pada bidang datar yang memiliki jarak yang sama terhadap suatu titik tetap. Titik tetap tersebut disebut **pusat lingkaran**, sedangkan jarak yang sama tersebut disebut **jari-jari**.
+
+Secara matematis, lingkaran dengan pusat <InlineMath math="O(a,b)" /> dan jari-jari <InlineMath math="r" /> dapat dinyatakan dengan persamaan:
+
+<BlockMath math="(x-a)^2 + (y-b)^2 = r^2" />
+
+### Unsur-unsur Lingkaran
+
+Bagaimana visualisasi dari persamaan lingkaran tersebut?
+
+<LineEquation
+  title="Unsur-unsur Lingkaran"
+  description="Visualisasi pusat, jari-jari, diameter, dan tali busur lingkaran."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "Lingkaran", at: 0, offset: [1.5, -1, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [0, -0.5, 0] },
+        { text: "r", at: 0, offset: [1.5, 0.3, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      labels: [{ text: "diameter", at: 0, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 2.12, y: 2.12, z: 0 },
+        { x: -2.12, y: 2.12, z: 0 },
+      ],
+      color: getColor("AMBER"),
+      labels: [{ text: "tali busur", at: 0, offset: [0, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+**Unsur-unsur penting lingkaran:**
+
+- **Pusat lingkaran (O)**: Titik tetap yang menjadi acuan lingkaran
+- **Jari-jari (r)**: Jarak dari pusat ke setiap titik pada lingkaran
+- **Diameter (d)**: Tali busur yang melalui pusat lingkaran, <InlineMath math="d = 2r" />
+- **Tali busur**: Ruas garis yang menghubungkan dua titik pada lingkaran
+
+## Busur Lingkaran
+
+Busur lingkaran adalah bagian dari keliling lingkaran yang dibatasi oleh dua titik pada lingkaran. Busur dilambangkan dengan simbol lengkung di atas huruf, misalnya <InlineMath math="\overset{\frown}{AB}" />.
+
+### Jenis-jenis Busur
+
+<LineEquation
+  title="Busur Minor dan Busur Mayor"
+  description="Visualisasi perbedaan busur minor dan busur mayor."
+  data={[
+    {
+      points: Array.from({ length: 91 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [{ text: "Busur minor", at: 45, offset: [1, 1, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 3, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: true,
+    },
+    {
+      points: Array.from({ length: 271 }, (_, i) => {
+        const angle = ((i + 90) * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      labels: [
+        {
+          text: "Busur mayor",
+          at: 135,
+          offset: [-1, -1, 0],
+        },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 3, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+**Jenis busur berdasarkan panjangnya:**
+
+- **Busur minor**: Busur yang panjangnya kurang dari setengah keliling lingkaran
+- **Busur mayor**: Busur yang panjangnya lebih dari setengah keliling lingkaran
+- **Setengah lingkaran**: Busur yang panjangnya tepat setengah keliling lingkaran
+
+## Sudut Pusat dan Sudut Keliling
+
+### Sudut Pusat
+
+Sudut pusat adalah sudut yang titik sudutnya berada di pusat lingkaran dan kaki-kaki sudutnya adalah jari-jari lingkaran.
+
+<LineEquation
+  title={
+    <>
+      Sudut Pusat <InlineMath math="\angle AOB" />
+    </>
+  }
+  description="Sudut yang dibentuk oleh dua jari-jari dengan titik sudut di pusat lingkaran."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "A", at: 1, offset: [0.5, 0, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2.12, y: 2.12, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "B", at: 1, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: Array.from({ length: 46 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "Busur AB", at: 22, offset: [1.5, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 46 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 0.8 * Math.cos(angle),
+          y: 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "α", at: 22, offset: [0.3, 0.2, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+**Sifat sudut pusat:**
+
+- Besar sudut pusat sama dengan besar busur yang menghadapnya
+- Jika sudut pusat = <InlineMath math="\alpha" />, maka busur = <InlineMath math="\alpha" />
+
+### Sudut Keliling
+
+Sudut keliling adalah sudut yang titik sudutnya berada pada lingkaran dan kaki-kaki sudutnya adalah tali busur.
+
+<LineEquation
+  title={
+    <>
+      Sudut Keliling <InlineMath math="\angle ACB" />
+    </>
+  }
+  description="Sudut yang titik sudutnya pada lingkaran dan menghadap busur yang sama."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: 0 },
+        { x: -2.12, y: -2.12, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.5, 0, 0] },
+        { text: "C", at: 1, offset: [-0.5, -0.3, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 2.12, y: 2.12, z: 0 },
+        { x: -2.12, y: -2.12, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "B", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: Array.from({ length: 46 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "Busur AB", at: 22, offset: [1.5, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2.12, y: 2.12, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "O", at: 0, offset: [1, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+## Hubungan Sudut Pusat dan Sudut Keliling
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Sudut keliling} = \frac{1}{2} \times \text{Sudut pusat}" />
+  <BlockMath math="\angle ACB = \frac{1}{2} \times \angle AOB" />
+</div>
+
+Jika sudut pusat dan sudut keliling menghadap busur yang sama, maka besar sudut keliling adalah setengah dari besar sudut pusat.
+
+**Contoh penerapan:**
+
+<LineEquation
+  title="Hubungan Sudut Pusat dan Sudut Keliling"
+  description={
+    <>
+      Jika <InlineMath math="\angle AOB = 80°" />, maka{" "}
+      <InlineMath math="\angle ACB = 40°" />.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "A", at: 1, offset: [0.5, 0, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0.78, y: 2.9, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "B", at: 1, offset: [0, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: 0 },
+        { x: -2.12, y: -2.12, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "C", at: 1, offset: [-0.5, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 0.78, y: 2.9, z: 0 },
+        { x: -2.12, y: -2.12, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 81 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 20 }, (_, i) => {
+        const angle = (i * 4 * Math.PI) / 180;
+        return {
+          x: 0.8 * Math.cos(angle),
+          y: 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "80°", at: 10, offset: [0.5, 0.2, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+## Panjang Busur dan Luas Juring
+
+### Panjang Busur
+
+Panjang busur berbanding lurus dengan besar sudut pusat yang menghadapnya.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Panjang busur} = \frac{\alpha}{360°} \times 2\pi r" />
+  <BlockMath math="l = \frac{\alpha}{360°} \times 2\pi r" />
+</div>
+
+Di mana:
+
+- <InlineMath math="l" /> = panjang busur
+- <InlineMath math="\alpha" /> = besar sudut pusat (dalam derajat)
+- <InlineMath math="r" /> = jari-jari lingkaran
+
+### Luas Juring
+
+Juring adalah daerah yang dibatasi oleh dua jari-jari dan busur lingkaran.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Luas juring} = \frac{\alpha}{360°} \times \pi r^2" />
+  <BlockMath math="L = \frac{\alpha}{360°} \times \pi r^2" />
+</div>
+
+Kita dapat memvisualisasikan luas juring dengan menggunakan persamaan di atas.
+
+<LineEquation
+  title="Juring Lingkaran"
+  description="Daerah yang dibatasi oleh dua jari-jari dan busur."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 1.5, y: 2.6, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+    },
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        ...Array.from({ length: 61 }, (_, i) => {
+          const angle = (i * Math.PI) / 180;
+          return {
+            x: 3 * Math.cos(angle),
+            y: 3 * Math.sin(angle),
+            z: 0,
+          };
+        }),
+        { x: 0, y: 0, z: 0 },
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "Juring", at: 30, offset: [0, 0, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+## Menghitung Panjang Busur dan Luas Juring
+
+Sebuah lingkaran memiliki jari-jari 14 cm. Jika sudut pusat yang menghadap suatu busur adalah 90°, tentukan:
+
+1. Panjang busur
+2. Luas juring
+
+**Penyelesaian:**
+
+Diketahui: <InlineMath math="r = 14" /> cm, <InlineMath math="\alpha = 90°" />
+
+1. Panjang busur:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="l = \frac{\alpha}{360°} \times 2\pi r" />
+     <BlockMath math="l = \frac{90°}{360°} \times 2\pi \times 14" />
+     <BlockMath math="l = \frac{1}{4} \times 28\pi" />
+     <BlockMath math="l = 7\pi \text{ cm} \approx 21,99 \text{ cm}" />
+   </div>
+
+2. Luas juring:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="L = \frac{\alpha}{360°} \times \pi r^2" />
+     <BlockMath math="L = \frac{90°}{360°} \times \pi \times 14^2" />
+     <BlockMath math="L = \frac{1}{4} \times 196\pi" />
+     <BlockMath math="L = 49\pi \text{ cm}^2 \approx 153,94 \text{ cm}^2" />
+   </div>
+
+## Latihan Soal
+
+1. Sebuah lingkaran memiliki diameter 20 cm. Jika sudut keliling yang menghadap suatu busur adalah 30°, tentukan besar sudut pusat yang menghadap busur yang sama!
+
+2. Pada lingkaran dengan pusat O dan jari-jari 21 cm, terdapat busur AB dengan sudut pusat 120°. Hitunglah:
+
+   - Panjang busur AB
+   - Luas juring AOB
+
+3. Dua buah sudut keliling menghadap busur yang sama. Jika salah satu sudut keliling besarnya 45°, tentukan besar sudut keliling yang lain!
+
+### Kunci Jawaban
+
+1. Sudut pusat = 2 × sudut keliling = 2 × 30° = 60°
+
+2. Diketahui: r = 21 cm, α = 120°
+
+   - Panjang busur AB = <InlineMath math="\frac{120°}{360°} \times 2\pi \times 21 = \frac{1}{3} \times 42\pi = 14\pi" /> cm ≈ 43,98 cm
+   - Luas juring AOB = <InlineMath math="\frac{120°}{360°} \times \pi \times 21^2 = \frac{1}{3} \times 441\pi = 147\pi" /> cm² ≈ 461,81 cm²
+
+3. Sudut keliling yang menghadap busur yang sama memiliki besar yang sama, jadi sudut keliling yang lain = 45°
