@@ -1,6 +1,313 @@
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
 export const metadata = {
   title: "Step Function Modeling",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Functions and Their Modeling",
 };
+
+## Understanding Step Functions
+
+A step function is a type of mathematical function that has constant values on certain intervals and experiences sudden jumps at specific points. The graph of this function resembles stairs, with horizontal lines connecting points of discontinuity.
+
+### Mathematical Definition
+
+A step function can be defined as a piecewise function of the form:
+
+<BlockMath math="f(x) = \begin{cases} c_1, & \text{if } a_1 \leq x < b_1 \\ c_2, & \text{if } a_2 \leq x < b_2 \\ c_3, & \text{if } a_3 \leq x < b_3 \\ \vdots \\ c_n, & \text{if } a_n \leq x < b_n \end{cases}" />
+
+where <InlineMath math="c_1, c_2, c_3, \ldots, c_n" /> are constants and <InlineMath math="[a_i, b_i)" /> are non-overlapping intervals.
+
+**Characteristics of step functions:**
+
+- Constant values on each interval
+- Jump discontinuities at interval boundary points
+- Graph shaped like stairs
+- Belongs to the category of piecewise functions
+
+## Types of Step Functions
+
+### Floor Function
+
+The floor function, denoted by <InlineMath math="\lfloor x \rfloor" />, gives the largest integer less than or equal to <InlineMath math="x" />.
+
+<BlockMath math="\lfloor x \rfloor = \max\{n \in \mathbb{Z} : n \leq x\}" />
+
+To make it easier to understand, let's look at the following example:
+
+<LineEquation
+  title={
+    <>
+      Floor Function <InlineMath math="f(x) = \lfloor x \rfloor" />
+    </>
+  }
+  description={
+    <>
+      The graph shows the floor function that gives the largest integer value
+      that does not exceed x.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: Math.floor(x), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = ⌊x⌋", at: 30, offset: [1, -1, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+**Floor function value table:**
+
+| x                                       | -2.5 | -1.7 | -1  | -0.3 | 0   | 0.8 | 1   | 1.9 | 2.4 |
+| --------------------------------------- | ---- | ---- | --- | ---- | --- | --- | --- | --- | --- |
+| <InlineMath math="\lfloor x \rfloor" /> | -3   | -2   | -1  | -1   | 0   | 0   | 1   | 1   | 2   |
+
+### Ceiling Function
+
+The ceiling function, denoted by <InlineMath math="\lceil x \rceil" />, gives the smallest integer greater than or equal to <InlineMath math="x" />.
+
+<BlockMath math="\lceil x \rceil = \min\{n \in \mathbb{Z} : n \geq x\}" />
+
+Let's look at the following example:
+
+<LineEquation
+  title={
+    <>
+      Ceiling Function <InlineMath math="f(x) = \lceil x \rceil" />
+    </>
+  }
+  description={
+    <>
+      The graph shows the ceiling function that gives the smallest integer value
+      that is not less than x.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: Math.ceil(x), z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = ⌈x⌉", at: 30, offset: [1, -1, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+### Unit Step Function (Heaviside)
+
+The unit step function or Heaviside function, denoted by <InlineMath math="H(x)" /> or <InlineMath math="u(x)" />, is defined as:
+
+<BlockMath math="H(x) = \begin{cases} 0, & \text{if } x < 0 \\ 1, & \text{if } x \geq 0 \end{cases}" />
+
+Unlike the floor and ceiling functions, the unit step function has a value of 0 for <InlineMath math="x < 0" /> and 1 for <InlineMath math="x \geq 0" />.
+
+<LineEquation
+  title={
+    <>
+      Unit Step Function <InlineMath math="H(x)" />
+    </>
+  }
+  description={
+    <>
+      The graph shows the unit step function that jumps from 0 to 1 at point x =
+      0.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        return { x, y: x >= 0 ? 1 : 0, z: 0 };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      labels: [{ text: "H(x)", at: 12, offset: [1, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Properties of Step Functions
+
+**General properties:**
+
+1. Domain: <InlineMath math="\mathbb{R}" /> (usually)
+2. Range: Set of discrete values
+3. Continuity: jump discontinuities at certain points
+
+**Special properties of floor and ceiling functions:**
+
+1. <InlineMath math="\lfloor x \rfloor \leq x < \lfloor x \rfloor + 1" />
+2. <InlineMath math="\lceil x \rceil - 1 < x \leq \lceil x \rceil" />
+3. <InlineMath math="\lceil x \rceil = \lfloor x \rfloor + 1 \text{ if } x \notin \mathbb{Z}" />
+4. <InlineMath math="\lceil x \rceil = \lfloor x \rfloor \text{ if } x \in \mathbb{Z}" />
+
+**Comparison table of floor and ceiling functions:**
+
+| x    | <InlineMath math="\lfloor x \rfloor" /> | <InlineMath math="\lceil x \rceil" /> | Difference |
+| ---- | --------------------------------------- | ------------------------------------- | ---------- |
+| -2.3 | -3                                      | -2                                    | 1          |
+| -1   | -1                                      | -1                                    | 0          |
+| 0.7  | 0                                       | 1                                     | 1          |
+| 2    | 2                                       | 2                                     | 0          |
+| 3.8  | 3                                       | 4                                     | 1          |
+
+## Transformations of Step Functions
+
+### Vertical Translation
+
+The function <InlineMath math="f(x) = \lfloor x \rfloor + k" /> shifts the floor function graph upward (if <InlineMath math="k > 0" />) or downward (if <InlineMath math="k < 0" />).
+
+<LineEquation
+  title={<>Vertical Translation of Floor Function</>}
+  description={
+    <>
+      Comparison of <InlineMath math="f(x) = \lfloor x \rfloor" /> with{" "}
+      <InlineMath math="g(x) = \lfloor x \rfloor + 2" /> and{" "}
+      <InlineMath math="h(x) = \lfloor x \rfloor - 1" />.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: Math.floor(x), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = ⌊x⌋", at: 30, offset: [0, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: Math.floor(x) + 2, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "g(x) = ⌊x⌋ + 2", at: 30, offset: [0, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: Math.floor(x) - 1, z: 0 };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      labels: [{ text: "h(x) = ⌊x⌋ - 1", at: 30, offset: [2, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+### Horizontal Translation
+
+The function <InlineMath math="f(x) = \lfloor x - h \rfloor" /> shifts the graph to the right (if <InlineMath math="h > 0" />) or to the left (if <InlineMath math="h < 0" />).
+
+## Practice Problems
+
+1. Determine the value of <InlineMath math="\lfloor 3.7 \rfloor + \lceil -2.3 \rceil" />
+
+2. A bookstore gives discounts based on the number of purchases:
+
+   - 1-5 books: no discount
+   - 6-10 books: 10% discount
+   - 11-20 books: 15% discount
+   - > 20 books: 20% discount
+
+   If the price per book is Rp 50,000, create a function that represents the total price after discount!
+
+3. Graph of function <InlineMath math="f(x) = 2\lfloor x \rfloor - 1" /> for <InlineMath math="-3 \leq x \leq 3" />
+
+4. Solve the equation <InlineMath math="\lfloor 2x + 1 \rfloor = 5" />
+
+5. An elevator can accommodate a maximum of 8 people. If there are <InlineMath math="n" /> people who want to use the elevator, how many times must the elevator operate?
+
+### Answer Key
+
+1. **Calculating floor and ceiling function values:**
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\lfloor 3.7 \rfloor = 3 \text{ (largest integer } \leq 3.7\text{)}" />
+     <BlockMath math="\lceil -2.3 \rceil = -2 \text{ (smallest integer } \geq -2.3\text{)}" />
+     <BlockMath math="\lfloor 3.7 \rfloor + \lceil -2.3 \rceil = 3 + (-2) = 1" />
+   </div>
+
+2. **Bookstore discount function model:**
+
+   Let <InlineMath math="n" /> be the number of books purchased, then the total price after discount is:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="H(n) = \begin{cases} 50000n, & \text{if } 1 \leq n \leq 5 \\ 50000n \times 0.9, & \text{if } 6 \leq n \leq 10 \\ 50000n \times 0.85, & \text{if } 11 \leq n \leq 20 \\ 50000n \times 0.8, & \text{if } n > 20 \end{cases}" />
+   </div>
+
+3. **Graph of function <InlineMath math="f(x) = 2\lfloor x \rfloor - 1" />:**
+
+   For each interval:
+
+   - <InlineMath math="-3 \leq x < -2: f(x) = 2(-3) - 1 = -7" />
+   - <InlineMath math="-2 \leq x < -1: f(x) = 2(-2) - 1 = -5" />
+   - <InlineMath math="-1 \leq x < 0: f(x) = 2(-1) - 1 = -3" />
+   - <InlineMath math="0 \leq x < 1: f(x) = 2(0) - 1 = -1" />
+   - <InlineMath math="1 \leq x < 2: f(x) = 2(1) - 1 = 1" />
+   - <InlineMath math="2 \leq x \leq 3: f(x) = 2(2) - 1 = 3" />
+
+   If we create the graph, it would look approximately like the following:
+
+   <LineEquation
+     title={
+       <>
+         Graph of <InlineMath math="f(x) = 2\lfloor x \rfloor - 1" />
+       </>
+     }
+     description={
+       <>
+         The graph shows the transformation of the floor function with a scale
+         factor of 2 and vertical translation of -1.
+       </>
+     }
+     data={[
+       {
+         points: Array.from({ length: 25 }, (_, i) => {
+           const x = (i - 12) * 0.25;
+           return { x, y: 2 * Math.floor(x) - 1, z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         showPoints: false,
+         labels: [{ text: "f(x) = 2⌊x⌋ - 1", at: 18, offset: [1, 1, 0] }],
+       },
+     ]}
+     cameraPosition={[0, 0, 10]}
+     showZAxis={false}
+   />
+
+4. **Solving the equation <InlineMath math="\lfloor 2x + 1 \rfloor = 5" />:**
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="5 \leq 2x + 1 < 6" />
+     <BlockMath math="4 \leq 2x < 5" />
+     <BlockMath math="2 \leq x < 2.5" />
+   </div>
+
+   So the solution set is <InlineMath math="x \in [2, 2.5)" />.
+
+5. **Calculating the number of elevator operations:**
+
+   If there are <InlineMath math="n" /> people and the elevator can accommodate a maximum of 8 people, then the number of elevator operations required is:
+
+   <BlockMath math="f(n) = \lceil \frac{n}{8} \rceil" />
+
+   The ceiling function is used because if there are remaining people (less than 8), one additional elevator operation is still required.
