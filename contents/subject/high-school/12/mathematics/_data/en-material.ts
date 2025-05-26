@@ -135,7 +135,7 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/combinatorics/probability-of-independent-conditional-events`,
       },
       {
-        title: "Binomial Theorem",
+        title: "Binomial Newton",
         href: `${BASE_PATH}/combinatorics/binomial-newton`,
       },
     ],

@@ -137,7 +137,7 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/combinatorics/probability-of-independent-conditional-events`,
       },
       {
-        title: "Binom Newton",
+        title: "Binomial Newton",
         href: `${BASE_PATH}/combinatorics/binomial-newton`,
       },
     ],
