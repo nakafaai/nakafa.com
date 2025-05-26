@@ -43,7 +43,7 @@ A central angle is an angle formed by two radii of a circle with the vertex loca
     {
       points: [
         { x: 0, y: 0, z: 0 },
-        { x: 2.83, y: 2.83, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
       ],
       color: getColor("ORANGE"),
       showPoints: true,
@@ -97,7 +97,7 @@ An inscribed angle is an angle formed by two chords with the vertex located on t
     {
       points: [
         { x: 4, y: 0, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        { x: 4 * Math.cos((5 * Math.PI) / 4), y: 4 * Math.sin((5 * Math.PI) / 4), z: 0 },
       ],
       color: getColor("ORANGE"),
       showPoints: true,
@@ -108,8 +108,8 @@ An inscribed angle is an angle formed by two chords with the vertex located on t
     },
     {
       points: [
-        { x: 2.83, y: 2.83, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
+        { x: 4 * Math.cos((5 * Math.PI) / 4), y: 4 * Math.sin((5 * Math.PI) / 4), z: 0 },
       ],
       color: getColor("ORANGE"),
       showPoints: true,
@@ -168,7 +168,7 @@ Central angles and inscribed angles that subtend the same arc have a special rel
     {
       points: [
         { x: 0, y: 0, z: 0 },
-        { x: 2.83, y: 2.83, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
       ],
       color: getColor("ORANGE"),
       showPoints: true,
@@ -177,7 +177,7 @@ Central angles and inscribed angles that subtend the same arc have a special rel
     {
       points: [
         { x: 4, y: 0, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        { x: 4 * Math.cos((5 * Math.PI) / 4), y: 4 * Math.sin((5 * Math.PI) / 4), z: 0 },
       ],
       color: getColor("CYAN"),
       showPoints: true,
@@ -185,8 +185,8 @@ Central angles and inscribed angles that subtend the same arc have a special rel
     },
     {
       points: [
-        { x: 2.83, y: 2.83, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
+        { x: 4 * Math.cos((5 * Math.PI) / 4), y: 4 * Math.sin((5 * Math.PI) / 4), z: 0 },
       ],
       color: getColor("CYAN"),
       showPoints: false,
@@ -266,7 +266,7 @@ Let's prove the relationship between central angle and inscribed angle by constr
     {
       points: [
         { x: 0, y: 0, z: 0 },
-        { x: 2.83, y: 2.83, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
       ],
       color: getColor("ORANGE"),
       showPoints: true,
@@ -275,7 +275,7 @@ Let's prove the relationship between central angle and inscribed angle by constr
     {
       points: [
         { x: 4, y: 0, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        { x: 4 * Math.cos((5 * Math.PI) / 4), y: 4 * Math.sin((5 * Math.PI) / 4), z: 0 },
       ],
       color: getColor("CYAN"),
       showPoints: true,
@@ -283,16 +283,16 @@ Let's prove the relationship between central angle and inscribed angle by constr
     },
     {
       points: [
-        { x: 2.83, y: 2.83, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
+        { x: 4 * Math.cos((5 * Math.PI) / 4), y: 4 * Math.sin((5 * Math.PI) / 4), z: 0 },
       ],
       color: getColor("CYAN"),
       showPoints: false,
     },
     {
       points: [
-        { x: -2.83, y: -2.83, z: 0 },
-        { x: 2.83, y: 2.83, z: 0 },
+        { x: 4 * Math.cos((5 * Math.PI) / 4), y: 4 * Math.sin((5 * Math.PI) / 4), z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
       ],
       color: getColor("TEAL"),
       showPoints: true,
@@ -371,17 +371,28 @@ Let's prove the relationship between central angle and inscribed angle by constr
          labels: [{ text: "O", at: 0, offset: [0, -0.5, 0] }],
        },
        {
-         points: Array.from({ length: 16 }, (_, i) => {
-           const angle = ((90 - (i * 90) / 15) * Math.PI) / 180;
-           return {
-             x: 0.8 * Math.cos(angle),
-             y: 0.8 * Math.sin(angle),
-             z: 0,
-           };
-         }),
+         points: (() => {
+           const C = { x: 0, y: 4 };
+           const A = { x: -4, y: 0 };
+           const B = { x: 4, y: 0 };
+           
+           // Calculate angle ACB at point C (should be 90°)
+           const angleCA = Math.atan2(A.y - C.y, A.x - C.x);
+           const angleCB = Math.atan2(B.y - C.y, B.x - C.x);
+           
+           return Array.from({ length: 16 }, (_, i) => {
+             const t = i / 15;
+             const angle = angleCA + t * (angleCB - angleCA);
+             return {
+               x: C.x + 0.8 * Math.cos(angle),
+               y: C.y + 0.8 * Math.sin(angle),
+               z: 0,
+             };
+           });
+         })(),
          color: getColor("PINK"),
          showPoints: false,
-         labels: [{ text: "90°", at: 7, offset: [0.5, 0.2, 0] }],
+         labels: [{ text: "90°", at: 7, offset: [0.5, -0.5, 0] }],
        },
      ]}
      cameraPosition={[0, 0, 12]}
@@ -412,7 +423,7 @@ Let's prove the relationship between central angle and inscribed angle by constr
        {
          points: [
            { x: 4, y: 0, z: 0 },
-           { x: 2.83, y: 2.83, z: 0 },
+           { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
          ],
          color: getColor("ORANGE"),
          showPoints: true,
@@ -424,7 +435,7 @@ Let's prove the relationship between central angle and inscribed angle by constr
        {
          points: [
            { x: 4, y: 0, z: 0 },
-           { x: -2.83, y: -2.83, z: 0 },
+           { x: 4 * Math.cos((5 * Math.PI) / 4), y: 4 * Math.sin((5 * Math.PI) / 4), z: 0 },
          ],
          color: getColor("CYAN"),
          showPoints: true,
@@ -432,8 +443,8 @@ Let's prove the relationship between central angle and inscribed angle by constr
        },
        {
          points: [
-           { x: 2.83, y: 2.83, z: 0 },
-           { x: -2.83, y: -2.83, z: 0 },
+           { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
+           { x: 4 * Math.cos((5 * Math.PI) / 4), y: 4 * Math.sin((5 * Math.PI) / 4), z: 0 },
          ],
          color: getColor("CYAN"),
          showPoints: false,
@@ -441,7 +452,7 @@ Let's prove the relationship between central angle and inscribed angle by constr
        {
          points: [
            { x: 4, y: 0, z: 0 },
-           { x: -2.83, y: 2.83, z: 0 },
+           { x: 4 * Math.cos((3 * Math.PI) / 4), y: 4 * Math.sin((3 * Math.PI) / 4), z: 0 },
          ],
          color: getColor("TEAL"),
          showPoints: true,
@@ -449,8 +460,8 @@ Let's prove the relationship between central angle and inscribed angle by constr
        },
        {
          points: [
-           { x: 2.83, y: 2.83, z: 0 },
-           { x: -2.83, y: 2.83, z: 0 },
+           { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
+           { x: 4 * Math.cos((3 * Math.PI) / 4), y: 4 * Math.sin((3 * Math.PI) / 4), z: 0 },
          ],
          color: getColor("TEAL"),
          showPoints: false,
@@ -508,7 +519,7 @@ Given central angle AOB = 80°. Find the measure of inscribed angle ACB that sub
     {
       points: [
         { x: 0, y: 0, z: 0 },
-        { x: 1.37, y: 3.76, z: 0 },
+        { x: 4 * Math.cos((80 * Math.PI) / 180), y: 4 * Math.sin((80 * Math.PI) / 180), z: 0 },
       ],
       color: getColor("ORANGE"),
       showPoints: true,
@@ -517,7 +528,7 @@ Given central angle AOB = 80°. Find the measure of inscribed angle ACB that sub
     {
       points: [
         { x: 4, y: 0, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        { x: 4 * Math.cos((5 * Math.PI) / 4), y: 4 * Math.sin((5 * Math.PI) / 4), z: 0 },
       ],
       color: getColor("CYAN"),
       showPoints: true,
@@ -525,15 +536,15 @@ Given central angle AOB = 80°. Find the measure of inscribed angle ACB that sub
     },
     {
       points: [
-        { x: 1.37, y: 3.76, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        { x: 4 * Math.cos((80 * Math.PI) / 180), y: 4 * Math.sin((80 * Math.PI) / 180), z: 0 },
+        { x: 4 * Math.cos((5 * Math.PI) / 4), y: 4 * Math.sin((5 * Math.PI) / 4), z: 0 },
       ],
       color: getColor("CYAN"),
       showPoints: false,
     },
     {
       points: Array.from({ length: 18 }, (_, i) => {
-        const angle = (i * 4 * Math.PI) / 180;
+        const angle = ((i * 80) / 17) * Math.PI / 180;
         return {
           x: 1.2 * Math.cos(angle),
           y: 1.2 * Math.sin(angle),

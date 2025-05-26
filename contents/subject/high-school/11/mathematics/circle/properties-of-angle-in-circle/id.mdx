@@ -31,7 +31,7 @@ Sudut-sudut keliling yang menghadap busur yang sama memiliki besar yang sama, ti
     {
       points: [
         { x: 4, y: 0, z: 0 },
-        { x: 2.83, y: 2.83, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
       ],
       color: getColor("ORANGE"),
       showPoints: true,
@@ -43,7 +43,11 @@ Sudut-sudut keliling yang menghadap busur yang sama memiliki besar yang sama, ti
     {
       points: [
         { x: 4, y: 0, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        {
+          x: 4 * Math.cos((5 * Math.PI) / 4),
+          y: 4 * Math.sin((5 * Math.PI) / 4),
+          z: 0,
+        },
       ],
       color: getColor("CYAN"),
       showPoints: true,
@@ -51,8 +55,12 @@ Sudut-sudut keliling yang menghadap busur yang sama memiliki besar yang sama, ti
     },
     {
       points: [
-        { x: 2.83, y: 2.83, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
+        {
+          x: 4 * Math.cos((5 * Math.PI) / 4),
+          y: 4 * Math.sin((5 * Math.PI) / 4),
+          z: 0,
+        },
       ],
       color: getColor("CYAN"),
       showPoints: false,
@@ -60,7 +68,11 @@ Sudut-sudut keliling yang menghadap busur yang sama memiliki besar yang sama, ti
     {
       points: [
         { x: 4, y: 0, z: 0 },
-        { x: -2.83, y: 2.83, z: 0 },
+        {
+          x: 4 * Math.cos((3 * Math.PI) / 4),
+          y: 4 * Math.sin((3 * Math.PI) / 4),
+          z: 0,
+        },
       ],
       color: getColor("TEAL"),
       showPoints: true,
@@ -68,8 +80,12 @@ Sudut-sudut keliling yang menghadap busur yang sama memiliki besar yang sama, ti
     },
     {
       points: [
-        { x: 2.83, y: 2.83, z: 0 },
-        { x: -2.83, y: 2.83, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
+        {
+          x: 4 * Math.cos((3 * Math.PI) / 4),
+          y: 4 * Math.sin((3 * Math.PI) / 4),
+          z: 0,
+        },
       ],
       color: getColor("TEAL"),
       showPoints: false,
@@ -131,7 +147,7 @@ Sudut pusat besarnya dua kali sudut keliling yang menghadap busur yang sama.
     {
       points: [
         { x: 0, y: 0, z: 0 },
-        { x: 2.83, y: 2.83, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
       ],
       color: getColor("ORANGE"),
       showPoints: true,
@@ -140,7 +156,11 @@ Sudut pusat besarnya dua kali sudut keliling yang menghadap busur yang sama.
     {
       points: [
         { x: 4, y: 0, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        {
+          x: 4 * Math.cos((5 * Math.PI) / 4),
+          y: 4 * Math.sin((5 * Math.PI) / 4),
+          z: 0,
+        },
       ],
       color: getColor("CYAN"),
       showPoints: true,
@@ -148,15 +168,19 @@ Sudut pusat besarnya dua kali sudut keliling yang menghadap busur yang sama.
     },
     {
       points: [
-        { x: 2.83, y: 2.83, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
+        {
+          x: 4 * Math.cos((5 * Math.PI) / 4),
+          y: 4 * Math.sin((5 * Math.PI) / 4),
+          z: 0,
+        },
       ],
       color: getColor("CYAN"),
       showPoints: false,
     },
     {
-      points: Array.from({ length: 46 }, (_, i) => {
-        const angle = (i * Math.PI) / 180;
+      points: Array.from({ length: 16 }, (_, i) => {
+        const angle = (((i * 45) / 15) * Math.PI) / 180;
         return {
           x: 1.2 * Math.cos(angle),
           y: 1.2 * Math.sin(angle),
@@ -165,24 +189,42 @@ Sudut pusat besarnya dua kali sudut keliling yang menghadap busur yang sama.
       }),
       color: getColor("PINK"),
       showPoints: false,
-      labels: [{ text: "2θ", at: 22, offset: [0.3, 0.2, 0] }],
+      labels: [{ text: "2θ", at: 7, offset: [0.5, 0.3, 0] }],
     },
     {
-      points: Array.from({ length: 23 }, (_, i) => {
-        const angle = ((225 - i * 2) * Math.PI) / 180;
-        return {
-          x: 0.8 * Math.cos(angle),
-          y: 0.8 * Math.sin(angle),
-          z: 0,
+      points: (() => {
+        const C = {
+          x: 4 * Math.cos((5 * Math.PI) / 4),
+          y: 4 * Math.sin((5 * Math.PI) / 4),
         };
-      }),
+        const A = { x: 4, y: 0 };
+        const B = {
+          x: 4 * Math.cos(Math.PI / 4),
+          y: 4 * Math.sin(Math.PI / 4),
+        };
+
+        // Calculate angle ACB at point C
+        const angleCA = Math.atan2(A.y - C.y, A.x - C.x);
+        const angleCB = Math.atan2(B.y - C.y, B.x - C.x);
+
+        return Array.from({ length: 16 }, (_, i) => {
+          const t = i / 15;
+          const angle = angleCA + t * (angleCB - angleCA);
+          return {
+            x: C.x + 0.8 * Math.cos(angle),
+            y: C.y + 0.8 * Math.sin(angle),
+            z: 0,
+          };
+        });
+      })(),
       color: getColor("AMBER"),
       showPoints: false,
-      labels: [{ text: "θ", at: 11, offset: [-0.3, -0.2, 0] }],
+      labels: [{ text: "θ", at: 7, offset: [0.5, 0.5, 0] }],
     },
-  ]}
-  cameraPosition={[0, 0, 12]}
-  showZAxis={false}
+
+]}
+cameraPosition={[0, 0, 12]}
+showZAxis={false}
 />
 
 **Sifat:** <InlineMath math="\angle AOB = 2 \times \angle ACB" />
@@ -243,22 +285,37 @@ Setiap sudut keliling yang menghadap diameter lingkaran selalu merupakan sudut s
       labels: [{ text: "O", at: 0, offset: [0, -0.5, 0] }],
     },
     {
-      points: Array.from({ length: 16 }, (_, i) => {
-        const angle = ((90 - (i * 90) / 15) * Math.PI) / 180;
-        return {
-          x: 0.8 * Math.cos(angle),
-          y: 0.8 * Math.sin(angle),
-          z: 0,
-        };
-      }),
+      points: (() => {
+        const C = { x: 0, y: 4 };
+        const A = { x: -4, y: 0 };
+        const B = { x: 4, y: 0 };
+
+        // Calculate angle ACB at point C (should be 90°)
+        const angleCA = Math.atan2(A.y - C.y, A.x - C.x);
+        const angleCB = Math.atan2(B.y - C.y, B.x - C.x);
+
+        return Array.from({ length: 16 }, (_, i) => {
+          const t = i / 15;
+          const angle = angleCA + t * (angleCB - angleCA);
+          return {
+            x: C.x + 0.8 * Math.cos(angle),
+            y: C.y + 0.8 * Math.sin(angle),
+            z: 0,
+          };
+        });
+      })(),
       color: getColor("PINK"),
       showPoints: false,
-      labels: [{ text: "90°", at: 7, offset: [0.5, 0.2, 0] }],
+      labels: [{ text: "90°", at: 7, offset: [-0.3, -0.5, 0] }],
     },
     {
       points: [
         { x: -4, y: 0, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        {
+          x: 4 * Math.cos((5 * Math.PI) / 4),
+          y: 4 * Math.sin((5 * Math.PI) / 4),
+          z: 0,
+        },
       ],
       color: getColor("TEAL"),
       showPoints: true,
@@ -267,14 +324,19 @@ Setiap sudut keliling yang menghadap diameter lingkaran selalu merupakan sudut s
     {
       points: [
         { x: 4, y: 0, z: 0 },
-        { x: -2.83, y: -2.83, z: 0 },
+        {
+          x: 4 * Math.cos((5 * Math.PI) / 4),
+          y: 4 * Math.sin((5 * Math.PI) / 4),
+          z: 0,
+        },
       ],
       color: getColor("TEAL"),
       showPoints: false,
     },
-  ]}
-  cameraPosition={[0, 0, 12]}
-  showZAxis={false}
+
+]}
+cameraPosition={[0, 0, 12]}
+showZAxis={false}
 />
 
 **Sifat:** Jika AB adalah diameter, maka <InlineMath math="\angle ACB = \angle ADB = 90°" />
@@ -374,94 +436,56 @@ Pada segiempat tali busur, sudut luar di suatu titik sama dengan sudut dalam di 
     },
     {
       points: [
-        { x: 3.46, y: 2, z: 0 },
-        { x: -2, y: 3.46, z: 0 },
-        { x: -3.46, y: -2, z: 0 },
-        { x: 2, y: -3.46, z: 0 },
-        { x: 3.46, y: 2, z: 0 },
+        { x: 4, y: 0, z: 0 },
+        { x: 0, y: 4, z: 0 },
+        { x: -4, y: 0, z: 0 },
+        { x: 0, y: -4, z: 0 },
+        { x: 4, y: 0, z: 0 },
       ],
       color: getColor("ORANGE"),
       smooth: false,
       showPoints: true,
       labels: [
-        { text: "A", at: 0, offset: [0.5, 0.3, 0] },
-        { text: "B", at: 1, offset: [-0.3, 0.5, 0] },
-        { text: "C", at: 2, offset: [-0.5, -0.3, 0] },
-        { text: "D", at: 3, offset: [0.3, -0.5, 0] },
+        { text: "A", at: 0, offset: [0.5, 0, 0] },
+        { text: "B", at: 1, offset: [0, 0.5, 0] },
+        { text: "C", at: 2, offset: [-0.5, 0, 0] },
+        { text: "D", at: 3, offset: [0, -0.5, 0] },
       ],
     },
     {
       points: [
-        { x: 3.46, y: 2, z: 0 },
-        { x: 6, y: 3.46, z: 0 },
+        { x: 4, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 },
       ],
       color: getColor("CYAN"),
       showPoints: true,
       labels: [{ text: "E", at: 1, offset: [0.5, 0, 0] }],
     },
     {
-      points: (() => {
-        // Calculate angle DAE dynamically
-        const A = { x: 3.46, y: 2 };
-        const D = { x: 2, y: -3.46 };
-        const E = { x: 6, y: 3.46 };
-
-        // Calculate angles from A to D and A to E
-        const angleAD = Math.atan2(D.y - A.y, D.x - A.x);
-        const angleAE = Math.atan2(E.y - A.y, E.x - A.x);
-
-        // Generate arc from D to E around A
-        const startAngle = angleAD;
-        const endAngle = angleAE;
-        const angleRange = endAngle - startAngle;
-
-        return Array.from({ length: 16 }, (_, i) => {
-          const t = i / 15;
-          const angle = startAngle + t * angleRange;
-          return {
-            x: A.x + 0.8 * Math.cos(angle),
-            y: A.y + 0.8 * Math.sin(angle),
-            z: 0,
-          };
-        });
-      })(),
+      points: Array.from({ length: 16 }, (_, i) => {
+        const angle = ((270 + (i * 90) / 15) * Math.PI) / 180;
+        return {
+          x: 4 + 0.8 * Math.cos(angle),
+          y: 0 + 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
       color: getColor("PINK"),
       showPoints: false,
-      labels: [{ text: "∠DAE", at: 7, offset: [1, 0, 0] }],
+      labels: [{ text: "∠DAE", at: 7, offset: [0.8, -0.5, 0] }],
     },
     {
-      points: (() => {
-        // Calculate angle BCD dynamically
-        const C = { x: -3.46, y: -2 };
-        const B = { x: -2, y: 3.46 };
-        const D = { x: 2, y: -3.46 };
-
-        // Calculate angles from C to B and C to D
-        const angleCB = Math.atan2(B.y - C.y, B.x - C.x);
-        const angleCD = Math.atan2(D.y - C.y, D.x - C.x);
-
-        // Generate arc from B to D around C
-        const startAngle = angleCB;
-        const endAngle = angleCD;
-        let angleRange = endAngle - startAngle;
-
-        // Ensure we take the smaller angle
-        if (angleRange < 0) angleRange += 2 * Math.PI;
-        if (angleRange > Math.PI) angleRange = angleRange - 2 * Math.PI;
-
-        return Array.from({ length: 16 }, (_, i) => {
-          const t = i / 15;
-          const angle = startAngle + t * angleRange;
-          return {
-            x: C.x + 0.8 * Math.cos(angle),
-            y: C.y + 0.8 * Math.sin(angle),
-            z: 0,
-          };
-        });
-      })(),
+      points: Array.from({ length: 16 }, (_, i) => {
+        const angle = ((90 + (i * 90) / 15) * Math.PI) / 180;
+        return {
+          x: -4 + 0.8 * Math.cos(angle),
+          y: 0 + 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
       color: getColor("AMBER"),
       showPoints: false,
-      labels: [{ text: "∠BCD", at: 7, offset: [0.8, 0.3, 0] }],
+      labels: [{ text: "∠BCD", at: 7, offset: [-0.8, 0.5, 0] }],
     },
 
 ]}
@@ -540,7 +564,7 @@ Karena AB adalah diameter dan C terletak pada lingkaran, maka berdasarkan Teorem
 
    <LineEquation
      title="Visualisasi"
-     description="Sudut pusat AOB = 140° dan sudut-sudut keliling yang menghadap busur AB"
+     description="Sudut pusat AOB = 140° dan sudut-sudut keliling yang menghadap busur AB."
      data={[
        {
          points: Array.from({ length: 361 }, (_, i) => {
@@ -569,7 +593,11 @@ Karena AB adalah diameter dan C terletak pada lingkaran, maka berdasarkan Teorem
        {
          points: [
            { x: 0, y: 0, z: 0 },
-           { x: -1.37, y: 3.76, z: 0 },
+           {
+             x: 4 * Math.cos((140 * Math.PI) / 180),
+             y: 4 * Math.sin((140 * Math.PI) / 180),
+             z: 0,
+           },
          ],
          color: getColor("ORANGE"),
          showPoints: true,
@@ -578,7 +606,11 @@ Karena AB adalah diameter dan C terletak pada lingkaran, maka berdasarkan Teorem
        {
          points: [
            { x: 4, y: 0, z: 0 },
-           { x: -2.83, y: -2.83, z: 0 },
+           {
+             x: 4 * Math.cos((5 * Math.PI) / 4),
+             y: 4 * Math.sin((5 * Math.PI) / 4),
+             z: 0,
+           },
          ],
          color: getColor("CYAN"),
          showPoints: true,
@@ -586,8 +618,16 @@ Karena AB adalah diameter dan C terletak pada lingkaran, maka berdasarkan Teorem
        },
        {
          points: [
-           { x: -1.37, y: 3.76, z: 0 },
-           { x: -2.83, y: -2.83, z: 0 },
+           {
+             x: 4 * Math.cos((140 * Math.PI) / 180),
+             y: 4 * Math.sin((140 * Math.PI) / 180),
+             z: 0,
+           },
+           {
+             x: 4 * Math.cos((5 * Math.PI) / 4),
+             y: 4 * Math.sin((5 * Math.PI) / 4),
+             z: 0,
+           },
          ],
          color: getColor("CYAN"),
          showPoints: false,
@@ -595,7 +635,11 @@ Karena AB adalah diameter dan C terletak pada lingkaran, maka berdasarkan Teorem
        {
          points: [
            { x: 4, y: 0, z: 0 },
-           { x: 2, y: -3.46, z: 0 },
+           {
+             x: 4 * Math.cos((7 * Math.PI) / 4),
+             y: 4 * Math.sin((7 * Math.PI) / 4),
+             z: 0,
+           },
          ],
          color: getColor("TEAL"),
          showPoints: true,
@@ -603,15 +647,23 @@ Karena AB adalah diameter dan C terletak pada lingkaran, maka berdasarkan Teorem
        },
        {
          points: [
-           { x: -1.37, y: 3.76, z: 0 },
-           { x: 2, y: -3.46, z: 0 },
+           {
+             x: 4 * Math.cos((140 * Math.PI) / 180),
+             y: 4 * Math.sin((140 * Math.PI) / 180),
+             z: 0,
+           },
+           {
+             x: 4 * Math.cos((7 * Math.PI) / 4),
+             y: 4 * Math.sin((7 * Math.PI) / 4),
+             z: 0,
+           },
          ],
          color: getColor("TEAL"),
          showPoints: false,
        },
        {
-         points: Array.from({ length: 25 }, (_, i) => {
-           const angle = (((i * 140) / 30) * Math.PI) / 180;
+         points: Array.from({ length: 16 }, (_, i) => {
+           const angle = (((i * 140) / 15) * Math.PI) / 180;
            return {
              x: 1.2 * Math.cos(angle),
              y: 1.2 * Math.sin(angle),
@@ -620,7 +672,7 @@ Karena AB adalah diameter dan C terletak pada lingkaran, maka berdasarkan Teorem
          }),
          color: getColor("PINK"),
          showPoints: false,
-         labels: [{ text: "140°", at: 15, offset: [0.3, 0.5, 0] }],
+         labels: [{ text: "140°", at: 7, offset: [0.3, 0.5, 0] }],
        },
      ]}
      cameraPosition={[0, 0, 12]}
@@ -670,7 +722,7 @@ Karena AB adalah diameter dan C terletak pada lingkaran, maka berdasarkan Teorem
 
    <LineEquation
      title="Visualisasi"
-     description="AB adalah diameter, BC = AC (segitiga sama kaki)"
+     description="AB adalah diameter, BC = AC (segitiga sama kaki)."
      data={[
        {
          points: Array.from({ length: 361 }, (_, i) => {
@@ -720,17 +772,28 @@ Karena AB adalah diameter dan C terletak pada lingkaran, maka berdasarkan Teorem
          labels: [{ text: "O", at: 0, offset: [0, -0.5, 0] }],
        },
        {
-         points: Array.from({ length: 16 }, (_, i) => {
-           const angle = ((90 - (i * 90) / 15) * Math.PI) / 180;
-           return {
-             x: 0.8 * Math.cos(angle),
-             y: 0.8 * Math.sin(angle),
-             z: 0,
-           };
-         }),
+         points: (() => {
+           const C = { x: 0, y: 4 };
+           const A = { x: -4, y: 0 };
+           const B = { x: 4, y: 0 };
+           
+           // Calculate angle ACB at point C (should be 90°)
+           const angleCA = Math.atan2(A.y - C.y, A.x - C.x);
+           const angleCB = Math.atan2(B.y - C.y, B.x - C.x);
+           
+           return Array.from({ length: 16 }, (_, i) => {
+             const t = i / 15;
+             const angle = angleCA + t * (angleCB - angleCA);
+             return {
+               x: C.x + 0.8 * Math.cos(angle),
+               y: C.y + 0.8 * Math.sin(angle),
+               z: 0,
+             };
+           });
+         })(),
          color: getColor("PINK"),
          showPoints: false,
-         labels: [{ text: "90°", at: 7, offset: [0.5, 0.2, 0] }],
+         labels: [{ text: "90°", at: 7, offset: [-0.3, -0.5, 0] }],
        },
      ]}
      cameraPosition={[0, 0, 12]}
