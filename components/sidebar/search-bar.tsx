@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchStore } from "@/lib/store/search";
+import { useSearch } from "@/lib/context/use-search";
 import { cn } from "@/lib/utils";
 import { IconCommand, IconLetterK } from "@tabler/icons-react";
 import { SearchIcon } from "lucide-react";
@@ -17,7 +17,7 @@ export function SearchBar({ className }: Props) {
   const t = useTranslations("Utils");
   const id = useId();
 
-  const setOpen = useSearchStore((state) => state.setOpen);
+  const setOpen = useSearch((state) => state.setOpen);
 
   return (
     <button

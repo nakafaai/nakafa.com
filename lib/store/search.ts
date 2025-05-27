@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
@@ -12,26 +12,34 @@ type Actions = {
   setOpen: (open: boolean) => void;
 };
 
-export const useSearchStore = create<State & Actions>()(
-  persist(
-    immer((set) => ({
-      query: "",
-      open: false,
+export type SearchStore = State & Actions;
 
-      setQuery: (query: string) => {
-        set((state) => {
-          state.query = query;
-        });
-      },
-      setOpen: (open: boolean) => {
-        set((state) => {
-          state.open = open;
-        });
-      },
-    })),
-    {
-      name: "nakafa-search",
-      storage: createJSONStorage(() => sessionStorage),
-    }
-  )
-);
+const initialState: State = {
+  query: "",
+  open: false,
+};
+
+export const createSearchStore = () => {
+  return createStore<SearchStore>()(
+    persist(
+      immer((set) => ({
+        ...initialState,
+
+        setQuery: (query: string) => {
+          set((state) => {
+            state.query = query;
+          });
+        },
+        setOpen: (open: boolean) => {
+          set((state) => {
+            state.open = open;
+          });
+        },
+      })),
+      {
+        name: "nakafa-search",
+        storage: createJSONStorage(() => sessionStorage),
+      }
+    )
+  );
+};

@@ -1,6 +1,7 @@
 import { LangSwitcher } from "@/components/home/lang-switcher";
+import { HomeSearch } from "@/components/home/search";
+import { HomeTitle } from "@/components/home/title";
 import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
-import { SearchBar } from "@/components/sidebar/search-bar";
 import { buttonVariants } from "@/components/ui/button";
 import { Particles } from "@/components/ui/particles";
 import { cn } from "@/lib/utils";
@@ -19,7 +20,6 @@ type Props = {
 export default async function Page({ params }: Props) {
   const { locale } = await params;
 
-  // const t = await getTranslations("Home");
   const [tHome, tCommon] = await Promise.all([
     getTranslations("Home"),
     getTranslations("Common"),
@@ -69,11 +69,9 @@ export default async function Page({ params }: Props) {
         <Particles className="pointer-events-none absolute inset-0 opacity-80" />
         <div className="mx-auto w-full max-w-xl px-6">
           <div className="relative flex h-full flex-col">
-            <h1 className="mb-8 font-medium text-4xl leading-none tracking-tighter md:text-center">
-              {tHome("title")}
-            </h1>
+            <HomeTitle />
 
-            <SearchBar className="h-12 sm:w-full" />
+            <HomeSearch />
 
             <div className="mt-4 flex justify-between gap-6 gap-y-3 sm:items-center">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

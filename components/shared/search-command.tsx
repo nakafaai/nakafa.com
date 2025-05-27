@@ -10,8 +10,8 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
-import { useSearch } from "@/lib/react-query/use-search";
-import { useSearchStore } from "@/lib/store/search";
+import { useSearch } from "@/lib/context/use-search";
+import { useSearchQuery } from "@/lib/react-query/use-search";
 import { cn } from "@/lib/utils";
 import { getAnchorStyle } from "@/lib/utils/search";
 import type { PagefindResult } from "@/types/pagefind";
@@ -31,11 +31,13 @@ import type { ReactElement } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { articlesMenu } from "../sidebar/_data/articles";
 import { subjectAll } from "../sidebar/_data/subject";
-import { LoaderIcon } from "../ui/icons";
+import { SpinnerIcon } from "../ui/icons";
 
 export function SearchCommand() {
-  const open = useSearchStore((state) => state.open);
-  const setOpen = useSearchStore((state) => state.setOpen);
+  const { open, setOpen } = useSearch((state) => ({
+    open: state.open,
+    setOpen: state.setOpen,
+  }));
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -76,8 +78,10 @@ export function SearchCommand() {
 }
 
 function SearchMain() {
-  const query = useSearchStore((state) => state.query);
-  const setQuery = useSearchStore((state) => state.setQuery);
+  const { query, setQuery } = useSearch((state) => ({
+    query: state.query,
+    setQuery: state.setQuery,
+  }));
 
   return (
     <>
@@ -114,7 +118,7 @@ function SearchList({ search }: { search: string }) {
     error,
     isLoading,
     isPlaceholderData,
-  } = useSearch({
+  } = useSearchQuery({
     query: debouncedSearch,
     enabled: !!debouncedSearch,
   });
@@ -148,7 +152,7 @@ function SearchListItems({
 }) {
   const t = useTranslations("Utils");
   const router = useRouter();
-  const setOpen = useSearchStore((state) => state.setOpen);
+  const setOpen = useSearch((state) => state.setOpen);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -180,7 +184,7 @@ function SearchListItems({
   if (isLoading) {
     return (
       <CommandEmpty className="flex items-center justify-center gap-1 p-7.5 text-muted-foreground text-sm">
-        <LoaderIcon />
+        <SpinnerIcon />
         <p>{t("search-loading")}</p>
       </CommandEmpty>
     );
@@ -231,7 +235,7 @@ function DefaultItems() {
   const t = useTranslations("Subject");
   const tArticles = useTranslations("Articles");
   const router = useRouter();
-  const setOpen = useSearchStore((state) => state.setOpen);
+  const setOpen = useSearch((state) => state.setOpen);
 
   useEffect(() => {
     // prefetch all the links

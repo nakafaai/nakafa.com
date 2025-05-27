@@ -2,7 +2,7 @@
 
 import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
 import { searchParsers } from "@/lib/nuqs/search";
-import { useSearch } from "@/lib/react-query/use-search";
+import { useSearchQuery } from "@/lib/react-query/use-search";
 import { cn } from "@/lib/utils";
 import { getAnchorStyle } from "@/lib/utils/search";
 import { IconMenu3 } from "@tabler/icons-react";
@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useQueryStates } from "nuqs";
 import { Fragment } from "react";
 import { useDebounceValue } from "usehooks-ts";
-import { LoaderIcon } from "../ui/icons";
+import { SpinnerIcon } from "../ui/icons";
 import { Separator } from "../ui/separator";
 
 export function SearchResults() {
@@ -35,7 +35,7 @@ export function SearchResults() {
     error,
     isLoading,
     isPlaceholderData,
-  } = useSearch({
+  } = useSearchQuery({
     query: debouncedQuery,
     enabled: !!debouncedQuery,
   });
@@ -71,7 +71,7 @@ export function SearchResults() {
   if (queryLoading) {
     return (
       <div className="flex items-center justify-center gap-1 text-muted-foreground text-sm">
-        <LoaderIcon className="size-4" />
+        <SpinnerIcon className="size-4" />
         <p>{t("search-loading")}</p>
       </div>
     );

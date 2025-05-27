@@ -34,7 +34,7 @@ const fetchSearchResults = async (query: string): Promise<PagefindResult[]> => {
   }));
 };
 
-export function useSearch({
+export function useSearchQuery({
   query,
   enabled,
 }: {
