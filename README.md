@@ -84,8 +84,6 @@ Nakafa leverages a modern and robust technology stack to deliver a high-quality 
 - **Animations**: [Framer Motion](https://www.framer.com/motion/), [React Spring](https://www.react-spring.dev/)
 - **Icons**: [Lucide React](https://lucide.dev/), [Tabler Icons](https://tabler-icons.io/)
 - **Linting & Formatting**: [BiomeJS](https://biomejs.dev/), [ESLint](https://eslint.org/)
-- **Analytics**: [Vercel Analytics](https://vercel.com/analytics) & [Speed Insights](https://vercel.com/speed-insights)
-- **Deployment**: [Vercel](https://vercel.com/)
 
 ## Getting Started
 
