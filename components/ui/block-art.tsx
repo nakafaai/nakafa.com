@@ -88,7 +88,7 @@ export function BlockArt({
   }, [totalCells, animatedCellCount, animationInterval]);
 
   const animateRipples = useCallback(() => {
-    const currentTime = Date.now();
+    const currentTime = performance.now();
     const affectedCells = new Map<number, number>();
 
     setRipples((prevRipples) => {
@@ -154,12 +154,12 @@ export function BlockArt({
       if (prev.length >= MAX_CONCURRENT_RIPPLES) {
         return [
           ...prev.slice(1),
-          { x, y, startTime: Date.now(), id: rippleIdRef.current++ },
+          { x, y, startTime: performance.now(), id: rippleIdRef.current++ },
         ];
       }
       return [
         ...prev,
-        { x, y, startTime: Date.now(), id: rippleIdRef.current++ },
+        { x, y, startTime: performance.now(), id: rippleIdRef.current++ },
       ];
     });
   }, []);
