@@ -248,7 +248,7 @@ export function BlockArt({
             <div
               key={i}
               className={cn(
-                "transition-all duration-300 ease-out",
+                "size-full transition-all duration-300 ease-out",
                 getCellColor(),
                 "hover:bg-primary"
               )}
