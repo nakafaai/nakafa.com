@@ -91,17 +91,17 @@ export function SearchResults() {
       {results.map((result, index) => (
         <Fragment key={result.url}>
           <div className="space-y-2">
-            <h2 className="px-4 font-medium text-muted-foreground text-sm leading-tight">
+            <h2 className="px-4 font-medium text-muted-foreground text-sm">
               {result.meta.title}
             </h2>
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-1">
               {result.sub_results.map((subResult) => (
                 <Link
                   prefetch
                   href={subResult.url}
                   key={`${subResult.url}-${subResult.title}`}
                   className={cn(
-                    "group flex items-center gap-2 p-2 px-4 transition-colors hover:bg-accent hover:text-accent-foreground",
+                    "group flex items-center gap-2 p-2 px-4 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
                     getAnchorStyle(subResult.anchor)
                   )}
                   title={subResult.title}
