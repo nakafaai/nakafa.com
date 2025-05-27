@@ -12,7 +12,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "../ui/sidebar";
 import { AboutMenu } from "./about-menu";
 import { CommunityMenu } from "./community-menu";
@@ -27,7 +26,6 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar
-      collapsible="icon"
       className={cn("z-20 border-y border-l", props.className)}
       {...props}
     >
@@ -74,7 +72,6 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
           <AboutMenu />
         </SidebarMenu>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 }
