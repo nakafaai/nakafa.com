@@ -44,9 +44,9 @@ export async function GET(
 ) {
   const { locale, slug } = await params;
 
-  // The last element is always "image.png", remove it
+  // If last element is "image.png", remove it
   // The rest of the path is the content path
-  const contentSlug = slug.slice(0, -1);
+  const contentSlug = slug.at(-1) === "image.png" ? slug.slice(0, -1) : slug;
 
   // Get metadata from the content path
   const { title, description } = await getMetadataFromSlug(locale, contentSlug);
@@ -60,7 +60,6 @@ export async function GET(
   ).then((res) => res.arrayBuffer());
 
   return generateOGImage({
-    primaryTextColor: "rgb(240,240,240)",
     title,
     description,
     fonts: [

@@ -6,7 +6,10 @@ import { Loader } from "lucide-react";
 export function LoaderIcon({ className, ...props }: ComponentProps<"svg">) {
   return (
     <Loader
-      className={cn("size-4 animate-spin [animation-duration:2s]", className)}
+      className={cn(
+        "size-4 shrink-0 animate-spin [animation-duration:2s]",
+        className
+      )}
       {...props}
     />
   );
