@@ -184,15 +184,33 @@ export function BlockArt({
         return;
       }
 
+      // Try to find the actual cell that was clicked
+      const target = e.target;
+      if (
+        target instanceof HTMLElement &&
+        target !== containerRef.current &&
+        containerRef.current.contains(target)
+      ) {
+        // Find the cell index from the DOM
+        const cells = Array.from(containerRef.current.children);
+        const cellIndex = cells.indexOf(target);
+
+        if (cellIndex >= 0) {
+          const col = cellIndex % COLS;
+          const row = Math.floor(cellIndex / COLS);
+          throttledHandleRipple(col, row);
+          return;
+        }
+      }
+
+      // Fallback to coordinate calculation if direct cell detection fails
       const rect = containerRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
 
-      const cellWidth = rect.width / COLS;
-      const cellHeight = rect.height / ROWS;
-
-      const col = Math.floor(x / cellWidth);
-      const row = Math.floor(y / cellHeight);
+      // Simple calculation without gap compensation for fallback
+      const col = Math.min(Math.floor((clickX / rect.width) * COLS), COLS - 1);
+      const row = Math.min(Math.floor((clickY / rect.height) * ROWS), ROWS - 1);
 
       throttledHandleRipple(col, row);
     },
@@ -213,13 +231,11 @@ export function BlockArt({
   );
 
   return (
-    <section
-      className={cn("h-full w-full bg-border pt-px lg:py-px", className)}
-    >
+    <section className={cn("size-full bg-border pt-px lg:py-px", className)}>
       <button
         type="button"
         ref={containerRef}
-        className="h-full w-full cursor-pointer"
+        className="size-full cursor-pointer"
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         aria-label="Interactive grid art with wave effect"
