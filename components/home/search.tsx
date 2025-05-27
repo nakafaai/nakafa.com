@@ -22,7 +22,7 @@ export function HomeSearch() {
     });
   };
 
-  const debouncedRedirect = useDebouncedCallback(redirect, 300);
+  const debouncedRedirect = useDebouncedCallback(redirect, 500);
 
   return (
     <SearchInput
