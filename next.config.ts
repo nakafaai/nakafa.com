@@ -26,7 +26,6 @@ const nextConfig: NextConfig = {
     },
     optimizePackageImports: ["three"],
     reactCompiler: true,
-    viewTransition: true,
   },
   images: {
     contentDispositionType: "inline",
