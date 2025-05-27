@@ -4,9 +4,9 @@ import { Link } from "@/i18n/navigation";
 import { useToc } from "@/lib/context/use-toc";
 import { cn, slugify } from "@/lib/utils";
 import type { MaterialList } from "@/types/subject/material";
+import { useIntersection } from "@mantine/hooks";
 import { ArrowDownIcon, ChevronDownIcon, LinkIcon } from "lucide-react";
-import { useState } from "react";
-import { useIntersectionObserver } from "usehooks-ts";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -31,14 +31,13 @@ export function CardMaterial({ material }: Props) {
     setActiveHeading: context.setActiveHeading,
   }));
 
-  const { ref } = useIntersectionObserver({
-    onChange(isIntersecting, entry) {
-      if (entry) {
-        handleIntersect({ isIntersecting, entry });
-      }
-    },
-    rootMargin: "-40% 0px -70% 0px",
-  });
+  const { ref, entry } = useIntersection();
+
+  useEffect(() => {
+    if (entry) {
+      handleIntersect({ isIntersecting: entry.isIntersecting, entry });
+    }
+  }, [entry, handleIntersect]);
 
   return (
     <Card ref={ref} id={id} className="scroll-mt-20 pb-0">

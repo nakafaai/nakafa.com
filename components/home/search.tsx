@@ -3,8 +3,8 @@
 import { SearchInput } from "@/components/shared/search-input";
 import { useRouter } from "@/i18n/navigation";
 import { useSearch } from "@/lib/context/use-search";
-import { useCallback, useTransition } from "react";
-import { useDebounceCallback } from "usehooks-ts";
+import { useDebouncedCallback } from "@mantine/hooks";
+import { useTransition } from "react";
 
 export function HomeSearch() {
   const router = useRouter();
@@ -16,13 +16,13 @@ export function HomeSearch() {
 
   const [isPending, startTransition] = useTransition();
 
-  const redirect = useCallback(() => {
+  const redirect = () => {
     startTransition(() => {
       router.push(`/search?q=${query}`);
     });
-  }, [router, query]);
+  };
 
-  const debouncedRedirect = useDebounceCallback(redirect, 300);
+  const debouncedRedirect = useDebouncedCallback(redirect, 300);
 
   return (
     <SearchInput

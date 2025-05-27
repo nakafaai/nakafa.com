@@ -5,6 +5,7 @@ import { searchParsers } from "@/lib/nuqs/search";
 import { useSearchQuery } from "@/lib/react-query/use-search";
 import { cn } from "@/lib/utils";
 import { getAnchorStyle } from "@/lib/utils/search";
+import { useDebouncedValue } from "@mantine/hooks";
 import { IconMenu3 } from "@tabler/icons-react";
 import {
   FileTextIcon,
@@ -16,7 +17,6 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useQueryStates } from "nuqs";
 import { Fragment } from "react";
-import { useDebounceValue } from "usehooks-ts";
 import { SpinnerIcon } from "../ui/icons";
 import { Separator } from "../ui/separator";
 
@@ -27,7 +27,7 @@ export function SearchResults() {
 
   const [{ q }] = useQueryStates(searchParsers);
 
-  const [debouncedQuery] = useDebounceValue(q, 300);
+  const [debouncedQuery] = useDebouncedValue(q, 300);
 
   const {
     data: results = [],

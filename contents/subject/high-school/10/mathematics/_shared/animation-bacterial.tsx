@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useIntersection } from "@mantine/hooks";
 import { PauseIcon, PlayIcon, TimerResetIcon } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import {
@@ -18,7 +19,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useIntersectionObserver } from "usehooks-ts";
 
 type FormulaType = "geometric" | "exponential" | "custom";
 
@@ -92,17 +92,19 @@ export function BacterialGrowth({
   const deferredPlaying = useDeferredValue(isPlaying);
   const deferredGeneration = useDeferredValue(generation);
 
-  const { ref } = useIntersectionObserver({
+  const { ref, entry } = useIntersection({
     threshold: 0.1,
-    // Start playing when component comes into view
-    onChange: (entry) => {
+  });
+
+  useEffect(() => {
+    if (entry) {
       if (entry) {
         setIsPlaying(true);
       } else {
         setIsPlaying(false);
       }
-    },
-  });
+    }
+  }, [entry]);
 
   // Start playing when component comes into view
 

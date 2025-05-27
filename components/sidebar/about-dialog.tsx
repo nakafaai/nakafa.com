@@ -1,7 +1,7 @@
 "use client";
 
+import { useMediaQuery } from "@mantine/hooks";
 import Image from "next/image";
-import { useMediaQuery } from "usehooks-ts";
 
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";

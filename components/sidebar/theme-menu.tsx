@@ -2,11 +2,11 @@
 
 import { themes } from "@/lib/data/theme";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@mantine/hooks";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { ChevronRightIcon, PaletteIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useMediaQuery } from "usehooks-ts";
 import {
   DropdownMenu,
   DropdownMenuContent,

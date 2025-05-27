@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useMousePosition } from "@/hooks/use-mouse";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "usehooks-ts";
+import { useMediaQuery } from "@mantine/hooks";
 
 type Circle = {
   x: number;

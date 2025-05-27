@@ -15,6 +15,7 @@ import { useSearchQuery } from "@/lib/react-query/use-search";
 import { cn } from "@/lib/utils";
 import { getAnchorStyle } from "@/lib/utils/search";
 import type { PagefindResult } from "@/types/pagefind";
+import { useDebouncedValue } from "@mantine/hooks";
 import { IconCommand, IconLetterK, IconMenu3 } from "@tabler/icons-react";
 import {
   ArrowDownIcon,
@@ -28,7 +29,6 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Fragment, startTransition, useEffect, useTransition } from "react";
 import type { ReactElement } from "react";
-import { useDebounceValue } from "usehooks-ts";
 import { articlesMenu } from "../sidebar/_data/articles";
 import { subjectAll } from "../sidebar/_data/subject";
 import { SpinnerIcon } from "../ui/icons";
@@ -110,7 +110,7 @@ function SearchInput({
 function SearchList({ search }: { search: string }) {
   const pagefindError = usePagefind((context) => context.error);
 
-  const [debouncedSearch] = useDebounceValue(search, 300);
+  const [debouncedSearch] = useDebouncedValue(search, 300);
 
   const {
     data: results = [],

@@ -3,12 +3,12 @@
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { languages } from "@/lib/data/lang";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@mantine/hooks";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Locale, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import { useTransition } from "react";
-import { useMediaQuery } from "usehooks-ts";
 import { DropdownMenuContent, DropdownMenuItem } from "../ui/dropdown-menu";
 
 export function LangMenuSwitcher() {

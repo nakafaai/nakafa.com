@@ -3,8 +3,9 @@
 import { useToc } from "@/lib/context/use-toc";
 import { cn, slugify } from "@/lib/utils";
 import type { HeadingProps, HeadingTag } from "@/types/markdown";
+import { useIntersection } from "@mantine/hooks";
 import { LinkIcon } from "lucide-react";
-import { useIntersectionObserver } from "usehooks-ts";
+import { useEffect } from "react";
 
 export function Heading({
   Tag,
@@ -21,14 +22,13 @@ export function Heading({
     setActiveHeading: context.setActiveHeading,
   }));
 
-  const { ref } = useIntersectionObserver({
-    onChange(isIntersecting, entry) {
-      if (entry) {
-        handleIntersect({ isIntersecting, entry });
-      }
-    },
-    rootMargin: "-20% 0px -60% 0px",
-  });
+  const { ref, entry } = useIntersection();
+
+  useEffect(() => {
+    if (entry) {
+      handleIntersect({ isIntersecting: entry.isIntersecting, entry });
+    }
+  }, [entry, handleIntersect]);
 
   return (
     <Tag

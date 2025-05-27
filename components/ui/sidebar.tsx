@@ -23,7 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils/index";
-import { useMediaQuery } from "usehooks-ts";
+import { useMediaQuery } from "@mantine/hooks";
 
 export const SIDEBAR_COOKIE_NAME = "sidebar_state";
 export const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -120,7 +120,7 @@ function SidebarProvider({
       state,
       open,
       setOpen,
-      isMobile,
+      isMobile: isMobile ?? false,
       openMobile,
       setOpenMobile,
       toggleSidebar,

@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { PauseIcon, PlayIcon, TimerResetIcon } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import {
@@ -18,7 +19,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useIntersectionObserver, useMediaQuery } from "usehooks-ts";
 
 type TableChairsProps = {
   labels?: {
@@ -59,17 +59,19 @@ export default function TableChairsAnimation({
 
   const isMobile = useMediaQuery("(max-width: 640px)");
 
-  const { ref } = useIntersectionObserver({
+  const { ref, entry } = useIntersection({
     threshold: 0.1,
-    // Start playing when component comes into view
-    onChange: (entry) => {
+  });
+
+  useEffect(() => {
+    if (entry) {
       if (entry) {
         setIsPlaying(true);
       } else {
         setIsPlaying(false);
       }
-    },
-  });
+    }
+  }, [entry]);
 
   const maxTables = isMobile ? 2 : 3;
 
