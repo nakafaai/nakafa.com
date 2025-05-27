@@ -84,7 +84,7 @@ export function SearchInput({
           onClick={action}
           disabled={loading || !value}
         >
-          <kbd className="flex size-6 items-center justify-center rounded-md border bg-muted">
+          <kbd className="flex size-6 items-center justify-center rounded-md border bg-primary text-primary-foreground">
             <CornerDownLeftIcon className="size-3" />
             <span className="sr-only">Search</span>
           </kbd>
