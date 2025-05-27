@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation";
+import { slugify } from "@/lib/utils";
 import type { Article } from "@/types/content";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
@@ -15,7 +16,7 @@ type Props = {
 export function CardArticle({ category, article }: Props) {
   const t = useTranslations("Articles");
 
-  const id = article.title.toLowerCase().replace(/\s+/g, "-");
+  const id = slugify(article.title);
 
   return (
     <Link

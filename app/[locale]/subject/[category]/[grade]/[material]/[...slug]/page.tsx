@@ -11,7 +11,7 @@ import {
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
 import { SkeletonText } from "@/components/shared/skeleton-text";
-import { sanitizeSlug } from "@/lib/utils";
+import { slugify } from "@/lib/utils";
 import { getContent } from "@/lib/utils/contents";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getHeadings } from "@/lib/utils/markdown";
@@ -195,7 +195,7 @@ export default async function Page({ params }: Props) {
             title={metadata.title}
             icon={getMaterialIcon(material)}
             link={{
-              href: `${materialPath}#${sanitizeSlug(metadata.subject ?? "")}`,
+              href: `${materialPath}#${slugify(metadata.subject ?? "")}`,
               label: metadata.subject ?? "",
             }}
           />

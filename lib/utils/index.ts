@@ -53,21 +53,17 @@ export function getAppUrl(): string {
   return process.env.NEXT_PUBLIC_URL ?? "https://nakafa.com";
 }
 
-/**
- * Sanitizes a slug, usually for use in URLs
- * @param slug - The slug to sanitize
- * @returns The sanitized slug
- */
-export function sanitizeSlug(slug: string): string {
-  return slug.toLowerCase().replace(/\s+/g, "-");
-}
-
 const MOBILE_REGEX =
   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
 export function isMobileDevice(): boolean {
   return MOBILE_REGEX.test(navigator.userAgent);
 }
 
+/**
+ * Slugifies a text
+ * @param text - The text to slugify
+ * @returns The slugified text, example: "Hello World" -> "hello-world"
+ */
 export function slugify(text: string): string {
   return text.toLowerCase().replace(/\s+/g, "-");
 }

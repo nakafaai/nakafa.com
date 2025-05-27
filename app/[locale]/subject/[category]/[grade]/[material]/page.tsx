@@ -13,6 +13,7 @@ import {
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
 import type { ParsedHeading } from "@/components/shared/sidebar-tree";
+import { slugify } from "@/lib/utils";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getGradeNonNumeric, getGradePath } from "@/lib/utils/subject/grade";
@@ -107,7 +108,7 @@ export default async function Page({ params }: Props) {
 
   const chapters: ParsedHeading[] = materials.map((material) => ({
     label: material.title,
-    href: `#${material.title.toLowerCase().replace(/\s+/g, "-")}`,
+    href: `#${slugify(material.title)}`,
   }));
 
   return (

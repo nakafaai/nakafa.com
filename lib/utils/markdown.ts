@@ -3,6 +3,7 @@ import path from "node:path";
 import type { ParsedHeading } from "@/components/shared/sidebar-tree";
 import { Children } from "react";
 import type { ReactNode } from "react";
+import { slugify } from ".";
 
 /**
  * Reads the raw content of a file, use app/[locale] as the base path.
@@ -36,7 +37,7 @@ export function getHeadings(content: string): ParsedHeading[] {
       for (const match of markdownMatches) {
         const level = match[1].length; // Number of # symbols
         const text = match[2].trim();
-        const slug = text.toLowerCase().replace(/\s+/g, "-");
+        const slug = slugify(text);
 
         const heading: ParsedHeading = {
           label: text,
