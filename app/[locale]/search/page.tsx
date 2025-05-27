@@ -17,15 +17,13 @@ export default function Page() {
         <div className="mx-auto w-full max-w-xl px-6">
           <HomeTitle />
         </div>
-        <div className="sticky top-20 z-10 bg-background/60 backdrop-blur-sm sm:top-10">
+        <div className="sticky top-20 z-10 sm:top-10">
           <div className="mx-auto w-full max-w-xl px-6">
             <InputSearch />
           </div>
         </div>
         <div className="mx-auto mt-8 w-full max-w-xl px-6">
-          <div className="flex flex-col gap-4">
-            <SearchResults />
-          </div>
+          <SearchResults />
         </div>
       </div>
       <FooterContent className="mt-0">

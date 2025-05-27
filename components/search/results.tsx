@@ -86,45 +86,39 @@ export function SearchResults() {
     );
   }
 
-  return results.map((result, index) => {
-    const visibleSubResults = result.sub_results.filter(
-      (subResult) => subResult.title !== result.meta.title
-    );
-
-    if (visibleSubResults.length === 0) {
-      return null;
-    }
-
-    return (
-      <Fragment key={result.url}>
-        <div className="space-y-2">
-          <h2 className="px-2 font-medium text-muted-foreground text-sm leading-tight">
-            {result.meta.title}
-          </h2>
-          <div className="flex flex-col gap-1">
-            {visibleSubResults.map((subResult) => (
-              <Link
-                prefetch
-                href={subResult.url}
-                key={subResult.url}
-                className={cn(
-                  getAnchorStyle(subResult.anchor),
-                  "group flex items-center gap-2 rounded-sm p-2 transition-colors hover:bg-accent hover:text-accent-foreground"
-                )}
-                title={subResult.title}
-              >
-                {subResult.anchor?.element === "h2" ? (
-                  <FileTextIcon className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground" />
-                ) : (
-                  <IconMenu3 className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground" />
-                )}
-                <span className="line-clamp-1">{subResult.title}</span>
-              </Link>
-            ))}
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border py-4 shadow-sm">
+      {results.map((result, index) => (
+        <Fragment key={result.url}>
+          <div className="space-y-2">
+            <h2 className="px-4 font-medium text-muted-foreground text-sm leading-tight">
+              {result.meta.title}
+            </h2>
+            <div className="flex flex-col gap-1">
+              {result.sub_results.map((subResult) => (
+                <Link
+                  prefetch
+                  href={subResult.url}
+                  key={`${subResult.url}-${subResult.title}`}
+                  className={cn(
+                    getAnchorStyle(subResult.anchor),
+                    "group flex items-center gap-2 rounded-sm p-2 px-4 transition-colors hover:bg-accent hover:text-accent-foreground"
+                  )}
+                  title={subResult.title}
+                >
+                  {subResult.anchor?.element === "h2" ? (
+                    <FileTextIcon className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground" />
+                  ) : (
+                    <IconMenu3 className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground" />
+                  )}
+                  <span className="line-clamp-1">{subResult.title}</span>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-        {index !== results.length - 1 && <Separator className="my-2" />}
-      </Fragment>
-    );
-  });
+          {index !== results.length - 1 && <Separator className="my-2" />}
+        </Fragment>
+      ))}
+    </div>
+  );
 }

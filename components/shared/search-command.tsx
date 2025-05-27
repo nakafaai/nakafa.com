@@ -204,7 +204,7 @@ function SearchListItems({
       <CommandGroup heading={result.meta.title}>
         {result.sub_results.map((subResult) => (
           <CommandItem
-            key={subResult.url}
+            key={`${subResult.url}-${subResult.title}`}
             value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
             className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
             onSelect={() => {

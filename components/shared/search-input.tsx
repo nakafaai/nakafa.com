@@ -44,12 +44,12 @@ export function SearchInput({
       <Label htmlFor={id} className="sr-only">
         {t("search")}
       </Label>
-      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3">
-        <SearchIcon className="size-4 text-muted-foreground" />
-      </div>
       <Input
         id={id}
-        className={cn("h-12 border-border px-9 sm:w-full", className)}
+        className={cn(
+          "h-12 border-border px-9 backdrop-blur-sm sm:w-full",
+          className
+        )}
         placeholder={t("search-bar-placeholder")}
         type="text"
         value={value}
@@ -57,10 +57,13 @@ export function SearchInput({
         autoComplete="off"
         {...props}
       />
+      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3 text-muted-foreground">
+        <SearchIcon className="size-4" />
+      </div>
       {loading ? (
         <div
           className={cn(
-            "pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 text-muted-foreground/80 peer-disabled:opacity-50",
+            "pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 text-muted-foreground peer-disabled:opacity-50",
             action && "right-9"
           )}
         >
@@ -69,7 +72,7 @@ export function SearchInput({
       ) : (
         <button
           className={cn(
-            "absolute inset-y-0 end-0 flex h-full w-9 cursor-pointer items-center justify-center rounded-e-md text-muted-foreground/80 opacity-0 outline-none transition-[color,box-shadow] hover:text-foreground",
+            "absolute inset-y-0 end-0 flex h-full w-9 cursor-pointer items-center justify-center rounded-e-md text-muted-foreground opacity-0 outline-none transition-[color,box-shadow] hover:text-foreground",
             value && "opacity-100",
             action && "right-9"
           )}
@@ -83,7 +86,7 @@ export function SearchInput({
       )}
       {action && (
         <button
-          className="absolute inset-y-0 end-0 flex h-full cursor-pointer items-center justify-center pe-3 text-muted-foreground/80 disabled:cursor-default disabled:opacity-50 peer-disabled:opacity-50"
+          className="absolute inset-y-0 end-0 flex h-full cursor-pointer items-center justify-center pe-3 text-muted-foreground disabled:cursor-default disabled:opacity-50 peer-disabled:opacity-50"
           type="button"
           onClick={action}
           disabled={loading || !value}
