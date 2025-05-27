@@ -17,7 +17,6 @@ import type { ArticleCategory } from "@/types/articles/category";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Suspense } from "react";
 
 export const revalidate = false;
 
@@ -72,7 +71,7 @@ export default async function Page({ params }: Props) {
   const articles = await getArticles(category, locale);
 
   return (
-    <Suspense fallback={null}>
+    <>
       <BreadcrumbJsonLd
         locale={locale}
         breadcrumbItems={articles.map((article, index) => ({
@@ -102,6 +101,6 @@ export default async function Page({ params }: Props) {
       <FooterContent className="mt-0">
         <RefContent githubUrl={getGithubUrl(`/contents${FILE_PATH}`)} />
       </FooterContent>
-    </Suspense>
+    </>
   );
 }

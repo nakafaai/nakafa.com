@@ -3,6 +3,7 @@ import { InputSearch } from "@/components/search/input";
 import { SearchResults } from "@/components/search/results";
 import { FooterContent } from "@/components/shared/footer-content";
 import { RefContent } from "@/components/shared/ref-content";
+import { Particles } from "@/components/ui/particles";
 import { getGithubUrl } from "@/lib/utils/github";
 
 export const revalidate = false;
@@ -14,6 +15,7 @@ export default function Page() {
         data-pagefind-ignore
         className="relative min-h-[calc(100svh-4rem)] py-10 lg:min-h-svh lg:border-t lg:py-26"
       >
+        <Particles className="pointer-events-none absolute inset-0 opacity-80" />
         <div className="mx-auto w-full max-w-xl px-6">
           <HomeTitle />
         </div>

@@ -153,7 +153,7 @@ export default async function Page({ params }: Props) {
     const { metadata, default: Content } = content;
 
     return (
-      <Suspense fallback={null}>
+      <>
         <BreadcrumbJsonLd
           locale={locale}
           name={metadata.title}
@@ -220,7 +220,7 @@ export default async function Page({ params }: Props) {
             data: headings,
           }}
         />
-      </Suspense>
+      </>
     );
   } catch {
     notFound();

@@ -9,7 +9,6 @@ import { IconBrandYoutube } from "@tabler/icons-react";
 import { HeartHandshakeIcon } from "lucide-react";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Suspense } from "react";
 
 export const revalidate = false;
 
@@ -28,7 +27,7 @@ export default async function Page({ params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <Suspense fallback={null}>
+    <>
       <BreadcrumbJsonLd
         locale={locale}
         breadcrumbItems={[
@@ -102,6 +101,6 @@ export default async function Page({ params }: Props) {
           </div>
         </div>
       </div>
-    </Suspense>
+    </>
   );
 }
