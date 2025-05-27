@@ -1,5 +1,22 @@
 import type { PagefindResult } from "@/types/pagefind";
 
+// Define the valid heading elements and their corresponding margin classes
+const HEADING_STYLES = {
+  h3: "ml-5",
+  h4: "ml-9",
+  h5: "ml-13",
+  h6: "ml-17",
+} as const;
+
+type HeadingElement = keyof typeof HEADING_STYLES;
+
+/**
+ * Check if the element is a valid heading element
+ */
+function isHeadingElement(element: string): element is HeadingElement {
+  return element in HEADING_STYLES;
+}
+
 /**
  * Get the style for the anchor element
  * @param anchor - The anchor element
@@ -7,21 +24,10 @@ import type { PagefindResult } from "@/types/pagefind";
  */
 export function getAnchorStyle(
   anchor: PagefindResult["sub_results"][number]["anchor"]
-) {
-  if (!anchor) {
+): string | null {
+  if (!anchor || !isHeadingElement(anchor.element)) {
     return null;
   }
-  if (anchor.element === "h3") {
-    return "ml-5";
-  }
-  if (anchor.element === "h4") {
-    return "ml-9";
-  }
-  if (anchor.element === "h5") {
-    return "ml-13";
-  }
-  if (anchor.element === "h6") {
-    return "ml-17";
-  }
-  return null;
+
+  return `${HEADING_STYLES[anchor.element]} rounded-l-md`;
 }

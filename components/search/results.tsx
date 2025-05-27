@@ -87,22 +87,22 @@ export function SearchResults() {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border py-4 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-xl border py-4 shadow-sm">
       {results.map((result, index) => (
         <Fragment key={result.url}>
           <div className="space-y-2">
             <h2 className="px-4 font-medium text-muted-foreground text-sm leading-tight">
               {result.meta.title}
             </h2>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col">
               {result.sub_results.map((subResult) => (
                 <Link
                   prefetch
                   href={subResult.url}
                   key={`${subResult.url}-${subResult.title}`}
                   className={cn(
-                    getAnchorStyle(subResult.anchor),
-                    "group flex items-center gap-2 rounded-sm p-2 px-4 transition-colors hover:bg-accent hover:text-accent-foreground"
+                    "group flex items-center gap-2 p-2 px-4 transition-colors hover:bg-accent hover:text-accent-foreground",
+                    getAnchorStyle(subResult.anchor)
                   )}
                   title={subResult.title}
                 >
@@ -116,7 +116,7 @@ export function SearchResults() {
               ))}
             </div>
           </div>
-          {index !== results.length - 1 && <Separator className="my-2" />}
+          {index !== results.length - 1 && <Separator />}
         </Fragment>
       ))}
     </div>
