@@ -19,6 +19,7 @@ import { CommunityMenu } from "./community-menu";
 import { LangMenu } from "./lang-menu";
 import { NavArticles } from "./nav-articles";
 import { NavSubject } from "./nav-subject";
+import { SearchMenu } from "./search-menu";
 import { ThemeMenu } from "./theme-menu";
 
 export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
@@ -61,6 +62,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
+        <SearchMenu />
         <NavSubject />
         <NavArticles />
       </SidebarContent>
