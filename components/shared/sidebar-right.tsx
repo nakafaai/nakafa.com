@@ -131,7 +131,7 @@ export function SidebarRight({
 
       <Sidebar
         collapsible="none"
-        className="sticky top-0 hidden h-svh border-b border-l xl:flex"
+        className="sticky top-0 hidden h-svh border-y border-l xl:flex"
         side="right"
         {...props}
       >
