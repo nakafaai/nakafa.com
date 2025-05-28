@@ -30,7 +30,7 @@ export function SearchMenu() {
               isActive={open}
               onClick={() => setOpen(true)}
               variant="outline"
-              className="justify-between text-muted-foreground"
+              className="cursor-pointer justify-between text-muted-foreground"
             >
               <div className="flex items-center gap-2">
                 <SearchIcon className="size-4" />
