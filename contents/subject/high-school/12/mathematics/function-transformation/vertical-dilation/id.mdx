@@ -3,4 +3,314 @@ export const metadata = {
     authors: [{ name: "Nabil Akbarazzima Fatih" }],
     date: "05/26/2025",
     subject: "Transformasi Fungsi",
-};  
+};
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Konsep Dasar Dilatasi Vertikal
+
+Dilatasi vertikal adalah transformasi geometri yang mengubah ukuran grafik fungsi secara vertikal, seperti meregangkan atau menekan karet gelang ke atas dan ke bawah. Bayangkan menarik foto dengan kedua tangan, satu di atas dan satu di bawah, lalu meregangkan atau menekannya secara vertikal tanpa mengubah lebar foto tersebut.
+
+Jika kita memiliki fungsi <InlineMath math="f(x)" />, maka dilatasi vertikal menghasilkan fungsi baru <InlineMath math="g(x) = k \cdot f(x)" /> dimana <InlineMath math="k" /> adalah faktor skala yang menentukan seberapa besar perubahan ukuran vertikal.
+
+### Aturan Dilatasi Vertikal
+
+Untuk setiap fungsi <InlineMath math="f(x)" />, dilatasi vertikal didefinisikan sebagai:
+
+<BlockMath math="g(x) = k \cdot f(x)" />
+
+Dimana <InlineMath math="k" /> adalah faktor skala yang mempengaruhi transformasi:
+- Jika <InlineMath math="k > 1" />, grafik diregangkan secara vertikal (diperbesar)
+- Jika <InlineMath math="0 < k < 1" />, grafik ditekan secara vertikal (diperkecil)
+- Jika <InlineMath math="k = 1" />, grafik tidak berubah
+- Jika <InlineMath math="k < 0" />, grafik mengalami refleksi sekaligus dilatasi
+
+## Visualisasi Dilatasi Vertikal
+
+Mari kita lihat bagaimana dilatasi vertikal bekerja pada fungsi kuadrat <InlineMath math="f(x) = x^2" /> dengan berbagai faktor skala.
+
+<LineEquation
+  title={<>Dilatasi Vertikal Fungsi Kuadrat <InlineMath math="f(x) = x^2" /></>}
+  description="Perhatikan bagaimana grafik diregangkan atau ditekan secara vertikal dengan faktor skala yang berbeda."
+  showZAxis={false}
+  cameraPosition={[12, 8, 12]}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      labels: [{ text: "f(x) = x²", offset: [3.5, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: 2 * x * x, z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      labels: [{ text: "g(x) = 2x²", offset: [3.5, 2, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: 0.5 * x * x, z: 0 };
+      }),
+      color: getColor("SKY"),
+      labels: [{ text: "h(x) = 0.5x²", offset: [3.5, 0.5, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Dari visualisasi di atas, kita dapat mengamati:
+- Fungsi asli <InlineMath math="f(x) = x^2" /> (ungu) sebagai referensi
+- Fungsi <InlineMath math="g(x) = 2x^2" /> (oranye) diregangkan vertikal dengan faktor 2
+- Fungsi <InlineMath math="h(x) = 0.5x^2" /> (violet) ditekan vertikal dengan faktor 0.5
+- Semua grafik memiliki titik puncak yang sama di <InlineMath math="(0, 0)" />
+
+## Dilatasi Vertikal pada Fungsi Linear
+
+Sekarang mari kita terapkan konsep yang sama pada fungsi linear <InlineMath math="f(x) = x + 1" />.
+
+<LineEquation
+  title={<>Dilatasi Vertikal Fungsi Linear <InlineMath math="f(x) = x + 1" /></>}
+  description="Garis hasil dilatasi memiliki kemiringan yang berubah sesuai faktor skala."
+  showZAxis={false}
+  cameraPosition={[10, 6, 10]}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: x + 1, z: 0 };
+      }),
+      color: getColor("AMBER"),
+      labels: [{ text: "f(x) = x + 1", offset: [2, 1.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 3 * (x + 1), z: 0 };
+      }),
+      color: getColor("TEAL"),
+      labels: [{ text: "g(x) = 3(x + 1)", offset: [1, 2, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 0.5 * (x + 1), z: 0 };
+      }),
+      color: getColor("ROSE"),
+      labels: [{ text: "h(x) = 0.5(x + 1)", offset: [2, 0.5, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Perhatikan bahwa:
+- Fungsi asli <InlineMath math="f(x) = x + 1" /> memiliki kemiringan 1
+- Fungsi <InlineMath math="g(x) = 3(x + 1)" /> memiliki kemiringan 3 (diregangkan)
+- Fungsi <InlineMath math="h(x) = 0.5(x + 1)" /> memiliki kemiringan 0.5 (ditekan)
+- Semua garis masih memotong sumbu y, tetapi di titik yang berbeda
+
+## Sifat Penting Dilatasi Vertikal
+
+### Pengaruh pada Koordinat Titik
+
+Jika titik <InlineMath math="(a, b)" /> berada pada grafik <InlineMath math="f(x)" />, maka titik yang bersesuaian pada grafik <InlineMath math="k \cdot f(x)" /> adalah <InlineMath math="(a, k \cdot b)" />.
+
+### Domain dan Range
+
+- **Domain**: Tidak berubah setelah dilatasi vertikal
+- **Range**: Berubah sesuai dengan faktor skala <InlineMath math="k" />
+
+Jika range fungsi asli adalah <InlineMath math="[c, d]" />, maka range setelah dilatasi vertikal dengan faktor <InlineMath math="k > 0" /> menjadi <InlineMath math="[k \cdot c, k \cdot d]" />.
+
+### Titik Potong Sumbu
+
+- **Titik potong sumbu x**: Tidak berubah (kecuali jika <InlineMath math="k = 0" />)
+- **Titik potong sumbu y**: Berubah sesuai faktor skala
+
+## Contoh Penerapan
+
+### Fungsi Eksponensial
+
+Mari kita lihat dilatasi vertikal pada fungsi eksponensial <InlineMath math="f(x) = 2^x" />.
+
+<LineEquation
+  title={<>Dilatasi Vertikal Fungsi Eksponensial <InlineMath math="f(x) = 2^x" /></>}
+  description="Kurva eksponensial mengalami perubahan tinggi sesuai faktor skala."
+  showZAxis={false}
+  cameraPosition={[8, 6, 8]}
+  data={[
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: Math.pow(2, x), z: 0 };
+      }),
+      color: getColor("INDIGO"),
+      labels: [{ text: "f(x) = 2^x", offset: [2, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: 2 * Math.pow(2, x), z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      labels: [{ text: "g(x) = 2 · 2^x", offset: [1, 2, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Pada fungsi eksponensial:
+- Asimtot horizontal tetap di <InlineMath math="y = 0" /> untuk kedua fungsi
+- Titik potong dengan sumbu y berubah dari <InlineMath math="(0, 1)" /> menjadi <InlineMath math="(0, 2)" />
+- Laju pertumbuhan fungsi meningkat sesuai faktor skala
+
+## Dilatasi Vertikal dengan Faktor Negatif
+
+Mari kita lihat apa yang terjadi ketika faktor skala bernilai negatif.
+
+<LineEquation
+  title={<>Dilatasi Vertikal dengan Faktor Negatif <InlineMath math="f(x) = x^2" /></>}
+  description="Faktor skala negatif menyebabkan refleksi sekaligus dilatasi."
+  showZAxis={false}
+  cameraPosition={[10, 6, 10]}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      labels: [{ text: "f(x) = x²", offset: [1, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: -2 * x * x, z: 0 };
+      }),
+      color: getColor("PINK"),
+      labels: [{ text: "g(x) = -2x²", offset: [1, -2, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Ketika faktor skala negatif:
+- Grafik mengalami refleksi terhadap sumbu x
+- Sekaligus mengalami dilatasi sesuai nilai absolut faktor skala
+- Parabola yang membuka ke atas menjadi membuka ke bawah
+
+## Latihan
+
+1. Diberikan fungsi <InlineMath math="f(x) = x^2 - 4x + 3" />. Tentukan persamaan fungsi hasil dilatasi vertikal dengan faktor skala 3.
+
+2. Jika grafik fungsi <InlineMath math="g(x) = \sqrt{x}" /> mengalami dilatasi vertikal dengan faktor <InlineMath math="\frac{1}{2}" />, tentukan:
+   - Persamaan fungsi hasil dilatasi
+   - Range fungsi setelah dilatasi
+
+3. Fungsi <InlineMath math="h(x) = |x - 1| + 2" /> mengalami dilatasi vertikal dengan faktor -1. Tentukan titik puncak dari fungsi hasil dilatasi.
+
+### Kunci Jawaban
+
+1. Dilatasi vertikal dengan faktor 3: <InlineMath math="f'(x) = 3f(x) = 3(x^2 - 4x + 3) = 3x^2 - 12x + 9" />
+
+   <LineEquation
+     title={<>Fungsi <InlineMath math="f(x) = x^2 - 4x + 3" /> dan Hasil Dilatasinya</>}
+     description="Parabola asli diregangkan vertikal dengan faktor 3 menghasilkan parabola yang lebih tinggi."
+     showZAxis={false}
+     cameraPosition={[12, 8, 12]}
+     data={[
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: x * x - 4 * x + 3, z: 0 };
+         }),
+         color: getColor("PURPLE"),
+         labels: [{ text: "f(x) = x² - 4x + 3", offset: [1, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: 3 * (x * x - 4 * x + 3), z: 0 };
+         }),
+         color: getColor("ORANGE"),
+         labels: [{ text: "f'(x) = 3x² - 12x + 9", offset: [1, -3, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+2. Persamaan fungsi hasil dilatasi:
+    
+   - Dilatasi vertikal: <InlineMath math="g'(x) = \frac{1}{2}g(x) = \frac{1}{2}\sqrt{x}" />
+   - Range setelah dilatasi: <InlineMath math="[0, \infty)" /> menjadi <InlineMath math="[0, \infty)" /> tetapi dengan nilai maksimum yang lebih kecil
+
+   Visualisasi:
+
+   <LineEquation
+     title={<>Fungsi <InlineMath math="g(x) = \sqrt{x}" /> dan Hasil Dilatasinya</>}
+     description="Kurva akar kuadrat ditekan vertikal dengan faktor 0.5 menghasilkan kurva yang lebih rendah."
+     showZAxis={false}
+     cameraPosition={[8, 6, 8]}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: Math.sqrt(x), z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         labels: [{ text: "g(x) = √x", offset: [2, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: 0.5 * Math.sqrt(x), z: 0 };
+         }),
+         color: getColor("TEAL"),
+         labels: [{ text: "g'(x) = 0.5√x", offset: [2, 0.5, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+3. Fungsi asli <InlineMath math="h(x) = |x - 1| + 2" /> memiliki titik puncak di <InlineMath math="(1, 2)" />.
+   Setelah dilatasi vertikal dengan faktor -1: <InlineMath math="h'(x) = -1 \cdot (|x - 1| + 2) = -|x - 1| - 2" />, titik puncak menjadi <InlineMath math="(1, -2)" />.
+
+   <LineEquation
+     title={<>Fungsi <InlineMath math="h(x) = |x - 1| + 2" /> dan Hasil Dilatasinya</>}
+     description="Fungsi nilai mutlak mengalami refleksi dan dilatasi dengan faktor -1."
+     showZAxis={false}
+     cameraPosition={[10, 6, 10]}
+     data={[
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: Math.abs(x - 1) + 2, z: 0 };
+         }),
+         color: getColor("INDIGO"),
+         labels: [{ text: "h(x) = |x - 1| + 2", offset: [1, -1.5, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: -(Math.abs(x - 1) + 2), z: 0 };
+         }),
+         color: getColor("EMERALD"),
+         labels: [{ text: "h'(x) = -|x - 1| - 2", offset: [1, 1.5, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />  
