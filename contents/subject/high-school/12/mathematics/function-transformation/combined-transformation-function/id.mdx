@@ -4,3 +4,533 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Transformasi Fungsi",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Pengertian Kombinasi Transformasi
+
+Kombinasi transformasi adalah penerapan dua atau lebih transformasi secara berurutan pada suatu fungsi. Bayangkan seperti memasak dengan beberapa langkah: pertama kita potong sayuran, lalu tumis, kemudian tambahkan bumbu. Setiap langkah mengubah bahan dasar menjadi bentuk yang berbeda.
+
+Dalam matematika, kita dapat menggabungkan translasi, refleksi, rotasi, dan dilatasi untuk menghasilkan transformasi yang lebih kompleks. Urutan penerapan transformasi sangat penting karena hasil akhirnya dapat berbeda.
+
+## Jenis Kombinasi Transformasi
+
+### Kombinasi Transformasi Vertikal
+
+Transformasi vertikal melibatkan perubahan pada sumbu y. Kombinasi yang umum adalah translasi vertikal diikuti dengan dilatasi vertikal.
+
+Untuk fungsi <InlineMath math="f(x)" /> yang mengalami translasi vertikal sebesar <InlineMath math="b" /> kemudian dilatasi vertikal dengan faktor <InlineMath math="k" />, rumusnya menjadi:
+
+<BlockMath math="g(x) = k \cdot f(x) + b" />
+
+### Kombinasi Transformasi Horizontal
+
+Transformasi horizontal mempengaruhi sumbu x. Contohnya adalah refleksi terhadap sumbu y diikuti dengan translasi horizontal.
+
+Untuk fungsi <InlineMath math="f(x)" /> yang direfleksikan terhadap sumbu y kemudian ditranslasi horizontal sebesar <InlineMath math="a" />, rumusnya adalah:
+
+<BlockMath math="g(x) = f(-(x - a))" />
+
+## Visualisasi Kombinasi Transformasi
+
+Mari kita lihat bagaimana kombinasi transformasi mempengaruhi fungsi kuadrat <InlineMath math="f(x) = x^2" />:
+
+**Langkah Perhitungan:**
+
+1. **Fungsi Awal**: <InlineMath math="f(x) = x^2" />
+
+2. **Langkah 1 - Translasi Vertikal**: Geser 2 unit ke atas
+
+   <BlockMath math="f_1(x) = f(x) + 2 = x^2 + 2" />
+
+3. **Langkah 2 - Dilatasi Vertikal**: Kalikan dengan faktor 0.5
+
+   <BlockMath math="g(x) = 0.5 \cdot f_1(x) = 0.5(x^2 + 2) = 0.5x^2 + 1" />
+
+**Contoh Perhitungan untuk <InlineMath math="x = 2" />:**
+- Fungsi awal: <InlineMath math="f(2) = 2^2 = 4" />
+- Setelah translasi: <InlineMath math="f_1(2) = 4 + 2 = 6" />
+- Setelah dilatasi: <InlineMath math="g(2) = 0.5 \times 6 = 3" />
+
+Jika kita visualisasikan, maka akan terlihat seperti ini:
+
+<LineEquation
+  title={<>Kombinasi Translasi dan Dilatasi Vertikal</>}
+  description="Fungsi kuadrat dengan translasi vertikal 2 unit ke atas kemudian dilatasi vertikal dengan faktor 0.5."
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.4;
+        const y = x * x * 0.3;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [
+        {
+          text: "f(x) = x²",
+          at: 15,
+          offset: [1, -0.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.4;
+        const y = x * x * 0.3;
+        // Translasi vertikal +2
+        const yTranslated = y + 2;
+        return { x, y: yTranslated, z: 0 };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      labels: [
+        {
+          text: "f(x) = x² + 2",
+          at: 15,
+          offset: [0.5, 0.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.4;
+        const y = x * x * 0.3;
+        // Kombinasi: translasi +2 kemudian dilatasi 0.5
+        const yCombined = 0.5 * (y + 2);
+        return { x, y: yCombined, z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [
+        {
+          text: "g(x) = 0.5(x² + 2)",
+          at: 15,
+          offset: [1.5, 0.5, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+## Urutan Transformasi
+
+Urutan penerapan transformasi sangat mempengaruhi hasil akhir. Mari kita bandingkan dua urutan yang berbeda:
+
+**Perbandingan Urutan Transformasi:**
+
+**Urutan A: Dilatasi dulu, lalu translasi**
+1. Fungsi awal: <InlineMath math="f(x) = x^2" />
+2. Dilatasi vertikal dengan faktor 2: <InlineMath math="h_1(x) = 2 \cdot f(x) = 2x^2" />
+3. Translasi vertikal +1: <InlineMath math="h_A(x) = h_1(x) + 1 = 2x^2 + 1" />
+
+**Urutan B: Translasi dulu, lalu dilatasi**
+1. Fungsi awal: <InlineMath math="f(x) = x^2" />
+2. Translasi vertikal +1: <InlineMath math="h_2(x) = f(x) + 1 = x^2 + 1" />
+3. Dilatasi vertikal dengan faktor 2: <InlineMath math="h_B(x) = 2 \cdot h_2(x) = 2(x^2 + 1) = 2x^2 + 2" />
+
+**Contoh Perhitungan untuk <InlineMath math="x = 1" />:**
+
+*Urutan A:*
+- Fungsi awal: <InlineMath math="f(1) = 1^2 = 1" />
+- Setelah dilatasi: <InlineMath math="h_1(1) = 2 \times 1 = 2" />
+- Setelah translasi: <InlineMath math="h_A(1) = 2 + 1 = 3" />
+
+*Urutan B:*
+- Fungsi awal: <InlineMath math="f(1) = 1^2 = 1" />
+- Setelah translasi: <InlineMath math="h_2(1) = 1 + 1 = 2" />
+- Setelah dilatasi: <InlineMath math="h_B(1) = 2 \times 2 = 4" />
+
+Terlihat bahwa hasil akhirnya berbeda: <InlineMath math="h_A(1) = 3" /> sedangkan <InlineMath math="h_B(1) = 4" />.
+
+<LineEquation
+  title={<>Perbandingan Urutan Transformasi</>}
+  description="Membandingkan hasil transformasi dengan urutan yang berbeda."
+  cameraPosition={[10, 6, 10]}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.3;
+        const y = x * x * 0.2;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [
+        {
+          text: "f(x) = x²",
+          at: 15,
+          offset: [0.5, 0.3, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.3;
+        const y = x * x * 0.2;
+        // Urutan 1: Dilatasi dulu (×2), lalu translasi (+1)
+        const y1 = 2 * y + 1;
+        return { x, y: y1, z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      showPoints: false,
+      labels: [
+        {
+          text: "2x² + 1",
+          at: 15,
+          offset: [0.5, 0.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.3;
+        const y = x * x * 0.2;
+        // Urutan 2: Translasi dulu (+1), lalu dilatasi (×2)
+        const y2 = 2 * (y + 1);
+        return { x, y: y2, z: 0 };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [
+        {
+          text: "2(x² + 1)",
+          at: 15,
+          offset: [0.5, 0.8, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+## Transformasi Horizontal Kombinasi
+
+Untuk transformasi horizontal, kita dapat menggabungkan refleksi dan translasi:
+
+**Langkah Perhitungan Transformasi Horizontal:**
+
+1. **Fungsi Awal**: <InlineMath math="f(x) = 1.5^x" />
+
+2. **Langkah 1 - Refleksi terhadap sumbu y**: Ganti x dengan -x
+   <BlockMath math="f_1(x) = f(-x) = 1.5^{-x}" />
+
+3. **Langkah 2 - Translasi horizontal**: Geser 2 unit ke kanan
+   <BlockMath math="g(x) = f_1(x-2) = 1.5^{-(x-2)} = 1.5^{-x+2}" />
+
+**Contoh Perhitungan untuk <InlineMath math="x = 3" />:**
+- Fungsi awal: <InlineMath math="f(3) = 1.5^3 = 3.375" />
+- Setelah refleksi: <InlineMath math="f_1(3) = 1.5^{-3} = \frac{1}{3.375} \approx 0.296" />
+- Setelah translasi: <InlineMath math="g(3) = 1.5^{-(3-2)} = 1.5^{-1} = \frac{1}{1.5} \approx 0.667" />
+
+Mari kita visualisasikan transformasi ini:
+
+<LineEquation
+  title={<>Kombinasi Refleksi dan Translasi Horizontal</>}
+  description="Fungsi eksponensial dengan refleksi terhadap sumbu y kemudian translasi horizontal."
+  cameraPosition={[8, 6, 8]}
+  data={[
+    {
+      points: Array.from({ length: 15 }, (_, i) => {
+        const x = (i - 7) * 0.4;
+        const y = Math.pow(1.5, x);
+        return { x, y, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [
+        {
+          text: "f(x) = 1.5^x",
+          at: 12,
+          offset: [0.5, 1.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 15 }, (_, i) => {
+        const x = (i - 7) * 0.4;
+        // Refleksi terhadap sumbu y: f(-x)
+        const y = Math.pow(1.5, -x);
+        return { x, y, z: 0 };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [
+        {
+          text: "f(-x) = 1.5^(-x)",
+          at: 3,
+          offset: [-2, -0.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 15 }, (_, i) => {
+        const x = (i - 7) * 0.4;
+        // Kombinasi: refleksi kemudian translasi horizontal +2
+        const y = Math.pow(1.5, -(x - 2));
+        return { x, y, z: 0 };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+      labels: [
+        {
+          text: "f(-(x-2))",
+          at: 8,
+          offset: [1, 0.8, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+## Sifat Kombinasi Transformasi
+
+Kombinasi transformasi memiliki beberapa sifat penting:
+
+- **Tidak Komutatif**: Urutan transformasi mempengaruhi hasil akhir
+- **Dapat Disederhanakan**: Beberapa kombinasi dapat ditulis dalam bentuk yang lebih sederhana
+- **Mempertahankan Kontinuitas**: Jika fungsi asli kontinu, hasil transformasi juga kontinu
+
+## Latihan
+
+1. Fungsi <InlineMath math="f(x) = x^2" /> ditranslasi vertikal 3 unit ke atas, kemudian dilatasi vertikal dengan faktor <InlineMath math="\frac{1}{2}" />. Tentukan rumus fungsi hasil transformasi.
+
+2. Fungsi <InlineMath math="g(x) = 2^x" /> direfleksikan terhadap sumbu y, kemudian ditranslasi horizontal 1 unit ke kanan. Tuliskan rumus fungsi hasil transformasi.
+
+3. Bandingkan hasil transformasi fungsi <InlineMath math="h(x) = x^2" /> dengan dua urutan berbeda:
+   - Urutan A: Dilatasi vertikal faktor 3, lalu translasi vertikal 2 unit ke atas
+   - Urutan B: Translasi vertikal 2 unit ke atas, lalu dilatasi vertikal faktor 3
+
+4. Fungsi <InlineMath math="f(x) = \sqrt{x}" /> mengalami kombinasi transformasi sehingga menjadi <InlineMath math="g(x) = 2\sqrt{x + 3} - 1" />. Sebutkan transformasi apa saja yang terjadi dan urutannya.
+
+5. Tentukan rumus fungsi hasil transformasi jika <InlineMath math="f(x) = |x|" /> ditranslasi horizontal 2 unit ke kiri, direfleksikan terhadap sumbu x, kemudian dilatasi vertikal dengan faktor 3.
+
+### Kunci Jawaban
+
+1. Transformasi bertahap pada <InlineMath math="f(x) = x^2" />:
+   
+   Langkah 1: Translasi vertikal +3
+   <BlockMath math="f_1(x) = x^2 + 3" />
+   
+   Langkah 2: Dilatasi vertikal dengan faktor <InlineMath math="\frac{1}{2}" />
+   <BlockMath math="g(x) = \frac{1}{2}(x^2 + 3) = \frac{1}{2}x^2 + \frac{3}{2}" />
+   
+   Jadi rumus fungsi hasil transformasi adalah <InlineMath math="g(x) = \frac{1}{2}x^2 + \frac{3}{2}" />.
+
+   <LineEquation
+     title={<>Transformasi Bertahap: Translasi Kemudian Dilatasi</>}
+     description="Transformasi bertahap fungsi kuadrat."
+     cameraPosition={[0, 0, 12]}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = x * x * 0.2;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("PURPLE"),
+         showPoints: false,
+         labels: [
+           {
+             text: "f(x) = x²",
+             at: 15,
+             offset: [0.5, 0.3, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = 0.5 * (x * x * 0.2 + 3);
+           return { x, y, z: 0 };
+         }),
+         color: getColor("ORANGE"),
+         showPoints: false,
+         labels: [
+           {
+             text: "g(x) = ½x² + 3/2",
+             at: 15,
+             offset: [0.5, 0.8, 0],
+           },
+         ],
+       },
+     ]}
+   />
+
+2. Transformasi bertahap pada <InlineMath math="g(x) = 2^x" />:
+   
+   Langkah 1: Refleksi terhadap sumbu y
+   <BlockMath math="g_1(x) = 2^{-x}" />
+   
+   Langkah 2: Translasi horizontal 1 unit ke kanan
+   <BlockMath math="h(x) = 2^{-(x-1)} = 2^{-x+1} = 2 \cdot 2^{-x}" />
+   
+   Jadi rumus fungsi hasil transformasi adalah <InlineMath math="h(x) = 2^{1-x}" />.
+
+   <LineEquation
+     title={<>Refleksi dan Translasi Horizontal Fungsi Eksponensial</>}
+     description="Transformasi fungsi eksponensial."
+     cameraPosition={[8, 6, 8]}
+     data={[
+       {
+         points: Array.from({ length: 15 }, (_, i) => {
+           const x = (i - 7) * 0.4;
+           const y = Math.pow(2, x * 0.5);
+           return { x, y, z: 0 };
+         }),
+         color: getColor("TEAL"),
+         showPoints: false,
+         labels: [
+           {
+             text: "g(x) = 2^x",
+             at: 12,
+             offset: [0.5, 0.5, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 15 }, (_, i) => {
+           const x = (i - 7) * 0.4;
+           const y = Math.pow(2, 1 - x * 0.5);
+           return { x, y, z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         showPoints: false,
+         labels: [
+           {
+             text: "h(x) = 2^(1-x)",
+             at: 3,
+             offset: [-0.8, 0.5, 0],
+           },
+         ],
+       },
+     ]}
+   />
+
+3. Perbandingan dua urutan transformasi:
+   
+   **Urutan A**: Dilatasi dulu, lalu translasi
+   <div className="flex flex-col gap-4">
+   <BlockMath math="h_1(x) = 3x^2" />
+   <BlockMath math="h_A(x) = 3x^2 + 2" />
+   </div>
+   
+   **Urutan B**: Translasi dulu, lalu dilatasi
+   <div className="flex flex-col gap-4">
+   <BlockMath math="h_2(x) = x^2 + 2" />
+   <BlockMath math="h_B(x) = 3(x^2 + 2) = 3x^2 + 6" />
+   </div>
+   
+   Hasil berbeda: <InlineMath math="h_A(x) = 3x^2 + 2" /> dan <InlineMath math="h_B(x) = 3x^2 + 6" />.
+
+   <LineEquation
+     title={<>Pengaruh Urutan Transformasi pada Hasil Akhir</>}
+     description="Perbandingan urutan transformasi yang berbeda."
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = x * x * 0.15;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("PURPLE"),
+         showPoints: false,
+         labels: [
+           {
+             text: "h(x) = x²",
+             at: 15,
+             offset: [0.5, 0.3, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = 3 * x * x * 0.15 + 2;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("EMERALD"),
+         showPoints: false,
+         labels: [
+           {
+             text: "Urutan A: 3x² + 2",
+             at: 15,
+             offset: [0.5, 0.8, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = 3 * (x * x * 0.15 + 2);
+           return { x, y, z: 0 };
+         }),
+         color: getColor("AMBER"),
+         showPoints: false,
+         labels: [
+           {
+             text: "Urutan B: 3x² + 6",
+             at: 10,
+             offset: [0.5, -0.5, 0],
+           },
+         ],
+       },
+     ]}
+   />
+
+4. Analisis transformasi <InlineMath math="g(x) = 2\sqrt{x + 3} - 1" /> dari <InlineMath math="f(x) = \sqrt{x}" />:
+   
+   Transformasi yang terjadi secara berurutan:
+   - Translasi horizontal 3 unit ke kiri: <InlineMath math="f(x + 3) = \sqrt{x + 3}" />
+   - Dilatasi vertikal dengan faktor 2: <InlineMath math="2\sqrt{x + 3}" />
+   - Translasi vertikal 1 unit ke bawah: <InlineMath math="2\sqrt{x + 3} - 1" />
+
+5. Transformasi bertahap pada <InlineMath math="f(x) = |x|" />:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="f_1(x) = |x + 2|" />
+   <BlockMath math="f_2(x) = -|x + 2|" />
+   <BlockMath math="g(x) = -3|x + 2|" />
+   </div>
+   
+   Jadi rumus fungsi hasil transformasi adalah <InlineMath math="g(x) = -3|x + 2|" />.
+
+   <LineEquation
+     title={<>Kombinasi Translasi, Refleksi, dan Dilatasi Fungsi Mutlak</>}
+     description="Transformasi bertahap fungsi nilai mutlak."
+     cameraPosition={[0, 0, 12]}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = Math.abs(x) * 0.5;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("CYAN"),
+         showPoints: false,
+         labels: [
+           {
+             text: "f(x) = |x|",
+             at: 15,
+             offset: [0.5, 0.3, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = -3 * Math.abs(x + 2) * 0.5;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("PINK"),
+         showPoints: false,
+         labels: [
+           {
+             text: "g(x) = -3|x + 2|",
+             at: 5,
+             offset: [-0.8, -0.5, 0],
+           },
+         ],
+       },
+     ]}
+   />

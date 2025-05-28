@@ -4,3 +4,533 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Function Transformation",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Understanding Combined Transformations
+
+Combined transformation is the application of two or more transformations sequentially to a function. Imagine cooking with several steps: first we cut vegetables, then sauté, then add spices. Each step changes the basic ingredients into a different form.
+
+In mathematics, we can combine translation, reflection, rotation, and dilation to produce more complex transformations. The order of applying transformations is very important because the final result can be different.
+
+## Types of Combined Transformations
+
+### Vertical Combined Transformations
+
+Vertical transformations involve changes on the y-axis. A common combination is vertical translation followed by vertical dilation.
+
+For function <InlineMath math="f(x)" /> that undergoes vertical translation by <InlineMath math="b" /> then vertical dilation with factor <InlineMath math="k" />, the formula becomes:
+
+<BlockMath math="g(x) = k \cdot f(x) + b" />
+
+### Horizontal Combined Transformations
+
+Horizontal transformations affect the x-axis. An example is reflection across the y-axis followed by horizontal translation.
+
+For function <InlineMath math="f(x)" /> that is reflected across the y-axis then translated horizontally by <InlineMath math="a" />, the formula is:
+
+<BlockMath math="g(x) = f(-(x - a))" />
+
+## Visualization of Combined Transformations
+
+Let's see how combined transformations affect the quadratic function <InlineMath math="f(x) = x^2" />:
+
+**Calculation Steps:**
+
+1. **Initial Function**: <InlineMath math="f(x) = x^2" />
+
+2. **Step 1 - Vertical Translation**: Shift 2 units up
+
+   <BlockMath math="f_1(x) = f(x) + 2 = x^2 + 2" />
+
+3. **Step 2 - Vertical Dilation**: Multiply by factor 0.5
+
+   <BlockMath math="g(x) = 0.5 \cdot f_1(x) = 0.5(x^2 + 2) = 0.5x^2 + 1" />
+
+**Example Calculation for <InlineMath math="x = 2" />:**
+- Initial function: <InlineMath math="f(2) = 2^2 = 4" />
+- After translation: <InlineMath math="f_1(2) = 4 + 2 = 6" />
+- After dilation: <InlineMath math="g(2) = 0.5 \times 6 = 3" />
+
+If we visualize this, it will look like this:
+
+<LineEquation
+  title={<>Combination of Vertical Translation and Dilation</>}
+  description="Quadratic function with vertical translation 2 units up then vertical dilation with factor 0.5."
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.4;
+        const y = x * x * 0.3;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [
+        {
+          text: "f(x) = x²",
+          at: 15,
+          offset: [1, -0.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.4;
+        const y = x * x * 0.3;
+        // Vertical translation +2
+        const yTranslated = y + 2;
+        return { x, y: yTranslated, z: 0 };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      labels: [
+        {
+          text: "f(x) = x² + 2",
+          at: 15,
+          offset: [0.5, 0.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.4;
+        const y = x * x * 0.3;
+        // Combination: translation +2 then dilation 0.5
+        const yCombined = 0.5 * (y + 2);
+        return { x, y: yCombined, z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [
+        {
+          text: "g(x) = 0.5(x² + 2)",
+          at: 15,
+          offset: [1.5, 0.5, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+## Order of Transformations
+
+The order of applying transformations greatly affects the final result. Let's compare two different orders:
+
+**Comparison of Transformation Orders:**
+
+**Order A: Dilation first, then translation**
+1. Initial function: <InlineMath math="f(x) = x^2" />
+2. Vertical dilation with factor 2: <InlineMath math="h_1(x) = 2 \cdot f(x) = 2x^2" />
+3. Vertical translation +1: <InlineMath math="h_A(x) = h_1(x) + 1 = 2x^2 + 1" />
+
+**Order B: Translation first, then dilation**
+1. Initial function: <InlineMath math="f(x) = x^2" />
+2. Vertical translation +1: <InlineMath math="h_2(x) = f(x) + 1 = x^2 + 1" />
+3. Vertical dilation with factor 2: <InlineMath math="h_B(x) = 2 \cdot h_2(x) = 2(x^2 + 1) = 2x^2 + 2" />
+
+**Example Calculation for <InlineMath math="x = 1" />:**
+
+*Order A:*
+- Initial function: <InlineMath math="f(1) = 1^2 = 1" />
+- After dilation: <InlineMath math="h_1(1) = 2 \times 1 = 2" />
+- After translation: <InlineMath math="h_A(1) = 2 + 1 = 3" />
+
+*Order B:*
+- Initial function: <InlineMath math="f(1) = 1^2 = 1" />
+- After translation: <InlineMath math="h_2(1) = 1 + 1 = 2" />
+- After dilation: <InlineMath math="h_B(1) = 2 \times 2 = 4" />
+
+It can be seen that the final results are different: <InlineMath math="h_A(1) = 3" /> while <InlineMath math="h_B(1) = 4" />.
+
+<LineEquation
+  title={<>Comparison of Transformation Orders</>}
+  description="Comparing transformation results with different orders."
+  cameraPosition={[10, 6, 10]}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.3;
+        const y = x * x * 0.2;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [
+        {
+          text: "f(x) = x²",
+          at: 15,
+          offset: [0.5, 0.3, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.3;
+        const y = x * x * 0.2;
+        // Order 1: Dilation first (×2), then translation (+1)
+        const y1 = 2 * y + 1;
+        return { x, y: y1, z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      showPoints: false,
+      labels: [
+        {
+          text: "2x² + 1",
+          at: 15,
+          offset: [0.5, 0.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.3;
+        const y = x * x * 0.2;
+        // Order 2: Translation first (+1), then dilation (×2)
+        const y2 = 2 * (y + 1);
+        return { x, y: y2, z: 0 };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [
+        {
+          text: "2(x² + 1)",
+          at: 15,
+          offset: [0.5, 0.8, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+## Combined Horizontal Transformations
+
+For horizontal transformations, we can combine reflection and translation:
+
+**Horizontal Transformation Calculation Steps:**
+
+1. **Initial Function**: <InlineMath math="f(x) = 1.5^x" />
+
+2. **Step 1 - Reflection across y-axis**: Replace x with -x
+   <BlockMath math="f_1(x) = f(-x) = 1.5^{-x}" />
+
+3. **Step 2 - Horizontal translation**: Shift 2 units to the right
+   <BlockMath math="g(x) = f_1(x-2) = 1.5^{-(x-2)} = 1.5^{-x+2}" />
+
+**Example Calculation for <InlineMath math="x = 3" />:**
+- Initial function: <InlineMath math="f(3) = 1.5^3 = 3.375" />
+- After reflection: <InlineMath math="f_1(3) = 1.5^{-3} = \frac{1}{3.375} \approx 0.296" />
+- After translation: <InlineMath math="g(3) = 1.5^{-(3-2)} = 1.5^{-1} = \frac{1}{1.5} \approx 0.667" />
+
+Let's visualize this transformation:
+
+<LineEquation
+  title={<>Combination of Reflection and Horizontal Translation</>}
+  description="Exponential function with reflection across y-axis then horizontal translation."
+  cameraPosition={[8, 6, 8]}
+  data={[
+    {
+      points: Array.from({ length: 15 }, (_, i) => {
+        const x = (i - 7) * 0.4;
+        const y = Math.pow(1.5, x);
+        return { x, y, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [
+        {
+          text: "f(x) = 1.5^x",
+          at: 12,
+          offset: [0.5, 1.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 15 }, (_, i) => {
+        const x = (i - 7) * 0.4;
+        // Reflection across y-axis: f(-x)
+        const y = Math.pow(1.5, -x);
+        return { x, y, z: 0 };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [
+        {
+          text: "f(-x) = 1.5^(-x)",
+          at: 3,
+          offset: [-2, -0.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 15 }, (_, i) => {
+        const x = (i - 7) * 0.4;
+        // Combination: reflection then horizontal translation +2
+        const y = Math.pow(1.5, -(x - 2));
+        return { x, y, z: 0 };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+      labels: [
+        {
+          text: "f(-(x-2))",
+          at: 8,
+          offset: [1, 0.8, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+## Properties of Combined Transformations
+
+Combined transformations have several important properties:
+
+- **Non-Commutative**: The order of transformations affects the final result
+- **Can be Simplified**: Some combinations can be written in simpler forms
+- **Preserves Continuity**: If the original function is continuous, the transformed result is also continuous
+
+## Exercises
+
+1. Function <InlineMath math="f(x) = x^2" /> is translated vertically 3 units up, then dilated vertically with factor <InlineMath math="\frac{1}{2}" />. Determine the formula of the transformed function.
+
+2. Function <InlineMath math="g(x) = 2^x" /> is reflected across the y-axis, then translated horizontally 1 unit to the right. Write the formula of the transformed function.
+
+3. Compare the transformation results of function <InlineMath math="h(x) = x^2" /> with two different orders:
+   - Order A: Vertical dilation factor 3, then vertical translation 2 units up
+   - Order B: Vertical translation 2 units up, then vertical dilation factor 3
+
+4. Function <InlineMath math="f(x) = \sqrt{x}" /> undergoes combined transformations to become <InlineMath math="g(x) = 2\sqrt{x + 3} - 1" />. List what transformations occur and their order.
+
+5. Determine the formula of the transformed function if <InlineMath math="f(x) = |x|" /> is translated horizontally 2 units to the left, reflected across the x-axis, then dilated vertically with factor 3.
+
+### Answer Key
+
+1. Step-by-step transformation of <InlineMath math="f(x) = x^2" />:
+   
+   Step 1: Vertical translation +3
+   <BlockMath math="f_1(x) = x^2 + 3" />
+   
+   Step 2: Vertical dilation with factor <InlineMath math="\frac{1}{2}" />
+   <BlockMath math="g(x) = \frac{1}{2}(x^2 + 3) = \frac{1}{2}x^2 + \frac{3}{2}" />
+   
+   So the formula of the transformed function is <InlineMath math="g(x) = \frac{1}{2}x^2 + \frac{3}{2}" />.
+
+   <LineEquation
+     title={<>Step-by-Step Transformation: Translation Then Dilation</>}
+     description="Step-by-step transformation of quadratic function."
+     cameraPosition={[0, 0, 12]}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = x * x * 0.2;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("PURPLE"),
+         showPoints: false,
+         labels: [
+           {
+             text: "f(x) = x²",
+             at: 15,
+             offset: [0.5, 0.3, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = 0.5 * (x * x * 0.2 + 3);
+           return { x, y, z: 0 };
+         }),
+         color: getColor("ORANGE"),
+         showPoints: false,
+         labels: [
+           {
+             text: "g(x) = ½x² + 3/2",
+             at: 15,
+             offset: [0.5, 0.8, 0],
+           },
+         ],
+       },
+     ]}
+   />
+
+2. Step-by-step transformation of <InlineMath math="g(x) = 2^x" />:
+   
+   Step 1: Reflection across y-axis
+   <BlockMath math="g_1(x) = 2^{-x}" />
+   
+   Step 2: Horizontal translation 1 unit to the right
+   <BlockMath math="h(x) = 2^{-(x-1)} = 2^{-x+1} = 2 \cdot 2^{-x}" />
+   
+   So the formula of the transformed function is <InlineMath math="h(x) = 2^{1-x}" />.
+
+   <LineEquation
+     title={<>Reflection and Horizontal Translation of Exponential Function</>}
+     description="Transformation of exponential function."
+     cameraPosition={[8, 6, 8]}
+     data={[
+       {
+         points: Array.from({ length: 15 }, (_, i) => {
+           const x = (i - 7) * 0.4;
+           const y = Math.pow(2, x * 0.5);
+           return { x, y, z: 0 };
+         }),
+         color: getColor("TEAL"),
+         showPoints: false,
+         labels: [
+           {
+             text: "g(x) = 2^x",
+             at: 12,
+             offset: [0.5, 0.5, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 15 }, (_, i) => {
+           const x = (i - 7) * 0.4;
+           const y = Math.pow(2, 1 - x * 0.5);
+           return { x, y, z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         showPoints: false,
+         labels: [
+           {
+             text: "h(x) = 2^(1-x)",
+             at: 3,
+             offset: [-0.8, 0.5, 0],
+           },
+         ],
+       },
+     ]}
+   />
+
+3. Comparison of two transformation orders:
+   
+   **Order A**: Dilation first, then translation
+   <div className="flex flex-col gap-4">
+   <BlockMath math="h_1(x) = 3x^2" />
+   <BlockMath math="h_A(x) = 3x^2 + 2" />
+   </div>
+   
+   **Order B**: Translation first, then dilation
+   <div className="flex flex-col gap-4">
+   <BlockMath math="h_2(x) = x^2 + 2" />
+   <BlockMath math="h_B(x) = 3(x^2 + 2) = 3x^2 + 6" />
+   </div>
+   
+   Different results: <InlineMath math="h_A(x) = 3x^2 + 2" /> and <InlineMath math="h_B(x) = 3x^2 + 6" />.
+
+   <LineEquation
+     title={<>Effect of Transformation Order on Final Result</>}
+     description="Comparison of different transformation orders."
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = x * x * 0.15;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("PURPLE"),
+         showPoints: false,
+         labels: [
+           {
+             text: "h(x) = x²",
+             at: 15,
+             offset: [0.5, 0.3, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = 3 * x * x * 0.15 + 2;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("EMERALD"),
+         showPoints: false,
+         labels: [
+           {
+             text: "Order A: 3x² + 2",
+             at: 15,
+             offset: [0.5, 0.8, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = 3 * (x * x * 0.15 + 2);
+           return { x, y, z: 0 };
+         }),
+         color: getColor("AMBER"),
+         showPoints: false,
+         labels: [
+           {
+             text: "Order B: 3x² + 6",
+             at: 10,
+             offset: [0.5, -0.5, 0],
+           },
+         ],
+       },
+     ]}
+   />
+
+4. Analysis of transformation <InlineMath math="g(x) = 2\sqrt{x + 3} - 1" /> from <InlineMath math="f(x) = \sqrt{x}" />:
+   
+   Transformations that occur sequentially:
+   - Horizontal translation 3 units to the left: <InlineMath math="f(x + 3) = \sqrt{x + 3}" />
+   - Vertical dilation with factor 2: <InlineMath math="2\sqrt{x + 3}" />
+   - Vertical translation 1 unit down: <InlineMath math="2\sqrt{x + 3} - 1" />
+
+5. Step-by-step transformation of <InlineMath math="f(x) = |x|" />:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="f_1(x) = |x + 2|" />
+   <BlockMath math="f_2(x) = -|x + 2|" />
+   <BlockMath math="g(x) = -3|x + 2|" />
+   </div>
+   
+   So the formula of the transformed function is <InlineMath math="g(x) = -3|x + 2|" />.
+
+   <LineEquation
+     title={<>Combination of Translation, Reflection, and Dilation of Absolute Function</>}
+     description="Step-by-step transformation of absolute value function."
+     cameraPosition={[0, 0, 12]}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = Math.abs(x) * 0.5;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("CYAN"),
+         showPoints: false,
+         labels: [
+           {
+             text: "f(x) = |x|",
+             at: 15,
+             offset: [0.5, 0.3, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = -3 * Math.abs(x + 2) * 0.5;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("PINK"),
+         showPoints: false,
+         labels: [
+           {
+             text: "g(x) = -3|x + 2|",
+             at: 5,
+             offset: [-0.8, -0.5, 0],
+           },
+         ],
+       },
+     ]}
+   />
