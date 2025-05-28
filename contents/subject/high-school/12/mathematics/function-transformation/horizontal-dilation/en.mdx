@@ -4,3 +4,312 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Function Transformation",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Basic Concepts of Horizontal Dilation
+
+Horizontal dilation is a geometric transformation that changes the size of a function graph horizontally, like pulling or compressing a rubber band left and right. Imagine holding a photo with both hands on the left and right sides, then stretching or compressing it horizontally without changing the height of the photo.
+
+If we have a function <InlineMath math="f(x)" />, then horizontal dilation produces a new function <InlineMath math="g(x) = f(kx)" /> where <InlineMath math="k" /> is the scale factor that determines how much the horizontal size changes.
+
+### Rules of Horizontal Dilation
+
+For any function <InlineMath math="f(x)" />, horizontal dilation is defined as:
+
+<BlockMath math="g(x) = f(kx)" />
+
+Where <InlineMath math="k" /> is the scale factor that affects the transformation:
+- If <InlineMath math="k > 1" />, the graph is compressed horizontally (reduced)
+- If <InlineMath math="0 < k < 1" />, the graph is stretched horizontally (enlarged)
+- If <InlineMath math="k = 1" />, the graph does not change
+- If <InlineMath math="k < 0" />, the graph undergoes reflection as well as dilation
+
+Note that the effect of horizontal dilation is counterintuitive: a larger scale factor actually compresses the graph.
+
+## Visualization of Horizontal Dilation
+
+Let's see how horizontal dilation works on the quadratic function <InlineMath math="f(x) = x^2" /> with various scale factors.
+
+<LineEquation
+  title={<>Horizontal Dilation of Quadratic Function <InlineMath math="f(x) = x^2" /></>}
+  description="Notice how the graph is compressed or stretched horizontally with different scale factors."
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      labels: [{ text: "f(x) = x²", offset: [4, 2, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: (2 * x) * (2 * x), z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      labels: [{ text: "g(x) = (2x)²", offset: [4, 3, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: (0.5 * x) * (0.5 * x), z: 0 };
+      }),
+      color: getColor("SKY"),
+      labels: [{ text: "h(x) = (0.5x)²", offset: [4, 1, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+From the visualization above, we can observe:
+- The original function <InlineMath math="f(x) = x^2" /> (purple) as reference
+- Function <InlineMath math="g(x) = (2x)^2" /> (orange) is horizontally compressed by factor 2
+- Function <InlineMath math="h(x) = (0.5x)^2" /> (sky) is horizontally stretched by factor 0.5
+- All graphs have the same vertex at <InlineMath math="(0, 0)" />
+
+## Horizontal Dilation on Linear Functions
+
+Now let's apply the same concept to the linear function <InlineMath math="f(x) = x + 2" />.
+
+<LineEquation
+  title={<>Horizontal Dilation of Linear Function <InlineMath math="f(x) = x + 2" /></>}
+  description="The dilated line has slope that changes according to the scale factor."
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: x + 2, z: 0 };
+      }),
+      color: getColor("AMBER"),
+      labels: [{ text: "f(x) = x + 2", offset: [2, 0.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * x + 2, z: 0 };
+      }),
+      color: getColor("TEAL"),
+      labels: [{ text: "g(x) = 2x + 2", offset: [1, 1.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 0.5 * x + 2, z: 0 };
+      }),
+      color: getColor("ROSE"),
+      labels: [{ text: "h(x) = 0.5x + 2", offset: [3, -0.5, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Notice that:
+- The original function <InlineMath math="f(x) = x + 2" /> has slope 1
+- Function <InlineMath math="g(x) = 2x + 2" /> has slope 2 (horizontally compressed)
+- Function <InlineMath math="h(x) = 0.5x + 2" /> has slope 0.5 (horizontally stretched)
+- All lines intersect the y-axis at the same point <InlineMath math="(0, 2)" />
+
+## Important Properties of Horizontal Dilation
+
+### Effect on Coordinate Points
+
+If point <InlineMath math="(a, b)" /> is on the graph of <InlineMath math="f(x)" />, then the corresponding point on the graph of <InlineMath math="f(kx)" /> is <InlineMath math="(\frac{a}{k}, b)" />.
+
+### Domain and Range
+
+- **Domain**: Changes according to the scale factor <InlineMath math="k" />
+- **Range**: Does not change after horizontal dilation
+
+If the domain of the original function is <InlineMath math="[c, d]" />, then the domain after horizontal dilation with factor <InlineMath math="k > 0" /> becomes <InlineMath math="[\frac{c}{k}, \frac{d}{k}]" />.
+
+### Axis Intercepts
+
+- **x-intercept**: Changes according to the scale factor
+- **y-intercept**: Does not change
+
+## Application Examples
+
+### Exponential Function
+
+Let's look at horizontal dilation on the exponential function <InlineMath math="f(x) = 2^x" />.
+
+<LineEquation
+  title={<>Horizontal Dilation of Exponential Function <InlineMath math="f(x) = 2^x" /></>}
+  description="The exponential curve undergoes width changes according to the scale factor."
+  showZAxis={false}
+  cameraPosition={[8, 6, 8]}
+  data={[
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: Math.pow(2, x), z: 0 };
+      }),
+      color: getColor("INDIGO"),
+      labels: [{ text: "f(x) = 2^x", offset: [2, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: Math.pow(2, 2 * x), z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      labels: [{ text: "g(x) = 2^(2x)", offset: [1, 2, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+For exponential functions:
+- The horizontal asymptote remains at <InlineMath math="y = 0" /> for both functions
+- The y-intercept remains the same at <InlineMath math="(0, 1)" />
+- The growth rate of the function changes according to the scale factor
+
+## Horizontal Dilation with Negative Factor
+
+Let's see what happens when the scale factor is negative.
+
+<LineEquation
+  title={<>Horizontal Dilation with Negative Factor <InlineMath math="f(x) = x^2 + 1" /></>}
+  description="Negative scale factor causes reflection as well as dilation."
+  showZAxis={false}
+  cameraPosition={[10, 6, 10]}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x + 1, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      labels: [{ text: "f(x) = x² + 1", offset: [2, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: (-2 * x) * (-2 * x) + 1, z: 0 };
+      }),
+      color: getColor("PINK"),
+      labels: [{ text: "g(x) = (-2x)² + 1", offset: [3, 2, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+When the scale factor is negative:
+- The graph undergoes reflection across the y-axis
+- Simultaneously undergoes dilation according to the absolute value of the scale factor
+- The graph shape remains the same because the quadratic function is symmetric
+
+## Exercises
+
+1. Given the function <InlineMath math="f(x) = x^2 - 2x + 1" />. Determine the equation of the function resulting from horizontal dilation with scale factor 3.
+
+2. If the graph of function <InlineMath math="g(x) = \sqrt{x}" /> undergoes horizontal dilation with factor <InlineMath math="\frac{1}{2}" />, determine:
+   - The equation of the resulting dilated function
+   - The domain of the function after dilation
+
+3. Function <InlineMath math="h(x) = |x - 2|" /> undergoes horizontal dilation with factor -1. Determine the vertex of the resulting dilated function.
+
+### Answer Key
+
+1. Horizontal dilation with factor 3: <InlineMath math="f'(x) = f(3x) = (3x)^2 - 2(3x) + 1 = 9x^2 - 6x + 1" />
+
+   <LineEquation
+     title={<>Function <InlineMath math="f(x) = x^2 - 2x + 1" /> and Its Dilation Result</>}
+     description="The original parabola is horizontally compressed by factor 3 producing a narrower parabola."
+     showZAxis={false}
+     cameraPosition={[12, 8, 12]}
+     data={[
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: x * x - 2 * x + 1, z: 0 };
+         }),
+         color: getColor("PURPLE"),
+         labels: [{ text: "f(x) = x² - 2x + 1", offset: [4, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: 9 * x * x - 6 * x + 1, z: 0 };
+         }),
+         color: getColor("ORANGE"),
+         labels: [{ text: "f'(x) = 9x² - 6x + 1", offset: [3, 2, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+2. Equation of the resulting dilated function:
+    
+   - Horizontal dilation: <InlineMath math="g'(x) = g(\frac{1}{2}x) = \sqrt{\frac{1}{2}x} = \sqrt{\frac{x}{2}}" />
+   - Domain after dilation: <InlineMath math="[0, \infty)" /> becomes <InlineMath math="[0, \infty)" /> (unchanged because the scale factor is positive)
+
+   Visualization:
+
+   <LineEquation
+     title={<>Function <InlineMath math="g(x) = \sqrt{x}" /> and Its Dilation Result</>}
+     description="The square root curve is horizontally stretched by factor 0.5 producing a wider curve."
+     showZAxis={false}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: Math.sqrt(x), z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         labels: [{ text: "g(x) = √x", offset: [2, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: Math.sqrt(0.5 * x), z: 0 };
+         }),
+         color: getColor("TEAL"),
+         labels: [{ text: "g'(x) = √(x/2)", offset: [3, 0.5, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+3. The original function <InlineMath math="h(x) = |x - 2|" /> has its vertex at <InlineMath math="(2, 0)" />.
+   After horizontal dilation with factor -1: <InlineMath math="h'(x) = |-x - 2| = |-(x + 2)| = |x + 2|" />, the vertex becomes <InlineMath math="(-2, 0)" />.
+
+   <LineEquation
+     title={<>Function <InlineMath math="h(x) = |x - 2|" /> and Its Dilation Result</>}
+     description="The absolute value function undergoes reflection and dilation with factor -1."
+     showZAxis={false}
+     cameraPosition={[10, 6, 10]}
+     data={[
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: Math.abs(x - 2), z: 0 };
+         }),
+         color: getColor("INDIGO"),
+         labels: [{ text: "h(x) = |x - 2|", offset: [2.5, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: Math.abs(x + 2), z: 0 };
+         }),
+         color: getColor("EMERALD"),
+         labels: [{ text: "h'(x) = |x + 2|", offset: [2.5, 2, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />

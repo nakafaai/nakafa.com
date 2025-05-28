@@ -4,3 +4,312 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Transformasi Fungsi",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Konsep Dasar Dilatasi Horizontal
+
+Dilatasi horizontal adalah transformasi geometri yang mengubah ukuran grafik fungsi secara horizontal, seperti menarik atau menekan karet gelang ke kiri dan ke kanan. Bayangkan memegang foto dengan kedua tangan di sisi kiri dan kanan, lalu meregangkan atau menekannya secara horizontal tanpa mengubah tinggi foto tersebut.
+
+Jika kita memiliki fungsi <InlineMath math="f(x)" />, maka dilatasi horizontal menghasilkan fungsi baru <InlineMath math="g(x) = f(kx)" /> dimana <InlineMath math="k" /> adalah faktor skala yang menentukan seberapa besar perubahan ukuran horizontal.
+
+### Aturan Dilatasi Horizontal
+
+Untuk setiap fungsi <InlineMath math="f(x)" />, dilatasi horizontal didefinisikan sebagai:
+
+<BlockMath math="g(x) = f(kx)" />
+
+Dimana <InlineMath math="k" /> adalah faktor skala yang mempengaruhi transformasi:
+- Jika <InlineMath math="k > 1" />, grafik ditekan secara horizontal (diperkecil)
+- Jika <InlineMath math="0 < k < 1" />, grafik diregangkan secara horizontal (diperbesar)
+- Jika <InlineMath math="k = 1" />, grafik tidak berubah
+- Jika <InlineMath math="k < 0" />, grafik mengalami refleksi sekaligus dilatasi
+
+Perhatikan bahwa efek dilatasi horizontal berlawanan dengan intuisi: faktor skala yang lebih besar justru menekan grafik.
+
+## Visualisasi Dilatasi Horizontal
+
+Mari kita lihat bagaimana dilatasi horizontal bekerja pada fungsi kuadrat <InlineMath math="f(x) = x^2" /> dengan berbagai faktor skala.
+
+<LineEquation
+  title={<>Dilatasi Horizontal Fungsi Kuadrat <InlineMath math="f(x) = x^2" /></>}
+  description="Perhatikan bagaimana grafik ditekan atau diregangkan secara horizontal dengan faktor skala yang berbeda."
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      labels: [{ text: "f(x) = x²", offset: [4, 2, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: (2 * x) * (2 * x), z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      labels: [{ text: "g(x) = (2x)²", offset: [4, 3, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: (0.5 * x) * (0.5 * x), z: 0 };
+      }),
+      color: getColor("SKY"),
+      labels: [{ text: "h(x) = (0.5x)²", offset: [4, 1, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Dari visualisasi di atas, kita dapat mengamati:
+- Fungsi asli <InlineMath math="f(x) = x^2" /> (ungu) sebagai referensi
+- Fungsi <InlineMath math="g(x) = (2x)^2" /> (oranye) ditekan horizontal dengan faktor 2
+- Fungsi <InlineMath math="h(x) = (0.5x)^2" /> (violet) diregangkan horizontal dengan faktor 0.5
+- Semua grafik memiliki titik puncak yang sama di <InlineMath math="(0, 0)" />
+
+## Dilatasi Horizontal pada Fungsi Linear
+
+Sekarang mari kita terapkan konsep yang sama pada fungsi linear <InlineMath math="f(x) = x + 2" />.
+
+<LineEquation
+  title={<>Dilatasi Horizontal Fungsi Linear <InlineMath math="f(x) = x + 2" /></>}
+  description="Garis hasil dilatasi memiliki kemiringan yang berubah sesuai faktor skala."
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: x + 2, z: 0 };
+      }),
+      color: getColor("AMBER"),
+      labels: [{ text: "f(x) = x + 2", offset: [2, 0.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * x + 2, z: 0 };
+      }),
+      color: getColor("TEAL"),
+      labels: [{ text: "g(x) = 2x + 2", offset: [1, 1.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 0.5 * x + 2, z: 0 };
+      }),
+      color: getColor("ROSE"),
+      labels: [{ text: "h(x) = 0.5x + 2", offset: [3, -0.5, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Perhatikan bahwa:
+- Fungsi asli <InlineMath math="f(x) = x + 2" /> memiliki kemiringan 1
+- Fungsi <InlineMath math="g(x) = 2x + 2" /> memiliki kemiringan 2 (ditekan horizontal)
+- Fungsi <InlineMath math="h(x) = 0.5x + 2" /> memiliki kemiringan 0.5 (diregangkan horizontal)
+- Semua garis memotong sumbu y di titik yang sama <InlineMath math="(0, 2)" />
+
+## Sifat Penting Dilatasi Horizontal
+
+### Pengaruh pada Koordinat Titik
+
+Jika titik <InlineMath math="(a, b)" /> berada pada grafik <InlineMath math="f(x)" />, maka titik yang bersesuaian pada grafik <InlineMath math="f(kx)" /> adalah <InlineMath math="(\frac{a}{k}, b)" />.
+
+### Domain dan Range
+
+- **Domain**: Berubah sesuai dengan faktor skala <InlineMath math="k" />
+- **Range**: Tidak berubah setelah dilatasi horizontal
+
+Jika domain fungsi asli adalah <InlineMath math="[c, d]" />, maka domain setelah dilatasi horizontal dengan faktor <InlineMath math="k > 0" /> menjadi <InlineMath math="[\frac{c}{k}, \frac{d}{k}]" />.
+
+### Titik Potong Sumbu
+
+- **Titik potong sumbu x**: Berubah sesuai faktor skala
+- **Titik potong sumbu y**: Tidak berubah
+
+## Contoh Penerapan
+
+### Fungsi Eksponensial
+
+Mari kita lihat dilatasi horizontal pada fungsi eksponensial <InlineMath math="f(x) = 2^x" />.
+
+<LineEquation
+  title={<>Dilatasi Horizontal Fungsi Eksponensial <InlineMath math="f(x) = 2^x" /></>}
+  description="Kurva eksponensial mengalami perubahan lebar sesuai faktor skala."
+  showZAxis={false}
+  cameraPosition={[8, 6, 8]}
+  data={[
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: Math.pow(2, x), z: 0 };
+      }),
+      color: getColor("INDIGO"),
+      labels: [{ text: "f(x) = 2^x", offset: [2, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: Math.pow(2, 2 * x), z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      labels: [{ text: "g(x) = 2^(2x)", offset: [1, 2, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Pada fungsi eksponensial:
+- Asimtot horizontal tetap di <InlineMath math="y = 0" /> untuk kedua fungsi
+- Titik potong dengan sumbu y tetap sama di <InlineMath math="(0, 1)" />
+- Laju pertumbuhan fungsi berubah sesuai faktor skala
+
+## Dilatasi Horizontal dengan Faktor Negatif
+
+Mari kita lihat apa yang terjadi ketika faktor skala bernilai negatif.
+
+<LineEquation
+  title={<>Dilatasi Horizontal dengan Faktor Negatif <InlineMath math="f(x) = x^2 + 1" /></>}
+  description="Faktor skala negatif menyebabkan refleksi sekaligus dilatasi."
+  showZAxis={false}
+  cameraPosition={[10, 6, 10]}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x + 1, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      labels: [{ text: "f(x) = x² + 1", offset: [2, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: (-2 * x) * (-2 * x) + 1, z: 0 };
+      }),
+      color: getColor("PINK"),
+      labels: [{ text: "g(x) = (-2x)² + 1", offset: [3, 2, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Ketika faktor skala negatif:
+- Grafik mengalami refleksi terhadap sumbu y
+- Sekaligus mengalami dilatasi sesuai nilai absolut faktor skala
+- Bentuk grafik tetap sama karena fungsi kuadrat simetris
+
+## Latihan
+
+1. Diberikan fungsi <InlineMath math="f(x) = x^2 - 2x + 1" />. Tentukan persamaan fungsi hasil dilatasi horizontal dengan faktor skala 3.
+
+2. Jika grafik fungsi <InlineMath math="g(x) = \sqrt{x}" /> mengalami dilatasi horizontal dengan faktor <InlineMath math="\frac{1}{2}" />, tentukan:
+   - Persamaan fungsi hasil dilatasi
+   - Domain fungsi setelah dilatasi
+
+3. Fungsi <InlineMath math="h(x) = |x - 2|" /> mengalami dilatasi horizontal dengan faktor -1. Tentukan titik puncak dari fungsi hasil dilatasi.
+
+### Kunci Jawaban
+
+1. Dilatasi horizontal dengan faktor 3: <InlineMath math="f'(x) = f(3x) = (3x)^2 - 2(3x) + 1 = 9x^2 - 6x + 1" />
+
+   <LineEquation
+     title={<>Fungsi <InlineMath math="f(x) = x^2 - 2x + 1" /> dan Hasil Dilatasinya</>}
+     description="Parabola asli ditekan horizontal dengan faktor 3 menghasilkan parabola yang lebih sempit."
+     showZAxis={false}
+     cameraPosition={[12, 8, 12]}
+     data={[
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: x * x - 2 * x + 1, z: 0 };
+         }),
+         color: getColor("PURPLE"),
+         labels: [{ text: "f(x) = x² - 2x + 1", offset: [4, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: 9 * x * x - 6 * x + 1, z: 0 };
+         }),
+         color: getColor("ORANGE"),
+         labels: [{ text: "f'(x) = 9x² - 6x + 1", offset: [3, 2, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+2. Persamaan fungsi hasil dilatasi:
+    
+   - Dilatasi horizontal: <InlineMath math="g'(x) = g(\frac{1}{2}x) = \sqrt{\frac{1}{2}x} = \sqrt{\frac{x}{2}}" />
+   - Domain setelah dilatasi: <InlineMath math="[0, \infty)" /> menjadi <InlineMath math="[0, \infty)" /> (tidak berubah karena faktor skala positif)
+
+   Visualisasi:
+
+   <LineEquation
+     title={<>Fungsi <InlineMath math="g(x) = \sqrt{x}" /> dan Hasil Dilatasinya</>}
+     description="Kurva akar kuadrat diregangkan horizontal dengan faktor 0.5 menghasilkan kurva yang lebih lebar."
+     showZAxis={false}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: Math.sqrt(x), z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         labels: [{ text: "g(x) = √x", offset: [2, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: Math.sqrt(0.5 * x), z: 0 };
+         }),
+         color: getColor("TEAL"),
+         labels: [{ text: "g'(x) = √(x/2)", offset: [3, 0.5, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+3. Fungsi asli <InlineMath math="h(x) = |x - 2|" /> memiliki titik puncak di <InlineMath math="(2, 0)" />.
+   Setelah dilatasi horizontal dengan faktor -1: <InlineMath math="h'(x) = |-x - 2| = |-(x + 2)| = |x + 2|" />, titik puncak menjadi <InlineMath math="(-2, 0)" />.
+
+   <LineEquation
+     title={<>Fungsi <InlineMath math="h(x) = |x - 2|" /> dan Hasil Dilatasinya</>}
+     description="Fungsi nilai mutlak mengalami refleksi dan dilatasi dengan faktor -1."
+     showZAxis={false}
+     cameraPosition={[10, 6, 10]}
+     data={[
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: Math.abs(x - 2), z: 0 };
+         }),
+         color: getColor("INDIGO"),
+         labels: [{ text: "h(x) = |x - 2|", offset: [2.5, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: Math.abs(x + 2), z: 0 };
+         }),
+         color: getColor("EMERALD"),
+         labels: [{ text: "h'(x) = |x + 2|", offset: [2.5, 2, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
