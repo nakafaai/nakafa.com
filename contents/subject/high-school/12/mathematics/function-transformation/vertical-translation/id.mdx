@@ -4,3 +4,275 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Transformasi Fungsi",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Konsep Dasar Translasi Vertikal
+
+Translasi vertikal adalah transformasi geometri yang menggeser grafik fungsi ke atas atau ke bawah sepanjang sumbu y tanpa mengubah bentuk grafik tersebut. Bayangkan seperti mengangkat atau menurunkan sebuah objek secara vertikal, bentuknya tetap sama, hanya posisinya yang berubah.
+
+Jika kita memiliki fungsi <InlineMath math="f(x)" />, maka translasi vertikal menghasilkan fungsi baru <InlineMath math="g(x) = f(x) + k" /> dimana <InlineMath math="k" /> adalah konstanta translasi.
+
+### Aturan Translasi Vertikal
+
+Untuk setiap fungsi <InlineMath math="f(x)" />, translasi vertikal didefinisikan sebagai:
+
+<BlockMath math="g(x) = f(x) + k" />
+
+Dimana:
+- Jika <InlineMath math="k > 0" />, grafik bergeser ke **atas** sebesar <InlineMath math="k" /> satuan
+- Jika <InlineMath math="k < 0" />, grafik bergeser ke **bawah** sebesar <InlineMath math="|k|" /> satuan
+- Jika <InlineMath math="k = 0" />, tidak ada translasi (grafik tetap sama)
+
+## Visualisasi Translasi Vertikal
+
+Mari kita lihat bagaimana translasi vertikal bekerja pada fungsi linear <InlineMath math="f(x) = 2x" />.
+
+<LineEquation
+  title={<>Translasi Vertikal Fungsi Linear <InlineMath math="f(x) = 2x" /></>}
+  description="Perhatikan bagaimana grafik bergeser vertikal tanpa mengubah kemiringan garis."
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * x, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      labels: [{ text: "f(x) = 2x", offset: [1, 0.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * x + 3, z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      labels: [{ text: "g(x) = 2x + 3", offset: [1, 0.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * x - 2, z: 0 };
+      }),
+      color: getColor("TEAL"),
+      labels: [{ text: "h(x) = 2x + (-2)", offset: [1, 0.5, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Dari visualisasi di atas, kita dapat mengamati:
+- Fungsi asli <InlineMath math="f(x) = 2x" /> (ungu) melewati titik asal
+- Fungsi <InlineMath math="g(x) = 2x + 3" /> (oranye) adalah hasil translasi ke atas 3 satuan
+- Fungsi <InlineMath math="h(x) = 2x + (-2)" /> (teal) adalah hasil translasi ke bawah 2 satuan
+
+## Translasi Vertikal pada Fungsi Kuadrat
+
+Sekarang mari kita terapkan konsep yang sama pada fungsi kuadrat <InlineMath math="f(x) = x^2" />.
+
+<LineEquation
+  title={<>Translasi Vertikal Fungsi Kuadrat <InlineMath math="f(x) = x^2" /></>}
+  description="Bentuk parabola tetap sama, hanya posisi vertikalnya yang berubah."
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x, z: 0 };
+      }),
+      color: getColor("VIOLET"),
+      labels: [{ text: "f(x) = x²", offset: [1, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x + 4, z: 0 };
+      }),
+      color: getColor("AMBER"),
+      labels: [{ text: "g(x) = x² + 4", offset: [1, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x - 3, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      labels: [{ text: "h(x) = x² + (-3)", offset: [1, 1, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Perhatikan bahwa:
+- Titik puncak parabola asli <InlineMath math="f(x) = x^2" /> berada di <InlineMath math="(0, 0)" />
+- Setelah translasi vertikal +4, titik puncak <InlineMath math="g(x) = x^2 + 4" /> berada di <InlineMath math="(0, 4)" />
+- Setelah translasi vertikal +(-3), titik puncak <InlineMath math="h(x) = x^2 + (-3)" /> berada di <InlineMath math="(0, -3)" />
+
+## Sifat Penting Translasi Vertikal
+
+### Bentuk Grafik Tidak Berubah
+
+Translasi vertikal mempertahankan bentuk asli grafik. Jarak antara titik pada grafik tetap sama, hanya posisi vertikal yang berubah.
+
+### Pengaruh pada Titik Koordinat
+
+Jika titik <InlineMath math="(a, b)" /> berada pada grafik <InlineMath math="f(x)" />, maka setelah translasi vertikal sebesar <InlineMath math="k" />, titik tersebut menjadi <InlineMath math="(a, b + k)" /> pada grafik <InlineMath math="f(x) + k" />.
+
+### Domain dan Range
+
+**Domain**: Tidak berubah setelah translasi vertikal
+**Range**: Bergeser sebesar <InlineMath math="k" /> satuan
+
+Jika range fungsi asli adalah <InlineMath math="[c, d]" />, maka range setelah translasi vertikal <InlineMath math="k" /> menjadi <InlineMath math="[c + k, d + k]" />.
+
+## Contoh Penerapan
+
+### Contoh Fungsi Eksponensial
+
+Mari kita lihat translasi vertikal pada fungsi eksponensial <InlineMath math="f(x) = 2^x" />.
+
+<LineEquation
+  title={<>Translasi Vertikal Fungsi Eksponensial <InlineMath math="f(x) = 2^x" /></>}
+  description="Kurva eksponensial mempertahankan karakteristiknya setelah translasi vertikal."
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.2;
+        return { x, y: Math.pow(2, x), z: 0 };
+      }),
+      color: getColor("INDIGO"),
+      labels: [{ text: "f(x) = 2^x", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.2;
+        return { x, y: Math.pow(2, x) + 2, z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      labels: [{ text: "g(x) = 2^x + 2", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.2;
+        return { x, y: Math.pow(2, x) - 1, z: 0 };
+      }),
+      color: getColor("ROSE"),
+      labels: [{ text: "h(x) = 2^x + (-1)", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Pada fungsi eksponensial:
+- Asimtot horizontal <InlineMath math="y = 0" /> pada <InlineMath math="f(x) = 2^x" /> bergeser menjadi <InlineMath math="y = k" /> pada <InlineMath math="f(x) + k" />
+- Titik potong dengan sumbu y bergeser dari <InlineMath math="(0, 1)" /> menjadi <InlineMath math="(0, 1 + k)" />
+
+## Latihan
+
+1. Diberikan fungsi <InlineMath math="f(x) = x^2 + 4x + 3" />. Tentukan persamaan fungsi hasil translasi vertikal ke atas sebesar 5 satuan.
+
+2. Jika grafik fungsi <InlineMath math="g(x) = 3x + 2" /> ditranslasi vertikal ke bawah sebesar 7 satuan, tentukan:
+   - Persamaan fungsi hasil translasi
+   - Titik potong dengan sumbu y setelah translasi
+
+3. Fungsi <InlineMath math="h(x) = \sqrt{x}" /> mengalami translasi vertikal sehingga titik <InlineMath math="(4, 2)" /> menjadi <InlineMath math="(4, 5)" />. Tentukan nilai konstanta translasi dan persamaan fungsi hasil translasi.
+
+### Kunci Jawaban
+
+1. Translasi vertikal ke atas 5 satuan: <InlineMath math="f'(x) = f(x) + 5 = x^2 + 4x + 3 + 5 = x^2 + 4x + 8" />
+
+   <LineEquation
+     title={<>Fungsi <InlineMath math="f(x) = x^2 + 4x + 3" /> dan Hasil Translasinya</>}
+     description="Fungsi kuadrat asli dan hasil translasi vertikal ke atas 5 satuan."
+     showZAxis={false}
+     data={[
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: x * x + 4 * x + 3, z: 0 };
+         }),
+         color: getColor("PURPLE"),
+         labels: [{ text: "f(x) = x² + 4x + 3", offset: [1, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: x * x + 4 * x + 3 + 5, z: 0 };
+         }),
+         color: getColor("ORANGE"),
+         labels: [{ text: "f'(x) = x² + 4x + 8", offset: [1, 1, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+2. Persamaan fungsi hasil translasi:
+    
+   - Translasi ke bawah 7 satuan: <InlineMath math="g'(x) = g(x) + (-7) = 3x + 2 + (-7) = 3x + (-5)" />
+   - Titik potong dengan sumbu y: substitusi <InlineMath math="x = 0" /> ke <InlineMath math="g'(x) = 3(0) + (-5) = -5" />, jadi titik potongnya adalah <InlineMath math="(0, -5)" />
+
+   Visualisasi:
+
+   <LineEquation
+     title={<>Fungsi <InlineMath math="g(x) = 3x + 2" /> dan Hasil Translasinya</>}
+     description="Fungsi linear asli dan hasil translasi vertikal ke bawah 7 satuan."
+     showZAxis={false}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.5;
+           return { x, y: 3 * x + 2, z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         labels: [{ text: "g(x) = 3x + 2", offset: [1, 0.5, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.5;
+           return { x, y: 3 * x + 2 - 7, z: 0 };
+         }),
+         color: getColor("TEAL"),
+         labels: [{ text: "g'(x) = 3x + (-5)", offset: [1, 0.5, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+3. Titik <InlineMath math="(4, 2)" /> pada <InlineMath math="h(x) = \sqrt{x}" /> menjadi <InlineMath math="(4, 5)" />, berarti translasi vertikal sebesar <InlineMath math="k = 5 + (-2) = 3" /> satuan ke atas.
+   Persamaan hasil translasi: <InlineMath math="h'(x) = \sqrt{x} + 3" />
+
+   <LineEquation
+     title={<>Fungsi <InlineMath math="h(x) = \sqrt{x}" /> dan Hasil Translasinya</>}
+     description="Fungsi akar kuadrat asli dan hasil translasi vertikal ke atas 3 satuan."
+     showZAxis={false}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: Math.sqrt(x), z: 0 };
+         }),
+         color: getColor("INDIGO"),
+         labels: [{ text: "h(x) = √x", offset: [1, 0.5, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: Math.sqrt(x) + 3, z: 0 };
+         }),
+         color: getColor("EMERALD"),
+         labels: [{ text: "h'(x) = √x + 3", offset: [1, 0.5, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />

@@ -4,3 +4,275 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Function Transformation",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Basic Concepts of Vertical Translation
+
+Vertical translation is a geometric transformation that shifts the graph of a function up or down along the y-axis without changing the shape of the graph. Imagine lifting or lowering an object vertically, its shape remains the same, only its position changes.
+
+If we have a function <InlineMath math="f(x)" />, then vertical translation produces a new function <InlineMath math="g(x) = f(x) + k" /> where <InlineMath math="k" /> is the translation constant.
+
+### Rules of Vertical Translation
+
+For any function <InlineMath math="f(x)" />, vertical translation is defined as:
+
+<BlockMath math="g(x) = f(x) + k" />
+
+Where:
+- If <InlineMath math="k > 0" />, the graph shifts **upward** by <InlineMath math="k" /> units
+- If <InlineMath math="k < 0" />, the graph shifts **downward** by <InlineMath math="|k|" /> units
+- If <InlineMath math="k = 0" />, there is no translation (graph remains the same)
+
+## Visualization of Vertical Translation
+
+Let's see how vertical translation works on the linear function <InlineMath math="f(x) = 2x" />.
+
+<LineEquation
+  title={<>Vertical Translation of Linear Function <InlineMath math="f(x) = 2x" /></>}
+  description="Notice how the graph shifts vertically without changing the slope of the line."
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * x, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      labels: [{ text: "f(x) = 2x", offset: [1, 0.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * x + 3, z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      labels: [{ text: "g(x) = 2x + 3", offset: [1, 0.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * x - 2, z: 0 };
+      }),
+      color: getColor("TEAL"),
+      labels: [{ text: "h(x) = 2x + (-2)", offset: [1, 0.5, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+From the visualization above, we can observe:
+- The original function <InlineMath math="f(x) = 2x" /> (purple) passes through the origin
+- Function <InlineMath math="g(x) = 2x + 3" /> (orange) is the result of translation upward by 3 units
+- Function <InlineMath math="h(x) = 2x + (-2)" /> (teal) is the result of translation downward by 2 units
+
+## Vertical Translation on Quadratic Functions
+
+Now let's apply the same concept to the quadratic function <InlineMath math="f(x) = x^2" />.
+
+<LineEquation
+  title={<>Vertical Translation of Quadratic Function <InlineMath math="f(x) = x^2" /></>}
+  description="The parabola shape remains the same, only its vertical position changes."
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x, z: 0 };
+      }),
+      color: getColor("VIOLET"),
+      labels: [{ text: "f(x) = x²", offset: [1, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x + 4, z: 0 };
+      }),
+      color: getColor("AMBER"),
+      labels: [{ text: "g(x) = x² + 4", offset: [1, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x - 3, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      labels: [{ text: "h(x) = x² + (-3)", offset: [1, 1, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Notice that:
+- The vertex of the original parabola <InlineMath math="f(x) = x^2" /> is at <InlineMath math="(0, 0)" />
+- After vertical translation +4, the vertex of <InlineMath math="g(x) = x^2 + 4" /> is at <InlineMath math="(0, 4)" />
+- After vertical translation +(-3), the vertex of <InlineMath math="h(x) = x^2 + (-3)" /> is at <InlineMath math="(0, -3)" />
+
+## Important Properties of Vertical Translation
+
+### Graph Shape Remains Unchanged
+
+Vertical translation preserves the original shape of the graph. The distance between points on the graph remains the same, only the vertical position changes.
+
+### Effect on Coordinate Points
+
+If point <InlineMath math="(a, b)" /> is on the graph of <InlineMath math="f(x)" />, then after vertical translation by <InlineMath math="k" />, that point becomes <InlineMath math="(a, b + k)" /> on the graph of <InlineMath math="f(x) + k" />.
+
+### Domain and Range
+
+**Domain**: Does not change after vertical translation
+**Range**: Shifts by <InlineMath math="k" /> units
+
+If the range of the original function is <InlineMath math="[c, d]" />, then the range after vertical translation <InlineMath math="k" /> becomes <InlineMath math="[c + k, d + k]" />.
+
+## Application Examples
+
+### Exponential Function Example
+
+Let's look at vertical translation on the exponential function <InlineMath math="f(x) = 2^x" />.
+
+<LineEquation
+  title={<>Vertical Translation of Exponential Function <InlineMath math="f(x) = 2^x" /></>}
+  description="The exponential curve maintains its characteristics after vertical translation."
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.2;
+        return { x, y: Math.pow(2, x), z: 0 };
+      }),
+      color: getColor("INDIGO"),
+      labels: [{ text: "f(x) = 2^x", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.2;
+        return { x, y: Math.pow(2, x) + 2, z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      labels: [{ text: "g(x) = 2^x + 2", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.2;
+        return { x, y: Math.pow(2, x) - 1, z: 0 };
+      }),
+      color: getColor("ROSE"),
+      labels: [{ text: "h(x) = 2^x + (-1)", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+For exponential functions:
+- The horizontal asymptote <InlineMath math="y = 0" /> on <InlineMath math="f(x) = 2^x" /> shifts to <InlineMath math="y = k" /> on <InlineMath math="f(x) + k" />
+- The y-intercept shifts from <InlineMath math="(0, 1)" /> to <InlineMath math="(0, 1 + k)" />
+
+## Exercises
+
+1. Given the function <InlineMath math="f(x) = x^2 + 4x + 3" />. Determine the equation of the function resulting from vertical translation upward by 5 units.
+
+2. If the graph of function <InlineMath math="g(x) = 3x + 2" /> is translated vertically downward by 7 units, determine:
+   - The equation of the resulting translated function
+   - The y-intercept after translation
+
+3. Function <InlineMath math="h(x) = \sqrt{x}" /> undergoes vertical translation such that point <InlineMath math="(4, 2)" /> becomes <InlineMath math="(4, 5)" />. Determine the translation constant value and the equation of the resulting translated function.
+
+### Answer Key
+
+1. Vertical translation upward by 5 units: <InlineMath math="f'(x) = f(x) + 5 = x^2 + 4x + 3 + 5 = x^2 + 4x + 8" />
+
+   <LineEquation
+     title={<>Function <InlineMath math="f(x) = x^2 + 4x + 3" /> and Its Translation Result</>}
+     description="Original quadratic function and the result of vertical translation upward by 5 units."
+     showZAxis={false}
+     data={[
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: x * x + 4 * x + 3, z: 0 };
+         }),
+         color: getColor("PURPLE"),
+         labels: [{ text: "f(x) = x² + 4x + 3", offset: [1, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: x * x + 4 * x + 3 + 5, z: 0 };
+         }),
+         color: getColor("ORANGE"),
+         labels: [{ text: "f'(x) = x² + 4x + 8", offset: [1, 1, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+2. Equation of the resulting translated function:
+    
+   - Translation downward by 7 units: <InlineMath math="g'(x) = g(x) + (-7) = 3x + 2 + (-7) = 3x + (-5)" />
+   - Y-intercept: substitute <InlineMath math="x = 0" /> into <InlineMath math="g'(x) = 3(0) + (-5) = -5" />, so the intercept point is <InlineMath math="(0, -5)" />
+
+   Visualization:
+
+   <LineEquation
+     title={<>Function <InlineMath math="g(x) = 3x + 2" /> and Its Translation Result</>}
+     description="Original linear function and the result of vertical translation downward by 7 units."
+     showZAxis={false}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.5;
+           return { x, y: 3 * x + 2, z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         labels: [{ text: "g(x) = 3x + 2", offset: [1, 0.5, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.5;
+           return { x, y: 3 * x + 2 - 7, z: 0 };
+         }),
+         color: getColor("TEAL"),
+         labels: [{ text: "g'(x) = 3x + (-5)", offset: [1, 0.5, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+3. Point <InlineMath math="(4, 2)" /> on <InlineMath math="h(x) = \sqrt{x}" /> becomes <InlineMath math="(4, 5)" />, meaning vertical translation by <InlineMath math="k = 5 + (-2) = 3" /> units upward.
+   Equation of the translation result: <InlineMath math="h'(x) = \sqrt{x} + 3" />
+
+   <LineEquation
+     title={<>Function <InlineMath math="h(x) = \sqrt{x}" /> and Its Translation Result</>}
+     description="Original square root function and the result of vertical translation upward by 3 units."
+     showZAxis={false}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: Math.sqrt(x), z: 0 };
+         }),
+         color: getColor("INDIGO"),
+         labels: [{ text: "h(x) = √x", offset: [1, 0.5, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: Math.sqrt(x) + 3, z: 0 };
+         }),
+         color: getColor("EMERALD"),
+         labels: [{ text: "h'(x) = √x + 3", offset: [1, 0.5, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
