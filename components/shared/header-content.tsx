@@ -41,7 +41,7 @@ export function HeaderContent({
 }: Props) {
   const showFooter = authors || date;
   return (
-    <div data-pagefind-ignore className="relative border-b py-10">
+    <div data-pagefind-ignore className="relative border-b py-10 lg:border-t">
       <Particles
         quantity={25}
         className="pointer-events-none absolute inset-0 opacity-80"
