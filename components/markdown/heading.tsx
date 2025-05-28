@@ -22,7 +22,9 @@ export function Heading({
     setActiveHeading: context.setActiveHeading,
   }));
 
-  const { ref, entry } = useIntersection();
+  const { ref, entry } = useIntersection({
+    rootMargin: "-20% 0px -60% 0px",
+  });
 
   useEffect(() => {
     if (entry) {

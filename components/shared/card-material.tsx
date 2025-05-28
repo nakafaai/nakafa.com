@@ -31,7 +31,9 @@ export function CardMaterial({ material }: Props) {
     setActiveHeading: context.setActiveHeading,
   }));
 
-  const { ref, entry } = useIntersection();
+  const { ref, entry } = useIntersection({
+    rootMargin: "-40% 0px -70% 0px",
+  });
 
   useEffect(() => {
     if (entry) {
