@@ -98,11 +98,7 @@ export function BacterialGrowth({
 
   useEffect(() => {
     if (entry) {
-      if (entry) {
-        setIsPlaying(true);
-      } else {
-        setIsPlaying(false);
-      }
+      setIsPlaying(entry.isIntersecting);
     }
   }, [entry]);
 
