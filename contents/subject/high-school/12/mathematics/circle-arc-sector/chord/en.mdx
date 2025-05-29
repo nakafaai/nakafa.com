@@ -4,3 +4,299 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Circle Arcs and Sectors",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Understanding Chord
+
+A chord is a straight line segment that connects two points on a circle. Imagine it like a string stretched inside a circle, connecting two points on the edge of the circle. Each chord divides the circle into two parts, namely the minor arc and the major arc.
+
+Chords have special characteristics in a circle. The farther the chord is from the center of the circle, the shorter its length. Conversely, the longest chord is the one that passes through the center of the circle, which is called the diameter.
+
+<LineEquation
+  title={<>Chord Visualization in Circle</>}
+  description="Various chords with different lengths and positions."
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 37 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 36;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      smooth: true,
+      showPoints: false,
+      labels: [{ text: "Circle", at: 9, offset: [1, 0.5, 0] }]
+    },
+    {
+      points: [
+        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
+        { x: 4 * Math.cos(5 * Math.PI / 6), y: 4 * Math.sin(5 * Math.PI / 6), z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.3, 0.3, 0] },
+        { text: "B", at: 1, offset: [-0.3, 0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 4 * Math.cos(Math.PI / 3), y: 4 * Math.sin(Math.PI / 3), z: 0 },
+        { x: 4 * Math.cos(4 * Math.PI / 3), y: 4 * Math.sin(4 * Math.PI / 3), z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "C", at: 0, offset: [0.3, 0.3, 0] },
+        { text: "D", at: 1, offset: [-0.3, -0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "E", at: 0, offset: [-0.3, -0.3, 0] },
+        { text: "F", at: 1, offset: [0.3, -0.3, 0] }
+      ]
+    },
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [0.3, 0.3, 0] }]
+    }
+  ]}
+/>
+
+## Types of Chords
+
+Based on their position and characteristics, chords can be distinguished into several types:
+
+1. **Regular Chord** is a chord that does not pass through the center of the circle. Its length is always shorter than the diameter of the circle.
+
+2. **Diameter** is a special chord that passes through the center of the circle. The diameter is the longest chord in the circle and divides the circle into two equal parts.
+
+3. **Parallel Chords** are two or more chords that have the same direction and do not intersect inside the circle.
+
+## Relationship Between Chord and Distance to Center
+
+There is an interesting relationship between the length of a chord and its distance from the center of the circle. The closer the chord is to the center of the circle, the longer the chord. This relationship can be expressed mathematically.
+
+If <InlineMath math="d" /> is the distance from the center of the circle to the chord, <InlineMath math="r" /> is the radius of the circle, and <InlineMath math="l" /> is the length of the chord, then:
+
+<BlockMath math="l = 2\sqrt{r^2 - d^2}" />
+
+This formula shows that when <InlineMath math="d = 0" /> (chord passes through the center), then <InlineMath math="l = 2r" /> which is the diameter.
+
+<LineEquation
+  title={<>Relationship Between Chord Length and Distance to Center</>}
+  description="Chords with different distances from the center of the circle."
+  cameraPosition={[0, 0, 8]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 37 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 36;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      smooth: true,
+      showPoints: false
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "d = 0", at: 0, offset: [0, -0.5, 0] }]
+    },
+    {
+      points: [
+        { x: -Math.sqrt(9 - 1), y: 1, z: 0 },
+        { x: Math.sqrt(9 - 1), y: 1, z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "d = 1", at: 0, offset: [0, 0.5, 0] }]
+    },
+    {
+      points: [
+        { x: -Math.sqrt(9 - 4), y: 2, z: 0 },
+        { x: Math.sqrt(9 - 4), y: 2, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "d = 2", at: 0, offset: [0, 0.5, 0] }]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 1, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: false
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 2, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: false
+    }
+  ]}
+/>
+
+## Properties of Equal Length Chords
+
+Chords that have the same length in the same circle have special properties. They have the same distance from the center of the circle. Conversely, chords that have the same distance from the center of the circle will have the same length.
+
+This property is very useful in solving various circle geometry problems. If two chords have the same length, then:
+
+1. The distance of both chords to the center of the circle is the same
+2. The arcs formed by both chords have the same length
+3. The central angles facing both chords have the same measure
+
+## Intersecting Chords Theorem
+
+When two chords intersect inside a circle, there is a special relationship between the segments formed. If chords AB and CD intersect at point P, then:
+
+<BlockMath math="AP \times PB = CP \times PD" />
+
+This theorem is known as the intersecting chords theorem and is very useful in solving various geometry problems.
+
+## Practice Problems
+
+1. A circle has a radius of 13 cm. If the distance of a chord to the center of the circle is 5 cm, determine the length of the chord.
+
+2. In a circle with radius 10 cm, there is a chord with length 16 cm. Determine the distance of the chord to the center of the circle.
+
+3. Two chords AB and CD in the same circle have lengths of 24 cm and 18 cm respectively. If the radius of the circle is 15 cm, determine the difference in distance between the two chords to the center of the circle.
+
+4. Chords PQ and RS intersect at point T in a circle. If PT = 6 cm, TQ = 8 cm, and RT = 4 cm, determine the length of TS.
+
+5. A circle has a diameter of 26 cm. Determine the length of a chord that is 12 cm away from the center of the circle.
+
+### Answer Key
+
+1. **Answer: 24 cm**
+
+   Given: <InlineMath math="r = 13" /> cm, <InlineMath math="d = 5" /> cm
+   
+   Using the chord length formula:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="l = 2\sqrt{r^2 - d^2}" />
+   
+   <BlockMath math="l = 2\sqrt{13^2 - 5^2}" />
+   
+   <BlockMath math="l = 2\sqrt{169 - 25}" />
+   
+   <BlockMath math="l = 2\sqrt{144} = 2 \times 12 = 24 \text{ cm}" />
+   </div>
+
+2. **Answer: 6 cm**
+
+   Given: <InlineMath math="r = 10" /> cm, <InlineMath math="l = 16" /> cm
+   
+   Using the chord length formula:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="16 = 2\sqrt{10^2 - d^2}" />
+   
+   <BlockMath math="8 = \sqrt{100 - d^2}" />
+   
+   <BlockMath math="64 = 100 - d^2" />
+   
+   <BlockMath math="d^2 = 100 - 64 = 36" />
+   
+   <BlockMath math="d = 6 \text{ cm}" />
+   </div>
+
+3. **Answer: 3 cm**
+
+   Given: <InlineMath math="r = 15" /> cm, <InlineMath math="l_1 = 24" /> cm, <InlineMath math="l_2 = 18" /> cm
+   
+   Finding the distance of the first chord:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="24 = 2\sqrt{15^2 - d_1^2}" />
+   
+   <BlockMath math="12 = \sqrt{225 - d_1^2}" />
+   
+   <BlockMath math="144 = 225 - d_1^2" />
+   
+   <BlockMath math="d_1^2 = 81, \text{ so } d_1 = 9 \text{ cm}" />
+   </div>
+   
+   Finding the distance of the second chord:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="18 = 2\sqrt{15^2 - d_2^2}" />
+   
+   <BlockMath math="9 = \sqrt{225 - d_2^2}" />
+   
+   <BlockMath math="81 = 225 - d_2^2" />
+   
+   <BlockMath math="d_2^2 = 144, \text{ so } d_2 = 12 \text{ cm}" />
+   </div>
+   
+   Difference in distance: <InlineMath math="d_2 - d_1 = 12 - 9 = 3" /> cm
+
+4. **Answer: 12 cm**
+
+   Given: PT = 6 cm, TQ = 8 cm, RT = 4 cm
+   
+   Using the intersecting chords theorem:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="PT \times TQ = RT \times TS" />
+   
+   <BlockMath math="6 \times 8 = 4 \times TS" />
+   
+   <BlockMath math="48 = 4 \times TS" />
+   
+   <BlockMath math="TS = 12 \text{ cm}" />
+   </div>
+
+5. **Answer: 10 cm**
+
+   Given: diameter = 26 cm, so <InlineMath math="r = 13" /> cm, <InlineMath math="d = 12" /> cm
+   
+   Using the chord length formula:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="l = 2\sqrt{r^2 - d^2}" />
+   
+   <BlockMath math="l = 2\sqrt{13^2 - 12^2}" />
+   
+   <BlockMath math="l = 2\sqrt{169 - 144}" />
+   
+   <BlockMath math="l = 2\sqrt{25} = 2 \times 5 = 10 \text{ cm}" />
+   </div>
