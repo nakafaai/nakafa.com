@@ -1,8 +1,8 @@
 export const metadata = {
-    title: "Horizontal Dilation",
-    authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "05/26/2025",
-    subject: "Function Transformation",
+  title: "Horizontal Dilation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Function Transformation",
 };
 
 import { getColor } from "@/lib/utils/color";
@@ -94,7 +94,7 @@ Now let's apply the same concept to the linear function <InlineMath math="f(x) =
     {
       points: Array.from({ length: 21 }, (_, i) => {
         const x = (i - 10) * 0.5;
-        return { x, y: 2 * x + 2, z: 0 };
+        return { x, y: (2 * x) + 2, z: 0 };
       }),
       color: getColor("TEAL"),
       labels: [{ text: "g(x) = 2x + 2", offset: [1, 1.5, 0] }],
@@ -103,7 +103,7 @@ Now let's apply the same concept to the linear function <InlineMath math="f(x) =
     {
       points: Array.from({ length: 21 }, (_, i) => {
         const x = (i - 10) * 0.5;
-        return { x, y: 0.5 * x + 2, z: 0 };
+        return { x, y: (0.5 * x) + 2, z: 0 };
       }),
       color: getColor("ROSE"),
       labels: [{ text: "h(x) = 0.5x + 2", offset: [3, -0.5, 0] }],
@@ -114,8 +114,8 @@ Now let's apply the same concept to the linear function <InlineMath math="f(x) =
 
 Notice that:
 - The original function <InlineMath math="f(x) = x + 2" /> has slope 1
-- Function <InlineMath math="g(x) = 2x + 2" /> has slope 2 (horizontally compressed)
-- Function <InlineMath math="h(x) = 0.5x + 2" /> has slope 0.5 (horizontally stretched)
+- Function <InlineMath math="g(x) = f(2x) = 2x + 2" /> has slope 2 (horizontally compressed)
+- Function <InlineMath math="h(x) = f(0.5x) = 0.5x + 2" /> has slope 0.5 (horizontally stretched)
 - All lines intersect the y-axis at the same point <InlineMath math="(0, 2)" />
 
 ## Important Properties of Horizontal Dilation
@@ -305,10 +305,10 @@ When the scale factor is negative:
        {
          points: Array.from({ length: 41 }, (_, i) => {
            const x = (i - 20) * 0.25;
-           return { x, y: Math.abs(x + 2), z: 0 };
+           return { x, y: Math.abs(-x - 2), z: 0 };
          }),
          color: getColor("EMERALD"),
-         labels: [{ text: "h'(x) = |x + 2|", offset: [2.5, 2, 0] }],
+         labels: [{ text: "h'(x) = |-x - 2|", offset: [2.5, 2, 0] }],
          showPoints: false,
        },
      ]}

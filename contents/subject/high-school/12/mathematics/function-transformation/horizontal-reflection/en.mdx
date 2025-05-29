@@ -1,8 +1,8 @@
 export const metadata = {
-    title: "Horizontal Reflection",
-    authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "05/26/2025",
-    subject: "Function Transformation",
+  title: "Horizontal Reflection",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Function Transformation",
 };
 
 import { getColor } from "@/lib/utils/color";
@@ -44,7 +44,7 @@ Let's see how horizontal reflection works on the quadratic function <InlineMath 
     {
       points: Array.from({ length: 41 }, (_, i) => {
         const x = (i - 20) * 0.25;
-        return { x, y: (-x - 2) * (-x - 2), z: 0 };
+        return { x, y: ((-x) - 2) * ((-x) - 2), z: 0 };
       }),
       color: getColor("ORANGE"),
       labels: [{ text: "g(x) = (-x - 2)²", offset: [-1, -1, 0] }],
@@ -284,10 +284,10 @@ Notice that:
        {
          points: Array.from({ length: 41 }, (_, i) => {
            const x = (i - 20) * 0.25;
-           return { x, y: Math.abs(x - 2), z: 0 };
+           return { x, y: Math.abs(-x + 2), z: 0 };
          }),
          color: getColor("EMERALD"),
-         labels: [{ text: "h'(x) = |x - 2|", offset: [1, -1, 0] }],
+         labels: [{ text: "h'(x) = |-x + 2|", offset: [1, -1, 0] }],
          showPoints: false,
        },
      ]}
