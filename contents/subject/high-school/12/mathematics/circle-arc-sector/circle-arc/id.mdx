@@ -4,3 +4,450 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Busur dan Juring Lingkaran",
 };
+
+import { LineEquation } from "@/components/contents/line-equation";
+import { getColor } from "@/lib/utils/color";
+
+## Hubungan Busur dengan Tali Busur
+
+Setiap busur lingkaran memiliki hubungan erat dengan tali busur yang menghubungkan kedua ujungnya. Tali busur adalah garis lurus yang menghubungkan dua titik ujung busur, sedangkan busur adalah jalur melengkung di sepanjang keliling lingkaran. Bayangkan seperti busur panah, dimana tali adalah garis lurus dan busur adalah lengkungan kayu.
+
+Hubungan ini sangat penting dalam berbagai aplikasi teknik dan arsitektur. Semakin panjang busur, semakin panjang pula tali busur yang menghubungkannya, namun hubungan ini tidak bersifat linear.
+
+<LineEquation
+  title="Hubungan Busur dan Tali Busur"
+  description="Perbandingan busur dengan tali busur pada berbagai sudut pusat."
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const angle = i * (Math.PI / 3) / 20;
+        return {
+          x: 5 * Math.cos(angle),
+          y: 5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      lineWidth: 4,
+      showPoints: false,
+      labels: [{ text: "Busur 60°", at: 10, offset: [1.5, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 5, y: 0, z: 0 },
+        { x: 5 * Math.cos(Math.PI / 3), y: 5 * Math.sin(Math.PI / 3), z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      lineWidth: 3,
+      showPoints: false,
+      labels: [{ text: "Tali Busur 60°", at: 0.5, offset: [0.8, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 5, y: 0, z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      showPoints: true,
+      labels: [{ text: "A", at: 0, offset: [0.5, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 5 * Math.cos(Math.PI / 3), y: 5 * Math.sin(Math.PI / 3), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      showPoints: true,
+      labels: [{ text: "B", at: 0, offset: [0.3, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const angle = Math.PI + (i * (2 * Math.PI / 3) / 30);
+        return {
+          x: 5 * Math.cos(angle),
+          y: 5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      lineWidth: 4,
+      showPoints: false,
+      labels: [{ text: "Busur 120°", at: 15, offset: [-1.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+        { x: 5 * Math.cos(2 * Math.PI / 3), y: 5 * Math.sin(2 * Math.PI / 3), z: 0 },
+      ],
+      color: getColor("AMBER"),
+      lineWidth: 3,
+      showPoints: false,
+      labels: [{ text: "Tali Busur 120°", at: 0.5, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      showPoints: true,
+      labels: [{ text: "C", at: 0, offset: [-0.5, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 5 * Math.cos(2 * Math.PI / 3), y: 5 * Math.sin(2 * Math.PI / 3), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      showPoints: true,
+      labels: [{ text: "D", at: 0, offset: [-0.3, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "O (Pusat)", at: 0, offset: [0, -0.8, 0] }],
+    },
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = i * (2 * Math.PI / 100);
+        return {
+          x: 5 * Math.cos(angle),
+          y: 5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      lineWidth: 1,
+      showPoints: false,
+      smooth: true,
+    },
+  ]}
+  cameraPosition={[0, 0, 14]}
+  showZAxis={false}
+/>
+
+## Rumus Panjang Tali Busur
+
+Panjang tali busur dapat dihitung menggunakan rumus trigonometri yang melibatkan sudut pusat dan jari-jari lingkaran:
+
+<BlockMath math="c = 2r \sin\left(\frac{\theta}{2}\right)" />
+
+Dimana:
+- <InlineMath math="c" /> = panjang tali busur
+- <InlineMath math="r" /> = jari-jari lingkaran
+- <InlineMath math="\theta" /> = sudut pusat dalam radian
+
+Rumus ini sangat berguna dalam perhitungan teknik, terutama dalam desain struktur lengkung dan analisis kekuatan material.
+
+## Tinggi Busur dan Sagita
+
+Tinggi busur atau sagita adalah jarak tegak lurus dari titik tengah tali busur ke titik tertinggi busur. Konsep ini sangat penting dalam desain jembatan lengkung dan struktur arsitektur.
+
+<BlockMath math="h = r - r\cos\left(\frac{\theta}{2}\right) = r\left(1 - \cos\left(\frac{\theta}{2}\right)\right)" />
+
+Dimana:
+- <InlineMath math="h" /> = tinggi busur (sagita)
+- <InlineMath math="r" /> = jari-jari lingkaran
+- <InlineMath math="\theta" /> = sudut pusat dalam radian
+
+Perhatikan visualisasi berikut:
+
+<LineEquation
+  title="Visualisasi Tinggi Busur"
+  description="Tinggi busur (sagita) pada berbagai sudut pusat."
+  data={[
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const angle = (-Math.PI / 6) + (i * (Math.PI / 3) / 30);
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      lineWidth: 4,
+      showPoints: false,
+      labels: [{ text: "Busur 60°", at: 15, offset: [1.5, 1, 0] }],
+    },
+    {
+      points: [
+        { x: 4 * Math.cos(-Math.PI / 6), y: 4 * Math.sin(-Math.PI / 6), z: 0 },
+        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      lineWidth: 3,
+      showPoints: false,
+      labels: [{ text: "Tali Busur", at: 0.5, offset: [0, -0.8, 0] }],
+    },
+    {
+      points: [
+        { x: (4 * Math.cos(-Math.PI / 6) + 4 * Math.cos(Math.PI / 6)) / 2, y: (4 * Math.sin(-Math.PI / 6) + 4 * Math.sin(Math.PI / 6)) / 2, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "M (Titik Tengah)", at: 0, offset: [1.2, -1.2, 0] }],
+    },
+    {
+      points: [
+        { x: (4 * Math.cos(-Math.PI / 6) + 4 * Math.cos(Math.PI / 6)) / 2, y: (4 * Math.sin(-Math.PI / 6) + 4 * Math.sin(Math.PI / 6)) / 2, z: 0 },
+        { x: 4 * Math.cos(0), y: 4 * Math.sin(0), z: 0 },
+      ],
+      color: getColor("ROSE"),
+      lineWidth: 4,
+      showPoints: false,
+      labels: [{ text: "Tinggi Busur (h)", offset: [0.8, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(-Math.PI / 6), y: 4 * Math.sin(-Math.PI / 6), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      lineWidth: 2,
+      showPoints: false,
+      labels: [{ text: "Jari-jari", offset: [-2, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      lineWidth: 2,
+      showPoints: false,
+      labels: [{ text: "Jari-jari", offset: [-2, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 4 * Math.cos(-Math.PI / 6), y: 4 * Math.sin(-Math.PI / 6), z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "P", at: 0, offset: [0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "Q", at: 0, offset: [-0.3, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = i * (2 * Math.PI / 100);
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      lineWidth: 1,
+      showPoints: false,
+      smooth: true,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Busur dalam Sistem Koordinat
+
+Dalam sistem koordinat Cartesian, busur dapat direpresentasikan menggunakan persamaan parametrik:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="x = r\cos(t)" />
+<BlockMath math="y = r\sin(t)" />
+</div>
+
+Dimana <InlineMath math="t" /> adalah parameter yang bervariasi dari sudut awal hingga sudut akhir busur.
+
+<LineEquation
+  title="Busur dalam Koordinat Cartesian"
+  description="Representasi busur menggunakan persamaan parametrik."
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const t = (Math.PI / 4) + (i * (Math.PI / 2) / 40);
+        return {
+          x: 3 * Math.cos(t),
+          y: 3 * Math.sin(t),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      lineWidth: 4,
+      showPoints: false,
+      labels: [{ text: "Busur Parametrik", at: 20, offset: [1.5, 1, 0] }],
+    },
+    {
+      points: [
+        { x: 3 * Math.cos(Math.PI / 4), y: 3 * Math.sin(Math.PI / 4), z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "t₁ = π/4 (45°)", at: 0, offset: [2, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 3 * Math.cos(3 * Math.PI / 4), y: 3 * Math.sin(3 * Math.PI / 4), z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "t₂ = 3π/4 (135°)", at: 0, offset: [-2, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3 * Math.cos(Math.PI / 4), y: 3 * Math.sin(Math.PI / 4), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      lineWidth: 2,
+      showPoints: false,
+      labels: [{ text: "r = 3", at: 0.5, offset: [0.3, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3 * Math.cos(3 * Math.PI / 4), y: 3 * Math.sin(3 * Math.PI / 4), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      lineWidth: 2,
+      showPoints: false,
+      labels: [{ text: "r = 3", at: 0.5, offset: [-0.3, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "Origin (0,0)", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = i * (2 * Math.PI / 100);
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      lineWidth: 1,
+      showPoints: false,
+      smooth: true,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Contoh Perhitungan Teknik
+
+Mari kita terapkan konsep ini dalam perhitungan teknik. Misalkan kita merancang jembatan lengkung dengan jari-jari 25 meter dan sudut pusat 120°.
+
+**Menghitung panjang tali busur:**
+
+<div className="flex flex-col gap-4">
+<BlockMath math="c = 2r \sin\left(\frac{\theta}{2}\right)" />
+<BlockMath math="c = 2 \times 25 \times \sin\left(\frac{120°}{2}\right)" />
+<BlockMath math="c = 50 \times \sin(60°)" />
+<BlockMath math="c = 50 \times \frac{\sqrt{3}}{2} = 25\sqrt{3} \text{ meter}" />
+</div>
+
+**Menghitung tinggi busur:**
+
+<div className="flex flex-col gap-4">
+<BlockMath math="h = r\left(1 - \cos\left(\frac{\theta}{2}\right)\right)" />
+<BlockMath math="h = 25\left(1 - \cos(60°)\right)" />
+<BlockMath math="h = 25\left(1 - \frac{1}{2}\right) = 12.5 \text{ meter}" />
+</div>
+
+## Latihan
+
+1. Sebuah jembatan lengkung memiliki jari-jari 30 meter dan sudut pusat 90°. Hitunglah panjang tali busur dan tinggi busur jembatan tersebut.
+
+2. Dalam desain kubah masjid, diketahui tinggi busur adalah 8 meter dan jari-jari lingkaran adalah 15 meter. Tentukan sudut pusat busur tersebut.
+
+3. Sebuah busur lingkaran memiliki panjang tali busur 24 meter dan jari-jari 15 meter. Hitunglah sudut pusat dan tinggi busur.
+
+4. Dalam sistem koordinat, sebuah busur dimulai dari titik (4, 0) dan berakhir di titik (0, 4) pada lingkaran dengan pusat di origin. Tentukan persamaan parametrik busur tersebut.
+
+### Kunci Jawaban
+
+1. **Penyelesaian:**
+   
+   Diketahui: <InlineMath math="r = 30 \text{ m}" /> dan <InlineMath math="\theta = 90°" />
+   
+   **Panjang tali busur:**
+   <div className="flex flex-col gap-4">
+   <BlockMath math="c = 2r \sin\left(\frac{\theta}{2}\right) = 2 \times 30 \times \sin(45°)" />
+   <BlockMath math="c = 60 \times \frac{\sqrt{2}}{2} = 30\sqrt{2} \text{ m} \approx 42.43 \text{ m}" />
+   </div>
+   
+   **Tinggi busur:**
+   <div className="flex flex-col gap-4">
+   <BlockMath math="h = r\left(1 - \cos\left(\frac{\theta}{2}\right)\right) = 30\left(1 - \cos(45°)\right)" />
+   <BlockMath math="h = 30\left(1 - \frac{\sqrt{2}}{2}\right) \approx 8.79 \text{ m}" />
+   </div>
+
+2. **Penyelesaian:**
+   
+   Diketahui: <InlineMath math="h = 8 \text{ m}" /> dan <InlineMath math="r = 15 \text{ m}" />
+   
+   **Langkah 1:** Gunakan rumus tinggi busur
+   <BlockMath math="8 = 15\left(1 - \cos\left(\frac{\theta}{2}\right)\right)" />
+   
+   **Langkah 2:** Isolasi cos
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\frac{8}{15} = 1 - \cos\left(\frac{\theta}{2}\right)" />
+   <BlockMath math="\cos\left(\frac{\theta}{2}\right) = 1 - \frac{8}{15} = \frac{7}{15}" />
+   </div>
+   
+   **Langkah 3:** Hitung sudut
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\frac{\theta}{2} = \arccos\left(\frac{7}{15}\right) \approx 62.18°" />
+   <BlockMath math="\theta \approx 124.36°" />
+   </div>
+
+3. **Penyelesaian:**
+   
+   Diketahui: <InlineMath math="c = 24 \text{ m}" /> dan <InlineMath math="r = 15 \text{ m}" />
+   
+   **Langkah 1:** Gunakan rumus tali busur
+   <div className="flex flex-col gap-4">
+   <BlockMath math="24 = 2 \times 15 \times \sin\left(\frac{\theta}{2}\right)" />
+   <BlockMath math="\sin\left(\frac{\theta}{2}\right) = \frac{24}{30} = 0.8" />
+   </div>
+   
+   **Langkah 2:** Hitung sudut pusat
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\frac{\theta}{2} = \arcsin(0.8) \approx 53.13°" />
+   <BlockMath math="\theta \approx 106.26°" />
+   </div>
+   
+   **Langkah 3:** Hitung tinggi busur
+   <BlockMath math="h = 15\left(1 - \cos(53.13°)\right) = 15(1 - 0.6) = 6 \text{ m}" />
+
+4. **Penyelesaian:**
+   
+   - Titik awal: (4, 0) → <InlineMath math="t_1 = 0°" />
+   - Titik akhir: (0, 4) → <InlineMath math="t_2 = 90°" />
+   - Jari-jari: <InlineMath math="r = 4" />
+   
+   **Persamaan parametrik:**
+   <div className="flex flex-col gap-4">
+   <BlockMath math="x = 4\cos(t)" />
+   <BlockMath math="y = 4\sin(t)" />
+   <BlockMath math="0° \leq t \leq 90°" />
+   </div>
