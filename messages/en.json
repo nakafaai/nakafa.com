@@ -91,7 +91,8 @@
     "select": "Select",
     "navigate": "Navigate",
     "close": "Close",
-    "community": "Community"
+    "community": "Community",
+    "report": "Report"
   },
   "Subject": {
     "elementary-school": "Elementary School",

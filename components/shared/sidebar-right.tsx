@@ -1,5 +1,6 @@
 import { IconMenu } from "@tabler/icons-react";
 import type { CSSProperties, ComponentProps, ReactNode } from "react";
+import { ReportButton } from "../sidebar/report-button";
 import { ShareButton } from "../sidebar/share-button";
 import { Button } from "../ui/button";
 import NavigationLink from "../ui/navigation-link";
@@ -79,6 +80,7 @@ function SidebarRightFooter() {
   return (
     <SidebarFooter className="border-t">
       <SidebarMenu>
+        <ReportButton />
         <ShareButton />
       </SidebarMenu>
     </SidebarFooter>
