@@ -32,7 +32,7 @@ export function CardMaterial({ material }: Props) {
   }));
 
   const { ref, entry } = useIntersection({
-    rootMargin: "-40% 0px -70% 0px",
+    rootMargin: "-20% 0px -60% 0px",
   });
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export function CardMaterial({ material }: Props) {
   }, [entry, handleIntersect]);
 
   return (
-    <Card ref={ref} id={id} className="scroll-mt-20 pb-0">
+    <Card ref={ref} id={id} className="scroll-mt-28 pb-0">
       <CardHeader className="gap-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-1.5">
