@@ -4,3 +4,247 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Circle Arcs and Sectors",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Understanding Circle Arcs
+
+A circle arc is a part of the circumference of a circle that is bounded by two points on the circle. Imagine it like a piece of string that curves following the shape of the circle. When we have a circle and mark two points on it, the part of the circumference that connects these two points is called an arc.
+
+Each arc has two endpoints located on the circle, and the length of the arc depends on the size of the central angle that faces the arc. The larger the central angle, the longer the arc.
+
+<LineEquation
+  title={<>Circle Arc Visualization</>}
+  description="Circle arcs with various central angle sizes."
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 37 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 36;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      smooth: true,
+      showPoints: false,
+      labels: [{ text: "Circle", at: 20, offset: [1.5, 0.5, 0] }]
+    },
+    {
+      points: Array.from({ length: 13 }, (_, i) => {
+        const startAngle = Math.PI / 6;
+        const endAngle = Math.PI / 6 + (2 * Math.PI / 3);
+        const angle = startAngle + (i * (endAngle - startAngle)) / 12;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("ORANGE"),
+      smooth: true,
+      showPoints: false,
+      labels: [{ text: "Arc AB", at: 6, offset: [1.5, 0.5, 0] }]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "A", at: 1, offset: [0.3, 0.3, 0] }]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 6 + (2 * Math.PI / 3)), y: 4 * Math.sin(Math.PI / 6 + (2 * Math.PI / 3)), z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "B", at: 1, offset: [-0.3, 0.3, 0] }]
+    }
+  ]}
+/>
+
+## Types of Arcs Based on Size
+
+Based on the size of the central angle that faces them, circle arcs can be distinguished into several types:
+
+1. **Minor Arc** is an arc whose central angle is less than 180°. This arc is the shorter part of the two possible arcs connecting two points on the circle.
+
+2. **Major Arc** is an arc whose central angle is more than 180°. This arc is the longer part of the two possible arcs connecting two points on the circle.
+
+3. **Semicircular Arc** is an arc whose central angle is exactly 180°. This arc divides the circle into two equal parts.
+
+## Arc Length Formula
+
+Arc length can be calculated using the ratio between the central angle and the full angle of the circle. Since the full circumference of a circle is <InlineMath math="2\pi r" />, the arc length can be expressed as:
+
+<BlockMath math="\text{Arc length} = \frac{\alpha}{360°} \times 2\pi r" />
+
+where:
+- <InlineMath math="\alpha" /> is the central angle in degrees
+- <InlineMath math="r" /> is the radius of the circle
+
+If the central angle is expressed in radians, the formula becomes simpler:
+
+<BlockMath math="\text{Arc length} = \alpha \times r" />
+
+where <InlineMath math="\alpha" /> is the central angle in radians.
+
+<LineEquation
+  title={<>Arc Length Comparison</>}
+  description="Arcs with different central angles on the same circle."
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 37 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 36;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      smooth: true,
+      showPoints: false
+    },
+    {
+      points: Array.from({ length: 7 }, (_, i) => {
+        const startAngle = 0;
+        const endAngle = Math.PI / 3;
+        const angle = startAngle + (i * (endAngle - startAngle)) / 6;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("ORANGE"),
+      smooth: true,
+      showPoints: false,
+      labels: [{ text: "60°", at: 3, offset: [0.8, 0.3, 0] }]
+    },
+    {
+      points: Array.from({ length: 13 }, (_, i) => {
+        const startAngle = Math.PI;
+        const endAngle = Math.PI + (2 * Math.PI / 3);
+        const angle = startAngle + (i * (endAngle - startAngle)) / 12;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("PURPLE"),
+      smooth: true,
+      showPoints: false,
+      labels: [{ text: "120°", at: 6, offset: [-1.5, 0.3, 0] }]
+    }
+  ]}
+/>
+
+## Relationship Between Arc and Central Angle
+
+There is a very close relationship between arc length and the size of the central angle that faces it. This relationship can be expressed in the form of a ratio:
+
+<BlockMath math="\frac{\text{Arc length}_1}{\text{Arc length}_2} = \frac{\alpha_1}{\alpha_2}" />
+
+This ratio applies to arcs on the same circle. This means that if the central angle of one arc is twice the central angle of another arc, then the length of that arc will also be twice as long.
+
+This concept is very useful in solving various problems involving circle arcs, especially when we need to find arc length without knowing the radius of the circle directly.
+
+## Practice Problems
+
+1. A circle arc has a radius of 14 cm and a central angle of 90°. Determine the length of the arc.
+
+2. Given that the length of arc AB is 22 cm and the angle AOB is 120°, where O is the center of the circle. What is the radius of the circle?
+
+3. In a circle with radius 21 cm, there are two arcs. The first arc has a central angle of 60° and the second arc has a central angle of 150°. Determine the ratio of the lengths of the two arcs.
+
+4. A circle arc has a length of 15.7 cm. If the radius of the circle is 10 cm, determine the central angle of the arc in degrees.
+
+5. Given that the circumference of a circle is 88 cm. If an arc on the circle has a central angle of 45°, determine the length of the arc.
+
+### Answer Key
+
+1. **Answer: 22 cm**
+
+   Given: <InlineMath math="r = 14" /> cm, <InlineMath math="\alpha = 90°" />
+   
+   Using the arc length formula:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Arc length} = \frac{\alpha}{360°} \times 2\pi r" />
+   
+   <BlockMath math="= \frac{90°}{360°} \times 2 \times \frac{22}{7} \times 14" />
+   
+   <BlockMath math="= \frac{1}{4} \times 2 \times \frac{22}{7} \times 14" />
+   
+   <BlockMath math="= \frac{1}{4} \times 88 = 22 \text{ cm}" />
+   </div>
+
+2. **Answer: 10.5 cm**
+
+   Given: Arc length AB = 22 cm, <InlineMath math="\alpha = 120°" />
+   
+   Using the arc length formula:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="22 = \frac{120°}{360°} \times 2\pi r" />
+   
+   <BlockMath math="22 = \frac{1}{3} \times 2 \times \frac{22}{7} \times r" />
+   
+   <BlockMath math="22 = \frac{44r}{21}" />
+   
+   <BlockMath math="r = \frac{22 \times 21}{44} = \frac{462}{44} = 10.5 \text{ cm}" />
+   </div>
+
+3. **Answer: 2 : 5**
+
+   Given: <InlineMath math="r = 21" /> cm, <InlineMath math="\alpha_1 = 60°" />, <InlineMath math="\alpha_2 = 150°" />
+   
+   Since on the same circle, the ratio of arc lengths equals the ratio of their central angles:
+   
+   <BlockMath math="\frac{\text{Arc length}_1}{\text{Arc length}_2} = \frac{\alpha_1}{\alpha_2} = \frac{60°}{150°} = \frac{2}{5}" />
+   
+   Therefore, the ratio of the lengths of the two arcs is 2 : 5.
+
+4. **Answer: 90°**
+
+   Given: Arc length = 15.7 cm, <InlineMath math="r = 10" /> cm
+   
+   Using the arc length formula:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="15.7 = \frac{\alpha}{360°} \times 2\pi \times 10" />
+   
+   <BlockMath math="15.7 = \frac{\alpha}{360°} \times 2 \times 3.14 \times 10" />
+   
+   <BlockMath math="15.7 = \frac{\alpha}{360°} \times 62.8" />
+   
+   <BlockMath math="\alpha = \frac{15.7 \times 360°}{62.8} = \frac{5652°}{62.8} = 90°" />
+   </div>
+
+5. **Answer: 11 cm**
+
+   Given: Circumference = 88 cm, <InlineMath math="\alpha = 45°" />
+   
+   Using the ratio concept:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Arc length} = \frac{\alpha}{360°} \times \text{Circumference}" />
+   
+   <BlockMath math="= \frac{45°}{360°} \times 88" />
+   
+   <BlockMath math="= \frac{1}{8} \times 88 = 11 \text{ cm}" />
+   </div>
