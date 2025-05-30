@@ -21,7 +21,7 @@ export function Header() {
           <Tooltip>
             <TooltipTrigger asChild>
               <a
-                href="https://github.com/nabilfatih/nakafa.com"
+                href="https://github.com/nakafaai/nakafa.com"
                 title={t("source-code")}
                 target="_blank"
                 rel="noopener noreferrer"

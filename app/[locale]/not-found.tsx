@@ -28,7 +28,7 @@ export default function NotFound() {
 
           <div className="mx-auto w-fit">
             <a
-              href="https://github.com/nabilfatih/nakafa.com"
+              href="https://github.com/nakafaai/nakafa.com"
               title={t("contribute-button")}
               target="_blank"
               rel="noopener noreferrer"

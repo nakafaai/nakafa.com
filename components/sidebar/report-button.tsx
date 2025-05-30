@@ -9,7 +9,7 @@ export function ReportButton() {
     <SidebarMenuItem>
       <SidebarMenuButton tooltip={t("report")} asChild>
         <a
-          href="https://github.com/nabilfatih/nakafa.com/issues/new/choose"
+          href="https://github.com/nakafaai/nakafa.com/issues/new/choose"
           title={t("report")}
           target="_blank"
           rel="noopener noreferrer"

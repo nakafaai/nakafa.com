@@ -75,7 +75,7 @@ export default async function Page({ params }: Props) {
             <div className="mt-4 flex justify-between gap-6 gap-y-3 sm:items-center">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <a
-                  href="https://github.com/nabilfatih/nakafa.com"
+                  href="https://github.com/nakafaai/nakafa.com"
                   title={tHome("contribute")}
                   target="_blank"
                   rel="noopener noreferrer"

@@ -35,7 +35,7 @@ function ErrorFallback({
             {t("retry")}
           </Button>
           <a
-            href="https://github.com/nabilfatih/nakafa.com/issues"
+            href="https://github.com/nakafaai/nakafa.com/issues"
             title={t("report")}
             target="_blank"
             rel="noopener noreferrer"

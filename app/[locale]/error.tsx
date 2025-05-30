@@ -51,7 +51,7 @@ export default function ErrorPage({
               {t("retry")}
             </Button>
             <a
-              href="https://github.com/nabilfatih/nakafa.com/issues"
+              href="https://github.com/nakafaai/nakafa.com/issues"
               title="Report"
               target="_blank"
               rel="noopener noreferrer"

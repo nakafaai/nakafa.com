@@ -5,18 +5,18 @@ First off, thank you for considering contributing to nakafa.com! It's people lik
 ## Where do I go from here?
 
 - Unsure where to begin contributing? You can start by looking through the issues labeled `good first issue` or `help wanted`.
-- Have a question or want to discuss an idea? Please use [GitHub Discussions](https://github.com/nabilfatih/nakafa.com/discussions).
-- Found a bug or have a feature request? Please check if a similar issue already exists before submitting a new one using our [Issue Templates](https://github.com/nabilfatih/nakafa.com/issues/new/choose).
+- Have a question or want to discuss an idea? Please use [GitHub Discussions](https://github.com/nakafaai/nakafa.com/discussions).
+- Found a bug or have a feature request? Please check if a similar issue already exists before submitting a new one using our [Issue Templates](https://github.com/nakafaai/nakafa.com/issues/new/choose).
 
 ## How Can I Contribute?
 
 ### Reporting Bugs
 
-Please use the [Bug Report template](https://github.com/nabilfatih/nakafa.com/issues/new?assignees=&labels=bug%2C+needs-triage&template=bug_report.yml&title=%5BBUG%5D+) to report bugs. Ensure your report is clear and contains sufficient information for us to reproduce the issue.
+Please use the [Bug Report template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=bug%2C+needs-triage&template=bug_report.yml&title=%5BBUG%5D+) to report bugs. Ensure your report is clear and contains sufficient information for us to reproduce the issue.
 
 ### Suggesting Enhancements
 
-Use the [Feature Request template](https://github.com/nabilfatih/nakafa.com/issues/new?assignees=&labels=enhancement%2C+needs-triage&template=feature_request.yml&title=%5BFEAT%5D+) for suggestions. Provide context and examples of why the enhancement would be beneficial.
+Use the [Feature Request template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=enhancement%2C+needs-triage&template=feature_request.yml&title=%5BFEAT%5D+) for suggestions. Provide context and examples of why the enhancement would be beneficial.
 
 ### Your First Code Contribution
 
@@ -48,4 +48,4 @@ Please follow the existing code style. We likely use Prettier and ESLint (check 
 
 ## Any other questions?
 
-Feel free to ask on [GitHub Discussions](https://github.com/nabilfatih/nakafa.com/discussions).
+Feel free to ask on [GitHub Discussions](https://github.com/nakafaai/nakafa.com/discussions).
