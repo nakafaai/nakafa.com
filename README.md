@@ -102,7 +102,7 @@ Ensure you have the following installed on your system:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/nabilfatih/nakafa.git
+   git clone https://github.com/nakafaai/nakafa.git
    cd nakafa
    ```
 
