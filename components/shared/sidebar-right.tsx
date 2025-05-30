@@ -99,7 +99,7 @@ export function SidebarRight({
           <Button
             variant="outline"
             size="icon"
-            className="fixed top-16 right-6 size-8 bg-background/60 backdrop-blur-sm xl:hidden"
+            className="fixed top-20 right-6 size-8 bg-background/60 backdrop-blur-sm xl:hidden"
           >
             <IconMenu />
             <span className="sr-only">Menu</span>
