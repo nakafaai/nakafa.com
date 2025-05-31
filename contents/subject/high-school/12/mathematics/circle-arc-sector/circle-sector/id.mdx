@@ -4,3 +4,425 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Busur dan Juring Lingkaran",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Pengertian Juring Lingkaran
+
+Juring lingkaran adalah daerah yang dibatasi oleh dua jari-jari lingkaran dan busur lingkaran. Bayangkan sebuah daun pisang yang lebar, kemudian kita memotongnya dari pangkal ke ujung mengikuti bentuk melengkung daun tersebut. Setiap potongan yang terbentuk menyerupai bentuk juring lingkaran.
+
+Juring terdiri dari tiga komponen utama:
+
+- Dua garis jari-jari yang bertemu di pusat lingkaran
+- Satu busur yang menghubungkan ujung kedua jari-jari tersebut
+
+Dalam bentuk geometri, juring terlihat seperti irisan buah jeruk atau segmen kaca mata yang berbentuk melengkung. Setiap juring memiliki sudut pusat yang menentukan besar kecilnya daerah juring tersebut.
+
+## Hubungan Sudut Pusat dengan Luas Juring
+
+Luas juring sangat bergantung pada besar sudut pusat yang membentuknya. Sudut pusat adalah sudut yang dibentuk oleh dua jari-jari di pusat lingkaran. Semakin besar sudut pusat, semakin luas pula daerah juring yang terbentuk.
+
+Hubungan antara sudut pusat dan luas juring dapat dinyatakan dalam bentuk perbandingan. Jika sudut pusat adalah <InlineMath math="\alpha" /> derajat, maka luas juring merupakan <InlineMath math="\frac{\alpha}{360°}" /> bagian dari luas keseluruhan lingkaran.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Luas Juring} = \frac{\alpha}{360°} \times \pi r^2" />
+</div>
+
+Rumus ini menunjukkan bahwa luas juring sebanding dengan sudut pusatnya. Ketika sudut pusat adalah 90°, maka luas juring akan menjadi seperempat dari luas lingkaran. Begitu pula ketika sudut pusat 180°, luas juring akan menjadi setengah dari luas lingkaran.
+
+## Menghitung Luas Juring
+
+Untuk menghitung luas juring, kita memerlukan dua informasi penting: jari-jari lingkaran dan besar sudut pusat. Proses perhitungannya cukup sederhana dengan menggunakan rumus yang telah kita pelajari.
+
+Mari kita lihat contoh perhitungan. Misalkan terdapat lingkaran dengan jari-jari 14 cm dan sudut pusat 60°. Luas juring dapat dihitung sebagai berikut:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Luas Juring} = \frac{60°}{360°} \times \pi \times 14^2" />
+<BlockMath math="= \frac{1}{6} \times \frac{22}{7} \times 196" />
+<BlockMath math="= \frac{22 \times 196}{6 \times 7}" />
+<BlockMath math="= \frac{4312}{42}" />
+<BlockMath math="= \frac{2156}{21} = 102\frac{14}{21} = 102\frac{2}{3} \text{ cm}^2" />
+</div>
+
+Perhitungan ini menunjukkan bahwa juring dengan sudut pusat 60° memiliki luas sebesar <InlineMath math="102\frac{2}{3}" /> cm².
+
+## Perbandingan Sudut Pusat dengan Luas Juring
+
+Untuk memahami hubungan proporsional antara sudut pusat dan luas juring, mari kita lihat berbagai contoh perbandingan:
+
+<div className="flex flex-col gap-4">
+
+<LineEquation
+  title={<>Juring <InlineMath math="60°" /> (<InlineMath math="\frac{1}{6}" /> bagian lingkaran)</>}
+  description={<>Sudut pusat <InlineMath math="60°" /> menghasilkan juring dengan luas <InlineMath math="\frac{1}{6}" /> dari luas total lingkaran.</>}
+  cameraPosition={[6, 4, 6]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 60;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3 * Math.cos(Math.PI / 3), y: 3 * Math.sin(Math.PI / 3), z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const angle = (i * Math.PI / 3) / 20;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        {
+          text: "60° = 1/6",
+          at: 10,
+          offset: [0.8, 0.5, 0],
+          color: getColor("VIOLET"),
+          fontSize: 0.4,
+        },
+      ],
+    },
+  ]}
+/>
+
+<LineEquation
+  title={<>Juring <InlineMath math="90°" /> (<InlineMath math="\frac{1}{4}" /> bagian lingkaran)</>}
+  description={<>Sudut pusat <InlineMath math="90°" /> menghasilkan juring dengan luas <InlineMath math="\frac{1}{4}" /> dari luas total lingkaran.</>}
+  cameraPosition={[6, 4, 6]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 60;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 3, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const angle = (i * Math.PI / 2) / 30;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        {
+          text: "90° = 1/4",
+          at: 15,
+          offset: [0.5, 0.8, 0],
+          color: getColor("VIOLET"),
+          fontSize: 0.4,
+        },
+      ],
+    },
+  ]}
+/>
+
+<LineEquation
+  title={<>Juring <InlineMath math="120°" /> (<InlineMath math="\frac{1}{3}" /> bagian lingkaran)</>}
+  description={<>Sudut pusat <InlineMath math="120°" /> menghasilkan juring dengan luas <InlineMath math="\frac{1}{3}" /> dari luas total lingkaran.</>}
+  cameraPosition={[6, 4, 6]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 60;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3 * Math.cos(2 * Math.PI / 3), y: 3 * Math.sin(2 * Math.PI / 3), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const angle = (i * 2 * Math.PI / 3) / 40;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        {
+          text: "120° = 1/3",
+          at: 20,
+          offset: [-0.5, 1, 0],
+          color: getColor("VIOLET"),
+          fontSize: 0.4,
+        },
+      ],
+    },
+  ]}
+/>
+
+<LineEquation
+  title={<>Juring <InlineMath math="180°" /> (<InlineMath math="\frac{1}{2}" /> bagian lingkaran)</>}
+  description={<>Sudut pusat <InlineMath math="180°" /> menghasilkan juring dengan luas <InlineMath math="\frac{1}{2}" /> dari luas total lingkaran.</>}
+  cameraPosition={[6, 4, 6]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 60;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const angle = (i * Math.PI) / 30;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        {
+          text: "180° = 1/2",
+          at: 15,
+          offset: [0, 0.5, 0],
+          color: getColor("VIOLET"),
+          fontSize: 0.4,
+        },
+      ],
+    },
+  ]}
+/>
+
+<LineEquation
+  title={<>Juring <InlineMath math="270°" /> (<InlineMath math="\frac{3}{4}" /> bagian lingkaran)</>}
+  description={<>Sudut pusat <InlineMath math="270°" /> menghasilkan juring dengan luas <InlineMath math="\frac{3}{4}" /> dari luas total lingkaran.</>}
+  cameraPosition={[6, 4, 6]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 60;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("FUCHSIA"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: -3, z: 0 },
+      ],
+      color: getColor("FUCHSIA"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: Array.from({ length: 82 }, (_, i) => {
+        const startAngle = 0;
+        const endAngle = (3 * Math.PI) / 2;
+        const angle = startAngle + (i * endAngle) / 81;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        {
+          text: "270° = 3/4",
+          at: 40,
+          offset: [1, -0.5, 0],
+          color: getColor("VIOLET"),
+          fontSize: 0.4,
+        },
+      ],
+    },
+  ]}
+/>
+
+</div>
+
+## Latihan
+
+1. Sebuah lingkaran memiliki jari-jari 21 cm. Tentukan luas juring yang dibentuk oleh sudut pusat 120°.
+
+2. Diketahui luas sebuah juring adalah 154 cm² dan jari-jari lingkarannya 14 cm. Berapakah besar sudut pusat juring tersebut?
+
+3. Sebuah roti bundar berbentuk lingkaran dengan diameter 28 cm dipotong menjadi 8 bagian sama besar. Tentukan luas setiap potongan roti.
+
+### Kunci Jawaban
+
+1. **Langkah Penyelesaian:**
+
+   Diketahui: <InlineMath math="r = 21 \text{ cm}" />, <InlineMath math="\alpha = 120°" />
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Luas Juring} = \frac{\alpha}{360°} \times \pi r^2" />
+   <BlockMath math="= \frac{120°}{360°} \times \frac{22}{7} \times 21^2" />
+   <BlockMath math="= \frac{1}{3} \times \frac{22}{7} \times 441" />
+   <BlockMath math="= \frac{22 \times 441}{3 \times 7}" />
+   <BlockMath math="= \frac{9702}{21}" />
+   <BlockMath math="= 462 \text{ cm}^2" />
+   </div>
+
+2. **Langkah Penyelesaian:**
+
+   Diketahui: Luas juring = 154 cm², <InlineMath math="r = 14 \text{ cm}" />
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="154 = \frac{\alpha}{360°} \times \frac{22}{7} \times 14^2" />
+   <BlockMath math="154 = \frac{\alpha}{360°} \times \frac{22}{7} \times 196" />
+   <BlockMath math="154 = \frac{\alpha}{360°} \times \frac{22 \times 196}{7}" />
+   <BlockMath math="154 = \frac{\alpha}{360°} \times \frac{4312}{7}" />
+   <BlockMath math="154 = \frac{\alpha}{360°} \times 616" />
+   <BlockMath math="\frac{\alpha}{360°} = \frac{154}{616} = \frac{1}{4}" />
+   <BlockMath math="\alpha = \frac{1}{4} \times 360° = 90°" />
+   </div>
+
+3. **Langkah Penyelesaian:**
+
+   Diketahui: diameter = 28 cm, maka <InlineMath math="r = 14 \text{ cm}" />
+   Roti dipotong menjadi 8 bagian sama besar, maka sudut pusat setiap potongan = <InlineMath math="\frac{360°}{8} = 45°" />
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Luas setiap potongan} = \frac{45°}{360°} \times \frac{22}{7} \times 14^2" />
+   <BlockMath math="= \frac{1}{8} \times \frac{22}{7} \times 196" />
+   <BlockMath math="= \frac{22 \times 196}{8 \times 7}" />
+   <BlockMath math="= \frac{4312}{56}" />
+   <BlockMath math="= 77 \text{ cm}^2" />
+   </div>
