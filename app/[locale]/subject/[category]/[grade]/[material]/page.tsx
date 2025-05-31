@@ -53,9 +53,9 @@ export async function generateMetadata({
 
   const FILE_PATH = getMaterialPath(category, grade, material);
 
-  let ogUrl = getOgUrl(locale, FILE_PATH);
+  let ogUrl: string = getOgUrl(locale, FILE_PATH);
 
-  const publicPath = `/subject/${locale}-${material}.png`;
+  const publicPath = `/subject/${locale}-${material}.png` as const;
   const fullPathToCheck = path.join(process.cwd(), `public${publicPath}`);
 
   // if the og image exists in public directory, use it

@@ -8,5 +8,5 @@ import { removeLeadingSlash } from ".";
  * @returns The Open Graph URL
  */
 export function getOgUrl(locale: Locale, path: string) {
-  return [`/${locale}/og`, removeLeadingSlash(path), "image.png"].join("/");
+  return `/${locale}/og/${removeLeadingSlash(path)}/image.png` as const;
 }
