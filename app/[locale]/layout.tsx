@@ -108,7 +108,7 @@ export async function generateMetadata({
       description: t("description"),
       images: [
         {
-          url: "https://nakafa.com/og.png",
+          url: "/og.png",
           alt: t("title"),
           width: 1200,
           height: 630,
@@ -125,7 +125,7 @@ export async function generateMetadata({
       type: "website",
       images: [
         {
-          url: "https://nakafa.com/og.png",
+          url: "/og.png",
           alt: t("title"),
           width: 1200,
           height: 630,
