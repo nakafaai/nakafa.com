@@ -76,17 +76,17 @@ export function SidebarTree({ data, title }: Props) {
   const t = useTranslations("Common");
 
   return (
-    <TocProvider toc={data}>
-      <SidebarGroup>
-        <SidebarGroupLabel>{title ?? t("on-this-page")}</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
+    <SidebarGroup>
+      <SidebarGroupLabel>{title ?? t("on-this-page")}</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          <TocProvider toc={data}>
             {data.map((item) => (
               <SidebarTreeItem key={item.href} heading={item} />
             ))}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    </TocProvider>
+          </TocProvider>
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   );
 }
