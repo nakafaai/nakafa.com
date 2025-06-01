@@ -4,6 +4,7 @@ import { HomeTitle } from "@/components/home/title";
 import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
 import { buttonVariants } from "@/components/ui/button";
 import { Particles } from "@/components/ui/particles";
+import { Promote } from "@/components/ui/promote";
 import { cn } from "@/lib/utils";
 import { IconBrandYoutube } from "@tabler/icons-react";
 import { HeartHandshakeIcon } from "lucide-react";
@@ -100,6 +101,7 @@ export default async function Page({ params }: Props) {
             </div>
           </div>
         </div>
+        <Promote />
       </div>
     </>
   );
