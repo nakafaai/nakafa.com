@@ -6,9 +6,9 @@ export const contributorSchema = z.object({
   official: z.boolean(),
   social: z
     .object({
-      twitter: z.string().url().optional(),
-      github: z.string().url().optional(),
-      linkedin: z.string().url().optional(),
+      twitter: z.url().optional(),
+      github: z.url().optional(),
+      linkedin: z.url().optional(),
     })
     .optional(),
 });
