@@ -16,6 +16,14 @@ export function Promote() {
           height="54"
         />
       </a>
+      <a href="https://twelve.tools" target="_blank" rel="noreferrer">
+        <Image
+          src="https://twelve.tools/badge1-light.svg"
+          alt="Featured on Twelve Tools"
+          width="200"
+          height="54"
+        />
+      </a>
     </div>
   );
 }
