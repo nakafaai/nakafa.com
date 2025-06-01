@@ -4,3 +4,136 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Combinatorics",
 };
+
+## Understanding of Slot Filling Rule
+
+**Slot filling rule** is a method to determine the number of ways to place objects in available slots. This concept is very useful in solving combinatorial problems where we need to count all possible arrangements or choices that can be made.
+
+Imagine filling out a form that has several columns. Each column has certain options, and we want to know how many different ways there are to fill out the entire form.
+
+## Table Rule Method
+
+**Table method** presents all possible combinations in a systematic table format. Each row and column represents choices from different categories.
+
+Suppose a student wants to choose an online learning package. There are three platforms (Platform A, Platform B, Platform C) and four subjects (Mathematics, Physics, Chemistry, Biology).
+
+Using a table, we can see all possible combinations:
+
+| Platform | Mathematics | Physics | Chemistry | Biology |
+|----------|-------------|---------|-----------|---------|
+| Platform A | A-Math | A-Phys | A-Chem | A-Bio |
+| Platform B | B-Math | B-Phys | B-Chem | B-Bio |
+| Platform C | C-Math | C-Phys | C-Chem | C-Bio |
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Total combinations} = 3 \times 4 = 12 \text{ ways}" />
+</div>
+
+## Tree Diagram Method
+
+**Tree diagram** depicts each choice as a tree branch. This method helps visualize step-by-step decision making.
+
+For the same case, the tree diagram starts from one initial point, then branches into available choices.
+
+1. Level 1:
+   <BlockMath math="1 \text{ initial point} \rightarrow 3 \text{ platform branches}" />
+
+2. Level 2:
+   <BlockMath math="3 \text{ platforms} \rightarrow 3 \times 4 = 12 \text{ subject branches}" />
+
+3. Branch structure:
+   <BlockMath math="\text{Start} \rightarrow \text{Platform} \rightarrow \text{Subject}" />
+
+4. Total complete routes:
+   <BlockMath math="3 \times 4 = 12 \text{ combinations}" />
+
+## Multiplication Rule Method
+
+**Multiplication rule** is the most efficient method to calculate the number of ways to fill available slots. If there are <InlineMath math="n" /> slots with each slot <InlineMath math="i" /> having <InlineMath math="k_i" /> choices, then the **total number of ways to fill** is:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Total ways} = k_1 \times k_2 \times k_3 \times \cdots \times k_n" />
+</div>
+
+### Example of Multiplication Rule Usage
+
+A school wants to create access codes for digital learning systems. The code consists of:
+- First slot: 3 letters (A, B, C)
+- Second slot: 5 numbers (1, 2, 3, 4, 5)  
+- Third slot: 2 symbols (@, #)
+
+Then, the total different codes that can be created are:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="k_1 = 3 \text{ (letter choices)}" />
+<BlockMath math="k_2 = 5 \text{ (number choices)}" />
+<BlockMath math="k_3 = 2 \text{ (symbol choices)}" />
+<BlockMath math="\text{Total different codes} = 3 \times 5 \times 2 = 30 \text{ codes}" />
+</div>
+
+## Cases with Restrictions
+
+In some situations, there are **certain restrictions** that affect the number of choices in each slot.
+
+### Repetition Not Allowed
+
+If the same object **cannot be used repeatedly**, then each filled slot will reduce the choices for the next slot.
+
+**Example:** Creating a 3-digit number from digits 2, 3, 4, 5, 6 without repetition.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{First slot} = 5 \text{ choices}" />
+<BlockMath math="\text{Second slot} = 4 \text{ choices (1 digit already used)}" />
+<BlockMath math="\text{Third slot} = 3 \text{ choices (2 digits already used)}" />
+<BlockMath math="\text{Total numbers} = 5 \times 4 \times 3 = 60 \text{ numbers}" />
+</div>
+
+### Repetition Allowed
+
+If the same object **can be used repeatedly**, then the choices in each slot remain the same.
+
+For the same case with repetition allowed:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Each slot} = 5 \text{ choices}" />
+<BlockMath math="\text{Total numbers} = 5 \times 5 \times 5 = 125 \text{ numbers}" />
+</div>
+
+## Exercises
+
+1. An electronics store sells smartphones with 4 different brands, each available in 3 memory capacities and 5 color choices. How many different smartphone combinations are there?
+
+2. To create a password consisting of 1 letter followed by 2 numbers, where the letter is chosen from A, B, C, D and numbers are chosen from 1, 2, 3, 4, 5 without repetition. How many passwords can be created?
+
+3. From city P to city R through city Q, there are 3 roads from P to Q and 4 roads from Q to R. How many different routes can be chosen for the journey from P to R?
+
+4. Creating license plate numbers consisting of 2 letters followed by 3 numbers. If there are 26 letters and 10 numbers (0-9) available, and repetition is allowed, how many license plate numbers can be created?
+
+### Answer Key
+
+1. Given: 4 brands, 3 memory capacities, 5 color choices
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Total combinations} = 4 \times 3 \times 5 = 60 \text{ smartphone combinations}" />
+   </div>
+
+2. Given: 1 letter from <InlineMath math="\{A, B, C, D\}" />, 2 numbers from <InlineMath math="\{1, 2, 3, 4, 5\}" /> without repetition
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Letter choices} = 4" />
+   <BlockMath math="\text{First number choices} = 5" />
+   <BlockMath math="\text{Second number choices} = 4 \text{ (without repetition)}" />
+   <BlockMath math="\text{Total passwords} = 4 \times 5 \times 4 = 80 \text{ passwords}" />
+   </div>
+
+3. Given: 3 roads from P to Q, 4 roads from Q to R
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Total routes} = 3 \times 4 = 12 \text{ different routes}" />
+   </div>
+
+4. Given: 2 letters from 26 letters, 3 numbers from 10 numbers, repetition allowed
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{First letter choices} = 26" />
+   <BlockMath math="\text{Second letter choices} = 26" />
+   <BlockMath math="\text{Each number choices} = 10" />
+   <BlockMath math="\text{Total license plates} = 26 \times 26 \times 10 \times 10 \times 10" />
+   <BlockMath math="= 676 \times 1000 = 676000 \text{ license plates}" />
+   </div>

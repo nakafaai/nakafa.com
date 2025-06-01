@@ -4,3 +4,136 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Kombinatorik",
 };
+
+## Pengertian Aturan Pengisian Tempat
+
+**Aturan pengisian tempat** adalah metode untuk menentukan banyaknya cara menempatkan objek-objek pada tempat-tempat yang tersedia. Konsep ini sangat berguna dalam menyelesaikan masalah kombinatorik dimana kita perlu menghitung semua kemungkinan susunan atau pilihan yang dapat dibuat.
+
+Bayangkan seperti mengisi formulir yang memiliki beberapa kolom. Setiap kolom memiliki pilihan tertentu, dan kita ingin tahu berapa banyak cara berbeda untuk mengisi seluruh formulir tersebut.
+
+## Metode Aturan Tabel
+
+**Metode tabel** menyajikan semua kemungkinan kombinasi dalam bentuk tabel yang sistematis. Setiap baris dan kolom mewakili pilihan dari kategori yang berbeda.
+
+Misalkan seorang siswa ingin memilih paket pembelajaran online. Tersedia tiga platform (Platform A, Platform B, Platform C) dan empat mata pelajaran (Matematika, Fisika, Kimia, Biologi).
+
+Dengan menggunakan tabel, kita dapat melihat semua kombinasi yang mungkin:
+
+| Platform | Matematika | Fisika | Kimia | Biologi |
+|----------|------------|--------|-------|---------|
+| Platform A | A-Mat | A-Fis | A-Kim | A-Bio |
+| Platform B | B-Mat | B-Fis | B-Kim | B-Bio |
+| Platform C | C-Mat | C-Fis | C-Kim | C-Bio |
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Total kombinasi} = 3 \times 4 = 12 \text{ cara}" />
+</div>
+
+## Metode Diagram Cabang
+
+**Diagram cabang** menggambarkan setiap pilihan sebagai cabang pohon. Metode ini membantu visualisasi langkah demi langkah dalam membuat keputusan.
+
+Untuk kasus yang sama, diagram cabang dimulai dari satu titik awal, kemudian bercabang menjadi pilihan-pilihan yang tersedia.
+
+1. Tingkat 1:
+   <BlockMath math="1 \text{ titik awal} \rightarrow 3 \text{ cabang platform}" />
+
+2. Tingkat 2:
+   <BlockMath math="3 \text{ platform} \rightarrow 3 \times 4 = 12 \text{ cabang mata pelajaran}" />
+
+3. Struktur cabang:
+   <BlockMath math="\text{Awal} \rightarrow \text{Platform} \rightarrow \text{Mata Pelajaran}" />
+
+4. Total rute lengkap:
+   <BlockMath math="3 \times 4 = 12 \text{ kombinasi}" />
+
+## Metode Aturan Perkalian
+
+**Aturan perkalian** adalah metode paling efisien untuk menghitung banyaknya cara mengisi tempat yang tersedia. Jika terdapat <InlineMath math="n" /> tempat dengan masing-masing tempat ke-<InlineMath math="i" /> memiliki <InlineMath math="k_i" /> pilihan, maka **total cara pengisian** adalah:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Total cara} = k_1 \times k_2 \times k_3 \times \cdots \times k_n" />
+</div>
+
+### Contoh Penggunaan Aturan Perkalian
+
+Sebuah sekolah ingin membuat kode akses untuk sistem pembelajaran digital. Kode tersebut terdiri dari:
+- Tempat pertama: 3 huruf (A, B, C)
+- Tempat kedua: 5 angka (1, 2, 3, 4, 5)  
+- Tempat ketiga: 2 simbol (@, #)
+
+Maka, total kode berbeda yang dapat dibuat adalah:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="k_1 = 3 \text{ (pilihan huruf)}" />
+<BlockMath math="k_2 = 5 \text{ (pilihan angka)}" />
+<BlockMath math="k_3 = 2 \text{ (pilihan simbol)}" />
+<BlockMath math="\text{Total kode berbeda} = 3 \times 5 \times 2 = 30 \text{ kode}" />
+</div>
+
+## Kasus Dengan Pembatasan
+
+Dalam beberapa situasi, terdapat **pembatasan tertentu** yang mempengaruhi jumlah pilihan di setiap tempat.
+
+### Pengulangan Tidak Diperbolehkan
+
+Jika objek yang sama **tidak boleh digunakan berulang**, maka setiap tempat yang terisi akan mengurangi pilihan untuk tempat berikutnya.
+
+**Contoh:** Membuat bilangan 3 digit dari angka 2, 3, 4, 5, 6 tanpa pengulangan.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Tempat pertama} = 5 \text{ pilihan}" />
+<BlockMath math="\text{Tempat kedua} = 4 \text{ pilihan (1 angka sudah terpakai)}" />
+<BlockMath math="\text{Tempat ketiga} = 3 \text{ pilihan (2 angka sudah terpakai)}" />
+<BlockMath math="\text{Total bilangan} = 5 \times 4 \times 3 = 60 \text{ bilangan}" />
+</div>
+
+### Pengulangan Diperbolehkan
+
+Jika objek yang sama **boleh digunakan berulang**, maka pilihan di setiap tempat tetap sama.
+
+Untuk kasus yang sama dengan pengulangan diperbolehkan:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Setiap tempat} = 5 \text{ pilihan}" />
+<BlockMath math="\text{Total bilangan} = 5 \times 5 \times 5 = 125 \text{ bilangan}" />
+</div>
+
+## Latihan
+
+1. Sebuah toko elektronik menjual smartphone dengan 4 merek berbeda, masing-masing tersedia dalam 3 kapasitas memori dan 5 pilihan warna. Berapa banyak kombinasi smartphone yang berbeda?
+
+2. Untuk membuat password yang terdiri dari 1 huruf diikuti 2 angka, dimana huruf dipilih dari A, B, C, D dan angka dipilih dari 1, 2, 3, 4, 5 tanpa pengulangan. Berapa banyak password yang dapat dibuat?
+
+3. Dari kota P ke kota R melalui kota Q, terdapat 3 jalan dari P ke Q dan 4 jalan dari Q ke R. Berapa banyak rute berbeda yang dapat dipilih untuk perjalanan dari P ke R?
+
+4. Membuat nomor plat kendaraan yang terdiri dari 2 huruf diikuti 3 angka. Jika tersedia 26 huruf dan 10 angka (0-9), dan pengulangan diperbolehkan, berapa banyak nomor plat yang dapat dibuat?
+
+### Kunci Jawaban
+
+1. Diketahui: 4 merek, 3 kapasitas memori, 5 pilihan warna
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Total kombinasi} = 4 \times 3 \times 5 = 60 \text{ kombinasi smartphone}" />
+   </div>
+
+2. Diketahui: 1 huruf dari <InlineMath math="\{A, B, C, D\}" />, 2 angka dari <InlineMath math="\{1, 2, 3, 4, 5\}" /> tanpa pengulangan
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Pilihan huruf} = 4" />
+   <BlockMath math="\text{Pilihan angka pertama} = 5" />
+   <BlockMath math="\text{Pilihan angka kedua} = 4 \text{ (tanpa pengulangan)}" />
+   <BlockMath math="\text{Total password} = 4 \times 5 \times 4 = 80 \text{ password}" />
+   </div>
+
+3. Diketahui: 3 jalan dari P ke Q, 4 jalan dari Q ke R
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Total rute} = 3 \times 4 = 12 \text{ rute berbeda}" />
+   </div>
+
+4. Diketahui: 2 huruf dari 26 huruf, 3 angka dari 10 angka, pengulangan diperbolehkan
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Pilihan huruf pertama} = 26" />
+   <BlockMath math="\text{Pilihan huruf kedua} = 26" />
+   <BlockMath math="\text{Pilihan setiap angka} = 10" />
+   <BlockMath math="\text{Total nomor plat} = 26 \times 26 \times 10 \times 10 \times 10" />
+   <BlockMath math="= 676 \times 1000 = 676000 \text{ nomor plat}" />
+   </div>
