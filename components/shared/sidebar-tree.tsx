@@ -1,7 +1,8 @@
 "use client";
 
-import { useToc } from "@/lib/context/use-toc";
+import { TocProvider, useActiveHeadings } from "@/lib/context/use-toc";
 import { slugify } from "@/lib/utils";
+import type { ParsedHeading } from "@/types/toc";
 import { useTranslations } from "next-intl";
 import NavigationLink from "../ui/navigation-link";
 import {
@@ -15,12 +16,6 @@ import {
 } from "../ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
-export type ParsedHeading = {
-  label: string;
-  href: string;
-  children?: ParsedHeading[];
-};
-
 type Props = {
   data: ParsedHeading[];
   title?: string;
@@ -33,7 +28,7 @@ function SidebarTreeItem({
   heading,
   depth = 0,
 }: { heading: ParsedHeading; depth?: number }) {
-  const activeHeading = useToc((context) => context.activeHeading);
+  const activeHeadings = useActiveHeadings();
 
   const id = slugify(heading.label);
 
@@ -41,7 +36,7 @@ function SidebarTreeItem({
     <SidebarMenuItem key={heading.href}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <SidebarMenuButton asChild isActive={activeHeading === id}>
+          <SidebarMenuButton asChild isActive={activeHeadings.includes(id)}>
             <NavigationLink href={heading.href} title={heading.label}>
               <span title={heading.label} className="truncate">
                 {heading.label}
@@ -81,15 +76,17 @@ export function SidebarTree({ data, title }: Props) {
   const t = useTranslations("Common");
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>{title ?? t("on-this-page")}</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {data.map((item) => (
-            <SidebarTreeItem key={item.href} heading={item} />
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+    <TocProvider toc={data}>
+      <SidebarGroup>
+        <SidebarGroupLabel>{title ?? t("on-this-page")}</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {data.map((item) => (
+              <SidebarTreeItem key={item.href} heading={item} />
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </TocProvider>
   );
 }

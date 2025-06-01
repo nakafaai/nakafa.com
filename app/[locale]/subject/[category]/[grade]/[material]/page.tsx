@@ -9,10 +9,9 @@ import {
   LayoutMaterialFooter,
   LayoutMaterialHeader,
   LayoutMaterialMain,
-  LayoutMaterialTableOfContents,
+  LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
-import type { ParsedHeading } from "@/components/shared/sidebar-tree";
 import { slugify } from "@/lib/utils";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
@@ -26,6 +25,7 @@ import { getStaticParams } from "@/lib/utils/system";
 import type { SubjectCategory } from "@/types/subject/category";
 import type { Grade } from "@/types/subject/grade";
 import type { MaterialGrade } from "@/types/subject/material";
+import type { ParsedHeading } from "@/types/toc";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -146,7 +146,7 @@ export default async function Page({ params }: Props) {
           <RefContent githubUrl={getGithubUrl(`/contents${FILE_PATH}`)} />
         </LayoutMaterialFooter>
       </LayoutMaterialContent>
-      <LayoutMaterialTableOfContents
+      <LayoutMaterialToc
         header={{
           title: t(material),
           href: FILE_PATH,

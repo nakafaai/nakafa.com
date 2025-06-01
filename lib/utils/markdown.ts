@@ -1,9 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { ParsedHeading } from "@/components/shared/sidebar-tree";
+import { slugify } from "@/lib/utils";
+import type { ParsedHeading } from "@/types/toc";
 import { Children } from "react";
 import type { ReactNode } from "react";
-import { slugify } from ".";
 
 /**
  * Reads the raw content of a file, use app/[locale] as the base path.
@@ -93,6 +93,25 @@ export function getHeadings(content: string): ParsedHeading[] {
   } catch {
     return [];
   }
+}
+
+/**
+ * Extracts all heading IDs from the given headings.
+ * @param headings - The headings to extract IDs from.
+ * @returns The extracted IDs.
+ */
+export function extractAllHeadingIds(headings: ParsedHeading[]): string[] {
+  const ids: string[] = [];
+
+  for (const heading of headings) {
+    ids.push(slugify(heading.label));
+
+    if (heading.children && heading.children.length > 0) {
+      ids.push(...extractAllHeadingIds(heading.children));
+    }
+  }
+
+  return ids;
 }
 
 /**

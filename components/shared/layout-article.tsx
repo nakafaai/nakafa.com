@@ -1,9 +1,10 @@
+import type { ParsedHeading } from "@/types/toc";
 import type { ComponentProps, ReactNode } from "react";
 import { FooterContent } from "./footer-content";
 import { HeaderContent } from "./header-content";
 import { LayoutContent } from "./layout-content";
 import { SidebarRight } from "./sidebar-right";
-import { type ParsedHeading, SidebarTree } from "./sidebar-tree";
+import { SidebarTree } from "./sidebar-tree";
 
 export function LayoutArticleHeader({
   ...props

@@ -1,12 +1,10 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
-import { useToc } from "@/lib/context/use-toc";
 import { cn, slugify } from "@/lib/utils";
 import type { MaterialList } from "@/types/subject/material";
-import { useIntersection } from "@mantine/hooks";
 import { ArrowDownIcon, ChevronDownIcon, LinkIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -26,28 +24,17 @@ export function CardMaterial({ material }: Props) {
 
   const id = slugify(material.title);
 
-  const { handleIntersect, setActiveHeading } = useToc((context) => ({
-    handleIntersect: context.handleIntersect,
-    setActiveHeading: context.setActiveHeading,
-  }));
-
-  const { ref, entry } = useIntersection({
-    rootMargin: "-20% 0px -60% 0px",
-  });
-
-  useEffect(() => {
-    if (entry) {
-      handleIntersect({ isIntersecting: entry.isIntersecting, entry });
-    }
-  }, [entry, handleIntersect]);
-
   return (
-    <Card ref={ref} id={id} className="scroll-mt-28 pb-0">
+    <Card className="pb-0">
       <CardHeader className="gap-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-1.5">
             <CardTitle className="group flex items-center font-medium">
-              <h2 title={material.title} className="inline-block">
+              <h2
+                id={id}
+                title={material.title}
+                className="inline-block scroll-mt-28"
+              >
                 {material.title}
               </h2>
               <a
@@ -55,7 +42,6 @@ export function CardMaterial({ material }: Props) {
                 title={material.title}
                 className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
                 aria-label={`Link to ${material.title}`}
-                onClick={() => setActiveHeading(id)}
               >
                 <LinkIcon className="size-4" />
               </a>

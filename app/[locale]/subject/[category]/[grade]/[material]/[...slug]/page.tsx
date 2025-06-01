@@ -7,7 +7,7 @@ import {
   LayoutMaterialHeader,
   LayoutMaterialMain,
   LayoutMaterialPagination,
-  LayoutMaterialTableOfContents,
+  LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
 import { SkeletonText } from "@/components/shared/skeleton-text";
@@ -209,7 +209,7 @@ export default async function Page({ params }: Props) {
             <RefContent githubUrl={getGithubUrl(`/contents${FILE_PATH}`)} />
           </LayoutMaterialFooter>
         </LayoutMaterialContent>
-        <LayoutMaterialTableOfContents
+        <LayoutMaterialToc
           header={{
             title: metadata.title,
             href: FILE_PATH,
