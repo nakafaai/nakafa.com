@@ -2,7 +2,7 @@
 
 import { useAnchorObserver } from "@/hooks/use-anchor-observer";
 import type { ParsedHeading } from "@/types/toc";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { extractAllHeadingIds } from "../utils/toc";
 
@@ -19,10 +19,7 @@ export function TocProvider({
   toc: ParsedHeading[];
   children: ReactNode;
 }) {
-  const [watchedHeadings] = useState<string[]>(extractAllHeadingIds(toc));
-
-  // Use the anchor observer hook to track active headings
-  const activeHeadings = useAnchorObserver(watchedHeadings, false);
+  const activeHeadings = useAnchorObserver(extractAllHeadingIds(toc), false);
 
   const value = useMemo(
     () => ({

@@ -94,7 +94,7 @@
     "three": "^0.177.0",
     "use-context-selector": "^2.0.0",
     "vaul": "^1.1.2",
-    "zod": "^3.25.43",
+    "zod": "^3.25.46",
     "zustand": "^5.0.5"
   },
   "devDependencies": {
@@ -112,7 +112,7 @@
     "postcss": "^8.5.4",
     "tailwindcss": "^4.1.8",
     "tsx": "^4.19.4",
-    "tw-animate-css": "^1.3.2",
+    "tw-animate-css": "^1.3.3",
     "typescript": "^5",
     "ultracite": "^4.2.5"
   }
