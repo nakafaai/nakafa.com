@@ -4,3 +4,194 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Kombinatorik",
 };
+
+## Pengertian Permutasi dengan Objek yang Sama
+
+**Permutasi dengan objek yang sama** adalah susunan objek dimana terdapat beberapa objek yang identik atau sama. Ketika ada objek yang sama, jumlah susunan yang berbeda akan berkurang karena **pertukaran objek yang identik tidak menghasilkan susunan baru**.
+
+Bayangkan menyusun huruf dari kata "MAMA". Walaupun ada 4 huruf, kita tidak bisa membedakan antara huruf M yang pertama dengan M yang kedua, atau A yang pertama dengan A yang kedua. Akibatnya, susunan yang terlihat berbeda tetapi menggunakan huruf yang sama di posisi berbeda dianggap identik.
+
+## Rumus Permutasi Objek Identik
+
+Untuk permutasi n objek dimana terdapat objek yang sama, **rumus yang digunakan** adalah:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3! \times \cdots \times r_k!}" />
+</div>
+
+**Keterangan:**
+
+- <InlineMath math="n" /> = jumlah total objek
+- <InlineMath math="r_1, r_2, r_3, \ldots, r_k" /> = banyaknya objek yang sama pada setiap kelompok
+- <InlineMath math="k" /> = banyaknya kelompok objek yang identik
+
+**Cara mengidentifikasi objek yang sama**: Hitung berapa kali setiap objek muncul dalam seluruh susunan, bukan hanya melihat objek yang berbeda.
+
+## Penerapan pada Kata dan Huruf
+
+### Contoh Kata KALIMANTAN
+
+Mari kita hitung berapa banyak susunan huruf yang dapat dibuat dari kata "KALIMANTAN".
+
+**Langkah identifikasi sistematis:**
+Tulis huruf satu per satu: K-A-L-I-M-A-N-T-A-N
+
+Total huruf: 10
+
+Identifikasi huruf: K muncul 1 kali, A muncul 3 kali (posisi ke-2, ke-6, ke-9), L muncul 1 kali, I muncul 1 kali, M muncul 1 kali, N muncul 2 kali (posisi ke-7, ke-10), T muncul 1 kali
+
+**Perhitungan:**
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P = \frac{10!}{1! \times 3! \times 1! \times 1! \times 1! \times 2! \times 1!}" />
+<BlockMath math="= \frac{10!}{3! \times 2!}" />
+<BlockMath math="= \frac{3628800}{6 \times 2} = \frac{3628800}{12}" />
+<BlockMath math="= 302400 \text{ susunan}" />
+</div>
+
+### Contoh Kata PALAPA
+
+Untuk kata "PALAPA" dengan 6 huruf:
+Tulis huruf satu per satu: P-A-L-A-P-A
+
+**Identifikasi huruf:** P muncul 2 kali (posisi ke-1, ke-5), A muncul 3 kali (posisi ke-2, ke-4, ke-6), L muncul 1 kali
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
+<BlockMath math="= \frac{720}{2 \times 6 \times 1} = \frac{720}{12}" />
+<BlockMath math="= 60 \text{ susunan}" />
+</div>
+
+## Langkah Perhitungan Sistematis
+
+Untuk menyelesaikan masalah permutasi dengan objek yang sama, ikuti langkah berikut:
+
+1. **Hitung total objek**: Tentukan nilai n
+2. **Identifikasi objek sama**: Kelompokkan objek yang identik
+3. **Hitung frekuensi**: Tentukan berapa kali setiap objek muncul
+4. **Terapkan rumus**: Masukkan ke dalam rumus permutasi
+5. **Hitung faktorial**: Selesaikan perhitungan dengan teliti
+
+### Kata BANANA
+
+Mari kita terapkan langkah-langkah ini untuk mencari susunan kata "BANANA":
+
+**Langkah 1: Hitung total objek**
+
+Tulis huruf satu per satu: B-A-N-A-N-A
+
+Total huruf: <InlineMath math="n = 6" />
+
+**Langkah 2: Identifikasi objek sama**
+
+Kelompokkan huruf yang identik:
+- Kelompok B: B
+- Kelompok A: A, A, A  
+- Kelompok N: N, N
+
+**Langkah 3: Hitung frekuensi**
+
+Hitung berapa kali setiap huruf muncul:
+- B muncul 1 kali
+- A muncul 3 kali
+- N muncul 2 kali
+
+**Langkah 4: Terapkan rumus**
+
+Gunakan rumus permutasi dengan objek yang sama:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3!}" />
+<BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
+</div>
+
+**Langkah 5: Hitung faktorial**
+
+Hitung nilai setiap faktorial:
+- <InlineMath math="6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
+- <InlineMath math="1! = 1" />
+- <InlineMath math="3! = 3 \times 2 \times 1 = 6" />
+- <InlineMath math="2! = 2 \times 1 = 2" />
+
+Perhitungan:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P = \frac{720}{1 \times 6 \times 2} = \frac{720}{12} = 60" />
+</div>
+
+Jadi, kata "BANANA" dapat disusun dalam **60 cara yang berbeda**.
+
+## Perbedaan dengan Permutasi Biasa
+
+**Permutasi biasa**: Semua objek berbeda, menggunakan rumus <InlineMath math="n!" />
+
+**Permutasi dengan objek sama**: Ada objek identik, menggunakan rumus:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{n!}{r_1! \times r_2! \times \cdots \times r_k!}" />
+</div>
+
+**Contoh perbandingan:**
+
+Menyusun huruf A, B, C, D (semua berbeda): <InlineMath math="4! = 24" /> cara
+
+Menyusun huruf A, A, B, C (ada yang sama): 
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{4!}{2!} = \frac{24}{2} = 12 \text{ cara}" />
+</div>
+
+Objek yang sama **mengurangi** jumlah susunan karena pertukaran objek identik tidak menghasilkan perbedaan.
+
+## Latihan
+
+1. Berapa banyak susunan huruf yang dapat dibuat dari kata "MATEMATIKA"?
+
+2. Sebuah toko bunga memiliki 8 bunga mawar dimana 3 berwarna merah, 3 berwarna putih, dan 2 berwarna kuning. Berapa banyak cara menyusun bunga tersebut dalam satu barisan?
+
+3. Dari angka 1, 1, 2, 2, 2, 3, berapa banyak bilangan 6 digit yang dapat dibentuk?
+
+4. Kata "INDONESIA" memiliki berapa banyak susunan huruf yang berbeda?
+
+### Kunci Jawaban
+
+1. Kata "MATEMATIKA" memiliki 10 huruf
+
+   **Huruf satu per satu:** M-A-T-E-M-A-T-I-K-A
+   
+   **Identifikasi huruf:** M muncul 2 kali (posisi ke-1, ke-5), A muncul 3 kali (posisi ke-2, ke-6, ke-10), T muncul 2 kali (posisi ke-3, ke-7), E muncul 1 kali, I muncul 1 kali, K muncul 1 kali
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P = \frac{10!}{2! \times 3! \times 2! \times 1! \times 1! \times 1!}" />
+   <BlockMath math="= \frac{3628800}{2 \times 6 \times 2 \times 1 \times 1 \times 1}" />
+   <BlockMath math="= \frac{3628800}{24} = 151200 \text{ susunan}" />
+   </div>
+
+2. Total 8 bunga dengan merah 3, putih 3, kuning 2
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P = \frac{8!}{3! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{40320}{6 \times 6 \times 2}" />
+   <BlockMath math="= \frac{40320}{72} = 560 \text{ cara}" />
+   </div>
+
+3. Angka 1, 1, 2, 2, 2, 3 (total 6 digit)
+   
+   **Identifikasi angka:** angka 1 muncul 2 kali, angka 2 muncul 3 kali, angka 3 muncul 1 kali
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
+   <BlockMath math="= \frac{720}{2 \times 6 \times 1}" />
+   <BlockMath math="= \frac{720}{12} = 60 \text{ bilangan}" />
+   </div>
+
+4. Kata "INDONESIA" memiliki 9 huruf
+   
+   **Huruf satu per satu:** I-N-D-O-N-E-S-I-A
+   
+   **Identifikasi huruf:** I muncul 2 kali (posisi ke-1, ke-8), N muncul 2 kali (posisi ke-2, ke-5), D muncul 1 kali, O muncul 1 kali, E muncul 1 kali, S muncul 1 kali, A muncul 1 kali
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P = \frac{9!}{2! \times 2! \times 1! \times 1! \times 1! \times 1! \times 1!}" />
+   <BlockMath math="= \frac{362880}{2 \times 2}" />
+   <BlockMath math="= \frac{362880}{4} = 90720 \text{ susunan}" />
+   </div>

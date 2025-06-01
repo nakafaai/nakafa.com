@@ -1,6 +1,197 @@
 export const metadata = {
-    title: "Permutation with Identical Objects",
-    authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "05/26/2025",
-    subject: "Combinatorics",
+   title: "Permutation with Identical Objects",
+   authors: [{ name: "Nabil Akbarazzima Fatih" }],
+   date: "05/26/2025",
+   subject: "Combinatorics",
 };
+
+## Understanding Permutation with Identical Objects
+
+**Permutation with identical objects** is an arrangement of objects where there are several objects that are identical or the same. When there are identical objects, the number of different arrangements will decrease because **exchanging identical objects does not produce new arrangements**.
+
+Imagine arranging letters from the word "MAMA". Although there are 4 letters, we cannot distinguish between the first M and the second M, or the first A and the second A. As a result, arrangements that look different but use the same letters in different positions are considered identical.
+
+## Formula for Identical Object Permutation
+
+For permutation of n objects where there are identical objects, **the formula used** is:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3! \times \cdots \times r_k!}" />
+</div>
+
+**Explanation:**
+
+- <InlineMath math="n" /> = total number of objects
+- <InlineMath math="r_1, r_2, r_3, \ldots, r_k" /> = number of identical objects in each group
+- <InlineMath math="k" /> = number of groups of identical objects
+
+**How to identify identical objects**: Count how many times each object appears in the entire arrangement, not just looking at different objects.
+
+## Application to Words and Letters
+
+### Example Word KALIMANTAN
+
+Let's calculate how many letter arrangements can be made from the word "KALIMANTAN".
+
+**Systematic identification steps:**
+Write letters one by one: K-A-L-I-M-A-N-T-A-N
+
+Total letters: 10
+
+Letter identification: K appears 1 time, A appears 3 times (positions 2, 6, 9), L appears 1 time, I appears 1 time, M appears 1 time, N appears 2 times (positions 7, 10), T appears 1 time
+
+**Calculation:**
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P = \frac{10!}{1! \times 3! \times 1! \times 1! \times 1! \times 2! \times 1!}" />
+<BlockMath math="= \frac{10!}{3! \times 2!}" />
+<BlockMath math="= \frac{3628800}{6 \times 2} = \frac{3628800}{12}" />
+<BlockMath math="= 302400 \text{ arrangements}" />
+</div>
+
+### Example Word PALAPA
+
+For the word "PALAPA" with 6 letters:
+Write letters one by one: P-A-L-A-P-A
+
+**Letter identification:** P appears 2 times (positions 1, 5), A appears 3 times (positions 2, 4, 6), L appears 1 time
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
+<BlockMath math="= \frac{720}{2 \times 6 \times 1} = \frac{720}{12}" />
+<BlockMath math="= 60 \text{ arrangements}" />
+</div>
+
+## Systematic Calculation Steps
+
+To solve permutation problems with identical objects, follow these steps:
+
+1. **Count total objects**: Determine the value of n
+2. **Identify identical objects**: Group objects that are identical
+3. **Count frequency**: Determine how many times each object appears
+4. **Apply formula**: Insert into the permutation formula
+5. **Calculate factorial**: Complete the calculation carefully
+
+### Word BANANA
+
+Let's apply these steps to find arrangements of the word "BANANA":
+
+**Step 1: Count total objects**
+
+Write letters one by one: B-A-N-A-N-A
+
+Total letters: <InlineMath math="n = 6" />
+
+**Step 2: Identify identical objects**
+
+Group identical letters together:
+- B group: B
+- A group: A, A, A  
+- N group: N, N
+
+**Step 3: Count frequency**
+
+Count how many times each letter appears:
+- B appears 1 time
+- A appears 3 times
+- N appears 2 times
+
+**Step 4: Apply formula**
+
+Use the permutation formula with identical objects:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3!}" />
+<BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
+</div>
+
+**Step 5: Calculate factorial**
+
+Calculate each factorial value:
+- <InlineMath math="6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
+- <InlineMath math="1! = 1" />
+- <InlineMath math="3! = 3 \times 2 \times 1 = 6" />
+- <InlineMath math="2! = 2 \times 1 = 2" />
+
+Calculation:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P = \frac{720}{1 \times 6 \times 2} = \frac{720}{12} = 60" />
+</div>
+
+Therefore, the word "BANANA" can be arranged in **60 different ways**.
+
+## Difference from Regular Permutation
+
+**Regular permutation**: All objects are different, using formula <InlineMath math="n!" />
+
+**Permutation with identical objects**: There are identical objects, using formula:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{n!}{r_1! \times r_2! \times \cdots \times r_k!}" />
+</div>
+
+**Comparison example:**
+
+Arranging letters A, B, C, D (all different): <InlineMath math="4! = 24" /> ways
+
+Arranging letters A, A, B, C (some identical): 
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{4!}{2!} = \frac{24}{2} = 12 \text{ ways}" />
+</div>
+
+Identical objects **reduce** the number of arrangements because exchanging identical objects does not produce differences.
+
+## Exercises
+
+1. How many letter arrangements can be made from the word "MATEMATIKA"?
+
+2. A flower shop has 8 roses where 3 are red, 3 are white, and 2 are yellow. How many ways can these flowers be arranged in a row?
+
+3. From the digits 1, 1, 2, 2, 2, 3, how many 6-digit numbers can be formed?
+
+4. How many different letter arrangements does the word "INDONESIA" have?
+
+### Answer Key
+
+1. The word "MATEMATIKA" has 10 letters
+
+   **Letters one by one:** M-A-T-E-M-A-T-I-K-A
+   
+   **Letter identification:** M appears 2 times (positions 1, 5), A appears 3 times (positions 2, 6, 10), T appears 2 times (positions 3, 7), E appears 1 time, I appears 1 time, K appears 1 time
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P = \frac{10!}{2! \times 3! \times 2! \times 1! \times 1! \times 1!}" />
+   <BlockMath math="= \frac{3628800}{2 \times 6 \times 2 \times 1 \times 1 \times 1}" />
+   <BlockMath math="= \frac{3628800}{24} = 151200 \text{ arrangements}" />
+   </div>
+
+2. Total 8 flowers with red 3, white 3, yellow 2
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P = \frac{8!}{3! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{40320}{6 \times 6 \times 2}" />
+   <BlockMath math="= \frac{40320}{72} = 560 \text{ ways}" />
+   </div>
+
+3. Digits 1, 1, 2, 2, 2, 3 (total 6 digits)
+   
+   **Digit identification:** digit 1 appears 2 times, digit 2 appears 3 times, digit 3 appears 1 time
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
+   <BlockMath math="= \frac{720}{2 \times 6 \times 1}" />
+   <BlockMath math="= \frac{720}{12} = 60 \text{ numbers}" />
+   </div>
+
+4. The word "INDONESIA" has 9 letters
+   
+   **Letters one by one:** I-N-D-O-N-E-S-I-A
+   
+   **Letter identification:** I appears 2 times (positions 1, 8), N appears 2 times (positions 2, 5), D appears 1 time, O appears 1 time, E appears 1 time, S appears 1 time, A appears 1 time
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P = \frac{9!}{2! \times 2! \times 1! \times 1! \times 1! \times 1! \times 1!}" />
+   <BlockMath math="= \frac{362880}{2 \times 2}" />
+   <BlockMath math="= \frac{362880}{4} = 90720 \text{ arrangements}" />
+   </div>
