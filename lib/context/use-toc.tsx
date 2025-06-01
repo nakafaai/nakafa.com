@@ -8,7 +8,6 @@ import { extractAllHeadingIds } from "../utils/toc";
 
 type TocContextType = {
   activeHeadings: string[];
-  setWatchedHeadings: (headingIds: string[]) => void;
 };
 
 const TocContext = createContext<TocContextType | undefined>(undefined);
@@ -20,9 +19,7 @@ export function TocProvider({
   toc: ParsedHeading[];
   children: ReactNode;
 }) {
-  const [watchedHeadings, setWatchedHeadings] = useState<string[]>(
-    extractAllHeadingIds(toc)
-  );
+  const [watchedHeadings] = useState<string[]>(extractAllHeadingIds(toc));
 
   // Use the anchor observer hook to track active headings
   const activeHeadings = useAnchorObserver(watchedHeadings, false);
@@ -30,7 +27,6 @@ export function TocProvider({
   const value = useMemo(
     () => ({
       activeHeadings,
-      setWatchedHeadings,
     }),
     [activeHeadings]
   );
@@ -45,12 +41,4 @@ export function useToc<T>(selector: (context: TocContextType) => T): T {
     throw new Error("useToc must be used within a TocProvider.");
   }
   return selector(context);
-}
-
-export function useActiveHeadings(): string[] {
-  return useToc((context) => context.activeHeadings);
-}
-
-export function useSetWatchedHeadings(): (headingIds: string[]) => void {
-  return useToc((context) => context.setWatchedHeadings);
 }

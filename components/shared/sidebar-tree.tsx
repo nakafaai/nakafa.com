@@ -1,6 +1,6 @@
 "use client";
 
-import { TocProvider, useActiveHeadings } from "@/lib/context/use-toc";
+import { TocProvider, useToc } from "@/lib/context/use-toc";
 import { slugify } from "@/lib/utils";
 import type { ParsedHeading } from "@/types/toc";
 import { useTranslations } from "next-intl";
@@ -28,7 +28,7 @@ function SidebarTreeItem({
   heading,
   depth = 0,
 }: { heading: ParsedHeading; depth?: number }) {
-  const activeHeadings = useActiveHeadings();
+  const activeHeadings = useToc((context) => context.activeHeadings);
 
   const id = slugify(heading.label);
 
