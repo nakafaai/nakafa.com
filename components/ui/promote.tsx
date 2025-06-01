@@ -24,6 +24,18 @@ export function Promote() {
           height="54"
         />
       </a>
+      <a
+        href="https://fazier.com/launches/nakafa.com"
+        target="_blank"
+        rel="noreferrer"
+      >
+        <Image
+          src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=neutral"
+          width="250"
+          height="54"
+          alt="Fazier badge"
+        />
+      </a>
     </div>
   );
 }
