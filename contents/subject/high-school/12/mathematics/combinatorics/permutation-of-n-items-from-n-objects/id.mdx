@@ -4,3 +4,131 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Kombinatorik",
 };
+
+## Pengertian Permutasi n Item dari n Objek
+
+**Permutasi n item dari n objek** adalah susunan semua objek yang tersedia dimana setiap objek digunakan tepat satu kali dan **urutan penyusunannya sangat penting**. Dalam kasus ini, kita menggunakan seluruh objek yang ada tanpa ada yang tersisa.
+
+Bayangkan seperti menyusun barisan foto untuk seluruh siswa di kelas. Jika ada 5 siswa, maka kita akan menyusun kelima siswa tersebut dalam satu barisan. Setiap siswa akan mendapat satu posisi, tidak ada yang duduk di bangku cadangan, dan posisi Andi di depan atau di belakang memberikan hasil yang berbeda.
+
+## Rumus Permutasi Lengkap
+
+Untuk permutasi n item dari n objek, **rumus yang digunakan** adalah:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="nP_n = \frac{n!}{(n-n)!} = \frac{n!}{0!}" />
+</div>
+
+**Penjelasan mengapa rumus ini menjadi sederhana:**
+- <InlineMath math="(n-n) = 0" />, sehingga penyebutnya menjadi <InlineMath math="0!" />
+- Berdasarkan definisi matematis, <InlineMath math="0! = 1" />
+- Oleh karena itu: <InlineMath math="\frac{n!}{0!} = \frac{n!}{1} = n!" />
+
+Jadi, rumusnya adalah:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="nP_n = n!" />
+</div>
+
+## Konsep Faktorial
+
+**Faktorial** adalah perkalian berturut-turut dari bilangan bulat positif. Faktorial dari bilangan n ditulis sebagai <InlineMath math="n!" /> dan didefinisikan sebagai:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="n! = n \times (n-1) \times (n-2) \times \cdots \times 2 \times 1" />
+</div>
+
+**Aturan khusus** untuk faktorial:
+- <InlineMath math="0! = 1" /> (berdasarkan definisi matematis)
+- <InlineMath math="1! = 1" />
+
+## Penerapan dalam Kehidupan Sehari-hari
+
+### Organisasi Sekolah
+
+Misalkan ada 4 siswa yang akan mengisi 4 posisi dalam kepengurusan kelas: ketua, wakil ketua, sekretaris, dan bendahara. Setiap siswa hanya dapat memegang satu jabatan.
+
+Banyaknya cara menyusun kepengurusan tersebut adalah:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="4P_4 = 4! = 4 \times 3 \times 2 \times 1 = 24 \text{ cara}" />
+</div>
+
+### Susunan Tempat Duduk
+
+Sebuah keluarga yang terdiri dari 6 anggota akan duduk berjajar di sofa untuk foto keluarga. Banyaknya cara mereka dapat disusun adalah:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="6P_6 = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720 \text{ cara}" />
+</div>
+
+## Langkah Perhitungan Sistematis
+
+Untuk menghitung permutasi n item dari n objek, ikuti langkah berikut:
+
+1. **Identifikasi jumlah objek**: Pastikan semua objek akan digunakan
+2. **Terapkan rumus**: Gunakan <InlineMath math="n!" />
+3. **Hitung faktorial**: Kalikan berturut-turut dari n sampai 1
+4. **Verifikasi hasil**: Pastikan perhitungan sudah benar
+
+### Perhitungan Detail
+
+Menghitung <InlineMath math="5!" /> dengan langkah-langkah yang jelas:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="5! = 5 \times 4 \times 3 \times 2 \times 1" />
+<BlockMath math="= 20 \times 3 \times 2 \times 1" />
+<BlockMath math="= 60 \times 2 \times 1" />
+<BlockMath math="= 120 \times 1 = 120" />
+</div>
+
+## Perbedaan dengan Permutasi Sebagian
+
+**Permutasi lengkap (n dari n objek)**: Menggunakan semua objek yang tersedia.
+**Permutasi sebagian (r dari n objek)**: Hanya menggunakan sebagian objek.
+
+**Contoh konkret**: 
+- Permutasi lengkap: Menyusun 5 buku dalam 5 posisi di rak = <InlineMath math="5!" /> = 120 cara
+- Permutasi sebagian: Memilih dan menyusun 3 buku dari 5 buku yang ada = <InlineMath math="5P_3" /> = 60 cara
+
+**Perhitungan detail untuk permutasi sebagian**:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="5P_3 = \frac{5!}{(5-3)!} = \frac{5!}{2!}" />
+<BlockMath math="= \frac{5 \times 4 \times 3 \times 2 \times 1}{2 \times 1}" />
+<BlockMath math="= \frac{120}{2} = 60 \text{ cara}" />
+</div>
+
+Dalam permutasi n item dari n objek, **tidak ada objek yang tersisa** dan **semua posisi harus diisi**.
+
+## Latihan
+
+1. Sebuah tim fotografer ingin menyusun 7 model untuk sesi foto dalam satu barisan. Berapa banyak cara berbeda mereka dapat menyusun ketujuh model tersebut?
+
+2. Dalam sebuah perlombaan lari, terdapat 5 peserta yang semuanya harus finis. Berapa banyak kemungkinan urutan finis yang berbeda?
+
+3. Seorang chef ingin menata 6 jenis makanan berbeda di atas meja dalam satu barisan lurus. Berapa banyak cara berbeda ia dapat menata makanan tersebut?
+
+4. Sebuah perpustakaan memiliki 8 buku berbeda yang akan disusun dalam satu rak. Jika semua buku harus diletakkan di rak tersebut, berapa banyak cara penyusunan yang mungkin?
+
+### Kunci Jawaban
+
+1. Diketahui: 7 model akan disusun dalam satu barisan (semua model digunakan)
+   <div className="flex flex-col gap-4">
+   <BlockMath math="7P_7 = 7! = 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 5040 \text{ cara}" />
+   </div>
+
+2. Diketahui: 5 peserta lari dengan urutan finis yang berbeda (semua peserta finis)
+   <div className="flex flex-col gap-4">
+   <BlockMath math="5P_5 = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120 \text{ kemungkinan urutan}" />
+   </div>
+
+3. Diketahui: 6 jenis makanan akan ditata dalam satu barisan lurus (semua makanan ditata)
+   <div className="flex flex-col gap-4">
+   <BlockMath math="6P_6 = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720 \text{ cara}" />
+   </div>
+
+4. Diketahui: 8 buku berbeda akan disusun dalam satu rak (semua buku disusun)
+   <div className="flex flex-col gap-4">
+   <BlockMath math="8P_8 = 8! = 8 \times 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 40320 \text{ cara}" />
+   </div>
