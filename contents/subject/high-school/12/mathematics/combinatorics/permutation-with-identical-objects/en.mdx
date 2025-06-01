@@ -45,9 +45,20 @@ Letter identification: K appears 1 time, A appears 3 times (positions 2, 6, 9), 
 <div className="flex flex-col gap-4">
 <BlockMath math="P = \frac{10!}{1! \times 3! \times 1! \times 1! \times 1! \times 2! \times 1!}" />
 <BlockMath math="= \frac{10!}{3! \times 2!}" />
-<BlockMath math="= \frac{3628800}{6 \times 2} = \frac{3628800}{12}" />
-<BlockMath math="= 302400 \text{ arrangements}" />
 </div>
+
+Simplify the fraction by canceling common factors:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3!}{3! \times 2!}" />
+<BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2!}" />
+<BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2}" />
+</div>
+
+Calculate step by step:
+- Divide 10 by 2: <InlineMath math="\frac{10}{2} = 5" />
+- So: <InlineMath math="5 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4" />
+- <InlineMath math="= 5 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 = 302,400" />
 
 ### Example Word PALAPA
 
@@ -56,11 +67,23 @@ Write letters one by one: P-A-L-A-P-A
 
 **Letter identification:** P appears 2 times (positions 1, 5), A appears 3 times (positions 2, 4, 6), L appears 1 time
 
+Calculate each factorial:
+- <InlineMath math="6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
+- <InlineMath math="2! = 2 \times 1 = 2" />
+- <InlineMath math="3! = 3 \times 2 \times 1 = 6" />
+
+So, the calculation is:
+
 <div className="flex flex-col gap-4">
 <BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
-<BlockMath math="= \frac{720}{2 \times 6 \times 1} = \frac{720}{12}" />
-<BlockMath math="= 60 \text{ arrangements}" />
+<BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{2! \times 3! \times 1!}" />
+<BlockMath math="= \frac{6 \times 5 \times 4}{2 \times 1}" />
+<BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
 </div>
+
+Simplify by dividing 6 by 2:
+- <InlineMath math="\frac{6}{2} = 3" />
+- So: <InlineMath math="3 \times 5 \times 4 = 60 \text{ arrangements}" />
 
 ## Systematic Calculation Steps
 
@@ -76,48 +99,49 @@ To solve permutation problems with identical objects, follow these steps:
 
 Let's apply these steps to find arrangements of the word "BANANA":
 
-**Step 1: Count total objects**
+1. **Count total objects**
 
-Write letters one by one: B-A-N-A-N-A
+   Write letters one by one: B-A-N-A-N-A
 
-Total letters: <InlineMath math="n = 6" />
+   Total letters: <InlineMath math="n = 6" />
 
-**Step 2: Identify identical objects**
+2. **Identify identical objects**
 
-Group identical letters together:
-- B group: B
-- A group: A, A, A  
-- N group: N, N
+   Group identical letters together:
+   - B group: B
+   - A group: A, A, A  
+   - N group: N, N
 
-**Step 3: Count frequency**
+3. **Count frequency**
 
-Count how many times each letter appears:
-- B appears 1 time
-- A appears 3 times
-- N appears 2 times
+   Count how many times each letter appears:
+   - B appears 1 time
+   - A appears 3 times
+   - N appears 2 times
 
-**Step 4: Apply formula**
+4. **Apply formula**
 
-Use the permutation formula with identical objects:
+   Use the permutation formula with identical objects:
 
-<div className="flex flex-col gap-4">
-<BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3!}" />
-<BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
-</div>
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3!}" />
+   <BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
+   </div>
 
-**Step 5: Calculate factorial**
+5. **Calculate factorial**
 
-Calculate each factorial value:
-- <InlineMath math="6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
-- <InlineMath math="1! = 1" />
-- <InlineMath math="3! = 3 \times 2 \times 1 = 6" />
-- <InlineMath math="2! = 2 \times 1 = 2" />
+   Simplify the fraction first:
 
-Calculation:
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{1! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{1 \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
+   </div>
 
-<div className="flex flex-col gap-4">
-<BlockMath math="P = \frac{720}{1 \times 6 \times 2} = \frac{720}{12} = 60" />
-</div>
+   Calculate with simplification:
+   - Divide 6 by 2: <InlineMath math="\frac{6}{2} = 3" />
+   - So: <InlineMath math="3 \times 5 \times 4 = 60" />
 
 Therefore, the word "BANANA" can be arranged in **60 different ways**.
 
@@ -161,28 +185,52 @@ Identical objects **reduce** the number of arrangements because exchanging ident
    
    **Letter identification:** M appears 2 times (positions 1, 5), A appears 3 times (positions 2, 6, 10), T appears 2 times (positions 3, 7), E appears 1 time, I appears 1 time, K appears 1 time
    
+   Simplify the fraction by canceling common factors:
+   
    <div className="flex flex-col gap-4">
    <BlockMath math="P = \frac{10!}{2! \times 3! \times 2! \times 1! \times 1! \times 1!}" />
-   <BlockMath math="= \frac{3628800}{2 \times 6 \times 2 \times 1 \times 1 \times 1}" />
-   <BlockMath math="= \frac{3628800}{24} = 151200 \text{ arrangements}" />
+   <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3!}{2! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2! \times 2!}" />
+   <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{4}" />
    </div>
 
+   Calculate with simplification:
+   - Complete calculation: <InlineMath math="10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 = 604,800" />
+   - Divide by 4: <InlineMath math="\frac{604,800}{4} = 151,200 \text{ arrangements}" />
+
 2. Total 8 flowers with red 3, white 3, yellow 2
+   
+   Simplify the fraction by canceling common factors:
+   
    <div className="flex flex-col gap-4">
    <BlockMath math="P = \frac{8!}{3! \times 3! \times 2!}" />
-   <BlockMath math="= \frac{40320}{6 \times 6 \times 2}" />
-   <BlockMath math="= \frac{40320}{72} = 560 \text{ ways}" />
+   <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4 \times 3!}{3! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{3! \times 2!}" />
+   <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{6 \times 2}" />
+   <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{12}" />
    </div>
+
+   Calculate with simplification:
+   - Divide 6 by 12: <InlineMath math="\frac{6}{12} = \frac{1}{2}" />
+   - So: <InlineMath math="8 \times 7 \times \frac{1}{2} \times 5 \times 4" />
+   - <InlineMath math="= 4 \times 7 \times 5 \times 4 = 560 \text{ ways}" />
 
 3. Digits 1, 1, 2, 2, 2, 3 (total 6 digits)
    
    **Digit identification:** digit 1 appears 2 times, digit 2 appears 3 times, digit 3 appears 1 time
    
+   Simplify the fraction by canceling common factors:
+   
    <div className="flex flex-col gap-4">
    <BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
-   <BlockMath math="= \frac{720}{2 \times 6 \times 1}" />
-   <BlockMath math="= \frac{720}{12} = 60 \text{ numbers}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{2! \times 3!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
    </div>
+
+   Calculate with simplification:
+   - Divide 6 by 2: <InlineMath math="\frac{6}{2} = 3" />
+   - So: <InlineMath math="3 \times 5 \times 4 = 60 \text{ numbers}" />
 
 4. The word "INDONESIA" has 9 letters
    
@@ -190,8 +238,16 @@ Identical objects **reduce** the number of arrangements because exchanging ident
    
    **Letter identification:** I appears 2 times (positions 1, 8), N appears 2 times (positions 2, 5), D appears 1 time, O appears 1 time, E appears 1 time, S appears 1 time, A appears 1 time
    
+   Simplify the fraction by canceling common factors:
+   
    <div className="flex flex-col gap-4">
    <BlockMath math="P = \frac{9!}{2! \times 2! \times 1! \times 1! \times 1! \times 1! \times 1!}" />
-   <BlockMath math="= \frac{362880}{2 \times 2}" />
-   <BlockMath math="= \frac{362880}{4} = 90720 \text{ arrangements}" />
+   <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3 \times 2!}{2! \times 2!}" />
+   <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3}{2!}" />
+   <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3}{2}" />
    </div>
+
+   Calculate with simplification:
+   - Divide by 2: <InlineMath math="\frac{8}{2} = 4" />
+   - So: <InlineMath math="9 \times 4 \times 7 \times 6 \times 5 \times 4 \times 3" />
+   - <InlineMath math="= 9 \times 4 \times 7 \times 6 \times 5 \times 4 \times 3 = 90,720 \text{ arrangements}" />

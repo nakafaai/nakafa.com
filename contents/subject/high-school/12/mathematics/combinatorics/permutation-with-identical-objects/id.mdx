@@ -1,8 +1,8 @@
 export const metadata = {
-    title: "Permutasi dengan Objek yang Sama",
-    authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "05/26/2025",
-    subject: "Kombinatorik",
+   title: "Permutasi dengan Objek yang Sama",
+   authors: [{ name: "Nabil Akbarazzima Fatih" }],
+   date: "05/26/2025",
+   subject: "Kombinatorik",
 };
 
 ## Pengertian Permutasi dengan Objek yang Sama
@@ -45,9 +45,20 @@ Identifikasi huruf: K muncul 1 kali, A muncul 3 kali (posisi ke-2, ke-6, ke-9), 
 <div className="flex flex-col gap-4">
 <BlockMath math="P = \frac{10!}{1! \times 3! \times 1! \times 1! \times 1! \times 2! \times 1!}" />
 <BlockMath math="= \frac{10!}{3! \times 2!}" />
-<BlockMath math="= \frac{3628800}{6 \times 2} = \frac{3628800}{12}" />
-<BlockMath math="= 302400 \text{ susunan}" />
 </div>
+
+Sederhanakan pecahan dengan membatalkan faktor yang sama:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3!}{3! \times 2!}" />
+<BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2!}" />
+<BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2}" />
+</div>
+
+Hitung langkah demi langkah:
+- Bagi 10 dengan 2: <InlineMath math="\frac{10}{2} = 5" />
+- Jadi: <InlineMath math="5 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4" />
+- <InlineMath math="= 5 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 = 302.400" />
 
 ### Contoh Kata PALAPA
 
@@ -56,11 +67,23 @@ Tulis huruf satu per satu: P-A-L-A-P-A
 
 **Identifikasi huruf:** P muncul 2 kali (posisi ke-1, ke-5), A muncul 3 kali (posisi ke-2, ke-4, ke-6), L muncul 1 kali
 
+Hitung setiap faktorial:
+- <InlineMath math="6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
+- <InlineMath math="2! = 2 \times 1 = 2" />
+- <InlineMath math="3! = 3 \times 2 \times 1 = 6" />
+
+Jadi, perhitungannya adalah:
+
 <div className="flex flex-col gap-4">
 <BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
-<BlockMath math="= \frac{720}{2 \times 6 \times 1} = \frac{720}{12}" />
-<BlockMath math="= 60 \text{ susunan}" />
+<BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{2! \times 3! \times 1!}" />
+<BlockMath math="= \frac{6 \times 5 \times 4}{2 \times 1}" />
+<BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
 </div>
+
+Sederhanakan dengan membagi 6 dengan 2:
+- <InlineMath math="\frac{6}{2} = 3" />
+- Jadi: <InlineMath math="3 \times 5 \times 4 = 60 \text{ susunan}" />
 
 ## Langkah Perhitungan Sistematis
 
@@ -76,48 +99,49 @@ Untuk menyelesaikan masalah permutasi dengan objek yang sama, ikuti langkah beri
 
 Mari kita terapkan langkah-langkah ini untuk mencari susunan kata "BANANA":
 
-**Langkah 1: Hitung total objek**
+1. **Hitung total objek**
 
-Tulis huruf satu per satu: B-A-N-A-N-A
+   Tulis huruf satu per satu: B-A-N-A-N-A
 
-Total huruf: <InlineMath math="n = 6" />
+   Total huruf: <InlineMath math="n = 6" />
 
-**Langkah 2: Identifikasi objek sama**
+2. **Identifikasi objek sama**
 
-Kelompokkan huruf yang identik:
-- Kelompok B: B
-- Kelompok A: A, A, A  
-- Kelompok N: N, N
+   Kelompokkan huruf yang identik:
+   - Kelompok B: B
+   - Kelompok A: A, A, A  
+   - Kelompok N: N, N
 
-**Langkah 3: Hitung frekuensi**
+3. **Hitung frekuensi**
 
-Hitung berapa kali setiap huruf muncul:
-- B muncul 1 kali
-- A muncul 3 kali
-- N muncul 2 kali
+   Hitung berapa kali setiap huruf muncul:
+   - B muncul 1 kali
+   - A muncul 3 kali
+   - N muncul 2 kali
 
-**Langkah 4: Terapkan rumus**
+4. **Terapkan rumus**
 
-Gunakan rumus permutasi dengan objek yang sama:
+   Gunakan rumus permutasi dengan objek yang sama:
 
-<div className="flex flex-col gap-4">
-<BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3!}" />
-<BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
-</div>
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3!}" />
+   <BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
+   </div>
 
-**Langkah 5: Hitung faktorial**
+5. **Hitung faktorial**
 
-Hitung nilai setiap faktorial:
-- <InlineMath math="6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
-- <InlineMath math="1! = 1" />
-- <InlineMath math="3! = 3 \times 2 \times 1 = 6" />
-- <InlineMath math="2! = 2 \times 1 = 2" />
+   Sederhanakan pecahan terlebih dahulu:
 
-Perhitungan:
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{1! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{1 \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
+   </div>
 
-<div className="flex flex-col gap-4">
-<BlockMath math="P = \frac{720}{1 \times 6 \times 2} = \frac{720}{12} = 60" />
-</div>
+   Hitung dengan penyederhanaan:
+   - Bagi 6 dengan 2: <InlineMath math="\frac{6}{2} = 3" />
+   - Jadi: <InlineMath math="3 \times 5 \times 4 = 60" />
 
 Jadi, kata "BANANA" dapat disusun dalam **60 cara yang berbeda**.
 
@@ -161,28 +185,52 @@ Objek yang sama **mengurangi** jumlah susunan karena pertukaran objek identik ti
    
    **Identifikasi huruf:** M muncul 2 kali (posisi ke-1, ke-5), A muncul 3 kali (posisi ke-2, ke-6, ke-10), T muncul 2 kali (posisi ke-3, ke-7), E muncul 1 kali, I muncul 1 kali, K muncul 1 kali
    
+   Sederhanakan pecahan dengan membatalkan faktor yang sama:
+   
    <div className="flex flex-col gap-4">
    <BlockMath math="P = \frac{10!}{2! \times 3! \times 2! \times 1! \times 1! \times 1!}" />
-   <BlockMath math="= \frac{3628800}{2 \times 6 \times 2 \times 1 \times 1 \times 1}" />
-   <BlockMath math="= \frac{3628800}{24} = 151200 \text{ susunan}" />
+   <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3!}{2! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2! \times 2!}" />
+   <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{4}" />
    </div>
 
+   Hitung dengan penyederhanaan:
+   - Perhitungan lengkap: <InlineMath math="10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 = 604.800" />
+   - Bagi dengan 4: <InlineMath math="\frac{604.800}{4} = 151.200 \text{ susunan}" />
+
 2. Total 8 bunga dengan merah 3, putih 3, kuning 2
+   
+   Sederhanakan pecahan dengan membatalkan faktor yang sama:
+   
    <div className="flex flex-col gap-4">
    <BlockMath math="P = \frac{8!}{3! \times 3! \times 2!}" />
-   <BlockMath math="= \frac{40320}{6 \times 6 \times 2}" />
-   <BlockMath math="= \frac{40320}{72} = 560 \text{ cara}" />
+   <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4 \times 3!}{3! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{3! \times 2!}" />
+   <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{6 \times 2}" />
+   <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{12}" />
    </div>
+
+   Hitung dengan penyederhanaan:
+   - Bagi 6 dengan 12: <InlineMath math="\frac{6}{12} = \frac{1}{2}" />
+   - Jadi: <InlineMath math="8 \times 7 \times \frac{1}{2} \times 5 \times 4" />
+   - <InlineMath math="= 4 \times 7 \times 5 \times 4 = 560 \text{ cara}" />
 
 3. Angka 1, 1, 2, 2, 2, 3 (total 6 digit)
    
    **Identifikasi angka:** angka 1 muncul 2 kali, angka 2 muncul 3 kali, angka 3 muncul 1 kali
    
+   Sederhanakan pecahan dengan membatalkan faktor yang sama:
+   
    <div className="flex flex-col gap-4">
    <BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
-   <BlockMath math="= \frac{720}{2 \times 6 \times 1}" />
-   <BlockMath math="= \frac{720}{12} = 60 \text{ bilangan}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{2! \times 3!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
    </div>
+
+   Hitung dengan penyederhanaan:
+   - Bagi 6 dengan 2: <InlineMath math="\frac{6}{2} = 3" />
+   - Jadi: <InlineMath math="3 \times 5 \times 4 = 60 \text{ bilangan}" />
 
 4. Kata "INDONESIA" memiliki 9 huruf
    
@@ -190,8 +238,16 @@ Objek yang sama **mengurangi** jumlah susunan karena pertukaran objek identik ti
    
    **Identifikasi huruf:** I muncul 2 kali (posisi ke-1, ke-8), N muncul 2 kali (posisi ke-2, ke-5), D muncul 1 kali, O muncul 1 kali, E muncul 1 kali, S muncul 1 kali, A muncul 1 kali
    
+   Sederhanakan pecahan dengan membatalkan faktor yang sama:
+   
    <div className="flex flex-col gap-4">
    <BlockMath math="P = \frac{9!}{2! \times 2! \times 1! \times 1! \times 1! \times 1! \times 1!}" />
-   <BlockMath math="= \frac{362880}{2 \times 2}" />
-   <BlockMath math="= \frac{362880}{4} = 90720 \text{ susunan}" />
+   <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3 \times 2!}{2! \times 2!}" />
+   <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3}{2!}" />
+   <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3}{2}" />
    </div>
+
+   Hitung dengan penyederhanaan:
+   - Bagi dengan 2: <InlineMath math="\frac{8}{2} = 4" />
+   - Jadi: <InlineMath math="9 \times 4 \times 7 \times 6 \times 5 \times 4 \times 3" />
+   - <InlineMath math="= 9 \times 4 \times 7 \times 6 \times 5 \times 4 \times 3 = 90.720 \text{ susunan}" />
