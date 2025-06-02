@@ -4,3 +4,153 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Kombinatorik",
 };
+
+## Pengertian Peluang
+
+Pernahkah kamu bertanya-tanya berapa kemungkinan hujan turun hari ini? Atau berapa peluang tim favoritmu menang dalam pertandingan? Dalam kehidupan sehari-hari, kita sering berhadapan dengan situasi yang tidak pasti, dan di sinilah konsep **peluang** menjadi penting.
+
+**Peluang** adalah ukuran kemungkinan terjadinya suatu kejadian. Peluang memberikan nilai numerik antara 0 dan 1, dimana:
+- Peluang 0 berarti kejadian tersebut **mustahil** terjadi
+- Peluang 1 berarti kejadian tersebut **pasti** terjadi
+- Peluang 0.5 berarti kejadian tersebut memiliki kemungkinan **sama besar** untuk terjadi atau tidak
+
+Konsep peluang membantu kita membuat keputusan berdasarkan data dan analisis, bukan hanya berdasarkan intuisi semata.
+
+## Ruang Sampel dan Kejadian
+
+Sebelum menghitung peluang, kita perlu memahami dua konsep fundamental:
+
+**Ruang Sampel (S)** adalah himpunan semua hasil yang mungkin terjadi dari suatu percobaan. Misalnya, ketika melempar dua buah dadu, ruang sampel terdiri dari semua pasangan angka yang mungkin muncul.
+
+**Kejadian (A)** adalah himpunan bagian dari ruang sampel yang merepresentasikan hasil yang kita inginkan atau hasil yang sedang kita tinjau.
+
+**Contoh konkret:** ketika melempar dua koin secara bersamaan, ruang sampelnya adalah <InlineMath math="\{AA, AG, GA, GG\}" />, dimana A = Angka dan G = Gambar. Jika kita ingin mengetahui peluang munculnya minimal satu gambar, maka kejadian A = <InlineMath math="\{AG, GA, GG\}" />.
+
+## Formula Peluang
+
+Untuk menghitung peluang suatu kejadian, kita menggunakan **rumus peluang klasik**:
+
+<BlockMath math="P(A) = \frac{n(A)}{n(S)}" />
+
+Dimana:
+- <InlineMath math="P(A)" /> = peluang terjadinya kejadian A
+- <InlineMath math="n(A)" /> = banyaknya hasil yang menguntungkan (anggota kejadian A)
+- <InlineMath math="n(S)" /> = banyaknya semua hasil yang mungkin (anggota ruang sampel)
+
+**Syarat penting:** Rumus ini berlaku ketika semua hasil dalam ruang sampel memiliki **peluang yang sama** untuk terjadi (equiprobable).
+
+**Sifat-sifat fundamental peluang:**
+- <InlineMath math="0 \leq P(A) \leq 1" /> (peluang selalu antara 0 dan 1)
+- <InlineMath math="P(A) + P(A') = 1" />, dimana <InlineMath math="A'" /> adalah **komplemen** dari kejadian A
+
+**Konsep Komplemen:** Komplemen kejadian A adalah semua hasil dalam ruang sampel yang **bukan** termasuk kejadian A. Misalnya, jika A adalah "mendapat angka genap", maka A' adalah "mendapat angka ganjil".
+
+## Penerapan dalam Situasi Nyata
+
+**Analisis Pelemparan Dua Dadu:**
+
+Ketika melempar dua buah dadu, total kemungkinan hasil adalah <InlineMath math="6 \times 6 = 36" /> pasangan. Mari kita analisis peluang mendapatkan jumlah mata dadu 9:
+
+**Langkah sistematis:**
+
+1. Identifikasi semua cara mendapat jumlah 9:
+   - Dadu pertama 3, dadu kedua 6: (3,6)
+   - Dadu pertama 4, dadu kedua 5: (4,5)  
+   - Dadu pertama 5, dadu kedua 4: (5,4)
+   - Dadu pertama 6, dadu kedua 3: (6,3)
+
+2. Hitung banyaknya kejadian yang menguntungkan: <InlineMath math="n(A) = 4" />
+
+3. Tentukan peluang: 
+    <BlockMath math="P(\text{jumlah} = 9) = \frac{4}{36} = \frac{1}{9} \approx 0.111" />
+
+**Strategi Pemasaran Berbasis Peluang:**
+
+Sebuah perusahaan minuman mengadakan program hadiah dengan memasukkan kupon dalam setiap kotak susu. Berdasarkan data historis, peluang seseorang membeli kotak susu yang mengandung hadiah adalah <InlineMath math="\frac{3}{32}" />.
+
+**Interpretasi praktis:** Dari setiap 32 kotak susu yang diproduksi, rata-rata 3 kotak berisi hadiah. Informasi ini membantu perusahaan:
+- Merencanakan anggaran promosi
+- Memperkirakan respons konsumen  
+- Menentukan target penjualan
+
+**Permainan Strategis:**
+
+Dalam permainan dadu tradisional, pemain sering menggunakan pemahaman peluang untuk membuat keputusan. Misalnya, peluang mendapatkan jumlah 7 (yang paling sering muncul) adalah:
+
+Cara mendapat jumlah 7: (1,6), (2,5), (3,4), (4,3), (5,2), (6,1) = 6 cara
+
+<BlockMath math="P(\text{jumlah} = 7) = \frac{6}{36} = \frac{1}{6} \approx 0.167" />
+
+Ini adalah peluang tertinggi dibandingkan jumlah lainnya, sehingga sering dijadikan dasar strategi permainan.
+
+## Latihan
+
+1. Dalam pelemparan dua buah dadu, tentukan peluang mendapatkan jumlah mata dadu yang merupakan bilangan genap.
+
+2. Sebuah kotak berisi 5 bola merah, 3 bola biru, dan 2 bola hijau. Jika diambil satu bola secara acak, tentukan peluang mendapatkan bola yang bukan merah.
+
+3. Dalam pelemparan tiga koin sekaligus, tentukan peluang mendapatkan tepat dua gambar.
+
+4. Sebuah perusahaan memproduksi 1000 unit produk. Berdasarkan pengalaman, 5% dari produk tersebut mengalami cacat. Jika seorang konsumen membeli satu produk secara acak, berapa peluang produk tersebut tidak cacat?
+
+### Kunci Jawaban
+
+1. **Jawaban: <InlineMath math="\frac{1}{2}" />**
+   
+   **Langkah penyelesaian sistematis:**
+   
+   Ruang sampel pelemparan dua dadu: <InlineMath math="n(S) = 36" />
+   
+   **Identifikasi semua jumlah genap dan cara memperolehnya:**
+   - Jumlah 2: (1,1) → 1 cara
+   - Jumlah 4: (1,3), (2,2), (3,1) → 3 cara  
+   - Jumlah 6: (1,5), (2,4), (3,3), (4,2), (5,1) → 5 cara
+   - Jumlah 8: (2,6), (3,5), (4,4), (5,3), (6,2) → 5 cara
+   - Jumlah 10: (4,6), (5,5), (6,4) → 3 cara
+   - Jumlah 12: (6,6) → 1 cara
+   
+   **Total kejadian menguntungkan:** <InlineMath math="n(A) = 1 + 3 + 5 + 5 + 3 + 1 = 18" />
+   
+   **Perhitungan peluang:**
+   <BlockMath math="P(\text{genap}) = \frac{18}{36} = \frac{1}{2} = 0.5" />
+
+2. **Jawaban: <InlineMath math="\frac{1}{2}" />**
+   
+   **Langkah penyelesaian:**
+   
+   **Hitung total bola:** <InlineMath math="5 + 3 + 2 = 10" /> bola
+   
+   **Identifikasi bola yang bukan merah:** <InlineMath math="3 \text{ biru} + 2 \text{ hijau} = 5" /> bola
+   
+   **Perhitungan peluang:**
+   <BlockMath math="P(\text{bukan merah}) = \frac{5}{10} = \frac{1}{2} = 0.5" />
+
+3. **Jawaban: <InlineMath math="\frac{3}{8}" />**
+   
+   **Langkah penyelesaian:**
+   
+   **Ruang sampel pelemparan tiga koin:** <InlineMath math="\{AAA, AAG, AGA, AGG, GAA, GAG, GGA, GGG\}" />
+   
+   **Total kemungkinan:** <InlineMath math="n(S) = 2^3 = 8" />
+   
+   **Kejadian tepat dua gambar:** <InlineMath math="\{AGG, GAG, GGA\}" />
+   
+   **Banyaknya kejadian menguntungkan:** <InlineMath math="n(A) = 3" />
+   
+   **Perhitungan peluang:**
+   <BlockMath math="P(\text{tepat 2 gambar}) = \frac{3}{8} = 0.375" />
+
+4. **Jawaban: <InlineMath math="\frac{19}{20}" /> atau 95%**
+   
+   **Langkah penyelesaian:**
+   
+   **Total produk:** 1000 unit
+   
+   **Produk cacat:** <InlineMath math="5\% \times 1000 = 50" /> unit
+   
+   **Produk tidak cacat:** <InlineMath math="1000 - 50 = 950" /> unit
+   
+   **Perhitungan peluang:**
+   <BlockMath math="P(\text{tidak cacat}) = \frac{950}{1000} = \frac{19}{20} = 0.95 = 95\%" />
+   
+   **Interpretasi:** Ada peluang 95% bahwa produk yang dibeli konsumen tidak mengalami cacat.

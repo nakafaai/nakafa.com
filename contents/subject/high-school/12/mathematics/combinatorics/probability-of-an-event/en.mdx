@@ -4,3 +4,153 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Combinatorics",
 };
+
+## Understanding Probability
+
+Have you ever wondered about the chances of rain today? Or what's the probability of your favorite team winning a match? In daily life, we often face uncertain situations, and this is where the concept of **probability** becomes important.
+
+**Probability** is a measure of the likelihood of an event occurring. Probability gives a numerical value between 0 and 1, where:
+- Probability 0 means the event is **impossible** to occur
+- Probability 1 means the event will **certainly** occur
+- Probability 0.5 means the event has an **equal chance** of occurring or not
+
+The concept of probability helps us make decisions based on data and analysis, not just based on intuition alone.
+
+## Sample Space and Events
+
+Before calculating probability, we need to understand two fundamental concepts:
+
+**Sample Space (S)** is the set of all possible outcomes from an experiment. For example, when rolling two dice, the sample space consists of all possible pairs of numbers that can appear.
+
+**Event (A)** is a subset of the sample space that represents the outcome we want or the outcome we are examining.
+
+**Concrete example:** when flipping two coins simultaneously, the sample space is <InlineMath math="\{AA, AG, GA, GG\}" />, where A = Heads and G = Tails. If we want to know the probability of getting at least one tail, then event A = <InlineMath math="\{AG, GA, GG\}" />.
+
+## Probability Formula
+
+To calculate the probability of an event, we use the **classical probability formula**:
+
+<BlockMath math="P(A) = \frac{n(A)}{n(S)}" />
+
+Where:
+- <InlineMath math="P(A)" /> = probability of event A occurring
+- <InlineMath math="n(A)" /> = number of favorable outcomes (members of event A)
+- <InlineMath math="n(S)" /> = number of all possible outcomes (members of sample space)
+
+**Important condition:** This formula applies when all outcomes in the sample space have **equal probability** of occurring (equiprobable).
+
+**Fundamental properties of probability:**
+- <InlineMath math="0 \leq P(A) \leq 1" /> (probability is always between 0 and 1)
+- <InlineMath math="P(A) + P(A') = 1" />, where <InlineMath math="A'" /> is the **complement** of event A
+
+**Complement Concept:** The complement of event A is all outcomes in the sample space that are **not** included in event A. For example, if A is "getting an even number", then A' is "getting an odd number".
+
+## Applications in Real Situations
+
+**Analysis of Rolling Two Dice:**
+
+When rolling two dice, the total possible outcomes are <InlineMath math="6 \times 6 = 36" /> pairs. Let's analyze the probability of getting a sum of 9:
+
+**Systematic steps:**
+
+1. Identify all ways to get sum 9:
+   - First die 3, second die 6: (3,6)
+   - First die 4, second die 5: (4,5)  
+   - First die 5, second die 4: (5,4)
+   - First die 6, second die 3: (6,3)
+
+2. Count the number of favorable events: <InlineMath math="n(A) = 4" />
+
+3. Determine probability: 
+    <BlockMath math="P(\text{sum} = 9) = \frac{4}{36} = \frac{1}{9} \approx 0.111" />
+
+**Probability-Based Marketing Strategy:**
+
+A beverage company runs a prize program by inserting coupons in each milk box. Based on historical data, the probability of someone buying a milk box containing a prize is <InlineMath math="\frac{3}{32}" />.
+
+**Practical interpretation:** Out of every 32 milk boxes produced, an average of 3 boxes contain prizes. This information helps the company:
+- Plan promotional budgets
+- Estimate consumer response  
+- Determine sales targets
+
+**Strategic Gaming:**
+
+In traditional dice games, players often use probability understanding to make decisions. For example, the probability of getting sum 7 (which occurs most frequently) is:
+
+Ways to get sum 7: (1,6), (2,5), (3,4), (4,3), (5,2), (6,1) = 6 ways
+
+<BlockMath math="P(\text{sum} = 7) = \frac{6}{36} = \frac{1}{6} \approx 0.167" />
+
+This is the highest probability compared to other sums, so it's often used as the basis for game strategy.
+
+## Practice Problems
+
+1. In rolling two dice, determine the probability of getting a sum that is an even number.
+
+2. A box contains 5 red balls, 3 blue balls, and 2 green balls. If one ball is drawn randomly, determine the probability of getting a ball that is not red.
+
+3. In flipping three coins simultaneously, determine the probability of getting exactly two tails.
+
+4. A company produces 1000 units of product. Based on experience, 5% of these products are defective. If a consumer buys one product randomly, what is the probability that the product is not defective?
+
+### Answer Key
+
+1. **Answer: <InlineMath math="\frac{1}{2}" />**
+   
+   **Systematic solution steps:**
+   
+   Sample space for rolling two dice: <InlineMath math="n(S) = 36" />
+   
+   **Identify all even sums and ways to obtain them:**
+   - Sum 2: (1,1) → 1 way
+   - Sum 4: (1,3), (2,2), (3,1) → 3 ways  
+   - Sum 6: (1,5), (2,4), (3,3), (4,2), (5,1) → 5 ways
+   - Sum 8: (2,6), (3,5), (4,4), (5,3), (6,2) → 5 ways
+   - Sum 10: (4,6), (5,5), (6,4) → 3 ways
+   - Sum 12: (6,6) → 1 way
+   
+   **Total favorable events:** <InlineMath math="n(A) = 1 + 3 + 5 + 5 + 3 + 1 = 18" />
+   
+   **Probability calculation:**
+   <BlockMath math="P(\text{even}) = \frac{18}{36} = \frac{1}{2} = 0.5" />
+
+2. **Answer: <InlineMath math="\frac{1}{2}" />**
+   
+   **Solution steps:**
+   
+   **Count total balls:** <InlineMath math="5 + 3 + 2 = 10" /> balls
+   
+   **Identify balls that are not red:** <InlineMath math="3 \text{ blue} + 2 \text{ green} = 5" /> balls
+   
+   **Probability calculation:**
+   <BlockMath math="P(\text{not red}) = \frac{5}{10} = \frac{1}{2} = 0.5" />
+
+3. **Answer: <InlineMath math="\frac{3}{8}" />**
+   
+   **Solution steps:**
+   
+   **Sample space for three coin flips:** <InlineMath math="\{AAA, AAG, AGA, AGG, GAA, GAG, GGA, GGG\}" />
+   
+   **Total possibilities:** <InlineMath math="n(S) = 2^3 = 8" />
+   
+   **Event exactly two tails:** <InlineMath math="\{AGG, GAG, GGA\}" />
+   
+   **Number of favorable events:** <InlineMath math="n(A) = 3" />
+   
+   **Probability calculation:**
+   <BlockMath math="P(\text{exactly 2 tails}) = \frac{3}{8} = 0.375" />
+
+4. **Answer: <InlineMath math="\frac{19}{20}" /> or 95%**
+   
+   **Solution steps:**
+   
+   **Total products:** 1000 units
+   
+   **Defective products:** <InlineMath math="5\% \times 1000 = 50" /> units
+   
+   **Non-defective products:** <InlineMath math="1000 - 50 = 950" /> units
+   
+   **Probability calculation:**
+   <BlockMath math="P(\text{not defective}) = \frac{950}{1000} = \frac{19}{20} = 0.95 = 95\%" />
+   
+   **Interpretation:** There is a 95% probability that the product purchased by a consumer is not defective.
