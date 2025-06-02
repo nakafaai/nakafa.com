@@ -4,3 +4,118 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Combinatorics",
 };
+
+## Understanding Circular Permutation
+
+Have you ever sat with friends around a round table? Or played traditional games that form a circle? Such situations involve the concept of **circular permutation**.
+
+Circular permutation is the arrangement of objects arranged around a circle. Unlike regular permutation which is arranged in a straight line, circular permutation considers the **relative positions** between objects in circular formation.
+
+Why is it called circular? Because in circular arrangements, there is no fixed starting or ending position. Each object can serve as a reference point, so several different arrangements in a straight line can be considered **the same** in circular arrangement.
+
+## Circular Permutation Formula
+
+To determine the number of ways to arrange <InlineMath math="n" /> different objects in circular formation, we use the formula:
+
+<BlockMath math="P_n = (n-1)!" />
+
+Where:
+- <InlineMath math="P_n" /> = circular permutation of <InlineMath math="n" /> objects
+- <InlineMath math="n" /> = number of objects to be arranged
+- <InlineMath math="(n-1)!" /> = factorial of <InlineMath math="(n-1)" />
+
+**Why is the formula <InlineMath math="(n-1)!" /> and not <InlineMath math="n!" />?**
+
+Key concept: in circular arrangements, **rotation does not change the arrangement**. Let's understand this with an analogy:
+
+Imagine 3 children (A, B, C) sitting around a round table. The arrangements ABC, BCA, and CAB are actually **the same arrangement** when viewed from a circular perspective, because their relative positions remain unchanged.
+
+Calculation steps:
+1. Fix one object as a **reference point** (for example, child A)
+2. Arrange other objects relative to this reference point
+3. Remaining objects to be arranged: <InlineMath math="n-1" />
+4. Number of ways: <InlineMath math="(n-1)!" />
+
+For 3 children: <InlineMath math="P_3 = (3-1)! = 2! = 2 \times 1 = 2" /> ways.
+
+## Applications in Daily Life
+
+Circular permutation is often encountered in various real situations:
+
+**Circular Seating:**
+
+Five students will sit around a round table for discussion. The number of ways they can sit is:
+
+<BlockMath math="P_5 = (5-1)! = 4! = 4 \times 3 \times 2 \times 1 = 24 \text{ ways}" />
+
+**Traditional Games:**
+
+Eight children play in a circle. The number of different formations they can form is:
+
+<BlockMath math="P_8 = (8-1)! = 7! = 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 5.040 \text{ ways}" />
+
+**Situations with Special Conditions:**
+
+When there are **additional conditions** such as certain objects must be adjacent, we use **grouping technique**:
+
+Example: 4 married couples sit in a circle, each couple must be adjacent.
+
+**Solution strategy:**
+1. **Group** each couple as one unit → 4 units
+2. **Arrange these units** in a circle: <InlineMath math="(4-1)! = 3! = 6" /> ways
+3. **Arrange positions** within each couple: <InlineMath math="2!" /> ways per couple
+4. **Total calculation:** <InlineMath math="3! \times (2!)^4 = 6 \times 2^4 = 6 \times 16 = 96" /> ways
+
+## Practice Problems
+
+1. There are 6 friends who will sit around a campfire. How many ways can they sit?
+
+2. A bracelet will be made from 8 different colored beads. How many ways can the beads be arranged on the bracelet?
+
+3. Five married couples will sit around a round table with the condition that each husband must sit next to his wife. How many possible seating arrangements are there?
+
+4. Seven students will play a circular game, but two specific students must not sit adjacent to each other. How many ways can they form a circle?
+
+### Answer Key
+
+1. **Answer: 120 ways**
+   
+   Solution steps:
+   - Given: <InlineMath math="n = 6" /> people
+   - Circular permutation formula: <InlineMath math="P_n = (n-1)!" />
+   - <InlineMath math="P_6 = (6-1)! = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120" />
+   
+   Therefore, 6 people can sit around a campfire in 120 different ways.
+
+2. **Answer: 5,040 ways**
+   
+   Solution steps:
+   - Given: 8 different beads will be arranged in a circle
+   - Circular permutation formula: <InlineMath math="P_n = (n-1)!" />
+   - Calculation: <InlineMath math="P_8 = (8-1)! = 7!" />
+   - <InlineMath math="7! = 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 5.040" />
+   
+   The bracelet can be made in 5,040 different arrangements.
+
+3. **Answer: 768 ways**
+   
+   Solution steps:
+   - Given: 5 married couples (10 people), each couple must be adjacent
+   - **Grouping technique:** Consider each couple as one unit → 5 units
+   - Circular permutation of 5 units: <InlineMath math="(5-1)! = 4! = 4 \times 3 \times 2 \times 1 = 24" />
+   - Each couple can exchange positions: <InlineMath math="2! = 2" /> ways per couple
+   - Total: <InlineMath math="24 \times 2^5 = 24 \times 32 = 768" />
+   
+   There are 768 seating arrangements that meet the conditions.
+
+4. **Answer: 480 ways**
+   
+   Solution steps (**complement method**):
+   - Total ways without restrictions: <InlineMath math="(7-1)! = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
+   - **Count unwanted ways** (2 students sitting adjacent):
+     - Consider 2 students as one unit: <InlineMath math="(6-1)! = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120" />
+     - 2 students can exchange positions: <InlineMath math="2! = 2" />
+     - Total adjacent arrangements: <InlineMath math="120 \times 2 = 240" />
+   - **Desired ways:** <InlineMath math="720 - 240 = 480" />
+   
+   Therefore, there are 480 ways to form a circle where the two students are not adjacent.

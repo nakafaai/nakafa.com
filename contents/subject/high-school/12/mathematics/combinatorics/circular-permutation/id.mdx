@@ -4,3 +4,118 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Kombinatorik",
 };
+
+## Pengertian Permutasi Siklis
+
+Pernahkah kalian duduk bersama teman-teman mengelilingi meja bundar? Atau bermain permainan tradisional yang membentuk lingkaran? Situasi seperti ini melibatkan konsep **permutasi siklis**.
+
+Permutasi siklis adalah susunan objek-objek yang disusun mengelilingi suatu lingkaran. Berbeda dengan permutasi biasa yang disusun dalam barisan lurus, permutasi siklis mempertimbangkan **posisi relatif** antar objek dalam formasi melingkar.
+
+Mengapa disebut siklis? Karena dalam susunan melingkar, tidak ada posisi awal atau akhir yang tetap. Setiap objek dapat menjadi titik referensi, sehingga beberapa susunan yang berbeda dalam barisan lurus bisa dianggap **sama** dalam susunan melingkar.
+
+## Rumus Permutasi Siklis
+
+Untuk menentukan banyaknya cara menyusun <InlineMath math="n" /> objek berbeda dalam formasi melingkar, kita menggunakan rumus:
+
+<BlockMath math="P_n = (n-1)!" />
+
+Dimana:
+- <InlineMath math="P_n" /> = permutasi siklis dari <InlineMath math="n" /> objek
+- <InlineMath math="n" /> = banyaknya objek yang akan disusun
+- <InlineMath math="(n-1)!" /> = faktorial dari <InlineMath math="(n-1)" />
+
+**Mengapa rumusnya <InlineMath math="(n-1)!" /> dan bukan <InlineMath math="n!" />?**
+
+Konsep kunci: dalam susunan melingkar, **rotasi tidak mengubah susunan**. Mari kita pahami dengan analogi:
+
+Bayangkan 3 anak (A, B, C) duduk mengelilingi meja bundar. Susunan ABC, BCA, dan CAB sebenarnya adalah **susunan yang sama** jika dilihat dari perspektif lingkaran, karena posisi relatif mereka tidak berubah.
+
+Langkah perhitungan:
+1. Tetapkan satu objek sebagai **titik referensi** (misalnya anak A)
+2. Susun objek lainnya terhadap titik referensi ini
+3. Sisa objek yang perlu disusun: <InlineMath math="n-1" />
+4. Banyaknya cara: <InlineMath math="(n-1)!" />
+
+Untuk 3 anak: <InlineMath math="P_3 = (3-1)! = 2! = 2 \times 1 = 2" /> cara.
+
+## Penerapan dalam Kehidupan Sehari-hari
+
+Permutasi siklis sering kita temui dalam berbagai situasi nyata:
+
+**Tempat Duduk Melingkar:**
+
+Lima siswa akan duduk mengelilingi meja bundar untuk berdiskusi. Banyaknya cara mereka dapat duduk adalah:
+
+<BlockMath math="P_5 = (5-1)! = 4! = 4 \times 3 \times 2 \times 1 = 24 \text{ cara}" />
+
+**Permainan Tradisional:**
+
+Delapan anak bermain dalam lingkaran. Banyaknya formasi berbeda yang dapat mereka bentuk adalah:
+
+<BlockMath math="P_8 = (8-1)! = 7! = 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 5.040 \text{ cara}" />
+
+**Situasi dengan Syarat Khusus:**
+
+Ketika ada **syarat tambahan** seperti objek tertentu harus berdampingan, kita menggunakan **teknik pengelompokan**:
+
+Contoh: 4 pasang suami istri duduk melingkar, setiap pasangan harus berdampingan.
+
+**Strategi penyelesaian:**
+1. **Kelompokkan** setiap pasangan sebagai satu unit → 4 unit
+2. **Susun unit-units** ini melingkar: <InlineMath math="(4-1)! = 3! = 6" /> cara
+3. **Atur posisi** dalam setiap pasangan: <InlineMath math="2!" /> cara per pasangan
+4. **Total perhitungan:** <InlineMath math="3! \times (2!)^4 = 6 \times 2^4 = 6 \times 16 = 96" /> cara
+
+## Latihan
+
+1. Terdapat 6 orang teman yang akan duduk mengelilingi api unggun. Berapa banyak cara mereka dapat duduk?
+
+2. Sebuah gelang akan dibuat dari 8 manik-manik berbeda warna. Berapa banyak cara menyusun manik-manik tersebut pada gelang?
+
+3. Lima pasangan suami istri akan duduk mengelilingi meja bundar dengan syarat setiap suami harus duduk bersebelahan dengan istrinya. Berapa banyak cara duduk yang mungkin?
+
+4. Tujuh siswa akan bermain permainan melingkar, tetapi dua siswa tertentu tidak boleh duduk bersebelahan. Berapa banyak cara mereka dapat membentuk lingkaran?
+
+### Kunci Jawaban
+
+1. **Jawaban: 120 cara**
+   
+   Langkah penyelesaian:
+   - Diketahui: <InlineMath math="n = 6" /> orang
+   - Rumus permutasi siklis: <InlineMath math="P_n = (n-1)!" />
+   - <InlineMath math="P_6 = (6-1)! = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120" />
+   
+   Jadi, 6 orang dapat duduk mengelilingi api unggun dengan 120 cara berbeda.
+
+2. **Jawaban: 5.040 cara**
+   
+   Langkah penyelesaian:
+   - Diketahui: 8 manik-manik berbeda akan disusun melingkar
+   - Rumus permutasi siklis: <InlineMath math="P_n = (n-1)!" />
+   - Perhitungan: <InlineMath math="P_8 = (8-1)! = 7!" />
+   - <InlineMath math="7! = 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 5.040" />
+   
+   Gelang dapat dibuat dengan 5.040 cara penyusunan berbeda.
+
+3. **Jawaban: 768 cara**
+   
+   Langkah penyelesaian:
+   - Diketahui: 5 pasangan suami istri (10 orang), setiap pasangan harus berdampingan
+   - **Teknik pengelompokan:** Anggap setiap pasangan sebagai satu unit → 5 unit
+   - Permutasi siklis 5 unit: <InlineMath math="(5-1)! = 4! = 4 \times 3 \times 2 \times 1 = 24" />
+   - Setiap pasangan dapat bertukar posisi: <InlineMath math="2! = 2" /> cara per pasangan
+   - Total: <InlineMath math="24 \times 2^5 = 24 \times 32 = 768" />
+   
+   Terdapat 768 cara duduk yang memenuhi syarat.
+
+4. **Jawaban: 480 cara**
+   
+   Langkah penyelesaian (**metode komplemen**):
+   - Total cara tanpa syarat: <InlineMath math="(7-1)! = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
+   - **Hitung cara yang TIDAK diinginkan** (2 siswa bersebelahan):
+     - Anggap 2 siswa sebagai satu unit: <InlineMath math="(6-1)! = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120" />
+     - 2 siswa dapat bertukar posisi: <InlineMath math="2! = 2" />
+     - Total cara bersebelahan: <InlineMath math="120 \times 2 = 240" />
+   - **Cara yang diinginkan:** <InlineMath math="720 - 240 = 480" />
+   
+   Jadi, ada 480 cara membentuk lingkaran dimana kedua siswa tidak bersebelahan.

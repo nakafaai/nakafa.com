@@ -17,6 +17,7 @@ import { cn } from "./lib/utils";
 import { filterWhitespaceNodes } from "./lib/utils/markdown";
 import type {
   AnchorProps,
+  BlockquoteProps,
   CodeProps,
   EmProps,
   HeadingProps,
@@ -73,6 +74,9 @@ const components = {
   ),
   strong: (props: StrongProps) => (
     <strong className="font-medium text-foreground" {...props} />
+  ),
+  blockquote: (props: BlockquoteProps) => (
+    <blockquote className="mt-6 border-l-2 pl-6 italic" {...props} />
   ),
   a: ({ href, children, ...props }: AnchorProps) => {
     const className = buttonVariants({ variant: "link" });
