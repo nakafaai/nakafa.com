@@ -4,3 +4,193 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Combinatorics",
 };
+
+## Understanding Combination
+
+Imagine you are asked to choose 3 friends to join a futsal team. Does the order of selection matter? Of course not! What matters is **who** is selected, not the order in which they are chosen.
+
+This is the fundamental difference between combination and permutation. **Combination** is a way to select a certain number of objects from a larger collection of objects, where **order is not considered**.
+
+In daily life, we often encounter combinations when:
+- Choosing food menus from a list of options
+- Determining team members for an activity
+- Selecting elective subjects at school
+- Determining color combinations for design
+
+The difference from permutation is very clear: if in permutation ABC is different from BAC, then in combination ABC is the same as BAC because the members are the same, only the order is different.
+
+## Combination Formula
+
+To determine the number of ways to select <InlineMath math="k" /> objects from <InlineMath math="n" /> available objects, we use the combination formula:
+
+<BlockMath math="C(n,k) = \binom{n}{k} = \frac{n!}{(n-k)! \times k!}" />
+
+Where:
+- <InlineMath math="C(n,k)" /> or <InlineMath math="\binom{n}{k}" /> = combination of <InlineMath math="k" /> objects from <InlineMath math="n" /> objects
+- <InlineMath math="n" /> = total available objects
+- <InlineMath math="k" /> = number of objects to be selected
+- <InlineMath math="n!" /> = factorial of <InlineMath math="n" />
+
+**Why is this formula different from permutation?**
+
+The combination formula actually comes from the permutation formula divided by <InlineMath math="k!" />:
+
+<BlockMath math="C(n,k) = \frac{P(n,k)}{k!} = \frac{n!}{(n-k)! \times k!}" />
+
+Division by <InlineMath math="k!" /> is done because in combinations, we **don't care about order**. Each group of <InlineMath math="k" /> objects has <InlineMath math="k!" /> different arrangement possibilities, but they are all considered **the same** in combinations.
+
+## Applications in Real Situations
+
+**Sports Team Formation:**
+
+From 10 available students, how many ways can we select 5 students for a basketball team?
+
+<div className="flex flex-col gap-4">
+<BlockMath math="C(10,5) = \frac{10!}{5! \times 5!}" />
+<BlockMath math="C(10,5) = \frac{10 \times 9 \times 8 \times 7 \times 6}{5 \times 4 \times 3 \times 2 \times 1} = \frac{30.240}{120} = 252 \text{ ways}" />
+</div>
+
+**Food Menu Selection:**
+
+A restaurant offers 8 types of food and you can choose 3 types. How many possible combination choices are there?
+
+<div className="flex flex-col gap-4">
+<BlockMath math="C(8,3) = \frac{8!}{5! \times 3!}" />
+<BlockMath math="C(8,3) = \frac{8 \times 7 \times 6}{3 \times 2 \times 1} = \frac{336}{6} = 56 \text{ combinations}" />
+</div>
+
+**Situations with Special Conditions:**
+
+Sometimes there are **certain restrictions** in selection. For example, from 12 students (7 males and 5 females), we must select 4 students with the condition of at least 2 females.
+
+**Solution strategy:**
+1. **Count all possibilities** that meet the conditions
+2. **Separate based on conditions:** 2 females + 2 males, 3 females + 1 male, or 4 females
+3. **Sum** all possibilities
+
+**Detailed calculations:**
+
+**Case 1:** 2 females + 2 males
+<div className="flex flex-col gap-4">
+<BlockMath math="C(5,2) \times C(7,2) = \frac{5!}{3! \times 2!} \times \frac{7!}{5! \times 2!}" />
+<BlockMath math="= \frac{5 \times 4}{2 \times 1} \times \frac{7 \times 6}{2 \times 1} = 10 \times 21 = 210" />
+</div>
+
+**Case 2:** 3 females + 1 male
+<div className="flex flex-col gap-4">
+<BlockMath math="C(5,3) \times C(7,1) = \frac{5!}{2! \times 3!} \times \frac{7!}{6! \times 1!}" />
+<BlockMath math="= \frac{5 \times 4}{2 \times 1} \times 7 = 10 \times 7 = 70" />
+</div>
+
+**Case 3:** 4 females + 0 males
+<div className="flex flex-col gap-4">
+<BlockMath math="C(5,4) = \frac{5!}{1! \times 4!} = \frac{5}{1} = 5" />
+</div>
+
+**Total:** <InlineMath math="210 + 70 + 5 = 285" /> ways
+
+## Practice Problems
+
+1. From 8 different books, how many ways can you choose 3 books to read during vacation?
+
+2. A futsal team has 12 players. How many ways can they select 5 players to play on the field?
+
+3. In a box there are 6 red balls and 4 blue balls. How many ways can you take 5 balls with the condition of at least 3 red balls?
+
+4. A student must choose 4 subjects from 10 available subjects. If 6 subjects are mandatory and 4 subjects are elective, how many ways can they choose if there must be at least 2 mandatory subjects?
+
+### Answer Key
+
+1. **Answer: 56 ways**
+   
+   Solution steps:
+   
+   Given: <InlineMath math="n = 8" /> books, select <InlineMath math="k = 3" /> books
+   
+   Combination formula:
+   
+   <div className="flex flex-col gap-4">
+      <BlockMath math="C(n,k) = \frac{n!}{(n-k)! \times k!}" />
+      <BlockMath math="C(8,3) = \frac{8!}{5! \times 3!} = \frac{8 \times 7 \times 6}{3 \times 2 \times 1} = \frac{336}{6} = 56" />
+   </div>
+   
+   Therefore, there are 56 ways to choose 3 books from 8 available books.
+
+2. **Answer: 792 ways**
+   
+   Solution steps:
+   
+   Given: <InlineMath math="n = 12" /> players, select <InlineMath math="k = 5" /> players
+   
+   Combination formula:
+   
+   <div className="flex flex-col gap-4">
+      <BlockMath math="C(12,5) = \frac{12!}{7! \times 5!}" />
+      <BlockMath math="C(12,5) = \frac{12 \times 11 \times 10 \times 9 \times 8}{5 \times 4 \times 3 \times 2 \times 1} = \frac{95.040}{120} = 792" />
+   </div>
+   
+   The futsal team can select 5 players from 12 players in 792 different ways.
+
+3. **Answer: 186 ways**
+   
+   Solution steps (**case method**):
+   
+   Total balls: 6 red + 4 blue = 10 balls
+   
+   Take 5 balls with at least 3 red balls
+   
+   **Detailed calculation for each case:**
+   
+   **Case 1:** 3 red + 2 blue
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(6,3) \times C(4,2) = \frac{6!}{3! \times 3!} \times \frac{4!}{2! \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{3 \times 2 \times 1} \times \frac{4 \times 3}{2 \times 1} = 20 \times 6 = 120" />
+   </div>
+   
+   **Case 2:** 4 red + 1 blue
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(6,4) \times C(4,1) = \frac{6!}{2! \times 4!} \times \frac{4!}{3! \times 1!}" />
+   <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times 4 = 15 \times 4 = 60" />
+   </div>
+   
+   **Case 3:** 5 red + 0 blue
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(6,5) \times C(4,0) = \frac{6!}{1! \times 5!} \times \frac{4!}{4! \times 0!}" />
+   <BlockMath math="= 6 \times 1 = 6" />
+   </div>
+   
+   **Total:** <InlineMath math="120 + 60 + 6 = 186" />
+   
+   There are 186 ways to take 5 balls with at least 3 red balls.
+
+4. **Answer: 185 ways**
+   
+   Solution steps (**case method**):
+   
+   Mandatory subjects: 6, elective subjects: 4
+   
+   Choose 4 subjects with at least 2 mandatory
+   
+   **Detailed calculation for each case:**
+   
+   **Case 1:** 2 mandatory + 2 elective
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(6,2) \times C(4,2) = \frac{6!}{4! \times 2!} \times \frac{4!}{2! \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times \frac{4 \times 3}{2 \times 1} = 15 \times 6 = 90" />
+   </div>
+   
+   **Case 2:** 3 mandatory + 1 elective
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(6,3) \times C(4,1) = \frac{6!}{3! \times 3!} \times \frac{4!}{3! \times 1!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{3 \times 2 \times 1} \times 4 = 20 \times 4 = 80" />
+   </div>
+   
+   **Case 3:** 4 mandatory + 0 elective
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(6,4) \times C(4,0) = \frac{6!}{2! \times 4!} \times \frac{4!}{4! \times 0!}" />
+   <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times 1 = 15 \times 1 = 15" />
+   </div>
+   
+   **Total:** <InlineMath math="90 + 80 + 15 = 185" />
+   
+   There are 185 ways to choose subjects with the given conditions.

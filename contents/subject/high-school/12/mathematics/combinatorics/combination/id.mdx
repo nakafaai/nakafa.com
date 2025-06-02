@@ -4,3 +4,193 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Kombinatorik",
 };
+
+## Pengertian Kombinasi
+
+Bayangkan kamu diminta memilih 3 orang teman untuk bergabung dalam tim futsal. Apakah urutan pemilihan mereka penting? Tentu tidak! Yang penting adalah **siapa saja** yang terpilih, bukan dalam urutan apa mereka dipilih.
+
+Inilah perbedaan mendasar antara kombinasi dan permutasi. **Kombinasi** adalah cara memilih sejumlah objek dari kumpulan objek yang lebih besar, dimana **urutan tidak diperhatikan**.
+
+Dalam kehidupan sehari-hari, kombinasi sering kita temui ketika:
+- Memilih menu makanan dari daftar pilihan
+- Menentukan anggota tim untuk suatu kegiatan
+- Memilih mata pelajaran elective di sekolah
+- Menentukan kombinasi warna untuk desain
+
+Perbedaan dengan permutasi sangat jelas: jika dalam permutasi ABC berbeda dengan BAC, maka dalam kombinasi ABC sama dengan BAC karena anggotanya sama, hanya urutannya berbeda.
+
+## Rumus Kombinasi
+
+Untuk menentukan banyaknya cara memilih <InlineMath math="k" /> objek dari <InlineMath math="n" /> objek yang tersedia, kita menggunakan rumus kombinasi:
+
+<BlockMath math="C(n,k) = \binom{n}{k} = \frac{n!}{(n-k)! \times k!}" />
+
+Dimana:
+- <InlineMath math="C(n,k)" /> atau <InlineMath math="\binom{n}{k}" /> = kombinasi <InlineMath math="k" /> objek dari <InlineMath math="n" /> objek
+- <InlineMath math="n" /> = total objek yang tersedia
+- <InlineMath math="k" /> = banyaknya objek yang dipilih
+- <InlineMath math="n!" /> = faktorial dari <InlineMath math="n" />
+
+**Mengapa rumus ini berbeda dari permutasi?**
+
+Rumus kombinasi sebenarnya berasal dari rumus permutasi yang dibagi dengan <InlineMath math="k!" />:
+
+<BlockMath math="C(n,k) = \frac{P(n,k)}{k!} = \frac{n!}{(n-k)! \times k!}" />
+
+Pembagian dengan <InlineMath math="k!" /> dilakukan karena dalam kombinasi, kita **tidak peduli urutan**. Setiap kelompok <InlineMath math="k" /> objek memiliki <InlineMath math="k!" /> cara pengaturan yang berbeda, tetapi semuanya dianggap **sama** dalam kombinasi.
+
+## Penerapan dalam Situasi Nyata
+
+**Pembentukan Tim Olahraga:**
+
+Dari 10 siswa yang tersedia, berapa cara memilih 5 siswa untuk tim basket?
+
+<div className="flex flex-col gap-4">
+<BlockMath math="C(10,5) = \frac{10!}{5! \times 5!}" />
+<BlockMath math="C(10,5) = \frac{10 \times 9 \times 8 \times 7 \times 6}{5 \times 4 \times 3 \times 2 \times 1} = \frac{30.240}{120} = 252 \text{ cara}" />
+</div>
+
+**Pemilihan Menu Makanan:**
+
+Sebuah restoran menawarkan 8 jenis makanan dan kamu boleh memilih 3 jenis. Berapa banyak kombinasi pilihan yang mungkin?
+
+<div className="flex flex-col gap-4">
+<BlockMath math="C(8,3) = \frac{8!}{5! \times 3!}" />
+<BlockMath math="C(8,3) = \frac{8 \times 7 \times 6}{3 \times 2 \times 1} = \frac{336}{6} = 56 \text{ kombinasi}" />
+</div>
+
+**Situasi dengan Syarat Khusus:**
+
+Kadang-kadang ada **pembatasan tertentu** dalam pemilihan. Misalnya, dari 12 siswa (7 laki-laki dan 5 perempuan), kita harus memilih 4 siswa dengan syarat minimal 2 perempuan.
+
+**Strategi penyelesaian:**
+1. **Hitung semua kemungkinan** yang memenuhi syarat
+2. **Pisahkan berdasarkan kondisi:** 2 perempuan + 2 laki-laki, 3 perempuan + 1 laki-laki, atau 4 perempuan
+3. **Jumlahkan** semua kemungkinan
+
+**Perhitungan detail:**
+
+**Kasus 1:** 2 perempuan + 2 laki-laki
+<div className="flex flex-col gap-4">
+<BlockMath math="C(5,2) \times C(7,2) = \frac{5!}{3! \times 2!} \times \frac{7!}{5! \times 2!}" />
+<BlockMath math="= \frac{5 \times 4}{2 \times 1} \times \frac{7 \times 6}{2 \times 1} = 10 \times 21 = 210" />
+</div>
+
+**Kasus 2:** 3 perempuan + 1 laki-laki
+<div className="flex flex-col gap-4">
+<BlockMath math="C(5,3) \times C(7,1) = \frac{5!}{2! \times 3!} \times \frac{7!}{6! \times 1!}" />
+<BlockMath math="= \frac{5 \times 4}{2 \times 1} \times 7 = 10 \times 7 = 70" />
+</div>
+
+**Kasus 3:** 4 perempuan + 0 laki-laki
+<div className="flex flex-col gap-4">
+<BlockMath math="C(5,4) = \frac{5!}{1! \times 4!} = \frac{5}{1} = 5" />
+</div>
+
+**Total:** <InlineMath math="210 + 70 + 5 = 285" /> cara
+
+## Latihan
+
+1. Dari 8 buku yang berbeda, berapa cara memilih 3 buku untuk dibaca selama liburan?
+
+2. Sebuah tim futsal memiliki 12 pemain. Berapa cara memilih 5 pemain untuk bermain di lapangan?
+
+3. Dalam sebuah kotak terdapat 6 bola merah dan 4 bola biru. Berapa cara mengambil 5 bola dengan syarat minimal 3 bola merah?
+
+4. Seorang siswa harus memilih 4 mata pelajaran dari 10 mata pelajaran yang tersedia. Jika 6 mata pelajaran adalah wajib dan 4 mata pelajaran adalah pilihan, berapa cara memilih jika harus ada minimal 2 mata pelajaran wajib?
+
+### Kunci Jawaban
+
+1. **Jawaban: 56 cara**
+   
+   Langkah penyelesaian:
+   
+   Diketahui: <InlineMath math="n = 8" /> buku, dipilih <InlineMath math="k = 3" /> buku
+   
+   Rumus kombinasi:
+   
+   <div className="flex flex-col gap-4">
+      <BlockMath math="C(n,k) = \frac{n!}{(n-k)! \times k!}" />
+      <BlockMath math="C(8,3) = \frac{8!}{5! \times 3!} = \frac{8 \times 7 \times 6}{3 \times 2 \times 1} = \frac{336}{6} = 56" />
+   </div>
+   
+   Jadi, ada 56 cara memilih 3 buku dari 8 buku yang tersedia.
+
+2. **Jawaban: 792 cara**
+   
+   Langkah penyelesaian:
+   
+   Diketahui: <InlineMath math="n = 12" /> pemain, dipilih <InlineMath math="k = 5" /> pemain
+   
+   Rumus kombinasi:
+   
+   <div className="flex flex-col gap-4">
+      <BlockMath math="C(12,5) = \frac{12!}{7! \times 5!}" />
+      <BlockMath math="C(12,5) = \frac{12 \times 11 \times 10 \times 9 \times 8}{5 \times 4 \times 3 \times 2 \times 1} = \frac{95.040}{120} = 792" />
+   </div>
+   
+   Tim futsal dapat memilih 5 pemain dari 12 pemain dengan 792 cara berbeda.
+
+3. **Jawaban: 186 cara**
+   
+   Langkah penyelesaian (**metode kasus**):
+   
+   Total bola: 6 merah + 4 biru = 10 bola
+   
+   Ambil 5 bola dengan minimal 3 bola merah
+   
+   **Rincian perhitungan setiap kasus:**
+   
+   **Kasus 1:** 3 merah + 2 biru
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(6,3) \times C(4,2) = \frac{6!}{3! \times 3!} \times \frac{4!}{2! \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{3 \times 2 \times 1} \times \frac{4 \times 3}{2 \times 1} = 20 \times 6 = 120" />
+   </div>
+   
+   **Kasus 2:** 4 merah + 1 biru
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(6,4) \times C(4,1) = \frac{6!}{2! \times 4!} \times \frac{4!}{3! \times 1!}" />
+   <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times 4 = 15 \times 4 = 60" />
+   </div>
+   
+   **Kasus 3:** 5 merah + 0 biru
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(6,5) \times C(4,0) = \frac{6!}{1! \times 5!} \times \frac{4!}{4! \times 0!}" />
+   <BlockMath math="= 6 \times 1 = 6" />
+   </div>
+   
+   **Total:** <InlineMath math="120 + 60 + 6 = 186" />
+   
+   Ada 186 cara mengambil 5 bola dengan minimal 3 bola merah.
+
+4. **Jawaban: 185 cara**
+   
+   Langkah penyelesaian (**metode kasus**):
+   
+   Mata pelajaran wajib: 6, mata pelajaran pilihan: 4
+   
+   Pilih 4 mata pelajaran dengan minimal 2 wajib
+   
+   **Rincian perhitungan setiap kasus:**
+   
+   **Kasus 1:** 2 wajib + 2 pilihan
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(6,2) \times C(4,2) = \frac{6!}{4! \times 2!} \times \frac{4!}{2! \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times \frac{4 \times 3}{2 \times 1} = 15 \times 6 = 90" />
+   </div>
+   
+   **Kasus 2:** 3 wajib + 1 pilihan
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(6,3) \times C(4,1) = \frac{6!}{3! \times 3!} \times \frac{4!}{3! \times 1!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{3 \times 2 \times 1} \times 4 = 20 \times 4 = 80" />
+   </div>
+   
+   **Kasus 3:** 4 wajib + 0 pilihan
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(6,4) \times C(4,0) = \frac{6!}{2! \times 4!} \times \frac{4!}{4! \times 0!}" />
+   <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times 1 = 15 \times 1 = 15" />
+   </div>
+   
+   **Total:** <InlineMath math="90 + 80 + 15 = 185" />
+   
+   Ada 185 cara memilih mata pelajaran dengan syarat yang diberikan.
