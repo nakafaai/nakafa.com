@@ -4,3 +4,230 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Kombinatorik",
 };
+
+## Memahami Kejadian Saling Bebas
+
+Dalam kehidupan nyata, kita sering menghadapi situasi dimana **hasil satu kejadian tidak mempengaruhi hasil kejadian lainnya**. Bayangkan kamu melempar koin dan dadu secara bersamaan. Apakah hasil koin mempengaruhi angka yang muncul pada dadu? Tentu tidak! Kedua kejadian ini bersifat independen atau saling bebas.
+
+**Kejadian saling bebas** adalah dua atau lebih kejadian yang hasil dari satu kejadian tidak mempengaruhi probabilitas kejadian lainnya. Jika kejadian A tidak mempengaruhi kejadian B, dan sebaliknya, maka kedua kejadian tersebut saling bebas.
+
+Sebagai ilustrasi sederhana, pikirkan tentang cuaca hari ini dan hasil ujian matematika kamu besok. Hujan atau cerah hari ini tidak akan mempengaruhi nilai ujian kamu (kecuali kamu terlambat karena hujan, tapi itu cerita lain!). Kedua kejadian ini saling bebas secara statistik.
+
+## Ciri Kejadian Saling Bebas
+
+### Tidak Saling Mempengaruhi
+
+Ciri utama kejadian saling bebas adalah **hasil satu kejadian tidak mengubah probabilitas kejadian lainnya**. Dalam notasi matematika, jika A dan B adalah kejadian saling bebas, maka:
+
+<BlockMath math="P(A|B) = P(A)" />
+
+Artinya probabilitas A terjadi ketika B sudah terjadi sama dengan probabilitas A terjadi secara umum.
+
+### Contoh Kehidupan Sehari Hari
+
+Beberapa contoh kejadian saling bebas yang mudah dipahami:
+
+- Melempar dua koin berbeda secara bersamaan
+- Mengambil kartu dari dua deck terpisah
+- Hasil ujian dua siswa yang berbeda (tanpa menyontek!)
+- Kondisi cuaca di dua kota yang berjauhan
+
+### Identifikasi Kejadian Saling Bebas
+
+Untuk mengidentifikasi apakah dua kejadian saling bebas, tanyakan: "Apakah mengetahui hasil kejadian pertama memberikan informasi tentang hasil kejadian kedua?" Jika jawabannya tidak, maka kedua kejadian tersebut saling bebas.
+
+## Rumus Peluang Kejadian Saling Bebas
+
+Karena kejadian saling bebas tidak saling mempengaruhi, perhitungan probabilitas gabungannya menjadi sederhana. **Rumus dasar** untuk probabilitas kejadian saling bebas adalah:
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B)" />
+
+Rumus ini menunjukkan bahwa probabilitas kedua kejadian A dan B terjadi bersamaan sama dengan perkalian probabilitas masing-masing kejadian.
+
+### Mengapa Rumus Ini Berlaku
+
+Berbeda dengan kejadian yang saling mempengaruhi, pada kejadian saling bebas probabilitas kondisional sama dengan probabilitas biasa. Karena <InlineMath math="P(A|B) = P(A)" />, maka:
+
+<BlockMath math="P(A \cap B) = P(A|B) \times P(B) = P(A) \times P(B)" />
+
+Inilah mengapa kita bisa langsung mengalikan probabilitas individual untuk mendapatkan probabilitas gabungan.
+
+## Penerapan dalam Perhitungan
+
+### Pelemparan Dua Dadu
+
+Dua dadu dilempar bersamaan, satu dadu merah dan satu dadu putih. Tentukan probabilitas mendapatkan angka <InlineMath math="2" /> pada dadu merah dan angka <InlineMath math="5" /> pada dadu putih.
+
+**Penyelesaian:**
+
+- Kejadian A: munculnya angka <InlineMath math="2" /> pada dadu merah
+- Kejadian B: munculnya angka <InlineMath math="5" /> pada dadu putih
+
+Kedua kejadian ini **saling bebas** karena hasil dadu merah tidak mempengaruhi hasil dadu putih.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{1}{6}" />
+
+<BlockMath math="P(B) = \frac{1}{6}" />
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{6} \times \frac{1}{6} = \frac{1}{36}" />
+</div>
+
+Jadi probabilitas mendapatkan angka <InlineMath math="2" /> pada dadu merah dan angka <InlineMath math="5" /> pada dadu putih adalah <InlineMath math="\frac{1}{36}" />.
+
+### Pelemparan Dadu dan Koin
+
+Sebuah dadu dan sebuah koin dilempar bersamaan. Tentukan probabilitas mendapatkan angka genap pada dadu dan gambar pada koin.
+
+**Penyelesaian:**
+
+<div className="flex flex-col gap-4">
+<BlockMath math="S_{dadu} = \{1, 2, 3, 4, 5, 6\}" />
+
+<BlockMath math="S_{koin} = \{A, G\}" />
+</div>
+
+- Kejadian A: munculnya angka genap pada dadu = <InlineMath math="\{2, 4, 6\}" />
+- Kejadian B: munculnya gambar pada koin = <InlineMath math="\{G\}" />
+
+Kedua kejadian **saling bebas** karena hasil dadu tidak mempengaruhi hasil koin.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+
+<BlockMath math="P(B) = \frac{1}{2}" />
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{2} \times \frac{1}{2} = \frac{1}{4}" />
+</div>
+
+### Contoh Aplikasi Nyata
+
+Dalam sebuah kota, probabilitas mobil pemadam kebakaran diperlukan pada hari tertentu adalah <InlineMath math="0.98" />, sedangkan probabilitas ambulans diperlukan adalah <InlineMath math="0.92" />. Berapa probabilitas kedua kendaraan tersebut diperlukan pada hari yang sama?
+
+Angka probabilitas ini menggambarkan skenario kota besar dengan tingkat aktivitas darurat yang tinggi.
+
+**Penyelesaian:**
+
+- Kejadian A: mobil pemadam kebakaran diperlukan
+- Kejadian B: ambulans diperlukan
+
+Kedua kejadian ini dapat dianggap **saling bebas** karena kebutuhan pemadam kebakaran tidak mempengaruhi kebutuhan ambulans.
+
+**Perhitungan detail:**
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A \cap B) = P(A) \times P(B)" />
+
+<BlockMath math="P(A \cap B) = 0.98 \times 0.92 = 0.9016" />
+</div>
+
+Jadi probabilitas kedua kendaraan tersebut diperlukan pada hari yang sama adalah <InlineMath math="0.9016" /> atau <InlineMath math="90.16\%" />.
+
+## Strategi Pemecahan Masalah
+
+### Langkah Sistematis
+
+Untuk menyelesaikan soal probabilitas kejadian saling bebas, ikuti langkah berikut:
+
+1. **Identifikasi kejadian** yang terlibat dalam masalah
+2. **Pastikan kejadian saling bebas** dengan memverifikasi tidak ada pengaruh timbal balik
+3. **Hitung probabilitas individual** setiap kejadian
+4. **Terapkan rumus** <InlineMath math="P(A \cap B) = P(A) \times P(B)" />
+5. **Periksa hasil** apakah masuk akal dalam konteks masalah
+
+### Tips Praktis
+
+Beberapa strategi untuk memudahkan pemahaman:
+
+- **Visualisasikan** kejadian dengan diagram pohon jika diperlukan
+- **Pastikan independensi** dengan bertanya apakah satu kejadian mempengaruhi yang lain
+- **Periksa konsistensi** hasil dengan menggunakan pendekatan berbeda
+- **Gunakan konteks** untuk memvalidasi apakah jawaban masuk akal
+
+### Mengenali Kejadian Saling Bebas
+
+Perhatikan karakteristik berikut untuk mengidentifikasi kejadian saling bebas:
+
+**Kejadian yang Saling Bebas:**
+- Pelemparan beberapa koin sekaligus
+- Pengambilan kartu dengan pengembalian
+- Hasil ujian siswa yang berbeda
+- Kondisi cuaca di lokasi terpisah
+
+**Kejadian yang TIDAK Saling Bebas:**
+- Pengambilan kartu tanpa pengembalian
+- Tinggi badan dan berat badan seseorang
+- Nilai ujian siswa yang sama pada mata pelajaran berbeda
+- Suhu dan kelembaban udara
+
+## Latihan
+
+1. Dua koin dilempar bersamaan. Tentukan probabilitas mendapatkan angka pada koin pertama dan gambar pada koin kedua.
+
+2. Sebuah dadu dan sebuah kartu diambil dari deck standar. Hitunglah probabilitas mendapatkan angka prima pada dadu dan kartu berwarna merah.
+
+3. Dalam sebuah kelas, probabilitas seorang siswa lulus matematika adalah <InlineMath math="0.85" /> dan probabilitas lulus fisika adalah <InlineMath math="0.78" />. Jika kedua mata pelajaran independen, berapa probabilitas siswa tersebut lulus kedua mata pelajaran?
+
+4. Tiga koin dilempar bersamaan. Tentukan probabilitas mendapatkan tepat dua gambar.
+
+### Kunci Jawaban
+
+1. **Penyelesaian:**
+   
+   - Kejadian A: angka pada koin pertama, <InlineMath math="P(A) = \frac{1}{2}" />
+   - Kejadian B: gambar pada koin kedua, <InlineMath math="P(B) = \frac{1}{2}" />
+   
+   Kedua kejadian saling bebas karena hasil koin pertama tidak mempengaruhi koin kedua.
+   
+   <BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{2} \times \frac{1}{2} = \frac{1}{4}" />
+
+2. **Penyelesaian:**
+   
+   - Kejadian A: angka prima pada dadu = <InlineMath math="\{2, 3, 5\}" />, sehingga <InlineMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+   - Kejadian B: kartu merah (hati dan wajik), sehingga <InlineMath math="P(B) = \frac{26}{52} = \frac{1}{2}" />
+   
+   Kedua kejadian saling bebas.
+   
+   <BlockMath math="P(A \cap B) = \frac{1}{2} \times \frac{1}{2} = \frac{1}{4}" />
+
+3. **Penyelesaian:**
+   
+   - Kejadian A: lulus matematika, <InlineMath math="P(A) = 0.85" />
+   - Kejadian B: lulus fisika, <InlineMath math="P(B) = 0.78" />
+   
+   Karena kedua mata pelajaran independen:
+   
+   <BlockMath math="P(A \cap B) = 0.85 \times 0.78 = 0.663" />
+   
+   Jadi probabilitas lulus kedua mata pelajaran adalah <InlineMath math="0.663" /> atau <InlineMath math="66.3\%" />.
+
+4. **Penyelesaian:**
+   
+   **Cara 1: Enumerasi Langsung**
+   
+   Ruang sampel 3 koin (A = Angka, G = Gambar): <InlineMath math="\{AAA, AAG, AGA, AGG, GAA, GAG, GGA, GGG\}" />, total = <InlineMath math="8" />
+   
+   Kejadian tepat dua gambar: <InlineMath math="\{AGG, GAG, GGA\}" />, ada <InlineMath math="3" /> kejadian
+   
+   <BlockMath math="P(\text{tepat 2 gambar}) = \frac{3}{8}" />
+   
+   **Cara 2: Menggunakan Distribusi Binomial**
+   
+   Untuk <InlineMath math="n = 3" /> lemparan dengan probabilitas sukses (gambar) <InlineMath math="p = \frac{1}{2}" />, probabilitas tepat <InlineMath math="k = 2" /> sukses adalah:
+
+   <BlockMath math="P(X = k) = \binom{n}{k} \times p^k \times (1-p)^{n-k}" />
+   
+   Substitusi nilai:
+
+   <BlockMath math="P(\text{tepat 2 gambar}) = \binom{3}{2} \times \left(\frac{1}{2}\right)^2 \times \left(\frac{1}{2}\right)^1" />
+   
+   **Penjelasan langkah per langkah:**
+   - <InlineMath math="\binom{3}{2} = 3" /> (cara memilih 2 posisi dari 3 untuk gambar)
+   - <InlineMath math="\left(\frac{1}{2}\right)^2 = \frac{1}{4}" /> (probabilitas 2 gambar)
+   - <InlineMath math="\left(\frac{1}{2}\right)^1 = \frac{1}{2}" /> (probabilitas 1 angka)
+
+   Jadi, perhitungannya adalah:
+
+   <BlockMath math="P(\text{tepat 2 gambar}) = 3 \times \frac{1}{4} \times \frac{1}{2} = 3 \times \frac{1}{8} = \frac{3}{8}" />
+   
+   Jadi probabilitas mendapatkan tepat dua gambar adalah <InlineMath math="\frac{3}{8}" />.

@@ -4,3 +4,230 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Combinatorics",
 };
+
+## Understanding Independent Events
+
+In real life, we often encounter situations where **the result of one event does not affect the result of another event**. Imagine you throw a coin and a die simultaneously. Does the result of the coin affect the number that appears on the die? Of course not! These two events are independent.
+
+**Independent events** are two or more events where the result of one event does not affect the probability of another event. If event A does not affect event B, and vice versa, then both events are independent.
+
+As a simple illustration, think about today's weather and your math exam result tomorrow. Whether it's rainy or sunny today will not affect your exam score (unless you're late because of the rain, but that's another story!). These two events are statistically independent.
+
+## Characteristics of Independent Events
+
+### Not Mutually Affecting
+
+The main characteristic of independent events is that **the result of one event does not change the probability of another event**. In mathematical notation, if A and B are independent events, then:
+
+<BlockMath math="P(A|B) = P(A)" />
+
+This means the probability of A occurring when B has already occurred is the same as the probability of A occurring in general.
+
+### Daily Life Examples
+
+Some examples of independent events that are easy to understand:
+
+- Throwing two different coins simultaneously
+- Drawing cards from two separate decks
+- Exam results of two different students (without cheating!)
+- Weather conditions in two distant cities
+
+### Identifying Independent Events
+
+To identify whether two events are independent, ask: "Does knowing the result of the first event provide information about the result of the second event?" If the answer is no, then both events are independent.
+
+## Formula for Probability of Independent Events
+
+Since independent events do not affect each other, calculating their joint probability becomes simple. The **basic formula** for the probability of independent events is:
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B)" />
+
+This formula shows that the probability of both events A and B occurring together equals the multiplication of the probability of each event.
+
+### Why This Formula Works
+
+Unlike events that affect each other, in independent events the conditional probability equals the regular probability. Since <InlineMath math="P(A|B) = P(A)" />, then:
+
+<BlockMath math="P(A \cap B) = P(A|B) \times P(B) = P(A) \times P(B)" />
+
+This is why we can directly multiply individual probabilities to get the joint probability.
+
+## Application in Calculations
+
+### Rolling Two Dice
+
+Two dice are rolled simultaneously, one red die and one white die. Find the probability of getting number <InlineMath math="2" /> on the red die and number <InlineMath math="5" /> on the white die.
+
+**Solution:**
+
+- Event A: getting number <InlineMath math="2" /> on the red die
+- Event B: getting number <InlineMath math="5" /> on the white die
+
+Both events are **independent** because the result of the red die does not affect the result of the white die.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{1}{6}" />
+
+<BlockMath math="P(B) = \frac{1}{6}" />
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{6} \times \frac{1}{6} = \frac{1}{36}" />
+</div>
+
+So the probability of getting number <InlineMath math="2" /> on the red die and number <InlineMath math="5" /> on the white die is <InlineMath math="\frac{1}{36}" />.
+
+### Rolling a Die and Coin
+
+A die and a coin are thrown simultaneously. Find the probability of getting an even number on the die and tails on the coin.
+
+**Solution:**
+
+<div className="flex flex-col gap-4">
+<BlockMath math="S_{die} = \{1, 2, 3, 4, 5, 6\}" />
+
+<BlockMath math="S_{coin} = \{H, T\}" />
+</div>
+
+- Event A: getting an even number on the die = <InlineMath math="\{2, 4, 6\}" />
+- Event B: getting tails on the coin = <InlineMath math="\{T\}" />
+
+Both events are **independent** because the result of the die does not affect the result of the coin.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+
+<BlockMath math="P(B) = \frac{1}{2}" />
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{2} \times \frac{1}{2} = \frac{1}{4}" />
+</div>
+
+### Real-World Application Example
+
+In a city, the probability that a fire truck is needed on a particular day is <InlineMath math="0.98" />, while the probability that an ambulance is needed is <InlineMath math="0.92" />. What is the probability that both vehicles are needed on the same day?
+
+These probability numbers represent a scenario of a large city with high emergency activity levels.
+
+**Solution:**
+
+- Event A: fire truck is needed
+- Event B: ambulance is needed
+
+Both events can be considered **independent** because the need for a fire truck does not affect the need for an ambulance.
+
+**Detailed calculation:**
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A \cap B) = P(A) \times P(B)" />
+
+<BlockMath math="P(A \cap B) = 0.98 \times 0.92 = 0.9016" />
+</div>
+
+So the probability that both vehicles are needed on the same day is <InlineMath math="0.9016" /> or <InlineMath math="90.16\%" />.
+
+## Problem-Solving Strategies
+
+### Systematic Steps
+
+To solve probability problems involving independent events, follow these steps:
+
+1. **Identify the events** involved in the problem
+2. **Ensure events are independent** by verifying there is no mutual influence
+3. **Calculate individual probabilities** of each event
+4. **Apply the formula** <InlineMath math="P(A \cap B) = P(A) \times P(B)" />
+5. **Check the result** to see if it makes sense in the problem context
+
+### Practical Tips
+
+Some strategies to facilitate understanding:
+
+- **Visualize** events with tree diagrams if necessary
+- **Ensure independence** by asking whether one event affects another
+- **Check consistency** of results using different approaches
+- **Use context** to validate whether the answer makes sense
+
+### Recognizing Independent Events
+
+Pay attention to the following characteristics to identify independent events:
+
+**Independent Events:**
+- Throwing multiple coins simultaneously
+- Drawing cards with replacement
+- Exam results of different students
+- Weather conditions in separate locations
+
+**Events that are NOT Independent:**
+- Drawing cards without replacement
+- A person's height and weight
+- Test scores of the same student in different subjects
+- Air temperature and humidity
+
+## Exercises
+
+1. Two coins are thrown simultaneously. Find the probability of getting heads on the first coin and tails on the second coin.
+
+2. A die and a card are drawn from a standard deck. Calculate the probability of getting a prime number on the die and a red card.
+
+3. In a class, the probability of a student passing mathematics is <InlineMath math="0.85" /> and the probability of passing physics is <InlineMath math="0.78" />. If both subjects are independent, what is the probability that the student passes both subjects?
+
+4. Three coins are thrown simultaneously. Find the probability of getting exactly two tails.
+
+### Answer Key
+
+1. **Solution:**
+   
+   - Event A: heads on the first coin, <InlineMath math="P(A) = \frac{1}{2}" />
+   - Event B: tails on the second coin, <InlineMath math="P(B) = \frac{1}{2}" />
+   
+   Both events are independent because the result of the first coin does not affect the second coin.
+   
+   <BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{2} \times \frac{1}{2} = \frac{1}{4}" />
+
+2. **Solution:**
+   
+   - Event A: prime number on the die = <InlineMath math="\{2, 3, 5\}" />, so <InlineMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+   - Event B: red card (hearts and diamonds), so <InlineMath math="P(B) = \frac{26}{52} = \frac{1}{2}" />
+   
+   Both events are independent.
+   
+   <BlockMath math="P(A \cap B) = \frac{1}{2} \times \frac{1}{2} = \frac{1}{4}" />
+
+3. **Solution:**
+   
+   - Event A: passing mathematics, <InlineMath math="P(A) = 0.85" />
+   - Event B: passing physics, <InlineMath math="P(B) = 0.78" />
+   
+   Since both subjects are independent:
+   
+   <BlockMath math="P(A \cap B) = 0.85 \times 0.78 = 0.663" />
+   
+   So the probability of passing both subjects is <InlineMath math="0.663" /> or <InlineMath math="66.3\%" />.
+
+4. **Solution:**
+   
+   **Method 1: Direct Enumeration**
+   
+   Sample space for 3 coins (H = Heads, T = Tails): <InlineMath math="\{HHH, HHT, HTH, HTT, THH, THT, TTH, TTT\}" />, total = <InlineMath math="8" />
+   
+   Event of exactly two tails: <InlineMath math="\{HTT, THT, TTH\}" />, there are <InlineMath math="3" /> events
+   
+   <BlockMath math="P(\text{exactly 2 tails}) = \frac{3}{8}" />
+   
+   **Method 2: Using Binomial Distribution**
+   
+   For <InlineMath math="n = 3" /> tosses with success probability (tails) <InlineMath math="p = \frac{1}{2}" />, the probability of exactly <InlineMath math="k = 2" /> successes is:
+
+   <BlockMath math="P(X = k) = \binom{n}{k} \times p^k \times (1-p)^{n-k}" />
+   
+   Substituting values:
+
+   <BlockMath math="P(\text{exactly 2 tails}) = \binom{3}{2} \times \left(\frac{1}{2}\right)^2 \times \left(\frac{1}{2}\right)^1" />
+   
+   **Step-by-step explanation:**
+   - <InlineMath math="\binom{3}{2} = 3" /> (ways to choose 2 positions out of 3 for tails)
+   - <InlineMath math="\left(\frac{1}{2}\right)^2 = \frac{1}{4}" /> (probability of 2 tails)
+   - <InlineMath math="\left(\frac{1}{2}\right)^1 = \frac{1}{2}" /> (probability of 1 head)
+
+   So, the calculation is:
+
+   <BlockMath math="P(\text{exactly 2 tails}) = 3 \times \frac{1}{4} \times \frac{1}{2} = 3 \times \frac{1}{8} = \frac{3}{8}" />
+   
+   So the probability of getting exactly two tails is <InlineMath math="\frac{3}{8}" />.
