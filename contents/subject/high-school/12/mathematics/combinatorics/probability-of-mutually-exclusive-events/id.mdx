@@ -4,3 +4,304 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Kombinatorik",
 };
+
+## Memahami Kejadian Saling Lepas
+
+Dalam kehidupan sehari-hari, kita sering menghadapi situasi dimana **dua kejadian tidak dapat terjadi bersamaan**. Misalnya, saat melempar satu koin, kita tidak mungkin mendapatkan angka dan gambar secara bersamaan dalam satu lemparan. Kejadian seperti ini disebut kejadian saling lepas atau mutually exclusive events.
+
+**Kejadian saling lepas** adalah dua atau lebih kejadian yang tidak dapat terjadi secara bersamaan dalam satu percobaan. Jika salah satu kejadian terjadi, maka kejadian lainnya pasti tidak akan terjadi.
+
+Sebagai ilustrasi sederhana, bayangkan kamu mengambil satu kartu dari satu deck. Kartu yang kamu ambil tidak mungkin sekaligus berwarna merah dan berwarna hitam. Kedua kejadian ini saling lepas karena tidak ada kartu yang memiliki kedua warna tersebut.
+
+## Ciri Kejadian Saling Lepas
+
+### Tidak Ada Irisan
+
+Ciri utama kejadian saling lepas adalah **tidak memiliki irisan atau elemen yang sama**. Dalam notasi matematika, jika A dan B adalah kejadian saling lepas, maka:
+
+<BlockMath math="A \cap B = \emptyset" />
+
+Simbol <InlineMath math="\emptyset" /> menunjukkan himpunan kosong, artinya tidak ada elemen yang sama antara kedua kejadian.
+
+### Contoh dalam Kehidupan Nyata
+
+Beberapa contoh kejadian saling lepas yang mudah dipahami:
+
+- Dalam pelemparan dadu: munculnya angka genap dan munculnya angka ganjil
+- Dalam pengambilan kartu: mengambil kartu As dan mengambil kartu King dalam satu pengambilan
+- Dalam lomba lari: menempati juara pertama dan menempati juara kedua secara bersamaan
+
+### Identifikasi Kejadian Saling Lepas
+
+Untuk mengidentifikasi apakah dua kejadian saling lepas, tanyakan pada diri sendiri: "Bisakah kedua kejadian ini terjadi bersamaan dalam satu percobaan?" Jika jawabannya tidak, maka kedua kejadian tersebut saling lepas.
+
+## Rumus Peluang Kejadian Saling Lepas
+
+Karena kejadian saling lepas tidak memiliki irisan, perhitungan peluangnya menjadi lebih sederhana. **Rumus dasar** untuk peluang kejadian saling lepas adalah:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B)" />
+
+Rumus ini menunjukkan bahwa peluang terjadinya kejadian A atau kejadian B sama dengan jumlah peluang masing-masing kejadian.
+
+### Mengapa Rumus Ini Berlaku
+
+Berbeda dengan kejadian yang tidak saling lepas, pada kejadian saling lepas tidak perlu mengurangi irisan karena <InlineMath math="P(A \cap B) = 0" />. Oleh karena itu, rumus umum:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
+
+Menjadi:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B) - 0 = P(A) + P(B)" />
+
+## Penerapan dalam Perhitungan
+
+### Pelemparan Dadu
+
+Sebuah dadu dilempar satu kali. Tentukan peluang munculnya angka prima atau angka yang lebih besar dari 4.
+
+**Penyelesaian:**
+
+Ruang sampel: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />
+
+- Kejadian A (angka prima): A = <InlineMath math="\{2, 3, 5\}" />
+- Kejadian B (angka > 4): B = <InlineMath math="\{5, 6\}" />
+
+Periksa irisan: <InlineMath math="A \cap B = \{5\}" />
+
+Karena terdapat irisan (angka 5), kedua kejadian **tidak saling lepas**. Mari gunakan contoh yang benar-benar saling lepas.
+
+**Contoh yang Tepat:**
+
+- Kejadian A (angka ganjil): A = <InlineMath math="\{1, 3, 5\}" />
+- Kejadian C (angka genap): C = <InlineMath math="\{2, 4, 6\}" />
+
+Periksa irisan: <InlineMath math="A \cap C = \emptyset" />
+
+Karena tidak ada irisan, kedua kejadian **saling lepas**.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+
+<BlockMath math="P(C) = \frac{3}{6} = \frac{1}{2}" />
+
+<BlockMath math="P(A \cup C) = P(A) + P(C) = \frac{1}{2} + \frac{1}{2} = 1" />
+</div>
+
+Hasil ini masuk akal karena dalam pelemparan dadu, pasti akan muncul angka ganjil atau genap (semua kemungkinan tercakup).
+
+### Pelemparan Dua Dadu
+
+Dua dadu dilempar bersamaan. Tentukan peluang mendapatkan jumlah mata dadu 5 atau jumlah mata dadu 7.
+
+**Penyelesaian:**
+
+Untuk memahami lebih jelas, mari kita lihat semua kemungkinan hasil pelemparan dua dadu dalam tabel berikut:
+
+| Dadu 1 \\ Dadu 2 | 1 | 2 | 3 | 4 | 5 | 6 |
+|------------------|---|---|---|---|---|---|
+| **1** | <InlineMath math="(1,1)" /> | <InlineMath math="(1,2)" /> | <InlineMath math="(1,3)" /> | <InlineMath math="(1,4)" /> | <InlineMath math="(1,5)" /> | <InlineMath math="(1,6)" /> |
+| **2** | <InlineMath math="(2,1)" /> | <InlineMath math="(2,2)" /> | <InlineMath math="(2,3)" /> | <InlineMath math="(2,4)" /> | <InlineMath math="(2,5)" /> | <InlineMath math="(2,6)" /> |
+| **3** | <InlineMath math="(3,1)" /> | <InlineMath math="(3,2)" /> | <InlineMath math="(3,3)" /> | <InlineMath math="(3,4)" /> | <InlineMath math="(3,5)" /> | <InlineMath math="(3,6)" /> |
+| **4** | <InlineMath math="(4,1)" /> | <InlineMath math="(4,2)" /> | <InlineMath math="(4,3)" /> | <InlineMath math="(4,4)" /> | <InlineMath math="(4,5)" /> | <InlineMath math="(4,6)" /> |
+| **5** | <InlineMath math="(5,1)" /> | <InlineMath math="(5,2)" /> | <InlineMath math="(5,3)" /> | <InlineMath math="(5,4)" /> | <InlineMath math="(5,5)" /> | <InlineMath math="(5,6)" /> |
+| **6** | <InlineMath math="(6,1)" /> | <InlineMath math="(6,2)" /> | <InlineMath math="(6,3)" /> | <InlineMath math="(6,4)" /> | <InlineMath math="(6,5)" /> | <InlineMath math="(6,6)" /> |
+
+Total kemungkinan = <InlineMath math="6 \times 6 = 36" />
+
+**Identifikasi kejadian:**
+
+**Kejadian A (jumlah = 5):**
+
+Dari tabel di atas, pasangan yang menghasilkan jumlah 5 adalah:
+- <InlineMath math="(1,4): 1 + 4 = 5" />
+- <InlineMath math="(2,3): 2 + 3 = 5" />
+- <InlineMath math="(3,2): 3 + 2 = 5" />
+- <InlineMath math="(4,1): 4 + 1 = 5" />
+
+Jadi ada **4 cara** untuk mendapatkan jumlah 5.
+
+**Kejadian B (jumlah = 7):**
+
+Dari tabel di atas, pasangan yang menghasilkan jumlah 7 adalah:
+- <InlineMath math="(1,6): 1 + 6 = 7" />
+- <InlineMath math="(2,5): 2 + 5 = 7" />
+- <InlineMath math="(3,4): 3 + 4 = 7" />
+- <InlineMath math="(4,3): 4 + 3 = 7" />
+- <InlineMath math="(5,2): 5 + 2 = 7" />
+- <InlineMath math="(6,1): 6 + 1 = 7" />
+
+Jadi ada **6 cara** untuk mendapatkan jumlah 7.
+
+**Periksa irisan:** Tidak mungkin jumlah dadu sekaligus 5 dan 7, sehingga <InlineMath math="A \cap B = \emptyset" />
+
+Kedua kejadian **saling lepas**.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{4}{36} = \frac{1}{9}" />
+
+<BlockMath math="P(B) = \frac{6}{36} = \frac{1}{6}" />
+
+<BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{9} + \frac{1}{6}" />
+</div>
+
+**Penyelesaian penjumlahan pecahan:**
+
+Untuk menjumlahkan <InlineMath math="\frac{1}{9} + \frac{1}{6}" />, kita perlu mencari KPK dari 9 dan 6.
+
+<InlineMath math="KPK(9, 6) = 18" />, sehingga:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{1}{9} = \frac{1 \times 2}{9 \times 2} = \frac{2}{18}" />
+
+<BlockMath math="\frac{1}{6} = \frac{1 \times 3}{6 \times 3} = \frac{3}{18}" />
+
+<BlockMath math="P(A \cup B) = \frac{2}{18} + \frac{3}{18} = \frac{5}{18}" />
+</div>
+
+## Strategi Pemecahan Masalah
+
+### Langkah Sistematis
+
+Untuk menyelesaikan soal peluang kejadian saling lepas, ikuti langkah berikut:
+
+1. **Identifikasi ruang sampel** dan tentukan total kemungkinan hasil
+2. **Definisikan kejadian** yang dimaksud dalam soal dengan jelas
+3. **Periksa irisan** antara kejadian untuk memastikan saling lepas
+4. **Hitung peluang masing-masing** kejadian secara terpisah
+5. **Terapkan rumus** <InlineMath math="P(A \cup B) = P(A) + P(B)" />
+
+### Tips Praktis
+
+Beberapa tips untuk memudahkan pemahaman:
+
+- **Visualisasikan** kejadian menggunakan diagram atau tabel jika memungkinkan
+- **Periksa ulang** apakah hasil akhir masuk akal (peluang harus antara 0 dan 1)
+- **Pastikan interpretasi** kata "atau" dalam soal sesuai dengan operasi gabungan
+
+### Waspada Kejadian yang Tampak Saling Lepas
+
+Banyak siswa keliru mengidentifikasi kejadian saling lepas. Berikut adalah contoh kejadian yang **tampak** saling lepas namun **sebenarnya tidak**:
+
+**Contoh 1: Pelemparan Dadu**
+- Kejadian A: Munculnya angka prima = <InlineMath math="\{2, 3, 5\}" />
+- Kejadian B: Munculnya angka ganjil = <InlineMath math="\{1, 3, 5\}" />
+
+**Kesalahan umum**: "Prima dan ganjil berbeda, jadi saling lepas"
+**Kenyataan**: <InlineMath math="A \cap B = \{3, 5\}" /> ≠ ∅, jadi **tidak saling lepas**
+
+**Contoh 2: Pengambilan Kartu**
+- Kejadian A: Mengambil kartu merah
+- Kejadian B: Mengambil kartu As
+
+**Kesalahan umum**: "Warna dan jenis kartu berbeda, jadi saling lepas"
+**Kenyataan**: Ada As merah (As hati dan As wajik), jadi **tidak saling lepas**
+
+**Contoh 3: Karakteristik Siswa**
+- Kejadian A: Siswa yang tinggi (> 160 cm)
+- Kejadian B: Siswa yang pintar (nilai > 80)
+
+**Kesalahan umum**: "Tinggi badan dan kepintaran tidak berhubungan"
+**Kenyataan**: Bisa ada siswa yang sekaligus tinggi dan pintar, jadi **tidak saling lepas**
+
+**Strategi Mengidentifikasi:**
+1. **Tanyakan**: "Bisakah satu elemen memenuhi kedua kriteria sekaligus?"
+2. **Cari irisan**: Identifikasi elemen yang masuk ke kedua kejadian
+3. **Jika ada irisan**: Kejadian **tidak saling lepas**
+4. **Jika tidak ada irisan**: Kejadian **saling lepas**
+
+## Latihan
+
+1. Sebuah dadu dilempar satu kali. Tentukan peluang munculnya angka kurang dari 3 atau angka lebih dari 5.
+
+2. Dari sekotak kartu bridge standar, satu kartu diambil secara acak. Hitunglah peluang terambilnya kartu As atau kartu King.
+
+3. Dua koin dilempar bersamaan. Tentukan peluang mendapatkan tepat satu gambar atau tepat dua angka.
+
+4. Dalam sebuah kotak terdapat 10 bola bernomor 1 sampai 10. Sebuah bola diambil secara acak. Hitunglah peluang terambilnya bola bernomor genap atau bola bernomor prima ganjil.
+
+### Kunci Jawaban
+
+1. **Penyelesaian:**
+   
+   Ruang sampel: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />, sehingga <InlineMath math="n(S) = 6" />
+   
+   - Kejadian A (angka < 3): A = <InlineMath math="\{1, 2\}" />, sehingga <InlineMath math="n(A) = 2" />
+   - Kejadian B (angka > 5): B = <InlineMath math="\{6\}" />, sehingga <InlineMath math="n(B) = 1" />
+   
+   Periksa irisan: <InlineMath math="A \cap B = \emptyset" /> (tidak ada angka yang sekaligus < 3 dan > 5)
+   
+   Karena saling lepas, gunakan rumus:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{2}{6} = \frac{1}{3}" />
+   
+   <BlockMath math="P(B) = \frac{1}{6}" />
+   
+   <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{3} + \frac{1}{6} = \frac{2}{6} + \frac{1}{6} = \frac{3}{6} = \frac{1}{2}" />
+   </div>
+
+2. **Penyelesaian:**
+   
+   Total kartu = <InlineMath math="52" />
+   
+   - Kejadian A (kartu As): <InlineMath math="4" /> kartu As
+   - Kejadian B (kartu King): <InlineMath math="4" /> kartu King
+   
+   Periksa irisan: Tidak ada kartu yang sekaligus As dan King, sehingga <InlineMath math="A \cap B = \emptyset" />
+   
+   Kedua kejadian saling lepas.
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{4}{52} = \frac{1}{13}" />
+   
+   <BlockMath math="P(B) = \frac{4}{52} = \frac{1}{13}" />
+   
+   <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{13} + \frac{1}{13} = \frac{2}{13}" />
+   </div>
+
+3. **Penyelesaian:**
+   
+   Ruang sampel pelemparan dua koin: <InlineMath math="\{(A,A), (A,G), (G,A), (G,G)\}" />, total = <InlineMath math="4" />
+   
+   - Kejadian A (tepat satu gambar): <InlineMath math="\{(A,G), (G,A)\}" />, sehingga <InlineMath math="n(A) = 2" />
+   - Kejadian B (tepat dua angka): <InlineMath math="\{(A,A)\}" />, sehingga <InlineMath math="n(B) = 1" />
+   
+   Periksa irisan: <InlineMath math="A \cap B = \emptyset" /> (tidak mungkin tepat satu gambar dan tepat dua angka bersamaan)
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{2}{4} = \frac{1}{2}" />
+   
+   <BlockMath math="P(B) = \frac{1}{4}" />
+   
+   <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{2} + \frac{1}{4} = \frac{2}{4} + \frac{1}{4} = \frac{3}{4}" />
+   </div>
+
+4. **Penyelesaian:**
+
+   Prima ganjil adalah bilangan prima yang sekaligus ganjil. Bilangan prima dari 1-10 adalah <InlineMath math="\{2, 3, 5, 7\}" />, sehingga prima ganjil adalah <InlineMath math="\{3, 5, 7\}" />.
+   
+   Ruang sampel: S = <InlineMath math="\{1, 2, 3, 4, 5, 6, 7, 8, 9, 10\}" />, sehingga <InlineMath math="n(S) = 10" />
+   
+   - Kejadian A (nomor genap): A = <InlineMath math="\{2, 4, 6, 8, 10\}" />, sehingga <InlineMath math="n(A) = 5" />
+   - Kejadian B (nomor prima ganjil): B = <InlineMath math="\{3, 5, 7\}" />, sehingga <InlineMath math="n(B) = 3" />
+   
+   Periksa irisan: <InlineMath math="A \cap B = \emptyset" /> (tidak ada nomor yang sekaligus genap dan prima ganjil)
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{5}{10} = \frac{1}{2}" />
+   
+   <BlockMath math="P(B) = \frac{3}{10}" />
+   
+   <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{2} + \frac{3}{10}" />
+   </div>
+
+   **Penyelesaian penjumlahan pecahan:**
+
+   Untuk menjumlahkan <InlineMath math="\frac{1}{2} + \frac{3}{10}" />, kita perlu menyamakan penyebut.
+
+   <InlineMath math="KPK(2, 10) = 10" />, sehingga:
+
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\frac{1}{2} = \frac{1 \times 5}{2 \times 5} = \frac{5}{10}" />
+   <BlockMath math="P(A \cup B) = \frac{5}{10} + \frac{3}{10} = \frac{8}{10} = \frac{4}{5}" />
+   </div>

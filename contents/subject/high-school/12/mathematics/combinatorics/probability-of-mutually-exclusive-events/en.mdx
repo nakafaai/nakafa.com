@@ -4,3 +4,304 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Combinatorics",
 };
+
+## Understanding Mutually Exclusive Events
+
+In everyday life, we often face situations where **two events cannot occur simultaneously**. For example, when flipping a coin, we cannot get both heads and tails at the same time in a single flip. Events like these are called mutually exclusive events.
+
+**Mutually exclusive events** are two or more events that cannot occur simultaneously in a single experiment. If one event occurs, then the other event will definitely not occur.
+
+As a simple illustration, imagine you draw one card from a deck. The card you draw cannot be both red and black at the same time. These two events are mutually exclusive because there is no card that has both colors.
+
+## Characteristics of Mutually Exclusive Events
+
+### No Intersection
+
+The main characteristic of mutually exclusive events is **having no intersection or common elements**. In mathematical notation, if A and B are mutually exclusive events, then:
+
+<BlockMath math="A \cap B = \emptyset" />
+
+The symbol <InlineMath math="\emptyset" /> indicates an empty set, meaning there are no common elements between the two events.
+
+### Examples in Real Life
+
+Several examples of mutually exclusive events that are easy to understand:
+
+- In dice rolling: getting an even number and getting an odd number
+- In card drawing: drawing an Ace and drawing a King in a single draw
+- In a race: placing first and placing second simultaneously
+
+### Identifying Mutually Exclusive Events
+
+To identify whether two events are mutually exclusive, ask yourself: "Can these two events occur simultaneously in one experiment?" If the answer is no, then the two events are mutually exclusive.
+
+## Formula for Probability of Mutually Exclusive Events
+
+Since mutually exclusive events have no intersection, calculating their probability becomes simpler. The **basic formula** for the probability of mutually exclusive events is:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B)" />
+
+This formula shows that the probability of event A or event B occurring equals the sum of the individual probabilities of each event.
+
+### Why This Formula Works
+
+Unlike events that are not mutually exclusive, in mutually exclusive events we don't need to subtract the intersection because <InlineMath math="P(A \cap B) = 0" />. Therefore, the general formula:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
+
+Becomes:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B) - 0 = P(A) + P(B)" />
+
+## Application in Calculations
+
+### Dice Rolling
+
+A die is rolled once. Determine the probability of getting a prime number or a number greater than 4.
+
+**Solution:**
+
+Sample space: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />
+
+- Event A (prime number): A = <InlineMath math="\{2, 3, 5\}" />
+- Event B (number > 4): B = <InlineMath math="\{5, 6\}" />
+
+Check intersection: <InlineMath math="A \cap B = \{5\}" />
+
+Since there is an intersection (number 5), the two events are **not mutually exclusive**. Let's use an example that is truly mutually exclusive.
+
+**Correct Example:**
+
+- Event A (odd number): A = <InlineMath math="\{1, 3, 5\}" />
+- Event C (even number): C = <InlineMath math="\{2, 4, 6\}" />
+
+Check intersection: <InlineMath math="A \cap C = \emptyset" />
+
+Since there is no intersection, the two events are **mutually exclusive**.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+
+<BlockMath math="P(C) = \frac{3}{6} = \frac{1}{2}" />
+
+<BlockMath math="P(A \cup C) = P(A) + P(C) = \frac{1}{2} + \frac{1}{2} = 1" />
+</div>
+
+This result makes sense because in dice rolling, either an odd or even number will definitely appear (all possibilities are covered).
+
+### Rolling Two Dice
+
+Two dice are rolled simultaneously. Determine the probability of getting a sum of 5 or a sum of 7.
+
+**Solution:**
+
+To understand more clearly, let's look at all possible outcomes of rolling two dice in the following table:
+
+| Die 1 \\ Die 2 | 1 | 2 | 3 | 4 | 5 | 6 |
+|------------------|---|---|---|---|---|---|
+| **1** | <InlineMath math="(1,1)" /> | <InlineMath math="(1,2)" /> | <InlineMath math="(1,3)" /> | <InlineMath math="(1,4)" /> | <InlineMath math="(1,5)" /> | <InlineMath math="(1,6)" /> |
+| **2** | <InlineMath math="(2,1)" /> | <InlineMath math="(2,2)" /> | <InlineMath math="(2,3)" /> | <InlineMath math="(2,4)" /> | <InlineMath math="(2,5)" /> | <InlineMath math="(2,6)" /> |
+| **3** | <InlineMath math="(3,1)" /> | <InlineMath math="(3,2)" /> | <InlineMath math="(3,3)" /> | <InlineMath math="(3,4)" /> | <InlineMath math="(3,5)" /> | <InlineMath math="(3,6)" /> |
+| **4** | <InlineMath math="(4,1)" /> | <InlineMath math="(4,2)" /> | <InlineMath math="(4,3)" /> | <InlineMath math="(4,4)" /> | <InlineMath math="(4,5)" /> | <InlineMath math="(4,6)" /> |
+| **5** | <InlineMath math="(5,1)" /> | <InlineMath math="(5,2)" /> | <InlineMath math="(5,3)" /> | <InlineMath math="(5,4)" /> | <InlineMath math="(5,5)" /> | <InlineMath math="(5,6)" /> |
+| **6** | <InlineMath math="(6,1)" /> | <InlineMath math="(6,2)" /> | <InlineMath math="(6,3)" /> | <InlineMath math="(6,4)" /> | <InlineMath math="(6,5)" /> | <InlineMath math="(6,6)" /> |
+
+Total possibilities = <InlineMath math="6 \times 6 = 36" />
+
+**Event identification:**
+
+**Event A (sum = 5):**
+
+From the table above, pairs that produce sum 5 are:
+- <InlineMath math="(1,4): 1 + 4 = 5" />
+- <InlineMath math="(2,3): 2 + 3 = 5" />
+- <InlineMath math="(3,2): 3 + 2 = 5" />
+- <InlineMath math="(4,1): 4 + 1 = 5" />
+
+So there are **4 ways** to get sum 5.
+
+**Event B (sum = 7):**
+
+From the table above, pairs that produce sum 7 are:
+- <InlineMath math="(1,6): 1 + 6 = 7" />
+- <InlineMath math="(2,5): 2 + 5 = 7" />
+- <InlineMath math="(3,4): 3 + 4 = 7" />
+- <InlineMath math="(4,3): 4 + 3 = 7" />
+- <InlineMath math="(5,2): 5 + 2 = 7" />
+- <InlineMath math="(6,1): 6 + 1 = 7" />
+
+So there are **6 ways** to get sum 7.
+
+**Check intersection:** It's impossible for the sum to be both 5 and 7, so <InlineMath math="A \cap B = \emptyset" />
+
+Both events are **mutually exclusive**.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{4}{36} = \frac{1}{9}" />
+
+<BlockMath math="P(B) = \frac{6}{36} = \frac{1}{6}" />
+
+<BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{9} + \frac{1}{6}" />
+</div>
+
+**Solution for fraction addition:**
+
+To add <InlineMath math="\frac{1}{9} + \frac{1}{6}" />, we need to find the LCM of 9 and 6.
+
+<InlineMath math="LCM(9, 6) = 18" />, so:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{1}{9} = \frac{1 \times 2}{9 \times 2} = \frac{2}{18}" />
+
+<BlockMath math="\frac{1}{6} = \frac{1 \times 3}{6 \times 3} = \frac{3}{18}" />
+
+<BlockMath math="P(A \cup B) = \frac{2}{18} + \frac{3}{18} = \frac{5}{18}" />
+</div>
+
+## Problem Solving Strategy
+
+### Systematic Steps
+
+To solve probability problems for mutually exclusive events, follow these steps:
+
+1. **Identify the sample space** and determine the total possible outcomes
+2. **Define the events** mentioned in the problem clearly
+3. **Check intersection** between events to ensure they are mutually exclusive
+4. **Calculate the probability of each** event separately
+5. **Apply the formula** <InlineMath math="P(A \cup B) = P(A) + P(B)" />
+
+### Practical Tips
+
+Several tips to facilitate understanding:
+
+- **Visualize** events using diagrams or tables when possible
+- **Double-check** whether the final result makes sense (probability must be between 0 and 1)
+- **Ensure interpretation** of the word "or" in the problem corresponds to the union operation
+
+### Beware of Events That Appear Mutually Exclusive
+
+Many students incorrectly identify mutually exclusive events. Here are examples of events that **appear** mutually exclusive but **actually are not**:
+
+**Example 1: Dice Rolling**
+- Event A: Getting a prime number = <InlineMath math="\{2, 3, 5\}" />
+- Event B: Getting an odd number = <InlineMath math="\{1, 3, 5\}" />
+
+**Common mistake**: "Prime and odd are different, so they are mutually exclusive"
+**Reality**: <InlineMath math="A \cap B = \{3, 5\}" /> ≠ ∅, so **not mutually exclusive**
+
+**Example 2: Card Drawing**
+- Event A: Drawing a red card
+- Event B: Drawing an Ace
+
+**Common mistake**: "Color and card type are different, so they are mutually exclusive"
+**Reality**: There are red Aces (Ace of hearts and Ace of diamonds), so **not mutually exclusive**
+
+**Example 3: Student Characteristics**
+- Event A: Students who are tall (> 160 cm)
+- Event B: Students who are smart (score > 80)
+
+**Common mistake**: "Height and intelligence are unrelated"
+**Reality**: There can be students who are both tall and smart, so **not mutually exclusive**
+
+**Identification Strategy:**
+1. **Ask**: "Can one element satisfy both criteria simultaneously?"
+2. **Find intersection**: Identify elements that belong to both events
+3. **If there is intersection**: Events are **not mutually exclusive**
+4. **If there is no intersection**: Events are **mutually exclusive**
+
+## Exercises
+
+1. A die is rolled once. Determine the probability of getting a number less than 3 or a number greater than 5.
+
+2. From a standard deck of bridge cards, one card is drawn randomly. Calculate the probability of drawing an Ace or a King.
+
+3. Two coins are flipped simultaneously. Determine the probability of getting exactly one tail or exactly two heads.
+
+4. In a box there are 10 balls numbered 1 to 10. A ball is drawn randomly. Calculate the probability of drawing an even-numbered ball or an odd prime-numbered ball.
+
+### Answer Key
+
+1. **Solution:**
+   
+   Sample space: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />, so <InlineMath math="n(S) = 6" />
+   
+   - Event A (number < 3): A = <InlineMath math="\{1, 2\}" />, so <InlineMath math="n(A) = 2" />
+   - Event B (number > 5): B = <InlineMath math="\{6\}" />, so <InlineMath math="n(B) = 1" />
+   
+   Check intersection: <InlineMath math="A \cap B = \emptyset" /> (no number is simultaneously < 3 and > 5)
+   
+   Since they are mutually exclusive, use the formula:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{2}{6} = \frac{1}{3}" />
+   
+   <BlockMath math="P(B) = \frac{1}{6}" />
+   
+   <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{3} + \frac{1}{6} = \frac{2}{6} + \frac{1}{6} = \frac{3}{6} = \frac{1}{2}" />
+   </div>
+
+2. **Solution:**
+   
+   Total cards = <InlineMath math="52" />
+   
+   - Event A (Ace card): <InlineMath math="4" /> Ace cards
+   - Event B (King card): <InlineMath math="4" /> King cards
+   
+   Check intersection: No card is simultaneously an Ace and a King, so <InlineMath math="A \cap B = \emptyset" />
+   
+   Both events are mutually exclusive.
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{4}{52} = \frac{1}{13}" />
+   
+   <BlockMath math="P(B) = \frac{4}{52} = \frac{1}{13}" />
+   
+   <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{13} + \frac{1}{13} = \frac{2}{13}" />
+   </div>
+
+3. **Solution:**
+   
+   Sample space for flipping two coins: <InlineMath math="\{(H,H), (H,T), (T,H), (T,T)\}" />, total = <InlineMath math="4" />
+   
+   - Event A (exactly one tail): <InlineMath math="\{(H,T), (T,H)\}" />, so <InlineMath math="n(A) = 2" />
+   - Event B (exactly two heads): <InlineMath math="\{(H,H)\}" />, so <InlineMath math="n(B) = 1" />
+   
+   Check intersection: <InlineMath math="A \cap B = \emptyset" /> (impossible to have exactly one tail and exactly two heads simultaneously)
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{2}{4} = \frac{1}{2}" />
+   
+   <BlockMath math="P(B) = \frac{1}{4}" />
+   
+   <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{2} + \frac{1}{4} = \frac{2}{4} + \frac{1}{4} = \frac{3}{4}" />
+   </div>
+
+4. **Solution:**
+
+   Odd prime is a prime number that is also odd. Prime numbers from 1-10 are <InlineMath math="\{2, 3, 5, 7\}" />, so odd primes are <InlineMath math="\{3, 5, 7\}" />.
+   
+   Sample space: S = <InlineMath math="\{1, 2, 3, 4, 5, 6, 7, 8, 9, 10\}" />, so <InlineMath math="n(S) = 10" />
+   
+   - Event A (even number): A = <InlineMath math="\{2, 4, 6, 8, 10\}" />, so <InlineMath math="n(A) = 5" />
+   - Event B (odd prime number): B = <InlineMath math="\{3, 5, 7\}" />, so <InlineMath math="n(B) = 3" />
+   
+   Check intersection: <InlineMath math="A \cap B = \emptyset" /> (no number is simultaneously even and odd prime)
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{5}{10} = \frac{1}{2}" />
+   
+   <BlockMath math="P(B) = \frac{3}{10}" />
+   
+   <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{2} + \frac{3}{10}" />
+   </div>
+
+   **Solution for fraction addition:**
+
+   To add <InlineMath math="\frac{1}{2} + \frac{3}{10}" />, we need to equalize the denominators.
+
+   <InlineMath math="LCM(2, 10) = 10" />, so:
+
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\frac{1}{2} = \frac{1 \times 5}{2 \times 5} = \frac{5}{10}" />
+   <BlockMath math="P(A \cup B) = \frac{5}{10} + \frac{3}{10} = \frac{8}{10} = \frac{4}{5}" />
+   </div>
