@@ -4,3 +4,256 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Combinatorics",
 };
+
+## Understanding Compound Events
+
+In daily life, we often face situations where **two or more events occur simultaneously**. For example, when throwing a dice and a coin at the same time, or drawing two cards from one deck. Situations like this are called compound events.
+
+**Compound events** are combinations of two or more single events that can occur in one experiment or several experiments conducted simultaneously. Unlike single events that only involve one outcome, compound events involve combinations of several outcomes at once.
+
+As a simple illustration, imagine you throw a dice and a coin simultaneously. A single event would only focus on the dice result alone or the coin alone. However, compound events would consider the combination of both results, such as "getting number 3 on the dice AND getting tails on the coin".
+
+## Types of Compound Events
+
+### Mutually Exclusive Events
+
+Two events are said to be **mutually exclusive** when both events cannot occur simultaneously in one experiment. In other words, if event A occurs, then event B definitely cannot occur, and vice versa.
+
+A classic example is throwing one dice. The event of getting an even number and the event of getting an odd number are mutually exclusive, because in one throw it's impossible to get a number that is both even and odd.
+
+For mutually exclusive events, the probability formula is:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B)" />
+
+**Calculation Example:**
+
+A dice is thrown once. Determine the probability of getting an even number or numbers 1 or 3.
+
+**Solution:**
+
+Sample space: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />
+
+- Event A (even numbers): A = <InlineMath math="\{2, 4, 6\}" />
+- Event B (numbers 1 or 3): B = <InlineMath math="\{1, 3\}" />
+
+Check intersection: <InlineMath math="A \cap B = \emptyset" /> (empty set)
+
+Since there is no intersection, both events are **mutually exclusive**.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+
+<BlockMath math="P(B) = \frac{2}{6} = \frac{1}{3}" />
+
+<BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{2} + \frac{1}{3} = \frac{3}{6} + \frac{2}{6} = \frac{5}{6}" />
+</div>
+
+### Non-Mutually Exclusive Events
+
+**Non-mutually exclusive events** occur when two events can happen simultaneously in one experiment. This means there is a possibility that both events occur at the same time.
+
+For example, in drawing one card from a standard deck, the event "drawing a red card" and the event "drawing an Ace" are not mutually exclusive. This is because there are cards that are both red and Ace, namely Ace of Hearts and Ace of Diamonds.
+
+For non-mutually exclusive events, the formula is:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
+
+The subtraction of <InlineMath math="P(A \cap B)" /> is needed to avoid double counting the intersection of both events.
+
+**Calculation Example:**
+
+From a standard bridge card deck, one card is drawn randomly. Determine the probability of drawing a red card or a face card (Jack, Queen, King).
+
+**Solution:**
+
+Total cards = 52
+
+- Event A (red cards): 26 cards (13 Hearts + 13 Diamonds)
+- Event B (face cards): 12 cards (4 Jacks + 4 Queens + 4 Kings)
+
+Intersection (red and face cards): 6 cards (Jack, Queen, King from Hearts and Diamonds)
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{26}{52} = \frac{1}{2}" />
+
+<BlockMath math="P(B) = \frac{12}{52} = \frac{3}{13}" />
+
+<BlockMath math="P(A \cap B) = \frac{6}{52} = \frac{3}{26}" />
+
+<BlockMath math="P(A \cup B) = \frac{1}{2} + \frac{3}{13} - \frac{3}{26} = \frac{13}{26} + \frac{6}{26} - \frac{3}{26} = \frac{16}{26} = \frac{8}{13}" />
+</div>
+
+### Independent Events
+
+Two events are called **independent** when the occurrence of one event does not affect the probability of the other event occurring. The result of the first event does not change the conditions for the second event.
+
+An easy-to-understand example is throwing two coins simultaneously. The result of the first coin toss (for example, heads) will not affect the result of the second coin toss. The probability of getting tails on the second coin remains 50% regardless of the first coin's result.
+
+Formula for independent events:
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B)" />
+
+**Calculation Example:**
+
+Two dice are thrown simultaneously. Determine the probability of getting number 3 on the first dice and an even number on the second dice.
+
+**Solution:**
+
+- Event A (number 3 on first dice): 1 possibility out of 6
+- Event B (even number on second dice): <InlineMath math="\{2, 4, 6\}" /> = 3 possibilities out of 6
+
+Since the result of the first dice does not affect the second dice, both events are independent.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{1}{6}" />
+
+<BlockMath math="P(B) = \frac{3}{6} = \frac{1}{2}" />
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{6} \times \frac{1}{2} = \frac{1}{12}" />
+</div>
+
+### Dependent Events
+
+**Dependent events** or conditional events occur when the result of the first event affects the probability of the second event occurring. The conditions after the first event change and affect subsequent calculations.
+
+**Main cause:** Drawing **without replacement** where objects that have been drawn are not returned to their original place, so the total number of objects decreases and changes the probability of subsequent draws.
+
+Formula for dependent events:
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B|A)" />
+
+where <InlineMath math="P(B|A)" /> is the probability of event B occurring given that event A has already occurred.
+
+**Calculation Example:**
+
+In a box there are 8 blue balls and 4 yellow balls. Two balls are drawn randomly **without replacement**. Determine the probability that both balls drawn are blue.
+
+**Solution:**
+
+Initial total balls = 8 + 4 = 12 balls
+
+- Event A (first ball blue): 8 blue balls out of 12 total balls
+- Event B (second ball blue after A): Since 1 blue ball has been drawn, 7 blue balls remain out of 11 total balls
+
+Since drawing is without replacement, conditions change after the first draw, so this is a dependent event.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{8}{12} = \frac{2}{3}" />
+
+<BlockMath math="P(B|A) = \frac{7}{11}" />
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B|A) = \frac{2}{3} \times \frac{7}{11} = \frac{14}{33}" />
+</div>
+
+## Application in Calculations
+
+### Union Operation
+
+When we want to know the probability of "event A **OR** event B", we use the union operation. The keyword "or" indicates that we are looking for the probability where at least one event occurs.
+
+In dice throwing, if we want to find the probability of getting an odd number or a prime number, we need to consider whether both events are mutually exclusive or not.
+
+### Intersection Operation
+
+Conversely, when looking for the probability of "event A **AND** event B", we use the intersection operation. The keyword "and" indicates that both events must occur simultaneously.
+
+In the context of card drawing, if we look for the probability of "drawing a red card AND an even-numbered card", we must count cards that meet both criteria.
+
+## Problem-Solving Strategy
+
+The first step in solving compound event probability problems is **identifying the types of events** involved. Pay attention to keywords in the problem:
+
+1. **"or"** indicates union operation
+2. **"and"** indicates intersection operation  
+3. **"without replacement"** indicates dependent events
+4. **"with replacement"** or "simultaneously" indicates independent events
+
+Next, determine whether the events are mutually exclusive or not by checking if there is a possibility that both events occur simultaneously. Finally, choose the appropriate formula and perform calculations carefully.
+
+## Exercises
+
+1. In throwing a dice, determine the probability of getting a prime number or an odd number on the dice.
+
+2. A box contains 6 red balls and 4 white balls. Two balls are drawn randomly without replacement. Calculate the probability that both balls drawn are red.
+
+3. Two dice are thrown simultaneously. Determine the probability that the sum of the dice is 7 or 11.
+
+4. From a standard bridge card deck, one card is drawn randomly. Calculate the probability of drawing an Ace or a black card.
+
+### Answer Key
+
+1. **Solution:**
+   
+   Sample space: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />, so n(S) = 6
+   
+   - Event A (prime numbers): A = <InlineMath math="\{2, 3, 5\}" />, so n(A) = 3
+   - Event B (odd numbers): B = <InlineMath math="\{1, 3, 5\}" />, so n(B) = 3
+   
+   Intersection A and B: <InlineMath math="A \cap B" /> = <InlineMath math="\{3, 5\}" />, so <InlineMath math="n(A \cap B)" /> = 2
+   
+   Since there is an intersection, the events are not mutually exclusive. Using the formula:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
+   
+   <BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+   
+   <BlockMath math="P(B) = \frac{3}{6} = \frac{1}{2}" />
+   
+   <BlockMath math="P(A \cap B) = \frac{2}{6} = \frac{1}{3}" />
+   
+   <BlockMath math="P(A \cup B) = \frac{1}{2} + \frac{1}{2} - \frac{1}{3} = 1 - \frac{1}{3} = \frac{2}{3}" />
+   </div>
+
+2. **Solution:**
+   
+   Total balls = 6 + 4 = 10 balls
+   
+   - Event A (first ball red): 6 red balls out of 10 total balls
+   - Event B (second ball red after A): After 1 red ball is drawn, 5 red balls remain out of 9 total balls
+   
+   Since drawing is **without replacement**, conditions change after the first draw, so this is a dependent event.
+
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{6}{10} = \frac{3}{5}" />
+   
+   <BlockMath math="P(B|A) = \frac{5}{9}" />
+   
+   <BlockMath math="P(A \cap B) = P(A) \times P(B|A) = \frac{3}{5} \times \frac{5}{9} = \frac{15}{45} = \frac{1}{3}" />
+   </div>
+
+3. **Solution:**
+   
+   Total possibilities = 6 × 6 = 36
+   
+   - Event A (sum = 7): (1,6), (2,5), (3,4), (4,3), (5,2), (6,1) → 6 ways
+   - Event B (sum = 11): (5,6), (6,5) → 2 ways
+   
+   Both events are mutually exclusive because it's impossible for the dice sum to be both 7 and 11.
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{6}{36} = \frac{1}{6}" />
+   
+   <BlockMath math="P(B) = \frac{2}{36} = \frac{1}{18}" />
+   
+   <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{6} + \frac{1}{18} = \frac{3}{18} + \frac{1}{18} = \frac{4}{18} = \frac{2}{9}" />
+   </div>
+
+4. **Solution:**
+   
+   Total cards = 52
+   
+   - Event A (Ace cards): 4 Ace cards
+   - Event B (black cards): 26 cards (Spades and Clubs)
+   
+   Intersection (black Aces): Ace of Spades and Ace of Clubs = 2 cards
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{4}{52} = \frac{1}{13}" />
+   
+   <BlockMath math="P(B) = \frac{26}{52} = \frac{1}{2}" />
+   
+   <BlockMath math="P(A \cap B) = \frac{2}{52} = \frac{1}{26}" />
+   
+   <BlockMath math="P(A \cup B) = \frac{1}{13} + \frac{1}{2} - \frac{1}{26} = \frac{2}{26} + \frac{13}{26} - \frac{1}{26} = \frac{14}{26} = \frac{7}{13}" />
+   </div>

@@ -4,3 +4,256 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Kombinatorik",
 };
+
+## Memahami Kejadian Majemuk
+
+Dalam kehidupan sehari-hari, kita sering menghadapi situasi dimana **dua atau lebih kejadian terjadi bersamaan**. Misalnya, ketika melempar dadu dan koin secara bersamaan, atau mengambil dua kartu dari satu deck. Situasi seperti ini disebut dengan kejadian majemuk.
+
+**Kejadian majemuk** adalah gabungan dari dua atau lebih kejadian tunggal yang dapat terjadi dalam satu percobaan atau beberapa percobaan yang dilakukan bersamaan. Berbeda dengan kejadian tunggal yang hanya melibatkan satu hasil, kejadian majemuk melibatkan kombinasi beberapa hasil sekaligus.
+
+Sebagai ilustrasi sederhana, bayangkan kamu melempar sebuah dadu dan sebuah koin secara bersamaan. Kejadian tunggal hanya akan fokus pada hasil dadu saja atau koin saja. Namun kejadian majemuk akan mempertimbangkan kombinasi hasil keduanya, seperti "munculnya angka 3 pada dadu DAN munculnya gambar pada koin".
+
+## Jenis Kejadian Majemuk
+
+### Kejadian Saling Lepas
+
+Dua kejadian dikatakan **saling lepas** ketika kedua kejadian tersebut tidak dapat terjadi bersamaan dalam satu percobaan. Dengan kata lain, jika kejadian A terjadi, maka kejadian B pasti tidak terjadi, begitu juga sebaliknya.
+
+Contoh klasik adalah pelemparan satu dadu. Kejadian munculnya angka genap dan kejadian munculnya angka ganjil adalah saling lepas, karena dalam satu lemparan tidak mungkin muncul angka yang sekaligus genap dan ganjil.
+
+Untuk kejadian saling lepas, rumus peluangnya adalah:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B)" />
+
+**Contoh Perhitungan:**
+
+Sebuah dadu dilempar satu kali. Tentukan peluang munculnya angka genap atau angka 1 atau 3.
+
+**Penyelesaian:**
+
+Ruang sampel: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />
+
+- Kejadian A (angka genap): A = <InlineMath math="\{2, 4, 6\}" />
+- Kejadian B (angka 1 atau 3): B = <InlineMath math="\{1, 3\}" />
+
+Periksa irisan: <InlineMath math="A \cap B = \emptyset" /> (himpunan kosong)
+
+Karena tidak ada irisan, maka kedua kejadian **saling lepas**.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+
+<BlockMath math="P(B) = \frac{2}{6} = \frac{1}{3}" />
+
+<BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{2} + \frac{1}{3} = \frac{3}{6} + \frac{2}{6} = \frac{5}{6}" />
+</div>
+
+### Kejadian Tidak Saling Lepas
+
+Kejadian **tidak saling lepas** terjadi ketika dua kejadian dapat terjadi bersamaan dalam satu percobaan. Artinya, ada kemungkinan kedua kejadian terjadi secara simultan.
+
+Misalnya, dalam pengambilan satu kartu dari deck standar, kejadian "mengambil kartu merah" dan kejadian "mengambil kartu As" adalah tidak saling lepas. Hal ini karena ada kartu yang sekaligus merah dan As, yaitu As Hati dan As Wajik.
+
+Untuk kejadian tidak saling lepas, rumusnya adalah:
+
+<BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
+
+Pengurangan <InlineMath math="P(A \cap B)" /> diperlukan untuk menghindari penghitungan ganda pada irisan kedua kejadian.
+
+**Contoh Perhitungan:**
+
+Dari sekotak kartu bridge standar, satu kartu diambil secara acak. Tentukan peluang terambilnya kartu merah atau kartu bergambar (Jack, Queen, King).
+
+**Penyelesaian:**
+
+Total kartu = 52
+
+- Kejadian A (kartu merah): 26 kartu (13 Hati + 13 Wajik)
+- Kejadian B (kartu bergambar): 12 kartu (4 Jack + 4 Queen + 4 King)
+
+Irisan (kartu merah dan bergambar): 6 kartu (Jack, Queen, King dari Hati dan Wajik)
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{26}{52} = \frac{1}{2}" />
+
+<BlockMath math="P(B) = \frac{12}{52} = \frac{3}{13}" />
+
+<BlockMath math="P(A \cap B) = \frac{6}{52} = \frac{3}{26}" />
+
+<BlockMath math="P(A \cup B) = \frac{1}{2} + \frac{3}{13} - \frac{3}{26} = \frac{13}{26} + \frac{6}{26} - \frac{3}{26} = \frac{16}{26} = \frac{8}{13}" />
+</div>
+
+### Kejadian Saling Bebas
+
+Dua kejadian disebut **saling bebas** ketika terjadinya satu kejadian tidak mempengaruhi peluang terjadinya kejadian lainnya. Hasil dari kejadian pertama tidak mengubah kondisi untuk kejadian kedua.
+
+Contoh yang mudah dipahami adalah pelemparan dua koin secara bersamaan. Hasil pelemparan koin pertama (misalnya angka) tidak akan mempengaruhi hasil pelemparan koin kedua. Peluang munculnya gambar pada koin kedua tetap 50% terlepas dari hasil koin pertama.
+
+Rumus untuk kejadian saling bebas:
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B)" />
+
+**Contoh Perhitungan:**
+
+Dua dadu dilempar secara bersamaan. Tentukan peluang munculnya angka 3 pada dadu pertama dan angka genap pada dadu kedua.
+
+**Penyelesaian:**
+
+- Kejadian A (angka 3 pada dadu pertama): 1 kemungkinan dari 6
+- Kejadian B (angka genap pada dadu kedua): <InlineMath math="\{2, 4, 6\}" /> = 3 kemungkinan dari 6
+
+Karena hasil dadu pertama tidak mempengaruhi dadu kedua, maka kedua kejadian saling bebas.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{1}{6}" />
+
+<BlockMath math="P(B) = \frac{3}{6} = \frac{1}{2}" />
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{6} \times \frac{1}{2} = \frac{1}{12}" />
+</div>
+
+### Kejadian Tidak Saling Bebas
+
+Kejadian **tidak saling bebas** atau kejadian bersyarat terjadi ketika hasil dari kejadian pertama mempengaruhi peluang terjadinya kejadian kedua. Kondisi setelah kejadian pertama berubah dan mempengaruhi perhitungan selanjutnya.
+
+**Penyebab utama:** Pengambilan **tanpa pengembalian** dimana objek yang sudah diambil tidak dikembalikan ke tempat semula, sehingga jumlah total objek berkurang dan mengubah peluang pengambilan berikutnya.
+
+Rumus untuk kejadian tidak saling bebas:
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B|A)" />
+
+dimana <InlineMath math="P(B|A)" /> adalah peluang kejadian B terjadi dengan syarat kejadian A telah terjadi.
+
+**Contoh Perhitungan:**
+
+Dalam sebuah kotak terdapat 8 bola biru dan 4 bola kuning. Dua bola diambil secara acak **tanpa pengembalian**. Tentukan peluang kedua bola yang terambil berwarna biru.
+
+**Penyelesaian:**
+
+Total bola awal = 8 + 4 = 12 bola
+
+- Kejadian A (bola pertama biru): 8 bola biru dari 12 bola total
+- Kejadian B (bola kedua biru setelah A): Karena 1 bola biru sudah diambil, tersisa 7 bola biru dari 11 bola total
+
+Karena pengambilan tanpa pengembalian, kondisi berubah setelah pengambilan pertama, sehingga ini adalah kejadian tidak saling bebas.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(A) = \frac{8}{12} = \frac{2}{3}" />
+
+<BlockMath math="P(B|A) = \frac{7}{11}" />
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B|A) = \frac{2}{3} \times \frac{7}{11} = \frac{14}{33}" />
+</div>
+
+## Penerapan dalam Perhitungan
+
+### Operasi Gabungan
+
+Ketika kita ingin mengetahui peluang "kejadian A **ATAU** kejadian B", kita menggunakan operasi gabungan (union). Kata kunci "atau" menunjukkan bahwa kita mencari peluang dimana minimal salah satu kejadian terjadi.
+
+Dalam pelemparan dadu, jika kita ingin mencari peluang munculnya angka ganjil atau angka prima, kita perlu mempertimbangkan apakah kedua kejadian saling lepas atau tidak.
+
+### Operasi Irisan
+
+Sebaliknya, ketika mencari peluang "kejadian A **DAN** kejadian B", kita menggunakan operasi irisan (intersection). Kata kunci "dan" menunjukkan bahwa kedua kejadian harus terjadi bersamaan.
+
+Dalam konteks pengambilan kartu, jika kita mencari peluang "mengambil kartu merah DAN kartu bernomor genap", kita harus menghitung kartu yang memenuhi kedua kriteria tersebut.
+
+## Strategi Penyelesaian Masalah
+
+Langkah pertama dalam menyelesaikan soal peluang kejadian majemuk adalah **mengidentifikasi jenis kejadian** yang terlibat. Perhatikan kata kunci dalam soal:
+
+1. **"atau"** menunjukkan operasi gabungan
+2. **"dan"** menunjukkan operasi irisan  
+3. **"tanpa pengembalian"** menunjukkan kejadian tidak saling bebas
+4. **"dengan pengembalian"** atau "secara bersamaan" menunjukkan kejadian saling bebas
+
+Selanjutnya, tentukan apakah kejadian tersebut saling lepas atau tidak dengan memeriksa apakah ada kemungkinan kedua kejadian terjadi bersamaan. Terakhir, pilih rumus yang sesuai dan lakukan perhitungan dengan teliti.
+
+## Latihan
+
+1. Dalam pelemparan sebuah dadu, tentukan peluang munculnya mata dadu bilangan prima atau mata dadu bilangan ganjil.
+
+2. Sebuah kotak berisi 6 bola merah dan 4 bola putih. Dua bola diambil secara acak tanpa pengembalian. Hitunglah peluang terambilnya kedua bola berwarna merah.
+
+3. Dua dadu dilempar secara bersamaan. Tentukan peluang jumlah mata dadu yang muncul adalah 7 atau 11.
+
+4. Dari sekotak kartu bridge standar, satu kartu diambil secara acak. Hitunglah peluang terambilnya kartu As atau kartu berwarna hitam.
+
+### Kunci Jawaban
+
+1. **Penyelesaian:**
+   
+   Ruang sampel: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />, sehingga n(S) = 6
+   
+   - Kejadian A (bilangan prima): A = <InlineMath math="\{2, 3, 5\}" />, sehingga n(A) = 3
+   - Kejadian B (bilangan ganjil): B = <InlineMath math="\{1, 3, 5\}" />, sehingga n(B) = 3
+   
+   Irisan A dan B: <InlineMath math="A \cap B" /> = <InlineMath math="\{3, 5\}" />, sehingga <InlineMath math="n(A \cap B)" /> = 2
+   
+   Karena ada irisan, maka kejadian tidak saling lepas. Menggunakan rumus:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
+   
+   <BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+   
+   <BlockMath math="P(B) = \frac{3}{6} = \frac{1}{2}" />
+   
+   <BlockMath math="P(A \cap B) = \frac{2}{6} = \frac{1}{3}" />
+   
+   <BlockMath math="P(A \cup B) = \frac{1}{2} + \frac{1}{2} - \frac{1}{3} = 1 - \frac{1}{3} = \frac{2}{3}" />
+   </div>
+
+2. **Penyelesaian:**
+   
+   Total bola = 6 + 4 = 10 bola
+   
+   - Kejadian A (bola pertama merah): 6 bola merah dari 10 bola total
+   - Kejadian B (bola kedua merah setelah A): Setelah 1 bola merah diambil, tersisa 5 bola merah dari 9 bola total
+   
+   Karena pengambilan **tanpa pengembalian**, kondisi berubah setelah pengambilan pertama, sehingga ini adalah kejadian tidak saling bebas.
+
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{6}{10} = \frac{3}{5}" />
+   
+   <BlockMath math="P(B|A) = \frac{5}{9}" />
+   
+   <BlockMath math="P(A \cap B) = P(A) \times P(B|A) = \frac{3}{5} \times \frac{5}{9} = \frac{15}{45} = \frac{1}{3}" />
+   </div>
+
+3. **Penyelesaian:**
+   
+   Total kemungkinan = 6 × 6 = 36
+   
+   - Kejadian A (jumlah = 7): (1,6), (2,5), (3,4), (4,3), (5,2), (6,1) → 6 cara
+   - Kejadian B (jumlah = 11): (5,6), (6,5) → 2 cara
+   
+   Kedua kejadian saling lepas karena tidak mungkin jumlah dadu sekaligus 7 dan 11.
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{6}{36} = \frac{1}{6}" />
+   
+   <BlockMath math="P(B) = \frac{2}{36} = \frac{1}{18}" />
+   
+   <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{6} + \frac{1}{18} = \frac{3}{18} + \frac{1}{18} = \frac{4}{18} = \frac{2}{9}" />
+   </div>
+
+4. **Penyelesaian:**
+   
+   Total kartu = 52
+   
+   - Kejadian A (kartu As): 4 kartu As
+   - Kejadian B (kartu hitam): 26 kartu (Spade dan Club)
+   
+   Irisan (As hitam): As Spade dan As Club = 2 kartu
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{4}{52} = \frac{1}{13}" />
+   
+   <BlockMath math="P(B) = \frac{26}{52} = \frac{1}{2}" />
+   
+   <BlockMath math="P(A \cap B) = \frac{2}{52} = \frac{1}{26}" />
+   
+   <BlockMath math="P(A \cup B) = \frac{1}{13} + \frac{1}{2} - \frac{1}{26} = \frac{2}{26} + \frac{13}{26} - \frac{1}{26} = \frac{14}{26} = \frac{7}{13}" />
+   </div>
