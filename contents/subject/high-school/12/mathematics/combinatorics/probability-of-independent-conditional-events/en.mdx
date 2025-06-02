@@ -4,3 +4,180 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Combinatorics",
 };
+
+## Understanding Basic Concepts
+
+Imagine you're playing cards with a friend. You draw one card from the deck, then your friend draws the next card. Does the probability of your friend getting a certain card depend on the card you drew earlier? **Of course!** This is what we call conditional probability in independent events.
+
+**Probability of independent conditional compound events** is the calculation of the probability of an event occurring by considering that another event has already occurred, where both events are fundamentally independent but mutually influence each other in the sequence of events.
+
+This concept differs from ordinary probability because we must consider **conditions that have already occurred** before calculating the probability of the next event.
+
+## Mathematical Formula and Notation
+
+For two events A and B that are independent but sequential, the conditional probability formula is:
+
+<BlockMath math="P(B|A) = \frac{P(A \cap B)}{P(A)}" />
+
+Where:
+- <InlineMath math="P(B|A)" /> is the probability of event B occurring after event A has occurred
+- <InlineMath math="P(A \cap B)" /> is the probability of both events A and B occurring together
+- <InlineMath math="P(A)" /> is the probability of event A occurring
+
+Since the events are independent, we can write:
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B|A)" />
+
+Therefore, for the joint probability of both events:
+
+<BlockMath math="P(A \cap B) = P(A) \times P(B|A)" />
+
+## Application to Card Drawing
+
+### Red Card and Heart Scenario
+
+A standard deck of cards has 52 cards. There are 26 red cards and 13 heart cards. If we draw two cards sequentially without replacement, how do we calculate the probability of getting a red card first and a heart card second?
+
+**Step-by-step analysis:**
+
+Let:
+- Event C = getting a red card on the first draw
+- Event D = getting a heart card on the second draw
+
+Probability calculation:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(C) = \frac{26}{52} = \frac{1}{2}" />
+
+<BlockMath math="P(D|C) = \frac{13}{51}" />
+
+<BlockMath math="P(C \cap D) = P(C) \times P(D|C) = \frac{26}{52} \times \frac{13}{51} = \frac{1}{2} \times \frac{13}{51} = \frac{13}{102}" />
+</div>
+
+After drawing one red card, there are 51 cards remaining in total. The number of heart cards remains 13 because heart cards are part of red cards, so the probability of drawing a heart card becomes <InlineMath math="\frac{13}{51}" />.
+
+### Specific Heart Card Calculation
+
+If we focus on drawing heart cards sequentially, then:
+
+- First draw: <InlineMath math="P(A) = \frac{13}{52} = \frac{1}{4}" />
+- Second draw after getting a heart: <InlineMath math="P(B|A) = \frac{12}{51}" />
+
+Therefore, the probability of getting a second heart card is:
+
+<BlockMath math="P(A \cap B) = \frac{13}{52} \times \frac{12}{51} = \frac{156}{2652} = \frac{1}{17}" />
+
+## Application in Management Selection
+
+A multinational company is conducting an **internal audit** to evaluate the distribution of managers based on gender and job level. Data obtained from the HR department shows the following composition:
+
+| Management Position | Male (L) | Female (P) | Total |
+|------------------|---------------|---------------|-------|
+| Senior (S)       | 78            | 122           | 200   |
+| Middle (M)     | 78            | 122           | 200   |
+| Junior (J)       | 44            | 156           | 200   |
+| **Total**        | **200**       | **400**       | **600** |
+
+From this data, the company wants to analyze the probability in a **random selection** process for a special committee to be formed. If two managers are randomly selected without replacement, the probability of getting a male manager on the first and second selection is:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="P(L_1) = \frac{200}{600} = \frac{1}{3}" />
+
+<BlockMath math="P(L_2|L_1) = \frac{199}{599}" />
+
+<BlockMath math="P(L_1 \cap L_2) = \frac{200}{600} \times \frac{199}{599} = \frac{1}{3} \times \frac{199}{599} = \frac{199}{1797}" />
+</div>
+
+After selecting one male manager, there are 599 total managers remaining with 199 male managers, so the probability of selecting a second male manager decreases to <InlineMath math="\frac{199}{599}" />.
+
+## Problem Solving Strategy
+
+### Systematic Steps
+
+To solve independent conditional probability problems:
+
+1. **Identify the events** first and second clearly
+2. **Determine the conditions** after the first event occurs
+3. **Calculate the probability** of the first event from initial conditions
+4. **Calculate the conditional probability** of the second event after the first event
+5. **Multiply both probabilities** to get the joint probability
+
+### Difference from Ordinary Probability
+
+**Conditional probability** considers changes in conditions after the first event, while **ordinary independent probability** does not consider the sequence of events.
+
+**Concrete Example: Drawing Two Ace Cards**
+
+Suppose we want to calculate the probability of getting two Ace cards in succession from a standard deck (52 cards, 4 Aces).
+
+1. **Independent Probability (With Replacement):**
+
+    If after drawing the first card, the card is returned and the deck is reshuffled:
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="P(As_1) = \frac{4}{52} = \frac{1}{13}" />
+
+    <BlockMath math="P(As_2) = \frac{4}{52} = \frac{1}{13}" />
+
+    <BlockMath math="P(As_1 \cap As_2) = \frac{4}{52} \times \frac{4}{52} = \frac{1}{13} \times \frac{1}{13} = \frac{1}{169}" />
+    </div>
+
+2. **Conditional Probability (Without Replacement):**
+
+    If the first card is not returned:
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="P(As_1) = \frac{4}{52} = \frac{1}{13}" />
+
+    <BlockMath math="P(As_2|As_1) = \frac{3}{51} = \frac{1}{17}" />
+
+    <BlockMath math="P(As_1 \cap As_2) = \frac{4}{52} \times \frac{3}{51} = \frac{1}{13} \times \frac{1}{17} = \frac{1}{221}" />
+    </div>
+
+**Result Comparison:**
+- Independent probability: <InlineMath math="\frac{1}{169} = 0.00592" />
+- Conditional probability: <InlineMath math="\frac{1}{221} = 0.00452" />
+
+Conditional probability gives a **smaller** result because after drawing one Ace, the number of remaining Aces decreases from 4 to 3, while the total cards also decrease from 52 to 51.
+
+## Exercises
+
+1. A box contains 8 red balls and 12 blue balls. If two balls are drawn sequentially without replacement, calculate the probability of getting a red ball on the first draw and a blue ball on the second draw.
+
+2. A deck of cards is shuffled randomly. Three cards are drawn successively without replacement. What is the probability of getting an Ace on the first draw, a King on the second draw, and a Queen on the third draw?
+
+### Answer Key
+
+1. **Solution:**
+
+   Let A = getting a red ball first, B = getting a blue ball second
+   
+   Total initial balls = 8 + 12 = 20 balls
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{8}{20} = \frac{2}{5}" />
+   
+   <BlockMath math="P(B|A) = \frac{12}{19}" />
+   
+   <BlockMath math="P(A \cap B) = \frac{8}{20} \times \frac{12}{19} = \frac{2}{5} \times \frac{12}{19} = \frac{24}{95}" />
+   </div>
+   
+   After drawing one red ball, there are 19 balls remaining in total (8-1=7 red, 12 blue). The number of blue balls does not change (remains 12), so the probability of drawing a blue ball second is <InlineMath math="\frac{12}{19}" />.
+
+2. **Solution:**
+
+   Let A = getting an Ace first, K = getting a King second, Q = getting a Queen third
+   
+   A standard deck has 52 cards with each: 4 Aces, 4 Kings, 4 Queens
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="P(A) = \frac{4}{52} = \frac{1}{13}" />
+   
+   <BlockMath math="P(K|A) = \frac{4}{51}" />
+   
+   <BlockMath math="P(Q|A \cap K) = \frac{4}{50} = \frac{2}{25}" />
+   
+   <BlockMath math="P(A \cap K \cap Q) = \frac{4}{52} \times \frac{4}{51} \times \frac{4}{50} = \frac{1}{13} \times \frac{4}{51} \times \frac{2}{25} = \frac{8}{16575}" />
+   </div>
+   
+   Each draw reduces the total cards (52→51→50), but the number of Aces, Kings, and Queens each remains 4 because the types of cards drawn are different at each step.
