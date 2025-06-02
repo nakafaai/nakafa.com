@@ -4,3 +4,221 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Kombinatorik",
 };
+
+## Apa itu Binomial Newton?
+
+Pernahkah kamu bertanya-tanya bagaimana cara cepat menghitung hasil dari <InlineMath math="(x + y)^{10}" /> tanpa harus mengalikan berkali-kali? **Binomial Newton** adalah teknik matematika yang memungkinkan kita mengembangkan bentuk <InlineMath math="(x + y)^n" /> menjadi penjumlahan suku-suku yang lebih sederhana.
+
+Bayangkan seperti membuka kemasan hadiah berlapis. Setiap lapisan yang kita buka akan mengungkap pola tertentu yang konsisten dan dapat diprediksi. Begitu juga dengan binomial Newton, setiap pangkat memiliki pola koefisien yang unik namun dapat dihitung dengan rumus yang sama.
+
+Mari kita lihat pola dasar untuk beberapa pangkat pertama:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="(x + y)^0 = 1" />
+
+<BlockMath math="(x + y)^1 = x + y" />
+
+<BlockMath math="(x + y)^2 = x^2 + 2xy + y^2" />
+
+<BlockMath math="(x + y)^3 = x^3 + 3x^2y + 3xy^2 + y^3" />
+
+<BlockMath math="(x + y)^4 = x^4 + 4x^3y + 6x^2y^2 + 4xy^3 + y^4" />
+</div>
+
+Dari pola ini, kita dapat melihat bahwa setiap suku memiliki **koefisien tertentu** yang mengikuti aturan matematika yang jelas.
+
+## Rumus Umum dan Koefisien Binomial
+
+Rumus umum binomial Newton dapat ditulis sebagai:
+
+<BlockMath math="(x + y)^n = \sum_{k=0}^{n} \binom{n}{k} x^{n-k} y^k" />
+
+Di mana <InlineMath math="\binom{n}{k}" /> adalah **koefisien binomial** yang dihitung dengan rumus:
+
+<BlockMath math="\binom{n}{k} = \frac{n!}{k!(n-k)!}" />
+
+Koefisien binomial ini juga dikenal sebagai "n pilih k" karena menunjukkan berapa banyak cara memilih k objek dari n objek yang tersedia.
+
+Bentuk ekspansi lengkap dapat ditulis sebagai:
+
+<BlockMath math="(x + y)^n = \binom{n}{0}x^n + \binom{n}{1}x^{n-1}y + \binom{n}{2}x^{n-2}y^2 + \cdots + \binom{n}{n}y^n" />
+
+Setiap suku dalam ekspansi memiliki struktur <InlineMath math="\binom{n}{k}x^{n-k}y^k" /> di mana pangkat <InlineMath math="x" /> dan <InlineMath math="y" /> selalu berjumlah <InlineMath math="n" />.
+
+## Mencari Koefisien Tertentu
+
+Salah satu aplikasi penting binomial Newton adalah mencari koefisien suku tertentu tanpa harus mengembangkan seluruh ekspansi.
+
+Misalkan kita ingin mencari koefisien dari <InlineMath math="x^2" /> dalam ekspansi <InlineMath math="(1 - x)^{2014}" />.
+
+Pertama, kita tulis ulang dalam bentuk binomial standar dengan <InlineMath math="a = 1" />, <InlineMath math="b = -x" />, dan <InlineMath math="n = 2014" />:
+
+<BlockMath math="(1 + (-x))^{2014} = \sum_{k=0}^{2014} \binom{2014}{k} (1)^{2014-k} (-x)^k" />
+
+Untuk mendapat suku yang mengandung <InlineMath math="x^2" />, kita perlu <InlineMath math="k = 2" />:
+
+<BlockMath math="\binom{2014}{2} (1)^{2012} (-x)^2 = \binom{2014}{2} \cdot 1 \cdot x^2 = \binom{2014}{2} x^2" />
+
+Menghitung koefisien binomial:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\binom{2014}{2} = \frac{2014!}{2!(2014-2)!} = \frac{2014 \times 2013}{2 \times 1}" />
+
+<BlockMath math="= \frac{4{,}053{,}182}{2} = 2{,}026{,}591" />
+</div>
+
+Jadi, koefisien dari <InlineMath math="x^2" /> adalah <InlineMath math="2{,}026{,}591" />.
+
+## Mencari Suku Konstanta
+
+Suku konstanta adalah suku yang tidak mengandung variabel apapun. Untuk menemukannya, kita perlu mengidentifikasi suku di mana pangkat semua variabel sama dengan nol.
+
+**Contoh:** Tentukan suku konstanta dari <InlineMath math="\left(3x^3 - \frac{2}{x}\right)^8" />.
+
+Kita tulis dalam bentuk binomial dengan <InlineMath math="a = 3x^3" /> dan <InlineMath math="b = -\frac{2}{x}" />:
+
+<BlockMath math="\left(3x^3 - \frac{2}{x}\right)^8 = \sum_{k=0}^{8} \binom{8}{k} (3x^3)^{8-k} \left(-\frac{2}{x}\right)^k" />
+
+Suku umum adalah:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\binom{8}{k} (3x^3)^{8-k} \left(-\frac{2}{x}\right)^k = \binom{8}{k} \cdot (3)^{8-k} \cdot (x^3)^{8-k} \cdot (-2)^k \cdot (x^{-1})^k" />
+
+<BlockMath math="= \binom{8}{k} \cdot 3^{8-k} \cdot (-2)^k \cdot x^{3(8-k)} \cdot x^{-k}" />
+
+<BlockMath math="= \binom{8}{k} \cdot 3^{8-k} \cdot (-2)^k \cdot x^{24-3k-k} = \binom{8}{k} \cdot 3^{8-k} \cdot (-2)^k \cdot x^{24-4k}" />
+</div>
+
+Untuk suku konstanta, pangkat <InlineMath math="x" /> harus nol:
+
+<BlockMath math="24 - 4k = 0 \Rightarrow 4k = 24 \Rightarrow k = 6" />
+
+Substitusi <InlineMath math="k = 6" />:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\binom{8}{6} \cdot 3^{8-6} \cdot (-2)^6 \cdot x^0 = \binom{8}{6} \cdot 3^2 \cdot (-2)^6" />
+
+<BlockMath math="= \frac{8!}{6! \cdot 2!} \cdot 9 \cdot 64 = \frac{8 \times 7}{2 \times 1} \cdot 9 \cdot 64" />
+
+<BlockMath math="= 28 \cdot 9 \cdot 64 = 252 \cdot 64 = 16{,}128" />
+</div>
+
+Perhatikan bahwa <InlineMath math="(-2)^6 = 64" /> karena pangkat genap selalu menghasilkan nilai positif, sama seperti <InlineMath math="(+2)^6 = 64" />.
+
+Jadi, suku konstanta adalah <InlineMath math="16{,}128" />.
+
+## Strategi Penyelesaian Masalah
+
+Saat menghadapi soal binomial Newton, ikuti langkah sistematis berikut:
+
+1. **Identifikasi komponen** dalam bentuk <InlineMath math="(a + b)^n" /> dan tentukan nilai a, b, dan n dengan jelas.
+
+2. **Tentukan jenis suku** yang dicari, apakah koefisien tertentu, suku konstanta, atau suku dengan pangkat tertentu.
+
+3. **Gunakan rumus suku umum** <InlineMath math="\binom{n}{k} a^{n-k} b^k" /> dan sesuaikan dengan kondisi yang diminta.
+
+4. **Hitung dengan teliti** nilai koefisien binomial dan operasi aritmatika lainnya.
+
+**Contoh Penerapan Strategi:**
+
+Tentukan koefisien dari <InlineMath math="x^5" /> dalam ekspansi <InlineMath math="(2x + 3)^8" />.
+
+1. **Identifikasi komponen**
+
+    Dari <InlineMath math="(2x + 3)^8" />, kita peroleh:
+    - <InlineMath math="a = 2x" />
+    - <InlineMath math="b = 3" />  
+    - <InlineMath math="n = 8" />
+
+2. **Tentukan jenis suku**
+
+    Kita mencari koefisien dari suku yang mengandung <InlineMath math="x^5" />.
+
+3. **Gunakan rumus suku umum**
+
+    Suku umum: <InlineMath math="\binom{8}{k} (2x)^{8-k} (3)^k" />
+
+    Ekspansi suku umum:
+    <BlockMath math="\binom{8}{k} (2x)^{8-k} (3)^k = \binom{8}{k} \cdot 2^{8-k} \cdot x^{8-k} \cdot 3^k = \binom{8}{k} \cdot 2^{8-k} \cdot 3^k \cdot x^{8-k}" />
+
+    Untuk mendapat <InlineMath math="x^5" />, perlu <InlineMath math="8-k = 5" />, sehingga <InlineMath math="k = 3" />.
+
+4. **Hitung dengan teliti**
+
+    Substitusi <InlineMath math="k = 3" />:
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="\binom{8}{3} \cdot 2^{8-3} \cdot 3^3 \cdot x^5 = \binom{8}{3} \cdot 2^5 \cdot 3^3 \cdot x^5" />
+
+    <BlockMath math="= \frac{8!}{3! \cdot 5!} \cdot 32 \cdot 27 \cdot x^5" />
+
+    <BlockMath math="= \frac{8 \times 7 \times 6}{3 \times 2 \times 1} \cdot 32 \cdot 27 \cdot x^5" />
+
+    <BlockMath math="= 56 \cdot 32 \cdot 27 \cdot x^5" />
+
+    <BlockMath math="= 1{,}792 \cdot 27 \cdot x^5 = 48{,}384x^5" />
+    </div>
+
+    Jadi, koefisien dari <InlineMath math="x^5" /> adalah <InlineMath math="48{,}384" />.
+
+Ingatlah bahwa **setiap suku dalam ekspansi binomial** memiliki total pangkat yang sama dengan pangkat awal, dan koefisien binomial selalu simetris: <InlineMath math="\binom{n}{k} = \binom{n}{n-k}" />.
+
+## Latihan
+
+1. Tentukan koefisien dari <InlineMath math="x^4" /> dalam ekspansi <InlineMath math="(2x - 3)^7" />.
+
+2. Hitunglah suku konstanta dari <InlineMath math="\left(x^2 + \frac{1}{x}\right)^9" />.
+
+3. Dalam ekspansi <InlineMath math="(1 + 2x)^{10}" />, tentukan suku yang mengandung <InlineMath math="x^3" />.
+
+### Kunci Jawaban
+
+1. **Penyelesaian:**
+
+   Tulis dalam bentuk binomial dengan <InlineMath math="a = 2x" />, <InlineMath math="b = -3" />, dan <InlineMath math="n = 7" />.
+   
+   Suku umum: <InlineMath math="\binom{7}{k} (2x)^{7-k} (-3)^k = \binom{7}{k} \cdot 2^{7-k} \cdot (-3)^k \cdot x^{7-k}" />
+   
+   Untuk koefisien <InlineMath math="x^4" />, perlu <InlineMath math="7-k = 4" />, sehingga <InlineMath math="k = 3" />.
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\binom{7}{3} \cdot 2^{7-3} \cdot (-3)^3 = \binom{7}{3} \cdot 2^4 \cdot (-3)^3" />
+   
+   <BlockMath math="= \frac{7!}{3! \cdot 4!} \cdot 16 \cdot (-27)" />
+   
+   <BlockMath math="= \frac{7 \times 6 \times 5}{3 \times 2 \times 1} \cdot 16 \cdot (-27)" />
+   
+   <BlockMath math="= 35 \cdot 16 \cdot (-27) = 560 \cdot (-27) = -15{,}120" />
+   </div>
+   
+   Jadi, koefisien dari <InlineMath math="x^4" /> adalah <InlineMath math="-15{,}120" />.
+
+2. **Penyelesaian:**
+
+   Tulis dalam bentuk binomial dengan <InlineMath math="a = x^2" />, <InlineMath math="b = \frac{1}{x}" />, dan <InlineMath math="n = 9" />.
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Suku umum: } \binom{9}{k} (x^2)^{9-k} \left(\frac{1}{x}\right)^k = \binom{9}{k} \cdot x^{2(9-k)} \cdot x^{-k}" />
+   
+   <BlockMath math="= \binom{9}{k} \cdot x^{18-2k} \cdot x^{-k} = \binom{9}{k} \cdot x^{18-2k-k} = \binom{9}{k} \cdot x^{18-3k}" />
+   </div>
+   
+   Untuk suku konstanta, pangkat <InlineMath math="x" /> harus nol: <InlineMath math="18-3k = 0" />, sehingga <InlineMath math="k = 6" />.
+   
+   <BlockMath math="\binom{9}{6} = \binom{9}{3} = \frac{9!}{3! \cdot 6!} = \frac{9 \times 8 \times 7}{3 \times 2 \times 1} = 84" />
+   
+   Jadi, suku konstanta adalah <InlineMath math="84" />.
+
+3. **Penyelesaian:**
+
+   Tulis dalam bentuk binomial dengan <InlineMath math="a = 1" />, <InlineMath math="b = 2x" />, dan <InlineMath math="n = 10" />.
+   
+   Suku umum: <InlineMath math="\binom{10}{k} (1)^{10-k} (2x)^k = \binom{10}{k} \cdot 2^k \cdot x^k" />
+   
+   Untuk suku yang mengandung <InlineMath math="x^3" />, perlu <InlineMath math="k = 3" />.
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\binom{10}{3} \cdot 2^3 \cdot x^3 = 120 \cdot 8 \cdot x^3 = 960x^3" />
+   </div>
+   
+   Jadi, suku yang mengandung <InlineMath math="x^3" /> adalah <InlineMath math="960x^3" />.

@@ -4,3 +4,221 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Combinatorics",
 };
+
+## What is Binomial Newton?
+
+Have you ever wondered how to quickly calculate the result of <InlineMath math="(x + y)^{10}" /> without having to multiply over and over again? **Binomial Newton** is a mathematical technique that allows us to expand the form <InlineMath math="(x + y)^n" /> into a sum of simpler terms.
+
+Imagine it like unwrapping a layered gift. Each layer we open reveals a certain pattern that is consistent and predictable. Similarly with binomial Newton, each power has a unique coefficient pattern that can be calculated with the same formula.
+
+Let's look at the basic patterns for the first few powers:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="(x + y)^0 = 1" />
+
+<BlockMath math="(x + y)^1 = x + y" />
+
+<BlockMath math="(x + y)^2 = x^2 + 2xy + y^2" />
+
+<BlockMath math="(x + y)^3 = x^3 + 3x^2y + 3xy^2 + y^3" />
+
+<BlockMath math="(x + y)^4 = x^4 + 4x^3y + 6x^2y^2 + 4xy^3 + y^4" />
+</div>
+
+From this pattern, we can see that each term has **certain coefficients** that follow clear mathematical rules.
+
+## General Formula and Binomial Coefficients
+
+The general formula for binomial Newton can be written as:
+
+<BlockMath math="(x + y)^n = \sum_{k=0}^{n} \binom{n}{k} x^{n-k} y^k" />
+
+Where <InlineMath math="\binom{n}{k}" /> is the **binomial coefficient** calculated with the formula:
+
+<BlockMath math="\binom{n}{k} = \frac{n!}{k!(n-k)!}" />
+
+This binomial coefficient is also known as "n choose k" because it shows how many ways to choose k objects from n available objects.
+
+The complete expansion form can be written as:
+
+<BlockMath math="(x + y)^n = \binom{n}{0}x^n + \binom{n}{1}x^{n-1}y + \binom{n}{2}x^{n-2}y^2 + \cdots + \binom{n}{n}y^n" />
+
+Each term in the expansion has the structure <InlineMath math="\binom{n}{k}x^{n-k}y^k" /> where the powers of <InlineMath math="x" /> and <InlineMath math="y" /> always sum to <InlineMath math="n" />.
+
+## Finding Specific Coefficients
+
+One important application of binomial Newton is finding coefficients of specific terms without having to expand the entire expression.
+
+Suppose we want to find the coefficient of <InlineMath math="x^2" /> in the expansion of <InlineMath math="(1 - x)^{2014}" />.
+
+First, we rewrite it in standard binomial form with <InlineMath math="a = 1" />, <InlineMath math="b = -x" />, and <InlineMath math="n = 2014" />:
+
+<BlockMath math="(1 + (-x))^{2014} = \sum_{k=0}^{2014} \binom{2014}{k} (1)^{2014-k} (-x)^k" />
+
+To get the term containing <InlineMath math="x^2" />, we need <InlineMath math="k = 2" />:
+
+<BlockMath math="\binom{2014}{2} (1)^{2012} (-x)^2 = \binom{2014}{2} \cdot 1 \cdot x^2 = \binom{2014}{2} x^2" />
+
+Calculating the binomial coefficient:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\binom{2014}{2} = \frac{2014!}{2!(2014-2)!} = \frac{2014 \times 2013}{2 \times 1}" />
+
+<BlockMath math="= \frac{4{,}053{,}182}{2} = 2{,}026{,}591" />
+</div>
+
+Therefore, the coefficient of <InlineMath math="x^2" /> is <InlineMath math="2{,}026{,}591" />.
+
+## Finding the Constant Term
+
+The constant term is a term that does not contain any variables. To find it, we need to identify the term where the power of all variables equals zero.
+
+**Example:** Determine the constant term of <InlineMath math="\left(3x^3 - \frac{2}{x}\right)^8" />.
+
+We write it in binomial form with <InlineMath math="a = 3x^3" /> and <InlineMath math="b = -\frac{2}{x}" />:
+
+<BlockMath math="\left(3x^3 - \frac{2}{x}\right)^8 = \sum_{k=0}^{8} \binom{8}{k} (3x^3)^{8-k} \left(-\frac{2}{x}\right)^k" />
+
+The general term is:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\binom{8}{k} (3x^3)^{8-k} \left(-\frac{2}{x}\right)^k = \binom{8}{k} \cdot (3)^{8-k} \cdot (x^3)^{8-k} \cdot (-2)^k \cdot (x^{-1})^k" />
+
+<BlockMath math="= \binom{8}{k} \cdot 3^{8-k} \cdot (-2)^k \cdot x^{3(8-k)} \cdot x^{-k}" />
+
+<BlockMath math="= \binom{8}{k} \cdot 3^{8-k} \cdot (-2)^k \cdot x^{24-3k-k} = \binom{8}{k} \cdot 3^{8-k} \cdot (-2)^k \cdot x^{24-4k}" />
+</div>
+
+For the constant term, the power of <InlineMath math="x" /> must be zero:
+
+<BlockMath math="24 - 4k = 0 \Rightarrow 4k = 24 \Rightarrow k = 6" />
+
+Substituting <InlineMath math="k = 6" />:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\binom{8}{6} \cdot 3^{8-6} \cdot (-2)^6 \cdot x^0 = \binom{8}{6} \cdot 3^2 \cdot (-2)^6" />
+
+<BlockMath math="= \frac{8!}{6! \cdot 2!} \cdot 9 \cdot 64 = \frac{8 \times 7}{2 \times 1} \cdot 9 \cdot 64" />
+
+<BlockMath math="= 28 \cdot 9 \cdot 64 = 252 \cdot 64 = 16{,}128" />
+</div>
+
+Note that <InlineMath math="(-2)^6 = 64" /> because even powers always produce positive values, just like <InlineMath math="(+2)^6 = 64" />.
+
+Therefore, the constant term is <InlineMath math="16{,}128" />.
+
+## Problem Solving Strategy
+
+When facing binomial Newton problems, follow these systematic steps:
+
+1. **Identify the components** in the form <InlineMath math="(a + b)^n" /> and clearly determine the values of a, b, and n.
+
+2. **Determine the type of term** being sought, whether it's a specific coefficient, constant term, or term with a specific power.
+
+3. **Use the general term formula** <InlineMath math="\binom{n}{k} a^{n-k} b^k" /> and adjust according to the required conditions.
+
+4. **Calculate carefully** the binomial coefficient values and other arithmetic operations.
+
+**Example Strategy Application:**
+
+Determine the coefficient of <InlineMath math="x^5" /> in the expansion of <InlineMath math="(2x + 3)^8" />.
+
+1. **Identify components**
+
+    From <InlineMath math="(2x + 3)^8" />, we get:
+    - <InlineMath math="a = 2x" />
+    - <InlineMath math="b = 3" />  
+    - <InlineMath math="n = 8" />
+
+2. **Determine the type of term**
+
+    We are looking for the coefficient of the term containing <InlineMath math="x^5" />.
+
+3. **Use the general term formula**
+
+    General term: <InlineMath math="\binom{8}{k} (2x)^{8-k} (3)^k" />
+
+    Expanding the general term:
+    <BlockMath math="\binom{8}{k} (2x)^{8-k} (3)^k = \binom{8}{k} \cdot 2^{8-k} \cdot x^{8-k} \cdot 3^k = \binom{8}{k} \cdot 2^{8-k} \cdot 3^k \cdot x^{8-k}" />
+
+    To get <InlineMath math="x^5" />, we need <InlineMath math="8-k = 5" />, so <InlineMath math="k = 3" />.
+
+4. **Calculate carefully**
+
+    Substituting <InlineMath math="k = 3" />:
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="\binom{8}{3} \cdot 2^{8-3} \cdot 3^3 \cdot x^5 = \binom{8}{3} \cdot 2^5 \cdot 3^3 \cdot x^5" />
+
+    <BlockMath math="= \frac{8!}{3! \cdot 5!} \cdot 32 \cdot 27 \cdot x^5" />
+
+    <BlockMath math="= \frac{8 \times 7 \times 6}{3 \times 2 \times 1} \cdot 32 \cdot 27 \cdot x^5" />
+
+    <BlockMath math="= 56 \cdot 32 \cdot 27 \cdot x^5" />
+
+    <BlockMath math="= 1{,}792 \cdot 27 \cdot x^5 = 48{,}384x^5" />
+    </div>
+
+    Therefore, the coefficient of <InlineMath math="x^5" /> is <InlineMath math="48{,}384" />.
+
+Remember that **every term in the binomial expansion** has a total power equal to the original power, and binomial coefficients are always symmetric: <InlineMath math="\binom{n}{k} = \binom{n}{n-k}" />.
+
+## Exercises
+
+1. Determine the coefficient of <InlineMath math="x^4" /> in the expansion of <InlineMath math="(2x - 3)^7" />.
+
+2. Calculate the constant term of <InlineMath math="\left(x^2 + \frac{1}{x}\right)^9" />.
+
+3. In the expansion of <InlineMath math="(1 + 2x)^{10}" />, determine the term containing <InlineMath math="x^3" />.
+
+### Answer Key
+
+1. **Solution:**
+
+   Write in binomial form with <InlineMath math="a = 2x" />, <InlineMath math="b = -3" />, and <InlineMath math="n = 7" />.
+   
+   General term: <InlineMath math="\binom{7}{k} (2x)^{7-k} (-3)^k = \binom{7}{k} \cdot 2^{7-k} \cdot (-3)^k \cdot x^{7-k}" />
+   
+   For the coefficient of <InlineMath math="x^4" />, we need <InlineMath math="7-k = 4" />, so <InlineMath math="k = 3" />.
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\binom{7}{3} \cdot 2^{7-3} \cdot (-3)^3 = \binom{7}{3} \cdot 2^4 \cdot (-3)^3" />
+   
+   <BlockMath math="= \frac{7!}{3! \cdot 4!} \cdot 16 \cdot (-27)" />
+   
+   <BlockMath math="= \frac{7 \times 6 \times 5}{3 \times 2 \times 1} \cdot 16 \cdot (-27)" />
+   
+   <BlockMath math="= 35 \cdot 16 \cdot (-27) = 560 \cdot (-27) = -15{,}120" />
+   </div>
+   
+   Therefore, the coefficient of <InlineMath math="x^4" /> is <InlineMath math="-15{,}120" />.
+
+2. **Solution:**
+
+   Write in binomial form with <InlineMath math="a = x^2" />, <InlineMath math="b = \frac{1}{x}" />, and <InlineMath math="n = 9" />.
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{General term: } \binom{9}{k} (x^2)^{9-k} \left(\frac{1}{x}\right)^k = \binom{9}{k} \cdot x^{2(9-k)} \cdot x^{-k}" />
+   
+   <BlockMath math="= \binom{9}{k} \cdot x^{18-2k} \cdot x^{-k} = \binom{9}{k} \cdot x^{18-2k-k} = \binom{9}{k} \cdot x^{18-3k}" />
+   </div>
+   
+   For the constant term, the power of <InlineMath math="x" /> must be zero: <InlineMath math="18-3k = 0" />, so <InlineMath math="k = 6" />.
+   
+   <BlockMath math="\binom{9}{6} = \binom{9}{3} = \frac{9!}{3! \cdot 6!} = \frac{9 \times 8 \times 7}{3 \times 2 \times 1} = 84" />
+   
+   Therefore, the constant term is <InlineMath math="84" />.
+
+3. **Solution:**
+
+   Write in binomial form with <InlineMath math="a = 1" />, <InlineMath math="b = 2x" />, and <InlineMath math="n = 10" />.
+   
+   General term: <InlineMath math="\binom{10}{k} (1)^{10-k} (2x)^k = \binom{10}{k} \cdot 2^k \cdot x^k" />
+   
+   For the term containing <InlineMath math="x^3" />, we need <InlineMath math="k = 3" />.
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\binom{10}{3} \cdot 2^3 \cdot x^3 = 120 \cdot 8 \cdot x^3 = 960x^3" />
+   </div>
+   
+   Therefore, the term containing <InlineMath math="x^3" /> is <InlineMath math="960x^3" />.
