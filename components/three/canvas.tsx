@@ -66,7 +66,6 @@ function ThreeCanvasComponent({
           </div>
         }
         shadows
-        dpr={[1, 4]}
         gl={{
           antialias: true,
           powerPreference: "high-performance",
