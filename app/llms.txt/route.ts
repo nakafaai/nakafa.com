@@ -86,7 +86,7 @@ export async function GET() {
     if (content) {
       return {
         section: task.section,
-        entry: `- [${content.metadata.title}](${task.locale}${task.filePath}): ${
+        entry: `- [${content.metadata.title}](/${task.locale}${task.filePath}): ${
           content.metadata.description ?? content.metadata.title
         }`,
       };
