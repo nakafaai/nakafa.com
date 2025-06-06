@@ -28,7 +28,6 @@ const nextConfig: NextConfig = {
     reactCompiler: true,
   },
   images: {
-    unoptimized: true,
     contentDispositionType: "inline",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
