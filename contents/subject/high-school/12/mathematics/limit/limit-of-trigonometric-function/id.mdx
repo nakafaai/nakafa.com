@@ -4,3 +4,182 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Limit",
 };
+
+## Memahami Limit Fungsi Trigonometri
+
+Bayangkan kamu mengamati bandul jam yang berayun sangat lambat mendekati titik keseimbangan. Gerakan ini mirip dengan perilaku fungsi trigonometri ketika variabelnya mendekati nilai tertentu. **Limit fungsi trigonometri** mengkaji bagaimana nilai fungsi sinus, cosinus, dan tangen berperilaku ketika input mendekati titik kritis.
+
+Berbeda dengan limit fungsi aljabar yang sering dapat diselesaikan dengan substitusi langsung, fungsi trigonometri memiliki karakteristik khusus karena sifat periodik dan osilasi mereka. Hal ini membuat kita perlu menggunakan **teorema dan sifat khusus** untuk menyelesaikan limit trigonometri.
+
+## Teorema Fundamental Limit Trigonometri
+
+Fondasi paling penting dalam limit trigonometri adalah teorema yang menyatakan bahwa fungsi sinus mendekati gradiennya ketika sudut mendekati nol.
+
+### Limit Dasar Sine
+
+Teorema paling mendasar adalah:
+
+<BlockMath math="\lim_{x \to 0} \frac{\sin x}{x} = 1" />
+
+Teorema ini **tidak dapat dibuktikan** menggunakan substitusi langsung karena menghasilkan bentuk <InlineMath math="\frac{0}{0}" />. Pembuktiannya memerlukan pendekatan geometris menggunakan lingkaran satuan dan teorema sandwich (squeeze theorem).
+
+> Dalam teorema ini, <InlineMath math="x" /> harus dalam **radian**, bukan derajat. Jika menggunakan derajat, hasilnya akan berbeda.
+
+### Konsekuensi dari Limit Dasar
+
+Dari limit fundamental di atas, kita dapat menurunkan beberapa limit penting lainnya:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to 0} \frac{\tan x}{x} = 1 \quad \text{(karena } \tan x = \frac{\sin x}{\cos x} \text{ dan } \cos x \to 1\text{)}" />
+<BlockMath math="\lim_{x \to 0} \frac{1 - \cos x}{x} = 0 \quad \text{(gunakan L'Hôpital atau ekspansi Taylor)}" />
+<BlockMath math="\lim_{x \to 0} \frac{1 - \cos x}{x^2} = \frac{1}{2} \quad \text{(identitas } 1 - \cos x = 2\sin^2\frac{x}{2}\text{)}" />
+</div>
+
+## Sifat Limit Trigonometri
+
+Berdasarkan teorema fundamental, kita dapat membangun serangkaian sifat yang sangat berguna:
+
+### Perbandingan Trigonometri
+
+Untuk konstanta <InlineMath math="a \neq 0" /> dan <InlineMath math="b \neq 0" />, dan **semua limit berikut ketika <InlineMath math="x \to 0" />**:
+
+| Limit | Hasil | Catatan |
+|-------|-------|---------|
+| <InlineMath math="\lim_{x \to 0} \frac{\sin ax}{bx}" /> | <InlineMath math="\frac{a}{b}" /> | Manipulasi dari teorema dasar |
+| <InlineMath math="\lim_{x \to 0} \frac{\tan ax}{bx}" /> | <InlineMath math="\frac{a}{b}" /> | Karena <InlineMath math="\tan ax = \frac{\sin ax}{\cos ax}" /> |
+| <InlineMath math="\lim_{x \to 0} \frac{\sin ax}{\sin bx}" /> | <InlineMath math="\frac{a}{b}" /> | Kombinasi dua limit sine |
+| <InlineMath math="\lim_{x \to 0} \frac{\tan ax}{\tan bx}" /> | <InlineMath math="\frac{a}{b}" /> | Kombinasi dua limit tangen |
+
+### Kombinasi Trigonometri
+
+Dari sifat perbandingan trigonometri, kita dapat menurunkan beberapa sifat kombinasi trigonometri:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to 0} \frac{\sin ax}{\sin bx} = \frac{a}{b}" />
+<BlockMath math="\lim_{x \to 0} \frac{\tan ax}{\sin bx} = \frac{a}{b}" />
+</div>
+
+## Teknik Penyelesaian Limit Trigonometri
+
+### Teknik Substitusi dan Manipulasi
+
+Ketika menghadapi limit trigonometri yang kompleks, kita sering perlu memanipulasi ekspresi agar dapat menggunakan teorema fundamental.
+
+**Hitung:** <InlineMath math="\lim_{x \to 0} \frac{\sin 2x}{3x}" />
+
+Kita manipulasi agar memperoleh bentuk standar:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to 0} \frac{\sin 2x}{3x} = \lim_{x \to 0} \frac{2 \sin 2x}{2 \cdot 3x} = \lim_{x \to 0} \frac{2}{3} \cdot \frac{\sin 2x}{2x}" />
+<BlockMath math="= \frac{2}{3} \lim_{x \to 0} \frac{\sin 2x}{2x} = \frac{2}{3} \cdot 1 = \frac{2}{3}" />
+</div>
+
+### Teknik Identitas Trigonometri
+
+Sering kali kita perlu menggunakan identitas trigonometri untuk menyederhanakan ekspresi. Selalu pastikan fungsi terdefinisi di titik yang didekati.
+
+**Hitung:** <InlineMath math="\lim_{x \to \frac{\pi}{4}} \frac{\sin x + \cos x}{\sin x}" />
+
+Karena <InlineMath math="\sin(\frac{\pi}{4}) = \frac{\sqrt{2}}{2} \neq 0" />, penyebut tidak nol di <InlineMath math="x = \frac{\pi}{4}" />.
+
+Substitusi langsung:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to \frac{\pi}{4}} \frac{\sin x + \cos x}{\sin x} = \frac{\sin \frac{\pi}{4} + \cos \frac{\pi}{4}}{\sin \frac{\pi}{4}}" />
+<BlockMath math="= \frac{\frac{\sqrt{2}}{2} + \frac{\sqrt{2}}{2}}{\frac{\sqrt{2}}{2}} = \frac{2 \cdot \frac{\sqrt{2}}{2}}{\frac{\sqrt{2}}{2}} = \frac{\sqrt{2}}{\frac{\sqrt{2}}{2}} = \sqrt{2} \cdot \frac{2}{\sqrt{2}} = 2" />
+</div>
+
+### Teknik untuk Bentuk Khusus
+
+Untuk limit yang melibatkan bentuk <InlineMath math="\frac{0}{0}" />, kita perlu teknik khusus.
+
+**Hitung:** <InlineMath math="\lim_{x \to \frac{\pi}{2}} \frac{\sin^2(x - \frac{\pi}{2})}{x(x - \frac{\pi}{2})}" />
+
+Misalkan <InlineMath math="u = x - \frac{\pi}{2}" />, maka ketika <InlineMath math="x \to \frac{\pi}{2}" />, kita punya <InlineMath math="u \to 0" /> dan <InlineMath math="x = u + \frac{\pi}{2}" />.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{u \to 0} \frac{\sin^2 u}{(u + \frac{\pi}{2}) \cdot u} = \lim_{u \to 0} \frac{\sin^2 u}{u^2} \cdot \frac{u}{u + \frac{\pi}{2}}" />
+<BlockMath math="= \lim_{u \to 0} \left(\frac{\sin u}{u}\right)^2 \cdot \lim_{u \to 0} \frac{u}{u + \frac{\pi}{2}}" />
+<BlockMath math="= 1^2 \cdot \lim_{u \to 0} \frac{u}{\frac{\pi}{2} + u} = 1 \cdot \frac{0}{\frac{\pi}{2}} = 0" />
+</div>
+
+## Limit Trigonometri dengan Identitas Sudut
+
+### Menggunakan Rumus Jumlah dan Selisih
+
+Ketika berhadapan dengan fungsi trigonometri yang melibatkan jumlah atau selisih sudut, kita dapat menggunakan identitas trigonometri.
+
+**Hitung:** <InlineMath math="\lim_{t \to 0} \frac{\cot 5t}{\cot 10t}" />
+
+Menggunakan definisi cotangen:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{t \to 0} \frac{\cot 5t}{\cot 10t} = \lim_{t \to 0} \frac{\frac{\cos 5t}{\sin 5t}}{\frac{\cos 10t}{\sin 10t}} = \lim_{t \to 0} \frac{\cos 5t \sin 10t}{\sin 5t \cos 10t}" />
+<BlockMath math="= \lim_{t \to 0} \frac{\cos 5t}{\cos 10t} \cdot \frac{\sin 10t}{\sin 5t} = 1 \cdot \frac{10}{5} = 2" />
+</div>
+
+## Latihan
+
+1. Hitung <InlineMath math="\lim_{x \to 0} \frac{\sin 3x}{4x}" />
+
+2. Hitung <InlineMath math="\lim_{x \to 0} \frac{\tan 2x}{\sin 5x}" />
+
+3. Hitung <InlineMath math="\lim_{x \to 0} \frac{1 - \cos 3x}{x^2}" />
+
+4. Hitung <InlineMath math="\lim_{x \to \frac{\pi}{6}} \frac{\sin x - \frac{1}{2}}{x - \frac{\pi}{6}}" />
+
+5. Hitung <InlineMath math="\lim_{x \to 0} \frac{\sin x \cos x}{x}" />
+
+### Kunci Jawaban
+
+1. **Penyelesaian:**
+
+   Gunakan manipulasi aljabar untuk memperoleh bentuk standar:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 0} \frac{\sin 3x}{4x} = \lim_{x \to 0} \frac{3 \sin 3x}{3 \cdot 4x} = \lim_{x \to 0} \frac{3}{4} \cdot \frac{\sin 3x}{3x}" />
+   <BlockMath math="= \frac{3}{4} \lim_{x \to 0} \frac{\sin 3x}{3x} = \frac{3}{4} \cdot 1 = \frac{3}{4}" />
+   </div>
+
+2. **Penyelesaian:**
+
+   Gunakan sifat perbandingan trigonometri:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 0} \frac{\tan 2x}{\sin 5x} = \lim_{x \to 0} \frac{\tan 2x}{2x} \cdot \frac{5x}{\sin 5x} \cdot \frac{2x}{5x}" />
+   <BlockMath math="= \lim_{x \to 0} \frac{\tan 2x}{2x} \cdot \lim_{x \to 0} \frac{5x}{\sin 5x} \cdot \frac{2}{5}" />
+   <BlockMath math="= 1 \cdot 1 \cdot \frac{2}{5} = \frac{2}{5}" />
+   </div>
+
+3. **Penyelesaian:**
+
+   Gunakan identitas <InlineMath math="1 - \cos ax = 2\sin^2\frac{ax}{2}" />:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 0} \frac{1 - \cos 3x}{x^2} = \lim_{x \to 0} \frac{2\sin^2\frac{3x}{2}}{x^2}" />
+   <BlockMath math="= \lim_{x \to 0} 2 \cdot \left(\frac{\sin\frac{3x}{2}}{\frac{3x}{2}}\right)^2 \cdot \left(\frac{3}{2}\right)^2" />
+   <BlockMath math="= 2 \cdot 1^2 \cdot \frac{9}{4} = \frac{9}{2}" />
+   </div>
+
+4. **Penyelesaian:**
+
+   Misalkan <InlineMath math="h = x - \frac{\pi}{6}" />, maka <InlineMath math="x = h + \frac{\pi}{6}" /> dan ketika <InlineMath math="x \to \frac{\pi}{6}" />, kita punya <InlineMath math="h \to 0" />:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{h \to 0} \frac{\sin(h + \frac{\pi}{6}) - \frac{1}{2}}{h}" />
+   <BlockMath math="= \lim_{h \to 0} \frac{\sin h \cos\frac{\pi}{6} + \cos h \sin\frac{\pi}{6} - \frac{1}{2}}{h}" />
+   <BlockMath math="= \lim_{h \to 0} \frac{\sin h \cdot \frac{\sqrt{3}}{2} + \cos h \cdot \frac{1}{2} - \frac{1}{2}}{h}" />
+   <BlockMath math="= \lim_{h \to 0} \frac{\frac{\sqrt{3}}{2}\sin h + \frac{1}{2}(\cos h - 1)}{h}" />
+   <BlockMath math="= \frac{\sqrt{3}}{2} \lim_{h \to 0} \frac{\sin h}{h} + \frac{1}{2} \lim_{h \to 0} \frac{\cos h - 1}{h}" />
+   <BlockMath math="= \frac{\sqrt{3}}{2} \cdot 1 + \frac{1}{2} \cdot 0 = \frac{\sqrt{3}}{2}" />
+   </div>
+
+5. **Penyelesaian:**
+
+   Gunakan identitas <InlineMath math="\sin x \cos x = \frac{1}{2}\sin 2x" />:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 0} \frac{\sin x \cos x}{x} = \lim_{x \to 0} \frac{\frac{1}{2}\sin 2x}{x}" />
+   <BlockMath math="= \frac{1}{2} \lim_{x \to 0} \frac{\sin 2x}{x} = \frac{1}{2} \lim_{x \to 0} \frac{2 \sin 2x}{2x}" />
+   <BlockMath math="= \frac{1}{2} \cdot 2 \lim_{x \to 0} \frac{\sin 2x}{2x} = 1 \cdot 1 = 1" />
+   </div>
