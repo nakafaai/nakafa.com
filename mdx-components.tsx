@@ -76,7 +76,7 @@ const components = {
     <strong className="font-medium text-foreground" {...props} />
   ),
   blockquote: (props: BlockquoteProps) => (
-    <blockquote className="mt-6 border-l-2 pl-6 italic" {...props} />
+    <blockquote className="mt-6 border-l-2 pl-4 italic" {...props} />
   ),
   a: ({ href, children, ...props }: AnchorProps) => {
     const className = buttonVariants({ variant: "link" });

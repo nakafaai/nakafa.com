@@ -4,3 +4,207 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Limits",
 };
+
+## Understanding Properties of Limit Function
+
+After learning the [basic concept of limits](/subject/high-school/12/mathematics/limit/concept-of-limit-function), we will now delve into **properties of limit functions** that are very helpful in solving complex limit calculations. Imagine these properties as game rules that allow us to break complex limits into simpler parts.
+
+These limit properties become an important foundation in calculus because they allow us to calculate limits without always having to use formal definitions or value tables. By understanding these properties, limit calculations become more efficient and systematic.
+
+## Basic Properties of Limits
+
+### Constant Property
+
+The simplest property is the limit of a constant function. If <InlineMath math="k" /> is a constant, then:
+
+<BlockMath math="\lim_{x \to c} k = k" />
+
+This means, the limit of a **constant** is the **constant itself**. This makes sense because the value of a constant does not change with respect to the variable <InlineMath math="x" />.
+
+### Identity Property
+
+For the identity function, the following holds:
+
+<BlockMath math="\lim_{x \to c} x = c" />
+
+When <InlineMath math="x" /> approaches <InlineMath math="c" />, the value of function <InlineMath math="f(x) = x" /> also approaches <InlineMath math="c" />.
+
+## Arithmetic Operation Properties
+
+Suppose <InlineMath math="\lim_{x \to c} f(x) = L" /> and <InlineMath math="\lim_{x \to c} g(x) = M" /> where <InlineMath math="L" /> and <InlineMath math="M" /> are real numbers, then the following properties hold:
+
+### Addition and Subtraction Properties
+
+The limit of the **sum** or **difference** of two functions equals the sum or difference of the **limits of each function**:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to c} [f(x) + g(x)] = \lim_{x \to c} f(x) + \lim_{x \to c} g(x) = L + M" />
+<BlockMath math="\lim_{x \to c} [f(x) - g(x)] = \lim_{x \to c} f(x) - \lim_{x \to c} g(x) = L - M" />
+</div>
+
+> This property allows us to break complex limits into simpler parts.
+
+### Multiplication Property
+
+The limit of the **product** of two functions equals the product of the **limits of each function**:
+
+<BlockMath math="\lim_{x \to c} [f(x) \cdot g(x)] = \lim_{x \to c} f(x) \cdot \lim_{x \to c} g(x) = L \cdot M" />
+
+### Multiplication by Constant Property
+
+A **constant** can be factored out from the limit sign:
+
+<BlockMath math="\lim_{x \to c} [k \cdot f(x)] = k \cdot \lim_{x \to c} f(x) = k \cdot L" />
+
+### Division Property
+
+The limit of the **quotient** of two functions equals the quotient of the **limits of each function**, provided the limit of the denominator is **not zero**:
+
+<BlockMath math="\lim_{x \to c} \frac{f(x)}{g(x)} = \frac{\lim_{x \to c} f(x)}{\lim_{x \to c} g(x)} = \frac{L}{M}" />
+
+with the condition <InlineMath math="M \neq 0" />.
+
+## Power and Root Properties
+
+### Power Property
+
+The limit of a **function raised to a power** equals the **power** of the limit of the function:
+
+<BlockMath math="\lim_{x \to c} [f(x)]^n = \left[\lim_{x \to c} f(x)\right]^n = L^n" />
+
+where <InlineMath math="n" /> is a real number.
+
+### Root Property
+
+The limit of the **root of a function** equals the **root** of the limit of the function:
+
+<BlockMath math="\lim_{x \to c} \sqrt[n]{f(x)} = \sqrt[n]{\lim_{x \to c} f(x)} = \sqrt[n]{L}" />
+
+**Important conditions:**
+- If <InlineMath math="n" /> is odd: this property applies to all values of <InlineMath math="L" />
+- If <InlineMath math="n" /> is even: <InlineMath math="L \geq 0" /> (cannot be negative because the even root of a negative number is not defined in real numbers)
+
+## Examples of Applying Limit Properties
+
+### Simple Example
+
+Calculate <InlineMath math="\lim_{x \to 2} (3x^2 + 5x - 1)" />.
+
+**Solution:**
+
+Using limit properties:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to 2} (3x^2 + 5x - 1) = \lim_{x \to 2} 3x^2 + \lim_{x \to 2} 5x - \lim_{x \to 2} 1" />
+<BlockMath math="= 3 \lim_{x \to 2} x^2 + 5 \lim_{x \to 2} x - 1" />
+<BlockMath math="= 3(2)^2 + 5(2) - 1 = 12 + 10 - 1 = 21" />
+</div>
+
+### Example with Fractions
+
+Calculate <InlineMath math="\lim_{x \to 4} \frac{x\sqrt{x}}{x^2 + 3}" />.
+
+**Solution:**
+
+Using division and multiplication properties:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to 4} \frac{x\sqrt{x}}{x^2 + 3} = \frac{\lim_{x \to 4} x\sqrt{x}}{\lim_{x \to 4} (x^2 + 3)}" />
+<BlockMath math="= \frac{\lim_{x \to 4} x \cdot \lim_{x \to 4} \sqrt{x}}{\lim_{x \to 4} x^2 + \lim_{x \to 4} 3}" />
+</div>
+
+Now we substitute the value <InlineMath math="x = 4" />:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="= \frac{4 \cdot \sqrt{4}}{4^2 + 3} = \frac{4 \cdot 2}{16 + 3} = \frac{8}{19}" />
+</div>
+
+In **decimal** form: <InlineMath math="\frac{8}{19} \approx 0.421" />
+
+### Example with Roots
+
+Calculate <InlineMath math="\lim_{x \to 0} \sqrt{x^2 - 3x + 2}" />.
+
+**Solution:**
+
+Using the root property (since <InlineMath math="n = 2" /> is even, we need to ensure the result inside the root is not negative):
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to 0} \sqrt{x^2 - 3x + 2} = \sqrt{\lim_{x \to 0} (x^2 - 3x + 2)}" />
+</div>
+
+Calculate the limit inside the root first:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to 0} (x^2 - 3x + 2) = 0^2 - 3(0) + 2 = 0 - 0 + 2 = 2" />
+</div>
+
+Since <InlineMath math="2 > 0" />, we can use the root property:
+
+<BlockMath math="= \sqrt{2} \approx 1.414" />
+
+## Exercises
+
+1. Calculate <InlineMath math="\lim_{x \to 3} (2x^2 - 4x + 1)" />
+
+2. Calculate <InlineMath math="\lim_{x \to 1} \frac{3x + 2}{x^2 + 1}" />
+
+3. Calculate <InlineMath math="\lim_{x \to 4} \sqrt{x + 5}" />
+
+4. Calculate <InlineMath math="\lim_{x \to 2} (x + 1)^3" />
+
+5. Calculate <InlineMath math="\lim_{x \to 0} \frac{5x^2 + 3x}{2x + 1}" />
+
+### Answer Key
+
+1. **Solution:**
+
+   Using addition and multiplication by constant properties:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 3} (2x^2 - 4x + 1) = 2\lim_{x \to 3} x^2 - 4\lim_{x \to 3} x + \lim_{x \to 3} 1" />
+   </div>
+
+   Substitute <InlineMath math="x = 3" />:
+
+   <div className="flex flex-col gap-4">
+   <BlockMath math="= 2(3)^2 - 4(3) + 1 = 2(9) - 12 + 1 = 18 - 12 + 1 = 7" />
+   </div>
+
+2. **Solution:**
+
+   Using the division property:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 1} \frac{3x + 2}{x^2 + 1} = \frac{\lim_{x \to 1} (3x + 2)}{\lim_{x \to 1} (x^2 + 1)}" />
+   <BlockMath math="= \frac{3(1) + 2}{1^2 + 1} = \frac{5}{2}" />
+   </div>
+
+   In **decimal** form: <InlineMath math="\frac{5}{2} = 2.5" />
+
+3. **Solution:**
+
+   Using the root property:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 4} \sqrt{x + 5} = \sqrt{\lim_{x \to 4} (x + 5)}" />
+   <BlockMath math="= \sqrt{4 + 5} = \sqrt{9} = 3" />
+   </div>
+
+4. **Solution:**
+
+   Using the power property:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 2} (x + 1)^3 = \left[\lim_{x \to 2} (x + 1)\right]^3" />
+   <BlockMath math="= (2 + 1)^3 = 3^3 = 27" />
+   </div>
+
+5. **Solution:**
+
+   Using the division property:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 0} \frac{5x^2 + 3x}{2x + 1} = \frac{\lim_{x \to 0} (5x^2 + 3x)}{\lim_{x \to 0} (2x + 1)}" />
+   <BlockMath math="= \frac{5(0)^2 + 3(0)}{2(0) + 1} = \frac{0}{1} = 0" />
+   </div>
