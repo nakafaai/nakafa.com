@@ -4,3 +4,185 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Limit",
 };
+
+## Memahami Limit Fungsi Aljabar
+
+Bayangkan kamu sedang mengendarai mobil menuju suatu tempat. Semakin dekat kamu dengan tujuan, semakin jelas kamu dapat melihat detailnya. Dalam matematika, **limit fungsi aljabar** bekerja dengan cara serupa. Limit menunjukkan nilai yang didekati oleh fungsi aljabar ketika variabel inputnya mendekati nilai tertentu.
+
+Fungsi aljabar adalah fungsi yang terbentuk dari kombinasi operasi aljabar seperti penjumlahan, pengurangan, perkalian, pembagian, dan perpangkatan dengan pangkat rasional. Contohnya adalah fungsi polinomial seperti <InlineMath math="f(x) = x^2 + 3x - 2" /> dan fungsi rasional seperti <InlineMath math="g(x) = \frac{x + 1}{x - 2}" />.
+
+## Sifat Fundamental Limit Aljabar
+
+Untuk menghitung limit fungsi aljabar, kita dapat menggunakan sifat-sifat dasar yang sangat membantu:
+
+### Limit Fungsi Polinomial
+
+Untuk fungsi polinomial yang **kontinu** di semua titik, perhitungan limit sangat sederhana. Kita dapat langsung **mensubstitusi** nilai yang didekati.
+
+Misalkan <InlineMath math="f(x) = x^4 - 5x^3 + x^2 - 7" />, maka:
+
+<BlockMath math="\lim_{x \to 2} f(x) = \lim_{x \to 2} (x^4 - 5x^3 + x^2 - 7)" />
+
+Karena fungsi polinomial kontinu di semua titik, kita dapat mensubstitusi langsung:
+
+<BlockMath math="= 2^4 - 5(2^3) + 2^2 - 7 = 16 - 40 + 4 - 7 = -27" />
+
+### Limit Fungsi Rasional
+
+Fungsi rasional memiliki bentuk <InlineMath math="\frac{P(x)}{Q(x)}" /> dimana <InlineMath math="P(x)" /> dan <InlineMath math="Q(x)" /> adalah polinomial. Perhitungan limitnya bergantung pada nilai penyebut:
+
+- **Jika penyebut tidak nol:** Gunakan substitusi langsung seperti fungsi polinomial.
+
+- **Jika penyebut nol:** Kita memperoleh bentuk tak tentu yang memerlukan manipulasi aljabar.
+
+## Mengatasi Bentuk Tak Tentu
+
+Ketika substitusi langsung menghasilkan bentuk <InlineMath math="\frac{0}{0}" />, kita perlu menggunakan teknik khusus.
+
+### Teknik Pemfaktoran
+
+Metode paling umum adalah memfaktorkan pembilang dan penyebut, kemudian menyederhanakan.
+
+**Contoh:** Hitung <InlineMath math="\lim_{x \to 2} \frac{x^2 - 4}{x - 2}" />
+
+Substitusi langsung memberikan <InlineMath math="\frac{0}{0}" />. Mari kita faktorkan:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="x^2 - 4 = (x + 2)(x - 2)" />
+<BlockMath math="\lim_{x \to 2} \frac{x^2 - 4}{x - 2} = \lim_{x \to 2} \frac{(x + 2)(x - 2)}{x - 2}" />
+</div>
+
+Karena <InlineMath math="x" /> mendekati 2 (bukan sama dengan 2), kita dapat membatalkan faktor <InlineMath math="(x - 2)" />:
+
+<BlockMath math="= \lim_{x \to 2} (x + 2) = 2 + 2 = 4" />
+
+### Teknik Rasionalisasi
+
+Untuk limit yang melibatkan bentuk akar, sering kali kita perlu merasionalkan. Substitusi langsung menghasilkan bentuk tak tentu.
+
+**Contoh:** Hitung <InlineMath math="\lim_{x \to 1} \frac{\sqrt{x} - 1}{x - 1}" />
+
+Substitusi langsung:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{\sqrt{1} - 1}{1 - 1} = \frac{1 - 1}{0} = \frac{0}{0} \text{ (bentuk tak tentu)}" />
+</div>
+
+Kita rasionalkan dengan mengalikan dengan **bentuk sekawan** <InlineMath math="\sqrt{x} + 1" />. Tujuannya adalah menghilangkan bentuk akar di pembilang menggunakan rumus <InlineMath math="(a-b)(a+b) = a^2 - b^2" />:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to 1} \frac{\sqrt{x} - 1}{x - 1} \cdot \frac{\sqrt{x} + 1}{\sqrt{x} + 1}" />
+<BlockMath math="= \lim_{x \to 1} \frac{(\sqrt{x} - 1)(\sqrt{x} + 1)}{(x - 1)(\sqrt{x} + 1)}" />
+<BlockMath math="= \lim_{x \to 1} \frac{(\sqrt{x})^2 - 1^2}{(x - 1)(\sqrt{x} + 1)} = \lim_{x \to 1} \frac{x - 1}{(x - 1)(\sqrt{x} + 1)}" />
+</div>
+
+Karena <InlineMath math="x \neq 1" /> (mendekati 1), kita dapat membatalkan <InlineMath math="(x - 1)" />:
+
+<BlockMath math="= \lim_{x \to 1} \frac{1}{\sqrt{x} + 1} = \frac{1}{\sqrt{1} + 1} = \frac{1}{1 + 1} = \frac{1}{2}" />
+
+## Penerapan Sifat Limit pada Fungsi Aljabar
+
+Sifat-sifat limit yang telah kita pelajari dapat diterapkan secara sistematis:
+
+### Kombinasi Sifat
+
+**Contoh:** Hitung <InlineMath math="\lim_{x \to 3} \frac{x^2 - 9}{x^2 + 2x - 15}" />
+
+Substitusi langsung:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{3^2 - 9}{3^2 + 2(3) - 15} = \frac{9 - 9}{9 + 6 - 15} = \frac{0}{0} \text{ (bentuk tak tentu)}" /> 
+</div>
+
+Mari kita faktorkan keduanya. Untuk <InlineMath math="x^2 + 2x - 15" />, kita cari dua bilangan yang jika dikalikan hasilnya <InlineMath math="-15" /> dan jika dijumlahkan hasilnya <InlineMath math="2" />. Bilangan tersebut adalah <InlineMath math="5" /> dan <InlineMath math="-3" />.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="x^2 - 9 = (x - 3)(x + 3)" />
+<BlockMath math="x^2 + 2x - 15 = x^2 + 5x - 3x - 15 = x(x + 5) - 3(x + 5) = (x - 3)(x + 5)" />
+</div>
+
+Sehingga:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to 3} \frac{(x - 3)(x + 3)}{(x - 3)(x + 5)} = \lim_{x \to 3} \frac{x + 3}{x + 5}" />
+</div>
+
+Substitusi <InlineMath math="x = 3" />: <InlineMath math="\frac{3 + 3}{3 + 5} = \frac{6}{8} = \frac{3}{4}" />
+
+> Jika pembilang bukan nol dan penyebut nol (seperti <InlineMath math="\frac{a}{0}" /> dengan <InlineMath math="a \neq 0" />), limit menuju tak hingga. Jika pembilang dan penyebut keduanya nol (bentuk <InlineMath math="\frac{0}{0}" />), gunakan teknik pemfaktoran atau rasionalisasi.
+
+## Kontinuitas dan Limit
+
+Suatu fungsi <InlineMath math="f" /> dikatakan **kontinu** di <InlineMath math="x = c" /> jika:
+
+1. <InlineMath math="f(c)" /> ada (terdefinisi)
+2. <InlineMath math="\lim_{x \to c} f(x)" /> ada  
+3. <InlineMath math="\lim_{x \to c} f(x) = f(c)" />
+
+Fungsi polinomial kontinu di semua titik, sedangkan fungsi rasional kontinu di semua titik kecuali dimana penyebutnya nol.
+
+## Latihan
+
+1. Hitung <InlineMath math="\lim_{x \to 2} (x^4 - 5x^3 + x^2 - 7)" />
+
+2. Hitung <InlineMath math="\lim_{x \to 2} \frac{x^2 - 6x + 8}{x^2 + 16x + 28}" />
+
+3. Hitung <InlineMath math="\lim_{x \to 1} \frac{x^2 - 2x + 1}{x - 1}" />
+
+4. Tentukan apakah fungsi <InlineMath math="f(x) = x^2 - 2x + 1" /> kontinu di <InlineMath math="x = 1" />
+
+5. Hitung <InlineMath math="\lim_{x \to 0} \frac{\sqrt{x + 4} - 2}{x}" />
+
+### Kunci Jawaban
+
+1. **Penyelesaian:**
+
+   Karena ini adalah fungsi polinomial yang kontinu di semua titik, kita dapat substitusi langsung:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 2} (x^4 - 5x^3 + x^2 - 7) = 2^4 - 5(2^3) + 2^2 - 7" />
+   <BlockMath math="= 16 - 5(8) + 4 - 7 = 16 - 40 + 4 - 7 = -27" />
+   </div>
+
+2. **Penyelesaian:**
+
+   Karena ini fungsi rasional dengan penyebut tidak nol di <InlineMath math="x = 2" />, gunakan substitusi langsung:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 2} \frac{x^2 - 6x + 8}{x^2 + 16x + 28} = \frac{2^2 - 6(2) + 8}{2^2 + 16(2) + 28}" />
+   <BlockMath math="= \frac{4 - 12 + 8}{4 + 32 + 28} = \frac{0}{64} = 0" />
+   </div>
+
+3. **Penyelesaian:**
+
+   Substitusi langsung memberikan <InlineMath math="\frac{0}{0}" />. Mari faktorkan pembilang:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="x^2 - 2x + 1 = (x - 1)^2" />
+   <BlockMath math="\lim_{x \to 1} \frac{(x - 1)^2}{x - 1} = \lim_{x \to 1} (x - 1) = 1 - 1 = 0" />
+   </div>
+
+4. **Penyelesaian:**
+
+   Untuk memeriksa kontinuitas di <InlineMath math="x = 1" />, periksa tiga syarat:
+   
+   - **Syarat 1 (fungsi terdefinisi):** <InlineMath math="f(1) = 1^2 - 2(1) + 1 = 1 - 2 + 1 = 0" /> ✓ (ada)
+   
+   - **Syarat 2 (limit ada):** Karena fungsi polinomial, <InlineMath math="\lim_{x \to 1} f(x) = f(1) = 0" /> ✓ (ada)
+   
+   - **Syarat 3 (limit sama dengan nilai fungsi):** <InlineMath math="\lim_{x \to 1} f(x) = f(1) = 0" /> ✓ (sama)
+   
+   Karena ketiga syarat kontinuitas terpenuhi, fungsi **kontinu** di <InlineMath math="x = 1" />.
+
+5. **Penyelesaian:**
+
+   Substitusi langsung: <InlineMath math="\frac{\sqrt{0 + 4} - 2}{0} = \frac{2 - 2}{0} = \frac{0}{0}" /> (bentuk tak tentu).
+   
+   Gunakan rasionalisasi dengan mengalikan bentuk sekawan <InlineMath math="\sqrt{x + 4} + 2" />:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 0} \frac{\sqrt{x + 4} - 2}{x} \cdot \frac{\sqrt{x + 4} + 2}{\sqrt{x + 4} + 2}" />
+   <BlockMath math="= \lim_{x \to 0} \frac{(\sqrt{x + 4})^2 - 2^2}{x(\sqrt{x + 4} + 2)} = \lim_{x \to 0} \frac{(x + 4) - 4}{x(\sqrt{x + 4} + 2)}" />
+   <BlockMath math="= \lim_{x \to 0} \frac{x}{x(\sqrt{x + 4} + 2)} = \lim_{x \to 0} \frac{1}{\sqrt{x + 4} + 2}" />
+   <BlockMath math="= \frac{1}{\sqrt{0 + 4} + 2} = \frac{1}{\sqrt{4} + 2} = \frac{1}{2 + 2} = \frac{1}{4}" />
+   </div>

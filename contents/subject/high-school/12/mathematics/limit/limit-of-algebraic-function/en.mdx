@@ -4,3 +4,185 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Limits",
 };
+
+## Understanding Limits of Algebraic Functions
+
+Imagine you are driving a car towards a destination. The closer you get to your destination, the clearer you can see its details. In mathematics, **limits of algebraic functions** work in a similar way. Limits show the value approached by an algebraic function when its input variable approaches a certain value.
+
+Algebraic functions are functions formed from combinations of algebraic operations such as addition, subtraction, multiplication, division, and exponentiation with rational exponents. Examples include polynomial functions like <InlineMath math="f(x) = x^2 + 3x - 2" /> and rational functions like <InlineMath math="g(x) = \frac{x + 1}{x - 2}" />.
+
+## Fundamental Properties of Algebraic Limits
+
+To calculate limits of algebraic functions, we can use basic properties that are very helpful:
+
+### Limits of Polynomial Functions
+
+For polynomial functions that are **continuous** at all points, calculating limits is very simple. We can directly **substitute** the approaching value.
+
+Let <InlineMath math="f(x) = x^4 - 5x^3 + x^2 - 7" />, then:
+
+<BlockMath math="\lim_{x \to 2} f(x) = \lim_{x \to 2} (x^4 - 5x^3 + x^2 - 7)" />
+
+Since polynomial functions are continuous at all points, we can substitute directly:
+
+<BlockMath math="= 2^4 - 5(2^3) + 2^2 - 7 = 16 - 40 + 4 - 7 = -27" />
+
+### Limits of Rational Functions
+
+Rational functions have the form <InlineMath math="\frac{P(x)}{Q(x)}" /> where <InlineMath math="P(x)" /> and <InlineMath math="Q(x)" /> are polynomials. Their limit calculation depends on the denominator value:
+
+- **If the denominator is not zero:** Use direct substitution like polynomial functions.
+
+- **If the denominator is zero:** We obtain an indeterminate form that requires algebraic manipulation.
+
+## Handling Indeterminate Forms
+
+When direct substitution yields the form <InlineMath math="\frac{0}{0}" />, we need to use special techniques.
+
+### Factoring Technique
+
+The most common method is to factor the numerator and denominator, then simplify.
+
+**Example:** Calculate <InlineMath math="\lim_{x \to 2} \frac{x^2 - 4}{x - 2}" />
+
+Direct substitution gives <InlineMath math="\frac{0}{0}" />. Let's factor:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="x^2 - 4 = (x + 2)(x - 2)" />
+<BlockMath math="\lim_{x \to 2} \frac{x^2 - 4}{x - 2} = \lim_{x \to 2} \frac{(x + 2)(x - 2)}{x - 2}" />
+</div>
+
+Since <InlineMath math="x" /> approaches 2 (not equal to 2), we can cancel the factor <InlineMath math="(x - 2)" />:
+
+<BlockMath math="= \lim_{x \to 2} (x + 2) = 2 + 2 = 4" />
+
+### Rationalization Technique
+
+For limits involving radical forms, we often need to rationalize. Direct substitution yields an indeterminate form.
+
+**Example:** Calculate <InlineMath math="\lim_{x \to 1} \frac{\sqrt{x} - 1}{x - 1}" />
+
+Direct substitution:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{\sqrt{1} - 1}{1 - 1} = \frac{1 - 1}{0} = \frac{0}{0} \text{ (indeterminate form)}" />
+</div>
+
+We rationalize by multiplying with the **conjugate** <InlineMath math="\sqrt{x} + 1" />. The purpose is to eliminate the radical form in the numerator using the formula <InlineMath math="(a-b)(a+b) = a^2 - b^2" />:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to 1} \frac{\sqrt{x} - 1}{x - 1} \cdot \frac{\sqrt{x} + 1}{\sqrt{x} + 1}" />
+<BlockMath math="= \lim_{x \to 1} \frac{(\sqrt{x} - 1)(\sqrt{x} + 1)}{(x - 1)(\sqrt{x} + 1)}" />
+<BlockMath math="= \lim_{x \to 1} \frac{(\sqrt{x})^2 - 1^2}{(x - 1)(\sqrt{x} + 1)} = \lim_{x \to 1} \frac{x - 1}{(x - 1)(\sqrt{x} + 1)}" />
+</div>
+
+Since <InlineMath math="x \neq 1" /> (approaching 1), we can cancel <InlineMath math="(x - 1)" />:
+
+<BlockMath math="= \lim_{x \to 1} \frac{1}{\sqrt{x} + 1} = \frac{1}{\sqrt{1} + 1} = \frac{1}{1 + 1} = \frac{1}{2}" />
+
+## Application of Limit Properties to Algebraic Functions
+
+The limit properties we have learned can be applied systematically:
+
+### Combining Properties
+
+**Example:** Calculate <InlineMath math="\lim_{x \to 3} \frac{x^2 - 9}{x^2 + 2x - 15}" />
+
+Direct substitution:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{3^2 - 9}{3^2 + 2(3) - 15} = \frac{9 - 9}{9 + 6 - 15} = \frac{0}{0} \text{ (indeterminate form)}" /> 
+</div>
+
+Let's factor both. For <InlineMath math="x^2 + 2x - 15" />, we find two numbers that when multiplied give <InlineMath math="-15" /> and when added give <InlineMath math="2" />. Those numbers are <InlineMath math="5" /> and <InlineMath math="-3" />.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="x^2 - 9 = (x - 3)(x + 3)" />
+<BlockMath math="x^2 + 2x - 15 = x^2 + 5x - 3x - 15 = x(x + 5) - 3(x + 5) = (x - 3)(x + 5)" />
+</div>
+
+Therefore:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\lim_{x \to 3} \frac{(x - 3)(x + 3)}{(x - 3)(x + 5)} = \lim_{x \to 3} \frac{x + 3}{x + 5}" />
+</div>
+
+Substitute <InlineMath math="x = 3" />: <InlineMath math="\frac{3 + 3}{3 + 5} = \frac{6}{8} = \frac{3}{4}" />
+
+> If the numerator is non-zero and the denominator is zero (like <InlineMath math="\frac{a}{0}" /> with <InlineMath math="a \neq 0" />), the limit approaches infinity. If both numerator and denominator are zero (the form <InlineMath math="\frac{0}{0}" />), use factoring or rationalization techniques.
+
+## Continuity and Limits
+
+A function <InlineMath math="f" /> is said to be **continuous** at <InlineMath math="x = c" /> if:
+
+1. <InlineMath math="f(c)" /> exists (is defined)
+2. <InlineMath math="\lim_{x \to c} f(x)" /> exists  
+3. <InlineMath math="\lim_{x \to c} f(x) = f(c)" />
+
+Polynomial functions are continuous at all points, while rational functions are continuous at all points except where their denominator is zero.
+
+## Exercises
+
+1. Calculate <InlineMath math="\lim_{x \to 2} (x^4 - 5x^3 + x^2 - 7)" />
+
+2. Calculate <InlineMath math="\lim_{x \to 2} \frac{x^2 - 6x + 8}{x^2 + 16x + 28}" />
+
+3. Calculate <InlineMath math="\lim_{x \to 1} \frac{x^2 - 2x + 1}{x - 1}" />
+
+4. Determine whether the function <InlineMath math="f(x) = x^2 - 2x + 1" /> is continuous at <InlineMath math="x = 1" />
+
+5. Calculate <InlineMath math="\lim_{x \to 0} \frac{\sqrt{x + 4} - 2}{x}" />
+
+### Answer Key
+
+1. **Solution:**
+
+   Since this is a polynomial function that is continuous at all points, we can substitute directly:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 2} (x^4 - 5x^3 + x^2 - 7) = 2^4 - 5(2^3) + 2^2 - 7" />
+   <BlockMath math="= 16 - 5(8) + 4 - 7 = 16 - 40 + 4 - 7 = -27" />
+   </div>
+
+2. **Solution:**
+
+   Since this is a rational function with a non-zero denominator at <InlineMath math="x = 2" />, use direct substitution:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 2} \frac{x^2 - 6x + 8}{x^2 + 16x + 28} = \frac{2^2 - 6(2) + 8}{2^2 + 16(2) + 28}" />
+   <BlockMath math="= \frac{4 - 12 + 8}{4 + 32 + 28} = \frac{0}{64} = 0" />
+   </div>
+
+3. **Solution:**
+
+   Direct substitution gives <InlineMath math="\frac{0}{0}" />. Let's factor the numerator:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="x^2 - 2x + 1 = (x - 1)^2" />
+   <BlockMath math="\lim_{x \to 1} \frac{(x - 1)^2}{x - 1} = \lim_{x \to 1} (x - 1) = 1 - 1 = 0" />
+   </div>
+
+4. **Solution:**
+
+   To check continuity at <InlineMath math="x = 1" />, check three conditions:
+   
+   - **Condition 1 (function is defined):** <InlineMath math="f(1) = 1^2 - 2(1) + 1 = 1 - 2 + 1 = 0" /> ✓ (exists)
+   
+   - **Condition 2 (limit exists):** Since it's a polynomial function, <InlineMath math="\lim_{x \to 1} f(x) = f(1) = 0" /> ✓ (exists)
+   
+   - **Condition 3 (limit equals function value):** <InlineMath math="\lim_{x \to 1} f(x) = f(1) = 0" /> ✓ (equal)
+   
+   Since all three continuity conditions are satisfied, the function is **continuous** at <InlineMath math="x = 1" />.
+
+5. **Solution:**
+
+   Direct substitution: <InlineMath math="\frac{\sqrt{0 + 4} - 2}{0} = \frac{2 - 2}{0} = \frac{0}{0}" /> (indeterminate form).
+   
+   Use rationalization by multiplying with the conjugate <InlineMath math="\sqrt{x + 4} + 2" />:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{x \to 0} \frac{\sqrt{x + 4} - 2}{x} \cdot \frac{\sqrt{x + 4} + 2}{\sqrt{x + 4} + 2}" />
+   <BlockMath math="= \lim_{x \to 0} \frac{(\sqrt{x + 4})^2 - 2^2}{x(\sqrt{x + 4} + 2)} = \lim_{x \to 0} \frac{(x + 4) - 4}{x(\sqrt{x + 4} + 2)}" />
+   <BlockMath math="= \lim_{x \to 0} \frac{x}{x(\sqrt{x + 4} + 2)} = \lim_{x \to 0} \frac{1}{\sqrt{x + 4} + 2}" />
+   <BlockMath math="= \frac{1}{\sqrt{0 + 4} + 2} = \frac{1}{\sqrt{4} + 2} = \frac{1}{2 + 2} = \frac{1}{4}" />
+   </div>
