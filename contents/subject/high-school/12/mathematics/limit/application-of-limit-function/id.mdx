@@ -4,3 +4,216 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Limit",
 };
+
+## Penerapan dalam Masalah Kesehatan Masyarakat
+
+Salah satu aplikasi paling relevan dari limit fungsi adalah dalam **analisis penyebaran penyakit** dan program vaksinasi. Ketika pemerintah merancang strategi kesehatan masyarakat, mereka perlu memahami bagaimana jumlah kasus akan berubah seiring waktu dan berapa banyak sumber daya yang diperlukan.
+
+### Model Penyebaran Virus
+
+Misalkan dalam suatu kota terdapat fungsi yang menggambarkan jumlah penduduk yang terinfeksi virus:
+
+<BlockMath math="N(t) = 285000 - \sqrt{t^2 - t + (190.68)^3}" />
+
+dimana <InlineMath math="N(t)" /> mewakili jumlah penduduk yang terinfeksi dan <InlineMath math="t" /> mewakili waktu dalam satuan tertentu.
+
+Untuk memahami perilaku jangka panjang dari penyebaran ini, kita perlu menghitung:
+
+<BlockMath math="\lim_{t \to \infty} N(t) = \lim_{t \to \infty} \left(285000 - \sqrt{t^2 - t + (190.68)^3}\right)" />
+
+**Analisis perilaku jangka panjang:**
+
+Ketika <InlineMath math="t" /> sangat besar, suku <InlineMath math="t^2" /> akan mendominasi di dalam akar karena:
+- <InlineMath math="t^2" /> tumbuh lebih cepat dibanding <InlineMath math="t" /> dan konstanta <InlineMath math="(190.68)^3" />
+- Untuk <InlineMath math="t >> 1" />, maka <InlineMath math="t^2 - t + (190.68)^3 \approx t^2" />
+
+Jadi,
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\sqrt{t^2 - t + (190.68)^3} \approx \sqrt{t^2} = |t| = t \quad \text{(untuk } t > 0\text{)}" />
+<BlockMath math="\lim_{t \to \infty} N(t) = \lim_{t \to \infty} (285000 - t) = -\infty" />
+</div>
+
+> Hasil negatif ini secara matematis menunjukkan bahwa model ini hanya berlaku untuk periode waktu terbatas. Dalam konteks nyata, jumlah penduduk terinfeksi tidak mungkin negatif, sehingga model ini valid hanya hingga titik dimana <InlineMath math="N(t) \geq 0" />.
+
+### Strategi Vaksinasi Optimal
+
+Dalam konteks program vaksinasi, limit fungsi membantu menentukan **target vaksinasi yang efektif**. Jika kita tahu bahwa pada waktu tertentu jumlah kasus akan stabil atau menurun, kita dapat menghitung berapa banyak vaksin yang dibutuhkan.
+
+Misalkan target vaksinasi untuk penduduk berusia di atas 18 tahun adalah <InlineMath math="V" /> orang, dan kita ingin mencapai kondisi dimana jumlah kasus baru mendekati nol. Kita dapat menggunakan limit untuk menentukan strategi optimal.
+
+## Aplikasi dalam Bidang Ekonomi
+
+### Analisis Biaya Marginal
+
+Dalam ekonomi, **biaya marginal** adalah tambahan biaya untuk memproduksi satu unit tambahan. Secara praktis, ini menjawab pertanyaan: "Berapa tambahan biaya jika kita memproduksi 1 unit lagi?"
+
+**Definisi matematis menggunakan limit:**
+
+<BlockMath math="\text{Biaya Marginal} = \lim_{\Delta x \to 0} \frac{C(x + \Delta x) - C(x)}{\Delta x}" />
+
+dimana:
+- <InlineMath math="C(x)" /> = fungsi total biaya produksi untuk <InlineMath math="x" /> unit
+- <InlineMath math="\Delta x" /> = perubahan kecil dalam jumlah produksi
+- Limit memberikan **laju perubahan sesaat** biaya terhadap produksi
+
+### Model Pertumbuhan Populasi
+
+Dalam studi demografi, model pertumbuhan populasi sering menggunakan fungsi yang melibatkan limit. Misalnya, model logistik:
+
+<BlockMath math="P(t) = \frac{K}{1 + Ae^{-rt}}" />
+
+Limit dari fungsi ini ketika <InlineMath math="t \to \infty" /> memberikan **kapasitas daya dukung** lingkungan:
+
+<BlockMath math="\lim_{t \to \infty} P(t) = K" />
+
+## Penerapan dalam Teknologi dan Sains
+
+### Analisis Sinyal Digital
+
+Dalam pemrosesan sinyal digital, limit fungsi digunakan untuk menganalisis **respons sistem** terhadap input tertentu. Filter digital sering dievaluasi menggunakan limit untuk memahami perilaku frekuensi tinggi dan rendah.
+
+### Laju Reaksi Kimia
+
+Dalam kimia, laju reaksi dapat dimodelkan menggunakan fungsi eksponensial. Limit fungsi membantu menentukan **konsentrasi kesetimbangan** reaktan:
+
+<BlockMath math="\lim_{t \to \infty} [A](t) = [A]_{\text{kesetimbangan}}" />
+
+## Optimalisasi Program Vaksinasi Kota
+
+1. **Deskripsi Masalah:**
+
+    Sebuah kota dengan populasi 576,260 orang sedang menghadapi wabah penyakit. Pemerintah kota telah mengembangkan model matematika untuk memprediksi jumlah kasus positif berdasarkan jumlah orang yang telah divaksinasi. Model tersebut dinyatakan dalam fungsi:
+
+    <BlockMath math="N(t) = 285000 - \sqrt{t^2 - t + (190.68)^3}" />
+
+    dimana:
+    - <InlineMath math="N(t)" /> = jumlah kasus positif yang tersisa
+    - <InlineMath math="t" /> = jumlah orang yang telah divaksinasi
+
+2. **Pertanyaan:**
+
+    Jika target program vaksinasi adalah 282,367 orang, berapa jumlah kasus positif yang masih tersisa ketika target tercapai?
+
+3. **Data dan Asumsi:**
+
+    Berdasarkan survei demografis kota:
+    - Total populasi: 576,260 orang
+    - Komposisi usia: 21% anak-anak (≤18 tahun), 79% dewasa (>18 tahun)
+    - Status kesehatan: 30% sudah terkonfirmasi positif
+    - Kebijakan: Hanya dewasa yang belum positif yang dapat divaksinasi
+
+    Justifikasi Target Vaksinasi 282,367 orang:
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="\text{Anak-anak} = 0.21 \times 576{,}260 = 121{,}015 \text{ orang}" />
+    <BlockMath math="\text{Dewasa} = 0.79 \times 576{,}260 = 455{,}245 \text{ orang}" />
+    <BlockMath math="\text{Total positif} = 0.3 \times 576{,}260 = 172{,}878 \text{ orang}" />
+    <BlockMath math="\text{Dewasa positif} = 0.79 \times 172{,}878 = 136{,}574 \text{ orang}" />
+    <BlockMath math="\text{Dewasa dapat divaksinasi} = 455{,}245 - 136{,}574 = 318{,}671 \text{ orang}" />
+    </div>
+
+    Target vaksinasi 282,367 orang merupakan 89% dari dewasa yang memenuhi syarat, disesuaikan dengan ketersediaan vaksin dan kapasitas tenaga medis.
+
+4. **Penyelesaian:**
+
+    Untuk menentukan jumlah kasus yang tersisa ketika <InlineMath math="t = 282{,}367" />, kita hitung:
+
+    <BlockMath math="N(282{,}367) = 285{,}000 - \sqrt{(282{,}367)^2 - 282{,}367 + (190.68)^3}" />
+
+    **Langkah 1:** Hitung <InlineMath math="(190.68)^3" />
+
+    <BlockMath math="(190.68)^3 = 190.68 \times 190.68 \times 190.68 = 6{,}932{,}907.88" />
+
+    **Langkah 2:** Hitung <InlineMath math="(282{,}367)^2" />
+
+    <BlockMath math="(282{,}367)^2 = 79{,}731{,}122{,}689" />
+
+    **Langkah 3:** Substitusi ke dalam akar
+
+    <BlockMath math="79{,}731{,}122{,}689 - 282{,}367 + 6{,}932{,}907.88 = 79{,}737{,}773{,}229.88" />
+
+    **Langkah 4:** Hitung hasil akhir
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="N(282{,}367) = 285{,}000 - \sqrt{79{,}737{,}773{,}229.88}" />
+    <BlockMath math="= 285{,}000 - 282{,}378.78" />
+    <BlockMath math="= 2{,}621.22 \approx 2{,}621 \text{ orang}" />
+    </div>
+
+5. **Interpretasi Hasil:**
+
+    Ketika program vaksinasi mencapai target 282,367 orang yang divaksinasi, model memprediksi bahwa akan tersisa **2,621 kasus positif** yang masih perlu ditangani. Hasil ini memberikan informasi penting untuk perencanaan sumber daya kesehatan selanjutnya.
+
+## Interpretasi dan Pengambilan Keputusan
+
+**Pemahaman hasil limit** sangat penting dalam pengambilan keputusan. Dalam contoh di atas, hasil 2,621 kasus memberikan informasi kepada pembuat kebijakan tentang:
+
+1. **Kapasitas rumah sakit** yang masih dibutuhkan
+2. **Jumlah tenaga medis** yang harus disiapkan  
+3. **Alokasi sumber daya** untuk penanganan kasus tersisa
+4. **Strategi komunikasi** kepada masyarakat tentang ekspektasi realistis
+
+> Limit fungsi memberikan gambaran tentang perilaku jangka panjang sistem, memungkinkan perencanaan yang lebih efektif dan realistis.
+
+## Latihan
+
+1. Sebuah perusahaan farmasi memodelkan produksi vaksin dengan fungsi <InlineMath math="P(t) = 50000(1 - e^{-0.1t})" />. Tentukan kapasitas produksi maksimum menggunakan konsep limit.
+
+2. Fungsi penyebaran informasi di media sosial dinyatakan sebagai <InlineMath math="I(t) = \frac{100000t}{t + 50}" />. Hitung limit ketika <InlineMath math="t \to \infty" /> dan interpretasikan hasilnya.
+
+3. Biaya total produksi masker adalah <InlineMath math="C(x) = 1000 + 5x + 0.01x^2" />. Tentukan biaya marginal menggunakan definisi limit.
+
+### Kunci Jawaban
+
+1. **Penyelesaian:**
+
+   Kapasitas produksi maksimum diperoleh dengan menghitung limit ketika <InlineMath math="t \to \infty" />:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{t \to \infty} P(t) = \lim_{t \to \infty} 50000(1 - e^{-0.1t})" />
+   <BlockMath math="= 50000 \lim_{t \to \infty} (1 - e^{-0.1t})" />
+   <BlockMath math="= 50000(1 - 0) = 50000 \text{ unit vaksin}" />
+   </div>
+
+   Jadi, kapasitas produksi maksimum adalah 50,000 unit vaksin.
+
+2. **Penyelesaian:**
+
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{t \to \infty} I(t) = \lim_{t \to \infty} \frac{100000t}{t + 50}" />
+   <BlockMath math="= \lim_{t \to \infty} \frac{100000t}{t(1 + \frac{50}{t})} = \lim_{t \to \infty} \frac{100000}{1 + \frac{50}{t}}" />
+   <BlockMath math="= \frac{100000}{1 + 0} = 100000 \text{ orang}" />
+   </div>
+
+   Dalam jangka panjang, informasi akan mencapai maksimal 100,000 orang, menunjukkan adanya saturasi dalam penyebaran informasi.
+
+3. **Penyelesaian:**
+
+   Biaya marginal adalah turunan dari fungsi biaya, yang dapat dihitung menggunakan definisi limit:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Biaya Marginal} = \lim_{\Delta x \to 0} \frac{C(x + \Delta x) - C(x)}{\Delta x}" />
+   </div>
+
+   **Langkah detail:**
+   
+   <BlockMath math="C(x + \Delta x) = 1000 + 5(x + \Delta x) + 0.01(x + \Delta x)^2" />
+   
+   Kita ekspansi:
+   
+   <BlockMath math="(x + \Delta x)^2 = x^2 + 2x\Delta x + (\Delta x)^2" />
+
+   Lalu kita substitusikan:
+   
+   <BlockMath math="C(x + \Delta x) = 1000 + 5x + 5\Delta x + 0.01x^2 + 0.02x\Delta x + 0.01(\Delta x)^2" />
+
+   Maka,
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(x + \Delta x) - C(x) = 5\Delta x + 0.02x\Delta x + 0.01(\Delta x)^2" />
+   <BlockMath math="\frac{C(x + \Delta x) - C(x)}{\Delta x} = 5 + 0.02x + 0.01\Delta x" />
+   <BlockMath math="\lim_{\Delta x \to 0} (5 + 0.02x + 0.01\Delta x) = 5 + 0.02x" />
+   </div>
+
+   Biaya marginal adalah <InlineMath math="5 + 0.02x" /> rupiah per unit. Artinya, untuk memproduksi masker ke-<InlineMath math="x" />, tambahan biayanya adalah <InlineMath math="5 + 0.02x" /> rupiah. Semakin banyak produksi, biaya marginal semakin meningkat karena adanya suku <InlineMath math="0.02x" />.

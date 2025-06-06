@@ -4,3 +4,216 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Limits",
 };
+
+## Application in Public Health Problems
+
+One of the most relevant applications of limit functions is in **disease spread analysis** and vaccination programs. When governments design public health strategies, they need to understand how the number of cases will change over time and how many resources are needed.
+
+### Virus Spread Model
+
+Suppose in a city there is a function that describes the number of residents infected with a virus:
+
+<BlockMath math="N(t) = 285000 - \sqrt{t^2 - t + (190.68)^3}" />
+
+where <InlineMath math="N(t)" /> represents the number of infected residents and <InlineMath math="t" /> represents time in certain units.
+
+To understand the long-term behavior of this spread, we need to calculate:
+
+<BlockMath math="\lim_{t \to \infty} N(t) = \lim_{t \to \infty} \left(285000 - \sqrt{t^2 - t + (190.68)^3}\right)" />
+
+**Long-term behavior analysis:**
+
+When <InlineMath math="t" /> is very large, the term <InlineMath math="t^2" /> will dominate inside the root because:
+- <InlineMath math="t^2" /> grows faster than <InlineMath math="t" /> and the constant <InlineMath math="(190.68)^3" />
+- For <InlineMath math="t >> 1" />, then <InlineMath math="t^2 - t + (190.68)^3 \approx t^2" />
+
+So,
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\sqrt{t^2 - t + (190.68)^3} \approx \sqrt{t^2} = |t| = t \quad \text{(for } t > 0\text{)}" />
+<BlockMath math="\lim_{t \to \infty} N(t) = \lim_{t \to \infty} (285000 - t) = -\infty" />
+</div>
+
+> This negative result mathematically indicates that this model is only valid for a limited time period. In real context, the number of infected residents cannot be negative, so this model is only valid up to the point where <InlineMath math="N(t) \geq 0" />.
+
+### Optimal Vaccination Strategy
+
+In the context of vaccination programs, limit functions help determine **effective vaccination targets**. If we know that at a certain time the number of cases will stabilize or decrease, we can calculate how many vaccines are needed.
+
+Suppose the vaccination target for residents over 18 years old is <InlineMath math="V" /> people, and we want to achieve a condition where the number of new cases approaches zero. We can use limits to determine the optimal strategy.
+
+## Application in Economics
+
+### Marginal Cost Analysis
+
+In economics, **marginal cost** is the additional cost to produce one additional unit. Practically, this answers the question: "How much additional cost if we produce 1 more unit?"
+
+**Mathematical definition using limits:**
+
+<BlockMath math="\text{Marginal Cost} = \lim_{\Delta x \to 0} \frac{C(x + \Delta x) - C(x)}{\Delta x}" />
+
+where:
+- <InlineMath math="C(x)" /> = total production cost function for <InlineMath math="x" /> units
+- <InlineMath math="\Delta x" /> = small change in production quantity
+- The limit gives the **instantaneous rate of change** of cost with respect to production
+
+### Population Growth Model
+
+In demographic studies, population growth models often use functions involving limits. For example, the logistic model:
+
+<BlockMath math="P(t) = \frac{K}{1 + Ae^{-rt}}" />
+
+The limit of this function when <InlineMath math="t \to \infty" /> gives the environmental **carrying capacity**:
+
+<BlockMath math="\lim_{t \to \infty} P(t) = K" />
+
+## Application in Technology and Science
+
+### Digital Signal Analysis
+
+In digital signal processing, limit functions are used to analyze **system response** to certain inputs. Digital filters are often evaluated using limits to understand high and low frequency behavior.
+
+### Chemical Reaction Rate
+
+In chemistry, reaction rates can be modeled using exponential functions. Limit functions help determine the **equilibrium concentration** of reactants:
+
+<BlockMath math="\lim_{t \to \infty} [A](t) = [A]_{\text{equilibrium}}" />
+
+## City Vaccination Program Optimization
+
+1. **Problem Description:**
+
+    A city with a population of 576,260 people is facing a disease outbreak. The city government has developed a mathematical model to predict the number of positive cases based on the number of people who have been vaccinated. The model is expressed in the function:
+
+    <BlockMath math="N(t) = 285000 - \sqrt{t^2 - t + (190.68)^3}" />
+
+    where:
+    - <InlineMath math="N(t)" /> = number of positive cases remaining
+    - <InlineMath math="t" /> = number of people who have been vaccinated
+
+2. **Question:**
+
+    If the vaccination program target is 282,367 people, how many positive cases will remain when the target is reached?
+
+3. **Data and Assumptions:**
+
+    Based on the city's demographic survey:
+    - Total population: 576,260 people
+    - Age composition: 21% children (≤18 years), 79% adults (>18 years)
+    - Health status: 30% already confirmed positive
+    - Policy: Only adults who are not positive can be vaccinated
+
+    Justification for Vaccination Target of 282,367 people:
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="\text{Children} = 0.21 \times 576{,}260 = 121{,}015 \text{ people}" />
+    <BlockMath math="\text{Adults} = 0.79 \times 576{,}260 = 455{,}245 \text{ people}" />
+    <BlockMath math="\text{Total positive} = 0.3 \times 576{,}260 = 172{,}878 \text{ people}" />
+    <BlockMath math="\text{Positive adults} = 0.79 \times 172{,}878 = 136{,}574 \text{ people}" />
+    <BlockMath math="\text{Adults eligible for vaccination} = 455{,}245 - 136{,}574 = 318{,}671 \text{ people}" />
+    </div>
+
+    The vaccination target of 282,367 people represents 89% of eligible adults, adjusted for vaccine availability and medical staff capacity.
+
+4. **Solution:**
+
+    To determine the number of cases remaining when <InlineMath math="t = 282{,}367" />, we calculate:
+
+    <BlockMath math="N(282{,}367) = 285{,}000 - \sqrt{(282{,}367)^2 - 282{,}367 + (190.68)^3}" />
+
+    **Step 1:** Calculate <InlineMath math="(190.68)^3" />
+
+    <BlockMath math="(190.68)^3 = 190.68 \times 190.68 \times 190.68 = 6{,}932{,}907.88" />
+
+    **Step 2:** Calculate <InlineMath math="(282{,}367)^2" />
+
+    <BlockMath math="(282{,}367)^2 = 79{,}731{,}122{,}689" />
+
+    **Step 3:** Substitute into the root
+
+    <BlockMath math="79{,}731{,}122{,}689 - 282{,}367 + 6{,}932{,}907.88 = 79{,}737{,}773{,}229.88" />
+
+    **Step 4:** Calculate the final result
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="N(282{,}367) = 285{,}000 - \sqrt{79{,}737{,}773{,}229.88}" />
+    <BlockMath math="= 285{,}000 - 282{,}378.78" />
+    <BlockMath math="= 2{,}621.22 \approx 2{,}621 \text{ people}" />
+    </div>
+
+5. **Result Interpretation:**
+
+    When the vaccination program reaches the target of 282,367 vaccinated people, the model predicts that there will be **2,621 positive cases** remaining that still need to be handled. This result provides important information for subsequent health resource planning.
+
+## Interpretation and Decision Making
+
+**Understanding limit results** is very important in decision making. In the example above, the result of 2,621 cases provides information to policymakers about:
+
+1. **Hospital capacity** still needed
+2. **Number of medical personnel** that must be prepared  
+3. **Resource allocation** for handling remaining cases
+4. **Communication strategy** to the public about realistic expectations
+
+> Limit functions provide insights into the long-term behavior of systems, enabling more effective and realistic planning.
+
+## Exercises
+
+1. A pharmaceutical company models vaccine production with the function <InlineMath math="P(t) = 50000(1 - e^{-0.1t})" />. Determine the maximum production capacity using the concept of limits.
+
+2. The function of information spread on social media is expressed as <InlineMath math="I(t) = \frac{100000t}{t + 50}" />. Calculate the limit when <InlineMath math="t \to \infty" /> and interpret the result.
+
+3. The total cost of mask production is <InlineMath math="C(x) = 1000 + 5x + 0.01x^2" />. Determine the marginal cost using the limit definition.
+
+### Answer Key
+
+1. **Solution:**
+
+   Maximum production capacity is obtained by calculating the limit when <InlineMath math="t \to \infty" />:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{t \to \infty} P(t) = \lim_{t \to \infty} 50000(1 - e^{-0.1t})" />
+   <BlockMath math="= 50000 \lim_{t \to \infty} (1 - e^{-0.1t})" />
+   <BlockMath math="= 50000(1 - 0) = 50000 \text{ vaccine units}" />
+   </div>
+
+   So, the maximum production capacity is 50,000 vaccine units.
+
+2. **Solution:**
+
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\lim_{t \to \infty} I(t) = \lim_{t \to \infty} \frac{100000t}{t + 50}" />
+   <BlockMath math="= \lim_{t \to \infty} \frac{100000t}{t(1 + \frac{50}{t})} = \lim_{t \to \infty} \frac{100000}{1 + \frac{50}{t}}" />
+   <BlockMath math="= \frac{100000}{1 + 0} = 100000 \text{ people}" />
+   </div>
+
+   In the long term, information will reach a maximum of 100,000 people, indicating saturation in information spread.
+
+3. **Solution:**
+
+   Marginal cost is the derivative of the cost function, which can be calculated using the limit definition:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Marginal Cost} = \lim_{\Delta x \to 0} \frac{C(x + \Delta x) - C(x)}{\Delta x}" />
+   </div>
+
+   **Detailed steps:**
+   
+   <BlockMath math="C(x + \Delta x) = 1000 + 5(x + \Delta x) + 0.01(x + \Delta x)^2" />
+   
+   We expand:
+   
+   <BlockMath math="(x + \Delta x)^2 = x^2 + 2x\Delta x + (\Delta x)^2" />
+
+   Then we substitute:
+   
+   <BlockMath math="C(x + \Delta x) = 1000 + 5x + 5\Delta x + 0.01x^2 + 0.02x\Delta x + 0.01(\Delta x)^2" />
+
+   So,
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="C(x + \Delta x) - C(x) = 5\Delta x + 0.02x\Delta x + 0.01(\Delta x)^2" />
+   <BlockMath math="\frac{C(x + \Delta x) - C(x)}{\Delta x} = 5 + 0.02x + 0.01\Delta x" />
+   <BlockMath math="\lim_{\Delta x \to 0} (5 + 0.02x + 0.01\Delta x) = 5 + 0.02x" />
+   </div>
+
+   The marginal cost is <InlineMath math="5 + 0.02x" /> rupiah per unit. This means, to produce the <InlineMath math="x" />-th mask, the additional cost is <InlineMath math="5 + 0.02x" /> rupiah. The more production, the higher the marginal cost due to the term <InlineMath math="0.02x" />.
