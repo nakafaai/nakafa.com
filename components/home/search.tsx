@@ -27,7 +27,6 @@ export function HomeSearch() {
       setValue={setQuery}
       loading={isPending}
       action={redirect}
-      autoFocus
     />
   );
 }
