@@ -42,7 +42,7 @@ function SidebarRightHeader({
   }
 
   return (
-    <SidebarHeader className="border-b">
+    <SidebarHeader>
       <SidebarMenu>
         <SidebarMenuItem>
           <Tooltip>
