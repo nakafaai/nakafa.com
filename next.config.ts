@@ -2,7 +2,6 @@ import createBundleAnalyzer from "@next/bundle-analyzer";
 import createMDX from "@next/mdx";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
-import { routing } from "./i18n/routing";
 
 const withAnalyzer = createBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
@@ -31,20 +30,33 @@ const nextConfig: NextConfig = {
     contentDispositionType: "inline",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
+  async rewrites() {
+    await Promise.resolve();
+    return [
+      {
+        source: "/:path*.md",
+        destination: "/llms.mdx/:path*",
+      },
+      {
+        source: "/:path*.mdx",
+        destination: "/llms.mdx/:path*",
+      },
+    ];
+  },
   async redirects() {
     await Promise.resolve();
-    return routing.locales.flatMap((locale) => [
+    return [
       {
-        source: `/${locale}/subject/junior-high-school/:path*`,
-        destination: `/${locale}/subject/middle-school/:path*`,
+        source: "/subject/junior-high-school/:path*",
+        destination: "/subject/middle-school/:path*",
         permanent: true,
       },
       {
-        source: `/${locale}/subject/senior-high-school/:path*`,
-        destination: `/${locale}/subject/high-school/:path*`,
+        source: "/subject/senior-high-school/:path*",
+        destination: "/subject/high-school/:path*",
         permanent: true,
       },
-    ]);
+    ];
   },
 };
 
