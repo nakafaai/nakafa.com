@@ -235,6 +235,10 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/derivative-function/writing-the-derivative-function`,
       },
       {
+        title: "Properties of Derivative Function",
+        href: `${BASE_PATH}/derivative-function/properties-of-derivative-function`,
+      },
+      {
         title: "Derivative of Algebraic Function",
         href: `${BASE_PATH}/derivative-function/derivative-of-algebraic-function`,
       },

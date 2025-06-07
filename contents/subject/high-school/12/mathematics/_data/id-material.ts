@@ -237,6 +237,10 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/derivative-function/writing-the-derivative-function`,
       },
       {
+        title: "Sifat Turunan Fungsi",
+        href: `${BASE_PATH}/derivative-function/properties-of-derivative-function`,
+      },
+      {
         title: "Turunan Fungsi Aljabar",
         href: `${BASE_PATH}/derivative-function/derivative-of-algebraic-function`,
       },
