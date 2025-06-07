@@ -4,3 +4,59 @@ export const metadata = {
     date: "06/07/2025",
     subject: "Derivative Functions",
 };
+
+## Shortcuts to Derivatives
+
+Finding the derivative of a function directly from its limit definition is a fundamental method, but it can be very long and tedious, especially for complex functions. The good news is, there are many shortcuts! Mathematicians have developed a set of practical rules known as the **properties of derivatives**.
+
+These properties act like special tools that make the process of differentiating functions much faster and more efficient, allowing us to focus on the core of the problem.
+
+## The Most Basic Rules
+
+Let's start with a few fundamental rules that we will use frequently.
+
+### Constant and Power Functions
+
+The first two rules are the foundation for many derivatives.
+
+1.  **Constant Function**: If a function is just a constant number, for example <InlineMath math="f(x) = k" />, its graph will be a straight horizontal line. A flat line has no slope at all, so its derivative is always zero.
+    
+    <BlockMath math="f(x) = k \implies f'(x) = 0" />
+
+2.  **Power Rule**: This is a very powerful rule for functions of the form <InlineMath math="f(x) = ax^n" />. The method is simple: multiply the exponent <InlineMath math="n" /> by the coefficient <InlineMath math="a" />, then subtract one from the exponent.
+    
+    <BlockMath math="f(x) = ax^n \implies f'(x) = n \cdot ax^{n-1}" />
+
+### Operations on Functions
+
+What if we combine several functions? Suppose we have two functions, <InlineMath math="u(x)" /> and <InlineMath math="v(x)" />.
+
+1.  **Constant Multiple**: If a function is multiplied by a constant, its derivative is that constant multiplied by the function's derivative.
+    
+    <BlockMath math="f(x) = k \cdot u(x) \implies f'(x) = k \cdot u'(x)" />
+
+2.  **Addition and Subtraction**: This rule is very intuitive. The derivative of two functions that are added or subtracted is the sum or difference of their individual derivatives.
+    
+    <BlockMath math="f(x) = u(x) \pm v(x) \implies f'(x) = u'(x) \pm v'(x)" />
+
+## Rules for Complex Functions
+
+For more complex operations like multiplication, division, and function composition, we need special rules.
+
+### Product Rule
+
+When differentiating the product of two functions, we can't simply multiply their individual derivatives. The correct rule is as follows:
+
+<BlockMath math="f(x) = u(x)v(x) \implies f'(x) = u'(x)v(x) + u(x)v'(x)" />
+
+### Quotient Rule
+
+Just like multiplication, division also has a special formula. Make sure the denominator function, <InlineMath math="v(x)" />, is not equal to zero.
+
+<BlockMath math="f(x) = \frac{u(x)}{v(x)} \implies f'(x) = \frac{u'(x)v(x) - u(x)v'(x)}{[v(x)]^2}" />
+
+### Chain Rule
+
+This rule is used for composite functions, or a "function within a function," like <InlineMath math="f(x) = [u(x)]^n" />. Imagine it like peeling an onion; we differentiate from the outermost layer inward. Differentiate the outer function first, then multiply by the derivative of the function inside.
+
+<BlockMath math="f(x) = [u(x)]^n \implies f'(x) = n[u(x)]^{n-1} \cdot u'(x)" />

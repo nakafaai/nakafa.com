@@ -4,3 +4,59 @@ export const metadata = {
     date: "06/07/2025",
     subject: "Turunan Fungsi",
 };
+
+## Jalan Pintas Menuju Turunan
+
+Mencari turunan fungsi langsung dari definisi limitnya memang cara yang mendasar, tapi bisa jadi sangat panjang dan melelahkan, apalagi untuk fungsi yang rumit. Kabar baiknya, ada banyak jalan pintas! Para matematikawan telah mengembangkan serangkaian aturan praktis yang kita kenal sebagai **sifat-sifat turunan**.
+
+Sifat-sifat ini bekerja layaknya peralatan khusus yang membuat proses penurunan fungsi menjadi jauh lebih cepat dan efisien, sehingga kita bisa fokus pada inti permasalahannya.
+
+## Aturan Paling Mendasar
+
+Mari kita mulai dengan beberapa aturan fundamental yang akan sering kita gunakan.
+
+### Fungsi Konstan dan Pangkat
+
+Dua aturan pertama adalah fondasi dari banyak turunan.
+
+1.  **Fungsi Konstan**: Jika sebuah fungsi hanya berupa angka konstan, misalnya <InlineMath math="f(x) = k" />, grafiknya akan menjadi garis lurus horizontal. Garis datar sama sekali tidak memiliki kemiringan, sehingga turunannya selalu nol.
+    
+    <BlockMath math="f(x) = k \implies f'(x) = 0" />
+
+2.  **Aturan Pangkat**: Ini adalah aturan yang sangat kuat untuk fungsi berbentuk <InlineMath math="f(x) = ax^n" />. Caranya sederhana, kalikan pangkat <InlineMath math="n" /> dengan koefisien <InlineMath math="a" />, lalu kurangi pangkatnya dengan satu.
+    
+    <BlockMath math="f(x) = ax^n \implies f'(x) = n \cdot ax^{n-1}" />
+
+### Operasi pada Fungsi
+
+Bagaimana jika kita menggabungkan beberapa fungsi? Misalkan kita punya dua fungsi, <InlineMath math="u(x)" /> dan <InlineMath math="v(x)" />.
+
+1.  **Pengali Konstanta**: Jika fungsi dikalikan dengan sebuah konstanta, turunannya adalah konstanta tersebut dikalikan dengan turunan fungsinya.
+    
+    <BlockMath math="f(x) = k \cdot u(x) \implies f'(x) = k \cdot u'(x)" />
+
+2.  **Penjumlahan dan Pengurangan**: Aturan ini sangat intuitif. Turunan dari dua fungsi yang dijumlahkan atau dikurangkan adalah hasil penjumlahan atau pengurangan dari turunan masing-masing fungsi.
+    
+    <BlockMath math="f(x) = u(x) \pm v(x) \implies f'(x) = u'(x) \pm v'(x)" />
+
+## Aturan untuk Fungsi Kompleks
+
+Untuk operasi yang lebih rumit seperti perkalian, pembagian, dan komposisi fungsi, kita memerlukan aturan khusus.
+
+### Aturan Hasil Kali
+
+Saat menurunkan hasil perkalian dua fungsi, kita tidak bisa begitu saja mengalikan turunan masing-masing. Aturan yang benar adalah sebagai berikut:
+
+<BlockMath math="f(x) = u(x)v(x) \implies f'(x) = u'(x)v(x) + u(x)v'(x)" />
+
+### Aturan Hasil Bagi
+
+Sama seperti perkalian, pembagian juga memiliki formula khusus. Pastikan fungsi penyebut, <InlineMath math="v(x)" />, tidak sama dengan nol.
+
+<BlockMath math="f(x) = \frac{u(x)}{v(x)} \implies f'(x) = \frac{u'(x)v(x) - u(x)v'(x)}{[v(x)]^2}" />
+
+### Aturan Rantai
+
+Aturan ini digunakan untuk fungsi komposisi, atau "fungsi di dalam fungsi," seperti <InlineMath math="f(x) = [u(x)]^n" />. Bayangkan seperti mengupas bawang, kita menurunkannya dari lapisan terluar ke dalam. Turunkan fungsi luar terlebih dahulu, lalu kalikan dengan turunan fungsi di dalamnya.
+
+<BlockMath math="f(x) = [u(x)]^n \implies f'(x) = n[u(x)]^{n-1} \cdot u'(x)" />
