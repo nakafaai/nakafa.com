@@ -1,16 +1,16 @@
+import { routing } from "@/i18n/routing";
 import {
   getFolderChildNames,
   getMetadataFromSlug,
   getNestedSlugs,
 } from "@/lib/utils/system";
-import type { Locale } from "next-intl";
 import { generateOGImage } from "./og";
 
 export function generateStaticParams() {
   // Top level directories in contents
   const topDirs = getFolderChildNames("contents");
   const result: { locale: string; slug: string[] }[] = [];
-  const locales: Locale[] = ["en", "id"];
+  const locales = routing.locales;
 
   // For each locale
   for (const locale of locales) {

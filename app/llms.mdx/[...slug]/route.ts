@@ -1,8 +1,7 @@
 import { routing } from "@/i18n/routing";
 import { getRawGithubUrl } from "@/lib/utils/github";
 import { getRawContent } from "@/lib/utils/markdown";
-import { getStaticParams } from "@/lib/utils/system";
-import type { Article, Subject } from "@/types/llms";
+import { getFolderChildNames, getNestedSlugs } from "@/lib/utils/system";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { type NextRequest, NextResponse } from "next/server";
@@ -53,54 +52,29 @@ export async function GET(
 }
 
 export function generateStaticParams() {
-  const locales = routing.locales;
+  // Top level directories in contents
+  const topDirs = getFolderChildNames("contents");
   const result: { slug: string[] }[] = [];
+  const locales = routing.locales;
 
-  // Get all article params
-  const articles = getStaticParams({
-    basePath: "contents/articles",
-    paramNames: ["category", "slug"],
-    slugParam: "slug",
-    isDeep: true,
-  }) as Article[];
-
-  // Get all subject params
-  const subjects = getStaticParams({
-    basePath: "contents/subject",
-    paramNames: ["category", "grade", "material", "slug"],
-    slugParam: "slug",
-    isDeep: true,
-  }) as Subject[];
-
-  // Generate params for articles
+  // For each locale
   for (const locale of locales) {
-    for (const article of articles) {
-      if (article.category && article.slug) {
+    // For each top directory (articles, subject, etc)
+    for (const topDir of topDirs) {
+      // Get all nested paths starting from this folder
+      const nestedPaths = getNestedSlugs(`contents/${topDir}`);
+
+      // Add the top-level folder itself
+      result.push({
+        slug: [locale, topDir],
+      });
+
+      // Add each nested path
+      for (const path of nestedPaths) {
         result.push({
-          slug: [
-            locale,
-            "articles",
-            String(article.category),
-            String(article.slug),
-          ],
+          slug: [locale, topDir, ...path],
         });
       }
-    }
-  }
-
-  // Generate params for subjects
-  for (const locale of locales) {
-    for (const subject of subjects) {
-      result.push({
-        slug: [
-          locale,
-          "subject",
-          String(subject.category),
-          String(subject.grade),
-          String(subject.material),
-          ...subject.slug.map(String),
-        ],
-      });
     }
   }
 
