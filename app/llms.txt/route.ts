@@ -3,30 +3,9 @@ import { getSlugPath as getArticleSlugPath } from "@/lib/utils/articles/slug";
 import { getContent } from "@/lib/utils/contents";
 import { getSlugPath as getSubjectSlugPath } from "@/lib/utils/subject/slug";
 import { getStaticParams } from "@/lib/utils/system";
-import type { ArticleCategory } from "@/types/articles/category";
-import type { SubjectCategory } from "@/types/subject/category";
-import type { Grade } from "@/types/subject/grade";
-import type { MaterialGrade } from "@/types/subject/material";
+import type { Article, ContentTask, Subject } from "@/types/llms";
 
 export const revalidate = false;
-
-type Article = {
-  category: ArticleCategory;
-  slug: string;
-};
-
-type Subject = {
-  category: SubjectCategory;
-  grade: Grade;
-  material: MaterialGrade;
-  slug: string[];
-};
-
-type ContentTask = {
-  locale: (typeof routing.locales)[number];
-  filePath: string;
-  section: string;
-};
 
 export async function GET() {
   const locales = routing.locales;
