@@ -2,10 +2,16 @@ import "server-only";
 
 const GITHUB_URL = process.env.GITHUB_URL;
 
-export function getGithubUrl(path: string) {
-  return `https://github.com${GITHUB_URL}${path}`;
+export function getGithubUrl({
+  path,
+  ref = "/tree/main",
+}: {
+  path: string;
+  ref?: string;
+}) {
+  return `https://github.com${GITHUB_URL}${ref}${path}`;
 }
 
 export function getRawGithubUrl(path: string) {
-  return `https://raw.githubusercontent.com${GITHUB_URL}${path}`;
+  return `https://raw.githubusercontent.com${GITHUB_URL}/refs/heads/main${path}`;
 }

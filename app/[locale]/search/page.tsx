@@ -30,7 +30,9 @@ export default function Page() {
       </div>
       <FooterContent className="mt-0">
         <RefContent
-          githubUrl={getGithubUrl(encodeURI("/app/[locale]/search"))}
+          githubUrl={getGithubUrl({
+            path: encodeURI("/app/[locale]/search"),
+          })}
         />
       </FooterContent>
     </>

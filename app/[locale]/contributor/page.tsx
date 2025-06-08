@@ -48,7 +48,9 @@ export default function Page() {
       </LayoutContent>
       <FooterContent className="mt-0">
         <RefContent
-          githubUrl={getGithubUrl(encodeURI("/app/[locale]/contributor"))}
+          githubUrl={getGithubUrl({
+            path: encodeURI("/app/[locale]/contributor"),
+          })}
         />
       </FooterContent>
     </>
