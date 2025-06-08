@@ -61,10 +61,10 @@ const components = {
   ),
   p: (props: ParagraphProps) => <Paragraph {...props} />,
   ol: (props: ListProps) => (
-    <ol className="list-decimal space-y-6 pl-5" {...props} />
+    <ol className="list-decimal space-y-4 pl-5" {...props} />
   ),
   ul: (props: ListProps) => (
-    <ul className="list-disc space-y-6 pl-5" {...props} />
+    <ul className="list-disc space-y-4 pl-5" {...props} />
   ),
   li: (props: ListItemProps) => (
     <li className="mt-4 pl-1 text-foreground/80 leading-relaxed" {...props} />
