@@ -1,6 +1,149 @@
 export const metadata = {
-    title: "Derivative of Trigonometric Function",
+    title: "Derivative of Trigonometric Functions",
     authors: [{ name: "Nabil Akbarazzima Fatih" }],
     date: "05/26/2025",
     subject: "Derivative Functions",
 };
+
+## The Rules of Trigonometric Functions
+
+Finding the derivative of a trigonometric function is not much different from an algebraic function. We still use the familiar derivative properties, such as the product and quotient rules.
+
+However, before that, we need to know the basic derivatives of the main trigonometric functions like sine and cosine. These basic rules are the foundation for solving more complex derivatives.
+
+## Basic Trigonometric Derivatives
+
+Just like the derivative of a power function, the derivative for a trigonometric function also has its basic pattern. The derivatives for sine and cosine, for example, can be proven directly from the limit definition of a derivative.
+
+Here are the basic derivatives of the six trigonometric functions that we need to memorize:
+
+1.  **Derivative of Sine**:
+    
+    <BlockMath math="f(x) = \sin x \implies f'(x) = \cos x" />
+
+2.  **Derivative of Cosine**:
+
+    <BlockMath math="f(x) = \cos x \implies f'(x) = -\sin x" />
+
+3.  **Derivative of Tangent**:
+
+    <BlockMath math="f(x) = \tan x \implies f'(x) = \sec^2 x" />
+
+4.  **Derivative of Cotangent**:
+
+    <BlockMath math="f(x) = \cot x \implies f'(x) = -\csc^2 x" />
+
+5.  **Derivative of Secant**:
+
+    <BlockMath math="f(x) = \sec x \implies f'(x) = \sec x \tan x" />
+
+6.  **Derivative of Cosecant**:
+
+    <BlockMath math="f(x) = \csc x \implies f'(x) = -\csc x \cot x" />
+
+## Applying the Rules to Trigonometric Functions
+
+Now let's see how to apply these rules in a few examples.
+
+### Combination of Algebra and Trigonometry
+
+Find the derivative of <InlineMath math="y = 2 \sin x + 5x" />.
+
+**Solution:**
+
+We can differentiate this function term by term using the sum rule.
+
+<div className="flex flex-col gap-4">
+    <BlockMath math="y' = \frac{d}{dx}(2 \sin x) + \frac{d}{dx}(5x)" />
+    <BlockMath math="y' = 2(\cos x) + 5(1)" />
+    <BlockMath math="y' = 2 \cos x + 5" />
+</div>
+
+### Using the Product Rule
+
+Find the derivative of <InlineMath math="y = 2 \sin x \tan x" />.
+
+**Solution:**
+
+Use the product rule <InlineMath math="y' = u'v + uv'" />.
+
+Let <InlineMath math="u = 2 \sin x" /> and <InlineMath math="v = \tan x" />.
+
+Then <InlineMath math="u' = 2 \cos x" /> and <InlineMath math="v' = \sec^2 x" />.
+
+<div className="flex flex-col gap-4">
+    <BlockMath math="y' = (2 \cos x)(\tan x) + (2 \sin x)(\sec^2 x)" />
+    <BlockMath math="y' = (2 \cos x)\left(\frac{\sin x}{\cos x}\right) + (2 \sin x)(\sec^2 x)" />
+    <BlockMath math="y' = 2 \sin x + 2 \sin x \sec^2 x" />
+</div>
+
+### Using the Quotient Rule
+
+Find the derivative of <InlineMath math="y = \frac{1 + \cos x}{\sin x}" />.
+
+**Solution:**
+
+Use the quotient rule <InlineMath math="y' = \frac{u'v - uv'}{v^2}" />.
+
+Let <InlineMath math="u = 1 + \cos x" /> and <InlineMath math="v = \sin x" />.
+
+Then <InlineMath math="u' = -\sin x" /> and <InlineMath math="v' = \cos x" />.
+
+<div className="flex flex-col gap-4">
+    <BlockMath math="y' = \frac{(-\sin x)(\sin x) - (1 + \cos x)(\cos x)}{(\sin x)^2}" />
+    <BlockMath math="y' = \frac{-\sin^2 x - (\cos x + \cos^2 x)}{\sin^2 x}" />
+    <BlockMath math="y' = \frac{-(\sin^2 x + \cos^2 x) - \cos x}{\sin^2 x}" />
+    <BlockMath math="y' = \frac{-1 - \cos x}{1 - \cos^2 x} \quad (\text{Pythagorean Identity})" />
+    <BlockMath math="y' = \frac{-(1 + \cos x)}{(1 - \cos x)(1 + \cos x)} \quad (\text{Factorization})" />
+    <BlockMath math="y' = \frac{-1}{1 - \cos x} = \frac{1}{\cos x - 1}" />
+</div>
+
+## Exercises
+
+1. Find the first derivative of <InlineMath math="f(x) = 4x^3 - 5 \cos x" />.
+2. Find the first derivative of <InlineMath math="f(x) = \sin x \cos x" />.
+
+### Answer Key
+
+1.  **Solution:**
+
+    Use the subtraction rule to differentiate each term separately.
+    
+    **Step 1: Differentiate the first term**
+
+    The derivative of <InlineMath math="4x^3" /> using the power rule is <InlineMath math="3 \cdot 4x^{3-1} = 12x^2" />.
+
+    **Step 2: Differentiate the second term**
+
+    The derivative of <InlineMath math="-5 \cos x" /> is <InlineMath math="-5(-\sin x) = 5 \sin x" />.
+
+    **Step 3: Combine the results**
+
+    <BlockMath math="f'(x) = 12x^2 + 5 \sin x" />
+
+    So, the derivative of the function is <InlineMath math="12x^2 + 5 \sin x" />.
+
+2.  **Solution:**
+
+    Use the product rule, <InlineMath math="f'(x) = u'v + uv'" />.
+    
+    **Step 1: Determine u, v, u', and v'**
+
+    Let <InlineMath math="u = \sin x" /> and <InlineMath math="v = \cos x" />.
+
+    Then, <InlineMath math="u' = \cos x" /> and <InlineMath math="v' = -\sin x" />.
+
+    **Step 2: Apply the Product Rule**
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="f'(x) = (\cos x)(\cos x) + (\sin x)(-\sin x)" />
+        <BlockMath math="f'(x) = \cos^2 x - \sin^2 x" />
+    </div>
+
+    **Step 3: Use a Trigonometric Identity (Optional)**
+
+    The result can also be simplified using the double angle identity, <InlineMath math="\cos(2x) = \cos^2 x - \sin^2 x" />.
+
+    <BlockMath math="f'(x) = \cos(2x)" />
+    
+    So, the derivative of the function is <InlineMath math="\cos(2x)" />.

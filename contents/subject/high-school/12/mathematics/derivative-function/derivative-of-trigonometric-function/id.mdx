@@ -4,3 +4,146 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Turunan Fungsi",
 };
+
+## Aturan Main Fungsi Trigonometri
+
+Menentukan turunan fungsi trigonometri sebenarnya tidak jauh berbeda dengan fungsi aljabar. Kita tetap menggunakan sifat-sifat turunan yang sudah dikenal, seperti aturan hasil kali dan hasil bagi.
+
+Namun, sebelum itu, kita perlu mengetahui turunan dasar dari fungsi-fungsi trigonometri utama seperti sinus dan kosinus. Aturan-aturan dasar inilah yang menjadi fondasi untuk menyelesaikan turunan yang lebih kompleks.
+
+## Turunan Dasar Trigonometri
+
+Sama seperti turunan fungsi pangkat, turunan untuk fungsi trigonometri juga memiliki pola dasarnya. Turunan untuk sinus dan kosinus, misalnya, bisa dibuktikan langsung dari definisi limit turunan.
+
+Berikut adalah turunan dasar dari enam fungsi trigonometri yang perlu kita hafal:
+
+1.  **Turunan Sinus**:
+    
+    <BlockMath math="f(x) = \sin x \implies f'(x) = \cos x" />
+
+2.  **Turunan Kosinus**:
+
+    <BlockMath math="f(x) = \cos x \implies f'(x) = -\sin x" />
+
+3.  **Turunan Tangen**:
+
+    <BlockMath math="f(x) = \tan x \implies f'(x) = \sec^2 x" />
+
+4.  **Turunan Kotangen**:
+
+    <BlockMath math="f(x) = \cot x \implies f'(x) = -\csc^2 x" />
+
+5.  **Turunan Sekan**:
+
+    <BlockMath math="f(x) = \sec x \implies f'(x) = \sec x \tan x" />
+
+6.  **Turunan Kosekan**:
+
+    <BlockMath math="f(x) = \csc x \implies f'(x) = -\csc x \cot x" />
+
+## Menerapkan Aturan pada Fungsi Trigonometri
+
+Sekarang mari kita lihat bagaimana menerapkan aturan-aturan ini dalam beberapa contoh soal.
+
+### Kombinasi Aljabar dan Trigonometri
+
+Tentukan turunan dari <InlineMath math="y = 2 \sin x + 5x" />.
+
+**Penyelesaian:**
+
+Kita bisa menurunkan fungsi ini suku per suku menggunakan aturan penjumlahan.
+
+<div className="flex flex-col gap-4">
+    <BlockMath math="y' = \frac{d}{dx}(2 \sin x) + \frac{d}{dx}(5x)" />
+    <BlockMath math="y' = 2(\cos x) + 5(1)" />
+    <BlockMath math="y' = 2 \cos x + 5" />
+</div>
+
+### Menggunakan Aturan Hasil Kali
+
+Tentukan turunan dari <InlineMath math="y = 2 \sin x \tan x" />.
+
+**Penyelesaian:**
+
+Gunakan aturan hasil kali <InlineMath math="y' = u'v + uv'" />.
+
+Misalkan <InlineMath math="u = 2 \sin x" /> dan <InlineMath math="v = \tan x" />.
+
+Maka <InlineMath math="u' = 2 \cos x" /> dan <InlineMath math="v' = \sec^2 x" />.
+
+<div className="flex flex-col gap-4">
+    <BlockMath math="y' = (2 \cos x)(\tan x) + (2 \sin x)(\sec^2 x)" />
+    <BlockMath math="y' = (2 \cos x)\left(\frac{\sin x}{\cos x}\right) + (2 \sin x)(\sec^2 x)" />
+    <BlockMath math="y' = 2 \sin x + 2 \sin x \sec^2 x" />
+</div>
+
+### Menggunakan Aturan Hasil Bagi
+
+Tentukan turunan dari <InlineMath math="y = \frac{1 + \cos x}{\sin x}" />.
+
+**Penyelesaian:**
+
+Gunakan aturan hasil bagi <InlineMath math="y' = \frac{u'v - uv'}{v^2}" />.
+
+Misalkan <InlineMath math="u = 1 + \cos x" /> dan <InlineMath math="v = \sin x" />.
+
+Maka <InlineMath math="u' = -\sin x" /> dan <InlineMath math="v' = \cos x" />.
+
+<div className="flex flex-col gap-4">
+    <BlockMath math="y' = \frac{(-\sin x)(\sin x) - (1 + \cos x)(\cos x)}{(\sin x)^2}" />
+    <BlockMath math="y' = \frac{-\sin^2 x - (\cos x + \cos^2 x)}{\sin^2 x}" />
+    <BlockMath math="y' = \frac{-(\sin^2 x + \cos^2 x) - \cos x}{\sin^2 x}" />
+    <BlockMath math="y' = \frac{-1 - \cos x}{1 - \cos^2 x} \quad (\text{Identitas Pythagoras})" />
+    <BlockMath math="y' = \frac{-(1 + \cos x)}{(1 - \cos x)(1 + \cos x)} \quad (\text{Faktorisasi})" />
+    <BlockMath math="y' = \frac{-1}{1 - \cos x} = \frac{1}{\cos x - 1}" />
+</div>
+
+## Latihan
+
+1. Tentukan turunan pertama dari <InlineMath math="f(x) = 4x^3 - 5 \cos x" />.
+2. Tentukan turunan pertama dari <InlineMath math="f(x) = \sin x \cos x" />.
+
+### Kunci Jawaban
+
+1.  **Penyelesaian:**
+
+    Gunakan aturan pengurangan untuk menurunkan setiap suku secara terpisah.
+    
+    **Langkah 1: Turunkan suku pertama**
+
+    Turunan dari <InlineMath math="4x^3" /> menggunakan aturan pangkat adalah <InlineMath math="3 \cdot 4x^{3-1} = 12x^2" />.
+
+    **Langkah 2: Turunkan suku kedua**
+
+    Turunan dari <InlineMath math="-5 \cos x" /> adalah <InlineMath math="-5(-\sin x) = 5 \sin x" />.
+
+    **Langkah 3: Gabungkan hasilnya**
+
+    <BlockMath math="f'(x) = 12x^2 + 5 \sin x" />
+
+    Jadi, turunan dari fungsi tersebut adalah <InlineMath math="12x^2 + 5 \sin x" />.
+
+2.  **Penyelesaian:**
+
+    Gunakan aturan hasil kali, <InlineMath math="f'(x) = u'v + uv'" />.
+    
+    **Langkah 1: Tentukan u, v, u', dan v'**
+
+    Misalkan <InlineMath math="u = \sin x" /> dan <InlineMath math="v = \cos x" />.
+
+    Maka, <InlineMath math="u' = \cos x" /> dan <InlineMath math="v' = -\sin x" />.
+
+    **Langkah 2: Terapkan Aturan Hasil Kali**
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="f'(x) = (\cos x)(\cos x) + (\sin x)(-\sin x)" />
+        <BlockMath math="f'(x) = \cos^2 x - \sin^2 x" />
+    </div>
+
+    **Langkah 3: Gunakan Identitas Trigonometri (Opsional)**
+
+    Hasilnya bisa juga disederhanakan menggunakan identitas sudut ganda, <InlineMath math="\cos(2x) = \cos^2 x - \sin^2 x" />.
+
+    <BlockMath math="f'(x) = \cos(2x)" />
+    
+    Jadi, turunan dari fungsi tersebut adalah <InlineMath math="\cos(2x)" />.
