@@ -1,6 +1,305 @@
+import { LineEquation } from "@/components/contents/line-equation";
+import { getColor } from "@/lib/utils/color";
+
 export const metadata = {
     title: "Persamaan Garis Singgung pada Kurva",
     authors: [{ name: "Nabil Akbarazzima Fatih" }],
     date: "05/26/2025",
     subject: "Turunan Fungsi",
 };
+
+## Hubungan Turunan dan Garis Singgung
+
+Kamu tentu sudah tahu kalau turunan bisa memberi tahu kita banyak hal tentang sifat sebuah fungsi. Salah satu kegunaan paling keren dari turunan adalah untuk menemukan **kemiringan** atau **gradien** dari sebuah garis singgung pada kurva.
+
+Bayangkan kamu "memperbesar" sebuah titik pada kurva terus-menerus. Lama-kelamaan, kurva yang melengkung itu akan terlihat seperti garis lurus, kan? Nah, garis lurus imajiner itulah yang kita sebut **garis singgung**. Gradien dari garis singgung di titik <InlineMath math="x=a" /> pada kurva <InlineMath math="y=f(x)" /> nilainya sama persis dengan turunan fungsi di titik itu, yaitu <InlineMath math="m = f'(a)" />.
+
+## Menentukan Persamaan Garis Singgung
+
+Untuk membuat persamaan garis lurus, kita butuh dua hal utama: sebuah titik yang dilewati garis dan gradien garis itu sendiri. Dalam konteks ini:
+
+1.  **Titik Singgung:** Sebuah titik <InlineMath math="P(a, b)" /> tempat garis menyentuh kurva.
+2.  **Gradien (m):** Kemiringan garis di titik tersebut, yang kita dapatkan dari turunan, <InlineMath math="m = f'(a)" />.
+
+Setelah punya keduanya, kita bisa langsung masukkan ke dalam rumus dasar persamaan garis yang sudah kamu kenal:
+
+<BlockMath math="y - b = m(x - a)" />
+
+> Singkatnya, untuk menemukan persamaan garis singgung, cari dulu gradiennya dengan menurunkan fungsi, lalu masukkan titik singgung dan gradien ke dalam rumus persamaan garis.
+
+## Membedah Kasus
+
+Mari kita lihat cara kerjanya lewat sebuah contoh. Tentukan persamaan garis singgung pada parabola <InlineMath math="y = 2 - 4x^2" /> di titik <InlineMath math="(1, -2)" />.
+
+**Penyelesaian:**
+
+**Langkah 1: Cari gradien garis singgung**
+
+Pertama, kita turunkan fungsi <InlineMath math="f(x) = 2 - 4x^2" /> untuk mendapatkan ekspresi gradiennya.
+
+<BlockMath math="f'(x) = -8x" />
+
+Karena kita mau mencari gradien di titik yang absisnya <InlineMath math="x=1" />, substitusikan nilai ini ke dalam turunan.
+
+<BlockMath math="m = f'(1) = -8(1) = -8" />
+
+Jadi, gradien garis singgungnya adalah -8.
+
+**Langkah 2: Susun persamaannya**
+
+Sekarang kita punya semua yang dibutuhkan:
+-   Titik singgung <InlineMath math="(a, b) = (1, -2)" />
+-   Gradien <InlineMath math="m = -8" />
+
+Masukkan ke dalam rumus persamaan garis:
+<div className="flex flex-col gap-4">
+    <BlockMath math="y - b = m(x - a)" />
+    <BlockMath math="y - (-2) = -8(x - 1)" />
+    <BlockMath math="y + 2 = -8x + 8" />
+    <BlockMath math="y = -8x + 6" />
+</div>
+
+Jadi, persamaan garis singgungnya adalah <InlineMath math="y = -8x + 6" />.
+
+<LineEquation
+  title={<>Visualisasi Garis Singgung pada Parabola</>}
+  description={
+    <>
+      Grafik ini menunjukkan kurva parabola <InlineMath math="y = 2 - 4x^2" />{" "}
+      dan garis singgungnya <InlineMath math="y = -8x + 6" /> yang bertemu
+      tepat di titik singgung <InlineMath math="(1, -2)" />.
+    </>
+  }
+  showZAxis={false}
+  cameraPosition={[0, 0, 15]}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = -2 + i * 0.1;
+        return { x, y: 2 - 4 * x * x, z: 0 };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+      labels: [
+        {
+          text: "y = 2 - 4x^2",
+          at: 5,
+          offset: [-2, 3, 0],
+        },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 6, z: 0 },
+        { x: 2, y: -10, z: 0 },
+      ],
+      color: getColor("YELLOW"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "y = -8x + 6",
+          at: 0,
+          offset: [2.5, -2.5, 0],
+        },
+      ],
+    },
+    {
+      points: [{ x: 1, y: -2, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        {
+          text: "(1, -2)",
+          offset: [1.5, -0.5, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+## Latihan
+
+1.  Carilah persamaan garis singgung kurva <InlineMath math="y = x^2 - 6\frac{1}{5}x + 14\frac{1}{2}" /> yang sejajar dengan garis <InlineMath math="x + 2y + 3 = 0" />.
+
+2.  Tentukan persamaan garis singgung parabola <InlineMath math="y = 2x^2 - 3x + 5" /> pada titik yang berordinat 4.
+
+3.  Suatu kurva <InlineMath math="y = 3x - \frac{3}{x^2}" /> memotong sumbu X di P. Carilah persamaan garis singgung kurva tersebut pada titik P!
+
+4.  Kurva <InlineMath math="y = (x^2 + 2)^2" /> memotong sumbu Y pada titik A. Tunjukkan bahwa garis singgung pada kurva tersebut melalui titik A sejajar sumbu X dan berjarak 4 satuan terhadap titik pusat koordinat!
+
+5.  Tentukan koordinat titik pada kurva <InlineMath math="y = 2x^2 - 7x + 1" />, jika garis singgung kurva melalui titik tersebut dan membentuk sudut 45° terhadap sumbu X positif. Tentukan pula persamaan garis singgung kurva yang melalui titik tersebut!
+
+### Kunci Jawaban
+
+1.  **Penyelesaian:**
+
+    **Langkah 1: Tentukan gradien.**
+
+    Garis singgung harus sejajar dengan garis <InlineMath math="x + 2y + 3 = 0" />. Untuk menemukan gradiennya, kita ubah dulu persamaan garis ini ke bentuk <InlineMath math="y = mx + c" />.
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="2y = -x - 3" />
+        <BlockMath math="y = -\frac{1}{2}x - \frac{3}{2}" />
+    </div>
+
+    Dari sini, kita tahu gradien garisnya adalah <InlineMath math="m = -\frac{1}{2}" />. Karena garis singgungnya sejajar, maka gradiennya juga sama.
+
+    **Langkah 2: Cari titik singgung.**
+
+    Gradien kurva pada suatu titik sama dengan nilai turunan pertama fungsi di titik tersebut. Pertama, kita cari fungsi turunan dari <InlineMath math="f(x) = x^2 - \frac{31}{5}x + \frac{29}{2}" />.
+
+    <BlockMath math="f'(x) = 2x - \frac{31}{5}" />
+
+    Kemudian, kita samakan nilai turunan ini dengan gradien yang sudah kita ketahui (<InlineMath math="m = -1/2" />) untuk menemukan absis (<InlineMath math="x" />) dari titik singgung.
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="2x - \frac{31}{5} = -\frac{1}{2}" />
+        <BlockMath math="2x = \frac{31}{5} - \frac{1}{2} = \frac{62 - 5}{10} = \frac{57}{10}" />
+        <BlockMath math="x = \frac{57}{20}" />
+    </div>
+
+    Setelah mendapatkan absis <InlineMath math="x=\frac{57}{20}" />, kita substitusikan nilai ini kembali ke persamaan kurva *awal* untuk menemukan ordinatnya (<InlineMath math="y" />).
+
+    <BlockMath math="y = (\frac{57}{20})^2 - \frac{31}{5}(\frac{57}{20}) + \frac{29}{2} = \frac{3249}{400} - \frac{1767}{100} + \frac{29}{2} = \frac{3249 - 7068 + 5800}{400} = \frac{1981}{400}" />
+
+    Jadi, titik singgungnya adalah <InlineMath math="\left(\frac{57}{20}, \frac{1981}{400}\right)" />.
+
+    **Langkah 3: Susun persamaan garis.**
+
+    Dengan titik <InlineMath math="\left(\frac{57}{20}, \frac{1981}{400}\right)" /> dan gradien <InlineMath math="m = -\frac{1}{2}" />, persamaannya adalah:
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="y - \frac{1981}{400} = -\frac{1}{2}\left(x - \frac{57}{20}\right)" />
+        <BlockMath math="y = -\frac{1}{2}x + \frac{57}{40} + \frac{1981}{400}" />
+        <BlockMath math="y = -\frac{1}{2}x + \frac{570 + 1981}{400}" />
+        <BlockMath math="y = -\frac{1}{2}x + \frac{2551}{400}" />
+    </div>
+
+2.  **Penyelesaian:**
+
+    **Langkah 1: Cari titik singgung.**
+
+    Karena ordinatnya adalah 4, kita atur <InlineMath math="y=4" /> pada persamaan parabola.
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="4 = 2x^2 - 3x + 5" />
+        <BlockMath math="2x^2 - 3x + 1 = 0" />
+        <BlockMath math="(2x-1)(x-1) = 0" />
+    </div>
+
+    Dari faktorisasi, kita mendapatkan dua nilai absis, yaitu <InlineMath math="x=1" /> dan <InlineMath math="x=\frac{1}{2}" />. Ini berarti ada dua titik singgung: <InlineMath math="(1, 4)" /> dan <InlineMath math="\left(\frac{1}{2}, 4\right)" />. Karena itu, akan ada dua persamaan garis singgung.
+
+    **Langkah 2: Hitung gradien dan buat persamaan untuk setiap titik.**
+
+    Kita akan memproses setiap titik singgung secara terpisah. Turunan fungsinya adalah <InlineMath math="f'(x) = 4x - 3" />.
+
+    **Kasus Pertama: Titik <InlineMath math="(1, 4)" />**
+
+    Gradien di titik ini adalah <InlineMath math="m = f'(1) = 4(1) - 3 = 1" />.
+
+    Maka, persamaannya adalah:
+
+    <BlockMath math="y - 4 = 1(x - 1) \implies y = x + 3" />
+
+    **Kasus Kedua: Titik <InlineMath math="\left(\frac{1}{2}, 4\right)" />**
+
+    Gradien di titik ini adalah <InlineMath math="m = f'(\frac{1}{2}) = 4(\frac{1}{2}) - 3 = -1" />.
+
+    Maka, persamaannya adalah:
+
+    <BlockMath math="y - 4 = -1(x - \frac{1}{2}) \implies y = -x + \frac{9}{2}" />
+
+3.  **Penyelesaian:**
+    
+    **Langkah 1: Cari titik P.**
+
+    Kurva memotong sumbu X saat <InlineMath math="y=0" />.
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="0 = 3x - \frac{3}{x^2}" />
+        <BlockMath math="3x = \frac{3}{x^2} \implies 3x^3 = 3 \implies x^3 = 1 \implies x=1" />
+    </div>
+
+    Jadi, titik potong P adalah <InlineMath math="(1, 0)" />.
+
+    **Langkah 2: Cari gradien di P.**
+
+    Kita ubah dulu fungsinya menjadi <InlineMath math="f(x) = 3x - 3x^{-2}" /> agar mudah diturunkan.
+
+    <BlockMath math="f'(x) = 3 - (-2)(3)x^{-3} = 3 + \frac{6}{x^3}" />
+
+    Gradien di <InlineMath math="x=1" /> adalah <InlineMath math="m = f'(1) = 3 + \frac{6}{1^3} = 9" />.
+    
+    **Langkah 3: Susun persamaan.**
+
+    Dengan titik <InlineMath math="(1, 0)" /> dan gradien 9, persamaannya adalah:
+
+    <BlockMath math="y - 0 = 9(x - 1) \implies y = 9x - 9" />
+
+4.  **Penyelesaian:**
+
+    **Langkah 1: Cari titik A.**
+
+    Kurva memotong sumbu Y saat <InlineMath math="x=0" />.
+
+    <BlockMath math="y = (0^2 + 2)^2 = 4" />
+
+    Jadi, titik potong A adalah <InlineMath math="(0, 4)" />.
+
+    **Langkah 2: Buktikan garis singgung sejajar sumbu X.**
+
+    Garis yang sejajar sumbu X pasti memiliki gradien 0. Mari kita buktikan bahwa turunan fungsi di titik A (<InlineMath math="x=0" />) adalah nol.
+
+    Turunan dari <InlineMath math="f(x)=(x^2+2)^2" /> menggunakan aturan rantai adalah <InlineMath math="f'(x) = 2(x^2+2)(2x) = 4x(x^2+2)" />.
+
+    Gradien di <InlineMath math="x=0" /> adalah <InlineMath math="m = f'(0) = 4(0)(0^2+2) = 0" />.
+
+    Karena gradiennya nol, **terbukti garis singgungnya sejajar dengan sumbu X**.
+
+    **Langkah 3: Buktikan jaraknya 4 satuan dari pusat koordinat.**
+
+    Persamaan garis singgung di titik <InlineMath math="(0,4)" /> dengan gradien <InlineMath math="m=0" /> adalah:
+
+    <BlockMath math="y - 4 = 0(x - 0) \implies y = 4" />
+
+    Garis <InlineMath math="y=4" /> adalah garis horizontal. Jarak setiap titik pada garis ini ke sumbu X (garis <InlineMath math="y=0" />) adalah 4 satuan. Karena titik pusat koordinat <InlineMath math="(0,0)" /> terletak di sumbu X, maka jarak garis singgung ini ke pusat koordinat juga 4 satuan. **Terbukti.**
+
+5.  **Penyelesaian:**
+
+    **Langkah 1: Tentukan gradien dari sudut.**
+
+    Hubungan antara gradien (<InlineMath math="m" />) dan sudut (<InlineMath math="\theta" />) yang dibentuk sebuah garis terhadap sumbu X positif adalah <InlineMath math="m = \tan(\theta)" />.
+
+    <BlockMath math="m = \tan(45^\circ) = 1" />
+
+    Jadi, gradien garis singgung yang kita cari adalah 1.
+    
+    **Langkah 2: Cari koordinat titik singgung.**
+
+    Gradien juga merupakan turunan pertama dari kurva <InlineMath math="f(x) = 2x^2 - 7x + 1" />.
+
+    <BlockMath math="f'(x) = 4x - 7" />
+
+    Kita samakan dengan gradien yang sudah kita dapatkan:
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="4x - 7 = 1" />
+        <BlockMath math="4x = 8 \implies x = 2" />
+    </div>
+
+    Sekarang, cari nilai <InlineMath math="y" /> dengan memasukkan <InlineMath math="x=2" /> ke persamaan kurva:
+
+    <BlockMath math="y = 2(2)^2 - 7(2) + 1 = 8 - 14 + 1 = -5" />
+
+    Jadi, koordinat titik singgungnya adalah <InlineMath math="(2, -5)" />.
+
+    **Langkah 3: Tentukan persamaan garis singgung.**
+
+    Menggunakan titik <InlineMath math="(2, -5)" /> dan gradien <InlineMath math="m=1" />:
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="y - (-5) = 1(x - 2)" />
+        <BlockMath math="y + 5 = x - 2" />
+        <BlockMath math="y = x - 7" />
+    </div>
