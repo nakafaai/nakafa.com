@@ -4,3 +4,137 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Turunan Fungsi",
 };
+
+## Memahami Fungsi Bersusun
+
+Bayangkan kamu punya mesin yang mengubah sebuah angka (fungsi pertama), dan hasilnya langsung dimasukkan ke mesin lain untuk diolah lagi (fungsi kedua). Proses inilah yang disebut **fungsi komposisi** atau fungsi bersusun. Secara matematis, kalau kita punya <InlineMath math="g(x)" /> sebagai **fungsi dalam** dan <InlineMath math="f(u)" /> sebagai **fungsi luar**, maka komposisinya adalah <InlineMath math="y = f(g(x))" />.
+
+Aturan rantai adalah metode untuk mencari turunan dari fungsi-fungsi seperti ini, di mana satu fungsi "terbungkus" di dalam fungsi lainnya.
+
+## Teorema Aturan Rantai
+
+Untuk menurunkan fungsi komposisi, kita tidak bisa menurunkannya satu per satu begitu saja. Ada sebuah aturan elegan yang menghubungkan turunan fungsi luar dan fungsi dalamnya.
+
+> Jika <InlineMath math="y = f(g(x))" />, maka turunannya ditentukan oleh perkalian antara turunan fungsi luar terhadap fungsi dalam dengan turunan fungsi dalam itu sendiri.
+
+Secara formal, jika kita memisalkan <InlineMath math="u = g(x)" />, maka <InlineMath math="y = f(u)" />. Turunannya didefinisikan sebagai:
+
+<BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dx}" />
+
+Rumus ini dikenal sebagai **aturan rantai**. Intinya, kita menurunkan dari "lapisan" terluar ke lapisan terdalam, lalu mengalikan hasilnya.
+
+## Penerapan Aturan Rantai
+
+Yuk, kita coba terapkan teorema ini pada beberapa kasus biar lebih kebayang.
+
+### Fungsi Bentuk Pangkat
+
+Tentukan turunan pertama dari <InlineMath math="y = (x^2 - 4x - 2)^8" />.
+
+**Penyelesaian:**
+
+Pertama, kita perlu memecah fungsi ini menjadi dua bagian: fungsi luar dan fungsi dalam.
+
+-   **Fungsi dalam** (<InlineMath math="u" />) adalah ekspresi yang ada di dalam kurung: <InlineMath math="u = x^2 - 4x - 2" />.
+-   **Fungsi luar** (<InlineMath math="y" />) adalah operasi pangkatnya: <InlineMath math="y = u^8" />.
+
+Selanjutnya, kita cari turunan dari masing-masing fungsi:
+
+-   Turunan fungsi dalam: <InlineMath math="\frac{du}{dx} = 2x - 4" />.
+-   Turunan fungsi luar: <InlineMath math="\frac{dy}{du} = 8u^7" />.
+
+Sekarang, kita bisa gabungkan keduanya pakai aturan rantai:
+<div className="flex flex-col gap-4">
+    <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dx}" />
+    <BlockMath math="\frac{dy}{dx} = 8u^7 \cdot (2x - 4)" />
+</div>
+
+Terakhir, kita substitusikan kembali <InlineMath math="u" /> dan sederhanakan ekspresinya:
+<div className="flex flex-col gap-4">
+    <BlockMath math="\frac{dy}{dx} = 8(x^2 - 4x - 2)^7 (2x - 4)" />
+    <BlockMath math="\frac{dy}{dx} = (16x - 32)(x^2 - 4x - 2)^7" />
+</div>
+
+### Fungsi Trigonometri
+
+Tentukan turunan pertama dari <InlineMath math="y = \cos^4(3 - 4x)" />.
+
+**Penyelesaian:**
+
+Fungsi ini bisa kita tulis ulang jadi <InlineMath math="y = (\cos(3 - 4x))^4" />. Ini adalah kasus di mana kita perlu menerapkan aturan rantai lebih dari sekali karena ada tiga lapisan fungsi.
+
+-   **Fungsi terdalam**: <InlineMath math="v = 3 - 4x" />
+-   **Fungsi tengah**: <InlineMath math="u = \cos(v)" />
+-   **Fungsi terluar**: <InlineMath math="y = u^4" />
+
+Kemudian, kita turunkan setiap lapisan:
+
+-   Turunan fungsi terluar: <InlineMath math="\frac{dy}{du} = 4u^3" />
+-   Turunan fungsi tengah: <InlineMath math="\frac{du}{dv} = -\sin(v)" />
+-   Turunan fungsi terdalam: <InlineMath math="\frac{dv}{dx} = -4" />
+
+Gabungkan semuanya dengan aturan rantai:
+<div className="flex flex-col gap-4">
+    <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dv} \cdot \frac{dv}{dx}" />
+    <BlockMath math="\frac{dy}{dx} = (4u^3) \cdot (-\sin(v)) \cdot (-4)" />
+</div>
+
+Sekarang, substitusikan kembali <InlineMath math="u" /> dan <InlineMath math="v" /> secara bertahap untuk mendapatkan hasil akhir:
+<div className="flex flex-col gap-4">
+    <BlockMath math="\frac{dy}{dx} = (4\cos^3(v)) \cdot (-\sin(v)) \cdot (-4)" />
+    <BlockMath math="\frac{dy}{dx} = 16\cos^3(v)\sin(v)" />
+    <BlockMath math="\frac{dy}{dx} = 16\cos^3(3 - 4x)\sin(3 - 4x)" />
+</div>
+
+## Latihan
+
+1.  Tentukan turunan pertama dari <InlineMath math="y = (3x^2 - 1)^3" />.
+2.  Tentukan turunan pertama dari <InlineMath math="y = \sin^3(2x)" />.
+
+### Kunci Jawaban
+
+1.  **Penyelesaian untuk <InlineMath math="y = (3x^2 - 1)^3" />**
+
+    **Langkah 1: Kenali fungsinya**
+    -   Fungsi dalam: <InlineMath math="u = 3x^2 - 1" />
+    -   Fungsi luar: <InlineMath math="y = u^3" />
+
+    **Langkah 2: Cari turunan masing-masing**
+    -   <InlineMath math="\frac{du}{dx} = 6x" />
+    -   <InlineMath math="\frac{dy}{du} = 3u^2" />
+
+    **Langkah 3: Gabungkan dengan aturan rantai**
+    <div className="flex flex-col gap-4">
+        <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dx}" />
+        <BlockMath math="\frac{dy}{dx} = 3u^2 \cdot 6x = 18x \cdot u^2" />
+    </div>
+    
+    **Langkah 4: Jangan lupa substitusi balik**
+    <BlockMath math="\frac{dy}{dx} = 18x(3x^2 - 1)^2" />
+
+2.  **Penyelesaian untuk <InlineMath math="y = \sin^3(2x)" />**
+
+    Fungsi ini adalah <InlineMath math="y = (\sin(2x))^3" />. Kita gunakan aturan rantai berlapis.
+
+    **Langkah 1: Kenali fungsinya**
+    -   Fungsi terdalam: <InlineMath math="v = 2x" />
+    -   Fungsi tengah: <InlineMath math="u = \sin(v)" />
+    -   Fungsi terluar: <InlineMath math="y = u^3" />
+
+    **Langkah 2: Cari turunan masing-masing**
+    -   <InlineMath math="\frac{dv}{dx} = 2" />
+    -   <InlineMath math="\frac{du}{dv} = \cos(v)" />
+    -   <InlineMath math="\frac{dy}{du} = 3u^2" />
+
+    **Langkah 3: Gabungkan dengan aturan rantai**
+    <div className="flex flex-col gap-4">
+        <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dv} \cdot \frac{dv}{dx}" />
+        <BlockMath math="\frac{dy}{dx} = (3u^2) \cdot (\cos(v)) \cdot (2)" />
+    </div>
+
+    **Langkah 4: Substitusi balik dan sederhanakan**
+    <div className="flex flex-col gap-4">
+        <BlockMath math="\frac{dy}{dx} = 6u^2 \cos(v)" />
+        <BlockMath math="\frac{dy}{dx} = 6\sin^2(v) \cos(v)" />
+        <BlockMath math="\frac{dy}{dx} = 6\sin^2(2x) \cos(2x)" />
+    </div>

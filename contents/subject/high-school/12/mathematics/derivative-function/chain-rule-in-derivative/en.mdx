@@ -4,3 +4,137 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Derivative Functions",
 };
+
+## Understanding Composite Functions
+
+Imagine you have a machine that transforms a number (the first function), and its result is immediately fed into another machine to be processed again (the second function). This process is called a **composite function**. Mathematically, if we have <InlineMath math="g(x)" /> as the **inner function** and <InlineMath math="f(u)" /> as the **outer function**, their composition is <InlineMath math="y = f(g(x))" />.
+
+The chain rule is a method for finding the derivative of functions like this, where one function is "nested" inside another.
+
+## The Chain Rule Theorem
+
+To differentiate a composite function, we can't just differentiate it piece by piece. There's an elegant rule that connects the derivative of the outer function with the derivative of the inner function.
+
+> If <InlineMath math="y = f(g(x))" />, then its derivative is the product of the derivative of the outer function with respect to the inner function and the derivative of the inner function itself.
+
+Formally, if we let <InlineMath math="u = g(x)" />, then <InlineMath math="y = f(u)" />. Its derivative is defined as:
+
+<BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dx}" />
+
+This formula is known as the **chain rule**. Essentially, we differentiate from the outermost "layer" to the innermost layer and then multiply the results.
+
+## Applying the Chain Rule
+
+Let's try applying this theorem to a few cases to get a better feel for it.
+
+### Power Form Functions
+
+Find the first derivative of <InlineMath math="y = (x^2 - 4x - 2)^8" />.
+
+**Solution:**
+
+First, we need to break this function down into two parts: an outer function and an inner function.
+
+-   **Inner function** (<InlineMath math="u" />) is the expression inside the parentheses: <InlineMath math="u = x^2 - 4x - 2" />.
+-   **Outer function** (<InlineMath math="y" />) is the power operation: <InlineMath math="y = u^8" />.
+
+Next, we find the derivative of each function:
+
+-   Derivative of the inner function: <InlineMath math="\frac{du}{dx} = 2x - 4" />.
+-   Derivative of the outer function: <InlineMath math="\frac{dy}{du} = 8u^7" />.
+
+Now, we can combine them using the chain rule:
+<div className="flex flex-col gap-4">
+    <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dx}" />
+    <BlockMath math="\frac{dy}{dx} = 8u^7 \cdot (2x - 4)" />
+</div>
+
+Finally, we substitute <InlineMath math="u" /> back in and simplify the expression:
+<div className="flex flex-col gap-4">
+    <BlockMath math="\frac{dy}{dx} = 8(x^2 - 4x - 2)^7 (2x - 4)" />
+    <BlockMath math="\frac{dy}{dx} = (16x - 32)(x^2 - 4x - 2)^7" />
+</div>
+
+### Trigonometric Functions
+
+Find the first derivative of <InlineMath math="y = \cos^4(3 - 4x)" />.
+
+**Solution:**
+
+We can rewrite this function as <InlineMath math="y = (\cos(3 - 4x))^4" />. This is a case where we need to apply the chain rule more than once because there are three layers of functions.
+
+-   **Innermost function**: <InlineMath math="v = 3 - 4x" />
+-   **Middle function**: <InlineMath math="u = \cos(v)" />
+-   **Outermost function**: <InlineMath math="y = u^4" />
+
+Then, we differentiate each layer:
+
+-   Derivative of the outermost function: <InlineMath math="\frac{dy}{du} = 4u^3" />
+-   Derivative of the middle function: <InlineMath math="\frac{du}{dv} = -\sin(v)" />
+-   Derivative of the innermost function: <InlineMath math="\frac{dv}{dx} = -4" />
+
+Combine them all using the chain rule:
+<div className="flex flex-col gap-4">
+    <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dv} \cdot \frac{dv}{dx}" />
+    <BlockMath math="\frac{dy}{dx} = (4u^3) \cdot (-\sin(v)) \cdot (-4)" />
+</div>
+
+Now, substitute <InlineMath math="u" /> and <InlineMath math="v" /> back in step-by-step to get the final result:
+<div className="flex flex-col gap-4">
+    <BlockMath math="\frac{dy}{dx} = (4\cos^3(v)) \cdot (-\sin(v)) \cdot (-4)" />
+    <BlockMath math="\frac{dy}{dx} = 16\cos^3(v)\sin(v)" />
+    <BlockMath math="\frac{dy}{dx} = 16\cos^3(3 - 4x)\sin(3 - 4x)" />
+</div>
+
+## Exercises
+
+1.  Find the first derivative of <InlineMath math="y = (3x^2 - 1)^3" />.
+2.  Find the first derivative of <InlineMath math="y = \sin^3(2x)" />.
+
+### Answer Key
+
+1.  **Solution for <InlineMath math="y = (3x^2 - 1)^3" />**
+
+    **Step 1: Identify the functions**
+    -   Inner function: <InlineMath math="u = 3x^2 - 1" />
+    -   Outer function: <InlineMath math="y = u^3" />
+
+    **Step 2: Find the derivative of each**
+    -   <InlineMath math="\frac{du}{dx} = 6x" />
+    -   <InlineMath math="\frac{dy}{du} = 3u^2" />
+
+    **Step 3: Combine with the chain rule**
+    <div className="flex flex-col gap-4">
+        <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dx}" />
+        <BlockMath math="\frac{dy}{dx} = 3u^2 \cdot 6x = 18x \cdot u^2" />
+    </div>
+    
+    **Step 4: Don't forget to substitute back**
+    <BlockMath math="\frac{dy}{dx} = 18x(3x^2 - 1)^2" />
+
+2.  **Solution for <InlineMath math="y = \sin^3(2x)" />**
+
+    This function is <InlineMath math="y = (\sin(2x))^3" />. We'll use the multi-layered chain rule.
+
+    **Step 1: Identify the functions**
+    -   Innermost function: <InlineMath math="v = 2x" />
+    -   Middle function: <InlineMath math="u = \sin(v)" />
+    -   Outermost function: <InlineMath math="y = u^3" />
+
+    **Step 2: Find the derivative of each**
+    -   <InlineMath math="\frac{dv}{dx} = 2" />
+    -   <InlineMath math="\frac{du}{dv} = \cos(v)" />
+    -   <InlineMath math="\frac{dy}{du} = 3u^2" />
+
+    **Step 3: Combine with the chain rule**
+    <div className="flex flex-col gap-4">
+        <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dv} \cdot \frac{dv}{dx}" />
+        <BlockMath math="\frac{dy}{dx} = (3u^2) \cdot (\cos(v)) \cdot (2)" />
+    </div>
+
+    **Step 4: Substitute back and simplify**
+    <div className="flex flex-col gap-4">
+        <BlockMath math="\frac{dy}{dx} = 6u^2 \cos(v)" />
+        <BlockMath math="\frac{dy}{dx} = 6\sin^2(v) \cos(v)" />
+        <BlockMath math="\frac{dy}{dx} = 6\sin^2(2x) \cos(2x)" />
+    </div>
