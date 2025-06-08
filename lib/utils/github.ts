@@ -9,9 +9,9 @@ export function getGithubUrl({
   path: string;
   ref?: string;
 }) {
-  return `https://github.com${GITHUB_URL}${ref}${path}`;
+  return `https://github.com${GITHUB_URL}${ref}${path}` as const;
 }
 
 export function getRawGithubUrl(path: string) {
-  return `https://raw.githubusercontent.com${GITHUB_URL}/refs/heads/main${path}`;
+  return `https://raw.githubusercontent.com${GITHUB_URL}/refs/heads/main${path}` as const;
 }

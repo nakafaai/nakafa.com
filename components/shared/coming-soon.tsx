@@ -1,10 +1,9 @@
 import { cn } from "@/lib/utils";
+import { getGithubUrl } from "@/lib/utils/github";
 import { useTranslations } from "next-intl";
 import { Heading } from "../markdown/heading";
 import { Paragraph } from "../markdown/paragraph";
 import { buttonVariants } from "../ui/button";
-
-const GITHUB_URL = process.env.GITHUB_URL;
 
 export function ComingSoon({ className }: { className?: string }) {
   const t = useTranslations("ComingSoon");
@@ -18,7 +17,7 @@ export function ComingSoon({ className }: { className?: string }) {
       <Paragraph>{t("description")}</Paragraph>
 
       <a
-        href={GITHUB_URL}
+        href={getGithubUrl({ path: "" })}
         title={t("contribute")}
         target="_blank"
         rel="noopener noreferrer"
