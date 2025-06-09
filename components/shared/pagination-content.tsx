@@ -32,7 +32,7 @@ function PaginationButton({
       title={title}
       className={cn(
         buttonVariants({ variant: "outline" }),
-        "group flex h-auto flex-col whitespace-normal py-3",
+        "group flex h-auto flex-col whitespace-normal py-3 shadow-sm",
         !href && "pointer-events-none hidden opacity-50 sm:flex",
         className
       )}
