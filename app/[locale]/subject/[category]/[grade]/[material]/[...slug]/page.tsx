@@ -10,7 +10,6 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
-import { SkeletonText } from "@/components/shared/skeleton-text";
 import { slugify } from "@/lib/utils";
 import { getContent } from "@/lib/utils/contents";
 import { getGithubUrl } from "@/lib/utils/github";
@@ -33,7 +32,6 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
-import { Suspense } from "react";
 
 export const revalidate = false;
 
@@ -199,11 +197,9 @@ export default async function Page({ params }: Props) {
               label: metadata.subject ?? "",
             }}
           />
-          <Suspense fallback={<SkeletonText />}>
-            <LayoutMaterialMain>
-              <Content />
-            </LayoutMaterialMain>
-          </Suspense>
+          <LayoutMaterialMain>
+            <Content />
+          </LayoutMaterialMain>
           <LayoutMaterialPagination pagination={pagination} />
           <LayoutMaterialFooter className="mt-10">
             <RefContent

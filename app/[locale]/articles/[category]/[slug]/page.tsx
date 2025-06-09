@@ -8,7 +8,6 @@ import {
   LayoutArticleHeader,
 } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
-import { SkeletonText } from "@/components/shared/skeleton-text";
 import { getCategoryIcon } from "@/lib/utils/articles/category";
 import { getSlugPath } from "@/lib/utils/articles/slug";
 import { getContent } from "@/lib/utils/contents";
@@ -23,7 +22,6 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 
 export const revalidate = false;
 
@@ -162,11 +160,9 @@ export default async function Page({ params }: Props) {
               name: t(category),
             }}
           />
-          <Suspense fallback={<SkeletonText />}>
-            <LayoutArticleContent>
-              <Content />
-            </LayoutArticleContent>
-          </Suspense>
+          <LayoutArticleContent>
+            <Content />
+          </LayoutArticleContent>
           <LayoutArticleFooter>
             <RefContent
               title={metadata.title}
