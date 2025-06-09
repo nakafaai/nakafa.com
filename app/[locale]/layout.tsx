@@ -20,7 +20,6 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
 import { Analytics } from "@/components/ui/analytics";
 import { ReactScan } from "@/components/ui/react-scan";
-import { SafariFullscreenFix } from "@/components/ui/safari-fullscreen-fix";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { TailwindIndicator } from "@/components/ui/tailwind-indicator";
@@ -187,7 +186,6 @@ export default async function LocaleLayout({ children, params }: Props) {
           <WebsiteJsonLd locale={locale} />
         </head>
         <body>
-          <SafariFullscreenFix />
           <AppProviders>
             <ThemeProvider
               attribute="class"
