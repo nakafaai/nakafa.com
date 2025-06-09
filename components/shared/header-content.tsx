@@ -63,10 +63,7 @@ export function HeaderContent({
             {Icon && (
               <Icon className="hidden size-7 shrink-0 translate-y-1 sm:block" />
             )}
-            <h1
-              id={title.toLowerCase().replace(/ /g, "-")}
-              className="font-medium text-3xl leading-tight tracking-tight"
-            >
+            <h1 className="font-medium text-3xl leading-tight tracking-tight">
               {title}
             </h1>
           </div>

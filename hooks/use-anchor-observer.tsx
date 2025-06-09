@@ -13,22 +13,19 @@ export function useAnchorObserver(watch: string[], single: boolean): string[] {
   const [activeAnchor, setActiveAnchor] = useState<string[]>([]);
 
   useEffect(() => {
-    let visible: string[] = [];
+    const visible: Set<Element> = new Set();
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting && !visible.includes(entry.target.id)) {
-            visible = [...visible, entry.target.id];
-          } else if (
-            !entry.isIntersecting &&
-            visible.includes(entry.target.id)
-          ) {
-            visible = visible.filter((v) => v !== entry.target.id);
+          if (entry.isIntersecting && !visible.has(entry.target)) {
+            visible.add(entry.target);
+          } else if (!entry.isIntersecting && visible.has(entry.target)) {
+            visible.delete(entry.target);
           }
         }
 
-        if (visible.length > 0) {
-          setActiveAnchor(visible);
+        if (visible.size > 0) {
+          setActiveAnchor(Array.from(visible).map((el) => el.id));
         }
       },
       {

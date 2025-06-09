@@ -1,3 +1,4 @@
+import type { MDXComponents } from "mdx/types";
 import { BlockMath, InlineMath, type MathComponentProps } from "react-katex";
 import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { Heading } from "./components/markdown/heading";
@@ -201,10 +202,9 @@ const components = {
   ),
 };
 
-declare global {
-  type MDXProvidedComponents = typeof components;
-}
-
-export function useMDXComponents(): MDXProvidedComponents {
-  return components;
+export function useMDXComponents(inherited: MDXComponents): MDXComponents {
+  return {
+    ...inherited,
+    ...components,
+  };
 }
