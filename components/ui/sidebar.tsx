@@ -22,7 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils/index";
+import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@mantine/hooks";
 
 export const SIDEBAR_COOKIE_NAME = "sidebar_state";
