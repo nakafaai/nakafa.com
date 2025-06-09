@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
-import { BlockArt } from "../ui/block-art";
 import { Particles } from "../ui/particles";
 
 type Props = {
@@ -13,7 +12,7 @@ export function FooterContent({ children, className }: Props) {
     <section>
       <footer
         data-pagefind-ignore
-        className={cn("relative mt-10 border-t pt-10 pb-20", className)}
+        className={cn("relative mt-10 pt-10 pb-20", className)}
       >
         <Particles
           quantity={25}
@@ -21,7 +20,6 @@ export function FooterContent({ children, className }: Props) {
         />
         <div className="z-10 mx-auto max-w-3xl px-6">{children}</div>
       </footer>
-      <BlockArt />
     </section>
   );
 }

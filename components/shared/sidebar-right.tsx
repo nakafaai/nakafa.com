@@ -98,7 +98,7 @@ export function SidebarRight({
           <Button
             variant="outline"
             size="icon"
-            className="fixed top-20 right-6 size-8 bg-background/60 backdrop-blur-sm xl:hidden"
+            className="fixed top-20 right-6 size-8 bg-background/30 backdrop-blur-xs xl:hidden"
           >
             <IconMenu />
             <span className="sr-only">Menu</span>
@@ -126,8 +126,8 @@ export function SidebarRight({
       </Sheet>
 
       <Sidebar
-        collapsible="none"
-        className="sticky top-0 hidden h-svh border-y border-l xl:flex"
+        variant="floating"
+        containerClassName="hidden lg:hidden xl:flex"
         side="right"
         {...props}
       >

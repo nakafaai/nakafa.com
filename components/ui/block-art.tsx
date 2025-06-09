@@ -227,7 +227,7 @@ export function BlockArt({
   );
 
   return (
-    <section className={cn("size-full bg-border pt-px lg:py-px", className)}>
+    <section className={cn("size-full bg-border py-px", className)}>
       <button
         type="button"
         ref={containerRef}

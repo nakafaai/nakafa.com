@@ -26,7 +26,8 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar
-      className={cn("z-20 border-y border-l", props.className)}
+      variant="floating"
+      className={cn("z-20", props.className)}
       {...props}
     >
       <SidebarHeader>
