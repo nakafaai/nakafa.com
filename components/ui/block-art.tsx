@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { createSeededRandom } from "@/lib/utils/random";
 import {
   type KeyboardEvent,
   type MouseEvent,
@@ -57,6 +58,7 @@ export function BlockArt({
   const containerRef = useRef<HTMLButtonElement>(null);
   const animationFrameRef = useRef<number>(0);
   const rippleIdRef = useRef(0);
+  const rngRef = useRef(createSeededRandom(COLS, ROWS, animatedCellCount));
 
   useEffect(() => {
     if (totalCells === 0 || animatedCellCount === 0) {
@@ -70,16 +72,11 @@ export function BlockArt({
       const newActiveIndices = new Set<number>();
       const availableIndices = Array.from({ length: totalCells }, (_, i) => i);
 
-      for (let i = availableIndices.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [availableIndices[i], availableIndices[j]] = [
-          availableIndices[j],
-          availableIndices[i],
-        ];
-      }
+      // Use deterministic shuffle instead of Math.random
+      const shuffledIndices = rngRef.current.shuffle(availableIndices);
 
       for (let i = 0; i < effectiveAnimatedCellCount; i++) {
-        newActiveIndices.add(availableIndices[i]);
+        newActiveIndices.add(shuffledIndices[i]);
       }
       setActiveIndices(newActiveIndices);
     }, animationInterval);

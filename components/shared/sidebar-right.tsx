@@ -1,5 +1,5 @@
 import { IconMenu } from "@tabler/icons-react";
-import type { CSSProperties, ComponentProps, ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { ReportButton } from "../sidebar/report-button";
 import { ShareButton } from "../sidebar/share-button";
 import { Button } from "../ui/button";
@@ -13,7 +13,6 @@ import {
   SheetTrigger,
 } from "../ui/sheet";
 import {
-  SIDEBAR_WIDTH_MOBILE,
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -109,12 +108,7 @@ export function SidebarRight({
           data-sidebar="sidebar-right"
           data-slot="sidebar-right"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-            } as CSSProperties
-          }
+          className="w-72 bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
           side="right"
         >
           <SheetHeader className="sr-only">

@@ -4,6 +4,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { type VariantProps, cva } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
+import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,9 +28,6 @@ import { useMediaQuery } from "@mantine/hooks";
 
 export const SIDEBAR_COOKIE_NAME = "sidebar_state";
 export const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-export const SIDEBAR_WIDTH = "16rem";
-export const SIDEBAR_WIDTH_MOBILE = "18rem";
-export const SIDEBAR_WIDTH_ICON = "3rem";
 export const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 export const SIDEBAR_DESKTOP = 1024;
 
@@ -134,13 +132,7 @@ function SidebarProvider({
         <div
           data-slot="sidebar-wrapper"
           tabIndex={-1}
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH,
-              "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
-              ...style,
-            } as React.CSSProperties
-          }
+          style={style}
           className={cn(
             "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
             className
@@ -173,7 +165,7 @@ function Sidebar({
       <div
         data-slot="sidebar"
         className={cn(
-          "flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground",
+          "flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground",
           className
         )}
         {...props}
@@ -191,12 +183,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
-          }
+          className="w-72 bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
           hidden={!isMobile}
           side={side}
         >
@@ -220,25 +207,25 @@ function Sidebar({
         <div
           data-slot="sidebar-gap"
           className={cn(
-            "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
+            "relative w-64 bg-transparent transition-[width] duration-200 ease-linear",
             "group-data-[collapsible=offcanvas]:w-0",
             "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
-              ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
-              : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)"
+              ? "group-data-[collapsible=icon]:w-[calc(3rem+(--spacing(4)))]"
+              : "group-data-[collapsible=icon]:w-12"
           )}
         />
         <div
           data-slot="sidebar-container"
           className={cn(
-            "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+            "fixed inset-y-0 z-10 hidden h-svh w-64 transition-[left,right,width] duration-200 ease-linear md:flex",
             side === "left"
-              ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-              : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+              ? "group-data-[collapsible=offcanvas]:-left-64 left-0"
+              : "group-data-[collapsible=offcanvas]:-right-64 right-0",
             // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
-              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
-              : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+              ? "p-2 group-data-[collapsible=icon]:w-[calc(3rem+(--spacing(4))+2px)]"
+              : "group-data-[collapsible=icon]:w-12 group-data-[side=left]:border-r group-data-[side=right]:border-l",
             className
           )}
           {...props}
@@ -605,14 +592,25 @@ function SidebarMenuBadge({
 function SidebarMenuSkeleton({
   className,
   showIcon = false,
+  index = 0,
   ...props
 }: React.ComponentProps<"div"> & {
   showIcon?: boolean;
+  index?: number;
 }) {
-  // Random width between 50 to 90%.
-  const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`;
-  }, []);
+  const widthClasses = useMemo(() => {
+    const widthIndex = index % 5;
+
+    const widthOptions = [
+      "max-w-[50%]",
+      "max-w-[60%]",
+      "max-w-[70%]",
+      "max-w-[80%]",
+      "max-w-[90%]",
+    ];
+
+    return widthOptions[widthIndex];
+  }, [index]);
 
   return (
     <div
@@ -628,13 +626,8 @@ function SidebarMenuSkeleton({
         />
       )}
       <Skeleton
-        className="h-4 max-w-(--skeleton-width) flex-1"
+        className={cn("h-4 flex-1", widthClasses)}
         data-sidebar="menu-skeleton-text"
-        style={
-          {
-            "--skeleton-width": width,
-          } as React.CSSProperties
-        }
       />
     </div>
   );

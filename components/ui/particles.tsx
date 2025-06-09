@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useMousePosition } from "@/hooks/use-mouse";
 import { cn } from "@/lib/utils";
+import { createSeededRandom } from "@/lib/utils/random";
 import { useMediaQuery } from "@mantine/hooks";
 import dynamic from "next/dynamic";
 
@@ -46,6 +47,8 @@ function ParticlesComponent({
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
 
   const isMobile = useMediaQuery("(max-width: 768px)");
+
+  const rngRef = useRef(createSeededRandom(quantity, staticity, ease));
 
   const isThemeDark = useMemo(() => {
     if (!resolvedTheme) {
@@ -91,18 +94,21 @@ function ParticlesComponent({
   }, [dpr]);
 
   const circleParams = useCallback((): Circle => {
-    const x = Math.floor(Math.random() * canvasSize.current.w);
-    const y = Math.floor(Math.random() * canvasSize.current.h);
+    const rng = rngRef.current;
+    const x = Math.floor(rng.next() * canvasSize.current.w);
+    const y = Math.floor(rng.next() * canvasSize.current.h);
     const translateX = 0;
     const translateY = 0;
-    const size = Math.floor(Math.random() * 2) + 1;
+    const size = rng.nextInt(1, 3); // Math.floor(Math.random() * 2) + 1
     const alpha = 0;
     const targetAlpha = Number.parseFloat(
-      (Math.random() * 0.6 + 0.1).toFixed(1)
+      rng
+        .nextFloat(0.1, 0.7)
+        .toFixed(1) // (Math.random() * 0.6 + 0.1)
     );
-    const dx = (Math.random() - 0.5) * 0.2;
-    const dy = (Math.random() - 0.5) * 0.2;
-    const magnetism = 0.1 + Math.random() * 4;
+    const dx = rng.nextFloat(-0.1, 0.1); // (Math.random() - 0.5) * 0.2
+    const dy = rng.nextFloat(-0.1, 0.1); // (Math.random() - 0.5) * 0.2
+    const magnetism = rng.nextFloat(0.1, 4.1); // 0.1 + Math.random() * 4
     return {
       x,
       y,
