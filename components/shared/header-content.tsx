@@ -41,7 +41,7 @@ export function HeaderContent({
 }: Props) {
   const showFooter = authors || date;
   return (
-    <div data-pagefind-ignore className="relative py-10">
+    <div data-pagefind-ignore className="relative pt-20 pb-10">
       <Particles
         quantity={25}
         className="pointer-events-none absolute inset-0 opacity-80"
