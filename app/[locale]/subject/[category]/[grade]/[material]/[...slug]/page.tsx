@@ -1,6 +1,7 @@
 import { ArticleJsonLd } from "@/components/json-ld/article";
 import { BreadcrumbJsonLd } from "@/components/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@/components/json-ld/learning-resource";
+import { ComingSoon } from "@/components/shared/coming-soon";
 import {
   LayoutMaterialContent,
   LayoutMaterialFooter,
@@ -198,7 +199,11 @@ export default async function Page({ params }: Props) {
             }}
           />
           <LayoutMaterialMain>
-            <Content />
+            {headings.length === 0 ? (
+              <ComingSoon className="py-10" />
+            ) : (
+              <Content />
+            )}
           </LayoutMaterialMain>
           <LayoutMaterialPagination pagination={pagination} />
           <LayoutMaterialFooter className="mt-10">
