@@ -4,3 +4,76 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Turunan Fungsi",
 };
+
+## Memahami Gerak Melalui Turunan
+
+Turunan bukan hanya sekadar konsep abstrak dalam matematika, melainkan sebuah alat yang sangat kuat untuk memahami **perubahan**. Salah satu aplikasinya yang paling nyata adalah dalam fisika, khususnya untuk menganalisis gerak suatu benda. Jika kita tahu fungsi posisi suatu benda setiap saat, kita bisa menggunakan turunan untuk mencari tahu kecepatan dan bahkan percepatannya di momen apa pun.
+
+## Kecepatan Sesaat dari Posisi
+
+Bayangkan Anda sedang mengendarai mobil. Posisi Anda terus berubah seiring waktu. **Kecepatan** adalah laju perubahan posisi tersebut. Jika kita memiliki fungsi yang mendeskripsikan posisi, <InlineMath math="s(t)" />, maka kecepatan sesaat, <InlineMath math="v(t)" />, pada waktu <InlineMath math="t" /> adalah turunan pertama dari fungsi posisi tersebut.
+
+<BlockMath math="v(t) = s'(t) = \frac{ds}{dt}" />
+
+Ini berarti kita bisa mengetahui kecepatan pasti di setiap momen, bukan hanya kecepatan rata-rata selama perjalanan.
+
+### Menentukan Fungsi Kecepatan
+
+Misalnya, gerak sebuah partikel ditentukan oleh fungsi posisi <InlineMath math="s(t) = t^3 - 6t^2 + 9t" />, dengan <InlineMath math="s" /> dalam meter dan <InlineMath math="t" /> dalam detik. Untuk menemukan fungsi kecepatannya, kita cukup menurunkan fungsi <InlineMath math="s(t)" /> terhadap <InlineMath math="t" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="v(t) = \frac{d}{dt}(t^3 - 6t^2 + 9t)" />
+  <BlockMath math="v(t) = 3t^2 - 12t + 9" />
+</div>
+
+Dengan fungsi ini, kita bisa menghitung kecepatan partikel kapan pun. Misalnya, pada <InlineMath math="t = 1" /> detik, kecepatannya adalah <InlineMath math="v(1) = 3(1)^2 - 12(1) + 9 = 0" /> meter/detik. Hasil nol ini menandakan bahwa partikel tersebut berhenti sesaat, mungkin untuk sejenak diam atau bahkan berbalik arah.
+
+## Percepatan dari Kecepatan
+
+Sekarang, bagaimana jika kecepatan itu sendiri berubah? Mungkin Anda menginjak pedal gas atau rem. Perubahan kecepatan ini disebut **percepatan**. Sama seperti kecepatan yang merupakan turunan dari posisi, percepatan, <InlineMath math="a(t)" />, adalah turunan pertama dari fungsi kecepatan. Ini juga menjadikannya turunan kedua dari fungsi posisi.
+
+<BlockMath math="a(t) = v'(t) = s''(t) = \frac{dv}{dt} = \frac{d^2s}{dt^2}" />
+
+### Menentukan Fungsi Percepatan
+
+Melanjutkan contoh partikel sebelumnya, kita sudah punya fungsi kecepatan <InlineMath math="v(t) = 3t^2 - 12t + 9" />. Fungsi percepatannya dapat kita cari dengan menurunkan fungsi <InlineMath math="v(t)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="a(t) = \frac{d}{dt}(3t^2 - 12t + 9)" />
+  <BlockMath math="a(t) = 6t - 12" />
+</div>
+
+Dari sini, kita bisa tahu percepatan partikel di setiap waktu. Misalnya, pada <InlineMath math="t = 3" /> detik, percepatannya adalah <InlineMath math="a(3) = 6(3) - 12 = 6" /> meter/detik².
+
+## Puncak Aplikasi pada Gerak Vertikal
+
+Sebuah bola dilempar lurus ke atas. Ketinggiannya, <InlineMath math="h(t)" /> dalam meter, setelah <InlineMath math="t" /> detik diberikan oleh persamaan <InlineMath math="h(t) = 50t - 5t^2" />.
+
+Pertama, kita bisa cari fungsi kecepatan dan percepatannya.
+
+Fungsi kecepatan:
+
+<BlockMath math="v(t) = h'(t) = 50 - 10t" />
+
+Fungsi percepatan:
+
+<BlockMath math="a(t) = v'(t) = -10" />
+
+> Percepatan di sini bernilai konstan dan negatif. Ini adalah representasi dari **percepatan gravitasi** bumi yang selalu menarik benda ke bawah. Nilainya sekitar <InlineMath math="-9.8" /> m/s², namun sering dibulatkan menjadi <InlineMath math="-10" /> dalam perhitungan fisika untuk mempermudah perhitungan.
+
+Salah satu pertanyaan paling menarik adalah: **kapan bola mencapai ketinggian maksimumnya?**
+
+Bola mencapai titik tertingginya tepat pada saat ia berhenti sejenak untuk berubah arah dan jatuh kembali. Dengan kata lain, ini terjadi pada saat kecepatannya persis nol.
+
+<div className="flex flex-col gap-4">
+    <BlockMath math="v(t) = 0" />
+    <BlockMath math="50 - 10t = 0" />
+    <BlockMath math="10t = 50" />
+    <BlockMath math="t = 5" />
+</div>
+
+Jadi, bola mencapai puncak pada detik ke-5. Untuk mencari tahu berapa tinggi maksimumnya, kita masukkan <InlineMath math="t=5" /> kembali ke fungsi ketinggian awal.
+
+<BlockMath math="h(5) = 50(5) - 5(5)^2 = 250 - 125 = 125" />
+
+Dengan demikian, tinggi maksimum yang dicapai bola adalah **125 meter**. Melalui turunan, kita tidak hanya mendeskripsikan gerak, tetapi juga dapat menganalisis dan menentukan momen-momen krusial, seperti titik tertinggi sebuah proyektil.
