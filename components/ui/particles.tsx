@@ -99,16 +99,12 @@ function ParticlesComponent({
     const y = Math.floor(rng.next() * canvasSize.current.h);
     const translateX = 0;
     const translateY = 0;
-    const size = rng.nextInt(1, 3); // Math.floor(Math.random() * 2) + 1
+    const size = rng.nextInt(1, 3);
     const alpha = 0;
-    const targetAlpha = Number.parseFloat(
-      rng
-        .nextFloat(0.1, 0.7)
-        .toFixed(1) // (Math.random() * 0.6 + 0.1)
-    );
-    const dx = rng.nextFloat(-0.1, 0.1); // (Math.random() - 0.5) * 0.2
-    const dy = rng.nextFloat(-0.1, 0.1); // (Math.random() - 0.5) * 0.2
-    const magnetism = rng.nextFloat(0.1, 4.1); // 0.1 + Math.random() * 4
+    const targetAlpha = Number.parseFloat(rng.nextFloat(0.1, 0.7).toFixed(1));
+    const dx = rng.nextFloat(-0.1, 0.1);
+    const dy = rng.nextFloat(-0.1, 0.1);
+    const magnetism = rng.nextFloat(0.1, 4.1);
     return {
       x,
       y,

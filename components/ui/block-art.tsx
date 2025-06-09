@@ -72,7 +72,6 @@ export function BlockArt({
       const newActiveIndices = new Set<number>();
       const availableIndices = Array.from({ length: totalCells }, (_, i) => i);
 
-      // Use deterministic shuffle instead of Math.random
       const shuffledIndices = rngRef.current.shuffle(availableIndices);
 
       for (let i = 0; i < effectiveAnimatedCellCount; i++) {
