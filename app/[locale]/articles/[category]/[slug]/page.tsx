@@ -48,18 +48,22 @@ export async function generateMetadata({
     width: 1200,
     height: 630,
   };
-  const twitter = {
+  const twitter: Metadata["twitter"] = {
     images: [image],
+  };
+  const openGraph: Metadata["openGraph"] = {
+    url: path,
+    images: [image],
+    type: "article",
+    siteName: "Nakafa",
+    locale,
   };
 
   if (!content) {
     return {
       title: t(category),
       alternates,
-      openGraph: {
-        url: path,
-        images: [image],
-      },
+      openGraph,
       twitter,
     };
   }
@@ -74,10 +78,7 @@ export async function generateMetadata({
     alternates,
     authors: metadata.authors,
     category: t(category),
-    openGraph: {
-      url: path,
-      images: [image],
-    },
+    openGraph,
     twitter,
   };
 }

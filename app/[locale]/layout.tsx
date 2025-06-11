@@ -119,6 +119,7 @@ export async function generateMetadata({
         },
       ],
       creator: "@nabilfatih_",
+      site: "@nabilfatih_",
     },
     openGraph: {
       title: t("title"),

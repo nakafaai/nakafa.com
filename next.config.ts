@@ -32,15 +32,13 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     await Promise.resolve();
+    const llmSource = ["/:path*.md", "/:path*.mdx", "/:path*/llms.txt"];
+    const llmDestination = "/llms.mdx/:path*";
     return [
-      {
-        source: "/:path*.md",
-        destination: "/llms.mdx/:path*",
-      },
-      {
-        source: "/:path*.mdx",
-        destination: "/llms.mdx/:path*",
-      },
+      ...llmSource.map((source) => ({
+        source,
+        destination: llmDestination,
+      })),
     ];
   },
   async redirects() {
