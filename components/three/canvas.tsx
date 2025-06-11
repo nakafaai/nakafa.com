@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@mantine/hooks";
 import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, type CanvasProps } from "@react-three/fiber";
 import { FrownIcon } from "lucide-react";
@@ -59,7 +58,6 @@ function ThreeCanvasComponent({
   children: ReactNode;
   frameloop?: "always" | "demand" | "never";
 } & CanvasProps) {
-  const isMobile = useMediaQuery("(max-width: 768px)");
   return (
     <ErrorBoundary
       fallbackRender={({ error, resetErrorBoundary }) => (
@@ -86,7 +84,7 @@ function ThreeCanvasComponent({
         }}
         {...props}
       >
-        <AdaptiveDpr pixelated={isMobile} />
+        <AdaptiveDpr />
         {children}
       </Canvas>
     </ErrorBoundary>
