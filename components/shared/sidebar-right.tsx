@@ -1,17 +1,8 @@
-import { IconMenu } from "@tabler/icons-react";
+import { MenuIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { ReportButton } from "../sidebar/report-button";
 import { ShareButton } from "../sidebar/share-button";
-import { Button } from "../ui/button";
 import NavigationLink from "../ui/navigation-link";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "../ui/sheet";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "../ui/sidebar";
 import { TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { Tooltip } from "../ui/tooltip";
@@ -93,42 +85,20 @@ export function SidebarRight({
 }: SidebarRightProps) {
   return (
     <div data-pagefind-ignore>
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="fixed top-20 right-6 size-8 bg-background/30 backdrop-blur-xs xl:hidden"
-          >
-            <IconMenu />
-            <span className="sr-only">Menu</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent
-          data-sidebar="sidebar-right"
-          data-slot="sidebar-right"
-          data-mobile="true"
-          className="w-72 bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-          side="right"
-        >
-          <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar Right</SheetTitle>
-            <SheetDescription>
-              Displays the mobile sidebar right.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="flex h-full w-full flex-col">
-            <SidebarRightHeader header={header} />
-            <SidebarContent>{children}</SidebarContent>
-            <SidebarRightFooter />
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Mobile trigger button */}
+      <SidebarTrigger
+        side="right"
+        variant="outline"
+        size="icon"
+        className="fixed top-20 right-6 size-8 bg-background/30 backdrop-blur-xs xl:hidden"
+        icon={<MenuIcon />}
+      />
 
+      {/* Right sidebar */}
       <Sidebar
+        side="right"
         variant="floating"
         containerClassName="hidden lg:hidden xl:flex"
-        side="right"
         {...props}
       >
         <SidebarRightHeader header={header} />

@@ -281,6 +281,65 @@ Nabil Fatih - [@nabilfatih](https://twitter.com/nabilfatih_) - <nakafaai@gmail.c
 
 Project Link: [https://github.com/nakafaai/nakafa.com](https://github.com/nakafaai/nakafa.com)
 
+## Sidebar System
+
+The project uses a clean, type-safe sidebar system that supports both left and right sidebars with independent state management.
+
+### Basic Usage
+
+```tsx
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarTrigger,
+  SidebarContent,
+} from "@/components/ui/sidebar";
+
+function App() {
+  return (
+    <SidebarProvider defaultOpen={true} defaultOpenRight={false}>
+      {/* Left Sidebar */}
+      <Sidebar side="left">
+        <SidebarContent>{/* Left sidebar content */}</SidebarContent>
+      </Sidebar>
+
+      {/* Main Content */}
+      <main>
+        <SidebarTrigger side="left" /> {/* Toggles left sidebar */}
+        <SidebarTrigger side="right" /> {/* Toggles right sidebar */}
+        {/* Main content */}
+      </main>
+
+      {/* Right Sidebar */}
+      <Sidebar side="right">
+        <SidebarContent>{/* Right sidebar content */}</SidebarContent>
+      </Sidebar>
+    </SidebarProvider>
+  );
+}
+```
+
+### Key Features
+
+- **Independent State Management**: Left and right sidebars have separate open/close states
+- **Mobile Responsive**: Automatically uses Sheet components on mobile devices
+- **Type Safe**: Full TypeScript support with proper prop types
+- **Keyboard Shortcuts**: Cmd/Ctrl+B toggles the left sidebar by default
+- **Persistent State**: Sidebar states are saved to cookies
+- **Tailwind Styling**: Fully compatible with Tailwind CSS classes
+
+### Props
+
+- `SidebarProvider`:
+  - `defaultOpen?: boolean` - Initial state for left sidebar (default: true)
+  - `defaultOpenRight?: boolean` - Initial state for right sidebar (default: false)
+- `SidebarTrigger`:
+  - `side?: "left" | "right"` - Which sidebar to toggle (default: "left")
+- `Sidebar`:
+  - `side?: "left" | "right"` - Which side to position the sidebar (default: "left")
+  - `variant?: "sidebar" | "floating" | "inset"` - Visual variant
+  - `collapsible?: "offcanvas" | "icon" | "none"` - Collapse behavior
+
 ---
 
 <p align="center">Built with ❤️ for learners everywhere.</p>
