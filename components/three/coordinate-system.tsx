@@ -10,6 +10,7 @@ import {
   type CSSProperties,
   type ReactNode,
   Suspense,
+  useCallback,
   useMemo,
   useState,
 } from "react";
@@ -95,6 +96,15 @@ export function CoordinateSystem({
   const originColor = useMemo(() => {
     return resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
   }, [resolvedTheme]);
+
+  // Handle button clicks with proper invalidation for on-demand rendering
+  const handleGridToggle = useCallback(() => {
+    setShowGrid(!showGrid);
+  }, [showGrid]);
+
+  const handlePlayToggle = useCallback(() => {
+    setPlay(!play);
+  }, [play]);
 
   return (
     <div
@@ -183,11 +193,7 @@ export function CoordinateSystem({
           sceneReady ? "opacity-100" : "opacity-0"
         )}
       >
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={() => setShowGrid(!showGrid)}
-        >
+        <Button variant="secondary" size="icon" onClick={handleGridToggle}>
           {showGrid ? (
             <Grid2x2Icon className="size-4" />
           ) : (
@@ -198,7 +204,7 @@ export function CoordinateSystem({
         <Button
           variant={play ? "secondary" : "default"}
           size="icon"
-          onClick={() => setPlay(!play)}
+          onClick={handlePlayToggle}
         >
           {play ? (
             <PauseIcon className="size-4" />

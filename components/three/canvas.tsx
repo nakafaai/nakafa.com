@@ -51,8 +51,12 @@ function ErrorFallback({
 
 function ThreeCanvasComponent({
   children,
+  frameloop = "demand",
   ...props
-}: { children: ReactNode } & CanvasProps) {
+}: {
+  children: ReactNode;
+  frameloop?: "always" | "demand" | "never";
+} & CanvasProps) {
   return (
     <ErrorBoundary
       fallbackRender={({ error, resetErrorBoundary }) => (
@@ -66,6 +70,7 @@ function ThreeCanvasComponent({
           </div>
         }
         shadows
+        frameloop={frameloop}
         gl={{
           antialias: true,
           powerPreference: "high-performance",
