@@ -13,18 +13,20 @@ export function CameraControls({
   autoRotate?: boolean;
 }) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
-  const { invalidate } = useThree();
+  const { invalidate, performance } = useThree();
 
   // Handle auto-rotation with proper invalidation for on-demand rendering
   useFrame(() => {
     if (autoRotate && controlsRef.current) {
+      // Trigger performance regression during auto-rotation
+      performance.regress();
       // Only invalidate if auto-rotate is actually changing something
       controlsRef.current.update();
       invalidate();
     }
   });
 
-  // Handle control changes for on-demand rendering
+  // Handle control changes for on-demand rendering and performance regression
   useEffect(() => {
     const controls = controlsRef.current;
     if (!controls) {
@@ -32,6 +34,8 @@ export function CameraControls({
     }
 
     const handleChange = () => {
+      // Trigger performance regression on control changes (movement)
+      performance.regress();
       invalidate();
     };
 
@@ -41,7 +45,7 @@ export function CameraControls({
     return () => {
       controls.removeEventListener("change", handleChange);
     };
-  }, [invalidate]);
+  }, [invalidate, performance]);
 
   return (
     <>
