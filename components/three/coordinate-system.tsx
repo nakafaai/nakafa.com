@@ -75,6 +75,7 @@ export function CoordinateSystem({
   const [showGrid, setShowGrid] = useState(initialShowGrid);
   const [play, setPlay] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Color mapping based on color scheme
   const gridColors = useMemo(() => {
@@ -106,12 +107,24 @@ export function CoordinateSystem({
     setPlay(!play);
   }, [play]);
 
+  // Handle pointer events for cursor changes
+  const handlePointerDown = useCallback(() => {
+    setIsDragging(true);
+  }, []);
+
+  const handlePointerUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
   return (
     <div
       className={cn(
         "relative aspect-square overflow-hidden rounded-md sm:aspect-[1.43/1]", // IMAX aspect ratio
+        isDragging ? "cursor-grabbing" : "cursor-grab",
         className
       )}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
     >
       <ThreeCanvas
         style={{ background: backgroundColor }}
