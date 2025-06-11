@@ -11,6 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarProvider,
   SidebarTrigger,
 } from "../ui/sidebar";
 import { TooltipContent, TooltipTrigger } from "../ui/tooltip";
@@ -85,26 +86,31 @@ export function SidebarRight({
 }: SidebarRightProps) {
   return (
     <div data-pagefind-ignore>
-      {/* Mobile trigger button */}
-      <SidebarTrigger
-        side="right"
-        variant="outline"
-        size="icon"
-        className="fixed top-20 right-6 size-8 bg-background/30 backdrop-blur-xs xl:hidden"
-        icon={<MenuIcon />}
-      />
-
-      {/* Right sidebar */}
-      <Sidebar
-        side="right"
-        variant="floating"
-        containerClassName="hidden lg:hidden xl:flex"
-        {...props}
+      <SidebarProvider
+        sidebarDesktop={1280}
+        keyboardShortcut="x"
+        cookieName="sidebar_state:right"
       >
-        <SidebarRightHeader header={header} />
-        <SidebarContent>{children}</SidebarContent>
-        <SidebarRightFooter />
-      </Sidebar>
+        {/* Mobile trigger button */}
+        <SidebarTrigger
+          variant="outline"
+          size="icon"
+          className="fixed top-20 right-6 size-8 bg-background/30 backdrop-blur-xs xl:hidden"
+          icon={<MenuIcon />}
+        />
+
+        {/* Right sidebar */}
+        <Sidebar
+          side="right"
+          variant="floating"
+          containerClassName="lg:hidden xl:block"
+          {...props}
+        >
+          <SidebarRightHeader header={header} />
+          <SidebarContent>{children}</SidebarContent>
+          <SidebarRightFooter />
+        </Sidebar>
+      </SidebarProvider>
     </div>
   );
 }
