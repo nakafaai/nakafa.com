@@ -13,7 +13,7 @@ export function Header() {
     <HeaderContainer>
       <div className="flex w-full items-center justify-between gap-2 px-6">
         <div className="flex items-center gap-6 sm:w-full">
-          <SidebarTrigger side="left" className="size-8" variant="outline" />
+          <SidebarTrigger className="size-8" variant="outline" />
         </div>
 
         <div className="flex w-full items-center justify-end gap-2">
