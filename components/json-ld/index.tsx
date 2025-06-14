@@ -1,4 +1,3 @@
-import Script from "next/script";
 import type { Thing, WithContext } from "schema-dts";
 
 interface JsonLdProps {
@@ -8,7 +7,7 @@ interface JsonLdProps {
 
 export function JsonLd({ jsonLd, id }: JsonLdProps) {
   return (
-    <Script
+    <script
       id={id}
       type="application/ld+json"
       // We need to use dangerouslySetInnerHTML here as this is the recommended
