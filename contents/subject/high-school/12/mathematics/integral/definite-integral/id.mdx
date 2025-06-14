@@ -4,3 +4,83 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Integral",
 };
+
+## Dari Perkiraan Menuju Luas Pasti
+
+Pada materi [Jumlahan Riemann](/subject/high-school/12/mathematics/integral/riemann-sum), kita telah belajar bagaimana memperkirakan luas di bawah kurva dengan membaginya menjadi banyak persegi panjang. Kita juga tahu bahwa semakin banyak persegi panjang yang kita gunakan (nilai <InlineMath math="n" /> semakin besar), maka perkiraan luas kita akan semakin akurat.
+
+Sekarang, bayangkan jika kita bisa membagi area tersebut menjadi persegi panjang yang **tak terhingga banyaknya**. Lebar setiap persegi panjang (<InlineMath math="\Delta x" />) akan menjadi sangat kecil, mendekati nol. Proses mengambil limit saat jumlah partisi <InlineMath math="n" /> mendekati tak hingga inilah yang mengubah Jumlahan Riemann dari sekadar perkiraan menjadi sebuah perhitungan yang eksak. Konsep inilah yang melahirkan **Integral Tentu**.
+
+## Notasi dan Makna Integral Tentu
+
+Integral tentu adalah cara formal untuk menuliskan "jumlah tak hingga" dari luas persegi panjang yang sangat kecil tersebut. Secara matematis, integral tentu didefinisikan sebagai limit dari Jumlahan Riemann.
+
+<BlockMath math="\int_{a}^{b} f(x) \, dx = \lim_{n \to \infty} \sum_{i=1}^{n} f(x_i) \Delta x" />
+
+Notasi ini memiliki arti spesifik:
+- **<InlineMath math="\int_{a}^{b}" />**: Ini adalah simbol integral dengan batas **bawah** <InlineMath math="a" /> dan batas **atas** <InlineMath math="b" />. Angka-angka ini mendefinisikan interval di mana kita menghitung luas.
+- **<InlineMath math="f(x)" />**: Ini adalah **integran**, yaitu fungsi yang kurvanya sedang kita hitung luasnya.
+- **<InlineMath math="dx" />**: Sama seperti pada integral tak tentu, ini menandakan bahwa kita mengintegrasikan terhadap variabel <InlineMath math="x" />.
+
+Berbeda dengan integral tak tentu yang hasilnya adalah sebuah fungsi (<InlineMath math="F(x) + C" />), hasil dari integral tentu adalah sebuah **angka tunggal** yang merepresentasikan luas bersih di bawah kurva dari <InlineMath math="x=a" /> hingga <InlineMath math="x=b" />.
+
+## Menghitung Integral Tentu dengan Limit
+
+Mari kita coba menghitung nilai pasti dari integral tentu menggunakan definisi limitnya, seperti pada contoh di gambar referensi.
+
+**Soal:** Tentukan nilai dari <InlineMath math="\int_{0}^{7} x \, dx" />.
+
+**Penyelesaian:**
+
+Untuk menyelesaikan ini, kita akan mengubahnya kembali ke bentuk limit dari Jumlahan Riemann.
+
+**Langkah 1: Tentukan komponen Jumlahan Riemann**
+
+Dari soal <InlineMath math="\int_{0}^{7} x \, dx" />, kita tahu:
+- Fungsi: <InlineMath math="f(x) = x" />
+- Interval: <InlineMath math="[a, b] = [0, 7]" />
+
+Maka, lebar setiap subinterval adalah:
+
+<BlockMath math="\Delta x = \frac{b-a}{n} = \frac{7-0}{n} = \frac{7}{n}" />
+
+Kita akan menggunakan titik sampel ujung kanan (<InlineMath math="x_i" />) untuk setiap partisi:
+
+<BlockMath math="x_i = a + i \Delta x = 0 + i \left(\frac{7}{n}\right) = \frac{7i}{n}" />
+
+**Langkah 2: Susun Jumlahan Riemann**
+
+Tinggi setiap persegi panjang adalah <InlineMath math="f(x_i)" />, jadi:
+
+<BlockMath math="f(x_i) = x_i = \frac{7i}{n}" />
+
+Sekarang, kita masukkan ke dalam formula Jumlahan Riemann:
+
+<BlockMath math="\sum_{i=1}^{n} f(x_i) \Delta x = \sum_{i=1}^{n} \left(\frac{7i}{n}\right) \left(\frac{7}{n}\right) = \sum_{i=1}^{n} \frac{49i}{n^2}" />
+
+**Langkah 3: Sederhanakan dan gunakan properti notasi sigma**
+
+Kita bisa mengeluarkan konstanta dari sigma. Ingat bahwa <InlineMath math="n" /> dianggap konstan dalam penjumlahan dari <InlineMath math="i=1" /> sampai <InlineMath math="n" />.
+
+<BlockMath math="\frac{49}{n^2} \sum_{i=1}^{n} i" />
+
+Dengan menggunakan rumus jumlah deret, kita dapat mengganti <InlineMath math="\sum_{i=1}^{n} i" />.
+
+<BlockMath math="\frac{49}{n^2} \left( \frac{n(n+1)}{2} \right) = \frac{49(n^2+n)}{2n^2} = \frac{49}{2} \left( 1 + \frac{1}{n} \right)" />
+
+> Untuk menyelesaikan limit dari Jumlahan Riemann, seringkali kita memerlukan beberapa rumus jumlah deret umum:
+> - <InlineMath math="\sum_{i=1}^{n} i = \frac{n(n+1)}{2}" />
+> - <InlineMath math="\sum_{i=1}^{n} i^2 = \frac{n(n+1)(2n+1)}{6}" />
+> - <InlineMath math="\sum_{i=1}^{n} i^3 = \left( \frac{n(n+1)}{2} \right)^2" />
+
+**Langkah 4: Ambil Limitnya**
+
+Terakhir, kita ambil limit saat <InlineMath math="n \to \infty" /> untuk menemukan luas pastinya.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\int_{0}^{7} x \, dx = \lim_{n \to \infty} \frac{49}{2} \left( 1 + \frac{1}{n} \right)" />
+<BlockMath math="= \frac{49}{2} \left( 1 + 0 \right)" />
+<BlockMath math="= \frac{49}{2}" />
+</div>
+
+Jadi, luas pasti daerah di bawah kurva <InlineMath math="f(x) = x" /> dari <InlineMath math="x=0" /> sampai <InlineMath math="x=7" /> adalah **49/2** atau **24.5**. Ini adalah contoh bagaimana integral tentu memberikan jawaban yang eksak, bukan lagi perkiraan.

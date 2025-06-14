@@ -4,3 +4,83 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Integrals",
 };
+
+## From Approximation to Exact Area
+
+In the [Riemann Sums](/subject/high-school/12/mathematics/integral/riemann-sum) material, we learned how to approximate the area under a curve by dividing it into many rectangles. We also know that the more rectangles we use (the larger the value of <InlineMath math="n" />), the more accurate our area approximation becomes.
+
+Now, imagine if we could divide the area into an **infinite number of rectangles**. The width of each rectangle (<InlineMath math="\Delta x" />) would become infinitesimally small, approaching zero. This process of taking the limit as the number of partitions <InlineMath math="n" /> approaches infinity is what transforms the Riemann Sum from a mere approximation into an exact calculation. This very concept gives rise to the **Definite Integral**.
+
+## Notation and Meaning of the Definite Integral
+
+The definite integral is the formal way of writing this "infinite sum" of the areas of infinitesimally small rectangles. Mathematically, the definite integral is defined as the limit of a Riemann Sum.
+
+<BlockMath math="\int_{a}^{b} f(x) \, dx = \lim_{n \to \infty} \sum_{i=1}^{n} f(x_i) \Delta x" />
+
+This notation has a specific meaning:
+- **<InlineMath math="\int_{a}^{b}" />**: This is the integral symbol with a **lower** limit <InlineMath math="a" /> and an **upper** limit <InlineMath math="b" />. These numbers define the interval over which we are calculating the area.
+- **<InlineMath math="f(x)" />**: This is the **integrand**, which is the function whose curve we are finding the area under.
+- **<InlineMath math="dx" />**: Just as with indefinite integrals, this indicates that we are integrating with respect to the variable <InlineMath math="x" />.
+
+Unlike an indefinite integral, which results in a function (<InlineMath math="F(x) + C" />), the result of a definite integral is a **single number** that represents the net area under the curve from <InlineMath math="x=a" /> to <InlineMath math="x=b" />.
+
+## Calculating the Definite Integral with Limits
+
+Let's try to calculate the exact value of a definite integral using its limit definition, as in the reference image example.
+
+**Problem:** Determine the value of <InlineMath math="\int_{0}^{7} x \, dx" />.
+
+**Solution:**
+
+To solve this, we will convert it back to the limit form of a Riemann Sum.
+
+**Step 1: Determine the Riemann Sum components**
+
+From the problem <InlineMath math="\int_{0}^{7} x \, dx" />, we know:
+- Function: <InlineMath math="f(x) = x" />
+- Interval: <InlineMath math="[a, b] = [0, 7]" />
+
+Thus, the width of each subinterval is:
+
+<BlockMath math="\Delta x = \frac{b-a}{n} = \frac{7-0}{n} = \frac{7}{n}" />
+
+We will use the right endpoint (<InlineMath math="x_i" />) as the sample point for each partition:
+
+<BlockMath math="x_i = a + i \Delta x = 0 + i \left(\frac{7}{n}\right) = \frac{7i}{n}" />
+
+**Step 2: Set up the Riemann Sum**
+
+The height of each rectangle is <InlineMath math="f(x_i)" />, so:
+
+<BlockMath math="f(x_i) = x_i = \frac{7i}{n}" />
+
+Now, we plug this into the Riemann Sum formula:
+
+<BlockMath math="\sum_{i=1}^{n} f(x_i) \Delta x = \sum_{i=1}^{n} \left(\frac{7i}{n}\right) \left(\frac{7}{n}\right) = \sum_{i=1}^{n} \frac{49i}{n^2}" />
+
+**Step 3: Simplify and use summation properties**
+
+We can factor constants out of the sigma notation. Remember that <InlineMath math="n" /> is treated as a constant in the sum from <InlineMath math="i=1" /> to <InlineMath math="n" />.
+
+<BlockMath math="\frac{49}{n^2} \sum_{i=1}^{n} i" />
+
+Using the series summation formula, we can replace <InlineMath math="\sum_{i=1}^{n} i" />.
+
+<BlockMath math="\frac{49}{n^2} \left( \frac{n(n+1)}{2} \right) = \frac{49(n^2+n)}{2n^2} = \frac{49}{2} \left( 1 + \frac{1}{n} \right)" />
+
+> To solve the limit of a Riemann Sum, we often need some common series summation formulas:
+> - <InlineMath math="\sum_{i=1}^{n} i = \frac{n(n+1)}{2}" />
+> - <InlineMath math="\sum_{i=1}^{n} i^2 = \frac{n(n+1)(2n+1)}{6}" />
+> - <InlineMath math="\sum_{i=1}^{n} i^3 = \left( \frac{n(n+1)}{2} \right)^2" />
+
+**Step 4: Take the Limit**
+
+Finally, we take the limit as <InlineMath math="n \to \infty" /> to find the exact area.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\int_{0}^{7} x \, dx = \lim_{n \to \infty} \frac{49}{2} \left( 1 + \frac{1}{n} \right)" />
+<BlockMath math="= \frac{49}{2} \left( 1 + 0 \right)" />
+<BlockMath math="= \frac{49}{2}" />
+</div>
+
+So, the exact area of the region under the curve <InlineMath math="f(x) = x" /> from <InlineMath math="x=0" /> to <InlineMath math="x=7" /> is **49/2** or **24.5**. This is an example of how the definite integral provides an exact answer, no longer an approximation.
