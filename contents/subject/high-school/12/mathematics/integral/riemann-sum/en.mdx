@@ -1,6 +1,212 @@
+import { LineEquation } from "@/components/contents/line-equation";
+import { getColor } from "@/lib/utils/color";
+
 export const metadata = {
     title: "Riemann Sum",
     authors: [{ name: "Nabil Akbarazzima Fatih" }],
     date: "05/26/2025",
     subject: "Integrals",
 };
+
+## The Basic Idea of Riemann Sums
+
+Imagine you have a plot of land with one side that is an irregular curve. How would you calculate its area? One of the most practical ways is to divide the land into several rectangular pieces of the same width, calculate the area of each piece, and then add them all up.
+
+That's the basic idea behind a **Riemann Sum**. It is a method to **approximate the area of a region under a curve** by dividing it into multiple rectangles and summing up their areas. The more rectangles we use, the more accurate our area approximation becomes.
+
+## Key Components
+
+To perform a Riemann Sum, we need to understand its main components:
+
+-   **Interval <InlineMath math="[a, b]" />**: This is the left and right boundary of the region whose area we want to calculate.
+-   **Partitions (<InlineMath math="n" />)**: This is the number of rectangles we will use to divide the region.
+-   **Subinterval Width (<InlineMath math="\Delta x" />)**: This is the width of each rectangle. If we divide the interval evenly, its width is calculated by the formula:
+
+    <BlockMath math="\Delta x = \frac{b-a}{n}" />
+
+-   **Sample Point (<InlineMath math="x_i^*" />)**: This is a point in each subinterval whose height we will use to determine the height of the rectangle (<InlineMath math="f(x_i^*)" />). There are several common ways to choose a sample point, such as the left endpoint, right endpoint, or midpoint.
+
+## The Riemann Sum Formula
+
+If we combine all these components, we get the general formula for a Riemann Sum:
+
+<BlockMath math="R_n = \sum_{i=1}^{n} f(x_i^*) \Delta x" />
+
+The sigma notation (<InlineMath math="\sum" />) simply means "sum up all the areas of the rectangles," where the area of each rectangle is its **height** (<InlineMath math="f(x_i^*)" />) times its **width** (<InlineMath math="\Delta x" />).
+
+## Visual Calculation Example
+
+Let's apply this concept to an example.
+
+**Problem:** Determine the Riemann Sum for the function <InlineMath math="f(x) = x" /> on the interval <InlineMath math="[0, 7]" /> by dividing it into 7 subintervals of equal length and using the **left endpoint** as the sample point.
+
+<LineEquation
+  title="Riemann Sum Visualization"
+  description={<>Graph of the function <InlineMath math="f(x)=x" /> with 7 rectangular partitions using the left endpoint.</>}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 8 }).map((_, i) => ({ x: i, y: i, z: 0 })),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = x", at: 4, offset: [-1, 0.5, 0] }],
+    },
+    ...Array.from({ length: 7 }).map((_, i) => {
+        const x_left = i;
+        const x_right = i + 1;
+        const y_height = x_left; // f(x) = x, so height is taken from x_left
+        return {
+            points: [
+                {x: x_left, y: 0, z: 0},
+                {x: x_right, y: 0, z: 0},
+                {x: x_right, y: y_height, z: 0},
+                {x: x_left, y: y_height, z: 0},
+                {x: x_left, y: 0, z: 0},
+            ],
+            color: getColor("SKY"),
+            smooth: false,
+            showPoints: false,
+        }
+    })
+  ]}
+/>
+
+**Solution:**
+
+1.  **Identify Components:**
+    -   Function: <InlineMath math="f(x) = x" />
+    -   Interval: <InlineMath math="a=0, b=7" />
+    -   Number of partitions: <InlineMath math="n=7" />
+
+2.  **Calculate Subinterval Width (<InlineMath math="\Delta x" />):**
+
+    <BlockMath math="\Delta x = \frac{7 - 0}{7} = 1" />
+
+    Each rectangle will have a width of 1.
+
+3.  **Determine the Sample Points (Left Endpoint):**
+
+    Our subintervals are:
+    
+    <BlockMath math="[0,1], [1,2], [2,3], [3,4], [4,5], [5,6], [6,7]" />
+    
+    For the left-endpoint method, we take the x-value from the left side of each subinterval as the sample point:
+    
+    <BlockMath math="x_1=0, x_2=1, x_3=2, x_4=3, x_5=4, x_6=5, x_7=6" />
+
+4.  **Calculate the Height of Each Rectangle:**
+
+    The height of each rectangle is determined by the function's value <InlineMath math="f(x) = x" /> at the chosen sample points:
+    
+    <div className="flex flex-col gap-4">
+    <BlockMath math="f(x_1) = f(0) = 0" />
+    <BlockMath math="f(x_2) = f(1) = 1" />
+    <BlockMath math="f(x_3) = f(2) = 2" />
+    <BlockMath math="f(x_4) = f(3) = 3" />
+    <BlockMath math="f(x_5) = f(4) = 4" />
+    <BlockMath math="f(x_6) = f(5) = 5" />
+    <BlockMath math="f(x_7) = f(6) = 6" />
+    </div>
+
+5.  **Calculate the Riemann Sum:**
+
+    Now we can calculate the total area by summing the areas of all rectangles. Remember that the area of each rectangle is height times width:
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="R_7 = \sum_{i=1}^{7} f(x_i^*) \Delta x" />
+    <BlockMath math="= [f(0) + f(1) + f(2) + f(3) + f(4) + f(5) + f(6)] \cdot 1" />
+    <BlockMath math="= (0 + 1 + 2 + 3 + 4 + 5 + 6) \cdot 1" />
+    <BlockMath math="= 21" />
+    </div>
+
+    Thus, the estimated area under the curve <InlineMath math="f(x)=x" /> from 0 to 7 is **21**.
+
+> Note that because the function <InlineMath math="f(x)=x" /> is always increasing (monotonically increasing), using the left endpoint will always produce rectangles that are under the curve, resulting in an area approximation that is smaller than the actual area (an underestimate). Conversely, if we use the right endpoint on a monotonically increasing function, the result will always be an overestimate.
+
+## Exercises
+
+1.  Calculate the Riemann Sum for the function <InlineMath math="f(x) = x^2 + 1" /> on the interval <InlineMath math="[0, 4]" /> using 4 subintervals of equal width and the **right endpoint** as the sample point.
+
+### Answer Key
+
+1.  We will calculate the Riemann Sum for <InlineMath math="f(x) = x^2+1" /> on <InlineMath math="[0,4]" /> with <InlineMath math="n=4" />.
+
+    <LineEquation
+    title="Riemann Sum Exercise Visualization"
+    description={<>Graph of the function <InlineMath math="f(x)=x^2+1" /> with 4 rectangular partitions using the right endpoint.</>}
+    cameraPosition={[10, 10, 10]}
+    showZAxis={false}
+    data={[
+        {
+        points: Array.from({ length: 41 }).map((_, i) => {
+            const x = i * 0.1;
+            const y = x * x + 1;
+            return { x, y, z: 0 };
+        }),
+        color: getColor("AMBER"),
+        showPoints: false,
+        labels: [{ text: "f(x) = x² + 1", at: 20, offset: [2, -1, 0] }],
+        },
+        ...Array.from({ length: 4 }).map((_, i) => {
+            const x_left = i;
+            const x_right = i + 1;
+            const y_height = x_right * x_right + 1; // f(x) = x² + 1, right endpoint
+            return {
+                points: [
+                    {x: x_left, y: 0, z: 0},
+                    {x: x_right, y: 0, z: 0},
+                    {x: x_right, y: y_height, z: 0},
+                    {x: x_left, y: y_height, z: 0},
+                    {x: x_left, y: 0, z: 0},
+                ],
+                color: getColor("CYAN"),
+                smooth: false,
+                showPoints: false,
+            }
+        })
+    ]}
+    />
+
+    **Step 1: Determine the main components.**
+    -   Function: <InlineMath math="f(x) = x^2 + 1" />
+    -   Interval: <InlineMath math="a=0, b=4" />
+    -   Number of partitions: <InlineMath math="n=4" />
+    -   Sample point: Right endpoint
+
+    **Step 2: Calculate the subinterval width.**
+
+    <BlockMath math="\Delta x = \frac{b-a}{n} = \frac{4-0}{4} = 1" />
+
+    **Step 3: Determine the right endpoint sample points.**
+
+    The subintervals are:
+    
+    <BlockMath math="[0,1], [1,2], [2,3], [3,4]" />
+    
+    For the right-endpoint method, we take the x-value from the right side of each subinterval:
+
+    <BlockMath math="x_1=1, x_2=2, x_3=3, x_4=4" />
+
+    **Step 4: Calculate the height of each rectangle.**
+
+    The height of each rectangle is determined by the function's value <InlineMath math="f(x) = x^2 + 1" /> at the right endpoint sample points:
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="f(x_1) = f(1) = 1^2 + 1 = 2" />
+    <BlockMath math="f(x_2) = f(2) = 2^2 + 1 = 5" />
+    <BlockMath math="f(x_3) = f(3) = 3^2 + 1 = 10" />
+    <BlockMath math="f(x_4) = f(4) = 4^2 + 1 = 17" />
+    </div>
+
+    **Step 5: Calculate the total Riemann Sum.**
+
+    Now we sum the areas of all rectangles (height × width):
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="R_4 = \sum_{i=1}^{4} f(x_i^*) \Delta x" />
+    <BlockMath math="= [f(1) + f(2) + f(3) + f(4)] \cdot 1" />
+    <BlockMath math="= (2 + 5 + 10 + 17) \cdot 1" />
+    <BlockMath math="= 34" />
+    </div>
+
+    Thus, the Riemann Sum for the function is **34**.
