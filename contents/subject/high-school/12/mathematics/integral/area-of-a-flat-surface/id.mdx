@@ -4,3 +4,252 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Integral",
 };
+
+import { LineEquation } from "@/components/contents/line-equation";
+import { getColor } from "@/lib/utils/color";
+
+## Konsep Dasar Luas Bidang Datar
+
+Dalam kehidupan sehari-hari, kita sering perlu menghitung luas berbagai bentuk bidang. Untuk bidang dengan bentuk sederhana seperti persegi atau segitiga, kita dapat menggunakan rumus yang sudah familiar. Namun, bagaimana jika kita ingin menghitung luas daerah yang dibatasi oleh kurva yang tidak beraturan?
+
+**Integral tentu** memberikan solusi elegan untuk masalah ini. Konsep dasar integral tentu berawal dari pendekatan Riemann, di mana kita membagi daerah menjadi persegi panjang kecil, kemudian menjumlahkan luasnya.
+
+Bayangkan kita memiliki fungsi <InlineMath math="f(x)" /> dan ingin mencari luas daerah di bawah kurva dari <InlineMath math="x = a" /> sampai <InlineMath math="x = b" />. Kita dapat membagi interval <InlineMath math="[a, b]" /> menjadi <InlineMath math="n" /> bagian kecil dengan lebar <InlineMath math="\Delta x" />.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="A = \lim_{n \to \infty} \sum_{i=1}^{n} f(x_i) \cdot \Delta x" />
+<BlockMath math="A = \int_{a}^{b} f(x) \, dx" />
+</div>
+
+## Menentukan Luas dengan Integral Tentu
+
+Untuk menghitung luas bidang datar menggunakan integral tentu, kita perlu memahami beberapa langkah sistematis:
+
+### Identifikasi Batas Integrasi
+
+Langkah pertama adalah menentukan batas bawah dan batas atas integrasi. Batas ini menunjukkan rentang nilai <InlineMath math="x" /> yang membatasi daerah yang ingin kita hitung luasnya.
+
+### Tentukan Fungsi Integran
+
+Fungsi yang akan diintegralkan adalah fungsi yang membatasi daerah tersebut. Jika daerah berada di atas sumbu <InlineMath math="x" />, maka luas daerah adalah <InlineMath math="\int_{a}^{b} f(x) \, dx" />.
+
+### Evaluasi Integral
+
+Setelah menentukan batas dan fungsi, kita dapat mengevaluasi integral menggunakan teorema dasar kalkulus:
+
+<BlockMath math="\int_{a}^{b} f(x) \, dx = F(b) - F(a)" />
+
+di mana <InlineMath math="F(x)" /> adalah antiturunan dari <InlineMath math="f(x)" />.
+
+## Penerapan pada Fungsi Kuadrat
+
+Mari kita terapkan konsep ini pada contoh konkret. Misalkan kita ingin menghitung luas daerah yang dibatasi oleh kurva <InlineMath math="f(x) = x^2 - 4x" /> dan sumbu <InlineMath math="x" /> antara <InlineMath math="x = 1" /> dan <InlineMath math="x = 3" />.
+
+<LineEquation
+  title={<>Grafik Fungsi <InlineMath math="f(x) = x^2 - 4x" /></>}
+  description="Visualisasi daerah yang akan dihitung luasnya dengan bantuan garis batas dan area arsiran."
+  showZAxis={false}
+  cameraPosition={[0, 0, 12]}
+  data={[
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = 0 + (i * 4) / 30;
+        const y = x * x - 4 * x;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      smooth: true,
+      showPoints: false,
+      labels: [
+        { text: "f(x) = x² - 4x", at: 25, offset: [0, 3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 1, y: 0, z: 0 },
+        { x: 1, y: -3, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [
+        { text: "x = 1", at: 0, offset: [0.3, -1.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: 0 },
+        { x: 3, y: -3, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [
+        { text: "x = 3", at: 0, offset: [0.3, -1.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 1, y: -3, z: 0 },
+        { x: 3, y: -3, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      lineWidth: 1,
+      labels: [
+        { text: "Daerah Luas", at: 0, offset: [0, -1.5, 0] }
+      ]
+    }
+  ]}
+/>
+
+Sekarang, coba perhatikan gambar di atas. Fungsi <InlineMath math="f(x) = x^2 - 4x" /> ternyata memiliki nilai negatif di interval <InlineMath math="[1, 3]" />. Kita bisa cek dengan mudah: ketika <InlineMath math="x = 1" />, kita dapat <InlineMath math="f(1) = 1 - 4 = -3" />. Demikian juga ketika <InlineMath math="x = 3" />, kita dapat <InlineMath math="f(3) = 9 - 12 = -3" />.
+
+Nah, di sinilah letak keunikannya! Karena kita mencari **luas** yang selalu bernilai positif, maka kita perlu menggunakan nilai mutlak dari fungsi tersebut. Jadi integral kita menjadi:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="A = \int_{1}^{3} |x^2 - 4x| \, dx" />
+<BlockMath math="A = \int_{1}^{3} -(x^2 - 4x) \, dx" />
+<BlockMath math="A = \int_{1}^{3} (-x^2 + 4x) \, dx" />
+</div>
+
+Mari kita selesaikan langkah demi langkah:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="A = \left[-\frac{x^3}{3} + 2x^2\right]_{1}^{3}" />
+<BlockMath math="A = \left(-\frac{27}{3} + 18\right) - \left(-\frac{1}{3} + 2\right)" />
+<BlockMath math="A = 9 - \frac{5}{3} = \frac{22}{3}" />
+</div>
+
+Jadi, luas daerah tersebut adalah <InlineMath math="\frac{22}{3}" /> satuan luas.
+
+## Penerapan pada Fungsi Irasional
+
+Sekarang mari kita coba contoh yang sedikit lebih menantang dengan fungsi irasional. Kita akan menghitung luas daerah di bawah kurva <InlineMath math="f(x) = x\sqrt{x^2 + 5}" /> dari <InlineMath math="x = 0" /> hingga <InlineMath math="x = 2" />.
+
+<LineEquation
+  title={<>Grafik Fungsi <InlineMath math="f(x) = x\sqrt{x^2 + 5}" /></>}
+  description="Daerah di bawah kurva yang akan dihitung luasnya dengan garis bantu interval."
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = 0 + (i * 2) / 30;
+        const y = x * Math.sqrt(x * x + 5);
+        return { x, y, z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      smooth: true,
+      showPoints: false,
+      labels: [
+        { text: "f(x) = x√(x² + 5)", at: 25, offset: [-1, -2, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "x = 0", at: 0, offset: [-0.5, -0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: 0 },
+        { x: 2, y: 6, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [
+        { text: "x = 2", at: 0, offset: [0.3, -0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 2, y: 6, z: 0 },
+        { x: 2, y: 6, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "f(2) = 6", at: 0, offset: [1.5, -1, 0] }
+      ]
+    }
+  ]}
+/>
+
+Untuk integral ini, kita perlu menggunakan **teknik substitusi**. Mengapa? Karena ada bentuk <InlineMath math="x\sqrt{x^2 + 5}" /> yang cukup rumit jika kita selesaikan langsung.
+
+Mari kita lakukan substitusi dengan <InlineMath math="u = x^2 + 5" />. Dari sini, kita dapat diferensial <InlineMath math="du = 2x \, dx" />, yang berarti <InlineMath math="x \, dx = \frac{1}{2} du" />.
+
+Jangan lupa mengubah batas integrasinya juga! Ketika <InlineMath math="x = 0" />, kita dapat <InlineMath math="u = 5" />. Ketika <InlineMath math="x = 2" />, kita dapat <InlineMath math="u = 9" />.
+
+Sekarang integral kita menjadi:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="A = \int_{0}^{2} x\sqrt{x^2 + 5} \, dx" />
+<BlockMath math="A = \int_{5}^{9} \frac{1}{2}\sqrt{u} \, du" />
+<BlockMath math="A = \frac{1}{2} \int_{5}^{9} u^{1/2} \, du" />
+<BlockMath math="A = \frac{1}{2} \left[\frac{2}{3}u^{3/2}\right]_{5}^{9}" />
+<BlockMath math="A = \frac{1}{3}\left[u^{3/2}\right]_{5}^{9}" />
+<BlockMath math="A = \frac{1}{3}\left(27 - 5\sqrt{5}\right)" />
+</div>
+
+Perhatikan bahwa <InlineMath math="9^{3/2} = (3^2)^{3/2} = 3^3 = 27" /> dan <InlineMath math="5^{3/2} = 5 \cdot \sqrt{5}" />.
+
+> Saat menggunakan substitusi dalam integral tentu, jangan lupa mengubah batas integrasi sesuai dengan variabel substitusi yang baru.
+
+## Latihan
+
+1. Hitunglah luas daerah yang dibatasi oleh kurva <InlineMath math="y = x^2 + 1" />, sumbu <InlineMath math="x" />, dan garis <InlineMath math="x = 0" /> serta <InlineMath math="x = 2" />!
+
+2. Tentukan luas daerah di bawah kurva <InlineMath math="y = \frac{1}{x^2 + 1}" /> dari <InlineMath math="x = 0" /> hingga <InlineMath math="x = 1" />!
+
+3. Hitunglah luas daerah yang dibatasi oleh kurva <InlineMath math="y = 2x - x^2" /> dan sumbu <InlineMath math="x" />!
+
+### Kunci Jawaban
+
+1. **Soal pertama dengan fungsi <InlineMath math="y = x^2 + 1" />**
+
+   Karena fungsi ini selalu positif, kita langsung dapat menyusun integral:
+   
+   <BlockMath math="A = \int_{0}^{2} (x^2 + 1) \, dx" />
+
+   Setelah kita integralkan dan evaluasi, diperoleh:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="A = \left[\frac{x^3}{3} + x\right]_{0}^{2}" />
+   <BlockMath math="A = \left(\frac{8}{3} + 2\right) - 0 = \frac{14}{3}" />
+   </div>
+
+   Jadi, luas daerah tersebut adalah <InlineMath math="\frac{14}{3}" /> satuan luas.
+
+2. **Soal kedua dengan fungsi rasional**
+
+   Untuk integral ini, kita perlu mengingat bahwa antiturunan dari <InlineMath math="\frac{1}{x^2 + 1}" /> adalah <InlineMath math="\arctan(x)" />.
+   
+   <BlockMath math="A = \int_{0}^{1} \frac{1}{x^2 + 1} \, dx" />
+
+   <div className="flex flex-col gap-4">
+   <BlockMath math="A = [\arctan(x)]_{0}^{1}" />
+   <BlockMath math="A = \arctan(1) - \arctan(0) = \frac{\pi}{4}" />
+   </div>
+
+   Luas daerah tersebut adalah <InlineMath math="\frac{\pi}{4}" /> satuan luas.
+
+3. **Soal ketiga dengan parabola**
+
+   Pertama, kita cari dulu di mana kurva memotong sumbu <InlineMath math="x" />:
+   
+   <BlockMath math="2x - x^2 = 0 \Rightarrow x(2 - x) = 0" />
+
+   Jadi titik potongnya di <InlineMath math="x = 0" /> dan <InlineMath math="x = 2" />. Karena fungsi ini positif di antara kedua titik tersebut, kita dapat langsung mengintegralkan:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="A = \int_{0}^{2} (2x - x^2) \, dx" />
+   <BlockMath math="A = \left[x^2 - \frac{x^3}{3}\right]_{0}^{2}" />
+   <BlockMath math="A = 4 - \frac{8}{3} = \frac{4}{3}" />
+   </div>
+
+   Luas daerah tersebut adalah <InlineMath math="\frac{4}{3}" /> satuan luas.
