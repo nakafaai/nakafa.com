@@ -4,3 +4,46 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Integrals",
 };
+
+## Identical Integration Limits
+
+If the upper and lower limits of a definite integral are the same, the result is zero.
+
+<BlockMath math="\int_{a}^{a} f(x) \, dx = 0" />
+
+This makes a lot of sense intuitively. Since a definite integral calculates the area under a curve over an interval, if the interval has no width (from <InlineMath math="a" /> to <InlineMath math="a" />), then there is no area to calculate. It's like trying to find the area of a straight line, which is of course zero.
+
+## Reversing the Integration Limits
+
+When we swap the lower and upper limits of an integral, the result is the negative of the original integral's value.
+
+<BlockMath math="\int_{a}^{b} f(x) \, dx = - \int_{b}^{a} f(x) \, dx" />
+
+A simple analogy is measuring displacement. The distance from point A to B is the same as the distance from B to A, but the direction is opposite. The negative sign here represents the opposite "direction" in the context of integration.
+
+## Constant Multiple Rule
+
+Just as with indefinite integrals, a constant can be factored out of the integral to simplify the calculation.
+
+<BlockMath math="\int_{a}^{b} kf(x) \, dx = k \int_{a}^{b} f(x) \, dx" />
+
+If we have a function that is "scaled up" or "scaled down" by a constant factor <InlineMath math="k" />, we can calculate its base area first (<InlineMath math="\int f(x)dx" />) and then multiply the result by that factor <InlineMath math="k" />.
+
+## Sum and Difference Rule
+
+The integral of a sum or difference of two functions is equal to the sum or difference of their individual integrals.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\int_{a}^{b} [f(x) + g(x)] \, dx = \int_{a}^{b} f(x) \, dx + \int_{a}^{b} g(x) \, dx" />
+<BlockMath math="\int_{a}^{b} [f(x) - g(x)] \, dx = \int_{a}^{b} f(x) \, dx - \int_{a}^{b} g(x) \, dx" />
+</div>
+
+This property allows us to break down the integral of a complex function into several simpler integrals. We can calculate the area under <InlineMath math="f(x)" /> and <InlineMath math="g(x)" /> separately, and then add or subtract them.
+
+## Interval Addition Property
+
+An integration interval can be split into several sub-intervals. The total area over the large interval is equal to the sum of the areas of its constituent sub-intervals.
+
+<BlockMath math="\int_{a}^{c} f(x) \, dx = \int_{a}^{b} f(x) \, dx + \int_{b}^{c} f(x) \, dx" />
+
+This property holds regardless of the order of <InlineMath math="a" />, <InlineMath math="b" />, and <InlineMath math="c" />. It's like saying that the journey from city A to city C is the same as the journey from A to B plus the journey from B to C. This is a very useful tool for handling functions that are defined differently on different intervals.

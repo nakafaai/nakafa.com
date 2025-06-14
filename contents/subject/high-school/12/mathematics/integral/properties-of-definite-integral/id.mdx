@@ -4,3 +4,46 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Integral",
 };
+
+## Batas Integrasi yang Sama
+
+Jika batas atas dan bawah dari suatu integral tentu sama, maka hasilnya adalah nol.
+
+<BlockMath math="\int_{a}^{a} f(x) \, dx = 0" />
+
+Ini sangat masuk akal secara intuitif. Karena integral tentu menghitung luas di bawah kurva pada suatu interval, jika intervalnya tidak memiliki lebar (dari <InlineMath math="a" /> ke <InlineMath math="a" />), maka tidak ada area yang bisa dihitung. Ini seperti mencoba menghitung luas sebuah garis lurus, yang tentu saja adalah nol.
+
+## Penukaran Batas Integrasi
+
+Ketika kita menukar batas bawah dan batas atas dari suatu integral, hasilnya akan menjadi negatif dari nilai integral aslinya.
+
+<BlockMath math="\int_{a}^{b} f(x) \, dx = - \int_{b}^{a} f(x) \, dx" />
+
+Analogi sederhananya adalah seperti mengukur perpindahan. Jarak dari titik A ke B sama dengan jarak dari B ke A, tetapi arahnya berlawanan. Tanda negatif di sini merepresentasikan "arah" yang berlawanan dalam konteks integrasi.
+
+## Aturan Kelipatan Konstanta
+
+Sama seperti pada integral tak tentu, konstanta dapat dikeluarkan dari integral untuk menyederhanakan perhitungan.
+
+<BlockMath math="\int_{a}^{b} kf(x) \, dx = k \int_{a}^{b} f(x) \, dx" />
+
+Jika kita memiliki fungsi yang "diperbesar" atau "diperkecil" oleh faktor konstan <InlineMath math="k" />, kita bisa menghitung luas dasarnya terlebih dahulu (<InlineMath math="\int f(x)dx" />), lalu mengalikan hasilnya dengan faktor <InlineMath math="k" /> tersebut.
+
+## Aturan Penjumlahan dan Pengurangan
+
+Integral dari penjumlahan atau pengurangan dua fungsi adalah sama dengan jumlah atau selisih dari integral masing-masing fungsi.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\int_{a}^{b} [f(x) + g(x)] \, dx = \int_{a}^{b} f(x) \, dx + \int_{a}^{b} g(x) \, dx" />
+<BlockMath math="\int_{a}^{b} [f(x) - g(x)] \, dx = \int_{a}^{b} f(x) \, dx - \int_{a}^{b} g(x) \, dx" />
+</div>
+
+Sifat ini memungkinkan kita untuk memecah integral dari fungsi yang kompleks menjadi beberapa integral yang lebih sederhana. Kita bisa menghitung luas di bawah <InlineMath math="f(x)" /> dan <InlineMath math="g(x)" /> secara terpisah, lalu menjumlahkan atau mengurangkannya.
+
+## Sifat Penambahan Interval
+
+Suatu interval integrasi dapat dipecah menjadi beberapa sub-interval. Luas total pada interval besar sama dengan jumlah luas pada sub-interval yang menyusunnya.
+
+<BlockMath math="\int_{a}^{c} f(x) \, dx = \int_{a}^{b} f(x) \, dx + \int_{b}^{c} f(x) \, dx" />
+
+Sifat ini berlaku tidak peduli urutan <InlineMath math="a" />, <InlineMath math="b" />, dan <InlineMath math="c" />. Ini seperti mengatakan bahwa perjalanan dari kota A ke kota C sama dengan perjalanan dari A ke B, ditambah perjalanan dari B ke C. Ini adalah alat yang sangat berguna untuk menangani fungsi yang didefinisikan secara berbeda pada interval yang berbeda.
