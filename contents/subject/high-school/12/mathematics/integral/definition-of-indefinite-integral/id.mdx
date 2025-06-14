@@ -4,3 +4,40 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Integral",
 };
+
+## Memahami Konsep Integral
+
+Coba bayangkan turunan itu seperti "resep" untuk mengetahui laju perubahan sesuatu. Misalnya, resep untuk mengetahui kecepatan mobilmu setiap saat. Nah, integral itu kebalikannya. Kalau kamu punya "resep" kecepatan tadi, dengan integral kamu bisa tahu fungsi posisi mobilmu. Jadi, integral pada dasarnya adalah **antiturunan**, atau proses untuk menemukan fungsi asli dari turunannya.
+
+## Peran Konstanta Misterius
+
+Coba kita lihat beberapa fungsi dan turunannya. Perhatikan baik-baik polanya.
+
+| Fungsi <InlineMath math="F(x)" /> | Turunan <InlineMath math="f(x) = F'(x)" /> |
+| :--- | :--- |
+| <InlineMath math="F(x) = 2x^2 + 1" /> | <InlineMath math="f(x) = 4x" /> |
+| <InlineMath math="F(x) = 2x^2 + 5" /> | <InlineMath math="f(x) = 4x" /> |
+| <InlineMath math="F(x) = 2x^2 - 10" /> | <InlineMath math="f(x) = 4x" /> |
+| <InlineMath math="F(x) = 2x^2" /> | <InlineMath math="f(x) = 4x" /> |
+
+Lihat? Semua fungsi <InlineMath math="F(x)" /> yang berbeda-beda itu, ternyata punya turunan <InlineMath math="f(x) = 4x" /> yang sama persis. Ini terjadi karena turunan dari konstanta (angka tanpa variabel, seperti 1, 5, atau -10) selalu nol.
+
+Karena itu, saat kita melakukan proses kebalikannya (integral), kita jadi kehilangan jejak nilai konstanta aslinya. Apakah konstantanya 1? 5? atau -1000? Kita tidak tahu. Untuk mengatasi masalah ini, kita pakai simbol **C** sebagai perwakilan semua kemungkinan konstanta itu. Simbol **C** ini adalah "jaring pengaman" kita untuk memastikan tidak ada solusi yang terlewat. Makanya, hasilnya kita sebut **integral tak tentu**.
+
+## Notasi Resmi Integral
+
+Dalam matematika, kita punya cara penulisan resmi untuk proses integrasi ini. Kelihatannya mungkin sedikit kompleks, tapi sebenarnya sederhana:
+
+<BlockMath math="\int f(x) \, dx = F(x) + C" />
+
+Yuk, kita bedah artinya satu per satu:
+- **<InlineMath math="\int" />** adalah **simbol integral**, bentuknya seperti huruf 'S' yang memanjang, melambangkan "penjumlahan" atau "akumulasi".
+- **<InlineMath math="f(x)" />** adalah fungsi yang akan kita integralkan, disebut **integran**.
+- **<InlineMath math="dx" />** disebut **diferensial dari x**. Ini adalah bagian krusial yang menandakan bahwa kita melakukan integrasi **terhadap variabel x**. Tanpa ini, ekspresi integral tidak lengkap.
+- **<InlineMath math="F(x) + C" />** adalah **integral tak tentu** dari <InlineMath math="f(x)" />. Ini adalah jawaban kita, di mana <InlineMath math="F(x)" /> adalah antiturunan dan **C** adalah **konstanta integrasi**.
+
+Jadi, ingat saja hubungan kunci ini:
+
+<BlockMath math="\frac{d}{dx} [F(x)] = f(x) \quad \iff \quad \int f(x) \, dx = F(x) + C" />
+
+> Intinya, kalau kamu punya fungsi <InlineMath math="F(x)" /> dan turunannya adalah <InlineMath math="f(x)" />, maka integral tak tentu dari <InlineMath math="f(x)" /> adalah keluarga dari semua fungsi <InlineMath math="F(x)" /> yang mungkin, yang kita tulis sebagai <InlineMath math="F(x) + C" />.

@@ -4,3 +4,118 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Integral",
 };
+
+## Aturan Pangkat
+
+Ini adalah salah satu aturan paling dasar dan penting dalam integral. Jika kamu menemukan integral dalam bentuk pangkat, gunakan formula ini:
+
+<BlockMath math="\int x^n \, dx = \frac{1}{n+1}x^{n+1} + C, \quad \text{dengan } n \neq -1" />
+
+Sederhananya, tambahkan satu ke pangkatnya, lalu bagi dengan pangkat yang baru itu.
+
+Sebagai contoh, mari kita selesaikan <InlineMath math="\int x^5 \, dx" />.
+
+Disini, <InlineMath math="n=5" />, jadi:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\int x^5 \, dx = \frac{1}{5+1}x^{5+1} + C" />
+<BlockMath math="= \frac{1}{6}x^6 + C" />
+</div>
+
+## Aturan Kelipatan Konstanta
+
+Jika fungsi yang akan diintegralkan memiliki koefisien atau konstanta, kamu bisa "mengeluarkan" konstanta itu dari integral untuk mempermudah perhitungan.
+
+<BlockMath math="\int a \cdot f(x) \, dx = a \int f(x) \, dx" />
+
+> Ingat, **a** adalah sebuah bilangan konstan. Sifat ini sangat berguna untuk menyederhanakan bentuk integral sebelum diselesaikan.
+
+## Aturan Penjumlahan dan Pengurangan
+
+Bagaimana jika kita harus mengintegralkan dua fungsi yang dijumlahkan atau dikurangkan? Gampang, kita bisa memisahkan mereka menjadi dua integral yang berbeda.
+
+<BlockMath math="\int [f(x) \pm g(x)] \, dx = \int f(x) \, dx \pm \int g(x) \, dx" />
+
+Contohnya, untuk menyelesaikan <InlineMath math="\int (x^4 - x^3) \, dx" />, kita pisahkan dulu:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\int (x^4 - x^3) \, dx = \int x^4 \, dx - \int x^3 \, dx" />
+<BlockMath math="= \left( \frac{1}{4+1}x^5 \right) - \left( \frac{1}{3+1}x^4 \right) + C" />
+<BlockMath math="= \frac{1}{5}x^5 - \frac{1}{4}x^4 + C" />
+</div>
+
+Jangan lupa untuk hanya menambahkan satu konstanta **C** di akhir. Secara teknis, setiap integral akan menghasilkan konstantanya sendiri (misalnya, <InlineMath math="C_1" /> dan <InlineMath math="C_2" />). Namun, karena semua konstanta tersebut nilainya tak tentu, hasil penjumlahan atau pengurangannya pun akan menjadi sebuah konstanta tak tentu baru. Oleh karena itu, kita cukup menuliskannya sebagai satu **C** di akhir.
+
+## Aturan Substitusi
+
+Untuk integral yang kelihatannya rumit, seperti perkalian dua fungsi di mana salah satunya adalah turunan dari yang lain (atau kelipatannya), kita bisa menggunakan **aturan substitusi**. Ide dasarnya adalah menyederhanakan integral dengan mengganti sebagian dari fungsi dengan variabel baru, biasanya **u**.
+
+<BlockMath math="\int f(g(x)) \cdot g'(x) \, dx = \int f(u) \, du" />
+
+Ini sering disebut juga sebagai **substitusi u**. Metode ini sangat ampuh untuk menyelesaikan integral yang kompleks.
+
+## Latihan
+
+1.  Tentukan hasil dari <InlineMath math="\int 6x^2 \, dx" />!
+2.  Tentukan hasil dari <InlineMath math="\int (3x^2 + 2x - 5) \, dx" />!
+3.  Selesaikan integral <InlineMath math="\int 2x(x^2 + 3)^4 \, dx" /> menggunakan aturan substitusi!
+
+### Kunci Jawaban
+
+1.  Untuk menyelesaikan <InlineMath math="\int 6x^2 \, dx" />, kita bisa menggunakan **Aturan Kelipatan Konstanta** dan **Aturan Pangkat**.
+    
+    **Langkah 1:** Keluarkan konstanta 6 dari integral.
+    
+    <BlockMath math="\int 6x^2 \, dx = 6 \int x^2 \, dx" />
+    
+    **Langkah 2:** Gunakan aturan pangkat pada <InlineMath math="\int x^2 \, dx" />, di mana <InlineMath math="n=2" />.
+    
+    <div className="flex flex-col gap-4">
+    <BlockMath math="6 \left( \frac{1}{2+1}x^{2+1} \right) + C" />
+    <BlockMath math="= 6 \left( \frac{1}{3}x^3 \right) + C" />
+    </div>
+    
+    **Langkah 3:** Kalikan konstantanya untuk mendapatkan hasil akhir.
+    
+    <BlockMath math="= 2x^3 + C" />
+
+2.  Untuk integral <InlineMath math="\int (3x^2 + 2x - 5) \, dx" />, kita gunakan **Aturan Penjumlahan dan Pengurangan** untuk memecahnya menjadi tiga integral terpisah.
+    
+    **Langkah 1:** Pisahkan setiap suku menjadi integralnya sendiri.
+    
+    <BlockMath math="\int 3x^2 \, dx + \int 2x \, dx - \int 5 \, dx" />
+    
+    **Langkah 2:** Selesaikan setiap integral satu per satu menggunakan aturan pangkat dan konstanta.
+    
+    <div className="flex flex-col gap-4">
+    <BlockMath math="= 3\left(\frac{1}{3}x^3\right) + 2\left(\frac{1}{2}x^2\right) - 5x + C" />
+    <BlockMath math="= x^3 + x^2 - 5x + C" />
+    </div>
+    
+    Jadi, jawabannya adalah <InlineMath math="x^3 + x^2 - 5x + C" />.
+
+3.  Integral <InlineMath math="\int 2x(x^2 + 3)^4 \, dx" /> adalah contoh klasik untuk **Aturan Substitusi**.
+    
+    **Langkah 1:** Pilih bagian dari fungsi untuk dijadikan <InlineMath math="u" />. Pilihan yang baik adalah bagian dalam kurung.
+    
+    Misalkan: <InlineMath math="u = x^2 + 3" />.
+    
+    **Langkah 2:** Cari turunan dari <InlineMath math="u" /> terhadap <InlineMath math="x" />, yaitu <InlineMath math="du/dx" />.
+    
+    <BlockMath math="\frac{du}{dx} = 2x" />
+    
+    Dari sini, kita bisa menulis <InlineMath math="du = 2x \, dx" />.
+    
+    **Langkah 3:** Lakukan substitusi. Ganti <InlineMath math="x^2+3" /> dengan <InlineMath math="u" /> dan <InlineMath math="2x \, dx" /> dengan <InlineMath math="du" />.
+    
+    <BlockMath math="\int (x^2 + 3)^4 (2x \, dx) = \int u^4 \, du" />
+    
+    **Langkah 4:** Selesaikan integral yang sudah disederhanakan menggunakan aturan pangkat.
+    
+    <BlockMath math="\int u^4 \, du = \frac{1}{5}u^5 + C" />
+    
+    **Langkah 5:** Kembalikan <InlineMath math="u" /> ke bentuk aslinya.
+    
+    <BlockMath math="= \frac{1}{5}(x^2 + 3)^5 + C" />
+    
+    Inilah hasil akhirnya.
