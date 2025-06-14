@@ -4,3 +4,74 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Integrals",
 };
+
+## The Bridge Between Derivatives and Integrals
+
+The Fundamental Theorem of Calculus (FTC) is the central pillar of calculus, magnificently connecting two seemingly different concepts: **derivatives** and **integrals**. This theorem provides us with a much simpler and more powerful method for calculating definite integrals, without needing to go through the lengthy process of Riemann sum limits. The theorem is divided into two important parts.
+
+These two parts complement each other: the first part shows that differentiation and integration are inverse operations, while the second part provides a practical way to calculate definite integrals using antiderivatives. This theorem is built upon the foundation of the **Mean Value Theorem for Integrals**, which guarantees the existence of a specific point within the integration interval.
+
+## Differentiating an Integral Function
+
+The first part of the FTC reveals that the processes of integration and differentiation are inverse operations. Formally, the theorem states:
+
+<BlockMath math="F(x) = \int_{a}^{x} f(t) \, dt \implies F'(x) = f(x)" />
+
+This means that the derivative of a function defined as an integral is the function inside the integral itself.
+
+> As a simple analogy, imagine <InlineMath math="f(t)" /> is the rate at which water flows into a bucket at time <InlineMath math="t" />. Then, <InlineMath math="F(x)" /> is the total volume of water in the bucket at time <InlineMath math="x" />. This theorem says that the rate of change of the water's volume at that instant (<InlineMath math="F'(x)" />) is exactly equal to the flow rate at that instant (<InlineMath math="f(x)" />).
+
+**Example:**
+
+Find the derivative of <InlineMath math="F(x) = \int_{1}^{x} \sqrt{2+t} \, dt" />.
+
+**Solution:**
+
+Based on FTC Part One, we don't need to integrate the function. We simply replace the variable <InlineMath math="t" /> in the integrand with the upper limit <InlineMath math="x" />.
+
+<BlockMath math="\frac{d}{dx} \left( \int_{1}^{x} \sqrt{2+t} \, dt \right) = \sqrt{2+x}" />
+
+It's as simple as that. The derivative is the original function, evaluated at the upper limit.
+
+## Evaluating Integrals with Antiderivatives
+
+The second part, also known as the **Evaluation Theorem**, gives us a practical method for calculating the exact value of a definite integral. The theorem states:
+
+<BlockMath math="\int_{a}^{b} f(x) \, dx = F(b) - F(a)" />
+
+Where <InlineMath math="F(x)" /> is the **antiderivative** (indefinite integral) of <InlineMath math="f(x)" />. This means that to find the area under the curve of <InlineMath math="f(x)" /> from <InlineMath math="a" /> to <InlineMath math="b" />, we just need to find its antiderivative and then calculate the difference in its value at the two limits.
+
+To write this, we often use the bracket notation <InlineMath math="[F(x)]_{a}^{b}" /> which means <InlineMath math="F(b) - F(a)" />.
+
+**Example 1:**
+
+Find the value of <InlineMath math="\int_{1}^{3} x^2 \, dx" />.
+
+**Solution:**
+
+1.  **Find the antiderivative:** The antiderivative of <InlineMath math="f(x) = x^2" /> is <InlineMath math="F(x) = \frac{1}{3}x^3" />.
+2.  **Evaluate at the limits:** Calculate <InlineMath math="F(3) - F(1)" />.
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="\int_{1}^{3} x^2 \, dx = \left[ \frac{1}{3}x^3 \right]_{1}^{3}" />
+    <BlockMath math="= \left( \frac{1}{3}(3)^3 \right) - \left( \frac{1}{3}(1)^3 \right)" />
+    <BlockMath math="= \frac{27}{3} - \frac{1}{3} = \frac{26}{3}" />
+    </div>
+
+**Example 2:**
+
+Find the value of <InlineMath math="\int_{1}^{5} (2x-1) \, dx" />.
+
+**Solution:**
+
+1.  **Find the antiderivative:** The antiderivative of <InlineMath math="f(x) = 2x - 1" /> is <InlineMath math="F(x) = x^2 - x" />.
+2.  **Evaluate at the limits:** Calculate <InlineMath math="F(5) - F(1)" />.
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="\int_{1}^{5} (2x-1) \, dx = \left[ x^2 - x \right]_{1}^{5}" />
+    <BlockMath math="= (5^2 - 5) - (1^2 - 1)" />
+    <BlockMath math="= (25 - 5) - (1 - 1)" />
+    <BlockMath math="= 20 - 0 = 20" />
+    </div>
+
+The Fundamental Theorem of Calculus fundamentally simplifies how we calculate areas and accumulations, turning them from complex limit problems into straightforward algebraic processes using antiderivatives.
