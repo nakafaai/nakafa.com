@@ -4,3 +4,144 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Integral",
 };
+
+## Penerapan Integral dalam Dunia Ekonomi
+
+Integral memiliki peran penting dalam menganalisis berbagai fenomena ekonomi dan bisnis. Bayangkan seorang manajer perusahaan yang ingin mengetahui total penjualan produk dalam periode tertentu, atau seorang ekonom yang menganalisis pertumbuhan pendapatan nasional. Di sinilah integral menjadi alat yang sangat berguna.
+
+Dalam konteks ekonomi, **integral** membantu kita menghitung akumulasi dari suatu besaran yang berubah terhadap waktu. Misalnya, jika kita memiliki fungsi laju penjualan, maka integral dari fungsi tersebut akan memberikan total penjualan dalam periode tertentu.
+
+Konsep ini serupa dengan menghitung luas daerah di bawah kurva, di mana sumbu horizontal mewakili waktu dan sumbu vertikal mewakili laju perubahan suatu besaran ekonomi.
+
+## Analisis Penjualan Menggunakan Integral
+
+Mari kita pelajari bagaimana integral dapat membantu menganalisis penjualan suatu produk. Misalkan sebuah perusahaan teknologi meluncurkan smartphone baru, dan tim analisis menemukan bahwa penjualan mengikuti pola tertentu.
+
+Setelah melakukan riset pasar, mereka menemukan bahwa laju penjualan per bulan dapat dimodelkan dengan fungsi <InlineMath math="f(t) = 2000\sqrt{t + 1} + 800" /> unit per bulan, di mana <InlineMath math="t" /> adalah waktu dalam bulan setelah peluncuran.
+
+Nah, sekarang pertanyaannya: berapa **total penjualan** dalam 3 bulan pertama? Di sinilah integral berperan. Kita perlu mengintegralkan fungsi laju penjualan:
+
+<BlockMath math="S = \int_{0}^{3} (2000\sqrt{t + 1} + 800) \, dt" />
+
+Mari kita selesaikan ini dengan memisahkan integralnya terlebih dahulu:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="S = \int_{0}^{3} 2000\sqrt{t + 1} \, dt + \int_{0}^{3} 800 \, dt" />
+<BlockMath math="S = 2000 \int_{0}^{3} (t + 1)^{1/2} \, dt + 800t \Big|_{0}^{3}" />
+</div>
+
+Untuk integral yang mengandung akar, kita bisa gunakan substitusi. Misalkan <InlineMath math="u = t + 1" />, maka <InlineMath math="du = dt" />. Jangan lupa ubah batas integrasinya juga!
+
+<div className="flex flex-col gap-4">
+<BlockMath math="S = 2000 \int_{1}^{4} u^{1/2} \, du + 2400" />
+<BlockMath math="S = 2000 \left[\frac{2}{3}u^{3/2}\right]_{1}^{4} + 2400" />
+<BlockMath math="S = \frac{4000}{3}(8 - 1) + 2400 = \frac{28000}{3} + 2400" />
+</div>
+
+Hasil akhirnya adalah <InlineMath math="S = 9333 + 2400 = 11733" /> unit smartphone terjual dalam 3 bulan pertama.
+
+## Analisis Keuntungan dan Pendapatan
+
+Sekarang mari kita lihat contoh yang berbeda. Misalkan sebuah startup teknologi memiliki laju pertumbuhan pendapatan yang mengikuti pola eksponensial <InlineMath math="R'(t) = 5000e^{0.1t}" /> ribu rupiah per bulan, di mana <InlineMath math="t" /> adalah waktu dalam bulan.
+
+Untuk menghitung **total peningkatan pendapatan** dalam 6 bulan pertama, kita integralkan fungsi laju pertumbuhan:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="R = \int_{0}^{6} 5000e^{0.1t} \, dt" />
+<BlockMath math="R = 5000 \int_{0}^{6} e^{0.1t} \, dt" />
+<BlockMath math="R = 5000 \left[\frac{e^{0.1t}}{0.1}\right]_{0}^{6}" />
+<BlockMath math="R = 50000(e^{0.6} - 1)" />
+</div>
+
+Dengan <InlineMath math="e^{0.6} \approx 1.822" />, maka total peningkatan pendapatan adalah sekitar <InlineMath math="50000 \times 0.822 = 41100" /> ribu rupiah atau 41.1 juta rupiah.
+
+## Optimalisasi Biaya Produksi
+
+Dalam dunia bisnis, perusahaan selalu berusaha mengoptimalkan biaya produksi. Misalkan biaya marginal untuk memproduksi suatu barang adalah <InlineMath math="MC(x) = 0.3x^2 - 12x + 200" /> ribu rupiah per unit, di mana <InlineMath math="x" /> adalah jumlah unit yang diproduksi.
+
+Nah, jika perusahaan ingin mengetahui **total biaya variabel** untuk memproduksi 20 unit pertama, mereka tinggal mengintegralkan fungsi biaya marginal:
+
+<BlockMath math="VC = \int_{0}^{20} (0.3x^2 - 12x + 200) \, dx" />
+
+Setelah kita integralkan dan evaluasi, diperoleh:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="VC = \left[0.1x^3 - 6x^2 + 200x\right]_{0}^{20}" />
+<BlockMath math="VC = 800 - 2400 + 4000 = 2400" />
+</div>
+
+Jadi, total biaya variabel untuk memproduksi 20 unit adalah 2.4 juta rupiah.
+
+> Dalam aplikasi ekonomi, integral membantu mengubah konsep marginal (laju perubahan) menjadi konsep total (akumulasi). Ini sangat berguna untuk pengambilan keputusan bisnis yang tepat.
+
+## Analisis Surplus Konsumen
+
+Konsep surplus konsumen juga dapat dihitung menggunakan integral. Bayangkan ada pasar dengan fungsi permintaan <InlineMath math="P = 100 - 0.5Q" /> dan harga keseimbangan adalah 60 rupiah per unit. 
+
+Surplus konsumen menunjukkan total manfaat yang diperoleh konsumen di atas harga yang mereka bayar. Kita bisa menghitungnya dengan:
+
+<BlockMath math="CS = \int_{0}^{80} (100 - 0.5Q - 60) \, dQ = \int_{0}^{80} (40 - 0.5Q) \, dQ" />
+
+Setelah dievaluasi:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="CS = \left[40Q - 0.25Q^2\right]_{0}^{80}" />
+<BlockMath math="CS = 3200 - 1600 = 1600" />
+</div>
+
+Surplus konsumen sebesar 1600 unit menunjukkan total manfaat yang diperoleh konsumen di atas harga keseimbangan.
+
+## Latihan
+
+1. Sebuah perusahaan memiliki laju penjualan <InlineMath math="f(t) = 1000 + 500t" /> unit per bulan. Hitunglah total penjualan dalam 6 bulan pertama!
+
+2. Jika biaya marginal suatu produk adalah <InlineMath math="MC(x) = 2x + 50" /> ribu rupiah per unit, berapa total biaya variabel untuk memproduksi 25 unit?
+
+3. Fungsi laju pertumbuhan investasi adalah <InlineMath math="I'(t) = 2000e^{0.05t}" /> juta rupiah per tahun. Hitunglah total pertumbuhan investasi dalam 4 tahun!
+
+### Kunci Jawaban
+
+1. **Menghitung total penjualan**
+
+   Karena kita punya fungsi laju penjualan, tinggal integralkan saja:
+   
+   <BlockMath math="S = \int_{0}^{6} (1000 + 500t) \, dt" />
+
+   Hasilnya adalah:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="S = \left[1000t + 250t^2\right]_{0}^{6}" />
+   <BlockMath math="S = 6000 + 9000 = 15000" />
+   </div>
+
+   Total penjualan dalam 6 bulan adalah 15,000 unit.
+
+2. **Menghitung biaya variabel**
+
+   Integralkan fungsi biaya marginal:
+   
+   <BlockMath math="VC = \int_{0}^{25} (2x + 50) \, dx" />
+   
+   Setelah dievaluasi:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="VC = \left[x^2 + 50x\right]_{0}^{25}" />
+   <BlockMath math="VC = 625 + 1250 = 1875" />
+   </div>
+
+   Total biaya variabel adalah 1,875 ribu rupiah atau 1.875 juta rupiah.
+
+3. **Menghitung pertumbuhan investasi**
+
+   Untuk fungsi eksponensial, kita integralkan:
+   
+   <BlockMath math="I = \int_{0}^{4} 2000e^{0.05t} \, dt" />
+   
+   Hasilnya adalah:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="I = 2000 \left[\frac{e^{0.05t}}{0.05}\right]_{0}^{4}" />
+   <BlockMath math="I = 40000(e^{0.2} - 1) \approx 40000(0.221) = 8856" />
+   </div>
+
+   Total pertumbuhan investasi dalam 4 tahun adalah sekitar 8.86 miliar rupiah.

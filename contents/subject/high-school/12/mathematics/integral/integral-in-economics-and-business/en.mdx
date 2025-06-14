@@ -4,3 +4,144 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Integrals",
 };
+
+## Application of Integrals in Economics
+
+Integrals play an important role in analyzing various economic and business phenomena. Imagine a company manager who wants to know the total sales of a product in a certain period, or an economist analyzing national income growth. This is where integrals become a very useful tool.
+
+In an economic context, **integrals** help us calculate the accumulation of a quantity that changes with respect to time. For example, if we have a sales rate function, then the integral of that function will give us the total sales in a certain period.
+
+This concept is similar to calculating the area under a curve, where the horizontal axis represents time and the vertical axis represents the rate of change of an economic quantity.
+
+## Sales Analysis Using Integrals
+
+Let's learn how integrals can help analyze the sales of a product. Suppose a technology company launches a new smartphone, and the analysis team finds that sales follow a certain pattern.
+
+After conducting market research, they found that the sales rate per month can be modeled with the function <InlineMath math="f(t) = 2000\sqrt{t + 1} + 800" /> units per month, where <InlineMath math="t" /> is the time in months after launch.
+
+Now, here's the question: what is the **total sales** in the first 3 months? This is where integrals play a role. We need to integrate the sales rate function:
+
+<BlockMath math="S = \int_{0}^{3} (2000\sqrt{t + 1} + 800) \, dt" />
+
+Let's solve this by separating the integral first:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="S = \int_{0}^{3} 2000\sqrt{t + 1} \, dt + \int_{0}^{3} 800 \, dt" />
+<BlockMath math="S = 2000 \int_{0}^{3} (t + 1)^{1/2} \, dt + 800t \Big|_{0}^{3}" />
+</div>
+
+For integrals containing square roots, we can use substitution. Let <InlineMath math="u = t + 1" />, then <InlineMath math="du = dt" />. Don't forget to change the integration limits too!
+
+<div className="flex flex-col gap-4">
+<BlockMath math="S = 2000 \int_{1}^{4} u^{1/2} \, du + 2400" />
+<BlockMath math="S = 2000 \left[\frac{2}{3}u^{3/2}\right]_{1}^{4} + 2400" />
+<BlockMath math="S = \frac{4000}{3}(8 - 1) + 2400 = \frac{28000}{3} + 2400" />
+</div>
+
+The final result is <InlineMath math="S = 9333 + 2400 = 11733" /> smartphone units sold in the first 3 months.
+
+## Profit and Revenue Analysis
+
+Now let's look at a different example. Suppose a technology startup has a revenue growth rate that follows an exponential pattern <InlineMath math="R'(t) = 5000e^{0.1t}" /> thousand dollars per month, where <InlineMath math="t" /> is the time in months.
+
+To calculate the **total revenue increase** in the first 6 months, we integrate the growth rate function:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="R = \int_{0}^{6} 5000e^{0.1t} \, dt" />
+<BlockMath math="R = 5000 \int_{0}^{6} e^{0.1t} \, dt" />
+<BlockMath math="R = 5000 \left[\frac{e^{0.1t}}{0.1}\right]_{0}^{6}" />
+<BlockMath math="R = 50000(e^{0.6} - 1)" />
+</div>
+
+With <InlineMath math="e^{0.6} \approx 1.822" />, the total revenue increase is approximately <InlineMath math="50000 \times 0.822 = 41100" /> thousand dollars or 41.1 million dollars.
+
+## Production Cost Optimization
+
+In the business world, companies always strive to optimize production costs. Suppose the marginal cost to produce a good is <InlineMath math="MC(x) = 0.3x^2 - 12x + 200" /> thousand dollars per unit, where <InlineMath math="x" /> is the number of units produced.
+
+Now, if the company wants to know the **total variable cost** to produce the first 20 units, they simply integrate the marginal cost function:
+
+<BlockMath math="VC = \int_{0}^{20} (0.3x^2 - 12x + 200) \, dx" />
+
+After we integrate and evaluate, we obtain:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="VC = \left[0.1x^3 - 6x^2 + 200x\right]_{0}^{20}" />
+<BlockMath math="VC = 800 - 2400 + 4000 = 2400" />
+</div>
+
+So, the total variable cost to produce 20 units is 2.4 million dollars.
+
+> In economic applications, integrals help transform marginal concepts (rates of change) into total concepts (accumulation). This is very useful for making the right business decisions.
+
+## Consumer Surplus Analysis
+
+The concept of consumer surplus can also be calculated using integrals. Imagine there's a market with demand function <InlineMath math="P = 100 - 0.5Q" /> and the equilibrium price is 60 dollars per unit. 
+
+Consumer surplus shows the total benefit obtained by consumers above the price they pay. We can calculate it with:
+
+<BlockMath math="CS = \int_{0}^{80} (100 - 0.5Q - 60) \, dQ = \int_{0}^{80} (40 - 0.5Q) \, dQ" />
+
+After evaluation:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="CS = \left[40Q - 0.25Q^2\right]_{0}^{80}" />
+<BlockMath math="CS = 3200 - 1600 = 1600" />
+</div>
+
+A consumer surplus of 1600 units shows the total benefit obtained by consumers above the equilibrium price.
+
+## Exercises
+
+1. A company has a sales rate of <InlineMath math="f(t) = 1000 + 500t" /> units per month. Calculate the total sales in the first 6 months!
+
+2. If the marginal cost of a product is <InlineMath math="MC(x) = 2x + 50" /> thousand dollars per unit, what is the total variable cost to produce 25 units?
+
+3. The investment growth rate function is <InlineMath math="I'(t) = 2000e^{0.05t}" /> million dollars per year. Calculate the total investment growth in 4 years!
+
+### Answer Key
+
+1. **Calculating total sales**
+
+   Since we have the sales rate function, just integrate it:
+   
+   <BlockMath math="S = \int_{0}^{6} (1000 + 500t) \, dt" />
+
+   The result is:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="S = \left[1000t + 250t^2\right]_{0}^{6}" />
+   <BlockMath math="S = 6000 + 9000 = 15000" />
+   </div>
+
+   Total sales in 6 months is 15,000 units.
+
+2. **Calculating variable cost**
+
+   Integrate the marginal cost function:
+   
+   <BlockMath math="VC = \int_{0}^{25} (2x + 50) \, dx" />
+   
+   After evaluation:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="VC = \left[x^2 + 50x\right]_{0}^{25}" />
+   <BlockMath math="VC = 625 + 1250 = 1875" />
+   </div>
+
+   Total variable cost is 1,875 thousand dollars or 1.875 million dollars.
+
+3. **Calculating investment growth**
+
+   For exponential functions, we integrate:
+   
+   <BlockMath math="I = \int_{0}^{4} 2000e^{0.05t} \, dt" />
+   
+   The result is:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="I = 2000 \left[\frac{e^{0.05t}}{0.05}\right]_{0}^{4}" />
+   <BlockMath math="I = 40000(e^{0.2} - 1) \approx 40000(0.221) = 8856" />
+   </div>
+
+   Total investment growth in 4 years is approximately 8.86 billion dollars.
