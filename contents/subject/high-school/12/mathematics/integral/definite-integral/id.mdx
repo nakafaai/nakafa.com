@@ -60,13 +60,20 @@ Sekarang, kita masukkan ke dalam formula Jumlahan Riemann:
 
 **Langkah 3: Sederhanakan dan gunakan properti notasi sigma**
 
-Kita bisa mengeluarkan konstanta dari sigma. Ingat bahwa <InlineMath math="n" /> dianggap konstan dalam penjumlahan dari <InlineMath math="i=1" /> sampai <InlineMath math="n" />.
+Kita bisa mengeluarkan konstanta dari sigma, karena <InlineMath math="n" /> dianggap konstan dalam penjumlahan dari <InlineMath math="i=1" /> sampai <InlineMath math="n" />.
 
 <BlockMath math="\frac{49}{n^2} \sum_{i=1}^{n} i" />
 
-Dengan menggunakan rumus jumlah deret, kita dapat mengganti <InlineMath math="\sum_{i=1}^{n} i" />.
+Selanjutnya, kita ganti <InlineMath math="\sum_{i=1}^{n} i" /> dengan rumus jumlah deretnya, yaitu <InlineMath math="\frac{n(n+1)}{2}" />, lalu kita sederhanakan ekspresinya untuk mempermudah perhitungan limit.
 
-<BlockMath math="\frac{49}{n^2} \left( \frac{n(n+1)}{2} \right) = \frac{49(n^2+n)}{2n^2} = \frac{49}{2} \left( 1 + \frac{1}{n} \right)" />
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{49}{n^2} \cdot \frac{n(n+1)}{2}" />
+<BlockMath math="= \frac{49n(n+1)}{2n^2}" />
+<BlockMath math="= \frac{49(n+1)}{2n}" />
+<BlockMath math="= \frac{49}{2} \left( \frac{n+1}{n} \right) = \frac{49}{2} \left( 1 + \frac{1}{n} \right)" />
+</div>
+
+Langkah-langkah penyederhanaan di atas memastikan kita mendapatkan bentuk yang paling mudah untuk dihitung limitnya. Pertama kita kanselasi <InlineMath math="n" /> dari pembilang dan penyebut, kemudian kita pisahkan pecahannya.
 
 > Untuk menyelesaikan limit dari Jumlahan Riemann, seringkali kita memerlukan beberapa rumus jumlah deret umum:
 > - <InlineMath math="\sum_{i=1}^{n} i = \frac{n(n+1)}{2}" />

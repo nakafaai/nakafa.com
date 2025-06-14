@@ -60,13 +60,20 @@ Now, we plug this into the Riemann Sum formula:
 
 **Step 3: Simplify and use summation properties**
 
-We can factor constants out of the sigma notation. Remember that <InlineMath math="n" /> is treated as a constant in the sum from <InlineMath math="i=1" /> to <InlineMath math="n" />.
+We can factor constants out of the sigma notation, as <InlineMath math="n" /> is treated as a constant in the sum from <InlineMath math="i=1" /> to <InlineMath math="n" />.
 
 <BlockMath math="\frac{49}{n^2} \sum_{i=1}^{n} i" />
 
-Using the series summation formula, we can replace <InlineMath math="\sum_{i=1}^{n} i" />.
+Next, we replace <InlineMath math="\sum_{i=1}^{n} i" /> with its series summation formula, <InlineMath math="\frac{n(n+1)}{2}" />, and then simplify the expression to make it easier to evaluate the limit.
 
-<BlockMath math="\frac{49}{n^2} \left( \frac{n(n+1)}{2} \right) = \frac{49(n^2+n)}{2n^2} = \frac{49}{2} \left( 1 + \frac{1}{n} \right)" />
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{49}{n^2} \cdot \frac{n(n+1)}{2}" />
+<BlockMath math="= \frac{49n(n+1)}{2n^2}" />
+<BlockMath math="= \frac{49(n+1)}{2n}" />
+<BlockMath math="= \frac{49}{2} \left( \frac{n+1}{n} \right) = \frac{49}{2} \left( 1 + \frac{1}{n} \right)" />
+</div>
+
+The simplification steps above ensure we get the easiest form to evaluate the limit. First, we cancel <InlineMath math="n" /> from the numerator and denominator, then we split the fraction.
 
 > To solve the limit of a Riemann Sum, we often need some common series summation formulas:
 > - <InlineMath math="\sum_{i=1}^{n} i = \frac{n(n+1)}{2}" />
