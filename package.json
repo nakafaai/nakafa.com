@@ -81,7 +81,7 @@
     "react-hook-form": "^7.57.0",
     "react-katex": "^3.1.0",
     "react-nice-avatar": "^1.5.0",
-    "react-resizable-panels": "^3.0.2",
+    "react-resizable-panels": "^3.0.3",
     "react-spring": "^10.0.1",
     "recharts": "^2.15.3",
     "remark-gfm": "^4.0.1",
