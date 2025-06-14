@@ -4,3 +4,155 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Integrals",
 };
+
+## The Role of Integrals in the World of Physics
+
+Have you ever wondered how physicists calculate the energy needed to launch a rocket into space? Or how they determine the forces acting on a water dam? The answer lies in one of the most powerful mathematical concepts: **integrals**.
+
+In physics, many quantities we need cannot be calculated with simple formulas because they involve continuous changes. For example, the force acting on an object might change with position or time. This is where integrals become an invaluable tool.
+
+The basic concept of integrals in physics is **accumulation**. If we have the rate of change of a quantity, integrals help us find the total quantity over a specific interval.
+
+## Calculating Work with Integrals
+
+Let's start with the most fundamental concept: **work**. In physics, work is defined as the product of force and displacement. But what if the force varies along the path?
+
+Imagine a particle located at position <InlineMath math="x" /> meters from the origin. The force acting on the particle is <InlineMath math="F(x) = x^2 + 2x" /> Newtons. Now, what is the work required to move the particle from position <InlineMath math="x = 1" /> meter to position <InlineMath math="x = 3" /> meters?
+
+Well, since the force changes with position, we cannot use the simple formula <InlineMath math="W = F \times s" />. We need to use integrals:
+
+<BlockMath math="W = \int_{1}^{3} F(x) \, dx = \int_{1}^{3} (x^2 + 2x) \, dx" />
+
+Let's solve it:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="W = \left[\frac{x^3}{3} + x^2\right]_{1}^{3}" />
+<BlockMath math="W = \left(\frac{27}{3} + 9\right) - \left(\frac{1}{3} + 1\right)" />
+<BlockMath math="W = (9 + 9) - \left(\frac{1}{3} + \frac{3}{3}\right) = 18 - \frac{4}{3}" />
+<BlockMath math="W = \frac{54}{3} - \frac{4}{3} = \frac{50}{3} \text{ Joule}" />
+</div>
+
+So, the required work is <InlineMath math="\frac{50}{3}" /> or approximately <InlineMath math="16.67" /> Joules.
+
+## Hooke's Law and Spring Energy
+
+Now let's discuss a very interesting application of integrals: **Hooke's Law**. Have you ever played on a trampoline or pressed a spring? The further we compress a spring, the greater the force required. This is what Hooke's Law explains.
+
+According to Hooke's Law, the force required to stretch or compress a spring is proportional to its displacement from the equilibrium position:
+
+<BlockMath math="F(x) = kx" />
+
+where <InlineMath math="k" /> is the spring constant and <InlineMath math="x" /> is the displacement distance from the natural position.
+
+Let's look at a real example. Suppose a force of <InlineMath math="40" /> N is required to hold a spring that has been stretched from its original length of <InlineMath math="10" /> cm to <InlineMath math="15" /> cm. Now, what is the work required to stretch the spring from <InlineMath math="15" /> cm to <InlineMath math="18" /> cm?
+
+First, we determine the spring constant. The displacement from the natural position is <InlineMath math="15 - 10 = 5" /> cm = <InlineMath math="0.05" /> m. Since <InlineMath math="F = kx" />, then:
+
+<BlockMath math="40 = k \times 0.05" />
+
+So <InlineMath math="k = \frac{40}{0.05} = 800" /> N/m.
+
+Now, to calculate the work to stretch the spring from <InlineMath math="15" /> cm to <InlineMath math="18" /> cm, we need to calculate the integral. The coordinates we use:
+- Position <InlineMath math="15" /> cm = <InlineMath math="0.05" /> m from natural position
+- Position <InlineMath math="18" /> cm = <InlineMath math="0.08" /> m from natural position
+
+We can calculate the work with integrals:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="W = \int_{0.05}^{0.08} 800x \, dx" />
+<BlockMath math="W = 800 \left[\frac{x^2}{2}\right]_{0.05}^{0.08}" />
+<BlockMath math="W = 400[(0.08)^2 - (0.05)^2]" />
+<BlockMath math="W = 400[0.0064 - 0.0025] = 400 \times 0.0039 = 1.56 \text{ Joule}" />
+</div>
+
+## Calculating Mass from Density Functions
+
+Another application of integrals in physics is calculating the **mass** of an object if we know its density function. This is very useful for objects with non-uniform density.
+
+Suppose we have a rod of length <InlineMath math="2" /> meters with linear density <InlineMath math="\rho(x) = 3x + 2" /> kg/m, where <InlineMath math="x" /> is the distance from one end of the rod. What is the total mass of the rod?
+
+<div className="flex flex-col gap-4">
+<BlockMath math="m = \int_{0}^{2} \rho(x) \, dx = \int_{0}^{2} (3x + 2) \, dx" />
+<BlockMath math="m = \left[\frac{3x^2}{2} + 2x\right]_{0}^{2}" />
+<BlockMath math="m = \frac{3(4)}{2} + 2(2) = 6 + 4 = 10 \text{ kg}" />
+</div>
+
+## Determining Center of Mass
+
+Another very important concept is **center of mass**. For objects with non-uniform density, the center of mass can be calculated using integrals.
+
+If we have a rod with density <InlineMath math="\rho(x)" /> over interval <InlineMath math="[a, b]" />, then the center of mass coordinate is:
+
+<BlockMath math="\bar{x} = \frac{\int_{a}^{b} x \rho(x) \, dx}{\int_{a}^{b} \rho(x) \, dx}" />
+
+For the rod with density <InlineMath math="\rho(x) = 3x + 2" /> above:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\bar{x} = \frac{\int_{0}^{2} x(3x + 2) \, dx}{10}" />
+<BlockMath math="\bar{x} = \frac{\int_{0}^{2} (3x^2 + 2x) \, dx}{10}" />
+<BlockMath math="\bar{x} = \frac{[x^3 + x^2]_{0}^{2}}{10} = \frac{8 + 4}{10} = 1.2 \text{ meter}" />
+</div>
+
+> The center of mass indicates the point where the entire mass of an object can be considered concentrated. This is very important in equilibrium analysis and object dynamics.
+
+## Calculating Moment of Inertia
+
+**Moment of inertia** is a quantity that shows how difficult it is for an object to rotate about a certain axis. For continuous objects, moment of inertia is calculated using integrals:
+
+<BlockMath math="I = \int r^2 \, dm" />
+
+where <InlineMath math="r" /> is the distance from the rotation axis and <InlineMath math="dm" /> is the mass element.
+
+For a homogeneous rod with mass <InlineMath math="M" /> and length <InlineMath math="L" /> rotating about one of its ends:
+
+<BlockMath math="I = \int_{0}^{L} x^2 \frac{M}{L} \, dx = \frac{M}{L} \int_{0}^{L} x^2 \, dx = \frac{M}{L} \left[\frac{x^3}{3}\right]_{0}^{L} = \frac{ML^2}{3}" />
+
+## Exercises
+
+1. A particle moves along the x-axis with force <InlineMath math="F(x) = 4x - x^2" /> Newtons. Calculate the work done to move the particle from <InlineMath math="x = 0" /> to <InlineMath math="x = 3" /> meters!
+
+2. A spring has spring constant <InlineMath math="k = 200" /> N/m. How much energy is stored in the spring when stretched <InlineMath math="0.1" /> meters from equilibrium position?
+
+3. A wire of length <InlineMath math="4" /> meters has linear density <InlineMath math="\rho(x) = 2 + x" /> kg/m. Determine the total mass of the wire and the position of its center of mass!
+
+### Answer Key
+
+1. **Calculating work with variable force**
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="W = \int_{0}^{3} (4x - x^2) \, dx" />
+   <BlockMath math="W = \left[2x^2 - \frac{x^3}{3}\right]_{0}^{3}" />
+   <BlockMath math="W = \left(2(3)^2 - \frac{(3)^3}{3}\right) - \left(2(0)^2 - \frac{(0)^3}{3}\right)" />
+   <BlockMath math="W = \left(18 - 9\right) - 0 = 9 \text{ Joule}" />
+   </div>
+
+   The work done is <InlineMath math="9" /> Joules.
+
+2. **Calculating spring energy**
+
+   The potential energy stored in the spring is:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="E = \int_{0}^{0.1} kx \, dx = \int_{0}^{0.1} 200x \, dx" />
+   <BlockMath math="E = 200 \left[\frac{x^2}{2}\right]_{0}^{0.1}" />
+   <BlockMath math="E = 200 \times \frac{(0.1)^2 - 0^2}{2} = 200 \times \frac{0.01}{2} = 100 \times 0.01 = 1 \text{ Joule}" />
+   </div>
+
+   The potential energy stored is <InlineMath math="1" /> Joule.
+
+3. **Calculating wire mass and center of mass**
+
+   Total mass:
+   
+   <BlockMath math="m = \int_{0}^{4} (2 + x) \, dx = \left[2x + \frac{x^2}{2}\right]_{0}^{4} = 8 + 8 = 16 \text{ kg}" />
+   
+   Center of mass:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\bar{x} = \frac{\int_{0}^{4} x(2 + x) \, dx}{16}" />
+   <BlockMath math="\bar{x} = \frac{\int_{0}^{4} (2x + x^2) \, dx}{16}" />
+   <BlockMath math="\bar{x} = \frac{[x^2 + \frac{x^3}{3}]_{0}^{4}}{16} = \frac{16 + \frac{64}{3}}{16}" />
+   <BlockMath math="\bar{x} = \frac{\frac{48 + 64}{3}}{16} = \frac{\frac{112}{3}}{16} = \frac{112}{48} = \frac{7}{3} \text{ meter}" />
+   </div>
+
+   The total mass of the wire is <InlineMath math="16" /> kg and its center of mass is located at position <InlineMath math="\frac{7}{3}" /> meters from the end.

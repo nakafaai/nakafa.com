@@ -4,3 +4,155 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Integral",
 };
+
+## Peran Integral dalam Dunia Fisika
+
+Pernahkah kalian bertanya-tanya bagaimana para fisikawan menghitung energi yang diperlukan untuk meluncurkan roket ke luar angkasa? Atau bagaimana mereka menentukan gaya yang bekerja pada bendungan air? Jawabannya terletak pada salah satu konsep matematika yang paling powerful: **integral**.
+
+Dalam fisika, banyak besaran yang kita perlukan tidak bisa dihitung dengan rumus sederhana karena melibatkan perubahan yang kontinu. Misalnya, gaya yang bekerja pada suatu benda mungkin berubah seiring dengan posisi atau waktu. Di sinilah integral menjadi alat yang sangat berharga.
+
+Konsep dasar integral dalam fisika adalah **akumulasi**. Jika kita memiliki laju perubahan suatu besaran, integral membantu kita menemukan total besaran tersebut dalam interval tertentu.
+
+## Menghitung Usaha dengan Integral
+
+Mari kita mulai dengan konsep yang paling fundamental: **usaha** atau work. Dalam fisika, usaha didefinisikan sebagai hasil kali gaya dengan perpindahan. Tapi bagaimana jika gayanya berubah-ubah sepanjang lintasan?
+
+Bayangkan sebuah partikel yang berada pada posisi <InlineMath math="x" /> meter dari titik asal. Gaya yang bekerja pada partikel tersebut adalah <InlineMath math="F(x) = x^2 + 2x" /> Newton. Sekarang, berapa usaha yang diperlukan untuk memindahkan partikel dari posisi <InlineMath math="x = 1" /> meter ke posisi <InlineMath math="x = 3" /> meter?
+
+Nah, karena gayanya berubah seiring dengan posisi, kita tidak bisa menggunakan rumus sederhana <InlineMath math="W = F \times s" />. Kita perlu menggunakan integral:
+
+<BlockMath math="W = \int_{1}^{3} F(x) \, dx = \int_{1}^{3} (x^2 + 2x) \, dx" />
+
+Mari kita selesaikan:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="W = \left[\frac{x^3}{3} + x^2\right]_{1}^{3}" />
+<BlockMath math="W = \left(\frac{27}{3} + 9\right) - \left(\frac{1}{3} + 1\right)" />
+<BlockMath math="W = (9 + 9) - \left(\frac{1}{3} + \frac{3}{3}\right) = 18 - \frac{4}{3}" />
+<BlockMath math="W = \frac{54}{3} - \frac{4}{3} = \frac{50}{3} \text{ Joule}" />
+</div>
+
+Jadi, usaha yang diperlukan adalah <InlineMath math="\frac{50}{3}" /> atau sekitar <InlineMath math="16.67" /> Joule.
+
+## Hukum Hooke dan Energi Pegas
+
+Sekarang mari kita bahas aplikasi integral yang sangat menarik: **Hukum Hooke**. Pernahkah kalian main trampolin atau menekan pegas? Semakin jauh kita menekan pegas, semakin besar gaya yang diperlukan. Inilah yang dijelaskan oleh Hukum Hooke.
+
+Menurut Hukum Hooke, gaya yang diperlukan untuk meregangkan atau menekan pegas sebanding dengan jarak perpindahannya dari posisi kesetimbangan:
+
+<BlockMath math="F(x) = kx" />
+
+di mana <InlineMath math="k" /> adalah konstanta pegas dan <InlineMath math="x" /> adalah jarak perpindahan dari posisi alami.
+
+Mari kita lihat contoh nyata. Misalkan diperlukan gaya <InlineMath math="40" /> N untuk menahan pegas yang telah direntangkan dari panjang aslinya <InlineMath math="10" /> cm sampai <InlineMath math="15" /> cm. Sekarang, berapa usaha yang diperlukan untuk meregangkan pegas dari <InlineMath math="15" /> cm menjadi <InlineMath math="18" /> cm?
+
+Pertama, kita tentukan konstanta pegas. Perpindahan dari posisi alami adalah <InlineMath math="15 - 10 = 5" /> cm = <InlineMath math="0.05" /> m. Karena <InlineMath math="F = kx" />, maka:
+
+<BlockMath math="40 = k \times 0.05" />
+
+Sehingga <InlineMath math="k = \frac{40}{0.05} = 800" /> N/m.
+
+Sekarang, untuk menghitung usaha meregangkan pegas dari <InlineMath math="15" /> cm ke <InlineMath math="18" /> cm, kita perlu menghitung integral. Koordinat yang kita gunakan:
+- Posisi <InlineMath math="15" /> cm = <InlineMath math="0.05" /> m dari posisi alami
+- Posisi <InlineMath math="18" /> cm = <InlineMath math="0.08" /> m dari posisi alami
+
+Kita bisa menghitung usaha dengan integral:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="W = \int_{0.05}^{0.08} 800x \, dx" />
+<BlockMath math="W = 800 \left[\frac{x^2}{2}\right]_{0.05}^{0.08}" />
+<BlockMath math="W = 400[(0.08)^2 - (0.05)^2]" />
+<BlockMath math="W = 400[0.0064 - 0.0025] = 400 \times 0.0039 = 1.56 \text{ Joule}" />
+</div>
+
+## Menghitung Massa dari Fungsi Densitas
+
+Aplikasi integral lainnya dalam fisika adalah menghitung **massa** suatu benda jika kita mengetahui fungsi densitasnya. Ini sangat berguna untuk benda yang densitasnya tidak seragam.
+
+Misalkan kita memiliki batang sepanjang <InlineMath math="2" /> meter dengan densitas linear <InlineMath math="\rho(x) = 3x + 2" /> kg/m, di mana <InlineMath math="x" /> adalah jarak dari salah satu ujung batang. Berapa massa total batang tersebut?
+
+<div className="flex flex-col gap-4">
+<BlockMath math="m = \int_{0}^{2} \rho(x) \, dx = \int_{0}^{2} (3x + 2) \, dx" />
+<BlockMath math="m = \left[\frac{3x^2}{2} + 2x\right]_{0}^{2}" />
+<BlockMath math="m = \frac{3(4)}{2} + 2(2) = 6 + 4 = 10 \text{ kg}" />
+</div>
+
+## Menentukan Pusat Massa
+
+Konsep lain yang sangat penting adalah **pusat massa**. Untuk benda dengan densitas yang tidak seragam, pusat massa dapat dihitung menggunakan integral.
+
+Jika kita memiliki batang dengan densitas <InlineMath math="\rho(x)" /> sepanjang interval <InlineMath math="[a, b]" />, maka koordinat pusat massa adalah:
+
+<BlockMath math="\bar{x} = \frac{\int_{a}^{b} x \rho(x) \, dx}{\int_{a}^{b} \rho(x) \, dx}" />
+
+Untuk batang dengan densitas <InlineMath math="\rho(x) = 3x + 2" /> di atas:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\bar{x} = \frac{\int_{0}^{2} x(3x + 2) \, dx}{10}" />
+<BlockMath math="\bar{x} = \frac{\int_{0}^{2} (3x^2 + 2x) \, dx}{10}" />
+<BlockMath math="\bar{x} = \frac{[x^3 + x^2]_{0}^{2}}{10} = \frac{8 + 4}{10} = 1.2 \text{ meter}" />
+</div>
+
+> Pusat massa menunjukkan titik di mana seluruh massa benda dapat dianggap terkonsentrasi. Ini sangat penting dalam analisis kesetimbangan dan dinamika benda.
+
+## Menghitung Momen Inersia
+
+**Momen inersia** adalah besaran yang menunjukkan seberapa sulit suatu benda untuk berputar terhadap sumbu tertentu. Untuk benda kontinu, momen inersia dihitung menggunakan integral:
+
+<BlockMath math="I = \int r^2 \, dm" />
+
+di mana <InlineMath math="r" /> adalah jarak dari sumbu rotasi dan <InlineMath math="dm" /> adalah elemen massa.
+
+Untuk batang homogen dengan massa <InlineMath math="M" /> dan panjang <InlineMath math="L" /> yang berputar terhadap salah satu ujungnya:
+
+<BlockMath math="I = \int_{0}^{L} x^2 \frac{M}{L} \, dx = \frac{M}{L} \int_{0}^{L} x^2 \, dx = \frac{M}{L} \left[\frac{x^3}{3}\right]_{0}^{L} = \frac{ML^2}{3}" />
+
+## Latihan
+
+1. Sebuah partikel bergerak sepanjang sumbu x dengan gaya <InlineMath math="F(x) = 4x - x^2" /> Newton. Hitunglah usaha yang dilakukan untuk memindahkan partikel dari <InlineMath math="x = 0" /> ke <InlineMath math="x = 3" /> meter!
+
+2. Sebuah pegas memiliki konstanta pegas <InlineMath math="k = 200" /> N/m. Berapa energi yang tersimpan dalam pegas ketika diregangkan sejauh <InlineMath math="0.1" /> meter dari posisi kesetimbangan?
+
+3. Sebuah kawat sepanjang <InlineMath math="4" /> meter memiliki densitas linear <InlineMath math="\rho(x) = 2 + x" /> kg/m. Tentukan massa total kawat dan posisi pusat massanya!
+
+### Kunci Jawaban
+
+1. **Menghitung usaha dengan gaya variabel**
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="W = \int_{0}^{3} (4x - x^2) \, dx" />
+   <BlockMath math="W = \left[2x^2 - \frac{x^3}{3}\right]_{0}^{3}" />
+   <BlockMath math="W = \left(2(3)^2 - \frac{(3)^3}{3}\right) - \left(2(0)^2 - \frac{(0)^3}{3}\right)" />
+   <BlockMath math="W = \left(18 - 9\right) - 0 = 9 \text{ Joule}" />
+   </div>
+
+   Usaha yang dilakukan adalah <InlineMath math="9" /> Joule.
+
+2. **Menghitung energi pegas**
+
+   Energi potensial yang tersimpan dalam pegas adalah:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="E = \int_{0}^{0.1} kx \, dx = \int_{0}^{0.1} 200x \, dx" />
+   <BlockMath math="E = 200 \left[\frac{x^2}{2}\right]_{0}^{0.1}" />
+   <BlockMath math="E = 200 \times \frac{(0.1)^2 - 0^2}{2} = 200 \times \frac{0.01}{2} = 100 \times 0.01 = 1 \text{ Joule}" />
+   </div>
+
+   Energi potensial yang tersimpan adalah <InlineMath math="1" /> Joule.
+
+3. **Menghitung massa dan pusat massa kawat**
+
+   Massa total:
+   
+   <BlockMath math="m = \int_{0}^{4} (2 + x) \, dx = \left[2x + \frac{x^2}{2}\right]_{0}^{4} = 8 + 8 = 16 \text{ kg}" />
+   
+   Pusat massa:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\bar{x} = \frac{\int_{0}^{4} x(2 + x) \, dx}{16}" />
+   <BlockMath math="\bar{x} = \frac{\int_{0}^{4} (2x + x^2) \, dx}{16}" />
+   <BlockMath math="\bar{x} = \frac{[x^2 + \frac{x^3}{3}]_{0}^{4}}{16} = \frac{16 + \frac{64}{3}}{16}" />
+   <BlockMath math="\bar{x} = \frac{\frac{48 + 64}{3}}{16} = \frac{\frac{112}{3}}{16} = \frac{112}{48} = \frac{7}{3} \text{ meter}" />
+   </div>
+
+   Massa total kawat adalah <InlineMath math="16" /> kg dan pusat massanya berada pada posisi <InlineMath math="\frac{7}{3}" /> meter dari ujung.
