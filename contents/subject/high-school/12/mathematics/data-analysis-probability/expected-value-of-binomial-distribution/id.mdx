@@ -4,3 +4,81 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Analisis Data dan Peluang",
 };
+
+## Memahami Konsep Nilai Harapan
+
+Bayangkan kamu adalah seorang pemain basket. Secara rata-rata, dari <InlineMath math="10" /> kali lemparan bebas, kamu berhasil memasukkan bola sebanyak <InlineMath math="8" /> kali. Nah, angka <InlineMath math="8" /> ini bisa kita sebut sebagai **nilai harapan** atau ekspektasi keberhasilanmu.
+
+Secara sederhana, nilai harapan adalah **nilai rata-rata yang kita harapkan terjadi** dari sebuah percobaan jika percobaan itu diulang berkali-kali dalam kondisi yang sama. Ini bukan berarti kamu *pasti* akan mendapatkan hasil itu setiap kali, tapi ini adalah prediksi rata-rata jangka panjangnya.
+
+## Rumus Harapan untuk Binomial
+
+Konsep ini sangat berguna dalam distribusi binomial. Ingat, distribusi binomial dipakai untuk percobaan yang hasilnya hanya ada dua (sukses atau gagal) dan dilakukan berulang-ulang. Nilai harapan binomial membantu kita memprediksi berapa banyak keberhasilan yang paling mungkin kita dapatkan.
+
+Distribusi binomial <InlineMath math="b(x;n,p)" /> memiliki nilai harapan:
+
+<BlockMath math="E(X) = np" />
+
+dengan <InlineMath math="n" /> adalah banyaknya percobaan dan <InlineMath math="p" /> adalah peluang keberhasilan.
+
+Rumus ini sangat intuitif. Jika peluang sukses dalam satu kali coba adalah <InlineMath math="p" />, maka dalam <InlineMath math="n" /> kali percobaan, harapan suksesnya adalah:
+
+<BlockMath math="E(X) = n \times p" />
+
+## Dari Mana Rumusnya Berasal?
+
+Mungkin kamu penasaran, kenapa rumusnya sesederhana itu? Mari kita bedah logikanya.
+
+Setiap percobaan dalam distribusi binomial bisa kita anggap sebagai variabel acak kecil, sebut saja <InlineMath math="I_k" />. Variabel ini bernilai <InlineMath math="1" /> jika percobaan ke-<InlineMath math="k" /> **sukses**, dan <InlineMath math="0" /> jika **gagal**.
+
+Nilai harapan untuk satu percobaan tunggal adalah:
+
+<BlockMath math="E(I_k) = 1 \cdot p + 0 \cdot q = p" />
+
+Karena jumlah total keberhasilan (<InlineMath math="X" />) adalah jumlah dari semua keberhasilan di setiap percobaan, maka:
+
+<BlockMath math="X = I_1 + I_2 + ... + I_n" />
+
+Dengan menggunakan sifat nilai harapan, kita bisa menjumlahkan semua nilai harapan dari setiap percobaan:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="E(X) = E(I_1) + E(I_2) + ... + E(I_n)" />
+<BlockMath math="E(X) = \underbrace{p + p + ... + p}_{n \text{ kali}} = np" />
+</div>
+
+Terbukti, kan? Nilai harapan totalnya adalah hasil kali dari jumlah percobaan dengan peluang keberhasilannya.
+
+## Studi Kasus Lempar Dadu
+
+Mari kita terapkan konsep ini pada sebuah contoh.
+
+**Soal:**
+
+Sebuah dadu seimbang dilempar sebanyak <InlineMath math="7" /> kali. Berapa nilai harapan untuk munculnya mata dadu lima dari seluruh lemparan tersebut?
+
+**Penyelesaian:**
+
+Pertama, mari kita pastikan bahwa ini memenuhi syarat distribusi binomial:
+
+- Hanya ada dua kemungkinan: **sukses** (keluar angka <InlineMath math="5" />) atau **gagal** (keluar angka selain <InlineMath math="5" />)
+- Jumlah percobaan tetap: <InlineMath math="7" /> kali
+- Setiap lemparan independen: hasil lemparan sebelumnya tidak mempengaruhi lemparan berikutnya
+- Peluang sukses sama: <InlineMath math="p = \frac{1}{6}" /> di setiap lemparan
+
+Sekarang kita identifikasi parameternya:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="S = \{1, 2, 3, 4, 5, 6\}" />
+<BlockMath math="p = \frac{1}{6}" />
+<BlockMath math="n = 7" />
+</div>
+
+Sekarang kita bisa langsung hitung nilai harapannya menggunakan rumus:
+
+<BlockMath math="E(X) = np = 7 \times \frac{1}{6} = \frac{7}{6} = 1.167" />
+
+**Jadi, apa artinya angka <InlineMath math="1.167" /> ini?**
+
+Nilai harapan <InlineMath math="1.167" /> bukan berarti kamu akan mendapat "<InlineMath math="1.167" /> kali" angka <InlineMath math="5" /> dalam satu eksperimen (karena itu tidak mungkin). Yang dimaksud adalah: jika kamu mengulangi eksperimen "lempar dadu <InlineMath math="7" /> kali" ini **ratusan atau ribuan kali**, maka rata-rata kamu akan mendapat angka <InlineMath math="5" /> sekitar <InlineMath math="1.167" /> kali per set <InlineMath math="7" /> lemparan.
+
+Dalam praktiknya, dalam satu set <InlineMath math="7" /> lemparan, kamu mungkin mendapat angka <InlineMath math="5" /> sebanyak <InlineMath math="0" />, <InlineMath math="1" />, <InlineMath math="2" />, atau bahkan <InlineMath math="3" /> kali. Tapi kalau dirata-ratakan dalam jangka panjang, hasilnya akan mendekati <InlineMath math="1.167" />.

@@ -4,3 +4,81 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Data Analysis and Probability",
 };
+
+## Understanding the Concept of Expected Value
+
+Imagine you are a basketball player. On average, out of <InlineMath math="10" /> free throw attempts, you successfully make <InlineMath math="8" /> shots. Well, this number <InlineMath math="8" /> can be called your **expected value** or expectation of success.
+
+Simply put, expected value is **the average value we expect to occur** from an experiment if that experiment is repeated many times under the same conditions. This doesn't mean you will *definitely* get that result every time, but it's a prediction of the long-term average.
+
+## Expected Value Formula for Binomial
+
+This concept is very useful in binomial distribution. Remember, binomial distribution is used for experiments that have only two possible outcomes (success or failure) and are performed repeatedly. Binomial expected value helps us predict how many successes we're most likely to get.
+
+Binomial distribution <InlineMath math="b(x;n,p)" /> has an expected value:
+
+<BlockMath math="E(X) = np" />
+
+where <InlineMath math="n" /> is the number of trials and <InlineMath math="p" /> is the probability of success.
+
+This formula is very intuitive. If the probability of success in one trial is <InlineMath math="p" />, then in <InlineMath math="n" /> trials, the expected number of successes is:
+
+<BlockMath math="E(X) = n \times p" />
+
+## Where Does the Formula Come From?
+
+You might be curious, why is the formula so simple? Let's break down the logic.
+
+Each trial in a binomial distribution can be thought of as a small random variable, let's call it <InlineMath math="I_k" />. This variable has a value of <InlineMath math="1" /> if the <InlineMath math="k" />-th trial is **successful**, and <InlineMath math="0" /> if it **fails**.
+
+The expected value for a single trial is:
+
+<BlockMath math="E(I_k) = 1 \cdot p + 0 \cdot q = p" />
+
+Since the total number of successes (<InlineMath math="X" />) is the sum of all successes in each trial, then:
+
+<BlockMath math="X = I_1 + I_2 + ... + I_n" />
+
+Using the properties of expected value, we can sum all expected values from each trial:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="E(X) = E(I_1) + E(I_2) + ... + E(I_n)" />
+<BlockMath math="E(X) = \underbrace{p + p + ... + p}_{n \text{ times}} = np" />
+</div>
+
+See? The total expected value is the product of the number of trials and the probability of success.
+
+## Dice Rolling Case Study
+
+Let's apply this concept to an example.
+
+**Problem:**
+
+A fair die is rolled <InlineMath math="7" /> times. What is the expected value for getting a five on the die from all the rolls?
+
+**Solution:**
+
+First, let's make sure this meets the requirements for binomial distribution:
+
+- There are only two possibilities: **success** (rolling a <InlineMath math="5" />) or **failure** (rolling a number other than <InlineMath math="5" />)
+- Fixed number of trials: <InlineMath math="7" /> times
+- Each roll is independent: the result of previous rolls doesn't affect subsequent rolls
+- Same probability of success: <InlineMath math="p = \frac{1}{6}" /> on each roll
+
+Now we identify the parameters:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="S = \{1, 2, 3, 4, 5, 6\}" />
+<BlockMath math="p = \frac{1}{6}" />
+<BlockMath math="n = 7" />
+</div>
+
+Now we can directly calculate the expected value using the formula:
+
+<BlockMath math="E(X) = np = 7 \times \frac{1}{6} = \frac{7}{6} = 1.167" />
+
+**So, what does this number <InlineMath math="1.167" /> mean?**
+
+Expected value <InlineMath math="1.167" /> doesn't mean you will get "<InlineMath math="1.167" /> times" the number <InlineMath math="5" /> in one experiment (because that's impossible). What it means is: if you repeat this experiment of "rolling a die <InlineMath math="7" /> times" **hundreds or thousands of times**, then on average you will get the number <InlineMath math="5" /> about <InlineMath math="1.167" /> times per set of <InlineMath math="7" /> rolls.
+
+In practice, in one set of <InlineMath math="7" /> rolls, you might get the number <InlineMath math="5" /> as many as <InlineMath math="0" />, <InlineMath math="1" />, <InlineMath math="2" />, or even <InlineMath math="3" /> times. But when averaged over the long term, the result will approach <InlineMath math="1.167" />.
