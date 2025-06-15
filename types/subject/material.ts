@@ -25,6 +25,7 @@ export const MaterialHighSchoolSchema = z.enum([
   "history",
   "informatics",
   "geospatial",
+  "sociology",
 ]);
 export type MaterialHighSchool = z.infer<typeof MaterialHighSchoolSchema>;
 

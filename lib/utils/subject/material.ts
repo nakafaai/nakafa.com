@@ -19,6 +19,7 @@ import {
   PawPrintIcon,
   PiIcon,
   ScaleIcon,
+  SpeechIcon,
 } from "lucide-react";
 import type { Locale } from "next-intl";
 
@@ -84,6 +85,8 @@ export function getMaterialIcon(material: MaterialGrade) {
       return ChartPieIcon;
     case "history":
       return HourglassIcon;
+    case "sociology":
+      return SpeechIcon;
     case "informatics":
       return CodeIcon;
     case "geospatial":

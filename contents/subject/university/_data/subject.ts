@@ -1,40 +1,53 @@
 import { getMaterialIcon } from "@/lib/utils/subject/material";
+import type { Grade } from "@/types/subject/grade";
 
 const BASE_PATH = "/subject/university";
 
-export function getSubjects(label: "bachelor" | "master") {
-  return [
-    {
-      icon: getMaterialIcon("ai-ds"),
-      label: "ai-ds",
-      href: `${BASE_PATH}/${label}/ai-ds`,
-    },
-    {
-      icon: getMaterialIcon("game-engineering"),
-      label: "game-engineering",
-      href: `${BASE_PATH}/${label}/game-engineering`,
-    },
-    {
-      icon: getMaterialIcon("computer-science"),
-      label: "computer-science",
-      href: `${BASE_PATH}/${label}/computer-science`,
-    },
-    {
-      icon: getMaterialIcon("informatics-engineering"),
-      label: "informatics-engineering",
-      href: `${BASE_PATH}/${label}/informatics-engineering`,
-    },
-    {
-      icon: getMaterialIcon("technology-electro-medical"),
-      label: "technology-electro-medical",
-      href: `${BASE_PATH}/${label}/technology-electro-medical`,
-    },
-    {
-      icon: getMaterialIcon("political-science"),
-      label: "political-science",
-      href: `${BASE_PATH}/${label}/political-science`,
-    },
-  ] as const;
-}
+const subjects = [
+  {
+    grade: ["bachelor"],
+    icon: getMaterialIcon("ai-ds"),
+    label: "ai-ds",
+  },
+  {
+    grade: ["bachelor"],
+    icon: getMaterialIcon("game-engineering"),
+    label: "game-engineering",
+  },
+  {
+    grade: ["bachelor"],
+    icon: getMaterialIcon("computer-science"),
+    label: "computer-science",
+  },
+  {
+    grade: ["bachelor"],
+    icon: getMaterialIcon("informatics-engineering"),
+    label: "informatics-engineering",
+  },
+  {
+    grade: ["bachelor"],
+    icon: getMaterialIcon("technology-electro-medical"),
+    label: "technology-electro-medical",
+  },
+  {
+    grade: ["bachelor"],
+    icon: getMaterialIcon("political-science"),
+    label: "political-science",
+  },
+] as const;
 
-export const bachelorSubjects = getSubjects("bachelor");
+export function getSubjects(grade: Grade) {
+  const grades = new Set(["bachelor"]);
+
+  if (!grades.has(grade)) {
+    return [];
+  }
+
+  return subjects
+    .filter((subject) => (subject.grade as readonly Grade[]).includes(grade))
+    .map((subject) => ({
+      icon: subject.icon,
+      label: subject.label,
+      href: `${BASE_PATH}/${grade}/${subject.label}`,
+    }));
+}
