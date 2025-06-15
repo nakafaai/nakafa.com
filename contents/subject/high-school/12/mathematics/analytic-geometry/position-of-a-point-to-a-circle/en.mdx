@@ -4,3 +4,225 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Analytic Geometry",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Understanding Point Position Relative to a Circle
+
+If you have a circle and any random point, you must be curious about where that point is, right? Is the point inside the circle, exactly on the edge of the circle, or completely outside the circle?
+
+This concept is really important because in real life we often need to know the position of an object relative to a circular area. For example, is your house still within the signal range of a tower that's circular in shape, or is an airplane's position still within radar surveillance.
+
+By using circle equations and point coordinates, we can determine the position of that point mathematically and accurately.
+
+## Power of a Point Concept
+
+To determine the position of a point relative to a circle, we use a concept called **power of a point**. This is a mathematical way to measure "how far" that point is from the circle.
+
+If we have point <InlineMath math="A(x_0, y_0)" /> and a circle with general equation <InlineMath math="x^2 + y^2 + Dx + Ey + F = 0" />, then the power of point <InlineMath math="A" /> is defined as:
+
+<BlockMath math="K_A = x_0^2 + y_0^2 + Dx_0 + Ey_0 + F" />
+
+So just substitute the point coordinates into the circle equation, easy right?
+
+## Three Possible Point Positions
+
+Based on the power of a point value, there are three possible positions:
+
+1. **Point inside the circle** occurs when <InlineMath math="K_A < 0" />. This means the point is located in the area inside the circle.
+
+2. **Point on the circle** occurs when <InlineMath math="K_A = 0" />. This means the point is exactly located on the edge or circumference of the circle.
+
+3. **Point outside the circle** occurs when <InlineMath math="K_A > 0" />. The point position is located outside the circle area.
+
+If we visualize this, it will look like this:
+
+<LineEquation
+  title="Point Position Relative to Circle"
+  description={<>Visualization of three possible positions of point <InlineMath math="A" /> relative to the circle.</>}
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        return {
+          x: 0,
+          y: 0,
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "P(0,0)", at: 0, offset: [-0.5, -0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        return {
+          x: 1.5,
+          y: 1,
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: "A (inside)", at: 0, offset: [0, -0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        const angle = Math.PI / 6;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "B (on)", at: 0, offset: [0.5, 0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        return {
+          x: 4.5,
+          y: 2,
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [
+        { text: "C (outside)", at: 0, offset: [0.5, 0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const xMin = -5;
+        const xMax = 5;
+        const y = 0;
+        return {
+          x: xMin + i * (xMax - xMin),
+          y: y,
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const yMin = -4;
+        const yMax = 4;
+        const x = 0;
+        return {
+          x: x,
+          y: yMin + i * (yMax - yMin),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## How to Determine Point Position
+
+The process is quite straightforward. First, we identify the circle equation and coordinates of the point to be checked. Second, substitute the point coordinates into the circle equation to get the power of a point value. Third, look at the sign of the substitution result.
+
+If the result is negative, the point is inside. If zero, the point is on the circle. If positive, the point is outside the circle.
+
+Let's try with a concrete example. Say we have point <InlineMath math="A(1, -2)" /> and circle <InlineMath math="x^2 + y^2 = 25" />.
+
+Substitute the point coordinates:
+
+<BlockMath math="K_A = 1^2 + (-2)^2 = 1 + 4 = 5" />
+
+Since the power of point value <InlineMath math="K_A = 5" /> and for circle <InlineMath math="x^2 + y^2 = 25" /> which has <InlineMath math="r^2 = 25" />, then <InlineMath math="5 < 25" />. So point <InlineMath math="A(1, -2)" /> is located inside the circle.
+
+> For circles in the form <InlineMath math="x^2 + y^2 = r^2" />, we compare the substitution result with <InlineMath math="r^2" />. If less than <InlineMath math="r^2" />, point is inside. If equal to <InlineMath math="r^2" />, point is on the circle. If greater than <InlineMath math="r^2" />, point is outside.
+
+## Application for General Form
+
+If the circle is in general form <InlineMath math="x^2 + y^2 + Dx + Ey + F = 0" />, the method is the same. Just substitute the point coordinates into the entire equation and look at the sign of the result.
+
+For example, for point <InlineMath math="A(1, -2)" /> and circle <InlineMath math="x^2 + y^2 - 8x - 2y - 8 = 0" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="K_A = 1^2 + (-2)^2 - 8(1) - 2(-2) - 8" />
+  <BlockMath math="K_A = 1 + 4 - 8 + 4 - 8 = -7" />
+</div>
+
+Since <InlineMath math="K_A = -7 < 0" />, then point <InlineMath math="A(1, -2)" /> is located inside the circle.
+
+## Practice Problems
+
+1. Determine the position of point <InlineMath math="A(3, 4)" /> relative to circle <InlineMath math="x^2 + y^2 = 16" />.
+
+2. Investigate whether point <InlineMath math="B(6, -8)" /> lies on circle <InlineMath math="x^2 + y^2 = 100" />.
+
+3. Determine the position of point <InlineMath math="C(2, 1)" /> relative to circle <InlineMath math="x^2 + y^2 - 4x + 6y - 12 = 0" />.
+
+4. A circle has equation <InlineMath math="(x-3)^2 + (y+2)^2 = 25" />. Determine the position of point <InlineMath math="D(7, 2)" /> relative to that circle.
+
+### Answer Key
+
+1. **Solution**:
+
+   Substitute coordinates of point <InlineMath math="A(3, 4)" /> into circle equation <InlineMath math="x^2 + y^2 = 16" />:
+   
+   <BlockMath math="K_A = 3^2 + 4^2 = 9 + 16 = 25" />
+   
+   Since <InlineMath math="K_A = 25 > 16" />, then point <InlineMath math="A(3, 4)" /> is located outside the circle.
+
+2. **Solution**:
+
+   Substitute coordinates of point <InlineMath math="B(6, -8)" /> into circle equation <InlineMath math="x^2 + y^2 = 100" />:
+   
+   <BlockMath math="K_B = 6^2 + (-8)^2 = 36 + 64 = 100" />
+   
+   Since <InlineMath math="K_B = 100 = 100" />, then point <InlineMath math="B(6, -8)" /> is located exactly on the circle.
+
+3. **Solution**:
+
+   Substitute coordinates of point <InlineMath math="C(2, 1)" /> into circle equation <InlineMath math="x^2 + y^2 - 4x + 6y - 12 = 0" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="K_C = 2^2 + 1^2 - 4(2) + 6(1) - 12" />
+     <BlockMath math="K_C = 4 + 1 - 8 + 6 - 12 = -9" />
+   </div>
+   
+   Since <InlineMath math="K_C = -9 < 0" />, then point <InlineMath math="C(2, 1)" /> is located inside the circle.
+
+4. **Solution**:
+
+   For circle <InlineMath math="(x-3)^2 + (y+2)^2 = 25" /> with center <InlineMath math="(3, -2)" /> and radius <InlineMath math="r = 5" />.
+   
+   Substitute point <InlineMath math="D(7, 2)" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="K_D = (7-3)^2 + (2-(-2))^2 = 4^2 + 4^2" />
+     <BlockMath math="K_D = 16 + 16 = 32" />
+   </div>
+   
+   Since <InlineMath math="K_D = 32 > 25 = r^2" />, then point <InlineMath math="D(7, 2)" /> is located outside the circle.

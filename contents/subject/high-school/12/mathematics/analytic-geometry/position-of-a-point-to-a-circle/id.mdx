@@ -4,3 +4,225 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Geometri Analitik",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Memahami Posisi Titik Relatif Terhadap Lingkaran
+
+Kalau kamu punya sebuah lingkaran dan satu titik sembarang, pasti kamu penasaran dong posisi titik itu di mana? Apakah titiknya ada di dalam lingkaran, tepat di tepi lingkarannya, atau malah di luar lingkaran sama sekali?
+
+Konsep ini penting banget karena dalam kehidupan nyata kita sering butuh tahu posisi suatu objek relatif terhadap area berbentuk lingkaran. Misalnya, apakah rumah kamu masih dalam jangkauan sinyal tower yang bentuknya lingkaran, atau apakah posisi pesawat masih dalam radar pengawasan.
+
+Dengan menggunakan persamaan lingkaran dan koordinat titik, kita bisa menentukan posisi titik tersebut secara matematika yang akurat.
+
+## Konsep Kuasa Titik
+
+Untuk menentukan kedudukan suatu titik terhadap lingkaran, kita pakai konsep yang namanya **kuasa titik**. Ini adalah cara matematis untuk mengukur "seberapa jauh" titik tersebut dari lingkaran.
+
+Kalau kita punya titik <InlineMath math="A(x_0, y_0)" /> dan lingkaran dengan persamaan umum <InlineMath math="x^2 + y^2 + Dx + Ey + F = 0" />, maka kuasa titik <InlineMath math="A" /> didefinisikan sebagai:
+
+<BlockMath math="K_A = x_0^2 + y_0^2 + Dx_0 + Ey_0 + F" />
+
+Jadi tinggal substitusi koordinat titik ke persamaan lingkaran, gampang kan?
+
+## Tiga Kemungkinan Posisi Titik
+
+Berdasarkan nilai kuasa titik, ada tiga kemungkinan posisi:
+
+1. **Titik di dalam lingkaran** terjadi ketika <InlineMath math="K_A < 0" />. Artinya titik tersebut berada di area dalam lingkaran.
+
+2. **Titik pada lingkaran** terjadi ketika <InlineMath math="K_A = 0" />. Ini berarti titik tersebut tepat berada di tepi atau keliling lingkaran.
+
+3. **Titik di luar lingkaran** terjadi ketika <InlineMath math="K_A > 0" />. Posisi titik berada di luar area lingkaran.
+
+Kalau kita visualisasi, maka akan terlihat seperti ini:
+
+<LineEquation
+  title="Posisi Titik Terhadap Lingkaran"
+  description={<>Visualisasi ketiga kemungkinan posisi titik <InlineMath math="A" /> terhadap lingkaran.</>}
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        return {
+          x: 0,
+          y: 0,
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "P(0,0)", at: 0, offset: [-0.5, -0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        return {
+          x: 1.5,
+          y: 1,
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: "A (dalam)", at: 0, offset: [0, -0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        const angle = Math.PI / 6;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "B (pada)", at: 0, offset: [0.5, 0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        return {
+          x: 4.5,
+          y: 2,
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [
+        { text: "C (luar)", at: 0, offset: [0.5, 0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const xMin = -5;
+        const xMax = 5;
+        const y = 0;
+        return {
+          x: xMin + i * (xMax - xMin),
+          y: y,
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const yMin = -4;
+        const yMax = 4;
+        const x = 0;
+        return {
+          x: x,
+          y: yMin + i * (yMax - yMin),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Cara Menentukan Kedudukan Titik
+
+Prosesnya cukup straightforward. Pertama, kita identifikasi persamaan lingkaran dan koordinat titik yang akan dicek. Kedua, substitusi koordinat titik ke persamaan lingkaran untuk mendapat nilai kuasa titik. Ketiga, lihat tanda dari hasil substitusi tersebut.
+
+Kalau hasilnya negatif, titik di dalam. Kalau nol, titik pada lingkaran. Kalau positif, titik di luar lingkaran.
+
+Mari kita coba dengan contoh konkret. Misalnya kita punya titik <InlineMath math="A(1, -2)" /> dan lingkaran <InlineMath math="x^2 + y^2 = 25" />.
+
+Substitusi koordinat titik:
+
+<BlockMath math="K_A = 1^2 + (-2)^2 = 1 + 4 = 5" />
+
+Karena nilai kuasa titik <InlineMath math="K_A = 5" /> dan untuk lingkaran <InlineMath math="x^2 + y^2 = 25" /> yang memiliki <InlineMath math="r^2 = 25" />, maka <InlineMath math="5 < 25" />. Jadi titik <InlineMath math="A(1, -2)" /> berada di dalam lingkaran.
+
+> Untuk lingkaran dalam bentuk <InlineMath math="x^2 + y^2 = r^2" />, kita bandingkan hasil substitusi dengan <InlineMath math="r^2" />. Kalau kurang dari <InlineMath math="r^2" />, titik di dalam. Kalau sama dengan <InlineMath math="r^2" />, titik pada lingkaran. Kalau lebih dari <InlineMath math="r^2" />, titik di luar.
+
+## Aplikasi untuk Bentuk Umum
+
+Kalau lingkarannya dalam bentuk umum <InlineMath math="x^2 + y^2 + Dx + Ey + F = 0" />, caranya sama saja. Tinggal substitusi koordinat titik ke seluruh persamaan dan lihat tanda hasilnya.
+
+Contohnya, untuk titik <InlineMath math="A(1, -2)" /> dan lingkaran <InlineMath math="x^2 + y^2 - 8x - 2y - 8 = 0" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="K_A = 1^2 + (-2)^2 - 8(1) - 2(-2) - 8" />
+  <BlockMath math="K_A = 1 + 4 - 8 + 4 - 8 = -7" />
+</div>
+
+Karena <InlineMath math="K_A = -7 < 0" />, maka titik <InlineMath math="A(1, -2)" /> berada di dalam lingkaran.
+
+## Latihan
+
+1. Tentukan kedudukan titik <InlineMath math="A(3, 4)" /> terhadap lingkaran <InlineMath math="x^2 + y^2 = 16" />.
+
+2. Selidiki apakah titik <InlineMath math="B(6, -8)" /> berada pada lingkaran <InlineMath math="x^2 + y^2 = 100" />.
+
+3. Tentukan kedudukan titik <InlineMath math="C(2, 1)" /> terhadap lingkaran <InlineMath math="x^2 + y^2 - 4x + 6y - 12 = 0" />.
+
+4. Sebuah lingkaran memiliki persamaan <InlineMath math="(x-3)^2 + (y+2)^2 = 25" />. Tentukan kedudukan titik <InlineMath math="D(7, 2)" /> terhadap lingkaran tersebut.
+
+### Kunci Jawaban
+
+1. **Penyelesaian**:
+
+   Substitusi koordinat titik <InlineMath math="A(3, 4)" /> ke persamaan lingkaran <InlineMath math="x^2 + y^2 = 16" />:
+   
+   <BlockMath math="K_A = 3^2 + 4^2 = 9 + 16 = 25" />
+   
+   Karena <InlineMath math="K_A = 25 > 16" />, maka titik <InlineMath math="A(3, 4)" /> berada di luar lingkaran.
+
+2. **Penyelesaian**:
+
+   Substitusi koordinat titik <InlineMath math="B(6, -8)" /> ke persamaan lingkaran <InlineMath math="x^2 + y^2 = 100" />:
+   
+   <BlockMath math="K_B = 6^2 + (-8)^2 = 36 + 64 = 100" />
+   
+   Karena <InlineMath math="K_B = 100 = 100" />, maka titik <InlineMath math="B(6, -8)" /> berada tepat pada lingkaran.
+
+3. **Penyelesaian**:
+
+   Substitusi koordinat titik <InlineMath math="C(2, 1)" /> ke persamaan lingkaran <InlineMath math="x^2 + y^2 - 4x + 6y - 12 = 0" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="K_C = 2^2 + 1^2 - 4(2) + 6(1) - 12" />
+     <BlockMath math="K_C = 4 + 1 - 8 + 6 - 12 = -9" />
+   </div>
+   
+   Karena <InlineMath math="K_C = -9 < 0" />, maka titik <InlineMath math="C(2, 1)" /> berada di dalam lingkaran.
+
+4. **Penyelesaian**:
+
+   Untuk lingkaran <InlineMath math="(x-3)^2 + (y+2)^2 = 25" /> dengan pusat <InlineMath math="(3, -2)" /> dan jari-jari <InlineMath math="r = 5" />.
+   
+   Substitusi titik <InlineMath math="D(7, 2)" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="K_D = (7-3)^2 + (2-(-2))^2 = 4^2 + 4^2" />
+     <BlockMath math="K_D = 16 + 16 = 32" />
+   </div>
+   
+   Karena <InlineMath math="K_D = 32 > 25 = r^2" />, maka titik <InlineMath math="D(7, 2)" /> berada di luar lingkaran.
