@@ -4,3 +4,334 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Geometri Analitik",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Pengertian Lingkaran
+
+Lingkaran adalah kumpulan semua titik pada bidang yang memiliki jarak yang sama terhadap satu titik tetap. Titik tetap ini kita sebut **pusat lingkaran**, sedangkan jarak yang sama dari pusat ke setiap titik pada lingkaran disebut **jari-jari**.
+
+Bayangkan kamu mengikat tali pada sebuah paku, lalu menarik tali tersebut hingga tegang dan menggambar lengkungan penuh di sekitar paku. Lengkungan yang terbentuk itulah yang kita sebut lingkaran, paku adalah pusatnya, dan panjang tali adalah jari-jarinya.
+
+<LineEquation
+  title="Lingkaran dengan Pusat dan Jari-jari"
+  description="Semua titik pada lingkaran memiliki jarak yang sama dari pusat."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = 0; // horizontal radius
+        return {
+          x: center.x + i * radius * Math.cos(angle),
+          y: center.y + i * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "P", at: 0, offset: [-0.3, -0.3, 0] },
+        { text: "r", at: 1, offset: [-1, -0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = Math.PI / 4; // 45 degree radius
+        return {
+          x: center.x + i * radius * Math.cos(angle),
+          y: center.y + i * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [{ text: "r", at: 1, offset: [-1, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = Math.PI; // 180 degree radius (left)
+        return {
+          x: center.x + i * radius * Math.cos(angle),
+          y: center.y + i * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [{ text: "r", at: 1, offset: [1, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = 0; // point A at 0 degrees
+        return {
+          x: center.x + radius * Math.cos(angle),
+          y: center.y + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "A", at: 0, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = Math.PI / 4; // point B at 45 degrees
+        return {
+          x: center.x + radius * Math.cos(angle),
+          y: center.y + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "B", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = Math.PI; // point C at 180 degrees
+        return {
+          x: center.x + radius * Math.cos(angle),
+          y: center.y + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "C", at: 0, offset: [-0.5, 0, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Dalam visualisasi di atas, titik P adalah pusat lingkaran, sedangkan titik A, B, dan C adalah beberapa titik yang berada pada lingkaran. Coba perhatikan bahwa jarak dari P ke A, P ke B, dan P ke C semuanya sama dengan <InlineMath math="r" />. Ini yang membuat mereka semua berada di lingkaran yang sama.
+
+## Definisi Matematis
+
+Nah, sekarang kita bikin definisi yang lebih formal. Secara matematis, lingkaran dengan pusat <InlineMath math="P(a, b)" /> dan jari-jari <InlineMath math="r" /> adalah himpunan semua titik <InlineMath math="(x, y)" /> yang memenuhi kondisi:
+
+<BlockMath math="d(P, (x,y)) = r" />
+
+Di mana <InlineMath math="d(P, (x,y))" /> adalah jarak dari titik pusat P ke titik <InlineMath math="(x, y)" /> pada lingkaran.
+
+Kalau kita pakai rumus jarak dalam sistem koordinat Kartesius, bisa kita tulis seperti ini:
+
+<BlockMath math="\sqrt{(x-a)^2 + (y-b)^2} = r" />
+
+## Persamaan Lingkaran
+
+Dari definisi matematis tadi, kita bisa menurunkan **persamaan lingkaran** dengan cara mengkuadratkan kedua ruas:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sqrt{(x-a)^2 + (y-b)^2} = r" />
+  <BlockMath math="(x-a)^2 + (y-b)^2 = r^2" />
+</div>
+
+Inilah **persamaan umum lingkaran** dengan pusat <InlineMath math="(a, b)" /> dan jari-jari <InlineMath math="r" />. Formula ini sangat berguna untuk menentukan apakah suatu titik berada di dalam, di luar, atau tepat pada lingkaran.
+
+<LineEquation
+  title="Lingkaran dalam Sistem Koordinat"
+  description="Lingkaran dengan pusat (2, 1) dan jari-jari 2."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 2 + 2 * Math.cos(angle),
+          y: 1 + 2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const center = { x: 2, y: 1 };
+        const radius = 2;
+        const angle = 0; // horizontal radius to the right
+        return {
+          x: center.x + i * radius * Math.cos(angle),
+          y: center.y + i * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "(2, 1)", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "r = 2", at: 1, offset: [0, -0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const xMin = -1;
+        const xMax = 5;
+        const y = 0; // x-axis
+        return {
+          x: xMin + i * (xMax - xMin),
+          y: y,
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const yMin = -2;
+        const yMax = 4;
+        const x = 0; // y-axis
+        return {
+          x: x,
+          y: yMin + i * (yMax - yMin),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        // Origin point at (0, 0)
+        return {
+          x: 0,
+          y: 0,
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+Untuk lingkaran pada visualisasi di atas, persamaannya adalah:
+
+<BlockMath math="(x-2)^2 + (y-1)^2 = 4" />
+
+### Bentuk Khusus Persamaan Lingkaran
+
+Ada satu kasus khusus yang menarik. Ketika pusat lingkaran berada di titik asal <InlineMath math="(0, 0)" />, persamaan lingkaran jadi lebih sederhana:
+
+<BlockMath math="x^2 + y^2 = r^2" />
+
+Bentuk ini sangat praktis karena lebih mudah dihitung dan dipahami.
+
+## Unsur Penting Lingkaran
+
+Ada beberapa istilah penting yang perlu kamu pahami dulu:
+
+1. **Pusat lingkaran** adalah titik tetap yang jadi patokan untuk semua titik pada lingkaran. Semua titik pada lingkaran punya jarak yang sama ke pusat ini.
+
+2. **Jari-jari** adalah jarak dari pusat lingkaran ke titik mana pun pada lingkaran. Dalam satu lingkaran, semua jari-jari panjangnya sama.
+
+3. **Diameter** adalah garis lurus yang menghubungkan dua titik pada lingkaran dan melewati pusat. Panjang diameter selalu dua kali panjang jari-jari, atau <InlineMath math="d = 2r" />.
+
+Supaya lebih mudah dipahami, kita bisa lihat visualisasi di bawah ini:
+
+<LineEquation
+  title="Unsur-unsur Lingkaran"
+  description="Visualisasi pusat, jari-jari, dan diameter."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = 0; // horizontal radius showing jari-jari
+        return {
+          x: center.x + i * radius * Math.cos(angle),
+          y: center.y + i * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [0, -0.5, 0] },
+        { text: "jari-jari", at: 1, offset: [-1, -0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = 0; // horizontal diameter
+        // i=0: left point, i=1: right point
+        const direction = i === 0 ? -1 : 1;
+        return {
+          x: center.x + direction * radius * Math.cos(angle),
+          y: center.y + direction * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [-0.5, 0, 0] },
+        { text: "B", at: 1, offset: [0.5, 0, 0] },
+        { text: "diameter", at: 1, offset: [-3, 1, 0] },
+      ],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Contoh Penerapan
+
+Sekarang kita coba terapkan definisi lingkaran untuk menentukan persamaan lingkaran.
+
+**Contoh**: Tentukan persamaan lingkaran yang berpusat di <InlineMath math="(3, -2)" /> dengan jari-jari 5.
+
+**Penyelesaian**: 
+Kita tinggal pakai rumus umum persamaan lingkaran dengan pusat <InlineMath math="(a, b)" /> dan jari-jari <InlineMath math="r" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(x-a)^2 + (y-b)^2 = r^2" />
+  <BlockMath math="(x-3)^2 + (y-(-2))^2 = 5^2" />
+  <BlockMath math="(x-3)^2 + (y+2)^2 = 25" />
+</div>
+
+Jadi persamaan lingkarannya adalah <InlineMath math="(x-3)^2 + (y+2)^2 = 25" />.
