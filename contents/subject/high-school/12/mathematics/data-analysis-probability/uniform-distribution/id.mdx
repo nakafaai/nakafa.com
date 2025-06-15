@@ -4,3 +4,113 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Analisis Data dan Peluang",
 };
+
+## Memahami Peluang Sederhana
+
+Dalam kehidupan sehari-hari, kita sering berhadapan dengan situasi yang hasilnya tidak pasti. Contoh sederhananya adalah saat melempar koin. Ada dua kemungkinan yang bisa muncul: sisi angka atau sisi gambar. Nah, kalau koinnya seimbang dan tidak ada yang curang, maka kedua sisi punya kesempatan yang sama untuk muncul. Konsep inilah yang menjadi dasar dari probabilitas atau peluang.
+
+Secara matematis, peluang sebuah kejadian A bisa kita hitung dengan cara yang cukup sederhana: bagi saja jumlah hasil yang kita inginkan dengan jumlah total semua hasil yang mungkin terjadi.
+
+<BlockMath math="P(A) = \frac{n(A)}{n(S)}" />
+
+## Konsep Distribusi Seragam
+
+Distribusi seragam itu sebenarnya konsep yang paling sederhana dalam dunia probabilitas. Ciri khasnya adalah **setiap hasil yang mungkin memiliki peluang yang sama persis** untuk terjadi. Bayangkan seperti membagi pizza dengan potongan yang sama besar untuk semua orang - tidak ada yang dapat bagian lebih besar atau lebih kecil.
+
+Mari kita ambil contoh dadu enam sisi yang adil. Angka yang bisa muncul adalah 1, 2, 3, 4, 5, atau 6. Peluang munculnya angka 1 sama persis dengan peluang munculnya angka 6, yaitu satu dari enam kemungkinan. Tidak ada angka yang "lebih beruntung" dari yang lain. Inilah yang dimaksud dengan distribusi seragam - semua hasil punya kesempatan yang sama.
+
+## Rumus Matematis
+
+Untuk menyatakan distribusi seragam secara matematis, kita punya rumus yang sangat sederhana. Jika sebuah variabel acak **X** bisa menghasilkan **k** kemungkinan yang berbeda, dan setiap kemungkinan punya peluang yang sama, maka rumusnya adalah:
+
+<BlockMath math="f(x;k) = \frac{1}{k}" />
+
+Di mana:
+
+- <InlineMath math="f(x;k)" /> adalah fungsi peluang untuk hasil tertentu ketika ada k total kemungkinan
+
+- <InlineMath math="x" /> adalah salah satu hasil yang mungkin terjadi (misalnya angka 3 pada dadu)
+
+- <InlineMath math="k" /> adalah jumlah total hasil yang mungkin (misalnya 6 untuk dadu)
+
+> Dengan kata lain, peluang untuk setiap hasil adalah **satu dibagi dengan jumlah total kemungkinan hasil**. Gampang banget kan?
+
+## Contoh Penerapan
+
+Sekarang mari kita lihat bagaimana konsep ini bekerja dalam situasi nyata.
+
+### Pelemparan Dadu
+
+Misalnya kita punya dadu seimbang dengan enam sisi dan dilempar sekali. Bagaimana cara kita menentukan distribusi seragamnya?
+
+- **Hasil yang Mungkin:** Ruang sampelnya adalah <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />
+
+- **Jumlah Total Hasil:** Ada 6 kemungkinan hasil, jadi <InlineMath math="k=6" />
+
+- **Fungsi Distribusi:** Menggunakan rumus kita:
+
+  <BlockMath math="f(x;6) = \frac{1}{6}" />
+
+- **Artinya:** Peluang untuk mendapatkan angka 1, 2, 3, 4, 5, atau 6 masing-masing adalah <InlineMath math="\frac{1}{6}" /> atau sekitar <InlineMath math="16{,}67\%" />
+
+### Roda Putar Berhadiah
+
+Contoh lain, misalnya ada roda putar yang dibagi menjadi 8 bagian yang sama besar, masing-masing diberi nomor 1 sampai 8. Berapa peluang roda berhenti di angka 5?
+
+- **Hasil yang Mungkin:** <InlineMath math="\{1, 2, 3, 4, 5, 6, 7, 8\}" />
+
+- **Jumlah Total Hasil:** Ada 8 bagian, jadi <InlineMath math="k=8" />
+
+- **Fungsi Distribusi:**
+
+  <BlockMath math="f(x;8) = \frac{1}{8}" />
+
+- **Artinya:** Peluang roda berhenti di angka 5 (atau angka lainnya) adalah <InlineMath math="\frac{1}{8}" /> atau <InlineMath math="12{,}5\%" />
+
+## Latihan
+
+1. Sebuah kantong berisi 10 bola yang identik kecuali warnanya: 1 bola merah, 1 bola biru, 1 bola hijau, dan seterusnya hingga 10 warna berbeda. Jika satu bola diambil secara acak, berapa peluang terambilnya bola berwarna kuning? Tuliskan juga fungsi distribusi seragamnya.
+
+2. Dalam satu set kartu bridge standar yang berisi 52 kartu, setiap kartu memiliki peluang yang sama untuk ditarik. Apa yang bisa kamu simpulkan mengenai distribusi peluang penarikan satu kartu dari dek tersebut? Berapa peluang menarik kartu King Hati?
+
+### Kunci Jawaban
+
+1. **Jawaban Soal Bola Berwarna**
+
+    - **Langkah 1: Hitung total kemungkinan.**
+    
+      Ada 10 bola dengan warna berbeda, jadi total kemungkinan hasil adalah <InlineMath math="k=10" />
+    
+    - **Langkah 2: Tentukan fungsi distribusi seragam.**
+    
+      Karena setiap bola punya peluang yang sama untuk diambil (tidak ada bola yang "istimewa"), kita gunakan rumus distribusi seragam:
+      
+      <BlockMath math="f(x;10) = \frac{1}{10}" />
+      
+      Di mana <InlineMath math="x" /> mewakili salah satu dari 10 warna bola yang ada
+    
+    - **Langkah 3: Hitung peluang bola kuning.**
+    
+      Bola kuning adalah salah satu dari 10 bola, jadi peluangnya sama dengan bola warna lain:
+      
+      <BlockMath math="P(\text{Bola Kuning}) = \frac{1}{10}" />
+      
+      Jadi, peluang terambilnya bola kuning adalah **<InlineMath math="\frac{1}{10}" />** atau **<InlineMath math="10\%" />**
+
+2. **Jawaban Soal Kartu Bridge**
+
+    - **Langkah 1: Analisis jenis distribusi.**
+    
+      Karena setiap kartu punya peluang yang sama untuk ditarik (tidak ada kartu yang lebih mudah ditarik), maka distribusi peluangnya adalah **distribusi seragam**
+    
+    - **Langkah 2: Hitung total kemungkinan.**
+    
+      Satu set kartu bridge standar punya 52 kartu yang berbeda, jadi <InlineMath math="k=52" />
+    
+    - **Langkah 3: Hitung peluang King Hati.**
+    
+      King Hati adalah salah satu dari 52 kartu yang ada, jadi menggunakan prinsip distribusi seragam:
+      
+      <BlockMath math="P(\text{King Hati}) = \frac{1}{52}" />
+      
+      Jadi, peluang menarik kartu King Hati adalah **<InlineMath math="\frac{1}{52}" />** atau sekitar **<InlineMath math="1{,}92\%" />**

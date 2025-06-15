@@ -4,3 +4,113 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Data Analysis and Probability",
 };
+
+## Understanding Simple Probability
+
+In everyday life, we often face situations with uncertain outcomes. A simple example is when flipping a coin. There are two possible outcomes: heads or tails. Well, if the coin is balanced and there's no cheating, then both sides have the same chance of appearing. This concept is the foundation of probability.
+
+Mathematically, the probability of an event A can be calculated in a fairly simple way: just divide the number of desired outcomes by the total number of all possible outcomes.
+
+<BlockMath math="P(A) = \frac{n(A)}{n(S)}" />
+
+## Concept of Uniform Distribution
+
+Uniform distribution is actually the simplest concept in the world of probability. Its characteristic is that **every possible outcome has exactly the same probability** of occurring. Imagine dividing a pizza into equal slices for everyone - no one gets a bigger or smaller piece.
+
+Let's take an example of a fair six-sided die. The numbers that can appear are 1, 2, 3, 4, 5, or 6. The probability of getting a 1 is exactly the same as the probability of getting a 6, which is one out of six possibilities. No number is "luckier" than the others. This is what we mean by uniform distribution - all outcomes have the same chance.
+
+## Mathematical Formula
+
+To express uniform distribution mathematically, we have a very simple formula. If a random variable **X** can produce **k** different possibilities, and each possibility has the same probability, then the formula is:
+
+<BlockMath math="f(x;k) = \frac{1}{k}" />
+
+Where:
+
+- <InlineMath math="f(x;k)" /> is the probability function for a specific outcome when there are k total possibilities
+
+- <InlineMath math="x" /> is one of the possible outcomes (for example, the number 3 on a die)
+
+- <InlineMath math="k" /> is the total number of possible outcomes (for example, 6 for a die)
+
+> In other words, the probability for each outcome is **one divided by the total number of possible outcomes**. Pretty easy, right?
+
+## Practical Applications
+
+Now let's see how this concept works in real situations.
+
+### Die Rolling
+
+For example, we have a balanced six-sided die that is rolled once. How do we determine its uniform distribution?
+
+- **Possible Outcomes:** The sample space is <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />
+
+- **Total Number of Outcomes:** There are 6 possible outcomes, so <InlineMath math="k=6" />
+
+- **Distribution Function:** Using our formula:
+
+  <BlockMath math="f(x;6) = \frac{1}{6}" />
+
+- **Meaning:** The probability of getting the numbers 1, 2, 3, 4, 5, or 6 is each <InlineMath math="\frac{1}{6}" /> or approximately <InlineMath math="16{,}67\%" />
+
+### Prize Wheel
+
+Another example, suppose there's a spinning wheel divided into 8 equal sections, each numbered 1 to 8. What's the probability that the wheel stops on number 5?
+
+- **Possible Outcomes:** <InlineMath math="\{1, 2, 3, 4, 5, 6, 7, 8\}" />
+
+- **Total Number of Outcomes:** There are 8 sections, so <InlineMath math="k=8" />
+
+- **Distribution Function:**
+
+  <BlockMath math="f(x;8) = \frac{1}{8}" />
+
+- **Meaning:** The probability that the wheel stops on number 5 (or any other number) is <InlineMath math="\frac{1}{8}" /> or <InlineMath math="12{,}5\%" />
+
+## Exercises
+
+1. A bag contains 10 identical balls except for their colors: 1 red ball, 1 blue ball, 1 green ball, and so on up to 10 different colors. If one ball is drawn randomly, what is the probability of drawing a yellow ball? Also write the uniform distribution function.
+
+2. In a standard bridge card set containing 52 cards, each card has the same probability of being drawn. What can you conclude about the probability distribution of drawing one card from that deck? What is the probability of drawing the King of Hearts?
+
+### Answer Key
+
+1. **Answer for Colored Ball Problem**
+
+    - **Step 1: Calculate total possibilities.**
+    
+      There are 10 balls with different colors, so the total possible outcomes is <InlineMath math="k=10" />
+    
+    - **Step 2: Determine the uniform distribution function.**
+    
+      Since each ball has the same probability of being drawn (no ball is "special"), we use the uniform distribution formula:
+      
+      <BlockMath math="f(x;10) = \frac{1}{10}" />
+      
+      Where <InlineMath math="x" /> represents one of the 10 ball colors available
+    
+    - **Step 3: Calculate the probability of the yellow ball.**
+    
+      The yellow ball is one of the 10 balls, so its probability is the same as other colored balls:
+      
+      <BlockMath math="P(\text{Yellow Ball}) = \frac{1}{10}" />
+      
+      Therefore, the probability of drawing a yellow ball is **<InlineMath math="\frac{1}{10}" />** or **<InlineMath math="10\%" />**
+
+2. **Answer for Bridge Card Problem**
+
+    - **Step 1: Analyze the type of distribution.**
+    
+      Since each card has the same probability of being drawn (no card is easier to draw), the probability distribution is **uniform distribution**
+    
+    - **Step 2: Calculate total possibilities.**
+    
+      A standard bridge card set has 52 different cards, so <InlineMath math="k=52" />
+    
+    - **Step 3: Calculate the probability of King of Hearts.**
+    
+      The King of Hearts is one of the 52 cards available, so using the uniform distribution principle:
+      
+      <BlockMath math="P(\text{King of Hearts}) = \frac{1}{52}" />
+      
+      Therefore, the probability of drawing the King of Hearts is **<InlineMath math="\frac{1}{52}" />** or approximately **<InlineMath math="1{,}92\%" />**
