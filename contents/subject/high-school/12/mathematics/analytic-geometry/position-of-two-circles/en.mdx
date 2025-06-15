@@ -4,3 +4,554 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Analytic Geometry",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Relationship Between Circles
+
+Have you ever noticed how two soap bubbles interact? Sometimes they intersect, sometimes they just touch briefly, or they might even avoid each other completely. Well, the mathematical concept of **position of two circles** is really similar to this phenomenon!
+
+In analytic geometry, we can determine with certainty how two circles relate to each other: whether they intersect, are tangent, or are completely separate. What's interesting is that all of this can be predicted just by knowing the center and radius of each circle.
+
+This concept is super useful in real life. For example, to design gears that must be tangent perfectly, calculate the coverage area of two radio antennas, or even plan a garden with round ponds that are interconnected.
+
+## Intersecting Circles
+
+Two circles are said to be **intersecting** if they meet at two different points. Just imagine two rings that "penetrate" each other.
+
+<LineEquation
+  title="Two Intersecting Circles"
+  description="Both circles meet at two different points."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 3;
+        const centerX = -1;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("BLUE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2.5;
+        const centerX = 1.5;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -1, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₁", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 1.5, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₂", at: 0, offset: [0.5, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        // Calculate intersection points accurately
+        const r1 = 3, r2 = 2.5;
+        const x1 = -1, y1 = 0, x2 = 1.5, y2 = 0;
+        const d = Math.sqrt((x2-x1)**2 + (y2-y1)**2); // d = 2.5
+        
+        // Distance from center 1 to radical line
+        const a = (r1**2 - r2**2 + d**2) / (2*d); // a = (9 - 6.25 + 6.25) / 5 = 1.8
+        
+        // Height of intersection point from line connecting centers
+        const h = Math.sqrt(r1**2 - a**2); // h = sqrt(9 - 3.24) = sqrt(5.76) = 2.4
+        
+        // Intersection points
+        const px = x1 + a * (x2-x1) / d; // px = -1 + 1.8 * 2.5 / 2.5 = 0.8
+        const py1 = y1 + h; // py1 = 2.4
+        const py2 = y1 - h; // py2 = -2.4
+        
+        return [
+          { x: px, y: py1, z: 0 },
+          { x: px, y: py2, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.5, 0.5, 0] },
+        { text: "B", at: 1, offset: [0.5, -0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: -6, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -4, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+For two circles with radii <InlineMath math="r_1" /> and <InlineMath math="r_2" /> and distance between centers <InlineMath math="d" />, the intersection condition occurs when:
+
+<BlockMath math="|r_1 - r_2| < d < r_1 + r_2" />
+
+Here's the logic:
+
+- **Upper bound**: If center distance = <InlineMath math="r_1 + r_2" />, both circles only touch externally
+- **Lower bound**: If center distance = <InlineMath math="|r_1 - r_2|" />, the small circle touches the large one internally
+- **Intersection area**: Between these two bounds, circles definitely intersect at two points
+
+## Tangent Circles
+
+Tangent means two circles **only meet at one point**. Like two wheels that touch at exactly one point to transfer motion.
+
+<LineEquation
+  title="Externally Tangent Circles"
+  description="Both circles touch externally, meeting at one point."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2.5;
+        const centerX = -2.5;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("EMERALD"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2;
+        const centerX = 2;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -2.5, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₁", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₂", at: 0, offset: [0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "T", at: 0, offset: [0, 0.8, 0] }],
+    },
+    {
+      points: [
+        { x: -6, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -4, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+There are two types of tangency:
+
+1. **External tangency** occurs when <InlineMath math="d = r_1 + r_2" />. Both circles are separate and touch at one point.
+
+2. **Internal tangency** occurs when <InlineMath math="d = |r_1 - r_2|" />. The small circle is inside the large one and they touch at one point.
+
+Here's an example of internally tangent circles:
+
+<LineEquation
+  title="Internally Tangent Circles"
+  description="The small circle is inside the large circle and they are tangent."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 4;
+        const centerX = 0;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 1.5;
+        const centerX = 2.5;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₁", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 2.5, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₂", at: 0, offset: [0, -0.8, 0] }],
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "T", at: 0, offset: [0.5, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+        { x: 5, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -5, z: 0 },
+        { x: 0, y: 5, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Separate Circles
+
+This condition occurs when the two circles **don't touch at all**. Like two islands separated by ocean, there's no physical connection between them.
+
+<LineEquation
+  title="Two Separate Circles"
+  description="Both circles are far apart and don't touch each other."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2;
+        const centerX = -3;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 1.5;
+        const centerX = 3;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₁", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₂", at: 0, offset: [0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 }
+      ],
+      color: getColor("YELLOW"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "d", at: 1, offset: [0, 0.8, 0] }],
+    },
+    {
+      points: [
+        { x: -6, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -4, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+The separate condition occurs when the distance between centers is greater than the sum of both radii:
+
+<BlockMath math="d > r_1 + r_2" />
+
+In this situation, there's no point that belongs to both circles simultaneously. They are completely separate in the coordinate plane.
+
+## Concentric and Coincident Circles
+
+**Concentric circles** are two circles that have the same center but different radii. Imagine an archery target with circles that have the same center.
+
+<LineEquation
+  title="Concentric Circles"
+  description="Two circles with the same center but different radii."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 3.5;
+        const centerX = 0;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("SKY"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2;
+        const centerX = 0;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2, y: 0, z: 0 }
+      ],
+      color: getColor("YELLOW"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "r₁", at: 1, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3.5, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "r₂", at: 1, offset: [0, 0.8, 0] }],
+    },
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+        { x: 5, y: 0, z: 0 }
+      ],
+      color: getColor("FUCHSIA"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -5, z: 0 },
+        { x: 0, y: 5, z: 0 }
+      ],
+      color: getColor("FUCHSIA"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+For concentric circles, the distance between centers is zero (<InlineMath math="d = 0" />) but the radii are different (<InlineMath math="r_1 \ne r_2" />).
+
+**Coincident circles** are a special condition where both circles are completely identical. They have the same center and radius, so they look like just one circle.
+
+The coincident condition occurs when:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="d = 0" />
+  <BlockMath math="r_1 = r_2" />
+</div>
+
+## How to Determine Position
+
+To determine the position of two circles practically, we need to calculate the distance between centers and compare it with the radii.
+
+Suppose the first circle is centered at <InlineMath math="(x_1, y_1)" /> with radius <InlineMath math="r_1" />, and the second circle is centered at <InlineMath math="(x_2, y_2)" /> with radius <InlineMath math="r_2" />.
+
+The distance between centers is calculated using the formula:
+
+<BlockMath math="d = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}" />
+
+After getting the value <InlineMath math="d" />, we can determine the position based on the following conditions:
+
+- **Separate**: <InlineMath math="d > r_1 + r_2" /> (circles far apart)
+- **Externally tangent**: <InlineMath math="d = r_1 + r_2" /> (touching externally)
+- **Intersecting**: <InlineMath math="|r_1 - r_2| < d < r_1 + r_2" /> (intersecting at two points)
+- **Internally tangent**: <InlineMath math="d = |r_1 - r_2|" /> (touching internally)
+- **Non-intersecting**: <InlineMath math="d < |r_1 - r_2|" /> (one circle inside the other)
+- **Concentric**: <InlineMath math="d = 0" /> and <InlineMath math="r_1 \ne r_2" /> (same center, different radii)
+- **Coincident**: <InlineMath math="d = 0" /> and <InlineMath math="r_1 = r_2" /> (identical circles)
+
+### Application Example
+
+Determine the position of two circles with equations <InlineMath math="x^2 + y^2 = 9" /> and <InlineMath math="x^2 + y^2 - 6x - 8y = 0" />.
+
+**Step 1**: Identify the center and radius of each circle.
+
+First circle: center <InlineMath math="(0, 0)" />, radius <InlineMath math="r_1 = 3" />
+
+For the second circle, we complete the square:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x^2 + y^2 - 6x - 8y = 0" />
+  <BlockMath math="(x^2 - 6x + 9) + (y^2 - 8y + 16) = 9 + 16" />
+  <BlockMath math="(x - 3)^2 + (y - 4)^2 = 25" />
+</div>
+
+Second circle: center <InlineMath math="(3, 4)" />, radius <InlineMath math="r_2 = 5" />
+
+**Step 2**: Calculate the distance between centers.
+
+<BlockMath math="d = \sqrt{(3-0)^2 + (4-0)^2} = \sqrt{9 + 16} = \sqrt{25} = 5" />
+
+**Step 3**: Compare with position conditions.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="r_1 + r_2 = 3 + 5 = 8" />
+  <BlockMath math="|r_1 - r_2| = |3 - 5| = 2" />
+</div>
+
+Since <InlineMath math="2 < 5 < 8" />, the two circles are **intersecting**.
+
+To ensure the answer is correct, we can check the condition <InlineMath math="|r_1 - r_2| < d < r_1 + r_2" />:
+- <InlineMath math="|3 - 5| = 2" />
+- <InlineMath math="3 + 5 = 8" />  
+- <InlineMath math="2 < 5 < 8" /> <InlineMath math="\checkmark" /> (intersection condition satisfied)
