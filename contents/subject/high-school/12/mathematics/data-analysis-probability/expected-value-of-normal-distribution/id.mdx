@@ -4,3 +4,134 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Analisis Data dan Peluang",
 };
+
+## Konsep Dasar Nilai Harapan
+
+Pernahkah kamu bertanya-tanya, jika kita mengambil sampel berulang kali dari distribusi normal, berapa nilai yang paling sering muncul? Atau dengan kata lain, apa nilai tengah yang diharapkan dari distribusi tersebut?
+
+Inilah yang disebut **nilai harapan** atau expected value. Dalam konteks distribusi normal, nilai harapan memiliki sifat yang sangat menarik dan sederhana.
+
+> Untuk distribusi normal <InlineMath math="n(x; \mu, \sigma)" />, nilai harapannya selalu sama dengan parameter rata-rata <InlineMath math="\mu" />.
+
+Secara matematis, kita dapat menuliskan:
+
+<BlockMath math="E(X) = \mu" />
+
+di mana <InlineMath math="X" /> adalah variabel acak yang mengikuti distribusi normal dan <InlineMath math="\mu" /> adalah parameter rata-rata dari distribusi tersebut.
+
+Mengapa demikian? Mari kita buktikan secara matematis.
+
+## Pembuktian Matematis
+
+Nilai harapan suatu variabel acak kontinu didefinisikan sebagai:
+
+<BlockMath math="E(X) = \int_{-\infty}^{\infty} x \cdot f(x) \, dx" />
+
+Untuk distribusi normal, fungsi kepadatan peluangnya adalah:
+
+<BlockMath math="f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}" />
+
+Substitusikan fungsi ini ke dalam rumus nilai harapan:
+
+<BlockMath math="E(X) = \int_{-\infty}^{\infty} x \cdot \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2} \, dx" />
+
+Sekarang, mari kita lakukan substitusi <InlineMath math="t = \frac{x-\mu}{\sigma}" />. Maka <InlineMath math="x = \sigma t + \mu" /> dan <InlineMath math="dx = \sigma \, dt" />.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="E(X) = \int_{-\infty}^{\infty} (\sigma t + \mu) \cdot \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}t^2} \cdot \sigma \, dt" />
+<BlockMath math="E(X) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} (\sigma t + \mu) e^{-\frac{1}{2}t^2} \, dt" />
+<BlockMath math="E(X) = \frac{\sigma}{\sqrt{2\pi}} \int_{-\infty}^{\infty} t e^{-\frac{1}{2}t^2} \, dt + \frac{\mu}{\sqrt{2\pi}} \int_{-\infty}^{\infty} e^{-\frac{1}{2}t^2} \, dt" />
+</div>
+
+Perhatikan bahwa:
+
+- **Integral pertama** <InlineMath math="\int_{-\infty}^{\infty} t e^{-\frac{1}{2}t^2} \, dt = 0" /> karena fungsi <InlineMath math="t e^{-\frac{1}{2}t^2}" /> adalah fungsi ganjil. Artinya, <InlineMath math="f(-t) = -f(t)" />, sehingga ketika diintegralkan pada interval simetris <InlineMath math="[-\infty, \infty]" />, hasilnya saling meniadakan dan bernilai nol.
+
+- **Integral kedua** <InlineMath math="\int_{-\infty}^{\infty} e^{-\frac{1}{2}t^2} \, dt = \sqrt{2\pi}" /> karena ini adalah integral Gaussian fundamental. Integral ini merupakan luas total di bawah kurva distribusi normal standar, yang selalu bernilai <InlineMath math="\sqrt{2\pi}" />.
+
+Maka:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="E(X) = \frac{\sigma}{\sqrt{2\pi}} \cdot 0 + \frac{\mu}{\sqrt{2\pi}} \cdot \sqrt{2\pi}" />
+<BlockMath math="E(X) = 0 + \mu = \mu" />
+</div>
+
+Terbukti bahwa **nilai harapan distribusi normal sama dengan parameter rata-ratanya**.
+
+> Untuk setiap distribusi normal <InlineMath math="X \sim N(\mu, \sigma^2)" />, berlaku <InlineMath math="E(X) = \mu" />. Ini berarti kita tidak perlu melakukan integrasi setiap kali menghitung nilai harapan distribusi normal, cukup menggunakan nilai parameter <InlineMath math="\mu" />.
+
+## Interpretasi Praktis
+
+Hasil pembuktian di atas memberikan pemahaman yang sangat penting:
+
+Jika kita memiliki distribusi normal dengan rata-rata <InlineMath math="\mu" /> dan standar deviasi <InlineMath math="\sigma" />, maka **nilai harapan** (expected value) dari variabel acak tersebut adalah tepat <InlineMath math="\mu" />. Artinya, jika kita mengambil sampel dalam jumlah sangat besar dan menghitung rata-ratanya, hasilnya akan mendekati nilai <InlineMath math="\mu" />.
+
+**Contoh sederhana:**
+
+Jika tinggi badan siswa di sekolahmu terdistribusi normal dengan rata-rata <InlineMath math="165" /> cm, maka nilai harapan tinggi badan siswa yang dipilih secara acak adalah <InlineMath math="165" /> cm.
+
+## Contoh Penerapan
+
+**Contoh 1**
+
+Misalkan hasil ujian matematika di suatu kelas terdistribusi normal dengan rata-rata <InlineMath math="\mu = 75" /> dan standar deviasi <InlineMath math="\sigma = 10" />. Berapakah nilai harapan skor ujian seorang siswa?
+
+**Penyelesaian:**
+
+Karena distribusi normal memiliki sifat <InlineMath math="E(X) = \mu" />, maka nilai harapan skor ujian adalah:
+
+<BlockMath math="E(X) = 75" />
+
+Jadi, nilai harapan skor ujian seorang siswa adalah <InlineMath math="75" />.
+
+**Contoh 2**
+
+Berat bayi yang baru lahir di suatu rumah sakit terdistribusi normal dengan rata-rata <InlineMath math="3.200" /> gram dan standar deviasi <InlineMath math="400" /> gram. Tentukan nilai harapan berat bayi yang akan lahir!
+
+**Penyelesaian:**
+
+Diketahui <InlineMath math="\mu = 3.200" /> gram dan <InlineMath math="\sigma = 400" /> gram.
+
+Nilai harapan berat bayi yang akan lahir adalah:
+
+<BlockMath math="E(X) = \mu = 3.200 \text{ gram}" />
+
+## Latihan
+
+1. Waktu tempuh perjalanan dari rumah ke sekolah terdistribusi normal dengan rata-rata <InlineMath math="25" /> menit dan standar deviasi <InlineMath math="5" /> menit. Tentukan nilai harapan waktu tempuh perjalanan!
+
+2. Suhu udara harian di kota Jakarta selama bulan Juni terdistribusi normal dengan rata-rata <InlineMath math="28°C" /> dan standar deviasi <InlineMath math="3°C" />. Berapa nilai harapan suhu udara pada hari yang dipilih secara acak?
+
+3. Nilai ujian fisika siswa kelas 12 terdistribusi normal dengan rata-rata <InlineMath math="78" /> dan standar deviasi <InlineMath math="12" />. Jika seorang siswa mengikuti ujian, berapa nilai harapan yang akan diperolehnya?
+
+### Kunci Jawaban
+
+1. **Penyelesaian Soal 1:**
+
+   Diketahui: <InlineMath math="\mu = 25" /> menit, <InlineMath math="\sigma = 5" /> menit
+
+   Karena distribusi normal memiliki sifat <InlineMath math="E(X) = \mu" />, maka:
+
+   <BlockMath math="E(X) = 25 \text{ menit}" />
+
+   **Jawaban:** Nilai harapan waktu tempuh perjalanan adalah <InlineMath math="25" /> menit.
+
+2. **Penyelesaian Soal 2:**
+
+   Diketahui: <InlineMath math="\mu = 28°C" />, <InlineMath math="\sigma = 3°C" />
+
+   Menggunakan sifat dasar distribusi normal:
+
+   <BlockMath math="E(X) = \mu = 28°C" />
+
+   **Jawaban:** Nilai harapan suhu udara adalah <InlineMath math="28°C" />.
+
+3. **Penyelesaian Soal 3:**
+
+   Diketahui: <InlineMath math="\mu = 78" />, <InlineMath math="\sigma = 12" />
+
+   Berdasarkan sifat fundamental distribusi normal:
+
+   <BlockMath math="E(X) = \mu = 78" />
+
+   **Jawaban:** Nilai harapan yang akan diperoleh siswa adalah <InlineMath math="78" />.

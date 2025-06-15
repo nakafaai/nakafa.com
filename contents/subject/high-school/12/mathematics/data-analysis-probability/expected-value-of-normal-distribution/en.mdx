@@ -4,3 +4,134 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Data Analysis and Probability",
 };
+
+## Basic Concept of Expected Value
+
+Have you ever wondered, if we repeatedly take samples from a normal distribution, what value appears most frequently? Or in other words, what is the central value that we expect from that distribution?
+
+This is what we call **expected value**. In the context of normal distribution, expected value has a very interesting and simple property.
+
+> For a normal distribution <InlineMath math="n(x; \mu, \sigma)" />, its expected value is always equal to the mean parameter <InlineMath math="\mu" />.
+
+Mathematically, we can write:
+
+<BlockMath math="E(X) = \mu" />
+
+where <InlineMath math="X" /> is a random variable that follows normal distribution and <InlineMath math="\mu" /> is the mean parameter of that distribution.
+
+Why is this so? Let's prove it mathematically.
+
+## Mathematical Proof
+
+The expected value of a continuous random variable is defined as:
+
+<BlockMath math="E(X) = \int_{-\infty}^{\infty} x \cdot f(x) \, dx" />
+
+For normal distribution, the probability density function is:
+
+<BlockMath math="f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}" />
+
+Substitute this function into the expected value formula:
+
+<BlockMath math="E(X) = \int_{-\infty}^{\infty} x \cdot \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2} \, dx" />
+
+Now, let's perform the substitution <InlineMath math="t = \frac{x-\mu}{\sigma}" />. Then <InlineMath math="x = \sigma t + \mu" /> and <InlineMath math="dx = \sigma \, dt" />.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="E(X) = \int_{-\infty}^{\infty} (\sigma t + \mu) \cdot \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}t^2} \cdot \sigma \, dt" />
+<BlockMath math="E(X) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} (\sigma t + \mu) e^{-\frac{1}{2}t^2} \, dt" />
+<BlockMath math="E(X) = \frac{\sigma}{\sqrt{2\pi}} \int_{-\infty}^{\infty} t e^{-\frac{1}{2}t^2} \, dt + \frac{\mu}{\sqrt{2\pi}} \int_{-\infty}^{\infty} e^{-\frac{1}{2}t^2} \, dt" />
+</div>
+
+Note that:
+
+- **First integral** <InlineMath math="\int_{-\infty}^{\infty} t e^{-\frac{1}{2}t^2} \, dt = 0" /> because the function <InlineMath math="t e^{-\frac{1}{2}t^2}" /> is an odd function. This means <InlineMath math="f(-t) = -f(t)" />, so when integrated over the symmetric interval <InlineMath math="[-\infty, \infty]" />, the results cancel each other out and equal zero.
+
+- **Second integral** <InlineMath math="\int_{-\infty}^{\infty} e^{-\frac{1}{2}t^2} \, dt = \sqrt{2\pi}" /> because this is the fundamental Gaussian integral. This integral represents the total area under the standard normal distribution curve, which always equals <InlineMath math="\sqrt{2\pi}" />.
+
+Therefore:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="E(X) = \frac{\sigma}{\sqrt{2\pi}} \cdot 0 + \frac{\mu}{\sqrt{2\pi}} \cdot \sqrt{2\pi}" />
+<BlockMath math="E(X) = 0 + \mu = \mu" />
+</div>
+
+It is proven that **the expected value of normal distribution equals its mean parameter**.
+
+> For every normal distribution <InlineMath math="X \sim N(\mu, \sigma^2)" />, we have <InlineMath math="E(X) = \mu" />. This means we don't need to perform integration every time we calculate the expected value of a normal distribution; we simply use the parameter value <InlineMath math="\mu" />.
+
+## Practical Interpretation
+
+The proof result above provides a very important understanding:
+
+If we have a normal distribution with mean <InlineMath math="\mu" /> and standard deviation <InlineMath math="\sigma" />, then the **expected value** of that random variable is exactly <InlineMath math="\mu" />. This means if we take samples in very large numbers and calculate their average, the result will approach the value <InlineMath math="\mu" />.
+
+**Simple example:**
+
+If the height of students in your school is normally distributed with mean <InlineMath math="165" /> cm, then the expected value of the height of a randomly selected student is <InlineMath math="165" /> cm.
+
+## Application Examples
+
+**Example 1**
+
+Suppose the math exam scores in a class are normally distributed with mean <InlineMath math="\mu = 75" /> and standard deviation <InlineMath math="\sigma = 10" />. What is the expected value of a student's exam score?
+
+**Solution:**
+
+Since normal distribution has the property <InlineMath math="E(X) = \mu" />, the expected value of the exam score is:
+
+<BlockMath math="E(X) = 75" />
+
+Therefore, the expected value of a student's exam score is <InlineMath math="75" />.
+
+**Example 2**
+
+The weight of newborn babies at a hospital is normally distributed with mean <InlineMath math="3.200" /> grams and standard deviation <InlineMath math="400" /> grams. Determine the expected value of the weight of a baby to be born!
+
+**Solution:**
+
+Given <InlineMath math="\mu = 3.200" /> grams and <InlineMath math="\sigma = 400" /> grams.
+
+The expected value of the weight of a baby to be born is:
+
+<BlockMath math="E(X) = \mu = 3.200 \text{ grams}" />
+
+## Exercises
+
+1. Travel time from home to school is normally distributed with mean <InlineMath math="25" /> minutes and standard deviation <InlineMath math="5" /> minutes. Determine the expected value of travel time!
+
+2. Daily air temperature in Jakarta during June is normally distributed with mean <InlineMath math="28°C" /> and standard deviation <InlineMath math="3°C" />. What is the expected value of air temperature on a randomly selected day?
+
+3. Physics exam scores of grade 12 students are normally distributed with mean <InlineMath math="78" /> and standard deviation <InlineMath math="12" />. If a student takes the exam, what is the expected value they will obtain?
+
+### Answer Key
+
+1. **Solution to Problem 1:**
+
+   Given: <InlineMath math="\mu = 25" /> minutes, <InlineMath math="\sigma = 5" /> minutes
+
+   Since normal distribution has the property <InlineMath math="E(X) = \mu" />, then:
+
+   <BlockMath math="E(X) = 25 \text{ minutes}" />
+
+   **Answer:** The expected value of travel time is <InlineMath math="25" /> minutes.
+
+2. **Solution to Problem 2:**
+
+   Given: <InlineMath math="\mu = 28°C" />, <InlineMath math="\sigma = 3°C" />
+
+   Using the basic property of normal distribution:
+
+   <BlockMath math="E(X) = \mu = 28°C" />
+
+   **Answer:** The expected value of air temperature is <InlineMath math="28°C" />.
+
+3. **Solution to Problem 3:**
+
+   Given: <InlineMath math="\mu = 78" />, <InlineMath math="\sigma = 12" />
+
+   Based on the fundamental property of normal distribution:
+
+   <BlockMath math="E(X) = \mu = 78" />
+
+   **Answer:** The expected value that the student will obtain is <InlineMath math="78" />.
