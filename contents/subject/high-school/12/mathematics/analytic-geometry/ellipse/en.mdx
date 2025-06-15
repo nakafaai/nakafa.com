@@ -1,8 +1,8 @@
 export const metadata = {
-    title: "Ellipse",
-    authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "05/26/2025",
-    subject: "Analytic Geometry",
+  title: "Ellipse",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Analytic Geometry",
 };
 
 import { getColor } from "@/lib/utils/color";
@@ -541,56 +541,6 @@ where <InlineMath math="c" /> is the distance from center to focus.
 <BlockMath math="e = \frac{c}{a}" />
 
 The eccentricity value of an ellipse is always <InlineMath math="0 < e < 1" />. The closer to <InlineMath math="0" />, the more circular the ellipse becomes. The closer to <InlineMath math="1" />, the more elongated the ellipse becomes.
-
-## Example Problems
-
-Now let's see how to use ellipse concepts to solve problems.
-
-**Example 1**: Find the equation of an ellipse with center at <InlineMath math="(0,0)" />, foci at <InlineMath math="(\pm 4, 0)" />, and major axis length <InlineMath math="10" />.
-
-**Solution**:
-
-Given:
-- Center at <InlineMath math="(0,0)" />
-- Foci at <InlineMath math="(\pm 4, 0)" />, so <InlineMath math="c = 4" />
-- Major axis length = <InlineMath math="10" />, so <InlineMath math="2a = 10" />, thus <InlineMath math="a = 5" />
-
-Using the formula <InlineMath math="c^2 = a^2 - b^2" />:
-
-<div className="flex flex-col gap-4">
-  <BlockMath math="4^2 = 5^2 - b^2" />
-  <BlockMath math="16 = 25 - b^2" />
-  <BlockMath math="b^2 = 9" />
-  <BlockMath math="b = 3" />
-</div>
-
-Since the foci are on the <InlineMath math="X" /> axis, the major axis is horizontal. The ellipse equation:
-
-<BlockMath math="\frac{x^2}{25} + \frac{y^2}{9} = 1" />
-
-**Example 2**: Given ellipse <InlineMath math="\frac{(x-1)^2}{16} + \frac{(y+2)^2}{9} = 1" />. Find the center, foci, and eccentricity of the ellipse.
-
-**Solution**:
-
-From the equation <InlineMath math="\frac{(x-1)^2}{16} + \frac{(y+2)^2}{9} = 1" />:
-- Center: <InlineMath math="(h,k) = (1, -2)" />
-- <InlineMath math="a^2 = 16" />, so <InlineMath math="a = 4" />
-- <InlineMath math="b^2 = 9" />, so <InlineMath math="b = 3" />
-
-Since <InlineMath math="a^2 = 16 > b^2 = 9" />, the major axis is horizontal.
-
-Calculate <InlineMath math="c" />:
-
-<div className="flex flex-col gap-4">
-  <BlockMath math="c^2 = a^2 - b^2 = 16 - 9 = 7" />
-  <BlockMath math="c = \sqrt{7}" />
-</div>
-
-The foci are located at <InlineMath math="(h \pm c, k) = (1 \pm \sqrt{7}, -2)" />.
-
-Eccentricity:
-
-<BlockMath math="e = \frac{c}{a} = \frac{\sqrt{7}}{4}" />
 
 ## Exercises
 

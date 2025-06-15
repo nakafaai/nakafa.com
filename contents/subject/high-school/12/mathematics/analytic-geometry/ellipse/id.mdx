@@ -1,8 +1,8 @@
 export const metadata = {
-    title: "Elips",
-    authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "05/26/2025",
-    subject: "Geometri Analitik",
+  title: "Elips",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Geometri Analitik",
 };
 
 import { getColor } from "@/lib/utils/color";
@@ -541,56 +541,6 @@ di mana <InlineMath math="c" /> adalah jarak dari pusat ke fokus.
 <BlockMath math="e = \frac{c}{a}" />
 
 Nilai eksentrisitas elips selalu <InlineMath math="0 < e < 1" />. Makin mendekati <InlineMath math="0" />, elips makin bulat seperti lingkaran. Makin mendekati <InlineMath math="1" />, elips makin pipih.
-
-## Contoh Soal
-
-Sekarang kita lihat gimana cara pakai konsep elips untuk ngerjain soal.
-
-**Contoh 1**: Tentukan persamaan elips dengan pusat di <InlineMath math="(0,0)" />, fokus di <InlineMath math="(\pm 4, 0)" />, dan panjang sumbu mayor <InlineMath math="10" />.
-
-**Penyelesaian**:
-
-Yang diketahui:
-- Pusat di <InlineMath math="(0,0)" />
-- Fokus di <InlineMath math="(\pm 4, 0)" />, berarti <InlineMath math="c = 4" />
-- Panjang sumbu mayor = <InlineMath math="10" />, berarti <InlineMath math="2a = 10" />, jadi <InlineMath math="a = 5" />
-
-Pakai rumus <InlineMath math="c^2 = a^2 - b^2" />:
-
-<div className="flex flex-col gap-4">
-  <BlockMath math="4^2 = 5^2 - b^2" />
-  <BlockMath math="16 = 25 - b^2" />
-  <BlockMath math="b^2 = 9" />
-  <BlockMath math="b = 3" />
-</div>
-
-Karena fokus ada di sumbu <InlineMath math="X" />, berarti sumbu mayor horizontal. Persamaan elips:
-
-<BlockMath math="\frac{x^2}{25} + \frac{y^2}{9} = 1" />
-
-**Contoh 2**: Diketahui elips <InlineMath math="\frac{(x-1)^2}{16} + \frac{(y+2)^2}{9} = 1" />. Tentukan pusat, fokus, dan eksentrisitas elips tersebut.
-
-**Penyelesaian**:
-
-Dari persamaan <InlineMath math="\frac{(x-1)^2}{16} + \frac{(y+2)^2}{9} = 1" />:
-- Pusat: <InlineMath math="(h,k) = (1, -2)" />
-- <InlineMath math="a^2 = 16" />, jadi <InlineMath math="a = 4" />
-- <InlineMath math="b^2 = 9" />, jadi <InlineMath math="b = 3" />
-
-Karena <InlineMath math="a^2 = 16 > b^2 = 9" />, sumbu mayor horizontal.
-
-Hitung <InlineMath math="c" />:
-
-<div className="flex flex-col gap-4">
-  <BlockMath math="c^2 = a^2 - b^2 = 16 - 9 = 7" />
-  <BlockMath math="c = \sqrt{7}" />
-</div>
-
-Fokus terletak di <InlineMath math="(h \pm c, k) = (1 \pm \sqrt{7}, -2)" />.
-
-Eksentrisitas:
-
-<BlockMath math="e = \frac{c}{a} = \frac{\sqrt{7}}{4}" />
 
 ## Latihan
 
