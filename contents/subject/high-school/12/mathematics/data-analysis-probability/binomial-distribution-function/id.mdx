@@ -4,3 +4,200 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Analisis Data dan Peluang",
 };
+
+## Mengenal Jacob Bernoulli
+
+Jacob Bernoulli, yang juga dikenal sebagai James atau Jacques, adalah salah satu matematikawan terkemuka dari keluarga Bernoulli. Dia adalah pelopor pertama dalam analisis Leibnizian dan mendukung Leibniz dalam perdebatan kalkulus melawan Newton.
+
+Jacob Bernoulli terkenal karena banyak kontribusinya untuk kalkulus. Dia adalah salah satu pendiri kalkulus variasi dan mengusulkan versi pertama dari hukum bilangan besar dalam bukunya "Ars Conjectandi" yang diterbitkan pada tahun 1713. Salah satu pembahasan penting dalam buku tersebut adalah mengenai percobaan binomial.
+
+## Kombinasi dan Peluang Dasar
+
+Sebelum masuk ke distribusi binomial, ada beberapa rumus dasar yang perlu kita kuasai dulu.
+
+Pertama, rumus kombinasi untuk memilih objek:
+
+<BlockMath math="C_k^n = \binom{n}{k} = \frac{n!}{k!(n-k)!}" />
+
+Kedua, faktorial (perkalian berurutan):
+
+<BlockMath math="n! = n \times (n-1) \times ... \times 3 \times 2 \times 1" />
+
+Dan yang ketiga, hubungan peluang kejadian dan kebalikannya:
+
+<BlockMath math="P(A) + P(A^c) = 1" />
+
+dengan <InlineMath math="P(A)" /> adalah peluang kejadian terjadi dan <InlineMath math="P(A^c)" /> adalah peluang kejadian tidak terjadi.
+
+## Konsep Distribusi Binomial
+
+Distribusi binomial itu sebenarnya konsep yang cukup sederhana kalau kita pahami dari dasarnya. Bayangkan kamu sedang melakukan percobaan yang hanya punya dua kemungkinan hasil: berhasil atau gagal. Contohnya seperti melempar koin yang hanya bisa menghasilkan angka atau gambar.
+
+Distribusi binomial digunakan ketika kita melakukan percobaan yang sama berulang kali dengan kondisi yang tetap sama. Yang penting, setiap percobaan bersifat independen (tidak saling mempengaruhi) - artinya hasil percobaan sebelumnya tidak mempengaruhi percobaan berikutnya.
+
+**Syarat-syarat percobaan binomial:**
+
+- Hanya ada dua kemungkinan hasil: sukses atau gagal
+
+- Jumlah percobaan sudah ditentukan dan tetap
+
+- Setiap percobaan saling independen
+
+- Peluang sukses sama untuk setiap percobaan
+
+## Rumus Distribusi Binomial
+
+Jika ada percobaan binomial dengan peluang berhasil <InlineMath math="p" /> dan peluang gagal <InlineMath math="q = 1 - p" />, maka rumus untuk menghitung peluang mendapatkan tepat <InlineMath math="x" /> keberhasilan dalam <InlineMath math="n" /> percobaan independen adalah:
+
+<BlockMath math="b(x;n,p) = \binom{n}{x} p^x q^{n-x} \text{ untuk } x = 0,1,2,...,n" />
+
+Keterangan:
+
+- <InlineMath math="n" /> = jumlah percobaan yang dilakukan
+
+- <InlineMath math="x" /> = jumlah keberhasilan yang kita inginkan
+
+- <InlineMath math="p" /> = peluang berhasil dalam satu percobaan
+
+- <InlineMath math="q = 1-p" /> = peluang gagal dalam satu percobaan
+
+Jadi, untuk menggunakan rumus ini, pastikan dulu percobaan yang kita hadapi memenuhi syarat-syarat binomial yang sudah disebutkan tadi.
+
+## Percobaan Koin
+
+Mari kita lihat contoh sederhana. Misalkan kita punya koin yang seimbang. Kita sebut angka sebagai "A" dan gambar sebagai "G", jadi ruang sampelnya <InlineMath math="S = \{A,G\}" />. 
+
+Kalau kita anggap mendapatkan gambar sebagai "berhasil", maka peluang berhasilnya <InlineMath math="p = \frac{1}{2}" />. Otomatis, peluang gagal (mendapatkan angka) adalah <InlineMath math="q = 1 - \frac{1}{2} = \frac{1}{2}" />.
+
+**Soal:** Jika kita melempar koin ini <InlineMath math="7" /> kali berturut-turut, berapa peluang mendapatkan gambar sebanyak <InlineMath math="5" /> kali?
+
+**Penyelesaian:**
+
+Kita identifikasi dulu parameternya:
+- <InlineMath math="n = 7" /> (jumlah lemparan)
+- <InlineMath math="x = 5" /> (jumlah gambar yang diinginkan)  
+- <InlineMath math="p = \frac{1}{2}" /> (peluang mendapatkan gambar)
+- <InlineMath math="q = \frac{1}{2}" /> (peluang mendapatkan angka)
+
+Sekarang kita gunakan rumus distribusi binomial:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="b(5;7,\frac{1}{2}) = \binom{7}{5} \left(\frac{1}{2}\right)^5 \left(\frac{1}{2}\right)^{7-5}" />
+
+<BlockMath math="= \binom{7}{5} \left(\frac{1}{2}\right)^5 \left(\frac{1}{2}\right)^2" />
+
+<BlockMath math="= \binom{7}{5} \left(\frac{1}{2}\right)^7" />
+</div>
+
+Mari kita hitung <InlineMath math="\binom{7}{5}" /> terlebih dahulu:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\binom{7}{5} = \frac{7!}{5!(7-5)!} = \frac{7!}{5! \cdot 2!}" />
+
+<BlockMath math="= \frac{7 \times 6 \times 5!}{5! \times 2 \times 1} = \frac{7 \times 6}{2} = \frac{42}{2} = 21" />
+</div>
+
+Jadi perhitungan lengkapnya:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="b(5;7,\frac{1}{2}) = 21 \times \frac{1}{2^7} = 21 \times \frac{1}{128} = \frac{21}{128}" />
+</div>
+
+Jadi, peluang mendapatkan <InlineMath math="5" /> gambar dalam <InlineMath math="7" /> kali lemparan adalah <InlineMath math="\frac{21}{128}" /> atau sekitar <InlineMath math="16{,}4\%" />.
+
+## Latihan
+
+1. Di sebuah kantong ada <InlineMath math="10" /> bola yang sama persis, kecuali warnanya: <InlineMath math="6" /> bola merah dan <InlineMath math="4" /> bola biru. Kalau kita ambil <InlineMath math="5" /> bola satu per satu dengan pengembalian (setiap bola yang diambil dikembalikan lagi), berapa peluang terambilnya tepat <InlineMath math="3" /> bola merah?
+
+2. Seorang pemanah punya tingkat akurasi <InlineMath math="80\%" /> untuk mengenai target. Kalau dia memanah <InlineMath math="6" /> kali, berapa peluang dia mengenai target tepat <InlineMath math="4" /> kali?
+
+3. Ada ujian pilihan ganda dengan <InlineMath math="4" /> pilihan jawaban di setiap soal. Seorang siswa menebak semua jawaban secara acak untuk <InlineMath math="8" /> soal. Berapa peluang dia menjawab benar tepat <InlineMath math="2" /> soal?
+
+### Kunci Jawaban
+
+1. **Jawaban Soal Bola Merah**
+
+    **Langkah 1: Identifikasi parameter.**
+    
+    - <InlineMath math="n = 5" /> (jumlah pengambilan)
+    - <InlineMath math="x = 3" /> (jumlah bola merah yang diinginkan)
+    - <InlineMath math="p = \frac{6}{10} = 0{,}6" /> (peluang terambil bola merah)
+    - <InlineMath math="q = 1 - 0{,}6 = 0{,}4" /> (peluang terambil bola biru)
+
+    **Langkah 2: Hitung menggunakan rumus distribusi binomial.**
+    
+    <div className="flex flex-col gap-4">
+    <BlockMath math="b(3;5,0{,}6) = \binom{5}{3} (0{,}6)^3 (0{,}4)^2" />
+    </div>
+    
+    Mari hitung <InlineMath math="\binom{5}{3}" /> dulu:
+
+    <BlockMath math="\binom{5}{3} = \frac{5!}{3! \cdot 2!} = \frac{5 \times 4}{2 \times 1} = 10" />
+    
+    Kemudian:
+    
+    <div className="flex flex-col gap-4">
+    <BlockMath math="= 10 \times (0{,}6)^3 \times (0{,}4)^2" />
+    
+    <BlockMath math="= 10 \times 0{,}216 \times 0{,}16 = 0{,}3456" />
+    </div>
+    
+    Jadi, peluang terambilnya tepat <InlineMath math="3" /> bola merah adalah <InlineMath math="0{,}3456" /> atau sekitar <InlineMath math="34{,}6\%" />.
+
+2. **Jawaban Soal Pemanah**
+
+    **Langkah 1: Identifikasi parameter.**
+    
+    - <InlineMath math="n = 6" /> (jumlah panahan)
+    - <InlineMath math="x = 4" /> (jumlah target yang diinginkan)
+    - <InlineMath math="p = 0{,}8" /> (peluang mengenai target)
+    - <InlineMath math="q = 0{,}2" /> (peluang meleset)
+
+    **Langkah 2: Hitung menggunakan rumus distribusi binomial.**
+    
+    <div className="flex flex-col gap-4">
+    <BlockMath math="b(4;6,0{,}8) = \binom{6}{4} (0{,}8)^4 (0{,}2)^2" />
+    </div>
+    
+    Mari hitung <InlineMath math="\binom{6}{4}" /> dulu:
+    
+    <BlockMath math="\binom{6}{4} = \frac{6!}{4! \cdot 2!} = \frac{6 \times 5}{2 \times 1} = 15" />
+    
+    Kemudian:
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="= 15 \times (0{,}8)^4 \times (0{,}2)^2" />
+    
+    <BlockMath math="= 15 \times 0{,}4096 \times 0{,}04 = 0{,}2458" />
+    </div>
+    
+    Jadi, peluang pemanah mengenai target tepat <InlineMath math="4" /> kali adalah <InlineMath math="0{,}2458" /> atau sekitar <InlineMath math="24{,}6\%" />.
+
+3. **Jawaban Soal Ujian Pilihan Ganda**
+
+    **Langkah 1: Identifikasi parameter.**
+    
+    - <InlineMath math="n = 8" /> (jumlah soal)
+    - <InlineMath math="x = 2" /> (jumlah jawaban benar yang diinginkan)
+    - <InlineMath math="p = \frac{1}{4} = 0{,}25" /> (peluang menjawab benar dengan menebak)
+    - <InlineMath math="q = \frac{3}{4} = 0{,}75" /> (peluang menjawab salah)
+
+    **Langkah 2: Hitung menggunakan rumus distribusi binomial.**
+    
+    <div className="flex flex-col gap-4">
+    <BlockMath math="b(2;8,0{,}25) = \binom{8}{2} (0{,}25)^2 (0{,}75)^6" />
+    </div>
+    
+    Mari hitung <InlineMath math="\binom{8}{2}" /> dulu:
+
+    <BlockMath math="\binom{8}{2} = \frac{8!}{2! \cdot 6!} = \frac{8 \times 7}{2 \times 1} = 28" />
+    
+    Kemudian:
+
+    <div className="flex flex-col gap-4">
+    <BlockMath math="= 28 \times (0{,}25)^2 \times (0{,}75)^6" />
+    
+    <BlockMath math="= 28 \times 0{,}0625 \times 0{,}178 = 0{,}3115" />
+    </div>
+    
+    Jadi, peluang siswa menjawab benar tepat <InlineMath math="2" /> soal adalah <InlineMath math="0{,}3115" /> atau sekitar <InlineMath math="31{,}2\%" />.
