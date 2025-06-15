@@ -4,3 +4,551 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Geometri Analitik",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Memahami Garis Singgung Lingkaran
+
+Bayangkan kamu sedang mengendarai sepeda di trek yang berbentuk lingkaran. Pada suatu titik, kamu memutuskan untuk keluar dari trek tersebut dalam garis lurus. Nah, garis lurus yang kamu tempuh itulah yang disebut **garis singgung** terhadap lingkaran trek.
+
+Secara matematis, garis singgung lingkaran adalah garis lurus yang menyentuh lingkaran tepat di satu titik saja. Titik persentuhan ini disebut **titik singgung**. Yang menarik adalah, garis singgung selalu **tegak lurus** terhadap jari-jari lingkaran di titik singgung tersebut.
+
+Konsep ini sangat berguna dalam berbagai aplikasi, seperti mendesain jalan raya yang keluar dari bundaran, menentukan lintasan benda yang bergerak meninggalkan orbit melingkar, atau bahkan dalam bidang optik untuk menentukan arah pantulan cahaya.
+
+## Garis Singgung Melalui Titik pada Lingkaran
+
+Mari kita mulai dengan kasus yang paling sederhana. Ketika kita sudah tahu titik singgungnya, menentukan persamaan garis singgung menjadi relatif mudah.
+
+<LineEquation
+  title="Garis Singgung Melalui Titik pada Lingkaran"
+  description="Visualisasi garis singgung yang melalui titik tertentu pada lingkaran."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 3;
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        return {
+          x: 0,
+          y: 0,
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        const angle = Math.PI / 4;
+        const radius = 3;
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "T", at: 0, offset: [0.5, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const angle = Math.PI / 4;
+        const radius = 3;
+        const tangentPoint = {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+        };
+        const radiusSlope = tangentPoint.y / tangentPoint.x;
+        const tangentSlope = -1 / radiusSlope;
+        
+        const xRange = 4;
+        return {
+          x: tangentPoint.x + (i - 0.5) * xRange,
+          y: tangentPoint.y + tangentSlope * (i - 0.5) * xRange,
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Garis Singgung", at: 1, offset: [1, 2, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const angle = Math.PI / 4;
+        const radius = 3;
+        return {
+          x: i * radius * Math.cos(angle),
+          y: i * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Jari-jari", at: 1, offset: [-2, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const xMin = -5;
+        const xMax = 5;
+        const y = 0;
+        return {
+          x: xMin + i * (xMax - xMin),
+          y: y,
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const yMin = -4;
+        const yMax = 4;
+        const x = 0;
+        return {
+          x: x,
+          y: yMin + i * (yMax - yMin),
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Untuk lingkaran dengan persamaan <InlineMath math="(x-a)^2 + (y-b)^2 = r^2" /> dan titik singgung <InlineMath math="T(x_1, y_1)" />, kita bisa menentukan persamaan garis singgungnya dengan langkah berikut:
+
+**Langkah pertama**: Hitung gradien jari-jari dari pusat <InlineMath math="O(a,b)" /> ke titik singgung <InlineMath math="T(x_1, y_1)" />:
+
+<BlockMath math="m_{\text{jari-jari}} = \frac{y_1 - b}{x_1 - a}" />
+
+**Langkah kedua**: Karena garis singgung tegak lurus dengan jari-jari, maka gradien garis singgung adalah:
+
+<BlockMath math="m_{\text{singgung}} = -\frac{x_1 - a}{y_1 - b}" />
+
+**Langkah ketiga**: Gunakan rumus persamaan garis dengan gradien dan satu titik:
+
+<BlockMath math="(y - y_1) = m_{\text{singgung}}(x - x_1)" />
+
+Setelah disederhanakan, kita akan mendapat **rumus praktis** untuk garis singgung lingkaran:
+
+<BlockMath math="(x - a)(x_1 - a) + (y - b)(y_1 - b) = r^2" />
+
+> Rumus ini sangat praktis karena kita tinggal mensubstitusikan koordinat pusat lingkaran, titik singgung, dan jari-jari kuadrat.
+
+## Garis Singgung dengan Gradien Tertentu
+
+Kadang kita tidak diberikan titik singgung, tetapi diminta mencari garis singgung yang memiliki gradien tertentu. Misalnya, kita ingin mencari garis singgung yang sejajar dengan garis tertentu.
+
+<LineEquation
+  title="Garis Singgung dengan Gradien Tertentu"
+  description="Dua garis singgung dengan gradien yang sama pada lingkaran."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2.5;
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        return {
+          x: 0,
+          y: 0,
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const m = 1; // gradien yang diberikan
+        const r = 2.5;
+        const c1 = r * Math.sqrt(1 + m * m);
+        const xRange = 6;
+        return {
+          x: -xRange/2 + i * xRange,
+          y: m * (-xRange/2 + i * xRange) + c1,
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Singgung 1", at: 0, offset: [0.5, 2.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const m = 1; // gradien yang diberikan
+        const r = 2.5;
+        const c2 = -r * Math.sqrt(1 + m * m);
+        const xRange = 6;
+        return {
+          x: -xRange/2 + i * xRange,
+          y: m * (-xRange/2 + i * xRange) + c2,
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Singgung 2", at: 1, offset: [0.5, -1.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const xMin = -5;
+        const xMax = 5;
+        const y = 0;
+        return {
+          x: xMin + i * (xMax - xMin),
+          y: y,
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const yMin = -4;
+        const yMax = 4;
+        const x = 0;
+        return {
+          x: x,
+          y: yMin + i * (yMax - yMin),
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Untuk lingkaran <InlineMath math="x^2 + y^2 = r^2" /> dan gradien <InlineMath math="m" /> yang diketahui, kita substitusikan persamaan garis <InlineMath math="y = mx + c" /> ke persamaan lingkaran:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x^2 + (mx + c)^2 = r^2" />
+  <BlockMath math="x^2 + m^2x^2 + 2mcx + c^2 = r^2" />
+  <BlockMath math="(1 + m^2)x^2 + 2mcx + (c^2 - r^2) = 0" />
+</div>
+
+Karena garis menyinggung lingkaran, diskriminan persamaan kuadrat ini harus nol:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\Delta = (2mc)^2 - 4(1 + m^2)(c^2 - r^2) = 0" />
+  <BlockMath math="4m^2c^2 - 4(1 + m^2)(c^2 - r^2) = 0" />
+  <BlockMath math="m^2c^2 - (1 + m^2)c^2 + (1 + m^2)r^2 = 0" />
+  <BlockMath math="-c^2 + (1 + m^2)r^2 = 0" />
+  <BlockMath math="c^2 = (1 + m^2)r^2" />
+</div>
+
+Sehingga diperoleh:
+
+<BlockMath math="c = \pm r\sqrt{1 + m^2}" />
+
+Jadi, untuk setiap gradien <InlineMath math="m" />, selalu ada **dua garis singgung** dengan persamaan:
+
+<BlockMath math="y = mx \pm r\sqrt{1 + m^2}" />
+
+## Garis Singgung dari Titik Eksternal
+
+Kasus yang paling menarik adalah ketika kita diminta mencari garis singgung yang ditarik dari titik di luar lingkaran. Dari satu titik di luar lingkaran, kita bisa menarik tepat **dua garis singgung**.
+
+<LineEquation
+  title="Garis Singgung dari Titik di Luar Lingkaran"
+  description="Dua garis singgung yang ditarik dari titik eksternal ke lingkaran."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2;
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        return {
+          x: 0,
+          y: 0,
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        return {
+          x: 4,
+          y: 2,
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "P", at: 0, offset: [0.5, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        // Titik singgung pertama (dihitung secara matematis)
+        const px = 4, py = 2, r = 2;
+        const d = Math.sqrt(px*px + py*py);
+        const angle1 = Math.atan2(py, px) - Math.acos(r/d);
+        return {
+          x: r * Math.cos(angle1),
+          y: r * Math.sin(angle1),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "T₁", at: 0, offset: [0.5, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        // Titik singgung kedua (dihitung secara matematis)
+        const px = 4, py = 2, r = 2;
+        const d = Math.sqrt(px*px + py*py);
+        const angle2 = Math.atan2(py, px) + Math.acos(r/d);
+        return {
+          x: r * Math.cos(angle2),
+          y: r * Math.sin(angle2),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "T₂", at: 0, offset: [0.5, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        // Garis singgung pertama
+        const px = 4, py = 2, r = 2;
+        const d = Math.sqrt(px*px + py*py);
+        const angle1 = Math.atan2(py, px) - Math.acos(r/d);
+        const t1x = r * Math.cos(angle1);
+        const t1y = r * Math.sin(angle1);
+        
+        return {
+          x: i === 0 ? px : t1x,
+          y: i === 0 ? py : t1y,
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Singgung 1", at: 0, offset: [0.5, -1, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        // Garis singgung kedua
+        const px = 4, py = 2, r = 2;
+        const d = Math.sqrt(px*px + py*py);
+        const angle2 = Math.atan2(py, px) + Math.acos(r/d);
+        const t2x = r * Math.cos(angle2);
+        const t2y = r * Math.sin(angle2);
+        
+        return {
+          x: i === 0 ? px : t2x,
+          y: i === 0 ? py : t2y,
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Singgung 2", at: 0, offset: [0.5, 1, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const xMin = -3;
+        const xMax = 5;
+        const y = 0;
+        return {
+          x: xMin + i * (xMax - xMin),
+          y: y,
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const yMin = -2;
+        const yMax = 4;
+        const x = 0;
+        return {
+          x: x,
+          y: yMin + i * (yMax - yMin),
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Untuk menentukan persamaan garis singgung dari titik <InlineMath math="P(x_0, y_0)" /> di luar lingkaran <InlineMath math="(x-a)^2 + (y-b)^2 = r^2" />, kita menggunakan konsep **garis kutub**.
+
+Persamaan garis kutub titik <InlineMath math="P(x_0, y_0)" /> terhadap lingkaran adalah:
+
+<BlockMath math="(x-a)(x_0-a) + (y-b)(y_0-b) = r^2" />
+
+Garis kutub ini adalah **garis yang menghubungkan kedua titik singgung** dari titik <InlineMath math="P" /> ke lingkaran. Jadi, untuk mencari titik-titik singgung, kita perlu:
+
+1. Menentukan persamaan garis kutub
+2. Mencari titik potong garis kutub dengan lingkaran
+3. Menggunakan kedua titik singgung untuk menentukan persamaan garis singgung
+
+> Konsep garis kutub ini sangat elegan karena memberikan cara sistematis untuk menyelesaikan masalah garis singgung dari titik eksternal.
+
+## Contoh Penerapan
+
+Mari kita lihat contoh konkret. Diketahui lingkaran <InlineMath math="L \equiv (x+1)^2 + (y-2)^2 = 9" /> dan titik <InlineMath math="B(2, 6)" /> yang berada di luar lingkaran.
+
+**Langkah 1**: Tentukan persamaan garis kutub titik <InlineMath math="B(2, 6)" /> terhadap lingkaran:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(x-(-1))(2-(-1)) + (y-2)(6-2) = 9" />
+  <BlockMath math="(x+1)(3) + (y-2)(4) = 9" />
+  <BlockMath math="3x + 3 + 4y - 8 = 9" />
+  <BlockMath math="3x + 4y = 14" />
+</div>
+
+**Langkah 2**: Cari titik potong garis kutub <InlineMath math="3x + 4y = 14" /> dengan lingkaran. Dari persamaan garis, kita dapat <InlineMath math="x = \frac{14-4y}{3}" />. Substitusi ke persamaan lingkaran:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(\frac{14-4y}{3} + 1)^2 + (y-2)^2 = 9" />
+  <BlockMath math="(\frac{17-4y}{3})^2 + (y-2)^2 = 9" />
+</div>
+
+Setelah diselesaikan, kita akan mendapat dua titik singgung. Kemudian gunakan titik-titik tersebut untuk menentukan persamaan garis singgung.
+
+## Latihan
+
+1. Tentukan persamaan garis singgung lingkaran <InlineMath math="x^2 + y^2 = 25" /> di titik <InlineMath math="(3, 4)" />.
+
+2. Carilah persamaan garis singgung lingkaran <InlineMath math="x^2 + y^2 = 16" /> yang sejajar dengan garis <InlineMath math="y = 2x + 5" />.
+
+3. Tentukan persamaan garis singgung lingkaran <InlineMath math="(x-1)^2 + (y+2)^2 = 8" /> yang melalui titik <InlineMath math="(4, 2)" />.
+
+4. Sebuah lingkaran memiliki persamaan <InlineMath math="x^2 + y^2 - 4x + 6y - 3 = 0" />. Tentukan persamaan garis singgung yang tegak lurus dengan garis <InlineMath math="x + 2y = 7" />.
+
+### Kunci Jawaban
+
+1. **Penyelesaian**:
+
+   Untuk lingkaran <InlineMath math="x^2 + y^2 = 25" /> dengan pusat <InlineMath math="O(0,0)" /> dan jari-jari <InlineMath math="r = 5" />, serta titik singgung <InlineMath math="T(3,4)" />.
+   
+   Menggunakan rumus garis singgung: <InlineMath math="(x-a)(x_1-a) + (y-b)(y_1-b) = r^2" />
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="(x-0)(3-0) + (y-0)(4-0) = 25" />
+     <BlockMath math="3x + 4y = 25" />
+   </div>
+   
+   Jadi persamaan garis singgungnya adalah <InlineMath math="3x + 4y = 25" />.
+
+2. **Penyelesaian**:
+
+   Garis yang sejajar dengan <InlineMath math="y = 2x + 5" /> memiliki gradien <InlineMath math="m = 2" />.
+   
+   Untuk lingkaran <InlineMath math="x^2 + y^2 = 16" /> dengan <InlineMath math="r = 4" />, menggunakan rumus:
+   
+   <BlockMath math="y = mx \pm r\sqrt{1 + m^2}" />
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="y = 2x \pm 4\sqrt{1 + 4}" />
+     <BlockMath math="y = 2x \pm 4\sqrt{5}" />
+   </div>
+   
+   Jadi ada dua garis singgung: <InlineMath math="y = 2x + 4\sqrt{5}" /> dan <InlineMath math="y = 2x - 4\sqrt{5}" />.
+
+3. **Penyelesaian**:
+
+   Lingkaran <InlineMath math="(x-1)^2 + (y+2)^2 = 8" /> memiliki pusat <InlineMath math="(1,-2)" /> dan <InlineMath math="r^2 = 8" />.
+   
+   Persamaan garis kutub titik <InlineMath math="(4,2)" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="(x-1)(4-1) + (y-(-2))(2-(-2)) = 8" />
+     <BlockMath math="3(x-1) + 4(y+2) = 8" />
+     <BlockMath math="3x - 3 + 4y + 8 = 8" />
+     <BlockMath math="3x + 4y = 3" />
+   </div>
+   
+   Cari titik potong dengan lingkaran untuk mendapat titik-titik singgung, lalu tentukan persamaan garis singgung melalui masing-masing titik singgung dan titik <InlineMath math="(4,2)" />.
+
+4. **Penyelesaian**:
+
+   Ubah persamaan lingkaran ke bentuk standar dengan melengkapkan kuadrat:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + y^2 - 4x + 6y - 3 = 0" />
+     <BlockMath math="(x^2 - 4x + 4) + (y^2 + 6y + 9) = 3 + 4 + 9" />
+     <BlockMath math="(x-2)^2 + (y+3)^2 = 16" />
+   </div>
+   
+   Pusat <InlineMath math="(2,-3)" />, jari-jari <InlineMath math="r = 4" />.
+   
+   Garis <InlineMath math="x + 2y = 7" /> dapat ditulis <InlineMath math="y = -\frac{1}{2}x + \frac{7}{2}" />, sehingga gradiennya <InlineMath math="m_1 = -\frac{1}{2}" />.
+   
+   Garis yang tegak lurus memiliki gradien <InlineMath math="m = 2" />.
+   
+   Untuk lingkaran dengan pusat <InlineMath math="(2,-3)" />, persamaan garis singgung dengan gradien 2:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="y - (-3) = 2(x - 2) \pm 4\sqrt{1 + 4}" />
+     <BlockMath math="y + 3 = 2x - 4 \pm 4\sqrt{5}" />
+     <BlockMath math="y = 2x - 7 \pm 4\sqrt{5}" />
+   </div>
+   
+   Jadi dua garis singgung: <InlineMath math="y = 2x - 7 + 4\sqrt{5}" /> dan <InlineMath math="y = 2x - 7 - 4\sqrt{5}" />.
