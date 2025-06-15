@@ -4,3 +4,710 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Analytic Geometry",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## What is an Ellipse?
+
+Ever seen the shape of planets orbiting the sun? Or the shadow of a circle when viewed from the side? Well, shapes like those are called **ellipses**! An ellipse isn't just a "flattened" circle, but there's a cool mathematical definition behind it.
+
+So here's the thing, an ellipse is a collection of points where **the sum of distances to two specific points is always the same**. These two specific points are called **foci**. Just imagine you have two nails and a string. If you tie the string to both nails, then pull a pencil until the string is tight and draw a complete curve, the curve formed is an ellipse!
+
+<LineEquation
+  title="Basic Ellipse Concept"
+  description="Ellipse with two foci and several points showing constant sum of distances."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const a = 4;
+        const b = 2.5;
+        return {
+          x: a * Math.cos(angle),
+          y: b * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.3, -0.3, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 4, b = 2.5;
+        const c = Math.sqrt(a*a - b*b);
+        return [
+          { x: -c, y: 0, z: 0 },
+          { x: c, y: 0, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, -0.5, 0] }
+      ],
+    },
+    {
+      points: (() => {
+        const angle = Math.PI / 3;
+        const a = 4, b = 2.5;
+        return [{
+          x: a * Math.cos(angle),
+          y: b * Math.sin(angle),
+          z: 0,
+        }];
+      })(),
+      color: getColor("LIME"),
+      showPoints: true,
+      labels: [{ text: "P", at: 0, offset: [0.5, 0.3, 0] }],
+    },
+    {
+      points: (() => {
+        const angle = Math.PI / 3;
+        const a = 4, b = 2.5;
+        const c = Math.sqrt(a*a - b*b);
+        const px = a * Math.cos(angle);
+        const py = b * Math.sin(angle);
+        return [
+          { x: -c, y: 0, z: 0 },
+          { x: px, y: py, z: 0 }
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "r₁", at: 1, offset: [-1, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const angle = Math.PI / 3;
+        const a = 4, b = 2.5;
+        const c = Math.sqrt(a*a - b*b);
+        const px = a * Math.cos(angle);
+        const py = b * Math.sin(angle);
+        return [
+          { x: c, y: 0, z: 0 },
+          { x: px, y: py, z: 0 }
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "r₂", at: 0, offset: [0.5, 1, 0] }],
+    },
+    {
+      points: [
+        { x: -6, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -4, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+From the visualization above, notice point <InlineMath math="P" />. The distance from <InlineMath math="P" /> to focus <InlineMath math="F_1" /> (which we call <InlineMath math="r_1" />) plus the distance from <InlineMath math="P" /> to focus <InlineMath math="F_2" /> (which we call <InlineMath math="r_2" />) will always be the same for all points on the ellipse. This is the **fundamental characteristic of an ellipse**!
+
+## Ellipse Components
+
+Before we discuss the formulas, let's get familiar with the important parts of an ellipse. Each part has its own role in determining the shape of the ellipse.
+
+<LineEquation
+  title="Ellipse Components"
+  description="Important parts of an ellipse with horizontal major axis."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const a = 4;
+        const b = 2.8;
+        return {
+          x: a * Math.cos(angle),
+          y: b * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "Center", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 4, b = 2.8;
+        const c = Math.sqrt(a*a - b*b);
+        return [
+          { x: -c, y: 0, z: 0 },
+          { x: c, y: 0, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, -0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: "A₁", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "A₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: -2.8, z: 0 },
+        { x: 0, y: 2.8, z: 0 }
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [
+        { text: "B₁", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "B₂", at: 1, offset: [-0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("YELLOW"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Major Axis", at: 1, offset: [-1.5, -1, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: -2.8, z: 0 },
+        { x: 0, y: 2.8, z: 0 }
+      ],
+      color: getColor("PINK"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Minor Axis", at: 1, offset: [1.5, -1, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Here are the components you need to know:
+
+1. **Ellipse center** is the midpoint of the ellipse, usually written with letter <InlineMath math="O" />. All measurements in the ellipse refer to this point.
+
+2. **Foci** (<InlineMath math="F_1" /> and <InlineMath math="F_2" />) are two fixed points that serve as reference for the ellipse definition. The distance between the two foci is called the focal distance.
+
+3. **Major axis** is the longest line that passes through the ellipse center and both foci. Its endpoints are points <InlineMath math="A_1" /> and <InlineMath math="A_2" />.
+
+4. **Minor axis** is the shortest line that passes through the ellipse center and is perpendicular to the major axis. Its endpoints are points <InlineMath math="B_1" /> and <InlineMath math="B_2" />.
+
+5. **Semi-major** (<InlineMath math="a" />) is half the length of the major axis, which is the distance from center to the major axis endpoint.
+
+6. **Semi-minor** (<InlineMath math="b" />) is half the length of the minor axis, which is the distance from center to the minor axis endpoint.
+
+> Remember, in an ellipse we always have <InlineMath math="a > b" />. If <InlineMath math="a = b" />, the shape becomes a circle!
+
+## Ellipse Equations
+
+Now, let's get into the fun part: how to write an ellipse in mathematical equation form. There are several forms depending on position and orientation.
+
+### Center at Origin
+
+If the ellipse center is at <InlineMath math="O(0,0)" />, there are two possible orientations:
+
+<LineEquation
+  title="Horizontal Major Axis"
+  description={<>Ellipse <InlineMath math="\frac{x^2}{a^2} + \frac{y^2}{b^2} = 1" /> with <InlineMath math="a > b" />.</>}
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const a = 4.5;
+        const b = 3;
+        return {
+          x: a * Math.cos(angle),
+          y: b * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O(0,0)", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 4.5, b = 3;
+        const c = Math.sqrt(a*a - b*b);
+        return [
+          { x: -c, y: 0, z: 0 },
+          { x: c, y: 0, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4.5, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "a", at: 1, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "b", at: 1, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: [
+        { x: -6, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -4, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+When the major axis is parallel to the <InlineMath math="X" /> axis (horizontal), the ellipse equation is:
+
+<BlockMath math="\frac{x^2}{a^2} + \frac{y^2}{b^2} = 1" />
+
+with the condition <InlineMath math="a > b" />.
+
+<LineEquation
+  title="Vertical Major Axis"
+  description={<>Ellipse <InlineMath math="\frac{x^2}{b^2} + \frac{y^2}{a^2} = 1" /> with <InlineMath math="a > b" />.</>}
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const a = 4.5;
+        const b = 3;
+        return {
+          x: b * Math.cos(angle),
+          y: a * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O(0,0)", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 4.5, b = 3;
+        const c = Math.sqrt(a*a - b*b);
+        return [
+          { x: 0, y: -c, z: 0 },
+          { x: 0, y: c, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [0.5, -0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 }
+      ],
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "b", at: 1, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 4.5, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "a", at: 1, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+        { x: 5, y: 0, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -6, z: 0 },
+        { x: 0, y: 6, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+When the major axis is parallel to the <InlineMath math="Y" /> axis (vertical), the ellipse equation is:
+
+<BlockMath math="\frac{x^2}{b^2} + \frac{y^2}{a^2} = 1" />
+
+with the condition <InlineMath math="a > b" />.
+
+### Shifted Center
+
+If the ellipse center is not at the origin, but at point <InlineMath math="(h, k)" />, the equation becomes:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\frac{(x-h)^2}{a^2} + \frac{(y-k)^2}{b^2} = 1 \quad \text{(horizontal major axis)}" />
+  <BlockMath math="\frac{(x-h)^2}{b^2} + \frac{(y-k)^2}{a^2} = 1 \quad \text{(vertical major axis)}" />
+</div>
+
+Visualization:
+
+<LineEquation
+  title="Ellipse with Shifted Center"
+  description={<>Ellipse with center at <InlineMath math="(2, -1)" /> and horizontal major axis.</>}
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const a = 3.5;
+        const b = 2.5;
+        const h = 2, k = -1;
+        return {
+          x: h + a * Math.cos(angle),
+          y: k + b * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("SKY"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 2, y: -1, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "(2,-1)", at: 0, offset: [-0.8, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 3.5, b = 2.5;
+        const c = Math.sqrt(a*a - b*b);
+        const h = 2, k = -1;
+        return [
+          { x: h - c, y: k, z: 0 },
+          { x: h + c, y: k, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: 2, y: -1, z: 0 },
+        { x: 5.5, y: -1, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "a", at: 1, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 2, y: -1, z: 0 },
+        { x: 2, y: 1.5, z: 0 }
+      ],
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "b", at: 1, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 7, y: 0, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -5, z: 0 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Important Relationships
+
+There's a formula that always applies to every ellipse:
+
+<BlockMath math="c^2 = a^2 - b^2" />
+
+where <InlineMath math="c" /> is the distance from center to focus.
+
+**Eccentricity** of an ellipse is defined as:
+
+<BlockMath math="e = \frac{c}{a}" />
+
+The eccentricity value of an ellipse is always <InlineMath math="0 < e < 1" />. The closer to <InlineMath math="0" />, the more circular the ellipse becomes. The closer to <InlineMath math="1" />, the more elongated the ellipse becomes.
+
+## Example Problems
+
+Now let's see how to use ellipse concepts to solve problems.
+
+**Example 1**: Find the equation of an ellipse with center at <InlineMath math="(0,0)" />, foci at <InlineMath math="(\pm 4, 0)" />, and major axis length <InlineMath math="10" />.
+
+**Solution**:
+
+Given:
+- Center at <InlineMath math="(0,0)" />
+- Foci at <InlineMath math="(\pm 4, 0)" />, so <InlineMath math="c = 4" />
+- Major axis length = <InlineMath math="10" />, so <InlineMath math="2a = 10" />, thus <InlineMath math="a = 5" />
+
+Using the formula <InlineMath math="c^2 = a^2 - b^2" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4^2 = 5^2 - b^2" />
+  <BlockMath math="16 = 25 - b^2" />
+  <BlockMath math="b^2 = 9" />
+  <BlockMath math="b = 3" />
+</div>
+
+Since the foci are on the <InlineMath math="X" /> axis, the major axis is horizontal. The ellipse equation:
+
+<BlockMath math="\frac{x^2}{25} + \frac{y^2}{9} = 1" />
+
+**Example 2**: Given ellipse <InlineMath math="\frac{(x-1)^2}{16} + \frac{(y+2)^2}{9} = 1" />. Find the center, foci, and eccentricity of the ellipse.
+
+**Solution**:
+
+From the equation <InlineMath math="\frac{(x-1)^2}{16} + \frac{(y+2)^2}{9} = 1" />:
+- Center: <InlineMath math="(h,k) = (1, -2)" />
+- <InlineMath math="a^2 = 16" />, so <InlineMath math="a = 4" />
+- <InlineMath math="b^2 = 9" />, so <InlineMath math="b = 3" />
+
+Since <InlineMath math="a^2 = 16 > b^2 = 9" />, the major axis is horizontal.
+
+Calculate <InlineMath math="c" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="c^2 = a^2 - b^2 = 16 - 9 = 7" />
+  <BlockMath math="c = \sqrt{7}" />
+</div>
+
+The foci are located at <InlineMath math="(h \pm c, k) = (1 \pm \sqrt{7}, -2)" />.
+
+Eccentricity:
+
+<BlockMath math="e = \frac{c}{a} = \frac{\sqrt{7}}{4}" />
+
+## Exercises
+
+1. Find the equation of an ellipse with center at <InlineMath math="(0,0)" />, major axis length <InlineMath math="12" /> and minor axis length <InlineMath math="8" />, with horizontal major axis.
+
+2. Given ellipse <InlineMath math="\frac{x^2}{25} + \frac{y^2}{16} = 1" />. Find the coordinates of the foci and the eccentricity of the ellipse.
+
+3. An ellipse has center at <InlineMath math="(3, -1)" />, foci at <InlineMath math="(3, 2)" /> and <InlineMath math="(3, -4)" />, and minor axis length <InlineMath math="6" />. Find the equation of the ellipse.
+
+4. Find the equation of an ellipse that passes through points <InlineMath math="(4, 3)" /> and <InlineMath math="(6, 2)" /> with center at <InlineMath math="(0, 0)" /> and horizontal major axis.
+
+### Answer Key
+
+1. **Solution**:
+
+   Given:
+   - Center at <InlineMath math="(0,0)" />
+   - Major axis length = <InlineMath math="12" />, so <InlineMath math="2a = 12" />, thus <InlineMath math="a = 6" />
+   - Minor axis length = <InlineMath math="8" />, so <InlineMath math="2b = 8" />, thus <InlineMath math="b = 4" />
+   - Horizontal major axis
+   
+   Ellipse equation with horizontal major axis:
+   
+   <BlockMath math="\frac{x^2}{a^2} + \frac{y^2}{b^2} = 1" />
+   
+   Substituting values <InlineMath math="a = 6" /> and <InlineMath math="b = 4" />:
+   
+   <BlockMath math="\frac{x^2}{36} + \frac{y^2}{16} = 1" />
+
+2. **Solution**:
+
+   From equation <InlineMath math="\frac{x^2}{25} + \frac{y^2}{16} = 1" />:
+   - <InlineMath math="a^2 = 25" />, so <InlineMath math="a = 5" />
+   - <InlineMath math="b^2 = 16" />, so <InlineMath math="b = 4" />
+   
+   Since <InlineMath math="a^2 > b^2" />, the major axis is horizontal.
+   
+   Calculate <InlineMath math="c" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="c^2 = a^2 - b^2 = 25 - 16 = 9" />
+     <BlockMath math="c = 3" />
+   </div>
+   
+   Foci coordinates: <InlineMath math="(\pm 3, 0)" /> which are <InlineMath math="(-3, 0)" /> and <InlineMath math="(3, 0)" />
+   
+   Eccentricity:
+   
+   <BlockMath math="e = \frac{c}{a} = \frac{3}{5} = 0{.}6" />
+
+3. **Solution**:
+
+   Given:
+   - Center: <InlineMath math="(3, -1)" />
+   - Foci: <InlineMath math="(3, 2)" /> and <InlineMath math="(3, -4)" />
+   - Minor axis length = <InlineMath math="6" />, so <InlineMath math="2b = 6" />, thus <InlineMath math="b = 3" />
+   
+   Since the foci have the same <InlineMath math="x" /> coordinate (<InlineMath math="x = 3" />), the major axis is vertical.
+   
+   <BlockMath math="\text{Distance between foci} = |2 - (-4)| = 6" />
+   
+   so <InlineMath math="2c = 6" />, thus <InlineMath math="c = 3" />
+   
+   Calculate <InlineMath math="a" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="c^2 = a^2 - b^2" />
+     <BlockMath math="9 = a^2 - 9" />
+     <BlockMath math="a^2 = 18" />
+     <BlockMath math="a = 3\sqrt{2}" />
+   </div>
+   
+   Ellipse equation with center <InlineMath math="(h,k) = (3,-1)" /> and vertical major axis:
+   
+   <BlockMath math="\frac{(x-3)^2}{9} + \frac{(y+1)^2}{18} = 1" />
+
+4. **Solution**:
+
+   An ellipse with center <InlineMath math="(0,0)" /> and horizontal major axis has the equation:
+   
+   <BlockMath math="\frac{x^2}{a^2} + \frac{y^2}{b^2} = 1" />
+   
+   Substituting point <InlineMath math="(4,3)" />:
+   
+   <BlockMath math="\frac{16}{a^2} + \frac{9}{b^2} = 1 \quad \text{...(1)}" />
+   
+   Substituting point <InlineMath math="(6,2)" />:
+   
+   <BlockMath math="\frac{36}{a^2} + \frac{4}{b^2} = 1 \quad \text{...(2)}" />
+   
+   Let <InlineMath math="u = \frac{1}{a^2}" /> and <InlineMath math="v = \frac{1}{b^2}" />, then:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="16u + 9v = 1 \quad \text{...(1)}" />
+     <BlockMath math="36u + 4v = 1 \quad \text{...(2)}" />
+   </div>
+   
+   From equation (1): <InlineMath math="v = \frac{1-16u}{9}" />
+   
+   Substituting into equation (2):
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="36u + 4 \cdot \frac{1-16u}{9} = 1" />
+     <BlockMath math="36u + \frac{4-64u}{9} = 1" />
+     <BlockMath math="324u + 4 - 64u = 9" />
+     <BlockMath math="260u = 5" />
+     <BlockMath math="u = \frac{1}{52}" />
+   </div>
+   
+   So <InlineMath math="a^2 = 52" />
+   
+   Substituting back:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="v = \frac{1-16 \cdot \frac{1}{52}}{9} = \frac{1-\frac{16}{52}}{9} = \frac{\frac{36}{52}}{9} = \frac{4}{52} = \frac{1}{13}" />
+   </div>
+   
+   So <InlineMath math="b^2 = 13" />
+   
+   Ellipse equation: <InlineMath math="\frac{x^2}{52} + \frac{y^2}{13} = 1" />

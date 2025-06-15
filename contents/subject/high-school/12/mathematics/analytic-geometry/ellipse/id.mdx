@@ -4,3 +4,710 @@ export const metadata = {
     date: "05/26/2025",
     subject: "Geometri Analitik",
 };
+
+import { getColor } from "@/lib/utils/color";
+import { LineEquation } from "@/components/contents/line-equation";
+
+## Apa itu Elips?
+
+Pernah lihat bentuk orbit planet yang mengelilingi matahari? Atau bayangan lingkaran ketika kita lihat dari samping? Nah, bentuk-bentuk seperti itu namanya **elips**! Elips bukan cuma lingkaran yang "gepeng" aja, tapi ada definisi matematika yang keren di baliknya.
+
+Jadi gini, elips itu adalah kumpulan titik-titik yang **jumlah jaraknya ke dua titik tertentu selalu sama**. Kedua titik tertentu ini namanya **fokus**. Bayangin aja, kamu punya dua paku dan tali. Kalau tali diikat ke kedua paku, terus kamu tarik pensil sampai tali kencang dan gambar kurva lengkap, maka kurva yang terbentuk itu elips!
+
+<LineEquation
+  title="Konsep Dasar Elips"
+  description="Elips dengan dua fokus dan beberapa titik yang menunjukkan jumlah jarak yang konstan."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const a = 4;
+        const b = 2.5;
+        return {
+          x: a * Math.cos(angle),
+          y: b * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.3, -0.3, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 4, b = 2.5;
+        const c = Math.sqrt(a*a - b*b);
+        return [
+          { x: -c, y: 0, z: 0 },
+          { x: c, y: 0, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, -0.5, 0] }
+      ],
+    },
+    {
+      points: (() => {
+        const angle = Math.PI / 3;
+        const a = 4, b = 2.5;
+        return [{
+          x: a * Math.cos(angle),
+          y: b * Math.sin(angle),
+          z: 0,
+        }];
+      })(),
+      color: getColor("LIME"),
+      showPoints: true,
+      labels: [{ text: "P", at: 0, offset: [0.5, 0.3, 0] }],
+    },
+    {
+      points: (() => {
+        const angle = Math.PI / 3;
+        const a = 4, b = 2.5;
+        const c = Math.sqrt(a*a - b*b);
+        const px = a * Math.cos(angle);
+        const py = b * Math.sin(angle);
+        return [
+          { x: -c, y: 0, z: 0 },
+          { x: px, y: py, z: 0 }
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "r₁", at: 1, offset: [-1, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const angle = Math.PI / 3;
+        const a = 4, b = 2.5;
+        const c = Math.sqrt(a*a - b*b);
+        const px = a * Math.cos(angle);
+        const py = b * Math.sin(angle);
+        return [
+          { x: c, y: 0, z: 0 },
+          { x: px, y: py, z: 0 }
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "r₂", at: 0, offset: [0.5, 1, 0] }],
+    },
+    {
+      points: [
+        { x: -6, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -4, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Dari visualisasi di atas, coba perhatikan titik <InlineMath math="P" />. Jarak dari <InlineMath math="P" /> ke fokus <InlineMath math="F_1" /> (yang kita sebut <InlineMath math="r_1" />) ditambah jarak dari <InlineMath math="P" /> ke fokus <InlineMath math="F_2" /> (yang kita sebut <InlineMath math="r_2" />) akan selalu sama untuk semua titik yang ada di elips. Inilah **ciri khas elips** yang paling dasar!
+
+## Komponen Elips
+
+Sebelum kita bahas rumusnya, yuk kenalan dulu sama bagian-bagian penting dalam elips. Tiap bagian ini punya peran masing-masing dalam menentukan bentuk elipsnya.
+
+<LineEquation
+  title="Komponen Elips"
+  description="Bagian-bagian penting dalam elips dengan sumbu mayor horizontal."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const a = 4;
+        const b = 2.8;
+        return {
+          x: a * Math.cos(angle),
+          y: b * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "Pusat", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 4, b = 2.8;
+        const c = Math.sqrt(a*a - b*b);
+        return [
+          { x: -c, y: 0, z: 0 },
+          { x: c, y: 0, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, -0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: "A₁", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "A₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: -2.8, z: 0 },
+        { x: 0, y: 2.8, z: 0 }
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [
+        { text: "B₁", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "B₂", at: 1, offset: [-0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("YELLOW"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Sumbu Mayor", at: 1, offset: [-1.5, -1, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: -2.8, z: 0 },
+        { x: 0, y: 2.8, z: 0 }
+      ],
+      color: getColor("PINK"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Sumbu Minor", at: 1, offset: [1.5, -1, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Nih, komponen-komponen yang perlu kamu tau:
+
+1. **Pusat elips** adalah titik tengah elips, biasanya kita tulis dengan huruf <InlineMath math="O" />. Semua pengukuran di elips merujuk ke titik ini.
+
+2. **Fokus** (<InlineMath math="F_1" /> dan <InlineMath math="F_2" />) adalah dua titik tetap yang jadi patokan definisi elips tadi. Jarak antara kedua fokus disebut jarak fokal.
+
+3. **Sumbu mayor** adalah garis terpanjang yang lewat pusat elips dan kedua fokus. Ujung-ujungnya adalah titik <InlineMath math="A_1" /> dan <InlineMath math="A_2" />.
+
+4. **Sumbu minor** adalah garis terpendek yang lewat pusat elips dan tegak lurus sumbu mayor. Ujung-ujungnya adalah titik <InlineMath math="B_1" /> dan <InlineMath math="B_2" />.
+
+5. **Semi-mayor** (<InlineMath math="a" />) adalah setengah panjang sumbu mayor, yaitu jarak dari pusat ke ujung sumbu mayor.
+
+6. **Semi-minor** (<InlineMath math="b" />) adalah setengah panjang sumbu minor, yaitu jarak dari pusat ke ujung sumbu minor.
+
+> Ingat ya, dalam elips selalu berlaku <InlineMath math="a > b" />. Kalau <InlineMath math="a = b" />, bentuknya jadi lingkaran!
+
+## Persamaan Elips
+
+Nah, sekarang kita masuk ke bagian yang seru: gimana cara nulis elips dalam bentuk persamaan matematika. Ada beberapa bentuk tergantung posisi dan orientasinya.
+
+### Pusat di Titik Asal
+
+Kalau pusat elips ada di <InlineMath math="O(0,0)" />, ada dua kemungkinan orientasi:
+
+<LineEquation
+  title="Sumbu Mayor Horizontal"
+  description={<>Elips <InlineMath math="\frac{x^2}{a^2} + \frac{y^2}{b^2} = 1" /> dengan <InlineMath math="a > b" />.</>}
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const a = 4.5;
+        const b = 3;
+        return {
+          x: a * Math.cos(angle),
+          y: b * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O(0,0)", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 4.5, b = 3;
+        const c = Math.sqrt(a*a - b*b);
+        return [
+          { x: -c, y: 0, z: 0 },
+          { x: c, y: 0, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4.5, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "a", at: 1, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "b", at: 1, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: [
+        { x: -6, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -4, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Kalau sumbu mayor sejajar sumbu <InlineMath math="X" /> (horizontal), persamaan elipsnya:
+
+<BlockMath math="\frac{x^2}{a^2} + \frac{y^2}{b^2} = 1" />
+
+dengan syarat <InlineMath math="a > b" />.
+
+<LineEquation
+  title="Sumbu Mayor Vertikal"
+  description={<>Elips <InlineMath math="\frac{x^2}{b^2} + \frac{y^2}{a^2} = 1" /> dengan <InlineMath math="a > b" />.</>}
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const a = 4.5;
+        const b = 3;
+        return {
+          x: b * Math.cos(angle),
+          y: a * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O(0,0)", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 4.5, b = 3;
+        const c = Math.sqrt(a*a - b*b);
+        return [
+          { x: 0, y: -c, z: 0 },
+          { x: 0, y: c, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [0.5, -0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 }
+      ],
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "b", at: 1, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 4.5, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "a", at: 1, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+        { x: 5, y: 0, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -6, z: 0 },
+        { x: 0, y: 6, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Kalau sumbu mayor sejajar sumbu <InlineMath math="Y" /> (vertikal), persamaan elipsnya:
+
+<BlockMath math="\frac{x^2}{b^2} + \frac{y^2}{a^2} = 1" />
+
+dengan syarat <InlineMath math="a > b" />.
+
+### Pusat Berpindah
+
+Kalau pusat elips bukan di titik asal, tapi di titik <InlineMath math="(h, k)" />, persamaannya jadi:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\frac{(x-h)^2}{a^2} + \frac{(y-k)^2}{b^2} = 1 \quad \text{(sumbu mayor horizontal)}" />
+  <BlockMath math="\frac{(x-h)^2}{b^2} + \frac{(y-k)^2}{a^2} = 1 \quad \text{(sumbu mayor vertikal)}" />
+</div>
+
+Visualisasi:
+
+<LineEquation
+  title="Elips dengan Pusat Berpindah"
+  description={<>Elips dengan pusat di <InlineMath math="(2, -1)" /> dan sumbu mayor horizontal.</>}
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const a = 3.5;
+        const b = 2.5;
+        const h = 2, k = -1;
+        return {
+          x: h + a * Math.cos(angle),
+          y: k + b * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("SKY"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 2, y: -1, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "(2,-1)", at: 0, offset: [-0.8, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 3.5, b = 2.5;
+        const c = Math.sqrt(a*a - b*b);
+        const h = 2, k = -1;
+        return [
+          { x: h - c, y: k, z: 0 },
+          { x: h + c, y: k, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: 2, y: -1, z: 0 },
+        { x: 5.5, y: -1, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "a", at: 1, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 2, y: -1, z: 0 },
+        { x: 2, y: 1.5, z: 0 }
+      ],
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "b", at: 1, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 7, y: 0, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -5, z: 0 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Hubungan Penting
+
+Ada rumus yang selalu berlaku untuk setiap elips:
+
+<BlockMath math="c^2 = a^2 - b^2" />
+
+di mana <InlineMath math="c" /> adalah jarak dari pusat ke fokus.
+
+**Eksentrisitas** elips didefinisikan sebagai:
+
+<BlockMath math="e = \frac{c}{a}" />
+
+Nilai eksentrisitas elips selalu <InlineMath math="0 < e < 1" />. Makin mendekati <InlineMath math="0" />, elips makin bulat seperti lingkaran. Makin mendekati <InlineMath math="1" />, elips makin pipih.
+
+## Contoh Soal
+
+Sekarang kita lihat gimana cara pakai konsep elips untuk ngerjain soal.
+
+**Contoh 1**: Tentukan persamaan elips dengan pusat di <InlineMath math="(0,0)" />, fokus di <InlineMath math="(\pm 4, 0)" />, dan panjang sumbu mayor <InlineMath math="10" />.
+
+**Penyelesaian**:
+
+Yang diketahui:
+- Pusat di <InlineMath math="(0,0)" />
+- Fokus di <InlineMath math="(\pm 4, 0)" />, berarti <InlineMath math="c = 4" />
+- Panjang sumbu mayor = <InlineMath math="10" />, berarti <InlineMath math="2a = 10" />, jadi <InlineMath math="a = 5" />
+
+Pakai rumus <InlineMath math="c^2 = a^2 - b^2" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4^2 = 5^2 - b^2" />
+  <BlockMath math="16 = 25 - b^2" />
+  <BlockMath math="b^2 = 9" />
+  <BlockMath math="b = 3" />
+</div>
+
+Karena fokus ada di sumbu <InlineMath math="X" />, berarti sumbu mayor horizontal. Persamaan elips:
+
+<BlockMath math="\frac{x^2}{25} + \frac{y^2}{9} = 1" />
+
+**Contoh 2**: Diketahui elips <InlineMath math="\frac{(x-1)^2}{16} + \frac{(y+2)^2}{9} = 1" />. Tentukan pusat, fokus, dan eksentrisitas elips tersebut.
+
+**Penyelesaian**:
+
+Dari persamaan <InlineMath math="\frac{(x-1)^2}{16} + \frac{(y+2)^2}{9} = 1" />:
+- Pusat: <InlineMath math="(h,k) = (1, -2)" />
+- <InlineMath math="a^2 = 16" />, jadi <InlineMath math="a = 4" />
+- <InlineMath math="b^2 = 9" />, jadi <InlineMath math="b = 3" />
+
+Karena <InlineMath math="a^2 = 16 > b^2 = 9" />, sumbu mayor horizontal.
+
+Hitung <InlineMath math="c" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="c^2 = a^2 - b^2 = 16 - 9 = 7" />
+  <BlockMath math="c = \sqrt{7}" />
+</div>
+
+Fokus terletak di <InlineMath math="(h \pm c, k) = (1 \pm \sqrt{7}, -2)" />.
+
+Eksentrisitas:
+
+<BlockMath math="e = \frac{c}{a} = \frac{\sqrt{7}}{4}" />
+
+## Latihan
+
+1. Tentukan persamaan elips dengan pusat di <InlineMath math="(0,0)" />, sumbu mayor sepanjang <InlineMath math="12" /> dan sumbu minor sepanjang <InlineMath math="8" />, dengan sumbu mayor horizontal.
+
+2. Diketahui elips <InlineMath math="\frac{x^2}{25} + \frac{y^2}{16} = 1" />. Tentukan koordinat fokus dan eksentrisitas elips tersebut.
+
+3. Sebuah elips memiliki pusat di <InlineMath math="(3, -1)" />, fokus di <InlineMath math="(3, 2)" /> dan <InlineMath math="(3, -4)" />, serta panjang sumbu minor <InlineMath math="6" />. Tentukan persamaan elips tersebut.
+
+4. Tentukan persamaan elips yang melalui titik <InlineMath math="(4, 3)" /> dan <InlineMath math="(6, 2)" /> dengan pusat di <InlineMath math="(0, 0)" /> dan sumbu mayor horizontal.
+
+### Kunci Jawaban
+
+1. **Penyelesaian**:
+
+   Diketahui:
+   - Pusat di <InlineMath math="(0,0)" />
+   - Panjang sumbu mayor = <InlineMath math="12" />, jadi <InlineMath math="2a = 12" />, maka <InlineMath math="a = 6" />
+   - Panjang sumbu minor = <InlineMath math="8" />, jadi <InlineMath math="2b = 8" />, maka <InlineMath math="b = 4" />
+   - Sumbu mayor horizontal
+   
+   Persamaan elips dengan sumbu mayor horizontal:
+   
+   <BlockMath math="\frac{x^2}{a^2} + \frac{y^2}{b^2} = 1" />
+   
+   Substitusi nilai <InlineMath math="a = 6" /> dan <InlineMath math="b = 4" />:
+   
+   <BlockMath math="\frac{x^2}{36} + \frac{y^2}{16} = 1" />
+
+2. **Penyelesaian**:
+
+   Dari persamaan <InlineMath math="\frac{x^2}{25} + \frac{y^2}{16} = 1" />:
+   - <InlineMath math="a^2 = 25" />, jadi <InlineMath math="a = 5" />
+   - <InlineMath math="b^2 = 16" />, jadi <InlineMath math="b = 4" />
+   
+   Karena <InlineMath math="a^2 > b^2" />, sumbu mayor horizontal.
+   
+   Hitung <InlineMath math="c" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="c^2 = a^2 - b^2 = 25 - 16 = 9" />
+     <BlockMath math="c = 3" />
+   </div>
+   
+   Koordinat fokus: <InlineMath math="(\pm 3, 0)" /> yaitu <InlineMath math="(-3, 0)" /> dan <InlineMath math="(3, 0)" />
+   
+   Eksentrisitas:
+   
+   <BlockMath math="e = \frac{c}{a} = \frac{3}{5} = 0{,}6" />
+
+3. **Penyelesaian**:
+
+   Diketahui:
+   - Pusat: <InlineMath math="(3, -1)" />
+   - Fokus: <InlineMath math="(3, 2)" /> dan <InlineMath math="(3, -4)" />
+   - Panjang sumbu minor = <InlineMath math="6" />, jadi <InlineMath math="2b = 6" />, maka <InlineMath math="b = 3" />
+   
+   Karena fokus punya koordinat <InlineMath math="x" /> yang sama (<InlineMath math="x = 3" />), sumbu mayor vertikal.
+   
+   <BlockMath math="\text{Jarak antar fokus} = |2 - (-4)| = 6" />
+   
+   jadi <InlineMath math="2c = 6" />, maka <InlineMath math="c = 3" />
+   
+   Hitung <InlineMath math="a" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="c^2 = a^2 - b^2" />
+     <BlockMath math="9 = a^2 - 9" />
+     <BlockMath math="a^2 = 18" />
+     <BlockMath math="a = 3\sqrt{2}" />
+   </div>
+   
+   Persamaan elips dengan pusat <InlineMath math="(h,k) = (3,-1)" /> dan sumbu mayor vertikal:
+   
+   <BlockMath math="\frac{(x-3)^2}{9} + \frac{(y+1)^2}{18} = 1" />
+
+4. **Penyelesaian**:
+
+   Elips dengan pusat <InlineMath math="(0,0)" /> dan sumbu mayor horizontal punya persamaan:
+   
+   <BlockMath math="\frac{x^2}{a^2} + \frac{y^2}{b^2} = 1" />
+   
+   Substitusi titik <InlineMath math="(4,3)" />:
+   
+   <BlockMath math="\frac{16}{a^2} + \frac{9}{b^2} = 1 \quad \text{...(1)}" />
+   
+   Substitusi titik <InlineMath math="(6,2)" />:
+   
+   <BlockMath math="\frac{36}{a^2} + \frac{4}{b^2} = 1 \quad \text{...(2)}" />
+   
+   Misalkan <InlineMath math="u = \frac{1}{a^2}" /> dan <InlineMath math="v = \frac{1}{b^2}" />, maka:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="16u + 9v = 1 \quad \text{...(1)}" />
+     <BlockMath math="36u + 4v = 1 \quad \text{...(2)}" />
+   </div>
+   
+   Dari persamaan (1): <InlineMath math="v = \frac{1-16u}{9}" />
+   
+   Substitusi ke persamaan (2):
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="36u + 4 \cdot \frac{1-16u}{9} = 1" />
+     <BlockMath math="36u + \frac{4-64u}{9} = 1" />
+     <BlockMath math="324u + 4 - 64u = 9" />
+     <BlockMath math="260u = 5" />
+     <BlockMath math="u = \frac{1}{52}" />
+   </div>
+   
+   Maka <InlineMath math="a^2 = 52" />
+   
+   Substitusi kembali:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="v = \frac{1-16 \cdot \frac{1}{52}}{9} = \frac{1-\frac{16}{52}}{9} = \frac{\frac{36}{52}}{9} = \frac{4}{52} = \frac{1}{13}" />
+   </div>
+   
+   Maka <InlineMath math="b^2 = 13" />
+   
+   Persamaan elips: <InlineMath math="\frac{x^2}{52} + \frac{y^2}{13} = 1" />
