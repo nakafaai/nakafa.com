@@ -65,6 +65,8 @@ export async function generateMetadata({
     publisher: "PT. Nakafa Tekno Kreatif",
     referrer: "origin-when-cross-origin",
     metadataBase: new URL("https://nakafa.com"),
+    classification: t("classification"),
+    generator: "Next.js",
     alternates: {
       canonical: "https://nakafa.com",
       languages: {
