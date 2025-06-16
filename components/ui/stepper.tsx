@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Slot } from "@radix-ui/react-slot";
 import { CheckIcon, LoaderCircleIcon } from "lucide-react";
+import { Slot as SlotPrimitive } from "radix-ui";
 import * as React from "react";
 import { createContext, useContext } from "react";
 
@@ -163,7 +163,7 @@ function StepperTrigger({
   const { step, isDisabled } = useStepItem();
 
   if (asChild) {
-    const Comp = asChild ? Slot : "span";
+    const Comp = asChild ? SlotPrimitive.Slot : "span";
     return (
       <Comp data-slot="stepper-trigger" className={className}>
         {children}
