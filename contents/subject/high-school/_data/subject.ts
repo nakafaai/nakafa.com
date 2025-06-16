@@ -11,13 +11,13 @@ const subjects = [
   },
   {
     grade: ["10", "11", "12"],
-    icon: getMaterialIcon("chemistry"),
-    label: "chemistry",
+    icon: getMaterialIcon("physics"),
+    label: "physics",
   },
   {
     grade: ["10", "11", "12"],
-    icon: getMaterialIcon("physics"),
-    label: "physics",
+    icon: getMaterialIcon("chemistry"),
+    label: "chemistry",
   },
   {
     grade: ["10", "11", "12"],
@@ -29,7 +29,6 @@ const subjects = [
     icon: getMaterialIcon("geography"),
     label: "geography",
   },
-
   {
     grade: ["10", "11", "12"],
     icon: getMaterialIcon("economy"),
