@@ -39,6 +39,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
     "embla-carousel-react": "^8.6.0",
+    "feed": "^5.1.0",
     "immer": "^10.1.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.516.0",
