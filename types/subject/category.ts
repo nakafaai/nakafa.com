@@ -1,9 +1,9 @@
 import { z } from "zod/v4";
 
-export const SubjectCategory = z.enum([
+export const SubjectCategorySchema = z.enum([
   "elementary-school",
   "middle-school",
   "high-school",
   "university",
 ]);
-export type SubjectCategory = z.infer<typeof SubjectCategory>;
+export type SubjectCategory = z.infer<typeof SubjectCategorySchema>;

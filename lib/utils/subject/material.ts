@@ -1,6 +1,6 @@
 import type { SubjectCategory } from "@/types/subject/category";
 import type { Grade } from "@/types/subject/grade";
-import type { MaterialGrade, MaterialList } from "@/types/subject/material";
+import type { Material, MaterialList } from "@/types/subject/material";
 import { MaterialListSchema } from "@/types/subject/material";
 import {
   BrainCircuitIcon,
@@ -33,7 +33,7 @@ import type { Locale } from "next-intl";
 export function getMaterialPath(
   category: SubjectCategory,
   grade: Grade,
-  material: MaterialGrade
+  material: Material
 ) {
   return `/subject/${category}/${grade}/${material}` as const;
 }
@@ -69,7 +69,7 @@ export async function getMaterials(
  * @param material - The material to get the icon for.
  * @returns The icon for the material.
  */
-export function getMaterialIcon(material: MaterialGrade) {
+export function getMaterialIcon(material: Material) {
   switch (material) {
     case "mathematics":
       return PiIcon;

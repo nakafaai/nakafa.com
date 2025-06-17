@@ -3,7 +3,7 @@ import { getSlugPath as getArticleSlugPath } from "@/lib/utils/articles/slug";
 import { getContent } from "@/lib/utils/contents";
 import { getSlugPath as getSubjectSlugPath } from "@/lib/utils/subject/slug";
 import { getStaticParams } from "@/lib/utils/system";
-import type { Article, ContentTask, Subject } from "@/types/llms";
+import { ArticleSchema, type ContentTask, SubjectSchema } from "@/types/llms";
 import { Feed } from "feed";
 import { getTranslations } from "next-intl/server";
 import { NextResponse } from "next/server";
@@ -32,22 +32,35 @@ export async function GET() {
     paramNames: ["category", "slug"],
     slugParam: "slug",
     isDeep: true,
-  }) as Article[];
+  });
 
   const subjects = getStaticParams({
     basePath: "contents/subject",
     paramNames: ["category", "grade", "material", "slug"],
     slugParam: "slug",
     isDeep: true,
-  }) as Subject[];
+  });
+
+  // parse articles and subjects
+  const { data: parsedArticles } = ArticleSchema.array().safeParse(articles);
+  const { data: parsedSubjects } = SubjectSchema.array().safeParse(subjects);
+
+  if (!parsedArticles || !parsedSubjects) {
+    return new NextResponse("Internal Server Error. Please try again later.", {
+      status: 500,
+    });
+  }
 
   // Create all content fetching tasks
   const contentTasks: ContentTask[] = [];
 
   // Add article tasks
   for (const locale of locales) {
-    for (const article of articles) {
-      const filePath = getArticleSlugPath(article.category, article.slug);
+    for (const article of parsedArticles) {
+      const filePath = getArticleSlugPath(
+        article.category,
+        article.slug.join("/")
+      );
       contentTasks.push({
         locale,
         filePath,
@@ -58,7 +71,7 @@ export async function GET() {
 
   // Add subject tasks
   for (const locale of locales) {
-    for (const subject of subjects) {
+    for (const subject of parsedSubjects) {
       const filePath = getSubjectSlugPath(
         subject.category,
         subject.grade,

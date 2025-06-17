@@ -1,7 +1,7 @@
 import type { ContentPagination } from "@/types/content";
 import type { SubjectCategory } from "@/types/subject/category";
 import type { Grade } from "@/types/subject/grade";
-import type { MaterialGrade, MaterialList } from "@/types/subject/material";
+import type { Material, MaterialList } from "@/types/subject/material";
 
 /**
  * Gets the path to a subject material based on its category, grade, material, and slug.
@@ -14,7 +14,7 @@ import type { MaterialGrade, MaterialList } from "@/types/subject/material";
 export function getSlugPath(
   category: SubjectCategory,
   grade: Grade,
-  material: MaterialGrade,
+  material: Material,
   slug: string[]
 ) {
   return `/subject/${category}/${grade}/${material}/${slug.join("/")}` as const;

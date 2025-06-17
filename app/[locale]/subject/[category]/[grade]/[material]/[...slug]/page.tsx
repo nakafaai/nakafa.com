@@ -27,7 +27,7 @@ import { getMaterialsPagination, getSlugPath } from "@/lib/utils/subject/slug";
 import { getStaticParams } from "@/lib/utils/system";
 import type { SubjectCategory } from "@/types/subject/category";
 import type { Grade } from "@/types/subject/grade";
-import type { MaterialGrade } from "@/types/subject/material";
+import type { Material } from "@/types/subject/material";
 import { formatISO } from "date-fns";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
@@ -40,7 +40,7 @@ type Params = {
   locale: Locale;
   category: SubjectCategory;
   grade: Grade;
-  material: MaterialGrade;
+  material: Material;
   slug: string[];
 };
 

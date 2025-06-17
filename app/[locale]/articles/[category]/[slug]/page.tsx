@@ -26,7 +26,11 @@ import { notFound } from "next/navigation";
 export const revalidate = false;
 
 type Props = {
-  params: Promise<{ locale: Locale; category: ArticleCategory; slug: string }>;
+  params: Promise<{
+    locale: Locale;
+    category: ArticleCategory;
+    slug: string;
+  }>;
 };
 
 export async function generateMetadata({

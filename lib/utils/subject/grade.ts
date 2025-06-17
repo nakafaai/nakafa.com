@@ -1,6 +1,6 @@
 import type { SubjectCategory } from "@/types/subject/category";
 import { type Grade, nonNumericGradeSchema } from "@/types/subject/grade";
-import type { MaterialGrade } from "@/types/subject/material";
+import type { Material } from "@/types/subject/material";
 import type { LucideIcon } from "lucide-react";
 import { getCategoryPath } from "./category";
 
@@ -41,7 +41,7 @@ export async function getGradeSubjects(
 ): Promise<
   {
     icon: LucideIcon;
-    label: MaterialGrade;
+    label: Material;
     href: string;
   }[]
 > {

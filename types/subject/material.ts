@@ -43,4 +43,4 @@ export const MaterialSchema = z.union([
   MaterialHighSchoolSchema,
   MaterialBachelorSchema,
 ]);
-export type MaterialGrade = z.infer<typeof MaterialSchema>;
+export type Material = z.infer<typeof MaterialSchema>;

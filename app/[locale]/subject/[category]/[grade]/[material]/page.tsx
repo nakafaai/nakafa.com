@@ -24,7 +24,7 @@ import {
 import { getStaticParams } from "@/lib/utils/system";
 import type { SubjectCategory } from "@/types/subject/category";
 import type { Grade } from "@/types/subject/grade";
-import type { MaterialGrade } from "@/types/subject/material";
+import type { Material } from "@/types/subject/material";
 import type { ParsedHeading } from "@/types/toc";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
@@ -36,7 +36,7 @@ type Params = {
   locale: Locale;
   category: SubjectCategory;
   grade: Grade;
-  material: MaterialGrade;
+  material: Material;
 };
 
 type Props = {

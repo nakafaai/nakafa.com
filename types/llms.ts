@@ -1,23 +1,27 @@
-import type { routing } from "@/i18n/routing";
-import type { ArticleCategory } from "./articles/category";
-import type { SubjectCategory } from "./subject/category";
-import type { Grade } from "./subject/grade";
-import type { MaterialGrade } from "./subject/material";
+import { routing } from "@/i18n/routing";
+import { z } from "zod/v4";
+import { ArticleCategorySchema } from "./articles/category";
+import { SubjectCategorySchema } from "./subject/category";
+import { gradeSchema } from "./subject/grade";
+import { MaterialSchema } from "./subject/material";
 
-export type Article = {
-  category: ArticleCategory;
-  slug: string;
-};
+export const ArticleSchema = z.object({
+  category: ArticleCategorySchema,
+  slug: z.array(z.string()),
+});
+export type Article = z.infer<typeof ArticleSchema>;
 
-export type Subject = {
-  category: SubjectCategory;
-  grade: Grade;
-  material: MaterialGrade;
-  slug: string[];
-};
+export const SubjectSchema = z.object({
+  category: SubjectCategorySchema,
+  grade: gradeSchema,
+  material: MaterialSchema,
+  slug: z.array(z.string()),
+});
+export type Subject = z.infer<typeof SubjectSchema>;
 
-export type ContentTask = {
-  locale: (typeof routing.locales)[number];
-  filePath: string;
-  section: string;
-};
+export const ContentTaskSchema = z.object({
+  locale: z.enum(routing.locales),
+  filePath: z.string(),
+  section: z.string(),
+});
+export type ContentTask = z.infer<typeof ContentTaskSchema>;
