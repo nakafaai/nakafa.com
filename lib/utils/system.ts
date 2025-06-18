@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ContentMetadataSchema } from "@/types/content";
+import { type ContentMetadata, ContentMetadataSchema } from "@/types/content";
 import { getTranslations } from "next-intl/server";
 
 /**
@@ -188,7 +188,7 @@ export function getStaticParams(
 export async function getMetadataFromSlug(
   locale: string,
   slug: string[]
-): Promise<{ title: string; description: string }> {
+): Promise<ContentMetadata> {
   const [tCommon, tMetadata] = await Promise.all([
     getTranslations("Common"),
     getTranslations("Metadata"),
@@ -208,12 +208,14 @@ export async function getMetadataFromSlug(
     const description =
       parsed.description || parsed.subject || tMetadata("short-description");
 
-    return { title, description };
+    return { ...parsed, title, description };
   } catch {
     // Return default values if there's an error
     return {
       title: defaultTitle,
       description: tMetadata("short-description"),
+      authors: [{ name: "Nakafa" }],
+      date: "",
     };
   }
 }
