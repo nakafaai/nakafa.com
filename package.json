@@ -42,7 +42,7 @@
     "feed": "^5.1.0",
     "immer": "^10.1.1",
     "input-otp": "^1.4.2",
-    "lucide-react": "^0.517.0",
+    "lucide-react": "^0.518.0",
     "motion": "^12.18.1",
     "next": "^15.3.4",
     "next-intl": "^4.1.0",
