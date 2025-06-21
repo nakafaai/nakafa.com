@@ -14,7 +14,6 @@ import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
-import type { ParsedHeading } from "@/types/toc";
 import {
   getGradeNonNumeric,
   getGradePath,
@@ -27,6 +26,7 @@ import {
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import type { Material } from "@repo/contents/_types/subject/material";
+import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
@@ -92,7 +92,7 @@ export async function generateMetadata({
 
 export function generateStaticParams() {
   return getStaticParams({
-    basePath: "@repo/contents/subject",
+    basePath: "subject",
     paramNames: ["category", "grade", "material"],
   });
 }

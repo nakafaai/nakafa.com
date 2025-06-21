@@ -10,7 +10,6 @@ import {
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getHeadings } from "@/lib/utils/markdown";
-import { getRawContent } from "@/lib/utils/markdown";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
 import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
@@ -23,7 +22,7 @@ import {
   getMaterialsPagination,
   getSlugPath,
 } from "@repo/contents/_lib/subject/slug";
-import { getContent } from "@repo/contents/_lib/utils";
+import { getContent, getRawContent } from "@repo/contents/_lib/utils";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import type { Material } from "@repo/contents/_types/subject/material";
@@ -112,7 +111,7 @@ export async function generateMetadata({
 
 export function generateStaticParams() {
   return getStaticParams({
-    basePath: "@repo/contents/subject",
+    basePath: "subject",
     paramNames: ["category", "grade", "material", "slug"],
     slugParam: "slug",
     isDeep: true,

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 export function generateStaticParams() {
   return getStaticParams({
-    basePath: "@repo/contents/subject",
+    basePath: "subject",
     paramNames: ["category"],
   });
 }

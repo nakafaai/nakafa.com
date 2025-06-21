@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export function generateStaticParams() {
   return getStaticParams({
-    basePath: "@repo/contents/subject",
+    basePath: "subject",
     paramNames: ["category", "grade"],
   });
 }

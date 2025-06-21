@@ -72,8 +72,6 @@ export function getStaticParams(
   const firstParam = paramNames[0];
   const firstLevelFolders = getFolderChildNames(basePath);
 
-  console.log(firstLevelFolders);
-
   if (paramNames.length === 1) {
     // Simple case: just return the first level folder names
     return firstLevelFolders.map((folder) => ({ [firstParam]: folder }));

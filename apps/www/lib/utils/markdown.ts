@@ -1,22 +1,7 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import type { ParsedHeading } from "@/types/toc";
+import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { Children } from "react";
 import type { ReactNode } from "react";
-
-/**
- * Reads the raw content of a file, use app/[locale] as the base path.
- * @param path - The path to the file.
- * @returns The raw content of the file.
- */
-export async function getRawContent(filePath: string): Promise<string> {
-  return fs
-    .readFile(path.join(process.cwd(), "contents", filePath), "utf8")
-    .catch(() => {
-      return "";
-    });
-}
 
 /**
  * Parses the headings from the content.

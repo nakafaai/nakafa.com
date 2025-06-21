@@ -1,4 +1,4 @@
-import type { ParsedHeading } from "@/types/toc";
+import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 
 export function extractAllHeadingIds(headings: ParsedHeading[]): string[] {

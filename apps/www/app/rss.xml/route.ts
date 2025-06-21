@@ -28,14 +28,14 @@ export async function GET() {
 
   // Get all static params
   const articles = getStaticParams({
-    basePath: "@repo/contents/articles",
+    basePath: "articles",
     paramNames: ["category", "slug"],
     slugParam: "slug",
     isDeep: true,
   });
 
   const subjects = getStaticParams({
-    basePath: "@repo/contents/subject",
+    basePath: "subject",
     paramNames: ["category", "grade", "material", "slug"],
     slugParam: "slug",
     isDeep: true,

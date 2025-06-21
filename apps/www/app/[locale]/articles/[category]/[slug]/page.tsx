@@ -6,12 +6,12 @@ import {
 } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
-import { getHeadings, getRawContent } from "@/lib/utils/markdown";
+import { getHeadings } from "@/lib/utils/markdown";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
 import { getCategoryIcon } from "@repo/contents/_lib/articles/category";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
-import { getContent } from "@repo/contents/_lib/utils";
+import { getContent, getRawContent } from "@repo/contents/_lib/utils";
 import { getReferences } from "@repo/contents/_lib/utils";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
@@ -90,7 +90,7 @@ export async function generateMetadata({
 // Generate bottom-up static params
 export function generateStaticParams() {
   return getStaticParams({
-    basePath: "@repo/contents/articles",
+    basePath: "articles",
     paramNames: ["category", "slug"],
   });
 }

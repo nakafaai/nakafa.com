@@ -1,7 +1,7 @@
 "use client";
 
 import { TocProvider, useToc } from "@/lib/context/use-toc";
-import type { ParsedHeading } from "@/types/toc";
+import type { ParsedHeading } from "@repo/contents/_types/toc";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,

@@ -1,7 +1,6 @@
 import { getRawGithubUrl } from "@/lib/utils/github";
-import { getRawContent } from "@/lib/utils/markdown";
 import { getNestedSlugs } from "@/lib/utils/system";
-import { getFolderChildNames } from "@repo/contents/_lib/utils";
+import { getFolderChildNames, getRawContent } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
@@ -54,7 +53,7 @@ export async function GET(
 
 export function generateStaticParams() {
   // Top level directories in contents
-  const topDirs = getFolderChildNames("contents");
+  const topDirs = getFolderChildNames(".");
   const result: { slug: string[] }[] = [];
   const locales = routing.locales;
 
@@ -63,7 +62,7 @@ export function generateStaticParams() {
     // For each top directory (articles, subject, etc)
     for (const topDir of topDirs) {
       // Get all nested paths starting from this folder
-      const nestedPaths = getNestedSlugs(`contents/${topDir}`);
+      const nestedPaths = getNestedSlugs(topDir);
 
       // Add the top-level folder itself
       result.push({

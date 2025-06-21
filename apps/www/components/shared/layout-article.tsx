@@ -1,4 +1,4 @@
-import type { ParsedHeading } from "@/types/toc";
+import type { ParsedHeading } from "@repo/contents/_types/toc";
 import type { ComponentProps, ReactNode } from "react";
 import { FooterContent } from "./footer-content";
 import { HeaderContent } from "./header-content";

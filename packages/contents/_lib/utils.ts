@@ -1,5 +1,7 @@
 import fs from "node:fs";
+import { promises as fsPromises } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { ContentMetadata } from "@repo/contents/_types/content";
 import {
   ContentMetadataSchema,
@@ -7,6 +9,32 @@ import {
 } from "@repo/contents/_types/content";
 import type { Locale } from "next-intl";
 import type { ComponentType } from "react";
+
+// Get the directory where this file is located and resolve to contents directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const contentsDir = path.resolve(__dirname, "..");
+
+/**
+ * Reads the raw content of a file from the contents directory.
+ * @param filePath - The path to the file relative to the contents directory.
+ * @returns The raw content of the file.
+ */
+export async function getRawContent(filePath: string): Promise<string> {
+  try {
+    // Strip leading slash if present for consistency
+    const cleanPath = filePath.startsWith("/")
+      ? filePath.substring(1)
+      : filePath;
+
+    // Resolve path relative to the contents directory
+    const fullPath = path.resolve(contentsDir, cleanPath);
+
+    return await fsPromises.readFile(fullPath, "utf8");
+  } catch {
+    return "";
+  }
+}
 
 /**
  * Gets the content for a specific file path.
@@ -76,8 +104,8 @@ export function getFolderChildNames(folder: string, exclude?: string[]) {
     : defaultExclude;
 
   try {
-    // For more reliable path resolution during both build and development
-    const contentDir = path.join(process.cwd(), folder);
+    // Resolve path relative to the contents directory instead of process.cwd()
+    const contentDir = path.resolve(contentsDir, folder);
 
     // Read directory synchronously - required for Next.js static generation
     const files = fs.readdirSync(contentDir, { withFileTypes: true });
