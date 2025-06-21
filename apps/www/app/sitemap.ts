@@ -1,5 +1,4 @@
-import fs from "node:fs";
-import path from "node:path";
+import { getFolderChildNames } from "@repo/contents/_lib/utils";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import type { MetadataRoute } from "next";
@@ -10,31 +9,16 @@ const host = "https://nakafa.com";
 
 export const baseRoutes = ["/search", "/contributor"];
 
-// Regex pattern for catch-all routes like [...rest]
-const catchAllPattern = /^\[\.{3}.*\]$/;
-
 // Function to recursively get all directories
 export function getAllRoutes(basePath = "", currentPath = ""): string[] {
-  const fullPath = path.join(process.cwd(), "contents", currentPath);
-
-  if (!fs.existsSync(fullPath)) {
-    return [];
-  }
-
-  const entries = fs.readdirSync(fullPath, { withFileTypes: true });
+  const children = getFolderChildNames(currentPath || ".");
 
   let routes = currentPath ? [`/${currentPath.replace(/\\/g, "/")}`] : ["/"];
 
-  for (const entry of entries) {
-    if (
-      entry.isDirectory() &&
-      !entry.name.startsWith("_") &&
-      !catchAllPattern.test(entry.name)
-    ) {
-      const childPath = path.join(currentPath, entry.name);
-      const childRoutes = getAllRoutes(basePath, childPath);
-      routes = [...routes, ...childRoutes];
-    }
+  for (const child of children) {
+    const childPath = currentPath ? `${currentPath}/${child}` : child;
+    const childRoutes = getAllRoutes(basePath, childPath);
+    routes = [...routes, ...childRoutes];
   }
 
   return routes;

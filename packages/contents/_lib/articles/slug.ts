@@ -32,7 +32,7 @@ export async function getArticles(
   }
 
   // Get all article directories under the specified category using the utility function
-  const slugs = getFolderChildNames(`contents/articles/${categoryName}`);
+  const slugs = getFolderChildNames(`articles/${categoryName}`);
 
   // Process the article data in a single pass
   const articles = await Promise.all(
