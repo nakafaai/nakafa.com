@@ -1,0 +1,455 @@
+export const metadata = {
+  title: "Sudut Pusat pada Juring",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Busur dan Juring Lingkaran",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Konsep Sudut Pusat pada Juring
+
+Sudut pusat pada juring adalah sudut yang dibentuk oleh dua jari-jari lingkaran yang membatasi sebuah juring. Bayangkan seperti sudut yang terbentuk ketika kita membuka kipas atau memotong kue menjadi beberapa bagian. Sudut ini memiliki titik puncak di pusat lingkaran dan kedua kakinya adalah jari-jari yang menuju ke tepi lingkaran.
+
+Sudut pusat memiliki peran khusus dalam menentukan ukuran juring. Semakin besar sudut pusat, semakin luas juring yang terbentuk. Sebaliknya, sudut pusat yang kecil akan menghasilkan juring yang sempit. Hubungan ini membuat sudut pusat menjadi kunci utama dalam perhitungan luas dan aplikasi juring.
+
+<LineEquation
+  title={<>Sudut Pusat yang Membentuk Juring</>}
+  description="Sudut pusat ditunjukkan dengan vertex di pusat O dan dua jari-jari sebagai kaki sudut."
+  data={[
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = (i / 100) * 2 * Math.PI;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: true
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      lineWidth: 3,
+      labels: [
+        { text: "O", at: 0, offset: [-0.4, -0.4, 0] },
+        { text: "A", at: 1, offset: [0.3, 0.2, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(5 * Math.PI / 6), y: 4 * Math.sin(5 * Math.PI / 6), z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      lineWidth: 3,
+      labels: [
+        { text: "B", at: 1, offset: [-0.3, 0.2, 0] }
+      ]
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const angle = Math.PI / 6 + (i / 40) * (2 * Math.PI / 3);
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        { text: "Juring", at: 20, offset: [-0.8, 0.6, 0] }
+      ]
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const angle = Math.PI / 6 + (i / 20) * (2 * Math.PI / 3);
+        const radius = 1.5;
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 2,
+      labels: [
+        { text: "α", at: 10, offset: [0.5, 0.5, 0] }
+      ]
+    }
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Sifat Sudut Pusat dalam Juring
+
+Sudut pusat pada juring memiliki karakteristik yang membedakannya dari sudut lainnya:
+
+- **Kedua kaki sudut**: Selalu berupa jari-jari lingkaran yang memiliki panjang sama
+- **Titik puncak sudut**: Selalu berada tepat di pusat lingkaran  
+- **Proporsi terhadap lingkaran**: Besar sudut pusat menentukan proporsi juring terhadap keseluruhan lingkaran
+
+Dalam satu lingkaran, jika terdapat beberapa juring dengan sudut pusat yang sama, maka luas juring tersebut juga akan sama. Hal ini terjadi karena luas juring berbanding lurus dengan besar sudut pusat. Sifat ini sangat berguna dalam pembagian lingkaran menjadi bagian-bagian yang sama besar.
+
+## Hubungan Sudut Pusat dengan Luas Juring
+
+Hubungan antara sudut pusat dan luas juring dapat dinyatakan dalam bentuk perbandingan matematika. Terdapat dua rumus utama yang digunakan:
+
+**Untuk sudut dalam derajat:**
+
+<BlockMath math="L = \frac{\theta}{360°} \times \pi r^2" />
+
+**Untuk sudut dalam radian:**
+
+<BlockMath math="L = \frac{1}{2} \theta r^2" />
+
+dimana:
+- <InlineMath math="L" /> = luas juring
+- <InlineMath math="\theta" /> = sudut pusat
+- <InlineMath math="r" /> = jari-jari lingkaran
+
+Perbandingan ini menunjukkan bahwa luas juring sebanding dengan besar sudut pusat. Ketika sudut pusat digandakan, luas juring juga akan menjadi dua kali lipat. Begitu pula sebaliknya, jika sudut pusat dibagi dua, luas juring akan menjadi setengahnya.
+
+<LineEquation
+  title={<>Perbandingan Sudut Pusat pada Juring Berbeda</>}
+  description="Visualisasi juring dengan sudut pusat 45°, 90°, dan 135° menunjukkan hubungan proporsional."
+  data={[
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = (i / 100) * 2 * Math.PI;
+        return {
+          x: 3.5 * Math.cos(angle),
+          y: 3.5 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: true
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3.5, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      lineWidth: 2,
+      labels: [
+        { text: "O", at: 0, offset: [-0.3, -0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3.5 * Math.cos(Math.PI / 4), y: 3.5 * Math.sin(Math.PI / 4), z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      lineWidth: 2
+    },
+    {
+      points: Array.from({ length: 16 }, (_, i) => {
+        const angle = (i / 15) * (Math.PI / 4);
+        return {
+          x: 3.5 * Math.cos(angle),
+          y: 3.5 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 3,
+      labels: [
+        { text: "45°", at: 7, offset: [0.4, 0.2, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 2 },
+        { x: 3.5 * Math.cos(Math.PI / 2), y: 3.5 * Math.sin(Math.PI / 2), z: 2 }
+      ],
+      color: getColor("INDIGO"),
+      showPoints: false,
+      lineWidth: 2
+    },
+    {
+      points: Array.from({ length: 26 }, (_, i) => {
+        const angle = (i / 25) * (Math.PI / 2);
+        return {
+          x: 3.5 * Math.cos(angle),
+          y: 3.5 * Math.sin(angle),
+          z: 2
+        };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 3,
+      labels: [
+        { text: "90°", at: 12, offset: [0.2, 0.4, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 4 },
+        { x: 3.5 * Math.cos(3 * Math.PI / 4), y: 3.5 * Math.sin(3 * Math.PI / 4), z: 4 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      lineWidth: 2
+    },
+    {
+      points: Array.from({ length: 36 }, (_, i) => {
+        const angle = (i / 35) * (3 * Math.PI / 4);
+        return {
+          x: 3.5 * Math.cos(angle),
+          y: 3.5 * Math.sin(angle),
+          z: 4
+        };
+      }),
+      color: getColor("FUCHSIA"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 3,
+      labels: [
+        { text: "135°", at: 17, offset: [-0.2, 0.4, 0] }
+      ]
+    }
+  ]}
+  cameraPosition={[8, 6, 8]}
+  showZAxis={true}
+/>
+
+## Pengukuran dan Identifikasi Sudut Pusat
+
+Mengidentifikasi sudut pusat pada juring memerlukan kemampuan mengenali ciri khas geometrisnya. Sudut pusat selalu memiliki vertex tepat di pusat lingkaran dan kedua kakinya berupa jari-jari yang sama panjang. Berbeda dengan sudut keliling yang vertexnya berada di circumference, sudut pusat memiliki posisi sentral yang memberikan kontrol penuh terhadap pembentukan juring.
+
+**Metode pengukuran sudut pusat:**
+
+- **Menggunakan busur derajat**: Letakkan titik pusat busur tepat di pusat lingkaran, pastikan garis dasar busur sejajar dengan salah satu jari-jari, kemudian baca skala pada posisi jari-jari kedua
+- **Perhitungan matematis**: Menggunakan rumus-rumus yang akan dijelaskan di bagian selanjutnya
+- **Pembagian lingkaran**: Membagi 360° dengan jumlah bagian yang sama
+
+Metode pengukuran ini memungkinkan kita mengidentifikasi besar sudut pusat dengan akurat, yang kemudian dapat digunakan untuk menghitung luas juring atau panjang busur yang sesuai.
+
+<LineEquation
+  title={<>Teknik Pengukuran Sudut Pusat</>}
+  description="Demonstrasi pengukuran sudut pusat 60° dengan jari-jari pembatas yang jelas."
+  data={[
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = (i / 100) * 2 * Math.PI;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: true
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      lineWidth: 3,
+      labels: [
+        { text: "O", at: 0, offset: [-0.3, -0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3 * Math.cos(Math.PI / 3), y: 3 * Math.sin(Math.PI / 3), z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      lineWidth: 3
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const angle = (i / 20) * (Math.PI / 3);
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        { text: "Busur", at: 10, offset: [1, 0.5, 0] }
+      ]
+    },
+    {
+      points: Array.from({ length: 11 }, (_, i) => {
+        const angle = (i / 10) * (Math.PI / 3);
+        const radius = 1.2;
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 2,
+      labels: [
+        { text: "60°", at: 5, offset: [0.5, 0.5, 0] }
+      ]
+    }
+  ]}
+  cameraPosition={[0, 0, 8]}
+  showZAxis={false}
+/>
+
+## Teorema Sudut Pusat dan Busur
+
+Teorema fundamental sudut pusat menyatakan hubungan langsung antara sudut pusat dan busur:
+
+**Teorema utama:**
+- Besar sudut pusat sama dengan besar busur yang dihadapinya
+- Jika sudut pusat berukuran <InlineMath math="\alpha" /> derajat, maka busur yang dibentuknya juga berukuran <InlineMath math="\alpha" /> derajat
+
+**Sifat-sifat penting:**
+
+- Dalam lingkaran yang sama, sudut pusat yang kongruen menghasilkan busur dan juring yang kongruen pula
+- Jika dua juring memiliki luas yang sama, maka sudut pusat yang membentuknya pasti sama besar
+- Operasi matematis pada sudut pusat mengikuti pola yang sama dengan busur yang dibentuk
+
+Teorema ini menjadi dasar dalam semua perhitungan yang melibatkan hubungan antara sudut pusat, busur, dan luas juring dalam geometri lingkaran.
+
+## Perhitungan Sudut Pusat dari Informasi Juring
+
+Menentukan besar sudut pusat dapat dilakukan melalui berbagai informasi yang diketahui tentang juring:
+
+**1. Dari luas juring dan jari-jari:**
+
+<BlockMath math="\alpha = \frac{360° \times L}{\pi r^2}" />
+
+**2. Dari panjang busur dan jari-jari:**
+
+<BlockMath math="\alpha = \frac{180° \times s}{\pi r}" />
+
+**3. Dari pembagian lingkaran sama rata:**
+
+<BlockMath math="\alpha = \frac{360°}{n}" />
+
+dimana:
+- <InlineMath math="\alpha" /> = sudut pusat (dalam derajat)
+- <InlineMath math="L" /> = luas juring
+- <InlineMath math="s" /> = panjang busur
+- <InlineMath math="r" /> = jari-jari lingkaran
+- <InlineMath math="n" /> = jumlah bagian pembagian
+
+Ketiga rumus ini memberikan fleksibilitas dalam menyelesaikan berbagai jenis soal geometri lingkaran, tergantung pada informasi yang tersedia.
+
+<LineEquation
+  title={<>Ilustrasi Parameter dalam Perhitungan Sudut Pusat</>}
+  description="Visualisasi elemen-elemen: jari-jari (r), panjang busur (s), dan sudut pusat (72°)."
+  data={[
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = (i / 100) * 2 * Math.PI;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: true
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      lineWidth: 3,
+      labels: [
+        { text: "r", at: 1, offset: [-1.5, -0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(2 * Math.PI / 5), y: 4 * Math.sin(2 * Math.PI / 5), z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      lineWidth: 3
+    },
+    {
+      points: Array.from({ length: 29 }, (_, i) => {
+        const angle = (i / 28) * (2 * Math.PI / 5);
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        { text: "s", at: 14, offset: [0.4, 0.3, 0] }
+      ]
+    },
+    {
+      points: Array.from({ length: 15 }, (_, i) => {
+        const angle = (i / 14) * (2 * Math.PI / 5);
+        const radius = 1.5;
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 2,
+      labels: [
+        { text: "72°", at: 7, offset: [0.3, 0.2, 0] }
+      ]
+    }
+  ]}
+  cameraPosition={[6, 6, 5]}
+  showZAxis={false}
+/>
+
+**Contoh aplikasi rumus:**
+
+- Pizza dipotong menjadi 8 bagian sama besar: <InlineMath math="\alpha = \frac{360°}{8} = 45°" />
+- Jam dinding dengan 12 angka: <InlineMath math="\alpha = \frac{360°}{12} = 30°" />
+- Kue tart dipotong menjadi 6 bagian: <InlineMath math="\alpha = \frac{360°}{6} = 60°" />
+
+Contoh-contoh ini menunjukkan penerapan langsung rumus pembagian lingkaran dalam kehidupan sehari-hari, dimana setiap bagian memiliki sudut pusat yang sama besar.

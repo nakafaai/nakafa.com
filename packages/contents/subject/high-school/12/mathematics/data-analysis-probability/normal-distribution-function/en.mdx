@@ -1,0 +1,148 @@
+export const metadata = {
+  title: "Normal Distribution Function",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Data Analysis and Probability",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Understanding Normal Distribution
+
+Did you know that the height of students in your school, national exam scores, or even the weight of apples in the supermarket all follow the same pattern? This pattern is called **normal distribution**.
+
+Normal distribution was first introduced by Abraham de Moivre in <InlineMath math="1733" /> as an approximation of the binomial distribution for large <InlineMath math="n" />. Later, Pierre-Simon Laplace developed it further and it became known as the Moivre-Laplace Theorem. Laplace used normal distribution to analyze errors in experiments.
+
+> Normal distribution is very useful because many natural and social phenomena follow this pattern. From human height to scientific measurement results, everything tends to be normally distributed.
+
+## Characteristics of Normal Curve
+
+Imagine a very symmetrical hill, like an inverted bell. That's the shape of the normal distribution curve. Let's look at the visualization of a standard normal curve with <InlineMath math="\mu = 0" /> and <InlineMath math="\sigma = 1" />:
+
+<LineEquation
+  title="Standard Normal Distribution Curve"
+  description="Bell-shaped curve that is symmetrical with characteristic features of normal distribution."
+  cameraPosition={[0, 0, 5]}
+  showZAxis={false}
+  data={[
+    {
+      points: (() => {
+        const points = [];
+        const step = 0.1;
+        for (let x = -3.5; x <= 3.5; x += step) {
+          const y = (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * x * x);
+          points.push({ x: x, y: y, z: 0 });
+        }
+        return points;
+      })(),
+      color: getColor("PURPLE"),
+      smooth: true,
+      showPoints: false,
+      labels: [
+        { text: "μ = 0", at: 35, offset: [0, 0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: -1, y: 0, z: 0 },
+        { x: -1, y: (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5), z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "μ - σ", at: 0, offset: [0, -0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 1, y: 0, z: 0 },
+        { x: 1, y: (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5), z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "μ + σ", at: 0, offset: [0, -0.3, 0] }
+      ]
+    },
+  ]}
+/>
+
+This curve has several unique characteristics that make it special:
+
+1. **Shape and Symmetry**
+
+    The curve is bell-shaped and symmetrical about the vertical line passing through the mean (<InlineMath math="\mu" />). This means the left and right parts of the curve are perfect mirrors of each other.
+
+2. **Central Point**
+
+    The mean, median, and mode are all located at the same point, which is at the peak of the curve. This occurs because the distribution is symmetrical.
+
+3. **Inflection Points**
+
+    The curve has inflection points at <InlineMath math="x = \mu \pm \sigma" />, which means the curve changes from concave to convex (or vice versa) at a distance of one standard deviation from the mean.
+
+4. **Horizontal Asymptote**
+
+    The curve approaches the <InlineMath math="x" /> axis but never touches it, both at the left and right ends.
+
+## Its Mathematical Function
+
+Now, let's look at its mathematical formula. Don't worry if it looks complicated, the important thing is that you understand the concept.
+
+If <InlineMath math="X" /> is a normal random variable with mean <InlineMath math="\mu" /> and variance <InlineMath math="\sigma^2" />, then the normal distribution function can be written as:
+
+<BlockMath math="f(x; \mu, \sigma) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}" />
+
+for <InlineMath math="-\infty < x < \infty" />.
+
+Where:
+
+- <InlineMath math="\pi" /> is the constant <InlineMath math="3.1416" />
+- <InlineMath math="e" /> is the constant number <InlineMath math="2.7183" />
+- <InlineMath math="\mu" /> is the mean of the distribution
+- <InlineMath math="\sigma" /> is the standard deviation
+
+> This formula looks complex, but you don't need to memorize it or calculate it manually. The important thing is to understand that the shape of the curve is determined by the values of <InlineMath math="\mu" /> and <InlineMath math="\sigma" />.
+
+## Transformation to Standard Normal
+
+In practice, we often use the **standard normal distribution** with mean <InlineMath math="\mu = 0" /> and standard deviation <InlineMath math="\sigma = 1" />. To convert a regular normal distribution to standard normal, we use the transformation:
+
+<BlockMath math="Z = \frac{x - \mu}{\sigma}" />
+
+This variable <InlineMath math="Z" /> is called the **standard score** or **z-score**. This transformation is very useful because it allows us to use the readily available standard normal distribution table.
+
+**Why use z-score?**
+
+With this transformation, we can compare data from different distributions. For example, you can compare math scores with physics scores, even though their means and standard deviations are different.
+
+## Calculation Example
+
+Let's look at a practical example. Suppose we have a normal distribution with <InlineMath math="\mu = 50" /> and <InlineMath math="\sigma = 10" />. We want to find the probability that <InlineMath math="X" /> lies between <InlineMath math="45" /> and <InlineMath math="62" />.
+
+**Step 1: Transform to z-score**
+
+<div className="flex flex-col gap-4">
+<BlockMath math="z_1 = \frac{45 - 50}{10} = \frac{-5}{10} = -0.5" />
+<BlockMath math="z_2 = \frac{62 - 50}{10} = \frac{12}{10} = 1.2" />
+</div>
+
+**Step 2: Use the standard normal distribution table**
+
+We need to find <InlineMath math="P(-0.5 < Z < 1.2)" />. Remember that for interval probability, we use the formula:
+
+<BlockMath math="P(a < Z < b) = P(Z < b) - P(Z < a)" />
+
+From the standard normal distribution table:
+
+- <InlineMath math="P(Z < -0.5) = 0.3085" />
+- <InlineMath math="P(Z < 1.2) = 0.8849" />
+
+**Step 3: Calculate the final probability**
+
+<BlockMath math="P(45 < X < 62) = P(-0.5 < Z < 1.2) = 0.8849 - 0.3085 = 0.5764" />
+
+So, the probability that <InlineMath math="X" /> lies between <InlineMath math="45" /> and <InlineMath math="62" /> is <InlineMath math="0.5764" /> or approximately <InlineMath math="57.64\%" />.

@@ -1,0 +1,250 @@
+export const metadata = {
+  title: "Busur",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Busur dan Juring Lingkaran",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Pengertian Busur Lingkaran
+
+Busur lingkaran adalah bagian dari keliling lingkaran yang dibatasi oleh dua titik pada lingkaran tersebut. Bayangkan seperti potongan tali yang melengkung mengikuti bentuk lingkaran. Ketika kita memiliki sebuah lingkaran dan menandai dua titik di atasnya, maka bagian keliling yang menghubungkan kedua titik tersebut disebut busur.
+
+Setiap busur memiliki dua ujung yang terletak pada lingkaran, dan panjang busur bergantung pada besar sudut pusat yang menghadap busur tersebut. Semakin besar sudut pusatnya, semakin panjang busurnya.
+
+<LineEquation
+  title={<>Visualisasi Busur Lingkaran</>}
+  description="Busur lingkaran dengan berbagai ukuran sudut pusat."
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 37 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 36;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      smooth: true,
+      showPoints: false,
+      labels: [{ text: "Lingkaran", at: 20, offset: [1.5, 0.5, 0] }]
+    },
+    {
+      points: Array.from({ length: 13 }, (_, i) => {
+        const startAngle = Math.PI / 6;
+        const endAngle = Math.PI / 6 + (2 * Math.PI / 3);
+        const angle = startAngle + (i * (endAngle - startAngle)) / 12;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("ORANGE"),
+      smooth: true,
+      showPoints: false,
+      labels: [{ text: "Busur AB", at: 6, offset: [1.5, 0.5, 0] }]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "A", at: 1, offset: [0.3, 0.3, 0] }]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 6 + (2 * Math.PI / 3)), y: 4 * Math.sin(Math.PI / 6 + (2 * Math.PI / 3)), z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "B", at: 1, offset: [-0.3, 0.3, 0] }]
+    }
+  ]}
+/>
+
+## Jenis Busur Berdasarkan Ukuran
+
+Berdasarkan besar sudut pusat yang menghadapnya, busur lingkaran dapat dibedakan menjadi beberapa jenis:
+
+1. **Busur Kecil** adalah busur yang sudut pusatnya kurang dari 180°. Busur ini merupakan bagian yang lebih pendek dari dua kemungkinan busur yang menghubungkan dua titik pada lingkaran.
+
+2. **Busur Besar** adalah busur yang sudut pusatnya lebih dari 180°. Busur ini merupakan bagian yang lebih panjang dari dua kemungkinan busur yang menghubungkan dua titik pada lingkaran.
+
+3. **Busur Setengah Lingkaran** adalah busur yang sudut pusatnya tepat 180°. Busur ini membagi lingkaran menjadi dua bagian yang sama besar.
+
+## Rumus Panjang Busur
+
+Panjang busur dapat dihitung menggunakan perbandingan antara sudut pusat dengan sudut penuh lingkaran. Karena keliling penuh lingkaran adalah <InlineMath math="2\pi r" />, maka panjang busur dapat dinyatakan sebagai:
+
+<BlockMath math="\text{Panjang busur} = \frac{\alpha}{360°} \times 2\pi r" />
+
+dimana:
+- <InlineMath math="\alpha" /> adalah besar sudut pusat dalam derajat
+- <InlineMath math="r" /> adalah jari-jari lingkaran
+
+Jika sudut pusat dinyatakan dalam radian, rumusnya menjadi lebih sederhana:
+
+<BlockMath math="\text{Panjang busur} = \alpha \times r" />
+
+dimana <InlineMath math="\alpha" /> adalah besar sudut pusat dalam radian.
+
+<LineEquation
+  title={<>Perbandingan Panjang Busur</>}
+  description="Busur dengan sudut pusat berbeda pada lingkaran yang sama."
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 37 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 36;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      smooth: true,
+      showPoints: false
+    },
+    {
+      points: Array.from({ length: 7 }, (_, i) => {
+        const startAngle = 0;
+        const endAngle = Math.PI / 3;
+        const angle = startAngle + (i * (endAngle - startAngle)) / 6;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("ORANGE"),
+      smooth: true,
+      showPoints: false,
+      labels: [{ text: "60°", at: 3, offset: [0.8, 0.3, 0] }]
+    },
+    {
+      points: Array.from({ length: 13 }, (_, i) => {
+        const startAngle = Math.PI;
+        const endAngle = Math.PI + (2 * Math.PI / 3);
+        const angle = startAngle + (i * (endAngle - startAngle)) / 12;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("PURPLE"),
+      smooth: true,
+      showPoints: false,
+      labels: [{ text: "120°", at: 6, offset: [-1.5, 0.3, 0] }]
+    }
+  ]}
+/>
+
+## Hubungan Busur dengan Sudut Pusat
+
+Terdapat hubungan yang sangat erat antara panjang busur dengan besar sudut pusat yang menghadapnya. Hubungan ini dapat dinyatakan dalam bentuk perbandingan:
+
+<BlockMath math="\frac{\text{Panjang busur}_1}{\text{Panjang busur}_2} = \frac{\alpha_1}{\alpha_2}" />
+
+Perbandingan ini berlaku untuk busur-busur pada lingkaran yang sama. Artinya, jika sudut pusat suatu busur dua kali lipat dari sudut pusat busur lain, maka panjang busur tersebut juga akan dua kali lipat.
+
+Konsep ini sangat berguna dalam menyelesaikan berbagai permasalahan yang melibatkan busur lingkaran, terutama ketika kita perlu mencari panjang busur tanpa mengetahui jari-jari lingkaran secara langsung.
+
+## Latihan
+
+1. Sebuah busur lingkaran memiliki jari-jari 14 cm dan besar sudut pusatnya adalah 90°. Tentukan panjang busur tersebut.
+
+2. Diketahui panjang busur AB adalah 22 cm dan besar sudut AOB sebesar 120°, dimana O adalah pusat lingkaran. Berapakah panjang jari-jari lingkarannya?
+
+3. Pada sebuah lingkaran dengan jari-jari 21 cm, terdapat dua busur. Busur pertama memiliki sudut pusat 60° dan busur kedua memiliki sudut pusat 150°. Tentukan perbandingan panjang kedua busur tersebut.
+
+4. Sebuah busur lingkaran memiliki panjang 15,7 cm. Jika jari-jari lingkaran adalah 10 cm, tentukan besar sudut pusat busur tersebut dalam derajat.
+
+5. Diketahui keliling sebuah lingkaran adalah 88 cm. Jika sebuah busur pada lingkaran tersebut memiliki sudut pusat 45°, tentukan panjang busur tersebut.
+
+### Kunci Jawaban
+
+1. **Jawaban: 22 cm**
+
+   Diketahui: <InlineMath math="r = 14" /> cm, <InlineMath math="\alpha = 90°" />
+   
+   Menggunakan rumus panjang busur:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Panjang busur} = \frac{\alpha}{360°} \times 2\pi r" />
+   
+   <BlockMath math="= \frac{90°}{360°} \times 2 \times \frac{22}{7} \times 14" />
+   
+   <BlockMath math="= \frac{1}{4} \times 2 \times \frac{22}{7} \times 14" />
+   
+   <BlockMath math="= \frac{1}{4} \times 88 = 22 \text{ cm}" />
+   </div>
+
+2. **Jawaban: 10,5 cm**
+
+   Diketahui: Panjang busur AB = 22 cm, <InlineMath math="\alpha = 120°" />
+   
+   Menggunakan rumus panjang busur:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="22 = \frac{120°}{360°} \times 2\pi r" />
+   
+   <BlockMath math="22 = \frac{1}{3} \times 2 \times \frac{22}{7} \times r" />
+   
+   <BlockMath math="22 = \frac{44r}{21}" />
+   
+   <BlockMath math="r = \frac{22 \times 21}{44} = \frac{462}{44} = 10,5 \text{ cm}" />
+   </div>
+
+3. **Jawaban: 2 : 5**
+
+   Diketahui: <InlineMath math="r = 21" /> cm, <InlineMath math="\alpha_1 = 60°" />, <InlineMath math="\alpha_2 = 150°" />
+   
+   Karena pada lingkaran yang sama, perbandingan panjang busur sama dengan perbandingan sudut pusatnya:
+   
+   <BlockMath math="\frac{\text{Panjang busur}_1}{\text{Panjang busur}_2} = \frac{\alpha_1}{\alpha_2} = \frac{60°}{150°} = \frac{2}{5}" />
+   
+   Jadi perbandingan panjang kedua busur adalah 2 : 5.
+
+4. **Jawaban: 90°**
+
+   Diketahui: Panjang busur = 15,7 cm, <InlineMath math="r = 10" /> cm
+   
+   Menggunakan rumus panjang busur:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="15,7 = \frac{\alpha}{360°} \times 2\pi \times 10" />
+   
+   <BlockMath math="15,7 = \frac{\alpha}{360°} \times 2 \times 3,14 \times 10" />
+   
+   <BlockMath math="15,7 = \frac{\alpha}{360°} \times 62,8" />
+   
+   <BlockMath math="\alpha = \frac{15,7 \times 360°}{62,8} = \frac{5652°}{62,8} = 90°" />
+   </div>
+
+5. **Jawaban: 11 cm**
+
+   Diketahui: Keliling = 88 cm, <InlineMath math="\alpha = 45°" />
+   
+   Menggunakan konsep perbandingan:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Panjang busur} = \frac{\alpha}{360°} \times \text{Keliling}" />
+   
+   <BlockMath math="= \frac{45°}{360°} \times 88" />
+   
+   <BlockMath math="= \frac{1}{8} \times 88 = 11 \text{ cm}" />
+   </div>

@@ -1,0 +1,455 @@
+export const metadata = {
+  title: "Central Angle on Sector",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Circle Arcs and Sectors",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Concept of Central Angle on Sector
+
+A central angle on a sector is an angle formed by two radii of a circle that bound a sector. Imagine the angle formed when we open a fan or cut a cake into several pieces. This angle has its vertex at the center of the circle and its two sides are radii extending to the edge of the circle.
+
+Central angles have a special role in determining the size of sectors. The larger the central angle, the wider the sector formed. Conversely, a small central angle will produce a narrow sector. This relationship makes the central angle the key factor in calculating area and sector applications.
+
+<LineEquation
+  title={<>Central Angle Forming a Sector</>}
+  description="The central angle is shown with vertex at center O and two radii as the angle sides."
+  data={[
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = (i / 100) * 2 * Math.PI;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: true
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      lineWidth: 3,
+      labels: [
+        { text: "O", at: 0, offset: [-0.4, -0.4, 0] },
+        { text: "A", at: 1, offset: [0.3, 0.2, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(5 * Math.PI / 6), y: 4 * Math.sin(5 * Math.PI / 6), z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      lineWidth: 3,
+      labels: [
+        { text: "B", at: 1, offset: [-0.3, 0.2, 0] }
+      ]
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const angle = Math.PI / 6 + (i / 40) * (2 * Math.PI / 3);
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        { text: "Sector", at: 20, offset: [-0.8, 0.6, 0] }
+      ]
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const angle = Math.PI / 6 + (i / 20) * (2 * Math.PI / 3);
+        const radius = 1.5;
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 2,
+      labels: [
+        { text: "α", at: 10, offset: [0.5, 0.5, 0] }
+      ]
+    }
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Properties of Central Angle in Sectors
+
+Central angles on sectors have characteristics that distinguish them from other angles:
+
+- **Both angle sides**: Always consist of radii of equal length
+- **Angle vertex**: Always located exactly at the center of the circle  
+- **Proportion to circle**: The size of the central angle determines the sector's proportion to the entire circle
+
+In the same circle, if there are several sectors with the same central angle, then the sector areas will also be equal. This occurs because sector area is directly proportional to the central angle size. This property is very useful in dividing circles into equal parts.
+
+## Relationship Between Central Angle and Sector Area
+
+The relationship between central angle and sector area can be expressed as a mathematical ratio. There are two main formulas used:
+
+**For angles in degrees:**
+
+<BlockMath math="L = \frac{\theta}{360°} \times \pi r^2" />
+
+**For angles in radians:**
+
+<BlockMath math="L = \frac{1}{2} \theta r^2" />
+
+where:
+- <InlineMath math="L" /> = sector area
+- <InlineMath math="\theta" /> = central angle
+- <InlineMath math="r" /> = radius
+
+This ratio shows that sector area is proportional to the central angle size. When the central angle is doubled, the sector area also becomes twice as large. Conversely, if the central angle is halved, the sector area becomes half.
+
+<LineEquation
+  title={<>Comparison of Central Angles on Different Sectors</>}
+  description="Visualization of sectors with central angles of 45°, 90°, and 135° showing proportional relationships."
+  data={[
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = (i / 100) * 2 * Math.PI;
+        return {
+          x: 3.5 * Math.cos(angle),
+          y: 3.5 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: true
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3.5, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      lineWidth: 2,
+      labels: [
+        { text: "O", at: 0, offset: [-0.3, -0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3.5 * Math.cos(Math.PI / 4), y: 3.5 * Math.sin(Math.PI / 4), z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      lineWidth: 2
+    },
+    {
+      points: Array.from({ length: 16 }, (_, i) => {
+        const angle = (i / 15) * (Math.PI / 4);
+        return {
+          x: 3.5 * Math.cos(angle),
+          y: 3.5 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 3,
+      labels: [
+        { text: "45°", at: 7, offset: [0.4, 0.2, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 2 },
+        { x: 3.5 * Math.cos(Math.PI / 2), y: 3.5 * Math.sin(Math.PI / 2), z: 2 }
+      ],
+      color: getColor("INDIGO"),
+      showPoints: false,
+      lineWidth: 2
+    },
+    {
+      points: Array.from({ length: 26 }, (_, i) => {
+        const angle = (i / 25) * (Math.PI / 2);
+        return {
+          x: 3.5 * Math.cos(angle),
+          y: 3.5 * Math.sin(angle),
+          z: 2
+        };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 3,
+      labels: [
+        { text: "90°", at: 12, offset: [0.2, 0.4, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 4 },
+        { x: 3.5 * Math.cos(3 * Math.PI / 4), y: 3.5 * Math.sin(3 * Math.PI / 4), z: 4 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      lineWidth: 2
+    },
+    {
+      points: Array.from({ length: 36 }, (_, i) => {
+        const angle = (i / 35) * (3 * Math.PI / 4);
+        return {
+          x: 3.5 * Math.cos(angle),
+          y: 3.5 * Math.sin(angle),
+          z: 4
+        };
+      }),
+      color: getColor("FUCHSIA"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 3,
+      labels: [
+        { text: "135°", at: 17, offset: [-0.2, 0.4, 0] }
+      ]
+    }
+  ]}
+  cameraPosition={[8, 6, 8]}
+  showZAxis={true}
+/>
+
+## Measurement and Identification of Central Angles
+
+Identifying central angles on sectors requires the ability to recognize their geometric characteristics. Central angles always have their vertex exactly at the center of the circle and both sides are radii of equal length. Unlike inscribed angles whose vertices are on the circumference, central angles have a central position that provides complete control over sector formation.
+
+**Central angle measurement methods:**
+
+- **Using a protractor**: Place the protractor's center point exactly at the circle's center, ensure the base line is parallel to one radius, then read the scale at the position of the second radius
+- **Mathematical calculation**: Using formulas that will be explained in the following sections
+- **Circle division**: Dividing 360° by the number of equal parts
+
+These measurement methods enable us to accurately identify the central angle size, which can then be used to calculate the corresponding sector area or arc length.
+
+<LineEquation
+  title={<>Central Angle Measurement Technique</>}
+  description="Demonstration of measuring a 60° central angle with clear bounding radii."
+  data={[
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = (i / 100) * 2 * Math.PI;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: true
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      lineWidth: 3,
+      labels: [
+        { text: "O", at: 0, offset: [-0.3, -0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3 * Math.cos(Math.PI / 3), y: 3 * Math.sin(Math.PI / 3), z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      lineWidth: 3
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const angle = (i / 20) * (Math.PI / 3);
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        { text: "Arc", at: 10, offset: [1, 0.5, 0] }
+      ]
+    },
+    {
+      points: Array.from({ length: 11 }, (_, i) => {
+        const angle = (i / 10) * (Math.PI / 3);
+        const radius = 1.2;
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 2,
+      labels: [
+        { text: "60°", at: 5, offset: [0.5, 0.5, 0] }
+      ]
+    }
+  ]}
+  cameraPosition={[0, 0, 8]}
+  showZAxis={false}
+/>
+
+## Central Angle and Arc Theorem
+
+The fundamental central angle theorem states the direct relationship between central angles and arcs:
+
+**Main theorem:**
+- The central angle measure equals the arc measure it subtends
+- If a central angle measures <InlineMath math="\alpha" /> degrees, then the arc it forms also measures <InlineMath math="\alpha" /> degrees
+
+**Important properties:**
+
+- In the same circle, congruent central angles produce congruent arcs and sectors
+- If two sectors have the same area, then their central angles must be equal in measure
+- Mathematical operations on central angles follow the same pattern as the arcs they form
+
+This theorem forms the basis for all calculations involving relationships between central angles, arcs, and sector areas in circle geometry.
+
+## Calculating Central Angle from Sector Information
+
+Determining the central angle measure can be done through various known information about the sector:
+
+**1. From sector area and radius:**
+
+<BlockMath math="\alpha = \frac{360° \times L}{\pi r^2}" />
+
+**2. From arc length and radius:**
+
+<BlockMath math="\alpha = \frac{180° \times s}{\pi r}" />
+
+**3. From equal circle division:**
+
+<BlockMath math="\alpha = \frac{360°}{n}" />
+
+where:
+- <InlineMath math="\alpha" /> = central angle (in degrees)
+- <InlineMath math="L" /> = sector area
+- <InlineMath math="s" /> = arc length
+- <InlineMath math="r" /> = radius
+- <InlineMath math="n" /> = number of divisions
+
+These three formulas provide flexibility in solving various types of circle geometry problems, depending on the available information.
+
+<LineEquation
+  title={<>Parameter Illustration in Central Angle Calculation</>}
+  description="Visualization of elements: radius (r), arc length (s), and central angle (72°)."
+  data={[
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = (i / 100) * 2 * Math.PI;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: true
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      lineWidth: 3,
+      labels: [
+        { text: "r", at: 1, offset: [-1.5, -0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(2 * Math.PI / 5), y: 4 * Math.sin(2 * Math.PI / 5), z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      lineWidth: 3
+    },
+    {
+      points: Array.from({ length: 29 }, (_, i) => {
+        const angle = (i / 28) * (2 * Math.PI / 5);
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        { text: "s", at: 14, offset: [0.4, 0.3, 0] }
+      ]
+    },
+    {
+      points: Array.from({ length: 15 }, (_, i) => {
+        const angle = (i / 14) * (2 * Math.PI / 5);
+        const radius = 1.5;
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 2,
+      labels: [
+        { text: "72°", at: 7, offset: [0.3, 0.2, 0] }
+      ]
+    }
+  ]}
+  cameraPosition={[6, 6, 5]}
+  showZAxis={false}
+/>
+
+**Formula application examples:**
+
+- Pizza cut into 8 equal parts: <InlineMath math="\alpha = \frac{360°}{8} = 45°" />
+- Wall clock with 12 numbers: <InlineMath math="\alpha = \frac{360°}{12} = 30°" />
+- Cake cut into 6 parts: <InlineMath math="\alpha = \frac{360°}{6} = 60°" />
+
+These examples demonstrate the direct application of circle division formulas in daily life, where each part has an equal central angle.

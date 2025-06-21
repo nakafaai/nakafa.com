@@ -1,0 +1,218 @@
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+export const metadata = {
+  title: "Rotasi",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/10/2025",
+  subject: "Transformasi Geometri",
+};
+
+## Memahami Rotasi
+
+Rotasi, atau perputaran, adalah transformasi geometri yang memutar setiap titik suatu objek mengelilingi titik pusat tertentu sejauh sudut tertentu. Transformasi ini mempertahankan kongruensi (bentuk dan ukuran) objek, tetapi orientasinya dapat berubah.
+
+Hal penting yang perlu diperhatikan dalam rotasi:
+
+- **Titik Pusat Rotasi (C):** Titik tetap yang menjadi pusat perputaran.
+- **Sudut Rotasi (<InlineMath math="\theta" />):** Besarnya perputaran. Jika sudut bernilai positif, rotasi dilakukan berlawanan arah jarum jam. Jika sudut bernilai negatif, rotasi dilakukan searah dengan jarum jam.
+
+### Definisi Rotasi
+
+Diketahui titik pusat <InlineMath math="C" /> dan sudut berarah <InlineMath math="\theta" />. Rotasi dengan titik pusat <InlineMath math="C" /> sebesar <InlineMath math="\theta" />, dinotasikan dengan <InlineMath math="\rho_{C,\theta}" /> atau <InlineMath math="R(C,\theta)" />, didefinisikan sebagai transformasi yang memetakan:
+
+1. Titik <InlineMath math="C" /> ke dirinya sendiri (<InlineMath math="C'=C" />).
+2. Sembarang titik <InlineMath math="P" /> ke titik <InlineMath math="P'" /> sedemikian sehingga <InlineMath math="CP = CP'" /> (jarak dari pusat ke titik sama dengan jarak dari pusat ke bayangan) dan sudut yang terbentuk oleh sinar <InlineMath math="\vec{CP}" /> dan <InlineMath math="\vec{CP'}" /> adalah <InlineMath math="\theta" />.
+
+## Rotasi terhadap Titik Asal
+
+Kasus khusus yang sering dibahas adalah rotasi terhadap titik asal <InlineMath math="O(0,0)" />.
+
+Jika titik <InlineMath math="P(x,y)" /> dirotasikan terhadap titik asal <InlineMath math="O(0,0)" /> sebesar sudut <InlineMath math="\theta" />, maka koordinat bayangannya <InlineMath math="P'(x',y')" /> dapat dihitung menggunakan rumus berikut:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = x \cos \theta - y \sin \theta" />
+  <BlockMath math="y' = x \sin \theta + y \cos \theta" />
+</div>
+
+## Merotasikan Sebuah Titik sebesar 90°
+
+Sebuah titik <InlineMath math="B(0,4)" /> dirotasikan terhadap titik asal <InlineMath math="(0,0)" /> sebesar <InlineMath math="90^\circ" />. Tentukan titik bayangannya.
+
+Di sini, <InlineMath math="x=0" />, <InlineMath math="y=4" />, dan <InlineMath math="\theta = 90^\circ" />.
+
+Kita tahu <InlineMath math="\cos 90^\circ = 0" /> dan <InlineMath math="\sin 90^\circ = 1" />.
+
+Menggunakan rumus:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = (0) \cos 90^\circ - (4) \sin 90^\circ = 0 \cdot 0 - 4 \cdot 1 = -4" />
+  <BlockMath math="y' = (0) \sin 90^\circ + (4) \cos 90^\circ = 0 \cdot 1 + 4 \cdot 0 = 0" />
+</div>
+
+Jadi, bayangan titik <InlineMath math="B(0,4)" /> adalah <InlineMath math="B'(-4,0)" />.
+
+<LineEquation
+  title={
+    <>
+      Rotasi Titik <InlineMath math="B(0,4)" /> sebesar{" "}
+      <InlineMath math="90^\circ" /> terhadap Titik Asal
+    </>
+  }
+  description={
+    <>
+      Visualisasi rotasi titik <InlineMath math="B(0,4)" /> menjadi{" "}
+      <InlineMath math="B'(-4,0)" /> sebesar <InlineMath math="90^\circ" />{" "}
+      berlawanan arah jarum jam mengelilingi titik asal{" "}
+      <InlineMath math="O(0,0)" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "O(0,0)", at: 0, offset: [0.3, -0.3, 0] }],
+    }, // Titik Pusat Rotasi
+    {
+      points: [{ x: 0, y: 4, z: 0 }],
+      color: getColor("SKY"),
+      showPoints: true,
+      labels: [{ text: "B(0,4) - Asli", at: 0, offset: [0.3, 0.3, 0] }],
+    }, // Titik Asli
+    {
+      points: [{ x: -4, y: 0, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "B'(-4,0) - Peta", at: 0, offset: [-0.7, 0.3, 0] }],
+    }, // Titik Peta
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 4, z: 0 },
+      ],
+      color: getColor("PURPLE"),
+    }, // Garis OB
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: -4, y: 0, z: 0 },
+      ],
+      color: getColor("PURPLE"),
+    }, // Garis OB'
+  ]}
+  showZAxis={false}
+  cameraPosition={[2, 2, 15]}
+/>
+
+## Merotasikan Sebuah Garis sebesar 90°
+
+Tentukan peta dari garis <InlineMath math="y=2x" /> yang dirotasikan terhadap titik asal <InlineMath math="(0,0)" /> sebesar <InlineMath math="90^\circ" />.
+
+Ambil sembarang titik <InlineMath math="P(x,y)" /> pada garis <InlineMath math="y=2x" />. Bayangannya, <InlineMath math="P'(x',y')" />, setelah rotasi <InlineMath math="90^\circ" /> terhadap titik asal adalah:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = x \cos 90^\circ - y \sin 90^\circ = x(0) - y(1) = -y" />
+  <BlockMath math="y' = x \sin 90^\circ + y \cos 90^\circ = x(1) + y(0) = x" />
+</div>
+
+Dari sini kita peroleh <InlineMath math="y = -x'" /> dan <InlineMath math="x = y'" />.
+
+Substitusikan <InlineMath math="x = y'" /> dan <InlineMath math="y = -x'" /> ke dalam persamaan garis asli <InlineMath math="y=2x" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(-x') = 2(y')" />
+  <BlockMath math="-x' = 2y'" />
+</div>
+
+Mengganti <InlineMath math="x'" /> dan <InlineMath math="y'" /> kembali ke <InlineMath math="x" /> dan <InlineMath math="y" />, persamaan garis bayangan adalah <InlineMath math="-x = 2y" /> atau <InlineMath math="y = -\frac{1}{2}x" />.
+
+<LineEquation
+  title={
+    <>
+      Rotasi Garis <InlineMath math="y=2x" /> sebesar{" "}
+      <InlineMath math="90^\circ" /> terhadap Titik Asal
+    </>
+  }
+  description={
+    <>
+      Garis asli <InlineMath math="y=2x" /> dirotasikan{" "}
+      <InlineMath math="90^\circ" /> menghasilkan garis bayangan{" "}
+      <InlineMath math="y = -\frac{1}{2}x" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: false,
+      labels: [{ text: "O(0,0)", at: 0, offset: [0.5, -0.5, 0] }],
+    }, // Titik Pusat Rotasi
+    {
+      // Garis Asli: y = 2x
+      points: Array.from({ length: 11 }, (_, i) => {
+        const xVal = (i - 5) * 0.5; // range from -2.5 to 2.5
+        return { x: xVal, y: 2 * xVal, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "y=2x", at: 6, offset: [1, 0.5, 0] }],
+    },
+    {
+      // Garis Bayangan: y = -1/2 x
+      points: Array.from({ length: 11 }, (_, i) => {
+        const xVal = (i - 5) * 0.5;
+        return { x: xVal, y: (-1 / 2) * xVal, z: 0 };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "y=(-1/2)x", at: 1, offset: [0.3, 0.5, 0] }],
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 10]}
+/>
+
+## Latihan
+
+1.  Sebuah titik <InlineMath math="A(3,0)" /> dirotasikan terhadap titik asal <InlineMath math="(0,0)" /> sebesar <InlineMath math="90^\circ" />. Tentukan titik bayangannya.
+2.  Tentukan peta dari garis <InlineMath math="y=4x" /> yang dirotasikan terhadap titik asal <InlineMath math="(0,0)" /> sebesar <InlineMath math="90^\circ" />.
+3.  Titik <InlineMath math="P(-2, -5)" /> dirotasikan terhadap titik asal <InlineMath math="O(0,0)" /> sebesar <InlineMath math="180^\circ" />. Tentukan koordinat bayangannya!
+
+### Kunci Jawaban
+
+1.  Titik <InlineMath math="A(3,0)" />, <InlineMath math="\theta = 90^\circ" />. <InlineMath math="x=3, y=0" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = 3 \cos 90^\circ - 0 \sin 90^\circ = 3(0) - 0(1) = 0" />
+      <BlockMath math="y' = 3 \sin 90^\circ + 0 \cos 90^\circ = 3(1) + 0(0) = 3" />
+    </div>
+
+    Jadi, bayangan titiknya adalah <InlineMath math="A'(0,3)" />.
+
+2.  Garis <InlineMath math="y=4x" />, <InlineMath math="\theta = 90^\circ" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = -y" />
+      <BlockMath math="y' = x" />
+    </div>
+
+    Maka <InlineMath math="y = -x'" /> dan <InlineMath math="x = y'" />.
+
+    Substitusi ke persamaan garis: <InlineMath math="(-x') = 4(y')" />.
+
+    Persamaan garis bayangan: <InlineMath math="-x = 4y" /> atau <InlineMath math="y = -\frac{1}{4}x" />.
+
+3.  Titik <InlineMath math="P(-2,-5)" />, <InlineMath math="\theta = 180^\circ" />. <InlineMath math="x=-2, y=-5" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\cos 180^\circ = -1" />
+      <BlockMath math="\sin 180^\circ = 0" />
+    </div>
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = (-2) \cos 180^\circ - (-5) \sin 180^\circ = (-2)(-1) - (-5)(0) = 2 - 0 = 2" />
+      <BlockMath math="y' = (-2) \sin 180^\circ + (-5) \cos 180^\circ = (-2)(0) + (-5)(-1) = 0 + 5 = 5" />
+    </div>
+
+    Jadi, bayangan titik P adalah <InlineMath math="P'(2,5)" />.

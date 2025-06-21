@@ -1,0 +1,510 @@
+import { LineEquation } from "@repo/contents/_components/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Mengonstruksi Fungsi Kuadrat",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/19/2025",
+  subject: "Persamaan dan Fungsi Kuadrat",
+};
+
+## Cara Menentukan Persamaan Fungsi Kuadrat
+
+Mengonstruksi fungsi kuadrat berarti menentukan bentuk persamaan <InlineMath math="f(x) = ax^2 + bx + c" /> berdasarkan informasi yang diberikan. Ada beberapa cara berbeda untuk mengonstruksi fungsi kuadrat, tergantung pada informasi yang tersedia.
+
+## Bentuk-Bentuk Penulisan Fungsi Kuadrat
+
+Sebelum kita mulai mengonstruksi fungsi kuadrat, mari kita pahami tiga bentuk penulisan fungsi kuadrat:
+
+1. **Bentuk Standar**: <InlineMath math="f(x) = ax^2 + bx + c" />
+2. **Bentuk Faktor**: <InlineMath math="f(x) = a(x - p)(x - q)" /> dimana p dan q adalah akar-akar persamaan
+3. **Bentuk Vertex**: <InlineMath math="f(x) = a(x - h)^2 + k" /> dimana (h, k) adalah titik puncak
+
+Ketiga bentuk ini saling berhubungan dan dapat diubah dari satu bentuk ke bentuk lainnya.
+
+## Metode Mengonstruksi Fungsi Kuadrat
+
+### Tiga Titik
+
+Cara paling umum untuk mengonstruksi fungsi kuadrat adalah dengan menggunakan tiga titik yang diketahui berada pada kurva.
+
+Jika kita memiliki tiga titik <InlineMath math="(x_1, y_1)" />, <InlineMath math="(x_2, y_2)" />, dan <InlineMath math="(x_3, y_3)" />, kita dapat memasukkan nilai-nilai ini ke dalam persamaan standar untuk mendapatkan tiga persamaan linear dengan tiga variabel a, b, dan c.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="y_1 = ax_1^2 + bx_1 + c" />
+  <BlockMath math="y_2 = ax_2^2 + bx_2 + c" />
+  <BlockMath math="y_3 = ax_3^2 + bx_3 + c" />
+</div>
+
+**Contoh**:
+
+Carilah persamaan fungsi kuadrat yang grafiknya melalui titik K(-1, 0), L(0, -3), dan M(1, -4).
+
+Masukkan nilai koordinat ke dalam persamaan standar.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="K(-1, 0): 0 = a(-1)^2 + b(-1) + c" />
+  <BlockMath math="L(0, -3): -3 = a(0)^2 + b(0) + c" />
+  <BlockMath math="M(1, -4): -4 = a(1)^2 + b(1) + c" />
+</div>
+
+Sederhanakan persamaan-persamaan tersebut.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="0 = a - b + c" />
+  <BlockMath math="-3 = c" />
+  <BlockMath math="-4 = a + b + c" />
+</div>
+
+Substitusi <InlineMath math="c = -3" /> ke persamaan pertama dan ketiga.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="0 = a - b - 3" />
+  <BlockMath math="-4 = a + b - 3" />
+</div>
+
+Sederhanakan dan jumlahkan kedua persamaan untuk menemukan nilai a.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="a - b = 3" />
+  <BlockMath math="a + b = -1" />
+  <BlockMath math="2a = 2" />
+  <BlockMath math="a = 1" />
+</div>
+
+Substitusi nilai a ke persamaan <InlineMath math="a - b = 3" /> untuk menemukan nilai b.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="1 - b = 3" />
+  <BlockMath math="b = -2" />
+</div>
+
+Fungsi kuadrat yang dihasilkan adalah:
+
+<BlockMath math="f(x) = x^2 - 2x - 3" />
+
+<div className="mt-4">
+  <LineEquation
+    title={
+      <>
+        Grafik <InlineMath math="f(x) = x^2 - 2x - 3" />
+      </>
+    }
+    description={
+      <>
+        Parabola yang melalui titik <InlineMath math="K(-1, 0)" />,{" "}
+        <InlineMath math="L(0, -3)" />, dan <InlineMath math="M(1, -4)" />.
+      </>
+    }
+    cameraPosition={[2, 3, 8]}
+    data={[
+      {
+        points: Array.from({ length: 7 }, (_, i) => {
+          const x = i - 3; // x values from -3 to 3
+          return { x, y: x * x - 2 * x - 3, z: 0 };
+        }),
+        color: getColor("TEAL"),
+        labels: [
+          {
+            text: "f(x) = x² - 2x - 3",
+            at: 5,
+            offset: [2, 0.3, 0],
+          },
+          {
+            text: "L(0, -3)",
+            at: 3,
+            offset: [-1, 0, 0],
+          },
+          {
+            text: "M(1, -4)",
+            at: 4,
+            offset: [0, -0.5, 0],
+          },
+          {
+            text: "K(-1, 0)",
+            at: 2,
+            offset: [-1, 0.3, 0],
+          },
+        ],
+      },
+    ]}
+  />
+</div>
+
+### Titik Puncak
+
+Jika kita mengetahui koordinat titik puncak (h, k) dan satu titik lain (p, q) pada grafik, kita dapat menggunakan bentuk vertex <InlineMath math="f(x) = a(x - h)^2 + k" /> untuk menemukan nilai a.
+
+**Contoh**:
+
+Temukan persamaan fungsi kuadrat yang memiliki titik puncak (2, 0) dan melalui titik (4, 4).
+
+Gunakan bentuk vertex <InlineMath math="f(x) = a(x - h)^2 + k" /> dengan h = 2 dan k = 0.
+
+<BlockMath math="f(x) = a(x - 2)^2 + 0 = a(x - 2)^2" />
+
+Substitusi titik (4, 4) untuk menemukan nilai a.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4 = a(4 - 2)^2" />
+  <BlockMath math="4 = 4a" />
+  <BlockMath math="a = 1" />
+</div>
+
+Fungsi kuadrat yang dihasilkan adalah:
+
+<BlockMath math="f(x) = (x - 2)^2 = x^2 - 4x + 4" />
+
+<div className="mt-4">
+  <LineEquation
+    title={
+      <>
+        Grafik <InlineMath math="f(x) = (x - 2)^2" />
+      </>
+    }
+    description={
+      <>
+        Parabola dengan titik puncak <InlineMath math="(2, 0)" /> dan melalui
+        titik <InlineMath math="(4, 4)" />
+      </>
+    }
+    cameraPosition={[6, 6, 8]}
+    data={[
+      {
+        points: Array.from({ length: 9 }, (_, i) => {
+          const x = i - 1; // x values from -1 to 7
+          return { x, y: Math.pow(x - 2, 2), z: 0 };
+        }),
+        color: getColor("INDIGO"),
+        labels: [
+          {
+            text: "f(x) = (x - 2)²",
+            at: 7,
+            offset: [0.3, 0.3, 0],
+          },
+          {
+            text: "(2, 0)",
+            at: 3,
+            offset: [0, 0.3, 0],
+          },
+          {
+            text: "(4, 4)",
+            at: 5,
+            offset: [0.3, 0.3, 0],
+          },
+        ],
+      },
+    ]}
+  />
+</div>
+
+### Akar-Akar Persamaan
+
+Jika kita mengetahui akar-akar (titik potong dengan sumbu x) p dan q dari fungsi kuadrat, dan satu titik tambahan (r, s) pada kurva, kita dapat menggunakan bentuk faktor <InlineMath math="f(x) = a(x - p)(x - q)" />.
+
+**Contoh**:
+
+Carilah persamaan fungsi kuadrat yang memiliki akar-akar x = -2 dan x = 3, dan melalui titik (1, -6).
+
+Gunakan bentuk faktor <InlineMath math="f(x) = a(x - p)(x - q)" /> dengan p = -2 dan q = 3.
+
+<BlockMath math="f(x) = a(x - (-2))(x - 3) = a(x + 2)(x - 3)" />
+
+Substitusi titik (1, -6) untuk menemukan nilai a.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="-6 = a(1 + 2)(1 - 3)" />
+  <BlockMath math="-6 = a(3)(-2)" />
+  <BlockMath math="-6 = -6a" />
+  <BlockMath math="a = 1" />
+</div>
+
+Fungsi kuadrat yang dihasilkan adalah:
+
+<BlockMath math="f(x) = (x + 2)(x - 3) = x^2 - x - 6" />
+
+<div className="mt-4">
+  <LineEquation
+    title={
+      <>
+        Grafik <InlineMath math="f(x) = (x + 2)(x - 3)" />
+      </>
+    }
+    description={
+      <>
+        Parabola dengan akar-akar <InlineMath math="x = -2" /> dan{" "}
+        <InlineMath math="x = 3" />, melalui titik <InlineMath math="(1, -6)" />
+      </>
+    }
+    cameraPosition={[4, 5, 10]}
+    data={[
+      {
+        points: Array.from({ length: 11 }, (_, i) => {
+          const x = i - 4; // x values from -4 to 6
+          return { x, y: (x + 2) * (x - 3), z: 0 };
+        }),
+        color: getColor("ORANGE"),
+        labels: [
+          {
+            text: "f(x) = (x + 2)(x - 3)",
+            at: 6,
+            offset: [3, 0.3, 0],
+          },
+          {
+            text: "(-2, 0)",
+            at: 2,
+            offset: [0.3, 0.3, 0],
+          },
+          {
+            text: "(3, 0)",
+            at: 7,
+            offset: [0.3, 0.3, 0],
+          },
+          {
+            text: "(1, -6)",
+            at: 5,
+            offset: [0.3, -0.3, 0],
+          },
+        ],
+      },
+    ]}
+  />
+</div>
+
+### Sumbu Simetri dan Diskriminan
+
+Kita juga dapat mengonstruksi fungsi kuadrat dengan mengetahui sumbu simetri (atau koordinat x dari titik puncak) dan nilai diskriminan.
+
+**Contoh**:
+
+Temukan persamaan fungsi kuadrat dengan sumbu simetri x = 1 dan diskriminan D = 16.
+
+Dari sumbu simetri x = 1, kita tahu bahwa <InlineMath math="-\frac{b}{2a} = 1" />, sehingga <InlineMath math="b = -2a" />.
+
+Dari diskriminan D = 16, kita tahu bahwa <InlineMath math="b^2 - 4ac = 16" />.
+
+Substitusi <InlineMath math="b = -2a" /> ke persamaan diskriminan.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(-2a)^2 - 4ac = 16" />
+  <BlockMath math="4a^2 - 4ac = 16" />
+  <BlockMath math="4a(a - c) = 16" />
+  <BlockMath math="a(a - c) = 4" />
+</div>
+
+Ada banyak nilai a dan c yang memenuhi persamaan ini. Mari kita ambil kasus sederhana dengan a = 1.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="1(1 - c) = 4" />
+  <BlockMath math="1 - c = 4" />
+  <BlockMath math="c = -3" />
+</div>
+
+Dengan a = 1, b = -2, dan c = -3, fungsi kuadrat yang dihasilkan adalah:
+
+<BlockMath math="f(x) = x^2 - 2x - 3" />
+
+### Koordinat Simetris
+
+Kita dapat mengonstruksi fungsi kuadrat dengan memanfaatkan sifat simetri dari parabola.
+
+**Contoh**:
+
+Tentukan persamaan fungsi kuadrat yang melalui titik-titik (0, 0), (4, 1), dan (-4, 1).
+
+Karena titik (4, 1) dan (-4, 1) memiliki nilai y yang sama dan berada pada jarak yang sama dari sumbu y, maka kurva simetris terhadap sumbu y. Ini berarti sumbu simetrinya adalah x = 0, dan puncaknya terletak di (0, 0).
+
+Gunakan bentuk vertex <InlineMath math="f(x) = a(x - h)^2 + k" /> dengan h = 0 dan k = 0.
+
+<BlockMath math="f(x) = ax^2" />
+
+Substitusi titik (4, 1) untuk menemukan nilai a.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="1 = a(4)^2" />
+  <BlockMath math="1 = 16a" />
+  <BlockMath math="a = \frac{1}{16}" />
+</div>
+
+Fungsi kuadrat yang dihasilkan adalah:
+
+<BlockMath math="f(x) = \frac{1}{16}x^2" />
+
+<div className="mt-4">
+  <LineEquation
+    title={
+      <>
+        Grafik <InlineMath math="f(x) = \frac{1}{16}x^2" />
+      </>
+    }
+    description={
+      <>
+        Parabola melalui titik <InlineMath math="(0, 0)" />,{" "}
+        <InlineMath math="(4, 1)" />, dan <InlineMath math="(-4, 1)" />
+      </>
+    }
+    cameraPosition={[0, 0.5, 8]}
+    data={[
+      {
+        points: Array.from({ length: 13 }, (_, i) => {
+          const x = i - 6; // x values from -6 to 6
+          return { x, y: (1 / 16) * x * x, z: 0 };
+        }),
+        color: getColor("TEAL"),
+        labels: [
+          {
+            text: "f(x) = (1/16)x²",
+            at: 11,
+            offset: [-2, 0.3, 0],
+          },
+          {
+            text: "(0, 0)",
+            at: 6,
+            offset: [0.3, 0.3, 0],
+          },
+          {
+            text: "(4, 1)",
+            at: 10,
+            offset: [0.3, 0.3, 0],
+          },
+          {
+            text: "(-4, 1)",
+            at: 2,
+            offset: [0.3, 0.3, 0],
+          },
+        ],
+      },
+    ]}
+  />
+</div>
+
+## Transformasi Antar Bentuk Fungsi Kuadrat
+
+### Bentuk Standar ke Bentuk Vertex
+
+Untuk mengubah <InlineMath math="f(x) = ax^2 + bx + c" /> menjadi bentuk vertex <InlineMath math="f(x) = a(x - h)^2 + k" />:
+
+1. Tentukan koordinat x dari titik puncak: <InlineMath math="h = -\frac{b}{2a}" />
+2. Hitung nilai fungsi di titik puncak: <InlineMath math="k = f(h) = f(-\frac{b}{2a})" />
+3. Atau gunakan rumus: <InlineMath math="k = c - \frac{b^2}{4a}" />
+
+### Bentuk Standar ke Bentuk Faktor
+
+Untuk mengubah <InlineMath math="f(x) = ax^2 + bx + c" /> menjadi bentuk faktor <InlineMath math="f(x) = a(x - p)(x - q)" />:
+
+1. Tentukan akar-akar persamaan <InlineMath math="ax^2 + bx + c = 0" /> menggunakan rumus:
+
+   <BlockMath math="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+
+2. Jika akar-akarnya adalah p dan q, maka:
+
+   <BlockMath math="f(x) = a(x - p)(x - q)" />
+
+### Bentuk Faktor ke Bentuk Standar
+
+Untuk mengubah <InlineMath math="f(x) = a(x - p)(x - q)" /> menjadi bentuk standar <InlineMath math="f(x) = ax^2 + bx + c" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="f(x) = a(x - p)(x - q)" />
+  <BlockMath math="f(x) = a(x^2 - qx - px + pq)" />
+  <BlockMath math="f(x) = a(x^2 - (p+q)x + pq)" />
+  <BlockMath math="f(x) = ax^2 - a(p+q)x + apq" />
+</div>
+
+Dengan membandingkan dengan bentuk standar, kita mendapatkan:
+
+- <InlineMath math="b = -a(p+q)" />
+- <InlineMath math="c = apq" />
+
+## Latihan dan Penyelesaian
+
+### Latihan 1
+
+Temukan persamaan fungsi kuadrat yang melalui titik (-2, 4), (1, -5), dan (3, 7).
+
+**Jawaban**:
+
+Masukkan titik-titik ke persamaan standar:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4 = a(-2)^2 + b(-2) + c = 4a - 2b + c" />
+  <BlockMath math="-5 = a(1)^2 + b(1) + c = a + b + c" />
+  <BlockMath math="7 = a(3)^2 + b(3) + c = 9a + 3b + c" />
+</div>
+
+Dari persamaan kedua, <InlineMath math="c = -5 - a - b" />.
+Substitusi ke persamaan pertama, lalu selesaikan:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="4 = 4a - 2b + (-5 - a - b)" />
+  <BlockMath math="9 = 3a - 3b" />
+  <BlockMath math="3 = a - b" />
+  <BlockMath math="a = 3 + b" />
+</div>
+
+Substitusi ke persamaan ketiga:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="7 = 9(3 + b) + 3b + (-5 - (3 + b) - b)" />
+  <BlockMath math="7 = 19 + 10b" />
+  <BlockMath math="b = -\frac{12}{10} = -\frac{6}{5}" />
+</div>
+
+Kemudian:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="a = 3 + (-\frac{6}{5}) = \frac{9}{5}" />
+  <BlockMath math="c = -5 - \frac{9}{5} - (-\frac{6}{5}) = -\frac{28}{5}" />
+</div>
+
+Jadi, persamaan fungsi kuadratnya adalah:
+
+<BlockMath math="f(x) = \frac{9}{5}x^2 - \frac{6}{5}x - \frac{28}{5}" />
+
+### Latihan 2
+
+Tentukan persamaan fungsi kuadrat yang memiliki titik puncak (-1, 4) dan melalui titik (2, -5).
+
+**Jawaban**:
+
+Gunakan bentuk vertex dengan h = -1 dan k = 4:
+
+<BlockMath math="f(x) = a(x - (-1))^2 + 4 = a(x + 1)^2 + 4" />
+
+Substitusi titik (2, -5):
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="-5 = a(2 + 1)^2 + 4" />
+  <BlockMath math="-5 = 9a + 4" />
+  <BlockMath math="-9 = 9a" />
+  <BlockMath math="a = -1" />
+</div>
+
+Jadi, persamaan fungsi kuadratnya adalah:
+
+<BlockMath math="f(x) = -(x + 1)^2 + 4 = -x^2 - 2x + 3" />
+
+### Latihan 3
+
+Tentukan persamaan fungsi kuadrat yang memiliki akar-akar x = -3 dan x = 2, dan memiliki nilai maksimum 4.
+
+**Jawaban**:
+
+Gunakan bentuk faktor dengan p = -3 dan q = 2:
+
+<BlockMath math="f(x) = a(x - (-3))(x - 2) = a(x + 3)(x - 2)" />
+
+Karena fungsi memiliki nilai maksimum, maka <InlineMath math="a < 0" />.
+
+Titik puncak berada di <InlineMath math="x = \frac{p + q}{2} = \frac{-3 + 2}{2} = -\frac{1}{2}" />.
+
+Substitusi x = -1/2 ke bentuk faktor dan gunakan bahwa nilai maksimum adalah 4:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="f(-\frac{1}{2}) = a(-\frac{1}{2} + 3)(-\frac{1}{2} - 2) = -a\frac{25}{4} = 4" />
+  <BlockMath math="a = -\frac{16}{25}" />
+</div>
+
+Jadi, persamaan fungsi kuadratnya adalah:
+
+<BlockMath math="f(x) = -\frac{16}{25}(x + 3)(x - 2) = -\frac{16}{25}x^2 - \frac{16}{25}x + \frac{96}{25}" />

@@ -1,0 +1,575 @@
+export const metadata = {
+  title: "Hyperbola",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Analytic Geometry",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## What is a Hyperbola?
+
+Have you ever seen the shape of cooling towers at power plants? Or perhaps noticed the shadow of a flashlight on the wall forming an open curve? Well, shapes like these are examples of **hyperbolas** in real life!
+
+A hyperbola is a curve formed when a plane cuts through a double cone at a certain angle. Unlike an ellipse which forms a closed curve, a hyperbola is actually formed from **two separate curves** that face each other.
+
+Mathematically, a hyperbola is defined as the locus of points where **the absolute difference of distances to two fixed points is always constant**. These two fixed points are called the **foci** of the hyperbola. For every point <InlineMath math="P" /> on the hyperbola, the difference <InlineMath math="|PF_1 - PF_2| = 2a" /> (constant), whereas in an [ellipse](/subject/high-school/12/mathematics/analytic-geometry/ellipse) the sum of distances is constant: <InlineMath math="PF_1 + PF_2 = 2a" />.
+
+<LineEquation
+  title="Basic Concept of Hyperbola"
+  description="Hyperbola with two foci showing constant difference in distances"
+  data={[
+    {
+      points: (() => {
+        const points = [];
+        const a = 3;
+        const b = 2;
+        const c = Math.sqrt(a * a + b * b);
+        
+        // Right branch of hyperbola
+        for (let t = -2; t <= 2; t += 0.1) {
+          const x = a * Math.cosh(t);
+          const y = b * Math.sinh(t);
+          points.push({ x, y, z: 0 });
+        }
+        return points;
+      })(),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const points = [];
+        const a = 3;
+        const b = 2;
+        
+        // Left branch of hyperbola
+        for (let t = -2; t <= 2; t += 0.1) {
+          const x = -a * Math.cosh(t);
+          const y = b * Math.sinh(t);
+          points.push({ x, y, z: 0 });
+        }
+        return points;
+      })(),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const a = 3;
+        const b = 2;
+        const c = Math.sqrt(a * a + b * b);
+        return [
+          { x: -c, y: 0, z: 0 },
+          { x: c, y: 0, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, -0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.3, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: -6, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -4, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Look at the visualization above! A hyperbola has two separate branches. For every point <InlineMath math="P" /> on the hyperbola, the difference in distance from <InlineMath math="P" /> to both foci <InlineMath math="F_1" /> and <InlineMath math="F_2" /> is always constant.
+
+## Components of a Hyperbola
+
+Before diving into formulas, let's get acquainted with the important parts of a hyperbola. Each component has its own role in determining the shape and properties of the hyperbola.
+
+<LineEquation
+  title="Parts of a Hyperbola"
+  description="Important components of a hyperbola with horizontal major axis."
+  data={[
+    {
+      points: (() => {
+        const points = [];
+        const a = 3;
+        const b = 2.5;
+        
+        // Right branch
+        for (let t = -1.5; t <= 1.5; t += 0.1) {
+          const x = a * Math.cosh(t);
+          const y = b * Math.sinh(t);
+          points.push({ x, y, z: 0 });
+        }
+        return points;
+      })(),
+      color: getColor("INDIGO"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const points = [];
+        const a = 3;
+        const b = 2.5;
+        
+        // Left branch
+        for (let t = -1.5; t <= 1.5; t += 0.1) {
+          const x = -a * Math.cosh(t);
+          const y = b * Math.sinh(t);
+          points.push({ x, y, z: 0 });
+        }
+        return points;
+      })(),
+      color: getColor("INDIGO"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "Center", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 3;
+        const b = 2.5;
+        const c = Math.sqrt(a * a + b * b);
+        return [
+          { x: -c, y: 0, z: 0 },
+          { x: c, y: 0, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 }
+      ],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: "A₁", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "A₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: -6, y: -5, z: 0 },
+        { x: 6, y: 5, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Asymptote", at: 1, offset: [0.5, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: -6, y: 5, z: 0 },
+        { x: 6, y: -5, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Asymptote", at: 0, offset: [-0.5, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+The components of a hyperbola you need to know:
+
+1. **Center of hyperbola** is the midpoint between the two foci, usually denoted by <InlineMath math="O" />.
+
+2. **Foci** (<InlineMath math="F_1" /> and <InlineMath math="F_2" />) are two fixed points that serve as the reference for the definition of a hyperbola. The distance between the two foci is called the focal distance.
+
+3. **Vertices** (<InlineMath math="A_1" /> and <InlineMath math="A_2" />) are the closest points between the two branches of the hyperbola. The line connecting the two vertices is called the major axis.
+
+4. **Major axis** is the line that passes through the center and both foci of the hyperbola.
+
+5. **Asymptotes** are lines that are approached by the branches of the hyperbola as they extend to infinity. The hyperbola never touches its asymptotes, but the farther from the center, the closer the curve approaches the asymptote lines.
+
+> The main difference between a hyperbola and an ellipse: a hyperbola has asymptotes and consists of two separate branches, while an ellipse is a closed curve without asymptotes.
+
+## Equation of a Hyperbola
+
+There are several forms depending on orientation and center position. We will discuss two cases:
+
+### Center at the Origin
+
+If the center of the hyperbola is at <InlineMath math="O(0,0)" />, there are two possible orientations:
+
+<LineEquation
+  title="Horizontal Major Axis"
+  description={<>Hyperbola <InlineMath math="\frac{x^2}{a^2} - \frac{y^2}{b^2} = 1" /> with horizontal major axis.</>}
+  data={[
+    {
+      points: (() => {
+        const points = [];
+        const a = 3;
+        const b = 2;
+        
+        // Right branch
+        for (let t = -1.8; t <= 1.8; t += 0.1) {
+          const x = a * Math.cosh(t);
+          const y = b * Math.sinh(t);
+          points.push({ x, y, z: 0 });
+        }
+        return points;
+      })(),
+      color: getColor("VIOLET"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const points = [];
+        const a = 3;
+        const b = 2;
+        
+        // Left branch
+        for (let t = -1.8; t <= 1.8; t += 0.1) {
+          const x = -a * Math.cosh(t);
+          const y = b * Math.sinh(t);
+          points.push({ x, y, z: 0 });
+        }
+        return points;
+      })(),
+      color: getColor("VIOLET"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O(0,0)", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 3;
+        const b = 2;
+        const c = Math.sqrt(a * a + b * b);
+        return [
+          { x: -c, y: 0, z: 0 },
+          { x: c, y: 0, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 }
+      ],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: "A₁", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "A₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: -6, y: -4, z: 0 },
+        { x: 6, y: 4, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: -6, y: 4, z: 0 },
+        { x: 6, y: -4, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+When the major axis is parallel to the <InlineMath math="X" /> axis (horizontal), the equation of the hyperbola is:
+
+<BlockMath math="\frac{x^2}{a^2} - \frac{y^2}{b^2} = 1" />
+
+If we visualize it, it will look like this:
+
+<LineEquation
+  title="Vertical Major Axis"
+  description={<>Hyperbola <InlineMath math="\frac{y^2}{a^2} - \frac{x^2}{b^2} = 1" /> with vertical major axis.</>}
+  data={[
+    {
+      points: (() => {
+        const points = [];
+        const a = 3;
+        const b = 2;
+        
+        // Top branch
+        for (let t = -1.8; t <= 1.8; t += 0.1) {
+          const x = b * Math.sinh(t);
+          const y = a * Math.cosh(t);
+          points.push({ x, y, z: 0 });
+        }
+        return points;
+      })(),
+      color: getColor("TEAL"),
+      showPoints: false,
+    },
+    {
+      points: (() => {
+        const points = [];
+        const a = 3;
+        const b = 2;
+        
+        // Bottom branch
+        for (let t = -1.8; t <= 1.8; t += 0.1) {
+          const x = b * Math.sinh(t);
+          const y = -a * Math.cosh(t);
+          points.push({ x, y, z: 0 });
+        }
+        return points;
+      })(),
+      color: getColor("TEAL"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "O(0,0)", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const a = 3;
+        const b = 2;
+        const c = Math.sqrt(a * a + b * b);
+        return [
+          { x: 0, y: -c, z: 0 },
+          { x: 0, y: c, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "F₁", at: 0, offset: [0.5, -0.5, 0] },
+        { text: "F₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: -3, z: 0 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "A₁", at: 0, offset: [0.5, -0.5, 0] },
+        { text: "A₂", at: 1, offset: [0.5, 0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: -4, y: -6, z: 0 },
+        { x: 4, y: 6, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: -4, y: 6, z: 0 },
+        { x: 4, y: -6, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+When the major axis is parallel to the <InlineMath math="Y" /> axis (vertical), the equation of the hyperbola is:
+
+<BlockMath math="\frac{y^2}{a^2} - \frac{x^2}{b^2} = 1" />
+
+### Shifted Center
+
+If the center of the hyperbola is not at the origin, but at point <InlineMath math="(h, k)" />, the equation becomes:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\frac{(x-h)^2}{a^2} - \frac{(y-k)^2}{b^2} = 1 \quad \text{(horizontal major axis)}" />
+  <BlockMath math="\frac{(y-k)^2}{a^2} - \frac{(x-h)^2}{b^2} = 1 \quad \text{(vertical major axis)}" />
+</div>
+
+## Important Properties of Hyperbola
+
+There are several mathematical relationships that always hold for every hyperbola:
+
+<BlockMath math="c^2 = a^2 + b^2" />
+
+where:
+- <InlineMath math="a" /> is the distance from center to vertex (semi-major axis)
+- <InlineMath math="b" /> is the constant that determines the shape of the hyperbola (semi-conjugate axis)
+- <InlineMath math="c" /> is the distance from center to focus
+
+This relationship is different from an ellipse which uses <InlineMath math="c^2 = a^2 - b^2" />.
+
+**Eccentricity** of a hyperbola is defined as:
+
+<BlockMath math="e = \frac{c}{a}" />
+
+The eccentricity value of a hyperbola is always <InlineMath math="e > 1" />. This is because <InlineMath math="c > a" /> (from the relationship <InlineMath math="c^2 = a^2 + b^2" />, so <InlineMath math="c = \sqrt{a^2 + b^2} > a" />). The larger the value of <InlineMath math="e" />, the more "open" or wide the hyperbola becomes. For comparison: a circle has <InlineMath math="e = 0" />, an ellipse has <InlineMath math="0 < e < 1" />, a parabola has <InlineMath math="e = 1" />, and a hyperbola has <InlineMath math="e > 1" />.
+
+**Asymptote equations** for a hyperbola with center at <InlineMath math="(0,0)" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="y = \pm \frac{b}{a}x \quad \text{(horizontal major axis)}" />
+  <BlockMath math="y = \pm \frac{a}{b}x \quad \text{(vertical major axis)}" />
+</div>
+
+> Asymptotes are "guides" for the hyperbola branches. The farther from the center, the closer the hyperbola curve approaches the asymptote lines, but never touches them.
+
+## Exercises
+
+1. Determine the equation of a hyperbola with center at <InlineMath math="(0,0)" />, vertices at <InlineMath math="(\pm 2, 0)" />, and foci at <InlineMath math="(\pm 3, 0)" />.
+
+2. Given the hyperbola <InlineMath math="\frac{x^2}{25} - \frac{y^2}{9} = 1" />. Determine the coordinates of the foci, eccentricity, and asymptote equations.
+
+3. A hyperbola has its center at <InlineMath math="(1, -2)" />, horizontal major axis, <InlineMath math="a = 3" />, and <InlineMath math="b = 4" />. Determine the equation of the hyperbola.
+
+4. Determine the asymptote equations of the hyperbola <InlineMath math="\frac{(y+1)^2}{4} - \frac{(x-2)^2}{9} = 1" />.
+
+### Answer Key
+
+1. **Solution**:
+
+   Given:
+   - Center at <InlineMath math="(0,0)" />
+   - Vertices at <InlineMath math="(\pm 2, 0)" />, so <InlineMath math="a = 2" />
+   - Foci at <InlineMath math="(\pm 3, 0)" />, so <InlineMath math="c = 3" />
+   - Horizontal major axis (since vertices and foci are on the <InlineMath math="X" /> axis)
+   
+   Use the relationship <InlineMath math="c^2 = a^2 + b^2" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="3^2 = 2^2 + b^2" />
+     <BlockMath math="9 = 4 + b^2" />
+     <BlockMath math="b^2 = 5" />
+   </div>
+   
+   Equation of hyperbola with horizontal major axis:
+   
+   <BlockMath math="\frac{x^2}{4} - \frac{y^2}{5} = 1" />
+
+2. **Solution**:
+
+   From the equation <InlineMath math="\frac{x^2}{25} - \frac{y^2}{9} = 1" />:
+   - <InlineMath math="a^2 = 25" />, so <InlineMath math="a = 5" />
+   - <InlineMath math="b^2 = 9" />, so <InlineMath math="b = 3" />
+   
+   Since it's in the form <InlineMath math="\frac{x^2}{a^2} - \frac{y^2}{b^2} = 1" />, the major axis is horizontal.
+   
+   Calculate <InlineMath math="c" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="c^2 = a^2 + b^2 = 25 + 9 = 34" />
+     <BlockMath math="c = \sqrt{34} \approx 5{,}831" />
+   </div>
+   
+   Coordinates of foci: <InlineMath math="(\pm \sqrt{34}, 0)" />
+   
+   Eccentricity:
+   
+   <BlockMath math="e = \frac{c}{a} = \frac{\sqrt{34}}{5} \approx \frac{5{,}831}{5} \approx 1{,}166" />
+   
+   Asymptote equations (horizontal major axis):
+   
+   <BlockMath math="y = \pm \frac{b}{a}x = \pm \frac{3}{5}x" />
+
+3. **Solution**:
+
+   Given:
+   - Center: <InlineMath math="(h,k) = (1, -2)" />
+   - Horizontal major axis
+   - <InlineMath math="a = 3" />, so <InlineMath math="a^2 = 9" />
+   - <InlineMath math="b = 4" />, so <InlineMath math="b^2 = 16" />
+   
+   Equation of hyperbola with center <InlineMath math="(h,k)" /> and horizontal major axis:
+   
+   <BlockMath math="\frac{(x-h)^2}{a^2} - \frac{(y-k)^2}{b^2} = 1" />
+   
+   Substituting values:
+   
+   <BlockMath math="\frac{(x-1)^2}{9} - \frac{(y+2)^2}{16} = 1" />
+
+4. **Solution**:
+
+   From the equation <InlineMath math="\frac{(y+1)^2}{4} - \frac{(x-2)^2}{9} = 1" />:
+   - Center: <InlineMath math="(h,k) = (2, -1)" />
+   - <InlineMath math="a^2 = 4" />, so <InlineMath math="a = 2" />
+   - <InlineMath math="b^2 = 9" />, so <InlineMath math="b = 3" />
+   - Vertical major axis (since it's in the form <InlineMath math="\frac{(y-k)^2}{a^2} - \frac{(x-h)^2}{b^2} = 1" />)
+   
+   For a hyperbola with center <InlineMath math="(h,k)" /> and vertical major axis, the asymptote equations:
+   
+   <BlockMath math="y - k = \pm \frac{a}{b}(x - h)" />
+   
+   Substituting values:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="y - (-1) = \pm \frac{2}{3}(x - 2)" />
+     <BlockMath math="y + 1 = \pm \frac{2}{3}(x - 2)" />
+     <BlockMath math="y = -1 \pm \frac{2}{3}(x - 2)" />
+   </div>
+   
+    So the asymptote equations are:
+    
+    <div className="flex flex-col gap-4">
+       <BlockMath math="y = -1 + \frac{2}{3}(x - 2)" />
+       <BlockMath math="y = -1 - \frac{2}{3}(x - 2)" />
+     </div>

@@ -1,0 +1,158 @@
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+export const metadata = {
+  title: "Reflection Matrix over Arbitrary Point",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/10/2025",
+  subject: "Geometric Transformation",
+};
+
+## Finding the Reflection Matrix over an Arbitrary Point
+
+The image of a point <InlineMath math="(x,y)" /> reflected over the point <InlineMath math="(a,b)" /> is <InlineMath math="(-x+2a, -y+2b)" /> or <InlineMath math="(2a-x, 2b-y)" />.
+
+The matrix operation associated with this transformation cannot be represented solely by a single <InlineMath math="2 \times 2" /> multiplication matrix, as it involves addition (translation) due to the center point <InlineMath math="(a,b)" /> not being the origin.
+
+However, we can represent this transformation as a combination of matrix operations:
+
+1. Translate the point <InlineMath math="(x,y)" /> so that the center of reflection <InlineMath math="(a,b)" /> effectively becomes the origin. This means we work with <InlineMath math="(x-a, y-b)" />.
+2. Reflect this translated point over the origin using the matrix <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+3. Translate the result back by adding the coordinates of the center of reflection <InlineMath math="(a,b)" />.
+
+Mathematically, if <InlineMath math="(x', y')" /> is the image of <InlineMath math="(x,y)" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} x-a \\ y-b \end{pmatrix} + \begin{pmatrix} a \\ b \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -(x-a) \\ -(y-b) \end{pmatrix} + \begin{pmatrix} a \\ b \end{pmatrix} = \begin{pmatrix} -x+a \\ -y+b \end{pmatrix} + \begin{pmatrix} a \\ b \end{pmatrix} = \begin{pmatrix} -x+2a \\ -y+2b \end{pmatrix}" />
+</div>
+
+This corresponds to the formula we are familiar with.
+
+### Matrix Operation for Reflection over a Point
+
+The matrix operation associated with reflection over the point <InlineMath math="P(a,b)" /> for any point <InlineMath math="(x,y)" /> is:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} + 2 \begin{pmatrix} a \\ b \end{pmatrix}" />
+
+Or, more precisely, it can be written as a combination:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \left( \begin{pmatrix} x \\ y \end{pmatrix} - \begin{pmatrix} a \\ b \end{pmatrix} \right) + \begin{pmatrix} a \\ b \end{pmatrix}" />
+
+The form presented as Property 4.11 in the book (<InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} + 2 \begin{pmatrix} a \\ b \end{pmatrix}" />) is a simplification of <InlineMath math="\begin{pmatrix} -x+2a \\ -y+2b \end{pmatrix}" />.
+
+## Finding the Image of a Point
+
+Determine the image of point <InlineMath math="(2,3)" /> by reflection over point <InlineMath math="(1,1)" />.
+
+**Alternative Solution:**
+
+Point <InlineMath math="(x,y) = (2,3)" />. Center <InlineMath math="(a,b) = (1,1)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 2 \\ 3 \end{pmatrix} + 2 \begin{pmatrix} 1 \\ 1 \end{pmatrix}" />
+  <BlockMath math="= \begin{pmatrix} (-1)(2) + (0)(3) \\ (0)(2) + (-1)(3) \end{pmatrix} + \begin{pmatrix} 2 \\ 2 \end{pmatrix}" />
+  <BlockMath math="= \begin{pmatrix} -2 \\ -3 \end{pmatrix} + \begin{pmatrix} 2 \\ 2 \end{pmatrix} = \begin{pmatrix} -2+2 \\ -3+2 \end{pmatrix} = \begin{pmatrix} 0 \\ -1 \end{pmatrix}" />
+</div>
+
+Visualization:
+
+<LineEquation
+  title={
+    <>
+      Reflection of Point <InlineMath math="Q(2,3)" /> over{" "}
+      <InlineMath math="P(1,1)" />
+    </>
+  }
+  description={
+    <>
+      Point <InlineMath math="Q(2,3)" /> reflected over{" "}
+      <InlineMath math="P(1,1)" /> becomes <InlineMath math="Q'(0,-1)" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 1, y: 1, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "P(1,1) - Center", at: 0, offset: [0.3, -0.5, 0] }],
+    },
+    {
+      points: [{ x: 2, y: 3, z: 0 }],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "Q(2,3) - Original", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: [{ x: 0, y: -1, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "Q'(0,-1) - Image", at: 0, offset: [-0.8, -0.2, 0] }],
+    },
+    {
+      points: [
+        { x: 2, y: 3, z: 0 },
+        { x: 0, y: -1, z: 0 },
+      ],
+      color: getColor("INDIGO"),
+    }, // Line QQ'
+  ]}
+  showZAxis={false}
+  cameraPosition={[1, 1, 10]}
+/>
+
+## Exercises
+
+1.  Determine the image of point <InlineMath math="(3,1)" /> by reflection over point <InlineMath math="(-2,-1)" />.
+2.  A line passes through points <InlineMath math="A(1,2)" /> and <InlineMath math="B(3,4)" />. Determine the equation of the image line after reflection over point <InlineMath math="C(0,1)" />.
+
+### Key Answers
+
+1.  Point <InlineMath math="(x,y) = (3,1)" />. Center <InlineMath math="(a,b) = (-2,-1)" />.
+
+    Using the formula <InlineMath math="x' = 2a-x" /> and <InlineMath math="y' = 2b-y" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = 2(-2) - 3 = -4 - 3 = -7" />
+      <BlockMath math="y' = 2(-1) - 1 = -2 - 1 = -3" />
+    </div>
+
+    Its image is <InlineMath math="(-7,-3)" />. Or using matrix operations:
+
+    <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 3 \\ 1 \end{pmatrix} + 2 \begin{pmatrix} -2 \\ -1 \end{pmatrix} = \begin{pmatrix} -3 \\ -1 \end{pmatrix} + \begin{pmatrix} -4 \\ -2 \end{pmatrix} = \begin{pmatrix} -7 \\ -3 \end{pmatrix}" />
+
+2.  Center of reflection <InlineMath math="C(0,1)" />. (<InlineMath math="a=0, b=1" />)
+
+    Image of point <InlineMath math="A(1,2)" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x'_A = 2(0)-1 = -1" />
+      <BlockMath math="y'_A = 2(1)-2 = 0" />
+    </div>
+
+    So <InlineMath math="A'(-1,0)" />.
+
+    Image of point <InlineMath math="B(3,4)" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x'_B = 2(0)-3 = -3" />
+      <BlockMath math="y'_B = 2(1)-4 = -2" />
+    </div>
+
+    So <InlineMath math="B'(-3,-2)" />.
+
+    The image line passes through <InlineMath math="A'(-1,0)" /> and <InlineMath math="B'(-3,-2)" />.
+
+    Gradient <InlineMath math="m' = \frac{-2 - 0}{-3 - (-1)} = \frac{-2}{-2} = 1" />.
+
+    Equation of the line:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="y - y'_A = m'(x - x'_A)" />
+      <BlockMath math="y - 0 = 1(x - (-1))" />
+      <BlockMath math="y = x + 1" />
+    </div>
+
+    or
+
+    <BlockMath math="x - y + 1 = 0" />

@@ -1,0 +1,125 @@
+export const metadata = {
+  title: "History of Pi",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Circle Arcs and Sectors",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Understanding and Meaning of Pi
+
+Have you ever wondered why the circumference of a circle always has a constant relationship with its diameter? This amazing mathematical constant is called <InlineMath math="\pi" /> (pi). The value of <InlineMath math="\pi" /> represents the ratio between the circumference of a circle and its diameter, which always produces the same number for all circles, approximately 3.14159.
+
+Mathematically, <InlineMath math="\pi" /> can be defined as:
+
+<BlockMath math="\pi = \frac{\text{circle circumference}}{\text{circle diameter}}" />
+
+This constant is very special because its value never changes, regardless of how big or small the circle is. Imagine it like a cake recipe that always produces the same taste even when the portion is enlarged or reduced.
+
+## Early Discoveries of Ancient Civilizations
+
+People in ancient times already recognized the special relationship between the circumference and diameter of a circle. The ancient Babylonian civilization used a simple approach by considering <InlineMath math="\pi" /> to have a value of 3. Although not accurate, this approach was sufficient for their practical needs in building structures and calculating land area.
+
+The ancient Egyptians had a more sophisticated approach. They used the value <InlineMath math="\pi \approx \frac{256}{81}" />, which when calculated gives a result of about 3.16. This value was more accurate compared to the Babylonian approach and showed a deeper understanding of mathematics.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{256}{81} = 3.160..." />
+</div>
+
+## Archimedes Method and Polygons
+
+Archimedes of Syracuse, a Greek mathematician who lived around 287-212 BC, developed a revolutionary method to calculate <InlineMath math="\pi" /> with greater precision. He used an approach of regular polygons that surrounded and were inside the circle.
+
+The basic concept was simple yet brilliant. Archimedes drew regular polygons inside and outside the circle, then calculated the perimeter of both polygons. The perimeter of the inner polygon provided a lower bound for the circle's circumference, while the perimeter of the outer polygon provided an upper bound.
+
+<LineEquation
+  title={<>Visualization of Archimedes Polygon Method</>}
+  description="Regular polygons that surround and are inside the circle to approximate the value of pi."
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 37 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 36;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      smooth: true,
+      showPoints: false,
+      labels: [{ text: "Circle", at: 9, offset: [0.5, 0.5, 0] }]
+    },
+    {
+      points: Array.from({ length: 7 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 6;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "Inner Polygon", at: 2, offset: [-1, -0.5, 0] }]
+    },
+    {
+      points: Array.from({ length: 7 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 6;
+        const radius = 3;
+        const apothem = radius / Math.cos(Math.PI / 6);
+        return {
+          x: apothem * Math.cos(angle),
+          y: apothem * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("PURPLE"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "Outer Polygon", at: 4, offset: [0.8, -0.5, 0] }]
+    }
+  ]}
+/>
+
+Using a 96-sided polygon, Archimedes successfully determined that the value of <InlineMath math="\pi" /> lies between <InlineMath math="\frac{223}{71}" /> and <InlineMath math="\frac{22}{7}" />. His calculations gave:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="3.1408 < \pi < 3.1429" />
+</div>
+
+## Contributions of Chinese Mathematicians
+
+Zu Chongzhi, a Chinese mathematician who lived in the 5th century AD, achieved an extraordinary breakthrough in calculating <InlineMath math="\pi" />. He used a polygon with 24,576 sides and successfully determined the value of <InlineMath math="\pi" /> to seven accurate decimal places.
+
+Zu Chongzhi found that <InlineMath math="\pi \approx \frac{355}{113}" />, which gives the value 3.1415929. This approximation was remarkable because it was accurate to six decimal places and was not surpassed for almost a thousand years.
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{355}{113} = 3.1415929..." />
+</div>
+
+## Modern Era and Pi Symbol
+
+William Jones, a Welsh mathematician, first introduced the symbol <InlineMath math="\pi" /> in 1706 in his work "Synopsis Palmariorum Matheseos". The choice of this Greek letter was very appropriate because <InlineMath math="\pi" /> is the first letter of the word "perimeter" in Greek, which means circumference.
+
+Leonhard Euler, the famous Swiss mathematician, popularized the use of the symbol <InlineMath math="\pi" /> through his influential works. Thanks to Euler, this symbol became the universal standard in mathematics to this day.
+
+## Special Properties of Pi
+
+The value of <InlineMath math="\pi" /> has very interesting characteristics. It is an irrational number, meaning it cannot be expressed as a simple fraction of two integers. Moreover, <InlineMath math="\pi" /> is also a transcendental number, which means it cannot be the root of a polynomial equation with rational coefficients.
+
+In daily life, we often use approximations <InlineMath math="\pi \approx 3.14" /> or <InlineMath math="\pi \approx \frac{22}{7}" /> for practical calculations. However, for applications requiring high precision such as satellite technology or physics research, more decimal places are needed.
+
+The fundamental relationship of <InlineMath math="\pi" /> with circle geometry can be expressed as:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="C = \pi \cdot d" />
+<BlockMath math="A = \pi \cdot r^2" />
+</div>
+
+where <InlineMath math="C" /> is circumference, <InlineMath math="d" /> is diameter, <InlineMath math="A" /> is area, and <InlineMath math="r" /> is the radius of the circle.

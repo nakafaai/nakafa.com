@@ -1,0 +1,168 @@
+import { Triangle } from "@repo/contents/_components/triangle";
+
+export const metadata = {
+  title: "Trigonometric Comparison: Sin θ and Cos θ",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/14/2025",
+  subject: "Trigonometry",
+};
+
+## What is Sine Ratio (sin θ)?
+
+Sine of an angle θ in a right triangle is the ratio between the length of the opposite side and the hypotenuse.
+
+<BlockMath math="\sin \theta = \frac{\text{opposite side}}{\text{hypotenuse}}" />
+
+<div className="mt-4">
+  <Triangle
+    title={
+      <>
+        Visualization of Sine (<InlineMath math="\sin \theta" />)
+      </>
+    }
+    description="Move the slider to see how the sine changes as the angle changes."
+    angle={30}
+    labels={{
+      opposite: "Opposite Side",
+      adjacent: "Adjacent Side",
+      hypotenuse: "Hypotenuse",
+    }}
+  />
+</div>
+
+### What is Cosine Ratio (cos θ)?
+
+Cosine of an angle θ in a right triangle is the ratio between the length of the adjacent side and the hypotenuse.
+
+<BlockMath math="\cos \theta = \frac{\text{adjacent side}}{\text{hypotenuse}}" />
+
+<div className="mt-4">
+  <Triangle
+    title={
+      <>
+        Visualization of Cosine (<InlineMath math="\cos \theta" />)
+      </>
+    }
+    description="Move the slider to see how the cosine changes as the angle changes."
+    angle={60}
+    labels={{
+      opposite: "Opposite Side",
+      adjacent: "Adjacent Side",
+      hypotenuse: "Hypotenuse",
+    }}
+  />
+</div>
+
+## Sine and Cosine Values for Common Angles
+
+Here are some sine and cosine values for commonly used angles:
+
+| Angle                     | Sine Value (sin θ)                       | Decimal Value              | Cosine Value (cos θ)                     | Decimal Value              |
+| ------------------------- | ---------------------------------------- | -------------------------- | ---------------------------------------- | -------------------------- |
+| <InlineMath math="0°" />  | <InlineMath math="0" />                  | <InlineMath math="0" />    | <InlineMath math="1" />                  | <InlineMath math="1" />    |
+| <InlineMath math="30°" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0.5" />  | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0.87" /> |
+| <InlineMath math="45°" /> | <InlineMath math="\frac{\sqrt{2}}{2}" /> | <InlineMath math="0.71" /> | <InlineMath math="\frac{\sqrt{2}}{2}" /> | <InlineMath math="0.71" /> |
+| <InlineMath math="60°" /> | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0.87" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0.5" />  |
+| <InlineMath math="90°" /> | <InlineMath math="1" />                  | <InlineMath math="1" />    | <InlineMath math="0" />                  | <InlineMath math="0" />    |
+
+## Applications of Sine and Cosine in Real Life
+
+Sine and cosine have many important applications in everyday life, especially in:
+
+1. Measuring the height of buildings or objects
+2. Navigation and direction finding
+3. Architecture and construction
+4. Physics and engineering
+5. Design and calculation of structures
+
+## Trigonometric Ratios in Pyramids
+
+Let's look at an example of applying sine and cosine in the context of pyramids:
+
+### Using Sine to Calculate Pyramid Height
+
+Suppose an archaeologist wants to know the height of a pyramid. They know that the elevation angle from the base to the top of the pyramid is 41° and the slant height (edge) of the pyramid is 600 m.
+
+<Triangle
+  title="Calculating Pyramid Height with Sine"
+  description="Triangle formed when calculating the height of a pyramid."
+  angle={41}
+  labels={{
+    opposite: "Pyramid Height",
+    adjacent: "Base Radius",
+    hypotenuse: "Slant Height",
+  }}
+/>
+
+To calculate the height of the pyramid, we use the sine ratio:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sin 41° = \frac{\text{pyramid height}}{\text{slant height}}" />
+  <BlockMath math="\sin 41° = \frac{x \text{ m}}{600 \text{ m}}" />
+  <BlockMath math="0.66 = \frac{x \text{ m}}{600 \text{ m}}" />
+  <BlockMath math="x = 0.66 \times 600 \text{ m} = 396 \text{ m}" />
+</div>
+
+Therefore, the height of the pyramid is 396 meters.
+
+### Using Cosine to Calculate Pyramid Base Radius
+
+Now, if we want to know the base radius of the pyramid, we can use the cosine ratio:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\cos 41° = \frac{\text{pyramid base radius}}{\text{slant height}}" />
+  <BlockMath math="\cos 41° = \frac{x \text{ m}}{600 \text{ m}}" />
+  <BlockMath math="0.75 = \frac{x \text{ m}}{600 \text{ m}}" />
+  <BlockMath math="x = 0.75 \times 600 \text{ m} = 450 \text{ m}" />
+</div>
+
+Therefore, the base radius of the pyramid is 450 meters.
+
+## Differences and Similarities Between Sin, Cos, and Tan
+
+### Differences
+
+1. **Sine (sin θ)** compares the opposite side with the hypotenuse.
+2. **Cosine (cos θ)** compares the adjacent side with the hypotenuse.
+3. **Tangent (tan θ)** compares the opposite side with the adjacent side.
+
+### Similarities
+
+1. All three are trigonometric ratios in right triangles.
+2. All three change their values according to the angle.
+3. These three ratios have a mathematical relationship:
+
+   <BlockMath math="\tan \theta = \frac{\sin \theta}{\cos \theta}" />
+
+## Practice Problem
+
+A child is flying a kite and has managed to raise it to a height of 3.5 m. The child is holding the string at a height of 60 cm from the ground. If the kite string forms an angle of 25° with the ground, what is the length of the string being used?
+
+<Triangle
+  title="Kite Problem"
+  description="Visualization of the kite string length problem."
+  angle={25}
+  labels={{
+    opposite: "Kite Height",
+    adjacent: "Horizontal Distance",
+    hypotenuse: "String Length",
+  }}
+/>
+
+To solve this problem, which trigonometric ratio should we use?
+
+**Correct Solution:**
+
+1. We need to calculate the string length (hypotenuse)
+2. We know the effective height of the kite (3.5 m - 0.6 m = 2.9 m)
+3. We know the elevation angle (25°)
+4. Since we're looking for the hypotenuse and we know the opposite side (effective height), we use the sine ratio:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\sin 25° = \frac{\text{effective height}}{\text{string length}}" />
+     <BlockMath math="\sin 25° = \frac{2.9 \text{ m}}{x \text{ m}}" />
+     <BlockMath math="0.42 = \frac{2.9 \text{ m}}{x \text{ m}}" />
+     <BlockMath math="x = \frac{2.9 \text{ m}}{0.42} = 6.9 \text{ m}" />
+   </div>
+
+Therefore, the length of the kite string being used is approximately 6.9 meters.

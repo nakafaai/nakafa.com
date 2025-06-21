@@ -1,0 +1,303 @@
+export const metadata = {
+  title: "Horizontal Translation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Function Transformation",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Basic Concepts of Horizontal Translation
+
+Horizontal translation is a geometric transformation that shifts the graph of a function left or right along the x-axis without changing the shape of the graph. Imagine sliding an object horizontally on a table, its shape remains the same, only its position changes.
+
+If we have a function <InlineMath math="f(x)" />, then horizontal translation produces a new function <InlineMath math="g(x) = f(x - h)" /> where <InlineMath math="h" /> is the translation constant.
+
+### Rules of Horizontal Translation
+
+For any function <InlineMath math="f(x)" />, horizontal translation is defined as:
+
+<BlockMath math="g(x) = f(x - h)" />
+
+Where:
+- If <InlineMath math="h > 0" />, the graph shifts to the **right** by <InlineMath math="h" /> units
+- If <InlineMath math="h < 0" />, the graph shifts to the **left** by <InlineMath math="|h|" /> units
+- If <InlineMath math="h = 0" />, there is no translation (graph remains the same)
+
+## Visualization of Horizontal Translation
+
+Let's see how horizontal translation works on the quadratic function <InlineMath math="f(x) = x^2" />.
+
+<LineEquation
+  title={<>Horizontal Translation of Quadratic Function <InlineMath math="f(x) = x^2" /></>}
+  description="Notice how the graph shifts horizontally without changing the parabola shape."
+  showZAxis={false}
+  cameraPosition={[12, 8, 12]}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      labels: [{ text: "f(x) = x²", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: (x - 3) * (x - 3), z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      labels: [{ text: "g(x) = (x - 3)²", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: (x + 2) * (x + 2), z: 0 };
+      }),
+      color: getColor("TEAL"),
+      labels: [{ text: "h(x) = (x + 2)²", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+From the visualization above, we can observe:
+- The original function <InlineMath math="f(x) = x^2" /> (purple) has its vertex at <InlineMath math="(0, 0)" />
+- Function <InlineMath math="g(x) = (x - 3)^2" /> (orange) shifts right by 3 units with vertex at <InlineMath math="(3, 0)" />
+- Function <InlineMath math="h(x) = (x + 2)^2" /> (teal) shifts left by 2 units with vertex at <InlineMath math="(-2, 0)" />
+
+## Horizontal Translation on Linear Functions
+
+Now let's apply the same concept to the linear function <InlineMath math="f(x) = 2x + 1" />.
+
+<LineEquation
+  title={<>Horizontal Translation of Linear Function <InlineMath math="f(x) = 2x + 1" /></>}
+  description="The line maintains the same slope, only its horizontal position changes."
+  showZAxis={false}
+  cameraPosition={[10, 6, 10]}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * x + 1, z: 0 };
+      }),
+      color: getColor("VIOLET"),
+      labels: [{ text: "f(x) = 2x + 1", offset: [1, 0.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * (x - 4) + 1, z: 0 };
+      }),
+      color: getColor("AMBER"),
+      labels: [{ text: "g(x) = 2(x - 4) + 1", offset: [1, 0.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * (x + 3) + 1, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      labels: [{ text: "h(x) = 2(x + 3) + 1", offset: [1, 0.5, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Notice that:
+- All lines have the same slope of 2
+- Function <InlineMath math="g(x) = 2(x - 4) + 1" /> shifts right by 4 units
+- Function <InlineMath math="h(x) = 2(x + 3) + 1" /> shifts left by 3 units
+
+## Important Properties of Horizontal Translation
+
+### Graph Shape Remains Unchanged
+
+Horizontal translation preserves the original shape of the graph. The vertical distance between points on the graph remains the same, only the horizontal position changes.
+
+### Effect on Coordinate Points
+
+If point <InlineMath math="(a, b)" /> is on the graph of <InlineMath math="f(x)" />, then after horizontal translation by <InlineMath math="h" />, that point becomes <InlineMath math="(a + h, b)" /> on the graph of <InlineMath math="f(x - h)" />.
+
+### Domain and Range
+
+- **Domain**: Shifts by <InlineMath math="h" /> units
+- **Range**: Does not change after horizontal translation
+
+If the domain of the original function is <InlineMath math="[c, d]" />, then the domain after horizontal translation <InlineMath math="h" /> becomes <InlineMath math="[c + h, d + h]" />.
+
+## Application Examples
+
+### Exponential Function Example
+
+Let's look at horizontal translation on the exponential function <InlineMath math="f(x) = 2^x" />.
+
+<LineEquation
+  title={<>Horizontal Translation of Exponential Function <InlineMath math="f(x) = 2^x" /></>}
+  description="The exponential curve maintains its characteristics after horizontal translation."
+  showZAxis={false}
+  cameraPosition={[8, 5, 8]}
+  data={[
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: Math.pow(2, x), z: 0 };
+      }),
+      color: getColor("INDIGO"),
+      labels: [{ text: "f(x) = 2^x", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: Math.pow(2, x - 2), z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      labels: [{ text: "g(x) = 2^(x-2)", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: Math.pow(2, x + 1), z: 0 };
+      }),
+      color: getColor("ROSE"),
+      labels: [{ text: "h(x) = 2^(x+1)", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+For exponential functions:
+- The horizontal asymptote remains at <InlineMath math="y = 0" /> for all functions
+- The y-intercept changes due to horizontal shift
+- Function <InlineMath math="g(x) = 2^{x-2}" /> shifts right by 2 units
+- Function <InlineMath math="h(x) = 2^{x+1}" /> shifts left by 1 unit
+
+## Difference from Vertical Translation
+
+It's important to understand the difference between horizontal and vertical translation:
+
+### Horizontal Translation
+- Changes the function input: <InlineMath math="f(x - h)" />
+- Affects the x position of each point
+- Domain changes, range remains
+
+### Vertical Translation
+- Changes the function output: <InlineMath math="f(x) + k" />
+- Affects the y position of each point
+- Domain remains, range changes
+
+## Exercises
+
+1. Given the function <InlineMath math="f(x) = x^2 + 2x + 1" />. Determine the equation of the function resulting from horizontal translation to the right by 3 units.
+
+2. If the graph of function <InlineMath math="g(x) = \sqrt{x}" /> is translated horizontally to the left by 4 units, determine:
+   - The equation of the resulting translated function
+   - The domain of the function after translation
+
+3. Function <InlineMath math="h(x) = 3^x" /> undergoes horizontal translation such that point <InlineMath math="(0, 1)" /> becomes <InlineMath math="(2, 1)" />. Determine the translation constant value and the equation of the resulting translated function.
+
+### Answer Key
+
+1. Horizontal translation to the right by 3 units: <InlineMath math="f'(x) = f(x - 3) = (x - 3)^2 + 2(x - 3) + 1 = x^2 - 4x + 4" />
+
+   <LineEquation
+     title={<>Function <InlineMath math="f(x) = x^2 + 2x + 1" /> and Its Translation Result</>}
+     description="Original quadratic function and the result of horizontal translation to the right by 3 units."
+     showZAxis={false}
+     cameraPosition={[12, 8, 12]}
+     data={[
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: x * x + 2 * x + 1, z: 0 };
+         }),
+         color: getColor("PURPLE"),
+         labels: [{ text: "f(x) = x² + 2x + 1", offset: [1, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: x * x - 4 * x + 4, z: 0 };
+         }),
+         color: getColor("ORANGE"),
+         labels: [{ text: "f'(x) = x² - 4x + 4", offset: [1, 1, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+2. Equation of the resulting translated function:
+    
+   - Translation to the left by 4 units: <InlineMath math="g'(x) = g(x + 4) = \sqrt{x + 4}" />
+   - Domain after translation: <InlineMath math="x + 4 \geq 0" />, so <InlineMath math="x \geq -4" /> or <InlineMath math="[-4, \infty)" />
+
+   Visualization:
+
+   <LineEquation
+     title={<>Function <InlineMath math="g(x) = \sqrt{x}" /> and Its Translation Result</>}
+     description="Original square root function and the result of horizontal translation to the left by 4 units."
+     showZAxis={false}
+     cameraPosition={[8, 6, 8]}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: Math.sqrt(x), z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         labels: [{ text: "g(x) = √x", offset: [1, 0.5, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25 - 4;
+           if (x + 4 >= 0) {
+             return { x, y: Math.sqrt(x + 4), z: 0 };
+           }
+           return null;
+         }).filter(Boolean),
+         color: getColor("TEAL"),
+         labels: [{ text: "g'(x) = √(x + 4)", offset: [1, 0.5, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+3. Point <InlineMath math="(0, 1)" /> on <InlineMath math="h(x) = 3^x" /> becomes <InlineMath math="(2, 1)" />, meaning horizontal translation by <InlineMath math="h = 2" /> units to the right.
+   Equation of the translation result: <InlineMath math="h'(x) = 3^{x-2}" />
+
+   <LineEquation
+     title={<>Function <InlineMath math="h(x) = 3^x" /> and Its Translation Result</>}
+     description="Original exponential function and the result of horizontal translation to the right by 2 units."
+     showZAxis={false}
+     cameraPosition={[10, 6, 10]}
+     data={[
+       {
+         points: Array.from({ length: 31 }, (_, i) => {
+           const x = (i - 15) * 0.2;
+           return { x, y: Math.pow(3, x), z: 0 };
+         }),
+         color: getColor("INDIGO"),
+         labels: [{ text: "h(x) = 3^x", offset: [0.5, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 31 }, (_, i) => {
+           const x = (i - 15) * 0.2;
+           return { x, y: Math.pow(3, x - 2), z: 0 };
+         }),
+         color: getColor("EMERALD"),
+         labels: [{ text: "h'(x) = 3^(x-2)", offset: [0.5, 1, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
