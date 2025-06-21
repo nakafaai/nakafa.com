@@ -1,6 +1,9 @@
 import { getRawGithubUrl } from "@/lib/utils/github";
-import { getNestedSlugs } from "@/lib/utils/system";
-import { getFolderChildNames, getRawContent } from "@repo/contents/_lib/utils";
+import {
+  getFolderChildNames,
+  getNestedSlugs,
+  getRawContent,
+} from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";

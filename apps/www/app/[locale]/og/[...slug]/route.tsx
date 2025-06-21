@@ -1,5 +1,5 @@
-import { getMetadataFromSlug, getNestedSlugs } from "@/lib/utils/system";
-import { getFolderChildNames } from "@repo/contents/_lib/utils";
+import { getMetadataFromSlug } from "@/lib/utils/system";
+import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 import { generateOGImage } from "./og";
 

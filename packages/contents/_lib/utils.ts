@@ -97,7 +97,7 @@ export async function getReferences(path: string): Promise<Reference[]> {
  * @returns The child names of the folder.
  */
 export function getFolderChildNames(folder: string, exclude?: string[]) {
-  const defaultExclude = ["_"];
+  const defaultExclude = ["_", "node_modules", ".next", ".git"];
 
   const effectiveExclude = exclude
     ? [...defaultExclude, ...exclude]
@@ -127,4 +127,46 @@ export function getFolderChildNames(folder: string, exclude?: string[]) {
   } catch {
     return [];
   }
+}
+
+/**
+ * Recursively builds slug arrays from nested folder structure
+ * @param basePath - Base path to start folder traversal
+ * @param currentPath - Current path traversed (used internally for recursion)
+ * @param result - Current result array (used internally for recursion)
+ * @returns Array of string arrays representing possible slug paths
+ */
+export function getNestedSlugs(
+  basePath: string,
+  currentPath: string[] = [],
+  result: string[][] = []
+): string[][] {
+  const fullPath =
+    currentPath.length === 0
+      ? basePath
+      : `${basePath}/${currentPath.join("/")}`;
+  const children = getFolderChildNames(fullPath);
+
+  if (children.length === 0) {
+    // Add leaf nodes as valid slug paths
+    if (currentPath.length > 0) {
+      result.push([...currentPath]);
+    }
+    return result;
+  }
+
+  // Check if there are any files at this level
+  if (
+    (fullPath.endsWith(".mdx") || fullPath.endsWith(".md")) &&
+    currentPath.length > 0
+  ) {
+    result.push([...currentPath]);
+  }
+
+  // Recursive case: explore children
+  for (const child of children) {
+    getNestedSlugs(basePath, [...currentPath, child], result);
+  }
+
+  return result;
 }
