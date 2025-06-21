@@ -1,0 +1,313 @@
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+export const metadata = {
+  title: "Pemodelan Fungsi Tangga",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/18/2025",
+  subject: "Fungsi dan Pemodelannya",
+};
+
+## Pengertian Fungsi Tangga
+
+Fungsi tangga (step function) adalah jenis fungsi matematika yang memiliki nilai konstan pada interval-interval tertentu dan mengalami lompatan mendadak di titik-titik tertentu. Grafik fungsi ini menyerupai tangga, dengan garis horizontal yang menghubungkan titik-titik diskontinuitas.
+
+### Definisi Matematika
+
+Fungsi tangga dapat didefinisikan sebagai fungsi sepotong-sepotong (piecewise function) yang berbentuk:
+
+<BlockMath math="f(x) = \begin{cases} c_1, & \text{jika } a_1 \leq x < b_1 \\ c_2, & \text{jika } a_2 \leq x < b_2 \\ c_3, & \text{jika } a_3 \leq x < b_3 \\ \vdots \\ c_n, & \text{jika } a_n \leq x < b_n \end{cases}" />
+
+dengan <InlineMath math="c_1, c_2, c_3, \ldots, c_n" /> adalah konstanta-konstanta dan <InlineMath math="[a_i, b_i)" /> adalah interval-interval yang tidak saling tumpang tindih.
+
+**Karakteristik fungsi tangga:**
+
+- Nilai konstan pada setiap interval
+- Diskontinuitas lompat di titik-titik batas interval
+- Grafik berbentuk seperti tangga
+- Termasuk dalam kategori fungsi sepotong-sepotong
+
+## Jenis-jenis Fungsi Tangga
+
+### Fungsi Lantai (Floor Function)
+
+Fungsi lantai, dilambangkan dengan <InlineMath math="\lfloor x \rfloor" />, memberikan bilangan bulat terbesar yang kurang dari atau sama dengan <InlineMath math="x" />.
+
+<BlockMath math="\lfloor x \rfloor = \max\{n \in \mathbb{Z} : n \leq x\}" />
+
+Supaya lebih mudah dipahami, mari kita lihat contoh berikut:
+
+<LineEquation
+  title={
+    <>
+      Fungsi Lantai <InlineMath math="f(x) = \lfloor x \rfloor" />
+    </>
+  }
+  description={
+    <>
+      Grafik menunjukkan fungsi lantai yang memberikan nilai bilangan bulat
+      terbesar yang tidak melebihi x.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: Math.floor(x), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = ⌊x⌋", at: 30, offset: [1, -1, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+**Tabel nilai fungsi lantai:**
+
+| x                                       | -2.5 | -1.7 | -1  | -0.3 | 0   | 0.8 | 1   | 1.9 | 2.4 |
+| --------------------------------------- | ---- | ---- | --- | ---- | --- | --- | --- | --- | --- |
+| <InlineMath math="\lfloor x \rfloor" /> | -3   | -2   | -1  | -1   | 0   | 0   | 1   | 1   | 2   |
+
+### Fungsi Langit-langit (Ceiling Function)
+
+Fungsi langit-langit, dilambangkan dengan <InlineMath math="\lceil x \rceil" />, memberikan bilangan bulat terkecil yang lebih besar dari atau sama dengan <InlineMath math="x" />.
+
+<BlockMath math="\lceil x \rceil = \min\{n \in \mathbb{Z} : n \geq x\}" />
+
+Kita lihat contoh berikut:
+
+<LineEquation
+  title={
+    <>
+      Fungsi Langit-langit <InlineMath math="f(x) = \lceil x \rceil" />
+    </>
+  }
+  description={
+    <>
+      Grafik menunjukkan fungsi langit-langit yang memberikan nilai bilangan
+      bulat terkecil yang tidak kurang dari x.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: Math.ceil(x), z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = ⌈x⌉", at: 30, offset: [1, -1, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+### Fungsi Unit Step (Heaviside)
+
+Fungsi unit step atau fungsi Heaviside, dilambangkan dengan <InlineMath math="H(x)" /> atau <InlineMath math="u(x)" />, didefinisikan sebagai:
+
+<BlockMath math="H(x) = \begin{cases} 0, & \text{jika } x < 0 \\ 1, & \text{jika } x \geq 0 \end{cases}" />
+
+Berbeda dengan fungsi lantai dan langit-langit, fungsi unit step memiliki nilai 0 untuk <InlineMath math="x < 0" /> dan 1 untuk <InlineMath math="x \geq 0" />.
+
+<LineEquation
+  title={
+    <>
+      Fungsi Unit Step <InlineMath math="H(x)" />
+    </>
+  }
+  description={
+    <>
+      Grafik menunjukkan fungsi unit step yang melompat dari 0 ke 1 di titik x =
+      0.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        return { x, y: x >= 0 ? 1 : 0, z: 0 };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      labels: [{ text: "H(x)", at: 12, offset: [1, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Sifat-sifat Fungsi Tangga
+
+**Sifat umum:**
+
+1. Domain: <InlineMath math="\mathbb{R}" /> (biasanya)
+2. Range: Himpunan nilai diskrit
+3. Kontinuitas: diskontinuitas lompat di titik-titik tertentu
+
+**Sifat khusus fungsi lantai dan langit-langit:**
+
+1. <InlineMath math="\lfloor x \rfloor \leq x < \lfloor x \rfloor + 1" />
+2. <InlineMath math="\lceil x \rceil - 1 < x \leq \lceil x \rceil" />
+3. <InlineMath math="\lceil x \rceil = \lfloor x \rfloor + 1 \text{ jika } x \notin \mathbb{Z}" />
+4. <InlineMath math="\lceil x \rceil = \lfloor x \rfloor \text{ jika } x \in \mathbb{Z}" />
+
+**Tabel perbandingan fungsi lantai dan langit-langit:**
+
+| x    | <InlineMath math="\lfloor x \rfloor" /> | <InlineMath math="\lceil x \rceil" /> | Selisih |
+| ---- | --------------------------------------- | ------------------------------------- | ------- |
+| -2.3 | -3                                      | -2                                    | 1       |
+| -1   | -1                                      | -1                                    | 0       |
+| 0.7  | 0                                       | 1                                     | 1       |
+| 2    | 2                                       | 2                                     | 0       |
+| 3.8  | 3                                       | 4                                     | 1       |
+
+## Transformasi Fungsi Tangga
+
+### Translasi Vertikal
+
+Fungsi <InlineMath math="f(x) = \lfloor x \rfloor + k" /> menggeser grafik fungsi lantai ke atas (jika <InlineMath math="k > 0" />) atau ke bawah (jika <InlineMath math="k < 0" />).
+
+<LineEquation
+  title={<>Translasi Vertikal Fungsi Lantai</>}
+  description={
+    <>
+      Perbandingan <InlineMath math="f(x) = \lfloor x \rfloor" /> dengan{" "}
+      <InlineMath math="g(x) = \lfloor x \rfloor + 2" /> dan{" "}
+      <InlineMath math="h(x) = \lfloor x \rfloor - 1" />.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: Math.floor(x), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "f(x) = ⌊x⌋", at: 30, offset: [0, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: Math.floor(x) + 2, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "g(x) = ⌊x⌋ + 2", at: 30, offset: [0, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: Math.floor(x) - 1, z: 0 };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      labels: [{ text: "h(x) = ⌊x⌋ - 1", at: 30, offset: [2, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+### Translasi Horizontal
+
+Fungsi <InlineMath math="f(x) = \lfloor x - h \rfloor" /> menggeser grafik ke kanan (jika <InlineMath math="h > 0" />) atau ke kiri (jika <InlineMath math="h < 0" />).
+
+## Latihan
+
+1. Tentukan nilai dari <InlineMath math="\lfloor 3.7 \rfloor + \lceil -2.3 \rceil" />
+
+2. Sebuah toko buku memberikan diskon berdasarkan jumlah pembelian:
+
+   - 1-5 buku: tidak ada diskon
+   - 6-10 buku: diskon 10%
+   - 11-20 buku: diskon 15%
+   - > 20 buku: diskon 20%
+
+   Jika harga per buku Rp 50.000, buatlah fungsi yang menyatakan total harga setelah diskon!
+
+3. Grafik fungsi <InlineMath math="f(x) = 2\lfloor x \rfloor - 1" /> untuk <InlineMath math="-3 \leq x \leq 3" />
+
+4. Selesaikan persamaan <InlineMath math="\lfloor 2x + 1 \rfloor = 5" />
+
+5. Sebuah lift dapat menampung maksimal 8 orang. Jika ada <InlineMath math="n" /> orang yang ingin naik lift, berapa kali lift harus beroperasi?
+
+### Kunci Jawaban
+
+1. **Menghitung nilai fungsi lantai dan langit-langit:**
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\lfloor 3.7 \rfloor = 3 \text{ (bilangan bulat terbesar } \leq 3.7\text{)}" />
+     <BlockMath math="\lceil -2.3 \rceil = -2 \text{ (bilangan bulat terkecil } \geq -2.3\text{)}" />
+     <BlockMath math="\lfloor 3.7 \rfloor + \lceil -2.3 \rceil = 3 + (-2) = 1" />
+   </div>
+
+2. **Model fungsi diskon toko buku:**
+
+   Misalkan <InlineMath math="n" /> adalah jumlah buku yang dibeli, maka total harga setelah diskon adalah:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="H(n) = \begin{cases} 50000n, & \text{jika } 1 \leq n \leq 5 \\ 50000n \times 0.9, & \text{jika } 6 \leq n \leq 10 \\ 50000n \times 0.85, & \text{jika } 11 \leq n \leq 20 \\ 50000n \times 0.8, & \text{jika } n > 20 \end{cases}" />
+   </div>
+
+3. **Grafik fungsi <InlineMath math="f(x) = 2\lfloor x \rfloor - 1" />:**
+
+   Untuk setiap interval:
+
+   - <InlineMath math="-3 \leq x < -2: f(x) = 2(-3) - 1 = -7" />
+   - <InlineMath math="-2 \leq x < -1: f(x) = 2(-2) - 1 = -5" />
+   - <InlineMath math="-1 \leq x < 0: f(x) = 2(-1) - 1 = -3" />
+   - <InlineMath math="0 \leq x < 1: f(x) = 2(0) - 1 = -1" />
+   - <InlineMath math="1 \leq x < 2: f(x) = 2(1) - 1 = 1" />
+   - <InlineMath math="2 \leq x \leq 3: f(x) = 2(2) - 1 = 3" />
+
+   Jika kita buat grafiknya, kira-kira akan terlihat seperti berikut:
+
+   <LineEquation
+     title={
+       <>
+         Grafik <InlineMath math="f(x) = 2\lfloor x \rfloor - 1" />
+       </>
+     }
+     description={
+       <>
+         Grafik menunjukkan transformasi fungsi lantai dengan faktor skala 2 dan
+         translasi vertikal -1.
+       </>
+     }
+     data={[
+       {
+         points: Array.from({ length: 25 }, (_, i) => {
+           const x = (i - 12) * 0.25;
+           return { x, y: 2 * Math.floor(x) - 1, z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         showPoints: false,
+         labels: [{ text: "f(x) = 2⌊x⌋ - 1", at: 18, offset: [1, 1, 0] }],
+       },
+     ]}
+     cameraPosition={[0, 0, 10]}
+     showZAxis={false}
+   />
+
+4. **Menyelesaikan persamaan <InlineMath math="\lfloor 2x + 1 \rfloor = 5" />:**
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="5 \leq 2x + 1 < 6" />
+     <BlockMath math="4 \leq 2x < 5" />
+     <BlockMath math="2 \leq x < 2.5" />
+   </div>
+
+   Jadi himpunan penyelesaiannya adalah <InlineMath math="x \in [2, 2.5)" />.
+
+5. **Menghitung jumlah operasi lift:**
+
+   Jika ada <InlineMath math="n" /> orang dan lift dapat menampung maksimal 8 orang, maka jumlah operasi lift yang diperlukan adalah:
+
+   <BlockMath math="f(n) = \lceil \frac{n}{8} \rceil" />
+
+   Fungsi langit-langit digunakan karena jika ada sisa orang (kurang dari 8), tetap diperlukan satu operasi lift tambahan.

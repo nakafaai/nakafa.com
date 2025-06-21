@@ -1,0 +1,302 @@
+export const metadata = {
+  title: "Tali Busur",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Busur dan Juring Lingkaran",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Pengertian Tali Busur
+
+Tali busur adalah ruas garis lurus yang menghubungkan dua titik pada lingkaran. Bayangkan seperti tali yang direntangkan di dalam lingkaran, menghubungkan dua titik di tepi lingkaran. Setiap tali busur membagi lingkaran menjadi dua bagian, yaitu busur kecil dan busur besar.
+
+Tali busur memiliki karakteristik khusus dalam lingkaran. Semakin jauh tali busur dari pusat lingkaran, semakin pendek panjangnya. Sebaliknya, tali busur terpanjang adalah yang melalui pusat lingkaran, yang disebut diameter.
+
+<LineEquation
+  title={<>Visualisasi Tali Busur dalam Lingkaran</>}
+  description="Berbagai tali busur dengan panjang dan posisi yang berbeda."
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 37 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 36;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      smooth: true,
+      showPoints: false,
+      labels: [{ text: "Lingkaran", at: 9, offset: [1, 0.5, 0] }]
+    },
+    {
+      points: [
+        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
+        { x: 4 * Math.cos(5 * Math.PI / 6), y: 4 * Math.sin(5 * Math.PI / 6), z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.3, 0.3, 0] },
+        { text: "B", at: 1, offset: [-0.3, 0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 4 * Math.cos(Math.PI / 3), y: 4 * Math.sin(Math.PI / 3), z: 0 },
+        { x: 4 * Math.cos(4 * Math.PI / 3), y: 4 * Math.sin(4 * Math.PI / 3), z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "C", at: 0, offset: [0.3, 0.3, 0] },
+        { text: "D", at: 1, offset: [-0.3, -0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "E", at: 0, offset: [-0.3, -0.3, 0] },
+        { text: "F", at: 1, offset: [0.3, -0.3, 0] }
+      ]
+    },
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [0.3, 0.3, 0] }]
+    }
+  ]}
+/>
+
+## Jenis Tali Busur
+
+Berdasarkan posisi dan karakteristiknya, tali busur dapat dibedakan menjadi beberapa jenis:
+
+1. **Tali Busur Biasa** adalah tali busur yang tidak melalui pusat lingkaran. Panjangnya selalu lebih pendek dari diameter lingkaran.
+
+2. **Diameter** adalah tali busur khusus yang melalui pusat lingkaran. Diameter merupakan tali busur terpanjang dalam lingkaran dan membagi lingkaran menjadi dua bagian yang sama besar.
+
+3. **Tali Busur Sejajar** adalah dua atau lebih tali busur yang memiliki arah yang sama dan tidak berpotongan di dalam lingkaran.
+
+## Hubungan Tali Busur dengan Jarak ke Pusat
+
+Terdapat hubungan yang menarik antara panjang tali busur dengan jaraknya ke pusat lingkaran. Semakin dekat tali busur ke pusat lingkaran, semakin panjang tali busur tersebut. Hubungan ini dapat dinyatakan secara matematis.
+
+Jika <InlineMath math="d" /> adalah jarak dari pusat lingkaran ke tali busur, <InlineMath math="r" /> adalah jari-jari lingkaran, dan <InlineMath math="l" /> adalah panjang tali busur, maka:
+
+<BlockMath math="l = 2\sqrt{r^2 - d^2}" />
+
+Rumus ini menunjukkan bahwa ketika <InlineMath math="d = 0" /> (tali busur melalui pusat), maka <InlineMath math="l = 2r" /> yang merupakan diameter.
+
+<LineEquation
+  title={<>Hubungan Panjang Tali Busur dengan Jarak ke Pusat</>}
+  description="Tali busur dengan jarak berbeda dari pusat lingkaran."
+  cameraPosition={[0, 0, 8]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 37 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 36;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0
+        };
+      }),
+      color: getColor("CYAN"),
+      smooth: true,
+      showPoints: false
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "d = 0", at: 0, offset: [0, -0.5, 0] }]
+    },
+    {
+      points: [
+        { x: -Math.sqrt(9 - 1), y: 1, z: 0 },
+        { x: Math.sqrt(9 - 1), y: 1, z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "d = 1", at: 0, offset: [0, 0.5, 0] }]
+    },
+    {
+      points: [
+        { x: -Math.sqrt(9 - 4), y: 2, z: 0 },
+        { x: Math.sqrt(9 - 4), y: 2, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      smooth: false,
+      showPoints: true,
+      labels: [{ text: "d = 2", at: 0, offset: [0, 0.5, 0] }]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 1, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: false
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 2, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: false
+    }
+  ]}
+/>
+
+## Sifat Tali Busur yang Sama Panjang
+
+Tali busur yang memiliki panjang sama dalam lingkaran yang sama memiliki sifat khusus. Mereka memiliki jarak yang sama dari pusat lingkaran. Sebaliknya, tali busur yang memiliki jarak sama dari pusat lingkaran akan memiliki panjang yang sama.
+
+Sifat ini sangat berguna dalam menyelesaikan berbagai permasalahan geometri lingkaran. Jika dua tali busur memiliki panjang yang sama, maka:
+
+1. Jarak kedua tali busur ke pusat lingkaran adalah sama
+2. Busur yang dibentuk oleh kedua tali busur memiliki panjang yang sama
+3. Sudut pusat yang menghadap kedua tali busur memiliki besar yang sama
+
+## Teorema Tali Busur Berpotongan
+
+Ketika dua tali busur berpotongan di dalam lingkaran, terdapat hubungan khusus antara segmen-segmen yang terbentuk. Jika tali busur AB dan CD berpotongan di titik P, maka:
+
+<BlockMath math="AP \times PB = CP \times PD" />
+
+Teorema ini dikenal sebagai teorema tali busur berpotongan dan sangat berguna dalam menyelesaikan berbagai permasalahan geometri.
+
+## Latihan
+
+1. Sebuah lingkaran memiliki jari-jari 13 cm. Jika jarak sebuah tali busur ke pusat lingkaran adalah 5 cm, tentukan panjang tali busur tersebut.
+
+2. Dalam sebuah lingkaran dengan jari-jari 10 cm, terdapat tali busur dengan panjang 16 cm. Tentukan jarak tali busur tersebut ke pusat lingkaran.
+
+3. Dua tali busur AB dan CD dalam lingkaran yang sama memiliki panjang masing-masing 24 cm dan 18 cm. Jika jari-jari lingkaran adalah 15 cm, tentukan selisih jarak kedua tali busur ke pusat lingkaran.
+
+4. Tali busur PQ dan RS berpotongan di titik T dalam sebuah lingkaran. Jika PT = 6 cm, TQ = 8 cm, dan RT = 4 cm, tentukan panjang TS.
+
+5. Sebuah lingkaran memiliki diameter 26 cm. Tentukan panjang tali busur yang berjarak 12 cm dari pusat lingkaran.
+
+### Kunci Jawaban
+
+1. **Jawaban: 24 cm**
+
+   Diketahui: <InlineMath math="r = 13" /> cm, <InlineMath math="d = 5" /> cm
+   
+   Menggunakan rumus panjang tali busur:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="l = 2\sqrt{r^2 - d^2}" />
+   
+   <BlockMath math="l = 2\sqrt{13^2 - 5^2}" />
+   
+   <BlockMath math="l = 2\sqrt{169 - 25}" />
+   
+   <BlockMath math="l = 2\sqrt{144} = 2 \times 12 = 24 \text{ cm}" />
+   </div>
+
+2. **Jawaban: 6 cm**
+
+   Diketahui: <InlineMath math="r = 10" /> cm, <InlineMath math="l = 16" /> cm
+   
+   Menggunakan rumus panjang tali busur:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="16 = 2\sqrt{10^2 - d^2}" />
+   
+   <BlockMath math="8 = \sqrt{100 - d^2}" />
+   
+   <BlockMath math="64 = 100 - d^2" />
+   
+   <BlockMath math="d^2 = 100 - 64 = 36" />
+   
+   <BlockMath math="d = 6 \text{ cm}" />
+   </div>
+
+3. **Jawaban: 3 cm**
+
+   Diketahui: <InlineMath math="r = 15" /> cm, <InlineMath math="l_1 = 24" /> cm, <InlineMath math="l_2 = 18" /> cm
+   
+   Mencari jarak tali busur pertama:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="24 = 2\sqrt{15^2 - d_1^2}" />
+   
+   <BlockMath math="12 = \sqrt{225 - d_1^2}" />
+   
+   <BlockMath math="144 = 225 - d_1^2" />
+   
+   <BlockMath math="d_1^2 = 81, \text{ maka } d_1 = 9 \text{ cm}" />
+   </div>
+   
+   Mencari jarak tali busur kedua:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="18 = 2\sqrt{15^2 - d_2^2}" />
+   
+   <BlockMath math="9 = \sqrt{225 - d_2^2}" />
+   
+   <BlockMath math="81 = 225 - d_2^2" />
+   
+   <BlockMath math="d_2^2 = 144, \text{ maka } d_2 = 12 \text{ cm}" />
+   </div>
+   
+   Selisih jarak: <InlineMath math="d_2 - d_1 = 12 - 9 = 3" /> cm
+
+4. **Jawaban: 12 cm**
+
+   Diketahui: PT = 6 cm, TQ = 8 cm, RT = 4 cm
+   
+   Menggunakan teorema tali busur berpotongan:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="PT \times TQ = RT \times TS" />
+   
+   <BlockMath math="6 \times 8 = 4 \times TS" />
+   
+   <BlockMath math="48 = 4 \times TS" />
+   
+   <BlockMath math="TS = 12 \text{ cm}" />
+   </div>
+
+5. **Jawaban: 10 cm**
+
+   Diketahui: diameter = 26 cm, maka <InlineMath math="r = 13" /> cm, <InlineMath math="d = 12" /> cm
+   
+   Menggunakan rumus panjang tali busur:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="l = 2\sqrt{r^2 - d^2}" />
+   
+   <BlockMath math="l = 2\sqrt{13^2 - 12^2}" />
+   
+   <BlockMath math="l = 2\sqrt{169 - 144}" />
+   
+   <BlockMath math="l = 2\sqrt{25} = 2 \times 5 = 10 \text{ cm}" />
+   </div>

@@ -1,0 +1,265 @@
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+export const metadata = {
+  title: "Dilation Matrix",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/10/2025",
+  subject: "Geometric Transformation",
+};
+
+## Finding the Matrix Associated with Dilation
+
+How to find the matrix associated with a dilation operation? Recall that a point <InlineMath math="(x,y)" /> is mapped by a dilation with a factor <InlineMath math="k \neq 0" /> and center <InlineMath math="O" /> to <InlineMath math="(kx,ky)" />.
+
+Suppose the matrix we are looking for is <InlineMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix}" />.
+
+Find <InlineMath math="r, s, t, u" /> such that it satisfies
+
+<BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} kx \\ ky \end{pmatrix}" />
+
+From the matrix multiplication on the left side, we get:
+
+<BlockMath math="\begin{pmatrix} rx + sy \\ tx + uy \end{pmatrix} = \begin{pmatrix} kx \\ ky \end{pmatrix}" />
+
+By equating the corresponding components:
+
+- **First row:** <InlineMath math="rx + sy = kx" />. For this equation to hold for all <InlineMath math="x" /> and <InlineMath math="y" />, the coefficients of <InlineMath math="x" /> must be equal, and the coefficients of <InlineMath math="y" /> must be equal. Thus, <InlineMath math="r = k" /> and <InlineMath math="s = 0" />.
+- **Second row:** <InlineMath math="tx + uy = ky" />. Similarly, <InlineMath math="t = 0" /> and <InlineMath math="u = k" />.
+
+## Dilation Matrix with Respect to the Origin
+
+The matrix associated with a dilation by a factor <InlineMath math="k \neq 0" /> with respect to the origin <InlineMath math="O(0,0)" /> is
+
+<BlockMath math="\begin{pmatrix} k & 0 \\ 0 & k \end{pmatrix}" />
+
+## Matrix Operation for Dilation with Respect to an Arbitrary Point
+
+A point <InlineMath math="(x,y)" /> dilated by a factor <InlineMath math="k \neq 0" /> and center <InlineMath math="(a,b)" /> will be mapped to <InlineMath math="(k(x-a)+a,\, k(y-b)+b)" />.
+
+Find the combination of matrix operations on the position vector <InlineMath math="\begin{pmatrix} x-a \\ y-b \end{pmatrix}" /> such that the result is <InlineMath math="\begin{pmatrix} k(x-a)+a \\ k(y-b)+b \end{pmatrix}" />.
+
+The matrix operation associated with a dilation by a factor <InlineMath math="k \neq 0" /> with respect to the point <InlineMath math="(a,b)" /> is
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} k & 0 \\ 0 & k \end{pmatrix} \begin{pmatrix} x-a \\ y-b \end{pmatrix} + \begin{pmatrix} a \\ b \end{pmatrix}" />
+
+or it can also be written as:
+
+<BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} - \begin{pmatrix} a \\ b \end{pmatrix} = \begin{pmatrix} k & 0 \\ 0 & k \end{pmatrix} \left( \begin{pmatrix} x \\ y \end{pmatrix} - \begin{pmatrix} a \\ b \end{pmatrix} \right)" />
+
+## Finding the Image of a Dilation Using Matrices
+
+Determine the image of point <InlineMath math="A(2,4)" /> transformed by a dilation with a factor of <InlineMath math="2" /> with respect to the center point <InlineMath math="P(1,1)" />!
+
+**Alternative Solution:**
+
+Given <InlineMath math="x=2, y=4, k=2, a=1, b=1" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} \begin{pmatrix} 2-1 \\ 4-1 \end{pmatrix} + \begin{pmatrix} 1 \\ 1 \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} \begin{pmatrix} 1 \\ 3 \end{pmatrix} + \begin{pmatrix} 1 \\ 1 \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} (2)(1) + (0)(3) \\ (0)(1) + (2)(3) \end{pmatrix} + \begin{pmatrix} 1 \\ 1 \end{pmatrix}" />
+  <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 2 \\ 6 \end{pmatrix} + \begin{pmatrix} 1 \\ 1 \end{pmatrix} = \begin{pmatrix} 3 \\ 7 \end{pmatrix}" />
+</div>
+
+Thus, the image of point <InlineMath math="A(2,4)" /> is <InlineMath math="A'(3,7)" />.
+
+<LineEquation
+  title={
+    <>
+      Visualization of Dilation of Point <InlineMath math="A(2,4)" /> with
+      Center <InlineMath math="P(1,1)" /> and Scale Factor{" "}
+      <InlineMath math="k=2" />
+    </>
+  }
+  description={
+    <>
+      Point <InlineMath math="A(2,4)" /> is dilated with respect to the center{" "}
+      <InlineMath math="P(1,1)" /> with a scale factor <InlineMath math="k=2" />{" "}
+      to produce the image <InlineMath math="A'(3,7)" />. The line from the
+      center to the original point and from the center to the image lie on the
+      same line, and the distance <InlineMath math="PA'" /> is twice the
+      distance <InlineMath math="PA" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 1, y: 1, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "P(1,1)", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [{ x: 2, y: 4, z: 0 }],
+      color: getColor("SKY"),
+      showPoints: true,
+      labels: [{ text: "A(2,4)", at: 0, offset: [1.5, 0.2, 0] }],
+    },
+    {
+      points: [{ x: 3, y: 7, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "A'(3,7)", at: 0, offset: [0.5, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 1, y: 1, z: 0 }, // P
+        { x: 2, y: 4, z: 0 }, // A
+      ],
+      color: getColor("AMBER"),
+    },
+    {
+      points: [
+        { x: 1, y: 1, z: 0 }, // P
+        { x: 3, y: 7, z: 0 }, // A'
+      ],
+      color: getColor("SKY"),
+      cone: { position: "end", size: 0.3 },
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 18]}
+/>
+
+## Exercises
+
+1.  Find the coordinates of the image of the point <InlineMath math="(a,b)" /> under the dilation <InlineMath math="[O,3]" />!
+2.  Determine the matrix corresponding to a dilation with a scale factor of <InlineMath math="-2" /> and centered at <InlineMath math="O(0,0)" />.
+3.  A point <InlineMath math="B(-1, 5)" /> is dilated with center <InlineMath math="P(2, -3)" /> and scale factor <InlineMath math="k = \frac{1}{2}" />. Determine the coordinates of the image of point <InlineMath math="B" />!
+4.  A triangle <InlineMath math="KLM" /> with vertices <InlineMath math="K(1,1)" />, <InlineMath math="L(5,1)" />, and <InlineMath math="M(3,4)" /> is dilated with center <InlineMath math="O(0,0)" /> and scale factor <InlineMath math="2" />. Draw the original triangle and its image, then determine the coordinates of the image vertices!
+
+### Key Answers
+
+1. The dilation <InlineMath math="[O,3]" /> means the center of dilation is <InlineMath math="O(0,0)" /> and the scale factor is <InlineMath math="k=3" />.
+
+   Let the point be <InlineMath math="Q(a,b)" />.
+
+   Then <InlineMath math="x=a, y=b, k=3" />.
+
+   <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 3 & 0 \\ 0 & 3 \end{pmatrix} \begin{pmatrix} a \\ b \end{pmatrix} = \begin{pmatrix} 3a \\ 3b \end{pmatrix}" />
+
+   Thus, the coordinates of the image of point <InlineMath math="(a,b)" /> are <InlineMath math="(3a, 3b)" />.
+
+2. Scale factor <InlineMath math="k=-2" />, center <InlineMath math="O(0,0)" />.
+
+   The dilation matrix is:
+
+   <BlockMath math="\begin{pmatrix} -2 & 0 \\ 0 & -2 \end{pmatrix}" />.
+
+3. Point <InlineMath math="B(-1, 5)" />, center <InlineMath math="P(2, -3)" />, scale factor <InlineMath math="k = \frac{1}{2}" />.
+
+   <InlineMath math="x=-1, y=5, a=2, b=-3, k=\frac{1}{2}" />.
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} \frac{1}{2} & 0 \\ 0 & \frac{1}{2} \end{pmatrix} \begin{pmatrix} -1-2 \\ 5-(-3) \end{pmatrix} + \begin{pmatrix} 2 \\ -3 \end{pmatrix}" />
+     <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} \frac{1}{2} & 0 \\ 0 & \frac{1}{2} \end{pmatrix} \begin{pmatrix} -3 \\ 8 \end{pmatrix} + \begin{pmatrix} 2 \\ -3 \end{pmatrix}" />
+     <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} (\frac{1}{2})(-3) + (0)(8) \\ (0)(-3) + (\frac{1}{2})(8) \end{pmatrix} + \begin{pmatrix} 2 \\ -3 \end{pmatrix}" />
+     <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -\frac{3}{2} \\ 4 \end{pmatrix} + \begin{pmatrix} 2 \\ -3 \end{pmatrix} = \begin{pmatrix} -\frac{3}{2} + \frac{4}{2} \\ 4 - 3 \end{pmatrix} = \begin{pmatrix} \frac{1}{2} \\ 1 \end{pmatrix}" />
+   </div>
+
+   The coordinates of the image of point <InlineMath math="B" /> are <InlineMath math="B'(\frac{1}{2}, 1)" />.
+
+4. Triangle <InlineMath math="KLM" /> with <InlineMath math="K(1,1)" />, <InlineMath math="L(5,1)" />, <InlineMath math="M(3,4)" />.
+
+   Center <InlineMath math="O(0,0)" />, <InlineMath math="k=2" />.
+
+   Image of point <InlineMath math="K(1,1)" />:
+
+   <BlockMath math="\begin{pmatrix} x_K' \\ y_K' \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} \begin{pmatrix} 1 \\ 1 \end{pmatrix} = \begin{pmatrix} 2 \\ 2 \end{pmatrix} \implies K'(2,2)" />
+
+   Image of point <InlineMath math="L(5,1)" />:
+
+   <BlockMath math="\begin{pmatrix} x_L' \\ y_L' \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} \begin{pmatrix} 5 \\ 1 \end{pmatrix} = \begin{pmatrix} 10 \\ 2 \end{pmatrix} \implies L'(10,2)" />
+
+   Image of point <InlineMath math="M(3,4)" />:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="\begin{pmatrix} x_M' \\ y_M' \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} \begin{pmatrix} 3 \\ 4 \end{pmatrix} = \begin{pmatrix} 6 \\ 8 \end{pmatrix} \implies M'(6,8)" />
+     <LineEquation
+       title={
+         <>
+           Visualization of Dilation of Triangle <InlineMath math="KLM" /> with
+           Center <InlineMath math="O(0,0)" /> and Scale Factor{" "}
+           <InlineMath math="k=2" />
+         </>
+       }
+       description={
+         <>
+           Triangle <InlineMath math="KLM" /> is dilated to become triangle{" "}
+           <InlineMath math="K'L'M'" />. The center of dilation is{" "}
+           <InlineMath math="O(0,0)" />.
+         </>
+       }
+       data={[
+         // Original Triangle KLM
+         {
+           points: [
+             { x: 1, y: 1, z: 0 }, // K
+             { x: 5, y: 1, z: 0 }, // L
+           ],
+           color: getColor("SKY"),
+           labels: [
+             { text: "K(1,1)", at: 0, offset: [-0.7, -0.2, 0] },
+             { text: "L(5,1)", at: 1, offset: [0.7, -0.2, 0] },
+           ],
+           showPoints: true,
+         },
+         {
+           points: [
+             { x: 5, y: 1, z: 0 }, // L
+             { x: 3, y: 4, z: 0 }, // M
+           ],
+           color: getColor("ORANGE"),
+           labels: [{ text: "M(3,4)", at: 1, offset: [0, 0.5, 0] }],
+           showPoints: true,
+         },
+         {
+           points: [
+             { x: 3, y: 4, z: 0 }, // M
+             { x: 1, y: 1, z: 0 }, // K
+           ],
+           color: getColor("PURPLE"),
+           showPoints: true,
+         },
+         // Dilated Triangle K'L'M'
+         {
+           points: [
+             { x: 2, y: 2, z: 0 }, // K'
+             { x: 10, y: 2, z: 0 }, // L'
+           ],
+           color: getColor("TEAL"),
+           labels: [
+             { text: "K'(2,2)", at: 0, offset: [-0.8, -0.3, 0] },
+             { text: "L'(10,2)", at: 1, offset: [0.8, -0.3, 0] },
+           ],
+           showPoints: true,
+         },
+         {
+           points: [
+             { x: 10, y: 2, z: 0 }, // L'
+             { x: 6, y: 8, z: 0 }, // M'
+           ],
+           color: getColor("PINK"),
+           labels: [{ text: "M'(6,8)", at: 1, offset: [0, 0.6, 0] }],
+           showPoints: true,
+         },
+         {
+           points: [
+             { x: 6, y: 8, z: 0 }, // M'
+             { x: 2, y: 2, z: 0 }, // K'
+           ],
+           color: getColor("INDIGO"),
+           showPoints: true,
+         },
+         // Origin
+         {
+           points: [{ x: 0, y: 0, z: 0 }],
+           color: getColor("INDIGO"),
+           showPoints: true,
+           labels: [{ text: "O", at: 0, offset: [-0.3, -0.3, 0] }],
+         },
+       ]}
+       showZAxis={false}
+       cameraPosition={[0, 0, 20]}
+     />
+   </div>

@@ -1,0 +1,294 @@
+export const metadata = {
+  title: "Horizontal Reflection",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Function Transformation",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Basic Concepts of Horizontal Reflection
+
+Horizontal reflection is a geometric transformation that reflects the graph of a function across the y-axis, like seeing the reflection of an object in a vertical mirror. Imagine standing in front of a mirror, your right hand will appear as your left hand in the mirror, similarly with function graphs that are reflected horizontally.
+
+If we have a function <InlineMath math="f(x)" />, then horizontal reflection produces a new function <InlineMath math="g(x) = f(-x)" /> which is the reflection of the original function across the y-axis.
+
+### Rules of Horizontal Reflection
+
+For any function <InlineMath math="f(x)" />, horizontal reflection is defined as:
+
+<BlockMath math="g(x) = f(-x)" />
+
+This transformation changes every point <InlineMath math="(x, y)" /> on the original graph to <InlineMath math="(-x, y)" /> on the reflected graph.
+
+## Visualization of Horizontal Reflection
+
+Let's see how horizontal reflection works on the quadratic function <InlineMath math="f(x) = (x - 2)^2" />.
+
+<LineEquation
+  title={<>Horizontal Reflection of Quadratic Function <InlineMath math="f(x) = (x - 2)^2" /></>}
+  description="Notice how the graph reflects across the y-axis, forming a symmetric reflection."
+  showZAxis={false}
+  cameraPosition={[12, 8, 12]}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: (x - 2) * (x - 2), z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      labels: [{ text: "f(x) = (x - 2)²", offset: [1, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: ((-x) - 2) * ((-x) - 2), z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      labels: [{ text: "g(x) = (-x - 2)²", offset: [-1, -1, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+From the visualization above, we can observe:
+- The original function <InlineMath math="f(x) = (x - 2)^2" /> (purple) has its vertex at <InlineMath math="(2, 0)" />
+- The reflected function <InlineMath math="g(x) = (-x - 2)^2" /> (orange) has its vertex at <InlineMath math="(-2, 0)" />
+- Both graphs are symmetric across the y-axis
+
+## Horizontal Reflection on Linear Functions
+
+Now let's apply the same concept to the linear function <InlineMath math="f(x) = 2x + 3" />.
+
+<LineEquation
+  title={<>Horizontal Reflection of Linear Function <InlineMath math="f(x) = 2x + 3" /></>}
+  description="The reflected line has opposite slope but the same y-intercept."
+  showZAxis={false}
+  cameraPosition={[10, 6, 10]}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * x + 3, z: 0 };
+      }),
+      color: getColor("VIOLET"),
+      labels: [{ text: "f(x) = 2x + 3", offset: [2.5, 0.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * (-x) + 3, z: 0 };
+      }),
+      color: getColor("AMBER"),
+      labels: [{ text: "g(x) = -2x + 3", offset: [-2.5, -0.5, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Notice that:
+- The original function <InlineMath math="f(x) = 2x + 3" /> has a positive slope of 2
+- The reflected function <InlineMath math="g(x) = -2x + 3" /> has a negative slope of 2
+- Both lines intersect the y-axis at the same point <InlineMath math="(0, 3)" />
+
+## Important Properties of Horizontal Reflection
+
+### Y-axis as Axis of Symmetry
+
+Horizontal reflection uses the y-axis as the mirror line. Every point on the original graph has the same distance to the y-axis as the corresponding point on the reflected graph.
+
+### Effect on Coordinate Points
+
+If point <InlineMath math="(a, b)" /> is on the graph of <InlineMath math="f(x)" />, then the corresponding point on the graph of <InlineMath math="f(-x)" /> is <InlineMath math="(-a, b)" />.
+
+### Domain and Range
+
+- **Domain**: Changes to the opposite of the original domain
+- **Range**: Does not change after horizontal reflection
+
+If the domain of the original function is <InlineMath math="[c, d]" />, then the domain after horizontal reflection becomes <InlineMath math="[-d, -c]" />.
+
+## Application Examples
+
+### Exponential Function Example
+
+Let's look at horizontal reflection on the exponential function <InlineMath math="f(x) = 2^x" />.
+
+<LineEquation
+  title={<>Horizontal Reflection of Exponential Function <InlineMath math="f(x) = 2^x" /></>}
+  description="The reflected exponential curve produces a decreasing curve with different characteristics."
+  showZAxis={false}
+  cameraPosition={[8, 6, 8]}
+  data={[
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: Math.pow(2, x), z: 0 };
+      }),
+      color: getColor("INDIGO"),
+      labels: [{ text: "f(x) = 2^x", offset: [3, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: Math.pow(2, -x), z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      labels: [{ text: "g(x) = 2^(-x)", offset: [-3, 1, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+For exponential functions:
+- The horizontal asymptote remains at <InlineMath math="y = 0" /> for both functions
+- The y-intercept remains the same at <InlineMath math="(0, 1)" />
+- The function that was originally increasing becomes decreasing after reflection
+
+## Horizontal Reflection on Square Root Functions
+
+Let's see how horizontal reflection affects the square root function.
+
+<LineEquation
+  title={<>Horizontal Reflection of Square Root Function <InlineMath math="f(x) = \sqrt{x}" /></>}
+  description="The reflected square root curve produces a curve that opens in the opposite direction."
+  showZAxis={false}
+  cameraPosition={[10, 6, 10]}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = i * 0.25;
+        return { x, y: Math.sqrt(x), z: 0 };
+      }),
+      color: getColor("CYAN"),
+      labels: [{ text: "f(x) = √x", offset: [1, 1.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = -i * 0.25;
+        if (x <= 0) {
+          return { x, y: Math.sqrt(-x), z: 0 };
+        }
+        return null;
+      }).filter(Boolean),
+      color: getColor("ROSE"),
+      labels: [{ text: "g(x) = √(-x)", offset: [-1, 1.5, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Notice that:
+- The domain of the original function <InlineMath math="f(x) = \sqrt{x}" /> is <InlineMath math="[0, \infty)" />
+- The domain of the reflected function <InlineMath math="g(x) = \sqrt{-x}" /> is <InlineMath math="(-\infty, 0]" />
+- Both curves meet at the origin <InlineMath math="(0, 0)" />
+
+## Exercises
+
+1. Given the function <InlineMath math="f(x) = x^2 + 3x + 2" />. Determine the equation of the function resulting from horizontal reflection.
+
+2. If the graph of function <InlineMath math="g(x) = 3^x + 1" /> is reflected across the y-axis, determine:
+   - The equation of the resulting reflected function
+   - The domain of the function after reflection
+
+3. Function <InlineMath math="h(x) = |x + 2|" /> undergoes horizontal reflection. Determine the vertex of the resulting reflected function.
+
+### Answer Key
+
+1. Horizontal reflection: <InlineMath math="f'(x) = f(-x) = (-x)^2 + 3(-x) + 2 = x^2 - 3x + 2" />
+
+   <LineEquation
+     title={<>Function <InlineMath math="f(x) = x^2 + 3x + 2" /> and Its Reflection Result</>}
+     description="The original parabola is reflected across the y-axis producing a parabola with different orientation."
+     showZAxis={false}
+     cameraPosition={[12, 8, 12]}
+     data={[
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: x * x + 3 * x + 2, z: 0 };
+         }),
+         color: getColor("PURPLE"),
+         labels: [{ text: "f(x) = x² + 3x + 2", offset: [1, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: x * x - 3 * x + 2, z: 0 };
+         }),
+         color: getColor("ORANGE"),
+         labels: [{ text: "f'(x) = x² - 3x + 2", offset: [1, -1, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+2. Equation of the resulting reflected function:
+    
+   - Horizontal reflection: <InlineMath math="g'(x) = g(-x) = 3^{-x} + 1" />
+   - Domain after reflection: Remains <InlineMath math="(-\infty, \infty)" /> because exponential functions are defined for all real numbers
+
+   Visualization:
+
+   <LineEquation
+     title={<>Function <InlineMath math="g(x) = 3^x + 1" /> and Its Reflection Result</>}
+     description="The increasing exponential curve is reflected to become a decreasing curve with the same asymptote."
+     showZAxis={false}
+     cameraPosition={[8, 6, 8]}
+     data={[
+       {
+         points: Array.from({ length: 31 }, (_, i) => {
+           const x = (i - 15) * 0.2;
+           return { x, y: Math.pow(3, x) + 1, z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         labels: [{ text: "g(x) = 3^x + 1", offset: [3, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 31 }, (_, i) => {
+           const x = (i - 15) * 0.2;
+           return { x, y: Math.pow(3, -x) + 1, z: 0 };
+         }),
+         color: getColor("TEAL"),
+         labels: [{ text: "g'(x) = 3^(-x) + 1", offset: [-3, 1, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+3. The original function <InlineMath math="h(x) = |x + 2|" /> has its vertex at <InlineMath math="(-2, 0)" />.
+   After horizontal reflection: <InlineMath math="h'(x) = |-x + 2| = |-(x - 2)| = |x - 2|" />, the vertex becomes <InlineMath math="(2, 0)" />.
+
+   <LineEquation
+     title={<>Function <InlineMath math="h(x) = |x + 2|" /> and Its Reflection Result</>}
+     description="The absolute value function is reflected across the y-axis producing a function with opposite vertex position."
+     showZAxis={false}
+     cameraPosition={[10, 6, 10]}
+     data={[
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: Math.abs(x + 2), z: 0 };
+         }),
+         color: getColor("INDIGO"),
+         labels: [{ text: "h(x) = |x + 2|", offset: [-1, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: Math.abs(-x + 2), z: 0 };
+         }),
+         color: getColor("EMERALD"),
+         labels: [{ text: "h'(x) = |-x + 2|", offset: [1, -1, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />  

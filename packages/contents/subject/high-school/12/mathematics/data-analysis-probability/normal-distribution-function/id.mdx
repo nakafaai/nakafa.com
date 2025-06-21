@@ -1,0 +1,148 @@
+export const metadata = {
+  title: "Fungsi Distribusi Normal",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Analisis Data dan Peluang",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Mengenal Distribusi Normal
+
+Tahukah kamu bahwa tinggi badan siswa di sekolahmu, nilai ujian nasional, atau bahkan berat buah apel di supermarket semuanya mengikuti pola yang sama? Pola ini disebut **distribusi normal**.
+
+Distribusi normal pertama kali diperkenalkan oleh Abraham de Moivre pada tahun <InlineMath math="1733" /> sebagai pendekatan dari distribusi binomial untuk <InlineMath math="n" /> yang besar. Kemudian, Pierre-Simon Laplace mengembangkannya lebih lanjut dan dikenal sebagai Teorema More Blue Laplace. Laplace menggunakan distribusi normal untuk menganalisis kesalahan dalam percobaan.
+
+> Distribusi normal sangat berguna karena banyak fenomena alam dan sosial yang mengikuti pola ini. Dari tinggi badan manusia hingga hasil pengukuran ilmiah, semuanya cenderung terdistribusi normal.
+
+## Karakteristik Kurva Normal
+
+Bayangkan sebuah bukit yang sangat simetris, seperti lonceng terbalik. Itulah bentuk kurva distribusi normal. Mari kita lihat visualisasi kurva normal standar dengan <InlineMath math="\mu = 0" /> dan <InlineMath math="\sigma = 1" />:
+
+<LineEquation
+  title="Kurva Distribusi Normal Standar"
+  description="Kurva berbentuk lonceng yang simetris dengan karakteristik khas distribusi normal."
+  cameraPosition={[0, 0, 5]}
+  showZAxis={false}
+  data={[
+    {
+      points: (() => {
+        const points = [];
+        const step = 0.1;
+        for (let x = -3.5; x <= 3.5; x += step) {
+          const y = (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * x * x);
+          points.push({ x: x, y: y, z: 0 });
+        }
+        return points;
+      })(),
+      color: getColor("PURPLE"),
+      smooth: true,
+      showPoints: false,
+      labels: [
+        { text: "μ = 0", at: 35, offset: [0, 0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: -1, y: 0, z: 0 },
+        { x: -1, y: (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5), z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "μ - σ", at: 0, offset: [0, -0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 1, y: 0, z: 0 },
+        { x: 1, y: (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5), z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "μ + σ", at: 0, offset: [0, -0.3, 0] }
+      ]
+    },
+  ]}
+/>
+
+Kurva ini memiliki beberapa karakteristik unik yang membuatnya istimewa:
+
+1. **Bentuk dan Simetri**
+
+    Kurva berbentuk seperti lonceng dan simetris terhadap garis vertikal yang melewati rata-rata (<InlineMath math="\mu" />). Artinya, bagian kiri dan kanan kurva adalah cerminan sempurna satu sama lain.
+
+2. **Titik Pusat**
+
+    Mean, median, dan modus semua berada di titik yang sama, yaitu di puncak kurva. Ini terjadi karena distribusinya simetris.
+
+3. **Titik Belok**
+
+    Kurva memiliki titik belok di <InlineMath math="x = \mu \pm \sigma" />, yang berarti kurva berubah dari cekung ke cembung (atau sebaliknya) pada jarak satu standar deviasi dari mean.
+
+4. **Asimtot Horizontal**
+
+    Kurva mendekati sumbu <InlineMath math="x" /> tapi tidak pernah menyentuhnya, baik di ujung kiri maupun kanan.
+
+## Fungsi Matematisnya
+
+Nah, sekarang mari kita lihat rumus matematisnya. Jangan khawatir kalau terlihat rumit, yang penting kamu paham konsepnya.
+
+Jika <InlineMath math="X" /> adalah variabel acak normal dengan rata-rata <InlineMath math="\mu" /> dan varians <InlineMath math="\sigma^2" />, maka fungsi distribusi normal dapat dituliskan:
+
+<BlockMath math="f(x; \mu, \sigma) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}" />
+
+untuk <InlineMath math="-\infty < x < \infty" />.
+
+Di mana:
+
+- <InlineMath math="\pi" /> adalah konstanta <InlineMath math="3.1416" />
+- <InlineMath math="e" /> adalah bilangan konstan <InlineMath math="2.7183" />
+- <InlineMath math="\mu" /> adalah rata-rata distribusi
+- <InlineMath math="\sigma" /> adalah simpangan baku
+
+> Rumus ini terlihat kompleks, tapi kamu tidak perlu menghafal atau menghitung secara manual. Yang penting adalah memahami bahwa bentuk kurva ditentukan oleh nilai <InlineMath math="\mu" /> dan <InlineMath math="\sigma" />.
+
+## Transformasi ke Normal Standar
+
+Dalam praktik, kita sering menggunakan **distribusi normal standar** dengan rata-rata <InlineMath math="\mu = 0" /> dan simpangan baku <InlineMath math="\sigma = 1" />. Untuk mengubah distribusi normal biasa menjadi normal standar, kita menggunakan transformasi:
+
+<BlockMath math="Z = \frac{x - \mu}{\sigma}" />
+
+Variabel <InlineMath math="Z" /> ini disebut **skor standar** atau **z-score**. Transformasi ini sangat berguna karena memungkinkan kita menggunakan tabel distribusi normal standar yang sudah tersedia.
+
+**Mengapa menggunakan z-score?**
+
+Dengan transformasi ini, kita bisa membandingkan data dari distribusi yang berbeda. Misalnya, kamu bisa membandingkan nilai matematika dengan nilai fisika, meskipun rata-rata dan standar deviasinya berbeda.
+
+## Contoh Perhitungan
+
+Mari kita lihat contoh praktis. Misalkan distribusi normal dengan <InlineMath math="\mu = 50" /> dan <InlineMath math="\sigma = 10" />. Kita ingin mencari peluang bahwa <InlineMath math="X" /> berada antara <InlineMath math="45" /> dan <InlineMath math="62" />.
+
+**Langkah 1: Transformasi ke z-score**
+
+<div className="flex flex-col gap-4">
+<BlockMath math="z_1 = \frac{45 - 50}{10} = \frac{-5}{10} = -0.5" />
+<BlockMath math="z_2 = \frac{62 - 50}{10} = \frac{12}{10} = 1.2" />
+</div>
+
+**Langkah 2: Gunakan tabel distribusi normal standar**
+
+Kita perlu mencari <InlineMath math="P(-0.5 < Z < 1.2)" />. Ingat bahwa untuk interval peluang, kita menggunakan rumus:
+
+<BlockMath math="P(a < Z < b) = P(Z < b) - P(Z < a)" />
+
+Dari tabel distribusi normal standar:
+
+- <InlineMath math="P(Z < -0.5) = 0.3085" />
+- <InlineMath math="P(Z < 1.2) = 0.8849" />
+
+**Langkah 3: Hitung peluang akhir**
+
+<BlockMath math="P(45 < X < 62) = P(-0.5 < Z < 1.2) = 0.8849 - 0.3085 = 0.5764" />
+
+Jadi, peluang bahwa <InlineMath math="X" /> berada antara <InlineMath math="45" /> dan <InlineMath math="62" /> adalah <InlineMath math="0.5764" /> atau sekitar <InlineMath math="57.64\%" />.

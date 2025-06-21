@@ -1,0 +1,486 @@
+export const metadata = {
+  title: "Relationship Between Arc Length and Sector Area",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Circle Arcs and Sectors",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Basic Concepts of Arc and Sector Relationships
+
+In circle geometry, there is a very close relationship between arc length and sector area. Imagine a bicycle wheel spinning, the larger the rotation angle of the wheel, the longer the path traced by a point on the edge of the wheel and the larger the area swept by the wheel's radius.
+
+This relationship can be expressed in the form of a consistent proportion. When the central angle of a circle changes, the arc length and sector area will change proportionally with the same ratio to the circumference and total area of the circle.
+
+## Fundamental Proportion
+
+The fundamental proportion that connects arc length and sector area to the whole circle can be expressed as follows:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{\text{Arc Length}}{\text{Circle Circumference}} = \frac{\text{Sector Area}}{\text{Circle Area}} = \frac{\alpha}{360°}" />
+</div>
+
+This formula shows that the ratio of arc length to circle circumference equals the ratio of sector area to circle area, both of which equal the ratio of central angle to the full angle of the circle.
+
+## Mathematical Formulas
+
+Based on this proportional relationship, we can derive formulas for calculating arc length and sector area:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Arc Length} = \frac{\alpha}{360°} \times 2\pi r" />
+<BlockMath math="\text{Sector Area} = \frac{\alpha}{360°} \times \pi r^2" />
+</div>
+
+From these two formulas, we can find a direct relationship between arc length and sector area:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Sector Area} = \frac{1}{2} \times \text{Arc Length} \times r" />
+</div>
+
+## Visualization of Proportional Relationships
+
+Let's see how this proportional relationship applies to various central angles. Each central angle produces a consistent ratio between arc length and sector area relative to the entire circle.
+
+<div className="flex flex-col gap-4">
+
+<LineEquation
+  title={<>Angle <InlineMath math="45°" /> produces ratio <InlineMath math="\frac{1}{8}" /></>}
+  description={<>Circle with central angle <InlineMath math="45°" /> shows that arc length = <InlineMath math="\frac{1}{8}" /> circumference and sector area = <InlineMath math="\frac{1}{8}" /> circle area.</>}
+  cameraPosition={[7, 5, 7]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 60;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: Array.from({ length: 16 }, (_, i) => {
+        const angle = (i * Math.PI / 4) / 15;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        {
+          text: "45°",
+          at: 8,
+          offset: [1, 0.8, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+<LineEquation
+  title={<>Angle <InlineMath math="90°" /> produces ratio <InlineMath math="\frac{1}{4}" /></>}
+  description={<>Circle with central angle <InlineMath math="90°" /> shows that arc length = <InlineMath math="\frac{1}{4}" /> circumference and sector area = <InlineMath math="\frac{1}{4}" /> circle area.</>}
+  cameraPosition={[7, 5, 7]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 60;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 4, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const angle = (i * Math.PI / 2) / 30;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        {
+          text: "90°",
+          at: 15,
+          offset: [0.8, 1, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+<LineEquation
+  title={<>Angle <InlineMath math="180°" /> produces ratio <InlineMath math="\frac{1}{2}" /></>}
+  description={<>Circle with central angle <InlineMath math="180°" /> shows that arc length = <InlineMath math="\frac{1}{2}" /> circumference and sector area = <InlineMath math="\frac{1}{2}" /> circle area.</>}
+  cameraPosition={[7, 5, 7]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 60;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const angle = (i * Math.PI) / 30;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        {
+          text: "180°",
+          at: 15,
+          offset: [0, -0.5, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+<LineEquation
+  title={<>Angle <InlineMath math="\alpha" /> for all general cases</>}
+  description={<>Every central angle <InlineMath math="\alpha" /> follows the same pattern: arc length = <InlineMath math="\frac{\alpha}{360°}" /> circumference and sector area = <InlineMath math="\frac{\alpha}{360°}" /> circle area.</>}
+  cameraPosition={[7, 5, 7]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 60;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 },
+      ],
+      color: getColor("LIME"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(2 * Math.PI / 3), y: 4 * Math.sin(2 * Math.PI / 3), z: 0 },
+      ],
+      color: getColor("LIME"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const angle = (i * 2 * Math.PI / 3) / 40;
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("FUCHSIA"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        {
+          text: "α = 120°",
+          at: 20,
+          offset: [-0.8, 1, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+</div>
+
+From the visualization above, we can see a consistent pattern. For every central angle <InlineMath math="\alpha" />, the following mathematical relationship applies:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Arc Length} = \frac{\alpha}{360°} \times \text{Circle Circumference}" />
+<BlockMath math="\text{Sector Area} = \frac{\alpha}{360°} \times \text{Circle Area}" />
+</div>
+
+Or in complete formula form:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\text{Arc Length} = \frac{\alpha}{360°} \times 2\pi r" />
+<BlockMath math="\text{Sector Area} = \frac{\alpha}{360°} \times \pi r^2" />
+</div>
+
+It is important to understand that these two formulas are interconnected. Two arcs are said to be congruent on the same circle if their corresponding central angles are equal. Furthermore, the arc length created by two adjacent arcs with coincident endpoints will equal the sum of the lengths of both arcs.
+
+## Application in Earth Measurement
+
+One of the most fascinating applications of the relationship between arc length and sector area is the measurement of Earth's circumference by Eratosthenes around 276-195 BC. By observing that sunlight fell perpendicularly at Syene while forming a 7.2° angle at Alexandria, which was 500 miles away, he was able to calculate Earth's circumference.
+
+<LineEquation
+  title={<>Earth Circumference Measurement by Eratosthenes</>}
+  description={<>Visualization shows the <InlineMath math="7.2°" /> angle between Alexandria and Syene with a distance of 500 miles.</>}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 73 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 72;
+        return {
+          x: 5 * Math.cos(angle),
+          y: 5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 2,
+      labels: [
+        {
+          text: "Earth",
+          at: 18,
+          offset: [1.5, 0, 0],
+        },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 5, y: 0, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 3,
+      labels: [
+        {
+          text: "Alexandria",
+          at: 1,
+          offset: [0.5, -0.8, 0],
+        },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 5 * Math.cos((7.2 * Math.PI) / 180), y: 5 * Math.sin((7.2 * Math.PI) / 180), z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 3,
+      labels: [
+        {
+          text: "Syene",
+          at: 1,
+          offset: [0.5, 0.8, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 11 }, (_, i) => {
+        const angle = (i * (7.2 * Math.PI) / 180) / 10;
+        return {
+          x: 5 * Math.cos(angle),
+          y: 5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 4,
+      labels: [
+        {
+          text: "500 miles",
+          at: 5,
+          offset: [1.2, 0.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 11 }, (_, i) => {
+        const angle = (i * (7.2 * Math.PI) / 180) / 10;
+        const radius = 1.5;
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 3,
+      labels: [
+        {
+          text: "7.2°",
+          at: 5,
+          offset: [0.8, 0.3, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+Using the proportional relationship:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{\text{Alexandria-Syene Distance}}{\text{Earth Circumference}} = \frac{7.2°}{360°}" />
+<BlockMath math="\frac{500 \text{ miles}}{\text{Earth Circumference}} = \frac{7.2°}{360°} = \frac{1}{50}" />
+<BlockMath math="\text{Earth Circumference} = 500 \times 50 = 25,000 \text{ miles}" />
+</div>
+
+## Relationship Between Arc and Sector
+
+It is important to understand that in one circle with the same central angle, the ratio between arc length and sector area has a special relationship:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="\frac{\text{Sector Area}}{\text{Arc Length}} = \frac{r}{2}" />
+</div>
+
+This relationship shows that the ratio of sector area to arc length is always equal to half the radius of the circle, regardless of the size of the central angle.
+
+## Exercises
+
+1. A circle has a radius of 14 cm. If the arc length of a sector is 22 cm, determine the area of that sector.
+
+2. Given a sector area of 154 cm² and an arc length of 22 cm. Determine the radius of the circle.
+
+3. Two cities are located on the same latitude with a distance of 1,000 km. If the angle formed at Earth's center is 9°, determine the estimated circumference of Earth.
+
+### Answer Key
+
+1. **Solution Steps:**
+
+   Given: <InlineMath math="r = 14 \text{ cm}" />, arc length = 22 cm
+   
+   Using the relationship: <InlineMath math="\text{Sector Area} = \frac{1}{2} \times \text{Arc Length} \times r" />
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\text{Sector Area} = \frac{1}{2} \times 22 \times 14" />
+   <BlockMath math="= \frac{22 \times 14}{2}" />
+   <BlockMath math="= \frac{308}{2}" />
+   <BlockMath math="= 154 \text{ cm}^2" />
+   </div>
+
+2. **Solution Steps:**
+
+   Given: Sector area = 154 cm², arc length = 22 cm
+   
+   Using the relationship: <InlineMath math="\frac{\text{Sector Area}}{\text{Arc Length}} = \frac{r}{2}" />
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\frac{154}{22} = \frac{r}{2}" />
+   <BlockMath math="7 = \frac{r}{2}" />
+   <BlockMath math="r = 14 \text{ cm}" />
+   </div>
+
+3. **Solution Steps:**
+
+   Given: Distance = 1,000 km, angle = 9°
+   
+   Using the proportion: <InlineMath math="\frac{\text{Distance}}{\text{Earth Circumference}} = \frac{9°}{360°}" />
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\frac{1,000}{\text{Earth Circumference}} = \frac{9°}{360°} = \frac{1}{40}" />
+   <BlockMath math="\text{Earth Circumference} = 1,000 \times 40" />
+   <BlockMath math="= 40,000 \text{ km}" />
+   </div>

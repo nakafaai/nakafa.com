@@ -1,0 +1,255 @@
+import { LineEquation } from "@repo/contents/_components/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Fungsi Naik, Turun, dan Stasioner",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Turunan Fungsi",
+};
+
+## Perilaku Fungsi dan Turunannya
+
+Pernahkah kamu memperhatikan bagaimana grafik sebuah fungsi bisa bergerak naik, turun, atau bahkan mendatar sejenak? Perilaku ini, yang disebut **kemonotonan fungsi**, ternyata punya kaitan erat dengan turunan pertamanya.
+
+Bayangkan kamu sedang berjalan di sepanjang kurva grafik dari kiri ke kanan.
+
+-   Saat kamu **mendaki**, artinya fungsi tersebut sedang **naik**.
+
+-   Saat kamu **menuruni lembah**, artinya fungsi tersebut sedang **turun**.
+
+-   Saat kamu berada di puncak bukit atau di dasar lembah, kamu berada di titik **diam** atau **stasioner**.
+
+Secara geometris, turunan pertama, <InlineMath math="f'(x)" />, adalah gradien dari garis singgung pada kurva di titik tersebut. Jadi, perilaku fungsi bisa kita lihat dari tanda gradiennya.
+
+## Sifat Kemonotonan Fungsi
+
+Hubungan antara turunan pertama dan perilaku fungsi dapat kita rangkum dalam sifat-sifat berikut:
+
+Misalkan fungsi <InlineMath math="y = f(x)" /> kontinu dan dapat diturunkan (diferensiabel) pada suatu interval.
+
+-   Jika <InlineMath math="f'(x) > 0" /> untuk semua <InlineMath math="x" /> dalam interval tersebut, maka <InlineMath math="f(x)" /> adalah **fungsi naik**.
+
+-   Jika <InlineMath math="f'(x) < 0" /> untuk semua <InlineMath math="x" /> dalam interval tersebut, maka <InlineMath math="f(x)" /> adalah **fungsi turun**.
+
+-   Jika <InlineMath math="f'(x) = 0" /> pada titik tertentu, maka <InlineMath math="f(x)" /> memiliki **titik stasioner** di sana.
+
+Titik stasioner inilah yang menjadi kunci untuk menemukan di mana sebuah fungsi berubah dari naik menjadi turun, atau sebaliknya.
+
+## Menganalisis Interval Fungsi
+
+Mari kita bedah sebuah kasus untuk melihat bagaimana cara menentukan interval di mana sebuah fungsi naik atau turun.
+
+Tentukan interval agar fungsi <InlineMath math="f(x) = x^3 - 3x" /> merupakan fungsi naik dan fungsi turun.
+
+**Penyelesaian:**
+
+**Langkah 1: Cari turunan pertama**
+
+Pertama, kita turunkan fungsi <InlineMath math="f(x)" />.
+
+<BlockMath math="f'(x) = 3x^2 - 3" />
+
+**Langkah 2: Temukan titik stasioner**
+
+Titik stasioner terjadi saat <InlineMath math="f'(x) = 0" />.
+
+<div className="flex flex-col gap-4">
+    <BlockMath math="3x^2 - 3 = 0" />
+    <BlockMath math="x^2 - 1 = 0" />
+    <BlockMath math="(x-1)(x+1) = 0" />
+</div>
+
+Dari sini, kita dapatkan titik-titik stasionernya adalah <InlineMath math="x = 1" /> dan <InlineMath math="x = -1" />.
+
+**Langkah 3: Buat garis bilangan dan uji interval**
+
+Kita letakkan titik stasioner pada garis bilangan. Titik-titik ini membagi garis menjadi tiga interval. Kita ambil satu titik uji dari setiap interval untuk mengetahui tanda <InlineMath math="f'(x)" /> (positif atau negatif).
+
+-   **Interval <InlineMath math="x < -1" />:**
+    
+    Ambil <InlineMath math="x=-2" />. <InlineMath math="f'(-2) = 3(-2)^2 - 3 = 9" /> (Positif, fungsi naik).
+
+-   **Interval <InlineMath math="-1 < x < 1" />:**
+    
+    Ambil <InlineMath math="x=0" />. <InlineMath math="f'(0) = 3(0)^2 - 3 = -3" /> (Negatif, fungsi turun).
+
+-   **Interval <InlineMath math="x > 1" />:**
+    
+    Ambil <InlineMath math="x=2" />. <InlineMath math="f'(2) = 3(2)^2 - 3 = 9" /> (Positif, fungsi naik).
+
+**Langkah 4: Simpulkan intervalnya**
+
+Berdasarkan pengujian, kita dapat menyimpulkan:
+
+-   Fungsi naik pada interval <InlineMath math="x < -1" /> atau <InlineMath math="x > 1" />.
+
+-   Fungsi turun pada interval <InlineMath math="-1 < x < 1" />.
+
+<LineEquation
+  title={<>Visualisasi Kemonotonan Fungsi</>}
+  description={
+    <>
+      Grafik ini mengilustrasikan perilaku fungsi <InlineMath math="f(x) = x^3 - 3x" />. 
+      Perhatikan bagaimana kurva naik saat turunannya positif, turun saat turunannya negatif, dan mendatar pada titik stasioner di mana <InlineMath math="f'(x)=0" />.
+    </>
+  }
+  showZAxis={false}
+  cameraPosition={[0, 0, 10]}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = -2 + i * 0.05;
+        const y = x ** 3 - 3 * x;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+      labels: [
+        {
+          text: "Naik",
+          at: 5,
+          offset: [-1, 1, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = -1 + i * 0.05;
+        const y = x ** 3 - 3 * x;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      labels: [
+        {
+          text: "Turun",
+          at: 20,
+          offset: [0, -1, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = 1 + i * 0.05;
+        const y = x ** 3 - 3 * x;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+      labels: [
+        {
+          text: "Naik",
+          at: 15,
+          offset: [1, 1, 0],
+        },
+      ],
+    },
+    {
+      points: [{ x: -1, y: 2, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        {
+          text: "Stasioner (-1, 2)",
+          offset: [-2.5, 0.5, 0],
+        },
+      ],
+    },
+    {
+      points: [{ x: 1, y: -2, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        {
+          text: "Stasioner (1, -2)",
+          offset: [2.5, -0.5, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+## Latihan
+
+1.  Tentukan interval fungsi naik dan interval fungsi turun pada kurva <InlineMath math="f(x) = x^3 - 3x^2 - 15" />.
+
+2.  Jika fungsi <InlineMath math="f(x) = ax^3 + x^2 + 5" /> selalu naik dalam interval <InlineMath math="0 < x < 2" />, tentukanlah nilai dari koefisien <InlineMath math="a" />!
+
+3.  Tentukan interval fungsi naik dan turun jika diketahui kurva <InlineMath math="f(x) = \sin 2x \cos 2x" />!
+
+### Kunci Jawaban
+
+1.  **Penyelesaian:**
+
+    Turunan pertama dari <InlineMath math="f(x) = x^3 - 3x^2 - 15" /> adalah <InlineMath math="f'(x) = 3x^2 - 6x" />.
+    
+    Titik stasioner didapat saat <InlineMath math="f'(x) = 0" />.
+
+    <BlockMath math="3x^2 - 6x = 0 \implies 3x(x - 2) = 0" />
+
+    Titik stasionernya adalah <InlineMath math="x=0" /> dan <InlineMath math="x=2" />.
+
+    Dengan menguji interval pada garis bilangan:
+
+    -   Untuk <InlineMath math="x<0" />, <InlineMath math="f'(x)" /> positif (naik).
+
+    -   Untuk <InlineMath math="0<x<2" />, <InlineMath math="f'(x)" /> negatif (turun).
+
+    -   Untuk <InlineMath math="x>2" />, <InlineMath math="f'(x)" /> positif (naik).
+
+    Jadi, fungsi naik pada <InlineMath math="x < 0" /> atau <InlineMath math="x > 2" />, dan turun pada interval <InlineMath math="0 < x < 2" />.
+
+2.  **Penyelesaian:**
+
+    Agar sebuah fungsi *selalu naik* pada suatu interval, turunan pertamanya harus non-negatif (<InlineMath math="f'(x) \ge 0" />) untuk setiap titik di dalam interval tersebut.
+
+    <BlockMath math="f'(x) = 3ax^2 + 2x = x(3ax + 2)" />
+    
+    Pada interval <InlineMath math="0 < x < 2" />, faktor <InlineMath math="x" /> selalu positif. Oleh karena itu, agar <InlineMath math="f'(x) \ge 0" />, faktor kedua yaitu <InlineMath math="(3ax + 2)" /> juga harus non-negatif.
+    
+    <BlockMath math="3ax + 2 \ge 0" />
+    
+    Ketidaksamaan ini harus terpenuhi untuk semua nilai <InlineMath math="x" /> dalam interval <InlineMath math="0 < x < 2" />. Karena <InlineMath math="h(x) = 3ax + 2" /> adalah fungsi linear, perilakunya monoton. Kita hanya perlu memastikan nilainya non-negatif pada titik ujung interval yang paling "kritis".
+
+    -   Jika <InlineMath math="a \ge 0" />, maka <InlineMath math="3ax" /> juga non-negatif, sehingga <InlineMath math="3ax+2" /> pasti akan positif. Kondisi ini sudah terpenuhi.
+
+    -   Jika <InlineMath math="a < 0" />, maka <InlineMath math="h(x)" /> adalah fungsi yang menurun. Nilai terkecilnya akan berada di ujung kanan interval (<InlineMath math="x=2" />). Agar <InlineMath math="h(x)" /> selalu non-negatif, kita cukup pastikan nilai minimumnya ini lebih besar atau sama dengan nol.
+
+    Kita uji pada batas kritis <InlineMath math="x=2" />:
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="3a(2) + 2 \ge 0" />
+        <BlockMath math="6a \ge -2" />
+        <BlockMath math="a \ge -1/3" />
+    </div>
+
+    Dengan menggabungkan kedua kasus tersebut, syarat agar fungsi selalu naik pada interval yang diberikan adalah <InlineMath math="a \ge -1/3" />.
+
+3.  **Penyelesaian:**
+
+    Gunakan identitas trigonometri sudut ganda: <InlineMath math="\sin(2A) = 2\sin(A)\cos(A)" />.
+
+    Maka, <InlineMath math="f(x) = \sin 2x \cos 2x = \frac{1}{2} \sin(4x)" />.
+    
+    Turunan pertamanya adalah:
+
+    <BlockMath math="f'(x) = \frac{1}{2} \cdot \cos(4x) \cdot 4 = 2\cos(4x)" />
+    
+    -   **Fungsi naik** saat <InlineMath math="f'(x) > 0" />, yaitu <InlineMath math="2\cos(4x) > 0" /> atau <InlineMath math="\cos(4x) > 0" />. Ini terjadi di kuadran I dan IV.
+
+        <div className="flex flex-col gap-4">
+            <BlockMath math="-\frac{\pi}{2} + 2k\pi < 4x < \frac{\pi}{2} + 2k\pi" />
+            <BlockMath math="-\frac{\pi}{8} + \frac{k\pi}{2} < x < \frac{\pi}{8} + \frac{k\pi}{2}" />
+        </div>
+
+        Interval ini berlaku untuk setiap <InlineMath math="k" /> bilangan bulat.
+
+    -   **Fungsi turun** saat <InlineMath math="f'(x) < 0" />, yaitu <InlineMath math="\cos(4x) < 0" />. Ini terjadi di kuadran II dan III.
+
+        <div className="flex flex-col gap-4">
+            <BlockMath math="\frac{\pi}{2} + 2k\pi < 4x < \frac{3\pi}{2} + 2k\pi" />
+            <BlockMath math="\frac{\pi}{8} + \frac{k\pi}{2} < x < \frac{3\pi}{8} + \frac{k\pi}{2}" />
+        </div>
+
+        Interval ini berlaku untuk setiap <InlineMath math="k" /> bilangan bulat.

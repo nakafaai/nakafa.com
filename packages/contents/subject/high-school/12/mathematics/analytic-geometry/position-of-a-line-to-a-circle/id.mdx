@@ -1,0 +1,304 @@
+export const metadata = {
+  title: "Kedudukan Garis Terhadap Lingkaran",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Geometri Analitik",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Memahami Hubungan Garis dan Lingkaran
+
+Coba bayangkan kamu punya sebuah lingkaran dan sebuah garis lurus pada bidang yang sama. Menarik kan, bagaimana kedua objek geometri ini bisa berinteraksi? Ternyata ada tiga kemungkinan yang bisa terjadi.
+
+Garis tersebut bisa **memotong lingkaran di dua titik**, **menyinggung lingkaran di satu titik saja**, atau bahkan **tidak bersentuhan sama sekali** dengan lingkaran. Seperti halnya ketika kamu melempar pensil ke arah cincin, pensil itu bisa menembus cincin, menyentuh tepi cincin, atau meleset sama sekali.
+
+Konsep ini sangat penting dalam geometri analitik karena membantu kita memahami berbagai situasi dalam kehidupan nyata. Misalnya, untuk menentukan apakah jalan raya akan melewati area lindung yang berbentuk lingkaran, atau untuk menganalisis lintasan satelit terhadap zona tertentu.
+
+## Tiga Kemungkinan Posisi
+
+Mari kita lihat ketiga kemungkinan kedudukan garis terhadap lingkaran secara visual:
+
+<LineEquation
+  title="Kedudukan Garis Terhadap Lingkaran"
+  description="Visualisasi tiga kemungkinan posisi garis relatif terhadap lingkaran."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const xMin = -5;
+        const xMax = 5;
+        const y = 4.5; // Garis yang tidak berpotongan
+        return {
+          x: xMin + i * (xMax - xMin),
+          y: y,
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Tidak berpotongan", at: 1, offset: [-2, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const xMin = -5;
+        const xMax = 5;
+        const y = 3; // Garis singgung
+        return {
+          x: xMin + i * (xMax - xMin),
+          y: y,
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Menyinggung", at: 1, offset: [-2, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const xMin = -5;
+        const xMax = 5;
+        const y = 1; // Garis memotong
+        return {
+          x: xMin + i * (xMax - xMin),
+          y: y,
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Memotong", at: 1, offset: [-2, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        return {
+          x: 0,
+          y: 0,
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "P", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const xMin = -6;
+        const xMax = 6;
+        const y = 0;
+        return {
+          x: xMin + i * (xMax - xMin),
+          y: y,
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const yMin = -4;
+        const yMax = 5;
+        const x = 0;
+        return {
+          x: x,
+          y: yMin + i * (yMax - yMin),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 14]}
+  showZAxis={false}
+/>
+
+Dari visualisasi di atas, kita bisa lihat tiga situasi berbeda. Garis pertama tidak menyentuh lingkaran sama sekali, garis kedua menyentuh lingkaran tepat di satu titik, dan garis ketiga menembus lingkaran sehingga berpotongan di dua titik.
+
+1. **Garis memotong lingkaran** terjadi ketika garis lurus melewati bagian dalam lingkaran sehingga bertemu dengan keliling lingkaran di dua titik berbeda.
+
+2. **Garis menyinggung lingkaran** terjadi ketika garis lurus hanya menyentuh keliling lingkaran tepat di satu titik saja. Garis seperti ini disebut garis singgung.
+
+3. **Garis tidak berpotongan** terjadi ketika garis lurus berada di luar lingkaran sehingga tidak ada titik pertemuan antara garis dan lingkaran.
+
+## Metode Diskriminan
+
+Untuk menentukan kedudukan garis terhadap lingkaran secara matematis, kita menggunakan metode substitusi yang menghasilkan persamaan kuadrat. Kemudian, kita analisis **diskriminan** dari persamaan kuadrat tersebut.
+
+Misalkan kita punya garis dengan persamaan <InlineMath math="y = mx + c" /> dan lingkaran dengan persamaan <InlineMath math="x^2 + y^2 + Dx + Ey + F = 0" />.
+
+Langkah pertama adalah mensubstitusikan persamaan garis ke dalam persamaan lingkaran. Caranya gampang, tinggal ganti semua <InlineMath math="y" /> di persamaan lingkaran dengan <InlineMath math="mx + c" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x^2 + (mx + c)^2 + Dx + E(mx + c) + F = 0" />
+  <BlockMath math="x^2 + m^2x^2 + 2mcx + c^2 + Dx + Emx + Ec + F = 0" />
+  <BlockMath math="(1 + m^2)x^2 + (2mc + D + Em)x + (c^2 + Ec + F) = 0" />
+</div>
+
+Hasil substitusi ini membentuk persamaan kuadrat dalam bentuk <InlineMath math="ax^2 + bx + c = 0" /> dengan koefisien:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="a = 1 + m^2" />
+  <BlockMath math="b = 2mc + D + Em" />
+  <BlockMath math="c = c^2 + Ec + F" />
+</div>
+
+Nah, sekarang kita hitung **diskriminan** dari persamaan kuadrat ini. Diskriminan adalah nilai yang menentukan jenis akar persamaan kuadrat:
+
+<BlockMath math="\Delta = b^2 - 4ac" />
+
+## Interpretasi Nilai Diskriminan
+
+Nilai diskriminan inilah yang akan memberitahu kita kedudukan garis terhadap lingkaran. Konsepnya sederhana:
+
+1. **Diskriminan positif** (<InlineMath math="\Delta > 0" />) artinya persamaan kuadrat memiliki dua akar real berbeda. Dalam konteks geometri, ini berarti garis **memotong lingkaran di dua titik**.
+
+2. **Diskriminan nol** (<InlineMath math="\Delta = 0" />) artinya persamaan kuadrat memiliki satu akar real (akar kembar). Geometrinya, garis **menyinggung lingkaran di satu titik**.
+
+3. **Diskriminan negatif** (<InlineMath math="\Delta < 0" />) artinya persamaan kuadrat tidak memiliki akar real. Secara geometri, garis **tidak berpotongan dengan lingkaran**.
+
+## Contoh Perhitungan
+
+Mari kita lihat contoh konkret supaya lebih jelas. Misalnya kita punya garis <InlineMath math="y = 2x - 1" /> dan lingkaran <InlineMath math="x^2 + y^2 - 4x + 2y - 4 = 0" />.
+
+Kita substitusikan <InlineMath math="y = 2x - 1" /> ke dalam persamaan lingkaran:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x^2 + (2x - 1)^2 - 4x + 2(2x - 1) - 4 = 0" />
+  <BlockMath math="x^2 + 4x^2 - 4x + 1 - 4x + 4x - 2 - 4 = 0" />
+  <BlockMath math="5x^2 - 4x - 5 = 0" />
+</div>
+
+Dari persamaan kuadrat <InlineMath math="5x^2 - 4x - 5 = 0" />, kita identifikasi koefisiennya: <InlineMath math="a = 5" />, <InlineMath math="b = -4" />, dan <InlineMath math="c = -5" />.
+
+Hitung diskriminan:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\Delta = b^2 - 4ac = (-4)^2 - 4(5)(-5)" />
+  <BlockMath math="\Delta = 16 + 100 = 116" />
+</div>
+
+Karena <InlineMath math="\Delta = 116 > 0" />, maka garis <InlineMath math="y = 2x - 1" /> **memotong lingkaran di dua titik**.
+
+> Nilai diskriminan ini tidak hanya memberitahu kedudukan garis, tetapi juga menunjukkan berapa banyak titik perpotongan yang ada. Semakin besar nilai diskriminan positif, semakin "jauh" garis dari kondisi menyinggung.
+
+## Kasus Lingkaran Standar
+
+Untuk lingkaran dengan pusat di titik asal seperti <InlineMath math="x^2 + y^2 = r^2" /> dan garis <InlineMath math="y = mx + c" />, prosesnya jadi lebih ringkas.
+
+Substitusikan garis ke lingkaran:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x^2 + (mx + c)^2 = r^2" />
+  <BlockMath math="x^2 + m^2x^2 + 2mcx + c^2 = r^2" />
+  <BlockMath math="(1 + m^2)x^2 + 2mcx + (c^2 - r^2) = 0" />
+</div>
+
+Diskriminan untuk kasus ini adalah:
+
+<BlockMath math="\Delta = (2mc)^2 - 4(1 + m^2)(c^2 - r^2)" />
+
+Setelah disederhanakan:
+
+<BlockMath math="\Delta = 4[r^2(1 + m^2) - c^2]" />
+
+Interpretasinya tetap sama berdasarkan tanda diskriminan.
+
+## Latihan
+
+1. Tentukan kedudukan garis <InlineMath math="y = x + 3" /> terhadap lingkaran <InlineMath math="x^2 + y^2 = 8" />.
+
+2. Selidiki kedudukan garis <InlineMath math="y = -2x + 5" /> terhadap lingkaran <InlineMath math="x^2 + y^2 - 6x + 4y + 9 = 0" />.
+
+3. Garis <InlineMath math="2x + y - 4 = 0" /> dan lingkaran <InlineMath math="x^2 + y^2 = 5" />. Bagaimana kedudukan keduanya?
+
+4. Tentukan nilai <InlineMath math="k" /> agar garis <InlineMath math="y = x + k" /> menyinggung lingkaran <InlineMath math="x^2 + y^2 = 18" />.
+
+### Kunci Jawaban
+
+1. **Penyelesaian**:
+
+   Substitusi <InlineMath math="y = x + 3" /> ke <InlineMath math="x^2 + y^2 = 8" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + (x + 3)^2 = 8" />
+     <BlockMath math="x^2 + x^2 + 6x + 9 = 8" />
+     <BlockMath math="2x^2 + 6x + 1 = 0" />
+   </div>
+   
+   Diskriminan: <InlineMath math="\Delta = 6^2 - 4(2)(1) = 36 - 8 = 28" />
+   
+   Karena <InlineMath math="\Delta = 28 > 0" />, garis **memotong lingkaran di dua titik**.
+
+2. **Penyelesaian**:
+
+   Substitusi <InlineMath math="y = -2x + 5" /> ke <InlineMath math="x^2 + y^2 - 6x + 4y + 9 = 0" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + (-2x + 5)^2 - 6x + 4(-2x + 5) + 9 = 0" />
+     <BlockMath math="x^2 + 4x^2 - 20x + 25 - 6x - 8x + 20 + 9 = 0" />
+     <BlockMath math="5x^2 - 34x + 54 = 0" />
+   </div>
+   
+   Diskriminan: <InlineMath math="\Delta = (-34)^2 - 4(5)(54) = 1156 - 1080 = 76" />
+   
+   Karena <InlineMath math="\Delta = 76 > 0" />, garis **memotong lingkaran di dua titik**.
+
+3. **Penyelesaian**:
+
+   Ubah garis <InlineMath math="2x + y - 4 = 0" /> menjadi <InlineMath math="y = -2x + 4" />.
+   
+   Substitusi ke <InlineMath math="x^2 + y^2 = 5" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + (-2x + 4)^2 = 5" />
+     <BlockMath math="x^2 + 4x^2 - 16x + 16 = 5" />
+     <BlockMath math="5x^2 - 16x + 11 = 0" />
+   </div>
+   
+   Diskriminan: <InlineMath math="\Delta = (-16)^2 - 4(5)(11) = 256 - 220 = 36" />
+   
+   Karena <InlineMath math="\Delta = 36 > 0" />, garis **memotong lingkaran di dua titik**.
+
+4. **Penyelesaian**:
+
+   Agar garis menyinggung lingkaran, diskriminan harus sama dengan nol.
+   
+   Substitusi <InlineMath math="y = x + k" /> ke <InlineMath math="x^2 + y^2 = 18" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + (x + k)^2 = 18" />
+     <BlockMath math="x^2 + x^2 + 2kx + k^2 = 18" />
+     <BlockMath math="2x^2 + 2kx + (k^2 - 18) = 0" />
+   </div>
+   
+   Diskriminan: <InlineMath math="\Delta = (2k)^2 - 4(2)(k^2 - 18) = 4k^2 - 8k^2 + 144 = -4k^2 + 144" />
+   
+   Supaya <InlineMath math="\Delta = 0" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="-4k^2 + 144 = 0" />
+     <BlockMath math="4k^2 = 144" />
+     <BlockMath math="k^2 = 36" />
+     <BlockMath math="k = \pm 6" />
+   </div>
+   
+   Jadi nilai <InlineMath math="k = 6" /> atau <InlineMath math="k = -6" />.

@@ -1,0 +1,639 @@
+export const metadata = {
+  title: "Equation of a Tangent Line to a Circle",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Analytic Geometry",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Unveiling the Mystery of Tangent Lines
+
+Have you ever noticed how a bicycle wheel moves on the road? When the wheel rotates, there's one point at the edge of the wheel that always touches the asphalt perfectly. Well, imagine if we could draw a straight line from that point of contact - that's what we call a **tangent line**!
+
+Unlike simply determining the position or relation of lines, this time we will delve deeper: how to find the **explicit mathematical equation** of the tangent line. It's like searching for a secret code that describes the exact path a line must follow to touch a circle perfectly.
+
+The ability to determine tangent line equations is very useful in engineering, physics, and even art. Imagine an architect designing a bridge arch, or an engineer calculating projectile trajectories.
+
+## Substitution for Specific Points
+
+When we already know which point on the circle will be touched by the tangent line, our work becomes more focused. Let's look at a systematic approach for this case.
+
+<LineEquation
+  title="Tangent Line at a Specific Point"
+  description="Constructing the tangent line equation when the point of tangency is known."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 4;
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+    },
+    {
+      points: [
+        {
+          x: 0,
+          y: 0,
+          z: 0,
+        }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "Center", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const angle = Math.PI * 5/6; // 150 degrees
+        const radius = 4;
+        return [{
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0,
+        }];
+      })(),
+      color: getColor("LIME"),
+      showPoints: true,
+      labels: [{ text: "M", at: 0, offset: [-0.8, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const angle = Math.PI * 5/6;
+        const radius = 4;
+        const pointX = radius * Math.cos(angle);
+        const pointY = radius * Math.sin(angle);
+        
+        // Direction perpendicular to radius (negative reciprocal gradient)
+        const perpSlope = -pointX / pointY;
+        
+        const range = 5;
+        return [
+          {
+            x: pointX - range,
+            y: pointY + perpSlope * (-range),
+            z: 0,
+          },
+          {
+            x: pointX + range,
+            y: pointY + perpSlope * range,
+            z: 0,
+          }
+        ];
+      })(),
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Tangent", at: 0, offset: [4, 3.5, 0] }],
+    },
+    {
+      points: (() => {
+        const angle = Math.PI * 5/6;
+        const radius = 4;
+        return [
+          { x: 0, y: 0, z: 0 },
+          {
+            x: radius * Math.cos(angle),
+            y: radius * Math.sin(angle),
+            z: 0,
+          }
+        ];
+      })(),
+      color: getColor("YELLOW"),
+      showPoints: false,
+      smooth: false,
+      cone: {
+        position: "end",
+        size: 0.3,
+      },
+      labels: [{ text: "r", at: 1, offset: [1, -1, 0] }],
+    },
+    {
+      points: [
+        { x: -6, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 }
+      ],
+      color: getColor("FUCHSIA"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -5, z: 0 },
+        { x: 0, y: 5, z: 0 }
+      ],
+      color: getColor("FUCHSIA"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+For circle <InlineMath math="x^2 + y^2 = r^2" /> with point of tangency <InlineMath math="M(p, q)" />, we use the **direct substitution formula**:
+
+<BlockMath math="px + qy = r^2" />
+
+Why does this formula work? Because the tangent line is always perpendicular to the radius at the point of tangency. If the radius has direction vector <InlineMath math="(p, q)" />, then the tangent line has the same normal vector, which is <InlineMath math="(p, q)" />.
+
+For general circle <InlineMath math="(x-h)^2 + (y-k)^2 = r^2" /> with point of tangency <InlineMath math="M(p, q)" />, the formula becomes:
+
+<BlockMath math="(p-h)(x-h) + (q-k)(y-k) = r^2" />
+
+> The advantage of this method is speed and accuracy. We don't need to calculate gradients separately or perform complex algebraic manipulations.
+
+## Distance Approach for Given Gradient
+
+Now we move to a more challenging case: finding the tangent line equation when only its gradient is known. Here we use the principle that the distance from the circle's center to the tangent line must equal the radius.
+
+<LineEquation
+  title="Tangent Line with Specific Slope"
+  description="Using distance approach to find equation with given gradient."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 3.5;
+        const h = 1, k = -0.5;
+        return {
+          x: h + radius * Math.cos(angle),
+          y: k + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 1, y: -0.5, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "Center", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        const m = -0.75; // desired gradient
+        const h = 1, k = -0.5, r = 3.5;
+        const c1 = k - m*h + r * Math.sqrt(1 + m * m);
+        const xRange = 8;
+        const xStart = -2;
+        return [
+          { x: xStart, y: m * xStart + c1, z: 0 },
+          { x: xStart + xRange, y: m * (xStart + xRange) + c1, z: 0 }
+        ];
+      })(),
+      color: getColor("SKY"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Upper Tangent", at: 1, offset: [1, 1, 0] }],
+    },
+    {
+      points: (() => {
+        const m = -0.75; // desired gradient
+        const h = 1, k = -0.5, r = 3.5;
+        const c2 = k - m*h - r * Math.sqrt(1 + m * m);
+        const xRange = 8;
+        const xStart = -2;
+        return [
+          { x: xStart, y: m * xStart + c2, z: 0 },
+          { x: xStart + xRange, y: m * (xStart + xRange) + c2, z: 0 }
+        ];
+      })(),
+      color: getColor("EMERALD"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Lower Tangent", at: 0, offset: [-0.5, -1.5, 0] }],
+    },
+    {
+      points: (() => {
+        const m = -0.75;
+        const h = 1, k = -0.5, r = 3.5;
+        
+        // Calculate tangent point for upper line
+        const c1 = k - m*h + r * Math.sqrt(1 + m * m);
+        
+        // Find tangent point by substitution
+        const a = 1 + m*m;
+        const b = 2*m*(c1 - k) - 2*h;
+        const c = (c1 - k)*(c1 - k) + h*h - r*r;
+        
+        const discriminant = b*b - 4*a*c;
+        const tangentX = (-b + Math.sqrt(discriminant)) / (2*a);
+        const tangentY = m * tangentX + c1;
+        
+        return [
+          { x: h, y: k, z: 0 },
+          { x: tangentX, y: tangentY, z: 0 }
+        ];
+      })(),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      cone: {
+        position: "end",
+        size: 0.2,
+      },
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 7, y: 0, z: 0 }
+      ],
+      color: getColor("PINK"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -5, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("PINK"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+Suppose we have circle <InlineMath math="(x-h)^2 + (y-k)^2 = r^2" /> and want to find a tangent line with gradient <InlineMath math="m" />. The tangent line has form <InlineMath math="y = mx + c" />.
+
+The key is using the **point-to-line distance formula**. The distance from center <InlineMath math="(h,k)" /> to line <InlineMath math="mx - y + c = 0" /> is:
+
+<BlockMath math="d = \frac{|mh - k + c|}{\sqrt{m^2 + 1}}" />
+
+Since the line is tangent to the circle, this distance must exactly equal the radius:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\frac{|mh - k + c|}{\sqrt{m^2 + 1}} = r" />
+  <BlockMath math="|mh - k + c| = r\sqrt{m^2 + 1}" />
+  <BlockMath math="mh - k + c = \pm r\sqrt{m^2 + 1}" />
+</div>
+
+Thus we obtain two constant values:
+
+<BlockMath math="c = k - mh \pm r\sqrt{m^2 + 1}" />
+
+Therefore, the equations of both tangent lines are:
+
+<BlockMath math="y = mx + k - mh \pm r\sqrt{m^2 + 1}" />
+
+## Quadratic Method for External Points
+
+The most challenging case is when we want to draw tangent lines from a point outside the circle. From one external point, we can draw exactly two tangent lines with different gradients.
+
+<LineEquation
+  title="Tangent Line from External Point"
+  description="Using quadratic method in gradient for points outside the circle."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2.8;
+        const h = -1, k = 1.5;
+        return {
+          x: h + radius * Math.cos(angle),
+          y: k + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -1, y: 1.5, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "Center", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 3.5, y: 4, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [{ text: "External", at: 0, offset: [0.5, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        // First tangent point - intersection of tangent line with circle
+        const px = 3.5, py = 4, h = -1, k = 1.5, r = 2.8;
+        
+        // Calculate gradient of first tangent line
+        const a = (h - px)*(h - px) - r*r;
+        const b = -2*(h - px)*(k - py);
+        const c = (k - py)*(k - py) - r*r;
+        
+        const discriminant = b*b - 4*a*c;
+        const m1 = (-b + Math.sqrt(discriminant)) / (2*a);
+        
+        // Tangent line equation: y = m1*x + c1
+        const c1 = py - m1*px;
+        
+        // Substitute y = m1*x + c1 into (x-h)^2 + (y-k)^2 = r^2
+        // (x-h)^2 + (m1*x + c1 - k)^2 = r^2
+        const A = 1 + m1*m1;
+        const B = 2*m1*(c1 - k) - 2*h;
+        const C = (c1 - k)*(c1 - k) + h*h - r*r;
+        
+        const discX = B*B - 4*A*C;
+        
+        // Two solutions, choose the one in the correct direction
+        const x1 = (-B + Math.sqrt(discX)) / (2*A);
+        const x2 = (-B - Math.sqrt(discX)) / (2*A);
+        
+        // Choose x that gives the correct tangent point
+        // Tangent point should be between center and external point in certain direction
+        const xTangent = Math.abs(x1 - h) < Math.abs(x2 - h) ? x1 : x2;
+        const yTangent = m1 * xTangent + c1;
+        
+        return [{ x: xTangent, y: yTangent, z: 0 }];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "S₁", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        // Second tangent point - intersection of tangent line with circle
+        const px = 3.5, py = 4, h = -1, k = 1.5, r = 2.8;
+        
+        // Calculate gradient of second tangent line
+        const a = (h - px)*(h - px) - r*r;
+        const b = -2*(h - px)*(k - py);
+        const c = (k - py)*(k - py) - r*r;
+        
+        const discriminant = b*b - 4*a*c;
+        const m2 = (-b - Math.sqrt(discriminant)) / (2*a);
+        
+        // Tangent line equation: y = m2*x + c2
+        const c2 = py - m2*px;
+        
+        // Substitute y = m2*x + c2 into (x-h)^2 + (y-k)^2 = r^2
+        // (x-h)^2 + (m2*x + c2 - k)^2 = r^2
+        const A = 1 + m2*m2;
+        const B = 2*m2*(c2 - k) - 2*h;
+        const C = (c2 - k)*(c2 - k) + h*h - r*r;
+        
+        const discX = B*B - 4*A*C;
+        
+        // Two solutions, choose the one in the correct direction
+        const x1 = (-B + Math.sqrt(discX)) / (2*A);
+        const x2 = (-B - Math.sqrt(discX)) / (2*A);
+        
+        // Choose x that gives the correct tangent point
+        const xTangent = Math.abs(x1 - h) < Math.abs(x2 - h) ? x1 : x2;
+        const yTangent = m2 * xTangent + c2;
+        
+        return [{ x: xTangent, y: yTangent, z: 0 }];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "S₂", at: 0, offset: [0.5, 0.5, 0] }],
+    },
+    {
+      points: (() => {
+        // First tangent line
+        const px = 3.5, py = 4, h = -1, k = 1.5, r = 2.8;
+        const a = (h - px)*(h - px) - r*r;
+        const b = -2*(h - px)*(k - py);
+        const c = (k - py)*(k - py) - r*r;
+        
+        const discriminant = b*b - 4*a*c;
+        const m1 = (-b + Math.sqrt(discriminant)) / (2*a);
+        
+        const c1 = py - m1*px;
+        
+        // Determine consistent line length
+        const lineLength = 6;
+        
+        return [
+          { x: px, y: py, z: 0 },
+          { x: px - lineLength, y: m1 * (px - lineLength) + c1, z: 0 }
+        ];
+      })(),
+      color: getColor("TEAL"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Tangent 1", at: 0, offset: [0.5, -1, 0] }],
+    },
+    {
+      points: (() => {
+        // Second tangent line
+        const px = 3.5, py = 4, h = -1, k = 1.5, r = 2.8;
+        const a = (h - px)*(h - px) - r*r;
+        const b = -2*(h - px)*(k - py);
+        const c = (k - py)*(k - py) - r*r;
+        
+        const discriminant = b*b - 4*a*c;
+        const m2 = (-b - Math.sqrt(discriminant)) / (2*a);
+        
+        const c2 = py - m2*px;
+        
+        // Use same line length for visual consistency
+        const lineLength = 6;
+        
+        return [
+          { x: px, y: py, z: 0 },
+          { x: px - lineLength, y: m2 * (px - lineLength) + c2, z: 0 }
+        ];
+      })(),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "Tangent 2", at: 0, offset: [0.5, 1, 0] }],
+    },
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+        { x: 5, y: 0, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -2, z: 0 },
+        { x: 0, y: 6, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+To solve this problem, we use the **quadratic equation in gradient** approach. Let the external point be <InlineMath math="P(x_0, y_0)" /> and the circle have equation <InlineMath math="x^2 + y^2 = r^2" />.
+
+The tangent line from point P has form <InlineMath math="y - y_0 = m(x - x_0)" />, or <InlineMath math="y = mx - mx_0 + y_0" />.
+
+Substitute into the circle equation and use the condition that discriminant equals zero:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x^2 + (mx - mx_0 + y_0)^2 = r^2" />
+  <BlockMath math="(1 + m^2)x^2 + 2m(y_0 - mx_0)x + (y_0 - mx_0)^2 - r^2 = 0" />
+</div>
+
+Discriminant equals zero gives a quadratic equation in <InlineMath math="m" />:
+
+<BlockMath math="(x_0^2 - r^2)m^2 - 2x_0y_0m + (y_0^2 - r^2) = 0" />
+
+The two roots of this equation are the gradients of both tangent lines.
+
+## Complete Applied Example
+
+Let's solve one concrete case to clarify understanding. Determine the tangent line equation for circle <InlineMath math="x^2 + y^2 = 25" /> passing through point <InlineMath math="A(7, 1)" />.
+
+**Step 1**: Verify that point A is outside the circle.
+
+<BlockMath math="7^2 + 1^2 = 49 + 1 = 50 > 25 \quad \checkmark" />
+
+**Step 2**: Form quadratic equation in gradient with <InlineMath math="x_0 = 7" />, <InlineMath math="y_0 = 1" />, <InlineMath math="r^2 = 25" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(49 - 25)m^2 - 2(7)(1)m + (1 - 25) = 0" />
+  <BlockMath math="24m^2 - 14m - 24 = 0" />
+  <BlockMath math="12m^2 - 7m - 12 = 0" />
+</div>
+
+**Step 3**: Solve using quadratic formula:
+
+<BlockMath math="m = \frac{7 \pm \sqrt{49 + 576}}{24} = \frac{7 \pm \sqrt{625}}{24} = \frac{7 \pm 25}{24}" />
+
+So <InlineMath math="m_1 = \frac{32}{24} = \frac{4}{3}" /> and <InlineMath math="m_2 = \frac{-18}{24} = -\frac{3}{4}" />.
+
+**Step 4**: Construct final equations:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="y - 1 = \frac{4}{3}(x - 7) \Rightarrow 4x - 3y = 25" />
+  <BlockMath math="y - 1 = -\frac{3}{4}(x - 7) \Rightarrow 3x + 4y = 25" />
+</div>
+
+## Practice
+
+1. Determine the tangent line equation for circle <InlineMath math="x^2 + y^2 = 16" /> at point <InlineMath math="(2\sqrt{2}, 2\sqrt{2})" />.
+
+2. Find the tangent line equation for circle <InlineMath math="x^2 + y^2 = 9" /> with gradient <InlineMath math="-\frac{1}{2}" />.
+
+3. Determine the tangent line equation for circle <InlineMath math="(x-3)^2 + (y-4)^2 = 25" /> passing through point <InlineMath math="(11, 10)" />.
+
+4. A circle has equation <InlineMath math="x^2 + y^2 - 6x - 8y = 0" />. Determine the tangent line equation parallel to line <InlineMath math="3x + 4y = 7" />.
+
+### Answer Key
+
+1. **Solution**:
+
+   For circle <InlineMath math="x^2 + y^2 = 16" /> at point <InlineMath math="(2\sqrt{2}, 2\sqrt{2})" />, use the formula:
+   
+   <BlockMath math="x \cdot x_1 + y \cdot y_1 = r^2" />
+   
+   **Step 1**: Substitute tangent point coordinates
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x \cdot 2\sqrt{2} + y \cdot 2\sqrt{2} = 16" />
+     <BlockMath math="2\sqrt{2}x + 2\sqrt{2}y = 16" />
+   </div>
+   
+   **Step 2**: Simplify by dividing both sides by <InlineMath math="2\sqrt{2}" />
+   
+   <BlockMath math="x + y = \frac{16}{2\sqrt{2}} = \frac{8}{\sqrt{2}} = \frac{8\sqrt{2}}{2} = 4\sqrt{2}" />
+   
+   So the tangent line equation is <InlineMath math="x + y = 4\sqrt{2}" />.
+
+2. **Solution**:
+
+   For gradient <InlineMath math="m = -\frac{1}{2}" /> and <InlineMath math="r = 3" />, use the formula:
+   
+   <BlockMath math="y = mx \pm r\sqrt{1 + m^2}" />
+   
+   **Step 1**: Calculate value of <InlineMath math="\sqrt{1 + m^2}" />
+   
+   <BlockMath math="\sqrt{1 + m^2} = \sqrt{1 + \left(-\frac{1}{2}\right)^2} = \sqrt{1 + \frac{1}{4}} = \sqrt{\frac{5}{4}} = \frac{\sqrt{5}}{2}" />
+   
+   **Step 2**: Substitute into formula
+   
+   <BlockMath math="y = -\frac{1}{2}x \pm 3 \cdot \frac{\sqrt{5}}{2} = -\frac{1}{2}x \pm \frac{3\sqrt{5}}{2}" />
+   
+   So the two tangent line equations are: <InlineMath math="y = -\frac{1}{2}x + \frac{3\sqrt{5}}{2}" /> and <InlineMath math="y = -\frac{1}{2}x - \frac{3\sqrt{5}}{2}" />.
+
+3. **Solution**:
+
+   Circle <InlineMath math="(x-3)^2 + (y-4)^2 = 25" /> has center <InlineMath math="(3,4)" /> and radius <InlineMath math="r = 5" />.
+   
+   **Step 1**: Check position of point <InlineMath math="(11,10)" />
+   
+   <BlockMath math="(11-3)^2 + (10-4)^2 = 8^2 + 6^2 = 64 + 36 = 100 > 25" />
+   
+   Point is outside the circle.
+   
+   **Step 2**: Use quadratic equation in gradient. With coordinate translation to circle center, point <InlineMath math="(11,10)" /> becomes <InlineMath math="(8,6)" /> relative to center.
+   
+   **Step 3**: Quadratic equation in gradient for circle <InlineMath math="x^2 + y^2 = 25" /> from point <InlineMath math="(8,6)" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="(8^2 - 25)m^2 - 2(8)(6)m + (6^2 - 25) = 0" />
+     <BlockMath math="39m^2 - 96m + 11 = 0" />
+   </div>
+   
+   **Step 4**: Using quadratic formula:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="m = \frac{96 \pm \sqrt{96^2 - 4(39)(11)}}{2(39)} = \frac{96 \pm \sqrt{9216 - 1716}}{78}" />
+     <BlockMath math="m = \frac{96 \pm \sqrt{7500}}{78} = \frac{96 \pm 50\sqrt{3}}{78}" />
+   </div>
+   
+   **Step 5**: Simplify gradients and determine tangent line equation through point <InlineMath math="(11,10)" />:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="m_1 = \frac{96 + 50\sqrt{3}}{78} \text{ and } m_2 = \frac{96 - 50\sqrt{3}}{78}" />
+   </div>
+   
+   Both tangent line equations can be written in form <InlineMath math="y - 10 = m(x - 11)" />.
+
+4. **Solution**:
+
+   **Step 1**: Convert circle equation to standard form by completing the square
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="x^2 + y^2 - 6x - 8y = 0" />
+     <BlockMath math="(x^2 - 6x + 9) + (y^2 - 8y + 16) = 9 + 16" />
+     <BlockMath math="(x-3)^2 + (y-4)^2 = 25" />
+   </div>
+   
+   Center <InlineMath math="(3,4)" />, radius <InlineMath math="r = 5" />.
+   
+   **Step 2**: Line <InlineMath math="3x + 4y = 7" /> can be written as <InlineMath math="y = -\frac{3}{4}x + \frac{7}{4}" />
+   
+   Parallel line gradient: <InlineMath math="m = -\frac{3}{4}" />
+   
+   **Step 3**: For circle with center <InlineMath math="(3,4)" />, parallel tangent line equation:
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="y - 4 = -\frac{3}{4}(x - 3) \pm 5\sqrt{1 + \frac{9}{16}}" />
+     <BlockMath math="y - 4 = -\frac{3}{4}(x - 3) \pm 5 \cdot \frac{5}{4}" />
+     <BlockMath math="y = -\frac{3}{4}x + \frac{9}{4} + 4 \pm \frac{25}{4}" />
+   </div>
+   
+   **Step 4**: Simplify both equations
+   
+   <div className="flex flex-col gap-4">
+     <BlockMath math="y = -\frac{3}{4}x + \frac{50}{4} = -\frac{3}{4}x + \frac{25}{2}" />
+     <BlockMath math="y = -\frac{3}{4}x" />
+   </div>
+   
+   So the two tangent line equations are: <InlineMath math="y = -\frac{3}{4}x + \frac{25}{2}" /> and <InlineMath math="y = -\frac{3}{4}x" />.
