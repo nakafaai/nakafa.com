@@ -1,7 +1,7 @@
 # ❤️❤️❤️❤️❤️
 
 <p align="center">
-  <img src="public/logo.svg" alt="Nakafa Logo" width="100" height="100">
+  <img src="https://nakafa/logo.svg" alt="Nakafa Logo" width="100" height="100">
 </p>
 
 <h1 align="center">Nakafa</h1>
