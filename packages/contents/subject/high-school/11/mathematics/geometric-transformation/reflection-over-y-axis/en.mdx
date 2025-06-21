@@ -1,0 +1,223 @@
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+export const metadata = {
+  title: "Reflection over Y Axis",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/10/2025",
+  subject: "Geometric Transformation",
+};
+
+## Understanding Reflection over the Y-axis
+
+Reflection over the Y-axis is a type of geometric transformation that moves every point on an object to a new position. Imagine the Y-axis as a mirror. Every point will have an image on the opposite side of the Y-axis at the same distance from the Y-axis.
+
+### Rule for Reflection over the Y-axis
+
+If a point <InlineMath math="P(x, y)" /> is reflected over the Y-axis, its image's coordinates, <InlineMath math="P'(x', y')" />, will follow the rule:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = -x" />
+  <BlockMath math="y' = y" />
+</div>
+
+Thus, the image of point <InlineMath math="P(x, y)" /> is <InlineMath math="P'(-x, y)" />.
+
+Note that the value of the y-coordinate does not change, while the value of the x-coordinate becomes its opposite (negative if positive, positive if negative).
+
+## Reflecting a Point
+
+Suppose we have point <InlineMath math="A(3, 4)" />. If point A is reflected over the Y-axis, its image, <InlineMath math="A'" />, can be determined as follows:
+
+The original x-coordinate is 3, so <InlineMath math="x' = -3" />.
+
+The original y-coordinate is 4, so <InlineMath math="y' = 4" />.
+
+Thus, the image of point A is <InlineMath math="A'(-3, 4)" />.
+
+Let's visualize this:
+
+<LineEquation
+  title={
+    <>
+      Point <InlineMath math="A(3,4)" /> and its Image{" "}
+      <InlineMath math="A'(-3,4)" />
+    </>
+  }
+  description="Visualization of the reflection of point A over the Y-axis."
+  data={[
+    {
+      points: [{ x: 3, y: 4, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "A(3,4)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: [{ x: -3, y: 4, z: 0 }],
+      color: getColor("SKY"),
+      showPoints: true,
+      labels: [{ text: "A'(-3,4)", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 12]}
+/>
+
+## Reflecting a Triangle
+
+Now, let's reflect a triangle <InlineMath math="PQR" /> with vertices <InlineMath math="P(1, 2)" />, <InlineMath math="Q(4, 4)" />, and <InlineMath math="R(2, 0)" /> over the Y-axis.
+
+To reflect a triangle, we need to reflect each of its vertices.
+
+1.  Point <InlineMath math="P(1, 2)" />: Its image is <InlineMath math="P'(-1, 2)" />.
+2.  Point <InlineMath math="Q(4, 4)" />: Its image is <InlineMath math="Q'(-4, 4)" />.
+3.  Point <InlineMath math="R(2, 0)" />: Its image is <InlineMath math="R'(-2, 0)" />.
+
+By connecting the image points <InlineMath math="P'Q'R'" />, we obtain the reflected triangle.
+
+<LineEquation
+  title={
+    <>
+      Triangle <InlineMath math="PQR" /> and its Image{" "}
+      <InlineMath math="P'Q'R'" />
+    </>
+  }
+  description="Visualization of the reflection of triangle PQR over the Y-axis."
+  data={[
+    ...[
+      {
+        from: { x: 1, y: 2, z: 0, label: "P(1,2)" },
+        to: { x: 4, y: 4, z: 0, label: "Q(4,4)" },
+      },
+      {
+        from: { x: 4, y: 4, z: 0, label: "Q(4,4)" },
+        to: { x: 2, y: 0, z: 0, label: "R(2,0)" },
+      },
+      {
+        from: { x: 2, y: 0, z: 0, label: "R(2,0)" },
+        to: { x: 1, y: 2, z: 0, label: "P(1,2)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("AMBER"),
+      showPoints: true,
+      labels: [
+        { text: segment.from.label, at: 0, offset: [0.5, 0.5, 0] },
+        { text: segment.to.label, at: 1, offset: [0.5, 0.5, 0] },
+      ],
+    })),
+    ...[
+      {
+        from: { x: -1, y: 2, z: 0, label: "P'(-1,2)" },
+        to: { x: -4, y: 4, z: 0, label: "Q'(-4,4)" },
+      },
+      {
+        from: { x: -4, y: 4, z: 0, label: "Q'(-4,4)" },
+        to: { x: -2, y: 0, z: 0, label: "R'(-2,0)" },
+      },
+      {
+        from: { x: -2, y: 0, z: 0, label: "R'(-2,0)" },
+        to: { x: -1, y: 2, z: 0, label: "P'(-1,2)" },
+      },
+    ].map((segment) => ({
+      points: [segment.from, segment.to],
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [
+        { text: segment.from.label, at: 0, offset: [-0.5, 0.5, 0] },
+        { text: segment.to.label, at: 1, offset: [-0.5, 0.5, 0] },
+      ],
+    })),
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 12]}
+/>
+
+## Reflecting a Line Equation
+
+Suppose we have a line with the equation <InlineMath math="y = x + 2" />. To find the equation of its image after reflection over the Y-axis, we substitute <InlineMath math="x" /> with <InlineMath math="-x" /> (because <InlineMath math="x' = -x" />) and <InlineMath math="y" /> with <InlineMath math="y" /> (because <InlineMath math="y' = y" />) into the original equation.
+
+Original equation:
+
+<BlockMath math="y = x + 2" />
+
+Substitute <InlineMath math="x \rightarrow -x" />:
+
+<BlockMath math="y = (-x) + 2" />
+
+The equation of the image is:
+
+<BlockMath math="y = -x + 2" />
+
+Let's visualize these two lines:
+
+<LineEquation
+  title={
+    <>
+      Line <InlineMath math="y = x + 2" /> and its Image{" "}
+      <InlineMath math="y = -x + 2" />
+    </>
+  }
+  description="Reflection of a line over the Y-axis."
+  data={[
+    {
+      // Original Line y = x + 2
+      points: Array.from({ length: 11 }, (_, i) => {
+        const x = (i - 5) * 0.8; // x from -4 to 4 for better fit
+        return { x, y: x + 2, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      smooth: true,
+      labels: [{ text: "y=x+2", at: 9, offset: [0.7, -0.5, 0] }],
+    },
+    {
+      // Reflected Line y = -x + 2
+      points: Array.from({ length: 11 }, (_, i) => {
+        const x = (i - 5) * 0.8; // x from -4 to 4
+        return { x, y: -x + 2, z: 0 };
+      }),
+      color: getColor("PINK"),
+      smooth: true,
+      labels: [{ text: "y=-x+2", at: 1, offset: [-0.7, -0.5, 0] }],
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[0, 0, 15]}
+/>
+
+## Exercises
+
+1.  Determine the coordinates of the image of point <InlineMath math="K(-5, 8)" /> if it is reflected over the Y-axis!
+2.  A triangle <InlineMath math="ABC" /> has vertices <InlineMath math="A(2, 1)" />, <InlineMath math="B(5, 3)" />, and <InlineMath math="C(3, 6)" />. Determine the coordinates of the image triangle <InlineMath math="A'B'C'" /> after reflection over the Y-axis!
+3.  Determine the equation of the image of the line <InlineMath math="3x - 2y + 6 = 0" /> if it is reflected over the Y-axis!
+4.  A line has the equation <InlineMath math="y = -3x - 4" />. Determine the equation of its image after reflection over the Y-axis.
+
+### Key Answers
+
+1.  The image of point <InlineMath math="K(-5, 8)" /> is <InlineMath math="K'(5, 8)" />.
+
+    **Explanation:** <InlineMath math="x' = -(-5) = 5" />, <InlineMath math="y' = 8" />.
+
+2.  The coordinates of the image triangle <InlineMath math="A'B'C'" /> are:
+
+    - <InlineMath math="A'(-2, 1)" />
+    - <InlineMath math="B'(-5, 3)" />
+    - <InlineMath math="C'(-3, 6)" />
+
+3.  The equation of the image of the line <InlineMath math="3x - 2y + 6 = 0" /> is <InlineMath math="-3x - 2y + 6 = 0" />.
+
+    **Explanation:** Substitute <InlineMath math="x" /> with <InlineMath math="-x" /> into the original equation:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="3(-x) - 2y + 6 = 0" />
+      <BlockMath math="-3x - 2y + 6 = 0" />
+    </div>
+
+4.  The equation of the image of the line <InlineMath math="y = -3x - 4" /> is <InlineMath math="y = 3x - 4" />.
+
+    **Explanation:** Substitute <InlineMath math="x" /> with <InlineMath math="-x" />:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="y = -3(-x) - 4" />
+      <BlockMath math="y = 3x - 4" />
+    </div>

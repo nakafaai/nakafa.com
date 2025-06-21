@@ -1,0 +1,563 @@
+export const metadata = {
+  title: "Circle and Arc Circle",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/18/2025",
+  subject: "Circle",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Definition of Circle
+
+A circle is the set of all points on a plane that have the same distance to a fixed point. The fixed point is called the **center of the circle**, while the same distance is called the **radius**.
+
+Mathematically, a circle with center <InlineMath math="O(a,b)" /> and radius <InlineMath math="r" /> can be expressed with the equation:
+
+<BlockMath math="(x-a)^2 + (y-b)^2 = r^2" />
+
+### Elements of Circle
+
+How is the visualization of the circle equation?
+
+<LineEquation
+  title="Elements of Circle"
+  description="Visualization of center, radius, diameter, and chord of circle."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [{ text: "Circle", at: 0, offset: [1.5, -1, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [0, -0.5, 0] },
+        { text: "r", at: 0, offset: [1.5, 0.3, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      labels: [{ text: "diameter", at: 0, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 2.12, y: 2.12, z: 0 },
+        { x: -2.12, y: 2.12, z: 0 },
+      ],
+      color: getColor("AMBER"),
+      labels: [{ text: "chord", at: 0, offset: [0, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+**Important elements of circle:**
+
+- **Center of circle (O)**: Fixed point that becomes the reference of the circle
+- **Radius (r)**: Distance from center to any point on the circle
+- **Diameter (d)**: Chord that passes through the center of the circle, <InlineMath math="d = 2r" />
+- **Chord**: Line segment that connects two points on the circle
+
+## Arc of Circle
+
+Arc of circle is a part of the circumference of the circle that is bounded by two points on the circle. Arc is denoted with a curved symbol above the letters, for example <InlineMath math="\overset{\frown}{AB}" />.
+
+### Types of Arc
+
+<LineEquation
+  title="Minor Arc and Major Arc"
+  description="Visualization of the difference between minor arc and major arc."
+  data={[
+    {
+      points: Array.from({ length: 91 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [{ text: "Minor arc", at: 45, offset: [1, 1, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 3, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("TEAL"),
+      showPoints: true,
+    },
+    {
+      points: Array.from({ length: 271 }, (_, i) => {
+        const angle = ((i + 90) * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      labels: [
+        {
+          text: "Major arc",
+          at: 135,
+          offset: [-1, -1, 0],
+        },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 3, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+**Types of arc based on their length:**
+
+- **Minor arc**: Arc whose length is less than half the circumference of the circle
+- **Major arc**: Arc whose length is more than half the circumference of the circle
+- **Semicircle**: Arc whose length is exactly half the circumference of the circle
+
+## Central Angle and Inscribed Angle
+
+### Central Angle
+
+Central angle is an angle whose vertex is at the center of the circle and whose sides are radii of the circle.
+
+<LineEquation
+  title={
+    <>
+      Central Angle <InlineMath math="\angle AOB" />
+    </>
+  }
+  description="Angle formed by two radii with vertex at the center of the circle."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "A", at: 1, offset: [0.5, 0, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2.12, y: 2.12, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "B", at: 1, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: Array.from({ length: 46 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "Arc AB", at: 22, offset: [1.5, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 46 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 0.8 * Math.cos(angle),
+          y: 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "α", at: 22, offset: [0.3, 0.2, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+**Properties of central angle:**
+
+- The measure of central angle equals the measure of the arc it subtends
+- If central angle = <InlineMath math="\alpha" />, then arc = <InlineMath math="\alpha" />
+
+### Inscribed Angle
+
+Inscribed angle is an angle whose vertex is on the circle and whose sides are chords.
+
+<LineEquation
+  title={
+    <>
+      Inscribed Angle <InlineMath math="\angle ACB" />
+    </>
+  }
+  description="Angle whose vertex is on the circle and subtends the same arc."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: 0 },
+        { x: -2.12, y: -2.12, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.5, 0, 0] },
+        { text: "C", at: 1, offset: [-0.5, -0.3, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 2.12, y: 2.12, z: 0 },
+        { x: -2.12, y: -2.12, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "B", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: Array.from({ length: 46 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "Arc AB", at: 22, offset: [1.5, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2.12, y: 2.12, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [{ text: "O", at: 0, offset: [1, 0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+## Relationship Between Central Angle and Inscribed Angle
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Inscribed angle} = \frac{1}{2} \times \text{Central angle}" />
+  <BlockMath math="\angle ACB = \frac{1}{2} \times \angle AOB" />
+</div>
+
+If central angle and inscribed angle subtend the same arc, then the measure of inscribed angle is half the measure of central angle.
+
+**Example application:**
+
+<LineEquation
+  title="Relationship Between Central Angle and Inscribed Angle"
+  description={
+    <>
+      If <InlineMath math="\angle AOB = 80°" />, then{" "}
+      <InlineMath math="\angle ACB = 40°" />.
+    </>
+  }
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "A", at: 1, offset: [0.5, 0, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0.78, y: 2.9, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "B", at: 1, offset: [0, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: 0 },
+        { x: -2.12, y: -2.12, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "C", at: 1, offset: [-0.5, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 0.78, y: 2.9, z: 0 },
+        { x: -2.12, y: -2.12, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 81 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 20 }, (_, i) => {
+        const angle = (i * 4 * Math.PI) / 180;
+        return {
+          x: 0.8 * Math.cos(angle),
+          y: 0.8 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+      labels: [{ text: "80°", at: 10, offset: [0.5, 0.2, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+## Arc Length and Sector Area
+
+### Arc Length
+
+Arc length is directly proportional to the measure of central angle that subtends it.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Arc length} = \frac{\alpha}{360°} \times 2\pi r" />
+  <BlockMath math="l = \frac{\alpha}{360°} \times 2\pi r" />
+</div>
+
+Where:
+
+- <InlineMath math="l" /> = arc length
+- <InlineMath math="\alpha" /> = measure of central angle (in degrees)
+- <InlineMath math="r" /> = radius of circle
+
+### Sector Area
+
+Sector is the region bounded by two radii and an arc of circle.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\text{Sector area} = \frac{\alpha}{360°} \times \pi r^2" />
+  <BlockMath math="L = \frac{\alpha}{360°} \times \pi r^2" />
+</div>
+
+We can visualize the sector area using the equation above.
+
+<LineEquation
+  title="Circle Sector"
+  description="Region bounded by two radii and an arc."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 1.5, y: 2.6, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+    },
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        ...Array.from({ length: 61 }, (_, i) => {
+          const angle = (i * Math.PI) / 180;
+          return {
+            x: 3 * Math.cos(angle),
+            y: 3 * Math.sin(angle),
+            z: 0,
+          };
+        }),
+        { x: 0, y: 0, z: 0 },
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [{ text: "Sector", at: 30, offset: [0, 0, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+## Calculating Arc Length and Sector Area
+
+A circle has a radius of 14 cm. If the central angle that subtends an arc is 90°, determine:
+
+1. Arc length
+2. Sector area
+
+**Solution:**
+
+Given: <InlineMath math="r = 14" /> cm, <InlineMath math="\alpha = 90°" />
+
+1. Arc length:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="l = \frac{\alpha}{360°} \times 2\pi r" />
+     <BlockMath math="l = \frac{90°}{360°} \times 2\pi \times 14" />
+     <BlockMath math="l = \frac{1}{4} \times 28\pi" />
+     <BlockMath math="l = 7\pi \text{ cm} \approx 21.99 \text{ cm}" />
+   </div>
+
+2. Sector area:
+
+   <div className="flex flex-col gap-4">
+     <BlockMath math="L = \frac{\alpha}{360°} \times \pi r^2" />
+     <BlockMath math="L = \frac{90°}{360°} \times \pi \times 14^2" />
+     <BlockMath math="L = \frac{1}{4} \times 196\pi" />
+     <BlockMath math="L = 49\pi \text{ cm}^2 \approx 153.94 \text{ cm}^2" />
+   </div>
+
+## Practice Problems
+
+1. A circle has a diameter of 20 cm. If an inscribed angle that subtends an arc is 30°, determine the measure of central angle that subtends the same arc!
+
+2. In a circle with center O and radius 21 cm, there is an arc AB with central angle 120°. Calculate:
+
+   - Arc length AB
+   - Sector area AOB
+
+3. Two inscribed angles subtend the same arc. If one inscribed angle measures 45°, determine the measure of the other inscribed angle!
+
+### Answer Key
+
+1. Central angle = 2 × inscribed angle = 2 × 30° = 60°
+
+2. Given: r = 21 cm, α = 120°
+
+   - Arc length AB = <InlineMath math="\frac{120°}{360°} \times 2\pi \times 21 = \frac{1}{3} \times 42\pi = 14\pi" /> cm ≈ 43.98 cm
+   - Sector area AOB = <InlineMath math="\frac{120°}{360°} \times \pi \times 21^2 = \frac{1}{3} \times 441\pi = 147\pi" /> cm² ≈ 461.81 cm²
+
+3. Inscribed angles that subtend the same arc have the same measure, so the other inscribed angle = 45°

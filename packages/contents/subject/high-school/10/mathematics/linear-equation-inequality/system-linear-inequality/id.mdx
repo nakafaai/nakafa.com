@@ -1,0 +1,215 @@
+import { Inequality } from "../../_shared/inequality";
+import { condition1, condition2 } from "./inequality-functions";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Sistem Pertidaksamaan Linear",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/18/2025",
+  subject: "Sistem Persamaan dan Pertidaksamaan Linear",
+};
+
+## Mengenal Sistem Pertidaksamaan Linear
+
+Dalam kehidupan sehari-hari, kita sering dihadapkan pada situasi di mana ada batasan-batasan yang perlu dipertimbangkan. Misalnya, dalam membuat kue, kita mungkin dibatasi oleh jumlah bahan yang tersedia dan anggaran yang terbatas. Batasan-batasan semacam ini sering dapat dimodelkan menggunakan pertidaksamaan linear.
+
+### Apa Itu Sistem Pertidaksamaan Linear?
+
+Sistem pertidaksamaan linear adalah kumpulan dua atau lebih pertidaksamaan linear yang harus dipenuhi secara bersamaan. Pertidaksamaan linear berbentuk:
+
+<BlockMath math="a_1x_1 + a_2x_2 + ... + a_nx_n \leq b \text{ atau } a_1x_1 + a_2x_2 + ... + a_nx_n \geq b" />
+
+Dimana <InlineMath math="a_1, a_2, ..., a_n" /> adalah koefisien, <InlineMath math="x_1, x_2, ..., x_n" /> adalah variabel, <InlineMath math="b" /> adalah konstanta, dan tanda ketidaksamaan dapat berupa <InlineMath math="\leq, \geq, <, >" />.
+
+Perbedaan utama antara persamaan linear dan pertidaksamaan linear adalah:
+
+- Persamaan linear memiliki tepat satu tanda sama dengan (<InlineMath math="=" />)
+- Pertidaksamaan linear memiliki tanda ketidaksamaan (<InlineMath math="\leq, \geq, <, >" />)
+
+### Sistem Pertidaksamaan Linear Dua Variabel
+
+Sistem pertidaksamaan linear dua variabel terdiri dari dua atau lebih pertidaksamaan dengan dua variabel (biasanya <InlineMath math="x" /> dan <InlineMath math="y" />):
+
+<BlockMath math="\begin{cases} a_1x + b_1y \leq c_1 \\ a_2x + b_2y \leq c_2 \end{cases}" />
+
+**Contoh**:
+
+<BlockMath math="\begin{cases} 2x + 5y < 10 \\ 6x + 2y > 10 \end{cases}" />
+
+Solusi dari sistem ini adalah himpunan pasangan nilai <InlineMath math="(x,y)" /> yang memenuhi semua pertidaksamaan secara bersamaan.
+
+## Penyelesaian Sistem Pertidaksamaan Linear
+
+Untuk menyelesaikan sistem pertidaksamaan linear dua variabel, kita menggunakan metode grafik dengan langkah-langkah berikut:
+
+### Gambarkan Garis Batas
+
+Untuk setiap pertidaksamaan, gambarkan garis batasnya dengan mengubah tanda ketidaksamaan menjadi tanda sama dengan.
+
+**Contoh**:
+
+Untuk sistem:
+
+<BlockMath math="\begin{cases} 2x + 5y < 10 \\ 6x + 2y > 10 \end{cases}" />
+
+Gambarkan garis:
+
+<BlockMath math="\begin{cases} 2x + 5y = 10 \\ 6x + 2y = 10 \end{cases}" />
+
+### Tentukan Daerah Hasil
+
+Untuk menentukan daerah hasil setiap pertidaksamaan:
+
+1. Ambil titik uji (misal titik origin <InlineMath math="(0,0)" /> jika bukan titik pada garis)
+2. Substitusikan ke pertidaksamaan
+3. Jika hasilnya benar, daerah yang memuat titik uji adalah daerah hasil
+4. Jika hasilnya salah, daerah yang tidak memuat titik uji adalah daerah hasil
+
+**Contoh**:
+
+Untuk <InlineMath math="2x + 5y < 10" />, cek titik (0,0):
+
+<BlockMath math="2(0) + 5(0) = 0 < 10" />
+
+_(benar)_
+
+Daerah hasil adalah bagian yang memuat titik (0,0), yaitu di bawah garis <InlineMath math="2x + 5y = 10" />.
+
+Untuk <InlineMath math="6x + 2y > 10" />, cek titik (0,0):
+
+<BlockMath math="6(0) + 2(0) = 0 > 10" />
+
+_(salah)_
+
+Daerah hasil adalah bagian yang tidak memuat titik (0,0), yaitu di atas garis <InlineMath math="6x + 2y = 10" />.
+
+### Tentukan Irisan Daerah Hasil
+
+Solusi sistem pertidaksamaan linear adalah irisan (daerah yang sama-sama dipenuhi) dari semua daerah hasil pertidaksamaan yang terlibat.
+
+### Penggambaran Grafik
+
+Ketika menggambar grafik pertidaksamaan linear:
+
+- Untuk <InlineMath math="\leq" /> atau <InlineMath math="\geq" />: gunakan garis utuh (daerah hasil termasuk titik-titik pada garis)
+- Untuk <InlineMath math="<" /> atau <InlineMath math=">" />: gunakan garis putus-putus (daerah hasil tidak termasuk titik-titik pada garis)
+- Daerah hasil diarsir untuk menunjukkan solusi
+
+## Aplikasi dalam Kehidupan Sehari-hari
+
+### Pemodelan Matematika
+
+Sistem pertidaksamaan linear sangat berguna untuk memodelkan masalah optimasi, seperti:
+
+- Masalah dalam produksi dengan batasan sumber daya
+- Perencanaan anggaran dengan batasan biaya
+- Perencanaan nutrisi dengan batasan kalori
+
+### Perencanaan Kegiatan
+
+Kiki adalah panitia perayaan hari kemerdekaan di RT. Dari kas RT ada uang sebesar Rp500.000,00 yang dapat digunakan. Untuk penyelenggaraan perlombaan, dibutuhkan Rp20.000,00 per anak. Hadiah untuk pemenang dianggarkan Rp40.000,00 untuk setiap jenis perlombaan. Diharapkan ada lebih dari 13 anak yang berpartisipasi.
+
+Misalkan:
+
+- <InlineMath math="x" /> = banyaknya peserta
+- <InlineMath math="y" /> = banyaknya perlombaan
+
+Model matematikanya adalah:
+
+<BlockMath math="\begin{cases} 20.000x + 40.000y \leq 500.000 \\ x > 13 \end{cases}" />
+
+Jika kita sederhanakan:
+
+<BlockMath math="\begin{cases} 20x + 40y \leq 500 \\ x > 13 \end{cases}" />
+
+Solusi sistem ini adalah daerah yang memenuhi kedua pertidaksamaan. Dari grafik, kita dapat melihat berbagai kombinasi jumlah peserta dan jumlah perlombaan yang dapat diselenggarakan dalam batas anggaran.
+
+## Strategi Penyelesaian Masalah
+
+Untuk menyelesaikan masalah sistem pertidaksamaan linear:
+
+1. Tentukan variabel yang digunakan
+2. Buat model matematika berdasarkan batasan-batasan yang ada
+3. Selesaikan sistem dengan metode grafik
+4. Interpretasikan solusi dalam konteks masalah asli
+
+## Perbedaan dengan Sistem Persamaan Linear
+
+| Aspek                   | Sistem Persamaan Linear                                          | Sistem Pertidaksamaan Linear                                                                             |
+| ----------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Tanda Operasi**       | Menggunakan tanda sama dengan (<InlineMath math="=" />)          | Menggunakan tanda ketidaksamaan (<InlineMath math="<, >, \leq, \geq" />)                                 |
+| **Bentuk Solusi**       | Biasanya berupa titik atau himpunan titik                        | Berupa daerah (region) pada bidang koordinat                                                             |
+| **Representasi Grafik** | Perpotongan garis                                                | Irisan daerah yang diarsir                                                                               |
+| **Metode Penyelesaian** | Substitusi, eliminasi, determinan                                | Terutama metode grafik                                                                                   |
+| **Jumlah Solusi**       | Dapat memiliki satu solusi, tak hingga solusi, atau tanpa solusi | Biasanya memiliki tak hingga solusi (sebuah daerah)                                                      |
+| **Penggambaran**        | Selalu menggunakan garis utuh                                    | Garis utuh untuk <InlineMath math="\leq, \geq" /> dan garis putus-putus untuk <InlineMath math="<, >" /> |
+
+## Visualisasi Interaktif Sistem Pertidaksamaan Linear
+
+Mari bayangkan sistem pertidaksamaan linear sebagai pagar pembatas di sebuah taman. Setiap pertidaksamaan membatasi area mana yang boleh kita masuki. Saat ada lebih dari satu pertidaksamaan, kita hanya boleh berada di area yang memenuhi semua batasan tersebut.
+
+Berikut adalah visualisasi interaktif dari sistem pertidaksamaan linear yang membantu kita memahami konsep ini lebih baik:
+
+### Contoh Sistem Pertidaksamaan
+
+Perhatikan sistem pertidaksamaan linear berikut:
+
+<BlockMath math="\begin{cases} x + y \leq 10 \\ 15x + 9y \geq 120 \end{cases}" />
+
+Pada visualisasi di bawah, daerah berwarna biru menunjukkan solusi dari <InlineMath math="x + y \leq 10" /> (semua titik di bawah atau pada garis <InlineMath math="x + y = 10" />).
+
+Daerah berwarna merah menunjukkan solusi dari <InlineMath math="15x + 9y \geq 120" /> (semua titik di atas atau pada garis <InlineMath math="15x + 9y = 120" />).
+
+Daerah yang berwarna ungu (perpotongan area biru dan merah) adalah solusi dari sistem pertidaksamaan linear tersebut.
+
+<Inequality
+  title="Sistem Pertidaksamaan Linear"
+  description={
+    <>
+      Visualisasi dari sistem pertidaksamaan <InlineMath math="x + y \leq 10" />{" "}
+      dan <InlineMath math="15x + 9y \geq 120" />.
+    </>
+  }
+  data={[
+    {
+      is2D: true,
+      boundaryLine2D: [1, 1, -10],
+      condition: condition1,
+      xRange: [-15, 15],
+      yRange: [-15, 15],
+      zRange: [-0.05, 0.05],
+      color: getColor("CYAN"),
+      boundaryColor: getColor("BLUE"),
+      label: {
+        text: "x + y ≤ 10",
+        position: [3, 3, 0.15],
+      },
+    },
+    {
+      is2D: true,
+      boundaryLine2D: [-15, -9, 120],
+      condition: condition2,
+      xRange: [-15, 15],
+      yRange: [-15, 15],
+      zRange: [-0.05, 0.05],
+      color: getColor("ROSE"),
+      boundaryColor: getColor("RED"),
+      label: {
+        text: "15x + 9y ≥ 120",
+        position: [6, 8, 0.15],
+      },
+    },
+  ]}
+/>
+
+### Cara Membaca Visualisasi
+
+Dalam visualisasi interaktif ini:
+
+1. **Garis batas** menunjukkan persamaan (misal: <InlineMath math="x + y = 10" /> dan <InlineMath math="15x + 9y = 120" />)
+2. **Daerah berwarna** menunjukkan solusi dari masing-masing pertidaksamaan
+3. **Daerah irisan** (yang memenuhi semua pertidaksamaan) adalah solusi sistem pertidaksamaan
+
+Kamu dapat melihat dengan jelas bahwa solusi dari sistem pertidaksamaan ini membentuk daerah yang dibatasi oleh kedua garis. Dari visualisasi, kita juga bisa menentukan titik potong kedua garis yang merupakan salah satu titik penting dalam daerah solusi.
+
+Dengan memahami visualisasi ini, kamu akan lebih mudah menyelesaikan masalah optimasi dalam kehidupan sehari-hari yang melibatkan batasan-batasan yang dapat dimodelkan dengan sistem pertidaksamaan linear.

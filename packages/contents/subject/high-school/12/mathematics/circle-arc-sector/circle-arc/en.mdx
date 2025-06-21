@@ -1,0 +1,453 @@
+export const metadata = {
+  title: "Circle Arc",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Circle Arcs and Sectors",
+};
+
+import { LineEquation } from "@repo/contents/_components/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+## Arc and Chord Relationship
+
+Every circle arc has a close relationship with the chord that connects its two endpoints. A chord is a straight line connecting two endpoints of an arc, while an arc is a curved path along the circle's circumference. Imagine it like a bow and arrow, where the string is the straight line and the bow is the curved wood.
+
+This relationship is very important in various engineering and architectural applications. The longer the arc, the longer the chord that connects it, but this relationship is not linear.
+
+<LineEquation
+  title="Arc and Chord Relationship"
+  description="Comparison of arc with chord at various central angles."
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const angle = i * (Math.PI / 3) / 20;
+        return {
+          x: 5 * Math.cos(angle),
+          y: 5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      lineWidth: 4,
+      showPoints: false,
+      labels: [{ text: "Arc 60°", at: 10, offset: [1.5, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 5, y: 0, z: 0 },
+        { x: 5 * Math.cos(Math.PI / 3), y: 5 * Math.sin(Math.PI / 3), z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      lineWidth: 3,
+      showPoints: false,
+      labels: [{ text: "Chord 60°", at: 0.5, offset: [0.8, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 5, y: 0, z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      showPoints: true,
+      labels: [{ text: "A", at: 0, offset: [0.5, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 5 * Math.cos(Math.PI / 3), y: 5 * Math.sin(Math.PI / 3), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      showPoints: true,
+      labels: [{ text: "B", at: 0, offset: [0.3, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const angle = Math.PI + (i * (2 * Math.PI / 3) / 30);
+        return {
+          x: 5 * Math.cos(angle),
+          y: 5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      lineWidth: 4,
+      showPoints: false,
+      labels: [{ text: "Arc 120°", at: 15, offset: [-1.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+        { x: 5 * Math.cos(2 * Math.PI / 3), y: 5 * Math.sin(2 * Math.PI / 3), z: 0 },
+      ],
+      color: getColor("AMBER"),
+      lineWidth: 3,
+      showPoints: false,
+      labels: [{ text: "Chord 120°", at: 0.5, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      showPoints: true,
+      labels: [{ text: "C", at: 0, offset: [-0.5, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 5 * Math.cos(2 * Math.PI / 3), y: 5 * Math.sin(2 * Math.PI / 3), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      showPoints: true,
+      labels: [{ text: "D", at: 0, offset: [-0.3, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "O (Center)", at: 0, offset: [0, -0.8, 0] }],
+    },
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = i * (2 * Math.PI / 100);
+        return {
+          x: 5 * Math.cos(angle),
+          y: 5 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      lineWidth: 1,
+      showPoints: false,
+      smooth: true,
+    },
+  ]}
+  cameraPosition={[0, 0, 14]}
+  showZAxis={false}
+/>
+
+## Chord Length Formula
+
+The chord length can be calculated using a trigonometric formula involving the central angle and circle radius:
+
+<BlockMath math="c = 2r \sin\left(\frac{\theta}{2}\right)" />
+
+Where:
+- <InlineMath math="c" /> = chord length
+- <InlineMath math="r" /> = circle radius
+- <InlineMath math="\theta" /> = central angle in radians
+
+This formula is very useful in engineering calculations, especially in curved structure design and material strength analysis.
+
+## Arc Height and Sagitta
+
+Arc height or sagitta is the perpendicular distance from the chord midpoint to the highest point of the arc. This concept is very important in arch bridge design and architectural structures.
+
+<BlockMath math="h = r - r\cos\left(\frac{\theta}{2}\right) = r\left(1 - \cos\left(\frac{\theta}{2}\right)\right)" />
+
+Where:
+- <InlineMath math="h" /> = arc height (sagitta)
+- <InlineMath math="r" /> = circle radius
+- <InlineMath math="\theta" /> = central angle in radians
+
+Observe the following visualization:
+
+<LineEquation
+  title="Arc Height Visualization"
+  description="Arc height (sagitta) at various central angles."
+  data={[
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const angle = (-Math.PI / 6) + (i * (Math.PI / 3) / 30);
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      lineWidth: 4,
+      showPoints: false,
+      labels: [{ text: "Arc 60°", at: 15, offset: [1.5, 1, 0] }],
+    },
+    {
+      points: [
+        { x: 4 * Math.cos(-Math.PI / 6), y: 4 * Math.sin(-Math.PI / 6), z: 0 },
+        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      lineWidth: 3,
+      showPoints: false,
+      labels: [{ text: "Chord", at: 0.5, offset: [0, -0.8, 0] }],
+    },
+    {
+      points: [
+        { x: (4 * Math.cos(-Math.PI / 6) + 4 * Math.cos(Math.PI / 6)) / 2, y: (4 * Math.sin(-Math.PI / 6) + 4 * Math.sin(Math.PI / 6)) / 2, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "M (Midpoint)", at: 0, offset: [1.2, -1.2, 0] }],
+    },
+    {
+      points: [
+        { x: (4 * Math.cos(-Math.PI / 6) + 4 * Math.cos(Math.PI / 6)) / 2, y: (4 * Math.sin(-Math.PI / 6) + 4 * Math.sin(Math.PI / 6)) / 2, z: 0 },
+        { x: 4 * Math.cos(0), y: 4 * Math.sin(0), z: 0 },
+      ],
+      color: getColor("ROSE"),
+      lineWidth: 4,
+      showPoints: false,
+      labels: [{ text: "Arc Height (h)", offset: [0.8, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(-Math.PI / 6), y: 4 * Math.sin(-Math.PI / 6), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      lineWidth: 2,
+      showPoints: false,
+      labels: [{ text: "Radius", offset: [-2, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      lineWidth: 2,
+      showPoints: false,
+      labels: [{ text: "Radius", offset: [-2, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 4 * Math.cos(-Math.PI / 6), y: 4 * Math.sin(-Math.PI / 6), z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "P", at: 0, offset: [0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "Q", at: 0, offset: [-0.3, 0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = i * (2 * Math.PI / 100);
+        return {
+          x: 4 * Math.cos(angle),
+          y: 4 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      lineWidth: 1,
+      showPoints: false,
+      smooth: true,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Arc in Coordinate System
+
+In the Cartesian coordinate system, an arc can be represented using parametric equations:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="x = r\cos(t)" />
+<BlockMath math="y = r\sin(t)" />
+</div>
+
+Where <InlineMath math="t" /> is a parameter that varies from the initial angle to the final angle of the arc.
+
+<LineEquation
+  title="Arc in Cartesian Coordinates"
+  description="Arc representation using parametric equations."
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const t = (Math.PI / 4) + (i * (Math.PI / 2) / 40);
+        return {
+          x: 3 * Math.cos(t),
+          y: 3 * Math.sin(t),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      lineWidth: 4,
+      showPoints: false,
+      labels: [{ text: "Parametric Arc", at: 20, offset: [1.5, 1, 0] }],
+    },
+    {
+      points: [
+        { x: 3 * Math.cos(Math.PI / 4), y: 3 * Math.sin(Math.PI / 4), z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "t₁ = π/4 (45°)", at: 0, offset: [2, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 3 * Math.cos(3 * Math.PI / 4), y: 3 * Math.sin(3 * Math.PI / 4), z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "t₂ = 3π/4 (135°)", at: 0, offset: [-2, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3 * Math.cos(Math.PI / 4), y: 3 * Math.sin(Math.PI / 4), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      lineWidth: 2,
+      showPoints: false,
+      labels: [{ text: "r = 3", at: 0.5, offset: [0.3, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3 * Math.cos(3 * Math.PI / 4), y: 3 * Math.sin(3 * Math.PI / 4), z: 0 },
+      ],
+      color: getColor("PURPLE"),
+      lineWidth: 2,
+      showPoints: false,
+      labels: [{ text: "r = 3", at: 0.5, offset: [-0.3, -0.3, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "Origin (0,0)", at: 0, offset: [-0.8, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 101 }, (_, i) => {
+        const angle = i * (2 * Math.PI / 100);
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      lineWidth: 1,
+      showPoints: false,
+      smooth: true,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Engineering Calculation Example
+
+Let's apply this concept in engineering calculations. Suppose we design an arch bridge with a radius of 25 meters and a central angle of 120°.
+
+**Calculating chord length:**
+
+<div className="flex flex-col gap-4">
+<BlockMath math="c = 2r \sin\left(\frac{\theta}{2}\right)" />
+<BlockMath math="c = 2 \times 25 \times \sin\left(\frac{120°}{2}\right)" />
+<BlockMath math="c = 50 \times \sin(60°)" />
+<BlockMath math="c = 50 \times \frac{\sqrt{3}}{2} = 25\sqrt{3} \text{ meters}" />
+</div>
+
+**Calculating arc height:**
+
+<div className="flex flex-col gap-4">
+<BlockMath math="h = r\left(1 - \cos\left(\frac{\theta}{2}\right)\right)" />
+<BlockMath math="h = 25\left(1 - \cos(60°)\right)" />
+<BlockMath math="h = 25\left(1 - \frac{1}{2}\right) = 12.5 \text{ meters}" />
+</div>
+
+## Exercises
+
+1. An arch bridge has a radius of 30 meters and a central angle of 90°. Calculate the chord length and arc height of the bridge.
+
+2. In a mosque dome design, the arc height is 8 meters and the circle radius is 15 meters. Determine the central angle of the arc.
+
+3. A circle arc has a chord length of 24 meters and a radius of 15 meters. Calculate the central angle and arc height.
+
+4. In a coordinate system, an arc starts from point (4, 0) and ends at point (0, 4) on a circle centered at the origin. Determine the parametric equations of the arc.
+
+### Answer Key
+
+1. **Solution:**
+   
+   Given: <InlineMath math="r = 30 \text{ m}" /> and <InlineMath math="\theta = 90°" />
+   
+   **Chord length:**
+   <div className="flex flex-col gap-4">
+   <BlockMath math="c = 2r \sin\left(\frac{\theta}{2}\right) = 2 \times 30 \times \sin(45°)" />
+   <BlockMath math="c = 60 \times \frac{\sqrt{2}}{2} = 30\sqrt{2} \text{ m} \approx 42.43 \text{ m}" />
+   </div>
+   
+   **Arc height:**
+   <div className="flex flex-col gap-4">
+   <BlockMath math="h = r\left(1 - \cos\left(\frac{\theta}{2}\right)\right) = 30\left(1 - \cos(45°)\right)" />
+   <BlockMath math="h = 30\left(1 - \frac{\sqrt{2}}{2}\right) \approx 8.79 \text{ m}" />
+   </div>
+
+2. **Solution:**
+   
+   Given: <InlineMath math="h = 8 \text{ m}" /> and <InlineMath math="r = 15 \text{ m}" />
+   
+   **Step 1:** Use the arc height formula
+   <BlockMath math="8 = 15\left(1 - \cos\left(\frac{\theta}{2}\right)\right)" />
+   
+   **Step 2:** Isolate cos
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\frac{8}{15} = 1 - \cos\left(\frac{\theta}{2}\right)" />
+   <BlockMath math="\cos\left(\frac{\theta}{2}\right) = 1 - \frac{8}{15} = \frac{7}{15}" />
+   </div>
+   
+   **Step 3:** Calculate angle
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\frac{\theta}{2} = \arccos\left(\frac{7}{15}\right) \approx 62.18°" />
+   <BlockMath math="\theta \approx 124.36°" />
+   </div>
+
+3. **Solution:**
+   
+   Given: <InlineMath math="c = 24 \text{ m}" /> and <InlineMath math="r = 15 \text{ m}" />
+   
+   **Step 1:** Use the chord formula
+   <div className="flex flex-col gap-4">
+   <BlockMath math="24 = 2 \times 15 \times \sin\left(\frac{\theta}{2}\right)" />
+   <BlockMath math="\sin\left(\frac{\theta}{2}\right) = \frac{24}{30} = 0.8" />
+   </div>
+   
+   **Step 2:** Calculate central angle
+   <div className="flex flex-col gap-4">
+   <BlockMath math="\frac{\theta}{2} = \arcsin(0.8) \approx 53.13°" />
+   <BlockMath math="\theta \approx 106.26°" />
+   </div>
+   
+   **Step 3:** Calculate arc height
+   <BlockMath math="h = 15\left(1 - \cos(53.13°)\right) = 15(1 - 0.6) = 6 \text{ m}" />
+
+4. **Solution:**
+   
+   - Starting point: (4, 0) → <InlineMath math="t_1 = 0°" />
+   - Ending point: (0, 4) → <InlineMath math="t_2 = 90°" />
+   - Radius: <InlineMath math="r = 4" />
+   
+   **Parametric equations:**
+   <div className="flex flex-col gap-4">
+   <BlockMath math="x = 4\cos(t)" />
+   <BlockMath math="y = 4\sin(t)" />
+   <BlockMath math="0° \leq t \leq 90°" />
+   </div>

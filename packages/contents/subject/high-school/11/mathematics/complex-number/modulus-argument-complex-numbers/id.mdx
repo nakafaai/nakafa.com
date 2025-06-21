@@ -1,0 +1,235 @@
+import { LineEquation } from "@repo/contents/_components/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Modulus dan Argumen Bilangan Kompleks",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2025",
+  subject: "Bilangan Kompleks",
+};
+
+## Apa itu Modulus dan Argumen?
+
+Bilangan kompleks <InlineMath math="z = x + iy" /> dapat digambarkan sebagai titik <InlineMath math="(x, y)" /> pada bidang kompleks (mirip dengan bidang Kartesius). Selain sebagai titik, kita juga bisa melihatnya sebagai **vektor** yang berawal dari titik pangkal <InlineMath math="(0, 0)" /> menuju titik <InlineMath math="(x, y)" />.
+
+Vektor ini memiliki **panjang** dan **arah**. Nah, panjang dan arah inilah yang kita sebut sebagai **Modulus** dan **Argumen**.
+
+## Modulus Bilangan Kompleks
+
+**Modulus** dari suatu bilangan kompleks <InlineMath math="z = x + iy" />, ditulis sebagai <InlineMath math="|z|" />, adalah **jarak** dari titik pangkal <InlineMath math="(0,0)" /> ke titik <InlineMath math="(x, y)" /> pada bidang kompleks. Ini sama saja dengan **panjang vektor** yang merepresentasikan <InlineMath math="z" />.
+
+<LineEquation
+  title="Visualisasi Modulus"
+  description={
+    <>
+      Modulus <InlineMath math="|z|" /> adalah panjang vektor dari titik pangkal
+      ke titik <InlineMath math="z" />. Kita bisa melihatnya sebagai sisi miring
+      segitiga siku-siku.
+    </>
+  }
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 4, z: 0 },
+      ],
+      color: getColor("SKY"),
+      labels: [
+        { text: "z = 3+4i", at: 1, offset: [0.5, 0.5, 0] },
+        {
+          text: "|z|",
+          at: 1,
+          offset: [-2, -1.5, 0],
+          color: getColor("AMBER"),
+        },
+      ],
+      cone: { position: "end" },
+    },
+    // Garis bantu x dan y
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 },
+      ],
+      color: getColor("ROSE"),
+      labels: [{ text: "x = 3", at: 1, offset: [-1.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: 0 },
+        { x: 3, y: 4, z: 0 },
+      ],
+      color: getColor("EMERALD"),
+      labels: [{ text: "y = 4", at: 1, offset: [1.5, -1.5, 0] }],
+    },
+  ]}
+/>
+
+Untuk menghitung modulus, kita bisa menggunakan Teorema Pythagoras pada segitiga siku-siku yang dibentuk oleh bagian riil (<InlineMath math="x" />), bagian imajiner (<InlineMath math="y" />), dan modulus (<InlineMath math="|z|" />) sebagai sisi miringnya.
+
+**Definisi Modulus:**
+
+Modulus dari bilangan kompleks <InlineMath math="z = x + iy" /> adalah:
+
+<BlockMath math="|z| = \sqrt{x^2 + y^2}" />
+
+Modulus selalu bernilai **non-negatif** (tidak pernah negatif) karena merupakan jarak.
+
+### Menghitung Modulus
+
+1.  **Tentukan modulus dari <InlineMath math="z_1 = 3 + 4i" />**, dengan <InlineMath math="x=3, y=4" />
+
+    <BlockMath math="|z_1| = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5" />
+
+2.  **Tentukan modulus dari <InlineMath math="z_2 = -1 - 2i" />**, dengan <InlineMath math="x=-1, y=-2" />
+
+    <BlockMath math="|z_2| = \sqrt{(-1)^2 + (-2)^2} = \sqrt{1 + 4} = \sqrt{5}" />
+
+3.  **Tentukan modulus dari <InlineMath math="z_3 = 5" />**, dengan <InlineMath math="x=5, y=0" />
+
+    <BlockMath math="|z_3| = \sqrt{5^2 + 0^2} = \sqrt{25} = 5" />
+
+    (Modulus bilangan riil adalah nilai mutlaknya).
+
+4.  **Tentukan modulus dari <InlineMath math="z_4 = -2i" />**, dengan <InlineMath math="x=0, y=-2" />
+
+    <BlockMath math="|z_4| = \sqrt{0^2 + (-2)^2} = \sqrt{4} = 2" />
+
+## Argumen Bilangan Kompleks
+
+**Argumen** dari bilangan kompleks <InlineMath math="z = x + iy" /> (yang tidak nol), ditulis sebagai <InlineMath math="\arg(z)" /> atau <InlineMath math="\theta" />, adalah **sudut** yang dibentuk oleh vektor <InlineMath math="z" /> dengan **sumbu riil positif** pada bidang kompleks. Sudut ini biasanya diukur dalam radian atau derajat.
+
+Dari trigonometri dasar pada segitiga siku-siku yang sama seperti pada visualisasi modulus, kita tahu hubungan:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x = |z| \cos \theta" />
+  <BlockMath math="y = |z| \sin \theta" />
+  <BlockMath math="\tan \theta = \frac{y}{x} \quad (\text{jika } x \neq 0)" />
+</div>
+
+Untuk mencari <InlineMath math="\theta" />, kita bisa menggunakan fungsi arctangen (atau <InlineMath math="\tan^{-1}" />):
+
+<BlockMath math="\theta = \arctan\left(\frac{y}{x}\right)" />
+
+Kalkulator biasanya memberikan nilai <InlineMath math="\arctan" /> dalam rentang <InlineMath math="(-90^\circ, 90^\circ)" /> atau <InlineMath math="(-\pi/2, \pi/2)" />. Kita perlu **memperhatikan kuadran** di mana titik <InlineMath math="(x, y)" /> berada untuk menentukan argumen yang benar.
+
+- **Kuadran <InlineMath math="I" />** (<InlineMath math="x>0, y>0" />):
+
+  <BlockMath math="\theta = \arctan(y/x)" />
+
+- **Kuadran <InlineMath math="II" />** (<InlineMath math="x<0, y>0" />):
+
+  <BlockMath math="\theta = 180^\circ + \arctan(y/x) \text{ atau } \theta = \pi + \arctan(y/x)" />
+
+- **Kuadran <InlineMath math="III" />** (<InlineMath math="x<0, y<0" />):
+
+  <BlockMath math="\theta = 180^\circ + \arctan(y/x) \text{ atau } \theta = \pi + \arctan(y/x)" />
+
+- **Kuadran <InlineMath math="IV" />** (<InlineMath math="x>0, y<0" />):
+
+  <BlockMath math="\theta = 360^\circ + \arctan(y/x) \text{ atau } \theta = 2\pi + \arctan(y/x)" />
+
+  atau cukup
+
+  <BlockMath math="\theta = \arctan(y/x)" />
+
+  jika menginginkan sudut negatif
+
+Seringkali, kita tertarik pada **Argumen Utama** (ditulis <InlineMath math="\text{Arg}(z)" />), yaitu nilai argumen yang berada dalam interval <InlineMath math="(-180^\circ, 180^\circ]" /> atau <InlineMath math="(-\pi, \pi]" />.
+
+### Menghitung Argumen
+
+1.  **Tentukan argumen dari <InlineMath math="z_1 = 1 + i" />**
+
+    Titik <InlineMath math="(1, 1)" /> berada di Kuadran <InlineMath math="I" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\tan \theta = \frac{y}{x} = \frac{1}{1} = 1" />
+      <BlockMath math="\theta = \arctan(1) = 45^\circ \text{ atau } \frac{\pi}{4} \text{ radian}" />
+    </div>
+
+2.  **Tentukan argumen dari <InlineMath math="z_2 = -\sqrt{3} + i" />**
+
+    Titik <InlineMath math="(-\sqrt{3}, 1)" /> berada di Kuadran <InlineMath math="II" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\tan \theta = \frac{y}{x} = \frac{1}{-\sqrt{3}}" />
+      <BlockMath math="\text{Sudut dasar} = \arctan\left(\left|\frac{1}{-\sqrt{3}}\right|\right) = \arctan\left(\frac{1}{\sqrt{3}}\right) = 30^\circ" />
+      <BlockMath math="\theta = 180^\circ - 30^\circ = 150^\circ \text{ atau } \frac{5\pi}{6} \text{ radian}" />
+    </div>
+
+    (Karena di Kuadran <InlineMath math="II" />, kita gunakan <InlineMath math="180^\circ - \text{sudut dasar}" />)
+
+3.  **Tentukan argumen dari <InlineMath math="z_3 = -1 - i\sqrt{3}" />**
+
+    Titik <InlineMath math="(-1, -\sqrt{3})" /> berada di Kuadran <InlineMath math="III" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\tan \theta = \frac{y}{x} = \frac{-\sqrt{3}}{-1} = \sqrt{3}" />
+      <BlockMath math="\text{Sudut dasar} = \arctan(\sqrt{3}) = 60^\circ" />
+      <BlockMath math="\theta = 180^\circ + 60^\circ = 240^\circ \text{ atau } \frac{4\pi}{3} \text{ radian}" />
+    </div>
+
+    (Karena di Kuadran <InlineMath math="III" />, kita gunakan <InlineMath math="180^\circ + \text{sudut dasar}" />
+    . Argumen Utama: <InlineMath math="-120^\circ" /> atau <InlineMath math="-2\pi/3" />
+    ).
+
+4.  **Tentukan argumen dari <InlineMath math="z_4 = 3 - 3i" />**
+
+    Titik <InlineMath math="(3, -3)" /> berada di Kuadran <InlineMath math="IV" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="\tan \theta = \frac{y}{x} = \frac{-3}{3} = -1" />
+      <BlockMath math="\text{Sudut dasar} = \arctan(|-1|) = \arctan(1) = 45^\circ" />
+      <BlockMath math="\theta = 360^\circ - 45^\circ = 315^\circ \text{ atau } \frac{7\pi}{4} \text{ radian}" />
+    </div>
+
+    (Karena di Kuadran <InlineMath math="IV" />, kita gunakan <InlineMath math="360^\circ - \text{sudut dasar}" />
+    . Argumen Utama: <InlineMath math="-45^\circ" /> atau <InlineMath math="-\pi/4" />
+    ).
+
+## Latihan
+
+Tentukan modulus dan argumen (dalam derajat) dari bilangan kompleks berikut:
+
+1.  <InlineMath math="z_a = 2 + 2i" />
+2.  <InlineMath math="z_b = -4" />
+3.  <InlineMath math="z_c = -i" />
+
+### Kunci Jawaban
+
+1.  **Untuk <InlineMath math="z_a = 2 + 2i" />:**
+
+    <InlineMath math="x=2, y=2" /> (Kuadran <InlineMath math="I" />) Modulus:
+
+    <BlockMath math="|z_a| = \sqrt{2^2 + 2^2} = \sqrt{4+4} = \sqrt{8} = 2\sqrt{2}" />
+
+    Argumen:
+
+    <BlockMath math="\tan \theta = \frac{2}{2} = 1 \implies \theta = \arctan(1) = 45^\circ" />
+
+2.  **Untuk <InlineMath math="z_b = -4" />:**
+
+    <InlineMath math="z_b = -4 + 0i" />. <InlineMath math="x=-4, y=0" /> (Sumbu
+    riil negatif) Modulus:
+
+    <BlockMath math="|z_b| = \sqrt{(-4)^2 + 0^2} = \sqrt{16} = 4" />
+
+    Argumen: Titik berada di sumbu riil negatif.
+
+    <BlockMath math="\theta = 180^\circ" />
+
+3.  **Untuk <InlineMath math="z_c = -i" />:**
+
+    <InlineMath math="z_c = 0 - 1i" />. <InlineMath math="x=0, y=-1" /> (Sumbu
+    imajiner negatif) Modulus:
+
+    <BlockMath math="|z_c| = \sqrt{0^2 + (-1)^2} = \sqrt{1} = 1" />
+
+    Argumen: Titik berada di sumbu imajiner negatif.
+
+    <BlockMath math="\theta = 270^\circ" />{" "}
+
+    atau <InlineMath math="-90^\circ" /> (Argumen Utama).

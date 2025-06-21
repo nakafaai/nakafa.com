@@ -1,0 +1,305 @@
+import { LineEquation } from "@repo/contents/_components/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Equation of a Tangent Line to a Curve",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Derivative Functions",
+};
+
+## Relationship Between Derivatives and Tangent Lines
+
+You probably already know that derivatives can tell us a lot about the properties of a function. One of the coolest uses of derivatives is to find the **slope** or **gradient** of a tangent line to a curve.
+
+Imagine "zooming in" on a point on a curve over and over. Eventually, the curved line will start to look like a straight line, right? Well, that imaginary straight line is what we call the **tangent line**. The gradient of the tangent line at a point <InlineMath math="x=a" /> on the curve <InlineMath math="y=f(x)" /> is exactly equal to the derivative of the function at that point, which is <InlineMath math="m = f'(a)" />.
+
+## Determining the Equation of a Tangent Line
+
+To create the equation of a straight line, we need two main things: a point the line passes through and the gradient of the line itself. In this context:
+
+1.  **Point of Tangency:** A point <InlineMath math="P(a, b)" /> where the line touches the curve.
+2.  **Gradient (m):** The slope of the line at that point, which we get from the derivative, <InlineMath math="m = f'(a)" />.
+
+Once we have both, we can plug them directly into the basic formula for a line equation that you're already familiar with:
+
+<BlockMath math="y - b = m(x - a)" />
+
+> In short, to find the equation of a tangent line, first find its gradient by differentiating the function, then plug the point of tangency and the gradient into the line equation formula.
+
+## Breaking Down a Case
+
+Let's see how it works with an example. Determine the equation of the tangent line to the parabola <InlineMath math="y = 2 - 4x^2" /> at the point <InlineMath math="(1, -2)" />.
+
+**Solution:**
+
+**Step 1: Find the gradient of the tangent line**
+
+First, we differentiate the function <InlineMath math="f(x) = 2 - 4x^2" /> to get its gradient expression.
+
+<BlockMath math="f'(x) = -8x" />
+
+Since we want to find the gradient at the point where the x-coordinate is <InlineMath math="x=1" />, we substitute this value into the derivative.
+
+<BlockMath math="m = f'(1) = -8(1) = -8" />
+
+So, the gradient of the tangent line is -8.
+
+**Step 2: Construct the equation**
+
+Now we have everything we need:
+-   Point of tangency <InlineMath math="(a, b) = (1, -2)" />
+-   Gradient <InlineMath math="m = -8" />
+
+Plug them into the line equation formula:
+<div className="flex flex-col gap-4">
+    <BlockMath math="y - b = m(x - a)" />
+    <BlockMath math="y - (-2) = -8(x - 1)" />
+    <BlockMath math="y + 2 = -8x + 8" />
+    <BlockMath math="y = -8x + 6" />
+</div>
+
+So, the equation of the tangent line is <InlineMath math="y = -8x + 6" />.
+
+<LineEquation
+  title={<>Visualization of the Tangent Line on the Parabola</>}
+  description={
+    <>
+      This graph shows the parabola curve <InlineMath math="y = 2 - 4x^2" />{" "}
+      and its tangent line <InlineMath math="y = -8x + 6" /> meeting
+      exactly at the point of tangency <InlineMath math="(1, -2)" />.
+    </>
+  }
+  showZAxis={false}
+  cameraPosition={[0, 0, 15]}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = -2 + i * 0.1;
+        return { x, y: 2 - 4 * x * x, z: 0 };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+      labels: [
+        {
+          text: "y = 2 - 4x^2",
+          at: 5,
+          offset: [-2, 3, 0],
+        },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 6, z: 0 },
+        { x: 2, y: -10, z: 0 },
+      ],
+      color: getColor("YELLOW"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "y = -8x + 6",
+          at: 0,
+          offset: [2.5, -2.5, 0],
+        },
+      ],
+    },
+    {
+      points: [{ x: 1, y: -2, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        {
+          text: "(1, -2)",
+          offset: [1.5, -0.5, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+## Exercises
+
+1.  Find the equation of the tangent line to the curve <InlineMath math="y = x^2 - 6\frac{1}{5}x + 14\frac{1}{2}" /> which is parallel to the line <InlineMath math="x + 2y + 3 = 0" />.
+
+2.  Determine the equation of the tangent line to the parabola <InlineMath math="y = 2x^2 - 3x + 5" /> at the point with an ordinate of 4.
+
+3.  A curve <InlineMath math="y = 3x - \frac{3}{x^2}" /> intersects the X-axis at P. Find the equation of the tangent line to the curve at point P!
+
+4.  The curve <InlineMath math="y = (x^2 + 2)^2" /> intersects the Y-axis at point A. Show that the tangent line to the curve at point A is parallel to the X-axis and is 4 units away from the origin!
+
+5.  Determine the coordinates of the point on the curve <InlineMath math="y = 2x^2 - 7x + 1" />, if the tangent line to the curve at that point forms an angle of 45° with the positive X-axis. Also, determine the equation of the tangent line to the curve that passes through that point!
+
+### Answer Key
+
+1.  **Solution:**
+
+    **Step 1: Determine the gradient.**
+
+    The tangent line must be parallel to the line <InlineMath math="x + 2y + 3 = 0" />. To find its gradient, let's first convert this line's equation into the slope-intercept form <InlineMath math="y = mx + c" />.
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="2y = -x - 3" />
+        <BlockMath math="y = -\frac{1}{2}x - \frac{3}{2}" />
+    </div>
+
+    From this, we know the gradient of the line is <InlineMath math="m = -\frac{1}{2}" />. Since the tangent line is parallel, its gradient is the same.
+
+    **Step 2: Find the point of tangency.**
+
+    The gradient of the curve at a point is equal to the value of the first derivative at that point. First, let's find the derivative function of <InlineMath math="f(x) = x^2 - \frac{31}{5}x + \frac{29}{2}" />.
+
+    <BlockMath math="f'(x) = 2x - \frac{31}{5}" />
+
+    Next, we set this derivative equal to the gradient we know (<InlineMath math="m = -1/2" />) to find the x-coordinate of the point of tangency.
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="2x - \frac{31}{5} = -\frac{1}{2}" />
+        <BlockMath math="2x = \frac{31}{5} - \frac{1}{2} = \frac{62 - 5}{10} = \frac{57}{10}" />
+        <BlockMath math="x = \frac{57}{20}" />
+    </div>
+
+    After getting the x-coordinate <InlineMath math="x=\frac{57}{20}" />, we substitute this value back into the *original* curve equation to find its y-coordinate.
+
+    <BlockMath math="y = (\frac{57}{20})^2 - \frac{31}{5}(\frac{57}{20}) + \frac{29}{2} = \frac{3249}{400} - \frac{1767}{100} + \frac{29}{2} = \frac{3249 - 7068 + 5800}{400} = \frac{1981}{400}" />
+
+    So, the point of tangency is <InlineMath math="\left(\frac{57}{20}, \frac{1981}{400}\right)" />.
+
+    **Step 3: Construct the line equation.**
+
+    With the point <InlineMath math="\left(\frac{57}{20}, \frac{1981}{400}\right)" /> and gradient <InlineMath math="m = -\frac{1}{2}" />, the equation is:
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="y - \frac{1981}{400} = -\frac{1}{2}\left(x - \frac{57}{20}\right)" />
+        <BlockMath math="y = -\frac{1}{2}x + \frac{57}{40} + \frac{1981}{400}" />
+        <BlockMath math="y = -\frac{1}{2}x + \frac{570 + 1981}{400}" />
+        <BlockMath math="y = -\frac{1}{2}x + \frac{2551}{400}" />
+    </div>
+
+2.  **Solution:**
+
+    **Step 1: Find the point(s) of tangency.**
+
+    Since the ordinate is 4, we set <InlineMath math="y=4" /> in the parabola's equation.
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="4 = 2x^2 - 3x + 5" />
+        <BlockMath math="2x^2 - 3x + 1 = 0" />
+        <BlockMath math="(2x-1)(x-1) = 0" />
+    </div>
+
+    From factorization, we get two x-values: <InlineMath math="x=1" /> and <InlineMath math="x=\frac{1}{2}" />. This means there are two points of tangency: <InlineMath math="(1, 4)" /> and <InlineMath math="\left(\frac{1}{2}, 4\right)" />. Therefore, there will be two tangent line equations.
+
+    **Step 2: Calculate the gradient and create the equation for each point.**
+
+    We will process each point of tangency separately. The derivative of the function is <InlineMath math="f'(x) = 4x - 3" />.
+
+    **Case One: Point <InlineMath math="(1, 4)" />**
+
+    The gradient at this point is <InlineMath math="m = f'(1) = 4(1) - 3 = 1" />.
+
+    Thus, the equation is:
+
+    <BlockMath math="y - 4 = 1(x - 1) \implies y = x + 3" />
+
+    **Case Two: Point <InlineMath math="\left(\frac{1}{2}, 4\right)" />**
+
+    The gradient at this point is <InlineMath math="m = f'(\frac{1}{2}) = 4(\frac{1}{2}) - 3 = -1" />.
+
+    Thus, the equation is:
+
+    <BlockMath math="y - 4 = -1(x - \frac{1}{2}) \implies y = -x + \frac{9}{2}" />
+
+3.  **Solution:**
+    
+    **Step 1: Find point P.**
+
+    The curve intersects the X-axis when <InlineMath math="y=0" />.
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="0 = 3x - \frac{3}{x^2}" />
+        <BlockMath math="3x = \frac{3}{x^2} \implies 3x^3 = 3 \implies x^3 = 1 \implies x=1" />
+    </div>
+
+    So, the intersection point P is <InlineMath math="(1, 0)" />.
+
+    **Step 2: Find the gradient at P.**
+
+    Let's first rewrite the function as <InlineMath math="f(x) = 3x - 3x^{-2}" /> to make it easier to differentiate.
+
+    <BlockMath math="f'(x) = 3 - (-2)(3)x^{-3} = 3 + \frac{6}{x^3}" />
+
+    The gradient at <InlineMath math="x=1" /> is <InlineMath math="m = f'(1) = 3 + \frac{6}{1^3} = 9" />.
+    
+    **Step 3: Construct the equation.**
+
+    With point <InlineMath math="(1, 0)" /> and gradient 9, the equation is:
+
+    <BlockMath math="y - 0 = 9(x - 1) \implies y = 9x - 9" />
+
+4.  **Solution:**
+
+    **Step 1: Find point A.**
+
+    The curve intersects the Y-axis when <InlineMath math="x=0" />.
+
+    <BlockMath math="y = (0^2 + 2)^2 = 4" />
+
+    So, the intersection point A is <InlineMath math="(0, 4)" />.
+
+    **Step 2: Prove the tangent line is parallel to the X-axis.**
+
+    A line parallel to the X-axis must have a gradient of 0. Let's prove that the derivative of the function at point A (<InlineMath math="x=0" />) is zero.
+
+    The derivative of <InlineMath math="f(x)=(x^2+2)^2" /> using the chain rule is <InlineMath math="f'(x) = 2(x^2+2)(2x) = 4x(x^2+2)" />.
+
+    The gradient at <InlineMath math="x=0" /> is <InlineMath math="m = f'(0) = 4(0)(0^2+2) = 0" />.
+
+    Since the gradient is zero, **it is proven that the tangent line is parallel to the X-axis**.
+
+    **Step 3: Prove its distance is 4 units from the origin.**
+
+    The equation of the tangent line at point <InlineMath math="(0,4)" /> with gradient <InlineMath math="m=0" /> is:
+
+    <BlockMath math="y - 4 = 0(x - 0) \implies y = 4" />
+
+    The line <InlineMath math="y=4" /> is a horizontal line. The distance from any point on this line to the X-axis (the line <InlineMath math="y=0" />) is 4 units. Since the origin <InlineMath math="(0,0)" /> lies on the X-axis, the distance from this tangent line to the origin is also 4 units. **Proven.**
+
+5.  **Solution:**
+
+    **Step 1: Determine the gradient from the angle.**
+
+    The relationship between the gradient (<InlineMath math="m" />) and the angle (<InlineMath math="\theta" />) a line makes with the positive X-axis is given by <InlineMath math="m = \tan(\theta)" />.
+
+    <BlockMath math="m = \tan(45^\circ) = 1" />
+
+    So, the gradient of the tangent line we are looking for is 1.
+    
+    **Step 2: Find the coordinates of the point of tangency.**
+
+    The gradient is also the first derivative of the curve <InlineMath math="f(x) = 2x^2 - 7x + 1" />.
+
+    <BlockMath math="f'(x) = 4x - 7" />
+
+    We set it equal to the gradient we found:
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="4x - 7 = 1" />
+        <BlockMath math="4x = 8 \implies x = 2" />
+    </div>
+
+    Now, find the <InlineMath math="y" />-value by plugging <InlineMath math="x=2" /> into the curve's equation:
+
+    <BlockMath math="y = 2(2)^2 - 7(2) + 1 = 8 - 14 + 1 = -5" />
+
+    So, the coordinates of the point of tangency are <InlineMath math="(2, -5)" />.
+
+    **Step 3: Determine the equation of the tangent line.**
+
+    Using the point <InlineMath math="(2, -5)" /> and gradient <InlineMath math="m=1" />:
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="y - (-5) = 1(x - 2)" />
+        <BlockMath math="y + 5 = x - 2" />
+        <BlockMath math="y = x - 7" />
+    </div>

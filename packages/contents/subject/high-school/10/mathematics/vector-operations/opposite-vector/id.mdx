@@ -1,0 +1,125 @@
+import { Vector3d } from "../../_shared/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Vektor Berkebalikan",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/12/2025",
+  subject: "Vektor dan Operasinya",
+};
+
+## Pengertian Vektor Berkebalikan
+
+Vektor berkebalikan adalah vektor yang panjangnya merupakan kebalikan dari panjang vektor aslinya, tetapi arahnya tetap sama. Jika <InlineMath math="\vec{v}" /> adalah sebuah vektor, maka vektor berkebalikan dari <InlineMath math="\vec{v}" /> adalah vektor dengan panjang <InlineMath math="\frac{1}{|\vec{v}|}" />, di mana <InlineMath math="|\vec{v}|" /> adalah panjang vektor <InlineMath math="\vec{v}" />.
+
+## Rumus Vektor Berkebalikan
+
+Jika kita memiliki sebuah vektor <InlineMath math="\vec{v}" />, maka vektor berkebalikan dari <InlineMath math="\vec{v}" /> dapat dirumuskan sebagai:
+
+<BlockMath math="\vec{v}_{\text{berkebalikan}} = \frac{1}{|\vec{v}|^2} \cdot \vec{v}" />
+
+Dimana:
+
+- <InlineMath math="\vec{v}_{\text{berkebalikan}}" /> adalah vektor berkebalikan
+- <InlineMath math="\vec{v}" /> adalah vektor asli
+- <InlineMath math="|\vec{v}|" /> adalah panjang atau besar vektor <InlineMath math="\vec{v}" />
+
+## Contoh Perhitungan
+
+Misalkan kita memiliki vektor <InlineMath math="\overrightarrow{AB} = 6\mathbf{i} + 8\mathbf{j}" />.
+
+Pertama, kita hitung panjang vektor <InlineMath math="\overrightarrow{AB}" />:
+
+<BlockMath math="|\overrightarrow{AB}| = \sqrt{6^2 + 8^2} = \sqrt{36 + 64} = \sqrt{100} = 10" />
+
+Kemudian, kita dapat mencari vektor berkebalikan dari <InlineMath math="\overrightarrow{AB}" />:
+
+<BlockMath math="\overrightarrow{AB}_{\text{berkebalikan}} = \frac{1}{|\overrightarrow{AB}|^2} \cdot \overrightarrow{AB} = \frac{1}{10^2} \cdot (6\mathbf{i} + 8\mathbf{j}) = \frac{1}{100} (6\mathbf{i} + 8\mathbf{j})" />
+
+Jadi vektor berkebalikan dari <InlineMath math="\overrightarrow{AB}" /> adalah <InlineMath math="\frac{1}{100}(6\mathbf{i} + 8\mathbf{j})" /> atau <InlineMath math="0,06\mathbf{i} + 0,08\mathbf{j}" />.
+
+<Vector3d
+  title="Visualisasi Vektor Berkebalikan"
+  description="Perbandingan antara vektor asli (merah) dan vektor berkebalikannya (biru)."
+  vectors={[
+    {
+      from: [0, 0, 0],
+      to: [6, 8, 0],
+      color: getColor("RED"),
+      label: "AB",
+      labelPosition: "end",
+    },
+    {
+      from: [0, 0, 0],
+      to: [0.06, 0.08, 0],
+      color: getColor("BLUE"),
+      label: "AB berkebalikan",
+      labelPosition: "end",
+    },
+  ]}
+  cameraPosition={[12, 10, 12]}
+/>
+
+## Sifat Vektor Berkebalikan
+
+1. Panjang vektor berkebalikan adalah kebalikan dari panjang vektor asli:
+
+   <BlockMath math="|\vec{v}_{\text{berkebalikan}}| = \frac{1}{|\vec{v}|}" />
+
+2. Arah vektor berkebalikan sama dengan arah vektor asli.
+
+3. Perkalian titik (dot product) antara vektor dengan vektor berkebalikannya:
+
+   <BlockMath math="\vec{v} \cdot \vec{v}_{\text{berkebalikan}} = 1" />
+
+4. Jika <InlineMath math="\vec{v}" /> adalah vektor dengan panjang 1 (vektor satuan), maka vektor berkebalikannya adalah vektor itu sendiri.
+
+## Aplikasi Vektor Berkebalikan
+
+Vektor berkebalikan memiliki banyak aplikasi dalam bidang fisika, matematika, dan rekayasa. Beberapa aplikasi penting diantaranya:
+
+1. Dalam kristalografi, vektor berkebalikan digunakan untuk mempelajari kisi-kisi dari kristal zat padat.
+
+2. Dalam fisika quantum, vektor berkebalikan digunakan dalam perhitungan ruang momentum.
+
+3. Dalam analisis vektor, vektor berkebalikan membantu menyelesaikan persamaan vektor.
+
+## Vektor Satuan dan Hubungannya dengan Vektor Berkebalikan
+
+### Vektor Satuan
+
+Vektor satuan adalah vektor yang panjangnya tepat satu satuan. Vektor satuan dari sebuah vektor <InlineMath math="\vec{v}" /> biasanya dinotasikan dengan <InlineMath math="\hat{v}" /> dan dihitung dengan rumus:
+
+<BlockMath math="\hat{v} = \frac{\vec{v}}{|\vec{v}|}" />
+
+<div className="mt-4">
+  <Vector3d
+    title="Perbandingan Vektor Asli dan Vektor Satuan"
+    description="Vektor asli (hijau) dan vektor satuan yang sesuai (ungu)."
+    vectors={[
+      {
+        from: [0, 0, 0],
+        to: [6, 8, 0],
+        color: getColor("GREEN"),
+        label: "v",
+        labelPosition: "end",
+      },
+      {
+        from: [0, 0, 0],
+        to: [0.6, 0.8, 0],
+        color: getColor("VIOLET"),
+        label: "v̂ (satuan)",
+        labelPosition: "end",
+      },
+    ]}
+    cameraPosition={[12, 10, 12]}
+  />
+</div>
+
+### Hubungan dengan Vektor Berkebalikan
+
+Terdapat hubungan menarik antara vektor satuan dan vektor berkebalikan. Jika <InlineMath math="\vec{v}" /> adalah sebuah vektor, maka:
+
+<BlockMath math="\vec{v}_{\text{berkebalikan}} = \frac{\hat{v}}{|\vec{v}|}" />
+
+Ini menunjukkan bahwa vektor berkebalikan dapat diperoleh dengan membagi vektor satuan dengan panjang vektor asli.

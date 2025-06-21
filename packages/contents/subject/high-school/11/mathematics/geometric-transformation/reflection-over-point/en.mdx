@@ -1,0 +1,203 @@
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+export const metadata = {
+  title: "Reflection over Point",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/10/2025",
+  subject: "Geometric Transformation",
+};
+
+## Understanding Reflection over a Point
+
+Reflection over a point, often called a half-turn rotation (<InlineMath math="180^\circ" />), is a geometric transformation where each point on an object is mapped to a new position such that the center of reflection becomes the midpoint between the original point and its image.
+
+Suppose the center of reflection is <InlineMath math="P(a,b)" />. If a point <InlineMath math="Q(x,y)" /> is reflected over point <InlineMath math="P" />, its image <InlineMath math="Q'(x',y')" /> will lie on the line passing through <InlineMath math="Q" /> and <InlineMath math="P" />, with <InlineMath math="P" /> as the midpoint of the segment <InlineMath math="QQ'" />.
+
+### Rule for Reflection over a Point
+
+If a point <InlineMath math="Q(x, y)" /> is reflected over the point <InlineMath math="P(a, b)" />, its image's coordinates, <InlineMath math="Q'(x', y')" />, are determined by the formula:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = 2a - x" />
+  <BlockMath math="y' = 2b - y" />
+</div>
+
+Alternatively, it can be written as:
+
+<BlockMath math="Q'(-x + 2a, -y + 2b)" />
+
+This means the x-coordinate of the image is twice the x-coordinate of the center minus the original x-coordinate, and the same applies to the y-coordinate.
+
+## Reflecting a Point over Another Point
+
+Determine the image of a half-turn <InlineMath math="\sigma_{(2,3)}" /> for the point <InlineMath math="(5, 4)" />.
+
+This means we are reflecting point <InlineMath math="Q(5,4)" /> over the center point <InlineMath math="P(2,3)" />.
+
+Here, <InlineMath math="x=5" />, <InlineMath math="y=4" />, <InlineMath math="a=2" />, and <InlineMath math="b=3" />.
+
+Using the formula:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = 2a - x = 2(2) - 5 = 4 - 5 = -1" />
+  <BlockMath math="y' = 2b - y = 2(3) - 4 = 6 - 4 = 2" />
+</div>
+
+Thus, the image of point <InlineMath math="(5,4)" /> is <InlineMath math="(-1,2)" />.
+
+<LineEquation
+  title={
+    <>
+      Image of Point <InlineMath math="Q(5,4)" /> over Point{" "}
+      <InlineMath math="P(2,3)" />
+    </>
+  }
+  description={
+    <>
+      Visualization of reflecting point <InlineMath math="Q(5,4)" /> over the
+      center point <InlineMath math="P(2,3)" /> resulting in{" "}
+      <InlineMath math="Q'(-1,2)" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 2, y: 3, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "P(2,3) - Center", at: 0, offset: [1.5, -0.5, 0] }],
+    },
+    {
+      points: [{ x: 5, y: 4, z: 0 }],
+      color: getColor("SKY"),
+      showPoints: true,
+      labels: [{ text: "Q(5,4) - Original", at: 0, offset: [0.3, 0.5, 0] }],
+    },
+    {
+      points: [{ x: -1, y: 2, z: 0 }],
+      color: getColor("EMERALD"),
+      showPoints: true,
+      labels: [{ text: "Q'(-1,2) - Image", at: 0, offset: [-0.7, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 5, y: 4, z: 0 },
+        { x: -1, y: 2, z: 0 },
+      ],
+      color: getColor("PINK"),
+    }, // Line connecting Q to Q'
+  ]}
+  showZAxis={false}
+/>
+
+## Reflecting a Line over a Point
+
+Determine the image of a half-turn <InlineMath math="\sigma_{(1,3)}" /> for the line <InlineMath math="l" /> with the equation <InlineMath math="2x - y + 3 = 0" />.
+
+Take an arbitrary point <InlineMath math="(x,y)" /> on line <InlineMath math="l" />. Its image, <InlineMath math="(x',y')" />, after reflection over point <InlineMath math="P(1,3)" /> is:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x' = 2(1) - x = 2 - x \implies x = 2 - x'" />
+  <BlockMath math="y' = 2(3) - y = 6 - y \implies y = 6 - y'" />
+</div>
+
+Substitute <InlineMath math="x = 2 - x'" /> and <InlineMath math="y = 6 - y'" /> into the equation of line <InlineMath math="l" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="2(2 - x') - (6 - y') + 3 = 0" />
+  <BlockMath math="4 - 2x' - 6 + y' + 3 = 0" />
+  <BlockMath math="-2x' + y' + 1 = 0" />
+</div>
+
+Replacing <InlineMath math="x'" /> and <InlineMath math="y'" /> back to <InlineMath math="x" /> and <InlineMath math="y" />, the equation of the image line <InlineMath math="l'" /> is:
+
+<BlockMath math="-2x + y + 1 = 0" />
+
+Alternatively, it can be written as <InlineMath math="2x - y - 1 = 0" />.
+
+<LineEquation
+  title={
+    <>
+      Image of Line <InlineMath math="2x-y+3=0" /> over Point{" "}
+      <InlineMath math="P(1,3)" />
+    </>
+  }
+  description={
+    <>
+      Original line <InlineMath math="2x-y+3=0" /> reflected over point{" "}
+      <InlineMath math="P(1,3)" /> results in image line{" "}
+      <InlineMath math="2x-y-1=0" />.
+    </>
+  }
+  data={[
+    {
+      points: [{ x: 1, y: 3, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      labels: [{ text: "P(1,3) - Center", at: 0, offset: [0.5, -0.5, 0] }],
+    },
+    {
+      // Original Line: 2x - y + 3 = 0  => y = 2x + 3
+      points: Array.from({ length: 11 }, (_, i) => {
+        const xVal = i - 5;
+        return { x: xVal, y: 2 * xVal + 3, z: 0 };
+      }),
+      color: getColor("SKY"),
+      labels: [{ text: "2x-y+3=0", at: 5, offset: [-2, 0.5, 0] }],
+    },
+    {
+      // Image Line: 2x - y - 1 = 0 => y = 2x - 1
+      points: Array.from({ length: 11 }, (_, i) => {
+        const xVal = i - 5;
+        return { x: xVal, y: 2 * xVal - 1, z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      labels: [{ text: "2x-y-1=0", at: 5, offset: [2, -0.5, 0] }],
+    },
+  ]}
+  showZAxis={false}
+  cameraPosition={[1, 2, 15]}
+/>
+
+## Exercises
+
+1.  Determine the image of a half-turn <InlineMath math="\sigma_{(-2,3)}" /> for the point <InlineMath math="(3, -4)" />.
+2.  Point <InlineMath math="K(-5, 1)" /> is reflected over the origin <InlineMath math="O(0,0)" />. Determine the coordinates of its image!
+3.  Determine the image of a half-turn <InlineMath math="\sigma_{(1,-3)}" /> for the line <InlineMath math="l" /> with the equation <InlineMath math="2x + 5y + 6 = 0" />.
+
+### Key Answers
+
+1.  Center <InlineMath math="P(-2,3)" />, point <InlineMath math="Q(3,-4)" />. So <InlineMath math="a=-2, b=3, x=3, y=-4" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = 2a - x = 2(-2) - 3 = -4 - 3 = -7" />
+      <BlockMath math="y' = 2b - y = 2(3) - (-4) = 6 + 4 = 10" />
+    </div>
+
+    Thus, the image of point <InlineMath math="Q(3,-4)" /> is <InlineMath math="(-7,10)" />.
+
+2.  Center <InlineMath math="O(0,0)" />, point <InlineMath math="K(-5,1)" />. So <InlineMath math="a=0, b=0, x=-5, y=1" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = 2(0) - (-5) = 0 + 5 = 5" />
+      <BlockMath math="y' = 2(0) - 1 = 0 - 1 = -1" />
+    </div>
+
+    Thus, the image of point <InlineMath math="K(-5,1)" /> is <InlineMath math="K'(5,-1)" />.
+
+3.  Center <InlineMath math="P(1,-3)" />. Line <InlineMath math="2x + 5y + 6 = 0" />.
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="x' = 2(1) - x = 2 - x \implies x = 2 - x'" />
+      <BlockMath math="y' = 2(-3) - y = -6 - y \implies y = -6 - y'" />
+    </div>
+
+    Substitute into the line equation:
+
+    <div className="flex flex-col gap-4">
+      <BlockMath math="2(2 - x') + 5(-6 - y') + 6 = 0" />
+      <BlockMath math="4 - 2x' - 30 - 5y' + 6 = 0" />
+      <BlockMath math="-2x' - 5y' - 20 = 0" />
+    </div>
+
+    Image line equation: <InlineMath math="-2x - 5y - 20 = 0" /> or <InlineMath math="2x + 5y + 20 = 0" />.

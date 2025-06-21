@@ -1,0 +1,190 @@
+import { Vector3d } from "../../_shared/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Vector Subtraction",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/12/2025",
+  subject: "Vector and Operations",
+};
+
+## Basic Concept of Vector Subtraction
+
+Vector subtraction is one of the basic operations in vector mathematics. Unlike vector addition that combines two vectors, vector subtraction produces the difference between two vectors. When we subtract vector <InlineMath math="\vec{b}" /> from vector <InlineMath math="\vec{a}" />, the result is a vector that, when added to <InlineMath math="\vec{b}" />, will produce <InlineMath math="\vec{a}" />.
+
+Mathematically, vector subtraction is defined as:
+
+<BlockMath math="\vec{a} - \vec{b} = \vec{a} + (-\vec{b})" />
+
+This means that subtracting vector <InlineMath math="\vec{b}" /> from vector <InlineMath math="\vec{a}" /> is equivalent to adding vector <InlineMath math="\vec{a}" /> with the negative of vector <InlineMath math="\vec{b}" />.
+
+## Geometric Vector Subtraction
+
+Geometrically, vector subtraction <InlineMath math="\vec{a} - \vec{b}" /> can be depicted by:
+
+1. Drawing vectors <InlineMath math="\vec{a}" /> and <InlineMath math="\vec{b}" /> with the same initial point.
+2. Drawing vector <InlineMath math="-\vec{b}" /> (vector <InlineMath math="\vec{b}" /> with reversed direction).
+3. Drawing a vector from the endpoint of <InlineMath math="\vec{b}" /> to the endpoint of <InlineMath math="\vec{a}" />.
+
+The resulting vector, <InlineMath math="\vec{a} - \vec{b}" />, can also be obtained by drawing a line from the endpoint of vector <InlineMath math="\vec{b}" /> to the endpoint of vector <InlineMath math="\vec{a}" /> when both vectors are drawn from the same origin point.
+
+<Vector3d
+  title="Visualization of Vector Subtraction in 3D Space"
+  description={
+    <>
+      Vector subtraction <InlineMath math="a - b" /> (purple color) is
+      equivalent to vector <InlineMath math="a" /> (blue color) added to the
+      negative of vector <InlineMath math="b" /> (red color).
+    </>
+  }
+  vectors={[
+    {
+      from: [0, 0, 0],
+      to: [3, 2, 1],
+      color: getColor("TEAL"),
+      label: "a",
+      id: "vector-a",
+    },
+    {
+      from: [0, 0, 0],
+      to: [1, 2, 2],
+      color: getColor("ROSE"),
+      label: "b",
+      id: "vector-b",
+    },
+    {
+      from: [0, 0, 0],
+      to: [-1, -2, -2],
+      color: getColor("ORANGE"),
+      label: "-b",
+      id: "vector-negative-b",
+    },
+    {
+      from: [0, 0, 0],
+      to: [2, 0, -1],
+      color: getColor("PINK"),
+      label: "a - b",
+      id: "vector-result",
+    },
+  ]}
+  cameraPosition={[6, 4, 6]}
+/>
+
+## Algebraic Vector Subtraction
+
+Vector subtraction can be performed by subtracting corresponding components. Suppose we have two vectors:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\vec{a} = (a_1, a_2, a_3)" />
+  <BlockMath math="\vec{b} = (b_1, b_2, b_3)" />
+</div>
+
+Then vector subtraction <InlineMath math="\vec{a} - \vec{b}" /> can be calculated as:
+
+<BlockMath math="\vec{a} - \vec{b} = (a_1 - b_1, a_2 - b_2, a_3 - b_3)" />
+
+For two-dimensional vectors, the equation becomes:
+
+<BlockMath math="\vec{a} - \vec{b} = (a_1 - b_1, a_2 - b_2)" />
+
+## Example of Vector Subtraction Calculation
+
+Suppose there are two vectors:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\vec{a} = (3, 4)" />
+  <BlockMath math="\vec{b} = (1, 2)" />
+</div>
+
+Vector subtraction <InlineMath math="\vec{a} - \vec{b}" /> is:
+
+<BlockMath math="\vec{a} - \vec{b} = (3, 4) - (1, 2) = (3-1, 4-2) = (2, 2)" />
+
+While vector subtraction <InlineMath math="\vec{b} - \vec{a}" /> is:
+
+<BlockMath math="\vec{b} - \vec{a} = (1, 2) - (3, 4) = (1-3, 2-4) = (-2, -2)" />
+
+Note that <InlineMath math="\vec{a} - \vec{b} \neq \vec{b} - \vec{a}" /> in general. In fact, <InlineMath math="\vec{a} - \vec{b} = -(\vec{b} - \vec{a})" />.
+
+<Vector3d
+  title="Example of Vector Subtraction"
+  description={
+    <>
+      Visualization of vector subtraction{" "}
+      <InlineMath math="a - b = (3,4,0) - (1,2,0) = (2,2,0)" />.
+    </>
+  }
+  vectors={[
+    {
+      from: [0, 0, 0],
+      to: [3, 4, 0],
+      color: getColor("TEAL"),
+      label: "a",
+      id: "example-vector-a",
+    },
+    {
+      from: [0, 0, 0],
+      to: [1, 2, 0],
+      color: getColor("ROSE"),
+      label: "b",
+      id: "example-vector-b",
+    },
+    {
+      from: [0, 0, 0],
+      to: [2, 2, 0],
+      color: getColor("LIME"),
+      label: "a - b",
+      id: "example-vector-result",
+    },
+  ]}
+  cameraPosition={[8, 6, 8]}
+/>
+
+## Applications of Vector Subtraction
+
+Vector subtraction has many applications in real life:
+
+1. **Calculating Displacement**: If <InlineMath math="\vec{a}" /> is the final position and <InlineMath math="\vec{b}" /> is the initial position, then <InlineMath math="\vec{a} - \vec{b}" /> is the displacement vector.
+
+2. **Calculating Distance**: In games like Angry Birds, vector subtraction is used to calculate the distance and direction between the bird and the target.
+
+3. **Physics**: Vector subtraction is used to calculate the resultant force in systems with multiple forces.
+
+## Vector Subtraction to Find the Resultant
+
+Vector subtraction can also be used to find the resultant vector. A resultant vector is a vector that represents the combined effect of two or more vectors.
+
+Suppose an object moves from initial position <InlineMath math="\vec{p}_1" /> to final position <InlineMath math="\vec{p}_2" />. The displacement vector of the object is:
+
+<BlockMath math="\vec{d} = \vec{p}_2 - \vec{p}_1" />
+
+This resultant vector shows the direction and distance of the object's displacement.
+
+## Properties of Vector Subtraction
+
+Vector subtraction has several important properties:
+
+1. <InlineMath math="\vec{a} - \vec{b} = \vec{a} + (-\vec{b})" />
+2. <InlineMath math="\vec{a} - \vec{a} = \vec{0}" /> (zero vector)
+3. <InlineMath math="\vec{a} - \vec{0} = \vec{a}" />
+4. <InlineMath math="\vec{0} - \vec{a} = -\vec{a}" />
+5. <InlineMath math="\vec{a} - \vec{b} = -(\vec{b} - \vec{a})" />
+
+## Example Problem
+
+A monkey is at position (3, 4) and wants to get a banana located at position (2, 1). Determine the displacement vector of the monkey to reach the banana.
+
+**Solution:**
+
+Monkey's position: <InlineMath math="\vec{m} = (3, 4)" />
+Banana's position: <InlineMath math="\vec{p} = (2, 1)" />
+
+Displacement vector of the monkey to the banana:
+
+<BlockMath math="\vec{d} = \vec{p} - \vec{m} = (2, 1) - (3, 4) = (2-3, 1-4) = (-1, -3)" />
+
+Therefore, the monkey needs to move 1 unit in the negative x-axis direction and 3 units in the negative y-axis direction to reach the banana.
+
+The magnitude of the displacement vector can be calculated using the Pythagorean theorem:
+
+<BlockMath math="|\vec{d}| = \sqrt{(-1)^2 + (-3)^2} = \sqrt{1 + 9} = \sqrt{10} \approx 3.16" />

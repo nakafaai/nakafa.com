@@ -1,0 +1,162 @@
+import { Vector3d } from "../../_shared/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Komponen Vektor",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/11/2025",
+  subject: "Vektor dan Operasinya",
+};
+
+## Pengertian Komponen Vektor
+
+Dalam mempelajari vektor, kita perlu memahami bahwa setiap vektor dapat diuraikan menjadi komponen-komponennya. Komponen vektor merupakan bagian dari vektor yang searah dengan sumbu koordinat.
+
+Komponen vektor adalah nilai-nilai yang menunjukkan seberapa jauh suatu vektor bergerak pada arah sumbu x dan sumbu y. Setiap vektor di bidang datar dapat dinyatakan sebagai kombinasi linear dari vektor satuan <InlineMath math="i" /> dan <InlineMath math="j" />.
+
+<Vector3d
+  title="Visualisasi Vektor dan Komponennya"
+  description={
+    <>
+      Vector <InlineMath math="AB" /> and its components on the{" "}
+      <InlineMath math="x" />, <InlineMath math="y" />, and{" "}
+      <InlineMath math="z" /> axes.
+    </>
+  }
+  vectors={[
+    {
+      from: [0, 0, 0],
+      to: [4, 6, 0],
+      color: getColor("ROSE"),
+      label: "AB",
+    },
+    {
+      from: [0, 0, 0],
+      to: [4, 0, 0],
+      color: getColor("TEAL"),
+      label: "Komponen x",
+    },
+    {
+      from: [0, 0, 0],
+      to: [0, 6, 0],
+      color: getColor("LIME"),
+      label: "Komponen y",
+    },
+  ]}
+/>
+
+Jika kita memiliki vektor <InlineMath math="\overrightarrow{AB}" />, maka:
+
+<BlockMath math="\overrightarrow{AB} = a\cdot i + b\cdot j" />
+
+dimana:
+
+- <InlineMath math="a" /> adalah komponen vektor pada sumbu x (horizontal)
+- <InlineMath math="b" /> adalah komponen vektor pada sumbu y (vertikal)
+- <InlineMath math="i" /> adalah vektor satuan arah sumbu x
+- <InlineMath math="j" /> adalah vektor satuan arah sumbu y
+
+### Contoh Komponen Vektor
+
+Perhatikan vektor <InlineMath math="\overrightarrow{AB}" /> pada gambar. Vektor ini dapat ditulis sebagai:
+
+<BlockMath math="\overrightarrow{AB} = 6i + 8j" />
+
+Ini berarti vektor <InlineMath math="\overrightarrow{AB}" /> memiliki komponen horizontal sebesar 6 satuan ke arah kanan dan komponen vertikal sebesar 8 satuan ke arah atas.
+
+## Panjang Vektor dari Komponen-komponennya
+
+Ketika kita telah mengetahui komponen-komponen suatu vektor, kita dapat menghitung panjang atau besar vektor tersebut menggunakan teorema Pythagoras.
+
+Panjang vektor <InlineMath math="\overrightarrow{AB}" /> dilambangkan dengan <InlineMath math="|\overrightarrow{AB}|" /> dan dihitung dengan rumus:
+
+<BlockMath math="|\overrightarrow{AB}| = \sqrt{a^2 + b^2}" />
+
+dimana <InlineMath math="a" /> dan <InlineMath math="b" /> adalah komponen-komponen vektor tersebut.
+
+### Contoh Perhitungan Panjang Vektor
+
+Untuk vektor <InlineMath math="\overrightarrow{AB} = 6i + 8j" />, panjang vektornya adalah:
+
+<BlockMath math="|\overrightarrow{AB}| = \sqrt{6^2 + 8^2} = \sqrt{36 + 64} = \sqrt{100} = 10" />
+
+Jadi, panjang vektor <InlineMath math="\overrightarrow{AB}" /> adalah 10 satuan.
+
+## Vektor dalam Ruang Tiga Dimensi
+
+Vektor tidak hanya terbatas pada bidang datar (dua dimensi), tetapi juga dapat diperluas ke ruang tiga dimensi.
+
+<Vector3d
+  title="Vektor dalam Ruang 3D"
+  description="Visualisasi vektor beserta komponennya dalam ruang tiga dimensi."
+  vectors={[
+    {
+      from: [0, 0, 0],
+      to: [5, 7, 4],
+      color: getColor("ORANGE"),
+      label: "Vektor 3D",
+    },
+    {
+      from: [0, 0, 0],
+      to: [5, 0, 0],
+      color: getColor("TEAL"),
+      label: "Komponen x",
+    },
+    {
+      from: [0, 0, 0],
+      to: [0, 7, 0],
+      color: getColor("LIME"),
+      label: "Komponen y",
+    },
+    {
+      from: [0, 0, 0],
+      to: [0, 0, 4],
+      color: getColor("YELLOW"),
+      label: "Komponen z",
+    },
+  ]}
+  cameraPosition={[12, 8, 12]}
+/>
+
+Dalam ruang tiga dimensi, sebuah vektor memiliki tiga komponen: komponen x, komponen y, dan komponen z. Vektor di ruang tiga dimensi dapat dinyatakan sebagai:
+
+<BlockMath math="\overrightarrow{v} = ai + bj + ck" />
+
+dimana:
+
+- <InlineMath math="a" /> adalah komponen vektor pada sumbu x
+- <InlineMath math="b" /> adalah komponen vektor pada sumbu y
+- <InlineMath math="c" /> adalah komponen vektor pada sumbu z
+- <InlineMath math="i" />, <InlineMath math="j" />, dan <InlineMath math="k" /> adalah
+  vektor satuan arah sumbu x, y, dan z
+
+Panjang vektor dalam ruang tiga dimensi dihitung dengan rumus:
+
+<BlockMath math="|\overrightarrow{v}| = \sqrt{a^2 + b^2 + c^2}" />
+
+## Vektor Satuan Arah
+
+Untuk menentukan arah dari suatu vektor, kita dapat menggunakan vektor satuan. Vektor satuan adalah vektor yang panjangnya 1 satuan. Untuk mendapatkan vektor satuan dari sebuah vektor, kita membagi vektor tersebut dengan panjangnya.
+
+Vektor satuan arah dari <InlineMath math="\overrightarrow{AB}" /> dilambangkan dengan <InlineMath math="\hat{AB}" /> dan dihitung dengan:
+
+<BlockMath math="\hat{AB} = \frac{\overrightarrow{AB}}{|\overrightarrow{AB}|}" />
+
+### Contoh Vektor Satuan Arah
+
+Untuk vektor <InlineMath math="\overrightarrow{AB} = 6i + 8j" /> dengan panjang 10, vektor satuan arahnya adalah:
+
+<BlockMath math="\hat{AB} = \frac{6i + 8j}{10} = \frac{6}{10}i + \frac{8}{10}j = 0.6i + 0.8j" />
+
+Vektor satuan ini menunjukkan arah dari vektor <InlineMath math="\overrightarrow{AB}" /> tanpa memperhatikan besarnya.
+
+## Aplikasi Komponen Vektor
+
+Komponen vektor memiliki banyak aplikasi dalam kehidupan sehari-hari, seperti:
+
+- Menghitung kecepatan dan perpindahan dalam fisika
+- Menganalisis gaya dalam mekanika
+- Menentukan arah dan besar resultan dalam pergerakan objek
+- Navigasi dan penentuan posisi dalam sistem koordinat
+
+Dengan memahami komponen vektor, kita dapat menganalisis berbagai masalah yang melibatkan arah dan besaran dalam matematika dan ilmu terapan lainnya.

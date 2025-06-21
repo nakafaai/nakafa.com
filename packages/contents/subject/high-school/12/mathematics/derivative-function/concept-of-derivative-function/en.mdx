@@ -1,0 +1,111 @@
+export const metadata = {
+  title: "Concept of Derivative Function",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Derivative Functions",
+};
+
+import { LineEquation } from "@repo/contents/_components/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+## The Idea Behind Derivatives
+
+Imagine you're riding a bicycle on a hilly road. Sometimes the road is steep, and other times it's flat. The **slope** of the road changes at every point you pass. In mathematics, the graph of a function can be thought of as this hilly road.
+
+For a straight line, the slope is always the same at every point. However, for a curved line, the slope is constantly changing. Well, a **derivative** is a powerful tool in mathematics that allows us to find the precise slope or rate of change at **one specific point** on a curve.
+
+## Gradient of a Secant Line
+
+To understand the concept of a derivative, let's start with something simpler: a **secant line** (or a cutting line). A secant line is a straight line that intersects a curve at two different points.
+
+Suppose we have a curve from the function <InlineMath math="y = f(x)" />. We pick two points on that curve, let's call them point <InlineMath math="P(x, f(x))" /> and point <InlineMath math="Q(x+\Delta x, f(x+\Delta x))" />. Here, <InlineMath math="\Delta x" /> (read "delta x") represents a small change in the value of <InlineMath math="x" />.
+
+The slope (gradient) of the secant line passing through points <InlineMath math="P" /> and <InlineMath math="Q" /> can be calculated with a formula we already know:
+
+<BlockMath math="m_{\text{secant}} = \frac{\text{change in } y}{\text{change in } x} = \frac{f(x + \Delta x) - f(x)}{\Delta x}" />
+
+The gradient of this secant line gives us an idea of the **average rate of change** of the function <InlineMath math="f(x)" /> between points <InlineMath math="P" /> and <InlineMath math="Q" />.
+
+<LineEquation
+  title="Secant and Tangent Line Visualization"
+  description={
+    <>
+      Notice how the secant line connects two points on the curve{" "}
+      <InlineMath math="y=x^2" />, while the tangent line just
+      touches the curve at a single point. The tangent line shows the slope of the curve
+      at that point.
+    </>
+  }
+  showZAxis={false}
+  cameraPosition={[0, 0, 15]}
+  data={(() => {
+    // Define the curve function
+    const f = (x) => x * x;
+
+    // 1. Define the main curve (parabola y = x^2)
+    const curvePoints = Array.from({ length: 101 }, (_, i) => {
+      const x = (i - 50) / 10; // x from -5 to 5
+      return { x, y: f(x), z: 0 };
+    });
+
+    // 2. Define the secant line
+    const p1_secant = { x: 1, y: f(1), z: 0 };
+    const p2_secant = { x: 3, y: f(3), z: 0 };
+
+    // 3. Define the tangent line at point P
+    const tangentPointX = 1;
+    const tangentPoint = { x: tangentPointX, y: f(tangentPointX), z: 0 };
+    const slope = 2 * tangentPointX; // Derivative of x^2 is 2x
+    // Line equation: y - y1 = m(x - x1) => y = m(x - x1) + y1
+    const tangentLineFunc = (x) => slope * (x - tangentPointX) + tangentPoint.y;
+    const tangentLinePoints = [
+      { x: -1, y: tangentLineFunc(-1), z: 0 },
+      { x: 3, y: tangentLineFunc(3), z: 0 },
+    ];
+
+    return [
+      {
+        points: curvePoints,
+        color: getColor("PURPLE"),
+        showPoints: false,
+      },
+      {
+        points: [p1_secant, p2_secant],
+        color: getColor("CYAN"),
+        labels: [
+          { text: "P", at: 0, offset: [-0.5, -0.5, 0] },
+          { text: "Q", at: 1, offset: [0.5, 0.5, 0] },
+          { text: "Secant Line", at: 0, offset: [-1, 2.5, 0] },
+        ],
+      },
+      {
+        points: tangentLinePoints,
+        color: getColor("AMBER"),
+        showPoints: false,
+        labels: [{ text: "Tangent Line", at: 1, offset: [2, -0.5, 0] }],
+      },
+    ];
+  })()}
+/>
+
+## From Secant Line to Tangent Line
+
+Now, what happens if we move point <InlineMath math="Q" /> closer and closer to point <InlineMath math="P" />? The distance between them, which is <InlineMath math="\Delta x" />, will become very small, approaching zero.
+
+When <InlineMath math="\Delta x \to 0" /> (read "delta x approaches zero"), the secant line we have will gradually transform into a **tangent line**. A tangent line is a line that touches the curve at exactly one point (in this case, point <InlineMath math="P" />).
+
+The slope of this tangent line is what truly represents the **slope of the curve** at point <InlineMath math="P" />. To find it, we use the concept of a **limit**.
+
+<BlockMath math="m_{\text{tangent}} = \lim_{\Delta x \to 0} \frac{f(x + \Delta x) - f(x)}{\Delta x}" />
+
+## Definition of the Derivative
+
+The limit of the gradient of the secant line as <InlineMath math="\Delta x" /> approaches zero is so important that it is given a special name: the **derivative**.
+
+The derivative of a function <InlineMath math="f(x)" />, denoted as <InlineMath math="f'(x)" /> (read "f prime x"), is defined as:
+
+<BlockMath math="f'(x) = \lim_{\Delta x \to 0} \frac{f(x + \Delta x) - f(x)}{\Delta x}" />
+
+The process of finding this derivative is called **differentiation**.
+
+> The derivative <InlineMath math="f'(x)" /> is essentially a new function that tells us the **instantaneous rate of change** (or the slope of the tangent line) of the original function <InlineMath math="f(x)" /> at every point <InlineMath math="x" /> where the limit exists. This is the foundation of differential calculus.

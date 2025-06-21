@@ -1,0 +1,487 @@
+export const metadata = {
+  title: "Rotation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Function Transformation",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Understanding Function Rotation
+
+Rotation is a geometric transformation that rotates an object around a specific center point with a determined rotation angle. In the context of functions, rotation changes the position of the function graph by rotating every point on the graph.
+
+Imagine rotating a wheel. Every point on the wheel will move following a circle with the rotation center as its center. Similarly with function graphs, every point will rotate following the same pattern.
+
+## Rotation Formula Around Center Point
+
+For rotation around center point <InlineMath math="(a, b)" /> with angle <InlineMath math="\theta" />, the transformation formula is:
+
+<div className="flex flex-col gap-4">
+<BlockMath math="x' = (x - a) \cos \theta - (y - b) \sin \theta + a" />
+<BlockMath math="y' = (x - a) \sin \theta + (y - b) \cos \theta + b" />
+</div>
+
+Where:
+- <InlineMath math="(x, y)" /> is the original point coordinate
+- <InlineMath math="(x', y')" /> is the rotated point coordinate
+- <InlineMath math="(a, b)" /> is the rotation center point
+- <InlineMath math="\theta" /> is the rotation angle (positive for counterclockwise direction)
+
+## Special Rotation Around Origin
+
+When rotation is performed around the origin <InlineMath math="(0, 0)" />, the formula becomes simpler:
+
+1. 90 Degree Rotation
+
+    <BlockMath math="(x, y) \rightarrow (-y, x)" />
+
+2. 180 Degree Rotation
+
+    <BlockMath math="(x, y) \rightarrow (-x, -y)" />
+
+3. 270 Degree Rotation
+
+    <BlockMath math="(x, y) \rightarrow (y, -x)" />
+
+## Visualization of Quadratic Function Rotation
+
+Let's see how rotation affects the quadratic function <InlineMath math="y = x^2" />:
+
+<LineEquation
+  title={<>Rotation of Function <InlineMath math="y = x^2" /> Around Origin</>}
+  description="Comparison of original function with 90° counterclockwise rotation result."
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        const y = x * x * 0.25;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [
+        {
+          text: "y = x²",
+          at: 15,
+          offset: [0.5, 0.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        const y = x * x * 0.25;
+        // 90° rotation around origin: (x,y) → (-y,x)
+        const xRotated = -y;
+        const yRotated = x;
+        return { x: xRotated, y: yRotated, z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [
+        {
+          text: "90° Rotation Result",
+          at: 5,
+          offset: [-1, 0.5, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+## Properties of Function Rotation
+
+Rotation has several important properties:
+
+- **Preserves Shape**: Rotation does not change the basic shape of the graph, only changes its orientation
+- **Preserves Distance**: The distance between two points on the graph remains the same after rotation
+- **Rotation Composition**: Consecutive rotations can be combined by adding their angles
+
+## Application of Rotation to Various Functions
+
+### Linear Function Rotation
+
+For linear function <InlineMath math="y = mx + c" />, rotation will change the slope and position of the line.
+
+<LineEquation
+  title={<>Rotation of Linear Function <InlineMath math="y = 2x + 1" /></>}
+  description="45° rotation around origin."
+  data={[
+    {
+      points: Array.from({ length: 11 }, (_, i) => {
+        const x = (i - 5);
+        const y = 2 * x + 1;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+      labels: [
+        {
+          text: "y = 2x + 1",
+          at: 6,
+          offset: [1, 0.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 11 }, (_, i) => {
+        const x = (i - 5);
+        const y = 2 * x + 1;
+        // 45° rotation around origin
+        const cos45 = Math.cos(Math.PI / 4);
+        const sin45 = Math.sin(Math.PI / 4);
+        const xRotated = x * cos45 - y * sin45;
+        const yRotated = x * sin45 + y * cos45;
+        return { x: xRotated, y: yRotated, z: 0 };
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [
+        {
+          text: "45° Rotation",
+          at: 6,
+          offset: [-0.5, 0.5, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+### Exponential Function Rotation
+
+Rotation can also be applied to exponential functions with interesting results.
+
+<LineEquation
+  title={<>Rotation of Function <InlineMath math="y = 2^x" /></>}
+  description="90° counterclockwise rotation."
+  cameraPosition={[8, 6, 8]}
+  data={[
+    {
+      points: Array.from({ length: 15 }, (_, i) => {
+        const x = (i - 7) * 0.5;
+        const y = Math.pow(2, x * 0.5);
+        return { x, y, z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      showPoints: false,
+      labels: [
+        {
+          text: "y = 2^x",
+          at: 12,
+          offset: [0.5, 0.5, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 15 }, (_, i) => {
+        const x = (i - 7) * 0.5;
+        const y = Math.pow(2, x * 0.5);
+        // 90° rotation around origin: (x,y) → (-y,x)
+        const xRotated = -y;
+        const yRotated = x;
+        return { x: xRotated, y: yRotated, z: 0 };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      labels: [
+        {
+          text: "90° Rotation",
+          at: 3,
+          offset: [-0.5, 0.5, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+## Steps to Determine Rotation Results
+
+To determine the rotation result of a function, follow these steps:
+
+- Determine the rotation center point and desired rotation angle
+- Select several points on the original function graph as samples
+- Apply the rotation formula to each sample point
+- Connect the rotation result points to form a new function graph
+- Verify the result by checking several additional points
+
+## Exercises
+
+1. Determine the rotation result of point <InlineMath math="(3, 4)" /> around the origin with a 90° counterclockwise angle.
+
+2. Function <InlineMath math="f(x) = x^2 - 2x + 1" /> is rotated 180° around the origin. Determine the coordinates of the rotation result vertex if the original vertex is at <InlineMath math="(1, 0)" />.
+
+3. Line <InlineMath math="y = 3x - 2" /> is rotated 270° around the origin. Determine the equation of the rotation result line.
+
+4. Point <InlineMath math="(2, 5)" /> is rotated 60° around point <InlineMath math="(1, 1)" />. Determine the rotation result coordinates.
+
+5. Function <InlineMath math="y = \sqrt{x}" /> for <InlineMath math="x \geq 0" /> is rotated 90° counterclockwise around the origin. Explain the shape of the rotation result graph.
+
+### Answer Key
+
+1. Using the 90° rotation formula:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="(x, y) \rightarrow (-y, x)" />
+   <BlockMath math="(3, 4) \rightarrow (-4, 3)" />
+   </div>
+   
+   So the rotation result is <InlineMath math="(-4, 3)" />.
+
+   <LineEquation
+     title="Visualization of Point (3, 4) Rotation"
+     description="90° counterclockwise rotation around origin."
+     cameraPosition={[8, 6, 8]}
+     data={[
+       {
+         points: [
+           { x: 0, y: 0, z: 0 },
+           { x: 3, y: 4, z: 0 }
+         ],
+         color: getColor("PURPLE"),
+         showPoints: false,
+         labels: [
+           {
+             text: "(3, 4)",
+             at: 1,
+             offset: [0.3, 0.3, 0],
+           },
+         ],
+         cone: { position: "end", size: 0.3 }
+       },
+       {
+         points: [
+           { x: 0, y: 0, z: 0 },
+           { x: -4, y: 3, z: 0 }
+         ],
+         color: getColor("ORANGE"),
+         showPoints: false,
+         labels: [
+           {
+             text: "(-4, 3)",
+             at: 1,
+             offset: [-0.5, 0.3, 0],
+           },
+         ],
+         cone: { position: "end", size: 0.3 }
+       },
+     ]}
+   />
+
+2. Original vertex rotated 180°:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="(x, y) \rightarrow (-x, -y)" />
+   <BlockMath math="(1, 0) \rightarrow (-1, 0)" />
+   </div>
+   
+   The coordinates of the rotation result vertex are <InlineMath math="(-1, 0)" />.
+
+   <LineEquation
+     title={<>Rotation of Function <InlineMath math="f(x) = x^2 - 2x + 1" /></>}
+     description="180° rotation around origin."
+     cameraPosition={[10, 6, 10]}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = x * x - 2 * x + 1;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("TEAL"),
+         showPoints: false,
+         labels: [
+           {
+             text: "f(x) = x² - 2x + 1",
+             at: 18,
+             offset: [1, 0.5, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = (i - 10) * 0.3;
+           const y = x * x - 2 * x + 1;
+           // 180° rotation: (x,y) → (-x,-y)
+           const xRotated = -x;
+           const yRotated = -y;
+           return { x: xRotated, y: yRotated, z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         showPoints: false,
+         labels: [
+           {
+             text: "180° Rotation Result",
+             at: 8,
+             offset: [-0.5, -0.5, 0],
+           },
+         ],
+       },
+     ]}
+   />
+
+3. Take two points on the line and rotate 270°:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="(x, y) \rightarrow (y, -x)" />
+   <BlockMath math="(0, -2) \rightarrow (-2, 0)" />
+   <BlockMath math="(1, 1) \rightarrow (1, -1)" />
+   <BlockMath math="m = \frac{-1 - 0}{1 - (-2)} = \frac{-1}{3}" />
+   <BlockMath math="y = -\frac{1}{3}x - \frac{2}{3}" />
+   </div>
+
+   So the equation of the rotation result line is <InlineMath math="y = -\frac{1}{3}x - \frac{2}{3}" />.
+
+   <LineEquation
+     title={<>Rotation of Line <InlineMath math="y = 3x - 2" /></>}
+     description="270° rotation around origin."
+     cameraPosition={[8, 6, 8]}
+     data={[
+       {
+         points: Array.from({ length: 11 }, (_, i) => {
+           const x = (i - 5) * 0.8;
+           const y = 3 * x - 2;
+           return { x, y, z: 0 };
+         }),
+         color: getColor("EMERALD"),
+         showPoints: false,
+         labels: [
+           {
+             text: "y = 3x - 2",
+             at: 6,
+             offset: [2, 0.5, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 11 }, (_, i) => {
+           const x = (i - 5) * 0.8;
+           const y = 3 * x - 2;
+           // 270° rotation: (x,y) → (y,-x)
+           const xRotated = y;
+           const yRotated = -x;
+           return { x: xRotated, y: yRotated, z: 0 };
+         }),
+         color: getColor("AMBER"),
+         showPoints: false,
+         labels: [
+           {
+             text: "y = -⅓x - ⅔",
+             at: 5,
+             offset: [-0.5, 1.5, 0],
+           },
+         ],
+       },
+     ]}
+   />
+
+4. Using the rotation formula around a point with 60° angle:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="x' = (x-a) \cos \theta - (y-b) \sin \theta + a" />
+   <BlockMath math="y' = (x-a) \sin \theta + (y-b) \cos \theta + b" />
+   <BlockMath math="x' = (2-1) \cdot \frac{1}{2} - (5-1) \cdot \frac{\sqrt{3}}{2} + 1" />
+   <BlockMath math="x' = \frac{3}{2} - 2\sqrt{3}" />
+   <BlockMath math="y' = (2-1) \cdot \frac{\sqrt{3}}{2} + (5-1) \cdot \frac{1}{2} + 1" />
+   <BlockMath math="y' = 3 + \frac{\sqrt{3}}{2}" />
+   </div>
+   
+   Rotation result coordinates: <InlineMath math="(\frac{3}{2} - 2\sqrt{3}, 3 + \frac{\sqrt{3}}{2})" />
+
+   <LineEquation
+     title="Rotation of Point (2, 5) Around Point (1, 1)"
+     description="60° counterclockwise rotation."
+     cameraPosition={[8, 6, 8]}
+     data={[
+       {
+         points: [
+           { x: 1, y: 1, z: 0 },
+           { x: 2, y: 5, z: 0 }
+         ],
+         color: getColor("CYAN"),
+         showPoints: false,
+         labels: [
+           {
+             text: "(2, 5)",
+             at: 1,
+             offset: [0.3, 0.3, 0],
+           },
+           {
+             text: "Center (1, 1)",
+             at: 0,
+             offset: [0.3, -0.3, 0],
+           },
+         ],
+         cone: { position: "end", size: 0.3 }
+       },
+       {
+         points: [
+           { x: 1, y: 1, z: 0 },
+           { x: 1.5 - 2 * Math.sqrt(3), y: 3 + Math.sqrt(3) / 2, z: 0 }
+         ],
+         color: getColor("PINK"),
+         showPoints: false,
+         labels: [
+           {
+             text: "Rotation Result",
+             at: 1,
+             offset: [-0.5, 0.3, 0],
+           },
+         ],
+         cone: { position: "end", size: 0.3 }
+       },
+     ]}
+   />
+
+5. Function <InlineMath math="y = \sqrt{x}" /> rotated 90° becomes:
+   
+   <div className="flex flex-col gap-4">
+   <BlockMath math="x = -\sqrt{y}" />
+   <BlockMath math="y = x^2 \text{ for } x \leq 0" />
+   </div>
+   
+   The rotation result graph forms a parabola that opens upward with domain <InlineMath math="x \leq 0" /> and range <InlineMath math="y \geq 0" />. This is a reflection of parabola <InlineMath math="y = x^2" /> across the y-axis.
+
+   <LineEquation
+     title={<>Rotation of Function <InlineMath math="y = \sqrt{x}" /></>}
+     description="90° counterclockwise rotation around origin."
+     cameraPosition={[8, 6, 8]}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           const y = Math.sqrt(x);
+           return { x, y, z: 0 };
+         }),
+         color: getColor("LIME"),
+         showPoints: false,
+         labels: [
+           {
+             text: "y = √x",
+             at: 15,
+             offset: [0.5, 0.3, 0],
+           },
+         ],
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           const y = Math.sqrt(x);
+           // 90° rotation: (x,y) → (-y,x)
+           const xRotated = -y;
+           const yRotated = x;
+           return { x: xRotated, y: yRotated, z: 0 };
+         }),
+         color: getColor("ROSE"),
+         showPoints: false,
+         labels: [
+           {
+             text: "y = x² (x ≤ 0)",
+             at: 15,
+             offset: [-0.8, 0.3, 0],
+           },
+         ],
+       },
+     ]}
+   />

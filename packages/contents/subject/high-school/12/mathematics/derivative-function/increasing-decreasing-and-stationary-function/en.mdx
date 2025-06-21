@@ -1,0 +1,255 @@
+import { LineEquation } from "@repo/contents/_components/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Increasing, Decreasing, and Stationary Functions",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Derivative Functions",
+};
+
+## Behavior of a Function and Its Derivative
+
+Have you ever noticed how the graph of a function can move up, down, or even flatten out for a moment? This behavior, called the **monotonicity of a function**, is closely related to its first derivative.
+
+Imagine you are walking along the curve of a graph from left to right.
+
+-   When you are **climbing**, it means the function is **increasing**.
+
+-   When you are **descending into a valley**, it means the function is **decreasing**.
+
+-   When you are at the top of a hill or the bottom of a valley, you are at a **stationary** point.
+
+Geometrically, the first derivative, <InlineMath math="f'(x)" />, is the gradient of the tangent line to the curve at that point. So, we can determine the function's behavior by looking at the sign of its gradient.
+
+## Properties of Monotonicity
+
+The relationship between the first derivative and the behavior of a function can be summarized by the following properties:
+
+Suppose the function <InlineMath math="y = f(x)" /> is continuous and differentiable over an interval.
+
+-   If <InlineMath math="f'(x) > 0" /> for all <InlineMath math="x" /> in that interval, then <InlineMath math="f(x)" /> is an **increasing function**.
+
+-   If <InlineMath math="f'(x) < 0" /> for all <InlineMath math="x" /> in that interval, then <InlineMath math="f(x)" /> is a **decreasing function**.
+
+-   If <InlineMath math="f'(x) = 0" /> at a specific point, then <InlineMath math="f(x)" /> has a **stationary point** there.
+
+These stationary points are the key to finding where a function changes from increasing to decreasing, or vice versa.
+
+## Analyzing Function Intervals
+
+Let's break down a case to see how to determine the intervals where a function is increasing or decreasing.
+
+Determine the intervals for which the function <InlineMath math="f(x) = x^3 - 3x" /> is increasing and decreasing.
+
+**Solution:**
+
+**Step 1: Find the first derivative**
+
+First, we differentiate the function <InlineMath math="f(x)" />.
+
+<BlockMath math="f'(x) = 3x^2 - 3" />
+
+**Step 2: Find the stationary points**
+
+Stationary points occur when <InlineMath math="f'(x) = 0" />.
+
+<div className="flex flex-col gap-4">
+    <BlockMath math="3x^2 - 3 = 0" />
+    <BlockMath math="x^2 - 1 = 0" />
+    <BlockMath math="(x-1)(x+1) = 0" />
+</div>
+
+From this, we get the stationary points at <InlineMath math="x = 1" /> and <InlineMath math="x = -1" />.
+
+**Step 3: Create a number line and test intervals**
+
+We place the stationary points on a number line. These points divide the line into three intervals. We take a test point from each interval to find the sign of <InlineMath math="f'(x)" /> (positive or negative).
+
+-   **Interval <InlineMath math="x < -1" />:**
+    
+    Take <InlineMath math="x=-2" />. <InlineMath math="f'(-2) = 3(-2)^2 - 3 = 9" /> (Positive, function is increasing).
+
+-   **Interval <InlineMath math="-1 < x < 1" />:**
+    
+    Take <InlineMath math="x=0" />. <InlineMath math="f'(0) = 3(0)^2 - 3 = -3" /> (Negative, function is decreasing).
+
+-   **Interval <InlineMath math="x > 1" />:**
+    
+    Take <InlineMath math="x=2" />. <InlineMath math="f'(2) = 3(2)^2 - 3 = 9" /> (Positive, function is increasing).
+
+**Step 4: Conclude the intervals**
+
+Based on the tests, we can conclude:
+
+-   The function is increasing on the intervals <InlineMath math="x < -1" /> or <InlineMath math="x > 1" />.
+
+-   The function is decreasing on the interval <InlineMath math="-1 < x < 1" />.
+
+<LineEquation
+  title={<>Visualization of Function Monotonicity</>}
+  description={
+    <>
+      This graph illustrates the behavior of the function <InlineMath math="f(x) = x^3 - 3x" />. 
+      Notice how the curve increases when its derivative is positive, decreases when its derivative is negative, and flattens at the stationary points where <InlineMath math="f'(x)=0" />.
+    </>
+  }
+  showZAxis={false}
+  cameraPosition={[0, 0, 10]}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = -2 + i * 0.05;
+        const y = x ** 3 - 3 * x;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+      labels: [
+        {
+          text: "Increasing",
+          at: 5,
+          offset: [-1, 1, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = -1 + i * 0.05;
+        const y = x ** 3 - 3 * x;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+      labels: [
+        {
+          text: "Decreasing",
+          at: 20,
+          offset: [0, -1, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = 1 + i * 0.05;
+        const y = x ** 3 - 3 * x;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+      labels: [
+        {
+          text: "Increasing",
+          at: 15,
+          offset: [1, 1, 0],
+        },
+      ],
+    },
+    {
+      points: [{ x: -1, y: 2, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        {
+          text: "Stationary (-1, 2)",
+          offset: [-2.5, 0.5, 0],
+        },
+      ],
+    },
+    {
+      points: [{ x: 1, y: -2, z: 0 }],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        {
+          text: "Stationary (1, -2)",
+          offset: [2.5, -0.5, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+## Exercises
+
+1.  Determine the intervals where the function is increasing and decreasing for the curve <InlineMath math="f(x) = x^3 - 3x^2 - 15" />.
+
+2.  If the function <InlineMath math="f(x) = ax^3 + x^2 + 5" /> is always increasing on the interval <InlineMath math="0 < x < 2" />, determine the value of the coefficient <InlineMath math="a" />!
+
+3.  Determine the intervals where the function is increasing and decreasing if the curve is given by <InlineMath math="f(x) = \sin 2x \cos 2x" />!
+
+### Answer Key
+
+1.  **Solution:**
+
+    The first derivative of <InlineMath math="f(x) = x^3 - 3x^2 - 15" /> is <InlineMath math="f'(x) = 3x^2 - 6x" />.
+    
+    Stationary points are found when <InlineMath math="f'(x) = 0" />.
+
+    <BlockMath math="3x^2 - 6x = 0 \implies 3x(x - 2) = 0" />
+
+    The stationary points are at <InlineMath math="x=0" /> and <InlineMath math="x=2" />.
+
+    By testing the intervals on a number line:
+
+    -   For <InlineMath math="x<0" />, <InlineMath math="f'(x)" /> is positive (increasing).
+
+    -   For <InlineMath math="0<x<2" />, <InlineMath math="f'(x)" /> is negative (decreasing).
+
+    -   For <InlineMath math="x>2" />, <InlineMath math="f'(x)" /> is positive (increasing).
+
+    So, the function is increasing on <InlineMath math="x < 0" /> or <InlineMath math="x > 2" />, and decreasing on the interval <InlineMath math="0 < x < 2" />.
+
+2.  **Solution:**
+
+    For a function to be *always increasing* on an interval, its first derivative must be non-negative (<InlineMath math="f'(x) \ge 0" />) for every point within that interval.
+
+    <BlockMath math="f'(x) = 3ax^2 + 2x = x(3ax + 2)" />
+    
+    In the interval <InlineMath math="0 < x < 2" />, the factor <InlineMath math="x" /> is always positive. Therefore, for <InlineMath math="f'(x) \ge 0" />, the second factor, <InlineMath math="(3ax + 2)" />, must also be non-negative.
+    
+    <BlockMath math="3ax + 2 \ge 0" />
+    
+    This inequality must hold for all values of <InlineMath math="x" /> in the interval <InlineMath math="0 < x < 2" />. Since <InlineMath math="h(x) = 3ax + 2" /> is a linear function, its behavior is monotonic. We only need to ensure it is non-negative at the most "critical" endpoint of the interval.
+
+    -   If <InlineMath math="a \ge 0" />, then <InlineMath math="3ax" /> is also non-negative, so <InlineMath math="3ax+2" /> will definitely be positive. This condition is met.
+
+    -   If <InlineMath math="a < 0" />, then <InlineMath math="h(x)" /> is a decreasing function. Its smallest value will be at the right end of the interval (<InlineMath math="x=2" />). For <InlineMath math="h(x)" /> to always be non-negative, we just need to ensure its minimum value is greater than or equal to zero.
+
+    We test at the critical boundary <InlineMath math="x=2" />:
+
+    <div className="flex flex-col gap-4">
+        <BlockMath math="3a(2) + 2 \ge 0" />
+        <BlockMath math="6a \ge -2" />
+        <BlockMath math="a \ge -1/3" />
+    </div>
+
+    Combining both cases, the condition for the function to be always increasing on the given interval is <InlineMath math="a \ge -1/3" />.
+
+3.  **Solution:**
+
+    Use the double angle trigonometric identity: <InlineMath math="\sin(2A) = 2\sin(A)\cos(A)" />.
+
+    So, <InlineMath math="f(x) = \sin 2x \cos 2x = \frac{1}{2} \sin(4x)" />.
+    
+    Its first derivative is:
+
+    <BlockMath math="f'(x) = \frac{1}{2} \cdot \cos(4x) \cdot 4 = 2\cos(4x)" />
+    
+    -   **The function is increasing** when <InlineMath math="f'(x) > 0" />, which is <InlineMath math="2\cos(4x) > 0" /> or <InlineMath math="\cos(4x) > 0" />. This occurs in the first and fourth quadrants.
+
+        <div className="flex flex-col gap-4">
+            <BlockMath math="-\frac{\pi}{2} + 2k\pi < 4x < \frac{\pi}{2} + 2k\pi" />
+            <BlockMath math="-\frac{\pi}{8} + \frac{k\pi}{2} < x < \frac{\pi}{8} + \frac{k\pi}{2}" />
+        </div>
+
+        This interval is valid for any integer <InlineMath math="k" />.
+
+    -   **The function is decreasing** when <InlineMath math="f'(x) < 0" />, which is <InlineMath math="\cos(4x) < 0" />. This occurs in the second and third quadrants.
+
+        <div className="flex flex-col gap-4">
+            <BlockMath math="\frac{\pi}{2} + 2k\pi < 4x < \frac{3\pi}{2} + 2k\pi" />
+            <BlockMath math="\frac{\pi}{8} + \frac{k\pi}{2} < x < \frac{3\pi}{8} + \frac{k\pi}{2}" />
+        </div>
+
+        This interval is valid for any integer <InlineMath math="k" />.

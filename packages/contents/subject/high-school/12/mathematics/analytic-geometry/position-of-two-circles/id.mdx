@@ -1,0 +1,557 @@
+export const metadata = {
+  title: "Kedudukan Dua Lingkaran",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Geometri Analitik",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Hubungan Antar Lingkaran
+
+Pernahkah kamu perhatikan bagaimana dua gelembung sabun berinteraksi? Kadang mereka bersilangan, kadang cuma bersentuhan sekilas, atau malah menghindar satu sama lain. Nah, konsep matematika tentang **kedudukan dua lingkaran** mirip banget dengan fenomena ini!
+
+Dalam geometri analitik, kita bisa menentukan dengan pasti bagaimana hubungan dua lingkaran: apakah mereka berpotongan, bersinggungan, atau justru terpisah sama sekali. Yang menarik, semua ini bisa diprediksi hanya dengan mengetahui pusat dan jari-jari masing-masing lingkaran.
+
+Konsep ini super berguna dalam kehidupan nyata. Misalnya, untuk mendesain roda gigi yang harus bersinggungan dengan sempurna, menghitung area coverage dua antena radio, atau bahkan merencanakan taman dengan kolam bundar yang saling berhubungan.
+
+## Lingkaran Berpotongan
+
+Dua lingkaran dikatakan **berpotongan** kalau mereka bertemu di dua titik berbeda. Bayangin aja seperti dua cincin yang saling "menembus" satu sama lain.
+
+<LineEquation
+  title="Dua Lingkaran Berpotongan"
+  description="Kedua lingkaran bertemu di dua titik yang berbeda."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 3;
+        const centerX = -1;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("BLUE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2.5;
+        const centerX = 1.5;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -1, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₁", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 1.5, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₂", at: 0, offset: [0.5, -0.5, 0] }],
+    },
+    {
+      points: (() => {
+        // Hitung titik potong secara akurat
+        const r1 = 3, r2 = 2.5;
+        const x1 = -1, y1 = 0, x2 = 1.5, y2 = 0;
+        const d = Math.sqrt((x2-x1)**2 + (y2-y1)**2); // d = 2.5
+        
+        // Jarak dari pusat 1 ke garis radikal
+        const a = (r1**2 - r2**2 + d**2) / (2*d); // a = (9 - 6.25 + 6.25) / 5 = 1.8
+        
+        // Tinggi titik potong dari garis yang menghubungkan pusat
+        const h = Math.sqrt(r1**2 - a**2); // h = sqrt(9 - 3.24) = sqrt(5.76) = 2.4
+        
+        // Titik potong
+        const px = x1 + a * (x2-x1) / d; // px = -1 + 1.8 * 2.5 / 2.5 = 0.8
+        const py1 = y1 + h; // py1 = 2.4
+        const py2 = y1 - h; // py2 = -2.4
+        
+        return [
+          { x: px, y: py1, z: 0 },
+          { x: px, y: py2, z: 0 }
+        ];
+      })(),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [0.5, 0.5, 0] },
+        { text: "B", at: 1, offset: [0.5, -0.5, 0] }
+      ],
+    },
+    {
+      points: [
+        { x: -6, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -4, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Untuk dua lingkaran dengan jari-jari <InlineMath math="r_1" /> dan <InlineMath math="r_2" /> serta jarak antar pusat <InlineMath math="d" />, kondisi berpotongan terjadi ketika:
+
+<BlockMath math="|r_1 - r_2| < d < r_1 + r_2" />
+
+Logikanya gini:
+
+- **Batas atas**: Kalau jarak pusat = <InlineMath math="r_1 + r_2" />, kedua lingkaran cuma bersentuhan di luar
+- **Batas bawah**: Kalau jarak pusat = <InlineMath math="|r_1 - r_2|" />, lingkaran kecil bersentuhan dengan yang besar dari dalam
+- **Area berpotongan**: Di antara kedua batas ini, lingkaran pasti berpotongan di dua titik
+
+## Lingkaran Bersinggungan
+
+Bersinggungan artinya dua lingkaran **cuma ketemu di satu titik aja**. Seperti dua roda yang bersentuhan tepat di satu titik buat mentransfer gerak.
+
+<LineEquation
+  title="Lingkaran Bersinggungan Luar"
+  description="Kedua lingkaran bersentuhan di luar, bertemu di satu titik."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2.5;
+        const centerX = -2.5;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("EMERALD"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2;
+        const centerX = 2;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -2.5, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₁", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₂", at: 0, offset: [0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "T", at: 0, offset: [0, 0.8, 0] }],
+    },
+    {
+      points: [
+        { x: -6, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -4, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Ada dua jenis bersinggungan:
+
+1. **Bersinggungan luar** terjadi ketika <InlineMath math="d = r_1 + r_2" />. Kedua lingkaran berada terpisah dan bersentuhan di satu titik.
+
+2. **Bersinggungan dalam** terjadi ketika <InlineMath math="d = |r_1 - r_2|" />. Lingkaran kecil ada di dalam yang besar dan bersentuhan di satu titik.
+
+Ini adalah contoh lingkaran bersinggungan dalam:
+
+<LineEquation
+  title="Lingkaran Bersinggungan Dalam"
+  description="Lingkaran kecil berada di dalam lingkaran besar dan bersinggungan."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 4;
+        const centerX = 0;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 1.5;
+        const centerX = 2.5;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PINK"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₁", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 2.5, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₂", at: 0, offset: [0, -0.8, 0] }],
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "T", at: 0, offset: [0.5, 0.5, 0] }],
+    },
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+        { x: 5, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -5, z: 0 },
+        { x: 0, y: 5, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Lingkaran Terpisah
+
+Kondisi ini terjadi ketika kedua lingkaran **sama sekali gak bersentuhan**. Seperti dua pulau yang terpisah lautan, gak ada koneksi fisik di antara keduanya.
+
+<LineEquation
+  title="Dua Lingkaran Terpisah"
+  description="Kedua lingkaran terpisah jauh dan tidak saling bersentuhan."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2;
+        const centerX = -3;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("INDIGO"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 1.5;
+        const centerX = 3;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ROSE"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₁", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P₂", at: 0, offset: [0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 0 },
+        { x: 3, y: 0, z: 0 }
+      ],
+      color: getColor("YELLOW"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "d", at: 1, offset: [0, 0.8, 0] }],
+    },
+    {
+      points: [
+        { x: -6, y: 0, z: 0 },
+        { x: 6, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -4, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Kondisi terpisah terjadi ketika jarak antar pusat lebih besar dari jumlah kedua jari-jari:
+
+<BlockMath math="d > r_1 + r_2" />
+
+Dalam situasi ini, gak ada titik yang jadi anggota kedua lingkaran sekaligus. Mereka benar-benar terpisah di bidang koordinat.
+
+## Lingkaran Konsentris dan Berhimpit
+
+**Lingkaran konsentris** adalah dua lingkaran yang pusatnya sama tapi jari-jarinya beda. Bayangin target panah dengan lingkaran-lingkaran yang berpusat sama.
+
+<LineEquation
+  title="Lingkaran Konsentris"
+  description="Dua lingkaran dengan pusat sama tetapi jari-jari berbeda."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 3.5;
+        const centerX = 0;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("SKY"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        const radius = 2;
+        const centerX = 0;
+        const centerY = 0;
+        return {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [{ text: "P", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2, y: 0, z: 0 }
+      ],
+      color: getColor("YELLOW"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "r₁", at: 1, offset: [0, -0.5, 0] }],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 3.5, y: 0, z: 0 }
+      ],
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+      labels: [{ text: "r₂", at: 1, offset: [0, 0.8, 0] }],
+    },
+    {
+      points: [
+        { x: -5, y: 0, z: 0 },
+        { x: 5, y: 0, z: 0 }
+      ],
+      color: getColor("FUCHSIA"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 0, y: -5, z: 0 },
+        { x: 0, y: 5, z: 0 }
+      ],
+      color: getColor("FUCHSIA"),
+      showPoints: false,
+      smooth: false,
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+Untuk lingkaran konsentris, jarak antar pusat adalah nol (<InlineMath math="d = 0" />) tapi jari-jari berbeda (<InlineMath math="r_1 \ne r_2" />).
+
+**Lingkaran berhimpit** adalah kondisi khusus dimana kedua lingkaran benar-benar identik. Mereka punya pusat dan jari-jari yang sama persis, jadi keliatan seperti satu lingkaran aja.
+
+Kondisi berhimpit terjadi ketika:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="d = 0" />
+  <BlockMath math="r_1 = r_2" />
+</div>
+
+## Cara Menentukan Kedudukan
+
+Untuk menentukan kedudukan dua lingkaran secara praktis, kita perlu hitung jarak antar pusat dan bandingkan dengan jari-jari.
+
+Misalkan lingkaran pertama berpusat di <InlineMath math="(x_1, y_1)" /> dengan jari-jari <InlineMath math="r_1" />, dan lingkaran kedua berpusat di <InlineMath math="(x_2, y_2)" /> dengan jari-jari <InlineMath math="r_2" />.
+
+Jarak antar pusat dihitung dengan rumus:
+
+<BlockMath math="d = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}" />
+
+Setelah dapat nilai <InlineMath math="d" />, kita bisa tentukan kedudukan berdasarkan kondisi berikut:
+
+- **Saling lepas**: <InlineMath math="d > r_1 + r_2" /> (lingkaran terpisah jauh)
+- **Bersinggungan luar**: <InlineMath math="d = r_1 + r_2" /> (bersentuhan di luar)
+- **Berpotongan**: <InlineMath math="|r_1 - r_2| < d < r_1 + r_2" /> (memotong di dua titik)
+- **Bersinggungan dalam**: <InlineMath math="d = |r_1 - r_2|" /> (bersentuhan di dalam)
+- **Tidak berpotongan**: <InlineMath math="d < |r_1 - r_2|" /> (satu lingkaran di dalam lainnya)
+- **Konsentris**: <InlineMath math="d = 0" /> dan <InlineMath math="r_1 \ne r_2" /> (pusat sama, jari-jari beda)
+- **Berhimpit**: <InlineMath math="d = 0" /> dan <InlineMath math="r_1 = r_2" /> (lingkaran identik)
+
+### Contoh Penerapan
+
+Tentukan kedudukan dua lingkaran dengan persamaan <InlineMath math="x^2 + y^2 = 9" /> dan <InlineMath math="x^2 + y^2 - 6x - 8y = 0" />.
+
+**Langkah 1**: Identifikasi pusat dan jari-jari masing-masing lingkaran.
+
+Lingkaran pertama: pusat <InlineMath math="(0, 0)" />, jari-jari <InlineMath math="r_1 = 3" />
+
+Untuk lingkaran kedua, kita lengkapkan kuadrat:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="x^2 + y^2 - 6x - 8y = 0" />
+  <BlockMath math="(x^2 - 6x + 9) + (y^2 - 8y + 16) = 9 + 16" />
+  <BlockMath math="(x - 3)^2 + (y - 4)^2 = 25" />
+</div>
+
+Lingkaran kedua: pusat <InlineMath math="(3, 4)" />, jari-jari <InlineMath math="r_2 = 5" />
+
+**Langkah 2**: Hitung jarak antar pusat.
+
+<BlockMath math="d = \sqrt{(3-0)^2 + (4-0)^2} = \sqrt{9 + 16} = \sqrt{25} = 5" />
+
+**Langkah 3**: Bandingkan dengan kondisi kedudukan.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="r_1 + r_2 = 3 + 5 = 8" />
+  <BlockMath math="|r_1 - r_2| = |3 - 5| = 2" />
+</div>
+
+Karena <InlineMath math="2 < 5 < 8" />, maka kedua lingkaran **saling berpotongan**.
+
+Untuk memastikan jawaban benar, kita bisa cek kondisi <InlineMath math="|r_1 - r_2| < d < r_1 + r_2" />:
+- <InlineMath math="|3 - 5| = 2" />
+- <InlineMath math="3 + 5 = 8" />  
+- <InlineMath math="2 < 5 < 8" /> <InlineMath math="\checkmark" /> (kondisi berpotongan terpenuhi)

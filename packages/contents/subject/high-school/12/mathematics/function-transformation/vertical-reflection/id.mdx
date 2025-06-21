@@ -1,0 +1,288 @@
+export const metadata = {
+  title: "Refleksi Vertikal",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Transformasi Fungsi",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Konsep Dasar Refleksi Vertikal
+
+Refleksi vertikal adalah transformasi geometri yang memantulkan grafik fungsi terhadap sumbu x, seperti melihat bayangan objek di permukaan air yang tenang. Bayangkan sebuah objek yang dipantulkan di cermin horizontal, bentuknya tetap sama tetapi posisinya terbalik secara vertikal.
+
+Jika kita memiliki fungsi <InlineMath math="f(x)" />, maka refleksi vertikal menghasilkan fungsi baru <InlineMath math="g(x) = -f(x)" /> yang merupakan bayangan dari fungsi asli terhadap sumbu x.
+
+### Aturan Refleksi Vertikal
+
+Untuk setiap fungsi <InlineMath math="f(x)" />, refleksi vertikal didefinisikan sebagai:
+
+<BlockMath math="g(x) = -f(x)" />
+
+Transformasi ini mengubah setiap titik <InlineMath math="(x, y)" /> pada grafik asli menjadi <InlineMath math="(x, -y)" /> pada grafik hasil refleksi.
+
+## Visualisasi Refleksi Vertikal
+
+Mari kita lihat bagaimana refleksi vertikal bekerja pada fungsi kuadrat <InlineMath math="f(x) = x^2" />.
+
+<LineEquation
+  title={<>Refleksi Vertikal Fungsi Kuadrat <InlineMath math="f(x) = x^2" /></>}
+  description="Perhatikan bagaimana grafik terpantul terhadap sumbu x, membentuk bayangan yang terbalik."
+  showZAxis={false}
+  data={[
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: x * x, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      labels: [{ text: "f(x) = x²", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 41 }, (_, i) => {
+        const x = (i - 20) * 0.25;
+        return { x, y: -(x * x), z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      labels: [{ text: "g(x) = -x²", offset: [0.5, -1, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Dari visualisasi di atas, kita dapat mengamati:
+- Fungsi asli <InlineMath math="f(x) = x^2" /> (ungu) membuka ke atas dengan titik puncak di <InlineMath math="(0, 0)" />
+- Fungsi hasil refleksi <InlineMath math="g(x) = -x^2" /> (oranye) membuka ke bawah dengan titik puncak tetap di <InlineMath math="(0, 0)" />
+- Kedua grafik simetris terhadap sumbu x
+
+## Refleksi Vertikal pada Fungsi Linear
+
+Sekarang mari kita terapkan konsep yang sama pada fungsi linear <InlineMath math="f(x) = 2x + 3" />.
+
+<LineEquation
+  title={<>Refleksi Vertikal Fungsi Linear <InlineMath math="f(x) = 2x + 3" /></>}
+  description="Garis hasil refleksi memiliki kemiringan yang berlawanan dan titik potong y yang berlawanan."
+  showZAxis={false}
+  cameraPosition={[12, 6, 12]}
+  data={[
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: 2 * x + 3, z: 0 };
+      }),
+      color: getColor("VIOLET"),
+      labels: [{ text: "f(x) = 2x + 3", offset: [1, 0.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 21 }, (_, i) => {
+        const x = (i - 10) * 0.5;
+        return { x, y: -(2 * x + 3), z: 0 };
+      }),
+      color: getColor("AMBER"),
+      labels: [{ text: "g(x) = -(2x + 3) = -2x - 3", offset: [1, -0.5, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Perhatikan bahwa:
+- Fungsi asli <InlineMath math="f(x) = 2x + 3" /> memiliki kemiringan positif dan memotong sumbu y di <InlineMath math="(0, 3)" />
+- Fungsi hasil refleksi <InlineMath math="g(x) = -2x - 3" /> memiliki kemiringan negatif dan memotong sumbu y di <InlineMath math="(0, -3)" />
+- Kedua garis berpotongan di sumbu x
+
+## Sifat Penting Refleksi Vertikal
+
+### Sumbu x sebagai Sumbu Simetri
+
+Refleksi vertikal menggunakan sumbu x sebagai garis cermin. Setiap titik pada grafik asli memiliki jarak yang sama ke sumbu x dengan titik yang bersesuaian pada grafik hasil refleksi.
+
+### Pengaruh pada Titik Koordinat
+
+Jika titik <InlineMath math="(a, b)" /> berada pada grafik <InlineMath math="f(x)" />, maka titik yang bersesuaian pada grafik <InlineMath math="-f(x)" /> adalah <InlineMath math="(a, -b)" />.
+
+### Domain dan Range
+
+- **Domain**: Tidak berubah setelah refleksi vertikal
+- **Range**: Berubah menjadi kebalikan dari range asli
+
+Jika range fungsi asli adalah <InlineMath math="[c, d]" />, maka range setelah refleksi vertikal menjadi <InlineMath math="[-d, -c]" />.
+
+## Contoh Penerapan
+
+### Contoh Fungsi Eksponensial
+
+Mari kita lihat refleksi vertikal pada fungsi eksponensial <InlineMath math="f(x) = 2^x" />.
+
+<LineEquation
+  title={<>Refleksi Vertikal Fungsi Eksponensial <InlineMath math="f(x) = 2^x" /></>}
+  description="Kurva eksponensial terpantul menjadi kurva yang menurun dengan asimtot horizontal di bawah sumbu x."
+  showZAxis={false}
+  cameraPosition={[8, 6, 8]}
+  data={[
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: Math.pow(2, x), z: 0 };
+      }),
+      color: getColor("INDIGO"),
+      labels: [{ text: "f(x) = 2^x", offset: [0.5, 1, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 31 }, (_, i) => {
+        const x = (i - 15) * 0.3;
+        return { x, y: -Math.pow(2, x), z: 0 };
+      }),
+      color: getColor("EMERALD"),
+      labels: [{ text: "g(x) = -2^x", offset: [0.5, -1, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Pada fungsi eksponensial:
+- Asimtot horizontal tetap di <InlineMath math="y = 0" /> untuk kedua fungsi (karena sumbu x terpantul pada dirinya sendiri)
+- Titik potong dengan sumbu y berubah dari <InlineMath math="(0, 1)" /> menjadi <InlineMath math="(0, -1)" />
+- Fungsi yang semula naik menjadi turun
+
+## Refleksi Vertikal pada Fungsi Trigonometri
+
+Mari kita lihat bagaimana refleksi vertikal mempengaruhi fungsi sinus.
+
+<LineEquation
+  title={<>Refleksi Vertikal Fungsi Sinus <InlineMath math="f(x) = \sin(x)" /></>}
+  description="Gelombang sinus terpantul menghasilkan gelombang yang bergerak berlawanan fase."
+  showZAxis={false}
+  cameraPosition={[0, 0, 12]}
+  data={[
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const x = (i - 30) * 0.2;
+        return { x, y: Math.sin(x), z: 0 };
+      }),
+      color: getColor("CYAN"),
+      labels: [{ text: "f(x) = sin(x)", offset: [1, 1.5, 0] }],
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 61 }, (_, i) => {
+        const x = (i - 30) * 0.2;
+        return { x, y: -Math.sin(x), z: 0 };
+      }),
+      color: getColor("ROSE"),
+      labels: [{ text: "g(x) = -sin(x)", offset: [1, -1.5, 0] }],
+      showPoints: false,
+    },
+  ]}
+/>
+
+Perhatikan bahwa:
+- Amplitudo tetap sama tetapi arah gelombang terbalik
+- Periode dan frekuensi tidak berubah
+- Titik maksimum menjadi titik minimum dan sebaliknya
+
+## Latihan
+
+1. Diberikan fungsi <InlineMath math="f(x) = x^2 + 4x + 3" />. Tentukan persamaan fungsi hasil refleksi vertikal.
+
+2. Jika grafik fungsi <InlineMath math="g(x) = 3^x + 2" /> direfleksikan terhadap sumbu x, tentukan:
+   - Persamaan fungsi hasil refleksi
+   - Range fungsi setelah refleksi
+
+3. Fungsi <InlineMath math="h(x) = \sqrt{x + 1}" /> mengalami refleksi vertikal. Tentukan titik potong dengan sumbu y dari fungsi hasil refleksi.
+
+### Kunci Jawaban
+
+1. Refleksi vertikal: <InlineMath math="f'(x) = -f(x) = -(x^2 + 4x + 3) = -x^2 - 4x - 3" />
+
+   <LineEquation
+     title={<>Fungsi <InlineMath math="f(x) = x^2 + 4x + 3" /> dan Hasil Refleksinya</>}
+     description="Parabola asli yang membuka ke atas direfleksikan menjadi parabola yang membuka ke bawah."
+     showZAxis={false}
+     data={[
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: x * x + 4 * x + 3, z: 0 };
+         }),
+         color: getColor("PURPLE"),
+         labels: [{ text: "f(x) = x² + 4x + 3", offset: [1, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 41 }, (_, i) => {
+           const x = (i - 20) * 0.25;
+           return { x, y: -(x * x + 4 * x + 3), z: 0 };
+         }),
+         color: getColor("ORANGE"),
+         labels: [{ text: "f'(x) = -x² - 4x - 3", offset: [1, -1, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+2. Persamaan fungsi hasil refleksi:
+    
+   - Refleksi vertikal: <InlineMath math="g'(x) = -(3^x + 2) = -3^x - 2" />
+   - Range setelah refleksi: Karena range asli <InlineMath math="g(x) = 3^x + 2" /> adalah <InlineMath math="(2, \infty)" />, maka range setelah refleksi adalah <InlineMath math="(-\infty, -2)" />
+
+   Visualisasi:
+
+   <LineEquation
+     title={<>Fungsi <InlineMath math="g(x) = 3^x + 2" /> dan Hasil Refleksinya</>}
+     description="Kurva eksponensial yang naik direfleksikan menjadi kurva yang turun dengan asimtot horizontal baru."
+     showZAxis={false}
+     cameraPosition={[8, 6, 8]}
+     data={[
+       {
+         points: Array.from({ length: 31 }, (_, i) => {
+           const x = (i - 15) * 0.2;
+           return { x, y: Math.pow(3, x) + 2, z: 0 };
+         }),
+         color: getColor("VIOLET"),
+         labels: [{ text: "g(x) = 3^x + 2", offset: [0.5, 1, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 31 }, (_, i) => {
+           const x = (i - 15) * 0.2;
+           return { x, y: -(Math.pow(3, x) + 2), z: 0 };
+         }),
+         color: getColor("TEAL"),
+         labels: [{ text: "g'(x) = -3^x - 2", offset: [0.5, -1, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />
+
+3. Fungsi asli <InlineMath math="h(x) = \sqrt{x + 1}" /> memiliki titik potong dengan sumbu y di <InlineMath math="(0, 1)" /> karena <InlineMath math="h(0) = \sqrt{0 + 1} = 1" />.
+   Setelah refleksi vertikal: <InlineMath math="h'(x) = -\sqrt{x + 1}" />, titik potong dengan sumbu y menjadi <InlineMath math="(0, -1)" />.
+
+   <LineEquation
+     title={<>Fungsi <InlineMath math="h(x) = \sqrt{x + 1}" /> dan Hasil Refleksinya</>}
+     description="Kurva akar kuadrat direfleksikan terhadap sumbu x menghasilkan kurva yang membuka ke bawah."
+     showZAxis={false}
+     data={[
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: Math.sqrt(x + 1), z: 0 };
+         }),
+         color: getColor("INDIGO"),
+         labels: [{ text: "h(x) = √(x + 1)", offset: [1, 0.5, 0] }],
+         showPoints: false,
+       },
+       {
+         points: Array.from({ length: 21 }, (_, i) => {
+           const x = i * 0.25;
+           return { x, y: -Math.sqrt(x + 1), z: 0 };
+         }),
+         color: getColor("EMERALD"),
+         labels: [{ text: "h'(x) = -√(x + 1)", offset: [1, -0.5, 0] }],
+         showPoints: false,
+       },
+     ]}
+   />

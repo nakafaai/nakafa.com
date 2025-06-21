@@ -1,0 +1,111 @@
+export const metadata = {
+  title: "Konsep Turunan Fungsi",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Turunan Fungsi",
+};
+
+import { LineEquation } from "@repo/contents/_components/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+## Ide di Balik Turunan
+
+Coba bayangkan kita sedang mengendarai sepeda di jalan yang berbukit-bukit. Terkadang jalanan menanjak tajam, terkadang landai. **Kemiringan** jalan di setiap titik yang kita lalui pasti berbeda-beda. Dalam matematika, grafik sebuah fungsi bisa diibaratkan seperti jalan berbukit tersebut.
+
+Untuk garis lurus, kemiringannya selalu sama di setiap titik. Namun, untuk kurva yang melengkung, kemiringannya terus berubah. Nah, **turunan** adalah alat canggih dalam matematika yang memungkinkan kita untuk menemukan kemiringan atau laju perubahan yang tepat di **satu titik spesifik** pada sebuah kurva.
+
+## Gradien Garis Sekan
+
+Untuk memahami konsep turunan, mari kita mulai dengan sesuatu yang lebih sederhana: **garis sekan** (atau garis potong). Garis sekan adalah sebuah garis lurus yang memotong kurva di dua titik yang berbeda.
+
+Misalkan kita punya sebuah kurva dari fungsi <InlineMath math="y = f(x)" />. Kita pilih dua titik pada kurva itu, sebut saja titik <InlineMath math="P(x, f(x))" /> dan titik <InlineMath math="Q(x+\Delta x, f(x+\Delta x))" />. Di sini, <InlineMath math="\Delta x" /> (dibaca "delta x") melambangkan perubahan kecil pada nilai <InlineMath math="x" />.
+
+Kemiringan (gradien) dari garis sekan yang melalui titik <InlineMath math="P" /> dan <InlineMath math="Q" /> dapat dihitung dengan rumus yang sudah kita kenal:
+
+<BlockMath math="m_{\text{sekan}} = \frac{\text{perubahan } y}{\text{perubahan } x} = \frac{f(x + \Delta x) - f(x)}{\Delta x}" />
+
+Gradien garis sekan ini memberi kita gambaran **rata-rata laju perubahan** fungsi <InlineMath math="f(x)" /> antara titik <InlineMath math="P" /> dan <InlineMath math="Q" />.
+
+<LineEquation
+  title="Visualisasi Garis Sekan dan Garis Singgung"
+  description={
+    <>
+      Perhatikan bagaimana garis sekan menghubungkan dua titik pada kurva{" "}
+      <InlineMath math="y=x^2" />, sementara garis singgung hanya
+      menyentuh kurva di satu titik. Garis singgung menunjukkan kemiringan kurva
+      di titik tersebut.
+    </>
+  }
+  showZAxis={false}
+  cameraPosition={[0, 0, 15]}
+  data={(() => {
+    // Define the curve function
+    const f = (x) => x * x;
+
+    // 1. Define the main curve (parabola y = x^2)
+    const curvePoints = Array.from({ length: 101 }, (_, i) => {
+      const x = (i - 50) / 10; // x from -5 to 5
+      return { x, y: f(x), z: 0 };
+    });
+
+    // 2. Define the secant line
+    const p1_secant = { x: 1, y: f(1), z: 0 };
+    const p2_secant = { x: 3, y: f(3), z: 0 };
+
+    // 3. Define the tangent line at point P
+    const tangentPointX = 1;
+    const tangentPoint = { x: tangentPointX, y: f(tangentPointX), z: 0 };
+    const slope = 2 * tangentPointX; // Derivative of x^2 is 2x
+    // Line equation: y - y1 = m(x - x1) => y = m(x - x1) + y1
+    const tangentLineFunc = (x) => slope * (x - tangentPointX) + tangentPoint.y;
+    const tangentLinePoints = [
+      { x: -1, y: tangentLineFunc(-1), z: 0 },
+      { x: 3, y: tangentLineFunc(3), z: 0 },
+    ];
+
+    return [
+      {
+        points: curvePoints,
+        color: getColor("PURPLE"),
+        showPoints: false,
+      },
+      {
+        points: [p1_secant, p2_secant],
+        color: getColor("CYAN"),
+        labels: [
+          { text: "P", at: 0, offset: [-0.5, -0.5, 0] },
+          { text: "Q", at: 1, offset: [0.5, 0.5, 0] },
+          { text: "Garis Sekan", at: 0, offset: [-1, 2.5, 0] },
+        ],
+      },
+      {
+        points: tangentLinePoints,
+        color: getColor("AMBER"),
+        showPoints: false,
+        labels: [{ text: "Garis Singgung", at: 1, offset: [2, -0.5, 0] }],
+      },
+    ];
+  })()}
+/>
+
+## Dari Garis Sekan ke Garis Singgung
+
+Sekarang, apa yang terjadi jika kita menggerakkan titik <InlineMath math="Q" /> semakin dekat ke titik <InlineMath math="P" />? Jarak antara keduanya, yaitu <InlineMath math="\Delta x" />, akan menjadi sangat kecil, mendekati nol.
+
+Ketika <InlineMath math="\Delta x \to 0" /> (dibaca "delta x mendekati nol"), garis sekan yang kita punya akan berangsur-angsur berubah menjadi sebuah **garis singgung**. Garis singgung adalah garis yang hanya menyentuh kurva di tepat satu titik (dalam kasus ini, titik <InlineMath math="P" />).
+
+Kemiringan dari garis singgung inilah yang merepresentasikan **kemiringan kurva** yang sesungguhnya di titik <InlineMath math="P" />. Untuk menemukannya, kita menggunakan konsep **limit**.
+
+<BlockMath math="m_{\text{singgung}} = \lim_{\Delta x \to 0} \frac{f(x + \Delta x) - f(x)}{\Delta x}" />
+
+## Definisi Turunan
+
+Limit dari gradien garis sekan saat <InlineMath math="\Delta x" /> mendekati nol ini sangatlah penting sehingga ia diberi nama khusus: **turunan**.
+
+Turunan dari sebuah fungsi <InlineMath math="f(x)" />, yang dinotasikan sebagai <InlineMath math="f'(x)" /> (dibaca "f aksen x"), didefinisikan sebagai:
+
+<BlockMath math="f'(x) = \lim_{\Delta x \to 0} \frac{f(x + \Delta x) - f(x)}{\Delta x}" />
+
+Proses untuk menemukan turunan ini disebut **diferensiasi**.
+
+> Turunan <InlineMath math="f'(x)" /> pada dasarnya adalah sebuah fungsi baru yang memberitahu kita **laju perubahan sesaat** (atau kemiringan garis singgung) dari fungsi asli <InlineMath math="f(x)" /> di setiap titik <InlineMath math="x" /> di mana limitnya ada. Ini adalah fondasi dari kalkulus diferensial.

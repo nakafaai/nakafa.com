@@ -1,0 +1,162 @@
+import { Vector3d } from "../../_shared/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Vector Components",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/11/2025",
+  subject: "Vector and Operations",
+};
+
+## Understanding Vector Components
+
+In studying vectors, we need to understand that every vector can be broken down into its components. Vector components are parts of a vector that are parallel to the coordinate axes.
+
+Vector components are values that indicate how far a vector moves in the direction of the x-axis and y-axis. Every vector in a plane can be expressed as a linear combination of unit vectors <InlineMath math="i" /> and <InlineMath math="j" />.
+
+<Vector3d
+  title="Vector Visualization and Its Components"
+  description={
+    <>
+      Vector <InlineMath math="AB" /> and its components on the{" "}
+      <InlineMath math="x" />, <InlineMath math="y" />, and{" "}
+      <InlineMath math="z" /> axes.
+    </>
+  }
+  vectors={[
+    {
+      from: [0, 0, 0],
+      to: [4, 6, 0],
+      color: getColor("ROSE"),
+      label: "AB",
+    },
+    {
+      from: [0, 0, 0],
+      to: [4, 0, 0],
+      color: getColor("TEAL"),
+      label: "x component",
+    },
+    {
+      from: [0, 0, 0],
+      to: [0, 6, 0],
+      color: getColor("LIME"),
+      label: "y component",
+    },
+  ]}
+/>
+
+If we have a vector <InlineMath math="\overrightarrow{AB}" />, then:
+
+<BlockMath math="\overrightarrow{AB} = a\cdot i + b\cdot j" />
+
+where:
+
+- <InlineMath math="a" /> is the vector component on the x-axis (horizontal)
+- <InlineMath math="b" /> is the vector component on the y-axis (vertical)
+- <InlineMath math="i" /> is the unit vector in the direction of the x-axis
+- <InlineMath math="j" /> is the unit vector in the direction of the y-axis
+
+### Example of Vector Components
+
+Consider the vector <InlineMath math="\overrightarrow{AB}" /> in the figure. This vector can be written as:
+
+<BlockMath math="\overrightarrow{AB} = 6i + 8j" />
+
+This means that vector <InlineMath math="\overrightarrow{AB}" /> has a horizontal component of 6 units to the right and a vertical component of 8 units upward.
+
+## Vector Magnitude from Its Components
+
+When we know the components of a vector, we can calculate the length or magnitude of the vector using the Pythagorean theorem.
+
+The magnitude of vector <InlineMath math="\overrightarrow{AB}" /> is denoted by <InlineMath math="|\overrightarrow{AB}|" /> and calculated using the formula:
+
+<BlockMath math="|\overrightarrow{AB}| = \sqrt{a^2 + b^2}" />
+
+where <InlineMath math="a" /> and <InlineMath math="b" /> are the components of the vector.
+
+### Example of Vector Magnitude Calculation
+
+For the vector <InlineMath math="\overrightarrow{AB} = 6i + 8j" />, its magnitude is:
+
+<BlockMath math="|\overrightarrow{AB}| = \sqrt{6^2 + 8^2} = \sqrt{36 + 64} = \sqrt{100} = 10" />
+
+Therefore, the magnitude of vector <InlineMath math="\overrightarrow{AB}" /> is 10 units.
+
+## Vectors in Three-Dimensional Space
+
+Vectors are not limited to a plane (two dimensions) but can also be extended to three-dimensional space.
+
+<Vector3d
+  title="Vectors in 3D Space"
+  description="Visualization of a vector and its components in three-dimensional space."
+  vectors={[
+    {
+      from: [0, 0, 0],
+      to: [5, 7, 4],
+      color: getColor("ORANGE"),
+      label: "3D Vector",
+    },
+    {
+      from: [0, 0, 0],
+      to: [5, 0, 0],
+      color: getColor("TEAL"),
+      label: "x component",
+    },
+    {
+      from: [0, 0, 0],
+      to: [0, 7, 0],
+      color: getColor("LIME"),
+      label: "y component",
+    },
+    {
+      from: [0, 0, 0],
+      to: [0, 0, 4],
+      color: getColor("YELLOW"),
+      label: "z component",
+    },
+  ]}
+  cameraPosition={[12, 8, 12]}
+/>
+
+In three-dimensional space, a vector has three components: the x-component, y-component, and z-component. A vector in three-dimensional space can be expressed as:
+
+<BlockMath math="\overrightarrow{v} = ai + bj + ck" />
+
+where:
+
+- <InlineMath math="a" /> is the vector component on the x-axis
+- <InlineMath math="b" /> is the vector component on the y-axis
+- <InlineMath math="c" /> is the vector component on the z-axis
+- <InlineMath math="i" />, <InlineMath math="j" />, and <InlineMath math="k" /> are
+  unit vectors in the direction of the x, y, and z axes
+
+The magnitude of a vector in three-dimensional space is calculated using the formula:
+
+<BlockMath math="|\overrightarrow{v}| = \sqrt{a^2 + b^2 + c^2}" />
+
+## Unit Direction Vector
+
+To determine the direction of a vector, we can use a unit vector. A unit vector is a vector with a magnitude of 1 unit. To obtain a unit vector from a vector, we divide the vector by its magnitude.
+
+The unit direction vector of <InlineMath math="\overrightarrow{AB}" /> is denoted by <InlineMath math="\hat{AB}" /> and calculated using:
+
+<BlockMath math="\hat{AB} = \frac{\overrightarrow{AB}}{|\overrightarrow{AB}|}" />
+
+### Example of Unit Direction Vector
+
+For the vector <InlineMath math="\overrightarrow{AB} = 6i + 8j" /> with a magnitude of 10, its unit direction vector is:
+
+<BlockMath math="\hat{AB} = \frac{6i + 8j}{10} = \frac{6}{10}i + \frac{8}{10}j = 0.6i + 0.8j" />
+
+This unit vector indicates the direction of vector <InlineMath math="\overrightarrow{AB}" /> without regard to its magnitude.
+
+## Applications of Vector Components
+
+Vector components have many applications in everyday life, such as:
+
+- Calculating velocity and displacement in physics
+- Analyzing forces in mechanics
+- Determining the direction and magnitude of resultants in object movement
+- Navigation and position determination in coordinate systems
+
+By understanding vector components, we can analyze various problems involving direction and magnitude in mathematics and other applied sciences.

@@ -1,0 +1,337 @@
+export const metadata = {
+  title: "Definition of Circle",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/26/2025",
+  subject: "Analytic Geometry",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Understanding Circle
+
+A circle is the collection of all points on a plane that have the same distance from one fixed point. This fixed point is called the **center of the circle**, while the equal distance from the center to every point on the circle is called the **radius**.
+
+Imagine you tie a string to a nail, then pull the string tight and draw a complete curve around the nail. The curve that forms is what we call a circle, the nail is its center, and the length of the string is its radius.
+
+<LineEquation
+  title="Circle with Center and Radius"
+  description="All points on the circle have the same distance from the center."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = 0; // horizontal radius
+        return {
+          x: center.x + i * radius * Math.cos(angle),
+          y: center.y + i * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "P", at: 0, offset: [-0.3, -0.3, 0] },
+        { text: "r", at: 1, offset: [-1, -0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = Math.PI / 4; // 45 degree radius
+        return {
+          x: center.x + i * radius * Math.cos(angle),
+          y: center.y + i * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [{ text: "r", at: 1, offset: [-1, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = Math.PI; // 180 degree radius (left)
+        return {
+          x: center.x + i * radius * Math.cos(angle),
+          y: center.y + i * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [{ text: "r", at: 1, offset: [1, -0.5, 0] }],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = 0; // point A at 0 degrees
+        return {
+          x: center.x + radius * Math.cos(angle),
+          y: center.y + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "A", at: 0, offset: [0.5, 0, 0] }],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = Math.PI / 4; // point B at 45 degrees
+        return {
+          x: center.x + radius * Math.cos(angle),
+          y: center.y + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "B", at: 0, offset: [0.3, 0.3, 0] }],
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = Math.PI; // point C at 180 degrees
+        return {
+          x: center.x + radius * Math.cos(angle),
+          y: center.y + radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [{ text: "C", at: 0, offset: [-0.5, 0, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+In the visualization above, point P is the center of the circle, while points A, B, and C are some points that lie on the circle. Notice that the distance from P to A, P to B, and P to C are all equal to <InlineMath math="r" />. This is what makes them all lie on the same circle.
+
+## Mathematical Definition
+
+Now, let's create a more formal definition. Mathematically, a circle with center <InlineMath math="P(a, b)" /> and radius <InlineMath math="r" /> is the set of all points <InlineMath math="(x, y)" /> that satisfy the condition:
+
+<BlockMath math="d(P, (x,y)) = r" />
+
+Where <InlineMath math="d(P, (x,y))" /> is the distance from the center point P to the point <InlineMath math="(x, y)" /> on the circle.
+
+If we use the distance formula in the Cartesian coordinate system, we can write it like this:
+
+<BlockMath math="\sqrt{(x-a)^2 + (y-b)^2} = r" />
+
+## Circle Equation
+
+From the mathematical definition above, we can derive the **circle equation** by squaring both sides:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="\sqrt{(x-a)^2 + (y-b)^2} = r" />
+  <BlockMath math="(x-a)^2 + (y-b)^2 = r^2" />
+</div>
+
+This is the **general equation of a circle** with center <InlineMath math="(a, b)" /> and radius <InlineMath math="r" />. This formula is very useful for determining whether a point lies inside, outside, or exactly on the circle.
+
+<LineEquation
+  title="Circle in Coordinate System"
+  description="Circle with center (2, 1) and radius 2."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 2 + 2 * Math.cos(angle),
+          y: 1 + 2 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const center = { x: 2, y: 1 };
+        const radius = 2;
+        const angle = 0; // horizontal radius to the right
+        return {
+          x: center.x + i * radius * Math.cos(angle),
+          y: center.y + i * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "(2, 1)", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "r = 2", at: 1, offset: [0, -0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const xMin = -1;
+        const xMax = 5;
+        const y = 0; // x-axis
+        return {
+          x: xMin + i * (xMax - xMin),
+          y: y,
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const yMin = -2;
+        const yMax = 4;
+        const x = 0; // y-axis
+        return {
+          x: x,
+          y: yMin + i * (yMax - yMin),
+          z: 0,
+        };
+      }),
+      color: getColor("AMBER"),
+      showPoints: false,
+      smooth: false,
+    },
+    {
+      points: Array.from({ length: 1 }, () => {
+        // Origin point at (0, 0)
+        return {
+          x: 0,
+          y: 0,
+          z: 0,
+        };
+      }),
+      color: getColor("TEAL"),
+      showPoints: true,
+      labels: [{ text: "O", at: 0, offset: [-0.5, -0.5, 0] }],
+    },
+  ]}
+  cameraPosition={[0, 0, 10]}
+  showZAxis={false}
+/>
+
+For the circle in the visualization above, its equation is:
+
+<BlockMath math="(x-2)^2 + (y-1)^2 = 4" />
+
+### Special Form of Circle Equation
+
+There's one special case that's interesting. When the center of the circle is at the origin <InlineMath math="(0, 0)" />, the circle equation becomes simpler:
+
+<BlockMath math="x^2 + y^2 = r^2" />
+
+This form is very practical because it's easier to calculate and understand.
+
+## Important Circle Elements
+
+There are several important terms you need to understand:
+
+1. **Center of circle** is the fixed point that serves as a reference for all points on the circle. All points on the circle have the same distance to this center.
+
+2. **Radius** is the distance from the center of the circle to any point on the circle. In one circle, all radii have the same length.
+
+3. **Diameter** is a straight line that connects two points on the circle and passes through the center. The length of the diameter is always twice the length of the radius, or <InlineMath math="d = 2r" />.
+
+To make it easier to understand, we can see the visualization below:
+
+<LineEquation
+  title="Circle Elements"
+  description="Visualization of center, radius, and diameter."
+  data={[
+    {
+      points: Array.from({ length: 361 }, (_, i) => {
+        const angle = (i * Math.PI) / 180;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = 0; // horizontal radius showing radius
+        return {
+          x: center.x + i * radius * Math.cos(angle),
+          y: center.y + i * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [0, -0.5, 0] },
+        { text: "radius", at: 1, offset: [-1, -0.5, 0] },
+      ],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const center = { x: 0, y: 0 };
+        const radius = 3;
+        const angle = 0; // horizontal diameter
+        // i=0: left point, i=1: right point
+        const direction = i === 0 ? -1 : 1;
+        return {
+          x: center.x + direction * radius * Math.cos(angle),
+          y: center.y + direction * radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [-0.5, 0, 0] },
+        { text: "B", at: 1, offset: [0.5, 0, 0] },
+        { text: "diameter", at: 1, offset: [-3, 1, 0] },
+      ],
+    },
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Application Example
+
+Now let's apply the circle definition to determine the circle equation.
+
+**Example**: Determine the equation of a circle centered at <InlineMath math="(3, -2)" /> with radius 5.
+
+**Solution**: 
+We just need to use the general formula for circle equation with center <InlineMath math="(a, b)" /> and radius <InlineMath math="r" />:
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(x-a)^2 + (y-b)^2 = r^2" />
+  <BlockMath math="(x-3)^2 + (y-(-2))^2 = 5^2" />
+  <BlockMath math="(x-3)^2 + (y+2)^2 = 25" />
+</div>
+
+So the circle equation is <InlineMath math="(x-3)^2 + (y+2)^2 = 25" />.

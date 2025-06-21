@@ -1,0 +1,268 @@
+import { LineEquation } from "@repo/contents/_components/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Penjumlahan dan Pengurangan Polinomial",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/04/2025",
+  subject: "Polinomial",
+};
+
+## Konsep Dasar
+
+Operasi penjumlahan dan pengurangan pada polinomial pada dasarnya sama seperti pada bentuk aljabar lainnya: kita hanya bisa menjumlahkan atau mengurangkan **suku-suku yang sejenis**.
+
+### Apa Itu Suku Sejenis?
+
+**Suku-suku sejenis** adalah suku-suku yang memiliki **variabel dan pangkat variabel yang sama persis**. Koefisien dari suku-suku tersebut bisa berbeda.
+
+**Contoh Suku Sejenis:**
+
+- <InlineMath math="3x, \space -7x, \space -\frac{1}{5}x" /> (semua memiliki variabel <InlineMath math="x" /> pangkat
+  1)
+- <InlineMath math="\frac{1}{2}x^3, \space 4x^3, \space -2x^3" /> (semua memiliki
+  variabel <InlineMath math="x" /> pangkat 3)
+- <InlineMath math="2x^2yz^3, \space \frac{3}{4}x^2yz^3, \space -5z^3x^2y" /> (semua
+  memiliki variabel <InlineMath math="x" /> pangkat 2, <InlineMath math="y" /> pangkat
+  1, dan <InlineMath math="z" /> pangkat 3)
+
+**Contoh Bukan Suku Sejenis:**
+
+- <InlineMath math="11x" /> dan <InlineMath math="4x^2" /> (pangkat <InlineMath math="x" /> berbeda)
+- <InlineMath math="4x^3" /> dan <InlineMath math="-2x^4" /> (pangkat <InlineMath math="x" /> berbeda)
+- <InlineMath math="4x^2" /> dan <InlineMath math="-x^5" /> (pangkat <InlineMath math="x" /> berbeda)
+- <InlineMath math="\frac{3}{4}x^2yz^3" /> dan <InlineMath math="2x^2y" /> (tidak
+  memiliki variabel <InlineMath math="z^3" />)
+- <InlineMath math="\frac{3}{4}x^2yz^3" /> dan <InlineMath math="-7xy^2z^3" /> (pangkat <InlineMath math="x" /> dan <InlineMath math="y" /> berbeda)
+
+## Penjumlahan Polinomial
+
+Untuk menjumlahkan dua polinomial, kita cukup **menjumlahkan koefisien dari suku-suku yang sejenis**.
+
+**Metode Horizontal:**
+
+1.  Tuliskan kedua polinomial dalam tanda kurung yang dihubungkan dengan tanda tambah.
+2.  Hilangkan tanda kurung.
+3.  Kelompokkan suku-suku yang sejenis.
+4.  Jumlahkan koefisien dari masing-masing kelompok suku sejenis (gunakan sifat distributif).
+
+**Contoh:**
+
+Tentukan hasil dari <InlineMath math="(2x^3 + 7x^2 + 3x + 5) + (6x^3 + 2x^2 + 4x + 1)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(2x^3 + 7x^2 + 3x + 5) + (6x^3 + 2x^2 + 4x + 1)" />
+  <BlockMath math="= 2x^3 + 7x^2 + 3x + 5 + 6x^3 + 2x^2 + 4x + 1 \quad \text{(Hilangkan kurung)}" />
+  <BlockMath math="= (2x^3 + 6x^3) + (7x^2 + 2x^2) + (3x + 4x) + (5 + 1) \quad \text{(Kelompokkan suku sejenis)}" />
+  <BlockMath math="= (2 + 6)x^3 + (7 + 2)x^2 + (3 + 4)x + (5 + 1) \quad \text{(Sifat distributif)}" />
+  <BlockMath math="= 8x^3 + 9x^2 + 7x + 6 \quad \text{(Hasil akhir)}" />
+</div>
+
+## Pengurangan Polinomial
+
+Untuk mengurangkan dua polinomial, kita **mengubah tanda setiap suku pada polinomial pengurang**, lalu menjumlahkannya seperti biasa.
+
+**Metode Horizontal:**
+
+1.  Tuliskan kedua polinomial dalam tanda kurung yang dihubungkan dengan tanda kurang.
+2.  Hilangkan tanda kurung. **Ingat:** ubah tanda setiap suku dalam kurung kedua (distribusikan tanda negatif).
+3.  Kelompokkan suku-suku yang sejenis.
+4.  Jumlahkan koefisien dari masing-masing kelompok suku sejenis.
+
+**Contoh:**
+
+Tentukan hasil dari <InlineMath math="(9x^3 + 4x^2 + 6x + 5) - (2x^3 + 3x^2 + 3x + 4)" />.
+
+<div className="flex flex-col gap-4">
+  <BlockMath math="(9x^3 + 4x^2 + 6x + 5) - (2x^3 + 3x^2 + 3x + 4)" />
+  <BlockMath math="= 9x^3 + 4x^2 + 6x + 5 - 2x^3 - 3x^2 - 3x - 4 \quad \text{(Ubah tanda \& hilangkan kurung)}" />
+  <BlockMath math="= (9x^3 - 2x^3) + (4x^2 - 3x^2) + (6x - 3x) + (5 - 4) \quad \text{(Kelompokkan suku sejenis)}" />
+  <BlockMath math="= (9 - 2)x^3 + (4 - 3)x^2 + (6 - 3)x + (5 - 4) \quad \text{(Sifat distributif)}" />
+  <BlockMath math="= 7x^3 + 1x^2 + 3x + 1 \quad \text{(Hasil akhir)}" />
+  <BlockMath math="= 7x^3 + x^2 + 3x + 1" />
+</div>
+
+Perhatikan saat mengurangkan, tanda negatif di depan kurung mengubah tanda _setiap_ suku di dalam kurung tersebut.
+
+## Metode Vertikal (Bersusun)
+
+Selain metode horizontal, penjumlahan dan pengurangan polinomial juga bisa dilakukan dengan metode vertikal atau bersusun, mirip seperti penjumlahan dan pengurangan bilangan biasa.
+
+**Langkah-langkah:**
+
+1.  Susun kedua polinomial secara vertikal.
+2.  Pastikan suku-suku yang sejenis berada dalam satu kolom.
+3.  Jika ada suku yang tidak ada pada salah satu polinomial, berikan ruang kosong atau tulis koefisien 0.
+4.  Jumlahkan atau kurangkan koefisien pada setiap kolom.
+
+**Contoh Penjumlahan Vertikal:**
+
+<BlockMath
+  math="\begin{array}{rrrrr}
+    & 2x^3 & +7x^2 & +3x & +5 \\
+  + & 6x^3 & +2x^2 & +4x & +1 \\
+  \hline
+    & 8x^3 & +9x^2 & +7x & +6
+  \end{array}"
+/>
+
+**Contoh Pengurangan Vertikal:**
+
+<BlockMath
+  math="\begin{array}{rrrrr}
+    & 9x^3 & +4x^2 & +6x & +5 \\
+  - & 2x^3 & +3x^2 & +3x & +4 \\
+  \hline
+  & 7x^3 & +1x^2 & +3x & +1
+\end{array}"
+/>
+
+Kedua metode (horizontal dan vertikal) akan menghasilkan jawaban yang sama. Pilihlah metode yang paling nyaman dan mudah dipahami.
+
+## Penjumlahan dan Pengurangan Grafik Fungsi Polinomial
+
+Selain melakukan operasi secara aljabar, kita juga bisa memahami penjumlahan dan pengurangan polinomial secara visual melalui grafiknya.
+
+Misalkan kita memiliki tiga grafik fungsi polinomial:
+
+<div className="flex flex-col gap-4">
+  <LineEquation
+    title={
+      <>
+        Grafik <InlineMath math="f(x) = x + 1" />
+      </>
+    }
+    description="Fungsi Linear (Derajat 1)"
+    showZAxis={false}
+    cameraPosition={[0, 0, 15]}
+    data={[
+      {
+        points: Array.from({ length: 51 }, (_, i) => {
+          const x = -2.5 + i * 0.1;
+          return { x, y: x + 1, z: 0 };
+        }),
+        color: getColor("SKY"),
+        showPoints: false,
+      },
+    ]}
+  />
+  <LineEquation
+    title={
+      <>
+        Grafik <InlineMath math="g(x) = 0.5x^4 - 2x^2 + 1" />
+      </>
+    }
+    description="Fungsi Derajat 4"
+    showZAxis={false}
+    cameraPosition={[0, 0, 15]}
+    data={[
+      {
+        points: Array.from({ length: 51 }, (_, i) => {
+          const x = -2.5 + i * 0.1;
+          return { x, y: 0.5 * x ** 4 - 2 * x ** 2 + 1, z: 0 };
+        }),
+        color: getColor("LIME"),
+        showPoints: false,
+      },
+    ]}
+  />
+  <LineEquation
+    title={
+      <>
+        Grafik <InlineMath math="h(x) = -0.5x^3 + 1.5x" />
+      </>
+    }
+    description="Fungsi Derajat 3"
+    showZAxis={false}
+    cameraPosition={[0, 0, 15]}
+    data={[
+      {
+        points: Array.from({ length: 51 }, (_, i) => {
+          const x = -2.5 + i * 0.1;
+          return { x, y: -0.5 * x ** 3 + 1.5 * x, z: 0 };
+        }),
+        color: getColor("AMBER"),
+        showPoints: false,
+      },
+    ]}
+  />
+</div>
+
+### Sketsa Grafik Hasil Penjumlahan dan Pengurangan
+
+Tanpa perlu mengetahui persamaan pasti dari fungsi <InlineMath math="f" />, <InlineMath math="g" />, atau <InlineMath math="h" />, kita bisa mensketsa grafik hasil penjumlahannya (misal <InlineMath math="f(x) + g(x)" />) atau pengurangannya (misal <InlineMath math="f(x) - g(x)" />) dengan cara berikut:
+
+1.  Pilih beberapa nilai <InlineMath math="x" /> yang sama pada kedua grafik.
+2.  Untuk setiap nilai <InlineMath math="x" />, baca nilai <InlineMath math="y" /> dari masing-masing grafik. Misalkan <InlineMath math="y_f = f(x)" /> dan <InlineMath math="y_g = g(x)" />.
+3.  **Untuk penjumlahan (<InlineMath math="f(x) + g(x)" />):** Hitung nilai <InlineMath math="y_{\text{baru}} = y_f + y_g" />.
+4.  **Untuk pengurangan (<InlineMath math="f(x) - g(x)" />):** Hitung nilai <InlineMath math="y_{\text{baru}} = y_f - y_g" />.
+5.  Plot titik <InlineMath math="(x, y_{\text{baru}})" />.
+6.  Ulangi untuk beberapa nilai <InlineMath math="x" /> lainnya.
+7.  Hubungkan titik-titik baru tersebut dengan kurva mulus.
+
+**Mengapa cara ini tepat?**
+
+Karena definisi dari penjumlahan atau pengurangan fungsi adalah menjumlahkan atau mengurangkan nilai output (<InlineMath math="y" />) mereka untuk setiap nilai input (<InlineMath math="x" />) yang sama.
+
+### Contoh Sketsa Grafik
+
+Berikut adalah contoh sketsa grafik hasil penjumlahan <InlineMath math="f(x) + g(x)" /> dan pengurangan <InlineMath math="f(x) - g(x)" /> yang didapat dengan metode penjumlahan/pengurangan nilai <InlineMath math="y" /> secara vertikal untuk setiap <InlineMath math="x" />.
+
+<div className="flex flex-col gap-4">
+  <LineEquation
+    title={
+      <>
+        Grafik <InlineMath math="f(x) + g(x)" />,{" "}
+        <InlineMath math="f(x) = x + 1" />, dan{" "}
+        <InlineMath math="g(x) = 0.5x^4 - 2x^2 + 1" />
+      </>
+    }
+    description={
+      <>
+        Hasil dari penjumlahan <InlineMath math="f(x) + g(x)" /> adalah{" "}
+        <InlineMath math="x + 1 + 0.5x^4 - 2x^2 + 1" />
+      </>
+    }
+    showZAxis={false}
+    cameraPosition={[0, 0, 15]}
+    data={[
+      {
+        points: Array.from({ length: 51 }, (_, i) => {
+          const x = -2.5 + i * 0.1;
+          return { x, y: x + 1 + (0.5 * x ** 4 - 2 * x ** 2 + 1), z: 0 };
+        }),
+        color: getColor("VIOLET"),
+        showPoints: false,
+      },
+    ]}
+  />
+  <LineEquation
+    title={
+      <>
+        Grafik <InlineMath math="f(x) - g(x)" />,{" "}
+        <InlineMath math="f(x) = x + 1" />, dan{" "}
+        <InlineMath math="g(x) = 0.5x^4 - 2x^2 + 1" />
+      </>
+    }
+    description={
+      <>
+        Hasil dari pengurangan <InlineMath math="f(x) - g(x)" /> adalah{" "}
+        <InlineMath math="x + 1 - (0.5x^4 - 2x^2 + 1)" />
+      </>
+    }
+    showZAxis={false}
+    cameraPosition={[0, 0, 15]}
+    data={[
+      {
+        points: Array.from({ length: 51 }, (_, i) => {
+          const x = -2.5 + i * 0.1;
+          return { x, y: x + 1 - (0.5 * x ** 4 - 2 * x ** 2 + 1), z: 0 };
+        }),
+        color: getColor("PINK"),
+        showPoints: false,
+      },
+    ]}
+  />
+</div>
+
+Dengan cara yang sama, kamu bisa mensketsa grafik <InlineMath math="f(x) + h(x), \space g(x) + h(x), \space f(x) - h(x), \space \text{dan} \space g(x) - h(x)" />. Intinya adalah menjumlahkan atau mengurangkan ketinggian (nilai <InlineMath math="y" />) dari grafik-grafik asli pada setiap nilai <InlineMath math="x" /> yang bersesuaian.
