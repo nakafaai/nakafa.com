@@ -27,8 +27,8 @@
         "@repo/next-config": "workspace:*",
         "@repo/seo": "workspace:*",
         "@t3-oss/env-nextjs": "^0.13.8",
-        "@tanstack/react-query": "^5.81.0",
-        "@tanstack/react-query-devtools": "^5.81.0",
+        "@tanstack/react-query": "^5.81.1",
+        "@tanstack/react-query-devtools": "^5.81.1",
         "babel-plugin-react-compiler": "^19.1.0-rc.2",
         "feed": "^5.1.0",
         "immer": "^10.1.1",
@@ -1048,13 +1048,13 @@
 
     "@tailwindcss/typography": ["@tailwindcss/typography@0.5.16", "", { "dependencies": { "lodash.castarray": "^4.4.0", "lodash.isplainobject": "^4.0.6", "lodash.merge": "^4.6.2", "postcss-selector-parser": "6.0.10" }, "peerDependencies": { "tailwindcss": ">=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1" } }, "sha512-0wDLwCVF5V3x3b1SGXPCDcdsbDHMBe+lkFzBRaHeLvNi+nrrnZ1lA18u+OTWO8iSWU2GxUOCvlXtDuqftc1oiA=="],
 
-    "@tanstack/query-core": ["@tanstack/query-core@5.81.0", "", {}, "sha512-lFsd8NBhkh26vzaq8uOOM2o3r4NtJros7kASI+TTMBmKT8C43HVN/2mOI9PFX9kzmxLThBzOLa4NI8ORhX8N9g=="],
+    "@tanstack/query-core": ["@tanstack/query-core@5.81.1", "", {}, "sha512-MAaygDGHHQlfVPYNT+1ZbnY5KsPhFbffDgdQ0YPVhJQyvLby3btnF0oVk9ZEpKEGfl3hEK7YDnNNFT//iX+s0w=="],
 
-    "@tanstack/query-devtools": ["@tanstack/query-devtools@5.81.0", "", {}, "sha512-6zYR9GQSVwRU9TFu+5VLkudNQkWV7KcMGgzAxpY4THb5I5SU51CkVL3pPPDGFqT+qwy85/fSH5YRwbFukx6Quw=="],
+    "@tanstack/query-devtools": ["@tanstack/query-devtools@5.81.1", "", {}, "sha512-tTezRld3cCo14eKgNzOo9HX+N9lfwb7kxl/5RHzGZg6dhqUvMwUWVjefLx/QTWcwXDA7zdP4V/zA9qDltzOSIA=="],
 
-    "@tanstack/react-query": ["@tanstack/react-query@5.81.0", "", { "dependencies": { "@tanstack/query-core": "5.81.0" }, "peerDependencies": { "react": "^18 || ^19" } }, "sha512-nutU/X1xrgMJXui61oi5j0gXKs2ZlHnI9f/C128CNha/MRi9i/E5tN3pcUIjvQZzNQnOxp1Uv90SZs3kmcecgw=="],
+    "@tanstack/react-query": ["@tanstack/react-query@5.81.1", "", { "dependencies": { "@tanstack/query-core": "5.81.1" }, "peerDependencies": { "react": "^18 || ^19" } }, "sha512-N78EEOq/Y5tqXvbGSE+LaRXU8oqlRU4w/D2Di8VwZrNL/tdvKhD+h5HCJr77MC0nUcil0nnzQpi+nu77t3/Xtg=="],
 
-    "@tanstack/react-query-devtools": ["@tanstack/react-query-devtools@5.81.0", "", { "dependencies": { "@tanstack/query-devtools": "5.81.0" }, "peerDependencies": { "@tanstack/react-query": "^5.81.0", "react": "^18 || ^19" } }, "sha512-Q7qRDsZnWlor9/dge2iRIwCVSj3EPyMxbjcQ4gY3sEC2WEBdVJnwd8/L4G5ETQ2nTwz30rOY/EiVw2Ozqn0Nww=="],
+    "@tanstack/react-query-devtools": ["@tanstack/react-query-devtools@5.81.1", "", { "dependencies": { "@tanstack/query-devtools": "5.81.1" }, "peerDependencies": { "@tanstack/react-query": "^5.81.1", "react": "^18 || ^19" } }, "sha512-149xTpxnilW8vyTe9Ka1YKeJqJLW6E2yDrLbM4UMiN4xO93+N73fdL1UcGT6LdawWEcpA6RvgA7LnOqrSnVOgw=="],
 
     "@tootallnate/quickjs-emscripten": ["@tootallnate/quickjs-emscripten@0.23.0", "", {}, "sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA=="],
 
