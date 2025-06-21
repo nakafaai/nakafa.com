@@ -1,9 +1,5 @@
 # ❤️❤️❤️❤️❤️
 
-<p align="center">
-  <img src="https://nakafa/logo.svg" alt="Nakafa Logo" width="100" height="100">
-</p>
-
 <h1 align="center">Nakafa</h1>
 
 <p align="center">
@@ -11,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://nakafa.com"><strong>Website</strong></a> •
+  <a href="https://nakafa.com">Website</a> •
   <a href="https://github.com/nakafaai/nakafa.com/issues">Report Bug</a> •
   <a href="https://github.com/nakafaai/nakafa.com/discussions">Request Feature</a> •
   <a href="https://deepwiki.com/nakafaai/nakafa.com"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
