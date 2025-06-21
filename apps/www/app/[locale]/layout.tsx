@@ -1,15 +1,12 @@
 import { DesignSystemProvider } from "@repo/design-system";
-import { cn } from "@repo/design-system/lib/utils";
+import { fonts } from "@repo/design-system/lib/fonts";
 import { routing } from "@repo/internationalization/src/routing";
 
 import { type Locale, NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Geist, Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 
-import "@repo/design-system/styles/globals.css";
-import "@repo/design-system/styles/theme.css";
-import "katex/dist/katex.min.css";
+import "@/styles/globals.css";
 
 import { AppProviders } from "@/components/providers";
 import { SearchCommand } from "@/components/shared/search-command";
@@ -33,16 +30,6 @@ type Props = {
   children: ReactNode;
   params: Promise<{ locale: Locale }>;
 };
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export async function generateMetadata({
   params,
@@ -173,15 +160,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <html
-      lang={locale}
-      className={cn(
-        "font-sans antialiased",
-        geistSans.variable,
-        geistMono.variable
-      )}
-      suppressHydrationWarning
-    >
+    <html lang={locale} className={fonts} suppressHydrationWarning>
       <NextIntlClientProvider>
         <head>
           <ReactScan />

@@ -1,0 +1,4 @@
+@import "tailwindcss";
+@import "@repo/design-system/styles/globals.css";
+@import "@repo/design-system/styles/theme.css";
+@import "katex/dist/katex.min.css";

@@ -14,11 +14,11 @@
   },
   "dependencies": {
     "@repo/analytics": "workspace:*",
+    "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
+    "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@repo/seo": "workspace:*",
-    "@repo/contents": "workspace:*",
-    "@repo/internationalization": "workspace:*",
     "@mdx-js/loader": "^3.1.0",
     "@mdx-js/react": "^3.1.0",
     "@next/mdx": "^15.3.4",
@@ -39,6 +39,7 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "24.0.3",
     "@types/react": "19.1.8",
