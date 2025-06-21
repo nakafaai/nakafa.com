@@ -73,4 +73,4 @@ For commercial licensing inquiries: <nakafaai@gmail.com>
 
 ---
 
-*Built with ❤️ for learners everywhere*
+Built with ❤️ for learners everywhere
