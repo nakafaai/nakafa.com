@@ -17,7 +17,7 @@ import {
 } from "@repo/design-system/components/ui/command";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { IconCommand, IconLetterK, IconMenu3 } from "@tabler/icons-react";
+import { IconMenu3 } from "@tabler/icons-react";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -29,7 +29,7 @@ import { FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Fragment, startTransition, useEffect, useTransition } from "react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { articlesMenu } from "../sidebar/_data/articles";
 import { subjectAll } from "../sidebar/_data/subject";
 
@@ -52,7 +52,7 @@ export function SearchCommand() {
           (navigator.userAgent.includes("Mac") ? event.metaKey : event.ctrlKey))
       ) {
         event.preventDefault();
-        setOpen(!open);
+        setOpen(true);
       }
     }
 
@@ -60,7 +60,7 @@ export function SearchCommand() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [setOpen, open]);
+  }, [setOpen]);
 
   return (
     <CommandDialog
@@ -311,29 +311,40 @@ function Footer() {
   return (
     <div className="flex items-center justify-between border-t p-3 text-muted-foreground text-sm">
       <div className="flex items-center gap-1">
-        <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
+        <FooterKbd>
           <CornerDownLeftIcon className="size-3 text-muted-foreground" />
-        </kbd>
+        </FooterKbd>
         <span>{t("select")}</span>
       </div>
       <div className="flex items-center gap-1">
-        <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
+        <FooterKbd>
           <ArrowUpIcon className="size-3 text-muted-foreground" />
-        </kbd>
-        <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
+        </FooterKbd>
+        <FooterKbd>
           <ArrowDownIcon className="size-3 text-muted-foreground" />
-        </kbd>
+        </FooterKbd>
         <span>{t("navigate")}</span>
       </div>
       <div className="flex items-center gap-1">
-        <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
-          <IconCommand className="size-3 text-muted-foreground" />
-        </kbd>
-        <kbd className="pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted">
-          <IconLetterK className="size-3 text-muted-foreground" />
-        </kbd>
+        <FooterKbd className="w-auto px-1">esc</FooterKbd>
         <span>{t("close")}</span>
       </div>
     </div>
+  );
+}
+
+function FooterKbd({
+  children,
+  className,
+}: { children: ReactNode; className?: string }) {
+  return (
+    <kbd
+      className={cn(
+        "pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted text-xs",
+        className
+      )}
+    >
+      {children}
+    </kbd>
   );
 }
