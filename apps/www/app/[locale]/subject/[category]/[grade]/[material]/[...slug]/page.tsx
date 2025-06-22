@@ -9,7 +9,6 @@ import {
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
-import { getHeadings } from "@/lib/utils/markdown";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
 import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
@@ -22,6 +21,7 @@ import {
   getMaterialsPagination,
   getSlugPath,
 } from "@repo/contents/_lib/subject/slug";
+import { getHeadings } from "@repo/contents/_lib/toc";
 import { getContent, getRawContent } from "@repo/contents/_lib/utils";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";

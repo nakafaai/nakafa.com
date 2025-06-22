@@ -1,10 +1,10 @@
 "use client";
 
+import { extractAllHeadingIds } from "@repo/contents/_lib/toc";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { useAnchorObserver } from "@repo/design-system/hooks/use-anchor-observer";
 import { type ReactNode, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
-import { extractAllHeadingIds } from "../utils/toc";
 
 type TocContextType = {
   activeHeadings: string[];

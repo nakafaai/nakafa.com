@@ -6,11 +6,11 @@ import {
 } from "@/components/shared/layout-article";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
-import { getHeadings } from "@/lib/utils/markdown";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
 import { getCategoryIcon } from "@repo/contents/_lib/articles/category";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
+import { getHeadings } from "@repo/contents/_lib/toc";
 import { getContent, getRawContent } from "@repo/contents/_lib/utils";
 import { getReferences } from "@repo/contents/_lib/utils";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
