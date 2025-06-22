@@ -1,0 +1,24 @@
+{
+  "name": "mcp",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3001 --turbopack",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@repo/next-config": "workspace:*",
+    "@vercel/mcp-adapter": "0.8.2",
+    "next": "15.3.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "redis": "^4.7.0",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "24.0.3",
+    "@types/react": "19.1.8",
+    "typescript": "^5.8.3"
+  }
+}
