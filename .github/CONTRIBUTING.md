@@ -1,51 +1,254 @@
-# Contributing to nakafa.com
+# 🌟 Contributing to nakafa.com
 
-First off, thank you for considering contributing to nakafa.com! It's people like you that make this project great.
+> 🎓 **Building the future of education together!** Welcome to our vibrant community of learners, educators, and developers.
 
-## Where do I go from here?
+Thank you for your interest in contributing to nakafa! Every contribution, no matter how small, helps millions of learners access better educational content. Together, we're making education more accessible, engaging, and effective for everyone! 🚀
 
-- Unsure where to begin contributing? You can start by looking through the issues labeled `good first issue` or `help wanted`.
-- Have a question or want to discuss an idea? Please use [GitHub Discussions](https://github.com/nakafaai/nakafa.com/discussions).
-- Found a bug or have a feature request? Please check if a similar issue already exists before submitting a new one using our [Issue Templates](https://github.com/nakafaai/nakafa.com/issues/new/choose).
+## 🤔 New to Contributing?
 
-## How Can I Contribute?
+**No worries!** Everyone starts somewhere, and we're here to help you succeed:
 
-### Reporting Bugs
+- 💬 **Questions?** Join our [Discord community](https://discord.gg/CPCSfKhvfQ) or start a [GitHub Discussion](https://github.com/nakafaai/nakafa.com/discussions)
+- 🐛 **Found a bug?** Use our [Bug Report template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=🐛+bug,🔍+needs-triage&template=bug_report.yml&title=🐛+[BUG]+)
+- 💡 **Have an idea?** Share it via our [Feature Request template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=✨+enhancement,💭+idea,🔍+needs-triage&template=feature_request.yml&title=✨+[FEAT]+)
+- 📚 **Want to suggest content?** Use our [Content Suggestion template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=📚+content,💡+suggestion,🎓+education,🔍+needs-triage&template=content-suggestion.yml&title=📚+[CONTENT]+)
 
-Please use the [Bug Report template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=bug%2C+needs-triage&template=bug_report.yml&title=%5BBUG%5D+) to report bugs. Ensure your report is clear and contains sufficient information for us to reproduce the issue.
+## 🎯 Ways to Contribute
 
-### Suggesting Enhancements
+### 🐛 **Bug Reports & Fixes**
 
-Use the [Feature Request template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=enhancement%2C+needs-triage&template=feature_request.yml&title=%5BFEAT%5D+) for suggestions. Provide context and examples of why the enhancement would be beneficial.
+Help us squash bugs and improve user experience! Use our [Bug Report template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=🐛+bug,🔍+needs-triage&template=bug_report.yml&title=🐛+[BUG]+) to report issues.
 
-### Your First Code Contribution
+### ✨ **Feature Development**
 
-Unsure where to begin contributing code? Look for issues tagged `good first issue`.
+Got ideas to make nakafa even better? Share them via our [Feature Request template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=✨+enhancement,💭+idea,🔍+needs-triage&template=feature_request.yml&title=✨+[FEAT]+)!
 
-**Setting up your development environment:**
+### 📚 **Educational Content**
 
-1. Fork the repository.
-2. Clone your fork locally: `git clone https://github.com/YOUR_USERNAME/nakafa.com.git`
-3. Install dependencies: `npm install` (or `yarn install` if you use Yarn - please check your project)
-4. Create a new branch for your changes: `git checkout -b your-branch-name`
-5. Make your changes.
-6. Run tests and linters: `npm run test` and `npm run lint` (Adjust if your scripts are named differently)
-7. Commit your changes: `git commit -m "Your descriptive commit message"`
-8. Push to your fork: `git push origin your-branch-name`
-9. Open a pull request to the `main` branch of the original repository.
+- **Subject matter experts**: Help create and review educational content
+- **Educators**: Share teaching insights and content suggestions
+- **Students**: Provide feedback on learning materials and suggest improvements
+- Use our [Content Suggestion template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=📚+content,💡+suggestion,🎓+education,🔍+needs-triage&template=content-suggestion.yml&title=📚+[CONTENT]+) to propose new educational content
 
-### Pull Request Process
+### 📖 **Documentation**
 
-1. Ensure your PR addresses an existing issue or discusses a new feature/bug fix.
-2. Update the README.md or other documentation if your changes require it.
-3. Ensure tests and linters pass (`npm run test`, `npm run lint`).
-4. Your pull request will be reviewed by a maintainer. Please address any feedback promptly.
-5. Once approved, your PR will be merged. Thank you for your contribution!
+Help make our docs clearer and more helpful! Use our [Documentation template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=📖+documentation,✨+enhancement,🔍+needs-triage&template=documentation.yml&title=📖+[DOCS]+) to suggest improvements.
 
-## Code Style
+### 🌍 **Internationalization**
 
-Please follow the existing code style. We likely use Prettier and ESLint (check `package.json`). Running `npm run lint` before committing can help ensure consistency.
+- Translate content to Indonesian and other languages
+- Improve localization and cultural adaptations
+- Help make education accessible globally
 
-## Any other questions?
+### ⚡ **Performance & Accessibility**
 
-Feel free to ask on [GitHub Discussions](https://github.com/nakafaai/nakafa.com/discussions).
+Make nakafa faster and more accessible! Use our [Performance & Accessibility template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=⚡+performance,♿+accessibility,🎨+UX,🔍+needs-triage&template=performance-accessibility.yml&title=⚡+[PERF/A11Y]+) to report issues.
+
+### 🎨 **Design & User Experience**
+
+- Improve UI/UX design
+- Create educational visualizations and graphics
+- Enhance mobile experience
+
+## 🛠️ Development Setup
+
+### 📋 Prerequisites
+
+- **Node.js**: Version 18+
+- **Bun**: We use Bun as our package manager and runtime
+- **Git**: For version control
+
+### ⚡ Quick Start
+
+1. **🍴 Fork & Clone**
+
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/nakafa.com.git
+   cd nakafa.com
+   ```
+
+2. **📦 Install Dependencies**
+
+   ```bash
+   bun install
+   ```
+
+3. **🚀 Start Development Server**
+
+   ```bash
+   cd apps/www
+   bun dev
+   ```
+
+4. **🌐 Open in Browser**
+   Visit `http://localhost:3000` to see nakafa running locally!
+
+### 🏗️ Project Structure
+
+```
+nakafa/
+├── 📱 apps/www/              # Main Next.js application
+├── 📦 packages/
+│   ├── 📚 contents/          # Educational content & MDX files
+│   ├── 🎨 design-system/    # UI components & design tokens
+│   ├── 🌍 internationalization/ # i18n configuration
+│   ├── 📊 analytics/        # Analytics utilities
+│   └── 🔧 ...              # Other shared packages
+```
+
+### 🧪 Testing & Quality
+
+```bash
+# Run tests
+bun test
+
+# Run linter
+bun lint
+
+# Format code
+bun format
+
+# Type check
+bun type-check
+```
+
+## 📝 Pull Request Process
+
+### 🚀 Ready to Submit?
+
+1. **🔍 Check Your Work**
+   - All tests pass: `bun test`
+   - No linting errors: `bun lint`
+   - TypeScript compiles: `bun type-check`
+   - Tested on mobile and desktop
+
+2. **📝 Create Pull Request**
+   - Use our [PR template](.github/PULL_REQUEST_TEMPLATE.md) (auto-filled)
+   - Link related issues with `Closes #123`
+   - Include screenshots for UI changes
+   - Write clear, descriptive commit messages
+
+3. **🎉 Review Process**
+   - A maintainer will review your PR
+   - Address any feedback promptly
+   - Once approved, we'll merge it!
+
+## 🎨 Code Style Guidelines
+
+### 💻 **TypeScript & React**
+
+- Use functional components with hooks
+- Write TypeScript with strict mode enabled
+- Export components and utilities with named exports
+- Follow Next.js App Router conventions
+
+### 🎯 **Educational Content**
+
+- Use MDX for rich educational content
+- Include proper learning objectives
+- Ensure accessibility (WCAG 2.1 AA)
+- Test mathematical notation with screen readers
+
+### 🌍 **Internationalization**
+
+- All user-facing strings must be translatable
+- Use semantic translation keys
+- Support both English and Indonesian
+- Consider RTL languages for future expansion
+
+### 🎨 **Design System**
+
+- Use components from `packages/design-system`
+- Follow established color and spacing systems
+- Ensure mobile-first responsive design
+- Maintain consistent visual hierarchy
+
+## 📚 Content Contribution Guidelines
+
+### 🎓 **Creating Educational Content**
+
+1. **📋 Plan Your Content**
+   - Define clear learning objectives
+   - Identify target grade level and prerequisites
+   - Consider different learning styles
+
+2. **✍️ Write in MDX**
+   - Use interactive components from our design system
+   - Include proper mathematical notation with KaTeX
+   - Add 3D visualizations where helpful
+
+3. **♿ Accessibility First**
+   - Provide alt text for all images and diagrams
+   - Use semantic HTML structure
+   - Test with screen readers
+   - Ensure proper color contrast
+
+4. **🔍 Review Process**
+   - Content reviewed by subject matter experts
+   - Tested with actual students when possible
+   - Aligned with curriculum standards
+
+## 🤝 Community Guidelines
+
+### 💫 **Our Values**
+
+- **🎓 Educational Excellence**: Quality content that truly helps learners
+- **🌍 Inclusivity**: Welcome everyone regardless of background or skill level
+- **🤝 Collaboration**: Work together to build something amazing
+- **💡 Innovation**: Embrace new ideas and creative solutions
+- **♿ Accessibility**: Ensure education is available to everyone
+
+### 🗣️ **Communication**
+
+- **Be Kind**: Treat everyone with respect and empathy
+- **Be Constructive**: Provide helpful feedback and suggestions
+- **Be Patient**: Remember that contributors have different experience levels
+- **Be Inclusive**: Use welcoming and inclusive language
+
+## 🆘 Need Help?
+
+### 💬 **Get Support**
+
+- 🎮 **Discord**: Join our [community chat](https://discord.gg/CPCSfKhvfQ) for quick help
+- 💭 **Discussions**: Use [GitHub Discussions](https://github.com/nakafaai/nakafa.com/discussions) for longer conversations
+- ❓ **Questions**: Use our [Question template](https://github.com/nakafaai/nakafa.com/issues/new?assignees=&labels=❓+question,🆘+help-wanted,🔍+needs-triage&template=question.yml&title=❓+[QUESTION]+) for specific questions
+
+### 🏷️ **Issue Labels**
+
+- 🆕 `good first issue` - Perfect for newcomers
+- 🆘 `help wanted` - We'd love community help on this
+- 🎓 `education` - Related to educational content
+- 🎨 `design` - UI/UX improvements
+- 🌍 `i18n` - Internationalization work
+- ♿ `accessibility` - Accessibility improvements
+
+## 🛡️ **Security**
+
+Found a security vulnerability? Please report it privately through our [Security Advisory](https://github.com/nakafaai/nakafa.com/security/advisories/new) - don't open a public issue.
+
+## 🎉 Recognition
+
+We appreciate all our contributors! Your contributions will be:
+
+- 📜 Listed in our contributors page
+- 🎖️ Credited in release notes for significant contributions
+- 💫 Celebrated in our Discord community
+- 📈 Contributing to your GitHub profile and portfolio
+
+---
+
+## 🚀 Ready to Start?
+
+1. 👋 Introduce yourself in our [Discord](https://discord.gg/CPCSfKhvfQ)
+2. 🔍 Browse [`good first issue`](https://github.com/nakafaai/nakafa.com/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) tagged issues
+3. 💬 Ask questions in [Discussions](https://github.com/nakafaai/nakafa.com/discussions)
+4. 🛠️ Set up your development environment
+5. 🎉 Make your first contribution!
+
+**Every contribution matters!** Whether you're fixing a typo, adding a feature, or creating educational content, you're helping build a better future for education. Thank you for being part of our community! 💖
+
+---
+
+> 🌟 **"Education is the most powerful weapon which you can use to change the world."** - Nelson Mandela
+>
+> Together, we're building tools that empower millions of learners worldwide. Thank you for contributing to this mission! 🚀

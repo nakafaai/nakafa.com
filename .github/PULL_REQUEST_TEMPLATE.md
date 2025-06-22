@@ -1,46 +1,77 @@
 <!-- markdownlint-disable-file MD041 -->
 <!--
-Thank you for contributing! Please provide a clear description of your changes below.
+🎉 Thank you for contributing to nakafa! 
+✨ Your contribution helps make education better for everyone.
 -->
 
-## Description
+## 📝 Description
 
-<!-- Clearly describe the changes you've made. -->
+<!-- 💡 Tell us what awesome changes you've made! Be clear and detailed. -->
 
-## Related Issue(s)
+## 🔗 Related Issue(s)
 
-<!-- Link to any related issues here. Use keywords like "Closes #123" or "Fixes #456" to automatically close issues when this PR is merged. -->
+<!-- 🎯 Link any related issues. Use "Closes #123" or "Fixes #456" to auto-close issues when merged. -->
 
 - Closes #
 
-## Type of Change
+## 🏷️ Type of Change
 
-<!-- Mark with an `x` all the boxes that apply: -->
+<!-- ✅ Check all that apply -->
 
-- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] ✨ New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] 📚 Documentation update
-- [ ] 🔧 Chore (refactoring, build process, tooling changes, etc.)
+- [ ] 🐛 **Bug Fix** - Fixed something that wasn't working
+- [ ] ✨ **New Feature** - Added cool new functionality  
+- [ ] 💥 **Breaking Change** - Might break existing functionality
+- [ ] 📚 **Documentation** - Updated docs, README, or comments
+- [ ] 🔧 **Maintenance** - Refactoring, build tools, or cleanup
+- [ ] 🎨 **UI/UX** - Visual or user experience improvements
+- [ ] ⚡ **Performance** - Made things faster or more efficient
 
-## Checklist
+## ✅ Pre-Flight Checklist
 
-<!-- Mark with an `x` all the boxes that apply: -->
+<!-- 🚀 Make sure everything is ready for takeoff! -->
 
-- [ ] I have read the **CONTRIBUTING** document ([.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)).
-- [ ] My code follows the style guidelines of this project.
-- [ ] I have performed a self-review of my own code.
-- [ ] I have commented my code, particularly in hard-to-understand areas.
-- [ ] I have made corresponding changes to the documentation.
-- [ ] My changes generate no new warnings.
-- [ ] I have added tests that prove my fix is effective or that my feature works.
-- [ ] New and existing unit tests pass locally with my changes.
-- [ ] Any dependent changes have been merged and published in downstream modules.
+### 📋 Code Quality
 
-## Screenshots (if applicable)
+- [ ] 📖 I've read the [Contributing Guidelines](.github/CONTRIBUTING.md)
+- [ ] 🔍 I've reviewed my own code thoroughly
+- [ ] 💬 I've commented tricky parts of my code
+- [ ] 🧪 I've added/updated tests for my changes
+- [ ] ✅ All tests pass locally
 
-<!-- Add screenshots or screen recordings to show the changes visually. -->
+### 📚 Documentation & Style  
 
-## Additional Context
+- [ ] 📝 Updated relevant documentation
+- [ ] 🎨 My code follows the project's style guidelines
+- [ ] ⚠️ No new warnings or errors introduced
+- [ ] 🔗 Updated dependencies are documented
 
-<!-- Add any other context about the pull request here. -->
+## 📸 Screenshots & Demos
+
+<!-- 🖼️ Show off your work! Before/after screenshots, GIFs, or videos are super helpful -->
+
+| Before | After |
+|--------|-------|
+| 📷 Screenshot/GIF | 📷 Screenshot/GIF |
+
+## 🧪 Testing
+
+<!-- 🔬 How did you test your changes? -->
+
+- [ ] 💻 **Desktop Testing** - Tested on desktop browsers
+- [ ] 📱 **Mobile Testing** - Tested on mobile devices  
+- [ ] 🌐 **Cross-browser** - Tested on different browsers
+- [ ] ♿ **Accessibility** - Tested with screen readers/keyboard navigation
+- [ ] 🧪 **Unit Tests** - Added/updated unit tests
+- [ ] 🔗 **Integration Tests** - Tested end-to-end functionality
+
+## 💬 Additional Notes
+
+<!-- 🤔 Anything else reviewers should know? Challenges faced, future improvements, etc. -->
+
+---
+
+<!-- 
+🎉 Thanks again for contributing! 
+👀 A maintainer will review your PR soon.
+💖 Every contribution makes nakafa better!
+-->

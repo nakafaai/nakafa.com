@@ -1,80 +1,105 @@
 name: 🐛 Bug Report
-description: Create a report to help us improve
-title: "[BUG] <title>"
-labels: ["bug", "needs-triage"]
+description: 🔍 Help us squash bugs and improve nakafa!
+title: "🐛 [BUG] "
+labels: ["🐛 bug", "🔍 needs-triage"]
 assignees: []
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report! Please search existing issues before submitting to avoid duplicates.
+        ## 👋 Thanks for helping us improve nakafa!
+        
+        🔍 **Before you start:** Please search existing issues to avoid duplicates.
+        📝 **Pro tip:** The more details you provide, the faster we can fix it!
+        
   - type: textarea
     id: bug-description
     attributes:
-      label: Describe the bug
-      description: A clear and concise description of what the bug is.
-      placeholder: Bug description
+      label: 🐛 What's the bug?
+      description: Tell us what went wrong in a clear and simple way.
+      placeholder: "Example: The search function crashes when I type special characters like @#$%"
     validations:
       required: true
+      
   - type: textarea
     id: reproduction
     attributes:
-      label: Steps to Reproduce
-      description: Steps to reliably reproduce the behavior.
+      label: 🔄 How can we reproduce it?
+      description: Give us the exact steps to recreate the problem.
       placeholder: |
-        1. Go to '...'
-        2. Click on '....'
-        3. Scroll down to '....'
-        4. See error
+        1. 🌐 Go to the search page
+        2. 🔤 Type "@#$%" in the search box
+        3. ⌨️ Press Enter
+        4. 💥 Page crashes with error message
     validations:
       required: true
+      
   - type: textarea
     id: expected-behavior
     attributes:
-      label: Expected Behavior
-      description: A clear and concise description of what you expected to happen.
+      label: ✅ What should happen instead?
+      description: Describe what you expected to see.
+      placeholder: "The search should handle special characters gracefully and show relevant results"
     validations:
       required: true
-  - type: textarea
-    id: actual-behavior
-    attributes:
-      label: Actual Behavior
-      description: A clear and concise description of what actually happened.
-    validations:
-      required: true
+      
   - type: textarea
     id: screenshots
     attributes:
-      label: Screenshots
-      description: If applicable, add screenshots or screen recordings to help explain your problem.
+      label: 📸 Screenshots or Videos
+      description: Show us what you're seeing! Drag & drop images or paste URLs.
+      placeholder: "🖼️ Drop your screenshots here or paste image URLs"
     validations:
       required: false
-  - type: input
-    id: project-version
+      
+  - type: dropdown
+    id: severity
     attributes:
-      label: Project Version
-      description: Which version of the project are you using? (Check package.json)
+      label: 🚨 How severe is this bug?
+      description: Help us prioritize the fix
+      options:
+        - 🔥 Critical - Breaks core functionality
+        - ⚠️ High - Major feature doesn't work
+        - 📋 Medium - Minor feature issue
+        - 💡 Low - Cosmetic or enhancement
+      default: 2
     validations:
-      required: false
+      required: true
+      
   - type: textarea
     id: environment
     attributes:
-      label: Environment
-      description: |
-        Please provide relevant environment details.
-        - OS: [e.g. macOS, Windows, Linux]
-        - Browser: [e.g. Chrome, Firefox, Safari, Edge]
-        - Node.js Version: [e.g. 18.x, 20.x]
+      label: 🖥️ Your Environment
+      description: Help us understand your setup
       placeholder: |
-        - OS:
-        - Browser:
-        - Node.js Version:
+        📱 Device: MacBook Pro / iPhone 13 / etc.
+        🌐 Browser: Chrome 120, Safari 17, etc.
+        💻 OS: macOS 14, Windows 11, etc.
+        📍 Page: https://nakafa.com/specific-page
+      value: |
+        📱 Device: 
+        🌐 Browser: 
+        💻 OS: 
+        📍 Page: 
     validations:
       required: false
+      
   - type: textarea
     id: additional-context
     attributes:
-      label: Additional Context
-      description: Add any other context about the problem here.
+      label: 💬 Anything else?
+      description: Any extra details, error messages, or context that might help.
+      placeholder: "🤔 Error messages, console logs, or anything else that might be relevant..."
     validations:
-      required: false 
+      required: false
+      
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: ✅ Final Check
+      description: Just a quick confirmation before submitting
+      options:
+        - label: 🔍 I've searched existing issues and this is a new bug
+          required: true
+        - label: 📝 I've provided clear steps to reproduce the issue
+          required: true 

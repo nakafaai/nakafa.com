@@ -1,41 +1,115 @@
 name: ✨ Feature Request
-description: Suggest an idea for this project
-title: "[FEAT] <title>"
-labels: ["enhancement", "needs-triage"]
+description: 💡 Share your awesome ideas to make nakafa even better!
+title: "✨ [FEAT] "
+labels: ["✨ enhancement", "💭 idea", "🔍 needs-triage"]
 assignees: []
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to suggest a feature! Please search existing issues before submitting to ensure it hasn't been requested already.
+        ## 🎉 Thanks for sharing your idea!
+        
+        💡 **Great ideas make great products!** We love hearing from our community.
+        🔍 **Quick check:** Please search existing issues to see if someone already suggested this.
+        
   - type: textarea
     id: problem-description
     attributes:
-      label: Is your feature request related to a problem? Please describe.
-      description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
-      placeholder: Describe the problem...
+      label: 🤔 What problem does this solve?
+      description: Help us understand the challenge you're facing.
+      placeholder: "Example: As a student, I find it hard to track my learning progress across different subjects..."
     validations:
       required: true
+      
   - type: textarea
     id: solution-description
     attributes:
-      label: Describe the solution you'd like
-      description: A clear and concise description of what you want to happen.
-      placeholder: Describe the desired solution...
+      label: 💡 What's your solution?
+      description: Paint us a picture of your ideal feature!
+      placeholder: "Example: A dashboard showing my completion progress, time spent, and achievements for each subject with visual charts..."
     validations:
       required: true
+      
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: 🎯 What type of feature is this?
+      description: Help us categorize your request
+      options:
+        - 🎨 UI/UX Enhancement - Better user interface
+        - 🔧 New Functionality - Brand new feature
+        - 📱 Mobile Experience - Mobile-specific improvement
+        - 🚀 Performance - Speed and optimization
+        - 🔐 Security - Safety and privacy
+        - 📊 Analytics - Data and insights
+        - 🌍 Accessibility - Making it work for everyone
+        - 🔌 Integration - Connect with other tools
+      default: 1
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: priority
+    attributes:
+      label: ⚡ How important is this to you?
+      description: Help us understand the impact
+      options:
+        - 🔥 Must-have - Can't live without it!
+        - ⭐ High - Would make my life much easier
+        - 👍 Medium - Nice to have feature
+        - 💡 Low - Cool idea for the future
+      default: 1
+    validations:
+      required: true
+      
+  - type: textarea
+    id: user-story
+    attributes:
+      label: 👤 User Story
+      description: Describe how someone would use this feature
+      placeholder: |
+        📝 As a [type of user], I want to [do something] so that [I get some benefit].
+        
+        Example: "As a teacher, I want to assign custom quizzes to my students so that I can assess their understanding of specific topics."
+    validations:
+      required: false
+      
   - type: textarea
     id: alternatives
     attributes:
-      label: Describe alternatives you've considered
-      description: A clear and concise description of any alternative solutions or features you've considered.
-      placeholder: Describe alternatives...
+      label: 🔄 Any alternatives you've tried?
+      description: Have you found workarounds or seen this done elsewhere?
+      placeholder: "🤔 Maybe you've seen similar features on other platforms, or found creative workarounds..."
     validations:
       required: false
+      
+  - type: textarea
+    id: mockups
+    attributes:
+      label: 🎨 Mockups or Examples
+      description: Got sketches, screenshots, or examples? Show us!
+      placeholder: "🖼️ Drop images, links to similar features, or describe the visual design you have in mind"
+    validations:
+      required: false
+      
   - type: textarea
     id: additional-context
     attributes:
-      label: Additional Context
-      description: Add any other context or screenshots about the feature request here.
+      label: 💬 Anything else?
+      description: Share any other thoughts, ideas, or context!
+      placeholder: "✨ Any other details, related features, or cool ideas that come to mind..."
     validations:
-      required: false 
+      required: false
+      
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: ✅ Final Check
+      description: Just making sure we're all set!
+      options:
+        - label: 🔍 I've searched existing issues and this is a new idea
+          required: true
+        - label: 💡 I've explained the problem and proposed solution clearly
+          required: true
+        - label: 🤝 I understand this is a community project and features take time
+          required: true 
