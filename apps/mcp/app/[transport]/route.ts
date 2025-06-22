@@ -4,24 +4,21 @@ import { z } from "zod";
 const handler = createMcpHandler(
   (server) => {
     server.tool(
-      "roll_dice",
-      "Rolls an N-sided die",
+      "echo",
+      "description",
       {
-        sides: z.number().int().min(2),
+        message: z.string(),
       },
-      ({ sides }) => {
-        const value = 1 + Math.floor(Math.random() * sides);
-        return {
-          content: [{ type: "text", text: `🎲 You rolled a ${value}!` }],
-        };
-      }
+      async ({ message }) => ({
+        content: [{ type: "text", text: `Tool echo: ${message}` }],
+      })
     );
   },
   {
     capabilities: {
       tools: {
-        roll_dice: {
-          description: "Rolls an N-sided die",
+        echo: {
+          description: "Echo a message",
         },
       },
     },
