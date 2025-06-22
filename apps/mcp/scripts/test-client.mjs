@@ -29,7 +29,7 @@ async function main() {
 
   const result = await client.listTools();
   // biome-ignore lint/suspicious/noConsole: For logging
-  console.info(result);
+  console.info(JSON.stringify(result, null, 2));
   client.close();
 }
 
