@@ -87,7 +87,7 @@ export default async function Page({ params }: Props) {
         description={t("description")}
         icon={getCategoryIcon(category)}
       />
-      <LayoutContent scrollIndicator={false} className="py-10">
+      <LayoutContent className="py-10">
         <ContainerList>
           {articles.map((article) => (
             <CardArticle

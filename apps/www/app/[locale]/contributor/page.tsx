@@ -39,7 +39,7 @@ export default function Page() {
         description={t("description")}
         icon={HeartHandshakeIcon}
       />
-      <LayoutContent scrollIndicator={false} className="py-10">
+      <LayoutContent className="py-10">
         <div className="flex flex-wrap gap-2">
           {contributors.map((contributor) => (
             <Avatar key={contributor.username} contributor={contributor} />
