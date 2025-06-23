@@ -1,9 +1,7 @@
-import type { LearningResource, WithContext } from "schema-dts";
-import type { Person } from "schema-dts";
+import type { LearningResource, Person, WithContext } from "schema-dts";
 import { JsonLd } from ".";
 
 type Props = {
-  id?: string;
   name: string;
   description: string;
   educationalLevel: string;
@@ -12,7 +10,6 @@ type Props = {
 };
 
 export function LearningResourceJsonLd({
-  id = "learning-resource-jsonld",
   name,
   description,
   educationalLevel,

@@ -1,10 +1,7 @@
 "use client";
 
-import { env } from "@/env";
 import { useMediaQuery } from "@mantine/hooks";
 import { buttonVariants } from "@repo/design-system/components/ui/button";
-import Image from "next/image";
-
 import {
   Dialog,
   DialogContent,
@@ -21,7 +18,9 @@ import {
 } from "@repo/design-system/components/ui/drawer";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { env } from "@/env";
 
 type Props = {
   open: boolean;
@@ -46,23 +45,23 @@ function AboutDialogContent({
     >
       <div className="relative mx-auto aspect-square size-16 overflow-hidden rounded-lg border">
         <Image
-          src="/logo.svg"
           alt="Nakafa"
-          title="Nakafa"
+          className="object-contain"
           fill
           priority
-          className="object-contain"
+          src="/logo.svg"
+          title="Nakafa"
         />
       </div>
       <Link
-        href="/contributor"
-        prefetch
-        title={t("contributor")}
         className={cn(
           buttonVariants({ variant: "outline", size: "sm" }),
           "mx-auto w-fit"
         )}
+        href="/contributor"
         onClick={() => onOpenChange(false)}
+        prefetch
+        title={t("contributor")}
       >
         {t("contributor")}
       </Link>
@@ -84,7 +83,7 @@ export function AboutDialog({ open, action }: Props) {
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={action}>
+      <Dialog onOpenChange={action} open={open}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader className="sm:text-center">
             <DialogTitle>{t("about")}</DialogTitle>
@@ -92,14 +91,14 @@ export function AboutDialog({ open, action }: Props) {
               {t("version", { version: env.NEXT_PUBLIC_VERSION })}
             </DialogDescription>
           </DialogHeader>
-          <AboutDialogContent onOpenChange={action} className="pb-0" />
+          <AboutDialogContent className="pb-0" onOpenChange={action} />
         </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Drawer open={open} onOpenChange={action}>
+    <Drawer onOpenChange={action} open={open}>
       <DrawerContent>
         <DrawerHeader className="text-center">
           <DrawerTitle>{t("about")}</DrawerTitle>

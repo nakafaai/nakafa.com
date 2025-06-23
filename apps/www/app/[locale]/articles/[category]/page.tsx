@@ -1,12 +1,3 @@
-import { CardArticle } from "@/components/shared/card-article";
-import { ContainerList } from "@/components/shared/container-list";
-import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderContent } from "@/components/shared/header-content";
-import { LayoutContent } from "@/components/shared/layout-content";
-import { RefContent } from "@/components/shared/ref-content";
-import { getGithubUrl } from "@/lib/utils/github";
-import { getOgUrl } from "@/lib/utils/metadata";
-import { getStaticParams } from "@/lib/utils/system";
 import {
   getCategoryIcon,
   getCategoryPath,
@@ -17,6 +8,15 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CardArticle } from "@/components/shared/card-article";
+import { ContainerList } from "@/components/shared/container-list";
+import { FooterContent } from "@/components/shared/footer-content";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
+import { RefContent } from "@/components/shared/ref-content";
+import { getGithubUrl } from "@/lib/utils/github";
+import { getOgUrl } from "@/lib/utils/metadata";
+import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
@@ -73,7 +73,6 @@ export default async function Page({ params }: Props) {
   return (
     <>
       <BreadcrumbJsonLd
-        locale={locale}
         breadcrumbItems={articles.map((article, index) => ({
           "@type": "ListItem",
           "@id": `https://nakafa.com/${locale}${FILE_PATH}/${article.slug}`,
@@ -81,19 +80,20 @@ export default async function Page({ params }: Props) {
           name: article.title,
           item: `https://nakafa.com/${locale}${FILE_PATH}/${article.slug}`,
         }))}
+        locale={locale}
       />
       <HeaderContent
-        title={t(category)}
         description={t("description")}
         icon={getCategoryIcon(category)}
+        title={t(category)}
       />
       <LayoutContent className="py-10">
         <ContainerList>
           {articles.map((article) => (
             <CardArticle
-              key={article.slug}
-              category={category}
               article={article}
+              category={category}
+              key={article.slug}
             />
           ))}
         </ContainerList>

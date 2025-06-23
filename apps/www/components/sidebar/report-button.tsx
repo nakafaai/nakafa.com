@@ -9,12 +9,12 @@ export function ReportButton() {
   const t = useTranslations("Common");
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton tooltip={t("report")} asChild>
+      <SidebarMenuButton asChild tooltip={t("report")}>
         <a
           href="https://github.com/nakafaai/nakafa.com/issues/new/choose"
-          title={t("report")}
-          target="_blank"
           rel="noopener noreferrer"
+          target="_blank"
+          title={t("report")}
         >
           <BugIcon className="size-4 shrink-0" />
           <span className="truncate">{t("report")}</span>

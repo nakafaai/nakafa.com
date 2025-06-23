@@ -1,3 +1,20 @@
+import { getCategoryIcon } from "@repo/contents/_lib/articles/category";
+import { getSlugPath } from "@repo/contents/_lib/articles/slug";
+import { getHeadings } from "@repo/contents/_lib/toc";
+import {
+  getContent,
+  getRawContent,
+  getReferences,
+} from "@repo/contents/_lib/utils";
+import type { ArticleCategory } from "@repo/contents/_types/articles/category";
+import { ArticleJsonLd } from "@repo/seo/json-ld/article";
+import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
+import { formatISO } from "date-fns";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import type { Locale } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import {
   LayoutArticle,
   LayoutArticleContent,
@@ -8,20 +25,6 @@ import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
-import { getCategoryIcon } from "@repo/contents/_lib/articles/category";
-import { getSlugPath } from "@repo/contents/_lib/articles/slug";
-import { getHeadings } from "@repo/contents/_lib/toc";
-import { getContent, getRawContent } from "@repo/contents/_lib/utils";
-import { getReferences } from "@repo/contents/_lib/utils";
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
-import { ArticleJsonLd } from "@repo/seo/json-ld/article";
-import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
-import { formatISO } from "date-fns";
-import type { Metadata } from "next";
-import type { Locale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
 
 export const revalidate = false;
 
@@ -35,7 +38,9 @@ type Props = {
 
 export async function generateMetadata({
   params,
-}: { params: Props["params"] }): Promise<Metadata> {
+}: {
+  params: Props["params"];
+}): Promise<Metadata> {
   const { locale, category, slug } = await params;
   const t = await getTranslations("Articles");
 
@@ -121,9 +126,6 @@ export default async function Page({ params }: Props) {
     return (
       <>
         <BreadcrumbJsonLd
-          locale={locale}
-          name={metadata.title}
-          description={metadata.description ?? ""}
           breadcrumbItems={headings.map((heading, index) => ({
             "@type": "ListItem",
             "@id": `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
@@ -131,48 +133,51 @@ export default async function Page({ params }: Props) {
             name: heading.label,
             item: `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
           }))}
+          description={metadata.description ?? ""}
+          locale={locale}
+          name={metadata.title}
         />
         <ArticleJsonLd
-          headline={metadata.title}
-          datePublished={formatISO(metadata.date)}
           author={metadata.authors.map((author) => ({
             "@type": "Person",
             name: author.name,
             url: `https://nakafa.com/${locale}/contributor`,
           }))}
-          image={getOgUrl(locale, FILE_PATH)}
+          datePublished={formatISO(metadata.date)}
           description={metadata.description ?? ""}
+          headline={metadata.title}
+          image={getOgUrl(locale, FILE_PATH)}
         />
         <LearningResourceJsonLd
-          name={metadata.title}
-          description={metadata.description ?? ""}
-          educationalLevel={t(category)}
-          datePublished={formatISO(metadata.date)}
           author={metadata.authors.map((author) => ({
             "@type": "Person",
             name: author.name,
             url: `https://nakafa.com/${locale}/contributor`,
           }))}
+          datePublished={formatISO(metadata.date)}
+          description={metadata.description ?? ""}
+          educationalLevel={t(category)}
+          name={metadata.title}
         />
         <LayoutArticle onThisPage={headings}>
           <LayoutArticleHeader
-            title={metadata.title}
-            description={metadata.description}
             authors={metadata.authors}
-            date={metadata.date}
             category={{
               icon: getCategoryIcon(category),
               name: t(category),
             }}
+            date={metadata.date}
+            description={metadata.description}
+            title={metadata.title}
           />
           <LayoutArticleContent>
             <Content />
           </LayoutArticleContent>
           <LayoutArticleFooter>
             <RefContent
-              title={metadata.title}
-              references={references}
               githubUrl={getGithubUrl({ path: `/contents${FILE_PATH}` })}
+              references={references}
+              title={metadata.title}
             />
           </LayoutArticleFooter>
         </LayoutArticle>

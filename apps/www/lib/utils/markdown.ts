@@ -1,5 +1,5 @@
-import { Children } from "react";
 import type { ReactNode } from "react";
+import { Children } from "react";
 
 /**
  * Filters whitespace text nodes from the given children to prevent hydration errors.

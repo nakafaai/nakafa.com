@@ -49,19 +49,19 @@ export function CameraControls({
 
   return (
     <>
-      <PerspectiveCamera makeDefault position={cameraPosition} fov={50} />
+      <PerspectiveCamera fov={50} makeDefault position={cameraPosition} />
       <OrbitControls
-        ref={controlsRef}
-        makeDefault
-        enableDamping
-        dampingFactor={0.05}
         autoRotate={autoRotate}
         autoRotateSpeed={0.5}
-        minDistance={1}
-        maxDistance={100}
-        zoomSpeed={1.25}
+        dampingFactor={0.05}
+        enableDamping
         enableZoom={true}
+        makeDefault
+        maxDistance={100}
+        minDistance={1}
+        ref={controlsRef}
         screenSpacePanning={true}
+        zoomSpeed={1.25}
       />
     </>
   );

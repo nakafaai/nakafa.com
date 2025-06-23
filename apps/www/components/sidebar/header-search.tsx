@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearch } from "@/lib/context/use-search";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Label } from "@repo/design-system/components/ui/label";
 import { usePathname } from "@repo/internationalization/src/navigation";
@@ -8,6 +7,7 @@ import { IconCommand, IconLetterK } from "@tabler/icons-react";
 import { SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
+import { useSearch } from "@/lib/context/use-search";
 
 export function HeaderSearch() {
   const pathname = usePathname();
@@ -22,15 +22,15 @@ export function HeaderSearch() {
 
   return (
     <button
+      className="w-full cursor-pointer sm:w-auto"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
         setOpen(true);
       }}
       type="button"
-      className="w-full cursor-pointer sm:w-auto"
     >
-      <Label htmlFor={id} className="sr-only">
+      <Label className="sr-only" htmlFor={id}>
         {t("search")}
       </Label>
       <div className="relative">
@@ -38,8 +38,8 @@ export function HeaderSearch() {
           <SearchIcon className="size-4 text-muted-foreground" />
         </div>
         <Input
-          id={id}
           className="pointer-events-none h-8 border border-border bg-background pl-9 shadow-xs transition-colors placeholder:text-sm hover:bg-accent hover:text-accent-foreground focus-visible:ring-0 sm:w-80 dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
+          id={id}
           placeholder={t("search-bar-placeholder")}
           type="text"
         />

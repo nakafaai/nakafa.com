@@ -110,73 +110,73 @@ export function RelationVisualizer({
   return (
     <div className="flex justify-center py-4">
       <svg
-        width="100%" // Make SVG responsive
+        aria-labelledby="svgTitle" // Make SVG responsive
         height={svgHeight} // Fixed height based on ellipse Ry
-        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         preserveAspectRatio="xMidYMid meet"
-        aria-labelledby="svgTitle"
+        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+        width="100%"
       >
         <title id="svgTitle">Arrow diagram of relation between sets</title>
         <defs>
           <marker
             id="arrowhead-visualizer" // Unique ID for this component's marker
-            viewBox="0 0 8 6" // Use viewBox for scaling
+            markerHeight="6" // Use viewBox for scaling
             markerWidth="8"
-            markerHeight="6"
+            orient="auto-start-reverse"
             refX="7" // Adjust refX so the tip is at the coordinate, line stops just before
             refY="3"
-            orient="auto-start-reverse" // Orients correctly
+            viewBox="0 0 8 6" // Orients correctly
           >
             {/* Use foreground color */}
-            <polygon points="0 0, 8 3, 0 6" className="fill-foreground/80" />
+            <polygon className="fill-foreground/80" points="0 0, 8 3, 0 6" />
           </marker>
         </defs>
 
         {/* Domain Ellipse and Label */}
         <text
-          x={domainEllipseCx}
-          y={svgPadding - 10} // Position label above ellipse
-          textAnchor="middle"
           className="fill-foreground font-semibold text-sm"
+          textAnchor="middle" // Position label above ellipse
+          x={domainEllipseCx}
+          y={svgPadding - 10}
         >
           {domainLabel}
         </text>
         <ellipse
+          className="fill-muted stroke-border"
           cx={domainEllipseCx}
           cy={ellipseCy}
           rx={ellipseRx}
           ry={ellipseRy}
-          className="fill-muted stroke-border"
           strokeWidth="1"
         />
 
         {/* Codomain Ellipse and Label */}
         <text
-          x={codomainEllipseCx}
-          y={svgPadding - 10} // Position label above ellipse
-          textAnchor="middle"
           className="fill-foreground font-semibold text-sm"
+          textAnchor="middle" // Position label above ellipse
+          x={codomainEllipseCx}
+          y={svgPadding - 10}
         >
           {codomainLabel}
         </text>
         <ellipse
+          className="fill-muted stroke-border"
           cx={codomainEllipseCx}
           cy={ellipseCy}
           rx={ellipseRx}
           ry={ellipseRy}
-          className="fill-muted stroke-border"
           strokeWidth="1"
         />
 
         {/* Domain Elements (Text) */}
         {domain.map((el) => (
           <text
+            className="fill-foreground font-medium text-sm"
+            dominantBaseline="middle"
             key={`domain-${el.id}`}
+            textAnchor="middle"
             x={elementCoords[el.id]?.x}
             y={elementCoords[el.id]?.y}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            className="fill-foreground font-medium text-sm"
           >
             {el.label}
           </text>
@@ -185,12 +185,12 @@ export function RelationVisualizer({
         {/* Codomain Elements (Text) */}
         {codomain.map((el) => (
           <text
+            className="fill-foreground font-medium text-sm"
+            dominantBaseline="middle"
             key={`codomain-${el.id}`}
+            textAnchor="middle"
             x={elementCoords[el.id]?.x}
             y={elementCoords[el.id]?.y}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            className="fill-foreground font-medium text-sm"
           >
             {el.label}
           </text>
@@ -202,7 +202,7 @@ export function RelationVisualizer({
           const endCoords = elementCoords[mapping.to];
 
           // Check if coordinates exist before drawing
-          if (!startCoords || !endCoords) {
+          if (!(startCoords && endCoords)) {
             return null;
           }
 
@@ -212,14 +212,14 @@ export function RelationVisualizer({
 
           return (
             <line
-              key={`mapping-${mapping.from}-${mapping.to}-${index}`}
-              x1={lineStartX}
-              y1={startCoords.y}
-              x2={lineEndX} // Adjusted end point for marker
-              y2={endCoords.y}
               className="stroke-foreground/50"
-              strokeWidth="1.5"
+              key={`mapping-${mapping.from}-${mapping.to}-${index}`}
               markerEnd="url(#arrowhead-visualizer)"
+              strokeWidth="1.5" // Adjusted end point for marker
+              x1={lineStartX}
+              x2={lineEndX}
+              y1={startCoords.y}
+              y2={endCoords.y}
             />
           );
         })}

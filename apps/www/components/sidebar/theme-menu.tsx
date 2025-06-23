@@ -32,12 +32,12 @@ function CheckerBadge({ isActive }: { isActive: boolean }) {
 }
 
 export function ThemeMenu() {
-  const { theme, setTheme } = useTheme();
+  const { theme: currentTheme, setTheme } = useTheme();
   const t = useTranslations("Common");
 
   const isMobile = useMediaQuery("(max-width: 640px)");
 
-  const isActive = (value: string) => theme === value;
+  const isActive = (value: string) => currentTheme === value;
 
   return (
     <DropdownMenu>
@@ -52,9 +52,9 @@ export function ThemeMenu() {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
-          side={isMobile ? "top" : "right"}
           align="end"
           className="max-h-96"
+          side={isMobile ? "top" : "right"}
         >
           <DropdownMenuGroup>
             {themes.slice(0, 3).map((theme) => (

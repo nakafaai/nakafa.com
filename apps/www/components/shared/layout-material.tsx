@@ -69,7 +69,7 @@ export function LayoutMaterialToc({
 }) {
   return (
     <SidebarRight header={header}>
-      <SidebarTree title={chapters.label} data={chapters.data} />
+      <SidebarTree data={chapters.data} title={chapters.label} />
     </SidebarRight>
   );
 }

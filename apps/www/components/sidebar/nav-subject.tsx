@@ -30,10 +30,10 @@ function MenuItem() {
     <SidebarMenu>
       {subjectAll.map((item) => (
         <Collapsible
-          key={item.title}
           asChild
-          defaultOpen
           className="group/collapsible"
+          defaultOpen
+          key={item.title}
         >
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
@@ -55,8 +55,8 @@ function MenuItem() {
                   return (
                     <SidebarMenuSubItem key={title}>
                       <SidebarMenuSubButton
-                        isActive={pathname.includes(subItem.href)}
                         asChild
+                        isActive={pathname.includes(subItem.href)}
                       >
                         <NavigationLink href={subItem.href} title={title}>
                           <span>{title}</span>

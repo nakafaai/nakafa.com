@@ -28,14 +28,14 @@ function PaginationButton({
 }) {
   return (
     <NavigationLink
-      href={href}
-      title={title}
       className={cn(
         buttonVariants({ variant: "outline" }),
         "group flex h-auto flex-col whitespace-normal py-3 shadow-sm",
         !href && "pointer-events-none hidden opacity-50 sm:flex",
         className
       )}
+      href={href}
+      title={title}
     >
       <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">
         {iconPosition === "left" && icon}
@@ -61,21 +61,21 @@ export function PaginationContent({ pagination, className }: Props) {
     <div className={cn("mt-10 pt-10", className)}>
       <div className="mx-auto grid max-w-3xl gap-6 px-6 sm:grid-cols-2">
         <PaginationButton
-          href={pagination.prev.href}
-          title={pagination.prev.title}
-          label={t("previous")}
-          icon={<ArrowLeftIcon className="size-4 shrink-0" />}
           className="items-start"
+          href={pagination.prev.href}
+          icon={<ArrowLeftIcon className="size-4 shrink-0" />}
           iconPosition="left"
+          label={t("previous")}
+          title={pagination.prev.title}
         />
 
         <PaginationButton
-          href={pagination.next.href}
-          title={pagination.next.title}
-          label={t("next")}
-          icon={<ArrowRightIcon className="size-4 shrink-0" />}
           className="items-end"
+          href={pagination.next.href}
+          icon={<ArrowRightIcon className="size-4 shrink-0" />}
           iconPosition="right"
+          label={t("next")}
+          title={pagination.next.title}
         />
       </div>
     </div>

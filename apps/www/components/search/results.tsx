@@ -1,9 +1,5 @@
 "use client";
 
-import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
-import { searchParsers } from "@/lib/nuqs/search";
-import { useSearchQuery } from "@/lib/react-query/use-search";
-import { getAnchorStyle } from "@/lib/utils/search";
 import { useDebouncedValue } from "@mantine/hooks";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
@@ -15,10 +11,14 @@ import {
   InfoIcon,
   RocketIcon,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { Fragment } from "react";
+import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
+import { searchParsers } from "@/lib/nuqs/search";
+import { useSearchQuery } from "@/lib/react-query/use-search";
+import { getAnchorStyle } from "@/lib/utils/search";
 
 export function SearchResults() {
   const t = useTranslations("Utils");
@@ -97,13 +97,13 @@ export function SearchResults() {
             <div className="flex flex-col gap-1">
               {result.sub_results.map((subResult) => (
                 <Link
-                  prefetch
-                  href={subResult.url}
-                  key={`${subResult.url}-${subResult.title}`}
                   className={cn(
                     "group flex items-center gap-2 p-2 px-4 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
                     getAnchorStyle(subResult.anchor)
                   )}
+                  href={subResult.url}
+                  key={`${subResult.url}-${subResult.title}`}
+                  prefetch
                   title={subResult.title}
                 >
                   {subResult.anchor?.element === "h2" ? (

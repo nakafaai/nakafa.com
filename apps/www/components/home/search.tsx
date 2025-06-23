@@ -1,9 +1,9 @@
 "use client";
 
-import { SearchInput } from "@/components/shared/search-input";
-import { useSearch } from "@/lib/context/use-search";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTransition } from "react";
+import { SearchInput } from "@/components/shared/search-input";
+import { useSearch } from "@/lib/context/use-search";
 
 export function HomeSearch() {
   const router = useRouter();
@@ -23,10 +23,10 @@ export function HomeSearch() {
 
   return (
     <SearchInput
-      value={query}
-      setValue={setQuery}
-      loading={isPending}
       action={redirect}
+      loading={isPending}
+      setValue={setQuery}
+      value={query}
     />
   );
 }

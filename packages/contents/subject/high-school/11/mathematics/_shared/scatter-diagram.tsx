@@ -107,51 +107,51 @@ export function ScatterDiagram({
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="x"
-              type="number"
               domain={
                 xAxisDomain === "min-max" ? ["dataMin", "dataMax"] : undefined
               }
-              tickMargin={8}
-              tickFormatter={(value) => {
-                return value.toString();
-              }}
               label={{
                 value: xAxisLabel || "X",
                 position: "bottom",
                 offset: 10,
                 style: { textAnchor: "middle" },
               }}
+              tickFormatter={(value) => {
+                return value.toString();
+              }}
+              tickMargin={8}
+              type="number"
             />
             <YAxis
               dataKey="y"
-              type="number"
-              tickMargin={8}
               label={{
                 value: yAxisLabel || "Y",
                 angle: -90,
                 position: "insideLeft",
                 style: { textAnchor: "middle" },
               }}
+              tickMargin={8}
+              type="number"
             />
             <ChartTooltip content={<ChartTooltipContent hideLabel={true} />} />
             {datasets.map((dataset) => (
               <Scatter
-                key={dataset.name}
                 data={dataset.points}
-                name={dataset.name}
                 fill={dataset.color}
+                key={dataset.name}
+                name={dataset.name}
               />
             ))}
             {regressionLineData && calculateRegressionLine && (
               <Line
+                activeDot={false}
                 data={regressionLineData}
                 dataKey="y"
-                type="linear"
-                stroke={regressionLineStyle?.color || "var(--chart-5)"}
-                strokeWidth={2}
-                strokeDasharray={regressionLineStyle?.strokeDasharray}
                 dot={false}
-                activeDot={false}
+                stroke={regressionLineStyle?.color || "var(--chart-5)"}
+                strokeDasharray={regressionLineStyle?.strokeDasharray}
+                strokeWidth={2}
+                type="linear"
               />
             )}
             {showResiduals &&
@@ -162,6 +162,7 @@ export function ScatterDiagram({
                     regressionParams.m * point.x + regressionParams.b;
                   return (
                     <ReferenceLine
+                      ifOverflow="visible"
                       key={`${dataset.name}-residual-${index}`}
                       segment={[
                         { x: point.x, y: point.y },
@@ -169,7 +170,6 @@ export function ScatterDiagram({
                       ]}
                       stroke={dataset.color}
                       strokeDasharray="2 2"
-                      ifOverflow="visible"
                     />
                   );
                 })

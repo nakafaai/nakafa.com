@@ -25,15 +25,15 @@ export function Header() {
           <Tooltip>
             <TooltipTrigger asChild>
               <a
-                href="https://github.com/nakafaai/nakafa.com"
-                title={t("source-code")}
-                target="_blank"
-                rel="noopener noreferrer"
+                aria-label={t("source-code")}
                 className={cn(
                   buttonVariants({ variant: "outline", size: "icon" }),
                   "size-8 shrink-0"
                 )}
-                aria-label={t("source-code")}
+                href="https://github.com/nakafaai/nakafa.com"
+                rel="noopener noreferrer"
+                target="_blank"
+                title={t("source-code")}
               >
                 <span className="sr-only">{t("source-code")}</span>
                 <IconBrandGithub className="size-4" />
@@ -46,15 +46,15 @@ export function Header() {
           <Tooltip>
             <TooltipTrigger asChild>
               <a
-                href="https://www.youtube.com/@nakafaa"
-                title={t("videos")}
-                target="_blank"
-                rel="noopener noreferrer"
+                aria-label={t("videos")}
                 className={cn(
                   buttonVariants({ variant: "outline", size: "icon" }),
                   "size-8 shrink-0"
                 )}
-                aria-label={t("videos")}
+                href="https://www.youtube.com/@nakafaa"
+                rel="noopener noreferrer"
+                target="_blank"
+                title={t("videos")}
               >
                 <span className="sr-only">{t("videos")}</span>
                 <IconBrandYoutube className="size-4" />

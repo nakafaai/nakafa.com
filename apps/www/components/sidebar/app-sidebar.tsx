@@ -9,8 +9,8 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
 import { cn } from "@repo/design-system/lib/utils";
-import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { AboutMenu } from "./about-menu";
 import { CommunityButton } from "./community-button";
@@ -25,28 +25,28 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar
-      variant="floating"
-      side="left"
       className={cn("z-20", props.className)}
+      side="left"
+      variant="floating"
       {...props}
     >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              size="lg"
-              className="cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               asChild
+              className="cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              size="lg"
             >
               <NavigationLink href="/" title="Nakafa">
                 <div className="relative aspect-square size-8">
                   <Image
-                    src="/logo.svg"
                     alt="Nakafa"
-                    title="Nakafa"
+                    className="rounded-lg border object-contain"
                     fill
                     priority
-                    className="rounded-lg border object-contain"
+                    src="/logo.svg"
+                    title="Nakafa"
                   />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">

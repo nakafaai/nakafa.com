@@ -27,11 +27,11 @@ vi.mock("@/env", () => ({
 }));
 
 describe("Page Routes Integration Tests", () => {
-  const locales = ["en", "id"];
+  const locales = ["en", "id"] as const;
 
   describe("Static Pages", () => {
     for (const locale of locales) {
-      it(`should render home page for ${locale} locale`, async () => {
+      it(`should render home page for ${locale} locale`, () => {
         const url = `/${locale}`;
 
         // Test that the page can be imported and rendered without throwing
@@ -42,17 +42,17 @@ describe("Page Routes Integration Tests", () => {
         // expect(response.status).toBe(200);
       });
 
-      it(`should render search page for ${locale} locale`, async () => {
+      it(`should render search page for ${locale} locale`, () => {
         const url = `/${locale}/search`;
         expect(() => mockRequest(url, locale)).not.toThrow();
       });
 
-      it(`should render contributor page for ${locale} locale`, async () => {
+      it(`should render contributor page for ${locale} locale`, () => {
         const url = `/${locale}/contributor`;
         expect(() => mockRequest(url, locale)).not.toThrow();
       });
 
-      it(`should render articles page for ${locale} locale`, async () => {
+      it(`should render articles page for ${locale} locale`, () => {
         const url = `/${locale}/articles`;
         expect(() => mockRequest(url, locale)).not.toThrow();
       });
@@ -68,13 +68,13 @@ describe("Page Routes Integration Tests", () => {
 
     for (const locale of locales) {
       for (const category of articleCategories) {
-        it(`should render article category page for ${locale}/${category}`, async () => {
+        it(`should render article category page for ${locale}/${category}`, () => {
           const url = `/${locale}/articles/${category}`;
           expect(() => mockRequest(url, locale)).not.toThrow();
         });
 
         for (const slug of sampleSlugs) {
-          it(`should render article page for ${locale}/${category}/${slug}`, async () => {
+          it(`should render article page for ${locale}/${category}/${slug}`, () => {
             const url = `/${locale}/articles/${category}/${slug}`;
             expect(() => mockRequest(url, locale)).not.toThrow();
           });
@@ -107,19 +107,19 @@ describe("Page Routes Integration Tests", () => {
         sampleSlugs,
       } of subjectTestCases) {
         for (const grade of grades) {
-          it(`should render subject grade page for ${locale}/${category}/${grade}`, async () => {
+          it(`should render subject grade page for ${locale}/${category}/${grade}`, () => {
             const url = `/${locale}/subject/${category}/${grade}`;
             expect(() => mockRequest(url, locale)).not.toThrow();
           });
 
           for (const material of materials) {
-            it(`should render subject material page for ${locale}/${category}/${grade}/${material}`, async () => {
+            it(`should render subject material page for ${locale}/${category}/${grade}/${material}`, () => {
               const url = `/${locale}/subject/${category}/${grade}/${material}`;
               expect(() => mockRequest(url, locale)).not.toThrow();
             });
 
             for (const slug of sampleSlugs) {
-              it(`should render subject content page for ${locale}/${category}/${grade}/${material}/${slug}`, async () => {
+              it(`should render subject content page for ${locale}/${category}/${grade}/${material}/${slug}`, () => {
                 const url = `/${locale}/subject/${category}/${grade}/${material}/${slug}`;
                 expect(() => mockRequest(url, locale)).not.toThrow();
               });
@@ -132,17 +132,17 @@ describe("Page Routes Integration Tests", () => {
 
   describe("Error Handling", () => {
     for (const locale of locales) {
-      it(`should handle non-existent routes gracefully for ${locale}`, async () => {
+      it(`should handle non-existent routes gracefully for ${locale}`, () => {
         const url = `/${locale}/non-existent-page`;
         expect(() => mockRequest(url, locale)).not.toThrow();
       });
 
-      it(`should handle invalid subject categories for ${locale}`, async () => {
+      it(`should handle invalid subject categories for ${locale}`, () => {
         const url = `/${locale}/subject/invalid-category/10`;
         expect(() => mockRequest(url, locale)).not.toThrow();
       });
 
-      it(`should handle invalid grades for ${locale}`, async () => {
+      it(`should handle invalid grades for ${locale}`, () => {
         const url = `/${locale}/subject/high-school/invalid-grade`;
         expect(() => mockRequest(url, locale)).not.toThrow();
       });
@@ -150,29 +150,29 @@ describe("Page Routes Integration Tests", () => {
   });
 
   describe("Internationalization", () => {
-    it("should handle locale fallback correctly", async () => {
+    it("should handle locale fallback correctly", () => {
       const url = "/"; // No locale specified
       expect(() => mockRequest(url)).not.toThrow();
     });
 
-    it("should handle invalid locale", async () => {
+    it("should handle invalid locale", () => {
       const url = "/invalid-locale/articles";
       expect(() => mockRequest(url, "invalid-locale")).not.toThrow();
     });
   });
 
   describe("API Routes", () => {
-    it("should handle RSS feed route", async () => {
+    it("should handle RSS feed route", () => {
       const url = "/rss.xml";
       expect(() => mockRequest(url)).not.toThrow();
     });
 
-    it("should handle sitemap route", async () => {
+    it("should handle sitemap route", () => {
       const url = "/sitemap.xml";
       expect(() => mockRequest(url)).not.toThrow();
     });
 
-    it("should handle manifest route", async () => {
+    it("should handle manifest route", () => {
       const url = "/manifest.webmanifest";
       expect(() => mockRequest(url)).not.toThrow();
     });
@@ -180,7 +180,7 @@ describe("Page Routes Integration Tests", () => {
 
   describe("Catch-All Routes", () => {
     for (const locale of locales) {
-      it(`should handle catch-all routes for ${locale}`, async () => {
+      it(`should handle catch-all routes for ${locale}`, () => {
         const url = `/${locale}/some/deep/nested/route`;
         expect(() => mockRequest(url, locale)).not.toThrow();
       });
@@ -188,9 +188,8 @@ describe("Page Routes Integration Tests", () => {
   });
 
   describe("Page Generation", () => {
-    it("should generate static params without errors", async () => {
+    it("should generate static params without errors", () => {
       // Test that static generation functions don't throw errors
-      const locales = ["en", "id"];
       const categories = ["high-school", "university"];
       const grades = ["10", "11", "12", "bachelor"];
 

@@ -32,8 +32,8 @@ export function LineEquation({
       </CardHeader>
       <CardContent>
         <CoordinateSystem cameraPosition={cameraPosition} showZAxis={showZAxis}>
-          {data.map((item, index) => (
-            <LineEquation3D key={`line-equation-${index}`} {...item} />
+          {data.map((item) => (
+            <LineEquation3D key={`${item.points.join(",")}`} {...item} />
           ))}
         </CoordinateSystem>
       </CardContent>

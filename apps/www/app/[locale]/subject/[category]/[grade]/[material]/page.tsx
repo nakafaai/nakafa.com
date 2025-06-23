@@ -1,19 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { CardMaterial } from "@/components/shared/card-material";
-import { ComingSoon } from "@/components/shared/coming-soon";
-import { ContainerList } from "@/components/shared/container-list";
-import {
-  LayoutMaterialContent,
-  LayoutMaterialFooter,
-  LayoutMaterialHeader,
-  LayoutMaterialMain,
-  LayoutMaterialToc,
-} from "@/components/shared/layout-material";
-import { RefContent } from "@/components/shared/ref-content";
-import { getGithubUrl } from "@/lib/utils/github";
-import { getOgUrl } from "@/lib/utils/metadata";
-import { getStaticParams } from "@/lib/utils/system";
 import {
   getGradeNonNumeric,
   getGradePath,
@@ -32,6 +18,20 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CardMaterial } from "@/components/shared/card-material";
+import { ComingSoon } from "@/components/shared/coming-soon";
+import { ContainerList } from "@/components/shared/container-list";
+import {
+  LayoutMaterialContent,
+  LayoutMaterialFooter,
+  LayoutMaterialHeader,
+  LayoutMaterialMain,
+  LayoutMaterialToc,
+} from "@/components/shared/layout-material";
+import { RefContent } from "@/components/shared/ref-content";
+import { getGithubUrl } from "@/lib/utils/github";
+import { getOgUrl } from "@/lib/utils/metadata";
+import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
@@ -108,15 +108,14 @@ export default async function Page({ params }: Props) {
 
   const materials = await getMaterials(FILE_PATH, locale);
 
-  const chapters: ParsedHeading[] = materials.map((material) => ({
-    label: material.title,
-    href: `#${slugify(material.title)}`,
+  const chapters: ParsedHeading[] = materials.map((mat) => ({
+    label: mat.title,
+    href: `#${slugify(mat.title)}`,
   }));
 
   return (
     <>
       <BreadcrumbJsonLd
-        locale={locale}
         breadcrumbItems={materials.map((mat, index) => ({
           "@type": "ListItem",
           "@id": `https://nakafa.com/${locale}${mat.href}`,
@@ -124,23 +123,24 @@ export default async function Page({ params }: Props) {
           name: mat.title,
           item: `https://nakafa.com/${locale}${mat.href}`,
         }))}
+        locale={locale}
       />
       <LayoutMaterialContent>
         <LayoutMaterialHeader
-          title={t(material)}
           icon={getMaterialIcon(material)}
           link={{
             href: gradePath,
             label: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
           }}
+          title={t(material)}
         />
         <LayoutMaterialMain className="py-10">
           {materials.length === 0 ? (
             <ComingSoon className="pb-10" />
           ) : (
             <ContainerList className="sm:grid-cols-1">
-              {materials.map((material) => (
-                <CardMaterial key={material.title} material={material} />
+              {materials.map((mat) => (
+                <CardMaterial key={mat.title} material={mat} />
               ))}
             </ContainerList>
           )}
@@ -152,14 +152,14 @@ export default async function Page({ params }: Props) {
         </LayoutMaterialFooter>
       </LayoutMaterialContent>
       <LayoutMaterialToc
+        chapters={{
+          label: t("chapter"),
+          data: chapters,
+        }}
         header={{
           title: t(material),
           href: FILE_PATH,
           description: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
-        }}
-        chapters={{
-          label: t("chapter"),
-          data: chapters,
         }}
       />
     </>

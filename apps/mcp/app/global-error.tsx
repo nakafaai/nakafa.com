@@ -27,13 +27,13 @@ export default function GlobalError({
 
   return (
     // global-error must include html and body tags
-    <html lang="en" className={fonts} suppressHydrationWarning>
+    <html className={fonts} lang="en" suppressHydrationWarning>
       <body>
         <DesignSystemProvider>
           <div className="relative">
             <div
-              data-pagefind-ignore
               className="relative flex h-svh items-center justify-center"
+              data-pagefind-ignore
             >
               <Particles className="pointer-events-none absolute inset-0 opacity-80" />
               <div className="mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
@@ -53,15 +53,15 @@ export default function GlobalError({
                   </div>
 
                   <div className="mx-auto grid w-fit grid-cols-2 gap-2">
-                    <Button variant="secondary" onClick={reset}>
+                    <Button onClick={reset} variant="secondary">
                       Retry
                     </Button>
                     <a
-                      href="https://github.com/nakafaai/nakafa.com/issues"
-                      title="Report"
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className={cn(buttonVariants({ variant: "secondary" }))}
+                      href="https://github.com/nakafaai/nakafa.com/issues"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      title="Report"
                     >
                       Report
                     </a>

@@ -5,7 +5,15 @@ import { useFrame } from "@react-three/fiber";
 import { COLORS } from "@repo/design-system/lib/color";
 import { isMobileDevice } from "@repo/design-system/lib/device";
 import { useMemo, useRef } from "react";
-import * as THREE from "three";
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  DoubleSide,
+  Float32BufferAttribute,
+  type Group,
+  MeshBasicMaterial,
+} from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
 
 type Props = {
@@ -25,9 +33,9 @@ type Props = {
   /** Granularity of the visualization (higher means more detailed) */
   resolution?: number;
   /** Color for the inequality region */
-  color?: string | THREE.Color;
+  color?: string | Color;
   /** Color for the boundary line/plane */
-  boundaryColor?: string | THREE.Color;
+  boundaryColor?: string | Color;
   /** Opacity of the region */
   opacity?: number;
   /** Width of the boundary line */
@@ -41,7 +49,7 @@ type Props = {
     /** Position for the label */
     position: [number, number, number];
     /** Color for the label text */
-    color?: string | THREE.Color;
+    color?: string | Color;
     /** Font size of the label text */
     fontSize?: number;
   };
@@ -81,7 +89,7 @@ export function Inequality({
   useMonoFont = true,
 }: Props) {
   const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
-  const groupRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<Group>(null);
 
   // Adaptive resolution for performance
   const adaptiveResolution = getAdaptiveResolution(resolution);
@@ -89,7 +97,7 @@ export function Inequality({
   // Create optimized buffer geometry for the inequality region
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function, but it's necessary for the inequality visualization
   const geometry = useMemo(() => {
-    const geo = new THREE.BufferGeometry();
+    const geo = new BufferGeometry();
     const vertices: Float32Array = new Float32Array(
       adaptiveResolution * adaptiveResolution * 36 * 3
     ); // Pre-allocate
@@ -267,11 +275,8 @@ export function Inequality({
     const finalVertices = new Float32Array(vertices.buffer, 0, vertexIndex);
     const finalIndices = new Uint32Array(indices.buffer, 0, indexOffset);
 
-    geo.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(finalVertices, 3)
-    );
-    geo.setIndex(new THREE.BufferAttribute(finalIndices, 1));
+    geo.setAttribute("position", new Float32BufferAttribute(finalVertices, 3));
+    geo.setIndex(new BufferAttribute(finalIndices, 1));
     geo.computeVertexNormals();
 
     return geo;
@@ -287,11 +292,11 @@ export function Inequality({
 
   // Material for the inequality region with performance optimizations
   const material = useMemo(() => {
-    return new THREE.MeshBasicMaterial({
-      color: color instanceof THREE.Color ? color : new THREE.Color(color),
+    return new MeshBasicMaterial({
+      color: color instanceof Color ? color : new Color(color),
       transparent: true,
-      opacity: opacity,
-      side: THREE.DoubleSide,
+      opacity,
+      side: DoubleSide,
       depthWrite: false, // Better transparency handling
     });
   }, [color, opacity]);
@@ -299,8 +304,8 @@ export function Inequality({
   // Generate boundary lines for rendering - optimized
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function, but it's necessary for the inequality visualization
   const boundarySegmentsGeometry = useMemo(() => {
-    if ((!boundaryFunction && !boundaryLine2D) || !showBoundary) {
-      return undefined;
+    if (!((boundaryFunction || boundaryLine2D) && showBoundary)) {
+      return;
     }
 
     const vertices: number[] = [];
@@ -405,14 +410,11 @@ export function Inequality({
     }
 
     if (vertices.length === 0) {
-      return undefined;
+      return;
     }
 
-    const geom = new THREE.BufferGeometry();
-    geom.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(vertices, 3)
-    );
+    const geom = new BufferGeometry();
+    geom.setAttribute("position", new Float32BufferAttribute(vertices, 3));
     return geom;
   }, [
     showBoundary,
@@ -438,11 +440,11 @@ export function Inequality({
   return (
     <group ref={groupRef}>
       {/* Render the shaded region */}
-      <mesh geometry={geometry} material={material} frustumCulled />
+      <mesh frustumCulled geometry={geometry} material={material} />
 
       {/* Render the boundary as one lineSegments for better performance */}
       {showBoundary && boundarySegmentsGeometry && (
-        <lineSegments geometry={boundarySegmentsGeometry} frustumCulled>
+        <lineSegments frustumCulled geometry={boundarySegmentsGeometry}>
           <lineBasicMaterial
             color={finalBoundaryColor}
             linewidth={boundaryLineWidth}
@@ -453,13 +455,13 @@ export function Inequality({
       {/* Render label if provided */}
       {label && (
         <Text
-          position={label.position}
-          color={label.color || finalBoundaryColor}
-          fontSize={label.fontSize || 0.5}
-          font={fontPath}
           anchorX="center"
           anchorY="middle"
+          color={label.color || finalBoundaryColor}
+          font={fontPath}
+          fontSize={label.fontSize || 0.5}
           frustumCulled
+          position={label.position}
         >
           {label.text}
         </Text>

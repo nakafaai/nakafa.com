@@ -74,38 +74,38 @@ export function CabinetChart({ title, description, footnote }: Props) {
           >
             <CartesianGrid horizontal={false} />
             <YAxis
+              axisLine={false}
               dataKey="name"
-              type="category"
+              hide
+              tickFormatter={(value) => value.slice(0, 3)}
               tickLine={false}
               tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-              hide
+              type="category"
             />
-            <XAxis dataKey="cabinet" type="number" hide />
+            <XAxis dataKey="cabinet" hide type="number" />
             <ChartTooltip
-              cursor={false}
               content={<ChartTooltipContent indicator="line" />}
+              cursor={false}
             />
             <Bar
               dataKey="cabinet"
-              layout="vertical"
               fill="var(--color-cabinet)"
+              layout="vertical"
               radius={8}
             >
               <LabelList
-                dataKey="name"
-                position="insideLeft"
-                offset={8}
                 className="fill-(--color-label)"
+                dataKey="name"
                 fontSize={12}
+                offset={8}
+                position="insideLeft"
               />
               <LabelList
-                dataKey="cabinet"
-                position="right"
-                offset={8}
                 className="fill-foreground"
+                dataKey="cabinet"
                 fontSize={12}
+                offset={8}
+                position="right"
               />
             </Bar>
             <ChartLegend content={<ChartLegendContent />} />
@@ -167,20 +167,20 @@ export function CompositionChart({ title, description, footnote }: Props) {
       <CardContent>
         <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <ChartContainer
-            config={chartConfig}
             className="aspect-square sm:aspect-square"
+            config={chartConfig}
           >
             <BarChart accessibilityLayer data={MinisterChartData}>
               <CartesianGrid vertical={false} />
               <XAxis
+                axisLine={false}
                 dataKey="name"
                 tickLine={false}
                 tickMargin={10}
-                axisLine={false}
               />
               <ChartTooltip
-                cursor={false}
                 content={<ChartTooltipContent indicator="line" />}
+                cursor={false}
               />
               <Bar dataKey="new" fill="var(--color-new)" radius={8} />
               <Bar
@@ -193,20 +193,20 @@ export function CompositionChart({ title, description, footnote }: Props) {
           </ChartContainer>
 
           <ChartContainer
-            config={chartConfig}
             className="aspect-square sm:aspect-square"
+            config={chartConfig}
           >
             <BarChart data={GenderChartData}>
               <CartesianGrid vertical={false} />
               <XAxis
+                axisLine={false}
                 dataKey="name"
                 tickLine={false}
                 tickMargin={10}
-                axisLine={false}
               />
               <ChartTooltip
-                cursor={false}
                 content={<ChartTooltipContent indicator="line" />}
+                cursor={false}
               />
               <Bar dataKey="male" fill="var(--color-male)" radius={8} />
               <Bar dataKey="female" fill="var(--color-female)" radius={8} />
@@ -215,20 +215,20 @@ export function CompositionChart({ title, description, footnote }: Props) {
           </ChartContainer>
 
           <ChartContainer
-            config={chartConfig}
             className="aspect-square sm:aspect-square"
+            config={chartConfig}
           >
             <BarChart data={PoliticalStatusChartData}>
               <CartesianGrid vertical={false} />
               <XAxis
+                axisLine={false}
                 dataKey="name"
                 tickLine={false}
                 tickMargin={10}
-                axisLine={false}
               />
               <ChartTooltip
-                cursor={false}
                 content={<ChartTooltipContent indicator="line" />}
+                cursor={false}
               />
               <Bar
                 dataKey="politician"

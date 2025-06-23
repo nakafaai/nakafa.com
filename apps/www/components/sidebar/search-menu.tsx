@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearch } from "@/lib/context/use-search";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -12,6 +11,7 @@ import {
 import { IconCommand, IconLetterK } from "@tabler/icons-react";
 import { SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSearch } from "@/lib/context/use-search";
 
 export function SearchMenu() {
   const t = useTranslations("Utils");
@@ -27,10 +27,10 @@ export function SearchMenu() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
+              className="cursor-pointer justify-between text-muted-foreground"
               isActive={open}
               onClick={() => setOpen(true)}
               variant="outline"
-              className="cursor-pointer justify-between text-muted-foreground"
             >
               <div className="flex items-center gap-2">
                 <SearchIcon className="size-4" />

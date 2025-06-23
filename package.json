@@ -4,8 +4,13 @@
   "bin": {
     "nakafa": "dist/index.js"
   },
-  "files": ["dist/index.js"],
-  "workspaces": ["apps/*", "packages/*"],
+  "files": [
+    "dist/index.js"
+  ],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
@@ -21,14 +26,14 @@
     "clean": "git clean -xdf node_modules"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.0.4",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.5.4",
     "@types/node": "^24.0.3",
     "tsup": "^8.5.0",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3",
-    "ultracite": "^4.2.13",
+    "ultracite": "^5.0.10",
     "vitest": "^3.2.4"
   },
   "packageManager": "bun@1.2.17",

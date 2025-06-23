@@ -1,7 +1,5 @@
 "use client";
 
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
-
 import {
   Card,
   CardContent,
@@ -17,8 +15,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@repo/design-system/components/ui/chart";
-import { useMemo } from "react";
 import type { ReactNode } from "react";
+import { useMemo } from "react";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 type Props = {
   p: number;
@@ -59,14 +58,14 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <LineChart data={data} accessibilityLayer>
+          <LineChart accessibilityLayer data={data}>
             <CartesianGrid />
             <XAxis
               dataKey="x"
-              tickMargin={8}
               tickFormatter={(value) => {
                 return value.toString();
               }}
+              tickMargin={8}
             />
             <YAxis
               label={{
@@ -75,10 +74,10 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
                 position: "insideLeft",
                 style: { textAnchor: "middle" },
               }}
-              tickMargin={8}
               tickFormatter={(value) =>
                 value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value
               }
+              tickMargin={8}
             />
             <ChartTooltip
               content={({ active, payload }) => {
@@ -91,8 +90,8 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
                     return (
                       <ChartTooltipContent
                         active={active}
-                        payload={[]}
                         label={`x = ${xValue}, y = undefined`}
+                        payload={[]}
                       />
                     );
                   }
@@ -100,8 +99,8 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
                   return (
                     <ChartTooltipContent
                       active={active}
-                      payload={payload}
                       label={`x = ${xValue}`}
+                      payload={payload}
                     />
                   );
                 }
@@ -109,13 +108,13 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
               }}
             />
             <Line
-              type="monotone"
+              connectNulls={false}
               dataKey="y"
-              stroke={chartConfig.y.color}
-              strokeWidth={2}
               dot
               name="y"
-              connectNulls={false}
+              stroke={chartConfig.y.color}
+              strokeWidth={2}
+              type="monotone"
             />
             <ChartLegend
               content={<ChartLegendContent verticalAlign="bottom" />}

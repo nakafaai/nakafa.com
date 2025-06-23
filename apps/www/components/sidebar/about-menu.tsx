@@ -22,7 +22,7 @@ export function AboutMenu() {
         </SidebarMenuButton>
       </SidebarMenuItem>
 
-      <AboutDialog open={open} action={setOpen} />
+      <AboutDialog action={setOpen} open={open} />
     </>
   );
 }

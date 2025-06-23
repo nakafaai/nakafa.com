@@ -3,7 +3,6 @@ import type { BreadcrumbList, WithContext } from "schema-dts";
 import { JsonLd } from ".";
 
 type Props = {
-  id?: string;
   locale: Locale;
   breadcrumbItems: BreadcrumbList["itemListElement"];
   name?: string;
@@ -11,7 +10,6 @@ type Props = {
 };
 
 export function BreadcrumbJsonLd({
-  id = "breadcrumb-jsonld",
   locale,
   breadcrumbItems,
   name,

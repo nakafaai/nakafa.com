@@ -1,13 +1,13 @@
-import { getRawGithubUrl } from "@/lib/utils/github";
 import {
   getFolderChildNames,
   getNestedSlugs,
   getRawContent,
 } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
-import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { type NextRequest, NextResponse } from "next/server";
+import { hasLocale } from "next-intl";
+import { getRawGithubUrl } from "@/lib/utils/github";
 
 export const revalidate = false;
 

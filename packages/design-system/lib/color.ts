@@ -47,7 +47,7 @@ export function randomColor(
   seed?: string | number
 ) {
   const availableKeys = COLOR_KEYS.filter(
-    (key) => !exclude || !exclude.some((excludeKey) => excludeKey === key)
+    (key) => !exclude?.some((excludeKey) => excludeKey === key)
   );
 
   if (availableKeys.length === 0) {

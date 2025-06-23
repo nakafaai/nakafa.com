@@ -34,8 +34,8 @@ export function PagefindProvider({ children }: { children: ReactNode }) {
       try {
         await importPagefind();
         setReady(true);
-      } catch (error: unknown) {
-        setError(getErrorMessage(error));
+      } catch (err: unknown) {
+        setError(getErrorMessage(err));
         setReady(false); // Explicitly set to false on error
       }
     };

@@ -25,8 +25,8 @@ import type {
   StrongProps,
   TableBodyProps,
   TableCellProps,
-  TableHeadProps,
   TableHeaderProps,
+  TableHeadProps,
   TableProps,
   TableRowProps,
 } from "@repo/design-system/types/markdown";
@@ -34,22 +34,22 @@ import type { MDXComponents } from "mdx/types";
 
 const components = {
   h1: (props: HeadingProps) => (
-    <Heading Tag="h1" className="text-3xl" {...props} />
+    <Heading className="text-3xl" Tag="h1" {...props} />
   ),
   h2: (props: HeadingProps) => (
-    <Heading Tag="h2" className="text-2xl" {...props} />
+    <Heading className="text-2xl" Tag="h2" {...props} />
   ),
   h3: (props: HeadingProps) => (
-    <Heading Tag="h3" className="text-xl" {...props} />
+    <Heading className="text-xl" Tag="h3" {...props} />
   ),
   h4: (props: HeadingProps) => (
-    <Heading Tag="h4" className="text-lg" {...props} />
+    <Heading className="text-lg" Tag="h4" {...props} />
   ),
   h5: (props: HeadingProps) => (
-    <Heading Tag="h5" className="text-base" {...props} />
+    <Heading className="text-base" Tag="h5" {...props} />
   ),
   h6: (props: HeadingProps) => (
-    <Heading Tag="h6" className="text-sm" {...props} />
+    <Heading className="text-sm" Tag="h6" {...props} />
   ),
   p: (props: ParagraphProps) => <Paragraph {...props} />,
   ol: (props: ListProps) => (
@@ -75,12 +75,12 @@ const components = {
     if (href?.startsWith("/")) {
       return (
         <NavigationLink
-          href={href}
-          title={href}
           className={cn(
             className,
             "h-auto p-0 text-base underline underline-offset-4"
           )}
+          href={href}
+          title={href}
           {...props}
         >
           {children}
@@ -89,18 +89,18 @@ const components = {
     }
     if (href?.startsWith("#")) {
       return (
-        <a href={href} title={href} className={className} {...props}>
+        <a className={className} href={href} title={href} {...props}>
           {children}
         </a>
       );
     }
     return (
       <a
-        href={href}
-        title={href}
-        target="_blank"
-        rel="noopener noreferrer"
         className={className}
+        href={href}
+        rel="noopener noreferrer"
+        target="_blank"
+        title={href}
         {...props}
       >
         {children}

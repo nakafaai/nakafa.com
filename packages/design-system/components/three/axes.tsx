@@ -4,15 +4,15 @@ import { Line, Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { COLORS } from "@repo/design-system/lib/color";
 import { type ComponentProps, useMemo, useRef } from "react";
-import * as THREE from "three";
+import { type Group, MeshBasicMaterial, Vector3 } from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
 
 // Shared materials cache for text components
-const textMaterialCache = new Map<string, THREE.MeshBasicMaterial>();
+const textMaterialCache = new Map<string, MeshBasicMaterial>();
 
-function getTextMaterial(color: string): THREE.MeshBasicMaterial {
+function getTextMaterial(color: string): MeshBasicMaterial {
   if (!textMaterialCache.has(color)) {
-    textMaterialCache.set(color, new THREE.MeshBasicMaterial({ color }));
+    textMaterialCache.set(color, new MeshBasicMaterial({ color }));
   }
   const material = textMaterialCache.get(color);
   if (!material) {
@@ -37,21 +37,21 @@ export function Axes({
   labelOffset?: number;
   font?: "mono" | "sans";
 } & ComponentProps<"group">) {
-  const groupRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<Group>(null);
 
   // Create points for each axis (now extending in both positive and negative directions)
   const xPoints = useMemo(
-    () => [new THREE.Vector3(-size, 0, 0), new THREE.Vector3(size, 0, 0)],
+    () => [new Vector3(-size, 0, 0), new Vector3(size, 0, 0)],
     [size]
   );
 
   const yPoints = useMemo(
-    () => [new THREE.Vector3(0, -size, 0), new THREE.Vector3(0, size, 0)],
+    () => [new Vector3(0, -size, 0), new Vector3(0, size, 0)],
     [size]
   );
 
   const zPoints = useMemo(
-    () => [new THREE.Vector3(0, 0, -size), new THREE.Vector3(0, 0, size)],
+    () => [new Vector3(0, 0, -size), new Vector3(0, 0, size)],
     [size]
   );
 
@@ -85,90 +85,90 @@ export function Axes({
   return (
     <group ref={groupRef} {...props}>
       {/* Axis lines with frustum culling */}
-      <Line points={xPoints} color={COLORS.RED} lineWidth={2} frustumCulled />
-      <Line points={yPoints} color={COLORS.GREEN} lineWidth={2} frustumCulled />
+      <Line color={COLORS.RED} frustumCulled lineWidth={2} points={xPoints} />
+      <Line color={COLORS.GREEN} frustumCulled lineWidth={2} points={yPoints} />
       <Line
-        visible={showZAxis}
-        points={zPoints}
         color={COLORS.BLUE}
-        lineWidth={2}
         frustumCulled
+        lineWidth={2}
+        points={zPoints}
+        visible={showZAxis}
       />
 
       {/* X-axis labels */}
       <Text
-        visible={showLabels}
-        position={labelPositions.xPos}
-        color={COLORS.RED}
-        fontSize={labelSize}
         anchorX="left"
+        color={COLORS.RED}
         font={fontToUse}
+        fontSize={labelSize}
         frustumCulled
         material={redMaterial}
+        position={labelPositions.xPos}
+        visible={showLabels}
       >
         X
       </Text>
       <Text
-        visible={showLabels}
-        position={labelPositions.xNeg}
-        color={COLORS.RED}
-        fontSize={labelSize}
         anchorX="right"
+        color={COLORS.RED}
         font={fontToUse}
+        fontSize={labelSize}
         frustumCulled
         material={redMaterial}
+        position={labelPositions.xNeg}
+        visible={showLabels}
       >
         -X
       </Text>
 
       {/* Y-axis labels */}
       <Text
-        visible={showLabels}
-        position={labelPositions.yPos}
-        color={COLORS.GREEN}
-        fontSize={labelSize}
         anchorX="left"
+        color={COLORS.GREEN}
         font={fontToUse}
+        fontSize={labelSize}
         frustumCulled
         material={greenMaterial}
+        position={labelPositions.yPos}
+        visible={showLabels}
       >
         Y
       </Text>
       <Text
-        visible={showLabels}
-        position={labelPositions.yNeg}
-        color={COLORS.GREEN}
-        fontSize={labelSize}
         anchorX="left"
+        color={COLORS.GREEN}
         font={fontToUse}
+        fontSize={labelSize}
         frustumCulled
         material={greenMaterial}
+        position={labelPositions.yNeg}
+        visible={showLabels}
       >
         -Y
       </Text>
 
       {/* Z-axis labels */}
       <Text
-        visible={showZAxis && showLabels}
-        position={labelPositions.zPos}
-        color={COLORS.BLUE}
-        fontSize={labelSize}
         anchorX="left"
+        color={COLORS.BLUE}
         font={fontToUse}
+        fontSize={labelSize}
         frustumCulled
         material={blueMaterial}
+        position={labelPositions.zPos}
+        visible={showZAxis && showLabels}
       >
         Z
       </Text>
       <Text
-        visible={showZAxis && showLabels}
-        position={labelPositions.zNeg}
-        color={COLORS.BLUE}
-        fontSize={labelSize}
         anchorX="left"
+        color={COLORS.BLUE}
         font={fontToUse}
+        fontSize={labelSize}
         frustumCulled
         material={blueMaterial}
+        position={labelPositions.zNeg}
+        visible={showZAxis && showLabels}
       >
         -Z
       </Text>

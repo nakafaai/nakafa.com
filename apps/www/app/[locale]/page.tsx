@@ -1,6 +1,3 @@
-import { LangSwitcher } from "@/components/home/lang-switcher";
-import { HomeSearch } from "@/components/home/search";
-import { HomeTitle } from "@/components/home/title";
 import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { cn } from "@repo/design-system/lib/utils";
@@ -9,6 +6,9 @@ import { IconBrandYoutube } from "@tabler/icons-react";
 import { HeartHandshakeIcon } from "lucide-react";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { LangSwitcher } from "@/components/home/lang-switcher";
+import { HomeSearch } from "@/components/home/search";
+import { HomeTitle } from "@/components/home/title";
 
 export const revalidate = false;
 
@@ -29,7 +29,6 @@ export default async function Page({ params }: Props) {
   return (
     <>
       <BreadcrumbJsonLd
-        locale={locale}
         breadcrumbItems={[
           {
             "@type": "ListItem",
@@ -60,10 +59,11 @@ export default async function Page({ params }: Props) {
             item: `https://nakafa.com/${locale}/contributor`,
           },
         ]}
+        locale={locale}
       />
       <div
-        data-pagefind-ignore
         className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh"
+        data-pagefind-ignore
       >
         <Particles className="pointer-events-none absolute inset-0 opacity-80" />
         <div className="mx-auto w-full max-w-xl px-6">
@@ -75,21 +75,21 @@ export default async function Page({ params }: Props) {
             <div className="mt-4 flex justify-between gap-6 gap-y-3 sm:items-center">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <a
-                  href="https://github.com/nakafaai/nakafa.com"
-                  title={tHome("contribute")}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className={cn(buttonVariants({ variant: "outline" }))}
+                  href="https://github.com/nakafaai/nakafa.com"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  title={tHome("contribute")}
                 >
                   <HeartHandshakeIcon className="size-4" />
                   {tHome("contribute")}
                 </a>
                 <a
-                  href="https://www.youtube.com/@nakafaa"
-                  title={tHome("videos")}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className={cn(buttonVariants({ variant: "outline" }))}
+                  href="https://www.youtube.com/@nakafaa"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  title={tHome("videos")}
                 >
                   <IconBrandYoutube className="size-4" />
                   {tHome("videos")}

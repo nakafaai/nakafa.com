@@ -194,7 +194,7 @@ export function VectorChart({
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <LineChart data={data} accessibilityLayer>
+          <LineChart accessibilityLayer data={data}>
             <CartesianGrid />
             <defs>
               {/* Vector arrows for both directions */}
@@ -205,24 +205,24 @@ export function VectorChart({
                     {/* Forward arrow marker (end of line) */}
                     <marker
                       id={`arrow-end-${vector.id}`}
-                      viewBox="0 0 10 10"
+                      markerHeight="8"
+                      markerWidth="8"
+                      orient="auto"
                       refX="10"
                       refY="5"
-                      markerWidth="8"
-                      markerHeight="8"
-                      orient="auto"
+                      viewBox="0 0 10 10"
                     >
                       <path d="M 0 0 L 10 5 L 0 10 Z" fill={color} />
                     </marker>
                     {/* Backward arrow marker (start of line) */}
                     <marker
                       id={`arrow-start-${vector.id}`}
-                      viewBox="0 0 10 10"
+                      markerHeight="8"
+                      markerWidth="8"
+                      orient="auto-start-reverse"
                       refX="10"
                       refY="5"
-                      markerWidth="8"
-                      markerHeight="8"
-                      orient="auto-start-reverse"
+                      viewBox="0 0 10 10"
                     >
                       <path d="M 0 0 L 10 5 L 0 10 Z" fill={color} />
                     </marker>
@@ -232,7 +232,6 @@ export function VectorChart({
             </defs>
             <XAxis
               dataKey="x"
-              tickMargin={8}
               tickFormatter={(value) => {
                 if (typeof value === "number") {
                   return Number.isInteger(value)
@@ -241,23 +240,24 @@ export function VectorChart({
                 }
                 return value;
               }}
+              tickMargin={8}
             />
             <YAxis
-              tickMargin={8}
-              tickFormatter={(value) => {
-                if (typeof value === "number") {
-                  return Number.isInteger(value)
-                    ? value.toString()
-                    : value.toFixed(2);
-                }
-                return value;
-              }}
               label={{
                 value: labels.yAxis,
                 angle: -90,
                 position: "insideLeft",
                 style: { textAnchor: "middle" },
               }}
+              tickFormatter={(value) => {
+                if (typeof value === "number") {
+                  return Number.isInteger(value)
+                    ? value.toString()
+                    : value.toFixed(2);
+                }
+                return value;
+              }}
+              tickMargin={8}
             />
 
             <ChartTooltip
@@ -267,7 +267,7 @@ export function VectorChart({
 
                   return (
                     <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
-                      {payload.map((entry, index) => {
+                      {payload.map((entry) => {
                         if (entry.value === null) {
                           return null;
                         }
@@ -278,8 +278,8 @@ export function VectorChart({
 
                         return (
                           <div
-                            key={`tooltip-${index}`}
                             className="flex items-center gap-2"
+                            key={`tooltip-${entry.name}-${entry.value}`}
                           >
                             <div
                               className="h-2 w-2 shrink-0 rounded-[2px]"
@@ -315,18 +315,18 @@ export function VectorChart({
 
               return (
                 <Line
-                  key={vector.id}
-                  type={vector.type || "monotone"}
+                  connectNulls
                   dataKey={vector.id}
+                  dot
+                  key={vector.id}
+                  name={vector.name}
                   stroke={color}
                   strokeWidth={2}
-                  dot
-                  name={vector.name}
-                  connectNulls
                   style={{
                     stroke: color,
                     ...markerProps,
                   }}
+                  type={vector.type || "monotone"}
                 />
               );
             })}

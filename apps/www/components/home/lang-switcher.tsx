@@ -2,11 +2,11 @@
 
 import { Button } from "@repo/design-system/components/ui/button";
 import {
+  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { DropdownMenu } from "@repo/design-system/components/ui/dropdown-menu";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
 import {
@@ -15,9 +15,8 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { LanguagesIcon } from "lucide-react";
-import { type Locale, useLocale } from "next-intl";
-import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
+import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 
 export function LangSwitcher() {
@@ -67,11 +66,11 @@ export function LangSwitcher() {
       <DropdownMenuContent align="end">
         {languages.map((language) => (
           <DropdownMenuItem
-            key={language.value}
-            onMouseEnter={() => handlePrefetch(language.value)}
-            onFocus={() => handlePrefetch(language.value)}
-            onClick={() => handleChangeLocale(language.value)}
             disabled={isPending}
+            key={language.value}
+            onClick={() => handleChangeLocale(language.value)}
+            onFocus={() => handlePrefetch(language.value)}
+            onMouseEnter={() => handlePrefetch(language.value)}
           >
             <span className="truncate">{language.label}</span>
             <IconCircleFilled

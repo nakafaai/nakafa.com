@@ -29,25 +29,25 @@ export function SearchInput({
 
   return (
     <div className="relative">
-      <Label htmlFor={id} className="sr-only">
+      <Label className="sr-only" htmlFor={id}>
         {t("search")}
       </Label>
       <Input
-        id={id}
+        autoComplete="off"
         className={cn(
           "h-12 border-border px-9 backdrop-blur-sm sm:w-full",
           className
         )}
-        placeholder={t("search-bar-placeholder")}
-        type="text"
-        value={value}
+        id={id}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             action?.();
           }
         }}
-        autoComplete="off"
+        placeholder={t("search-bar-placeholder")}
+        type="text"
+        value={value}
         {...props}
       />
       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3 text-muted-foreground">
@@ -60,29 +60,29 @@ export function SearchInput({
             action && "right-9"
           )}
         >
-          <SpinnerIcon className="size-4" aria-hidden="true" />
+          <SpinnerIcon aria-hidden="true" className="size-4" />
         </div>
       ) : (
         <button
+          aria-label="Clear search"
           className={cn(
             "absolute inset-y-0 end-0 flex h-full w-9 cursor-pointer items-center justify-center rounded-e-md text-muted-foreground opacity-0 outline-none transition-[color,box-shadow] hover:text-foreground",
             value && "opacity-100",
             action && "right-9"
           )}
-          aria-label="Clear search"
-          type="button"
           onClick={() => setValue("")}
+          type="button"
         >
-          <XIcon className="size-4 shrink-0" aria-hidden="true" />
+          <XIcon aria-hidden="true" className="size-4 shrink-0" />
           <span className="sr-only">Clear search</span>
         </button>
       )}
       {action && (
         <button
           className="absolute inset-y-0 end-0 flex h-full cursor-pointer items-center justify-center pe-3 text-muted-foreground disabled:cursor-default disabled:opacity-50 peer-disabled:opacity-50"
-          type="button"
-          onClick={action}
           disabled={loading || !value}
+          onClick={action}
+          type="button"
         >
           <kbd className="flex size-6 items-center justify-center rounded-md border bg-primary text-primary-foreground">
             <CornerDownLeftIcon className="size-3" />

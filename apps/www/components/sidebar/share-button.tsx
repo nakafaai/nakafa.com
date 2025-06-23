@@ -6,8 +6,8 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { getAppUrl } from "@repo/design-system/lib/utils";
 import { Share2Icon } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 export function ShareButton() {
@@ -27,7 +27,7 @@ export function ShareButton() {
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton tooltip={t("share")} onClick={handleShare}>
+      <SidebarMenuButton onClick={handleShare} tooltip={t("share")}>
         <Share2Icon className="size-4 shrink-0" />
         <span className="truncate">{t("share")}</span>
       </SidebarMenuButton>

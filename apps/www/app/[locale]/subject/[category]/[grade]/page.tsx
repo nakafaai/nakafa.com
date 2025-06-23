@@ -1,12 +1,3 @@
-import { CardSubject } from "@/components/shared/card-subject";
-import { ContainerList } from "@/components/shared/container-list";
-import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderContent } from "@/components/shared/header-content";
-import { LayoutContent } from "@/components/shared/layout-content";
-import { RefContent } from "@/components/shared/ref-content";
-import { getGithubUrl } from "@/lib/utils/github";
-import { getOgUrl } from "@/lib/utils/metadata";
-import { getStaticParams } from "@/lib/utils/system";
 import { getCategoryIcon } from "@repo/contents/_lib/subject/category";
 import {
   getGradeNonNumeric,
@@ -19,6 +10,15 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CardSubject } from "@/components/shared/card-subject";
+import { ContainerList } from "@/components/shared/container-list";
+import { FooterContent } from "@/components/shared/footer-content";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
+import { RefContent } from "@/components/shared/ref-content";
+import { getGithubUrl } from "@/lib/utils/github";
+import { getOgUrl } from "@/lib/utils/metadata";
+import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
@@ -84,7 +84,6 @@ export default async function Page({ params }: Props) {
   return (
     <>
       <BreadcrumbJsonLd
-        locale={locale}
         breadcrumbItems={subjects.map((subject, index) => ({
           "@type": "ListItem",
           "@id": `https://nakafa.com/${locale}${subject.href}`,
@@ -92,11 +91,12 @@ export default async function Page({ params }: Props) {
           name: t(subject.label),
           item: `https://nakafa.com/${locale}${subject.href}`,
         }))}
+        locale={locale}
       />
       <HeaderContent
-        title={t(getGradeNonNumeric(grade) ?? "grade", { grade })}
         description={t("grade-description")}
         icon={getCategoryIcon(category)}
+        title={t(getGradeNonNumeric(grade) ?? "grade", { grade })}
       />
       <LayoutContent className="py-10">
         <ContainerList>

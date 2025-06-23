@@ -8,15 +8,18 @@ import {
 } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { FrownIcon } from "lucide-react";
-import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 function ErrorFallback({
   error,
   resetErrorBoundary,
-}: { error: Error; resetErrorBoundary: () => void }) {
+}: {
+  error: Error;
+  resetErrorBoundary: () => void;
+}) {
   const t = useTranslations("Error");
   return (
     <div className="flex h-full w-full flex-col items-center justify-center p-4 text-center">
@@ -34,15 +37,15 @@ function ErrorFallback({
         </div>
 
         <div className="mx-auto grid w-fit grid-cols-2 gap-2">
-          <Button variant="secondary" size="sm" onClick={resetErrorBoundary}>
+          <Button onClick={resetErrorBoundary} size="sm" variant="secondary">
             {t("retry")}
           </Button>
           <a
-            href="https://github.com/nakafaai/nakafa.com/issues"
-            title={t("report")}
-            target="_blank"
-            rel="noopener noreferrer"
             className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}
+            href="https://github.com/nakafaai/nakafa.com/issues"
+            rel="noopener noreferrer"
+            target="_blank"
+            title={t("report")}
           >
             {t("report")}
           </a>
@@ -69,21 +72,21 @@ function ThreeCanvasComponent({
       <Canvas
         fallback={
           <div className="flex h-full w-full items-center justify-center">
-            <FrownIcon className="size-6 shrink-0" aria-hidden="true" />
+            <FrownIcon aria-hidden="true" className="size-6 shrink-0" />
           </div>
         }
-        shadows
         frameloop={frameloop}
-        performance={{
-          min: 0.8,
-          max: 1.0,
-          debounce: 100,
-        }}
         gl={{
           antialias: true,
           powerPreference: "high-performance",
           alpha: true,
         }}
+        performance={{
+          min: 0.8,
+          max: 1.0,
+          debounce: 100,
+        }}
+        shadows
         {...props}
       >
         <AdaptiveDpr />

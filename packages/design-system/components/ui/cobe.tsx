@@ -13,11 +13,11 @@ type Props = {
 
 const defaultMarkers: Required<Pick<Props, "markers">>["markers"] = [
   // Latitude, Longitude
-  { location: [48.137154, 11.576124], size: 0.09 },
-  { location: [-6.2, 106.816666], size: 0.08 },
-  { location: [40.73061, -73.935242], size: 0.06 },
-  { location: [25.276987, 55.296249], size: 0.08 },
-  { location: [-23.533773, -46.62529], size: 0.07 },
+  { location: [48.137_154, 11.576_124], size: 0.09 },
+  { location: [-6.2, 106.816_666], size: 0.08 },
+  { location: [40.730_61, -73.935_242], size: 0.06 },
+  { location: [25.276_987, 55.296_249], size: 0.08 },
+  { location: [-23.533_773, -46.625_29], size: 0.07 },
 ];
 
 const defaultOptions: Required<
@@ -67,7 +67,7 @@ export function Cobe({
       theta: 0.2,
       dark: 1.1,
       diffuse: 2,
-      mapSamples: 16000,
+      mapSamples: 16_000,
       mapBrightness: 1.8,
       mapBaseBrightness: 0.05,
       baseColor,
@@ -80,7 +80,7 @@ export function Cobe({
         if (!pointerInteracting.current) {
           // Called on every animation frame.
           // `state` will be an empty object, return updated params.
-          phi += 0.00125;
+          phi += 0.001_25;
         }
         state.phi = phi + r.get();
         state.width = width * 2;
@@ -107,18 +107,18 @@ export function Cobe({
       }}
     >
       <canvas
-        ref={canvasRef}
+        onMouseMove={(e) => {
+          if (pointerInteracting.current !== null) {
+            const delta = e.clientX - pointerInteracting.current;
+            pointerInteractionMovement.current = delta;
+            api.start({ r: delta / 200 });
+          }
+        }}
         onPointerDown={(e) => {
           pointerInteracting.current =
             e.clientX - pointerInteractionMovement.current;
           if (canvasRef.current) {
             canvasRef.current.style.cursor = "grabbing";
-          }
-        }}
-        onPointerUp={() => {
-          pointerInteracting.current = null;
-          if (canvasRef.current) {
-            canvasRef.current.style.cursor = "grab";
           }
         }}
         onPointerOut={() => {
@@ -127,11 +127,10 @@ export function Cobe({
             canvasRef.current.style.cursor = "grab";
           }
         }}
-        onMouseMove={(e) => {
-          if (pointerInteracting.current !== null) {
-            const delta = e.clientX - pointerInteracting.current;
-            pointerInteractionMovement.current = delta;
-            api.start({ r: delta / 200 });
+        onPointerUp={() => {
+          pointerInteracting.current = null;
+          if (canvasRef.current) {
+            canvasRef.current.style.cursor = "grab";
           }
         }}
         onTouchMove={(e) => {
@@ -141,6 +140,7 @@ export function Cobe({
             api.start({ r: delta / 100 });
           }
         }}
+        ref={canvasRef}
         style={{
           width: "100%",
           height: "100%",

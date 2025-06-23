@@ -1,10 +1,10 @@
 "use client";
 
+import { useQueryStates } from "nuqs";
+import { useCallback } from "react";
 import { SearchInput } from "@/components/shared/search-input";
 import { useSearch } from "@/lib/context/use-search";
 import { searchParsers } from "@/lib/nuqs/search";
-import { useQueryStates } from "nuqs";
-import { useCallback } from "react";
 
 export function InputSearch() {
   const setQuery = useSearch((state) => state.setQuery);
@@ -19,5 +19,5 @@ export function InputSearch() {
     [setSearch, setQuery]
   );
 
-  return <SearchInput value={q} setValue={setValue} autoFocus />;
+  return <SearchInput autoFocus setValue={setValue} value={q} />;
 }

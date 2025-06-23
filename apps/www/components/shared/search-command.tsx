@@ -1,10 +1,5 @@
 "use client";
 
-import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
-import { useSearch } from "@/lib/context/use-search";
-import { useSearchQuery } from "@/lib/react-query/use-search";
-import { getAnchorStyle } from "@/lib/utils/search";
-import type { PagefindResult } from "@/types/pagefind";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
   CommandDialog,
@@ -22,14 +17,19 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   CornerDownLeftIcon,
+  FileTextIcon,
   HeartCrackIcon,
   InfoIcon,
 } from "lucide-react";
-import { FileTextIcon } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Fragment, startTransition, useEffect, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
+import { Fragment, useEffect, useTransition } from "react";
+import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
+import { useSearch } from "@/lib/context/use-search";
+import { useSearchQuery } from "@/lib/react-query/use-search";
+import { getAnchorStyle } from "@/lib/utils/search";
+import type { PagefindResult } from "@/types/pagefind";
 import { articlesMenu } from "../sidebar/_data/articles";
 import { subjectAll } from "../sidebar/_data/subject";
 
@@ -64,12 +64,12 @@ export function SearchCommand() {
 
   return (
     <CommandDialog
-      open={open}
-      onOpenChange={setOpen}
       commandProps={{
         shouldFilter: false, // filter by pagefind results
         loop: true,
       }}
+      onOpenChange={setOpen}
+      open={open}
     >
       <SearchMain />
       <Footer />
@@ -85,7 +85,7 @@ function SearchMain() {
 
   return (
     <>
-      <SearchInput value={query} onChange={setQuery} />
+      <SearchInput onChange={setQuery} value={query} />
       <SearchList search={query} />
     </>
   );
@@ -94,15 +94,18 @@ function SearchMain() {
 function SearchInput({
   value,
   onChange,
-}: { value: string; onChange: (value: string) => void }) {
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
   const t = useTranslations("Utils");
 
   return (
     <CommandInput
+      autoFocus
+      onValueChange={onChange}
       placeholder={t("search-placeholder")}
       value={value}
-      onValueChange={onChange}
-      autoFocus
     />
   );
 }
@@ -131,9 +134,9 @@ function SearchList({ search }: { search: string }) {
     <CommandList className="h-full md:max-h-[500px]">
       <SearchListItems
         error={hasError ? displayError : ""}
-        search={debouncedSearch}
         isLoading={isLoading && !hasError && !isPlaceholderData}
         results={results}
+        search={debouncedSearch}
       />
     </CommandList>
   );
@@ -204,16 +207,16 @@ function SearchListItems({
       <CommandGroup heading={result.meta.title}>
         {result.sub_results.map((subResult) => (
           <CommandItem
-            key={`${subResult.url}-${subResult.title}`}
-            value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
             className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
+            disabled={isPending}
+            key={`${subResult.url}-${subResult.title}`}
             onSelect={() => {
               startTransition(() => {
                 setOpen(false);
                 router.push(subResult.url);
               });
             }}
-            disabled={isPending}
+            value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
           >
             {subResult.anchor?.element === "h2" ? (
               <FileTextIcon />
@@ -236,6 +239,7 @@ function DefaultItems() {
   const tArticles = useTranslations("Articles");
   const router = useRouter();
   const setOpen = useSearch((state) => state.setOpen);
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
     // prefetch all the links
@@ -253,7 +257,7 @@ function DefaultItems() {
   return (
     <>
       {subjectAll.map((item) => (
-        <CommandGroup key={item.title} heading={t(item.title)}>
+        <CommandGroup heading={t(item.title)} key={item.title}>
           {item.items.map((subItem) => {
             let title = "";
             // Only grade that has value
@@ -263,15 +267,15 @@ function DefaultItems() {
 
             return (
               <CommandItem
-                key={title}
-                value={title}
                 className="cursor-pointer"
+                key={title}
                 onSelect={() => {
                   startTransition(() => {
                     setOpen(false);
                     router.push(subItem.href);
                   });
                 }}
+                value={title}
               >
                 <item.icon />
                 <span className="line-clamp-1">{title}</span>
@@ -286,15 +290,15 @@ function DefaultItems() {
       <CommandGroup heading={tArticles("articles")}>
         {articlesMenu.map((item) => (
           <CommandItem
-            key={item.title}
-            value={tArticles(item.title)}
             className="cursor-pointer"
+            key={item.title}
             onSelect={() => {
               startTransition(() => {
                 setOpen(false);
                 router.push(item.href);
               });
             }}
+            value={tArticles(item.title)}
           >
             <item.icon />
             <span className="line-clamp-1">{tArticles(item.title)}</span>
@@ -336,7 +340,10 @@ function Footer() {
 function FooterKbd({
   children,
   className,
-}: { children: ReactNode; className?: string }) {
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <kbd
       className={cn(

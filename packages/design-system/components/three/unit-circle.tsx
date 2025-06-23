@@ -12,7 +12,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useMemo, useRef } from "react";
-import * as THREE from "three";
+import { type Group, MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
 import { FONT_PATH, MONO_FONT_PATH, ORIGIN_COLOR } from "./_data";
 
 type Props = {
@@ -36,22 +36,22 @@ const UNIT_ARC_SEGMENTS = 16; // Reduced from 24
 const SPHERE_SEGMENTS = 8; // Low poly sphere
 
 // Pre-calculate static circle points once
-const STATIC_CIRCLE_POINTS: THREE.Vector3[] = (() => {
-  const pts: THREE.Vector3[] = [];
+const STATIC_CIRCLE_POINTS: Vector3[] = (() => {
+  const pts: Vector3[] = [];
   for (let i = 0; i <= UNIT_CIRCLE_SEGMENTS; i++) {
     const a = (i / UNIT_CIRCLE_SEGMENTS) * Math.PI * 2;
-    pts.push(new THREE.Vector3(Math.cos(a), Math.sin(a), 0));
+    pts.push(new Vector3(Math.cos(a), Math.sin(a), 0));
   }
   return pts;
 })();
 
 // Shared geometry instances
-let sharedSphereGeometry: THREE.SphereGeometry | null = null;
-const sharedMaterials: Map<string, THREE.MeshBasicMaterial> = new Map();
+let sharedSphereGeometry: SphereGeometry | null = null;
+const sharedMaterials: Map<string, MeshBasicMaterial> = new Map();
 
 function getSharedSphereGeometry() {
   if (!sharedSphereGeometry) {
-    sharedSphereGeometry = new THREE.SphereGeometry(
+    sharedSphereGeometry = new SphereGeometry(
       0.05,
       SPHERE_SEGMENTS,
       SPHERE_SEGMENTS
@@ -62,7 +62,7 @@ function getSharedSphereGeometry() {
 
 function getSharedMaterial(color: string) {
   if (!sharedMaterials.has(color)) {
-    sharedMaterials.set(color, new THREE.MeshBasicMaterial({ color }));
+    sharedMaterials.set(color, new MeshBasicMaterial({ color }));
   }
   const material = sharedMaterials.get(color);
   if (!material) {
@@ -81,7 +81,7 @@ export function UnitCircle({
 }: Props) {
   const t = useTranslations("Common");
   const { resolvedTheme } = useTheme();
-  const groupRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<Group>(null);
 
   const angleInRadians = getRadians(angle);
   const sin = getSin(angle);
@@ -93,10 +93,10 @@ export function UnitCircle({
 
   // Memoize angle arc points with reduced segments
   const arcPoints = useMemo(() => {
-    const pts: THREE.Vector3[] = [];
+    const pts: Vector3[] = [];
     for (let i = 0; i <= UNIT_ARC_SEGMENTS; i++) {
       const a = (i / UNIT_ARC_SEGMENTS) * angleInRadians;
-      pts.push(new THREE.Vector3(Math.cos(a) * 0.3, Math.sin(a) * 0.3, 0));
+      pts.push(new Vector3(Math.cos(a) * 0.3, Math.sin(a) * 0.3, 0));
     }
     return pts;
   }, [angleInRadians]);
@@ -158,12 +158,9 @@ export function UnitCircle({
     resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
 
   // Pre-calculate positions
-  const pointPosition = useMemo(
-    () => new THREE.Vector3(cos, sin, 0),
-    [cos, sin]
-  );
-  const origin = useMemo(() => new THREE.Vector3(0, 0, 0), []);
-  const cosPoint = useMemo(() => new THREE.Vector3(cos, 0, 0), [cos]);
+  const pointPosition = useMemo(() => new Vector3(cos, sin, 0), [cos, sin]);
+  const origin = useMemo(() => new Vector3(0, 0, 0), []);
+  const cosPoint = useMemo(() => new Vector3(cos, 0, 0), [cos]);
 
   // Line segments for better performance
   const lineSegments = useMemo(
@@ -192,100 +189,100 @@ export function UnitCircle({
       <group rotation={[0, 0, 0]}>
         {/* Circle outline */}
         <Line
-          points={circlePoints}
           color={circleColor}
-          lineWidth={2}
           frustumCulled
+          lineWidth={2}
+          points={circlePoints}
         />
 
         {/* Angle arc */}
         <Line
-          points={arcPoints}
           color={COLORS.VIOLET}
-          lineWidth={2}
           frustumCulled
+          lineWidth={2}
+          points={arcPoints}
         />
 
         {/* Angle label */}
         <Text
+          anchorX="center"
+          anchorY="middle"
+          color={COLORS.VIOLET}
+          font={fontPath}
+          fontSize={0.12}
+          frustumCulled
           position={[
             Math.cos(angleInRadians / 2) * 0.5,
             Math.sin(angleInRadians / 2) * 0.4,
             0,
           ]}
-          color={COLORS.VIOLET}
-          fontSize={0.12}
-          font={fontPath}
           visible={showLabels}
-          frustumCulled
-          anchorX="center"
-          anchorY="middle"
         >
           {`${angle}°`}
         </Text>
 
         {/* Point on circle - using shared geometry */}
         <mesh
-          position={pointPosition}
+          frustumCulled
           geometry={sphereGeometry}
           material={sphereMaterial}
-          frustumCulled
+          position={pointPosition}
         />
 
         {/* Line from origin to point */}
         <Line
-          points={lineSegments.radius}
           color={COLORS.ROSE}
-          lineWidth={2}
           frustumCulled
+          lineWidth={2}
+          points={lineSegments.radius}
         />
 
         {/* Sine line (vertical) */}
         <Line
-          points={lineSegments.sine}
           color={COLORS.ORANGE}
-          lineWidth={2}
           frustumCulled
+          lineWidth={2}
+          points={lineSegments.sine}
         />
 
         {/* Cosine line (horizontal) */}
         <Line
-          points={lineSegments.cosine}
           color={COLORS.CYAN}
-          lineWidth={2}
           frustumCulled
+          lineWidth={2}
+          points={lineSegments.cosine}
         />
 
         {/* Trig value labels - only render if visible */}
         {showLabels && (
           <>
             <Text
-              position={[cos / 2, -0.2, 0]}
-              color={COLORS.CYAN}
-              fontSize={0.12}
-              font={fontPath}
               anchorX="center"
+              color={COLORS.CYAN}
+              font={fontPath}
+              fontSize={0.12}
               frustumCulled
+              position={[cos / 2, -0.2, 0]}
             >
               {labels.cos}
             </Text>
             <Text
-              position={[cos + 0.2, sin / 2, 0]}
-              color={COLORS.ORANGE}
-              fontSize={0.12}
-              font={fontPath}
               anchorX="left"
               anchorY="middle"
+              color={COLORS.ORANGE}
+              font={fontPath}
+              fontSize={0.12}
               frustumCulled
+              position={[cos + 0.2, sin / 2, 0]}
             >
               {labels.sin}
             </Text>
             <Text
-              position={[1.1, 1.1, 0]}
               color={COLORS.ROSE}
-              fontSize={0.12}
               font={fontPath}
+              fontSize={0.12}
               frustumCulled
+              position={[1.1, 1.1, 0]}
             >
               {labels.tan}
             </Text>

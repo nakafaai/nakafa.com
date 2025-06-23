@@ -1,11 +1,22 @@
 "use client";
 
+import { buttonVariants } from "@repo/design-system/components/ui/button";
+import { cn } from "@repo/design-system/lib/utils";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import type * as React from "react";
 import { DayPicker } from "react-day-picker";
 
-import { buttonVariants } from "@repo/design-system/components/ui/button";
-import { cn } from "@repo/design-system/lib/utils";
+function Chevron(props: {
+  className?: string;
+  size?: number;
+  disabled?: boolean;
+  orientation?: "left" | "right" | "up" | "down";
+}) {
+  if (props.orientation === "left") {
+    return <ChevronLeftIcon size={16} {...props} aria-hidden="true" />;
+  }
+  return <ChevronRightIcon size={16} {...props} aria-hidden="true" />;
+}
 
 function Calendar({
   className,
@@ -62,17 +73,7 @@ function Calendar({
   );
 
   const defaultComponents = {
-    Chevron: (props: {
-      className?: string;
-      size?: number;
-      disabled?: boolean;
-      orientation?: "left" | "right" | "up" | "down";
-    }) => {
-      if (props.orientation === "left") {
-        return <ChevronLeftIcon size={16} {...props} aria-hidden="true" />;
-      }
-      return <ChevronRightIcon size={16} {...props} aria-hidden="true" />;
-    },
+    Chevron,
   };
 
   const mergedComponents = {
@@ -82,10 +83,10 @@ function Calendar({
 
   return (
     <DayPicker
-      showOutsideDays={showOutsideDays}
       className={cn("w-fit", className)}
       classNames={mergedClassNames}
       components={mergedComponents}
+      showOutsideDays={showOutsideDays}
       {...props}
     />
   );

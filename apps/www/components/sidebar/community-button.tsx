@@ -10,12 +10,12 @@ export function CommunityButton() {
   const t = useTranslations("Common");
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton tooltip={t("community")} asChild>
+      <SidebarMenuButton asChild tooltip={t("community")}>
         <a
           href="https://discord.gg/CPCSfKhvfQ"
-          title={t("community")}
-          target="_blank"
           rel="noopener noreferrer"
+          target="_blank"
+          title={t("community")}
         >
           <IconBrandDiscord className="size-4 shrink-0" />
           <span className="truncate">{t("community")}</span>

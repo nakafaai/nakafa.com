@@ -1,5 +1,5 @@
-import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
 import { usePagefind } from "../context/use-pagefind";
 
 const HTML_EXT_REGEX = /\.html$/;

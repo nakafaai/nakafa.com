@@ -1,12 +1,12 @@
-import { getStaticParams } from "@/lib/utils/system";
-import { ArticleSchema, type ContentTask, SubjectSchema } from "@/types/llms";
 import { getSlugPath as getArticleSlugPath } from "@repo/contents/_lib/articles/slug";
 import { getSlugPath as getSubjectSlugPath } from "@repo/contents/_lib/subject/slug";
 import { getContent } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 import { Feed } from "feed";
-import { getTranslations } from "next-intl/server";
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
+import { getStaticParams } from "@/lib/utils/system";
+import { ArticleSchema, type ContentTask, SubjectSchema } from "@/types/llms";
 
 export const revalidate = false;
 
@@ -45,7 +45,7 @@ export async function GET() {
   const { data: parsedArticles } = ArticleSchema.array().safeParse(articles);
   const { data: parsedSubjects } = SubjectSchema.array().safeParse(subjects);
 
-  if (!parsedArticles || !parsedSubjects) {
+  if (!(parsedArticles && parsedSubjects)) {
     return new NextResponse("Internal Server Error. Please try again later.", {
       status: 500,
     });

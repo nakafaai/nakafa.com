@@ -11,9 +11,9 @@ export class SeededRandom {
   private seed: number;
 
   constructor(seed: number) {
-    this.seed = seed % 2147483647; // Ensure seed is within valid range
+    this.seed = seed % 2_147_483_647; // Ensure seed is within valid range
     if (this.seed <= 0) {
-      this.seed += 2147483646;
+      this.seed += 2_147_483_646;
     }
   }
 
@@ -22,8 +22,8 @@ export class SeededRandom {
    * @returns A pseudo-random number between 0 and 1
    */
   next(): number {
-    this.seed = (this.seed * 16807) % 2147483647;
-    return (this.seed - 1) / 2147483646;
+    this.seed = (this.seed * 16_807) % 2_147_483_647;
+    return (this.seed - 1) / 2_147_483_646;
   }
 
   /**
@@ -76,7 +76,7 @@ export class SeededRandom {
    */
   choice<T>(array: T[]): T | undefined {
     if (array.length === 0) {
-      return undefined;
+      return;
     }
     return array[this.nextInt(0, array.length)];
   }
@@ -100,7 +100,7 @@ export function createSeed(...inputs: (string | number)[]): number {
       );
     }
   }
-  return Math.abs(seed) % 2147483647;
+  return Math.abs(seed) % 2_147_483_647;
 }
 
 /**

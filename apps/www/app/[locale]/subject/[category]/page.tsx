@@ -1,5 +1,5 @@
-import { getStaticParams } from "@/lib/utils/system";
 import { redirect } from "next/navigation";
+import { getStaticParams } from "@/lib/utils/system";
 
 export function generateStaticParams() {
   return getStaticParams({

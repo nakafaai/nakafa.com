@@ -1,13 +1,12 @@
 "use client";
 
-import { useTheme } from "next-themes";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-
 import { useMediaQuery } from "@mantine/hooks";
 import { useMousePosition } from "@repo/design-system/hooks/use-mouse";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { cn } from "@repo/design-system/lib/utils";
 import dynamic from "next/dynamic";
+import { useTheme } from "next-themes";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 type Circle = {
   x: number;
@@ -57,6 +56,7 @@ function ParticlesComponent({
     return resolvedTheme === "dark";
   }, [resolvedTheme]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: we need to call initCanvas and animate on mount
   useEffect(() => {
     if (canvasRef.current) {
       context.current = canvasRef.current.getContext("2d");
@@ -68,16 +68,15 @@ function ParticlesComponent({
     return () => {
       window.removeEventListener("resize", initCanvas);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // when color changes, we need to re-render the particles
+  // biome-ignore lint/correctness/useExhaustiveDependencies: we need to call initCanvas and animate on mount
   useEffect(() => {
     if (resolvedTheme) {
       initCanvas();
       animate();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedTheme]);
 
   const resizeCanvas = useCallback(() => {
@@ -292,7 +291,7 @@ function ParticlesComponent({
   ]);
 
   return (
-    <div className={cn(className)} ref={canvasContainerRef} aria-hidden="true">
+    <div aria-hidden="true" className={cn(className)} ref={canvasContainerRef}>
       <canvas ref={canvasRef} />
     </div>
   );

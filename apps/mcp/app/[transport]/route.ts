@@ -1,6 +1,6 @@
-import { env } from "@/env";
 import { createMcpHandler } from "@vercel/mcp-adapter";
 import { z } from "zod";
+import { env } from "@/env";
 
 const handler = createMcpHandler(
   (server) => {

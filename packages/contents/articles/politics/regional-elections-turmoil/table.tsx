@@ -57,8 +57,8 @@ export function RulingTable({
           </TableRow>
         </TableHeader>
         <TableBody className="border-x border-b">
-          {tableData.map((row, index) => (
-            <TableRow key={index}>
+          {tableData.map((row) => (
+            <TableRow key={row.category}>
               <TableCell className="border-r bg-muted/50 text-center font-medium">
                 {row.category}
               </TableCell>

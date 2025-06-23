@@ -18,9 +18,7 @@ export function SkeletonText({ lines = 5, className }: Props) {
           {Array.from({ length: lines }).map((_, index) => {
             const widthPercentage = Math.max(10, 100 - index * 20);
             const width = index === 0 ? "100%" : `${widthPercentage}%`;
-            return (
-              <Skeleton key={index} style={{ width: width }} className="h-4" />
-            );
+            return <Skeleton className="h-4" key={width} style={{ width }} />;
           })}
         </div>
       </div>

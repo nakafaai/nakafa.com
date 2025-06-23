@@ -77,14 +77,14 @@ export function VirusChart({
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <LineChart data={data} accessibilityLayer>
+          <LineChart accessibilityLayer data={data}>
             <CartesianGrid />
             <XAxis
               dataKey="phase"
-              tickMargin={8}
               tickFormatter={(value) => {
                 return value.toString();
               }}
+              tickMargin={8}
             />
             <YAxis
               label={{
@@ -93,10 +93,10 @@ export function VirusChart({
                 position: "insideLeft",
                 style: { textAnchor: "middle" },
               }}
-              tickMargin={8}
               tickFormatter={(value) =>
                 value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value
               }
+              tickMargin={8}
             />
             <ChartTooltip
               content={({ active, payload }) => {
@@ -106,8 +106,8 @@ export function VirusChart({
                   return (
                     <ChartTooltipContent
                       active={active}
-                      payload={payload}
                       label={`${labels.phase} ${phaseValue}`}
+                      payload={payload}
                     />
                   );
                 }
@@ -115,28 +115,28 @@ export function VirusChart({
               }}
             />
             <Line
-              type="monotone"
               dataKey="exponential"
-              stroke={chartConfig.exponential.color}
-              strokeWidth={2}
               dot
               name="exponential"
+              stroke={chartConfig.exponential.color}
+              strokeWidth={2}
+              type="monotone"
             />
             <Line
-              type="monotone"
               dataKey="linear"
-              stroke={chartConfig.linear.color}
-              strokeWidth={2}
               dot
               name="linear"
+              stroke={chartConfig.linear.color}
+              strokeWidth={2}
+              type="monotone"
             />
             <Line
-              type="monotone"
               dataKey="logarithmic"
-              stroke={chartConfig.logarithmic.color}
-              strokeWidth={2}
               dot
               name="logarithmic"
+              stroke={chartConfig.logarithmic.color}
+              strokeWidth={2}
+              type="monotone"
             />
             <ChartLegend
               content={<ChartLegendContent verticalAlign="bottom" />}

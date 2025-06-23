@@ -28,11 +28,11 @@ export default function ErrorPage({
 
   return (
     <div
-      data-pagefind-ignore
       className={cn(
         "relative flex h-[calc(100svh-4rem)] items-center justify-center",
         pathname === "/" && "lg:h-svh"
       )}
+      data-pagefind-ignore
     >
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />
       <div className="mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
@@ -50,15 +50,15 @@ export default function ErrorPage({
           </div>
 
           <div className="mx-auto grid w-fit grid-cols-2 gap-2">
-            <Button variant="secondary" onClick={reset}>
+            <Button onClick={reset} variant="secondary">
               {t("retry")}
             </Button>
             <a
-              href="https://github.com/nakafaai/nakafa.com/issues"
-              title="Report"
-              target="_blank"
-              rel="noopener noreferrer"
               className={cn(buttonVariants({ variant: "secondary" }))}
+              href="https://github.com/nakafaai/nakafa.com/issues"
+              rel="noopener noreferrer"
+              target="_blank"
+              title="Report"
             >
               {t("report")}
             </a>

@@ -1,5 +1,4 @@
-import fs from "node:fs";
-import { promises as fsPromises } from "node:fs";
+import fs, { promises as fsPromises } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ContentMetadata } from "@repo/contents/_types/content";
@@ -44,14 +43,16 @@ export async function getRawContent(filePath: string): Promise<string> {
  */
 export async function getContent(
   locale: Locale,
-  path: string
+  filePath: string
 ): Promise<{
   metadata: ContentMetadata;
   default: ComponentType<unknown>;
 } | null> {
   try {
     // Strip leading slash if present for consistency
-    const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+    const cleanPath = filePath.startsWith("/")
+      ? filePath.substring(1)
+      : filePath;
 
     // Create a dynamic import path that works reliably with Next.js
     // Using a relative path from the location of this file (lib/utils)
@@ -75,10 +76,12 @@ export async function getContent(
  * @param path - The path to the references file.
  * @returns The references.
  */
-export async function getReferences(path: string): Promise<Reference[]> {
+export async function getReferences(filePath: string): Promise<Reference[]> {
   try {
     // Strip leading slash if present for consistency
-    const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+    const cleanPath = filePath.startsWith("/")
+      ? filePath.substring(1)
+      : filePath;
 
     // Create a dynamic import path that works reliably with Next.js
     // Using a relative path from the location of this file (lib/utils)

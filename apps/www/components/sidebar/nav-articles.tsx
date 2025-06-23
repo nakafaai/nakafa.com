@@ -22,9 +22,9 @@ function MenuItem() {
       {articlesMenu.map((item) => (
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton
-            tooltip={t(item.title)}
-            isActive={pathname.includes(item.href)}
             asChild
+            isActive={pathname.includes(item.href)}
+            tooltip={t(item.title)}
           >
             <NavigationLink href={item.href} title={t(item.title)}>
               {item.icon && <item.icon />}

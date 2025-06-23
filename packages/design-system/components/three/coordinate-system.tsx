@@ -4,8 +4,7 @@ import { GizmoHelper, GizmoViewport, Grid } from "@react-three/drei";
 import { Button } from "@repo/design-system/components/ui/button";
 import { COLORS } from "@repo/design-system/lib/color";
 import { cn } from "@repo/design-system/lib/utils";
-import { Grid2X2XIcon, PauseIcon, PlayIcon } from "lucide-react";
-import { Grid2x2Icon } from "lucide-react";
+import { Grid2X2XIcon, Grid2x2Icon, PauseIcon, PlayIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
   type CSSProperties,
@@ -127,59 +126,59 @@ export function CoordinateSystem({
       onPointerUp={handlePointerUp}
     >
       <ThreeCanvas
-        style={{ background: backgroundColor }}
         onCreated={() => setTimeout(() => setSceneReady(true), 100)}
+        style={{ background: backgroundColor }}
       >
         <Suspense fallback={null}>
           {/* Camera Controls */}
-          <CameraControls cameraPosition={cameraPosition} autoRotate={play} />
+          <CameraControls autoRotate={play} cameraPosition={cameraPosition} />
 
           {/* Lighting */}
           <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} intensity={1} castShadow />
+          <pointLight castShadow intensity={1} position={[10, 10, 10]} />
 
           {/* Coordinate System */}
           <Axes
-            visible={showAxes}
-            size={size}
+            font={font}
             showLabels={showLabels}
             showZAxis={showZAxis}
-            font={font}
+            size={size}
+            visible={showAxes}
           />
 
           {/* Origin */}
-          <Origin visible={showOrigin} color={originColor} />
+          <Origin color={originColor} visible={showOrigin} />
 
           {/* Grid */}
           <Grid
-            visible={showGrid}
             args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
+            cellColor={gridColors.secondary}
+            fadeDistance={50}
+            fadeStrength={1}
             position={[0, 0, 0]}
             rotation={[0, 0, 0]}
-            cellColor={gridColors.secondary}
             sectionColor={gridColors.main}
-            fadeDistance={50}
-            fadeStrength={1}
+            visible={showGrid}
           />
           <Grid
-            visible={showGrid}
             args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
+            cellColor={gridColors.secondary}
+            fadeDistance={50}
+            fadeStrength={1}
             position={[0, 0, 0]}
             rotation={[Math.PI / 2, 0, 0]}
-            cellColor={gridColors.secondary}
             sectionColor={gridColors.main}
-            fadeDistance={50}
-            fadeStrength={1}
+            visible={showGrid}
           />
           <Grid
-            visible={showGrid}
             args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
-            position={[0, 0, 0]}
-            rotation={[0, 0, Math.PI / 2]}
             cellColor={gridColors.secondary}
-            sectionColor={gridColors.main}
             fadeDistance={50}
             fadeStrength={1}
+            position={[0, 0, 0]}
+            rotation={[0, 0, Math.PI / 2]}
+            sectionColor={gridColors.main}
+            visible={showGrid}
           />
 
           {/* User Content */}
@@ -187,9 +186,9 @@ export function CoordinateSystem({
 
           {/* Orientation Helper */}
           <GizmoHelper
-            visible={showGizmo}
             alignment="bottom-right"
             margin={[56, 56]}
+            visible={showGizmo}
           >
             <GizmoViewport
               axisColors={[COLORS.RED, COLORS.GREEN, COLORS.BLUE]}
@@ -206,7 +205,7 @@ export function CoordinateSystem({
           sceneReady ? "opacity-100" : "opacity-0"
         )}
       >
-        <Button variant="secondary" size="icon" onClick={handleGridToggle}>
+        <Button onClick={handleGridToggle} size="icon" variant="secondary">
           {showGrid ? (
             <Grid2x2Icon className="size-4" />
           ) : (
@@ -215,9 +214,9 @@ export function CoordinateSystem({
           <span className="sr-only">Toggle Grid</span>
         </Button>
         <Button
-          variant={play ? "secondary" : "default"}
-          size="icon"
           onClick={handlePlayToggle}
+          size="icon"
+          variant={play ? "secondary" : "default"}
         >
           {play ? (
             <PauseIcon className="size-4" />

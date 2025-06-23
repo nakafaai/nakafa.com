@@ -46,36 +46,36 @@ export function HistogramChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="aspect-square">
+        <ChartContainer className="aspect-square" config={chartConfig}>
           <RechartsBarChart
-            barGap={0}
-            barCategoryGap={0}
             accessibilityLayer
+            barCategoryGap={0}
+            barGap={0}
             data={data}
           >
             <CartesianGrid vertical={false} />
 
             <XAxis
+              axisLine={false}
               dataKey="name"
               tickLine={false}
               tickMargin={10}
-              axisLine={false}
             />
             <YAxis
-              dataKey="value"
-              tickLine={false}
-              tickMargin={10}
               axisLine={false}
+              dataKey="value"
               label={{
                 value: yAxisLabel,
                 angle: -90,
                 position: "insideLeft",
                 style: { textAnchor: "middle" },
               }}
+              tickLine={false}
+              tickMargin={10}
             />
             <ChartTooltip
-              cursor={false}
               content={<ChartTooltipContent indicator="line" />}
+              cursor={false}
             />
             <RechartsBar dataKey="value" radius={0} />
           </RechartsBarChart>
@@ -99,30 +99,30 @@ export function BarChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="aspect-square">
-          <RechartsBarChart data={data} accessibilityLayer>
+        <ChartContainer className="aspect-square" config={chartConfig}>
+          <RechartsBarChart accessibilityLayer data={data}>
             <CartesianGrid vertical={false} />
             <XAxis
+              axisLine={false}
               dataKey="name"
               tickLine={false}
               tickMargin={10}
-              axisLine={false}
             />
             <YAxis
-              dataKey="value"
-              tickLine={false}
-              tickMargin={10}
               axisLine={false}
+              dataKey="value"
               label={{
                 value: yAxisLabel,
                 angle: -90,
                 position: "insideLeft",
                 style: { textAnchor: "middle" },
               }}
+              tickLine={false}
+              tickMargin={10}
             />
             <ChartTooltip
-              cursor={false}
               content={<ChartTooltipContent indicator="line" />}
+              cursor={false}
             />
             <RechartsBar dataKey="value" radius={8} />
           </RechartsBarChart>

@@ -4,30 +4,36 @@ import { Instance, Instances, Line, Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { randomColor } from "@repo/design-system/lib/color";
 import { useMemo, useRef } from "react";
-import * as THREE from "three";
+import {
+  CatmullRomCurve3,
+  Color,
+  ConeGeometry,
+  type Group,
+  MeshBasicMaterial,
+  Quaternion,
+  SphereGeometry,
+  Vector3,
+} from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
 
 // Shared geometry cache
-let sharedSphereGeometry: THREE.SphereGeometry | null = null;
-const sharedConeGeometries = new Map<string, THREE.ConeGeometry>();
-const sharedMaterials = new Map<string, THREE.MeshBasicMaterial>();
+let sharedSphereGeometry: SphereGeometry | null = null;
+const sharedConeGeometries = new Map<string, ConeGeometry>();
+const sharedMaterials = new Map<string, MeshBasicMaterial>();
 
-function getSharedSphereGeometry(): THREE.SphereGeometry {
+function getSharedSphereGeometry(): SphereGeometry {
   if (!sharedSphereGeometry) {
     // Reduced segments for better performance
-    sharedSphereGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+    sharedSphereGeometry = new SphereGeometry(0.1, 8, 8);
   }
   return sharedSphereGeometry;
 }
 
-function getSharedConeGeometry(size: number): THREE.ConeGeometry {
+function getSharedConeGeometry(size: number): ConeGeometry {
   const key = `cone-${size}`;
   if (!sharedConeGeometries.has(key)) {
     // Reduced segments for better performance
-    sharedConeGeometries.set(
-      key,
-      new THREE.ConeGeometry(size / 2, size, 16, 1)
-    );
+    sharedConeGeometries.set(key, new ConeGeometry(size / 2, size, 16, 1));
   }
   const geometry = sharedConeGeometries.get(key);
   if (!geometry) {
@@ -36,15 +42,13 @@ function getSharedConeGeometry(size: number): THREE.ConeGeometry {
   return geometry;
 }
 
-function getSharedMaterial(
-  color: string | THREE.Color
-): THREE.MeshBasicMaterial {
-  const colorKey = color instanceof THREE.Color ? color.getHexString() : color;
+function getSharedMaterial(color: string | Color): MeshBasicMaterial {
+  const colorKey = color instanceof Color ? color.getHexString() : color;
   if (!sharedMaterials.has(colorKey)) {
     sharedMaterials.set(
       colorKey,
-      new THREE.MeshBasicMaterial({
-        color: color instanceof THREE.Color ? color : new THREE.Color(color),
+      new MeshBasicMaterial({
+        color: color instanceof Color ? color : new Color(color),
       })
     );
   }
@@ -61,7 +65,7 @@ export type Props = {
     y: number;
     z: number;
   }[];
-  color?: string | THREE.Color;
+  color?: string | Color;
   lineWidth?: number;
   /**
    * Whether to use the mono font for the labels
@@ -89,7 +93,7 @@ export type Props = {
     /** Optional [x,y,z] offset applied on top of the base point position */
     offset?: [number, number, number];
     /** Color for the label text */
-    color?: string | THREE.Color;
+    color?: string | Color;
     /** Font size of the label text */
     fontSize?: number;
   }>;
@@ -115,10 +119,10 @@ export function LineEquation({
   useMonoFont = true,
   cone,
 }: Props) {
-  const groupRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<Group>(null);
 
   const vectorPoints = useMemo(
-    () => points.map((point) => new THREE.Vector3(point.x, point.y, point.z)),
+    () => points.map((point) => new Vector3(point.x, point.y, point.z)),
     [points]
   );
 
@@ -131,11 +135,11 @@ export function LineEquation({
       return vectorPoints;
     }
 
-    let basePoints: THREE.Vector3[];
+    let basePoints: Vector3[];
 
     if (smooth) {
       // Use CatmullRomCurve3 for smooth curves
-      const curve = new THREE.CatmullRomCurve3(vectorPoints);
+      const curve = new CatmullRomCurve3(vectorPoints);
       basePoints = curve.getPoints(curvePoints);
     } else {
       // For non-smooth lines, use the original points directly
@@ -150,7 +154,7 @@ export function LineEquation({
       ) {
         const startPoint = basePoints[0];
         const nextPoint = basePoints[1];
-        const direction = new THREE.Vector3()
+        const direction = new Vector3()
           .subVectors(nextPoint, startPoint)
           .normalize();
         basePoints[0] = startPoint
@@ -165,11 +169,11 @@ export function LineEquation({
         const endPoint = basePoints.at(-1);
         const prevPoint = basePoints.at(-2);
         // Ensure points exist
-        if (!endPoint || !prevPoint) {
+        if (!(endPoint && prevPoint)) {
           return basePoints; // Return unmodified points if check fails
         }
 
-        const direction = new THREE.Vector3()
+        const direction = new Vector3()
           .subVectors(endPoint, prevPoint)
           .normalize();
         // Find the index of the last point to modify it directly
@@ -204,8 +208,7 @@ export function LineEquation({
       return null;
     }
 
-    const cones: { position: THREE.Vector3; quaternion: THREE.Quaternion }[] =
-      [];
+    const cones: { position: Vector3; quaternion: Quaternion }[] = [];
 
     // Add start cone if position is "start" or "both"
     if (cone.position === "start" || cone.position === "both") {
@@ -213,16 +216,16 @@ export function LineEquation({
       const nextPoint = vectorPoints[1];
       // Ensure points exist (should always be true here due to length check)
       if (targetPoint && nextPoint) {
-        const direction = new THREE.Vector3()
+        const direction = new Vector3()
           .subVectors(nextPoint, targetPoint)
           .normalize();
         // For start cone: position it so its tip is at the original start point
         // The cone points backwards (opposite to line direction)
-        const conePosition = new THREE.Vector3()
+        const conePosition = new Vector3()
           .copy(targetPoint)
           .add(direction.clone().multiplyScalar(arrowSize / 2));
-        const quaternion = new THREE.Quaternion().setFromUnitVectors(
-          new THREE.Vector3(0, 1, 0),
+        const quaternion = new Quaternion().setFromUnitVectors(
+          new Vector3(0, 1, 0),
           direction.clone().negate()
         );
         cones.push({ position: conePosition, quaternion });
@@ -236,14 +239,14 @@ export function LineEquation({
 
       // Ensure both points exist before proceeding
       if (targetPoint && prevPoint) {
-        const direction = new THREE.Vector3()
+        const direction = new Vector3()
           .subVectors(targetPoint, prevPoint)
           .normalize();
-        const conePosition = new THREE.Vector3()
+        const conePosition = new Vector3()
           .copy(targetPoint)
           .sub(direction.clone().multiplyScalar(arrowSize / 2));
-        const quaternion = new THREE.Quaternion().setFromUnitVectors(
-          new THREE.Vector3(0, 1, 0),
+        const quaternion = new Quaternion().setFromUnitVectors(
+          new Vector3(0, 1, 0),
           direction
         );
         cones.push({ position: conePosition, quaternion });
@@ -291,37 +294,40 @@ export function LineEquation({
     <group ref={groupRef}>
       {/* Draw a line connecting the provided points */}
       <Line
-        points={linePoints}
         color={color}
-        lineWidth={lineWidth}
         frustumCulled
+        lineWidth={lineWidth}
+        points={linePoints}
       />
 
       {/* Render the cone(s) if configured */}
       {coneData &&
         coneGeometry &&
         coneMaterial &&
-        coneData.map((data, index) => (
+        coneData.map((data) => (
           <mesh
-            key={`cone-${index}`}
+            frustumCulled
             geometry={coneGeometry}
+            key={`cone-${data.position.x}-${data.position.y}-${data.position.z}`}
             material={coneMaterial}
             position={data.position}
             quaternion={data.quaternion}
-            frustumCulled
           />
         ))}
 
       {/* Optionally render a small sphere at each point */}
       <Instances
-        visible={showPoints}
-        geometry={pointGeom}
-        material={pointMat}
         count={vectorPoints.length}
         frustumCulled
+        geometry={pointGeom}
+        material={pointMat}
+        visible={showPoints}
       >
-        {vectorPoints.map((v, i) => (
-          <Instance key={i} position={[v.x, v.y, v.z]} />
+        {vectorPoints.map((v) => (
+          <Instance
+            key={`point-${v.x}-${v.y}-${v.z}`}
+            position={[v.x, v.y, v.z]}
+          />
         ))}
       </Instances>
 
@@ -332,14 +338,14 @@ export function LineEquation({
         }
         return (
           <Text
-            key={data.key}
-            position={data.position}
-            color={data.color}
-            fontSize={data.fontSize}
             anchorX="center"
             anchorY="middle"
+            color={data.color}
             font={fontPath}
+            fontSize={data.fontSize}
             frustumCulled
+            key={data.key}
+            position={data.position}
           >
             {data.text}
           </Text>

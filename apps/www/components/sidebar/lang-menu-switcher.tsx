@@ -13,8 +13,8 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { type Locale, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
+import { type Locale, useLocale } from "next-intl";
 import { useTransition } from "react";
 
 export function LangMenuSwitcher() {
@@ -62,14 +62,14 @@ export function LangMenuSwitcher() {
   }
 
   return (
-    <DropdownMenuContent side={isMobile ? "top" : "right"} align="end">
+    <DropdownMenuContent align="end" side={isMobile ? "top" : "right"}>
       {languages.map((language) => (
         <DropdownMenuItem
-          key={language.value}
-          onMouseEnter={() => handlePrefetch(language.value)}
-          onFocus={() => handlePrefetch(language.value)}
-          onClick={() => handleChangeLocale(language.value)}
           disabled={isPending}
+          key={language.value}
+          onClick={() => handleChangeLocale(language.value)}
+          onFocus={() => handlePrefetch(language.value)}
+          onMouseEnter={() => handlePrefetch(language.value)}
         >
           <span className="truncate">{language.label}</span>
           <IconCircleFilled

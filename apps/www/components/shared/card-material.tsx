@@ -34,17 +34,17 @@ export function CardMaterial({ material }: Props) {
           <div className="flex flex-col gap-1.5">
             <CardTitle className="group flex items-center font-medium">
               <h2
+                className="inline-block scroll-mt-28"
                 id={id}
                 title={material.title}
-                className="inline-block scroll-mt-28"
               >
                 {material.title}
               </h2>
               <a
+                aria-label={`Link to ${material.title}`}
+                className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
                 href={`#${id}`}
                 title={material.title}
-                className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
-                aria-label={`Link to ${material.title}`}
               >
                 <LinkIcon className="size-4" />
               </a>
@@ -56,11 +56,11 @@ export function CardMaterial({ material }: Props) {
             )}
           </div>
           <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? "Close content" : "Open content"}
             className="group shrink-0"
+            onClick={() => setIsOpen(!isOpen)}
+            size="icon"
+            variant="ghost"
           >
             <span className="sr-only">
               {isOpen ? "Close content" : "Open content"}
@@ -74,18 +74,18 @@ export function CardMaterial({ material }: Props) {
           </Button>
         </div>
       </CardHeader>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Collapsible onOpenChange={setIsOpen} open={isOpen}>
         <CollapsibleContent>
           <CardContent className="px-0">
             {material.items.map((item) => (
               <Link
-                key={item.href}
-                href={item.href}
-                title={item.title}
-                prefetch
                 className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-3 transition-colors last:rounded-b-xl last:pb-6 hover:bg-accent/20"
+                href={item.href}
+                key={item.href}
+                prefetch
+                title={item.title}
               >
-                <h3 title={item.title} className="truncate">
+                <h3 className="truncate" title={item.title}>
                   {item.title}
                 </h3>
                 <ArrowDownIcon className="-rotate-90 size-4 opacity-0 transition-opacity group-hover:opacity-100" />

@@ -1,17 +1,12 @@
 import { DesignSystemProvider } from "@repo/design-system";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { routing } from "@repo/internationalization/src/routing";
-
-import { type Locale, NextIntlClientProvider, hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { hasLocale, type Locale, NextIntlClientProvider } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import "@/styles/globals.css";
 
-import { AppProviders } from "@/components/providers";
-import { SearchCommand } from "@/components/shared/search-command";
-import { AppSidebar } from "@/components/sidebar/app-sidebar";
-import { Header } from "@/components/sidebar/header";
 import { VercelAnalytics } from "@repo/analytics/vercel";
 import { ReactScan } from "@repo/design-system/components/ui/react-scan";
 import {
@@ -25,6 +20,10 @@ import { OrganizationJsonLd } from "@repo/seo/json-ld/organization";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { AppProviders } from "@/components/providers";
+import { SearchCommand } from "@/components/shared/search-command";
+import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import { Header } from "@/components/sidebar/header";
 
 type Props = {
   children: ReactNode;
@@ -33,7 +32,9 @@ type Props = {
 
 export async function generateMetadata({
   params,
-}: { params: Props["params"] }): Promise<Metadata> {
+}: {
+  params: Props["params"];
+}): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations("Metadata");
 
@@ -117,7 +118,7 @@ export async function generateMetadata({
       description: t("description"),
       url: "https://nakafa.com",
       siteName: "Nakafa",
-      locale: locale,
+      locale,
       type: "website",
       images: [
         {
@@ -160,7 +161,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <html lang={locale} className={fonts} suppressHydrationWarning>
+    <html className={fonts} lang={locale} suppressHydrationWarning>
       <NextIntlClientProvider>
         <head>
           <ReactScan />
@@ -177,7 +178,7 @@ export default async function LocaleLayout({ children, params }: Props) {
                 <SidebarInset>
                   <Header />
                   <SearchCommand />
-                  <div data-pagefind-body className="relative">
+                  <div className="relative" data-pagefind-body>
                     {children}
                   </div>
                 </SidebarInset>

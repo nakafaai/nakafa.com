@@ -191,13 +191,13 @@ export function BacterialGrowth({
       const time = i * timeInterval;
       return (
         <Button
-          key={i}
-          variant={generation === i ? "default" : "outline"}
-          size="sm"
+          key={time.toString()}
           onClick={() => {
             setGeneration(i);
             setIsPlaying(false);
           }}
+          size="sm"
+          variant={generation === i ? "default" : "outline"}
         >
           {time}
           {timeUnit}
@@ -217,8 +217,8 @@ export function BacterialGrowth({
 
       <CardContent>
         <div
-          ref={ref}
           className="relative aspect-square w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950"
+          ref={ref}
         >
           <div
             className="grid h-full w-full gap-0.5 p-2 sm:px-0"
@@ -230,15 +230,15 @@ export function BacterialGrowth({
               <AnimatePresence mode="popLayout">
                 {bacteria.map((id) => (
                   <motion.div
-                    key={id}
-                    layout
-                    className="relative flex items-center justify-center"
-                    initial={{ scale: 0, opacity: 0 }}
                     animate={{
                       scale: 1,
                       opacity: 1,
                     }}
+                    className="relative flex items-center justify-center"
                     exit={{ scale: 0, opacity: 0 }}
+                    initial={{ scale: 0, opacity: 0 }}
+                    key={id}
+                    layout
                     transition={{
                       type: "spring",
                       stiffness: 500,
@@ -247,10 +247,10 @@ export function BacterialGrowth({
                     }}
                   >
                     <motion.div
-                      className="aspect-square h-full max-h-[20px] w-full max-w-[20px] rounded-full bg-cyan-300 transition-colors hover:bg-cyan-400 sm:max-h-[32px] sm:max-w-[32px] dark:bg-cyan-500"
                       animate={{
                         scale: [1, 1.1, 1],
                       }}
+                      className="aspect-square h-full max-h-[20px] w-full max-w-[20px] rounded-full bg-cyan-300 transition-colors hover:bg-cyan-400 sm:max-h-[32px] sm:max-w-[32px] dark:bg-cyan-500"
                       transition={{
                         duration: 1,
                         repeat: Number.POSITIVE_INFINITY,
@@ -272,19 +272,19 @@ export function BacterialGrowth({
         <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <div className="flex justify-between gap-2">
             <Button
-              variant="outline"
               aria-label="Reset"
               onClick={resetAnimation}
               size="icon"
+              variant="outline"
             >
               <TimerResetIcon className="size-4 shrink-0" />
               <span className="sr-only">Reset</span>
             </Button>
             <Button
-              variant={isPlaying ? "outline" : "default"}
               aria-label={isPlaying ? "Pause" : "Play"}
               onClick={togglePlayPause}
               size="icon"
+              variant={isPlaying ? "outline" : "default"}
             >
               {isPlaying ? (
                 <PauseIcon className="size-4 shrink-0" />
@@ -299,9 +299,9 @@ export function BacterialGrowth({
             {[0.25, 0.5, 1, 1.5, 2].map((speedValue) => (
               <Button
                 key={speedValue}
-                variant={speed === speedValue ? "default" : "outline"}
-                size="sm"
                 onClick={() => setSpeed(speedValue)}
+                size="sm"
+                variant={speed === speedValue ? "default" : "outline"}
               >
                 {speedValue}x
               </Button>

@@ -229,22 +229,24 @@ export function BlockArt({
   return (
     <section className={cn("size-full bg-border py-px", className)}>
       <button
-        type="button"
-        ref={containerRef}
+        aria-label="Interactive grid art with wave effect"
         className="size-full cursor-pointer"
         onClick={handleClick}
         onKeyDown={handleKeyDown}
-        aria-label="Interactive grid art with wave effect"
+        ref={containerRef}
         style={{
           display: "grid",
           gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${ROWS}, auto)`,
           gap: "1px",
         }}
+        type="button"
       >
         {Array.from({ length: totalCells }).map((_, i) => {
           const rippleIntensity = rippleAffectedCells.get(i) || 0;
           const isActive = activeIndices.has(i);
+          const row = Math.floor(i / COLS);
+          const col = i % COLS;
 
           const getCellColor = () => {
             if (rippleIntensity > 0) {
@@ -258,12 +260,12 @@ export function BlockArt({
 
           return (
             <div
-              key={i}
               className={cn(
                 "size-full transition-all duration-300 ease-out",
                 getCellColor(),
                 "hover:bg-primary"
               )}
+              key={`${row}-${col}`}
               style={{
                 aspectRatio: "1 / 1",
                 opacity: rippleIntensity > 0 ? 0.8 + 0.2 * rippleIntensity : 1,

@@ -48,12 +48,12 @@ export function GradientBlock({
   const gradientStyle = useMemo(() => {
     // Create a more unique hash from the keyString that produces better variation
     const hash = Array.from(keyString).reduce((acc, char, index) => {
-      // Use prime numbers, character code, character position, and bitwise operations
+      // Use prime numbers, character code, character position, and mathematical operations
       // to create significantly more variation between similar strings
       const charCode = char.charCodeAt(0);
       const position = index + 1;
-      // Use different prime numbers and bitwise operations for more randomness
-      return ((acc * 37) ^ (charCode * position * 17)) % 10000000;
+      // Use different prime numbers and mathematical operations for more randomness
+      return (acc * 37 + charCode * position * 17) % 10_000_000;
     }, 23); // Start with a prime seed for better distribution
 
     // Create a secondary hash value for additional variation
@@ -61,12 +61,15 @@ export function GradientBlock({
       const charCode = char.charCodeAt(0);
       // Use a different algorithm for this hash
       return (
-        (acc + (charCode << (index % 5)) + (charCode >> (index % 3))) % 10000000
+        (acc +
+          charCode * 2 ** (index % 5) +
+          Math.floor(charCode / 2 ** (index % 3))) %
+        10_000_000
       );
     }, 41); // Different prime seed
 
     // Use both hashes to determine the base hue with more variation
-    const baseHue = (hash % 360) ^ (secondaryHash % 30);
+    const baseHue = (hash % 360) + (secondaryHash % 30);
 
     // Use the secondary hash for additional color adjustments
     const hueOffset = secondaryHash % 60;
@@ -244,12 +247,5 @@ export function GradientBlock({
     };
   }, [keyString, style, colorScheme, intensity, gradientType]);
 
-  return (
-    <div
-      className={className}
-      style={gradientStyle}
-      aria-label={`Gradient generated from key: ${keyString}`}
-      aria-hidden
-    />
-  );
+  return <div aria-hidden className={className} style={gradientStyle} />;
 }

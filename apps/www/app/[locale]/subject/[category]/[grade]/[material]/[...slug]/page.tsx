@@ -1,16 +1,3 @@
-import { ComingSoon } from "@/components/shared/coming-soon";
-import {
-  LayoutMaterialContent,
-  LayoutMaterialFooter,
-  LayoutMaterialHeader,
-  LayoutMaterialMain,
-  LayoutMaterialPagination,
-  LayoutMaterialToc,
-} from "@/components/shared/layout-material";
-import { RefContent } from "@/components/shared/ref-content";
-import { getGithubUrl } from "@/lib/utils/github";
-import { getOgUrl } from "@/lib/utils/metadata";
-import { getStaticParams } from "@/lib/utils/system";
 import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
 import {
   getMaterialIcon,
@@ -32,9 +19,22 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { formatISO } from "date-fns";
 import type { Metadata } from "next";
+import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound, redirect } from "next/navigation";
+import { ComingSoon } from "@/components/shared/coming-soon";
+import {
+  LayoutMaterialContent,
+  LayoutMaterialFooter,
+  LayoutMaterialHeader,
+  LayoutMaterialMain,
+  LayoutMaterialPagination,
+  LayoutMaterialToc,
+} from "@/components/shared/layout-material";
+import { RefContent } from "@/components/shared/ref-content";
+import { getGithubUrl } from "@/lib/utils/github";
+import { getOgUrl } from "@/lib/utils/metadata";
+import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
@@ -157,9 +157,6 @@ export default async function Page({ params }: Props) {
     return (
       <>
         <BreadcrumbJsonLd
-          locale={locale}
-          name={metadata.title}
-          // this will only work for the first heading, not for the nested headings
           breadcrumbItems={headings.map((heading, index) => ({
             "@type": "ListItem",
             "@id": `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
@@ -167,39 +164,42 @@ export default async function Page({ params }: Props) {
             name: heading.label,
             item: `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
           }))}
+          locale={locale}
+          // this will only work for the first heading, not for the nested headings
+          name={metadata.title}
         />
         <ArticleJsonLd
-          headline={metadata.title}
-          datePublished={formatISO(metadata.date)}
           author={metadata.authors.map((author) => ({
             "@type": "Person",
             name: author.name,
             url: `https://nakafa.com/${locale}/contributor`,
           }))}
-          image={getOgUrl(locale, FILE_PATH)}
+          datePublished={formatISO(metadata.date)}
           description={metadata.description ?? metadata.subject ?? ""}
+          headline={metadata.title}
+          image={getOgUrl(locale, FILE_PATH)}
         />
         <LearningResourceJsonLd
-          name={metadata.title}
+          author={metadata.authors.map((author) => ({
+            "@type": "Person",
+            name: author.name,
+            url: `https://nakafa.com/${locale}/contributor`,
+          }))}
+          datePublished={formatISO(metadata.date)}
           description={metadata.description ?? metadata.subject ?? ""}
           educationalLevel={tSubject(getGradeNonNumeric(grade) ?? "grade", {
             grade,
           })}
-          datePublished={formatISO(metadata.date)}
-          author={metadata.authors.map((author) => ({
-            "@type": "Person",
-            name: author.name,
-            url: `https://nakafa.com/${locale}/contributor`,
-          }))}
+          name={metadata.title}
         />
         <LayoutMaterialContent>
           <LayoutMaterialHeader
-            title={metadata.title}
             icon={getMaterialIcon(material)}
             link={{
               href: `${materialPath}#${slugify(metadata.subject ?? "")}`,
               label: metadata.subject ?? "",
             }}
+            title={metadata.title}
           />
           <LayoutMaterialMain>
             {headings.length === 0 ? (
@@ -216,14 +216,14 @@ export default async function Page({ params }: Props) {
           </LayoutMaterialFooter>
         </LayoutMaterialContent>
         <LayoutMaterialToc
+          chapters={{
+            label: tCommon("on-this-page"),
+            data: headings,
+          }}
           header={{
             title: metadata.title,
             href: FILE_PATH,
             description: metadata.description ?? metadata.subject,
-          }}
-          chapters={{
-            label: tCommon("on-this-page"),
-            data: headings,
           }}
         />
       </>

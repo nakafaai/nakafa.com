@@ -93,12 +93,13 @@ export function BudgetChart({
           >
             <CartesianGrid vertical={false} />
             <XAxis
+              axisLine={false}
               dataKey="year"
               tickLine={false}
               tickMargin={10}
-              axisLine={false}
             />
             <YAxis
+              axisLine={false}
               label={{
                 value: yLabel,
                 angle: -90,
@@ -106,19 +107,18 @@ export function BudgetChart({
                 style: { textAnchor: "middle" },
               }}
               tickLine={false}
-              axisLine={false}
             />
             <ChartTooltip
-              cursor={false}
               content={<ChartTooltipContent indicator="line" />}
+              cursor={false}
             />
             <Bar dataKey="budget" fill="var(--color-budget)" radius={8}>
               <LabelList
-                dataKey="budget"
-                position="top"
-                offset={8}
                 className="fill-foreground"
+                dataKey="budget"
                 fontSize={12}
+                offset={8}
+                position="top"
               />
             </Bar>
             <ChartLegend content={<ChartLegendContent />} />
@@ -181,12 +181,13 @@ export function FundChart({ title, description, yLabel, footnote }: Props) {
           >
             <CartesianGrid vertical={false} />
             <XAxis
+              axisLine={false}
               dataKey="year"
               tickLine={false}
               tickMargin={10}
-              axisLine={false}
             />
             <YAxis
+              axisLine={false}
               label={{
                 value: yLabel,
                 angle: -90,
@@ -194,19 +195,18 @@ export function FundChart({ title, description, yLabel, footnote }: Props) {
                 style: { textAnchor: "middle" },
               }}
               tickLine={false}
-              axisLine={false}
             />
             <ChartTooltip
-              cursor={false}
               content={<ChartTooltipContent indicator="line" />}
+              cursor={false}
             />
             <Bar dataKey="fund" fill="var(--color-fund)" radius={8}>
               <LabelList
-                dataKey="fund"
-                position="top"
-                offset={8}
                 className="fill-foreground"
+                dataKey="fund"
                 fontSize={12}
+                offset={8}
+                position="top"
               />
             </Bar>
             <ChartLegend content={<ChartLegendContent />} />
@@ -339,16 +339,17 @@ export function ElectabilityChart({
           <LineChart accessibilityLayer data={ElectabilityChartData}>
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="date"
-              tickLine={false}
               axisLine={false}
-              tickMargin={8}
+              dataKey="date"
               tickFormatter={(value) => {
                 const date = new Date(value);
                 return format(date, "MMM yyyy");
               }}
+              tickLine={false}
+              tickMargin={8}
             />
             <YAxis
+              axisLine={false}
               label={{
                 value: yLabel,
                 angle: -90,
@@ -356,10 +357,8 @@ export function ElectabilityChart({
                 style: { textAnchor: "middle" },
               }}
               tickLine={false}
-              axisLine={false}
             />
             <ChartTooltip
-              cursor={false}
               content={
                 <ChartTooltipContent
                   indicator="line"
@@ -368,27 +367,28 @@ export function ElectabilityChart({
                   }}
                 />
               }
+              cursor={false}
             />
             <Line
               dataKey="anies_muhaimin"
-              type="natural"
+              dot={false}
               stroke="var(--color-anies_muhaimin)"
               strokeWidth={2}
-              dot={false}
+              type="natural"
             />
             <Line
               dataKey="prabowo_gibran"
-              type="natural"
+              dot={false}
               stroke="var(--color-prabowo_gibran)"
               strokeWidth={2}
-              dot={false}
+              type="natural"
             />
             <Line
               dataKey="ganjar_mahfud"
-              type="natural"
+              dot={false}
               stroke="var(--color-ganjar_mahfud)"
               strokeWidth={2}
-              dot={false}
+              type="natural"
             />
             <ChartLegend content={<ChartLegendContent />} />
           </LineChart>

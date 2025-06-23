@@ -36,9 +36,9 @@ export function Stage({ title }: Props) {
         <Stepper defaultValue={2}>
           {stages.map((stage) => (
             <StepperItem
+              className="relative flex-1 flex-col!"
               key={stage.step}
               step={stage.step}
-              className="relative flex-1 flex-col!"
             >
               <StepperTrigger className="flex-col gap-3 rounded">
                 <StepperIndicator />

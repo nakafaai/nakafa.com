@@ -31,7 +31,9 @@ export type SidebarRightProps = {
 
 function SidebarRightHeader({
   header,
-}: { header: SidebarRightProps["header"] }) {
+}: {
+  header: SidebarRightProps["header"];
+}) {
   if (!header) {
     return null;
   }
@@ -42,7 +44,7 @@ function SidebarRightHeader({
         <SidebarMenuItem>
           <Tooltip>
             <TooltipTrigger asChild>
-              <SidebarMenuButton size="lg" asChild>
+              <SidebarMenuButton asChild size="lg">
                 <NavigationLink href={header.href} title={header.title}>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">
@@ -58,9 +60,9 @@ function SidebarRightHeader({
               </SidebarMenuButton>
             </TooltipTrigger>
             <TooltipContent
-              side="left"
               align="center"
               className="hidden max-w-xs sm:block"
+              side="left"
             >
               {header.title}
             </TooltipContent>
@@ -90,23 +92,23 @@ export function SidebarRight({
   return (
     <div data-pagefind-ignore>
       <SidebarProvider
-        sidebarDesktop={1280}
-        keyboardShortcut="x"
         cookieName="sidebar_state:right"
+        keyboardShortcut="x"
+        sidebarDesktop={1280}
       >
         {/* Mobile trigger button */}
         <SidebarTrigger
-          variant="outline"
-          size="icon"
           className="fixed top-20 right-6 size-8 bg-background/30 backdrop-blur-xs xl:hidden"
           icon={<MenuIcon />}
+          size="icon"
+          variant="outline"
         />
 
         {/* Right sidebar */}
         <Sidebar
+          containerClassName="lg:hidden xl:block"
           side="right"
           variant="floating"
-          containerClassName="lg:hidden xl:block"
           {...props}
         >
           <SidebarRightHeader header={header} />

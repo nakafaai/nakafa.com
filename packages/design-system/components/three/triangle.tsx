@@ -5,9 +5,8 @@ import { useFrame } from "@react-three/fiber";
 import { COLORS } from "@repo/design-system/lib/color";
 import { useTheme } from "next-themes";
 import { useMemo, useRef } from "react";
-import * as THREE from "three";
-import { ORIGIN_COLOR } from "./_data";
-import { FONT_PATH, MONO_FONT_PATH } from "./_data";
+import { type Group, MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
+import { FONT_PATH, MONO_FONT_PATH, ORIGIN_COLOR } from "./_data";
 
 // Pre-calculate common values
 const SPHERE_SEGMENTS = 8; // Reduced from 16
@@ -31,12 +30,12 @@ type Props = {
 };
 
 // Singleton geometry instances for reuse
-let sharedSphereGeometry: THREE.SphereGeometry | null = null;
-const sharedMaterials: Map<string, THREE.MeshBasicMaterial> = new Map();
+let sharedSphereGeometry: SphereGeometry | null = null;
+const sharedMaterials: Map<string, MeshBasicMaterial> = new Map();
 
 function getSharedSphereGeometry() {
   if (!sharedSphereGeometry) {
-    sharedSphereGeometry = new THREE.SphereGeometry(
+    sharedSphereGeometry = new SphereGeometry(
       1,
       SPHERE_SEGMENTS,
       SPHERE_SEGMENTS
@@ -47,7 +46,7 @@ function getSharedSphereGeometry() {
 
 function getSharedMaterial(color: string) {
   if (!sharedMaterials.has(color)) {
-    sharedMaterials.set(color, new THREE.MeshBasicMaterial({ color }));
+    sharedMaterials.set(color, new MeshBasicMaterial({ color }));
   }
   const material = sharedMaterials.get(color);
   if (!material) {
@@ -68,7 +67,7 @@ export function Triangle({
   ...props
 }: Props) {
   const { resolvedTheme } = useTheme();
-  const groupRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<Group>(null);
 
   // Convert angle to radians and calculate the points
   const angleInRadians = (angle * Math.PI) / 180;
@@ -100,9 +99,9 @@ export function Triangle({
 
   // Memoize triangle side segments
   const triangleSideLines = useMemo(() => {
-    const origin = new THREE.Vector3(0, 0, 0);
-    const adj = new THREE.Vector3(adjacent, 0, 0);
-    const opp = new THREE.Vector3(adjacent, opposite, 0);
+    const origin = new Vector3(0, 0, 0);
+    const adj = new Vector3(adjacent, 0, 0);
+    const opp = new Vector3(adjacent, opposite, 0);
     return [
       [origin, adj],
       [adj, opp],
@@ -112,11 +111,11 @@ export function Triangle({
 
   // Memoize the angle arc points with fewer segments for performance
   const triangleArcPoints = useMemo(() => {
-    const pts: THREE.Vector3[] = [];
+    const pts: Vector3[] = [];
     for (let i = 0; i <= ARC_SEGMENTS; i++) {
       const a = (i / ARC_SEGMENTS) * angleInRadians;
       pts.push(
-        new THREE.Vector3(Math.cos(a) * arcRadius, Math.sin(a) * arcRadius, 0)
+        new Vector3(Math.cos(a) * arcRadius, Math.sin(a) * arcRadius, 0)
       );
     }
     return pts;
@@ -135,13 +134,13 @@ export function Triangle({
   // Determine label positions based on quadrant and angle
   const labelPositions = useMemo(() => {
     // Calculate midpoints for labels
-    const adjacentMidpoint = new THREE.Vector3(adjacent / 2, 0, 0);
-    const oppositeMidpoint = new THREE.Vector3(adjacent, opposite / 2, 0);
-    const hypotenuseMidpoint = new THREE.Vector3(adjacent / 2, opposite / 2, 0);
+    const adjacentMidpoint = new Vector3(adjacent / 2, 0, 0);
+    const oppositeMidpoint = new Vector3(adjacent, opposite / 2, 0);
+    const hypotenuseMidpoint = new Vector3(adjacent / 2, opposite / 2, 0);
 
-    const adjacentLabelPos = new THREE.Vector3();
-    const oppositeLabelPos = new THREE.Vector3();
-    const hypotenuseLabelPos = new THREE.Vector3();
+    const adjacentLabelPos = new Vector3();
+    const oppositeLabelPos = new Vector3();
+    const hypotenuseLabelPos = new Vector3();
 
     // Combined switch statement for all label positions based on quadrant
     switch (quadrant) {
@@ -149,13 +148,13 @@ export function Triangle({
         // 0-90 degrees
         adjacentLabelPos
           .copy(adjacentMidpoint)
-          .add(new THREE.Vector3(0, -fontSize * 1.5, 0));
+          .add(new Vector3(0, -fontSize * 1.5, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new THREE.Vector3(fontSize * 4, 0, 0));
+          .add(new Vector3(fontSize * 4, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
-          .add(new THREE.Vector3(0, fontSize * 2, 0));
+          .add(new Vector3(0, fontSize * 2, 0));
         break;
       }
 
@@ -163,13 +162,13 @@ export function Triangle({
         // 90-180 degrees
         adjacentLabelPos
           .copy(adjacentMidpoint)
-          .add(new THREE.Vector3(0, -fontSize * 1.5, 0));
+          .add(new Vector3(0, -fontSize * 1.5, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new THREE.Vector3(-fontSize * 4, 0, 0));
+          .add(new Vector3(-fontSize * 4, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
-          .add(new THREE.Vector3(0, fontSize * 2, 0));
+          .add(new Vector3(0, fontSize * 2, 0));
         break;
       }
 
@@ -177,13 +176,13 @@ export function Triangle({
         // 180-270 degrees
         adjacentLabelPos
           .copy(adjacentMidpoint)
-          .add(new THREE.Vector3(0, fontSize * 1.5, 0));
+          .add(new Vector3(0, fontSize * 1.5, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new THREE.Vector3(-fontSize * 4, 0, 0));
+          .add(new Vector3(-fontSize * 4, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
-          .add(new THREE.Vector3(0, -fontSize * 2, 0));
+          .add(new Vector3(0, -fontSize * 2, 0));
         break;
       }
 
@@ -191,13 +190,13 @@ export function Triangle({
         // 270-360 degrees
         adjacentLabelPos
           .copy(adjacentMidpoint)
-          .add(new THREE.Vector3(0, fontSize * 1.5, 0));
+          .add(new Vector3(0, fontSize * 1.5, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new THREE.Vector3(fontSize * 4, 0, 0));
+          .add(new Vector3(fontSize * 4, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
-          .add(new THREE.Vector3(0, -fontSize * 2, 0));
+          .add(new Vector3(0, -fontSize * 2, 0));
         break;
       }
 
@@ -228,94 +227,102 @@ export function Triangle({
     }
   });
 
-  // Line colors array for easy access
-  const lineColors = [COLORS.CYAN, COLORS.ORANGE, COLORS.ROSE];
+  // Line colors and semantic keys for triangle sides
+  const sideConfig = [
+    { color: COLORS.CYAN, key: "adjacent" },
+    { color: COLORS.ORANGE, key: "opposite" },
+    { color: COLORS.ROSE, key: "hypotenuse" },
+  ];
 
   return (
     <group ref={groupRef} {...props}>
       {/* Draw the triangle sides - optimized with single color array access */}
       {triangleSideLines.map((pts, i) => (
         <Line
-          key={i}
-          points={pts}
-          color={lineColors[i]}
-          lineWidth={2}
+          color={sideConfig[i].color}
           frustumCulled
+          key={sideConfig[i].key}
+          lineWidth={2}
+          points={pts}
         />
       ))}
 
       {/* Angle arc */}
       <Line
-        points={triangleArcPoints}
         color={COLORS.VIOLET}
-        lineWidth={2}
         frustumCulled
+        lineWidth={2}
+        points={triangleArcPoints}
       />
 
       {/* Angle label */}
       <Text
+        anchorX="center"
+        anchorY="middle"
+        color={COLORS.VIOLET}
+        font={fontPath}
+        fontSize={fontSize}
+        frustumCulled
         position={[
           Math.cos(angleInRadians / 2) * angleLabelDistance +
             (angle > 180 ? -1 : 1) * fontSize * 0.5,
           Math.sin(angleInRadians / 2) * angleLabelDistance,
           0,
         ]}
-        color={COLORS.VIOLET}
-        fontSize={fontSize}
-        font={fontPath}
-        frustumCulled
-        anchorX="center"
-        anchorY="middle"
       >
         {`${angle}°`}
       </Text>
 
       {/* Side labels */}
       <Text
-        position={labelPositions.adjacentLabelPos}
-        color={COLORS.CYAN}
-        fontSize={fontSize}
-        font={fontPath}
         anchorX="center"
+        color={COLORS.CYAN}
+        font={fontPath}
+        fontSize={fontSize}
         frustumCulled
+        position={labelPositions.adjacentLabelPos}
       >
         {labels.adjacent}
       </Text>
 
       <Text
-        position={labelPositions.oppositeLabelPos}
-        color={COLORS.ORANGE}
-        fontSize={fontSize}
-        font={fontPath}
         anchorY="middle"
+        color={COLORS.ORANGE}
+        font={fontPath}
+        fontSize={fontSize}
         frustumCulled
+        position={labelPositions.oppositeLabelPos}
       >
         {labels.opposite}
       </Text>
 
       <Text
-        position={labelPositions.hypotenuseLabelPos}
-        color={COLORS.ROSE}
-        fontSize={fontSize}
-        font={fontPath}
         anchorX="center"
         anchorY="middle"
-        rotation={[0, 0, hypotenuseLabelRotation]}
+        color={COLORS.ROSE}
+        font={fontPath}
+        fontSize={fontSize}
         frustumCulled
+        position={labelPositions.hypotenuseLabelPos}
+        rotation={[0, 0, hypotenuseLabelRotation]}
       >
         {labels.hypotenuse}
       </Text>
 
       {/* Points at vertices - using instanced rendering */}
       <Instances
-        visible
-        geometry={sphereGeo}
-        material={sphereMat}
         count={triangleVertices.length}
         frustumCulled
+        geometry={sphereGeo}
+        material={sphereMat}
+        visible
       >
-        {triangleVertices.map((v, i) => (
-          <Instance key={i} position={[v.x, v.y, v.z]} scale={vertexSize} />
+        {triangleVertices.map((v) => (
+          <Instance
+            key={`${v.x.toFixed(3)}-${v.y.toFixed(3)}`}
+            position={[v.x, v.y, v.z]}
+            scale={vertexSize}
+          />
         ))}
       </Instances>
     </group>

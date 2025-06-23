@@ -8,8 +8,8 @@ export default function NotFound() {
 
   return (
     <div
-      data-pagefind-ignore
       className="relative flex h-[calc(100svh-4rem)] items-center justify-center"
+      data-pagefind-ignore
     >
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />
       <div className="mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
@@ -28,11 +28,11 @@ export default function NotFound() {
 
           <div className="mx-auto w-fit">
             <a
-              href="https://github.com/nakafaai/nakafa.com"
-              title={t("contribute-button")}
-              target="_blank"
-              rel="noopener noreferrer"
               className={cn(buttonVariants({ variant: "secondary" }))}
+              href="https://github.com/nakafaai/nakafa.com"
+              rel="noopener noreferrer"
+              target="_blank"
+              title={t("contribute-button")}
             >
               {t("contribute-button")}
             </a>

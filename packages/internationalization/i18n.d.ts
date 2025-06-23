@@ -1,4 +1,4 @@
-import type messages from "./dictionaries/en.json";
+import messages from "./dictionaries/en.json" with { type: "json" };
 import type { formats } from "./src/request";
 import type { routing } from "./src/routing";
 

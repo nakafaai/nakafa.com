@@ -230,8 +230,8 @@ export default function TableChairsAnimation({
 
       <CardContent>
         <div
-          ref={ref}
           className="relative aspect-square w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 p-4 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950"
+          ref={ref}
         >
           <div className="flex h-full flex-col items-center justify-center gap-8">
             {/* Table and chairs visualization */}
@@ -250,9 +250,12 @@ export default function TableChairsAnimation({
                   <AnimatePresence mode="popLayout">
                     {arrangement.tables.map((table) => (
                       <motion.div
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="absolute rounded-md bg-teal-300 shadow-sm transition-colors hover:bg-teal-400 dark:bg-teal-500"
+                        exit={{ opacity: 0, scale: 0 }}
+                        initial={{ opacity: 0, scale: 0 }}
                         key={`table-${table.id}`}
                         layout
-                        className="absolute rounded-md bg-teal-300 shadow-sm transition-colors hover:bg-teal-400 dark:bg-teal-500"
                         style={{
                           left: table.x,
                           top: table.y,
@@ -260,9 +263,6 @@ export default function TableChairsAnimation({
                           height: table.height,
                           zIndex: 10,
                         }}
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0 }}
                         transition={{
                           type: "spring",
                           stiffness: 500,
@@ -277,9 +277,12 @@ export default function TableChairsAnimation({
                   <AnimatePresence mode="popLayout">
                     {arrangement.chairs.map((chair) => (
                       <motion.div
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="absolute rounded-full bg-cyan-300 shadow-sm transition-colors hover:bg-cyan-400 dark:bg-cyan-500"
+                        exit={{ opacity: 0, scale: 0 }}
+                        initial={{ opacity: 0, scale: 0 }}
                         key={`chair-${chair.id}`}
                         layout
-                        className="absolute rounded-full bg-cyan-300 shadow-sm transition-colors hover:bg-cyan-400 dark:bg-cyan-500"
                         style={{
                           left: chair.x,
                           top: chair.y,
@@ -287,9 +290,6 @@ export default function TableChairsAnimation({
                           height: 24,
                           zIndex: 20,
                         }}
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0 }}
                         transition={{
                           type: "spring",
                           stiffness: 500,
@@ -310,19 +310,19 @@ export default function TableChairsAnimation({
         <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <div className="flex justify-between gap-2">
             <Button
-              variant="outline"
               aria-label="Reset"
               onClick={resetAnimation}
               size="icon"
+              variant="outline"
             >
               <TimerResetIcon className="size-4 shrink-0" />
               <span className="sr-only">Reset</span>
             </Button>
             <Button
-              variant={isPlaying ? "outline" : "default"}
               aria-label={isPlaying ? "Pause" : "Play"}
               onClick={togglePlayPause}
               size="icon"
+              variant={isPlaying ? "outline" : "default"}
             >
               {isPlaying ? (
                 <PauseIcon className="size-4 shrink-0" />
@@ -336,11 +336,11 @@ export default function TableChairsAnimation({
           <div className="flex gap-2">
             {[0.5, 1, 1.5, 2].map((speedValue) => (
               <Button
-                key={speedValue}
-                variant={speed === speedValue ? "default" : "outline"}
                 aria-label={`Set speed to ${speedValue}x`}
-                size="sm"
+                key={speedValue}
                 onClick={() => setSpeed(speedValue)}
+                size="sm"
+                variant={speed === speedValue ? "default" : "outline"}
               >
                 {speedValue}x
               </Button>
@@ -352,14 +352,14 @@ export default function TableChairsAnimation({
           <div className="flex flex-wrap justify-center gap-2">
             {Array.from({ length: maxTables }).map((_, i) => (
               <Button
-                key={i}
-                variant={tableCount === i + 1 ? "default" : "outline"}
                 aria-label={`Set table count to ${i + 1}`}
-                size="sm"
+                key={`table-count-${i + 1}`}
                 onClick={() => {
                   setTableCount(i + 1);
                   setIsPlaying(false);
                 }}
+                size="sm"
+                variant={tableCount === i + 1 ? "default" : "outline"}
               >
                 {i + 1} {labels.table}
               </Button>

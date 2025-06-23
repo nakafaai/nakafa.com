@@ -17,9 +17,14 @@ import {
   ChartTooltipContent,
 } from "@repo/design-system/components/ui/chart";
 import { useTranslations } from "next-intl";
-import { LabelList } from "recharts";
-import { Bar } from "recharts";
-import { BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  LabelList,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 type Props = {
   title: string;
@@ -94,38 +99,38 @@ export function ElectabilityChart({ title, description, footnote }: Props) {
           >
             <CartesianGrid horizontal={false} />
             <YAxis
+              axisLine={false}
               dataKey="name"
-              type="category"
+              hide
               tickLine={false}
               tickMargin={10}
-              axisLine={false}
-              hide
+              type="category"
             />
-            <XAxis dataKey="value" type="number" hide />
+            <XAxis dataKey="value" hide type="number" />
             <ChartTooltip
-              cursor={false}
               content={<ChartTooltipContent indicator="line" />}
+              cursor={false}
             />
             <Bar
               dataKey="value"
-              layout="vertical"
               fill="var(--color-value)"
+              layout="vertical"
               radius={8}
             >
               <LabelList
-                dataKey="name"
-                position="left"
-                offset={10}
                 className="fill-foreground"
+                dataKey="name"
                 fontSize={12}
+                offset={10}
+                position="left"
                 width={75}
               />
               <LabelList
-                dataKey="value"
-                position="right"
-                offset={8}
                 className="fill-foreground"
+                dataKey="value"
                 fontSize={12}
+                offset={8}
+                position="right"
               />
             </Bar>
             <ChartLegend content={<ChartLegendContent />} />

@@ -1,6 +1,6 @@
-import { getMetadataFromSlug } from "@/lib/utils/system";
 import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
+import { getMetadataFromSlug } from "@/lib/utils/system";
 import { generateOGImage } from "./og";
 
 export function generateStaticParams() {

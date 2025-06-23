@@ -25,7 +25,7 @@ function isHeadingElement(element: string): element is HeadingElement {
 export function getAnchorStyle(
   anchor: PagefindResult["sub_results"][number]["anchor"]
 ): string | null {
-  if (!anchor || !isHeadingElement(anchor.element)) {
+  if (!(anchor && isHeadingElement(anchor.element))) {
     return null;
   }
 

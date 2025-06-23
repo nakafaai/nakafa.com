@@ -1,6 +1,5 @@
 "use client";
 
-import { TocProvider, useToc } from "@/lib/context/use-toc";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
@@ -19,6 +18,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { slugify } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
+import { TocProvider, useToc } from "@/lib/context/use-toc";
 
 type Props = {
   data: ParsedHeading[];
@@ -31,7 +31,10 @@ type Props = {
 function SidebarTreeItem({
   heading,
   depth = 0,
-}: { heading: ParsedHeading; depth?: number }) {
+}: {
+  heading: ParsedHeading;
+  depth?: number;
+}) {
   const activeHeadings = useToc((context) => context.activeHeadings);
 
   const id = slugify(heading.label);
@@ -42,16 +45,16 @@ function SidebarTreeItem({
         <TooltipTrigger asChild>
           <SidebarMenuButton asChild isActive={activeHeadings.includes(id)}>
             <NavigationLink href={heading.href} title={heading.label}>
-              <span title={heading.label} className="truncate">
+              <span className="truncate" title={heading.label}>
                 {heading.label}
               </span>
             </NavigationLink>
           </SidebarMenuButton>
         </TooltipTrigger>
         <TooltipContent
-          side="left"
           align="center"
           className="hidden max-w-xs sm:block"
+          side="left"
         >
           {heading.label}
         </TooltipContent>
@@ -61,9 +64,9 @@ function SidebarTreeItem({
         <SidebarMenuSub>
           {heading.children.map((child) => (
             <SidebarTreeItem
-              key={child.href}
-              heading={child}
               depth={depth + 1}
+              heading={child}
+              key={child.href}
             />
           ))}
         </SidebarMenuSub>
@@ -86,7 +89,7 @@ export function SidebarTree({ data, title }: Props) {
         <SidebarMenu>
           <TocProvider toc={data}>
             {data.map((item) => (
-              <SidebarTreeItem key={item.href} heading={item} />
+              <SidebarTreeItem heading={item} key={item.href} />
             ))}
           </TocProvider>
         </SidebarMenu>

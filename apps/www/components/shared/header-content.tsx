@@ -41,20 +41,20 @@ export function HeaderContent({
 }: Props) {
   const showFooter = authors || date;
   return (
-    <div data-pagefind-ignore className="relative pt-20 pb-10">
+    <div className="relative pt-20 pb-10" data-pagefind-ignore>
       <Particles
-        quantity={25}
         className="pointer-events-none absolute inset-0 opacity-80"
+        quantity={25}
       />
       <div className="z-10 mx-auto max-w-3xl space-y-4 px-6">
         <div className="space-y-2">
           {link && (
             <Link
-              href={link.href}
-              className={cn(buttonVariants({ variant: "link" }), "h-auto p-0")}
               aria-label={link.label}
-              title={link.label}
+              className={cn(buttonVariants({ variant: "link" }), "h-auto p-0")}
+              href={link.href}
               prefetch
+              title={link.label}
             >
               {link.label}
             </Link>

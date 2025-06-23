@@ -62,8 +62,8 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
     <>
       <div className={cn("space-y-4", className)}>
         <h2
-          id={t("references")}
           className="scroll-mt-28 font-medium text-2xl leading-tight tracking-tight"
+          id={t("references")}
         >
           {t("references")}
         </h2>
@@ -73,10 +73,10 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setOpen(!open)}
                   aria-label={t("bibliography")}
+                  onClick={() => setOpen(!open)}
+                  size="icon"
+                  variant="outline"
                 >
                   <span className="sr-only">{t("bibliography")}</span>
                   <LayersIcon className="size-4" />
@@ -91,16 +91,16 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="outline"
-                size="icon"
-                asChild
                 aria-label={t("source-code")}
+                asChild
+                size="icon"
+                variant="outline"
               >
                 <a
                   href={githubUrl}
-                  title={t("source-code")}
-                  target="_blank"
                   rel="noopener noreferrer"
+                  target="_blank"
+                  title={t("source-code")}
                 >
                   <span className="sr-only">{t("source-code")}</span>
                   <IconBrandGithub className="size-4" />
@@ -114,12 +114,12 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" asChild>
+              <Button asChild size="icon" variant="outline">
                 <a
                   href="https://www.youtube.com/@nakafaa"
-                  title={t("videos")}
-                  target="_blank"
                   rel="noopener noreferrer"
+                  target="_blank"
+                  title={t("videos")}
                 >
                   <span className="sr-only">{t("videos")}</span>
                   <IconBrandYoutube className="size-4" />
@@ -133,12 +133,12 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" asChild>
+              <Button asChild size="icon" variant="outline">
                 <a
                   href="https://discord.gg/CPCSfKhvfQ"
-                  title={t("community")}
-                  target="_blank"
                   rel="noopener noreferrer"
+                  target="_blank"
+                  title={t("community")}
                 >
                   <span className="sr-only">{t("community")}</span>
                   <IconBrandDiscord className="size-4" />
@@ -153,7 +153,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
       </div>
 
       {showSheet && (
-        <Sheet open={open} onOpenChange={setOpen}>
+        <Sheet onOpenChange={setOpen} open={open}>
           <SheetContent className="w-6/7 sm:max-w-xl">
             <div className="flex h-full flex-col">
               <SheetHeader>
@@ -178,8 +178,8 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                         <Card key={reference.title}>
                           <CardHeader>
                             <CardTitle
-                              title={reference.title}
                               className="line-clamp-1 capitalize"
+                              title={reference.title}
                             >
                               {reference.title.toLowerCase()}
                             </CardTitle>
@@ -187,10 +187,10 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                               <GlobeIcon className="size-4 shrink-0" />
                               {reference.url ? (
                                 <a
-                                  href={reference.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
                                   className="underline-offset-4 hover:underline"
+                                  href={reference.url}
+                                  rel="noopener noreferrer"
+                                  target="_blank"
                                 >
                                   {cleanUrl}
                                 </a>

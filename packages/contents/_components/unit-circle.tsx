@@ -43,9 +43,9 @@ function Content({ angle }: { angle: number }) {
     <>
       <CardContent>
         <CoordinateSystem
-          showZAxis={false}
-          showOrigin={false}
           cameraPosition={[0, 0, 4]}
+          showOrigin={false}
+          showZAxis={false}
         >
           <UnitCircle3D angle={angleValue} />
         </CoordinateSystem>
@@ -54,11 +54,11 @@ function Content({ angle }: { angle: number }) {
         <div className="mx-auto flex w-full max-w-md flex-col gap-4">
           <div className="flex items-center gap-2">
             <Label htmlFor="angle">
-              <Badge variant="outline" className="font-mono">
+              <Badge className="font-mono" variant="outline">
                 {angleValue}°
               </Badge>
             </Label>
-            <Badge variant="outline" className="font-mono">
+            <Badge className="font-mono" variant="outline">
               {getRadians(angleValue).toFixed(2)} {t("radian")}
             </Badge>
           </div>
@@ -67,11 +67,11 @@ function Content({ angle }: { angle: number }) {
             <span className="font-mono text-muted-foreground text-sm">0°</span>
             <Slider
               id="angle"
-              value={[angleValue]}
-              onValueChange={(values) => setAngleValue(values[0])}
-              min={0}
               max={360}
+              min={0}
+              onValueChange={(values) => setAngleValue(values[0])}
               step={1}
+              value={[angleValue]}
             />
             <span className="font-mono text-muted-foreground text-sm">
               360°

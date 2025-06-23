@@ -9,8 +9,8 @@ export const ThemeProvider = ({
   <NextThemeProvider
     attribute="class"
     defaultTheme="system"
-    enableSystem
     disableTransitionOnChange
+    enableSystem
     themes={themes.map((t) => t.value)}
     {...properties}
   >

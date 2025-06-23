@@ -29,20 +29,20 @@ export function CardArticle({ category, article }: Props) {
 
   return (
     <Link
-      key={article.slug}
-      href={`/articles/${category}/${article.slug}`}
-      title={article.title}
       className="group"
+      href={`/articles/${category}/${article.slug}`}
+      key={article.slug}
       prefetch
+      title={article.title}
     >
       <Card className="relative h-full overflow-hidden pt-8">
         <GradientBlock
-          keyString={article.slug}
           className="absolute inset-0 h-3 border-b transition-all duration-500 ease-in-out group-hover:h-5"
+          keyString={article.slug}
         />
         <CardHeader>
           <CardTitle className="line-clamp-2 font-medium leading-snug">
-            <h2 id={id} title={article.title} className="scroll-mt-28">
+            <h2 className="scroll-mt-28" id={id} title={article.title}>
               {article.title}
             </h2>
           </CardTitle>

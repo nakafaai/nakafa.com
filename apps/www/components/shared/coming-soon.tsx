@@ -1,27 +1,27 @@
-import { getGithubUrl } from "@/lib/utils/github";
 import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { Heading } from "@repo/design-system/markdown/heading";
 import { Paragraph } from "@repo/design-system/markdown/paragraph";
 import { useTranslations } from "next-intl";
+import { getGithubUrl } from "@/lib/utils/github";
 
 export function ComingSoon({ className }: { className?: string }) {
   const t = useTranslations("ComingSoon");
 
   return (
-    <div data-pagefind-ignore className={cn(className)}>
-      <Heading Tag="h2" className="text-2xl">
+    <div className={cn(className)} data-pagefind-ignore>
+      <Heading className="text-2xl" Tag="h2">
         {t("title")}
       </Heading>
 
       <Paragraph>{t("description")}</Paragraph>
 
       <a
-        href={getGithubUrl({ path: "" })}
-        title={t("contribute")}
-        target="_blank"
-        rel="noopener noreferrer"
         className={buttonVariants({ variant: "default" })}
+        href={getGithubUrl({ path: "" })}
+        rel="noopener noreferrer"
+        target="_blank"
+        title={t("contribute")}
       >
         {t("contribute")}
       </a>

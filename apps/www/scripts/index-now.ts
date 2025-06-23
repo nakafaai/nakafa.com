@@ -48,7 +48,7 @@ function loadSubmissionHistory(): {
       const parsed = JSON.parse(data);
 
       // Handle conversion from old format to new format
-      if (!parsed.indexNow && !parsed.bing) {
+      if (!(parsed.indexNow || parsed.bing)) {
         // Old format detected - convert to new format
         return {
           indexNow: parsed || {},
@@ -133,6 +133,44 @@ function getApiKey(): string {
   return hardcodedKey;
 }
 
+// Helper function to submit a single batch to IndexNow
+async function submitBatchToIndexNow(
+  batch: string[],
+  key: string,
+  batchCount: number,
+  totalBatches: number
+): Promise<string[]> {
+  const apiEndpoint = "https://api.indexnow.org";
+
+  logger.progress(
+    batchCount,
+    totalBatches,
+    `Submitting batch ${batchCount} of ${totalBatches}`
+  );
+
+  const response = await fetch(apiEndpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    body: JSON.stringify({
+      host: new URL(host).hostname,
+      key,
+      keyLocation,
+      urlList: batch,
+    }),
+  });
+
+  const status = response.status;
+
+  if (status !== 200) {
+    logger.error(`Batch ${batchCount} failed with status: ${status}`);
+    return [];
+  }
+  logger.success(`Batch ${batchCount} completed (${batch.length} URLs)`);
+  return batch;
+}
+
 // Submit URLs to IndexNow
 async function submitUrlsToIndexNow(
   urls: string[],
@@ -143,59 +181,39 @@ async function submitUrlsToIndexNow(
     return [];
   }
 
-  const apiEndpoint = "https://api.indexnow.org";
-
   // Split URLs into batches of 100
   const batchSize = 100;
+  const batches: string[][] = [];
+  for (let i = 0; i < urls.length; i += batchSize) {
+    batches.push(urls.slice(i, i + batchSize));
+  }
 
   logger.info(`Submitting ${urls.length} URLs to IndexNow...`);
 
   const successfullySubmitted: string[] = [];
-  let batchCount = 0;
-  const totalBatches = Math.ceil(urls.length / batchSize);
+  const totalBatches = batches.length;
 
-  for (let i = 0; i < urls.length; i += batchSize) {
-    batchCount++;
-    const batch = urls.slice(i, i + batchSize);
+  // Process batches sequentially using reduce
+  await batches.reduce(async (previousPromise, batch, index) => {
+    await previousPromise;
 
     try {
-      logger.progress(
-        batchCount,
-        totalBatches,
-        `Submitting batch ${batchCount} of ${totalBatches}`
+      const batchResult = await submitBatchToIndexNow(
+        batch,
+        key,
+        index + 1,
+        totalBatches
       );
-
-      const response = await fetch(apiEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-        },
-        body: JSON.stringify({
-          host: new URL(host).hostname,
-          key,
-          keyLocation,
-          urlList: batch,
-        }),
-      });
-
-      const status = response.status;
-
-      if (status !== 200) {
-        logger.error(`Batch ${batchCount} failed with status: ${status}`);
-      } else {
-        logger.success(`Batch ${batchCount} completed (${batch.length} URLs)`);
-        // Track successfully submitted URLs
-        successfullySubmitted.push(...batch);
-      }
+      successfullySubmitted.push(...batchResult);
 
       // Avoid rate limiting
-      if (i + batchSize < urls.length) {
+      if (index < totalBatches - 1) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     } catch (error) {
-      logger.error(`Error submitting batch ${batchCount}: ${error}`);
+      logger.error(`Error submitting batch ${index + 1}: ${error}`);
     }
-  }
+  }, Promise.resolve());
 
   logger.info(
     `IndexNow submission completed. Successfully submitted ${successfullySubmitted.length}/${urls.length} URLs.`
@@ -267,6 +285,47 @@ async function processBingResponse(
   return { success: true, quotaRemaining: null, shouldBreak: false };
 }
 
+// Helper function to submit a single batch to Bing
+async function submitBatchToBing(
+  batch: string[],
+  apiKey: string,
+  startIdx: number,
+  endIdx: number
+): Promise<{
+  success: boolean;
+  urls: string[];
+  quotaRemaining?: number;
+  shouldBreak?: boolean;
+}> {
+  const apiEndpoint =
+    "https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch";
+
+  logger.info(
+    `Submitting batch of ${batch.length} URLs to Bing (${startIdx} to ${endIdx})`
+  );
+
+  const response = await fetch(`${apiEndpoint}?apikey=${apiKey}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      Host: "ssl.bing.com",
+    },
+    body: JSON.stringify({
+      siteUrl: host,
+      urlList: batch,
+    }),
+  });
+
+  const result = await processBingResponse(response, batch);
+
+  return {
+    success: result.success,
+    urls: result.success ? batch : [],
+    quotaRemaining: result.quotaRemaining ?? undefined,
+    shouldBreak: result.shouldBreak,
+  };
+}
+
 // Submit URLs to Bing URL Submission API
 async function submitUrlsToBing(
   urls: string[],
@@ -276,9 +335,6 @@ async function submitUrlsToBing(
     logger.info("No new URLs to submit to Bing.");
     return [];
   }
-
-  const apiEndpoint =
-    "https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch";
 
   // Set a safer default batch size to respect Bing's quota
   let batchSize = 100; // Reduced from 500 to 100 to stay within quota
@@ -292,7 +348,12 @@ async function submitUrlsToBing(
   const MAX_RETRIES = 2;
   const successfullySubmitted: string[] = [];
 
-  while (submitted < urls.length) {
+  // Process URLs in batches using async iteration
+  const processBatch = async (): Promise<boolean> => {
+    if (submitted >= urls.length) {
+      return false;
+    }
+
     // Calculate how many URLs to submit in this batch
     const currentBatchSize = Math.min(batchSize, urls.length - submitted);
     const batch = urls.slice(submitted, submitted + currentBatchSize);
@@ -300,32 +361,15 @@ async function submitUrlsToBing(
     const endIdx = submitted + batch.length;
 
     try {
-      logger.info(
-        `Submitting batch of ${batch.length} URLs to Bing (${startIdx} to ${endIdx})`
-      );
-
-      const response = await fetch(`${apiEndpoint}?apikey=${apiKey}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          Host: "ssl.bing.com",
-        },
-        body: JSON.stringify({
-          siteUrl: host,
-          urlList: batch,
-        }),
-      });
-
-      const result = await processBingResponse(response, batch);
+      const result = await submitBatchToBing(batch, apiKey, startIdx, endIdx);
 
       if (result.shouldBreak) {
-        break;
+        return false;
       }
 
       if (result.success) {
         // Track successfully submitted URLs
-        successfullySubmitted.push(...batch);
-
+        successfullySubmitted.push(...result.urls);
         // Increment submitted count only on success
         submitted += batch.length;
         // Reset retry counter on success
@@ -334,13 +378,12 @@ async function submitUrlsToBing(
         // Check if we have a new quota limit
         if (result.quotaRemaining) {
           batchSize = result.quotaRemaining;
-
           // If the batch was too large, retry with the smaller batch size
           if (batch.length > result.quotaRemaining) {
             logger.info(
               `Retrying with smaller batch size of ${result.quotaRemaining}`
             );
-            continue;
+            return true; // Continue processing
           }
         }
 
@@ -350,7 +393,7 @@ async function submitUrlsToBing(
           logger.warn(
             `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`
           );
-          break;
+          return false;
         }
       }
 
@@ -359,6 +402,7 @@ async function submitUrlsToBing(
         logger.progress(submitted, urls.length, "Submission progress");
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
+      return true;
     } catch (error) {
       logger.error(`Error submitting URLs to Bing: ${error}`);
       // Increment retry count and exit if max retries reached
@@ -367,10 +411,21 @@ async function submitUrlsToBing(
         logger.warn(
           `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`
         );
-        break;
+        return false;
       }
+      return true;
     }
-  }
+  };
+
+  // Use tail recursion to avoid await in loop
+  const processAllBatches = async (): Promise<void> => {
+    const shouldContinue = await processBatch();
+    if (shouldContinue && submitted < urls.length) {
+      await processAllBatches();
+    }
+  };
+
+  await processAllBatches();
 
   logger.info(
     `Bing URL Submission API process completed. Submitted ${submitted}/${urls.length} URLs.`

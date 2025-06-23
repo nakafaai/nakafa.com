@@ -25,7 +25,10 @@ export function Inequality({ title, description, data }: Props) {
       <CardContent>
         <CoordinateSystem>
           {data.map((item, index) => (
-            <Inequality3D key={`inequality-${index}`} {...item} />
+            <Inequality3D
+              key={`inequality-${item.boundaryLine2D?.join("_") || index}`}
+              {...item}
+            />
           ))}
         </CoordinateSystem>
       </CardContent>

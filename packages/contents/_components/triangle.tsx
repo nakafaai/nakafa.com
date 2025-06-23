@@ -21,8 +21,8 @@ import {
   getTan,
 } from "@repo/design-system/lib/math";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import type { ReactNode } from "react";
+import { useState } from "react";
 
 type Props = {
   title: ReactNode;
@@ -49,7 +49,7 @@ export function Triangle({
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <Content angle={angle} size={size} labels={labels} />
+      <Content angle={angle} labels={labels} size={size} />
     </Card>
   );
 }
@@ -58,7 +58,11 @@ function Content({
   angle,
   size,
   labels,
-}: { angle: number; size: number; labels?: Props["labels"] }) {
+}: {
+  angle: number;
+  size: number;
+  labels?: Props["labels"];
+}) {
   const t = useTranslations("Common");
   const [angleValue, setAngleValue] = useState(angle);
 
@@ -66,23 +70,23 @@ function Content({
     <>
       <CardContent>
         <CoordinateSystem
-          showZAxis={false}
-          showOrigin={false}
           cameraPosition={[0, 0, 4]}
+          showOrigin={false}
+          showZAxis={false}
         >
-          <Triangle3D angle={angleValue} size={size} labels={labels} />
+          <Triangle3D angle={angleValue} labels={labels} size={size} />
         </CoordinateSystem>
       </CardContent>
       <CardFooter className="border-t px-0">
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">
-            <Badge variant="outline" className="font-mono">
+            <Badge className="font-mono" variant="outline">
               Sin ({angleValue}°) = {getSin(angleValue).toFixed(2)}
             </Badge>
-            <Badge variant="outline" className="font-mono">
+            <Badge className="font-mono" variant="outline">
               Cos ({angleValue}°) = {getCos(angleValue).toFixed(2)}
             </Badge>
-            <Badge variant="outline" className="font-mono">
+            <Badge className="font-mono" variant="outline">
               Tan ({angleValue}°) ={" "}
               {Number.isFinite(getTan(angleValue))
                 ? getTan(angleValue).toFixed(2)
@@ -95,11 +99,11 @@ function Content({
           <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
             <div className="flex items-center gap-2">
               <Label htmlFor="angle">
-                <Badge variant="outline" className="font-mono">
+                <Badge className="font-mono" variant="outline">
                   {angleValue}°
                 </Badge>
               </Label>
-              <Badge variant="outline" className="font-mono">
+              <Badge className="font-mono" variant="outline">
                 {getRadians(angleValue).toFixed(2)} {t("radian")}
               </Badge>
             </div>
@@ -110,11 +114,11 @@ function Content({
               </span>
               <Slider
                 id="angle"
-                value={[angleValue]}
-                onValueChange={(values) => setAngleValue(values[0])}
-                min={0}
                 max={360}
+                min={0}
+                onValueChange={(values) => setAngleValue(values[0])}
                 step={1}
+                value={[angleValue]}
               />
               <span className="font-mono text-muted-foreground text-sm">
                 360°

@@ -47,7 +47,7 @@ export function FunctionIllustration({
           <ArrowDownIcon className="block size-4 sm:hidden" />
           <ArrowRightIcon className="hidden size-4 sm:block" />
 
-          <Button variant="destructive" className="pointer-events-none">
+          <Button className="pointer-events-none" variant="destructive">
             {content.output}
           </Button>
         </div>

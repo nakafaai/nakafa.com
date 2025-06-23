@@ -26,7 +26,7 @@ export function getGradeNonNumeric(grade: Grade) {
   const parsedGrade = nonNumericGradeSchema.safeParse(grade);
 
   if (!parsedGrade.success) {
-    return undefined;
+    return;
   }
 
   return parsedGrade.data;

@@ -4,18 +4,25 @@ import { Line, Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { COLORS } from "@repo/design-system/lib/color";
 import { useMemo, useRef } from "react";
-import * as THREE from "three";
+import {
+  Color,
+  ConeGeometry,
+  type Group,
+  MeshBasicMaterial,
+  Quaternion,
+  Vector3,
+} from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
 
 // Shared geometry and material caches
-const coneGeometryCache = new Map<string, THREE.ConeGeometry>();
-const materialCache = new Map<string, THREE.MeshBasicMaterial>();
+const coneGeometryCache = new Map<string, ConeGeometry>();
+const materialCache = new Map<string, MeshBasicMaterial>();
 
-function getSharedConeGeometry(size: number): THREE.ConeGeometry {
+function getSharedConeGeometry(size: number): ConeGeometry {
   const key = `cone-${size}`;
   if (!coneGeometryCache.has(key)) {
     // Reduced segments from 32 to 16 for better performance
-    coneGeometryCache.set(key, new THREE.ConeGeometry(size / 2, size, 16, 1));
+    coneGeometryCache.set(key, new ConeGeometry(size / 2, size, 16, 1));
   }
   const geometry = coneGeometryCache.get(key);
   if (!geometry) {
@@ -24,15 +31,13 @@ function getSharedConeGeometry(size: number): THREE.ConeGeometry {
   return geometry;
 }
 
-function getSharedMaterial(
-  color: string | THREE.Color
-): THREE.MeshBasicMaterial {
-  const colorKey = color instanceof THREE.Color ? color.getHexString() : color;
+function getSharedMaterial(color: string | Color): MeshBasicMaterial {
+  const colorKey = color instanceof Color ? color.getHexString() : color;
   if (!materialCache.has(colorKey)) {
     materialCache.set(
       colorKey,
-      new THREE.MeshBasicMaterial({
-        color: color instanceof THREE.Color ? color : new THREE.Color(color),
+      new MeshBasicMaterial({
+        color: color instanceof Color ? color : new Color(color),
       })
     );
   }
@@ -49,7 +54,7 @@ type Props = {
   /** End point of the vector [x, y, z] */
   to: [number, number, number];
   /** Color of the vector */
-  color?: string | THREE.Color;
+  color?: string | Color;
   /** Width of the vector line */
   lineWidth?: number;
   /** Show arrowhead */
@@ -78,28 +83,24 @@ export function ArrowHelper({
   useMonoFont = true,
   ...props
 }: Props) {
-  const groupRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<Group>(null);
 
   // Memoize vector calculations
   const vectors = useMemo(() => {
-    const fromVec = new THREE.Vector3(...from);
-    const toVec = new THREE.Vector3(...to);
-    const direction = new THREE.Vector3()
-      .subVectors(toVec, fromVec)
-      .normalize();
+    const fromVec = new Vector3(...from);
+    const toVec = new Vector3(...to);
+    const direction = new Vector3().subVectors(toVec, fromVec).normalize();
     const length = fromVec.distanceTo(toVec);
     return { fromVec, toVec, direction, length };
   }, [from, to]);
 
   // Memoize label position calculation
   const labelPos = useMemo(() => {
-    const midPoint = new THREE.Vector3().addVectors(
+    const midPoint = new Vector3().addVectors(
       vectors.fromVec,
-      new THREE.Vector3()
-        .copy(vectors.direction)
-        .multiplyScalar(vectors.length / 2)
+      new Vector3().copy(vectors.direction).multiplyScalar(vectors.length / 2)
     );
-    const endPoint = new THREE.Vector3().copy(vectors.toVec);
+    const endPoint = new Vector3().copy(vectors.toVec);
 
     switch (labelPosition) {
       case "start":
@@ -108,7 +109,7 @@ export function ArrowHelper({
         return midPoint;
       default:
         // Add slight offset for end position
-        return endPoint.clone().add(new THREE.Vector3(0.2, 0.2, 0.2));
+        return endPoint.clone().add(new Vector3(0.2, 0.2, 0.2));
     }
   }, [vectors, labelPosition]);
 
@@ -127,7 +128,7 @@ export function ArrowHelper({
   const shaftPoints = useMemo(
     () => [
       vectors.fromVec,
-      new THREE.Vector3(
+      new Vector3(
         vectors.toVec.x - vectors.direction.x * arrowSize,
         vectors.toVec.y - vectors.direction.y * arrowSize,
         vectors.toVec.z - vectors.direction.z * arrowSize
@@ -142,14 +143,14 @@ export function ArrowHelper({
       return null;
     }
 
-    const position = new THREE.Vector3(
+    const position = new Vector3(
       vectors.toVec.x - (vectors.direction.x * arrowSize) / 2,
       vectors.toVec.y - (vectors.direction.y * arrowSize) / 2,
       vectors.toVec.z - (vectors.direction.z * arrowSize) / 2
     );
 
-    const quaternion = new THREE.Quaternion().setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
+    const quaternion = new Quaternion().setFromUnitVectors(
+      new Vector3(0, 1, 0),
       vectors.direction
     );
 
@@ -173,32 +174,32 @@ export function ArrowHelper({
     <group ref={groupRef} {...props}>
       {/* Shaft of the arrow */}
       <Line
-        points={shaftPoints}
         color={color}
-        lineWidth={lineWidth}
         frustumCulled
+        lineWidth={lineWidth}
+        points={shaftPoints}
       />
 
       {/* Cone arrowhead with optimized segments */}
       {showArrow && coneGeometry && material && coneTransform && (
         <mesh
+          frustumCulled
           geometry={coneGeometry}
           material={material}
           position={coneTransform.position}
           quaternion={coneTransform.quaternion}
-          frustumCulled
         />
       )}
 
       {/* Label text */}
       <Text
-        visible={!!label}
-        position={labelPos}
-        color={color instanceof THREE.Color ? color.getStyle() : color}
-        fontSize={0.5}
         anchorX="left"
+        color={color instanceof Color ? color.getStyle() : color}
         font={fontPath}
+        fontSize={0.5}
         frustumCulled
+        position={labelPos}
+        visible={!!label}
       >
         {label}
       </Text>

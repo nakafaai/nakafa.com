@@ -21,20 +21,20 @@ const geistMono = Geist_Mono({
 export default function NotFound() {
   return (
     <html
-      lang="en"
       className={cn(
         "font-sans antialiased",
         geistSans.variable,
         geistMono.variable
       )}
+      lang="en"
       suppressHydrationWarning
     >
       <body>
         <DesignSystemProvider
           attribute="class"
           defaultTheme="system"
-          enableSystem
           disableTransitionOnChange
+          enableSystem
         >
           <NextError statusCode={404} />
         </DesignSystemProvider>

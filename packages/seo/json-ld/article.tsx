@@ -1,7 +1,6 @@
 import { getAppUrl } from "@repo/design-system/lib/utils";
 import { JsonLd } from "@repo/seo/json-ld";
-import type { Article, WithContext } from "schema-dts";
-import type { Person } from "schema-dts";
+import type { Article, Person, WithContext } from "schema-dts";
 
 type Props = {
   headline: string;
