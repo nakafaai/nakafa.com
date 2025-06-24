@@ -113,6 +113,11 @@ export async function generateMetadata({
       creator: "@nabilfatih_",
       site: "@nabilfatih_",
     },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: t("title"),
+    },
     openGraph: {
       title: t("title"),
       description: t("description"),
