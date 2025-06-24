@@ -29,11 +29,11 @@
     "@biomejs/biome": "2.0.5",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.5.4",
-    "@types/node": "^24.0.3",
+    "@types/node": "^24.0.4",
     "tsup": "^8.5.0",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3",
-    "ultracite": "^5.0.12",
+    "ultracite": "^5.0.18",
     "vitest": "^3.2.4"
   },
   "packageManager": "bun@1.2.17",
