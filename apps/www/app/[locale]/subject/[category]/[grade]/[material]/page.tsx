@@ -147,7 +147,7 @@ export default async function Page({ params }: Props) {
         </LayoutMaterialMain>
         <LayoutMaterialFooter>
           <RefContent
-            githubUrl={getGithubUrl({ path: `/contents${FILE_PATH}` })}
+            githubUrl={getGithubUrl({ path: `/packages/contents${FILE_PATH}` })}
           />
         </LayoutMaterialFooter>
       </LayoutMaterialContent>

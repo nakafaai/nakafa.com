@@ -211,7 +211,9 @@ export default async function Page({ params }: Props) {
           <LayoutMaterialPagination pagination={pagination} />
           <LayoutMaterialFooter className="mt-10">
             <RefContent
-              githubUrl={getGithubUrl({ path: `/contents${FILE_PATH}` })}
+              githubUrl={getGithubUrl({
+                path: `/packages/contents${FILE_PATH}`,
+              })}
             />
           </LayoutMaterialFooter>
         </LayoutMaterialContent>
