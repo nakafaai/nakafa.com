@@ -11,7 +11,7 @@
         "tsup": "^8.5.0",
         "turbo": "^2.5.4",
         "typescript": "^5.8.3",
-        "ultracite": "^5.0.18",
+        "ultracite": "^5.0.19",
         "vitest": "^3.2.4",
       },
     },
@@ -2682,7 +2682,7 @@
 
     "uglify-js": ["uglify-js@3.19.3", "", { "bin": { "uglifyjs": "bin/uglifyjs" } }, "sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ=="],
 
-    "ultracite": ["ultracite@5.0.18", "", { "dependencies": { "@clack/prompts": "^0.11.0", "commander": "^14.0.0", "deepmerge": "^4.3.1", "jsonc-parser": "^3.3.1", "vitest": "^3.2.4" }, "bin": { "ultracite": "dist/index.js" } }, "sha512-DmG8z00UOjX7YKcaVn5Tjz05P/TYm265mTe/zkmLjafkO8JdoxIK6B6BcUDCUWzMuYuVgOpl4OOObNX52bgBTQ=="],
+    "ultracite": ["ultracite@5.0.19", "", { "dependencies": { "@clack/prompts": "^0.11.0", "commander": "^14.0.0", "deepmerge": "^4.3.1", "jsonc-parser": "^3.3.1", "vitest": "^3.2.4" }, "bin": { "ultracite": "dist/index.js" } }, "sha512-dfsNyOLsEM2OGupKK8DBY/On+hVTWpoEMHX5Rlv/kRwnNUB6U1a3XA5My7dpRWbHLfeB0Ar3e7qypPBKT+pOJg=="],
 
     "undici-types": ["undici-types@7.8.0", "", {}, "sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw=="],
 
