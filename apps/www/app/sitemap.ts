@@ -10,14 +10,14 @@ const host = "https://nakafa.com";
 export const baseRoutes = ["/search", "/contributor"];
 
 // Function to recursively get all directories
-export function getAllRoutes(basePath = "", currentPath = ""): string[] {
+export function getAllRoutes(currentPath = ""): string[] {
   const children = getFolderChildNames(currentPath || ".");
 
   let routes = currentPath ? [`/${currentPath.replace(/\\/g, "/")}`] : ["/"];
 
   for (const child of children) {
     const childPath = currentPath ? `${currentPath}/${child}` : child;
-    const childRoutes = getAllRoutes(basePath, childPath);
+    const childRoutes = getAllRoutes(childPath);
     routes = [...routes, ...childRoutes];
   }
 

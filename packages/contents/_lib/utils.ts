@@ -47,6 +47,7 @@ export async function getContent(
 ): Promise<{
   metadata: ContentMetadata;
   default: ComponentType<unknown>;
+  raw: string;
 } | null> {
   try {
     // Strip leading slash if present for consistency
@@ -56,15 +57,17 @@ export async function getContent(
 
     // Create a dynamic import path that works reliably with Next.js
     // Using a relative path from the location of this file (lib/utils)
-    const contentModule = await import(
-      `@repo/contents/${cleanPath}/${locale}.mdx`
-    );
+    const [contentModule, raw] = await Promise.all([
+      import(`@repo/contents/${cleanPath}/${locale}.mdx`),
+      getRawContent(`${cleanPath}/${locale}.mdx`),
+    ]);
 
     const parsedMetadata = ContentMetadataSchema.parse(contentModule.metadata);
 
     return {
       metadata: parsedMetadata,
       default: contentModule.default,
+      raw,
     };
   } catch {
     return null;
@@ -144,10 +147,16 @@ export function getNestedSlugs(
   currentPath: string[] = [],
   result: string[][] = []
 ): string[][] {
+  let cleanBasePath = basePath;
+  // if basePath empty string, use "."
+  if (basePath === "") {
+    cleanBasePath = ".";
+  }
+
   const fullPath =
     currentPath.length === 0
-      ? basePath
-      : `${basePath}/${currentPath.join("/")}`;
+      ? cleanBasePath
+      : `${cleanBasePath}/${currentPath.join("/")}`;
   const children = getFolderChildNames(fullPath);
 
   if (children.length === 0) {

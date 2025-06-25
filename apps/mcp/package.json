@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@repo/next-config": "workspace:*",
+    "@repo/contents": "workspace:*",
     "@vercel/mcp-adapter": "0.11.1",
     "next": "15.3.4",
     "react": "^19.1.0",
