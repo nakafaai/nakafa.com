@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "next dev -p 3000 --turbopack",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3000",
     "analyze": "ANALYZE=true npm run build",
     "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
     "test": "NODE_ENV=test vitest run",

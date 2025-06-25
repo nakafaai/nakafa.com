@@ -22,4 +22,14 @@ export const subjectAll = [
       },
     ],
   },
+  {
+    title: "university",
+    icon: getCategoryIcon("university"),
+    items: [
+      {
+        title: "bachelor",
+        href: "/subject/university/bachelor",
+      },
+    ],
+  },
 ] as const;

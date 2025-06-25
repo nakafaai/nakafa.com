@@ -16,6 +16,7 @@ import {
   EarthIcon,
   FlaskConicalIcon,
   Gamepad2Icon,
+  HandshakeIcon,
   HourglassIcon,
   LightbulbIcon,
   MapPinIcon,
@@ -106,6 +107,8 @@ export function getMaterialIcon(material: Material) {
       return CableIcon;
     case "informatics-engineering":
       return ComputerIcon;
+    case "international-relations":
+      return HandshakeIcon;
     default:
       return LightbulbIcon;
   }

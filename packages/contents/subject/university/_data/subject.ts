@@ -34,6 +34,11 @@ const subjects = [
     icon: getMaterialIcon("political-science"),
     label: "political-science",
   },
+  {
+    grade: ["bachelor"],
+    icon: getMaterialIcon("international-relations"),
+    label: "international-relations",
+  },
 ] as const;
 
 export function getSubjects(grade: Grade) {
