@@ -38,7 +38,6 @@
       "name": "mcp",
       "dependencies": {
         "@repo/analytics": "workspace:*",
-        "@repo/contents": "workspace:*",
         "@repo/next-config": "workspace:*",
         "@vercel/mcp-adapter": "0.11.1",
         "next": "15.3.4",
