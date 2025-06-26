@@ -1,8 +1,4 @@
-import { getContents } from "@repo/contents/_lib/utils";
-
-export async function GET() {
-  const contents = await getContents({});
-
+export function GET() {
   const terminalOutput = `❤️ Nakafa API Server ❤️
 
 [${new Date().toLocaleTimeString()}] INFO: Welcome to Nakafa API Server!
@@ -10,7 +6,6 @@ export async function GET() {
 
 [${new Date().toLocaleTimeString()}] INFO: API Server initialized successfully
 [${new Date().toLocaleTimeString()}] INFO: Ready to serve educational content.
-[${new Date().toLocaleTimeString()}] INFO: Total contents: ${contents.length}
 [${new Date().toLocaleTimeString()}] INFO: Connection established - Happy learning!
 
 [${new Date().toLocaleTimeString()}] INFO: Website: https://nakafa.com
