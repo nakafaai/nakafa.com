@@ -265,7 +265,7 @@ export async function getReferences(filePath: string): Promise<Reference[]> {
  * @returns The child names of the folder.
  */
 export function getFolderChildNames(folder: string, exclude?: string[]) {
-  const defaultExclude = ["_", "node_modules", ".next", ".git"];
+  const defaultExclude = ["_", "node_modules", ".", "dist"];
 
   const effectiveExclude = exclude
     ? [...defaultExclude, ...exclude]
