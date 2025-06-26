@@ -1,4 +1,4 @@
-import { app } from "@repo/backend";
+import { app } from "@repo/backend/server";
 
 export const GET = app.handle;
 export const POST = app.handle;
@@ -7,5 +7,3 @@ export const DELETE = app.handle;
 export const PATCH = app.handle;
 export const OPTIONS = app.handle;
 export const HEAD = app.handle;
-
-export type { App } from "@repo/backend";

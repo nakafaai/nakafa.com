@@ -1,5 +1,5 @@
 import { treaty } from "@elysiajs/eden";
-import type { App } from ".";
+import type { App } from "./server";
 
 const baseUrl =
   process.env.NODE_ENV === "production"
