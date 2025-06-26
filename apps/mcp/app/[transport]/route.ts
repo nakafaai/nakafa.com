@@ -26,9 +26,12 @@ const handler = createMcpHandler(
       GetContentsSchema.shape,
       async ({ locale, type }) => {
         // fetch from api
-        const contents = await fetch(
-          `https://api.nakafa.com/v1/contents/${locale}/${type}`
-        ).then((res) => res.json());
+        const url = `https://api.nakafa.com/v1/contents/${locale}/${type}`;
+
+        // clean url make sure there is no trailing slash at the end
+        const cleanUrl = url.endsWith("/") ? url.slice(0, -1) : url;
+
+        const contents = await fetch(cleanUrl).then((res) => res.json());
 
         await vercelTrack("get_contents", {
           locale,
