@@ -29,8 +29,8 @@ export async function GET() {
 
   for (const result of results) {
     for (const content of result.contents) {
-      const entry = `- [${content.title}](${content.url}): ${
-        content.description ?? content.title
+      const entry = `- [${content.metadata.title}](${content.url}): ${
+        content.metadata.description ?? content.metadata.title
       }`;
 
       const list = map.get(result.section) ?? [];

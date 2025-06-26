@@ -44,3 +44,10 @@ export const ContentPaginationSchema = z.object({
   }),
 });
 export type ContentPagination = z.infer<typeof ContentPaginationSchema>;
+
+export const ContentSchema = z.object({
+  metadata: ContentMetadataSchema,
+  raw: z.string(),
+  url: z.string(),
+});
+export type Content = z.infer<typeof ContentSchema>;

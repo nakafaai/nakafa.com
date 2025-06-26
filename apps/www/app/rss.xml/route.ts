@@ -53,12 +53,12 @@ export async function GET() {
   for (const result of results) {
     for (const content of result.contents) {
       feedItems.push({
-        title: content.title,
-        description: content.description ?? content.title,
+        title: content.metadata.title,
+        description: content.metadata.description ?? content.metadata.title,
         link: `${baseUrl}${content.url}`,
-        date: new Date(content.date),
+        date: new Date(content.metadata.date),
         id: content.url,
-        author: content.authors,
+        author: content.metadata.authors,
       });
     }
   }

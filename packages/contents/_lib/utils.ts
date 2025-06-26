@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import type { ContentMetadata } from "@repo/contents/_types/content";
 import {
   ContentMetadataSchema,
+  ContentSchema,
   type Reference,
 } from "@repo/contents/_types/content";
 import type { Locale } from "next-intl";
@@ -220,10 +221,17 @@ export async function getContents({
       return null;
     }
 
-    return {
-      ...content.metadata,
+    const { data, error } = ContentSchema.safeParse({
+      metadata: content.metadata,
+      raw: content.raw,
       url: `/${locale}/${item.slug.join("/")}`,
-    };
+    });
+
+    if (error) {
+      return null;
+    }
+
+    return data;
   });
 
   const contents = await Promise.all(promises).then((results) =>
