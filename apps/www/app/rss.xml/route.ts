@@ -1,12 +1,8 @@
-import { getSlugPath as getArticleSlugPath } from "@repo/contents/_lib/articles/slug";
-import { getSlugPath as getSubjectSlugPath } from "@repo/contents/_lib/subject/slug";
-import { getContent } from "@repo/contents/_lib/utils";
+import { getContents } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
-import { Feed } from "feed";
+import { Feed, type Item } from "feed";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
-import { getStaticParams } from "@/lib/utils/system";
-import { ArticleSchema, type ContentTask, SubjectSchema } from "@/types/llms";
 
 export const revalidate = false;
 
@@ -26,86 +22,19 @@ export async function GET() {
     }),
   ]);
 
-  // Get all static params
-  const articles = getStaticParams({
-    basePath: "articles",
-    paramNames: ["category", "slug"],
-    slugParam: "slug",
-    isDeep: true,
-  });
+  // Fetch all articles and subjects for all locales in parallel
+  const contentPromises = locales.flatMap((locale) => [
+    getContents({ locale, basePath: "articles" }).then((contents) => ({
+      locale,
+      contents,
+    })),
+    getContents({ locale, basePath: "subject" }).then((contents) => ({
+      locale,
+      contents,
+    })),
+  ]);
 
-  const subjects = getStaticParams({
-    basePath: "subject",
-    paramNames: ["category", "grade", "material", "slug"],
-    slugParam: "slug",
-    isDeep: true,
-  });
-
-  // parse articles and subjects
-  const { data: parsedArticles } = ArticleSchema.array().safeParse(articles);
-  const { data: parsedSubjects } = SubjectSchema.array().safeParse(subjects);
-
-  if (!(parsedArticles && parsedSubjects)) {
-    return new NextResponse("Internal Server Error. Please try again later.", {
-      status: 500,
-    });
-  }
-
-  // Create all content fetching tasks
-  const contentTasks: ContentTask[] = [];
-
-  // Add article tasks
-  for (const locale of locales) {
-    for (const article of parsedArticles) {
-      const filePath = getArticleSlugPath(
-        article.category,
-        article.slug.join("/")
-      );
-      contentTasks.push({
-        locale,
-        filePath,
-        section: "Articles",
-      });
-    }
-  }
-
-  // Add subject tasks
-  for (const locale of locales) {
-    for (const subject of parsedSubjects) {
-      const filePath = getSubjectSlugPath(
-        subject.category,
-        subject.grade,
-        subject.material,
-        subject.slug
-      );
-      contentTasks.push({
-        locale,
-        filePath,
-        section: "Subjects",
-      });
-    }
-  }
-
-  const contentPromises = contentTasks.map(async (task) => {
-    const content = await getContent(task.locale, task.filePath);
-    if (content) {
-      return {
-        section: task.section,
-        entry: {
-          title: content.metadata.title,
-          description: content.metadata.description ?? content.metadata.title,
-          link: `${baseUrl}/${task.locale}${task.filePath}`,
-          date: new Date(content.metadata.date),
-          id: `/${task.locale}${task.filePath}`,
-          author: content.metadata.authors,
-          language: task.locale,
-        },
-      };
-    }
-    return null;
-  });
-
-  const contentResults = await Promise.all(contentPromises);
+  const results = await Promise.all(contentPromises);
 
   const feed = new Feed({
     title: t("title"),
@@ -118,13 +47,28 @@ export async function GET() {
     copyright: tCommon("copyright", { year: new Date().getFullYear() }),
   });
 
-  // clean up content results
-  const cleanedContents = contentResults.filter((result) => result !== null);
+  // Collect all feed items
+  const feedItems: Item[] = [];
 
-  for (const content of cleanedContents.sort((a, b) => {
-    return new Date(b.entry.date).getTime() - new Date(a.entry.date).getTime();
-  })) {
-    feed.addItem(content.entry);
+  for (const result of results) {
+    for (const content of result.contents) {
+      feedItems.push({
+        title: content.title,
+        description: content.description ?? content.title,
+        link: `${baseUrl}${content.url}`,
+        date: new Date(content.date),
+        id: content.url,
+        author: content.authors,
+      });
+    }
+  }
+
+  // Sort by date (newest first) and add to feed
+  const sortedItems = feedItems.sort(
+    (a, b) => b.date.getTime() - a.date.getTime()
+  );
+  for (const item of sortedItems) {
+    feed.addItem(item);
   }
 
   return new NextResponse(feed.rss2());
