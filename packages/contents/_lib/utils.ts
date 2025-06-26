@@ -41,26 +41,48 @@ function isContentsDir(dirPath: string): boolean {
  * @returns The path to the contents directory.
  */
 function findContentsDir(): string {
-  // Try relative path first (development)
-  const relativePath = path.resolve(__dirname, "..");
-  if (isContentsDir(relativePath)) {
-    return relativePath;
+  // Get the absolute path to this file and work backwards to find the monorepo root
+  const currentFilePath = fileURLToPath(import.meta.url);
+  const currentDir = path.dirname(currentFilePath);
+
+  // This file is at packages/contents/_lib/utils.ts
+  // So we go up 2 levels to get to packages/contents
+  const contentsFromFile = path.resolve(currentDir, "..");
+  if (isContentsDir(contentsFromFile)) {
+    return contentsFromFile;
   }
 
-  // Try from process.cwd() (production - might be in different structure)
+  // Try to find the monorepo root by looking for package.json with workspaces
+  let searchDir = currentDir;
+  while (searchDir !== path.dirname(searchDir)) {
+    const packageJsonPath = path.join(searchDir, "package.json");
+    if (fs.existsSync(packageJsonPath)) {
+      try {
+        const packageJson = JSON.parse(
+          fs.readFileSync(packageJsonPath, "utf8")
+        );
+        if (packageJson.workspaces || packageJson.private) {
+          // Found monorepo root, try packages/contents from here
+          const contentsFromRoot = path.join(searchDir, "packages", "contents");
+          if (isContentsDir(contentsFromRoot)) {
+            return contentsFromRoot;
+          }
+        }
+      } catch {
+        // Continue searching
+      }
+    }
+    searchDir = path.dirname(searchDir);
+  }
+
+  // Fallback: try from process.cwd()
   const fromCwd = path.join(process.cwd(), "packages", "contents");
   if (isContentsDir(fromCwd)) {
     return fromCwd;
   }
 
-  // Try direct from cwd (if contents is at root level in production)
-  const directCwd = path.join(process.cwd(), "contents");
-  if (isContentsDir(directCwd)) {
-    return directCwd;
-  }
-
-  // Fallback to relative path
-  return relativePath;
+  // Last resort: return the path relative to this file
+  return contentsFromFile;
 }
 
 const contentsDir = findContentsDir();
