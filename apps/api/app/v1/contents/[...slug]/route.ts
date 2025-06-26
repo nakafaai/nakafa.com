@@ -4,7 +4,6 @@ import {
   getNestedSlugs,
 } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
-import { NextResponse } from "next/server";
 
 export const dynamic = "force-static";
 export const revalidate = false;
@@ -55,5 +54,5 @@ export async function GET(
     basePath: contentSlug,
   });
 
-  return NextResponse.json(content);
+  return new Response(JSON.stringify(content, null, 2));
 }

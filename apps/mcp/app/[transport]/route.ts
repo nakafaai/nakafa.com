@@ -31,15 +31,17 @@ const handler = createMcpHandler(
         // clean url make sure there is no trailing slash at the end
         const cleanUrl = url.endsWith("/") ? url.slice(0, -1) : url;
 
-        const contents = await fetch(cleanUrl).then((res) => res.json());
+        const contents = await fetch(cleanUrl).then((res) => res.text());
+
+        const parsedContents = JSON.parse(contents);
 
         await vercelTrack("get_contents", {
           locale,
           type,
-          total: contents.length,
+          total: parsedContents.length,
         });
 
-        if (contents.length === 0) {
+        if (parsedContents.length === 0) {
           return {
             content: [
               {
@@ -54,9 +56,9 @@ const handler = createMcpHandler(
           content: [
             {
               type: "text",
-              text: `Found ${contents.length} contents:
+              text: `Found ${parsedContents.length} contents:
               
-              ${JSON.stringify(contents, null, 2)}
+              ${JSON.stringify(parsedContents, null, 2)}
               `,
             },
           ],
