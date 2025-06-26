@@ -7,10 +7,10 @@
     "start": "next start -p 3002"
   },
   "dependencies": {
-    "@repo/backend": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/analytics": "workspace:*",
+    "@repo/design-system": "workspace:*",
     "next": "15.3.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
