@@ -1,9 +1,13 @@
-import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/utils";
+import {
+  getContent,
+  getFolderChildNames,
+  getNestedSlugs,
+} from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 
 export const revalidate = false;
 
-export function GET(_req: Request) {
+export async function GET(_req: Request) {
   const topDirs = getFolderChildNames(".");
   const result: { locale: string; slug: string[] }[] = [];
   const locales = routing.locales;
@@ -31,5 +35,21 @@ export function GET(_req: Request) {
     }
   }
 
-  return new Response(JSON.stringify(result, null, 2));
+  const promises = result.map(async (item) => {
+    const content = await getContent(item.locale, item.slug.join("/"));
+    if (!content) {
+      return null;
+    }
+
+    return {
+      ...content.metadata,
+      url: `/${item.locale}/${item.slug.join("/")}`,
+    };
+  });
+
+  const contents = await Promise.all(promises).then((results) =>
+    results.filter((item) => item !== null)
+  );
+
+  return new Response(JSON.stringify(contents, null, 2));
 }

@@ -205,15 +205,10 @@ export async function getContents({
   basePath?: string;
 }) {
   // Get all nested slug paths recursively
-  const allSlugs = getNestedSlugs(basePath);
-
-  // Early return if no slugs found
-  if (allSlugs.length === 0) {
-    return [];
-  }
+  const nestedPaths = getNestedSlugs(basePath);
 
   // Fetch content for each slug path with better error handling and performance
-  const contentPromises = allSlugs.map(async (slugArray) => {
+  const contentPromises = nestedPaths.map(async (slugArray) => {
     const slugPath = slugArray.join("/");
     const fullPath = `${basePath}/${slugPath}`;
 
