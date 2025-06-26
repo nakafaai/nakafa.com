@@ -42,12 +42,17 @@ export async function GET(
 ) {
   const { slug } = await params;
 
-  const locale = slug.at(0) ?? "en";
-  const contentSlug = slug.slice(1).join("/");
+  let locale = "en";
+  let basePath = "";
+
+  if (slug.length >= 2) {
+    locale = slug.at(0) ?? "en";
+    basePath = slug.slice(1).join("/");
+  }
 
   const content = await getContents({
     locale,
-    basePath: contentSlug,
+    basePath,
   });
 
   return NextResponse.json(content);

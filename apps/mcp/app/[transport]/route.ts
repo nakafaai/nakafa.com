@@ -12,10 +12,10 @@ const GetContentsSchema = z.object({
       "Language locale for content retrieval. 'en' for English, 'id' for Indonesian (Bahasa Indonesia)"
     ),
   type: z
-    .enum(["", "subject", "articles"])
-    .default("")
+    .enum(["subject", "articles"])
+    .default("subject")
     .describe(
-      "Content type filter: empty string '' for all content types, 'subject' for educational subjects and course materials, 'articles' for political analysis and educational articles"
+      "Content type filter: 'subject' for educational subjects and course materials, 'articles' for political analysis and educational articles"
     ),
 });
 
