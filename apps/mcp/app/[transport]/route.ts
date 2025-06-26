@@ -50,16 +50,7 @@ const handler = createMcpHandler(
       }
     );
   },
-  {
-    capabilities: {
-      tools: {
-        get_contents: {
-          description:
-            "Retrieve structured educational content from Nakafa platform with metadata and URLs, optimized for educational content analysis and discovery.",
-        },
-      },
-    },
-  },
+  {},
   {
     redisUrl: env.REDIS_URL,
     basePath: "",
