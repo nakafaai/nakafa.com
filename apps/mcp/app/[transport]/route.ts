@@ -24,29 +24,16 @@ const handler = createMcpHandler(
     server.tool(
       "get_contents",
       "Retrieve educational contents from Nakafa platform. Returns a structured list of educational materials including articles, subjects, and course content with metadata like titles, descriptions, authors, and URLs. This tool is optimized for educational content discovery and analysis.",
-      {
-        locale: GetContentsSchema.shape.locale,
-        type: GetContentsSchema.shape.type,
-      },
+      GetContentsSchema.shape,
       async ({ locale, type }) => {
         await vercelTrack("get_contents", {
           locale,
           type,
         });
 
-        const { data, error } = GetContentsSchema.safeParse({
-          locale,
-          type,
-        });
-
-        if (error) {
-          return {
-            content: [{ type: "text", text: "Invalid parameters." }],
-          };
-        }
         const contents = await getContents({
-          locale: data.locale,
-          basePath: data.type,
+          locale,
+          basePath: type,
         });
 
         if (contents.length === 0) {
