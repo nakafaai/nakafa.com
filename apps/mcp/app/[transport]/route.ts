@@ -3,27 +3,42 @@ import { createMcpHandler } from "@vercel/mcp-adapter";
 import { z } from "zod";
 import { env } from "@/env";
 
+const GetContentsSchema = z.object({
+  locale: z
+    .enum(["en", "id"])
+    .default("en")
+    .describe(
+      "Language locale for content retrieval. 'en' for English, 'id' for Indonesian (Bahasa Indonesia)"
+    ),
+  type: z
+    .enum(["", "subject", "articles"])
+    .default("")
+    .describe(
+      "Content type filter: empty string '' for all content types, 'subject' for educational subjects and course materials, 'articles' for political analysis and educational articles"
+    ),
+});
+
 const handler = createMcpHandler(
   (server) => {
     server.tool(
       "get_contents",
       "Retrieve educational contents from Nakafa platform. Returns a structured list of educational materials including articles, subjects, and course content with metadata like titles, descriptions, authors, and URLs. This tool is optimized for educational content discovery and analysis.",
       {
-        locale: z
-          .enum(["en", "id"])
-          .default("en")
-          .describe(
-            "Language locale for content retrieval. 'en' for English, 'id' for Indonesian (Bahasa Indonesia)"
-          ),
-        type: z
-          .enum(["", "subject", "articles"])
-          .default("")
-          .describe(
-            "Content type filter: empty string '' for all content types, 'subject' for educational subjects and course materials, 'articles' for political analysis and educational articles"
-          ),
+        locale: GetContentsSchema.pick({ locale: true }),
+        type: GetContentsSchema.pick({ type: true }),
       },
-      async ({ locale, type }) => {
-        const contents = await getContents({ locale, basePath: type });
+      async (params) => {
+        const { data, error } = GetContentsSchema.safeParse(params);
+
+        if (error) {
+          return {
+            content: [{ type: "text", text: "Invalid parameters." }],
+          };
+        }
+        const contents = await getContents({
+          locale: data.locale,
+          basePath: data.type,
+        });
 
         if (contents.length === 0) {
           return {
@@ -50,7 +65,16 @@ const handler = createMcpHandler(
       }
     );
   },
-  {},
+  {
+    capabilities: {
+      tools: {
+        get_contents: {
+          description:
+            "Retrieve structured educational content from Nakafa platform with metadata and URLs, optimized for educational content analysis and discovery.",
+        },
+      },
+    },
+  },
   {
     redisUrl: env.REDIS_URL,
     basePath: "",
