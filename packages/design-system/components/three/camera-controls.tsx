@@ -2,7 +2,7 @@
 
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 export function CameraControls({
@@ -26,26 +26,11 @@ export function CameraControls({
     }
   });
 
-  // Handle control changes for on-demand rendering and performance regression
-  useEffect(() => {
-    const controls = controlsRef.current;
-    if (!controls) {
-      return;
-    }
-
-    const handleChange = () => {
-      // Trigger performance regression on control changes (movement)
-      performance.regress();
-      invalidate();
-    };
-
-    // Listen for control changes
-    controls.addEventListener("change", handleChange);
-
-    return () => {
-      controls.removeEventListener("change", handleChange);
-    };
-  }, [invalidate, performance]);
+  const handleChange = () => {
+    // Trigger performance regression on control changes (movement)
+    performance.regress();
+    invalidate();
+  };
 
   return (
     <>
@@ -59,6 +44,7 @@ export function CameraControls({
         makeDefault
         maxDistance={100}
         minDistance={1}
+        onChange={handleChange}
         ref={controlsRef}
         screenSpacePanning={true}
         zoomSpeed={1.25}

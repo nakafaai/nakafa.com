@@ -121,11 +121,15 @@ export function Triangle({
     return pts;
   }, [angleInRadians, arcRadius]);
 
-  // Vertices for instancing
-  const triangleVertices = useMemo(
-    () => triangleSideLines.map((pts) => pts[0]),
-    [triangleSideLines]
-  );
+  // Vertices for instancing with semantic labels
+  const triangleVertices = useMemo(() => {
+    const vertices = triangleSideLines.map((pts) => pts[0]);
+    return [
+      { position: vertices[0], key: "origin" },
+      { position: vertices[1], key: "adjacent" },
+      { position: vertices[2], key: "opposite" },
+    ];
+  }, [triangleSideLines]);
 
   // Use shared geometry and material
   const sphereGeo = getSharedSphereGeometry();
@@ -317,10 +321,10 @@ export function Triangle({
         material={sphereMat}
         visible
       >
-        {triangleVertices.map((v) => (
+        {triangleVertices.map((vertex) => (
           <Instance
-            key={`${v.x.toFixed(3)}-${v.y.toFixed(3)}`}
-            position={[v.x, v.y, v.z]}
+            key={vertex.key}
+            position={[vertex.position.x, vertex.position.y, vertex.position.z]}
             scale={vertexSize}
           />
         ))}
