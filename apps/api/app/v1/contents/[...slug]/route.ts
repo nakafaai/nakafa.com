@@ -5,7 +5,6 @@ import {
 } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 
-export const dynamic = "force-static";
 export const revalidate = false;
 
 export function generateStaticParams() {
