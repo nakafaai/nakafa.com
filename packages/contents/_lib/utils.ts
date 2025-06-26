@@ -204,31 +204,28 @@ export async function getContents({
   locale?: Locale;
   basePath?: string;
 }) {
-  // Get all nested slug paths recursively
+  const result: { slug: string[] }[] = [];
+
   const nestedPaths = getNestedSlugs(basePath);
 
-  // Fetch content for each slug path with better error handling and performance
-  const contentPromises = nestedPaths.map(async (slugArray) => {
-    const slugPath = slugArray.join("/");
-    const fullPath = `${basePath}/${slugPath}`;
+  for (const nestedPath of nestedPaths) {
+    result.push({ slug: nestedPath });
+  }
 
-    const content = await getContent(locale, fullPath);
-
+  const promises = result.map(async (item) => {
+    const content = await getContent(locale, item.slug.join("/"));
     if (!content) {
       return null;
     }
 
     return {
       ...content.metadata,
-      url: `/${locale}/${fullPath}`,
+      url: `/${locale}/${item.slug.join("/")}`,
     };
   });
 
-  // Wait for all promises and filter out nulls more efficiently
-  const results = await Promise.all(contentPromises);
-
-  // Filter out null results and ensure type safety
-  return results.filter((item) => item !== null);
+  const contents = await Promise.all(promises);
+  return contents;
 }
 
 /**
