@@ -74,6 +74,51 @@ export async function getContent(
   }
 }
 
+export async function getContents({
+  locale = "en",
+  basePath = "",
+}: {
+  locale?: Locale;
+  basePath?: string;
+}) {
+  // Get all nested slug paths recursively
+  const allSlugs = getNestedSlugs(basePath);
+
+  // Early return if no slugs found
+  if (allSlugs.length === 0) {
+    return [];
+  }
+
+  // Fetch content for each slug path with better error handling and performance
+  const contentPromises = allSlugs.map(async (slugArray) => {
+    try {
+      const slugPath = slugArray.join("/");
+      const fullPath = `${basePath}/${slugPath}`;
+      const content = await getContent(locale, fullPath);
+
+      if (!content) {
+        return null;
+      }
+
+      return {
+        ...content.metadata,
+        url: `/${locale}/${fullPath}`,
+      };
+    } catch {
+      // Return null for failed content instead of throwing
+      return null;
+    }
+  });
+
+  // Wait for all promises and filter out nulls more efficiently
+  const results = await Promise.all(contentPromises);
+
+  // Filter out null results and ensure type safety
+  return results.filter(
+    (item): item is NonNullable<typeof item> => item !== null
+  );
+}
+
 /**
  * Gets the references from the references.ts file.
  * @param path - The path to the references file.
