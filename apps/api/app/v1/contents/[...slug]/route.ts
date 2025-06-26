@@ -6,6 +6,7 @@ import {
 import { routing } from "@repo/internationalization/src/routing";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-static";
 export const revalidate = false;
 
 export function generateStaticParams() {
