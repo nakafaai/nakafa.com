@@ -9,7 +9,7 @@ export function GET() {
 [${new Date().toLocaleTimeString()}] INFO: Connection established - Happy learning!
 
 [${new Date().toLocaleTimeString()}] INFO: Website: https://nakafa.com
-[${new Date().toLocaleTimeString()}] INFO: GitHub: https://github.com/nakafaai/nakafa.com/apps/api
+[${new Date().toLocaleTimeString()}] INFO: GitHub: https://github.com/nakafaai/nakafa.com
 [${new Date().toLocaleTimeString()}] INFO: Documentation: https://docs.nakafa.com
 
 nakafa-api-server:~$ _
