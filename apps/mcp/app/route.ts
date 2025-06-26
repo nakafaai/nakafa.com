@@ -10,8 +10,8 @@ export async function GET() {
 
 [${new Date().toLocaleTimeString()}] INFO: MCP Server initialized successfully
 [${new Date().toLocaleTimeString()}] INFO: Ready to serve educational content.
-[${new Date().toLocaleTimeString()}] INFO: Connection established - Happy learning!
 [${new Date().toLocaleTimeString()}] INFO: Total contents: ${contents.length}
+[${new Date().toLocaleTimeString()}] INFO: Connection established - Happy learning!
 
 [${new Date().toLocaleTimeString()}] INFO: Website: https://nakafa.com
 [${new Date().toLocaleTimeString()}] INFO: GitHub: https://github.com/nakafaai/nakafa.com/apps/mcp
