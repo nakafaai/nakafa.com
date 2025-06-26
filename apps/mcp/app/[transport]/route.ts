@@ -1,6 +1,6 @@
 import { getContents } from "@repo/contents/_lib/utils";
 import { createMcpHandler } from "@vercel/mcp-adapter";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { env } from "@/env";
 
 const handler = createMcpHandler(
