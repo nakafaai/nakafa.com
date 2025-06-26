@@ -26,9 +26,9 @@ const handler = createMcpHandler(
       GetContentsSchema.shape,
       async ({ locale, type }) => {
         // fetch from api
-        const contents = await fetch(`/api/v1/contents/${locale}/${type}`).then(
-          (res) => res.json()
-        );
+        const contents = await fetch(
+          `https://api.nakafa.com/v1/contents/${locale}/${type}`
+        ).then((res) => res.json());
 
         await vercelTrack("get_contents", {
           locale,
