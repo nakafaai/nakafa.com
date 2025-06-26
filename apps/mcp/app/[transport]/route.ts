@@ -26,7 +26,7 @@ const handler = createMcpHandler(
       "Retrieve educational contents from Nakafa platform. Returns a structured list of educational materials including articles, subjects, and course content with metadata like titles, descriptions, authors, and URLs. This tool is optimized for educational content discovery and analysis.",
       GetContentsSchema.shape,
       async ({ locale, type }) => {
-        const contents = getContents({
+        const contents = await getContents({
           locale,
           basePath: type,
         });
