@@ -1,0 +1,27 @@
+{
+  "name": "api",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3001 --turbopack",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "test-client": "node scripts/test-client.mjs",
+    "test-streamable-http-client": "node scripts/test-streamable-http-client.mjs"
+  },
+  "dependencies": {
+    "@repo/next-config": "workspace:*",
+    "@repo/contents": "workspace:*",
+    "@repo/analytics": "workspace:*",
+    "next": "15.3.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "redis": "^5.5.6",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "24.0.4",
+    "@types/react": "19.1.8",
+    "typescript": "^5.8.3"
+  }
+}
