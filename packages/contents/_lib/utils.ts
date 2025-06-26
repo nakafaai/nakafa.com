@@ -46,6 +46,8 @@ function findContentsDir(): string {
 
   // Try from the app's working directory first (production)
   const possiblePaths = [
+    // Production: contents copied by webpack to .next/server/packages/contents
+    path.join(process.cwd(), ".next", "server", "packages", "contents"),
     // Production: contents copied to app directory
     path.join(process.cwd(), "packages", "contents"),
     path.join(process.cwd(), "contents"),
@@ -74,6 +76,7 @@ const contentsDir = findContentsDir();
  */
 export function debugFileSystem() {
   const possiblePaths = [
+    path.join(process.cwd(), ".next", "server", "packages", "contents"),
     path.join(process.cwd(), "packages", "contents"),
     path.join(process.cwd(), "contents"),
     path.resolve(__dirname, ".."),
