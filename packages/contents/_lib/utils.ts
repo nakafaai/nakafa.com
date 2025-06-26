@@ -69,9 +69,7 @@ export async function getContent(
       default: contentModule.default,
       raw,
     };
-  } catch (error) {
-    // biome-ignore lint/suspicious/noConsole: Need to log the error
-    console.error(error);
+  } catch {
     return null;
   }
 }
