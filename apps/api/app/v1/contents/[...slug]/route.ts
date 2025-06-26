@@ -11,7 +11,7 @@ export const revalidate = false;
 export function generateStaticParams() {
   // Top level directories in contents
   const topDirs = getFolderChildNames(".");
-  const result: { locale: string; slug: string[] }[] = [];
+  const result: { slug: string[] }[] = [];
   const locales = routing.locales;
 
   // For each locale
@@ -23,15 +23,13 @@ export function generateStaticParams() {
 
       // Add the top-level folder itself
       result.push({
-        locale,
-        slug: [topDir],
+        slug: [locale, topDir],
       });
 
       // Add each nested path
       for (const path of nestedPaths) {
         result.push({
-          locale,
-          slug: [topDir, ...path],
+          slug: [locale, topDir, ...path],
         });
       }
     }
