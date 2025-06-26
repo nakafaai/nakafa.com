@@ -1,49 +1,35 @@
-import {
-  getContent,
-  getFolderChildNames,
-  getNestedSlugs,
-} from "@repo/contents/_lib/utils";
-import { routing } from "@repo/internationalization/src/routing";
+import { getContent, getNestedSlugs } from "@repo/contents/_lib/utils";
 
 export const revalidate = false;
 
 export async function GET(_req: Request) {
-  const topDirs = getFolderChildNames(".");
-  const result: { locale: string; slug: string[] }[] = [];
-  const locales = routing.locales;
+  const result: { slug: string[] }[] = [];
+  for (const topDir of ["articles", "subject"]) {
+    // Get all nested paths starting from this folder
+    const nestedPaths = getNestedSlugs(topDir);
 
-  // For each locale
-  for (const locale of locales) {
-    // For each top directory (articles, subject, etc)
-    for (const topDir of topDirs) {
-      // Get all nested paths starting from this folder
-      const nestedPaths = getNestedSlugs(topDir);
+    // Add the top-level folder itself
+    result.push({
+      slug: [topDir],
+    });
 
-      // Add the top-level folder itself
+    // Add each nested path
+    for (const path of nestedPaths) {
       result.push({
-        locale,
-        slug: [topDir],
+        slug: [topDir, ...path],
       });
-
-      // Add each nested path
-      for (const path of nestedPaths) {
-        result.push({
-          locale,
-          slug: [topDir, ...path],
-        });
-      }
     }
   }
 
   const promises = result.map(async (item) => {
-    const content = await getContent(item.locale, item.slug.join("/"));
+    const content = await getContent("en", item.slug.join("/"));
     if (!content) {
       return null;
     }
 
     return {
       ...content.metadata,
-      url: `/${item.locale}/${item.slug.join("/")}`,
+      url: `/en/${item.slug.join("/")}`,
     };
   });
 
