@@ -4,6 +4,7 @@ import {
   getNestedSlugs,
 } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
+import { NextResponse } from "next/server";
 
 export function generateStaticParams() {
   // Top level directories in contents
@@ -49,5 +50,5 @@ export async function GET(
     basePath: contentSlug,
   });
 
-  return new Response(JSON.stringify(content, null, 2));
+  return NextResponse.json(content);
 }
