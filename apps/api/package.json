@@ -4,9 +4,7 @@
   "scripts": {
     "dev": "next dev -p 3002 --turbopack",
     "build": "next build",
-    "start": "next start -p 3002",
-    "test-client": "node scripts/test-client.mjs",
-    "test-streamable-http-client": "node scripts/test-streamable-http-client.mjs"
+    "start": "next start -p 3002"
   },
   "dependencies": {
     "@repo/next-config": "workspace:*",

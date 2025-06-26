@@ -48,16 +48,21 @@ function findContentsDir(): string {
   const possiblePaths = [
     // Development: relative to this file
     path.resolve(__dirname, ".."),
+    // Production: Check if contents are in the current working directory
+    path.join(process.cwd(), "packages", "contents"),
     // Production: Turborepo build output
+    path.join(process.cwd(), "node_modules", "@repo", "contents"),
     path.join(process.cwd(), "node_modules", "@repo", "contents", "dist"),
+    path.join(process.cwd(), "..", "..", "packages", "contents"),
     path.join(process.cwd(), "..", "..", "packages", "contents", "dist"),
     // Production: contents copied to app directory
-    path.join(process.cwd(), "packages", "contents"),
     path.join(process.cwd(), "contents"),
     // Alternative production paths
-    path.join(process.cwd(), "..", "..", "packages", "contents"),
     path.join(process.cwd(), "..", "..", "..", "packages", "contents"),
     path.join(process.cwd(), "..", "packages", "contents"),
+    // Vercel specific paths
+    path.join("/var/task", "packages", "contents"),
+    path.join("/var/task", "node_modules", "@repo", "contents"),
   ];
 
   for (const possiblePath of possiblePaths) {
