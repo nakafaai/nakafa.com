@@ -12,7 +12,7 @@ export function GET() {
           formatted: uptimeFormatted,
         },
         server: {
-          name: "Nakafa MCP Server",
+          name: "Nakafa API Server",
           version: "1.0.0",
           nodeVersion: process.version,
           platform: process.platform,
