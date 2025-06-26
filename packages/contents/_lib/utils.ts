@@ -46,13 +46,14 @@ function findContentsDir(): string {
 
   // Try from the app's working directory first (production)
   const possiblePaths = [
-    // Production: contents copied by webpack to .next/server/packages/contents
-    path.join(process.cwd(), ".next", "server", "packages", "contents"),
+    // Development: relative to this file
+    path.resolve(__dirname, ".."),
+    // Production: Turborepo build output
+    path.join(process.cwd(), "node_modules", "@repo", "contents", "dist"),
+    path.join(process.cwd(), "..", "..", "packages", "contents", "dist"),
     // Production: contents copied to app directory
     path.join(process.cwd(), "packages", "contents"),
     path.join(process.cwd(), "contents"),
-    // Development: relative to this file
-    path.resolve(__dirname, ".."),
     // Alternative production paths
     path.join(process.cwd(), "..", "..", "packages", "contents"),
     path.join(process.cwd(), "..", "packages", "contents"),
@@ -76,10 +77,11 @@ const contentsDir = findContentsDir();
  */
 export function debugFileSystem() {
   const possiblePaths = [
-    path.join(process.cwd(), ".next", "server", "packages", "contents"),
+    path.resolve(__dirname, ".."),
+    path.join(process.cwd(), "node_modules", "@repo", "contents", "dist"),
+    path.join(process.cwd(), "..", "..", "packages", "contents", "dist"),
     path.join(process.cwd(), "packages", "contents"),
     path.join(process.cwd(), "contents"),
-    path.resolve(__dirname, ".."),
     path.join(process.cwd(), "..", "..", "packages", "contents"),
     path.join(process.cwd(), "..", "packages", "contents"),
   ];
