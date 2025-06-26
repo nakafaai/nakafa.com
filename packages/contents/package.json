@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "rm -rf dist && mkdir -p dist && rsync -av --exclude='dist' --exclude='node_modules' --exclude='.turbo' --exclude='.git' . dist/",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
