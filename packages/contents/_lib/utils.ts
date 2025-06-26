@@ -13,27 +13,34 @@ import type { ComponentType } from "react";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Function to find the contents directory dynamically
-function findContentsDir(): string {
-  // Helper function to check if a directory looks like a contents directory
-  function isContentsDir(dirPath: string): boolean {
-    if (!fs.existsSync(dirPath)) {
-      return false;
-    }
-
-    try {
-      const items = fs.readdirSync(dirPath);
-      // Check for typical contents directory structure
-      // Look for common content folders or _lib, _types, _components directories
-      const hasContentStructure = items.some(
-        (item) => item === "subject" || item === "articles"
-      );
-      return hasContentStructure;
-    } catch {
-      return false;
-    }
+/**
+ * Checks if a directory looks like a contents directory.
+ * @param dirPath - The path to the directory to check.
+ * @returns True if the directory looks like a contents directory, false otherwise.
+ */
+function isContentsDir(dirPath: string): boolean {
+  if (!fs.existsSync(dirPath)) {
+    return false;
   }
 
+  try {
+    const items = fs.readdirSync(dirPath);
+    // Check for typical contents directory structure
+    // Look for common content folders or _lib, _types, _components directories
+    const hasContentStructure = items.some(
+      (item) => item === "subject" || item === "articles"
+    );
+    return hasContentStructure;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Finds the contents directory dynamically.
+ * @returns The path to the contents directory.
+ */
+function findContentsDir(): string {
   // Try relative path first (development)
   const relativePath = path.resolve(__dirname, "..");
   if (isContentsDir(relativePath)) {
@@ -59,7 +66,8 @@ function findContentsDir(): string {
 const contentsDir = findContentsDir();
 
 /**
- * Debug function to understand the file system structure in different environments
+ * Debug function to understand the file system structure in different environments.
+ * @returns The debug object.
  */
 export function debugFileSystem() {
   const debug = {
@@ -69,8 +77,8 @@ export function debugFileSystem() {
     __filename,
     contentsDir,
     contentsDirExists: fs.existsSync(contentsDir),
-    cwdContents: [] as string[],
-    contentsDirContents: [] as string[],
+    cwdContents: [""],
+    contentsDirContents: [""],
   };
 
   try {
