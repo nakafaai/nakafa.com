@@ -1,5 +1,5 @@
+import { cleanSlug } from "@repo/connection/lib/utils";
 import type { Content } from "@repo/contents/_types/content";
-import { cleanSlug } from "@/lib/utils";
 import { fetcher } from "../lib/fetcher";
 import type { Base, FetchResult } from "../lib/types";
 import { validateContent, validateContents } from "../validation/contents";
