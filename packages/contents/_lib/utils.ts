@@ -41,48 +41,29 @@ function isContentsDir(dirPath: string): boolean {
  * @returns The path to the contents directory.
  */
 function findContentsDir(): string {
-  // Get the absolute path to this file and work backwards to find the monorepo root
-  const currentFilePath = fileURLToPath(import.meta.url);
-  const currentDir = path.dirname(currentFilePath);
+  // In production (Vercel), the contents are likely copied to the app directory
+  // because of the "Include files outside the root directory" setting
 
-  // This file is at packages/contents/_lib/utils.ts
-  // So we go up 2 levels to get to packages/contents
-  const contentsFromFile = path.resolve(currentDir, "..");
-  if (isContentsDir(contentsFromFile)) {
-    return contentsFromFile;
-  }
+  // Try from the app's working directory first (production)
+  const possiblePaths = [
+    // Production: contents copied to app directory
+    path.join(process.cwd(), "packages", "contents"),
+    path.join(process.cwd(), "contents"),
+    // Development: relative to this file
+    path.resolve(__dirname, ".."),
+    // Alternative production paths
+    path.join(process.cwd(), "..", "..", "packages", "contents"),
+    path.join(process.cwd(), "..", "packages", "contents"),
+  ];
 
-  // Try to find the monorepo root by looking for package.json with workspaces
-  let searchDir = currentDir;
-  while (searchDir !== path.dirname(searchDir)) {
-    const packageJsonPath = path.join(searchDir, "package.json");
-    if (fs.existsSync(packageJsonPath)) {
-      try {
-        const packageJson = JSON.parse(
-          fs.readFileSync(packageJsonPath, "utf8")
-        );
-        if (packageJson.workspaces || packageJson.private) {
-          // Found monorepo root, try packages/contents from here
-          const contentsFromRoot = path.join(searchDir, "packages", "contents");
-          if (isContentsDir(contentsFromRoot)) {
-            return contentsFromRoot;
-          }
-        }
-      } catch {
-        // Continue searching
-      }
+  for (const possiblePath of possiblePaths) {
+    if (isContentsDir(possiblePath)) {
+      return possiblePath;
     }
-    searchDir = path.dirname(searchDir);
   }
 
-  // Fallback: try from process.cwd()
-  const fromCwd = path.join(process.cwd(), "packages", "contents");
-  if (isContentsDir(fromCwd)) {
-    return fromCwd;
-  }
-
-  // Last resort: return the path relative to this file
-  return contentsFromFile;
+  // Last resort: return the development path
+  return path.resolve(__dirname, "..");
 }
 
 const contentsDir = findContentsDir();
@@ -92,6 +73,29 @@ const contentsDir = findContentsDir();
  * @returns The debug object.
  */
 export function debugFileSystem() {
+  const possiblePaths = [
+    path.join(process.cwd(), "packages", "contents"),
+    path.join(process.cwd(), "contents"),
+    path.resolve(__dirname, ".."),
+    path.join(process.cwd(), "..", "..", "packages", "contents"),
+    path.join(process.cwd(), "..", "packages", "contents"),
+  ];
+
+  const pathResults = possiblePaths.map((p) => ({
+    path: p,
+    exists: fs.existsSync(p),
+    isContentsDir: fs.existsSync(p) ? isContentsDir(p) : false,
+    contents: fs.existsSync(p)
+      ? (() => {
+          try {
+            return fs.readdirSync(p).slice(0, 10); // First 10 items
+          } catch {
+            return ["Error reading"];
+          }
+        })()
+      : [],
+  }));
+
   const debug = {
     nodeEnv: process.env.NODE_ENV,
     cwd: process.cwd(),
@@ -99,19 +103,20 @@ export function debugFileSystem() {
     __filename,
     contentsDir,
     contentsDirExists: fs.existsSync(contentsDir),
-    cwdContents: [""],
-    contentsDirContents: [""],
+    possiblePaths: pathResults,
+    cwdContents: [] as string[],
+    contentsDirContents: [] as string[],
   };
 
   try {
-    debug.cwdContents = fs.readdirSync(process.cwd());
+    debug.cwdContents = fs.readdirSync(process.cwd()).slice(0, 20);
   } catch {
     debug.cwdContents = ["Error reading cwd"];
   }
 
   try {
     if (fs.existsSync(contentsDir)) {
-      debug.contentsDirContents = fs.readdirSync(contentsDir);
+      debug.contentsDirContents = fs.readdirSync(contentsDir).slice(0, 20);
     }
   } catch {
     debug.contentsDirContents = ["Error reading contents dir"];
