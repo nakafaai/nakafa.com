@@ -29,6 +29,7 @@ const handler = createMcpHandler(
         const contents = data.map((item) => ({
           ...item.metadata,
           url: item.url,
+          slug: item.slug,
         }));
 
         await vercelTrack("get_contents", {
