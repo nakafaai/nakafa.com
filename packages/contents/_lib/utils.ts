@@ -56,6 +56,7 @@ function findContentsDir(): string {
     path.join(process.cwd(), "contents"),
     // Alternative production paths
     path.join(process.cwd(), "..", "..", "packages", "contents"),
+    path.join(process.cwd(), "..", "..", "..", "packages", "contents"),
     path.join(process.cwd(), "..", "packages", "contents"),
   ];
 
@@ -83,6 +84,7 @@ export function debugFileSystem() {
     path.join(process.cwd(), "packages", "contents"),
     path.join(process.cwd(), "contents"),
     path.join(process.cwd(), "..", "..", "packages", "contents"),
+    path.join(process.cwd(), "..", "..", "..", "packages", "contents"),
     path.join(process.cwd(), "..", "packages", "contents"),
   ];
 
