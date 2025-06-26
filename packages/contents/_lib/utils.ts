@@ -209,7 +209,7 @@ export async function getContents({
   const nestedPaths = getNestedSlugs(basePath);
 
   for (const nestedPath of nestedPaths) {
-    result.push({ slug: nestedPath });
+    result.push({ slug: [...nestedPath] });
   }
 
   const promises = result.map(async (item) => {

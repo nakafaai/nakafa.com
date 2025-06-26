@@ -4,7 +4,7 @@ export const revalidate = false;
 
 export async function GET(_req: Request) {
   const result: { slug: string[] }[] = [];
-  for (const topDir of ["articles", "subject"]) {
+  for (const topDir of ["subject"]) {
     // Get all nested paths starting from this folder
     const nestedPaths = getNestedSlugs(topDir);
 
