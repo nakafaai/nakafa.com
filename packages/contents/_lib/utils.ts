@@ -13,11 +13,50 @@ import type { ComponentType } from "react";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Use process.cwd() for production compatibility
-const contentsDir =
-  process.env.NODE_ENV === "production"
-    ? path.join(process.cwd(), "packages/contents")
-    : path.resolve(__dirname, "..");
+// Function to find the contents directory dynamically
+function findContentsDir(): string {
+  // Helper function to check if a directory looks like a contents directory
+  function isContentsDir(dirPath: string): boolean {
+    if (!fs.existsSync(dirPath)) {
+      return false;
+    }
+
+    try {
+      const items = fs.readdirSync(dirPath);
+      // Check for typical contents directory structure
+      // Look for common content folders or _lib, _types, _components directories
+      const hasContentStructure = items.some(
+        (item) => item === "subject" || item === "articles"
+      );
+      return hasContentStructure;
+    } catch {
+      return false;
+    }
+  }
+
+  // Try relative path first (development)
+  const relativePath = path.resolve(__dirname, "..");
+  if (isContentsDir(relativePath)) {
+    return relativePath;
+  }
+
+  // Try from process.cwd() (production - might be in different structure)
+  const fromCwd = path.join(process.cwd(), "packages", "contents");
+  if (isContentsDir(fromCwd)) {
+    return fromCwd;
+  }
+
+  // Try direct from cwd (if contents is at root level in production)
+  const directCwd = path.join(process.cwd(), "contents");
+  if (isContentsDir(directCwd)) {
+    return directCwd;
+  }
+
+  // Fallback to relative path
+  return relativePath;
+}
+
+const contentsDir = findContentsDir();
 
 /**
  * Debug function to understand the file system structure in different environments
