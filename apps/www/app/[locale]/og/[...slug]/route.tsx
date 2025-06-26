@@ -11,6 +11,11 @@ export function generateStaticParams() {
 
   // For each locale
   for (const locale of locales) {
+    result.push({
+      locale,
+      slug: ["image.png"],
+    });
+
     // For each top directory (articles, subject, etc)
     for (const topDir of topDirs) {
       // Get all nested paths starting from this folder
