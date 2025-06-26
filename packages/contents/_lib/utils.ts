@@ -221,7 +221,7 @@ export async function getContents({
       return null;
     }
 
-    const slug = `${locale}${item.slug.join("/")}`;
+    const slug = `${locale}/${item.slug.join("/")}`;
 
     const { data, error } = ContentSchema.safeParse({
       metadata: content.metadata,

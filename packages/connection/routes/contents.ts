@@ -1,4 +1,5 @@
 import type { Content } from "@repo/contents/_types/content";
+import { cleanSlug } from "@/lib/utils";
 import { fetcher } from "../lib/fetcher";
 import type { Base, FetchResult } from "../lib/types";
 import { validateContent, validateContents } from "../validation/contents";
@@ -47,7 +48,7 @@ export async function getContent({
   slug,
   ...base
 }: { slug: string } & Base): Promise<FetchResult<string>> {
-  const url = `${PREFIX}/${slug}`;
+  const url = `${PREFIX}/${cleanSlug(slug)}`;
   const { data, error } = await fetcher<Content[]>(url, {
     method: "GET",
     headers: {
