@@ -6,13 +6,55 @@ import {
   ContentMetadataSchema,
   type Reference,
 } from "@repo/contents/_types/content";
+import { env } from "@repo/contents/env";
 import type { Locale } from "next-intl";
 import type { ComponentType } from "react";
 
 // Get the directory where this file is located and resolve to contents directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const contentsDir = path.resolve(__dirname, "..");
+
+/**
+ * Resolves the absolute path to the contents directory.
+ * Uses process.cwd() for production, preview, and development environments for compatibility.
+ */
+const contentsDir: string =
+  env.VERCEL_ENV &&
+  ["production", "preview", "development"].includes(env.VERCEL_ENV)
+    ? path.join(process.cwd(), "packages/contents")
+    : path.resolve(__dirname, "..");
+
+/**
+ * Debug function to understand the file system structure in different environments
+ */
+export function debugFileSystem() {
+  const debug = {
+    nodeEnv: process.env.NODE_ENV,
+    cwd: process.cwd(),
+    __dirname,
+    __filename,
+    contentsDir,
+    contentsDirExists: fs.existsSync(contentsDir),
+    cwdContents: [] as string[],
+    contentsDirContents: [] as string[],
+  };
+
+  try {
+    debug.cwdContents = fs.readdirSync(process.cwd());
+  } catch {
+    debug.cwdContents = ["Error reading cwd"];
+  }
+
+  try {
+    if (fs.existsSync(contentsDir)) {
+      debug.contentsDirContents = fs.readdirSync(contentsDir);
+    }
+  } catch {
+    debug.contentsDirContents = ["Error reading contents dir"];
+  }
+
+  return debug;
+}
 
 /**
  * Reads the raw content of a file from the contents directory.
@@ -149,8 +191,13 @@ export function getFolderChildNames(folder: string, exclude?: string[]) {
     : defaultExclude;
 
   try {
-    // Resolve path relative to the contents directory instead of process.cwd()
+    // Resolve path relative to the contents directory
     const contentDir = path.resolve(contentsDir, folder);
+
+    // Check if directory exists first
+    if (!fs.existsSync(contentDir)) {
+      return [];
+    }
 
     // Read directory synchronously - required for Next.js static generation
     const files = fs.readdirSync(contentDir, { withFileTypes: true });

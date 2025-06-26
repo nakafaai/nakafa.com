@@ -37,6 +37,17 @@ const handler = createMcpHandler(
           total: contents.length,
         });
 
+        if (contents.length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: "No contents found. Please try again with different parameters.",
+              },
+            ],
+          };
+        }
+
         return {
           content: [
             {
