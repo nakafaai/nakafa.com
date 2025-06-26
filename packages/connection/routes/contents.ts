@@ -1,7 +1,7 @@
 import type { Content } from "@repo/contents/_types/content";
 import { fetcher } from "../lib/fetcher";
 import type { Base, FetchResult } from "../lib/types";
-import { validateContents } from "../validation/contents";
+import { validateContent, validateContents } from "../validation/contents";
 
 const PREFIX = "/contents";
 
@@ -39,6 +39,57 @@ export async function getContents({
 
   return {
     data: parsed,
+    error,
+  };
+}
+
+export async function getContent({
+  slug,
+  ...base
+}: { slug: string } & Base): Promise<FetchResult<string>> {
+  const url = `${PREFIX}/${slug}`;
+  const { data, error } = await fetcher<Content[]>(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    ...base,
+  });
+
+  if (error) {
+    return {
+      data: "",
+      error,
+    };
+  }
+
+  // find the content with the slug
+  const content = data?.find((c) => c.slug === slug);
+
+  if (!content) {
+    return {
+      data: "",
+      error: {
+        status: 404,
+        message: "Content not found",
+      },
+    };
+  }
+
+  const { parsed, error: validationError } = validateContent(url, content);
+
+  if (validationError) {
+    return {
+      data: "",
+      error: {
+        status: 400,
+        message: validationError,
+      },
+    };
+  }
+
+  return {
+    data: parsed?.raw ?? "",
     error,
   };
 }

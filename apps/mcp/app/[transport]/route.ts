@@ -1,30 +1,15 @@
 import { vercelTrack } from "@repo/analytics/vercel";
 import { api } from "@repo/connection/routes";
 import { createMcpHandler } from "@vercel/mcp-adapter";
-import { z } from "zod";
 import { env } from "@/env";
-
-const GetContentsSchema = z.object({
-  locale: z
-    .enum(["en", "id"])
-    .default("en")
-    .describe(
-      "Language locale for content retrieval. 'en' for English, 'id' for Indonesian (Bahasa Indonesia)."
-    ),
-  type: z
-    .enum(["subject", "articles"])
-    .default("subject")
-    .describe(
-      "Content type filter: 'subject' for educational subjects and course materials, 'articles' for political analysis and educational articles."
-    ),
-});
+import { tools } from "@/lib/tools";
 
 const handler = createMcpHandler(
   (server) => {
     server.tool(
-      "get_contents",
-      "Retrieve educational contents from Nakafa platform. Returns a structured list of educational materials including articles, subjects, and course content with metadata like titles, descriptions, authors, and URLs. This tool is optimized for educational content discovery and analysis.",
-      GetContentsSchema.shape,
+      tools.getContents.name,
+      tools.getContents.description,
+      tools.getContents.parameters,
       async ({ locale, type }) => {
         const { data, error } = await api.contents.getContents({
           slug: `${locale}/${type}`,
@@ -76,14 +61,41 @@ const handler = createMcpHandler(
         };
       }
     );
+
+    server.tool(
+      tools.getContent.name,
+      tools.getContent.description,
+      tools.getContent.parameters,
+      async ({ slug }) => {
+        const { data, error } = await api.contents.getContent({ slug });
+
+        if (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error: ${error.message}. You can try to get the slug from the 'get_contents' tool.`,
+              },
+            ],
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: data,
+            },
+          ],
+        };
+      }
+    );
   },
   {
     capabilities: {
       tools: {
-        get_contents: {
-          description:
-            "Retrieve structured educational content from Nakafa platform with metadata and URLs, optimized for educational content analysis and discovery.",
-        },
+        [tools.getContents.name]: tools.getContents.description,
+        [tools.getContent.name]: tools.getContent.description,
       },
     },
   },

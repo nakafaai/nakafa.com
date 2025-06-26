@@ -221,10 +221,13 @@ export async function getContents({
       return null;
     }
 
+    const slug = `${locale}${item.slug.join("/")}`;
+
     const { data, error } = ContentSchema.safeParse({
       metadata: content.metadata,
       raw: content.raw,
-      url: `/${locale}/${item.slug.join("/")}`,
+      url: `https://nakafa.com/${slug}`,
+      slug,
     });
 
     if (error) {
