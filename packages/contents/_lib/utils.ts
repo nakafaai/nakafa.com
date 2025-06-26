@@ -76,7 +76,7 @@ export async function getContent(
   }
 }
 
-export async function getContents({
+export function getContents({
   locale = "en",
   basePath = "",
 }: {
@@ -92,26 +92,17 @@ export async function getContents({
   }
 
   // Fetch content for each slug path with better error handling and performance
-  const contentPromises = allSlugs.map(async (slugArray) => {
+  const contentPromises = allSlugs.map((slugArray) => {
     const slugPath = slugArray.join("/");
     const fullPath = `${basePath}/${slugPath}`;
-    const content = await getContent(locale, fullPath);
-
-    if (!content) {
-      return null;
-    }
 
     return {
-      ...content.metadata,
       url: `/${locale}/${fullPath}`,
     };
   });
 
   // Wait for all promises and filter out nulls more efficiently
-  const results = await Promise.all(contentPromises);
-
-  // Filter out null results and ensure type safety
-  return results.filter((item) => item !== null);
+  return contentPromises;
 }
 
 /**
