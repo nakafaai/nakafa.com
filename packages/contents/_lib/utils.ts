@@ -69,7 +69,9 @@ export async function getContent(
       default: contentModule.default,
       raw,
     };
-  } catch {
+  } catch (error) {
+    // biome-ignore lint/suspicious/noConsole: Need to log the error
+    console.error(error);
     return null;
   }
 }
@@ -91,23 +93,18 @@ export async function getContents({
 
   // Fetch content for each slug path with better error handling and performance
   const contentPromises = allSlugs.map(async (slugArray) => {
-    try {
-      const slugPath = slugArray.join("/");
-      const fullPath = `${basePath}/${slugPath}`;
-      const content = await getContent(locale, fullPath);
+    const slugPath = slugArray.join("/");
+    const fullPath = `${basePath}/${slugPath}`;
+    const content = await getContent(locale, fullPath);
 
-      if (!content) {
-        return null;
-      }
-
-      return {
-        ...content.metadata,
-        url: `/${locale}/${fullPath}`,
-      };
-    } catch {
-      // Return null for failed content instead of throwing
+    if (!content) {
       return null;
     }
+
+    return {
+      ...content.metadata,
+      url: `/${locale}/${fullPath}`,
+    };
   });
 
   // Wait for all promises and filter out nulls more efficiently
