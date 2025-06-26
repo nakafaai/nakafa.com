@@ -5,8 +5,6 @@ import {
 } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 
-export const revalidate = false;
-
 export function generateStaticParams() {
   // Top level directories in contents
   const topDirs = getFolderChildNames(".");
