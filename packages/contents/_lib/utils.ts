@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename);
  * Resolves the absolute path to the contents directory.
  * Uses process.cwd() for production, preview, and development environments for compatibility.
  */
-const contentsDir: string =
+const contentsDir =
   env.VERCEL_ENV &&
   ["production", "preview", "development"].includes(env.VERCEL_ENV)
     ? path.join(process.cwd(), "packages/contents")
