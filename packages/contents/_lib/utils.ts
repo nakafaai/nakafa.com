@@ -6,7 +6,6 @@ import {
   ContentMetadataSchema,
   type Reference,
 } from "@repo/contents/_types/content";
-import { env } from "@repo/contents/env";
 import type { Locale } from "next-intl";
 import type { ComponentType } from "react";
 
@@ -14,13 +13,9 @@ import type { ComponentType } from "react";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/**
- * Resolves the absolute path to the contents directory.
- * Uses process.cwd() for production, preview, and development environments for compatibility.
- */
+// Use process.cwd() for production compatibility
 const contentsDir =
-  env.VERCEL_ENV &&
-  ["production", "preview", "development"].includes(env.VERCEL_ENV)
+  process.env.NODE_ENV === "production"
     ? path.join(process.cwd(), "packages/contents")
     : path.resolve(__dirname, "..");
 
