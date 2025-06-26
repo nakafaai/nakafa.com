@@ -1,4 +1,4 @@
-export async function GET() {
+export function GET() {
   const terminalOutput = `❤️ Nakafa MCP Server ❤️
 
 [${new Date().toLocaleTimeString()}] INFO: Welcome to Nakafa MCP Server!
