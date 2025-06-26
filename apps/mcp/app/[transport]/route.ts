@@ -1,4 +1,5 @@
 import { vercelTrack } from "@repo/analytics/vercel";
+import { getContents } from "@repo/contents/_lib/utils";
 import { createMcpHandler } from "@vercel/mcp-adapter";
 import { z } from "zod";
 import { env } from "@/env";
@@ -25,23 +26,18 @@ const handler = createMcpHandler(
       "Retrieve educational contents from Nakafa platform. Returns a structured list of educational materials including articles, subjects, and course content with metadata like titles, descriptions, authors, and URLs. This tool is optimized for educational content discovery and analysis.",
       GetContentsSchema.shape,
       async ({ locale, type }) => {
-        // fetch from api
-        const url = `https://api.nakafa.com/v1/contents/${locale}/${type}`;
-
-        // clean url make sure there is no trailing slash at the end
-        const cleanUrl = url.endsWith("/") ? url.slice(0, -1) : url;
-
-        const contents = await fetch(cleanUrl).then((res) => res.text());
-
-        const parsedContents = JSON.parse(contents);
+        const contents = await getContents({
+          locale,
+          basePath: type,
+        });
 
         await vercelTrack("get_contents", {
           locale,
           type,
-          total: parsedContents.length,
+          total: contents.length,
         });
 
-        if (parsedContents.length === 0) {
+        if (contents.length === 0) {
           return {
             content: [
               {
@@ -56,9 +52,9 @@ const handler = createMcpHandler(
           content: [
             {
               type: "text",
-              text: `Found ${parsedContents.length} contents:
+              text: `Found ${contents.length} contents:
               
-              ${JSON.stringify(parsedContents, null, 2)}
+              ${JSON.stringify(contents, null, 2)}
               `,
             },
           ],
