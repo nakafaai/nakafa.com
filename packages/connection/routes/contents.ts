@@ -6,7 +6,12 @@ import { validateContent, validateContents } from "../validation/contents";
 
 const PREFIX = "/contents";
 
-export async function getContents({
+export const contents = {
+  getContents,
+  getContent,
+};
+
+async function getContents({
   slug,
   ...base
 }: { slug: string } & Base): Promise<FetchResult<Content[]>> {
@@ -44,7 +49,7 @@ export async function getContents({
   };
 }
 
-export async function getContent({
+async function getContent({
   slug,
   ...base
 }: { slug: string } & Base): Promise<FetchResult<string>> {

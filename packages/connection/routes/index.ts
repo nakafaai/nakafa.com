@@ -1,8 +1,7 @@
-import { getContent, getContents } from "./contents";
+import { contents } from "./contents";
 
 export const api = {
   contents: {
-    getContents,
-    getContent,
+    ...contents,
   },
 };
