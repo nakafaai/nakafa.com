@@ -208,6 +208,8 @@ export async function getContents({
 
   const nestedPaths = getNestedSlugs(basePath);
 
+  result.push({ slug: [basePath] });
+
   for (const nestedPath of nestedPaths) {
     result.push({ slug: [basePath, ...nestedPath] });
   }

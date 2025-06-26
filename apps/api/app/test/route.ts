@@ -4,7 +4,7 @@ export const revalidate = false;
 
 export async function GET(_req: Request) {
   const contents = await getContents({
-    locale: "en",
+    locale: "id",
     basePath: "subject",
   });
 
