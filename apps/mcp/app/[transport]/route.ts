@@ -8,13 +8,13 @@ const GetContentsSchema = z.object({
     .enum(["en", "id"])
     .default("en")
     .describe(
-      "Language locale for content retrieval. 'en' for English, 'id' for Indonesian (Bahasa Indonesia)"
+      "Language locale for content retrieval. 'en' for English, 'id' for Indonesian (Bahasa Indonesia)."
     ),
   type: z
     .enum(["subject", "articles"])
     .default("subject")
     .describe(
-      "Content type filter: 'subject' for educational subjects and course materials, 'articles' for political analysis and educational articles"
+      "Content type filter: 'subject' for educational subjects and course materials, 'articles' for political analysis and educational articles."
     ),
 });
 
@@ -26,7 +26,7 @@ const handler = createMcpHandler(
       GetContentsSchema.shape,
       async ({ locale, type }) => {
         const contents = await fetch(
-          `https://api.nakafa.com/v1/contents/${locale}/${type}`
+          `https://api.nakafa.com/contents/${locale}/${type}`
         ).then((res) => res.json());
 
         await vercelTrack("get_contents", {

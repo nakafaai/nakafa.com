@@ -1,5 +1,9 @@
-export function GET() {
-  const terminalOutput = `❤️ Nakafa API Server ❤️
+import { Elysia } from "elysia";
+
+export const rootRoute = new Elysia().get(
+  "/",
+  () => {
+    const terminalOutput = `❤️ Nakafa API Server ❤️
 
 [${new Date().toLocaleTimeString()}] INFO: Welcome to Nakafa API Server!
 [${new Date().toLocaleTimeString()}] INFO: Your gateway to comprehensive multilingual educational content.
@@ -15,10 +19,17 @@ export function GET() {
 nakafa-api-server:~$ _
 `;
 
-  return new Response(terminalOutput, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
+    return new Response(terminalOutput, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    });
+  },
+  {
+    detail: {
+      tags: ["Health"],
+      summary: "API welcome message.",
+      description: "Returns a terminal-style welcome message.",
     },
-  });
-}
+  }
+);
