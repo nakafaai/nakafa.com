@@ -224,7 +224,10 @@ export async function getContents({
     };
   });
 
-  const contents = await Promise.all(promises);
+  const contents = await Promise.all(promises).then((results) =>
+    results.filter((item) => item !== null)
+  );
+
   return contents;
 }
 
