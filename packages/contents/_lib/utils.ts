@@ -114,9 +114,7 @@ export async function getContents({
   const results = await Promise.all(contentPromises);
 
   // Filter out null results and ensure type safety
-  return results.filter(
-    (item): item is NonNullable<typeof item> => item !== null
-  );
+  return results.filter((item) => item !== null);
 }
 
 /**

@@ -26,14 +26,15 @@ const handler = createMcpHandler(
       "Retrieve educational contents from Nakafa platform. Returns a structured list of educational materials including articles, subjects, and course content with metadata like titles, descriptions, authors, and URLs. This tool is optimized for educational content discovery and analysis.",
       GetContentsSchema.shape,
       async ({ locale, type }) => {
-        await vercelTrack("get_contents", {
-          locale,
-          type,
-        });
-
         const contents = await getContents({
           locale,
           basePath: type,
+        });
+
+        await vercelTrack("get_contents", {
+          locale,
+          type,
+          total: contents.length,
         });
 
         if (contents.length === 0) {
