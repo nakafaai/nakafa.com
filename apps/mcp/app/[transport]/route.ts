@@ -3,6 +3,7 @@ import { api } from "@repo/connection/routes";
 import { createMcpHandler } from "@vercel/mcp-adapter";
 import { env } from "@/env";
 import { tools } from "@/lib/tools";
+import { buildContentSlug } from "@/lib/utils";
 
 const handler = createMcpHandler(
   (server) => {
@@ -10,9 +11,11 @@ const handler = createMcpHandler(
       tools.getContents.name,
       tools.getContents.description,
       tools.getContents.parameters,
-      async ({ locale, type }) => {
+      async ({ locale, filters }) => {
+        const cleanSlug = buildContentSlug({ locale, filters });
+
         const { data, error } = await api.contents.getContents({
-          slug: `${locale}/${type}`,
+          slug: cleanSlug,
         });
 
         if (error) {
@@ -34,7 +37,7 @@ const handler = createMcpHandler(
 
         await vercelTrack("get_contents", {
           locale,
-          type,
+          type: filters.type,
           total: contents.length,
         });
 

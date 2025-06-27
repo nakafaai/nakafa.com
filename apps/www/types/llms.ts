@@ -1,9 +1,9 @@
 import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
 import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
-import { gradeSchema } from "@repo/contents/_types/subject/grade";
+import { GradeSchema } from "@repo/contents/_types/subject/grade";
 import { MaterialSchema } from "@repo/contents/_types/subject/material";
 import { routing } from "@repo/internationalization/src/routing";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const ArticleSchema = z.object({
   category: ArticleCategorySchema,
@@ -13,7 +13,7 @@ export type Article = z.infer<typeof ArticleSchema>;
 
 export const SubjectSchema = z.object({
   category: SubjectCategorySchema,
-  grade: gradeSchema,
+  grade: GradeSchema,
   material: MaterialSchema,
   slug: z.array(z.string()),
 });

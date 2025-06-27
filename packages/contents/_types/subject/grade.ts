@@ -1,6 +1,6 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 
-export const numericGradeSchema = z.enum([
+export const NumericGradeSchema = z.enum([
   "1",
   "2",
   "3",
@@ -14,9 +14,9 @@ export const numericGradeSchema = z.enum([
   "11",
   "12",
 ]);
-export const nonNumericGradeSchema = z.enum(["bachelor", "master", "phd"]);
-export type NumericGrade = z.infer<typeof numericGradeSchema>;
-export type NonNumericGrade = z.infer<typeof nonNumericGradeSchema>;
+export const NonNumericGradeSchema = z.enum(["bachelor", "master", "phd"]);
+export type NumericGrade = z.infer<typeof NumericGradeSchema>;
+export type NonNumericGrade = z.infer<typeof NonNumericGradeSchema>;
 
-export const gradeSchema = z.union([numericGradeSchema, nonNumericGradeSchema]);
-export type Grade = z.infer<typeof gradeSchema>;
+export const GradeSchema = z.union([NumericGradeSchema, NonNumericGradeSchema]);
+export type Grade = z.infer<typeof GradeSchema>;

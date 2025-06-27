@@ -1,7 +1,7 @@
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import {
   type Grade,
-  nonNumericGradeSchema,
+  NonNumericGradeSchema,
 } from "@repo/contents/_types/subject/grade";
 import type { Material } from "@repo/contents/_types/subject/material";
 import type { LucideIcon } from "lucide-react";
@@ -23,7 +23,7 @@ export function getGradePath(category: SubjectCategory, grade: Grade) {
  * @returns The non-numeric grade.
  */
 export function getGradeNonNumeric(grade: Grade) {
-  const parsedGrade = nonNumericGradeSchema.safeParse(grade);
+  const parsedGrade = NonNumericGradeSchema.safeParse(grade);
 
   if (!parsedGrade.success) {
     return;

@@ -5,7 +5,7 @@ import { z } from "zod";
 export const env = createEnv({
   extends: [core()],
   server: {
-    REDIS_URL: z.string().url(),
+    REDIS_URL: z.string(),
   },
   client: {},
   runtimeEnv: {
