@@ -1,5 +1,5 @@
 import ky, { HTTPError, TimeoutError } from "ky";
-import type { Base, FetchResult } from "./types";
+import type { FetchResult } from "./types";
 
 const url =
   process.env.NODE_ENV === "development"
@@ -10,16 +10,11 @@ const URL_DETAILS_REGEX = /:.*$/;
 
 export async function fetcher<T>(
   endpoint: string,
-  options: RequestInit & Base
+  options: RequestInit
 ): Promise<FetchResult<T | null>> {
   try {
     const response = await ky<T>(`${url}${endpoint}`, {
-      cache: options.cache,
-      timeout: 60_000,
       ...options,
-      headers: {
-        ...options.headers,
-      },
     }).json();
 
     return { data: response, error: null };

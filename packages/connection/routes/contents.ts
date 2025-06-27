@@ -1,7 +1,7 @@
 import { cleanSlug } from "@repo/connection/lib/utils";
 import type { Content } from "@repo/contents/_types/content";
 import { fetcher } from "../lib/fetcher";
-import type { Base, FetchResult } from "../lib/types";
+import type { FetchResult } from "../lib/types";
 import { validateContent, validateContents } from "../validation/contents";
 
 const PREFIX = "/contents";
@@ -14,13 +14,10 @@ export const contents = {
 async function getContents({
   slug,
   ...base
-}: { slug: string } & Base): Promise<FetchResult<Content[]>> {
+}: { slug: string } & RequestInit): Promise<FetchResult<Content[]>> {
   const url = `${PREFIX}/${slug}`;
   const { data, error } = await fetcher<Content[]>(url, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
     ...base,
   });
 
@@ -52,13 +49,12 @@ async function getContents({
 async function getContent({
   slug,
   ...base
-}: { slug: string } & Base): Promise<FetchResult<string>> {
+}: {
+  slug: string;
+} & RequestInit): Promise<FetchResult<string>> {
   const url = `${PREFIX}/${cleanSlug(slug)}`;
   const { data, error } = await fetcher<Content[]>(url, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
     ...base,
   });
 
