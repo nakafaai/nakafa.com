@@ -30,6 +30,37 @@ export const GetContentsSchema = z.object({
         "The material of the content to get. Category and grade must be specified if material is specified. Only for subjects."
       ),
     })
+    .refine(
+      (data) => {
+        // If grade is specified, category must be provided
+        if (data.grade !== undefined && data.category === undefined) {
+          return false;
+        }
+        return true;
+      },
+      {
+        message: "Category is required when grade is specified.",
+        path: ["category"],
+      }
+    )
+    .refine(
+      (data) => {
+        // If material is specified, both category and grade must be provided
+        if (data.material !== undefined) {
+          if (data.category === undefined) {
+            return false;
+          }
+          if (data.grade === undefined) {
+            return false;
+          }
+        }
+        return true;
+      },
+      {
+        message: "Category and grade are required when material is specified.",
+        path: ["category", "grade"],
+      }
+    )
     .describe(
       "Filter by content type, category, grade, and material. articles only have category, subjects have category, grade, and material."
     ),
