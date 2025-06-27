@@ -263,6 +263,8 @@ function DefaultItems() {
             // Only grade that has value
             if ("value" in subItem) {
               title = t(subItem.title, { grade: subItem.value });
+            } else {
+              title = t(subItem.title);
             }
 
             return (
