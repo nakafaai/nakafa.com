@@ -13,130 +13,7 @@ import type { ComponentType } from "react";
 // Get the directory where this file is located and resolve to contents directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-/**
- * Checks if a directory looks like a contents directory.
- * @param dirPath - The path to the directory to check.
- * @returns True if the directory looks like a contents directory, false otherwise.
- */
-function isContentsDir(dirPath: string): boolean {
-  if (!fs.existsSync(dirPath)) {
-    return false;
-  }
-
-  try {
-    const items = fs.readdirSync(dirPath);
-    // Check for typical contents directory structure
-    // Look for common content folders or _lib, _types, _components directories
-    const hasContentStructure = items.some(
-      (item) => item === "subject" || item === "articles"
-    );
-    return hasContentStructure;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Finds the contents directory dynamically.
- * @returns The path to the contents directory.
- */
-function findContentsDir(): string {
-  // In production (Vercel), the contents are likely copied to the app directory
-  // because of the "Include files outside the root directory" setting
-
-  // Try from the app's working directory first (production)
-  const possiblePaths = [
-    // Development: relative to this file
-    path.resolve(__dirname, ".."),
-    // Production: Check if contents are in the current working directory
-    path.join(process.cwd(), "packages", "contents"),
-    // Production: Turborepo build output
-    path.join(process.cwd(), "node_modules", "@repo", "contents"),
-    path.join(process.cwd(), "node_modules", "@repo", "contents", "dist"),
-    path.join(process.cwd(), "..", "..", "packages", "contents"),
-    path.join(process.cwd(), "..", "..", "packages", "contents", "dist"),
-    // Production: contents copied to app directory
-    path.join(process.cwd(), "contents"),
-    // Alternative production paths
-    path.join(process.cwd(), "..", "..", "..", "packages", "contents"),
-    path.join(process.cwd(), "..", "packages", "contents"),
-    // Vercel specific paths
-    path.join("/var/task", "packages", "contents"),
-    path.join("/var/task", "node_modules", "@repo", "contents"),
-  ];
-
-  for (const possiblePath of possiblePaths) {
-    if (isContentsDir(possiblePath)) {
-      return possiblePath;
-    }
-  }
-
-  // Last resort: return the development path
-  return path.resolve(__dirname, "..");
-}
-
-const contentsDir = findContentsDir();
-
-/**
- * Debug function to understand the file system structure in different environments.
- * @returns The debug object.
- */
-export function debugFileSystem() {
-  const possiblePaths = [
-    path.resolve(__dirname, ".."),
-    path.join(process.cwd(), "node_modules", "@repo", "contents", "dist"),
-    path.join(process.cwd(), "..", "..", "packages", "contents", "dist"),
-    path.join(process.cwd(), "packages", "contents"),
-    path.join(process.cwd(), "contents"),
-    path.join(process.cwd(), "..", "..", "packages", "contents"),
-    path.join(process.cwd(), "..", "..", "..", "packages", "contents"),
-    path.join(process.cwd(), "..", "packages", "contents"),
-  ];
-
-  const pathResults = possiblePaths.map((p) => ({
-    path: p,
-    exists: fs.existsSync(p),
-    isContentsDir: fs.existsSync(p) ? isContentsDir(p) : false,
-    contents: fs.existsSync(p)
-      ? (() => {
-          try {
-            return fs.readdirSync(p).slice(0, 10); // First 10 items
-          } catch {
-            return ["Error reading"];
-          }
-        })()
-      : [],
-  }));
-
-  const debug = {
-    nodeEnv: process.env.NODE_ENV,
-    cwd: process.cwd(),
-    __dirname,
-    __filename,
-    contentsDir,
-    contentsDirExists: fs.existsSync(contentsDir),
-    possiblePaths: pathResults,
-    cwdContents: [] as string[],
-    contentsDirContents: [] as string[],
-  };
-
-  try {
-    debug.cwdContents = fs.readdirSync(process.cwd()).slice(0, 20);
-  } catch {
-    debug.cwdContents = ["Error reading cwd"];
-  }
-
-  try {
-    if (fs.existsSync(contentsDir)) {
-      debug.contentsDirContents = fs.readdirSync(contentsDir).slice(0, 20);
-    }
-  } catch {
-    debug.contentsDirContents = ["Error reading contents dir"];
-  }
-
-  return debug;
-}
+const contentsDir = path.resolve(__dirname, "..");
 
 /**
  * Reads the raw content of a file from the contents directory.
@@ -332,6 +209,7 @@ export function getNestedSlugs(
     currentPath.length === 0
       ? cleanBasePath
       : `${cleanBasePath}/${currentPath.join("/")}`;
+
   const children = getFolderChildNames(fullPath);
 
   if (children.length === 0) {
@@ -343,10 +221,7 @@ export function getNestedSlugs(
   }
 
   // Check if there are any files at this level
-  if (
-    (fullPath.endsWith(".mdx") || fullPath.endsWith(".md")) &&
-    currentPath.length > 0
-  ) {
+  if (currentPath.length > 0) {
     result.push([...currentPath]);
   }
 
