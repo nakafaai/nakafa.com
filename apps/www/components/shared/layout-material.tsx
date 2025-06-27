@@ -81,5 +81,5 @@ export function LayoutMaterial({
   children: ReactNode;
   className?: string;
 }) {
-  return <div className={cn("lg:flex", className)}>{children}</div>;
+  return <div className={cn("flex", className)}>{children}</div>;
 }

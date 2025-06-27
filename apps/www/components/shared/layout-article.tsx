@@ -45,7 +45,7 @@ export function LayoutArticle({
   onThisPage: ParsedHeading[];
 }) {
   return (
-    <div className="lg:flex">
+    <div className="flex">
       <div className="flex-1">{children}</div>
       <SidebarRight>
         <SidebarTree data={onThisPage} />
