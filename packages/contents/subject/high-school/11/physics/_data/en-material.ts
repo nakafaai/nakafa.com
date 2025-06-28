@@ -94,7 +94,7 @@ const enMaterials: MaterialList = [
       },
       {
         title: "Uniformly Accelerated Linear Motion",
-        href: `${BASE_PATH}/kinematics/uniform-linear-motion`,
+        href: `${BASE_PATH}/kinematics/non-uniform-linear-motion`,
       },
       {
         title: "Stopping Distance",

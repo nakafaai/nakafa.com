@@ -94,7 +94,7 @@ const idMaterials: MaterialList = [
       },
       {
         title: "Gerak Lurus Berubah Beraturan",
-        href: `${BASE_PATH}/kinematics/uniform-linear-motion`,
+        href: `${BASE_PATH}/kinematics/non-uniform-linear-motion`,
       },
       {
         title: "Jarak Henti",
