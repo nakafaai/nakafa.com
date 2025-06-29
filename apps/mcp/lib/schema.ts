@@ -67,7 +67,7 @@ export const GetContentsSchema = z.object({
 });
 export type GetContentsParams = z.infer<typeof GetContentsSchema>;
 
-export const getContentSchema = z.object({
+export const GetContentSchema = z.object({
   slug: z
     .string()
     .describe(

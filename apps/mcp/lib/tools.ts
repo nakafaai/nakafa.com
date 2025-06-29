@@ -1,4 +1,4 @@
-import { GetContentsSchema, getContentSchema } from "./schema";
+import { GetContentSchema, GetContentsSchema } from "./schema";
 
 export const tools = {
   getContents: {
@@ -11,6 +11,6 @@ export const tools = {
     name: "get_content",
     description:
       "Retrieve a specific content from Nakafa platform. Returns the mdx of the content.",
-    parameters: getContentSchema.shape,
+    parameters: GetContentSchema.shape,
   },
 } as const;
