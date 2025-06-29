@@ -40,7 +40,7 @@ const subjects = [
     label: "sociology",
   },
   {
-    grade: ["11", "12"],
+    grade: ["10", "11", "12"],
     icon: getMaterialIcon("history"),
     label: "history",
   },
