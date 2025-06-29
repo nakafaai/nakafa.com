@@ -25,12 +25,12 @@ const subjects = [
     label: "biology",
   },
   {
-    grade: ["10", "11", "12"],
+    grade: ["11", "12"],
     icon: getMaterialIcon("geography"),
     label: "geography",
   },
   {
-    grade: ["10", "11", "12"],
+    grade: ["11", "12"],
     icon: getMaterialIcon("economy"),
     label: "economy",
   },
@@ -40,7 +40,7 @@ const subjects = [
     label: "sociology",
   },
   {
-    grade: ["10", "11", "12"],
+    grade: ["11", "12"],
     icon: getMaterialIcon("history"),
     label: "history",
   },
