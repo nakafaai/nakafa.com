@@ -5,7 +5,6 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { Link } from "@repo/internationalization/src/navigation";
 import type { LucideIcon } from "lucide-react";
-import { GradientBlock } from "./gradient-block";
 
 type Props = {
   icon: LucideIcon;
@@ -28,10 +27,7 @@ export function CardSubject({ icon: Icon, label, href }: Props) {
             </CardTitle>
           </div>
         </CardHeader>
-        <GradientBlock
-          className="absolute inset-y-0 right-0 h-full w-3 border-l transition-all duration-500 ease-in-out group-hover:w-9"
-          keyString={label}
-        />
+        <div className="absolute inset-y-0 right-0 h-full w-3 border-l bg-accent transition-all duration-500 ease-in-out group-hover:w-9" />
       </Card>
     </Link>
   );

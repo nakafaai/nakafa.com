@@ -15,7 +15,6 @@ import { slugify } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
-import { GradientBlock } from "./gradient-block";
 
 type Props = {
   category: string;
@@ -36,10 +35,7 @@ export function CardArticle({ category, article }: Props) {
       title={article.title}
     >
       <Card className="relative h-full overflow-hidden pt-8">
-        <GradientBlock
-          className="absolute inset-0 h-3 border-b transition-all duration-500 ease-in-out group-hover:h-5"
-          keyString={article.slug}
-        />
+        <div className="absolute inset-0 h-3 border-b bg-accent transition-all duration-500 ease-in-out group-hover:h-5" />
         <CardHeader>
           <CardTitle className="line-clamp-2 font-medium leading-snug">
             <h2 className="scroll-mt-28" id={id} title={article.title}>
