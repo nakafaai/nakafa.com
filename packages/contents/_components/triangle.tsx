@@ -11,18 +11,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Label } from "@repo/design-system/components/ui/label";
+import { Label as LabelUI } from "@repo/design-system/components/ui/label";
 import { Separator } from "@repo/design-system/components/ui/separator";
-import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   getCos,
   getRadians,
   getSin,
   getTan,
 } from "@repo/design-system/lib/math";
+import { MinusIcon, PlusIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import {
+  Button,
+  Group,
+  Input,
+  Label,
+  NumberField,
+} from "react-aria-components";
 
 type Props = {
   title: ReactNode;
@@ -98,32 +105,40 @@ function Content({
 
           <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
             <div className="flex items-center gap-2">
-              <Label htmlFor="angle">
+              <LabelUI htmlFor="angle">
                 <Badge className="font-mono" variant="outline">
                   {angleValue}°
                 </Badge>
-              </Label>
+              </LabelUI>
               <Badge className="font-mono" variant="outline">
                 {getRadians(angleValue).toFixed(2)} {t("radian")}
               </Badge>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-muted-foreground text-sm">
-                0°
-              </span>
-              <Slider
-                id="angle"
-                max={360}
-                min={0}
-                onValueChange={(values) => setAngleValue(values[0])}
-                step={1}
-                value={[angleValue]}
-              />
-              <span className="font-mono text-muted-foreground text-sm">
-                360°
-              </span>
-            </div>
+            <NumberField
+              formatOptions={{
+                localeMatcher: "best fit",
+              }}
+              onChange={setAngleValue}
+              value={angleValue}
+            >
+              <Label className="sr-only">Angle</Label>
+              <Group className="relative inline-flex h-9 w-full items-center overflow-hidden whitespace-nowrap rounded-md border border-input text-sm shadow-xs outline-none transition-[color,box-shadow] data-focus-within:border-ring data-disabled:opacity-50 data-focus-within:ring-[3px] data-focus-within:ring-ring/50 data-focus-within:has-aria-invalid:border-destructive data-focus-within:has-aria-invalid:ring-destructive/20 dark:data-focus-within:has-aria-invalid:ring-destructive/40">
+                <Button
+                  className="-ms-px flex aspect-square h-[inherit] cursor-pointer items-center justify-center rounded-s-md border border-input bg-background text-muted-foreground/80 text-sm transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                  slot="decrement"
+                >
+                  <MinusIcon aria-hidden="true" className="size-4" />
+                </Button>
+                <Input className="w-full grow bg-background px-3 py-2 text-center font-mono text-foreground tabular-nums" />
+                <Button
+                  className="-me-px flex aspect-square h-[inherit] cursor-pointer items-center justify-center rounded-e-md border border-input bg-background text-muted-foreground/80 text-sm transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                  slot="increment"
+                >
+                  <PlusIcon aria-hidden="true" className="size-4" />
+                </Button>
+              </Group>
+            </NumberField>
           </div>
         </div>
       </CardFooter>
