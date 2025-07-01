@@ -5,7 +5,7 @@ const idMaterials: MaterialList = [
   {
     title: "Badan Usaha dalam Perekonomian",
     description:
-      "Memahami berbagai jenis organisasi usaha dan perannya dalam sistem ekonomi",
+      "Organisasi berkuasa yang mendorong pertumbuhan ekonomi dan menciptakan lapangan kerja.",
     href: `${BASE_PATH}/business-economy`,
     items: [
       {
@@ -37,7 +37,7 @@ const idMaterials: MaterialList = [
   {
     title: "Pendapatan Nasional dan Kesenjangan Ekonomi",
     description:
-      "Menganalisis metode pengukuran pendapatan nasional dan memahami pola kesenjangan ekonomi",
+      "Mengukur kekayaan bangsa dan memahami mengapa ada yang makmur dan ada yang miskin.",
     href: `${BASE_PATH}/national-income-inequality`,
     items: [
       {
@@ -53,7 +53,7 @@ const idMaterials: MaterialList = [
   {
     title: "Ketenagakerjaan",
     description:
-      "Menjelajahi dinamika pasar tenaga kerja, sistem upah, dan tantangan pengangguran",
+      "Jembatan vital yang menghubungkan manusia dengan pendapatan dan stabilitas ekonomi.",
     href: `${BASE_PATH}/employment`,
     items: [
       {
@@ -73,7 +73,7 @@ const idMaterials: MaterialList = [
   {
     title: "Teori Uang, Indeks Harga dan Inflasi",
     description:
-      "Memahami teori moneter, pengukuran tingkat harga, dan proses inflasi",
+      "Kekuatan yang menentukan daya beli uang Anda hari ini versus besok.",
     href: `${BASE_PATH}/money-price-inflation`,
     items: [
       {
@@ -93,7 +93,7 @@ const idMaterials: MaterialList = [
   {
     title: "Kebijakan Moneter dan Kebijakan Fiskal",
     description:
-      "Mengkaji kebijakan ekonomi pemerintah dan dampaknya terhadap perekonomian",
+      "Toolkit ekonomi pemerintah untuk mengarahkan bangsa melalui kemakmuran dan krisis.",
     href: `${BASE_PATH}/monetary-fiscal-policy`,
     items: [
       {

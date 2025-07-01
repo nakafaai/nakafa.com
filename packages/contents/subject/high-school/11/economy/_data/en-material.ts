@@ -5,7 +5,7 @@ const enMaterials: MaterialList = [
   {
     title: "Business Entities in Economy",
     description:
-      "Understanding different types of business organizations and their roles in the economic system",
+      "Powerful organizations that drive economic growth and create jobs worldwide.",
     href: `${BASE_PATH}/business-economy`,
     items: [
       {
@@ -37,7 +37,7 @@ const enMaterials: MaterialList = [
   {
     title: "National Income and Economic Inequality",
     description:
-      "Analyzing national income measurement methods and understanding economic inequality patterns",
+      "Measuring a nation's wealth and understanding why some prosper while others struggle.",
     href: `${BASE_PATH}/national-income-inequality`,
     items: [
       {
@@ -53,7 +53,7 @@ const enMaterials: MaterialList = [
   {
     title: "Employment",
     description:
-      "Exploring labor market dynamics, wage systems, and unemployment challenges",
+      "The lifeline connecting people to income, purpose, and economic stability.",
     href: `${BASE_PATH}/employment`,
     items: [
       {
@@ -73,7 +73,7 @@ const enMaterials: MaterialList = [
   {
     title: "Money Theory, Price Index and Inflation",
     description:
-      "Understanding monetary theory, price level measurements, and inflationary processes",
+      "Forces that determine what your money can buy today versus tomorrow.",
     href: `${BASE_PATH}/money-price-inflation`,
     items: [
       {
@@ -93,7 +93,7 @@ const enMaterials: MaterialList = [
   {
     title: "Monetary and Fiscal Policy",
     description:
-      "Examining government economic policies and their impacts on the economy",
+      "Government's economic toolkit for steering nations through prosperity and crisis.",
     href: `${BASE_PATH}/monetary-fiscal-policy`,
     items: [
       {
