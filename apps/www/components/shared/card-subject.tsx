@@ -27,7 +27,7 @@ export function CardSubject({ icon: Icon, label, href }: Props) {
             </CardTitle>
           </div>
         </CardHeader>
-        <div className="absolute inset-y-0 right-0 h-full w-3 border-l bg-accent transition-all duration-500 ease-in-out group-hover:w-9" />
+        <div className="absolute inset-y-0 right-0 h-full w-3 border-l bg-primary transition-all duration-500 ease-in-out group-hover:w-9" />
       </Card>
     </Link>
   );
