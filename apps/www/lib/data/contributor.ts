@@ -45,4 +45,12 @@ export const contributors: Contributor[] = [
     username: "alfeus",
     official: false,
   },
+  {
+    name: "Achmad Miftahul Ulum",
+    username: "ulum",
+    official: false,
+    social: {
+      linkedin: "https://www.linkedin.com/in/achmad-miftahul-ulum-84b92a237/",
+    },
+  },
 ];
