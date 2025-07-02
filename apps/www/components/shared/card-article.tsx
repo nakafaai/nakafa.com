@@ -34,8 +34,8 @@ export function CardArticle({ category, article }: Props) {
       prefetch
       title={article.title}
     >
-      <Card className="relative h-full overflow-hidden pt-8">
-        <div className="absolute inset-0 h-3 border-b bg-primary transition-all duration-500 ease-in-out group-hover:h-5" />
+      <Card className="relative h-full overflow-hidden">
+        <div className="absolute inset-0 h-0 bg-primary transition-all duration-500 ease-in-out group-hover:h-4" />
         <CardHeader>
           <CardTitle className="line-clamp-2 font-medium leading-snug">
             <h2 className="scroll-mt-28" id={id} title={article.title}>
