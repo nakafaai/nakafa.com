@@ -7,11 +7,11 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "next-intl": "^4.3.2"
+    "next-intl": "^4.3.4"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.0.8",
+    "@types/node": "24.0.10",
     "@types/react": "19.1.8",
     "@types/react-dom": "19.1.6",
     "next": "15.3.4"
