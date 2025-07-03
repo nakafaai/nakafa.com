@@ -21,44 +21,25 @@ export const GetContentsSchema = z.object({
         ),
       category: z
         .union([ArticleCategorySchema, SubjectCategorySchema])
-        .optional()
         .describe("The category of the content to get."),
       grade: GradeSchema.optional().describe(
-        "The grade of the content to get. Category must be specified if grade is specified. Only for subjects."
+        "The grade of the content to get. Only for subjects."
       ),
       material: MaterialSchema.optional().describe(
-        "The material of the content to get. Category and grade must be specified if material is specified. Only for subjects."
+        "The material of the content to get. Grade must be specified if material is specified. Only for subjects."
       ),
     })
     .refine(
       (data) => {
-        // If grade is specified, category must be provided
-        if (data.grade !== undefined && data.category === undefined) {
+        // If material is specified, both category and grade must be provided
+        if (data.material !== undefined && data.grade === undefined) {
           return false;
         }
         return true;
       },
       {
-        message: "Category is required when grade is specified.",
-        path: ["category"],
-      }
-    )
-    .refine(
-      (data) => {
-        // If material is specified, both category and grade must be provided
-        if (data.material !== undefined) {
-          if (data.category === undefined) {
-            return false;
-          }
-          if (data.grade === undefined) {
-            return false;
-          }
-        }
-        return true;
-      },
-      {
-        message: "Category and grade are required when material is specified.",
-        path: ["category", "grade"],
+        message: "Grade is required when material is specified.",
+        path: ["grade"],
       }
     )
     .describe(
