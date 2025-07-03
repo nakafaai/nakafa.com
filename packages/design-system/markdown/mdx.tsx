@@ -11,6 +11,7 @@ import { Anchor } from "@repo/design-system/markdown/anchor";
 import { Code } from "@repo/design-system/markdown/code";
 import { Heading } from "@repo/design-system/markdown/heading";
 import { BlockMath, InlineMath } from "@repo/design-system/markdown/math";
+import { Mermaid } from "@repo/design-system/markdown/mermaid";
 import { Paragraph } from "@repo/design-system/markdown/paragraph";
 import type {
   BlockquoteProps,
@@ -68,6 +69,7 @@ export const components = {
     <pre className="whitespace-pre md:whitespace-pre-wrap" {...props} />
   ),
   code: Code,
+  Mermaid,
   InlineMath,
   BlockMath,
   table: ({ children, ...props }: TableProps) => (
