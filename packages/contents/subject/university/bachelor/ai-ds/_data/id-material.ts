@@ -3,20 +3,6 @@ import { BASE_PATH } from ".";
 
 const idMaterials: MaterialList = [
   {
-    title: "Pemrograman dalam C",
-    description:
-      "Bahasa fondasi yang membangun kecepatan dan efisiensi untuk sistem AI performa tinggi.",
-    href: `${BASE_PATH}/c-programming`,
-    items: [],
-  },
-  {
-    title: "Pemrograman dalam C++",
-    description:
-      "Pemrograman berorientasi objek yang kuat untuk arsitektur AI kompleks dan optimisasi.",
-    href: `${BASE_PATH}/cpp-programming`,
-    items: [],
-  },
-  {
     title: "Metode Linear AI",
     description:
       "Tulang punggung matematika yang mengubah pola data menjadi prediksi cerdas.",

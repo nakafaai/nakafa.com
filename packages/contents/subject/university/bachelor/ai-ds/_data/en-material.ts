@@ -3,20 +3,6 @@ import { BASE_PATH } from ".";
 
 const enMaterials: MaterialList = [
   {
-    title: "Programming in C",
-    description:
-      "Foundation language building speed and efficiency for high-performance AI systems.",
-    href: `${BASE_PATH}/c-programming`,
-    items: [],
-  },
-  {
-    title: "Programming in C++",
-    description:
-      "Powerful object-oriented programming enabling complex AI architectures and optimization.",
-    href: `${BASE_PATH}/cpp-programming`,
-    items: [],
-  },
-  {
     title: "Linear Methods of AI",
     description:
       "Mathematical backbone transforming data patterns into intelligent predictions.",
