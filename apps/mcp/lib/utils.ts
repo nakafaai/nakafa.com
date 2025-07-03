@@ -9,7 +9,7 @@ export function buildContentSlug(params: GetContentsParams): string {
   if (category) {
     segments.push(category);
 
-    if (grade) {
+    if (type === "subject" && grade) {
       segments.push(grade);
 
       if (material) {

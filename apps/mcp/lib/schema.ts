@@ -22,28 +22,15 @@ export const GetContentsSchema = z.object({
       category: z
         .union([ArticleCategorySchema, SubjectCategorySchema])
         .describe("The category of the content to get."),
-      grade: GradeSchema.optional().describe(
-        "The grade of the content to get. Only for subjects."
+      grade: GradeSchema.describe(
+        "The grade of the content to get. Only for when type is 'subject'."
       ),
-      material: MaterialSchema.optional().describe(
-        "The material of the content to get. Grade must be specified if material is specified. Only for subjects."
+      material: MaterialSchema.describe(
+        "The material of the content to get. Only for when type is 'subject'."
       ),
     })
-    .refine(
-      (data) => {
-        // If material is specified, both category and grade must be provided
-        if (data.material !== undefined && data.grade === undefined) {
-          return false;
-        }
-        return true;
-      },
-      {
-        message: "Grade is required when material is specified.",
-        path: ["grade"],
-      }
-    )
     .describe(
-      "Filter by content type, category, grade, and material. articles only have category, subjects have category, grade, and material."
+      "Filter by content type, category, grade, and material. Type 'articles' only have category, type 'subject' have category, grade, and material."
     ),
 });
 export type GetContentsParams = z.infer<typeof GetContentsSchema>;
