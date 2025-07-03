@@ -323,9 +323,9 @@ export function LineEquation({
         material={pointMat}
         visible={showPoints}
       >
-        {vectorPoints.map((v) => (
+        {vectorPoints.map((v, index) => (
           <Instance
-            key={`point-${v.x}-${v.y}-${v.z}`}
+            key={`point-${index}-${v.x}-${v.y}-${v.z}`}
             position={[v.x, v.y, v.z]}
           />
         ))}

@@ -1,5 +1,3 @@
-import { buttonVariants } from "@repo/design-system/components/ui/button";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   Table,
   TableBody,
@@ -8,13 +6,13 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
+import { filterWhitespaceNodes } from "@repo/design-system/lib/utils";
+import { Anchor } from "@repo/design-system/markdown/anchor";
 import { Code } from "@repo/design-system/markdown/code";
 import { Heading } from "@repo/design-system/markdown/heading";
 import { BlockMath, InlineMath } from "@repo/design-system/markdown/math";
 import { Paragraph } from "@repo/design-system/markdown/paragraph";
 import type {
-  AnchorProps,
   BlockquoteProps,
   EmProps,
   HeadingProps,
@@ -51,14 +49,10 @@ export const components = {
     <Heading className="text-sm" Tag="h6" {...props} />
   ),
   p: (props: ParagraphProps) => <Paragraph {...props} />,
-  ol: (props: ListProps) => (
-    <ol className="list-decimal space-y-4 pl-5" {...props} />
-  ),
-  ul: (props: ListProps) => (
-    <ul className="list-disc space-y-4 pl-5" {...props} />
-  ),
+  ol: (props: ListProps) => <ol className="list-decimal pl-5" {...props} />,
+  ul: (props: ListProps) => <ul className="list-disc pl-5" {...props} />,
   li: (props: ListItemProps) => (
-    <li className="mt-4 pl-1 text-foreground/80 leading-relaxed" {...props} />
+    <li className="my-4 pl-1 text-foreground/80 leading-loose" {...props} />
   ),
   em: (props: EmProps) => (
     <em className="font-medium text-foreground" {...props} />
@@ -67,45 +61,9 @@ export const components = {
     <strong className="font-medium text-foreground" {...props} />
   ),
   blockquote: (props: BlockquoteProps) => (
-    <blockquote className="mt-6 border-l-2 pl-4 italic" {...props} />
+    <blockquote className="mt-4 border-l-2 pl-4 italic" {...props} />
   ),
-  a: ({ href, children, ...props }: AnchorProps) => {
-    const className = buttonVariants({ variant: "link" });
-    if (href?.startsWith("/")) {
-      return (
-        <NavigationLink
-          className={cn(
-            className,
-            "h-auto p-0 text-base underline underline-offset-4"
-          )}
-          href={href}
-          title={href}
-          {...props}
-        >
-          {children}
-        </NavigationLink>
-      );
-    }
-    if (href?.startsWith("#")) {
-      return (
-        <a className={className} href={href} title={href} {...props}>
-          {children}
-        </a>
-      );
-    }
-    return (
-      <a
-        className={className}
-        href={href}
-        rel="noopener noreferrer"
-        target="_blank"
-        title={href}
-        {...props}
-      >
-        {children}
-      </a>
-    );
-  },
+  a: Anchor,
   pre: (props: PreProps) => (
     <pre className="whitespace-pre md:whitespace-pre-wrap" {...props} />
   ),
