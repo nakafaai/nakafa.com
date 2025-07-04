@@ -10,8 +10,6 @@
     "@next/third-parties": "15.3.5",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@vercel/analytics": "^1.5.0",
-    "posthog-js": "^1.256.1",
-    "posthog-node": "^5.1.1",
     "react": "^19.1.0",
     "server-only": "^0.0.1",
     "zod": "^3.25.67"

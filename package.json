@@ -21,7 +21,7 @@
     "analyze": "turbo analyze",
     "translate": "turbo translate",
     "boundaries": "turbo boundaries",
-    "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker,zod",
+    "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker,zod,recharts",
     "bump-ui": "npx shadcn@latest add --all --overwrite -c packages/design-system",
     "clean": "git clean -xdf node_modules"
   },
@@ -33,7 +33,7 @@
     "tsup": "^8.5.0",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3",
-    "ultracite": "^5.0.31",
+    "ultracite": "^5.0.32",
     "vitest": "^3.2.4"
   },
   "packageManager": "bun@1.2.18",
