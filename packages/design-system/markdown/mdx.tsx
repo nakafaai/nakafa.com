@@ -53,7 +53,7 @@ export const components = {
   ol: (props: ListProps) => <ol className="list-decimal pl-5" {...props} />,
   ul: (props: ListProps) => <ul className="list-disc pl-5" {...props} />,
   li: (props: ListItemProps) => (
-    <li className="my-4 pl-1 text-foreground/80 leading-loose" {...props} />
+    <li className="my-2 pl-1 text-foreground/80 leading-loose" {...props} />
   ),
   em: (props: EmProps) => (
     <em className="font-medium text-foreground" {...props} />
