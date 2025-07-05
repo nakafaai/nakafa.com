@@ -291,7 +291,164 @@ const idMaterials: MaterialList = [
     description:
       "Otak digital yang meniru neuron manusia untuk mengenali pola dan membuat keputusan.",
     href: `${BASE_PATH}/neural-networks`,
-    items: [],
+    items: [
+      {
+        title: "Masalah dari Supervised Learning",
+        href: `${BASE_PATH}/neural-networks/problem-supervised-learning`,
+      },
+      {
+        title: "Jenis-jenis Supervised Learning",
+        href: `${BASE_PATH}/neural-networks/type-supervised-learning`,
+      },
+      {
+        title: "Regresi Linear",
+        href: `${BASE_PATH}/neural-networks/linear-regression`,
+      },
+      {
+        title: "Ruang Fungsi",
+        href: `${BASE_PATH}/neural-networks/function-space`,
+      },
+      {
+        title: "Fungsi Kerugian",
+        href: `${BASE_PATH}/neural-networks/loss-function`,
+      },
+      {
+        title: "Persamaan Normal",
+        href: `${BASE_PATH}/neural-networks/normal-equation`,
+      },
+      {
+        title: "Fungsi Dasar Linear",
+        href: `${BASE_PATH}/neural-networks/basic-linear-function`,
+      },
+      {
+        title: "Pengklasifikasi Biner",
+        href: `${BASE_PATH}/neural-networks/binary-classifier`,
+      },
+      {
+        title: "Kerugian Entropi Silang Biner",
+        href: `${BASE_PATH}/neural-networks/binary-cross-entropy-loss`,
+      },
+      {
+        title: "Optimasi",
+        href: `${BASE_PATH}/neural-networks/optimization`,
+      },
+      {
+        title: "Pengklasifikasi Multi-Kelas",
+        href: `${BASE_PATH}/neural-networks/multi-class-classifier`,
+      },
+      {
+        title: "Kerugian Entropi Silang",
+        href: `${BASE_PATH}/neural-networks/cross-entropy-loss`,
+      },
+      {
+        title: "Persepsi Multi-Lapisan",
+        href: `${BASE_PATH}/neural-networks/multi-layer-perceptron`,
+      },
+      {
+        title: "Turunan Parsial",
+        href: `${BASE_PATH}/neural-networks/partial-derivative`,
+      },
+      {
+        title: "Contoh Penggunaan Turunan Parsial",
+        href: `${BASE_PATH}/neural-networks/partial-derivative-example`,
+      },
+      {
+        title: "Learning dalam Bentuk Vektor",
+        href: `${BASE_PATH}/neural-networks/learning-vector`,
+      },
+      {
+        title: "Fungsi Aktivasi untuk Lapisan Tersembunyi",
+        href: `${BASE_PATH}/neural-networks/hidden-layer-activation-function`,
+      },
+      {
+        title: "Tantangan Optimasi",
+        href: `${BASE_PATH}/neural-networks/optimization-challenge`,
+      },
+      {
+        title: "Varian Keturunan Gradien",
+        href: `${BASE_PATH}/neural-networks/gradient-descent-variant`,
+      },
+      {
+        title: "Laju Pembelajaran Adaptif",
+        href: `${BASE_PATH}/neural-networks/adaptive-learning-rate`,
+      },
+      {
+        title: "Rata-Rata Tertimbang Eksponensial",
+        href: `${BASE_PATH}/neural-networks/exponential-weighted-average`,
+      },
+      {
+        title: "Momentum",
+        href: `${BASE_PATH}/neural-networks/momentum`,
+      },
+      {
+        title: "Propagasi Akar Rata-Rata Kuadrat",
+        href: `${BASE_PATH}/neural-networks/root-mean-squared-propagation`,
+      },
+      {
+        title: "Estimasi Momen Adaptif",
+        href: `${BASE_PATH}/neural-networks/adam`,
+      },
+      {
+        title: "Overfitting dan Underfitting",
+        href: `${BASE_PATH}/neural-networks/overfitting-underfitting`,
+      },
+      {
+        title: "Regularisasi",
+        href: `${BASE_PATH}/neural-networks/regularization`,
+      },
+      {
+        title: "Penalti Parameter",
+        href: `${BASE_PATH}/neural-networks/parameter-penalties`,
+      },
+      {
+        title: "Dropout",
+        href: `${BASE_PATH}/neural-networks/dropout`,
+      },
+      {
+        title: "Pelatihan, Validasi, dan Pengujian",
+        href: `${BASE_PATH}/neural-networks/train-validate-test`,
+      },
+      {
+        title: "Praproses dan Inisialisasi",
+        href: `${BASE_PATH}/neural-networks/preprocessing-initialization`,
+      },
+      {
+        title: "Normalisasi Batch",
+        href: `${BASE_PATH}/neural-networks/batch-normalization`,
+      },
+      {
+        title: "Pencarian Hyperparameter",
+        href: `${BASE_PATH}/neural-networks/hyperparameter-search`,
+      },
+      {
+        title: "Konvolusi untuk Data Waktu",
+        href: `${BASE_PATH}/neural-networks/convolution-time-series`,
+      },
+      {
+        title: "Pooling untuk Data Waktu",
+        href: `${BASE_PATH}/neural-networks/pooling-time-series`,
+      },
+      {
+        title: "Convolutional Neural Networks untuk Data Waktu",
+        href: `${BASE_PATH}/neural-networks/cnn-time-series`,
+      },
+      {
+        title: "Konvolusi untuk Gambar",
+        href: `${BASE_PATH}/neural-networks/convolution-image`,
+      },
+      {
+        title: "Konvolusi pada Volume",
+        href: `${BASE_PATH}/neural-networks/convolution-volume`,
+      },
+      {
+        title: "Blok Konvolusi",
+        href: `${BASE_PATH}/neural-networks/convolution-block`,
+      },
+      {
+        title: "Convolutional Neural Network",
+        href: `${BASE_PATH}/neural-networks/cnn`,
+      },
+    ],
   },
   {
     title: "Machine Learning",

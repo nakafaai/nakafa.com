@@ -291,7 +291,164 @@ const enMaterials: MaterialList = [
     description:
       "Digital brains mimicking human neurons to recognize patterns and make decisions.",
     href: `${BASE_PATH}/neural-networks`,
-    items: [],
+    items: [
+      {
+        title: "Problems of Supervised Learning",
+        href: `${BASE_PATH}/neural-networks/problem-supervised-learning`,
+      },
+      {
+        title: "Types of Supervised Learning",
+        href: `${BASE_PATH}/neural-networks/type-supervised-learning`,
+      },
+      {
+        title: "Linear Regression",
+        href: `${BASE_PATH}/neural-networks/linear-regression`,
+      },
+      {
+        title: "Function Space",
+        href: `${BASE_PATH}/neural-networks/function-space`,
+      },
+      {
+        title: "Loss Function",
+        href: `${BASE_PATH}/neural-networks/loss-function`,
+      },
+      {
+        title: "Normal Equation",
+        href: `${BASE_PATH}/neural-networks/normal-equation`,
+      },
+      {
+        title: "Basic Linear Function",
+        href: `${BASE_PATH}/neural-networks/basic-linear-function`,
+      },
+      {
+        title: "Binary Classifier",
+        href: `${BASE_PATH}/neural-networks/binary-classifier`,
+      },
+      {
+        title: "Binary Cross-Entropy Loss",
+        href: `${BASE_PATH}/neural-networks/binary-cross-entropy-loss`,
+      },
+      {
+        title: "Optimization",
+        href: `${BASE_PATH}/neural-networks/optimization`,
+      },
+      {
+        title: "Multi-Class Classifier",
+        href: `${BASE_PATH}/neural-networks/multi-class-classifier`,
+      },
+      {
+        title: "Cross-Entropy Loss",
+        href: `${BASE_PATH}/neural-networks/cross-entropy-loss`,
+      },
+      {
+        title: "Multi-Layer Perceptron",
+        href: `${BASE_PATH}/neural-networks/multi-layer-perceptron`,
+      },
+      {
+        title: "Partial Derivative",
+        href: `${BASE_PATH}/neural-networks/partial-derivative`,
+      },
+      {
+        title: "Partial Derivative Example",
+        href: `${BASE_PATH}/neural-networks/partial-derivative-example`,
+      },
+      {
+        title: "Learning in Vector Form",
+        href: `${BASE_PATH}/neural-networks/learning-vector`,
+      },
+      {
+        title: "Activation Function for Hidden Layer",
+        href: `${BASE_PATH}/neural-networks/hidden-layer-activation-function`,
+      },
+      {
+        title: "Optimization Challenge",
+        href: `${BASE_PATH}/neural-networks/optimization-challenge`,
+      },
+      {
+        title: "Gradient Descent Variants",
+        href: `${BASE_PATH}/neural-networks/gradient-descent-variant`,
+      },
+      {
+        title: "Adaptive Learning Rate",
+        href: `${BASE_PATH}/neural-networks/adaptive-learning-rate`,
+      },
+      {
+        title: "Exponential Weighted Average",
+        href: `${BASE_PATH}/neural-networks/exponential-weighted-average`,
+      },
+      {
+        title: "Momentum",
+        href: `${BASE_PATH}/neural-networks/momentum`,
+      },
+      {
+        title: "Root Mean Squared Propagation",
+        href: `${BASE_PATH}/neural-networks/root-mean-squared-propagation`,
+      },
+      {
+        title: "Adaptive Moment Estimation",
+        href: `${BASE_PATH}/neural-networks/adam`,
+      },
+      {
+        title: "Overfitting and Underfitting",
+        href: `${BASE_PATH}/neural-networks/overfitting-underfitting`,
+      },
+      {
+        title: "Regularization",
+        href: `${BASE_PATH}/neural-networks/regularization`,
+      },
+      {
+        title: "Parameter Penalties",
+        href: `${BASE_PATH}/neural-networks/parameter-penalties`,
+      },
+      {
+        title: "Dropout",
+        href: `${BASE_PATH}/neural-networks/dropout`,
+      },
+      {
+        title: "Training, Validation, and Testing",
+        href: `${BASE_PATH}/neural-networks/train-validate-test`,
+      },
+      {
+        title: "Preprocessing and Initialization",
+        href: `${BASE_PATH}/neural-networks/preprocessing-initialization`,
+      },
+      {
+        title: "Batch Normalization",
+        href: `${BASE_PATH}/neural-networks/batch-normalization`,
+      },
+      {
+        title: "Hyperparameter Search",
+        href: `${BASE_PATH}/neural-networks/hyperparameter-search`,
+      },
+      {
+        title: "Convolution for Time Series",
+        href: `${BASE_PATH}/neural-networks/convolution-time-series`,
+      },
+      {
+        title: "Pooling for Time Series",
+        href: `${BASE_PATH}/neural-networks/pooling-time-series`,
+      },
+      {
+        title: "Convolutional Neural Networks for Time Series",
+        href: `${BASE_PATH}/neural-networks/cnn-time-series`,
+      },
+      {
+        title: "Convolution for Images",
+        href: `${BASE_PATH}/neural-networks/convolution-image`,
+      },
+      {
+        title: "Convolution on Volume",
+        href: `${BASE_PATH}/neural-networks/convolution-volume`,
+      },
+      {
+        title: "Convolution Block",
+        href: `${BASE_PATH}/neural-networks/convolution-block`,
+      },
+      {
+        title: "Convolutional Neural Network",
+        href: `${BASE_PATH}/neural-networks/cnn`,
+      },
+    ],
   },
   {
     title: "Machine Learning",
