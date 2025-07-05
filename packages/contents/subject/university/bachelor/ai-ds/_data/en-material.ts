@@ -7,7 +7,168 @@ const enMaterials: MaterialList = [
     description:
       "Mathematical backbone transforming data patterns into intelligent predictions.",
     href: `${BASE_PATH}/linear-methods`,
-    items: [],
+    items: [
+      {
+        title: "Definition of Determinant",
+        href: `${BASE_PATH}/linear-methods/determinant`,
+      },
+      {
+        title: "Determinant Calculation",
+        href: `${BASE_PATH}/linear-methods/determinant-calculation`,
+      },
+      {
+        title: "Laplace Expansion Theorem",
+        href: `${BASE_PATH}/linear-methods/laplace-expansion`,
+      },
+      {
+        title: "Cramer's Rule",
+        href: `${BASE_PATH}/linear-methods/cramer-rule`,
+      },
+      {
+        title: "Complex Vector Space",
+        href: `${BASE_PATH}/linear-methods/complex-vector-space`,
+      },
+      {
+        title: "Complex Matrix",
+        href: `${BASE_PATH}/linear-methods/complex-matrix`,
+      },
+      {
+        title: "Eigenvalues, Eigenvectors, and Eigenspaces",
+        href: `${BASE_PATH}/linear-methods/eigenvalue-eigenvector-eigenspace`,
+      },
+      {
+        title: "Characteristic Polynomial",
+        href: `${BASE_PATH}/linear-methods/characteristic-polynomial`,
+      },
+      {
+        title: "Eigenvalues of Diagonal and Triangular Matrices",
+        href: `${BASE_PATH}/linear-methods/eigenvalue-diagonal-matrix`,
+      },
+      {
+        title: "Orthogonal and Unitary Matrices",
+        href: `${BASE_PATH}/linear-methods/orthogonal-unitary-matrix`,
+      },
+      {
+        title: "Symmetric and Hermitian Matrices",
+        href: `${BASE_PATH}/linear-methods/symmetric-hermitian-matrix`,
+      },
+      {
+        title: "Positive Definite Matrix",
+        href: `${BASE_PATH}/linear-methods/positive-definite-matrix`,
+      },
+      {
+        title: "Scalar Product",
+        href: `${BASE_PATH}/linear-methods/scalar-product`,
+      },
+      {
+        title: "Matrix Condition",
+        href: `${BASE_PATH}/linear-methods/matrix-condition`,
+      },
+      {
+        title: "LU Decomposition",
+        href: `${BASE_PATH}/linear-methods/lu-decomposition`,
+      },
+      {
+        title: "Cholesky Decomposition",
+        href: `${BASE_PATH}/linear-methods/cholesky-decomposition`,
+      },
+      {
+        title: "QR Decomposition",
+        href: `${BASE_PATH}/linear-methods/qr-decomposition`,
+      },
+      {
+        title: "Linear Model",
+        href: `${BASE_PATH}/linear-methods/linear-model`,
+      },
+      {
+        title: "System of Linear Equations",
+        href: `${BASE_PATH}/linear-methods/system-linear-equation`,
+      },
+      {
+        title: "Linear Equilibrium Problem",
+        href: `${BASE_PATH}/linear-methods/linear-equilibrium-problem`,
+      },
+      {
+        title: "Normal Equation System",
+        href: `${BASE_PATH}/linear-methods/normal-equation`,
+      },
+      {
+        title: "Normal Equation System Solution",
+        href: `${BASE_PATH}/linear-methods/normal-equation-solution`,
+      },
+      {
+        title: "Identifiability and Ranking Capability",
+        href: `${BASE_PATH}/linear-methods/identifiability-ranking`,
+      },
+      {
+        title: "Regularization",
+        href: `${BASE_PATH}/linear-methods/regularization`,
+      },
+      {
+        title: "Statistical Analysis",
+        href: `${BASE_PATH}/linear-methods/statistical-analysis`,
+      },
+      {
+        title: "Best Approximation in Function and Polynomial Spaces",
+        href: `${BASE_PATH}/linear-methods/approximation-function-polynomial`,
+      },
+      {
+        title: "Orthogonal Projection",
+        href: `${BASE_PATH}/linear-methods/orthogonal-projection`,
+      },
+      {
+        title: "Orthogonal Polynomials",
+        href: `${BASE_PATH}/linear-methods/orthogonal-polynomials`,
+      },
+      {
+        title: "Matrix Similarity",
+        href: `${BASE_PATH}/linear-methods/matrix-equality`,
+      },
+      {
+        title: "Matrix Diagonalization",
+        href: `${BASE_PATH}/linear-methods/diagonalization-matrix`,
+      },
+      {
+        title: "Basic Procedure for Diagonalization",
+        href: `${BASE_PATH}/linear-methods/diagonalization-procedure`,
+      },
+      {
+        title: "Spectral Theorem",
+        href: `${BASE_PATH}/linear-methods/spectral-theorem`,
+      },
+      {
+        title: "Spectral Theorem for Complex Matrices",
+        href: `${BASE_PATH}/linear-methods/spectral-complex-matrix`,
+      },
+      {
+        title: "Spectral Theorem for Real Matrices",
+        href: `${BASE_PATH}/linear-methods/spectral-real-matrix`,
+      },
+      {
+        title: "Real Axis Transformation",
+        href: `${BASE_PATH}/linear-methods/real-axis-transformation`,
+      },
+      {
+        title: "Principal Component Analysis Example",
+        href: `${BASE_PATH}/linear-methods/principal-component-analysis`,
+      },
+      {
+        title: "Triangularization and Jordan Normal Form",
+        href: `${BASE_PATH}/linear-methods/jordan-normal-form`,
+      },
+      {
+        title: "Numerical Calculation of Eigenvalues",
+        href: `${BASE_PATH}/linear-methods/numerical-eigenvalue-calculation`,
+      },
+      {
+        title: "Individual Eigenvalue Calculation",
+        href: `${BASE_PATH}/linear-methods/individual-eigenvalue-calculation`,
+      },
+      {
+        title: "All Eigenvalues Calculation",
+        href: `${BASE_PATH}/linear-methods/all-eigenvalues-calculation`,
+      },
+    ],
   },
   {
     title: "AI Programming",
