@@ -175,7 +175,116 @@ const enMaterials: MaterialList = [
     description:
       "Coding intelligence that teaches machines to think and solve complex problems.",
     href: `${BASE_PATH}/ai-programming`,
-    items: [],
+    items: [
+      {
+        title: "Markdown and Command Line Interfaces",
+        href: `${BASE_PATH}/ai-programming/markdown-cli`,
+      },
+      {
+        title: "First Steps in Python",
+        href: `${BASE_PATH}/ai-programming/python-step-1`,
+      },
+      {
+        title: "Everything is an Object in Python",
+        href: `${BASE_PATH}/ai-programming/everything-object-python`,
+      },
+      {
+        title: "Numbers",
+        href: `${BASE_PATH}/ai-programming/numbers`,
+      },
+      {
+        title: "Arithmetic Operators",
+        href: `${BASE_PATH}/ai-programming/arithmetic-operator`,
+      },
+      {
+        title: "Number Attributes and Methods",
+        href: `${BASE_PATH}/ai-programming/number-attribute-method`,
+      },
+      {
+        title: "Mathematical Functions",
+        href: `${BASE_PATH}/ai-programming/math-function`,
+      },
+      {
+        title: "Variables",
+        href: `${BASE_PATH}/ai-programming/variable`,
+      },
+      {
+        title: "Comparison and Logic",
+        href: `${BASE_PATH}/ai-programming/comparison-logic`,
+      },
+      {
+        title: "String Objects",
+        href: `${BASE_PATH}/ai-programming/string-object`,
+      },
+      {
+        title: "Escape Sequences",
+        href: `${BASE_PATH}/ai-programming/escape-sequence`,
+      },
+      {
+        title: "Indexing and Slicing",
+        href: `${BASE_PATH}/ai-programming/indexing-slicing`,
+      },
+      {
+        title: "String Methods",
+        href: `${BASE_PATH}/ai-programming/string-method`,
+      },
+      {
+        title: "Print Function",
+        href: `${BASE_PATH}/ai-programming/print-function`,
+      },
+      {
+        title: "String Formatting",
+        href: `${BASE_PATH}/ai-programming/string-formatting`,
+      },
+      {
+        title: "Containers",
+        href: `${BASE_PATH}/ai-programming/container`,
+      },
+      {
+        title: "Immutable, Mutable, and Identity",
+        href: `${BASE_PATH}/ai-programming/immutable-mutable-identity`,
+      },
+      {
+        title: "Iterables",
+        href: `${BASE_PATH}/ai-programming/iterable`,
+      },
+      {
+        title: "Control Flow",
+        href: `${BASE_PATH}/ai-programming/control-flow`,
+      },
+      {
+        title: "File Input and Output",
+        href: `${BASE_PATH}/ai-programming/file-input-output`,
+      },
+      {
+        title: "Dictionary",
+        href: `${BASE_PATH}/ai-programming/dictionary`,
+      },
+      {
+        title: "Functions",
+        href: `${BASE_PATH}/ai-programming/function`,
+      },
+      {
+        title: "Creating Arrays with NumPy",
+        href: `${BASE_PATH}/ai-programming/array-numpy`,
+      },
+      {
+        title: "Attributes and Data Types with NumPy",
+        href: `${BASE_PATH}/ai-programming/attribute-data-type-numpy`,
+      },
+      {
+        title: "Indexing and Slicing with NumPy",
+        href: `${BASE_PATH}/ai-programming/indexing-slicing-numpy`,
+      },
+      {
+        title: "Array Operations with NumPy",
+        href: `${BASE_PATH}/ai-programming/array-operation-numpy`,
+      },
+      {
+        title: "Syntactic Sugar",
+        href: `${BASE_PATH}/ai-programming/syntactic-sugar`,
+      },
+    ],
   },
   {
     title: "Neural Networks",

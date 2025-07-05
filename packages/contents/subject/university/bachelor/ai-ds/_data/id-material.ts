@@ -175,7 +175,116 @@ const idMaterials: MaterialList = [
     description:
       "Mengkode kecerdasan yang mengajarkan mesin berpikir dan memecahkan masalah kompleks.",
     href: `${BASE_PATH}/ai-programming`,
-    items: [],
+    items: [
+      {
+        title: "Markdown dan Command Line Interfaces",
+        href: `${BASE_PATH}/ai-programming/markdown-cli`,
+      },
+      {
+        title: "Step Pertama di Python",
+        href: `${BASE_PATH}/ai-programming/python-step-1`,
+      },
+      {
+        title: "Semuanya adalah Objek di Python",
+        href: `${BASE_PATH}/ai-programming/everything-object-python`,
+      },
+      {
+        title: "Numbers",
+        href: `${BASE_PATH}/ai-programming/numbers`,
+      },
+      {
+        title: "Operator Aritmatika",
+        href: `${BASE_PATH}/ai-programming/arithmetic-operator`,
+      },
+      {
+        title: "Atribut dan Metode Bilangan",
+        href: `${BASE_PATH}/ai-programming/number-attribute-method`,
+      },
+      {
+        title: "Fungsi Matematika",
+        href: `${BASE_PATH}/ai-programming/math-function`,
+      },
+      {
+        title: "Variabel",
+        href: `${BASE_PATH}/ai-programming/variable`,
+      },
+      {
+        title: "Perbandingan dan Logika",
+        href: `${BASE_PATH}/ai-programming/comparison-logic`,
+      },
+      {
+        title: "Objek String",
+        href: `${BASE_PATH}/ai-programming/string-object`,
+      },
+      {
+        title: "Escape Sequence",
+        href: `${BASE_PATH}/ai-programming/escape-sequence`,
+      },
+      {
+        title: "Indexing dan Slicing",
+        href: `${BASE_PATH}/ai-programming/indexing-slicing`,
+      },
+      {
+        title: "Metode String",
+        href: `${BASE_PATH}/ai-programming/string-method`,
+      },
+      {
+        title: "Fungsi Print",
+        href: `${BASE_PATH}/ai-programming/print-function`,
+      },
+      {
+        title: "Pemformatan String",
+        href: `${BASE_PATH}/ai-programming/string-formatting`,
+      },
+      {
+        title: "Container",
+        href: `${BASE_PATH}/ai-programming/container`,
+      },
+      {
+        title: "Immutable, Mutable, dan Identity",
+        href: `${BASE_PATH}/ai-programming/immutable-mutable-identity`,
+      },
+      {
+        title: "Iterable",
+        href: `${BASE_PATH}/ai-programming/iterable`,
+      },
+      {
+        title: "Control Flow",
+        href: `${BASE_PATH}/ai-programming/control-flow`,
+      },
+      {
+        title: "File Input dan Output",
+        href: `${BASE_PATH}/ai-programming/file-input-output`,
+      },
+      {
+        title: "Dictionary",
+        href: `${BASE_PATH}/ai-programming/dictionary`,
+      },
+      {
+        title: "Fungsi",
+        href: `${BASE_PATH}/ai-programming/function`,
+      },
+      {
+        title: "Membuat Array dengan NumPy",
+        href: `${BASE_PATH}/ai-programming/array-numpy`,
+      },
+      {
+        title: "Atribut dan Tipe Data dengan NumPy",
+        href: `${BASE_PATH}/ai-programming/attribute-data-type-numpy`,
+      },
+      {
+        title: "Indexing dan Slicing dengan NumPy",
+        href: `${BASE_PATH}/ai-programming/indexing-slicing-numpy`,
+      },
+      {
+        title: "Operasi pada Array dengan NumPy",
+        href: `${BASE_PATH}/ai-programming/array-operation-numpy`,
+      },
+      {
+        title: "Syntactic Sugar",
+        href: `${BASE_PATH}/ai-programming/syntactic-sugar`,
+      },
+    ],
   },
   {
     title: "Neural Networks",
