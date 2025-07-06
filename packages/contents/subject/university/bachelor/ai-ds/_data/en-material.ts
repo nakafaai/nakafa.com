@@ -455,7 +455,136 @@ const enMaterials: MaterialList = [
     description:
       "Algorithms that learn from experience to predict future outcomes automatically.",
     href: `${BASE_PATH}/machine-learning`,
-    items: [],
+    items: [
+      {
+        title: "What is Machine Learning?",
+        href: `${BASE_PATH}/machine-learning/what-machine-learning`,
+      },
+      {
+        title: "What is Supervised Learning?",
+        href: `${BASE_PATH}/machine-learning/what-supervised-learning`,
+      },
+      {
+        title: "Formal Setting for Supervised Learning",
+        href: `${BASE_PATH}/machine-learning/formal-supervised-learning`,
+      },
+      {
+        title: "Empirical Risk Minimization",
+        href: `${BASE_PATH}/machine-learning/empirical-risk-minimization`,
+      },
+      {
+        title: "Regularized Risk Minimization",
+        href: `${BASE_PATH}/machine-learning/regularized-risk-minimization`,
+      },
+      {
+        title: "K-Nearest Neighbor Classifier",
+        href: `${BASE_PATH}/machine-learning/k-nearest-neighbor-classifier`,
+      },
+      {
+        title: "Maximum A Posteriori Rule",
+        href: `${BASE_PATH}/machine-learning/maximum-posteriori-rule`,
+      },
+      {
+        title: "Bayesian Decision Rule",
+        href: `${BASE_PATH}/machine-learning/bayesian-decision-rule`,
+      },
+      {
+        title: "Discriminant Function",
+        href: `${BASE_PATH}/machine-learning/discriminant-function`,
+      },
+      {
+        title: "Proof of Bayes Optimal Classifier",
+        href: `${BASE_PATH}/machine-learning/bayes-optimal-classifier-proof`,
+      },
+      {
+        title: "Univariate Normal Distribution",
+        href: `${BASE_PATH}/machine-learning/univariate-normal-distribution`,
+      },
+      {
+        title: "Probability vs Likelihood",
+        href: `${BASE_PATH}/machine-learning/probability-vs-likelihood`,
+      },
+      {
+        title: "Maximum Likelihood Estimation",
+        href: `${BASE_PATH}/machine-learning/maximum-likelihood-estimation`,
+      },
+      {
+        title: "Maximum Likelihood Estimation Example",
+        href: `${BASE_PATH}/machine-learning/maximum-likelihood-estimation-example`,
+      },
+      {
+        title: "Maximum Likelihood Method",
+        href: `${BASE_PATH}/machine-learning/maximum-likelihood-method`,
+      },
+      {
+        title: "Parameter Fitting for Normal Distribution",
+        href: `${BASE_PATH}/machine-learning/parameter-fitting-normal-distribution`,
+      },
+      {
+        title: "Covariance",
+        href: `${BASE_PATH}/machine-learning/covariance`,
+      },
+      {
+        title: "Eigendecomposition of Covariance Matrix",
+        href: `${BASE_PATH}/machine-learning/eigendecomposition-covariance-matrix`,
+      },
+      {
+        title: "Gaussian Model",
+        href: `${BASE_PATH}/machine-learning/gaussian-model`,
+      },
+      {
+        title: "Discriminant Function for Gaussian Model",
+        href: `${BASE_PATH}/machine-learning/discriminant-function-gaussian-model`,
+      },
+      {
+        title: "Mahalanobis Distance",
+        href: `${BASE_PATH}/machine-learning/mahalanobis-distance`,
+      },
+      {
+        title: "Point Estimation",
+        href: `${BASE_PATH}/machine-learning/point-estimation`,
+      },
+      {
+        title: "Unbiased Estimator",
+        href: `${BASE_PATH}/machine-learning/unbiased-estimator`,
+      },
+      {
+        title: "Consistency",
+        href: `${BASE_PATH}/machine-learning/consistency`,
+      },
+      {
+        title: "Mean Squared Error",
+        href: `${BASE_PATH}/machine-learning/mean-squared-error`,
+      },
+      {
+        title: "Bias-Variance Decomposition of Mean Squared Error",
+        href: `${BASE_PATH}/machine-learning/bias-variance-decomposition-mse`,
+      },
+      {
+        title: "Model Selection for Maximum Likelihood Estimation",
+        href: `${BASE_PATH}/machine-learning/model-selection-mle`,
+      },
+      {
+        title: "Kullback-Leibler Divergence",
+        href: `${BASE_PATH}/machine-learning/kl-divergence`,
+      },
+      {
+        title: "Akaike Information Criterion",
+        href: `${BASE_PATH}/machine-learning/akaike-information-criterion`,
+      },
+      {
+        title: "Cross Validation",
+        href: `${BASE_PATH}/machine-learning/cross-validation`,
+      },
+      {
+        title: "Gaussian Mixture Model",
+        href: `${BASE_PATH}/machine-learning/gaussian-mixture-model`,
+      },
+      {
+        title: "Expectation Maximization Algorithm",
+        href: `${BASE_PATH}/machine-learning/expectation-maximization-algorithm`,
+      },
+    ],
   },
   {
     title: "Nonlinear Optimization for AI",

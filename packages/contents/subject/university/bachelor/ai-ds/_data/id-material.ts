@@ -455,7 +455,136 @@ const idMaterials: MaterialList = [
     description:
       "Algoritma yang belajar dari pengalaman untuk memprediksi hasil masa depan secara otomatis.",
     href: `${BASE_PATH}/machine-learning`,
-    items: [],
+    items: [
+      {
+        title: "Apa itu Machine Learning?",
+        href: `${BASE_PATH}/machine-learning/what-machine-learning`,
+      },
+      {
+        title: "Apa itu Supervised Learning?",
+        href: `${BASE_PATH}/machine-learning/what-supervised-learning`,
+      },
+      {
+        title: "Pengaturan Formal untuk Supervised Learning",
+        href: `${BASE_PATH}/machine-learning/formal-supervised-learning`,
+      },
+      {
+        title: "Minimalisasi Risiko Empiris",
+        href: `${BASE_PATH}/machine-learning/empirical-risk-minimization`,
+      },
+      {
+        title: "Minimalisasi Risiko yang Teratur",
+        href: `${BASE_PATH}/machine-learning/regularized-risk-minimization`,
+      },
+      {
+        title: "K-Nearest Neighbor Classifier",
+        href: `${BASE_PATH}/machine-learning/k-nearest-neighbor-classifier`,
+      },
+      {
+        title: "Aturan Maksimum Posteriori",
+        href: `${BASE_PATH}/machine-learning/maximum-posteriori-rule`,
+      },
+      {
+        title: "Aturan Keputusan Bayesian",
+        href: `${BASE_PATH}/machine-learning/bayesian-decision-rule`,
+      },
+      {
+        title: "Fungsi Diskriminatif",
+        href: `${BASE_PATH}/machine-learning/discriminant-function`,
+      },
+      {
+        title: "Bukti Pengklasifikasi Optimal Bayes",
+        href: `${BASE_PATH}/machine-learning/bayes-optimal-classifier-proof`,
+      },
+      {
+        title: "Distribusi Normal Univariat",
+        href: `${BASE_PATH}/machine-learning/univariate-normal-distribution`,
+      },
+      {
+        title: "Probabilitas vs Kemungkinan",
+        href: `${BASE_PATH}/machine-learning/probability-vs-likelihood`,
+      },
+      {
+        title: "Estimasi Kemungkinan Maksimum",
+        href: `${BASE_PATH}/machine-learning/maximum-likelihood-estimation`,
+      },
+      {
+        title: "Contoh Estimasi Kemungkinan Maksimum",
+        href: `${BASE_PATH}/machine-learning/maximum-likelihood-estimation-example`,
+      },
+      {
+        title: "Metode Kemungkinan Maksimum",
+        href: `${BASE_PATH}/machine-learning/maximum-likelihood-method`,
+      },
+      {
+        title: "Pemasangan Parameter untuk Distribusi Normal",
+        href: `${BASE_PATH}/machine-learning/parameter-fitting-normal-distribution`,
+      },
+      {
+        title: "Kovarians",
+        href: `${BASE_PATH}/machine-learning/covariance`,
+      },
+      {
+        title: "Eigendekomposisi dari Matriks Kovarians",
+        href: `${BASE_PATH}/machine-learning/eigendecomposition-covariance-matrix`,
+      },
+      {
+        title: "Model Gaussian",
+        href: `${BASE_PATH}/machine-learning/gaussian-model`,
+      },
+      {
+        title: "Fungsi Diskriminan untuk Model Gaussian",
+        href: `${BASE_PATH}/machine-learning/discriminant-function-gaussian-model`,
+      },
+      {
+        title: "Jarak Mahalanobis",
+        href: `${BASE_PATH}/machine-learning/mahalanobis-distance`,
+      },
+      {
+        title: "Estimasi Titik",
+        href: `${BASE_PATH}/machine-learning/point-estimation`,
+      },
+      {
+        title: "Penaksir yang Tidak Bias",
+        href: `${BASE_PATH}/machine-learning/unbiased-estimator`,
+      },
+      {
+        title: "Konsistensi",
+        href: `${BASE_PATH}/machine-learning/consistency`,
+      },
+      {
+        title: "Kesalahan Kuadrat Rata-Rata",
+        href: `${BASE_PATH}/machine-learning/mean-squared-error`,
+      },
+      {
+        title: "Dekomposisi Bias-Varians dari Kesalahan Kuadrat Rata-Rata",
+        href: `${BASE_PATH}/machine-learning/bias-variance-decomposition-mse`,
+      },
+      {
+        title: "Pemilihan Model untuk Estimasi Kemungkinan Maksimum",
+        href: `${BASE_PATH}/machine-learning/model-selection-mle`,
+      },
+      {
+        title: "Divergensi Kullback-Leibler",
+        href: `${BASE_PATH}/machine-learning/kl-divergence`,
+      },
+      {
+        title: "Kriteria Informasi Akaike",
+        href: `${BASE_PATH}/machine-learning/akaike-information-criterion`,
+      },
+      {
+        title: "Validasi Silang",
+        href: `${BASE_PATH}/machine-learning/cross-validation`,
+      },
+      {
+        title: "Model Campuran Gaussian",
+        href: `${BASE_PATH}/machine-learning/gaussian-mixture-model`,
+      },
+      {
+        title: "Algoritma Maksimisasi Ekspektasi",
+        href: `${BASE_PATH}/machine-learning/expectation-maximization-algorithm`,
+      },
+    ],
   },
   {
     title: "Optimisasi Nonlinear untuk AI",
