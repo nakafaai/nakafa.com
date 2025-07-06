@@ -1,4 +1,4 @@
-import { Vector3d } from "../../_shared/vector-3d";
+import { Vector3d } from "@repo/contents/_components/vector-3d";
 import { getColor } from "@repo/design-system/lib/color";
 
 export const metadata = {
@@ -32,9 +32,9 @@ The resulting vector, <InlineMath math="\vec{a} - \vec{b}" />, can also be obtai
   title="Visualization of Vector Subtraction in 3D Space"
   description={
     <>
-      Vector subtraction <InlineMath math="a - b" /> (purple color) is
-      equivalent to vector <InlineMath math="a" /> (blue color) added to the
-      negative of vector <InlineMath math="b" /> (red color).
+      Vector subtraction <InlineMath math="a - b" /> is equivalent to vector{" "}
+      <InlineMath math="a" /> added to the negative of vector{" "}
+      <InlineMath math="b" />.
     </>
   }
   vectors={[
@@ -43,28 +43,24 @@ The resulting vector, <InlineMath math="\vec{a} - \vec{b}" />, can also be obtai
       to: [3, 2, 1],
       color: getColor("TEAL"),
       label: "a",
-      id: "vector-a",
     },
     {
       from: [0, 0, 0],
       to: [1, 2, 2],
       color: getColor("ROSE"),
       label: "b",
-      id: "vector-b",
     },
     {
       from: [0, 0, 0],
       to: [-1, -2, -2],
       color: getColor("ORANGE"),
       label: "-b",
-      id: "vector-negative-b",
     },
     {
       from: [0, 0, 0],
       to: [2, 0, -1],
       color: getColor("PINK"),
       label: "a - b",
-      id: "vector-result",
     },
   ]}
   cameraPosition={[6, 4, 6]}
@@ -120,21 +116,18 @@ Note that <InlineMath math="\vec{a} - \vec{b} \neq \vec{b} - \vec{a}" /> in gene
       to: [3, 4, 0],
       color: getColor("TEAL"),
       label: "a",
-      id: "example-vector-a",
     },
     {
       from: [0, 0, 0],
       to: [1, 2, 0],
       color: getColor("ROSE"),
       label: "b",
-      id: "example-vector-b",
     },
     {
       from: [0, 0, 0],
       to: [2, 2, 0],
       color: getColor("LIME"),
       label: "a - b",
-      id: "example-vector-result",
     },
   ]}
   cameraPosition={[8, 6, 8]}

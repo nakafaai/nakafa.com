@@ -7,19 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 type Props = {
   title: ReactNode;
   description: ReactNode;
-  vectors: {
-    from: [number, number, number];
-    to: [number, number, number];
-    color: string;
-    label: string;
-    labelPosition?: "start" | "middle" | "end";
-    id?: string;
-  }[];
+  vectors: ComponentProps<typeof Vector>[];
   cameraPosition?: [number, number, number];
 };
 
@@ -38,7 +31,10 @@ export function Vector3d({
       <CardContent>
         <CoordinateSystem cameraPosition={cameraPosition}>
           {vectors.map((vector) => (
-            <Vector key={vector.id ?? vector.label} {...vector} />
+            <Vector
+              key={`vector-${vector.from?.join(",")}-${vector.to.join(",")}`}
+              {...vector}
+            />
           ))}
         </CoordinateSystem>
       </CardContent>

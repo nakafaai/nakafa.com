@@ -1,4 +1,4 @@
-import { Vector3d } from "../../_shared/vector-3d";
+import { Vector3d } from "@repo/contents/_components/vector-3d";
 import { getColor } from "@repo/design-system/lib/color";
 
 export const metadata = {
@@ -32,9 +32,9 @@ Vektor yang dihasilkan, yaitu <InlineMath math="\vec{a} - \vec{b}" />, juga dapa
   title="Visualisasi Pengurangan Vektor di Ruang 3D"
   description={
     <>
-      Pengurangan vektor <InlineMath math="a - b" /> (warna ungu) adalah sama
-      dengan vektor <InlineMath math="a" /> (warna biru) ditambah dengan negatif
-      vektor <InlineMath math="b" /> (warna merah).
+      Pengurangan vektor <InlineMath math="a - b" /> adalah sama dengan vektor{" "}
+      <InlineMath math="a" /> ditambah dengan negatif vektor{" "}
+      <InlineMath math="b" />.
     </>
   }
   vectors={[
@@ -43,28 +43,24 @@ Vektor yang dihasilkan, yaitu <InlineMath math="\vec{a} - \vec{b}" />, juga dapa
       to: [3, 2, 1],
       color: getColor("TEAL"),
       label: "a",
-      id: "vector-a",
     },
     {
       from: [0, 0, 0],
       to: [1, 2, 2],
       color: getColor("ROSE"),
       label: "b",
-      id: "vector-b",
     },
     {
       from: [0, 0, 0],
       to: [-1, -2, -2],
       color: getColor("ORANGE"),
       label: "-b",
-      id: "vector-negative-b",
     },
     {
       from: [0, 0, 0],
       to: [2, 0, -1],
       color: getColor("PINK"),
       label: "a - b",
-      id: "vector-result",
     },
   ]}
   cameraPosition={[6, 4, 6]}
@@ -120,21 +116,18 @@ Perhatikan bahwa <InlineMath math="\vec{a} - \vec{b} \neq \vec{b} - \vec{a}" /> 
       to: [3, 4, 0],
       color: getColor("TEAL"),
       label: "a",
-      id: "example-vector-a",
     },
     {
       from: [0, 0, 0],
       to: [1, 2, 0],
       color: getColor("ROSE"),
       label: "b",
-      id: "example-vector-b",
     },
     {
       from: [0, 0, 0],
       to: [2, 2, 0],
       color: getColor("LIME"),
       label: "a - b",
-      id: "example-vector-result",
     },
   ]}
   cameraPosition={[8, 6, 8]}
