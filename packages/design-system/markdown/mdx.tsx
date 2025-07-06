@@ -50,8 +50,10 @@ export const components = {
     <Heading className="text-sm" Tag="h6" {...props} />
   ),
   p: (props: ParagraphProps) => <Paragraph {...props} />,
-  ol: (props: ListProps) => <ol className="list-decimal pl-5" {...props} />,
-  ul: (props: ListProps) => <ul className="list-disc pl-5" {...props} />,
+  ol: (props: ListProps) => (
+    <ol className="my-4 list-decimal pl-5" {...props} />
+  ),
+  ul: (props: ListProps) => <ul className="my-4 list-disc pl-5" {...props} />,
   li: (props: ListItemProps) => (
     <li className="my-4 pl-1 text-foreground/80 leading-[1.75]" {...props} />
   ),
@@ -62,7 +64,7 @@ export const components = {
     <strong className="font-medium text-foreground" {...props} />
   ),
   blockquote: (props: BlockquoteProps) => (
-    <blockquote className="mt-4 border-l-2 pl-4 italic" {...props} />
+    <blockquote className="my-4 border-l-2 pl-4 italic" {...props} />
   ),
   a: Anchor,
   pre: (props: PreProps) => (

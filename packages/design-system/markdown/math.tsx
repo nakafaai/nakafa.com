@@ -11,7 +11,7 @@ import {
 export function BlockMath(props: MathComponentProps) {
   return (
     <ScrollArea
-      className="max-w-full rounded-xl border bg-card text-card-foreground shadow-sm"
+      className="mx-auto w-full max-w-xs rounded-xl border bg-card text-card-foreground shadow-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl"
       type="hover"
     >
       <div className="px-4">
