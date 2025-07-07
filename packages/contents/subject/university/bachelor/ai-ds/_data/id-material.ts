@@ -672,7 +672,116 @@ const idMaterials: MaterialList = [
     description:
       "Teknik mutakhir yang mendorong batas kemampuan kecerdasan buatan.",
     href: `${BASE_PATH}/advanced-machine-learning`,
-    items: [],
+    items: [
+      {
+        title: "Konsistensi Universal",
+        href: `${BASE_PATH}/advanced-machine-learning/universal-consistency`,
+      },
+      {
+        title: "Union Bound",
+        href: `${BASE_PATH}/advanced-machine-learning/union-bound`,
+      },
+      {
+        title: "Ketidaksetaraan Jensen",
+        href: `${BASE_PATH}/advanced-machine-learning/jensen-inequality`,
+      },
+      {
+        title: "Ketidaksetaraan Markov",
+        href: `${BASE_PATH}/advanced-machine-learning/markov-inequality`,
+      },
+      {
+        title: "Ketidaksetaraan Chebyshev",
+        href: `${BASE_PATH}/advanced-machine-learning/chebyshev-inequality`,
+      },
+      {
+        title: "Ketidaksetaraan Chernoff",
+        href: `${BASE_PATH}/advanced-machine-learning/chernoff-inequality`,
+      },
+      {
+        title: "Ketidaksetaraan Hoeffding",
+        href: `${BASE_PATH}/advanced-machine-learning/hoeffding-inequality`,
+      },
+      {
+        title: "Estimasi Titik",
+        href: `${BASE_PATH}/advanced-machine-learning/point-estimation`,
+      },
+      {
+        title: "Minimalisasi Risiko Empiris",
+        href: `${BASE_PATH}/advanced-machine-learning/erm`,
+      },
+      {
+        title: "Ketika Minimalisasi Risiko Empiris Gagal",
+        href: `${BASE_PATH}/advanced-machine-learning/when-erm-fails`,
+      },
+      {
+        title: "Generalization Bound",
+        href: `${BASE_PATH}/advanced-machine-learning/generalization-bound`,
+      },
+      {
+        title: "Estimasi Error Bound",
+        href: `${BASE_PATH}/advanced-machine-learning/estimation-error-bound`,
+      },
+      {
+        title: "Fungsi Pertumbuhan",
+        href: `${BASE_PATH}/advanced-machine-learning/growth-function`,
+      },
+      {
+        title: "Ketidaksetaraan Vapnik-Chervonenkis",
+        href: `${BASE_PATH}/advanced-machine-learning/vc-inequality`,
+      },
+      {
+        title: "Dimensi Vapnik-Chervonenkis",
+        href: `${BASE_PATH}/advanced-machine-learning/vc-dimension`,
+      },
+      {
+        title: "Sauer-Shelah Lemma",
+        href: `${BASE_PATH}/advanced-machine-learning/sauer-shelah-lemma`,
+      },
+      {
+        title: "Vapnik-Chervonenkis Bound",
+        href: `${BASE_PATH}/advanced-machine-learning/vc-bound`,
+      },
+      {
+        title: "Vapnik-Chervonenkis Generalization Bound",
+        href: `${BASE_PATH}/advanced-machine-learning/vc-generalization-bound`,
+      },
+      {
+        title: "Symmetrization Lemma",
+        href: `${BASE_PATH}/advanced-machine-learning/symmetrization-lemma`,
+      },
+      {
+        title: "Teorema Condorcet",
+        href: `${BASE_PATH}/advanced-machine-learning/condorcet-theorem`,
+      },
+      {
+        title: "Hard dan Soft Voting",
+        href: `${BASE_PATH}/advanced-machine-learning/hard-soft-voting`,
+      },
+      {
+        title: "Weak dan Strong Learner",
+        href: `${BASE_PATH}/advanced-machine-learning/weak-strong-learner`,
+      },
+      {
+        title: "Algoritma Boosting",
+        href: `${BASE_PATH}/advanced-machine-learning/boosting-algorithm`,
+      },
+      {
+        title: "Algoritma AdaBoost",
+        href: `${BASE_PATH}/advanced-machine-learning/adaboost-algorithm`,
+      },
+      {
+        title: "Model Aditif",
+        href: `${BASE_PATH}/advanced-machine-learning/additive-model`,
+      },
+      {
+        title: "Forward Stagewise Additive Modelling",
+        href: `${BASE_PATH}/advanced-machine-learning/fsam`,
+      },
+      {
+        title: "Analisis Teoritis",
+        href: `${BASE_PATH}/advanced-machine-learning/theoretical-analysis`,
+      },
+    ],
   },
   {
     title: "Computer Vision",
