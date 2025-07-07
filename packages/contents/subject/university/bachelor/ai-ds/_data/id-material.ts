@@ -591,7 +591,81 @@ const idMaterials: MaterialList = [
     description:
       "Matematika lanjutan yang menemukan solusi optimal dalam ruang masalah AI yang kompleks.",
     href: `${BASE_PATH}/nonlinear-optimization`,
-    items: [],
+    items: [
+      {
+        title: "Masalah Optimisasi Nonlinear",
+        href: `${BASE_PATH}/nonlinear-optimization/nonlinear-optimization-problem`,
+      },
+      {
+        title: "Penerimaan dan Pengoptimalan",
+        href: `${BASE_PATH}/nonlinear-optimization/acceptance-optimization`,
+      },
+      {
+        title: "Konvergensi Proses Berulang",
+        href: `${BASE_PATH}/nonlinear-optimization/convergence-repeated-process`,
+      },
+      {
+        title: "Kondisi Optimalitas di Satu Dimensi",
+        href: `${BASE_PATH}/nonlinear-optimization/one-dimensional-optimality-condition`,
+      },
+      {
+        title: "Kondisi Optimalitas di Dua Dimensi",
+        href: `${BASE_PATH}/nonlinear-optimization/two-dimensional-optimality-condition`,
+      },
+      {
+        title: "Prosedur Degradasi",
+        href: `${BASE_PATH}/nonlinear-optimization/degradation-procedure`,
+      },
+      {
+        title: "Metode Gradien",
+        href: `${BASE_PATH}/nonlinear-optimization/gradient-method`,
+      },
+      {
+        title: "Perilaku Konvergensi",
+        href: `${BASE_PATH}/nonlinear-optimization/convergence-behavior`,
+      },
+      {
+        title: "Gradien Konjugasi",
+        href: `${BASE_PATH}/nonlinear-optimization/conjugate-gradient`,
+      },
+      {
+        title: "Metode Gradien vs Metode Gradien Konjugasi",
+        href: `${BASE_PATH}/nonlinear-optimization/gradient-vs-conjugate-gradient`,
+      },
+      {
+        title: "Metode Newton dan Metode Quasi-Newton",
+        href: `${BASE_PATH}/nonlinear-optimization/newton-quasi-newton`,
+      },
+      {
+        title: "Metode Pemrograman Kuadratik Berurutan",
+        href: `${BASE_PATH}/nonlinear-optimization/sqp`,
+      },
+      {
+        title: "Metode Quasi-Newton Pemrograman Kuadratik Berurutan",
+        href: `${BASE_PATH}/nonlinear-optimization/quasi-newton-sqp`,
+      },
+      {
+        title: "Masalah Penyetaraan Nonlinear",
+        href: `${BASE_PATH}/nonlinear-optimization/nonlinear-equality-problem`,
+      },
+      {
+        title: "Metode Gauss-Newton",
+        href: `${BASE_PATH}/nonlinear-optimization/gauss-newton`,
+      },
+      {
+        title: "Konvergensi Lokal Metode Gauss-Newton",
+        href: `${BASE_PATH}/nonlinear-optimization/local-convergence-gauss-newton`,
+      },
+      {
+        title:
+          "Mengapa Pemrograman Kuadratik Berurutan Tidak Cocok untuk Regresi Nonlinier?",
+        href: `${BASE_PATH}/nonlinear-optimization/why-sqp-nonlinear-regression`,
+      },
+      {
+        title: "Masalah yang Belum Ditentukan dan Regularisasi",
+        href: `${BASE_PATH}/nonlinear-optimization/underdetermined-problem-regularization`,
+      },
+    ],
   },
   {
     title: "Advanced Machine Learning",

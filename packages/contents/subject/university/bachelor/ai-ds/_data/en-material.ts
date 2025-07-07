@@ -591,7 +591,81 @@ const enMaterials: MaterialList = [
     description:
       "Advanced mathematics finding optimal solutions in complex AI problem spaces.",
     href: `${BASE_PATH}/nonlinear-optimization`,
-    items: [],
+    items: [
+      {
+        title: "Nonlinear Optimization Problem",
+        href: `${BASE_PATH}/nonlinear-optimization/nonlinear-optimization-problem`,
+      },
+      {
+        title: "Acceptance and Optimization",
+        href: `${BASE_PATH}/nonlinear-optimization/acceptance-optimization`,
+      },
+      {
+        title: "Convergence of Repeated Process",
+        href: `${BASE_PATH}/nonlinear-optimization/convergence-repeated-process`,
+      },
+      {
+        title: "One-Dimensional Optimality Condition",
+        href: `${BASE_PATH}/nonlinear-optimization/one-dimensional-optimality-condition`,
+      },
+      {
+        title: "Two-Dimensional Optimality Condition",
+        href: `${BASE_PATH}/nonlinear-optimization/two-dimensional-optimality-condition`,
+      },
+      {
+        title: "Degradation Procedure",
+        href: `${BASE_PATH}/nonlinear-optimization/degradation-procedure`,
+      },
+      {
+        title: "Gradient Method",
+        href: `${BASE_PATH}/nonlinear-optimization/gradient-method`,
+      },
+      {
+        title: "Convergence Behavior",
+        href: `${BASE_PATH}/nonlinear-optimization/convergence-behavior`,
+      },
+      {
+        title: "Conjugate Gradient",
+        href: `${BASE_PATH}/nonlinear-optimization/conjugate-gradient`,
+      },
+      {
+        title: "Gradient Method vs Conjugate Gradient Method",
+        href: `${BASE_PATH}/nonlinear-optimization/gradient-vs-conjugate-gradient`,
+      },
+      {
+        title: "Newton and Quasi-Newton Methods",
+        href: `${BASE_PATH}/nonlinear-optimization/newton-quasi-newton`,
+      },
+      {
+        title: "Sequential Quadratic Programming Method",
+        href: `${BASE_PATH}/nonlinear-optimization/sqp`,
+      },
+      {
+        title: "Quasi-Newton Sequential Quadratic Programming Method",
+        href: `${BASE_PATH}/nonlinear-optimization/quasi-newton-sqp`,
+      },
+      {
+        title: "Nonlinear Equality Problem",
+        href: `${BASE_PATH}/nonlinear-optimization/nonlinear-equality-problem`,
+      },
+      {
+        title: "Gauss-Newton Method",
+        href: `${BASE_PATH}/nonlinear-optimization/gauss-newton`,
+      },
+      {
+        title: "Local Convergence of Gauss-Newton Method",
+        href: `${BASE_PATH}/nonlinear-optimization/local-convergence-gauss-newton`,
+      },
+      {
+        title:
+          "Why Sequential Quadratic Programming Not Suitable for Nonlinear Regression?",
+        href: `${BASE_PATH}/nonlinear-optimization/why-sqp-nonlinear-regression`,
+      },
+      {
+        title: "Underdetermined Problem and Regularization",
+        href: `${BASE_PATH}/nonlinear-optimization/underdetermined-problem-regularization`,
+      },
+    ],
   },
   {
     title: "Advanced Machine Learning",

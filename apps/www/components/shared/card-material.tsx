@@ -85,10 +85,8 @@ export function CardMaterial({ material }: Props) {
                 prefetch
                 title={item.title}
               >
-                <h3 className="truncate" title={item.title}>
-                  {item.title}
-                </h3>
-                <ArrowDownIcon className="-rotate-90 size-4 opacity-0 transition-opacity group-hover:opacity-100" />
+                <h3 title={item.title}>{item.title}</h3>
+                <ArrowDownIcon className="-rotate-90 size-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
               </Link>
             ))}
           </CardContent>
