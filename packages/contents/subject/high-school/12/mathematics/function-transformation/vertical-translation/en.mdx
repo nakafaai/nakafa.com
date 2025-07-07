@@ -200,7 +200,7 @@ For exponential functions:
            return { x, y: x * x + 4 * x + 3, z: 0 };
          }),
          color: getColor("PURPLE"),
-         labels: [{ text: "f(x) = x² + 4x + 3", offset: [1, 1, 0] }],
+         labels: [{ text: "f(x) = x² + 4x + 3", at: 10, offset: [0, 1.5, 0] }],
          showPoints: false,
        },
        {
@@ -209,7 +209,7 @@ For exponential functions:
            return { x, y: x * x + 4 * x + 3 + 5, z: 0 };
          }),
          color: getColor("ORANGE"),
-         labels: [{ text: "f'(x) = x² + 4x + 8", offset: [1, 1, 0] }],
+         labels: [{ text: "f'(x) = x² + 4x + 8", at: 10, offset: [0, -0.5, 0] }],
          showPoints: false,
        },
      ]}
@@ -262,7 +262,7 @@ For exponential functions:
            return { x, y: Math.sqrt(x), z: 0 };
          }),
          color: getColor("INDIGO"),
-         labels: [{ text: "h(x) = √x", offset: [1, 0.5, 0] }],
+         labels: [{ text: "h(x) = √x", offset: [1, 1, 0] }],
          showPoints: false,
        },
        {
@@ -271,7 +271,7 @@ For exponential functions:
            return { x, y: Math.sqrt(x) + 3, z: 0 };
          }),
          color: getColor("EMERALD"),
-         labels: [{ text: "h'(x) = √x + 3", offset: [1, 0.5, 0] }],
+         labels: [{ text: "h'(x) = √x + 3", offset: [1, 1, 0] }],
          showPoints: false,
        },
      ]}
