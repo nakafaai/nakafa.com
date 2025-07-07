@@ -788,7 +788,104 @@ const idMaterials: MaterialList = [
     description:
       "Mengajarkan mesin untuk melihat dan memahami dunia visual seperti manusia.",
     href: `${BASE_PATH}/computer-vision`,
-    items: [],
+    items: [
+      {
+        title: "Gambar Skala Abu-Abu",
+        href: `${BASE_PATH}/computer-vision/grayscale-image`,
+      },
+      {
+        title: "Gambar Berwarna",
+        href: `${BASE_PATH}/computer-vision/color-image`,
+      },
+      {
+        title: "Histogram Equalization",
+        href: `${BASE_PATH}/computer-vision/histogram-equalization`,
+      },
+      {
+        title: "Edge Detection",
+        href: `${BASE_PATH}/computer-vision/edge-detection`,
+      },
+      {
+        title: "Penghalusan",
+        href: `${BASE_PATH}/computer-vision/smoothing`,
+      },
+      {
+        title: "Unsharp Masking",
+        href: `${BASE_PATH}/computer-vision/unsharp-masking`,
+      },
+      {
+        title: "Hough Transform",
+        href: `${BASE_PATH}/computer-vision/hough-transform`,
+      },
+      {
+        title: "Fourier Transform",
+        href: `${BASE_PATH}/computer-vision/fourier-transform`,
+      },
+      {
+        title: "Otsu's Method",
+        href: `${BASE_PATH}/computer-vision/otsu-method`,
+      },
+      {
+        title: "Region Growing",
+        href: `${BASE_PATH}/computer-vision/region-growing`,
+      },
+      {
+        title: "Algoritma Watershed",
+        href: `${BASE_PATH}/computer-vision/watershed-algorithm`,
+      },
+      {
+        title: "Matriks Co-Occurrence",
+        href: `${BASE_PATH}/computer-vision/co-occurrence-matrix`,
+      },
+      {
+        title: "Gabor Filter",
+        href: `${BASE_PATH}/computer-vision/gabor-filter`,
+      },
+      {
+        title: "Harris Corner Detection",
+        href: `${BASE_PATH}/computer-vision/harris-corner-detection`,
+      },
+      {
+        title: "Histogram untuk Gradient",
+        href: `${BASE_PATH}/computer-vision/histogram-gradient`,
+      },
+      {
+        title: "Scale-Invariant Feature Transform",
+        href: `${BASE_PATH}/computer-vision/sift`,
+      },
+      {
+        title: "Speeded-Up Robust Features",
+        href: `${BASE_PATH}/computer-vision/surf`,
+      },
+      {
+        title: "Lapisan Konvolusi",
+        href: `${BASE_PATH}/computer-vision/convolution-layer`,
+      },
+      {
+        title: "Pooling",
+        href: `${BASE_PATH}/computer-vision/pooling`,
+      },
+      {
+        title: "Dekonvolusi",
+        href: `${BASE_PATH}/computer-vision/deconvolution`,
+      },
+      {
+        title: "Fungsi Kesalahan untuk Klasifikasi",
+        href: `${BASE_PATH}/computer-vision/loss-function-classification`,
+      },
+      {
+        title: "Augmentasi",
+        href: `${BASE_PATH}/computer-vision/augmentation`,
+      },
+      {
+        title: "Regularisasi",
+        href: `${BASE_PATH}/computer-vision/regularization`,
+      },
+      {
+        title: "AlexNet",
+        href: `${BASE_PATH}/computer-vision/alexnet`,
+      },
+    ],
   },
   {
     title: "Natural Language Processing",

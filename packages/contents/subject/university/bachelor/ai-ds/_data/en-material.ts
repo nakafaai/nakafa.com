@@ -788,7 +788,104 @@ const enMaterials: MaterialList = [
     description:
       "Teaching machines to see and understand the visual world like humans.",
     href: `${BASE_PATH}/computer-vision`,
-    items: [],
+    items: [
+      {
+        title: "Grayscale Image",
+        href: `${BASE_PATH}/computer-vision/grayscale-image`,
+      },
+      {
+        title: "Color Image",
+        href: `${BASE_PATH}/computer-vision/color-image`,
+      },
+      {
+        title: "Histogram Equalization",
+        href: `${BASE_PATH}/computer-vision/histogram-equalization`,
+      },
+      {
+        title: "Edge Detection",
+        href: `${BASE_PATH}/computer-vision/edge-detection`,
+      },
+      {
+        title: "Smoothing",
+        href: `${BASE_PATH}/computer-vision/smoothing`,
+      },
+      {
+        title: "Unsharp Masking",
+        href: `${BASE_PATH}/computer-vision/unsharp-masking`,
+      },
+      {
+        title: "Hough Transform",
+        href: `${BASE_PATH}/computer-vision/hough-transform`,
+      },
+      {
+        title: "Fourier Transform",
+        href: `${BASE_PATH}/computer-vision/fourier-transform`,
+      },
+      {
+        title: "Otsu's Method",
+        href: `${BASE_PATH}/computer-vision/otsu-method`,
+      },
+      {
+        title: "Region Growing",
+        href: `${BASE_PATH}/computer-vision/region-growing`,
+      },
+      {
+        title: "Watershed Algorithm",
+        href: `${BASE_PATH}/computer-vision/watershed-algorithm`,
+      },
+      {
+        title: "Co-Occurrence Matrix",
+        href: `${BASE_PATH}/computer-vision/co-occurrence-matrix`,
+      },
+      {
+        title: "Gabor Filter",
+        href: `${BASE_PATH}/computer-vision/gabor-filter`,
+      },
+      {
+        title: "Harris Corner Detection",
+        href: `${BASE_PATH}/computer-vision/harris-corner-detection`,
+      },
+      {
+        title: "Histogram for Gradient",
+        href: `${BASE_PATH}/computer-vision/histogram-gradient`,
+      },
+      {
+        title: "Scale-Invariant Feature Transform",
+        href: `${BASE_PATH}/computer-vision/sift`,
+      },
+      {
+        title: "Speeded-Up Robust Features",
+        href: `${BASE_PATH}/computer-vision/surf`,
+      },
+      {
+        title: "Convolution Layer",
+        href: `${BASE_PATH}/computer-vision/convolution-layer`,
+      },
+      {
+        title: "Pooling",
+        href: `${BASE_PATH}/computer-vision/pooling`,
+      },
+      {
+        title: "Deconvolution",
+        href: `${BASE_PATH}/computer-vision/deconvolution`,
+      },
+      {
+        title: "Loss Function for Classification",
+        href: `${BASE_PATH}/computer-vision/loss-function-classification`,
+      },
+      {
+        title: "Augmentation",
+        href: `${BASE_PATH}/computer-vision/augmentation`,
+      },
+      {
+        title: "Regularization",
+        href: `${BASE_PATH}/computer-vision/regularization`,
+      },
+      {
+        title: "AlexNet",
+        href: `${BASE_PATH}/computer-vision/alexnet`,
+      },
+    ],
   },
   {
     title: "Natural Language Processing",
