@@ -1,5 +1,4 @@
 import { buttonVariants } from "@repo/design-system/components/ui/button";
-import { Particles } from "@repo/design-system/components/ui/particles";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { format } from "date-fns";
@@ -42,10 +41,6 @@ export function HeaderContent({
   const showFooter = authors || date;
   return (
     <div className="relative pt-20 pb-10" data-pagefind-ignore>
-      <Particles
-        className="pointer-events-none absolute inset-0 opacity-80"
-        quantity={25}
-      />
       <div className="z-10 mx-auto max-w-3xl space-y-4 px-6">
         <div className="space-y-2">
           {link && (

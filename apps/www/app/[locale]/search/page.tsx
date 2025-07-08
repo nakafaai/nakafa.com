@@ -1,4 +1,3 @@
-import { Particles } from "@repo/design-system/components/ui/particles";
 import { HomeTitle } from "@/components/home/title";
 import { InputSearch } from "@/components/search/input";
 import { SearchResults } from "@/components/search/results";
@@ -15,7 +14,6 @@ export default function Page() {
         className="relative min-h-[calc(100svh-4rem)] py-10 lg:min-h-svh lg:py-26"
         data-pagefind-ignore
       >
-        <Particles className="pointer-events-none absolute inset-0 opacity-80" />
         <div className="mx-auto w-full max-w-xl px-6">
           <HomeTitle />
         </div>
