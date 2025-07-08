@@ -892,7 +892,104 @@ const enMaterials: MaterialList = [
     description:
       "Bridging human language and machine understanding for seamless communication.",
     href: `${BASE_PATH}/nlp`,
-    items: [],
+    items: [
+      {
+        title: "Formal Grammar",
+        href: `${BASE_PATH}/nlp/formal-grammar`,
+      },
+      {
+        title: "Unrestricted Grammar",
+        href: `${BASE_PATH}/nlp/unrestricted-grammar`,
+      },
+      {
+        title: "Context-Sensitive Grammar",
+        href: `${BASE_PATH}/nlp/context-sensitive-grammar`,
+      },
+      {
+        title: "Context-Free Grammar",
+        href: `${BASE_PATH}/nlp/context-free-grammar`,
+      },
+      {
+        title: "Regular Grammar and Left/Right Linear",
+        href: `${BASE_PATH}/nlp/regular-grammar-left-right`,
+      },
+      {
+        title: "Finite State Automata",
+        href: `${BASE_PATH}/nlp/finite-state-automata`,
+      },
+      {
+        title: "Morphology",
+        href: `${BASE_PATH}/nlp/morphology`,
+      },
+      {
+        title: "Finite State Transducer",
+        href: `${BASE_PATH}/nlp/finite-state-transducer`,
+      },
+      {
+        title: "Syntax",
+        href: `${BASE_PATH}/nlp/syntax`,
+      },
+      {
+        title: "Parsing",
+        href: `${BASE_PATH}/nlp/parsing`,
+      },
+      {
+        title: "Cocke-Kasami-Younger Algorithm",
+        href: `${BASE_PATH}/nlp/cky-algorithm`,
+      },
+      {
+        title: "Chomsky-Normal Form",
+        href: `${BASE_PATH}/nlp/chomsky-normal-form`,
+      },
+      {
+        title: "Sentence Meaning",
+        href: `${BASE_PATH}/nlp/sentence-meaning`,
+      },
+      {
+        title: "Levenshtein-Distance Algorithm",
+        href: `${BASE_PATH}/nlp/levenshtein-distance`,
+      },
+      {
+        title: "N-Gram Model",
+        href: `${BASE_PATH}/nlp/n-gram-model`,
+      },
+      {
+        title: "Language Model Evaluation",
+        href: `${BASE_PATH}/nlp/language-model-evaluation`,
+      },
+      {
+        title: "Language Model Perplexity",
+        href: `${BASE_PATH}/nlp/perplexity-language-model`,
+      },
+      {
+        title: "Sentiment Analysis",
+        href: `${BASE_PATH}/nlp/sentiment-analysis`,
+      },
+      {
+        title: "Bag of Words",
+        href: `${BASE_PATH}/nlp/bag-of-words`,
+      },
+      {
+        title: "Classifier Evaluation",
+        href: `${BASE_PATH}/nlp/classifier-evaluation`,
+      },
+      {
+        title: "Neural Network as Computation Graph",
+        href: `${BASE_PATH}/nlp/neural-network-graph`,
+      },
+      {
+        title: "Sequence Learning Problem",
+        href: `${BASE_PATH}/nlp/sequence-learning-problem`,
+      },
+      {
+        title: "Recurrent Neural Network",
+        href: `${BASE_PATH}/nlp/recurrent-neural-network`,
+      },
+      {
+        title: "Long Short-Term Memory",
+        href: `${BASE_PATH}/nlp/long-short-term-memory`,
+      },
+    ],
   },
 ] as const;
 

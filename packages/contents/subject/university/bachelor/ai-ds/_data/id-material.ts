@@ -892,7 +892,104 @@ const idMaterials: MaterialList = [
     description:
       "Menjembatani bahasa manusia dan pemahaman mesin untuk komunikasi yang mulus.",
     href: `${BASE_PATH}/nlp`,
-    items: [],
+    items: [
+      {
+        title: "Grammar Formal",
+        href: `${BASE_PATH}/nlp/formal-grammar`,
+      },
+      {
+        title: "Grammar Tidak Terbatas",
+        href: `${BASE_PATH}/nlp/unrestricted-grammar`,
+      },
+      {
+        title: "Grammar Context-Sensitive",
+        href: `${BASE_PATH}/nlp/context-sensitive-grammar`,
+      },
+      {
+        title: "Grammar Context-Free",
+        href: `${BASE_PATH}/nlp/context-free-grammar`,
+      },
+      {
+        title: "Grammar Regular dan Left/Right Linear",
+        href: `${BASE_PATH}/nlp/regular-grammar-left-right`,
+      },
+      {
+        title: "Finite State Automata",
+        href: `${BASE_PATH}/nlp/finite-state-automata`,
+      },
+      {
+        title: "Morfologi",
+        href: `${BASE_PATH}/nlp/morphology`,
+      },
+      {
+        title: "Finite State Transducer",
+        href: `${BASE_PATH}/nlp/finite-state-transducer`,
+      },
+      {
+        title: "Syntax",
+        href: `${BASE_PATH}/nlp/syntax`,
+      },
+      {
+        title: "Parsing",
+        href: `${BASE_PATH}/nlp/parsing`,
+      },
+      {
+        title: "Cocke-Kasami-Younger Algorithm",
+        href: `${BASE_PATH}/nlp/cky-algorithm`,
+      },
+      {
+        title: "Chomsky-Normal Form",
+        href: `${BASE_PATH}/nlp/chomsky-normal-form`,
+      },
+      {
+        title: "Arti Kalimat",
+        href: `${BASE_PATH}/nlp/sentence-meaning`,
+      },
+      {
+        title: "Algoritma Levenshtein-Distance",
+        href: `${BASE_PATH}/nlp/levenshtein-distance`,
+      },
+      {
+        title: "Model N-Gram",
+        href: `${BASE_PATH}/nlp/n-gram-model`,
+      },
+      {
+        title: "Evaluasi Languange Model",
+        href: `${BASE_PATH}/nlp/language-model-evaluation`,
+      },
+      {
+        title: "Perplexity Language Model",
+        href: `${BASE_PATH}/nlp/perplexity-language-model`,
+      },
+      {
+        title: "Analisis Sentimen",
+        href: `${BASE_PATH}/nlp/sentiment-analysis`,
+      },
+      {
+        title: "Bag of Words",
+        href: `${BASE_PATH}/nlp/bag-of-words`,
+      },
+      {
+        title: "Evaluasi Pengklasifikasi",
+        href: `${BASE_PATH}/nlp/classifier-evaluation`,
+      },
+      {
+        title: "Neural Network sebagai Grafik Perhitungan",
+        href: `${BASE_PATH}/nlp/neural-network-graph`,
+      },
+      {
+        title: "Sequence Learning Problem",
+        href: `${BASE_PATH}/nlp/sequence-learning-problem`,
+      },
+      {
+        title: "Recurrent Neural Network",
+        href: `${BASE_PATH}/nlp/recurrent-neural-network`,
+      },
+      {
+        title: "Long Short-Term Memory",
+        href: `${BASE_PATH}/nlp/long-short-term-memory`,
+      },
+    ],
   },
 ] as const;
 
