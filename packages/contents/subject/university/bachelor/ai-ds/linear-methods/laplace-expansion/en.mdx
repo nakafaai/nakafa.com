@@ -17,7 +17,7 @@ For matrix <InlineMath math="A \in \mathbb{R}^{n \times n}" />, the determinant 
 
 ### Column-Based Expansion
 
-Besides expansion based on column j, the determinant can be calculated using the formula:
+Besides expansion based on column <InlineMath math="j" />, the determinant can be calculated using the formula:
 
 <MathContainer>
 <BlockMath math="\det A = \sum_{i=1}^{n} (-1)^{i+j} \cdot a_{ij} \cdot \det A_{ij}" />
@@ -27,7 +27,7 @@ for any chosen column <InlineMath math="j \in \{1, 2, \ldots, n\}" />.
 
 ### Row-Based Expansion
 
-The determinant can also be calculated based on row i:
+The determinant can also be calculated based on row <InlineMath math="i" />:
 
 <MathContainer>
 <BlockMath math="\det A = \sum_{j=1}^{n} (-1)^{i+j} \cdot a_{ij} \cdot \det A_{ij}" />
@@ -64,7 +64,7 @@ Expansion based on the first row:
 <BlockMath math="+ a_{13} \cdot \det \begin{pmatrix} a_{21} & a_{22} \\ a_{31} & a_{32} \end{pmatrix}" />
 </MathContainer>
 
-After calculating the 2×2 determinants:
+After calculating the <InlineMath math="2 \times 2" /> determinants:
 
 <MathContainer>
 <BlockMath math="= a_{11} \cdot (a_{22} \cdot a_{33} - a_{23} \cdot a_{32})" />
@@ -82,9 +82,9 @@ If we expand it fully:
 
 ## Sarrus Rule
 
-The result of the 3×3 matrix expansion above corresponds to **Sarrus Rule**. This rule provides a visual way to calculate 3×3 determinants through diagonal patterns.
+The result of the <InlineMath math="3 \times 3" /> matrix expansion above corresponds to **Sarrus Rule**. This rule provides a visual way to calculate <InlineMath math="3 \times 3" /> determinants through diagonal patterns.
 
-Sarrus formula for 3×3 matrices:
+Sarrus formula for <InlineMath math="3 \times 3" /> matrices:
 
 <MathContainer>
 <BlockMath math="\det A = a_{11}a_{22}a_{33} + a_{12}a_{23}a_{31} + a_{13}a_{21}a_{32}" />
