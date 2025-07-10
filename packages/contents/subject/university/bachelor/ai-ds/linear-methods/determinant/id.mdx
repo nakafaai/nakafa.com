@@ -4,3 +4,138 @@ export const metadata = {
     date: "07/10/2025",
     subject: "Metode Linear AI",
 };
+
+## Konsep Dasar Determinan
+
+Determinan adalah alat matematika yang sangat penting dalam aljabar linear. Bayangkan determinan sebagai pengukur "kekuatan" suatu matriks, ia memberitahu kita seberapa besar perubahan yang dialami suatu ruang ketika ditransformasi oleh matriks tersebut.
+
+Setiap matriks persegi memiliki satu nilai determinan yang unik. Nilai ini bisa positif, negatif, atau nol, dan masing-masing memberitahu kita informasi yang berbeda tentang matriks tersebut.
+
+Determinan adalah fungsi khusus yang mengambil matriks persegi dan menghasilkan satu bilangan real:
+
+<BlockMath math="\det : \mathbb{R}^{n \times n} \to \mathbb{R} : A \mapsto \det A" />
+
+Fungsi ini unik karena memiliki tiga sifat khas yang tidak dimiliki fungsi lain.
+
+## Tiga Sifat Penentu Determinan
+
+### Sifat Linear pada Setiap Baris
+
+Determinan bersifat **linear** pada setiap baris matriks. Artinya, jika kita mengubah satu baris, determinan akan berubah secara linear.
+
+Ketika kita menjumlahkan dua vektor dalam satu baris:
+
+<MathContainer>
+<BlockMath math="\det \begin{pmatrix} a_1 \\ \vdots \\ a_i + a_i' \\ \vdots \\ a_n \end{pmatrix} = \det \begin{pmatrix} a_1 \\ \vdots \\ a_i \\ \vdots \\ a_n \end{pmatrix}" />
+<BlockMath math="+ \det \begin{pmatrix} a_1 \\ \vdots \\ a_i' \\ \vdots \\ a_n \end{pmatrix}" />
+</MathContainer>
+
+Ketika kita mengalikan satu baris dengan skalar:
+
+<MathContainer>
+<BlockMath math="\det \begin{pmatrix} a_1 \\ \vdots \\ \lambda \cdot a_i \\ \vdots \\ a_n \end{pmatrix}" />
+<BlockMath math="= \lambda \cdot \det \begin{pmatrix} a_1 \\ \vdots \\ a_i \\ \vdots \\ a_n \end{pmatrix}" />
+</MathContainer>
+
+### Sifat Antisimetris
+
+Determinan bersifat **antisimetris**, jika ada dua baris yang identik, determinan langsung menjadi nol:
+
+<BlockMath math="\det \begin{pmatrix} \vdots \\ a \\ \vdots \\ a \\ \vdots \end{pmatrix} = 0" />
+
+Ini masuk akal karena jika dua baris sama, matriks tidak dapat memiliki rank penuh.
+
+### Sifat Normalisasi
+
+Determinan **dinormalisasi** sehingga determinan matriks identitas selalu bernilai 1:
+
+<BlockMath math="\det I = 1" />
+
+Di mana <InlineMath math="I" /> adalah matriks identitas berukuran berapa pun.
+
+## Operasi Matriks dan Determinan
+
+Jika kita mengalikan seluruh matriks dengan skalar <InlineMath math="\lambda" />, determinan akan terdampak dengan pangkat n:
+
+<BlockMath math="\det(\lambda A) = \lambda^n \cdot \det A" />
+
+Ini karena setiap baris dikalikan dengan <InlineMath math="\lambda" />, dan ada <InlineMath math="n" /> baris total.
+
+Ketika kita menukar dua baris matriks, determinan berubah tanda:
+
+<BlockMath math="\det B = -\det A" />
+
+Yang menarik, ketika kita menambahkan kelipatan satu baris ke baris lain, determinan tidak berubah:
+
+<MathContainer>
+<BlockMath math="\det \begin{pmatrix} \vdots \\ a_j \\ \vdots \\ a_i + \lambda a_j \\ \vdots \end{pmatrix}" />
+<BlockMath math="= \det \begin{pmatrix} \vdots \\ a_j \\ \vdots \\ a_i \\ \vdots \end{pmatrix}" />
+</MathContainer>
+
+Mengalikan baris dengan skalar <InlineMath math="\lambda \neq 0" /> mengubah determinan menjadi <InlineMath math="\det A' = \lambda \cdot \det A" />. Menukar baris mengubah tanda menjadi <InlineMath math="\det A' = -\det A" />. Menambahkan kelipatan baris lain tidak mengubah determinan sama sekali.
+
+## Hubungan dengan Keterbalikan Matriks
+
+Determinan adalah kunci untuk memahami apakah matriks dapat dibalik. Untuk matriks persegi A, kondisi berikut setara:
+
+1. **Matriks A dapat dibalik**
+2. **Terdapat matriks invers** <InlineMath math="A^{-1}" /> yang memenuhi <InlineMath math="AA^{-1} = I" />
+3. **Rank matriks penuh**: <InlineMath math="\text{rank}(A) = n" />
+4. **Kernel trivial**: <InlineMath math="\ker(A) = \{0\}" />
+5. **Kolom-kolom linear independen**
+6. **Baris-baris linear independen**
+7. **Determinan tidak nol**: <InlineMath math="\det A \neq 0" />
+
+> Jika determinan nol, matriks "meratakan" ruang ke dimensi yang lebih rendah, sehingga transformasi tidak dapat dibalik.
+
+Jika baris-baris matriks saling bergantung secara linear, determinan pasti nol. Ini terjadi karena sifat antisimetris determinan, dependensi linear menciptakan situasi di mana kita bisa membuat baris yang identik melalui operasi linear.
+
+## Sifat Perkalian dan Matriks Similar
+
+Salah satu sifat paling berguna determinan adalah cara ia berinteraksi dengan perkalian matriks:
+
+<BlockMath math="\det(AB) = \det A \cdot \det B" />
+
+Jika matriks <InlineMath math="A" /> dapat dibalik, determinan inversnya adalah:
+
+<BlockMath math="\det(A^{-1}) = \frac{1}{\det A}" />
+
+Dua matriks <InlineMath math="A" /> dan <InlineMath math="B" /> disebut **similar** jika ada matriks invertible <InlineMath math="S" /> sehingga:
+
+<BlockMath math="B = S^{-1}AS" />
+
+Matriks yang similar memiliki determinan yang sama. Buktinya sederhana:
+
+<MathContainer>
+<BlockMath math="\det B = \det(S^{-1}AS)" />
+<BlockMath math="= \det(S^{-1}) \cdot \det A \cdot \det S" />
+<BlockMath math="= \frac{1}{\det S} \cdot \det A \cdot \det S = \det A" />
+</MathContainer>
+
+Ketika melakukan eliminasi Gauss dengan <InlineMath math="p" /> pertukaran baris, determinan matriks hasil <InlineMath math="R" /> adalah:
+
+<BlockMath math="\det R = (-1)^p \cdot \det A" />
+
+Ini memberikan metode praktis untuk menghitung determinan.
+
+## Kesalahan Umum tentang Determinan
+
+Penting untuk diingat bahwa determinan **tidak** bersifat additif:
+
+<BlockMath math="\det(A + B) \neq \det A + \det B" />
+
+Sebagai contoh sederhana:
+
+<MathContainer>
+<BlockMath math="\det\left(\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix} + \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}\right)" />
+<BlockMath math="= \det\begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} = 4" />
+</MathContainer>
+
+Tetapi:
+
+<MathContainer>
+<BlockMath math="\det\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix} + \det\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}" />
+<BlockMath math="= 1 + 1 = 2" />
+</MathContainer>
+
+Jelas bahwa <InlineMath math="4 \neq 2" />, sehingga determinan tidak bersifat additif pada penjumlahan matriks.

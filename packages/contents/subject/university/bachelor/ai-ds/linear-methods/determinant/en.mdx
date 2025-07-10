@@ -4,3 +4,138 @@ export const metadata = {
     date: "07/10/2025",
     subject: "Linear Methods of AI",
 };
+
+## Basic Concepts of Determinant
+
+Determinant is a very important mathematical tool in linear algebra. Think of determinant as a "strength" measure of a matrix, it tells us how much change a space undergoes when transformed by that matrix.
+
+Every square matrix has one unique determinant value. This value can be positive, negative, or zero, and each tells us different information about the matrix.
+
+Determinant is a special function that takes a square matrix and produces one real number:
+
+<BlockMath math="\det : \mathbb{R}^{n \times n} \to \mathbb{R} : A \mapsto \det A" />
+
+This function is unique because it has three characteristic properties that no other function has.
+
+## Three Determining Properties of Determinant
+
+### Linear Property on Each Row
+
+Determinant is **linear** on each row of the matrix. This means, if we change one row, the determinant will change linearly.
+
+When we add two vectors in one row:
+
+<MathContainer>
+<BlockMath math="\det \begin{pmatrix} a_1 \\ \vdots \\ a_i + a_i' \\ \vdots \\ a_n \end{pmatrix} = \det \begin{pmatrix} a_1 \\ \vdots \\ a_i \\ \vdots \\ a_n \end{pmatrix}" />
+<BlockMath math="+ \det \begin{pmatrix} a_1 \\ \vdots \\ a_i' \\ \vdots \\ a_n \end{pmatrix}" />
+</MathContainer>
+
+When we multiply one row by a scalar:
+
+<MathContainer>
+<BlockMath math="\det \begin{pmatrix} a_1 \\ \vdots \\ \lambda \cdot a_i \\ \vdots \\ a_n \end{pmatrix}" />
+<BlockMath math="= \lambda \cdot \det \begin{pmatrix} a_1 \\ \vdots \\ a_i \\ \vdots \\ a_n \end{pmatrix}" />
+</MathContainer>
+
+### Antisymmetric Property
+
+Determinant is **antisymmetric**, if there are two identical rows, the determinant immediately becomes zero:
+
+<BlockMath math="\det \begin{pmatrix} \vdots \\ a \\ \vdots \\ a \\ \vdots \end{pmatrix} = 0" />
+
+This makes sense because if two rows are the same, the matrix cannot have full rank.
+
+### Normalization Property
+
+Determinant is **normalized** so that the determinant of the identity matrix is always 1:
+
+<BlockMath math="\det I = 1" />
+
+Where <InlineMath math="I" /> is an identity matrix of any size.
+
+## Matrix Operations and Determinant
+
+If we multiply the entire matrix by a scalar <InlineMath math="\lambda" />, the determinant will be affected by the power of n:
+
+<BlockMath math="\det(\lambda A) = \lambda^n \cdot \det A" />
+
+This is because each row is multiplied by <InlineMath math="\lambda" />, and there are <InlineMath math="n" /> total rows.
+
+When we swap two rows of a matrix, the determinant changes sign:
+
+<BlockMath math="\det B = -\det A" />
+
+Interestingly, when we add a multiple of one row to another row, the determinant doesn't change:
+
+<MathContainer>
+<BlockMath math="\det \begin{pmatrix} \vdots \\ a_j \\ \vdots \\ a_i + \lambda a_j \\ \vdots \end{pmatrix}" />
+<BlockMath math="= \det \begin{pmatrix} \vdots \\ a_j \\ \vdots \\ a_i \\ \vdots \end{pmatrix}" />
+</MathContainer>
+
+Multiplying a row by scalar <InlineMath math="\lambda \neq 0" /> changes the determinant to <InlineMath math="\det A' = \lambda \cdot \det A" />. Swapping rows changes the sign to <InlineMath math="\det A' = -\det A" />. Adding multiples of other rows doesn't change the determinant at all.
+
+## Relationship with Matrix Invertibility
+
+Determinant is key to understanding whether a matrix can be inverted. For a square matrix A, the following conditions are equivalent:
+
+1. **Matrix A is invertible**
+2. **There exists an inverse matrix** <InlineMath math="A^{-1}" /> that satisfies <InlineMath math="AA^{-1} = I" />
+3. **Full rank matrix**: <InlineMath math="\text{rank}(A) = n" />
+4. **Trivial kernel**: <InlineMath math="\ker(A) = \{0\}" />
+5. **Columns are linearly independent**
+6. **Rows are linearly independent**
+7. **Determinant is not zero**: <InlineMath math="\det A \neq 0" />
+
+> If the determinant is zero, the matrix "flattens" space to a lower dimension, so the transformation cannot be inverted.
+
+If the rows of a matrix are linearly dependent, the determinant must be zero. This happens because of the antisymmetric property of determinant, linear dependence creates a situation where we can make identical rows through linear operations.
+
+## Multiplication Properties and Similar Matrices
+
+One of the most useful properties of determinant is how it interacts with matrix multiplication:
+
+<BlockMath math="\det(AB) = \det A \cdot \det B" />
+
+If matrix <InlineMath math="A" /> is invertible, the determinant of its inverse is:
+
+<BlockMath math="\det(A^{-1}) = \frac{1}{\det A}" />
+
+Two matrices <InlineMath math="A" /> and <InlineMath math="B" /> are called **similar** if there exists an invertible matrix <InlineMath math="S" /> such that:
+
+<BlockMath math="B = S^{-1}AS" />
+
+Similar matrices have the same determinant. The proof is simple:
+
+<MathContainer>
+<BlockMath math="\det B = \det(S^{-1}AS)" />
+<BlockMath math="= \det(S^{-1}) \cdot \det A \cdot \det S" />
+<BlockMath math="= \frac{1}{\det S} \cdot \det A \cdot \det S = \det A" />
+</MathContainer>
+
+When performing Gaussian elimination with <InlineMath math="p" /> row swaps, the determinant of the resulting matrix <InlineMath math="R" /> is:
+
+<BlockMath math="\det R = (-1)^p \cdot \det A" />
+
+This provides a practical method for calculating determinants.
+
+## Common Mistakes About Determinant
+
+It's important to remember that determinant is **not** additive:
+
+<BlockMath math="\det(A + B) \neq \det A + \det B" />
+
+As a simple example:
+
+<MathContainer>
+<BlockMath math="\det\left(\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix} + \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}\right)" />
+<BlockMath math="= \det\begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} = 4" />
+</MathContainer>
+
+But:
+
+<MathContainer>
+<BlockMath math="\det\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix} + \det\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}" />
+<BlockMath math="= 1 + 1 = 2" />
+</MathContainer>
+
+Clearly <InlineMath math="4 \neq 2" />, so determinant is not additive on matrix addition.
