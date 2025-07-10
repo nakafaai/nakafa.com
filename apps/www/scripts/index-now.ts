@@ -1,5 +1,4 @@
-// Load environment variables from .env file
-import "dotenv/config";
+// Environment variables loaded via Node.js --env-file flag
 import fs from "node:fs";
 import path from "node:path";
 import {

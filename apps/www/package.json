@@ -10,7 +10,7 @@
     "test": "NODE_ENV=test vitest run",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
-    "index-now": "tsx scripts/index-now.ts"
+    "index-now": "node --env-file=.env.local --import tsx scripts/index-now.ts"
   },
   "dependencies": {
     "@repo/analytics": "workspace:*",
