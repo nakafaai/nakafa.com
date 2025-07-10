@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { SpinnerIcon } from "../ui/icons";
 
 function ErrorFallback({
   error,
@@ -100,5 +101,10 @@ export const ThreeCanvas = dynamic(
   () => Promise.resolve(ThreeCanvasComponent),
   {
     ssr: false,
+    loading: () => (
+      <div className="flex h-full w-full items-center justify-center">
+        <SpinnerIcon aria-hidden="true" className="size-6 shrink-0" />
+      </div>
+    ),
   }
 );
