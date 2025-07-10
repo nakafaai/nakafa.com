@@ -4,3 +4,152 @@ export const metadata = {
     date: "07/10/2025",
     subject: "Metode Linear AI",
 };
+
+## Teorema Pengembangan Laplace
+
+Teorema Pengembangan Laplace memberikan cara untuk menghitung determinan matriks dengan memecahnya menjadi determinan matriks yang lebih kecil. Metode ini sangat berguna karena memungkinkan kita menghitung determinan matriks berukuran besar secara sistematis.
+
+Teorema ini memberikan fleksibilitas dalam memilih baris atau kolom mana yang akan digunakan untuk pengembangan, sehingga kita dapat memilih yang paling menguntungkan untuk perhitungan.
+
+## Pernyataan Teorema
+
+Untuk matriks <InlineMath math="A \in \mathbb{R}^{n \times n}" />, determinan dapat dihitung dengan dua cara:
+
+### Pengembangan Berdasarkan Kolom
+
+Selain pengembangan berdasarkan kolom ke-j, determinan dapat dihitung dengan rumus:
+
+<MathContainer>
+<BlockMath math="\det A = \sum_{i=1}^{n} (-1)^{i+j} \cdot a_{ij} \cdot \det A_{ij}" />
+</MathContainer>
+
+untuk setiap kolom <InlineMath math="j \in \{1, 2, \ldots, n\}" /> yang dipilih.
+
+### Pengembangan Berdasarkan Baris
+
+Determinan juga dapat dihitung berdasarkan baris ke-i:
+
+<MathContainer>
+<BlockMath math="\det A = \sum_{j=1}^{n} (-1)^{i+j} \cdot a_{ij} \cdot \det A_{ij}" />
+</MathContainer>
+
+untuk setiap baris <InlineMath math="i \in \{1, 2, \ldots, n\}" /> yang dipilih.
+
+## Contoh Pengembangan
+
+### Matriks 2×2
+
+Untuk matriks berukuran <InlineMath math="n = 2" />:
+
+<BlockMath math="A = \begin{pmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \end{pmatrix}" />
+
+Pengembangan berdasarkan baris pertama:
+
+<MathContainer>
+<BlockMath math="\det A = a_{11} \cdot \det(a_{22}) - a_{12} \cdot \det(a_{21})" />
+<BlockMath math="= a_{11} \cdot a_{22} - a_{12} \cdot a_{21}" />
+</MathContainer>
+
+### Matriks 3×3
+
+Untuk matriks berukuran <InlineMath math="n = 3" />:
+
+<BlockMath math="A = \begin{pmatrix} a_{11} & a_{12} & a_{13} \\ a_{21} & a_{22} & a_{23} \\ a_{31} & a_{32} & a_{33} \end{pmatrix}" />
+
+Pengembangan berdasarkan baris pertama:
+
+<MathContainer>
+<BlockMath math="\det A = a_{11} \cdot \det \begin{pmatrix} a_{22} & a_{23} \\ a_{32} & a_{33} \end{pmatrix}" />
+<BlockMath math="- a_{12} \cdot \det \begin{pmatrix} a_{21} & a_{23} \\ a_{31} & a_{33} \end{pmatrix}" />
+<BlockMath math="+ a_{13} \cdot \det \begin{pmatrix} a_{21} & a_{22} \\ a_{31} & a_{32} \end{pmatrix}" />
+</MathContainer>
+
+Setelah menghitung determinan-determinan 2×2:
+
+<MathContainer>
+<BlockMath math="= a_{11} \cdot (a_{22} \cdot a_{33} - a_{23} \cdot a_{32})" />
+<BlockMath math="- a_{12} \cdot (a_{21} \cdot a_{33} - a_{23} \cdot a_{31})" />
+<BlockMath math="+ a_{13} \cdot (a_{21} \cdot a_{32} - a_{22} \cdot a_{31})" />
+</MathContainer>
+
+Jika kita kembangkan secara penuh:
+
+<MathContainer>
+<BlockMath math="= a_{11} \cdot a_{22} \cdot a_{33} - a_{11} \cdot a_{23} \cdot a_{32}" />
+<BlockMath math="- a_{12} \cdot a_{21} \cdot a_{33} + a_{12} \cdot a_{23} \cdot a_{31}" />
+<BlockMath math="+ a_{13} \cdot a_{21} \cdot a_{32} - a_{13} \cdot a_{22} \cdot a_{31}" />
+</MathContainer>
+
+## Aturan Sarrus
+
+Hasil pengembangan matriks 3×3 di atas sesuai dengan **Aturan Sarrus**. Aturan ini memberikan cara visual untuk menghitung determinan 3×3 melalui pola diagonal.
+
+Rumus Sarrus untuk matriks 3×3:
+
+<MathContainer>
+<BlockMath math="\det A = a_{11}a_{22}a_{33} + a_{12}a_{23}a_{31} + a_{13}a_{21}a_{32}" />
+<BlockMath math="- a_{13}a_{22}a_{31} - a_{11}a_{23}a_{32} - a_{12}a_{21}a_{33}" />
+</MathContainer>
+
+Aturan Sarrus menggunakan pola diagonal untuk menentukan suku-suku mana yang dijumlahkan dan mana yang dikurangkan.
+
+## Kompleksitas Komputasi
+
+Kompleksitas perhitungan determinan menggunakan pengembangan Laplace sangat tinggi. Untuk matriks berukuran <InlineMath math="n \times n" />, jumlah operasi perkalian yang diperlukan adalah:
+
+<MathContainer>
+<BlockMath math="n \cdot (n-1) \cdot (n-2) \cdot \ldots \cdot 2 \cdot 1 \cdot (n-1)" />
+<BlockMath math="= n! \cdot (n-1)" />
+</MathContainer>
+
+Ini menunjukkan bahwa kompleksitas algoritma adalah faktorial, yang sangat tidak efisien untuk matriks berukuran besar.
+
+## Pemanfaatan Elemen Nol
+
+Ketika matriks memiliki banyak elemen nol, kita dapat memilih pengembangan sedemikian rupa sehingga subdeterminan dengan elemen nol tidak perlu dihitung. Hal ini dapat mengurangi beban perhitungan secara signifikan.
+
+### Contoh Optimisasi
+
+Misalkan kita memiliki matriks:
+
+<BlockMath math="A = \begin{pmatrix} 0 & 3 & 3 \\ 2 & 2 & 0 \\ 1 & 0 & 1 \end{pmatrix}" />
+
+Pengembangan berdasarkan baris pertama:
+
+<MathContainer>
+<BlockMath math="\det A = 0 \cdot \det(\ldots) - 3 \cdot \det \begin{pmatrix} 2 & 0 \\ 1 & 1 \end{pmatrix}" />
+<BlockMath math="+ 3 \cdot \det \begin{pmatrix} 2 & 2 \\ 1 & 0 \end{pmatrix}" />
+</MathContainer>
+
+Karena elemen pertama nol, perhitungannya menjadi:
+
+<MathContainer>
+<BlockMath math="= -3 \cdot (2 \cdot 1 - 0 \cdot 1) + 3 \cdot (2 \cdot 0 - 2 \cdot 1)" />
+<BlockMath math="= -3 \cdot 2 + 3 \cdot (-2)" />
+<BlockMath math="= -6 - 6 = -12" />
+</MathContainer>
+
+Dengan memilih baris atau kolom yang memiliki banyak nol, kita dapat menghemat perhitungan.
+
+## Determinan Matriks Transpose
+
+Salah satu sifat penting yang terkait dengan teorema Laplace adalah:
+
+<BlockMath math="\det A^T = \det A" />
+
+Ini berarti determinan matriks sama dengan determinan transposenya.
+
+### Konsekuensi untuk Baris dan Kolom
+
+Karena sifat transpose ini, semua sifat determinan yang berlaku untuk baris matriks <InlineMath math="A" /> juga berlaku untuk kolom matriks <InlineMath math="A" />.
+
+Misalnya:
+- Jika dua baris identik maka determinan nol, demikian juga jika dua kolom identik
+- Menukar dua baris mengubah tanda determinan, begitu pula menukar dua kolom
+- Operasi baris elementer dan operasi kolom elementer memiliki efek yang sama terhadap determinan
+
+## Matriks Berukuran Lebih Besar
+
+Untuk matriks berukuran <InlineMath math="n = 4" /> dan seterusnya, prinsip pengembangan Laplace tetap berlaku. Namun kompleksitas perhitungannya menjadi sangat tinggi, sehingga dalam praktik sering digunakan metode lain yang lebih efisien seperti eliminasi Gauss.
+
+Teorema Pengembangan Laplace memberikan fondasi teoretis yang solid untuk memahami struktur determinan, meskipun dalam aplikasi praktis mungkin digantikan oleh algoritma yang lebih efisien.

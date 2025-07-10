@@ -4,3 +4,152 @@ export const metadata = {
     date: "07/10/2025",
     subject: "Linear Methods of AI",
 };
+
+## Laplace Expansion Theorem
+
+The Laplace Expansion Theorem provides a way to calculate the determinant of a matrix by breaking it down into determinants of smaller matrices. This method is very useful because it allows us to calculate determinants of large matrices systematically.
+
+This theorem provides flexibility in choosing which row or column to use for expansion, so we can choose the most advantageous one for calculation.
+
+## Theorem Statement
+
+For matrix <InlineMath math="A \in \mathbb{R}^{n \times n}" />, the determinant can be calculated in two ways:
+
+### Column-Based Expansion
+
+Besides expansion based on column j, the determinant can be calculated using the formula:
+
+<MathContainer>
+<BlockMath math="\det A = \sum_{i=1}^{n} (-1)^{i+j} \cdot a_{ij} \cdot \det A_{ij}" />
+</MathContainer>
+
+for any chosen column <InlineMath math="j \in \{1, 2, \ldots, n\}" />.
+
+### Row-Based Expansion
+
+The determinant can also be calculated based on row i:
+
+<MathContainer>
+<BlockMath math="\det A = \sum_{j=1}^{n} (-1)^{i+j} \cdot a_{ij} \cdot \det A_{ij}" />
+</MathContainer>
+
+for any chosen row <InlineMath math="i \in \{1, 2, \ldots, n\}" />.
+
+## Expansion Examples
+
+### 2×2 Matrix
+
+For a matrix of size <InlineMath math="n = 2" />:
+
+<BlockMath math="A = \begin{pmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \end{pmatrix}" />
+
+Expansion based on the first row:
+
+<MathContainer>
+<BlockMath math="\det A = a_{11} \cdot \det(a_{22}) - a_{12} \cdot \det(a_{21})" />
+<BlockMath math="= a_{11} \cdot a_{22} - a_{12} \cdot a_{21}" />
+</MathContainer>
+
+### 3×3 Matrix
+
+For a matrix of size <InlineMath math="n = 3" />:
+
+<BlockMath math="A = \begin{pmatrix} a_{11} & a_{12} & a_{13} \\ a_{21} & a_{22} & a_{23} \\ a_{31} & a_{32} & a_{33} \end{pmatrix}" />
+
+Expansion based on the first row:
+
+<MathContainer>
+<BlockMath math="\det A = a_{11} \cdot \det \begin{pmatrix} a_{22} & a_{23} \\ a_{32} & a_{33} \end{pmatrix}" />
+<BlockMath math="- a_{12} \cdot \det \begin{pmatrix} a_{21} & a_{23} \\ a_{31} & a_{33} \end{pmatrix}" />
+<BlockMath math="+ a_{13} \cdot \det \begin{pmatrix} a_{21} & a_{22} \\ a_{31} & a_{32} \end{pmatrix}" />
+</MathContainer>
+
+After calculating the 2×2 determinants:
+
+<MathContainer>
+<BlockMath math="= a_{11} \cdot (a_{22} \cdot a_{33} - a_{23} \cdot a_{32})" />
+<BlockMath math="- a_{12} \cdot (a_{21} \cdot a_{33} - a_{23} \cdot a_{31})" />
+<BlockMath math="+ a_{13} \cdot (a_{21} \cdot a_{32} - a_{22} \cdot a_{31})" />
+</MathContainer>
+
+If we expand it fully:
+
+<MathContainer>
+<BlockMath math="= a_{11} \cdot a_{22} \cdot a_{33} - a_{11} \cdot a_{23} \cdot a_{32}" />
+<BlockMath math="- a_{12} \cdot a_{21} \cdot a_{33} + a_{12} \cdot a_{23} \cdot a_{31}" />
+<BlockMath math="+ a_{13} \cdot a_{21} \cdot a_{32} - a_{13} \cdot a_{22} \cdot a_{31}" />
+</MathContainer>
+
+## Sarrus Rule
+
+The result of the 3×3 matrix expansion above corresponds to **Sarrus Rule**. This rule provides a visual way to calculate 3×3 determinants through diagonal patterns.
+
+Sarrus formula for 3×3 matrices:
+
+<MathContainer>
+<BlockMath math="\det A = a_{11}a_{22}a_{33} + a_{12}a_{23}a_{31} + a_{13}a_{21}a_{32}" />
+<BlockMath math="- a_{13}a_{22}a_{31} - a_{11}a_{23}a_{32} - a_{12}a_{21}a_{33}" />
+</MathContainer>
+
+Sarrus rule uses diagonal patterns to determine which terms are added and which are subtracted.
+
+## Computational Complexity
+
+The complexity of determinant calculation using Laplace expansion is very high. For an <InlineMath math="n \times n" /> matrix, the number of multiplication operations required is:
+
+<MathContainer>
+<BlockMath math="n \cdot (n-1) \cdot (n-2) \cdot \ldots \cdot 2 \cdot 1 \cdot (n-1)" />
+<BlockMath math="= n! \cdot (n-1)" />
+</MathContainer>
+
+This shows that the algorithm complexity is factorial, which is very inefficient for large matrices.
+
+## Utilizing Zero Elements
+
+When a matrix has many zero elements, we can choose the expansion such that subdeterminants with zero elements do not need to be calculated. This can significantly reduce the computational burden.
+
+### Optimization Example
+
+Suppose we have a matrix:
+
+<BlockMath math="A = \begin{pmatrix} 0 & 3 & 3 \\ 2 & 2 & 0 \\ 1 & 0 & 1 \end{pmatrix}" />
+
+Expansion based on the first row:
+
+<MathContainer>
+<BlockMath math="\det A = 0 \cdot \det(\ldots) - 3 \cdot \det \begin{pmatrix} 2 & 0 \\ 1 & 1 \end{pmatrix}" />
+<BlockMath math="+ 3 \cdot \det \begin{pmatrix} 2 & 2 \\ 1 & 0 \end{pmatrix}" />
+</MathContainer>
+
+Since the first element is zero, the calculation becomes:
+
+<MathContainer>
+<BlockMath math="= -3 \cdot (2 \cdot 1 - 0 \cdot 1) + 3 \cdot (2 \cdot 0 - 2 \cdot 1)" />
+<BlockMath math="= -3 \cdot 2 + 3 \cdot (-2)" />
+<BlockMath math="= -6 - 6 = -12" />
+</MathContainer>
+
+By choosing rows or columns that have many zeros, we can save calculations.
+
+## Determinant of Transpose Matrix
+
+One important property related to the Laplace theorem is:
+
+<BlockMath math="\det A^T = \det A" />
+
+This means the determinant of a matrix equals the determinant of its transpose.
+
+### Consequences for Rows and Columns
+
+Due to this transpose property, all determinant properties that apply to rows of matrix <InlineMath math="A" /> also apply to columns of matrix <InlineMath math="A" />.
+
+For example:
+- If two rows are identical then the determinant is zero, likewise if two columns are identical
+- Swapping two rows changes the sign of the determinant, so does swapping two columns
+- Elementary row operations and elementary column operations have the same effect on the determinant
+
+## Larger Matrices
+
+For matrices of size <InlineMath math="n = 4" /> and beyond, the principle of Laplace expansion still applies. However, the computational complexity becomes very high, so in practice other more efficient methods such as Gaussian elimination are often used.
+
+The Laplace Expansion Theorem provides a solid theoretical foundation for understanding determinant structure, although in practical applications it may be replaced by more efficient algorithms.
