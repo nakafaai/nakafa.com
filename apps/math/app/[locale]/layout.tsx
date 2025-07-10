@@ -25,7 +25,9 @@ export async function generateMetadata({
   params: Props["params"];
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations("Finance.Metadata");
+  const t = await getTranslations("Math.Metadata");
+
+  const url = "https://math.nakafa.com";
 
   return {
     title: {
@@ -43,35 +45,29 @@ export async function generateMetadata({
     creator: "Nabil Akbarazzima Fatih",
     publisher: "PT. Nakafa Tekno Kreatif",
     referrer: "origin-when-cross-origin",
-    metadataBase: new URL("https://finance.nakafa.com"),
+    metadataBase: new URL(url),
     generator: "Next.js",
     alternates: {
-      canonical: "https://finance.nakafa.com",
+      canonical: url,
       languages: {
-        id: "https://finance.nakafa.com/id",
-        en: "https://finance.nakafa.com/en",
+        id: `${url}/id`,
+        en: `${url}/en`,
       },
     },
     icons: {
       icon: [
         { url: "/favicon.ico", sizes: "16x16", type: "image/x-icon" },
         { url: "/logo.svg", type: "image/svg+xml" },
-        new URL("/favicon.ico", "https://finance.nakafa.com"),
+        new URL("/favicon.ico", url),
       ],
-      shortcut: [
-        { url: "/favicon.ico" },
-        new URL("/favicon.ico", "https://finance.nakafa.com"),
-      ],
-      apple: [
-        { url: "/logo.svg" },
-        new URL("/logo.svg", "https://finance.nakafa.com"),
-      ],
+      shortcut: [{ url: "/favicon.ico" }, new URL("/favicon.ico", url)],
+      apple: [{ url: "/logo.svg" }, new URL("/logo.svg", url)],
       other: [
         { rel: "manifest", url: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", url: "/logo.svg" },
       ],
     },
-    manifest: "https://finance.nakafa.com/manifest.webmanifest",
+    manifest: `${url}/manifest.webmanifest`,
     robots: {
       index: true,
       follow: true,
@@ -109,7 +105,7 @@ export async function generateMetadata({
     openGraph: {
       title: t("title"),
       description: t("description"),
-      url: "https://finance.nakafa.com",
+      url,
       siteName: t("title"),
       locale,
       type: "website",

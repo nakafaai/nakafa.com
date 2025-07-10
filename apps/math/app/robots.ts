@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://finance.nakafa.com/sitemap.xml",
+    sitemap: "https://math.nakafa.com/sitemap.xml",
   };
 }

@@ -6,7 +6,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const locale = "en";
 
   const t = await getTranslations({
-    namespace: "Finance.Metadata",
+    namespace: "Math.Metadata",
     locale,
   });
 

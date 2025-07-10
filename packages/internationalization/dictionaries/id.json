@@ -171,10 +171,10 @@
     "description": "Fitur ini belum tersedia. Silakan periksa kembali nanti atau berkontribusi pada proyek.",
     "contribute": "Berkontribusi"
   },
-  "Finance": {
+  "Math": {
     "Metadata": {
-      "title": "Nakafa Finance",
-      "description": "Analisis perusahaan sederhana dalam beberapa klik."
+      "title": "Mathe by Nakafa",
+      "description": "Kalkulator bertenaga AI kamu."
     }
   }
 }
