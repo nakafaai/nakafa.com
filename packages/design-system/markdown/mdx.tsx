@@ -10,7 +10,11 @@ import { filterWhitespaceNodes } from "@repo/design-system/lib/utils";
 import { Anchor } from "@repo/design-system/markdown/anchor";
 import { Code } from "@repo/design-system/markdown/code";
 import { Heading } from "@repo/design-system/markdown/heading";
-import { BlockMath, InlineMath } from "@repo/design-system/markdown/math";
+import {
+  BlockMath,
+  InlineMath,
+  MathContainer,
+} from "@repo/design-system/markdown/math";
 import { Mermaid } from "@repo/design-system/markdown/mermaid";
 import { Paragraph } from "@repo/design-system/markdown/paragraph";
 import type {
@@ -72,6 +76,7 @@ export const components = {
   ),
   code: Code,
   Mermaid,
+  MathContainer,
   InlineMath,
   BlockMath,
   table: ({ children, ...props }: TableProps) => (
