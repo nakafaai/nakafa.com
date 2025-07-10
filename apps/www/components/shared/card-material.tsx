@@ -79,13 +79,13 @@ export function CardMaterial({ material }: Props) {
           <CardContent className="px-0">
             {material.items.map((item) => (
               <Link
-                className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-3 transition-colors last:rounded-b-xl last:pb-6 hover:bg-accent/20"
+                className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-3 transition-colors last:rounded-b-xl last:pb-6 hover:bg-accent hover:text-accent-foreground"
                 href={item.href}
                 key={item.href}
                 prefetch
                 title={item.title}
               >
-                <h3 title={item.title}>{item.title}</h3>
+                <h3>{item.title}</h3>
                 <ArrowDownIcon className="-rotate-90 size-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
               </Link>
             ))}

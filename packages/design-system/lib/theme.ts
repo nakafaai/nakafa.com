@@ -17,6 +17,7 @@ import {
   LeafIcon,
   MoonIcon,
   NotebookPenIcon,
+  PopsicleIcon,
   RabbitIcon,
   SparkleIcon,
   SunIcon,
@@ -91,6 +92,10 @@ export const themes = [
   {
     value: "pinky",
     icon: HeartIcon,
+  },
+  {
+    value: "popsicle",
+    icon: PopsicleIcon,
   },
   {
     value: "retro",

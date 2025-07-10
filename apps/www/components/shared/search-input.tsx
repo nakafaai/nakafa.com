@@ -35,7 +35,7 @@ export function SearchInput({
       <Input
         autoComplete="off"
         className={cn(
-          "h-12 border-border px-9 backdrop-blur-sm sm:w-full",
+          "h-12 border-border px-9 backdrop-blur-sm sm:w-full dark:border-input",
           className
         )}
         id={id}
