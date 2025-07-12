@@ -9,7 +9,7 @@ export const metadata = {
 
 Just like matrices with real entries, we can also form matrices whose entries are complex numbers. Imagine a rectangular table containing complex numbers arranged neatly in rows and columns.
 
-**Definition of Complex Matrix**: A rectangular scheme of complex numbers with <InlineMath math="m \in \mathbb{N}" /> rows and <InlineMath math="n \in \mathbb{N}" /> columns is called a complex <InlineMath math="m \times n" /> matrix:
+A rectangular scheme of complex numbers with <InlineMath math="m \in \mathbb{N}" /> rows and <InlineMath math="n \in \mathbb{N}" /> columns is called a complex <InlineMath math="m \times n" /> matrix:
 
 <BlockMath math="A = \begin{pmatrix} a_{11} & \cdots & a_{1n} \\ \vdots & & \vdots \\ a_{m1} & \cdots & a_{mn} \end{pmatrix} = (a_{ij})_{\substack{i=1,\ldots,m \\ j=1,\ldots,n}}" />
 
@@ -21,7 +21,7 @@ The main difference from real matrices is that each entry <InlineMath math="a_{i
 
 In the context of complex matrices, the concept of matrix transpose is extended to a more general concept called the **adjoint matrix**. This concept is the complex generalization of the transpose matrix <InlineMath math="A^T" />.
 
-**Definition of Adjoint Matrix**: Let <InlineMath math="A \in \mathbb{C}^{m \times n}" /> be a complex <InlineMath math="m \times n" /> matrix. The **adjoint matrix** (complex conjugate transpose matrix) <InlineMath math="A^H" /> of <InlineMath math="A" /> is the complex <InlineMath math="n \times m" /> matrix obtained by swapping the rows and columns of <InlineMath math="A" /> and taking the complex conjugate of each entry:
+Let <InlineMath math="A \in \mathbb{C}^{m \times n}" /> be a complex <InlineMath math="m \times n" /> matrix. The **adjoint matrix** (complex conjugate transpose matrix) <InlineMath math="A^H" /> of <InlineMath math="A" /> is the complex <InlineMath math="n \times m" /> matrix obtained by swapping the rows and columns of <InlineMath math="A" /> and taking the complex conjugate of each entry:
 
 <BlockMath math="A^H = \overline{A^T} = \overline{A}^T = \begin{pmatrix} \overline{a_{11}} & \cdots & \overline{a_{m1}} \\ \vdots & & \vdots \\ \overline{a_{1n}} & \cdots & \overline{a_{mn}} \end{pmatrix} \in \mathbb{C}^{n \times m}" />
 
@@ -59,7 +59,7 @@ This property shows that the adjoint of a matrix product is the product of the a
 
 For vectors in complex spaces, we need a way to measure the "length" or norm of that vector. The concept of Euclidean norm is extended for complex spaces using the adjoint matrix.
 
-**Definition of Euclidean Norm**: For <InlineMath math="v \in \mathbb{C}^n" />, we define:
+For <InlineMath math="v \in \mathbb{C}^n" />, we define:
 
 <BlockMath math="v^H v = \sum_{i=1}^n \overline{v_i} v_i = \sum_{i=1}^n |v_i|^2 \in \mathbb{R}_0^+" />
 

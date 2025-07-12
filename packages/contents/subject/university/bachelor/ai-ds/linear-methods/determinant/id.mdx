@@ -43,7 +43,7 @@ Determinan bersifat **antisimetris**, jika ada dua baris yang identik, determina
 
 <BlockMath math="\det \begin{pmatrix} \vdots \\ a \\ \vdots \\ a \\ \vdots \end{pmatrix} = 0" />
 
-Ini masuk akal karena jika dua baris sama, matriks tidak dapat memiliki rank penuh.
+Ini masuk akal karena jika dua baris sama, matriks tidak dapat memiliki peringkat penuh.
 
 ### Sifat Normalisasi
 
@@ -80,7 +80,7 @@ Determinan adalah kunci untuk memahami apakah matriks dapat dibalik. Untuk matri
 
 1. **Matriks A dapat dibalik**
 2. **Terdapat matriks invers** <InlineMath math="A^{-1}" /> yang memenuhi <InlineMath math="AA^{-1} = I" />
-3. **Rank matriks penuh**: <InlineMath math="\text{rank}(A) = n" />
+3. **Peringkat matriks penuh**: <InlineMath math="\text{rank}(A) = n" />
 4. **Kernel trivial**: <InlineMath math="\ker(A) = \{0\}" />
 5. **Kolom-kolom linear independen**
 6. **Baris-baris linear independen**
@@ -100,11 +100,11 @@ Jika matriks <InlineMath math="A" /> dapat dibalik, determinan inversnya adalah:
 
 <BlockMath math="\det(A^{-1}) = \frac{1}{\det A}" />
 
-Dua matriks <InlineMath math="A" /> dan <InlineMath math="B" /> disebut **similar** jika ada matriks invertible <InlineMath math="S" /> sehingga:
+Dua matriks <InlineMath math="A" /> dan <InlineMath math="B" /> disebut **serupa** jika ada matriks dapat diinversi <InlineMath math="S" /> sehingga:
 
 <BlockMath math="B = S^{-1}AS" />
 
-Matriks yang similar memiliki determinan yang sama. Buktinya sederhana:
+Matriks yang serupa memiliki determinan yang sama. Buktinya sederhana:
 
 <MathContainer>
 <BlockMath math="\det B = \det(S^{-1}AS)" />
