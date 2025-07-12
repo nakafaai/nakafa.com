@@ -1,0 +1,82 @@
+export const metadata = {
+    title: "Complex Matrix",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/12/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Definition of Matrix with Complex Entries
+
+Just like matrices with real entries, we can also form matrices whose entries are complex numbers. Imagine a rectangular table containing complex numbers arranged neatly in rows and columns.
+
+**Definition of Complex Matrix**: A rectangular scheme of complex numbers with <InlineMath math="m \in \mathbb{N}" /> rows and <InlineMath math="n \in \mathbb{N}" /> columns is called a complex <InlineMath math="m \times n" /> matrix:
+
+<BlockMath math="A = \begin{pmatrix} a_{11} & \cdots & a_{1n} \\ \vdots & & \vdots \\ a_{m1} & \cdots & a_{mn} \end{pmatrix} = (a_{ij})_{\substack{i=1,\ldots,m \\ j=1,\ldots,n}}" />
+
+with **coefficients** <InlineMath math="a_{ij} \in \mathbb{C}" /> for <InlineMath math="i = 1, \ldots, m" /> and <InlineMath math="j = 1, \ldots, n" />. The set of all complex <InlineMath math="m \times n" /> matrices is written as <InlineMath math="\mathbb{C}^{m \times n}" />.
+
+The main difference from real matrices is that each entry <InlineMath math="a_{ij}" /> can now be a complex number such as <InlineMath math="2 + 3i" /> or <InlineMath math="-1 - 4i" />.
+
+## Adjoint Matrix
+
+In the context of complex matrices, the concept of matrix transpose is extended to a more general concept called the **adjoint matrix**. This concept is the complex generalization of the transpose matrix <InlineMath math="A^T" />.
+
+**Definition of Adjoint Matrix**: Let <InlineMath math="A \in \mathbb{C}^{m \times n}" /> be a complex <InlineMath math="m \times n" /> matrix. The **adjoint matrix** (complex conjugate transpose matrix) <InlineMath math="A^H" /> of <InlineMath math="A" /> is the complex <InlineMath math="n \times m" /> matrix obtained by swapping the rows and columns of <InlineMath math="A" /> and taking the complex conjugate of each entry:
+
+<BlockMath math="A^H = \overline{A^T} = \overline{A}^T = \begin{pmatrix} \overline{a_{11}} & \cdots & \overline{a_{m1}} \\ \vdots & & \vdots \\ \overline{a_{1n}} & \cdots & \overline{a_{mn}} \end{pmatrix} \in \mathbb{C}^{n \times m}" />
+
+This process involves two steps: first transpose the matrix (swap rows and columns), then take the complex conjugate of each entry.
+
+## Properties of Adjoint Matrix
+
+The adjoint matrix has several important properties that are useful in calculations. Here are the fundamental properties that always hold:
+
+### Basic Properties
+
+1. **Relationship with real transpose**: For <InlineMath math="A \in \mathbb{R}^{m \times n} \subset \mathbb{C}^{m \times n}" />, we have <InlineMath math="A^H = A^T" />
+
+This makes sense because if the matrix only contains real entries, then the complex conjugate does not change its value.
+
+2. **Involution**: <InlineMath math="(A^H)^H = A" />
+
+If we take the adjoint of an adjoint, we return to the original matrix.
+
+### Linear Operation Properties
+
+3. **Linearity of addition**: <InlineMath math="(A + B)^H = A^H + B^H" />
+
+4. **Linearity of scalar multiplication**: <InlineMath math="(\lambda \cdot A)^H = \overline{\lambda} \cdot A^H" />
+
+Note that for scalar multiplication, we need to take the conjugate of the scalar <InlineMath math="\lambda" />.
+
+### Multiplication Properties
+
+5. **Anticommutative property of multiplication**: <InlineMath math="(A \cdot B)^H = B^H \cdot A^H" />
+
+This property shows that the adjoint of a matrix product is the product of the adjoints of those matrices in reverse order.
+
+## Euclidean Norm on Complex Spaces
+
+For vectors in complex spaces, we need a way to measure the "length" or norm of that vector. The concept of Euclidean norm is extended for complex spaces using the adjoint matrix.
+
+**Definition of Euclidean Norm**: For <InlineMath math="v \in \mathbb{C}^n" />, we define:
+
+<BlockMath math="v^H v = \sum_{i=1}^n \overline{v_i} v_i = \sum_{i=1}^n |v_i|^2 \in \mathbb{R}_0^+" />
+
+The **Euclidean norm** is calculated as:
+
+<BlockMath math="\|v\|_2 = \sqrt{v^H v}" />
+
+This defines a norm on <InlineMath math="\mathbb{C}^n" />, namely the **Euclidean norm** <InlineMath math="\|\cdot\|_2 : \mathbb{C}^n \to \mathbb{R} : v \mapsto \|v\|_2" />.
+
+### Properties of Euclidean Norm
+
+The Euclidean norm satisfies the following properties:
+
+**Homogeneity**: <InlineMath math="\|\alpha v\|_2 = |\alpha| \|v\|_2" />
+
+**Positive definite**: <InlineMath math="\|v\|_2 \geq 0" /> and <InlineMath math="\|v\|_2 = 0 \Leftrightarrow v = 0" />
+
+**Triangle inequality**: <InlineMath math="\|v + w\|_2 \leq \|v\|_2 + \|w\|_2" />
+
+These properties guarantee that <InlineMath math="\|\cdot\|_2" /> is truly a norm in the formal mathematical sense.
