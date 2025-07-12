@@ -1,0 +1,80 @@
+export const metadata = {
+    title: "Complex Vector Space",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/12/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Introduction to Complex Numbers
+
+Before understanding complex vector spaces, we need to understand complex numbers first. Imagine we have an imaginary unit <InlineMath math="i" /> with the special property <InlineMath math="i^2 = -1" />. Complex numbers are numbers that consist of a real part and an imaginary part.
+
+The set of complex numbers is defined as <InlineMath math="\mathbb{C} := \{z = x + iy : x, y \in \mathbb{R}\}" />. In every complex number <InlineMath math="z = x + iy" />, the part <InlineMath math="x = \text{Re}(z)" /> is called the **real part** and the part <InlineMath math="y = \text{Im}(z)" /> is called the **imaginary part**.
+
+Using the property <InlineMath math="i^2 = -1" />, we can perform arithmetic operations on complex numbers such as addition, subtraction, multiplication, and division. The set <InlineMath math="(\mathbb{C}, +, \cdot)" /> forms a **field**.
+
+### Conjugate and Modulus
+
+For a complex number <InlineMath math="z = x + iy" />, the **complex conjugate** is defined as <InlineMath math="\overline{z} = x - iy" />. This conjugate is useful in various calculations.
+
+The **modulus** or absolute value of a complex number is calculated with the formula:
+
+<BlockMath math="|z| = \sqrt{z \cdot \overline{z}} = \sqrt{x^2 + y^2}" />
+
+This modulus gives the "distance" of the complex number from the origin in the complex plane.
+
+## Fundamental Theorem of Algebra
+
+The fundamental theorem of algebra is an important result that distinguishes complex polynomials from real polynomials. This theorem states that every non-constant polynomial with complex coefficients must have a complex root.
+
+**Fundamental Theorem of Algebra**: Every non-constant polynomial
+
+<BlockMath math="p(z) = a_n z^n + a_{n-1} z^{n-1} + \cdots + a_1 z + a_0, \quad z \in \mathbb{C}" />
+
+with degree <InlineMath math="n \geq 1" /> and complex coefficients <InlineMath math="a_k \in \mathbb{C}" /> for <InlineMath math="k = 0, 1, \ldots, n" /> with <InlineMath math="a_n \neq 0" />, has (at least) one complex root. This means there exists a number <InlineMath math="z_* \in \mathbb{C}" /> such that <InlineMath math="p(z_*) = 0" />.
+
+This theorem is very important because it guarantees that in the field of complex numbers, every polynomial equation always has a solution.
+
+## Definition and Axioms of Complex Vector Space
+
+After understanding complex numbers, we can extend the concept of vector spaces from real scalars to complex scalars. Vector spaces can not only be defined with scalars from <InlineMath math="\mathbb{R}" />, but also from other fields such as <InlineMath math="\mathbb{C}" />.
+
+**Definition of Complex Vector Space**: A set <InlineMath math="V" /> with an addition operation
+
+<BlockMath math="+ : V \times V \to V : (x, y) \mapsto x + y" />
+
+and a scalar multiplication operation
+
+<BlockMath math="\cdot : \mathbb{C} \times V \to V : (\lambda, x) \mapsto \lambda \cdot x" />
+
+is called a **complex vector space** if it satisfies the following axioms:
+
+### Vector Addition Axioms
+
+1. **Associative**: <InlineMath math="(x + y) + z = x + (y + z)" /> for all <InlineMath math="x, y, z \in V" />
+
+2. **Commutative**: <InlineMath math="x + y = y + x" /> for all <InlineMath math="x, y \in V" />
+
+3. **Identity Element**: There exists an element <InlineMath math="0 \in V" /> such that <InlineMath math="x + 0 = x = 0 + x" /> for all <InlineMath math="x \in V" />
+
+4. **Inverse Element**: For every <InlineMath math="x \in V" /> there exists an element <InlineMath math="-x \in V" /> such that <InlineMath math="x + (-x) = 0 = (-x) + x" />
+
+### Scalar Multiplication Axioms
+
+5. **Associative multiplication**: <InlineMath math="(\lambda \mu) \cdot x = \lambda \cdot (\mu \cdot x)" /> for all <InlineMath math="\lambda, \mu \in \mathbb{C}, x \in V" />
+
+6. **Unit element**: <InlineMath math="1 \cdot x = x" /> for all <InlineMath math="x \in V" />
+
+### Distributive Axioms
+
+7. **Distributive over vector addition**: <InlineMath math="\lambda \cdot (x + y) = \lambda \cdot x + \lambda \cdot y" /> for all <InlineMath math="\lambda \in \mathbb{C}, x, y \in V" />
+
+8. **Distributive over scalar addition**: <InlineMath math="(\lambda + \mu) \cdot x = \lambda \cdot x + \mu \cdot x" /> for all <InlineMath math="\lambda, \mu \in \mathbb{C}, x \in V" />
+
+Elements <InlineMath math="x \in V" /> are called **vectors**, while elements <InlineMath math="\lambda \in \mathbb{C}" /> are called **scalars**.
+
+## Differences from Real Vector Spaces
+
+It is important to understand that in complex vector spaces, we do not use special properties of real numbers such as ordering or real analysis. All results that apply to vector spaces remain valid for complex vector spaces, especially those related to matrices, systems of linear equations, and determinants.
+
+The main difference lies in the **scalar field** used. While real vector spaces use <InlineMath math="\mathbb{R}" /> as the scalar field, complex vector spaces use <InlineMath math="\mathbb{C}" /> which provides more flexibility in calculations.

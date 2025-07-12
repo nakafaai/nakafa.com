@@ -1,0 +1,80 @@
+export const metadata = {
+    title: "Ruang Vektor Kompleks",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/12/2025",
+    subject: "Metode Linear AI",
+};
+
+## Pengenalan Bilangan Kompleks
+
+Sebelum memahami ruang vektor kompleks, kita perlu memahami bilangan kompleks terlebih dahulu. Bayangkan kita memiliki unit imajiner <InlineMath math="i" /> dengan sifat khusus <InlineMath math="i^2 = -1" />. Bilangan kompleks adalah bilangan yang terdiri dari bagian real dan bagian imajiner.
+
+Himpunan bilangan kompleks didefinisikan sebagai <InlineMath math="\mathbb{C} := \{z = x + iy : x, y \in \mathbb{R}\}" />. Dalam setiap bilangan kompleks <InlineMath math="z = x + iy" />, bagian <InlineMath math="x = \text{Re}(z)" /> disebut **bagian real** dan bagian <InlineMath math="y = \text{Im}(z)" /> disebut **bagian imajiner**.
+
+Dengan menggunakan sifat <InlineMath math="i^2 = -1" />, kita dapat melakukan operasi aritmetika pada bilangan kompleks seperti penjumlahan, pengurangan, perkalian, dan pembagian. Himpunan <InlineMath math="(\mathbb{C}, +, \cdot)" /> membentuk sebuah **lapangan** (field).
+
+### Konjugat dan Modulus
+
+Untuk bilangan kompleks <InlineMath math="z = x + iy" />, **konjugat kompleks** didefinisikan sebagai <InlineMath math="\overline{z} = x - iy" />. Konjugat ini berguna dalam berbagai perhitungan.
+
+**Modulus** atau nilai mutlak dari bilangan kompleks dihitung dengan rumus:
+
+<BlockMath math="|z| = \sqrt{z \cdot \overline{z}} = \sqrt{x^2 + y^2}" />
+
+Modulus ini memberikan "jarak" bilangan kompleks dari titik asal dalam bidang kompleks.
+
+## Teorema Fundamental Aljabar
+
+Teorema fundamental aljabar merupakan hasil penting yang membedakan polinomial kompleks dari polinomial real. Teorema ini menyatakan bahwa setiap polinomial tidak konstan dengan koefisien kompleks pasti memiliki akar kompleks.
+
+**Teorema Fundamental Aljabar**: Setiap polinomial tidak konstan
+
+<BlockMath math="p(z) = a_n z^n + a_{n-1} z^{n-1} + \cdots + a_1 z + a_0, \quad z \in \mathbb{C}" />
+
+dengan derajat <InlineMath math="n \geq 1" /> dan koefisien kompleks <InlineMath math="a_k \in \mathbb{C}" /> untuk <InlineMath math="k = 0, 1, \ldots, n" /> dengan <InlineMath math="a_n \neq 0" />, memiliki (setidaknya) satu akar kompleks. Artinya, terdapat bilangan <InlineMath math="z_* \in \mathbb{C}" /> sehingga <InlineMath math="p(z_*) = 0" />.
+
+Teorema ini sangat penting karena menjamin bahwa dalam lapangan bilangan kompleks, setiap persamaan polinomial selalu memiliki solusi.
+
+## Definisi dan Aksioma Ruang Vektor Kompleks
+
+Setelah memahami bilangan kompleks, kita dapat memperluas konsep ruang vektor dari skalar real ke skalar kompleks. Ruang vektor tidak hanya dapat didefinisikan dengan skalar dari <InlineMath math="\mathbb{R}" />, tetapi juga dari lapangan lain seperti <InlineMath math="\mathbb{C}" />.
+
+**Definisi Ruang Vektor Kompleks**: Suatu himpunan <InlineMath math="V" /> dengan operasi penjumlahan
+
+<BlockMath math="+ : V \times V \to V : (x, y) \mapsto x + y" />
+
+dan operasi perkalian skalar
+
+<BlockMath math="\cdot : \mathbb{C} \times V \to V : (\lambda, x) \mapsto \lambda \cdot x" />
+
+disebut **ruang vektor kompleks** jika memenuhi aksioma-aksioma berikut:
+
+### Aksioma Penjumlahan Vektor
+
+1. **Asosiatif**: <InlineMath math="(x + y) + z = x + (y + z)" /> untuk semua <InlineMath math="x, y, z \in V" />
+
+2. **Komutatif**: <InlineMath math="x + y = y + x" /> untuk semua <InlineMath math="x, y \in V" />
+
+3. **Elemen Netral**: Terdapat elemen <InlineMath math="0 \in V" /> sehingga <InlineMath math="x + 0 = x = 0 + x" /> untuk semua <InlineMath math="x \in V" />
+
+4. **Elemen Invers**: Untuk setiap <InlineMath math="x \in V" /> terdapat elemen <InlineMath math="-x \in V" /> sehingga <InlineMath math="x + (-x) = 0 = (-x) + x" />
+
+### Aksioma Perkalian Skalar
+
+5. **Asosiatif perkalian**: <InlineMath math="(\lambda \mu) \cdot x = \lambda \cdot (\mu \cdot x)" /> untuk semua <InlineMath math="\lambda, \mu \in \mathbb{C}, x \in V" />
+
+6. **Elemen satuan**: <InlineMath math="1 \cdot x = x" /> untuk semua <InlineMath math="x \in V" />
+
+### Aksioma Distributif
+
+7. **Distributif terhadap penjumlahan vektor**: <InlineMath math="\lambda \cdot (x + y) = \lambda \cdot x + \lambda \cdot y" /> untuk semua <InlineMath math="\lambda \in \mathbb{C}, x, y \in V" />
+
+8. **Distributif terhadap penjumlahan skalar**: <InlineMath math="(\lambda + \mu) \cdot x = \lambda \cdot x + \mu \cdot x" /> untuk semua <InlineMath math="\lambda, \mu \in \mathbb{C}, x \in V" />
+
+Elemen-elemen <InlineMath math="x \in V" /> disebut **vektor**, sedangkan elemen-elemen <InlineMath math="\lambda \in \mathbb{C}" /> disebut **skalar**.
+
+## Perbedaan dengan Ruang Vektor Real
+
+Penting untuk memahami bahwa dalam ruang vektor kompleks, kita tidak menggunakan sifat-sifat khusus bilangan real seperti urutan atau analisis real. Semua hasil yang berlaku untuk ruang vektor tetap berlaku untuk ruang vektor kompleks, terutama yang berkaitan dengan matriks, sistem persamaan linear, dan determinan.
+
+Perbedaan utama terletak pada **lapangan skalar** yang digunakan. Sementara ruang vektor real menggunakan <InlineMath math="\mathbb{R}" /> sebagai lapangan skalar, ruang vektor kompleks menggunakan <InlineMath math="\mathbb{C}" /> yang memberikan fleksibilitas lebih dalam perhitungan.
