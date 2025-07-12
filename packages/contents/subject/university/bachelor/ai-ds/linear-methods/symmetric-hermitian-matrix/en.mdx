@@ -1,0 +1,145 @@
+export const metadata = {
+    title: "Symmetric and Hermitian Matrices",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/12/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Definitions of Symmetric and Hermitian
+
+In linear algebra, we recognize two special types of matrices that have very interesting properties. Imagine a mirror that perfectly reflects objects. Symmetric and Hermitian matrices have a similar mathematical "mirror" property.
+
+A real square matrix <InlineMath math="A \in \mathbb{R}^{n \times n}" /> is called **symmetric** if it equals its transpose:
+
+<BlockMath math="A^T = A" />
+
+Whereas a complex square matrix <InlineMath math="A \in \mathbb{C}^{n \times n}" /> is called **Hermitian** if it equals its adjoint:
+
+<BlockMath math="A^H = A" />
+
+Let's look at an example to understand this concept more clearly:
+
+<BlockMath math="A = \begin{pmatrix} 1 & 2 & 3 \\ 2 & 4 & 5 \\ 3 & 5 & 6 \end{pmatrix}" />
+
+Notice that the element at position <InlineMath math="(i,j)" /> is the same as the element at position <InlineMath math="(j,i)" />. For example <InlineMath math="a_{12} = a_{21} = 2" /> and <InlineMath math="a_{13} = a_{31} = 3" />.
+
+## Relationship Between Symmetric and Hermitian
+
+Every real symmetric matrix is actually also a complex Hermitian matrix. Why is that? Because when we consider a real matrix as a complex matrix, the complex conjugate of a real number is the number itself.
+
+> Real symmetric matrices are a special case of complex Hermitian matrices.
+
+This means all properties that apply to Hermitian matrices also apply to symmetric matrices. However, symmetric matrices have the additional advantage that all their elements are real.
+
+## Diagonal of Hermitian Matrices
+
+One interesting property of Hermitian matrices is that all their diagonal elements are always real numbers. Let's see why this happens.
+
+For a Hermitian matrix <InlineMath math="A \in \mathbb{C}^{n \times n}" />, we have <InlineMath math="A^H = A" />. This means for every diagonal element:
+
+<BlockMath math="a_{ii} = \overline{a_{ii}}" />
+
+Because <InlineMath math="a_{ii} = \overline{a_{ii}}" />, then <InlineMath math="a_{ii} \in \mathbb{R}" /> for all <InlineMath math="i" />.
+
+So, even though Hermitian matrices can have complex elements off the diagonal, their diagonal elements are definitely real. This is a direct consequence of the Hermitian definition.
+
+## Quadratic Forms
+
+Symmetric and Hermitian matrices have a special feature in terms of quadratic forms. Let's see how they work with vectors.
+
+If we have a symmetric matrix <InlineMath math="A \in \mathbb{R}^{n \times n}" /> and a vector <InlineMath math="x \in \mathbb{R}^n" />, then we can form a quadratic function:
+
+<MathContainer>
+<BlockMath math="q : \mathbb{R}^n \to \mathbb{R}" />
+<BlockMath math="q(x) = x^T A x" />
+</MathContainer>
+
+For a Hermitian matrix <InlineMath math="A \in \mathbb{C}^{n \times n}" />, the result <InlineMath math="x^H A x" /> always produces a real number, even though <InlineMath math="A" /> and <InlineMath math="x" /> are complex.
+
+Let's prove why this happens:
+
+<MathContainer>
+<BlockMath math="x^H A x = x^H A x" />
+<BlockMath math="= (x^H A x)^H" />
+<BlockMath math="= x^H A^H (x^H)^H" />
+<BlockMath math="= x^H A^H x" />
+<BlockMath math="= x^H A x" />
+</MathContainer>
+
+Because <InlineMath math="x^H A x = (x^H A x)^H" />, then <InlineMath math="x^H A x" /> is a real number.
+
+So we get the quadratic form for the complex case:
+
+<MathContainer>
+<BlockMath math="q : \mathbb{C}^n \to \mathbb{R}" />
+<BlockMath math="q(x) = x^H A x" />
+</MathContainer>
+
+## Basic Vector Properties
+
+Before discussing eigenvalues, let's understand the basic properties of vectors that we will use. For a vector <InlineMath math="x \in \mathbb{R}^n" /> or <InlineMath math="x \in \mathbb{C}^n" />, we have:
+
+<MathContainer>
+<BlockMath math="x^T x \geq 0 \text{ and } x^H x \geq 0" />
+<BlockMath math="x^T x = 0 \Leftrightarrow x = 0" />
+<BlockMath math="x^H x = 0 \Leftrightarrow x = 0" />
+</MathContainer>
+
+This is because:
+
+<MathContainer>
+<BlockMath math="x^T x = \sum_{k=1}^n x_k^2" />
+<BlockMath math="x^H x = \sum_{k=1}^n \overline{x_k} x_k = \sum_{k=1}^n |x_k|^2" />
+</MathContainer>
+
+Both forms are always non-negative and only equal to zero if all vector components are zero.
+
+## Eigenvalues Are Always Real
+
+This is one of the most amazing properties of symmetric and Hermitian matrices. All eigenvalues of symmetric or Hermitian matrices are always real numbers.
+
+Let's look at the proof. Suppose <InlineMath math="A \in \mathbb{C}^{n \times n}" /> is a Hermitian matrix with <InlineMath math="A^H = A" />. If <InlineMath math="A \cdot v = \lambda \cdot v" /> with <InlineMath math="v \neq 0" />, then:
+
+<MathContainer>
+<BlockMath math="\lambda \cdot v^H v = v^H (\lambda \cdot v)" />
+<BlockMath math="= v^H (A \cdot v)" />
+<BlockMath math="= v^H A v" />
+<BlockMath math="= v^H A^H v" />
+<BlockMath math="= (A \cdot v)^H v" />
+<BlockMath math="= (\lambda \cdot v)^H v" />
+<BlockMath math="= \overline{\lambda} \cdot v^H v" />
+</MathContainer>
+
+Because <InlineMath math="v^H v \neq 0" />, we can conclude that <InlineMath math="\lambda = \overline{\lambda}" />, so <InlineMath math="\lambda \in \mathbb{R}" />.
+
+For real symmetric matrices, since they are also Hermitian matrices, their eigenvalues are also always real.
+
+## Orthogonality of Eigenvectors
+
+Eigenvectors corresponding to different eigenvalues in symmetric or Hermitian matrices are always orthogonal to each other. This is a very useful property in various applications.
+
+Let's prove this property. Suppose <InlineMath math="A \in \mathbb{C}^{n \times n}" /> is a Hermitian matrix with:
+
+<MathContainer>
+<BlockMath math="A v = \lambda v \text{ with } v \neq 0" />
+<BlockMath math="A w = \mu w \text{ with } w \neq 0" />
+<BlockMath math="\lambda \neq \mu" />
+</MathContainer>
+
+We know that <InlineMath math="\overline{\mu} = \mu" /> because eigenvalues are real. Now:
+
+<MathContainer>
+<BlockMath math="\mu (w^H v) = \mu (w^H v)" />
+<BlockMath math="= (\mu w)^H v" />
+<BlockMath math="= (A w)^H v" />
+<BlockMath math="= w^H A^H v" />
+<BlockMath math="= w^H A v" />
+<BlockMath math="= w^H (\lambda v)" />
+<BlockMath math="= \lambda (w^H v)" />
+</MathContainer>
+
+So <InlineMath math="(\mu - \lambda)(w^H v) = 0" />. Because <InlineMath math="\lambda \neq \mu" />, then <InlineMath math="w^H v = 0" />, which means the eigenvectors are orthogonal.
+
+For real symmetric matrices, we have <InlineMath math="w^T v = 0" />.
+
+This orthogonality property allows us to diagonalize symmetric and Hermitian matrices using orthogonal or unitary matrices.

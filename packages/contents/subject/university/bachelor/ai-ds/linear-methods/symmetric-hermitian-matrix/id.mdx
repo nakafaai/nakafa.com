@@ -1,0 +1,145 @@
+export const metadata = {
+    title: "Matriks Simetris dan Hermitian",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/12/2025",
+    subject: "Metode Linear AI",
+};
+
+## Definisi Simetris dan Hermitian
+
+Dalam aljabar linear, kita mengenal dua jenis matriks khusus yang memiliki sifat sangat menarik. Bayangkan sebuah cermin yang memantulkan objek dengan sempurna. Matriks simetris dan Hermitian memiliki sifat "cermin" matematis yang serupa.
+
+Matriks persegi real <InlineMath math="A \in \mathbb{R}^{n \times n}" /> disebut **simetris** jika sama dengan transposnya:
+
+<BlockMath math="A^T = A" />
+
+Sedangkan matriks persegi kompleks <InlineMath math="A \in \mathbb{C}^{n \times n}" /> disebut **Hermitian** jika sama dengan adjoinnya:
+
+<BlockMath math="A^H = A" />
+
+Mari kita lihat contoh untuk memahami konsep ini lebih jelas:
+
+<BlockMath math="A = \begin{pmatrix} 1 & 2 & 3 \\ 2 & 4 & 5 \\ 3 & 5 & 6 \end{pmatrix}" />
+
+Perhatikan bahwa elemen di posisi <InlineMath math="(i,j)" /> sama dengan elemen di posisi <InlineMath math="(j,i)" />. Misalnya <InlineMath math="a_{12} = a_{21} = 2" /> dan <InlineMath math="a_{13} = a_{31} = 3" />.
+
+## Hubungan Simetris dan Hermitian
+
+Setiap matriks simetris real sebenarnya juga merupakan matriks Hermitian kompleks. Mengapa demikian? Karena ketika kita menganggap matriks real sebagai matriks kompleks, konjugat kompleks dari bilangan real adalah bilangan itu sendiri.
+
+> Matriks simetris real adalah kasus khusus dari matriks Hermitian kompleks.
+
+Ini berarti semua sifat yang berlaku untuk matriks Hermitian juga berlaku untuk matriks simetris. Namun, matriks simetris memiliki keuntungan tambahan karena semua elemennya real.
+
+## Diagonal Matriks Hermitian
+
+Salah satu sifat menarik dari matriks Hermitian adalah bahwa semua elemen diagonalnya selalu berupa bilangan real. Mari kita lihat mengapa hal ini terjadi.
+
+Untuk matriks Hermitian <InlineMath math="A \in \mathbb{C}^{n \times n}" />, kita punya <InlineMath math="A^H = A" />. Ini berarti untuk setiap elemen diagonal:
+
+<BlockMath math="a_{ii} = \overline{a_{ii}}" />
+
+Karena <InlineMath math="a_{ii} = \overline{a_{ii}}" />, maka <InlineMath math="a_{ii} \in \mathbb{R}" /> untuk semua <InlineMath math="i" />.
+
+Jadi, meskipun matriks Hermitian bisa memiliki elemen kompleks di luar diagonal, elemen diagonalnya pasti real. Ini adalah konsekuensi langsung dari definisi Hermitian.
+
+## Bentuk Kuadrat
+
+Matriks simetris dan Hermitian memiliki keistimewaan dalam hal bentuk kuadrat. Mari kita lihat bagaimana mereka bekerja dengan vektor.
+
+Jika kita memiliki matriks simetris <InlineMath math="A \in \mathbb{R}^{n \times n}" /> dan vektor <InlineMath math="x \in \mathbb{R}^n" />, maka kita dapat membentuk fungsi kuadrat:
+
+<MathContainer>
+<BlockMath math="q : \mathbb{R}^n \to \mathbb{R}" />
+<BlockMath math="q(x) = x^T A x" />
+</MathContainer>
+
+Untuk matriks Hermitian <InlineMath math="A \in \mathbb{C}^{n \times n}" />, hasil <InlineMath math="x^H A x" /> selalu menghasilkan bilangan real, meskipun <InlineMath math="A" /> dan <InlineMath math="x" /> kompleks. 
+
+Mari kita buktikan mengapa hal ini terjadi:
+
+<MathContainer>
+<BlockMath math="x^H A x = x^H A x" />
+<BlockMath math="= (x^H A x)^H" />
+<BlockMath math="= x^H A^H (x^H)^H" />
+<BlockMath math="= x^H A^H x" />
+<BlockMath math="= x^H A x" />
+</MathContainer>
+
+Karena <InlineMath math="x^H A x = (x^H A x)^H" />, maka <InlineMath math="x^H A x" /> adalah bilangan real.
+
+Jadi kita mendapatkan bentuk kuadrat untuk kasus kompleks:
+
+<MathContainer>
+<BlockMath math="q : \mathbb{C}^n \to \mathbb{R}" />
+<BlockMath math="q(x) = x^H A x" />
+</MathContainer>
+
+## Sifat Dasar Vektor
+
+Sebelum membahas nilai eigen, mari kita pahami sifat dasar vektor yang akan kita gunakan. Untuk vektor <InlineMath math="x \in \mathbb{R}^n" /> atau <InlineMath math="x \in \mathbb{C}^n" />, kita memiliki:
+
+<MathContainer>
+<BlockMath math="x^T x \geq 0 \text{ dan } x^H x \geq 0" />
+<BlockMath math="x^T x = 0 \Leftrightarrow x = 0" />
+<BlockMath math="x^H x = 0 \Leftrightarrow x = 0" />
+</MathContainer>
+
+Hal ini karena:
+
+<MathContainer>
+<BlockMath math="x^T x = \sum_{k=1}^n x_k^2" />
+<BlockMath math="x^H x = \sum_{k=1}^n \overline{x_k} x_k = \sum_{k=1}^n |x_k|^2" />
+</MathContainer>
+
+Kedua bentuk ini selalu non-negatif dan hanya bernilai nol jika semua komponen vektor adalah nol.
+
+## Nilai Eigen Selalu Real
+
+Inilah salah satu sifat paling menakjubkan dari matriks simetris dan Hermitian. Semua nilai eigen dari matriks simetris atau Hermitian selalu berupa bilangan real.
+
+Mari kita lihat pembuktiannya. Misalkan <InlineMath math="A \in \mathbb{C}^{n \times n}" /> adalah matriks Hermitian dengan <InlineMath math="A^H = A" />. Jika <InlineMath math="A \cdot v = \lambda \cdot v" /> dengan <InlineMath math="v \neq 0" />, maka:
+
+<MathContainer>
+<BlockMath math="\lambda \cdot v^H v = v^H (\lambda \cdot v)" />
+<BlockMath math="= v^H (A \cdot v)" />
+<BlockMath math="= v^H A v" />
+<BlockMath math="= v^H A^H v" />
+<BlockMath math="= (A \cdot v)^H v" />
+<BlockMath math="= (\lambda \cdot v)^H v" />
+<BlockMath math="= \overline{\lambda} \cdot v^H v" />
+</MathContainer>
+
+Karena <InlineMath math="v^H v \neq 0" />, kita dapat menyimpulkan bahwa <InlineMath math="\lambda = \overline{\lambda}" />, sehingga <InlineMath math="\lambda \in \mathbb{R}" />.
+
+Untuk matriks simetris real, karena ia juga merupakan matriks Hermitian, nilai eigennya juga selalu real.
+
+## Ortogonalitas Vektor Eigen
+
+Vektor eigen yang bersesuaian dengan nilai eigen yang berbeda pada matriks simetris atau Hermitian selalu ortogonal satu sama lain. Ini adalah sifat yang sangat berguna dalam berbagai aplikasi.
+
+Mari kita buktikan sifat ini. Misalkan <InlineMath math="A \in \mathbb{C}^{n \times n}" /> adalah matriks Hermitian dengan:
+
+<MathContainer>
+<BlockMath math="A v = \lambda v \text{ dengan } v \neq 0" />
+<BlockMath math="A w = \mu w \text{ dengan } w \neq 0" />
+<BlockMath math="\lambda \neq \mu" />
+</MathContainer>
+
+Kita tahu bahwa <InlineMath math="\overline{\mu} = \mu" /> karena nilai eigen real. Sekarang:
+
+<MathContainer>
+<BlockMath math="\mu (w^H v) = \mu (w^H v)" />
+<BlockMath math="= (\mu w)^H v" />
+<BlockMath math="= (A w)^H v" />
+<BlockMath math="= w^H A^H v" />
+<BlockMath math="= w^H A v" />
+<BlockMath math="= w^H (\lambda v)" />
+<BlockMath math="= \lambda (w^H v)" />
+</MathContainer>
+
+Jadi <InlineMath math="(\mu - \lambda)(w^H v) = 0" />. Karena <InlineMath math="\lambda \neq \mu" />, maka <InlineMath math="w^H v = 0" />, yang berarti vektor eigen ortogonal.
+
+Untuk matriks simetris real, kita punya <InlineMath math="w^T v = 0" />.
+
+Sifat ortogonalitas ini memungkinkan kita untuk mendiagonalkan matriks simetris dan Hermitian menggunakan matriks ortogonal atau uniter.
