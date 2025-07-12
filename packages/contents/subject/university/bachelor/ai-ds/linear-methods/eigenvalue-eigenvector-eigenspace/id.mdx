@@ -1,0 +1,116 @@
+export const metadata = {
+    title: "Nilai Eigen, Vektor Eigen, dan Ruang Eigen",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/12/2025",
+    subject: "Metode Linear AI",
+};
+
+## Definisi Konsep Fundamental
+
+Dalam aljabar linear, kita sering tertarik dengan vektor-vektor khusus yang memiliki sifat istimewa ketika dikalikan dengan matriks. Bayangkan vektor yang hanya "diregangkan" atau "dipendekkan" oleh matriks, tetapi arahnya tidak berubah.
+
+**Definisi Vektor Eigen**: Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" /> adalah matriks persegi. Sebuah **vektor eigen** <InlineMath math="v \in \mathbb{K}^n" /> untuk **nilai eigen** <InlineMath math="\lambda \in \mathbb{K}" /> adalah vektor tak nol <InlineMath math="v \neq 0" /> yang memenuhi:
+
+<BlockMath math="A \cdot v = \lambda \cdot v" />
+
+Persamaan ini menunjukkan bahwa ketika matriks <InlineMath math="A" /> mengoperasikan vektor <InlineMath math="v" />, hasilnya adalah kelipatan skalar dari vektor yang sama.
+
+> Menurut definisi, nilai eigen dapat sama dengan 0, tetapi vektor eigen selalu tak nol.
+
+## Sifat Dasar Vektor Eigen
+
+Vektor eigen memiliki sifat-sifat fundamental yang sangat berguna dalam berbagai aplikasi matematik.
+
+**Perkalian Skalar**: Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dan <InlineMath math="v \in \mathbb{K}^n" /> dengan <InlineMath math="v \neq 0" /> adalah vektor eigen dari <InlineMath math="A" /> untuk nilai eigen <InlineMath math="\lambda \in \mathbb{K}" />. Maka semua kelipatan <InlineMath math="t \cdot v" /> dengan <InlineMath math="t \neq 0" /> juga merupakan vektor eigen dari <InlineMath math="A" /> untuk nilai eigen yang sama <InlineMath math="\lambda" />.
+
+**Bukti**: <InlineMath math="A \cdot (t \cdot v) = t \cdot (A \cdot v) = t \cdot (\lambda \cdot v) = \lambda \cdot (t \cdot v)" />
+
+Sifat ini menunjukkan bahwa jika kita menemukan satu vektor eigen, maka semua kelipatan tak nolnya juga adalah vektor eigen untuk nilai eigen yang sama.
+
+## Contoh Perhitungan Vektor Eigen
+
+Mari kita lihat beberapa contoh konkret untuk memahami konsep ini lebih baik:
+
+### Matriks Diagonal
+
+Untuk matriks <InlineMath math="A = \begin{pmatrix} 1 & 0 \\ 0 & 2 \end{pmatrix}" />:
+
+<InlineMath math="v_1 = \begin{pmatrix} 1 \\ 0 \end{pmatrix}" /> adalah vektor eigen untuk nilai eigen <InlineMath math="\lambda_1 = 1" />, karena <InlineMath math="A \cdot v_1 = \begin{pmatrix} 1 \\ 0 \end{pmatrix} = 1 \cdot v_1" />
+
+<InlineMath math="v_2 = \begin{pmatrix} 0 \\ 1 \end{pmatrix}" /> adalah vektor eigen untuk nilai eigen <InlineMath math="\lambda_2 = 2" />, karena <InlineMath math="A \cdot v_2 = \begin{pmatrix} 0 \\ 2 \end{pmatrix} = 2 \cdot v_2" />
+
+### Matriks Simetris
+
+Untuk matriks <InlineMath math="A = \begin{pmatrix} 3 & 1 \\ 1 & 3 \end{pmatrix}" />:
+
+<InlineMath math="v_1 = \begin{pmatrix} -1 \\ 1 \end{pmatrix}" /> adalah vektor eigen untuk nilai eigen <InlineMath math="\lambda_1 = 2" />, karena <InlineMath math="A \cdot v_1 = \begin{pmatrix} -2 \\ 2 \end{pmatrix} = 2 \cdot v_1" />
+
+<InlineMath math="v_2 = \begin{pmatrix} 1 \\ 1 \end{pmatrix}" /> adalah vektor eigen untuk nilai eigen <InlineMath math="\lambda_2 = 4" />, karena <InlineMath math="A \cdot v_2 = \begin{pmatrix} 4 \\ 4 \end{pmatrix} = 4 \cdot v_2" />
+
+## Kebebasan Linear Vektor Eigen
+
+Salah satu hasil penting dalam teori vektor eigen adalah bahwa vektor eigen yang bersesuaian dengan nilai eigen yang berbeda selalu bebas linear.
+
+**Teorema Kebebasan Linear**: Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dan <InlineMath math="\lambda_1, \ldots, \lambda_k \in \mathbb{K}" /> adalah nilai-nilai eigen yang berbeda berpasangan dari <InlineMath math="A" />, yaitu <InlineMath math="\lambda_i \neq \lambda_j" /> untuk <InlineMath math="i \neq j" /> dengan <InlineMath math="i, j \in \{1, \ldots, k\}" />. Maka vektor-vektor eigen yang bersesuaian <InlineMath math="v_1, \ldots, v_k \in \mathbb{K}^n" /> adalah bebas linear.
+
+Teorema ini dapat dibuktikan menggunakan induksi matematika dan memiliki konsekuensi penting bahwa matriks <InlineMath math="n \times n" /> memiliki paling banyak <InlineMath math="n" /> nilai eigen yang berbeda.
+
+## Ruang Eigen dan Multiplisitas Geometrik
+
+Untuk setiap nilai eigen, kita dapat mendefinisikan ruang vektor yang terdiri dari semua vektor eigen yang bersesuaian dengan nilai eigen tersebut.
+
+**Definisi Ruang Eigen**: Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dan <InlineMath math="\lambda \in \mathbb{K}" />. Himpunan:
+
+<BlockMath math="\text{Eig}_A(\lambda) = \{v \in \mathbb{K}^n : A \cdot v = \lambda \cdot v\}" />
+
+disebut **ruang eigen** dari <InlineMath math="A" /> untuk nilai eigen <InlineMath math="\lambda" />. Dimensi dari <InlineMath math="\text{Eig}_A(\lambda)" />:
+
+<BlockMath math="\dim \text{Eig}_A(\lambda)" />
+
+disebut **multiplisitas geometrik** dari nilai eigen <InlineMath math="\lambda" /> dari <InlineMath math="A" />.
+
+### Sifat-sifat Ruang Eigen
+
+Ruang eigen memiliki beberapa sifat penting:
+
+1. **Vektor nol bukan vektor eigen**: Vektor nol bukan vektor eigen, tetapi merupakan elemen dari <InlineMath math="\text{Eig}_A(\lambda)" />
+
+2. **Himpunan vektor eigen**: <InlineMath math="\text{Eig}_A(\lambda) \setminus \{0\}" /> adalah himpunan semua vektor eigen dari <InlineMath math="A" /> yang bersesuaian dengan <InlineMath math="\lambda" />
+
+3. **Kondisi nilai eigen**: <InlineMath math="\lambda" /> adalah nilai eigen dari <InlineMath math="A" /> jika dan hanya jika <InlineMath math="\text{Eig}_A(\lambda) \neq \{0\}" />
+
+4. **Batasan dimensi**: <InlineMath math="0 \leq \dim \text{Eig}_A(\lambda) \leq n" />
+
+5. **Hubungan dengan kernel**: <InlineMath math="\text{Eig}_A(0) = \{v \in \mathbb{K}^n : A \cdot v = 0\} = \ker A" />
+
+6. **Ruang eigen umum**: <InlineMath math="\text{Eig}_A(\lambda) = \{v \in \mathbb{K}^n : (A - \lambda \cdot I) \cdot v = 0\} = \ker(A - \lambda \cdot I)" />
+
+7. **Perpotongan ruang eigen**: Jika <InlineMath math="\lambda_1 \neq \lambda_2" />, maka <InlineMath math="\text{Eig}_A(\lambda_1) \cap \text{Eig}_A(\lambda_2) = \{0\}" />
+
+## Hubungan dengan Invertibilitas
+
+Nilai eigen memiliki hubungan erat dengan sifat invertibilitas matriks.
+
+**Teorema Invertibilitas dan Nilai Eigen**: Matriks <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dapat diinversi jika dan hanya jika semua nilai eigen <InlineMath math="\lambda \in \mathbb{K}" /> dari <InlineMath math="A" /> memenuhi <InlineMath math="\lambda \neq 0" />.
+
+**Bukti**: <InlineMath math="A" /> dapat diinversi jika dan hanya jika <InlineMath math="\text{Rang} A = n" />, yang berarti <InlineMath math="\text{Eig}_A(0) = \ker A = \{0\}" />, sehingga <InlineMath math="\lambda = 0" /> bukan nilai eigen dari <InlineMath math="A" />.
+
+### Nilai Eigen Matriks Invers
+
+Jika matriks <InlineMath math="A" /> dapat diinversi dan <InlineMath math="v \neq 0" /> adalah vektor eigen dari <InlineMath math="A" /> untuk nilai eigen <InlineMath math="\lambda \in \mathbb{K}" />, maka <InlineMath math="v" /> juga merupakan vektor eigen dari <InlineMath math="A^{-1}" /> untuk nilai eigen <InlineMath math="\frac{1}{\lambda}" />.
+
+**Bukti**: Dari <InlineMath math="A \cdot v = \lambda \cdot v" />, dengan mengalikan <InlineMath math="A^{-1}" /> dan <InlineMath math="\frac{1}{\lambda}" />, diperoleh <InlineMath math="\frac{1}{\lambda} \cdot v = A^{-1} \cdot v" />.
+
+## Kriteria Invertibilitas
+
+**Teorema Karakterisasi Invertibilitas**: Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" /> adalah matriks persegi. Pernyataan-pernyataan berikut ekuivalen:
+
+1. <InlineMath math="A" /> dapat diinversi
+2. Terdapat matriks <InlineMath math="A^{-1} \in \mathbb{K}^{n \times n}" /> dengan <InlineMath math="A \cdot A^{-1} = I = A^{-1} \cdot A" />
+3. <InlineMath math="A" /> memiliki rank penuh, <InlineMath math="\text{Rang} A = n" /> atau <InlineMath math="\ker A = \{0\}" />
+4. Kolom-kolom dari <InlineMath math="A" /> bebas linear
+5. Baris-baris dari <InlineMath math="A" /> bebas linear
+6. <InlineMath math="\det A \neq 0" />
+7. Semua nilai eigen dari <InlineMath math="A" /> tidak sama dengan 0
+
+Teorema ini memberikan berbagai cara equivalent untuk memeriksa apakah suatu matriks dapat diinversi, dengan nilai eigen menjadi salah satu kriteria yang sangat berguna.
