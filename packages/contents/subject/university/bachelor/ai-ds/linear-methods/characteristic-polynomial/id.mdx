@@ -9,14 +9,14 @@ export const metadata = {
 
 Untuk mencari nilai eigen suatu matriks, kita memerlukan alat matematika yang sangat penting dalam aljabar linear. Bayangkan kita ingin mencari semua nilai <InlineMath math="\lambda" /> yang membuat matriks <InlineMath math="A - \lambda I" /> menjadi singular (tidak dapat diinversi).
 
-**Polinomial Karakteristik**: Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" />. Fungsi:
+Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" />. Kita dapat membentuk fungsi khusus:
 
 <MathContainer>
 <BlockMath math="\chi_A(t) = \det(A - t \cdot I)" />
 <BlockMath math="\chi_A(t) = a_n \cdot t^n + a_{n-1} \cdot t^{n-1} + \cdots + a_1 t + a_0" />
 </MathContainer>
 
-adalah polinomial berderajat <InlineMath math="n" /> dalam <InlineMath math="t \in \mathbb{K}" />, yang disebut **polinomial karakteristik** dari <InlineMath math="A" />:
+Fungsi ini adalah polinomial berderajat <InlineMath math="n" /> dalam <InlineMath math="t \in \mathbb{K}" />, yang kita sebut **polinomial karakteristik** dari <InlineMath math="A" />.
 
 dengan koefisien <InlineMath math="a_0, \ldots, a_{n-1}, a_n \in \mathbb{K}" />.
 
@@ -45,7 +45,7 @@ Ini berarti:
 
 Konsep paling penting dari polinomial karakteristik adalah hubungannya dengan nilai eigen.
 
-**Teorema Fundamental**: <InlineMath math="\lambda \in \mathbb{K}" /> adalah nilai eigen dari <InlineMath math="A" /> jika dan hanya jika <InlineMath math="\det(A - \lambda \cdot I) = 0" />.
+Sekarang, mari kita lihat hubungan yang sangat penting: <InlineMath math="\lambda \in \mathbb{K}" /> adalah nilai eigen dari <InlineMath math="A" /> jika dan hanya jika <InlineMath math="\det(A - \lambda \cdot I) = 0" />.
 
 Dengan kata lain, **nilai eigen adalah akar-akar dari polinomial karakteristik**.
 
@@ -57,7 +57,7 @@ disebut **persamaan karakteristik** dari <InlineMath math="A" />.
 
 ## Multiplisitas Aljabar
 
-Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dan <InlineMath math="\lambda \in \mathbb{K}" />. Multiplisitas dari akar <InlineMath math="t = \lambda" /> dari polinomial karakteristik <InlineMath math="\chi_A(t)" /> disebut **multiplisitas aljabar** <InlineMath math="\mu_A(\lambda)" /> dari nilai eigen <InlineMath math="\lambda" /> dari <InlineMath math="A" />. Kita katakan <InlineMath math="\lambda" /> adalah nilai eigen dengan multiplisitas <InlineMath math="\mu_A(\lambda)" /> dari <InlineMath math="A" />.
+Sekarang, bagaimana jika sebuah nilai eigen muncul beberapa kali sebagai akar polinomial karakteristik? Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dan <InlineMath math="\lambda \in \mathbb{K}" />. Multiplisitas dari akar <InlineMath math="t = \lambda" /> dari polinomial karakteristik <InlineMath math="\chi_A(t)" /> disebut **multiplisitas aljabar** <InlineMath math="\mu_A(\lambda)" /> dari nilai eigen <InlineMath math="\lambda" /> dari <InlineMath math="A" />. Kita katakan <InlineMath math="\lambda" /> adalah nilai eigen dengan multiplisitas <InlineMath math="\mu_A(\lambda)" /> dari <InlineMath math="A" />.
 
 ### Batasan Multiplisitas
 
@@ -69,17 +69,17 @@ Untuk setiap nilai eigen <InlineMath math="\lambda" />, berlaku:
 
 Salah satu hasil penting dalam teori nilai eigen adalah hubungan antara multiplisitas geometrik dan aljabar.
 
-**Teorema**: Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dan <InlineMath math="\lambda \in \mathbb{K}" />. Berlaku:
+Untuk setiap matriks <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dan <InlineMath math="\lambda \in \mathbb{K}" />, kita memiliki hubungan yang menarik:
 
 <BlockMath math="0 \leq \dim \text{Eig}_A(\lambda) \leq \mu_A(\lambda) \leq n" />
 
 > Multiplisitas geometrik setiap nilai eigen selalu lebih kecil atau sama dengan multiplisitas aljabarnya.
 
-Teorema ini dapat dibuktikan dengan menggunakan transformasi basis dan bentuk blok Jordan.
+Mengapa ini terjadi? Hal ini dapat dijelaskan dengan menggunakan transformasi basis dan bentuk blok Jordan.
 
 ## Contoh Perhitungan Polinomial Karakteristik
 
-Mari kita lihat contoh konkret perhitungan polinomial karakteristik:
+Setelah memahami konsep-konsep dasar, mari kita lihat bagaimana menerapkannya dalam contoh konkret perhitungan polinomial karakteristik:
 
 ### Contoh Matriks 3x3
 
@@ -110,7 +110,7 @@ Matriks ini memiliki akar <InlineMath math="\lambda = 1" /> dengan multiplisitas
 
 ## Contoh Transformasi Geometrik
 
-Mari kita lihat bagaimana polinomial karakteristik bekerja pada transformasi geometrik umum di <InlineMath math="\mathbb{R}^2 \to \mathbb{R}^2" />:
+Sekarang, mari kita jelajahi sesuatu yang menarik: bagaimana polinomial karakteristik bekerja pada transformasi geometrik yang sering kita temui di <InlineMath math="\mathbb{R}^2 \to \mathbb{R}^2" />:
 
 ### Rotasi
 
@@ -146,9 +146,9 @@ Nilai eigen adalah <InlineMath math="\lambda = 1" /> dengan <InlineMath math="\m
 
 ## Sifat Matriks Serupa
 
-**Teorema Matriks Serupa**: Matriks-matriks serupa memiliki polinomial karakteristik yang sama, dan karena itu memiliki nilai eigen yang sama, jejak yang sama, dan determinan yang sama.
+Matriks-matriks serupa memiliki sifat yang sangat menarik: mereka memiliki polinomial karakteristik yang sama, dan karena itu memiliki nilai eigen yang sama, jejak yang sama, dan determinan yang sama.
 
-**Bukti**: Misalkan <InlineMath math="S \in \mathbb{K}^{n \times n}" /> dapat diinversi dan <InlineMath math="B = S^{-1} \cdot A \cdot S" />. Maka:
+Mari kita lihat mengapa hal ini benar. Misalkan <InlineMath math="S \in \mathbb{K}^{n \times n}" /> dapat diinversi dan <InlineMath math="B = S^{-1} \cdot A \cdot S" />. Maka:
 
 <MathContainer>
 <BlockMath math="\chi_B(t) = \det(B - t \cdot I) = \det(S^{-1} \cdot A \cdot S - t \cdot S^{-1} \cdot I \cdot S)" />
@@ -158,9 +158,9 @@ Nilai eigen adalah <InlineMath math="\lambda = 1" /> dengan <InlineMath math="\m
 
 ### Sifat Vektor Eigen Matriks Serupa
 
-**Teorema**: Misalkan <InlineMath math="A, B \in \mathbb{K}^{n \times n}" /> adalah matriks serupa dengan <InlineMath math="B = S^{-1} \cdot A \cdot S" /> dan matriks invertible <InlineMath math="S \in \mathbb{K}^{n \times n}" />. Misalkan <InlineMath math="\lambda \in \mathbb{K}" /> adalah nilai eigen dari <InlineMath math="A" /> dan <InlineMath math="B" />. Misalkan <InlineMath math="v \in \mathbb{K}^n" /> adalah vektor eigen dari <InlineMath math="A" /> untuk nilai eigen <InlineMath math="\lambda" />. Maka <InlineMath math="w = S^{-1} \cdot v" /> adalah vektor eigen dari <InlineMath math="B" /> untuk nilai eigen <InlineMath math="\lambda" />.
+Sekarang, bagaimana dengan vektor eigen dari matriks serupa? Misalkan <InlineMath math="A, B \in \mathbb{K}^{n \times n}" /> adalah matriks serupa dengan <InlineMath math="B = S^{-1} \cdot A \cdot S" /> dan matriks invertible <InlineMath math="S \in \mathbb{K}^{n \times n}" />. Jika <InlineMath math="\lambda \in \mathbb{K}" /> adalah nilai eigen dari <InlineMath math="A" /> dan <InlineMath math="B" />, dan <InlineMath math="v \in \mathbb{K}^n" /> adalah vektor eigen dari <InlineMath math="A" /> untuk nilai eigen <InlineMath math="\lambda" />, maka <InlineMath math="w = S^{-1} \cdot v" /> adalah vektor eigen dari <InlineMath math="B" /> untuk nilai eigen <InlineMath math="\lambda" />.
 
-**Bukti**: Misalkan <InlineMath math="A \cdot v = \lambda \cdot v" /> dan <InlineMath math="w = S^{-1} \cdot v" />. Maka:
+Mari kita lihat mengapa ini benar. Misalkan <InlineMath math="A \cdot v = \lambda \cdot v" /> dan <InlineMath math="w = S^{-1} \cdot v" />. Maka:
 
 <MathContainer>
 <BlockMath math="B \cdot w = S^{-1} \cdot A \cdot S \cdot S^{-1} \cdot v = S^{-1} \cdot A \cdot v" />

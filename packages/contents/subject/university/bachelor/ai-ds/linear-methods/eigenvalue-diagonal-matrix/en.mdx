@@ -21,7 +21,7 @@ are its main diagonal entries:
 
 <BlockMath math="\lambda_1 = a_{11}, \ldots, \lambda_n = a_{nn}" />
 
-**Proof**: Since <InlineMath math="\chi_A(t) = \det(A - t \cdot I) = (a_{11} - t) \cdots (a_{nn} - t)" /> with roots <InlineMath math="a_{11}, \ldots, a_{nn}" />.
+Why is this true? Since <InlineMath math="\chi_A(t) = \det(A - t \cdot I) = (a_{11} - t) \cdots (a_{nn} - t)" /> with roots <InlineMath math="a_{11}, \ldots, a_{nn}" />.
 
 This property greatly simplifies our work because we don't need to calculate determinants or solve complex characteristic equations.
 
@@ -75,14 +75,14 @@ This property holds naturally for complex eigenvalues of matrices with real entr
 
 ## Relationship Between Determinant and Trace
 
-There's a fundamental relationship between eigenvalues and the determinant and trace of a matrix. If the characteristic polynomial <InlineMath math="\chi_A(t)" /> can be factored linearly in <InlineMath math="\mathbb{K}" />, meaning matrix <InlineMath math="A" /> has <InlineMath math="n" /> eigenvalues <InlineMath math="\lambda_1, \ldots, \lambda_n \in \mathbb{K}" />, then:
+There's a fundamental relationship between eigenvalues and the determinant and trace of a matrix. If the characteristic polynomial <InlineMath math="\chi_A(t)" /> can be factored linearly in <InlineMath math="\mathbb{K}" />, which means matrix <InlineMath math="A" /> has <InlineMath math="n" /> eigenvalues <InlineMath math="\lambda_1, \ldots, \lambda_n \in \mathbb{K}" />, then:
 
 <MathContainer>
 <BlockMath math="\det A = \prod_{i=1}^n \lambda_i" />
 <BlockMath math="\text{tr} A = \sum_{i=1}^n \lambda_i" />
 </MathContainer>
 
-**The determinant is the product** of all eigenvalues, while **the trace is the sum** of all eigenvalues.
+**The determinant is the product** of all eigenvalues, and **the trace is the sum** of all eigenvalues.
 
 Let's verify with our previous examples:
 

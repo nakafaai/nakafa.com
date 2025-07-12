@@ -9,7 +9,7 @@ export const metadata = {
 
 In linear algebra, we are often interested in special vectors that have unique properties when multiplied by matrices. Imagine vectors that are only "stretched" or "shortened" by the matrix, but their direction remains unchanged.
 
-**Definition of Eigenvector**: Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> be a square matrix. An **eigenvector** <InlineMath math="v \in \mathbb{K}^n" /> for an **eigenvalue** <InlineMath math="\lambda \in \mathbb{K}" /> is a non-zero vector <InlineMath math="v \neq 0" /> that satisfies:
+Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> be a square matrix. An **eigenvector** <InlineMath math="v \in \mathbb{K}^n" /> for an **eigenvalue** <InlineMath math="\lambda \in \mathbb{K}" /> is a non-zero vector <InlineMath math="v \neq 0" /> that satisfies:
 
 <BlockMath math="A \cdot v = \lambda \cdot v" />
 
@@ -23,7 +23,7 @@ Eigenvectors have fundamental properties that are very useful in various mathema
 
 **Scalar Multiplication**: Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> and <InlineMath math="v \in \mathbb{K}^n" /> with <InlineMath math="v \neq 0" /> be an eigenvector of <InlineMath math="A" /> for eigenvalue <InlineMath math="\lambda \in \mathbb{K}" />. Then all multiples <InlineMath math="t \cdot v" /> with <InlineMath math="t \neq 0" /> are also eigenvectors of <InlineMath math="A" /> for the same eigenvalue <InlineMath math="\lambda" />.
 
-**Proof**: <InlineMath math="A \cdot (t \cdot v) = t \cdot (A \cdot v) = t \cdot (\lambda \cdot v) = \lambda \cdot (t \cdot v)" />
+Why is this true? <InlineMath math="A \cdot (t \cdot v) = t \cdot (A \cdot v) = t \cdot (\lambda \cdot v) = \lambda \cdot (t \cdot v)" />
 
 This property shows that if we find one eigenvector, then all its non-zero multiples are also eigenvectors for the same eigenvalue.
 
@@ -51,7 +51,7 @@ For matrix <InlineMath math="A = \begin{pmatrix} 3 & 1 \\ 1 & 3 \end{pmatrix}" /
 
 One important result in eigenvector theory is that eigenvectors corresponding to different eigenvalues are always linearly independent.
 
-**Linear Independence Theorem**: Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> and <InlineMath math="\lambda_1, \ldots, \lambda_k \in \mathbb{K}" /> be pairwise distinct eigenvalues of <InlineMath math="A" />, that is <InlineMath math="\lambda_i \neq \lambda_j" /> for <InlineMath math="i \neq j" /> with <InlineMath math="i, j \in \{1, \ldots, k\}" />. Then the corresponding eigenvectors <InlineMath math="v_1, \ldots, v_k \in \mathbb{K}^n" /> are linearly independent.
+There's a very important result about linear independence of eigenvectors. Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> and <InlineMath math="\lambda_1, \ldots, \lambda_k \in \mathbb{K}" /> be pairwise distinct eigenvalues of <InlineMath math="A" />, that is <InlineMath math="\lambda_i \neq \lambda_j" /> for <InlineMath math="i \neq j" /> with <InlineMath math="i, j \in \{1, \ldots, k\}" />. Then the corresponding eigenvectors <InlineMath math="v_1, \ldots, v_k \in \mathbb{K}^n" /> are linearly independent.
 
 This theorem can be proven using mathematical induction and has the important consequence that an <InlineMath math="n \times n" /> matrix has at most <InlineMath math="n" /> distinct eigenvalues.
 
@@ -59,7 +59,7 @@ This theorem can be proven using mathematical induction and has the important co
 
 For each eigenvalue, we can define a vector space consisting of all eigenvectors corresponding to that eigenvalue.
 
-**Definition of Eigenspace**: Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> and <InlineMath math="\lambda \in \mathbb{K}" />. The set:
+Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> and <InlineMath math="\lambda \in \mathbb{K}" />. The set:
 
 <BlockMath math="\text{Eig}_A(\lambda) = \{v \in \mathbb{K}^n : A \cdot v = \lambda \cdot v\}" />
 
@@ -91,19 +91,19 @@ Eigenspaces have several important properties:
 
 Eigenvalues have a close relationship with the invertibility property of matrices.
 
-**Theorem on Invertibility and Eigenvalues**: Matrix <InlineMath math="A \in \mathbb{K}^{n \times n}" /> is invertible if and only if all eigenvalues <InlineMath math="\lambda \in \mathbb{K}" /> of <InlineMath math="A" /> satisfy <InlineMath math="\lambda \neq 0" />.
+Now, let's look at an interesting relationship between invertibility and eigenvalues. Matrix <InlineMath math="A \in \mathbb{K}^{n \times n}" /> is invertible if and only if all eigenvalues <InlineMath math="\lambda \in \mathbb{K}" /> of <InlineMath math="A" /> satisfy <InlineMath math="\lambda \neq 0" />.
 
-**Proof**: <InlineMath math="A" /> is invertible if and only if <InlineMath math="\text{Rank} A = n" />, which means <InlineMath math="\text{Eig}_A(0) = \ker A = \{0\}" />, so <InlineMath math="\lambda = 0" /> is not an eigenvalue of <InlineMath math="A" />.
+Why is this true? <InlineMath math="A" /> is invertible if and only if <InlineMath math="\text{Rank} A = n" />, which means <InlineMath math="\text{Eig}_A(0) = \ker A = \{0\}" />, so <InlineMath math="\lambda = 0" /> is not an eigenvalue of <InlineMath math="A" />.
 
 ### Eigenvalues of Inverse Matrix
 
 If matrix <InlineMath math="A" /> is invertible and <InlineMath math="v \neq 0" /> is an eigenvector of <InlineMath math="A" /> for eigenvalue <InlineMath math="\lambda \in \mathbb{K}" />, then <InlineMath math="v" /> is also an eigenvector of <InlineMath math="A^{-1}" /> for eigenvalue <InlineMath math="\frac{1}{\lambda}" />.
 
-**Proof**: From <InlineMath math="A \cdot v = \lambda \cdot v" />, by multiplying <InlineMath math="A^{-1}" /> and <InlineMath math="\frac{1}{\lambda}" />, we get <InlineMath math="\frac{1}{\lambda} \cdot v = A^{-1} \cdot v" />.
+Why is this true? From <InlineMath math="A \cdot v = \lambda \cdot v" />, by multiplying <InlineMath math="A^{-1}" /> and <InlineMath math="\frac{1}{\lambda}" />, we get <InlineMath math="\frac{1}{\lambda} \cdot v = A^{-1} \cdot v" />.
 
 ## Invertibility Criteria
 
-**Theorem on Characterization of Invertibility**: Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> be a square matrix. The following statements are equivalent:
+Let's look at various ways to determine whether a matrix is invertible. For a square matrix <InlineMath math="A \in \mathbb{K}^{n \times n}" />, the following statements are equivalent:
 
 1. <InlineMath math="A" /> is invertible
 2. There exists a matrix <InlineMath math="A^{-1} \in \mathbb{K}^{n \times n}" /> with <InlineMath math="A \cdot A^{-1} = I = A^{-1} \cdot A" />

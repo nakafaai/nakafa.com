@@ -21,7 +21,7 @@ adalah entri diagonal utamanya:
 
 <BlockMath math="\lambda_1 = a_{11}, \ldots, \lambda_n = a_{nn}" />
 
-**Bukti**: Karena <InlineMath math="\chi_A(t) = \det(A - t \cdot I) = (a_{11} - t) \cdots (a_{nn} - t)" /> dengan akar-akar <InlineMath math="a_{11}, \ldots, a_{nn}" />.
+Mengapa hal ini benar? Karena <InlineMath math="\chi_A(t) = \det(A - t \cdot I) = (a_{11} - t) \cdots (a_{nn} - t)" /> dengan akar-akar <InlineMath math="a_{11}, \ldots, a_{nn}" />.
 
 Sifat ini sangat memudahkan kita karena tidak perlu menghitung determinan atau menyelesaikan persamaan karakteristik yang kompleks.
 
@@ -75,14 +75,14 @@ Sifat ini berlaku secara alami untuk nilai eigen kompleks dari matriks dengan en
 
 ## Hubungan Determinan dan Jejak
 
-Ada hubungan fundamental antara nilai eigen dengan determinan dan jejak matriks. Jika polinomial karakteristik <InlineMath math="\chi_A(t)" /> dapat difaktorkan secara linear di <InlineMath math="\mathbb{K}" />, artinya matriks <InlineMath math="A" /> memiliki <InlineMath math="n" /> nilai eigen <InlineMath math="\lambda_1, \ldots, \lambda_n \in \mathbb{K}" />, maka:
+Ada hubungan fundamental antara nilai eigen dengan determinan dan jejak matriks. Jika polinomial karakteristik <InlineMath math="\chi_A(t)" /> dapat difaktorkan secara linear di <InlineMath math="\mathbb{K}" />, yang berarti matriks <InlineMath math="A" /> memiliki <InlineMath math="n" /> nilai eigen <InlineMath math="\lambda_1, \ldots, \lambda_n \in \mathbb{K}" />, maka:
 
 <MathContainer>
 <BlockMath math="\det A = \prod_{i=1}^n \lambda_i" />
 <BlockMath math="\text{tr} A = \sum_{i=1}^n \lambda_i" />
 </MathContainer>
 
-**Determinan adalah hasil kali** semua nilai eigen, sedangkan **jejak adalah jumlah** semua nilai eigen.
+**Determinan adalah hasil kali** semua nilai eigen, sementara **jejak adalah jumlah** semua nilai eigen.
 
 Mari kita verifikasi dengan contoh sebelumnya:
 

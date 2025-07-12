@@ -9,14 +9,14 @@ export const metadata = {
 
 To find the eigenvalues of a matrix, we need a very important mathematical tool in linear algebra. Imagine we want to find all values <InlineMath math="\lambda" /> that make the matrix <InlineMath math="A - \lambda I" /> become singular (not invertible).
 
-**Characteristic Polynomial**: Let <InlineMath math="A \in \mathbb{K}^{n \times n}" />. The function:
+Let <InlineMath math="A \in \mathbb{K}^{n \times n}" />. We can form a special function:
 
 <MathContainer>
 <BlockMath math="\chi_A(t) = \det(A - t \cdot I)" />
 <BlockMath math="\chi_A(t) = a_n \cdot t^n + a_{n-1} \cdot t^{n-1} + \cdots + a_1 t + a_0" />
 </MathContainer>
 
-is a polynomial of degree <InlineMath math="n" /> in <InlineMath math="t \in \mathbb{K}" />, which is called the **characteristic polynomial** of <InlineMath math="A" />:
+This function is a polynomial of degree <InlineMath math="n" /> in <InlineMath math="t \in \mathbb{K}" />, which we call the **characteristic polynomial** of <InlineMath math="A" />.
 
 with coefficients <InlineMath math="a_0, \ldots, a_{n-1}, a_n \in \mathbb{K}" />.
 
@@ -45,7 +45,7 @@ This means:
 
 The most important concept of the characteristic polynomial is its relationship with eigenvalues.
 
-**Fundamental Theorem**: <InlineMath math="\lambda \in \mathbb{K}" /> is an eigenvalue of <InlineMath math="A" /> if and only if <InlineMath math="\det(A - \lambda \cdot I) = 0" />.
+Now, let's look at a very important relationship: <InlineMath math="\lambda \in \mathbb{K}" /> is an eigenvalue of <InlineMath math="A" /> if and only if <InlineMath math="\det(A - \lambda \cdot I) = 0" />.
 
 In other words, **eigenvalues are the roots of the characteristic polynomial**.
 
@@ -57,7 +57,7 @@ is called the **characteristic equation** of <InlineMath math="A" />.
 
 ## Algebraic Multiplicity
 
-Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> and <InlineMath math="\lambda \in \mathbb{K}" />. The multiplicity of the root <InlineMath math="t = \lambda" /> of the characteristic polynomial <InlineMath math="\chi_A(t)" /> is called the **algebraic multiplicity** <InlineMath math="\mu_A(\lambda)" /> of the eigenvalue <InlineMath math="\lambda" /> of <InlineMath math="A" />. We say <InlineMath math="\lambda" /> is an eigenvalue with multiplicity <InlineMath math="\mu_A(\lambda)" /> of <InlineMath math="A" />.
+Now, what happens if an eigenvalue appears multiple times as a root of the characteristic polynomial? Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> and <InlineMath math="\lambda \in \mathbb{K}" />. The multiplicity of the root <InlineMath math="t = \lambda" /> of the characteristic polynomial <InlineMath math="\chi_A(t)" /> is called the **algebraic multiplicity** <InlineMath math="\mu_A(\lambda)" /> of the eigenvalue <InlineMath math="\lambda" /> of <InlineMath math="A" />. We say <InlineMath math="\lambda" /> is an eigenvalue with multiplicity <InlineMath math="\mu_A(\lambda)" /> of <InlineMath math="A" />.
 
 ### Multiplicity Bounds
 
@@ -69,17 +69,17 @@ For every eigenvalue <InlineMath math="\lambda" />, it holds:
 
 One important result in eigenvalue theory is the relationship between geometric and algebraic multiplicity.
 
-**Theorem**: Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> and <InlineMath math="\lambda \in \mathbb{K}" />. It holds:
+For any matrix <InlineMath math="A \in \mathbb{K}^{n \times n}" /> and <InlineMath math="\lambda \in \mathbb{K}" />, we have an interesting relationship:
 
 <BlockMath math="0 \leq \dim \text{Eig}_A(\lambda) \leq \mu_A(\lambda) \leq n" />
 
 > The geometric multiplicity of every eigenvalue is always less than or equal to its algebraic multiplicity.
 
-This theorem can be proven using basis transformation and Jordan block form.
+Why does this happen? This can be explained using basis transformation and Jordan block form.
 
 ## Examples of Characteristic Polynomial Calculation
 
-Let's look at concrete examples of characteristic polynomial calculation:
+After understanding the basic concepts, let's see how to apply them in concrete examples of characteristic polynomial calculation:
 
 ### 3x3 Matrix Example
 
@@ -110,7 +110,7 @@ This matrix has the root <InlineMath math="\lambda = 1" /> with algebraic multip
 
 ## Geometric Transformation Examples
 
-Let's see how the characteristic polynomial works on common geometric transformations in <InlineMath math="\mathbb{R}^2 \to \mathbb{R}^2" />:
+Now, let's explore something fascinating: how the characteristic polynomial works on common geometric transformations we often encounter in <InlineMath math="\mathbb{R}^2 \to \mathbb{R}^2" />:
 
 ### Rotation
 
@@ -146,9 +146,9 @@ The eigenvalue is <InlineMath math="\lambda = 1" /> with <InlineMath math="\mu_A
 
 ## Properties of Similar Matrices
 
-**Similar Matrices Theorem**: Similar matrices have the same characteristic polynomial, and therefore have the same eigenvalues, the same trace, and the same determinant.
+Similar matrices have a fascinating property: they have the same characteristic polynomial, and therefore have the same eigenvalues, the same trace, and the same determinant.
 
-**Proof**: Let <InlineMath math="S \in \mathbb{K}^{n \times n}" /> be invertible and <InlineMath math="B = S^{-1} \cdot A \cdot S" />. Then:
+Let's see why this is true. Let <InlineMath math="S \in \mathbb{K}^{n \times n}" /> be invertible and <InlineMath math="B = S^{-1} \cdot A \cdot S" />. Then:
 
 <MathContainer>
 <BlockMath math="\chi_B(t) = \det(B - t \cdot I) = \det(S^{-1} \cdot A \cdot S - t \cdot S^{-1} \cdot I \cdot S)" />
@@ -158,9 +158,9 @@ The eigenvalue is <InlineMath math="\lambda = 1" /> with <InlineMath math="\mu_A
 
 ### Eigenvector Properties of Similar Matrices
 
-**Theorem**: Let <InlineMath math="A, B \in \mathbb{K}^{n \times n}" /> be similar matrices with <InlineMath math="B = S^{-1} \cdot A \cdot S" /> and invertible matrix <InlineMath math="S \in \mathbb{K}^{n \times n}" />. Let <InlineMath math="\lambda \in \mathbb{K}" /> be an eigenvalue of <InlineMath math="A" /> and <InlineMath math="B" />. Let <InlineMath math="v \in \mathbb{K}^n" /> be an eigenvector of <InlineMath math="A" /> for eigenvalue <InlineMath math="\lambda" />. Then <InlineMath math="w = S^{-1} \cdot v" /> is an eigenvector of <InlineMath math="B" /> for eigenvalue <InlineMath math="\lambda" />.
+Now, what about the eigenvectors of similar matrices? Let <InlineMath math="A, B \in \mathbb{K}^{n \times n}" /> be similar matrices with <InlineMath math="B = S^{-1} \cdot A \cdot S" /> and invertible matrix <InlineMath math="S \in \mathbb{K}^{n \times n}" />. If <InlineMath math="\lambda \in \mathbb{K}" /> is an eigenvalue of both <InlineMath math="A" /> and <InlineMath math="B" />, and <InlineMath math="v \in \mathbb{K}^n" /> is an eigenvector of <InlineMath math="A" /> for eigenvalue <InlineMath math="\lambda" />, then <InlineMath math="w = S^{-1} \cdot v" /> is an eigenvector of <InlineMath math="B" /> for eigenvalue <InlineMath math="\lambda" />.
 
-**Proof**: Let <InlineMath math="A \cdot v = \lambda \cdot v" /> and <InlineMath math="w = S^{-1} \cdot v" />. Then:
+Let's see why this is true. Let <InlineMath math="A \cdot v = \lambda \cdot v" /> and <InlineMath math="w = S^{-1} \cdot v" />. Then:
 
 <MathContainer>
 <BlockMath math="B \cdot w = S^{-1} \cdot A \cdot S \cdot S^{-1} \cdot v = S^{-1} \cdot A \cdot v" />
