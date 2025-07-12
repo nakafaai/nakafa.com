@@ -1,0 +1,103 @@
+export const metadata = {
+    title: "Nilai Eigen dari Matriks Diagonal dan Segitiga",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/12/2025",
+    subject: "Metode Linear AI",
+};
+
+## Matriks Diagonal dan Sifat Khususnya
+
+Untuk matriks diagonal, nilai eigen bisa langsung dibaca dari entri diagonal utamanya. Ini adalah salah satu keistimewaan paling menarik dalam aljabar linear.
+
+Nilai eigen dari matriks diagonal kuadrat atau matriks segitiga <InlineMath math="A \in \mathbb{K}^{n \times n}" />
+
+<MathContainer>
+<BlockMath math="A = \begin{pmatrix} a_{11} & & 0 \\ & \ddots & \\ 0 & & a_{nn} \end{pmatrix}" />
+<BlockMath math="\text{atau } A = \begin{pmatrix} a_{11} & * \\ & \ddots & \\ 0 & & a_{nn} \end{pmatrix}" />
+<BlockMath math="\text{atau } A = \begin{pmatrix} a_{11} & & 0 \\ & \ddots & \\ * & & a_{nn} \end{pmatrix}" />
+</MathContainer>
+
+adalah entri diagonal utamanya:
+
+<BlockMath math="\lambda_1 = a_{11}, \ldots, \lambda_n = a_{nn}" />
+
+**Bukti**: Karena <InlineMath math="\chi_A(t) = \det(A - t \cdot I) = (a_{11} - t) \cdots (a_{nn} - t)" /> dengan akar-akar <InlineMath math="a_{11}, \ldots, a_{nn}" />.
+
+Sifat ini sangat memudahkan kita karena tidak perlu menghitung determinan atau menyelesaikan persamaan karakteristik yang kompleks.
+
+## Matriks Segitiga Atas dan Bawah
+
+Matriks segitiga memiliki sifat yang sama dengan matriks diagonal. Baik matriks segitiga atas maupun segitiga bawah, nilai eigennya tetap merupakan entri diagonal utama.
+
+Hal ini terjadi karena ketika kita menghitung <InlineMath math="\det(A - tI)" />, entri di atas atau di bawah diagonal utama tidak mempengaruhi hasil perhitungan determinan. Struktur segitiga membuat determinan bisa dihitung sebagai perkalian entri diagonal.
+
+## Contoh Perhitungan Langsung
+
+Mari kita lihat beberapa contoh konkret untuk memahami konsep ini dengan lebih baik.
+
+### Nilai Eigen Kompleks
+
+Misalkan <InlineMath math="A = \begin{pmatrix} 1 & -1 \\ 1 & 1 \end{pmatrix}" />. Polinomial karakteristiknya adalah:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = \det \begin{pmatrix} 1-t & -1 \\ 1 & 1-t \end{pmatrix}" />
+<BlockMath math="= (1-t) \cdot (1-t) - 1 \cdot (-1) = t^2 - 2t + 2" />
+</MathContainer>
+
+yang memiliki akar <InlineMath math="\lambda_1 = 1 + i" /> dan <InlineMath math="\lambda_2 = 1 - i" />.
+
+### Nilai Eigen Nol
+
+Untuk <InlineMath math="A = \begin{pmatrix} 1 & -i \\ i & 1 \end{pmatrix}" />, polinomial karakteristiknya adalah:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = \det \begin{pmatrix} 1-t & -i \\ i & 1-t \end{pmatrix}" />
+<BlockMath math="= (1-t) \cdot (1-t) - i \cdot (-i) = t^2 - 2t" />
+</MathContainer>
+
+dengan akar <InlineMath math="\lambda_1 = 2" /> dan <InlineMath math="\lambda_2 = 0" />.
+
+## Faktorisasi Polinomial Karakteristik
+
+Ketika matriks <InlineMath math="A \in \mathbb{C}^{n \times n}" /> memiliki <InlineMath math="n" /> nilai eigen yang tidak harus berbeda <InlineMath math="\lambda_1, \ldots, \lambda_n \in \mathbb{C}" />, polinomial karakteristik <InlineMath math="\chi_A(t)" /> bisa difaktorkan sebagai:
+
+<BlockMath math="\chi_A(t) = (\lambda_1 - t) \cdots (\lambda_n - t)" />
+
+Jumlah multiplisitas aljabar dari semua nilai eigen adalah <InlineMath math="n" />:
+
+<BlockMath math="\sum_{\lambda \in \mathbb{C}} \mu_A(\lambda) = n" />
+
+Dalam bentuk yang lebih kompak:
+
+<BlockMath math="\chi_A(t) = \prod_{\lambda \in \mathbb{C}} (\lambda - t)^{\mu_A(\lambda)}" />
+
+Sifat ini berlaku secara alami untuk nilai eigen kompleks dari matriks dengan entri real. Nilai eigen bisa berupa bilangan real atau berpasangan kompleks konjugat.
+
+## Hubungan Determinan dan Jejak
+
+Ada hubungan fundamental antara nilai eigen dengan determinan dan jejak matriks. Jika polinomial karakteristik <InlineMath math="\chi_A(t)" /> dapat difaktorkan secara linear di <InlineMath math="\mathbb{K}" />, artinya matriks <InlineMath math="A" /> memiliki <InlineMath math="n" /> nilai eigen <InlineMath math="\lambda_1, \ldots, \lambda_n \in \mathbb{K}" />, maka:
+
+<MathContainer>
+<BlockMath math="\det A = \prod_{i=1}^n \lambda_i" />
+<BlockMath math="\text{tr} A = \sum_{i=1}^n \lambda_i" />
+</MathContainer>
+
+**Determinan adalah hasil kali** semua nilai eigen, sedangkan **jejak adalah jumlah** semua nilai eigen.
+
+Mari kita verifikasi dengan contoh sebelumnya:
+
+Untuk <InlineMath math="A = \begin{pmatrix} 1 & -1 \\ 1 & 1 \end{pmatrix}" /> dengan <InlineMath math="\lambda_1 = 1 + i" />, <InlineMath math="\lambda_2 = 1 - i" />:
+
+<MathContainer>
+<BlockMath math="\det A = 1 \cdot 1 - 1 \cdot (-1) = 2 = \lambda_1 \cdot \lambda_2" />
+<BlockMath math="\text{tr} A = 1 + 1 = 2 = \lambda_1 + \lambda_2" />
+</MathContainer>
+
+Untuk <InlineMath math="A = \begin{pmatrix} 1 & -i \\ i & 1 \end{pmatrix}" /> dengan <InlineMath math="\lambda_1 = 2" />, <InlineMath math="\lambda_2 = 0" />:
+
+<MathContainer>
+<BlockMath math="\det A = 1 \cdot 1 - i \cdot (-i) = 0 = \lambda_1 \cdot \lambda_2" />
+<BlockMath math="\text{tr} A = 1 + 1 = 2 = \lambda_1 + \lambda_2" />
+</MathContainer>
+
+Hubungan ini sangat berguna untuk verifikasi perhitungan dan memberikan wawasan geometris tentang transformasi linear yang diwakili oleh matriks.

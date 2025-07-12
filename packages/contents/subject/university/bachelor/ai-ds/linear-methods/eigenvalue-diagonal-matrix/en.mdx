@@ -1,0 +1,103 @@
+export const metadata = {
+    title: "Eigenvalues of Diagonal and Triangular Matrices",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/12/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Diagonal Matrices and Their Special Properties
+
+For diagonal matrices, eigenvalues can be read directly from their main diagonal entries. This is one of the most fascinating features in linear algebra.
+
+The eigenvalues of a square diagonal matrix or triangular matrix <InlineMath math="A \in \mathbb{K}^{n \times n}" />
+
+<MathContainer>
+<BlockMath math="A = \begin{pmatrix} a_{11} & & 0 \\ & \ddots & \\ 0 & & a_{nn} \end{pmatrix}" />
+<BlockMath math="\text{or } A = \begin{pmatrix} a_{11} & * \\ & \ddots & \\ 0 & & a_{nn} \end{pmatrix}" />
+<BlockMath math="\text{or } A = \begin{pmatrix} a_{11} & & 0 \\ & \ddots & \\ * & & a_{nn} \end{pmatrix}" />
+</MathContainer>
+
+are its main diagonal entries:
+
+<BlockMath math="\lambda_1 = a_{11}, \ldots, \lambda_n = a_{nn}" />
+
+**Proof**: Since <InlineMath math="\chi_A(t) = \det(A - t \cdot I) = (a_{11} - t) \cdots (a_{nn} - t)" /> with roots <InlineMath math="a_{11}, \ldots, a_{nn}" />.
+
+This property greatly simplifies our work because we don't need to calculate determinants or solve complex characteristic equations.
+
+## Upper and Lower Triangular Matrices
+
+Triangular matrices have the same property as diagonal matrices. For both upper and lower triangular matrices, the eigenvalues are still the main diagonal entries.
+
+This happens because when we calculate <InlineMath math="\det(A - tI)" />, the entries above or below the main diagonal don't affect the determinant calculation. The triangular structure allows the determinant to be computed as the product of diagonal entries.
+
+## Direct Calculation Examples
+
+Let's look at some concrete examples to better understand this concept.
+
+### Complex Eigenvalues
+
+Suppose <InlineMath math="A = \begin{pmatrix} 1 & -1 \\ 1 & 1 \end{pmatrix}" />. Its characteristic polynomial is:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = \det \begin{pmatrix} 1-t & -1 \\ 1 & 1-t \end{pmatrix}" />
+<BlockMath math="= (1-t) \cdot (1-t) - 1 \cdot (-1) = t^2 - 2t + 2" />
+</MathContainer>
+
+which has roots <InlineMath math="\lambda_1 = 1 + i" /> and <InlineMath math="\lambda_2 = 1 - i" />.
+
+### Zero Eigenvalues
+
+For <InlineMath math="A = \begin{pmatrix} 1 & -i \\ i & 1 \end{pmatrix}" />, the characteristic polynomial is:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = \det \begin{pmatrix} 1-t & -i \\ i & 1-t \end{pmatrix}" />
+<BlockMath math="= (1-t) \cdot (1-t) - i \cdot (-i) = t^2 - 2t" />
+</MathContainer>
+
+with roots <InlineMath math="\lambda_1 = 2" /> and <InlineMath math="\lambda_2 = 0" />.
+
+## Characteristic Polynomial Factorization
+
+When matrix <InlineMath math="A \in \mathbb{C}^{n \times n}" /> has <InlineMath math="n" /> eigenvalues that don't have to be distinct <InlineMath math="\lambda_1, \ldots, \lambda_n \in \mathbb{C}" />, the characteristic polynomial <InlineMath math="\chi_A(t)" /> can be factored as:
+
+<BlockMath math="\chi_A(t) = (\lambda_1 - t) \cdots (\lambda_n - t)" />
+
+The sum of algebraic multiplicities of all eigenvalues is <InlineMath math="n" />:
+
+<BlockMath math="\sum_{\lambda \in \mathbb{C}} \mu_A(\lambda) = n" />
+
+In a more compact form:
+
+<BlockMath math="\chi_A(t) = \prod_{\lambda \in \mathbb{C}} (\lambda - t)^{\mu_A(\lambda)}" />
+
+This property holds naturally for complex eigenvalues of matrices with real entries. Eigenvalues can be real numbers or complex conjugate pairs.
+
+## Relationship Between Determinant and Trace
+
+There's a fundamental relationship between eigenvalues and the determinant and trace of a matrix. If the characteristic polynomial <InlineMath math="\chi_A(t)" /> can be factored linearly in <InlineMath math="\mathbb{K}" />, meaning matrix <InlineMath math="A" /> has <InlineMath math="n" /> eigenvalues <InlineMath math="\lambda_1, \ldots, \lambda_n \in \mathbb{K}" />, then:
+
+<MathContainer>
+<BlockMath math="\det A = \prod_{i=1}^n \lambda_i" />
+<BlockMath math="\text{tr} A = \sum_{i=1}^n \lambda_i" />
+</MathContainer>
+
+**The determinant is the product** of all eigenvalues, while **the trace is the sum** of all eigenvalues.
+
+Let's verify with our previous examples:
+
+For <InlineMath math="A = \begin{pmatrix} 1 & -1 \\ 1 & 1 \end{pmatrix}" /> with <InlineMath math="\lambda_1 = 1 + i" />, <InlineMath math="\lambda_2 = 1 - i" />:
+
+<MathContainer>
+<BlockMath math="\det A = 1 \cdot 1 - 1 \cdot (-1) = 2 = \lambda_1 \cdot \lambda_2" />
+<BlockMath math="\text{tr} A = 1 + 1 = 2 = \lambda_1 + \lambda_2" />
+</MathContainer>
+
+For <InlineMath math="A = \begin{pmatrix} 1 & -i \\ i & 1 \end{pmatrix}" /> with <InlineMath math="\lambda_1 = 2" />, <InlineMath math="\lambda_2 = 0" />:
+
+<MathContainer>
+<BlockMath math="\det A = 1 \cdot 1 - i \cdot (-i) = 0 = \lambda_1 \cdot \lambda_2" />
+<BlockMath math="\text{tr} A = 1 + 1 = 2 = \lambda_1 + \lambda_2" />
+</MathContainer>
+
+This relationship is very useful for verifying calculations and provides geometric insights into the linear transformation represented by the matrix.
