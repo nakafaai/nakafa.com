@@ -1,0 +1,106 @@
+export const metadata = {
+    title: "Orthogonal and Unitary Matrices",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/12/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Getting to Know Orthogonal and Unitary Matrices
+
+Orthogonal and unitary matrices are very special types of matrices. Imagine them as "clean" transformations that don't change distances and angles in space, only rotating or reflecting objects.
+
+The difference is simple. Orthogonal matrices work with real numbers, while unitary matrices work with complex numbers. Both have the same properties, just different versions.
+
+## Mathematical Definitions
+
+### Orthogonal Matrices
+
+A square real matrix <InlineMath math="A \in \mathbb{R}^{n \times n}" /> is called **orthogonal** if:
+
+<BlockMath math="A^{-1} = A^T" />
+
+This means, to get the inverse of this matrix, we just transpose it. Very practical, right?
+
+This is equivalent to:
+
+<BlockMath math="A^T A = A A^T = I" />
+
+### Unitary Matrices
+
+A square complex matrix <InlineMath math="A \in \mathbb{C}^{n \times n}" /> is called **unitary** if:
+
+<BlockMath math="A^{-1} = A^H" />
+
+Here <InlineMath math="A^H" /> is the conjugate transpose of <InlineMath math="A" />. The concept is similar, just for complex numbers.
+
+This is also equivalent to:
+
+<BlockMath math="A^H A = A A^H = I" />
+
+> Real orthogonal matrices are actually a special case of unitary matrices, since <InlineMath math="\mathbb{R}^{n \times n} \subset \mathbb{C}^{n \times n}" />.
+
+## Interesting Determinant Properties
+
+What's interesting about orthogonal and unitary matrices is that their determinants always have absolute value 1. Why is this?
+
+For a unitary matrix <InlineMath math="A" />, we have <InlineMath math="A^H A = I" />. If we calculate its determinant:
+
+<MathContainer>
+<BlockMath math="1 = \det I = \det(A^H A) = \det A^H \cdot \det A = \overline{\det A} \cdot \det A = |\det A|^2" />
+</MathContainer>
+
+So <InlineMath math="|\det A| = 1" />. For orthogonal matrices, the proof is the same, just using <InlineMath math="A^T A = I" />.
+
+## Special Eigenvalues
+
+Eigenvalues of orthogonal and unitary matrices also have special properties. Every eigenvalue <InlineMath math="\lambda" /> always satisfies:
+
+<BlockMath math="|\lambda| = 1" />
+
+Why is this? Suppose <InlineMath math="A \cdot v = \lambda \cdot v" /> for an eigenvector <InlineMath math="v \neq 0" />. For the complex case, we can calculate:
+
+<MathContainer>
+<BlockMath math="v^H v = v^H A^H A v = (A \cdot v)^H (A \cdot v) = (\lambda \cdot v)^H (\lambda \cdot v)" />
+<BlockMath math="= \overline{\lambda} \cdot \lambda \cdot v^H v = |\lambda|^2 \cdot v^H v" />
+</MathContainer>
+
+Since <InlineMath math="v^H v \neq 0" />, then <InlineMath math="|\lambda|^2 = 1" />, so <InlineMath math="|\lambda| = 1" />.
+
+## Forms of Eigenvalues
+
+For real orthogonal matrices, the eigenvalues can be 1 or -1 if real. But if complex, they can be written as:
+
+<BlockMath math="\lambda = \exp(i\varphi) = \cos \varphi + i \sin \varphi" />
+
+This means complex eigenvalues lie on the unit circle in the complex plane.
+
+## Concrete Example of Rotation Matrix
+
+Let's look at a familiar example, the rotation matrix:
+
+<BlockMath math="A = \begin{pmatrix} \cos \alpha & -\sin \alpha \\ \sin \alpha & \cos \alpha \end{pmatrix}" />
+
+We can check that this is an orthogonal matrix:
+
+<MathContainer>
+<BlockMath math="A^T A = \begin{pmatrix} \cos \alpha & \sin \alpha \\ -\sin \alpha & \cos \alpha \end{pmatrix} \begin{pmatrix} \cos \alpha & -\sin \alpha \\ \sin \alpha & \cos \alpha \end{pmatrix}" />
+<BlockMath math="= \begin{pmatrix} \cos^2 \alpha + \sin^2 \alpha & \cos \alpha(-\sin \alpha) + \sin \alpha \cos \alpha \\ (-\sin \alpha) \cos \alpha + \cos \alpha \sin \alpha & (-\sin \alpha)(-\sin \alpha) + \cos^2 \alpha \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}" />
+</MathContainer>
+
+### Finding Eigenvalues
+
+The characteristic polynomial is:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = \det \begin{pmatrix} \cos \alpha - t & -\sin \alpha \\ \sin \alpha & \cos \alpha - t \end{pmatrix}" />
+<BlockMath math="= (\cos \alpha - t)^2 + \sin^2 \alpha = \cos^2 \alpha + \sin^2 \alpha - 2t \cos \alpha + t^2" />
+<BlockMath math="= 1 - 2t \cos \alpha + t^2" />
+</MathContainer>
+
+The eigenvalues are:
+
+<BlockMath math="\lambda_{1,2} = \cos \alpha \pm \sqrt{\cos^2 \alpha - 1} = \cos \alpha \pm \sqrt{-\sin^2 \alpha} = \cos \alpha \pm i \sin \alpha" />
+
+The result is <InlineMath math="\lambda_{1,2} = e^{\pm i\alpha}" />. 
+
+The transformation <InlineMath math="\mathbb{R}^2 \to \mathbb{R}^2 : x \mapsto A \cdot x" /> represents a rotation by angle <InlineMath math="\alpha" />. For <InlineMath math="\alpha \neq 0" /> and <InlineMath math="\alpha \neq \pi" />, this matrix has no real eigenvalues, but has two complex eigenvalues.

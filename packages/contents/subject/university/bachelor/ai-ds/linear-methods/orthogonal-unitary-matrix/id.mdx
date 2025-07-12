@@ -1,0 +1,106 @@
+export const metadata = {
+    title: "Matriks Ortogonal dan Uniter",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/12/2025",
+    subject: "Metode Linear AI",
+};
+
+## Mengenal Matriks Ortogonal dan Uniter
+
+Matriks ortogonal dan uniter adalah jenis matriks yang sangat istimewa. Bayangkan mereka seperti transformasi yang sangat "bersih" yang tidak mengubah jarak dan sudut dalam ruang, hanya memutar atau memantulkan objek.
+
+Perbedaannya sederhana. Matriks ortogonal bekerja dengan bilangan real, sedangkan matriks uniter bekerja dengan bilangan kompleks. Keduanya punya sifat yang sama, cuma versi yang berbeda saja.
+
+## Definisi Matematis
+
+### Matriks Ortogonal
+
+Matriks kuadrat real <InlineMath math="A \in \mathbb{R}^{n \times n}" /> disebut **ortogonal** kalau:
+
+<BlockMath math="A^{-1} = A^T" />
+
+Artinya, untuk mendapat invers matriks ini, kita cukup transpose saja. Sangat praktis kan?
+
+Ini sama artinya dengan:
+
+<BlockMath math="A^T A = A A^T = I" />
+
+### Matriks Uniter
+
+Matriks kuadrat kompleks <InlineMath math="A \in \mathbb{C}^{n \times n}" /> disebut **uniter** kalau:
+
+<BlockMath math="A^{-1} = A^H" />
+
+Di sini <InlineMath math="A^H" /> adalah conjugate transpose dari <InlineMath math="A" />. Konsepnya mirip, cuma untuk bilangan kompleks.
+
+Ini juga ekuivalen dengan:
+
+<BlockMath math="A^H A = A A^H = I" />
+
+> Matriks ortogonal real sebenarnya adalah kasus khusus dari matriks uniter, karena <InlineMath math="\mathbb{R}^{n \times n} \subset \mathbb{C}^{n \times n}" />.
+
+## Sifat Determinan yang Menarik
+
+Yang menarik dari matriks ortogonal dan uniter adalah determinannya selalu punya nilai absolut 1. Kenapa bisa begitu?
+
+Untuk matriks uniter <InlineMath math="A" />, kita punya <InlineMath math="A^H A = I" />. Kalau kita hitung determinannya:
+
+<MathContainer>
+<BlockMath math="1 = \det I = \det(A^H A) = \det A^H \cdot \det A = \overline{\det A} \cdot \det A = |\det A|^2" />
+</MathContainer>
+
+Jadi <InlineMath math="|\det A| = 1" />. Untuk matriks ortogonal, cara buktikannya sama, cuma pakai <InlineMath math="A^T A = I" />.
+
+## Nilai Eigen yang Istimewa
+
+Nilai eigen dari matriks ortogonal dan uniter juga punya sifat khusus. Setiap nilai eigen <InlineMath math="\lambda" /> selalu memenuhi:
+
+<BlockMath math="|\lambda| = 1" />
+
+Mengapa demikian? Misalkan <InlineMath math="A \cdot v = \lambda \cdot v" /> untuk vektor eigen <InlineMath math="v \neq 0" />. Untuk kasus kompleks, kita bisa hitung:
+
+<MathContainer>
+<BlockMath math="v^H v = v^H A^H A v = (A \cdot v)^H (A \cdot v) = (\lambda \cdot v)^H (\lambda \cdot v)" />
+<BlockMath math="= \overline{\lambda} \cdot \lambda \cdot v^H v = |\lambda|^2 \cdot v^H v" />
+</MathContainer>
+
+Karena <InlineMath math="v^H v \neq 0" />, maka <InlineMath math="|\lambda|^2 = 1" />, sehingga <InlineMath math="|\lambda| = 1" />.
+
+## Bentuk Nilai Eigen
+
+Untuk matriks ortogonal real, nilai eigennya bisa 1 atau -1 kalau real. Tapi kalau kompleks, bentuknya bisa ditulis sebagai:
+
+<BlockMath math="\lambda = \exp(i\varphi) = \cos \varphi + i \sin \varphi" />
+
+Ini artinya nilai eigen kompleks terletak di lingkaran unit di bidang kompleks.
+
+## Contoh Konkret Matriks Rotasi
+
+Mari lihat contoh yang familiar yaitu matriks rotasi:
+
+<BlockMath math="A = \begin{pmatrix} \cos \alpha & -\sin \alpha \\ \sin \alpha & \cos \alpha \end{pmatrix}" />
+
+Kita bisa cek bahwa ini matriks ortogonal:
+
+<MathContainer>
+<BlockMath math="A^T A = \begin{pmatrix} \cos \alpha & \sin \alpha \\ -\sin \alpha & \cos \alpha \end{pmatrix} \begin{pmatrix} \cos \alpha & -\sin \alpha \\ \sin \alpha & \cos \alpha \end{pmatrix}" />
+<BlockMath math="= \begin{pmatrix} \cos^2 \alpha + \sin^2 \alpha & \cos \alpha(-\sin \alpha) + \sin \alpha \cos \alpha \\ (-\sin \alpha) \cos \alpha + \cos \alpha \sin \alpha & (-\sin \alpha)(-\sin \alpha) + \cos^2 \alpha \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}" />
+</MathContainer>
+
+### Mencari Nilai Eigen
+
+Polinomial karakteristiknya adalah:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = \det \begin{pmatrix} \cos \alpha - t & -\sin \alpha \\ \sin \alpha & \cos \alpha - t \end{pmatrix}" />
+<BlockMath math="= (\cos \alpha - t)^2 + \sin^2 \alpha = \cos^2 \alpha + \sin^2 \alpha - 2t \cos \alpha + t^2" />
+<BlockMath math="= 1 - 2t \cos \alpha + t^2" />
+</MathContainer>
+
+Nilai eigennya adalah:
+
+<BlockMath math="\lambda_{1,2} = \cos \alpha \pm \sqrt{\cos^2 \alpha - 1} = \cos \alpha \pm \sqrt{-\sin^2 \alpha} = \cos \alpha \pm i \sin \alpha" />
+
+Hasilnya adalah <InlineMath math="\lambda_{1,2} = e^{\pm i\alpha}" />. 
+
+Transformasi <InlineMath math="\mathbb{R}^2 \to \mathbb{R}^2 : x \mapsto A \cdot x" /> menggambarkan rotasi sebesar sudut <InlineMath math="\alpha" />. Untuk <InlineMath math="\alpha \neq 0" /> dan <InlineMath math="\alpha \neq \pi" />, matriks ini tidak punya nilai eigen real, tapi punya dua nilai eigen kompleks.
