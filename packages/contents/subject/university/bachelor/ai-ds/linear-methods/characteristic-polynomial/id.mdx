@@ -1,0 +1,170 @@
+export const metadata = {
+    title: "Karakteristik Polinomial",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/12/2025",
+    subject: "Metode Linear AI",
+};
+
+## Definisi dan Konsep Dasar
+
+Untuk mencari nilai eigen suatu matriks, kita memerlukan alat matematika yang sangat penting dalam aljabar linear. Bayangkan kita ingin mencari semua nilai <InlineMath math="\lambda" /> yang membuat matriks <InlineMath math="A - \lambda I" /> menjadi singular (tidak dapat diinversi).
+
+**Polinomial Karakteristik**: Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" />. Fungsi:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = \det(A - t \cdot I)" />
+<BlockMath math="\chi_A(t) = a_n \cdot t^n + a_{n-1} \cdot t^{n-1} + \cdots + a_1 t + a_0" />
+</MathContainer>
+
+adalah polinomial berderajat <InlineMath math="n" /> dalam <InlineMath math="t \in \mathbb{K}" />, yang disebut **polinomial karakteristik** dari <InlineMath math="A" />:
+
+dengan koefisien <InlineMath math="a_0, \ldots, a_{n-1}, a_n \in \mathbb{K}" />.
+
+Faktanya, <InlineMath math="\chi_A(t)" /> benar-benar merupakan polinomial berderajat <InlineMath math="n" /> untuk setiap matriks <InlineMath math="A \in \mathbb{K}^{n \times n}" />.
+
+## Jejak Matriks dan Koefisien Polinomial
+
+Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" /> adalah matriks persegi. **Jejak** dari <InlineMath math="A" /> adalah jumlah dari elemen-elemen diagonal:
+
+<BlockMath math="\text{jejak} A = \sum_{i=1}^n a_{ii}" />
+
+Jejak matriks memiliki hubungan erat dengan koefisien polinomial karakteristik.
+
+### Hubungan Koefisien dengan Jejak dan Determinan
+
+Dalam polinomial karakteristik <InlineMath math="\chi_A(t)" /> dari <InlineMath math="A" />, koefisien-koefisiennya memiliki makna khusus:
+
+<BlockMath math="a_n = (-1)^n, \quad a_{n-1} = (-1)^{n-1} \cdot \text{jejak} A, \quad a_0 = \det A" />
+
+Ini berarti:
+- Koefisien tertinggi selalu <InlineMath math="(-1)^n" />
+- Koefisien kedua tertinggi terkait dengan jejak matriks
+- Suku konstanta adalah determinan matriks
+
+## Nilai Eigen sebagai Akar Polinomial
+
+Konsep paling penting dari polinomial karakteristik adalah hubungannya dengan nilai eigen.
+
+**Teorema Fundamental**: <InlineMath math="\lambda \in \mathbb{K}" /> adalah nilai eigen dari <InlineMath math="A" /> jika dan hanya jika <InlineMath math="\det(A - \lambda \cdot I) = 0" />.
+
+Dengan kata lain, **nilai eigen adalah akar-akar dari polinomial karakteristik**.
+
+**Persamaan Karakteristik**: Persamaan untuk <InlineMath math="t \in \mathbb{K}" />:
+
+<BlockMath math="\det(A - t \cdot I) = 0" />
+
+disebut **persamaan karakteristik** dari <InlineMath math="A" />.
+
+## Multiplisitas Aljabar
+
+Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dan <InlineMath math="\lambda \in \mathbb{K}" />. Multiplisitas dari akar <InlineMath math="t = \lambda" /> dari polinomial karakteristik <InlineMath math="\chi_A(t)" /> disebut **multiplisitas aljabar** <InlineMath math="\mu_A(\lambda)" /> dari nilai eigen <InlineMath math="\lambda" /> dari <InlineMath math="A" />. Kita katakan <InlineMath math="\lambda" /> adalah nilai eigen dengan multiplisitas <InlineMath math="\mu_A(\lambda)" /> dari <InlineMath math="A" />.
+
+### Batasan Multiplisitas
+
+Untuk setiap nilai eigen <InlineMath math="\lambda" />, berlaku:
+
+<BlockMath math="0 \leq \mu_A(\lambda) \leq n" />
+
+## Hubungan Multiplisitas Geometrik dan Aljabar
+
+Salah satu hasil penting dalam teori nilai eigen adalah hubungan antara multiplisitas geometrik dan aljabar.
+
+**Teorema**: Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dan <InlineMath math="\lambda \in \mathbb{K}" />. Berlaku:
+
+<BlockMath math="0 \leq \dim \text{Eig}_A(\lambda) \leq \mu_A(\lambda) \leq n" />
+
+> Multiplisitas geometrik setiap nilai eigen selalu lebih kecil atau sama dengan multiplisitas aljabarnya.
+
+Teorema ini dapat dibuktikan dengan menggunakan transformasi basis dan bentuk blok Jordan.
+
+## Contoh Perhitungan Polinomial Karakteristik
+
+Mari kita lihat contoh konkret perhitungan polinomial karakteristik:
+
+### Contoh Matriks 3x3
+
+Misalkan <InlineMath math="A = \begin{pmatrix} 3 & 2 & -1 \\ 1 & 0 & -4 \\ 3 & 0 & 1 \end{pmatrix} \in \mathbb{K}^{3 \times 3}" />. Polinomial karakteristik dari <InlineMath math="A" /> adalah:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = \det \begin{pmatrix} 3-t & 2 & -1 \\ 1 & -t & -4 \\ 3 & 0 & 1-t \end{pmatrix}" />
+<BlockMath math="= (3-t) \cdot (-t) \cdot (1-t) - 2 \cdot (1 \cdot (1-t) + 3 \cdot 4) + 1 \cdot 3 \cdot t" />
+<BlockMath math="= -3t + 3t^2 + t^2 - t^3 - 2 + 2t - 24 - 3t" />
+<BlockMath math="= -t^3 + 4t^2 - 4t - 26" />
+</MathContainer>
+
+Untuk <InlineMath math="\mathbb{K} = \mathbb{R}" />, <InlineMath math="\chi_A(t)" /> hanya memiliki akar <InlineMath math="\lambda_1 \approx -1.8003" /> dengan multiplisitas aljabar <InlineMath math="\mu_A(\lambda_1) = 1" />.
+
+Untuk <InlineMath math="\mathbb{K} = \mathbb{C}" />, <InlineMath math="\chi_A(t)" /> memiliki akar <InlineMath math="\lambda_1 \approx -1.8003" />, <InlineMath math="\lambda_2 \approx 2.9001 + 2.4559i" />, dan <InlineMath math="\lambda_3 \approx 2.9001 - 2.4559i" /> dengan multiplisitas aljabar masing-masing <InlineMath math="\mu_A(\lambda_1) = \mu_A(\lambda_2) = \mu_A(\lambda_3) = 1" />.
+
+### Contoh Sederhana
+
+Polinomial karakteristik dari matriks <InlineMath math="A = \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}" /> adalah:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = \det(A - t \cdot I) = \det \begin{pmatrix} 1-t & 2 \\ 0 & 1-t \end{pmatrix}" />
+<BlockMath math="= (1-t) \cdot (1-t) - 0 \cdot 2 = (1-t)^2" />
+<BlockMath math="= t^2 - 2 \cdot t + 1" />
+</MathContainer>
+
+Matriks ini memiliki akar <InlineMath math="\lambda = 1" /> dengan multiplisitas aljabar <InlineMath math="\mu_A(1) = 2" />. <InlineMath math="\lambda = 1" /> adalah satu-satunya nilai eigen dari <InlineMath math="A" />. Kita telah menghitung bahwa <InlineMath math="\dim \text{Eig}_A(1) = 1" />.
+
+## Contoh Transformasi Geometrik
+
+Mari kita lihat bagaimana polinomial karakteristik bekerja pada transformasi geometrik umum di <InlineMath math="\mathbb{R}^2 \to \mathbb{R}^2" />:
+
+### Rotasi
+
+Rotasi dengan <InlineMath math="A = \begin{pmatrix} \cos(\alpha) & -\sin(\alpha) \\ \sin(\alpha) & \cos(\alpha) \end{pmatrix}" /> memiliki polinomial karakteristik:
+
+<BlockMath math="\chi_A(t) = (\cos(\alpha) - t)^2 + \sin(\alpha)^2 = t^2 - 2 \cdot \cos(\alpha) \cdot t + 1" />
+
+Ini memiliki akar real jika dan hanya jika <InlineMath math="\cos(\alpha)^2 - 1 \geq 0" />, yaitu <InlineMath math="\cos(\alpha)^2 = 1" />, sehingga <InlineMath math="\alpha = 0" /> atau <InlineMath math="\alpha = \pi" />.
+
+### Refleksi
+
+Refleksi pada sumbu dengan <InlineMath math="A = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" /> memiliki polinomial karakteristik:
+
+<BlockMath math="\chi_A(t) = (1-t) \cdot (-1-t) = t^2 - 1" />
+
+Nilai eigen adalah <InlineMath math="\lambda_1 = 1" /> dan <InlineMath math="\lambda_2 = -1" /> dengan <InlineMath math="\mu_A(1) = \mu_A(-1) = 1" />.
+
+### Peregangan
+
+Peregangan dengan <InlineMath math="A = \begin{pmatrix} s & 0 \\ 0 & s \end{pmatrix}" /> memiliki polinomial karakteristik:
+
+<BlockMath math="\chi_A(t) = (s-t)^2 = t^2 - 2 \cdot s \cdot t + s^2" />
+
+Nilai eigen adalah <InlineMath math="\lambda = s" /> dengan <InlineMath math="\mu_A(s) = 2" />.
+
+### Geseran
+
+Geseran dengan <InlineMath math="A = \begin{pmatrix} 1 & s \\ 0 & 1 \end{pmatrix}" /> dengan <InlineMath math="s \neq 0" /> memiliki polinomial karakteristik:
+
+<BlockMath math="\chi_A(t) = (1-t)^2 = t^2 - 2 \cdot t + 1" />
+
+Nilai eigen adalah <InlineMath math="\lambda = 1" /> dengan <InlineMath math="\mu_A(1) = 2" />.
+
+## Sifat Matriks Serupa
+
+**Teorema Matriks Serupa**: Matriks-matriks serupa memiliki polinomial karakteristik yang sama, dan karena itu memiliki nilai eigen yang sama, jejak yang sama, dan determinan yang sama.
+
+**Bukti**: Misalkan <InlineMath math="S \in \mathbb{K}^{n \times n}" /> dapat diinversi dan <InlineMath math="B = S^{-1} \cdot A \cdot S" />. Maka:
+
+<MathContainer>
+<BlockMath math="\chi_B(t) = \det(B - t \cdot I) = \det(S^{-1} \cdot A \cdot S - t \cdot S^{-1} \cdot I \cdot S)" />
+<BlockMath math="= \det(S^{-1} \cdot (A - t \cdot I) \cdot S)" />
+<BlockMath math="= \det S^{-1} \cdot \det(A - t \cdot I) \cdot \det S = \chi_A(t)" />
+</MathContainer>
+
+### Sifat Vektor Eigen Matriks Serupa
+
+**Teorema**: Misalkan <InlineMath math="A, B \in \mathbb{K}^{n \times n}" /> adalah matriks serupa dengan <InlineMath math="B = S^{-1} \cdot A \cdot S" /> dan matriks invertible <InlineMath math="S \in \mathbb{K}^{n \times n}" />. Misalkan <InlineMath math="\lambda \in \mathbb{K}" /> adalah nilai eigen dari <InlineMath math="A" /> dan <InlineMath math="B" />. Misalkan <InlineMath math="v \in \mathbb{K}^n" /> adalah vektor eigen dari <InlineMath math="A" /> untuk nilai eigen <InlineMath math="\lambda" />. Maka <InlineMath math="w = S^{-1} \cdot v" /> adalah vektor eigen dari <InlineMath math="B" /> untuk nilai eigen <InlineMath math="\lambda" />.
+
+**Bukti**: Misalkan <InlineMath math="A \cdot v = \lambda \cdot v" /> dan <InlineMath math="w = S^{-1} \cdot v" />. Maka:
+
+<MathContainer>
+<BlockMath math="B \cdot w = S^{-1} \cdot A \cdot S \cdot S^{-1} \cdot v = S^{-1} \cdot A \cdot v" />
+<BlockMath math="= S^{-1} \cdot \lambda \cdot v = \lambda \cdot S^{-1} \cdot v = \lambda \cdot w" />
+</MathContainer>
+
+Ini menunjukkan bahwa transformasi keserupaan tidak hanya mempertahankan nilai eigen, tetapi juga memberikan cara sistematis untuk mengubah vektor eigen.

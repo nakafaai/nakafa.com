@@ -1,0 +1,170 @@
+export const metadata = {
+    title: "Characteristic Polynomial",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/12/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Definition and Basic Concepts
+
+To find the eigenvalues of a matrix, we need a very important mathematical tool in linear algebra. Imagine we want to find all values <InlineMath math="\lambda" /> that make the matrix <InlineMath math="A - \lambda I" /> become singular (not invertible).
+
+**Characteristic Polynomial**: Let <InlineMath math="A \in \mathbb{K}^{n \times n}" />. The function:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = \det(A - t \cdot I)" />
+<BlockMath math="\chi_A(t) = a_n \cdot t^n + a_{n-1} \cdot t^{n-1} + \cdots + a_1 t + a_0" />
+</MathContainer>
+
+is a polynomial of degree <InlineMath math="n" /> in <InlineMath math="t \in \mathbb{K}" />, which is called the **characteristic polynomial** of <InlineMath math="A" />:
+
+with coefficients <InlineMath math="a_0, \ldots, a_{n-1}, a_n \in \mathbb{K}" />.
+
+In fact, <InlineMath math="\chi_A(t)" /> is indeed a polynomial of degree <InlineMath math="n" /> for every matrix <InlineMath math="A \in \mathbb{K}^{n \times n}" />.
+
+## Matrix Trace and Polynomial Coefficients
+
+Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> be a square matrix. The **trace** of <InlineMath math="A" /> is the sum of the diagonal elements:
+
+<BlockMath math="\text{trace} A = \sum_{i=1}^n a_{ii}" />
+
+The matrix trace has a close relationship with the coefficients of the characteristic polynomial.
+
+### Relationship of Coefficients with Trace and Determinant
+
+In the characteristic polynomial <InlineMath math="\chi_A(t)" /> of <InlineMath math="A" />, its coefficients have special meaning:
+
+<BlockMath math="a_n = (-1)^n, \quad a_{n-1} = (-1)^{n-1} \cdot \text{trace} A, \quad a_0 = \det A" />
+
+This means:
+- The highest coefficient is always <InlineMath math="(-1)^n" />
+- The second highest coefficient is related to the matrix trace
+- The constant term is the determinant of the matrix
+
+## Eigenvalues as Polynomial Roots
+
+The most important concept of the characteristic polynomial is its relationship with eigenvalues.
+
+**Fundamental Theorem**: <InlineMath math="\lambda \in \mathbb{K}" /> is an eigenvalue of <InlineMath math="A" /> if and only if <InlineMath math="\det(A - \lambda \cdot I) = 0" />.
+
+In other words, **eigenvalues are the roots of the characteristic polynomial**.
+
+**Characteristic Equation**: The equation for <InlineMath math="t \in \mathbb{K}" />:
+
+<BlockMath math="\det(A - t \cdot I) = 0" />
+
+is called the **characteristic equation** of <InlineMath math="A" />.
+
+## Algebraic Multiplicity
+
+Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> and <InlineMath math="\lambda \in \mathbb{K}" />. The multiplicity of the root <InlineMath math="t = \lambda" /> of the characteristic polynomial <InlineMath math="\chi_A(t)" /> is called the **algebraic multiplicity** <InlineMath math="\mu_A(\lambda)" /> of the eigenvalue <InlineMath math="\lambda" /> of <InlineMath math="A" />. We say <InlineMath math="\lambda" /> is an eigenvalue with multiplicity <InlineMath math="\mu_A(\lambda)" /> of <InlineMath math="A" />.
+
+### Multiplicity Bounds
+
+For every eigenvalue <InlineMath math="\lambda" />, it holds:
+
+<BlockMath math="0 \leq \mu_A(\lambda) \leq n" />
+
+## Relationship between Geometric and Algebraic Multiplicity
+
+One important result in eigenvalue theory is the relationship between geometric and algebraic multiplicity.
+
+**Theorem**: Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> and <InlineMath math="\lambda \in \mathbb{K}" />. It holds:
+
+<BlockMath math="0 \leq \dim \text{Eig}_A(\lambda) \leq \mu_A(\lambda) \leq n" />
+
+> The geometric multiplicity of every eigenvalue is always less than or equal to its algebraic multiplicity.
+
+This theorem can be proven using basis transformation and Jordan block form.
+
+## Examples of Characteristic Polynomial Calculation
+
+Let's look at concrete examples of characteristic polynomial calculation:
+
+### 3x3 Matrix Example
+
+Let <InlineMath math="A = \begin{pmatrix} 3 & 2 & -1 \\ 1 & 0 & -4 \\ 3 & 0 & 1 \end{pmatrix} \in \mathbb{K}^{3 \times 3}" />. The characteristic polynomial of <InlineMath math="A" /> is:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = \det \begin{pmatrix} 3-t & 2 & -1 \\ 1 & -t & -4 \\ 3 & 0 & 1-t \end{pmatrix}" />
+<BlockMath math="= (3-t) \cdot (-t) \cdot (1-t) - 2 \cdot (1 \cdot (1-t) + 3 \cdot 4) + 1 \cdot 3 \cdot t" />
+<BlockMath math="= -3t + 3t^2 + t^2 - t^3 - 2 + 2t - 24 - 3t" />
+<BlockMath math="= -t^3 + 4t^2 - 4t - 26" />
+</MathContainer>
+
+For <InlineMath math="\mathbb{K} = \mathbb{R}" />, <InlineMath math="\chi_A(t)" /> only has the root <InlineMath math="\lambda_1 \approx -1.8003" /> with algebraic multiplicity <InlineMath math="\mu_A(\lambda_1) = 1" />.
+
+For <InlineMath math="\mathbb{K} = \mathbb{C}" />, <InlineMath math="\chi_A(t)" /> has roots <InlineMath math="\lambda_1 \approx -1.8003" />, <InlineMath math="\lambda_2 \approx 2.9001 + 2.4559i" />, and <InlineMath math="\lambda_3 \approx 2.9001 - 2.4559i" /> with algebraic multiplicities <InlineMath math="\mu_A(\lambda_1) = \mu_A(\lambda_2) = \mu_A(\lambda_3) = 1" /> respectively.
+
+### Simple Example
+
+The characteristic polynomial of matrix <InlineMath math="A = \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}" /> is:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = \det(A - t \cdot I) = \det \begin{pmatrix} 1-t & 2 \\ 0 & 1-t \end{pmatrix}" />
+<BlockMath math="= (1-t) \cdot (1-t) - 0 \cdot 2 = (1-t)^2" />
+<BlockMath math="= t^2 - 2 \cdot t + 1" />
+</MathContainer>
+
+This matrix has the root <InlineMath math="\lambda = 1" /> with algebraic multiplicity <InlineMath math="\mu_A(1) = 2" />. <InlineMath math="\lambda = 1" /> is the only eigenvalue of <InlineMath math="A" />. We have calculated that <InlineMath math="\dim \text{Eig}_A(1) = 1" />.
+
+## Geometric Transformation Examples
+
+Let's see how the characteristic polynomial works on common geometric transformations in <InlineMath math="\mathbb{R}^2 \to \mathbb{R}^2" />:
+
+### Rotation
+
+Rotation with <InlineMath math="A = \begin{pmatrix} \cos(\alpha) & -\sin(\alpha) \\ \sin(\alpha) & \cos(\alpha) \end{pmatrix}" /> has the characteristic polynomial:
+
+<BlockMath math="\chi_A(t) = (\cos(\alpha) - t)^2 + \sin(\alpha)^2 = t^2 - 2 \cdot \cos(\alpha) \cdot t + 1" />
+
+This has real roots if and only if <InlineMath math="\cos(\alpha)^2 - 1 \geq 0" />, that is <InlineMath math="\cos(\alpha)^2 = 1" />, so <InlineMath math="\alpha = 0" /> or <InlineMath math="\alpha = \pi" />.
+
+### Reflection
+
+Reflection along axes with <InlineMath math="A = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" /> has the characteristic polynomial:
+
+<BlockMath math="\chi_A(t) = (1-t) \cdot (-1-t) = t^2 - 1" />
+
+The eigenvalues are <InlineMath math="\lambda_1 = 1" /> and <InlineMath math="\lambda_2 = -1" /> with <InlineMath math="\mu_A(1) = \mu_A(-1) = 1" />.
+
+### Scaling
+
+Scaling with <InlineMath math="A = \begin{pmatrix} s & 0 \\ 0 & s \end{pmatrix}" /> has the characteristic polynomial:
+
+<BlockMath math="\chi_A(t) = (s-t)^2 = t^2 - 2 \cdot s \cdot t + s^2" />
+
+The eigenvalue is <InlineMath math="\lambda = s" /> with <InlineMath math="\mu_A(s) = 2" />.
+
+### Shearing
+
+Shearing with <InlineMath math="A = \begin{pmatrix} 1 & s \\ 0 & 1 \end{pmatrix}" /> with <InlineMath math="s \neq 0" /> has the characteristic polynomial:
+
+<BlockMath math="\chi_A(t) = (1-t)^2 = t^2 - 2 \cdot t + 1" />
+
+The eigenvalue is <InlineMath math="\lambda = 1" /> with <InlineMath math="\mu_A(1) = 2" />.
+
+## Properties of Similar Matrices
+
+**Similar Matrices Theorem**: Similar matrices have the same characteristic polynomial, and therefore have the same eigenvalues, the same trace, and the same determinant.
+
+**Proof**: Let <InlineMath math="S \in \mathbb{K}^{n \times n}" /> be invertible and <InlineMath math="B = S^{-1} \cdot A \cdot S" />. Then:
+
+<MathContainer>
+<BlockMath math="\chi_B(t) = \det(B - t \cdot I) = \det(S^{-1} \cdot A \cdot S - t \cdot S^{-1} \cdot I \cdot S)" />
+<BlockMath math="= \det(S^{-1} \cdot (A - t \cdot I) \cdot S)" />
+<BlockMath math="= \det S^{-1} \cdot \det(A - t \cdot I) \cdot \det S = \chi_A(t)" />
+</MathContainer>
+
+### Eigenvector Properties of Similar Matrices
+
+**Theorem**: Let <InlineMath math="A, B \in \mathbb{K}^{n \times n}" /> be similar matrices with <InlineMath math="B = S^{-1} \cdot A \cdot S" /> and invertible matrix <InlineMath math="S \in \mathbb{K}^{n \times n}" />. Let <InlineMath math="\lambda \in \mathbb{K}" /> be an eigenvalue of <InlineMath math="A" /> and <InlineMath math="B" />. Let <InlineMath math="v \in \mathbb{K}^n" /> be an eigenvector of <InlineMath math="A" /> for eigenvalue <InlineMath math="\lambda" />. Then <InlineMath math="w = S^{-1} \cdot v" /> is an eigenvector of <InlineMath math="B" /> for eigenvalue <InlineMath math="\lambda" />.
+
+**Proof**: Let <InlineMath math="A \cdot v = \lambda \cdot v" /> and <InlineMath math="w = S^{-1} \cdot v" />. Then:
+
+<MathContainer>
+<BlockMath math="B \cdot w = S^{-1} \cdot A \cdot S \cdot S^{-1} \cdot v = S^{-1} \cdot A \cdot v" />
+<BlockMath math="= S^{-1} \cdot \lambda \cdot v = \lambda \cdot S^{-1} \cdot v = \lambda \cdot w" />
+</MathContainer>
+
+This shows that similarity transformation not only preserves eigenvalues, but also provides a systematic way to transform eigenvectors.
