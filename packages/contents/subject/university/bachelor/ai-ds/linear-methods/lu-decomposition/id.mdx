@@ -102,9 +102,12 @@ Algoritma eliminasi Gauss bekerja seperti pembersihan sistematis. Untuk setiap k
 Kompleksitas waktu untuk menghitung dekomposisi LU adalah <InlineMath math="\frac{1}{3}n^3 + O(n^2)" /> operasi aritmatika. Pembuktian menunjukkan bahwa perkalian dan penjumlahan terjadi bersamaan dalam transformasi baris eliminasi <InlineMath math="a_{ij} := a_{ij} + \lambda_{ir} \cdot a_{rl}" />.
 
 <MathContainer>
-<BlockMath math="\sum_{j=1}^n \sum_{i=j+1}^n \sum_{l=j+1}^n 1 = \sum_{j=1}^n (n-j)^2 = \sum_{j=1}^n (n^2 - 2nj + j^2)" />
-<BlockMath math="= n^3 - 2n \sum_{j=1}^n j + \sum_{j=1}^n j^2 = n^3 - 2n \frac{n(n+1)}{2} + \frac{n(n+1)(2n+1)}{6}" />
-<BlockMath math="= n^3 - n^3 + \frac{2}{6}n^3 + O(n^2) = \frac{1}{3}n^3 + O(n^2)" />
+<BlockMath math="\sum_{j=1}^n \sum_{i=j+1}^n \sum_{l=j+1}^n 1 = \sum_{j=1}^n (n-j)^2" />
+<BlockMath math="= \sum_{j=1}^n (n^2 - 2nj + j^2)" />
+<BlockMath math="= n^3 - 2n \sum_{j=1}^n j + \sum_{j=1}^n j^2" />
+<BlockMath math="= n^3 - 2n \frac{n(n+1)}{2} + \frac{n(n+1)(2n+1)}{6}" />
+<BlockMath math="= n^3 - n^3 + \frac{2}{6}n^3 + O(n^2)" />
+<BlockMath math="= \frac{1}{3}n^3 + O(n^2)" />
 </MathContainer>
 
 ## Implementasi Algoritma dalam Python
@@ -247,7 +250,13 @@ Mari kita lihat bagaimana dekomposisi LU digunakan untuk menyelesaikan sistem li
 
    Untuk baris kedua dengan <InlineMath math="l_{22} = 1" />, kita dapatkan <InlineMath math="y_2 = c_2 = 4" />.
 
-   Untuk baris ketiga dengan <InlineMath math="l_{33} = 1" />, kita hitung <InlineMath math="y_3 = c_3 - l_{31} \cdot y_1 - l_{32} \cdot y_2 = 3 - \frac{1}{3} \cdot 3 - \frac{1}{2} \cdot 4 = 3 - 1 - 2 = 0" />.
+   Untuk baris ketiga dengan <InlineMath math="l_{33} = 1" />, kita hitung:
+
+   <MathContainer>
+   <BlockMath math="y_3 = c_3 - l_{31} \cdot y_1 - l_{32} \cdot y_2" />
+   <BlockMath math="= 3 - \frac{1}{3} \cdot 3 - \frac{1}{2} \cdot 4" />
+   <BlockMath math="= 3 - 1 - 2 = 0" />
+   </MathContainer>
 
    Sehingga diperoleh:
 
@@ -269,7 +278,10 @@ Mari kita lihat bagaimana dekomposisi LU digunakan untuk menyelesaikan sistem li
 
    Mari kita buktikan dengan menghitung <InlineMath math="A \cdot (x + K \cdot t_1)" />. Hasilnya adalah:
 
-   <BlockMath math="A \cdot (x + K \cdot t_1) = A \cdot \begin{pmatrix} -1 \\ 2 \\ 0 \\ 0 \end{pmatrix} + A \cdot \begin{pmatrix} 1 \\ -2 \\ 1 \\ 0 \end{pmatrix} \cdot t_1 = \begin{pmatrix} 4 \\ 3 \\ 3 \end{pmatrix} + \begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix} \cdot t_1 = b" />
+   <MathContainer>
+   <BlockMath math="A \cdot (x + K \cdot t_1) = A \cdot \begin{pmatrix} -1 \\ 2 \\ 0 \\ 0 \end{pmatrix} + A \cdot \begin{pmatrix} 1 \\ -2 \\ 1 \\ 0 \end{pmatrix} \cdot t_1" />
+   <BlockMath math="= \begin{pmatrix} 4 \\ 3 \\ 3 \end{pmatrix} + \begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix} \cdot t_1 = b" />
+   </MathContainer>
 
    Perhatikan bahwa <InlineMath math="A \cdot K = 0" />, yang berarti vektor <InlineMath math="K" /> berada dalam ruang null dari matriks <InlineMath math="A" />. Ini menjelaskan mengapa menambahkan kelipatan <InlineMath math="K" /> pada solusi tidak mengubah hasil.
 

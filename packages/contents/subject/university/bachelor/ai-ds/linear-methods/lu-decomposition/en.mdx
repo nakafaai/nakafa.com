@@ -102,9 +102,12 @@ The Gaussian elimination algorithm works like systematic cleaning. For each colu
 The time complexity for computing LU decomposition is <InlineMath math="\frac{1}{3}n^3 + O(n^2)" /> arithmetic operations. The proof shows that multiplication and addition occur simultaneously in the elimination row transformation <InlineMath math="a_{ij} := a_{ij} + \lambda_{ir} \cdot a_{rl}" />.
 
 <MathContainer>
-<BlockMath math="\sum_{j=1}^n \sum_{i=j+1}^n \sum_{l=j+1}^n 1 = \sum_{j=1}^n (n-j)^2 = \sum_{j=1}^n (n^2 - 2nj + j^2)" />
-<BlockMath math="= n^3 - 2n \sum_{j=1}^n j + \sum_{j=1}^n j^2 = n^3 - 2n \frac{n(n+1)}{2} + \frac{n(n+1)(2n+1)}{6}" />
-<BlockMath math="= n^3 - n^3 + \frac{2}{6}n^3 + O(n^2) = \frac{1}{3}n^3 + O(n^2)" />
+<BlockMath math="\sum_{j=1}^n \sum_{i=j+1}^n \sum_{l=j+1}^n 1 = \sum_{j=1}^n (n-j)^2" />
+<BlockMath math="= \sum_{j=1}^n (n^2 - 2nj + j^2)" />
+<BlockMath math="= n^3 - 2n \sum_{j=1}^n j + \sum_{j=1}^n j^2" />
+<BlockMath math="= n^3 - 2n \frac{n(n+1)}{2} + \frac{n(n+1)(2n+1)}{6}" />
+<BlockMath math="= n^3 - n^3 + \frac{2}{6}n^3 + O(n^2)" />
+<BlockMath math="= \frac{1}{3}n^3 + O(n^2)" />
 </MathContainer>
 
 ## Algorithm Implementation in Python
@@ -247,7 +250,13 @@ Let's see how LU decomposition is used to solve linear systems concretely. Suppo
 
    For the second row with <InlineMath math="l_{22} = 1" />, we get <InlineMath math="y_2 = c_2 = 4" />.
 
-   For the third row with <InlineMath math="l_{33} = 1" />, we calculate <InlineMath math="y_3 = c_3 - l_{31} \cdot y_1 - l_{32} \cdot y_2 = 3 - \frac{1}{3} \cdot 3 - \frac{1}{2} \cdot 4 = 3 - 1 - 2 = 0" />.
+   For the third row with <InlineMath math="l_{33} = 1" />, we calculate:
+
+   <MathContainer>
+   <BlockMath math="y_3 = c_3 - l_{31} \cdot y_1 - l_{32} \cdot y_2" />
+   <BlockMath math="= 3 - \frac{1}{3} \cdot 3 - \frac{1}{2} \cdot 4" />
+   <BlockMath math="= 3 - 1 - 2 = 0" />
+   </MathContainer>
 
    So we obtain:
 
@@ -269,7 +278,10 @@ Let's see how LU decomposition is used to solve linear systems concretely. Suppo
 
    Let's prove by calculating <InlineMath math="A \cdot (x + K \cdot t_1)" />. The result is:
 
-   <BlockMath math="A \cdot (x + K \cdot t_1) = A \cdot \begin{pmatrix} -1 \\ 2 \\ 0 \\ 0 \end{pmatrix} + A \cdot \begin{pmatrix} 1 \\ -2 \\ 1 \\ 0 \end{pmatrix} \cdot t_1 = \begin{pmatrix} 4 \\ 3 \\ 3 \end{pmatrix} + \begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix} \cdot t_1 = b" />
+   <MathContainer>
+   <BlockMath math="A \cdot (x + K \cdot t_1) = A \cdot \begin{pmatrix} -1 \\ 2 \\ 0 \\ 0 \end{pmatrix} + A \cdot \begin{pmatrix} 1 \\ -2 \\ 1 \\ 0 \end{pmatrix} \cdot t_1" />
+   <BlockMath math="= \begin{pmatrix} 4 \\ 3 \\ 3 \end{pmatrix} + \begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix} \cdot t_1 = b" />
+   </MathContainer>
 
    Note that <InlineMath math="A \cdot K = 0" />, which means vector <InlineMath math="K" /> is in the null space of matrix <InlineMath math="A" />. This explains why adding multiples of <InlineMath math="K" /> to the solution does not change the result.
 
