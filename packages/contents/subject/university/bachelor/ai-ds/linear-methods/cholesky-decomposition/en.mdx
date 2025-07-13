@@ -1,0 +1,84 @@
+export const metadata = {
+    title: "Cholesky Decomposition",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/13/2025",
+    subject: "Linear Methods of AI",
+};
+
+## LU Decomposition for Positive Definite Matrices
+
+For positive definite matrices, there is a special property that makes decomposition much simpler. [LU decomposition](/subject/university/bachelor/ai-ds/linear-methods/lu-decomposition) can be performed without using a permutation matrix <InlineMath math="P" /> because Gaussian elimination can proceed without row swapping, and all pivot elements generated are guaranteed to be positive.
+
+This means we obtain factorization in the form <InlineMath math="A = L \cdot U" />, where the diagonal elements of <InlineMath math="U" /> are positive pivot elements for all diagonal indices.
+
+Since <InlineMath math="A = A^T" />, we also have:
+
+<MathContainer>
+<BlockMath math="A = A^T = (L \cdot U)^T = (L \cdot D \cdot \tilde{U})^T = \tilde{U}^T \cdot D \cdot L^T" />
+</MathContainer>
+
+where <InlineMath math="\tilde{U}" /> is a matrix whose main diagonal is normalized to 1, and <InlineMath math="D" /> is a diagonal matrix:
+
+<MathContainer>
+<BlockMath math="\tilde{U} = \begin{pmatrix} 1 & u_{12}/u_{11} & \cdots & u_{1n}/u_{11} \\ & \ddots & \ddots & \vdots \\ & & 1 & u_{n-1,n}/u_{n-1,n-1} \\ 0 & & & 1 \end{pmatrix}" />
+<BlockMath math="D = \begin{pmatrix} u_{11} & & 0 \\ & \ddots & \\ 0 & & u_{nn} \end{pmatrix}" />
+</MathContainer>
+
+Since LU decomposition without <InlineMath math="P" /> is unique, then:
+
+<MathContainer>
+<BlockMath math="A = L \cdot U = \tilde{U}^T \cdot (D \cdot L^T)" />
+<BlockMath math="L = \tilde{U}^T \quad \text{and} \quad U = D \cdot L^T" />
+</MathContainer>
+
+If we define:
+
+<BlockMath math="D^{\frac{1}{2}} = \begin{pmatrix} \sqrt{u_{11}} & & 0 \\ & \ddots & \\ 0 & & \sqrt{u_{nn}} \end{pmatrix}" />
+
+then <InlineMath math="D^{\frac{1}{2}} \cdot D^{\frac{1}{2}} = D" />.
+
+## Cholesky Decomposition
+
+Positive definite matrices <InlineMath math="A \in \mathbb{R}^{n \times n}" /> allow for Cholesky decomposition:
+
+<BlockMath math="A = L \cdot D \cdot L^T = \tilde{L} \cdot \tilde{L}^T" />
+
+where <InlineMath math="\tilde{L} = L \cdot D^{\frac{1}{2}}" /> is a regular lower triangular matrix. This matrix can be computed using the Cholesky algorithm.
+
+The computation of matrix <InlineMath math="\tilde{L}" /> is performed with:
+
+<BlockMath math="\tilde{L} = \begin{pmatrix} \tilde{l}_{11} & 0 \\ \vdots & \ddots \\ \tilde{l}_{n1} & \cdots & \tilde{l}_{nn} \end{pmatrix}" />
+
+based on the relationship <InlineMath math="\tilde{L} \cdot \tilde{L}^T = A" />. The following algorithm produces the Cholesky factor.
+
+## Cholesky Algorithm
+
+Given a positive definite matrix <InlineMath math="A \in \mathbb{R}^{n \times n}" />.
+
+<MathContainer>
+<BlockMath math="\tilde{l}_{11} := \sqrt{a_{11}}" />
+<BlockMath math="\tilde{l}_{j1} := \frac{a_{j1}}{\tilde{l}_{11}}, \quad j = 2, \ldots, n" />
+</MathContainer>
+
+For <InlineMath math="i = 2, \ldots, n" />:
+
+<MathContainer>
+<BlockMath math="\tilde{l}_{ii} := \sqrt{a_{ii} - \tilde{l}_{i1}^2 - \tilde{l}_{i2}^2 - \ldots - \tilde{l}_{i,i-1}^2}" />
+<BlockMath math="\tilde{l}_{ji} := \tilde{l}_{ii}^{-1} \cdot \left( a_{ji} - \tilde{l}_{j1}\tilde{l}_{i1} - \tilde{l}_{j2}\tilde{l}_{i2} - \ldots - \tilde{l}_{j,i-1}\tilde{l}_{i,i-1} \right)" />
+</MathContainer>
+
+for <InlineMath math="j = i + 1, \ldots, n" />.
+
+After running this algorithm, we will obtain the Cholesky factor which is a lower triangular matrix:
+
+<BlockMath math="\tilde{L} = \begin{pmatrix} \tilde{l}_{11} & 0 \\ \vdots & \ddots \\ \tilde{l}_{n1} & \cdots & \tilde{l}_{nn} \end{pmatrix}" />
+
+## Cholesky Algorithm Complexity
+
+The Cholesky algorithm for computing the Cholesky factor <InlineMath math="\tilde{L}" /> from <InlineMath math="A \in \mathbb{R}^{n \times n}" /> requires:
+
+<BlockMath math="\frac{1}{6}n^3 + O(n^2)" />
+
+arithmetic operations.
+
+This is half the number of operations required to compute LU decomposition, because the use of symmetry allows us to perform computations without row swapping in a different order.

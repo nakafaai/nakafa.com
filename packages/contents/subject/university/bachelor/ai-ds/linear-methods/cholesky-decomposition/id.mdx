@@ -1,0 +1,84 @@
+export const metadata = {
+    title: "Cholesky Dekomposisi",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/13/2025",
+    subject: "Metode Linear AI",
+};
+
+## Dekomposisi LU untuk Matriks Positif Definit
+
+Untuk matriks positif definit, ada sifat khusus yang membuat dekomposisi menjadi lebih sederhana. [Dekomposisi LU](/subject/university/bachelor/ai-ds/linear-methods/lu-decomposition) dapat dilakukan tanpa menggunakan matriks permutasi <InlineMath math="P" /> karena eliminasi Gauss dapat berjalan tanpa pertukaran baris, dan semua elemen pivot yang dihasilkan dijamin positif.
+
+Hal ini berarti kita memperoleh faktorisasi dalam bentuk <InlineMath math="A = L \cdot U" />, di mana elemen diagonal dari <InlineMath math="U" /> adalah elemen pivot yang positif untuk semua indeks diagonal.
+
+Karena <InlineMath math="A = A^T" />, kita juga memiliki:
+
+<MathContainer>
+<BlockMath math="A = A^T = (L \cdot U)^T = (L \cdot D \cdot \tilde{U})^T = \tilde{U}^T \cdot D \cdot L^T" />
+</MathContainer>
+
+di mana <InlineMath math="\tilde{U}" /> adalah matriks yang diagonal utamanya dinormalisasi menjadi 1, dan <InlineMath math="D" /> adalah matriks diagonal:
+
+<MathContainer>
+<BlockMath math="\tilde{U} = \begin{pmatrix} 1 & u_{12}/u_{11} & \cdots & u_{1n}/u_{11} \\ & \ddots & \ddots & \vdots \\ & & 1 & u_{n-1,n}/u_{n-1,n-1} \\ 0 & & & 1 \end{pmatrix}" />
+<BlockMath math="D = \begin{pmatrix} u_{11} & & 0 \\ & \ddots & \\ 0 & & u_{nn} \end{pmatrix}" />
+</MathContainer>
+
+Karena dekomposisi LU tanpa <InlineMath math="P" /> adalah unik, maka:
+
+<MathContainer>
+<BlockMath math="A = L \cdot U = \tilde{U}^T \cdot (D \cdot L^T)" />
+<BlockMath math="L = \tilde{U}^T \quad \text{dan} \quad U = D \cdot L^T" />
+</MathContainer>
+
+Jika kita mendefinisikan:
+
+<BlockMath math="D^{\frac{1}{2}} = \begin{pmatrix} \sqrt{u_{11}} & & 0 \\ & \ddots & \\ 0 & & \sqrt{u_{nn}} \end{pmatrix}" />
+
+maka <InlineMath math="D^{\frac{1}{2}} \cdot D^{\frac{1}{2}} = D" />.
+
+## Dekomposisi Cholesky
+
+Matriks positif definit <InlineMath math="A \in \mathbb{R}^{n \times n}" /> memungkinkan adanya dekomposisi Cholesky:
+
+<BlockMath math="A = L \cdot D \cdot L^T = \tilde{L} \cdot \tilde{L}^T" />
+
+dengan <InlineMath math="\tilde{L} = L \cdot D^{\frac{1}{2}}" /> adalah matriks segitiga bawah reguler. Matriks ini dapat dihitung menggunakan algoritma Cholesky.
+
+Perhitungan matriks <InlineMath math="\tilde{L}" /> dilakukan dengan:
+
+<BlockMath math="\tilde{L} = \begin{pmatrix} \tilde{l}_{11} & 0 \\ \vdots & \ddots \\ \tilde{l}_{n1} & \cdots & \tilde{l}_{nn} \end{pmatrix}" />
+
+berdasarkan hubungan <InlineMath math="\tilde{L} \cdot \tilde{L}^T = A" />. Algoritma berikut menghasilkan faktor Cholesky.
+
+## Algoritma Cholesky
+
+Diberikan matriks positif definit <InlineMath math="A \in \mathbb{R}^{n \times n}" />.
+
+<MathContainer>
+<BlockMath math="\tilde{l}_{11} := \sqrt{a_{11}}" />
+<BlockMath math="\tilde{l}_{j1} := \frac{a_{j1}}{\tilde{l}_{11}}, \quad j = 2, \ldots, n" />
+</MathContainer>
+
+Untuk <InlineMath math="i = 2, \ldots, n" />:
+
+<MathContainer>
+<BlockMath math="\tilde{l}_{ii} := \sqrt{a_{ii} - \tilde{l}_{i1}^2 - \tilde{l}_{i2}^2 - \ldots - \tilde{l}_{i,i-1}^2}" />
+<BlockMath math="\tilde{l}_{ji} := \tilde{l}_{ii}^{-1} \cdot \left( a_{ji} - \tilde{l}_{j1}\tilde{l}_{i1} - \tilde{l}_{j2}\tilde{l}_{i2} - \ldots - \tilde{l}_{j,i-1}\tilde{l}_{i,i-1} \right)" />
+</MathContainer>
+
+untuk <InlineMath math="j = i + 1, \ldots, n" />.
+
+Setelah menjalankan algoritma ini, kita akan mendapatkan faktor Cholesky yang merupakan matriks segitiga bawah:
+
+<BlockMath math="\tilde{L} = \begin{pmatrix} \tilde{l}_{11} & 0 \\ \vdots & \ddots \\ \tilde{l}_{n1} & \cdots & \tilde{l}_{nn} \end{pmatrix}" />
+
+## Kompleksitas Algoritma Cholesky
+
+Algoritma Cholesky untuk menghitung faktor Cholesky <InlineMath math="\tilde{L}" /> dari <InlineMath math="A \in \mathbb{R}^{n \times n}" /> memerlukan:
+
+<BlockMath math="\frac{1}{6}n^3 + O(n^2)" />
+
+operasi aritmetika.
+
+Hal ini merupakan setengah dari jumlah operasi yang diperlukan untuk menghitung dekomposisi LU, karena penggunaan simetri memungkinkan kita melakukan perhitungan tanpa pertukaran baris dalam urutan yang berbeda.
