@@ -1,0 +1,139 @@
+export const metadata = {
+    title: "Positive Definite Matrix",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/13/2025",
+    subject: "Linear Methods AI",
+};
+
+## Positive and Semidefinite Definitions
+
+Imagine we have a bowl that always faces upward. No matter from which direction we throw a ball into it, the ball will always roll to the lowest point. Positive definite matrices have a property similar to this bowl in mathematical space.
+
+A symmetric matrix <InlineMath math="A \in \mathbb{R}^{n \times n}" /> or Hermitian matrix <InlineMath math="A \in \mathbb{C}^{n \times n}" /> is called **positive semidefinite** if:
+
+<MathContainer>
+<BlockMath math="x^T A x \geq 0 \text{ for all } x \in \mathbb{R}^n" />
+<BlockMath math="x^H A x \geq 0 \text{ for all } x \in \mathbb{C}^n" />
+</MathContainer>
+
+A matrix is called **positive definite** if a stronger condition is satisfied:
+
+<MathContainer>
+<BlockMath math="x^T A x > 0 \text{ for all } x \neq 0 \text{ in } \mathbb{R}^n" />
+<BlockMath math="x^H A x > 0 \text{ for all } x \neq 0 \text{ in } \mathbb{C}^n" />
+</MathContainer>
+
+Conversely, a matrix is called **negative semidefinite** if <InlineMath math="-A" /> is positive semidefinite, and **negative definite** if <InlineMath math="-A" /> is positive definite. A matrix that is neither positive nor negative semidefinite is called **indefinite**.
+
+## Geometric Properties of Ellipsoids
+
+Why is this concept important? Let's look at it from an interesting geometric perspective.
+
+If <InlineMath math="A" /> is a positive definite matrix, then the set:
+
+<BlockMath math="E = \{x \in \mathbb{R}^n : x^T A x = 1\}" />
+
+forms an ellipsoid in <InlineMath math="n" />-dimensional space centered at the origin. This ellipsoid shape provides a visual representation of how the matrix "stretches" space in various directions.
+
+Specifically, if <InlineMath math="A = \frac{1}{r^2} I" /> where <InlineMath math="I" /> is the identity matrix, then <InlineMath math="E" /> becomes a sphere with radius <InlineMath math="r" />.
+
+## Properties of Diagonal Elements
+
+One simple but important property of positive definite matrices is that all their diagonal elements must be positive.
+
+If <InlineMath math="A" /> is a positive definite matrix, then all diagonal elements <InlineMath math="a_{ii} > 0" /> for <InlineMath math="i = 1, 2, \ldots, n" />.
+
+Why is this so? Because if we take the standard basis vector <InlineMath math="e_i" /> that has component 1 at position <InlineMath math="i" /> and 0 elsewhere, then:
+
+<BlockMath math="a_{ii} = e_i^T A e_i > 0" />
+
+However, this condition is not sufficient to guarantee positive definiteness. We can have a matrix with all positive diagonal elements but still not be positive definite.
+
+## Eigenvalue Criteria
+
+The most elegant way to determine positive definiteness is through eigenvalues. Let's look at this very useful criterion.
+
+A symmetric matrix <InlineMath math="A \in \mathbb{R}^{n \times n}" /> or Hermitian matrix <InlineMath math="A \in \mathbb{C}^{n \times n}" /> is positive definite if and only if all its eigenvalues are positive:
+
+<BlockMath math="\lambda_1, \lambda_2, \ldots, \lambda_n > 0" />
+
+For positive semidefinite, all eigenvalues must be non-negative (<InlineMath math="\lambda_i \geq 0" />).
+
+Why is this true? Because for symmetric or Hermitian matrices, we can perform orthogonal diagonalization. If <InlineMath math="A = Q \Lambda Q^T" /> where <InlineMath math="\Lambda" /> is a diagonal matrix containing eigenvalues, then:
+
+<BlockMath math="x^T A x = x^T Q \Lambda Q^T x = y^T \Lambda y = \sum_{i=1}^n \lambda_i y_i^2" />
+
+where <InlineMath math="y = Q^T x" />. This expression is positive for all <InlineMath math="x \neq 0" /> if and only if all <InlineMath math="\lambda_i > 0" />.
+
+## Leading Principal Minor Criteria
+
+There's another practical way to check positive definiteness without computing eigenvalues. This method is called the **leading principal minor criteria** or Hauptminorenkriterium.
+
+Let <InlineMath math="A \in \mathbb{R}^{n \times n}" /> be a symmetric matrix. For <InlineMath math="k = 1, 2, \ldots, n" />, define the <InlineMath math="k" />-th leading principal minor as:
+
+<BlockMath math="A_k = \begin{pmatrix} a_{11} & \cdots & a_{1k} \\ \vdots & \ddots & \vdots \\ a_{k1} & \cdots & a_{kk} \end{pmatrix}" />
+
+This is the upper-left submatrix of size <InlineMath math="k \times k" /> from matrix <InlineMath math="A" />. The determinant of <InlineMath math="A_k" /> is called the **<InlineMath math="k" />-th leading principal minor**.
+
+A symmetric matrix <InlineMath math="A" /> is positive definite if and only if all its leading principal minors are positive:
+
+<BlockMath math="\det A_k > 0 \text{ for all } k = 1, 2, \ldots, n" />
+
+> It's important to note that this leading principal minor criterion only detects positive definiteness, not positive semidefiniteness.
+
+## Application Examples
+
+Let's look at some examples to better understand these concepts.
+
+### Indefinite Matrix with Mixed Eigenvalues
+
+Consider the matrix <InlineMath math="A = \begin{pmatrix} 1 & 5 \\ 5 & 4 \end{pmatrix}" />. This matrix has eigenvalues approximately <InlineMath math="\lambda_1 \approx 7.7202" /> and <InlineMath math="\lambda_2 \approx -2.7202" />. 
+
+Since there is a negative eigenvalue, this matrix is **indefinite**. Even though its diagonal elements (1 and 4) are both positive, this doesn't guarantee positive definiteness.
+
+### Positive Definite Matrix with Verification
+
+Now consider the matrix <InlineMath math="A = \begin{pmatrix} 5 & 1 \\ 1 & 4 \end{pmatrix}" />. This matrix has eigenvalues <InlineMath math="\lambda_1 \approx 5.6180" /> and <InlineMath math="\lambda_2 \approx 3.3820" />. Both eigenvalues are positive, so this matrix is **positive definite**.
+
+We can also verify this using the leading principal minor criteria:
+
+<MathContainer>
+<BlockMath math="A_1 = (5), \quad \det A_1 = 5 > 0" />
+<BlockMath math="A_2 = \begin{pmatrix} 5 & 1 \\ 1 & 4 \end{pmatrix}, \quad \det A_2 = 20 - 1 = 19 > 0" />
+</MathContainer>
+
+Since all leading principal minors are positive, this matrix is positive definite.
+
+### Inverse of Positive Definite Matrix
+
+From the previous example, the inverse of the positive definite matrix is:
+
+<BlockMath math="A^{-1} = \begin{pmatrix} 4/19 & -1/19 \\ -1/19 & 5/19 \end{pmatrix}" />
+
+This matrix has eigenvalues approximately <InlineMath math="\lambda_1 \approx 0.17800" /> and <InlineMath math="\lambda_2 \approx 0.29569" />. Both are positive, so <InlineMath math="A^{-1}" /> is also positive definite.
+
+## Properties of Transpose Matrices
+
+One important result in linear algebra is the property of the matrix <InlineMath math="A^T A" /> for rectangular matrices.
+
+If <InlineMath math="A \in \mathbb{R}^{m \times n}" /> with <InlineMath math="m \geq n" />, then the matrix <InlineMath math="A^T A \in \mathbb{R}^{n \times n}" /> is **positive semidefinite**. This matrix becomes **positive definite** if and only if <InlineMath math="A" /> has full rank (rank <InlineMath math="n" />).
+
+Why is this so? Because for any vector <InlineMath math="x \in \mathbb{R}^n" />:
+
+<BlockMath math="x^T (A^T A) x = (Ax)^T (Ax) = \|Ax\|^2 \geq 0" />
+
+This expression equals zero only if <InlineMath math="Ax = 0" />. If <InlineMath math="A" /> has full rank, then <InlineMath math="Ax = 0" /> only for <InlineMath math="x = 0" />, so <InlineMath math="A^T A" /> is positive definite.
+
+## Spectral Transformation
+
+A very useful concept in practice is the ability to "shift" the spectrum of a matrix.
+
+If <InlineMath math="A \in \mathbb{R}^{n \times n}" /> is a symmetric matrix or <InlineMath math="A \in \mathbb{C}^{n \times n}" /> is a Hermitian matrix, and <InlineMath math="t" /> is a real number smaller than all eigenvalues of <InlineMath math="A" />, then the matrix:
+
+<BlockMath math="A - tI" />
+
+is positive definite.
+
+This provides a practical way to make a matrix positive definite by shifting its eigenvalues. If we know the lower bound of the smallest eigenvalue, we can shift the spectrum so that all eigenvalues become positive.
+
+> Positive definite matrices play a central role in optimization, numerical analysis, and machine learning due to their geometric properties that guarantee the existence of a unique global minimum.

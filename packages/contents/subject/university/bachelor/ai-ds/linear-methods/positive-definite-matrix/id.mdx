@@ -1,0 +1,139 @@
+export const metadata = {
+    title: "Matriks Definit Positif",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/13/2025",
+    subject: "Metode Linear AI",
+};
+
+## Definisi Positif dan Semidefinit
+
+Bayangkan kita memiliki sebuah mangkuk yang selalu mengarah ke atas. Tidak peduli dari arah mana kita melemparkan bola ke dalamnya, bola tersebut akan selalu menggelinding ke titik terendah. Matriks definit positif memiliki sifat yang mirip dengan mangkuk ini dalam ruang matematika.
+
+Sebuah matriks simetris <InlineMath math="A \in \mathbb{R}^{n \times n}" /> atau matriks Hermitian <InlineMath math="A \in \mathbb{C}^{n \times n}" /> disebut **positif semidefinit** jika:
+
+<MathContainer>
+<BlockMath math="x^T A x \geq 0 \text{ untuk semua } x \in \mathbb{R}^n" />
+<BlockMath math="x^H A x \geq 0 \text{ untuk semua } x \in \mathbb{C}^n" />
+</MathContainer>
+
+Matriks disebut **positif definit** jika kondisi yang lebih kuat terpenuhi:
+
+<MathContainer>
+<BlockMath math="x^T A x > 0 \text{ untuk semua } x \neq 0 \text{ dalam } \mathbb{R}^n" />
+<BlockMath math="x^H A x > 0 \text{ untuk semua } x \neq 0 \text{ dalam } \mathbb{C}^n" />
+</MathContainer>
+
+Sebaliknya, matriks disebut **negatif semidefinit** jika <InlineMath math="-A" /> adalah positif semidefinit, dan **negatif definit** jika <InlineMath math="-A" /> adalah positif definit. Matriks yang tidak positif maupun negatif semidefinit disebut **indefinit**.
+
+## Sifat Geometris Elipsoid
+
+Mengapa konsep ini penting? Mari kita lihat dari sudut pandang geometris yang menarik.
+
+Jika <InlineMath math="A" /> adalah matriks definit positif, maka himpunan:
+
+<BlockMath math="E = \{x \in \mathbb{R}^n : x^T A x = 1\}" />
+
+membentuk sebuah elipsoid dalam ruang <InlineMath math="n" /> dimensi dengan pusat di titik origin. Bentuk elipsoid ini memberikan gambaran visual tentang bagaimana matriks tersebut "meregangkan" ruang di berbagai arah.
+
+Secara khusus, jika <InlineMath math="A = \frac{1}{r^2} I" /> dimana <InlineMath math="I" /> adalah matriks identitas, maka <InlineMath math="E" /> menjadi sebuah bola dengan jari-jari <InlineMath math="r" />.
+
+## Sifat Elemen Diagonal
+
+Salah satu sifat sederhana namun penting dari matriks definit positif adalah bahwa semua elemen diagonalnya harus positif.
+
+Jika <InlineMath math="A" /> adalah matriks definit positif, maka semua elemen diagonal <InlineMath math="a_{ii} > 0" /> untuk <InlineMath math="i = 1, 2, \ldots, n" />.
+
+Mengapa demikian? Karena jika kita ambil vektor basis standar <InlineMath math="e_i" /> yang hanya memiliki komponen 1 pada posisi ke-<InlineMath math="i" /> dan 0 di tempat lain, maka:
+
+<BlockMath math="a_{ii} = e_i^T A e_i > 0" />
+
+Namun, kondisi ini tidak cukup untuk menjamin definit positif. Kita bisa memiliki matriks dengan semua elemen diagonal positif tetapi tidak definit positif.
+
+## Kriteria Nilai Eigen
+
+Cara paling elegant untuk menentukan definit positif adalah melalui nilai eigennya. Mari kita lihat kriteria yang sangat berguna ini.
+
+Sebuah matriks simetris <InlineMath math="A \in \mathbb{R}^{n \times n}" /> atau Hermitian <InlineMath math="A \in \mathbb{C}^{n \times n}" /> adalah definit positif jika dan hanya jika semua nilai eigennya positif:
+
+<BlockMath math="\lambda_1, \lambda_2, \ldots, \lambda_n > 0" />
+
+Untuk semidefinit positif, semua nilai eigen harus non-negatif (<InlineMath math="\lambda_i \geq 0" />).
+
+Mengapa hal ini benar? Karena untuk matriks simetris atau Hermitian, kita dapat melakukan diagonalisasi ortogonal. Jika <InlineMath math="A = Q \Lambda Q^T" /> dimana <InlineMath math="\Lambda" /> adalah matriks diagonal berisi nilai eigen, maka:
+
+<BlockMath math="x^T A x = x^T Q \Lambda Q^T x = y^T \Lambda y = \sum_{i=1}^n \lambda_i y_i^2" />
+
+dimana <InlineMath math="y = Q^T x" />. Ekspresi ini positif untuk semua <InlineMath math="x \neq 0" /> jika dan hanya jika semua <InlineMath math="\lambda_i > 0" />.
+
+## Kriteria Minor Utama
+
+Ada cara praktis lain untuk memeriksa definit positif tanpa harus menghitung nilai eigen. Metode ini disebut **kriteria minor utama** atau Hauptminorenkriterium.
+
+Misalkan <InlineMath math="A \in \mathbb{R}^{n \times n}" /> adalah matriks simetris. Untuk <InlineMath math="k = 1, 2, \ldots, n" />, definisikan minor utama ke-<InlineMath math="k" /> sebagai:
+
+<BlockMath math="A_k = \begin{pmatrix} a_{11} & \cdots & a_{1k} \\ \vdots & \ddots & \vdots \\ a_{k1} & \cdots & a_{kk} \end{pmatrix}" />
+
+Ini adalah submatriks kiri-atas berukuran <InlineMath math="k \times k" /> dari matriks <InlineMath math="A" />. Determinan dari <InlineMath math="A_k" /> disebut **minor utama ke-<InlineMath math="k" />**.
+
+Matriks simetris <InlineMath math="A" /> adalah definit positif jika dan hanya jika semua minor utamanya positif:
+
+<BlockMath math="\det A_k > 0 \text{ untuk semua } k = 1, 2, \ldots, n" />
+
+> Penting untuk dicatat bahwa kriteria minor utama ini hanya mendeteksi definit positif, bukan semidefinit positif.
+
+## Contoh Penerapan
+
+Mari kita lihat beberapa contoh untuk memahami konsep ini lebih baik.
+
+### Matriks Indefinit dengan Eigenvalue Campuran
+
+Perhatikan matriks <InlineMath math="A = \begin{pmatrix} 1 & 5 \\ 5 & 4 \end{pmatrix}" />. Matriks ini memiliki nilai eigen sekitar <InlineMath math="\lambda_1 \approx 7.7202" /> dan <InlineMath math="\lambda_2 \approx -2.7202" />. 
+
+Karena ada nilai eigen negatif, matriks ini adalah **indefinit**. Meskipun elemen diagonalnya (1 dan 4) keduanya positif, hal ini tidak menjamin definit positif.
+
+### Matriks Definit Positif dengan Verifikasi
+
+Sekarang perhatikan matriks <InlineMath math="A = \begin{pmatrix} 5 & 1 \\ 1 & 4 \end{pmatrix}" />. Matriks ini memiliki nilai eigen <InlineMath math="\lambda_1 \approx 5.6180" /> dan <InlineMath math="\lambda_2 \approx 3.3820" />. Kedua nilai eigen positif, sehingga matriks ini **definit positif**.
+
+Kita juga dapat memverifikasi dengan kriteria minor utama:
+
+<MathContainer>
+<BlockMath math="A_1 = (5), \quad \det A_1 = 5 > 0" />
+<BlockMath math="A_2 = \begin{pmatrix} 5 & 1 \\ 1 & 4 \end{pmatrix}, \quad \det A_2 = 20 - 1 = 19 > 0" />
+</MathContainer>
+
+Karena semua minor utama positif, matriks ini definit positif.
+
+### Inverse Matriks Definit Positif
+
+Dari contoh sebelumnya, inverse dari matriks definit positif adalah:
+
+<BlockMath math="A^{-1} = \begin{pmatrix} 4/19 & -1/19 \\ -1/19 & 5/19 \end{pmatrix}" />
+
+Matriks ini memiliki nilai eigen sekitar <InlineMath math="\lambda_1 \approx 0.17800" /> dan <InlineMath math="\lambda_2 \approx 0.29569" />. Keduanya positif, sehingga <InlineMath math="A^{-1}" /> juga definit positif.
+
+## Sifat Matriks Transpose
+
+Salah satu hasil penting dalam aljabar linear adalah sifat matriks <InlineMath math="A^T A" /> untuk matriks persegi panjang.
+
+Jika <InlineMath math="A \in \mathbb{R}^{m \times n}" /> dengan <InlineMath math="m \geq n" />, maka matriks <InlineMath math="A^T A \in \mathbb{R}^{n \times n}" /> adalah **positif semidefinit**. Matriks ini menjadi **positif definit** jika dan hanya jika <InlineMath math="A" /> memiliki peringkat penuh (rank <InlineMath math="n" />).
+
+Mengapa demikian? Karena untuk setiap vektor <InlineMath math="x \in \mathbb{R}^n" />:
+
+<BlockMath math="x^T (A^T A) x = (Ax)^T (Ax) = \|Ax\|^2 \geq 0" />
+
+Ekspresi ini sama dengan nol hanya jika <InlineMath math="Ax = 0" />. Jika <InlineMath math="A" /> memiliki peringkat penuh, maka <InlineMath math="Ax = 0" /> hanya untuk <InlineMath math="x = 0" />, sehingga <InlineMath math="A^T A" /> definit positif.
+
+## Transformasi Spektral
+
+Konsep yang sangat berguna dalam praktik adalah kemampuan untuk "menggeser" spektrum matriks.
+
+Jika <InlineMath math="A \in \mathbb{R}^{n \times n}" /> adalah matriks simetris atau <InlineMath math="A \in \mathbb{C}^{n \times n}" /> adalah matriks Hermitian, dan <InlineMath math="t" /> adalah bilangan real yang lebih kecil dari semua nilai eigen <InlineMath math="A" />, maka matriks:
+
+<BlockMath math="A - tI" />
+
+adalah definit positif.
+
+Ini memberikan cara praktis untuk membuat matriks menjadi definit positif dengan menggeser nilai eigennya. Jika kita tahu batas bawah nilai eigen terkecil, kita dapat menggeser spektrum sehingga semua nilai eigen menjadi positif.
+
+> Matriks definit positif memiliki peran sentral dalam optimasi, analisis numerik, dan pembelajaran mesin karena sifat geometrisnya yang menjamin adanya minimum global yang unik.
