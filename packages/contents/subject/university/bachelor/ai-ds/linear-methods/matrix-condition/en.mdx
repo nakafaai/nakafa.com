@@ -1,0 +1,108 @@
+export const metadata = {
+    title: "Matrix Condition",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/13/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Matrix Norm from Vector Norm
+
+Have you ever wondered how we can measure the "size" of a matrix? Just like vectors that have length, matrices also require the concept of "size" called matrix norm. What's interesting is that we can build matrix norms directly from vector norms that we already know.
+
+If we have a vector norm on space <InlineMath math="\mathbb{R}^n" />, then we can define a corresponding matrix norm on <InlineMath math="\mathbb{R}^{n \times n}" /> through the formula:
+
+<BlockMath math="\|A\| = \sup_{x \in \mathbb{R}^n} \frac{\|Ax\|}{\|x\|} = \max_{x \in \mathbb{R}^n: \|x\|=1} \|Ax\|" />
+
+The norm produced this way is called the **natural matrix norm** that is induced by the vector norm. This norm has two important properties that make it very useful in numerical analysis.
+
+1. **Compatibility Property**: For all matrices <InlineMath math="A \in \mathbb{R}^{n \times n}" /> and vectors <InlineMath math="x \in \mathbb{R}^n" />, the following holds:
+
+    <BlockMath math="\|Ax\| \leq \|A\| \cdot \|x\|" />
+
+2. **Multiplicative Property**: For all matrices <InlineMath math="A, B \in \mathbb{R}^{n \times n}" />, the following holds:
+
+    <BlockMath math="\|AB\| \leq \|A\| \cdot \|B\|" />
+
+Both properties are very fundamental because they ensure that matrix norms behave consistently with matrix and vector multiplication operations.
+
+## Examples of Special Matrix Norms
+
+Let's look at some concrete examples of matrix norms that are often used in practice.
+
+1. **Maximum Column Norm**: If we use the norm <InlineMath math="\|x\|_1 = \sum_{i=1}^n |x_i|" /> on vectors, then the induced matrix norm is:
+
+    <BlockMath math="\|A\|_1 = \max_{j=1,\ldots,n} \sum_{i=1}^n |a_{ij}|" />
+
+    This means we look for the column with the largest sum of absolute values.
+
+2. **Maximum Row Norm**: If we use the maximum norm <InlineMath math="\|x\|_\infty = \max_{i=1,\ldots,n} |x_i|" /> on vectors, then the induced matrix norm is:
+
+    <BlockMath math="\|A\|_\infty = \max_{i=1,\ldots,n} \sum_{j=1}^n |a_{ij}|" />
+
+    This means we look for the row with the largest sum of absolute values.
+
+Both norms are very easy to compute and provide good estimates for numerical algorithm stability analysis.
+
+## Linear System Stability
+
+Why do we need to understand matrix condition? The answer lies in the problem of numerical stability. When we solve linear equation systems <InlineMath math="Ax = b" /> using computers, there is always the possibility of small errors in data or calculations.
+
+Imagine we have a slightly perturbed system. Instead of solving <InlineMath math="Ax = b" />, we actually solve the perturbed system <InlineMath math="\tilde{A}\tilde{x} = \tilde{b}" /> where <InlineMath math="\tilde{A} = A + \delta A" /> and <InlineMath math="\tilde{b} = b + \delta b" />.
+
+The crucial question is how much influence do small perturbations <InlineMath math="\delta A" /> and <InlineMath math="\delta b" /> have on the solution <InlineMath math="\tilde{x}" />?
+
+If matrix <InlineMath math="A" /> is regular and the perturbation is small enough such that <InlineMath math="\|\delta A\| < \frac{1}{\|A^{-1}\|}" />, then the perturbed matrix <InlineMath math="\tilde{A} = A + \delta A" /> is also regular.
+
+For the relative error in the solution, we obtain the estimate:
+
+<BlockMath math="\frac{\|\delta x\|}{\|x\|} \leq \frac{\text{cond}(A)}{1 - \text{cond}(A)\|\delta A\|/\|A\|} \left( \frac{\|\delta b\|}{\|b\|} + \frac{\|\delta A\|}{\|A\|} \right)" />
+
+where <InlineMath math="\text{cond}(A)" /> is the **condition number** of matrix <InlineMath math="A" />.
+
+> The condition number measures the sensitivity of linear system solutions to small perturbations in input data.
+
+## Spectral Radius and Eigenvalues
+
+Before discussing condition numbers further, we need to understand the concept of spectral radius. The **spectral radius** of a matrix <InlineMath math="A" /> is defined as:
+
+<BlockMath math="\text{spr}(A) = \max\{|\lambda| : \lambda \text{ is an eigenvalue of } A\}" />
+
+The spectral radius provides information about the eigenvalue with the largest magnitude of the matrix.
+
+There is an interesting relationship between spectral radius and matrix norms. For every eigenvalue <InlineMath math="\lambda" /> of matrix <InlineMath math="A" />, the following holds:
+
+<BlockMath math="|\lambda| \leq \|A\|" />
+
+This means that matrix norms provide an upper bound for all eigenvalues.
+
+A more specific result applies to the **spectral norm** or 2-norm of matrices. For symmetric matrices <InlineMath math="A \in \mathbb{R}^{n \times n}" />, the spectral norm equals the spectral radius:
+
+<BlockMath math="\|A\|_2 = \max\{|\lambda| : \lambda \text{ eigenvalue of } A\} = \text{spr}(A)" />
+
+For general matrices, the spectral norm is computed as:
+
+<BlockMath math="\|A\|_2 = \sqrt{\text{spr}(A^T A)}" />
+
+## Condition Number
+
+Now we arrive at the central concept in numerical analysis, namely the **condition number**. For invertible matrices <InlineMath math="A \in \mathbb{R}^{n \times n}" />, the condition number is defined as follows.
+
+<BlockMath math="\text{cond}(A) = \|A\| \cdot \|A^{-1}\|" />
+
+The condition number measures how "bad" a matrix is in the context of numerical stability. The larger the condition number, the more sensitive the system is to small perturbations.
+
+### Spectral Condition
+
+For symmetric matrices, we can compute the condition number explicitly using eigenvalues. The **spectral condition** of symmetric matrices is:
+
+<BlockMath math="\text{cond}_2(A) = \frac{|\lambda_{\max}|}{|\lambda_{\min}|}" />
+
+where <InlineMath math="\lambda_{\max}" /> and <InlineMath math="\lambda_{\min}" /> are the eigenvalues with the largest and smallest magnitudes.
+
+The spectral condition provides a very clear interpretation. A matrix has bad condition if:
+- Its eigenvalues are very different in magnitude (large ratio)
+- There are eigenvalues that are very small (approaching singular)
+
+Conversely, matrices with good condition have eigenvalues that are relatively uniform in magnitude.
+
+> The condition number provides a quantitative measure of how sensitive linear system solutions are to small perturbations in input data.

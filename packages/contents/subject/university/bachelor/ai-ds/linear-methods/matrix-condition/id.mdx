@@ -1,0 +1,108 @@
+export const metadata = {
+    title: "Kondisi Matriks",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/13/2025",
+    subject: "Metode Linear AI",
+};
+
+## Norma Matriks dari Norma Vektor
+
+Pernahkah kamu bertanya-tanya bagaimana kita bisa mengukur "ukuran" sebuah matriks? Sama seperti vektor yang memiliki panjang, matriks juga memerlukan konsep "ukuran" yang disebut norma matriks. Yang menarik adalah, kita dapat membangun norma matriks langsung dari norma vektor yang sudah kita kenal.
+
+Jika kita memiliki norma vektor pada ruang <InlineMath math="\mathbb{R}^n" />, maka kita dapat mendefinisikan norma matriks yang sesuai pada <InlineMath math="\mathbb{R}^{n \times n}" /> melalui formula:
+
+<BlockMath math="\|A\| = \sup_{x \in \mathbb{R}^n} \frac{\|Ax\|}{\|x\|} = \max_{x \in \mathbb{R}^n: \|x\|=1} \|Ax\|" />
+
+Norma yang dihasilkan dengan cara ini disebut **norma matriks alami** yang diinduksi oleh norma vektor. Norma ini memiliki dua sifat penting yang membuatnya sangat berguna dalam analisis numerik.
+
+1. **Sifat Kompatibilitas**: Untuk semua matriks <InlineMath math="A \in \mathbb{R}^{n \times n}" /> dan vektor <InlineMath math="x \in \mathbb{R}^n" />, berlaku:
+
+    <BlockMath math="\|Ax\| \leq \|A\| \cdot \|x\|" />
+
+2. **Sifat Multiplikatif**: Untuk semua matriks <InlineMath math="A, B \in \mathbb{R}^{n \times n}" />, berlaku:
+
+    <BlockMath math="\|AB\| \leq \|A\| \cdot \|B\|" />
+
+Kedua sifat ini sangat fundamental karena memastikan bahwa norma matriks berperilaku konsisten dengan operasi perkalian matriks dan vektor.
+
+## Contoh Norma Matriks Khusus
+
+Mari kita lihat beberapa contoh konkret dari norma matriks yang sering digunakan dalam praktik.
+
+1. **Norma Maksimum Kolom**: Jika kita menggunakan norma <InlineMath math="\|x\|_1 = \sum_{i=1}^n |x_i|" /> pada vektor, maka norma matriks yang diinduksi adalah:
+
+    <BlockMath math="\|A\|_1 = \max_{j=1,\ldots,n} \sum_{i=1}^n |a_{ij}|" />
+
+    Ini berarti kita mencari kolom dengan jumlah nilai absolut terbesar.
+
+2. **Norma Maksimum Baris**: Jika kita menggunakan norma maksimum <InlineMath math="\|x\|_\infty = \max_{i=1,\ldots,n} |x_i|" /> pada vektor, maka norma matriks yang diinduksi adalah:
+
+    <BlockMath math="\|A\|_\infty = \max_{i=1,\ldots,n} \sum_{j=1}^n |a_{ij}|" />
+
+    Ini berarti kita mencari baris dengan jumlah nilai absolut terbesar.
+
+Kedua norma ini sangat mudah dihitung dan memberikan estimasi yang baik untuk analisis stabilitas algoritma numerik.
+
+## Stabilitas Sistem Linear
+
+Mengapa kita perlu memahami kondisi matriks? Jawabannya terletak pada masalah stabilitas numerik. Ketika kita menyelesaikan sistem persamaan linear <InlineMath math="Ax = b" /> menggunakan komputer, selalu ada kemungkinan kesalahan kecil dalam data atau perhitungan.
+
+Bayangkan kita memiliki sistem yang sedikit terganggu. Alih-alih menyelesaikan <InlineMath math="Ax = b" />, kita sebenarnya menyelesaikan sistem yang terganggu <InlineMath math="\tilde{A}\tilde{x} = \tilde{b}" /> dimana <InlineMath math="\tilde{A} = A + \delta A" /> dan <InlineMath math="\tilde{b} = b + \delta b" />.
+
+Pertanyaan krusialnya adalah seberapa besar pengaruh gangguan kecil <InlineMath math="\delta A" /> dan <InlineMath math="\delta b" /> terhadap solusi <InlineMath math="\tilde{x}" />?
+
+Jika matriks <InlineMath math="A" /> adalah reguler dan gangguan cukup kecil sehingga <InlineMath math="\|\delta A\| < \frac{1}{\|A^{-1}\|}" />, maka matriks yang terganggu <InlineMath math="\tilde{A} = A + \delta A" /> juga reguler.
+
+Untuk kesalahan relatif dalam solusi, kita memperoleh estimasi:
+
+<BlockMath math="\frac{\|\delta x\|}{\|x\|} \leq \frac{\text{cond}(A)}{1 - \text{cond}(A)\|\delta A\|/\|A\|} \left( \frac{\|\delta b\|}{\|b\|} + \frac{\|\delta A\|}{\|A\|} \right)" />
+
+dimana <InlineMath math="\text{cond}(A)" /> adalah **bilangan kondisi** matriks <InlineMath math="A" />.
+
+> Bilangan kondisi mengukur sensitivitas solusi sistem linear terhadap gangguan kecil dalam data masukan.
+
+## Spektralradius dan Nilai Eigen
+
+Sebelum membahas bilangan kondisi lebih lanjut, kita perlu memahami konsep spektralradius. **Spektralradius** suatu matriks <InlineMath math="A" /> didefinisikan sebagai:
+
+<BlockMath math="\text{spr}(A) = \max\{|\lambda| : \lambda \text{ adalah nilai eigen dari } A\}" />
+
+Spektralradius memberikan informasi tentang nilai eigen dengan magnitudo terbesar dari matriks tersebut.
+
+Ada hubungan menarik antara spektralradius dan norma matriks. Untuk setiap nilai eigen <InlineMath math="\lambda" /> dari matriks <InlineMath math="A" />, berlaku:
+
+<BlockMath math="|\lambda| \leq \|A\|" />
+
+Ini berarti norma matriks memberikan batas atas untuk semua nilai eigen.
+
+Hasil yang lebih spesifik berlaku untuk **norma spektral** atau norma-2 matriks. Untuk matriks simetris <InlineMath math="A \in \mathbb{R}^{n \times n}" />, norma spektral sama dengan spektralradius:
+
+<BlockMath math="\|A\|_2 = \max\{|\lambda| : \lambda \text{ nilai eigen dari } A\} = \text{spr}(A)" />
+
+Untuk matriks umum, norma spektral dihitung sebagai:
+
+<BlockMath math="\|A\|_2 = \sqrt{\text{spr}(A^T A)}" />
+
+## Bilangan Kondisi
+
+Sekarang kita sampai pada konsep sentral dalam analisis numerik, yaitu **bilangan kondisi**. Untuk matriks yang dapat dibalik <InlineMath math="A \in \mathbb{R}^{n \times n}" />, bilangan kondisi didefinisikan sebagai berikut.
+
+<BlockMath math="\text{cond}(A) = \|A\| \cdot \|A^{-1}\|" />
+
+Bilangan kondisi mengukur seberapa "buruk" suatu matriks dalam konteks stabilitas numerik. Semakin besar bilangan kondisi, semakin sensitif sistem terhadap gangguan kecil.
+
+### Kondisi Spektral
+
+Untuk matriks simetris, kita dapat menghitung bilangan kondisi secara eksplisit menggunakan nilai eigen. **Kondisi spektral** matriks simetris adalah:
+
+<BlockMath math="\text{cond}_2(A) = \frac{|\lambda_{\max}|}{|\lambda_{\min}|}" />
+
+dimana <InlineMath math="\lambda_{\max}" /> dan <InlineMath math="\lambda_{\min}" /> adalah nilai eigen dengan magnitudo terbesar dan terkecil.
+
+Kondisi spektral memberikan interpretasi yang sangat jelas. Matriks memiliki kondisi yang buruk jika:
+- Nilai eigennya sangat berbeda dalam magnitudo (rasio besar)
+- Ada nilai eigen yang sangat kecil (mendekati singular)
+
+Sebaliknya, matriks dengan kondisi baik memiliki nilai eigen yang relatif seragam dalam magnitudo.
+
+> Bilangan kondisi memberikan ukuran kuantitatif tentang seberapa sensitif solusi sistem linear terhadap gangguan kecil dalam data masukan.
