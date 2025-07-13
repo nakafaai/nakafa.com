@@ -76,7 +76,9 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -89,6 +91,7 @@ import {
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
 import { CheckIcon, CopyIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type {
   ComponentProps,
   HTMLAttributes,
@@ -457,9 +460,17 @@ export const CodeBlockSelectContent = ({
   children,
   ...props
 }: CodeBlockSelectContentProps) => {
+  const t = useTranslations("Common");
   const { data } = useContext(CodeBlockContext);
 
-  return <SelectContent {...props}>{data.map(children)}</SelectContent>;
+  return (
+    <SelectContent {...props}>
+      <SelectGroup>
+        <SelectLabel>{t("language")}</SelectLabel>
+        {data.map(children)}
+      </SelectGroup>
+    </SelectContent>
+  );
 };
 
 export type CodeBlockSelectItemProps = ComponentProps<typeof SelectItem>;
