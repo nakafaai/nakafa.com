@@ -8,7 +8,7 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { filterWhitespaceNodes } from "@repo/design-system/lib/utils";
 import { Anchor } from "@repo/design-system/markdown/anchor";
-import { Code } from "@repo/design-system/markdown/code";
+import { CodeBlockMdx } from "@repo/design-system/markdown/code-block";
 import { Heading } from "@repo/design-system/markdown/heading";
 import {
   BlockMath,
@@ -24,7 +24,6 @@ import type {
   ListItemProps,
   ListProps,
   ParagraphProps,
-  PreProps,
   StrongProps,
   TableBodyProps,
   TableCellProps,
@@ -71,10 +70,7 @@ export const components = {
     <blockquote className="my-4 border-l-2 pl-4 italic" {...props} />
   ),
   a: Anchor,
-  pre: (props: PreProps) => (
-    <pre className="whitespace-pre md:whitespace-pre-wrap" {...props} />
-  ),
-  code: Code,
+  CodeBlock: CodeBlockMdx,
   Mermaid,
   MathContainer,
   InlineMath,

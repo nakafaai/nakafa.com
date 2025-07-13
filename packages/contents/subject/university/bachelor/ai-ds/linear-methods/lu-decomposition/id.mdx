@@ -1,0 +1,276 @@
+export const metadata = {
+    title: "LU Dekomposisi",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/13/2025",
+    subject: "Metode Linear AI",
+};
+
+## Apa itu Dekomposisi LU?
+
+Dekomposisi LU adalah singkatan dari **Lower-Upper decomposition** atau dekomposisi Lower-Upper. Nama ini berasal dari dua matriks hasil dekomposisi:
+
+- **L (Lower)** = Matriks segitiga bawah yang memiliki elemen nol di atas diagonal utama
+- **U (Upper)** = Matriks segitiga atas yang memiliki elemen nol di bawah diagonal utama
+
+Mengapa kita memerlukan dekomposisi ini? Karena menyelesaikan sistem persamaan linear dengan matriks segitiga jauh lebih mudah daripada dengan matriks biasa.
+
+## Konsep Dasar Dekomposisi LU
+
+Dekomposisi LU adalah cara memecah matriks menjadi perkalian dua matriks yang lebih sederhana. Bayangkan kita memiliki puzzle yang rumit, lalu kita bongkar menjadi kepingan-kepingan yang lebih mudah disusun kembali.
+
+Untuk matriks <InlineMath math="A" /> yang diberikan, kita mendapatkan:
+
+<BlockMath math="P \cdot A = L \cdot U" />
+
+Di mana <InlineMath math="P" /> adalah matriks permutasi (pengatur urutan baris), <InlineMath math="L" /> adalah matriks segitiga bawah, dan <InlineMath math="U" /> adalah matriks segitiga atas.
+
+Eliminasi Gauss menghitung dekomposisi LU ini melalui serangkaian operasi baris yang sistematis. Proses ini dapat dituliskan sebagai:
+
+<BlockMath math="U = L_r \cdot P_r \cdot \ldots \cdot L_3 \cdot P_3 \cdot L_2 \cdot P_2 \cdot L_1 \cdot P_1 \cdot A" />
+
+dengan <InlineMath math="i = 1, \ldots, r" />, matriks pertukaran baris <InlineMath math="P_i" /> atau <InlineMath math="P_i = I" /> dan matriks eliminasi:
+
+<BlockMath math="L_i = \begin{pmatrix} 1 & & & \\ & \ddots & & \\ & & \lambda_{i+1i} & \\ & & \vdots & \ddots \\ & & \lambda_{mi} & & 1 \end{pmatrix}" />
+
+Invers dari <InlineMath math="L_i" /> adalah:
+
+<BlockMath math="L_i^{-1} = \begin{pmatrix} 1 & & & \\ & \ddots & & \\ & & -\lambda_{i+1i} & \\ & & \vdots & \ddots \\ & & -\lambda_{mi} & & 1 \end{pmatrix}" />
+
+Karena <InlineMath math="P_i^{-1} = P_i" />, kita dapat menulis ulang rangkaian operasi ini menjadi bentuk yang lebih sederhana hingga akhirnya mendapatkan <InlineMath math="L^{-1} \cdot P \cdot A = U" />.
+
+## Struktur Hasil Dekomposisi
+
+Dari eliminasi Gauss dengan langkah-langkah <InlineMath math="j_1, \ldots, j_r" />, kita mendapatkan tiga matriks dengan struktur khusus:
+
+<BlockMath math="\begin{pmatrix} 0 & u_{1j_1} & \cdots & & \cdots & u_{1n} \\ l_{21} & 0 & 0 & u_{2j_2} & \cdots & u_{2n} \\ l_{31} & l_{32} & 0 & 0 & \ddots & \\ \vdots & \vdots & \ddots & 0 & 0 & u_{rj_r} \cdots u_{rm} \\ & & & l_{(r+1)r} & 0 & 0 & 0 & 0 \\ \vdots & \vdots & & \vdots & 0 & 0 & 0 & 0 \\ l_{m1} & l_{m2} & \cdots & l_{mr} & 0 & 0 & 0 & 0 \end{pmatrix}" />
+
+Matriks <InlineMath math="P" /> diperoleh dari penerapan vektor permutasi <InlineMath math="p" /> pada baris-baris matriks identitas. Ketiga matriks memiliki sifat:
+
+1. <InlineMath math="U" /> adalah matriks segitiga atas dalam bentuk baris bertingkat dengan peringkat <InlineMath math="r" />
+2. <InlineMath math="L" /> adalah matriks segitiga bawah reguler dengan 1 pada diagonal
+3. <InlineMath math="P" /> adalah matriks permutasi dengan <InlineMath math="P^{-1} = P^T" />
+
+## Langkah Eliminasi Gauss
+
+Mari kita lihat contoh konkret. Bayangkan kita sedang membersihkan rumah lantai demi lantai, mulai dari atas.
+
+1. **Kolom pertama** dengan elemen pivot <InlineMath math="a_{21} = 3" />. Kita tukar baris pertama dan kedua seperti menukar posisi furniture.
+
+   <MathContainer>
+   <BlockMath math="A = \begin{pmatrix} 3 & 3 & 3 & 3 \\ 0 & 2 & 4 & 2 \\ 1 & 2 & 3 & 1 \end{pmatrix}" />
+   <BlockMath math="r = 1, \text{ Langkah } = \{1\}, p = (2,1,3), v = 1" />
+   </MathContainer>
+
+   Eliminasi entri lain pada kolom tersebut: <InlineMath math="\lambda_{21} = 0" />, <InlineMath math="\lambda_{31} = -\frac{1}{3}" />
+
+2. **Kolom kedua** dengan elemen pivot <InlineMath math="a_{22} = 2" />. Tidak ada pertukaran diperlukan.
+
+   Eliminasi: <InlineMath math="\lambda_{32} = -\frac{1}{2}" />
+
+3. **Kolom ketiga** tidak memiliki elemen pivot yang bisa digunakan.
+
+4. **Kolom keempat** dengan elemen pivot <InlineMath math="a_{34} = -1" />. Tidak ada operasi lagi diperlukan.
+
+Hasil akhir:
+
+<MathContainer>
+<BlockMath math="r = 3" />
+<BlockMath math="\text{Langkah} = \{1, 2, 4\}" />
+<BlockMath math="p = (2,1,3)" />
+<BlockMath math="v = 1" />
+</MathContainer>
+
+Dari hasil eliminasi ini, kita peroleh:
+
+<MathContainer>
+<BlockMath math="U = \begin{pmatrix} 3 & 3 & 3 & 3 \\ 0 & 2 & 4 & 2 \\ 0 & 0 & 0 & -1 \end{pmatrix}" />
+<BlockMath math="L = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 1/3 & 1/2 & 1 \end{pmatrix}" />
+<BlockMath math="P = \begin{pmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix}" />
+</MathContainer>
+
+Pembuktian menunjukkan bahwa <InlineMath math="L \cdot U = P \cdot A" /> untuk matriks <InlineMath math="A" /> yang diberikan awalnya.
+
+## Algoritma dan Kompleksitas
+
+Algoritma eliminasi Gauss bekerja seperti pembersihan sistematis. Untuk setiap kolom, kita melakukan:
+
+1. Cari elemen pivot terbaik
+2. Tukar baris jika perlu
+3. Eliminasi elemen di bawah pivot
+4. Simpan informasi multiplier
+
+Kompleksitas waktu untuk menghitung dekomposisi LU adalah <InlineMath math="\frac{1}{3}n^3 + O(n^2)" /> operasi aritmatika. Pembuktian menunjukkan bahwa perkalian dan penjumlahan terjadi bersamaan dalam transformasi baris eliminasi <InlineMath math="a_{ij} := a_{ij} + \lambda_{ir} \cdot a_{rl}" />.
+
+<MathContainer>
+<BlockMath math="\sum_{j=1}^n \sum_{i=j+1}^n \sum_{l=j+1}^n 1 = \sum_{j=1}^n (n-j)^2 = \sum_{j=1}^n (n^2 - 2nj + j^2)" />
+<BlockMath math="= n^3 - 2n \sum_{j=1}^n j + \sum_{j=1}^n j^2 = n^3 - 2n \frac{n(n+1)}{2} + \frac{n(n+1)(2n+1)}{6}" />
+<BlockMath math="= n^3 - n^3 + \frac{2}{6}n^3 + O(n^2) = \frac{1}{3}n^3 + O(n^2)" />
+</MathContainer>
+
+## Implementasi Algoritma dalam Python
+
+Berikut adalah implementasi algoritma dekomposisi LU dalam Python:
+
+<CodeBlock data={[{
+  language: "python",
+  filename: "lu_decomposition.py",
+  code: `import numpy as np
+
+def lu_decomposition(A):
+    """
+    Melakukan dekomposisi LU dengan pemilihan pivot parsial
+    Masukan: Matriks A (n x n)
+    Keluaran: L, U, P (matriks Bawah, Atas, dan Permutasi)
+    """
+    n = A.shape[0]
+    U = A.copy().astype(float)
+    L = np.zeros((n, n))
+    P = np.eye(n)
+    
+    for i in range(n):
+        max_row = i
+        for k in range(i + 1, n):
+            if abs(U[k, i]) > abs(U[max_row, i]):
+                max_row = k
+        
+        if max_row != i:
+            U[[i, max_row]] = U[[max_row, i]]
+            P[[i, max_row]] = P[[max_row, i]]
+            if i > 0:
+                L[[i, max_row], :i] = L[[max_row, i], :i]
+        
+        for k in range(i + 1, n):
+            if U[i, i] != 0:
+                factor = U[k, i] / U[i, i]
+                L[k, i] = factor
+                U[k, i:] = U[k, i:] - factor * U[i, i:]
+    
+    np.fill_diagonal(L, 1)
+    return L, U, P
+
+def forward_substitution(L, b):
+    """
+    Substitusi maju untuk menyelesaikan L * y = b
+    """
+    n = len(b)
+    y = np.zeros(n)
+    
+    for i in range(n):
+        y[i] = b[i] - np.dot(L[i, :i], y[:i])
+    
+    return y
+
+def backward_substitution(U, y):
+    """
+    Substitusi mundur untuk menyelesaikan U * x = y
+    """
+    n = len(y)
+    x = np.zeros(n)
+    
+    for i in range(n - 1, -1, -1):
+        if U[i, i] != 0:
+            x[i] = (y[i] - np.dot(U[i, i+1:], x[i+1:])) / U[i, i]
+    
+    return x
+
+def solve_linear_system(A, b):
+    """
+    Menyelesaikan sistem Ax = b menggunakan dekomposisi LU
+    """
+    L, U, P = lu_decomposition(A)
+    pb = np.dot(P, b)
+    y = forward_substitution(L, pb)
+    x = backward_substitution(U, y)
+    return x, L, U, P`
+}]} />
+
+## Penyelesaian Sistem Linear
+
+Setelah mendapatkan dekomposisi LU, menyelesaikan sistem <InlineMath math="A \cdot x = b" /> menjadi seperti menyelesaikan puzzle yang sudah diurutkan.
+
+Sistem <InlineMath math="A \cdot x = b" /> berubah menjadi <InlineMath math="U \cdot x = L^{-1} \cdot P \cdot b" /> melalui dua tahap:
+
+### Substitusi Maju
+
+Algoritma substitusi maju menyelesaikan <InlineMath math="L \cdot y = P \cdot b" /> dengan matriks segitiga bawah reguler <InlineMath math="L" /> dan vektor <InlineMath math="c = P \cdot b" />. Proses ini seperti mengisi tangga dari bawah ke atas, di mana setiap langkah bergantung pada langkah sebelumnya.
+
+Untuk setiap baris <InlineMath math="i = 1, \ldots, m" />, kita menghitung:
+
+<BlockMath math="y_i := \frac{1}{l_{ii}} \cdot \left( c_i - \sum_{j=1}^{i-1} l_{ij} \cdot y_j \right)" />
+
+Algoritma ini efisien karena kita hanya perlu menghitung satu nilai di setiap langkah. Elemen diagonal <InlineMath math="l_{ii}" /> selalu bernilai 1 untuk matriks <InlineMath math="L" /> dari dekomposisi LU, sehingga pembagian menjadi sederhana.
+
+### Substitusi Mundur
+
+Algoritma substitusi mundur menyelesaikan <InlineMath math="U \cdot x = y" /> dengan matriks <InlineMath math="U" /> dalam bentuk baris bertingkat dengan <InlineMath math="r" /> langkah pada kolom-kolom <InlineMath math="j_1, \ldots, j_r" /> dan vektor <InlineMath math="d = y" />.
+
+Pertama, kita periksa apakah sistem dapat diselesaikan. Jika <InlineMath math="r < m" /> dan terdapat <InlineMath math="d_i \neq 0" /> untuk <InlineMath math="i \in \{r + 1, \ldots, m\}" />, maka sistem tidak memiliki solusi.
+
+Jika sistem dapat diselesaikan, kita inisialisasi matriks kernel <InlineMath math="K" /> dengan ukuran <InlineMath math="n \times (n-r)" />, dan mulai dengan <InlineMath math="k = 0" /> serta <InlineMath math="i = r" />.
+
+Algoritma bekerja mundur dari kolom <InlineMath math="j = n" /> hingga <InlineMath math="j = 1" />. Untuk setiap kolom, kita periksa apakah kolom tersebut adalah langkah pivot atau bukan.
+
+1. **Jika kolom j adalah langkah pivot**, artinya <InlineMath math="j = j_i" /> untuk langkah ke-<InlineMath math="i" />, maka kita hitung solusi untuk variabel <InlineMath math="x_j" />:
+
+   <BlockMath math="x_j := \frac{1}{u_{ij}} \cdot \left( d_i - \sum_{l=j+1}^n u_{il} \cdot x_l \right)" />
+
+   Dan kita juga hitung kontribusi variabel ini terhadap matriks kernel:
+   
+   <BlockMath math="K_{jq} := \frac{1}{u_{ij}} \cdot \left( - \sum_{l=j+1}^n u_{il} \cdot K_{lq} \right)" />
+
+   untuk <InlineMath math="q = 1, \ldots, n - r" />, kemudian kita kurangi <InlineMath math="i" /> dengan 1.
+
+2. **Jika kolom j bukan langkah pivot**, artinya tidak ada pivot pada kolom tersebut, maka variabel <InlineMath math="x_j" /> adalah variabel bebas. Kita set:
+   - <InlineMath math="k := k + 1" />
+   - <InlineMath math="x_j := 0" /> (solusi khusus)
+   - <InlineMath math="K_{jk} := 1" /> (basis kernel)
+
+Algoritma ini menghasilkan solusi <InlineMath math="x" /> dan matriks <InlineMath math="K" /> yang memenuhi <InlineMath math="U \cdot x = d" /> dan <InlineMath math="U \cdot K = 0" />.
+
+Kolom-kolom dari matriks <InlineMath math="K" /> membentuk basis untuk kernel (ruang null) dari matriks <InlineMath math="U" />. Ini berarti bahwa setiap kolom <InlineMath math="K" /> adalah vektor yang ketika dikalikan dengan <InlineMath math="U" /> menghasilkan vektor nol.
+
+Himpunan solusi lengkap adalah:
+
+<BlockMath math="\left\{ x + K \cdot \begin{pmatrix} t_1 \\ \vdots \\ t_{n-r} \end{pmatrix} : t_1, \ldots, t_{n-r} \in \mathbb{R} \right\}" />
+
+## Contoh Penerapan
+
+Mari kita lihat bagaimana dekomposisi LU digunakan untuk menyelesaikan sistem linear secara konkret. Misalkan kita memiliki vektor <InlineMath math="b = \begin{pmatrix} 4 \\ 3 \\ 3 \end{pmatrix}" /> dan ingin menyelesaikan sistem <InlineMath math="A \cdot x = b" />.
+
+1. **Langkah pertama** adalah menghitung <InlineMath math="c = P \cdot b" />. Karena matriks permutasi <InlineMath math="P" /> menukar baris pertama dengan baris kedua, kita mendapatkan:
+
+   <BlockMath math="c = P \cdot b = \begin{pmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix} \begin{pmatrix} 4 \\ 3 \\ 3 \end{pmatrix} = \begin{pmatrix} 3 \\ 4 \\ 3 \end{pmatrix}" />
+
+2. **Langkah kedua** adalah substitusi maju untuk menyelesaikan <InlineMath math="L \cdot y = c" />. Kita menggunakan matriks segitiga bawah <InlineMath math="L" /> yang sudah kita peroleh. Proses ini dilakukan dari atas ke bawah seperti mengisi tangga satu per satu.
+
+   Untuk baris pertama dengan <InlineMath math="l_{11} = 1" />, kita dapatkan <InlineMath math="y_1 = c_1 = 3" />.
+
+   Untuk baris kedua dengan <InlineMath math="l_{22} = 1" />, kita dapatkan <InlineMath math="y_2 = c_2 = 4" />.
+
+   Untuk baris ketiga dengan <InlineMath math="l_{33} = 1" />, kita hitung <InlineMath math="y_3 = c_3 - l_{31} \cdot y_1 - l_{32} \cdot y_2 = 3 - \frac{1}{3} \cdot 3 - \frac{1}{2} \cdot 4 = 3 - 1 - 2 = 0" />.
+
+   Sehingga diperoleh:
+
+   <BlockMath math="y = L^{-1} \cdot c = \begin{pmatrix} 3 \\ 4 \\ 0 \end{pmatrix}" />
+
+3. **Langkah ketiga** adalah substitusi mundur untuk menyelesaikan <InlineMath math="U \cdot x = y" />. Matriks <InlineMath math="U" /> dalam bentuk baris bertingkat memiliki pivot pada kolom 1, 2, dan 4. Kolom 3 tidak memiliki pivot sehingga menjadi variabel bebas.
+
+   Dari proses substitusi mundur, kita memperoleh solusi khusus:
+
+   <BlockMath math="x = \begin{pmatrix} -1 \\ 2 \\ 0 \\ 0 \end{pmatrix}" />
+
+   dan matriks kernel:
+
+   <BlockMath math="K = \begin{pmatrix} 1 \\ -2 \\ 1 \\ 0 \end{pmatrix}" />
+
+4. **Interpretasi hasil** sangat penting untuk dipahami. Solusi <InlineMath math="x" /> adalah satu solusi khusus dari sistem persamaan. Matriks <InlineMath math="K" /> menunjukkan arah di mana kita bisa bergerak dalam ruang solusi tanpa mengubah hasil perkalian <InlineMath math="A \cdot x" />.
+
+5. **Verifikasi matematis** menunjukkan bahwa untuk setiap nilai parameter <InlineMath math="t_1" />, solusi umum <InlineMath math="x + K \cdot t_1" /> tetap memenuhi persamaan asli.
+
+   Mari kita buktikan dengan menghitung <InlineMath math="A \cdot (x + K \cdot t_1)" />. Hasilnya adalah:
+
+   <BlockMath math="A \cdot (x + K \cdot t_1) = A \cdot \begin{pmatrix} -1 \\ 2 \\ 0 \\ 0 \end{pmatrix} + A \cdot \begin{pmatrix} 1 \\ -2 \\ 1 \\ 0 \end{pmatrix} \cdot t_1 = \begin{pmatrix} 4 \\ 3 \\ 3 \end{pmatrix} + \begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix} \cdot t_1 = b" />
+
+   Perhatikan bahwa <InlineMath math="A \cdot K = 0" />, yang berarti vektor <InlineMath math="K" /> berada dalam ruang null dari matriks <InlineMath math="A" />. Ini menjelaskan mengapa menambahkan kelipatan <InlineMath math="K" /> pada solusi tidak mengubah hasil.
+
+Dibandingkan dengan menghitung dekomposisi LU secara penuh, proses substitusi maju dan mundur ini jauh lebih efisien untuk menyelesaikan sistem linear dengan vektor ruas kanan yang berbeda-beda.

@@ -1,0 +1,276 @@
+export const metadata = {
+    title: "LU Decomposition",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/13/2025",
+    subject: "Linear Methods of AI",
+};
+
+## What is LU Decomposition?
+
+LU decomposition is an abbreviation for **Lower-Upper decomposition**. This name comes from the two matrices resulting from decomposition:
+
+- **L (Lower)** = Lower triangular matrix that has zero elements above the main diagonal
+- **U (Upper)** = Upper triangular matrix that has zero elements below the main diagonal
+
+Why do we need this decomposition? Because solving linear equation systems with triangular matrices is much easier than with regular matrices.
+
+## Basic Concepts of LU Decomposition
+
+LU decomposition is a way to break down a matrix into the multiplication of two simpler matrices. Imagine we have a complex puzzle, then we disassemble it into pieces that are easier to reassemble.
+
+For a given matrix <InlineMath math="A" />, we get:
+
+<BlockMath math="P \cdot A = L \cdot U" />
+
+Where <InlineMath math="P" /> is a permutation matrix (row order arranger), <InlineMath math="L" /> is a lower triangular matrix, and <InlineMath math="U" /> is an upper triangular matrix.
+
+Gaussian elimination computes this LU decomposition through a series of systematic row operations. This process can be written as:
+
+<BlockMath math="U = L_r \cdot P_r \cdot \ldots \cdot L_3 \cdot P_3 \cdot L_2 \cdot P_2 \cdot L_1 \cdot P_1 \cdot A" />
+
+with <InlineMath math="i = 1, \ldots, r" />, row exchange matrix <InlineMath math="P_i" /> or <InlineMath math="P_i = I" /> and elimination matrix:
+
+<BlockMath math="L_i = \begin{pmatrix} 1 & & & \\ & \ddots & & \\ & & \lambda_{i+1i} & \\ & & \vdots & \ddots \\ & & \lambda_{mi} & & 1 \end{pmatrix}" />
+
+The inverse of <InlineMath math="L_i" /> is:
+
+<BlockMath math="L_i^{-1} = \begin{pmatrix} 1 & & & \\ & \ddots & & \\ & & -\lambda_{i+1i} & \\ & & \vdots & \ddots \\ & & -\lambda_{mi} & & 1 \end{pmatrix}" />
+
+Since <InlineMath math="P_i^{-1} = P_i" />, we can rewrite this sequence of operations into a simpler form until we finally get <InlineMath math="L^{-1} \cdot P \cdot A = U" />.
+
+## Structure of Decomposition Results
+
+From Gaussian elimination with steps <InlineMath math="j_1, \ldots, j_r" />, we get three matrices with special structure:
+
+<BlockMath math="\begin{pmatrix} 0 & u_{1j_1} & \cdots & & \cdots & u_{1n} \\ l_{21} & 0 & 0 & u_{2j_2} & \cdots & u_{2n} \\ l_{31} & l_{32} & 0 & 0 & \ddots & \\ \vdots & \vdots & \ddots & 0 & 0 & u_{rj_r} \cdots u_{rm} \\ & & & l_{(r+1)r} & 0 & 0 & 0 & 0 \\ \vdots & \vdots & & \vdots & 0 & 0 & 0 & 0 \\ l_{m1} & l_{m2} & \cdots & l_{mr} & 0 & 0 & 0 & 0 \end{pmatrix}" />
+
+Matrix <InlineMath math="P" /> is obtained from applying permutation vector <InlineMath math="p" /> to the rows of the identity matrix. The three matrices have properties:
+
+1. <InlineMath math="U" /> is an upper triangular matrix in row echelon form with rank <InlineMath math="r" />
+2. <InlineMath math="L" /> is a regular lower triangular matrix with 1 on the diagonal
+3. <InlineMath math="P" /> is a permutation matrix with <InlineMath math="P^{-1} = P^T" />
+
+## Gaussian Elimination Steps
+
+Let's look at a concrete example. Imagine we are cleaning house floor by floor, starting from the top.
+
+1. **First column** with pivot element <InlineMath math="a_{21} = 3" />. We swap the first and second rows like rearranging furniture positions.
+
+   <MathContainer>
+   <BlockMath math="A = \begin{pmatrix} 3 & 3 & 3 & 3 \\ 0 & 2 & 4 & 2 \\ 1 & 2 & 3 & 1 \end{pmatrix}" />
+   <BlockMath math="r = 1, \text{ Steps } = \{1\}, p = (2,1,3), v = 1" />
+   </MathContainer>
+
+   Eliminate other entries in that column: <InlineMath math="\lambda_{21} = 0" />, <InlineMath math="\lambda_{31} = -\frac{1}{3}" />
+
+2. **Second column** with pivot element <InlineMath math="a_{22} = 2" />. No exchange needed.
+
+   Elimination: <InlineMath math="\lambda_{32} = -\frac{1}{2}" />
+
+3. **Third column** has no pivot element that can be used.
+
+4. **Fourth column** with pivot element <InlineMath math="a_{34} = -1" />. No more operations needed.
+
+Final result:
+
+<MathContainer>
+<BlockMath math="r = 3" />
+<BlockMath math="\text{Steps} = \{1, 2, 4\}" />
+<BlockMath math="p = (2,1,3)" />
+<BlockMath math="v = 1" />
+</MathContainer>
+
+From this elimination result, we obtain:
+
+<MathContainer>
+<BlockMath math="U = \begin{pmatrix} 3 & 3 & 3 & 3 \\ 0 & 2 & 4 & 2 \\ 0 & 0 & 0 & -1 \end{pmatrix}" />
+<BlockMath math="L = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 1/3 & 1/2 & 1 \end{pmatrix}" />
+<BlockMath math="P = \begin{pmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix}" />
+</MathContainer>
+
+The proof shows that <InlineMath math="L \cdot U = P \cdot A" /> for the initially given matrix <InlineMath math="A" />.
+
+## Algorithm and Complexity
+
+The Gaussian elimination algorithm works like systematic cleaning. For each column, we perform:
+
+1. Find the best pivot element
+2. Swap rows if necessary
+3. Eliminate elements below the pivot
+4. Store multiplier information
+
+The time complexity for computing LU decomposition is <InlineMath math="\frac{1}{3}n^3 + O(n^2)" /> arithmetic operations. The proof shows that multiplication and addition occur simultaneously in the elimination row transformation <InlineMath math="a_{ij} := a_{ij} + \lambda_{ir} \cdot a_{rl}" />.
+
+<MathContainer>
+<BlockMath math="\sum_{j=1}^n \sum_{i=j+1}^n \sum_{l=j+1}^n 1 = \sum_{j=1}^n (n-j)^2 = \sum_{j=1}^n (n^2 - 2nj + j^2)" />
+<BlockMath math="= n^3 - 2n \sum_{j=1}^n j + \sum_{j=1}^n j^2 = n^3 - 2n \frac{n(n+1)}{2} + \frac{n(n+1)(2n+1)}{6}" />
+<BlockMath math="= n^3 - n^3 + \frac{2}{6}n^3 + O(n^2) = \frac{1}{3}n^3 + O(n^2)" />
+</MathContainer>
+
+## Algorithm Implementation in Python
+
+Here is the implementation of the LU decomposition algorithm in Python:
+
+<CodeBlock data={[{
+  language: "python",
+  filename: "lu_decomposition.py",
+  code: `import numpy as np
+
+def lu_decomposition(A):
+    """
+    Perform LU decomposition with partial pivoting
+    Input: Matrix A (n x n)
+    Output: L, U, P (Lower, Upper, and Permutation matrices)
+    """
+    n = A.shape[0]
+    U = A.copy().astype(float)
+    L = np.zeros((n, n))
+    P = np.eye(n)
+    
+    for i in range(n):
+        max_row = i
+        for k in range(i + 1, n):
+            if abs(U[k, i]) > abs(U[max_row, i]):
+                max_row = k
+        
+        if max_row != i:
+            U[[i, max_row]] = U[[max_row, i]]
+            P[[i, max_row]] = P[[max_row, i]]
+            if i > 0:
+                L[[i, max_row], :i] = L[[max_row, i], :i]
+        
+        for k in range(i + 1, n):
+            if U[i, i] != 0:
+                factor = U[k, i] / U[i, i]
+                L[k, i] = factor
+                U[k, i:] = U[k, i:] - factor * U[i, i:]
+    
+    np.fill_diagonal(L, 1)
+    return L, U, P
+
+def forward_substitution(L, b):
+    """
+    Forward substitution to solve L * y = b
+    """
+    n = len(b)
+    y = np.zeros(n)
+    
+    for i in range(n):
+        y[i] = b[i] - np.dot(L[i, :i], y[:i])
+    
+    return y
+
+def backward_substitution(U, y):
+    """
+    Backward substitution to solve U * x = y
+    """
+    n = len(y)
+    x = np.zeros(n)
+    
+    for i in range(n - 1, -1, -1):
+        if U[i, i] != 0:
+            x[i] = (y[i] - np.dot(U[i, i+1:], x[i+1:])) / U[i, i]
+    
+    return x
+
+def solve_linear_system(A, b):
+    """
+    Solve system Ax = b using LU decomposition
+    """
+    L, U, P = lu_decomposition(A)
+    pb = np.dot(P, b)
+    y = forward_substitution(L, pb)
+    x = backward_substitution(U, y)
+    return x, L, U, P`
+}]} />
+
+## Solving Linear Systems
+
+After obtaining LU decomposition, solving the system <InlineMath math="A \cdot x = b" /> becomes like solving a puzzle that has been sorted.
+
+The system <InlineMath math="A \cdot x = b" /> transforms into <InlineMath math="U \cdot x = L^{-1} \cdot P \cdot b" /> through two stages:
+
+### Forward Substitution
+
+The forward substitution algorithm solves <InlineMath math="L \cdot y = P \cdot b" /> with regular lower triangular matrix <InlineMath math="L" /> and vector <InlineMath math="c = P \cdot b" />. This process is like filling stairs from bottom to top, where each step depends on the previous step.
+
+For each row <InlineMath math="i = 1, \ldots, m" />, we calculate:
+
+<BlockMath math="y_i := \frac{1}{l_{ii}} \cdot \left( c_i - \sum_{j=1}^{i-1} l_{ij} \cdot y_j \right)" />
+
+This algorithm is efficient because we only need to calculate one value at each step. The diagonal element <InlineMath math="l_{ii}" /> is always 1 for matrix <InlineMath math="L" /> from LU decomposition, so division becomes simple.
+
+### Backward Substitution
+
+The backward substitution algorithm solves <InlineMath math="U \cdot x = y" /> with matrix <InlineMath math="U" /> in row echelon form with <InlineMath math="r" /> steps on columns <InlineMath math="j_1, \ldots, j_r" /> and vector <InlineMath math="d = y" />.
+
+First, we check whether the system can be solved. If <InlineMath math="r < m" /> and there exists <InlineMath math="d_i \neq 0" /> for <InlineMath math="i \in \{r + 1, \ldots, m\}" />, then the system has no solution.
+
+If the system can be solved, we initialize kernel matrix <InlineMath math="K" /> with size <InlineMath math="n \times (n-r)" />, and start with <InlineMath math="k = 0" /> and <InlineMath math="i = r" />.
+
+The algorithm works backward from column <InlineMath math="j = n" /> to <InlineMath math="j = 1" />. For each column, we check whether that column is a pivot step or not.
+
+1. **If column j is a pivot step**, meaning <InlineMath math="j = j_i" /> for step <InlineMath math="i" />, then we calculate the solution for variable <InlineMath math="x_j" />:
+
+   <BlockMath math="x_j := \frac{1}{u_{ij}} \cdot \left( d_i - \sum_{l=j+1}^n u_{il} \cdot x_l \right)" />
+
+   And we also calculate the contribution of this variable to the kernel matrix:
+   
+   <BlockMath math="K_{jq} := \frac{1}{u_{ij}} \cdot \left( - \sum_{l=j+1}^n u_{il} \cdot K_{lq} \right)" />
+
+   for <InlineMath math="q = 1, \ldots, n - r" />, then we decrease <InlineMath math="i" /> by 1.
+
+2. **If column j is not a pivot step**, meaning there is no pivot in that column, then variable <InlineMath math="x_j" /> is a free variable. We set:
+   - <InlineMath math="k := k + 1" />
+   - <InlineMath math="x_j := 0" /> (particular solution)
+   - <InlineMath math="K_{jk} := 1" /> (kernel basis)
+
+This algorithm produces solution <InlineMath math="x" /> and matrix <InlineMath math="K" /> that satisfy <InlineMath math="U \cdot x = d" /> and <InlineMath math="U \cdot K = 0" />.
+
+The columns of matrix <InlineMath math="K" /> form a basis for the kernel (null space) of matrix <InlineMath math="U" />. This means that each column <InlineMath math="K" /> is a vector that when multiplied by <InlineMath math="U" /> produces a zero vector.
+
+The complete solution set is:
+
+<BlockMath math="\left\{ x + K \cdot \begin{pmatrix} t_1 \\ \vdots \\ t_{n-r} \end{pmatrix} : t_1, \ldots, t_{n-r} \in \mathbb{R} \right\}" />
+
+## Application Example
+
+Let's see how LU decomposition is used to solve linear systems concretely. Suppose we have vector <InlineMath math="b = \begin{pmatrix} 4 \\ 3 \\ 3 \end{pmatrix}" /> and want to solve system <InlineMath math="A \cdot x = b" />.
+
+1. **The first step** is to calculate <InlineMath math="c = P \cdot b" />. Since permutation matrix <InlineMath math="P" /> swaps the first row with the second row, we get:
+
+   <BlockMath math="c = P \cdot b = \begin{pmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix} \begin{pmatrix} 4 \\ 3 \\ 3 \end{pmatrix} = \begin{pmatrix} 3 \\ 4 \\ 3 \end{pmatrix}" />
+
+2. **The second step** is forward substitution to solve <InlineMath math="L \cdot y = c" />. We use the lower triangular matrix <InlineMath math="L" /> that we have obtained. This process is done from top to bottom like filling stairs one by one.
+
+   For the first row with <InlineMath math="l_{11} = 1" />, we get <InlineMath math="y_1 = c_1 = 3" />.
+
+   For the second row with <InlineMath math="l_{22} = 1" />, we get <InlineMath math="y_2 = c_2 = 4" />.
+
+   For the third row with <InlineMath math="l_{33} = 1" />, we calculate <InlineMath math="y_3 = c_3 - l_{31} \cdot y_1 - l_{32} \cdot y_2 = 3 - \frac{1}{3} \cdot 3 - \frac{1}{2} \cdot 4 = 3 - 1 - 2 = 0" />.
+
+   So we obtain:
+
+   <BlockMath math="y = L^{-1} \cdot c = \begin{pmatrix} 3 \\ 4 \\ 0 \end{pmatrix}" />
+
+3. **The third step** is backward substitution to solve <InlineMath math="U \cdot x = y" />. Matrix <InlineMath math="U" /> in row echelon form has pivots in columns 1, 2, and 4. Column 3 has no pivot so it becomes a free variable.
+
+   From the backward substitution process, we obtain the particular solution:
+
+   <BlockMath math="x = \begin{pmatrix} -1 \\ 2 \\ 0 \\ 0 \end{pmatrix}" />
+
+   and kernel matrix:
+
+   <BlockMath math="K = \begin{pmatrix} 1 \\ -2 \\ 1 \\ 0 \end{pmatrix}" />
+
+4. **Result interpretation** is very important to understand. Solution <InlineMath math="x" /> is one particular solution of the equation system. Matrix <InlineMath math="K" /> shows the direction in which we can move in the solution space without changing the result of multiplication <InlineMath math="A \cdot x" />.
+
+5. **Mathematical verification** shows that for any parameter value <InlineMath math="t_1" />, the general solution <InlineMath math="x + K \cdot t_1" /> still satisfies the original equation.
+
+   Let's prove by calculating <InlineMath math="A \cdot (x + K \cdot t_1)" />. The result is:
+
+   <BlockMath math="A \cdot (x + K \cdot t_1) = A \cdot \begin{pmatrix} -1 \\ 2 \\ 0 \\ 0 \end{pmatrix} + A \cdot \begin{pmatrix} 1 \\ -2 \\ 1 \\ 0 \end{pmatrix} \cdot t_1 = \begin{pmatrix} 4 \\ 3 \\ 3 \end{pmatrix} + \begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix} \cdot t_1 = b" />
+
+   Note that <InlineMath math="A \cdot K = 0" />, which means vector <InlineMath math="K" /> is in the null space of matrix <InlineMath math="A" />. This explains why adding multiples of <InlineMath math="K" /> to the solution does not change the result.
+
+Compared to computing LU decomposition completely, this forward and backward substitution process is much more efficient for solving linear systems with different right-hand side vectors.
