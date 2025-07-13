@@ -1,0 +1,114 @@
+export const metadata = {
+    title: "Scalar Product",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/13/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Definition of Scalar Product
+
+A scalar product is a fundamental operation that allows us to compute the "multiplication" between two vectors with the result being a scalar number. Through every positive definite matrix, we can define a scalar product on vector spaces.
+
+A scalar product on complex vector space <InlineMath math="\mathbb{C}^n" /> is a sesquilinear Hermitian form that is positive definite with three main properties.
+
+### Sesquilinear Property
+
+For all vectors <InlineMath math="x, y, z \in \mathbb{C}^n" /> and scalars <InlineMath math="\lambda, \mu \in \mathbb{C}" />, the scalar product satisfies:
+
+<MathContainer>
+<BlockMath math="\langle \lambda x + \mu y, z \rangle_A = \overline{\lambda} \langle x, z \rangle_A + \overline{\mu} \langle y, z \rangle_A" />
+<BlockMath math="\langle x, \lambda y + \mu z \rangle_A = \lambda \langle x, y \rangle_A + \mu \langle x, z \rangle_A" />
+</MathContainer>
+
+This property is called sesquilinear because it is semilinear in the first argument and linear in the second argument.
+
+### Hermitian Property
+
+For all vectors <InlineMath math="x, y \in \mathbb{C}^n" />, the following holds:
+
+<BlockMath math="\langle y, x \rangle_A = \overline{\langle x, y \rangle_A}" />
+
+### Positive Definite Property
+
+For all vectors <InlineMath math="x \in \mathbb{C}^n" />, the following holds:
+
+<MathContainer>
+<BlockMath math="\langle x, x \rangle_A \geq 0" />
+<BlockMath math="\langle x, x \rangle_A = 0 \Leftrightarrow x = 0" />
+</MathContainer>
+
+Thus, a scalar product is a sesquilinear Hermitian form that is positive definite on <InlineMath math="\mathbb{C}^n" />.
+
+## Scalar Product on Real Space
+
+If <InlineMath math="A \in \mathbb{R}^{n \times n}" /> is a positive definite matrix, then the mapping:
+
+<BlockMath math="\langle \cdot, \cdot \rangle_A : \mathbb{R}^n \times \mathbb{R}^n \to \mathbb{R} : (x, y) \mapsto \langle x, y \rangle_A = x^T A y" />
+
+has the following properties:
+
+1. **Bilinear**: For all vectors <InlineMath math="x, y, z \in \mathbb{R}^n" /> and scalars <InlineMath math="\lambda, \mu \in \mathbb{R}" />, the following holds:
+
+    <MathContainer>
+    <BlockMath math="\langle \lambda x + \mu y, z \rangle_A = \lambda \langle x, z \rangle_A + \mu \langle y, z \rangle_A" />
+    <BlockMath math="\langle x, \lambda y + \mu z \rangle_A = \lambda \langle x, y \rangle_A + \mu \langle x, z \rangle_A" />
+    </MathContainer>
+
+    This property is called bilinear because it is linear in both arguments.
+
+2. **Symmetric**: For all vectors <InlineMath math="x, y \in \mathbb{R}^n" />, the following holds:
+
+    <BlockMath math="\langle y, x \rangle_A = \langle x, y \rangle_A" />
+
+3. **Positive Definite**: For all vectors <InlineMath math="x \in \mathbb{R}^n" />, the following holds:
+
+    <MathContainer>
+    <BlockMath math="\langle x, x \rangle_A \geq 0" />
+    <BlockMath math="\langle x, x \rangle_A = 0 \Leftrightarrow x = 0" />
+    </MathContainer>
+
+    Thus, a scalar product is a symmetric bilinear form that is positive definite on <InlineMath math="\mathbb{R}^n" />.
+
+## Scalar Product on Complex Space
+
+Generalization to complex space involves the important role of complex conjugate. If <InlineMath math="A \in \mathbb{C}^{n \times n}" /> is a positive definite matrix, then the mapping:
+
+<BlockMath math="\langle \cdot, \cdot \rangle_A : \mathbb{C}^n \times \mathbb{C}^n \to \mathbb{C} : (x, y) \mapsto \langle x, y \rangle_A = x^H A y" />
+
+has the same properties as the general definition above, namely sesquilinear in the first argument, linear in the second argument, Hermitian with complex conjugate, and positive definite.
+
+This shows that when we move to complex space, the complex conjugate plays an important role in maintaining a consistent scalar product structure.
+
+## Matrix Representation
+
+An important result in scalar product theory is that every scalar product can be expressed in the form of an appropriate matrix.
+
+Every scalar product <InlineMath math="s(x, y)" /> on <InlineMath math="\mathbb{R}^n" /> as well as on <InlineMath math="\mathbb{C}^n" /> can be expressed in the form:
+
+<MathContainer>
+<BlockMath math="s(x, y) = x^T A y \text{ (for real case)}" />
+<BlockMath math="s(x, y) = x^H A y \text{ (for complex case)}" />
+</MathContainer>
+
+through an appropriate positive definite matrix <InlineMath math="A \in \mathbb{R}^{n \times n}" /> or <InlineMath math="A \in \mathbb{C}^{n \times n}" />.
+
+The elements of matrix <InlineMath math="A" /> can be computed as:
+
+<BlockMath math="a_{ij} = s(e_i, e_j) \text{ for } i, j = 1, \ldots, n" />
+
+where <InlineMath math="e_i" /> is the standard basis vector.
+
+## Example of Standard Scalar Product
+
+The simplest example is the standard scalar product that uses the identity matrix <InlineMath math="I" />.
+
+The standard scalar product is defined as:
+
+<MathContainer>
+<BlockMath math="\langle x, y \rangle = x^T y \text{ (for real case)}" />
+<BlockMath math="\langle x, y \rangle = x^H y \text{ (for complex case)}" />
+</MathContainer>
+
+This standard scalar product is obtained by using the identity matrix as its representation matrix, so that all required properties are satisfied naturally.
+
+> Through the relationship between scalar products and positive definite matrices, we can construct various types of scalar products that suit specific application needs.

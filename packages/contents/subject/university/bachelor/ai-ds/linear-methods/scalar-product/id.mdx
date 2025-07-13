@@ -1,0 +1,114 @@
+export const metadata = {
+    title: "Produk Skalar",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/13/2025",
+    subject: "Metode Linear AI",
+};
+
+## Definisi Produk Skalar
+
+Produk skalar adalah operasi fundamental yang memungkinkan kita menghitung "perkalian" antara dua vektor dengan hasil berupa bilangan skalar. Melalui setiap matriks definit positif, kita dapat mendefinisikan produk skalar pada ruang vektor.
+
+Produk skalar pada ruang kompleks <InlineMath math="\mathbb{C}^n" /> adalah bentuk sesquilinear Hermitian yang definit positif dengan tiga sifat utama.
+
+### Sifat Sesquilinear
+
+Untuk semua vektor <InlineMath math="x, y, z \in \mathbb{C}^n" /> dan skalar <InlineMath math="\lambda, \mu \in \mathbb{C}" />, produk skalar memenuhi:
+
+<MathContainer>
+<BlockMath math="\langle \lambda x + \mu y, z \rangle_A = \overline{\lambda} \langle x, z \rangle_A + \overline{\mu} \langle y, z \rangle_A" />
+<BlockMath math="\langle x, \lambda y + \mu z \rangle_A = \lambda \langle x, y \rangle_A + \mu \langle x, z \rangle_A" />
+</MathContainer>
+
+Sifat ini disebut sesquilinear karena semilinear pada argumen pertama dan linear pada argumen kedua.
+
+### Sifat Hermitian
+
+Untuk semua vektor <InlineMath math="x, y \in \mathbb{C}^n" />, berlaku:
+
+<BlockMath math="\langle y, x \rangle_A = \overline{\langle x, y \rangle_A}" />
+
+### Sifat Definit Positif
+
+Untuk semua vektor <InlineMath math="x \in \mathbb{C}^n" />, berlaku:
+
+<MathContainer>
+<BlockMath math="\langle x, x \rangle_A \geq 0" />
+<BlockMath math="\langle x, x \rangle_A = 0 \Leftrightarrow x = 0" />
+</MathContainer>
+
+Dengan demikian, produk skalar adalah bentuk sesquilinear Hermitian yang definit positif pada <InlineMath math="\mathbb{C}^n" />.
+
+## Produk Skalar pada Ruang Real
+
+Jika <InlineMath math="A \in \mathbb{R}^{n \times n}" /> adalah matriks definit positif, maka pemetaan:
+
+<BlockMath math="\langle \cdot, \cdot \rangle_A : \mathbb{R}^n \times \mathbb{R}^n \to \mathbb{R} : (x, y) \mapsto \langle x, y \rangle_A = x^T A y" />
+
+memiliki sifat-sifat berikut:
+
+1. **Bilinear**: Untuk semua vektor <InlineMath math="x, y, z \in \mathbb{R}^n" /> dan skalar <InlineMath math="\lambda, \mu \in \mathbb{R}" />, berlaku:
+
+    <MathContainer>
+    <BlockMath math="\langle \lambda x + \mu y, z \rangle_A = \lambda \langle x, z \rangle_A + \mu \langle y, z \rangle_A" />
+    <BlockMath math="\langle x, \lambda y + \mu z \rangle_A = \lambda \langle x, y \rangle_A + \mu \langle x, z \rangle_A" />
+    </MathContainer>
+
+    Sifat ini disebut bilinear karena linear pada kedua argumen.
+
+2. **Simetris**: Untuk semua vektor <InlineMath math="x, y \in \mathbb{R}^n" />, berlaku:
+
+    <BlockMath math="\langle y, x \rangle_A = \langle x, y \rangle_A" />
+
+3. **Definit Positif**: Untuk semua vektor <InlineMath math="x \in \mathbb{R}^n" />, berlaku:
+
+    <MathContainer>
+    <BlockMath math="\langle x, x \rangle_A \geq 0" />
+    <BlockMath math="\langle x, x \rangle_A = 0 \Leftrightarrow x = 0" />
+    </MathContainer>
+
+    Dengan demikian, produk skalar adalah bentuk bilinear simetris yang definit positif pada <InlineMath math="\mathbb{R}^n" />.
+
+## Produk Skalar pada Ruang Kompleks
+
+Generalisasi ke ruang kompleks melibatkan peran penting konjugat kompleks. Jika <InlineMath math="A \in \mathbb{C}^{n \times n}" /> adalah matriks definit positif, maka pemetaan:
+
+<BlockMath math="\langle \cdot, \cdot \rangle_A : \mathbb{C}^n \times \mathbb{C}^n \to \mathbb{C} : (x, y) \mapsto \langle x, y \rangle_A = x^H A y" />
+
+memiliki sifat-sifat yang sama seperti definisi umum di atas, yaitu sesquilinear pada argumen pertama, linear pada argumen kedua, Hermitian dengan konjugat kompleks, dan definit positif.
+
+Hal ini menunjukkan bahwa ketika kita beralih ke ruang kompleks, konjugat kompleks berperan penting dalam mempertahankan struktur produk skalar yang konsisten.
+
+## Representasi Matriks
+
+Hasil penting dalam teori produk skalar adalah bahwa setiap produk skalar dapat dinyatakan dalam bentuk matriks yang sesuai.
+
+Setiap produk skalar <InlineMath math="s(x, y)" /> pada <InlineMath math="\mathbb{R}^n" /> maupun pada <InlineMath math="\mathbb{C}^n" /> dapat dinyatakan dalam bentuk:
+
+<MathContainer>
+<BlockMath math="s(x, y) = x^T A y \text{ (untuk kasus real)}" />
+<BlockMath math="s(x, y) = x^H A y \text{ (untuk kasus kompleks)}" />
+</MathContainer>
+
+melalui matriks definit positif <InlineMath math="A \in \mathbb{R}^{n \times n}" /> yang sesuai atau <InlineMath math="A \in \mathbb{C}^{n \times n}" />.
+
+Elemen-elemen matriks <InlineMath math="A" /> dapat dihitung sebagai:
+
+<BlockMath math="a_{ij} = s(e_i, e_j) \text{ untuk } i, j = 1, \ldots, n" />
+
+dimana <InlineMath math="e_i" /> adalah vektor basis standar.
+
+## Contoh Produk Skalar Standar
+
+Contoh paling sederhana adalah produk skalar standar yang menggunakan matriks identitas <InlineMath math="I" />.
+
+Produk skalar standar didefinisikan sebagai:
+
+<MathContainer>
+<BlockMath math="\langle x, y \rangle = x^T y \text{ (untuk kasus real)}" />
+<BlockMath math="\langle x, y \rangle = x^H y \text{ (untuk kasus kompleks)}" />
+</MathContainer>
+
+Produk skalar standar ini diperoleh dengan menggunakan matriks identitas sebagai matriks representasinya, sehingga semua sifat yang diperlukan terpenuhi secara alami.
+
+> Melalui hubungan antara produk skalar dan matriks definit positif, kita dapat membangun berbagai jenis produk skalar yang sesuai dengan kebutuhan aplikasi tertentu.
