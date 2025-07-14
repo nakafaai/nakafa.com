@@ -1,6 +1,6 @@
 import { vercelTrack } from "@repo/analytics/vercel";
 import { api } from "@repo/connection/routes";
-import { createMcpHandler } from "@vercel/mcp-adapter";
+import { createMcpHandler } from "mcp-handler";
 import { env } from "@/env";
 import { tools } from "@/lib/tools";
 import { buildContentSlug } from "@/lib/utils";
