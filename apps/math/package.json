@@ -10,7 +10,7 @@
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
-    "next": "15.3.5",
+    "next": "15.4.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

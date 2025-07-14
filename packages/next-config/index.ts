@@ -48,6 +48,11 @@ export const config: NextConfig = {
         destination: "/subject/high-school/:path*",
         permanent: true,
       },
+      {
+        source: "/discord",
+        destination: "https://discord.gg/CPCSfKhvfQ",
+        permanent: false,
+      },
     ];
   },
 };
