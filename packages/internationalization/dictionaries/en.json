@@ -94,7 +94,14 @@
     "navigate": "Navigate",
     "close": "Close",
     "community": "Community",
-    "report": "Report"
+    "report": "Report",
+    "copy-markdown": "Copy Markdown",
+    "copy-success": "Copied to clipboard",
+    "open": "Open",
+    "open-in-github": "Open in GitHub",
+    "open-in-chatgpt": "Open in ChatGPT",
+    "open-in-claude": "Open in Claude",
+    "open-in-t3-chat": "Open in T3 Chat"
   },
   "Subject": {
     "elementary-school": "Elementary School",

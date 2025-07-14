@@ -3,6 +3,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { format } from "date-fns";
 import { CalendarIcon, type LucideIcon, UserPenIcon } from "lucide-react";
+import { LLmCopyButton, ViewOptions } from "@/components/shared/open-content";
 
 type Props = {
   /** The title of the content */
@@ -27,6 +28,10 @@ type Props = {
   }[];
   /** The date of the content creation */
   date?: string;
+  /** The slug of the content */
+  slug?: string;
+  /** The github url of the content */
+  githubUrl?: string;
 };
 
 export function HeaderContent({
@@ -37,12 +42,13 @@ export function HeaderContent({
   category,
   authors,
   date,
+  slug,
 }: Props) {
   const showFooter = authors || date;
   return (
     <div className="relative pt-20 pb-10" data-pagefind-ignore>
-      <div className="z-10 mx-auto max-w-3xl space-y-4 px-6">
-        <div className="space-y-2">
+      <div className="z-10 mx-auto max-w-3xl space-y-6 px-6">
+        <div className="space-y-3">
           {link && (
             <Link
               aria-label={link.label}
@@ -90,6 +96,12 @@ export function HeaderContent({
                 </p>
               )}
             </div>
+          </div>
+        )}
+        {slug && (
+          <div className="flex items-center gap-2">
+            <LLmCopyButton slug={slug} />
+            <ViewOptions slug={slug} />
           </div>
         )}
       </div>

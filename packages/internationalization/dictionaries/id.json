@@ -94,7 +94,14 @@
     "navigate": "Navigasi",
     "close": "Menutup",
     "community": "Komunitas",
-    "report": "Laporkan"
+    "report": "Laporkan",
+    "copy-markdown": "Salin Markdown",
+    "copy-success": "Berhasil disalin ke papan klip",
+    "open": "Buka",
+    "open-in-github": "Buka di GitHub",
+    "open-in-chatgpt": "Buka di ChatGPT",
+    "open-in-claude": "Buka di Claude",
+    "open-in-t3-chat": "Buka di T3 Chat"
   },
   "Subject": {
     "elementary-school": "SD",

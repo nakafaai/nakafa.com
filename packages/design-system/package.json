@@ -7,6 +7,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@repo/internationalization": "workspace:*",
     "@hookform/resolvers": "^5.1.1",
     "@icons-pack/react-simple-icons": "^13.5.0",
     "@mantine/hooks": "^8.1.3",

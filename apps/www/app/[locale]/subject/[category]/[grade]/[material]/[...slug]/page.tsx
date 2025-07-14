@@ -199,6 +199,7 @@ export default async function Page({ params }: Props) {
               href: `${materialPath}#${slugify(metadata.subject ?? "")}`,
               label: metadata.subject ?? "",
             }}
+            slug={`/${locale}${FILE_PATH}`}
             title={metadata.title}
           />
           <LayoutMaterialMain>

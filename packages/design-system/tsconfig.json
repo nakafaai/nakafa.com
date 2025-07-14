@@ -2,6 +2,7 @@
   "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "types": ["@repo/internationalization/i18n.d.ts"],
     "plugins": [
       {
         "name": "next"

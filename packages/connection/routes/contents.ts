@@ -66,7 +66,7 @@ async function getContent({
   }
 
   // find the content with the slug
-  const content = data?.find((c) => c.slug === slug);
+  const content = data?.find((c) => c.slug === cleanSlug(slug));
 
   if (!content) {
     return {
