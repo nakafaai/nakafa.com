@@ -94,7 +94,7 @@ export function ViewOptions({ slug }: { slug: string }) {
           />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent className="w-56">
         {[
           {
             title: t("open-in-github"),
