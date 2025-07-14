@@ -163,6 +163,7 @@
         "@radix-ui/react-use-controllable-state": "^1.2.2",
         "@react-three/drei": "^10.5.0",
         "@react-three/fiber": "^9.2.0",
+        "@repo/internationalization": "workspace:*",
         "@shikijs/transformers": "^3.8.0",
         "@tabler/icons-react": "^3.34.0",
         "class-variance-authority": "^0.7.1",
