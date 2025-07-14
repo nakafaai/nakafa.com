@@ -1,0 +1,257 @@
+export const metadata = {
+    title: "QR Dekomposisi",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/14/2025",
+    subject: "Metode Linear AI",
+};
+
+## Teorema Eksistensi QR Dekomposisi
+
+Kita ingin mengubah matriks menjadi bentuk segitiga atas, tetapi bukan melalui operasi baris elementer, melainkan melalui transformasi ortogonal yang lebih baik kondisinya. Bayangkan seperti memutar dan memantulkan ruang geometris untuk menyederhanakan matriks, tanpa mengubah sifat fundamentalnya.
+
+Misalkan <InlineMath math="A \in \mathbb{R}^{m \times n}" /> adalah matriks persegi panjang dengan <InlineMath math="m \geq n" /> dan <InlineMath math="\text{Peringkat}A = n" />. Maka terdapat matriks ortogonal <InlineMath math="Q \in \mathbb{R}^{m \times m}" /> dengan <InlineMath math="Q^T Q = I" /> dan matriks segitiga atas <InlineMath math="R \in \mathbb{R}^{m \times n}" /> dengan elemen diagonal <InlineMath math="r_{ii} > 0" /> untuk <InlineMath math="i = 1, \ldots, n" />, sehingga:
+
+<BlockMath math="A = Q \cdot R" />
+
+Representasi ini disebut QR dekomposisi dari <InlineMath math="A" />.
+
+### Pembuktian dengan Gram-Schmidt
+
+Kolom-kolom <InlineMath math="a_j" /> untuk <InlineMath math="j = 1, \ldots, n" /> dari matriks <InlineMath math="A" /> dapat diorthonormalisasi menggunakan proses Gram-Schmidt:
+
+<MathContainer>
+<BlockMath math="\tilde{q}_j := a_j - \sum_{k=1}^{j-1} \langle a_j, q_k \rangle \cdot q_k" />
+<BlockMath math="q_j := \frac{\tilde{q}_j}{\|\tilde{q}_j\|_2}" />
+</MathContainer>
+
+Kita memperoleh vektor ortonormal <InlineMath math="q_j" /> untuk <InlineMath math="j = 1, \ldots, n" /> sebagai kolom dari matriks ortogonal <InlineMath math="Q_1 \in \mathbb{R}^{m \times n}" />. Sebaliknya:
+
+<MathContainer>
+<BlockMath math="a_j = \sum_{k=1}^{j-1} \langle a_j, q_k \rangle \cdot q_k + \tilde{q}_j" />
+<BlockMath math="= \sum_{k=1}^{j-1} \langle a_j, q_k \rangle \cdot q_k + \|\tilde{q}_j\|_2 \cdot q_j" />
+<BlockMath math="= \sum_{k=1}^{j-1} q_k \cdot r_{kj} + q_j \cdot r_{jj}" />
+</MathContainer>
+
+Jadi <InlineMath math="A = Q_1 R_1" /> dengan matriks segitiga atas <InlineMath math="R_1 \in \mathbb{R}^{n \times n}" /> yang elemen diagonalnya <InlineMath math="r_{ii} = \|\tilde{q}_i\|_2 > 0" />.
+
+Jika <InlineMath math="Q_1" /> dilengkapi dengan <InlineMath math="m - n" /> kolom tambahan menjadi matriks ortogonal <InlineMath math="Q = (Q_1 \quad Q_2) \in \mathbb{R}^{m \times m}" /> dan <InlineMath math="R_1" /> menjadi <InlineMath math="R = \begin{pmatrix} R_1 \\ 0 \end{pmatrix} \in \mathbb{R}^{m \times n}" />, maka <InlineMath math="A = Q_1 R_1 = QR" />.
+
+## QR Dekomposisi Penuh dan Ekonomis
+
+Ketika kita memiliki matriks <InlineMath math="A \in \mathbb{R}^{m \times n}" /> dengan <InlineMath math="m \geq n" />, 
+ada dua cara untuk merepresentasikan QR dekomposisi. Perbedaannya terletak pada ukuran matriks yang digunakan.
+
+### QR Dekomposisi Penuh
+
+QR dekomposisi penuh menggunakan matriks berukuran penuh:
+
+<BlockMath math="A = Q \cdot R" />
+
+dengan <InlineMath math="Q \in \mathbb{R}^{m \times m}" /> adalah matriks ortogonal berukuran penuh dan 
+<InlineMath math="R \in \mathbb{R}^{m \times n}" /> adalah matriks segitiga atas.
+
+### QR Dekomposisi Ekonomis
+
+Karena bagian bawah matriks <InlineMath math="R" /> hanya berisi nol, kita bisa menghemat penyimpanan dan komputasi. 
+QR dekomposisi ekonomis hanya menggunakan bagian yang benar-benar diperlukan:
+
+<BlockMath math="A = Q \cdot R = (Q_1 \quad Q_2) \cdot \begin{pmatrix} R_1 \\ 0 \end{pmatrix} = Q_1 \cdot R_1" />
+
+Di sini <InlineMath math="Q_1 \in \mathbb{R}^{m \times n}" /> hanya mengambil kolom pertama sampai ke-<InlineMath math="n" /> 
+dari <InlineMath math="Q" />, dan <InlineMath math="R_1 \in \mathbb{R}^{n \times n}" /> adalah matriks segitiga atas persegi.
+
+Mengapa disebut ekonomis? Karena kita menghemat ruang penyimpanan dan waktu komputasi. 
+Alih-alih menyimpan matriks <InlineMath math="Q" /> berukuran <InlineMath math="m \times m" /> yang bisa sangat besar, 
+kita hanya perlu <InlineMath math="Q_1" /> berukuran <InlineMath math="m \times n" />.
+
+Kolom-kolom matriks <InlineMath math="Q_2 \in \mathbb{R}^{m \times (m-n)}" /> yang tidak kita pakai membentuk 
+basis ortonormal dari <InlineMath math="\text{Kernel}A^T" />:
+
+<BlockMath math="A^T Q_2 = R_1^T Q_1^T Q_2 = 0" />
+
+### Sifat Keunikan
+
+QR dekomposisi ekonomis <InlineMath math="A = Q_1 \cdot R_1" /> dengan kondisi <InlineMath math="r_{ii} > 0" /> 
+untuk semua <InlineMath math="i = 1, \ldots, n" /> adalah unik untuk matriks <InlineMath math="A" /> 
+yang memiliki peringkat penuh.
+
+## Metode Householder untuk QR Dekomposisi
+
+Meskipun proses Gram-Schmidt memberikan cara teoretis yang elegan untuk memperoleh QR dekomposisi, 
+metode ini tidak cocok untuk perhitungan praktis. Masalah utamanya adalah ketidakstabilan numerik akibat pembatalan, 
+ortogonalitas kolom-kolom cepat hilang selama komputasi.
+
+Untuk mengatasi masalah ini, kita memerlukan metode yang lebih stabil secara numerik. 
+Salah satu pendekatan yang paling berhasil adalah prosedur Householder, 
+yang menggunakan transformasi refleksi ortogonal. Alternatif lain adalah prosedur Givens dengan transformasi rotasi.
+
+### Transformasi Householder
+
+Untuk vektor <InlineMath math="v \in \mathbb{R}^m" /> dengan <InlineMath math="\|v\|_2 = 1" />, 
+kita dapat mendefinisikan matriks transformasi Householder:
+
+<BlockMath math="S = I - 2vv^T \in \mathbb{R}^{m \times m}" />
+
+Perhatikan bahwa <InlineMath math="vv^T" /> adalah produk diadik, yaitu perkalian vektor kolom 
+<InlineMath math="v \in \mathbb{R}^{m \times 1}" /> dengan vektor baris <InlineMath math="v^T \in \mathbb{R}^{1 \times m}" />. 
+Hasil perkalian ini adalah matriks <InlineMath math="m \times m" /> dengan rank 1 untuk <InlineMath math="v \neq 0" />. 
+Jangan sampai tertukar dengan perkalian skalar <InlineMath math="v^T v \in \mathbb{R}" />.
+
+## Sifat-sifat Transformasi Householder
+
+Misalkan <InlineMath math="S = I - 2vv^T \in \mathbb{R}^{m \times m}" /> adalah matriks transformasi Householder 
+untuk vektor <InlineMath math="v \in \mathbb{R}^m" /> dengan <InlineMath math="\|v\|_2 = 1" />. Maka berlaku:
+
+1. <InlineMath math="S" /> adalah simetri: <InlineMath math="S^T = S" />
+
+2. <InlineMath math="S" /> adalah matriks ortogonal: <InlineMath math="S^T S = I" />
+
+3. Perkalian <InlineMath math="S \cdot x" /> dari <InlineMath math="S" /> dari kiri dengan vektor <InlineMath math="x \in \mathbb{R}^n" /> 
+   menyebabkan refleksi <InlineMath math="x" /> pada subruang <InlineMath math="\text{Span}(v)^{\perp}" />, 
+   yaitu pada hiperplane dengan vektor normal <InlineMath math="v" />
+
+4. <InlineMath math="\text{cond}_2(S) = 1" />
+
+## Prosedur Householder
+
+Diberikan matriks <InlineMath math="A \in \mathbb{R}^{m \times n}" /> dengan <InlineMath math="m \geq n" /> 
+dan <InlineMath math="\text{Peringkat}A = n" />. Untuk perhitungan QR dekomposisi, 
+matriks <InlineMath math="A" /> ditransformasi kolom demi kolom melalui refleksi Householder 
+menjadi bentuk segitiga atas.
+
+Mulai dengan <InlineMath math="A_1 = A" /> dan refleksikan kolom pertama dari <InlineMath math="A_1" /> 
+terhadap vektor menggunakan bidang refleksi dengan:
+
+<MathContainer>
+<BlockMath math="\tilde{a}_1 \text{ kolom pertama dari } A_1" />
+<BlockMath math="\pm\|\tilde{a}_1\|_2 \cdot e_1 \in \mathbb{R}^m \text{ vektor target}" />
+<BlockMath math="v_1 = u_1/\|u_1\|_2 \text{ dengan } \text{Span}(v_1)^{\perp}" />
+</MathContainer>
+
+<BlockMath math="u_1 = \tilde{a}_1 \mp \|\tilde{a}_1\|_2 \cdot e_1" />
+
+### Proses Iteratif Transformasi
+
+Matriks transformasi Householder <InlineMath math="S_1 = I_m - 2v_1v_1^T \in \mathbb{R}^{m \times m}" />. Diperoleh:
+
+<BlockMath math="A_2 = S_1 \cdot A_1 = \begin{pmatrix} r_{11} & * \\ 0 & \tilde{A}_2 \end{pmatrix}" />
+
+dengan <InlineMath math="r_{11} = \pm\|\tilde{a}_1\|_2" /> dan <InlineMath math="\tilde{A}_2 \in \mathbb{R}^{m-1 \times n-1}" />.
+
+Lanjutkan dengan refleksi kolom pertama dari submatriks dengan bidang refleksi:
+
+<MathContainer>
+<BlockMath math="\tilde{a}_2 \text{ kolom pertama dari } \tilde{A}_2" />
+<BlockMath math="\pm\|\tilde{a}_2\|_2 \cdot \tilde{e}_1 \in \mathbb{R}^{m-1}" />
+<BlockMath math="v_2 = u_2/\|u_2\|_2" />
+</MathContainer>
+
+<BlockMath math="u_2 = \tilde{a}_2 \mp \|\tilde{a}_2\|_2 \cdot \tilde{e}_1" />
+
+Dengan matriks transformasi:
+
+<MathContainer>
+<BlockMath math="\tilde{S}_2 = I_{m-1} - 2v_2v_2^T \in \mathbb{R}^{m-1 \times m-1}" />
+<BlockMath math="S_2 = \begin{pmatrix} I_1 & 0 \\ 0 & \tilde{S}_2 \end{pmatrix} \in \mathbb{R}^{m \times m}" />
+</MathContainer>
+
+Diperoleh:
+
+<BlockMath math="A_3 = S_2 \cdot A_2 = \begin{pmatrix} r_{11} & * & * \\ 0 & r_{22} & * \\ 0 & 0 & \tilde{A}_3 \end{pmatrix}" />
+
+dengan <InlineMath math="r_{22} = \pm\|\tilde{a}_2\|_2" /> dan <InlineMath math="\tilde{A}_3 \in \mathbb{R}^{m-2 \times n-2}" />, dan seterusnya hingga:
+
+<BlockMath math="\tilde{A}_n = \begin{pmatrix} \tilde{a}_{nn} \\ \vdots \\ \tilde{a}_{mn} \end{pmatrix} \in \mathbb{R}^{m-(n-1) \times 1}" />
+
+Pada akhirnya diperoleh matriks segitiga atas:
+
+<BlockMath math="A_{n+1} = R = \begin{pmatrix} r_{11} & & * \\ & \ddots & \\ 0 & & r_{nn} \\ 0 & \cdots & 0 \\ \vdots & & \vdots \\ 0 & \cdots & 0 \end{pmatrix} = S_n \cdot \ldots \cdot S_1 \cdot A = Q^T \cdot A" />
+
+Jadi diperoleh faktorisasi:
+
+<MathContainer>
+<BlockMath math="A = Q \cdot R" />
+<BlockMath math="Q = (S_n \cdot \ldots \cdot S_1)^T = S_1 \cdot \ldots \cdot S_n" />
+</MathContainer>
+
+dengan <InlineMath math="Q" /> adalah matriks ortogonal.
+
+## Algoritma Implementasi Householder
+
+Implementasi prosedur Householder:
+
+Mulai dengan:
+<MathContainer>
+<BlockMath math="A_1 := A" />
+<BlockMath math="Q_1 := I" />
+</MathContainer>
+
+Untuk <InlineMath math="i = 1, \ldots, n" />:
+
+<BlockMath math="\tilde{a}_i = \begin{pmatrix} a_{ii} \\ \vdots \\ a_{mi} \end{pmatrix} := \begin{pmatrix} (A_i)_{ii} \\ \vdots \\ (A_i)_{mi} \end{pmatrix} \in \mathbb{R}^{m-i+1}" />
+
+Hitung:
+<MathContainer>
+<BlockMath math="\sigma := \|\tilde{a}_i\|_2" />
+<BlockMath math="u_i := \tilde{a}_i + \begin{pmatrix} \mp\sigma \\ 0 \\ \vdots \\ 0 \end{pmatrix} \in \mathbb{R}^{m-i+1}" />
+<BlockMath math="\hat{u}_i := \begin{pmatrix} 0 \\ \vdots \\ 0 \\ u_i \end{pmatrix} \in \mathbb{R}^m" />
+</MathContainer>
+
+dan:
+<BlockMath math="\beta := 1/(\sigma(\sigma + |\tilde{a}_{ii}|))" />
+
+Kemudian:
+<MathContainer>
+<BlockMath math="v_i = \frac{\tilde{a}_i \mp \|\tilde{a}_i\|_2 \cdot e_1}{\|\tilde{a}_i \mp \|\tilde{a}_i\|_2 \cdot e_1\|_2} = \frac{u_i}{\|u_i\|_2}" />
+<BlockMath math="\tilde{S}_i = I_{m-i+1} - 2v_i v_i^T = I_{m-i+1} - \beta u_i u_i^T" />
+<BlockMath math="S_i = I_m - \beta \hat{u}_i \hat{u}_i^T" />
+</MathContainer>
+
+Sehingga diperoleh:
+<MathContainer>
+<BlockMath math="A_{i+1} := S_i A_i = (I_m - \beta \hat{u}_i \hat{u}_i^T) A_i = A_i - \hat{u}_i (\beta \hat{u}_i^T A_i)" />
+<BlockMath math="Q_{i+1} := Q_i S_i = Q_i (I_m - \beta \hat{u}_i \hat{u}_i^T) = Q_i - (Q_i \hat{u}_i) \beta \hat{u}_i^T" />
+</MathContainer>
+
+Akhirnya diperoleh:
+<MathContainer>
+<BlockMath math="R := A_{n+1}" />
+<BlockMath math="Q := Q_{n+1}" />
+</MathContainer>
+
+## Aspek Numerik dan Kompleksitas Householder
+
+### Kompleksitas Komputasi
+
+Kompleksitas numerik untuk perhitungan QR dekomposisi matriks <InlineMath math="A \in \mathbb{R}^{m \times n}" /> 
+dengan prosedur Householder pada dasarnya adalah:
+
+<MathContainer>
+<BlockMath math="n^2 \cdot m \text{ operasi aritmetika untuk } m \gg n" />
+<BlockMath math="\frac{2}{3}n^3 \text{ operasi aritmetika untuk } m \approx n" />
+</MathContainer>
+
+### Sifat Numerik
+
+1. Karena transformasi ortogonal, berlaku <InlineMath math="\text{cond}_2(R) = \text{cond}_2(A)" />
+
+2. Elemen diagonal <InlineMath math="R" /> adalah bilangan <InlineMath math="\pm\|\tilde{a}_i\|_2" /> 
+   dari langkah ke-<InlineMath math="i" />. Memilih transformasi sehingga semuanya positif memberikan QR dekomposisi. 
+   Jika <InlineMath math="\|\tilde{a}_i\|_2 = 0" />, <InlineMath math="A" /> tidak memiliki peringkat penuh 
+   dan algoritma berhenti.
+
+   Untuk alasan numerik memilih tanda sehingga pembatalan dihindari:
+
+   <MathContainer>
+   <BlockMath math="u_i = \tilde{a}_i \mp \|\tilde{a}_i\|_2 \cdot e_1 \text{ (bentuk umum)}" />
+   <BlockMath math="u_i = \tilde{a}_i + \text{sgn}(\tilde{a}_i) \cdot \|\tilde{a}_i\|_2 \cdot e_1 \text{ (pilihan tanda optimal)}" />
+   </MathContainer>
+
+3. Sebagai pengganti membangun <InlineMath math="Q" />, dalam penyimpanan kompak juga dapat menyimpan 
+   hanya informasi yang diperlukan untuk transformasi:
+
+   <BlockMath math="\text{Simpan vektor } \tilde{a}_i \mp \|\tilde{a}_i\|_2 \cdot e_1" />
+
+   di tempat bebas dari <InlineMath math="A" /> di bawah diagonal dan elemen diagonal dalam vektor tambahan.
+
+4. Jika hanya ingin menghitung QR dekomposisi ekonomis, hapus kolom <InlineMath math="Q" /> dan baris <InlineMath math="R" /> yang sesuai.
