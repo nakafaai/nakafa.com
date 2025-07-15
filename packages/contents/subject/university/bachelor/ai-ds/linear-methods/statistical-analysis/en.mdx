@@ -1,0 +1,60 @@
+export const metadata = {
+    title: "Statistical Analysis",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Fisher Information Matrix
+
+Matrix <InlineMath math="A^T A" /> has a special name in the context of least squares problems. This matrix is called the Fisher information matrix, named after the famous statistician.
+
+Imagine measuring how sharp the peak of a mountain is. The sharper the peak, the easier it is to determine the exact location of the peak. Similarly, the Fisher information matrix provides a measure of how well we can determine the optimal parameters.
+
+## Parameter Covariance Matrix
+
+Matrix <InlineMath math="C = (A^T A)^{-1}" /> is the covariance matrix of the parameter estimator <InlineMath math="\hat{x} = (A^T A)^{-1} A^T b" />. This matrix applies when we assume that components <InlineMath math="b_i" /> for <InlineMath math="i = 1, \ldots, n" /> are independent values that are standard normally distributed.
+
+With this assumption, the estimator <InlineMath math="\hat{x}" /> follows a multivariate normal distribution
+
+<BlockMath math="\hat{x} \sim N(x_{true}, C)" />
+
+where <InlineMath math="x_{true} \in \mathbb{R}^n" /> is the unknown true parameter as the expected value and <InlineMath math="C \in \mathbb{R}^{n \times n}" /> as the covariance matrix.
+
+Diagonal elements <InlineMath math="c_{ii}" /> describe the variance of parameters, like measuring how far parameter estimates can deviate from their true values. From these values, confidence intervals for the parameters can be calculated. Off-diagonal elements <InlineMath math="c_{ij}" /> with <InlineMath math="i \neq j" /> are covariances that show how the uncertainties of two parameters are related. From these covariances, correlations <InlineMath math="c_{ij}/\sqrt{c_{ii} \cdot c_{jj}}" /> between parameters can be obtained.
+
+What matters in parameter estimation is not only the estimator <InlineMath math="\hat{x}" /> itself, but also its statistical significance as described by the covariance matrix <InlineMath math="C" />. Like a doctor who not only provides test results, but also explains the level of confidence in those results. In statistics courses, these concepts are discussed in more detail.
+
+## QR Decomposition
+
+The covariance matrix can be calculated using the reduced QR decomposition of <InlineMath math="A" />. If <InlineMath math="A = QR" />, then it holds
+
+<MathContainer>
+<BlockMath math="C = (A^T A)^{-1}" />
+<BlockMath math="= (R^T Q^T QR)^{-1}" />
+<BlockMath math="= R^{-1} R^{-T}" />
+</MathContainer>
+
+## Weighted Least Squares
+
+To meet requirements regarding measurement errors and provide appropriate weights to measurement data, weighted least squares problems are commonly used
+
+<MathContainer>
+<BlockMath math="\min_x \sum_{i=1}^m \frac{(h(t_i) \cdot x - y_i)^2}{\sigma_i^2}" />
+<BlockMath math="= \|Ax - b\|_2^2" />
+</MathContainer>
+
+This problem can be transformed by defining
+
+<MathContainer>
+<BlockMath math="A = \Sigma^{-1} \begin{pmatrix} h(t_1) \\ \vdots \\ h(t_m) \end{pmatrix}" />
+<BlockMath math="b = \Sigma^{-1} \begin{pmatrix} y_1 \\ \vdots \\ y_m \end{pmatrix}" />
+</MathContainer>
+
+with
+
+<BlockMath math="\Sigma^{-1} = \begin{pmatrix} 1/\sigma_1 & 0 & \cdots \\ 0 & \ddots & \\ \vdots & & 1/\sigma_m \end{pmatrix}" />
+
+Here <InlineMath math="\sigma_i^2" /> is the variance of measurement errors <InlineMath math="y_i" /> that are independent and normally distributed. Additionally, it is assumed that measurement errors have expected value <InlineMath math="0" />, so there are no systematic errors. Thus <InlineMath math="b_i" /> is standard normally distributed.
+
+In weighted least squares functions, measurement values with large measurement errors are given weaker weights compared to measurement values with small measurement errors. The analogy is like when we listen to opinions from various sources, we give greater weight to more reliable sources and smaller weight to less accurate sources.

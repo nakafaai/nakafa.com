@@ -1,0 +1,60 @@
+export const metadata = {
+    title: "Analisis Statistik",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Metode Linear AI",
+};
+
+## Matriks Informasi Fisher
+
+Matriks <InlineMath math="A^T A" /> memiliki nama khusus dalam konteks masalah kuadrat terkecil. Matriks ini disebut sebagai matriks informasi Fisher, sesuai dengan nama ahli statistik terkenal.
+
+Bayangkan seperti mengukur seberapa tajam puncak sebuah gunung. Semakin tajam puncaknya, semakin mudah kita menentukan lokasi puncak yang tepat. Begitu juga dengan matriks informasi Fisher, ia memberikan ukuran seberapa baik kita dapat menentukan parameter yang optimal.
+
+## Matriks Kovarian Parameter
+
+Matriks <InlineMath math="C = (A^T A)^{-1}" /> merupakan matriks kovarian dari penduga parameter <InlineMath math="\hat{x} = (A^T A)^{-1} A^T b" />. Matriks ini berlaku ketika kita mengasumsikan bahwa komponen <InlineMath math="b_i" /> untuk <InlineMath math="i = 1, \ldots, n" /> adalah nilai bebas yang terdistribusi normal standar.
+
+Dengan asumsi tersebut, penduga <InlineMath math="\hat{x}" /> mengikuti distribusi normal multivariat
+
+<BlockMath math="\hat{x} \sim N(x_{true}, C)" />
+
+dimana <InlineMath math="x_{true} \in \mathbb{R}^n" /> adalah parameter sebenarnya yang tidak diketahui sebagai nilai harapan dan <InlineMath math="C \in \mathbb{R}^{n \times n}" /> sebagai matriks kovarian.
+
+Elemen diagonal <InlineMath math="c_{ii}" /> menggambarkan varian dari parameter, seperti mengukur seberapa jauh estimasi parameter bisa meleset dari nilai sebenarnya. Dari nilai ini dapat dihitung interval kepercayaan untuk parameter tersebut. Elemen di luar diagonal <InlineMath math="c_{ij}" /> dengan <InlineMath math="i \neq j" /> adalah kovarian yang menunjukkan bagaimana ketidakpastian dua parameter saling berkaitan. Dari kovarian ini dapat diperoleh korelasi <InlineMath math="c_{ij}/\sqrt{c_{ii} \cdot c_{jj}}" /> antar parameter.
+
+Yang penting dalam estimasi parameter bukan hanya penduga <InlineMath math="\hat{x}" /> itu sendiri, tetapi juga signifikansi statistiknya yang dijelaskan melalui matriks kovarian <InlineMath math="C" />. Seperti seorang dokter yang tidak hanya memberikan hasil tes, tetapi juga menjelaskan tingkat kepercayaan terhadap hasil tersebut. Dalam kuliah statistik, konsep-konsep ini dibahas secara lebih rinci.
+
+## Dekomposisi QR
+
+Matriks kovarian dapat dihitung menggunakan dekomposisi QR kecil dari <InlineMath math="A" />. Jika <InlineMath math="A = QR" />, maka berlaku
+
+<MathContainer>
+<BlockMath math="C = (A^T A)^{-1}" />
+<BlockMath math="= (R^T Q^T QR)^{-1}" />
+<BlockMath math="= R^{-1} R^{-T}" />
+</MathContainer>
+
+## Kuadrat Terkecil Berbobot
+
+Untuk memenuhi persyaratan terhadap kesalahan pengukuran dan memberikan bobot yang sesuai pada data pengukuran, biasanya digunakan masalah kuadrat terkecil berbobot
+
+<MathContainer>
+<BlockMath math="\min_x \sum_{i=1}^m \frac{(h(t_i) \cdot x - y_i)^2}{\sigma_i^2}" />
+<BlockMath math="= \|Ax - b\|_2^2" />
+</MathContainer>
+
+Masalah ini dapat ditransformasi dengan mendefinisikan
+
+<MathContainer>
+<BlockMath math="A = \Sigma^{-1} \begin{pmatrix} h(t_1) \\ \vdots \\ h(t_m) \end{pmatrix}" />
+<BlockMath math="b = \Sigma^{-1} \begin{pmatrix} y_1 \\ \vdots \\ y_m \end{pmatrix}" />
+</MathContainer>
+
+dengan
+
+<BlockMath math="\Sigma^{-1} = \begin{pmatrix} 1/\sigma_1 & 0 & \cdots \\ 0 & \ddots & \\ \vdots & & 1/\sigma_m \end{pmatrix}" />
+
+Di sini <InlineMath math="\sigma_i^2" /> adalah varian dari kesalahan pengukuran <InlineMath math="y_i" /> yang bebas dan terdistribusi normal. Selain itu diasumsikan bahwa kesalahan pengukuran memiliki nilai harapan <InlineMath math="0" />, sehingga tidak ada kesalahan sistematis. Dengan demikian <InlineMath math="b_i" /> terdistribusi normal standar.
+
+Dalam fungsi kuadrat terkecil berbobot, nilai pengukuran dengan kesalahan pengukuran besar diberi bobot yang lebih lemah dibandingkan nilai pengukuran dengan kesalahan pengukuran kecil. Analoginya seperti ketika kita mendengarkan pendapat dari berbagai sumber, kita akan memberikan bobot lebih besar pada sumber yang lebih dapat dipercaya dan bobot lebih kecil pada sumber yang kurang akurat.
