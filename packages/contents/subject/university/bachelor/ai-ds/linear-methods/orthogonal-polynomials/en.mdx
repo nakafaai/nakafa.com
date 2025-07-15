@@ -1,0 +1,147 @@
+export const metadata = {
+    title: "Orthogonal Polynomials",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Weighted Scalar Product
+
+In numerical analysis, we often need to measure the difference between two functions using the maximum norm. This norm is defined as:
+
+<BlockMath math="\|f - g\|_\infty = \max_{x \in [-1,1]} |f(x) - g(x)|" />
+
+In general, the maximum norm can become very large, especially near the endpoints of the interval where large errors often occur. Imagine measuring the height of a mountain only from its highest peak without considering the slope of its sides. 
+
+To address this problem, we can use a weighted scalar product that gives different emphasis to each part of the interval:
+
+<BlockMath math="\langle f, g \rangle_\omega = \int_{-1}^{1} f(x)g(x)\omega(x) \, dx" />
+
+with the weight function:
+
+<BlockMath math="\omega(x) = \frac{1}{\sqrt{1-x^2}}" />
+
+This weight function provides stronger emphasis on the interval endpoints, allowing us to suppress large errors that typically occur in those regions.
+
+## Orthogonalization and Chebyshev Polynomials
+
+When we orthogonalize the monomial basis <InlineMath math="1, x, \ldots, x^n" /> with respect to this weighted scalar product, we obtain orthogonal polynomials <InlineMath math="p_k" /> that satisfy a two-level recurrence relation. This process is like rearranging building blocks so that each floor stands perfectly perpendicular to the others:
+
+<MathContainer>
+<BlockMath math="p_0(x) = 1" />
+<BlockMath math="p_1(x) = x" />
+<BlockMath math="p_{k+1}(x) = 4xp_k(x) - 4p_{k-1}(x), \quad k = 1, \ldots, n" />
+</MathContainer>
+
+The norm of these polynomials is:
+
+<MathContainer>
+<BlockMath math="\|p_k\|_\omega = \begin{cases}
+\sqrt{\pi}, & k = 0 \\
+\sqrt{\pi/2}, & k \neq 0
+\end{cases}" />
+<BlockMath math="p_k(1) = 2^{k-1}" />
+</MathContainer>
+
+If we perform normalization at <InlineMath math="x = 1" />, we obtain the famous Chebyshev polynomials:
+
+<BlockMath math="T_k(x) = 2^{1-k}p_k(x) = \cos(k \arccos(x)), \quad k = 0, 1, 2, \ldots" />
+
+This trigonometric form shows that Chebyshev polynomials are essentially transformations of cosine functions adapted for the interval <InlineMath math="[-1, 1]" />.
+
+There exists a theorem stating that two-way recurrence relations hold generally for polynomials derived from monomial bases in the space <InlineMath math="C([-1, 1])" /> with certain symmetry properties. The scalar product satisfies the relation:
+
+<BlockMath math="\langle p, xq \rangle = \langle xp, q \rangle" />
+
+for all polynomials <InlineMath math="p, q \in P" />.
+
+## Gram-Schmidt Process
+
+Through the Gram-Schmidt orthogonalization process from the basis <InlineMath math="1, x, \ldots, x^n" />, we obtain orthogonal polynomials <InlineMath math="\tilde{p}_k" /> with <InlineMath math="k = 0, \ldots, n" />. This process is like building a structural framework where each beam is positioned based on the previous beam with accurate calculations:
+
+<MathContainer>
+<BlockMath math="\tilde{p}_0(x) = 1" />
+<BlockMath math="\tilde{p}_1(x) = x - \beta_0" />
+<BlockMath math="\tilde{p}_{k+1}(x) = (x - \beta_k)\tilde{p}_k(x) - \gamma_k\tilde{p}_{k-1}(x), \quad k = 1, \ldots, n" />
+</MathContainer>
+
+with coefficients:
+
+<MathContainer>
+<BlockMath math="\beta_k = \frac{\langle x\tilde{p}_k, \tilde{p}_k \rangle}{\|\tilde{p}_k\|^2}, \quad k = 0, \ldots, n" />
+<BlockMath math="\gamma_k = \frac{\|\tilde{p}_k\|^2}{\|\tilde{p}_{k-1}\|^2}, \quad k = 1, \ldots, n" />
+</MathContainer>
+
+The orthonormal polynomials are then obtained through:
+
+<BlockMath math="p_k = \|\tilde{p}_k\|^{-1}\tilde{p}_k, \quad k = 0, \ldots, n" />
+
+## Legendre Polynomials
+
+For orthonormalization of the basis <InlineMath math="1, x, \ldots, x^n" /> with respect to the standard scalar product:
+
+<BlockMath math="\langle f, g \rangle = \int_{-1}^{1} f(x)g(x) \, dx" />
+
+we obtain polynomials related to Legendre polynomials:
+
+<BlockMath math="\varphi_k(x) = \frac{(2k-2)!}{(k-1)!^2} \sqrt{\frac{2k-1}{2^{k-1}}} L_{k-1}(x), \quad k = 1, \ldots, n+1" />
+
+where <InlineMath math="L_k(x)" /> are Legendre polynomials defined through a two-level recurrence relation.
+
+The Legendre polynomials themselves are defined as:
+
+<MathContainer>
+<BlockMath math="L_0(x) = 1" />
+<BlockMath math="L_1(x) = x" />
+<BlockMath math="L_{k+1}(x) = xL_k(x) - \frac{k^2}{4k^2-1}L_{k-1}(x), \quad k = 1, \ldots, n" />
+</MathContainer>
+
+With respect to the standard scalar product, Legendre polynomials produce an orthonormal system <InlineMath math="\varphi_i : [-1, 1] \to \mathbb{R}" /> with <InlineMath math="i = 0, \ldots, n" /> that satisfies:
+
+<BlockMath math="\langle \varphi_i, \varphi_j \rangle_t = \delta_{ij}" />
+
+## Transformation to Different Intervals
+
+When we have another approximation interval <InlineMath math="[a, b]" /> different from the standard interval, we perform a linear variable substitution. This process is like changing the scale on a map from one region to another while maintaining the correct proportions:
+
+<MathContainer>
+<BlockMath math="x = a + \frac{b-a}{2}(t+1) \in [a, b]" />
+<BlockMath math="t = -1 + \frac{2}{b-a}(x-a) \in [-1, 1]" />
+</MathContainer>
+
+Then the differential becomes:
+
+<BlockMath math="dx = \frac{b-a}{2}dt" />
+
+On the interval <InlineMath math="[a, b]" /> there exist polynomials <InlineMath math="\tilde{\varphi}_i : [a, b] \to \mathbb{R}" /> with <InlineMath math="i = 0, \ldots, n" /> expressed as:
+
+<BlockMath math="\tilde{\varphi}_i(x) = \sqrt{\frac{2}{b-a}}\varphi_i\left(-1 + \frac{2}{b-a}(x-a)\right) = \sqrt{\frac{2}{b-a}}\varphi_i(t)" />
+
+### Verification of Orthonormal Properties
+
+We can verify that the orthonormal properties remain valid after transformation:
+
+<MathContainer>
+<BlockMath math="\langle \tilde{\varphi}_i, \tilde{\varphi}_j \rangle_x = \int_a^b \tilde{\varphi}_i(x)\tilde{\varphi}_j(x) \, dx" />
+<BlockMath math="= \int_a^b \sqrt{\frac{2}{b-a}}\varphi_i\left(-1 + \frac{2}{b-a}(x-a)\right)" />
+<BlockMath math="\times \sqrt{\frac{2}{b-a}}\varphi_j\left(-1 + \frac{2}{b-a}(x-a)\right) \, dx" />
+</MathContainer>
+
+With substitution, we obtain:
+
+<MathContainer>
+<BlockMath math="= \int_{-1}^1 \frac{2}{b-a}\varphi_i(t)\varphi_j(t) \frac{b-a}{2} \, dt" />
+<BlockMath math="= \int_{-1}^1 \varphi_i(t)\varphi_j(t) \, dt = \langle \varphi_i, \varphi_j \rangle_t = \delta_{ij}" />
+</MathContainer>
+
+Thus:
+
+<BlockMath math="\langle f, \tilde{\varphi}_i \rangle_x = \int_a^b f(x)\varphi_i\left(-1 + \frac{2}{b-a}(x-a)\right)\sqrt{\frac{2}{b-a}} \, dx" />
+
+## Gauss Approximation
+
+In Gauss approximation with the scalar product:
+
+<BlockMath math="\langle f, g \rangle = \int_{-1}^1 f(t)g(x) \, dx" />
+
+this method provides a very important foundation in numerical analysis. The orthogonal polynomials we have studied become the fundamental basis for developing efficient Gauss quadrature methods for various computational applications that require function approximation with high accuracy.

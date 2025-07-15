@@ -1,0 +1,147 @@
+export const metadata = {
+    title: "Polinomial Ortogonal",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Metode Linear AI",
+};
+
+## Perkalian Skalar Berbobot
+
+Dalam analisis numerik, kita sering perlu mengukur perbedaan antara dua fungsi menggunakan norma maksimum. Norma ini didefinisikan sebagai:
+
+<BlockMath math="\|f - g\|_\infty = \max_{x \in [-1,1]} |f(x) - g(x)|" />
+
+Secara umum, norma maksimum dapat menjadi sangat besar, terutama di dekat ujung interval dimana kesalahan besar sering muncul. Bayangkan seperti mengukur ketinggian gunung hanya dari puncak tertinggi saja tanpa mempertimbangkan kemiringan lerengnya. 
+
+Untuk mengatasi masalah ini, kita dapat menggunakan perkalian skalar berbobot yang memberikan penekanan berbeda pada setiap bagian interval:
+
+<BlockMath math="\langle f, g \rangle_\omega = \int_{-1}^{1} f(x)g(x)\omega(x) \, dx" />
+
+dengan fungsi bobot:
+
+<BlockMath math="\omega(x) = \frac{1}{\sqrt{1-x^2}}" />
+
+Fungsi bobot ini memberikan penekanan yang lebih kuat pada ujung interval, sehingga dapat menekan kesalahan besar yang biasanya terjadi di daerah tersebut.
+
+## Ortogonalisasi dan Polinomial Chebyshev
+
+Ketika kita mengortogonalisasi basis monomial <InlineMath math="1, x, \ldots, x^n" /> terhadap perkalian skalar berbobot ini, kita memperoleh polinomial ortogonal <InlineMath math="p_k" /> yang memenuhi hubungan rekursi dua tingkat. Proses ini seperti mengatur ulang bangunan blok agar setiap lantai berdiri tegak lurus sempurna terhadap lantai lainnya:
+
+<MathContainer>
+<BlockMath math="p_0(x) = 1" />
+<BlockMath math="p_1(x) = x" />
+<BlockMath math="p_{k+1}(x) = 4xp_k(x) - 4p_{k-1}(x), \quad k = 1, \ldots, n" />
+</MathContainer>
+
+Norma dari polinomial ini adalah:
+
+<MathContainer>
+<BlockMath math="\|p_k\|_\omega = \begin{cases}
+\sqrt{\pi}, & k = 0 \\
+\sqrt{\pi/2}, & k \neq 0
+\end{cases}" />
+<BlockMath math="p_k(1) = 2^{k-1}" />
+</MathContainer>
+
+Jika kita melakukan normalisasi pada <InlineMath math="x = 1" />, kita memperoleh polinomial Chebyshev yang sangat terkenal:
+
+<BlockMath math="T_k(x) = 2^{1-k}p_k(x) = \cos(k \arccos(x)), \quad k = 0, 1, 2, \ldots" />
+
+Bentuk trigonometri ini menunjukkan bahwa polinomial Chebyshev pada dasarnya adalah transformasi dari fungsi kosinus yang disesuaikan untuk interval <InlineMath math="[-1, 1]" />.
+
+Terdapat suatu teorema yang menyatakan bahwa hubungan rekursi dua arah berlaku umum untuk polinomial yang berasal dari basis monomial pada ruang <InlineMath math="C([-1, 1])" /> dengan sifat simetri tertentu. Perkalian skalar memenuhi hubungan:
+
+<BlockMath math="\langle p, xq \rangle = \langle xp, q \rangle" />
+
+untuk semua polinomial <InlineMath math="p, q \in P" />.
+
+## Proses Gram-Schmidt
+
+Melalui proses ortogonalisasi Gram-Schmidt dari basis <InlineMath math="1, x, \ldots, x^n" />, kita memperoleh polinomial ortogonal <InlineMath math="\tilde{p}_k" /> dengan <InlineMath math="k = 0, \ldots, n" />. Proses ini seperti membuat kerangka bangunan dimana setiap balok diposisikan berdasarkan balok sebelumnya dengan perhitungan yang akurat:
+
+<MathContainer>
+<BlockMath math="\tilde{p}_0(x) = 1" />
+<BlockMath math="\tilde{p}_1(x) = x - \beta_0" />
+<BlockMath math="\tilde{p}_{k+1}(x) = (x - \beta_k)\tilde{p}_k(x) - \gamma_k\tilde{p}_{k-1}(x), \quad k = 1, \ldots, n" />
+</MathContainer>
+
+dengan koefisien:
+
+<MathContainer>
+<BlockMath math="\beta_k = \frac{\langle x\tilde{p}_k, \tilde{p}_k \rangle}{\|\tilde{p}_k\|^2}, \quad k = 0, \ldots, n" />
+<BlockMath math="\gamma_k = \frac{\|\tilde{p}_k\|^2}{\|\tilde{p}_{k-1}\|^2}, \quad k = 1, \ldots, n" />
+</MathContainer>
+
+Polinomial ortonormal kemudian diperoleh melalui:
+
+<BlockMath math="p_k = \|\tilde{p}_k\|^{-1}\tilde{p}_k, \quad k = 0, \ldots, n" />
+
+## Polinomial Legendre
+
+Untuk ortonormalisasi basis <InlineMath math="1, x, \ldots, x^n" /> terhadap perkalian skalar standar:
+
+<BlockMath math="\langle f, g \rangle = \int_{-1}^{1} f(x)g(x) \, dx" />
+
+kita memperoleh polinomial yang terkait dengan polinomial Legendre:
+
+<BlockMath math="\varphi_k(x) = \frac{(2k-2)!}{(k-1)!^2} \sqrt{\frac{2k-1}{2^{k-1}}} L_{k-1}(x), \quad k = 1, \ldots, n+1" />
+
+dimana <InlineMath math="L_k(x)" /> adalah polinomial Legendre yang didefinisikan melalui hubungan rekursi dua tingkat.
+
+Polinomial Legendre sendiri didefinisikan sebagai:
+
+<MathContainer>
+<BlockMath math="L_0(x) = 1" />
+<BlockMath math="L_1(x) = x" />
+<BlockMath math="L_{k+1}(x) = xL_k(x) - \frac{k^2}{4k^2-1}L_{k-1}(x), \quad k = 1, \ldots, n" />
+</MathContainer>
+
+Terhadap perkalian skalar standar, polinomial Legendre menghasilkan sistem ortonormal <InlineMath math="\varphi_i : [-1, 1] \to \mathbb{R}" /> dengan <InlineMath math="i = 0, \ldots, n" /> yang memenuhi:
+
+<BlockMath math="\langle \varphi_i, \varphi_j \rangle_t = \delta_{ij}" />
+
+## Transformasi ke Interval Berbeda
+
+Ketika kita memiliki interval aproksimasi lain <InlineMath math="[a, b]" /> yang berbeda dari interval standar, kita melakukan substitusi variabel linear. Proses ini seperti mengubah skala peta dari satu wilayah ke wilayah lain sambil mempertahankan proporsi yang tepat:
+
+<MathContainer>
+<BlockMath math="x = a + \frac{b-a}{2}(t+1) \in [a, b]" />
+<BlockMath math="t = -1 + \frac{2}{b-a}(x-a) \in [-1, 1]" />
+</MathContainer>
+
+Maka diferensial menjadi:
+
+<BlockMath math="dx = \frac{b-a}{2}dt" />
+
+Pada interval <InlineMath math="[a, b]" /> terdapat polinomial <InlineMath math="\tilde{\varphi}_i : [a, b] \to \mathbb{R}" /> dengan <InlineMath math="i = 0, \ldots, n" /> yang dinyatakan sebagai:
+
+<BlockMath math="\tilde{\varphi}_i(x) = \sqrt{\frac{2}{b-a}}\varphi_i\left(-1 + \frac{2}{b-a}(x-a)\right) = \sqrt{\frac{2}{b-a}}\varphi_i(t)" />
+
+### Verifikasi Sifat Ortonormal
+
+Kita dapat memverifikasi bahwa sifat ortonormal tetap berlaku setelah transformasi:
+
+<MathContainer>
+<BlockMath math="\langle \tilde{\varphi}_i, \tilde{\varphi}_j \rangle_x = \int_a^b \tilde{\varphi}_i(x)\tilde{\varphi}_j(x) \, dx" />
+<BlockMath math="= \int_a^b \sqrt{\frac{2}{b-a}}\varphi_i\left(-1 + \frac{2}{b-a}(x-a)\right)" />
+<BlockMath math="\times \sqrt{\frac{2}{b-a}}\varphi_j\left(-1 + \frac{2}{b-a}(x-a)\right) \, dx" />
+</MathContainer>
+
+Dengan substitusi, kita memperoleh:
+
+<MathContainer>
+<BlockMath math="= \int_{-1}^1 \frac{2}{b-a}\varphi_i(t)\varphi_j(t) \frac{b-a}{2} \, dt" />
+<BlockMath math="= \int_{-1}^1 \varphi_i(t)\varphi_j(t) \, dt = \langle \varphi_i, \varphi_j \rangle_t = \delta_{ij}" />
+</MathContainer>
+
+Dengan demikian:
+
+<BlockMath math="\langle f, \tilde{\varphi}_i \rangle_x = \int_a^b f(x)\varphi_i\left(-1 + \frac{2}{b-a}(x-a)\right)\sqrt{\frac{2}{b-a}} \, dx" />
+
+## Aproksimasi Gauss
+
+Dalam aproksimasi Gauss dengan perkalian skalar:
+
+<BlockMath math="\langle f, g \rangle = \int_{-1}^1 f(t)g(x) \, dx" />
+
+metode ini memberikan fondasi yang sangat penting dalam analisis numerik. Polinomial ortogonal yang telah kita pelajari menjadi dasar fundamental dalam pengembangan metode kuadratur Gauss yang efisien untuk berbagai aplikasi komputasi yang memerlukan aproksimasi fungsi dengan akurasi tinggi.
