@@ -1,0 +1,154 @@
+export const metadata = {
+    title: "Normal Equation System Solution",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Linear Methods of AI",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Fundamental Properties
+
+Normal equation systems <InlineMath math="A^T A x = A^T b" /> have special characteristics that distinguish them from ordinary linear systems. Imagine finding the best point on a line to represent scattered data points, this system provides a mathematical way to find that optimal solution.
+
+For a matrix <InlineMath math="A \in \mathbb{R}^{m \times n}" /> with <InlineMath math="m \geq n" />, the normal equation system <InlineMath math="A^T A x = A^T b" /> always has a solution. More specifically, this system has a unique solution exactly when matrix <InlineMath math="A" /> has full rank, that is when <InlineMath math="\text{Rank}(A) = n" />. Under this condition, the solution can be expressed as <InlineMath math="\hat{x} = (A^T A)^{-1} A^T b" />.
+
+When matrix <InlineMath math="A" /> does not have full rank, the solution set of the normal equation system takes the form <InlineMath math="\hat{x} + \text{Kernel}(A)" />, where <InlineMath math="\hat{x}" /> is any particular solution of the system.
+
+### Why the System is Always Solvable
+
+The fundamental reason why normal equation systems always have a solution lies in the concept of orthogonal projection. The orthogonal projection of vector <InlineMath math="b" /> onto the column space <InlineMath math="\{Ax : x \in \mathbb{R}^n\}" /> always exists and is the solution to the linear least squares problem, which automatically is also a solution to the normal equation system.
+
+To understand why other solutions take the form <InlineMath math="\hat{x} + \text{Kernel}(A)" />, suppose <InlineMath math="\tilde{x}" /> is another solution of the system <InlineMath math="A^T A \tilde{x} = A^T b" />. Then <InlineMath math="\tilde{x}" /> is a solution to the normal equation system if and only if <InlineMath math="A^T A(\tilde{x} - \hat{x}) = 0" />, which is equivalent to <InlineMath math="(\tilde{x} - \hat{x})^T A^T A(\tilde{x} - \hat{x}) = 0" />, which is further equivalent to <InlineMath math="A(\tilde{x} - \hat{x}) = 0" />, or in other words <InlineMath math="\tilde{x} - \hat{x} \in \text{Kernel}(A)" />.
+
+## Moore-Penrose Pseudoinverse
+
+For a matrix <InlineMath math="A \in \mathbb{R}^{m \times n}" /> with <InlineMath math="m \geq n" /> and <InlineMath math="\text{Rank}(A) = n" />, we can define the Moore-Penrose pseudoinverse as
+
+<BlockMath math="A^{\dagger} = (A^T A)^{-1} A^T" />
+
+The Moore-Penrose pseudoinverse functions like the "best inverse" of a non-square matrix. It provides an optimal way to "cancel" linear transformations in the least squares context.
+
+The Moore-Penrose pseudoinverse satisfies four Penrose axioms that uniquely determine its characteristics
+
+<MathContainer>
+<BlockMath math="AA^{\dagger}A = A" />
+<BlockMath math="A^{\dagger}AA^{\dagger} = A^{\dagger}" />
+<BlockMath math="(AA^{\dagger})^T = AA^{\dagger}" />
+<BlockMath math="(A^{\dagger}A)^T = A^{\dagger}A" />
+</MathContainer>
+
+These four properties are unique, meaning if a matrix <InlineMath math="B" /> satisfies all four axioms, then automatically <InlineMath math="B = A^{\dagger}" />. The Moore-Penrose pseudoinverse thus functions as the unique solution operator for linear least squares problems.
+
+## Solution Using QR Decomposition
+
+A more numerically stable approach to solving normal equation systems uses QR decomposition. For a matrix <InlineMath math="A \in \mathbb{R}^{m \times n}" /> with full rank and <InlineMath math="m \geq n" />, we can use the (thin) QR decomposition <InlineMath math="A = Q_1 R_1" />.
+
+With this decomposition, the normal equation system <InlineMath math="A^T A x = A^T b" /> can be solved through
+
+<BlockMath math="A^T A x = R_1^T Q_1^T Q_1 R_1 x = R_1^T R_1 x = R_1^T Q_1^T b = A^T b" />
+
+Since <InlineMath math="R_1" /> is an invertible upper triangular matrix, this equation is equivalent to
+
+<BlockMath math="R_1 x = Q_1^T b" />
+
+This upper triangular system can be solved using back substitution, providing the solution <InlineMath math="x" /> directly and efficiently.
+
+## Numerical Example
+
+Let's apply this method to a concrete example. Suppose we have experimental data that we want to fit with a quadratic polynomial. We will use the following data
+
+<MathContainer>
+<BlockMath math="A = \begin{pmatrix} 9 & -3 & 1 \\ 4 & -2 & 1 \\ 1 & -1 & 1 \\ 0 & 0 & 1 \\ 1 & 1 & 1 \\ 4 & 2 & 1 \\ 9 & 3 & 1 \end{pmatrix}" />
+<BlockMath math="b = \begin{pmatrix} -2.2 \\ -4.2 \\ -4.2 \\ -1.8 \\ 1.8 \\ 8.2 \\ 15.8 \end{pmatrix}" />
+</MathContainer>
+
+Each row in matrix <InlineMath math="A" /> has the format <InlineMath math="[t_i^2, t_i, 1]" /> to find the coefficients of polynomial <InlineMath math="y = at^2 + bt + c" />, while vector <InlineMath math="b" /> contains the corresponding observation values.
+
+### QR Decomposition Process
+
+The QR decomposition of matrix <InlineMath math="A" /> yields
+
+<MathContainer>
+<BlockMath math="Q_1 = \begin{pmatrix} -0.64286 & -0.56695 & 0.16496 \\ -0.28571 & -0.37796 & -0.24744 \\ -0.07143 & -0.18898 & -0.49487 \\ -0.00000 & 0.00000 & -0.57735 \\ -0.07143 & 0.18898 & -0.49487 \\ -0.28571 & 0.37796 & -0.24744 \\ -0.64286 & 0.56695 & 0.16496 \end{pmatrix}" />
+<BlockMath math="R_1 = \begin{pmatrix} -14.00000 & -0.00000 & -2.00000 \\ 0.00000 & 5.29150 & 0.00000 \\ 0.00000 & 0.00000 & -1.73205 \end{pmatrix}" />
+</MathContainer>
+
+### Solution Steps
+
+First, we compute <InlineMath math="Q_1^T b" /> to obtain
+
+<BlockMath math="Q_1^T b = \begin{pmatrix} -9.7143 \\ 16.0257 \\ 3.4806 \end{pmatrix}" />
+
+Next, we solve the upper triangular system <InlineMath math="R_1 x = Q_1^T b" /> using back substitution. Since <InlineMath math="R_1" /> is upper triangular, we start from the bottom equation.
+
+From the third equation, <InlineMath math="-1.73205 x_3 = 3.4806" />, so <InlineMath math="x_3 = -2.00952" />.
+
+From the second equation, <InlineMath math="5.29150 x_2 = 16.0257" />, so <InlineMath math="x_2 = 3.02857" />.
+
+From the first equation, <InlineMath math="-14.00000 x_1 - 2.00000(-2.00952) = -9.7143" />, so <InlineMath math="x_1 = 0.98095" />.
+
+Thus, the complete solution is
+
+<BlockMath math="\hat{x} = \begin{pmatrix} 0.98095 \\ 3.02857 \\ -2.00952 \end{pmatrix}" />
+
+### Fitting Results
+
+Based on the obtained solution, the quadratic polynomial that best fits the data is
+
+<BlockMath math="y = 0.98095 \cdot t^2 + 3.02857 \cdot t - 2.00952" />
+
+The following visualization shows how well this polynomial represents the original data
+
+<LineEquation
+  title="Quadratic Polynomial Fitting"
+  description="Polynomial curve generated from the normal equation system solution."
+  cameraPosition={[15, 10, 15]}
+  data={(() => {
+    // Original data from matrix A (column t) and vector b
+    const originalData = [
+      [-3, -2.2],
+      [-2, -4.2],
+      [-1, -4.2],
+      [0, -1.8],
+      [1, 1.8],
+      [2, 8.2],
+      [3, 15.8]
+    ];
+    
+    // Polynomial coefficients from normal equation system solution
+    const a = 0.98095;
+    const b = 3.02857;
+    const c = -2.00952;
+    
+    return [
+      {
+        points: Array.from({ length: 50 }, (_, i) => {
+          const t = -3 + (i * 6) / 49;
+          const y = a * t * t + b * t + c;
+          return { x: t, y: y, z: 0 };
+        }),
+        color: getColor("CYAN"),
+        smooth: true,
+        showPoints: false
+      },
+      {
+        points: originalData.map(([t, y]) => ({ x: t, y: y, z: 0 })),
+        color: getColor("ORANGE"),
+        smooth: false,
+        showPoints: true
+      }
+    ];
+  })()}
+/>
+
+## Method Comparison
+
+To solve normal equation systems, there are two main approaches that can be compared in terms of computation and numerical stability.
+
+The Cholesky approach involves explicitly forming the matrix <InlineMath math="A^T A" /> first, then applying Cholesky decomposition since this matrix is positive definite. This method requires approximately <InlineMath math="n^2 \cdot m + \frac{1}{6}n^3 + O(n^2) + O(m \cdot n)" /> arithmetic operations. However, multiplication and decomposition can become sources of large error propagation, especially when <InlineMath math="m = n" /> where <InlineMath math="\text{cond}(A^T A) \approx \text{cond}(A)^2" />.
+
+The QR approach, conversely, can solve this problem with better numerical stability and comparable computational complexity. The main complexity is determined by <InlineMath math="n^2 \cdot m" /> operations for QR decomposition, making it comparable to the Cholesky approach. However, the significant advantage of QR lies in the fact that orthogonal transformations do not worsen the problem condition, unlike forming <InlineMath math="A^T A" /> in the Cholesky method.
+
+The choice of the appropriate method depends on the data characteristics and the level of accuracy required in the specific application.
