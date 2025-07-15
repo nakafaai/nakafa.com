@@ -1,0 +1,115 @@
+export const metadata = {
+    title: "System of Linear Equations",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Overdetermined Linear Equation Systems
+
+Imagine we are trying to fit a curve to a set of data. 
+In many practical cases, we have more data than parameters we want to find. 
+Such situations create what is called **overdetermined linear equation systems**.
+
+This system has a special characteristic. The number of equations is greater than the number of unknown variables. 
+Mathematically, if we have <InlineMath math="m" /> equations and <InlineMath math="n" /> variables, 
+then the condition <InlineMath math="m > n" /> makes this system "overdetermined".
+
+## Real Example with Quadratic Polynomial Model
+
+Let's look at a concrete example. Suppose we have <InlineMath math="7" /> data points that we want to fit 
+with a parabola or quadratic curve.
+
+The data we have is as follows.
+
+| <InlineMath math="i" /> | <InlineMath math="1" /> | <InlineMath math="2" /> | <InlineMath math="3" /> | <InlineMath math="4" /> | <InlineMath math="5" /> | <InlineMath math="6" /> | <InlineMath math="7" /> |
+|---|---|---|---|---|---|---|---|
+| <InlineMath math="t_i" /> | <InlineMath math="-3" /> | <InlineMath math="-2" /> | <InlineMath math="-1" /> | <InlineMath math="0" /> | <InlineMath math="1" /> | <InlineMath math="2" /> | <InlineMath math="3" /> |
+| <InlineMath math="y_i" /> | <InlineMath math="-2.2" /> | <InlineMath math="-4.2" /> | <InlineMath math="-4.2" /> | <InlineMath math="-1.8" /> | <InlineMath math="1.8" /> | <InlineMath math="8.2" /> | <InlineMath math="15.8" /> |
+
+We want to find a parabola with the following form.
+
+<BlockMath math="y = a_2 \cdot t^2 + a_1 \cdot t + a_0" />
+
+Here we are looking for <InlineMath math="3" /> parameters, namely <InlineMath math="a_2" /> (quadratic coefficient), 
+<InlineMath math="a_1" /> (linear coefficient), and <InlineMath math="a_0" /> (constant).
+
+## Setting Up the System of Equations
+
+Now, how do we use this data to find the parabola parameters? 
+The idea is simple. For each data point, we can write one equation. 
+With <InlineMath math="7" /> data points, we will get <InlineMath math="7" /> equations.
+
+<MathContainer>
+<BlockMath math="a_2 \cdot (-3)^2 + a_1 \cdot (-3) + a_0 = -2.2" />
+<BlockMath math="a_2 \cdot (-2)^2 + a_1 \cdot (-2) + a_0 = -4.2" />
+<BlockMath math="a_2 \cdot (-1)^2 + a_1 \cdot (-1) + a_0 = -4.2" />
+<BlockMath math="a_2 \cdot 0^2 + a_1 \cdot 0 + a_0 = -1.8" />
+<BlockMath math="a_2 \cdot 1^2 + a_1 \cdot 1 + a_0 = 1.8" />
+<BlockMath math="a_2 \cdot 2^2 + a_1 \cdot 2 + a_0 = 8.2" />
+<BlockMath math="a_2 \cdot 3^2 + a_1 \cdot 3 + a_0 = 15.8" />
+</MathContainer>
+
+Now let's calculate the square values for each <InlineMath math="t_i" />. 
+For example, for <InlineMath math="t_1 = -3" />, we have <InlineMath math="(-3)^2 = 9" />. 
+Similarly for the others. After calculating everything, our equations become like this.
+
+<MathContainer>
+<BlockMath math="9a_2 - 3a_1 + a_0 = -2.2" />
+<BlockMath math="4a_2 - 2a_1 + a_0 = -4.2" />
+<BlockMath math="1a_2 - 1a_1 + a_0 = -4.2" />
+<BlockMath math="0a_2 + 0a_1 + a_0 = -1.8" />
+<BlockMath math="1a_2 + 1a_1 + a_0 = 1.8" />
+<BlockMath math="4a_2 + 2a_1 + a_0 = 8.2" />
+<BlockMath math="9a_2 + 3a_1 + a_0 = 15.8" />
+</MathContainer>
+
+## Matrix Form
+
+The system of equations above can be written in matrix form <InlineMath math="A \cdot x = b" />.
+
+<MathContainer>
+<BlockMath math="\begin{pmatrix} 9 & -3 & 1 \\ 4 & -2 & 1 \\ 1 & -1 & 1 \\ 0 & 0 & 1 \\ 1 & 1 & 1 \\ 4 & 2 & 1 \\ 9 & 3 & 1 \end{pmatrix} \begin{pmatrix} a_2 \\ a_1 \\ a_0 \end{pmatrix} = \begin{pmatrix} -2.2 \\ -4.2 \\ -4.2 \\ -1.8 \\ 1.8 \\ 8.2 \\ 15.8 \end{pmatrix}" />
+</MathContainer>
+
+In general, for a quadratic polynomial model with <InlineMath math="m" /> data points, 
+the matrix form is as follows.
+
+<MathContainer>
+<BlockMath math="\begin{pmatrix} t_1^2 & t_1 & 1 \\ \vdots & \vdots & \vdots \\ t_m^2 & t_m & 1 \end{pmatrix} \begin{pmatrix} a_2 \\ a_1 \\ a_0 \end{pmatrix} = \begin{pmatrix} y_1 \\ \vdots \\ y_m \end{pmatrix}" />
+</MathContainer>
+
+## Why There Is No Exact Solution
+
+Now we face an interesting situation. In our example, matrix <InlineMath math="A" /> has size <InlineMath math="7 \times 3" /> 
+and vector <InlineMath math="x" /> has size <InlineMath math="3 \times 1" />. 
+This means we have <InlineMath math="7" /> equations but only <InlineMath math="3" /> unknown variables.
+
+Does this mean the system cannot be solved? Let's examine this more deeply.
+
+The three columns of matrix <InlineMath math="A" /> are linearly independent, so the rank of matrix <InlineMath math="A" /> is <InlineMath math="3" />. 
+However, when we add vector <InlineMath math="b" /> to matrix <InlineMath math="A" /> 
+to form the augmented matrix <InlineMath math="(A|b)" />, its rank becomes <InlineMath math="4" />.
+
+This condition tells us something important. This system **has no exact solution**. 
+In simple terms, there is no single parabola that can pass through all <InlineMath math="7" /> data points perfectly.
+
+## Solution with Least Squares
+
+So what should we do? Give up? Of course not! 
+
+When an overdetermined linear equation system has no exact solution, 
+we use the **least squares** approach. The basic idea makes perfect sense. 
+If we cannot find a parabola that passes through all points, 
+let's find the parabola that is "closest" to all points.
+
+Mathematically, this method seeks parameters that minimize the sum of squared differences 
+between predicted values and observed values. Imagine we draw a parabola, 
+then measure the vertical distance from each data point to that parabola. 
+The least squares method finds the parabola that makes the total squared distances as small as possible.
+
+> Overdetermined linear equation systems are very common in the real world, 
+> especially when we have many measurement data but a relatively simple model.
+
+The least squares approach provides an optimal solution in the sense of minimizing 
+overall error, making it very practical for engineering and scientific applications.

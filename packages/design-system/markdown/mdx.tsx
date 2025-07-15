@@ -84,7 +84,7 @@ export const components = {
     </Table>
   ),
   thead: ({ children, ...props }: TableHeaderProps) => (
-    <TableHeader className="border-b bg-muted/50" {...props}>
+    <TableHeader className="border-b bg-muted text-muted-foreground" {...props}>
       {filterWhitespaceNodes(children)}
     </TableHeader>
   ),

@@ -1,0 +1,115 @@
+export const metadata = {
+    title: "Sistem Persamaan Linear",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Metode Linear AI",
+};
+
+## Sistem Persamaan Linear Berlebih
+
+Bayangkan kita sedang mencoba mencocokkan sebuah kurva dengan sekumpulan data. 
+Dalam banyak kasus praktis, kita memiliki lebih banyak data daripada parameter yang ingin kita cari. 
+Situasi seperti ini menciptakan apa yang disebut **sistem persamaan linear berlebih**.
+
+Sistem ini memiliki karakteristik khusus. Jumlah persamaan lebih banyak daripada jumlah variabel yang tidak diketahui. 
+Secara matematis, jika kita punya <InlineMath math="m" /> persamaan dan <InlineMath math="n" /> variabel, 
+maka kondisi <InlineMath math="m > n" /> membuat sistem ini "berlebih".
+
+## Contoh Nyata dengan Model Polinomial Kuadrat
+
+Mari kita lihat contoh konkret. Misalkan kita memiliki <InlineMath math="7" /> titik data yang ingin kita cocokkan 
+dengan sebuah parabola atau kurva kuadrat.
+
+Data yang kita miliki adalah sebagai berikut.
+
+| <InlineMath math="i" /> | <InlineMath math="1" /> | <InlineMath math="2" /> | <InlineMath math="3" /> | <InlineMath math="4" /> | <InlineMath math="5" /> | <InlineMath math="6" /> | <InlineMath math="7" /> |
+|---|---|---|---|---|---|---|---|
+| <InlineMath math="t_i" /> | <InlineMath math="-3" /> | <InlineMath math="-2" /> | <InlineMath math="-1" /> | <InlineMath math="0" /> | <InlineMath math="1" /> | <InlineMath math="2" /> | <InlineMath math="3" /> |
+| <InlineMath math="y_i" /> | <InlineMath math="-2.2" /> | <InlineMath math="-4.2" /> | <InlineMath math="-4.2" /> | <InlineMath math="-1.8" /> | <InlineMath math="1.8" /> | <InlineMath math="8.2" /> | <InlineMath math="15.8" /> |
+
+Kita ingin mencari sebuah parabola yang bentuknya seperti ini.
+
+<BlockMath math="y = a_2 \cdot t^2 + a_1 \cdot t + a_0" />
+
+Di sini kita mencari <InlineMath math="3" /> parameter, yaitu <InlineMath math="a_2" /> (koefisien kuadrat), 
+<InlineMath math="a_1" /> (koefisien linear), dan <InlineMath math="a_0" /> (konstanta).
+
+## Menyusun Sistem Persamaan
+
+Sekarang, bagaimana kita menggunakan data ini untuk mencari parameter parabola? 
+Idenya sederhana. Untuk setiap titik data, kita bisa menuliskan satu persamaan. 
+Dengan <InlineMath math="7" /> titik data, kita akan mendapatkan <InlineMath math="7" /> persamaan.
+
+<MathContainer>
+<BlockMath math="a_2 \cdot (-3)^2 + a_1 \cdot (-3) + a_0 = -2.2" />
+<BlockMath math="a_2 \cdot (-2)^2 + a_1 \cdot (-2) + a_0 = -4.2" />
+<BlockMath math="a_2 \cdot (-1)^2 + a_1 \cdot (-1) + a_0 = -4.2" />
+<BlockMath math="a_2 \cdot 0^2 + a_1 \cdot 0 + a_0 = -1.8" />
+<BlockMath math="a_2 \cdot 1^2 + a_1 \cdot 1 + a_0 = 1.8" />
+<BlockMath math="a_2 \cdot 2^2 + a_1 \cdot 2 + a_0 = 8.2" />
+<BlockMath math="a_2 \cdot 3^2 + a_1 \cdot 3 + a_0 = 15.8" />
+</MathContainer>
+
+Sekarang mari kita hitung nilai kuadrat untuk setiap <InlineMath math="t_i" />. 
+Misalnya, untuk <InlineMath math="t_1 = -3" />, kita punya <InlineMath math="(-3)^2 = 9" />. 
+Begitu juga dengan yang lain. Setelah dihitung semua, persamaan kita menjadi seperti ini.
+
+<MathContainer>
+<BlockMath math="9a_2 - 3a_1 + a_0 = -2.2" />
+<BlockMath math="4a_2 - 2a_1 + a_0 = -4.2" />
+<BlockMath math="1a_2 - 1a_1 + a_0 = -4.2" />
+<BlockMath math="0a_2 + 0a_1 + a_0 = -1.8" />
+<BlockMath math="1a_2 + 1a_1 + a_0 = 1.8" />
+<BlockMath math="4a_2 + 2a_1 + a_0 = 8.2" />
+<BlockMath math="9a_2 + 3a_1 + a_0 = 15.8" />
+</MathContainer>
+
+## Bentuk Matriks
+
+Sistem persamaan di atas bisa ditulis dalam bentuk matriks <InlineMath math="A \cdot x = b" />.
+
+<MathContainer>
+<BlockMath math="\begin{pmatrix} 9 & -3 & 1 \\ 4 & -2 & 1 \\ 1 & -1 & 1 \\ 0 & 0 & 1 \\ 1 & 1 & 1 \\ 4 & 2 & 1 \\ 9 & 3 & 1 \end{pmatrix} \begin{pmatrix} a_2 \\ a_1 \\ a_0 \end{pmatrix} = \begin{pmatrix} -2.2 \\ -4.2 \\ -4.2 \\ -1.8 \\ 1.8 \\ 8.2 \\ 15.8 \end{pmatrix}" />
+</MathContainer>
+
+Secara umum, untuk model polinomial kuadrat dengan <InlineMath math="m" /> titik data, 
+bentuk matriksnya adalah sebagai berikut.
+
+<MathContainer>
+<BlockMath math="\begin{pmatrix} t_1^2 & t_1 & 1 \\ \vdots & \vdots & \vdots \\ t_m^2 & t_m & 1 \end{pmatrix} \begin{pmatrix} a_2 \\ a_1 \\ a_0 \end{pmatrix} = \begin{pmatrix} y_1 \\ \vdots \\ y_m \end{pmatrix}" />
+</MathContainer>
+
+## Mengapa Tidak Ada Solusi Tepat
+
+Sekarang kita hadapi situasi yang menarik. Dalam contoh kita, matriks <InlineMath math="A" /> berukuran <InlineMath math="7 \times 3" /> 
+dan vektor <InlineMath math="x" /> berukuran <InlineMath math="3 \times 1" />. 
+Artinya, kita memiliki <InlineMath math="7" /> persamaan tetapi hanya <InlineMath math="3" /> variabel yang tidak diketahui.
+
+Apakah ini berarti sistemnya tidak bisa diselesaikan? Mari kita periksa lebih dalam.
+
+Ketiga kolom matriks <InlineMath math="A" /> saling bebas linear, sehingga peringkat matriks <InlineMath math="A" /> adalah <InlineMath math="3" />. 
+Namun ketika kita menambahkan vektor <InlineMath math="b" /> ke matriks <InlineMath math="A" /> 
+untuk membentuk matriks diperluas <InlineMath math="(A|b)" />, peringkatnya menjadi <InlineMath math="4" />.
+
+Kondisi ini memberitahu kita sesuatu yang penting. Sistem ini **tidak memiliki solusi tepat**. 
+Dalam bahasa sederhana, tidak ada parabola tunggal yang bisa melewati ke-<InlineMath math="7" /> titik data secara sempurna.
+
+## Solusi dengan Kuadrat Terkecil
+
+Lalu apa yang harus kita lakukan? Menyerah? Tentu tidak! 
+
+Ketika sistem persamaan linear berlebih tidak memiliki solusi tepat, 
+kita menggunakan pendekatan **kuadrat terkecil**. Ide dasarnya sangat masuk akal. 
+Jika kita tidak bisa menemukan parabola yang melewati semua titik, 
+mari kita cari parabola yang "paling dekat" dengan semua titik.
+
+Secara matematis, metode ini mencari parameter yang meminimalkan jumlah kuadrat selisih 
+antara nilai prediksi dan nilai observasi. Bayangkan kita menggambar parabola, 
+lalu mengukur jarak vertikal dari setiap titik data ke parabola tersebut. 
+Metode kuadrat terkecil mencari parabola yang membuat total kuadrat jarak-jarak ini paling kecil.
+
+> Sistem persamaan linear berlebih sangat umum dalam dunia nyata, 
+> terutama ketika kita memiliki banyak data pengukuran tetapi model yang relatif sederhana.
+
+Pendekatan kuadrat terkecil memberikan solusi yang optimal dalam arti meminimalkan 
+kesalahan secara keseluruhan, sehingga sangat praktis untuk aplikasi rekayasa dan sains.
