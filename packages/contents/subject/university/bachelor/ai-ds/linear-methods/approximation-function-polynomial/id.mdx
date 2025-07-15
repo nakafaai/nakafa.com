@@ -1,0 +1,52 @@
+export const metadata = {
+    title: "Perkiraan Terbaik dalam Fungsi dan Ruang Polinomial",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Metode Linear AI",
+};
+
+## Pendekatan Terbaik dalam Ruang Fungsi
+
+Tujuan kita adalah melakukan pendekatan terhadap fungsi tertentu dalam subruang yang sesuai dari ruang fungsi menggunakan norma tertentu dengan hasil yang optimal.
+
+Himpunan <InlineMath math="C([a; b])" /> dari fungsi kontinu <InlineMath math="f : [a; b] \to \mathbb{R}" /> membentuk ruang vektor real berdimensi tak hingga. Bayangkan ruang ini seperti perpustakaan raksasa yang berisi semua fungsi kontinu yang mungkin ada pada interval <InlineMath math="[a; b]" />.
+
+## Produk Skalar dan Ruang Euklidean
+
+Dengan produk skalar yang didefinisikan sebagai
+
+<BlockMath math="\langle f, g \rangle = \int_a^b f(x) g(x) \, dx" />
+
+maka <InlineMath math="C([a; b])" /> menjadi ruang vektor euklidean. Norma yang bersesuaian adalah rata-rata kuadratik
+
+<BlockMath math="\|f\| = \sqrt{\langle f, f \rangle} = \left( \int_a^b f(x)^2 \, dx \right)^{\frac{1}{2}}" />
+
+Produk skalar ini seperti cara mengukur kemiripan antara dua fungsi, mirip dengan menghitung seberapa serupa dua lagu berdasarkan harmonisasi nadanya. Sedangkan norma memberikan ukuran "besarnya" suatu fungsi dalam arti kuadratik, seperti mengukur volume suara rata-rata dari sebuah musik.
+
+## Definisi Aproksimasi Terbaik
+
+Misalkan <InlineMath math="S \subset C([a; b])" /> adalah subruang vektor berdimensi hingga dan <InlineMath math="f \in C([a; b])" />. Tugas kita adalah menentukan <InlineMath math="g \in S" /> sedemikian rupa sehingga
+
+<BlockMath math="\|f - g\| = \min_{\varphi \in S} \|f - \varphi\|" />
+
+Fungsi <InlineMath math="g \in S" /> dengan sifat ini disebut pendekatan Gauss. Suatu <InlineMath math="g \in S" /> dengan sifat tersebut dinamakan pendekatan terbaik dari <InlineMath math="f" /> dalam <InlineMath math="S" /> terhadap norma <InlineMath math="\| \cdot \|" />.
+
+Seperti mencari foto yang paling mirip dengan aslinya dari koleksi foto terbatas, pendekatan terbaik memberikan fungsi yang paling mendekati fungsi asli dalam ruang yang tersedia.
+
+## Ruang Polinomial
+
+Selanjutnya kita akan meninjau
+
+<BlockMath math="S = P_n([a; b])" />
+
+yaitu himpunan semua polinomial berderajat maksimal <InlineMath math="n" />. Ruang polinomial adalah seperti kotak perkakas matematika yang berisi berbagai macam kurva sederhana untuk mendekati bentuk fungsi yang lebih rumit. Semakin tinggi derajat <InlineMath math="n" />, semakin banyak "alat" yang tersedia untuk membentuk kurva yang lebih fleksibel.
+
+## Polinomial Trigonometrik
+
+Kemungkinan lain adalah himpunan semua polinomial trigonometrik
+
+<BlockMath math="S = T_n(\omega) = \left\{ \frac{a_0}{2} + \sum_{i=1}^n \left( a_i \cos\left(\frac{2\pi i x}{\omega}\right) + b_i \sin\left(\frac{2\pi i x}{\omega}\right) \right) : a_i, b_i \in \mathbb{R} \right\}" />
+
+untuk pendekatan fungsi periodik <InlineMath math="f : \mathbb{R} \to \mathbb{R}" /> dengan periode <InlineMath math="\omega > 0" />.
+
+Polinomial trigonometrik ini seperti orkestra matematika dimana fungsi sinus dan kosinus berperan sebagai instrumen musik yang berharmoni untuk menciptakan melodi fungsi yang berulang. Setiap suku dalam deret ini menambahkan frekuensi harmonik yang berbeda, sama seperti instrumen musik yang memainkan nada dasar dan harmonik-harmoniknya.

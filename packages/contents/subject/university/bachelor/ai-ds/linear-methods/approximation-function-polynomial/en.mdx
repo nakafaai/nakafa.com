@@ -1,0 +1,52 @@
+export const metadata = {
+    title: "Best Approximation in Function and Polynomial Spaces",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Best Approximation in Function Spaces
+
+Our goal is to perform approximation of a specific function within an appropriate subspace of function space using a certain norm with optimal results.
+
+The set <InlineMath math="C([a; b])" /> of continuous functions <InlineMath math="f : [a; b] \to \mathbb{R}" /> forms an infinite-dimensional real vector space. Imagine this space like a massive library containing all possible continuous functions on the interval <InlineMath math="[a; b]" />.
+
+## Scalar Product and Euclidean Space
+
+With the scalar product defined as
+
+<BlockMath math="\langle f, g \rangle = \int_a^b f(x) g(x) \, dx" />
+
+then <InlineMath math="C([a; b])" /> becomes a Euclidean vector space. The corresponding norm is the quadratic mean
+
+<BlockMath math="\|f\| = \sqrt{\langle f, f \rangle} = \left( \int_a^b f(x)^2 \, dx \right)^{\frac{1}{2}}" />
+
+This scalar product is like a way to measure similarity between two functions, similar to calculating how similar two songs are based on their harmonic resonance. While the norm provides a measure of the "magnitude" of a function in the quadratic sense, like measuring the average volume of a piece of music.
+
+## Definition of Best Approximation
+
+Let <InlineMath math="S \subset C([a; b])" /> be a finite-dimensional vector subspace and <InlineMath math="f \in C([a; b])" />. Our task is to determine <InlineMath math="g \in S" /> such that
+
+<BlockMath math="\|f - g\| = \min_{\varphi \in S} \|f - \varphi\|" />
+
+A function <InlineMath math="g \in S" /> with this property is called a Gauss approximation. Such <InlineMath math="g \in S" /> with this property is called the best approximation of <InlineMath math="f" /> in <InlineMath math="S" /> with respect to the norm <InlineMath math="\| \cdot \|" />.
+
+Like searching for the photo that most closely resembles the original from a limited photo collection, the best approximation provides the function that most closely matches the original function within the available space.
+
+## Polynomial Spaces
+
+Next, we will examine
+
+<BlockMath math="S = P_n([a; b])" />
+
+which is the set of all polynomials of maximum degree <InlineMath math="n" />. Polynomial space is like a mathematical toolbox containing various simple curves to approximate more complex function shapes. The higher the degree <InlineMath math="n" />, the more "tools" are available to form more flexible curves.
+
+## Trigonometric Polynomials
+
+Another possibility is the set of all trigonometric polynomials
+
+<BlockMath math="S = T_n(\omega) = \left\{ \frac{a_0}{2} + \sum_{i=1}^n \left( a_i \cos\left(\frac{2\pi i x}{\omega}\right) + b_i \sin\left(\frac{2\pi i x}{\omega}\right) \right) : a_i, b_i \in \mathbb{R} \right\}" />
+
+for approximation of periodic functions <InlineMath math="f : \mathbb{R} \to \mathbb{R}" /> with period <InlineMath math="\omega > 0" />.
+
+These trigonometric polynomials are like a mathematical orchestra where sine and cosine functions serve as musical instruments that harmonize to create the melody of repeating functions. Each term in this series adds a different harmonic frequency, just like musical instruments playing fundamental notes and their harmonics.
