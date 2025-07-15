@@ -1,0 +1,117 @@
+export const metadata = {
+    title: "Masalah Keseimbangan Linear",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Metode Linear AI",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Definisi Masalah
+
+Bayangkan kamu sedang mencoba mencocokkan puzzle yang tidak sempurna. Begitulah situasi yang kita hadapi dalam masalah keseimbangan linear. Kita memiliki matriks <InlineMath math="A \in \mathbb{R}^{m \times n}" /> dan vektor <InlineMath math="b \in \mathbb{R}^m" />, tetapi sistem persamaan <InlineMath math="A \cdot x = b" /> mungkin tidak memiliki solusi yang tepat.
+
+Dalam kasus seperti ini, kita mencari solusi terbaik yang dapat kita peroleh dengan meminimumkan fungsi kesalahan
+
+<BlockMath math="F(x) = \|A \cdot x - b\|_2^2" />
+
+Fungsi ini mengukur seberapa jauh hasil perkalian <InlineMath math="A \cdot x" /> dari target yang kita inginkan yaitu <InlineMath math="b" />.
+
+## Masalah Optimasi
+
+Sekarang kita pahami dulu apa yang sebenarnya ingin kita capai. Permasalahan minimisasi
+
+<BlockMath math="\min_x \|A \cdot x - b\|_2^2" />
+
+adalah inti dari **masalah keseimbangan linear** atau yang sering disebut *masalah kuadrat terkecil linear*. Bayangkan seperti mencari posisi terbaik untuk melempar bola agar mendarat sedekat mungkin dengan target, meskipun tidak bisa tepat sasaran.
+
+Mengapa kita menggunakan pendekatan ini? Karena dalam banyak situasi nyata, data yang kita miliki mengandung derau atau gangguan yang membuat solusi eksak tidak mungkin ditemukan.
+
+## Ekspansi Formula
+
+Sekarang coba kita uraikan formula ini untuk melihat apa yang sebenarnya terjadi di dalamnya
+
+<MathContainer>
+<BlockMath math="\min_x \|A \cdot x - b\|_2^2 = \min_x \sum_{i=1}^{n} (A \cdot x - b)_i^2" />
+</MathContainer>
+
+Bentuk ekspansi ini menunjukkan bahwa kita sebenarnya menjumlahkan kuadrat dari setiap komponen kesalahan. Mirip seperti menghitung total jarak kuadrat antara beberapa titik prediksi dengan titik target yang sebenarnya. Dengan mengkuadratkan setiap kesalahan, kita memberikan penalti yang lebih besar untuk kesalahan yang besar dibandingkan kesalahan kecil.
+
+## Norm Alternatif
+
+Ternyata ada beberapa cara berbeda untuk mengukur kesalahan, tergantung pada karakteristik masalah yang kita hadapi.
+
+**<InlineMath math="\ell_1" />-norm** bekerja dengan menjumlahkan nilai absolut kesalahan
+
+<BlockMath math="\min_x \|A \cdot x - b\|_1 = \min_x \sum_{i=1}^{n} |(A \cdot x - b)_i|" />
+
+Pendekatan ini seperti mengukur jarak dengan berjalan di kota yang jalanannya berbentuk grid. Kamu harus bergerak horizontal dan vertikal saja, tidak bisa diagonal. Metode ini lebih tahan terhadap data pencilan yang ekstrem.
+
+**<InlineMath math="\ell_\infty" />-norm** fokus pada kesalahan terbesar
+
+<BlockMath math="\min_x \|A \cdot x - b\|_\infty = \min_x \max_{i=1,\ldots,n} |(A \cdot x - b)_i|" />
+
+Bayangkan kamu sedang mengatur tinggi meja yang tidak rata. Metode ini akan fokus mengatasi kaki meja yang paling tinggi atau paling pendek, memastikan tidak ada satu bagian pun yang terlalu ekstrem.
+
+Pemilihan norm yang tepat tergantung pada jenis kesalahan yang paling ingin kita hindari dan karakteristik data yang kita miliki.
+
+## Interpretasi Geometris
+
+<LineEquation
+  title="Solusi Masalah Keseimbangan Linear"
+  description={<>Ilustrasi geometris menunjukkan hubungan antara vektor <InlineMath math="b" />, proyeksi <InlineMath math="A\hat{x}" />, dan vektor kesalahan.</>}
+  data={[
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: 2, z: 1 },
+        { x: 6, y: 3, z: 1.5 }
+      ],
+      color: getColor("SKY"),
+      cone: { position: "end" },
+      showPoints: false,
+      labels: [
+        { text: "A·x̂", at: 2, offset: [0.5, 0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2.5, y: 2, z: 1.5 },
+        { x: 5, y: 4, z: 3 }
+      ],
+      color: getColor("AMBER"),
+      cone: { position: "end" },
+      showPoints: false,
+      labels: [
+        { text: "b", at: 2, offset: [0.5, 0, 0.5] }
+      ]
+    },
+    {
+      points: [
+        { x: 5, y: 4, z: 3 },
+        { x: 5.5, y: 3.5, z: 2.25 },
+        { x: 6, y: 3, z: 1.5 }
+      ],
+      color: getColor("PURPLE"),
+      cone: { position: "end" },
+      showPoints: false,
+      labels: [
+        { text: "A·x̂ - b", at: 1, offset: [0, -0.5, 0] }
+      ]
+    }
+  ]}
+/>
+
+Gambaran geometris ini membantu kita memahami apa yang sebenarnya terjadi. Bidang datar dalam diagram ini menrepresentasikan ruang kolom dari matriks <InlineMath math="A" /> (disebut *Citra A*), yaitu semua kemungkinan hasil perkalian <InlineMath math="A \cdot x" />.
+
+Vektor <InlineMath math="b" /> adalah target yang ingin kita capai, tetapi mungkin tidak berada dalam ruang kolom matriks <InlineMath math="A" />. Solusi optimal <InlineMath math="\hat{x}" /> menghasilkan <InlineMath math="A\hat{x}" /> yang merupakan titik terdekat dari <InlineMath math="b" /> dalam ruang kolom tersebut.
+
+Vektor <InlineMath math="A\hat{x} - b" /> menunjukkan vektor kesalahan yang menghubungkan proyeksi terbaik dengan target asli. Seperti bayangan benda yang jatuh ke lantai, <InlineMath math="A\hat{x}" /> adalah "bayangan" terdekat dari <InlineMath math="b" /> dalam ruang yang tersedia.
+
+## Metode Penyelesaian
+
+Setiap jenis norm membutuhkan pendekatan penyelesaian yang berbeda. Masalah <InlineMath math="\ell_1" />-norm dan <InlineMath math="\ell_\infty" />-norm bisa diselesaikan menggunakan teknik optimasi linear, dimana kita mengubah masalah menjadi bentuk yang bisa ditangani oleh algoritma pemrograman linear.
+
+Sementara itu, masalah kuadrat terkecil dengan norm Euklides memiliki keunggulan khusus. Ketika kesalahan dalam data mengikuti pola distribusi normal (seperti bel), maka solusi yang kita peroleh memberikan estimasi terbaik dalam arti statistik, yang disebut estimator kemungkinan maksimum.

@@ -1,0 +1,117 @@
+export const metadata = {
+    title: "Linear Equilibrium Problem",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Linear Methods of AI",
+};
+
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/contents/_components/line-equation";
+
+## Problem Definition
+
+Imagine you're trying to match a puzzle with imperfect pieces. That's the situation we face in the linear equilibrium problem. We have a matrix <InlineMath math="A \in \mathbb{R}^{m \times n}" /> and vector <InlineMath math="b \in \mathbb{R}^m" />, but the equation system <InlineMath math="A \cdot x = b" /> may not have an exact solution.
+
+In cases like this, we search for the best solution we can obtain by minimizing the error function
+
+<BlockMath math="F(x) = \|A \cdot x - b\|_2^2" />
+
+This function measures how far the product result <InlineMath math="A \cdot x" /> is from our desired target <InlineMath math="b" />.
+
+## Optimization Problem
+
+Now let's understand what we actually want to achieve. The minimization problem
+
+<BlockMath math="\min_x \|A \cdot x - b\|_2^2" />
+
+is the core of the **linear equilibrium problem** or what is often called the *linear least squares problem*. Imagine looking for the best position to throw a ball so it lands as close as possible to the target, even though you can't hit it exactly.
+
+Why do we use this approach? Because in many real situations, the data we have contains noise or disturbances that make finding an exact solution impossible.
+
+## Formula Expansion
+
+Now let's break down this formula to see what actually happens inside it
+
+<MathContainer>
+<BlockMath math="\min_x \|A \cdot x - b\|_2^2 = \min_x \sum_{i=1}^{n} (A \cdot x - b)_i^2" />
+</MathContainer>
+
+This expanded form shows that we're actually summing the squares of each error component. Similar to calculating the total squared distance between several prediction points and the actual target points. By squaring each error, we give a larger penalty to big errors compared to small ones.
+
+## Alternative Norms
+
+It turns out there are several different ways to measure error, depending on the characteristics of the problem we're dealing with.
+
+**<InlineMath math="\ell_1" />-norm** works by summing the absolute values of errors
+
+<BlockMath math="\min_x \|A \cdot x - b\|_1 = \min_x \sum_{i=1}^{n} |(A \cdot x - b)_i|" />
+
+This approach is like measuring distance by walking in a city with grid-shaped streets. You have to move horizontally and vertically only, no diagonal movement. This method is more resistant to extreme outlier data.
+
+**<InlineMath math="\ell_\infty" />-norm** focuses on the largest error
+
+<BlockMath math="\min_x \|A \cdot x - b\|_\infty = \min_x \max_{i=1,\ldots,n} |(A \cdot x - b)_i|" />
+
+Imagine you're adjusting the height of an uneven table. This method will focus on fixing the highest or lowest table leg, ensuring no single part is too extreme.
+
+The right choice of norm depends on the type of error we most want to avoid and the characteristics of the data we have.
+
+## Geometric Interpretation
+
+<LineEquation
+  title="Linear Equilibrium Problem Solution"
+  description={<>Geometric illustration showing the relationship between vector <InlineMath math="b" />, projection <InlineMath math="A\hat{x}" />, and error vector.</>}
+  data={[
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: 2, z: 1 },
+        { x: 6, y: 3, z: 1.5 }
+      ],
+      color: getColor("SKY"),
+      cone: { position: "end" },
+      showPoints: false,
+      labels: [
+        { text: "A·x̂", at: 2, offset: [0.5, 0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 2.5, y: 2, z: 1.5 },
+        { x: 5, y: 4, z: 3 }
+      ],
+      color: getColor("AMBER"),
+      cone: { position: "end" },
+      showPoints: false,
+      labels: [
+        { text: "b", at: 2, offset: [0.5, 0, 0.5] }
+      ]
+    },
+    {
+      points: [
+        { x: 5, y: 4, z: 3 },
+        { x: 5.5, y: 3.5, z: 2.25 },
+        { x: 6, y: 3, z: 1.5 }
+      ],
+      color: getColor("PURPLE"),
+      cone: { position: "end" },
+      showPoints: false,
+      labels: [
+        { text: "A·x̂ - b", at: 1, offset: [0, -0.5, 0] }
+      ]
+    }
+  ]}
+/>
+
+This geometric visualization helps us understand what's actually happening. The flat plane in this diagram represents the column space of matrix <InlineMath math="A" /> (called *Image A*), which is all possible results of multiplication <InlineMath math="A \cdot x" />.
+
+Vector <InlineMath math="b" /> is the target we want to reach, but it may not lie within the column space of matrix <InlineMath math="A" />. The optimal solution <InlineMath math="\hat{x}" /> produces <InlineMath math="A\hat{x}" /> which is the closest point to <InlineMath math="b" /> in that column space.
+
+Vector <InlineMath math="A\hat{x} - b" /> shows the error vector connecting the best projection with the original target. Like a shadow of an object falling to the floor, <InlineMath math="A\hat{x}" /> is the closest "shadow" of <InlineMath math="b" /> in the available space.
+
+## Solution Methods
+
+Each type of norm requires a different solution approach. Problems with <InlineMath math="\ell_1" />-norm and <InlineMath math="\ell_\infty" />-norm can be solved using linear optimization techniques, where we transform the problem into a form that can be handled by linear programming algorithms.
+
+Meanwhile, the least squares problem with Euclidean norm has a special advantage. When errors in the data follow a normal distribution pattern (bell-shaped), then the solution we obtain provides the best estimate in a statistical sense, called the maximum likelihood estimator.
