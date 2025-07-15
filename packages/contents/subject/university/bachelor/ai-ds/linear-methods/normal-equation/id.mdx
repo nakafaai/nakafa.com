@@ -1,0 +1,96 @@
+export const metadata = {
+    title: "Sistem Persamaan Normal",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Metode Linear AI",
+};
+
+## Apa itu Sistem Persamaan Normal
+
+Bayangkan kamu punya masalah optimasi yang rumit, tapi ternyata ada jalan pintas yang elegan. Dalam masalah kuadrat terkecil, alih-alih melakukan optimasi langsung, kita bisa mengubahnya menjadi sistem persamaan yang lebih mudah diselesaikan.
+
+Ketika kita ingin meminimumkan
+
+<BlockMath math="\min_x \|A \cdot x - b\|_2^2" />
+
+ternyata solusinya dapat ditemukan dengan menyelesaikan sistem persamaan berikut
+
+<BlockMath math="A^T A \cdot x = A^T b" />
+
+Persamaan ini disebut **sistem persamaan normal** karena melibatkan konsep ortogonalitas atau keadaan "normal" (tegak lurus) dalam ruang vektor.
+
+## Hubungan Fundamental
+
+Ada hubungan yang sangat menarik antara masalah minimisasi dan sistem persamaan normal ini. Vektor <InlineMath math="\hat{x} \in \mathbb{R}^n" /> merupakan solusi dari masalah kuadrat terkecil jika dan hanya jika vektor tersebut memenuhi sistem persamaan normal.
+
+Dengan kata lain, mencari <InlineMath math="\hat{x}" /> yang membuat <InlineMath math="\|A \cdot x - b\|_2^2" /> minimal sama persis dengan mencari <InlineMath math="\hat{x}" /> yang memenuhi <InlineMath math="A^T A \cdot \hat{x} = A^T b" />.
+
+## Mengapa Sistem Ini Bekerja
+
+Untuk memahami mengapa hubungan ini berlaku, kita perlu melihat dari sudut pandang geometris.
+
+Ketika <InlineMath math="\hat{x}" /> memberikan nilai minimum untuk <InlineMath math="\|A\hat{x} - b\|_2^2" />, maka vektor kesalahan <InlineMath math="A\hat{x} - b" /> harus ortogonal terhadap semua vektor dalam ruang kolom matriks <InlineMath math="A" />.
+
+Ruang kolom ini terdiri dari semua vektor yang dapat ditulis sebagai <InlineMath math="Ax" /> untuk <InlineMath math="x \in \mathbb{R}^n" />. Kondisi ortogonalitas berarti
+
+<BlockMath math="0 = \langle Ax, A\hat{x} - b \rangle" />
+
+untuk setiap vektor <InlineMath math="x \in \mathbb{R}^n" />. Dengan menggunakan sifat perkalian dalam, kita dapat menuliskan
+
+<MathContainer>
+<BlockMath math="0 = (Ax)^T (A\hat{x} - b) = x^T (A^T A\hat{x} - A^T b)" />
+</MathContainer>
+
+Karena hubungan ini harus berlaku untuk semua vektor <InlineMath math="x" />, maka
+
+<BlockMath math="A^T A\hat{x} - A^T b = 0" />
+
+Inilah yang memberikan sistem persamaan normal.
+
+## Pembuktian Menggunakan Teorema Pythagoras
+
+Kita juga bisa memverifikasi hasil ini dengan cara yang berbeda. Misalkan <InlineMath math="\hat{x}" /> adalah solusi sistem persamaan normal dan <InlineMath math="x" /> adalah sembarang vektor di <InlineMath math="\mathbb{R}^n" />.
+
+Menggunakan teorema Pythagoras, kita dapat menuliskan
+
+<MathContainer>
+<BlockMath math="\|Ax - b\|_2^2 = \|A\hat{x} - b - A(\hat{x} - x)\|_2^2" />
+<BlockMath math="= \|A\hat{x} - b\|_2^2 + \|A(\hat{x} - x)\|_2^2 - 2 \langle A\hat{x} - b, A(\hat{x} - x) \rangle" />
+<BlockMath math="= \|A\hat{x} - b\|_2^2 + \underbrace{\|A(\hat{x} - x)\|_2^2}_{\geq 0} - 2 \underbrace{(\hat{x} - x)^T (A^T A\hat{x} - A^T b)}_{=0}" />
+</MathContainer>
+
+Karena <InlineMath math="\hat{x}" /> memenuhi sistem persamaan normal, maka <InlineMath math="A^T A\hat{x} - A^T b = 0" /> dan norm kuadrat selalu non-negatif. Oleh karena itu
+
+<BlockMath math="\|Ax - b\|_2^2 = \|A\hat{x} - b\|_2^2 + \|A(\hat{x} - x)\|_2^2 \geq \|A\hat{x} - b\|_2^2" />
+
+Ketidaksamaan ini membuktikan bahwa <InlineMath math="\hat{x}" /> memang memberikan nilai minimum.
+
+## Kapan Sistem Persamaan Normal Dapat Diselesaikan
+
+Tidak semua sistem persamaan normal dapat diselesaikan dengan mudah. Ada kondisi khusus yang harus dipenuhi.
+
+Untuk matriks <InlineMath math="A \in \mathbb{R}^{m \times n}" /> dengan <InlineMath math="m \geq n" />, matriks simetrik <InlineMath math="A^T A \in \mathbb{R}^{n \times n}" /> dapat diinversi jika dan hanya jika matriks <InlineMath math="A" /> memiliki peringkat penuh, yaitu <InlineMath math="\text{Peringkat}(A) = n" />.
+
+Kondisi ini sangat penting karena menentukan apakah sistem persamaan normal memiliki solusi yang unik. Ketika <InlineMath math="A^T A" /> dapat diinversi, solusi dapat ditulis secara eksplisit sebagai
+
+<BlockMath math="\hat{x} = (A^T A)^{-1} A^T b" />
+
+## Pembuktian Kondisi Invertible
+
+Untuk memahami kapan <InlineMath math="A^T A" /> dapat diinversi, kita perlu melihat hubungan antara ruang nul (kernel) dan peringkat.
+
+Jika <InlineMath math="A^T A" /> dapat diinversi, maka ruang nul dari <InlineMath math="A^T A" /> hanya berisi vektor nol. Karena ruang nul dari <InlineMath math="A^T A" /> mencakup ruang nul dari <InlineMath math="A" />, maka <InlineMath math="A" /> juga hanya memiliki vektor nol dalam ruang nulnya. Ini berarti <InlineMath math="\text{Peringkat}(A) = n" />.
+
+Sebaliknya, jika <InlineMath math="\text{Peringkat}(A) = n" />, maka persamaan <InlineMath math="Ax = 0" /> hanya memiliki solusi <InlineMath math="x = 0" />. Untuk melihat bahwa <InlineMath math="A^T A" /> dapat diinversi, perhatikan bahwa jika <InlineMath math="A^T Ax = 0" />, maka
+
+<BlockMath math="0 = \langle x, A^T Ax \rangle = x^T A^T Ax = \langle Ax, Ax \rangle" />
+
+Karena perkalian dalam hanya bernilai nol jika <InlineMath math="Ax = 0" />, dan kita tahu bahwa ini hanya terjadi ketika <InlineMath math="x = 0" />, maka <InlineMath math="A^T A" /> memang dapat diinversi.
+
+## Sifat Positif Definit
+
+Lebih dari sekadar dapat diinversi, matriks <InlineMath math="A^T A" /> memiliki sifat khusus. Ketika <InlineMath math="\text{Peringkat}(A) = n" /> dan <InlineMath math="x \neq 0" />, kita memiliki <InlineMath math="Ax \neq 0" /> dan
+
+<BlockMath math="x^T A^T A x = \langle Ax, Ax \rangle > 0" />
+
+Ini menunjukkan bahwa <InlineMath math="A^T A" /> adalah matriks **positif definit**. Properti ini menjamin bahwa sistem persamaan normal tidak hanya memiliki solusi unik, tetapi juga stabil secara numerik ketika diselesaikan dengan metode komputasi. Algoritma seperti dekomposisi Cholesky dapat digunakan dengan aman untuk menyelesaikan sistem ini.

@@ -1,0 +1,96 @@
+export const metadata = {
+    title: "Normal Equation System",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Linear Methods of AI",
+};
+
+## What is Normal Equation System
+
+Imagine you have a complex optimization problem, but it turns out there's an elegant shortcut. In least squares problems, instead of doing direct optimization, we can transform it into a system of equations that's easier to solve.
+
+When we want to minimize
+
+<BlockMath math="\min_x \|A \cdot x - b\|_2^2" />
+
+it turns out the solution can be found by solving the following system of equations
+
+<BlockMath math="A^T A \cdot x = A^T b" />
+
+This equation is called the **normal equation system** because it involves the concept of orthogonality or "normal" (perpendicular) state in vector space.
+
+## Fundamental Relationship
+
+There's a very interesting relationship between the minimization problem and this normal equation system. Vector <InlineMath math="\hat{x} \in \mathbb{R}^n" /> is a solution to the least squares problem if and only if that vector satisfies the normal equation system.
+
+In other words, finding <InlineMath math="\hat{x}" /> that makes <InlineMath math="\|A \cdot x - b\|_2^2" /> minimal is exactly the same as finding <InlineMath math="\hat{x}" /> that satisfies <InlineMath math="A^T A \cdot \hat{x} = A^T b" />.
+
+## Why This System Works
+
+To understand why this relationship holds, we need to look at it from a geometric perspective.
+
+When <InlineMath math="\hat{x}" /> gives the minimum value for <InlineMath math="\|A\hat{x} - b\|_2^2" />, then the error vector <InlineMath math="A\hat{x} - b" /> must be orthogonal to all vectors in the column space of matrix <InlineMath math="A" />.
+
+This column space consists of all vectors that can be written as <InlineMath math="Ax" /> for <InlineMath math="x \in \mathbb{R}^n" />. The orthogonality condition means
+
+<BlockMath math="0 = \langle Ax, A\hat{x} - b \rangle" />
+
+for every vector <InlineMath math="x \in \mathbb{R}^n" />. Using the properties of inner product, we can write
+
+<MathContainer>
+<BlockMath math="0 = (Ax)^T (A\hat{x} - b) = x^T (A^T A\hat{x} - A^T b)" />
+</MathContainer>
+
+Since this relationship must hold for all vectors <InlineMath math="x" />, then
+
+<BlockMath math="A^T A\hat{x} - A^T b = 0" />
+
+This is what gives us the normal equation system.
+
+## Proof Using Pythagorean Theorem
+
+We can also verify this result in a different way. Let <InlineMath math="\hat{x}" /> be the solution of the normal equation system and <InlineMath math="x" /> be any vector in <InlineMath math="\mathbb{R}^n" />.
+
+Using the Pythagorean theorem, we can write
+
+<MathContainer>
+<BlockMath math="\|Ax - b\|_2^2 = \|A\hat{x} - b - A(\hat{x} - x)\|_2^2" />
+<BlockMath math="= \|A\hat{x} - b\|_2^2 + \|A(\hat{x} - x)\|_2^2 - 2 \langle A\hat{x} - b, A(\hat{x} - x) \rangle" />
+<BlockMath math="= \|A\hat{x} - b\|_2^2 + \underbrace{\|A(\hat{x} - x)\|_2^2}_{\geq 0} - 2 \underbrace{(\hat{x} - x)^T (A^T A\hat{x} - A^T b)}_{=0}" />
+</MathContainer>
+
+Since <InlineMath math="\hat{x}" /> satisfies the normal equation system, then <InlineMath math="A^T A\hat{x} - A^T b = 0" /> and the squared norm is always non-negative. Therefore
+
+<BlockMath math="\|Ax - b\|_2^2 = \|A\hat{x} - b\|_2^2 + \|A(\hat{x} - x)\|_2^2 \geq \|A\hat{x} - b\|_2^2" />
+
+This inequality proves that <InlineMath math="\hat{x}" /> indeed gives the minimum value.
+
+## When Normal Equation System Can Be Solved
+
+Not all normal equation systems can be solved easily. There are special conditions that must be met.
+
+For matrix <InlineMath math="A \in \mathbb{R}^{m \times n}" /> with <InlineMath math="m \geq n" />, the symmetric matrix <InlineMath math="A^T A \in \mathbb{R}^{n \times n}" /> can be inverted if and only if matrix <InlineMath math="A" /> has full rank, that is <InlineMath math="\text{Rank}(A) = n" />.
+
+This condition is very important because it determines whether the normal equation system has a unique solution. When <InlineMath math="A^T A" /> can be inverted, the solution can be written explicitly as
+
+<BlockMath math="\hat{x} = (A^T A)^{-1} A^T b" />
+
+## Proof of Invertible Condition
+
+To understand when <InlineMath math="A^T A" /> can be inverted, we need to look at the relationship between null space (kernel) and rank.
+
+If <InlineMath math="A^T A" /> can be inverted, then the null space of <InlineMath math="A^T A" /> contains only the zero vector. Since the null space of <InlineMath math="A^T A" /> includes the null space of <InlineMath math="A" />, then <InlineMath math="A" /> also has only the zero vector in its null space. This means <InlineMath math="\text{Rank}(A) = n" />.
+
+Conversely, if <InlineMath math="\text{Rank}(A) = n" />, then the equation <InlineMath math="Ax = 0" /> has only the solution <InlineMath math="x = 0" />. To see that <InlineMath math="A^T A" /> can be inverted, note that if <InlineMath math="A^T Ax = 0" />, then
+
+<BlockMath math="0 = \langle x, A^T Ax \rangle = x^T A^T Ax = \langle Ax, Ax \rangle" />
+
+Since the inner product is only zero when <InlineMath math="Ax = 0" />, and we know this only happens when <InlineMath math="x = 0" />, then <InlineMath math="A^T A" /> is indeed invertible.
+
+## Positive Definite Property
+
+More than just being invertible, matrix <InlineMath math="A^T A" /> has a special property. When <InlineMath math="\text{Rank}(A) = n" /> and <InlineMath math="x \neq 0" />, we have <InlineMath math="Ax \neq 0" /> and
+
+<BlockMath math="x^T A^T A x = \langle Ax, Ax \rangle > 0" />
+
+This shows that <InlineMath math="A^T A" /> is a **positive definite** matrix. This property guarantees that the normal equation system not only has a unique solution, but is also numerically stable when solved with computational methods. Algorithms like Cholesky decomposition can be safely used to solve this system.
