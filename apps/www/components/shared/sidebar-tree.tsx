@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { slugify } from "@repo/design-system/lib/utils";
+import { AlignLeftIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { TocProvider, useToc } from "@/lib/context/use-toc";
 
@@ -84,7 +85,10 @@ export function SidebarTree({ data, title }: Props) {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{title ?? t("on-this-page")}</SidebarGroupLabel>
+      <SidebarGroupLabel className="gap-2">
+        <AlignLeftIcon />
+        {title ?? t("on-this-page")}
+      </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           <TocProvider toc={data}>
