@@ -1,0 +1,88 @@
+export const metadata = {
+    title: "Regularisasi",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Metode Linear AI",
+};
+
+## Masalah dalam Sistem Linear
+
+Ketika kita berhadapan dengan sistem persamaan linear <InlineMath math="Ax = b" /> dimana <InlineMath math="A \in \mathbb{R}^{m \times n}" /> dan <InlineMath math="b \in \mathbb{R}^m" />, sering kali muncul situasi yang menantang. Jika <InlineMath math="m > n" /> dan <InlineMath math="\text{Peringkat}(A|b) > \text{Peringkat}(A)" />, maka sistem kuadrat terkecil menjadi tidak dapat diselesaikan karena sistem terlalu terbatas atau memiliki terlalu banyak batasan.
+
+Situasi lain yang sama bermasalahnya terjadi ketika matriks <InlineMath math="A" /> tidak memiliki peringkat penuh, yaitu <InlineMath math="\text{Peringkat}(A) < n" />. Dalam kondisi ini, sistem persamaan menjadi kurang terbatas atau memiliki terlalu banyak kebebasan.
+
+Bayangkan seperti mencoba menentukan posisi sebuah objek dengan informasi yang terlalu sedikit atau saling bertentangan. Regularisasi hadir sebagai solusi untuk memberikan stabilitas pada masalah yang tidak stabil ini.
+
+## Definisi Masalah Regularisasi
+
+Untuk mengatasi masalah ketidakstabilan, kita memperkenalkan masalah kuadrat terkecil yang dimodifikasi
+
+<BlockMath math="\min_x \left( \|Ax - b\|_2^2 + \omega^2 \|x - x_0\|_2^2 \right)" />
+
+dimana <InlineMath math="x_0 \in \mathbb{R}^n" /> adalah nilai awal atau perkiraan awal untuk parameter model dan <InlineMath math="\omega^2 \in \mathbb{R}_0^+" /> adalah faktor pembobot. Suku tambahan
+
+<BlockMath math="\omega^2 \|x - x_0\|_2^2" />
+
+disebut suku regularisasi Tikhonov.
+
+Suku regularisasi ini seperti memberikan "preferensi" kepada sistem untuk memilih solusi yang tidak terlalu jauh dari perkiraan awal <InlineMath math="x_0" />. Semakin besar nilai <InlineMath math="\omega" />, semakin kuat preferensi ini.
+
+## Interpretasi Regularisasi
+
+Melalui suku regularisasi, masalah kuadrat terkecil tidak hanya meminimumkan perbedaan <InlineMath math="\|Ax - b\|" /> antara model dan data, tetapi juga meminimumkan perbedaan <InlineMath math="\|x - x_0\|" /> antara parameter dan nilai perkiraan awal <InlineMath math="x_0" />, dengan bobot <InlineMath math="\omega^2" />.
+
+Perhatikan bahwa nilai perkiraan awal <InlineMath math="x_0" /> dipilih oleh peneliti. Solusi <InlineMath math="\hat{x}" /> kemudian tidak hanya menggambarkan perilaku proses yang diselidiki, tetapi juga mencerminkan asumsi awal peneliti.
+
+## Formulasi Matriks
+
+Masalah regularisasi dapat ditulis dalam bentuk matriks sebagai
+
+<MathContainer>
+<BlockMath math="\min_x \left\| \begin{pmatrix} Ax - b \\ \omega(x - x_0) \end{pmatrix} \right\|^2" />
+<BlockMath math="= \left\| \begin{pmatrix} A \\ \omega I \end{pmatrix} x - \begin{pmatrix} b \\ \omega x_0 \end{pmatrix} \right\|_2^2" />
+</MathContainer>
+
+Sistem persamaan normal yang bersesuaian menjadi
+
+<MathContainer>
+<BlockMath math="\begin{pmatrix} A \\ \omega I \end{pmatrix}^T \begin{pmatrix} A \\ \omega I \end{pmatrix} x" />
+<BlockMath math="= \begin{pmatrix} A \\ \omega I \end{pmatrix}^T \begin{pmatrix} b \\ \omega x_0 \end{pmatrix}" />
+</MathContainer>
+
+atau dalam bentuk yang lebih sederhana
+
+<BlockMath math="(A^T A + \omega^2 I) x = A^T b + \omega^2 x_0" />
+
+## Sifat Solusi Regularisasi
+
+Untuk <InlineMath math="\omega > 0" />, sistem persamaan normal
+
+<BlockMath math="(A^T A + \omega^2 I) x = A^T b + \omega^2 x_0" />
+
+dari masalah regularisasi selalu memiliki solusi yang unik. Regularisasi dengan demikian memulihkan kemampuan identifikasi semua parameter.
+
+Matriks <InlineMath math="\begin{pmatrix} A \\ \omega I \end{pmatrix}" /> memiliki <InlineMath math="n" /> baris yang linear independen dalam blok <InlineMath math="\omega I" /> untuk <InlineMath math="\omega > 0" />, sehingga mencapai peringkat maksimal <InlineMath math="n" />. Matriks <InlineMath math="A^T A + \omega^2 I" /> menjadi positif definit untuk <InlineMath math="\omega > 0" />, yang menjamin bahwa masalah menjadi terdefinisi dengan baik dan memiliki solusi yang stabil.
+
+## Pembobot Individual untuk Parameter
+
+Kita dapat memilih faktor pembobot individual <InlineMath math="\omega_i \geq 0" /> untuk setiap parameter <InlineMath math="i = 1, \ldots, n" />. Dalam hal ini, masalah kuadrat terkecil menjadi
+
+<MathContainer>
+<BlockMath math="\min_x \|Ax - b\|_2^2 + \sum_{i=1}^n \omega_i^2 (x_i - x_{0i})^2" />
+<BlockMath math="= \|Ax - b\|_2^2 + \|\Omega(x - x_0)\|_2^2" />
+<BlockMath math="= \left\| \begin{pmatrix} A \\ \Omega \end{pmatrix} x - \begin{pmatrix} b \\ \Omega x_0 \end{pmatrix} \right\|_2^2" />
+</MathContainer>
+
+dengan matriks diagonal
+
+<BlockMath math="\Omega = \begin{pmatrix} \omega_1 & 0 & \cdots \\ 0 & \ddots & \\ \vdots & & \omega_n \end{pmatrix}" />
+
+Faktor pembobot <InlineMath math="\omega_i" /> dipilih sedemikian rupa sehingga matriks <InlineMath math="\begin{pmatrix} A \\ \Omega \end{pmatrix}" /> memiliki peringkat penuh.
+
+## Strategi Pemilihan Pembobot
+
+Untuk parameter yang sulit ditentukan dengan baik, kita memilih faktor pembobot <InlineMath math="\omega_i" /> yang besar. Sebaliknya, untuk parameter yang sudah dapat ditentukan dengan baik, kita dapat memilih <InlineMath math="\omega_i = 0" />. Tentu saja, semua faktor pembobot <InlineMath math="\omega_i" /> dapat mempengaruhi semua parameter.
+
+Jika kita memutuskan untuk menetapkan suatu parameter pada nilai tertentu atau mengubahnya menjadi konstanta, kita dapat mengatur faktor <InlineMath math="\omega_i = \infty" /> secara prinsip. Hal ini juga berlaku ketika kita menambahkan kondisi ketidaksetaraan <InlineMath math="l_i \leq x_i \leq u_i" /> ke dalam masalah, yang kemudian dipenuhi dalam solusi dengan persamaan <InlineMath math="x_i = l_i" /> atau <InlineMath math="x_i = u_i" />.
+
+Melalui regularisasi, solusi tidak hanya bergantung pada data, tetapi juga pada asumsi awal dari peneliti. Hal ini memberikan fleksibilitas dalam mengintegrasikan pengetahuan domain ke dalam proses estimasi parameter.

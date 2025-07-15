@@ -1,0 +1,88 @@
+export const metadata = {
+    title: "Regularization",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Problems in Linear Systems
+
+When we deal with linear equation systems <InlineMath math="Ax = b" /> where <InlineMath math="A \in \mathbb{R}^{m \times n}" /> and <InlineMath math="b \in \mathbb{R}^m" />, challenging situations often arise. If <InlineMath math="m > n" /> and <InlineMath math="\text{Rank}(A|b) > \text{Rank}(A)" />, then the least squares system becomes unsolvable because the system is too constrained or has too many restrictions.
+
+Another equally problematic situation occurs when matrix <InlineMath math="A" /> does not have full rank, i.e., <InlineMath math="\text{Rank}(A) < n" />. In this condition, the equation system becomes under-constrained or has too much freedom.
+
+Imagine trying to determine the position of an object with too little or conflicting information. Regularization emerges as a solution to provide stability to these unstable problems.
+
+## Definition of Regularization Problem
+
+To address the instability problem, we introduce a modified least squares problem
+
+<BlockMath math="\min_x \left( \|Ax - b\|_2^2 + \omega^2 \|x - x_0\|_2^2 \right)" />
+
+where <InlineMath math="x_0 \in \mathbb{R}^n" /> is the initial value or prior estimate for the model parameters and <InlineMath math="\omega^2 \in \mathbb{R}_0^+" /> is the weighting factor. The additional term
+
+<BlockMath math="\omega^2 \|x - x_0\|_2^2" />
+
+is called the Tikhonov regularization term.
+
+This regularization term is like giving a "preference" to the system to choose solutions that are not too far from the initial estimate <InlineMath math="x_0" />. The larger the value of <InlineMath math="\omega" />, the stronger this preference becomes.
+
+## Interpretation of Regularization
+
+Through the regularization term, the least squares problem not only minimizes the difference <InlineMath math="\|Ax - b\|" /> between model and data, but also minimizes the difference <InlineMath math="\|x - x_0\|" /> between parameters and the prior estimate <InlineMath math="x_0" />, weighted by <InlineMath math="\omega^2" />.
+
+Note that the prior estimate <InlineMath math="x_0" /> is chosen by the researcher. The solution <InlineMath math="\hat{x}" /> then not only describes the behavior of the process being investigated, but also reflects the researcher's initial assumptions.
+
+## Matrix Formulation
+
+The regularization problem can be written in matrix form as
+
+<MathContainer>
+<BlockMath math="\min_x \left\| \begin{pmatrix} Ax - b \\ \omega(x - x_0) \end{pmatrix} \right\|^2" />
+<BlockMath math="= \left\| \begin{pmatrix} A \\ \omega I \end{pmatrix} x - \begin{pmatrix} b \\ \omega x_0 \end{pmatrix} \right\|_2^2" />
+</MathContainer>
+
+The corresponding normal equation system becomes
+
+<MathContainer>
+<BlockMath math="\begin{pmatrix} A \\ \omega I \end{pmatrix}^T \begin{pmatrix} A \\ \omega I \end{pmatrix} x" />
+<BlockMath math="= \begin{pmatrix} A \\ \omega I \end{pmatrix}^T \begin{pmatrix} b \\ \omega x_0 \end{pmatrix}" />
+</MathContainer>
+
+or in simpler form
+
+<BlockMath math="(A^T A + \omega^2 I) x = A^T b + \omega^2 x_0" />
+
+## Properties of Regularization Solution
+
+For <InlineMath math="\omega > 0" />, the normal equation system
+
+<BlockMath math="(A^T A + \omega^2 I) x = A^T b + \omega^2 x_0" />
+
+of the regularization problem always has a unique solution. Regularization thus restores the identifiability of all parameters.
+
+The matrix <InlineMath math="\begin{pmatrix} A \\ \omega I \end{pmatrix}" /> has <InlineMath math="n" /> linearly independent rows in the <InlineMath math="\omega I" /> block for <InlineMath math="\omega > 0" />, thus achieving maximum rank <InlineMath math="n" />. The matrix <InlineMath math="A^T A + \omega^2 I" /> becomes positive definite for <InlineMath math="\omega > 0" />, ensuring that the problem becomes well-defined and has a stable solution.
+
+## Individual Weights for Parameters
+
+We can choose individual weighting factors <InlineMath math="\omega_i \geq 0" /> for each parameter <InlineMath math="i = 1, \ldots, n" />. In this case, the least squares problem becomes
+
+<MathContainer>
+<BlockMath math="\min_x \|Ax - b\|_2^2 + \sum_{i=1}^n \omega_i^2 (x_i - x_{0i})^2" />
+<BlockMath math="= \|Ax - b\|_2^2 + \|\Omega(x - x_0)\|_2^2" />
+<BlockMath math="= \left\| \begin{pmatrix} A \\ \Omega \end{pmatrix} x - \begin{pmatrix} b \\ \Omega x_0 \end{pmatrix} \right\|_2^2" />
+</MathContainer>
+
+with diagonal matrix
+
+<BlockMath math="\Omega = \begin{pmatrix} \omega_1 & 0 & \cdots \\ 0 & \ddots & \\ \vdots & & \omega_n \end{pmatrix}" />
+
+The weighting factors <InlineMath math="\omega_i" /> are chosen such that the matrix <InlineMath math="\begin{pmatrix} A \\ \Omega \end{pmatrix}" /> has full rank.
+
+## Weight Selection Strategy
+
+For parameters that are difficult to determine well, we choose large weighting factors <InlineMath math="\omega_i" />. Conversely, for parameters that can already be determined well, we can choose <InlineMath math="\omega_i = 0" />. Of course, all weighting factors <InlineMath math="\omega_i" /> can influence all parameters.
+
+If we decide to fix a parameter to a specific value or turn it into a constant, we can set the factor <InlineMath math="\omega_i = \infty" /> in principle. This also applies when we add inequality conditions <InlineMath math="l_i \leq x_i \leq u_i" /> to the problem, which are then satisfied in the solution with equations <InlineMath math="x_i = l_i" /> or <InlineMath math="x_i = u_i" />.
+
+Through regularization, the solution depends not only on the data, but also on the researcher's initial assumptions. This provides flexibility in integrating domain knowledge into the parameter estimation process.
