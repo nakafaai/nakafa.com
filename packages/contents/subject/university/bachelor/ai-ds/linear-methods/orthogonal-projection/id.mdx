@@ -1,0 +1,73 @@
+export const metadata = {
+    title: "Proyeksi Ortogonal",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Metode Linear AI",
+};
+
+## Teorema Eksistensi dan Keunikan
+
+Pertanyaan penting yang muncul adalah apakah pendekatan terbaik itu benar-benar ada dan apakah solusinya unik? Jawabannya adalah ya. Misalkan <InlineMath math="V" /> adalah ruang vektor euklidean dan <InlineMath math="S \subset V" /> adalah subruang vektor berdimensi hingga. Maka untuk setiap <InlineMath math="f \in V" /> terdapat pendekatan terbaik <InlineMath math="g \in S" /> yang tunggal dengan
+
+<BlockMath math="\|f - g\| = \min_{\varphi \in S} \|f - \varphi\|" />
+
+Teorema ini memberikan jaminan bahwa pendekatan terbaik selalu ada dan bersifat unik. Seperti mencari titik terdekat dari sebuah lokasi ke jalan raya, selalu ada satu titik yang memberikan jarak terpendek.
+
+Misalkan <InlineMath math="n" /> adalah dimensi dari <InlineMath math="S" /> dan <InlineMath math="\psi_1, \ldots, \psi_n" /> adalah basis dari <InlineMath math="S" />. Dengan menggunakan proses Gram-Schmidt, kita dapat menghitung basis ortonormal <InlineMath math="\varphi_1, \ldots, \varphi_n" /> dari <InlineMath math="S" /> dengan <InlineMath math="\langle \varphi_i, \varphi_k \rangle = \delta_{ik}" />. 
+
+Setiap <InlineMath math="g \in S" /> memiliki representasi tunggal sebagai <InlineMath math="g = \sum_{i=1}^n \alpha_i \varphi_i" />. Kemudian berlaku
+
+<MathContainer>
+<BlockMath math="\|f - g\|^2 = \langle f - g, f - g \rangle = \left\langle f - \sum_{i=1}^n \alpha_i \varphi_i, f - \sum_{k=1}^n \alpha_k \varphi_k \right\rangle" />
+<BlockMath math="= \langle f, f \rangle - 2 \sum_{i=1}^n \alpha_i \langle f, \varphi_i \rangle + \sum_{i,k=1}^n \alpha_i \alpha_k \langle \varphi_i, \varphi_k \rangle" />
+<BlockMath math="= \|f\|^2 - 2 \sum_{i=1}^n \alpha_i \langle f, \varphi_i \rangle + \sum_{i=1}^n \alpha_i^2" />
+</MathContainer>
+
+Dengan menggunakan identitas <InlineMath math="(\alpha_i - \langle f, \varphi_i \rangle)^2 = \alpha_i^2 - 2\alpha_i \langle f, \varphi_i \rangle + \langle f, \varphi_i \rangle^2" />, kita peroleh
+
+<BlockMath math="\|f - g\|^2 = \|f\|^2 - \sum_{i=1}^n \langle f, \varphi_i \rangle^2 + \sum_{i=1}^n (\alpha_i - \langle f, \varphi_i \rangle)^2" />
+
+Fungsi <InlineMath math="g \in S" /> adalah pendekatan terbaik dari <InlineMath math="f" /> jika dan hanya jika <InlineMath math="\alpha_i = \langle f, \varphi_i \rangle" /> untuk <InlineMath math="i = 1, \ldots, n" />.
+
+## Formula Basis Ortonormal
+
+Untuk basis ortonormal <InlineMath math="\varphi_1, \ldots, \varphi_n" /> dari <InlineMath math="S" />, pendekatan terbaik diberikan oleh
+
+<BlockMath math="g = \sum_{i=1}^n \langle f, \varphi_i \rangle \varphi_i" />
+
+Pendekatan terbaik memenuhi rumus jarak
+
+<BlockMath math="\|f - g\| = \left( \|f\|^2 - \sum_{i=1}^n \langle f, \varphi_i \rangle^2 \right)^{\frac{1}{2}}" />
+
+Pendekatan terbaik <InlineMath math="g" /> dari <InlineMath math="f" /> dalam <InlineMath math="S" /> adalah proyeksi ortogonal dari <InlineMath math="f" /> pada <InlineMath math="S" />. Hal ini berarti
+
+<BlockMath math="\langle f - g, \varphi \rangle = 0 \text{ untuk semua } \varphi \in S" />
+
+Secara geometris, vektor dari <InlineMath math="g" /> ke <InlineMath math="f" /> tegak lurus terhadap subruang <InlineMath math="S" />. Bayangkan seperti menjatuhkan bola dari udara ke lantai, titik jatuhnya adalah proyeksi ortogonal bola tersebut pada lantai.
+
+## Konstruksi dengan Basis Sembarang
+
+Ketika basis ortonormal dari <InlineMath math="S" /> tidak diketahui, kita dapat menggunakan basis sembarang <InlineMath math="\psi_1, \ldots, \psi_n" /> dari <InlineMath math="S" />. Misalkan <InlineMath math="g = \sum_{i=1}^n \alpha_i \psi_i" /> adalah representasi unik dari <InlineMath math="g" /> terhadap basis ini.
+
+Karena <InlineMath math="\psi_k \in S" />, maka kondisi ortogonalitas memberikan
+
+<BlockMath math="\left\langle f - \sum_{i=1}^n \alpha_i \psi_i, \psi_k \right\rangle = 0, \quad k = 1, \ldots, n" />
+
+Ini menghasilkan sistem persamaan linear
+
+<BlockMath math="\sum_{i=1}^n \alpha_i \langle \psi_i, \psi_k \rangle = \langle f, \psi_k \rangle, \quad k = 1, \ldots, n" />
+
+Matriks koefisien <InlineMath math="A = (\langle \psi_i, \psi_k \rangle)_{i=1,\ldots,n,k=1,\ldots,n}" /> disebut matriks Gram dari basis <InlineMath math="\psi_1, \ldots, \psi_n" />. Matriks ini bersifat simetris dan positif definit. Untuk <InlineMath math="\alpha \neq 0" /> berlaku
+
+<BlockMath math="\alpha^T A \alpha = \sum_{i,k=1}^n \langle \psi_i, \psi_k \rangle \alpha_i \alpha_k = \left\| \sum_{i=1}^n \alpha_i \psi_i \right\|^2 > 0" />
+
+Namun, matriks <InlineMath math="A" /> dapat menjadi sangat buruk kondisinya dalam praktik. Sebagai contoh, untuk basis monomial <InlineMath math="1, x, \ldots, x^n" />, matriks menjadi sangat tidak stabil sehingga perhitungan <InlineMath math="g" /> menjadi sulit dilakukan untuk <InlineMath math="n" /> yang besar.
+
+Pendekatan Gauss dengan basis ortonormal dari <InlineMath math="S" /> memiliki keunggulan karena kemudahan perhitungan pendekatan terbaik
+
+<MathContainer>
+<BlockMath math="g(x) = \sum_{k=1}^n \langle f, \varphi_k \rangle \varphi_k(x)" />
+<BlockMath math="= \sum_{k=1}^n \int_a^b f(t) \varphi_k(t) \, dt \, \varphi_k(x)" />
+</MathContainer>
+
+tanpa perlu menyelesaikan sistem persamaan linear. Dengan basis ortonormal, kita dapat langsung menghitung koefisien proyeksi seperti menggunakan sistem koordinat yang sudah tersusun rapi dan saling tegak lurus.

@@ -1,0 +1,73 @@
+export const metadata = {
+    title: "Orthogonal Projection",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/15/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Existence and Uniqueness Theorem
+
+An important question that arises is whether the best approximation really exists and whether its solution is unique? The answer is yes. Let <InlineMath math="V" /> be a Euclidean vector space and <InlineMath math="S \subset V" /> be a finite-dimensional vector subspace. Then for every <InlineMath math="f \in V" /> there exists a unique best approximation <InlineMath math="g \in S" /> with
+
+<BlockMath math="\|f - g\| = \min_{\varphi \in S} \|f - \varphi\|" />
+
+This theorem guarantees that the best approximation always exists and is unique. Like finding the closest point from a location to a highway, there is always one point that gives the shortest distance.
+
+Let <InlineMath math="n" /> be the dimension of <InlineMath math="S" /> and <InlineMath math="\psi_1, \ldots, \psi_n" /> be a basis of <InlineMath math="S" />. Using the Gram-Schmidt process, we can compute an orthonormal basis <InlineMath math="\varphi_1, \ldots, \varphi_n" /> of <InlineMath math="S" /> with <InlineMath math="\langle \varphi_i, \varphi_k \rangle = \delta_{ik}" />. 
+
+Every <InlineMath math="g \in S" /> has a unique representation as <InlineMath math="g = \sum_{i=1}^n \alpha_i \varphi_i" />. Then it follows that
+
+<MathContainer>
+<BlockMath math="\|f - g\|^2 = \langle f - g, f - g \rangle = \left\langle f - \sum_{i=1}^n \alpha_i \varphi_i, f - \sum_{k=1}^n \alpha_k \varphi_k \right\rangle" />
+<BlockMath math="= \langle f, f \rangle - 2 \sum_{i=1}^n \alpha_i \langle f, \varphi_i \rangle + \sum_{i,k=1}^n \alpha_i \alpha_k \langle \varphi_i, \varphi_k \rangle" />
+<BlockMath math="= \|f\|^2 - 2 \sum_{i=1}^n \alpha_i \langle f, \varphi_i \rangle + \sum_{i=1}^n \alpha_i^2" />
+</MathContainer>
+
+Using the identity <InlineMath math="(\alpha_i - \langle f, \varphi_i \rangle)^2 = \alpha_i^2 - 2\alpha_i \langle f, \varphi_i \rangle + \langle f, \varphi_i \rangle^2" />, we obtain
+
+<BlockMath math="\|f - g\|^2 = \|f\|^2 - \sum_{i=1}^n \langle f, \varphi_i \rangle^2 + \sum_{i=1}^n (\alpha_i - \langle f, \varphi_i \rangle)^2" />
+
+Function <InlineMath math="g \in S" /> is the best approximation of <InlineMath math="f" /> if and only if <InlineMath math="\alpha_i = \langle f, \varphi_i \rangle" /> for <InlineMath math="i = 1, \ldots, n" />.
+
+## Orthonormal Basis Formula
+
+For an orthonormal basis <InlineMath math="\varphi_1, \ldots, \varphi_n" /> of <InlineMath math="S" />, the best approximation is given by
+
+<BlockMath math="g = \sum_{i=1}^n \langle f, \varphi_i \rangle \varphi_i" />
+
+The best approximation satisfies the distance formula
+
+<BlockMath math="\|f - g\| = \left( \|f\|^2 - \sum_{i=1}^n \langle f, \varphi_i \rangle^2 \right)^{\frac{1}{2}}" />
+
+The best approximation <InlineMath math="g" /> of <InlineMath math="f" /> in <InlineMath math="S" /> is the orthogonal projection of <InlineMath math="f" /> onto <InlineMath math="S" />. This means
+
+<BlockMath math="\langle f - g, \varphi \rangle = 0 \text{ for all } \varphi \in S" />
+
+Geometrically, the vector from <InlineMath math="g" /> to <InlineMath math="f" /> is perpendicular to the subspace <InlineMath math="S" />. Imagine dropping a ball from the air to the floor, the point where it lands is the orthogonal projection of the ball onto the floor.
+
+## Construction with Arbitrary Basis
+
+When an orthonormal basis of <InlineMath math="S" /> is not known, we can use an arbitrary basis <InlineMath math="\psi_1, \ldots, \psi_n" /> of <InlineMath math="S" />. Let <InlineMath math="g = \sum_{i=1}^n \alpha_i \psi_i" /> be the unique representation of <InlineMath math="g" /> with respect to this basis.
+
+Since <InlineMath math="\psi_k \in S" />, the orthogonality condition gives
+
+<BlockMath math="\left\langle f - \sum_{i=1}^n \alpha_i \psi_i, \psi_k \right\rangle = 0, \quad k = 1, \ldots, n" />
+
+This yields the linear system
+
+<BlockMath math="\sum_{i=1}^n \alpha_i \langle \psi_i, \psi_k \rangle = \langle f, \psi_k \rangle, \quad k = 1, \ldots, n" />
+
+The coefficient matrix <InlineMath math="A = (\langle \psi_i, \psi_k \rangle)_{i=1,\ldots,n,k=1,\ldots,n}" /> is called the Gram matrix of the basis <InlineMath math="\psi_1, \ldots, \psi_n" />. This matrix is symmetric and positive definite. For <InlineMath math="\alpha \neq 0" /> it holds
+
+<BlockMath math="\alpha^T A \alpha = \sum_{i,k=1}^n \langle \psi_i, \psi_k \rangle \alpha_i \alpha_k = \left\| \sum_{i=1}^n \alpha_i \psi_i \right\|^2 > 0" />
+
+However, matrix <InlineMath math="A" /> can become very ill-conditioned in practice. For example, for the monomial basis <InlineMath math="1, x, \ldots, x^n" />, the matrix becomes very unstable so that computing <InlineMath math="g" /> becomes difficult for large <InlineMath math="n" />.
+
+The Gauss approximation with an orthonormal basis of <InlineMath math="S" /> has the advantage of easy computation of the best approximation
+
+<MathContainer>
+<BlockMath math="g(x) = \sum_{k=1}^n \langle f, \varphi_k \rangle \varphi_k(x)" />
+<BlockMath math="= \sum_{k=1}^n \int_a^b f(t) \varphi_k(t) \, dt \, \varphi_k(x)" />
+</MathContainer>
+
+without needing to solve a linear system. With an orthonormal basis, we can directly compute the projection coefficients like using a coordinate system that is already neatly arranged and mutually perpendicular.
