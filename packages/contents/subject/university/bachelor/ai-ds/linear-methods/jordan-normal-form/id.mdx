@@ -1,0 +1,48 @@
+export const metadata = {
+    title: "Trigonalisasi dan Bentuk Normal Jordan",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/17/2025",
+    subject: "Metode Linear AI",
+};
+
+## Trigonalisasi Matriks
+
+Meskipun matriks <InlineMath math="A" /> tidak dapat didiagonalisasi, masih berlaku teorema berikut ini.
+
+Untuk matriks <InlineMath math="A \in \mathbb{K}^{n \times n}" />, jika polinomial karakteristik dari <InlineMath math="A" /> dapat dipecah menjadi faktor-faktor linear, maka <InlineMath math="A" /> serupa dengan matriks segitiga atas <InlineMath math="R \in \mathbb{K}^{n \times n}" />. Entri-entri pada diagonal matriks segitiga atas ini adalah semua nilai eigen dari <InlineMath math="A" />.
+
+Hubungan keserupaan ini dinyatakan dengan:
+
+<MathContainer>
+<BlockMath math="R = S^{-1} \cdot A \cdot S" />
+</MathContainer>
+
+dengan <InlineMath math="S \in \mathbb{K}^{n \times n}" /> adalah matriks yang dapat diinverskan.
+
+Bentuk segitiga atas ini dapat dijelaskan secara lebih tepat melalui Bentuk Normal Jordan.
+
+## Bentuk Normal Jordan
+
+Misalkan <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dengan polinomial karakteristik:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = (\lambda_1 - t)^{r_1} \cdot \ldots \cdot (\lambda_k - t)^{r_k}" />
+</MathContainer>
+
+dengan nilai eigen yang saling berbeda <InlineMath math="\lambda_1, \ldots, \lambda_k \in \mathbb{K}" />. Maka terdapat matriks yang dapat diinverskan <InlineMath math="S \in \mathbb{K}^{n \times n}" /> sedemikian sehingga:
+
+<MathContainer>
+<BlockMath math="S^{-1} \cdot A \cdot S = \begin{pmatrix} \lambda_1 \cdot I_{r_1} + N_1 & & 0 \\ & \ddots & \\ 0 & & \lambda_k \cdot I_{r_k} + N_k \end{pmatrix}" />
+</MathContainer>
+
+Bentuk ini menunjukkan bagaimana matriks dapat diorganisasi menjadi blok-blok yang lebih sederhana, dimana setiap blok dikaitkan dengan satu nilai eigen tertentu.
+
+## Struktur Blok Jordan
+
+Untuk setiap <InlineMath math="i = 1, \ldots, k" />, blok Jordan <InlineMath math="\lambda_i \cdot I_{r_i} + N_i" /> memiliki struktur yang sangat khas. Bayangkan seperti tangga yang hampir sempurna, dimana setiap anak tangga memiliki nilai yang sama (yaitu nilai eigen <InlineMath math="\lambda_i" />), tetapi terdapat "penghubung" berupa angka 1 di posisi tertentu yang membuat struktur ini unik.
+
+<MathContainer>
+<BlockMath math="\lambda_i \cdot I_{r_i} + N_i = \begin{pmatrix} \lambda_i & 1 & & & \\ & \ddots & \ddots & & \\ & & \ddots & 1 & \\ & & & \lambda_i & 0 \\ & & & & \lambda_i & 1 \\ & & & & & \ddots & \ddots \\ & & & & & & \ddots & 1 \\ & & & & & & & \lambda_i & 0 \\ & & & & & & & & \ddots & \ddots \\ & & & & & & & & & \ddots & 0 \\ & & & & & & & & & & \lambda_i \end{pmatrix} \in \mathbb{K}^{r_i \times r_i}" />
+</MathContainer>
+
+Dalam struktur ini, nilai eigen <InlineMath math="\lambda_i" /> mendominasi diagonal utama, sementara angka 1 muncul pada posisi tertentu di atas diagonal (disebut superdiagonal). Posisi angka 0 dan 1 pada superdiagonal menentukan bagaimana blok Jordan terbagi menjadi sub-blok yang lebih kecil. Struktur ini memberikan informasi lengkap tentang bagaimana transformasi linear bekerja pada ruang vektor yang terkait dengan nilai eigen tersebut.

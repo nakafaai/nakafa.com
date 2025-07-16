@@ -1,0 +1,48 @@
+export const metadata = {
+    title: "Triangularization and Jordan Normal Form",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/17/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Matrix Triangularization
+
+Even though matrix <InlineMath math="A" /> cannot be diagonalized, the following theorem still holds.
+
+For matrix <InlineMath math="A \in \mathbb{K}^{n \times n}" />, if the characteristic polynomial of <InlineMath math="A" /> can be factored into linear factors, then <InlineMath math="A" /> is similar to an upper triangular matrix <InlineMath math="R \in \mathbb{K}^{n \times n}" />. The entries on the diagonal of this upper triangular matrix are all the eigenvalues of <InlineMath math="A" />.
+
+This similarity relationship is expressed as:
+
+<MathContainer>
+<BlockMath math="R = S^{-1} \cdot A \cdot S" />
+</MathContainer>
+
+where <InlineMath math="S \in \mathbb{K}^{n \times n}" /> is an invertible matrix.
+
+This upper triangular form can be described more precisely through the Jordan Normal Form.
+
+## Jordan Normal Form
+
+Let <InlineMath math="A \in \mathbb{K}^{n \times n}" /> with characteristic polynomial:
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = (\lambda_1 - t)^{r_1} \cdot \ldots \cdot (\lambda_k - t)^{r_k}" />
+</MathContainer>
+
+with distinct eigenvalues <InlineMath math="\lambda_1, \ldots, \lambda_k \in \mathbb{K}" />. Then there exists an invertible matrix <InlineMath math="S \in \mathbb{K}^{n \times n}" /> such that:
+
+<MathContainer>
+<BlockMath math="S^{-1} \cdot A \cdot S = \begin{pmatrix} \lambda_1 \cdot I_{r_1} + N_1 & & 0 \\ & \ddots & \\ 0 & & \lambda_k \cdot I_{r_k} + N_k \end{pmatrix}" />
+</MathContainer>
+
+This form shows how a matrix can be organized into simpler blocks, where each block is associated with one particular eigenvalue.
+
+## Jordan Block Structure
+
+For each <InlineMath math="i = 1, \ldots, k" />, the Jordan block <InlineMath math="\lambda_i \cdot I_{r_i} + N_i" /> has a very distinctive structure. Imagine it like an almost perfect staircase, where each step has the same value (namely the eigenvalue <InlineMath math="\lambda_i" />), but there are "connectors" in the form of the number 1 at certain positions that make this structure unique.
+
+<MathContainer>
+<BlockMath math="\lambda_i \cdot I_{r_i} + N_i = \begin{pmatrix} \lambda_i & 1 & & & \\ & \ddots & \ddots & & \\ & & \ddots & 1 & \\ & & & \lambda_i & 0 \\ & & & & \lambda_i & 1 \\ & & & & & \ddots & \ddots \\ & & & & & & \ddots & 1 \\ & & & & & & & \lambda_i & 0 \\ & & & & & & & & \ddots & \ddots \\ & & & & & & & & & \ddots & 0 \\ & & & & & & & & & & \lambda_i \end{pmatrix} \in \mathbb{K}^{r_i \times r_i}" />
+</MathContainer>
+
+In this structure, the eigenvalue <InlineMath math="\lambda_i" /> dominates the main diagonal, while the number 1 appears at certain positions above the diagonal (called the superdiagonal). The positions of 0 and 1 on the superdiagonal determine how the Jordan block is divided into smaller sub-blocks. This structure provides complete information about how the linear transformation operates on the vector space associated with that eigenvalue.
