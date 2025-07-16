@@ -1,0 +1,147 @@
+export const metadata = {
+    title: "Analisis Komponen Utama",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/17/2025",
+    subject: "Metode Linear AI",
+};
+
+import { LineEquation } from "@repo/contents/_components/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+## Contoh Analisis Komponen Utama
+
+Bayangkan kamu memiliki sebuah vektor acak <InlineMath math="x \in \mathbb{R}^n" /> yang terdistribusi normal. Vektor ini memiliki nilai harapan nol <InlineMath math="0 \in \mathbb{R}^n" /> dan matriks kovarians positif definit <InlineMath math="C \in \mathbb{R}^{n \times n}" />. Kita dapat menuliskannya sebagai distribusi normal seperti ini:
+
+<MathContainer>
+<BlockMath math="x \sim N(0, C)" />
+</MathContainer>
+
+Setiap parameter individual <InlineMath math="x_i" /> merepresentasikan karakteristik dari proses yang sedang kita amati. Dalam praktiknya, hampir semua entri dari matriks kovarians <InlineMath math="C" /> bisa bernilai tidak nol. Ini artinya parameter-parameter tersebut saling berkorelasi kuat karena adanya kovarians pada elemen diagonal samping.
+
+Melalui analisis komponen utama, kita bisa menentukan faktor-faktor pengaruh utama yang mempengaruhi proses tersebut.
+
+## Diagonalisasi Matriks Kovarians
+
+Untuk mengidentifikasi faktor pengaruh utama, kita perlu melakukan diagonalisasi pada matriks kovarians <InlineMath math="C" />. Misalkan <InlineMath math="\lambda_1 \geq \ldots \geq \lambda_n > 0" /> adalah nilai eigen dari <InlineMath math="C" /> dengan vektor eigen ortonormal yang bersesuaian <InlineMath math="v_1, \ldots, v_n" />.
+
+Berdasarkan teorema spektral, kita dapat membentuk matriks diagonal dan matriks vektor eigen:
+
+<MathContainer>
+<BlockMath math="\Lambda = \begin{pmatrix} \lambda_1 & & 0 \\ & \ddots & \\ 0 & & \lambda_n \end{pmatrix}" />
+<BlockMath math="S = (v_1 \quad \ldots \quad v_n)" />
+</MathContainer>
+
+Kemudian berlaku hubungan fundamental:
+
+<MathContainer>
+<BlockMath math="\Lambda = S^T \cdot C \cdot S" />
+</MathContainer>
+
+## Transformasi ke Koordinat Baru
+
+Berkaitan dengan basis <InlineMath math="v_1, \ldots, v_n" />, koordinat baru didefinisikan sebagai <InlineMath math="y = S^T x" />. Yang menarik adalah variabel <InlineMath math="y_i" /> menjadi independen dan terdistribusi normal dengan varians <InlineMath math="\lambda_i" />:
+
+<MathContainer>
+<BlockMath math="y_i \sim N(0, \lambda_i), \quad i = 1, \ldots, n" />
+</MathContainer>
+
+Variabel <InlineMath math="y_i" /> inilah yang disebut **komponen utama** dari <InlineMath math="x" />. Komponen utama dengan varians <InlineMath math="\lambda_i" /> yang paling besar menggambarkan faktor pengaruh utama dari proses yang diamati.
+
+Analoginya seperti ketika kamu mengamati gerak awan di langit. Ada banyak faktor yang mempengaruhi pergerakan awan, tapi angin barat mungkin memberikan pengaruh paling besar. Komponen utama pertama seperti arah angin utama yang memberikan kontribusi terbesar terhadap pola pergerakan awan.
+
+## Visualisasi Geometris
+
+Secara geometris, analisis komponen utama dapat dipahami sebagai cara mencari arah yang paling optimal untuk merepresentasikan data. Bayangkan data tersebar seperti awan titik-titik dalam ruang dua dimensi. Komponen utama menunjukkan arah dimana data memiliki variabilitas maksimum.
+
+<LineEquation
+  title={<>Visualisasi Analisis Komponen Utama dalam <InlineMath math="\mathbb{R}^2" /></>}
+  description="Transformasi dari koordinat asli ke arah faktor utama yang menangkap variabilitas maksimum data."
+  data={[
+    {
+      points: Array.from({ length: 100 }, (_, i) => {
+        const angle = (i / 99) * 2 * Math.PI;
+        const a = 3;
+        const b = 1.5;
+        const rotation = Math.PI / 6;
+        const x_local = a * Math.cos(angle);
+        const y_local = b * Math.sin(angle);
+        const x = x_local * Math.cos(rotation) - y_local * Math.sin(rotation);
+        const y = x_local * Math.sin(rotation) + y_local * Math.cos(rotation);
+        return { x, y, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      smooth: true,
+      showPoints: false
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "Variable 1",
+          at: 1,
+          offset: [0.3, -0.5, 0]
+        }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: -3, z: 0 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "Variable 2",
+          at: 1,
+          offset: [0.8, 0.3, 0]
+        }
+      ]
+    },
+    {
+      points: [
+        { x: -3.5, y: -2, z: 0 },
+        { x: 3.5, y: 2, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "Faktor 1",
+          at: 1,
+          offset: [0.3, 0.3, 0]
+        }
+      ]
+    },
+    {
+      points: [
+        { x: -1.5, y: 2.6, z: 0 },
+        { x: 1.5, y: -2.6, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "Faktor 2",
+          at: 0,
+          offset: [-0.8, 0.3, 0]
+        }
+      ]
+    }
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+Dalam visualisasi di atas, Variable 1 dan Variable 2 merepresentasikan koordinat asli data kamu. Sementara Faktor 1 dan Faktor 2 menunjukkan arah komponen utama yang baru. Perhatikan bagaimana arah faktor tidak sejajar dengan sumbu asli, melainkan mengikuti pola sebaran data yang sebenarnya.
+
+Faktor 1 menunjukkan arah dengan variabilitas terbesar dari data, sedangkan Faktor 2 menunjukkan arah variabilitas terbesar kedua yang tegak lurus terhadap Faktor 1. Transformasi ini memungkinkan kita memahami struktur data dengan lebih baik karena komponen utama menangkap pola variabilitas yang sesungguhnya ada dalam data.

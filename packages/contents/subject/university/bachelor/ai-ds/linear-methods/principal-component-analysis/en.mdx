@@ -1,0 +1,147 @@
+export const metadata = {
+    title: "Principal Component Analysis",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/17/2025",
+    subject: "Linear Methods of AI",
+};
+
+import { LineEquation } from "@repo/contents/_components/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+## Principal Component Analysis Example
+
+Imagine you have a random vector <InlineMath math="x \in \mathbb{R}^n" /> that is normally distributed. This vector has a zero expected value <InlineMath math="0 \in \mathbb{R}^n" /> and a positive definite covariance matrix <InlineMath math="C \in \mathbb{R}^{n \times n}" />. We can write it as a normal distribution like this:
+
+<MathContainer>
+<BlockMath math="x \sim N(0, C)" />
+</MathContainer>
+
+Each individual parameter <InlineMath math="x_i" /> represents characteristics of the process we are observing. In practice, almost all entries of the covariance matrix <InlineMath math="C" /> can be non-zero. This means these parameters are strongly correlated due to covariances in the off-diagonal elements.
+
+Through principal component analysis, we can determine the main influence factors that affect the process.
+
+## Covariance Matrix Diagonalization
+
+To identify the main influence factors, we need to perform diagonalization on the covariance matrix <InlineMath math="C" />. Let <InlineMath math="\lambda_1 \geq \ldots \geq \lambda_n > 0" /> be the eigenvalues of <InlineMath math="C" /> with corresponding orthonormal eigenvectors <InlineMath math="v_1, \ldots, v_n" />.
+
+Based on the spectral theorem, we can form the diagonal matrix and eigenvector matrix:
+
+<MathContainer>
+<BlockMath math="\Lambda = \begin{pmatrix} \lambda_1 & & 0 \\ & \ddots & \\ 0 & & \lambda_n \end{pmatrix}" />
+<BlockMath math="S = (v_1 \quad \ldots \quad v_n)" />
+</MathContainer>
+
+Then the fundamental relationship holds:
+
+<MathContainer>
+<BlockMath math="\Lambda = S^T \cdot C \cdot S" />
+</MathContainer>
+
+## Transformation to New Coordinates
+
+In relation to the basis <InlineMath math="v_1, \ldots, v_n" />, new coordinates are defined as <InlineMath math="y = S^T x" />. What's interesting is that the variables <InlineMath math="y_i" /> become independent and normally distributed with variance <InlineMath math="\lambda_i" />:
+
+<MathContainer>
+<BlockMath math="y_i \sim N(0, \lambda_i), \quad i = 1, \ldots, n" />
+</MathContainer>
+
+These variables <InlineMath math="y_i" /> are called the **principal components** of <InlineMath math="x" />. The principal component with the largest variance <InlineMath math="\lambda_i" /> describes the main influence factor of the observed process.
+
+The analogy is like when you observe cloud movement in the sky. There are many factors affecting cloud movement, but westerly winds might have the greatest influence. The first principal component is like the main wind direction that contributes most to the cloud movement pattern.
+
+## Geometric Visualization
+
+Geometrically, principal component analysis can be understood as a way to find the most optimal direction to represent data. Imagine data scattered like a cloud of points in two-dimensional space. Principal components show the direction where data has maximum variability.
+
+<LineEquation
+  title={<>Principal Component Analysis Visualization in <InlineMath math="\mathbb{R}^2" /></>}
+  description="Transformation from original coordinates to principal factor directions that capture maximum data variability."
+  data={[
+    {
+      points: Array.from({ length: 100 }, (_, i) => {
+        const angle = (i / 99) * 2 * Math.PI;
+        const a = 3;
+        const b = 1.5;
+        const rotation = Math.PI / 6;
+        const x_local = a * Math.cos(angle);
+        const y_local = b * Math.sin(angle);
+        const x = x_local * Math.cos(rotation) - y_local * Math.sin(rotation);
+        const y = x_local * Math.sin(rotation) + y_local * Math.cos(rotation);
+        return { x, y, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      smooth: true,
+      showPoints: false
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "Variable 1",
+          at: 1,
+          offset: [0.3, -0.5, 0]
+        }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: -3, z: 0 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "Variable 2",
+          at: 1,
+          offset: [0.8, 0.3, 0]
+        }
+      ]
+    },
+    {
+      points: [
+        { x: -3.5, y: -2, z: 0 },
+        { x: 3.5, y: 2, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "Factor 1",
+          at: 1,
+          offset: [0.3, 0.3, 0]
+        }
+      ]
+    },
+    {
+      points: [
+        { x: -1.5, y: 2.6, z: 0 },
+        { x: 1.5, y: -2.6, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "Factor 2",
+          at: 0,
+          offset: [-0.8, 0.3, 0]
+        }
+      ]
+    }
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+In the visualization above, Variable 1 and Variable 2 represent the original coordinates of your data. Meanwhile, Factor 1 and Factor 2 show the new principal component directions. Notice how the factor directions are not aligned with the original axes, but rather follow the actual data distribution pattern.
+
+Factor 1 shows the direction with the greatest variability in the data, while Factor 2 shows the direction with the second greatest variability that is perpendicular to Factor 1. This transformation allows us to better understand the data structure because principal components capture the variability patterns that actually exist in the data.

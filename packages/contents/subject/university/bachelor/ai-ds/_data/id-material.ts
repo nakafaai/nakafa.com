@@ -149,7 +149,7 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/linear-methods/real-axis-transformation`,
       },
       {
-        title: "Contoh Analisis Komponen Utama",
+        title: "Analisis Komponen Utama",
         href: `${BASE_PATH}/linear-methods/principal-component-analysis`,
       },
       {

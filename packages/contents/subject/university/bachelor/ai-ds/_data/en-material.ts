@@ -149,7 +149,7 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/linear-methods/real-axis-transformation`,
       },
       {
-        title: "Principal Component Analysis Example",
+        title: "Principal Component Analysis",
         href: `${BASE_PATH}/linear-methods/principal-component-analysis`,
       },
       {
