@@ -122,7 +122,7 @@ const idMaterials: MaterialList = [
       },
       {
         title: "Kesamaan Matriks",
-        href: `${BASE_PATH}/linear-methods/matrix-equality`,
+        href: `${BASE_PATH}/linear-methods/matrix-similarity`,
       },
       {
         title: "Diagonalisasi Matriks",

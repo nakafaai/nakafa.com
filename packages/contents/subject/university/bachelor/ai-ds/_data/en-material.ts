@@ -122,7 +122,7 @@ const enMaterials: MaterialList = [
       },
       {
         title: "Matrix Similarity",
-        href: `${BASE_PATH}/linear-methods/matrix-equality`,
+        href: `${BASE_PATH}/linear-methods/matrix-similarity`,
       },
       {
         title: "Matrix Diagonalization",

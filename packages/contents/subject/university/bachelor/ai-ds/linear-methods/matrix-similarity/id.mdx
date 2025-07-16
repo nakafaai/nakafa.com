@@ -1,0 +1,103 @@
+export const metadata = {
+    title: "Kesamaan Matriks",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/16/2025",
+    subject: "Metode Linear AI",
+};
+
+## Definisi Kesamaan Matriks
+
+Dalam aljabar linear, konsep kesamaan atau kemiripan matriks sangat penting untuk memahami bagaimana dua matriks yang berbeda dapat menggambarkan transformasi linear yang sama pada ruang yang berbeda. Bayangkan seperti dua potret yang berbeda dari objek yang sama, tapi diambil dari sudut pandang yang berbeda.
+
+Dua matriks <InlineMath math="A, B \in \mathbb{K}^{n \times n}" /> dikatakan **serupa** atau **mirip** jika terdapat matriks yang dapat dibalik <InlineMath math="S \in \mathbb{K}^{n \times n}" /> sehingga:
+
+<BlockMath math="B = S^{-1} \cdot A \cdot S" />
+
+Matriks <InlineMath math="S" /> dalam hal ini disebut sebagai matriks transformasi kesamaan.
+
+## Transformasi Basis dan Representasi Koordinat
+
+Untuk memahami mengapa kesamaan matriks begitu penting, kita perlu melihat hubungannya dengan transformasi basis. Misalkan <InlineMath math="e_1, \ldots, e_n \in \mathbb{K}^n" /> adalah basis kanonik dan <InlineMath math="v_1, \ldots, v_n \in \mathbb{K}^n" /> adalah basis lain dari <InlineMath math="\mathbb{K}^n" />.
+
+Jika <InlineMath math="S" /> adalah matriks yang dapat dibalik dengan kolom <InlineMath math="v_k" />:
+
+<BlockMath math="S = (v_1 \quad \ldots \quad v_n) \in \mathbb{K}^{n \times n}" />
+
+Maka berlaku <InlineMath math="v_k = S \cdot e_k" /> atau <InlineMath math="e_k = S^{-1} \cdot v_k" /> untuk <InlineMath math="k = 1, \ldots, n" />. Matriks <InlineMath math="S" /> menggambarkan **transformasi basis**.
+
+Sebuah vektor <InlineMath math="x \in \mathbb{K}^n" /> dapat dinyatakan dalam basis kanonik melalui koordinat <InlineMath math="x_k" /> dan dalam basis <InlineMath math="v_1, \ldots, v_n" /> melalui koordinat <InlineMath math="\xi_k" />:
+
+<MathContainer>
+<BlockMath math="x = \sum_{k=1}^n x_k \cdot e_k" />
+<BlockMath math="= \sum_{k=1}^n \xi_k \cdot v_k = S \cdot \xi" />
+<BlockMath math="\xi = \begin{pmatrix} \xi_1 \\ \vdots \\ \xi_n \end{pmatrix} = S^{-1} \cdot x" />
+</MathContainer>
+
+Matriks <InlineMath math="S^{-1}" /> menggambarkan **transformasi koordinat**.
+
+## Transformasi Linear dalam Basis Berbeda
+
+Sekarang pertimbangkan transformasi linear <InlineMath math="y = A \cdot x" />. Dalam basis kanonik, <InlineMath math="y" /> dinyatakan melalui koordinat <InlineMath math="y_k" />, sedangkan dalam basis <InlineMath math="v_1, \ldots, v_n" /> melalui koordinat <InlineMath math="\eta_k" />:
+
+<MathContainer>
+<BlockMath math="y = \sum_{k=1}^n y_k \cdot e_k" />
+<BlockMath math="= \sum_{k=1}^n \eta_k \cdot v_k = S \cdot \eta" />
+<BlockMath math="\eta = \begin{pmatrix} \eta_1 \\ \vdots \\ \eta_n \end{pmatrix} = S^{-1} \cdot y" />
+</MathContainer>
+
+Oleh karena itu:
+
+<MathContainer>
+<BlockMath math="S \cdot \eta = y = A \cdot x" />
+<BlockMath math="= A \cdot S \cdot \xi" />
+</MathContainer>
+
+atau dengan kata lain:
+
+<BlockMath math="\eta = S^{-1} \cdot A \cdot S \cdot \xi" />
+
+Dalam basis <InlineMath math="v_1, \ldots, v_n" />, transformasi linear <InlineMath math="y = A \cdot x" /> digambarkan oleh <InlineMath math="\eta = B \cdot \xi" /> dengan matriks:
+
+<BlockMath math="B = S^{-1} \cdot A \cdot S" />
+
+Inilah mengapa matriks serupa menggambarkan transformasi linear yang sama namun dilihat dari basis yang berbeda. Matriks serupa menggambarkan transformasi linear yang sama terhadap basis yang berbeda dari <InlineMath math="\mathbb{K}^n" />.
+
+## Sifat Invarian Matriks Serupa
+
+Matriks serupa memiliki beberapa sifat mendasar yang sangat berguna. Karena mereka menggambarkan transformasi linear yang sama pada ruang berbeda, matriks serupa mempertahankan karakteristik bawaan yang sama.
+
+Berdasarkan teorema tentang matriks serupa, jika matriks <InlineMath math="A" /> dan <InlineMath math="B = S^{-1} \cdot A \cdot S" /> serupa, maka keduanya memiliki:
+
+1. **Determinan yang sama**
+2. **Polinomial karakteristik yang sama** 
+3. **Nilai eigen yang sama**
+4. **Jejak yang sama**
+
+### Pembuktian Kesamaan Determinan
+
+Untuk determinan, kita dapat menunjukkan:
+
+<MathContainer>
+<BlockMath math="\det(B) = \det(S^{-1} \cdot A \cdot S)" />
+<BlockMath math="= \det(S^{-1}) \cdot \det(A) \cdot \det(S)" />
+</MathContainer>
+
+Karena <InlineMath math="\det(S^{-1}) = \frac{1}{\det(S)}" />, maka:
+
+<MathContainer>
+<BlockMath math="\det(B) = \frac{1}{\det(S)} \cdot \det(A) \cdot \det(S)" />
+<BlockMath math="= \det(A)" />
+</MathContainer>
+
+### Kesamaan Nilai Eigen
+
+Jika <InlineMath math="v \in \mathbb{K}^n" /> adalah vektor eigen dari <InlineMath math="A" /> dengan nilai eigen <InlineMath math="\lambda \in \mathbb{K}" />, sehingga <InlineMath math="A \cdot v = \lambda \cdot v" />, maka <InlineMath math="w = S^{-1} \cdot v" /> adalah vektor eigen dari <InlineMath math="B" /> dengan nilai eigen yang sama:
+
+<MathContainer>
+<BlockMath math="B \cdot w = S^{-1} \cdot A \cdot S \cdot w" />
+<BlockMath math="= S^{-1} \cdot A \cdot v" />
+<BlockMath math="= S^{-1} \cdot \lambda \cdot v" />
+<BlockMath math="= \lambda \cdot w" />
+</MathContainer>
+
+Ini menunjukkan bahwa kesamaan matriks mempertahankan spektrum atau kumpulan nilai eigen, yang merupakan karakteristik dasar dari transformasi linear.
