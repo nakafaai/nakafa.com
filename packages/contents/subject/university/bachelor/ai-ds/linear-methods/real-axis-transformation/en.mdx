@@ -1,0 +1,376 @@
+export const metadata = {
+    title: "Real Axis Transformation",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/16/2025",
+    subject: "Linear Methods of AI",
+};
+
+import { LineEquation } from "@repo/contents/_components/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+## Quadratic Forms with Symmetric Matrices
+
+When you encounter a general quadratic equation, the best way to understand it is by looking at its structure in matrix form. Imagine you have a symmetric matrix <InlineMath math="A" /> with elements:
+
+<MathContainer>
+<BlockMath math="A = \begin{pmatrix} a & b/2 \\ b/2 & c \end{pmatrix}" />
+</MathContainer>
+
+This matrix has eigenvalues <InlineMath math="\lambda_1, \lambda_2 \in \mathbb{R}" /> and corresponding orthonormal eigenvectors <InlineMath math="v_1, v_2 \in \mathbb{R}^2" />. Something interesting happens when we use coordinate transformation through the matrix <InlineMath math="S = (v_1 \quad v_2) \in \mathbb{R}^{2 \times 2}" />.
+
+For coordinate transformation, we use <InlineMath math="\begin{pmatrix} \delta \\ \epsilon \end{pmatrix} = S^T \begin{pmatrix} d \\ e \end{pmatrix}" />. In the new coordinates <InlineMath math="\xi = S^T x" />, the equation becomes:
+
+<MathContainer>
+<BlockMath math="\lambda_1 \xi_1^2 + \lambda_2 \xi_2^2 + \delta \xi_1 + \epsilon \xi_2 + f = 0" />
+</MathContainer>
+
+## Completing the Square Process
+
+For both variables with <InlineMath math="\lambda_1, \lambda_2 \neq 0" />, the completing the square process is performed separately:
+
+<MathContainer>
+<BlockMath math="0 = \lambda_1 \left( \xi_1^2 + 2 \frac{\delta}{2\lambda_1} \xi_1 + \frac{\delta^2}{4\lambda_1^2} \right) - \frac{\delta^2}{4\lambda_1} \\ + \lambda_2 \left( \xi_2^2 + 2 \frac{\epsilon}{2\lambda_2} \xi_2 + \frac{\epsilon^2}{4\lambda_2^2} \right) - \frac{\epsilon^2}{4\lambda_2} + f" />
+</MathContainer>
+
+The result of this process gives a simpler form:
+
+<MathContainer>
+<BlockMath math="= \lambda_1 \left( \xi_1 + \frac{\delta}{2\lambda_1} \right)^2 + \lambda_2 \left( \xi_2 + \frac{\epsilon}{2\lambda_2} \right)^2 \\ + \left( f - \frac{\delta^2}{4\lambda_1} - \frac{\epsilon^2}{4\lambda_2} \right)" />
+</MathContainer>
+
+By determining the center point <InlineMath math="(m_1, m_2) = \left( -\frac{\delta}{2\lambda_1}, -\frac{\epsilon}{2\lambda_2} \right)" /> and the constant <InlineMath math="\gamma = \frac{\delta^2}{4\lambda_1} + \frac{\epsilon^2}{4\lambda_2} - f" />, we obtain:
+
+<MathContainer>
+<BlockMath math="\lambda_1 (\xi_1 - m_1)^2 + \lambda_2 (\xi_2 - m_2)^2 - \gamma = 0" />
+</MathContainer>
+
+For <InlineMath math="\gamma > 0" />, various curve forms can emerge depending on the signs of the eigenvalues.
+
+## Curve Classification
+
+### Both Eigenvalues Positive
+
+If <InlineMath math="\lambda_1 > 0" /> and <InlineMath math="\lambda_2 > 0" />, then the conic section formed is an **ellipse**:
+
+<MathContainer>
+<BlockMath math="\frac{(\xi_1 - m_1)^2}{r_1^2} + \frac{(\xi_2 - m_2)^2}{r_2^2} = 1" />
+</MathContainer>
+
+With semi-axis lengths <InlineMath math="r_1 = \sqrt{\frac{\gamma}{\lambda_1}}" /> in the direction of <InlineMath math="v_1" /> and <InlineMath math="r_2 = \sqrt{\frac{\gamma}{\lambda_2}}" /> in the direction of <InlineMath math="v_2" />.
+
+<LineEquation
+  title={<>Ellipse Visualization in Coordinates <InlineMath math="\xi_1, \xi_2" /></>}
+  description="Ellipse curve with both positive eigenvalues and principal axes aligned with eigenvector directions."
+  data={[
+    {
+      points: Array.from({ length: 100 }, (_, i) => {
+        const t = (i / 99) * 2 * Math.PI;
+        const lambda1 = 2; // λ₁ > 0
+        const lambda2 = 1; // λ₂ > 0
+        const gamma = 16; // γ > 0
+        const m1 = 0; // δ/(2λ₁) = 0
+        const m2 = 0; // ε/(2λ₂) = 0
+        const r1 = Math.sqrt(gamma / lambda1);
+        const r2 = Math.sqrt(gamma / lambda2);
+        const x = Math.cos(t) * r1 + m1;
+        const y = Math.sin(t) * r2 + m2;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      smooth: true,
+      showPoints: false
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("EMERALD"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "ξ₁",
+          at: 1,
+          offset: [0.3, -0.3, 0]
+        }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: -3, z: 0 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("EMERALD"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "ξ₂",
+          at: 1,
+          offset: [0.3, 0.3, 0]
+        }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ROSE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        {
+          text: "Center (m₁, m₂)",
+          at: 0,
+          offset: [0.4, 0.4, 0]
+        }
+      ]
+    }
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+### Eigenvalues with Opposite Signs
+
+When <InlineMath math="\lambda_1 > 0" /> and <InlineMath math="\lambda_2 < 0" />, the conic section formed is a **hyperbola**:
+
+<MathContainer>
+<BlockMath math="\frac{(\xi_1 - m_1)^2}{r_1^2} - \frac{(\xi_2 - m_2)^2}{r_2^2} = 1" />
+</MathContainer>
+
+With semi-axis lengths <InlineMath math="r_1 = \sqrt{\frac{\gamma}{\lambda_1}}" /> in the direction of <InlineMath math="v_1" /> and <InlineMath math="r_2 = \sqrt{\frac{\gamma}{-\lambda_2}}" /> in the direction of <InlineMath math="v_2" />.
+
+<LineEquation
+  title={<>Hyperbola Visualization in Coordinates <InlineMath math="\xi_1, \xi_2" /></>}
+  description="Hyperbola curve with principal axes aligned with eigenvector directions and center transformation."
+  data={[
+    {
+      points: Array.from({ length: 60 }, (_, i) => {
+        const t = (i / 29 - 1) * 2.5;
+        const lambda1 = 2; // λ₁ > 0
+        const lambda2 = -1; // λ₂ < 0
+        const gamma = 3; // γ > 0
+        const r1 = Math.sqrt(gamma / lambda1);
+        const r2 = Math.sqrt(gamma / (-lambda2));
+        const x = Math.cosh(t) * r1;
+        const y = Math.sinh(t) * r2;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      smooth: true,
+      showPoints: false
+    },
+    {
+      points: Array.from({ length: 60 }, (_, i) => {
+        const t = (i / 29 - 1) * 2.5;
+        const lambda1 = 2;
+        const lambda2 = -1;
+        const gamma = 3;
+        const r1 = Math.sqrt(gamma / lambda1);
+        const r2 = Math.sqrt(gamma / (-lambda2));
+        const x = -Math.cosh(t) * r1;
+        const y = Math.sinh(t) * r2;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      smooth: true,
+      showPoints: false
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const lambda1 = 2;
+        const lambda2 = -1;
+        const gamma = 3;
+        const r1 = Math.sqrt(gamma / lambda1);
+        const r2 = Math.sqrt(gamma / (-lambda2));
+        const slope = r2 / r1; // slope asimptot
+        const x = (i - 0.5) * 6; // dari -3 ke 3
+        const y = slope * x;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("SKY"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "r₁",
+          at: 1,
+          offset: [0.5, -0.5, 0]
+        }
+      ]
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const lambda1 = 2;
+        const lambda2 = -1;
+        const gamma = 3;
+        const r1 = Math.sqrt(gamma / lambda1);
+        const r2 = Math.sqrt(gamma / (-lambda2));
+        const slope = -r2 / r1; // slope asimptot negatif
+        const x = (i - 0.5) * 6; // dari -3 ke 3
+        const y = slope * x;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("SKY"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "r₂",
+          at: 0,
+          offset: [-0.5, -0.5, 0]
+        }
+      ]
+    },
+    {
+      points: [
+        { x: -4, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "ξ₁",
+          at: 1,
+          offset: [0.3, -0.3, 0]
+        }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: -3, z: 0 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "ξ₂",
+          at: 1,
+          offset: [0.3, 0.3, 0]
+        }
+      ]
+    }
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+### One Eigenvalue Zero
+
+A special condition occurs when <InlineMath math="\lambda_1 \neq 0" /> and <InlineMath math="\lambda_2 = 0" />. Completing the square gives:
+
+<MathContainer>
+<BlockMath math="0 = \lambda_1 \left( \xi_1^2 + 2 \frac{\delta}{2\lambda_1} \xi_1 + \frac{\delta^2}{4\lambda_1^2} \right) - \frac{\delta^2}{4\lambda_1} + \epsilon \xi_2 + f" />
+<BlockMath math="= \lambda_1 \left( \xi_1 + \frac{\delta}{2\lambda_1} \right)^2 + \epsilon \xi_2 + \left( f - \frac{\delta^2}{4\lambda_1} \right)" />
+<BlockMath math="= \lambda_1 (\xi_1 - m_1)^2 + \epsilon \xi_2 - \gamma" />
+</MathContainer>
+
+The conic section formed is a **parabola**:
+
+<MathContainer>
+<BlockMath math="\xi_2 = -\frac{\lambda_1}{\epsilon} (\xi_1 - m_1)^2 + \frac{\gamma}{\epsilon}" />
+</MathContainer>
+
+<LineEquation
+  title={<>Parabola Visualization in Coordinates <InlineMath math="\xi_1, \xi_2" /></>}
+  description="Parabola curve with one zero eigenvalue and coordinate axis transformation aligned with eigenvectors."
+  data={[
+    {
+      points: Array.from({ length: 50 }, (_, i) => {
+        const t = (i / 49 - 0.5) * 6;
+        const lambda1 = 1; // λ₁ ≠ 0
+        const epsilon = -2; // ε ≠ 0
+        const gamma = 2; // γ
+        const m1 = 0; // δ/(2λ₁) = 0
+        const x = t;
+        const y = -(lambda1 / epsilon) * Math.pow(x - m1, 2) + (gamma / epsilon);
+        return { x, y, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      smooth: true,
+      showPoints: false
+    },
+    {
+      points: [
+        { x: -3.5, y: 0, z: 0 },
+        { x: 3.5, y: 0, z: 0 }
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "ξ₁",
+          at: 1,
+          offset: [0.3, -0.3, 0]
+        }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: -0.5, z: 0 },
+        { x: 0, y: 4, z: 0 }
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "ξ₂",
+          at: 1,
+          offset: [0.3, 0.3, 0]
+        }
+      ]
+    }
+  ]}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+/>
+
+## Two-Dimensional Example
+
+Conic sections in <InlineMath math="\mathbb{R}^2" /> satisfy the general quadratic equation:
+
+<MathContainer>
+<BlockMath math="ax_1^2 + bx_1x_2 + cx_2^2 + dx_1 + ex_2 + f = 0" />
+</MathContainer>
+
+Which can be written in matrix form as:
+
+<MathContainer>
+<BlockMath math="\begin{pmatrix} x_1 \\ x_2 \end{pmatrix}^T \begin{pmatrix} a & b/2 \\ b/2 & c \end{pmatrix} \begin{pmatrix} x_1 \\ x_2 \end{pmatrix} + \begin{pmatrix} d \\ e \end{pmatrix}^T \begin{pmatrix} x_1 \\ x_2 \end{pmatrix} + f = 0" />
+</MathContainer>
+
+## Quadratic Surfaces and Transformation
+
+For a symmetric matrix <InlineMath math="A \in \mathbb{R}^{n \times n}" />, vector <InlineMath math="b \in \mathbb{R}^n" />, and scalar <InlineMath math="c \in \mathbb{R}" />, the **quadratic surface** <InlineMath math="Q" /> is defined as the solution set of the general quadratic equation:
+
+<MathContainer>
+<BlockMath math="x^T A x + b^T x + c = 0" />
+</MathContainer>
+
+Which can be written in explicit form:
+
+<MathContainer>
+<BlockMath math="Q = \left\{ x \in \mathbb{R}^n : x^T A x + b^T x + c = 0 \right\}" />
+<BlockMath math="= \left\{ x \in \mathbb{R}^n : \sum_{j=1}^n \sum_{k=1}^n x_j a_{jk} x_k + \sum_{j=1}^n b_j x_j + c = 0 \right\}" />
+</MathContainer>
+
+If <InlineMath math="A \in \mathbb{R}^{n \times n}" /> is symmetric and <InlineMath math="v_1, \ldots, v_n \in \mathbb{R}^n" /> is an orthonormal basis of eigenvectors with <InlineMath math="A \cdot v_i = \lambda_i \cdot v_i" />, then the orthonormal matrix <InlineMath math="S = (v_1 \quad \ldots \quad v_n)" /> enables diagonalization <InlineMath math="A \cdot S = S \cdot \Lambda" /> or <InlineMath math="\Lambda = S^{-1} \cdot A \cdot S = S^T \cdot A \cdot S" />.
+
+In the new coordinate basis <InlineMath math="\xi = S^T x" /> and <InlineMath math="\mu = S^T b" />, the quadratic surface has diagonal form:
+
+<MathContainer>
+<BlockMath math="Q = \left\{ \xi \in \mathbb{R}^n : \xi^T S^T A S \xi + b^T S \xi + c = 0 \right\}" />
+<BlockMath math="= \left\{ \xi \in \mathbb{R}^n : \xi^T \Lambda \xi + \mu^T \xi + c = 0 \right\}" />
+<BlockMath math="= \left\{ \xi \in \mathbb{R}^n : \sum_{j=1}^n \lambda_j \xi_j^2 + \sum_{j=1}^n \mu_j \xi_j + c = 0 \right\}" />
+<BlockMath math="= \left\{ \xi \in \mathbb{R}^n : \sum_{j=1}^n (\lambda_j \xi_j^2 + \mu_j \xi_j) = -c \right\}" />
+</MathContainer>
+
+In the orthonormal basis of eigenvectors, the quadratic form has a diagonal structure. This transformation is called **principal axis transformation** because the new coordinate axes are aligned with the directions of the matrix eigenvectors.
