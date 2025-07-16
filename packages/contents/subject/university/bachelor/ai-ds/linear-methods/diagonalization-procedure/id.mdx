@@ -1,8 +1,8 @@
 export const metadata = {
-    title: "Prosedur Dasar untuk Diagonalisasi",
-    authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "07/16/2025",
-    subject: "Metode Linear AI",
+   title: "Prosedur Dasar untuk Diagonalisasi",
+   authors: [{ name: "Nabil Akbarazzima Fatih" }],
+   date: "07/16/2025",
+   subject: "Metode Linear AI",
 };
 
 ## Prosedur Umum Diagonalisasi Matriks
@@ -56,9 +56,11 @@ Mari kita terapkan prosedur diagonalisasi pada contoh konkret ini:
 2. Kita cari semua vektor yang "bertahan" terhadap transformasi untuk setiap nilai eigen:
 
    <MathContainer>
-   <BlockMath math="\text{Eig}_A(1) = \text{Kern}(A - I) = \text{Span}\left\{\begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix}, \begin{pmatrix} 0 \\ 1 \\ 1 \end{pmatrix}\right\}" />
-   <BlockMath math="\text{Eig}_A(-1) = \text{Kern}(A + I) = \text{Span}\begin{pmatrix} 1 \\ 3 \\ 2 \end{pmatrix}" />
+   <BlockMath math="\text{Eig}_A(1) = \text{Kern}(A - I) = \text{rentang}\left\{\begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix}, \begin{pmatrix} 0 \\ 1 \\ 1 \end{pmatrix}\right\}" />
+   <BlockMath math="\text{Eig}_A(-1) = \text{Kern}(A + I) = \text{rentang}\begin{pmatrix} 1 \\ 3 \\ 2 \end{pmatrix}" />
    </MathContainer>
+
+   Di sini kernel (ruang nol) adalah himpunan semua vektor yang dipetakan ke vektor nol oleh matriks, sedangkan rentang dari sekumpulan vektor adalah himpunan semua kombinasi linear dari vektor-vektor tersebut.
 
 3. Kita periksa apakah kondisi diagonalisasi terpenuhi. Untuk nilai eigen <InlineMath math="\lambda_1 = 1" />, multiplisitas aljabarnya adalah 2 dan ruang eigennya memiliki dimensi 2 (dua vektor basis independen). Untuk nilai eigen <InlineMath math="\lambda_2 = -1" />, multiplisitas aljabarnya adalah 1 dan ruang eigennya memiliki dimensi 1.
 

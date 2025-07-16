@@ -1,8 +1,8 @@
 export const metadata = {
-    title: "QR Dekomposisi",
-    authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "07/14/2025",
-    subject: "Metode Linear AI",
+   title: "QR Dekomposisi",
+   authors: [{ name: "Nabil Akbarazzima Fatih" }],
+   date: "07/14/2025",
+   subject: "Metode Linear AI",
 };
 
 ## Teorema Eksistensi QR Dekomposisi
@@ -65,9 +65,11 @@ Alih-alih menyimpan matriks <InlineMath math="Q" /> berukuran <InlineMath math="
 kita hanya perlu <InlineMath math="Q_1" /> berukuran <InlineMath math="m \times n" />.
 
 Kolom-kolom matriks <InlineMath math="Q_2 \in \mathbb{R}^{m \times (m-n)}" /> yang tidak kita pakai membentuk 
-basis ortonormal dari <InlineMath math="\text{Kernel}A^T" />:
+basis ortonormal dari kernel (ruang nol) <InlineMath math="\text{Kernel}A^T" />:
 
 <BlockMath math="A^T Q_2 = R_1^T Q_1^T Q_2 = 0" />
+
+Di sini kernel dari <InlineMath math="A^T" /> adalah himpunan semua vektor <InlineMath math="x" /> yang memenuhi <InlineMath math="A^T x = 0" />.
 
 ### Sifat Keunikan
 
@@ -92,10 +94,10 @@ kita dapat mendefinisikan matriks transformasi Householder:
 
 <BlockMath math="S = I - 2vv^T \in \mathbb{R}^{m \times m}" />
 
-Perhatikan bahwa <InlineMath math="vv^T" /> adalah produk diadik, yaitu perkalian vektor kolom 
+Perhatikan bahwa <InlineMath math="vv^T" /> adalah produk diadik (outer product), yaitu perkalian vektor kolom 
 <InlineMath math="v \in \mathbb{R}^{m \times 1}" /> dengan vektor baris <InlineMath math="v^T \in \mathbb{R}^{1 \times m}" />. 
-Hasil perkalian ini adalah matriks <InlineMath math="m \times m" /> dengan rank 1 untuk <InlineMath math="v \neq 0" />. 
-Jangan sampai tertukar dengan perkalian skalar <InlineMath math="v^T v \in \mathbb{R}" />.
+Hasil perkalian ini adalah matriks <InlineMath math="m \times m" /> dengan peringkat 1 untuk <InlineMath math="v \neq 0" />. 
+Jangan sampai tertukar dengan perkalian skalar <InlineMath math="v^T v \in \mathbb{R}" /> yang menghasilkan bilangan tunggal.
 
 ## Sifat-sifat Transformasi Householder
 
@@ -107,8 +109,8 @@ untuk vektor <InlineMath math="v \in \mathbb{R}^m" /> dengan <InlineMath math="\
 2. <InlineMath math="S" /> adalah matriks ortogonal: <InlineMath math="S^T S = I" />
 
 3. Perkalian <InlineMath math="S \cdot x" /> dari <InlineMath math="S" /> dari kiri dengan vektor <InlineMath math="x \in \mathbb{R}^n" /> 
-   menyebabkan refleksi <InlineMath math="x" /> pada subruang <InlineMath math="\text{Span}(v)^{\perp}" />, 
-   yaitu pada hiperplane dengan vektor normal <InlineMath math="v" />
+   menyebabkan refleksi <InlineMath math="x" /> pada subruang <InlineMath math="\text{rentang}(v)^{\perp}" />, 
+   yaitu pada hiperplane (bidang datar berdimensi tinggi) dengan vektor normal <InlineMath math="v" />
 
 4. <InlineMath math="\text{cond}_2(S) = 1" />
 
@@ -125,7 +127,7 @@ terhadap vektor menggunakan bidang refleksi dengan:
 <MathContainer>
 <BlockMath math="\tilde{a}_1 \text{ kolom pertama dari } A_1" />
 <BlockMath math="\pm\|\tilde{a}_1\|_2 \cdot e_1 \in \mathbb{R}^m \text{ vektor target}" />
-<BlockMath math="v_1 = u_1/\|u_1\|_2 \text{ dengan } \text{Span}(v_1)^{\perp}" />
+<BlockMath math="v_1 = u_1/\|u_1\|_2 \text{ dengan } \text{rentang}(v_1)^{\perp}" />
 </MathContainer>
 
 <BlockMath math="u_1 = \tilde{a}_1 \mp \|\tilde{a}_1\|_2 \cdot e_1" />

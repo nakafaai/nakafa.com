@@ -33,7 +33,7 @@ Kondisi peringkat penuh seperti memastikan bahwa setiap parameter memberikan inf
 
 Peringkat matriks <InlineMath math="A \in \mathbb{R}^{m \times n}" /> dapat diperoleh selama proses komputasi dekomposisi QR atau dekomposisi LU dari matriks <InlineMath math="A" />. Namun, pendekatan yang lebih mahal secara komputasi tetapi lebih stabil secara numerik adalah menentukan peringkat menggunakan dekomposisi nilai singular dari <InlineMath math="A" />.
 
-Perbedaan antara kedua pendekatan ini seperti membandingkan pengukuran dengan penggaris biasa versus pengukuran dengan alat presisi tinggi. Dekomposisi nilai singular memberikan informasi yang lebih detail dan robust tentang struktur numerik matriks, terutama untuk kasus mendekati singular.
+Perbedaan antara kedua pendekatan ini seperti membandingkan pengukuran dengan penggaris biasa dibandingkan dengan pengukuran menggunakan alat presisi tinggi. Dekomposisi nilai singular memberikan informasi yang lebih detail dan robust tentang struktur numerik matriks, terutama untuk kasus mendekati singular.
 
 ## Dekomposisi Nilai Singular
 
@@ -57,11 +57,11 @@ dimana <InlineMath math="\#" /> menunjukkan jumlah elemen dalam himpunan.
 
 Sifat fundamental ini memberikan cara numerik yang stabil untuk menentukan peringkat matriks. Nilai singular yang sangat kecil seperti sinyal radio yang lemah, masih ada tetapi hampir tidak terdeteksi. 
 
-### Kondisi Rank-Deficient
+### Kondisi Defisiensi Peringkat
 
-Istilah "rank-deficient" (defisiensi peringkat) merujuk pada kondisi ketika matriks tidak memiliki peringkat penuh. Artinya, <InlineMath math="\text{Peringkat}(A) < \min(m, n)" />. Dalam konteks ini, beberapa baris atau kolom matriks saling bergantung secara linear.
+Istilah defisiensi peringkat merujuk pada kondisi ketika matriks tidak memiliki peringkat penuh. Artinya, <InlineMath math="\text{Peringkat}(A) < \min(m, n)" />. Dalam konteks ini, beberapa baris atau kolom matriks saling bergantung secara linear.
 
-Ketika matriks mengalami rank-deficient, beberapa nilai singular menjadi nol atau sangat mendekati nol
+Ketika matriks mengalami defisiensi peringkat, beberapa nilai singular menjadi nol atau sangat mendekati nol
 
 <BlockMath math="\sigma_r > \sigma_{r+1} = \sigma_{r+2} = \cdots = \sigma_{\min(m,n)} = 0" />
 

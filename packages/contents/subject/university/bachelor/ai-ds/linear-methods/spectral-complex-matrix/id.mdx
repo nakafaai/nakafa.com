@@ -1,0 +1,160 @@
+export const metadata = {
+    title: "Teorema Spektral untuk Matriks Kompleks",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/16/2025",
+    subject: "Metode Linear AI",
+};
+
+## Karakterisasi Diagonalisasi Ortogonal
+
+Teorema spektral untuk matriks kompleks memberikan karakterisasi lengkap tentang kapan sebuah matriks kompleks dapat didiagonalisasi menggunakan basis ortonormal dari vektor eigen. Ini adalah hasil yang sangat penting dalam aljabar linear karena menghubungkan konsep geometri (basis ortonormal) dengan konsep aljabar (normalitas matriks).
+
+Untuk matriks kompleks <InlineMath math="A \in \mathbb{C}^{n \times n}" />, kondisi berikut ini ekuivalen satu sama lain:
+
+1. Terdapat basis ortonormal dari <InlineMath math="\mathbb{C}^n" /> yang terdiri dari vektor eigen matriks <InlineMath math="A" />
+2. Matriks <InlineMath math="A" /> adalah normal
+
+Ekuivalensi ini sangat mendalam karena menunjukkan bahwa sifat aljabar (normalitas) berkaitan langsung dengan kemungkinan diagonalisasi ortogonal.
+
+## Pembuktian Arah Pertama
+
+Mari kita buktikan bahwa jika terdapat basis ortonormal dari vektor eigen, maka matriks tersebut normal. Ini seperti membuktikan bahwa jika sebuah bangunan memiliki struktur yang sangat teratur dan simetris, maka bangunan tersebut memiliki sifat keseimbangan khusus.
+
+Misalkan <InlineMath math="v_1, \ldots, v_n" /> adalah basis ortonormal yang terdiri dari vektor eigen matriks <InlineMath math="A" />. Untuk setiap <InlineMath math="j = 1, \ldots, n" /> berlaku <InlineMath math="Av_j = \lambda_j v_j" />.
+
+Karena basis ortonormal, kita punya rangkaian perhitungan berikut:
+
+<MathContainer>
+<BlockMath math="(A^H v_i)^H v_j = v_i^H (Av_j) = v_i^H (\lambda_j v_j)" />
+<BlockMath math="= \lambda_j v_i^H v_j = \lambda_j \delta_{ij}" />
+</MathContainer>
+
+Ini berarti <InlineMath math="A^H v_i = \overline{\lambda_i} v_i" />, sehingga:
+
+<MathContainer>
+<BlockMath math="AA^H v_i = A(\overline{\lambda_i} v_i) = \overline{\lambda_i} \lambda_i v_i" />
+<BlockMath math="= \lambda_i \overline{\lambda_i} v_i = \lambda_i (A^H v_i) = A^H (\lambda_i v_i) = A^H A v_i" />
+</MathContainer>
+
+Karena ini berlaku untuk semua vektor basis, maka <InlineMath math="AA^H = A^H A" />, yang berarti <InlineMath math="A" /> normal.
+
+## Pembuktian Normalitas ke Diagonalisasi
+
+Sekarang kita buktikan arah sebaliknya menggunakan induksi matematis. Bayangkan seperti membangun rumah tingkat, kita mulai dari lantai dasar dan membuktikan bahwa setiap lantai baru dapat dibangun menggunakan hasil dari lantai sebelumnya.
+
+### Struktur Induksi Matematis
+
+1. **Langkah Basis** 
+   Untuk <InlineMath math="n = 0" /> (matriks kosong), pernyataan jelas benar.
+
+2. **Hipotesis Induksi** 
+   Asumsikan pernyataan benar untuk semua matriks normal berukuran <InlineMath math="(n-1) \times (n-1)" />.
+
+3. **Langkah Induksi** 
+   Misalkan <InlineMath math="A \in \mathbb{C}^{n \times n}" /> normal. Berdasarkan teorema fundamental aljabar, terdapat nilai eigen <InlineMath math="\lambda_1 \in \mathbb{C}" /> dari <InlineMath math="A" />. Misalkan <InlineMath math="v_1 \in \mathbb{C}^n" /> adalah vektor eigen yang bersesuaian dengan <InlineMath math="v_1^H v_1 = 1" />.
+
+   Kita punya <InlineMath math="Av_1 = \lambda_1 v_1" /> dan dari sifat matriks normal, <InlineMath math="A^H v_1 = \overline{\lambda_1} v_1" />.
+
+### Pembentukan Subruang Invarian
+
+Lengkapi <InlineMath math="v_1" /> menjadi basis ortonormal <InlineMath math="\mathbb{C}^n" /> dengan vektor <InlineMath math="v_2, \ldots, v_n" />. Definisikan:
+
+<BlockMath math="W = \text{rentang}(v_2, \ldots, v_n)" />
+
+Di sini rentang dari vektor-vektor <InlineMath math="v_2, \ldots, v_n" /> adalah himpunan semua kombinasi linear dari vektor-vektor tersebut. Dengan kata lain, <InlineMath math="W" /> berisi semua vektor yang dapat ditulis sebagai <InlineMath math="a_2 v_2 + a_3 v_3 + \cdots + a_n v_n" /> dengan <InlineMath math="a_2, a_3, \ldots, a_n \in \mathbb{C}" />.
+
+Untuk setiap <InlineMath math="w \in W" />, berlaku:
+
+<MathContainer>
+<BlockMath math="(Aw)^H v_1 = w^H (A^H v_1) = w^H (\overline{\lambda_1} v_1)" />
+<BlockMath math="= \overline{\lambda_1} w^H v_1 = 0" />
+</MathContainer>
+
+Jadi <InlineMath math="Aw \in W" />, yang berarti:
+
+<BlockMath math="A(W) = \{Aw \mid w \in W\} \subset W" />
+
+Dengan kata lain, <InlineMath math="W" /> adalah subruang yang invarian (tidak berubah) di bawah transformasi <InlineMath math="A" />. Ini seperti kolam terpisah dimana ikan yang berenang di kolam tersebut tidak pernah keluar dari kolam.
+
+### Transformasi Kesatuan dan Pemeliharaan Normalitas
+
+Misalkan <InlineMath math="T \in \mathbb{C}^{n \times n}" /> adalah matriks kesatuan dengan kolom <InlineMath math="v_1, \ldots, v_n" />. Maka <InlineMath math="T \cdot T^H = T \cdot T^{-1} = I" />.
+
+Transformasi ini memberikan bentuk blok yang elegan:
+
+<MathContainer>
+<BlockMath math="T^H \cdot A \cdot T = T^{-1} \cdot A \cdot T" />
+<BlockMath math="= \begin{pmatrix} \lambda_1 & 0^T \\ 0 & A' \end{pmatrix}" />
+</MathContainer>
+
+dengan:
+
+<BlockMath math="A' \in \mathbb{C}^{(n-1) \times (n-1)}" />
+
+Karena transformasi kesatuan mempertahankan normalitas seperti cermin yang mempertahankan bentuk objek, kita dapat menunjukkan bahwa:
+
+<MathContainer>
+<BlockMath math="(T^H \cdot A \cdot T) \cdot (T^H \cdot A \cdot T)^H" />
+<BlockMath math="= T^H \cdot A \cdot T \cdot T^H \cdot A^H \cdot T" />
+<BlockMath math="= T^H \cdot A \cdot A^H \cdot T" />
+<BlockMath math="= T^H \cdot A^H \cdot A \cdot T" />
+<BlockMath math="= (T^H \cdot A \cdot T)^H \cdot (T^H \cdot A \cdot T)" />
+</MathContainer>
+
+Oleh karena itu matriks blok diagonal juga normal, yang berarti <InlineMath math="A'" /> juga normal.
+
+## Konstruksi Basis Ortonormal Lengkap
+
+Sekarang kita sampai pada tahap akhir seperti menyusun teka-teki yang sudah hampir selesai. Berdasarkan hipotesis induksi, terdapat basis ortonormal <InlineMath math="v'_2, \ldots, v'_n" /> dari vektor eigen untuk <InlineMath math="A'" />. Misalkan <InlineMath math="S'" /> adalah matriks kesatuan dengan kolom tersebut, dimana:
+
+<BlockMath math="S' \in \mathbb{C}^{(n-1) \times (n-1)}" />
+
+sehingga:
+
+<BlockMath math="S'^H \cdot A' \cdot S' = \begin{pmatrix} \lambda_2 & & \\ & \ddots & \\ & & \lambda_n \end{pmatrix}" />
+
+dengan nilai eigen <InlineMath math="\lambda_2, \ldots, \lambda_n" /> dari <InlineMath math="A'" />.
+
+Sekarang kita definisikan:
+
+<BlockMath math="S = T \cdot \begin{pmatrix} 1 & 0^T \\ 0 & S' \end{pmatrix}" />
+
+Maka <InlineMath math="S" /> adalah matriks kesatuan dengan:
+
+<BlockMath math="S \in \mathbb{C}^{n \times n}" />
+
+dan:
+
+<MathContainer>
+<BlockMath math="S^H \cdot A \cdot S = \begin{pmatrix} 1 & 0^T \\ 0 & S'^H \end{pmatrix} \cdot T^H \cdot A \cdot T" />
+<BlockMath math="\cdot \begin{pmatrix} 1 & 0^T \\ 0 & S' \end{pmatrix}" />
+<BlockMath math="= \begin{pmatrix} \lambda_1 & 0^T \\ 0 & S'^H A' S' \end{pmatrix}" />
+<BlockMath math="= \begin{pmatrix} \lambda_1 & & \\ & \ddots & \\ & & \lambda_n \end{pmatrix}" />
+</MathContainer>
+
+Kolom dari <InlineMath math="S" /> membentuk basis ortonormal dari vektor eigen matriks <InlineMath math="A" />.
+
+## Kasus Matriks Riil
+
+Untuk matriks riil, situasinya sedikit berbeda seperti perbedaan antara menggambar di kanvas datar (riil) dibandingkan dengan menggambar dalam ruang 3D (kompleks). Matriks riil:
+
+<BlockMath math="A \in \mathbb{R}^{n \times n}" />
+
+disebut normal jika:
+
+<BlockMath math="A \cdot A^T = A^T \cdot A" />
+
+Matriks riil normal adalah kasus khusus dari matriks kompleks normal dengan entri riil. Karena itu, sifat yang sama berlaku untuk kedua jenis matriks simetris dan ortogonal.
+
+Matriks simetris dan matriks ortogonal selalu normal. Untuk matriks simetris <InlineMath math="A^T = A" />, jelas bahwa:
+
+<BlockMath math="A \cdot A^T = A \cdot A = A^T \cdot A" />
+
+Untuk matriks ortogonal <InlineMath math="A^T = A^{-1}" />, kita punya:
+
+<MathContainer>
+<BlockMath math="A \cdot A^T = A \cdot A^{-1} = I" />
+<BlockMath math="= A^{-1} \cdot A = A^T \cdot A" />
+</MathContainer>
+
+Namun, tidak semua matriks riil normal memiliki nilai eigen riil. Dalam teorema spektral riil, keberadaan nilai eigen riil tidak dijamin, sehingga diagonalisasi ortogonal mungkin tidak selalu dimungkinkan dalam bilangan riil.

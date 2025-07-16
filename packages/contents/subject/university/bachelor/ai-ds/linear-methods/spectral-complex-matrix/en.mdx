@@ -1,0 +1,160 @@
+export const metadata = {
+    title: "Spectral Theorem for Complex Matrices",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/16/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Orthogonal Diagonalization Characterization
+
+The spectral theorem for complex matrices provides a complete characterization of when a complex matrix can be diagonalized using an orthonormal basis of eigenvectors. This is a very important result in linear algebra because it connects geometric concepts (orthonormal basis) with algebraic concepts (matrix normality).
+
+For a complex matrix <InlineMath math="A \in \mathbb{C}^{n \times n}" />, the following conditions are equivalent to each other:
+
+1. There exists an orthonormal basis of <InlineMath math="\mathbb{C}^n" /> consisting of eigenvectors of matrix <InlineMath math="A" />
+2. Matrix <InlineMath math="A" /> is normal
+
+This equivalence is very profound because it shows that algebraic properties (normality) are directly related to the possibility of orthogonal diagonalization.
+
+## Proof of the First Direction
+
+Let us prove that if there exists an orthonormal basis of eigenvectors, then the matrix is normal. This is like proving that if a building has a very regular and symmetric structure, then the building has special balance properties.
+
+Let <InlineMath math="v_1, \ldots, v_n" /> be an orthonormal basis consisting of eigenvectors of matrix <InlineMath math="A" />. For each <InlineMath math="j = 1, \ldots, n" /> we have <InlineMath math="Av_j = \lambda_j v_j" />.
+
+Since it's an orthonormal basis, we have the following sequence of calculations:
+
+<MathContainer>
+<BlockMath math="(A^H v_i)^H v_j = v_i^H (Av_j) = v_i^H (\lambda_j v_j)" />
+<BlockMath math="= \lambda_j v_i^H v_j = \lambda_j \delta_{ij}" />
+</MathContainer>
+
+This means <InlineMath math="A^H v_i = \overline{\lambda_i} v_i" />, so that:
+
+<MathContainer>
+<BlockMath math="AA^H v_i = A(\overline{\lambda_i} v_i) = \overline{\lambda_i} \lambda_i v_i" />
+<BlockMath math="= \lambda_i \overline{\lambda_i} v_i = \lambda_i (A^H v_i) = A^H (\lambda_i v_i) = A^H A v_i" />
+</MathContainer>
+
+Since this holds for all basis vectors, then <InlineMath math="AA^H = A^H A" />, which means <InlineMath math="A" /> is normal.
+
+## Proof from Normality to Diagonalization
+
+Now we prove the opposite direction using mathematical induction. Imagine building a multi-story house, we start from the ground floor and prove that each new floor can be built using results from the previous floor.
+
+### Mathematical Induction Structure
+
+1. **Base Step** 
+   For <InlineMath math="n = 0" /> (empty matrix), the statement is clearly true.
+
+2. **Induction Hypothesis** 
+   Assume the statement is true for all normal matrices of size <InlineMath math="(n-1) \times (n-1)" />.
+
+3. **Induction Step** 
+   Let <InlineMath math="A \in \mathbb{C}^{n \times n}" /> be normal. Based on the fundamental theorem of algebra, there exists an eigenvalue <InlineMath math="\lambda_1 \in \mathbb{C}" /> of <InlineMath math="A" />. Let <InlineMath math="v_1 \in \mathbb{C}^n" /> be a corresponding eigenvector with <InlineMath math="v_1^H v_1 = 1" />.
+
+   We have <InlineMath math="Av_1 = \lambda_1 v_1" /> and from the properties of normal matrices, <InlineMath math="A^H v_1 = \overline{\lambda_1} v_1" />.
+
+### Formation of Invariant Subspace
+
+Complete <InlineMath math="v_1" /> to an orthonormal basis of <InlineMath math="\mathbb{C}^n" /> with vectors <InlineMath math="v_2, \ldots, v_n" />. Define:
+
+<BlockMath math="W = \text{span}(v_2, \ldots, v_n)" />
+
+Here the span of vectors <InlineMath math="v_2, \ldots, v_n" /> is the set of all linear combinations of those vectors. In other words, <InlineMath math="W" /> contains all vectors that can be written as <InlineMath math="a_2 v_2 + a_3 v_3 + \cdots + a_n v_n" /> with <InlineMath math="a_2, a_3, \ldots, a_n \in \mathbb{C}" />.
+
+For every <InlineMath math="w \in W" />, we have:
+
+<MathContainer>
+<BlockMath math="(Aw)^H v_1 = w^H (A^H v_1) = w^H (\overline{\lambda_1} v_1)" />
+<BlockMath math="= \overline{\lambda_1} w^H v_1 = 0" />
+</MathContainer>
+
+So <InlineMath math="Aw \in W" />, which means:
+
+<BlockMath math="A(W) = \{Aw \mid w \in W\} \subset W" />
+
+In other words, <InlineMath math="W" /> is a subspace that is invariant (unchanging) under transformation <InlineMath math="A" />. This is like a separate pond where fish swimming in that pond never leave the pond.
+
+### Unitary Transformation and Preservation of Normality
+
+Let <InlineMath math="T \in \mathbb{C}^{n \times n}" /> be a unitary matrix with columns <InlineMath math="v_1, \ldots, v_n" />. Then <InlineMath math="T \cdot T^H = T \cdot T^{-1} = I" />.
+
+This transformation gives an elegant block form:
+
+<MathContainer>
+<BlockMath math="T^H \cdot A \cdot T = T^{-1} \cdot A \cdot T" />
+<BlockMath math="= \begin{pmatrix} \lambda_1 & 0^T \\ 0 & A' \end{pmatrix}" />
+</MathContainer>
+
+with:
+
+<BlockMath math="A' \in \mathbb{C}^{(n-1) \times (n-1)}" />
+
+Since unitary transformations preserve normality like a mirror that preserves the shape of objects, we can show that:
+
+<MathContainer>
+<BlockMath math="(T^H \cdot A \cdot T) \cdot (T^H \cdot A \cdot T)^H" />
+<BlockMath math="= T^H \cdot A \cdot T \cdot T^H \cdot A^H \cdot T" />
+<BlockMath math="= T^H \cdot A \cdot A^H \cdot T" />
+<BlockMath math="= T^H \cdot A^H \cdot A \cdot T" />
+<BlockMath math="= (T^H \cdot A \cdot T)^H \cdot (T^H \cdot A \cdot T)" />
+</MathContainer>
+
+Therefore the block diagonal matrix is also normal, which means <InlineMath math="A'" /> is also normal.
+
+## Construction of Complete Orthonormal Basis
+
+Now we arrive at the final stage like assembling a puzzle that is almost complete. Based on the induction hypothesis, there exists an orthonormal basis <InlineMath math="v'_2, \ldots, v'_n" /> of eigenvectors for <InlineMath math="A'" />. Let <InlineMath math="S'" /> be a unitary matrix with those columns, where:
+
+<BlockMath math="S' \in \mathbb{C}^{(n-1) \times (n-1)}" />
+
+so that:
+
+<BlockMath math="S'^H \cdot A' \cdot S' = \begin{pmatrix} \lambda_2 & & \\ & \ddots & \\ & & \lambda_n \end{pmatrix}" />
+
+with eigenvalues <InlineMath math="\lambda_2, \ldots, \lambda_n" /> of <InlineMath math="A'" />.
+
+Now we define:
+
+<BlockMath math="S = T \cdot \begin{pmatrix} 1 & 0^T \\ 0 & S' \end{pmatrix}" />
+
+Then <InlineMath math="S" /> is a unitary matrix with:
+
+<BlockMath math="S \in \mathbb{C}^{n \times n}" />
+
+and:
+
+<MathContainer>
+<BlockMath math="S^H \cdot A \cdot S = \begin{pmatrix} 1 & 0^T \\ 0 & S'^H \end{pmatrix} \cdot T^H \cdot A \cdot T" />
+<BlockMath math="\cdot \begin{pmatrix} 1 & 0^T \\ 0 & S' \end{pmatrix}" />
+<BlockMath math="= \begin{pmatrix} \lambda_1 & 0^T \\ 0 & S'^H A' S' \end{pmatrix}" />
+<BlockMath math="= \begin{pmatrix} \lambda_1 & & \\ & \ddots & \\ & & \lambda_n \end{pmatrix}" />
+</MathContainer>
+
+The columns of <InlineMath math="S" /> form an orthonormal basis of eigenvectors of matrix <InlineMath math="A" />.
+
+## Real Matrix Case
+
+For real matrices, the situation is slightly different like the difference between drawing on a flat canvas (real) compared to drawing in 3D space (complex). A real matrix:
+
+<BlockMath math="A \in \mathbb{R}^{n \times n}" />
+
+is called normal if:
+
+<BlockMath math="A \cdot A^T = A^T \cdot A" />
+
+Normal real matrices are a special case of normal complex matrices with real entries. Therefore, the same properties apply to both types of symmetric and orthogonal matrices.
+
+Symmetric matrices and orthogonal matrices are always normal. For a symmetric matrix <InlineMath math="A^T = A" />, it is clear that:
+
+<BlockMath math="A \cdot A^T = A \cdot A = A^T \cdot A" />
+
+For an orthogonal matrix <InlineMath math="A^T = A^{-1}" />, we have:
+
+<MathContainer>
+<BlockMath math="A \cdot A^T = A \cdot A^{-1} = I" />
+<BlockMath math="= A^{-1} \cdot A = A^T \cdot A" />
+</MathContainer>
+
+However, not all normal real matrices have real eigenvalues. In the real spectral theorem, the existence of real eigenvalues is not guaranteed, so orthogonal diagonalization may not always be possible in real numbers.

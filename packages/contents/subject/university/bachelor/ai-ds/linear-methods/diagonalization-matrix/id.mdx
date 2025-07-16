@@ -1,8 +1,8 @@
 export const metadata = {
-    title: "Diagonalisasi Matriks",
-    authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "07/16/2025",
-    subject: "Metode Linear AI",
+   title: "Diagonalisasi Matriks",
+   authors: [{ name: "Nabil Akbarazzima Fatih" }],
+   date: "07/16/2025",
+   subject: "Metode Linear AI",
 };
 
 ## Konsep Diagonalisasi Matriks
@@ -39,15 +39,15 @@ Perhatikan matriks:
 
 <BlockMath math="A = \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}" />
 
-Matriks ini memiliki nilai eigen <InlineMath math="\lambda = 1" /> dengan multiplisitas aljabar <InlineMath math="\mu_A(1) = 2" />. Ruang eigen adalah kernel (ruang nol) dari <InlineMath math="A - 1 \cdot I" />:
+Matriks ini memiliki nilai eigen <InlineMath math="\lambda = 1" /> dengan multiplisitas aljabar <InlineMath math="\mu_A(1) = 2" />. Ruang eigen adalah kernel (ruang nol) dari <InlineMath math="A - 1 \cdot I" />, yaitu himpunan semua vektor yang dipetakan ke vektor nol oleh matriks tersebut:
 
 <MathContainer>
 <BlockMath math="\text{Eig}_A(1) = \text{Kern}(A - 1 \cdot I)" />
 <BlockMath math="= \text{Kern}\begin{pmatrix} 0 & 2 \\ 0 & 0 \end{pmatrix}" />
-<BlockMath math="= \text{Span}\begin{pmatrix} 1 \\ 0 \end{pmatrix}" />
+<BlockMath math="= \text{rentang}\begin{pmatrix} 1 \\ 0 \end{pmatrix}" />
 </MathContainer>
 
-yang memiliki dimensi 1. Karena tidak ada nilai eigen dan vektor eigen lain, dan tidak terdapat basis <InlineMath math="\mathbb{K}^2" /> dari vektor eigen <InlineMath math="A" />, maka <InlineMath math="A" /> tidak dapat didiagonalisasi.
+Di sini rentang dari vektor <InlineMath math="\begin{pmatrix} 1 \\ 0 \end{pmatrix}" /> adalah himpunan semua kelipatan skalar dari vektor tersebut, yang memiliki dimensi 1. Karena tidak ada nilai eigen dan vektor eigen lain, dan tidak terdapat basis <InlineMath math="\mathbb{K}^2" /> dari vektor eigen <InlineMath math="A" />, maka <InlineMath math="A" /> tidak dapat didiagonalisasi.
 
 ## Syarat Diagonalisasi Matriks
 
