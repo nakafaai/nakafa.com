@@ -1,0 +1,63 @@
+export const metadata = {
+    title: "Spectral Theorem",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/16/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Basic Concepts of Normal Matrices
+
+The spectral theorem answers the important question of when a matrix can be diagonalized using an orthonormal basis of eigenvectors. Imagine you want to transform a complex matrix into a simple diagonal matrix, but using basis vectors that are mutually perpendicular. The spectral theorem provides the precise conditions when this transformation is possible.
+
+When this condition is satisfied, the basis transformation matrix becomes unitary with the property <InlineMath math="S^{-1} = S^H" /> or orthogonal with the property <InlineMath math="S^{-1} = S^T" /> for the real case. We will start by studying the complex case first.
+
+A complex matrix <InlineMath math="A \in \mathbb{C}^{n \times n}" /> is called normal if it satisfies the commutativity condition with its conjugate transpose:
+
+<BlockMath math="A \cdot A^H = A^H \cdot A" />
+
+This condition appears simple, but it is actually very powerful. Matrices that can "exchange places" with their conjugate transpose have special geometric properties.
+
+## Special Properties of Eigenspaces of Normal Matrices
+
+Normal matrices have interesting properties that arbitrary matrices do not possess. For normal matrices, the null space of the matrix and the null space of its conjugate transpose turn out to be identical.
+
+Let's see why this happens. The null space (kernel) is the set of all vectors <InlineMath math="x" /> that produce <InlineMath math="Ax = 0" />. If <InlineMath math="A^H A = A A^H" /> and <InlineMath math="Ax = 0" />, then we can analyze it like this:
+
+<MathContainer>
+<BlockMath math="0 = (Ax)^H (Ax) = x^H A^H Ax = x^H A A^H x = (A^H x)^H (A^H x)" />
+</MathContainer>
+
+From this calculation, we conclude that <InlineMath math="A^H x = 0" />. Therefore, for normal matrices we have <InlineMath math="\text{Kern}A^H = \text{Kern}A" />.
+
+This equality of null spaces brings important consequences for eigenspaces. For every eigenvalue <InlineMath math="\lambda \in \mathbb{C}" />, the eigenspaces of <InlineMath math="A" /> and <InlineMath math="A^H" /> turn out to be identical.
+
+<BlockMath math="\text{Eig}_A(\lambda) = \text{Eig}_{A^H}(\lambda)" />
+
+So every eigenvector of the normal matrix <InlineMath math="A" /> for eigenvalue <InlineMath math="\lambda" /> is also an eigenvector of <InlineMath math="A^H" /> with exactly the same eigenvalue. Imagine finding two mirrors that reflect light in exactly the same direction.
+
+## Hermitian and Unitary Matrices as Examples of Normal Matrices
+
+Two important types of matrices that are always normal are Hermitian matrices and unitary matrices. Let's understand why both are special.
+
+### Hermitian Matrices and Real Eigenvalues
+
+Hermitian matrices have the property <InlineMath math="A^H = A" />. Because of the normal definition <InlineMath math="A \cdot A^H = A^H \cdot A" />, for Hermitian matrices we have <InlineMath math="A \cdot A = A \cdot A" />, which is clearly always true.
+
+Eigenvalues of Hermitian matrices are always real. To understand this, we use the fact that for normal matrices, the eigenspaces of <InlineMath math="A" /> and <InlineMath math="A^H" /> for the same eigenvalue are identical.
+
+<BlockMath math="\text{Eig}_A(\lambda) = \text{Eig}_{A^H}(\lambda) = \text{Eig}_A(\overline{\lambda}) \Rightarrow \lambda = \overline{\lambda}" />
+
+The condition <InlineMath math="\lambda = \overline{\lambda}" /> means the eigenvalue equals its complex conjugate, which only happens if <InlineMath math="\lambda" /> is a pure real number. So all eigenvalues of Hermitian matrices are always real numbers, not complex numbers with imaginary parts.
+
+### Unitary Matrices and Eigenvalues on the Unit Circle
+
+Unitary matrices have the property <InlineMath math="A^H = A^{-1}" />. To prove that unitary matrices are also normal, we substitute into the definition and get <InlineMath math="A \cdot A^H = A \cdot A^{-1} = I = A^{-1} \cdot A = A^H \cdot A" />.
+
+Eigenvalues of unitary matrices have magnitude 1, meaning they lie on the unit circle in the complex plane. We can show this with the following calculation.
+
+<MathContainer>
+<BlockMath math="\text{Eig}_A(\lambda) = \text{Eig}_{A^H}(\lambda) = \text{Eig}_{A^{-1}}(\lambda) = \text{Eig}_A(\lambda^{-1})" />
+<BlockMath math="\Rightarrow \lambda = \lambda^{-1} \Rightarrow \lambda \cdot \overline{\lambda} = 1" />
+</MathContainer>
+
+The condition <InlineMath math="\lambda \cdot \overline{\lambda} = 1" /> is mathematically equivalent to <InlineMath math="|\lambda|^2 = 1" />, which means <InlineMath math="|\lambda| = 1" />. So all eigenvalues of unitary matrices have modulus exactly equal to 1. This modulus is the distance from the origin in the complex plane. Imagine a spinning wheel, unitary transformations only rotate vectors without changing their length.
