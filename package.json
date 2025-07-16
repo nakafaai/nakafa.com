@@ -21,7 +21,7 @@
     "analyze": "turbo analyze",
     "translate": "turbo translate",
     "boundaries": "turbo boundaries",
-    "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker,zod,recharts",
+    "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker,zod,recharts,@biomejs/biome",
     "bump-ui": "npx shadcn@latest add --all --overwrite -c packages/design-system",
     "clean": "git clean -xdf node_modules"
   },
