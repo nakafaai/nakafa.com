@@ -1,0 +1,96 @@
+export const metadata = {
+    title: "Matrix Diagonalization",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/16/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Matrix Diagonalization Concept
+
+In matrix theory, we often seek ways to simplify matrix forms to make them easier to analyze and compute. Diagonalization is one of the most powerful techniques to achieve this. Imagine transforming a complex space into a more orderly space where each dimension does not interfere with each other.
+
+The main goal of diagonalization is to find a special basis so that the linear transformation <InlineMath math="y = A \cdot x" /> can be represented through a diagonal matrix <InlineMath math="B = S^{-1} \cdot A \cdot S" />. If this basis is an orthonormal basis, then the transformation matrix has the property <InlineMath math="S^{-1} = S^T" />.
+
+## Definition of Diagonalization
+
+A matrix <InlineMath math="A \in \mathbb{K}^{n \times n}" /> is called **diagonalizable** if it is similar to some diagonal matrix <InlineMath math="\Lambda \in \mathbb{K}^{n \times n}" />, that is, if there exists an invertible matrix <InlineMath math="S \in \mathbb{K}^{n \times n}" /> such that:
+
+<BlockMath math="\Lambda = S^{-1} \cdot A \cdot S" />
+
+## Basic Conditions for Diagonalization
+
+When can a matrix <InlineMath math="A \in \mathbb{K}^{n \times n}" /> be diagonalized? The answer is when we can find a basis of <InlineMath math="\mathbb{K}^n" /> that consists entirely of eigenvectors <InlineMath math="v_1, \ldots, v_n \in \mathbb{K}^n" /> of <InlineMath math="A" /> with corresponding eigenvalues <InlineMath math="\lambda_1, \ldots, \lambda_n \in \mathbb{K}" />.
+
+The diagonal matrix <InlineMath math="\Lambda" /> is:
+
+<BlockMath math="\Lambda = \begin{pmatrix} \lambda_1 & & \\ & \ddots & \\ & & \lambda_n \end{pmatrix} = \text{diag}(\lambda_1, \ldots, \lambda_n)" />
+
+and <InlineMath math="S" /> is the matrix with columns:
+
+<BlockMath math="S = (v_1 \quad \ldots \quad v_n)" />
+
+If <InlineMath math="A" /> is diagonalizable, then the columns <InlineMath math="v_1, \ldots, v_n" /> of <InlineMath math="S" /> form a basis of eigenvectors. From <InlineMath math="\Lambda = S^{-1} \cdot A \cdot S" /> we obtain <InlineMath math="A \cdot S = S \cdot \Lambda" /> and thus <InlineMath math="A \cdot v_i = \lambda_i \cdot v_i" /> for <InlineMath math="i = 1, \ldots, n" />.
+
+Conversely, if <InlineMath math="v_1, \ldots, v_n" /> is a basis of eigenvectors, then <InlineMath math="S" /> is invertible and from <InlineMath math="A \cdot v_i = \lambda_i \cdot v_i" /> for <InlineMath math="i = 1, \ldots, n" /> we obtain <InlineMath math="A \cdot S = S \cdot \Lambda" /> and thus <InlineMath math="\Lambda = S^{-1} \cdot A \cdot S" />.
+
+## Example of Non-Diagonalizable Case
+
+Consider the matrix:
+
+<BlockMath math="A = \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}" />
+
+This matrix has eigenvalue <InlineMath math="\lambda = 1" /> with algebraic multiplicity <InlineMath math="\mu_A(1) = 2" />. The eigenspace is the kernel (null space) of <InlineMath math="A - 1 \cdot I" />:
+
+<MathContainer>
+<BlockMath math="\text{Eig}_A(1) = \text{Kern}(A - 1 \cdot I)" />
+<BlockMath math="= \text{Kern}\begin{pmatrix} 0 & 2 \\ 0 & 0 \end{pmatrix}" />
+<BlockMath math="= \text{Span}\begin{pmatrix} 1 \\ 0 \end{pmatrix}" />
+</MathContainer>
+
+which has dimension 1. Since there are no other eigenvalues and eigenvectors, and there is no basis of <InlineMath math="\mathbb{K}^2" /> consisting of eigenvectors of <InlineMath math="A" />, then <InlineMath math="A" /> is not diagonalizable.
+
+## Requirements for Matrix Diagonalization
+
+If a matrix <InlineMath math="A \in \mathbb{K}^{n \times n}" /> is diagonalizable, then the characteristic polynomial <InlineMath math="\chi_A(t)" /> of <InlineMath math="A" /> over <InlineMath math="\mathbb{K}" /> factors into linear factors:
+
+<BlockMath math="\chi_A(t) = (\lambda_1 - t) \cdots (\lambda_n - t)" />
+
+where <InlineMath math="A" /> has <InlineMath math="n" /> eigenvalues that need not be distinct <InlineMath math="\lambda_i \in \mathbb{K}" />.
+
+When all eigenvalues are distinct, the process becomes simpler. If <InlineMath math="A \in \mathbb{K}^{n \times n}" /> and the characteristic polynomial <InlineMath math="\chi_A(t)" /> of <InlineMath math="A" /> over <InlineMath math="\mathbb{K}" /> factors into linear factors:
+
+<BlockMath math="\chi_A(t) = (\lambda_1 - t) \cdots (\lambda_n - t)" />
+
+with pairwise distinct eigenvalues <InlineMath math="\lambda_i \neq \lambda_j" /> for <InlineMath math="i \neq j" /> with <InlineMath math="i, j \in \{1, \ldots, n\}" />, then <InlineMath math="A" /> is certainly diagonalizable.
+
+Why is this so? Because eigenvectors for pairwise distinct eigenvalues of <InlineMath math="A" /> are always linearly independent and form a basis of <InlineMath math="\mathbb{K}^n" />.
+
+But what if <InlineMath math="A" /> has repeated eigenvalues? We must check this more carefully. Eigenvalues have algebraic multiplicity <InlineMath math="\mu_A(\lambda_i)" /> and geometric multiplicity <InlineMath math="\dim \text{Eig}_A(\lambda_i)" /> with the relationship:
+
+<BlockMath math="\dim \text{Eig}_A(\lambda_i) \leq \mu_A(\lambda_i)" />
+
+## Diagonalization Characterization Theorem
+
+For a matrix <InlineMath math="A \in \mathbb{K}^{n \times n}" />, the following statements are equivalent:
+
+1. <InlineMath math="A" /> is diagonalizable.
+
+2. Both of the following conditions are satisfied. First, the characteristic polynomial of <InlineMath math="A" /> must factor into linear factors:
+
+   <BlockMath math="\chi_A(t) = (\lambda_1 - t)^{\mu_A(\lambda_1)} \cdots (\lambda_k - t)^{\mu_A(\lambda_k)}" />
+
+   with pairwise distinct eigenvalues <InlineMath math="\lambda_1, \ldots, \lambda_k \in \mathbb{K}" /> of <InlineMath math="A" />. Second, for all eigenvalues of <InlineMath math="A" />, the algebraic multiplicity must equal the geometric multiplicity:
+
+   <BlockMath math="\mu_A(\lambda_i) = \dim \text{Eig}_A(\lambda_i) \quad \text{for } i = 1, \ldots, k" />
+
+3. The direct sum of all eigenspaces is the entire vector space:
+
+   <BlockMath math="\text{Eig}_A(\lambda_1) \oplus \cdots \oplus \text{Eig}_A(\lambda_k) = \mathbb{K}^n" />
+
+   This means there exists a basis of <InlineMath math="\mathbb{K}^n" /> consisting of eigenvectors of <InlineMath math="A" />.
+
+For each <InlineMath math="i = 1, \ldots, k" />, let <InlineMath math="v_1^{(i)}, \ldots, v_{d_i}^{(i)}" /> be a basis of eigenvectors of <InlineMath math="A" /> for the eigenspace <InlineMath math="\text{Eig}_A(\lambda_i)" />. Then:
+
+<BlockMath math="v_1^{(1)}, \ldots, v_{d_1}^{(1)}, v_1^{(2)}, \ldots, v_{d_2}^{(2)}, \ldots, v_1^{(k)}, \ldots, v_{d_k}^{(k)}" />
+
+is a basis of <InlineMath math="\mathbb{K}^n" /> consisting of eigenvectors of <InlineMath math="A" />. Therefore, <InlineMath math="A" /> is diagonalizable.

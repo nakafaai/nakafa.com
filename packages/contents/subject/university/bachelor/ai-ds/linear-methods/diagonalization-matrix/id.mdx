@@ -1,0 +1,96 @@
+export const metadata = {
+    title: "Diagonalisasi Matriks",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/16/2025",
+    subject: "Metode Linear AI",
+};
+
+## Konsep Diagonalisasi Matriks
+
+Dalam teori matriks, kita sering mencari cara untuk menyederhanakan bentuk matriks agar lebih mudah dianalisis dan dihitung. Diagonalisasi adalah salah satu teknik paling ampuh untuk mencapai hal ini. Bayangkan seperti mengubah ruang yang rumit menjadi ruang yang lebih teratur dimana setiap dimensi tidak saling mengganggu.
+
+Tujuan utama diagonalisasi adalah mencari basis khusus sehingga transformasi linear <InlineMath math="y = A \cdot x" /> dapat direpresentasikan melalui matriks diagonal <InlineMath math="B = S^{-1} \cdot A \cdot S" />. Jika basis tersebut adalah basis ortonormal, maka matriks transformasi memiliki sifat <InlineMath math="S^{-1} = S^T" />.
+
+## Definisi Diagonalisasi
+
+Sebuah matriks <InlineMath math="A \in \mathbb{K}^{n \times n}" /> disebut **dapat didiagonalisasi** jika matriks tersebut serupa dengan suatu matriks diagonal <InlineMath math="\Lambda \in \mathbb{K}^{n \times n}" />, yaitu jika terdapat matriks yang dapat dibalik <InlineMath math="S \in \mathbb{K}^{n \times n}" /> sedemikian sehingga:
+
+<BlockMath math="\Lambda = S^{-1} \cdot A \cdot S" />
+
+## Kondisi Dasar Diagonalisasi
+
+Kapan sebuah matriks <InlineMath math="A \in \mathbb{K}^{n \times n}" /> bisa didiagonalisasi? Jawabannya adalah ketika kita bisa menemukan basis dari <InlineMath math="\mathbb{K}^n" /> yang seluruhnya terdiri dari vektor eigen <InlineMath math="v_1, \ldots, v_n \in \mathbb{K}^n" /> dari <InlineMath math="A" /> dengan nilai eigen yang berkaitan <InlineMath math="\lambda_1, \ldots, \lambda_n \in \mathbb{K}" />.
+
+Matriks diagonal <InlineMath math="\Lambda" /> adalah:
+
+<BlockMath math="\Lambda = \begin{pmatrix} \lambda_1 & & \\ & \ddots & \\ & & \lambda_n \end{pmatrix} = \text{diag}(\lambda_1, \ldots, \lambda_n)" />
+
+dan <InlineMath math="S" /> adalah matriks dengan kolom:
+
+<BlockMath math="S = (v_1 \quad \ldots \quad v_n)" />
+
+Jika <InlineMath math="A" /> dapat didiagonalisasi, maka kolom <InlineMath math="v_1, \ldots, v_n" /> dari <InlineMath math="S" /> membentuk basis vektor eigen. Dari <InlineMath math="\Lambda = S^{-1} \cdot A \cdot S" /> kita peroleh <InlineMath math="A \cdot S = S \cdot \Lambda" /> dan dengan demikian <InlineMath math="A \cdot v_i = \lambda_i \cdot v_i" /> untuk <InlineMath math="i = 1, \ldots, n" />.
+
+Sebaliknya, jika <InlineMath math="v_1, \ldots, v_n" /> adalah basis vektor eigen, maka <InlineMath math="S" /> dapat dibalik dan dari <InlineMath math="A \cdot v_i = \lambda_i \cdot v_i" /> untuk <InlineMath math="i = 1, \ldots, n" /> kita peroleh <InlineMath math="A \cdot S = S \cdot \Lambda" /> dan dengan demikian <InlineMath math="\Lambda = S^{-1} \cdot A \cdot S" />.
+
+## Contoh Kasus Non-Diagonalisasi
+
+Perhatikan matriks:
+
+<BlockMath math="A = \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}" />
+
+Matriks ini memiliki nilai eigen <InlineMath math="\lambda = 1" /> dengan multiplisitas aljabar <InlineMath math="\mu_A(1) = 2" />. Ruang eigen adalah kernel (ruang nol) dari <InlineMath math="A - 1 \cdot I" />:
+
+<MathContainer>
+<BlockMath math="\text{Eig}_A(1) = \text{Kern}(A - 1 \cdot I)" />
+<BlockMath math="= \text{Kern}\begin{pmatrix} 0 & 2 \\ 0 & 0 \end{pmatrix}" />
+<BlockMath math="= \text{Span}\begin{pmatrix} 1 \\ 0 \end{pmatrix}" />
+</MathContainer>
+
+yang memiliki dimensi 1. Karena tidak ada nilai eigen dan vektor eigen lain, dan tidak terdapat basis <InlineMath math="\mathbb{K}^2" /> dari vektor eigen <InlineMath math="A" />, maka <InlineMath math="A" /> tidak dapat didiagonalisasi.
+
+## Syarat Diagonalisasi Matriks
+
+Jika matriks <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dapat didiagonalisasi, maka polinomial karakteristik <InlineMath math="\chi_A(t)" /> dari <InlineMath math="A" /> dalam <InlineMath math="\mathbb{K}" /> terurai menjadi faktor linear:
+
+<BlockMath math="\chi_A(t) = (\lambda_1 - t) \cdots (\lambda_n - t)" />
+
+dimana <InlineMath math="A" /> memiliki <InlineMath math="n" /> nilai eigen yang tidak perlu berbeda <InlineMath math="\lambda_i \in \mathbb{K}" />.
+
+Ketika semua nilai eigen berbeda, prosesnya menjadi lebih sederhana. Jika <InlineMath math="A \in \mathbb{K}^{n \times n}" /> dan polinomial karakteristik <InlineMath math="\chi_A(t)" /> dari <InlineMath math="A" /> dalam <InlineMath math="\mathbb{K}" /> terurai menjadi faktor linear:
+
+<BlockMath math="\chi_A(t) = (\lambda_1 - t) \cdots (\lambda_n - t)" />
+
+dengan nilai eigen yang berbeda secara berpasangan <InlineMath math="\lambda_i \neq \lambda_j" /> untuk <InlineMath math="i \neq j" /> dengan <InlineMath math="i, j \in \{1, \ldots, n\}" />, maka <InlineMath math="A" /> pasti dapat didiagonalisasi.
+
+Mengapa begitu? Karena vektor eigen untuk nilai eigen yang berbeda secara berpasangan dari <InlineMath math="A" /> selalu bebas linear dan membentuk basis dari <InlineMath math="\mathbb{K}^n" />.
+
+Tapi bagaimana kalau <InlineMath math="A" /> memiliki nilai eigen berulang? Kita harus lebih hati-hati mengeceknya. Nilai eigen memiliki multiplisitas aljabar <InlineMath math="\mu_A(\lambda_i)" /> dan multiplisitas geometris <InlineMath math="\dim \text{Eig}_A(\lambda_i)" /> dengan hubungan:
+
+<BlockMath math="\dim \text{Eig}_A(\lambda_i) \leq \mu_A(\lambda_i)" />
+
+## Teorema Karakterisasi Diagonalisasi
+
+Untuk matriks <InlineMath math="A \in \mathbb{K}^{n \times n}" />, pernyataan berikut adalah ekuivalen:
+
+1. <InlineMath math="A" /> dapat didiagonalisasi.
+
+2. Kedua kondisi berikut terpenuhi. Pertama, polinomial karakteristik dari <InlineMath math="A" /> harus terurai dalam faktor linear:
+
+   <BlockMath math="\chi_A(t) = (\lambda_1 - t)^{\mu_A(\lambda_1)} \cdots (\lambda_k - t)^{\mu_A(\lambda_k)}" />
+
+   dengan nilai eigen yang berbeda secara berpasangan <InlineMath math="\lambda_1, \ldots, \lambda_k \in \mathbb{K}" /> dari <InlineMath math="A" />. Kedua, untuk semua nilai eigen dari <InlineMath math="A" />, multiplisitas aljabar harus sama dengan multiplisitas geometris:
+
+   <BlockMath math="\mu_A(\lambda_i) = \dim \text{Eig}_A(\lambda_i) \quad \text{untuk } i = 1, \ldots, k" />
+
+3. Penjumlahan langsung semua ruang eigen adalah seluruh ruang vektor:
+
+   <BlockMath math="\text{Eig}_A(\lambda_1) \oplus \cdots \oplus \text{Eig}_A(\lambda_k) = \mathbb{K}^n" />
+
+   Ini berarti terdapat basis dari <InlineMath math="\mathbb{K}^n" /> yang terdiri dari vektor eigen <InlineMath math="A" />.
+
+Untuk setiap <InlineMath math="i = 1, \ldots, k" />, misalkan <InlineMath math="v_1^{(i)}, \ldots, v_{d_i}^{(i)}" /> adalah basis vektor eigen dari <InlineMath math="A" /> untuk ruang eigen <InlineMath math="\text{Eig}_A(\lambda_i)" />. Maka:
+
+<BlockMath math="v_1^{(1)}, \ldots, v_{d_1}^{(1)}, v_1^{(2)}, \ldots, v_{d_2}^{(2)}, \ldots, v_1^{(k)}, \ldots, v_{d_k}^{(k)}" />
+
+adalah basis dari <InlineMath math="\mathbb{K}^n" /> yang terdiri dari vektor eigen <InlineMath math="A" />. Oleh karena itu, <InlineMath math="A" /> dapat didiagonalisasi.
