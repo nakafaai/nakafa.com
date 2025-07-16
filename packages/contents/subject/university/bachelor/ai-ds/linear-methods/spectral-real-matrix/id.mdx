@@ -1,0 +1,57 @@
+export const metadata = {
+    title: "Teorema Spektral untuk Matriks Nyata",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/16/2025",
+    subject: "Metode Linear AI",
+};
+
+## Kondisi Ekuivalen Teorema
+
+Untuk matriks nyata <InlineMath math="A \in \mathbb{R}^{n \times n}" />, dua kondisi berikut ini ekuivalen satu sama lain.
+
+1. Terdapat basis ortonormal dari <InlineMath math="\mathbb{R}^n" /> yang terdiri dari vektor eigen matriks <InlineMath math="A" />
+
+2. Matriks <InlineMath math="A" /> normal dan polinomial karakteristik <InlineMath math="\chi_A(t)" /> dari <InlineMath math="A" /> terurai di <InlineMath math="\mathbb{R}" /> menjadi faktor linear
+
+Perbedaan utama dengan kasus [matriks kompleks](/subject/university/bachelor/ai-ds/linear-methods/spectral-complex-matrix) terletak pada syarat tambahan tentang faktorisasi polinomial karakteristik. Dalam bilangan nyata, semua akar polinomial karakteristik harus berupa bilangan nyata.
+
+Berdasarkan teorema ini, beberapa jenis matriks dapat didiagonalisasi menggunakan basis ortonormal dari vektor eigen. Matriks hermitian kompleks, matriks kesatuan kompleks, dan matriks simetris nyata selalu memenuhi kondisi ini. Matriks ortogonal dapat didiagonalisasi secara ortogonal hanya jika polinomial karakteristiknya terurai dalam faktor linear di bilangan nyata.
+
+## Matriks Normal tanpa Basis Ortonormal
+
+Perhatikan matriks rotasi untuk sudut <InlineMath math="\alpha" /> yang bukan kelipatan <InlineMath math="\pi" />.
+
+<BlockMath math="A = \begin{pmatrix} \cos(\alpha) & -\sin(\alpha) \\ \sin(\alpha) & \cos(\alpha) \end{pmatrix}" />
+
+Matriks ini ortogonal sehingga otomatis normal. Namun polinomial karakteristiknya
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = (\cos(\alpha) - t)^2 + \sin^2(\alpha)" />
+<BlockMath math="= -t^2 + 2\cos(\alpha) \cdot t + 1" />
+</MathContainer>
+
+tidak terurai menjadi faktor linear di bilangan nyata untuk sebagian besar nilai <InlineMath math="\alpha" />. Bayangkan seperti mencari solusi persamaan kuadrat yang tidak memiliki akar nyata. Akibatnya, meskipun matriks normal, tidak terdapat basis ortonormal dari vektor eigen nyata.
+
+## Matriks Non-Normal yang Didiagonalisasi
+
+Matriks berikut memiliki nilai eigen <InlineMath math="\lambda_1 = 1" /> dan <InlineMath math="\lambda_2 = 2" /> dengan multiplisitas aljabar masing-masing 1.
+
+<BlockMath math="A = \begin{pmatrix} 1 & 3 \\ 0 & 2 \end{pmatrix}" />
+
+Karena nilai eigen berbeda, matriks dapat didiagonalisasi. Namun matriks ini tidak normal karena
+
+<MathContainer>
+<BlockMath math="A \cdot A^T = \begin{pmatrix} 10 & 6 \\ 6 & 4 \end{pmatrix}" />
+<BlockMath math="A^T \cdot A = \begin{pmatrix} 1 & 3 \\ 3 & 13 \end{pmatrix}" />
+</MathContainer>
+
+Kedua matriks ini tidak sama, sehingga <InlineMath math="A \cdot A^T \neq A^T \cdot A" />.
+
+Ruang eigen dari matriks ini adalah
+
+<MathContainer>
+<BlockMath math="\text{Eig}_A(1) = \text{Kern}(A - I) = \text{Kern}\begin{pmatrix} 0 & 3 \\ 0 & 1 \end{pmatrix} = \text{rentang}\begin{pmatrix} 1 \\ 0 \end{pmatrix}" />
+<BlockMath math="\text{Eig}_A(2) = \text{Kern}(A - 2I) = \text{Kern}\begin{pmatrix} -1 & 3 \\ 0 & 0 \end{pmatrix} = \text{rentang}\begin{pmatrix} 3 \\ 1 \end{pmatrix}" />
+</MathContainer>
+
+Di sini kernel (ruang nol) adalah himpunan semua vektor yang dipetakan ke vektor nol oleh matriks, sedangkan rentang adalah himpunan semua kombinasi linear dari vektor tersebut. Meskipun matriks dapat didiagonalisasi, tidak terdapat basis ortonormal dari vektor eigen karena vektor eigen tidak ortogonal satu sama lain.

@@ -1,0 +1,57 @@
+export const metadata = {
+    title: "Spectral Theorem for Real Matrices",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/16/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Equivalent Conditions of the Theorem
+
+For a real matrix <InlineMath math="A \in \mathbb{R}^{n \times n}" />, the following two conditions are equivalent to each other.
+
+1. There exists an orthonormal basis of <InlineMath math="\mathbb{R}^n" /> consisting of eigenvectors of matrix <InlineMath math="A" />
+
+2. Matrix <InlineMath math="A" /> is normal and the characteristic polynomial <InlineMath math="\chi_A(t)" /> of <InlineMath math="A" /> factors into linear factors in <InlineMath math="\mathbb{R}" />
+
+The main difference from the case of [complex matrices](/subject/university/bachelor/ai-ds/linear-methods/spectral-complex-matrix) lies in the additional requirement about the factorization of the characteristic polynomial. In real numbers, all roots of the characteristic polynomial must be real numbers.
+
+Based on this theorem, several types of matrices can be diagonalized using an orthonormal basis of eigenvectors. Complex Hermitian matrices, complex unitary matrices, and real symmetric matrices always satisfy this condition. Orthogonal matrices can be orthogonally diagonalized only if their characteristic polynomial factors into linear factors in real numbers.
+
+## Normal Matrix without Orthonormal Basis
+
+Consider a rotation matrix for angle <InlineMath math="\alpha" /> that is not a multiple of <InlineMath math="\pi" />.
+
+<BlockMath math="A = \begin{pmatrix} \cos(\alpha) & -\sin(\alpha) \\ \sin(\alpha) & \cos(\alpha) \end{pmatrix}" />
+
+This matrix is orthogonal and therefore automatically normal. However, its characteristic polynomial
+
+<MathContainer>
+<BlockMath math="\chi_A(t) = (\cos(\alpha) - t)^2 + \sin^2(\alpha)" />
+<BlockMath math="= -t^2 + 2\cos(\alpha) \cdot t + 1" />
+</MathContainer>
+
+does not factor into linear factors in real numbers for most values of <InlineMath math="\alpha" />. Imagine searching for solutions to a quadratic equation that has no real roots. As a result, even though the matrix is normal, there is no orthonormal basis of real eigenvectors.
+
+## Non-Normal Matrix that is Diagonalizable
+
+The following matrix has eigenvalues <InlineMath math="\lambda_1 = 1" /> and <InlineMath math="\lambda_2 = 2" /> with algebraic multiplicity 1 each.
+
+<BlockMath math="A = \begin{pmatrix} 1 & 3 \\ 0 & 2 \end{pmatrix}" />
+
+Since the eigenvalues are different, the matrix can be diagonalized. However, this matrix is not normal because
+
+<MathContainer>
+<BlockMath math="A \cdot A^T = \begin{pmatrix} 10 & 6 \\ 6 & 4 \end{pmatrix}" />
+<BlockMath math="A^T \cdot A = \begin{pmatrix} 1 & 3 \\ 3 & 13 \end{pmatrix}" />
+</MathContainer>
+
+These two matrices are not equal, so <InlineMath math="A \cdot A^T \neq A^T \cdot A" />.
+
+The eigenspaces of this matrix are
+
+<MathContainer>
+<BlockMath math="\text{Eig}_A(1) = \text{Kern}(A - I) = \text{Kern}\begin{pmatrix} 0 & 3 \\ 0 & 1 \end{pmatrix} = \text{span}\begin{pmatrix} 1 \\ 0 \end{pmatrix}" />
+<BlockMath math="\text{Eig}_A(2) = \text{Kern}(A - 2I) = \text{Kern}\begin{pmatrix} -1 & 3 \\ 0 & 0 \end{pmatrix} = \text{span}\begin{pmatrix} 3 \\ 1 \end{pmatrix}" />
+</MathContainer>
+
+Here the kernel (null space) is the set of all vectors that are mapped to the zero vector by the matrix, while the span is the set of all linear combinations of that vector. Although the matrix can be diagonalized, there is no orthonormal basis of eigenvectors because the eigenvectors are not orthogonal to each other.
