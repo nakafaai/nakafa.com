@@ -1,0 +1,76 @@
+export const metadata = {
+    title: "Prosedur Dasar untuk Diagonalisasi",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/16/2025",
+    subject: "Metode Linear AI",
+};
+
+## Prosedur Umum Diagonalisasi Matriks
+
+Bayangkan kamu sedang mencoba mengatur ulang sebuah ruang yang berantakan menjadi teratur. Diagonalisasi matriks mirip seperti itu, kita mengubah matriks yang kompleks menjadi bentuk diagonal yang jauh lebih sederhana untuk dianalisis.
+
+Untuk mendiagonalisasi sebuah matriks <InlineMath math="A \in \mathbb{K}^{n \times n}" />, kita menggunakan prosedur sistematis yang akan menentukan apakah matriks tersebut dapat disederhanakan dan bagaimana caranya.
+
+## Langkah-Langkah Diagonalisasi
+
+Prosedur diagonalisasi terdiri dari tiga langkah utama yang harus dilakukan secara berurutan:
+
+1. **Menghitung polinomial karakteristik** untuk mencari semua nilai eigen <InlineMath math="\lambda_1, \ldots, \lambda_k \in \mathbb{K}" /> beserta multiplisitas aljabarnya <InlineMath math="\mu_A(\lambda_1), \ldots, \mu_A(\lambda_k)" />. 
+
+   Langkah ini seperti mencari "kunci-kunci" yang akan membuka struktur tersembunyi matriks. Syarat mutlak yang harus dipenuhi adalah polinomial karakteristik <InlineMath math="\chi_A(t)" /> harus terurai sepenuhnya dalam faktor linear, artinya:
+
+   <BlockMath math="\sum_{i=1}^k \mu_A(\lambda_i) = n" />
+
+   Jika tidak, maka matriks tidak dapat didiagonalisasi sama sekali.
+
+2. **Menghitung ruang eigen** untuk setiap nilai eigen dengan menyelesaikan sistem persamaan linear homogen:
+
+   <BlockMath math="(A - \lambda_i \cdot I) \cdot v = 0" />
+
+   Di sini kita mencari semua vektor yang "bertahan" ketika matriks <InlineMath math="A" /> bekerja padanya, hanya mengubah panjangnya sebesar faktor <InlineMath math="\lambda_i" /> tanpa mengubah arahnya.
+
+3. **Memeriksa kondisi diagonalisasi** dengan memverifikasi apakah multiplisitas aljabar sama dengan multiplisitas geometris untuk semua nilai eigen. Secara matematis, untuk semua <InlineMath math="i = 1, \ldots, k" /> harus berlaku <InlineMath math="\mu_A(\lambda_i) = \dim \text{Eig}_A(\lambda_i)" />.
+
+   Kondisi ini memastikan kita memiliki cukup vektor eigen independen untuk membentuk basis lengkap. Jika terpenuhi, vektor basis dari semua ruang eigen membentuk kolom matriks transformasi <InlineMath math="S" />, menghasilkan:
+
+   <BlockMath math="\Lambda = S^{-1} \cdot A \cdot S" />
+
+## Contoh Aplikasi Prosedur
+
+Perhatikan matriks:
+
+<BlockMath math="A = \begin{pmatrix} 0 & -1 & 1 \\ -3 & -2 & 3 \\ -2 & -2 & 3 \end{pmatrix}" />
+
+Mari kita terapkan prosedur diagonalisasi pada contoh konkret ini:
+
+1. Kita hitung polinomial karakteristik untuk menemukan "kunci-kunci" nilai eigen:
+
+   <BlockMath math="\chi_A(t) = \det(A - t \cdot I) = -t^3 + t^2 + t - 1" />
+
+   Setelah difaktorkan, kita peroleh:
+
+   <BlockMath math="\chi_A(t) = (1 - t)^2 \cdot (-1 - t)" />
+
+   Dari sini terlihat bahwa nilai eigen adalah <InlineMath math="\lambda_1 = 1" /> dengan multiplisitas aljabar <InlineMath math="\mu_A(1) = 2" /> dan <InlineMath math="\lambda_2 = -1" /> dengan multiplisitas aljabar <InlineMath math="\mu_A(-1) = 1" />. Karena <InlineMath math="2 + 1 = 3" /> sama dengan dimensi matriks, syarat awal terpenuhi.
+
+2. Kita cari semua vektor yang "bertahan" terhadap transformasi untuk setiap nilai eigen:
+
+   <MathContainer>
+   <BlockMath math="\text{Eig}_A(1) = \text{Kern}(A - I) = \text{Span}\left\{\begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix}, \begin{pmatrix} 0 \\ 1 \\ 1 \end{pmatrix}\right\}" />
+   <BlockMath math="\text{Eig}_A(-1) = \text{Kern}(A + I) = \text{Span}\begin{pmatrix} 1 \\ 3 \\ 2 \end{pmatrix}" />
+   </MathContainer>
+
+3. Kita periksa apakah kondisi diagonalisasi terpenuhi. Untuk nilai eigen <InlineMath math="\lambda_1 = 1" />, multiplisitas aljabarnya adalah 2 dan ruang eigennya memiliki dimensi 2 (dua vektor basis independen). Untuk nilai eigen <InlineMath math="\lambda_2 = -1" />, multiplisitas aljabarnya adalah 1 dan ruang eigennya memiliki dimensi 1.
+
+   Karena <InlineMath math="\mu_A(1) = 2 = \dim \text{Eig}_A(1)" /> dan <InlineMath math="\mu_A(-1) = 1 = \dim \text{Eig}_A(-1)" />, kondisi diagonalisasi terpenuhi sepenuhnya.
+
+Sekarang kita dapat membentuk matriks transformasi <InlineMath math="S" /> dengan menyusun semua vektor eigen sebagai kolom, dan matriks diagonal <InlineMath math="\Lambda" /> dengan nilai eigen di diagonal utama:
+
+<MathContainer>
+<BlockMath math="S = \begin{pmatrix} 1 & 0 & 1 \\ 0 & 1 & 3 \\ 1 & 1 & 2 \end{pmatrix}" />
+<BlockMath math="\Lambda = \begin{pmatrix} 1 & & \\ & 1 & \\ & & -1 \end{pmatrix}" />
+</MathContainer>
+
+Dengan demikian, matriks <InlineMath math="A" /> berhasil didiagonalisasi menjadi <InlineMath math="\Lambda" /> melalui transformasi <InlineMath math="\Lambda = S^{-1} \cdot A \cdot S" />.
+
+Diagonalisasi berarti terdapat basis vektor eigen, dimana matriks transformasi basis <InlineMath math="S" /> dapat dibalik. Hasil ini menunjukkan bahwa prosedur sistematis yang kita gunakan dapat menentukan dengan pasti apakah suatu matriks dapat didiagonalisasi dan bagaimana cara melakukannya.

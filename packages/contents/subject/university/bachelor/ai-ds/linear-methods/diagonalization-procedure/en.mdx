@@ -1,0 +1,76 @@
+export const metadata = {
+    title: "Basic Procedure for Diagonalization",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/16/2025",
+    subject: "Linear Methods of AI",
+};
+
+## General Matrix Diagonalization Procedure
+
+Imagine you are trying to rearrange a messy room to make it orderly. Matrix diagonalization is similar to that, we transform a complex matrix into a diagonal form that is much simpler to analyze.
+
+To diagonalize a matrix <InlineMath math="A \in \mathbb{K}^{n \times n}" />, we use a systematic procedure that will determine whether the matrix can be simplified and how to do it.
+
+## Diagonalization Steps
+
+The diagonalization procedure consists of three main steps that must be performed sequentially:
+
+1. **Compute the characteristic polynomial** to find all eigenvalues <InlineMath math="\lambda_1, \ldots, \lambda_k \in \mathbb{K}" /> along with their algebraic multiplicities <InlineMath math="\mu_A(\lambda_1), \ldots, \mu_A(\lambda_k)" />. 
+
+   This step is like finding the "keys" that will unlock the hidden structure of the matrix. The absolute requirement that must be satisfied is that the characteristic polynomial <InlineMath math="\chi_A(t)" /> must factor completely into linear factors, meaning:
+
+   <BlockMath math="\sum_{i=1}^k \mu_A(\lambda_i) = n" />
+
+   If not, then the matrix cannot be diagonalized at all.
+
+2. **Compute the eigenspaces** for each eigenvalue by solving the homogeneous linear system:
+
+   <BlockMath math="(A - \lambda_i \cdot I) \cdot v = 0" />
+
+   Here we look for all vectors that "survive" when the matrix <InlineMath math="A" /> acts on them, only changing their length by a factor of <InlineMath math="\lambda_i" /> without changing their direction.
+
+3. **Check the diagonalization conditions** by verifying whether the algebraic multiplicity equals the geometric multiplicity for all eigenvalues. Mathematically, for all <InlineMath math="i = 1, \ldots, k" /> we must have <InlineMath math="\mu_A(\lambda_i) = \dim \text{Eig}_A(\lambda_i)" />.
+
+   This condition ensures that we have enough independent eigenvectors to form a complete basis. If satisfied, the basis vectors from all eigenspaces form the columns of the transformation matrix <InlineMath math="S" />, yielding:
+
+   <BlockMath math="\Lambda = S^{-1} \cdot A \cdot S" />
+
+## Example Application of the Procedure
+
+Consider the matrix:
+
+<BlockMath math="A = \begin{pmatrix} 0 & -1 & 1 \\ -3 & -2 & 3 \\ -2 & -2 & 3 \end{pmatrix}" />
+
+Let us apply the diagonalization procedure to this concrete example:
+
+1. We compute the characteristic polynomial to find the eigenvalue "keys":
+
+   <BlockMath math="\chi_A(t) = \det(A - t \cdot I) = -t^3 + t^2 + t - 1" />
+
+   After factoring, we obtain:
+
+   <BlockMath math="\chi_A(t) = (1 - t)^2 \cdot (-1 - t)" />
+
+   From this we see that the eigenvalues are <InlineMath math="\lambda_1 = 1" /> with algebraic multiplicity <InlineMath math="\mu_A(1) = 2" /> and <InlineMath math="\lambda_2 = -1" /> with algebraic multiplicity <InlineMath math="\mu_A(-1) = 1" />. Since <InlineMath math="2 + 1 = 3" /> equals the matrix dimension, the initial requirement is satisfied.
+
+2. We find all vectors that "survive" the transformation for each eigenvalue:
+
+   <MathContainer>
+   <BlockMath math="\text{Eig}_A(1) = \text{Kern}(A - I) = \text{Span}\left\{\begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix}, \begin{pmatrix} 0 \\ 1 \\ 1 \end{pmatrix}\right\}" />
+   <BlockMath math="\text{Eig}_A(-1) = \text{Kern}(A + I) = \text{Span}\begin{pmatrix} 1 \\ 3 \\ 2 \end{pmatrix}" />
+   </MathContainer>
+
+3. We check whether the diagonalization conditions are satisfied. For eigenvalue <InlineMath math="\lambda_1 = 1" />, its algebraic multiplicity is 2 and its eigenspace has dimension 2 (two independent basis vectors). For eigenvalue <InlineMath math="\lambda_2 = -1" />, its algebraic multiplicity is 1 and its eigenspace has dimension 1.
+
+   Since <InlineMath math="\mu_A(1) = 2 = \dim \text{Eig}_A(1)" /> and <InlineMath math="\mu_A(-1) = 1 = \dim \text{Eig}_A(-1)" />, the diagonalization conditions are completely satisfied.
+
+Now we can form the transformation matrix <InlineMath math="S" /> by arranging all eigenvectors as columns, and the diagonal matrix <InlineMath math="\Lambda" /> with eigenvalues on the main diagonal:
+
+<MathContainer>
+<BlockMath math="S = \begin{pmatrix} 1 & 0 & 1 \\ 0 & 1 & 3 \\ 1 & 1 & 2 \end{pmatrix}" />
+<BlockMath math="\Lambda = \begin{pmatrix} 1 & & \\ & 1 & \\ & & -1 \end{pmatrix}" />
+</MathContainer>
+
+Thus, the matrix <InlineMath math="A" /> is successfully diagonalized to <InlineMath math="\Lambda" /> through the transformation <InlineMath math="\Lambda = S^{-1} \cdot A \cdot S" />.
+
+Diagonalization means there exists a basis of eigenvectors, where the basis transformation matrix <InlineMath math="S" /> is invertible. This result shows that the systematic procedure we use can definitively determine whether a matrix can be diagonalized and how to do it.
