@@ -38,6 +38,7 @@ export async function debugDir() {
     dirName: __dirname,
     contentsDir,
     pathResolve: path.resolve(contentsDir, contentPath),
+    pathRelative: path.relative(contentsDir, contentPath),
 
     // tes to get the content
     content,

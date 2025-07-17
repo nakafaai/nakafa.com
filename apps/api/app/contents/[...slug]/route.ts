@@ -1,44 +1,45 @@
 import {
   getContents,
-  getFolderChildNames,
-  getNestedSlugs,
+  // getFolderChildNames,
+  // getNestedSlugs,
 } from "@repo/contents/_lib/utils";
-import { routing } from "@repo/internationalization/src/routing";
+// import { routing } from "@repo/internationalization/src/routing";
 import { NextResponse } from "next/server";
 
-export function generateStaticParams() {
-  // Top level directories in contents
-  const topDirs = getFolderChildNames(".");
-  const result: { slug: string[] }[] = [];
-  const locales = routing.locales;
+// TODO: Uncomment when testing is done
+// export function generateStaticParams() {
+//   // Top level directories in contents
+//   const topDirs = getFolderChildNames(".");
+//   const result: { slug: string[] }[] = [];
+//   const locales = routing.locales;
 
-  // For each locale
-  for (const locale of locales) {
-    result.push({
-      slug: [locale],
-    });
+//   // For each locale
+//   for (const locale of locales) {
+//     result.push({
+//       slug: [locale],
+//     });
 
-    // For each top directory (articles, subject, etc)
-    for (const topDir of topDirs) {
-      // Get all nested paths starting from this folder
-      const nestedPaths = getNestedSlugs(topDir);
+//     // For each top directory (articles, subject, etc)
+//     for (const topDir of topDirs) {
+//       // Get all nested paths starting from this folder
+//       const nestedPaths = getNestedSlugs(topDir);
 
-      // Add the top-level folder itself
-      result.push({
-        slug: [locale, topDir],
-      });
+//       // Add the top-level folder itself
+//       result.push({
+//         slug: [locale, topDir],
+//       });
 
-      // Add each nested path
-      for (const path of nestedPaths) {
-        result.push({
-          slug: [locale, topDir, ...path],
-        });
-      }
-    }
-  }
+//       // Add each nested path
+//       for (const path of nestedPaths) {
+//         result.push({
+//           slug: [locale, topDir, ...path],
+//         });
+//       }
+//     }
+//   }
 
-  return result;
-}
+//   return result;
+// }
 
 export async function GET(
   _req: Request,
