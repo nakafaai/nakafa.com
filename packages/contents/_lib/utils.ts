@@ -13,7 +13,32 @@ import type { ComponentType } from "react";
 // Get the directory where this file is located and resolve to contents directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const contentsDir = path.resolve(__dirname, "..");
+
+// Use a more robust approach that works in both dev and production
+const contentsDir = (() => {
+  // First try the relative approach from current file location
+  const relativePath = path.resolve(__dirname, "..");
+  if (fs.existsSync(relativePath)) {
+    return relativePath;
+  }
+
+  // Fallback: use process.cwd() and look for packages/contents
+  const cwd = process.cwd();
+  const cwdContents = path.join(cwd, "packages", "contents");
+  if (fs.existsSync(cwdContents)) {
+    return cwdContents;
+  }
+
+  // Last resort: try from workspace root (for monorepo setups)
+  const workspaceRoot = path.resolve(cwd, "..", "..");
+  const workspaceContents = path.join(workspaceRoot, "packages", "contents");
+  if (fs.existsSync(workspaceContents)) {
+    return workspaceContents;
+  }
+
+  // If all else fails, return the original relative path
+  return relativePath;
+})();
 
 export async function debugDir() {
   const contentPath =
@@ -35,20 +60,39 @@ export async function debugDir() {
 
   const pathResolve = path.resolve(contentsDir, contentPath);
   const pathRelative = path.relative(contentsDir, contentPath);
+  const filePath = path.join(process.cwd(), contentPath);
+
+  // Additional debugging paths
+  const cwd = process.cwd();
+  const cwdContents = path.join(cwd, "packages", "contents");
+  const alternativePath = path.join(cwdContents, contentPath);
 
   const data = {
+    // Environment info
+    nodeEnv: process.env.NODE_ENV,
+    platform: process.platform,
+    cwd,
+
+    // File paths
     fileName: __filename,
     dirName: __dirname,
     contentsDir,
     pathResolve,
     pathRelative,
+    filePath,
+    cwdContents,
+    alternativePath,
+
+    // Existence checks
     isFileNameExists: fs.existsSync(__filename),
     isDirNameExists: fs.existsSync(__dirname),
     isContentsDirExists: fs.existsSync(contentsDir),
     isPathExists: fs.existsSync(pathResolve),
     isPathExistsRelative: fs.existsSync(pathRelative),
+    isCwdContentsExists: fs.existsSync(cwdContents),
+    isAlternativePathExists: fs.existsSync(alternativePath),
 
-    // tes to get the content
+    // Test to get the content
     content,
     contents,
   };
