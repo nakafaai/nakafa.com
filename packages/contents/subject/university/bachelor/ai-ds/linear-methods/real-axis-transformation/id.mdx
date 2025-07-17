@@ -1,8 +1,8 @@
 export const metadata = {
-    title: "Transformasi Sumbu Nyata",
-    authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "07/16/2025",
-    subject: "Metode Linear AI",
+  title: "Transformasi Sumbu Nyata",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "07/16/2025",
+  subject: "Metode Linear AI",
 };
 
 import { LineEquation } from "@repo/contents/_components/line-equation";
@@ -29,13 +29,13 @@ Untuk transformasi koordinat, kita menggunakan <InlineMath math="\begin{pmatrix}
 Untuk kedua variabel dengan <InlineMath math="\lambda_1, \lambda_2 \neq 0" />, proses melengkapkan kuadrat dilakukan secara terpisah:
 
 <MathContainer>
-<BlockMath math="0 = \lambda_1 \left( \xi_1^2 + 2 \frac{\delta}{2\lambda_1} \xi_1 + \frac{\delta^2}{4\lambda_1^2} \right) - \frac{\delta^2}{4\lambda_1} \\ + \lambda_2 \left( \xi_2^2 + 2 \frac{\epsilon}{2\lambda_2} \xi_2 + \frac{\epsilon^2}{4\lambda_2^2} \right) - \frac{\epsilon^2}{4\lambda_2} + f" />
+<BlockMath math="\begin{aligned} 0 &= \lambda_1 \left( \xi_1^2 + 2 \frac{\delta}{2\lambda_1} \xi_1 + \frac{\delta^2}{4\lambda_1^2} \right) - \frac{\delta^2}{4\lambda_1} \\ &\quad + \lambda_2 \left( \xi_2^2 + 2 \frac{\epsilon}{2\lambda_2} \xi_2 + \frac{\epsilon^2}{4\lambda_2^2} \right) - \frac{\epsilon^2}{4\lambda_2} + f \end{aligned}" />
 </MathContainer>
 
 Hasil dari proses ini memberikan bentuk yang lebih sederhana:
 
 <MathContainer>
-<BlockMath math="= \lambda_1 \left( \xi_1 + \frac{\delta}{2\lambda_1} \right)^2 + \lambda_2 \left( \xi_2 + \frac{\epsilon}{2\lambda_2} \right)^2 \\ + \left( f - \frac{\delta^2}{4\lambda_1} - \frac{\epsilon^2}{4\lambda_2} \right)" />
+<BlockMath math="\begin{aligned} &= \lambda_1 \left( \xi_1 + \frac{\delta}{2\lambda_1} \right)^2 + \lambda_2 \left( \xi_2 + \frac{\epsilon}{2\lambda_2} \right)^2 \\ &\quad + \left( f - \frac{\delta^2}{4\lambda_1} - \frac{\epsilon^2}{4\lambda_2} \right) \end{aligned}" />
 </MathContainer>
 
 Dengan menentukan titik pusat <InlineMath math="(m_1, m_2) = \left( -\frac{\delta}{2\lambda_1}, -\frac{\epsilon}{2\lambda_2} \right)" /> dan konstanta <InlineMath math="\gamma = \frac{\delta^2}{4\lambda_1} + \frac{\epsilon^2}{4\lambda_2} - f" />, kita memperoleh:

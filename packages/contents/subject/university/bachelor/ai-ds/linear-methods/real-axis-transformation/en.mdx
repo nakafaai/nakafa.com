@@ -1,8 +1,8 @@
 export const metadata = {
-    title: "Real Axis Transformation",
-    authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "07/16/2025",
-    subject: "Linear Methods of AI",
+  title: "Real Axis Transformation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "07/16/2025",
+  subject: "Linear Methods of AI",
 };
 
 import { LineEquation } from "@repo/contents/_components/line-equation";
@@ -29,13 +29,13 @@ For coordinate transformation, we use <InlineMath math="\begin{pmatrix} \delta \
 For both variables with <InlineMath math="\lambda_1, \lambda_2 \neq 0" />, the completing the square process is performed separately:
 
 <MathContainer>
-<BlockMath math="0 = \lambda_1 \left( \xi_1^2 + 2 \frac{\delta}{2\lambda_1} \xi_1 + \frac{\delta^2}{4\lambda_1^2} \right) - \frac{\delta^2}{4\lambda_1} \\ + \lambda_2 \left( \xi_2^2 + 2 \frac{\epsilon}{2\lambda_2} \xi_2 + \frac{\epsilon^2}{4\lambda_2^2} \right) - \frac{\epsilon^2}{4\lambda_2} + f" />
+<BlockMath math="\begin{aligned} 0 &= \lambda_1 \left( \xi_1^2 + 2 \frac{\delta}{2\lambda_1} \xi_1 + \frac{\delta^2}{4\lambda_1^2} \right) - \frac{\delta^2}{4\lambda_1} \\ &\quad + \lambda_2 \left( \xi_2^2 + 2 \frac{\epsilon}{2\lambda_2} \xi_2 + \frac{\epsilon^2}{4\lambda_2^2} \right) - \frac{\epsilon^2}{4\lambda_2} + f \end{aligned}" />
 </MathContainer>
 
 The result of this process gives a simpler form:
 
 <MathContainer>
-<BlockMath math="= \lambda_1 \left( \xi_1 + \frac{\delta}{2\lambda_1} \right)^2 + \lambda_2 \left( \xi_2 + \frac{\epsilon}{2\lambda_2} \right)^2 \\ + \left( f - \frac{\delta^2}{4\lambda_1} - \frac{\epsilon^2}{4\lambda_2} \right)" />
+<BlockMath math="\begin{aligned} &= \lambda_1 \left( \xi_1 + \frac{\delta}{2\lambda_1} \right)^2 + \lambda_2 \left( \xi_2 + \frac{\epsilon}{2\lambda_2} \right)^2 \\ &\quad + \left( f - \frac{\delta^2}{4\lambda_1} - \frac{\epsilon^2}{4\lambda_2} \right) \end{aligned}" />
 </MathContainer>
 
 By determining the center point <InlineMath math="(m_1, m_2) = \left( -\frac{\delta}{2\lambda_1}, -\frac{\epsilon}{2\lambda_2} \right)" /> and the constant <InlineMath math="\gamma = \frac{\delta^2}{4\lambda_1} + \frac{\epsilon^2}{4\lambda_2} - f" />, we obtain:
