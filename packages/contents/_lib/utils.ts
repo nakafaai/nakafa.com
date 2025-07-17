@@ -19,7 +19,7 @@ export async function debugDir() {
   const contentPath =
     "subject/university/bachelor/ai-ds/linear-methods/determinant-calculation";
   const content = await getContent("en", contentPath)
-    .then((c) => c?.metadata)
+    .then((c) => c?.raw.slice(0, 100))
     .catch((e) => {
       return e;
     });
@@ -28,7 +28,7 @@ export async function debugDir() {
     locale: "en",
     basePath: contentPath,
   })
-    .then((c) => c?.map((item) => item.metadata))
+    .then((c) => c?.map((item) => item.raw.slice(0, 100)))
     .catch((e) => {
       return e;
     });
