@@ -63,7 +63,7 @@ export async function debugDir() {
   // const filePath = path.join(process.cwd(), contentPath);
 
   // Additional debugging paths
-  // const cwd = process.cwd();
+  const cwd = process.cwd();
   // const cwdContents = path.join(cwd, "packages", "contents");
   // const alternativePath = path.join(cwdContents, contentPath);
 
@@ -74,7 +74,12 @@ export async function debugDir() {
   const chapterDir = path.resolve(materialDir, "linear-methods");
   const subChapterDir = path.resolve(chapterDir, "determinant-calculation");
 
-  // see children of categoryDir
+  const contentsChildren = fs.existsSync(contentsDir)
+    ? fs.readdirSync(contentsDir, { withFileTypes: true })
+    : [];
+  const subjectChildren = fs.existsSync(subjectDir)
+    ? fs.readdirSync(subjectDir, { withFileTypes: true })
+    : [];
   const categoryChildren = fs.existsSync(categoryDir)
     ? fs.readdirSync(categoryDir, { withFileTypes: true })
     : [];
@@ -95,7 +100,7 @@ export async function debugDir() {
     // Environment info
     nodeEnv: process.env.NODE_ENV,
     platform: process.platform,
-    // cwd,
+    cwd,
 
     // File paths
     // fileName: __filename,
@@ -107,6 +112,8 @@ export async function debugDir() {
     materialDir,
     chapterDir,
     subChapterDir,
+    contentsChildren,
+    subjectChildren,
     categoryChildren,
     gradeChildren,
     materialChildren,
