@@ -15,11 +15,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const contentsDir = path.resolve(__dirname, "..");
 
-export function debugDir() {
+export async function debugDir() {
   const data = {
     fileName: __filename,
     dirName: __dirname,
     contentsDir,
+
+    // tes to get the content
+    content: await getContent(
+      "en",
+      "subject/university/bachelor/ai-ds/linear-methods/determinant-calculation"
+    ).then((content) => content?.metadata),
   };
 
   return data;
