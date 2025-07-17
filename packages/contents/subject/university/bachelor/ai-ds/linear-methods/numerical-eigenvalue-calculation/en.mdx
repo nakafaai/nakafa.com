@@ -1,0 +1,28 @@
+export const metadata = {
+    title: "Numerical Calculation of Eigenvalues",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/17/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Iterative Algorithms for Eigenvalues
+
+Numerical calculation of eigenvalues and eigenvectors uses a different approach from classical methods. Traditional methods typically find zeros of the characteristic polynomial, but in numerical computation we use iterative algorithms that gradually approach eigenvalues and eigenvectors.
+
+Imagine an archer throwing arrows. Instead of hitting the center of the target in one shot (like finding polynomial roots directly), the archer uses repeated practice techniques to get closer and closer to the target (like iterative algorithms). Each throw makes them more accurate.
+
+## Nonlinear Problems
+
+Eigenvalue calculation problems fall into the category of nonlinear problems. As a result, direct methods from linear algebra such as matrix decomposition alone do not provide adequate solutions. We need special approaches that can handle this nonlinear complexity.
+
+## Diagonalizable Matrix Assumptions
+
+Let matrix <InlineMath math="A" /> of size <InlineMath math="n \times n" /> be diagonalizable with eigenvectors and eigenvalues. The fundamental relationship between matrix, eigenvectors, and eigenvalues is expressed in the following equation.
+
+<BlockMath math="A \cdot v_i = \lambda_i \cdot v_i, \quad i = 1, 2, \ldots, n" />
+
+Each eigenvector <InlineMath math="v_i" /> has a corresponding eigenvalue <InlineMath math="\lambda_i" />. For iterative algorithms to work well, eigenvalues must be ordered based on their absolute values.
+
+<BlockMath math="|\lambda_1| \geq |\lambda_2| \geq \cdots \geq |\lambda_n|" />
+
+This ordering allows iterative algorithms to find eigenvalues with the largest magnitude first. In this context, <InlineMath math="\lambda_1" /> is called the dominant eigenvalue and <InlineMath math="v_1" /> is the corresponding dominant eigenvector.

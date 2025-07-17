@@ -1,0 +1,28 @@
+export const metadata = {
+    title: "Perhitungan Numerik dari Nilai Eigen",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/17/2025",
+    subject: "Metode Linear AI",
+};
+
+## Algoritma Iteratif untuk Nilai Eigen
+
+Perhitungan nilai eigen dan vektor eigen secara numerik menggunakan cara yang berbeda dari pendekatan klasik. Metode tradisional biasanya mencari titik nol dari polinomial karakteristik, tetapi dalam perhitungan numerik kita menggunakan algoritma iteratif yang secara bertahap mendekati nilai eigen dan vektor eigen.
+
+Bayangkan seperti seorang pemanah yang melempar anak panah. Alih-alih langsung mengenai pusat target dalam sekali tembak (seperti mencari akar polinomial langsung), pemanah menggunakan teknik berlatih berulang untuk semakin mendekati target (seperti algoritma iteratif). Setiap lemparan membuat dia semakin akurat.
+
+## Masalah Nonlinear
+
+Masalah perhitungan nilai eigen termasuk dalam kategori masalah nonlinear. Akibatnya, metode langsung dari aljabar linear seperti dekomposisi matriks saja tidak memberikan solusi yang memadai. Kita memerlukan pendekatan khusus yang dapat menangani kompleksitas nonlinear ini.
+
+## Asumsi Matriks Diagonalisasi
+
+Misalkan matriks <InlineMath math="A" /> berukuran <InlineMath math="n \times n" /> dapat didiagonalisasi dengan vektor eigen dan nilai eigen. Hubungan fundamental antara matriks, vektor eigen, dan nilai eigen dinyatakan dalam persamaan berikut.
+
+<BlockMath math="A \cdot v_i = \lambda_i \cdot v_i, \quad i = 1, 2, \ldots, n" />
+
+Setiap vektor eigen <InlineMath math="v_i" /> memiliki nilai eigen yang bersesuaian <InlineMath math="\lambda_i" />. Untuk algoritma iteratif dapat bekerja dengan baik, nilai eigen harus diurutkan berdasarkan besarnya nilai absolut.
+
+<BlockMath math="|\lambda_1| \geq |\lambda_2| \geq \cdots \geq |\lambda_n|" />
+
+Pengurutan ini memungkinkan algoritma iteratif untuk menemukan nilai eigen dengan magnitudo terbesar terlebih dahulu. Dalam konteks ini, <InlineMath math="\lambda_1" /> disebut nilai eigen dominan dan <InlineMath math="v_1" /> adalah vektor eigen dominan yang bersesuaian.
