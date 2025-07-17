@@ -15,6 +15,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const contentsDir = path.resolve(__dirname, "..");
 
+export function debugDir() {
+  const data = {
+    fileName: __filename,
+    dirName: __dirname,
+    contentsDir,
+  };
+
+  return data;
+}
+
 /**
  * Reads the raw content of a file from the contents directory.
  * @param filePath - The path to the file relative to the contents directory.
