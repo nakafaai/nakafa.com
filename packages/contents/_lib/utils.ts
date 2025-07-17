@@ -66,6 +66,7 @@ export async function debugDir() {
   const cwd = process.cwd();
   const cwdContents = path.join(cwd, "packages", "contents");
   const alternativePath = path.join(cwdContents, contentPath);
+  const contentPathResolve = path.resolve(contentsDir, contentPath);
 
   const data = {
     // Environment info
@@ -82,7 +83,7 @@ export async function debugDir() {
     filePath,
     cwdContents,
     alternativePath,
-
+    contentPathResolve,
     // Existence checks
     isFileNameExists: fs.existsSync(__filename),
     isDirNameExists: fs.existsSync(__dirname),
@@ -91,7 +92,7 @@ export async function debugDir() {
     isPathExistsRelative: fs.existsSync(pathRelative),
     isCwdContentsExists: fs.existsSync(cwdContents),
     isAlternativePathExists: fs.existsSync(alternativePath),
-
+    isContentPathResolveExists: fs.existsSync(contentPathResolve),
     // Test to get the content
     content,
     contents,
