@@ -21,5 +21,8 @@
         "noUnknownAtRule": "off"
       }
     }
+  },
+  "files": {
+    "maxSize": 26214400
   }
 }
