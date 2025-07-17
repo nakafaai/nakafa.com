@@ -19,7 +19,7 @@ export function StateTable({ caption }: Props) {
     <div className="grid grid-cols-1">
       <Table containerClassName="scrollbar-hide">
         <TableCaption>{caption}</TableCaption>
-        <TableHeader className="border-x border-t bg-muted/50">
+        <TableHeader className="border-x border-t bg-accent text-accent-foreground">
           <TableRow>
             <TableHead className="border-r text-center">
               {t("country")}
@@ -40,7 +40,7 @@ export function StateTable({ caption }: Props) {
         </TableHeader>
         <TableBody className="border-x border-b">
           <TableRow>
-            <TableCell className="border-r bg-muted/50 text-center font-medium">
+            <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
               Malaysia
             </TableCell>
             <TableCell className="border-r text-center">9,00</TableCell>
@@ -49,7 +49,7 @@ export function StateTable({ caption }: Props) {
             <TableCell className="text-center">{t("good")}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell className="border-r bg-muted/50 text-center font-medium">
+            <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
               Singapore
             </TableCell>
             <TableCell className="border-r text-center">10,00</TableCell>
@@ -58,7 +58,7 @@ export function StateTable({ caption }: Props) {
             <TableCell className="text-center">{t("good")}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell className="border-r bg-muted/50 text-center font-medium">
+            <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
               Thailand
             </TableCell>
             <TableCell className="border-r text-center">3,25</TableCell>
@@ -67,7 +67,7 @@ export function StateTable({ caption }: Props) {
             <TableCell className="text-center">{t("medium")}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell className="border-r bg-muted/50 text-center font-medium">
+            <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
               Philippines
             </TableCell>
             <TableCell className="border-r text-center">4,75</TableCell>
@@ -76,7 +76,7 @@ export function StateTable({ caption }: Props) {
             <TableCell className="text-center">{t("medium")}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell className="border-r bg-muted/50 text-center font-medium">
+            <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
               Indonesia
             </TableCell>
             <TableCell className="border-r text-center">2,50</TableCell>

@@ -40,7 +40,7 @@ export function RulingTable({
     <div className="grid grid-cols-1">
       <Table containerClassName="pb-4">
         <TableCaption>{caption}</TableCaption>
-        <TableHeader className="border-x border-t bg-muted/50">
+        <TableHeader className="border-x border-t bg-accent text-accent-foreground">
           <TableRow>
             <TableHead className="w-1/4 border-r text-center">
               {headers.category}
@@ -59,7 +59,7 @@ export function RulingTable({
         <TableBody className="border-x border-b">
           {tableData.map((row) => (
             <TableRow key={row.category}>
-              <TableCell className="border-r bg-muted/50 text-center font-medium">
+              <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
                 {row.category}
               </TableCell>
               <TableCell className="border-r text-center">
