@@ -33,12 +33,17 @@ export async function debugDir() {
       return e;
     });
 
+  const pathResolve = path.resolve(contentsDir, contentPath);
+  const pathRelative = path.relative(contentsDir, contentPath);
+
   const data = {
     fileName: __filename,
     dirName: __dirname,
     contentsDir,
-    pathResolve: path.resolve(contentsDir, contentPath),
-    pathRelative: path.relative(contentsDir, contentPath),
+    pathResolve,
+    pathRelative,
+    isPathExists: fs.existsSync(pathResolve),
+    isPathExistsRelative: fs.existsSync(pathRelative),
 
     // tes to get the content
     content,
