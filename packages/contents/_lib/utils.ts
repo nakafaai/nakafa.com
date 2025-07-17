@@ -25,6 +25,16 @@ export async function debugDir() {
       return e;
     });
 
+  const contents = await getContents({
+    locale: "en",
+    basePath:
+      "subject/university/bachelor/ai-ds/linear-methods/determinant-calculation",
+  })
+    .then((c) => c?.map((item) => item.metadata))
+    .catch((e) => {
+      return e;
+    });
+
   const data = {
     fileName: __filename,
     dirName: __dirname,
@@ -32,6 +42,7 @@ export async function debugDir() {
 
     // tes to get the content
     content,
+    contents,
   };
 
   return data;
