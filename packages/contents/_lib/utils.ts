@@ -58,41 +58,79 @@ export async function debugDir() {
       return e;
     });
 
-  const pathResolve = path.resolve(contentsDir, contentPath);
-  const pathRelative = path.relative(contentsDir, contentPath);
-  const filePath = path.join(process.cwd(), contentPath);
+  // const pathResolve = path.resolve(contentsDir, contentPath);
+  // const pathRelative = path.relative(contentsDir, contentPath);
+  // const filePath = path.join(process.cwd(), contentPath);
 
   // Additional debugging paths
-  const cwd = process.cwd();
-  const cwdContents = path.join(cwd, "packages", "contents");
-  const alternativePath = path.join(cwdContents, contentPath);
-  const contentPathResolve = path.resolve(contentsDir, contentPath);
+  // const cwd = process.cwd();
+  // const cwdContents = path.join(cwd, "packages", "contents");
+  // const alternativePath = path.join(cwdContents, contentPath);
+
+  const subjectDir = path.resolve(contentsDir, "subject");
+  const categoryDir = path.resolve(subjectDir, "university");
+  const gradeDir = path.resolve(categoryDir, "bachelor");
+  const materialDir = path.resolve(gradeDir, "ai-ds");
+  const chapterDir = path.resolve(materialDir, "linear-methods");
+  const subChapterDir = path.resolve(chapterDir, "determinant-calculation");
+
+  // see children of categoryDir
+  const categoryChildren = fs.existsSync(categoryDir)
+    ? fs.readdirSync(categoryDir, { withFileTypes: true })
+    : [];
+  const gradeChildren = fs.existsSync(gradeDir)
+    ? fs.readdirSync(gradeDir, { withFileTypes: true })
+    : [];
+  const materialChildren = fs.existsSync(materialDir)
+    ? fs.readdirSync(materialDir, { withFileTypes: true })
+    : [];
+  const chapterChildren = fs.existsSync(chapterDir)
+    ? fs.readdirSync(chapterDir, { withFileTypes: true })
+    : [];
+  const subChapterChildren = fs.existsSync(subChapterDir)
+    ? fs.readdirSync(subChapterDir, { withFileTypes: true })
+    : [];
 
   const data = {
     // Environment info
     nodeEnv: process.env.NODE_ENV,
     platform: process.platform,
-    cwd,
+    // cwd,
 
     // File paths
-    fileName: __filename,
-    dirName: __dirname,
+    // fileName: __filename,
+    // dirName: __dirname,
     contentsDir,
-    pathResolve,
-    pathRelative,
-    filePath,
-    cwdContents,
-    alternativePath,
-    contentPathResolve,
+    subjectDir,
+    categoryDir,
+    gradeDir,
+    materialDir,
+    chapterDir,
+    subChapterDir,
+    categoryChildren,
+    gradeChildren,
+    materialChildren,
+    chapterChildren,
+    subChapterChildren,
+    // pathResolve,
+    // pathRelative,
+    // filePath,
+    // cwdContents,
+    // alternativePath,
     // Existence checks
-    isFileNameExists: fs.existsSync(__filename),
-    isDirNameExists: fs.existsSync(__dirname),
+    // isFileNameExists: fs.existsSync(__filename),
+    // isDirNameExists: fs.existsSync(__dirname),
     isContentsDirExists: fs.existsSync(contentsDir),
-    isPathExists: fs.existsSync(pathResolve),
-    isPathExistsRelative: fs.existsSync(pathRelative),
-    isCwdContentsExists: fs.existsSync(cwdContents),
-    isAlternativePathExists: fs.existsSync(alternativePath),
-    isContentPathResolveExists: fs.existsSync(contentPathResolve),
+    isSubjectDirExists: fs.existsSync(subjectDir),
+    isCategoryDirExists: fs.existsSync(categoryDir),
+    isGradeDirExists: fs.existsSync(gradeDir),
+    isMaterialDirExists: fs.existsSync(materialDir),
+    isChapterDirExists: fs.existsSync(chapterDir),
+    isSubChapterDirExists: fs.existsSync(subChapterDir),
+    // isPathExists: fs.existsSync(pathResolve),
+    // isPathExistsRelative: fs.existsSync(pathRelative),
+    // isCwdContentsExists: fs.existsSync(cwdContents),
+    // isAlternativePathExists: fs.existsSync(alternativePath),
     // Test to get the content
     content,
     contents,
