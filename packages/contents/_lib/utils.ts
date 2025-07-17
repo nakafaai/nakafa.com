@@ -42,6 +42,9 @@ export async function debugDir() {
     contentsDir,
     pathResolve,
     pathRelative,
+    isFileNameExists: fs.existsSync(__filename),
+    isDirNameExists: fs.existsSync(__dirname),
+    isContentsDirExists: fs.existsSync(contentsDir),
     isPathExists: fs.existsSync(pathResolve),
     isPathExistsRelative: fs.existsSync(pathRelative),
 
@@ -67,6 +70,16 @@ export async function getRawContent(filePath: string): Promise<string> {
 
     // Resolve path relative to the contents directory
     const fullPath = path.resolve(contentsDir, cleanPath);
+
+    // Check if file exists before attempting to read
+    const exists = await fsPromises
+      .access(fullPath, fs.constants.F_OK)
+      .then(() => true)
+      .catch(() => false);
+
+    if (!exists) {
+      return "";
+    }
 
     return await fsPromises.readFile(fullPath, "utf8");
   } catch {
