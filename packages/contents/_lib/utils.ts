@@ -16,10 +16,9 @@ const __dirname = path.dirname(__filename);
 const contentsDir = path.resolve(__dirname, "..");
 
 export async function debugDir() {
-  const content = await getContent(
-    "en",
-    "subject/university/bachelor/ai-ds/linear-methods/determinant-calculation"
-  )
+  const contentPath =
+    "subject/university/bachelor/ai-ds/linear-methods/determinant-calculation";
+  const content = await getContent("en", contentPath)
     .then((c) => c?.metadata)
     .catch((e) => {
       return e;
@@ -27,8 +26,7 @@ export async function debugDir() {
 
   const contents = await getContents({
     locale: "en",
-    basePath:
-      "subject/university/bachelor/ai-ds/linear-methods/determinant-calculation",
+    basePath: contentPath,
   })
     .then((c) => c?.map((item) => item.metadata))
     .catch((e) => {
@@ -39,6 +37,7 @@ export async function debugDir() {
     fileName: __filename,
     dirName: __dirname,
     contentsDir,
+    pathResolve: path.resolve(contentsDir, contentPath),
 
     // tes to get the content
     content,
