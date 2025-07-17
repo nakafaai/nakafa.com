@@ -6,7 +6,6 @@ import {
 // import { routing } from "@repo/internationalization/src/routing";
 import { NextResponse } from "next/server";
 
-// TODO: Uncomment when testing is done
 // export function generateStaticParams() {
 //   // Top level directories in contents
 //   const topDirs = getFolderChildNames(".");
