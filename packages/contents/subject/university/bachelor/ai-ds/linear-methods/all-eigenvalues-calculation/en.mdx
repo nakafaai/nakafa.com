@@ -1,0 +1,56 @@
+export const metadata = {
+    title: "All Eigenvalues Calculation",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/17/2025",
+    subject: "Linear Methods of AI",
+};
+
+## QR Method for All Eigenvalues
+
+Using the QR method, you can calculate all eigenvalues of matrix <InlineMath math="A" />. This process is carried out through iterations that gradually change the matrix form, like sharpening a knife repeatedly until it's sharp. Each iteration round makes the matrix increasingly approach a form that makes it easier for us to read its eigenvalues.
+
+## QR Algorithm
+
+1. **Initial step** is to set <InlineMath math="A_0 := A" /> and <InlineMath math="k := 0" />
+
+2. **Iteration process** that is repeated continuously. In each round, perform QR decomposition on matrix <InlineMath math="A_k" />
+
+   <MathContainer>
+   <BlockMath math="Q_k \cdot R_k = A_k" />
+   </MathContainer>
+
+   After that, construct a new matrix by multiplying <InlineMath math="R_k" /> and <InlineMath math="Q_k" /> in reverse order
+
+   <MathContainer>
+   <BlockMath math="A_{k+1} := R_k \cdot Q_k" />
+   </MathContainer>
+
+   Add one to the value of <InlineMath math="k" /> and check whether the iteration has reached a stable state
+
+   <MathContainer>
+   <BlockMath math="\max_{j=1,\ldots,n} |(A_k)_{jj} - (A_{k-1})_{jj}| \leq \text{tolerance}" />
+   </MathContainer>
+
+   The iteration stops when the largest change in diagonal elements is already very small.
+
+## Similarity Properties in Iteration
+
+Every matrix <InlineMath math="A_k" /> that appears in the QR iteration has similar properties to the initial matrix <InlineMath math="A" />. This means the eigenvalues do not change during the iteration process.
+
+Like assembling the same puzzle in different ways. The puzzle pieces remain the same, but their arrangement can change. Likewise with our matrix, its mathematical content remains the same even though its structural form changes.
+
+## Diagonal Element Convergence
+
+If the condition <InlineMath math="|\lambda_1| > |\lambda_2| > \cdots > |\lambda_n|" /> holds, then the elements on the main diagonal of matrix <InlineMath math="A_k" /> will approach the corresponding eigenvalues
+
+<MathContainer>
+<BlockMath math="\lim_{k \to \infty} (A_k)_{jj} = \lambda_j, \quad j = 1, 2, \ldots, n" />
+</MathContainer>
+
+This process is like water flowing to the lowest place. The eigenvalues "fall" and occupy their respective diagonal positions according to their magnitude order.
+
+## Non-Diagonal Element Convergence
+
+If matrix <InlineMath math="A" /> is symmetric, all elements outside the main diagonal will approach zero when <InlineMath math="k \to \infty" />.
+
+Conversely, if the matrix is not symmetric, only the elements below the main diagonal approach zero, while those above do not. Imagine it like organizing a closet. If the closet is symmetric, all items can be neatly arranged. But if it's not symmetric, some parts remain messy.

@@ -1,0 +1,56 @@
+export const metadata = {
+    title: "Perhitungan Semua Nilai Eigen",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/17/2025",
+    subject: "Metode Linear AI",
+};
+
+## Metode QR untuk Semua Nilai Eigen
+
+Dengan menggunakan metode QR, kamu dapat menghitung seluruh nilai eigen dari matriks <InlineMath math="A" />. Proses ini dilakukan melalui iterasi yang mengubah bentuk matriks secara bertahap, seperti mengasah pisau berulang kali sampai tajam. Setiap putaran iterasi membuat matriks semakin mendekati bentuk yang memudahkan kita membaca nilai eigennya.
+
+## Algoritma QR
+
+1. **Langkah awal** adalah menetapkan <InlineMath math="A_0 := A" /> dan <InlineMath math="k := 0" />
+
+2. **Proses iterasi** yang diulang terus menerus. Pada setiap putaran, lakukan dekomposisi QR terhadap matriks <InlineMath math="A_k" />
+
+   <MathContainer>
+   <BlockMath math="Q_k \cdot R_k = A_k" />
+   </MathContainer>
+
+   Setelah itu, susun matriks baru dengan mengalikan <InlineMath math="R_k" /> dan <InlineMath math="Q_k" /> secara terbalik
+
+   <MathContainer>
+   <BlockMath math="A_{k+1} := R_k \cdot Q_k" />
+   </MathContainer>
+
+   Tambahkan nilai <InlineMath math="k" /> dengan satu dan cek apakah iterasi sudah mencapai keadaan stabil
+
+   <MathContainer>
+   <BlockMath math="\max_{j=1,\ldots,n} |(A_k)_{jj} - (A_{k-1})_{jj}| \leq \text{toleransi}" />
+   </MathContainer>
+
+   Iterasi berhenti saat perubahan terbesar pada elemen diagonal sudah sangat kecil.
+
+## Sifat Kemiripan dalam Iterasi
+
+Setiap matriks <InlineMath math="A_k" /> yang muncul dalam iterasi QR memiliki kesamaan sifat dengan matriks awal <InlineMath math="A" />. Hal ini berarti nilai eigen tidak berubah selama proses iterasi berlangsung.
+
+Seperti menyusun puzzle yang sama dengan cara berbeda. Potongan puzzlenya tetap sama, tapi susunannya bisa berubah-ubah. Begitu juga dengan matriks kita, isinya secara matematis tetap sama meski bentuk susunannya berubah.
+
+## Konvergensi Elemen Diagonal
+
+Bila berlaku kondisi <InlineMath math="|\lambda_1| > |\lambda_2| > \cdots > |\lambda_n|" />, maka elemen pada diagonal utama matriks <InlineMath math="A_k" /> akan mendekati nilai eigen yang sesuai
+
+<MathContainer>
+<BlockMath math="\lim_{k \to \infty} (A_k)_{jj} = \lambda_j, \quad j = 1, 2, \ldots, n" />
+</MathContainer>
+
+Proses ini seperti air yang mengalir ke tempat paling rendah. Nilai eigen "turun" dan menempati posisi diagonalnya masing-masing sesuai urutan besarnya.
+
+## Konvergensi Elemen Non-Diagonal
+
+Apabila matriks <InlineMath math="A" /> berbentuk simetrik, seluruh elemen di luar diagonal utama akan menuju nol ketika <InlineMath math="k \to \infty" />.
+
+Sebaliknya, jika matriks tidak simetrik, hanya elemen di bawah diagonal utama yang menuju nol, sementara elemen di atasnya tidak. Bayangkan seperti merapikan lemari. Kalau lemarinya simetris, semua barang bisa tertata rapi. Tapi kalau tidak simetris, ada bagian yang tetap berantakan.
