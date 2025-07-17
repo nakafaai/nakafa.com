@@ -1,0 +1,85 @@
+export const metadata = {
+    title: "Individual Eigenvalue Calculation",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/17/2025",
+    subject: "Linear Methods of AI",
+};
+
+## Inverse Iteration Method with Shift
+
+The inverse iteration method with shift is designed to calculate specific eigenvalues that approach initial guesses. This algorithm uses a shift parameter <InlineMath math="\mu" /> as a guide to search towards particular eigenvalues.
+
+Imagine you're searching for a radio station among many frequencies. Without shift, you hear all stations at once (unclear). With shift, you direct the dial to a specific frequency to get one clear station.
+
+The algorithm starts with matrix <InlineMath math="A \in \mathbb{R}^{n \times n}" /> and shift parameter <InlineMath math="\mu \in \mathbb{R}" />. The initial vector <InlineMath math="w_0 \in \mathbb{R}^n" /> is normalized to <InlineMath math="\hat{w}_0 := w_0/\|w_0\|" /> and iteration starts from <InlineMath math="k := 0" />.
+
+### LU Decomposition and Iteration
+
+The first step is to compute the LU decomposition of matrix <InlineMath math="A - \mu \cdot I" />. This decomposition is performed once at the beginning and used repeatedly in each iteration for computational efficiency.
+
+<MathContainer>
+<BlockMath math="w_{k+1} := (A - \mu \cdot I)^{-1} \cdot \hat{w}_k" />
+</MathContainer>
+
+In practice, instead of computing the matrix inverse directly, we solve the linear system using LU decomposition
+
+<MathContainer>
+<BlockMath math="(A - \mu \cdot I) \cdot w_{k+1} = \hat{w}_k" />
+</MathContainer>
+
+### Normalization and Convergence
+
+After obtaining <InlineMath math="w_{k+1}" />, perform normalization to prevent uncontrolled growth
+
+<MathContainer>
+<BlockMath math="\hat{w}_{k+1} := w_{k+1}/\|w_{k+1}\|" />
+</MathContainer>
+
+Eigenvalue estimation uses the ratio of vector components. For index <InlineMath math="j" /> with <InlineMath math="(\hat{w}_k)_j \neq 0" />
+
+<MathContainer>
+<BlockMath math="\lambda := (w_{k+1})_j / (\hat{w}_k)_j" />
+</MathContainer>
+
+Iteration continues until meeting the convergence criteria <InlineMath math="|1/\lambda - 1/\lambda_{\text{old}}| \leq \text{tolerance}" />. The tolerance parameter is a threshold value that determines how accurate the desired result should be, for example <InlineMath math="10^{-6}" /> for six decimal digit accuracy.
+
+Imagine measuring height with a ruler. Tolerance determines how precise the measurement you accept (whether accurate to centimeters or needing millimeters). The smaller the tolerance value, the more accurate the result, but requires more iterations.
+
+The final result provides eigenvalue <InlineMath math="1/\lambda + \mu" /> and eigenvector <InlineMath math="\hat{w}_k" />.
+
+## von Mises Method for Dominant Eigenvalue
+
+The von Mises vector iteration method finds the eigenvalue with the largest magnitude (dominant eigenvalue). This algorithm uses a simple iterative process with repeated matrix multiplication.
+
+The algorithm starts with initial vector <InlineMath math="w_0 \in \mathbb{R}^n" /> normalized to <InlineMath math="\hat{w}_0 := w_0/\|w_0\|" /> and iteration starts from <InlineMath math="k := 0" />.
+
+### Iteration and Convergence
+
+Each iteration performs two main operations
+
+<MathContainer>
+<BlockMath math="w_{k+1} := A \cdot \hat{w}_k" />
+<BlockMath math="\hat{w}_{k+1} := w_{k+1}/\|w_{k+1}\|" />
+</MathContainer>
+
+Eigenvalue estimation uses component ratio for index <InlineMath math="j" /> with <InlineMath math="(\hat{w}_k)_j \neq 0" />
+
+<MathContainer>
+<BlockMath math="\lambda := (w_{k+1})_j / (\hat{w}_k)_j" />
+</MathContainer>
+
+Iteration continues until <InlineMath math="|\lambda - \lambda_{\text{old}}| \leq \text{tolerance}" />. The tolerance value determines the level of precision needed, typically ranging from <InlineMath math="10^{-8}" /> to <InlineMath math="10^{-12}" /> for high-precision calculations. The final result is the dominant eigenvalue <InlineMath math="\lambda" /> and eigenvector <InlineMath math="\hat{w}_k" />.
+
+This method succeeds if <InlineMath math="|\lambda_1| > |\lambda_2|" /> and the initial vector <InlineMath math="w_0" /> has non-zero components in the direction of the dominant eigenvector. With these assumptions, iteration converges to the dominant eigenvalue <InlineMath math="\lambda_1" /> and associated eigenvector.
+
+## Technique for Finding Smallest Eigenvalue
+
+For invertible matrices, there is an important relationship between the eigenvalues of a matrix and its inverse. If <InlineMath math="A \cdot v_n = \lambda_n \cdot v_n" />, then
+
+<MathContainer>
+<BlockMath math="A^{-1} \cdot v_n = \frac{1}{\lambda_n} \cdot v_n" />
+</MathContainer>
+
+This means the smallest eigenvalue of <InlineMath math="A" /> becomes the largest eigenvalue of <InlineMath math="A^{-1}" />. By applying vector iteration on <InlineMath math="A^{-1}" />, we obtain the smallest eigenvalue of the original matrix.
+
+In practice, each iteration solves the linear system <InlineMath math="A \cdot w_{k+1} = \hat{w}_k" /> using LU decomposition, avoiding inefficient explicit inverse computation.
