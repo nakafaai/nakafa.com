@@ -23,6 +23,6 @@
     }
   },
   "files": {
-    "maxSize": 26214400
+    "includes": ["**/*", "!packages/contents/_data/quran.ts"]
   }
 }
