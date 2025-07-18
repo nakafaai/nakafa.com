@@ -64,7 +64,7 @@ export const SurahSchema = z.object({
     text: true,
     translation: true,
     audio: true,
-  }),
+  }).optional(),
   verses: z.array(VerseSchema),
 });
 export type Surah = z.infer<typeof SurahSchema>;
