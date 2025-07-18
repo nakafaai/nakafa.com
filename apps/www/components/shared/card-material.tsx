@@ -67,7 +67,7 @@ export function CardMaterial({ material }: Props) {
             </span>
             <ChevronDownIcon
               className={cn(
-                "size-4 text-muted-foreground transition-all group-hover:text-foreground",
+                "size-4 text-muted-foreground transition-all",
                 isOpen ? "" : "rotate-180"
               )}
             />
