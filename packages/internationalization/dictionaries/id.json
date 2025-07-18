@@ -146,7 +146,9 @@
   },
   "Holy": {
     "quran": "Al Quran",
-    "quran-description": "Barokah bagi orang yang membaca Al Quran dan mengikuti petunjuknya."
+    "quran-description": "Barokah bagi orang yang membaca Al Quran dan mengikuti petunjuknya.",
+    "verse": "Ayat",
+    "verse-count": "Ayat {count}"
   },
   "Utils": {
     "search": "Cari",

@@ -24,6 +24,7 @@ import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import {
+  LayoutMaterial,
   LayoutMaterialContent,
   LayoutMaterialFooter,
   LayoutMaterialHeader,
@@ -193,43 +194,45 @@ export default async function Page({ params }: Props) {
           })}
           name={metadata.title}
         />
-        <LayoutMaterialContent>
-          <LayoutMaterialHeader
-            icon={getMaterialIcon(material)}
-            link={{
-              href: `${materialPath}#${slugify(metadata.subject ?? "")}`,
-              label: metadata.subject ?? "",
-            }}
-            slug={`/${locale}${FILE_PATH}`}
-            title={metadata.title}
-          />
-          <LayoutMaterialMain>
-            {headings.length === 0 ? (
-              <ComingSoon className="py-10" />
-            ) : (
-              <Content />
-            )}
-          </LayoutMaterialMain>
-          <LayoutMaterialPagination pagination={pagination} />
-          <LayoutMaterialFooter className="mt-10">
-            <RefContent
-              githubUrl={getGithubUrl({
-                path: `/packages/contents${FILE_PATH}`,
-              })}
+        <LayoutMaterial>
+          <LayoutMaterialContent>
+            <LayoutMaterialHeader
+              icon={getMaterialIcon(material)}
+              link={{
+                href: `${materialPath}#${slugify(metadata.subject ?? "")}`,
+                label: metadata.subject ?? "",
+              }}
+              slug={`/${locale}${FILE_PATH}`}
+              title={metadata.title}
             />
-          </LayoutMaterialFooter>
-        </LayoutMaterialContent>
-        <LayoutMaterialToc
-          chapters={{
-            label: tCommon("on-this-page"),
-            data: headings,
-          }}
-          header={{
-            title: metadata.title,
-            href: FILE_PATH,
-            description: metadata.description ?? metadata.subject,
-          }}
-        />
+            <LayoutMaterialMain>
+              {headings.length === 0 ? (
+                <ComingSoon className="py-10" />
+              ) : (
+                <Content />
+              )}
+            </LayoutMaterialMain>
+            <LayoutMaterialPagination pagination={pagination} />
+            <LayoutMaterialFooter className="mt-10">
+              <RefContent
+                githubUrl={getGithubUrl({
+                  path: `/packages/contents${FILE_PATH}`,
+                })}
+              />
+            </LayoutMaterialFooter>
+          </LayoutMaterialContent>
+          <LayoutMaterialToc
+            chapters={{
+              label: tCommon("on-this-page"),
+              data: headings,
+            }}
+            header={{
+              title: metadata.title,
+              href: FILE_PATH,
+              description: metadata.description ?? metadata.subject,
+            }}
+          />
+        </LayoutMaterial>
       </>
     );
   } catch {

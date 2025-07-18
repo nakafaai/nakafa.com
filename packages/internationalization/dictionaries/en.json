@@ -146,7 +146,9 @@
   },
   "Holy": {
     "quran": "Quran",
-    "quran-description": "Blessed is the one who reads the Quran and follows its guidance."
+    "quran-description": "Blessed is the one who reads the Quran and follows its guidance.",
+    "verse": "Verse",
+    "verse-count": "Verse {count}"
   },
   "Utils": {
     "search": "Search",
