@@ -1,6 +1,7 @@
 import { getAllSurah } from "@repo/contents/_lib/quran";
 import { Link } from "@repo/internationalization/src/navigation";
 import { MoonStarIcon } from "lucide-react";
+import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { FooterContent } from "@/components/shared/footer-content";
@@ -15,6 +16,30 @@ type Params = {
 type Props = {
   params: Promise<Params>;
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Props["params"];
+}): Promise<Metadata> {
+  const { locale } = await params;
+
+  const t = await getTranslations("Holy");
+
+  const path = `/${locale}/quran`;
+
+  const alternates = {
+    canonical: path,
+  };
+
+  const title = t("quran");
+
+  return {
+    title,
+    alternates,
+    category: t("quran"),
+  };
+}
 
 export default async function Page({ params }: Props) {
   const { locale } = await params;

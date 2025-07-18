@@ -1,6 +1,7 @@
 import { getSurah } from "@repo/contents/_lib/quran";
 import { slugify } from "@repo/design-system/lib/utils";
 import { MoonStarIcon } from "lucide-react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -21,6 +22,46 @@ type Props = {
     surah: string;
   }>;
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Props["params"];
+}): Promise<Metadata> {
+  const { locale, surah } = await params;
+
+  const t = await getTranslations("Holy");
+
+  const path = `/${locale}/quran/${surah}`;
+
+  const surahData = getSurah(Number(surah));
+
+  const alternates = {
+    canonical: path,
+  };
+
+  if (!surahData) {
+    return {
+      alternates,
+    };
+  }
+
+  const title =
+    surahData.name.transliteration[locale] ??
+    surahData.name.translation[locale] ??
+    surahData.name.long;
+
+  const description = surahData.name.translation[locale];
+
+  return {
+    title: {
+      absolute: `${title} - ${t("quran")}`,
+    },
+    alternates,
+    category: t("quran"),
+    description,
+  };
+}
 
 export function generateStaticParams() {
   // surah 1-114
