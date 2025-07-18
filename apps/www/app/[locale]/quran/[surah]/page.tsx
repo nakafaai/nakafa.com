@@ -16,6 +16,8 @@ import {
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
 
+export const revalidate = false;
+
 type Props = {
   params: Promise<{
     locale: Locale;
