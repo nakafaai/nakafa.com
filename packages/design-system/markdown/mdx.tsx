@@ -63,12 +63,8 @@ export const components = {
       {...props}
     />
   ),
-  em: (props: EmProps) => (
-    <em className="font-medium text-foreground" {...props} />
-  ),
-  strong: (props: StrongProps) => (
-    <strong className="font-medium text-foreground" {...props} />
-  ),
+  em: (props: EmProps) => <em className="font-medium" {...props} />,
+  strong: (props: StrongProps) => <strong className="font-medium" {...props} />,
   blockquote: (props: BlockquoteProps) => (
     <blockquote className="my-4 border-l-2 pl-4 italic" {...props} />
   ),
