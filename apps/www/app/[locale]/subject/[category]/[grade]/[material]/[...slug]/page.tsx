@@ -9,7 +9,7 @@ import {
   getSlugPath,
 } from "@repo/contents/_lib/subject/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
-import { getContent, getRawContent } from "@repo/contents/_lib/utils";
+import { getContent } from "@repo/contents/_lib/utils";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import type { Material } from "@repo/contents/_types/subject/material";
@@ -140,9 +140,8 @@ export default async function Page({ params }: Props) {
   }
 
   try {
-    const [content, headings, pagination] = await Promise.all([
+    const [content, pagination] = await Promise.all([
       getContent(locale, FILE_PATH),
-      getRawContent(`${FILE_PATH}/${locale}.mdx`).then(getHeadings),
       getMaterials(materialPath, locale).then((materials) =>
         getMaterialsPagination(FILE_PATH, materials)
       ),
@@ -153,6 +152,8 @@ export default async function Page({ params }: Props) {
     }
 
     const { metadata, default: Content } = content;
+
+    const headings = getHeadings(content.raw);
 
     return (
       <>

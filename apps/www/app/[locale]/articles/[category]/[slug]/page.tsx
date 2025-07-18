@@ -1,11 +1,7 @@
 import { getCategoryIcon } from "@repo/contents/_lib/articles/category";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
-import {
-  getContent,
-  getRawContent,
-  getReferences,
-} from "@repo/contents/_lib/utils";
+import { getContent, getReferences } from "@repo/contents/_lib/utils";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -111,10 +107,9 @@ export default async function Page({ params }: Props) {
 
   try {
     // Get the file, headings
-    const [content, references, headings] = await Promise.all([
+    const [content, references] = await Promise.all([
       getContent(locale, FILE_PATH),
       getReferences(FILE_PATH),
-      getRawContent(`${FILE_PATH}/${locale}.mdx`).then(getHeadings),
     ]);
 
     if (!content) {
@@ -122,6 +117,8 @@ export default async function Page({ params }: Props) {
     }
 
     const { metadata, default: Content } = content;
+
+    const headings = getHeadings(content.raw);
 
     return (
       <>

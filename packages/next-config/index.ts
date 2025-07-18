@@ -1,3 +1,4 @@
+import path from "node:path";
 import withBundleAnalyzer from "@next/bundle-analyzer";
 import createMDX from "@next/mdx";
 
@@ -5,6 +6,10 @@ import type { NextConfig } from "next";
 
 export const config: NextConfig = {
   reactStrictMode: true,
+  outputFileTracingRoot: path.join(process.cwd(), "../../"),
+  outputFileTracingIncludes: {
+    "**/*": ["packages/contents/**/*"],
+  },
   logging: {
     fetches: {
       fullUrl: true,
