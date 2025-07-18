@@ -101,7 +101,8 @@
     "open-in-github": "Buka di GitHub",
     "open-in-chatgpt": "Buka di ChatGPT",
     "open-in-claude": "Buka di Claude",
-    "open-in-t3-chat": "Buka di T3 Chat"
+    "open-in-t3-chat": "Buka di T3 Chat",
+    "holy": "Suci"
   },
   "Subject": {
     "elementary-school": "SD",
@@ -142,6 +143,10 @@
     "contributor": "Kontributor",
     "contributor-description": "Dibuat oleh kontributor",
     "articles": "Artikel"
+  },
+  "Holy": {
+    "quran": "Al Quran",
+    "quran-description": "Barokah bagi orang yang membaca Al Quran dan mengikuti petunjuknya."
   },
   "Utils": {
     "search": "Cari",

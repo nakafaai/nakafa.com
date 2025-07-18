@@ -101,7 +101,8 @@
     "open-in-github": "Open in GitHub",
     "open-in-chatgpt": "Open in ChatGPT",
     "open-in-claude": "Open in Claude",
-    "open-in-t3-chat": "Open in T3 Chat"
+    "open-in-t3-chat": "Open in T3 Chat",
+    "holy": "Holy"
   },
   "Subject": {
     "elementary-school": "Elementary School",
@@ -142,6 +143,10 @@
     "contributor": "Contributor",
     "contributor-description": "Made by contributor",
     "articles": "Articles"
+  },
+  "Holy": {
+    "quran": "Quran",
+    "quran-description": "Blessed is the one who reads the Quran and follows its guidance."
   },
   "Utils": {
     "search": "Search",

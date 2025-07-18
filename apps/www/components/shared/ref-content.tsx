@@ -42,7 +42,7 @@ import { useState } from "react";
 
 type Props = {
   /** The URL of the GitHub repository. */
-  githubUrl: string;
+  githubUrl?: string;
   /** The title of the references (sheet title) */
   title?: string;
   /** The references to display (sheet content) */
@@ -97,7 +97,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                 variant="outline"
               >
                 <a
-                  href={githubUrl}
+                  href={githubUrl ?? "https://github.com/nakafaai/nakafa.com"}
                   rel="noopener noreferrer"
                   target="_blank"
                   title={t("source-code")}
