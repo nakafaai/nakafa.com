@@ -46,7 +46,7 @@ export default async function Page({ params }: Props) {
               >
                 <div className="flex w-full items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex size-8 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground ring-1 ring-primary ring-offset-2 ring-offset-secondary/80">
+                    <div className="flex size-8 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground ring-1 ring-primary ring-offset-2 ring-offset-secondary/60">
                       <span className="font-mono text-xs tracking-tighter">
                         {surah.number}
                       </span>
