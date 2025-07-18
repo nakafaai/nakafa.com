@@ -1,3 +1,4 @@
+import { getVersesByJuz } from "@repo/contents/_lib/quran";
 import { NextResponse } from "next/server";
 
 export function generateStaticParams() {
@@ -13,7 +14,7 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  return NextResponse.json({
-    id,
-  });
+  const verses = getVersesByJuz(Number.parseInt(id, 10));
+
+  return NextResponse.json(verses);
 }

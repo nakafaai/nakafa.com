@@ -1,7 +1,7 @@
+import { getAllSurah } from "@repo/contents/_lib/quran";
 import { NextResponse } from "next/server";
 
-export function GET(_req: Request) {
-  return NextResponse.json({
-    message: "Surah API is working",
-  });
+export function GET() {
+  const surahs = getAllSurah();
+  return NextResponse.json(surahs);
 }

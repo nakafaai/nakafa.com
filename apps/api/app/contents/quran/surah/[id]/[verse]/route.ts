@@ -1,3 +1,4 @@
+import { getVerseBySurah } from "@repo/contents/_lib/quran";
 import { NextResponse } from "next/server";
 
 // can not support static params for 114 surah and 6236 verses = 710.904 params
@@ -7,8 +8,10 @@ export async function GET(
 ) {
   const { id, verse } = await params;
 
-  return NextResponse.json({
-    id,
-    verse,
+  const verseData = getVerseBySurah({
+    surah: Number.parseInt(id, 10),
+    verse: Number.parseInt(verse, 10),
   });
+
+  return NextResponse.json(verseData);
 }
