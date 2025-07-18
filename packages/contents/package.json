@@ -6,12 +6,10 @@
     "subject/**",
     "articles/**",
     "_components/**",
-    "_data/**",
     "_lib/**",
     "_types/**"
   ],
   "scripts": {
-    "build": "echo 'Contents package built'",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },

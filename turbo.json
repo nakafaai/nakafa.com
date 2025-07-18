@@ -16,7 +16,6 @@
         "**/subject/**",
         "**/articles/**",
         "**/_components/**",
-        "**/_data/**",
         "**/_lib/**",
         "**/_types/**"
       ]
