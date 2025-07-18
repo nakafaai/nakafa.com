@@ -7,6 +7,7 @@ import {
   ContentSchema,
   type Reference,
 } from "@repo/contents/_types/content";
+import ky from "ky";
 import type { Locale } from "next-intl";
 import type { ComponentType } from "react";
 
@@ -21,29 +22,30 @@ const contentsDir = path.resolve(__dirname, "..");
  * @returns The raw content of the file.
  */
 export async function getRawContent(filePath: string): Promise<string> {
-  try {
-    // Strip leading slash if present for consistency
-    const cleanPath = filePath.startsWith("/")
-      ? filePath.substring(1)
-      : filePath;
+  // Strip leading slash if present for consistency
+  const cleanPath = filePath.startsWith("/") ? filePath.substring(1) : filePath;
 
-    // Resolve path relative to the contents directory
-    const fullPath = path.resolve(contentsDir, cleanPath);
+  // Resolve path relative to the contents directory
+  const fullPath = path.resolve(contentsDir, cleanPath);
 
-    // Check if file exists before attempting to read
-    const exists = await fsPromises
-      .access(fullPath, fs.constants.F_OK)
-      .then(() => true)
-      .catch(() => false);
+  // Check if file exists locally
+  const exists = await fsPromises
+    .access(fullPath, fs.constants.F_OK)
+    .then(() => true)
+    .catch(() => false);
 
-    if (!exists) {
-      return "";
-    }
-
-    return await fsPromises.readFile(fullPath, "utf8");
-  } catch {
-    return "";
+  if (exists) {
+    // Read local file, return empty string if it fails
+    return await fsPromises.readFile(fullPath, "utf8").catch(() => "");
   }
+
+  // Fallback to fetching from GitHub, return empty string if it fails
+  return await ky
+    .get(
+      `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${cleanPath}`
+    )
+    .text()
+    .catch(() => "");
 }
 
 /**
@@ -66,11 +68,13 @@ export async function getContent(
       ? filePath.substring(1)
       : filePath;
 
+    const contentPath = `${cleanPath}/${locale}.mdx`;
+
     // Create a dynamic import path that works reliably with Next.js
     // Using a relative path from the location of this file (lib/utils)
     const [contentModule, raw] = await Promise.all([
-      import(`@repo/contents/${cleanPath}/${locale}.mdx`),
-      getRawContent(`${cleanPath}/${locale}.mdx`),
+      import(`@repo/contents/${contentPath}`),
+      getRawContent(contentPath),
     ]);
 
     const parsedMetadata = ContentMetadataSchema.parse(contentModule.metadata);

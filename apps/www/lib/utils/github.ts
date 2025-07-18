@@ -1,4 +1,4 @@
-const GITHUB_URL = process.env.NEXT_PUBLIC_GITHUB_URL;
+const GITHUB_URL = "/nakafaai/nakafa.com";
 
 export function getGithubUrl({
   path,

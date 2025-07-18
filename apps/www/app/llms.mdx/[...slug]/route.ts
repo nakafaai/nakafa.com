@@ -1,12 +1,12 @@
 import {
+  getContent,
   getFolderChildNames,
   getNestedSlugs,
-  getRawContent,
 } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { type NextRequest, NextResponse } from "next/server";
-import { hasLocale } from "next-intl";
+import { hasLocale, type Locale } from "next-intl";
 import { getRawGithubUrl } from "@/lib/utils/github";
 
 export const revalidate = false;
@@ -30,7 +30,7 @@ export async function GET(
     cleanSlug = slug.join("/");
   }
 
-  const content = await getRawContent(`${cleanSlug}/${locale}.mdx`);
+  const content = await getContent(locale as Locale, cleanSlug);
 
   if (!content) {
     notFound();
@@ -38,7 +38,7 @@ export async function GET(
 
   // Construct the header information
   const urlPath = `/${locale}/${cleanSlug}`;
-  const githubSourcePath = `/contents/${cleanSlug}/${locale}.mdx`;
+  const githubSourcePath = `packages/contents/${cleanSlug}/${locale}.mdx`;
 
   scanned.push("# Nakafa Framework: LLM");
   scanned.push("");
@@ -49,7 +49,7 @@ export async function GET(
   scanned.push("");
   scanned.push("---");
   scanned.push("");
-  scanned.push(content);
+  scanned.push(content.raw);
 
   return new NextResponse(scanned.join("\n"));
 }
