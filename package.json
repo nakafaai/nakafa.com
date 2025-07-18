@@ -21,19 +21,19 @@
     "analyze": "turbo analyze",
     "translate": "turbo translate",
     "boundaries": "turbo boundaries",
-    "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker,zod,recharts,@biomejs/biome",
+    "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker,zod,recharts",
     "bump-ui": "npx shadcn@latest add --all --overwrite -c packages/design-system",
     "clean": "git clean -xdf node_modules"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.0.6",
+    "@biomejs/biome": "2.1.2",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.5.5",
     "@types/node": "^24.0.14",
     "tsup": "^8.5.0",
     "turbo": "^2.5.5",
     "typescript": "^5.8.3",
-    "ultracite": "^5.0.37",
+    "ultracite": "^5.0.46",
     "vitest": "^3.2.4"
   },
   "packageManager": "bun@1.2.18",
