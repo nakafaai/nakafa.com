@@ -22,6 +22,7 @@ import { CardMaterial } from "@/components/shared/card-material";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { ContainerList } from "@/components/shared/container-list";
 import {
+  LayoutMaterial,
   LayoutMaterialContent,
   LayoutMaterialFooter,
   LayoutMaterialHeader,
@@ -125,43 +126,47 @@ export default async function Page({ params }: Props) {
         }))}
         locale={locale}
       />
-      <LayoutMaterialContent>
-        <LayoutMaterialHeader
-          icon={getMaterialIcon(material)}
-          link={{
-            href: gradePath,
-            label: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
-          }}
-          title={t(material)}
-        />
-        <LayoutMaterialMain className="py-10">
-          {materials.length === 0 ? (
-            <ComingSoon className="pb-10" />
-          ) : (
-            <ContainerList className="sm:grid-cols-1">
-              {materials.map((mat) => (
-                <CardMaterial key={mat.title} material={mat} />
-              ))}
-            </ContainerList>
-          )}
-        </LayoutMaterialMain>
-        <LayoutMaterialFooter>
-          <RefContent
-            githubUrl={getGithubUrl({ path: `/packages/contents${FILE_PATH}` })}
+      <LayoutMaterial>
+        <LayoutMaterialContent>
+          <LayoutMaterialHeader
+            icon={getMaterialIcon(material)}
+            link={{
+              href: gradePath,
+              label: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
+            }}
+            title={t(material)}
           />
-        </LayoutMaterialFooter>
-      </LayoutMaterialContent>
-      <LayoutMaterialToc
-        chapters={{
-          label: t("chapter"),
-          data: chapters,
-        }}
-        header={{
-          title: t(material),
-          href: FILE_PATH,
-          description: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
-        }}
-      />
+          <LayoutMaterialMain className="py-10">
+            {materials.length === 0 ? (
+              <ComingSoon className="pb-10" />
+            ) : (
+              <ContainerList className="sm:grid-cols-1">
+                {materials.map((mat) => (
+                  <CardMaterial key={mat.title} material={mat} />
+                ))}
+              </ContainerList>
+            )}
+          </LayoutMaterialMain>
+          <LayoutMaterialFooter>
+            <RefContent
+              githubUrl={getGithubUrl({
+                path: `/packages/contents${FILE_PATH}`,
+              })}
+            />
+          </LayoutMaterialFooter>
+        </LayoutMaterialContent>
+        <LayoutMaterialToc
+          chapters={{
+            label: t("chapter"),
+            data: chapters,
+          }}
+          header={{
+            title: t(material),
+            href: FILE_PATH,
+            description: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
+          }}
+        />
+      </LayoutMaterial>
     </>
   );
 }
