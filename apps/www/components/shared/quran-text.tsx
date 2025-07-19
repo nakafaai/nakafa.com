@@ -10,6 +10,7 @@ export function QuranText({
     <p
       className={cn("font-quran text-4xl leading-loose", className)}
       dir="rtl"
+      lang="ar"
       {...props}
     >
       {children}
