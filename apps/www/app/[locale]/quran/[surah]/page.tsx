@@ -149,7 +149,7 @@ export default async function Page({ params }: Props) {
                 key={verse.number.inQuran}
               >
                 <a className="flex w-full scroll-mt-44" href={`#${id}`} id={id}>
-                  <div className="flex size-6 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground ring-1 ring-primary ring-offset-2 ring-offset-secondary/60">
+                  <div className="flex size-8 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground ring-1 ring-primary ring-offset-2 ring-offset-secondary/60">
                     <span className="font-mono text-xs tracking-tighter">
                       {verse.number.inSurah}
                     </span>
