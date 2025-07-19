@@ -6,11 +6,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@repo/design-system/components/ui/drawer";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import { BookOpenIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -23,19 +18,12 @@ export function QuranInterpretation({ interpretation }: Props) {
 
   return (
     <Drawer>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DrawerTrigger asChild className="cursor-pointer">
-            <Button size="icon" variant="outline">
-              <BookOpenIcon />
-              <span className="sr-only">{t("interpretation")}</span>
-            </Button>
-          </DrawerTrigger>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{t("interpretation")}</p>
-        </TooltipContent>
-      </Tooltip>
+      <DrawerTrigger asChild className="cursor-pointer">
+        <Button size="icon" variant="outline">
+          <BookOpenIcon />
+          <span className="sr-only">{t("interpretation")}</span>
+        </Button>
+      </DrawerTrigger>
 
       <DrawerContent className="mx-auto sm:max-w-3xl">
         <DrawerHeader className="border-b">
