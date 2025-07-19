@@ -14,6 +14,7 @@ import {
   LayoutMaterialPagination,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { QuranInterpretation } from "@/components/shared/quran-interpretation";
 import { QuranText } from "@/components/shared/quran-text";
 import { RefContent } from "@/components/shared/ref-content";
 
@@ -158,21 +159,36 @@ export default async function Page({ params }: Props) {
 
             return (
               <div
-                className="mb-6 space-y-4 border-b pb-6 last:mb-0 last:border-b-0 last:pb-0"
+                className="mb-6 space-y-6 border-b pb-6 last:mb-0 last:border-b-0 last:pb-0"
                 key={verse.number.inQuran}
               >
-                <a className="flex w-full scroll-mt-44" href={`#${id}`} id={id}>
-                  <div className="flex size-8 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground ring-1 ring-primary ring-offset-2 ring-offset-secondary/60">
-                    <span className="font-mono text-xs tracking-tighter">
-                      {verse.number.inSurah}
-                    </span>
-                    <h2 className="sr-only">
-                      {t("verse-count", { count: verse.number.inSurah })}
-                    </h2>
+                <div className="flex items-center gap-4">
+                  <a
+                    className="flex w-full flex-1 shrink-0 scroll-mt-44"
+                    href={`#${id}`}
+                    id={id}
+                  >
+                    <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
+                      <span className="font-mono text-xs tracking-tighter">
+                        {verse.number.inSurah}
+                      </span>
+                      <h2 className="sr-only">
+                        {t("verse-count", { count: verse.number.inSurah })}
+                      </h2>
+                    </div>
+                  </a>
+
+                  <div className="flex items-center">
+                    {locale === "id" && (
+                      // Only available in Indonesian
+                      <QuranInterpretation
+                        interpretation={verse.tafsir.id.short}
+                      />
+                    )}
                   </div>
-                </a>
+                </div>
                 <QuranText>{verse.text.arab}</QuranText>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-2">
                   <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
                     {transliteration}
                   </p>

@@ -43,7 +43,11 @@ export function Avatar({ contributor }: Props) {
       </Tooltip>
 
       <DrawerContent className="mx-auto sm:max-w-xs">
-        <DrawerHeader>
+        <DrawerHeader className="items-center">
+          <Character
+            className="size-16 shadow-xs"
+            name={`${contributor.name} - ${contributor.username}`}
+          />
           <DrawerTitle className="text-center">{contributor.name}</DrawerTitle>
           {contributor.official && (
             <DrawerDescription className="text-center">

@@ -98,7 +98,7 @@ export function SidebarRight({
       >
         {/* Mobile trigger button */}
         <SidebarTrigger
-          className="fixed top-20 right-6 size-8 bg-background/80 backdrop-blur-xs xl:hidden"
+          className="fixed top-20 right-6 size-9 bg-background/80 backdrop-blur-xs xl:hidden"
           icon={<MenuIcon />}
           size="icon"
           variant="outline"
