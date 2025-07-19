@@ -145,7 +145,7 @@ export default async function Page({ params }: Props) {
 
             return (
               <div
-                className="mb-6 space-y-2 border-b pb-6 last:mb-0 last:border-b-0 last:pb-0"
+                className="mb-6 space-y-4 border-b pb-6 last:mb-0 last:border-b-0 last:pb-0"
                 key={verse.number.inQuran}
               >
                 <a className="flex w-full scroll-mt-44" href={`#${id}`} id={id}>
@@ -158,7 +158,7 @@ export default async function Page({ params }: Props) {
                     </h2>
                   </div>
                 </a>
-                <p className="font-arabic text-4xl leading-relaxed" dir="rtl">
+                <p className="font-quran text-4xl leading-loose" dir="rtl">
                   {verse.text.arab}
                 </p>
                 <div className="flex flex-col gap-1">

@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono, Noto_Naskh_Arabic } from "next/font/google";
+import { Amiri, Geist, Geist_Mono } from "next/font/google";
 import { cn } from "./utils";
 
 const geistSans = Geist({
@@ -11,14 +11,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const arabicSans = Noto_Naskh_Arabic({
-  variable: "--font-arabic",
-  subsets: ["arabic", "latin"],
+export const quranSans = Amiri({
+  variable: "--font-quran",
+  subsets: ["latin"],
+  weight: ["400", "700"],
 });
 
 export const fonts = cn(
   geistSans.variable,
   geistMono.variable,
-  arabicSans.variable,
+  quranSans.variable,
   "touch-manipulation font-sans antialiased"
 );

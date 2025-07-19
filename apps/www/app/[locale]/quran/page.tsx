@@ -81,7 +81,7 @@ export default async function Page({ params }: Props) {
                     <h2>{title}</h2>
                   </div>
 
-                  <p className="font-arabic text-xl tracking-widest" dir="rtl">
+                  <p className="font-quran text-xl tracking-widest" dir="rtl">
                     {surah.name.short}
                   </p>
                 </div>
