@@ -14,6 +14,7 @@ import {
   LayoutMaterialPagination,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { QuranText } from "@/components/shared/quran-text";
 import { RefContent } from "@/components/shared/ref-content";
 
 export const revalidate = false;
@@ -93,6 +94,8 @@ export default async function Page({ params }: Props) {
 
   const translation = surahData.name.translation[locale];
 
+  const preBismillah = surahData.preBismillah;
+
   const title =
     surahData.name.transliteration[locale] ??
     translation ??
@@ -135,6 +138,16 @@ export default async function Page({ params }: Props) {
           title={title}
         />
         <LayoutMaterialMain>
+          {preBismillah && (
+            <div className="mb-20 flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center shadow-sm">
+              <QuranText>{preBismillah.text.arab}</QuranText>
+              <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
+                {preBismillah.translation[locale] ??
+                  preBismillah.translation.en}
+              </p>
+            </div>
+          )}
+
           {surahData.verses.map((verse) => {
             const transliteration = verse.text.transliteration.en;
             const translate = verse.translation[locale] ?? verse.translation.en;
@@ -158,11 +171,9 @@ export default async function Page({ params }: Props) {
                     </h2>
                   </div>
                 </a>
-                <p className="font-quran text-4xl leading-loose" dir="rtl">
-                  {verse.text.arab}
-                </p>
+                <QuranText>{verse.text.arab}</QuranText>
                 <div className="flex flex-col gap-1">
-                  <p className="text-muted-foreground text-sm italic leading-relaxed">
+                  <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
                     {transliteration}
                   </p>
                   <p className="text-pretty text-foreground/80 leading-relaxed">
