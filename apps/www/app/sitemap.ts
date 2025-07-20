@@ -7,7 +7,11 @@ import type { Locale } from "next-intl";
 // Adapt this as necessary
 const host = "https://nakafa.com";
 
-export const baseRoutes = ["/search", "/contributor"];
+export const baseRoutes = ["/search", "/contributor", "/quran"];
+
+export function getQuranRoutes(): string[] {
+  return Array.from({ length: 114 }, (_, index) => `/quran/${index + 1}`);
+}
 
 // Function to recursively get all directories
 export function getAllRoutes(currentPath = ""): string[] {
@@ -58,7 +62,14 @@ export function getOgRoutes(routes: string[]): string[] {
 export default function sitemap(): MetadataRoute.Sitemap {
   const contentRoutes = getAllRoutes(); // Get routes from 'contents' directory
   const ogRoutes = getOgRoutes(contentRoutes);
-  const allBaseRoutes = [...baseRoutes, ...contentRoutes, ...ogRoutes];
+  const quranRoutes = getQuranRoutes();
+
+  const allBaseRoutes = [
+    ...baseRoutes,
+    ...contentRoutes,
+    ...ogRoutes,
+    ...quranRoutes,
+  ];
 
   // Generate sitemap entries for all routes, including localized versions
   const sitemapEntries = allBaseRoutes.flatMap((route) => {
