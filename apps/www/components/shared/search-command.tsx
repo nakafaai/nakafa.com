@@ -1,6 +1,6 @@
 "use client";
 
-import { useDebouncedValue } from "@mantine/hooks";
+import { useDebouncedValue, useHotkeys } from "@mantine/hooks";
 import {
   CommandDialog,
   CommandEmpty,
@@ -39,28 +39,10 @@ export function SearchCommand() {
     setOpen: state.setOpen,
   }));
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      const el = document.activeElement;
-      if (!el || (el as HTMLElement).isContentEditable) {
-        return;
-      }
-      if (
-        event.key === "/" ||
-        (event.key === "k" &&
-          !event.shiftKey &&
-          (navigator.userAgent.includes("Mac") ? event.metaKey : event.ctrlKey))
-      ) {
-        event.preventDefault();
-        setOpen(true);
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [setOpen]);
+  useHotkeys([
+    ["/", () => setOpen(true)],
+    ["mod+K", () => setOpen(true)],
+  ]);
 
   return (
     <CommandDialog
