@@ -1,4 +1,4 @@
-import { getSurah } from "@repo/contents/_lib/quran";
+import { getSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { slugify } from "@repo/design-system/lib/utils";
 import { MoonStarIcon } from "lucide-react";
 import type { Metadata } from "next";
@@ -50,10 +50,7 @@ export async function generateMetadata({
     };
   }
 
-  const title =
-    surahData.name.transliteration[locale] ??
-    surahData.name.translation[locale] ??
-    surahData.name.long;
+  const title = getSurahName({ locale, name: surahData.name });
 
   const description = surahData.name.translation[locale];
 
@@ -86,7 +83,7 @@ export default async function Page({ params }: Props) {
 
   const surahData = getSurah(Number(surah));
 
-  const previousSurah = getSurah(Number(surah) - 1);
+  const prevSurah = getSurah(Number(surah) - 1);
   const nextSurah = getSurah(Number(surah) + 1);
 
   if (!surahData) {
@@ -97,10 +94,7 @@ export default async function Page({ params }: Props) {
 
   const preBismillah = surahData.preBismillah;
 
-  const title =
-    surahData.name.transliteration[locale] ??
-    translation ??
-    surahData.name.long;
+  const title = getSurahName({ locale, name: surahData.name });
 
   const headings = surahData.verses.map((verse) => ({
     label: t("verse-count", { count: verse.number.inSurah }),
@@ -109,20 +103,12 @@ export default async function Page({ params }: Props) {
 
   const pagination = {
     prev: {
-      href: previousSurah ? `/quran/${previousSurah.number}` : "",
-      title:
-        previousSurah?.name.transliteration[locale] ??
-        previousSurah?.name.translation[locale] ??
-        previousSurah?.name.long ??
-        "",
+      href: prevSurah ? `/quran/${prevSurah.number}` : "",
+      title: prevSurah ? getSurahName({ locale, name: prevSurah.name }) : "",
     },
     next: {
       href: nextSurah ? `/quran/${nextSurah.number}` : "",
-      title:
-        nextSurah?.name.transliteration[locale] ??
-        nextSurah?.name.translation[locale] ??
-        nextSurah?.name.long ??
-        "",
+      title: nextSurah ? getSurahName({ locale, name: nextSurah.name }) : "",
     },
   };
 

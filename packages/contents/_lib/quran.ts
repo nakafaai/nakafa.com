@@ -93,3 +93,21 @@ export function getVerseBySurah({
   const verseData = surahData.verses[verse - 1];
   return verseData;
 }
+
+/**
+ * Get the name of a surah in a given locale
+ * @param locale - The locale to get the name in
+ * @param surah - The surah to get the name for
+ * @returns The name of the surah in the given locale
+ */
+export function getSurahName({
+  locale,
+  name,
+}: {
+  locale:
+    | keyof Surah["name"]["transliteration"]
+    | keyof Surah["name"]["translation"];
+  name: Surah["name"];
+}) {
+  return name.transliteration[locale] ?? name.translation[locale] ?? name.long;
+}

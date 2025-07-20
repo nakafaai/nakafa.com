@@ -1,5 +1,6 @@
-import { getAllSurah } from "@repo/contents/_lib/quran";
+import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { Link } from "@repo/internationalization/src/navigation";
+import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { MoonStarIcon } from "lucide-react";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
@@ -51,6 +52,16 @@ export default async function Page({ params }: Props) {
 
   return (
     <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={surahs.map((surah, index) => ({
+          "@type": "ListItem",
+          "@id": `https://nakafa.com/${locale}/quran/${surah.number}`,
+          position: index + 1,
+          name: getSurahName({ locale, name: surah.name }),
+          item: `https://nakafa.com/${locale}/quran/${surah.number}`,
+        }))}
+        locale={locale}
+      />
       <HeaderContent
         description={t("quran-description")}
         icon={MoonStarIcon}
@@ -59,10 +70,7 @@ export default async function Page({ params }: Props) {
       <LayoutContent className="py-10">
         <div className="overflow-hidden rounded-xl border shadow-sm">
           {surahs.map((surah) => {
-            const title =
-              surah.name.transliteration[locale] ??
-              surah.name.translation[locale] ??
-              surah.name.long;
+            const title = getSurahName({ locale, name: surah.name });
             return (
               <Link
                 className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-4 transition-colors first:border-t-0 first:pt-5 last:pb-5 hover:bg-accent hover:text-accent-foreground"
