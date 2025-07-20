@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useThrottledState } from "@mantine/hooks";
+import { useEffect } from "react";
 
 /**
  * Find the active heading of page
@@ -10,7 +11,7 @@ import { useEffect, useState } from "react";
  * @returns Active anchor
  */
 export function useAnchorObserver(watch: string[], single: boolean): string[] {
-  const [activeAnchor, setActiveAnchor] = useState<string[]>([]);
+  const [activeAnchor, setActiveAnchor] = useThrottledState<string[]>([], 150);
 
   useEffect(() => {
     const visible: Set<Element> = new Set();
@@ -66,7 +67,7 @@ export function useAnchorObserver(watch: string[], single: boolean): string[] {
       window.removeEventListener("scroll", onScroll);
       observer.disconnect();
     };
-  }, [single, watch]);
+  }, [single, watch, setActiveAnchor]);
 
   return single ? activeAnchor.slice(0, 1) : activeAnchor;
 }
