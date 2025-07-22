@@ -6,6 +6,7 @@ import {
   getAllRoutes,
   getEntries,
   getOgRoutes,
+  getQuranRoutes,
 } from "../app/sitemap";
 import { logger } from "./utils";
 
@@ -92,7 +93,8 @@ function getUnsubmittedUrls(service: "indexNow" | "bing"): {
   // Get all URLs from sitemap
   const routes = getAllRoutes();
   const ogRoutes = getOgRoutes(routes);
-  const allRoutes = [...baseRoutes, ...routes, ...ogRoutes];
+  const quranRoutes = getQuranRoutes();
+  const allRoutes = [...baseRoutes, ...routes, ...ogRoutes, ...quranRoutes];
   const allEntries = allRoutes.flatMap((route) => getEntries(route));
 
   // Extract unique URLs
