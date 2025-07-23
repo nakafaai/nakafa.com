@@ -31,7 +31,7 @@ export function OpenContent({ slug }: { slug: string }) {
   );
 }
 
-export function LLmCopyButton({ slug }: { slug: string }) {
+function LLmCopyButton({ slug }: { slug: string }) {
   const t = useTranslations("Common");
   const [isPending, startTransition] = useTransition();
 
@@ -80,14 +80,14 @@ export function LLmCopyButton({ slug }: { slug: string }) {
   );
 }
 
-export function ViewOptions({ slug }: { slug: string }) {
+function ViewOptions({ slug }: { slug: string }) {
   const t = useTranslations("Common");
 
   const locale = slug.split("/")[1];
   const path = `/${slug.split("/").slice(2).join("/")}`;
 
   const markdownUrl = new URL(`${slug}.mdx`, "https://nakafa.com");
-  const q = `Read ${markdownUrl}, I want to ask questions about it.`;
+  const q = `I’m looking at this ${markdownUrl}, help me understand how to use it. Be ready to explain it in detail.`;
 
   const claude = `https://claude.ai/new?${new URLSearchParams({
     q,
