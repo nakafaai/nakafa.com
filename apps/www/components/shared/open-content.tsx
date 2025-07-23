@@ -22,6 +22,15 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { getGithubUrl } from "@/lib/utils/github";
 
+export function OpenContent({ slug }: { slug: string }) {
+  return (
+    <div className="inline-flex divide-x divide-secondary-foreground/10 rounded-md shadow-xs rtl:space-x-reverse">
+      <LLmCopyButton slug={slug} />
+      <ViewOptions slug={slug} />
+    </div>
+  );
+}
+
 export function LLmCopyButton({ slug }: { slug: string }) {
   const t = useTranslations("Common");
   const [isPending, startTransition] = useTransition();
@@ -39,15 +48,28 @@ export function LLmCopyButton({ slug }: { slug: string }) {
         return;
       }
 
-      await navigator.clipboard.writeText(data);
-      toast.success(t("copy-success"), {
-        position: "bottom-center",
-      });
+      navigator.clipboard
+        .writeText(data)
+        .then(() => {
+          toast.success(t("copy-success"), {
+            position: "bottom-center",
+          });
+        })
+        .catch((e) => {
+          toast.error(e.message, {
+            position: "bottom-center",
+          });
+        });
     });
   };
 
   return (
-    <Button disabled={isPending} onClick={handleCopy} variant="outline">
+    <Button
+      className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10"
+      disabled={isPending}
+      onClick={handleCopy}
+      variant="secondary"
+    >
       {isPending ? (
         <SpinnerIcon className="size-4" />
       ) : (
@@ -87,8 +109,12 @@ export function ViewOptions({ slug }: { slug: string }) {
   return (
     <DropdownMenu onOpenChange={setOpen} open={open}>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
-          {t("open")}
+        <Button
+          className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10"
+          size="icon"
+          variant="secondary"
+        >
+          <span className="sr-only">{t("open")}</span>
           <ChevronDownIcon
             className={cn("size-4 transition-transform", open && "rotate-180")}
           />

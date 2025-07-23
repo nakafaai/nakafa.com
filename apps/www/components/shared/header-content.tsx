@@ -3,7 +3,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { format } from "date-fns";
 import { CalendarIcon, type LucideIcon, UserPenIcon } from "lucide-react";
-import { LLmCopyButton, ViewOptions } from "@/components/shared/open-content";
+import { OpenContent } from "@/components/shared/open-content";
 
 type Props = {
   /** The title of the content */
@@ -69,41 +69,46 @@ export function HeaderContent({
             </h1>
           </div>
         </div>
-        {description && <p className="text-muted-foreground">{description}</p>}
-        {showFooter && (
-          <div className="flex flex-col justify-between gap-2 pt-2 sm:flex-row sm:items-center sm:gap-4">
-            {authors && (
-              <p className="inline-flex items-center gap-1 text-muted-foreground">
-                <UserPenIcon className="size-4 shrink-0" />
-                <span className="text-sm">
-                  {authors.map((author) => author.name).join(", ")}
-                </span>
-              </p>
+
+        {(description || showFooter) && (
+          <div className="space-y-2">
+            {description && (
+              <p className="text-muted-foreground">{description}</p>
             )}
+            {showFooter && (
+              <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
+                {authors && (
+                  <p className="inline-flex items-center gap-1 text-muted-foreground">
+                    <UserPenIcon className="size-4 shrink-0" />
+                    <span className="text-sm">
+                      {authors.map((author) => author.name).join(", ")}
+                    </span>
+                  </p>
+                )}
 
-            <div className="flex items-center gap-4">
-              {date && (
-                <p className="inline-flex items-center gap-1 text-muted-foreground">
-                  <CalendarIcon className="size-4 shrink-0" />
-                  <span className="text-sm">{format(date, "d MMM, yyyy")}</span>
-                </p>
-              )}
+                <div className="flex items-center gap-4">
+                  {date && (
+                    <p className="inline-flex items-center gap-1 text-muted-foreground">
+                      <CalendarIcon className="size-4 shrink-0" />
+                      <span className="text-sm">
+                        {format(date, "d MMM, yyyy")}
+                      </span>
+                    </p>
+                  )}
 
-              {category && (
-                <p className="inline-flex items-center gap-1 text-muted-foreground">
-                  <category.icon className="size-4 shrink-0" />
-                  <span className="text-sm">{category.name}</span>
-                </p>
-              )}
-            </div>
+                  {category && (
+                    <p className="inline-flex items-center gap-1 text-muted-foreground">
+                      <category.icon className="size-4 shrink-0" />
+                      <span className="text-sm">{category.name}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
-        {slug && (
-          <div className="flex items-center gap-2">
-            <LLmCopyButton slug={slug} />
-            <ViewOptions slug={slug} />
-          </div>
-        )}
+
+        {slug && <OpenContent slug={slug} />}
       </div>
     </div>
   );
