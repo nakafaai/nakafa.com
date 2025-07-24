@@ -11,5 +11,6 @@ export function getGithubUrl({
 }
 
 export function getRawGithubUrl(path: string) {
-  return `https://raw.githubusercontent.com${GITHUB_URL}/refs/heads/main${path}` as const;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `https://raw.githubusercontent.com${GITHUB_URL}/refs/heads/main${cleanPath}` as const;
 }

@@ -38,7 +38,7 @@ export async function GET(
 
   // Construct the header information
   const urlPath = `/${locale}/${cleanSlug}`;
-  const githubSourcePath = `packages/contents/${cleanSlug}/${locale}.mdx`;
+  const githubSourcePath = `/packages/contents/${cleanSlug}/${locale}.mdx`;
 
   scanned.push("# Nakafa Framework: LLM");
   scanned.push("");
