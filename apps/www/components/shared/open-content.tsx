@@ -87,7 +87,7 @@ function ViewOptions({ slug }: { slug: string }) {
   const path = `/${slug.split("/").slice(2).join("/")}`;
 
   const markdownUrl = new URL(`${slug}.mdx`, "https://nakafa.com");
-  const q = `I’m looking at this ${markdownUrl}, help me understand how to use it. Be ready to explain it in detail.`;
+  const q = `I’m looking at this ${markdownUrl}, help me understand. Explain to me what is this about.`;
 
   const claude = `https://claude.ai/new?${new URLSearchParams({
     q,
