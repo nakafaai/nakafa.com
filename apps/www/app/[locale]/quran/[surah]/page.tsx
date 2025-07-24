@@ -14,6 +14,7 @@ import {
   LayoutMaterialPagination,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { QuranAudio } from "@/components/shared/quran-audio";
 import { QuranInterpretation } from "@/components/shared/quran-interpretation";
 import { QuranText } from "@/components/shared/quran-text";
 import { RefContent } from "@/components/shared/ref-content";
@@ -164,7 +165,8 @@ export default async function Page({ params }: Props) {
                     </div>
                   </a>
 
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-2">
+                    <QuranAudio audio={verse.audio} />
                     {locale === "id" && (
                       // Only available in Indonesian
                       <QuranInterpretation
