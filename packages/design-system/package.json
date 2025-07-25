@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@repo/internationalization": "workspace:*",
-    "@hookform/resolvers": "^5.1.1",
+    "@hookform/resolvers": "^5.2.0",
     "@icons-pack/react-simple-icons": "^13.6.0",
     "@mantine/hooks": "^8.2.1",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
