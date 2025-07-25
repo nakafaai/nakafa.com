@@ -34,11 +34,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              size="lg"
-            >
+            <SidebarMenuButton asChild size="lg">
               <NavigationLink href="/" title="Nakafa">
                 <div className="relative aspect-square size-8">
                   <Image
