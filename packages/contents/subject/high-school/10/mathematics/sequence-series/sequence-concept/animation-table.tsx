@@ -333,7 +333,7 @@ export default function TableChairsAnimation({
             </Button>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {[0.5, 1, 1.5, 2].map((speedValue) => (
               <Button
                 aria-label={`Set speed to ${speedValue}x`}
