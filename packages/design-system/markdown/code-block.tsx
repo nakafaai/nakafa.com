@@ -22,7 +22,7 @@ import {
 
 export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
   return (
-    <CodeBlock data={data} defaultValue={data[0].language}>
+    <CodeBlock className="my-4" data={data} defaultValue={data[0].language}>
       <CodeBlockHeader>
         <CodeBlockFiles>
           {(item) => (

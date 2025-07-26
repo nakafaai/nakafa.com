@@ -20,6 +20,7 @@ import {
   SiEslint,
   SiGatsby,
   SiGitignoredotio,
+  SiGnometerminal,
   SiGnubash,
   SiGo,
   SiGraphql,
@@ -405,7 +406,7 @@ export const CodeBlockFilename = ({
     );
     return regex.test(children?.toString() ?? "");
   })?.[1];
-  const Icon = icon ?? defaultIcon;
+  const Icon = icon ?? defaultIcon ?? SiGnometerminal;
 
   if (value !== activeValue) {
     return null;
@@ -416,7 +417,7 @@ export const CodeBlockFilename = ({
       className="flex items-center gap-2 bg-accent px-4 py-1.5 text-accent-foreground text-sm"
       {...props}
     >
-      {Icon && <Icon className="h-4 w-4 shrink-0" />}
+      {Icon && <Icon className="size-4 shrink-0" />}
       <span className="flex-1 truncate">{children}</span>
     </div>
   );

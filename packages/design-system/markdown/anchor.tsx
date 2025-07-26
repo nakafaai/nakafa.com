@@ -22,14 +22,25 @@ export function Anchor({ href, children, ...props }: AnchorProps) {
   }
   if (href?.startsWith("#")) {
     return (
-      <a className={className} href={href} title={href} {...props}>
+      <a
+        className={cn(
+          className,
+          "h-auto p-0 text-base underline underline-offset-4"
+        )}
+        href={href}
+        title={href}
+        {...props}
+      >
         {children}
       </a>
     );
   }
   return (
     <a
-      className={className}
+      className={cn(
+        className,
+        "h-auto p-0 text-base underline underline-offset-4"
+      )}
       href={href}
       rel="noopener noreferrer"
       target="_blank"

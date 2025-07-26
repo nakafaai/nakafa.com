@@ -4,3 +4,385 @@ export const metadata = {
     date: "07/26/2025",
     subject: "Pemrograman AI",
 };
+
+## Pengenalan Python
+
+Python adalah bahasa pemrograman yang sangat populer dan mudah dipelajari. Python dirancang dengan filosofi yang mengutamakan keterbacaan kode, sehingga cocok untuk pemula yang baru belajar pemrograman.
+
+Mengapa Python menjadi pilihan favorit banyak programmer? Python memiliki sintaks yang mirip dengan bahasa Inggris sehari-hari, sehingga mudah dipahami. Bayangkan seperti membaca resep masakan yang ditulis dengan bahasa yang jelas dan mudah diikuti. Selain itu, Python sangat powerful untuk berbagai keperluan, mulai dari pengembangan web, analisis data, machine learning, hingga artificial intelligence.
+
+Untuk informasi lebih lengkap dan mendalam tentang Python, kamu bisa mengunjungi [dokumentasi resmi Python](https://docs.python.org). Dokumentasi ini menjadi sumber referensi utama yang selalu update dengan fitur-fitur terbaru Python.
+
+## Program Hello World
+
+Tradisi dalam belajar pemrograman adalah membuat program pertama yang menampilkan teks "Hello World!". Ini adalah cara sederhana untuk memastikan Python terinstall dengan benar dan kamu sudah siap untuk coding.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "hello.py",
+    code: `print("Hello World!")`
+  }]}
+/>
+
+Perintah `print()` adalah fungsi bawaan Python yang digunakan untuk menampilkan teks atau data ke layar. Apapun yang kamu tulis di dalam tanda kurung akan ditampilkan sebagai output.
+
+## Tiga Cara Menjalankan Program Python
+
+Ada tiga cara utama untuk menjalankan kode Python, masing-masing memiliki kegunaan yang berbeda tergantung kebutuhan kamu.
+
+### Mode Interaktif
+
+Mode interaktif memungkinkan kamu menulis dan menjalankan kode Python langsung di terminal. Ini sangat berguna untuk testing kode sederhana atau eksperimen cepat.
+
+Cara menggunakan mode interaktif seperti ini. Pertama buka terminal atau command prompt, kemudian ketik `python` atau `python3` dan tekan Enter. Kamu akan melihat prompt `>>>` yang menandakan Python siap menerima perintah. Selanjutnya tulis kode Python dan tekan Enter untuk menjalankannya.
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "terminal",
+    code: `$ python3
+Python 3.8.5 (default, Sep  4 2020, 02:22:02) 
+[Clang 10.0.0 ] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> print("Hello World!")
+Hello World!
+>>> 2 + 3
+5
+>>> name = "Alice"
+>>> print(f"Hello, {name}!")
+Hello, Alice!
+>>>`
+  }]}
+/>
+
+### Mode Script
+
+Mode script adalah cara menjalankan file Python yang sudah disimpan. Ini cocok untuk program yang lebih kompleks atau program yang ingin kamu simpan untuk digunakan berulang kali.
+
+Langkah-langkah menjalankan script Python cukup sederhana. Pertama buat file dengan ekstensi `.py` menggunakan text editor, kemudian tulis kode Python di dalam file tersebut dan simpan. Setelah itu buka terminal dan navigasi ke folder tempat file disimpan, lalu jalankan dengan perintah `python nama_file.py`.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "greeting.py",
+    code: `# Program sederhana untuk menyapa pengguna
+name = input("Siapa nama kamu? ")
+age = input("Berapa umur kamu? ")
+
+print(f"Halo {name}!")
+print(f"Ternyata kamu berumur {age} tahun.")
+print("Selamat belajar Python!")`
+  }]}
+/>
+
+Untuk menjalankan file di atas:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "terminal",
+    code: `$ python3 greeting.py
+Siapa nama kamu? Budi
+Berapa umur kamu? 20
+Halo Budi!
+Ternyata kamu berumur 20 tahun.
+Selamat belajar Python!`
+  }]}
+/>
+
+### Jupyter Lab dan Notebooks
+
+Jupyter adalah environment interaktif yang sangat populer untuk data science dan pembelajaran. Bayangkan Jupyter seperti buku catatan digital yang bisa menjalankan kode. Jupyter memungkinkan kamu menulis kode, melihat hasilnya langsung, dan menambahkan penjelasan dalam satu dokumen.
+
+Keunggulan Jupyter sangat banyak. Kamu bisa menjalankan kode per cell atau bagian, hasil output langsung terlihat di bawah kode, bisa menambahkan teks penjelasan, gambar, dan grafik, serta ideal untuk eksperimen, analisis data, dan pembelajaran.
+
+Cara menggunakan Jupyter cukup mudah. Pertama install Jupyter melalui pip:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "terminal",
+    code: `# Install jupyter
+pip install jupyter
+
+# Atau install melalui Anaconda (recommended)
+conda install jupyter`
+  }]}
+/>
+
+Kedua, jalankan Jupyter Lab:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "terminal",
+    code: `# Menjalankan Jupyter Lab
+jupyter lab
+
+# Akan membuka browser dengan interface Jupyter`
+  }]}
+/>
+
+Ketiga, buat notebook baru dengan ekstensi `.ipynb` dan tulis kode di dalam cell, lalu tekan Shift+Enter untuk menjalankan.
+
+Contoh penggunaan dalam Jupyter:
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "jupyter_example.ipynb",
+    code: `# Cell 1: Import dan setup
+import math
+
+# Cell 2: Variabel dan operasi
+radius = 5
+area = math.pi * radius ** 2
+print(f"Luas lingkaran dengan radius {radius} adalah {area:.2f}")
+
+# Cell 3: Membuat fungsi
+def calculate_circle_area(r):
+    """Fungsi untuk menghitung luas lingkaran"""
+    return math.pi * r ** 2
+
+# Cell 4: Test fungsi
+test_radius = 7
+result = calculate_circle_area(test_radius)
+print(f"Luas lingkaran dengan radius {test_radius} adalah {result:.2f}")`
+  }]}
+/>
+
+## Sintaks Dasar Python
+
+Mari belajar beberapa konsep dasar Python yang akan sering kamu gunakan.
+
+### Variabel dan Tipe Data
+
+Python memiliki beberapa tipe data dasar yang perlu kamu pahami. Variabel di Python seperti kotak yang bisa menyimpan berbagai jenis data, dan kamu bisa memberi label atau nama pada kotak tersebut.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "data_types.py",
+    code: `# Tipe data dasar dalam Python
+
+# String (teks)
+name = "John Doe"
+message = 'Hello Python!'
+
+# Integer (bilangan bulat)
+age = 25
+year = 2025
+
+# Float (bilangan desimal)
+height = 175.5
+pi = 3.14159
+
+# Boolean (True/False)
+is_student = True
+is_graduated = False
+
+# List (daftar item)
+fruits = ["apel", "jeruk", "mangga", "pisang"]
+numbers = [1, 2, 3, 4, 5]
+
+# Dictionary (key-value pairs)
+person = {
+    "name": "Alice",
+    "age": 22,
+    "major": "Computer Science"
+}
+
+# Menampilkan tipe data
+print(type(name))        # <class 'str'>
+print(type(age))         # <class 'int'>
+print(type(height))      # <class 'float'>
+print(type(is_student))  # <class 'bool'>
+print(type(fruits))      # <class 'list'>
+print(type(person))      # <class 'dict'>`
+  }]}
+/>
+
+### Input dan Output
+
+Interaksi dengan pengguna adalah bagian penting dari programming. Seperti percakapan, program kamu bisa bertanya kepada pengguna dan memberikan jawaban atau informasi.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "input_output.py",
+    code: `# Input dari pengguna
+user_name = input("Masukkan nama kamu: ")
+user_age = input("Masukkan umur kamu: ")
+
+# Konversi tipe data
+age_number = int(user_age)  # Konversi string ke integer
+
+# Output dengan format yang rapi
+print(f"Halo {user_name}!")
+print(f"Kamu berumur {age_number} tahun.")
+
+# Operasi matematika
+next_year = age_number + 1
+print(f"Tahun depan kamu akan berumur {next_year} tahun.")
+
+# Output dengan format yang berbeda
+print("Nama:", user_name)
+print("Umur:", age_number)
+print("Umur tahun depan:", next_year)`
+  }]}
+/>
+
+### Operasi Matematika Dasar
+
+Python mendukung berbagai operasi matematika:
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "math_operations.py",
+    code: `# Operasi matematika dasar
+a = 10
+b = 3
+
+# Operasi aritmatika
+penjumlahan = a + b      # 13
+pengurangan = a - b      # 7
+perkalian = a * b        # 30
+pembagian = a / b        # 3.333...
+pembagian_bulat = a // b # 3 (hasil pembagian dibulatkan ke bawah)
+sisa_bagi = a % b        # 1 (modulus)
+pangkat = a ** b         # 1000 (10 pangkat 3)
+
+print(f"{a} + {b} = {penjumlahan}")
+print(f"{a} - {b} = {pengurangan}")
+print(f"{a} * {b} = {perkalian}")
+print(f"{a} / {b} = {pembagian}")
+print(f"{a} // {b} = {pembagian_bulat}")
+print(f"{a} % {b} = {sisa_bagi}")
+print(f"{a} ** {b} = {pangkat}")
+
+# Operasi dengan assignment
+x = 5
+x += 3  # x = x + 3, hasilnya x = 8
+x *= 2  # x = x * 2, hasilnya x = 16
+print(f"Nilai x sekarang: {x}")`
+  }]}
+/>
+
+## Latihan Praktis
+
+Mari coba beberapa latihan sederhana untuk mempraktikkan apa yang sudah dipelajari:
+
+### Kalkulator Sederhana
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "calculator.py",
+    code: `# Kalkulator sederhana
+print("=== KALKULATOR SEDERHANA ===")
+
+# Input dari pengguna
+angka1 = float(input("Masukkan angka pertama: "))
+operator = input("Masukkan operator (+, -, *, /): ")
+angka2 = float(input("Masukkan angka kedua: "))
+
+# Proses kalkulasi
+if operator == "+":
+    hasil = angka1 + angka2
+elif operator == "-":
+    hasil = angka1 - angka2
+elif operator == "*":
+    hasil = angka1 * angka2
+elif operator == "/":
+    if angka2 != 0:
+        hasil = angka1 / angka2
+    else:
+        print("Error: Tidak bisa membagi dengan nol!")
+        hasil = None
+else:
+    print("Operator tidak valid!")
+    hasil = None
+
+# Output hasil
+if hasil is not None:
+    print(f"Hasil: {angka1} {operator} {angka2} = {hasil}")`
+  }]}
+/>
+
+### Konversi Suhu
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "temperature_converter.py",
+    code: `# Konverter suhu Celsius ke Fahrenheit dan Kelvin
+print("=== KONVERTER SUHU ===")
+
+# Input suhu dalam Celsius
+celsius = float(input("Masukkan suhu dalam Celsius: "))
+
+# Konversi ke Fahrenheit dan Kelvin
+fahrenheit = (celsius * 9/5) + 32
+kelvin = celsius + 273.15
+
+# Output hasil konversi
+print(f"\nHasil konversi dari {celsius}°C:")
+print(f"Fahrenheit: {fahrenheit:.1f}°F")
+print(f"Kelvin: {kelvin:.1f}K")
+
+# Bonus: Informasi tambahan
+if celsius < 0:
+    print("Suhu ini di bawah titik beku air!")
+elif celsius == 0:
+    print("Suhu ini adalah titik beku air!")
+elif celsius == 100:
+    print("Suhu ini adalah titik didih air!")
+elif celsius > 100:
+    print("Suhu ini di atas titik didih air!")`
+  }]}
+/>
+
+### Profil Mahasiswa
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "personal_info.py",
+    code: `# Program untuk mengumpulkan dan menampilkan informasi personal
+print("=== PROFIL MAHASISWA ===")
+
+# Input informasi
+nama = input("Nama lengkap: ")
+nim = input("NIM: ")
+jurusan = input("Jurusan: ")
+semester = int(input("Semester: "))
+hobi = input("Hobi favorit: ")
+
+# Menghitung informasi tambahan
+tahun_masuk = 2025 - (semester - 1) // 2
+perkiraan_lulus = tahun_masuk + 4
+
+# Menampilkan profil lengkap
+print("\n" + "="*40)
+print("PROFIL MAHASISWA")
+print("="*40)
+print(f"Nama        : {nama}")
+print(f"NIM         : {nim}")
+print(f"Jurusan     : {jurusan}")
+print(f"Semester    : {semester}")
+print(f"Hobi        : {hobi}")
+print(f"Tahun Masuk : {tahun_masuk}")
+print(f"Perkiraan Lulus: {perkiraan_lulus}")
+print("="*40)
+
+# Pesan motivasi
+if semester <= 2:
+    print("Semangat di awal perkuliahan!")
+elif semester <= 6:
+    print("Pertahankan semangat belajarnya!")
+else:
+    print("Semangat menyelesaikan kuliah!")`
+  }]}
+/>

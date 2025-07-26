@@ -4,3 +4,385 @@ export const metadata = {
     date: "07/26/2025",
     subject: "AI Programming",
 };
+
+## Introduction to Python
+
+Python is a very popular and easy-to-learn programming language. Python is designed with a philosophy that prioritizes code readability, making it suitable for beginners who are new to programming.
+
+Why is Python the favorite choice of many programmers? Python has syntax similar to everyday English, making it easy to understand. Imagine reading a recipe written in clear and easy-to-follow language. Additionally, Python is very powerful for various purposes, from web development, data analysis, machine learning, to artificial intelligence.
+
+For more complete and in-depth information about Python, you can visit the [official Python documentation](https://docs.python.org). This documentation serves as the main reference source that is always updated with the latest Python features.
+
+## Hello World Program
+
+The tradition in learning programming is to create the first program that displays the text "Hello World!". This is a simple way to ensure Python is installed correctly and you're ready for coding.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "hello.py",
+    code: `print("Hello World!")`
+  }]}
+/>
+
+The `print()` command is a built-in Python function used to display text or data to the screen. Whatever you write inside the parentheses will be displayed as output.
+
+## Three Ways to Run Python Programs
+
+There are three main ways to run Python code, each with different uses depending on your needs.
+
+### Interactive Mode
+
+Interactive mode allows you to write and run Python code directly in the terminal. This is very useful for testing simple code or quick experiments.
+
+Here's how to use interactive mode. First open a terminal or command prompt, then type `python` or `python3` and press Enter. You'll see the `>>>` prompt indicating Python is ready to receive commands. Next, write Python code and press Enter to execute it.
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "terminal",
+    code: `$ python3
+Python 3.8.5 (default, Sep  4 2020, 02:22:02) 
+[Clang 10.0.0 ] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> print("Hello World!")
+Hello World!
+>>> 2 + 3
+5
+>>> name = "Alice"
+>>> print(f"Hello, {name}!")
+Hello, Alice!
+>>>`
+  }]}
+/>
+
+### Script Mode
+
+Script mode is a way to run saved Python files. This is suitable for more complex programs or programs you want to save for repeated use.
+
+The steps to run Python scripts are quite simple. First create a file with `.py` extension using a text editor, then write Python code inside the file and save it. After that, open a terminal and navigate to the folder where the file is saved, then run it with the command `python filename.py`.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "greeting.py",
+    code: `# Simple program to greet users
+name = input("What's your name? ")
+age = input("How old are you? ")
+
+print(f"Hello {name}!")
+print(f"You are {age} years old.")
+print("Happy learning Python!")`
+  }]}
+/>
+
+To run the file above:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "terminal",
+    code: `$ python3 greeting.py
+What's your name? John
+How old are you? 20
+Hello John!
+You are 20 years old.
+Happy learning Python!`
+  }]}
+/>
+
+### Jupyter Lab and Notebooks
+
+Jupyter is an interactive environment very popular for data science and learning. Imagine Jupyter like a digital notebook that can run code. Jupyter allows you to write code, see results immediately, and add explanations in one document.
+
+Jupyter has many advantages. You can run code per cell or section, output results are immediately visible below the code, you can add text explanations, images, and graphs, and it's ideal for experiments, data analysis, and learning.
+
+Using Jupyter is quite easy. First install Jupyter via pip:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "terminal",
+    code: `# Install jupyter
+pip install jupyter
+
+# Or install via Anaconda (recommended)
+conda install jupyter`
+  }]}
+/>
+
+Second, run Jupyter Lab:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "terminal",
+    code: `# Run Jupyter Lab
+jupyter lab
+
+# Will open browser with Jupyter interface`
+  }]}
+/>
+
+Third, create a new notebook with `.ipynb` extension and write code in cells, then press Shift+Enter to execute.
+
+Example usage in Jupyter:
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "jupyter_example.ipynb",
+    code: `# Cell 1: Import and setup
+import math
+
+# Cell 2: Variables and operations
+radius = 5
+area = math.pi * radius ** 2
+print(f"Circle area with radius {radius} is {area:.2f}")
+
+# Cell 3: Create function
+def calculate_circle_area(r):
+    """Function to calculate circle area"""
+    return math.pi * r ** 2
+
+# Cell 4: Test function
+test_radius = 7
+result = calculate_circle_area(test_radius)
+print(f"Circle area with radius {test_radius} is {result:.2f}")`
+  }]}
+/>
+
+## Basic Python Syntax
+
+Let's learn some basic Python concepts that you'll use frequently.
+
+### Variables and Data Types
+
+Python has several basic data types you need to understand. Variables in Python are like boxes that can store various types of data, and you can give labels or names to those boxes.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "data_types.py",
+    code: `# Basic data types in Python
+
+# String (text)
+name = "John Doe"
+message = 'Hello Python!'
+
+# Integer (whole numbers)
+age = 25
+year = 2025
+
+# Float (decimal numbers)
+height = 175.5
+pi = 3.14159
+
+# Boolean (True/False)
+is_student = True
+is_graduated = False
+
+# List (list of items)
+fruits = ["apple", "orange", "mango", "banana"]
+numbers = [1, 2, 3, 4, 5]
+
+# Dictionary (key-value pairs)
+person = {
+    "name": "Alice",
+    "age": 22,
+    "major": "Computer Science"
+}
+
+# Display data types
+print(type(name))        # <class 'str'>
+print(type(age))         # <class 'int'>
+print(type(height))      # <class 'float'>
+print(type(is_student))  # <class 'bool'>
+print(type(fruits))      # <class 'list'>
+print(type(person))      # <class 'dict'>`
+  }]}
+/>
+
+### Input and Output
+
+User interaction is an important part of programming. Like a conversation, your program can ask users questions and provide answers or information.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "input_output.py",
+    code: `# Input from user
+user_name = input("Enter your name: ")
+user_age = input("Enter your age: ")
+
+# Data type conversion
+age_number = int(user_age)  # Convert string to integer
+
+# Output with neat formatting
+print(f"Hello {user_name}!")
+print(f"You are {age_number} years old.")
+
+# Mathematical operations
+next_year = age_number + 1
+print(f"Next year you will be {next_year} years old.")
+
+# Output with different format
+print("Name:", user_name)
+print("Age:", age_number)
+print("Age next year:", next_year)`
+  }]}
+/>
+
+### Basic Mathematical Operations
+
+Python supports various mathematical operations:
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "math_operations.py",
+    code: `# Basic mathematical operations
+a = 10
+b = 3
+
+# Arithmetic operations
+addition = a + b      # 13
+subtraction = a - b   # 7
+multiplication = a * b # 30
+division = a / b      # 3.333...
+floor_division = a // b # 3 (division result rounded down)
+modulus = a % b       # 1 (remainder)
+exponent = a ** b     # 1000 (10 to the power of 3)
+
+print(f"{a} + {b} = {addition}")
+print(f"{a} - {b} = {subtraction}")
+print(f"{a} * {b} = {multiplication}")
+print(f"{a} / {b} = {division}")
+print(f"{a} // {b} = {floor_division}")
+print(f"{a} % {b} = {modulus}")
+print(f"{a} ** {b} = {exponent}")
+
+# Operations with assignment
+x = 5
+x += 3  # x = x + 3, result is x = 8
+x *= 2  # x = x * 2, result is x = 16
+print(f"Current value of x: {x}")`
+  }]}
+/>
+
+## Practical Exercises
+
+Let's try some simple exercises to practice what we've learned:
+
+### Simple Calculator
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "calculator.py",
+    code: `# Simple calculator
+print("=== SIMPLE CALCULATOR ===")
+
+# Input from user
+number1 = float(input("Enter first number: "))
+operator = input("Enter operator (+, -, *, /): ")
+number2 = float(input("Enter second number: "))
+
+# Calculation process
+if operator == "+":
+    result = number1 + number2
+elif operator == "-":
+    result = number1 - number2
+elif operator == "*":
+    result = number1 * number2
+elif operator == "/":
+    if number2 != 0:
+        result = number1 / number2
+    else:
+        print("Error: Cannot divide by zero!")
+        result = None
+else:
+    print("Invalid operator!")
+    result = None
+
+# Output result
+if result is not None:
+    print(f"Result: {number1} {operator} {number2} = {result}")`
+  }]}
+/>
+
+### Temperature Conversion
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "temperature_converter.py",
+    code: `# Temperature converter from Celsius to Fahrenheit and Kelvin
+print("=== TEMPERATURE CONVERTER ===")
+
+# Input temperature in Celsius
+celsius = float(input("Enter temperature in Celsius: "))
+
+# Convert to Fahrenheit and Kelvin
+fahrenheit = (celsius * 9/5) + 32
+kelvin = celsius + 273.15
+
+# Output conversion results
+print(f"\nConversion results from {celsius}°C:")
+print(f"Fahrenheit: {fahrenheit:.1f}°F")
+print(f"Kelvin: {kelvin:.1f}K")
+
+# Bonus: Additional information
+if celsius < 0:
+    print("This temperature is below water freezing point!")
+elif celsius == 0:
+    print("This temperature is water freezing point!")
+elif celsius == 100:
+    print("This temperature is water boiling point!")
+elif celsius > 100:
+    print("This temperature is above water boiling point!")`
+  }]}
+/>
+
+### Student Profile
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "personal_info.py",
+    code: `# Program to collect and display personal information
+print("=== STUDENT PROFILE ===")
+
+# Input information
+name = input("Full name: ")
+student_id = input("Student ID: ")
+major = input("Major: ")
+semester = int(input("Semester: "))
+hobby = input("Favorite hobby: ")
+
+# Calculate additional information
+entry_year = 2025 - (semester - 1) // 2
+estimated_graduation = entry_year + 4
+
+# Display complete profile
+print("\n" + "="*40)
+print("STUDENT PROFILE")
+print("="*40)
+print(f"Name        : {name}")
+print(f"Student ID  : {student_id}")
+print(f"Major       : {major}")
+print(f"Semester    : {semester}")
+print(f"Hobby       : {hobby}")
+print(f"Entry Year  : {entry_year}")
+print(f"Est. Graduation: {estimated_graduation}")
+print("="*40)
+
+# Motivational message
+if semester <= 2:
+    print("Good luck at the beginning of your studies!")
+elif semester <= 6:
+    print("Keep up your learning spirit!")
+else:
+    print("Good luck finishing your studies!")`
+  }]}
+/>
