@@ -73,7 +73,7 @@ export const components = {
   CodeBlock: CodeBlockMdx,
   code: (props: CodeProps) => (
     <code
-      className="inline rounded-sm border bg-muted px-1.5 font-mono text-muted-foreground tracking-tight"
+      className="inline rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight"
       {...props}
     />
   ),
