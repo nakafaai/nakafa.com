@@ -44,6 +44,21 @@ export async function generateMetadata({
   const alternates = {
     canonical: path,
   };
+  const image = {
+    url: "/quran.png",
+    width: 1200,
+    height: 630,
+  };
+  const twitter: Metadata["twitter"] = {
+    images: [image],
+  };
+  const openGraph: Metadata["openGraph"] = {
+    url: path,
+    images: [image],
+    type: "book",
+    siteName: "Nakafa",
+    locale,
+  };
 
   if (!surahData) {
     return {
@@ -62,6 +77,8 @@ export async function generateMetadata({
     alternates,
     category: t("quran"),
     description,
+    twitter,
+    openGraph,
   };
 }
 
