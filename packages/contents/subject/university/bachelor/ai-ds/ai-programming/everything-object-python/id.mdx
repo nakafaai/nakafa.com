@@ -4,3 +4,672 @@ export const metadata = {
     date: "07/26/2025",
     subject: "Pemrograman AI",
 };
+
+## Konsep Dasar Object-Oriented Programming
+
+Python adalah bahasa pemrograman yang menganut paradigma object-oriented programming atau OOP. Salah satu prinsip fundamental Python adalah bahwa semuanya adalah objek. Konsep ini mungkin terdengar abstrak di awal, tapi sebenarnya sangat natural dan mirip dengan cara kita melihat dunia nyata.
+
+Bayangkan dunia di sekitar kita. Semua benda memiliki karakteristik dan dapat melakukan sesuatu. Mobil memiliki warna, merek, dan kecepatan, serta dapat bergerak, berhenti, dan membunyikan klakson. Begitu juga di Python, setiap data dan fungsi adalah objek yang memiliki atribut dan dapat melakukan aksi tertentu.
+
+## Perbandingan Paradigma Programming
+
+### Bahasa Procedural
+
+Dalam bahasa pemrograman procedural, state dan action dipisahkan. Data dan fungsi yang mengoperasikan data tersebut terpisah satu sama lain.
+
+<CodeBlock 
+  data={[{
+    language: "c",
+    filename: "procedural_parking.c",
+    code: `// Contoh pendekatan procedural dalam bahasa C
+struct ParkSystem {
+    int max;
+    int occ;
+};
+
+int occupy(struct ParkSystem* ps) {
+    if (ps->max <= ps->occ) { 
+        return -1; 
+    }
+    ps->occ++;
+    return 0;
+}
+
+void leave(struct ParkSystem* ps) {
+    if (ps->occ > 0) { 
+        ps->occ--; 
+    }
+}
+
+int main() {
+    struct ParkSystem ps = {100, 0};
+    occupy(&ps);
+    printf("%d %d", ps.max, ps.occ);
+    return 0;
+}`
+  }]}
+/>
+
+Dalam pendekatan procedural, kamu melihat bahwa data (struct) dan fungsi terpisah. Fungsi menerima data sebagai parameter dan memodifikasinya dari luar.
+
+### Bahasa Object-Oriented
+
+Dalam bahasa pemrograman object-oriented, state dan action digabung menjadi satu unit yang disebut class. Atribut menggambarkan state, sedangkan method menggambarkan action yang dapat dilakukan pada state tersebut.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "oop_parking.py",
+    code: `# Contoh pendekatan object-oriented dalam Python
+class ParkSystem:
+    def __init__(self, max_capacity):
+        self.max = max_capacity
+        self.occ = 0
+    
+    def occupy(self):
+        if self.max <= self.occ:
+            return -1
+        self.occ += 1
+        return 0
+    
+    def leave(self):
+        if self.occ > 0:
+            self.occ -= 1
+
+# Penggunaan
+ps = ParkSystem(100)
+ps.occupy()
+print(f"Max: {ps.max}, Occupied: {ps.occ}")`
+  }]}
+/>
+
+Dalam pendekatan object-oriented, data dan fungsi yang mengoperasikan data tersebut dikemas dalam satu unit. Objek memiliki tanggung jawab untuk mengelola state-nya sendiri.
+
+## Sistem Parkir sebagai Analogi
+
+Mari kita gunakan sistem parkir sebagai contoh untuk memahami konsep objek. Dalam dunia nyata, sistem parkir memiliki karakteristik seperti kapasitas maksimal dan jumlah tempat yang terisi. Sistem ini juga dapat melakukan aksi seperti menerima mobil masuk atau keluar.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "parking_system_detailed.py",
+    code: `class ParkingSystem:
+    def __init__(self, capacity):
+        """Inisialisasi sistem parkir dengan kapasitas tertentu"""
+        self.capacity = capacity
+        self.occupied = 0
+        self.vehicles = []  # Daftar kendaraan yang parkir
+    
+    def park_vehicle(self, vehicle_plate):
+        """Method untuk parkir kendaraan"""
+        if self.occupied >= self.capacity:
+            return f"Parkir penuh! Tidak bisa parkir {vehicle_plate}"
+        
+        self.vehicles.append(vehicle_plate)
+        self.occupied += 1
+        return f"Kendaraan {vehicle_plate} berhasil parkir"
+    
+    def exit_vehicle(self, vehicle_plate):
+        """Method untuk keluar parkir"""
+        if vehicle_plate in self.vehicles:
+            self.vehicles.remove(vehicle_plate)
+            self.occupied -= 1
+            return f"Kendaraan {vehicle_plate} keluar parkir"
+        else:
+            return f"Kendaraan {vehicle_plate} tidak ditemukan"
+    
+    def get_status(self):
+        """Method untuk melihat status parkir"""
+        available = self.capacity - self.occupied
+        return {
+            'capacity': self.capacity,
+            'occupied': self.occupied,
+            'available': available,
+            'vehicles': self.vehicles
+        }
+    
+    def is_full(self):
+        """Method untuk mengecek apakah parkir penuh"""
+        return self.occupied >= self.capacity
+
+# Contoh penggunaan
+parking = ParkingSystem(5)
+print(parking.park_vehicle("B 1234 CD"))
+print(parking.park_vehicle("B 5678 EF"))
+print(parking.get_status())
+print(parking.is_full())`
+  }]}
+/>
+
+## Konsep Objek pada Tipe Data
+
+Di Python, konsep "semuanya adalah objek" berarti setiap data yang kamu buat memiliki atribut dan method. Mari kita eksplorasi konsep ini lebih dalam.
+
+### Angka adalah Objek
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "numbers_as_objects.py",
+    code: `# Angka di Python adalah objek
+number = 42
+
+# Angka memiliki method
+print(number.bit_length())  # Method untuk menghitung bit length
+print(number.__add__(8))    # Method untuk penjumlahan (sama dengan number + 8)
+
+# Angka float juga objek
+price = 15.75
+print(price.is_integer())   # Method untuk cek apakah bilangan bulat
+print(price.as_integer_ratio())  # Method untuk konversi ke rasio
+
+# Bahkan hasil operasi matematika adalah objek
+result = 10 + 5
+print(type(result))         # <class 'int'>
+print(dir(result))          # Melihat semua method yang tersedia`
+  }]}
+/>
+
+### String adalah Objek
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "strings_as_objects.py",
+    code: `# String di Python adalah objek yang sangat powerful
+message = "Belajar Python itu Menyenangkan"
+
+# String memiliki banyak method berguna
+print(message.upper())              # BELAJAR PYTHON ITU MENYENANGKAN
+print(message.lower())              # belajar python itu menyenangkan
+print(message.title())              # Belajar Python Itu Menyenangkan
+print(message.count('a'))           # Menghitung huruf 'a'
+print(message.replace('Python', 'Programming'))  # Mengganti kata
+
+# Method untuk pemeriksaan
+email = "user@example.com"
+print(email.endswith('.com'))       # True
+print(email.startswith('user'))     # True
+print(email.find('@'))              # Posisi karakter '@'
+
+# Method untuk formatting
+name = "alice"
+age = 25
+formatted = "Nama: {}, Umur: {}".format(name.title(), age)
+print(formatted)
+
+# String split dan join
+words = message.split()             # Memecah jadi list kata
+print(words)
+rejoined = " ".join(words)          # Menggabung kembali
+print(rejoined)`
+  }]}
+/>
+
+### List adalah Objek
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "lists_as_objects.py",
+    code: `# List di Python adalah objek yang dinamis
+fruits = ["apel", "jeruk", "mangga"]
+
+# List memiliki method untuk manipulasi data
+fruits.append("pisang")             # Menambah di akhir
+print(fruits)
+
+fruits.insert(1, "strawberry")      # Menambah di posisi tertentu
+print(fruits)
+
+fruits.remove("jeruk")              # Menghapus item tertentu
+print(fruits)
+
+# Method untuk pencarian dan pengurutan
+numbers = [3, 1, 4, 1, 5, 9, 2, 6]
+print(numbers.count(1))             # Menghitung kemunculan
+print(numbers.index(4))             # Mencari posisi
+
+numbers.sort()                      # Mengurutkan
+print(numbers)
+
+numbers.reverse()                   # Membalik urutan
+print(numbers)
+
+# List comprehension - cara pythonic
+squares = [x**2 for x in range(1, 6)]
+print(squares)                      # [1, 4, 9, 16, 25]
+
+# Method untuk operasi advanced
+original = [1, 2, 3]
+copy_list = original.copy()         # Membuat salinan
+original.extend([4, 5])             # Menambah multiple items
+print(f"Original: {original}")
+print(f"Copy: {copy_list}")`
+  }]}
+/>
+
+### Dictionary adalah Objek
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "dicts_as_objects.py",
+    code: `# Dictionary di Python adalah objek yang fleksibel
+student = {
+    "name": "Alice",
+    "age": 22,
+    "major": "Computer Science",
+    "gpa": 3.8
+}
+
+# Dictionary memiliki method untuk manipulasi
+print(student.get("name"))          # Mengambil value dengan aman
+print(student.get("height", "Unknown"))  # Default value jika key tidak ada
+
+# Method untuk melihat isi dictionary
+print(student.keys())               # Semua keys
+print(student.values())             # Semua values
+print(student.items())              # Pasangan key-value
+
+# Method untuk update dan manipulasi
+student.update({"semester": 6, "age": 23})  # Update multiple values
+print(student)
+
+# Pop method untuk mengambil dan menghapus
+gpa = student.pop("gpa")
+print(f"GPA yang dihapus: {gpa}")
+print(student)
+
+# Dictionary comprehension
+grades = {"Math": 85, "Physics": 92, "Chemistry": 78}
+passed = {subject: grade for subject, grade in grades.items() if grade >= 80}
+print(passed)
+
+# Nested dictionary
+university = {
+    "students": {
+        "CS": ["Alice", "Bob"],
+        "Math": ["Charlie", "Diana"]
+    },
+    "location": "Jakarta"
+}
+print(university["students"]["CS"])`
+  }]}
+/>
+
+## Fungsi juga adalah Objek
+
+Salah satu hal yang menarik di Python adalah bahwa fungsi juga merupakan objek. Ini memungkinkan kamu untuk memperlakukan fungsi seperti data biasa.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "functions_as_objects.py",
+    code: `# Fungsi di Python adalah objek first-class
+def greet(name):
+    return f"Hello, {name}!"
+
+def farewell(name):
+    return f"Goodbye, {name}!"
+
+# Fungsi memiliki atribut
+print(greet.__name__)               # Nama fungsi
+print(type(greet))                  # <class 'function'>
+
+# Fungsi bisa disimpan dalam variable
+my_function = greet
+print(my_function("Alice"))         # Hello, Alice!
+
+# Fungsi bisa disimpan dalam list
+functions = [greet, farewell]
+for func in functions:
+    print(func("Bob"))
+
+# Fungsi bisa dijadikan parameter
+def call_function(func, name):
+    return func(name)
+
+result = call_function(greet, "Charlie")
+print(result)
+
+# Fungsi bisa dikembalikan dari fungsi lain
+def get_greeting_function(language):
+    def english_greet(name):
+        return f"Hello, {name}!"
+    
+    def indonesian_greet(name):
+        return f"Halo, {name}!"
+    
+    if language == "english":
+        return english_greet
+    else:
+        return indonesian_greet
+
+# Menggunakan fungsi yang dikembalikan
+greet_func = get_greeting_function("indonesian")
+print(greet_func("Diana"))          # Halo, Diana!
+
+# Lambda function juga objek
+square = lambda x: x ** 2
+print(type(square))                 # <class 'function'>
+print(square(5))                    # 25`
+  }]}
+/>
+
+## Class dan Instance sebagai Objek
+
+Class adalah blueprint untuk membuat objek, sedangkan instance adalah objek yang dibuat dari class tersebut.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "class_and_instances.py",
+    code: `# Membuat class sebagai blueprint
+class Student:
+    # Class attribute (shared by all instances)
+    university = "Universitas Indonesia"
+    
+    def __init__(self, name, major, semester):
+        # Instance attributes (unique for each instance)
+        self.name = name
+        self.major = major
+        self.semester = semester
+        self.courses = []
+    
+    def add_course(self, course):
+        """Method untuk menambah mata kuliah"""
+        self.courses.append(course)
+        return f"{self.name} mengambil mata kuliah {course}"
+    
+    def get_info(self):
+        """Method untuk mendapatkan informasi mahasiswa"""
+        return {
+            'name': self.name,
+            'major': self.major,
+            'semester': self.semester,
+            'courses': self.courses,
+            'university': self.university
+        }
+    
+    def __str__(self):
+        """Method khusus untuk representasi string"""
+        return f"Student({self.name}, {self.major})"
+    
+    def __len__(self):
+        """Method khusus untuk mendapatkan jumlah mata kuliah"""
+        return len(self.courses)
+
+# Membuat instance (objek) dari class
+student1 = Student("Alice", "Computer Science", 4)
+student2 = Student("Bob", "Mathematics", 6)
+
+# Setiap instance adalah objek dengan atribut dan method
+print(student1.add_course("Python Programming"))
+print(student1.add_course("Data Structures"))
+
+print(student2.add_course("Calculus"))
+print(student2.add_course("Linear Algebra"))
+
+# Menggunakan method
+print(student1.get_info())
+print(student2.get_info())
+
+# Method khusus (__str__ dan __len__)
+print(student1)                     # Student(Alice, Computer Science)
+print(len(student1))                # 2 (jumlah mata kuliah)
+
+# Instance memiliki atribut yang bisa diakses
+print(f"Nama: {student1.name}")
+print(f"Jurusan: {student1.major}")
+print(f"Universitas: {student1.university}")
+
+# Class juga objek
+print(type(Student))                # <class 'type'>
+print(Student.__name__)             # Student
+print(Student.university)           # Universitas Indonesia`
+  }]}
+/>
+
+## Method Khusus
+
+Python memiliki method khusus yang dimulai dan diakhiri dengan double underscore. Method ini memungkinkan objek kamu berperilaku seperti built-in types.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "magic_methods.py",
+    code: `class BankAccount:
+    def __init__(self, owner, balance=0):
+        self.owner = owner
+        self.balance = balance
+    
+    def __str__(self):
+        """Representasi string yang readable"""
+        return f"BankAccount({self.owner}, Rp{self.balance:,})"
+    
+    def __repr__(self):
+        """Representasi string untuk debugging"""
+        return f"BankAccount('{self.owner}', {self.balance})"
+    
+    def __len__(self):
+        """Mengembalikan panjang nama pemilik"""
+        return len(self.owner)
+    
+    def __eq__(self, other):
+        """Membandingkan dua akun bank"""
+        if isinstance(other, BankAccount):
+            return self.balance == other.balance
+        return False
+    
+    def __lt__(self, other):
+        """Less than comparison"""
+        if isinstance(other, BankAccount):
+            return self.balance < other.balance
+        return False
+    
+    def __add__(self, amount):
+        """Menambah saldo (deposit)"""
+        if isinstance(amount, (int, float)) and amount > 0:
+            self.balance += amount
+        return self
+    
+    def __sub__(self, amount):
+        """Mengurangi saldo (withdraw)"""
+        if isinstance(amount, (int, float)) and amount > 0:
+            if amount <= self.balance:
+                self.balance -= amount
+            else:
+                print("Saldo tidak mencukupi!")
+        return self
+    
+    def __bool__(self):
+        """True jika ada saldo, False jika saldo 0"""
+        return self.balance > 0
+
+# Membuat objek
+account1 = BankAccount("Alice", 1000000)
+account2 = BankAccount("Bob", 500000)
+
+# Magic methods in action
+print(account1)                     # __str__
+print(repr(account1))               # __repr__
+print(len(account1))                # __len__ (panjang nama)
+
+# Comparison
+print(account1 == account2)         # __eq__
+print(account1 > account2)          # __lt__ (terbalik)
+
+# Arithmetic operations
+account1 + 500000                   # __add__ (deposit)
+print(account1)
+
+account1 - 200000                   # __sub__ (withdraw)
+print(account1)
+
+# Boolean conversion
+empty_account = BankAccount("Charlie", 0)
+print(bool(account1))               # True
+print(bool(empty_account))          # False
+
+# Menggunakan dalam conditional
+if account1:
+    print(f"{account1.owner} memiliki saldo")
+else:
+    print(f"{account1.owner} tidak memiliki saldo")`
+  }]}
+/>
+
+## Praktik Object-Oriented Programming
+
+Mari kita buat contoh yang lebih kompleks untuk memahami bagaimana OOP diterapkan dalam skenario nyata.
+
+<CodeBlock 
+  data={[{
+    language: "python",
+    filename: "library_management.py",
+    code: `class Book:
+    def __init__(self, title, author, isbn):
+        self.title = title
+        self.author = author
+        self.isbn = isbn
+        self.is_borrowed = False
+        self.borrower = None
+    
+    def __str__(self):
+        status = "Dipinjam" if self.is_borrowed else "Tersedia"
+        return f"{self.title} oleh {self.author} - {status}"
+
+class Member:
+    def __init__(self, name, member_id):
+        self.name = name
+        self.member_id = member_id
+        self.borrowed_books = []
+    
+    def __str__(self):
+        return f"Member: {self.name} (ID: {self.member_id})"
+
+class Library:
+    def __init__(self, name):
+        self.name = name
+        self.books = []
+        self.members = []
+    
+    def add_book(self, book):
+        """Menambah buku ke perpustakaan"""
+        self.books.append(book)
+        return f"Buku '{book.title}' berhasil ditambahkan"
+    
+    def register_member(self, member):
+        """Mendaftarkan anggota baru"""
+        self.members.append(member)
+        return f"Anggota {member.name} berhasil didaftarkan"
+    
+    def borrow_book(self, member_id, isbn):
+        """Meminjam buku"""
+        # Cari anggota
+        member = None
+        for m in self.members:
+            if m.member_id == member_id:
+                member = m
+                break
+        
+        if not member:
+            return "Anggota tidak ditemukan"
+        
+        # Cari buku
+        book = None
+        for b in self.books:
+            if b.isbn == isbn and not b.is_borrowed:
+                book = b
+                break
+        
+        if not book:
+            return "Buku tidak tersedia"
+        
+        # Proses peminjaman
+        book.is_borrowed = True
+        book.borrower = member
+        member.borrowed_books.append(book)
+        
+        return f"{member.name} berhasil meminjam '{book.title}'"
+    
+    def return_book(self, member_id, isbn):
+        """Mengembalikan buku"""
+        member = None
+        for m in self.members:
+            if m.member_id == member_id:
+                member = m
+                break
+        
+        if not member:
+            return "Anggota tidak ditemukan"
+        
+        book = None
+        for b in member.borrowed_books:
+            if b.isbn == isbn:
+                book = b
+                break
+        
+        if not book:
+            return "Buku tidak ditemukan dalam daftar pinjaman"
+        
+        # Proses pengembalian
+        book.is_borrowed = False
+        book.borrower = None
+        member.borrowed_books.remove(book)
+        
+        return f"{member.name} berhasil mengembalikan '{book.title}'"
+    
+    def get_available_books(self):
+        """Mendapatkan daftar buku yang tersedia"""
+        available = [book for book in self.books if not book.is_borrowed]
+        return available
+    
+    def get_member_books(self, member_id):
+        """Mendapatkan daftar buku yang dipinjam anggota"""
+        for member in self.members:
+            if member.member_id == member_id:
+                return member.borrowed_books
+        return []
+
+# Contoh penggunaan sistem perpustakaan
+library = Library("Perpustakaan Central")
+
+# Menambah buku
+book1 = Book("Python Programming", "John Smith", "978-1234567890")
+book2 = Book("Data Science Basics", "Jane Doe", "978-0987654321")
+book3 = Book("Machine Learning", "Bob Johnson", "978-1122334455")
+
+print(library.add_book(book1))
+print(library.add_book(book2))
+print(library.add_book(book3))
+
+# Mendaftarkan anggota
+member1 = Member("Alice Cooper", "M001")
+member2 = Member("Bob Wilson", "M002")
+
+print(library.register_member(member1))
+print(library.register_member(member2))
+
+# Meminjam buku
+print(library.borrow_book("M001", "978-1234567890"))
+print(library.borrow_book("M002", "978-0987654321"))
+
+# Melihat status buku
+print("\nDaftar semua buku:")
+for book in library.books:
+    print(book)
+
+print("\nBuku yang tersedia:")
+for book in library.get_available_books():
+    print(book)
+
+print(f"\nBuku yang dipinjam Alice: {len(library.get_member_books('M001'))} buku")
+
+# Mengembalikan buku
+print(library.return_book("M001", "978-1234567890"))`
+  }]}
+/>
+
+Dengan memahami konsep bahwa semuanya adalah objek di Python, kamu dapat menulis kode yang lebih terstruktur, mudah dipahami, dan mudah dipelihara. Object-oriented programming memungkinkan kamu untuk memodelkan masalah dunia nyata ke dalam kode dengan cara yang natural dan intuitif.
