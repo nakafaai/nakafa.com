@@ -90,7 +90,10 @@ function SelectLabel({
 }: React.ComponentProps<typeof SelectPrimitive.Label>) {
   return (
     <SelectPrimitive.Label
-      className={cn("px-2 py-1.5 text-muted-foreground text-xs", className)}
+      className={cn(
+        "px-2 py-1.5 font-medium text-muted-foreground text-xs",
+        className
+      )}
       data-slot="select-label"
       {...props}
     />
