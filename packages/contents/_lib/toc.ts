@@ -8,9 +8,17 @@ import { slugify } from "@repo/design-system/lib/utils";
  */
 export function getHeadings(content: string): ParsedHeading[] {
   try {
+    // Remove content within <CodeBlock ... /> components and markdown code
+    // fences to prevent headings inside code examples from being added to the TOC.
+    const cleanedContent = content
+      .replace(/<CodeBlock[\s\S]*?\/>/gm, "")
+      .replace(/```[\s\S]*?```/g, "");
+
     // Handle markdown style headings (# Heading)
     const markdownHeadingRegex = /^(#{1,6})\s+(.*)$/gm;
-    const markdownMatches = Array.from(content.matchAll(markdownHeadingRegex));
+    const markdownMatches = Array.from(
+      cleanedContent.matchAll(markdownHeadingRegex)
+    );
 
     if (markdownMatches && markdownMatches.length > 0) {
       const headings: ParsedHeading[] = [];

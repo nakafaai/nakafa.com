@@ -413,7 +413,7 @@ export const CodeBlockFilename = ({
 
   return (
     <div
-      className="flex items-center gap-2 bg-accent px-4 py-1.5 text-accent-foreground text-xs"
+      className="flex items-center gap-2 bg-accent px-4 py-1.5 text-accent-foreground text-sm"
       {...props}
     >
       {Icon && <Icon className="h-4 w-4 shrink-0" />}
@@ -438,7 +438,7 @@ export const CodeBlockSelectTrigger = ({
 }: CodeBlockSelectTriggerProps) => (
   <SelectTrigger
     className={cn(
-      "w-fit border-none text-accent-foreground text-xs shadow-none",
+      "w-fit border-none text-accent-foreground text-sm shadow-none",
       className
     )}
     size="sm"

@@ -1,0 +1,339 @@
+export const metadata = {
+  title: "Markdown dan Command Line Interfaces",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "07/26/2025",
+  subject: "Pemrograman AI",
+};
+
+## Pengenalan Markdown
+
+Markdown adalah bahasa markup sederhana yang memungkinkan kamu menulis dokumen terstruktur menggunakan format teks biasa. Bayangkan seperti menulis catatan di buku tulis, tapi dengan aturan khusus yang membuat tulisan kamu bisa diubah menjadi dokumen yang rapi dan terstruktur.
+
+Mengapa markdown begitu berguna? Seperti halnya kamu menulis pesan WhatsApp dengan **huruf tebal** atau *huruf miring*, markdown memungkinkan kamu memformat teks dengan cara yang mudah dibaca bahkan sebelum diubah ke format final. Ini seperti memberikan instruksi kepada komputer tentang bagaimana teks harus ditampilkan, tanpa harus repot dengan tombol-tombol pemformatan yang rumit.
+
+### Sintaks Dasar Markdown
+
+Berikut contoh sintaks markdown yang paling umum digunakan. Perhatikan bagaimana setiap simbol memiliki makna khusus, seperti tanda pagar untuk judul:
+
+<CodeBlock 
+  data={[{
+    language: "markdown",
+    filename: "basic-syntax.md",
+    code: `# Heading Level 1
+## Heading Level 2
+### Heading Level 3
+
+**Bold text**
+*Italic text*
+~~Strikethrough text~~
+
+> Blockquote untuk kutipan penting
+
+1. Ordered list item pertama
+2. Ordered list item kedua
+3. Ordered list item ketiga
+
+- Unordered list item
+- Item lainnya
+- Item terakhir
+
+[Link text](https://example.com)
+![Alt text](image.jpg)
+
+\`inline code\`
+
+\`\`\`python
+# Code block
+def hello_world():
+    print("Hello, World!")
+\`\`\`
+
+---
+
+| Kolom 1 | Kolom 2 | Kolom 3 |
+|---------|---------|---------|
+| Data A  | Data B  | Data C  |
+| Data D  | Data E  | Data F  |`
+  }]}
+/>
+
+### Alur Kerja Markdown
+
+Proses kerja dengan markdown mengikuti alur yang sangat sederhana. Seperti menulis surat, kamu mulai dengan membuat draft di kertas biasa, lalu merapikannya menjadi surat formal. Begitu juga dengan markdown.
+
+Langkah pertama adalah **membuat file** dengan ekstensi `.md`. Kemudian kamu **menulis konten** menggunakan sintaks markdown. Setelah itu, kamu **mengkonversi** ke format lain menggunakan alat seperti pandoc. Terakhir, kamu **menampilkan** hasil di browser atau aplikasi lain.
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "markdown-workflow.sh",
+    code: `# Membuat file markdown baru
+touch document.md
+
+# Edit dengan text editor
+nano document.md
+
+# Konversi ke HTML menggunakan pandoc
+pandoc document.md -o document.html
+
+# Konversi ke PDF
+pandoc document.md -o document.pdf
+
+# Preview di browser
+open document.html`
+  }]}
+/>
+
+## Dasar-Dasar Antarmuka Baris Perintah
+
+Antarmuka baris perintah atau CLI adalah cara berkomunikasi dengan komputer menggunakan teks, bukan klik mouse. Kamu mengetik instruksi, komputer membaca dan menjalankannya.
+
+Mengapa belajar CLI penting? Pemrogram yang menguasai CLI bisa bekerja lebih efisien dan memiliki kontrol penuh atas sistem mereka.
+
+### Navigasi dan Eksplorasi Direktori
+
+Navigasi di CLI melibatkan beberapa hal penting. Kamu perlu tahu di mana posisi kamu sekarang, melihat apa saja yang ada di sekitar, dan berpindah ke tempat yang kamu tuju:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "navigation-commands.sh",
+    code: `# Menampilkan direktori kerja saat ini
+pwd
+
+# Melihat isi direktori
+ls
+ls -l    # format detail
+ls -la   # termasuk file tersembunyi
+
+# Berpindah direktori
+cd /home/user/documents
+cd ..    # naik satu level
+cd ~     # ke home directory
+cd -     # kembali ke direktori sebelumnya
+
+# Membuat direktori baru
+mkdir new_project
+mkdir -p project/src/components  # buat hierarki direktori`
+  }]}
+/>
+
+### Operasi File dan Direktori
+
+Bekerja dengan file di CLI memungkinkan kamu melakukan berbagai operasi. Kamu bisa menyalin, memindahkan, menghapus, dan membaca file dengan perintah yang spesifik:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "file-operations.sh",
+    code: `# Menyalin file
+cp source.txt destination.txt
+cp -r source_folder/ destination_folder/
+
+# Memindahkan atau mengganti nama file
+mv old_name.txt new_name.txt
+mv file.txt /path/to/new/location/
+
+# Menghapus file
+rm unwanted_file.txt
+rm -rf unwanted_folder/  # hapus direktori dan isinya
+
+# Melihat isi file
+cat file.txt        # tampilkan seluruh isi
+head -10 file.txt   # 10 baris pertama
+tail -10 file.txt   # 10 baris terakhir
+less file.txt       # view dengan navigasi`
+  }]}
+/>
+
+### Integrasi Markdown dengan CLI
+
+Menggabungkan markdown dengan CLI seperti memiliki asisten pribadi yang bisa mengubah catatan-catatan kamu menjadi dokumen profesional secara otomatis. Kamu bisa mengelola proyek dokumentasi dengan efisien:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "markdown-cli-workflow.sh",
+    code: `# Setup proyek markdown
+mkdir my-documentation
+cd my-documentation
+
+# Struktur direktori
+mkdir -p {src,build,images,assets}
+
+# Buat file markdown
+touch src/index.md src/getting-started.md src/api-reference.md
+
+# Otomatisasi build dengan script
+cat << 'EOF' > build.sh
+#!/bin/bash
+echo "Building documentation..."
+
+# Konversi semua file .md ke .html
+for file in src/*.md; do
+    basename=$(basename "$file" .md)
+    pandoc "$file" -o "build/$basename.html" --standalone --css=style.css
+    echo "Converted: $file -> build/$basename.html"
+done
+
+echo "Build completed!"
+EOF
+
+# Buat script executable
+chmod +x build.sh
+
+# Jalankan build
+./build.sh`
+  }]}
+/>
+
+### Alat CLI untuk Markdown
+
+Ada berbagai alat CLI yang membantu kamu bekerja dengan markdown. Setiap alat memiliki fungsi khusus untuk mempermudah pekerjaan:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "markdown-tools.sh",
+    code: `# Install pandoc (universal document converter)
+# Ubuntu/Debian:
+sudo apt-get install pandoc
+
+# macOS dengan Homebrew:
+brew install pandoc
+
+# Install markdown linter
+npm install -g markdownlint-cli
+
+# Check markdown syntax
+markdownlint *.md
+
+# Install markdown preview tool
+npm install -g markdown-preview
+
+# Preview markdown di browser
+markdown-preview README.md
+
+# Convert markdown ke berbagai format
+pandoc input.md -o output.pdf
+pandoc input.md -o output.docx
+pandoc input.md -o output.epub
+
+# Dengan template custom
+pandoc input.md -o output.html --template=custom.html`
+  }]}
+/>
+
+### Praktik Terbaik CLI dan Markdown
+
+Kombinasi CLI dan markdown sangat ampuh untuk dokumentasi dan pengembangan. Kamu bisa menciptakan alur kerja yang efisien:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "best-practices.sh",
+    code: `# Git workflow untuk dokumentasi markdown
+git init
+git add README.md
+git commit -m "Initial documentation"
+
+# Automation script untuk documentation
+cat << 'EOF' > update-docs.sh
+#!/bin/bash
+
+# Update timestamp
+echo "Last updated: $(date)" >> docs/footer.md
+
+# Generate table of contents
+find docs/ -name "*.md" | sort > docs/TOC.md
+
+# Build static site
+pandoc docs/*.md -o site/index.html --standalone
+
+# Deploy ke server
+rsync -av site/ user@server:/var/www/docs/
+EOF
+
+# Monitoring perubahan file
+# Install inotify-tools dulu
+sudo apt-get install inotify-tools
+
+# Watch dan auto-rebuild
+inotifywait -m -e modify --format '%w%f' docs/*.md | while read file; do
+    echo "File $file berubah, rebuilding..."
+    ./build.sh
+done`
+  }]}
+/>
+
+### Contoh Proyek Nyata
+
+Mari buat contoh proyek dokumentasi lengkap untuk tim pengembangan:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "project-example.sh",
+    code: `# Setup project structure
+mkdir ai-project-docs
+cd ai-project-docs
+
+# Create directory structure
+mkdir -p {docs/{api,tutorials,guides},scripts,templates}
+
+# Create main documentation files
+cat << 'EOF' > docs/README.md
+# AI Project Documentation
+
+## Overview
+Dokumentasi lengkap untuk proyek AI programming.
+
+## Structure
+- [API Reference](api/README.md)
+- [Tutorials](tutorials/README.md) 
+- [User Guides](guides/README.md)
+EOF
+
+# Create build configuration
+cat << 'EOF' > config.yaml
+input_dir: docs
+output_dir: build
+css: templates/style.css
+template: templates/default.html
+EOF
+
+# Create automated build script
+cat << 'EOF' > scripts/build-docs.sh
+#!/bin/bash
+
+CONFIG_FILE="config.yaml"
+INPUT_DIR=$(grep "input_dir:" $CONFIG_FILE | cut -d' ' -f2)
+OUTPUT_DIR=$(grep "output_dir:" $CONFIG_FILE | cut -d' ' -f2)
+
+echo "Building documentation from $INPUT_DIR to $OUTPUT_DIR"
+
+# Create output directory
+mkdir -p $OUTPUT_DIR
+
+# Convert all markdown files
+find $INPUT_DIR -name "*.md" -type f | while read file; do
+    rel_path=\${file#$INPUT_DIR/}
+    output_file="$OUTPUT_DIR/\${rel_path%.md}.html"
+    output_dir=$(dirname "$output_file")
+    
+    mkdir -p "$output_dir"
+    pandoc "$file" -o "$output_file" --standalone
+    echo "✓ Converted: $file"
+done
+
+echo "Documentation build completed!"
+EOF
+
+chmod +x scripts/build-docs.sh
+
+# Run the build
+./scripts/build-docs.sh`
+  }]}
+/>
+
+Dengan menguasai markdown dan antarmuka baris perintah, kamu bisa membuat alur kerja dokumentasi yang efisien dan otomatis. Markdown memberikan cara mudah untuk menulis konten terstruktur, sementara CLI memberikan alat-alat canggih untuk mengelola, mengkonversi, dan menyebarkan dokumentasi tersebut.

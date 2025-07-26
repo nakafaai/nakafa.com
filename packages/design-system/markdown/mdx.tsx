@@ -19,6 +19,7 @@ import { Mermaid } from "@repo/design-system/markdown/mermaid";
 import { Paragraph } from "@repo/design-system/markdown/paragraph";
 import type {
   BlockquoteProps,
+  CodeProps,
   EmProps,
   HeadingProps,
   ListItemProps,
@@ -70,6 +71,12 @@ export const components = {
   ),
   a: Anchor,
   CodeBlock: CodeBlockMdx,
+  code: (props: CodeProps) => (
+    <code
+      className="inline rounded-md bg-muted px-1 font-mono text-muted-foreground"
+      {...props}
+    />
+  ),
   Mermaid,
   MathContainer,
   InlineMath,

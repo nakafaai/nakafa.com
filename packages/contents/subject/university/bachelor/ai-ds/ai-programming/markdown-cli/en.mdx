@@ -1,0 +1,339 @@
+export const metadata = {
+    title: "Markdown and Command Line Interfaces",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "07/26/2025",
+    subject: "AI Programming",
+};
+
+## Introduction to Markdown
+
+Markdown is a simple markup language that allows you to write structured documents using plain text format. Imagine writing notes in a notebook, but with special rules that make your writing convertible into neat and structured documents.
+
+Why is markdown so useful? Just like you write WhatsApp messages with **bold text** or *italic text*, markdown allows you to format text in a way that's easy to read even before it's converted to the final format. It's like giving instructions to the computer about how text should be displayed, without having to bother with complicated formatting buttons.
+
+### Basic Markdown Syntax
+
+Here are examples of the most commonly used markdown syntax. Notice how each symbol has a special meaning, like the hash symbol for headings:
+
+<CodeBlock 
+  data={[{
+    language: "markdown",
+    filename: "basic-syntax.md",
+    code: `# Heading Level 1
+## Heading Level 2
+### Heading Level 3
+
+**Bold text**
+*Italic text*
+~~Strikethrough text~~
+
+> Blockquote for important quotes
+
+1. First ordered list item
+2. Second ordered list item
+3. Third ordered list item
+
+- Unordered list item
+- Another item
+- Last item
+
+[Link text](https://example.com)
+![Alt text](image.jpg)
+
+\`inline code\`
+
+\`\`\`python
+# Code block
+def hello_world():
+    print("Hello, World!")
+\`\`\`
+
+---
+
+| Column 1 | Column 2 | Column 3 |
+|----------|----------|----------|
+| Data A   | Data B   | Data C   |
+| Data D   | Data E   | Data F   |`
+  }]}
+/>
+
+### Markdown Workflow
+
+Working with markdown follows a very simple flow. Like writing a letter, you start by creating a draft on plain paper, then organize it into a formal letter. Same with markdown.
+
+The first step is **creating a file** with `.md` extension. Then you **write content** using markdown syntax. After that, you **convert** to other formats using tools like pandoc. Finally, you **display** the result in a browser or other applications.
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "markdown-workflow.sh",
+    code: `# Create new markdown file
+touch document.md
+
+# Edit with text editor
+nano document.md
+
+# Convert to HTML using pandoc
+pandoc document.md -o document.html
+
+# Convert to PDF
+pandoc document.md -o document.pdf
+
+# Preview in browser
+open document.html`
+  }]}
+/>
+
+## Command Line Interface Basics
+
+Command line interface or CLI is a way to communicate with computers using text, not mouse clicks. You type instructions, the computer reads and executes them.
+
+Why is learning CLI important? Programmers who master CLI can work more efficiently and have full control over their systems.
+
+### Directory Navigation and Exploration
+
+CLI navigation involves several important things. You need to know where you are now, see what's around you, and move to where you want to go:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "navigation-commands.sh",
+    code: `# Display current working directory
+pwd
+
+# List directory contents
+ls
+ls -l    # detailed format
+ls -la   # including hidden files
+
+# Change directory
+cd /home/user/documents
+cd ..    # go up one level
+cd ~     # go to home directory
+cd -     # return to previous directory
+
+# Create new directory
+mkdir new_project
+mkdir -p project/src/components  # create directory hierarchy`
+  }]}
+/>
+
+### File and Directory Operations
+
+Working with files in CLI allows you to perform various operations. You can copy, move, delete, and read files with specific commands:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "file-operations.sh",
+    code: `# Copy files
+cp source.txt destination.txt
+cp -r source_folder/ destination_folder/
+
+# Move or rename files
+mv old_name.txt new_name.txt
+mv file.txt /path/to/new/location/
+
+# Delete files
+rm unwanted_file.txt
+rm -rf unwanted_folder/  # delete directory and its contents
+
+# View file contents
+cat file.txt        # display entire contents
+head -10 file.txt   # first 10 lines
+tail -10 file.txt   # last 10 lines
+less file.txt       # view with navigation`
+  }]}
+/>
+
+### Integrating Markdown with CLI
+
+Combining markdown with CLI is like having a personal assistant that can turn your notes into professional documents automatically. You can manage documentation projects efficiently:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "markdown-cli-workflow.sh",
+    code: `# Setup markdown project
+mkdir my-documentation
+cd my-documentation
+
+# Directory structure
+mkdir -p {src,build,images,assets}
+
+# Create markdown files
+touch src/index.md src/getting-started.md src/api-reference.md
+
+# Automate build with script
+cat << 'EOF' > build.sh
+#!/bin/bash
+echo "Building documentation..."
+
+# Convert all .md files to .html
+for file in src/*.md; do
+    basename=$(basename "$file" .md)
+    pandoc "$file" -o "build/$basename.html" --standalone --css=style.css
+    echo "Converted: $file -> build/$basename.html"
+done
+
+echo "Build completed!"
+EOF
+
+# Make script executable
+chmod +x build.sh
+
+# Run build
+./build.sh`
+  }]}
+/>
+
+### CLI Tools for Markdown
+
+There are various CLI tools that help you work with markdown. Each tool has a specific function to make work easier:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "markdown-tools.sh",
+    code: `# Install pandoc (universal document converter)
+# Ubuntu/Debian:
+sudo apt-get install pandoc
+
+# macOS with Homebrew:
+brew install pandoc
+
+# Install markdown linter
+npm install -g markdownlint-cli
+
+# Check markdown syntax
+markdownlint *.md
+
+# Install markdown preview tool
+npm install -g markdown-preview
+
+# Preview markdown in browser
+markdown-preview README.md
+
+# Convert markdown to various formats
+pandoc input.md -o output.pdf
+pandoc input.md -o output.docx
+pandoc input.md -o output.epub
+
+# With custom template
+pandoc input.md -o output.html --template=custom.html`
+  }]}
+/>
+
+### Best Practices for CLI and Markdown
+
+The combination of CLI and markdown is very powerful for documentation and development. You can create efficient workflows:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "best-practices.sh",
+    code: `# Git workflow for markdown documentation
+git init
+git add README.md
+git commit -m "Initial documentation"
+
+# Automation script for documentation
+cat << 'EOF' > update-docs.sh
+#!/bin/bash
+
+# Update timestamp
+echo "Last updated: $(date)" >> docs/footer.md
+
+# Generate table of contents
+find docs/ -name "*.md" | sort > docs/TOC.md
+
+# Build static site
+pandoc docs/*.md -o site/index.html --standalone
+
+# Deploy to server
+rsync -av site/ user@server:/var/www/docs/
+EOF
+
+# Monitor file changes
+# Install inotify-tools first
+sudo apt-get install inotify-tools
+
+# Watch and auto-rebuild
+inotifywait -m -e modify --format '%w%f' docs/*.md | while read file; do
+    echo "File $file changed, rebuilding..."
+    ./build.sh
+done`
+  }]}
+/>
+
+### Real Project Example
+
+Let's create a complete documentation project example for development teams:
+
+<CodeBlock 
+  data={[{
+    language: "bash",
+    filename: "project-example.sh",
+    code: `# Setup project structure
+mkdir ai-project-docs
+cd ai-project-docs
+
+# Create directory structure
+mkdir -p {docs/{api,tutorials,guides},scripts,templates}
+
+# Create main documentation files
+cat << 'EOF' > docs/README.md
+# AI Project Documentation
+
+## Overview
+Complete documentation for AI programming projects.
+
+## Structure
+- [API Reference](api/README.md)
+- [Tutorials](tutorials/README.md) 
+- [User Guides](guides/README.md)
+EOF
+
+# Create build configuration
+cat << 'EOF' > config.yaml
+input_dir: docs
+output_dir: build
+css: templates/style.css
+template: templates/default.html
+EOF
+
+# Create automated build script
+cat << 'EOF' > scripts/build-docs.sh
+#!/bin/bash
+
+CONFIG_FILE="config.yaml"
+INPUT_DIR=$(grep "input_dir:" $CONFIG_FILE | cut -d' ' -f2)
+OUTPUT_DIR=$(grep "output_dir:" $CONFIG_FILE | cut -d' ' -f2)
+
+echo "Building documentation from $INPUT_DIR to $OUTPUT_DIR"
+
+# Create output directory
+mkdir -p $OUTPUT_DIR
+
+# Convert all markdown files
+find $INPUT_DIR -name "*.md" -type f | while read file; do
+    rel_path=\${file#$INPUT_DIR/}
+    output_file="$OUTPUT_DIR/\${rel_path%.md}.html"
+    output_dir=$(dirname "$output_file")
+    
+    mkdir -p "$output_dir"
+    pandoc "$file" -o "$output_file" --standalone
+    echo "✓ Converted: $file"
+done
+
+echo "Documentation build completed!"
+EOF
+
+chmod +x scripts/build-docs.sh
+
+# Run the build
+./scripts/build-docs.sh`
+  }]}
+/>
+
+By mastering markdown and command line interface, you can create efficient and automated documentation workflows. Markdown provides an easy way to write structured content, while CLI provides powerful tools to manage, convert, and distribute that documentation.
