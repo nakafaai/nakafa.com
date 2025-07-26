@@ -295,7 +295,7 @@ export function BacterialGrowth({
             </Button>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {[0.25, 0.5, 1, 1.5, 2].map((speedValue) => (
               <Button
                 key={speedValue}

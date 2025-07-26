@@ -339,7 +339,7 @@ export const CodeBlock = ({
     <CodeBlockContext.Provider value={{ value, onValueChange, data }}>
       <div
         className={cn(
-          "size-full overflow-hidden rounded-md border shadow-sm",
+          "grid size-full grid-cols-1 overflow-hidden rounded-md border shadow-sm",
           className
         )}
         {...props}
@@ -379,7 +379,7 @@ export const CodeBlockFiles = ({
 
   return (
     <div
-      className={cn("flex grow flex-row items-center gap-2", className)}
+      className={cn("flex min-w-0 grow flex-row items-center gap-2", className)}
       {...props}
     >
       {data.map(children)}
@@ -414,11 +414,11 @@ export const CodeBlockFilename = ({
 
   return (
     <div
-      className="flex items-center gap-2 bg-accent px-4 py-1.5 text-accent-foreground text-sm"
+      className="flex min-w-0 items-center gap-2 bg-accent px-4 py-1.5 text-accent-foreground text-sm"
       {...props}
     >
       {Icon && <Icon className="size-4 shrink-0" />}
-      <span className="flex-1 truncate">{children}</span>
+      <span className="min-w-0 flex-1 truncate">{children}</span>
     </div>
   );
 };

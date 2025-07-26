@@ -10,7 +10,10 @@ function Table({
 }: React.ComponentProps<"table"> & { containerClassName?: string }) {
   return (
     <div
-      className={cn("relative w-full overflow-x-auto", containerClassName)}
+      className={cn(
+        "relative grid w-full grid-cols-1 overflow-x-auto",
+        containerClassName
+      )}
       data-slot="table-container"
     >
       <table

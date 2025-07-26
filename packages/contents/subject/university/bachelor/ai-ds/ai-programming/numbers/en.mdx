@@ -4,3 +4,184 @@ export const metadata = {
     date: "07/26/2025",
     subject: "AI Programming",
 };
+
+## Introduction to Number Data Types
+
+In Python programming, numbers are one of the most fundamental data types you'll use every day. Think of numbers as basic ingredients in cooking. Without good basic ingredients, the dish you create won't be perfect. Similarly with programming, without understanding numbers well, the programs you create will be difficult to develop.
+
+Python is very flexible in handling numbers. When you type numbers in the Python shell, Python immediately recognizes and displays them back. Let's see how Python works with numbers.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "basic_numbers.py",
+      code: `>>> 4
+4
+
+>>> 4.
+4.0
+
+>>> 0.30
+0.3
+
+>>> 0.0000999
+9.99e-05
+
+>>> 2. + 1j
+(2+1j)`
+    }
+  ]}
+/>
+
+From the example above, you can see Python automatically recognizes various number formats. When you type <InlineMath math="4" />, Python knows it's an integer. When you type <InlineMath math="4." /> with a dot at the end, Python converts it to a decimal number <InlineMath math="4.0" />.
+
+## Types of Number Data
+
+Python has three main categories for numbers, each with special characteristics you need to understand.
+
+### Integer
+
+Integer is a whole number without decimal points. This includes positive, negative, and zero numbers. In daily life, you use integers to count things that can't be broken down, like the number of students in a class or page numbers in a book.
+
+**Valid integer examples**
+
+<MathContainer>
+<BlockMath math="-2, -1, 0, 1, 2" />
+<BlockMath math="+1, +2, +3" />
+</MathContainer>
+
+**Special features of integers in Python**
+
+Python allows you to use underscores to make large numbers easier to read. For example, <InlineMath math="123\_456\_789" /> is actually the same as <InlineMath math="123456789" />. This is like using commas in number writing in Indonesian language.
+
+### Float
+
+Float is a number that has decimal points. You'll often use floats for calculations that require precision, such as measuring distance, weight, or percentages.
+
+**Common float examples**
+
+<MathContainer>
+<BlockMath math="-1.2, 3.85, +7.01" />
+<BlockMath math="-.21, .01, 2., +5." />
+</MathContainer>
+
+**Scientific notation for very small or large numbers**
+
+Python uses scientific notation for very small or very large numbers. For example:
+
+<MathContainer>
+<BlockMath math="-3.2e5 = -3.2 \times 10^5" />
+<BlockMath math="2e-2 = 2 \times 10^{-2}" />
+<BlockMath math="+2.e4 = +2.0 \times 10^4" />
+</MathContainer>
+
+The notation <InlineMath math="e" /> or <InlineMath math="E" /> in Python is the same as the scientific notation you learned in mathematics. The number <InlineMath math="1E1" /> equals <InlineMath math="1 \times 10^1 = 10.0" />, and <InlineMath math="3.1E-7" /> equals <InlineMath math="3.1 \times 10^{-7}" />.
+
+### Complex
+
+Complex numbers consist of real and imaginary parts. In Python, the letter <InlineMath math="j" /> is used to indicate the imaginary part. This is often used in advanced mathematics, signal processing, and machine learning.
+
+**Complex number examples**
+
+<MathContainer>
+<BlockMath math="2 + 3j" />
+<BlockMath math="4.5 - 2.1j" />
+</MathContainer>
+
+Imagine complex numbers like coordinates on a map. The real part is the horizontal position, and the imaginary part is the vertical position.
+
+## The type Function for Checking Data Types
+
+When you work with complex data, sometimes you need to ensure the data type you're handling. Python provides the `type()` function for this purpose.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "check_types.py",
+      code: `>>> type(5)
+<class 'int'>
+
+>>> type(.1)
+<class 'float'>
+
+>>> type(2j)
+<class 'complex'>`
+    }
+  ]}
+/>
+
+The `type()` function is useful when you're debugging programs or want to ensure the received data matches expectations. It's like checking labels on food packaging to make sure you get the right product.
+
+## Constructors for Creating Number Objects
+
+Python provides constructors to convert or create number objects from other types. This is very useful when you need to convert data from one format to another.
+
+### Constructor float
+
+The `float()` constructor converts other numbers into decimal numbers.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "float_constructor.py",
+      code: `>>> float(2)
+2.0
+
+>>> float()
+0.0`
+    }
+  ]}
+/>
+
+When you call `float(2)`, Python converts the integer <InlineMath math="2" /> to float <InlineMath math="2.0" />. If you call `float()` without arguments, Python gives the default value <InlineMath math="0.0" />.
+
+### Constructor int
+
+The `int()` constructor converts other numbers to integers by discarding the decimal part.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "int_constructor.py",
+      code: `>>> int(2.1)
+2
+
+>>> int(2.9)
+2`
+    }
+  ]}
+/>
+
+Note that `int()` doesn't round numbers, but truncates the decimal part. Both `int(2.1)` and `int(2.9)` result in <InlineMath math="2" />. This is like cutting off the tail of decimal numbers, not rounding them.
+
+### Constructor complex
+
+The `complex()` constructor creates complex numbers from real numbers.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "complex_constructor.py",
+      code: `>>> complex(2.)
+(2+0j)
+
+>>> complex(0., 2.)
+2j`
+    }
+  ]}
+/>
+
+`complex(2.)` creates a complex number with real part <InlineMath math="2" /> and imaginary part <InlineMath math="0" />. Meanwhile, `complex(0., 2.)` creates a pure imaginary number <InlineMath math="2j" />.
+
+## Number Data Types Summary Table
+
+| Category | Type | Examples | Description |
+|----------|------|----------|-------------|
+| **Integer** | `int` | <InlineMath math="-2, -1, 0, 1, 2" /> and <InlineMath math="+1, +2, +3" /> | Whole numbers, can use underscore for clarity |
+| **Floating-Point** | `float` | <InlineMath math="-1.2, 3.85, +7.01" /> and <InlineMath math="-.21, .01, 2." /> | Decimal numbers, supports scientific notation with <InlineMath math="e" /> or <InlineMath math="E" /> |
+| **Complex** | `complex` | <InlineMath math="2 + 3j" /> and <InlineMath math="4.5 - 2.1j" /> | Complex numbers with <InlineMath math="j" /> as imaginary unit |
