@@ -4,3 +4,230 @@ export const metadata = {
     date: "07/26/2025",
     subject: "Pemrograman AI",
 };
+
+## Pengenalan Operator Aritmatika
+
+Operator aritmatika adalah simbol yang memungkinkan kamu melakukan operasi matematika dalam Python. Bayangkan operator seperti alat di dalam kotak perkakas. Setiap alat memiliki fungsi spesifik, dan kamu perlu tahu kapan dan bagaimana menggunakannya untuk mendapatkan hasil yang tepat.
+
+Python menyediakan tujuh operator aritmatika utama yang dapat kamu gunakan untuk melakukan perhitungan matematika. Setiap operator memiliki urutan prioritas yang berbeda, sehingga penting untuk memahami mana yang akan dikerjakan terlebih dahulu.
+
+## Urutan Prioritas Operator
+
+Python memiliki tujuh operator aritmatika yang dikelompokkan dalam tiga tingkat prioritas. Urutan ini menentukan operator mana yang akan dikerjakan terlebih dahulu dalam sebuah ekspresi.
+
+### Prioritas Tertinggi
+
+**Operator Perpangkatan `**`**
+
+Operator `**` digunakan untuk perpangkatan dan memiliki prioritas tertinggi. Operator ini juga memiliki asosiativitas kanan, berbeda dengan operator lainnya.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "exponentiation.py",
+      code: `>>> 2**3
+8
+
+>>> 2**-1
+0.5
+
+>>> 2**0.5
+1.4142135623730951`
+    }
+  ]}
+/>
+
+Operator perpangkatan sangat berguna untuk berbagai perhitungan. Kamu bisa menggunakannya untuk menghitung kuadrat, kubik, akar kuadrat, atau bahkan pangkat negatif untuk mendapatkan pecahan.
+
+### Prioritas Menengah
+
+Kelompok operator dengan prioritas menengah terdiri dari empat operator yang sering kamu gunakan dalam perhitungan sehari-hari.
+
+**Operator Perkalian**
+
+Operator `*` digunakan untuk mengalikan dua angka.
+
+**Operator Pembagian**
+
+Operator `/` melakukan pembagian dan selalu menghasilkan bilangan float, bahkan ketika kedua operand adalah integer.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "division_examples.py",
+      code: `>>> 7.0 / 2.0
+3.5
+
+>>> 7.0 / 2
+3.5
+
+>>> 7 / 2.0
+3.5
+
+>>> 7 / 2
+3.5
+
+>>> 4 / 2
+2.0`
+    }
+  ]}
+/>
+
+Perhatikan bahwa meskipun `4 / 2` menghasilkan angka bulat secara matematis, Python tetap mengembalikan <InlineMath math="2.0" /> sebagai float.
+
+**Operator Pembagian Integer**
+
+Operator `//` melakukan pembagian integer yang membulatkan hasil ke bilangan bulat terdekat yang lebih kecil.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "integer_division.py",
+      code: `>>> 4 // 2
+2
+
+>>> 7 // 2
+3
+
+>>> -7 // 2
+-4
+
+>>> 7.0 // 2
+3.0`
+    }
+  ]}
+/>
+
+Pembagian integer bekerja dengan membulatkan hasil ke bilangan bulat terdekat yang lebih kecil. Untuk angka negatif seperti `-7 // 2`, hasilnya adalah `-4`, bukan `-3`.
+
+**Operator Modulo `%`**
+
+Operator `%` mengembalikan sisa pembagian. Operator ini mengikuti rumus matematika <InlineMath math="a \% b = a - (a // b) \times b" />.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "modulo_examples.py",
+      code: `>>> 5 % 4
+1
+
+>>> -5 % 4
+3
+
+>>> 5 % -4
+-3
+
+>>> -5 % -4
+-1`
+    }
+  ]}
+/>
+
+Untuk memahami modulo dengan angka negatif, perhatikan bahwa `5 % 4` menghasilkan `1`, sedangkan `-5 % 4` menghasilkan `3`. Operator modulo sangat berguna untuk menentukan apakah suatu angka habis dibagi atau untuk mendapatkan digit terakhir dari sebuah angka.
+
+### Prioritas Terendah
+
+**Operator Penjumlahan dan Pengurangan**
+
+Operator `+` dan `-` memiliki prioritas terendah di antara semua operator aritmatika.
+
+## Aturan Prioritas dan Asosiativitas
+
+### Urutan Evaluasi Ekspresi
+
+Python mengevaluasi ekspresi berdasarkan tiga aturan utama.
+
+1. **Urutan prioritas** menentukan operator mana yang dikerjakan terlebih dahulu
+2. **Asosiativitas kiri** berlaku untuk operator dengan prioritas yang sama, kecuali perpangkatan
+3. **Tanda kurung** dapat mengubah urutan evaluasi
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "precedence_examples.py",
+      code: `>>> 2 + 4 * 3
+14
+
+>>> (2 + 4) * 3
+18
+
+>>> 2 * 2**3
+16
+
+>>> 6 / 2 * 4
+12
+
+>>> 6 / (2 * 4)
+0.75`
+    }
+  ]}
+/>
+
+### Aturan Asosiativitas
+
+Asosiativitas menentukan urutan evaluasi ketika ada beberapa operator dengan prioritas yang sama dalam satu ekspresi.
+
+**Asosiativitas Kiri**
+
+Evaluasi dimulai dari kiri ke kanan. Sebagian besar operator menggunakan aturan ini.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "left_associative.py",
+      code: `>>> 6 / 2 * 4
+12
+
+>>> 10 - 3 - 2
+5`
+    }
+  ]}
+/>
+
+Ekspresi `6 / 2 * 4` dievaluasi sebagai `(6 / 2) * 4 = 3 * 4 = 12`, bukan `6 / (2 * 4) = 6 / 8 = 0.75`.
+
+**Asosiativitas Kanan**
+
+Evaluasi dimulai dari kanan ke kiri. Hanya operator perpangkatan `**` yang menggunakan aturan ini.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "right_associative.py",
+      code: `>>> 2 ** 3 ** 2
+512
+
+>>> 3 ** 2 ** 2
+81`
+    }
+  ]}
+/>
+
+Ekspresi `2 ** 3 ** 2` dievaluasi sebagai `2 ** (3 ** 2) = 2 ** 9 = 512`, bukan `(2 ** 3) ** 2 = 8 ** 2 = 64`.
+
+## Python Shell sebagai Kalkulator
+
+Python shell sangat efektif sebagai kalkulator untuk berbagai perhitungan matematika. Kamu bisa mengetik ekspresi matematika langsung dan Python akan mengevaluasinya secara real-time.
+
+Hal penting yang perlu diingat adalah operator `/` selalu menghasilkan float bahkan ketika hasilnya berupa bilangan bulat. Sebaliknya, operator `//` menghasilkan integer kecuali salah satu operand adalah float. Untuk operator modulo, hasilnya akan mengikuti tanda dari pembagi dan menggunakan rumus matematika yang konsisten.
+
+## Tabel Ringkasan Operator Aritmatika
+
+| Prioritas | Operator | Fungsi | Asosiativitas |
+|-----------|----------|--------|---------------|
+| **Tertinggi** | `**` | Perpangkatan | Kanan |
+| **Menengah** | `*` | Perkalian | Kiri |
+| **Menengah** | `/` | Pembagian | Kiri |
+| **Menengah** | `//` | Pembagian integer | Kiri |
+| **Menengah** | `%` | Modulo | Kiri |
+| **Terendah** | `+` | Penjumlahan | Kiri |
+| **Terendah** | `-` | Pengurangan | Kiri |
+
+Dengan memahami operator aritmatika dan urutan prioritasnya, kamu dapat menulis ekspresi matematika yang akurat dan efisien dalam program Python. Gunakan tanda kurung ketika kamu ingin mengubah urutan evaluasi standar untuk mendapatkan hasil yang diinginkan.

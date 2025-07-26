@@ -254,12 +254,11 @@ const wordHighlightClassNames = cn(
 
 const codeBlockClassName = cn(
   "mt-0 bg-background text-sm",
-  "[&_pre]:whitespace-pre-wrap",
   "[&_pre]:py-4",
+  "[&_pre]:overflow-x-auto",
   "[&_.shiki]:!bg-[var(--shiki-bg)]",
   "[&_code]:w-full",
   "[&_code]:grid",
-  "[&_code]:overflow-x-auto",
   "[&_code]:bg-transparent",
   "[&_.line]:px-4",
   "[&_.line]:w-full",

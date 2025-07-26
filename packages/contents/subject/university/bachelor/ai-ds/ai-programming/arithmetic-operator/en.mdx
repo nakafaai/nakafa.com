@@ -4,3 +4,230 @@ export const metadata = {
     date: "07/26/2025",
     subject: "AI Programming",
 };
+
+## Introduction to Arithmetic Operators
+
+Arithmetic operators are symbols that allow you to perform mathematical operations in Python. Think of operators like tools in a toolbox. Each tool has a specific function, and you need to know when and how to use them to get the right results.
+
+Python provides seven main arithmetic operators that you can use to perform mathematical calculations. Each operator has a different order of precedence, so it's important to understand which one will be executed first.
+
+## Operator Precedence Order
+
+Python has seven arithmetic operators grouped into three precedence levels. This order determines which operator will be executed first in an expression.
+
+### Highest Precedence
+
+**Exponentiation Operator `**`**
+
+The `**` operator is used for exponentiation and has the highest precedence. This operator also has right associativity, unlike other operators.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "exponentiation.py",
+      code: `>>> 2**3
+8
+
+>>> 2**-1
+0.5
+
+>>> 2**0.5
+1.4142135623730951`
+    }
+  ]}
+/>
+
+The exponentiation operator is very useful for various calculations. You can use it to calculate squares, cubes, square roots, or even negative powers to get fractions.
+
+### Middle Precedence
+
+The group of operators with middle precedence consists of four operators that you often use in daily calculations.
+
+**Multiplication Operator**
+
+The `*` operator is used to multiply two numbers.
+
+**Division Operator**
+
+The `/` operator performs division and always produces a float result, even when both operands are integers.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "division_examples.py",
+      code: `>>> 7.0 / 2.0
+3.5
+
+>>> 7.0 / 2
+3.5
+
+>>> 7 / 2.0
+3.5
+
+>>> 7 / 2
+3.5
+
+>>> 4 / 2
+2.0`
+    }
+  ]}
+/>
+
+Note that even though `4 / 2` produces a whole number mathematically, Python still returns <InlineMath math="2.0" /> as a float.
+
+**Integer Division Operator**
+
+The `//` operator performs integer division which rounds the result to the nearest smaller integer.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "integer_division.py",
+      code: `>>> 4 // 2
+2
+
+>>> 7 // 2
+3
+
+>>> -7 // 2
+-4
+
+>>> 7.0 // 2
+3.0`
+    }
+  ]}
+/>
+
+Integer division works by rounding the result to the nearest smaller integer. For negative numbers like `-7 // 2`, the result is `-4`, not `-3`.
+
+**Modulo Operator `%`**
+
+The `%` operator returns the remainder of division. This operator follows the mathematical formula <InlineMath math="a \% b = a - (a // b) \times b" />.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "modulo_examples.py",
+      code: `>>> 5 % 4
+1
+
+>>> -5 % 4
+3
+
+>>> 5 % -4
+-3
+
+>>> -5 % -4
+-1`
+    }
+  ]}
+/>
+
+To understand modulo with negative numbers, note that `5 % 4` produces `1`, while `-5 % 4` produces `3`. The modulo operator is very useful for determining whether a number is divisible or for getting the last digit of a number.
+
+### Lowest Precedence
+
+**Addition and Subtraction Operators**
+
+The `+` and `-` operators have the lowest precedence among all arithmetic operators.
+
+## Precedence Rules and Associativity
+
+### Expression Evaluation Order
+
+Python evaluates expressions based on three main rules.
+
+1. **Precedence order** determines which operator is executed first
+2. **Left associativity** applies to operators with the same precedence, except exponentiation
+3. **Parentheses** can change the evaluation order
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "precedence_examples.py",
+      code: `>>> 2 + 4 * 3
+14
+
+>>> (2 + 4) * 3
+18
+
+>>> 2 * 2**3
+16
+
+>>> 6 / 2 * 4
+12
+
+>>> 6 / (2 * 4)
+0.75`
+    }
+  ]}
+/>
+
+### Associativity Rules
+
+Associativity determines the evaluation order when there are multiple operators with the same precedence in one expression.
+
+**Left Associativity**
+
+Evaluation starts from left to right. Most operators use this rule.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "left_associative.py",
+      code: `>>> 6 / 2 * 4
+12
+
+>>> 10 - 3 - 2
+5`
+    }
+  ]}
+/>
+
+The expression `6 / 2 * 4` is evaluated as `(6 / 2) * 4 = 3 * 4 = 12`, not `6 / (2 * 4) = 6 / 8 = 0.75`.
+
+**Right Associativity**
+
+Evaluation starts from right to left. Only the exponentiation operator `**` uses this rule.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "right_associative.py",
+      code: `>>> 2 ** 3 ** 2
+512
+
+>>> 3 ** 2 ** 2
+81`
+    }
+  ]}
+/>
+
+The expression `2 ** 3 ** 2` is evaluated as `2 ** (3 ** 2) = 2 ** 9 = 512`, not `(2 ** 3) ** 2 = 8 ** 2 = 64`.
+
+## Python Shell as Calculator
+
+Python shell is very effective as a calculator for various mathematical calculations. You can type mathematical expressions directly and Python will evaluate them in real-time.
+
+Important things to remember are that the `/` operator always produces a float even when the result is a whole number. Conversely, the `//` operator produces an integer unless one of the operands is a float. For the modulo operator, the result will follow the sign of the divisor and use a consistent mathematical formula.
+
+## Arithmetic Operators Summary Table
+
+| Precedence | Operator | Function | Associativity |
+|------------|----------|----------|---------------|
+| **Highest** | `**` | Exponentiation | Right |
+| **Middle** | `*` | Multiplication | Left |
+| **Middle** | `/` | Division | Left |
+| **Middle** | `//` | Integer division | Left |
+| **Middle** | `%` | Modulo | Left |
+| **Lowest** | `+` | Addition | Left |
+| **Lowest** | `-` | Subtraction | Left |
+
+By understanding arithmetic operators and their precedence order, you can write accurate and efficient mathematical expressions in Python programs. Use parentheses when you want to change the standard evaluation order to get the desired results.
