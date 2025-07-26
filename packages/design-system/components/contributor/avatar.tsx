@@ -1,10 +1,7 @@
+import { SiGithub, SiX } from "@icons-pack/react-simple-icons";
 import type { Contributor } from "@repo/contents/_types/contributor";
 import { Character } from "@repo/design-system/components/ui/character";
-import {
-  IconBrandGithub,
-  IconBrandLinkedin,
-  IconBrandTwitter,
-} from "@tabler/icons-react";
+import { IconBrandLinkedin } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { Badge } from "../ui/badge";
 import { buttonVariants } from "../ui/button";
@@ -69,7 +66,7 @@ export function Avatar({ contributor }: Props) {
                   target="_blank"
                   title="Twitter"
                 >
-                  <IconBrandTwitter className="size-4" />
+                  <SiX className="size-4" />
                   <span className="sr-only">Twitter</span>
                 </a>
               )}
@@ -84,7 +81,7 @@ export function Avatar({ contributor }: Props) {
                   target="_blank"
                   title="GitHub"
                 >
-                  <IconBrandGithub className="size-4" />
+                  <SiGithub className="size-4" />
                   <span className="sr-only">GitHub</span>
                 </a>
               )}

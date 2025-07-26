@@ -1,5 +1,6 @@
 "use client";
 
+import { SiDiscord, SiGithub, SiYoutube } from "@icons-pack/react-simple-icons";
 import type { Reference } from "@repo/contents/_types/content";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -24,11 +25,6 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cleanupUrl, cn, formatUrl } from "@repo/design-system/lib/utils";
-import {
-  IconBrandDiscord,
-  IconBrandGithub,
-  IconBrandYoutube,
-} from "@tabler/icons-react";
 import {
   BookIcon,
   BookOpenIcon,
@@ -103,7 +99,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                   title={t("source-code")}
                 >
                   <span className="sr-only">{t("source-code")}</span>
-                  <IconBrandGithub className="size-4" />
+                  <SiGithub className="size-4" />
                 </a>
               </Button>
             </TooltipTrigger>
@@ -122,7 +118,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                   title={t("videos")}
                 >
                   <span className="sr-only">{t("videos")}</span>
-                  <IconBrandYoutube className="size-4" />
+                  <SiYoutube className="size-4" />
                 </a>
               </Button>
             </TooltipTrigger>
@@ -141,7 +137,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                   title={t("community")}
                 >
                   <span className="sr-only">{t("community")}</span>
-                  <IconBrandDiscord className="size-4" />
+                  <SiDiscord className="size-4" />
                 </a>
               </Button>
             </TooltipTrigger>

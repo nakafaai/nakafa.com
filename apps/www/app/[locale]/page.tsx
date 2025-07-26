@@ -1,8 +1,8 @@
+import { SiYoutube } from "@icons-pack/react-simple-icons";
 import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { cn } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { IconBrandYoutube } from "@tabler/icons-react";
 import { HeartHandshakeIcon } from "lucide-react";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -91,7 +91,7 @@ export default async function Page({ params }: Props) {
                   target="_blank"
                   title={tHome("videos")}
                 >
-                  <IconBrandYoutube className="size-4" />
+                  <SiYoutube className="size-4" />
                   {tHome("videos")}
                 </a>
               </div>
