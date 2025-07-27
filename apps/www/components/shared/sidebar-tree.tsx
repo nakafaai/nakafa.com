@@ -20,6 +20,7 @@ import { slugify } from "@repo/design-system/lib/utils";
 import { AlignLeftIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { TocProvider, useToc } from "@/lib/context/use-toc";
+import { useVirtual } from "@/lib/context/use-virtual";
 
 type Props = {
   data: ParsedHeading[];
@@ -37,19 +38,39 @@ function SidebarTreeItem({
   depth?: number;
 }) {
   const activeHeadings = useToc((context) => context.activeHeadings);
+  const scrollToIndex = useVirtual((context) => context.scrollToIndex);
 
   const id = slugify(heading.label);
+
+  const hasIndex = heading.index !== undefined;
+  // TODO: disable isActive when hasIndex until fix is coming
+  const isActive = activeHeadings.includes(id) && !hasIndex;
 
   return (
     <SidebarMenuItem key={heading.href}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <SidebarMenuButton asChild isActive={activeHeadings.includes(id)}>
-            <NavigationLink href={heading.href} title={heading.label}>
-              <span className="truncate" title={heading.label}>
-                {heading.label}
-              </span>
-            </NavigationLink>
+          <SidebarMenuButton asChild isActive={isActive}>
+            {hasIndex ? (
+              <button
+                onClick={() => {
+                  if (heading.index !== undefined) {
+                    scrollToIndex(heading.index);
+                  }
+                }}
+                type="button"
+              >
+                <span className="truncate" title={heading.label}>
+                  {heading.label}
+                </span>
+              </button>
+            ) : (
+              <NavigationLink href={heading.href} title={heading.label}>
+                <span className="truncate" title={heading.label}>
+                  {heading.label}
+                </span>
+              </NavigationLink>
+            )}
           </SidebarMenuButton>
         </TooltipTrigger>
         <TooltipContent

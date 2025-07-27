@@ -1,5 +1,5 @@
 import { getSurah, getSurahName } from "@repo/contents/_lib/quran";
-import { slugify } from "@repo/design-system/lib/utils";
+import { cn, slugify } from "@repo/design-system/lib/utils";
 import { MoonStarIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -18,6 +18,7 @@ import { QuranAudio } from "@/components/shared/quran-audio";
 import { QuranInterpretation } from "@/components/shared/quran-interpretation";
 import { QuranText } from "@/components/shared/quran-text";
 import { RefContent } from "@/components/shared/ref-content";
+import { WindowVirtualized } from "@/components/shared/window-virtualized";
 
 export const revalidate = false;
 
@@ -114,8 +115,9 @@ export default async function Page({ params }: Props) {
 
   const title = getSurahName({ locale, name: surahData.name });
 
-  const headings = surahData.verses.map((verse) => ({
+  const headings = surahData.verses.map((verse, index) => ({
     label: t("verse-count", { count: verse.number.inSurah }),
+    index,
     href: `/quran/${surah}#${slugify(t("verse-count", { count: verse.number.inSurah }))}`,
   }));
 
@@ -153,57 +155,64 @@ export default async function Page({ params }: Props) {
             </div>
           )}
 
-          {surahData.verses.map((verse) => {
-            const transliteration = verse.text.transliteration.en;
-            const translate = verse.translation[locale] ?? verse.translation.en;
+          <WindowVirtualized>
+            {surahData.verses.map((verse, index) => {
+              const transliteration = verse.text.transliteration.en;
+              const translate =
+                verse.translation[locale] ?? verse.translation.en;
 
-            const id = slugify(
-              t("verse-count", { count: verse.number.inSurah })
-            );
+              const id = slugify(
+                t("verse-count", { count: verse.number.inSurah })
+              );
 
-            return (
-              <div
-                className="mb-6 space-y-6 border-b pb-6 last:mb-0 last:border-b-0 last:pb-0"
-                key={verse.number.inQuran}
-              >
-                <div className="flex items-center gap-4">
-                  <a
-                    className="flex w-full flex-1 shrink-0 scroll-mt-44"
-                    href={`#${id}`}
-                    id={id}
-                  >
-                    <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
-                      <span className="font-mono text-xs tracking-tighter">
-                        {verse.number.inSurah}
-                      </span>
-                      <h2 className="sr-only">
-                        {t("verse-count", { count: verse.number.inSurah })}
-                      </h2>
+              return (
+                <div
+                  className={cn(
+                    "mb-6 space-y-6 border-b pb-6",
+                    index === surahData.verses.length - 1 &&
+                      "mb-0 border-b-0 pb-0"
+                  )}
+                  key={verse.number.inQuran}
+                >
+                  <div className="flex items-center gap-4">
+                    <a
+                      className="flex w-full flex-1 shrink-0 scroll-mt-44"
+                      href={`#${id}`}
+                      id={id}
+                    >
+                      <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
+                        <span className="font-mono text-xs tracking-tighter">
+                          {verse.number.inSurah}
+                        </span>
+                        <h2 className="sr-only">
+                          {t("verse-count", { count: verse.number.inSurah })}
+                        </h2>
+                      </div>
+                    </a>
+
+                    <div className="flex items-center gap-2">
+                      <QuranAudio audio={verse.audio} />
+                      {locale === "id" && (
+                        // Only available in Indonesian
+                        <QuranInterpretation
+                          interpretation={verse.tafsir.id.short}
+                        />
+                      )}
                     </div>
-                  </a>
-
-                  <div className="flex items-center gap-2">
-                    <QuranAudio audio={verse.audio} />
-                    {locale === "id" && (
-                      // Only available in Indonesian
-                      <QuranInterpretation
-                        interpretation={verse.tafsir.id.short}
-                      />
-                    )}
+                  </div>
+                  <QuranText>{verse.text.arab}</QuranText>
+                  <div className="flex flex-col gap-2">
+                    <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
+                      {transliteration}
+                    </p>
+                    <p className="text-pretty text-foreground/80 leading-relaxed">
+                      {translate}
+                    </p>
                   </div>
                 </div>
-                <QuranText>{verse.text.arab}</QuranText>
-                <div className="flex flex-col gap-2">
-                  <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
-                    {transliteration}
-                  </p>
-                  <p className="text-pretty text-foreground/80 leading-relaxed">
-                    {translate}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </WindowVirtualized>
         </LayoutMaterialMain>
         <LayoutMaterialPagination pagination={pagination} />
         <LayoutMaterialFooter className="mt-10">

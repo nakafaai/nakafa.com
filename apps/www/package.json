@@ -36,6 +36,7 @@
     "use-context-selector": "^2.0.0",
     "use-sound": "^5.0.0",
     "babel-plugin-react-compiler": "^19.1.0-rc.2",
+    "virtua": "^0.41.5",
     "zod": "^3.25.67"
   },
   "devDependencies": {

@@ -1,5 +1,6 @@
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import type { ComponentProps, ReactNode } from "react";
+import { VirtualProvider } from "@/lib/context/use-virtual";
 import { FooterContent } from "./footer-content";
 import { HeaderContent } from "./header-content";
 import { LayoutContent } from "./layout-content";
@@ -45,11 +46,13 @@ export function LayoutArticle({
   onThisPage: ParsedHeading[];
 }) {
   return (
-    <div className="flex">
-      <div className="flex-1">{children}</div>
-      <SidebarRight>
-        <SidebarTree data={onThisPage} />
-      </SidebarRight>
-    </div>
+    <VirtualProvider>
+      <div className="flex">
+        <div className="flex-1">{children}</div>
+        <SidebarRight>
+          <SidebarTree data={onThisPage} />
+        </SidebarRight>
+      </div>
+    </VirtualProvider>
   );
 }
