@@ -17,6 +17,7 @@ import {
 } from "@repo/design-system/markdown/math";
 import { Mermaid } from "@repo/design-system/markdown/mermaid";
 import { Paragraph } from "@repo/design-system/markdown/paragraph";
+import { Youtube } from "@repo/design-system/markdown/youtube";
 import type {
   BlockquoteProps,
   CodeProps,
@@ -77,6 +78,7 @@ export const components = {
       {...props}
     />
   ),
+  Youtube,
   Mermaid,
   MathContainer,
   InlineMath,

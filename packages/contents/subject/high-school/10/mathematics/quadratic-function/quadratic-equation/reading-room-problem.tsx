@@ -2,7 +2,7 @@ import { InlineMath } from "react-katex";
 
 export function ReadingRoomProblem() {
   return (
-    <div className="my-6 flex justify-center">
+    <div className="my-6 grid place-items-center">
       <div className="relative w-full max-w-md">
         {/* Main container - Classroom */}
         <div className="relative aspect-[3/2] w-full border bg-card shadow-sm">
