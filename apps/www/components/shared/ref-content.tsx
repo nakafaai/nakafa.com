@@ -149,7 +149,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
       </div>
 
       {showSheet && (
-        <Sheet onOpenChange={setOpen} open={open}>
+        <Sheet modal={false} onOpenChange={setOpen} open={open}>
           <SheetContent className="w-6/7 sm:max-w-xl">
             <div className="flex h-full flex-col">
               <SheetHeader>

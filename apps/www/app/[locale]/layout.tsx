@@ -20,6 +20,7 @@ import { OrganizationJsonLd } from "@repo/seo/json-ld/organization";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { AiSheet } from "@/components/ai/sheet";
 import { AppProviders } from "@/components/providers";
 import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
@@ -183,6 +184,7 @@ export default async function LocaleLayout({ children, params }: Props) {
                 <SidebarInset>
                   <Header />
                   <SearchCommand />
+                  <AiSheet />
                   <div className="relative" data-pagefind-body>
                     {children}
                   </div>
