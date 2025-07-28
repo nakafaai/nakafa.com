@@ -155,7 +155,7 @@ export default async function Page({ params }: Props) {
             </div>
           )}
 
-          <WindowVirtualized>
+          <WindowVirtualized ssrCount={surahData.verses.length}>
             {surahData.verses.map((verse, index) => {
               const transliteration = verse.text.transliteration.en;
               const translate =

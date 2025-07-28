@@ -1,10 +1,19 @@
 "use client";
 
-import { WindowVirtualizer } from "virtua";
+import { WindowVirtualizer, type WindowVirtualizerProps } from "virtua";
 import { useVirtual } from "@/lib/context/use-virtual";
 
-export function WindowVirtualized({ children }: { children: React.ReactNode }) {
+export function WindowVirtualized({
+  children,
+  ...props
+}: {
+  children: React.ReactNode;
+} & WindowVirtualizerProps) {
   const virtualRef = useVirtual((state) => state.virtualRef);
 
-  return <WindowVirtualizer ref={virtualRef}>{children}</WindowVirtualizer>;
+  return (
+    <WindowVirtualizer ref={virtualRef} {...props}>
+      {children}
+    </WindowVirtualizer>
+  );
 }
