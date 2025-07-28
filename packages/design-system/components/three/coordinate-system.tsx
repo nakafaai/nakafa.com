@@ -118,7 +118,7 @@ export function CoordinateSystem({
   return (
     <div
       className={cn(
-        "relative aspect-square overflow-hidden rounded-md sm:aspect-[1.43/1]", // IMAX aspect ratio
+        "relative grid aspect-square overflow-hidden rounded-md sm:aspect-[1.43/1]", // IMAX aspect ratio
         isDragging ? "cursor-grabbing" : "cursor-grab",
         className
       )}
