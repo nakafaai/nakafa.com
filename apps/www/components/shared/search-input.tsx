@@ -53,30 +53,21 @@ export function SearchInput({
       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3 text-muted-foreground">
         <SearchIcon className="size-4" />
       </div>
-      {loading ? (
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 text-muted-foreground peer-disabled:opacity-50",
-            action && "right-9"
-          )}
-        >
-          <SpinnerIcon aria-hidden="true" className="size-4" />
-        </div>
-      ) : (
-        <button
-          aria-label="Clear search"
-          className={cn(
-            "absolute inset-y-0 end-0 flex h-full w-9 cursor-pointer items-center justify-center rounded-e-md text-muted-foreground opacity-0 outline-none transition-[color,box-shadow] hover:text-foreground",
-            value && "opacity-100",
-            action && "right-9"
-          )}
-          onClick={() => setValue("")}
-          type="button"
-        >
-          <XIcon aria-hidden="true" className="size-4 shrink-0" />
-          <span className="sr-only">Clear search</span>
-        </button>
-      )}
+      <button
+        aria-label="Clear search"
+        className={cn(
+          "absolute inset-y-0 right-0 flex h-full w-9 cursor-pointer items-center justify-center rounded-e-md text-muted-foreground opacity-0 outline-none transition-[color,box-shadow] hover:text-foreground",
+          value && "opacity-100",
+          action && "right-9"
+        )}
+        disabled={loading}
+        onClick={() => setValue("")}
+        type="button"
+      >
+        <XIcon aria-hidden="true" className="size-4 shrink-0" />
+        <span className="sr-only">Clear search</span>
+      </button>
+
       {action && (
         <button
           className="absolute inset-y-0 end-0 flex h-full cursor-pointer items-center justify-center pe-3 text-muted-foreground disabled:cursor-default disabled:opacity-50 peer-disabled:opacity-50"
@@ -85,7 +76,11 @@ export function SearchInput({
           type="button"
         >
           <kbd className="flex size-6 items-center justify-center rounded-md border bg-primary text-primary-foreground">
-            <CornerDownLeftIcon className="size-3" />
+            {loading ? (
+              <SpinnerIcon aria-hidden="true" className="size-3" />
+            ) : (
+              <CornerDownLeftIcon className="size-3" />
+            )}
             <span className="sr-only">Search</span>
           </kbd>
         </button>

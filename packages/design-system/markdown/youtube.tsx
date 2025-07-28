@@ -28,7 +28,7 @@ export function Youtube({ videoId }: Props) {
       <div className="aspect-video">
         <YouTubeEmbed videoid={videoId} />
       </div>
-      <CardFooter className="flex-wrap gap-2 border-t bg-muted pb-6">
+      <CardFooter className="flex-wrap gap-2 border-t pb-6">
         <Button asChild variant="outline">
           <Link
             href={`https://www.youtube.com/watch?v=${videoId}`}
