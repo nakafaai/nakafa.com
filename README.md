@@ -33,7 +33,7 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ```bash
 bun dev          # Development server (Turbopack)
-bun run build        # Production build
+bun run build    # Production build
 bun start        # Production server
 bun lint         # Lint & format check
 bun test         # Run tests
