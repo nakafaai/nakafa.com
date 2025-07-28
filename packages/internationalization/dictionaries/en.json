@@ -97,11 +97,13 @@
     "report": "Report",
     "copy-markdown": "Copy Markdown",
     "copy-success": "Copied to clipboard",
+    "copy-success-gemini": "Copied to clipboard. You can now paste it in Gemini.",
     "open": "Open",
     "open-in-github": "Open in GitHub",
     "open-in-chatgpt": "Open in ChatGPT",
     "open-in-claude": "Open in Claude",
     "open-in-t3-chat": "Open in T3 Chat",
+    "open-in-gemini": "Open in Gemini",
     "holy": "Holy",
     "see-on-youtube": "See on YouTube",
     "subscribe": "Subscribe"

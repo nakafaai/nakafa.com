@@ -97,11 +97,13 @@
     "report": "Laporkan",
     "copy-markdown": "Salin Markdown",
     "copy-success": "Berhasil disalin ke papan klip",
+    "copy-success-gemini": "Berhasil disalin. Sekarang kamu dapat menempelkannya di Gemini.",
     "open": "Buka",
     "open-in-github": "Buka di GitHub",
     "open-in-chatgpt": "Buka di ChatGPT",
     "open-in-claude": "Buka di Claude",
     "open-in-t3-chat": "Buka di T3 Chat",
+    "open-in-gemini": "Buka di Gemini",
     "holy": "Suci",
     "see-on-youtube": "Lihat di YouTube",
     "subscribe": "Berlangganan"
