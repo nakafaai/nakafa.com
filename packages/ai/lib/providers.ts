@@ -1,16 +1,36 @@
-import { gateway } from "@ai-sdk/gateway";
+import {
+  createGateway,
+  gateway as defaultGateway,
+  type GatewayModelId,
+} from "@ai-sdk/gateway";
 import { customProvider } from "ai";
 
-const languageModels = {
-  google: gateway("google/gemini-2.5-flash"),
+const languageModels: Record<"google", GatewayModelId> = {
+  google: "google/gemini-2.5-flash",
 };
 
-export const model = customProvider({
-  languageModels,
-});
+export type ModelId = keyof typeof languageModels;
 
-export type modelID = keyof typeof languageModels;
+export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const MODELS = Object.keys(languageModels);
+export const defaultModel: ModelId = "google";
 
-export const defaultModel: modelID = "google";
+export class Model {
+  private readonly provider: ReturnType<typeof customProvider>;
+
+  constructor(options?: { apiKey?: string }) {
+    const gateway = options?.apiKey
+      ? createGateway({ apiKey: options.apiKey })
+      : defaultGateway;
+
+    this.provider = customProvider({
+      languageModels: {
+        google: gateway(languageModels.google),
+      },
+    });
+  }
+
+  languageModel(id: ModelId = defaultModel) {
+    return this.provider.languageModel(id);
+  }
+}

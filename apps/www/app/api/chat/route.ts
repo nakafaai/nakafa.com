@@ -1,13 +1,11 @@
-import { defaultModel, model } from "@repo/ai/lib/providers";
-import {
-  convertToModelMessages,
-  stepCountIs,
-  streamText,
-  type UIMessage,
-} from "ai";
+import { defaultModel, Model } from "@repo/ai/lib/providers";
+import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import { env } from "@/env";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
+
+const model = new Model({ apiKey: env.AI_GATEWAY_API_KEY });
 
 export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
@@ -16,7 +14,6 @@ export async function POST(req: Request) {
     model: model.languageModel(defaultModel),
     system: "You are a helpful assistant.",
     messages: convertToModelMessages(messages),
-    stopWhen: stepCountIs(5), // enable multi-step agentic flow
   });
 
   return result.toUIMessageStreamResponse({
