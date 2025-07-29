@@ -48,8 +48,11 @@ export async function POST(req: Request) {
   return result.toUIMessageStreamResponse({
     sendReasoning: true,
     onError: (error) => {
-      if (error instanceof Error && error.message.includes("Rate limit")) {
-        return t("rate-limit-message");
+      if (error instanceof Error) {
+        if (error.message.includes("Rate limit")) {
+          return t("rate-limit-message");
+        }
+        return error.message;
       }
       return t("error-message");
     },
