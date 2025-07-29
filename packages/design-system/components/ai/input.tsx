@@ -184,6 +184,8 @@ export const AIInputSubmit = ({
   children,
   ...props
 }: AIInputSubmitProps) => {
+  const defaultVariant = status === "streaming" ? "destructive" : "default";
+
   let Icon = <SendIcon />;
   if (status === "submitted") {
     Icon = <SpinnerIcon className="animate-spin" />;
@@ -197,7 +199,7 @@ export const AIInputSubmit = ({
       className={cn(className)}
       size={size}
       type="submit"
-      variant={variant}
+      variant={variant ?? defaultVariant}
       {...props}
     >
       {children ?? Icon}
