@@ -13,7 +13,6 @@ import { Heading } from "@repo/design-system/markdown/heading";
 import { Paragraph } from "@repo/design-system/markdown/paragraph";
 import type {
   BlockquoteProps,
-  CodeProps,
   EmProps,
   HeadingProps,
   ListItemProps,
@@ -64,12 +63,6 @@ export const reactMdxComponents: Options["components"] = {
     <blockquote className="my-4 border-l-2 pl-4 italic" {...props} />
   ),
   a: Anchor,
-  code: (props: CodeProps) => (
-    <code
-      className="inline break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight"
-      {...props}
-    />
-  ),
   table: ({ children, ...props }: TableProps) => (
     <Table containerClassName="my-4 rounded-xl border shadow-sm" {...props}>
       {filterWhitespaceNodes(children)}

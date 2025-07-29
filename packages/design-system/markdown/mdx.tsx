@@ -56,10 +56,7 @@ export const components = {
     <Heading className="text-sm" Tag="h6" {...props} />
   ),
   p: (props: ParagraphProps) => (
-    <Paragraph
-      className="text-foreground/80 last:mb-0 [&_em]:text-foreground [&_strong]:text-foreground"
-      {...props}
-    />
+    <Paragraph className="text-foreground/80" {...props} />
   ),
   ol: (props: ListProps) => (
     <ol className="my-4 list-decimal pl-5" {...props} />

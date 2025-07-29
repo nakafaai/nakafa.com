@@ -40,7 +40,7 @@ import { toast } from "sonner";
 import { useAi } from "@/lib/context/use-ai";
 
 const MIN_WIDTH = 448;
-const MAX_WIDTH = 672;
+const MAX_WIDTH = 768;
 
 export function AiSheet() {
   const open = useAi((state) => state.open);
