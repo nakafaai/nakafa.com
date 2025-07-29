@@ -54,8 +54,8 @@
     "apps/mcp": {
       "name": "mcp",
       "dependencies": {
-        "@repo/analytics": "workspace:*",
         "@repo/connection": "workspace:*",
+        "@repo/contents": "workspace:*",
         "@repo/next-config": "workspace:*",
         "mcp-handler": "1.0.1",
         "next": "15.4.4",
