@@ -1,4 +1,3 @@
-import { vercelTrack } from "@repo/analytics/vercel";
 import { api } from "@repo/connection/routes";
 import { createMcpHandler } from "mcp-handler";
 import { env } from "@/env";
@@ -34,12 +33,6 @@ const handler = createMcpHandler(
           url: item.url,
           slug: item.slug,
         }));
-
-        await vercelTrack("get_contents", {
-          locale,
-          type: filters.type,
-          total: contents.length,
-        });
 
         if (contents.length === 0) {
           return {

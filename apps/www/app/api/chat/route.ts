@@ -1,12 +1,9 @@
-import { defaultModel, Model } from "@repo/ai/lib/providers";
+import { defaultModel, model } from "@repo/ai/lib/providers";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { getTranslations } from "next-intl/server";
-import { env } from "@/env";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
-
-const model = new Model({ apiKey: env.AI_GATEWAY_API_KEY });
 
 export async function POST(req: Request) {
   const t = await getTranslations("Ai");
