@@ -208,7 +208,6 @@
         "rehype-katex": "^7.0.1",
         "remark-gfm": "^4.0.1",
         "remark-math": "^6.0.0",
-        "server-only": "^0.0.1",
         "shiki": "^3.8.1",
         "sonner": "^2.0.6",
         "tailwind-merge": "^3.3.1",
