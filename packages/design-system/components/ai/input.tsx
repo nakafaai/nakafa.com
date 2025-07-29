@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@repo/design-system/components/ui/button";
+import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
-import { Loader2Icon, SendIcon, SquareIcon, XIcon } from "lucide-react";
+import { SendIcon, SquareIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type {
   ComponentProps,
@@ -185,7 +186,7 @@ export const AIInputSubmit = ({
 }: AIInputSubmitProps) => {
   let Icon = <SendIcon />;
   if (status === "submitted") {
-    Icon = <Loader2Icon className="animate-spin" />;
+    Icon = <SpinnerIcon className="animate-spin" />;
   } else if (status === "streaming") {
     Icon = <SquareIcon />;
   } else if (status === "error") {
@@ -193,7 +194,7 @@ export const AIInputSubmit = ({
   }
   return (
     <Button
-      className={cn("gap-1.5 rounded-lg rounded-br-xl", className)}
+      className={cn(className)}
       size={size}
       type="submit"
       variant={variant}

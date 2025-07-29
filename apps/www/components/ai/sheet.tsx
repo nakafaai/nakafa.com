@@ -1,5 +1,6 @@
 "use client";
 
+import { type UIMessage, useChat } from "@ai-sdk/react";
 import { useHotkeys, useMediaQuery } from "@mantine/hooks";
 import {
   AIConversation,
@@ -13,6 +14,10 @@ import {
   AIInputToolbar,
   AIInputTools,
 } from "@repo/design-system/components/ai/input";
+import {
+  AIMessage,
+  AIMessageContent,
+} from "@repo/design-system/components/ai/message";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -29,8 +34,8 @@ import {
   Minimize2Icon,
   SparklesIcon,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useAi } from "@/lib/context/use-ai";
 
 const MIN_WIDTH = 448;
@@ -115,31 +120,91 @@ export function AiSheet() {
 }
 
 function AiSheetContent() {
-  const t = useTranslations("ComingSoon");
-
   const [text, setText] = useState("");
+
+  const { sendMessage, messages, status, stop } = useChat({
+    onError: (error) => {
+      toast.error(
+        error.message.length > 0
+          ? error.message
+          : "An error occurred, please try again later.",
+        { position: "bottom-center" }
+      );
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    sendMessage({ text });
+    setText("");
+  };
 
   return (
     <div className="relative flex size-full flex-col overflow-hidden">
       <AIConversation>
         <AIConversationContent>
-          <p className="text-center">{t("title")}</p>
+          <AISheetMessages messages={messages} />
         </AIConversationContent>
         <AIConversationScrollButton />
       </AIConversation>
 
       <div className="grid shrink-0 gap-4 px-4 pb-3">
-        <AIInput>
+        <AIInput onSubmit={handleSubmit}>
           <AIInputTextarea
             onChange={(e) => setText(e.target.value)}
             value={text}
           />
           <AIInputToolbar>
             <AIInputTools />
-            <AIInputSubmit disabled={!text} status="ready" />
+            <AIInputSubmit
+              disabled={!text}
+              onClick={() => {
+                if (status === "streaming") {
+                  stop();
+                  return;
+                }
+              }}
+              status={status}
+            />
           </AIInputToolbar>
         </AIInput>
       </div>
+    </div>
+  );
+}
+
+function AISheetMessages({ messages }: { messages: UIMessage[] }) {
+  return (
+    <div className="flex flex-col gap-2">
+      {messages.map((message) => (
+        <AIMessage
+          from={message.role === "user" ? "user" : "assistant"}
+          key={message.id}
+        >
+          <AISheetMessage message={message} />
+        </AIMessage>
+      ))}
+    </div>
+  );
+}
+
+function AISheetMessage({ message }: { message: UIMessage }) {
+  return (
+    <div className="flex flex-col gap-2">
+      {message.parts.map((part, i) => {
+        switch (part.type) {
+          case "text":
+            return (
+              <AIMessageContent key={`message-${message.id}-part-${i}`}>
+                <p className="whitespace-pre-wrap text-pretty break-words">
+                  {part.text}
+                </p>
+              </AIMessageContent>
+            );
+          default:
+            return null;
+        }
+      })}
     </div>
   );
 }

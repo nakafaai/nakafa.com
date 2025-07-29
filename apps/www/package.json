@@ -19,6 +19,7 @@
     "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@repo/seo": "workspace:*",
+    "@repo/ai": "workspace:*",
     "@mdx-js/loader": "^3.1.0",
     "@mdx-js/react": "^3.1.0",
     "@t3-oss/env-nextjs": "^0.13.8",
