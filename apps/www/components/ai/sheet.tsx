@@ -51,7 +51,7 @@ export function AiSheet() {
   });
 
   return (
-    <Sheet modal={false} onOpenChange={setOpen} open={open}>
+    <Sheet defaultOpen={open} modal={false} onOpenChange={setOpen} open={open}>
       <SheetContent
         className={cn(
           "max-w-none gap-0 transition-all duration-0 sm:max-w-none",
