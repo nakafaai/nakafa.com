@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@repo/internationalization": "workspace:*",
-    "@next/third-parties": "15.4.4",
+    "@next/third-parties": "15.4.5",
     "@hookform/resolvers": "^5.2.1",
     "@icons-pack/react-simple-icons": "^13.7.0",
     "@mantine/hooks": "^8.2.1",

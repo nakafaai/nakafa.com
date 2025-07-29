@@ -28,7 +28,7 @@
     "feed": "^5.1.0",
     "immer": "^10.1.1",
     "nuqs": "^2.4.3",
-    "next": "15.4.4",
+    "next": "15.4.5",
     "react": "19.1.1",
     "react-aria-components": "^1.11.0",
     "react-dom": "19.1.1",
