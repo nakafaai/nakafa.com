@@ -1,6 +1,12 @@
 import { defaultModel, Model } from "@repo/ai/lib/providers";
 import { api } from "@repo/connection/routes";
-import { convertToModelMessages, streamText, tool, type UIMessage } from "ai";
+import {
+  convertToModelMessages,
+  stepCountIs,
+  streamText,
+  tool,
+  type UIMessage,
+} from "ai";
 import { getTranslations } from "next-intl/server";
 import { env } from "@/env";
 
@@ -20,6 +26,7 @@ export async function POST(req: Request) {
     system:
       "You are an expert tutor for all knowledge in the universes. Built by Nakafa. Able to explain complex things in a way that is easy to understand.",
     messages: convertToModelMessages(messages),
+    stopWhen: stepCountIs(5),
     toolChoice: "required",
     tools: {
       getContent: tool({
