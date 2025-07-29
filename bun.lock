@@ -155,9 +155,6 @@
       "devDependencies": {
         "@repo/typescript-config": "workspace:*",
         "@types/node": "24.1.0",
-        "@types/react": "19.1.9",
-        "@types/react-dom": "19.1.7",
-        "next": "15.4.5",
       },
     },
     "packages/design-system": {
@@ -231,9 +228,6 @@
       },
       "devDependencies": {
         "@repo/typescript-config": "workspace:*",
-        "@types/node": "24.1.0",
-        "@types/react": "19.1.9",
-        "@types/react-dom": "19.1.7",
         "next": "15.4.5",
       },
     },
@@ -263,9 +257,6 @@
       "devDependencies": {
         "@repo/typescript-config": "workspace:*",
         "@types/lodash.merge": "^4.6.9",
-        "@types/node": "24.1.0",
-        "@types/react": "19.1.9",
-        "@types/react-dom": "^19.1.7",
         "next": "15.4.5",
       },
     },
