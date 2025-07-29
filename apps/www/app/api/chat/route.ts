@@ -1,12 +1,5 @@
 import { defaultModel, Model } from "@repo/ai/lib/providers";
-import { api } from "@repo/connection/routes";
-import {
-  convertToModelMessages,
-  stepCountIs,
-  streamText,
-  tool,
-  type UIMessage,
-} from "ai";
+import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { getTranslations } from "next-intl/server";
 import { env } from "@/env";
 
@@ -18,29 +11,17 @@ const model = new Model({ apiKey: env.AI_GATEWAY_API_KEY });
 export async function POST(req: Request) {
   const t = await getTranslations("Ai");
 
-  const { messages, slug }: { messages: UIMessage[]; slug: string } =
+  const { messages, slug: pageSlug }: { messages: UIMessage[]; slug: string } =
     await req.json();
 
   const result = streamText({
     model: model.languageModel(defaultModel),
-    system:
-      "You are an expert tutor for all knowledge in the universes. Built by Nakafa. Able to explain complex things in a way that is easy to understand.",
+    system: `You are an expert tutor for all knowledge in the universes. Built by Nakafa. Able to explain complex things in a way that is easy to understand.
+      User is in this page: "${pageSlug}", and you can use the getContent tool to retrieve the content of the page.`,
     messages: convertToModelMessages(messages),
-    stopWhen: stepCountIs(5),
-    toolChoice: "required",
-    tools: {
-      getContent: tool({
-        description:
-          "Retrieve a specific content from Nakafa platform. Returns the mdx of the content.",
-        execute: async () => {
-          const { data } = await api.contents.getContent({ slug });
-          return data;
-        },
-      }),
-    },
     providerOptions: {
       gateway: {
-        order: ["groq"],
+        order: ["groq", "azure"],
       },
     },
   });

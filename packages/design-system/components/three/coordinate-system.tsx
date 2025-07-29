@@ -201,7 +201,7 @@ export function CoordinateSystem({
       {/* UI Controls */}
       <div
         className={cn(
-          "absolute bottom-3 left-3 flex gap-2 transition-opacity duration-300 ease-in-out",
+          "absolute bottom-3 left-3 flex gap-2 transition-opacity duration-300 ease-out",
           sceneReady ? "opacity-100" : "opacity-0"
         )}
       >
