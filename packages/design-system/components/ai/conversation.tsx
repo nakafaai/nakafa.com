@@ -31,7 +31,11 @@ export const AIConversationContent = ({
   <StickToBottom.Content className={cn("p-4", className)} {...props} />
 );
 
-export const AIConversationScrollButton = () => {
+export type AIConversationScrollButtonProps = ComponentProps<typeof Button>;
+export const AIConversationScrollButton = ({
+  className,
+  ...props
+}: AIConversationScrollButtonProps) => {
   const { isAtBottom, scrollToBottom } = useStickToBottomContext();
   const handleScrollToBottom = useCallback(() => {
     scrollToBottom();
@@ -39,11 +43,15 @@ export const AIConversationScrollButton = () => {
   return (
     !isAtBottom && (
       <Button
-        className="absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full"
+        className={cn(
+          "absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full",
+          className
+        )}
         onClick={handleScrollToBottom}
         size="icon"
         type="button"
         variant="outline"
+        {...props}
       >
         <ArrowDownIcon className="size-4" />
       </Button>

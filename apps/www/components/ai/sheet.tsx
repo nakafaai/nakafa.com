@@ -31,16 +31,18 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useAi } from "@/lib/context/use-ai";
 
 const MIN_WIDTH = 448;
 const MAX_WIDTH = 672;
 
 export function AiSheet() {
-  const [open, setOpen] = useState(false);
+  const open = useAi((state) => state.open);
+  const setOpen = useAi((state) => state.setOpen);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  useHotkeys([["mod+i", () => setOpen((v) => !v)]]);
+  useHotkeys([["mod+i", () => setOpen(!open)]]);
 
   const { width, isResizing, resizerProps, setWidth } = useResizable({
     initialWidth: MAX_WIDTH,
@@ -73,7 +75,7 @@ export function AiSheet() {
           role="separator"
           type="button"
         />
-        <SheetHeader className="border-b">
+        <SheetHeader className="border-b py-3">
           <SheetTitle className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-2 text-base">
@@ -118,22 +120,26 @@ function AiSheetContent() {
   const [text, setText] = useState("");
 
   return (
-    <AIConversation className="relative size-full">
-      <AIConversationContent>
-        <p className="text-center">{t("title")}</p>
-      </AIConversationContent>
-      <AIConversationScrollButton />
+    <div className="relative flex size-full flex-col overflow-hidden">
+      <AIConversation>
+        <AIConversationContent>
+          <p className="text-center">{t("title")}</p>
+        </AIConversationContent>
+        <AIConversationScrollButton />
+      </AIConversation>
 
-      <AIInput className="absolute inset-x-0 bottom-0 rounded-none border-0 border-t">
-        <AIInputTextarea
-          onChange={(e) => setText(e.target.value)}
-          value={text}
-        />
-        <AIInputToolbar>
-          <AIInputTools />
-          <AIInputSubmit disabled={!text} status="ready" />
-        </AIInputToolbar>
-      </AIInput>
-    </AIConversation>
+      <div className="grid shrink-0 gap-4 px-4 pb-3">
+        <AIInput>
+          <AIInputTextarea
+            onChange={(e) => setText(e.target.value)}
+            value={text}
+          />
+          <AIInputToolbar>
+            <AIInputTools />
+            <AIInputSubmit disabled={!text} status="ready" />
+          </AIInputToolbar>
+        </AIInput>
+      </div>
+    </div>
   );
 }

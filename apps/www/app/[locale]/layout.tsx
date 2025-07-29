@@ -25,6 +25,7 @@ import { AppProviders } from "@/components/providers";
 import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
+import { AiContextProvider } from "@/lib/context/use-ai";
 
 type Props = {
   children: ReactNode;
@@ -184,7 +185,9 @@ export default async function LocaleLayout({ children, params }: Props) {
                 <SidebarInset>
                   <Header />
                   <SearchCommand />
-                  <AiSheet />
+                  <AiContextProvider>
+                    <AiSheet />
+                  </AiContextProvider>
                   <div className="relative" data-pagefind-body>
                     {children}
                   </div>
