@@ -199,7 +199,7 @@ function AiSheetContent() {
 
 function AISheetMessages({ messages }: { messages: UIMessage[] }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       {messages.map((message) => (
         <AIMessage
           from={message.role === "user" ? "user" : "assistant"}
