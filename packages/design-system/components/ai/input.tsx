@@ -130,7 +130,7 @@ export const AIInputToolbar = ({
   ...props
 }: AIInputToolbarProps) => (
   <div
-    className={cn("flex items-center justify-between p-1", className)}
+    className={cn("flex items-center justify-between p-2", className)}
     {...props}
   />
 );
