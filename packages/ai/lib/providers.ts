@@ -5,15 +5,16 @@ import {
 } from "@ai-sdk/gateway";
 import { customProvider } from "ai";
 
-const languageModels: Record<"google", GatewayModelId> = {
+const languageModels: Record<"google" | "moonshot", GatewayModelId> = {
   google: "google/gemini-2.5-flash",
+  moonshot: "moonshotai/kimi-k2",
 };
 
 export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "google";
+export const defaultModel: ModelId = "moonshot";
 
 export class Model {
   private readonly provider: ReturnType<typeof customProvider>;
@@ -26,6 +27,7 @@ export class Model {
     this.provider = customProvider({
       languageModels: {
         google: gateway(languageModels.google),
+        moonshot: gateway(languageModels.moonshot),
       },
     });
   }

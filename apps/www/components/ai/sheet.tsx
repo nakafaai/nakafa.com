@@ -133,8 +133,7 @@ function AiSheetContent() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     sendMessage({ text });
     setText("");
   };
@@ -148,10 +147,22 @@ function AiSheetContent() {
         <AIConversationScrollButton />
       </AIConversation>
 
-      <div className="grid shrink-0 gap-4 px-4 pb-3">
-        <AIInput onSubmit={handleSubmit}>
+      <div className="grid shrink-0 gap-4">
+        <AIInput
+          className="rounded-none border-0 border-t shadow-none"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+        >
           <AIInputTextarea
             onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit();
+              }
+            }}
             value={text}
           />
           <AIInputToolbar>

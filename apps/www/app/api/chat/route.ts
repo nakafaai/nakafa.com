@@ -12,8 +12,14 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: model.languageModel(defaultModel),
-    system: "You are a helpful assistant.",
+    system:
+      "You are an expert tutor for all knowledge in the universes. Built by Nakafa. Able to explain complex things in a way that is easy to understand.",
     messages: convertToModelMessages(messages),
+    providerOptions: {
+      gateway: {
+        order: ["groq"],
+      },
+    },
   });
 
   return result.toUIMessageStreamResponse({
