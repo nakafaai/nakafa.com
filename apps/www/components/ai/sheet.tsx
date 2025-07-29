@@ -29,13 +29,15 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
+import { DefaultChatTransport } from "ai";
 import {
   EyeOffIcon,
   Maximize2Icon,
   Minimize2Icon,
   SparklesIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useAi } from "@/lib/context/use-ai";
 
@@ -116,14 +118,28 @@ export function AiSheet() {
 }
 
 function AiSheetContent() {
-  const [text, setText] = useState("");
+  const t = useTranslations("Ai");
+
+  const slug = usePathname();
+
+  const text = useAi((state) => state.text);
+  const setText = useAi((state) => state.setText);
 
   const { sendMessage, messages, status, stop } = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+      prepareSendMessagesRequest: ({ messages: m }) => {
+        return {
+          body: {
+            messages: m,
+            slug, // used for letting the server know which page the user is on
+          },
+        };
+      },
+    }),
     onError: (error) => {
       toast.error(
-        error.message.length > 0
-          ? error.message
-          : "An error occurred, please try again later.",
+        error.message.length > 0 ? error.message : t("error-message"),
         { position: "bottom-center" }
       );
     },

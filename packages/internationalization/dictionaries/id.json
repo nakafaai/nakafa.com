@@ -191,7 +191,8 @@
     "contribute": "Berkontribusi"
   },
   "Ai": {
-    "text-placeholder": "Apa yang ingin kamu tanyakan?"
+    "text-placeholder": "Apa yang ingin kamu tanyakan?",
+    "error-message": "Terjadi kesalahan, silakan coba lagi nanti."
   },
   "Math": {
     "Metadata": {

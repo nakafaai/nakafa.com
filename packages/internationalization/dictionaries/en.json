@@ -191,7 +191,8 @@
     "contribute": "Contribute"
   },
   "Ai": {
-    "text-placeholder": "What would you like to know?"
+    "text-placeholder": "What would you like to know?",
+    "error-message": "An error occurred, please try again later."
   },
   "Math": {
     "Metadata": {
