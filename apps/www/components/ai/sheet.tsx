@@ -149,6 +149,7 @@ function AiSheetContent() {
 
       <div className="grid shrink-0 gap-4">
         <AIInput
+          autoFocus
           className="rounded-none border-0 border-t shadow-none"
           onSubmit={(e) => {
             e.preventDefault();
