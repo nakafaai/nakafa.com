@@ -10,14 +10,7 @@ import { filterWhitespaceNodes } from "@repo/design-system/lib/utils";
 import { Anchor } from "@repo/design-system/markdown/anchor";
 import { CodeBlockMdx } from "@repo/design-system/markdown/code-block";
 import { Heading } from "@repo/design-system/markdown/heading";
-import {
-  BlockMath,
-  InlineMath,
-  MathContainer,
-} from "@repo/design-system/markdown/math";
-import { Mermaid } from "@repo/design-system/markdown/mermaid";
 import { Paragraph } from "@repo/design-system/markdown/paragraph";
-import { Youtube } from "@repo/design-system/markdown/youtube";
 import type {
   BlockquoteProps,
   CodeProps,
@@ -26,7 +19,6 @@ import type {
   ListItemProps,
   ListProps,
   ParagraphProps,
-  PreProps,
   StrongProps,
   TableBodyProps,
   TableCellProps,
@@ -35,8 +27,9 @@ import type {
   TableProps,
   TableRowProps,
 } from "@repo/design-system/types/markdown";
+import type { Options } from "react-markdown";
 
-export const components = {
+export const reactMdxComponents: Options["components"] = {
   h1: (props: HeadingProps) => (
     <Heading className="text-3xl" Tag="h1" {...props} />
   ),
@@ -56,20 +49,14 @@ export const components = {
     <Heading className="text-sm" Tag="h6" {...props} />
   ),
   p: (props: ParagraphProps) => (
-    <Paragraph
-      className="text-foreground/80 last:mb-0 [&_em]:text-foreground [&_strong]:text-foreground"
-      {...props}
-    />
+    <Paragraph className="text-inherit" {...props} />
   ),
   ol: (props: ListProps) => (
     <ol className="my-4 list-decimal pl-5" {...props} />
   ),
   ul: (props: ListProps) => <ul className="my-4 list-disc pl-5" {...props} />,
   li: (props: ListItemProps) => (
-    <li
-      className="my-4 text-pretty pl-1 text-foreground/80 leading-[1.75]"
-      {...props}
-    />
+    <li className="my-4 text-pretty pl-1 leading-[1.75]" {...props} />
   ),
   em: (props: EmProps) => <em className="font-medium" {...props} />,
   strong: (props: StrongProps) => <strong className="font-medium" {...props} />,
@@ -77,18 +64,12 @@ export const components = {
     <blockquote className="my-4 border-l-2 pl-4 italic" {...props} />
   ),
   a: Anchor,
-  CodeBlock: CodeBlockMdx,
   code: (props: CodeProps) => (
     <code
       className="inline break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight"
       {...props}
     />
   ),
-  Youtube,
-  Mermaid,
-  MathContainer,
-  InlineMath,
-  BlockMath,
   table: ({ children, ...props }: TableProps) => (
     <Table containerClassName="my-4 rounded-xl border shadow-sm" {...props}>
       {filterWhitespaceNodes(children)}
@@ -123,10 +104,7 @@ export const components = {
       {filterWhitespaceNodes(children)}
     </TableCell>
   ),
-  pre: ({
-    node,
-    children,
-  }: PreProps & { node: { properties: { className: string } } }) => {
+  pre: ({ node, children }) => {
     let language = "javascript";
     let filename = "index.js";
 

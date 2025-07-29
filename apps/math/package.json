@@ -11,14 +11,14 @@
     "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
     "next": "15.4.4",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "24.1.0",
-    "@types/react": "19.1.8",
-    "@types/react-dom": "19.1.6",
+    "@types/react": "19.1.9",
+    "@types/react-dom": "19.1.7",
     "typescript": "^5.8.3"
   }
 }

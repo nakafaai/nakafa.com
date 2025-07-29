@@ -18,6 +18,7 @@ import {
   AIMessage,
   AIMessageContent,
 } from "@repo/design-system/components/ai/message";
+import { AIResponse } from "@repo/design-system/components/ai/response";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -66,10 +67,6 @@ export function AiSheet() {
         style={{ width: isMobile ? "100%" : `${width}px` }}
       >
         <button
-          aria-orientation="vertical"
-          aria-valuemax={MAX_WIDTH}
-          aria-valuemin={MIN_WIDTH}
-          aria-valuenow={width}
           className={cn(
             "-left-1 absolute top-0 bottom-0 z-10 w-1 cursor-col-resize outline-0 ring-0 transition-colors hover:bg-accent",
             isResizing && "bg-accent",
@@ -77,7 +74,6 @@ export function AiSheet() {
           )}
           onKeyDown={resizerProps.onKeyDown}
           onMouseDown={resizerProps.onMouseDown}
-          role="separator"
           type="button"
         />
         <SheetHeader className="border-b py-3">
@@ -208,9 +204,7 @@ function AISheetMessage({ message }: { message: UIMessage }) {
           case "text":
             return (
               <AIMessageContent key={`message-${message.id}-part-${i}`}>
-                <p className="whitespace-pre-wrap text-pretty break-words">
-                  {part.text}
-                </p>
+                <AIResponse>{part.text}</AIResponse>
               </AIMessageContent>
             );
           default:
