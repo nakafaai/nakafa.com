@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import type { ComponentProps } from "react";
 import { toast } from "sonner";
 import { useAi } from "@/lib/context/use-ai";
 
@@ -122,9 +123,6 @@ function AiSheetContent() {
 
   const slug = usePathname();
 
-  const text = useAi((state) => state.text);
-  const setText = useAi((state) => state.setText);
-
   const { sendMessage, messages, status, stop } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
@@ -145,9 +143,8 @@ function AiSheetContent() {
     },
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = (text: string) => {
     sendMessage({ text });
-    setText("");
   };
 
   return (
@@ -159,40 +156,59 @@ function AiSheetContent() {
         <AIConversationScrollButton />
       </AIConversation>
 
-      <div className="grid shrink-0 gap-4">
-        <AIInput
-          autoFocus
-          className="rounded-none border-0 border-t shadow-none"
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
+      <AISheetToolbar handleSubmit={handleSubmit} status={status} stop={stop} />
+    </div>
+  );
+}
+
+function AISheetToolbar({
+  status,
+  stop,
+  handleSubmit,
+}: {
+  status: ComponentProps<typeof AIInputSubmit>["status"];
+  stop: () => void;
+  handleSubmit: (message: string) => void;
+}) {
+  const text = useAi((state) => state.text);
+  const setText = useAi((state) => state.setText);
+
+  return (
+    <div className="grid shrink-0 gap-4">
+      <AIInput
+        autoFocus
+        className="rounded-none border-0 border-t shadow-none"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(text);
+          setText("");
+        }}
+      >
+        <AIInputTextarea
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(text);
+              setText("");
+            }
           }}
-        >
-          <AIInputTextarea
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit();
+          value={text}
+        />
+        <AIInputToolbar>
+          <AIInputTools />
+          <AIInputSubmit
+            disabled={!text}
+            onClick={() => {
+              if (status === "streaming") {
+                stop();
+                return;
               }
             }}
-            value={text}
+            status={status}
           />
-          <AIInputToolbar>
-            <AIInputTools />
-            <AIInputSubmit
-              disabled={!text}
-              onClick={() => {
-                if (status === "streaming") {
-                  stop();
-                  return;
-                }
-              }}
-              status={status}
-            />
-          </AIInputToolbar>
-        </AIInput>
-      </div>
+        </AIInputToolbar>
+      </AIInput>
     </div>
   );
 }
