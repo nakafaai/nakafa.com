@@ -134,7 +134,7 @@ export const reactMdxComponents: Options["components"] = {
       {
         language,
         filename,
-        code: (children.props as { children: string }).children,
+        code: (children.props as { children: string })?.children ?? "", // this is not safe, but it's the only way to get the code
       },
     ];
 

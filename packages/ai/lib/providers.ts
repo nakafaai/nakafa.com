@@ -21,4 +21,4 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "google";
+export const defaultModel: ModelId = "moonshot";
