@@ -26,12 +26,12 @@ export function Heading({
     >
       <a
         aria-label={`Link to ${props.children}`}
-        className="group inline-flex items-center gap-2"
+        className="group/heading inline-flex items-center gap-2"
         href={`#${id}`}
         title={props.children?.toString()}
       >
         <span className="text-pretty">{props.children}</span>
-        <LinkIcon className="invisible size-4 text-muted-foreground group-hover:visible" />
+        <LinkIcon className="invisible size-4 text-muted-foreground group-hover/heading:visible" />
       </a>
     </Tag>
   );
