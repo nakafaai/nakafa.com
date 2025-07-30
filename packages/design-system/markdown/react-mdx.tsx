@@ -130,14 +130,16 @@ export const reactMdxComponents: Options["components"] = {
       return <pre>{children}</pre>;
     }
 
-    const data = [
-      {
-        language,
-        filename,
-        code: (children.props as { children: string })?.children ?? "", // this is not safe, but it's the only way to get the code
-      },
-    ];
-
-    return <CodeBlockMdx data={data} />;
+    return (
+      <CodeBlockMdx
+        data={[
+          {
+            language,
+            filename,
+            code: (children.props as { children: string })?.children ?? "",
+          },
+        ]}
+      />
+    );
   },
 };
