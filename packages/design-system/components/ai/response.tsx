@@ -5,7 +5,7 @@ import { reactMdxComponents } from "@repo/design-system/markdown/react-mdx";
 import { marked } from "marked";
 import type { HTMLAttributes } from "react";
 import { memo, useMemo } from "react";
-import ReactMarkdown, { type Options } from "react-markdown";
+import ReactMarkdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -16,37 +16,27 @@ function parseMarkdownIntoBlocks(markdown: string): string[] {
 }
 
 const MemoizedBlock = memo(
-  ({ content, options }: { content: string; options?: Options }) => (
+  ({ content }: { content: string }) => (
     <ReactMarkdown
       components={reactMdxComponents}
       rehypePlugins={[rehypeKatex]}
       remarkPlugins={[remarkGfm, remarkMath]}
-      {...options}
     >
       {content}
     </ReactMarkdown>
   ),
-  (prevProps, nextProps) => {
-    if (prevProps.content !== nextProps.content) {
-      return false;
-    }
-    return true;
-  }
+  (prevProps, nextProps) => prevProps.content === nextProps.content
 );
 MemoizedBlock.displayName = "MemoizedBlock";
 
 export type AIResponseProps = HTMLAttributes<HTMLDivElement> & {
-  options?: Options;
   id: string;
-  children: Options["children"];
+  content: string;
 };
 
 export const AIResponse = memo(
-  ({ className, options, children, id, ...props }: AIResponseProps) => {
-    const blocks = useMemo(
-      () => parseMarkdownIntoBlocks(children?.toString() ?? ""),
-      [children]
-    );
+  ({ className, content, id, ...props }: AIResponseProps) => {
+    const blocks = useMemo(() => parseMarkdownIntoBlocks(content), [content]);
 
     return (
       <div
@@ -60,8 +50,7 @@ export const AIResponse = memo(
           <MemoizedBlock
             content={block}
             // biome-ignore lint/suspicious/noArrayIndexKey: "This is a unique key"
-            key={`${id}-block-${index}`}
-            options={options}
+            key={`${id}-block_${index}`}
           />
         ))}
       </div>
