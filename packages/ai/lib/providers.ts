@@ -10,6 +10,7 @@ const languageModels = {
   google: gateway("google/gemini-2.5-flash"),
   moonshot: gateway("moonshotai/kimi-k2"),
   openai: gateway("openai/gpt-4.1-nano"),
+  zai: gateway("zai/glm-4.5"),
 };
 
 export const model = customProvider({
@@ -20,4 +21,4 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "moonshot";
+export const defaultModel: ModelId = "google";
