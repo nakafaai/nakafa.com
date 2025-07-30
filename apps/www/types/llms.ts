@@ -3,7 +3,7 @@ import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
 import { GradeSchema } from "@repo/contents/_types/subject/grade";
 import { MaterialSchema } from "@repo/contents/_types/subject/material";
 import { routing } from "@repo/internationalization/src/routing";
-import { z } from "zod";
+import * as z from "zod";
 
 export const ArticleSchema = z.object({
   category: ArticleCategorySchema,

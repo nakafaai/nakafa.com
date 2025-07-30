@@ -19,6 +19,9 @@
       },
       "nursery": {
         "noUnknownAtRule": "off"
+      },
+      "performance": {
+        "noNamespaceImport": "off"
       }
     }
   },

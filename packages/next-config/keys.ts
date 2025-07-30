@@ -1,6 +1,6 @@
 import { vercel } from "@t3-oss/env-core/presets-zod";
 import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod";
+import * as z from "zod";
 
 export const keys = () =>
   createEnv({
@@ -12,9 +12,9 @@ export const keys = () =>
     },
     client: {
       NEXT_PUBLIC_VERSION: z.string(),
-      NEXT_PUBLIC_APP_URL: z.string().url(),
-      NEXT_PUBLIC_API_URL: z.string().url().optional(),
-      NEXT_PUBLIC_MCP_URL: z.string().url(),
+      NEXT_PUBLIC_APP_URL: z.url(),
+      NEXT_PUBLIC_API_URL: z.url().optional(),
+      NEXT_PUBLIC_MCP_URL: z.url(),
     },
     runtimeEnv: {
       ANALYZE: process.env.ANALYZE,

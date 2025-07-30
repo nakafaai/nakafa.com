@@ -2,7 +2,7 @@ import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
 import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
 import { GradeSchema } from "@repo/contents/_types/subject/grade";
 import { MaterialSchema } from "@repo/contents/_types/subject/material";
-import { z } from "zod";
+import * as z from "zod";
 
 export const GetContentsSchema = z.object({
   locale: z

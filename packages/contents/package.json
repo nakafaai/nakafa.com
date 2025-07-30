@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "zod": "^3.25.67"
+    "zod": "^4.0.14"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
