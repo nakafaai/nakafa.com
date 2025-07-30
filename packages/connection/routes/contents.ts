@@ -2,7 +2,6 @@ import { cleanSlug } from "@repo/connection/lib/utils";
 import type { Content } from "@repo/contents/_types/content";
 import { fetcher } from "../lib/fetcher";
 import type { FetchResult } from "../lib/types";
-import { validateContent, validateContents } from "../validation/contents";
 
 const PREFIX = "/contents";
 
@@ -28,20 +27,18 @@ async function getContents({
     };
   }
 
-  const { parsed, error: validationError } = validateContents(url, data);
-
-  if (validationError) {
+  if (!data) {
     return {
       data: [],
       error: {
-        status: 400,
-        message: validationError,
+        status: 404,
+        message: "Contents not found",
       },
     };
   }
 
   return {
-    data: parsed,
+    data,
     error,
   };
 }
@@ -78,20 +75,8 @@ async function getContent({
     };
   }
 
-  const { parsed, error: validationError } = validateContent(url, content);
-
-  if (validationError) {
-    return {
-      data: "",
-      error: {
-        status: 400,
-        message: validationError,
-      },
-    };
-  }
-
   return {
-    data: parsed?.raw ?? "",
+    data: content.raw,
     error,
   };
 }

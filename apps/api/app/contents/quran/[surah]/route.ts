@@ -10,11 +10,11 @@ export function generateStaticParams() {
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ surah: string }> }
 ) {
-  const { id } = await params;
+  const { surah } = await params;
 
-  const surah = getSurah(Number.parseInt(id, 10));
+  const surahData = getSurah(Number.parseInt(surah, 10));
 
-  return NextResponse.json(surah);
+  return NextResponse.json(surahData);
 }
