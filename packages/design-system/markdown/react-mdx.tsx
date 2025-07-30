@@ -98,12 +98,26 @@ export const reactMdxComponents: Options["components"] = {
     </TableCell>
   ),
   pre: ({ node, children }) => {
-    let language = "javascript";
-    let filename = "index.js";
+    let language = "plaintext";
+    let filename = "code.txt";
 
-    if (typeof node?.properties?.className === "string") {
-      language = node.properties.className.replace("language-", "");
-      filename = `index.${language}`;
+    const codeElement = node?.children.find(
+      (child) => child.type === "element" && child.tagName === "code"
+    );
+
+    if (codeElement?.type === "element") {
+      const classNameList = codeElement.properties?.className;
+
+      if (Array.isArray(classNameList)) {
+        const langClass = classNameList.find(
+          (c) => typeof c === "string" && c.startsWith("language-")
+        );
+
+        if (typeof langClass === "string") {
+          language = langClass.replace("language-", "");
+          filename = `index.${language}`;
+        }
+      }
     }
 
     const childrenIsCode =
