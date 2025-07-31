@@ -54,7 +54,7 @@ export function AiSheet() {
   useHotkeys([["mod+i", () => setOpen(!open)]]);
 
   const { width, isResizing, resizerProps, setWidth } = useResizable({
-    initialWidth: MAX_WIDTH,
+    initialWidth: MIN_WIDTH,
     minWidth: MIN_WIDTH,
     maxWidth: MAX_WIDTH,
   });
