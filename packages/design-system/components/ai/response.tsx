@@ -10,11 +10,6 @@ import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
-function parseMarkdownIntoBlocks(markdown: string): string[] {
-  const tokens = marked.lexer(markdown);
-  return tokens.map((token) => token.raw);
-}
-
 const MemoizedBlock = memo(
   ({ content }: { content: string }) => (
     <ReactMarkdown
@@ -36,7 +31,9 @@ export type AIResponseProps = HTMLAttributes<HTMLDivElement> & {
 
 export const AIResponse = memo(
   ({ className, content, id, ...props }: AIResponseProps) => {
-    const blocks = useMemo(() => parseMarkdownIntoBlocks(content), [content]);
+    const blocks = useMemo(() => {
+      return parseMarkdownIntoBlocks(transformMarkdown(content));
+    }, [content]);
 
     return (
       <div className={cn("size-full", className)} {...props}>
@@ -52,3 +49,16 @@ export const AIResponse = memo(
   }
 );
 AIResponse.displayName = "AIResponse";
+
+function parseMarkdownIntoBlocks(markdown: string): string[] {
+  const tokens = marked.lexer(markdown);
+  return tokens.map((token) => token.raw);
+}
+
+function transformMarkdown(content: string) {
+  return content
+    .replace(/\\\(/g, "$")
+    .replace(/\\\)/g, "$")
+    .replace(/\\\[/g, "$$")
+    .replace(/\\\]/g, "$$");
+}
