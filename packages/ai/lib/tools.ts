@@ -1,3 +1,4 @@
+import { cleanSlug } from "@repo/connection/lib/utils";
 import { api } from "@repo/connection/routes";
 import { tool } from "ai";
 import * as math from "mathjs";
@@ -7,15 +8,53 @@ const getContentTool = tool({
   description: "Get the content of a page.",
   inputSchema: z
     .object({
-      slug: z.string().describe("The slug of the content to get."),
+      locale: z
+        .enum(["en", "id"])
+        .describe("The locale of the content to get."),
+      slug: z
+        .string()
+        .describe(
+          "The slug of the content to get. Always start with slash (/)."
+        ),
     })
     .describe("The slug of the content to get."),
   outputSchema: z.object({
     slug: z.string().describe("The slug of the content to get."),
     content: z.string().describe("The content of the page."),
   }),
-  execute: async ({ slug }) => {
-    const { data, error } = await api.contents.getContent({ slug });
+  execute: async ({ slug, locale }) => {
+    const cleanedSlug = cleanSlug(slug);
+
+    if (cleanedSlug.includes("/quran")) {
+      if (cleanedSlug.split("/").length !== 2) {
+        return {
+          slug,
+          content: "Surah not found.",
+        };
+      }
+
+      const surah = cleanedSlug.split("/")[1];
+
+      const { data: surahData, error: surahError } =
+        await api.contents.getSurah({
+          surah: Number.parseInt(surah, 10),
+        });
+      if (surahError) {
+        return {
+          slug,
+          content: surahError.message,
+        };
+      }
+      return {
+        slug,
+        content: surahData,
+      };
+    }
+
+    const { data, error } = await api.contents.getContent({
+      slug: `${locale}/${cleanedSlug}`,
+    });
+
     if (error) {
       return {
         slug,
