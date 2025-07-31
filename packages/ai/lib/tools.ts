@@ -1,4 +1,3 @@
-import { cleanSlug } from "@repo/connection/lib/utils";
 import { api } from "@repo/connection/routes";
 import { tool } from "ai";
 import * as math from "mathjs";
@@ -23,17 +22,15 @@ const getContentTool = tool({
     content: z.string().describe("The content of the page."),
   }),
   execute: async ({ slug, locale }) => {
-    const cleanedSlug = cleanSlug(slug);
-
-    if (cleanedSlug.includes("/quran")) {
-      if (cleanedSlug.split("/").length !== 2) {
+    if (slug.includes("/quran")) {
+      if (slug.split("/").length !== 2) {
         return {
           slug,
           content: "Surah not found.",
         };
       }
 
-      const surah = cleanedSlug.split("/")[1];
+      const surah = slug.split("/")[1];
 
       const { data: surahData, error: surahError } =
         await api.contents.getSurah({
@@ -52,7 +49,7 @@ const getContentTool = tool({
     }
 
     const { data, error } = await api.contents.getContent({
-      slug: `${locale}/${cleanedSlug}`,
+      slug: `${locale}/${slug}`,
     });
 
     if (error) {
