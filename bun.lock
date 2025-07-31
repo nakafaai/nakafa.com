@@ -115,9 +115,9 @@
       "name": "@repo/ai",
       "version": "0.0.0",
       "dependencies": {
-        "@ai-sdk/react": "^2.0.0-beta.31",
+        "@ai-sdk/react": "^2.0.0",
         "@t3-oss/env-nextjs": "^0.13.8",
-        "ai": "^5.0.0-beta.31",
+        "ai": "^5.0.0",
       },
       "devDependencies": {
         "@repo/typescript-config": "workspace:*",
@@ -275,13 +275,13 @@
     },
   },
   "packages": {
-    "@ai-sdk/gateway": ["@ai-sdk/gateway@1.0.0-beta.17", "", { "dependencies": { "@ai-sdk/provider": "2.0.0-beta.1", "@ai-sdk/provider-utils": "3.0.0-beta.8" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-ikM6U0LHc2K4GLJNVK8diC1H16ewkaXumr3rMbYOaL1zOy8TmuxMSZk8Tj7rqiJTJPjRPmB70bTCMXrmUy30pw=="],
+    "@ai-sdk/gateway": ["@ai-sdk/gateway@1.0.0", "", { "dependencies": { "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-VEm87DyRx1yIPywbTy8ntoyh4jEDv1rJ88m+2I7zOm08jJI5BhFtAWh0OF6YzZu1Vu4NxhOWO4ssGdsqydDQ3A=="],
 
-    "@ai-sdk/provider": ["@ai-sdk/provider@2.0.0-beta.1", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-Z8SPncMtS3RsoXITmT7NVwrAq6M44dmw0DoUOYJqNNtCu8iMWuxB8Nxsoqpa0uEEy9R1V1ZThJAXTYgjTUxl3w=="],
+    "@ai-sdk/provider": ["@ai-sdk/provider@2.0.0", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA=="],
 
-    "@ai-sdk/provider-utils": ["@ai-sdk/provider-utils@3.0.0-beta.8", "", { "dependencies": { "@ai-sdk/provider": "2.0.0-beta.1", "@standard-schema/spec": "^1.0.0", "eventsource-parser": "^3.0.3", "zod-to-json-schema": "^3.24.1" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-N8H4HhqLRe7R635i33W2MkNuckGWjC5TdektsBpFUMFncqtZlNFJ8e3LV81Udk00ac8juX57bboUIi8APJ2V/g=="],
+    "@ai-sdk/provider-utils": ["@ai-sdk/provider-utils@3.0.0", "", { "dependencies": { "@ai-sdk/provider": "2.0.0", "@standard-schema/spec": "^1.0.0", "eventsource-parser": "^3.0.3", "zod-to-json-schema": "^3.24.1" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-BoQZtGcBxkeSH1zK+SRYNDtJPIPpacTeiMZqnG4Rv6xXjEwM0FH4MGs9c+PlhyEWmQCzjRM2HAotEydFhD4dYw=="],
 
-    "@ai-sdk/react": ["@ai-sdk/react@2.0.0-beta.31", "", { "dependencies": { "@ai-sdk/provider-utils": "3.0.0-beta.8", "ai": "5.0.0-beta.31", "swr": "^2.2.5", "throttleit": "2.1.0" }, "peerDependencies": { "react": "^18 || ^19 || ^19.0.0-rc", "zod": "^3.25.76 || ^4" }, "optionalPeers": ["zod"] }, "sha512-S19NY2qI1dsaqFOKYh3BQplChx09+qAWkKgBrEj8J15AZ829fTWH52+9CZZd4UoR5+b0zI0SaFWD/W4dt45mng=="],
+    "@ai-sdk/react": ["@ai-sdk/react@2.0.0", "", { "dependencies": { "@ai-sdk/provider-utils": "3.0.0", "ai": "5.0.0", "swr": "^2.2.5", "throttleit": "2.1.0" }, "peerDependencies": { "react": "^18 || ^19 || ^19.0.0-rc", "zod": "^3.25.76 || ^4" }, "optionalPeers": ["zod"] }, "sha512-am4xt+Zh+hMBNmnSOG9cEg7vlDqAg+Du4wGgFskHO6xRXYpntjJB1zP9H2ZCB1hNL5Y8vRmE2quZEWDUuNrnGA=="],
 
     "@alloc/quick-lru": ["@alloc/quick-lru@5.2.0", "", {}, "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw=="],
 
@@ -1397,7 +1397,7 @@
 
     "aggregate-error": ["aggregate-error@3.1.0", "", { "dependencies": { "clean-stack": "^2.0.0", "indent-string": "^4.0.0" } }, "sha512-4I7Td01quW/RpocfNayFdFVk1qSuoh0E7JrbRJ16nH01HhKFQ88INq9Sd+nd72zqRySlr9BmDA8xlEJ6vJMrYA=="],
 
-    "ai": ["ai@5.0.0-beta.31", "", { "dependencies": { "@ai-sdk/gateway": "1.0.0-beta.17", "@ai-sdk/provider": "2.0.0-beta.1", "@ai-sdk/provider-utils": "3.0.0-beta.8", "@opentelemetry/api": "1.9.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4" }, "bin": { "ai": "dist/bin/ai.min.js" } }, "sha512-2l6cGeMLSAxR8XnT2Whi3BUe3cdVeaCFAv5KvU/f0JlLUP1hQNZXWCJHcbOHlNp5ftH6fGtOeL4gJmqokRQIjw=="],
+    "ai": ["ai@5.0.0", "", { "dependencies": { "@ai-sdk/gateway": "1.0.0", "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.0", "@opentelemetry/api": "1.9.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-F4jOhOSeiZD8lXpF4l1hRqyM1jbqoLKGVZNxAP467wmQCsWUtElMa3Ki5PrDMq6qvUNC3deUKfERDAsfj7IDlg=="],
 
     "ajv": ["ajv@6.12.6", "", { "dependencies": { "fast-deep-equal": "^3.1.1", "fast-json-stable-stringify": "^2.0.0", "json-schema-traverse": "^0.4.1", "uri-js": "^4.2.2" } }, "sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g=="],
 
