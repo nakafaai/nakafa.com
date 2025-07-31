@@ -13,7 +13,7 @@ const getContentTool = tool({
       slug: z
         .string()
         .describe(
-          "The slug of the content to get. Always start with slash (/)."
+          "The slug of the content to get. Use slug as it is, do not change anything. Always start with slash (/)."
         ),
     })
     .describe("The slug of the content to get."),
@@ -22,15 +22,16 @@ const getContentTool = tool({
     content: z.string().describe("The content of the page."),
   }),
   execute: async ({ slug, locale }) => {
-    if (slug.includes("/quran")) {
-      if (slug.split("/").length !== 2) {
+    if (slug.startsWith("/quran")) {
+      const slugParts = slug.split("/");
+      if (slugParts.length !== 3) {
         return {
           slug,
           content: "Surah not found.",
         };
       }
 
-      const surah = slug.split("/")[1];
+      const surah = slugParts[2];
 
       const { data: surahData, error: surahError } =
         await api.contents.getSurah({
@@ -49,7 +50,7 @@ const getContentTool = tool({
     }
 
     const { data, error } = await api.contents.getContent({
-      slug: `${locale}/${slug}`,
+      slug: `${locale}${slug}`,
     });
 
     if (error) {
