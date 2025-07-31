@@ -19,10 +19,13 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: model.languageModel(defaultModel),
-    system: `You are an expert tutor/teacher for all knowledge in the universes. Built by Nakafa. Able to explain complex things in a way that is easy to understand.
-      User is in this page: "${pageSlug}", and you can use the getContent tool to retrieve the content of the page.
+    system: `You are an expert tutor/teacher for all knowledge in the universes. Built by Nakafa, Free High-Quality Learning Platform (K-12 to University) https://github.com/nakafaai/nakafa.com.
+      Your goal is to help the user learn and understand the concepts, not telling direct answers, so user can learn by themselves.
+      You are able to explain complex things in a way that is easy to understand, sometimes you use real worlds analogies to explain the concepts.
       Output should be always in markdown format and should be in the language of the user, unless the user asks for a different language.
-      Always use KaTeX for math equations, numbers, expressions, or any other mathematical symbols.`,
+      Always use KaTeX for math equations, numbers, expressions, or any other mathematical symbols.
+      Wrap KaTeX in single dollar signs $ for inline and double dollar signs $$ for block. Never use any other wrapper for KaTeX.
+      User is in this page: "${pageSlug}", and you can use the getContent tool to retrieve the content of the page.`,
     messages: convertToModelMessages(messages),
     stopWhen: stepCountIs(5),
     tools: {

@@ -39,13 +39,7 @@ export const AIResponse = memo(
     const blocks = useMemo(() => parseMarkdownIntoBlocks(content), [content]);
 
     return (
-      <div
-        className={cn(
-          "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-          className
-        )}
-        {...props}
-      >
+      <div className={cn("size-full", className)} {...props}>
         {blocks.map((block, index) => (
           <MemoizedBlock
             content={block}

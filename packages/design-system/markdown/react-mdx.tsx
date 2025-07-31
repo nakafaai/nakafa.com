@@ -30,22 +30,22 @@ import type { Options } from "react-markdown";
 
 export const reactMdxComponents: Options["components"] = {
   h1: (props: HeadingProps) => (
-    <Heading className="text-3xl" Tag="h1" {...props} />
+    <Heading className="mt-6 mb-4 text-3xl" Tag="h1" {...props} />
   ),
   h2: (props: HeadingProps) => (
-    <Heading className="text-2xl" Tag="h2" {...props} />
+    <Heading className="mt-6 mb-4 text-2xl" Tag="h2" {...props} />
   ),
   h3: (props: HeadingProps) => (
-    <Heading className="text-xl" Tag="h3" {...props} />
+    <Heading className="mt-6 mb-4 text-xl" Tag="h3" {...props} />
   ),
   h4: (props: HeadingProps) => (
-    <Heading className="text-lg" Tag="h4" {...props} />
+    <Heading className="mt-6 mb-4 text-lg" Tag="h4" {...props} />
   ),
   h5: (props: HeadingProps) => (
-    <Heading className="text-base" Tag="h5" {...props} />
+    <Heading className="mt-6 mb-4 text-base" Tag="h5" {...props} />
   ),
   h6: (props: HeadingProps) => (
-    <Heading className="text-sm" Tag="h6" {...props} />
+    <Heading className="mt-6 mb-4 text-sm" Tag="h6" {...props} />
   ),
   p: (props: ParagraphProps) => (
     <Paragraph className="text-inherit" {...props} />
