@@ -47,7 +47,7 @@ const getContentTool = tool({
       }
       return {
         slug,
-        content: surahData,
+        content: JSON.stringify(surahData, null, 2),
       };
     }
 
