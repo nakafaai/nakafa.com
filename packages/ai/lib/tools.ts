@@ -3,13 +3,17 @@ import { tool } from "ai";
 import * as math from "mathjs";
 import * as z from "zod";
 
-export const getContentTool = tool({
+const getContentTool = tool({
   description: "Get the content of a page.",
   inputSchema: z
     .object({
       slug: z.string().describe("The slug of the content to get."),
     })
     .describe("The slug of the content to get."),
+  outputSchema: z.object({
+    slug: z.string().describe("The slug of the content to get."),
+    content: z.string().describe("The content of the page."),
+  }),
   execute: async ({ slug }) => {
     const { data, error } = await api.contents.getContent({ slug });
     if (error) {
@@ -25,7 +29,7 @@ export const getContentTool = tool({
   },
 });
 
-export const mathEvalTool = tool({
+const mathEvalTool = tool({
   description: "Evaluate a math expression.",
   inputSchema: z
     .object({
@@ -36,9 +40,19 @@ export const mathEvalTool = tool({
         ),
     })
     .describe("Expression to evaluate using math.js."),
+  outputSchema: z.object({
+    original: z.object({
+      expression: z.string().describe("The original expression."),
+      latex: z.string().describe("The original expression in LaTeX."),
+    }),
+    result: z.object({
+      expression: z.string().describe("The simplified expression."),
+      latex: z.string().describe("The simplified expression in LaTeX."),
+      value: z.string().describe("The evaluated value."),
+    }),
+  }),
   execute: ({ expression }) => {
     const node = math.parse(expression);
-
     const original = {
       expression: node.toString(),
       latex: node.toTex(),
@@ -46,21 +60,29 @@ export const mathEvalTool = tool({
 
     const simplifiedNode = math.simplify(node);
 
-    let evaluatedValue: string | null;
-    try {
-      evaluatedValue = simplifiedNode.evaluate();
-    } catch {
-      evaluatedValue = null;
-    }
-
     const result = {
-      expression: simplifiedNode.toString(),
-      latex: simplifiedNode.toTex(),
-      value:
-        evaluatedValue !== null
-          ? math.format(evaluatedValue, { precision: 14 })
-          : "Cannot be evaluated.",
+      expression: "",
+      latex: "",
+      value: "",
     };
+
+    try {
+      const evaluatedValue = simplifiedNode.evaluate();
+      const formattedValue = math.format(evaluatedValue, { precision: 14 });
+
+      let latex = formattedValue;
+      if (typeof evaluatedValue?.toTex === "function") {
+        latex = evaluatedValue.toTex();
+      }
+
+      result.expression = formattedValue;
+      result.latex = latex;
+      result.value = formattedValue;
+    } catch {
+      result.expression = simplifiedNode.toString();
+      result.latex = simplifiedNode.toTex();
+      result.value = "Cannot be evaluated.";
+    }
 
     return {
       original,
@@ -68,3 +90,8 @@ export const mathEvalTool = tool({
     };
   },
 });
+
+export const tools = {
+  getContent: getContentTool,
+  mathEval: mathEvalTool,
+};

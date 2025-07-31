@@ -1,7 +1,8 @@
 "use client";
 
-import { type UIMessage, useChat } from "@ai-sdk/react";
+import { useChat } from "@ai-sdk/react";
 import { useHotkeys, useMediaQuery } from "@mantine/hooks";
+import type { MyUIMessage } from "@repo/ai/lib/types";
 import {
   AIConversation,
   AIConversationContent,
@@ -123,7 +124,7 @@ function AiSheetContent() {
 
   const slug = usePathname();
 
-  const { sendMessage, messages, status, stop } = useChat({
+  const { sendMessage, messages, status, stop } = useChat<MyUIMessage>({
     transport: new DefaultChatTransport({
       api: "/api/chat",
       prepareSendMessagesRequest: ({ messages: m }) => {
@@ -214,22 +215,18 @@ function AISheetToolbar({
   );
 }
 
-function AISheetMessages({ messages }: { messages: UIMessage[] }) {
-  return (
-    <div className="flex flex-col gap-4">
-      {messages.map((message) => (
-        <AIMessage
-          from={message.role === "user" ? "user" : "assistant"}
-          key={message.id}
-        >
-          <AISheetMessage message={message} />
-        </AIMessage>
-      ))}
-    </div>
-  );
+function AISheetMessages({ messages }: { messages: MyUIMessage[] }) {
+  return messages.map((message) => (
+    <AIMessage
+      from={message.role === "user" ? "user" : "assistant"}
+      key={message.id}
+    >
+      <AISheetMessage message={message} />
+    </AIMessage>
+  ));
 }
 
-function AISheetMessage({ message }: { message: UIMessage }) {
+function AISheetMessage({ message }: { message: MyUIMessage }) {
   return (
     <div className="flex flex-col gap-2">
       {message.parts.map((part, i) => {

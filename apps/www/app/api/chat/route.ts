@@ -1,5 +1,5 @@
 import { defaultModel, model } from "@repo/ai/lib/providers";
-import { getContentTool, mathEvalTool } from "@repo/ai/lib/tools";
+import { tools } from "@repo/ai/lib/tools";
 import {
   convertToModelMessages,
   stepCountIs,
@@ -31,10 +31,7 @@ export async function POST(req: Request) {
       Always use the mathEval tool to evaluate math expressions or any other calculations. Every step should be calculated, do not calculate by yourself.`,
     messages: convertToModelMessages(messages),
     stopWhen: stepCountIs(20),
-    tools: {
-      getContent: getContentTool,
-      mathEval: mathEvalTool,
-    },
+    tools,
     providerOptions: {
       gateway: {
         order: ["groq", "azure"],
