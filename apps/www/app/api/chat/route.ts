@@ -1,5 +1,5 @@
 import { defaultModel, model } from "@repo/ai/lib/providers";
-import { getContentTool } from "@repo/ai/lib/tools";
+import { getContentTool, mathEvalTool } from "@repo/ai/lib/tools";
 import {
   convertToModelMessages,
   stepCountIs,
@@ -27,11 +27,13 @@ export async function POST(req: Request) {
       Wrap KaTeX in single dollar signs $ for inline and double dollar signs $$ for block. Never use any other wrapper for KaTeX.
       Always use block math for math equations, anything that has long math expressions, formulas, or complex calculations.
       If math is too long, use multiple lines to display it.
-      User is in this page: "${pageSlug}", and you can use the getContent tool to retrieve the content of the page.`,
+      User is in this page: "${pageSlug}", and you can use the getContent tool to retrieve the content of the page.
+      Always use the mathEval tool to evaluate math expressions or any other calculations. Every step should be calculated, do not calculate by yourself.`,
     messages: convertToModelMessages(messages),
-    stopWhen: stepCountIs(5),
+    stopWhen: stepCountIs(20),
     tools: {
       getContent: getContentTool,
+      mathEval: mathEvalTool,
     },
     providerOptions: {
       gateway: {

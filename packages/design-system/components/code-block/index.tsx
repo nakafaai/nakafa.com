@@ -99,9 +99,18 @@ import type {
   ReactElement,
   ReactNode,
 } from "react";
-import { cloneElement, createContext, useContext, useState } from "react";
-import { useShikiHighlighter } from "react-shiki";
-import type { BundledLanguage, CodeOptionsMultipleThemes } from "shiki";
+import {
+  cloneElement,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import {
+  type BundledLanguage,
+  type CodeOptionsMultipleThemes,
+  codeToHtml,
+} from "shiki";
 
 export type { BundledLanguage } from "shiki";
 
@@ -255,6 +264,36 @@ const codeBlockClassName = cn(
   "[&_.line]:w-full",
   "[&_.line]:relative"
 );
+
+const highlight = (
+  html: string,
+  language?: BundledLanguage,
+  themes?: CodeOptionsMultipleThemes["themes"]
+) =>
+  codeToHtml(html, {
+    lang: language ?? "typescript",
+    themes: themes ?? {
+      light: "github-light",
+      dark: "github-dark-default",
+    },
+    transformers: [
+      transformerNotationDiff({
+        matchAlgorithm: "v3",
+      }),
+      transformerNotationHighlight({
+        matchAlgorithm: "v3",
+      }),
+      transformerNotationWordHighlight({
+        matchAlgorithm: "v3",
+      }),
+      transformerNotationFocus({
+        matchAlgorithm: "v3",
+      }),
+      transformerNotationErrorLevel({
+        matchAlgorithm: "v3",
+      }),
+    ],
+  });
 
 export type CodeBlockData = {
   language: string;
@@ -587,37 +626,28 @@ export const CodeBlockContent = ({
   syntaxHighlighting = true,
   ...props
 }: CodeBlockContentProps) => {
-  const highlightedCode = useShikiHighlighter(
-    children,
-    language,
-    themes ?? {
-      light: "github-light",
-      dark: "github-dark-default",
-    },
-    {
-      transformers: [
-        transformerNotationDiff({
-          matchAlgorithm: "v3",
-        }),
-        transformerNotationHighlight({
-          matchAlgorithm: "v3",
-        }),
-        transformerNotationWordHighlight({
-          matchAlgorithm: "v3",
-        }),
-        transformerNotationFocus({
-          matchAlgorithm: "v3",
-        }),
-        transformerNotationErrorLevel({
-          matchAlgorithm: "v3",
-        }),
-      ],
-    }
-  );
+  const [html, setHtml] = useState<string | null>(null);
 
-  if (!(syntaxHighlighting && highlightedCode)) {
+  useEffect(() => {
+    if (!syntaxHighlighting) {
+      return;
+    }
+
+    highlight(children, language, themes)
+      .then(setHtml)
+      // biome-ignore lint/suspicious/noConsole: "it's fine"
+      .catch(console.error);
+  }, [children, themes, syntaxHighlighting, language]);
+
+  if (!(syntaxHighlighting && html)) {
     return <CodeBlockFallback>{children}</CodeBlockFallback>;
   }
 
-  return <div {...props}>{highlightedCode}</div>;
+  return (
+    <div
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: "Kinda how Shiki works"
+      dangerouslySetInnerHTML={{ __html: html }}
+      {...props}
+    />
+  );
 };
