@@ -193,7 +193,8 @@
   "Ai": {
     "text-placeholder": "What would you like to know?",
     "error-message": "An error occurred, please try again later.",
-    "rate-limit-message": "Rate limit exceeded. Please try again later."
+    "rate-limit-message": "Rate limit exceeded. Please try again later.",
+    "get-content": "Get Content"
   },
   "Math": {
     "Metadata": {

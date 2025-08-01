@@ -42,6 +42,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { toast } from "sonner";
 import { useAi } from "@/lib/context/use-ai";
+import { ContentTool } from "./content-tool";
 
 const MIN_WIDTH = 448;
 const MAX_WIDTH = 768;
@@ -238,6 +239,13 @@ function AISheetMessage({ message }: { message: MyUIMessage }) {
               <AIMessageContent key={`message-${message.id}-part-${i}`}>
                 <AIResponse content={part.text} id={message.id} />
               </AIMessageContent>
+            );
+          case "tool-getContent":
+            return (
+              <ContentTool
+                key={`tool-${part.toolCallId}`}
+                status={part.state}
+              />
             );
           default:
             return null;
