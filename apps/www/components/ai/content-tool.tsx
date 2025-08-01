@@ -25,10 +25,7 @@ export function ContentTool({ status, className }: Props) {
 
   return (
     <div
-      className={cn(
-        "my-4 rounded-lg border bg-card px-3 py-2 shadow-sm",
-        className
-      )}
+      className={cn("rounded-lg border bg-card px-3 py-2 shadow-sm", className)}
     >
       <div className="flex items-center gap-2">
         {icon}
