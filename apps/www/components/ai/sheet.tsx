@@ -147,10 +147,6 @@ function AiSheetContent() {
     },
   });
 
-  const handleSubmit = (text: string) => {
-    sendMessage({ text });
-  };
-
   return (
     <div className="relative flex size-full flex-col overflow-hidden">
       <AIConversation>
@@ -160,7 +156,11 @@ function AiSheetContent() {
         <AIConversationScrollButton />
       </AIConversation>
 
-      <AISheetToolbar handleSubmit={handleSubmit} status={status} stop={stop} />
+      <AISheetToolbar
+        handleSubmit={(text) => sendMessage({ text })}
+        status={status}
+        stop={stop}
+      />
     </div>
   );
 }
@@ -177,16 +177,18 @@ function AISheetToolbar({
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
 
+  const handleSendMessage = () => {
+    if (text.trim()) {
+      handleSubmit(text);
+      setText("");
+    }
+  };
+
   return (
     <div className="grid shrink-0 gap-4">
       <AIInput
-        autoFocus
         className="rounded-none border-0 border-t shadow-none"
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit(text);
-          setText("");
-        }}
+        onSubmit={handleSendMessage}
       >
         <AIInputTextarea
           autoFocus
@@ -194,8 +196,7 @@ function AISheetToolbar({
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              handleSubmit(text);
-              setText("");
+              handleSendMessage();
             }
           }}
           value={text}
@@ -203,7 +204,7 @@ function AISheetToolbar({
         <AIInputToolbar>
           <AIInputTools />
           <AIInputSubmit
-            disabled={!text}
+            disabled={!text.trim()}
             onClick={() => {
               if (status === "streaming") {
                 stop();
