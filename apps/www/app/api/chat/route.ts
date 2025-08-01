@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     tools,
     providerOptions: {
       gateway: {
-        order: ["groq", "azure"],
+        order: ["groq", "azure", "vertex"],
       },
     },
   });
