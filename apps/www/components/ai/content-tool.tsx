@@ -20,7 +20,7 @@ export function ContentTool({ status, className, ...props }: Props) {
     icon = <BookIcon className="size-4 shrink-0" />;
   }
   if (status === "output-error") {
-    icon = <FrownIcon className="size-4 shrink-0" />;
+    icon = <FrownIcon className="size-4 shrink-0 text-destructive" />;
   }
 
   return (
