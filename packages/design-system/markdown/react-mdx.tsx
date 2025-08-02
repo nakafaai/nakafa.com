@@ -13,6 +13,7 @@ import { Heading } from "@repo/design-system/markdown/heading";
 import { Paragraph } from "@repo/design-system/markdown/paragraph";
 import type {
   BlockquoteProps,
+  CodeProps,
   EmProps,
   HeadingProps,
   ListItemProps,
@@ -96,6 +97,14 @@ export const reactMdxComponents: Options["components"] = {
     <TableCell className="border-r text-center last:border-r-0" {...props}>
       {filterWhitespaceNodes(children)}
     </TableCell>
+  ),
+  code: ({ children, ...props }: CodeProps) => (
+    <code
+      className="inline break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight"
+      {...props}
+    >
+      {children}
+    </code>
   ),
   pre: ({ node, children }) => {
     let language = "plaintext";
