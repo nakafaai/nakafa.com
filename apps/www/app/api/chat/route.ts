@@ -30,6 +30,9 @@ export async function POST(req: Request) {
       Output should be always in markdown format and should be in the language of the user, unless the user asks for a different language.
       Always use KaTeX for math equations, numbers, expressions, or any other mathematical symbols.
       Wrap KaTeX in single dollar signs $ for inline and double dollar signs $$ for block. Never use any other wrapper for KaTeX.
+      Example:
+      $x^2 + y^2 = z^2$ (inline math)
+      $$x^2 + y^2 = z^2$$ (block math)
       Always use block math for math equations, anything that has long math expressions, formulas, or complex calculations.
       If math is too long, use multiple lines to display it.
       For inline code, use \` to wrap the code. For example: \`print("Hello, world!")\`
