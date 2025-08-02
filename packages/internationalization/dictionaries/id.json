@@ -191,6 +191,7 @@
     "contribute": "Berkontribusi"
   },
   "Ai": {
+    "ask-nina": "Tanya Nina",
     "text-placeholder": "Apa yang ingin kamu tanyakan?",
     "error-message": "Terjadi kesalahan, silakan coba lagi nanti.",
     "rate-limit-message": "Batas waktu habis. Silakan coba lagi nanti.",

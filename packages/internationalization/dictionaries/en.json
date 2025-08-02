@@ -191,6 +191,7 @@
     "contribute": "Contribute"
   },
   "Ai": {
+    "ask-nina": "Ask Nina",
     "text-placeholder": "What would you like to know?",
     "error-message": "An error occurred, please try again later.",
     "rate-limit-message": "Rate limit exceeded. Please try again later.",

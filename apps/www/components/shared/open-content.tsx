@@ -22,18 +22,35 @@ import {
   CopyIcon,
   ExternalLinkIcon,
   MessageCircleIcon,
+  SparklesIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { useAi } from "@/lib/context/use-ai";
 import { getGithubUrl } from "@/lib/utils/github";
 
 export function OpenContent({ slug }: { slug: string }) {
   return (
-    <div className="inline-flex divide-x divide-secondary-foreground/20 rounded-md shadow-xs rtl:space-x-reverse">
-      <LLmCopyButton slug={slug} />
-      <ViewOptions slug={slug} />
+    <div className="flex flex-wrap items-center gap-2">
+      <div className="inline-flex divide-x divide-secondary-foreground/20 rounded-md shadow-xs rtl:space-x-reverse">
+        <LLmCopyButton slug={slug} />
+        <ViewOptions slug={slug} />
+      </div>
+      <AskAiButton />
     </div>
+  );
+}
+
+function AskAiButton() {
+  const setOpen = useAi((state) => state.setOpen);
+  const t = useTranslations("Ai");
+
+  return (
+    <Button onClick={() => setOpen(true)}>
+      <SparklesIcon />
+      {t("ask-nina")}
+    </Button>
   );
 }
 
