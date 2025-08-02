@@ -25,7 +25,7 @@ export function ContentTool({ status, className, output, ...props }: Props) {
   if (status === "output-error") {
     icon = <FrownIcon className="size-4 shrink-0 text-destructive" />;
   }
-  if (status === "input-available" && !output?.available) {
+  if (status === "output-available" && !output?.available) {
     icon = <FrownIcon className="size-4 shrink-0 text-destructive" />;
   }
 
