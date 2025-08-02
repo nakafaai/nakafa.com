@@ -45,7 +45,7 @@ import { useAi } from "@/lib/context/use-ai";
 import { ContentTool } from "./content-tool";
 
 const MIN_WIDTH = 448;
-const MAX_WIDTH = 768;
+const MAX_WIDTH = 672;
 
 export function AiSheet() {
   const open = useAi((state) => state.open);
