@@ -8,15 +8,27 @@ import {
   InlineMath as InlineMathReactKatex,
   type MathComponentProps,
 } from "react-katex";
+import { cn } from "../lib/utils";
 
-export function MathContainer(props: HTMLAttributes<HTMLDivElement>) {
-  return <div className="my-4 space-y-4 last:mb-0" {...props} />;
+export function MathContainer({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={cn("my-4 space-y-4 last:mb-0", className)} {...props} />
+  );
 }
 
-export function BlockMath(props: MathComponentProps) {
+export function BlockMath({
+  className,
+  ...props
+}: MathComponentProps & { className?: string }) {
   return (
     <ScrollArea
-      className="grid rounded-xl border bg-card text-card-foreground shadow-sm"
+      className={cn(
+        "grid rounded-xl border bg-card text-card-foreground shadow-sm",
+        className
+      )}
       type="hover"
     >
       <div className="px-4">

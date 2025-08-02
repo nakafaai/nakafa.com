@@ -148,7 +148,7 @@ export const reactMdxComponents: Options["components"] = {
     const result = (children.props as { children: string })?.children ?? "";
 
     if (language === "math") {
-      return <BlockMath>{result}</BlockMath>;
+      return <BlockMath className="my-4">{result}</BlockMath>;
     }
 
     return (
