@@ -11,7 +11,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
-import { SendIcon, SquareIcon, XIcon } from "lucide-react";
+import { SendIcon, SquareIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type {
   ComponentProps,
@@ -191,9 +191,8 @@ export const AIInputSubmit = ({
     Icon = <SpinnerIcon className="animate-spin" />;
   } else if (status === "streaming") {
     Icon = <SquareIcon />;
-  } else if (status === "error") {
-    Icon = <XIcon />;
   }
+
   return (
     <Button
       className={cn(className)}

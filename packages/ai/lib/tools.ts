@@ -20,7 +20,6 @@ const getContentsTool = tool({
 
     const { data, error } = await api.contents.getContents({
       slug: cleanSlug,
-      withRaw: false,
     });
 
     if (error) {
@@ -30,7 +29,11 @@ const getContentsTool = tool({
     }
 
     return {
-      content: data,
+      content: data.map((item) => ({
+        title: item.metadata.title,
+        url: item.url,
+        slug: item.slug,
+      })),
     };
   },
 });

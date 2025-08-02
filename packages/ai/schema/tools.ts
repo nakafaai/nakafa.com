@@ -1,5 +1,4 @@
 import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
-import { ContentSchema } from "@repo/contents/_types/content";
 import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
 import { GradeSchema } from "@repo/contents/_types/subject/grade";
 import { MaterialSchema } from "@repo/contents/_types/subject/material";
@@ -41,7 +40,13 @@ export type GetContentsInput = z.infer<typeof getContentsInputSchema>;
 export const getContentsOutputSchema = z
   .object({
     content: z
-      .array(ContentSchema)
+      .array(
+        z.object({
+          title: z.string().describe("The title of the content."),
+          slug: z.string().describe("The slug of the content."),
+          url: z.string().describe("The url of the content from Nakafa."),
+        })
+      )
       .describe("The list of contents available in Nakafa."),
   })
   .describe("The output schema for the getContents tool.");
