@@ -148,8 +148,8 @@ function AiSheetContent() {
   });
 
   return (
-    <div className="relative flex size-full flex-col overflow-hidden">
-      <AIConversation>
+    <div className="relative flex size-full flex-col divide-y overflow-hidden">
+      <AIConversation className="relative size-full">
         <AIConversationContent>
           <AISheetMessages messages={messages} />
         </AIConversationContent>
@@ -187,7 +187,7 @@ function AISheetToolbar({
   return (
     <div className="grid shrink-0 gap-4">
       <AIInput
-        className="rounded-none border-0 border-t shadow-none"
+        className="rounded-none border-0 shadow-none"
         onSubmit={handleSendMessage}
       >
         <AIInputTextarea

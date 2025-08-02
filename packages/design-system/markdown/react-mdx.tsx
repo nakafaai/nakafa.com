@@ -129,13 +129,10 @@ export const reactMdxComponents: Options["components"] = {
       }
     }
 
-    const childrenIsCode =
-      typeof children === "object" &&
-      children !== null &&
-      "type" in children &&
-      children.type === "code";
+    const hasChildren =
+      typeof children === "object" && children !== null && "props" in children;
 
-    if (!childrenIsCode) {
+    if (!hasChildren) {
       return <pre>{children}</pre>;
     }
 

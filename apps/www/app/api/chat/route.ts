@@ -35,12 +35,12 @@ export async function POST(req: Request) {
       Always use block math for math equations, anything that has long math expressions, formulas, or complex calculations.
       Never use code for math, always use KaTeX.
       For inline code, use \` to wrap the code. For example: \`print("Hello, world!")\`
-      For block code, use \`\`\` with the language name as the first line to wrap the code. and \`\`\` at the end.
+      For block code, use \`\`\` with the language name (filename of the language name) as the first line to wrap the code. and \`\`\` at the end.
       Example:
-      \`\`\`python
+      \`\`\`py
       print("Hello, world!")
       \`\`\`
-      \`\`\`javascript
+      \`\`\`tsx
       console.log("Hello, world!");
       \`\`\`
       Always use the mathEval tool to evaluate math expressions or any other calculations. Every step should be calculated, do not calculate by yourself.

@@ -132,13 +132,10 @@ export const components = {
       filename = `index.${language}`;
     }
 
-    const childrenIsCode =
-      typeof children === "object" &&
-      children !== null &&
-      "type" in children &&
-      children.type === "code";
+    const hasChildren =
+      typeof children === "object" && children !== null && "props" in children;
 
-    if (!childrenIsCode) {
+    if (!hasChildren) {
       return <pre>{children}</pre>;
     }
 
@@ -146,7 +143,7 @@ export const components = {
       {
         language,
         filename,
-        code: (children.props as { children: string }).children,
+        code: (children.props as { children: string })?.children ?? "",
       },
     ];
 

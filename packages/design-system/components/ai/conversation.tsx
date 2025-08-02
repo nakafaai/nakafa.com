@@ -37,9 +37,11 @@ export const AIConversationScrollButton = ({
   ...props
 }: AIConversationScrollButtonProps) => {
   const { isAtBottom, scrollToBottom } = useStickToBottomContext();
+
   const handleScrollToBottom = useCallback(() => {
     scrollToBottom();
   }, [scrollToBottom]);
+
   return (
     !isAtBottom && (
       <Button
