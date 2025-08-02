@@ -29,12 +29,12 @@ export async function POST(req: Request) {
       Output should be always in markdown format and should be in the language of the user, unless the user asks for a different language.
       Never use any other format for the output, only markdown. Never return HTML.
       Always use KaTeX for math equations, numbers, expressions, or any other mathematical symbols.
-      Wrap KaTeX in single dollar signs $ for inline and double dollar signs $$ for block. Never use any other wrapper for KaTeX.
+      Wrap KaTeX in single dollar signs $ for inline. Never use any other wrapper for KaTeX.
       Example:
       $x^2 + y^2 = z^2$ (inline math)
-      $$x^2 + y^2 = z^2$$ (block math)
       Always use block math for math equations, anything that has long math expressions, formulas, or complex calculations.
-      For block math, you can also use \`\`\` with the "math" as the first line to wrap the code. and \`\`\` at the end. For example:
+      For block math, you can also use \`\`\` with the "math" as the first line to wrap the code. and \`\`\` at the end.
+      Example:
       \`\`\`math
       x^2 + y^2 = z^2
       \`\`\`
