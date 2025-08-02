@@ -10,6 +10,7 @@ import { filterWhitespaceNodes } from "@repo/design-system/lib/utils";
 import { Anchor } from "@repo/design-system/markdown/anchor";
 import { CodeBlockMdx } from "@repo/design-system/markdown/code-block";
 import { Heading } from "@repo/design-system/markdown/heading";
+import { BlockMath, InlineMath } from "@repo/design-system/markdown/math";
 import { Paragraph } from "@repo/design-system/markdown/paragraph";
 import type {
   BlockquoteProps,
@@ -98,14 +99,22 @@ export const reactMdxComponents: Options["components"] = {
       {filterWhitespaceNodes(children)}
     </TableCell>
   ),
-  code: ({ children, ...props }: CodeProps) => (
-    <code
-      className="inline break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight"
-      {...props}
-    >
-      {children}
-    </code>
-  ),
+  code: ({ children, ...props }: CodeProps) => {
+    const isInlineMath = props.className?.includes("language-math math-inline");
+
+    if (isInlineMath) {
+      return <InlineMath>{String(children)}</InlineMath>;
+    }
+
+    return (
+      <code
+        className="inline break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight"
+        {...props}
+      >
+        {children}
+      </code>
+    );
+  },
   pre: ({ node, children }) => {
     let language = "plaintext";
     let filename = "code.txt";
@@ -136,13 +145,19 @@ export const reactMdxComponents: Options["components"] = {
       return <pre>{children}</pre>;
     }
 
+    const result = (children.props as { children: string })?.children ?? "";
+
+    if (language === "math") {
+      return <BlockMath>{result}</BlockMath>;
+    }
+
     return (
       <CodeBlockMdx
         data={[
           {
             language,
             filename,
-            code: (children.props as { children: string })?.children ?? "",
+            code: result,
           },
         ]}
       />

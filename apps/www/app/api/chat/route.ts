@@ -33,11 +33,14 @@ export async function POST(req: Request) {
       $x^2 + y^2 = z^2$ (inline math)
       $$x^2 + y^2 = z^2$$ (block math)
       Always use block math for math equations, anything that has long math expressions, formulas, or complex calculations.
-      Never use code for math, always use KaTeX.
+      For block math, you can also use \`\`\` with the "math" as the first line to wrap the code. and \`\`\` at the end. For example:
+      \`\`\`math
+      x^2 + y^2 = z^2
+      \`\`\`
       For inline code, use \` to wrap the code. For example: \`print("Hello, world!")\`
-      For block code, use \`\`\` with the filename of the language name as the first line to wrap the code. and \`\`\` at the end.
+      For block code, use \`\`\` with the language name as the first line to wrap the code. and \`\`\` at the end.
       Example:
-      \`\`\`py
+      \`\`\`python
       print("Hello, world!")
       \`\`\`
       \`\`\`tsx
