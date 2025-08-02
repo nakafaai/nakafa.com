@@ -14,6 +14,7 @@ export type GetContentInput = z.infer<typeof getContentInputSchema>;
 
 export const getContentOutputSchema = z
   .object({
+    available: z.boolean().describe("Whether the content is available."),
     url: z.string().describe("The url of the content from Nakafa."),
     content: z.string().describe("The content of the page."),
   })

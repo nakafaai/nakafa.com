@@ -25,6 +25,9 @@ export function ContentTool({ status, className, output, ...props }: Props) {
   if (status === "output-error") {
     icon = <FrownIcon className="size-4 shrink-0 text-destructive" />;
   }
+  if (status === "input-available" && !output?.available) {
+    icon = <FrownIcon className="size-4 shrink-0 text-destructive" />;
+  }
 
   return (
     <div
@@ -34,7 +37,7 @@ export function ContentTool({ status, className, output, ...props }: Props) {
       )}
       {...props}
     >
-      {output && (
+      {output?.available && (
         <Link
           className="absolute inset-0 cursor-pointer"
           href={output.url}
@@ -47,7 +50,7 @@ export function ContentTool({ status, className, output, ...props }: Props) {
           {icon}
           <p className="font-medium text-sm">{t("get-content")}</p>
         </div>
-        {output && <ExternalLinkIcon className="size-4" />}
+        {output?.available && <ExternalLinkIcon className="size-4" />}
       </div>
     </div>
   );
