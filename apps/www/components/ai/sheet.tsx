@@ -149,7 +149,7 @@ function AiSheetContent() {
 
   return (
     <div className="relative flex size-full flex-col divide-y overflow-hidden">
-      <AIConversation className="relative size-full">
+      <AIConversation>
         <AIConversationContent>
           <AISheetMessages messages={messages} />
         </AIConversationContent>
