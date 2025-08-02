@@ -56,9 +56,20 @@ function parseMarkdownIntoBlocks(markdown: string): string[] {
 }
 
 function transformMarkdown(content: string) {
-  return content
+  let transformed = content
     .replace(/\\\(/g, "$")
     .replace(/\\\)/g, "$")
     .replace(/\\\[/g, "$$")
     .replace(/\\\]/g, "$$");
+
+  const occurrences = (transformed.match(/\$\$/g) || []).length;
+  if (
+    occurrences % 2 === 1 &&
+    transformed.endsWith("$") &&
+    !transformed.endsWith("$$")
+  ) {
+    transformed += "$";
+  }
+
+  return transformed;
 }

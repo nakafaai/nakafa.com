@@ -232,7 +232,7 @@ function AISheetMessages({ messages }: { messages: MyUIMessage[] }) {
 
 function AISheetMessage({ message }: { message: MyUIMessage }) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-4">
       {message.parts.map((part, i) => {
         switch (part.type) {
           case "text":

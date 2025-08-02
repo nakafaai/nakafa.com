@@ -14,8 +14,11 @@ export const contents = {
 
 async function getContents({
   slug,
+  withRaw = true,
   ...base
-}: { slug: string } & RequestInit): Promise<FetchResult<Content[]>> {
+}: { slug: string; withRaw?: boolean } & RequestInit): Promise<
+  FetchResult<Content[]>
+> {
   const url = `${PREFIX}/${slug}`;
   const { data, error } = await fetcher<Content[]>(url, {
     method: "GET",
@@ -36,6 +39,13 @@ async function getContents({
         status: 404,
         message: "Contents not found",
       },
+    };
+  }
+
+  if (!withRaw) {
+    return {
+      data: data.map((item) => ({ ...item, raw: "" })),
+      error,
     };
   }
 

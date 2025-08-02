@@ -4,12 +4,39 @@ import * as math from "mathjs";
 import {
   getContentInputSchema,
   getContentOutputSchema,
+  getContentsInputSchema,
+  getContentsOutputSchema,
   mathEvalInputSchema,
   mathEvalOutputSchema,
 } from "../schema/tools";
+import { buildContentSlug } from "./utils";
+
+const getContentsTool = tool({
+  description: "Get a list of contents available in Nakafa.",
+  inputSchema: getContentsInputSchema,
+  outputSchema: getContentsOutputSchema,
+  execute: async ({ locale, filters }) => {
+    const cleanSlug = buildContentSlug({ locale, filters });
+
+    const { data, error } = await api.contents.getContents({
+      slug: cleanSlug,
+      withRaw: false,
+    });
+
+    if (error) {
+      return {
+        content: [],
+      };
+    }
+
+    return {
+      content: data,
+    };
+  },
+});
 
 const getContentTool = tool({
-  description: "Get the content of a page.",
+  description: "Get the content of a page in Nakafa.",
   inputSchema: getContentInputSchema,
   outputSchema: getContentOutputSchema,
   execute: async ({ slug, locale }) => {
@@ -110,5 +137,6 @@ const mathEvalTool = tool({
 
 export const tools = {
   getContent: getContentTool,
+  getContents: getContentsTool,
   mathEval: mathEvalTool,
 };
