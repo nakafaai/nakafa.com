@@ -138,7 +138,7 @@ export default async function Page({ params }: Props) {
           />
           <LayoutMaterialMain>
             {materials.length === 0 ? (
-              <ComingSoon className="pb-10" />
+              <ComingSoon />
             ) : (
               <ContainerList className="sm:grid-cols-1">
                 {materials.map((mat) => (

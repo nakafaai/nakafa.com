@@ -206,14 +206,10 @@ export default async function Page({ params }: Props) {
               title={metadata.title}
             />
             <LayoutMaterialMain>
-              {headings.length === 0 ? (
-                <ComingSoon className="py-10" />
-              ) : (
-                <Content />
-              )}
+              {headings.length === 0 ? <ComingSoon /> : <Content />}
             </LayoutMaterialMain>
             <LayoutMaterialPagination pagination={pagination} />
-            <LayoutMaterialFooter className="mt-10">
+            <LayoutMaterialFooter>
               <RefContent
                 githubUrl={getGithubUrl({
                   path: `/packages/contents${FILE_PATH}`,
