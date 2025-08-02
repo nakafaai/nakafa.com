@@ -49,7 +49,6 @@ const getContentTool = tool({
       const slugParts = slug.split("/");
       if (slugParts.length !== 3) {
         return {
-          available: false,
           url: url.toString(),
           content: "Surah not found.",
         };
@@ -63,13 +62,11 @@ const getContentTool = tool({
         });
       if (surahError) {
         return {
-          available: false,
           url: url.toString(),
           content: surahError.message,
         };
       }
       return {
-        available: true,
         url: url.toString(),
         content: JSON.stringify(surahData, null, 2),
       };
@@ -81,13 +78,11 @@ const getContentTool = tool({
 
     if (error) {
       return {
-        available: false,
         url: url.toString(),
         content: error.message,
       };
     }
     return {
-      available: true,
       url: url.toString(),
       content: data,
     };

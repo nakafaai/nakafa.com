@@ -1,9 +1,10 @@
 "use client";
 
-import type { MathEvalOutput } from "@repo/ai/schema/tools";
+import type { GetContentsOutput } from "@repo/ai/schema/tools";
+import { Badge } from "@repo/design-system/components/ui/badge";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { CalculatorIcon, CheckIcon, FrownIcon } from "lucide-react";
+import { FrownIcon, LibraryIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, memo } from "react";
 
@@ -13,10 +14,10 @@ type Props = {
     | "input-available"
     | "output-available"
     | "output-error";
-  output?: MathEvalOutput;
+  output?: GetContentsOutput;
 } & ComponentProps<"div">;
 
-export const MathEvalTool = memo(
+export const ContentsTool = memo(
   ({ status, className, output, ...props }: Props) => {
     const t = useTranslations("Ai");
 
@@ -26,9 +27,6 @@ export const MathEvalTool = memo(
     }
     if (status === "output-available" && !output) {
       icon = <FrownIcon className="size-4 shrink-0 text-destructive" />;
-    }
-    if (status === "output-available" && output) {
-      icon = <CheckIcon className="size-4 shrink-0" />;
     }
 
     return (
@@ -41,13 +39,17 @@ export const MathEvalTool = memo(
       >
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <CalculatorIcon className="size-4 shrink-0" />
-            <p className="font-medium text-sm">{t("math-eval")}</p>
+            <LibraryIcon className="size-4 shrink-0" />
+            <p className="font-medium text-sm">{t("get-contents")}</p>
           </div>
-          {icon}
+          {output ? (
+            <Badge variant="outline">{output.content.length}</Badge>
+          ) : (
+            icon
+          )}
         </div>
       </div>
     );
   }
 );
-MathEvalTool.displayName = "MathEvalTool";
+ContentsTool.displayName = "ContentsTool";

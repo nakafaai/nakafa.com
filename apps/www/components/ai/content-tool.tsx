@@ -25,22 +25,22 @@ export const ContentTool = memo(
     if (status === "output-error") {
       icon = <FrownIcon className="size-4 shrink-0 text-destructive" />;
     }
-    if (status === "output-available" && !output?.available) {
+    if (status === "output-available" && !output) {
       icon = <FrownIcon className="size-4 shrink-0 text-destructive" />;
     }
-    if (output?.available) {
+    if (output) {
       icon = <ExternalLinkIcon className="size-4 shrink-0" />;
     }
 
     return (
       <div
         className={cn(
-          "relative w-fit rounded-xl border bg-card px-3 py-2 shadow-sm first:mt-0 last:mb-0",
+          "relative flex h-10 w-fit items-center justify-center rounded-xl border bg-card px-3 shadow-sm first:mt-0 last:mb-0",
           className
         )}
         {...props}
       >
-        {output?.available && (
+        {output && (
           <Link
             className="absolute inset-0 cursor-pointer"
             href={output.url}

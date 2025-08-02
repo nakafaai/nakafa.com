@@ -43,6 +43,7 @@ import type { ComponentProps } from "react";
 import { toast } from "sonner";
 import { useAi } from "@/lib/context/use-ai";
 import { ContentTool } from "./content-tool";
+import { ContentsTool } from "./contents-tool";
 import { MathEvalTool } from "./matheval-tool";
 
 const MIN_WIDTH = 448;
@@ -241,6 +242,14 @@ function AISheetMessage({ message }: { message: MyUIMessage }) {
               <AIMessageContent key={`message-${message.id}-part-${i}`}>
                 <AIResponse content={part.text} id={message.id} />
               </AIMessageContent>
+            );
+          case "tool-getContents":
+            return (
+              <ContentsTool
+                key={`tool-${part.toolCallId}`}
+                output={part.output}
+                status={part.state}
+              />
             );
           case "tool-getContent":
             return (
