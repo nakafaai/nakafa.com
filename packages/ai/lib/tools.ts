@@ -13,11 +13,13 @@ const getContentTool = tool({
   inputSchema: getContentInputSchema,
   outputSchema: getContentOutputSchema,
   execute: async ({ slug, locale }) => {
+    const url = new URL(`/${locale}${slug}`, "https://nakafa.com");
+
     if (slug.startsWith("/quran")) {
       const slugParts = slug.split("/");
       if (slugParts.length !== 3) {
         return {
-          slug,
+          url: url.toString(),
           content: "Surah not found.",
         };
       }
@@ -30,12 +32,12 @@ const getContentTool = tool({
         });
       if (surahError) {
         return {
-          slug,
+          url: url.toString(),
           content: surahError.message,
         };
       }
       return {
-        slug,
+        url: url.toString(),
         content: JSON.stringify(surahData, null, 2),
       };
     }
@@ -46,12 +48,12 @@ const getContentTool = tool({
 
     if (error) {
       return {
-        slug,
+        url: url.toString(),
         content: error.message,
       };
     }
     return {
-      slug,
+      url: url.toString(),
       content: data,
     };
   },

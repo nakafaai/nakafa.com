@@ -14,7 +14,7 @@ export type GetContentInput = z.infer<typeof getContentInputSchema>;
 
 export const getContentOutputSchema = z
   .object({
-    slug: z.string().describe("The slug of the content to get."),
+    url: z.string().describe("The url of the content from Nakafa."),
     content: z.string().describe("The content of the page."),
   })
   .describe("The output schema for the getContent tool.");

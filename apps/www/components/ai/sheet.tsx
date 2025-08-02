@@ -245,6 +245,7 @@ function AISheetMessage({ message }: { message: MyUIMessage }) {
             return (
               <ContentTool
                 key={`tool-${part.toolCallId}`}
+                output={part.output}
                 status={part.state}
               />
             );
