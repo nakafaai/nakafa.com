@@ -18,7 +18,7 @@ export function Heading({
   return (
     <Tag
       className={cn(
-        "mt-10 mb-6 flex scroll-mt-44 items-center font-medium leading-tight tracking-tight",
+        "mt-10 mb-6 flex scroll-mt-44 items-center font-medium leading-tight tracking-tight first:mt-0 last:mb-0",
         className
       )}
       id={id}

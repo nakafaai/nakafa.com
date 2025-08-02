@@ -26,7 +26,7 @@ export default function Page() {
           <SearchResults />
         </div>
       </div>
-      <FooterContent className="mt-0">
+      <FooterContent>
         <RefContent
           githubUrl={getGithubUrl({
             path: encodeURI("/app/[locale]/search"),

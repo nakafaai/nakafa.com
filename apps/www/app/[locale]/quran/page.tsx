@@ -84,7 +84,7 @@ export default async function Page({ params }: Props) {
         icon={MoonStarIcon}
         title={t("quran")}
       />
-      <LayoutContent className="py-10">
+      <LayoutContent>
         <div className="overflow-hidden rounded-xl border shadow-sm">
           {surahs.map((surah) => {
             const title = getSurahName({ locale, name: surah.name });
@@ -115,7 +115,7 @@ export default async function Page({ params }: Props) {
           })}
         </div>
       </LayoutContent>
-      <FooterContent className="mt-0">
+      <FooterContent>
         <RefContent />
       </FooterContent>
     </>

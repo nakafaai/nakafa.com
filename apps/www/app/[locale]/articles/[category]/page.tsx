@@ -87,7 +87,7 @@ export default async function Page({ params }: Props) {
         icon={getCategoryIcon(category)}
         title={t(category)}
       />
-      <LayoutContent className="py-10">
+      <LayoutContent>
         <ContainerList>
           {articles.map((article) => (
             <CardArticle

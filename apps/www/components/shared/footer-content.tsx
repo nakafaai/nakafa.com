@@ -9,10 +9,7 @@ type Props = {
 export function FooterContent({ children, className }: Props) {
   return (
     <section>
-      <footer
-        className={cn("relative mt-10 pt-10 pb-20", className)}
-        data-pagefind-ignore
-      >
+      <footer className={cn("relative py-20", className)} data-pagefind-ignore>
         <div className="z-10 mx-auto max-w-3xl px-6">{children}</div>
       </footer>
     </section>

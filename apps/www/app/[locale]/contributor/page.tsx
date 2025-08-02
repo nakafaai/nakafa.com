@@ -39,14 +39,14 @@ export default function Page() {
         icon={HeartHandshakeIcon}
         title={t("title")}
       />
-      <LayoutContent className="py-10">
+      <LayoutContent>
         <div className="flex flex-wrap gap-2">
           {contributors.map((contributor) => (
             <Avatar contributor={contributor} key={contributor.username} />
           ))}
         </div>
       </LayoutContent>
-      <FooterContent className="mt-0">
+      <FooterContent>
         <RefContent
           githubUrl={getGithubUrl({
             path: encodeURI("/app/[locale]/contributor"),

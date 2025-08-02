@@ -53,9 +53,7 @@ export function LayoutMaterialFooter({
   children: ReactNode;
   className?: string;
 }) {
-  return (
-    <FooterContent className={cn("mt-0", className)}>{children}</FooterContent>
-  );
+  return <FooterContent className={cn(className)}>{children}</FooterContent>;
 }
 
 export function LayoutMaterialToc({

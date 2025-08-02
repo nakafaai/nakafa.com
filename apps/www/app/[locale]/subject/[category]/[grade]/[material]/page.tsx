@@ -136,7 +136,7 @@ export default async function Page({ params }: Props) {
             }}
             title={t(material)}
           />
-          <LayoutMaterialMain className="py-10">
+          <LayoutMaterialMain>
             {materials.length === 0 ? (
               <ComingSoon className="pb-10" />
             ) : (

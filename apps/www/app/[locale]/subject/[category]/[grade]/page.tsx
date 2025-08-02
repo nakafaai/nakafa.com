@@ -98,7 +98,7 @@ export default async function Page({ params }: Props) {
         icon={getCategoryIcon(category)}
         title={t(getGradeNonNumeric(grade) ?? "grade", { grade })}
       />
-      <LayoutContent className="py-10">
+      <LayoutContent>
         <ContainerList>
           {subjects.map((subject) => (
             <CardSubject
@@ -109,7 +109,7 @@ export default async function Page({ params }: Props) {
           ))}
         </ContainerList>
       </LayoutContent>
-      <FooterContent className="mt-0">
+      <FooterContent>
         <RefContent
           githubUrl={getGithubUrl({ path: `/packages/contents${FILE_PATH}` })}
         />
