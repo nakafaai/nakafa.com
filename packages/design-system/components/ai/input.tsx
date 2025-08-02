@@ -184,7 +184,7 @@ export const AIInputSubmit = ({
   children,
   ...props
 }: AIInputSubmitProps) => {
-  const defaultVariant = status === "streaming" ? "destructive" : "default";
+  const defaultVariant = status === "streaming" ? "destructive" : variant;
 
   let Icon = <SendIcon />;
   if (status === "submitted") {
@@ -199,7 +199,7 @@ export const AIInputSubmit = ({
       className={cn(className)}
       size={size}
       type="submit"
-      variant={variant ?? defaultVariant}
+      variant={defaultVariant}
       {...props}
     >
       {children ?? Icon}
