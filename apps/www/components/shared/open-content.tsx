@@ -32,17 +32,14 @@ import { getGithubUrl } from "@/lib/utils/github";
 
 export function OpenContent({ slug }: { slug: string }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="inline-flex divide-x divide-secondary-foreground/20 rounded-md shadow-xs rtl:space-x-reverse">
-        <LLmCopyButton slug={slug} />
-        <ViewOptions slug={slug} />
-      </div>
-      <AskAiButton />
+    <div className="inline-flex divide-x divide-secondary-foreground/20 rounded-md shadow-xs rtl:space-x-reverse">
+      <LLmCopyButton slug={slug} />
+      <ViewOptions slug={slug} />
     </div>
   );
 }
 
-function AskAiButton() {
+export function AskAiButton() {
   const setOpen = useAi((state) => state.setOpen);
   const t = useTranslations("Ai");
 

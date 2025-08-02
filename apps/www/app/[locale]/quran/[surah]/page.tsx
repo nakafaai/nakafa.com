@@ -142,6 +142,7 @@ export default async function Page({ params }: Props) {
             href: "/quran",
             label: t("quran"),
           }}
+          showAskAi
           title={title}
         />
         <LayoutMaterialMain>
@@ -215,7 +216,7 @@ export default async function Page({ params }: Props) {
           </WindowVirtualized>
         </LayoutMaterialMain>
         <LayoutMaterialPagination pagination={pagination} />
-        <LayoutMaterialFooter className="mt-10">
+        <LayoutMaterialFooter>
           <RefContent />
         </LayoutMaterialFooter>
       </LayoutMaterialContent>
