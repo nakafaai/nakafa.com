@@ -57,8 +57,7 @@ export function AiSheet() {
   const slug = usePathname();
 
   const currentMessages = useAi((state) => state.currentMessages);
-  const setMessages = useAi((state) => state.setMessages);
-  const clearMessages = useAi((state) => state.clearMessages);
+  const setCurrentMessages = useAi((state) => state.setCurrentMessages);
 
   const open = useAi((state) => state.open);
   const setOpen = useAi((state) => state.setOpen);
@@ -73,32 +72,38 @@ export function AiSheet() {
     maxWidth: MAX_WIDTH,
   });
 
-  const { sendMessage, messages, status, stop } = useChat<MyUIMessage>({
-    messages: currentMessages,
-    transport: new DefaultChatTransport({
-      api: "/api/chat",
-      prepareSendMessagesRequest: ({ messages: ms }) => {
-        setMessages(ms);
+  const { sendMessage, messages, status, stop, setMessages } =
+    useChat<MyUIMessage>({
+      messages: currentMessages,
+      transport: new DefaultChatTransport({
+        api: "/api/chat",
+        prepareSendMessagesRequest: ({ messages: ms }) => {
+          setCurrentMessages(ms);
 
-        return {
-          body: {
-            messages: ms,
-            slug,
-            locale,
-          },
-        };
+          return {
+            body: {
+              messages: ms,
+              slug,
+              locale,
+            },
+          };
+        },
+      }),
+      onError: (error) => {
+        toast.error(
+          error.message.length > 0 ? error.message : t("error-message"),
+          { position: "bottom-center" }
+        );
       },
-    }),
-    onError: (error) => {
-      toast.error(
-        error.message.length > 0 ? error.message : t("error-message"),
-        { position: "bottom-center" }
-      );
-    },
-    onFinish: ({ message }) => {
-      setMessages([message]);
-    },
-  });
+      onFinish: ({ message }) => {
+        setCurrentMessages([message]);
+      },
+    });
+
+  const handleClearMessages = () => {
+    setMessages([]);
+    setCurrentMessages([]);
+  };
 
   return (
     <Sheet defaultOpen={open} modal={false} onOpenChange={setOpen} open={open}>
@@ -132,7 +137,7 @@ export function AiSheet() {
 
             <div className="flex items-center">
               <Button
-                onClick={() => clearMessages()}
+                onClick={handleClearMessages}
                 size="icon-sm"
                 variant="ghost"
               >
