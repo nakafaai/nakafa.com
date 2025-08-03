@@ -33,11 +33,11 @@ import { cn } from "@repo/design-system/lib/utils";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { DefaultChatTransport } from "ai";
 import {
-  EyeOffIcon,
   Maximize2Icon,
   Minimize2Icon,
   SparklesIcon,
   Trash2Icon,
+  XIcon,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
@@ -159,7 +159,7 @@ export function AiSheet() {
                 size="icon-sm"
                 variant="ghost"
               >
-                <EyeOffIcon />
+                <XIcon />
                 <span className="sr-only">Close</span>
               </Button>
             </div>
