@@ -111,10 +111,12 @@ export function HeaderContent({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-2">
-          {slug && <OpenContent slug={slug} />}
-          {showAskAi && <AskAiButton />}
-        </div>
+        {(slug || showAskAi) && (
+          <div className="flex flex-wrap items-center gap-2">
+            {slug && <OpenContent slug={slug} />}
+            {showAskAi && <AskAiButton />}
+          </div>
+        )}
       </div>
     </div>
   );
