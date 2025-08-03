@@ -57,11 +57,10 @@ export type GetContentsOutput = z.infer<typeof getContentsOutputSchema>;
 export const getContentInputSchema = z
   .object({
     locale: z.enum(["en", "id"]).describe("The locale of the content to get."),
-    slug: z
-      .string()
-      .describe(
-        "The slug of the content to get. Use slug as it is, do not change anything. Always start with slash (/). The slug also can be found in the 'slug' field of the getContents tool which is to get the list of contents available in Nakafa."
-      ),
+    slug: z.string().describe(
+      `The slug of the content to get. Use slug as it is, do not change anything. Always start with slash (/). DO NOT include locale in the slug.
+        The slug also can be found in the 'slug' field of the getContents tool which is to get the list of contents available in Nakafa.`
+    ),
   })
   .describe("The input schema for the getContent tool.");
 export type GetContentInput = z.infer<typeof getContentInputSchema>;

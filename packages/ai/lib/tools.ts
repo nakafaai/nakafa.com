@@ -44,7 +44,13 @@ const getContentTool = tool({
   inputSchema: getContentInputSchema,
   outputSchema: getContentOutputSchema,
   execute: async ({ slug, locale }) => {
-    const cleanedSlug = cleanSlug(slug);
+    let cleanedSlug = cleanSlug(slug);
+
+    // Manually make sure that slug not containing locale
+    if (cleanedSlug.startsWith(`/${locale}`)) {
+      cleanedSlug = cleanedSlug.slice(locale.length + 1);
+    }
+
     const url = new URL(`/${locale}/${cleanedSlug}`, "https://nakafa.com");
 
     if (slug.startsWith("/quran")) {
