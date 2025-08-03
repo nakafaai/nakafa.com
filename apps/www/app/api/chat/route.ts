@@ -33,16 +33,19 @@ export async function POST(req: Request) {
       Example:
       $x^2 + y^2 = z^2$ (inline math)
       Always use block math for math equations, anything that has long math expressions, formulas, or complex calculations.
-      For block math, you can also use \`\`\` with the "math" as the first line to wrap the code. and \`\`\` at the end.
+      For block math, you MUST wrap the math in \`\`\`math and \`\`\` at the end.
       Example:
       \`\`\`math
       x^2 + y^2 = z^2
       \`\`\`
       For inline code, use \` to wrap the code. For example: \`print("Hello, world!")\`
-      For block code, use \`\`\` with the language name as the first line to wrap the code. and \`\`\` at the end.
+      For block code, you MUST wrap the code in \`\`\`(language) and \`\`\` at the end.
       Example:
       \`\`\`python
       print("Hello, world!")
+      \`\`\`
+      \`\`\`math
+      \\frac{1}{2\\pi i} \\oint_C \\frac{f(z)}{z-z_0} dz
       \`\`\`
       \`\`\`tsx
       console.log("Hello, world!");
