@@ -56,6 +56,20 @@ export async function POST(req: Request) {
     messages: convertToModelMessages(messages),
     stopWhen: stepCountIs(20),
     tools,
+    prepareStep: ({ stepNumber }) => {
+      if (stepNumber === 0) {
+        return {
+          // use a different model for this step:
+          model: model.languageModel("google"),
+          // force a tool choice for this step:
+          toolChoice: { type: "tool", toolName: "getContent" },
+          // limit the tools that are available for this step:
+          activeTools: ["getContent"],
+        };
+      }
+
+      // when nothing is returned, the default settings are used
+    },
     providerOptions: {
       gateway: {
         order: ["groq", "azure", "vertex"],
