@@ -47,10 +47,12 @@ const getContentTool = tool({
 
     if (slug.startsWith("/quran")) {
       const slugParts = slug.split("/");
+
       if (slugParts.length !== 3) {
         return {
           url: url.toString(),
-          content: "Surah not found.",
+          content:
+            "Surah not found. Maybe not available or still in development.",
         };
       }
 
@@ -60,12 +62,14 @@ const getContentTool = tool({
         await api.contents.getSurah({
           surah: Number.parseInt(surah, 10),
         });
+
       if (surahError) {
         return {
           url: url.toString(),
           content: surahError.message,
         };
       }
+
       return {
         url: url.toString(),
         content: JSON.stringify(surahData, null, 2),
@@ -82,6 +86,7 @@ const getContentTool = tool({
         content: error.message,
       };
     }
+
     return {
       url: url.toString(),
       content: data,

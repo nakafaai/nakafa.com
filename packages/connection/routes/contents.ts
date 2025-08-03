@@ -82,7 +82,8 @@ async function getContent({
       data: "",
       error: {
         status: 404,
-        message: "Content not found",
+        message:
+          "Content not found. Maybe not available or still in development.",
       },
     };
   }
