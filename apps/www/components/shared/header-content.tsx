@@ -74,7 +74,7 @@ export function HeaderContent({
         </div>
 
         {(description || showFooter) && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {description && (
               <p className="text-muted-foreground">{description}</p>
             )}
