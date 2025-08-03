@@ -43,7 +43,7 @@ export const ContentsTool = memo(
             <p className="font-medium text-sm">{t("get-contents")}</p>
           </div>
           {output ? (
-            <Badge variant="outline">{output.content.length}</Badge>
+            <Badge variant="secondary">{output.content.length}</Badge>
           ) : (
             icon
           )}
