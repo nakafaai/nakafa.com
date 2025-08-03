@@ -12,7 +12,7 @@ const languageModels = {
   meta: gateway("meta/llama-4-maverick"),
   moonshot: gateway("moonshotai/kimi-k2"),
   openai: gateway("openai/gpt-4.1-nano"),
-  qwen: gateway("alibaba/qwen3-coder"),
+  qwen: gateway("alibaba/qwen-3-32b"),
   zai: gateway("zai/glm-4.5"),
 };
 
