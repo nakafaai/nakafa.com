@@ -19,6 +19,11 @@ import {
   AIMessage,
   AIMessageContent,
 } from "@repo/design-system/components/ai/message";
+import {
+  AIReasoning,
+  AIReasoningContent,
+  AIReasoningTrigger,
+} from "@repo/design-system/components/ai/reasoning";
 import { AIResponse } from "@repo/design-system/components/ai/response";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -251,6 +256,19 @@ function AISheetMessage({ message }: { message: MyUIMessage }) {
               <AIMessageContent key={`message-${message.id}-part-${i}`}>
                 <AIResponse content={part.text} id={message.id} />
               </AIMessageContent>
+            );
+          case "reasoning":
+            return (
+              <AIReasoning
+                className="w-full"
+                isStreaming={part.state === "streaming"}
+                key={`reasoning-${message.id}-part-${i}`}
+              >
+                <AIReasoningTrigger />
+                <AIReasoningContent id={message.id}>
+                  {part.text}
+                </AIReasoningContent>
+              </AIReasoning>
             );
           case "tool-getContents":
             return (

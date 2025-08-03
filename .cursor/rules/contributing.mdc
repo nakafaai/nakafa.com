@@ -1,0 +1,24 @@
+---
+description: Guidelines for contributing to the Nakafa project
+globs: 
+alwaysApply: false
+---
+
+# Contributing to Nakafa
+
+Follow these steps to contribute:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/name`
+3. Make changes following established patterns
+4. Run `bun lint` and `bun test`
+5. Submit a pull request
+
+## Code Standards
+
+- Use Biome for linting: [biome.json](mdc:biome.json)
+- Follow TypeScript best practices
+- Write tests for new features
+- Maintain MDX content structure in [packages/contents/](mdc:packages/contents/)
+
+For commercial licensing or questions: <nakafaai@gmail.com>

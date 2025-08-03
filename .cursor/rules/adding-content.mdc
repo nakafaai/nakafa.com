@@ -1,0 +1,24 @@
+---
+description: How to add new educational content to Nakafa
+alwaysApply: false
+---
+
+# Adding Content to Nakafa
+
+To add new educational content:
+
+1. Navigate to the appropriate level in [packages/contents/subject/](mdc:packages/contents/subject/)
+2. Create MDX files following the existing structure
+   - For articles: [packages/contents/articles/](mdc:packages/contents/articles/)
+   - For subjects: Create in relevant grade/material directory
+3. Update data files in `_data/` directories (e.g., subject.ts)
+4. Test locally with `bun dev`
+
+## Content Structure
+
+- MDX files should include frontmatter with title, description, etc.
+- Use components from [packages/design-system/](mdc:packages/design-system/) for interactive elements.
+- Support both English (en.mdx) and Indonesian (id.mdx) versions.
+- Add references in ref.ts if needed.
+
+Ensure content is educational, accurate, and follows the AGPL-3.0 license.
