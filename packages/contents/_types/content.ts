@@ -49,6 +49,7 @@ export const ContentSchema = z.object({
   metadata: ContentMetadataSchema,
   raw: z.string(),
   url: z.string(),
+  locale: z.string(),
   slug: z.string(),
 });
 export type Content = z.infer<typeof ContentSchema>;

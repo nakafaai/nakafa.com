@@ -46,6 +46,7 @@ export const getContentsOutputSchema = z
           title: z.string().describe("The title of the content."),
           slug: z.string().describe("The slug of the content."),
           url: z.string().describe("The url of the content from Nakafa."),
+          locale: z.string().describe("The locale of the content."),
         })
       )
       .describe("The list of contents available in Nakafa."),

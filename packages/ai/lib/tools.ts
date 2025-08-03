@@ -9,17 +9,17 @@ import {
   mathEvalInputSchema,
   mathEvalOutputSchema,
 } from "../schema/tools";
-import { buildContentSlug } from "./utils";
+import { buildContentSlug, cleanSlug } from "./utils";
 
 const getContentsTool = tool({
   description: "Get a list of contents available in Nakafa.",
   inputSchema: getContentsInputSchema,
   outputSchema: getContentsOutputSchema,
   execute: async ({ locale, filters }) => {
-    const cleanSlug = buildContentSlug({ locale, filters });
+    const slug = buildContentSlug({ locale, filters });
 
     const { data, error } = await api.contents.getContents({
-      slug: cleanSlug,
+      slug,
     });
 
     if (error) {
@@ -33,6 +33,7 @@ const getContentsTool = tool({
         title: item.metadata.title,
         url: item.url,
         slug: item.slug,
+        locale: item.locale,
       })),
     };
   },
@@ -43,7 +44,8 @@ const getContentTool = tool({
   inputSchema: getContentInputSchema,
   outputSchema: getContentOutputSchema,
   execute: async ({ slug, locale }) => {
-    const url = new URL(`/${locale}${slug}`, "https://nakafa.com");
+    const cleanedSlug = cleanSlug(slug);
+    const url = new URL(`/${locale}/${cleanedSlug}`, "https://nakafa.com");
 
     if (slug.startsWith("/quran")) {
       const slugParts = slug.split("/");
@@ -77,7 +79,7 @@ const getContentTool = tool({
     }
 
     const { data, error } = await api.contents.getContent({
-      slug: `${locale}${slug}`,
+      slug: `${locale}/${cleanedSlug}`,
     });
 
     if (error) {

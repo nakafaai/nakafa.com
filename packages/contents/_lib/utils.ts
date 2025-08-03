@@ -112,13 +112,17 @@ export async function getContents({
       return null;
     }
 
-    const slug = `${locale}/${item.slug.join("/")}`;
+    const url = new URL(
+      `/${locale}/${item.slug.join("/")}`,
+      "https://nakafa.com"
+    );
 
     const { data, error } = ContentSchema.safeParse({
       metadata: content.metadata,
       raw: content.raw,
-      url: `https://nakafa.com/${slug}`,
-      slug,
+      url: url.toString(),
+      slug: item.slug.join("/"),
+      locale,
     });
 
     if (error) {

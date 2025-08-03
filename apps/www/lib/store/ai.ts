@@ -13,6 +13,7 @@ type Actions = {
   setOpen: (open: boolean) => void;
   setText: (text: string) => void;
   setCurrentMessages: (messages: MyUIMessage[]) => void;
+  clearCurrentMessages: () => void;
 };
 
 export type AiStore = State & Actions;
@@ -39,6 +40,7 @@ export const createAiStore = () => {
           );
           set({ currentMessages: uniqueMessages });
         },
+        clearCurrentMessages: () => set({ currentMessages: [] }),
       })),
       {
         storage: createJSONStorage(() => localStorage),

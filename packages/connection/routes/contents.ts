@@ -19,7 +19,7 @@ async function getContents({
 }: { slug: string; withRaw?: boolean } & RequestInit): Promise<
   FetchResult<Content[]>
 > {
-  const url = `${PREFIX}/${slug}`;
+  const url = `${PREFIX}/${cleanSlug(slug)}`;
   const { data, error } = await fetcher<Content[]>(url, {
     method: "GET",
     ...base,

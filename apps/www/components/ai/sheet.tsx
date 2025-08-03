@@ -63,6 +63,7 @@ export function AiSheet() {
 
   const currentMessages = useAi((state) => state.currentMessages);
   const setCurrentMessages = useAi((state) => state.setCurrentMessages);
+  const clearCurrentMessages = useAi((state) => state.clearCurrentMessages);
 
   const open = useAi((state) => state.open);
   const setOpen = useAi((state) => state.setOpen);
@@ -107,7 +108,7 @@ export function AiSheet() {
 
   const handleClearMessages = () => {
     setMessages([]);
-    setCurrentMessages([]);
+    clearCurrentMessages();
   };
 
   return (

@@ -20,3 +20,8 @@ export function buildContentSlug(params: GetContentsInput): string {
 
   return segments.join("/");
 }
+
+export function cleanSlug(slug: string): string {
+  // remove slash at the beginning and the end
+  return slug.replace(/^\/+|\/+$/g, "");
+}
