@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useRef } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
@@ -22,10 +22,35 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useAi<T>(selector: (state: AiStore) => T): T {
+function useAiContext() {
   const ctx = useContextSelector(AiContext, (context) => context);
   if (!ctx) {
     throw new Error("useAi must be used within a AiContextProvider");
   }
-  return useStore(ctx, useShallow(selector));
+  return ctx;
+}
+
+export function useAi<T>(selector: (state: AiStore) => T): T {
+  const store = useAiContext();
+  return useStore(store, useShallow(selector));
+}
+
+export function useAiHydrated() {
+  const store = useAiContext();
+
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const unSubFinish = store.persist.onFinishHydration(() =>
+      setHydrated(true)
+    );
+
+    setHydrated(store.persist.hasHydrated());
+
+    return () => {
+      unSubFinish();
+    };
+  }, [store]);
+
+  return hydrated;
 }

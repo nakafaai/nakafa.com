@@ -47,7 +47,7 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { toast } from "sonner";
-import { useAi } from "@/lib/context/use-ai";
+import { useAi, useAiHydrated } from "@/lib/context/use-ai";
 import { ContentTool } from "./content-tool";
 import { ContentsTool } from "./contents-tool";
 import { MathEvalTool } from "./matheval-tool";
@@ -55,13 +55,28 @@ import { MathEvalTool } from "./matheval-tool";
 const MIN_WIDTH = 448;
 const MAX_WIDTH = 672;
 
-export function AiSheet() {
+export function AiChat() {
+  const hydrated = useAiHydrated();
+  const currentMessages = useAi((state) => state.currentMessages);
+
+  // Avoiding empty initial messages in useChat because of hydration issues
+  if (!hydrated) {
+    return null;
+  }
+
+  return <AiSheet initialMessages={currentMessages} />;
+}
+
+export function AiSheet({
+  initialMessages,
+}: {
+  initialMessages: MyUIMessage[];
+}) {
   const t = useTranslations("Ai");
 
   const locale = useLocale();
   const slug = usePathname();
 
-  const currentMessages = useAi((state) => state.currentMessages);
   const setCurrentMessages = useAi((state) => state.setCurrentMessages);
   const clearCurrentMessages = useAi((state) => state.clearCurrentMessages);
 
@@ -80,7 +95,7 @@ export function AiSheet() {
 
   const { sendMessage, messages, status, stop, setMessages } =
     useChat<MyUIMessage>({
-      messages: currentMessages,
+      messages: initialMessages,
       transport: new DefaultChatTransport({
         api: "/api/chat",
         prepareSendMessagesRequest: ({ messages: ms }) => {

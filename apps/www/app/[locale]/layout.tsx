@@ -1,13 +1,7 @@
-import { DesignSystemProvider } from "@repo/design-system";
-import { fonts } from "@repo/design-system/lib/fonts";
-import { routing } from "@repo/internationalization/src/routing";
-import { notFound } from "next/navigation";
-import { hasLocale, type Locale, NextIntlClientProvider } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-
 import "@/styles/globals.css";
 
 import { VercelAnalytics } from "@repo/analytics/vercel";
+import { DesignSystemProvider } from "@repo/design-system";
 import { ReactScan } from "@repo/design-system/components/ui/react-scan";
 import {
   SidebarInset,
@@ -15,12 +9,17 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
+import { fonts } from "@repo/design-system/lib/fonts";
+import { routing } from "@repo/internationalization/src/routing";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { OrganizationJsonLd } from "@repo/seo/json-ld/organization";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata, Viewport } from "next";
+import { notFound } from "next/navigation";
+import { hasLocale, type Locale, NextIntlClientProvider } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
-import { AiSheet } from "@/components/ai/sheet";
+import { AiChat } from "@/components/ai/sheet";
 import { AppProviders } from "@/components/providers";
 import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
@@ -184,7 +183,7 @@ export default async function LocaleLayout({ children, params }: Props) {
                 <SidebarInset>
                   <Header />
                   <SearchCommand />
-                  <AiSheet />
+                  <AiChat />
                   <div className="relative" data-pagefind-body>
                     {children}
                   </div>
