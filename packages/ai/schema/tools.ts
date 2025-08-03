@@ -40,7 +40,7 @@ export type GetContentsInput = z.infer<typeof getContentsInputSchema>;
 
 export const getContentsOutputSchema = z
   .object({
-    content: z
+    contents: z
       .array(
         z.object({
           title: z.string().describe("The title of the content."),

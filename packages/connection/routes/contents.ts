@@ -61,7 +61,8 @@ async function getContent({
 }: {
   slug: string;
 } & RequestInit): Promise<FetchResult<string>> {
-  const url = `${PREFIX}/${cleanSlug(slug)}`;
+  const cleanedSlug = cleanSlug(slug);
+  const url = `${PREFIX}/${cleanedSlug}`;
   const { data, error } = await fetcher<Content[]>(url, {
     method: "GET",
     ...base,
@@ -74,8 +75,9 @@ async function getContent({
     };
   }
 
-  // find the content with the slug
-  const content = data?.find((c) => c.slug === cleanSlug(slug));
+  const content = data?.find(
+    (c) => cleanSlug(`/${c.locale}/${c.slug}`) === cleanedSlug
+  );
 
   if (!content) {
     return {

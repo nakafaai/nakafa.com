@@ -24,17 +24,19 @@ const getContentsTool = tool({
 
     if (error) {
       return {
-        content: [],
+        contents: [],
       };
     }
 
+    const contents = data.map((item) => ({
+      title: item.metadata.title,
+      url: item.url,
+      slug: item.slug,
+      locale: item.locale,
+    }));
+
     return {
-      content: data.map((item) => ({
-        title: item.metadata.title,
-        url: item.url,
-        slug: item.slug,
-        locale: item.locale,
-      })),
+      contents,
     };
   },
 });
