@@ -37,6 +37,7 @@ import {
   Maximize2Icon,
   Minimize2Icon,
   SparklesIcon,
+  Trash2Icon,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
@@ -50,6 +51,15 @@ const MIN_WIDTH = 448;
 const MAX_WIDTH = 672;
 
 export function AiSheet() {
+  const t = useTranslations("Ai");
+
+  const locale = useLocale();
+  const slug = usePathname();
+
+  const currentMessages = useAi((state) => state.currentMessages);
+  const setMessages = useAi((state) => state.setMessages);
+  const clearMessages = useAi((state) => state.clearMessages);
+
   const open = useAi((state) => state.open);
   const setOpen = useAi((state) => state.setOpen);
 
@@ -61,6 +71,33 @@ export function AiSheet() {
     initialWidth: MIN_WIDTH,
     minWidth: MIN_WIDTH,
     maxWidth: MAX_WIDTH,
+  });
+
+  const { sendMessage, messages, status, stop } = useChat<MyUIMessage>({
+    messages: currentMessages,
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+      prepareSendMessagesRequest: ({ messages: ms }) => {
+        setMessages(ms);
+
+        return {
+          body: {
+            messages: ms,
+            slug,
+            locale,
+          },
+        };
+      },
+    }),
+    onError: (error) => {
+      toast.error(
+        error.message.length > 0 ? error.message : t("error-message"),
+        { position: "bottom-center" }
+      );
+    },
+    onFinish: ({ message }) => {
+      setMessages([message]);
+    },
   });
 
   return (
@@ -95,6 +132,14 @@ export function AiSheet() {
 
             <div className="flex items-center">
               <Button
+                onClick={() => clearMessages()}
+                size="icon-sm"
+                variant="ghost"
+              >
+                <Trash2Icon />
+                <span className="sr-only">Clear</span>
+              </Button>
+              <Button
                 onClick={() => {
                   setWidth(width === MAX_WIDTH ? MIN_WIDTH : MAX_WIDTH);
                 }}
@@ -116,54 +161,22 @@ export function AiSheet() {
           </SheetTitle>
         </SheetHeader>
 
-        <AiSheetContent />
+        <div className="relative flex size-full flex-col divide-y overflow-hidden">
+          <AIConversation>
+            <AIConversationContent>
+              <AISheetMessages messages={messages} />
+            </AIConversationContent>
+            <AIConversationScrollButton />
+          </AIConversation>
+
+          <AISheetToolbar
+            handleSubmit={(text) => sendMessage({ text })}
+            status={status}
+            stop={stop}
+          />
+        </div>
       </SheetContent>
     </Sheet>
-  );
-}
-
-function AiSheetContent() {
-  const t = useTranslations("Ai");
-
-  const locale = useLocale();
-  const slug = usePathname();
-
-  const { sendMessage, messages, status, stop } = useChat<MyUIMessage>({
-    transport: new DefaultChatTransport({
-      api: "/api/chat",
-      prepareSendMessagesRequest: ({ messages: m }) => {
-        return {
-          body: {
-            messages: m,
-            slug,
-            locale,
-          },
-        };
-      },
-    }),
-    onError: (error) => {
-      toast.error(
-        error.message.length > 0 ? error.message : t("error-message"),
-        { position: "bottom-center" }
-      );
-    },
-  });
-
-  return (
-    <div className="relative flex size-full flex-col divide-y overflow-hidden">
-      <AIConversation>
-        <AIConversationContent>
-          <AISheetMessages messages={messages} />
-        </AIConversationContent>
-        <AIConversationScrollButton />
-      </AIConversation>
-
-      <AISheetToolbar
-        handleSubmit={(text) => sendMessage({ text })}
-        status={status}
-        stop={stop}
-      />
-    </div>
   );
 }
 
@@ -179,7 +192,13 @@ function AISheetToolbar({
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (status === "streaming") {
+      stop();
+      return;
+    }
+
     if (text.trim()) {
       handleSubmit(text);
       setText("");
@@ -195,26 +214,11 @@ function AISheetToolbar({
         <AIInputTextarea
           autoFocus
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSendMessage();
-            }
-          }}
           value={text}
         />
         <AIInputToolbar>
           <AIInputTools />
-          <AIInputSubmit
-            disabled={!text.trim()}
-            onClick={() => {
-              if (status === "streaming") {
-                stop();
-                return;
-              }
-            }}
-            status={status}
-          />
+          <AIInputSubmit disabled={status === "submitted"} status={status} />
         </AIInputToolbar>
       </AIInput>
     </div>

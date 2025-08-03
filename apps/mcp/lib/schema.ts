@@ -22,11 +22,12 @@ export const GetContentsSchema = z
           ),
         category: z
           .union([ArticleCategorySchema, SubjectCategorySchema])
+          .nullish()
           .describe("The category of the content to get."),
-        grade: GradeSchema.describe(
+        grade: GradeSchema.nullish().describe(
           "The grade of the content to get. Only for when type is 'subject'."
         ),
-        material: MaterialSchema.describe(
+        material: MaterialSchema.nullish().describe(
           "The material of the content to get. Only for when type is 'subject'."
         ),
       })
