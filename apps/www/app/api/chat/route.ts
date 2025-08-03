@@ -114,9 +114,18 @@ export async function POST(req: Request) {
     messages: convertToModelMessages(messages),
     stopWhen: stepCountIs(20),
     tools,
-    prepareStep: ({ stepNumber }) => {
+    prepareStep: ({ stepNumber, messages: initialMessages }) => {
+      // Compress conversation history for longer loops
+      let finalMessages = initialMessages;
+
+      // Sorry, we need to cut costs, ai is expensive
+      if (initialMessages.length > 6) {
+        finalMessages = initialMessages.slice(-6);
+      }
+
       if (stepNumber === 0) {
         return {
+          messages: finalMessages,
           // use a different model for this step:
           model: model.languageModel("google"),
           // force a tool choice for this step:
@@ -126,7 +135,9 @@ export async function POST(req: Request) {
         };
       }
 
-      // when nothing is returned, the default settings are used
+      return {
+        messages: finalMessages,
+      };
     },
     providerOptions: {
       gateway: {
