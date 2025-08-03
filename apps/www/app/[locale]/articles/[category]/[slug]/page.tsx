@@ -165,6 +165,7 @@ export default async function Page({ params }: Props) {
             }}
             date={metadata.date}
             description={metadata.description}
+            showAskAi
             slug={`/${locale}${FILE_PATH}`}
             title={metadata.title}
           />
