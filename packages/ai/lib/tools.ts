@@ -30,7 +30,6 @@ const getContentsTool = tool({
 
     const contents = data.map((item) => ({
       title: item.metadata.title,
-      url: item.url,
       slug: item.slug,
       locale: item.locale,
     }));
