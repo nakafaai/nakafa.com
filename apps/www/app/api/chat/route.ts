@@ -115,13 +115,9 @@ export async function POST(req: Request) {
     stopWhen: stepCountIs(20),
     tools,
     prepareStep: ({ stepNumber, messages: initialMessages }) => {
+      // We need to cut costs, ai is expensive
       // Compress conversation history for longer loops
-      let finalMessages = initialMessages;
-
-      // Sorry, we need to cut costs, ai is expensive
-      if (initialMessages.length > 6) {
-        finalMessages = initialMessages.slice(-6);
-      }
+      const finalMessages = initialMessages.slice(-5);
 
       if (stepNumber === 0) {
         return {
