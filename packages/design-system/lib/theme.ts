@@ -10,6 +10,7 @@ import {
   CpuIcon,
   Disc3Icon,
   EclipseIcon,
+  GemIcon,
   HeartIcon,
   HourglassIcon,
   JapaneseYenIcon,
@@ -72,6 +73,10 @@ export const themes = [
   {
     value: "ghibli",
     icon: CatIcon,
+  },
+  {
+    value: "luxury",
+    icon: GemIcon,
   },
   {
     value: "nature",
