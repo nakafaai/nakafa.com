@@ -105,7 +105,6 @@
     "open-in-claude": "Buka di Claude",
     "open-in-t3-chat": "Buka di T3 Chat",
     "open-in-gemini": "Buka di Gemini",
-    "holy": "Suci",
     "see-on-youtube": "Lihat di YouTube",
     "subscribe": "Berlangganan"
   },
@@ -150,6 +149,7 @@
     "articles": "Artikel"
   },
   "Holy": {
+    "holy": "Suci",
     "quran": "Al Quran",
     "quran-description": "Barokah bagi orang yang membaca Al Quran dan mengikuti petunjuknya.",
     "verse": "Ayat",

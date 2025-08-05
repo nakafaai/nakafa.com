@@ -38,7 +38,7 @@ function MenuItem() {
 }
 
 export function NavHoly() {
-  const t = useTranslations("Common");
+  const t = useTranslations("Holy");
 
   return (
     <SidebarGroup>

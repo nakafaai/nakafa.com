@@ -31,6 +31,7 @@ import { useSearchQuery } from "@/lib/react-query/use-search";
 import { getAnchorStyle } from "@/lib/utils/search";
 import type { PagefindResult } from "@/types/pagefind";
 import { articlesMenu } from "../sidebar/_data/articles";
+import { holyMenu } from "../sidebar/_data/holy";
 import { subjectAll } from "../sidebar/_data/subject";
 
 export function SearchCommand() {
@@ -219,8 +220,11 @@ function SearchListItems({
 function DefaultItems() {
   const t = useTranslations("Subject");
   const tArticles = useTranslations("Articles");
+  const tHoly = useTranslations("Holy");
+
   const router = useRouter();
   const setOpen = useSearch((state) => state.setOpen);
+
   const [, startTransition] = useTransition();
 
   useEffect(() => {
@@ -232,6 +236,10 @@ function DefaultItems() {
     }
 
     for (const item of articlesMenu) {
+      router.prefetch(item.href);
+    }
+
+    for (const item of holyMenu) {
       router.prefetch(item.href);
     }
   }, [router]);
@@ -286,6 +294,27 @@ function DefaultItems() {
           >
             <item.icon />
             <span className="line-clamp-1">{tArticles(item.title)}</span>
+          </CommandItem>
+        ))}
+      </CommandGroup>
+
+      <CommandSeparator alwaysRender className="my-2" />
+
+      <CommandGroup heading={tHoly("holy")}>
+        {holyMenu.map((item) => (
+          <CommandItem
+            className="cursor-pointer"
+            key={item.title}
+            onSelect={() => {
+              startTransition(() => {
+                setOpen(false);
+                router.push(item.href);
+              });
+            }}
+            value={tHoly(item.title)}
+          >
+            <item.icon />
+            <span className="line-clamp-1">{tHoly(item.title)}</span>
           </CommandItem>
         ))}
       </CommandGroup>

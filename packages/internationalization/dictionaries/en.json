@@ -105,7 +105,6 @@
     "open-in-claude": "Open in Claude",
     "open-in-t3-chat": "Open in T3 Chat",
     "open-in-gemini": "Open in Gemini",
-    "holy": "Holy",
     "see-on-youtube": "See on YouTube",
     "subscribe": "Subscribe"
   },
@@ -150,6 +149,7 @@
     "articles": "Articles"
   },
   "Holy": {
+    "holy": "Holy",
     "quran": "Quran",
     "quran-description": "Blessed is the one who reads the Quran and follows its guidance.",
     "verse": "Verse",
