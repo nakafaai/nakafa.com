@@ -12,7 +12,8 @@ import {
 import { buildContentSlug, cleanSlug } from "./utils";
 
 const getContentsTool = tool({
-  description: "Get a list of contents available in Nakafa.",
+  description:
+    "Retrieves a list of available educational content, such as articles or subjects. Results can be filtered by language, subject, grade, or category to narrow down the search.",
   inputSchema: getContentsInputSchema,
   outputSchema: getContentsOutputSchema,
   execute: async ({ locale, filters }) => {
@@ -41,7 +42,8 @@ const getContentsTool = tool({
 });
 
 const getContentTool = tool({
-  description: "Get the content of a page in Nakafa.",
+  description:
+    "Fetches the full content of a specific educational page or article from Nakafa. It can also retrieve specific chapters (surah) from the Quran.",
   inputSchema: getContentInputSchema,
   outputSchema: getContentOutputSchema,
   execute: async ({ slug, locale }) => {
@@ -104,7 +106,8 @@ const getContentTool = tool({
 });
 
 const mathEvalTool = tool({
-  description: "Evaluate a math expression.",
+  description:
+    "Performs mathematical calculations by evaluating a given mathematical expression. It returns the result in various formats, including the simplified expression and its LaTeX representation.",
   inputSchema: mathEvalInputSchema,
   outputSchema: mathEvalOutputSchema,
   execute: ({ expression }) => {
