@@ -28,7 +28,7 @@ export function CardMaterial({ material }: Props) {
   const id = slugify(material.title);
 
   return (
-    <Card className="pb-0">
+    <Card className="overflow-hidden pb-0">
       <CardHeader className="gap-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-1.5">
@@ -76,10 +76,10 @@ export function CardMaterial({ material }: Props) {
       </CardHeader>
       <Collapsible onOpenChange={setIsOpen} open={isOpen}>
         <CollapsibleContent>
-          <CardContent className="px-0">
+          <CardContent className="divide-y border-t px-0">
             {material.items.map((item) => (
               <Link
-                className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-3 transition-colors last:rounded-b-xl last:pb-6 hover:bg-accent hover:text-accent-foreground"
+                className="group flex w-full scroll-mt-28 items-center gap-2 px-6 py-3 transition-colors ease-out last:pb-6 hover:bg-accent hover:text-accent-foreground"
                 href={item.href}
                 key={item.href}
                 prefetch
