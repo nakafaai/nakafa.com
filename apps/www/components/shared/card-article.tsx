@@ -49,7 +49,7 @@ export function CardArticle({ category, article }: Props) {
           </time>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Badge variant="outline">
+              <Badge variant="secondary">
                 {article.official ? t("official") : t("contributor")}
               </Badge>
             </TooltipTrigger>
