@@ -2,6 +2,7 @@ import { defaultModel, model } from "@repo/ai/lib/providers";
 import { tools } from "@repo/ai/lib/tools";
 import {
   convertToModelMessages,
+  smoothStream,
   stepCountIs,
   streamText,
   type UIMessage,
@@ -135,6 +136,10 @@ export async function POST(req: Request) {
         messages: finalMessages,
       };
     },
+    experimental_transform: smoothStream({
+      delayInMs: 20,
+      chunking: "word",
+    }),
     providerOptions: {
       gateway: {
         order: ["groq", "cerebras", "azure", "vertex"],
