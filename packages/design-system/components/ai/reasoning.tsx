@@ -7,28 +7,29 @@ import {
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
 import { cn } from "@repo/design-system/lib/utils";
-import { ChevronDownIcon } from "lucide-react";
+import { BrainIcon, ChevronDownIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
 import { AIResponse } from "./response";
 
-type AIReasoningContextValue = {
+type ReasoningContextValue = {
   isStreaming: boolean;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   duration: number;
 };
-const AIReasoningContext = createContext<AIReasoningContextValue | null>(null);
 
-const useAIReasoning = () => {
-  const context = useContext(AIReasoningContext);
+const ReasoningContext = createContext<ReasoningContextValue | null>(null);
+
+const useReasoning = () => {
+  const context = useContext(ReasoningContext);
   if (!context) {
-    throw new Error("AIReasoning components must be used within AIReasoning");
+    throw new Error("Reasoning components must be used within Reasoning");
   }
   return context;
 };
 
-export type AIReasoningProps = ComponentProps<typeof Collapsible> & {
+export type ReasoningProps = ComponentProps<typeof Collapsible> & {
   isStreaming?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
@@ -46,13 +47,12 @@ export const AIReasoning = memo(
     duration: durationProp,
     children,
     ...props
-  }: AIReasoningProps) => {
+  }: ReasoningProps) => {
     const [isOpen, setIsOpen] = useControllableState({
       prop: open,
       defaultProp: defaultOpen,
       onChange: onOpenChange,
     });
-
     const [duration, setDuration] = useControllableState({
       prop: durationProp,
       defaultProp: 0,
@@ -87,40 +87,41 @@ export const AIReasoning = memo(
       }
     }, [isStreaming, isOpen, defaultOpen, setIsOpen, hasAutoClosedRef]);
 
-    const handleOpenChange = (value: boolean) => {
-      setIsOpen(value);
+    const handleOpenChange = (v: boolean) => {
+      setIsOpen(v);
     };
 
     return (
-      <AIReasoningContext.Provider
+      <ReasoningContext.Provider
         value={{ isStreaming, isOpen, setIsOpen, duration }}
       >
         <Collapsible
-          className={cn("not-prose", className)}
+          className={cn("not-prose mb-4", className)}
           onOpenChange={handleOpenChange}
           open={isOpen}
           {...props}
         >
           {children}
         </Collapsible>
-      </AIReasoningContext.Provider>
+      </ReasoningContext.Provider>
     );
   }
 );
 
-export type AIReasoningTriggerProps = ComponentProps<
+export type ReasoningTriggerProps = ComponentProps<
   typeof CollapsibleTrigger
 > & {
   title?: string;
 };
+
 export const AIReasoningTrigger = memo(
   ({
     className,
     title = "Reasoning",
     children,
     ...props
-  }: AIReasoningTriggerProps) => {
-    const { isStreaming, isOpen, duration } = useAIReasoning();
+  }: ReasoningTriggerProps) => {
+    const { isStreaming, isOpen, duration } = useReasoning();
 
     return (
       <CollapsibleTrigger
@@ -132,7 +133,8 @@ export const AIReasoningTrigger = memo(
       >
         {children ?? (
           <>
-            {isStreaming && duration === 0 ? (
+            <BrainIcon className="size-4" />
+            {isStreaming || duration === 0 ? (
               <p>Thinking...</p>
             ) : (
               <p>Thought for {duration} seconds</p>
@@ -150,19 +152,26 @@ export const AIReasoningTrigger = memo(
   }
 );
 
-export type AIReasoningContentProps = ComponentProps<
+export type ReasoningContentProps = ComponentProps<
   typeof CollapsibleContent
 > & {
   children: string;
   id: string;
 };
+
 export const AIReasoningContent = memo(
-  ({ className, children, id, ...props }: AIReasoningContentProps) => (
+  ({ className, children, id, ...props }: ReasoningContentProps) => (
     <CollapsibleContent
-      className={cn("mt-4 text-muted-foreground text-sm", className)}
+      className={cn(
+        "mt-4 text-sm",
+        "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
+        className
+      )}
       {...props}
     >
-      <AIResponse className="grid" content={children} id={id} />
+      <AIResponse className="grid gap-2" id={id}>
+        {children}
+      </AIResponse>
     </CollapsibleContent>
   )
 );

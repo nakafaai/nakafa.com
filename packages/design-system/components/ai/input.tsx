@@ -11,6 +11,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
+import type { ChatStatus } from "ai";
 import { SendIcon, SquareIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type {
@@ -176,7 +177,7 @@ export const AIInputButton = ({
 };
 
 export type AIInputSubmitProps = ComponentProps<typeof Button> & {
-  status?: "submitted" | "streaming" | "ready" | "error";
+  status?: ChatStatus;
 };
 export const AIInputSubmit = ({
   className,
