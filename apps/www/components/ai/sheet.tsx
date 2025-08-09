@@ -4,27 +4,27 @@ import { useChat } from "@ai-sdk/react";
 import { useHotkeys, useMediaQuery } from "@mantine/hooks";
 import type { MyUIMessage } from "@repo/ai/lib/types";
 import {
-  AIConversation,
-  AIConversationContent,
-  AIConversationScrollButton,
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
 } from "@repo/design-system/components/ai/conversation";
 import {
-  AIInput,
-  AIInputSubmit,
-  AIInputTextarea,
-  AIInputToolbar,
-  AIInputTools,
+  PromptInput,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputToolbar,
+  PromptInputTools,
 } from "@repo/design-system/components/ai/input";
 import {
-  AIMessage,
-  AIMessageContent,
+  Message,
+  MessageContent,
 } from "@repo/design-system/components/ai/message";
 import {
-  AIReasoning,
-  AIReasoningContent,
-  AIReasoningTrigger,
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
 } from "@repo/design-system/components/ai/reasoning";
-import { AIResponse } from "@repo/design-system/components/ai/response";
+import { Response } from "@repo/design-system/components/ai/response";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -188,12 +188,12 @@ export function AiSheet({
         </SheetHeader>
 
         <div className="relative flex size-full flex-col divide-y overflow-hidden">
-          <AIConversation>
-            <AIConversationContent>
+          <Conversation>
+            <ConversationContent>
               <AISheetMessages messages={messages} />
-            </AIConversationContent>
-            <AIConversationScrollButton />
-          </AIConversation>
+            </ConversationContent>
+            <ConversationScrollButton />
+          </Conversation>
 
           <AISheetToolbar
             handleSubmit={(text) => sendMessage({ text })}
@@ -211,7 +211,7 @@ function AISheetToolbar({
   stop,
   handleSubmit,
 }: {
-  status: ComponentProps<typeof AIInputSubmit>["status"];
+  status: ComponentProps<typeof PromptInputSubmit>["status"];
   stop: () => void;
   handleSubmit: (message: string) => void;
 }) {
@@ -233,32 +233,35 @@ function AISheetToolbar({
 
   return (
     <div className="grid shrink-0 gap-4">
-      <AIInput
+      <PromptInput
         className="rounded-none border-0 shadow-none"
         onSubmit={handleSendMessage}
       >
-        <AIInputTextarea
+        <PromptInputTextarea
           autoFocus
           onChange={(e) => setText(e.target.value)}
           value={text}
         />
-        <AIInputToolbar>
-          <AIInputTools />
-          <AIInputSubmit disabled={status === "submitted"} status={status} />
-        </AIInputToolbar>
-      </AIInput>
+        <PromptInputToolbar>
+          <PromptInputTools />
+          <PromptInputSubmit
+            disabled={status === "submitted"}
+            status={status}
+          />
+        </PromptInputToolbar>
+      </PromptInput>
     </div>
   );
 }
 
 function AISheetMessages({ messages }: { messages: MyUIMessage[] }) {
   return messages.map((message) => (
-    <AIMessage
+    <Message
       from={message.role === "user" ? "user" : "assistant"}
       key={message.id}
     >
       <AISheetMessage message={message} />
-    </AIMessage>
+    </Message>
   ));
 }
 
@@ -269,22 +272,20 @@ function AISheetMessage({ message }: { message: MyUIMessage }) {
         switch (part.type) {
           case "text":
             return (
-              <AIMessageContent key={`message-${message.id}-part-${i}`}>
-                <AIResponse id={message.id}>{part.text}</AIResponse>
-              </AIMessageContent>
+              <MessageContent key={`message-${message.id}-part-${i}`}>
+                <Response id={message.id}>{part.text}</Response>
+              </MessageContent>
             );
           case "reasoning":
             return (
-              <AIReasoning
+              <Reasoning
                 className="w-full"
                 isStreaming={part.state === "streaming"}
                 key={`reasoning-${message.id}-part-${i}`}
               >
-                <AIReasoningTrigger />
-                <AIReasoningContent id={message.id}>
-                  {part.text}
-                </AIReasoningContent>
-              </AIReasoning>
+                <ReasoningTrigger />
+                <ReasoningContent id={message.id}>{part.text}</ReasoningContent>
+              </Reasoning>
             );
           case "tool-getContents":
             return (

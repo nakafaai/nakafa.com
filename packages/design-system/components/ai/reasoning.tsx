@@ -10,7 +10,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
-import { AIResponse } from "./response";
+import { Response } from "./response";
 
 type ReasoningContextValue = {
   isStreaming: boolean;
@@ -37,7 +37,7 @@ export type ReasoningProps = ComponentProps<typeof Collapsible> & {
   duration?: number;
 };
 
-export const AIReasoning = memo(
+export const Reasoning = memo(
   ({
     className,
     isStreaming = false,
@@ -114,7 +114,7 @@ export type ReasoningTriggerProps = ComponentProps<
   title?: string;
 };
 
-export const AIReasoningTrigger = memo(
+export const ReasoningTrigger = memo(
   ({
     className,
     title = "Reasoning",
@@ -156,11 +156,10 @@ export type ReasoningContentProps = ComponentProps<
   typeof CollapsibleContent
 > & {
   children: string;
-  id: string;
 };
 
-export const AIReasoningContent = memo(
-  ({ className, children, id, ...props }: ReasoningContentProps) => (
+export const ReasoningContent = memo(
+  ({ className, children, ...props }: ReasoningContentProps) => (
     <CollapsibleContent
       className={cn(
         "mt-4 text-sm",
@@ -169,13 +168,11 @@ export const AIReasoningContent = memo(
       )}
       {...props}
     >
-      <AIResponse className="grid gap-2" id={id}>
-        {children}
-      </AIResponse>
+      <Response className="grid gap-2">{children}</Response>
     </CollapsibleContent>
   )
 );
 
-AIReasoning.displayName = "AIReasoning";
-AIReasoningTrigger.displayName = "AIReasoningTrigger";
-AIReasoningContent.displayName = "AIReasoningContent";
+Reasoning.displayName = "Reasoning";
+ReasoningTrigger.displayName = "ReasoningTrigger";
+ReasoningContent.displayName = "ReasoningContent";
