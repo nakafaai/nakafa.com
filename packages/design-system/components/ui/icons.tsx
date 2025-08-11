@@ -7,7 +7,6 @@ export function SpinnerIcon({ className, ...props }: ComponentProps<"svg">) {
       className={cn("size-4 shrink-0 animate-spin", className)}
       height="1em"
       strokeLinejoin="round"
-      style={{ color: "currentcolor" }}
       viewBox="0 0 16 16"
       width="1em"
       xmlns="http://www.w3.org/2000/svg"
