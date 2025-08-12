@@ -11,7 +11,7 @@ import {
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ChatStatus } from "ai";
-import { SendIcon, SquareIcon, XIcon } from "lucide-react";
+import { SendIcon, SquareIcon } from "lucide-react";
 import type {
   ComponentProps,
   HTMLAttributes,
@@ -215,8 +215,6 @@ export const PromptInputSubmit = ({
     Icon = <SpinnerIcon />;
   } else if (status === "streaming") {
     Icon = <SquareIcon className="size-4" />;
-  } else if (status === "error") {
-    Icon = <XIcon className="size-4" />;
   }
 
   return (
