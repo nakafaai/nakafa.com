@@ -142,7 +142,10 @@ export async function POST(req: Request) {
     }),
     providerOptions: {
       gateway: {
-        order: ["groq", "cerebras", "azure", "vertex"],
+        order: ["baseten", "groq", "cerebras", "azure", "vertex"],
+      },
+      openai: {
+        reasoningEffort: "high",
       },
     },
   });

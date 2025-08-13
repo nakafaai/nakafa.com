@@ -16,7 +16,7 @@ const getContentsTool = tool({
     "Retrieves a list of available educational content, such as articles or subjects. Results can be filtered by language, subject, grade, or category to narrow down the search.",
   inputSchema: getContentsInputSchema,
   outputSchema: getContentsOutputSchema,
-  execute: async ({ locale, filters }) => {
+  async *execute({ locale, filters }) {
     const slug = buildContentSlug({ locale, filters });
 
     const { data, error } = await api.contents.getContents({
@@ -35,7 +35,7 @@ const getContentsTool = tool({
       locale: item.locale,
     }));
 
-    return {
+    yield {
       contents,
     };
   },
@@ -46,7 +46,7 @@ const getContentTool = tool({
     "Fetches the full content of a specific educational page or article from Nakafa. It can also retrieve specific chapters (surah) from the Quran.",
   inputSchema: getContentInputSchema,
   outputSchema: getContentOutputSchema,
-  execute: async ({ slug, locale }) => {
+  async *execute({ slug, locale }) {
     let cleanedSlug = cleanSlug(slug);
 
     // Manually make sure that slug not containing locale
@@ -60,7 +60,7 @@ const getContentTool = tool({
       const slugParts = slug.split("/");
 
       if (slugParts.length !== 3) {
-        return {
+        yield {
           url: url.toString(),
           content:
             "Surah not found. Maybe not available or still in development.",
@@ -75,13 +75,13 @@ const getContentTool = tool({
         });
 
       if (surahError) {
-        return {
+        yield {
           url: url.toString(),
           content: surahError.message,
         };
       }
 
-      return {
+      yield {
         url: url.toString(),
         content: JSON.stringify(surahData, null, 2),
       };
@@ -92,13 +92,13 @@ const getContentTool = tool({
     });
 
     if (error) {
-      return {
+      yield {
         url: url.toString(),
         content: error.message,
       };
     }
 
-    return {
+    yield {
       url: url.toString(),
       content: data,
     };
