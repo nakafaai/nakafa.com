@@ -1,4 +1,8 @@
 import {
+  CodeBlock,
+  CodeBlockCopyButton,
+} from "@repo/design-system/components/ai/code-block";
+import {
   Table,
   TableBody,
   TableCell,
@@ -6,9 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { filterWhitespaceNodes } from "@repo/design-system/lib/utils";
+import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
 import { Anchor } from "@repo/design-system/markdown/anchor";
-import { CodeBlockMdx } from "@repo/design-system/markdown/code-block";
 import { Heading } from "@repo/design-system/markdown/heading";
 import { BlockMath, InlineMath } from "@repo/design-system/markdown/math";
 import { Paragraph } from "@repo/design-system/markdown/paragraph";
@@ -117,9 +120,8 @@ export const reactMdxComponents: Options["components"] = {
       </code>
     );
   },
-  pre: ({ node, children }) => {
+  pre: ({ node, className, children }) => {
     let language = "plaintext";
-    let filename = "code.txt";
 
     const codeElement = node?.children.find(
       (child) => child.type === "element" && child.tagName === "code"
@@ -135,7 +137,6 @@ export const reactMdxComponents: Options["components"] = {
 
         if (typeof langClass === "string") {
           language = langClass.replace("language-", "");
-          filename = `index.${language}`;
         }
       }
     }
@@ -154,15 +155,13 @@ export const reactMdxComponents: Options["components"] = {
     }
 
     return (
-      <CodeBlockMdx
-        data={[
-          {
-            language,
-            filename,
-            code: result,
-          },
-        ]}
-      />
+      <CodeBlock
+        className={cn("my-4 h-auto", className)}
+        code={result}
+        language={language}
+      >
+        <CodeBlockCopyButton />
+      </CodeBlock>
     );
   },
 };
