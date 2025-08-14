@@ -113,7 +113,7 @@ export async function POST(req: Request) {
       </instructions>
     `,
     messages: convertToModelMessages(messages),
-    stopWhen: stepCountIs(20),
+    stopWhen: stepCountIs(5),
     tools,
     prepareStep: ({ stepNumber, messages: initialMessages }) => {
       // We need to cut costs, ai is expensive
