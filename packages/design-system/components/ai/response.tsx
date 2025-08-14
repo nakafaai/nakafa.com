@@ -13,15 +13,8 @@ import remarkRehype from "remark-rehype";
 
 // Hoisted regex patterns to top-level scope for performance
 const LINK_IMAGE_PATTERN = /(!?\[)([^\]]*?)$/;
-const BOLD_PATTERN = /(\*\*)([^*]*?)$/;
-const ITALIC_PATTERN = /(__)([^_]*?)$/;
-const SINGLE_ASTERISK_PATTERN = /(\*)([^*]*?)$/;
 const INLINE_CODE_PATTERN = /(`)([^`]*?)$/;
 const TRIPLE_BACKTICKS_GLOBAL = /```/g;
-const ASTERISK_PAIRS_GLOBAL = /\*\*/g;
-const UNDERSCORE_PAIRS_GLOBAL = /__/g;
-const STRIKETHROUGH_PATTERN = /(~~)([^~]*?)$/;
-const STRIKETHROUGH_PAIRS_GLOBAL = /~~/g;
 const ZERO_WIDTH_SPACE_GLOBAL = /\u200B/g;
 const CARRIAGE_RETURN_GLOBAL = /\r/g;
 const NON_WHITESPACE_PATTERN = /\S/;
@@ -101,46 +94,6 @@ function removeUnterminatedLinkOrImage(input: string): string {
   return input.substring(0, startIndex);
 }
 
-function completeBoldFormatting(input: string): string {
-  if (!input.match(BOLD_PATTERN)) {
-    return input;
-  }
-  const asteriskPairs = (input.match(ASTERISK_PAIRS_GLOBAL) || []).length;
-  if (asteriskPairs % 2 === 1 && !TRAILING_WHITESPACE_PATTERN.test(input)) {
-    return `${input}**`;
-  }
-  return input;
-}
-
-function completeDoubleUnderscoreItalicFormatting(input: string): string {
-  if (!input.match(ITALIC_PATTERN)) {
-    return input;
-  }
-  const underscorePairs = (input.match(UNDERSCORE_PAIRS_GLOBAL) || []).length;
-  if (underscorePairs % 2 === 1 && !TRAILING_WHITESPACE_PATTERN.test(input)) {
-    return `${input}__`;
-  }
-  return input;
-}
-
-function completeSingleAsteriskItalicFormatting(input: string): string {
-  if (!input.match(SINGLE_ASTERISK_PATTERN)) {
-    return input;
-  }
-  const singleAsterisks = input.split("").reduce((count, char, index) => {
-    if (char !== "*") {
-      return count;
-    }
-    const prevChar = input[index - 1];
-    const nextChar = input[index + 1];
-    return prevChar !== "*" && nextChar !== "*" ? count + 1 : count;
-  }, 0);
-  if (singleAsterisks % 2 === 1 && !TRAILING_WHITESPACE_PATTERN.test(input)) {
-    return `${input}*`;
-  }
-  return input;
-}
-
 function completeInlineCodeFormatting(input: string): string {
   if (!input.match(INLINE_CODE_PATTERN)) {
     return input;
@@ -169,17 +122,6 @@ function completeInlineCodeFormatting(input: string): string {
     !TRAILING_WHITESPACE_PATTERN.test(input)
   ) {
     return `${input}\``;
-  }
-  return input;
-}
-
-function completeStrikethroughFormatting(input: string): string {
-  if (!input.match(STRIKETHROUGH_PATTERN)) {
-    return input;
-  }
-  const tildePairs = (input.match(STRIKETHROUGH_PAIRS_GLOBAL) || []).length;
-  if (tildePairs % 2 === 1 && !TRAILING_WHITESPACE_PATTERN.test(input)) {
-    return `${input}~~`;
   }
   return input;
 }
@@ -291,11 +233,8 @@ function parseIncompleteMarkdown(text: string): string {
   result = convertLetteredListsToNumbered(result);
 
   result = removeUnterminatedLinkOrImage(result);
-  result = completeBoldFormatting(result);
-  result = completeDoubleUnderscoreItalicFormatting(result);
-  result = completeSingleAsteriskItalicFormatting(result);
+
   result = completeInlineCodeFormatting(result);
-  result = completeStrikethroughFormatting(result);
 
   // Sanitize math/markdown outside of fenced code blocks to avoid hallucinated formatting
   result = sanitizeMathOutsideCodeFences(result);
