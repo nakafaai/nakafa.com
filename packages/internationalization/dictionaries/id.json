@@ -198,7 +198,10 @@
     "rate-limit-message": "Batas waktu habis. Silakan coba lagi nanti.",
     "get-content": "Materi",
     "get-contents": "Konten",
-    "math-eval": "Perhitungan"
+    "math-eval": "Perhitungan",
+    "thinking": "Berpikir...",
+    "thought-for": "Berpikir selama {duration} detik",
+    "found-contents": "Menemukan {count} konten"
   },
   "Math": {
     "Metadata": {

@@ -12,7 +12,7 @@ const languageModels = {
   meta: gateway("meta/llama-4-maverick"),
   moonshot: gateway("moonshotai/kimi-k2"),
   openai: gateway("openai/gpt-oss-120b"),
-  qwen: gateway("alibaba/qwen3-coder"),
+  qwen: gateway("alibaba/qwen-3-235b"),
   zai: gateway("zai/glm-4.5"),
 };
 
@@ -24,4 +24,4 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "openai";
+export const defaultModel: ModelId = "qwen";

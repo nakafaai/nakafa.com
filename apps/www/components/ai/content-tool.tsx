@@ -1,12 +1,15 @@
 "use client";
 
 import type { GetContentOutput } from "@repo/ai/schema/tools";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
-import { cn } from "@repo/design-system/lib/utils";
-import { Link } from "@repo/internationalization/src/navigation";
-import { BookIcon, ExternalLinkIcon, FrownIcon } from "lucide-react";
+import {
+  Tool,
+  ToolContent,
+  ToolHeader,
+} from "@repo/design-system/components/ai/tool";
+import { ExternalLinkIcon } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { type ComponentProps, memo } from "react";
+import { memo } from "react";
 
 type Props = {
   status:
@@ -15,48 +18,27 @@ type Props = {
     | "output-available"
     | "output-error";
   output?: GetContentOutput;
-} & ComponentProps<"div">;
+};
 
-export const ContentTool = memo(
-  ({ status, className, output, ...props }: Props) => {
-    const t = useTranslations("Ai");
+export const ContentTool = memo(({ status, output }: Props) => {
+  const t = useTranslations("Ai");
 
-    let icon = <SpinnerIcon className="size-4 shrink-0" />;
-    if (status === "output-error") {
-      icon = <FrownIcon className="size-4 shrink-0 text-destructive" />;
-    }
-    if (status === "output-available" && !output) {
-      icon = <FrownIcon className="size-4 shrink-0 text-destructive" />;
-    }
-    if (output) {
-      icon = <ExternalLinkIcon className="size-4 shrink-0" />;
-    }
-
-    return (
-      <div
-        className={cn(
-          "relative flex h-10 w-fit items-center justify-center rounded-xl border bg-card px-3 shadow-sm first:mt-0 last:mb-0",
-          className
-        )}
-        {...props}
-      >
-        {output && (
+  return (
+    <Tool>
+      <ToolHeader state={status} type={t("get-content")} />
+      <ToolContent>
+        <div className="p-3">
           <Link
-            className="absolute inset-0 cursor-pointer"
-            href={output.url}
+            className="flex items-center gap-1 text-muted-foreground text-sm underline-offset-4 hover:underline"
+            href={output?.url ?? ""}
             target="_blank"
-            type="button"
-          />
-        )}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <BookIcon className="size-4 shrink-0" />
-            <p className="font-medium text-sm">{t("get-content")}</p>
-          </div>
-          {icon}
+          >
+            <span className="max-w-48 truncate sm:max-w-64">{output?.url}</span>
+            <ExternalLinkIcon className="ml-1 size-3.5 shrink-0" />
+          </Link>
         </div>
-      </div>
-    );
-  }
-);
+      </ToolContent>
+    </Tool>
+  );
+});
 ContentTool.displayName = "ContentTool";

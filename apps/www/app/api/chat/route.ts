@@ -40,10 +40,10 @@ export async function POST(req: Request) {
 
         <format_rules>
           <rule>
-            For mathematical equations, numbers, expressions, or any other mathematical symbols, always use KaTeX.
+            For mathematical equations, numbers, expressions, or any other mathematical symbols, always use TeX syntax.
           </rule>
           <rule>
-            For inline math, wrap the KaTeX in single dollar signs ($).
+            For inline math, wrap the math in single dollar signs ($).
             <example>
               $x^2 + y^2 = z^2$
             </example>
@@ -124,7 +124,7 @@ export async function POST(req: Request) {
         return {
           messages: finalMessages,
           // use a different model for this step:
-          model: model.languageModel("google"),
+          model: model.languageModel("qwen"),
           // force a tool choice for this step:
           toolChoice: { type: "tool", toolName: "getContent" },
           // limit the tools that are available for this step:

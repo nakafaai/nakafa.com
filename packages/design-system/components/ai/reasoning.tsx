@@ -8,6 +8,7 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { cn } from "@repo/design-system/lib/utils";
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
 import { Response } from "./response";
@@ -96,7 +97,7 @@ export const Reasoning = memo(
         value={{ isStreaming, isOpen, setIsOpen, duration }}
       >
         <Collapsible
-          className={cn("not-prose mb-4", className)}
+          className={cn("not-prose", className)}
           onOpenChange={handleOpenChange}
           open={isOpen}
           {...props}
@@ -121,6 +122,7 @@ export const ReasoningTrigger = memo(
     children,
     ...props
   }: ReasoningTriggerProps) => {
+    const t = useTranslations("Ai");
     const { isStreaming, isOpen, duration } = useReasoning();
 
     return (
@@ -135,9 +137,9 @@ export const ReasoningTrigger = memo(
           <>
             <BrainIcon className="size-4" />
             {isStreaming || duration === 0 ? (
-              <p>Thinking...</p>
+              <p>{t("thinking")}</p>
             ) : (
-              <p>Thought for {duration} seconds</p>
+              <p>{t("thought-for", { duration })}</p>
             )}
             <ChevronDownIcon
               className={cn(
@@ -168,7 +170,7 @@ export const ReasoningContent = memo(
       )}
       {...props}
     >
-      <Response className="grid gap-2">{children}</Response>
+      <Response className="text-muted-foreground text-sm">{children}</Response>
     </CollapsibleContent>
   )
 );

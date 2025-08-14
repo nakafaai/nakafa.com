@@ -3,13 +3,12 @@
 import { cn } from "@repo/design-system/lib/utils";
 import { reactMdxComponents } from "@repo/design-system/markdown/react-mdx";
 import hardenReactMarkdown from "harden-react-markdown";
+import { marked } from "marked";
 import type { ComponentProps, HTMLAttributes } from "react";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import ReactMarkdown, { type Options } from "react-markdown";
-import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import "katex/dist/katex.min.css";
 
 // Hoisted regex patterns to top-level scope for performance
 const LINK_IMAGE_PATTERN = /(!?\[)([^\]]*?)$/;
@@ -23,6 +22,11 @@ const ASTERISK_PAIRS_GLOBAL = /\*\*/g;
 const UNDERSCORE_PAIRS_GLOBAL = /__/g;
 const STRIKETHROUGH_PATTERN = /(~~)([^~]*?)$/;
 const STRIKETHROUGH_PAIRS_GLOBAL = /~~/g;
+
+function parseMarkdownIntoBlocks(markdown: string): string[] {
+  const tokens = marked.lexer(markdown);
+  return tokens.map((token) => token.raw);
+}
 
 function removeUnterminatedLinkOrImage(input: string): string {
   const match = input.match(LINK_IMAGE_PATTERN);
@@ -136,7 +140,12 @@ function parseIncompleteMarkdown(text: string): string {
 }
 
 // Create a hardened version of ReactMarkdown
-const HardenedMarkdown = hardenReactMarkdown(ReactMarkdown);
+const HardenedMarkdown = memo(
+  hardenReactMarkdown(ReactMarkdown),
+  (prevProps, nextProps) => {
+    return prevProps.children === nextProps.children;
+  }
+);
 
 export type ResponseProps = HTMLAttributes<HTMLDivElement> & {
   options?: Options;
@@ -165,10 +174,16 @@ export const Response = memo(
     ...props
   }: ResponseProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
-    const parsedChildren =
-      typeof children === "string" && shouldParseIncompleteMarkdown
-        ? parseIncompleteMarkdown(children)
-        : children;
+    const blocksMarkdown = useMemo(() => {
+      if (typeof children !== "string") {
+        return [];
+      }
+      return parseMarkdownIntoBlocks(
+        shouldParseIncompleteMarkdown
+          ? parseIncompleteMarkdown(children)
+          : children
+      );
+    }, [children, shouldParseIncompleteMarkdown]);
 
     return (
       <div
@@ -178,17 +193,19 @@ export const Response = memo(
         )}
         {...props}
       >
-        <HardenedMarkdown
-          allowedImagePrefixes={allowedImagePrefixes ?? ["*"]}
-          allowedLinkPrefixes={allowedLinkPrefixes ?? ["*"]}
-          components={reactMdxComponents}
-          defaultOrigin={defaultOrigin}
-          rehypePlugins={[rehypeKatex]}
-          remarkPlugins={[remarkGfm, remarkMath]}
-          {...options}
-        >
-          {parsedChildren}
-        </HardenedMarkdown>
+        {blocksMarkdown.map((block) => (
+          <HardenedMarkdown
+            allowedImagePrefixes={allowedImagePrefixes ?? ["*"]}
+            allowedLinkPrefixes={allowedLinkPrefixes ?? ["*"]}
+            components={reactMdxComponents}
+            defaultOrigin={defaultOrigin}
+            key={`block-${block}`}
+            remarkPlugins={[remarkGfm, remarkMath]}
+            {...options}
+          >
+            {block}
+          </HardenedMarkdown>
+        ))}
       </div>
     );
   },
