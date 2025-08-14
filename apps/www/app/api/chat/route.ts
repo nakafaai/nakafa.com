@@ -154,9 +154,9 @@ export async function POST(req: Request) {
         prompt: [
           `The model tried to call the tool "${toolCall.toolName}"` +
             " with the following arguments:",
-          JSON.stringify(toolCall.input),
+          JSON.stringify(toolCall.input, null, 2),
           "The tool accepts the following schema:",
-          JSON.stringify(inputSchema(toolCall)),
+          JSON.stringify(inputSchema(toolCall), null, 2),
           "Please fix the arguments.",
         ].join("\n"),
         providerOptions: {
@@ -169,7 +169,7 @@ export async function POST(req: Request) {
         },
       });
 
-      return { ...toolCall, input: JSON.stringify(repairedArgs) };
+      return { ...toolCall, input: JSON.stringify(repairedArgs, null, 2) };
     },
     experimental_transform: smoothStream({
       delayInMs: 20,
