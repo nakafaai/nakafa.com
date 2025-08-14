@@ -16,7 +16,6 @@ const LINK_IMAGE_PATTERN = /(!?\[)([^\]]*?)$/;
 const BOLD_PATTERN = /(\*\*)([^*]*?)$/;
 const ITALIC_PATTERN = /(__)([^_]*?)$/;
 const SINGLE_ASTERISK_PATTERN = /(\*)([^*]*?)$/;
-const SINGLE_UNDERSCORE_PATTERN = /(_)([^_]*?)$/;
 const INLINE_CODE_PATTERN = /(`)([^`]*?)$/;
 const TRIPLE_BACKTICKS_GLOBAL = /```/g;
 const ASTERISK_PAIRS_GLOBAL = /\*\*/g;
@@ -38,6 +37,24 @@ const DISPLAY_MATH_IN_BACKTICKS_GLOBAL = /`\s*\$\$([\s\S]*?)\$\$\s*`/g;
 const INLINE_SINGLE_DOLLAR_GLOBAL = /\$(?!\$)\s*([^$]*?)\s*\$(?!\$)/g;
 const INLINE_PAREN_MATH_GLOBAL = /\\\(([\s\S]*?)\\\)/g;
 const TRAILING_WHITESPACE_PATTERN = /\s$/;
+
+/**
+ * Converts lettered lists (e.g., "a.", "b.") to standard numbered lists.
+ * This is a fallback for when the AI generates non-standard list formats.
+ */
+function convertLetteredListsToNumbered(input: string): string {
+  if (!input) {
+    return input;
+  }
+  // Finds lines starting with whitespace, a letter, a dot, and a space.
+  const letteredListRegex = /^(\s*)([a-z])\.\s+/gim;
+
+  return input.replace(letteredListRegex, (_match, whitespace, letter) => {
+    // Convert letter to its corresponding number (a=1, b=2, c=3).
+    const number = letter.toLowerCase().charCodeAt(0) - "a".charCodeAt(0) + 1;
+    return `${whitespace}${number}. `;
+  });
+}
 
 /**
  * Cleans a markdown string by removing insignificant whitespace-only content.
@@ -120,24 +137,6 @@ function completeSingleAsteriskItalicFormatting(input: string): string {
   }, 0);
   if (singleAsterisks % 2 === 1 && !TRAILING_WHITESPACE_PATTERN.test(input)) {
     return `${input}*`;
-  }
-  return input;
-}
-
-function completeSingleUnderscoreItalicFormatting(input: string): string {
-  if (!input.match(SINGLE_UNDERSCORE_PATTERN)) {
-    return input;
-  }
-  const singleUnderscores = input.split("").reduce((count, char, index) => {
-    if (char !== "_") {
-      return count;
-    }
-    const prevChar = input[index - 1];
-    const nextChar = input[index + 1];
-    return prevChar !== "_" && nextChar !== "_" ? count + 1 : count;
-  }, 0);
-  if (singleUnderscores % 2 === 1 && !TRAILING_WHITESPACE_PATTERN.test(input)) {
-    return `${input}_`;
   }
   return input;
 }
@@ -288,11 +287,13 @@ function parseIncompleteMarkdown(text: string): string {
 
   let result = text;
 
+  // Convert lettered lists before other parsing to ensure consistency.
+  result = convertLetteredListsToNumbered(result);
+
   result = removeUnterminatedLinkOrImage(result);
   result = completeBoldFormatting(result);
   result = completeDoubleUnderscoreItalicFormatting(result);
   result = completeSingleAsteriskItalicFormatting(result);
-  result = completeSingleUnderscoreItalicFormatting(result);
   result = completeInlineCodeFormatting(result);
   result = completeStrikethroughFormatting(result);
 

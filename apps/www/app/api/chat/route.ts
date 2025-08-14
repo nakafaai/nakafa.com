@@ -88,7 +88,7 @@ export async function POST(req: Request) {
       <format>
         Output MUST be valid Markdown only. Never output HTML, XML, YAML, or any other format.
         Use headings sparingly with "##" or "###" only; do not use "#".
-        Use lists with "- " for bullets and "1." for ordered lists.
+        Use lists with "- " for bullets and "1." for ordered lists. Do NOT use lettered lists (e.g., a., b., c.).
         Wrap any URL as a Markdown link [text](url) or as inline code \`url\`. Do NOT paste bare URLs.
         Do NOT wrap the entire message in a single code block; only wrap code or math.
         Keep a friendly teacher tone; in Indonesian use "kamu" (never "Anda").
