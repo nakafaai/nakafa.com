@@ -6,7 +6,7 @@ import {
   ToolContent,
   ToolHeader,
 } from "@repo/design-system/components/ai/tool";
-import { ExternalLinkIcon } from "lucide-react";
+import { BookOpenIcon, ExternalLinkIcon } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
@@ -25,7 +25,11 @@ export const ContentTool = memo(({ status, output }: Props) => {
 
   return (
     <Tool>
-      <ToolHeader state={status} type={t("get-content")} />
+      <ToolHeader
+        icon={<BookOpenIcon className="size-4 text-muted-foreground" />}
+        state={status}
+        type={t("get-content")}
+      />
       <ToolContent>
         <div className="p-3">
           <Link

@@ -32,6 +32,7 @@ export const Tool = ({ className, ...props }: ToolProps) => (
 export type ToolHeaderProps = {
   type: string;
   state: ToolUIPart["state"];
+  icon?: ReactNode;
   className?: string;
 };
 
@@ -46,8 +47,8 @@ const getStatusBadge = (status: ToolUIPart["state"]) => {
   const icons = {
     "input-streaming": <CircleIcon className="size-4" />,
     "input-available": <ClockIcon className="size-4 animate-pulse" />,
-    "output-available": <CheckCircleIcon className="size-4 text-green-600" />,
-    "output-error": <XCircleIcon className="size-4 text-red-600" />,
+    "output-available": <CheckCircleIcon className="size-4" />,
+    "output-error": <XCircleIcon className="size-4 text-destructive" />,
   } as const;
 
   return {
@@ -60,6 +61,7 @@ export const ToolHeader = ({
   className,
   type,
   state,
+  icon,
   ...props
 }: ToolHeaderProps) => {
   const t = useTranslations("Ai");
@@ -73,7 +75,7 @@ export const ToolHeader = ({
       {...props}
     >
       <div className="flex items-center gap-2">
-        <WrenchIcon className="size-4 text-muted-foreground" />
+        {icon ?? <WrenchIcon className="size-4 text-muted-foreground" />}
         <span className="font-medium text-sm">{type}</span>
         <Badge className="rounded-full text-xs" variant="secondary">
           {getStatusBadge(state).icon}

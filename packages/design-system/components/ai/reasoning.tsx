@@ -60,6 +60,7 @@ export const Reasoning = memo(
     });
 
     const [hasAutoClosedRef, setHasAutoClosedRef] = useState(false);
+    const [wasAutoOpened, setWasAutoOpened] = useState(false);
     const [startTime, setStartTime] = useState<number | null>(null);
 
     // Track duration when streaming starts and ends
@@ -74,19 +75,35 @@ export const Reasoning = memo(
       }
     }, [isStreaming, startTime, setDuration]);
 
-    // Auto-open when streaming starts, auto-close when streaming ends (once only)
+    // Auto-open when streaming starts, auto-close when streaming ends (once only).
+    // Do NOT auto-close if the user manually opened the panel when there was no streaming.
     useEffect(() => {
       if (isStreaming && !isOpen) {
         setIsOpen(true);
-      } else if (!isStreaming && isOpen && !defaultOpen && !hasAutoClosedRef) {
+        setWasAutoOpened(true);
+      } else if (
+        !isStreaming &&
+        isOpen &&
+        !defaultOpen &&
+        !hasAutoClosedRef &&
+        wasAutoOpened
+      ) {
         // Add a small delay before closing to allow user to see the content
         const timer = setTimeout(() => {
           setIsOpen(false);
           setHasAutoClosedRef(true);
+          setWasAutoOpened(false);
         }, 1000);
         return () => clearTimeout(timer);
       }
-    }, [isStreaming, isOpen, defaultOpen, setIsOpen, hasAutoClosedRef]);
+    }, [
+      isStreaming,
+      isOpen,
+      defaultOpen,
+      setIsOpen,
+      hasAutoClosedRef,
+      wasAutoOpened,
+    ]);
 
     const handleOpenChange = (v: boolean) => {
       setIsOpen(v);

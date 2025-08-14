@@ -7,6 +7,7 @@ import {
   ToolHeader,
 } from "@repo/design-system/components/ai/tool";
 import { InlineMath } from "@repo/design-system/markdown/math";
+import { CalculatorIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -24,7 +25,11 @@ export const MathEvalTool = memo(({ status, output }: Props) => {
 
   return (
     <Tool>
-      <ToolHeader state={status} type={t("math-eval")} />
+      <ToolHeader
+        icon={<CalculatorIcon className="size-4 text-muted-foreground" />}
+        state={status}
+        type={t("math-eval")}
+      />
       <ToolContent>
         <div className="p-3">
           <p className="text-muted-foreground text-sm">

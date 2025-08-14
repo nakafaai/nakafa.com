@@ -6,6 +6,7 @@ import {
   ToolContent,
   ToolHeader,
 } from "@repo/design-system/components/ai/tool";
+import { LibraryIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -23,7 +24,11 @@ export const ContentsTool = memo(({ status, output }: Props) => {
 
   return (
     <Tool>
-      <ToolHeader state={status} type={t("get-contents")} />
+      <ToolHeader
+        icon={<LibraryIcon className="size-4 text-muted-foreground" />}
+        state={status}
+        type={t("get-contents")}
+      />
       <ToolContent>
         <div className="p-3">
           <p className="text-muted-foreground text-sm">
