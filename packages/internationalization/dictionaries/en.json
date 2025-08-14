@@ -205,7 +205,9 @@
     "pending": "Pending",
     "running": "Running",
     "completed": "Completed",
-    "error": "Error"
+    "error": "Error",
+    "input": "Input",
+    "output": "Output"
   },
   "Math": {
     "Metadata": {

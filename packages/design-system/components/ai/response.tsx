@@ -9,6 +9,7 @@ import { memo, useMemo } from "react";
 import ReactMarkdown, { type Options } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import remarkRehype from "remark-rehype";
 
 // Hoisted regex patterns to top-level scope for performance
 const LINK_IMAGE_PATTERN = /(!?\[)([^\]]*?)$/;
@@ -36,6 +37,7 @@ const INLINE_PAREN_MATH_IN_BACKTICKS_GLOBAL = /`\s*\\\(([^`]*?)\\\)\s*`/g;
 const DISPLAY_MATH_IN_BACKTICKS_GLOBAL = /`\s*\$\$([\s\S]*?)\$\$\s*`/g;
 const INLINE_SINGLE_DOLLAR_GLOBAL = /\$(?!\$)\s*([^$]*?)\s*\$(?!\$)/g;
 const INLINE_PAREN_MATH_GLOBAL = /\\\(([\s\S]*?)\\\)/g;
+const TRAILING_WHITESPACE_PATTERN = /\s$/;
 
 /**
  * Cleans a markdown string by removing insignificant whitespace-only content.
@@ -87,7 +89,10 @@ function completeBoldFormatting(input: string): string {
     return input;
   }
   const asteriskPairs = (input.match(ASTERISK_PAIRS_GLOBAL) || []).length;
-  return asteriskPairs % 2 === 1 ? `${input}**` : input;
+  if (asteriskPairs % 2 === 1 && !TRAILING_WHITESPACE_PATTERN.test(input)) {
+    return `${input}**`;
+  }
+  return input;
 }
 
 function completeDoubleUnderscoreItalicFormatting(input: string): string {
@@ -95,7 +100,10 @@ function completeDoubleUnderscoreItalicFormatting(input: string): string {
     return input;
   }
   const underscorePairs = (input.match(UNDERSCORE_PAIRS_GLOBAL) || []).length;
-  return underscorePairs % 2 === 1 ? `${input}__` : input;
+  if (underscorePairs % 2 === 1 && !TRAILING_WHITESPACE_PATTERN.test(input)) {
+    return `${input}__`;
+  }
+  return input;
 }
 
 function completeSingleAsteriskItalicFormatting(input: string): string {
@@ -110,7 +118,10 @@ function completeSingleAsteriskItalicFormatting(input: string): string {
     const nextChar = input[index + 1];
     return prevChar !== "*" && nextChar !== "*" ? count + 1 : count;
   }, 0);
-  return singleAsterisks % 2 === 1 ? `${input}*` : input;
+  if (singleAsterisks % 2 === 1 && !TRAILING_WHITESPACE_PATTERN.test(input)) {
+    return `${input}*`;
+  }
+  return input;
 }
 
 function completeSingleUnderscoreItalicFormatting(input: string): string {
@@ -125,7 +136,10 @@ function completeSingleUnderscoreItalicFormatting(input: string): string {
     const nextChar = input[index + 1];
     return prevChar !== "_" && nextChar !== "_" ? count + 1 : count;
   }, 0);
-  return singleUnderscores % 2 === 1 ? `${input}_` : input;
+  if (singleUnderscores % 2 === 1 && !TRAILING_WHITESPACE_PATTERN.test(input)) {
+    return `${input}_`;
+  }
+  return input;
 }
 
 function completeInlineCodeFormatting(input: string): string {
@@ -151,7 +165,13 @@ function completeInlineCodeFormatting(input: string): string {
       singleBacktickCount++;
     }
   }
-  return singleBacktickCount % 2 === 1 ? `${input}\`` : input;
+  if (
+    singleBacktickCount % 2 === 1 &&
+    !TRAILING_WHITESPACE_PATTERN.test(input)
+  ) {
+    return `${input}\``;
+  }
+  return input;
 }
 
 function completeStrikethroughFormatting(input: string): string {
@@ -159,7 +179,10 @@ function completeStrikethroughFormatting(input: string): string {
     return input;
   }
   const tildePairs = (input.match(STRIKETHROUGH_PAIRS_GLOBAL) || []).length;
-  return tildePairs % 2 === 1 ? `${input}~~` : input;
+  if (tildePairs % 2 === 1 && !TRAILING_WHITESPACE_PATTERN.test(input)) {
+    return `${input}~~`;
+  }
+  return input;
 }
 
 /**
@@ -321,8 +344,9 @@ export const Response = memo(
       const parsed = shouldParseIncompleteMarkdown
         ? parseIncompleteMarkdown(children)
         : children;
-      const blocks = parseMarkdownIntoBlocks(parsed);
-      return blocks.filter((block) => cleanMarkdown(block).length > 0);
+      return parseMarkdownIntoBlocks(cleanMarkdown(parsed)).filter(
+        (block) => block.length > 0
+      );
     }, [children, shouldParseIncompleteMarkdown]);
 
     if (blocksMarkdown.length === 0) {
@@ -345,7 +369,7 @@ export const Response = memo(
             defaultOrigin={defaultOrigin}
             // biome-ignore lint/suspicious/noArrayIndexKey: We need to use the index as key to prevent the component from re-rendering
             key={`block-${block}-index-${index}`}
-            remarkPlugins={[remarkGfm, remarkMath]}
+            remarkPlugins={[remarkGfm, remarkMath, remarkRehype]}
             {...options}
           >
             {block}

@@ -31,10 +31,23 @@ export const MathEvalTool = memo(({ status, output }: Props) => {
         type={t("math-eval")}
       />
       <ToolContent>
-        <div className="p-3">
-          <p className="text-muted-foreground text-sm">
-            <InlineMath>{output?.result.latex ?? ""}</InlineMath>
-          </p>
+        <div className="flex flex-col gap-3 p-3">
+          <div className="grid gap-1.5">
+            <span className="font-medium text-muted-foreground text-xs">
+              {t("input")}
+            </span>
+            <p className="text-muted-foreground text-sm">
+              <InlineMath>{output?.original.latex ?? ""}</InlineMath>
+            </p>
+          </div>
+          <div className="grid gap-1.5">
+            <span className="font-medium text-muted-foreground text-xs">
+              {t("output")}
+            </span>
+            <p className="text-muted-foreground text-sm">
+              <InlineMath>{output?.result.latex ?? ""}</InlineMath>
+            </p>
+          </div>
         </div>
       </ToolContent>
     </Tool>

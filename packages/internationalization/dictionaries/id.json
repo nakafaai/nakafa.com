@@ -205,7 +205,9 @@
     "pending": "Menunggu",
     "running": "Berjalan",
     "completed": "Selesai",
-    "error": "Error"
+    "error": "Error",
+    "input": "Input",
+    "output": "Output"
   },
   "Math": {
     "Metadata": {
