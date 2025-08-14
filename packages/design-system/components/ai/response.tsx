@@ -193,13 +193,14 @@ export const Response = memo(
         )}
         {...props}
       >
-        {blocksMarkdown.map((block) => (
+        {blocksMarkdown.map((block, index) => (
           <HardenedMarkdown
             allowedImagePrefixes={allowedImagePrefixes ?? ["*"]}
             allowedLinkPrefixes={allowedLinkPrefixes ?? ["*"]}
             components={reactMdxComponents}
             defaultOrigin={defaultOrigin}
-            key={`block-${block}`}
+            // biome-ignore lint/suspicious/noArrayIndexKey: We need to use the index as key to prevent the component from re-rendering
+            key={`block-${block}-index-${index}`}
             remarkPlugins={[remarkGfm, remarkMath]}
             {...options}
           >

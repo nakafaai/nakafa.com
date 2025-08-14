@@ -24,4 +24,4 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "qwen";
+export const defaultModel: ModelId = "google";
