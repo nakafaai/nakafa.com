@@ -346,7 +346,7 @@ export const Response = memo(
         ? parseIncompleteMarkdown(children)
         : children;
       return parseMarkdownIntoBlocks(cleanMarkdown(parsed)).filter(
-        (block) => block.length > 0
+        (block) => cleanMarkdown(block).length > 0
       );
     }, [children, shouldParseIncompleteMarkdown]);
 
