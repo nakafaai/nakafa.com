@@ -201,7 +201,11 @@
     "math-eval": "Calculation",
     "thinking": "Thinking...",
     "thought-for": "Thought for {duration} seconds",
-    "found-contents": "Found {count} contents"
+    "found-contents": "Found {count} contents",
+    "pending": "Pending",
+    "running": "Running",
+    "completed": "Completed",
+    "error": "Error"
   },
   "Math": {
     "Metadata": {

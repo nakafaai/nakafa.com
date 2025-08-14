@@ -201,7 +201,11 @@
     "math-eval": "Perhitungan",
     "thinking": "Berpikir...",
     "thought-for": "Berpikir selama {duration} detik",
-    "found-contents": "Menemukan {count} konten"
+    "found-contents": "Menemukan {count} konten",
+    "pending": "Menunggu",
+    "running": "Berjalan",
+    "completed": "Selesai",
+    "error": "Error"
   },
   "Math": {
     "Metadata": {
