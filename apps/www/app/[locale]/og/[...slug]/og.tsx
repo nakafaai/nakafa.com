@@ -2,10 +2,15 @@ import type { ImageResponseOptions } from "next/dist/compiled/@vercel/og/types";
 import { ImageResponse } from "next/og";
 import type { ReactElement, ReactNode } from "react";
 
-interface GenerateProps {
+const MAX_TITLE_FIRST_LENGTH = 30;
+const MAX_TITLE_SECOND_LENGTH = 60;
+const MAX_DESCRIPTION_LENGTH = 80;
+const MAX_DESCRIPTION_TRUNCATED_LENGTH = 100;
+
+type GenerateProps = {
   title: ReactNode;
   description?: ReactNode;
-}
+};
 
 function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) {
@@ -41,21 +46,25 @@ export function generate(props: GenerateProps): ReactElement {
 
   // Dynamic title font size (larger for shorter titles)
   let titleFontSize = "52px";
-  if (titleLength < 30) {
+  if (titleLength < MAX_TITLE_FIRST_LENGTH) {
     titleFontSize = "68px";
-  } else if (titleLength < 60) {
+  } else if (titleLength < MAX_TITLE_SECOND_LENGTH) {
     titleFontSize = "60px";
   }
 
   // Dynamic description font size
-  const descriptionFontSize = descriptionLength < 80 ? "28px" : "24px";
+  const descriptionFontSize =
+    descriptionLength < MAX_DESCRIPTION_LENGTH ? "28px" : "24px";
 
   // Dynamic gap based on content amount
   const contentGap =
-    titleLength < 30 && descriptionLength < 80 ? "32px" : "24px";
+    titleLength < MAX_TITLE_FIRST_LENGTH &&
+    descriptionLength < MAX_DESCRIPTION_LENGTH
+      ? "32px"
+      : "24px";
 
   const truncatedDescription = props.description
-    ? truncateText(String(props.description), 100)
+    ? truncateText(String(props.description), MAX_DESCRIPTION_TRUNCATED_LENGTH)
     : undefined;
 
   return (

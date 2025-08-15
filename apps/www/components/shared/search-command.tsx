@@ -34,6 +34,8 @@ import { articlesMenu } from "../sidebar/_data/articles";
 import { holyMenu } from "../sidebar/_data/holy";
 import { subjectAll } from "../sidebar/_data/subject";
 
+const DEBOUNCE_TIME = 300;
+
 export function SearchCommand() {
   const { open, setOpen } = useSearch((state) => ({
     open: state.open,
@@ -96,7 +98,7 @@ function SearchInput({
 function SearchList({ search }: { search: string }) {
   const pagefindError = usePagefind((context) => context.error);
 
-  const [debouncedSearch] = useDebouncedValue(search, 300);
+  const [debouncedSearch] = useDebouncedValue(search, DEBOUNCE_TIME);
 
   const {
     data: results = [],
@@ -106,11 +108,11 @@ function SearchList({ search }: { search: string }) {
     isPlaceholderData,
   } = useSearchQuery({
     query: debouncedSearch,
-    enabled: !!debouncedSearch,
+    enabled: Boolean(debouncedSearch),
   });
 
   // Combine initialization error with query error
-  const hasError = isError || !!pagefindError;
+  const hasError = isError || Boolean(pagefindError);
   const displayError = pagefindError || (error ? getErrorMessage(error) : "");
 
   return (

@@ -30,6 +30,8 @@ import {
   NumberField,
 } from "react-aria-components";
 
+const CAMERA_Z_POSITION = 4;
+
 type Props = {
   title: ReactNode;
   description: ReactNode;
@@ -56,7 +58,7 @@ function Content({ angle }: { angle: number }) {
     <>
       <CardContent>
         <CoordinateSystem
-          cameraPosition={[0, 0, 4]}
+          cameraPosition={[0, 0, CAMERA_Z_POSITION]}
           showOrigin={false}
           showZAxis={false}
         >

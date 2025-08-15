@@ -14,6 +14,9 @@ import {
 } from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
 
+const ARROW_SEGMENTS = 16;
+const ARROW_SEGMENT_OFFSET = 0.2;
+
 // Shared geometry and material caches
 const coneGeometryCache = new Map<string, ConeGeometry>();
 const materialCache = new Map<string, MeshBasicMaterial>();
@@ -22,7 +25,10 @@ function getSharedConeGeometry(size: number): ConeGeometry {
   const key = `cone-${size}`;
   if (!coneGeometryCache.has(key)) {
     // Reduced segments from 32 to 16 for better performance
-    coneGeometryCache.set(key, new ConeGeometry(size / 2, size, 16, 1));
+    coneGeometryCache.set(
+      key,
+      new ConeGeometry(size / 2, size, ARROW_SEGMENTS, 1)
+    );
   }
   const geometry = coneGeometryCache.get(key);
   if (!geometry) {
@@ -109,7 +115,15 @@ export function ArrowHelper({
         return midPoint;
       default:
         // Add slight offset for end position
-        return endPoint.clone().add(new Vector3(0.2, 0.2, 0.2));
+        return endPoint
+          .clone()
+          .add(
+            new Vector3(
+              ARROW_SEGMENT_OFFSET,
+              ARROW_SEGMENT_OFFSET,
+              ARROW_SEGMENT_OFFSET
+            )
+          );
     }
   }, [vectors, labelPosition]);
 
@@ -199,7 +213,7 @@ export function ArrowHelper({
         fontSize={0.5}
         frustumCulled
         position={labelPos}
-        visible={!!label}
+        visible={Boolean(label)}
       >
         {label}
       </Text>

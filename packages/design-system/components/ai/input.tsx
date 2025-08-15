@@ -17,7 +17,7 @@ import type {
   HTMLAttributes,
   KeyboardEventHandler,
 } from "react";
-import { Children, useCallback, useEffect, useRef } from "react";
+import { Children, memo, useCallback, useEffect, useRef } from "react";
 import { SpinnerIcon } from "../ui/icons";
 
 type UseAutoResizeTextareaProps = {
@@ -77,7 +77,7 @@ const useAutoResizeTextarea = ({
 
 export type PromptInputProps = HTMLAttributes<HTMLFormElement>;
 
-export const PromptInput = ({ className, ...props }: PromptInputProps) => (
+export const PromptInput = memo(({ className, ...props }: PromptInputProps) => (
   <form
     className={cn(
       "w-full divide-y overflow-hidden rounded-xl border bg-background shadow-sm",
@@ -85,62 +85,66 @@ export const PromptInput = ({ className, ...props }: PromptInputProps) => (
     )}
     {...props}
   />
-);
+));
+PromptInput.displayName = "PromptInput";
 
 export type PromptInputTextareaProps = ComponentProps<typeof Textarea> & {
   minHeight?: number;
   maxHeight?: number;
 };
 
-export const PromptInputTextarea = ({
-  onChange,
-  className,
-  placeholder = "What would you like to know?",
-  minHeight = 48,
-  maxHeight = 164,
-  ...props
-}: PromptInputTextareaProps) => {
-  const { textareaRef, adjustHeight } = useAutoResizeTextarea({
-    minHeight,
-    maxHeight,
-  });
+export const PromptInputTextarea = memo(
+  ({
+    onChange,
+    className,
+    placeholder = "What would you like to know?",
+    minHeight = 48,
+    maxHeight = 164,
+    ...props
+  }: PromptInputTextareaProps) => {
+    const { textareaRef, adjustHeight } = useAutoResizeTextarea({
+      minHeight,
+      maxHeight,
+    });
 
-  const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
-    if (e.key === "Enter") {
-      if (e.shiftKey) {
-        // Allow newline
-        return;
+    const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+      if (e.key === "Enter") {
+        if (e.shiftKey) {
+          // Allow newline
+          return;
+        }
+
+        // Submit on Enter (without Shift)
+        e.preventDefault();
+        const form = e.currentTarget.form;
+        if (form) {
+          form.requestSubmit();
+        }
       }
+    };
 
-      // Submit on Enter (without Shift)
-      e.preventDefault();
-      const form = e.currentTarget.form;
-      if (form) {
-        form.requestSubmit();
-      }
-    }
-  };
-
-  return (
-    <Textarea
-      className={cn(
-        "w-full resize-none rounded-none border-none p-3 shadow-none outline-none ring-0",
-        "bg-transparent dark:bg-transparent",
-        "focus-visible:ring-0",
-        className
-      )}
-      name="message"
-      onChange={(e) => {
-        adjustHeight();
-        onChange?.(e);
-      }}
-      onKeyDown={handleKeyDown}
-      placeholder={placeholder}
-      ref={textareaRef}
-      {...props}
-    />
-  );
-};
+    return (
+      <Textarea
+        className={cn(
+          "w-full resize-none rounded-none border-none p-3 shadow-none outline-none ring-0",
+          "bg-transparent dark:bg-transparent",
+          "focus-visible:ring-0",
+          className
+        )}
+        name="message"
+        onChange={(e) => {
+          adjustHeight();
+          onChange?.(e);
+        }}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        ref={textareaRef}
+        {...props}
+      />
+    );
+  }
+);
+PromptInputTextarea.displayName = "PromptInputTextarea";
 
 export type PromptInputToolbarProps = HTMLAttributes<HTMLDivElement>;
 
@@ -149,7 +153,7 @@ export const PromptInputToolbar = ({
   ...props
 }: PromptInputToolbarProps) => (
   <div
-    className={cn("flex items-center justify-between p-1", className)}
+    className={cn("flex items-center justify-between p-2", className)}
     {...props}
   />
 );

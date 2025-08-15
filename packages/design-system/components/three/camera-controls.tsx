@@ -5,8 +5,12 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
+const DEFAULT_CAMERA_X = 12;
+const DEFAULT_CAMERA_Y = 8;
+const DEFAULT_CAMERA_Z = 12;
+
 export function CameraControls({
-  cameraPosition = [12, 8, 12],
+  cameraPosition = [DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, DEFAULT_CAMERA_Z],
   autoRotate = true,
 }: {
   cameraPosition?: [number, number, number];

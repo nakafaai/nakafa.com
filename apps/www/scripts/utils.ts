@@ -1,3 +1,5 @@
+const PERCENTAGE_PRECISION = 100;
+
 /**
  * Utility functions for scripts
  */
@@ -93,7 +95,7 @@ export const logger = {
   },
 
   progress: (current: number, total: number, label: string): void => {
-    const percentage = Math.round((current / total) * 100);
+    const percentage = Math.round((current / total) * PERCENTAGE_PRECISION);
     // biome-ignore lint/suspicious/noConsole: For logging
     console.info(
       `${logger.fg.cyan}${logger.bright}▸ ${label}:${logger.reset} ${current}/${total} (${percentage}%)`

@@ -10,6 +10,14 @@ import {
 import type React from "react";
 import { useMemo } from "react";
 
+const SVG_PADDING = 20;
+const ELLIPSE_RX = 50;
+const ELLIPSE_RY = 90;
+const ELLIPSE_GAP = 100;
+const TEXT_PADDING = 15;
+const LINE_OFFSET = 0.3;
+const SLOT_CENTER_OFFSET = 0.5;
+
 type DiagramProps = {
   title: string;
   description: string;
@@ -47,19 +55,13 @@ type RelationVisualizerProps = {
 };
 
 // --- SVG Configuration ---
-const svgPadding = 20; // Padding around the elements
-const ellipseRx = 50; // Horizontal radius of ellipse
-const ellipseRy = 90; // Vertical radius of ellipse
-const ellipseGap = 100; // Gap between the two ellipses
-const textPadding = 15; // Padding inside ellipse for text placement
-
-const svgWidth = 2 * ellipseRx * 2 + ellipseGap + 2 * svgPadding;
-const svgHeight = 2 * ellipseRy + 2 * svgPadding;
+const svgWidth = 2 * ELLIPSE_RX * 2 + ELLIPSE_GAP + 2 * SVG_PADDING;
+const svgHeight = 2 * ELLIPSE_RY + 2 * SVG_PADDING;
 
 // Center X coordinates for the ellipses
-const domainEllipseCx = svgPadding + ellipseRx;
-const codomainEllipseCx = domainEllipseCx + 2 * ellipseRx + ellipseGap;
-const ellipseCy = svgPadding + ellipseRy; // Y center for both ellipses
+const domainEllipseCx = SVG_PADDING + ELLIPSE_RX;
+const codomainEllipseCx = domainEllipseCx + 2 * ELLIPSE_RX + ELLIPSE_GAP;
+const ellipseCy = SVG_PADDING + ELLIPSE_RY; // Y center for both ellipses
 
 // Calculate X coordinate for text within ellipses
 const domainTextX = domainEllipseCx;
@@ -73,11 +75,11 @@ const calculateTextY = (
   cy: number
 ): number => {
   // Calculate the effective height available for text
-  const textHeightArea = ry * 2 - textPadding * 2;
+  const textHeightArea = ry * 2 - TEXT_PADDING * 2;
   // Calculate the height of each slot
   const slotHeight = textHeightArea / total;
   // Calculate the center Y of the slot, offset by top padding and ellipse center
-  return cy - ry + textPadding + slotHeight * (index + 0.5);
+  return cy - ry + TEXT_PADDING + slotHeight * (index + SLOT_CENTER_OFFSET);
 };
 
 export function RelationVisualizer({
@@ -94,14 +96,14 @@ export function RelationVisualizer({
     domain.forEach((el, index) => {
       coords[el.id] = {
         x: domainTextX,
-        y: calculateTextY(index, domain.length, ellipseRy, ellipseCy),
+        y: calculateTextY(index, domain.length, ELLIPSE_RY, ellipseCy),
       };
     });
     // Codomain elements
     codomain.forEach((el, index) => {
       coords[el.id] = {
         x: codomainTextX,
-        y: calculateTextY(index, codomain.length, ellipseRy, ellipseCy),
+        y: calculateTextY(index, codomain.length, ELLIPSE_RY, ellipseCy),
       };
     });
     return coords;
@@ -137,7 +139,7 @@ export function RelationVisualizer({
           className="fill-foreground font-semibold text-sm"
           textAnchor="middle" // Position label above ellipse
           x={domainEllipseCx}
-          y={svgPadding - 10}
+          y={SVG_PADDING - 10}
         >
           {domainLabel}
         </text>
@@ -145,8 +147,8 @@ export function RelationVisualizer({
           className="fill-muted stroke-border"
           cx={domainEllipseCx}
           cy={ellipseCy}
-          rx={ellipseRx}
-          ry={ellipseRy}
+          rx={ELLIPSE_RX}
+          ry={ELLIPSE_RY}
           strokeWidth="1"
         />
 
@@ -155,7 +157,7 @@ export function RelationVisualizer({
           className="fill-foreground font-semibold text-sm"
           textAnchor="middle" // Position label above ellipse
           x={codomainEllipseCx}
-          y={svgPadding - 10}
+          y={SVG_PADDING - 10}
         >
           {codomainLabel}
         </text>
@@ -163,8 +165,8 @@ export function RelationVisualizer({
           className="fill-muted stroke-border"
           cx={codomainEllipseCx}
           cy={ellipseCy}
-          rx={ellipseRx}
-          ry={ellipseRy}
+          rx={ELLIPSE_RX}
+          ry={ELLIPSE_RY}
           strokeWidth="1"
         />
 
@@ -207,8 +209,8 @@ export function RelationVisualizer({
           }
 
           // Calculate start/end points for the line, slightly offset from text center
-          const lineStartX = startCoords.x + ellipseRx * 0.3; // Start near edge of domain ellipse
-          const lineEndX = endCoords.x - ellipseRx * 0.3; // End near edge of codomain ellipse
+          const lineStartX = startCoords.x + ELLIPSE_RX * LINE_OFFSET; // Start near edge of domain ellipse
+          const lineEndX = endCoords.x - ELLIPSE_RX * LINE_OFFSET; // End near edge of codomain ellipse
 
           return (
             <line

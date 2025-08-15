@@ -1,16 +1,11 @@
 "use client";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
 import type { UIMessage } from "ai";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, memo, useContext, useEffect, useState } from "react";
 
 type BranchContextType = {
   currentBranch: number;
@@ -85,30 +80,33 @@ export const Branch = ({
 
 export type BranchMessagesProps = HTMLAttributes<HTMLDivElement>;
 
-export const BranchMessages = ({ children, ...props }: BranchMessagesProps) => {
-  const { currentBranch, setBranches, branches } = useBranch();
-  const childrenArray = Array.isArray(children) ? children : [children];
+export const BranchMessages = memo(
+  ({ children, ...props }: BranchMessagesProps) => {
+    const { currentBranch, setBranches, branches } = useBranch();
+    const childrenArray = Array.isArray(children) ? children : [children];
 
-  // Use useEffect to update branches when they change
-  useEffect(() => {
-    if (branches.length !== childrenArray.length) {
-      setBranches(childrenArray);
-    }
-  }, [childrenArray, branches, setBranches]);
+    // Use useEffect to update branches when they change
+    useEffect(() => {
+      if (branches.length !== childrenArray.length) {
+        setBranches(childrenArray);
+      }
+    }, [childrenArray, branches, setBranches]);
 
-  return childrenArray.map((branch, index) => (
-    <div
-      className={cn(
-        "grid gap-2 overflow-hidden [&>div]:pb-0",
-        index === currentBranch ? "block" : "hidden"
-      )}
-      key={branch.key}
-      {...props}
-    >
-      {branch}
-    </div>
-  ));
-};
+    return childrenArray.map((branch, index) => (
+      <div
+        className={cn(
+          "grid gap-2 overflow-hidden [&>div]:pb-0",
+          index === currentBranch ? "block" : "hidden"
+        )}
+        key={branch.key}
+        {...props}
+      >
+        {branch}
+      </div>
+    ));
+  }
+);
+BranchMessages.displayName = "BranchMessages";
 
 export type BranchSelectorProps = HTMLAttributes<HTMLDivElement> & {
   from: UIMessage["role"];
@@ -215,56 +213,3 @@ export const BranchPage = ({ className, ...props }: BranchPageProps) => {
     </span>
   );
 };
-
-export type MessageProps = HTMLAttributes<HTMLDivElement> & {
-  from: UIMessage["role"];
-};
-
-export const Message = ({ className, from, ...props }: MessageProps) => (
-  <div
-    className={cn(
-      "group flex w-full items-end justify-end gap-2 py-4",
-      from === "user" ? "is-user" : "is-assistant flex-row-reverse justify-end",
-      "[&>div]:max-w-[80%]",
-      className
-    )}
-    {...props}
-  />
-);
-
-export type MessageContentProps = HTMLAttributes<HTMLDivElement>;
-
-export const MessageContent = ({
-  children,
-  className,
-  ...props
-}: MessageContentProps) => (
-  <div
-    className={cn(
-      "flex flex-col gap-2 overflow-hidden rounded-lg px-4 py-3 text-foreground text-sm",
-      "group-[.is-user]:bg-primary group-[.is-user]:text-primary-foreground",
-      "group-[.is-assistant]:bg-secondary group-[.is-assistant]:text-foreground",
-      className
-    )}
-    {...props}
-  >
-    <div className="is-user:dark">{children}</div>
-  </div>
-);
-
-export type MessageAvatarProps = ComponentProps<typeof Avatar> & {
-  src: string;
-  name?: string;
-};
-
-export const MessageAvatar = ({
-  src,
-  name,
-  className,
-  ...props
-}: MessageAvatarProps) => (
-  <Avatar className={cn("size-8 ring ring-border", className)} {...props}>
-    <AvatarImage alt="" className="mt-0 mb-0" src={src} />
-    <AvatarFallback>{name?.slice(0, 2) || "ME"}</AvatarFallback>
-  </Avatar>
-);

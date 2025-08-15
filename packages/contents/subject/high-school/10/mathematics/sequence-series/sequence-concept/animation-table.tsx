@@ -20,6 +20,21 @@ import {
   useState,
 } from "react";
 
+// Constants for animation and layout
+const MAX_TABLES_MOBILE = 2;
+const MAX_TABLES_DESKTOP = 3;
+const ANIMATION_INTERVAL_MS = 2000;
+const INITIAL_SIDE_CHAIRS = 2;
+const STAGGER_DELAY = 0.01;
+const SPEED_HALF = 0.5;
+const SPEED_NORMAL = 1;
+const SPEED_FAST = 1.5;
+const SPEED_VERY_FAST = 2;
+const SPEED_VALUES = [SPEED_HALF, SPEED_NORMAL, SPEED_FAST, SPEED_VERY_FAST];
+const CHAIR_SIZE = 24;
+const Z_INDEX_TABLE = 10;
+const Z_INDEX_CHAIR = 20;
+
 type TableChairsProps = {
   labels?: {
     title?: string;
@@ -69,7 +84,7 @@ export default function TableChairsAnimation({
     }
   }, [entry]);
 
-  const maxTables = isMobile ? 2 : 3;
+  const maxTables = isMobile ? MAX_TABLES_MOBILE : MAX_TABLES_DESKTOP;
 
   // Calculate chair count based on the formula U_n = 2n + 2
   const chairCount = useMemo(
@@ -94,7 +109,7 @@ export default function TableChairsAnimation({
           }
           return prev;
         });
-      }, 2000 / speed);
+      }, ANIMATION_INTERVAL_MS / speed);
     }
 
     return () => clearInterval(interval);
@@ -119,7 +134,6 @@ export default function TableChairsAnimation({
   const tableWidth = 100;
   const tableHeight = 80;
   const tableSpacing = 4; // Gap between tables
-  const chairSize = 24;
   const chairOffset = 8; // Distance of chair from table edge
 
   // Generate arrangement of tables and chairs
@@ -144,25 +158,25 @@ export default function TableChairsAnimation({
       chairs.push(
         {
           id: 1,
-          x: -chairSize - chairOffset,
-          y: tableHeight / 2 - chairSize / 2,
+          x: -CHAIR_SIZE - chairOffset,
+          y: tableHeight / 2 - CHAIR_SIZE / 2,
           side: "left",
         },
         {
           id: 2,
           x: tableWidth + chairOffset,
-          y: tableHeight / 2 - chairSize / 2,
+          y: tableHeight / 2 - CHAIR_SIZE / 2,
           side: "right",
         },
         {
           id: 3,
-          x: tableWidth / 2 - chairSize / 2,
-          y: -chairSize - chairOffset,
+          x: tableWidth / 2 - CHAIR_SIZE / 2,
+          y: -CHAIR_SIZE - chairOffset,
           side: "top",
         },
         {
           id: 4,
-          x: tableWidth / 2 - chairSize / 2,
+          x: tableWidth / 2 - CHAIR_SIZE / 2,
           y: tableHeight + chairOffset,
           side: "bottom",
         }
@@ -182,8 +196,8 @@ export default function TableChairsAnimation({
       // Add chairs on the left side of the leftmost table
       chairs.push({
         id: 1,
-        x: -chairSize - chairOffset, // No need to add spacing between tables for the first chair
-        y: tableHeight / 2 - chairSize / 2,
+        x: -CHAIR_SIZE - chairOffset, // No need to add spacing between tables for the first chair
+        y: tableHeight / 2 - CHAIR_SIZE / 2,
         side: "left",
       });
 
@@ -191,16 +205,17 @@ export default function TableChairsAnimation({
       chairs.push({
         id: 2,
         x: totalWidth + chairOffset + (deferredTableCount - 1) * tableSpacing, // Add spacing between tables
-        y: tableHeight / 2 - chairSize / 2,
+        y: tableHeight / 2 - CHAIR_SIZE / 2,
         side: "right",
       });
 
       // Add chairs on the top of each table
       for (let i = 0; i < deferredTableCount; i++) {
         chairs.push({
-          id: 3 + i,
-          x: i * tableWidth + tableWidth / 2 - chairSize / 2 + i * tableSpacing, // Add spacing between tables
-          y: -chairSize - chairOffset,
+          id: INITIAL_SIDE_CHAIRS + 1 + i,
+          x:
+            i * tableWidth + tableWidth / 2 - CHAIR_SIZE / 2 + i * tableSpacing, // Add spacing between tables
+          y: -CHAIR_SIZE - chairOffset,
           side: "top",
         });
       }
@@ -208,8 +223,9 @@ export default function TableChairsAnimation({
       // Add chairs on the bottom of each table
       for (let i = 0; i < deferredTableCount; i++) {
         chairs.push({
-          id: 3 + deferredTableCount + i,
-          x: i * tableWidth + tableWidth / 2 - chairSize / 2 + i * tableSpacing, // Add spacing between tables
+          id: INITIAL_SIDE_CHAIRS + 1 + deferredTableCount + i,
+          x:
+            i * tableWidth + tableWidth / 2 - CHAIR_SIZE / 2 + i * tableSpacing, // Add spacing between tables
           y: tableHeight + chairOffset,
           side: "bottom",
         });
@@ -261,13 +277,13 @@ export default function TableChairsAnimation({
                           top: table.y,
                           width: table.width,
                           height: table.height,
-                          zIndex: 10,
+                          zIndex: Z_INDEX_TABLE,
                         }}
                         transition={{
                           type: "spring",
                           stiffness: 500,
                           damping: 30,
-                          delay: (table.id - 1) * 0.01, // Stagger effect
+                          delay: (table.id - 1) * STAGGER_DELAY, // Stagger effect
                         }}
                       />
                     ))}
@@ -286,15 +302,15 @@ export default function TableChairsAnimation({
                         style={{
                           left: chair.x,
                           top: chair.y,
-                          width: 24,
-                          height: 24,
-                          zIndex: 20,
+                          width: CHAIR_SIZE,
+                          height: CHAIR_SIZE,
+                          zIndex: Z_INDEX_CHAIR,
                         }}
                         transition={{
                           type: "spring",
                           stiffness: 500,
                           damping: 30,
-                          delay: chair.id * 0.01, // Stagger effect
+                          delay: chair.id * STAGGER_DELAY, // Stagger effect
                         }}
                       />
                     ))}
@@ -334,7 +350,7 @@ export default function TableChairsAnimation({
           </div>
 
           <div className="flex flex-wrap justify-center gap-2">
-            {[0.5, 1, 1.5, 2].map((speedValue) => (
+            {SPEED_VALUES.map((speedValue) => (
               <Button
                 aria-label={`Set speed to ${speedValue}x`}
                 key={speedValue}

@@ -16,6 +16,37 @@ import {
 } from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
 
+// Performance tuning constants
+const MIN_CORES_FOR_HIGH_RES = 8;
+const MIN_CORES_FOR_MEDIUM_RES = 4;
+const MAX_RES_MOBILE_LOW_CORE = 50;
+const MAX_RES_MEDIUM_CORE = 100;
+
+// Default geometry values
+const DEFAULT_RANGE_MIN = -5;
+const DEFAULT_RANGE_MAX = 5;
+
+// Geometry calculation constants
+const COMPONENTS_PER_VERTEX = 3;
+const VERTICES_PER_CELL = 36;
+const INDICES_PER_CELL = 36;
+const LAST_VERTEX_OFFSET_IN_QUAD = 3;
+
+// 2D inequality cell check thresholds
+const SATISFIED_CORNERS_THRESHOLD_HIGH = 3;
+const SATISFIED_CORNERS_THRESHOLD_LOW = 2;
+const RESOLUTION_THRESHOLD_FOR_CORNERS = 80;
+
+// Boundary line constants
+const MAX_LINE_RESOLUTION = 50;
+const EPSILON = 1e-10;
+const VERTICAL_CONNECTOR_DENSITY_FACTOR = 4;
+
+// Label constants
+const DEFAULT_LABEL_FONT_SIZE = 0.5;
+
+type Point = [number, number, number];
+
 type Props = {
   /** Function that determines the boundary of the inequality (where the inequality becomes equality) */
   boundaryFunction?: (x: number, y: number) => number;
@@ -61,24 +92,24 @@ type Props = {
 function getAdaptiveResolution(requestedResolution: number): number {
   // Check device capabilities
   const isMobile = isMobileDevice();
-  const cores = navigator.hardwareConcurrency || 4;
+  const cores = navigator.hardwareConcurrency || MIN_CORES_FOR_MEDIUM_RES;
 
-  if (isMobile || cores < 4) {
-    return Math.min(requestedResolution, 50);
+  if (isMobile || cores < MIN_CORES_FOR_MEDIUM_RES) {
+    return Math.min(requestedResolution, MAX_RES_MOBILE_LOW_CORE);
   }
-  if (cores >= 8) {
+  if (cores >= MIN_CORES_FOR_HIGH_RES) {
     return requestedResolution;
   }
-  return Math.min(requestedResolution, 100);
+  return Math.min(requestedResolution, MAX_RES_MEDIUM_CORE);
 }
 
 export function Inequality({
   boundaryFunction,
   is2D = false,
   boundaryLine2D,
-  xRange = [-5, 5],
-  yRange = [-5, 5],
-  zRange = [-5, 5],
+  xRange = [DEFAULT_RANGE_MIN, DEFAULT_RANGE_MAX],
+  yRange = [DEFAULT_RANGE_MIN, DEFAULT_RANGE_MAX],
+  zRange = [DEFAULT_RANGE_MIN, DEFAULT_RANGE_MAX],
   resolution = 200,
   color = COLORS.BLUE,
   boundaryColor,
@@ -99,10 +130,13 @@ export function Inequality({
   const geometry = useMemo(() => {
     const geo = new BufferGeometry();
     const vertices: Float32Array = new Float32Array(
-      adaptiveResolution * adaptiveResolution * 36 * 3
+      adaptiveResolution *
+        adaptiveResolution *
+        VERTICES_PER_CELL *
+        COMPONENTS_PER_VERTEX
     ); // Pre-allocate
     const indices: Uint32Array = new Uint32Array(
-      adaptiveResolution * adaptiveResolution * 36
+      adaptiveResolution * adaptiveResolution * INDICES_PER_CELL
     ); // Pre-allocate
     let vertexIndex = 0;
     let indexOffset = 0;
@@ -112,35 +146,22 @@ export function Inequality({
     const yStep = (yRange[1] - yRange[0]) / adaptiveResolution;
 
     // Helper function to add a quad (two triangles) to the geometry - optimized
-    const addQuad = (
-      p1x: number,
-      p1y: number,
-      p1z: number,
-      p2x: number,
-      p2y: number,
-      p2z: number,
-      p3x: number,
-      p3y: number,
-      p3z: number,
-      p4x: number,
-      p4y: number,
-      p4z: number
-    ) => {
-      const index = vertexIndex / 3;
+    const addQuad = (p1: Point, p2: Point, p3: Point, p4: Point) => {
+      const index = vertexIndex / COMPONENTS_PER_VERTEX;
 
       // Add vertices directly to array
-      vertices[vertexIndex++] = p1x;
-      vertices[vertexIndex++] = p1y;
-      vertices[vertexIndex++] = p1z;
-      vertices[vertexIndex++] = p2x;
-      vertices[vertexIndex++] = p2y;
-      vertices[vertexIndex++] = p2z;
-      vertices[vertexIndex++] = p3x;
-      vertices[vertexIndex++] = p3y;
-      vertices[vertexIndex++] = p3z;
-      vertices[vertexIndex++] = p4x;
-      vertices[vertexIndex++] = p4y;
-      vertices[vertexIndex++] = p4z;
+      vertices[vertexIndex++] = p1[0];
+      vertices[vertexIndex++] = p1[1];
+      vertices[vertexIndex++] = p1[2];
+      vertices[vertexIndex++] = p2[0];
+      vertices[vertexIndex++] = p2[1];
+      vertices[vertexIndex++] = p2[2];
+      vertices[vertexIndex++] = p3[0];
+      vertices[vertexIndex++] = p3[1];
+      vertices[vertexIndex++] = p3[2];
+      vertices[vertexIndex++] = p4[0];
+      vertices[vertexIndex++] = p4[1];
+      vertices[vertexIndex++] = p4[2];
 
       // Add indices for two triangles
       indices[indexOffset++] = index;
@@ -148,41 +169,48 @@ export function Inequality({
       indices[indexOffset++] = index + 2;
       indices[indexOffset++] = index;
       indices[indexOffset++] = index + 2;
-      indices[indexOffset++] = index + 3;
+      indices[indexOffset++] = index + LAST_VERTEX_OFFSET_IN_QUAD;
     };
 
     // Helper function to create all faces of a complete cell - optimized
-    const addCompleteCell = (
-      x1: number,
-      y1: number,
-      x2: number,
-      y2: number,
-      z1: number,
-      z2: number
-    ) => {
+    const addCompleteCell = ({
+      x1,
+      y1,
+      x2,
+      y2,
+      z1,
+      z2,
+    }: {
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      z1: number;
+      z2: number;
+    }) => {
       // Only add visible faces for performance (basic culling)
       // Bottom face (at minimum z)
-      addQuad(x1, y1, z1, x2, y1, z1, x2, y2, z1, x1, y2, z1);
+      addQuad([x1, y1, z1], [x2, y1, z1], [x2, y2, z1], [x1, y2, z1]);
 
       // Top face (at maximum z)
-      addQuad(x1, y1, z2, x1, y2, z2, x2, y2, z2, x2, y1, z2);
+      addQuad([x1, y1, z2], [x1, y2, z2], [x2, y2, z2], [x2, y1, z2]);
 
       // Side faces - only if on boundary
       if (Math.abs(x1 - xRange[0]) < xStep) {
         // Left face
-        addQuad(x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1);
+        addQuad([x1, y1, z1], [x1, y1, z2], [x1, y2, z2], [x1, y2, z1]);
       }
       if (Math.abs(x2 - xRange[1]) < xStep) {
         // Right face
-        addQuad(x2, y1, z1, x2, y2, z1, x2, y2, z2, x2, y1, z2);
+        addQuad([x2, y1, z1], [x2, y2, z1], [x2, y2, z2], [x2, y1, z2]);
       }
       if (Math.abs(y1 - yRange[0]) < yStep) {
         // Front face
-        addQuad(x1, y1, z1, x2, y1, z1, x2, y1, z2, x1, y1, z2);
+        addQuad([x1, y1, z1], [x2, y1, z1], [x2, y1, z2], [x1, y1, z2]);
       }
       if (Math.abs(y2 - yRange[1]) < yStep) {
         // Back face
-        addQuad(x1, y2, z1, x1, y2, z2, x2, y2, z2, x2, y2, z1);
+        addQuad([x1, y2, z1], [x1, y2, z2], [x2, y2, z2], [x2, y2, z1]);
       }
     };
 
@@ -212,7 +240,7 @@ export function Inequality({
 
           if (centerValue <= 0 && distanceToLine > cellDiagonal) {
             // Fully inside - add cell
-            addCompleteCell(x1, y1, x2, y2, zRange[0], zRange[1]);
+            addCompleteCell({ x1, y1, x2, y2, z1: zRange[0], z2: zRange[1] });
           } else if (centerValue <= 0 || distanceToLine < cellDiagonal * 2) {
             // Near boundary - check corners
             const corner1Satisfies = a * x1 + b * y1 + c <= 0;
@@ -227,10 +255,11 @@ export function Inequality({
               (corner4Satisfies ? 1 : 0);
 
             if (
-              satisfiedCorners >= 3 ||
-              (satisfiedCorners >= 2 && adaptiveResolution < 80)
+              satisfiedCorners >= SATISFIED_CORNERS_THRESHOLD_HIGH ||
+              (satisfiedCorners >= SATISFIED_CORNERS_THRESHOLD_LOW &&
+                adaptiveResolution < RESOLUTION_THRESHOLD_FOR_CORNERS)
             ) {
-              addCompleteCell(x1, y1, x2, y2, zRange[0], zRange[1]);
+              addCompleteCell({ x1, y1, x2, y2, z1: zRange[0], z2: zRange[1] });
             }
           }
         }
@@ -253,18 +282,10 @@ export function Inequality({
           if (zBoundary >= zRange[0] && zBoundary <= zRange[1]) {
             // Create a quad at the boundary
             addQuad(
-              x1,
-              y1,
-              zBoundary,
-              x2,
-              y1,
-              zBoundary,
-              x2,
-              y2,
-              zBoundary,
-              x1,
-              y2,
-              zBoundary
+              [x1, y1, zBoundary],
+              [x2, y1, zBoundary],
+              [x2, y2, zBoundary],
+              [x1, y2, zBoundary]
             );
           }
         }
@@ -275,7 +296,10 @@ export function Inequality({
     const finalVertices = new Float32Array(vertices.buffer, 0, vertexIndex);
     const finalIndices = new Uint32Array(indices.buffer, 0, indexOffset);
 
-    geo.setAttribute("position", new Float32BufferAttribute(finalVertices, 3));
+    geo.setAttribute(
+      "position",
+      new Float32BufferAttribute(finalVertices, COMPONENTS_PER_VERTEX)
+    );
     geo.setIndex(new BufferAttribute(finalIndices, 1));
     geo.computeVertexNormals();
 
@@ -309,7 +333,7 @@ export function Inequality({
     }
 
     const vertices: number[] = [];
-    const lineResolution = Math.min(adaptiveResolution, 50); // Lower resolution for lines
+    const lineResolution = Math.min(adaptiveResolution, MAX_LINE_RESOLUTION); // Lower resolution for lines
     const xStep = (xRange[1] - xRange[0]) / lineResolution;
     const yStep = (yRange[1] - yRange[0]) / lineResolution;
 
@@ -318,7 +342,7 @@ export function Inequality({
       const [a, b, c] = boundaryLine2D;
 
       // Create boundary lines more efficiently
-      if (Math.abs(b) > 1e-10) {
+      if (Math.abs(b) > EPSILON) {
         // Express y as a function of x
         for (let ix = 0; ix <= lineResolution; ix++) {
           const x = xRange[0] + ix * xStep;
@@ -340,7 +364,7 @@ export function Inequality({
         for (
           let i = 0;
           i <= lineResolution;
-          i += Math.floor(lineResolution / 4)
+          i += Math.floor(lineResolution / VERTICAL_CONNECTOR_DENSITY_FACTOR)
         ) {
           const x = xRange[0] + i * xStep;
           const y = (-a * x - c) / b;
@@ -348,7 +372,7 @@ export function Inequality({
             vertices.push(x, y, zRange[0], x, y, zRange[1]);
           }
         }
-      } else if (Math.abs(a) > 1e-10) {
+      } else if (Math.abs(a) > EPSILON) {
         // Express x as a function of y
         for (let iy = 0; iy <= lineResolution; iy++) {
           const y = yRange[0] + iy * yStep;
@@ -414,7 +438,10 @@ export function Inequality({
     }
 
     const geom = new BufferGeometry();
-    geom.setAttribute("position", new Float32BufferAttribute(vertices, 3));
+    geom.setAttribute(
+      "position",
+      new Float32BufferAttribute(vertices, COMPONENTS_PER_VERTEX)
+    );
     return geom;
   }, [
     showBoundary,
@@ -459,7 +486,7 @@ export function Inequality({
           anchorY="middle"
           color={label.color || finalBoundaryColor}
           font={fontPath}
-          fontSize={label.fontSize || 0.5}
+          fontSize={label.fontSize || DEFAULT_LABEL_FONT_SIZE}
           frustumCulled
           position={label.position}
         >

@@ -170,9 +170,7 @@ export async function getReferences(filePath: string): Promise<Reference[]> {
 export function getFolderChildNames(folder: string, exclude?: string[]) {
   const defaultExclude = ["_", "node_modules", ".", "dist"];
 
-  const effectiveExclude = exclude
-    ? [...defaultExclude, ...exclude]
-    : defaultExclude;
+  const effectiveExclude = [...defaultExclude, ...(exclude ?? [])];
 
   try {
     // Resolve path relative to the contents directory

@@ -20,6 +20,8 @@ import { ChevronRightIcon, PaletteIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 
+const BASE_THEMES_COUNT = 3;
+
 function CheckerBadge({ isActive }: { isActive: boolean }) {
   return (
     <IconCircleFilled
@@ -57,7 +59,7 @@ export function ThemeMenu() {
           side={isMobile ? "top" : "right"}
         >
           <DropdownMenuGroup>
-            {themes.slice(0, 3).map((theme) => (
+            {themes.slice(0, BASE_THEMES_COUNT).map((theme) => (
               <DropdownMenuItem
                 key={theme.value}
                 onClick={() => setTheme(theme.value)}
@@ -72,7 +74,7 @@ export function ThemeMenu() {
           <DropdownMenuSeparator />
 
           <DropdownMenuGroup>
-            {themes.slice(3).map((theme) => (
+            {themes.slice(BASE_THEMES_COUNT).map((theme) => (
               <DropdownMenuItem
                 key={theme.value}
                 onClick={() => setTheme(theme.value)}

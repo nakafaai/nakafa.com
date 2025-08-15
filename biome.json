@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.1.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
   "extends": ["ultracite"],
   "javascript": {
     "formatter": {
@@ -17,8 +17,8 @@
           }
         }
       },
-      "nursery": {
-        "noUnknownAtRule": "off"
+      "suspicious": {
+        "noUnknownAtRules": "off"
       },
       "performance": {
         "noNamespaceImport": "off"

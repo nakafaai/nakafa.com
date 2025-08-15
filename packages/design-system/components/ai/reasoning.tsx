@@ -13,6 +13,9 @@ import type { ComponentProps } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
 import { Response } from "./response";
 
+const AUTO_CLOSE_DELAY = 1000;
+const DURATION_FACTOR = 1000;
+
 type ReasoningContextValue = {
   isStreaming: boolean;
   isOpen: boolean;
@@ -70,7 +73,7 @@ export const Reasoning = memo(
           setStartTime(Date.now());
         }
       } else if (startTime !== null) {
-        setDuration(Math.round((Date.now() - startTime) / 1000));
+        setDuration(Math.round((Date.now() - startTime) / DURATION_FACTOR));
         setStartTime(null);
       }
     }, [isStreaming, startTime, setDuration]);
@@ -93,7 +96,7 @@ export const Reasoning = memo(
           setIsOpen(false);
           setHasAutoClosedRef(true);
           setWasAutoOpened(false);
-        }, 1000);
+        }, AUTO_CLOSE_DELAY);
         return () => clearTimeout(timer);
       }
     }, [
@@ -189,7 +192,8 @@ export const ReasoningContent = memo(
     >
       <Response className="text-muted-foreground text-sm">{children}</Response>
     </CollapsibleContent>
-  )
+  ),
+  (prevProps, nextProps) => prevProps.children === nextProps.children
 );
 
 Reasoning.displayName = "Reasoning";

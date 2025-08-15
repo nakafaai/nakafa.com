@@ -12,6 +12,8 @@ import {
 } from "ai";
 import { getTranslations } from "next-intl/server";
 
+const MAX_CONVERSATION_HISTORY = 5;
+
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
@@ -129,7 +131,7 @@ export async function POST(req: Request) {
     prepareStep: ({ messages: initialMessages }) => {
       // We need to cut costs, ai is expensive
       // Compress conversation history for longer loops
-      const finalMessages = initialMessages.slice(-5);
+      const finalMessages = initialMessages.slice(-MAX_CONVERSATION_HISTORY);
 
       return {
         messages: finalMessages,

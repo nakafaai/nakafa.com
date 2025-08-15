@@ -36,6 +36,16 @@ const DEFAULT_WAVE_COLOR = "bg-primary";
 const DEFAULT_WAVE_DURATION = 2000; // ms
 const MAX_CONCURRENT_RIPPLES = 5; // Limit concurrent ripples
 
+// Ripple effect constants
+const RIPPLE_RADIUS_MULTIPLIER = 1.5;
+const RIPPLE_WAVE_INNER_BOUND = 1.5;
+const RIPPLE_WAVE_OUTER_BOUND = 0.5;
+const RIPPLE_BASE_OPACITY = 0.8;
+const RIPPLE_OPACITY_INTENSITY_FACTOR = 0.2;
+const RIPPLE_SCALE_INTENSITY_FACTOR = 0.2;
+const RIPPLE_SHADOW_BLUR_FACTOR = 20;
+const RIPPLE_SHADOW_COLOR_MIX_FACTOR = 60;
+
 export function BlockArt({
   gridCols = 16,
   gridRows = 8,
@@ -98,7 +108,8 @@ export function BlockArt({
       for (const ripple of limitedRipples) {
         const elapsed = currentTime - ripple.startTime;
         const progress = elapsed / waveDuration;
-        const radius = progress * Math.max(COLS, ROWS) * 1.5;
+        const radius =
+          progress * Math.max(COLS, ROWS) * RIPPLE_RADIUS_MULTIPLIER;
 
         const minRow = Math.max(0, Math.floor(ripple.y - radius - 2));
         const maxRow = Math.min(ROWS - 1, Math.ceil(ripple.y + radius + 2));
@@ -111,7 +122,10 @@ export function BlockArt({
               (col - ripple.x) ** 2 + (row - ripple.y) ** 2
             );
 
-            if (distance >= radius - 1.5 && distance <= radius + 0.5) {
+            if (
+              distance >= radius - RIPPLE_WAVE_INNER_BOUND &&
+              distance <= radius + RIPPLE_WAVE_OUTER_BOUND
+            ) {
               const cellIndex = row * COLS + col;
               const intensity = 1 - Math.abs(distance - radius) / 2;
               const fadeOut = 1 - progress;
@@ -268,14 +282,18 @@ export function BlockArt({
               key={`${row}-${col}`}
               style={{
                 aspectRatio: "1 / 1",
-                opacity: rippleIntensity > 0 ? 0.8 + 0.2 * rippleIntensity : 1,
+                opacity:
+                  rippleIntensity > 0
+                    ? RIPPLE_BASE_OPACITY +
+                      RIPPLE_OPACITY_INTENSITY_FACTOR * rippleIntensity
+                    : 1,
                 transform:
                   rippleIntensity > 0
-                    ? `scale(${1 + rippleIntensity * 0.2})`
+                    ? `scale(${1 + rippleIntensity * RIPPLE_SCALE_INTENSITY_FACTOR})`
                     : undefined,
                 boxShadow:
                   rippleIntensity > 0
-                    ? `0 0 ${20 * rippleIntensity}px color-mix(in oklch, var(--primary) ${60 * rippleIntensity}%, transparent)`
+                    ? `0 0 ${RIPPLE_SHADOW_BLUR_FACTOR * rippleIntensity}px color-mix(in oklch, var(--primary) ${RIPPLE_SHADOW_COLOR_MIX_FACTOR * rippleIntensity}%, transparent)`
                     : undefined,
                 transition:
                   rippleIntensity > 0

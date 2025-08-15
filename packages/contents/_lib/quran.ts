@@ -5,6 +5,10 @@ import {
   type Verse,
 } from "@repo/contents/_types/quran";
 
+const SURAH_COUNT = 114;
+const VERSE_COUNT = 286;
+const JUZ_COUNT = 30;
+
 /**
  * Get a surah by its id, id is 1-114
  * @param id - The id of the surah
@@ -12,7 +16,7 @@ import {
  */
 export function getSurah(id: number): Surah | null {
   // validate input
-  if (id < 1 || id > 114) {
+  if (id < 1 || id > SURAH_COUNT) {
     return null;
   }
 
@@ -51,7 +55,7 @@ export function getAllSurah(): Omit<Surah, "verses">[] {
  */
 export function getVersesByJuz(juz: number): Verse[] {
   // juz is 1-30, validate input
-  if (juz < 1 || juz > 30) {
+  if (juz < 1 || juz > JUZ_COUNT) {
     return [];
   }
 
@@ -75,11 +79,11 @@ export function getVerseBySurah({
   verse: number;
 }): Verse | null {
   // validate input
-  if (surah < 1 || surah > 114) {
+  if (surah < 1 || surah > SURAH_COUNT) {
     return null;
   }
 
-  if (verse < 1 || verse > 286) {
+  if (verse < 1 || verse > VERSE_COUNT) {
     return null;
   }
 

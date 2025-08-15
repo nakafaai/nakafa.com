@@ -11,6 +11,8 @@ import {
 } from "../schema/tools";
 import { buildContentSlug, cleanSlug } from "./utils";
 
+const QURAN_SLUG_PARTS_COUNT = 3;
+
 const getContentsTool = tool({
   description:
     "Retrieves a list of available educational content, such as articles or subjects. Results can be filtered by language, subject, grade, or category to narrow down the search.",
@@ -59,7 +61,7 @@ const getContentTool = tool({
     if (slug.startsWith("/quran")) {
       const slugParts = slug.split("/");
 
-      if (slugParts.length !== 3) {
+      if (slugParts.length !== QURAN_SLUG_PARTS_COUNT) {
         return {
           url: url.toString(),
           content:

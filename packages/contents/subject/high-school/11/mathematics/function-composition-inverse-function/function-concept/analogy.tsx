@@ -25,6 +25,8 @@ import {
 } from "react-aria-components";
 import { InlineMath } from "react-katex";
 
+const DEFAULT_INPUT = 5;
+
 type Props = {
   title: string;
   description: string;
@@ -43,7 +45,7 @@ export function FunctionAnalogy({ title, description }: Props) {
 }
 
 function Machine() {
-  const [input, setInput] = useState<number>(5);
+  const [input, setInput] = useState<number>(DEFAULT_INPUT);
 
   const output = useMemo(() => {
     // y = 2x + 1

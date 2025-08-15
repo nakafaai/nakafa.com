@@ -30,8 +30,14 @@ import {
   useState,
 } from "react";
 
+const SECONDS_PER_MINUTE = 60;
+const MINUTES_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
+const DAYS_PER_WEEK = 7;
+
 export const SIDEBAR_COOKIE_NAME = "sidebar_state";
-export const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+export const SIDEBAR_COOKIE_MAX_AGE =
+  SECONDS_PER_MINUTE * MINUTES_PER_HOUR * HOURS_PER_DAY * DAYS_PER_WEEK;
 export const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 export const SIDEBAR_DESKTOP = 1024;
 
@@ -611,8 +617,6 @@ function SidebarMenuSkeleton({
   index?: number;
 }) {
   const widthClasses = useMemo(() => {
-    const widthIndex = index % 5;
-
     const widthOptions = [
       "max-w-[50%]",
       "max-w-[60%]",
@@ -620,6 +624,7 @@ function SidebarMenuSkeleton({
       "max-w-[80%]",
       "max-w-[90%]",
     ];
+    const widthIndex = index % widthOptions.length;
 
     return widthOptions[widthIndex];
   }, [index]);

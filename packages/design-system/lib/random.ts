@@ -1,3 +1,8 @@
+const MAX_SEED = 2_147_483_647;
+const MIN_SEED = 0;
+const SEED_INCREMENT = 2_147_483_646;
+const SEED_MULTIPLIER = 16_807;
+
 /**
  * Deterministic Pseudo-Random Number Generator (PRNG) using Linear Congruential Generator
  *
@@ -11,9 +16,9 @@ export class SeededRandom {
   private seed: number;
 
   constructor(seed: number) {
-    this.seed = seed % 2_147_483_647; // Ensure seed is within valid range
-    if (this.seed <= 0) {
-      this.seed += 2_147_483_646;
+    this.seed = seed % MAX_SEED; // Ensure seed is within valid range
+    if (this.seed <= MIN_SEED) {
+      this.seed += SEED_INCREMENT;
     }
   }
 
@@ -22,8 +27,8 @@ export class SeededRandom {
    * @returns A pseudo-random number between 0 and 1
    */
   next(): number {
-    this.seed = (this.seed * 16_807) % 2_147_483_647;
-    return (this.seed - 1) / 2_147_483_646;
+    this.seed = (this.seed * SEED_MULTIPLIER) % MAX_SEED;
+    return (this.seed - 1) / SEED_INCREMENT;
   }
 
   /**
@@ -100,7 +105,7 @@ export function createSeed(...inputs: (string | number)[]): number {
       );
     }
   }
-  return Math.abs(seed) % 2_147_483_647;
+  return Math.abs(seed) % MAX_SEED;
 }
 
 /**

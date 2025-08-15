@@ -20,6 +20,16 @@ import {
   useState,
 } from "react";
 
+const MAX_BACTERIA_COUNT = 100;
+const SPEED_INTERVAL = 1000;
+const STAGGER_DELAY = 0.01;
+const SCALE_INCREASE = 1.1;
+const SPEED_VALUES_DIFFERENCE = 0.25;
+const SPEED_VALUES = Array.from(
+  { length: 5 },
+  (_, i) => SPEED_VALUES_DIFFERENCE * (i + 1)
+);
+
 type FormulaType = "geometric" | "exponential" | "custom";
 
 type BacterialGrowthProps = {
@@ -129,7 +139,7 @@ export function BacterialGrowth({
   const bacteria = useMemo(
     () =>
       Array.from(
-        { length: Math.min(Math.round(bacteriaCount), 100) },
+        { length: Math.min(Math.round(bacteriaCount), MAX_BACTERIA_COUNT) },
         (_, i) => i
       ),
     [bacteriaCount]
@@ -137,7 +147,7 @@ export function BacterialGrowth({
 
   // Calculate how many bacteria to actually show (cap at 100 for performance)
   const displayCount = useMemo(
-    () => Math.min(Math.round(bacteriaCount), 100),
+    () => Math.min(Math.round(bacteriaCount), MAX_BACTERIA_COUNT),
     [bacteriaCount]
   );
 
@@ -164,7 +174,7 @@ export function BacterialGrowth({
           }
           return prev;
         });
-      }, 1000 / speed);
+      }, SPEED_INTERVAL / speed);
     }
 
     return () => clearInterval(interval);
@@ -243,12 +253,12 @@ export function BacterialGrowth({
                       type: "spring",
                       stiffness: 500,
                       damping: 30,
-                      delay: id * 0.01, // Stagger effect
+                      delay: id * STAGGER_DELAY, // Stagger effect
                     }}
                   >
                     <motion.div
                       animate={{
-                        scale: [1, 1.1, 1],
+                        scale: [1, SCALE_INCREASE, 1],
                       }}
                       className="aspect-square h-full max-h-[20px] w-full max-w-[20px] rounded-full bg-cyan-300 transition-colors hover:bg-cyan-400 sm:max-h-[32px] sm:max-w-[32px] dark:bg-cyan-500"
                       transition={{
@@ -257,7 +267,7 @@ export function BacterialGrowth({
                         repeatType: "reverse",
                       }}
                       whileHover={{
-                        scale: 1.2,
+                        scale: SCALE_INCREASE,
                       }}
                     />
                   </motion.div>
@@ -296,7 +306,7 @@ export function BacterialGrowth({
           </div>
 
           <div className="flex flex-wrap justify-center gap-2">
-            {[0.25, 0.5, 1, 1.5, 2].map((speedValue) => (
+            {SPEED_VALUES.map((speedValue) => (
               <Button
                 key={speedValue}
                 onClick={() => setSpeed(speedValue)}

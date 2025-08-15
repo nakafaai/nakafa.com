@@ -8,6 +8,17 @@ import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
+const MIN_PARTICLE_SIZE = 1;
+const MAX_PARTICLE_SIZE = 3;
+const MIN_TARGET_ALPHA = 0.1;
+const MAX_TARGET_ALPHA = 0.7;
+const MIN_PARTICLE_SPEED = -0.1;
+const MAX_PARTICLE_SPEED = 0.1;
+const MIN_MAGNETISM = 0.1;
+const MAX_MAGNETISM = 4.1;
+const REMAP_EDGE_END = 20;
+const ALPHA_FADE_IN_SPEED = 0.02;
+
 type Circle = {
   x: number;
   y: number;
@@ -26,6 +37,14 @@ type ParticlesProps = {
   quantity?: number;
   staticity?: number;
   ease?: number;
+};
+
+type RemapValueProps = {
+  value: number;
+  start1: number;
+  end1: number;
+  start2: number;
+  end2: number;
 };
 
 function ParticlesComponent({
@@ -98,12 +117,14 @@ function ParticlesComponent({
     const y = Math.floor(rng.next() * canvasSize.current.h);
     const translateX = 0;
     const translateY = 0;
-    const size = rng.nextInt(1, 3);
+    const size = rng.nextInt(MIN_PARTICLE_SIZE, MAX_PARTICLE_SIZE);
     const alpha = 0;
-    const targetAlpha = Number.parseFloat(rng.nextFloat(0.1, 0.7).toFixed(1));
-    const dx = rng.nextFloat(-0.1, 0.1);
-    const dy = rng.nextFloat(-0.1, 0.1);
-    const magnetism = rng.nextFloat(0.1, 4.1);
+    const targetAlpha = Number.parseFloat(
+      rng.nextFloat(MIN_TARGET_ALPHA, MAX_TARGET_ALPHA).toFixed(1)
+    );
+    const dx = rng.nextFloat(MIN_PARTICLE_SPEED, MAX_PARTICLE_SPEED);
+    const dy = rng.nextFloat(MIN_PARTICLE_SPEED, MAX_PARTICLE_SPEED);
+    const magnetism = rng.nextFloat(MIN_MAGNETISM, MAX_MAGNETISM);
     return {
       x,
       y,
@@ -197,13 +218,7 @@ function ParticlesComponent({
   }, [onMouseMove]);
 
   const remapValue = useCallback(
-    (
-      value: number,
-      start1: number,
-      end1: number,
-      start2: number,
-      end2: number
-    ): number => {
+    ({ value, start1, end1, start2, end2 }: RemapValueProps): number => {
       const remapped =
         ((value - start1) * (end2 - start2)) / (end1 - start1) + start2;
       return remapped > 0 ? remapped : 0;
@@ -223,10 +238,16 @@ function ParticlesComponent({
       ];
       const closestEdge = edge.reduce((a, b) => Math.min(a, b));
       const remapClosestEdge = Number.parseFloat(
-        remapValue(closestEdge, 0, 20, 0, 1).toFixed(2)
+        remapValue({
+          value: closestEdge,
+          start1: 0,
+          end1: REMAP_EDGE_END,
+          start2: 0,
+          end2: 1,
+        }).toFixed(2)
       );
       if (remapClosestEdge > 1) {
-        circle.alpha += 0.02;
+        circle.alpha += ALPHA_FADE_IN_SPEED;
         if (circle.alpha > circle.targetAlpha) {
           circle.alpha = circle.targetAlpha;
         }
@@ -239,8 +260,8 @@ function ParticlesComponent({
       // Only apply mouse-based movement on non-mobile devices
       if (isMobile) {
         // On mobile, gradually reset any existing translation to zero
-        circle.translateX += (0 - circle.translateX) / ease;
-        circle.translateY += (0 - circle.translateY) / ease;
+        circle.translateX += -circle.translateX / ease;
+        circle.translateY += -circle.translateY / ease;
       } else {
         circle.translateX +=
           (mouse.current.x / (staticity / circle.magnetism) -

@@ -19,6 +19,9 @@ import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
+const THRESHOLD_VALUE = 1000;
+const THRESHOLD_VALUE_DECIMAL_PLACES = 0;
+
 type Props = {
   p: number;
   a: number;
@@ -75,7 +78,9 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
                 style: { textAnchor: "middle" },
               }}
               tickFormatter={(value) =>
-                value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value
+                value >= THRESHOLD_VALUE
+                  ? `${(value / THRESHOLD_VALUE).toFixed(THRESHOLD_VALUE_DECIMAL_PLACES)}k`
+                  : value
               }
               tickMargin={8}
             />

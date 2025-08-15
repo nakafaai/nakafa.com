@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+const SCROLL_BOTTOM_TOLERANCE = 6;
+
 /**
  * Find the active heading of page
  *
@@ -43,7 +45,10 @@ export function useAnchorObserver(watch: string[], single: boolean): string[] {
 
       if (top <= 0 && single) {
         setActiveAnchor(watch.slice(0, 1));
-      } else if (top + element.clientHeight >= element.scrollHeight - 6) {
+      } else if (
+        top + element.clientHeight >=
+        element.scrollHeight - SCROLL_BOTTOM_TOLERANCE
+      ) {
         setActiveAnchor((active) => {
           return active.length > 0 && !single
             ? watch.slice(watch.indexOf(active[0]))

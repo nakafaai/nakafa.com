@@ -1,6 +1,8 @@
 import type { ComponentProps } from "react";
 import { ORIGIN_COLOR } from "./_data";
 
+const SPHERE_GEOMETRY_SEGMENTS = 16;
+
 export function Origin({
   size = 0.2,
   color = ORIGIN_COLOR.LIGHT,
@@ -11,7 +13,9 @@ export function Origin({
 } & ComponentProps<"mesh">) {
   return (
     <mesh {...props}>
-      <sphereGeometry args={[size, 16, 16]} />
+      <sphereGeometry
+        args={[size, SPHERE_GEOMETRY_SEGMENTS, SPHERE_GEOMETRY_SEGMENTS]}
+      />
       <meshBasicMaterial color={color} />
     </mesh>
   );

@@ -1,6 +1,8 @@
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 
+const HEADING_LEVELS = 6;
+
 /**
  * Parses the headings from the content.
  * @param content - Markdown content to parse.
@@ -23,7 +25,7 @@ export function getHeadings(content: string): ParsedHeading[] {
     if (markdownMatches && markdownMatches.length > 0) {
       const headings: ParsedHeading[] = [];
       // Keep track of the last heading seen at each level
-      const lastHeadingAtLevel: ParsedHeading[] = new Array(7); // 0-6 levels (0 unused)
+      const lastHeadingAtLevel: ParsedHeading[] = new Array(HEADING_LEVELS + 1); // 0-6 levels (0 unused)
 
       for (const match of markdownMatches) {
         const level = match[1].length; // Number of # symbols

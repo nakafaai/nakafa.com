@@ -9,6 +9,10 @@ import {
 } from "@repo/design-system/components/ui/card";
 import type { ComponentProps, ReactNode } from "react";
 
+const DEFAULT_CAMERA_POSITION_X = 10;
+const DEFAULT_CAMERA_POSITION_Y = 6;
+const DEFAULT_CAMERA_POSITION_Z = 10;
+
 type Props = {
   title: ReactNode;
   description: ReactNode;
@@ -21,7 +25,11 @@ export function LineEquation({
   title,
   description,
   data,
-  cameraPosition = [10, 6, 10],
+  cameraPosition = [
+    DEFAULT_CAMERA_POSITION_X,
+    DEFAULT_CAMERA_POSITION_Y,
+    DEFAULT_CAMERA_POSITION_Z,
+  ],
   showZAxis = true,
 }: Props) {
   return (

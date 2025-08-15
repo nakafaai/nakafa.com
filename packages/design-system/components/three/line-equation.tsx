@@ -16,6 +16,13 @@ import {
 } from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
 
+const SPHERE_GEOMETRY_RADIUS = 0.1;
+const SPHERE_GEOMETRY_SEGMENTS = 8;
+const CONE_GEOMETRY_SEGMENTS = 16;
+const CONE_GEOMETRY_HEIGHT_SEGMENTS = 1;
+const DEFAULT_ARROW_SIZE = 0.5;
+const DEFAULT_FONT_SIZE = 0.5;
+
 // Shared geometry cache
 let sharedSphereGeometry: SphereGeometry | null = null;
 const sharedConeGeometries = new Map<string, ConeGeometry>();
@@ -24,7 +31,11 @@ const sharedMaterials = new Map<string, MeshBasicMaterial>();
 function getSharedSphereGeometry(): SphereGeometry {
   if (!sharedSphereGeometry) {
     // Reduced segments for better performance
-    sharedSphereGeometry = new SphereGeometry(0.1, 8, 8);
+    sharedSphereGeometry = new SphereGeometry(
+      SPHERE_GEOMETRY_RADIUS,
+      SPHERE_GEOMETRY_SEGMENTS,
+      SPHERE_GEOMETRY_SEGMENTS
+    );
   }
   return sharedSphereGeometry;
 }
@@ -33,7 +44,15 @@ function getSharedConeGeometry(size: number): ConeGeometry {
   const key = `cone-${size}`;
   if (!sharedConeGeometries.has(key)) {
     // Reduced segments for better performance
-    sharedConeGeometries.set(key, new ConeGeometry(size / 2, size, 16, 1));
+    sharedConeGeometries.set(
+      key,
+      new ConeGeometry(
+        size / 2,
+        size,
+        CONE_GEOMETRY_SEGMENTS,
+        CONE_GEOMETRY_HEIGHT_SEGMENTS
+      )
+    );
   }
   const geometry = sharedConeGeometries.get(key);
   if (!geometry) {
@@ -127,7 +146,7 @@ export function LineEquation({
   );
 
   // Define cone size (default to 0.5 if not provided in cone prop)
-  const arrowSize = cone?.size ?? 0.5;
+  const arrowSize = cone?.size ?? DEFAULT_ARROW_SIZE;
 
   // Generate smooth curve points if smooth is true
   const linePoints = useMemo(() => {
@@ -283,7 +302,7 @@ export function LineEquation({
           key: `label-${idx}`,
           position: pos,
           color: label.color ?? color,
-          fontSize: label.fontSize ?? 0.5,
+          fontSize: label.fontSize ?? DEFAULT_FONT_SIZE,
           text: label.text,
         };
       })

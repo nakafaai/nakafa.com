@@ -20,6 +20,12 @@ import { CameraControls } from "./camera-controls";
 import { ThreeCanvas } from "./canvas";
 import { Origin } from "./origin";
 
+const GIZMO_MARGIN = 56;
+const SCENE_READY_DELAY = 100;
+const CAMERA_POSITION_X = 12;
+const CAMERA_POSITION_Y = 8;
+const CAMERA_POSITION_Z = 12;
+
 type Props = {
   /** Show the grid planes */
   showGrid?: boolean;
@@ -65,7 +71,7 @@ export function CoordinateSystem({
   gridDivisions = 15,
   size = 15,
   backgroundColor = "transparent",
-  cameraPosition = [12, 8, 12],
+  cameraPosition = [CAMERA_POSITION_X, CAMERA_POSITION_Y, CAMERA_POSITION_Z],
   font = "mono",
   children,
   className,
@@ -126,7 +132,9 @@ export function CoordinateSystem({
       onPointerUp={handlePointerUp}
     >
       <ThreeCanvas
-        onCreated={() => setTimeout(() => setSceneReady(true), 100)}
+        onCreated={() =>
+          setTimeout(() => setSceneReady(true), SCENE_READY_DELAY)
+        }
         style={{ background: backgroundColor }}
       >
         <Suspense fallback={null}>
@@ -187,7 +195,7 @@ export function CoordinateSystem({
           {/* Orientation Helper */}
           <GizmoHelper
             alignment="bottom-right"
-            margin={[56, 56]}
+            margin={[GIZMO_MARGIN, GIZMO_MARGIN]}
             visible={showGizmo}
           >
             <GizmoViewport

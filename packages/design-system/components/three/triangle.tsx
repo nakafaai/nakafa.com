@@ -12,6 +12,33 @@ import { FONT_PATH, MONO_FONT_PATH, ORIGIN_COLOR } from "./_data";
 const SPHERE_SEGMENTS = 8; // Reduced from 16
 const ARC_SEGMENTS = 20; // Reduced from 30
 
+// Angle and Quadrant constants
+const DEGREES_IN_HALF_CIRCLE = 180;
+const DEGREES_TO_RADIANS = Math.PI / DEGREES_IN_HALF_CIRCLE;
+const DEGREES_IN_QUADRANT = 90;
+const QUADRANTS_IN_CIRCLE = 4;
+
+// Sizing and scaling constants
+const BASE_FONT_SIZE = 0.12;
+const FONT_SIZE_SCALE_FACTOR = 0.12;
+const BASE_VERTEX_SIZE = 0.05;
+const VERTEX_SIZE_SCALE_FACTOR = 0.05;
+const ARC_RADIUS_SCALE_FACTOR = 0.2;
+const ANGLE_LABEL_DISTANCE_SCALE_FACTOR = 0.3;
+const MIN_SCALE_FACTOR = 1;
+
+// Label offset multipliers
+const LABEL_OFFSET_ADJACENT_Y = 1.5;
+const LABEL_OFFSET_OPPOSITE_X = 4;
+const LABEL_OFFSET_HYPOTENUSE_Y = 2;
+const ANGLE_LABEL_POSITION_ADJUSTMENT = 0.5;
+
+// Quadrant identifiers
+const Q1 = 1;
+const Q2 = 2;
+const Q3 = 3;
+const Q4 = 4;
+
 type Props = {
   /** Angle in degrees */
   angle?: number;
@@ -70,10 +97,11 @@ export function Triangle({
   const groupRef = useRef<Group>(null);
 
   // Convert angle to radians and calculate the points
-  const angleInRadians = (angle * Math.PI) / 180;
+  const angleInRadians = angle * DEGREES_TO_RADIANS;
 
   // Identify which quadrant the angle is in
-  const quadrant = (Math.floor(angle / 90) % 4) + 1;
+  const quadrant =
+    (Math.floor(angle / DEGREES_IN_QUADRANT) % QUADRANTS_IN_CIRCLE) + Q1;
 
   // Create a right triangle with sides of variable length based on the angle
   const hypotenuse = size; // Scale the hypotenuse by the size parameter
@@ -84,18 +112,22 @@ export function Triangle({
   const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
 
   // Scale the font size based on the triangle size
-  const fontSize = 0.12 * Math.max(1, size * 0.12);
+  const fontSize =
+    BASE_FONT_SIZE * Math.max(MIN_SCALE_FACTOR, size * FONT_SIZE_SCALE_FACTOR);
 
   // Colors based on theme
   const baseColor =
     resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
 
   // Scale the vertex points based on triangle size
-  const vertexSize = 0.05 * Math.max(1, size * 0.05);
+  const vertexSize =
+    BASE_VERTEX_SIZE *
+    Math.max(MIN_SCALE_FACTOR, size * VERTEX_SIZE_SCALE_FACTOR);
 
   // Scale the angle arc radius based on triangle size - make it more proportional
-  const arcRadius = 0.2 * Math.sqrt(size);
-  const angleLabelDistance = 0.3 * Math.sqrt(size);
+  const arcRadius = ARC_RADIUS_SCALE_FACTOR * Math.sqrt(size);
+  const angleLabelDistance =
+    ANGLE_LABEL_DISTANCE_SCALE_FACTOR * Math.sqrt(size);
 
   // Memoize triangle side segments
   const triangleSideLines = useMemo(() => {
@@ -148,59 +180,59 @@ export function Triangle({
 
     // Combined switch statement for all label positions based on quadrant
     switch (quadrant) {
-      case 1: {
+      case Q1: {
         // 0-90 degrees
         adjacentLabelPos
           .copy(adjacentMidpoint)
-          .add(new Vector3(0, -fontSize * 1.5, 0));
+          .add(new Vector3(0, -fontSize * LABEL_OFFSET_ADJACENT_Y, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new Vector3(fontSize * 4, 0, 0));
+          .add(new Vector3(fontSize * LABEL_OFFSET_OPPOSITE_X, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
-          .add(new Vector3(0, fontSize * 2, 0));
+          .add(new Vector3(0, fontSize * LABEL_OFFSET_HYPOTENUSE_Y, 0));
         break;
       }
 
-      case 2: {
+      case Q2: {
         // 90-180 degrees
         adjacentLabelPos
           .copy(adjacentMidpoint)
-          .add(new Vector3(0, -fontSize * 1.5, 0));
+          .add(new Vector3(0, -fontSize * LABEL_OFFSET_ADJACENT_Y, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new Vector3(-fontSize * 4, 0, 0));
+          .add(new Vector3(-fontSize * LABEL_OFFSET_OPPOSITE_X, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
-          .add(new Vector3(0, fontSize * 2, 0));
+          .add(new Vector3(0, fontSize * LABEL_OFFSET_HYPOTENUSE_Y, 0));
         break;
       }
 
-      case 3: {
+      case Q3: {
         // 180-270 degrees
         adjacentLabelPos
           .copy(adjacentMidpoint)
-          .add(new Vector3(0, fontSize * 1.5, 0));
+          .add(new Vector3(0, fontSize * LABEL_OFFSET_ADJACENT_Y, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new Vector3(-fontSize * 4, 0, 0));
+          .add(new Vector3(-fontSize * LABEL_OFFSET_OPPOSITE_X, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
-          .add(new Vector3(0, -fontSize * 2, 0));
+          .add(new Vector3(0, -fontSize * LABEL_OFFSET_HYPOTENUSE_Y, 0));
         break;
       }
 
-      case 4: {
+      case Q4: {
         // 270-360 degrees
         adjacentLabelPos
           .copy(adjacentMidpoint)
-          .add(new Vector3(0, fontSize * 1.5, 0));
+          .add(new Vector3(0, fontSize * LABEL_OFFSET_ADJACENT_Y, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new Vector3(fontSize * 4, 0, 0));
+          .add(new Vector3(fontSize * LABEL_OFFSET_OPPOSITE_X, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
-          .add(new Vector3(0, -fontSize * 2, 0));
+          .add(new Vector3(0, -fontSize * LABEL_OFFSET_HYPOTENUSE_Y, 0));
         break;
       }
 
@@ -214,10 +246,10 @@ export function Triangle({
   // Calculate hypotenuse rotation once
   const hypotenuseLabelRotation = useMemo(() => {
     switch (quadrant) {
-      case 1:
+      case Q1:
         return Math.atan2(opposite, adjacent);
-      case 2:
-      case 3:
+      case Q2:
+      case Q3:
         return Math.atan2(opposite, adjacent) + Math.PI;
       default:
         return Math.atan2(opposite, adjacent);
@@ -269,7 +301,9 @@ export function Triangle({
         frustumCulled
         position={[
           Math.cos(angleInRadians / 2) * angleLabelDistance +
-            (angle > 180 ? -1 : 1) * fontSize * 0.5,
+            (angle > DEGREES_IN_HALF_CIRCLE ? -1 : 1) *
+              fontSize *
+              ANGLE_LABEL_POSITION_ADJUSTMENT,
           Math.sin(angleInRadians / 2) * angleLabelDistance,
           0,
         ]}

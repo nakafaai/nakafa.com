@@ -34,6 +34,22 @@ type Props = {
 const UNIT_CIRCLE_SEGMENTS = 48; // Reduced from 64
 const UNIT_ARC_SEGMENTS = 16; // Reduced from 24
 const SPHERE_SEGMENTS = 8; // Low poly sphere
+const SPHERE_RADIUS = 0.05;
+const ARC_RADIUS = 0.3;
+const LABEL_FONT_SIZE = 0.12;
+const EPSILON = 1e-10;
+
+// Label positioning constants
+const ANGLE_LABEL_X_FACTOR = 0.5;
+const ANGLE_LABEL_Y_FACTOR = 0.4;
+const COS_LABEL_Y_OFFSET = -0.2;
+const SIN_LABEL_X_OFFSET = 0.2;
+const TAN_LABEL_POSITION = 1.1;
+const THREE = 3;
+const SQRT_3 = Math.sqrt(THREE);
+const TWO = 2;
+const FOUR = 4;
+const ONE = 1;
 
 // Pre-calculate static circle points once
 const STATIC_CIRCLE_POINTS: Vector3[] = (() => {
@@ -52,7 +68,7 @@ const sharedMaterials: Map<string, MeshBasicMaterial> = new Map();
 function getSharedSphereGeometry() {
   if (!sharedSphereGeometry) {
     sharedSphereGeometry = new SphereGeometry(
-      0.05,
+      SPHERE_RADIUS,
       SPHERE_SEGMENTS,
       SPHERE_SEGMENTS
     );
@@ -96,7 +112,9 @@ export function UnitCircle({
     const pts: Vector3[] = [];
     for (let i = 0; i <= UNIT_ARC_SEGMENTS; i++) {
       const a = (i / UNIT_ARC_SEGMENTS) * angleInRadians;
-      pts.push(new Vector3(Math.cos(a) * 0.3, Math.sin(a) * 0.3, 0));
+      pts.push(
+        new Vector3(Math.cos(a) * ARC_RADIUS, Math.sin(a) * ARC_RADIUS, 0)
+      );
     }
     return pts;
   }, [angleInRadians]);
@@ -107,7 +125,7 @@ export function UnitCircle({
       if (!Number.isFinite(value)) {
         return t("undefined");
       }
-      if (Math.abs(value) < 1e-10) {
+      if (Math.abs(value) < EPSILON) {
         return "0";
       }
 
@@ -120,19 +138,19 @@ export function UnitCircle({
 
       // Common trig values lookup table for performance
       const commonValues = [
-        { value: 0.5, display: "1/2" },
+        { value: ONE / TWO, display: "1/2" },
         { value: Math.SQRT1_2, display: "√2/2" },
-        { value: Math.sqrt(3) / 2, display: "√3/2" },
-        { value: 1, display: "1" },
-        { value: Math.sqrt(3), display: "√3" },
-        { value: Math.sqrt(3) / 3, display: "√3/3" },
+        { value: SQRT_3 / TWO, display: "√3/2" },
+        { value: ONE, display: "1" },
+        { value: SQRT_3, display: "√3" },
+        { value: SQRT_3 / THREE, display: "√3/3" },
         { value: Math.SQRT2, display: "√2" },
-        { value: 0.25, display: "1/4" },
-        { value: 0.75, display: "3/4" },
+        { value: ONE / FOUR, display: "1/4" },
+        { value: THREE / FOUR, display: "3/4" },
       ];
 
       for (const { value: v, display } of commonValues) {
-        if (Math.abs(absValue - v) < 1e-10) {
+        if (Math.abs(absValue - v) < EPSILON) {
           return `${sign}${display}`;
         }
       }
@@ -209,11 +227,11 @@ export function UnitCircle({
           anchorY="middle"
           color={COLORS.VIOLET}
           font={fontPath}
-          fontSize={0.12}
+          fontSize={LABEL_FONT_SIZE}
           frustumCulled
           position={[
-            Math.cos(angleInRadians / 2) * 0.5,
-            Math.sin(angleInRadians / 2) * 0.4,
+            Math.cos(angleInRadians / 2) * ANGLE_LABEL_X_FACTOR,
+            Math.sin(angleInRadians / 2) * ANGLE_LABEL_Y_FACTOR,
             0,
           ]}
           visible={showLabels}
@@ -260,9 +278,9 @@ export function UnitCircle({
               anchorX="center"
               color={COLORS.CYAN}
               font={fontPath}
-              fontSize={0.12}
+              fontSize={LABEL_FONT_SIZE}
               frustumCulled
-              position={[cos / 2, -0.2, 0]}
+              position={[cos / 2, COS_LABEL_Y_OFFSET, 0]}
             >
               {labels.cos}
             </Text>
@@ -271,18 +289,18 @@ export function UnitCircle({
               anchorY="middle"
               color={COLORS.ORANGE}
               font={fontPath}
-              fontSize={0.12}
+              fontSize={LABEL_FONT_SIZE}
               frustumCulled
-              position={[cos + 0.2, sin / 2, 0]}
+              position={[cos + SIN_LABEL_X_OFFSET, sin / 2, 0]}
             >
               {labels.sin}
             </Text>
             <Text
               color={COLORS.ROSE}
               font={fontPath}
-              fontSize={0.12}
+              fontSize={LABEL_FONT_SIZE}
               frustumCulled
-              position={[1.1, 1.1, 0]}
+              position={[TAN_LABEL_POSITION, TAN_LABEL_POSITION, 0]}
             >
               {labels.tan}
             </Text>

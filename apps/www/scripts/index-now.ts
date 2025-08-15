@@ -10,6 +10,12 @@ import {
 } from "../app/sitemap";
 import { logger } from "./utils";
 
+const BATCH_SIZE = 100;
+const MAX_RETRIES = 2;
+const RATE_LIMIT_DELAY = 1000;
+
+const HTTP_STATUS_CODE_OK = 200;
+
 // References:
 // - https://www.bing.com/indexnow/getstarted
 // - https://www.bing.com/webmasters/url-submission-api#APIs
@@ -164,7 +170,7 @@ async function submitBatchToIndexNow(
 
   const status = response.status;
 
-  if (status !== 200) {
+  if (status !== HTTP_STATUS_CODE_OK) {
     logger.error(`Batch ${batchCount} failed with status: ${status}`);
     return [];
   }
@@ -183,7 +189,7 @@ async function submitUrlsToIndexNow(
   }
 
   // Split URLs into batches of 100
-  const batchSize = 100;
+  const batchSize = BATCH_SIZE;
   const batches: string[][] = [];
   for (let i = 0; i < urls.length; i += batchSize) {
     batches.push(urls.slice(i, i + batchSize));
@@ -209,7 +215,7 @@ async function submitUrlsToIndexNow(
 
       // Avoid rate limiting
       if (index < totalBatches - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY));
       }
     } catch (error) {
       logger.error(`Error submitting batch ${index + 1}: ${error}`);
@@ -256,7 +262,7 @@ async function processBingResponse(
 
   logger.info(`Bing API response status: ${status}`);
 
-  if (status !== 200) {
+  if (status !== HTTP_STATUS_CODE_OK) {
     logger.error(`Error submitting URLs to Bing. Status: ${status}`);
     logger.error(`Response: ${responseText}`);
 
@@ -338,7 +344,7 @@ async function submitUrlsToBing(
   }
 
   // Set a safer default batch size to respect Bing's quota
-  let batchSize = 100; // Reduced from 500 to 100 to stay within quota
+  let batchSize = BATCH_SIZE; // Reduced from 500 to 100 to stay within quota
 
   logger.info("Starting Bing URL Submission API process...");
   logger.stats("URLs to submit", urls.length);
@@ -346,7 +352,6 @@ async function submitUrlsToBing(
 
   let submitted = 0;
   let retryCount = 0;
-  const MAX_RETRIES = 2;
   const successfullySubmitted: string[] = [];
 
   // Process URLs in batches using async iteration
@@ -401,7 +406,7 @@ async function submitUrlsToBing(
       // Avoid rate limiting with a delay between batches
       if (submitted < urls.length) {
         logger.progress(submitted, urls.length, "Submission progress");
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY));
       }
       return true;
     } catch (error) {

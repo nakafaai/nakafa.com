@@ -18,6 +18,12 @@ import {
 } from "@repo/design-system/components/ui/chart";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
+const EXPONENTIAL_BASE = 3;
+const LINEAR_SCALING_FACTOR = 3;
+const LOGARITHMIC_SCALING_FACTOR = 20;
+const THRESHOLD_VALUE = 1000;
+const THRESHOLD_VALUE_DECIMAL_PLACES = 0;
+
 type Props = {
   labels: {
     title?: string;
@@ -35,9 +41,9 @@ const data = Array.from({ length: 5 }, (_, i) => {
   const phase = i + 1;
   return {
     phase,
-    exponential: 3 ** phase, // Exponential: 3^phase
-    linear: 3 * phase, // Linear: 3*phase
-    logarithmic: Math.log(phase + 1) * 20, // Logarithmic: log(phase+1) * scaling factor
+    exponential: EXPONENTIAL_BASE ** phase, // Exponential: 3^phase
+    linear: LINEAR_SCALING_FACTOR * phase, // Linear: 3*phase
+    logarithmic: Math.log(phase + 1) * LOGARITHMIC_SCALING_FACTOR, // Logarithmic: log(phase+1) * scaling factor
   };
 });
 
@@ -94,7 +100,9 @@ export function VirusChart({
                 style: { textAnchor: "middle" },
               }}
               tickFormatter={(value) =>
-                value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value
+                value >= THRESHOLD_VALUE
+                  ? `${(value / THRESHOLD_VALUE).toFixed(THRESHOLD_VALUE_DECIMAL_PLACES)}k`
+                  : value
               }
               tickMargin={8}
             />

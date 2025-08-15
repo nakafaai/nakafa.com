@@ -26,6 +26,8 @@ import {
   YAxis,
 } from "recharts";
 
+const TICK_LABEL_CHAR_LIMIT = 3;
+
 type Props = {
   title: string;
   description: string;
@@ -77,7 +79,7 @@ export function CabinetChart({ title, description, footnote }: Props) {
               axisLine={false}
               dataKey="name"
               hide
-              tickFormatter={(value) => value.slice(0, 3)}
+              tickFormatter={(value) => value.slice(0, TICK_LABEL_CHAR_LIMIT)}
               tickLine={false}
               tickMargin={10}
               type="category"

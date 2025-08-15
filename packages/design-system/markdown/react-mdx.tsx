@@ -56,16 +56,11 @@ export const reactMdxComponents: Options["components"] = {
     <Paragraph className="text-inherit" {...props} />
   ),
   ol: (props: ListProps) => (
-    <ol className="my-4 list-decimal pl-5 first:mt-0 last:mb-0" {...props} />
+    <ol className="my-4 list-decimal pl-5" {...props} />
   ),
-  ul: (props: ListProps) => (
-    <ul className="my-4 list-disc pl-5 first:mt-0 last:mb-0" {...props} />
-  ),
+  ul: (props: ListProps) => <ul className="my-4 list-disc pl-5" {...props} />,
   li: (props: ListItemProps) => (
-    <li
-      className="my-4 text-pretty pl-1 leading-[1.75] first:mt-0 last:mb-0"
-      {...props}
-    />
+    <li className="my-4 text-pretty pl-1 leading-[1.75]" {...props} />
   ),
   em: (props: EmProps) => <em className="font-medium" {...props} />,
   strong: (props: StrongProps) => <strong className="font-medium" {...props} />,

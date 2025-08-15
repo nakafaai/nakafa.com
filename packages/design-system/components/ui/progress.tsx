@@ -4,6 +4,8 @@ import { cn } from "@repo/design-system/lib/utils";
 import { Progress as ProgressPrimitive } from "radix-ui";
 import type * as React from "react";
 
+const PROGRESS_INDICATOR_TRANSLATE_X_PERCENTAGE = 100;
+
 function Progress({
   className,
   value,
@@ -21,7 +23,11 @@ function Progress({
       <ProgressPrimitive.Indicator
         className="h-full w-full flex-1 bg-primary transition-all"
         data-slot="progress-indicator"
-        style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+        style={{
+          transform: `translateX(-${
+            PROGRESS_INDICATOR_TRANSLATE_X_PERCENTAGE - (value || 0)
+          }%)`,
+        }}
       />
     </ProgressPrimitive.Root>
   );

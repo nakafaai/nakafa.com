@@ -20,6 +20,8 @@ import { searchParsers } from "@/lib/nuqs/search";
 import { useSearchQuery } from "@/lib/react-query/use-search";
 import { getAnchorStyle } from "@/lib/utils/search";
 
+const DEBOUNCE_TIME = 300;
+
 export function SearchResults() {
   const t = useTranslations("Utils");
 
@@ -27,7 +29,7 @@ export function SearchResults() {
 
   const [{ q }] = useQueryStates(searchParsers);
 
-  const [debouncedQuery] = useDebouncedValue(q, 300);
+  const [debouncedQuery] = useDebouncedValue(q, DEBOUNCE_TIME);
 
   const {
     data: results = [],
@@ -37,10 +39,10 @@ export function SearchResults() {
     isPlaceholderData,
   } = useSearchQuery({
     query: debouncedQuery,
-    enabled: !!debouncedQuery,
+    enabled: Boolean(debouncedQuery),
   });
 
-  const hasError = isError || !!pagefindError;
+  const hasError = isError || Boolean(pagefindError);
   const displayError = pagefindError || (error ? getErrorMessage(error) : "");
   const queryLoading = isLoading && !hasError && !isPlaceholderData;
 

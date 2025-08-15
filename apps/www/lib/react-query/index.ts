@@ -4,11 +4,15 @@ import {
   QueryClient,
 } from "@tanstack/react-query";
 
+const STALE_TIME_SECONDS = 60;
+const MILLISECONDS_PER_SECOND = 1000;
+const STALE_TIME_MS = STALE_TIME_SECONDS * MILLISECONDS_PER_SECOND;
+
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000,
+        staleTime: STALE_TIME_MS,
       },
       dehydrate: {
         // include pending queries in dehydration

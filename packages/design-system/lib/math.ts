@@ -1,9 +1,13 @@
+const DEGREES_IN_HALF_CIRCLE = 180;
+const DEGREES_TO_RADIANS = Math.PI / DEGREES_IN_HALF_CIRCLE;
+const EPSILON = 1e-10;
+
 export function getRadians(angle: number) {
-  return angle * (Math.PI / 180);
+  return angle * DEGREES_TO_RADIANS;
 }
 
 export function getDegrees(angle: number) {
-  return angle * (180 / Math.PI);
+  return angle / DEGREES_TO_RADIANS;
 }
 
 export function getSin(angle: number) {
@@ -21,7 +25,7 @@ export function getCos(angle: number) {
  */
 export function getTan(angle: number) {
   // Check if cos is close to zero to handle tan(90°), tan(270°), etc.
-  return Math.abs(Math.cos(getRadians(angle))) < 1e-10
+  return Math.abs(Math.cos(getRadians(angle))) < EPSILON
     ? Number.POSITIVE_INFINITY
     : Math.tan(getRadians(angle));
 }
