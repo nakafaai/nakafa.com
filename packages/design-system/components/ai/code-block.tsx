@@ -38,7 +38,7 @@ export const CodeBlock = memo(
     <CodeBlockContext.Provider value={{ code }}>
       <div
         className={cn(
-          "relative grid w-full grid-cols-1 overflow-hidden rounded-md border bg-background text-foreground",
+          "relative grid w-full grid-cols-1 overflow-hidden rounded-md border bg-background text-foreground shadow-sm",
           className
         )}
         {...props}
