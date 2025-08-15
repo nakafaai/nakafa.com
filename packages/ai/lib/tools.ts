@@ -2,12 +2,12 @@ import { api } from "@repo/connection/routes";
 import { tool } from "ai";
 import * as math from "mathjs";
 import {
+  calculatorInputSchema,
+  calculatorOutputSchema,
   getContentInputSchema,
   getContentOutputSchema,
   getContentsInputSchema,
   getContentsOutputSchema,
-  mathEvalInputSchema,
-  mathEvalOutputSchema,
 } from "../schema/tools";
 import { buildContentSlug, cleanSlug } from "./utils";
 
@@ -107,11 +107,11 @@ const getContentTool = tool({
   },
 });
 
-const mathEvalTool = tool({
+const calculatorTool = tool({
   description:
     "Performs mathematical calculations by evaluating a given mathematical expression. It returns the result in various formats, including the simplified expression and its LaTeX representation.",
-  inputSchema: mathEvalInputSchema,
-  outputSchema: mathEvalOutputSchema,
+  inputSchema: calculatorInputSchema,
+  outputSchema: calculatorOutputSchema,
   execute: ({ expression }) => {
     const node = math.parse(expression);
     const original = {
@@ -153,5 +153,5 @@ const mathEvalTool = tool({
 export const tools = {
   getContent: getContentTool,
   getContents: getContentsTool,
-  mathEval: mathEvalTool,
+  calculator: calculatorTool,
 };

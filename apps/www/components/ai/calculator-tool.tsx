@@ -1,6 +1,6 @@
 "use client";
 
-import type { MathEvalOutput } from "@repo/ai/schema/tools";
+import type { CalculatorOutput } from "@repo/ai/schema/tools";
 import {
   Tool,
   ToolContent,
@@ -17,10 +17,10 @@ type Props = {
     | "input-available"
     | "output-available"
     | "output-error";
-  output?: MathEvalOutput;
+  output?: CalculatorOutput;
 };
 
-export const MathEvalTool = memo(({ status, output }: Props) => {
+export const CalculatorTool = memo(({ status, output }: Props) => {
   const t = useTranslations("Ai");
 
   return (
@@ -28,7 +28,7 @@ export const MathEvalTool = memo(({ status, output }: Props) => {
       <ToolHeader
         icon={<CalculatorIcon className="size-4 text-muted-foreground" />}
         state={status}
-        type={t("math-eval")}
+        type={t("calculator")}
       />
       <ToolContent>
         <div className="flex flex-col gap-3 p-3">
@@ -53,4 +53,4 @@ export const MathEvalTool = memo(({ status, output }: Props) => {
     </Tool>
   );
 });
-MathEvalTool.displayName = "MathEvalTool";
+CalculatorTool.displayName = "CalculatorTool";

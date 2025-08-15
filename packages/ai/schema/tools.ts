@@ -72,18 +72,18 @@ export const getContentOutputSchema = z
   .describe("The output schema for the getContent tool.");
 export type GetContentOutput = z.infer<typeof getContentOutputSchema>;
 
-export const mathEvalInputSchema = z
+export const calculatorInputSchema = z
   .object({
     expression: z
       .string()
       .describe(
-        "Valid math expression to evaluate. It will use math.js to evaluate the expression."
+        "A valid mathematical expression for calculation. This tool functions as a calculator, using math.js to evaluate the expression."
       ),
   })
-  .describe("The input schema for the mathEval tool.");
-export type MathEvalInput = z.infer<typeof mathEvalInputSchema>;
+  .describe("The input schema for the calculator tool.");
+export type CalculatorInput = z.infer<typeof calculatorInputSchema>;
 
-export const mathEvalOutputSchema = z
+export const calculatorOutputSchema = z
   .object({
     original: z.object({
       expression: z.string().describe("The original expression."),
@@ -95,5 +95,5 @@ export const mathEvalOutputSchema = z
       value: z.string().describe("The evaluated value."),
     }),
   })
-  .describe("The output schema for the mathEval tool.");
-export type MathEvalOutput = z.infer<typeof mathEvalOutputSchema>;
+  .describe("The output schema for the calculator tool.");
+export type CalculatorOutput = z.infer<typeof calculatorOutputSchema>;

@@ -1,3 +1,4 @@
+import dedent from "dedent";
 import type { GetContentsInput } from "../schema/tools";
 
 export function buildContentSlug(params: GetContentsInput): string {
@@ -24,4 +25,8 @@ export function buildContentSlug(params: GetContentsInput): string {
 export function cleanSlug(slug: string): string {
   // remove slash at the beginning and the end
   return slug.replace(/^\/+|\/+$/g, "");
+}
+
+export function dedentString(text: string): string {
+  return dedent(text);
 }

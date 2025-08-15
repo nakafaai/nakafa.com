@@ -60,7 +60,7 @@ export const reactMdxComponents: Options["components"] = {
   ),
   ul: (props: ListProps) => <ul className="my-4 list-disc pl-5" {...props} />,
   li: (props: ListItemProps) => (
-    <li className="my-4 text-pretty pl-1 leading-[1.75]" {...props} />
+    <li className="my-4 text-pretty pl-1 leading-[1.75] last:mb-0" {...props} />
   ),
   em: (props: EmProps) => <em className="font-medium" {...props} />,
   strong: (props: StrongProps) => <strong className="font-medium" {...props} />,

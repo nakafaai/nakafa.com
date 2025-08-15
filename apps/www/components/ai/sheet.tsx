@@ -48,9 +48,9 @@ import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { toast } from "sonner";
 import { useAi, useAiHydrated } from "@/lib/context/use-ai";
+import { CalculatorTool } from "./calculator-tool";
 import { ContentTool } from "./content-tool";
 import { ContentsTool } from "./contents-tool";
-import { MathEvalTool } from "./matheval-tool";
 
 const MIN_WIDTH = 448;
 const MAX_WIDTH = 672;
@@ -303,9 +303,9 @@ function AISheetMessage({ message }: { message: MyUIMessage }) {
                 status={part.state}
               />
             );
-          case "tool-mathEval":
+          case "tool-calculator":
             return (
-              <MathEvalTool
+              <CalculatorTool
                 key={`tool-${part.toolCallId}`}
                 output={part.output}
                 status={part.state}

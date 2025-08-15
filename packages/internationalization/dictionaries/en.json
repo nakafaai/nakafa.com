@@ -198,7 +198,7 @@
     "rate-limit-message": "Rate limit exceeded. Please try again later.",
     "get-content": "Material",
     "get-contents": "Contents",
-    "math-eval": "Calculation",
+    "calculator": "Calculator",
     "thinking": "Thinking...",
     "thought-for": "Thought for {duration} seconds",
     "found-contents": "Found {count} contents",
