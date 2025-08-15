@@ -119,8 +119,6 @@ const mathEvalTool = tool({
       latex: node.toTex(),
     };
 
-    const simplifiedNode = math.simplify(node);
-
     const result = {
       expression: "",
       latex: "",
@@ -128,7 +126,7 @@ const mathEvalTool = tool({
     };
 
     try {
-      const evaluatedValue = simplifiedNode.evaluate();
+      const evaluatedValue = node.evaluate();
       const formattedValue = math.format(evaluatedValue, { precision: 14 });
 
       let latex = formattedValue;
@@ -140,8 +138,8 @@ const mathEvalTool = tool({
       result.latex = latex;
       result.value = formattedValue;
     } catch {
-      result.expression = simplifiedNode.toString();
-      result.latex = simplifiedNode.toTex();
+      result.expression = node.toString();
+      result.latex = node.toTex();
       result.value = "Cannot be evaluated.";
     }
 

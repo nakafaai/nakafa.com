@@ -20,6 +20,7 @@ const INLINE_SINGLE_DOLLAR_GLOBAL = /\$(?!\$)\s*([^$]*?)\s*\$(?!\$)/g;
 const INLINE_PAREN_MATH_GLOBAL = /\\\(([\s\S]*?)\\\)/g;
 const TRAILING_WHITESPACE_PATTERN = /\s$/;
 const LETTERED_LIST_PATTERN = /^(\s*)([a-z])\.\s+/gim;
+const FENCED_MATH_PATTERN = /```math([\s\S]*?)```/g;
 const TRIPLE_BACKTICK_LENGTH = 3;
 
 /**
@@ -29,7 +30,7 @@ const TRIPLE_BACKTICK_LENGTH = 3;
  */
 export function parseMarkdownIntoBlocks(markdown: string): string[] {
   const tokens = marked.lexer(markdown);
-  return tokens.map((token) => token.raw);
+  return tokens.map((token) => cleanMarkdown(token.raw));
 }
 
 /**
@@ -175,8 +176,16 @@ export function applyOutsideCodeFences(
  * Converts display math $$...$$ and \[...\] into fenced math blocks, removes backticks
  * around inline math, and normalizes spacing for inline $...$.
  */
-export function sanitizeMathOutsideCodeFences(input: string): string {
-  return applyOutsideCodeFences(input, (segment) => {
+export function normalizeMathDelimiters(input: string): string {
+  // First, clean up any malformed fenced math blocks. This is done before
+  // the main processing to ensure they are properly formatted.
+  const cleanedInput = input.replace(
+    FENCED_MATH_PATTERN,
+    (_, inner: string) => `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`
+  );
+
+  // Now, process the rest of the math delimiters outside of any code fences.
+  return applyOutsideCodeFences(cleanedInput, (segment) => {
     let s = segment;
 
     // Strip backticks around inline TeX $...$ and \(...\)
@@ -243,7 +252,7 @@ export function parseIncompleteMarkdown(text: string): string {
   result = completeInlineCodeFormatting(result);
 
   // Sanitize math/markdown outside of fenced code blocks to avoid hallucinated formatting
-  result = sanitizeMathOutsideCodeFences(result);
+  result = normalizeMathDelimiters(result);
 
   return result;
 }
