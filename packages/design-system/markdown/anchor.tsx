@@ -55,7 +55,7 @@ export function Anchor({ href, children, ...props }: AnchorProps) {
 
 function truncate({
   children,
-  maxLength = 320,
+  maxLength = 24,
 }: {
   children: ReactNode;
   maxLength?: number;
