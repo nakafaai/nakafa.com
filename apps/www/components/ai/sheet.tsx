@@ -276,7 +276,7 @@ function AISheetMessage({ message }: { message: MyUIMessage }) {
           case "text":
             return (
               <MessageContent key={`message-${message.id}-part-${i}`}>
-                <Response>{part.text}</Response>
+                <Response id={message.id}>{part.text}</Response>
               </MessageContent>
             );
           case "reasoning":

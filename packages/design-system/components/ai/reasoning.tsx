@@ -178,10 +178,11 @@ export type ReasoningContentProps = ComponentProps<
   typeof CollapsibleContent
 > & {
   children: string;
+  id: string;
 };
 
 export const ReasoningContent = memo(
-  ({ className, children, ...props }: ReasoningContentProps) => (
+  ({ className, children, id, ...props }: ReasoningContentProps) => (
     <CollapsibleContent
       className={cn(
         "mt-4 text-sm",
@@ -190,7 +191,9 @@ export const ReasoningContent = memo(
       )}
       {...props}
     >
-      <Response className="text-muted-foreground text-sm">{children}</Response>
+      <Response className="text-muted-foreground text-sm" id={id}>
+        {children}
+      </Response>
     </CollapsibleContent>
   ),
   (prevProps, nextProps) => prevProps.children === nextProps.children

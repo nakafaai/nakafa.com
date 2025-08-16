@@ -28,6 +28,7 @@ export type HardenedMarkdownProps = {
 };
 
 export type ResponseProps = {
+  id: string;
   children: string;
   className?: string;
   parseIncompleteMarkdown?: boolean;
@@ -44,9 +45,10 @@ HardenedMarkdown.displayName = "HardenedMarkdown";
 
 const HardenedMarkdownBlocks = memo(
   ({
+    id,
     children,
     ...props
-  }: HardenedMarkdownProps & Pick<ResponseProps, "children">) => {
+  }: HardenedMarkdownProps & Pick<ResponseProps, "children" | "id">) => {
     const blocks = useMemo(() => {
       return parseMarkdownIntoBlocks(cleanMarkdown(children)).filter(
         (block) => cleanMarkdown(block).length > 0
@@ -57,7 +59,7 @@ const HardenedMarkdownBlocks = memo(
       <HardenedMarkdown
         components={reactMdxComponents}
         // biome-ignore lint/suspicious/noArrayIndexKey: We need to use the index as key to prevent the component from re-rendering
-        key={`block-${block}-index-${index}`}
+        key={`${id}-block_${index}`}
         remarkPlugins={[remarkGfm, remarkMath, remarkRehype]}
         {...props}
       >
@@ -71,6 +73,7 @@ HardenedMarkdownBlocks.displayName = "HardenedMarkdownBlocks";
 
 export const Response = memo(
   ({
+    id,
     className,
     children,
     allowedImagePrefixes,
@@ -98,6 +101,7 @@ export const Response = memo(
           allowedImagePrefixes={allowedImagePrefixes ?? ["*"]}
           allowedLinkPrefixes={allowedLinkPrefixes ?? ["*"]}
           defaultOrigin={defaultOrigin}
+          id={id}
         >
           {parsedChildren}
         </HardenedMarkdownBlocks>
