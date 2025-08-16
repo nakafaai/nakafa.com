@@ -35,7 +35,6 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
-import { usePathname } from "@repo/internationalization/src/navigation";
 import { DefaultChatTransport } from "ai";
 import {
   Maximize2Icon,
@@ -44,7 +43,7 @@ import {
   Trash2Icon,
   XIcon,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { toast } from "sonner";
 import { useAi, useAiHydrated } from "@/lib/context/use-ai";
@@ -74,9 +73,6 @@ export function AiSheet({
 }) {
   const t = useTranslations("Ai");
 
-  const locale = useLocale();
-  const slug = usePathname();
-
   const setCurrentMessages = useAi((state) => state.setCurrentMessages);
   const clearCurrentMessages = useAi((state) => state.clearCurrentMessages);
 
@@ -99,6 +95,12 @@ export function AiSheet({
       transport: new DefaultChatTransport({
         api: "/api/chat",
         prepareSendMessagesRequest: ({ messages: ms }) => {
+          const currentUrl = window.location.href;
+          const url = new URL(currentUrl);
+
+          const slug = `/${url.pathname.split("/").slice(2).join("/")}`;
+          const locale = url.pathname.split("/")[1];
+
           setCurrentMessages(ms);
 
           return {

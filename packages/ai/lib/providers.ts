@@ -9,6 +9,7 @@ const gateway = createGateway({
 const languageModels = {
   deepseek: gateway("deepseek/deepseek-r1-distill-llama-70b"),
   google: gateway("google/gemini-2.5-flash"),
+  "google-premium": gateway("google/gemini-2.5-pro"),
   meta: gateway("meta/llama-4-maverick"),
   moonshot: gateway("moonshotai/kimi-k2"),
   openai: gateway("openai/gpt-oss-120b"),

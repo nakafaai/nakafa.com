@@ -119,6 +119,7 @@ export const PromptInputTextarea = memo(
         const form = e.currentTarget.form;
         if (form) {
           form.requestSubmit();
+          adjustHeight(true);
         }
       }
     };

@@ -20,7 +20,8 @@ const INLINE_SINGLE_DOLLAR_GLOBAL = /\$(?!\$)\s*([^$]*?)\s*\$(?!\$)/g;
 const INLINE_PAREN_MATH_GLOBAL = /\\\(([\s\S]*?)\\\)/g;
 const TRAILING_WHITESPACE_PATTERN = /\s$/;
 const LETTERED_LIST_PATTERN = /^(\s*)([a-z])\.\s+/gim;
-const FENCED_MATH_PATTERN = /```math([\s\S]*?)```/g;
+const FENCED_MATH_PATTERN = /```math([\sS]*?)```/g;
+const MATH_TAG_PATTERN = /<math>([\s\S]*?)<\/math>/g;
 const TRIPLE_BACKTICK_LENGTH = 3;
 
 /**
@@ -220,6 +221,11 @@ export function normalizeMathDelimiters(input: string): string {
     // Convert \[...\] to fenced math blocks
     s = s.replace(
       DISPLAY_MATH_BRACKETS_GLOBAL,
+      (_, inner: string) => `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`
+    );
+
+    s = s.replace(
+      MATH_TAG_PATTERN,
       (_, inner: string) => `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`
     );
 
