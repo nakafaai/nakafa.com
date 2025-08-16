@@ -104,11 +104,14 @@ export async function POST(req: Request) {
       gateway: {
         order: ["baseten", "groq", "cerebras", "azure", "vertex"],
       },
-      google: {
-        thinkingConfig: {
-          includeThoughts: true,
-        },
-      } satisfies GoogleGenerativeAIProviderOptions,
+      providerOptions: {
+        google: {
+          thinkingConfig: {
+            thinkingBudget: 0, // Disable thinking
+            includeThoughts: false,
+          },
+        } satisfies GoogleGenerativeAIProviderOptions,
+      },
     },
   });
 
