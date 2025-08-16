@@ -65,9 +65,15 @@ export function taskPrompt({ context }: { context: string }) {
 
     <instructions>
       You must break down the context into a series of logical tasks. For each task, provide:
-      - A clear and descriptive 'title' yet concise, to the point, and in the same language as the context.
-      - A list of 'items' detailing the specific actions to perform.
-      For each action in the 'items' list, you MUST specify the exact tool to use or the task to perform.
+      - A clear and descriptive 'title' yet every title must be unique and concise, and to the point, and in the same language as the context.
+      - A list of 'items' detailing the specific actions to perform. MUST be detailed and specific with the tool to use.
+      - Only create multiple tasks if the context is complex and requires multiple steps to complete.
+      - Group items into a single task if the items are related to the same topic and can be performed in a single step.
+      - Max is 3 tasks. If the context is complex and requires more than 3 tasks, Group multiple items into those 3 tasks. So we don't have task that only contains 1 item. It's okay to have a lot of items in a single task.
+      - Items must be unique and not redundant. but still detailed step by step guide. End to end guide.
+      - For each action in the 'items' list, you MUST specify the exact tool to use or the task to perform.
+      - NEVER TELL THE ARGUMENTS OR PARAMETERS OF THE TOOL. Just tell the tool to use and what is the purpose of using the tool.
+      - NEVER HALLUCINATE if you don't know the answer.
     </instructions>
 
     <tools>
@@ -77,3 +83,14 @@ export function taskPrompt({ context }: { context: string }) {
     </tools>
   `);
 }
+
+export const contextAnalysisInstructions = dedentString(`
+  <context_analysis_instructions>
+    You are about to create tasks to help the user. Before creating tasks, you must first thoroughly analyze the user's message to extract all important details:
+
+    1. **Problem Type**: Identify what kind of problem or request this is
+    2. **Variables and Values**: Extract all numerical values, variables, constants, and relationships
+    3. **Questions**: Identify specific questions being asked
+    4. **Requirements**: List constraints, conditions, or requirements
+  </context_analysis_instructions>
+`);

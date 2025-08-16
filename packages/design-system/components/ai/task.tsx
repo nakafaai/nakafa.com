@@ -68,7 +68,9 @@ export const TaskTrigger = ({
     {children ?? (
       <div className="flex cursor-pointer items-center gap-2 text-muted-foreground hover:text-foreground [&_svg]:shrink-0">
         {icon ?? <BlocksIcon className="size-4" />}
-        <p className="text-sm">{title}</p>
+        <p className="line-clamp-1 text-sm" title={title}>
+          {title}
+        </p>
         <ChevronDownIcon className="size-4 transition-transform group-data-[state=open]:rotate-180" />
       </div>
     )}

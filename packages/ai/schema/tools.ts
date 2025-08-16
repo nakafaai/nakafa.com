@@ -22,17 +22,25 @@ export const createTaskOutputSchema = z
         title: z
           .string()
           .describe(
-            "The title of the items. Must be concise and to the point."
+            "The unique title of the items. Must be concise, simple, and to the point."
           ),
         items: z.array(
-          z.object({
-            title: z
-              .string()
-              .describe(
-                "The title of the task. Must be concise and to the point."
-              ),
-            task: z.string().describe("The task to perform."),
-          })
+          z
+            .object({
+              title: z
+                .string()
+                .describe(
+                  "The unique title of the task. Must be concise, simple, and to the point."
+                ),
+              task: z
+                .string()
+                .describe(
+                  "The detailed task to perform. Detailed step by step and end to end explanation of the task to perform and always mention the tool to use."
+                ),
+            })
+            .describe(
+              "Unique and not redundant steps. But still detailed step by step guide. End to end guide."
+            )
         ),
       })
     ),

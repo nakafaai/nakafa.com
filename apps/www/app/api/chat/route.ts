@@ -1,7 +1,10 @@
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { defaultModel, model } from "@repo/ai/lib/providers";
 import { tools } from "@repo/ai/lib/tools";
-import { nakafaPrompt } from "@repo/ai/prompt/system";
+import {
+  contextAnalysisInstructions,
+  nakafaPrompt,
+} from "@repo/ai/prompt/system";
 import {
   convertToModelMessages,
   generateObject,
@@ -41,11 +44,12 @@ export async function POST(req: Request) {
 
       if (stepNumber === 0) {
         return {
-          // use a different model for this step:
-          model: model.languageModel(defaultModel),
-          // force a tool choice for this step:
+          system: nakafaPrompt({
+            locale,
+            slug: pageSlug,
+            injection: contextAnalysisInstructions,
+          }),
           toolChoice: { type: "tool", toolName: "createTask" },
-          // limit the tools that are available for this step:
           activeTools: ["createTask"],
           messages: finalMessages,
         };
