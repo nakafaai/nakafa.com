@@ -50,6 +50,7 @@ import { useAi, useAiHydrated } from "@/lib/context/use-ai";
 import { CalculatorTool } from "./calculator-tool";
 import { ContentTool } from "./content-tool";
 import { ContentsTool } from "./contents-tool";
+import { TaskTool } from "./task-tool";
 
 const MIN_WIDTH = 448;
 const MAX_WIDTH = 672;
@@ -308,6 +309,14 @@ function AISheetMessage({ message }: { message: MyUIMessage }) {
           case "tool-calculator":
             return (
               <CalculatorTool
+                key={`tool-${part.toolCallId}`}
+                output={part.output}
+                status={part.state}
+              />
+            );
+          case "tool-createTask":
+            return (
+              <TaskTool
                 key={`tool-${part.toolCallId}`}
                 output={part.output}
                 status={part.state}

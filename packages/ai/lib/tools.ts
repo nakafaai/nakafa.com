@@ -1,17 +1,57 @@
+import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { api } from "@repo/connection/routes";
-import { tool } from "ai";
+import { generateObject, tool } from "ai";
 import * as math from "mathjs";
+import { taskPrompt } from "../prompt/system";
 import {
   calculatorInputSchema,
   calculatorOutputSchema,
+  createTaskInputSchema,
+  createTaskOutputSchema,
   getContentInputSchema,
   getContentOutputSchema,
   getContentsInputSchema,
   getContentsOutputSchema,
 } from "../schema/tools";
+import { defaultModel, model } from "./providers";
 import { buildContentSlug, cleanSlug } from "./utils";
 
 const QURAN_SLUG_PARTS_COUNT = 3;
+
+const createTaskTool = tool({
+  description: "Create a task to help the user learn.",
+  inputSchema: createTaskInputSchema,
+  outputSchema: createTaskOutputSchema,
+  async *execute({ context }) {
+    // https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preliminary-tool-results
+    yield {
+      tasks: [],
+      status: "loading",
+    };
+
+    const { object } = await generateObject({
+      model: model.languageModel(defaultModel),
+      system: taskPrompt({ context }),
+      prompt: context,
+      schema: createTaskOutputSchema.pick({
+        tasks: true,
+      }),
+      providerOptions: {
+        google: {
+          thinkingConfig: {
+            thinkingBudget: 0, // Disable thinking
+            includeThoughts: false,
+          },
+        } satisfies GoogleGenerativeAIProviderOptions,
+      },
+    });
+
+    yield {
+      tasks: object.tasks,
+      status: "completed",
+    };
+  },
+});
 
 const getContentsTool = tool({
   description:
@@ -151,6 +191,7 @@ const calculatorTool = tool({
 });
 
 export const tools = {
+  createTask: createTaskTool,
   getContent: getContentTool,
   getContents: getContentsTool,
   calculator: calculatorTool,

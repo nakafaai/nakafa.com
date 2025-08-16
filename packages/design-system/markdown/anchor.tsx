@@ -2,6 +2,7 @@ import { buttonVariants } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
+import type { ReactNode } from "react";
 
 export function Anchor({ href, children, ...props }: AnchorProps) {
   const className = buttonVariants({ variant: "link" });
@@ -47,7 +48,23 @@ export function Anchor({ href, children, ...props }: AnchorProps) {
       title={href}
       {...props}
     >
-      {children}
+      {truncate({ children })}
     </a>
   );
+}
+
+function truncate({
+  children,
+  maxLength = 320,
+}: {
+  children: ReactNode;
+  maxLength?: number;
+}) {
+  if (typeof children === "string") {
+    if (children.length <= maxLength) {
+      return children;
+    }
+    return `${children.slice(0, maxLength)}...`;
+  }
+  return children;
 }

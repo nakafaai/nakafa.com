@@ -8,7 +8,7 @@ const gateway = createGateway({
 
 const languageModels = {
   deepseek: gateway("deepseek/deepseek-r1-distill-llama-70b"),
-  google: gateway("google/gemini-2.5-flash"),
+  "google-default": gateway("google/gemini-2.5-flash"),
   "google-premium": gateway("google/gemini-2.5-pro"),
   meta: gateway("meta/llama-4-maverick"),
   moonshot: gateway("moonshotai/kimi-k2"),
@@ -25,4 +25,4 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "google";
+export const defaultModel: ModelId = "google-default";

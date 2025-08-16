@@ -4,6 +4,43 @@ import { GradeSchema } from "@repo/contents/_types/subject/grade";
 import { MaterialSchema } from "@repo/contents/_types/subject/material";
 import * as z from "zod";
 
+export const createTaskInputSchema = z
+  .object({
+    context: z
+      .string()
+      .describe(
+        "The context of the task to create. The language of the context is the same as the language of the user."
+      ),
+  })
+  .describe("The input schema for the createTask tool.");
+export type CreateTaskInput = z.infer<typeof createTaskInputSchema>;
+
+export const createTaskOutputSchema = z
+  .object({
+    tasks: z.array(
+      z.object({
+        title: z
+          .string()
+          .describe(
+            "The title of the items. Must be concise and to the point."
+          ),
+        items: z.array(
+          z.object({
+            title: z
+              .string()
+              .describe(
+                "The title of the task. Must be concise and to the point."
+              ),
+            task: z.string().describe("The task to perform."),
+          })
+        ),
+      })
+    ),
+    status: z.enum(["loading", "completed"]),
+  })
+  .describe("The output schema for the createTask tool.");
+export type CreateTaskOutput = z.infer<typeof createTaskOutputSchema>;
+
 export const getContentsInputSchema = z
   .object({
     locale: z
