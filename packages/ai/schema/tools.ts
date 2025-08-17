@@ -66,11 +66,11 @@ export const getContentInputSchema = z
     slug: z
       .string()
       .describe(
-        "The slug of the content to get. Use slug as it is, do not change anything. Always start with slash (/). DO NOT include locale in the slug"
+        "The slug of the content to get - MUST be a verified slug returned from getSubjects or getArticles responses. Use slug exactly as returned. Always start with slash (/). DO NOT include locale in the slug. NEVER use unverified slugs."
       ),
   })
   .describe(
-    "Get the full content from Nakafa platform. Use this to retrieve detailed content after finding slugs with getSubjects or getArticles. ALWAYS use this to get comprehensive information about ANY topic."
+    "Get the full content from Nakafa platform. CRITICAL: ONLY use this with slugs that were returned from getSubjects or getArticles responses. NEVER use with guessed, assumed, or unverified slugs."
   );
 export type GetContentInput = z.infer<typeof getContentInputSchema>;
 

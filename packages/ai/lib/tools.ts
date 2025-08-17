@@ -86,7 +86,7 @@ const getSubjectsTool = tool({
 const getContentTool = tool({
   name: "getContent",
   description:
-    "Fetches the full content from Nakafa platform. Use this to retrieve detailed content after finding slugs with getSubjects or getArticles. ALWAYS use this to get comprehensive information about ANY topic. Can also retrieve Quran chapters.",
+    "Fetches the full content from Nakafa platform. CRITICAL: ONLY use this with slugs that were returned from getSubjects or getArticles responses. NEVER use with guessed, assumed, or unverified slugs. Can also retrieve Quran chapters.",
   inputSchema: getContentInputSchema,
   outputSchema: getContentOutputSchema,
   async execute({ slug, locale }) {

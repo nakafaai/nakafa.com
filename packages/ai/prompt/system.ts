@@ -59,6 +59,14 @@ export function nakafaPrompt({ locale, slug, injection }: SystemPromptProps) {
         <both_required>ALWAYS check BOTH getArticles AND getSubjects for ANY question - the answer might exist in either format.</both_required>
       </tool_distinction>
 
+      <SLUG_VERIFICATION_RULES>
+        <getContent_restriction>getContent can ONLY be used with slugs that were returned from getSubjects or getArticles responses.</getContent_restriction>
+        <never_guess_slugs>NEVER use getContent with guessed, assumed, created, or unverified slugs.</never_guess_slugs>
+        <never_use_current_page>NEVER use getContent with the current_page slug without first verifying it exists via getSubjects or getArticles.</never_use_current_page>
+        <sequential_workflow>MANDATORY sequence: 1) getSubjects + getArticles, 2) ONLY then getContent with returned slugs.</sequential_workflow>
+        <slug_source_verification>Slugs for getContent MUST come from tool responses - no other source is allowed.</slug_source_verification>
+      </SLUG_VERIFICATION_RULES>
+
       <workflow>
         <CRITICAL_TOOL_USAGE>ALWAYS use tools FIRST before answering ANY question - even if it seems like general knowledge.</CRITICAL_TOOL_USAGE>
         <content_search>For ANY question about ANYTHING, ALWAYS use getSubjects AND getArticles to find real slugs.</content_search>
