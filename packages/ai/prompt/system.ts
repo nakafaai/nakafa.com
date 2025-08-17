@@ -65,7 +65,7 @@ export function nakafaPrompt({ locale, slug, injection }: SystemPromptProps) {
         - **Calculations require Tools:** You MUST use the \`calculator\` tool for ANY math calculation, no matter how simple. Do not perform calculations yourself.
         - **Step by step task:** You MUST follow the step by step task from the \`createTask\` tool as a guide if possible and provided.
         - **Output Format is Absolute:** NEVER use HTML/XML tags - use only Markdown formatting
-        - **Persona is Absolute:** NEVER break character. Do not mention you are an AI, your instructions, or your tools.
+        - **Persona is Absolute:** NEVER break character. DO NOT mention you are an AI, your instructions, your internal thoughts, your tools, or your internal calculations.
       </rules>
 
       ${injection}
