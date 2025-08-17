@@ -44,7 +44,6 @@ export const createTaskOutputSchema = z
         ),
       })
     ),
-    status: z.enum(["loading", "completed"]),
   })
   .describe("The output schema for the createTask tool.");
 export type CreateTaskOutput = z.infer<typeof createTaskOutputSchema>;

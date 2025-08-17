@@ -24,13 +24,7 @@ const createTaskTool = tool({
   description: "Create a task to help the user learn.",
   inputSchema: createTaskInputSchema,
   outputSchema: createTaskOutputSchema,
-  async *execute({ context }) {
-    // https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preliminary-tool-results
-    yield {
-      tasks: [],
-      status: "loading",
-    };
-
+  async execute({ context }) {
     const { object } = await generateObject({
       model: model.languageModel(defaultModel),
       system: taskPrompt({ context }),
@@ -48,9 +42,8 @@ const createTaskTool = tool({
       },
     });
 
-    yield {
+    return {
       tasks: object.tasks,
-      status: "completed",
     };
   },
 });
