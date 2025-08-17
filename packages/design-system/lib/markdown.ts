@@ -29,6 +29,7 @@ const NON_WHITESPACE_START_PATTERN = /^\S/;
 const ASTERISK_PLUS_LIST_PATTERN = /^(\s*)([*+])\s+/gm;
 const NUMBERED_LIST_SPACING_PATTERN = /^(\s*)(\d+)\.\s{2,}/gm;
 const DASH_LIST_SPACING_PATTERN = /^(\s*)(-)\s{2,}/gm;
+const MALFORMED_HEADING_PATTERN = /^(#{1,6})\s*#+\s*(.*?)$/gm;
 
 /**
  * Parses markdown text into an array of blocks.
@@ -99,6 +100,22 @@ function normalizeDashListSpacing(input: string): string {
   return input.replace(
     DASH_LIST_SPACING_PATTERN,
     (_, whitespace, dash) => `${whitespace}${dash} `
+  );
+}
+
+/**
+ * Cleans malformed headings where LLMs generate extra # symbols inside the heading text.
+ * Converts "## # Heading Text" to "## Heading Text" and similar cases.
+ */
+function cleanMalformedHeadings(input: string): string {
+  if (!input) {
+    return input;
+  }
+  // Finds lines starting with 1-6 #s, followed by optional whitespace,
+  // then one or more additional #s, then the actual heading text.
+  return input.replace(
+    MALFORMED_HEADING_PATTERN,
+    (_, headingLevel, headingText) => `${headingLevel} ${headingText.trim()}`
   );
 }
 
@@ -358,6 +375,9 @@ export function parseMarkdown(text: string): string {
   }
 
   let result = text;
+
+  // Clean malformed headings where LLMs put # symbols inside heading text.
+  result = cleanMalformedHeadings(result);
 
   // Convert lettered lists before other parsing to ensure consistency.
   result = convertLetteredListsToNumbered(result);
