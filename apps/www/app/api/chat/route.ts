@@ -40,11 +40,9 @@ export async function POST(req: Request) {
     prepareStep: ({ messages: initialMessages, stepNumber }) => {
       // We need to cut costs, ai is expensive
       // Compress conversation history for longer loops
-      if (initialMessages.length > MAX_CONVERSATION_HISTORY) {
-        return {
-          messages: initialMessages.slice(-(MAX_CONVERSATION_HISTORY / 2)),
-        };
-      }
+      const finalMessages = initialMessages.slice(
+        -(MAX_CONVERSATION_HISTORY / 2)
+      );
 
       if (stepNumber === 0) {
         return {
@@ -53,12 +51,14 @@ export async function POST(req: Request) {
             slug: pageSlug,
             injection: contextAnalysisInstructions,
           }),
+          messages: finalMessages,
           toolChoice: { type: "tool", toolName: "createTask" },
           activeTools: ["createTask"],
         };
       }
 
       return {
+        messages: finalMessages,
         activeTools: ["getContent", "getArticles", "getSubjects", "calculator"],
       };
     },

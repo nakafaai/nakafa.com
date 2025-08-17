@@ -62,7 +62,7 @@ const getArticlesTool = tool({
   async execute({ locale, category }) {
     const slug = buildContentSlug({
       locale,
-      filters: { type: "article", category },
+      filters: { type: "articles", category },
     });
 
     const { data, error } = await api.contents.getContents({

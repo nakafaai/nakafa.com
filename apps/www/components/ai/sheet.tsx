@@ -294,6 +294,7 @@ function AISheetMessage({ message }: { message: MyUIMessage }) {
           case "tool-getArticles":
             return (
               <ArticlesTool
+                input={part.input}
                 key={`tool-${part.toolCallId}`}
                 output={part.output}
                 status={part.state}
@@ -302,6 +303,7 @@ function AISheetMessage({ message }: { message: MyUIMessage }) {
           case "tool-getSubjects":
             return (
               <SubjectsTool
+                input={part.input}
                 key={`tool-${part.toolCallId}`}
                 output={part.output}
                 status={part.state}

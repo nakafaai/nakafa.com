@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
+import { SpinnerIcon } from "../ui/icons";
 
 export type ToolProps = ComponentProps<typeof Collapsible>;
 
@@ -66,6 +67,8 @@ export const ToolHeader = ({
 }: ToolHeaderProps) => {
   const t = useTranslations("Ai");
 
+  const loading = state === "input-streaming" || state === "input-available";
+
   return (
     <CollapsibleTrigger
       className={cn(
@@ -75,7 +78,11 @@ export const ToolHeader = ({
       {...props}
     >
       <div className="flex items-center gap-2">
-        {icon ?? <WrenchIcon className="size-4 text-muted-foreground" />}
+        {loading ? (
+          <SpinnerIcon className="size-4" />
+        ) : (
+          (icon ?? <WrenchIcon className="size-4 text-muted-foreground" />)
+        )}
         <span className="font-medium text-sm">{type}</span>
         <Badge className="rounded-full text-xs" variant="secondary">
           {getStatusBadge(state).icon}

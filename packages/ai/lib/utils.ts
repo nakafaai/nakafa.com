@@ -3,7 +3,7 @@ import dedent from "dedent";
 export function buildContentSlug(params: {
   locale: string;
   filters: {
-    type: "article" | "subject";
+    type: "articles" | "subject";
     category?: string;
     grade?: string;
     material?: string;
