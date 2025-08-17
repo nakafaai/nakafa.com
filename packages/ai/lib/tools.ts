@@ -151,7 +151,7 @@ const getContentTool = tool({
 const calculatorTool = tool({
   name: "calculator",
   description:
-    "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation, no matter how simple. NEVER calculate manually. Evaluates mathematical expressions and returns results in multiple formats including LaTeX.",
+    "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation including simple arithmetic. NEVER calculate manually. Only use for evaluable expressions with concrete numbers, not algebraic variables. Uses Math.js to evaluate expressions.",
   inputSchema: calculatorInputSchema,
   outputSchema: calculatorOutputSchema,
   execute: ({ expression }) => {

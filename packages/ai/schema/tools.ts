@@ -89,11 +89,11 @@ export const calculatorInputSchema = z
     expression: z
       .string()
       .describe(
-        "A valid mathematical expression for calculation. This tool functions as a calculator, using math.js to evaluate the expression."
+        "A mathematical expression with concrete numbers and operations. Use ONLY evaluable expressions with numbers - NOT algebraic variables. Compatible with Math.js."
       ),
   })
   .describe(
-    "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation, no matter how simple. NEVER calculate manually."
+    "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation including simple arithmetic. NEVER calculate manually. Only use for evaluable expressions with concrete numbers, not algebraic variables."
   );
 export type CalculatorInput = z.infer<typeof calculatorInputSchema>;
 

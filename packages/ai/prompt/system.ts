@@ -59,6 +59,14 @@ export function nakafaPrompt({ locale, slug, injection }: SystemPromptProps) {
         <both_required>ALWAYS check BOTH getArticles AND getSubjects for ANY question - the answer might exist in either format.</both_required>
       </tool_distinction>
 
+      <CALCULATOR_ENFORCEMENT>
+        <mandatory_calculator>ALWAYS use calculator tool for ANY mathematical calculation - even simple ones.</mandatory_calculator>
+        <never_calculate_manually>NEVER do mental math or manual calculation - ALWAYS use the calculator tool.</never_calculate_manually>
+        <simple_math_included>Simple arithmetic like addition, subtraction, multiplication, division MUST use calculator.</simple_math_included>
+        <calculable_expressions_only>Only use calculator for expressions that can be evaluated (numbers and operations) - NOT for algebraic variables or symbolic math.</calculable_expressions_only>
+        <mathjs_compatible>Use calculator for expressions compatible with Math.js - concrete numbers and mathematical operations only.</mathjs_compatible>
+      </CALCULATOR_ENFORCEMENT>
+
       <SLUG_VERIFICATION_RULES>
         <getContent_restriction>getContent can ONLY be used with slugs that were returned from getSubjects or getArticles responses.</getContent_restriction>
         <never_guess_slugs>NEVER use getContent with guessed, assumed, created, or unverified slugs.</never_guess_slugs>
@@ -71,7 +79,7 @@ export function nakafaPrompt({ locale, slug, injection }: SystemPromptProps) {
         <CRITICAL_TOOL_USAGE>ALWAYS use tools FIRST before answering ANY question - even if it seems like general knowledge.</CRITICAL_TOOL_USAGE>
         <content_search>For ANY question about ANYTHING, ALWAYS use getSubjects AND getArticles to find real slugs.</content_search>
         <content_retrieval>Then ALWAYS use getContent with verified slugs to provide comprehensive answers.</content_retrieval>
-        <calculations>Use calculator for ANY math calculation - never calculate manually.</calculations>
+        <calculations>MANDATORY: Use calculator for ANY math calculation including simple ones - NEVER calculate manually.</calculations>
         <no_direct_answers>NEVER answer directly about ANY topic without checking tools first.</no_direct_answers>
         <tool_first_policy>When in doubt, ALWAYS use tools first - it's better to over-use tools than to answer directly.</tool_first_policy>
       </workflow>
