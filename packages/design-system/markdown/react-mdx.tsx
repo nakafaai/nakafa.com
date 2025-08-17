@@ -1,8 +1,4 @@
 import {
-  CodeBlock,
-  CodeBlockCopyButton,
-} from "@repo/design-system/components/ai/code-block";
-import {
   Table,
   TableBody,
   TableCell,
@@ -10,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
+import { filterWhitespaceNodes } from "@repo/design-system/lib/utils";
 import { Anchor } from "@repo/design-system/markdown/anchor";
 import { Heading } from "@repo/design-system/markdown/heading";
 import { BlockMath, InlineMath } from "@repo/design-system/markdown/math";
@@ -32,6 +28,7 @@ import type {
   TableRowProps,
 } from "@repo/design-system/types/markdown";
 import type { Options } from "react-markdown";
+import { CodeBlockMdx } from "./code-block";
 
 export const reactMdxComponents: Options["components"] = {
   h1: (props: HeadingProps) => (
@@ -120,7 +117,7 @@ export const reactMdxComponents: Options["components"] = {
       </code>
     );
   },
-  pre: ({ node, className, children }) => {
+  pre: ({ node, children }) => {
     let language = "plaintext";
 
     const codeElement = node?.children.find(
@@ -155,13 +152,7 @@ export const reactMdxComponents: Options["components"] = {
     }
 
     return (
-      <CodeBlock
-        className={cn("my-4 h-auto", className)}
-        code={result}
-        language={language}
-      >
-        <CodeBlockCopyButton />
-      </CodeBlock>
+      <CodeBlockMdx data={[{ code: result, language, filename: language }]} />
     );
   },
 };

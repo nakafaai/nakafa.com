@@ -16,7 +16,7 @@ import {
 } from "ai";
 import { getTranslations } from "next-intl/server";
 
-const MAX_CONVERSATION_HISTORY = 5;
+const MAX_CONVERSATION_HISTORY = 20;
 const MAX_STEPS = 20;
 
 // Allow streaming responses up to 30 seconds
@@ -40,7 +40,11 @@ export async function POST(req: Request) {
     prepareStep: ({ messages: initialMessages, stepNumber }) => {
       // We need to cut costs, ai is expensive
       // Compress conversation history for longer loops
-      const finalMessages = initialMessages.slice(-MAX_CONVERSATION_HISTORY);
+      if (initialMessages.length > MAX_CONVERSATION_HISTORY) {
+        return {
+          messages: initialMessages.slice(-(MAX_CONVERSATION_HISTORY / 2)),
+        };
+      }
 
       if (stepNumber === 0) {
         return {
@@ -51,12 +55,10 @@ export async function POST(req: Request) {
           }),
           toolChoice: { type: "tool", toolName: "createTask" },
           activeTools: ["createTask"],
-          messages: finalMessages,
         };
       }
 
       return {
-        messages: finalMessages,
         activeTools: ["getContent", "getContents", "calculator"],
       };
     },

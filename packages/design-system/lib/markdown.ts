@@ -22,6 +22,8 @@ const TRAILING_WHITESPACE_PATTERN = /\s$/;
 const LETTERED_LIST_PATTERN = /^(\s*)([a-z])\.\s+/gim;
 const FENCED_MATH_PATTERN = /```math([\sS]*?)```/g;
 const MATH_TAG_PATTERN = /<math>([\s\S]*?)<\/math>/g;
+const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
+  /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/g;
 const TRIPLE_BACKTICK_LENGTH = 3;
 
 /**
@@ -178,9 +180,16 @@ export function applyOutsideCodeFences(
  * around inline math, and normalizes spacing for inline $...$.
  */
 export function normalizeMathDelimiters(input: string): string {
-  // First, clean up any malformed fenced math blocks. This is done before
+  // First, handle code blocks containing single dollar math expressions
+  // This needs to be done before other processing to avoid conflicts
+  const processedInput = input.replace(
+    CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN,
+    (_, inner: string) => `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`
+  );
+
+  // Then, clean up any malformed fenced math blocks. This is done before
   // the main processing to ensure they are properly formatted.
-  const cleanedInput = input.replace(
+  const cleanedInput = processedInput.replace(
     FENCED_MATH_PATTERN,
     (_, inner: string) => `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`
   );
