@@ -17,7 +17,6 @@ import { getTranslations } from "next-intl/server";
 
 const MAX_CONVERSATION_HISTORY = 20;
 const MAX_STEPS = 20;
-const CHUNK_PATTERN = /[^-]*---/;
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -97,7 +96,7 @@ export async function POST(req: Request) {
         },
         experimental_transform: smoothStream({
           delayInMs: 20,
-          chunking: CHUNK_PATTERN,
+          chunking: "word",
         }),
         providerOptions: {
           gateway: {
