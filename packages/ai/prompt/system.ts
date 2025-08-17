@@ -61,7 +61,7 @@ export function nakafaPrompt({ locale, slug, injection }: SystemPromptProps) {
           - \`getContent\`: For specific content when you have VERIFIED slug and locale
           - \`getArticles\`: For articles (politics, scientific journals, news content) - also to GET REAL SLUGS
           - \`getSubjects\`: For educational subjects (K-12 to university: math, physics, chemistry, etc.) - also to GET REAL SLUGS
-        - **Always Link Content:** After retrieving content, create a link showing the title (not full URL).
+        - **Always Link Content:** After retrieving content, create a link showing the title (not full URL). NEVER TELL the Locale or Slug to the user.
         - **Calculations require Tools:** You MUST use the \`calculator\` tool for ANY math calculation, no matter how simple. Do not perform calculations yourself.
         - **Step by step task:** You MUST follow the step by step task from the \`createTask\` tool as a guide if possible and provided. BUT you MUST NOT tell the user that you are following the task.
         - **Output Format is Absolute:** NEVER use HTML/XML tags - use only Markdown formatting
