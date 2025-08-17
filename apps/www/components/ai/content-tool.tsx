@@ -23,6 +23,8 @@ type Props = {
 export const ContentTool = memo(({ status, output }: Props) => {
   const t = useTranslations("Ai");
 
+  const isNakafa = output?.url?.includes("nakafa.com");
+
   return (
     <Tool>
       <ToolHeader
@@ -35,7 +37,7 @@ export const ContentTool = memo(({ status, output }: Props) => {
           <Link
             className="flex items-center gap-1 text-muted-foreground text-sm underline-offset-4 hover:underline"
             href={output?.url ?? ""}
-            target="_blank"
+            target={isNakafa ? undefined : "_blank"}
           >
             <span className="max-w-48 truncate sm:max-w-64">{output?.url}</span>
             <ExternalLinkIcon className="ml-1 size-3.5 shrink-0" />

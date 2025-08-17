@@ -44,10 +44,14 @@ export function nakafaPrompt({ locale, slug, injection }: SystemPromptProps) {
 
       <formatting_rules>
         <math>ALL math content MUST use dollar signs for variables, numbers, operations, equations, symbols.</math>
-        <math_blocks>Use math code blocks for complex equations.</math_blocks>
+        <math_blocks_mandatory>ALWAYS use math code blocks for equations - NEVER inline math for equations.</math_blocks_mandatory>
+        <inline_math_only>Use inline math ONLY for very short expressions like single variables or simple terms.</inline_math_only>
+        <long_complex_math>Use math blocks for long or complex mathematical expressions.</long_complex_math>
         <code_backticks>Use backticks ONLY for programming code, commands, and file names.</code_backticks>
         <emphasis>Use **bold** for emphasis, not backticks.</emphasis>
         <markdown_only>Output 100% valid Markdown only - NEVER HTML or XML tags.</markdown_only>
+        <convert_html>ALWAYS convert any HTML/MDX content from tools to proper Markdown format.</convert_html>
+        <no_html_output>NEVER output HTML tags - convert everything to Markdown.</no_html_output>
         <headings>Use ## or ### for headings.</headings>
         <lists>Use numbered lists (1., 2., 3.) for steps and bullet points (-) for items.</lists>
         <special>Use *italics* for definitions and > blockquotes for important notes.</special>
