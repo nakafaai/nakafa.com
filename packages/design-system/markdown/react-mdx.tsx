@@ -152,7 +152,9 @@ export const reactMdxComponents: Options["components"] = {
     }
 
     return (
-      <CodeBlockMdx data={[{ code: result, language, filename: language }]} />
+      <CodeBlockMdx
+        data={[{ code: result, language, filename: `index.${language}` }]}
+      />
     );
   },
 };

@@ -211,7 +211,8 @@
     "completed": "Selesai",
     "error": "Error",
     "input": "Input",
-    "output": "Output"
+    "output": "Output",
+    "prepare-next-moves": "Menyiapkan langkah selanjutnya..."
   },
   "Math": {
     "Metadata": {

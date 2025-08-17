@@ -2,7 +2,7 @@
 
 import {
   cleanMarkdown,
-  parseIncompleteMarkdown,
+  parseMarkdown,
   parseMarkdownIntoBlocks,
 } from "@repo/design-system/lib/markdown";
 import { cn } from "@repo/design-system/lib/utils";
@@ -32,7 +32,6 @@ export type ResponseProps = {
   id: string;
   children: string;
   className?: string;
-  parseIncompleteMarkdown?: boolean;
 } & HardenedMarkdownProps;
 
 // Create a hardened version of ReactMarkdown
@@ -81,16 +80,8 @@ export const Response = memo(
     allowedImagePrefixes,
     allowedLinkPrefixes,
     defaultOrigin = "https://nakafa.com",
-    parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
   }: ResponseProps) => {
-    // Parse the children to remove incomplete markdown tokens if enabled
-    const parsedChildren = useMemo(
-      () =>
-        shouldParseIncompleteMarkdown
-          ? parseIncompleteMarkdown(children)
-          : children,
-      [children, shouldParseIncompleteMarkdown]
-    );
+    const parsedChildren = useMemo(() => parseMarkdown(children), [children]);
 
     return (
       <div

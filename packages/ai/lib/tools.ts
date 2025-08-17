@@ -1,13 +1,9 @@
-import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { api } from "@repo/connection/routes";
-import { generateObject, tool } from "ai";
+import { tool } from "ai";
 import * as math from "mathjs";
-import { taskPrompt } from "../prompt/system";
 import {
   calculatorInputSchema,
   calculatorOutputSchema,
-  createTaskInputSchema,
-  createTaskOutputSchema,
   getArticlesInputSchema,
   getArticlesOutputSchema,
   getContentInputSchema,
@@ -15,41 +11,14 @@ import {
   getSubjectsInputSchema,
   getSubjectsOutputSchema,
 } from "../schema/tools";
-import { defaultModel, model } from "./providers";
 import { buildContentSlug, cleanSlug } from "./utils";
 
 const QURAN_SLUG_PARTS_COUNT = 3;
 
-const createTaskTool = tool({
-  description: "Create a task to help the user learn.",
-  inputSchema: createTaskInputSchema,
-  outputSchema: createTaskOutputSchema,
-  async execute({ context }) {
-    const { object } = await generateObject({
-      model: model.languageModel(defaultModel),
-      system: taskPrompt({ context }),
-      prompt: context,
-      schema: createTaskOutputSchema.pick({
-        tasks: true,
-      }),
-      providerOptions: {
-        google: {
-          thinkingConfig: {
-            thinkingBudget: 0, // Disable thinking
-            includeThoughts: false,
-          },
-        } satisfies GoogleGenerativeAIProviderOptions,
-      },
-    });
-
-    return {
-      tasks: object.tasks,
-    };
-  },
-});
-
 const getArticlesTool = tool({
-  description: "Retrieves a list of available articles.",
+  name: "getArticles",
+  description:
+    "Retrieves articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, and general publications. Use this for ANY question about ANY topic.",
   inputSchema: getArticlesInputSchema,
   outputSchema: getArticlesOutputSchema,
   async execute({ locale, category }) {
@@ -81,7 +50,9 @@ const getArticlesTool = tool({
 });
 
 const getSubjectsTool = tool({
-  description: "Retrieves a list of available subjects.",
+  name: "getSubjects",
+  description:
+    "Retrieves educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for ANY question about ANY topic.",
   inputSchema: getSubjectsInputSchema,
   outputSchema: getSubjectsOutputSchema,
   async execute({ locale, category, grade, material }) {
@@ -113,8 +84,9 @@ const getSubjectsTool = tool({
 });
 
 const getContentTool = tool({
+  name: "getContent",
   description:
-    "Fetches the full content of a specific educational page or article from Nakafa. It can also retrieve specific chapters (surah) from the Quran.",
+    "Fetches the full content from Nakafa platform. Use this to retrieve detailed content after finding slugs with getSubjects or getArticles. ALWAYS use this to get comprehensive information about ANY topic. Can also retrieve Quran chapters.",
   inputSchema: getContentInputSchema,
   outputSchema: getContentOutputSchema,
   async execute({ slug, locale }) {
@@ -177,8 +149,9 @@ const getContentTool = tool({
 });
 
 const calculatorTool = tool({
+  name: "calculator",
   description:
-    "Performs mathematical calculations by evaluating a given mathematical expression. It returns the result in various formats, including the simplified expression and its LaTeX representation.",
+    "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation, no matter how simple. NEVER calculate manually. Evaluates mathematical expressions and returns results in multiple formats including LaTeX.",
   inputSchema: calculatorInputSchema,
   outputSchema: calculatorOutputSchema,
   execute: ({ expression }) => {
@@ -220,7 +193,6 @@ const calculatorTool = tool({
 });
 
 export const tools = {
-  createTask: createTaskTool,
   getContent: getContentTool,
   getArticles: getArticlesTool,
   getSubjects: getSubjectsTool,

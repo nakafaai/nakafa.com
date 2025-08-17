@@ -4,50 +4,6 @@ import { GradeSchema } from "@repo/contents/_types/subject/grade";
 import { MaterialSchema } from "@repo/contents/_types/subject/material";
 import * as z from "zod";
 
-export const createTaskInputSchema = z
-  .object({
-    context: z
-      .string()
-      .describe(
-        "The context of the task to create. The language of the context is the same as the language of the user."
-      ),
-  })
-  .describe("The input schema for the createTask tool.");
-export type CreateTaskInput = z.infer<typeof createTaskInputSchema>;
-
-export const createTaskOutputSchema = z
-  .object({
-    tasks: z.array(
-      z.object({
-        title: z
-          .string()
-          .describe(
-            "The unique title of the items. Must be concise, simple, and to the point."
-          ),
-        items: z.array(
-          z
-            .object({
-              title: z
-                .string()
-                .describe(
-                  "The unique title of the task. Must be concise, simple, and to the point."
-                ),
-              task: z
-                .string()
-                .describe(
-                  "The detailed task to perform. Detailed step by step and end to end explanation of the task to perform and always mention the tool to use."
-                ),
-            })
-            .describe(
-              "Unique and not redundant steps. But still detailed step by step guide. End to end guide."
-            )
-        ),
-      })
-    ),
-  })
-  .describe("The output schema for the createTask tool.");
-export type CreateTaskOutput = z.infer<typeof createTaskOutputSchema>;
-
 export const getArticlesInputSchema = z
   .object({
     locale: z.enum(["en", "id"]).describe("The locale of the article to get."),
@@ -55,7 +11,9 @@ export const getArticlesInputSchema = z
       "The category of the article to get."
     ),
   })
-  .describe("Get latest articles from Nakafa platform. Such as politics, etc.");
+  .describe(
+    "Get articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, and general publications. Use this for ANY question about ANY topic."
+  );
 export type GetArticlesInput = z.infer<typeof getArticlesInputSchema>;
 
 export const getArticlesOutputSchema = z
@@ -83,7 +41,7 @@ export const getSubjectsInputSchema = z
     material: MaterialSchema.describe("The material of the subject to get."),
   })
   .describe(
-    "Get educational subjects K-12 to university level from Nakafa platform."
+    "Get educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for ANY question about ANY topic."
   );
 export type GetSubjectsInput = z.infer<typeof getSubjectsInputSchema>;
 
@@ -111,7 +69,9 @@ export const getContentInputSchema = z
         "The slug of the content to get. Use slug as it is, do not change anything. Always start with slash (/). DO NOT include locale in the slug"
       ),
   })
-  .describe("Get specific content from Nakafa platform.");
+  .describe(
+    "Get the full content from Nakafa platform. Use this to retrieve detailed content after finding slugs with getSubjects or getArticles. ALWAYS use this to get comprehensive information about ANY topic."
+  );
 export type GetContentInput = z.infer<typeof getContentInputSchema>;
 
 export const getContentOutputSchema = z
@@ -132,7 +92,9 @@ export const calculatorInputSchema = z
         "A valid mathematical expression for calculation. This tool functions as a calculator, using math.js to evaluate the expression."
       ),
   })
-  .describe("The input schema for the calculator tool.");
+  .describe(
+    "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation, no matter how simple. NEVER calculate manually."
+  );
 export type CalculatorInput = z.infer<typeof calculatorInputSchema>;
 
 export const calculatorOutputSchema = z

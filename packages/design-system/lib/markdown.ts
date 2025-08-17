@@ -11,12 +11,10 @@ const ESCAPED_NEWLINE_GLOBAL = /\\n/g;
 const ESCAPED_CARRIAGE_RETURN_GLOBAL = /\\r/g;
 const ESCAPED_TAB_GLOBAL = /\\t/g;
 const TRIPLE_BACKTICKS = /```/g;
-const DISPLAY_MATH_DOLLARS_GLOBAL = /\$\$([\s\S]*?)\$\$/g;
+// Simplified math patterns - combine all backtick cases into one
+const MATH_IN_BACKTICKS_GLOBAL =
+  /`\s*(?:\$\$?([\s\S]*?)\$\$?|\\\(([\s\S]*?)\\\))\s*`/g;
 const DISPLAY_MATH_BRACKETS_GLOBAL = /\\\[([\s\S]*?)\\\]/g;
-const INLINE_MATH_IN_BACKTICKS_GLOBAL = /`\s*\$([^`$]*?)\$\s*`/g;
-const INLINE_PAREN_MATH_IN_BACKTICKS_GLOBAL = /`\s*\\\(([^`]*?)\\\)\s*`/g;
-const DISPLAY_MATH_IN_BACKTICKS_GLOBAL = /`\s*\$\$([\s\S]*?)\$\$\s*`/g;
-const INLINE_SINGLE_DOLLAR_GLOBAL = /\$(?!\$)\s*([^$]*?)\s*\$(?!\$)/g;
 const INLINE_PAREN_MATH_GLOBAL = /\\\(([\s\S]*?)\\\)/g;
 const TRAILING_WHITESPACE_PATTERN = /\s$/;
 const LETTERED_LIST_PATTERN = /^(\s*)([a-z])\.\s+/gim;
@@ -25,6 +23,12 @@ const MATH_TAG_PATTERN = /<math>([\s\S]*?)<\/math>/g;
 const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
   /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/g;
 const TRIPLE_BACKTICK_LENGTH = 3;
+const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
+const BULLET_LIST_PATTERN = /^(\s*)[-]\s+/;
+const NON_WHITESPACE_START_PATTERN = /^\S/;
+const ASTERISK_PLUS_LIST_PATTERN = /^(\s*)([*+])\s+/gm;
+const NUMBERED_LIST_SPACING_PATTERN = /^(\s*)(\d+)\.\s{2,}/gm;
+const DASH_LIST_SPACING_PATTERN = /^(\s*)(-)\s{2,}/gm;
 
 /**
  * Parses markdown text into an array of blocks.
@@ -51,6 +55,51 @@ function convertLetteredListsToNumbered(input: string): string {
     const number = letter.toLowerCase().charCodeAt(0) - "a".charCodeAt(0) + 1;
     return `${whitespace}${number}. `;
   });
+}
+
+/**
+ * Converts asterisk (*) and plus (+) bullet lists to dash (-) bullet lists.
+ * This normalizes bullet list markers to the supported format.
+ */
+function convertBulletListsToDashes(input: string): string {
+  if (!input) {
+    return input;
+  }
+  // Finds lines starting with whitespace, an asterisk or plus, and a space.
+  return input.replace(
+    ASTERISK_PLUS_LIST_PATTERN,
+    (_, whitespace) => `${whitespace}- `
+  );
+}
+
+/**
+ * Normalizes spacing in numbered lists to ensure consistent single space after number.
+ * Converts "1.  " or "1.   " to "1. " (single space).
+ */
+function normalizeNumberedListSpacing(input: string): string {
+  if (!input) {
+    return input;
+  }
+  // Finds lines with numbered lists that have 2 or more spaces after the number and period.
+  return input.replace(
+    NUMBERED_LIST_SPACING_PATTERN,
+    (_, whitespace, number) => `${whitespace}${number}. `
+  );
+}
+
+/**
+ * Normalizes spacing in dash bullet lists to ensure consistent single space after dash.
+ * Converts "-  " or "-   " to "- " (single space).
+ */
+function normalizeDashListSpacing(input: string): string {
+  if (!input) {
+    return input;
+  }
+  // Finds lines with dash lists that have 2 or more spaces after the dash.
+  return input.replace(
+    DASH_LIST_SPACING_PATTERN,
+    (_, whitespace, dash) => `${whitespace}${dash} `
+  );
 }
 
 /**
@@ -176,36 +225,104 @@ export function applyOutsideCodeFences(
 }
 
 /**
+ * Detects if a position in the text is within a list item.
+ * @param text - The full text
+ * @param position - The position to check
+ * @returns Object with isInList boolean and indentation string
+ */
+function getListContext(
+  text: string,
+  position: number
+): { isInList: boolean; indentation: string } {
+  // Check if current line or recent lines contain list markers
+  const lines = text.slice(0, position).split("\n");
+
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Skip empty lines
+    if (trimmed === "") {
+      continue;
+    }
+
+    // Check for numbered list (1., 2., etc.)
+    const numberedMatch = line.match(NUMBERED_LIST_PATTERN);
+    if (numberedMatch) {
+      const indentation = `${numberedMatch[1]}    `; // Base indentation + 4 spaces for content
+      return { isInList: true, indentation };
+    }
+
+    // Check for bullet list (-, *, +)
+    const bulletMatch = line.match(BULLET_LIST_PATTERN);
+    if (bulletMatch) {
+      const indentation = `${bulletMatch[1]}  `; // Base indentation + 2 spaces for content
+      return { isInList: true, indentation };
+    }
+
+    // If this line starts at column 0 and isn't a list item, we're not in a list
+    if (line.match(NON_WHITESPACE_START_PATTERN)) {
+      break;
+    }
+  }
+
+  return { isInList: false, indentation: "" };
+}
+
+/**
+ * Creates a fenced math block with appropriate newlines based on context.
+ * @param inner - The math content
+ * @param fullText - The complete text for context analysis
+ * @param matchStart - Start position of the match
+ * @returns Formatted math block
+ */
+function createFencedMathBlock(
+  inner: string,
+  fullText: string,
+  matchStart: number
+): string {
+  const context = getListContext(fullText, matchStart);
+
+  if (context.isInList) {
+    // In a list: use single newline and preserve indentation
+    return `\n${context.indentation}\`\`\`math\n${context.indentation}${inner.trim()}\n${context.indentation}\`\`\`\n`;
+  }
+  // Not in a list: use double newlines for block separation
+  return `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`;
+}
+
+/**
  * Converts display math $$...$$ and \[...\] into fenced math blocks, removes backticks
- * around inline math, and normalizes spacing for inline $...$.
+ * around inline math, and normalizes spacing for inline $...$ while preserving list indentation.
  */
 export function normalizeMathDelimiters(input: string): string {
   // First, handle code blocks containing single dollar math expressions
   // This needs to be done before other processing to avoid conflicts
-  const processedInput = input.replace(
+  let processedInput = input.replace(
     CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN,
-    (_, inner: string) => `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`
+    (_, inner: string, offset: number) =>
+      createFencedMathBlock(inner, input, offset)
   );
 
   // Then, clean up any malformed fenced math blocks. This is done before
   // the main processing to ensure they are properly formatted.
-  const cleanedInput = processedInput.replace(
+  processedInput = processedInput.replace(
     FENCED_MATH_PATTERN,
-    (_, inner: string) => `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`
+    (_, inner: string, offset: number) =>
+      createFencedMathBlock(inner, processedInput, offset)
   );
 
   // Now, process the rest of the math delimiters outside of any code fences.
-  return applyOutsideCodeFences(cleanedInput, (segment) => {
+  return applyOutsideCodeFences(processedInput, (segment) => {
     let s = segment;
 
-    // Strip backticks around inline TeX $...$ and \(...\)
+    // Strip backticks around any math expressions (handles $, $$, and \(...\) in one pass)
     s = s.replace(
-      INLINE_MATH_IN_BACKTICKS_GLOBAL,
-      (_, inner: string) => `$${inner.trim()}$`
-    );
-    s = s.replace(
-      INLINE_PAREN_MATH_IN_BACKTICKS_GLOBAL,
-      (_, inner: string) => `$${inner.trim()}$`
+      MATH_IN_BACKTICKS_GLOBAL,
+      (_, dollarContent: string, parenContent: string) => {
+        const content = dollarContent || parenContent;
+        return `$${content.trim()}$`;
+      }
     );
 
     // Convert bare inline parenthesis math \(...\) to $...$ first,
@@ -215,33 +332,16 @@ export function normalizeMathDelimiters(input: string): string {
       (_, inner: string) => `$${inner.trim()}$`
     );
 
-    // Convert display math wrapped in backticks to fenced math
-    s = s.replace(
-      DISPLAY_MATH_IN_BACKTICKS_GLOBAL,
-      (_, inner: string) => `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`
-    );
-
-    // Convert $$...$$ to fenced math blocks
-    s = s.replace(
-      DISPLAY_MATH_DOLLARS_GLOBAL,
-      (_, inner: string) => `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`
-    );
-
     // Convert \[...\] to fenced math blocks
     s = s.replace(
       DISPLAY_MATH_BRACKETS_GLOBAL,
-      (_, inner: string) => `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`
+      (_, inner: string, offset: number) =>
+        createFencedMathBlock(inner, s, offset)
     );
 
-    s = s.replace(
-      MATH_TAG_PATTERN,
-      (_, inner: string) => `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`
-    );
-
-    // Normalize spacing inside inline single-dollar math
-    s = s.replace(
-      INLINE_SINGLE_DOLLAR_GLOBAL,
-      (_, inner: string) => `$${inner.trim()}$`
+    // Convert <math>...</math> to fenced math blocks
+    s = s.replace(MATH_TAG_PATTERN, (_, inner: string, offset: number) =>
+      createFencedMathBlock(inner, s, offset)
     );
 
     return s;
@@ -252,7 +352,7 @@ export function normalizeMathDelimiters(input: string): string {
  * Parses markdown text and removes incomplete tokens to prevent partial rendering
  * of links, images, bold, and italic formatting during streaming.
  */
-export function parseIncompleteMarkdown(text: string): string {
+export function parseMarkdown(text: string): string {
   if (!text || typeof text !== "string") {
     return text;
   }
@@ -261,6 +361,15 @@ export function parseIncompleteMarkdown(text: string): string {
 
   // Convert lettered lists before other parsing to ensure consistency.
   result = convertLetteredListsToNumbered(result);
+
+  // Convert asterisk and plus bullet lists to dash bullet lists.
+  result = convertBulletListsToDashes(result);
+
+  // Normalize spacing in numbered lists to ensure single space after number.
+  result = normalizeNumberedListSpacing(result);
+
+  // Normalize spacing in dash bullet lists to ensure single space after dash.
+  result = normalizeDashListSpacing(result);
 
   result = removeUnterminatedLinkOrImage(result);
 

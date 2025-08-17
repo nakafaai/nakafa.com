@@ -1,10 +1,7 @@
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { defaultModel, model } from "@repo/ai/lib/providers";
 import { tools } from "@repo/ai/lib/tools";
-import {
-  contextAnalysisInstructions,
-  nakafaPrompt,
-} from "@repo/ai/prompt/system";
+import { nakafaPrompt } from "@repo/ai/prompt/system";
 import {
   convertToModelMessages,
   createUIMessageStream,
@@ -50,34 +47,15 @@ export async function POST(req: Request) {
         messages: convertToModelMessages(messages),
         stopWhen: stepCountIs(MAX_STEPS),
         tools,
-        prepareStep: ({ messages: initialMessages, stepNumber }) => {
+        prepareStep: ({ messages: initialMessages }) => {
           // We need to cut costs, ai is expensive
           // Compress conversation history for longer loops
           const finalMessages = initialMessages.slice(
             -(MAX_CONVERSATION_HISTORY / 2)
           );
 
-          if (stepNumber === 0) {
-            return {
-              system: nakafaPrompt({
-                locale,
-                slug: pageSlug,
-                injection: contextAnalysisInstructions,
-              }),
-              messages: finalMessages,
-              toolChoice: { type: "tool", toolName: "createTask" },
-              activeTools: ["createTask"],
-            };
-          }
-
           return {
             messages: finalMessages,
-            activeTools: [
-              "getContent",
-              "getArticles",
-              "getSubjects",
-              "calculator",
-            ],
           };
         },
         experimental_repairToolCall: async ({
@@ -126,8 +104,8 @@ export async function POST(req: Request) {
           },
           google: {
             thinkingConfig: {
-              thinkingBudget: 0, // Disable thinking
-              includeThoughts: false,
+              thinkingBudget: -1, // Dynamic thinking
+              includeThoughts: true,
             },
           } satisfies GoogleGenerativeAIProviderOptions,
         },

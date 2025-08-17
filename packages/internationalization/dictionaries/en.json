@@ -211,7 +211,8 @@
     "completed": "Completed",
     "error": "Error",
     "input": "Input",
-    "output": "Output"
+    "output": "Output",
+    "prepare-next-moves": "Preparing next moves..."
   },
   "Math": {
     "Metadata": {
