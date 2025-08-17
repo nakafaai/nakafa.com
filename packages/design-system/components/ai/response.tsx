@@ -11,6 +11,7 @@ import hardenReactMarkdown from "harden-react-markdown";
 import type { ComponentProps } from "react";
 import { memo, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkRehype from "remark-rehype";
@@ -60,6 +61,7 @@ const HardenedMarkdownBlocks = memo(
         components={reactMdxComponents}
         // biome-ignore lint/suspicious/noArrayIndexKey: We need to use the index as key to prevent the component from re-rendering
         key={`${id}-block_${index}`}
+        rehypePlugins={[rehypeRaw]}
         remarkPlugins={[remarkGfm, remarkMath, remarkRehype]}
         {...props}
       >

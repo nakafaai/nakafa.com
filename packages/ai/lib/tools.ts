@@ -8,10 +8,12 @@ import {
   calculatorOutputSchema,
   createTaskInputSchema,
   createTaskOutputSchema,
+  getArticlesInputSchema,
+  getArticlesOutputSchema,
   getContentInputSchema,
   getContentOutputSchema,
-  getContentsInputSchema,
-  getContentsOutputSchema,
+  getSubjectsInputSchema,
+  getSubjectsOutputSchema,
 } from "../schema/tools";
 import { defaultModel, model } from "./providers";
 import { buildContentSlug, cleanSlug } from "./utils";
@@ -53,13 +55,15 @@ const createTaskTool = tool({
   },
 });
 
-const getContentsTool = tool({
-  description:
-    "Retrieves a list of available educational content, such as articles or subjects. Results can be filtered by language, subject, grade, or category to narrow down the search.",
-  inputSchema: getContentsInputSchema,
-  outputSchema: getContentsOutputSchema,
-  async execute({ locale, filters }) {
-    const slug = buildContentSlug({ locale, filters });
+const getArticlesTool = tool({
+  description: "Retrieves a list of available articles.",
+  inputSchema: getArticlesInputSchema,
+  outputSchema: getArticlesOutputSchema,
+  async execute({ locale, category }) {
+    const slug = buildContentSlug({
+      locale,
+      filters: { type: "article", category },
+    });
 
     const { data, error } = await api.contents.getContents({
       slug,
@@ -67,18 +71,50 @@ const getContentsTool = tool({
 
     if (error) {
       return {
-        contents: [],
+        articles: [],
       };
     }
 
-    const contents = data.map((item) => ({
+    const articles = data.map((item) => ({
       title: item.metadata.title,
       slug: item.slug,
       locale: item.locale,
     }));
 
     return {
-      contents,
+      articles,
+    };
+  },
+});
+
+const getSubjectsTool = tool({
+  description: "Retrieves a list of available subjects.",
+  inputSchema: getSubjectsInputSchema,
+  outputSchema: getSubjectsOutputSchema,
+  async execute({ locale, category, grade, material }) {
+    const slug = buildContentSlug({
+      locale,
+      filters: { type: "subject", category, grade, material },
+    });
+
+    const { data, error } = await api.contents.getContents({
+      slug,
+    });
+
+    if (error) {
+      return {
+        subjects: [],
+      };
+    }
+
+    const subjects = data.map((item) => ({
+      title: item.metadata.title,
+      slug: item.slug,
+      locale: item.locale,
+    }));
+
+    return {
+      subjects,
     };
   },
 });
@@ -193,6 +229,7 @@ const calculatorTool = tool({
 export const tools = {
   createTask: createTaskTool,
   getContent: getContentTool,
-  getContents: getContentsTool,
+  getArticles: getArticlesTool,
+  getSubjects: getSubjectsTool,
   calculator: calculatorTool,
 };

@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       }
 
       return {
-        activeTools: ["getContent", "getContents", "calculator"],
+        activeTools: ["getContent", "getArticles", "getSubjects", "calculator"],
       };
     },
     experimental_repairToolCall: async ({

@@ -1,12 +1,12 @@
 "use client";
 
-import type { GetContentsOutput } from "@repo/ai/schema/tools";
+import type { GetArticlesOutput } from "@repo/ai/schema/tools";
 import {
   Tool,
   ToolContent,
   ToolHeader,
 } from "@repo/design-system/components/ai/tool";
-import { LibraryIcon } from "lucide-react";
+import { NewspaperIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -16,24 +16,24 @@ type Props = {
     | "input-available"
     | "output-available"
     | "output-error";
-  output?: GetContentsOutput;
+  output?: GetArticlesOutput;
 };
 
-export const ContentsTool = memo(({ status, output }: Props) => {
+export const ArticlesTool = memo(({ status, output }: Props) => {
   const t = useTranslations("Ai");
 
   return (
     <Tool>
       <ToolHeader
-        icon={<LibraryIcon className="size-4 text-muted-foreground" />}
+        icon={<NewspaperIcon className="size-4 text-muted-foreground" />}
         state={status}
-        type={t("get-contents")}
+        type={t("get-articles")}
       />
       <ToolContent>
         <div className="p-3">
           <p className="text-muted-foreground text-sm">
-            {t("found-contents", {
-              count: output?.contents.length ?? 0,
+            {t("found-articles", {
+              count: output?.articles.length ?? 0,
             })}
           </p>
         </div>
@@ -41,4 +41,4 @@ export const ContentsTool = memo(({ status, output }: Props) => {
     </Tool>
   );
 });
-ContentsTool.displayName = "ContentsTool";
+ArticlesTool.displayName = "ArticlesTool";

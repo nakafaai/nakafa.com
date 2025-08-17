@@ -47,9 +47,10 @@ import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { toast } from "sonner";
 import { useAi, useAiHydrated } from "@/lib/context/use-ai";
+import { ArticlesTool } from "./articles-tool";
 import { CalculatorTool } from "./calculator-tool";
 import { ContentTool } from "./content-tool";
-import { ContentsTool } from "./contents-tool";
+import { SubjectsTool } from "./subjects-tool";
 import { TaskTool } from "./task-tool";
 
 const MIN_WIDTH = 448;
@@ -290,9 +291,17 @@ function AISheetMessage({ message }: { message: MyUIMessage }) {
                 <ReasoningContent id={message.id}>{part.text}</ReasoningContent>
               </Reasoning>
             );
-          case "tool-getContents":
+          case "tool-getArticles":
             return (
-              <ContentsTool
+              <ArticlesTool
+                key={`tool-${part.toolCallId}`}
+                output={part.output}
+                status={part.state}
+              />
+            );
+          case "tool-getSubjects":
+            return (
+              <SubjectsTool
                 key={`tool-${part.toolCallId}`}
                 output={part.output}
                 status={part.state}

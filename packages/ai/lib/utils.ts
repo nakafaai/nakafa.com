@@ -1,7 +1,14 @@
 import dedent from "dedent";
-import type { GetContentsInput } from "../schema/tools";
 
-export function buildContentSlug(params: GetContentsInput): string {
+export function buildContentSlug(params: {
+  locale: string;
+  filters: {
+    type: "article" | "subject";
+    category?: string;
+    grade?: string;
+    material?: string;
+  };
+}): string {
   const { locale, filters } = params;
   const { type, category, grade, material } = filters;
 
