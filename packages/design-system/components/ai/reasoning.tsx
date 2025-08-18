@@ -10,7 +10,8 @@ import { cn } from "@repo/design-system/lib/utils";
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
-import { createContext, memo, useContext, useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
+import { createContext, useContextSelector } from "use-context-selector";
 import { Response } from "./response";
 
 const AUTO_CLOSE_DELAY = 1000;
@@ -25,13 +26,13 @@ type ReasoningContextValue = {
 
 const ReasoningContext = createContext<ReasoningContextValue | null>(null);
 
-const useReasoning = () => {
-  const context = useContext(ReasoningContext);
+function useReasoning<T>(selector: (state: ReasoningContextValue) => T): T {
+  const context = useContextSelector(ReasoningContext, (v) => v);
   if (!context) {
     throw new Error("Reasoning components must be used within Reasoning");
   }
-  return context;
-};
+  return selector(context);
+}
 
 export type ReasoningProps = ComponentProps<typeof Collapsible> & {
   isStreaming?: boolean;
@@ -112,10 +113,13 @@ export const Reasoning = memo(
       setIsOpen(v);
     };
 
+    const value = useMemo(
+      () => ({ isStreaming, isOpen, setIsOpen, duration }),
+      [isStreaming, isOpen, setIsOpen, duration]
+    );
+
     return (
-      <ReasoningContext.Provider
-        value={{ isStreaming, isOpen, setIsOpen, duration }}
-      >
+      <ReasoningContext.Provider value={value}>
         <Collapsible
           className={cn("not-prose", className)}
           onOpenChange={handleOpenChange}
@@ -143,7 +147,9 @@ export const ReasoningTrigger = memo(
     ...props
   }: ReasoningTriggerProps) => {
     const t = useTranslations("Ai");
-    const { isStreaming, isOpen, duration } = useReasoning();
+    const isStreaming = useReasoning((v) => v.isStreaming);
+    const isOpen = useReasoning((v) => v.isOpen);
+    const duration = useReasoning((v) => v.duration);
 
     return (
       <CollapsibleTrigger

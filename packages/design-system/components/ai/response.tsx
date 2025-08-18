@@ -1,5 +1,6 @@
 "use client";
 
+import { useStream } from "@repo/design-system/hooks/use-stream";
 import {
   cleanMarkdown,
   parseMarkdown,
@@ -9,7 +10,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { reactMdxComponents } from "@repo/design-system/markdown/react-mdx";
 import hardenReactMarkdown from "harden-react-markdown";
 import type { ComponentProps } from "react";
-import { memo, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
@@ -32,6 +33,7 @@ export type ResponseProps = {
   id: string;
   children: string;
   className?: string;
+  animate?: boolean;
 } & HardenedMarkdownProps;
 
 const MemoizedHardenedMarkdown = memo(
@@ -41,6 +43,26 @@ const MemoizedHardenedMarkdown = memo(
   }
 );
 MemoizedHardenedMarkdown.displayName = "MemoizedHardenedMarkdown";
+
+const HardenedMarkdownBlock = memo(
+  ({
+    children,
+    ...props
+  }: HardenedMarkdownProps & Pick<ResponseProps, "children">) => {
+    return (
+      <MemoizedHardenedMarkdown
+        components={reactMdxComponents}
+        rehypePlugins={[rehypeRaw]}
+        remarkPlugins={[remarkGfm, remarkMath, remarkRehype]}
+        {...props}
+      >
+        {children}
+      </MemoizedHardenedMarkdown>
+    );
+  },
+  (prevProps, nextProps) => prevProps.children === nextProps.children
+);
+HardenedMarkdownBlock.displayName = "HardenedMarkdownBlock";
 
 const HardenedMarkdownBlocks = memo(
   ({
@@ -55,23 +77,20 @@ const HardenedMarkdownBlocks = memo(
     }, [children]);
 
     return blocks.map((block, index) => (
-      <MemoizedHardenedMarkdown
-        components={reactMdxComponents}
+      <HardenedMarkdownBlock
         // biome-ignore lint/suspicious/noArrayIndexKey: We need to use the index as key to prevent the component from re-rendering
         key={`${id}-block_${index}`}
-        rehypePlugins={[rehypeRaw]}
-        remarkPlugins={[remarkGfm, remarkMath, remarkRehype]}
         {...props}
       >
         {block}
-      </MemoizedHardenedMarkdown>
+      </HardenedMarkdownBlock>
     ));
   },
   (prevProps, nextProps) => prevProps.children === nextProps.children
 );
 HardenedMarkdownBlocks.displayName = "HardenedMarkdownBlocks";
 
-export const Response = memo(
+const ResponseContent = memo(
   ({
     className,
     children,
@@ -79,7 +98,7 @@ export const Response = memo(
     allowedLinkPrefixes = ["*"],
     defaultOrigin = "https://nakafa.com",
     ...props
-  }: ResponseProps) => {
+  }: Omit<ResponseProps, "animate">) => {
     const parsedChildren = useMemo(() => parseMarkdown(children), [children]);
 
     return (
@@ -101,5 +120,58 @@ export const Response = memo(
     );
   },
   (prevProps, nextProps) => prevProps.children === nextProps.children
+);
+ResponseContent.displayName = "ResponseContent";
+
+export const Response = memo(
+  ({
+    id,
+    children,
+    animate = false,
+    className,
+    allowedImagePrefixes,
+    allowedLinkPrefixes,
+    defaultOrigin,
+  }: ResponseProps) => {
+    const contentRef = useRef("");
+    const { stream, addPart } = useStream();
+
+    useEffect(() => {
+      if (!(children && animate)) {
+        return;
+      }
+
+      if (contentRef.current !== children) {
+        const delta = children.slice(contentRef.current.length);
+        if (delta) {
+          addPart(delta);
+        }
+        contentRef.current = children;
+      }
+    }, [children, animate, addPart]);
+
+    const wrap = useCallback(
+      (v: string) => {
+        return (
+          <ResponseContent
+            allowedImagePrefixes={allowedImagePrefixes}
+            allowedLinkPrefixes={allowedLinkPrefixes}
+            className={className}
+            defaultOrigin={defaultOrigin}
+            id={id}
+          >
+            {v}
+          </ResponseContent>
+        );
+      },
+      [id, className, allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin]
+    );
+
+    if (!animate) {
+      return wrap(children);
+    }
+
+    return wrap(stream ?? children ?? "");
+  }
 );
 Response.displayName = "Response";

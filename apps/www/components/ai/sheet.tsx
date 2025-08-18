@@ -298,7 +298,12 @@ function AISheetMessage({
                 key={`message-${message.id}-part-${i}`}
               >
                 <MessageContent>
-                  <Response id={message.id}>{part.text}</Response>
+                  <Response
+                    animate={part.state === "streaming"}
+                    id={message.id}
+                  >
+                    {part.text}
+                  </Response>
                 </MessageContent>
                 {isLastPart && (
                   <AISheetMessageActions
