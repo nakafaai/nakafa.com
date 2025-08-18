@@ -293,10 +293,7 @@ function AISheetMessage({
           case "text": {
             const isLastPart = i === message.parts.length - 1;
             return (
-              <div
-                className="flex flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end"
-                key={`message-${message.id}-part-${i}`}
-              >
+              <div className="flex flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end">
                 <MessageContent>
                   <Response
                     animate={part.state === "streaming"}
@@ -320,7 +317,7 @@ function AISheetMessage({
               <Reasoning
                 className="w-full"
                 isStreaming={part.state === "streaming"}
-                key={`reasoning-${message.id}-part-${i}`}
+                key={`reasoning-${message.id}`}
               >
                 <ReasoningTrigger />
                 <ReasoningContent id={message.id}>{part.text}</ReasoningContent>

@@ -172,6 +172,7 @@ export const Response = memo(
     }
 
     return wrap(stream ?? children ?? "");
-  }
+  },
+  (prevProps, nextProps) => prevProps.children === nextProps.children
 );
 Response.displayName = "Response";

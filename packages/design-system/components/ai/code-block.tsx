@@ -142,12 +142,40 @@ export type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   children?: ReactNode;
 };
 
+// Extract styles to prevent inline object creation
+const LIGHT_CUSTOM_STYLE = {
+  margin: 0,
+  padding: "1rem",
+  fontSize: "0.875rem",
+  background: "hsl(var(--background))",
+  color: "hsl(var(--foreground))",
+};
+
+const DARK_CUSTOM_STYLE = {
+  margin: 0,
+  padding: "1rem",
+  fontSize: "0.875rem",
+  background: "hsl(var(--background))",
+  color: "hsl(var(--foreground))",
+};
+
+const LINE_NUMBER_STYLE = {
+  color: "hsl(var(--muted-foreground))",
+  paddingRight: "1rem",
+  minWidth: "2.5rem",
+};
+
+const CODE_TAG_PROPS = {
+  className: "font-mono text-sm",
+};
+
 const MemoizedSyntaxHighlighter = memo(
   SyntaxHighlighter,
   (prevProps, nextProps) => {
     return prevProps.children === nextProps.children;
   }
 );
+MemoizedSyntaxHighlighter.displayName = "MemoizedSyntaxHighlighter";
 
 export const CodeBlock = memo(
   ({
@@ -188,22 +216,10 @@ export const CodeBlock = memo(
           <div className="relative">
             <MemoizedSyntaxHighlighter
               className="overflow-hidden dark:hidden"
-              codeTagProps={{
-                className: "font-mono text-sm",
-              }}
-              customStyle={{
-                margin: 0,
-                padding: "1rem",
-                fontSize: "0.875rem",
-                background: "hsl(var(--background))",
-                color: "hsl(var(--foreground))",
-              }}
+              codeTagProps={CODE_TAG_PROPS}
+              customStyle={LIGHT_CUSTOM_STYLE}
               language={language}
-              lineNumberStyle={{
-                color: "hsl(var(--muted-foreground))",
-                paddingRight: "1rem",
-                minWidth: "2.5rem",
-              }}
+              lineNumberStyle={LINE_NUMBER_STYLE}
               showLineNumbers={showLineNumbers}
               style={oneLight}
             >
@@ -211,22 +227,10 @@ export const CodeBlock = memo(
             </MemoizedSyntaxHighlighter>
             <MemoizedSyntaxHighlighter
               className="hidden overflow-hidden dark:block"
-              codeTagProps={{
-                className: "font-mono text-sm",
-              }}
-              customStyle={{
-                margin: 0,
-                padding: "1rem",
-                fontSize: "0.875rem",
-                background: "hsl(var(--background))",
-                color: "hsl(var(--foreground))",
-              }}
+              codeTagProps={CODE_TAG_PROPS}
+              customStyle={DARK_CUSTOM_STYLE}
               language={language}
-              lineNumberStyle={{
-                color: "hsl(var(--muted-foreground))",
-                paddingRight: "1rem",
-                minWidth: "2.5rem",
-              }}
+              lineNumberStyle={LINE_NUMBER_STYLE}
               showLineNumbers={showLineNumbers}
               style={oneDark}
             >
