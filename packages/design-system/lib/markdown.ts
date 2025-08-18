@@ -311,12 +311,17 @@ function createFencedMathBlock(
 ): string {
   const context = getListContext(fullText, matchStart);
 
+  // Clean content while preserving internal structure
+  const lines = inner.split("\n");
+  const trimmedLines = lines.map((line) => line.trimEnd()); // Remove trailing spaces only
+  const cleanContent = trimmedLines.join("\n").replace(/^\n+|\n+$/g, ""); // Remove leading/trailing empty lines only
+
   if (context.isInList) {
     // In a list: use single newline and preserve indentation
-    return `\n${context.indentation}\`\`\`math\n${context.indentation}${inner.trim()}\n${context.indentation}\`\`\`\n`;
+    return `\n${context.indentation}\`\`\`math\n${context.indentation}${cleanContent}\n${context.indentation}\`\`\`\n`;
   }
   // Not in a list: use double newlines for block separation
-  return `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`;
+  return `\n\n\`\`\`math\n${cleanContent}\n\`\`\`\n\n`;
 }
 
 /**
