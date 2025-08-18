@@ -13,6 +13,7 @@ type Actions = {
   setOpen: (open: boolean) => void;
   setText: (text: string) => void;
   setCurrentMessages: (messages: MyUIMessage[]) => void;
+  appendCurrentMessages: (messages: MyUIMessage) => void;
   clearCurrentMessages: () => void;
 };
 
@@ -32,13 +33,12 @@ export const createAiStore = () => {
 
         setOpen: (open) => set({ open }),
         setText: (text) => set({ text }),
-        setCurrentMessages: (messages) => {
+        setCurrentMessages: (messages) => set({ currentMessages: messages }),
+        appendCurrentMessages: (message) => {
           const currentMessages = get().currentMessages;
-          const combined = [...currentMessages, ...messages];
-          const uniqueMessages = Array.from(
-            new Map(combined.map((m) => [m.id, m])).values()
-          );
-          set({ currentMessages: uniqueMessages });
+          set({
+            currentMessages: [...currentMessages, message],
+          });
         },
         clearCurrentMessages: () => set({ currentMessages: [] }),
       })),

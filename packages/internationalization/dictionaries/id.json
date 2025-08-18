@@ -212,7 +212,9 @@
     "error": "Error",
     "input": "Input",
     "output": "Output",
-    "prepare-next-moves": "Menyiapkan langkah selanjutnya..."
+    "prepare-next-moves": "Menyiapkan langkah selanjutnya...",
+    "copy-message": "Salin pesan",
+    "retry-message": "Ulangi pesan"
   },
   "Math": {
     "Metadata": {

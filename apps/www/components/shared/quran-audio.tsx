@@ -2,7 +2,8 @@
 
 import type { Verse } from "@repo/contents/_types/quran";
 import { Button } from "@repo/design-system/components/ui/button";
-import { PlayIcon, SquareIcon } from "lucide-react";
+import { IconSquareFilled } from "@tabler/icons-react";
+import { PlayIcon } from "lucide-react";
 import { useState } from "react";
 import useSound from "use-sound";
 
@@ -35,7 +36,7 @@ export function QuranAudio({ audio }: Props) {
       size="icon"
       variant={isPlaying ? "destructive" : "outline"}
     >
-      {isPlaying ? <SquareIcon /> : <PlayIcon />}
+      {isPlaying ? <IconSquareFilled /> : <PlayIcon />}
       <span className="sr-only">{isPlaying ? "Stop audio" : "Play audio"}</span>
     </Button>
   );

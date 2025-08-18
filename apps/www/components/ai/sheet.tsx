@@ -1,8 +1,9 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { useHotkeys, useMediaQuery } from "@mantine/hooks";
+import { useClipboard, useHotkeys, useMediaQuery } from "@mantine/hooks";
 import type { MyUIMessage } from "@repo/ai/lib/types";
+import { Action, Actions } from "@repo/design-system/components/ai/actions";
 import {
   Conversation,
   ConversationContent,
@@ -37,8 +38,11 @@ import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
 import { DefaultChatTransport } from "ai";
 import {
+  CheckIcon,
+  CopyIcon,
   Maximize2Icon,
   Minimize2Icon,
+  RefreshCcwIcon,
   SparklesIcon,
   Trash2Icon,
   XIcon,
@@ -75,6 +79,7 @@ export function AiSheet({
   const t = useTranslations("Ai");
 
   const setCurrentMessages = useAi((state) => state.setCurrentMessages);
+  const appendCurrentMessages = useAi((state) => state.appendCurrentMessages);
   const clearCurrentMessages = useAi((state) => state.clearCurrentMessages);
 
   const open = useAi((state) => state.open);
@@ -90,7 +95,7 @@ export function AiSheet({
     maxWidth: MAX_WIDTH,
   });
 
-  const { sendMessage, messages, status, stop, setMessages } =
+  const { sendMessage, messages, status, stop, setMessages, regenerate } =
     useChat<MyUIMessage>({
       messages: initialMessages,
       transport: new DefaultChatTransport({
@@ -120,7 +125,7 @@ export function AiSheet({
         );
       },
       onFinish: ({ message }) => {
-        setCurrentMessages([message]);
+        appendCurrentMessages(message);
       },
     });
 
@@ -193,7 +198,7 @@ export function AiSheet({
         <div className="relative flex size-full flex-col divide-y overflow-hidden">
           <Conversation>
             <ConversationContent>
-              <AISheetMessages messages={messages} />
+              <AISheetMessages messages={messages} regenerate={regenerate} />
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
@@ -257,28 +262,54 @@ function AISheetToolbar({
   );
 }
 
-function AISheetMessages({ messages }: { messages: MyUIMessage[] }) {
+function AISheetMessages({
+  messages,
+  regenerate,
+}: {
+  messages: MyUIMessage[];
+  regenerate: ({ messageId }: { messageId: string }) => void;
+}) {
   return messages.map((message) => (
     <Message
       from={message.role === "user" ? "user" : "assistant"}
       key={message.id}
     >
-      <AISheetMessage message={message} />
+      <AISheetMessage message={message} regenerate={regenerate} />
     </Message>
   ));
 }
 
-function AISheetMessage({ message }: { message: MyUIMessage }) {
+function AISheetMessage({
+  message,
+  regenerate,
+}: {
+  message: MyUIMessage;
+  regenerate: ({ messageId }: { messageId: string }) => void;
+}) {
   return (
     <div className="flex flex-col gap-4">
       {message.parts.map((part, i) => {
         switch (part.type) {
-          case "text":
+          case "text": {
+            const isLastPart = i === message.parts.length - 1;
             return (
-              <MessageContent key={`message-${message.id}-part-${i}`}>
-                <Response id={message.id}>{part.text}</Response>
-              </MessageContent>
+              <div
+                className="flex flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end"
+                key={`message-${message.id}-part-${i}`}
+              >
+                <MessageContent>
+                  <Response id={message.id}>{part.text}</Response>
+                </MessageContent>
+                {isLastPart && (
+                  <AISheetMessageActions
+                    messageId={message.id}
+                    regenerate={regenerate}
+                    text={part.text}
+                  />
+                )}
+              </div>
             );
+          }
           case "reasoning":
             return (
               <Reasoning
@@ -329,5 +360,38 @@ function AISheetMessage({ message }: { message: MyUIMessage }) {
         }
       })}
     </div>
+  );
+}
+
+function AISheetMessageActions({
+  messageId,
+  text,
+  regenerate,
+}: {
+  messageId: string;
+  text: string;
+  regenerate: ({ messageId }: { messageId: string }) => void;
+}) {
+  const t = useTranslations("Ai");
+
+  const clipboard = useClipboard({ timeout: 1000 });
+
+  return (
+    <Actions className="opacity-0 transition-opacity ease-out group-hover:opacity-100">
+      <Action
+        label={t("retry-message")}
+        onClick={() => regenerate({ messageId })}
+        tooltip={t("retry-message")}
+      >
+        <RefreshCcwIcon />
+      </Action>
+      <Action
+        label={t("copy-message")}
+        onClick={() => clipboard.copy(text)}
+        tooltip={t("copy-message")}
+      >
+        {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
+      </Action>
+    </Actions>
   );
 }

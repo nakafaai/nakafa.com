@@ -31,15 +31,12 @@ export function Action({
   label,
   className,
   variant = "ghost",
-  size = "sm",
+  size = "icon-sm",
   ...props
 }: ActionProps) {
   const button = (
     <Button
-      className={cn(
-        "size-9 p-1.5 text-muted-foreground hover:text-foreground",
-        className
-      )}
+      className={cn(className)}
       size={size}
       type="button"
       variant={variant}
@@ -55,7 +52,7 @@ export function Action({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>{button}</TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent side="bottom">
             <p>{tooltip}</p>
           </TooltipContent>
         </Tooltip>

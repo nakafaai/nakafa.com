@@ -10,8 +10,9 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
+import { IconSquareFilled } from "@tabler/icons-react";
 import type { ChatStatus } from "ai";
-import { SendIcon, SquareIcon } from "lucide-react";
+import { SendIcon } from "lucide-react";
 import type {
   ComponentProps,
   HTMLAttributes,
@@ -219,15 +220,15 @@ export const PromptInputSubmit = ({
   if (status === "submitted") {
     Icon = <SpinnerIcon />;
   } else if (status === "streaming") {
-    Icon = <SquareIcon className="size-4" />;
+    Icon = <IconSquareFilled className="size-4" />;
   }
 
   return (
     <Button
-      className={cn("gap-1.5 rounded-lg", className)}
+      className={cn("gap-1.5", className)}
       size={size}
       type="submit"
-      variant={variant}
+      variant={status === "streaming" ? "destructive" : variant}
       {...props}
     >
       {children ?? Icon}

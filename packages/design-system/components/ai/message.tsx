@@ -14,7 +14,7 @@ export type MessageProps = HTMLAttributes<HTMLDivElement> & {
 export const Message = memo(({ className, from, ...props }: MessageProps) => (
   <div
     className={cn(
-      "group flex w-full items-end justify-end gap-2 py-4",
+      "group flex w-full items-end justify-end gap-2",
       from === "user" ? "is-user" : "is-assistant flex-row-reverse justify-end",
       className
     )}
@@ -29,14 +29,14 @@ export const MessageContent = memo(
   ({ children, className, ...props }: MessageContentProps) => (
     <div
       className={cn(
-        "flex flex-col gap-2 overflow-hidden rounded-lg text-foreground/80",
+        "w-fit overflow-hidden rounded-lg text-foreground/80",
         "group-[.is-user]:bg-primary group-[.is-user]:px-3 group-[.is-user]:py-2 group-[.is-user]:text-primary-foreground",
         "group-[.is-assistant]:rounded-none",
         className
       )}
       {...props}
     >
-      <div className="is-user:dark">{children}</div>
+      <div className="is-user:dark flex flex-col gap-4">{children}</div>
     </div>
   ),
   (prevProps, nextProps) => prevProps.children === nextProps.children
