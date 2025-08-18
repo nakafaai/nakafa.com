@@ -409,8 +409,10 @@ export function parseMarkdown(text: string): string {
   // Normalize spacing in dash bullet lists to ensure single space after dash.
   result = normalizeDashListSpacing(result);
 
+  // Remove unterminated links or images
   result = removeUnterminatedLinkOrImage(result);
 
+  // Complete inline code formatting
   result = completeInlineCodeFormatting(result);
 
   // Sanitize math/markdown outside of fenced code blocks to avoid hallucinated formatting
