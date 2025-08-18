@@ -90,7 +90,7 @@ export default async function Page({ params }: Props) {
             const title = getSurahName({ locale, name: surah.name });
             return (
               <Link
-                className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-4 transition-colors first:border-t-0 first:pt-5 last:pb-5 hover:bg-accent hover:text-accent-foreground"
+                className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-4 transition-colors ease-out first:border-t-0 first:pt-5 last:pb-5 hover:bg-accent hover:text-accent-foreground"
                 href={`/quran/${surah.number}`}
                 key={surah.number}
                 prefetch
