@@ -136,6 +136,9 @@ export const Response = memo(
     const contentRef = useRef("");
     const { stream, addPart } = useStream();
 
+    // biome-ignore lint/suspicious/noConsole: For debugging
+    console.log("children", children);
+
     useEffect(() => {
       if (!(children && animate)) {
         return;
