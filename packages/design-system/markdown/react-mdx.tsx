@@ -28,7 +28,7 @@ import type {
   TableRowProps,
 } from "@repo/design-system/types/markdown";
 import type { Options } from "react-markdown";
-import { CodeBlockMdx } from "./code-block";
+import { CodeBlock, CodeBlockCopyButton } from "../components/ai/code-block";
 
 export const reactMdxComponents: Options["components"] = {
   h1: (props: HeadingProps) => (
@@ -80,6 +80,7 @@ export const reactMdxComponents: Options["components"] = {
       {filterWhitespaceNodes(children)}
     </TableHeader>
   ),
+  hr: () => <hr className="my-4 border-border" />,
   tbody: ({ children, ...props }: TableBodyProps) => (
     <TableBody {...props}>{filterWhitespaceNodes(children)}</TableBody>
   ),
@@ -152,9 +153,9 @@ export const reactMdxComponents: Options["components"] = {
     }
 
     return (
-      <CodeBlockMdx
-        data={[{ code: result, language, filename: `index.${language}` }]}
-      />
+      <CodeBlock code={result} language={language}>
+        <CodeBlockCopyButton />
+      </CodeBlock>
     );
   },
 };

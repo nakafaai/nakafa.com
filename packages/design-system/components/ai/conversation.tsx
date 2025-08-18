@@ -27,7 +27,10 @@ export type ConversationContentProps = ComponentProps<
 
 export const ConversationContent = memo(
   ({ className, ...props }: ConversationContentProps) => (
-    <StickToBottom.Content className={cn("p-4", className)} {...props} />
+    <StickToBottom.Content
+      className={cn("flex flex-col gap-4 p-4", className)}
+      {...props}
+    />
   )
 );
 ConversationContent.displayName = "ConversationContent";

@@ -34,14 +34,13 @@ export type ResponseProps = {
   className?: string;
 } & HardenedMarkdownProps;
 
-// Create a hardened version of ReactMarkdown
-const HardenedMarkdown = memo(
+const MemoizedHardenedMarkdown = memo(
   hardenReactMarkdown(ReactMarkdown),
   (prevProps, nextProps) => {
     return prevProps.children === nextProps.children;
   }
 );
-HardenedMarkdown.displayName = "HardenedMarkdown";
+MemoizedHardenedMarkdown.displayName = "MemoizedHardenedMarkdown";
 
 const HardenedMarkdownBlocks = memo(
   ({
@@ -56,7 +55,7 @@ const HardenedMarkdownBlocks = memo(
     }, [children]);
 
     return blocks.map((block, index) => (
-      <HardenedMarkdown
+      <MemoizedHardenedMarkdown
         components={reactMdxComponents}
         // biome-ignore lint/suspicious/noArrayIndexKey: We need to use the index as key to prevent the component from re-rendering
         key={`${id}-block_${index}`}
@@ -65,7 +64,7 @@ const HardenedMarkdownBlocks = memo(
         {...props}
       >
         {block}
-      </HardenedMarkdown>
+      </MemoizedHardenedMarkdown>
     ));
   },
   (prevProps, nextProps) => prevProps.children === nextProps.children
@@ -74,12 +73,12 @@ HardenedMarkdownBlocks.displayName = "HardenedMarkdownBlocks";
 
 export const Response = memo(
   ({
-    id,
     className,
     children,
-    allowedImagePrefixes,
-    allowedLinkPrefixes,
+    allowedImagePrefixes = ["*"],
+    allowedLinkPrefixes = ["*"],
     defaultOrigin = "https://nakafa.com",
+    ...props
   }: ResponseProps) => {
     const parsedChildren = useMemo(() => parseMarkdown(children), [children]);
 
@@ -91,10 +90,10 @@ export const Response = memo(
         )}
       >
         <HardenedMarkdownBlocks
-          allowedImagePrefixes={allowedImagePrefixes ?? ["*"]}
-          allowedLinkPrefixes={allowedLinkPrefixes ?? ["*"]}
+          allowedImagePrefixes={allowedImagePrefixes}
+          allowedLinkPrefixes={allowedLinkPrefixes}
           defaultOrigin={defaultOrigin}
-          id={id}
+          {...props}
         >
           {parsedChildren}
         </HardenedMarkdownBlocks>
