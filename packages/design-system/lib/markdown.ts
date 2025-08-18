@@ -27,6 +27,12 @@ const LETTERED_LIST_PATTERN = /^(\s*)([a-z])\.\s+/gim;
 const FENCED_MATH_PATTERN = /```math([\s\S]*?)```/g;
 // Converts HTML math tags: <math>x^2</math> → ```math\nx^2\n```
 const MATH_TAG_PATTERN = /<math>([\s\S]*?)<\/math>/g;
+// Converts MDX InlineMath components: <InlineMath math="x^2" /> → $x^2$
+const INLINE_MATH_COMPONENT_PATTERN =
+  /<InlineMath\s+math=["']([^"']*?)["']\s*\/?>(?:<\/InlineMath>)?/g;
+// Converts MDX BlockMath components: <BlockMath math="x^2" /> → ```math\nx^2\n```
+const BLOCK_MATH_COMPONENT_PATTERN =
+  /<BlockMath\s+math=["']([^"']*?)["']\s*\/?>(?:<\/BlockMath>)?/g;
 // Converts code blocks with math: ```\n$x^2$\n``` → ```math\nx^2\n```
 const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
   /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/g;
@@ -357,6 +363,17 @@ export function normalizeMathDelimiters(input: string): string {
   // Now, process the rest of the math delimiters outside of any code fences.
   return applyOutsideCodeFences(processedInput, (segment) => {
     let s = segment;
+
+    // Convert MDX math components (LLM hallucinations) to proper formats
+    s = s.replace(
+      INLINE_MATH_COMPONENT_PATTERN,
+      (_, content: string) => `$${content.trim()}$`
+    );
+    s = s.replace(
+      BLOCK_MATH_COMPONENT_PATTERN,
+      (_, inner: string, offset: number) =>
+        createFencedMathBlock(inner, s, offset)
+    );
 
     // Convert various inline math patterns to standard $...$ format
     const inlineMathPatterns = [

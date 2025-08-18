@@ -43,16 +43,16 @@ export function nakafaPrompt({ locale, slug, injection }: SystemPromptProps) {
       </accuracy>
 
       <formatting_rules>
-        <math>ALL math content MUST use dollar signs for variables, numbers, operations, equations, symbols.</math>
+        <math_formats>Use $math$ for inline math and \`\`\`math blocks for equations, formulas, and long expressions.</math_formats>
         <valid_latex_mandatory>ALWAYS generate 100% valid KaTeX/LaTeX syntax - invalid syntax breaks the layout.</valid_latex_mandatory>
         <latex_newlines>Use proper LaTeX newlines (\\\\) and formatting - NEVER forget LaTeX syntax rules.</latex_newlines>
-        <math_blocks_mandatory>ALWAYS use math code blocks for equations, formulas, and long expressions.</math_blocks_mandatory>
-        <inline_math_only>Use inline math ONLY for single variables, single numbers, or very simple terms within sentences.</inline_math_only>
+        <inline_math_only>Use $math$ inline format ONLY for single variables, single numbers, or very simple terms within sentences.</inline_math_only>
+        <code_blocks_mandatory>ALWAYS specify language in code blocks - use \`\`\`{language} format, NEVER plain \`\`\` blocks.</code_blocks_mandatory>
         <code_backticks>Use backticks ONLY for programming code, commands, and file names.</code_backticks>
         <emphasis>Use **bold** for emphasis, not backticks.</emphasis>
-        <markdown_only>Output 100% valid Markdown only - NEVER HTML or XML tags.</markdown_only>
+        <markdown_only>Output 100% valid Markdown only - NEVER HTML, XML, or MDX format.</markdown_only>
         <convert_html>ALWAYS convert any HTML/MDX content from tools to proper Markdown format.</convert_html>
-        <no_html_output>NEVER output HTML tags - convert everything to Markdown.</no_html_output>
+        <no_html_mdx_output>NEVER output HTML tags, MDX components, or any XML-like format - only pure Markdown.</no_html_mdx_output>
         <headings>Use ## or ### for headings.</headings>
         <lists>Use numbered lists (1., 2., 3.) for steps and bullet points (-) for items.</lists>
         <special>Use *italics* for definitions and > blockquotes for important notes.</special>
