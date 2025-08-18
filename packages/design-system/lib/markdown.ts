@@ -311,12 +311,26 @@ function createFencedMathBlock(
 ): string {
   const context = getListContext(fullText, matchStart);
 
+  // Convert regular line breaks to LaTeX line breaks for proper math rendering
+  let mathContent = inner.trim();
+
+  // Check if we have multiple lines of math content
+  const lines = mathContent
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  if (lines.length > 1) {
+    // For multi-line math, add LaTeX line breaks between equations
+    mathContent = lines.join(" \\\\\n");
+  }
+
   if (context.isInList) {
     // In a list: use single newline and preserve indentation
-    return `\n${context.indentation}\`\`\`math\n${context.indentation}${inner.trim()}\n${context.indentation}\`\`\`\n`;
+    return `\n${context.indentation}\`\`\`math\n${context.indentation}${mathContent}\n${context.indentation}\`\`\`\n`;
   }
   // Not in a list: use double newlines for block separation
-  return `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`;
+  return `\n\n\`\`\`math\n${mathContent}\n\`\`\`\n\n`;
 }
 
 /**
