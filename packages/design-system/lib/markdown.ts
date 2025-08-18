@@ -35,6 +35,12 @@ const PLAINTEXT_BLOCK_WITH_LATEX_PATTERN =
   /```(?:plaintext|text)?[\s\n]*([\s\S]*?(?:\\(?:frac|times|pi|alpha|beta|gamma|theta|sigma|text|sqrt|sum|int|lim|infty|cdot|ldots|quad|left|right|div)\b|[°′″]|\w*\^\d+|\d+°|\w*\^2|\w*\^3|cm\^2|m\^2|km\^2)[\s\S]*?)[\s\n]*```/g;
 // Detects existing LaTeX line breaks: \\
 const LATEX_LINE_BREAKS_PATTERN = /\\\\/;
+// Detects any type of line breaks: \r, \n, or \r\n
+const ANY_LINE_BREAKS_PATTERN = /[\r\n]/;
+// Splits content by any line break type
+const LINE_BREAK_SPLITTER = /[\r\n]+/;
+// Matches equality signs to detect multi-line equations
+const EQUALITY_PATTERN = /=/g;
 const TRIPLE_BACKTICK_LENGTH = 3;
 const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
 const BULLET_LIST_PATTERN = /^(\s*)[-]\s+/;
@@ -316,14 +322,17 @@ function createFencedMathBlock(
 
   let mathContent = inner.trim();
 
-  // Only add line breaks if content has multiple lines AND lacks LaTeX line breaks
-  const hasMultipleLines = mathContent.includes("\n");
+  // Detect various types of line breaks and multi-line patterns
+  const hasNewlines = ANY_LINE_BREAKS_PATTERN.test(mathContent);
+  const hasMultipleEquations =
+    (mathContent.match(EQUALITY_PATTERN) || []).length > 1;
   const hasLatexLineBreaks = LATEX_LINE_BREAKS_PATTERN.test(mathContent);
+  const hasMultilinePattern = hasNewlines || hasMultipleEquations;
 
-  if (hasMultipleLines && !hasLatexLineBreaks) {
-    // Split by lines, filter out empty lines, and join with LaTeX line breaks
+  if (hasMultilinePattern && !hasLatexLineBreaks) {
+    // Split by any line break type and filter out empty lines
     const lines = mathContent
-      .split("\n")
+      .split(LINE_BREAK_SPLITTER)
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
 

@@ -191,3 +191,7 @@
     scrollbar-color: var(--border) transparent;
   }
 }
+
+.katex .katex-html > .newline {
+  margin-block: 1rem;
+}
