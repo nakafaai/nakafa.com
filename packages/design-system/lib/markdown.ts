@@ -311,18 +311,20 @@ function createFencedMathBlock(
 ): string {
   const context = getListContext(fullText, matchStart);
 
-  // Convert regular line breaks to LaTeX line breaks for proper math rendering
+  // Clean up the math content and handle KaTeX multi-line requirements
   let mathContent = inner.trim();
 
-  // Check if we have multiple lines of math content
+  // Process lines and check if we need multi-line KaTeX environment
   const lines = mathContent
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
 
   if (lines.length > 1) {
-    // For multi-line math, add LaTeX line breaks between equations
-    mathContent = lines.join(" \\\\\n");
+    // For multi-line math, wrap in aligned environment for proper KaTeX rendering
+    mathContent = `\\begin{aligned}\n${lines.join(" \\\\\n")}\n\\end{aligned}`;
+  } else {
+    mathContent = lines[0] || mathContent;
   }
 
   if (context.isInList) {
