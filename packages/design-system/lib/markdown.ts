@@ -32,7 +32,7 @@ const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
   /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/g;
 // Converts code blocks with LaTeX: ```\n\frac{a}{b}\n``` or ```plaintext\n\frac{a}{b}\n``` → ```math\n\frac{a}{b}\n```
 const PLAINTEXT_BLOCK_WITH_LATEX_PATTERN =
-  /```(?:plaintext|text)?\s*\n([\s\S]*?(?:\\(?:frac|times|pi|alpha|beta|gamma|theta|sigma|text|sqrt|sum|int|lim|infty|cdot|ldots|quad|left|right)\b|[°′″]|r\^2|cm\^2|m\^2)[\s\S]*?)\n```/g;
+  /```(?:plaintext|text)?[\s\n]*([\s\S]*?(?:\\(?:frac|times|pi|alpha|beta|gamma|theta|sigma|text|sqrt|sum|int|lim|infty|cdot|ldots|quad|left|right|div)\b|[°′″]|\w*\^\d+|\d+°|\w*\^2|\w*\^3|cm\^2|m\^2|km\^2)[\s\S]*?)[\s\n]*```/g;
 const TRIPLE_BACKTICK_LENGTH = 3;
 const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
 const BULLET_LIST_PATTERN = /^(\s*)[-]\s+/;
