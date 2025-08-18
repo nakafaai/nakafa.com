@@ -43,7 +43,6 @@ const TRIPLE_BACKTICK_LENGTH = 3;
 const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
 const BULLET_LIST_PATTERN = /^(\s*)[-]\s+/;
 const NON_WHITESPACE_START_PATTERN = /^\S/;
-const ASTERISK_PLUS_LIST_PATTERN = /^(\s*)([*+])\s+/gm;
 const NUMBERED_LIST_SPACING_PATTERN = /^(\s*)(\d+)\.\s{2,}/gm;
 const DASH_LIST_SPACING_PATTERN = /^(\s*)(-)\s{2,}/gm;
 const MALFORMED_HEADING_PATTERN = /^(#{1,6})\s*#+\s*(.*?)$/gm;
@@ -73,21 +72,6 @@ function convertLetteredListsToNumbered(input: string): string {
     const number = letter.toLowerCase().charCodeAt(0) - "a".charCodeAt(0) + 1;
     return `${whitespace}${number}. `;
   });
-}
-
-/**
- * Converts asterisk (*) and plus (+) bullet lists to dash (-) bullet lists.
- * This normalizes bullet list markers to the supported format.
- */
-function convertBulletListsToDashes(input: string): string {
-  if (!input) {
-    return input;
-  }
-  // Finds lines starting with whitespace, an asterisk or plus, and a space.
-  return input.replace(
-    ASTERISK_PLUS_LIST_PATTERN,
-    (_, whitespace) => `${whitespace}- `
-  );
 }
 
 /**
@@ -419,9 +403,6 @@ export function parseMarkdown(text: string): string {
 
   // Convert lettered lists before other parsing to ensure consistency.
   result = convertLetteredListsToNumbered(result);
-
-  // Convert asterisk and plus bullet lists to dash bullet lists.
-  result = convertBulletListsToDashes(result);
 
   // Normalize spacing in numbered lists to ensure single space after number.
   result = normalizeNumberedListSpacing(result);
