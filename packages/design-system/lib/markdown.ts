@@ -33,6 +33,8 @@ const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
 // Converts code blocks with LaTeX: ```\n\frac{a}{b}\n``` or ```plaintext\n\frac{a}{b}\n``` → ```math\n\frac{a}{b}\n```
 const PLAINTEXT_BLOCK_WITH_LATEX_PATTERN =
   /```(?:plaintext|text)?[\s\n]*([\s\S]*?(?:\\(?:frac|times|pi|alpha|beta|gamma|theta|sigma|text|sqrt|sum|int|lim|infty|cdot|ldots|quad|left|right|div)\b|[°′″]|\w*\^\d+|\d+°|\w*\^2|\w*\^3|cm\^2|m\^2|km\^2)[\s\S]*?)[\s\n]*```/g;
+// Detects existing LaTeX line breaks: \\
+const LATEX_LINE_BREAKS_PATTERN = /\\\\/;
 const TRIPLE_BACKTICK_LENGTH = 3;
 const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
 const BULLET_LIST_PATTERN = /^(\s*)[-]\s+/;
@@ -299,6 +301,7 @@ function getListContext(
 
 /**
  * Creates a fenced math block with appropriate newlines based on context.
+ * Adds LaTeX line breaks (\\) only when multi-line content lacks them.
  * @param inner - The math content
  * @param fullText - The complete text for context analysis
  * @param matchStart - Start position of the match
@@ -311,12 +314,30 @@ function createFencedMathBlock(
 ): string {
   const context = getListContext(fullText, matchStart);
 
+  let mathContent = inner.trim();
+
+  // Only add line breaks if content has multiple lines AND lacks LaTeX line breaks
+  const hasMultipleLines = mathContent.includes("\n");
+  const hasLatexLineBreaks = LATEX_LINE_BREAKS_PATTERN.test(mathContent);
+
+  if (hasMultipleLines && !hasLatexLineBreaks) {
+    // Split by lines, filter out empty lines, and join with LaTeX line breaks
+    const lines = mathContent
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    if (lines.length > 1) {
+      mathContent = lines.join(" \\\\\n");
+    }
+  }
+
   if (context.isInList) {
     // In a list: use single newline and preserve indentation
-    return `\n${context.indentation}\`\`\`math\n${context.indentation}${inner.trim()}\n${context.indentation}\`\`\`\n`;
+    return `\n${context.indentation}\`\`\`math\n${context.indentation}${mathContent}\n${context.indentation}\`\`\`\n`;
   }
   // Not in a list: use double newlines for block separation
-  return `\n\n\`\`\`math\n${inner.trim()}\n\`\`\`\n\n`;
+  return `\n\n\`\`\`math\n${mathContent}\n\`\`\`\n\n`;
 }
 
 /**
@@ -326,7 +347,7 @@ function createFencedMathBlock(
  * - `$x^2$` → $x^2$ (removes wrong backticks)
  * - \(x^2\) → $x^2$ (inline math)
  * - <math>x^2</math> → ```math\nx^2\n``` (block math)
- * - ```\n\frac{a}{b}\n``` → ```math\n\frac{a}{b}\n``` (LaTeX in code blocks)
+ * - ```\n\frac{a}{b}\nc = d\n``` → ```math\n\frac{a}{b} \\\\\nc = d\n``` (LaTeX in code blocks + smart line breaks)
  */
 export function normalizeMathDelimiters(input: string): string {
   // First, convert plaintext code blocks that contain LaTeX commands to math blocks
