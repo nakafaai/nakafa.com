@@ -36,9 +36,6 @@ const BLOCK_MATH_COMPONENT_PATTERN =
 // Converts code blocks with math: ```\n$x^2$\n``` → ```math\nx^2\n```
 const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
   /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/g;
-// Converts code blocks with LaTeX: ```\n\frac{a}{b}\n``` or ```plaintext\n\frac{a}{b}\n``` → ```math\n\frac{a}{b}\n```
-const PLAINTEXT_BLOCK_WITH_LATEX_PATTERN =
-  /```(?:plaintext|text)?[\s\n]*([\s\S]*?(?:\\(?:frac|times|pi|alpha|beta|gamma|theta|sigma|text|sqrt|sum|int|lim|infty|cdot|ldots|quad|left|right|div)\b|[°′″]|\w*\^\d+|\d+°|\w*\^2|\w*\^3|cm\^2|m\^2|km\^2)[\s\S]*?)[\s\n]*```/g;
 const TRIPLE_BACKTICK_LENGTH = 3;
 const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
 const BULLET_LIST_PATTERN = /^(\s*)[-]\s+/;
@@ -322,12 +319,7 @@ function createFencedMathBlock(
  * - ```\n\frac{a}{b}\nc = d\n``` → ```math\n\frac{a}{b} \\\\\nc = d\n``` (LaTeX in code blocks + smart line breaks)
  */
 export function normalizeMathDelimiters(input: string): string {
-  // First, convert plaintext code blocks that contain LaTeX commands to math blocks
-  let processedInput = input.replace(
-    PLAINTEXT_BLOCK_WITH_LATEX_PATTERN,
-    (_, inner: string, offset: number) =>
-      createFencedMathBlock(inner, input, offset)
-  );
+  let processedInput = input;
 
   // Then, handle code blocks containing single dollar math expressions
   processedInput = processedInput.replace(
