@@ -18,7 +18,7 @@ const DISPLAY_MATH_BRACKETS_GLOBAL = /\\\[([\s\S]*?)\\\]/g;
 const INLINE_PAREN_MATH_GLOBAL = /\\\(([\s\S]*?)\\\)/g;
 const TRAILING_WHITESPACE_PATTERN = /\s$/;
 const LETTERED_LIST_PATTERN = /^(\s*)([a-z])\.\s+/gim;
-const FENCED_MATH_PATTERN = /```math([\sS]*?)```/g;
+const FENCED_MATH_PATTERN = /```math([\s\S]*?)```/g;
 const MATH_TAG_PATTERN = /<math>([\s\S]*?)<\/math>/g;
 const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
   /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/g;
