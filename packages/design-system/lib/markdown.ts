@@ -345,23 +345,16 @@ export function normalizeMathDelimiters(input: string): string {
   return applyOutsideCodeFences(processedInput, (segment) => {
     let s = segment;
 
-    // Fix: `$x^2$` becomes $x^2$ (removes wrong backticks)
-    s = s.replace(
-      DOLLAR_MATH_IN_BACKTICKS_GLOBAL,
-      (_, content: string) => `$${content.trim()}$`
-    );
+    // Convert various inline math patterns to standard $...$ format
+    const inlineMathPatterns = [
+      DOLLAR_MATH_IN_BACKTICKS_GLOBAL, // `$x^2$` → $x^2$
+      PAREN_MATH_IN_BACKTICKS_GLOBAL, // `\(x^2\)` → $x^2$
+      INLINE_PAREN_MATH_GLOBAL, // \(x^2\) → $x^2$
+    ];
 
-    // Fix: `\(x^2\)` becomes $x^2$ (converts parenthesis math)
-    s = s.replace(
-      PAREN_MATH_IN_BACKTICKS_GLOBAL,
-      (_, content: string) => `$${content.trim()}$`
-    );
-
-    // Fix: \(x^2\) becomes $x^2$ (normalize parenthesis math to dollars)
-    s = s.replace(
-      INLINE_PAREN_MATH_GLOBAL,
-      (_, inner: string) => `$${inner.trim()}$`
-    );
+    for (const pattern of inlineMathPatterns) {
+      s = s.replace(pattern, (_, content: string) => `$${content.trim()}$`);
+    }
 
     // Convert all display math formats to fenced blocks
     const displayMathPatterns = [
