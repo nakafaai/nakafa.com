@@ -44,9 +44,10 @@ export function nakafaPrompt({ locale, slug, injection }: SystemPromptProps) {
 
       <formatting_rules>
         <math>ALL math content MUST use dollar signs for variables, numbers, operations, equations, symbols.</math>
-        <math_blocks_mandatory>ALWAYS use math code blocks for equations - NEVER inline math for equations.</math_blocks_mandatory>
-        <inline_math_only>Use inline math ONLY for very short expressions like single variables or simple terms.</inline_math_only>
-        <long_complex_math>Use math blocks for long or complex mathematical expressions.</long_complex_math>
+        <valid_latex_mandatory>ALWAYS generate 100% valid KaTeX/LaTeX syntax - invalid syntax breaks the layout.</valid_latex_mandatory>
+        <latex_newlines>Use proper LaTeX newlines (\\\\) and formatting - NEVER forget LaTeX syntax rules.</latex_newlines>
+        <math_blocks_mandatory>ALWAYS use math code blocks for equations, formulas, and long expressions.</math_blocks_mandatory>
+        <inline_math_only>Use inline math ONLY for single variables, single numbers, or very simple terms within sentences.</inline_math_only>
         <code_backticks>Use backticks ONLY for programming code, commands, and file names.</code_backticks>
         <emphasis>Use **bold** for emphasis, not backticks.</emphasis>
         <markdown_only>Output 100% valid Markdown only - NEVER HTML or XML tags.</markdown_only>
