@@ -4,7 +4,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
@@ -53,14 +52,12 @@ export const Action = memo(
 
     if (tooltip) {
       return (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>{button}</TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p>{tooltip}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>{button}</TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
       );
     }
 
