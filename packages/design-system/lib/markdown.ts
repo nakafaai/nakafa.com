@@ -30,6 +30,9 @@ const MATH_TAG_PATTERN = /<math>([\s\S]*?)<\/math>/g;
 // Converts code blocks with math: ```\n$x^2$\n``` → ```math\nx^2\n```
 const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
   /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/g;
+// Converts code blocks with LaTeX: ```\n\frac{a}{b}\n``` or ```plaintext\n\frac{a}{b}\n``` → ```math\n\frac{a}{b}\n```
+const PLAINTEXT_BLOCK_WITH_LATEX_PATTERN =
+  /```(?:plaintext|text)?\s*\n([\s\S]*?(?:\\(?:frac|times|pi|alpha|beta|gamma|theta|sigma|text|sqrt|sum|int|lim|infty|cdot|ldots|quad|left|right)\b|[°′″]|r\^2|cm\^2|m\^2)[\s\S]*?)\n```/g;
 const TRIPLE_BACKTICK_LENGTH = 3;
 const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
 const BULLET_LIST_PATTERN = /^(\s*)[-]\s+/;
@@ -323,14 +326,21 @@ function createFencedMathBlock(
  * - `$x^2$` → $x^2$ (removes wrong backticks)
  * - \(x^2\) → $x^2$ (inline math)
  * - <math>x^2</math> → ```math\nx^2\n``` (block math)
+ * - ```\n\frac{a}{b}\n``` → ```math\n\frac{a}{b}\n``` (LaTeX in code blocks)
  */
 export function normalizeMathDelimiters(input: string): string {
-  // First, handle code blocks containing single dollar math expressions
-  // This needs to be done before other processing to avoid conflicts
+  // First, convert plaintext code blocks that contain LaTeX commands to math blocks
   let processedInput = input.replace(
-    CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN,
+    PLAINTEXT_BLOCK_WITH_LATEX_PATTERN,
     (_, inner: string, offset: number) =>
       createFencedMathBlock(inner, input, offset)
+  );
+
+  // Then, handle code blocks containing single dollar math expressions
+  processedInput = processedInput.replace(
+    CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN,
+    (_, inner: string, offset: number) =>
+      createFencedMathBlock(inner, processedInput, offset)
   );
 
   // Then, clean up any malformed fenced math blocks. This is done before
