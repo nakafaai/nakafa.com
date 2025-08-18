@@ -11,15 +11,23 @@ const ESCAPED_NEWLINE_GLOBAL = /\\n/g;
 const ESCAPED_CARRIAGE_RETURN_GLOBAL = /\\r/g;
 const ESCAPED_TAB_GLOBAL = /\\t/g;
 const TRIPLE_BACKTICKS = /```/g;
-// Simplified math patterns - combine all backtick cases into one
-const MATH_IN_BACKTICKS_GLOBAL =
-  /`\s*(?:\$\$?([\s\S]*?)\$\$?|\\\(([\s\S]*?)\\\))\s*`/g;
+// Removes backticks from math: `$x^2$` → $x^2$
+const DOLLAR_MATH_IN_BACKTICKS_GLOBAL = /`\s*\$([^$][\s\S]*?[^$]|\S)\$\s*`/g;
+// Removes backticks from math: `\(x^2\)` → $x^2$
+const PAREN_MATH_IN_BACKTICKS_GLOBAL = /`\s*\\\(([\s\S]*?)\\\)\s*`/g;
+// Converts display math: \[x^2\] → ```math\nx^2\n```
 const DISPLAY_MATH_BRACKETS_GLOBAL = /\\\[([\s\S]*?)\\\]/g;
+// Converts display math: $$x^2$$ → ```math\nx^2\n```
+const DISPLAY_MATH_DOUBLE_DOLLAR_GLOBAL = /\$\$([\s\S]*?)\$\$/g;
+// Converts inline math: \(x^2\) → $x^2$
 const INLINE_PAREN_MATH_GLOBAL = /\\\(([\s\S]*?)\\\)/g;
 const TRAILING_WHITESPACE_PATTERN = /\s$/;
 const LETTERED_LIST_PATTERN = /^(\s*)([a-z])\.\s+/gim;
+// Cleans malformed fenced math: ```math x^2``` → ```math\nx^2\n```
 const FENCED_MATH_PATTERN = /```math([\s\S]*?)```/g;
+// Converts HTML math tags: <math>x^2</math> → ```math\nx^2\n```
 const MATH_TAG_PATTERN = /<math>([\s\S]*?)<\/math>/g;
+// Converts code blocks with math: ```\n$x^2$\n``` → ```math\nx^2\n```
 const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
   /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/g;
 const TRIPLE_BACKTICK_LENGTH = 3;
@@ -309,8 +317,12 @@ function createFencedMathBlock(
 }
 
 /**
- * Converts display math $$...$$ and \[...\] into fenced math blocks, removes backticks
- * around inline math, and normalizes spacing for inline $...$ while preserving list indentation.
+ * Cleans up math delimiters in markdown text:
+ * - $$x^2$$ → ```math\nx^2\n``` (block math)
+ * - \[x^2\] → ```math\nx^2\n``` (block math)
+ * - `$x^2$` → $x^2$ (removes wrong backticks)
+ * - \(x^2\) → $x^2$ (inline math)
+ * - <math>x^2</math> → ```math\nx^2\n``` (block math)
  */
 export function normalizeMathDelimiters(input: string): string {
   // First, handle code blocks containing single dollar math expressions
@@ -333,33 +345,36 @@ export function normalizeMathDelimiters(input: string): string {
   return applyOutsideCodeFences(processedInput, (segment) => {
     let s = segment;
 
-    // Strip backticks around any math expressions (handles $, $$, and \(...\) in one pass)
+    // Fix: `$x^2$` becomes $x^2$ (removes wrong backticks)
     s = s.replace(
-      MATH_IN_BACKTICKS_GLOBAL,
-      (_, dollarContent: string, parenContent: string) => {
-        const content = dollarContent || parenContent;
-        return `$${content.trim()}$`;
-      }
+      DOLLAR_MATH_IN_BACKTICKS_GLOBAL,
+      (_, content: string) => `$${content.trim()}$`
     );
 
-    // Convert bare inline parenthesis math \(...\) to $...$ first,
-    // so later replacements don't accidentally run inside newly inserted fences
+    // Fix: `\(x^2\)` becomes $x^2$ (converts parenthesis math)
+    s = s.replace(
+      PAREN_MATH_IN_BACKTICKS_GLOBAL,
+      (_, content: string) => `$${content.trim()}$`
+    );
+
+    // Fix: \(x^2\) becomes $x^2$ (normalize parenthesis math to dollars)
     s = s.replace(
       INLINE_PAREN_MATH_GLOBAL,
       (_, inner: string) => `$${inner.trim()}$`
     );
 
-    // Convert \[...\] to fenced math blocks
-    s = s.replace(
-      DISPLAY_MATH_BRACKETS_GLOBAL,
-      (_, inner: string, offset: number) =>
-        createFencedMathBlock(inner, s, offset)
-    );
+    // Convert all display math formats to fenced blocks
+    const displayMathPatterns = [
+      DISPLAY_MATH_BRACKETS_GLOBAL, // \[x^2\] → ```math\nx^2\n```
+      DISPLAY_MATH_DOUBLE_DOLLAR_GLOBAL, // $$x^2$$ → ```math\nx^2\n```
+      MATH_TAG_PATTERN, // <math>x^2</math> → ```math\nx^2\n```
+    ];
 
-    // Convert <math>...</math> to fenced math blocks
-    s = s.replace(MATH_TAG_PATTERN, (_, inner: string, offset: number) =>
-      createFencedMathBlock(inner, s, offset)
-    );
+    for (const pattern of displayMathPatterns) {
+      s = s.replace(pattern, (_, inner: string, offset: number) =>
+        createFencedMathBlock(inner, s, offset)
+      );
+    }
 
     return s;
   });
