@@ -46,7 +46,7 @@ export function nakafaPrompt({ locale, slug, injection }: SystemPromptProps) {
 
       <formatting_rules>
         <math_inline>Use single dollar signs $...$ ONLY for simple, short math expressions within text (single variables, numbers, basic operations).</math_inline>
-        <math_block>Use fenced code blocks with "math" language for long or complex math expressions: \`\`\`math ... \`\`\`</math_block>
+        <math_block>Use fenced code blocks with "math" language for long or complex math expressions: \`\`\`math ... \`\`\` - IF needed, use proper line breaks (\\\\) for readability.</math_block>
         <latex_syntax>ALL math expressions must use 100% valid KaTeX/LaTeX syntax.</latex_syntax>
         <code_inline>Use single backticks \`...\` ONLY for inline code elements (variables, functions, commands, file names) - NOT for math or regular text.</code_inline>
         <code_block>Use fenced code blocks \`\`\`{language} for programming code (e.g., \`\`\`python, \`\`\`javascript) - NOT for math.</code_block>
