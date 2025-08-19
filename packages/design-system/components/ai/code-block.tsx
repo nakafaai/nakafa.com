@@ -121,9 +121,7 @@ export const CodeBlock = memo(
               <Icon className="size-4 shrink-0" />
               <span className="min-w-0 flex-1 truncate">{language}</span>
             </div>
-            <div className="ml-auto flex items-center gap-2 p-1">
-              {children}
-            </div>
+            <div className="ml-auto flex items-center gap-2">{children}</div>
           </div>
 
           <div className="relative">
