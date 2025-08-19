@@ -68,7 +68,7 @@ export const ToolHeader = memo(
     return (
       <CollapsibleTrigger
         className={cn(
-          "flex w-full items-center justify-between gap-4 p-3",
+          "flex w-full cursor-pointer items-center justify-between gap-4 p-3",
           className
         )}
         {...props}
@@ -80,7 +80,7 @@ export const ToolHeader = memo(
             (icon ?? <WrenchIcon className="size-4 text-muted-foreground" />)
           )}
           <span className="font-medium text-sm">{type}</span>
-          <Badge className="rounded-full text-xs" variant="secondary">
+          <Badge variant="secondary">
             {getStatusBadge(state).icon}
             {t(getStatusBadge(state).label)}
           </Badge>

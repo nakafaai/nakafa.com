@@ -55,7 +55,9 @@ export const ArticlesTool = memo(({ status, output, input }: Props) => {
               })}
             </p>
             <Link
-              className={cn(buttonVariants({ size: "sm" }))}
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "sm" })
+              )}
               href={`/${buildContentSlug({
                 locale: "en",
                 filters: { type: "articles", category: input?.category },
