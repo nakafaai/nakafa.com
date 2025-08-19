@@ -62,6 +62,7 @@ const LIGHT_CUSTOM_STYLE = {
   fontSize: "0.875rem",
   background: "hsl(var(--background))",
   color: "hsl(var(--foreground))",
+  borderRadius: "0",
 };
 
 const DARK_CUSTOM_STYLE = {
@@ -70,12 +71,13 @@ const DARK_CUSTOM_STYLE = {
   fontSize: "0.875rem",
   background: "hsl(var(--background))",
   color: "hsl(var(--foreground))",
+  borderRadius: "0",
 };
 
 const LINE_NUMBER_STYLE = {
   color: "hsl(var(--muted-foreground))",
   paddingRight: "1rem",
-  minWidth: "2.5rem",
+  minWidth: "2rem",
 };
 
 const CODE_TAG_PROPS = {
