@@ -1,6 +1,5 @@
 "use client";
 
-import { useStream } from "@repo/design-system/hooks/use-stream";
 import {
   cleanMarkdown,
   parseMarkdown,
@@ -10,7 +9,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { reactMdxComponents } from "@repo/design-system/markdown/react-mdx";
 import hardenReactMarkdown from "harden-react-markdown";
 import type { ComponentProps } from "react";
-import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { memo, useCallback, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
@@ -33,7 +32,6 @@ export type ResponseProps = {
   id: string;
   children: string;
   className?: string;
-  animate?: boolean;
 } & HardenedMarkdownProps;
 
 const MemoizedHardenedMarkdown = memo(
@@ -98,7 +96,7 @@ const ResponseContent = memo(
     allowedLinkPrefixes = ["*"],
     defaultOrigin = "https://nakafa.com",
     ...props
-  }: Omit<ResponseProps, "animate">) => {
+  }: ResponseProps) => {
     const parsedChildren = useMemo(() => parseMarkdown(children), [children]);
 
     return (
@@ -127,29 +125,11 @@ export const Response = memo(
   ({
     id,
     children,
-    animate = false,
     className,
     allowedImagePrefixes,
     allowedLinkPrefixes,
     defaultOrigin,
   }: ResponseProps) => {
-    const contentRef = useRef("");
-    const { stream, addPart } = useStream();
-
-    useEffect(() => {
-      if (!(children && animate)) {
-        return;
-      }
-
-      if (contentRef.current !== children) {
-        const delta = children.slice(contentRef.current.length);
-        if (delta) {
-          addPart(delta);
-        }
-        contentRef.current = children;
-      }
-    }, [children, animate, addPart]);
-
     const wrap = useCallback(
       (v: string) => {
         return (
@@ -167,11 +147,7 @@ export const Response = memo(
       [id, className, allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin]
     );
 
-    if (!animate) {
-      return wrap(children);
-    }
-
-    return wrap(stream ?? children ?? "");
+    return wrap(children);
   },
   (prevProps, nextProps) => prevProps.children === nextProps.children
 );

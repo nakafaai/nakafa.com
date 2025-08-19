@@ -295,12 +295,7 @@ function AISheetMessage({
             return (
               <div className="flex flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end">
                 <MessageContent>
-                  <Response
-                    animate={part.state === "streaming"}
-                    id={message.id}
-                  >
-                    {part.text}
-                  </Response>
+                  <Response id={message.id}>{part.text}</Response>
                 </MessageContent>
                 {isLastPart && (
                   <AISheetMessageActions
