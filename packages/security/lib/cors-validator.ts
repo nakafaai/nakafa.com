@@ -167,10 +167,10 @@ export class CorsValidator {
   /**
    * Create a 403 Forbidden response
    */
-  createForbiddenResponse(message = "Access denied"): Response {
-    return new Response(JSON.stringify({ error: message }), {
+  createForbiddenResponse(message = "Access denied."): Response {
+    return new Response(message, {
       status: 403,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain" },
     });
   }
 }
