@@ -1,2 +1,2 @@
-export type { DomainValidatorConfig } from "./lib/domain-validator";
-export { DomainValidator } from "./lib/domain-validator";
+export type { CorsValidatorConfig } from "./lib/cors-validator";
+export { CorsValidator } from "./lib/cors-validator";

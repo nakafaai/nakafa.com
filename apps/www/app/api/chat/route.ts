@@ -2,7 +2,7 @@ import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { defaultModel, model } from "@repo/ai/lib/providers";
 import { tools } from "@repo/ai/lib/tools";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
-import { DomainValidator } from "@repo/security";
+import { CorsValidator } from "@repo/security";
 import {
   convertToModelMessages,
   createUIMessageStream,
@@ -22,12 +22,12 @@ const MAX_STEPS = 20;
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
-const domainValidator = new DomainValidator();
+const corsValidator = new CorsValidator();
 
 export async function POST(req: Request) {
   // Only allow requests from allowed domain
-  if (!domainValidator.isRequestFromAllowedDomain(req)) {
-    return domainValidator.createForbiddenResponse();
+  if (!corsValidator.isRequestFromAllowedDomain(req)) {
+    return corsValidator.createForbiddenResponse();
   }
 
   const t = await getTranslations("Ai");

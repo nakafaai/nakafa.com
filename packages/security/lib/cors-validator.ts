@@ -1,32 +1,40 @@
 /**
- * Domain validation utilities for API security
+ * CORS validation utilities for API security
  */
 
-export type DomainValidatorConfig = {
+export type CorsValidatorConfig = {
   /** Primary domain to allow (e.g., "nakafa.com") */
   allowedDomain?: string;
   /** Additional allowed origins (e.g., localhost for development) */
   additionalOrigins?: string[];
-  /** Whether to allow www subdomain */
-  allowWww?: boolean;
+  /** Whether to allow all subdomains */
+  allowSubdomains?: boolean;
 };
 
-export class DomainValidator {
+export class CorsValidator {
   private readonly allowedDomain: string;
   private readonly additionalOrigins: string[];
-  private readonly allowWww: boolean;
+  private readonly allowSubdomains: boolean;
 
-  constructor(config: DomainValidatorConfig = {}) {
-    this.allowedDomain =
-      config.allowedDomain || process.env.ALLOWED_DOMAIN || "nakafa.com";
-    this.additionalOrigins =
-      config.additionalOrigins || this.getDefaultDevelopmentOrigins();
-    this.allowWww = config.allowWww ?? true;
+  constructor({
+    allowedDomain = "nakafa.com",
+    additionalOrigins = [],
+    allowSubdomains = true,
+  }: CorsValidatorConfig = {}) {
+    this.allowedDomain = allowedDomain;
+    this.additionalOrigins = [
+      ...this.getDefaultDevelopmentOrigins(),
+      ...additionalOrigins,
+    ];
+    this.allowSubdomains = allowSubdomains;
   }
 
   private getDefaultDevelopmentOrigins(): string[] {
     // Only include localhost in development
-    if (process.env.NODE_ENV === "development") {
+    if (
+      process.env.NODE_ENV === "development" ||
+      process.env.VERCEL_TARGET_ENV === "development"
+    ) {
       return [
         "http://localhost:3000", // www app
         "http://localhost:3001", // mcp app
@@ -42,11 +50,26 @@ export class DomainValidator {
       ...this.additionalOrigins,
     ];
 
-    if (this.allowWww) {
-      origins.push(`https://www.${this.allowedDomain}`);
+    // Note: For subdomain validation, we check dynamically in validation methods
+    // rather than pre-generating all possible subdomains
+    return origins;
+  }
+
+  /**
+   * Check if a hostname is allowed (supports subdomains)
+   */
+  private isHostnameAllowed(hostname: string): boolean {
+    // Exact match
+    if (hostname === this.allowedDomain) {
+      return true;
     }
 
-    return origins;
+    // Subdomain check (e.g., api.nakafa.com, www.nakafa.com)
+    if (this.allowSubdomains && hostname.endsWith(`.${this.allowedDomain}`)) {
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -57,8 +80,24 @@ export class DomainValidator {
 
     // Check Origin header (for CORS requests)
     const origin = request.headers.get("origin");
-    if (origin && allowedOrigins.includes(origin)) {
-      return true;
+    if (origin) {
+      // First check exact matches from allowedOrigins
+      if (allowedOrigins.includes(origin)) {
+        return true;
+      }
+
+      // Then check subdomain matches
+      try {
+        const originUrl = new URL(origin);
+        if (
+          originUrl.protocol === "https:" &&
+          this.isHostnameAllowed(originUrl.hostname)
+        ) {
+          return true;
+        }
+      } catch {
+        return false;
+      }
     }
 
     // Check Referer header (for same-origin requests)
@@ -66,8 +105,12 @@ export class DomainValidator {
     if (referer) {
       try {
         const refererUrl = new URL(referer);
-        const refererOrigin = `${refererUrl.protocol}//${refererUrl.host}`;
-        return allowedOrigins.includes(refererOrigin);
+        if (
+          refererUrl.protocol === "https:" &&
+          this.isHostnameAllowed(refererUrl.hostname)
+        ) {
+          return true;
+        }
       } catch {
         return false;
       }
@@ -82,7 +125,26 @@ export class DomainValidator {
    */
   isOriginAllowed(origin: string): boolean {
     const allowedOrigins = this.getAllowedOrigins();
-    return allowedOrigins.includes(origin);
+
+    // First check exact matches
+    if (allowedOrigins.includes(origin)) {
+      return true;
+    }
+
+    // Then check subdomain matches
+    try {
+      const originUrl = new URL(origin);
+      if (
+        originUrl.protocol === "https:" &&
+        this.isHostnameAllowed(originUrl.hostname)
+      ) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+
+    return false;
   }
 
   /**
