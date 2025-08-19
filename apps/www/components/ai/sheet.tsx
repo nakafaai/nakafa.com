@@ -104,16 +104,17 @@ export function AiSheet({
           const currentUrl = window.location.href;
           const url = new URL(currentUrl);
 
-          const slug = `/${url.pathname.split("/").slice(2).join("/")}`;
           const locale = url.pathname.split("/")[1];
+          const slug = `/${url.pathname.split("/").slice(2).join("/")}`;
 
           setCurrentMessages(ms);
 
           return {
             body: {
               messages: ms,
-              slug,
+              url: currentUrl,
               locale,
+              slug,
             },
           };
         },

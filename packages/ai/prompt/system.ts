@@ -2,11 +2,15 @@ import { dedentString } from "../lib/utils";
 
 type SystemPromptProps = {
   /**
-   * The locale of the content to get.
+   * The URL of the current page.
+   */
+  url: string;
+  /**
+   * The locale of the current page.
    */
   locale: string;
   /**
-   * The slug of the content to get.
+   * The slug of the current page.
    */
   slug: string;
   /**
@@ -15,7 +19,12 @@ type SystemPromptProps = {
   injection?: string;
 };
 
-export function nakafaPrompt({ locale, slug, injection }: SystemPromptProps) {
+export function nakafaPrompt({
+  url,
+  locale,
+  slug,
+  injection,
+}: SystemPromptProps) {
   return dedentString(`
       <persona>
         <identity>You are Nakafa's expert tutor, a friendly teacher who can explain anything in this universe.</identity>
@@ -32,6 +41,7 @@ export function nakafaPrompt({ locale, slug, injection }: SystemPromptProps) {
       </persona>
 
       <current_page>
+        <url>${url}</url>
         <locale>${locale}</locale>
         <slug>${slug}</slug>
       </current_page>

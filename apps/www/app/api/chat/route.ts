@@ -26,9 +26,11 @@ export async function POST(req: Request) {
 
   const {
     messages,
+    url,
     locale,
-    slug: pageSlug,
-  }: { messages: UIMessage[]; locale: string; slug: string } = await req.json();
+    slug,
+  }: { messages: UIMessage[]; url: string; locale: string; slug: string } =
+    await req.json();
 
   const stream = createUIMessageStream({
     onError: (error) => {
@@ -43,7 +45,11 @@ export async function POST(req: Request) {
     execute: ({ writer }) => {
       const result = streamText({
         model: model.languageModel(defaultModel),
-        system: nakafaPrompt({ locale, slug: pageSlug }),
+        system: nakafaPrompt({
+          url,
+          locale,
+          slug,
+        }),
         messages: convertToModelMessages(messages),
         stopWhen: stepCountIs(MAX_STEPS),
         tools,
