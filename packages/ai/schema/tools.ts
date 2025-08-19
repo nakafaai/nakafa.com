@@ -21,6 +21,7 @@ export const getArticlesOutputSchema = z
     articles: z.array(
       z.object({
         title: z.string().describe("The title of the article."),
+        url: z.string().describe("The url of the article."),
         slug: z.string().describe("The slug of the article."),
         locale: z.string().describe("The locale of the article."),
       })
@@ -50,6 +51,7 @@ export const getSubjectsOutputSchema = z
     subjects: z.array(
       z.object({
         title: z.string().describe("The title of the subject."),
+        url: z.string().describe("The url of the subject."),
         slug: z.string().describe("The slug of the subject."),
         locale: z.string().describe("The locale of the subject."),
       })

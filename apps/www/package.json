@@ -21,6 +21,7 @@
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
+    "@repo/security": "workspace:*",
     "@repo/seo": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tanstack/react-query": "^5.85.5",

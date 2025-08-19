@@ -22,6 +22,7 @@
         "@repo/contents": "workspace:*",
         "@repo/design-system": "workspace:*",
         "@repo/next-config": "workspace:*",
+        "@repo/security": "workspace:*",
         "next": "15.4.7",
         "react": "^19.1.1",
         "react-dom": "^19.1.1",
@@ -63,6 +64,7 @@
         "@repo/design-system": "workspace:*",
         "@repo/internationalization": "workspace:*",
         "@repo/next-config": "workspace:*",
+        "@repo/security": "workspace:*",
         "@repo/seo": "workspace:*",
         "@t3-oss/env-nextjs": "^0.13.8",
         "@tanstack/react-query": "^5.85.5",
@@ -233,6 +235,13 @@
         "@next/mdx": "^15.4.7",
         "@repo/typescript-config": "workspace:*",
         "next": "15.4.7",
+      },
+    },
+    "packages/security": {
+      "name": "@repo/security",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@repo/typescript-config": "workspace:*",
       },
     },
     "packages/seo": {
@@ -1052,6 +1061,8 @@
     "@repo/internationalization": ["@repo/internationalization@workspace:packages/internationalization"],
 
     "@repo/next-config": ["@repo/next-config@workspace:packages/next-config"],
+
+    "@repo/security": ["@repo/security@workspace:packages/security"],
 
     "@repo/seo": ["@repo/seo@workspace:packages/seo"],
 

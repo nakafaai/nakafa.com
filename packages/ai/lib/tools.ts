@@ -39,6 +39,7 @@ const getArticlesTool = tool({
 
     const articles = data.map((item) => ({
       title: item.metadata.title,
+      url: item.url,
       slug: item.slug,
       locale: item.locale,
     }));
@@ -73,6 +74,7 @@ const getSubjectsTool = tool({
 
     const subjects = data.map((item) => ({
       title: item.metadata.title,
+      url: item.url,
       slug: item.slug,
       locale: item.locale,
     }));
