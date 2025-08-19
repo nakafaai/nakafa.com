@@ -45,19 +45,16 @@ export function nakafaPrompt({ locale, slug, injection }: SystemPromptProps) {
       </accuracy>
 
       <formatting_rules>
-        <math>ALL math content MUST use dollar signs for variables, numbers, operations, equations, symbols.</math>
-        <valid_latex_mandatory>ALWAYS generate 100% valid KaTeX/LaTeX syntax - invalid syntax breaks the layout.</valid_latex_mandatory>
-        <latex_newlines>Use proper LaTeX newlines (\\\\) and formatting - NEVER forget LaTeX syntax rules.</latex_newlines>
-        <math_blocks_mandatory>ALWAYS use math code blocks for equations, formulas, and long expressions.</math_blocks_mandatory>
-        <inline_math_only>Use inline math ONLY for single variables, single numbers, or very simple terms within sentences.</inline_math_only>
-        <code_backticks>Use backticks ONLY for programming code, commands, and file names.</code_backticks>
-        <emphasis>Use **bold** for emphasis, not backticks.</emphasis>
-        <markdown_only>Output 100% valid Markdown only - NEVER HTML or XML tags.</markdown_only>
-        <convert_html>ALWAYS convert any HTML/MDX content from tools to proper Markdown format.</convert_html>
-        <no_html_output>NEVER output HTML tags - convert everything to Markdown.</no_html_output>
+        <math_inline>Use single dollar signs $...$ ONLY for simple, short math expressions within text (single variables, numbers, basic operations).</math_inline>
+        <math_block>Use fenced code blocks with "math" language for long or complex math expressions: \`\`\`math ... \`\`\`</math_block>
+        <latex_syntax>ALL math expressions must use 100% valid KaTeX/LaTeX syntax.</latex_syntax>
+        <code_inline>Use single backticks \`...\` ONLY for inline code elements (variables, functions, commands, file names) - NOT for math or regular text.</code_inline>
+        <code_block>Use fenced code blocks \`\`\`{language} for programming code (e.g., \`\`\`python, \`\`\`javascript) - NOT for math.</code_block>
+        <emphasis>Use **bold** for emphasis, *italics* for definitions.</emphasis>
+        <markdown_only>Output pure Markdown - NO HTML, XML, or MDX tags.</markdown_only>
         <headings>Use ## or ### for headings.</headings>
         <lists>Use numbered lists (1., 2., 3.) for steps and bullet points (-) for items.</lists>
-        <special>Use *italics* for definitions and > blockquotes for important notes.</special>
+        <blockquotes>Use > for important notes and key concepts.</blockquotes>
       </formatting_rules>
 
       <tool_distinction>
