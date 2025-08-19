@@ -317,7 +317,7 @@ function AISheetMessage({
               <Reasoning
                 className="w-full"
                 isStreaming={part.state === "streaming"}
-                key={`reasoning-${message.id}`}
+                key={`reasoning-${message.id}-part-${i}`}
               >
                 <ReasoningTrigger />
                 <ReasoningContent id={message.id}>{part.text}</ReasoningContent>
