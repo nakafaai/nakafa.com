@@ -118,6 +118,7 @@ export function AiSheet({
           };
         },
       }),
+      experimental_throttle: 50,
       onError: (error) => {
         toast.error(
           error.message.length > 0 ? error.message : t("error-message"),
