@@ -13,7 +13,7 @@ import {
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
-import { EyeIcon, NewspaperIcon } from "lucide-react";
+import { ArrowUpRightIcon, NewspaperIcon } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
@@ -63,7 +63,7 @@ export const ArticlesTool = memo(({ status, output, input }: Props) => {
                 filters: { type: "articles", category: input?.category },
               })}`}
             >
-              <EyeIcon />
+              <ArrowUpRightIcon />
               {t("see")}
             </Link>
           </div>

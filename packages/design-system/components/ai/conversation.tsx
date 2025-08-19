@@ -12,7 +12,7 @@ export const Conversation = memo(
   ({ className, ...props }: ConversationProps) => (
     <StickToBottom
       className={cn("relative flex-1 overflow-y-auto", className)}
-      initial="auto"
+      initial="instant"
       resize="smooth"
       role="log"
       {...props}

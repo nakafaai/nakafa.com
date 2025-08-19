@@ -14,7 +14,7 @@ import {
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
-import { EyeIcon, LibraryIcon } from "lucide-react";
+import { ArrowUpRightIcon, GraduationCapIcon } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
@@ -36,7 +36,7 @@ export const SubjectsTool = memo(({ status, output, input }: Props) => {
   return (
     <Tool>
       <ToolHeader
-        icon={<LibraryIcon className="size-4 text-muted-foreground" />}
+        icon={<GraduationCapIcon className="size-4 text-muted-foreground" />}
         state={status}
         type={t("get-subjects")}
       />
@@ -80,7 +80,7 @@ export const SubjectsTool = memo(({ status, output, input }: Props) => {
                 },
               })}`}
             >
-              <EyeIcon />
+              <ArrowUpRightIcon />
               {t("see")}
             </Link>
           </div>

@@ -75,7 +75,7 @@ export const ToolHeader = memo(
       >
         <div className="flex items-center gap-2">
           {loading ? (
-            <SpinnerIcon className="size-4" />
+            <SpinnerIcon className="size-4 text-muted-foreground" />
           ) : (
             (icon ?? <WrenchIcon className="size-4 text-muted-foreground" />)
           )}
