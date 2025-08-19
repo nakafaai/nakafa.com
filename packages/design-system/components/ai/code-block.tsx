@@ -111,7 +111,7 @@ export const CodeBlock = memo(
       <CodeBlockContextProvider code={code}>
         <div
           className={cn(
-            "grid size-full grid-cols-1 overflow-hidden rounded-md border shadow-sm",
+            "my-4 grid size-full grid-cols-1 overflow-hidden rounded-md border shadow-sm",
             className
           )}
           {...props}
