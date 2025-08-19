@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 export function Anchor({ href, children, ...props }: AnchorProps) {
   const className = buttonVariants({ variant: "link" });
+  const isNakafa = href?.includes("nakafa.com");
   if (href?.startsWith("/")) {
     return (
       <NavigationLink
@@ -44,7 +45,7 @@ export function Anchor({ href, children, ...props }: AnchorProps) {
       )}
       href={href}
       rel="noopener noreferrer"
-      target="_blank"
+      target={isNakafa ? undefined : "_blank"}
       title={href}
       {...props}
     >
