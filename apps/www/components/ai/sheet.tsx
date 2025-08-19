@@ -295,7 +295,10 @@ function AISheetMessage({
           case "text": {
             const isLastPart = i === message.parts.length - 1;
             return (
-              <div className="flex flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end">
+              <div
+                className="flex flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end"
+                key={`message-${message.id}-part-${i}`}
+              >
                 <MessageContent>
                   <Response id={message.id}>{part.text}</Response>
                 </MessageContent>
