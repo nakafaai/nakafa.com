@@ -42,7 +42,7 @@ const MemoizedHardenedMarkdown = memo(
 );
 MemoizedHardenedMarkdown.displayName = "MemoizedHardenedMarkdown";
 
-const HardenedMarkdownBlock = memo(
+const Block = memo(
   ({
     children,
     ...props
@@ -60,9 +60,9 @@ const HardenedMarkdownBlock = memo(
   },
   (prevProps, nextProps) => prevProps.children === nextProps.children
 );
-HardenedMarkdownBlock.displayName = "HardenedMarkdownBlock";
+Block.displayName = "Block";
 
-const HardenedMarkdownBlocks = memo(
+const Blocks = memo(
   ({
     id,
     children,
@@ -75,18 +75,18 @@ const HardenedMarkdownBlocks = memo(
     }, [children]);
 
     return blocks.map((block, index) => (
-      <HardenedMarkdownBlock
+      <Block
         // biome-ignore lint/suspicious/noArrayIndexKey: We need to use the index as key to prevent the component from re-rendering
         key={`${id}-block_${index}`}
         {...props}
       >
         {block}
-      </HardenedMarkdownBlock>
+      </Block>
     ));
   },
   (prevProps, nextProps) => prevProps.children === nextProps.children
 );
-HardenedMarkdownBlocks.displayName = "HardenedMarkdownBlocks";
+Blocks.displayName = "Blocks";
 
 const ResponseContent = memo(
   ({
@@ -106,14 +106,14 @@ const ResponseContent = memo(
           className
         )}
       >
-        <HardenedMarkdownBlocks
+        <Blocks
           allowedImagePrefixes={allowedImagePrefixes}
           allowedLinkPrefixes={allowedLinkPrefixes}
           defaultOrigin={defaultOrigin}
           {...props}
         >
           {parsedChildren}
-        </HardenedMarkdownBlocks>
+        </Blocks>
       </div>
     );
   },
