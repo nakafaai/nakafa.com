@@ -1,5 +1,6 @@
 "use client";
 
+import { buildContentSlug } from "@repo/ai/lib/utils";
 import type {
   GetArticlesInput,
   GetArticlesOutput,
@@ -10,7 +11,10 @@ import {
   ToolHeader,
 } from "@repo/design-system/components/ai/tool";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { NewspaperIcon } from "lucide-react";
+import { buttonVariants } from "@repo/design-system/components/ui/button";
+import { cn } from "@repo/design-system/lib/utils";
+import { EyeIcon, NewspaperIcon } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -40,15 +44,27 @@ export const ArticlesTool = memo(({ status, output, input }: Props) => {
           {input && (
             <div className="flex flex-wrap gap-2">
               {input.category && (
-                <Badge variant="outline">{tArticles(input.category)}</Badge>
+                <Badge variant="secondary">{tArticles(input.category)}</Badge>
               )}
             </div>
           )}
-          <p className="text-muted-foreground text-sm">
-            {t("found-articles", {
-              count: output?.articles.length ?? 0,
-            })}
-          </p>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-muted-foreground text-sm">
+              {t("found-articles", {
+                count: output?.articles.length ?? 0,
+              })}
+            </p>
+            <Link
+              className={cn(buttonVariants({ size: "sm" }))}
+              href={`/${buildContentSlug({
+                locale: "en",
+                filters: { type: "articles", category: input?.category },
+              })}`}
+            >
+              <EyeIcon />
+              {t("see")}
+            </Link>
+          </div>
         </div>
       </ToolContent>
     </Tool>

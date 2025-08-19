@@ -1,5 +1,6 @@
 "use client";
 
+import { buildContentSlug } from "@repo/ai/lib/utils";
 import type {
   GetSubjectsInput,
   GetSubjectsOutput,
@@ -11,7 +12,10 @@ import {
   ToolHeader,
 } from "@repo/design-system/components/ai/tool";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { LibraryIcon } from "lucide-react";
+import { buttonVariants } from "@repo/design-system/components/ui/button";
+import { cn } from "@repo/design-system/lib/utils";
+import { EyeIcon, LibraryIcon } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -56,11 +60,28 @@ export const SubjectsTool = memo(({ status, output, input }: Props) => {
             </div>
           )}
 
-          <p className="text-muted-foreground text-sm">
-            {t("found-subjects", {
-              count: output?.subjects.length ?? 0,
-            })}
-          </p>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-muted-foreground text-sm">
+              {t("found-subjects", {
+                count: output?.subjects.length ?? 0,
+              })}
+            </p>
+            <Link
+              className={cn(buttonVariants({ size: "sm" }))}
+              href={`/${buildContentSlug({
+                locale: "en",
+                filters: {
+                  type: "subject",
+                  category: input?.category,
+                  grade: input?.grade,
+                  material: input?.material,
+                },
+              })}`}
+            >
+              <EyeIcon />
+              {t("see")}
+            </Link>
+          </div>
         </div>
       </ToolContent>
     </Tool>
