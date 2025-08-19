@@ -99,18 +99,13 @@ import type {
   ReactElement,
   ReactNode,
 } from "react";
-import {
-  cloneElement,
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { cloneElement, useEffect, useState } from "react";
 import {
   type BundledLanguage,
   type CodeOptionsMultipleThemes,
   codeToHtml,
 } from "shiki";
+import { createContext, useContextSelector } from "use-context-selector";
 
 export type { BundledLanguage } from "shiki";
 
@@ -316,6 +311,14 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
   data: [],
 });
 
+function useCodeBlock<T>(selector: (state: CodeBlockContextType) => T): T {
+  const ctx = useContextSelector(CodeBlockContext, (context) => context);
+  if (!ctx) {
+    throw new Error("CodeBlock components must be used within CodeBlock");
+  }
+  return selector(ctx);
+}
+
 export type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   defaultValue?: string;
   value?: string;
@@ -377,7 +380,7 @@ export const CodeBlockFiles = ({
   children,
   ...props
 }: CodeBlockFilesProps) => {
-  const { data } = useContext(CodeBlockContext);
+  const data = useCodeBlock((state) => state.data);
 
   return (
     <div
@@ -401,7 +404,7 @@ export const CodeBlockFilename = ({
   children,
   ...props
 }: CodeBlockFilenameProps) => {
-  const { value: activeValue } = useContext(CodeBlockContext);
+  const activeValue = useCodeBlock((state) => state.value);
   const defaultIcon = Object.entries(filenameIconMap).find(([pattern]) => {
     const regex = new RegExp(
       `^${pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*")}$`
@@ -428,7 +431,10 @@ export const CodeBlockFilename = ({
 export type CodeBlockSelectProps = ComponentProps<typeof Select>;
 
 export const CodeBlockSelect = (props: CodeBlockSelectProps) => {
-  const { value, onValueChange } = useContext(CodeBlockContext);
+  const { value, onValueChange } = useCodeBlock((state) => ({
+    value: state.value,
+    onValueChange: state.onValueChange,
+  }));
 
   return <Select onValueChange={onValueChange} value={value} {...props} />;
 };
@@ -467,7 +473,7 @@ export const CodeBlockSelectContent = ({
   ...props
 }: CodeBlockSelectContentProps) => {
   const t = useTranslations("Common");
-  const { data } = useContext(CodeBlockContext);
+  const data = useCodeBlock((state) => state.data);
 
   return (
     <SelectContent {...props}>
@@ -504,7 +510,10 @@ export const CodeBlockCopyButton = ({
   ...props
 }: CodeBlockCopyButtonProps) => {
   const [isCopied, setIsCopied] = useState(false);
-  const { data, value } = useContext(CodeBlockContext);
+  const { data, value } = useCodeBlock((state) => ({
+    data: state.data,
+    value: state.value,
+  }));
   const code = data.find((item) => item.language === value)?.code;
 
   const copyToClipboard = () => {
@@ -573,7 +582,7 @@ export type CodeBlockBodyProps = Omit<
 };
 
 export const CodeBlockBody = ({ children, ...props }: CodeBlockBodyProps) => {
-  const { data } = useContext(CodeBlockContext);
+  const data = useCodeBlock((state) => state.data);
 
   return <div {...props}>{data.map(children)}</div>;
 };
@@ -590,7 +599,7 @@ export const CodeBlockItem = ({
   value,
   ...props
 }: CodeBlockItemProps) => {
-  const { value: activeValue } = useContext(CodeBlockContext);
+  const activeValue = useCodeBlock((state) => state.value);
 
   if (value !== activeValue) {
     return null;
