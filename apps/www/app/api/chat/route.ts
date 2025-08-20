@@ -114,7 +114,7 @@ export async function POST(req: Request) {
         }),
         providerOptions: {
           gateway: {
-            order: ["baseten", "groq", "cerebras", "azure", "vertex"],
+            order: ["groq", "baseten", "cerebras", "azure", "vertex"],
           },
           google: {
             thinkingConfig: {
