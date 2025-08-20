@@ -79,13 +79,13 @@ export const reactMdxComponents: Options["components"] = {
   ),
   ol: memo(
     ({ ...props }) => (
-      <ol className="my-4 list-decimal space-y-4 pl-5 last:mb-0" {...props} />
+      <ol className="my-4 list-decimal space-y-4 pl-6 last:mb-0" {...props} />
     ),
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
   ul: memo(
     ({ ...props }) => (
-      <ul className="my-4 list-disc space-y-4 pl-5 last:mb-0" {...props} />
+      <ul className="my-4 list-disc space-y-4 pl-6 last:mb-0" {...props} />
     ),
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
