@@ -2,7 +2,6 @@ import { buttonVariants } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 export function Anchor({ href, children, ...props }: AnchorProps) {
@@ -27,7 +26,7 @@ export function Anchor({ href, children, ...props }: AnchorProps) {
 
   if (href?.startsWith("#")) {
     return (
-      <Link
+      <a
         className={cn(
           className,
           "h-auto p-0 text-base underline underline-offset-4"
@@ -37,12 +36,12 @@ export function Anchor({ href, children, ...props }: AnchorProps) {
         {...props}
       >
         {children}
-      </Link>
+      </a>
     );
   }
 
   return (
-    <Link
+    <a
       className={cn(
         className,
         "h-auto p-0 text-base underline underline-offset-4"
@@ -54,7 +53,7 @@ export function Anchor({ href, children, ...props }: AnchorProps) {
       {...props}
     >
       {truncate({ children })}
-    </Link>
+    </a>
   );
 }
 

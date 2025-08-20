@@ -16,24 +16,18 @@ import { OrganizationJsonLd } from "@repo/seo/json-ld/organization";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
-import { hasLocale, type Locale, NextIntlClientProvider } from "next-intl";
+import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import type { ReactNode } from "react";
 import { AiChat } from "@/components/ai/sheet";
 import { AppProviders } from "@/components/providers";
 import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
 
-type Props = {
-  children: ReactNode;
-  params: Promise<{ locale: Locale }>;
-};
-
 export async function generateMetadata({
   params,
 }: {
-  params: Props["params"];
+  params: LayoutProps<"/[locale]">["params"];
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations("Metadata");
@@ -155,7 +149,8 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export default async function LocaleLayout({ children, params }: Props) {
+export default async function LocaleLayout(props: LayoutProps<"/[locale]">) {
+  const { children, params } = props;
   const { locale } = await params;
   // Ensure that the incoming `locale` is valid
   if (!hasLocale(routing.locales, locale)) {

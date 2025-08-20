@@ -2,6 +2,7 @@
 
 import { useDebouncedValue } from "@mantine/hooks";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { cn } from "@repo/design-system/lib/utils";
 import { IconMenu3 } from "@tabler/icons-react";
@@ -11,7 +12,6 @@ import {
   InfoIcon,
   RocketIcon,
 } from "lucide-react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { Fragment } from "react";
@@ -98,14 +98,13 @@ export function SearchResults() {
             </h2>
             <div className="flex flex-col gap-1">
               {result.sub_results.map((subResult) => (
-                <Link
+                <NavigationLink
                   className={cn(
                     "group flex items-center gap-2 p-2 px-4 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
                     getAnchorStyle(subResult.anchor)
                   )}
                   href={subResult.url}
                   key={`${subResult.url}-${subResult.title}`}
-                  prefetch
                   title={subResult.title}
                 >
                   {subResult.anchor?.element === "h2" ? (
@@ -114,7 +113,7 @@ export function SearchResults() {
                     <IconMenu3 className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground" />
                   )}
                   <span className="line-clamp-1">{subResult.title}</span>
-                </Link>
+                </NavigationLink>
               ))}
             </div>
           </div>

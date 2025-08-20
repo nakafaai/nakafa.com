@@ -7,7 +7,6 @@ import {
   ToolHeader,
 } from "@repo/design-system/components/ai/tool";
 import { BookOpenIcon, ExternalLinkIcon } from "lucide-react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -34,14 +33,14 @@ export const ContentTool = memo(({ status, output }: Props) => {
       />
       <ToolContent>
         <div className="p-3">
-          <Link
+          <a
             className="flex items-center gap-1 text-muted-foreground text-sm underline-offset-4 hover:underline"
             href={output?.url ?? ""}
             target={isNakafa ? undefined : "_blank"}
           >
             <span className="max-w-48 truncate sm:max-w-64">{output?.url}</span>
             <ExternalLinkIcon className="ml-1 size-3.5 shrink-0" />
-          </Link>
+          </a>
         </div>
       </ToolContent>
     </Tool>

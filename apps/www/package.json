@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 --turbopack",
-    "build": "next build",
+    "build": "next build --turbopack",
     "start": "next start -p 3000",
     "analyze": "ANALYZE=true npm run build",
     "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
@@ -30,7 +30,7 @@
     "feed": "^5.1.0",
     "immer": "^10.1.1",
     "lucide-react": "^0.540.0",
-    "next": "15.4.7",
+    "next": "15.5.0",
     "nuqs": "^2.4.3",
     "react": "19.1.1",
     "react-aria-components": "^1.11.0",

@@ -5,6 +5,7 @@ import type { NextConfig } from "next";
 
 export const config: NextConfig = {
   reactStrictMode: true,
+  typedRoutes: true,
   logging: {
     fetches: {
       fullUrl: true,

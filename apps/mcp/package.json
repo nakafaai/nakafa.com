@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001 --turbopack",
-    "build": "next build",
+    "build": "next build --turbopack",
     "start": "next start -p 3001",
     "test-client": "node scripts/test-client.mjs",
     "test-streamable-http-client": "node scripts/test-streamable-http-client.mjs"
@@ -13,10 +13,10 @@
     "@repo/contents": "workspace:*",
     "@repo/connection": "workspace:*",
     "mcp-handler": "1.0.1",
-    "next": "15.4.7",
+    "next": "15.5.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "redis": "^5.8.1"
+    "redis": "^5.8.2"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

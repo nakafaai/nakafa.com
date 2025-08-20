@@ -139,19 +139,8 @@ function SearchListItems({
   results: PagefindResult[];
 }) {
   const t = useTranslations("Utils");
-  const router = useRouter();
   const setOpen = useSearch((state) => state.setOpen);
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    const subResultsToPrefetch = results.flatMap(
-      (result) => result.sub_results
-    );
-    for (const subResult of subResultsToPrefetch) {
-      // router prefetch will manage that it will not prefetch the same url twice
-      router.prefetch(subResult.url);
-    }
-  }, [results, router]);
 
   if (error) {
     return (
@@ -198,7 +187,7 @@ function SearchListItems({
             onSelect={() => {
               startTransition(() => {
                 setOpen(false);
-                router.push(subResult.url);
+                window.location.href = subResult.url;
               });
             }}
             value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
