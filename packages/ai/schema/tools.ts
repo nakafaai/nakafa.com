@@ -12,7 +12,7 @@ export const getArticlesInputSchema = z
     ),
   })
   .describe(
-    "Get articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, and general publications. Use this for ANY question about ANY topic."
+    "Get articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, politics, and general publications. Use this for research questions, current events, scientific studies, news analysis, and academic research topics."
   );
 export type GetArticlesInput = z.infer<typeof getArticlesInputSchema>;
 
@@ -42,7 +42,7 @@ export const getSubjectsInputSchema = z
     material: MaterialSchema.describe("The material of the subject to get."),
   })
   .describe(
-    "Get educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for ANY question about ANY topic."
+    "Get educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for study questions, homework help, learning concepts, educational content, and curriculum-based topics."
   );
 export type GetSubjectsInput = z.infer<typeof getSubjectsInputSchema>;
 

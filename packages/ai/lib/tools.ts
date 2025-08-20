@@ -18,7 +18,7 @@ const QURAN_SLUG_PARTS_COUNT = 3;
 const getArticlesTool = tool({
   name: "getArticles",
   description:
-    "Retrieves articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, and general publications. Use this for ANY question about ANY topic.",
+    "Retrieves articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, politics, and general publications. Use this for research questions, current events, scientific studies, news analysis, and academic research topics.",
   inputSchema: getArticlesInputSchema,
   outputSchema: getArticlesOutputSchema,
   async execute({ locale, category }) {
@@ -53,7 +53,7 @@ const getArticlesTool = tool({
 const getSubjectsTool = tool({
   name: "getSubjects",
   description:
-    "Retrieves educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for ANY question about ANY topic.",
+    "Retrieves educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for study questions, homework help, learning concepts, educational content, and curriculum-based topics.",
   inputSchema: getSubjectsInputSchema,
   outputSchema: getSubjectsOutputSchema,
   async execute({ locale, category, grade, material }) {

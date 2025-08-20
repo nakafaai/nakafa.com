@@ -2,6 +2,7 @@ import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { defaultModel, model } from "@repo/ai/lib/providers";
 import { tools } from "@repo/ai/lib/tools";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
+import { api } from "@repo/connection/routes";
 import { CorsValidator } from "@repo/security";
 import {
   convertToModelMessages,
@@ -40,6 +41,13 @@ export async function POST(req: Request) {
   }: { messages: UIMessage[]; url: string; locale: string; slug: string } =
     await req.json();
 
+  // Check if the slug is verified by calling api
+  const verified = await api.contents
+    .getContent({
+      slug,
+    })
+    .then((res) => res.data !== "");
+
   const stream = createUIMessageStream({
     onError: (error) => {
       if (error instanceof Error) {
@@ -55,8 +63,11 @@ export async function POST(req: Request) {
         model: model.languageModel(defaultModel),
         system: nakafaPrompt({
           url,
-          locale,
-          slug,
+          currentPage: {
+            locale,
+            slug,
+            verified,
+          },
         }),
         messages: convertToModelMessages(messages),
         stopWhen: stepCountIs(MAX_STEPS),
