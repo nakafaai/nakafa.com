@@ -44,7 +44,7 @@ export const ArticlesTool = memo(({ status, output, input }: Props) => {
           {input && (
             <div className="flex flex-wrap gap-2">
               {input.category && (
-                <Badge variant="secondary">{tArticles(input.category)}</Badge>
+                <Badge variant="outline">{tArticles(input.category)}</Badge>
               )}
             </div>
           )}
