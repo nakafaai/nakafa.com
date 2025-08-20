@@ -8,9 +8,9 @@
   },
   "dependencies": {
     "@ai-sdk/google-vertex": "^3.0.10",
-    "@ai-sdk/react": "^2.0.18",
+    "@ai-sdk/react": "^2.0.19",
     "@t3-oss/env-nextjs": "^0.13.8",
-    "ai": "^5.0.18",
+    "ai": "^5.0.19",
     "dedent": "^1.6.0"
   },
   "devDependencies": {
