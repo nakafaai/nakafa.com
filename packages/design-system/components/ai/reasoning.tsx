@@ -197,7 +197,7 @@ export const ReasoningContent = memo(
       )}
       {...props}
     >
-      <Response className="text-muted-foreground text-sm" id={id}>
+      <Response className="break-all text-muted-foreground text-sm" id={id}>
         {children}
       </Response>
     </CollapsibleContent>
