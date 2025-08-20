@@ -110,7 +110,7 @@ export async function POST(req: Request) {
         },
         experimental_transform: smoothStream({
           delayInMs: 20,
-          chunking: "word",
+          chunking: "line",
         }),
         providerOptions: {
           gateway: {
