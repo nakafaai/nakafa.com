@@ -149,10 +149,7 @@ export const reactMdxComponents: Options["components"] = {
   ),
   th: memo(
     ({ children, ...props }) => (
-      <TableHead
-        className="border-r text-center font-medium last:border-r-0"
-        {...props}
-      >
+      <TableHead className="border-r font-medium last:border-r-0" {...props}>
         {filterWhitespaceNodes(children)}
       </TableHead>
     ),
@@ -160,7 +157,7 @@ export const reactMdxComponents: Options["components"] = {
   ),
   td: memo(
     ({ children, ...props }) => (
-      <TableCell className="border-r text-center last:border-r-0" {...props}>
+      <TableCell className="border-r last:border-r-0" {...props}>
         {filterWhitespaceNodes(children)}
       </TableCell>
     ),
