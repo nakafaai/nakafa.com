@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { memo, useEffect, useMemo, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
+import { SpinnerIcon } from "../ui/icons";
 import { Response } from "./response";
 
 const AUTO_CLOSE_DELAY = 1000;
@@ -35,6 +36,7 @@ function useReasoning<T>(selector: (state: ReasoningContextValue) => T): T {
 }
 
 export type ReasoningProps = ComponentProps<typeof Collapsible> & {
+  autoOpen?: boolean;
   isStreaming?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
@@ -45,6 +47,7 @@ export type ReasoningProps = ComponentProps<typeof Collapsible> & {
 export const Reasoning = memo(
   ({
     className,
+    autoOpen = true,
     isStreaming = false,
     open,
     defaultOpen = false,
@@ -82,7 +85,7 @@ export const Reasoning = memo(
     // Auto-open when streaming starts, auto-close when streaming ends (once only).
     // Do NOT auto-close if the user manually opened the panel when there was no streaming.
     useEffect(() => {
-      if (isStreaming && !isOpen) {
+      if (isStreaming && !isOpen && autoOpen) {
         setIsOpen(true);
         setWasAutoOpened(true);
       } else if (
@@ -107,6 +110,7 @@ export const Reasoning = memo(
       setIsOpen,
       hasAutoClosedRef,
       wasAutoOpened,
+      autoOpen,
     ]);
 
     const handleOpenChange = (v: boolean) => {
@@ -161,7 +165,11 @@ export const ReasoningTrigger = memo(
       >
         {children ?? (
           <>
-            <BrainIcon className="size-4" />
+            {isStreaming ? (
+              <SpinnerIcon className="size-4" />
+            ) : (
+              <BrainIcon className="size-4" />
+            )}
             {isStreaming || duration === 0 ? (
               <p>{t("thinking")}</p>
             ) : (

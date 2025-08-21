@@ -315,6 +315,7 @@ function AISheetMessage({
           case "reasoning":
             return (
               <Reasoning
+                autoOpen={false}
                 className="w-full"
                 isStreaming={part.state === "streaming"}
                 key={`reasoning-${message.id}-part-${i}`}
