@@ -6,6 +6,7 @@ import { nakafaPrompt } from "@repo/ai/prompt/system";
 import { tools } from "@repo/ai/tools";
 import { api } from "@repo/connection/routes";
 import { CorsValidator } from "@repo/security";
+import { createChildLogger, logError } from "@repo/utilities/logging";
 import { geolocation } from "@vercel/functions";
 import {
   convertToModelMessages,
@@ -59,14 +60,44 @@ export async function POST(req: Request) {
 
   const { latitude, longitude, city, country } = geolocation(req);
 
+  // Create logger with context for this chat session
+  const sessionLogger = createChildLogger({
+    service: "chat-api",
+    currentPage: {
+      locale,
+      slug: cleanSlug(slug),
+      verified,
+    },
+    currentDate,
+    userLocation: {
+      latitude: latitude ?? "Unknown",
+      longitude: longitude ?? "Unknown",
+      city: city ?? "Unknown",
+      country: country ?? "Unknown",
+    },
+    url,
+  });
+
+  // Log chat session start
+  sessionLogger.info("Chat session started");
+
   const stream = createUIMessageStream<MyUIMessage>({
     onError: (error) => {
+      // Log the error with context
       if (error instanceof Error) {
+        logError(sessionLogger, error, {
+          errorLocation: "createUIMessageStream",
+          errorType: error.name,
+        });
+
         if (error.message.includes("Rate limit")) {
+          sessionLogger.warn("Rate limit exceeded in chat stream");
           return t("rate-limit-message");
         }
         return error.message;
       }
+
+      sessionLogger.error("Unknown error in chat stream");
       return t("error-message");
     },
     execute: ({ writer }) => {
@@ -107,7 +138,16 @@ export async function POST(req: Request) {
           inputSchema,
           error,
         }) => {
+          // Log tool call repair attempt
+          logError(sessionLogger, error, {
+            errorLocation: "experimental_repairToolCall",
+            toolName: toolCall.toolName,
+            toolInput: toolCall.input,
+            errorType: error.name,
+          });
+
           if (NoSuchToolError.isInstance(error)) {
+            sessionLogger.warn("Invalid tool name, not attempting repair");
             return null; // do not attempt to fix invalid tool names
           }
 
@@ -136,6 +176,8 @@ export async function POST(req: Request) {
             },
           });
 
+          sessionLogger.info("Tool call successfully repaired");
+
           return { ...toolCall, input: JSON.stringify(repairedArgs, null, 2) };
         },
         experimental_transform: smoothStream({
@@ -151,12 +193,21 @@ export async function POST(req: Request) {
         result.toUIMessageStream({
           sendReasoning: true,
           onError: (error) => {
+            // Log the error with context
             if (error instanceof Error) {
+              logError(sessionLogger, error, {
+                errorLocation: "toUIMessageStream",
+                errorType: error.name,
+              });
+
               if (error.message.includes("Rate limit")) {
+                sessionLogger.warn("Rate limit exceeded in message stream");
                 return t("rate-limit-message");
               }
               return error.message;
             }
+
+            sessionLogger.error("Unknown error in message stream");
             return t("error-message");
           },
         })
