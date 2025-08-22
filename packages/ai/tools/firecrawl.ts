@@ -100,6 +100,7 @@ export const webSearchTool = tool({
       const news =
         response.news?.map((result) => ({
           title: ("title" in result ? result.title : "") || "",
+          description: ("snippet" in result ? result.snippet : "") || "",
           url: ("url" in result ? result.url : "") || "",
           content: truncateContent(
             ("markdown" in result ? result.markdown : "") || ""
@@ -109,6 +110,8 @@ export const webSearchTool = tool({
       const web =
         response.web?.map((result) => ({
           title: ("title" in result ? result.title : "") || "",
+          description:
+            ("description" in result ? result.description : "") || "",
           url: ("url" in result ? result.url : "") || "",
           content: truncateContent(
             ("markdown" in result ? result.markdown : "") || ""

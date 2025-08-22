@@ -40,13 +40,13 @@ export const WebSearchTool = memo(({ status, output }: Props) => {
       {output?.data.news.map((item) => (
         <Source href={item.url} key={item.url}>
           <SourceTrigger showFavicon />
-          <SourceContent title={item.title} />
+          <SourceContent description={item.description} title={item.title} />
         </Source>
       ))}
       {output?.data.web.map((item) => (
         <Source href={item.url} key={item.url}>
           <SourceTrigger showFavicon />
-          <SourceContent title={item.title} />
+          <SourceContent description={item.description} title={item.title} />
         </Source>
       ))}
     </div>

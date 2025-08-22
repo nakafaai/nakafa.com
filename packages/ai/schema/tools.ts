@@ -138,28 +138,36 @@ export const scrapeOutputSchema = z.object({
 });
 export type ScrapeOutput = z.output<typeof scrapeOutputSchema>;
 
-export const webSearchInputSchema = z.object({
-  query: z.string().describe("The query to search the web for"),
-});
+export const webSearchInputSchema = z
+  .object({
+    query: z.string().describe("The query to search the web for"),
+  })
+  .describe("Search the web for up-to-date information using a text query");
 export type WebSearchInput = z.input<typeof webSearchInputSchema>;
 
-export const webSearchOutputSchema = z.object({
-  data: z.object({
-    news: z.array(
-      z.object({
-        title: z.string(),
-        url: z.string(),
-        content: z.string(),
-      })
-    ),
-    web: z.array(
-      z.object({
-        title: z.string(),
-        url: z.string(),
-        content: z.string(),
-      })
-    ),
-  }),
-  error: z.string().optional(),
-});
+export const webSearchOutputSchema = z
+  .object({
+    data: z.object({
+      news: z.array(
+        z.object({
+          title: z.string(),
+          url: z.string(),
+          content: z.string(),
+          description: z.string(),
+        })
+      ),
+      web: z.array(
+        z.object({
+          title: z.string(),
+          url: z.string(),
+          content: z.string(),
+          description: z.string(),
+        })
+      ),
+    }),
+    error: z.string().optional(),
+  })
+  .describe(
+    "The output schema for web search results including news and web content"
+  );
 export type WebSearchOutput = z.output<typeof webSearchOutputSchema>;
