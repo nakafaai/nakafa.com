@@ -14,7 +14,7 @@ export const getArticlesInputSchema = z
   .describe(
     "Get articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, politics, and general publications. Use this for research questions, current events, scientific studies, news analysis, and academic research topics."
   );
-export type GetArticlesInput = z.infer<typeof getArticlesInputSchema>;
+export type GetArticlesInput = z.input<typeof getArticlesInputSchema>;
 
 export const getArticlesOutputSchema = z
   .object({
@@ -30,7 +30,7 @@ export const getArticlesOutputSchema = z
   .describe(
     "The output schema for the getArticles tool. The articles are from Nakafa platform."
   );
-export type GetArticlesOutput = z.infer<typeof getArticlesOutputSchema>;
+export type GetArticlesOutput = z.output<typeof getArticlesOutputSchema>;
 
 export const getSubjectsInputSchema = z
   .object({
@@ -38,13 +38,15 @@ export const getSubjectsInputSchema = z
     category: SubjectCategorySchema.describe(
       "The category of the subject to get."
     ),
-    grade: GradeSchema.describe("The grade of the subject to get."),
-    material: MaterialSchema.describe("The material of the subject to get."),
+    grade: GradeSchema.describe("String of the grade of the subject to get."),
+    material: MaterialSchema.nullable().describe(
+      "The material of the subject to get."
+    ),
   })
   .describe(
     "Get educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for study questions, homework help, learning concepts, educational content, and curriculum-based topics."
   );
-export type GetSubjectsInput = z.infer<typeof getSubjectsInputSchema>;
+export type GetSubjectsInput = z.input<typeof getSubjectsInputSchema>;
 
 export const getSubjectsOutputSchema = z
   .object({
@@ -60,7 +62,7 @@ export const getSubjectsOutputSchema = z
   .describe(
     "The output schema for the getSubjects tool. The subjects are K-12 to university level."
   );
-export type GetSubjectsOutput = z.infer<typeof getSubjectsOutputSchema>;
+export type GetSubjectsOutput = z.output<typeof getSubjectsOutputSchema>;
 
 export const getContentInputSchema = z
   .object({
@@ -74,7 +76,7 @@ export const getContentInputSchema = z
   .describe(
     "Get the full content from Nakafa platform. CRITICAL: ONLY use this with slugs that were returned from getSubjects or getArticles responses. NEVER use with guessed, assumed, or unverified slugs."
   );
-export type GetContentInput = z.infer<typeof getContentInputSchema>;
+export type GetContentInput = z.input<typeof getContentInputSchema>;
 
 export const getContentOutputSchema = z
   .object({
@@ -84,7 +86,7 @@ export const getContentOutputSchema = z
   .describe(
     "The output schema for the getContent tool. The content is the full content of the page."
   );
-export type GetContentOutput = z.infer<typeof getContentOutputSchema>;
+export type GetContentOutput = z.output<typeof getContentOutputSchema>;
 
 export const calculatorInputSchema = z
   .object({
@@ -97,7 +99,7 @@ export const calculatorInputSchema = z
   .describe(
     "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation including simple arithmetic. NEVER calculate manually. Only use for evaluable expressions with concrete numbers, not algebraic variables."
   );
-export type CalculatorInput = z.infer<typeof calculatorInputSchema>;
+export type CalculatorInput = z.input<typeof calculatorInputSchema>;
 
 export const calculatorOutputSchema = z
   .object({
@@ -112,7 +114,7 @@ export const calculatorOutputSchema = z
     }),
   })
   .describe("The output schema for the calculator tool.");
-export type CalculatorOutput = z.infer<typeof calculatorOutputSchema>;
+export type CalculatorOutput = z.output<typeof calculatorOutputSchema>;
 
 const MAX_URL_LENGTH = 100;
 
@@ -125,7 +127,7 @@ export const scrapeInputSchema = z
       .describe("The URL to scrape (including http:// or https://)"),
   })
   .describe("Get the content of a URL");
-export type ScrapeInput = z.infer<typeof scrapeInputSchema>;
+export type ScrapeInput = z.input<typeof scrapeInputSchema>;
 
 export const scrapeOutputSchema = z.object({
   data: z.object({
@@ -134,12 +136,12 @@ export const scrapeOutputSchema = z.object({
   }),
   error: z.string().optional(),
 });
-export type ScrapeOutput = z.infer<typeof scrapeOutputSchema>;
+export type ScrapeOutput = z.output<typeof scrapeOutputSchema>;
 
 export const webSearchInputSchema = z.object({
   query: z.string().describe("The query to search the web for"),
 });
-export type WebSearchInput = z.infer<typeof webSearchInputSchema>;
+export type WebSearchInput = z.input<typeof webSearchInputSchema>;
 
 export const webSearchOutputSchema = z.object({
   data: z.object({
@@ -160,4 +162,4 @@ export const webSearchOutputSchema = z.object({
   }),
   error: z.string().optional(),
 });
-export type WebSearchOutput = z.infer<typeof webSearchOutputSchema>;
+export type WebSearchOutput = z.output<typeof webSearchOutputSchema>;

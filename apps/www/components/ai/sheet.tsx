@@ -338,7 +338,6 @@ function AISheetMessage({
           case "tool-getSubjects":
             return (
               <SubjectsTool
-                input={part.input}
                 key={`tool-${part.toolCallId}`}
                 output={part.output}
                 status={part.state}
