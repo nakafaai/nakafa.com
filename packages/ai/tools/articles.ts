@@ -36,6 +36,7 @@ export const getArticlesTool = tool({
     }));
 
     return {
+      baseUrl: `/${slug}`,
       articles,
     };
   },

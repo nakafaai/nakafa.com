@@ -1,6 +1,5 @@
 "use client";
 
-import { buildContentSlug } from "@repo/ai/lib/utils";
 import type {
   GetArticlesInput,
   GetArticlesOutput,
@@ -12,9 +11,9 @@ import {
 } from "@repo/design-system/components/ai/tool";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { buttonVariants } from "@repo/design-system/components/ui/button";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
 import { ArrowUpRightIcon, NewspaperIcon } from "lucide-react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -54,18 +53,15 @@ export const ArticlesTool = memo(({ status, output, input }: Props) => {
                 count: output?.articles.length ?? 0,
               })}
             </p>
-            <Link
+            <NavigationLink
               className={cn(
                 buttonVariants({ variant: "secondary", size: "sm" })
               )}
-              href={`/${buildContentSlug({
-                locale: "en",
-                filters: { type: "articles", category: input?.category },
-              })}`}
+              href={output?.baseUrl ?? ""}
             >
               <ArrowUpRightIcon />
               {t("see")}
-            </Link>
+            </NavigationLink>
           </div>
         </div>
       </ToolContent>

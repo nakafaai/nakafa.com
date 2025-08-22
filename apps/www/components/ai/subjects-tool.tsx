@@ -6,7 +6,10 @@ import {
   ToolContent,
   ToolHeader,
 } from "@repo/design-system/components/ai/tool";
-import { GraduationCapIcon } from "lucide-react";
+import { buttonVariants } from "@repo/design-system/components/ui/button";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { cn } from "@repo/design-system/lib/utils";
+import { ArrowUpRightIcon, GraduationCapIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -37,6 +40,15 @@ export const SubjectsTool = memo(({ status, output }: Props) => {
                 count: output?.subjects.length ?? 0,
               })}
             </p>
+            <NavigationLink
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "sm" })
+              )}
+              href={output?.baseUrl ?? ""}
+            >
+              <ArrowUpRightIcon />
+              {t("see")}
+            </NavigationLink>
           </div>
         </div>
       </ToolContent>

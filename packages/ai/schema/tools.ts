@@ -18,6 +18,7 @@ export type GetArticlesInput = z.input<typeof getArticlesInputSchema>;
 
 export const getArticlesOutputSchema = z
   .object({
+    baseUrl: z.string().describe("The base url of the articles."),
     articles: z.array(
       z.object({
         title: z.string().describe("The title of the article."),
@@ -48,6 +49,7 @@ export type GetSubjectsInput = z.input<typeof getSubjectsInputSchema>;
 
 export const getSubjectsOutputSchema = z
   .object({
+    baseUrl: z.string().describe("The base url of the subjects."),
     subjects: z.array(
       z.object({
         title: z.string().describe("The title of the subject."),

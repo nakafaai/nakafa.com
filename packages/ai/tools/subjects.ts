@@ -36,6 +36,7 @@ export const getSubjectsTool = tool({
     }));
 
     return {
+      baseUrl: `/${slug}`,
       subjects,
     };
   },
