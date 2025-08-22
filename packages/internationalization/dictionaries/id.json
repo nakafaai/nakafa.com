@@ -215,7 +215,8 @@
     "prepare-next-moves": "Menyiapkan langkah selanjutnya...",
     "copy-message": "Salin pesan",
     "retry-message": "Ulangi pesan",
-    "see": "Lihat"
+    "see": "Lihat",
+    "scrape": "Scrape"
   },
   "Math": {
     "Metadata": {

@@ -215,7 +215,8 @@
     "prepare-next-moves": "Preparing next moves...",
     "copy-message": "Copy message",
     "retry-message": "Retry message",
-    "see": "See"
+    "see": "See",
+    "scrape": "Scrape"
   },
   "Math": {
     "Metadata": {

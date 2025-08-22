@@ -112,10 +112,7 @@ export const components = {
     </TableRow>
   ),
   th: ({ children, ...props }: TableHeadProps) => (
-    <TableHead
-      className="border-r text-center font-medium last:border-r-0"
-      {...props}
-    >
+    <TableHead className="border-r font-medium last:border-r-0" {...props}>
       {filterWhitespaceNodes(children)}
     </TableHead>
   ),

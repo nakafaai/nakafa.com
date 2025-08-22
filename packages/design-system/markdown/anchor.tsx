@@ -1,20 +1,14 @@
-import { buttonVariants } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { cn } from "@repo/design-system/lib/utils";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
 import type { ReactNode } from "react";
 
 export function Anchor({ href, children, ...props }: AnchorProps) {
-  const className = buttonVariants({ variant: "link" });
   const isNakafa = href?.includes("nakafa.com");
 
   if (href?.startsWith("/")) {
     return (
       <NavigationLink
-        className={cn(
-          className,
-          "h-auto p-0 text-base underline underline-offset-4"
-        )}
+        className="h-auto p-0 font-normal text-primary underline underline-offset-4"
         href={href}
         title={href}
         {...props}
@@ -27,10 +21,7 @@ export function Anchor({ href, children, ...props }: AnchorProps) {
   if (href?.startsWith("#")) {
     return (
       <a
-        className={cn(
-          className,
-          "h-auto p-0 text-base underline underline-offset-4"
-        )}
+        className="h-auto p-0 font-normal text-primary underline underline-offset-4"
         href={href}
         title={href}
         {...props}
@@ -42,10 +33,7 @@ export function Anchor({ href, children, ...props }: AnchorProps) {
 
   return (
     <a
-      className={cn(
-        className,
-        "h-auto p-0 text-base underline underline-offset-4"
-      )}
+      className="h-auto p-0 font-normal text-primary underline underline-offset-4"
       href={href ?? ""}
       rel="noopener noreferrer"
       target={isNakafa ? undefined : "_blank"}

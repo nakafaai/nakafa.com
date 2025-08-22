@@ -139,7 +139,10 @@ export const reactMdxComponents: Options["components"] = {
     ),
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
-  a: Anchor,
+  a: memo(
+    ({ ...props }) => <Anchor {...props} />,
+    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+  ),
   table: memo(
     ({ children, ...props }) => (
       <Table containerClassName="my-4 rounded-xl border shadow-sm" {...props}>
@@ -259,14 +262,20 @@ export const reactMdxComponents: Options["components"] = {
     },
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
-  sup: ({ node, children, className, ...props }) => (
-    <sup className={cn("text-sm", className)} {...props}>
-      {children}
-    </sup>
+  sup: memo(
+    ({ node, children, className, ...props }) => (
+      <sup className={cn("text-sm", className)} {...props}>
+        {children}
+      </sup>
+    ),
+    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
-  sub: ({ node, children, className, ...props }) => (
-    <sub className={cn("text-sm", className)} {...props}>
-      {children}
-    </sub>
+  sub: memo(
+    ({ node, children, className, ...props }) => (
+      <sub className={cn("text-sm", className)} {...props}>
+        {children}
+      </sub>
+    ),
+    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
 };

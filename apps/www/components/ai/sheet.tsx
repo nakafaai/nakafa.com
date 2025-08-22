@@ -54,6 +54,7 @@ import { useAi, useAiHydrated } from "@/lib/context/use-ai";
 import { ArticlesTool } from "./articles-tool";
 import { CalculatorTool } from "./calculator-tool";
 import { ContentTool } from "./content-tool";
+import { ScrapeTool } from "./scrape-tool";
 import { SubjectsTool } from "./subjects-tool";
 import { WebSearchTool } from "./web-search-tool";
 
@@ -362,6 +363,14 @@ function AISheetMessage({
           case "tool-webSearch":
             return (
               <WebSearchTool
+                key={`tool-${part.toolCallId}`}
+                output={part.output}
+                status={part.state}
+              />
+            );
+          case "tool-scrape":
+            return (
+              <ScrapeTool
                 key={`tool-${part.toolCallId}`}
                 output={part.output}
                 status={part.state}

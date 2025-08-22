@@ -65,15 +65,21 @@ export const scrapeTool = tool({
       const markdown = response.markdown;
 
       if (!markdown) {
-        return { data: "", error: "No markdown found" };
+        return { data: { url: "", content: "" }, error: "No markdown found" };
       }
 
       return {
-        data: truncateContent(markdown, MAX_SCRAPE_CONTENT_LENGTH),
+        data: {
+          url: urlToCrawl,
+          content: truncateContent(markdown, MAX_SCRAPE_CONTENT_LENGTH),
+        },
         error: undefined,
       };
     } catch (error) {
-      return { data: "", error: `Failed to crawl: ${error}` };
+      return {
+        data: { url: "", content: "" },
+        error: `Failed to crawl: ${error}`,
+      };
     }
   },
 });
@@ -86,7 +92,7 @@ export const webSearchTool = tool({
   async execute({ query }) {
     try {
       const response = await app.search(query, {
-        limit: 5,
+        limit: 3,
         sources: ["web", "news"],
         scrapeOptions: { formats: ["markdown"] },
       });

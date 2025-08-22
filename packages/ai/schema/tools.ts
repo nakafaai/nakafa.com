@@ -128,9 +128,13 @@ export const scrapeInputSchema = z
 export type ScrapeInput = z.infer<typeof scrapeInputSchema>;
 
 export const scrapeOutputSchema = z.object({
-  data: z.string(),
+  data: z.object({
+    url: z.string(),
+    content: z.string(),
+  }),
   error: z.string().optional(),
 });
+export type ScrapeOutput = z.infer<typeof scrapeOutputSchema>;
 
 export const webSearchInputSchema = z.object({
   query: z.string().describe("The query to search the web for"),
