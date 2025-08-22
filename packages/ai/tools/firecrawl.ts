@@ -65,7 +65,7 @@ export const scrapeTool = tool({
       const markdown = response.markdown;
 
       if (!markdown) {
-        return { data: { url: "", content: "" }, error: "No markdown found" };
+        return { data: { url: "", content: "" }, error: "No content found." };
       }
 
       return {
