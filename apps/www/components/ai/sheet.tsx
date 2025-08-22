@@ -55,6 +55,7 @@ import { ArticlesTool } from "./articles-tool";
 import { CalculatorTool } from "./calculator-tool";
 import { ContentTool } from "./content-tool";
 import { SubjectsTool } from "./subjects-tool";
+import { WebSearchTool } from "./web-search-tool";
 
 const MIN_WIDTH = 448;
 const MAX_WIDTH = 672;
@@ -353,6 +354,14 @@ function AISheetMessage({
           case "tool-calculator":
             return (
               <CalculatorTool
+                key={`tool-${part.toolCallId}`}
+                output={part.output}
+                status={part.state}
+              />
+            );
+          case "tool-webSearch":
+            return (
+              <WebSearchTool
                 key={`tool-${part.toolCallId}`}
                 output={part.output}
                 status={part.state}

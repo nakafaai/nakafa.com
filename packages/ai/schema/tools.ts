@@ -113,3 +113,47 @@ export const calculatorOutputSchema = z
   })
   .describe("The output schema for the calculator tool.");
 export type CalculatorOutput = z.infer<typeof calculatorOutputSchema>;
+
+const MAX_URL_LENGTH = 100;
+
+export const scrapeInputSchema = z
+  .object({
+    urlToCrawl: z
+      .url()
+      .min(1)
+      .max(MAX_URL_LENGTH)
+      .describe("The URL to scrape (including http:// or https://)"),
+  })
+  .describe("Get the content of a URL");
+export type ScrapeInput = z.infer<typeof scrapeInputSchema>;
+
+export const scrapeOutputSchema = z.object({
+  data: z.string(),
+  error: z.string().optional(),
+});
+
+export const webSearchInputSchema = z.object({
+  query: z.string().describe("The query to search the web for"),
+});
+export type WebSearchInput = z.infer<typeof webSearchInputSchema>;
+
+export const webSearchOutputSchema = z.object({
+  data: z.object({
+    news: z.array(
+      z.object({
+        title: z.string(),
+        url: z.string(),
+        content: z.string(),
+      })
+    ),
+    web: z.array(
+      z.object({
+        title: z.string(),
+        url: z.string(),
+        content: z.string(),
+      })
+    ),
+  }),
+  error: z.string().optional(),
+});
+export type WebSearchOutput = z.infer<typeof webSearchOutputSchema>;

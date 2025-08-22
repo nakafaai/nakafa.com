@@ -22,6 +22,11 @@ export const config: NextConfig = {
   images: {
     contentDispositionType: "inline",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    remotePatterns: [
+      {
+        hostname: "www.google.com",
+      },
+    ],
   },
 
   async rewrites() {
