@@ -39,37 +39,67 @@ function sameNodePosition(a?: MarkdownNode, b?: MarkdownNode) {
 export const reactMdxComponents: Options["components"] = {
   h1: memo(
     ({ ...props }) => (
-      <Heading className="mt-6 mb-4 text-2xl" Tag="h1" {...props} />
+      <Heading
+        className="mt-6 mb-4 text-2xl"
+        Tag="h1"
+        {...props}
+        enableLink={false}
+      />
     ),
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
   h2: memo(
     ({ ...props }) => (
-      <Heading className="mt-6 mb-4 text-xl" Tag="h2" {...props} />
+      <Heading
+        className="mt-6 mb-4 text-xl"
+        Tag="h2"
+        {...props}
+        enableLink={false}
+      />
     ),
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
   h3: memo(
     ({ ...props }) => (
-      <Heading className="mt-6 mb-4 text-lg" Tag="h3" {...props} />
+      <Heading
+        className="mt-6 mb-4 text-lg"
+        Tag="h3"
+        {...props}
+        enableLink={false}
+      />
     ),
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
   h4: memo(
     ({ ...props }) => (
-      <Heading className="mt-6 mb-4 text-base" Tag="h4" {...props} />
+      <Heading
+        className="mt-6 mb-4 text-base"
+        Tag="h4"
+        {...props}
+        enableLink={false}
+      />
     ),
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
   h5: memo(
     ({ ...props }) => (
-      <Heading className="mt-6 mb-4 text-sm" Tag="h5" {...props} />
+      <Heading
+        className="mt-6 mb-4 text-sm"
+        Tag="h5"
+        {...props}
+        enableLink={false}
+      />
     ),
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
   h6: memo(
     ({ ...props }) => (
-      <Heading className="mt-6 mb-4 text-xs" Tag="h6" {...props} />
+      <Heading
+        className="mt-6 mb-4 text-xs"
+        Tag="h6"
+        {...props}
+        enableLink={false}
+      />
     ),
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),

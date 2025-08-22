@@ -8,12 +8,29 @@ import { LinkIcon } from "lucide-react";
 export function Heading({
   Tag,
   className,
+  enableLink = true,
   ...props
 }: {
   Tag: HeadingTag;
   className: string;
+  enableLink?: boolean;
 } & HeadingProps) {
   const id = slugify(props.children?.toString() ?? "");
+
+  if (!enableLink) {
+    return (
+      <Tag
+        className={cn(
+          "mt-10 mb-6 flex items-center font-medium leading-tight tracking-tight first:mt-0 last:mb-0",
+          className
+        )}
+        id={id}
+        {...props}
+      >
+        <span className="text-pretty text-foreground">{props.children}</span>
+      </Tag>
+    );
+  }
 
   return (
     <Tag
