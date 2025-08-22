@@ -24,6 +24,7 @@ export const getSubjectsTool = tool({
 
     if (error) {
       return {
+        baseUrl: `/${slug}`,
         subjects: [],
       };
     }

@@ -1,15 +1,11 @@
 "use client";
 
-import type {
-  GetArticlesInput,
-  GetArticlesOutput,
-} from "@repo/ai/schema/tools";
+import type { GetArticlesOutput } from "@repo/ai/schema/tools";
 import {
   Tool,
   ToolContent,
   ToolHeader,
 } from "@repo/design-system/components/ai/tool";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { buttonVariants } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
@@ -23,13 +19,11 @@ type Props = {
     | "input-available"
     | "output-available"
     | "output-error";
-  input?: Partial<GetArticlesInput>;
   output?: GetArticlesOutput;
 };
 
-export const ArticlesTool = memo(({ status, output, input }: Props) => {
+export const ArticlesTool = memo(({ status, output }: Props) => {
   const t = useTranslations("Ai");
-  const tArticles = useTranslations("Articles");
 
   return (
     <Tool>
@@ -40,13 +34,6 @@ export const ArticlesTool = memo(({ status, output, input }: Props) => {
       />
       <ToolContent>
         <div className="flex flex-col gap-3 p-3">
-          {input && (
-            <div className="flex flex-wrap gap-2">
-              {input.category && (
-                <Badge variant="outline">{tArticles(input.category)}</Badge>
-              )}
-            </div>
-          )}
           <div className="flex items-center justify-between gap-4">
             <p className="text-muted-foreground text-sm">
               {t("found-articles", {

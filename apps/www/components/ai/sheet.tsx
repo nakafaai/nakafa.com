@@ -329,7 +329,6 @@ function AISheetMessage({
           case "tool-getArticles":
             return (
               <ArticlesTool
-                input={part.input}
                 key={`tool-${part.toolCallId}`}
                 output={part.output}
                 status={part.state}

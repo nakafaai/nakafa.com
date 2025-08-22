@@ -24,6 +24,7 @@ export const getArticlesTool = tool({
 
     if (error) {
       return {
+        baseUrl: `/${slug}`,
         articles: [],
       };
     }
