@@ -6,8 +6,6 @@ const singleAsteriskPattern = /(\*)([^*]*?)$/;
 const singleUnderscorePattern = /(_)([^_]*?)$/;
 const inlineCodePattern = /(`)([^`]*?)$/;
 const strikethroughPattern = /(~~)([^~]*?)$/;
-const inlineKatexPattern = /(\$)([^$]*?)$/;
-const blockKatexPattern = /(\$\$)([^$]*?)$/;
 const inlineTripleBacktickPattern = /^```[^`\n]*```?$/;
 const consecutiveAsterisksPattern = /^\*{4,}$/;
 const listBulletPattern = /^\s*[-*+]\s/;
@@ -349,52 +347,6 @@ function handleIncompleteStrikethrough(text: string): string {
   return text;
 }
 
-// Counts single dollar signs that are not part of double dollar signs and not escaped
-function countSingleDollarSigns(text: string): number {
-  return text.split("").reduce((acc, char, index) => {
-    if (char === "$") {
-      const prevChar = text[index - 1];
-      const nextChar = text[index + 1];
-      // Skip if escaped with backslash
-      if (prevChar === "\\") {
-        return acc;
-      }
-      if (prevChar !== "$" && nextChar !== "$") {
-        return acc + 1;
-      }
-    }
-    return acc;
-  }, 0);
-}
-
-// Completes incomplete block KaTeX formatting ($$)
-function handleIncompleteBlockKatex(text: string): string {
-  const blockKatexMatch = text.match(blockKatexPattern);
-
-  if (blockKatexMatch) {
-    const dollarPairs = (text.match(/\$\$/g) || []).length;
-    if (dollarPairs % 2 === 1) {
-      return `${text}$$`;
-    }
-  }
-
-  return text;
-}
-
-// Completes incomplete inline KaTeX formatting ($)
-function handleIncompleteInlineKatex(text: string): string {
-  const inlineKatexMatch = text.match(inlineKatexPattern);
-
-  if (inlineKatexMatch) {
-    const singleDollars = countSingleDollarSigns(text);
-    if (singleDollars % 2 === 1) {
-      return `${text}$`;
-    }
-  }
-
-  return text;
-}
-
 // Counts triple asterisks that are not part of quadruple or more asterisks
 function countTripleAsterisks(text: string): number {
   let count = 0;
@@ -452,10 +404,6 @@ export function parseIncompleteMarkdown(text: string): string {
   result = handleIncompleteSingleUnderscoreItalic(result);
   result = handleIncompleteInlineCode(result);
   result = handleIncompleteStrikethrough(result);
-
-  // Handle KaTeX formatting (block first, then inline)
-  result = handleIncompleteBlockKatex(result);
-  result = handleIncompleteInlineKatex(result);
 
   return result;
 }
