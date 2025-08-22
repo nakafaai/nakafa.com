@@ -38,10 +38,8 @@ export const getSubjectsInputSchema = z
     category: SubjectCategorySchema.describe(
       "The category of the subject to get."
     ),
-    grade: GradeSchema.describe("String of the grade of the subject to get."),
-    material: MaterialSchema.nullable().describe(
-      "The material of the subject to get."
-    ),
+    grade: GradeSchema.describe("The grade of the subject to get."),
+    material: MaterialSchema.describe("The material of the subject to get."),
   })
   .describe(
     "Get educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for study questions, homework help, learning concepts, educational content, and curriculum-based topics."
