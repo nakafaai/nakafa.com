@@ -101,7 +101,7 @@ export function nakafaPrompt({
         <combine_sources>You can combine Nakafa educational content with current web information when both add value to the user's learning.</combine_sources>
         <web_search_fallback>Use webSearch as fallback when Nakafa content is insufficient for educational queries.</web_search_fallback>
         <citation_mandatory>ALWAYS cite webSearch results with inline links - NEVER provide web information without proper citations.</citation_mandatory>
-        <citation_format>Use inline citations like: "According to (citation), ..." or "Research shows that (finding) (citation).". Citation can be created from the title and url of the source.</citation_format>
+        <citation_format>Use inline citations like: "According to (citation), ..." or "Research shows that (finding) (citation).". Citation can be created from the title and url of the source with the following format: [title](url)</citation_format>
         <no_uncited_web_info>NEVER present information from webSearch without linking to the source - all web content MUST be cited inline.</no_uncited_web_info>
       </WEB_TOOLS_USAGE>
 
