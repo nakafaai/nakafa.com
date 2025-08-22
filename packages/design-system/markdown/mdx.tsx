@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { filterWhitespaceNodes } from "@repo/design-system/lib/utils";
+import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
 import { Anchor } from "@repo/design-system/markdown/anchor";
 import { CodeBlockMdx } from "@repo/design-system/markdown/code-block";
 import { Heading } from "@repo/design-system/markdown/heading";
@@ -28,6 +28,8 @@ import type {
   ParagraphProps,
   PreProps,
   StrongProps,
+  SubProps,
+  SupProps,
   TableBodyProps,
   TableCellProps,
   TableHeaderProps,
@@ -151,4 +153,14 @@ export const components = {
 
     return <CodeBlockMdx data={data} />;
   },
+  sup: ({ children, className, ...props }: SupProps) => (
+    <sup className={cn("text-sm", className)} {...props}>
+      {children}
+    </sup>
+  ),
+  sub: ({ children, className, ...props }: SubProps) => (
+    <sub className={cn("text-sm", className)} {...props}>
+      {children}
+    </sub>
+  ),
 };

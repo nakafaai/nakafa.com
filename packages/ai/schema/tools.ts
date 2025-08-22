@@ -7,7 +7,7 @@ import * as z from "zod";
 export const getArticlesInputSchema = z
   .object({
     locale: z.enum(["en", "id"]).describe("The locale of the article to get."),
-    category: ArticleCategorySchema.describe(
+    category: ArticleCategorySchema.nullish().describe(
       "The category of the article to get."
     ),
   })
@@ -35,11 +35,13 @@ export type GetArticlesOutput = z.infer<typeof getArticlesOutputSchema>;
 export const getSubjectsInputSchema = z
   .object({
     locale: z.enum(["en", "id"]).describe("The locale of the subject to get."),
-    category: SubjectCategorySchema.describe(
+    category: SubjectCategorySchema.nullish().describe(
       "The category of the subject to get."
     ),
-    grade: GradeSchema.describe("The grade of the subject to get."),
-    material: MaterialSchema.describe("The material of the subject to get."),
+    grade: GradeSchema.nullish().describe("The grade of the subject to get."),
+    material: MaterialSchema.nullish().describe(
+      "The material of the subject to get."
+    ),
   })
   .describe(
     "Get educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for study questions, homework help, learning concepts, educational content, and curriculum-based topics."

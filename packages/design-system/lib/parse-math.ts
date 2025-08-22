@@ -1,15 +1,4 @@
-import { marked } from "marked";
-
 // Hoisted regex patterns to top-level scope for performance
-const LINK_IMAGE_PATTERN = /(!?\[)([^\]]*?)$/;
-const INLINE_CODE_PATTERN = /(`)([^`]*?)$/;
-const TRIPLE_BACKTICKS_GLOBAL = /```/g;
-const ZERO_WIDTH_SPACE_GLOBAL = /\u200B/g;
-const CARRIAGE_RETURN_GLOBAL = /\r/g;
-const NON_WHITESPACE_PATTERN = /\S/;
-const ESCAPED_NEWLINE_GLOBAL = /\\n/g;
-const ESCAPED_CARRIAGE_RETURN_GLOBAL = /\\r/g;
-const ESCAPED_TAB_GLOBAL = /\\t/g;
 const TRIPLE_BACKTICKS = /```/g;
 // Removes backticks from math: `$x^2$` → $x^2$
 const DOLLAR_MATH_IN_BACKTICKS_GLOBAL = /`\s*\$([^$][\s\S]*?[^$]|\S)\$\s*`/g;
@@ -21,8 +10,6 @@ const DISPLAY_MATH_BRACKETS_GLOBAL = /\\\[([\s\S]*?)\\\]/g;
 const DISPLAY_MATH_DOUBLE_DOLLAR_GLOBAL = /\$\$([\s\S]*?)\$\$/g;
 // Converts inline math: \(x^2\) → $x^2$
 const INLINE_PAREN_MATH_GLOBAL = /\\\(([\s\S]*?)\\\)/g;
-const TRAILING_WHITESPACE_PATTERN = /\s$/;
-const LETTERED_LIST_PATTERN = /^(\s*)([a-z])\.\s+/gim;
 // Cleans malformed fenced math: ```math x^2``` → ```math\nx^2\n```
 const FENCED_MATH_PATTERN = /```math([\s\S]*?)```/g;
 // Converts HTML math tags: <math>x^2</math> → ```math\nx^2\n```
@@ -40,170 +27,11 @@ const TRIPLE_BACKTICK_LENGTH = 3;
 const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
 const BULLET_LIST_PATTERN = /^(\s*)[-]\s+/;
 const NON_WHITESPACE_START_PATTERN = /^\S/;
-const NUMBERED_LIST_SPACING_PATTERN = /^(\s*)(\d+)\.\s{2,}/gm;
-const DASH_LIST_SPACING_PATTERN = /^(\s*)(-)\s{2,}/gm;
-const MALFORMED_HEADING_PATTERN = /^(#{1,6})\s*#+\s*(.*?)$/gm;
-
-/**
- * Parses markdown text into an array of blocks.
- * @param markdown - The markdown text to parse.
- * @returns An array of blocks.
- */
-export function parseMarkdownIntoBlocks(markdown: string): string[] {
-  const tokens = marked.lexer(markdown);
-  return tokens.map((token) => cleanMarkdown(token.raw));
-}
-
-/**
- * Converts lettered lists (e.g., "a.", "b.") to standard numbered lists.
- * This is a fallback for when the AI generates non-standard list formats.
- */
-function convertLetteredListsToNumbered(input: string): string {
-  if (!input) {
-    return input;
-  }
-  // Finds lines starting with whitespace, a letter, a dot, and a space.
-
-  return input.replace(LETTERED_LIST_PATTERN, (_match, whitespace, letter) => {
-    // Convert letter to its corresponding number (a=1, b=2, c=3).
-    const number = letter.toLowerCase().charCodeAt(0) - "a".charCodeAt(0) + 1;
-    return `${whitespace}${number}. `;
-  });
-}
-
-/**
- * Normalizes spacing in numbered lists to ensure consistent single space after number.
- * Converts "1.  " or "1.   " to "1. " (single space).
- */
-function normalizeNumberedListSpacing(input: string): string {
-  if (!input) {
-    return input;
-  }
-  // Finds lines with numbered lists that have 2 or more spaces after the number and period.
-  return input.replace(
-    NUMBERED_LIST_SPACING_PATTERN,
-    (_, whitespace, number) => `${whitespace}${number}. `
-  );
-}
-
-/**
- * Normalizes spacing in dash bullet lists to ensure consistent single space after dash.
- * Converts "-  " or "-   " to "- " (single space).
- */
-function normalizeDashListSpacing(input: string): string {
-  if (!input) {
-    return input;
-  }
-  // Finds lines with dash lists that have 2 or more spaces after the dash.
-  return input.replace(
-    DASH_LIST_SPACING_PATTERN,
-    (_, whitespace, dash) => `${whitespace}${dash} `
-  );
-}
-
-/**
- * Cleans malformed headings where LLMs generate extra # symbols inside the heading text.
- * Converts "## # Heading Text" to "## Heading Text" and similar cases.
- */
-function cleanMalformedHeadings(input: string): string {
-  if (!input) {
-    return input;
-  }
-  // Finds lines starting with 1-6 #s, followed by optional whitespace,
-  // then one or more additional #s, then the actual heading text.
-  return input.replace(
-    MALFORMED_HEADING_PATTERN,
-    (_, headingLevel, headingText) => `${headingLevel} ${headingText.trim()}`
-  );
-}
-
-/**
- * Cleans a markdown string by removing insignificant whitespace-only content.
- * Returns an empty string when the input contains no visible characters
- * (e.g., only newlines like "\n\n" or spaces), so callers can skip rendering.
- */
-export function cleanMarkdown(input: string): string {
-  if (typeof input !== "string") {
-    return "";
-  }
-  // Normalize common invisible characters and trim edges
-  const normalized = input
-    .replace(ZERO_WIDTH_SPACE_GLOBAL, "")
-    .replace(CARRIAGE_RETURN_GLOBAL, "");
-  const trimmed = normalized.trim();
-  // If there are no non-whitespace characters, treat as empty
-  if (!NON_WHITESPACE_PATTERN.test(trimmed)) {
-    return "";
-  }
-  // Special case: content that is only escaped sequences like "\n\n" or "\t\n"
-  const afterRemovingEscapes = trimmed
-    .replace(ESCAPED_NEWLINE_GLOBAL, "")
-    .replace(ESCAPED_CARRIAGE_RETURN_GLOBAL, "")
-    .replace(ESCAPED_TAB_GLOBAL, "")
-    .trim();
-  if (afterRemovingEscapes.length === 0) {
-    return "";
-  }
-
-  return trimmed;
-}
-
-/**
- * Removes unterminated links or images from the input string.
- * @param input - The input string to remove unterminated links or images from.
- * @returns The input string with unterminated links or images removed.
- */
-export function removeUnterminatedLinkOrImage(input: string): string {
-  const match = input.match(LINK_IMAGE_PATTERN);
-  if (!match) {
-    return input;
-  }
-  const startIndex = input.lastIndexOf(match[1]);
-  return input.substring(0, startIndex);
-}
-
-/**
- * Completes inline code formatting in the input string.
- * @param input - The input string to complete inline code formatting in.
- * @returns The input string with inline code formatting completed.
- */
-export function completeInlineCodeFormatting(input: string): string {
-  if (!input.match(INLINE_CODE_PATTERN)) {
-    return input;
-  }
-  const allTripleBackticks = (input.match(TRIPLE_BACKTICKS_GLOBAL) || [])
-    .length;
-  const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
-  if (insideIncompleteCodeBlock) {
-    return input;
-  }
-
-  let singleBacktickCount = 0;
-  for (let i = 0; i < input.length; i++) {
-    if (input[i] !== "`") {
-      continue;
-    }
-    const isTripleStart =
-      input.substring(i, i + TRIPLE_BACKTICK_LENGTH) === "```";
-    const isTripleMiddle = i > 0 && input.substring(i - 1, i + 2) === "```";
-    const isTripleEnd = i > 1 && input.substring(i - 2, i + 1) === "```";
-    if (!(isTripleStart || isTripleMiddle || isTripleEnd)) {
-      singleBacktickCount++;
-    }
-  }
-  if (
-    singleBacktickCount % 2 === 1 &&
-    !TRAILING_WHITESPACE_PATTERN.test(input)
-  ) {
-    return `${input}\``;
-  }
-  return input;
-}
 
 /**
  * Applies a transform only to segments that are OUTSIDE of fenced code blocks (``` ... ```)
  */
-export function applyOutsideCodeFences(
+function applyOutsideCodeFences(
   input: string,
   transform: (segment: string) => string
 ): string {
@@ -318,7 +146,7 @@ function createFencedMathBlock(
  * - <math>x^2</math> → ```math\nx^2\n``` (block math)
  * - ```\n\frac{a}{b}\nc = d\n``` → ```math\n\frac{a}{b} \\\\\nc = d\n``` (LaTeX in code blocks + smart line breaks)
  */
-export function normalizeMathDelimiters(input: string): string {
+function normalizeMathDelimiters(input: string): string {
   let processedInput = input;
 
   // Then, handle code blocks containing single dollar math expressions
@@ -379,36 +207,13 @@ export function normalizeMathDelimiters(input: string): string {
   });
 }
 
-/**
- * Parses markdown text and removes incomplete tokens to prevent partial rendering
- * of links, images, bold, and italic formatting during streaming.
- */
-export function parseMarkdown(text: string): string {
-  if (!text || typeof text !== "string") {
+export function preprocessLaTeX(text: string): string {
+  if (!text) {
     return text;
   }
 
   let result = text;
 
-  // Clean malformed headings where LLMs put # symbols inside heading text.
-  result = cleanMalformedHeadings(result);
-
-  // Convert lettered lists before other parsing to ensure consistency.
-  result = convertLetteredListsToNumbered(result);
-
-  // Normalize spacing in numbered lists to ensure single space after number.
-  result = normalizeNumberedListSpacing(result);
-
-  // Normalize spacing in dash bullet lists to ensure single space after dash.
-  result = normalizeDashListSpacing(result);
-
-  // Remove unterminated links or images
-  result = removeUnterminatedLinkOrImage(result);
-
-  // Complete inline code formatting
-  result = completeInlineCodeFormatting(result);
-
-  // Sanitize math/markdown outside of fenced code blocks to avoid hallucinated formatting
   result = normalizeMathDelimiters(result);
 
   return result;

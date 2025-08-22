@@ -4,9 +4,9 @@ export function buildContentSlug(params: {
   locale: string;
   filters: {
     type: "articles" | "subject";
-    category?: string;
-    grade?: string;
-    material?: string;
+    category?: string | null;
+    grade?: string | null;
+    material?: string | null;
   };
 }): string {
   const { locale, filters } = params;

@@ -18,3 +18,5 @@ export type TableRowProps = ComponentPropsWithoutRef<"tr">;
 export type TableHeadProps = ComponentPropsWithoutRef<"th">;
 export type TableCellProps = ComponentPropsWithoutRef<"td">;
 export type BlockquoteProps = ComponentPropsWithoutRef<"blockquote">;
+export type SupProps = ComponentPropsWithoutRef<"sup">;
+export type SubProps = ComponentPropsWithoutRef<"sub">;

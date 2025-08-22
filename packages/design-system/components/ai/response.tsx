@@ -1,10 +1,8 @@
 "use client";
 
-import {
-  cleanMarkdown,
-  parseMarkdown,
-  parseMarkdownIntoBlocks,
-} from "@repo/design-system/lib/markdown";
+import { parseMarkdownIntoBlocks } from "@repo/design-system/lib/parse-blocks";
+import { parseIncompleteMarkdown } from "@repo/design-system/lib/parse-incomplete-markdown";
+import { preprocessLaTeX } from "@repo/design-system/lib/parse-math";
 import { cn } from "@repo/design-system/lib/utils";
 import { reactMdxComponents } from "@repo/design-system/markdown/react-mdx";
 import hardenReactMarkdown from "harden-react-markdown";
@@ -47,6 +45,11 @@ const Block = memo(
     children,
     ...props
   }: HardenedMarkdownProps & Pick<ResponseProps, "children">) => {
+    const parsedContent = useMemo(
+      () => preprocessLaTeX(parseIncompleteMarkdown(children.trim())),
+      [children]
+    );
+
     return (
       <MemoizedHardenedMarkdown
         components={reactMdxComponents}
@@ -54,7 +57,7 @@ const Block = memo(
         remarkPlugins={[remarkGfm, remarkMath, remarkRehype]}
         {...props}
       >
-        {children}
+        {parsedContent}
       </MemoizedHardenedMarkdown>
     );
   },
@@ -69,9 +72,7 @@ const Blocks = memo(
     ...props
   }: HardenedMarkdownProps & Pick<ResponseProps, "children" | "id">) => {
     const blocks = useMemo(() => {
-      return parseMarkdownIntoBlocks(cleanMarkdown(children)).filter(
-        (block) => cleanMarkdown(block).length > 0
-      );
+      return parseMarkdownIntoBlocks(children);
     }, [children]);
 
     return blocks.map((block, index) => (
@@ -97,8 +98,6 @@ const ResponseContent = memo(
     defaultOrigin = "https://nakafa.com",
     ...props
   }: ResponseProps) => {
-    const parsedChildren = useMemo(() => parseMarkdown(children), [children]);
-
     return (
       <div
         className={cn(
@@ -112,7 +111,7 @@ const ResponseContent = memo(
           defaultOrigin={defaultOrigin}
           {...props}
         >
-          {parsedChildren}
+          {children}
         </Blocks>
       </div>
     );

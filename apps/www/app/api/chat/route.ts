@@ -1,6 +1,7 @@
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { defaultModel, model } from "@repo/ai/lib/providers";
 import { tools } from "@repo/ai/lib/tools";
+import { cleanSlug } from "@repo/ai/lib/utils";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
 import { api } from "@repo/connection/routes";
 import { CorsValidator } from "@repo/security";
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
   // Check if the slug is verified by calling api
   const verified = await api.contents
     .getContent({
-      slug,
+      slug: `${locale}/${cleanSlug(slug)}`,
     })
     .then((res) => res.data !== "");
 

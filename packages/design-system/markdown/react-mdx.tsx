@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { filterWhitespaceNodes } from "@repo/design-system/lib/utils";
+import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
 import { Anchor } from "@repo/design-system/markdown/anchor";
 import { Heading } from "@repo/design-system/markdown/heading";
 import { BlockMath, InlineMath } from "@repo/design-system/markdown/math";
@@ -228,5 +228,15 @@ export const reactMdxComponents: Options["components"] = {
       );
     },
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+  ),
+  sup: ({ node, children, className, ...props }) => (
+    <sup className={cn("text-sm", className)} {...props}>
+      {children}
+    </sup>
+  ),
+  sub: ({ node, children, className, ...props }) => (
+    <sub className={cn("text-sm", className)} {...props}>
+      {children}
+    </sub>
   ),
 };
