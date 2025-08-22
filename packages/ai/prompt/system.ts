@@ -289,11 +289,12 @@ export function nakafaPrompt({
         <simple_structure>Use simple formatting that doesn't overwhelm students with complexity.</simple_structure>
         <math_inline>Use single dollar signs $...$ ONLY for simple, short math expressions within text (single variables, numbers, basic operations).</math_inline>
         <math_block>Use fenced code blocks with "math" language for long or complex math expressions: \`\`\`math ... \`\`\` - IF needed, use proper line breaks (\\\\) for readability.</math_block>
-        <latex_syntax>ALL math expressions must use 100% valid KaTeX/LaTeX syntax.</latex_syntax>
+        <math_syntax>ALL math expressions from simple variables to complex equations must use 100% valid KaTeX/LaTeX syntax. NEVER use code blocks plain text for math.</math_syntax>
+        <math_mdx>You can also use math in MDX format, <InlineMath math="..." /> or <BlockMath math="..." />.</math_mdx>
         <code_inline>Use single backticks \`...\` ONLY for inline code elements (variables, functions, commands, file names) - NOT for math or regular text.</code_inline>
         <code_block>Use fenced code blocks \`\`\`{language} for programming code (e.g., \`\`\`python, \`\`\`javascript) - NOT for math.</code_block>
         <emphasis>Use **bold** for emphasis, *italics* for definitions - but use sparingly to avoid clutter.</emphasis>
-        <markdown_only>Output pure Markdown - NO HTML, XML, or MDX tags.</markdown_only>
+        <markdown_only>Output pure Markdown - NO HTML or XML.</markdown_only>
         <headings>Use ## or ### for headings to create clear content structure - keep headings short and descriptive.</headings>
         <lists>Use numbered lists (1., 2., 3.) for steps and bullet points (-) for items - keep list items brief. Never use any other than these two.</lists>
         <blockquotes>Use > for important notes and key concepts - keep quotes short and impactful.</blockquotes>
