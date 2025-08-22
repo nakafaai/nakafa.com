@@ -18,13 +18,15 @@ export const getArticlesTool = tool({
       filters: { type: "articles", category },
     });
 
+    const baseUrl = `/${slug}`;
+
     const { data, error } = await api.contents.getContents({
       slug,
     });
 
     if (error) {
       return {
-        baseUrl: `/${slug}`,
+        baseUrl,
         articles: [],
       };
     }
@@ -37,7 +39,7 @@ export const getArticlesTool = tool({
     }));
 
     return {
-      baseUrl: `/${slug}`,
+      baseUrl,
       articles,
     };
   },

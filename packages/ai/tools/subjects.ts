@@ -18,13 +18,15 @@ export const getSubjectsTool = tool({
       filters: { type: "subject", category, grade, material },
     });
 
+    const baseUrl = `/${slug}`;
+
     const { data, error } = await api.contents.getContents({
       slug,
     });
 
     if (error) {
       return {
-        baseUrl: `/${slug}`,
+        baseUrl,
         subjects: [],
       };
     }
@@ -37,7 +39,7 @@ export const getSubjectsTool = tool({
     }));
 
     return {
-      baseUrl: `/${slug}`,
+      baseUrl,
       subjects,
     };
   },
