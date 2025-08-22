@@ -10,6 +10,7 @@ const inlineKatexPattern = /(\$)([^$]*?)$/;
 const blockKatexPattern = /(\$\$)([^$]*?)$/;
 const inlineTripleBacktickPattern = /^```[^`\n]*```?$/;
 const consecutiveAsterisksPattern = /^\*{4,}$/;
+const listBulletPattern = /^\s*[-*+]\s/;
 
 // Constants for magic numbers
 const TRIPLE_ASTERISK_LENGTH = 3;
@@ -117,6 +118,7 @@ function handleIncompleteSingleAsteriskItalic(text: string): string {
 }
 
 // Counts single underscores that are not part of double underscores and not escaped
+// Excludes underscores in math expressions and after list bullets
 function countSingleUnderscores(text: string): number {
   return text.split("").reduce((acc, char, index) => {
     if (char === "_") {
@@ -126,12 +128,125 @@ function countSingleUnderscores(text: string): number {
       if (prevChar === "\\") {
         return acc;
       }
+      // Skip if this underscore is inside a math expression
+      if (isInsideMathExpression(text, index)) {
+        return acc;
+      }
+      // Skip if this underscore appears after a list bullet
+      if (isAfterListBullet(text, index)) {
+        return acc;
+      }
       if (prevChar !== "_" && nextChar !== "_") {
         return acc + 1;
       }
     }
     return acc;
   }, 0);
+}
+
+// Checks if an underscore at the given index is inside a math expression
+// Supports: $...$, $$...$$, \(...\), \[...\]
+function isInsideMathExpression(
+  text: string,
+  underscoreIndex: number
+): boolean {
+  return (
+    isInsideBlockMath(text, underscoreIndex) ||
+    isInsideInlineMath(text, underscoreIndex)
+  );
+}
+
+// Checks if position is inside block math ($$...$$) or LaTeX display math (\[...\])
+function isInsideBlockMath(text: string, position: number): boolean {
+  const beforeText = text.substring(0, position);
+  const afterText = text.substring(position);
+
+  // Check $$...$$
+  const beforeDollarMatches = beforeText.match(/\$\$/g) || [];
+  const afterDollarMatches = afterText.match(/\$\$/g) || [];
+  if (beforeDollarMatches.length % 2 === 1 && afterDollarMatches.length > 0) {
+    return true;
+  }
+
+  // Check \[...\]
+  const beforeBracketMatch = beforeText.lastIndexOf("\\[");
+  const beforeBracketCloseMatch = beforeText.lastIndexOf("\\]");
+  if (
+    beforeBracketMatch !== -1 &&
+    (beforeBracketCloseMatch === -1 ||
+      beforeBracketMatch > beforeBracketCloseMatch)
+  ) {
+    const afterBracketCloseMatch = afterText.indexOf("\\]");
+    if (afterBracketCloseMatch !== -1) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// Checks if position is inside inline math ($...$) or LaTeX inline math (\(...\))
+function isInsideInlineMath(text: string, position: number): boolean {
+  const beforeText = text.substring(0, position);
+  const afterText = text.substring(position);
+
+  // Check $...$
+  let dollarCount = 0;
+  for (let i = 0; i < position; i++) {
+    if (
+      text[i] === "$" &&
+      text[i + 1] !== "$" &&
+      text[i - 1] !== "$" &&
+      text[i - 1] !== "\\"
+    ) {
+      dollarCount++;
+    }
+  }
+  if (dollarCount % 2 === 1) {
+    for (let i = position + 1; i < text.length; i++) {
+      if (
+        text[i] === "$" &&
+        text[i + 1] !== "$" &&
+        text[i - 1] !== "$" &&
+        text[i - 1] !== "\\"
+      ) {
+        return true;
+      }
+    }
+  }
+
+  // Check \(...\)
+  const beforeParenMatch = beforeText.lastIndexOf("\\(");
+  const beforeParenCloseMatch = beforeText.lastIndexOf("\\)");
+  if (
+    beforeParenMatch !== -1 &&
+    (beforeParenCloseMatch === -1 || beforeParenMatch > beforeParenCloseMatch)
+  ) {
+    const afterParenCloseMatch = afterText.indexOf("\\)");
+    if (afterParenCloseMatch !== -1) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// Checks if an underscore appears after a list bullet (-, *, +)
+function isAfterListBullet(text: string, underscoreIndex: number): boolean {
+  // Look backwards from the underscore to find the start of the current line
+  let lineStart = underscoreIndex;
+  while (lineStart > 0 && text[lineStart - 1] !== "\n") {
+    lineStart--;
+  }
+
+  // Check if this line starts with a list bullet (optionally preceded by whitespace)
+  const lineContent = text.substring(
+    lineStart,
+    text.indexOf("\n", underscoreIndex) || text.length
+  );
+  const listBulletMatch = lineContent.match(listBulletPattern);
+
+  return !!listBulletMatch;
 }
 
 // Completes incomplete italic formatting with single underscores (_)

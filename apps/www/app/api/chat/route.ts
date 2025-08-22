@@ -1,5 +1,5 @@
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
-import { defaultModel, model } from "@repo/ai/lib/providers";
+import { defaultModel, model, order } from "@repo/ai/lib/providers";
 import { tools } from "@repo/ai/lib/tools";
 import { cleanSlug } from "@repo/ai/lib/utils";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
@@ -109,6 +109,7 @@ export async function POST(req: Request) {
               "Please fix the arguments.",
             ].join("\n"),
             providerOptions: {
+              gateway: { order },
               google: {
                 thinkingConfig: {
                   thinkingBudget: 0, // Disable thinking
@@ -125,15 +126,7 @@ export async function POST(req: Request) {
           chunking: "line",
         }),
         providerOptions: {
-          gateway: {
-            order: ["groq", "baseten", "cerebras", "azure", "vertex"],
-          },
-          google: {
-            thinkingConfig: {
-              thinkingBudget: -1, // Dynamic thinking
-              includeThoughts: true,
-            },
-          } satisfies GoogleGenerativeAIProviderOptions,
+          gateway: { order },
         },
       });
 
