@@ -55,6 +55,7 @@ function handleIncompleteDoubleUnderscoreItalic(text: string): string {
 }
 
 // Counts single asterisks that are not part of double asterisks and not escaped
+// Excludes asterisks used as list bullets
 function countSingleAsterisks(text: string): number {
   return text.split("").reduce((acc, char, index) => {
     if (char === "*") {
@@ -64,12 +65,41 @@ function countSingleAsterisks(text: string): number {
       if (prevChar === "\\") {
         return acc;
       }
+      // Skip if this is a list bullet asterisk
+      if (isListBulletAsterisk(text, index)) {
+        return acc;
+      }
       if (prevChar !== "*" && nextChar !== "*") {
         return acc + 1;
       }
     }
     return acc;
   }, 0);
+}
+
+// Checks if an asterisk at the given index is used as a list bullet
+function isListBulletAsterisk(text: string, asteriskIndex: number): boolean {
+  const nextChar = text[asteriskIndex + 1];
+
+  // List bullets must be followed by a space
+  if (nextChar !== " ") {
+    return false;
+  }
+
+  // Check if this asterisk is at the start of a line (after newline + optional whitespace)
+  // or at the very beginning of the text
+  if (asteriskIndex === 0) {
+    return true;
+  }
+
+  // Look backwards to see if we're at the start of a line
+  let i = asteriskIndex - 1;
+  while (i >= 0 && (text[i] === " " || text[i] === "\t")) {
+    i--;
+  }
+
+  // If we reached a newline or the start of text, this is a list bullet
+  return i < 0 || text[i] === "\n";
 }
 
 // Completes incomplete italic formatting with single asterisks (*)

@@ -295,7 +295,7 @@ export function nakafaPrompt({
         <emphasis>Use **bold** for emphasis, *italics* for definitions - but use sparingly to avoid clutter.</emphasis>
         <markdown_only>Output pure Markdown - NO HTML, XML, or MDX tags.</markdown_only>
         <headings>Use ## or ### for headings to create clear content structure - keep headings short and descriptive.</headings>
-        <lists>Use numbered lists (1., 2., 3.) for steps and bullet points (-) for items - keep list items brief.</lists>
+        <lists>Use numbered lists (1., 2., 3.) for steps and bullet points (-) for items - keep list items brief. Never use any other than these two.</lists>
         <blockquotes>Use > for important notes and key concepts - keep quotes short and impactful.</blockquotes>
         <visual_appeal>Structure content to be visually appealing and easy to scan - avoid overwhelming students with too much text.</visual_appeal>
         <emoji_usage>Use emojis strategically to enhance engagement and break up text, making it more approachable for students.</emoji_usage>
