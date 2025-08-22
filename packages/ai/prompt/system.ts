@@ -23,6 +23,31 @@ type SystemPromptProps = {
     verified: boolean;
   };
   /**
+   * The current date.
+   */
+  currentDate: string;
+  /**
+   * The current time.
+   */
+  userLocation: {
+    /**
+     * The city of the user's location.
+     */
+    city: string;
+    /**
+     * The country of the user's location.
+     */
+    country: string;
+    /**
+     * The latitude of the user's location.
+     */
+    latitude: string;
+    /**
+     * The longitude of the user's location.
+     */
+    longitude: string;
+  };
+  /**
    * The injection of the system prompt. Must be valid XML.
    */
   injection?: string;
@@ -31,6 +56,8 @@ type SystemPromptProps = {
 export function nakafaPrompt({
   url,
   currentPage,
+  currentDate,
+  userLocation,
   injection,
 }: SystemPromptProps) {
   return createPrompt({
@@ -70,6 +97,17 @@ export function nakafaPrompt({
         <slug>${currentPage.slug}</slug>
         <verified>${currentPage.verified ? "yes" : "no"}</verified>
       </current_page>
+
+      <current_date>
+        <date>${currentDate}</date>
+      </current_date>
+
+      <user_location>
+        <city>${userLocation.city}</city>
+        <country>${userLocation.country}</country>
+        <latitude>${userLocation.latitude}</latitude>
+        <longitude>${userLocation.longitude}</longitude>
+      </user_location>
     `,
 
     // Comprehensive rules, workflows, and enforcement guidelines

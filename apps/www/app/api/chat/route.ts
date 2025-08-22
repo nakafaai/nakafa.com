@@ -1,10 +1,12 @@
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { defaultModel, model, order } from "@repo/ai/lib/providers";
+import type { MyUIMessage } from "@repo/ai/lib/types";
 import { cleanSlug } from "@repo/ai/lib/utils";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
 import { tools } from "@repo/ai/tools";
 import { api } from "@repo/connection/routes";
 import { CorsValidator } from "@repo/security";
+import { geolocation } from "@vercel/functions";
 import {
   convertToModelMessages,
   createUIMessageStream,
@@ -49,7 +51,15 @@ export async function POST(req: Request) {
     })
     .then((res) => res.data !== "");
 
-  const stream = createUIMessageStream({
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const { latitude, longitude, city, country } = geolocation(req);
+
+  const stream = createUIMessageStream<MyUIMessage>({
     onError: (error) => {
       if (error instanceof Error) {
         if (error.message.includes("Rate limit")) {
@@ -68,6 +78,13 @@ export async function POST(req: Request) {
             locale,
             slug,
             verified,
+          },
+          currentDate,
+          userLocation: {
+            latitude: latitude ?? "Unknown",
+            longitude: longitude ?? "Unknown",
+            city: city ?? "Unknown",
+            country: country ?? "Unknown",
           },
         }),
         messages: convertToModelMessages(messages),
