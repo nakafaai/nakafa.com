@@ -23,7 +23,6 @@
         "@repo/design-system": "workspace:*",
         "@repo/next-config": "workspace:*",
         "@repo/security": "workspace:*",
-        "@repo/utilities": "workspace:*",
         "next": "15.5.0",
         "react": "^19.1.1",
         "react-dom": "^19.1.1",
