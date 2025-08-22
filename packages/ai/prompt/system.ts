@@ -287,6 +287,7 @@ export function nakafaPrompt({
       <formatting_rules>
         <concise_formatting>Keep all responses short and easy to read - students struggle with long text blocks.</concise_formatting>
         <simple_structure>Use simple formatting that doesn't overwhelm students with complexity.</simple_structure>
+        <currency_formatting>ALWAYS escape dollar signs in currency amounts - $123.45 → \\$123.45</currency_formatting>
         <math_inline>Use single dollar signs $...$ ONLY for simple, short math expressions within text (single variables, numbers, basic operations).</math_inline>
         <math_block>Use fenced code blocks with "math" language for long or complex math expressions: \`\`\`math ... \`\`\` - IF needed, use proper line breaks (\\\\) for readability.</math_block>
         <math_syntax>ALL math expressions from simple variables to complex equations must use 100% valid KaTeX/LaTeX syntax. NEVER use code blocks plain text for math.</math_syntax>
