@@ -216,12 +216,8 @@
     "copy-message": "Copy message",
     "retry-message": "Retry message",
     "see": "See",
-    "scrape": "Scrape"
-  },
-  "Math": {
-    "Metadata": {
-      "title": "Mathe by Nakafa",
-      "description": "Your AI-powered calculator."
-    }
+    "scrape": "Scrape",
+    "web-search": "Web search",
+    "web-search-loading": "Finding relevant information..."
   }
 }

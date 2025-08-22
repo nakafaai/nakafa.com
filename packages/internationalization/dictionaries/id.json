@@ -216,12 +216,8 @@
     "copy-message": "Salin pesan",
     "retry-message": "Ulangi pesan",
     "see": "Lihat",
-    "scrape": "Scrape"
-  },
-  "Math": {
-    "Metadata": {
-      "title": "Mathe by Nakafa",
-      "description": "Kalkulator bertenaga AI kamu."
-    }
+    "scrape": "Scrape",
+    "web-search": "Pencarian web",
+    "web-search-loading": "Mencari informasi terkait..."
   }
 }

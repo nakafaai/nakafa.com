@@ -6,7 +6,7 @@ import {
   ToolContent,
   ToolHeader,
 } from "@repo/design-system/components/ai/tool";
-import { ExternalLinkIcon, SearchIcon } from "lucide-react";
+import { ExternalLinkIcon, ScanSearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -27,7 +27,7 @@ export const ScrapeTool = memo(({ status, output }: Props) => {
   return (
     <Tool>
       <ToolHeader
-        icon={<SearchIcon className="size-4 text-muted-foreground" />}
+        icon={<ScanSearchIcon className="size-4 text-muted-foreground" />}
         state={status}
         type={t("scrape")}
       />
