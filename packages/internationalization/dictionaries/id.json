@@ -206,6 +206,7 @@
     "found-contents": "Menemukan {count} konten",
     "found-articles": "Menemukan {count} artikel",
     "found-subjects": "Menemukan {count} mata pelajaran",
+    "found-results": "Menemukan {count} hasil",
     "pending": "Menunggu",
     "running": "Berjalan",
     "completed": "Selesai",

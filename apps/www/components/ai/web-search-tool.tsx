@@ -27,6 +27,8 @@ export const WebSearchTool = memo(({ status, output }: Props) => {
   const isLoading =
     status === "input-streaming" || status === "input-available";
 
+  const results = output?.data.news.concat(output?.data.web) ?? [];
+
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4">
@@ -54,20 +56,23 @@ export const WebSearchTool = memo(({ status, output }: Props) => {
         <SearchIcon className="size-4 text-muted-foreground" />
         <span className="text-muted-foreground text-sm">{t("web-search")}</span>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        {output?.data.news.map((item) => (
-          <Source href={item.url} key={item.url}>
-            <SourceTrigger showFavicon />
-            <SourceContent description={item.description} title={item.title} />
-          </Source>
-        ))}
-        {output?.data.web.map((item) => (
-          <Source href={item.url} key={item.url}>
-            <SourceTrigger showFavicon />
-            <SourceContent description={item.description} title={item.title} />
-          </Source>
-        ))}
-      </div>
+      {results.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {results.map((item) => (
+            <Source href={item.url} key={item.url}>
+              <SourceTrigger showFavicon />
+              <SourceContent
+                description={item.description}
+                title={item.title}
+              />
+            </Source>
+          ))}
+        </div>
+      ) : (
+        <div className="text-muted-foreground text-sm">
+          {t("found-results", { count: results.length })}
+        </div>
+      )}
     </div>
   );
 });

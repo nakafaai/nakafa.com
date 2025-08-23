@@ -1,7 +1,8 @@
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { defaultModel, model, order } from "@repo/ai/lib/providers";
+
 import type { MyUIMessage } from "@repo/ai/lib/types";
-import { cleanSlug } from "@repo/ai/lib/utils";
+import { cleanSlug, compressMessages } from "@repo/ai/lib/utils";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
 import { tools } from "@repo/ai/tools";
 import { api } from "@repo/connection/routes";
@@ -17,11 +18,9 @@ import {
   smoothStream,
   stepCountIs,
   streamText,
-  type UIMessage,
 } from "ai";
 import { getTranslations } from "next-intl/server";
 
-const MAX_CONVERSATION_HISTORY = 20;
 const MAX_STEPS = 20;
 
 // Allow streaming responses up to 30 seconds
@@ -42,7 +41,7 @@ export async function POST(req: Request) {
     url,
     locale,
     slug,
-  }: { messages: UIMessage[]; url: string; locale: string; slug: string } =
+  }: { messages: MyUIMessage[]; url: string; locale: string; slug: string } =
     await req.json();
 
   // Check if the slug is verified by calling api
@@ -81,6 +80,21 @@ export async function POST(req: Request) {
     },
     url,
   });
+
+  // Use smart message compression to stay within token limits
+  const originalMessageCount = messages.length;
+  const { messages: finalMessages, tokens } = compressMessages(messages);
+
+  // Log compression results
+  if (finalMessages.length < originalMessageCount) {
+    sessionLogger.warn(
+      `Messages compressed from ${originalMessageCount} to ${finalMessages.length} messages (${tokens} tokens) to stay within token limit`
+    );
+  } else {
+    sessionLogger.info(
+      `All ${originalMessageCount} messages fit within token limit (${tokens} tokens)`
+    );
+  }
 
   // Log chat session start
   sessionLogger.info("Chat session started");
@@ -122,20 +136,9 @@ export async function POST(req: Request) {
             country: country ?? "Unknown",
           },
         }),
-        messages: convertToModelMessages(messages),
+        messages: convertToModelMessages(finalMessages),
         stopWhen: stepCountIs(MAX_STEPS),
         tools,
-        prepareStep: ({ messages: initialMessages }) => {
-          // We need to cut costs, ai is expensive
-          // Compress conversation history for longer loops
-          const finalMessages = initialMessages.slice(
-            -(MAX_CONVERSATION_HISTORY / 2)
-          );
-
-          return {
-            messages: finalMessages,
-          };
-        },
         experimental_repairToolCall: async ({
           toolCall,
           tools: availableTools,

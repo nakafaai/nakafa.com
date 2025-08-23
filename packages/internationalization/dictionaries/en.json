@@ -206,6 +206,7 @@
     "found-contents": "Found {count} contents",
     "found-articles": "Found {count} articles",
     "found-subjects": "Found {count} subjects",
+    "found-results": "Found {count} results",
     "pending": "Pending",
     "running": "Running",
     "completed": "Completed",

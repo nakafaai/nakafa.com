@@ -1,6 +1,7 @@
 import FirecrawlApp from "@mendable/firecrawl-js";
 import { tool } from "ai";
 import { keys } from "../keys";
+import { selectRelevantContent } from "../lib/content-selection";
 import {
   scrapeInputSchema,
   scrapeOutputSchema,
@@ -10,74 +11,41 @@ import {
 
 const app = new FirecrawlApp({ apiKey: keys().FIRECRAWL_API_KEY });
 
-const MAX_CONTENT_LENGTH = 800; // Keep search results under 800 chars to manage token costs
-const MAX_SCRAPE_CONTENT_LENGTH = 2000; // Allow more content for specific URL scraping
-
-// Truncation thresholds for smart content cutting
-const SENTENCE_THRESHOLD = 0.7; // Use sentence boundary if 70% or more of max length
-const NEWLINE_THRESHOLD = 0.7; // Use newline boundary if 70% or more of max length
-const WORD_THRESHOLD = 0.8; // Use word boundary if 80% or more of max length
-
-// Helper function to truncate content while preserving readability
-function truncateContent(
-  content: string,
-  maxLength: number = MAX_CONTENT_LENGTH
-): string {
-  if (content.length <= maxLength) {
-    return content;
-  }
-
-  // Try to cut at the end of a sentence
-  const truncated = content.substring(0, maxLength);
-  const lastSentence = truncated.lastIndexOf(". ");
-  const lastNewline = truncated.lastIndexOf("\n");
-
-  // Use sentence boundary if it exists and is not too short
-  if (lastSentence > maxLength * SENTENCE_THRESHOLD) {
-    return truncated.substring(0, lastSentence + 1);
-  }
-
-  // Use newline boundary if it exists and is not too short
-  if (lastNewline > maxLength * NEWLINE_THRESHOLD) {
-    return truncated.substring(0, lastNewline);
-  }
-
-  // Otherwise, cut at word boundary
-  const lastSpace = truncated.lastIndexOf(" ");
-  if (lastSpace > maxLength * WORD_THRESHOLD) {
-    return `${truncated.substring(0, lastSpace)}...`;
-  }
-
-  return `${truncated}...`;
-}
-
 export const scrapeTool = tool({
   name: "scrape",
-  description: "Scrape a URL and return the content",
+  description:
+    "Scrape a URL and return the content. Use this for specific URLs to get the content of the url.",
   inputSchema: scrapeInputSchema,
   outputSchema: scrapeOutputSchema,
   async execute({ urlToCrawl }) {
+    const url = urlToCrawl;
     try {
-      const response = await app.scrape(urlToCrawl, {
+      const response = await app.scrape(url, {
         formats: ["markdown"],
       });
 
       const markdown = response.markdown;
 
       if (!markdown) {
-        return { data: { url: "", content: "" }, error: "No content found." };
+        return { data: { url, content: "" }, error: "No content found." };
       }
+
+      // Use smart content selection to truncate long content while preserving readability
+      const processedContent = selectRelevantContent({
+        content: markdown,
+        maxLength: 3000, // Longer limit for scraped content
+      });
 
       return {
         data: {
-          url: urlToCrawl,
-          content: truncateContent(markdown, MAX_SCRAPE_CONTENT_LENGTH),
+          url,
+          content: processedContent,
         },
         error: undefined,
       };
     } catch (error) {
       return {
-        data: { url: "", content: "" },
+        data: { url, content: "" },
         error: `Failed to crawl: ${error}`,
       };
     }
@@ -92,31 +60,47 @@ export const webSearchTool = tool({
   async execute({ query }) {
     try {
       const response = await app.search(query, {
-        limit: 3,
+        limit: 4,
         sources: ["web", "news"],
         scrapeOptions: { formats: ["markdown"] },
       });
 
       const news =
-        response.news?.map((result) => ({
-          title: ("title" in result ? result.title : "") || "",
-          description: ("snippet" in result ? result.snippet : "") || "",
-          url: ("url" in result ? result.url : "") || "",
-          content: truncateContent(
-            ("markdown" in result ? result.markdown : "") || ""
-          ),
-        })) || [];
+        response.news?.map((result) => {
+          const rawContent =
+            ("markdown" in result ? result.markdown : "") || "";
+          const processedContent = selectRelevantContent({
+            content: rawContent,
+            query, // Use the search query for relevance scoring
+            preserveStructure: false, // Focus on relevance over structure
+          });
+
+          return {
+            title: ("title" in result ? result.title : "") || "",
+            description: ("snippet" in result ? result.snippet : "") || "",
+            url: ("url" in result ? result.url : "") || "",
+            content: processedContent,
+          };
+        }) || [];
 
       const web =
-        response.web?.map((result) => ({
-          title: ("title" in result ? result.title : "") || "",
-          description:
-            ("description" in result ? result.description : "") || "",
-          url: ("url" in result ? result.url : "") || "",
-          content: truncateContent(
-            ("markdown" in result ? result.markdown : "") || ""
-          ),
-        })) || [];
+        response.web?.map((result) => {
+          const rawContent =
+            ("markdown" in result ? result.markdown : "") || "";
+          const processedContent = selectRelevantContent({
+            content: rawContent,
+            query, // Use the search query for relevance scoring
+            preserveStructure: false, // Focus on relevance over structure
+          });
+
+          return {
+            title: ("title" in result ? result.title : "") || "",
+            description:
+              ("description" in result ? result.description : "") || "",
+            url: ("url" in result ? result.url : "") || "",
+            content: processedContent,
+          };
+        }) || [];
 
       return { data: { news, web }, error: undefined };
     } catch (error) {

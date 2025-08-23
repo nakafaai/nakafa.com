@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start -p 3000",
     "analyze": "ANALYZE=true npm run build",
     "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
