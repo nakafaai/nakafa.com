@@ -30,7 +30,7 @@ function useAiContext() {
   return ctx;
 }
 
-export function useAi<T>(selector: (state: AiStore) => T): T {
+export function useAi<T>(selector: (state: AiStore) => T) {
   const store = useAiContext();
   return useStore(store, useShallow(selector));
 }

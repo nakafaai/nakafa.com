@@ -1,6 +1,5 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
 import { useClipboard, useHotkeys, useMediaQuery } from "@mantine/hooks";
 import type { MyUIMessage } from "@repo/ai/lib/types";
 import { Action, Actions } from "@repo/design-system/components/ai/actions";
@@ -36,7 +35,6 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
-import { DefaultChatTransport } from "ai";
 import {
   CheckIcon,
   CopyIcon,
@@ -49,8 +47,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
-import { toast } from "sonner";
-import { useAi, useAiHydrated } from "@/lib/context/use-ai";
+import { useAi } from "@/lib/context/use-ai";
+import { useChat } from "@/lib/context/use-chat";
 import { ArticlesTool } from "./articles-tool";
 import { CalculatorTool } from "./calculator-tool";
 import { ContentTool } from "./content-tool";
@@ -61,29 +59,7 @@ import { WebSearchTool } from "./web-search-tool";
 const MIN_WIDTH = 448;
 const MAX_WIDTH = 672;
 
-export function AiChat() {
-  const hydrated = useAiHydrated();
-  const currentMessages = useAi((state) => state.currentMessages);
-
-  // Avoiding empty initial messages in useChat because of hydration issues
-  if (!hydrated) {
-    return null;
-  }
-
-  return <AiSheet initialMessages={currentMessages} />;
-}
-
-export function AiSheet({
-  initialMessages,
-}: {
-  initialMessages: MyUIMessage[];
-}) {
-  const t = useTranslations("Ai");
-
-  const setCurrentMessages = useAi((state) => state.setCurrentMessages);
-  const appendCurrentMessages = useAi((state) => state.appendCurrentMessages);
-  const clearCurrentMessages = useAi((state) => state.clearCurrentMessages);
-
+export function AiSheet() {
   const open = useAi((state) => state.open);
   const setOpen = useAi((state) => state.setOpen);
 
@@ -97,46 +73,10 @@ export function AiSheet({
     maxWidth: MAX_WIDTH,
   });
 
-  const { sendMessage, messages, status, stop, setMessages, regenerate } =
-    useChat<MyUIMessage>({
-      messages: initialMessages,
-      transport: new DefaultChatTransport({
-        api: "/api/chat",
-        prepareSendMessagesRequest: ({ messages: ms }) => {
-          const currentUrl = window.location.href;
-          const url = new URL(currentUrl);
-
-          const locale = url.pathname.split("/")[1];
-          const slug = `/${url.pathname.split("/").slice(2).join("/")}`;
-
-          setCurrentMessages(ms);
-
-          return {
-            body: {
-              messages: ms,
-              url: currentUrl,
-              locale,
-              slug,
-            },
-          };
-        },
-      }),
-      experimental_throttle: 50,
-      onError: (error) => {
-        toast.error(
-          error.message.length > 0 ? error.message : t("error-message"),
-          { position: "bottom-center" }
-        );
-      },
-      onFinish: ({ message }) => {
-        appendCurrentMessages(message);
-      },
-    });
-
-  const handleClearMessages = () => {
-    setMessages([]);
-    clearCurrentMessages();
-  };
+  const { messages, status, stop, sendMessage, regenerate } = useChat(
+    (state) => state.chat
+  );
+  const handleClearMessages = useChat((state) => state.clearMessages);
 
   return (
     <Sheet defaultOpen={open} modal={false} onOpenChange={setOpen} open={open}>

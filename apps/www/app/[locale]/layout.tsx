@@ -18,7 +18,7 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { AiChat } from "@/components/ai/sheet";
+import { AiSheet } from "@/components/ai/sheet";
 import { AppProviders } from "@/components/providers";
 import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
@@ -178,7 +178,7 @@ export default async function LocaleLayout(props: LayoutProps<"/[locale]">) {
                 <SidebarInset>
                   <Header />
                   <SearchCommand />
-                  <AiChat />
+                  <AiSheet />
                   <div className="relative" data-pagefind-body>
                     {children}
                   </div>
