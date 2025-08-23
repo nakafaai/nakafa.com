@@ -3,7 +3,7 @@
 import { type UseChatHelpers, useChat as useAIChat } from "@ai-sdk/react";
 import type { MyUIMessage } from "@repo/ai/lib/types";
 import { DefaultChatTransport } from "ai";
-import type { ReactNode } from "react";
+import { type ReactNode, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useAi } from "./use-ai";
@@ -57,21 +57,20 @@ export function ChatProvider({
     },
   });
 
-  const handleClearMessages = () => {
+  const clearMessages = useCallback(() => {
     chat.setMessages([]);
     setCurrentMessages([]);
-  };
+  }, [setCurrentMessages, chat.setMessages]);
 
-  return (
-    <ChatContext.Provider
-      value={{
-        chat,
-        clearMessages: handleClearMessages,
-      }}
-    >
-      {children}
-    </ChatContext.Provider>
+  const value = useMemo(
+    () => ({
+      chat,
+      clearMessages,
+    }),
+    [chat, clearMessages]
   );
+
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
 
 export function useChat<T>(selector: (state: ChatContextValue) => T) {
