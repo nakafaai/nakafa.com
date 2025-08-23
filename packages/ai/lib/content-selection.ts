@@ -277,20 +277,6 @@ export function selectRelevantContent(
 }
 
 /**
- * Simple truncation function for backward compatibility
- */
-export function truncateContent(
-  content: string,
-  maxLength: number = DEFAULT_MAX_LENGTH
-): string {
-  return selectRelevantContent({
-    content,
-    maxLength,
-    preserveStructure: false,
-  });
-}
-
-/**
  * Get content length statistics
  */
 export function getContentStats(content: string): {
