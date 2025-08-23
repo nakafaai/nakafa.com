@@ -189,7 +189,7 @@ export async function POST(req: Request) {
         },
         experimental_transform: smoothStream({
           delayInMs: 20,
-          chunking: "line",
+          chunking: "word",
         }),
         providerOptions: {
           gateway: { order },
