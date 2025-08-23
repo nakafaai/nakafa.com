@@ -1,10 +1,10 @@
 "use client";
 
+import { reactMdxComponents } from "@repo/design-system/components/markdown/react-mdx";
 import { parseMarkdownIntoBlocks } from "@repo/design-system/lib/parse-blocks";
 import { parseIncompleteMarkdown } from "@repo/design-system/lib/parse-incomplete-markdown";
 import { preprocessLaTeX } from "@repo/design-system/lib/parse-math";
 import { cn } from "@repo/design-system/lib/utils";
-import { reactMdxComponents } from "@repo/design-system/markdown/react-mdx";
 import hardenReactMarkdown from "harden-react-markdown";
 import type { ComponentProps } from "react";
 import { memo, useCallback, useMemo } from "react";

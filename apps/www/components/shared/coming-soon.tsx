@@ -1,7 +1,7 @@
+import { Heading } from "@repo/design-system/components/markdown/heading";
+import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
 import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
-import { Heading } from "@repo/design-system/markdown/heading";
-import { Paragraph } from "@repo/design-system/markdown/paragraph";
 import { useTranslations } from "next-intl";
 import { getGithubUrl } from "@/lib/utils/github";
 

@@ -6,7 +6,7 @@ import {
   ToolContent,
   ToolHeader,
 } from "@repo/design-system/components/ai/tool";
-import { InlineMath } from "@repo/design-system/markdown/math";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CalculatorIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";

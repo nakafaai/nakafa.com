@@ -1,3 +1,10 @@
+import { Anchor } from "@repo/design-system/components/markdown/anchor";
+import { Heading } from "@repo/design-system/components/markdown/heading";
+import {
+  BlockMath,
+  InlineMath,
+} from "@repo/design-system/components/markdown/math";
+import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
 import {
   Table,
   TableBody,
@@ -7,13 +14,9 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
-import { Anchor } from "@repo/design-system/markdown/anchor";
-import { Heading } from "@repo/design-system/markdown/heading";
-import { BlockMath, InlineMath } from "@repo/design-system/markdown/math";
-import { Paragraph } from "@repo/design-system/markdown/paragraph";
 import { memo } from "react";
 import type { Options } from "react-markdown";
-import { CodeBlock, CodeBlockCopyButton } from "../components/ai/code-block";
+import { CodeBlock, CodeBlockCopyButton } from "../ai/code-block";
 
 // Types for markdown component props with `node.position` info
 type MarkdownPoint = { line?: number; column?: number };

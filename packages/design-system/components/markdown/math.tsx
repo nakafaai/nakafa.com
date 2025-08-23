@@ -8,7 +8,7 @@ import {
   InlineMath as InlineMathReactKatex,
   type MathComponentProps,
 } from "react-katex";
-import { cn } from "../lib/utils";
+import { cn } from "../../lib/utils";
 
 export function MathContainer({
   className,
