@@ -21,6 +21,9 @@ import type {
 import { Children, memo, useCallback, useEffect, useRef } from "react";
 import { SpinnerIcon } from "../ui/icons";
 
+const MIN_HEIGHT = 48;
+const MAX_HEIGHT = 164;
+
 type UseAutoResizeTextareaProps = {
   minHeight: number;
   maxHeight?: number;
@@ -78,15 +81,34 @@ const useAutoResizeTextarea = ({
 
 export type PromptInputProps = HTMLAttributes<HTMLFormElement>;
 
-export const PromptInput = memo(({ className, ...props }: PromptInputProps) => (
-  <form
-    className={cn(
-      "w-full divide-y overflow-hidden rounded-xl border bg-background shadow-sm",
-      className
-    )}
-    {...props}
-  />
-));
+export const PromptInput = memo(
+  ({ className, onSubmit, ...props }: PromptInputProps) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+      // Reset textarea height on any form submission
+      const textarea = e.currentTarget.querySelector<HTMLTextAreaElement>(
+        'textarea[name="message"]'
+      );
+
+      if (textarea) {
+        // Get the minimum height from the textarea's style or default
+        textarea.style.height = `${MIN_HEIGHT}px`;
+      }
+
+      onSubmit?.(e);
+    };
+
+    return (
+      <form
+        className={cn(
+          "w-full divide-y overflow-hidden rounded-xl border bg-background shadow-sm",
+          className
+        )}
+        onSubmit={handleSubmit}
+        {...props}
+      />
+    );
+  }
+);
 PromptInput.displayName = "PromptInput";
 
 export type PromptInputTextareaProps = ComponentProps<typeof Textarea> & {
@@ -99,8 +121,8 @@ export const PromptInputTextarea = memo(
     onChange,
     className,
     placeholder = "What would you like to know?",
-    minHeight = 48,
-    maxHeight = 164,
+    minHeight = MIN_HEIGHT,
+    maxHeight = MAX_HEIGHT,
     ...props
   }: PromptInputTextareaProps) => {
     const { textareaRef, adjustHeight } = useAutoResizeTextarea({
@@ -120,7 +142,6 @@ export const PromptInputTextarea = memo(
         const form = e.currentTarget.form;
         if (form) {
           form.requestSubmit();
-          adjustHeight(true);
         }
       }
     };
