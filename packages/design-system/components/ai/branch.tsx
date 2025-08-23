@@ -1,8 +1,8 @@
 "use client";
 
+import type { MyUIMessage } from "@repo/ai/lib/types";
 import { Button } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
-import type { UIMessage } from "ai";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
@@ -109,7 +109,7 @@ export const BranchMessages = memo(
 BranchMessages.displayName = "BranchMessages";
 
 export type BranchSelectorProps = HTMLAttributes<HTMLDivElement> & {
-  from: UIMessage["role"];
+  from: MyUIMessage["role"];
 };
 
 export const BranchSelector = ({
