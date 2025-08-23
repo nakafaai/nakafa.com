@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { AiContextProvider } from "@/lib/context/use-ai";
 import { PagefindProvider } from "@/lib/context/use-pagefind";
 import { SearchContextProvider } from "@/lib/context/use-search";
-import { ChatProvider } from "./chat";
 import { ReactQueryProviders } from "./react-query";
 
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -12,9 +11,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <NuqsAdapter>
         <ReactQueryProviders>
           <PagefindProvider>
-            <AiContextProvider>
-              <ChatProvider>{children}</ChatProvider>
-            </AiContextProvider>
+            <AiContextProvider>{children}</AiContextProvider>
           </PagefindProvider>
         </ReactQueryProviders>
       </NuqsAdapter>

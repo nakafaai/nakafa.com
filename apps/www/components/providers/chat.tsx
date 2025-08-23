@@ -9,7 +9,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const currentMessages = useAi((state) => state.currentMessages);
 
   if (!isHydrated) {
-    return children;
+    return null;
   }
 
   return (

@@ -20,6 +20,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AiSheet } from "@/components/ai/sheet";
 import { AppProviders } from "@/components/providers";
+import { ChatProvider } from "@/components/providers/chat";
 import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
@@ -178,7 +179,9 @@ export default async function LocaleLayout(props: LayoutProps<"/[locale]">) {
                 <SidebarInset>
                   <Header />
                   <SearchCommand />
-                  <AiSheet />
+                  <ChatProvider>
+                    <AiSheet />
+                  </ChatProvider>
                   <div className="relative" data-pagefind-body>
                     {children}
                   </div>
