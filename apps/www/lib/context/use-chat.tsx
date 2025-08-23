@@ -16,10 +16,10 @@ type ChatContextValue = {
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 
 export function ChatProvider({
-  messages,
+  messages = [],
   children,
 }: {
-  messages: MyUIMessage[];
+  messages?: MyUIMessage[];
   children: ReactNode;
 }) {
   const setCurrentMessages = useAi((state) => state.setCurrentMessages);
