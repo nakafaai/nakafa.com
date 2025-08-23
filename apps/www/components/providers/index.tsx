@@ -3,18 +3,21 @@ import type { ReactNode } from "react";
 import { AiContextProvider } from "@/lib/context/use-ai";
 import { PagefindProvider } from "@/lib/context/use-pagefind";
 import { SearchContextProvider } from "@/lib/context/use-search";
+import { ConvexClientProvider } from "./convex";
 import { ReactQueryProviders } from "./react-query";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <SearchContextProvider>
-      <NuqsAdapter>
-        <ReactQueryProviders>
-          <PagefindProvider>
-            <AiContextProvider>{children}</AiContextProvider>
-          </PagefindProvider>
-        </ReactQueryProviders>
-      </NuqsAdapter>
-    </SearchContextProvider>
+    <ConvexClientProvider>
+      <SearchContextProvider>
+        <NuqsAdapter>
+          <ReactQueryProviders>
+            <PagefindProvider>
+              <AiContextProvider>{children}</AiContextProvider>
+            </PagefindProvider>
+          </ReactQueryProviders>
+        </NuqsAdapter>
+      </SearchContextProvider>
+    </ConvexClientProvider>
   );
 }

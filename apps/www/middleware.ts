@@ -1,9 +1,7 @@
+import { convexAuthNextjsMiddleware } from "@convex-dev/auth/nextjs/server";
 import { internationalizationMiddleware } from "@repo/internationalization/middleware";
-import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  return internationalizationMiddleware(request);
-}
+export default convexAuthNextjsMiddleware(internationalizationMiddleware);
 
 export const config = {
   matcher:
