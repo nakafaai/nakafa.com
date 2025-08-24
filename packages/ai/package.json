@@ -9,7 +9,7 @@
   "dependencies": {
     "@ai-sdk/google-vertex": "^3.0.11",
     "@ai-sdk/react": "^2.0.22",
-    "@mendable/firecrawl-js": "^3.1.0",
+    "@mendable/firecrawl-js": "^3.2.0",
     "@t3-oss/env-nextjs": "^0.13.8",
     "ai": "^5.0.22",
     "dedent": "^1.6.0",
