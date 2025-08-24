@@ -13,7 +13,12 @@
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+
+    "paths": {
+      "@/*": ["./*"],
+      "@repo/*": ["../../packages/*"]
+    }
   },
   "include": ["./**/*"],
   "exclude": ["./convex/_generated"]
