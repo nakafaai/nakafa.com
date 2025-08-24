@@ -5,7 +5,6 @@ export const keys = () =>
   createEnv({
     server: {
       CONVEX_URL: z.string(),
-      CONVEX_DEPLOYMENT: z.string(),
       CONVEX_SITE_URL: z.url(),
     },
     client: {
@@ -13,7 +12,6 @@ export const keys = () =>
     },
     runtimeEnv: {
       CONVEX_URL: process.env.CONVEX_URL,
-      CONVEX_DEPLOYMENT: process.env.CONVEX_DEPLOYMENT,
       CONVEX_SITE_URL: process.env.CONVEX_SITE_URL,
       NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
     },
