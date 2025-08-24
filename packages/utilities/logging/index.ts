@@ -28,6 +28,7 @@
 export type { LoggerConfig } from "./logger";
 export {
   createChildLogger,
+  createDevLogger,
   createLogger,
   createServiceLogger,
   logger,

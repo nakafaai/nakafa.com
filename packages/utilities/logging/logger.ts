@@ -1,4 +1,5 @@
 import pino from "pino";
+import pinoPretty from "pino-pretty";
 
 export type LoggerConfig = {
   level?: "trace" | "debug" | "info" | "warn" | "error" | "fatal";
@@ -20,26 +21,25 @@ export function createLogger(config: LoggerConfig = {}) {
     ...(service && { name: service }),
   };
 
-  // Disable pretty logging in production to prevent worker thread issues during builds
-  // This maintains your preference for pretty by default in development
-  const shouldUsePretty = pretty && process.env.NODE_ENV !== "production";
+  // Only use pretty logging in development and when explicitly enabled
+  const isDevelopment = process.env.NODE_ENV === "development";
+  const shouldUsePretty = pretty && isDevelopment;
 
   if (shouldUsePretty) {
     try {
-      return pino({
-        ...baseConfig,
-        transport: {
-          target: "pino-pretty",
-          options: {
-            colorize,
-            translateTime: "yyyy-mm-dd HH:MM:ss",
-            ignore: "pid,hostname",
-            messageFormat: service ? `[${service}] {msg}` : "{msg}",
-          },
-        },
+      // Use pino-pretty directly as a stream to avoid worker thread issues
+      const prettyStream = pinoPretty({
+        colorize,
+        translateTime: "SYS:standard",
+        ignore: "pid,hostname",
+        messageFormat: service ? `[${service}] {msg}` : undefined,
+        singleLine: false,
+        hideObject: false,
       });
+
+      return pino(baseConfig, prettyStream);
     } catch {
-      // Fallback to raw JSON if pretty logging fails
+      // If pino-pretty fails, fallback to simple JSON logging
       return pino(baseConfig);
     }
   }
@@ -49,9 +49,35 @@ export function createLogger(config: LoggerConfig = {}) {
 }
 
 /**
- * Default logger instance for immediate use
+ * Create a development-friendly logger that avoids worker thread issues
+ * @param config Logger configuration options
+ * @returns Logger instance optimized for development
  */
-export const logger = createLogger();
+export function createDevLogger(config: LoggerConfig = {}) {
+  const { level = "info", service } = config;
+
+  // Simple development logger that doesn't use worker threads
+  return pino({
+    level,
+    ...(service && { name: service }),
+    // Use destination directly to avoid transport worker threads
+    ...(process.env.NODE_ENV === "development" && {
+      formatters: {
+        level: (label) => ({ level: label }),
+        log: (object) => object,
+      },
+    }),
+  });
+}
+
+/**
+ * Default logger instance for immediate use
+ * Uses development-friendly configuration to prevent worker thread issues
+ */
+export const logger =
+  process.env.NODE_ENV === "development"
+    ? createDevLogger()
+    : createLogger({ pretty: false });
 
 /**
  * Create a child logger with additional context

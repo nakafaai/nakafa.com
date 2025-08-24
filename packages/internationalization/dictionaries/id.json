@@ -193,7 +193,7 @@
   },
   "Ai": {
     "ask-nina": "Tanya Nina",
-    "text-placeholder": "Apa yang ingin kamu tanyakan?",
+    "text-placeholder": "Tanya saya apa saja...",
     "error-message": "Terjadi kesalahan, silakan coba lagi nanti.",
     "rate-limit-message": "Batas waktu habis. Silakan coba lagi nanti.",
     "get-content": "Materi",

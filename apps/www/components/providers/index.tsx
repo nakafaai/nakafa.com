@@ -1,6 +1,7 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
 import { AiContextProvider } from "@/lib/context/use-ai";
+import { ChatProvider } from "@/lib/context/use-chat";
 import { PagefindProvider } from "@/lib/context/use-pagefind";
 import { SearchContextProvider } from "@/lib/context/use-search";
 import { ConvexClientProvider } from "./convex";
@@ -13,7 +14,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <NuqsAdapter>
           <ReactQueryProviders>
             <PagefindProvider>
-              <AiContextProvider>{children}</AiContextProvider>
+              <AiContextProvider>
+                <ChatProvider>{children}</ChatProvider>
+              </AiContextProvider>
             </PagefindProvider>
           </ReactQueryProviders>
         </NuqsAdapter>

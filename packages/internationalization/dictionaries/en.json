@@ -193,7 +193,7 @@
   },
   "Ai": {
     "ask-nina": "Ask Nina",
-    "text-placeholder": "What would you like to know?",
+    "text-placeholder": "Ask me anything...",
     "error-message": "An error occurred, please try again later.",
     "rate-limit-message": "Rate limit exceeded. Please try again later.",
     "get-content": "Material",

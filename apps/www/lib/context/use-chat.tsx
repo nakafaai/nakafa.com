@@ -1,6 +1,7 @@
 "use client";
 
 import { type UseChatHelpers, useChat as useAIChat } from "@ai-sdk/react";
+import { useIsomorphicEffect } from "@mantine/hooks";
 import type { MyUIMessage } from "@repo/ai/lib/types";
 import { DefaultChatTransport } from "ai";
 import { type ReactNode, useCallback, useMemo } from "react";
@@ -15,18 +16,13 @@ type ChatContextValue = {
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 
-export function ChatProvider({
-  messages = [],
-  children,
-}: {
-  messages?: MyUIMessage[];
-  children: ReactNode;
-}) {
+export function ChatProvider({ children }: { children: ReactNode }) {
   const setCurrentMessages = useAi((state) => state.setCurrentMessages);
   const appendCurrentMessages = useAi((state) => state.appendCurrentMessages);
+  const currentMessages = useAi((state) => state.currentMessages);
 
   const chat = useAIChat<MyUIMessage>({
-    messages,
+    messages: currentMessages,
     transport: new DefaultChatTransport({
       api: "/api/chat",
       prepareSendMessagesRequest: ({ messages: ms }) => {
@@ -61,6 +57,10 @@ export function ChatProvider({
     chat.setMessages([]);
     setCurrentMessages([]);
   }, [setCurrentMessages, chat.setMessages]);
+
+  useIsomorphicEffect(() => {
+    chat.setMessages(currentMessages);
+  }, [currentMessages]);
 
   const value = useMemo(
     () => ({

@@ -186,6 +186,8 @@ const AISheetToolbar = memo(
     stop: () => void;
     handleSubmit: (message: string) => void;
   }) => {
+    const t = useTranslations("Ai");
+
     const text = useAi((state) => state.text);
     const setText = useAi((state) => state.setText);
 
@@ -211,6 +213,7 @@ const AISheetToolbar = memo(
           <PromptInputTextarea
             autoFocus
             onChange={(e) => setText(e.target.value)}
+            placeholder={t("text-placeholder")}
             value={text}
           />
           <PromptInputToolbar>
