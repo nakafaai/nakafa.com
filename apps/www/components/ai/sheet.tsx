@@ -1,8 +1,6 @@
 "use client";
 
-import { useClipboard, useHotkeys, useMediaQuery } from "@mantine/hooks";
-import type { MyUIMessage } from "@repo/ai/lib/types";
-import { Action, Actions } from "@repo/design-system/components/ai/actions";
+import { useHotkeys, useMediaQuery } from "@mantine/hooks";
 import {
   Conversation,
   ConversationContent,
@@ -15,19 +13,9 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from "@repo/design-system/components/ai/input";
-import {
-  Message,
-  MessageContent,
-} from "@repo/design-system/components/ai/message";
-import {
-  Reasoning,
-  ReasoningContent,
-  ReasoningTrigger,
-} from "@repo/design-system/components/ai/reasoning";
-import { Response } from "@repo/design-system/components/ai/response";
+import { Message } from "@repo/design-system/components/ai/message";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { TypingLoader } from "@repo/design-system/components/ui/icons";
 import {
   Sheet,
   SheetContent,
@@ -36,13 +24,9 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
-import type { ChatStatus } from "ai";
 import {
-  CheckIcon,
-  CopyIcon,
   Maximize2Icon,
   Minimize2Icon,
-  RefreshCcwIcon,
   SparklesIcon,
   Trash2Icon,
   XIcon,
@@ -51,12 +35,9 @@ import { useTranslations } from "next-intl";
 import { type ComponentProps, memo } from "react";
 import { useAi } from "@/lib/context/use-ai";
 import { useChat } from "@/lib/context/use-chat";
-import { ArticlesTool } from "./articles-tool";
-import { CalculatorTool } from "./calculator-tool";
-import { ContentTool } from "./content-tool";
-import { ScrapeTool } from "./scrape-tool";
-import { SubjectsTool } from "./subjects-tool";
-import { WebSearchTool } from "./web-search-tool";
+import { AIChatLoading } from "./chat-loading";
+import { AiChatMessage } from "./chat-message";
+import { AiChatModel } from "./chat-model";
 
 const MIN_WIDTH = 448;
 const MAX_WIDTH = 672;
@@ -75,10 +56,8 @@ export function AiSheet() {
     maxWidth: MAX_WIDTH,
   });
 
-  const { messages, status, stop, sendMessage, regenerate } = useChat(
-    (state) => state.chat
-  );
-  const handleClearMessages = useChat((state) => state.clearMessages);
+  const { messages, status, stop, sendMessage, regenerate, setMessages } =
+    useChat((state) => state.chat);
 
   return (
     <Sheet defaultOpen={open} modal={false} onOpenChange={setOpen} open={open}>
@@ -112,7 +91,7 @@ export function AiSheet() {
 
             <div className="flex items-center">
               <Button
-                onClick={handleClearMessages}
+                onClick={() => setMessages([])}
                 size="icon-sm"
                 variant="ghost"
               >
@@ -144,8 +123,15 @@ export function AiSheet() {
         <div className="relative flex size-full flex-col divide-y overflow-hidden">
           <Conversation>
             <ConversationContent>
-              <AISheetMessages messages={messages} regenerate={regenerate} />
-              <AISheetLoading status={status} />
+              {messages.map((message) => (
+                <Message
+                  from={message.role === "user" ? "user" : "assistant"}
+                  key={message.id}
+                >
+                  <AiChatMessage message={message} regenerate={regenerate} />
+                </Message>
+              ))}
+              <AIChatLoading status={status} />
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
@@ -160,21 +146,6 @@ export function AiSheet() {
     </Sheet>
   );
 }
-
-const AISheetLoading = memo(({ status }: { status: ChatStatus }) => {
-  if (status !== "submitted") {
-    return null;
-  }
-
-  return (
-    <Message from="assistant" key="typing">
-      <div className="flex flex-col gap-4">
-        <TypingLoader />
-      </div>
-    </Message>
-  );
-});
-AISheetLoading.displayName = "AISheetLoading";
 
 const AISheetToolbar = memo(
   ({
@@ -205,7 +176,7 @@ const AISheetToolbar = memo(
     };
 
     return (
-      <div className="grid shrink-0 gap-4">
+      <div className="grid shrink-0">
         <PromptInput
           className="rounded-none border-0 shadow-none"
           onSubmit={handleSendMessage}
@@ -217,7 +188,9 @@ const AISheetToolbar = memo(
             value={text}
           />
           <PromptInputToolbar>
-            <PromptInputTools />
+            <PromptInputTools>
+              <AiChatModel />
+            </PromptInputTools>
             <PromptInputSubmit
               disabled={status === "submitted"}
               status={status}
@@ -229,163 +202,3 @@ const AISheetToolbar = memo(
   }
 );
 AISheetToolbar.displayName = "AISheetToolbar";
-
-const AISheetMessages = memo(
-  ({
-    messages,
-    regenerate,
-  }: {
-    messages: MyUIMessage[];
-    regenerate: ({ messageId }: { messageId: string }) => void;
-  }) => {
-    return messages.map((message) => (
-      <Message
-        from={message.role === "user" ? "user" : "assistant"}
-        key={message.id}
-      >
-        <AISheetMessage message={message} regenerate={regenerate} />
-      </Message>
-    ));
-  }
-);
-AISheetMessages.displayName = "AISheetMessages";
-
-const AISheetMessage = memo(
-  ({
-    message,
-    regenerate,
-  }: {
-    message: MyUIMessage;
-    regenerate: ({ messageId }: { messageId: string }) => void;
-  }) => {
-    return (
-      <div className="flex flex-col gap-4">
-        {message.parts.map((part, i) => {
-          switch (part.type) {
-            case "text": {
-              const isLastPart = i === message.parts.length - 1;
-              return (
-                <div
-                  className="flex flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end"
-                  key={`message-${message.id}-part-${i}`}
-                >
-                  <MessageContent>
-                    <Response id={message.id}>{part.text}</Response>
-                  </MessageContent>
-                  {isLastPart && (
-                    <AISheetMessageActions
-                      messageId={message.id}
-                      regenerate={regenerate}
-                      text={part.text}
-                    />
-                  )}
-                </div>
-              );
-            }
-            case "reasoning":
-              return (
-                <Reasoning
-                  autoOpen={false}
-                  className="w-full"
-                  isStreaming={part.state === "streaming"}
-                  key={`reasoning-${message.id}-part-${i}`}
-                >
-                  <ReasoningTrigger />
-                  <ReasoningContent id={message.id}>
-                    {part.text}
-                  </ReasoningContent>
-                </Reasoning>
-              );
-            case "tool-getArticles":
-              return (
-                <ArticlesTool
-                  key={`tool-${part.toolCallId}`}
-                  output={part.output}
-                  status={part.state}
-                />
-              );
-            case "tool-getSubjects":
-              return (
-                <SubjectsTool
-                  key={`tool-${part.toolCallId}`}
-                  output={part.output}
-                  status={part.state}
-                />
-              );
-            case "tool-getContent":
-              return (
-                <ContentTool
-                  key={`tool-${part.toolCallId}`}
-                  output={part.output}
-                  status={part.state}
-                />
-              );
-            case "tool-calculator":
-              return (
-                <CalculatorTool
-                  key={`tool-${part.toolCallId}`}
-                  output={part.output}
-                  status={part.state}
-                />
-              );
-            case "tool-webSearch":
-              return (
-                <WebSearchTool
-                  key={`tool-${part.toolCallId}`}
-                  output={part.output}
-                  status={part.state}
-                />
-              );
-            case "tool-scrape":
-              return (
-                <ScrapeTool
-                  key={`tool-${part.toolCallId}`}
-                  output={part.output}
-                  status={part.state}
-                />
-              );
-            default:
-              return null;
-          }
-        })}
-      </div>
-    );
-  }
-);
-AISheetMessage.displayName = "AISheetMessage";
-
-const AISheetMessageActions = memo(
-  ({
-    messageId,
-    text,
-    regenerate,
-  }: {
-    messageId: string;
-    text: string;
-    regenerate: ({ messageId }: { messageId: string }) => void;
-  }) => {
-    const t = useTranslations("Ai");
-
-    const clipboard = useClipboard({ timeout: 1000 });
-
-    return (
-      <Actions className="opacity-0 transition-opacity ease-out group-hover:opacity-100">
-        <Action
-          label={t("retry-message")}
-          onClick={() => regenerate({ messageId })}
-          tooltip={t("retry-message")}
-        >
-          <RefreshCcwIcon />
-        </Action>
-        <Action
-          label={t("copy-message")}
-          onClick={() => clipboard.copy(text)}
-          tooltip={t("copy-message")}
-        >
-          {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
-        </Action>
-      </Actions>
-    );
-  }
-);
-AISheetMessageActions.displayName = "AISheetMessageActions";

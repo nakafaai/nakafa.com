@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useRef } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
@@ -33,24 +33,4 @@ function useAiContext() {
 export function useAi<T>(selector: (state: AiStore) => T) {
   const store = useAiContext();
   return useStore(store, useShallow(selector));
-}
-
-export function useAiHydrated() {
-  const store = useAiContext();
-
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    const unSubFinish = store.persist.onFinishHydration(() =>
-      setHydrated(true)
-    );
-
-    setHydrated(store.persist.hasHydrated());
-
-    return () => {
-      unSubFinish();
-    };
-  }, [store]);
-
-  return hydrated;
 }

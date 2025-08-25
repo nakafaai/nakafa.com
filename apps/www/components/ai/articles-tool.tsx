@@ -28,7 +28,9 @@ export const ArticlesTool = memo(({ status, output }: Props) => {
   return (
     <Tool>
       <ToolHeader
-        icon={<NewspaperIcon className="size-4 text-muted-foreground" />}
+        icon={
+          <NewspaperIcon className="size-4 shrink-0 text-muted-foreground" />
+        }
         state={status}
         type={t("get-articles")}
       />

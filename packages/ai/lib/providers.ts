@@ -15,6 +15,10 @@ const languageModels = {
   openai: gateway("openai/gpt-oss-120b"),
   qwen: gateway("alibaba/qwen-3-235b"),
   zai: gateway("zai/glm-4.5"),
+
+  // selection models
+  standard: gateway("openai/gpt-oss-120b"),
+  pro: gateway("google/gemini-2.5-flash"),
 };
 
 export const model = customProvider({
@@ -25,6 +29,6 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "openai";
+export const defaultModel: ModelId = "standard";
 
 export const order = ["groq", "baseten", "cerebras", "azure", "vertex"];

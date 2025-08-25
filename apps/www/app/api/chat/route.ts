@@ -1,6 +1,5 @@
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
-import { defaultModel, model, order } from "@repo/ai/lib/providers";
-
+import { type ModelId, model, order } from "@repo/ai/lib/providers";
 import type { MyUIMessage } from "@repo/ai/lib/types";
 import { cleanSlug, compressMessages } from "@repo/ai/lib/utils";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
@@ -41,8 +40,14 @@ export async function POST(req: Request) {
     url,
     locale,
     slug,
-  }: { messages: MyUIMessage[]; url: string; locale: string; slug: string } =
-    await req.json();
+    model: selectedModel,
+  }: {
+    messages: MyUIMessage[];
+    url: string;
+    locale: string;
+    slug: string;
+    model: ModelId;
+  } = await req.json();
 
   // Check if the slug is verified by calling api
   const verified = await api.contents
@@ -120,7 +125,7 @@ export async function POST(req: Request) {
     },
     execute: ({ writer }) => {
       const result = streamText({
-        model: model.languageModel(defaultModel),
+        model: model.languageModel(selectedModel),
         system: nakafaPrompt({
           url,
           currentPage: {
@@ -162,7 +167,7 @@ export async function POST(req: Request) {
             availableTools[toolCall.toolName as keyof typeof availableTools];
 
           const { object: repairedArgs } = await generateObject({
-            model: model.languageModel(defaultModel),
+            model: model.languageModel(selectedModel),
             schema: tool.inputSchema,
             prompt: [
               `The model tried to call the tool "${toolCall.toolName}"` +

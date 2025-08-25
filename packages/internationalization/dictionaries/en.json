@@ -219,6 +219,9 @@
     "see": "See",
     "scrape": "Scrape",
     "web-search": "Web search",
-    "web-search-loading": "Finding relevant information..."
+    "web-search-loading": "Finding relevant information...",
+    "model": "Model",
+    "standard": "Standard",
+    "pro": "Pro"
   }
 }

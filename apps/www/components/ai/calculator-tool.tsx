@@ -26,7 +26,9 @@ export const CalculatorTool = memo(({ status, output }: Props) => {
   return (
     <Tool>
       <ToolHeader
-        icon={<CalculatorIcon className="size-4 text-muted-foreground" />}
+        icon={
+          <CalculatorIcon className="size-4 shrink-0 text-muted-foreground" />
+        }
         state={status}
         type={t("calculator")}
       />

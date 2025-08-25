@@ -53,7 +53,7 @@ export const WebSearchTool = memo(({ status, output }: Props) => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <SearchIcon className="size-4 text-muted-foreground" />
+        <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
         <span className="text-muted-foreground text-sm">{t("web-search")}</span>
       </div>
       {results.length > 0 ? (

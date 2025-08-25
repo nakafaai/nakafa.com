@@ -27,7 +27,9 @@ export const ContentTool = memo(({ status, output }: Props) => {
   return (
     <Tool>
       <ToolHeader
-        icon={<BookOpenIcon className="size-4 text-muted-foreground" />}
+        icon={
+          <BookOpenIcon className="size-4 shrink-0 text-muted-foreground" />
+        }
         state={status}
         type={t("get-content")}
       />

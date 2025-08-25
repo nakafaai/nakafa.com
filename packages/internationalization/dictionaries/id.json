@@ -193,7 +193,7 @@
   },
   "Ai": {
     "ask-nina": "Tanya Nina",
-    "text-placeholder": "Tanya saya apa saja...",
+    "text-placeholder": "Tanya aku apa saja...",
     "error-message": "Terjadi kesalahan, silakan coba lagi nanti.",
     "rate-limit-message": "Batas waktu habis. Silakan coba lagi nanti.",
     "get-content": "Materi",
@@ -219,6 +219,9 @@
     "see": "Lihat",
     "scrape": "Scrape",
     "web-search": "Pencarian web",
-    "web-search-loading": "Mencari informasi terkait..."
+    "web-search-loading": "Mencari informasi terkait...",
+    "model": "Model",
+    "standard": "Standar",
+    "pro": "Pro"
   }
 }

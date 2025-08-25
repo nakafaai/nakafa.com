@@ -28,7 +28,9 @@ export const SubjectsTool = memo(({ status, output }: Props) => {
   return (
     <Tool>
       <ToolHeader
-        icon={<GraduationCapIcon className="size-4 text-muted-foreground" />}
+        icon={
+          <GraduationCapIcon className="size-4 shrink-0 text-muted-foreground" />
+        }
         state={status}
         type={t("get-subjects")}
       />

@@ -1,32 +1,62 @@
 "use client";
 
+import {
+  PromptInput,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputToolbar,
+  PromptInputTools,
+} from "@repo/design-system/components/ai/input";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { SearchInput } from "@/components/shared/search-input";
-import { useSearch } from "@/lib/context/use-search";
+import { useAi } from "@/lib/context/use-ai";
+import { useChat } from "@/lib/context/use-chat";
+import { AiChatModel } from "../ai/chat-model";
 
 export function HomeSearch() {
+  const t = useTranslations("Ai");
+
   const router = useRouter();
 
-  const { query, setQuery } = useSearch((state) => ({
-    query: state.query,
-    setQuery: state.setQuery,
-  }));
+  const text = useAi((state) => state.text);
+  const setText = useAi((state) => state.setText);
+
+  const { sendMessage, setMessages } = useChat((state) => state.chat);
 
   const [isPending, startTransition] = useTransition();
 
-  const redirect = () => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!text.trim()) {
+      return;
+    }
+
     startTransition(() => {
-      router.push(`/search?q=${query}`);
+      setMessages([]);
+
+      router.push("/chat");
+
+      sendMessage({ text });
+      setText("");
     });
   };
 
   return (
-    <SearchInput
-      action={redirect}
-      loading={isPending}
-      setValue={setQuery}
-      value={query}
-    />
+    <PromptInput onSubmit={handleSubmit}>
+      <PromptInputTextarea
+        autoFocus
+        className="p-4"
+        onChange={(e) => setText(e.target.value)}
+        placeholder={t("text-placeholder")}
+        value={text}
+      />
+      <PromptInputToolbar className="pt-0">
+        <PromptInputTools>
+          <AiChatModel />
+        </PromptInputTools>
+        <PromptInputSubmit disabled={isPending} isPending={isPending} />
+      </PromptInputToolbar>
+    </PromptInput>
   );
 }

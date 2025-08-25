@@ -5,6 +5,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -226,6 +227,7 @@ export const PromptInputButton = ({
 
 export type PromptInputSubmitProps = ComponentProps<typeof Button> & {
   status?: ChatStatus;
+  isPending?: boolean;
 };
 
 export const PromptInputSubmit = ({
@@ -233,12 +235,13 @@ export const PromptInputSubmit = ({
   variant = "default",
   size = "icon",
   status,
+  isPending,
   children,
   ...props
 }: PromptInputSubmitProps) => {
   let Icon = <SendIcon className="size-4" />;
 
-  if (status === "submitted") {
+  if (status === "submitted" || isPending) {
     Icon = <SpinnerIcon />;
   } else if (status === "streaming") {
     Icon = <IconSquareFilled className="size-4" />;
@@ -273,8 +276,8 @@ export const PromptInputModelSelectTrigger = ({
 }: PromptInputModelSelectTriggerProps) => (
   <SelectTrigger
     className={cn(
-      "border-none bg-transparent font-medium text-muted-foreground shadow-none transition-colors",
-      'hover:bg-accent hover:text-foreground [&[aria-expanded="true"]]:bg-accent [&[aria-expanded="true"]]:text-foreground',
+      "border-none bg-transparent font-medium shadow-none transition-colors ease-out",
+      'hover:bg-accent hover:text-accent-foreground [&[aria-expanded="true"]]:bg-accent [&[aria-expanded="true"]]:text-accent-foreground',
       className
     )}
     {...props}
@@ -290,6 +293,13 @@ export const PromptInputModelSelectContent = ({
   ...props
 }: PromptInputModelSelectContentProps) => (
   <SelectContent className={cn(className)} {...props} />
+);
+
+export const PromptInputModelSelectLabel = ({
+  className,
+  ...props
+}: ComponentProps<typeof SelectLabel>) => (
+  <SelectLabel className={cn(className)} {...props} />
 );
 
 export type PromptInputModelSelectItemProps = ComponentProps<typeof SelectItem>;
