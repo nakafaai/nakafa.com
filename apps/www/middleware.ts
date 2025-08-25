@@ -10,6 +10,12 @@ export default convexAuthNextjsMiddleware(internationalizationMiddleware, {
 });
 
 export const config = {
-  matcher:
-    "/((?!api|trpc|_next|_vercel|manifest|webmanifest|sitemap|.*\\..*).*)",
+  matcher: [
+    "/((?!_next/static|_pagefind|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|js|css|webmanifest|xml|txt)$).*)",
+
+    // all routes except static assets and /api/chat
+    "/((?!.*\\..*|_next|api/chat).*)",
+    // Include all API and TRPC routes except /api/chat
+    "/(api(?!/chat)|trpc)(.*)",
+  ],
 };
