@@ -36,6 +36,6 @@
     "ultracite": "^5.2.5",
     "vitest": "^3.2.4"
   },
-  "packageManager": "bun@1.2.20",
+  "packageManager": "bun@1.2.21",
   "type": "module"
 }
