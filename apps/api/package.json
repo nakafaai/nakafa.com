@@ -4,7 +4,9 @@
   "scripts": {
     "dev": "next dev -p 3002 --turbopack",
     "build": "next build --turbopack",
-    "start": "next start -p 3002"
+    "start": "next start -p 3002",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "@repo/next-config": "workspace:*",

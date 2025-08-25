@@ -12,9 +12,10 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@auth/core": "0.40.0",
+    "@auth/core": "0.37.0",
     "@convex-dev/auth": "^0.0.88",
-    "convex": "^1.26.1"
+    "convex": "^1.26.1",
+    "convex-helpers": "^0.1.104"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*"

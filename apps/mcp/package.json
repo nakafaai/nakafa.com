@@ -6,13 +6,15 @@
     "build": "next build --turbopack",
     "start": "next start -p 3001",
     "test-client": "node scripts/test-client.mjs",
-    "test-streamable-http-client": "node scripts/test-streamable-http-client.mjs"
+    "test-streamable-http-client": "node scripts/test-streamable-http-client.mjs",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "@repo/next-config": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/connection": "workspace:*",
-    "mcp-handler": "1.0.1",
+    "mcp-handler": "1.0.2",
     "next": "15.5.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
