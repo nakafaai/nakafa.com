@@ -4,20 +4,23 @@ import { AiContextProvider } from "@/lib/context/use-ai";
 import { ChatProvider } from "@/lib/context/use-chat";
 import { PagefindProvider } from "@/lib/context/use-pagefind";
 import { SearchContextProvider } from "@/lib/context/use-search";
+import { ConvexProvider } from "./convex";
 import { ReactQueryProviders } from "./react-query";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <SearchContextProvider>
-      <NuqsAdapter>
-        <ReactQueryProviders>
-          <PagefindProvider>
-            <AiContextProvider>
-              <ChatProvider>{children}</ChatProvider>
-            </AiContextProvider>
-          </PagefindProvider>
-        </ReactQueryProviders>
-      </NuqsAdapter>
-    </SearchContextProvider>
+    <ConvexProvider>
+      <SearchContextProvider>
+        <NuqsAdapter>
+          <ReactQueryProviders>
+            <PagefindProvider>
+              <AiContextProvider>
+                <ChatProvider>{children}</ChatProvider>
+              </AiContextProvider>
+            </PagefindProvider>
+          </ReactQueryProviders>
+        </NuqsAdapter>
+      </SearchContextProvider>
+    </ConvexProvider>
   );
 }

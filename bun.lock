@@ -103,7 +103,7 @@
       "name": "@repo/ai",
       "version": "0.0.0",
       "dependencies": {
-        "@ai-sdk/google-vertex": "^3.0.14",
+        "@ai-sdk/google-vertex": "^3.0.15",
         "@ai-sdk/react": "^2.0.25",
         "@mendable/firecrawl-js": "^3.2.1",
         "@t3-oss/env-nextjs": "^0.13.8",
@@ -306,9 +306,9 @@
 
     "@ai-sdk/gateway": ["@ai-sdk/gateway@1.0.14", "", { "dependencies": { "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.7" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-qD5yn7JsQp6hP85YD3LPv6h4Obef0NZnGah/8KT0kMCgkwBhFNKWgXLbsn04K26RkgEqAc7G0Q61pC6ZtjeF6Q=="],
 
-    "@ai-sdk/google": ["@ai-sdk/google@2.0.10", "", { "dependencies": { "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.7" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-/w9DSX6X7564goOkGbAHo7hO5uuamX9atrmH17JZAjmJeCv9karKX7lYFSWng1miFPDDm8ouU5ipjM3p5ti2Pg=="],
+    "@ai-sdk/google": ["@ai-sdk/google@2.0.11", "", { "dependencies": { "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.7" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-dnVIgSz1DZD/0gVau6ifYN3HZFN15HZwC9VjevTFfvrfSfbEvpXj5x/k/zk/0XuQrlQ5g8JiwJtxc9bx24x2xw=="],
 
-    "@ai-sdk/google-vertex": ["@ai-sdk/google-vertex@3.0.14", "", { "dependencies": { "@ai-sdk/anthropic": "2.0.8", "@ai-sdk/google": "2.0.10", "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.7", "google-auth-library": "^9.15.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-kIwi8pzCyXhU3JfmbYkf9GzgyG2fLtZLVUTT4yrAR/GhCH25ljWX5Byelk4QueAnLbak5i9TriHUmBjVLM1N5g=="],
+    "@ai-sdk/google-vertex": ["@ai-sdk/google-vertex@3.0.15", "", { "dependencies": { "@ai-sdk/anthropic": "2.0.8", "@ai-sdk/google": "2.0.11", "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.7", "google-auth-library": "^9.15.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-xbHyijaylmKg13A2vamgcOq3KFbOPteOGiRDkxEG3RPyyv+jztuE5g+eH18Qc4oGJQwsgNwyEnkA5lXbg/5kzQ=="],
 
     "@ai-sdk/provider": ["@ai-sdk/provider@2.0.0", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA=="],
 
