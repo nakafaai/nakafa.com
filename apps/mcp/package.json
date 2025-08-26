@@ -15,7 +15,7 @@
     "@repo/contents": "workspace:*",
     "@repo/connection": "workspace:*",
     "mcp-handler": "1.0.2",
-    "next": "15.5.0",
+    "next": "15.5.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "redis": "^5.8.2"

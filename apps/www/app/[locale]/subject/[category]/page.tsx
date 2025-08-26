@@ -1,5 +1,10 @@
-import { redirect } from "next/navigation";
+import { redirect } from "@repo/internationalization/src/navigation";
+import type { Locale } from "next-intl";
 import { getStaticParams } from "@/lib/utils/system";
+
+type Props = {
+  params: Promise<{ locale: Locale }>;
+};
 
 export function generateStaticParams() {
   return getStaticParams({
@@ -8,7 +13,8 @@ export function generateStaticParams() {
   });
 }
 
-export default function Page() {
+export default async function Page({ params }: Props) {
+  const { locale } = await params;
   // This is empty page, redirect to home page
-  redirect("/");
+  redirect({ href: "/", locale });
 }
