@@ -36,7 +36,7 @@ export default convexAuthNextjsMiddleware(
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_pagefind|fonts|subject|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|js|css|webmanifest|xml|txt)$).*)",
+    "/((?!_next/static|_pagefind|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|js|css|webmanifest|xml|txt)$).*)",
 
     // all routes except static assets and /api/chat
     "/((?!.*\\..*|_next|api/chat).*)",
