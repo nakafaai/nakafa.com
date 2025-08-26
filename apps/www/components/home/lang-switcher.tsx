@@ -14,6 +14,7 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { LanguagesIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { type Locale, useLocale, useTranslations } from "next-intl";
@@ -25,6 +26,7 @@ export function LangSwitcher() {
   const pathname = usePathname();
   const params = useParams();
   const currentLocale = useLocale();
+  const queryClient = useQueryClient();
 
   const t = useTranslations("Common");
 
@@ -43,7 +45,7 @@ export function LangSwitcher() {
       return;
     }
 
-    startTransition(() => {
+    startTransition(async () => {
       router.replace(
         // @ts-expect-error -- TypeScript will validate that only known `params`
         // are used in combination with a given `pathname`. Since the two will
@@ -51,6 +53,13 @@ export function LangSwitcher() {
         { pathname, params },
         { locale }
       );
+
+      if (typeof window !== "undefined" && window.pagefind) {
+        // reboot the pagefind because of the language change
+        await window.pagefind.destroy?.();
+
+        queryClient.invalidateQueries({ queryKey: ["search"] });
+      }
     });
   }
 
