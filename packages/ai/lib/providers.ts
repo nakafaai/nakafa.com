@@ -4,6 +4,10 @@ import { keys } from "../keys";
 
 const gateway = createGateway({
   apiKey: keys().AI_GATEWAY_API_KEY,
+  headers: {
+    "http-referer": "https://nakafa.com",
+    "x-title": "nakafa.com",
+  },
 });
 
 const languageModels = {
