@@ -1,6 +1,6 @@
 "use client";
 
-import { useHotkeys, useMediaQuery } from "@mantine/hooks";
+import { useMediaQuery } from "@mantine/hooks";
 import {
   Conversation,
   ConversationContent,
@@ -47,8 +47,6 @@ export function AiSheet() {
   const setOpen = useAi((state) => state.setOpen);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
-
-  useHotkeys([["mod+i", () => setOpen(!open)]]);
 
   const { width, isResizing, resizerProps, setWidth } = useResizable({
     initialWidth: MIN_WIDTH,
