@@ -3,8 +3,80 @@ import { v } from "convex/values";
 import { asyncMap } from "convex-helpers";
 import { internal } from "./_generated/api";
 import { action, internalMutation, mutation, query } from "./_generated/server";
+import { generateAccessToken } from "./utils/helper";
+
+// Ensure user has an access token
+export const ensureAccessToken = internalMutation({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found.");
+    }
+
+    if (!user.accessToken) {
+      const accessToken = generateAccessToken();
+      await ctx.db.patch(args.userId, { accessToken });
+      return accessToken;
+    }
+
+    return user.accessToken;
+  },
+});
+
+// Get user by access token
+export const getUserByAccessToken = query({
+  args: {
+    accessToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("accessToken", (q) => q.eq("accessToken", args.accessToken))
+      .unique();
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      ...user,
+      name: user.username || user.name,
+      avatarUrl: user.imageId
+        ? await ctx.storage.getUrl(user.imageId)
+        : undefined,
+    };
+  },
+});
+
+// Generate access token for current user (if they don't have one)
+export const generateMyAccessToken = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("User not authenticated.");
+    }
+
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error("User not found.");
+    }
+
+    if (user.accessToken) {
+      return user.accessToken;
+    }
+
+    const accessToken = generateAccessToken();
+    await ctx.db.patch(userId, { accessToken });
+    return accessToken;
+  },
+});
 
 export const getUser = query({
+  args: {},
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
@@ -29,7 +101,7 @@ export const generateUploadUrl = mutation({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("User not found");
+      throw new Error("User not found.");
     }
     return await ctx.storage.generateUploadUrl();
   },

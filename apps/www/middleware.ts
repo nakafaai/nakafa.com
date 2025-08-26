@@ -1,13 +1,38 @@
-import { convexAuthNextjsMiddleware } from "@convex-dev/auth/nextjs/server";
+import {
+  convexAuthNextjsMiddleware,
+  createRouteMatcher,
+  nextjsMiddlewareRedirect,
+} from "@convex-dev/auth/nextjs/server";
 import { internationalizationMiddleware } from "@repo/internationalization/middleware";
 
 const DAYS = 30;
 const MAX_AGE = 60 * 60 * 24 * DAYS;
 
-export default convexAuthNextjsMiddleware(internationalizationMiddleware, {
-  cookieConfig: { maxAge: MAX_AGE },
-  verbose: true,
-});
+const isAuthPage = createRouteMatcher(["/auth"]);
+const isSettingsPage = createRouteMatcher(["/settings"]);
+
+export default convexAuthNextjsMiddleware(
+  async (request, { convexAuth }) => {
+    const isAuthenticated = await convexAuth.isAuthenticated();
+
+    const isAuth = isAuthPage(request);
+    const isSettings = isSettingsPage(request);
+
+    if (isAuth && isAuthenticated) {
+      return nextjsMiddlewareRedirect(request, "/");
+    }
+
+    if (isSettings && !isAuthenticated) {
+      return nextjsMiddlewareRedirect(request, "/auth");
+    }
+
+    return internationalizationMiddleware(request);
+  },
+  {
+    cookieConfig: { maxAge: MAX_AGE },
+    verbose: true,
+  }
+);
 
 export const config = {
   matcher: [

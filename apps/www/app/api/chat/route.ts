@@ -37,17 +37,17 @@ export async function POST(req: Request) {
 
   const {
     messages,
-    url,
     locale,
     slug,
     model: selectedModel,
   }: {
     messages: MyUIMessage[];
-    url: string;
     locale: string;
     slug: string;
     model: ModelId;
   } = await req.json();
+
+  const url = `/${locale}/${cleanSlug(slug)}`;
 
   // Check if the slug is verified by calling api
   const verified = await api.contents

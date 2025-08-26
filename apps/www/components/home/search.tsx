@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   PromptInput,
   PromptInputSubmit,
@@ -8,6 +9,7 @@ import {
   PromptInputTools,
 } from "@repo/design-system/components/ai/input";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useAi } from "@/lib/context/use-ai";
@@ -16,6 +18,8 @@ import { AiChatModel } from "../ai/chat-model";
 
 export function HomeSearch() {
   const t = useTranslations("Ai");
+
+  const user = useQuery(api.users.getUser);
 
   const router = useRouter();
 
@@ -29,6 +33,11 @@ export function HomeSearch() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!text.trim()) {
+      return;
+    }
+
+    if (!user) {
+      router.push("/auth");
       return;
     }
 

@@ -14,11 +14,13 @@ export default defineSchema({
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
 
-    // For developer to use the platform
+    // For user to use the platform
     accessToken: v.optional(v.string()),
 
     // custom fields
     username: v.optional(v.string()),
     imageId: v.optional(v.id("_storage")),
-  }).index("email", ["email"]),
+  })
+    .index("email", ["email"])
+    .index("accessToken", ["accessToken"]),
 });

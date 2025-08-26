@@ -16,23 +16,18 @@ const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const getModel = useAi((state) => state.getModel);
+  const getLocale = useAi((state) => state.getLocale);
+  const getSlug = useAi((state) => state.getSlug);
 
   const chat = useAIChat<MyUIMessage>({
     transport: new DefaultChatTransport({
       api: "/api/chat",
       prepareSendMessagesRequest: ({ messages: ms }) => {
-        const currentUrl = window.location.href;
-        const url = new URL(currentUrl);
-
-        const locale = url.pathname.split("/")[1];
-        const slug = `/${url.pathname.split("/").slice(2).join("/")}`;
-
         return {
           body: {
             messages: ms,
-            url: currentUrl,
-            locale,
-            slug,
+            locale: getLocale(),
+            slug: getSlug(),
             model: getModel(),
           },
         };
