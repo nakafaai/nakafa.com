@@ -39,7 +39,6 @@ export function LangMenuSwitcher() {
   }
 
   function handleChangeLocale(locale: Locale) {
-    console.log("handleChangeLocale", locale);
     startTransition(async () => {
       router.replace(
         // @ts-expect-error -- TypeScript will validate that only known `params`
@@ -49,19 +48,13 @@ export function LangMenuSwitcher() {
         { locale }
       );
 
-      console.log("router.replace", { pathname, params }, { locale });
-
       // Refresh the page
       router.refresh();
 
-      console.log("router.refresh");
-
       // reboot the pagefind because of the language change
       if (typeof window !== "undefined" && window.pagefind) {
-        console.log("window.pagefind.destroy");
         await window.pagefind.destroy?.();
 
-        console.log("queryClient.invalidateQueries");
         queryClient.invalidateQueries({ queryKey: ["search"] });
       }
     });
