@@ -198,6 +198,12 @@ export async function POST(req: Request) {
         }),
         providerOptions: {
           gateway: { order },
+          google: {
+            thinkingConfig: {
+              thinkingBudget: -1, // Dynamic thinking budget
+              includeThoughts: true,
+            },
+          } satisfies GoogleGenerativeAIProviderOptions,
         },
       });
 
