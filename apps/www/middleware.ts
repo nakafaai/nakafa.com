@@ -10,6 +10,7 @@ const MAX_AGE = 60 * 60 * 24 * DAYS;
 
 const isAuthPage = createRouteMatcher(["/auth"]);
 const isSettingsPage = createRouteMatcher(["/settings"]);
+const isChatPage = createRouteMatcher(["/chat"]);
 
 export default convexAuthNextjsMiddleware(
   async (request, { convexAuth }) => {
@@ -17,12 +18,13 @@ export default convexAuthNextjsMiddleware(
 
     const isAuth = isAuthPage(request);
     const isSettings = isSettingsPage(request);
+    const isChat = isChatPage(request);
 
     if (isAuth && isAuthenticated) {
       return nextjsMiddlewareRedirect(request, "/");
     }
 
-    if (isSettings && !isAuthenticated) {
+    if ((isChat || isSettings) && !isAuthenticated) {
       return nextjsMiddlewareRedirect(request, "/auth");
     }
 
