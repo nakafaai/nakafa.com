@@ -39,10 +39,6 @@ export function LangMenuSwitcher() {
   }
 
   function handleChangeLocale(locale: Locale) {
-    if (currentLocale === locale) {
-      return;
-    }
-
     startTransition(async () => {
       router.replace(
         // @ts-expect-error -- TypeScript will validate that only known `params`
