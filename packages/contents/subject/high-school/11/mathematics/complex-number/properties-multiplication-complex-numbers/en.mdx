@@ -19,10 +19,10 @@ The commutative property means that the order in the multiplication of two compl
 
 Let <InlineMath math="z_1 = 1+2i" /> and <InlineMath math="z_2 = 3-i" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="z_1 \times z_2 = (1+2i)(3-i) = 1(3-i) + 2i(3-i) = 3-i+6i-2i^2 = 3+5i-2(-1) = 5+5i" />
   <BlockMath math="z_2 \times z_1 = (3-i)(1+2i) = 3(1+2i) - i(1+2i) = 3+6i-i-2i^2 = 3+5i-2(-1) = 5+5i" />
-</div>
+</MathContainer>
 
 The results are proven to be the same.
 
@@ -36,10 +36,10 @@ The associative property states that when multiplying three or more complex numb
 
 Let <InlineMath math="z_1 = i" />, <InlineMath math="z_2 = 2" />, and <InlineMath math="z_3 = 3-i" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(z_1 \times z_2) \times z_3 = (i \times 2) \times (3-i) = 2i(3-i) = 6i - 2i^2 = 6i - 2(-1) = 2+6i" />
   <BlockMath math="z_1 \times (z_2 \times z_3) = i \times (2 \times (3-i)) = i \times (6-2i) = 6i - 2i^2 = 6i - 2(-1) = 2+6i" />
-</div>
+</MathContainer>
 
 The results are proven to be the same.
 
@@ -53,10 +53,10 @@ The complex number <InlineMath math="1 = 1+0i" /> is the identity element for mu
 
 Let <InlineMath math="z = 4-7i" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="z \times 1 = (4-7i)(1+0i) = 4(1) - (-7)(0) + i(4(0) + (-7)(1)) = 4 - 7i = z" />
   <BlockMath math="1 \times z = (1+0i)(4-7i) = 1(4) - (0)(-7) + i(1(-7) + 0(4)) = 4 - 7i = z" />
-</div>
+</MathContainer>
 
 ### Distributive Property of Multiplication over Addition
 
@@ -68,10 +68,23 @@ This property connects the operations of multiplication and addition of complex 
 
 Let <InlineMath math="z_1=2" />, <InlineMath math="z_2 = 1+i" />, <InlineMath math="z_3 = 3-2i" />.
 
-<div className="flex flex-col gap-4">
-  <BlockMath math="z_1 \times (z_2 + z_3) = 2 \times ((1+i) + (3-2i)) = 2 \times (1+3 + i-2i) = 2 \times (4-i) = 8-2i" />
-  <BlockMath math="(z_1 \times z_2) + (z_1 \times z_3) = (2(1+i)) + (2(3-2i)) = (2+2i) + (6-4i) = (2+6) + (2i-4i) = 8-2i" />
-</div>
+**Left side:** <InlineMath math="z_1 \times (z_2 + z_3)" />
+
+<MathContainer>
+  <BlockMath math="z_1 \times (z_2 + z_3) = 2 \times ((1+i) + (3-2i))" />
+  <BlockMath math="= 2 \times (1+3 + i-2i)" />
+  <BlockMath math="= 2 \times (4-i)" />
+  <BlockMath math="= 8-2i" />
+</MathContainer>
+
+**Right side:** <InlineMath math="(z_1 \times z_2) + (z_1 \times z_3)" />
+
+<MathContainer>
+  <BlockMath math="(z_1 \times z_2) + (z_1 \times z_3) = (2(1+i)) + (2(3-2i))" />
+  <BlockMath math="= (2+2i) + (6-4i)" />
+  <BlockMath math="= (2+6) + (2i-4i)" />
+  <BlockMath math="= 8-2i" />
+</MathContainer>
 
 The results are proven to be the same.
 
@@ -79,14 +92,14 @@ The results are proven to be the same.
 
 We can prove several algebraic identities using these properties. Let's prove that <InlineMath math="(z_1 + z_2)^2 = z_1^2 + 2z_1z_2 + z_2^2" /> for any <InlineMath math="z_1, z_2" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(z_1 + z_2)^2 = (z_1 + z_2)(z_1 + z_2) \quad \text{(Definition of square)}" />
   <BlockMath math="= z_1(z_1 + z_2) + z_2(z_1 + z_2) \quad \text{(Distributive Property)}" />
   <BlockMath math="= (z_1z_1 + z_1z_2) + (z_2z_1 + z_2z_2) \quad \text{(Distributive Property)}" />
   <BlockMath math="= z_1^2 + z_1z_2 + z_2z_1 + z_2^2 \quad \text{(Definition of square)}" />
   <BlockMath math="= z_1^2 + z_1z_2 + z_1z_2 + z_2^2 \quad \text{(Commutative Property: } z_2z_1 = z_1z_2)" />
   <BlockMath math="= z_1^2 + 2z_1z_2 + z_2^2 \quad \text{(Combining like terms)}" />
-</div>
+</MathContainer>
 
 ## Multiplicative Inverse
 
@@ -94,11 +107,11 @@ Every non-zero complex number <InlineMath math="z = x + iy \neq 0" /> has a mult
 
 Let <InlineMath math="z^{-1} = u + iv" />. Then:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="z \times z^{-1} = 1" />
   <BlockMath math="(x+iy)(u+iv) = 1 + 0i" />
   <BlockMath math="(xu - yv) + i(xv + uy) = 1 + 0i" />
-</div>
+</MathContainer>
 
 Based on the equality of two complex numbers, we obtain the system of equations:
 
@@ -107,10 +120,10 @@ Based on the equality of two complex numbers, we obtain the system of equations:
 
 By solving this system of equations (for example, by multiplying equation 1 by <InlineMath math="x" />, equation 2 by <InlineMath math="y" />, then adding them, and using the substitution method), we will get:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="u = \frac{x}{x^2+y^2}" />
   <BlockMath math="v = -\frac{y}{x^2+y^2}" />
-</div>
+</MathContainer>
 
 So, the multiplicative inverse of <InlineMath math="z = x+iy" /> is:
 

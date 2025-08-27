@@ -19,10 +19,10 @@ Sifat komutatif berarti urutan dalam perkalian dua bilangan kompleks tidak mempe
 
 Misal <InlineMath math="z_1 = 1+2i" /> dan <InlineMath math="z_2 = 3-i" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="z_1 \times z_2 = (1+2i)(3-i) = 1(3-i) + 2i(3-i) = 3-i+6i-2i^2 = 3+5i-2(-1) = 5+5i" />
   <BlockMath math="z_2 \times z_1 = (3-i)(1+2i) = 3(1+2i) - i(1+2i) = 3+6i-i-2i^2 = 3+5i-2(-1) = 5+5i" />
-</div>
+</MathContainer>
 
 Terbukti hasilnya sama.
 
@@ -36,10 +36,10 @@ Sifat asosiatif menyatakan bahwa saat mengalikan tiga bilangan kompleks atau leb
 
 Misal <InlineMath math="z_1 = i" />, <InlineMath math="z_2 = 2" />, dan <InlineMath math="z_3 = 3-i" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(z_1 \times z_2) \times z_3 = (i \times 2) \times (3-i) = 2i(3-i) = 6i - 2i^2 = 6i - 2(-1) = 2+6i" />
   <BlockMath math="z_1 \times (z_2 \times z_3) = i \times (2 \times (3-i)) = i \times (6-2i) = 6i - 2i^2 = 6i - 2(-1) = 2+6i" />
-</div>
+</MathContainer>
 
 Terbukti hasilnya sama.
 
@@ -53,10 +53,10 @@ Bilangan kompleks <InlineMath math="1 = 1+0i" /> adalah elemen identitas untuk p
 
 Misal <InlineMath math="z = 4-7i" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="z \times 1 = (4-7i)(1+0i) = 4(1) - (-7)(0) + i(4(0) + (-7)(1)) = 4 - 7i = z" />
   <BlockMath math="1 \times z = (1+0i)(4-7i) = 1(4) - (0)(-7) + i(1(-7) + 0(4)) = 4 - 7i = z" />
-</div>
+</MathContainer>
 
 ### Distributif Perkalian Terhadap Penjumlahan
 
@@ -68,10 +68,23 @@ Sifat ini menghubungkan operasi perkalian dan penjumlahan bilangan kompleks.
 
 Misal <InlineMath math="z_1=2" />, <InlineMath math="z_2 = 1+i" />, <InlineMath math="z_3 = 3-2i" />.
 
-<div className="flex flex-col gap-4">
-  <BlockMath math="z_1 \times (z_2 + z_3) = 2 \times ((1+i) + (3-2i)) = 2 \times (1+3 + i-2i) = 2 \times (4-i) = 8-2i" />
-  <BlockMath math="(z_1 \times z_2) + (z_1 \times z_3) = (2(1+i)) + (2(3-2i)) = (2+2i) + (6-4i) = (2+6) + (2i-4i) = 8-2i" />
-</div>
+**Ruas kiri:** <InlineMath math="z_1 \times (z_2 + z_3)" />
+
+<MathContainer>
+  <BlockMath math="z_1 \times (z_2 + z_3) = 2 \times ((1+i) + (3-2i))" />
+  <BlockMath math="= 2 \times (1+3 + i-2i)" />
+  <BlockMath math="= 2 \times (4-i)" />
+  <BlockMath math="= 8-2i" />
+</MathContainer>
+
+**Ruas kanan:** <InlineMath math="(z_1 \times z_2) + (z_1 \times z_3)" />
+
+<MathContainer>
+  <BlockMath math="(z_1 \times z_2) + (z_1 \times z_3) = (2(1+i)) + (2(3-2i))" />
+  <BlockMath math="= (2+2i) + (6-4i)" />
+  <BlockMath math="= (2+6) + (2i-4i)" />
+  <BlockMath math="= 8-2i" />
+</MathContainer>
 
 Terbukti hasilnya sama.
 
@@ -79,14 +92,14 @@ Terbukti hasilnya sama.
 
 Kita bisa membuktikan beberapa identitas aljabar menggunakan sifat-sifat ini. Mari kita buktikan bahwa <InlineMath math="(z_1 + z_2)^2 = z_1^2 + 2z_1z_2 + z_2^2" /> untuk sembarang <InlineMath math="z_1, z_2" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(z_1 + z_2)^2 = (z_1 + z_2)(z_1 + z_2) \quad \text{(Definisi kuadrat)}" />
   <BlockMath math="= z_1(z_1 + z_2) + z_2(z_1 + z_2) \quad \text{(Sifat Distributif)}" />
   <BlockMath math="= (z_1z_1 + z_1z_2) + (z_2z_1 + z_2z_2) \quad \text{(Sifat Distributif)}" />
   <BlockMath math="= z_1^2 + z_1z_2 + z_2z_1 + z_2^2 \quad \text{(Definisi kuadrat)}" />
   <BlockMath math="= z_1^2 + z_1z_2 + z_1z_2 + z_2^2 \quad \text{(Sifat Komutatif: } z_2z_1 = z_1z_2)" />
   <BlockMath math="= z_1^2 + 2z_1z_2 + z_2^2 \quad \text{(Penggabungan suku sejenis)}" />
-</div>
+</MathContainer>
 
 ## Invers Perkalian
 
@@ -94,11 +107,11 @@ Setiap bilangan kompleks <InlineMath math="z = x + iy \neq 0" /> memiliki invers
 
 Misalkan <InlineMath math="z^{-1} = u + iv" />. Maka:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="z \times z^{-1} = 1" />
   <BlockMath math="(x+iy)(u+iv) = 1 + 0i" />
   <BlockMath math="(xu - yv) + i(xv + uy) = 1 + 0i" />
-</div>
+</MathContainer>
 
 Berdasarkan kesamaan dua bilangan kompleks, kita peroleh sistem persamaan:
 
@@ -107,10 +120,10 @@ Berdasarkan kesamaan dua bilangan kompleks, kita peroleh sistem persamaan:
 
 Dengan menyelesaikan sistem persamaan ini (misalnya dengan mengalikan persamaan 1 dengan <InlineMath math="x" />, persamaan 2 dengan <InlineMath math="y" />, lalu menjumlahkannya, dan metode substitusi), kita akan dapatkan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="u = \frac{x}{x^2+y^2}" />
   <BlockMath math="v = -\frac{y}{x^2+y^2}" />
-</div>
+</MathContainer>
 
 Jadi, invers perkalian dari <InlineMath math="z = x+iy" /> adalah:
 
