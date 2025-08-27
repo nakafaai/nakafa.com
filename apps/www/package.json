@@ -33,7 +33,7 @@
     "feed": "^5.1.0",
     "immer": "^10.1.1",
     "lucide-react": "^0.542.0",
-    "next": "15.5.1",
+    "next": "15.5.2",
     "nuqs": "^2.5.1",
     "react": "19.1.1",
     "react-aria-components": "^1.12.0",
