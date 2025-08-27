@@ -193,7 +193,9 @@
   },
   "Auth": {
     "continue-with-google": "Masuk dengan Google",
-    "logout": "Keluar"
+    "logout": "Keluar",
+    "login": "Masuk",
+    "account": "Akun"
   },
   "Ai": {
     "ask-nina": "Tanya Nina",

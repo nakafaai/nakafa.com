@@ -91,7 +91,7 @@ export const getUser = query({
       name: user.username || user.name,
       avatarUrl: user.imageId
         ? await ctx.storage.getUrl(user.imageId)
-        : undefined,
+        : user.image,
     };
   },
 });

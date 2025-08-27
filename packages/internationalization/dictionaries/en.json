@@ -193,7 +193,9 @@
   },
   "Auth": {
     "continue-with-google": "Continue with Google",
-    "logout": "Logout"
+    "logout": "Logout",
+    "login": "Login",
+    "account": "Account"
   },
   "Ai": {
     "ask-nina": "Ask Nina",

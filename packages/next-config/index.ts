@@ -26,6 +26,9 @@ export const config: NextConfig = {
       {
         hostname: "www.google.com",
       },
+      {
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
   },
 
