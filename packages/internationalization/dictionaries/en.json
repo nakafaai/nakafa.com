@@ -192,7 +192,8 @@
     "contribute": "Contribute"
   },
   "Auth": {
-    "continue-with-google": "Continue with Google"
+    "continue-with-google": "Continue with Google",
+    "logout": "Logout"
   },
   "Ai": {
     "ask-nina": "Ask Nina",

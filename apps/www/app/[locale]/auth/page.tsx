@@ -1,9 +1,10 @@
 "use client";
 
 import { Particles } from "@repo/design-system/components/ui/particles";
-import { Unauthenticated } from "convex/react";
+import { Authenticated, Unauthenticated } from "convex/react";
 import { useTranslations } from "next-intl";
 import { AuthGoogle } from "@/components/auth/google";
+import { AuthLogout } from "@/components/auth/logout";
 
 export default function Page() {
   const t = useTranslations("Metadata");
@@ -26,6 +27,10 @@ export default function Page() {
           <Unauthenticated>
             <AuthGoogle />
           </Unauthenticated>
+
+          <Authenticated>
+            <AuthLogout />
+          </Authenticated>
         </div>
       </div>
     </div>

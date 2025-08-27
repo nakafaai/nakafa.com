@@ -192,7 +192,8 @@
     "contribute": "Berkontribusi"
   },
   "Auth": {
-    "continue-with-google": "Masuk dengan Google"
+    "continue-with-google": "Masuk dengan Google",
+    "logout": "Keluar"
   },
   "Ai": {
     "ask-nina": "Tanya Nina",
