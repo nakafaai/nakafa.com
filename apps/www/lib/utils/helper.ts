@@ -1,3 +1,8 @@
+/**
+ * Get the initial name of a user.
+ * @param name - The name of the user (optional)
+ * @returns The initial name of the user (default: "NF")
+ */
 export function getInitialName(name?: string) {
   const trimmedName = name?.trim() ?? "";
 
