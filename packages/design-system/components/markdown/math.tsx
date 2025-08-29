@@ -24,14 +24,8 @@ export function BlockMath({
   ...props
 }: MathComponentProps & { className?: string }) {
   return (
-    <div className="overflow-hidden">
-      <ScrollArea
-        className={cn(
-          "grid rounded-xl border bg-card text-card-foreground shadow-sm",
-          className
-        )}
-        type="hover"
-      >
+    <div className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
+      <ScrollArea className={cn("grid", className)} type="hover">
         <div className="px-4">
           <BlockMathReactKatex {...props} />
         </div>
