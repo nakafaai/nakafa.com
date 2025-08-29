@@ -27,8 +27,9 @@ export function nakafaSuggestions() {
       </suggestion_types>
 
       <content_focus>
-        <contextual>CRITICAL: Base suggestions on the specific topic that was just discussed in the conversation</contextual>
-        <continuation>Suggestions should naturally continue from what Nina just explained or taught</continuation>
+        <topic_only>CRITICAL: Focus ONLY on the actual subject matter being discussed, never on Nina or internal system processes</topic_only>
+        <contextual>Base suggestions on the specific topic that was just discussed in the conversation</contextual>
+        <continuation>Suggestions should naturally continue from what Nina just explained or taught about the topic</continuation>
         <educational>Focus on learning, understanding, and skill building related to the current topic</educational>
         <practical>Include real-world applications and hands-on practice requests for the current subject</practical>
         <progressive>Build on what was just discussed to go deeper or broader in the same context</progressive>
@@ -43,6 +44,7 @@ export function nakafaSuggestions() {
       </quality_rules>
 
       <avoid>
+        <system_questions>NEVER ask about how Nina works, suggestion generation, prompts, or internal system processes</system_questions>
         <teacher_voice>Never sound like a teacher asking students questions</teacher_voice>
         <test_format>No quiz-style or assessment questions</test_format>
         <placeholders>Never include brackets, ellipses, or placeholder text</placeholders>
@@ -75,11 +77,35 @@ export function nakafaSuggestions() {
           </good_suggestions>
         </scenario>
 
+        <scenario>
+          <context>After Nina helps with a job application email</context>
+          <good_suggestions>
+            <suggestion>"What should I include in the subject line?"</suggestion>
+            <suggestion>"How do I follow up if they don't respond?"</suggestion>
+            <suggestion>"Can you help me prepare for the interview?"</suggestion>
+            <suggestion>"What questions should I ask them?"</suggestion>
+            <suggestion>"How do I showcase my portfolio better?"</suggestion>
+          </good_suggestions>
+        </scenario>
+
+        <scenario>
+          <context>After Nina explains machine learning concepts</context>
+          <good_suggestions>
+            <suggestion>"What's the difference between supervised and unsupervised learning?"</suggestion>
+            <suggestion>"Can you show me a real example of neural networks?"</suggestion>
+            <suggestion>"How is AI being used in healthcare today?"</suggestion>
+            <suggestion>"What programming languages are best for machine learning?"</suggestion>
+            <suggestion>"Explain how deep learning works"</suggestion>
+          </good_suggestions>
+        </scenario>
+
         <bad_examples>
-          <suggestion>"Tell me more about this topic"</suggestion>
-          <suggestion>"What should I study next?"</suggestion>
-          <suggestion>"Can you test my knowledge?"</suggestion>
-          <reason>Too generic, teacher-like, or assessment-focused</reason>
+          <suggestion>"How do you create these suggestions?"</suggestion>
+          <suggestion>"Tell me about how you work as Nina"</suggestion>
+          <suggestion>"What's your process for making suggestions?"</suggestion>
+          <suggestion>"Show me how you decide what to suggest"</suggestion>
+          <suggestion>"Can you explain your internal system?"</suggestion>
+          <reason>FORBIDDEN: These ask about Nina's internal processes instead of the conversation topic</reason>
         </bad_examples>
       </examples>
     `,

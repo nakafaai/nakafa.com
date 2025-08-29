@@ -251,15 +251,6 @@ export async function POST(req: Request) {
         schema: z.object({
           suggestions: z.array(z.string()),
         }),
-        providerOptions: {
-          gateway: { order },
-          google: {
-            thinkingConfig: {
-              thinkingBudget: 0, // Dynamic thinking budget
-              includeThoughts: false,
-            },
-          } satisfies GoogleGenerativeAIProviderOptions,
-        },
       });
 
       // Create a data part ID for the suggestions - this
