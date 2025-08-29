@@ -30,7 +30,10 @@ import {
   UserIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 import { getInitialName } from "@/lib/utils/helper";
+
+const prefetchLinks = ["/settings", "/auth"] as const;
 
 export function NavUser() {
   const t = useTranslations("Auth");
@@ -40,6 +43,13 @@ export function NavUser() {
 
   const { signOut } = useAuthActions();
   const { isMobile } = useSidebar();
+
+  useEffect(() => {
+    // prefetch all the links
+    for (const link of prefetchLinks) {
+      router.prefetch(link);
+    }
+  });
 
   if (!user) {
     return (
@@ -59,7 +69,7 @@ export function NavUser() {
           <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
             <Avatar className="size-6 rounded-lg">
               <AvatarImage alt={user.name} src={user.avatarUrl ?? ""} />
-              <AvatarFallback className="rounded-lg">
+              <AvatarFallback className="rounded-lg text-sm">
                 {getInitialName(user.name)}
               </AvatarFallback>
             </Avatar>
@@ -77,7 +87,7 @@ export function NavUser() {
         >
           <DropdownMenuLabel className="p-0 font-normal">
             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-              <Avatar className="h-8 w-8 rounded-lg">
+              <Avatar className="size-8 rounded-lg">
                 <AvatarImage alt={user.name} src={user.avatarUrl ?? ""} />
                 <AvatarFallback className="rounded-lg">
                   {getInitialName(user.name)}

@@ -12,6 +12,7 @@ import {
 } from "@repo/design-system/components/ui/command";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { cn } from "@repo/design-system/lib/utils";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { IconMenu3 } from "@tabler/icons-react";
 import {
   ArrowDownIcon,
@@ -21,7 +22,6 @@ import {
   HeartCrackIcon,
   InfoIcon,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
 import { Fragment, useEffect, useTransition } from "react";
@@ -233,7 +233,7 @@ function DefaultItems() {
     for (const item of holyMenu) {
       router.prefetch(item.href);
     }
-  }, [router]);
+  });
 
   return (
     <>
