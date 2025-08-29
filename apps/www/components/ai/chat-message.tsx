@@ -35,7 +35,7 @@ export const AiChatMessage = memo(({ message, regenerate }: Props) => {
               i === message.parts.length - (message.role === "user" ? 1 : 2);
             return (
               <div
-                className="flex flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end"
+                className="flex flex-col gap-4 group-[.is-user]:items-end group-[.is-user]:justify-end"
                 key={`message-${message.id}-part-${i}`}
               >
                 <MessageContent>
