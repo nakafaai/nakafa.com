@@ -27,7 +27,7 @@ export function Heading({
         id={id}
         {...props}
       >
-        <span className="text-pretty text-foreground">{props.children}</span>
+        <span className="text-pretty">{props.children}</span>
       </Tag>
     );
   }
@@ -47,7 +47,7 @@ export function Heading({
         href={`#${id}`}
         title={props.children?.toString()}
       >
-        <span className="text-pretty text-foreground">{props.children}</span>
+        <span className="text-pretty">{props.children}</span>
         <LinkIcon className="invisible size-4 shrink-0 text-muted-foreground group-hover/heading:visible" />
       </a>
     </Tag>
