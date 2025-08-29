@@ -69,7 +69,7 @@ export function NavUser() {
           <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
             <Avatar className="size-6 rounded-lg">
               <AvatarImage alt={user.name} src={user.avatarUrl ?? ""} />
-              <AvatarFallback className="rounded-lg text-sm">
+              <AvatarFallback className="rounded-lg text-xs">
                 {getInitialName(user.name)}
               </AvatarFallback>
             </Avatar>
