@@ -57,9 +57,7 @@ export const components = {
   h6: (props: HeadingProps) => (
     <Heading className="text-sm" Tag="h6" {...props} />
   ),
-  p: (props: ParagraphProps) => (
-    <Paragraph className="text-foreground/80" {...props} />
-  ),
+  p: (props: ParagraphProps) => <Paragraph {...props} />,
   ol: (props: ListProps) => (
     <ol className="my-4 list-decimal space-y-4 pl-6 last:mb-0" {...props} />
   ),
@@ -67,10 +65,7 @@ export const components = {
     <ul className="my-4 list-disc space-y-4 pl-6 last:mb-0" {...props} />
   ),
   li: (props: ListItemProps) => (
-    <li
-      className="space-y-4 text-pretty pl-1 text-foreground/80 leading-relaxed"
-      {...props}
-    />
+    <li className="space-y-4 text-pretty pl-1 leading-relaxed" {...props} />
   ),
   em: (props: EmProps) => <em className="font-medium" {...props} />,
   strong: (props: StrongProps) => <strong className="font-medium" {...props} />,

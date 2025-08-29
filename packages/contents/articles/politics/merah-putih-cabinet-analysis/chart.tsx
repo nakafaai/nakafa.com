@@ -115,7 +115,7 @@ export function CabinetChart({ title, description, footnote }: Props) {
         </ChartContainer>
       </CardContent>
       <CardFooter>
-        <p className="text-foreground/80 text-sm">{footnote}</p>
+        <p className="text-sm">{footnote}</p>
       </CardFooter>
     </Card>
   );
@@ -248,7 +248,7 @@ export function CompositionChart({ title, description, footnote }: Props) {
         </div>
       </CardContent>
       <CardFooter>
-        <p className="text-foreground/80 text-sm">{footnote}</p>
+        <p className="text-sm">{footnote}</p>
       </CardFooter>
     </Card>
   );

@@ -206,9 +206,7 @@ export default async function Page({ params }: Props) {
                     <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
                       {transliteration}
                     </p>
-                    <p className="text-pretty text-foreground/80 leading-relaxed">
-                      {translate}
-                    </p>
+                    <p className="text-pretty leading-relaxed">{translate}</p>
                   </div>
                 </div>
               );

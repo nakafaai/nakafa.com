@@ -14,7 +14,7 @@ export function ComingSoon({ className }: { className?: string }) {
         {t("title")}
       </Heading>
 
-      <Paragraph className="text-foreground/80">{t("description")}</Paragraph>
+      <Paragraph>{t("description")}</Paragraph>
 
       <a
         className={buttonVariants({ variant: "default" })}

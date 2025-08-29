@@ -15,6 +15,7 @@ import { AIChatMessageActions } from "./chat-actions";
 import { ContentTool } from "./content-tool";
 import { ScrapeTool } from "./scrape-tool";
 import { SubjectsTool } from "./subjects-tool";
+import { SuggestionsData } from "./suggestions-data";
 import { WebSearchTool } from "./web-search-tool";
 
 type Props = {
@@ -28,7 +29,10 @@ export const AiChatMessage = memo(({ message, regenerate }: Props) => {
       {message.parts.map((part, i) => {
         switch (part.type) {
           case "text": {
-            const isLastPart = i === message.parts.length - 1;
+            // For assistant messages, last 2 parts are the message and the suggestions data
+            // For user message, last 1 part is the message
+            const isLastMessagePart =
+              i === message.parts.length - (message.role === "user" ? 1 : 2);
             return (
               <div
                 className="flex flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end"
@@ -37,7 +41,7 @@ export const AiChatMessage = memo(({ message, regenerate }: Props) => {
                 <MessageContent>
                   <Response id={message.id}>{part.text}</Response>
                 </MessageContent>
-                {isLastPart && (
+                {isLastMessagePart && (
                   <AIChatMessageActions
                     messageId={message.id}
                     regenerate={regenerate}
@@ -105,6 +109,13 @@ export const AiChatMessage = memo(({ message, regenerate }: Props) => {
                 key={`tool-${part.toolCallId}`}
                 output={part.output}
                 status={part.state}
+              />
+            );
+          case "data-suggestions":
+            return (
+              <SuggestionsData
+                key={`data-${part.id}`}
+                suggestions={part.data}
               />
             );
           default:

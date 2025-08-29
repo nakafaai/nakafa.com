@@ -107,7 +107,7 @@ export const reactMdxComponents: Options["components"] = {
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
   p: memo(
-    ({ ...props }) => <Paragraph className="text-inherit" {...props} />,
+    ({ ...props }) => <Paragraph {...props} />,
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
   ol: memo(
@@ -254,7 +254,7 @@ export const reactMdxComponents: Options["components"] = {
       const result = (children.props as { children: string })?.children ?? "";
 
       if (language === "math") {
-        return <BlockMath className="my-4">{result}</BlockMath>;
+        return <BlockMath math={result} />;
       }
 
       return (

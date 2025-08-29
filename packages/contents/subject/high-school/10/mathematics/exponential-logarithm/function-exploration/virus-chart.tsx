@@ -153,7 +153,7 @@ export function VirusChart({
         </ChartContainer>
       </CardContent>
       <CardFooter>
-        <p className="text-foreground/80 text-sm">{labels.caption}</p>
+        <p className="text-sm">{labels.caption}</p>
       </CardFooter>
     </Card>
   );

@@ -1,7 +1,7 @@
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { type ModelId, model, order } from "@repo/ai/lib/providers";
 import type { MyUIMessage } from "@repo/ai/lib/types";
-import { cleanSlug, compressMessages } from "@repo/ai/lib/utils";
+import { cleanSlug, compressMessages, dedentString } from "@repo/ai/lib/utils";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
 import { tools } from "@repo/ai/tools";
 import { api } from "@repo/connection/routes";
@@ -16,9 +16,11 @@ import {
   NoSuchToolError,
   smoothStream,
   stepCountIs,
+  streamObject,
   streamText,
 } from "ai";
 import { getTranslations } from "next-intl/server";
+import * as z from "zod";
 
 const MAX_STEPS = 20;
 
@@ -88,18 +90,20 @@ export async function POST(req: Request) {
 
   // Use smart message compression to stay within token limits
   const originalMessageCount = messages.length;
-  const { messages: finalMessages, tokens } = compressMessages(messages);
+  const { messages: compressedMessages, tokens } = compressMessages(messages);
 
   // Log compression results
-  if (finalMessages.length < originalMessageCount) {
+  if (compressedMessages.length < originalMessageCount) {
     sessionLogger.warn(
-      `Messages compressed from ${originalMessageCount} to ${finalMessages.length} messages (${tokens} tokens) to stay within token limit`
+      `Messages compressed from ${originalMessageCount} to ${compressedMessages.length} messages (${tokens} tokens) to stay within token limit`
     );
   } else {
     sessionLogger.info(
       `All ${originalMessageCount} messages fit within token limit (${tokens} tokens)`
     );
   }
+
+  const finalMessages = convertToModelMessages(compressedMessages);
 
   // Log chat session start
   sessionLogger.info("Chat session started");
@@ -123,7 +127,7 @@ export async function POST(req: Request) {
       sessionLogger.error("Unknown error in chat stream");
       return t("error-message");
     },
-    execute: ({ writer }) => {
+    execute: async ({ writer }) => {
       const result = streamText({
         model: model.languageModel(selectedModel),
         system: nakafaPrompt({
@@ -141,7 +145,7 @@ export async function POST(req: Request) {
             country: country ?? "Unknown",
           },
         }),
-        messages: convertToModelMessages(finalMessages),
+        messages: finalMessages,
         stopWhen: stepCountIs(MAX_STEPS),
         tools,
         experimental_repairToolCall: async ({
@@ -230,6 +234,60 @@ export async function POST(req: Request) {
           },
         })
       );
+
+      await result.consumeStream();
+
+      // Return the messages from the response, to be used in the followup suggestions
+      const messagesFromResponse = (await result.response).messages;
+
+      const followupSuggestions = streamObject({
+        model: model.languageModel("google-default"),
+        messages: [
+          ...messagesFromResponse,
+          {
+            role: "user",
+            content: dedentString(`
+                What question or statement should I ask or tell next based on my previous messages?
+                Return an array of 5 suggested questions or statements.
+                Answer in the same language as the previous messages.
+              `),
+          },
+        ],
+        schemaName: "Suggestions",
+        schemaDescription: "An array of suggested questions",
+        schema: z.object({
+          suggestions: z.array(z.string()),
+        }),
+        providerOptions: {
+          gateway: { order },
+          google: {
+            thinkingConfig: {
+              thinkingBudget: 0, // Dynamic thinking budget
+              includeThoughts: false,
+            },
+          } satisfies GoogleGenerativeAIProviderOptions,
+        },
+      });
+
+      // Create a data part ID for the suggestions - this
+      // ensures that only ONE data-suggestions part will
+      // be visible in the frontend
+      const dataPartId = crypto.randomUUID();
+
+      // Read the suggestions from the stream
+      for await (const chunk of followupSuggestions.partialObjectStream) {
+        // Write the suggestions to the UIMessageStream
+        writer.write({
+          id: dataPartId,
+          type: "data-suggestions",
+          data:
+            chunk.suggestions?.filter(
+              // Because of some AI SDK type weirdness,
+              // we need to filter out undefined suggestions
+              (suggestion) => suggestion !== undefined
+            ) ?? [],
+        });
+      }
     },
   });
 

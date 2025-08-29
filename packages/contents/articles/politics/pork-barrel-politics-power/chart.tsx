@@ -126,7 +126,7 @@ export function BudgetChart({
         </ChartContainer>
       </CardContent>
       <CardFooter>
-        <p className="text-foreground/80 text-sm">{footnote}</p>
+        <p className="text-sm">{footnote}</p>
       </CardFooter>
     </Card>
   );
@@ -214,7 +214,7 @@ export function FundChart({ title, description, yLabel, footnote }: Props) {
         </ChartContainer>
       </CardContent>
       <CardFooter>
-        <p className="text-foreground/80 text-sm">{footnote}</p>
+        <p className="text-sm">{footnote}</p>
       </CardFooter>
     </Card>
   );
@@ -395,7 +395,7 @@ export function ElectabilityChart({
         </ChartContainer>
       </CardContent>
       <CardFooter>
-        <p className="text-foreground/80 text-sm">{footnote}</p>
+        <p className="text-sm">{footnote}</p>
       </CardFooter>
     </Card>
   );
