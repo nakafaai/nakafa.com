@@ -29,10 +29,6 @@ export const AiChatMessage = memo(({ message, regenerate }: Props) => {
       {message.parts.map((part, i) => {
         switch (part.type) {
           case "text": {
-            // For assistant messages, last 2 parts are the message and the suggestions data
-            // For user message, last 1 part is the message
-            const isLastMessagePart =
-              i === message.parts.length - (message.role === "user" ? 1 : 2);
             return (
               <div
                 className="flex flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end"
@@ -41,13 +37,12 @@ export const AiChatMessage = memo(({ message, regenerate }: Props) => {
                 <MessageContent>
                   <Response id={message.id}>{part.text}</Response>
                 </MessageContent>
-                {isLastMessagePart && (
-                  <AIChatMessageActions
-                    messageId={message.id}
-                    regenerate={regenerate}
-                    text={part.text}
-                  />
-                )}
+
+                <AIChatMessageActions
+                  messageId={message.id}
+                  regenerate={regenerate}
+                  text={part.text}
+                />
               </div>
             );
           }

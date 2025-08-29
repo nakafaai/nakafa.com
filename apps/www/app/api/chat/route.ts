@@ -1,7 +1,8 @@
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { type ModelId, model, order } from "@repo/ai/lib/providers";
 import type { MyUIMessage } from "@repo/ai/lib/types";
-import { cleanSlug, compressMessages, dedentString } from "@repo/ai/lib/utils";
+import { cleanSlug, compressMessages } from "@repo/ai/lib/utils";
+import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
 import { tools } from "@repo/ai/tools";
 import { api } from "@repo/connection/routes";
@@ -242,19 +243,11 @@ export async function POST(req: Request) {
 
       const followupSuggestions = streamObject({
         model: model.languageModel("google-default"),
-        messages: [
-          ...messagesFromResponse,
-          {
-            role: "user",
-            content: dedentString(`
-                What question or statement should I ask or tell next based on my previous messages?
-                Return an array of 5 suggested questions or statements.
-                Answer in the same language as the previous messages.
-              `),
-          },
-        ],
+        system: nakafaSuggestions(),
+        messages: messagesFromResponse,
         schemaName: "Suggestions",
-        schemaDescription: "An array of suggested questions",
+        schemaDescription:
+          "An array of suggested questions or statements that a student would want to ask or tell next",
         schema: z.object({
           suggestions: z.array(z.string()),
         }),
