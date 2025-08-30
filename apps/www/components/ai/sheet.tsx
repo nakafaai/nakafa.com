@@ -35,7 +35,6 @@ import { useTranslations } from "next-intl";
 import { type ComponentProps, memo } from "react";
 import { useAi } from "@/lib/context/use-ai";
 import { useChat } from "@/lib/context/use-chat";
-import { AIChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
 
@@ -126,10 +125,13 @@ export function AiSheet() {
                   from={message.role === "user" ? "user" : "assistant"}
                   key={message.id}
                 >
-                  <AiChatMessage message={message} regenerate={regenerate} />
+                  <AiChatMessage
+                    message={message}
+                    regenerate={regenerate}
+                    status={status}
+                  />
                 </Message>
               ))}
-              <AIChatLoading status={status} />
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>

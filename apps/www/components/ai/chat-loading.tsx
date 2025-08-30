@@ -3,8 +3,13 @@ import { TypingLoader } from "@repo/design-system/components/ui/icons";
 import type { ChatStatus } from "ai";
 import { memo } from "react";
 
-export const AIChatLoading = memo(({ status }: { status: ChatStatus }) => {
-  if (status !== "submitted") {
+type Props = {
+  status: ChatStatus;
+  force?: boolean;
+};
+
+export const AIChatLoading = memo(({ status, force = false }: Props) => {
+  if (status !== "submitted" && !force) {
     return null;
   }
 

@@ -8,10 +8,12 @@ import {
   ReasoningTrigger,
 } from "@repo/design-system/components/ai/reasoning";
 import { Response } from "@repo/design-system/components/ai/response";
+import type { ChatStatus } from "ai";
 import { memo } from "react";
 import { ArticlesTool } from "./articles-tool";
 import { CalculatorTool } from "./calculator-tool";
 import { AIChatMessageActions } from "./chat-actions";
+import { AIChatLoading } from "./chat-loading";
 import { ContentTool } from "./content-tool";
 import { ScrapeTool } from "./scrape-tool";
 import { SubjectsTool } from "./subjects-tool";
@@ -21,9 +23,14 @@ import { WebSearchTool } from "./web-search-tool";
 type Props = {
   message: MyUIMessage;
   regenerate: ({ messageId }: { messageId: string }) => void;
+  status: ChatStatus;
 };
 
-export const AiChatMessage = memo(({ message, regenerate }: Props) => {
+export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
+  if (message.parts.length === 0) {
+    return <AIChatLoading force status={status} />;
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {message.parts.map((part, i) => {
