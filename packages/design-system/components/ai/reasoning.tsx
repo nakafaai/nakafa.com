@@ -204,8 +204,7 @@ export const ReasoningContent = memo(
         {children}
       </Response>
     </CollapsibleContent>
-  ),
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  )
 );
 
 Reasoning.displayName = "Reasoning";
