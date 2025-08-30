@@ -22,11 +22,9 @@ async function main() {
 
   await client.connect(transport);
 
-  // biome-ignore lint/suspicious/noConsole: For logging
   console.info("Connected", client.getServerCapabilities());
 
   const result = await client.listTools();
-  // biome-ignore lint/suspicious/noConsole: For logging
   console.info(JSON.stringify(result, null, 2));
 }
 

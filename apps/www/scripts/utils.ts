@@ -45,50 +45,42 @@ export const logger = {
 
   // Log methods
   info: (message: string): void => {
-    // biome-ignore lint/suspicious/noConsole: For logging
     console.info(
       `${logger.fg.blue}${logger.bright}ℹ INFO:${logger.reset} ${message}`
     );
   },
 
   success: (message: string): void => {
-    // biome-ignore lint/suspicious/noConsole: For logging
     console.info(
       `${logger.fg.green}${logger.bright}✓ SUCCESS:${logger.reset} ${message}`
     );
   },
 
   warn: (message: string): void => {
-    // biome-ignore lint/suspicious/noConsole: For logging
     console.warn(
       `${logger.fg.yellow}${logger.bright}⚠ WARNING:${logger.reset} ${message}`
     );
   },
 
   error: (message: string): void => {
-    // biome-ignore lint/suspicious/noConsole: For logging
     console.error(
       `${logger.fg.red}${logger.bright}✗ ERROR:${logger.reset} ${message}`
     );
   },
 
   header: (message: string): void => {
-    // biome-ignore lint/suspicious/noConsole: For logging
     console.info(
       `\n${logger.fg.cyan}${logger.bright}═══════════════════════════════════════════════════════════════════${logger.reset}`
     );
-    // biome-ignore lint/suspicious/noConsole: For logging
     console.info(
       `${logger.fg.cyan}${logger.bright}  ${message}${logger.reset}`
     );
-    // biome-ignore lint/suspicious/noConsole: For logging
     console.info(
       `${logger.fg.cyan}${logger.bright}═══════════════════════════════════════════════════════════════════${logger.reset}\n`
     );
   },
 
   stats: (label: string, value: string | number): void => {
-    // biome-ignore lint/suspicious/noConsole: For logging
     console.info(
       `${logger.fg.magenta}${logger.bright}▸ ${label}:${logger.reset} ${value}`
     );
@@ -96,7 +88,6 @@ export const logger = {
 
   progress: (current: number, total: number, label: string): void => {
     const percentage = Math.round((current / total) * PERCENTAGE_PRECISION);
-    // biome-ignore lint/suspicious/noConsole: For logging
     console.info(
       `${logger.fg.cyan}${logger.bright}▸ ${label}:${logger.reset} ${current}/${total} (${percentage}%)`
     );
