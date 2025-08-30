@@ -10,7 +10,7 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import type { ToolUIPart } from "ai";
 import {
-  CheckCircleIcon,
+  CheckCheckIcon,
   ChevronDownIcon,
   CircleIcon,
   ClockIcon,
@@ -49,7 +49,7 @@ const getStatusBadge = (status: ToolUIPart["state"]) => {
   const icons = {
     "input-streaming": <CircleIcon className="size-4" />,
     "input-available": <ClockIcon className="size-4 animate-pulse" />,
-    "output-available": <CheckCircleIcon className="size-4" />,
+    "output-available": <CheckCheckIcon className="size-4" />,
     "output-error": <XCircleIcon className="size-4 text-destructive" />,
   } as const;
 
