@@ -32,25 +32,14 @@ export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 group-[.is-user]:items-end group-[.is-user]:justify-end">
       {message.parts.map((part, i) => {
         switch (part.type) {
           case "text": {
             return (
-              <div
-                className="flex flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end"
-                key={`message-${message.id}-part-${i}`}
-              >
-                <MessageContent>
-                  <Response id={message.id}>{part.text}</Response>
-                </MessageContent>
-
-                <AIChatMessageActions
-                  messageId={message.id}
-                  regenerate={regenerate}
-                  text={part.text}
-                />
-              </div>
+              <MessageContent key={`message-${message.id}-part-${i}`}>
+                <Response id={message.id}>{part.text}</Response>
+              </MessageContent>
             );
           }
           case "reasoning":
@@ -124,6 +113,15 @@ export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
             return null;
         }
       })}
+
+      <AIChatMessageActions
+        messageId={message.id}
+        regenerate={regenerate}
+        text={message.parts
+          .filter((p) => p.type === "text")
+          .map((p) => p.text)
+          .join("\n")}
+      />
     </div>
   );
 });
