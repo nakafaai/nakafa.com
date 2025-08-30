@@ -32,7 +32,7 @@ export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
   }
 
   return (
-    <div className="flex flex-col gap-4 group-[.is-user]:items-end group-[.is-user]:justify-end">
+    <div className="flex size-full flex-col gap-4 group-[.is-user]:items-end group-[.is-user]:justify-end">
       {message.parts.map((part, i) => {
         switch (part.type) {
           case "text": {
