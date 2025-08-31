@@ -30,7 +30,7 @@ export const MessageContent = memo(
     <div
       className={cn(
         "overflow-hidden rounded-lg",
-        "group-[.is-user]:bg-secondary group-[.is-user]:px-3 group-[.is-user]:py-2 group-[.is-user]:text-secondary-foreground",
+        "group-[.is-user]:bg-muted group-[.is-user]:px-3 group-[.is-user]:py-2",
         "group-[.is-assistant]:rounded-none",
         className
       )}
