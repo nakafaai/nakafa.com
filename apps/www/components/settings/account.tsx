@@ -8,6 +8,7 @@ import {
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { useQuery } from "convex/react";
 import { LogOutIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -16,6 +17,8 @@ import { getInitialName } from "@/lib/utils/helper";
 export function SettingsAccount() {
   const t = useTranslations("Auth");
   const user = useQuery(api.users.getUser);
+
+  const router = useRouter();
 
   const { signOut } = useAuthActions();
 
@@ -40,7 +43,7 @@ export function SettingsAccount() {
         </div>
       </div>
 
-      <Button onClick={() => signOut()}>
+      <Button onClick={() => signOut().then(() => router.replace("/"))}>
         <LogOutIcon />
         {t("logout")}
       </Button>
