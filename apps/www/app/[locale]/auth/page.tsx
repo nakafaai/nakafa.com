@@ -10,7 +10,7 @@ export default function Page() {
   const t = useTranslations("Metadata");
 
   return (
-    <div
+    <main
       className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh"
       data-pagefind-ignore
     >
@@ -33,6 +33,6 @@ export default function Page() {
           </Authenticated>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
