@@ -105,7 +105,7 @@
       "dependencies": {
         "@ai-sdk/google-vertex": "^3.0.16",
         "@ai-sdk/react": "^2.0.29",
-        "@mendable/firecrawl-js": "^4.3.0",
+        "@mendable/firecrawl-js": "^4.3.1",
         "@t3-oss/env-nextjs": "^0.13.8",
         "ai": "^5.0.29",
         "dedent": "^1.6.0",
@@ -738,7 +738,7 @@
 
     "@mediapipe/tasks-vision": ["@mediapipe/tasks-vision@0.10.17", "", {}, "sha512-CZWV/q6TTe8ta61cZXjfnnHsfWIdFhms03M9T7Cnd5y2mdpylJM0rF1qRq+wsQVRMLz1OYPVEBU9ph2Bx8cxrg=="],
 
-    "@mendable/firecrawl-js": ["@mendable/firecrawl-js@4.3.0", "", { "dependencies": { "axios": "^1.11.0", "typescript-event-target": "^1.1.1", "zod": "^3.23.8", "zod-to-json-schema": "^3.23.0" } }, "sha512-OIYJvbxCyw2BWub52BXfsuGZxorNIwuFxWZeIb1fGI+9BWKaBygBdoHYyADYJ++mi34mq455BVG8ll6XZl0DfA=="],
+    "@mendable/firecrawl-js": ["@mendable/firecrawl-js@4.3.1", "", { "dependencies": { "axios": "^1.11.0", "typescript-event-target": "^1.1.1", "zod": "^3.23.8", "zod-to-json-schema": "^3.23.0" } }, "sha512-wDPpWjnU3SStnhTtCVtTEiEOelJHaUqKq8Oak6+GRcOUkJk2VgueT8GvsOW9FZtMYjo5dbUa8KfPpdN0mAyfIA=="],
 
     "@mermaid-js/parser": ["@mermaid-js/parser@0.6.2", "", { "dependencies": { "langium": "3.3.1" } }, "sha512-+PO02uGF6L6Cs0Bw8RpGhikVvMWEysfAyl27qTlroUB8jSWr1lL0Sf6zi78ZxlSnmgSY2AMMKVgghnN9jTtwkQ=="],
 
