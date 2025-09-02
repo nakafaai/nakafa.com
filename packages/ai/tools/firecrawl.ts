@@ -75,31 +75,7 @@ export const webSearchTool = tool({
         scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
       });
 
-      const news =
-        response.news?.map((result) => {
-          const title = ("title" in result ? result.title : "") || "";
-          const description = ("snippet" in result ? result.snippet : "") || "";
-          const url = ("url" in result ? result.url : "") || "";
-
-          const domain = extractDomain(url);
-
-          const citation = domain && url ? `[${domain}](${url})` : "";
-
-          const processedContent = selectRelevantContent({
-            content: ("markdown" in result ? result.markdown : "") || "",
-            query, // Use the search query for relevance scoring
-            preserveStructure: false, // Focus on relevance over structure
-          });
-
-          return {
-            title,
-            description,
-            url,
-            citation,
-            content: processedContent,
-          };
-        }) || [];
-
+      // Process web results first (higher priority)
       const web =
         response.web?.map((result) => {
           const title = ("title" in result ? result.title : "") || "";
@@ -125,6 +101,41 @@ export const webSearchTool = tool({
             content: processedContent,
           };
         }) || [];
+
+      // Collect URLs from web results to avoid duplicates
+      const webUrls = new Set(web.map((item) => item.url).filter(Boolean));
+
+      // Process news results, excluding URLs already in web results
+      const news =
+        response.news
+          ?.filter((result) => {
+            const url = ("url" in result ? result.url : "") || "";
+            return url && !webUrls.has(url);
+          })
+          .map((result) => {
+            const title = ("title" in result ? result.title : "") || "";
+            const description =
+              ("snippet" in result ? result.snippet : "") || "";
+            const url = ("url" in result ? result.url : "") || "";
+
+            const domain = extractDomain(url);
+
+            const citation = domain && url ? `[${domain}](${url})` : "";
+
+            const processedContent = selectRelevantContent({
+              content: ("markdown" in result ? result.markdown : "") || "",
+              query, // Use the search query for relevance scoring
+              preserveStructure: false, // Focus on relevance over structure
+            });
+
+            return {
+              title,
+              description,
+              url,
+              citation,
+              content: processedContent,
+            };
+          }) || [];
 
       return { data: { news, web }, error: undefined };
     } catch (error) {

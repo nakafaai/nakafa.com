@@ -7,7 +7,6 @@ import {
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
@@ -31,21 +30,11 @@ export const WebSearchTool = memo(({ status, output }: Props) => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <SpinnerIcon className="size-4 text-muted-foreground" />
-          <span className="text-muted-foreground text-sm">
-            {t("web-search-loading")}
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton
-              className="h-5 w-32 rounded-full"
-              key={`web-search-skeleton-${index + 1}`}
-            />
-          ))}
-        </div>
+      <div className="flex items-center gap-2">
+        <SpinnerIcon className="size-4 text-muted-foreground" />
+        <span className="text-muted-foreground text-sm">
+          {t("web-search-loading")}
+        </span>
       </div>
     );
   }
