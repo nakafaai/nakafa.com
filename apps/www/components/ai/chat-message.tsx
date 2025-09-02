@@ -32,87 +32,91 @@ export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
   }
 
   return (
-    <div className="flex size-full flex-col gap-4 group-[.is-user]:items-end group-[.is-user]:justify-end">
-      {message.parts.map((part, i) => {
-        switch (part.type) {
-          case "text": {
-            return (
-              <MessageContent key={`message-${message.id}-part-${i}`}>
-                <Response id={message.id}>{part.text}</Response>
-              </MessageContent>
-            );
+    <div className="flex size-full flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end">
+      <div className="flex flex-col gap-4">
+        {message.parts.map((part, i) => {
+          switch (part.type) {
+            case "text": {
+              return (
+                <MessageContent key={`message-${message.id}-part-${i}`}>
+                  <Response id={message.id}>{part.text}</Response>
+                </MessageContent>
+              );
+            }
+            case "reasoning":
+              return (
+                <Reasoning
+                  autoOpen={false}
+                  className="w-full"
+                  isStreaming={part.state === "streaming"}
+                  key={`reasoning-${message.id}-part-${i}`}
+                >
+                  <ReasoningTrigger />
+                  <ReasoningContent id={message.id}>
+                    {part.text}
+                  </ReasoningContent>
+                </Reasoning>
+              );
+            case "tool-getArticles":
+              return (
+                <ArticlesTool
+                  key={`tool-${part.toolCallId}`}
+                  output={part.output}
+                  status={part.state}
+                />
+              );
+            case "tool-getSubjects":
+              return (
+                <SubjectsTool
+                  key={`tool-${part.toolCallId}`}
+                  output={part.output}
+                  status={part.state}
+                />
+              );
+            case "tool-getContent":
+              return (
+                <ContentTool
+                  key={`tool-${part.toolCallId}`}
+                  output={part.output}
+                  status={part.state}
+                />
+              );
+            case "tool-calculator":
+              return (
+                <CalculatorTool
+                  key={`tool-${part.toolCallId}`}
+                  output={part.output}
+                  status={part.state}
+                />
+              );
+            case "tool-webSearch":
+              return (
+                <WebSearchTool
+                  key={`tool-${part.toolCallId}`}
+                  output={part.output}
+                  status={part.state}
+                />
+              );
+            case "tool-scrape":
+              return (
+                <ScrapeTool
+                  key={`tool-${part.toolCallId}`}
+                  output={part.output}
+                  status={part.state}
+                />
+              );
+            case "data-suggestions":
+              return (
+                <SuggestionsData
+                  key={`data-${part.id}`}
+                  suggestions={part.data}
+                />
+              );
+            default:
+              return null;
           }
-          case "reasoning":
-            return (
-              <Reasoning
-                autoOpen={false}
-                className="w-full"
-                isStreaming={part.state === "streaming"}
-                key={`reasoning-${message.id}-part-${i}`}
-              >
-                <ReasoningTrigger />
-                <ReasoningContent id={message.id}>{part.text}</ReasoningContent>
-              </Reasoning>
-            );
-          case "tool-getArticles":
-            return (
-              <ArticlesTool
-                key={`tool-${part.toolCallId}`}
-                output={part.output}
-                status={part.state}
-              />
-            );
-          case "tool-getSubjects":
-            return (
-              <SubjectsTool
-                key={`tool-${part.toolCallId}`}
-                output={part.output}
-                status={part.state}
-              />
-            );
-          case "tool-getContent":
-            return (
-              <ContentTool
-                key={`tool-${part.toolCallId}`}
-                output={part.output}
-                status={part.state}
-              />
-            );
-          case "tool-calculator":
-            return (
-              <CalculatorTool
-                key={`tool-${part.toolCallId}`}
-                output={part.output}
-                status={part.state}
-              />
-            );
-          case "tool-webSearch":
-            return (
-              <WebSearchTool
-                key={`tool-${part.toolCallId}`}
-                output={part.output}
-                status={part.state}
-              />
-            );
-          case "tool-scrape":
-            return (
-              <ScrapeTool
-                key={`tool-${part.toolCallId}`}
-                output={part.output}
-                status={part.state}
-              />
-            );
-          case "data-suggestions":
-            return (
-              <SuggestionsData
-                key={`data-${part.id}`}
-                suggestions={part.data}
-              />
-            );
-          default:
-            return null;
-        }
-      })}
+        })}
+      </div>
 
       <AIChatMessageActions
         messageId={message.id}
