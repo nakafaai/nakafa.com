@@ -151,17 +151,19 @@ export const webSearchOutputSchema = z
       news: z.array(
         z.object({
           title: z.string(),
-          url: z.string(),
-          content: z.string(),
           description: z.string(),
+          url: z.string(),
+          citation: z.string(),
+          content: z.string(),
         })
       ),
       web: z.array(
         z.object({
           title: z.string(),
-          url: z.string(),
-          content: z.string(),
           description: z.string(),
+          url: z.string(),
+          citation: z.string(),
+          content: z.string(),
         })
       ),
     }),

@@ -13,7 +13,8 @@
     "@t3-oss/env-nextjs": "^0.13.8",
     "ai": "^5.0.29",
     "dedent": "^1.6.0",
-    "gpt-tokenizer": "^3.0.1"
+    "gpt-tokenizer": "^3.0.1",
+    "parse-domain": "^8.2.2"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

@@ -129,7 +129,7 @@ export async function POST(req: Request) {
       return t("error-message");
     },
     execute: async ({ writer }) => {
-      const result = streamText({
+      const streamTextResult = streamText({
         model: model.languageModel(selectedModel),
         system: nakafaPrompt({
           url,
@@ -213,7 +213,7 @@ export async function POST(req: Request) {
       });
 
       writer.merge(
-        result.toUIMessageStream({
+        streamTextResult.toUIMessageStream({
           sendReasoning: true,
           onError: (error) => {
             // Log the error with context
@@ -236,12 +236,12 @@ export async function POST(req: Request) {
         })
       );
 
-      await result.consumeStream();
+      await streamTextResult.consumeStream();
 
       // Return the messages from the response, to be used in the followup suggestions
-      const messagesFromResponse = (await result.response).messages;
+      const messagesFromResponse = (await streamTextResult.response).messages;
 
-      const followupSuggestions = streamObject({
+      const streamObjectResult = streamObject({
         model: model.languageModel("google-default"),
         system: nakafaSuggestions(),
         messages: messagesFromResponse,
@@ -268,7 +268,7 @@ export async function POST(req: Request) {
       const dataPartId = crypto.randomUUID();
 
       // Read the suggestions from the stream
-      for await (const chunk of followupSuggestions.partialObjectStream) {
+      for await (const chunk of streamObjectResult.partialObjectStream) {
         // Write the suggestions to the UIMessageStream
         writer.write({
           id: dataPartId,

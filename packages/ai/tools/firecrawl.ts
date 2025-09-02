@@ -1,5 +1,6 @@
 import FirecrawlApp from "@mendable/firecrawl-js";
 import { tool } from "ai";
+import { fromUrl, ParseResultType, parseDomain } from "parse-domain";
 import { keys } from "../keys";
 import { selectRelevantContent } from "../lib/content-selection";
 import {
@@ -10,6 +11,15 @@ import {
 } from "../schema/tools";
 
 const app = new FirecrawlApp({ apiKey: keys().FIRECRAWL_API_KEY });
+
+function extractDomain(url: string): string {
+  const result = parseDomain(fromUrl(url));
+  if (result.type === ParseResultType.Listed) {
+    const { domain } = result;
+    return domain || "";
+  }
+  return "";
+}
 
 export const scrapeTool = tool({
   name: "scrape",
@@ -71,7 +81,9 @@ export const webSearchTool = tool({
           const description = ("snippet" in result ? result.snippet : "") || "";
           const url = ("url" in result ? result.url : "") || "";
 
-          const citation = title && url ? `[${title}](${url})` : "";
+          const domain = extractDomain(url);
+
+          const citation = domain && url ? `[${domain}](${url})` : "";
 
           const processedContent = selectRelevantContent({
             content: ("markdown" in result ? result.markdown : "") || "",
@@ -95,7 +107,9 @@ export const webSearchTool = tool({
             ("description" in result ? result.description : "") || "";
           const url = ("url" in result ? result.url : "") || "";
 
-          const citation = title && url ? `[${title}](${url})` : "";
+          const domain = extractDomain(url);
+
+          const citation = domain && url ? `[${domain}](${url})` : "";
 
           const processedContent = selectRelevantContent({
             content: ("markdown" in result ? result.markdown : "") || "",

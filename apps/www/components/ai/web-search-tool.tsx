@@ -58,8 +58,8 @@ export const WebSearchTool = memo(({ status, output }: Props) => {
       </div>
       {results.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2">
-          {results.map((item) => (
-            <Source href={item.url} key={item.url}>
+          {results.map((item, index) => (
+            <Source href={item.url} key={`${item.url}-${index}`}>
               <SourceTrigger showFavicon />
               <SourceContent
                 description={item.description}

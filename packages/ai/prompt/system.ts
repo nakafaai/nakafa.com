@@ -136,7 +136,7 @@ export function nakafaPrompt({
         <combine_sources>You can combine Nakafa educational content with current web information when both add value to the user's learning.</combine_sources>
         <web_search_fallback>Use webSearch as fallback when Nakafa content is insufficient for educational queries.</web_search_fallback>
         <citation_mandatory>ALWAYS cite webSearch results with inline links - NEVER provide web information without proper citations.</citation_mandatory>
-        <citation_format>Use inline citations like: "According to (citation), ..." or "Research shows that (finding) (citation).". Citation MUST use standard ASCII characters: [title](url) - Use ONLY ASCII square brackets [ ] and ASCII parentheses ( ) - NEVER use Unicode full-width characters like 【】or （）</citation_format>
+        <citation_format>Use inline citations like: "According to (citation), ..." or "Research shows that (finding) (citation).". Citation MUST use standard ASCII characters: [domain](url) - Use ONLY ASCII square brackets [ ] and ASCII parentheses ( ) - NEVER use Unicode full-width characters like 【】or （）</citation_format>
       </WEB_TOOLS_USAGE>
 
       <SLUG_VERIFICATION_RULES>
