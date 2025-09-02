@@ -67,37 +67,47 @@ export const webSearchTool = tool({
 
       const news =
         response.news?.map((result) => {
-          const rawContent =
-            ("markdown" in result ? result.markdown : "") || "";
+          const title = ("title" in result ? result.title : "") || "";
+          const description = ("snippet" in result ? result.snippet : "") || "";
+          const url = ("url" in result ? result.url : "") || "";
+
+          const citation = title && url ? `[${title}](${url})` : "";
+
           const processedContent = selectRelevantContent({
-            content: rawContent,
+            content: ("markdown" in result ? result.markdown : "") || "",
             query, // Use the search query for relevance scoring
             preserveStructure: false, // Focus on relevance over structure
           });
 
           return {
-            title: ("title" in result ? result.title : "") || "",
-            description: ("snippet" in result ? result.snippet : "") || "",
-            url: ("url" in result ? result.url : "") || "",
+            title,
+            description,
+            url,
+            citation,
             content: processedContent,
           };
         }) || [];
 
       const web =
         response.web?.map((result) => {
-          const rawContent =
-            ("markdown" in result ? result.markdown : "") || "";
+          const title = ("title" in result ? result.title : "") || "";
+          const description =
+            ("description" in result ? result.description : "") || "";
+          const url = ("url" in result ? result.url : "") || "";
+
+          const citation = title && url ? `[${title}](${url})` : "";
+
           const processedContent = selectRelevantContent({
-            content: rawContent,
+            content: ("markdown" in result ? result.markdown : "") || "",
             query, // Use the search query for relevance scoring
             preserveStructure: false, // Focus on relevance over structure
           });
 
           return {
-            title: ("title" in result ? result.title : "") || "",
-            description:
-              ("description" in result ? result.description : "") || "",
-            url: ("url" in result ? result.url : "") || "",
+            title,
+            description,
+            url,
+            citation,
             content: processedContent,
           };
         }) || [];
