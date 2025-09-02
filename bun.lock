@@ -71,7 +71,7 @@
         "@t3-oss/env-nextjs": "^0.13.8",
         "@tanstack/react-query": "^5.85.9",
         "@tanstack/react-query-devtools": "^5.85.9",
-        "@vercel/functions": "^2.2.13",
+        "@vercel/functions": "^3.0.0",
         "babel-plugin-react-compiler": "^19.1.0-rc.3",
         "feed": "^5.1.0",
         "immer": "^10.1.3",
@@ -1530,9 +1530,9 @@
 
     "@vercel/analytics": ["@vercel/analytics@1.5.0", "", { "peerDependencies": { "@remix-run/react": "^2", "@sveltejs/kit": "^1 || ^2", "next": ">= 13", "react": "^18 || ^19 || ^19.0.0-rc", "svelte": ">= 4", "vue": "^3", "vue-router": "^4" }, "optionalPeers": ["@remix-run/react", "@sveltejs/kit", "next", "react", "svelte", "vue", "vue-router"] }, "sha512-MYsBzfPki4gthY5HnYN7jgInhAZ7Ac1cYDoRWFomwGHWEX7odTEzbtg9kf/QSo7XEsEAqlQugA6gJ2WS2DEa3g=="],
 
-    "@vercel/functions": ["@vercel/functions@2.2.13", "", { "dependencies": { "@vercel/oidc": "2.0.2" }, "peerDependencies": { "@aws-sdk/credential-provider-web-identity": "*" }, "optionalPeers": ["@aws-sdk/credential-provider-web-identity"] }, "sha512-14ArBSIIcOBx9nrEgaJb4Bw+en1gl6eSoJWh8qjifLl5G3E4dRXCFOT8HP+w66vb9Wqyd1lAQBrmRhRwOj9X9A=="],
+    "@vercel/functions": ["@vercel/functions@3.0.0", "", { "dependencies": { "@vercel/oidc": "3.0.0" }, "peerDependencies": { "@aws-sdk/credential-provider-web-identity": "*" }, "optionalPeers": ["@aws-sdk/credential-provider-web-identity"] }, "sha512-U7PRdjAcwirEg1u/oAbbwgWXZvZvrtuh2F1B9LB49bcXAIMXYonbFCn2euKZCyxDsANBJUY4R1QgExyKdTLhiA=="],
 
-    "@vercel/oidc": ["@vercel/oidc@2.0.2", "", { "dependencies": { "@types/ms": "2.1.0", "ms": "2.1.3" } }, "sha512-59PBFx3T+k5hLTEWa3ggiMpGRz1OVvl9eN8SUai+A43IsqiOuAe7qPBf+cray/Fj6mkgnxm/D7IAtjc8zSHi7g=="],
+    "@vercel/oidc": ["@vercel/oidc@3.0.0", "", { "dependencies": { "@types/ms": "2.1.0", "ms": "2.1.3" } }, "sha512-XOoUcf/1VfGArUAfq0ELxk6TD7l4jGcrOsWjQibj4wYM74uNihzZ9gA46ywWegoqKWWdph4y5CKxGI9823deoA=="],
 
     "@vitejs/plugin-react": ["@vitejs/plugin-react@5.0.2", "", { "dependencies": { "@babel/core": "^7.28.3", "@babel/plugin-transform-react-jsx-self": "^7.27.1", "@babel/plugin-transform-react-jsx-source": "^7.27.1", "@rolldown/pluginutils": "1.0.0-beta.34", "@types/babel__core": "^7.20.5", "react-refresh": "^0.17.0" }, "peerDependencies": { "vite": "^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0" } }, "sha512-tmyFgixPZCx2+e6VO9TNITWcCQl8+Nl/E8YbAyPVv85QCc7/A3JrdfG2A8gIzvVhWuzMOVrFW1aReaNxrI6tbw=="],
 
