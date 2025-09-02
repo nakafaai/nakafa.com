@@ -60,9 +60,9 @@ export const webSearchTool = tool({
   async execute({ query }) {
     try {
       const response = await app.search(query, {
-        limit: 4,
+        limit: 6,
         sources: ["web", "news"],
-        scrapeOptions: { formats: ["markdown"] },
+        scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
       });
 
       const news =
