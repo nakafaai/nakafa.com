@@ -32,6 +32,7 @@ export const scrapeTool = tool({
     try {
       const response = await app.scrape(url, {
         formats: ["markdown"],
+        timeout: 5000, // 5 second timeout
       });
 
       const markdown = response.markdown;
@@ -73,6 +74,7 @@ export const webSearchTool = tool({
         limit: 5,
         sources: ["web", "news"],
         scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
+        timeout: 5000, // 5 second timeout
       });
 
       // Process web results first (higher priority)
