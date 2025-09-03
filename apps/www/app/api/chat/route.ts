@@ -214,7 +214,6 @@ export async function POST(req: Request) {
 
       writer.merge(
         streamTextResult.toUIMessageStream({
-          sendReasoning: true,
           onError: (error) => {
             // Log the error with context
             if (error instanceof Error) {
