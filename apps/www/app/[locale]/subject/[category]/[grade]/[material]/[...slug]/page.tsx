@@ -102,6 +102,7 @@ export async function generateMetadata({
     title: {
       absolute: `${metadata.title} - ${metadata.subject} - ${defaultTitle}`,
     },
+    description: metadata.description ?? metadata.subject ?? "",
     alternates,
     authors: metadata.authors,
     category: t(material),
