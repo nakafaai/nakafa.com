@@ -2,11 +2,6 @@
 
 import type { MyUIMessage } from "@repo/ai/lib/types";
 import { MessageContent } from "@repo/design-system/components/ai/message";
-import {
-  Reasoning,
-  ReasoningContent,
-  ReasoningTrigger,
-} from "@repo/design-system/components/ai/reasoning";
 import { Response } from "@repo/design-system/components/ai/response";
 import type { ChatStatus } from "ai";
 import { memo } from "react";
@@ -27,14 +22,17 @@ type Props = {
 };
 
 export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
-  if (message.parts.length === 0) {
+  // We are not showing the reasoning parts in the chat message
+  const parts = message.parts.filter((p) => p.type !== "reasoning");
+
+  if (parts.length === 0) {
     return <AIChatLoading force status={status} />;
   }
 
   return (
     <div className="flex size-full flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end">
       <div className="flex flex-col gap-4">
-        {message.parts.map((part, i) => {
+        {parts.map((part, i) => {
           switch (part.type) {
             case "text": {
               return (
@@ -43,20 +41,6 @@ export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
                 </MessageContent>
               );
             }
-            case "reasoning":
-              return (
-                <Reasoning
-                  autoOpen={false}
-                  className="w-full"
-                  isStreaming={part.state === "streaming"}
-                  key={`reasoning-${message.id}-part-${i}`}
-                >
-                  <ReasoningTrigger />
-                  <ReasoningContent id={message.id}>
-                    {part.text}
-                  </ReasoningContent>
-                </Reasoning>
-              );
             case "tool-getArticles":
               return (
                 <ArticlesTool
@@ -121,7 +105,7 @@ export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
       <AIChatMessageActions
         messageId={message.id}
         regenerate={regenerate}
-        text={message.parts
+        text={parts
           .filter((p) => p.type === "text")
           .map((p) => p.text)
           .join("\n")}
