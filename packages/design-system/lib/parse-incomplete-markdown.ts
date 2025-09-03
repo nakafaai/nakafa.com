@@ -13,6 +13,14 @@ const listBulletPattern = /^\s*[-*+]\s/;
 // Constants for magic numbers
 const TRIPLE_ASTERISK_LENGTH = 3;
 
+// Helper function to check if we have a complete code block
+function hasCompleteCodeBlock(text: string): boolean {
+  const tripleBackticks = (text.match(/```/g) || []).length;
+  return (
+    tripleBackticks > 0 && tripleBackticks % 2 === 0 && text.includes("\n")
+  );
+}
+
 // Handles incomplete links and images by removing them if not closed
 function handleIncompleteLinksAndImages(text: string): string {
   const linkMatch = text.match(linkImagePattern);
@@ -27,6 +35,11 @@ function handleIncompleteLinksAndImages(text: string): string {
 
 // Completes incomplete bold formatting (**)
 function handleIncompleteBold(text: string): string {
+  // Don't process if inside a complete code block
+  if (hasCompleteCodeBlock(text)) {
+    return text;
+  }
+
   const boldMatch = text.match(boldPattern);
 
   if (boldMatch) {
@@ -103,6 +116,11 @@ function isListBulletAsterisk(text: string, asteriskIndex: number): boolean {
 
 // Completes incomplete italic formatting with single asterisks (*)
 function handleIncompleteSingleAsteriskItalic(text: string): string {
+  // Don't process if inside a complete code block
+  if (hasCompleteCodeBlock(text)) {
+    return text;
+  }
+
   const singleAsteriskMatch = text.match(singleAsteriskPattern);
 
   if (singleAsteriskMatch) {
@@ -249,6 +267,11 @@ function isAfterListBullet(text: string, underscoreIndex: number): boolean {
 
 // Completes incomplete italic formatting with single underscores (_)
 function handleIncompleteSingleUnderscoreItalic(text: string): string {
+  // Don't process if inside a complete code block
+  if (hasCompleteCodeBlock(text)) {
+    return text;
+  }
+
   const singleUnderscoreMatch = text.match(singleUnderscorePattern);
 
   if (singleUnderscoreMatch) {
@@ -366,6 +389,11 @@ function countTripleAsterisks(text: string): number {
 
 // Completes incomplete bold-italic formatting (***)
 function handleIncompleteBoldItalic(text: string): string {
+  // Don't process if inside a complete code block
+  if (hasCompleteCodeBlock(text)) {
+    return text;
+  }
+
   // Don't process if text is only asterisks and has 4 or more consecutive asterisks
   // This prevents cases like **** from being treated as incomplete ***
   if (consecutiveAsterisksPattern.test(text)) {
