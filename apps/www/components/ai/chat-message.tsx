@@ -22,8 +22,10 @@ type Props = {
 };
 
 export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
-  // We are not showing the reasoning parts in the chat message
-  const parts = message.parts.filter((p) => p.type !== "reasoning");
+  // We are not showing the reasoning parts in the chat message, and not include step-start
+  const parts = message.parts.filter(
+    (p) => p.type !== "reasoning" && p.type !== "step-start"
+  );
 
   if (parts.length === 0) {
     return <AIChatLoading force status={status} />;
