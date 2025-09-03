@@ -27,7 +27,10 @@ export function BlockMath({
     <div className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
       <ScrollArea className={cn("grid", className)} type="hover">
         <div className="px-4">
-          <BlockMathReactKatex {...props} />
+          <BlockMathReactKatex
+            errorColor="var(--color-muted-foreground)"
+            {...props}
+          />
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
@@ -36,5 +39,10 @@ export function BlockMath({
 }
 
 export function InlineMath(props: MathComponentProps) {
-  return <InlineMathReactKatex {...props} />;
+  return (
+    <InlineMathReactKatex
+      errorColor="var(--color-muted-foreground)"
+      {...props}
+    />
+  );
 }
