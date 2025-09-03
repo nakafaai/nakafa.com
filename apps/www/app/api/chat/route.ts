@@ -214,6 +214,7 @@ export async function POST(req: Request) {
 
       writer.merge(
         streamTextResult.toUIMessageStream({
+          sendReasoning: false,
           onError: (error) => {
             // Log the error with context
             if (error instanceof Error) {
@@ -238,7 +239,9 @@ export async function POST(req: Request) {
       await streamTextResult.consumeStream();
 
       // Return the messages from the response, to be used in the followup suggestions
-      const messagesFromResponse = (await streamTextResult.response).messages;
+      const messagesFromResponse = (
+        await streamTextResult.response
+      ).messages.filter((message) => message.role === "assistant");
 
       const streamObjectResult = streamObject({
         model: model.languageModel("google-default"),
