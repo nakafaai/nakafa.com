@@ -46,7 +46,7 @@ const Block = memo(
     ...props
   }: HardenedMarkdownProps & Pick<ResponseProps, "children">) => {
     const parsedContent = useMemo(
-      () => preprocessLaTeX(parseIncompleteMarkdown(children.trim())),
+      () => parseIncompleteMarkdown(preprocessLaTeX(children.trim())),
       [children]
     );
 
@@ -54,7 +54,11 @@ const Block = memo(
       <MemoizedHardenedMarkdown
         components={reactMdxComponents}
         rehypePlugins={[rehypeRaw]}
-        remarkPlugins={[remarkGfm, remarkMath, remarkRehype]}
+        remarkPlugins={[
+          remarkGfm,
+          [remarkMath, { singleDollarTextMath: false }],
+          remarkRehype,
+        ]}
         {...props}
       >
         {parsedContent}

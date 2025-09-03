@@ -1,3 +1,7 @@
+import {
+  CodeBlock,
+  CodeBlockCopyButton,
+} from "@repo/design-system/components/ai/code-block";
 import { Anchor } from "@repo/design-system/components/markdown/anchor";
 import { Heading } from "@repo/design-system/components/markdown/heading";
 import {
@@ -14,9 +18,12 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
-import { memo } from "react";
+import { isValidElement, memo } from "react";
 import type { Options } from "react-markdown";
-import { CodeBlock, CodeBlockCopyButton } from "../ai/code-block";
+import type { BundledLanguage } from "shiki";
+import { Mermaid } from "./mermaid";
+
+const LANGUAGE_REGEX = /language-([^\s]+)/;
 
 // Types for markdown component props with `node.position` info
 type MarkdownPoint = { line?: number; column?: number };
@@ -200,71 +207,82 @@ export const reactMdxComponents: Options["components"] = {
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
   code: memo(
-    ({ children, ...props }) => {
-      const isInlineMath = props.className?.includes(
-        "language-math math-inline"
-      );
+    ({ node, children, className, ...props }) => {
+      const inline = node?.position?.start.line === node?.position?.end.line;
+      const isInlineMath = className?.includes("language-math math-inline");
 
       if (isInlineMath) {
         return <InlineMath>{String(children)}</InlineMath>;
       }
 
-      return (
-        <code
-          className="inline break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight"
-          {...props}
-        >
-          {children}
-        </code>
-      );
-    },
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
-  ),
-  pre: memo(
-    ({ node, children }) => {
-      let language = "plaintext";
-
-      const codeElement = node?.children.find(
-        (child) => child.type === "element" && child.tagName === "code"
-      );
-
-      if (codeElement?.type === "element") {
-        const classNameList = codeElement.properties?.className;
-
-        if (Array.isArray(classNameList)) {
-          const langClass = classNameList.find(
-            (c) => typeof c === "string" && c.startsWith("language-")
-          );
-
-          if (typeof langClass === "string") {
-            language = langClass.replace("language-", "");
-          }
-        }
+      if (inline) {
+        return (
+          <code
+            className={cn(
+              "inline break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight",
+              className
+            )}
+            {...props}
+          >
+            {children}
+          </code>
+        );
       }
 
-      const hasChildren =
-        typeof children === "object" &&
-        children !== null &&
-        "props" in children;
+      const match = className?.match(LANGUAGE_REGEX);
+      const language = match?.at(1) ?? "";
 
-      if (!hasChildren) {
-        return <pre>{children}</pre>;
+      // Extract code content from children safely
+      let code = "";
+      if (
+        isValidElement(children) &&
+        children.props &&
+        typeof children.props === "object" &&
+        "children" in children.props &&
+        typeof children.props.children === "string"
+      ) {
+        code = children.props.children;
+      } else if (typeof children === "string") {
+        code = children;
       }
-
-      const result = (children.props as { children: string })?.children ?? "";
 
       if (language === "math") {
-        return <BlockMath math={result} />;
+        return <BlockMath math={code} />;
+      }
+
+      if (language === "mermaid") {
+        return (
+          <div
+            className={cn(
+              "group relative my-4 h-auto rounded-xl border p-4",
+              className
+            )}
+            data-streamdown="mermaid-block"
+          >
+            <div className="flex items-center justify-end">
+              <CodeBlockCopyButton code={code} />
+            </div>
+            <Mermaid chart={code} />
+          </div>
+        );
       }
 
       return (
-        <CodeBlock code={result} language={language}>
+        <CodeBlock
+          className={cn("overflow-x-auto border-t", className)}
+          code={code}
+          data-language={language}
+          data-streamdown="code-block"
+          language={language as BundledLanguage}
+          preClassName="overflow-x-auto font-mono text-sm p-4 bg-muted/40"
+        >
           <CodeBlockCopyButton />
         </CodeBlock>
       );
     },
     (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
   ),
+  pre: ({ children }) => children,
   sup: memo(
     ({ node, children, className, ...props }) => (
       <sup className={cn("text-sm", className)} {...props}>

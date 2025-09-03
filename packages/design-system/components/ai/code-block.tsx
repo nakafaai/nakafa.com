@@ -1,18 +1,30 @@
 "use client";
 
-import { SiGnometerminal } from "@icons-pack/react-simple-icons";
-import { Button } from "@repo/design-system/components/ui/button";
-import { languageIconMap } from "@repo/design-system/lib/programming";
 import { cn } from "@repo/design-system/lib/utils";
 import { CheckIcon, CopyIcon } from "lucide-react";
-import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
-import { memo, useMemo, useState } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
-  oneDark,
-  oneLight,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
-import { createContext, useContextSelector } from "use-context-selector";
+  type ComponentProps,
+  createContext,
+  type HTMLAttributes,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  type BundledLanguage,
+  type BundledTheme,
+  createHighlighter,
+} from "shiki";
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+
+const PRE_TAG_REGEX = /<pre(\s|>)/;
+
+type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
+  code: string;
+  language: BundledLanguage;
+  preClassName?: string;
+};
 
 type CodeBlockContextType = {
   code: string;
@@ -22,189 +34,269 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
   code: "",
 });
 
-function CodeBlockContextProvider({
-  code,
-  children,
-}: {
-  code: string;
-  children: ReactNode;
-}) {
-  const value = useMemo(() => ({ code }), [code]);
+const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
+  "github-light" as BundledTheme,
+  "github-dark" as BundledTheme,
+]);
 
-  return (
-    <CodeBlockContext.Provider value={value}>
-      {children}
-    </CodeBlockContext.Provider>
+class HighlighterManager {
+  private lightHighlighter: Awaited<
+    ReturnType<typeof createHighlighter>
+  > | null = null;
+  private darkHighlighter: Awaited<
+    ReturnType<typeof createHighlighter>
+  > | null = null;
+  private lightTheme: BundledTheme | null = null;
+  private darkTheme: BundledTheme | null = null;
+  private readonly loadedLanguages: Set<BundledLanguage> = new Set();
+  private initializationPromise: Promise<void> | null = null;
+
+  private async ensureHighlightersInitialized(
+    themes: [BundledTheme, BundledTheme],
+    language: BundledLanguage
+  ): Promise<void> {
+    const [lightTheme, darkTheme] = themes;
+    const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
+
+    // Check if we need to recreate highlighters due to theme change
+    const needsLightRecreation =
+      !this.lightHighlighter || this.lightTheme !== lightTheme;
+    const needsDarkRecreation =
+      !this.darkHighlighter || this.darkTheme !== darkTheme;
+
+    if (needsLightRecreation || needsDarkRecreation) {
+      // If themes changed, reset loaded languages
+      this.loadedLanguages.clear();
+    }
+
+    // Check if we need to load the language
+    const needsLanguageLoad = !this.loadedLanguages.has(language);
+
+    // Create or recreate light highlighter if needed
+    if (needsLightRecreation) {
+      this.lightHighlighter = await createHighlighter({
+        themes: [lightTheme],
+        langs: [language],
+        engine: jsEngine,
+      });
+      this.lightTheme = lightTheme;
+      this.loadedLanguages.add(language);
+    } else if (needsLanguageLoad && this.lightHighlighter) {
+      // Load the language if not already loaded
+      await this.lightHighlighter.loadLanguage(language);
+    }
+
+    // Create or recreate dark highlighter if needed
+    if (needsDarkRecreation) {
+      // If recreating dark highlighter, load all previously loaded languages plus the new one
+      const langsToLoad = needsLanguageLoad
+        ? [...this.loadedLanguages, language]
+        : Array.from(this.loadedLanguages);
+
+      this.darkHighlighter = await createHighlighter({
+        themes: [darkTheme],
+        langs: langsToLoad.length > 0 ? langsToLoad : [language],
+        engine: jsEngine,
+      });
+      this.darkTheme = darkTheme;
+    } else if (needsLanguageLoad && this.darkHighlighter) {
+      // Load the language if not already loaded
+      await this.darkHighlighter.loadLanguage(language);
+    }
+
+    // Mark language as loaded after both highlighters have it
+    if (needsLanguageLoad) {
+      this.loadedLanguages.add(language);
+    }
+  }
+
+  async highlightCode(
+    code: string,
+    language: BundledLanguage,
+    themes: [BundledTheme, BundledTheme],
+    preClassName?: string
+  ): Promise<[string, string]> {
+    // Ensure only one initialization happens at a time
+    if (this.initializationPromise) {
+      await this.initializationPromise;
+    }
+
+    // Initialize or load language
+    this.initializationPromise = this.ensureHighlightersInitialized(
+      themes,
+      language
+    );
+    await this.initializationPromise;
+    this.initializationPromise = null;
+
+    const addPreClass = (html: string) => {
+      if (!preClassName) {
+        return html;
+      }
+      return html.replace(PRE_TAG_REGEX, `<pre class="${preClassName}"$1`);
+    };
+
+    const [lightTheme, darkTheme] = themes;
+
+    if (this.lightHighlighter === null || this.darkHighlighter === null) {
+      throw new Error("Highlighters not initialized");
+    }
+
+    const light = this.lightHighlighter.codeToHtml(code, {
+      lang: language,
+      theme: lightTheme,
+    });
+    const dark = this.darkHighlighter.codeToHtml(code, {
+      lang: language,
+      theme: darkTheme,
+    });
+
+    return [
+      removePreBackground(addPreClass(light)),
+      removePreBackground(addPreClass(dark)),
+    ];
+  }
+}
+
+// Create a singleton instance of the highlighter manager
+const highlighterManager = new HighlighterManager();
+
+export function highlightCode(
+  code: string,
+  language: BundledLanguage,
+  themes: [BundledTheme, BundledTheme],
+  preClassName?: string
+) {
+  return highlighterManager.highlightCode(code, language, themes, preClassName);
+}
+
+// Remove background styles from <pre> tags (inline style)
+function removePreBackground(html: string) {
+  return html.replace(
+    /(<pre[^>]*)(style="[^"]*background[^";]*;?[^"]*")([^>]*>)/g,
+    "$1$3"
   );
 }
 
-function useCodeBlock<T>(selector: (state: CodeBlockContextType) => T): T {
-  const ctx = useContextSelector(CodeBlockContext, (context) => context);
-  if (!ctx) {
-    throw new Error(
-      "useCodeBlock must be used within a CodeBlockContextProvider"
-    );
-  }
-  return selector(ctx);
-}
+export const CodeBlock = ({
+  code,
+  language,
+  className,
+  children,
+  preClassName,
+  ...rest
+}: CodeBlockProps) => {
+  const [html, setHtml] = useState<string>("");
+  const [darkHtml, setDarkHtml] = useState<string>("");
+  const mounted = useRef(false);
+  const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
 
-export type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
-  code: string;
-  language: string;
-  showLineNumbers?: boolean;
-  children?: ReactNode;
-};
+  useEffect(() => {
+    mounted.current = true;
 
-// Extract styles to prevent inline object creation
-const LIGHT_CUSTOM_STYLE = {
-  margin: 0,
-  padding: "1rem",
-  fontSize: "0.875rem",
-  background: "hsl(var(--background))",
-  color: "hsl(var(--foreground))",
-  borderRadius: "0",
-};
-
-const DARK_CUSTOM_STYLE = {
-  margin: 0,
-  padding: "1rem",
-  fontSize: "0.875rem",
-  background: "hsl(var(--background))",
-  color: "hsl(var(--foreground))",
-  borderRadius: "0",
-};
-
-const LINE_NUMBER_STYLE = {
-  color: "hsl(var(--muted-foreground))",
-  paddingRight: "1rem",
-  minWidth: "2rem",
-};
-
-const CODE_TAG_PROPS = {
-  className: "font-mono text-sm",
-};
-
-const MemoizedSyntaxHighlighter = memo(
-  SyntaxHighlighter,
-  (prevProps, nextProps) => {
-    return prevProps.children === nextProps.children;
-  }
-);
-MemoizedSyntaxHighlighter.displayName = "MemoizedSyntaxHighlighter";
-
-export const CodeBlock = memo(
-  ({
-    code,
-    language,
-    showLineNumbers = false,
-    className,
-    children,
-    ...props
-  }: CodeBlockProps) => {
-    const Icon = useMemo(
-      () =>
-        languageIconMap[
-          language.toLowerCase() as keyof typeof languageIconMap
-        ] ?? SiGnometerminal,
-      [language]
+    highlightCode(code, language, [lightTheme, darkTheme], preClassName).then(
+      ([light, dark]) => {
+        if (mounted.current) {
+          setHtml(light);
+          setDarkHtml(dark);
+        }
+      }
     );
 
-    return (
-      <CodeBlockContextProvider code={code}>
+    return () => {
+      mounted.current = false;
+    };
+  }, [code, language, lightTheme, darkTheme, preClassName]);
+
+  return (
+    <CodeBlockContext.Provider value={{ code }}>
+      <div
+        className="my-4 w-full overflow-hidden rounded-md border"
+        data-code-block-container
+        data-language={language}
+      >
         <div
-          className={cn(
-            "my-4 grid size-full grid-cols-1 overflow-hidden rounded-md border shadow-sm",
-            className
-          )}
-          {...props}
+          className="flex items-center justify-between bg-muted/80 p-3 text-muted-foreground text-sm"
+          data-code-block-header
+          data-language={language}
         >
-          <div className="flex flex-row items-center border-b bg-accent p-1">
-            <div className="flex min-w-0 items-center gap-2 bg-accent px-4 py-1.5 text-accent-foreground text-sm">
-              <Icon className="size-4 shrink-0" />
-              <span className="min-w-0 flex-1 truncate">{language}</span>
-            </div>
-            <div className="ml-auto flex items-center gap-2">{children}</div>
-          </div>
-
-          <div className="relative">
-            <MemoizedSyntaxHighlighter
-              className="overflow-hidden dark:hidden"
-              codeTagProps={CODE_TAG_PROPS}
-              customStyle={LIGHT_CUSTOM_STYLE}
-              language={language}
-              lineNumberStyle={LINE_NUMBER_STYLE}
-              showLineNumbers={showLineNumbers}
-              style={oneLight}
-            >
-              {code}
-            </MemoizedSyntaxHighlighter>
-            <MemoizedSyntaxHighlighter
-              className="hidden overflow-hidden dark:block"
-              codeTagProps={CODE_TAG_PROPS}
-              customStyle={DARK_CUSTOM_STYLE}
-              language={language}
-              lineNumberStyle={LINE_NUMBER_STYLE}
-              showLineNumbers={showLineNumbers}
-              style={oneDark}
-            >
-              {code}
-            </MemoizedSyntaxHighlighter>
+          <span className="ml-1 font-mono lowercase">{language}</span>
+          <div>{children}</div>
+        </div>
+        <div className="w-full">
+          <div className="min-w-full">
+            <div
+              className={cn("overflow-x-auto dark:hidden", className)}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+              dangerouslySetInnerHTML={{ __html: html }}
+              data-code-block
+              data-language={language}
+              {...rest}
+            />
+            <div
+              className={cn("hidden overflow-x-auto dark:block", className)}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+              dangerouslySetInnerHTML={{ __html: darkHtml }}
+              data-code-block
+              data-language={language}
+              {...rest}
+            />
           </div>
         </div>
-      </CodeBlockContextProvider>
-    );
-  },
-  (prevProps, nextProps) => {
-    return prevProps.code === nextProps.code;
-  }
-);
+      </div>
+    </CodeBlockContext.Provider>
+  );
+};
 
-export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
+export type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;
 };
 
-export const CodeBlockCopyButton = memo(
-  ({
-    onCopy,
-    onError,
-    timeout = 2000,
-    children,
-    className,
-    ...props
-  }: CodeBlockCopyButtonProps) => {
-    const [isCopied, setIsCopied] = useState(false);
-    const code = useCodeBlock((state) => state.code);
+export const CodeBlockCopyButton = ({
+  onCopy,
+  onError,
+  timeout = 2000,
+  children,
+  className,
+  code: propCode,
+  ...props
+}: CodeBlockCopyButtonProps & { code?: string }) => {
+  const [isCopied, setIsCopied] = useState(false);
+  const contextCode = useContext(CodeBlockContext).code;
+  const code = propCode ?? contextCode;
 
-    const copyToClipboard = async () => {
-      if (typeof window === "undefined" || !navigator.clipboard.writeText) {
-        onError?.(new Error("Clipboard API not available"));
-        return;
-      }
+  const copyToClipboard = async () => {
+    if (typeof window === "undefined" || !navigator?.clipboard?.writeText) {
+      onError?.(new Error("Clipboard API not available"));
+      return;
+    }
 
-      try {
-        await navigator.clipboard.writeText(code);
-        setIsCopied(true);
-        onCopy?.();
-        setTimeout(() => setIsCopied(false), timeout);
-      } catch (error) {
-        onError?.(error as Error);
-      }
-    };
+    try {
+      await navigator.clipboard.writeText(code);
+      setIsCopied(true);
+      onCopy?.();
+      setTimeout(() => setIsCopied(false), timeout);
+    } catch (error) {
+      onError?.(error as Error);
+    }
+  };
 
-    const Icon = isCopied ? CheckIcon : CopyIcon;
+  const Icon = isCopied ? CheckIcon : CopyIcon;
 
-    return (
-      <Button
-        className={cn("shrink-0", className)}
-        onClick={copyToClipboard}
-        size="icon"
-        variant="ghost"
-        {...props}
-      >
-        {children ?? <Icon className="text-accent-foreground" size={14} />}
-      </Button>
-    );
-  }
-);
+  return (
+    <button
+      className={cn(
+        "cursor-pointer text-muted-foreground",
+        "p-1 transition-all",
+        className
+      )}
+      onClick={copyToClipboard}
+      type="button"
+      {...props}
+    >
+      {children ?? <Icon size={16} />}
+    </button>
+  );
+};

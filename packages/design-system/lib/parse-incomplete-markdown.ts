@@ -7,34 +7,41 @@ const singleUnderscorePattern = /(_)([^_]*?)$/;
 const inlineCodePattern = /(`)([^`]*?)$/;
 const strikethroughPattern = /(~~)([^~]*?)$/;
 const inlineTripleBacktickPattern = /^```[^`\n]*```?$/;
-const consecutiveAsterisksPattern = /^\*{4,}$/;
-const listBulletPattern = /^\s*[-*+]\s/;
-
-// Constants for magic numbers
+const fourOrMoreAsterisksPattern = /^\*{4,}$/;
+const TRIPLE_BACKTICK_LENGTH = 3;
 const TRIPLE_ASTERISK_LENGTH = 3;
 
 // Helper function to check if we have a complete code block
-function hasCompleteCodeBlock(text: string): boolean {
+const hasCompleteCodeBlock = (text: string): boolean => {
   const tripleBackticks = (text.match(/```/g) || []).length;
   return (
     tripleBackticks > 0 && tripleBackticks % 2 === 0 && text.includes("\n")
   );
-}
+};
 
-// Handles incomplete links and images by removing them if not closed
-function handleIncompleteLinksAndImages(text: string): string {
+// Handles incomplete links and images by preserving them with a special marker
+const handleIncompleteLinksAndImages = (text: string): string => {
   const linkMatch = text.match(linkImagePattern);
 
   if (linkMatch) {
-    const startIndex = text.lastIndexOf(linkMatch[1]);
-    return text.substring(0, startIndex);
+    const isImage = linkMatch[1].startsWith("!");
+
+    // For images, we still remove them as they can't show skeleton
+    if (isImage) {
+      const startIndex = text.lastIndexOf(linkMatch[1]);
+      return text.substring(0, startIndex);
+    }
+
+    // For links, preserve the text and close the link with a
+    // special placeholder URL that indicates it's incomplete
+    return `${text}](nakafa:incomplete-link)`;
   }
 
   return text;
-}
+};
 
 // Completes incomplete bold formatting (**)
-function handleIncompleteBold(text: string): string {
+const handleIncompleteBold = (text: string): string => {
   // Don't process if inside a complete code block
   if (hasCompleteCodeBlock(text)) {
     return text;
@@ -50,10 +57,10 @@ function handleIncompleteBold(text: string): string {
   }
 
   return text;
-}
+};
 
 // Completes incomplete italic formatting with double underscores (__)
-function handleIncompleteDoubleUnderscoreItalic(text: string): string {
+const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
   const italicMatch = text.match(italicPattern);
 
   if (italicMatch) {
@@ -64,11 +71,10 @@ function handleIncompleteDoubleUnderscoreItalic(text: string): string {
   }
 
   return text;
-}
+};
 
-// Counts single asterisks that are not part of double asterisks and not escaped
-// Excludes asterisks used as list bullets
-function countSingleAsterisks(text: string): number {
+// Counts single asterisks that are not part of double asterisks, not escaped, and not list markers
+const countSingleAsterisks = (text: string): number => {
   return text.split("").reduce((acc, char, index) => {
     if (char === "*") {
       const prevChar = text[index - 1];
@@ -77,8 +83,26 @@ function countSingleAsterisks(text: string): number {
       if (prevChar === "\\") {
         return acc;
       }
-      // Skip if this is a list bullet asterisk
-      if (isListBulletAsterisk(text, index)) {
+      // Check if this is a list marker (asterisk at start of line followed by space)
+      // Look backwards to find the start of the current line
+      let lineStartIndex = index;
+      for (let i = index - 1; i >= 0; i--) {
+        if (text[i] === "\n") {
+          lineStartIndex = i + 1;
+          break;
+        }
+        if (i === 0) {
+          lineStartIndex = 0;
+          break;
+        }
+      }
+      // Check if this asterisk is at the beginning of a line (with optional whitespace)
+      const beforeAsterisk = text.substring(lineStartIndex, index);
+      if (
+        beforeAsterisk.trim() === "" &&
+        (nextChar === " " || nextChar === "\t")
+      ) {
+        // This is likely a list marker, don't count it
         return acc;
       }
       if (prevChar !== "*" && nextChar !== "*") {
@@ -87,35 +111,10 @@ function countSingleAsterisks(text: string): number {
     }
     return acc;
   }, 0);
-}
-
-// Checks if an asterisk at the given index is used as a list bullet
-function isListBulletAsterisk(text: string, asteriskIndex: number): boolean {
-  const nextChar = text[asteriskIndex + 1];
-
-  // List bullets must be followed by a space
-  if (nextChar !== " ") {
-    return false;
-  }
-
-  // Check if this asterisk is at the start of a line (after newline + optional whitespace)
-  // or at the very beginning of the text
-  if (asteriskIndex === 0) {
-    return true;
-  }
-
-  // Look backwards to see if we're at the start of a line
-  let i = asteriskIndex - 1;
-  while (i >= 0 && (text[i] === " " || text[i] === "\t")) {
-    i--;
-  }
-
-  // If we reached a newline or the start of text, this is a list bullet
-  return i < 0 || text[i] === "\n";
-}
+};
 
 // Completes incomplete italic formatting with single asterisks (*)
-function handleIncompleteSingleAsteriskItalic(text: string): string {
+const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   // Don't process if inside a complete code block
   if (hasCompleteCodeBlock(text)) {
     return text;
@@ -131,11 +130,39 @@ function handleIncompleteSingleAsteriskItalic(text: string): string {
   }
 
   return text;
-}
+};
 
-// Counts single underscores that are not part of double underscores and not escaped
-// Excludes underscores in math expressions and after list bullets
-function countSingleUnderscores(text: string): number {
+// Check if a position is within a math block (between $ or $$)
+const isWithinMathBlock = (text: string, position: number): boolean => {
+  // Count dollar signs before this position
+  let inInlineMath = false;
+  let inBlockMath = false;
+
+  for (let i = 0; i < text.length && i < position; i++) {
+    // Skip escaped dollar signs
+    if (text[i] === "\\" && text[i + 1] === "$") {
+      i++; // Skip the next character
+      continue;
+    }
+
+    if (text[i] === "$") {
+      // Check for block math ($$)
+      if (text[i + 1] === "$") {
+        inBlockMath = !inBlockMath;
+        i++; // Skip the second $
+        inInlineMath = false; // Block math takes precedence
+      } else if (!inBlockMath) {
+        // Only toggle inline math if not in block math
+        inInlineMath = !inInlineMath;
+      }
+    }
+  }
+
+  return Boolean(inInlineMath) || Boolean(inBlockMath);
+};
+
+// Counts single underscores that are not part of double underscores, not escaped, and not in math blocks
+const countSingleUnderscores = (text: string): number => {
   return text.split("").reduce((acc, char, index) => {
     if (char === "_") {
       const prevChar = text[index - 1];
@@ -144,12 +171,8 @@ function countSingleUnderscores(text: string): number {
       if (prevChar === "\\") {
         return acc;
       }
-      // Skip if this underscore is inside a math expression
-      if (isInsideMathExpression(text, index)) {
-        return acc;
-      }
-      // Skip if this underscore appears after a list bullet
-      if (isAfterListBullet(text, index)) {
+      // Skip if within math block
+      if (isWithinMathBlock(text, index)) {
         return acc;
       }
       if (prevChar !== "_" && nextChar !== "_") {
@@ -158,115 +181,10 @@ function countSingleUnderscores(text: string): number {
     }
     return acc;
   }, 0);
-}
-
-// Checks if an underscore at the given index is inside a math expression
-// Supports: $...$, $$...$$, \(...\), \[...\]
-function isInsideMathExpression(
-  text: string,
-  underscoreIndex: number
-): boolean {
-  return (
-    isInsideBlockMath(text, underscoreIndex) ||
-    isInsideInlineMath(text, underscoreIndex)
-  );
-}
-
-// Checks if position is inside block math ($$...$$) or LaTeX display math (\[...\])
-function isInsideBlockMath(text: string, position: number): boolean {
-  const beforeText = text.substring(0, position);
-  const afterText = text.substring(position);
-
-  // Check $$...$$
-  const beforeDollarMatches = beforeText.match(/\$\$/g) || [];
-  const afterDollarMatches = afterText.match(/\$\$/g) || [];
-  if (beforeDollarMatches.length % 2 === 1 && afterDollarMatches.length > 0) {
-    return true;
-  }
-
-  // Check \[...\]
-  const beforeBracketMatch = beforeText.lastIndexOf("\\[");
-  const beforeBracketCloseMatch = beforeText.lastIndexOf("\\]");
-  if (
-    beforeBracketMatch !== -1 &&
-    (beforeBracketCloseMatch === -1 ||
-      beforeBracketMatch > beforeBracketCloseMatch)
-  ) {
-    const afterBracketCloseMatch = afterText.indexOf("\\]");
-    if (afterBracketCloseMatch !== -1) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-// Checks if position is inside inline math ($...$) or LaTeX inline math (\(...\))
-function isInsideInlineMath(text: string, position: number): boolean {
-  const beforeText = text.substring(0, position);
-  const afterText = text.substring(position);
-
-  // Check $...$
-  let dollarCount = 0;
-  for (let i = 0; i < position; i++) {
-    if (
-      text[i] === "$" &&
-      text[i + 1] !== "$" &&
-      text[i - 1] !== "$" &&
-      text[i - 1] !== "\\"
-    ) {
-      dollarCount++;
-    }
-  }
-  if (dollarCount % 2 === 1) {
-    for (let i = position + 1; i < text.length; i++) {
-      if (
-        text[i] === "$" &&
-        text[i + 1] !== "$" &&
-        text[i - 1] !== "$" &&
-        text[i - 1] !== "\\"
-      ) {
-        return true;
-      }
-    }
-  }
-
-  // Check \(...\)
-  const beforeParenMatch = beforeText.lastIndexOf("\\(");
-  const beforeParenCloseMatch = beforeText.lastIndexOf("\\)");
-  if (
-    beforeParenMatch !== -1 &&
-    (beforeParenCloseMatch === -1 || beforeParenMatch > beforeParenCloseMatch)
-  ) {
-    const afterParenCloseMatch = afterText.indexOf("\\)");
-    if (afterParenCloseMatch !== -1) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-// Checks if an underscore appears after a list bullet (-, *, +)
-function isAfterListBullet(text: string, underscoreIndex: number): boolean {
-  // Look backwards from the underscore to find the start of the current line
-  let lineStart = underscoreIndex;
-  while (lineStart > 0 && text[lineStart - 1] !== "\n") {
-    lineStart--;
-  }
-
-  // Check if this line starts with a list bullet (optionally preceded by whitespace)
-  const lineContent = text.substring(
-    lineStart,
-    text.indexOf("\n", underscoreIndex) || text.length
-  );
-  const listBulletMatch = lineContent.match(listBulletPattern);
-
-  return !!listBulletMatch;
-}
+};
 
 // Completes incomplete italic formatting with single underscores (_)
-function handleIncompleteSingleUnderscoreItalic(text: string): string {
+const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
   // Don't process if inside a complete code block
   if (hasCompleteCodeBlock(text)) {
     return text;
@@ -282,20 +200,20 @@ function handleIncompleteSingleUnderscoreItalic(text: string): string {
   }
 
   return text;
-}
+};
 
 // Checks if a backtick at position i is part of a triple backtick sequence
-function isPartOfTripleBacktick(text: string, i: number): boolean {
-  const TRIPLE_BACKTICK_LENGTH = 3;
+const isPartOfTripleBacktick = (text: string, i: number): boolean => {
   const isTripleStart = text.substring(i, i + TRIPLE_BACKTICK_LENGTH) === "```";
-  const isTripleMiddle = i > 0 && text.substring(i - 1, i + 2) === "```";
+  const isTripleMiddle =
+    i > 0 && text.substring(i - 1, i + TRIPLE_BACKTICK_LENGTH - 1) === "```";
   const isTripleEnd = i > 1 && text.substring(i - 2, i + 1) === "```";
 
   return isTripleStart || isTripleMiddle || isTripleEnd;
-}
+};
 
 // Counts single backticks that are not part of triple backticks
-function countSingleBackticks(text: string): number {
+const countSingleBackticks = (text: string): number => {
   let count = 0;
   for (let i = 0; i < text.length; i++) {
     if (text[i] === "`" && !isPartOfTripleBacktick(text, i)) {
@@ -303,11 +221,11 @@ function countSingleBackticks(text: string): number {
     }
   }
   return count;
-}
+};
 
 // Completes incomplete inline code formatting (`)
 // Avoids completing if inside an incomplete code block
-function handleIncompleteInlineCode(text: string): string {
+const handleIncompleteInlineCode = (text: string): string => {
   // Check if we have inline triple backticks (starts with ``` and should end with ```)
   // This pattern should ONLY match truly inline code (no newlines)
   // Examples: ```code``` or ```python code```
@@ -325,15 +243,6 @@ function handleIncompleteInlineCode(text: string): string {
   const allTripleBackticks = (text.match(/```/g) || []).length;
   const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
 
-  // Special case: if text ends with ```\n (triple backticks followed by newline)
-  // This is actually a complete code block, not incomplete
-  if (
-    (text.endsWith("```\n") || text.endsWith("```")) &&
-    allTripleBackticks % 2 === 0
-  ) {
-    return text;
-  }
-
   // Don't modify text if we have complete multi-line code blocks (even pairs of ```)
   if (
     allTripleBackticks > 0 &&
@@ -341,6 +250,16 @@ function handleIncompleteInlineCode(text: string): string {
     text.includes("\n")
   ) {
     // We have complete multi-line code blocks, don't add any backticks
+    return text;
+  }
+
+  // Special case: if text ends with ```\n (triple backticks followed by newline)
+  // This is actually a complete code block, not incomplete
+  // Count all triple backticks - if even, it's complete
+  if (
+    (text.endsWith("```\n") || text.endsWith("```")) &&
+    allTripleBackticks % 2 === 0
+  ) {
     return text;
   }
 
@@ -354,10 +273,10 @@ function handleIncompleteInlineCode(text: string): string {
   }
 
   return text;
-}
+};
 
 // Completes incomplete strikethrough formatting (~~)
-function handleIncompleteStrikethrough(text: string): string {
+const handleIncompleteStrikethrough = (text: string): string => {
   const strikethroughMatch = text.match(strikethroughPattern);
 
   if (strikethroughMatch) {
@@ -368,10 +287,35 @@ function handleIncompleteStrikethrough(text: string): string {
   }
 
   return text;
-}
+};
+
+// Completes incomplete block KaTeX formatting ($$)
+const handleIncompleteBlockKatex = (text: string): string => {
+  // Count all $$ pairs in the text
+  const dollarPairs = (text.match(/\$\$/g) || []).length;
+
+  // If we have an even number of $$, the block is complete
+  if (dollarPairs % 2 === 0) {
+    return text;
+  }
+
+  // If we have an odd number, add closing $$
+  // Check if this looks like a multi-line math block (contains newlines after opening $$)
+  const firstDollarIndex = text.indexOf("$$");
+  const hasNewlineAfterStart =
+    firstDollarIndex !== -1 && text.indexOf("\n", firstDollarIndex) !== -1;
+
+  // For multi-line blocks, add newline before closing $$ if not present
+  if (hasNewlineAfterStart && !text.endsWith("\n")) {
+    return `${text}\n$$`;
+  }
+
+  // For inline blocks or when already ending with newline, just add $$
+  return `${text}$$`;
+};
 
 // Counts triple asterisks that are not part of quadruple or more asterisks
-function countTripleAsterisks(text: string): number {
+const countTripleAsterisks = (text: string): number => {
   let count = 0;
   const matches = text.match(/\*+/g) || [];
 
@@ -385,10 +329,10 @@ function countTripleAsterisks(text: string): number {
   }
 
   return count;
-}
+};
 
 // Completes incomplete bold-italic formatting (***)
-function handleIncompleteBoldItalic(text: string): string {
+const handleIncompleteBoldItalic = (text: string): string => {
   // Don't process if inside a complete code block
   if (hasCompleteCodeBlock(text)) {
     return text;
@@ -396,7 +340,7 @@ function handleIncompleteBoldItalic(text: string): string {
 
   // Don't process if text is only asterisks and has 4 or more consecutive asterisks
   // This prevents cases like **** from being treated as incomplete ***
-  if (consecutiveAsterisksPattern.test(text)) {
+  if (fourOrMoreAsterisksPattern.test(text)) {
     return text;
   }
 
@@ -410,18 +354,26 @@ function handleIncompleteBoldItalic(text: string): string {
   }
 
   return text;
-}
+};
 
 // Parses markdown text and removes incomplete tokens to prevent partial rendering
-export function parseIncompleteMarkdown(text: string): string {
+export const parseIncompleteMarkdown = (text: string): string => {
   if (!text || typeof text !== "string") {
     return text;
   }
 
   let result = text;
 
-  // Handle incomplete links and images first (removes content)
-  result = handleIncompleteLinksAndImages(result);
+  // Handle incomplete links and images first
+  const processedResult = handleIncompleteLinksAndImages(result);
+
+  // If we added an incomplete link marker, don't process other formatting
+  // as the content inside the link should be preserved as-is
+  if (processedResult.endsWith("](nakafa:incomplete-link)")) {
+    return processedResult;
+  }
+
+  result = processedResult;
 
   // Handle various formatting completions
   // Handle triple asterisks first (most specific)
@@ -433,5 +385,9 @@ export function parseIncompleteMarkdown(text: string): string {
   result = handleIncompleteInlineCode(result);
   result = handleIncompleteStrikethrough(result);
 
+  // Handle KaTeX formatting (only block math with $$)
+  result = handleIncompleteBlockKatex(result);
+  // Note: We don't handle inline KaTeX with single $ as they're likely currency symbols
+
   return result;
-}
+};

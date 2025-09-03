@@ -1,26 +1,27 @@
 // Hoisted regex patterns to top-level scope for performance
 const TRIPLE_BACKTICKS = /```/g;
-// Removes backticks from math: `$x^2$` → $x^2$
+// Detects math expressions in backticks with dollar signs: `$x^2$`
 const DOLLAR_MATH_IN_BACKTICKS_GLOBAL = /`\s*\$([^$][\s\S]*?[^$]|\S)\$\s*`/g;
-// Removes backticks from math: `\(x^2\)` → $x^2$
+// Detects math expressions in backticks with double dollar signs: `$$x^2$$`
+const DOUBLE_DOLLAR_MATH_IN_BACKTICKS_GLOBAL =
+  /`\s*\$\$([^$][\s\S]*?[^$]|\S)\$\$\s*`/g;
+// Detects math expressions in backticks with LaTeX parentheses: `\(x^2\)`
 const PAREN_MATH_IN_BACKTICKS_GLOBAL = /`\s*\\\(([\s\S]*?)\\\)\s*`/g;
-// Converts display math: \[x^2\] → ```math\nx^2\n```
+// Detects LaTeX display math with square brackets: \[x^2 + y^2 = z^2\]
 const DISPLAY_MATH_BRACKETS_GLOBAL = /\\\[([\s\S]*?)\\\]/g;
-// Converts display math: $$x^2$$ → ```math\nx^2\n```
-const DISPLAY_MATH_DOUBLE_DOLLAR_GLOBAL = /\$\$([\s\S]*?)\$\$/g;
-// Converts inline math: \(x^2\) → $x^2$
+// Detects LaTeX inline math with parentheses: \(x^2\)
 const INLINE_PAREN_MATH_GLOBAL = /\\\(([\s\S]*?)\\\)/g;
-// Cleans malformed fenced math: ```math x^2``` → ```math\nx^2\n```
+// Detects malformed fenced math blocks: ```math x^2```
 const FENCED_MATH_PATTERN = /```math([\s\S]*?)```/g;
-// Converts HTML math tags: <math>x^2</math> → ```math\nx^2\n```
+// Detects HTML math tags: <math>x^2</math>
 const MATH_TAG_PATTERN = /<math>([\s\S]*?)<\/math>/g;
-// Converts MDX InlineMath components: <InlineMath math="x^2" /> → $x^2$
+// Detects MDX InlineMath components: <InlineMath math="x^2" />
 const INLINE_MATH_COMPONENT_PATTERN =
   /<InlineMath\s+math=["']([^"']*?)["']\s*\/?>(?:<\/InlineMath>)?/g;
-// Converts MDX BlockMath components: <BlockMath math="x^2" /> → ```math\nx^2\n```
+// Detects MDX BlockMath components: <BlockMath math="x^2" />
 const BLOCK_MATH_COMPONENT_PATTERN =
   /<BlockMath\s+math=["']([^"']*?)["']\s*\/?>(?:<\/BlockMath>)?/g;
-// Converts code blocks with math: ```\n$x^2$\n``` → ```math\nx^2\n```
+// Detects code blocks containing dollar math: ```\n$x^2$\n```
 const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
   /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/g;
 const TRIPLE_BACKTICK_LENGTH = 3;
@@ -139,10 +140,12 @@ function createFencedMathBlock(
 
 /**
  * Cleans up math delimiters in markdown text:
- * - $$x^2$$ → ```math\nx^2\n``` (block math)
+ * - $$ x^2 $$ → ```math\nx^2\n``` (block math with spacing)
  * - \[x^2\] → ```math\nx^2\n``` (block math)
- * - `$x^2$` → $x^2$ (removes wrong backticks)
- * - \(x^2\) → $x^2$ (inline math)
+ * - `$x^2$` → $$x^2$$ (removes wrong backticks, converts to inline)
+ * - `$$x^2$$` → $$x^2$$ (removes wrong backticks from double dollar)
+ * - \(x^2\) → $$x^2$$ (inline math)
+ * - $$x^2$$ (no spacing) stays as inline math unchanged
  * - <math>x^2</math> → ```math\nx^2\n``` (block math)
  * - ```\n\frac{a}{b}\nc = d\n``` → ```math\n\frac{a}{b} \\\\\nc = d\n``` (LaTeX in code blocks + smart line breaks)
  */
@@ -170,30 +173,30 @@ function normalizeMathDelimiters(input: string): string {
 
     // Convert MDX math components (LLM hallucinations) to proper formats
     s = s.replace(
-      INLINE_MATH_COMPONENT_PATTERN,
-      (_, content: string) => `$${content.trim()}$`
+      INLINE_MATH_COMPONENT_PATTERN, // <InlineMath math="x^2" /> → $$x^2$$
+      (_, content: string) => `$$${content.trim()}$$`
     );
     s = s.replace(
-      BLOCK_MATH_COMPONENT_PATTERN,
+      BLOCK_MATH_COMPONENT_PATTERN, // <BlockMath math="x^2" /> → ```math\nx^2\n```
       (_, inner: string, offset: number) =>
         createFencedMathBlock(inner, s, offset)
     );
 
-    // Convert various inline math patterns to standard $...$ format
+    // Convert various inline math patterns to standard $$...$$ format
     const inlineMathPatterns = [
-      DOLLAR_MATH_IN_BACKTICKS_GLOBAL, // `$x^2$` → $x^2$
-      PAREN_MATH_IN_BACKTICKS_GLOBAL, // `\(x^2\)` → $x^2$
-      INLINE_PAREN_MATH_GLOBAL, // \(x^2\) → $x^2$
+      DOLLAR_MATH_IN_BACKTICKS_GLOBAL, // `$x^2$` → $$x^2$$
+      DOUBLE_DOLLAR_MATH_IN_BACKTICKS_GLOBAL, // `$$x^2$$` → $$x^2$$
+      PAREN_MATH_IN_BACKTICKS_GLOBAL, // `\(x^2\)` → $$x^2$$
+      INLINE_PAREN_MATH_GLOBAL, // \(x^2\) → $$x^2$$
     ];
 
     for (const pattern of inlineMathPatterns) {
-      s = s.replace(pattern, (_, content: string) => `$${content.trim()}$`);
+      s = s.replace(pattern, (_, content: string) => `$$${content.trim()}$$`);
     }
 
     // Convert all display math formats to fenced blocks
     const displayMathPatterns = [
       DISPLAY_MATH_BRACKETS_GLOBAL, // \[x^2\] → ```math\nx^2\n```
-      DISPLAY_MATH_DOUBLE_DOLLAR_GLOBAL, // $$x^2$$ → ```math\nx^2\n```
       MATH_TAG_PATTERN, // <math>x^2</math> → ```math\nx^2\n```
     ];
 
