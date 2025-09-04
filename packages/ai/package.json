@@ -7,11 +7,11 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/google-vertex": "^3.0.18",
-    "@ai-sdk/react": "^2.0.30",
+    "@ai-sdk/google-vertex": "^3.0.19",
+    "@ai-sdk/react": "^2.0.32",
     "@mendable/firecrawl-js": "^4.3.3",
     "@t3-oss/env-nextjs": "^0.13.8",
-    "ai": "^5.0.30",
+    "ai": "^5.0.32",
     "dedent": "^1.7.0",
     "gpt-tokenizer": "^3.0.1",
     "parse-domain": "^8.2.2"
