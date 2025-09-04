@@ -23,13 +23,13 @@
     "cobe": "^0.6.4",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
-    "geist": "^1.4.2",
+    "geist": "^1.5.1",
     "harden-react-markdown": "^1.0.5",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.542.0",
     "marked": "^16.2.1",
     "mathjs": "^14.6.0",
-    "mermaid": "11.10.1",
+    "mermaid": "11.11.0",
     "motion": "^12.23.12",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.4.3",
@@ -60,14 +60,14 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@tailwindcss/postcss": "^4.1.12",
+    "@tailwindcss/postcss": "^4.1.13",
     "@tailwindcss/typography": "^0.5.16",
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.3.1",
     "@types/react": "^19.1.12",
     "@types/react-katex": "^3.0.4",
     "@types/react-syntax-highlighter": "^15.5.13",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.12",
+    "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2"
   }
 }
