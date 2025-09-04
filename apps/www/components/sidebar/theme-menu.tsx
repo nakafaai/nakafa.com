@@ -61,8 +61,9 @@ export function ThemeMenu() {
           <DropdownMenuGroup>
             {themes.slice(0, BASE_THEMES_COUNT).map((theme) => (
               <DropdownMenuItem
+                className="cursor-pointer"
                 key={theme.value}
-                onClick={() => setTheme(theme.value)}
+                onSelect={() => setTheme(theme.value)}
               >
                 <theme.icon className="size-4 shrink-0" />
                 <span className="truncate">{t(theme.value)}</span>
@@ -76,8 +77,9 @@ export function ThemeMenu() {
           <DropdownMenuGroup>
             {themes.slice(BASE_THEMES_COUNT).map((theme) => (
               <DropdownMenuItem
+                className="cursor-pointer"
                 key={theme.value}
-                onClick={() => setTheme(theme.value)}
+                onSelect={() => setTheme(theme.value)}
               >
                 <theme.icon className="size-4 shrink-0" />
                 <span className="truncate">{t(theme.value)}</span>

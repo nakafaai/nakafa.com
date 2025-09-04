@@ -64,11 +64,12 @@ export function LangMenuSwitcher() {
     <DropdownMenuContent align="end" side={isMobile ? "top" : "right"}>
       {languages.map((language) => (
         <DropdownMenuItem
+          className="cursor-pointer"
           disabled={isPending}
           key={language.value}
-          onClick={() => handleChangeLocale(language.value)}
           onFocus={() => handlePrefetch(language.value)}
           onMouseEnter={() => handlePrefetch(language.value)}
+          onSelect={() => handleChangeLocale(language.value)}
         >
           <span className="truncate">{language.label}</span>
           <IconCircleFilled
