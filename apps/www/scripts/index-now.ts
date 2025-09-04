@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   baseRoutes,
-  getAllRoutes,
+  getContentRoutes,
   getEntries,
   getOgRoutes,
   getQuranRoutes,
@@ -97,7 +97,7 @@ function getUnsubmittedUrls(service: "indexNow" | "bing"): {
   const history = loadSubmissionHistory();
 
   // Get all URLs from sitemap
-  const routes = getAllRoutes();
+  const routes = getContentRoutes();
   const ogRoutes = getOgRoutes(routes);
   const quranRoutes = getQuranRoutes();
   const allRoutes = [...baseRoutes, ...routes, ...ogRoutes, ...quranRoutes];

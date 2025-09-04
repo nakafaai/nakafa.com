@@ -14,14 +14,14 @@ export function getQuranRoutes(): string[] {
 }
 
 // Function to recursively get all directories
-export function getAllRoutes(currentPath = ""): string[] {
+export function getContentRoutes(currentPath = ""): string[] {
   const children = getFolderChildNames(currentPath || ".");
 
   let routes = currentPath ? [`/${currentPath.replace(/\\/g, "/")}`] : ["/"];
 
   for (const child of children) {
     const childPath = currentPath ? `${currentPath}/${child}` : child;
-    const childRoutes = getAllRoutes(childPath);
+    const childRoutes = getContentRoutes(childPath);
     routes = [...routes, ...childRoutes];
   }
 
@@ -45,7 +45,7 @@ export function getEntries(href: Href): MetadataRoute.Sitemap {
 }
 
 export function getUrl(href: Href, locale: Locale): string {
-  const pathname = getPathname({ locale, href });
+  const pathname = getPathname({ locale, href, forcePrefix: true });
   return host + pathname;
 }
 
@@ -60,7 +60,7 @@ export function getOgRoutes(routes: string[]): string[] {
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const contentRoutes = getAllRoutes(); // Get routes from 'contents' directory
+  const contentRoutes = getContentRoutes(); // Get routes from 'contents' directory
   const ogRoutes = getOgRoutes(contentRoutes);
   const quranRoutes = getQuranRoutes();
 
@@ -92,11 +92,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  // You might want to filter out duplicates if getAllRoutes can return "/"
-  // and also handle OG routes if they should be in the sitemap explicitly.
-  // For now, this focuses on content page discoverability.
+  const sitemaps = [...homeEntry, ...sitemapEntries];
 
-  return [...homeEntry, ...sitemapEntries].filter(
-    (entry, index, self) => index === self.findIndex((e) => e.url === entry.url)
-  ); // Basic deduplication
+  return sitemaps;
 }
