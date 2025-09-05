@@ -15,8 +15,8 @@ export const getContentTool = tool({
     let cleanedSlug = cleanSlug(slug);
 
     // Manually make sure that slug not containing locale
-    if (cleanedSlug.startsWith(`/${locale}`)) {
-      cleanedSlug = cleanedSlug.slice(locale.length + 1);
+    if (cleanedSlug.startsWith(locale)) {
+      cleanedSlug = cleanedSlug.slice(locale.length + 1); // remove locale and slash
     }
 
     const url = new URL(`/${locale}/${cleanedSlug}`, "https://nakafa.com");

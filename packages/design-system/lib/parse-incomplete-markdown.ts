@@ -27,10 +27,23 @@ const hasCompleteCodeBlock = (text: string): boolean => {
 
 // Handles incomplete links and images by preserving them with a special marker
 const handleIncompleteLinksAndImages = (text: string): string => {
+  // Don't process if inside a complete code block
+  if (hasCompleteCodeBlock(text)) {
+    return text;
+  }
+
   const linkMatch = text.match(linkImagePattern);
 
   if (linkMatch) {
     const isImage = linkMatch[1].startsWith("!");
+
+    // Find the position of the matched link/image marker
+    const markerIndex = text.lastIndexOf(linkMatch[1]);
+
+    // Check if the marker is within a math block
+    if (isWithinMathBlock(text, markerIndex)) {
+      return text;
+    }
 
     // For images, we still remove them as they can't show skeleton
     if (isImage) {
@@ -434,24 +447,6 @@ const handleIncompleteStrikethrough = (text: string): string => {
   }
 
   return text;
-};
-
-// Counts single dollar signs that are not part of double dollar signs and not escaped
-const _countSingleDollarSigns = (text: string): number => {
-  return text.split("").reduce((acc, char, index) => {
-    if (char === "$") {
-      const prevChar = text[index - 1];
-      const nextChar = text[index + 1];
-      // Skip if escaped with backslash
-      if (prevChar === "\\") {
-        return acc;
-      }
-      if (prevChar !== "$" && nextChar !== "$") {
-        return acc + 1;
-      }
-    }
-    return acc;
-  }, 0);
 };
 
 // Completes incomplete block KaTeX formatting ($$)
