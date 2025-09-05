@@ -57,7 +57,7 @@ export const scrapeTool = tool({
 export const webSearchTool = tool({
   name: "webSearch",
   description:
-    "Search the web for up-to-date information. Use exactly the citation field for inline citations.",
+    "Search the web for up-to-date information and as universal fallback for ANY topic when Nakafa content is insufficient. Use exactly the citation field for inline citations.",
   inputSchema: webSearchInputSchema,
   outputSchema: webSearchOutputSchema,
   async execute({ query }) {
