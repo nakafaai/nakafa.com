@@ -102,7 +102,7 @@ const wordHighlightClassNames = cn(
 );
 
 const codeBlockClassName = cn(
-  "mt-0 bg-background text-sm",
+  "mt-0 bg-muted/40 text-sm",
   "[&_pre]:py-4",
   "[&_pre]:overflow-x-auto",
   "[&_.shiki]:!bg-[var(--shiki-bg)]",
@@ -212,7 +212,7 @@ export const CodeBlockHeader = ({
 }: CodeBlockHeaderProps) => (
   <div
     className={cn(
-      "flex flex-row items-center border-b bg-accent p-1",
+      "flex flex-row items-center border-b bg-muted/80 p-1",
       className
     )}
     {...props}
@@ -270,7 +270,7 @@ export const CodeBlockFilename = ({
 
   return (
     <div
-      className="flex min-w-0 items-center gap-2 bg-accent px-4 py-1.5 text-accent-foreground text-sm"
+      className="flex min-w-0 items-center gap-2 px-4 py-1.5 text-muted-foreground text-sm"
       {...props}
     >
       {Icon && <Icon className="size-4 shrink-0" />}
@@ -298,7 +298,7 @@ export const CodeBlockSelectTrigger = ({
 }: CodeBlockSelectTriggerProps) => (
   <SelectTrigger
     className={cn(
-      "w-fit border-none text-accent-foreground text-sm shadow-none",
+      "w-fit border-none text-muted-foreground text-sm shadow-none",
       className
     )}
     size="sm"
@@ -401,7 +401,7 @@ export const CodeBlockCopyButton = ({
       variant="ghost"
       {...props}
     >
-      {children ?? <Icon className="text-accent-foreground" size={14} />}
+      {children ?? <Icon className="text-muted-foreground" size={14} />}
     </Button>
   );
 };
