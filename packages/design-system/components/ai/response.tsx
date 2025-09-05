@@ -47,10 +47,7 @@ const Block = memo(
     ...props
   }: HardenedMarkdownProps & Pick<ResponseProps, "children">) => {
     const parsedContent = useMemo(
-      () =>
-        parseIncompleteMarkdown(
-          preprocessLaTeX(normalizeBrackets(children.trim()))
-        ),
+      () => parseIncompleteMarkdown(preprocessLaTeX(children.trim())),
       [children]
     );
 
@@ -139,6 +136,7 @@ export const Response = memo(
   }: ResponseProps) => {
     const wrap = useCallback(
       (v: string) => {
+        const normalizedChildren = normalizeBrackets(v);
         return (
           <ResponseContent
             allowedImagePrefixes={allowedImagePrefixes}
@@ -147,7 +145,7 @@ export const Response = memo(
             defaultOrigin={defaultOrigin}
             id={id}
           >
-            {v}
+            {normalizedChildren}
           </ResponseContent>
         );
       },
