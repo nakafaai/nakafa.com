@@ -48,9 +48,6 @@ export function LangMenuSwitcher() {
         { locale }
       );
 
-      // Refresh the page
-      router.refresh();
-
       // reboot the pagefind because of the language change
       if (typeof window !== "undefined" && window.pagefind) {
         await window.pagefind.destroy?.();
