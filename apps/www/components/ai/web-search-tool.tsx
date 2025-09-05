@@ -1,6 +1,6 @@
 "use client";
 
-import type { WebSearchOutput } from "@repo/ai/schema/tools";
+import type { WebSearchInput, WebSearchOutput } from "@repo/ai/schema/tools";
 import {
   Source,
   SourceContent,
@@ -17,6 +17,7 @@ type Props = {
     | "input-available"
     | "output-available"
     | "output-error";
+  input?: Partial<WebSearchInput>;
   output?: WebSearchOutput;
 };
 
@@ -26,7 +27,7 @@ export const WebSearchTool = memo(({ status, output }: Props) => {
   const isLoading =
     status === "input-streaming" || status === "input-available";
 
-  const results = output?.data.news.concat(output?.data.web) ?? [];
+  const results = output?.sources ?? [];
 
   if (isLoading) {
     return (

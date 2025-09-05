@@ -78,6 +78,7 @@ export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
             case "tool-webSearch":
               return (
                 <WebSearchTool
+                  input={part.input}
                   key={`tool-${part.toolCallId}`}
                   output={part.output}
                   status={part.state}

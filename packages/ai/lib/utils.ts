@@ -1,5 +1,6 @@
 import type { UIDataTypes, UIMessagePart } from "ai";
 import dedent from "dedent";
+import { fromUrl, ParseResultType, parseDomain } from "parse-domain";
 import { DEFAULT_LIMIT, isWithinLimit } from "./tokens";
 import type { MyUIMessage, MyUITools } from "./types";
 
@@ -54,6 +55,20 @@ export function cleanSlug(slug: string): string {
  */
 export function dedentString(text: string): string {
   return dedent(text);
+}
+
+/**
+ * Extract the domain from a URL
+ * @param url - The URL to extract the domain from
+ * @returns The extracted domain
+ */
+export function extractDomain(url: string): string {
+  const result = parseDomain(fromUrl(url));
+  if (result.type === ParseResultType.Listed) {
+    const { domain } = result;
+    return domain || "";
+  }
+  return "";
 }
 
 /**

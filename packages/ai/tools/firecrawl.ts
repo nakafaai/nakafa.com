@@ -1,8 +1,8 @@
 import FirecrawlApp from "@mendable/firecrawl-js";
 import { tool } from "ai";
-import { fromUrl, ParseResultType, parseDomain } from "parse-domain";
 import { keys } from "../keys";
 import { selectRelevantContent } from "../lib/content-selection";
+import { extractDomain } from "../lib/utils";
 import {
   scrapeInputSchema,
   scrapeOutputSchema,
@@ -11,15 +11,6 @@ import {
 } from "../schema/tools";
 
 const app = new FirecrawlApp({ apiKey: keys().FIRECRAWL_API_KEY });
-
-function extractDomain(url: string): string {
-  const result = parseDomain(fromUrl(url));
-  if (result.type === ParseResultType.Listed) {
-    const { domain } = result;
-    return domain || "";
-  }
-  return "";
-}
 
 export const scrapeTool = tool({
   name: "scrape",
@@ -65,7 +56,8 @@ export const scrapeTool = tool({
 
 export const webSearchTool = tool({
   name: "webSearch",
-  description: "Search the web for up-to-date information",
+  description:
+    "Search the web for up-to-date information. Use exactly the citation field for inline citations.",
   inputSchema: webSearchInputSchema,
   outputSchema: webSearchOutputSchema,
   async execute({ query }) {
@@ -85,10 +77,6 @@ export const webSearchTool = tool({
             ("description" in result ? result.description : "") || "";
           const url = ("url" in result ? result.url : "") || "";
 
-          const domain = extractDomain(url);
-
-          const citation = domain && url ? `[${domain}](${url})` : "";
-
           const processedContent = selectRelevantContent({
             content: ("markdown" in result ? result.markdown : "") || "",
             query, // Use the search query for relevance scoring
@@ -99,7 +87,6 @@ export const webSearchTool = tool({
             title,
             description,
             url,
-            citation,
             content: processedContent,
           };
         }) || [];
@@ -120,10 +107,6 @@ export const webSearchTool = tool({
               ("snippet" in result ? result.snippet : "") || "";
             const url = ("url" in result ? result.url : "") || "";
 
-            const domain = extractDomain(url);
-
-            const citation = domain && url ? `[${domain}](${url})` : "";
-
             const processedContent = selectRelevantContent({
               content: ("markdown" in result ? result.markdown : "") || "",
               query, // Use the search query for relevance scoring
@@ -134,15 +117,28 @@ export const webSearchTool = tool({
               title,
               description,
               url,
-              citation,
               content: processedContent,
             };
           }) || [];
 
-      return { data: { news, web }, error: undefined };
+      // combine news and web into a single array
+      const sources = [...web, ...news];
+
+      // add citation to each source, make sure only include sources with a url
+      const sourcesWithCitation = sources
+        .filter((source) => source.url)
+        .map((source) => {
+          const domain = extractDomain(source.url);
+          return {
+            ...source,
+            citation: `[${domain}](${source.url})`,
+          };
+        });
+
+      return { sources: sourcesWithCitation, error: undefined };
     } catch (error) {
       return {
-        data: { news: [], web: [] },
+        sources: [],
         error: `Failed to search: ${error}`,
       };
     }

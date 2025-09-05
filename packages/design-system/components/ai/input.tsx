@@ -22,7 +22,7 @@ import type {
 import { Children, memo, useCallback, useEffect, useRef } from "react";
 import { SpinnerIcon } from "../ui/icons";
 
-const MIN_HEIGHT = 48;
+const MIN_HEIGHT = 64;
 const MAX_HEIGHT = 164;
 
 type UseAutoResizeTextareaProps = {

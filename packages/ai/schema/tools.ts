@@ -147,29 +147,18 @@ export type WebSearchInput = z.input<typeof webSearchInputSchema>;
 
 export const webSearchOutputSchema = z
   .object({
-    data: z.object({
-      news: z.array(
-        z.object({
-          title: z.string(),
-          description: z.string(),
-          url: z.string(),
-          citation: z.string(),
-          content: z.string(),
-        })
-      ),
-      web: z.array(
-        z.object({
-          title: z.string(),
-          description: z.string(),
-          url: z.string(),
-          citation: z.string(),
-          content: z.string(),
-        })
-      ),
-    }),
+    sources: z.array(
+      z.object({
+        title: z.string(),
+        description: z.string(),
+        url: z.string(),
+        content: z.string(),
+        citation: z.string(),
+      })
+    ),
     error: z.string().optional(),
   })
   .describe(
-    "The output schema for web search results including news and web content"
+    "The output schema for web search results. Use exactly the citation field for inline citations."
   );
 export type WebSearchOutput = z.output<typeof webSearchOutputSchema>;

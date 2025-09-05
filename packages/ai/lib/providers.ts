@@ -33,6 +33,6 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "standard";
+export const defaultModel: ModelId = "google-premium";
 
 export const order = ["groq", "baseten", "cerebras", "azure", "vertex"];

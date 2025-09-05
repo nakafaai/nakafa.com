@@ -23,7 +23,7 @@ import {
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
 
-const MAX_STEPS = 20;
+const MAX_STEPS = 10;
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
