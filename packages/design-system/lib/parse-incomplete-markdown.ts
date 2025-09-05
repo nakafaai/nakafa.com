@@ -6,10 +6,16 @@ const singleAsteriskPattern = /(\*)([^*]*?)$/;
 const singleUnderscorePattern = /(_)([^_]*?)$/;
 const inlineCodePattern = /(`)([^`]*?)$/;
 const strikethroughPattern = /(~~)([^~]*?)$/;
+
+// Additional regex patterns used throughout the file
+const whitespaceAndMarkersPattern = /^[\s_~*`]*$/;
+const listItemPattern = /^[\s]*[-*+][\s]+$/;
 const inlineTripleBacktickPattern = /^```[^`\n]*```?$/;
 const fourOrMoreAsterisksPattern = /^\*{4,}$/;
+
+// Constants for magic numbers
 const TRIPLE_BACKTICK_LENGTH = 3;
-const TRIPLE_ASTERISK_LENGTH = 3;
+const MIN_ASTERISKS_FOR_TRIPLE = 3;
 
 // Helper function to check if we have a complete code block
 const hasCompleteCodeBlock = (text: string): boolean => {
@@ -50,6 +56,37 @@ const handleIncompleteBold = (text: string): string => {
   const boldMatch = text.match(boldPattern);
 
   if (boldMatch) {
+    // Don't close if there's no meaningful content after the opening markers
+    // boldMatch[2] contains the content after **
+    // Check if content is only whitespace or other emphasis markers
+    const contentAfterMarker = boldMatch[2];
+    if (
+      !contentAfterMarker ||
+      whitespaceAndMarkersPattern.test(contentAfterMarker)
+    ) {
+      return text;
+    }
+
+    // Check if the bold marker is in a list item context
+    // Find the position of the matched bold marker
+    const markerIndex = text.lastIndexOf(boldMatch[1]);
+    const beforeMarker = text.substring(0, markerIndex);
+    const lastNewlineBeforeMarker = beforeMarker.lastIndexOf("\n");
+    const lineStart =
+      lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
+    const lineBeforeMarker = text.substring(lineStart, markerIndex);
+
+    // Check if this line is a list item with just the bold marker
+    if (listItemPattern.test(lineBeforeMarker)) {
+      // This is a list item with just emphasis markers
+      // Check if content after marker spans multiple lines
+      const hasNewlineInContent = contentAfterMarker.includes("\n");
+      if (hasNewlineInContent) {
+        // Don't complete if the content spans to another line
+        return text;
+      }
+    }
+
     const asteriskPairs = (text.match(/\*\*/g) || []).length;
     if (asteriskPairs % 2 === 1) {
       return `${text}**`;
@@ -64,6 +101,37 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
   const italicMatch = text.match(italicPattern);
 
   if (italicMatch) {
+    // Don't close if there's no meaningful content after the opening markers
+    // italicMatch[2] contains the content after __
+    // Check if content is only whitespace or other emphasis markers
+    const contentAfterMarker = italicMatch[2];
+    if (
+      !contentAfterMarker ||
+      whitespaceAndMarkersPattern.test(contentAfterMarker)
+    ) {
+      return text;
+    }
+
+    // Check if the underscore marker is in a list item context
+    // Find the position of the matched underscore marker
+    const markerIndex = text.lastIndexOf(italicMatch[1]);
+    const beforeMarker = text.substring(0, markerIndex);
+    const lastNewlineBeforeMarker = beforeMarker.lastIndexOf("\n");
+    const lineStart =
+      lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
+    const lineBeforeMarker = text.substring(lineStart, markerIndex);
+
+    // Check if this line is a list item with just the underscore marker
+    if (listItemPattern.test(lineBeforeMarker)) {
+      // This is a list item with just emphasis markers
+      // Check if content after marker spans multiple lines
+      const hasNewlineInContent = contentAfterMarker.includes("\n");
+      if (hasNewlineInContent) {
+        // Don't complete if the content spans to another line
+        return text;
+      }
+    }
+
     const underscorePairs = (text.match(/__/g) || []).length;
     if (underscorePairs % 2 === 1) {
       return `${text}__`;
@@ -123,6 +191,33 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   const singleAsteriskMatch = text.match(singleAsteriskPattern);
 
   if (singleAsteriskMatch) {
+    // Find the first single asterisk position (not part of **)
+    let firstSingleAsteriskIndex = -1;
+    for (let i = 0; i < text.length; i++) {
+      if (text[i] === "*" && text[i - 1] !== "*" && text[i + 1] !== "*") {
+        firstSingleAsteriskIndex = i;
+        break;
+      }
+    }
+
+    if (firstSingleAsteriskIndex === -1) {
+      return text;
+    }
+
+    // Get content after the first single asterisk
+    const contentAfterFirstAsterisk = text.substring(
+      firstSingleAsteriskIndex + 1
+    );
+
+    // Check if there's meaningful content after the asterisk
+    // Don't close if content is only whitespace or emphasis markers
+    if (
+      !contentAfterFirstAsterisk ||
+      whitespaceAndMarkersPattern.test(contentAfterFirstAsterisk)
+    ) {
+      return text;
+    }
+
     const singleAsterisks = countSingleAsterisks(text);
     if (singleAsterisks % 2 === 1) {
       return `${text}*`;
@@ -193,6 +288,38 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
   const singleUnderscoreMatch = text.match(singleUnderscorePattern);
 
   if (singleUnderscoreMatch) {
+    // Find the first single underscore position (not part of __)
+    let firstSingleUnderscoreIndex = -1;
+    for (let i = 0; i < text.length; i++) {
+      if (
+        text[i] === "_" &&
+        text[i - 1] !== "_" &&
+        text[i + 1] !== "_" &&
+        !isWithinMathBlock(text, i)
+      ) {
+        firstSingleUnderscoreIndex = i;
+        break;
+      }
+    }
+
+    if (firstSingleUnderscoreIndex === -1) {
+      return text;
+    }
+
+    // Get content after the first single underscore
+    const contentAfterFirstUnderscore = text.substring(
+      firstSingleUnderscoreIndex + 1
+    );
+
+    // Check if there's meaningful content after the underscore
+    // Don't close if content is only whitespace or emphasis markers
+    if (
+      !contentAfterFirstUnderscore ||
+      whitespaceAndMarkersPattern.test(contentAfterFirstUnderscore)
+    ) {
+      return text;
+    }
+
     const singleUnderscores = countSingleUnderscores(text);
     if (singleUnderscores % 2 === 1) {
       return `${text}_`;
@@ -205,8 +332,7 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
 // Checks if a backtick at position i is part of a triple backtick sequence
 const isPartOfTripleBacktick = (text: string, i: number): boolean => {
   const isTripleStart = text.substring(i, i + TRIPLE_BACKTICK_LENGTH) === "```";
-  const isTripleMiddle =
-    i > 0 && text.substring(i - 1, i + TRIPLE_BACKTICK_LENGTH - 1) === "```";
+  const isTripleMiddle = i > 0 && text.substring(i - 1, i + 2) === "```";
   const isTripleEnd = i > 1 && text.substring(i - 2, i + 1) === "```";
 
   return isTripleStart || isTripleMiddle || isTripleEnd;
@@ -255,7 +381,6 @@ const handleIncompleteInlineCode = (text: string): string => {
 
   // Special case: if text ends with ```\n (triple backticks followed by newline)
   // This is actually a complete code block, not incomplete
-  // Count all triple backticks - if even, it's complete
   if (
     (text.endsWith("```\n") || text.endsWith("```")) &&
     allTripleBackticks % 2 === 0
@@ -266,6 +391,17 @@ const handleIncompleteInlineCode = (text: string): string => {
   const inlineCodeMatch = text.match(inlineCodePattern);
 
   if (inlineCodeMatch && !insideIncompleteCodeBlock) {
+    // Don't close if there's no meaningful content after the opening marker
+    // inlineCodeMatch[2] contains the content after `
+    // Check if content is only whitespace or other emphasis markers
+    const contentAfterMarker = inlineCodeMatch[2];
+    if (
+      !contentAfterMarker ||
+      whitespaceAndMarkersPattern.test(contentAfterMarker)
+    ) {
+      return text;
+    }
+
     const singleBacktickCount = countSingleBackticks(text);
     if (singleBacktickCount % 2 === 1) {
       return `${text}\``;
@@ -280,6 +416,17 @@ const handleIncompleteStrikethrough = (text: string): string => {
   const strikethroughMatch = text.match(strikethroughPattern);
 
   if (strikethroughMatch) {
+    // Don't close if there's no meaningful content after the opening markers
+    // strikethroughMatch[2] contains the content after ~~
+    // Check if content is only whitespace or other emphasis markers
+    const contentAfterMarker = strikethroughMatch[2];
+    if (
+      !contentAfterMarker ||
+      whitespaceAndMarkersPattern.test(contentAfterMarker)
+    ) {
+      return text;
+    }
+
     const tildePairs = (text.match(/~~/g) || []).length;
     if (tildePairs % 2 === 1) {
       return `${text}~~`;
@@ -287,6 +434,24 @@ const handleIncompleteStrikethrough = (text: string): string => {
   }
 
   return text;
+};
+
+// Counts single dollar signs that are not part of double dollar signs and not escaped
+const _countSingleDollarSigns = (text: string): number => {
+  return text.split("").reduce((acc, char, index) => {
+    if (char === "$") {
+      const prevChar = text[index - 1];
+      const nextChar = text[index + 1];
+      // Skip if escaped with backslash
+      if (prevChar === "\\") {
+        return acc;
+      }
+      if (prevChar !== "$" && nextChar !== "$") {
+        return acc + 1;
+      }
+    }
+    return acc;
+  }, 0);
 };
 
 // Completes incomplete block KaTeX formatting ($$)
@@ -322,9 +487,9 @@ const countTripleAsterisks = (text: string): number => {
   for (const match of matches) {
     // Count how many complete triple asterisks are in this sequence
     const asteriskCount = match.length;
-    if (asteriskCount >= TRIPLE_ASTERISK_LENGTH) {
+    if (asteriskCount >= MIN_ASTERISKS_FOR_TRIPLE) {
       // Each group of exactly 3 asterisks counts as one triple asterisk marker
-      count += Math.floor(asteriskCount / TRIPLE_ASTERISK_LENGTH);
+      count += Math.floor(asteriskCount / MIN_ASTERISKS_FOR_TRIPLE);
     }
   }
 
@@ -347,6 +512,17 @@ const handleIncompleteBoldItalic = (text: string): string => {
   const boldItalicMatch = text.match(boldItalicPattern);
 
   if (boldItalicMatch) {
+    // Don't close if there's no meaningful content after the opening markers
+    // boldItalicMatch[2] contains the content after ***
+    // Check if content is only whitespace or other emphasis markers
+    const contentAfterMarker = boldItalicMatch[2];
+    if (
+      !contentAfterMarker ||
+      whitespaceAndMarkersPattern.test(contentAfterMarker)
+    ) {
+      return text;
+    }
+
     const tripleAsteriskCount = countTripleAsterisks(text);
     if (tripleAsteriskCount % 2 === 1) {
       return `${text}***`;

@@ -47,7 +47,7 @@ const Block = memo(
     ...props
   }: HardenedMarkdownProps & Pick<ResponseProps, "children">) => {
     const parsedContent = useMemo(
-      () => parseIncompleteMarkdown(preprocessLaTeX(children.trim())),
+      () => parseIncompleteMarkdown(preprocessLaTeX(children).trim()),
       [children]
     );
 
