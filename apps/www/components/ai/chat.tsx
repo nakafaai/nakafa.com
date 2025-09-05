@@ -81,7 +81,7 @@ const AIChatToolbar = memo(() => {
           placeholder={t("text-placeholder")}
           value={text}
         />
-        <PromptInputToolbar className="pt-0">
+        <PromptInputToolbar>
           <PromptInputTools>
             <AiChatModel />
           </PromptInputTools>
