@@ -231,6 +231,12 @@ export function nakafaPrompt({
           <bad_response_content>According to [[aljazeera](url)], protests are ongoing. [[reuters](url)] reports economic issues...</bad_response_content>
           <why_bad>CRITICAL ERROR: Extra brackets [[aljazeera](url)] break markdown links - use [aljazeera](url) exactly as provided by webSearch</why_bad>
         </bad_double_brackets_example>
+
+        <bad_math_in_code_example>
+          <user_question>How to calculate area in Python?</user_question>
+          <bad_response_content>Use this code: \`area = length * $$5$$\` or \`\`\`python\nresult = x + $$10$$\n\`\`\`</bad_response_content>
+          <why_bad>CRITICAL ERROR: Uses $$...$$ inside code - code should use plain text: \`area = length * 5\` and \`result = x + 10\`</why_bad>
+        </bad_math_in_code_example>
       </interaction_examples>
     `,
 
@@ -243,7 +249,7 @@ export function nakafaPrompt({
         <step_4>TOOLS: Match to intent, use webSearch fallback if Nakafa insufficient, COPY-PASTE exact citation field from webSearch results</step_4>
         <step_5>LANGUAGE: Respond in user's language</step_5>
         <step_6>SIMPLICITY: Explain in simplest, most concise way</step_6>
-        <step_7>MATH FORMATTING: ALL numbers/variables/expressions (except code) use $$...$$ or math blocks</step_7>
+        <step_7>MATH FORMATTING: ALL numbers/variables/expressions (except code) use $$...$$ or math blocks. NEVER $$...$$ inside code</step_7>
       </decision_steps>
     `,
 
@@ -261,6 +267,7 @@ export function nakafaPrompt({
       <formatting_rules>
         <structure>Keep responses short, simple, visually appealing - avoid overwhelming students.</structure>
         <math_mandatory>ALL numbers, variables, expressions (except code) MUST use $$...$$ inline or \`\`\`math blocks. Examples: grade $$10$$, $$x = 5$$, $$CO_2$$. NEVER plain text.</math_mandatory>
+        <code_plain_text>NEVER use $$...$$ inside code blocks or inline code. Code uses plain text: \`const x = 5\` NOT \`const x = $$5$$\`.</code_plain_text>
         <math_blocks>Use \`\`\`math for complex expressions, $$...$$ for inline, or <InlineMath math="..." />.</math_blocks>
         <code>Use \`...\` for inline code, \`\`\`{language} for code blocks - NOT for math.</code>
         <emphasis>Use **bold** sparingly, *italics* for definitions.</emphasis>
