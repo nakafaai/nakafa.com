@@ -73,3 +73,28 @@ export function filterWhitespaceNodes(children: ReactNode) {
     (child) => !(typeof child === "string" && child.trim() === "")
   );
 }
+
+/**
+ * Saves a file to the browser
+ * @param filename - The name of the file
+ * @param content - The content of the file
+ * @param mimeType - The MIME type of the file
+ */
+export function save(
+  filename: string,
+  content: string | Blob,
+  mimeType: string
+) {
+  const blob =
+    typeof content === "string"
+      ? new Blob([content], { type: mimeType })
+      : content;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

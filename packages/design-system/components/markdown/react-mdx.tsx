@@ -1,6 +1,7 @@
 import {
   CodeBlock,
   CodeBlockCopyButton,
+  CodeBlockDownloadButton,
 } from "@repo/design-system/components/ai/code-block";
 import { Anchor } from "@repo/design-system/components/markdown/anchor";
 import { Heading } from "@repo/design-system/components/markdown/heading";
@@ -280,7 +281,7 @@ export const reactMdxComponents: Options["components"] = {
       }
 
       const match = className?.match(LANGUAGE_REGEX);
-      const language = match?.at(1) ?? "";
+      const language = (match?.at(1) ?? "") as BundledLanguage | "math";
 
       // Extract code content from children safely
       let code = "";
@@ -323,9 +324,10 @@ export const reactMdxComponents: Options["components"] = {
           code={code}
           data-language={language}
           data-nakafa="code-block"
-          language={language as BundledLanguage}
+          language={language}
           preClassName="overflow-x-auto font-mono text-sm p-4 bg-muted/40"
         >
+          <CodeBlockDownloadButton code={code} language={language} />
           <CodeBlockCopyButton />
         </CodeBlock>
       );
