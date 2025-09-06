@@ -3,7 +3,6 @@
 import { reactMdxComponents } from "@repo/design-system/components/markdown/react-mdx";
 import { normalizeBrackets } from "@repo/design-system/lib/normalize-brackets";
 import { parseMarkdownIntoBlocks } from "@repo/design-system/lib/parse-blocks";
-import { parseIncompleteMarkdown } from "@repo/design-system/lib/parse-incomplete-markdown";
 import { preprocessLaTeX } from "@repo/design-system/lib/parse-math";
 import { cn } from "@repo/design-system/lib/utils";
 import hardenReactMarkdown from "harden-react-markdown";
@@ -47,7 +46,7 @@ const Block = memo(
     ...props
   }: HardenedMarkdownProps & Pick<ResponseProps, "children">) => {
     const parsedContent = useMemo(
-      () => parseIncompleteMarkdown(preprocessLaTeX(children).trim()),
+      () => preprocessLaTeX(children.trim()),
       [children]
     );
 
