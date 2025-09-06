@@ -183,7 +183,7 @@ export const reactMdxComponents: Options["components"] = {
   table: memo(
     ({ children, ...props }) => (
       <Table
-        containerClassName="my-4 rounded-xl border shadow-sm"
+        containerClassName="my-4 rounded-xl border"
         data-nakafa="table"
         {...props}
       >
@@ -195,7 +195,7 @@ export const reactMdxComponents: Options["components"] = {
   thead: memo(
     ({ children, ...props }) => (
       <TableHeader
-        className="border-b bg-accent text-accent-foreground"
+        className="border-b bg-muted/80"
         data-nakafa="table-header"
         {...props}
       >
@@ -212,7 +212,7 @@ export const reactMdxComponents: Options["components"] = {
   ),
   tbody: memo(
     ({ children, ...props }) => (
-      <TableBody data-nakafa="table-body" {...props}>
+      <TableBody className="bg-muted/40" data-nakafa="table-body" {...props}>
         {filterWhitespaceNodes(children)}
       </TableBody>
     ),

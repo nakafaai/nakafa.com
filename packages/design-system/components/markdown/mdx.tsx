@@ -86,20 +86,19 @@ export const components = {
   InlineMath,
   BlockMath,
   table: ({ children, ...props }: TableProps) => (
-    <Table containerClassName="my-4 rounded-xl border shadow-sm" {...props}>
+    <Table containerClassName="my-4 rounded-xl border" {...props}>
       {filterWhitespaceNodes(children)}
     </Table>
   ),
   thead: ({ children, ...props }: TableHeaderProps) => (
-    <TableHeader
-      className="border-b bg-accent text-accent-foreground"
-      {...props}
-    >
+    <TableHeader className="border-b bg-muted/80" {...props}>
       {filterWhitespaceNodes(children)}
     </TableHeader>
   ),
   tbody: ({ children, ...props }: TableBodyProps) => (
-    <TableBody {...props}>{filterWhitespaceNodes(children)}</TableBody>
+    <TableBody className="bg-muted/40" data-nakafa="table-body" {...props}>
+      {filterWhitespaceNodes(children)}
+    </TableBody>
   ),
   tr: ({ children, ...props }: TableRowProps) => (
     <TableRow className="border-b last:border-b-0" {...props}>
