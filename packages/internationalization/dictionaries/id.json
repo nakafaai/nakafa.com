@@ -228,6 +228,14 @@
     "web-search-loading": "Mencari informasi terkait...",
     "model": "Model",
     "standard": "Standar",
-    "pro": "Pro"
+    "pro": "Pro",
+    "deepseek": "DeepSeek",
+    "google-default": "Google Default",
+    "google-premium": "Google Premium",
+    "meta": "Meta",
+    "moonshot": "Moonshot",
+    "openai": "OpenAI",
+    "qwen": "Qwen",
+    "zai": "Zai"
   }
 }

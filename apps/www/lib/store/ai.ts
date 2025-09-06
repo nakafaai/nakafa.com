@@ -1,3 +1,4 @@
+import type { ModelId } from "@repo/ai/lib/providers";
 import { routing } from "@repo/internationalization/src/routing";
 import type { Locale } from "next-intl";
 import { createStore } from "zustand";
@@ -6,7 +7,7 @@ import { immer } from "zustand/middleware/immer";
 type State = {
   open: boolean;
   text: string;
-  model: "standard" | "pro";
+  model: ModelId;
   locale: Locale;
   slug: string;
 };
@@ -14,8 +15,8 @@ type State = {
 type Actions = {
   setOpen: (open: boolean) => void;
   setText: (text: string) => void;
-  setModel: (model: "standard" | "pro") => void;
-  getModel: () => "standard" | "pro";
+  setModel: (model: ModelId) => void;
+  getModel: () => ModelId;
   getLocale: () => Locale;
   getSlug: () => string;
 };

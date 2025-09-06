@@ -1,5 +1,6 @@
 "use client";
 
+import type { ModelId } from "@repo/ai/lib/providers";
 import {
   PromptInputModelSelect,
   PromptInputModelSelectContent,
@@ -25,7 +26,7 @@ export function AiChatModel() {
 
   return (
     <PromptInputModelSelect
-      onValueChange={(value: "standard" | "pro") => {
+      onValueChange={(value: ModelId) => {
         setModel(value);
       }}
       value={model}

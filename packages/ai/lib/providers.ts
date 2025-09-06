@@ -15,7 +15,7 @@ const languageModels = {
   "google-default": gateway("google/gemini-2.5-flash"),
   "google-premium": gateway("google/gemini-2.5-pro"),
   meta: gateway("meta/llama-4-maverick"),
-  moonshot: gateway("moonshotai/kimi-k2"),
+  moonshot: gateway("moonshotai/kimi-k2-0905"),
   openai: gateway("openai/gpt-oss-120b"),
   qwen: gateway("alibaba/qwen-3-235b"),
   zai: gateway("zai/glm-4.5"),
@@ -33,6 +33,6 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "google-premium";
+export const defaultModel: ModelId = "google-default";
 
 export const order = ["groq", "baseten", "cerebras", "azure", "vertex"];

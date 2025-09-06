@@ -1,6 +1,7 @@
-import { BackpackIcon, ZapIcon } from "lucide-react";
+import type { ModelId } from "@repo/ai/lib/providers";
+import { BackpackIcon, type LucideIcon, ZapIcon } from "lucide-react";
 
-export const models = [
+export const models: { icon: LucideIcon; value: ModelId }[] = [
   {
     icon: BackpackIcon,
     value: "standard",
@@ -9,4 +10,4 @@ export const models = [
     icon: ZapIcon,
     value: "pro",
   },
-] as const;
+];
