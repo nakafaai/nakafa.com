@@ -1,7 +1,7 @@
 "use client";
 
 import { reactMdxComponents } from "@repo/design-system/components/markdown/react-mdx";
-import { normalizeBrackets } from "@repo/design-system/lib/normalize-brackets";
+import { normalizeText } from "@repo/design-system/lib/normalize";
 import { parseMarkdownIntoBlocks } from "@repo/design-system/lib/parse-blocks";
 import { preprocessLaTeX } from "@repo/design-system/lib/parse-math";
 import { cn } from "@repo/design-system/lib/utils";
@@ -135,7 +135,7 @@ export const Response = memo(
   }: ResponseProps) => {
     const wrap = useCallback(
       (v: string) => {
-        const normalizedChildren = normalizeBrackets(v);
+        const normalizedChildren = normalizeText(v);
         return (
           <ResponseContent
             allowedImagePrefixes={allowedImagePrefixes}

@@ -255,9 +255,16 @@ export function nakafaPrompt({
         <step_4>TOOLS: Match to intent, use webSearch fallback if Nakafa insufficient, COPY-PASTE exact citation field from webSearch results</step_4>
         <step_5>LANGUAGE: Respond in user's language</step_5>
         <step_6>SIMPLICITY: Explain in simplest, most concise way</step_6>
-        <step_7>MATH FORMATTING: ALL numbers/variables/expressions (except code) use $$...$$ or math blocks. NEVER $$...$$ inside code</step_7>
-        <step_8>DIAGRAMS: Use \`\`\`mermaid for visual explanations (processes, relationships, timelines)</step_8>
+        <step_7>CRITICAL: NEVER TELL, TALK, OR MENTION ANYTHING ABOUT AI, TOOLS, FUNCTIONS, PROMPTS, OR INTERNAL PROCESSES</step_7>
       </decision_steps>
+
+      <formatting_decisions>
+        <math_decision>Numbers/variables/expressions → $$...$$ inline ($$10$$, $$x = 5$$, $$CO_2$$) | Complex math → \`\`\`math blocks | Code → plain text only</math_decision>
+        <structure_decision>Educational content → numbered lists (1., 2., 3.) | Simple items → bullet points | Steps → ordered format</structure_decision>
+        <visual_decision>Processes/relationships → \`\`\`mermaid diagrams | Code examples → \`\`\`{language} blocks | Emphasis → **bold** sparingly</visual_decision>
+        <citation_decision>Web facts → copy-paste exact [domain](url) from webSearch citation field | NEVER generic [citation](url) | NEVER double brackets [[domain](url)] | NEVER incomplete [domain] only</citation_decision>
+        <language_decision>ALWAYS user's language MANDATORY → override everything else | Never mix languages | Natural phrasing</language_decision>
+      </formatting_decisions>
     `,
 
     // Main directive and mission
