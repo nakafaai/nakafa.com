@@ -298,7 +298,9 @@ export const reactMdxComponents: Options["components"] = {
       }
 
       if (language === "math") {
-        return <BlockMath data-nakafa="math-block" math={code} />;
+        return (
+          <BlockMath className="my-4" data-nakafa="math-block" math={code} />
+        );
       }
 
       if (language === "mermaid") {
