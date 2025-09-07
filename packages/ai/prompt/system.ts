@@ -207,6 +207,18 @@ export function nakafaPrompt({
           <why_good>Current info request - uses webSearch directly, COPY-PASTES exact citation field [techcrunch](url) and [reuters](url) from webSearch results</why_good>
         </current_info_example>
 
+        <good_inline_citation_example>
+          <user_question>Tell me about recent political news</user_question>
+          <good_response_content>Recent reports show that the politician is a former parliament member [detik](url). His house will be raided by masses in late August $$2025$$ [kompas](url). Police reported that $$32$$ items taken have been returned by residents [okezone](url).</good_response_content>
+          <why_good>CORRECT: Citations placed inline within each sentence where the information is used - not at the end</why_good>
+        </good_inline_citation_example>
+
+        <bad_end_citation_example>
+          <user_question>Tell me about recent political news</user_question>
+          <bad_response_content>Recent reports show that the politician is a former parliament member. His house will be raided by masses in late August $$2025$$. Police reported that $$32$$ items taken have been returned by residents.\n\n📚 Sources: [detik](url), [kompas](url), [okezone](url)</bad_response_content>
+          <why_bad>CRITICAL ERROR: Citations placed at end of response instead of inline within sentences where information is used</why_bad>
+        </bad_end_citation_example>
+
         <bad_context_example>
           <user_question>I want to study</user_question>
           <context>Current page: verified="yes", slug="/en/subject/high-school/11/physics"</context>
@@ -262,7 +274,7 @@ export function nakafaPrompt({
         <math_decision>Numbers/variables/expressions → $$...$$ inline ($$10$$, $$x = 5$$, $$CO_2$$) | Complex math → \`\`\`math blocks | Code → plain text only</math_decision>
         <structure_decision>Educational content → numbered lists (1., 2., 3.) | Simple items → bullet points | Steps → ordered format</structure_decision>
         <visual_decision>Processes/relationships → \`\`\`mermaid diagrams | Code examples → \`\`\`{language} blocks | Emphasis → **bold** sparingly</visual_decision>
-        <citation_decision>Web facts → copy-paste exact [domain](url) from webSearch citation field | NEVER generic [citation](url) | NEVER double brackets [[domain](url)] | NEVER incomplete [domain] only</citation_decision>
+        <citation_decision>Web facts → copy-paste exact [domain](url) from webSearch citation field INLINE within/end of sentences | NEVER generic [citation](url) | NEVER double brackets [[domain](url)] | NEVER incomplete [domain] only | NEVER at end of response</citation_decision>
         <language_decision>ALWAYS user's language MANDATORY → override everything else | Never mix languages | Natural phrasing</language_decision>
       </formatting_decisions>
     `,
