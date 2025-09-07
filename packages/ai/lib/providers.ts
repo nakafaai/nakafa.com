@@ -11,18 +11,14 @@ const gateway = createGateway({
 });
 
 const languageModels = {
-  deepseek: gateway("deepseek/deepseek-r1-distill-llama-70b"),
-  "google-default": gateway("google/gemini-2.5-flash"),
-  "google-premium": gateway("google/gemini-2.5-pro"),
+  deepseek: gateway("deepseek/deepseek-v3.1-thinking"),
+  "google-flash": gateway("google/gemini-2.5-flash"),
+  "google-pro": gateway("google/gemini-2.5-pro"),
   meta: gateway("meta/llama-4-maverick"),
-  moonshot: gateway("moonshotai/kimi-k2-0905"),
-  openai: gateway("openai/gpt-oss-120b"),
+  "kimi-k2": gateway("moonshotai/kimi-k2-0905"),
+  "openai-oss": gateway("openai/gpt-oss-120b"),
   qwen: gateway("alibaba/qwen-3-235b"),
   zai: gateway("zai/glm-4.5"),
-
-  // selection models
-  standard: gateway("openai/gpt-oss-120b"),
-  pro: gateway("google/gemini-2.5-flash"),
 };
 
 export const model = customProvider({
@@ -33,6 +29,6 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "google-default";
+export const defaultModel: ModelId = "google-flash";
 
 export const order = ["cerebras", "groq", "baseten", "azure", "vertex"];

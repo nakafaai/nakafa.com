@@ -9,6 +9,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
     "@icons-pack/react-simple-icons": "^13.7.0",
+    "@lobehub/icons": "^2.31.0",
     "@mantine/hooks": "^8.2.8",
     "@next/third-parties": "15.5.2",
     "@radix-ui/react-use-controllable-state": "^1.2.2",

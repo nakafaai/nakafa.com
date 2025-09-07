@@ -23,6 +23,7 @@ export function AiChatModel() {
   const setModel = useAi((state) => state.setModel);
 
   const Icon = models.find((m) => m.value === model)?.icon;
+  const label = models.find((m) => m.value === model)?.label;
 
   return (
     <PromptInputModelSelect
@@ -34,7 +35,7 @@ export function AiChatModel() {
       <PromptInputModelSelectTrigger>
         <PromptInputModelSelectValue>
           {Icon && <Icon />}
-          {t(model)}
+          {label}
         </PromptInputModelSelectValue>
       </PromptInputModelSelectTrigger>
       <PromptInputModelSelectContent>
@@ -43,7 +44,7 @@ export function AiChatModel() {
           {models.map((m) => (
             <PromptInputModelSelectItem key={m.value} value={m.value}>
               <m.icon />
-              {t(m.value)}
+              {m.label}
             </PromptInputModelSelectItem>
           ))}
         </SelectGroup>
