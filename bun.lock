@@ -103,7 +103,7 @@
       "name": "@repo/ai",
       "version": "0.0.0",
       "dependencies": {
-        "@ai-sdk/google-vertex": "^3.0.20",
+        "@ai-sdk/google-vertex": "^3.0.21",
         "@ai-sdk/react": "^2.0.34",
         "@mendable/firecrawl-js": "^4.3.4",
         "@t3-oss/env-nextjs": "^0.13.8",
@@ -309,7 +309,7 @@
 
     "@ai-sdk/google": ["@ai-sdk/google@2.0.12", "", { "dependencies": { "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.8" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-BH3w0hPddNo82okuF/UmCZreKibUSDTW/SED0sBWlrj16S9/H/Urzf4mBwwT419kVenb8XvO55KJ6Byc8ONNXQ=="],
 
-    "@ai-sdk/google-vertex": ["@ai-sdk/google-vertex@3.0.20", "", { "dependencies": { "@ai-sdk/anthropic": "2.0.12", "@ai-sdk/google": "2.0.12", "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.8", "google-auth-library": "^9.15.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-erL1vCeXCDmKr1XBjuXgSnhw4VWpqZRYks5jLGaRYH5u7sm6zGutzfBa3WbJI/cRhSctpXnLBcYsjGS3ZytNKQ=="],
+    "@ai-sdk/google-vertex": ["@ai-sdk/google-vertex@3.0.21", "", { "dependencies": { "@ai-sdk/anthropic": "2.0.12", "@ai-sdk/google": "2.0.12", "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.8", "google-auth-library": "^9.15.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4" } }, "sha512-AsgYJ7e0P+yHZhhXP4dIC9WVivmR2y8twau0RrwFlyN4vAI+4+Orzx5lH+eFvaTKJVWRYhyciCB7u9RFwc5irA=="],
 
     "@ai-sdk/provider": ["@ai-sdk/provider@2.0.0", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA=="],
 
