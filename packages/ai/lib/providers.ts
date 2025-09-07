@@ -11,12 +11,13 @@ const gateway = createGateway({
 });
 
 const languageModels = {
-  deepseek: gateway("deepseek/deepseek-v3.1-thinking"),
+  deepseek: gateway("deepseek/deepseek-v3.1"),
   "google-flash": gateway("google/gemini-2.5-flash"),
   "google-pro": gateway("google/gemini-2.5-pro"),
   meta: gateway("meta/llama-4-maverick"),
   "kimi-k2": gateway("moonshotai/kimi-k2-0905"),
   "openai-oss": gateway("openai/gpt-oss-120b"),
+  "openai-gpt-5": gateway("openai/gpt-5-mini"),
   qwen: gateway("alibaba/qwen-3-235b"),
   zai: gateway("zai/glm-4.5"),
 };
