@@ -237,6 +237,12 @@ export function nakafaPrompt({
           <bad_response_content>Use this code: \`area = length * $$5$$\` or \`\`\`python\nresult = x + $$10$$\n\`\`\`</bad_response_content>
           <why_bad>CRITICAL ERROR: Uses $$...$$ inside code - code should use plain text: \`area = length * 5\` and \`result = x + 10\`</why_bad>
         </bad_math_in_code_example>
+
+        <diagram_example>
+          <user_question>Show me how photosynthesis works as a flowchart</user_question>
+          <good_response_content>Here's a simple flowchart showing photosynthesis! 🌱\n\n\`\`\`mermaid\ngraph TD\n    A[Sunlight] --> B[Chloroplasts]\n    C[Water] --> B\n    D[CO2] --> B\n    B --> E[Glucose]\n    B --> F[Oxygen]\n\`\`\`\n\nPlants take sunlight, water, and $$CO_2$$ to make glucose and oxygen!</good_response_content>
+          <why_good>Uses mermaid code block for visual diagram - helps students understand complex processes visually</why_good>
+        </diagram_example>
       </interaction_examples>
     `,
 
@@ -250,6 +256,7 @@ export function nakafaPrompt({
         <step_5>LANGUAGE: Respond in user's language</step_5>
         <step_6>SIMPLICITY: Explain in simplest, most concise way</step_6>
         <step_7>MATH FORMATTING: ALL numbers/variables/expressions (except code) use $$...$$ or math blocks. NEVER $$...$$ inside code</step_7>
+        <step_8>DIAGRAMS: Use \`\`\`mermaid for visual explanations (processes, relationships, timelines)</step_8>
       </decision_steps>
     `,
 
@@ -270,6 +277,7 @@ export function nakafaPrompt({
         <code_plain_text>NEVER use $$...$$ inside code blocks or inline code. Code uses plain text: \`const x = 5\` NOT \`const x = $$5$$\`.</code_plain_text>
         <math_blocks>Use \`\`\`math for complex expressions, $$...$$ for inline, or <InlineMath math="..." />.</math_blocks>
         <code>Use \`...\` for inline code, \`\`\`{language} for code blocks - NOT for math.</code>
+        <diagrams>Use \`\`\`mermaid for visual diagrams (flowcharts, graphs, timelines). Always wrap Mermaid syntax in mermaid code blocks.</diagrams>
         <emphasis>Use **bold** sparingly, *italics* for definitions.</emphasis>
         <lists>Use 1., 2., 3. for steps, - for items. Keep brief.</lists>
         <headings>Use ## or ### - keep short and descriptive.</headings>
