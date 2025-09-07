@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { memo, useEffect, useMemo, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
+import { SpinnerIcon } from "../ui/icons";
 import { Response } from "./response";
 
 const AUTO_CLOSE_DELAY = 1000;
@@ -164,7 +165,11 @@ export const ReasoningTrigger = memo(
       >
         {children ?? (
           <>
-            <BrainIcon className="size-4" />
+            {isStreaming ? (
+              <SpinnerIcon className="size-4" />
+            ) : (
+              <BrainIcon className="size-4" />
+            )}
             {isStreaming || duration === 0 ? (
               <p>{t("thinking")}</p>
             ) : (

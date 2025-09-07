@@ -35,4 +35,4 @@ export const MODELS = Object.keys(languageModels) as ModelId[];
 
 export const defaultModel: ModelId = "google-default";
 
-export const order = ["groq", "baseten", "cerebras", "azure", "vertex"];
+export const order = ["cerebras", "groq", "baseten", "azure", "vertex"];

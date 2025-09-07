@@ -2,6 +2,11 @@
 
 import type { MyUIMessage } from "@repo/ai/lib/types";
 import { MessageContent } from "@repo/design-system/components/ai/message";
+import {
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
+} from "@repo/design-system/components/ai/reasoning";
 import { Response } from "@repo/design-system/components/ai/response";
 import type { ChatStatus } from "ai";
 import { memo } from "react";
@@ -23,9 +28,7 @@ type Props = {
 
 export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
   // We are not showing the reasoning parts in the chat message, and not include step-start
-  const parts = message.parts.filter(
-    (p) => p.type !== "reasoning" && p.type !== "step-start"
-  );
+  const parts = message.parts.filter((p) => p.type !== "step-start");
 
   if (parts.length === 0) {
     return <AIChatLoading force status={status} />;
@@ -41,6 +44,23 @@ export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
                 <MessageContent key={`message-${message.id}-part-${i}`}>
                   <Response id={message.id}>{part.text}</Response>
                 </MessageContent>
+              );
+            }
+            case "reasoning": {
+              return (
+                <Reasoning
+                  autoOpen={false}
+                  className="w-full"
+                  isStreaming={
+                    part.state === "streaming" && status === "streaming"
+                  }
+                  key={`reasoning-${message.id}-part-${i}`}
+                >
+                  <ReasoningTrigger />
+                  <ReasoningContent id={`reasoning-${message.id}-part-${i}`}>
+                    {part.text}
+                  </ReasoningContent>
+                </Reasoning>
               );
             }
             case "tool-getArticles":

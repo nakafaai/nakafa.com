@@ -50,6 +50,11 @@ const Block = memo(
       [children]
     );
 
+    // Return null if content is empty after trimming whitespace
+    if (!parsedContent.trim()) {
+      return null;
+    }
+
     return (
       <MemoizedHardenedMarkdown
         components={reactMdxComponents}
