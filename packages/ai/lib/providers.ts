@@ -18,7 +18,9 @@ const languageModels = {
   "kimi-k2": gateway("moonshotai/kimi-k2-0905"),
   "openai-oss": gateway("openai/gpt-oss-120b"),
   "openai-gpt-5": gateway("openai/gpt-5-mini"),
-  qwen: gateway("alibaba/qwen-3-235b"),
+  "qwen-3": gateway("alibaba/qwen-3-235b"),
+  "qwen-coder": gateway("alibaba/qwen3-coder"),
+  "grok-code": gateway("xai/grok-code-fast-1"),
   zai: gateway("zai/glm-4.5"),
 };
 

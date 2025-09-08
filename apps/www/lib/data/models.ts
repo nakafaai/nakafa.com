@@ -1,4 +1,12 @@
-import { DeepSeek, Gemini, Moonshot, OpenAI, Qwen, ZAI } from "@lobehub/icons";
+import {
+  DeepSeek,
+  Gemini,
+  Moonshot,
+  OpenAI,
+  Qwen,
+  XAI,
+  ZAI,
+} from "@lobehub/icons";
 import type { ModelId } from "@repo/ai/lib/providers";
 import type { ComponentType } from "react";
 
@@ -36,8 +44,18 @@ export const models: { icon: ComponentType; value: ModelId; label: string }[] =
     },
     {
       icon: Qwen,
-      value: "qwen",
+      value: "qwen-3",
       label: "Qwen 3 235B",
+    },
+    {
+      icon: Qwen,
+      value: "qwen-coder",
+      label: "Qwen 3 Coder",
+    },
+    {
+      icon: XAI,
+      value: "grok-code",
+      label: "Grok Code",
     },
     {
       icon: ZAI,
