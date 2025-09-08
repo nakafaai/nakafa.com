@@ -51,9 +51,7 @@ export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
                 <Reasoning
                   autoOpen={false}
                   className="w-full"
-                  isStreaming={
-                    part.state === "streaming" && status === "streaming"
-                  }
+                  isStreaming={part.state === "streaming"}
                   key={`reasoning-${message.id}-part-${i}`}
                 >
                   <ReasoningTrigger />
