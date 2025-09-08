@@ -1,4 +1,5 @@
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
+import type { OpenAIResponsesProviderOptions } from "@ai-sdk/openai";
 import { type ModelId, model, order } from "@repo/ai/lib/providers";
 import type { MyUIMessage } from "@repo/ai/lib/types";
 import { cleanSlug, compressMessages } from "@repo/ai/lib/utils";
@@ -203,6 +204,9 @@ export async function POST(req: Request) {
         }),
         providerOptions: {
           gateway: { order },
+          openai: {
+            reasoningSummary: "detailed", // 'auto' for condensed or 'detailed' for comprehensive
+          } satisfies OpenAIResponsesProviderOptions,
           google: {
             thinkingConfig: {
               thinkingBudget: -1, // Dynamic thinking budget
