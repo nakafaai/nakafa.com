@@ -27,12 +27,9 @@ export const WebSearchPart = memo(({ message }: Props) => {
     return (
       <div className="flex items-center gap-2">
         <SpinnerIcon className="size-4 text-muted-foreground" />
-        <q
-          cite={message.query}
-          className="text-muted-foreground text-sm italic"
-        >
-          {message.query}
-        </q>
+        <p className="text-muted-foreground text-sm">
+          {t("web-search-loading")}
+        </p>
       </div>
     );
   }

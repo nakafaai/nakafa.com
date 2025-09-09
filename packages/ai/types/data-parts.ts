@@ -45,7 +45,7 @@ export const dataPartSchema = z.object({
       latex: z.string(),
       value: z.string(),
     }),
-    status: z.enum(["loading", "done", "error"]),
+    status: z.enum(["done", "error"]),
     error: errorSchema.optional(),
   }),
   "scrape-url": z.object({

@@ -26,12 +26,6 @@ export const createCalculator = ({ writer }: Params) => {
         value: "",
       };
 
-      writer.write({
-        id: toolCallId,
-        type: "data-calculator",
-        data: { original, result, status: "loading" },
-      });
-
       try {
         const evaluatedValue = node.evaluate();
         const formattedValue = math.format(evaluatedValue, { precision: 14 });
