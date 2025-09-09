@@ -150,7 +150,7 @@ export async function POST(req: Request) {
         }),
         messages: finalMessages,
         stopWhen: stepCountIs(MAX_STEPS),
-        tools,
+        tools: tools({ writer }),
         experimental_repairToolCall: async ({
           toolCall,
           tools: availableTools,

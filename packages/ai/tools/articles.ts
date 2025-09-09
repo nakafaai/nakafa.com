@@ -1,46 +1,77 @@
 import { api } from "@repo/connection/routes";
-import { tool } from "ai";
+import { tool, type UIMessageStreamWriter } from "ai";
 import { buildContentSlug } from "../lib/utils";
-import {
-  getArticlesInputSchema,
-  getArticlesOutputSchema,
-} from "../schema/tools";
+import { getArticlesInputSchema } from "../schema/tools";
+import type { MyUIMessage } from "../types/message";
 
-export const getArticlesTool = tool({
-  name: "getArticles",
-  description:
-    "Retrieves articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, politics, and general publications. Use this for research questions, current events, scientific studies, news analysis, and academic research topics.",
-  inputSchema: getArticlesInputSchema,
-  outputSchema: getArticlesOutputSchema,
-  async execute({ locale, category }) {
-    const slug = buildContentSlug({
-      locale,
-      filters: { type: "articles", category },
-    });
+type Params = {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+};
 
-    const baseUrl = `/${slug}`;
+export const createGetArticles = ({ writer }: Params) => {
+  return tool({
+    name: "getArticles",
+    description:
+      "Retrieves articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, politics, and general publications. Use this for research questions, current events, scientific studies, news analysis, and academic research topics.",
+    inputSchema: getArticlesInputSchema,
+    execute: async ({ locale, category }) => {
+      const slug = buildContentSlug({
+        locale,
+        filters: { type: "articles", category },
+      });
 
-    const { data, error } = await api.contents.getContents({
-      slug,
-    });
+      const baseUrl = `/${slug}`;
 
-    if (error) {
+      writer.write({
+        type: "data-get-articles",
+        data: {
+          baseUrl,
+          status: "loading",
+          articles: [],
+        },
+      });
+
+      const { data, error } = await api.contents.getContents({
+        slug,
+      });
+
+      if (error) {
+        writer.write({
+          type: "data-get-articles",
+          data: {
+            baseUrl,
+            articles: [],
+            status: "error",
+            error,
+          },
+        });
+
+        return {
+          baseUrl,
+          articles: [],
+        };
+      }
+
+      const articles = data.map((item) => ({
+        title: item.metadata.title,
+        url: item.url,
+        slug: item.slug,
+        locale: item.locale,
+      }));
+
+      writer.write({
+        type: "data-get-articles",
+        data: {
+          baseUrl,
+          articles,
+          status: "done",
+        },
+      });
+
       return {
         baseUrl,
-        articles: [],
+        articles,
       };
-    }
-
-    const articles = data.map((item) => ({
-      title: item.metadata.title,
-      url: item.url,
-      slug: item.slug,
-      locale: item.locale,
-    }));
-
-    return {
-      baseUrl,
-      articles,
-    };
-  },
-});
+    },
+  });
+};

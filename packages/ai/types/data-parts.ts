@@ -45,6 +45,8 @@ export const dataPartSchema = z.object({
       latex: z.string(),
       value: z.string(),
     }),
+    status: z.enum(["loading", "done", "error"]),
+    error: errorSchema.optional(),
   }),
   "scrape-url": z.object({
     url: z.string(),
@@ -53,6 +55,7 @@ export const dataPartSchema = z.object({
     error: errorSchema.optional(),
   }),
   "web-search": z.object({
+    query: z.string(),
     sources: z.array(
       z.object({
         title: z.string(),

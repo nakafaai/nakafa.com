@@ -1,46 +1,77 @@
 import { api } from "@repo/connection/routes";
-import { tool } from "ai";
+import { tool, type UIMessageStreamWriter } from "ai";
 import { buildContentSlug } from "../lib/utils";
-import {
-  getSubjectsInputSchema,
-  getSubjectsOutputSchema,
-} from "../schema/tools";
+import { getSubjectsInputSchema } from "../schema/tools";
+import type { MyUIMessage } from "../types/message";
 
-export const getSubjectsTool = tool({
-  name: "getSubjects",
-  description:
-    "Retrieves educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for study questions, homework help, learning concepts, educational content, and curriculum-based topics.",
-  inputSchema: getSubjectsInputSchema,
-  outputSchema: getSubjectsOutputSchema,
-  async execute({ locale, category, grade, material }) {
-    const slug = buildContentSlug({
-      locale,
-      filters: { type: "subject", category, grade, material },
-    });
+type Params = {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+};
 
-    const baseUrl = `/${slug}`;
+export const createGetSubjects = ({ writer }: Params) => {
+  return tool({
+    name: "getSubjects",
+    description:
+      "Retrieves educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for study questions, homework help, learning concepts, educational content, and curriculum-based topics.",
+    inputSchema: getSubjectsInputSchema,
+    execute: async ({ locale, category, grade, material }) => {
+      const slug = buildContentSlug({
+        locale,
+        filters: { type: "subject", category, grade, material },
+      });
 
-    const { data, error } = await api.contents.getContents({
-      slug,
-    });
+      const baseUrl = `/${slug}`;
 
-    if (error) {
+      writer.write({
+        type: "data-get-subjects",
+        data: {
+          baseUrl,
+          status: "loading",
+          subjects: [],
+        },
+      });
+
+      const { data, error } = await api.contents.getContents({
+        slug,
+      });
+
+      if (error) {
+        writer.write({
+          type: "data-get-subjects",
+          data: {
+            baseUrl,
+            subjects: [],
+            status: "error",
+            error,
+          },
+        });
+
+        return {
+          baseUrl,
+          subjects: [],
+        };
+      }
+
+      const subjects = data.map((item) => ({
+        title: item.metadata.title,
+        url: item.url,
+        slug: item.slug,
+        locale: item.locale,
+      }));
+
+      writer.write({
+        type: "data-get-subjects",
+        data: {
+          baseUrl,
+          subjects,
+          status: "done",
+        },
+      });
+
       return {
         baseUrl,
-        subjects: [],
+        subjects,
       };
-    }
-
-    const subjects = data.map((item) => ({
-      title: item.metadata.title,
-      url: item.url,
-      slug: item.slug,
-      locale: item.locale,
-    }));
-
-    return {
-      baseUrl,
-      subjects,
-    };
-  },
-});
+    },
+  });
+};

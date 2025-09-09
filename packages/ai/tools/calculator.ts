@@ -1,47 +1,73 @@
-import { tool } from "ai";
+import { tool, type UIMessageStreamWriter } from "ai";
 import * as math from "mathjs";
-import { calculatorInputSchema, calculatorOutputSchema } from "../schema/tools";
+import { calculatorInputSchema } from "../schema/tools";
+import type { MyUIMessage } from "../types/message";
 
-export const calculatorTool = tool({
-  name: "calculator",
-  description:
-    "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation including simple arithmetic. NEVER calculate manually. Only use for evaluable expressions with concrete numbers, not algebraic variables. Uses Math.js to evaluate expressions.",
-  inputSchema: calculatorInputSchema,
-  outputSchema: calculatorOutputSchema,
-  execute: ({ expression }) => {
-    const node = math.parse(expression);
-    const original = {
-      expression: node.toString(),
-      latex: node.toTex(),
-    };
+type Params = {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+};
 
-    const result = {
-      expression: "",
-      latex: "",
-      value: "",
-    };
+export const createCalculator = ({ writer }: Params) => {
+  return tool({
+    name: "calculator",
+    description:
+      "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation including simple arithmetic. NEVER calculate manually. Only use for evaluable expressions with concrete numbers, not algebraic variables. Uses Math.js to evaluate expressions.",
+    inputSchema: calculatorInputSchema,
+    execute: ({ expression }) => {
+      const node = math.parse(expression);
+      const original = {
+        expression: node.toString(),
+        latex: node.toTex(),
+      };
 
-    try {
-      const evaluatedValue = node.evaluate();
-      const formattedValue = math.format(evaluatedValue, { precision: 14 });
+      const result = {
+        expression: "",
+        latex: "",
+        value: "",
+      };
 
-      let latex = formattedValue;
-      if (typeof evaluatedValue?.toTex === "function") {
-        latex = evaluatedValue.toTex();
+      writer.write({
+        type: "data-calculator",
+        data: { original, result, status: "loading" },
+      });
+
+      try {
+        const evaluatedValue = node.evaluate();
+        const formattedValue = math.format(evaluatedValue, { precision: 14 });
+
+        let latex = formattedValue;
+        if (typeof evaluatedValue?.toTex === "function") {
+          latex = evaluatedValue.toTex();
+        }
+
+        result.expression = formattedValue;
+        result.latex = latex;
+        result.value = formattedValue;
+
+        writer.write({
+          type: "data-calculator",
+          data: { original, result, status: "done" },
+        });
+      } catch {
+        result.expression = node.toString();
+        result.latex = node.toTex();
+        result.value = "Cannot be evaluated.";
+
+        writer.write({
+          type: "data-calculator",
+          data: {
+            original,
+            result,
+            status: "error",
+            error: { message: "Cannot be evaluated." },
+          },
+        });
       }
 
-      result.expression = formattedValue;
-      result.latex = latex;
-      result.value = formattedValue;
-    } catch {
-      result.expression = node.toString();
-      result.latex = node.toTex();
-      result.value = "Cannot be evaluated.";
-    }
-
-    return {
-      original,
-      result,
-    };
-  },
-});
+      return {
+        original,
+        result,
+      };
+    },
+  });
+};
