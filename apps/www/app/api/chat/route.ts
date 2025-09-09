@@ -206,7 +206,9 @@ export async function POST(req: Request) {
         providerOptions: {
           gateway: { order },
           openai: {
+            include: ["reasoning.encrypted_content"],
             reasoningSummary: "detailed", // 'auto' for condensed or 'detailed' for comprehensive
+            serviceTier: "priority",
           } satisfies OpenAIResponsesProviderOptions,
           google: {
             thinkingConfig: {
