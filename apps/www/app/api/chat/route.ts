@@ -1,11 +1,11 @@
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import type { OpenAIResponsesProviderOptions } from "@ai-sdk/openai";
 import { type ModelId, model, order } from "@repo/ai/lib/providers";
-import type { MyUIMessage } from "@repo/ai/lib/types";
 import { cleanSlug, compressMessages } from "@repo/ai/lib/utils";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
 import { tools } from "@repo/ai/tools";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/connection/routes";
 import { CorsValidator } from "@repo/security";
 import { createChildLogger, logError } from "@repo/utilities/logging";
@@ -279,12 +279,14 @@ export async function POST(req: Request) {
         writer.write({
           id: dataPartId,
           type: "data-suggestions",
-          data:
-            chunk.suggestions?.filter(
-              // Because of some AI SDK type weirdness,
-              // we need to filter out undefined suggestions
-              (suggestion) => suggestion !== undefined
-            ) ?? [],
+          data: {
+            data:
+              chunk.suggestions?.filter(
+                // Because of some AI SDK type weirdness,
+                // we need to filter out undefined suggestions
+                (suggestion) => suggestion !== undefined
+              ) ?? [],
+          },
         });
       }
     },

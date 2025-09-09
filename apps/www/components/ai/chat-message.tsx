@@ -1,6 +1,6 @@
 "use client";
 
-import type { MyUIMessage } from "@repo/ai/lib/types";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import { MessageContent } from "@repo/design-system/components/ai/message";
 import {
   Reasoning,
@@ -114,7 +114,7 @@ export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
               return (
                 <SuggestionsData
                   key={`data-${part.id}`}
-                  suggestions={part.data}
+                  suggestions={part.data.data}
                 />
               );
             default:

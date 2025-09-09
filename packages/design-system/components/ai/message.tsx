@@ -1,4 +1,4 @@
-import type { MyUIMessage } from "@repo/ai/lib/types";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import {
   Avatar,
   AvatarFallback,

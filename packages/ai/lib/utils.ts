@@ -1,8 +1,8 @@
 import type { UIDataTypes, UIMessagePart } from "ai";
 import dedent from "dedent";
 import { fromUrl, ParseResultType, parseDomain } from "parse-domain";
+import type { MyUIMessage, MyUITools } from "../types/message";
 import { DEFAULT_LIMIT, isWithinLimit } from "./tokens";
-import type { MyUIMessage, MyUITools } from "./types";
 
 /**
  * Build a content slug

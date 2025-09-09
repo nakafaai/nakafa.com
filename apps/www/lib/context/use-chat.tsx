@@ -1,7 +1,7 @@
 "use client";
 
 import { type UseChatHelpers, useChat as useAIChat } from "@ai-sdk/react";
-import type { MyUIMessage } from "@repo/ai/lib/types";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import { DefaultChatTransport } from "ai";
 import { type ReactNode, useMemo } from "react";
 import { toast } from "sonner";
