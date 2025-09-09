@@ -14,7 +14,7 @@ export const createGetArticles = ({ writer }: Params) => {
     description:
       "Retrieves articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, politics, and general publications. Use this for research questions, current events, scientific studies, news analysis, and academic research topics.",
     inputSchema: getArticlesInputSchema,
-    execute: async ({ locale, category }) => {
+    execute: async ({ locale, category }, { toolCallId }) => {
       const slug = buildContentSlug({
         locale,
         filters: { type: "articles", category },
@@ -23,6 +23,7 @@ export const createGetArticles = ({ writer }: Params) => {
       const baseUrl = `/${slug}`;
 
       writer.write({
+        id: toolCallId,
         type: "data-get-articles",
         data: {
           baseUrl,
@@ -37,6 +38,7 @@ export const createGetArticles = ({ writer }: Params) => {
 
       if (error) {
         writer.write({
+          id: toolCallId,
           type: "data-get-articles",
           data: {
             baseUrl,
@@ -60,6 +62,7 @@ export const createGetArticles = ({ writer }: Params) => {
       }));
 
       writer.write({
+        id: toolCallId,
         type: "data-get-articles",
         data: {
           baseUrl,

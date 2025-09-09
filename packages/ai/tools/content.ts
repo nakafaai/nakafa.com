@@ -16,7 +16,7 @@ export const createGetContent = ({ writer }: Params) => {
     description:
       "Fetches the full content from Nakafa platform. CRITICAL: ONLY use this with slugs that were returned from getSubjects or getArticles responses. NEVER use with guessed, assumed, or unverified slugs. Can also retrieve Quran chapters.",
     inputSchema: getContentInputSchema,
-    execute: async ({ slug, locale }) => {
+    execute: async ({ slug, locale }, { toolCallId }) => {
       let cleanedSlug = cleanSlug(slug);
 
       if (cleanedSlug.startsWith(locale)) {
@@ -30,6 +30,7 @@ export const createGetContent = ({ writer }: Params) => {
       ).toString();
 
       writer.write({
+        id: toolCallId,
         type: "data-get-content",
         data: {
           url,
@@ -43,6 +44,7 @@ export const createGetContent = ({ writer }: Params) => {
 
         if (slugParts.length !== QURAN_SLUG_PARTS_COUNT) {
           writer.write({
+            id: toolCallId,
             type: "data-get-content",
             data: {
               url,
@@ -70,6 +72,7 @@ export const createGetContent = ({ writer }: Params) => {
 
         if (surahError) {
           writer.write({
+            id: toolCallId,
             type: "data-get-content",
             data: {
               url,
@@ -86,6 +89,7 @@ export const createGetContent = ({ writer }: Params) => {
         }
 
         writer.write({
+          id: toolCallId,
           type: "data-get-content",
           data: {
             url,
@@ -106,6 +110,7 @@ export const createGetContent = ({ writer }: Params) => {
 
       if (error) {
         writer.write({
+          id: toolCallId,
           type: "data-get-content",
           data: {
             url,
@@ -122,6 +127,7 @@ export const createGetContent = ({ writer }: Params) => {
       }
 
       writer.write({
+        id: toolCallId,
         type: "data-get-content",
         data: {
           url,

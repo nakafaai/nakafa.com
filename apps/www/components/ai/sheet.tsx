@@ -8,6 +8,7 @@ import {
 } from "@repo/design-system/components/ai/conversation";
 import {
   PromptInput,
+  type PromptInputMessage,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
@@ -32,7 +33,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { type ComponentProps, memo } from "react";
+import { memo } from "react";
 import { useAi } from "@/lib/context/use-ai";
 import { useChat } from "@/lib/context/use-chat";
 import { AiChatMessage } from "./chat-message";
@@ -53,8 +54,9 @@ export function AiSheet() {
     maxWidth: MAX_WIDTH,
   });
 
-  const { messages, status, stop, sendMessage, regenerate, setMessages } =
-    useChat((state) => state.chat);
+  const { messages, status, regenerate, setMessages } = useChat(
+    (state) => state.chat
+  );
 
   return (
     <Sheet defaultOpen={open} modal={false} onOpenChange={setOpen} open={open}>
@@ -136,69 +138,61 @@ export function AiSheet() {
             <ConversationScrollButton />
           </Conversation>
 
-          <AISheetToolbar
-            handleSubmit={(text) => sendMessage({ text })}
-            status={status}
-            stop={stop}
-          />
+          <AISheetToolbar />
         </div>
       </SheetContent>
     </Sheet>
   );
 }
 
-const AISheetToolbar = memo(
-  ({
-    status,
-    stop,
-    handleSubmit,
-  }: {
-    status: ComponentProps<typeof PromptInputSubmit>["status"];
-    stop: () => void;
-    handleSubmit: (message: string) => void;
-  }) => {
-    const t = useTranslations("Ai");
+const AISheetToolbar = memo(() => {
+  const t = useTranslations("Ai");
 
-    const text = useAi((state) => state.text);
-    const setText = useAi((state) => state.setText);
+  const text = useAi((state) => state.text);
+  const setText = useAi((state) => state.setText);
 
-    const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      if (status === "streaming") {
-        stop();
-        return;
-      }
+  const { sendMessage, status, stop } = useChat((state) => state.chat);
 
-      if (text.trim()) {
-        handleSubmit(text);
-        setText("");
-      }
-    };
+  const handleSubmit = (message: PromptInputMessage) => {
+    if (status === "streaming") {
+      stop();
+      return;
+    }
 
-    return (
-      <div className="grid shrink-0">
-        <PromptInput
-          className="rounded-none border-0 shadow-none"
-          onSubmit={handleSendMessage}
-        >
-          <PromptInputTextarea
-            autoFocus
-            onChange={(e) => setText(e.target.value)}
-            placeholder={t("text-placeholder")}
-            value={text}
+    if (!message.text?.trim()) {
+      return;
+    }
+
+    sendMessage({
+      text: message.text,
+      files: message.files,
+    });
+    setText("");
+  };
+
+  return (
+    <div className="grid shrink-0">
+      <PromptInput
+        className="rounded-none border-0 shadow-none"
+        onSubmit={handleSubmit}
+      >
+        <PromptInputTextarea
+          autoFocus
+          onChange={(e) => setText(e.target.value)}
+          placeholder={t("text-placeholder")}
+          value={text}
+        />
+        <PromptInputToolbar>
+          <PromptInputTools>
+            <AiChatModel />
+          </PromptInputTools>
+          <PromptInputSubmit
+            disabled={status === "submitted"}
+            status={status}
           />
-          <PromptInputToolbar>
-            <PromptInputTools>
-              <AiChatModel />
-            </PromptInputTools>
-            <PromptInputSubmit
-              disabled={status === "submitted"}
-              status={status}
-            />
-          </PromptInputToolbar>
-        </PromptInput>
-      </div>
-    );
-  }
-);
+        </PromptInputToolbar>
+      </PromptInput>
+    </div>
+  );
+});
 AISheetToolbar.displayName = "AISheetToolbar";

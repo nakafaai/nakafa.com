@@ -13,7 +13,7 @@ export const createCalculator = ({ writer }: Params) => {
     description:
       "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation including simple arithmetic. NEVER calculate manually. Only use for evaluable expressions with concrete numbers, not algebraic variables. Uses Math.js to evaluate expressions.",
     inputSchema: calculatorInputSchema,
-    execute: ({ expression }) => {
+    execute: ({ expression }, { toolCallId }) => {
       const node = math.parse(expression);
       const original = {
         expression: node.toString(),
@@ -27,6 +27,7 @@ export const createCalculator = ({ writer }: Params) => {
       };
 
       writer.write({
+        id: toolCallId,
         type: "data-calculator",
         data: { original, result, status: "loading" },
       });
@@ -45,6 +46,7 @@ export const createCalculator = ({ writer }: Params) => {
         result.value = formattedValue;
 
         writer.write({
+          id: toolCallId,
           type: "data-calculator",
           data: { original, result, status: "done" },
         });
@@ -54,6 +56,7 @@ export const createCalculator = ({ writer }: Params) => {
         result.value = "Cannot be evaluated.";
 
         writer.write({
+          id: toolCallId,
           type: "data-calculator",
           data: {
             original,

@@ -209,6 +209,7 @@
     "calculator": "Kalkulator",
     "thinking": "Berpikir...",
     "thought-for": "Berpikir selama {duration} detik",
+    "thought-for-a-few-seconds": "Berpikir selama beberapa detik",
     "found-contents": "Menemukan {count} konten",
     "found-articles": "Menemukan {count} artikel",
     "found-subjects": "Menemukan {count} mata pelajaran",

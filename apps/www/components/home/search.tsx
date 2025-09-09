@@ -3,6 +3,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   PromptInput,
+  type PromptInputMessage,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
@@ -26,27 +27,29 @@ export function HomeSearch() {
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
 
-  const { sendMessage, setMessages } = useChat((state) => state.chat);
+  const { status, sendMessage, setMessages } = useChat((state) => state.chat);
 
   const [isPending, startTransition] = useTransition();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!text.trim()) {
-      return;
-    }
-
-    if (!user) {
-      router.push("/auth");
-      return;
-    }
-
+  const handleSubmit = (message: PromptInputMessage) => {
     startTransition(() => {
+      if (!message.text?.trim()) {
+        return;
+      }
+
+      if (!user) {
+        router.push("/auth");
+        return;
+      }
+
       setMessages([]);
 
       router.push("/chat");
 
-      sendMessage({ text });
+      sendMessage({
+        text: message.text,
+        files: message.files,
+      });
       setText("");
     });
   };
@@ -64,7 +67,11 @@ export function HomeSearch() {
         <PromptInputTools>
           <AiChatModel />
         </PromptInputTools>
-        <PromptInputSubmit disabled={isPending} isPending={isPending} />
+        <PromptInputSubmit
+          disabled={isPending}
+          isPending={isPending}
+          status={status}
+        />
       </PromptInputToolbar>
     </PromptInput>
   );

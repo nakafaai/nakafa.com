@@ -7,6 +7,7 @@ import {
 } from "@repo/design-system/components/ai/conversation";
 import {
   PromptInput,
+  type PromptInputMessage,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
@@ -58,13 +59,15 @@ const AIChatToolbar = memo(() => {
 
   const { sendMessage, status } = useChat((state) => state.chat);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!text.trim()) {
+  const handleSubmit = (message: PromptInputMessage) => {
+    if (!message.text?.trim()) {
       return;
     }
 
-    sendMessage({ text });
+    sendMessage({
+      text: message.text,
+      files: message.files,
+    });
     setText("");
   };
 

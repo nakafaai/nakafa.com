@@ -14,7 +14,7 @@ export const createGetSubjects = ({ writer }: Params) => {
     description:
       "Retrieves educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for study questions, homework help, learning concepts, educational content, and curriculum-based topics.",
     inputSchema: getSubjectsInputSchema,
-    execute: async ({ locale, category, grade, material }) => {
+    execute: async ({ locale, category, grade, material }, { toolCallId }) => {
       const slug = buildContentSlug({
         locale,
         filters: { type: "subject", category, grade, material },
@@ -23,6 +23,7 @@ export const createGetSubjects = ({ writer }: Params) => {
       const baseUrl = `/${slug}`;
 
       writer.write({
+        id: toolCallId,
         type: "data-get-subjects",
         data: {
           baseUrl,
@@ -37,6 +38,7 @@ export const createGetSubjects = ({ writer }: Params) => {
 
       if (error) {
         writer.write({
+          id: toolCallId,
           type: "data-get-subjects",
           data: {
             baseUrl,
@@ -60,6 +62,7 @@ export const createGetSubjects = ({ writer }: Params) => {
       }));
 
       writer.write({
+        id: toolCallId,
         type: "data-get-subjects",
         data: {
           baseUrl,

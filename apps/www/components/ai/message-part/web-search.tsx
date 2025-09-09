@@ -1,41 +1,47 @@
 "use client";
 
-import type { WebSearchInput, WebSearchOutput } from "@repo/ai/schema/tools";
+import type { DataPart } from "@repo/ai/types/data-parts";
 import {
   Source,
   SourceContent,
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
-import { SearchIcon } from "lucide-react";
+import { CircleXIcon, SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
 type Props = {
-  status:
-    | "input-streaming"
-    | "input-available"
-    | "output-available"
-    | "output-error";
-  input?: Partial<WebSearchInput>;
-  output?: WebSearchOutput;
+  message: DataPart["web-search"];
 };
 
-export const WebSearchTool = memo(({ status, output }: Props) => {
+export const WebSearchPart = memo(({ message }: Props) => {
   const t = useTranslations("Ai");
 
-  const isLoading =
-    status === "input-streaming" || status === "input-available";
+  const isLoading = message.status === "loading";
+  const isError = message.status === "error";
 
-  const results = output?.sources ?? [];
+  const results = message.sources ?? [];
 
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
         <SpinnerIcon className="size-4 text-muted-foreground" />
-        <span className="text-muted-foreground text-sm">
-          {t("web-search-loading")}
-        </span>
+        <q
+          cite={message.query}
+          className="text-muted-foreground text-sm italic"
+        >
+          {message.query}
+        </q>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center gap-2">
+        <CircleXIcon className="size-4 shrink-0 text-destructive" />
+        <span className="text-muted-foreground text-sm">{t("web-search")}</span>
       </div>
     );
   }
@@ -66,3 +72,4 @@ export const WebSearchTool = memo(({ status, output }: Props) => {
     </div>
   );
 });
+WebSearchPart.displayName = "WebSearchPart";

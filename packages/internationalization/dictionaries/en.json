@@ -209,6 +209,7 @@
     "calculator": "Calculator",
     "thinking": "Thinking...",
     "thought-for": "Thought for {duration} seconds",
+    "thought-for-a-few-seconds": "Thought for a few seconds",
     "found-contents": "Found {count} contents",
     "found-articles": "Found {count} articles",
     "found-subjects": "Found {count} subjects",

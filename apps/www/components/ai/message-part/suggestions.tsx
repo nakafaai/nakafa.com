@@ -1,14 +1,18 @@
 "use client";
 
+import type { DataPart } from "@repo/ai/types/data-parts";
 import { PlusIcon, QuoteIcon } from "lucide-react";
+import { memo } from "react";
 import { useChat } from "@/lib/context/use-chat";
 
 type Props = {
-  suggestions: string[];
+  message: DataPart["suggestions"];
 };
 
-export function SuggestionsData({ suggestions }: Props) {
+export const SuggestionsPart = memo(({ message }: Props) => {
   const { sendMessage } = useChat((state) => state.chat);
+
+  const suggestions = message.data;
 
   return (
     <div className="flex flex-col gap-4">
@@ -31,4 +35,5 @@ export function SuggestionsData({ suggestions }: Props) {
       </div>
     </div>
   );
-}
+});
+SuggestionsPart.displayName = "SuggestionsPart";

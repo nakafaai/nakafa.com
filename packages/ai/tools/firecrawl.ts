@@ -18,10 +18,11 @@ export const createScrape = ({ writer }: Params) => {
     description:
       "Scrape a URL and return the content. Use this for specific URLs to get the content of the url.",
     inputSchema: scrapeInputSchema,
-    execute: async ({ urlToCrawl }) => {
+    execute: async ({ urlToCrawl }, { toolCallId }) => {
       const url = urlToCrawl;
 
       writer.write({
+        id: toolCallId,
         type: "data-scrape-url",
         data: { url, status: "loading", content: "" },
       });
@@ -36,6 +37,7 @@ export const createScrape = ({ writer }: Params) => {
 
         if (!markdown) {
           writer.write({
+            id: toolCallId,
             type: "data-scrape-url",
             data: {
               url,
@@ -57,6 +59,7 @@ export const createScrape = ({ writer }: Params) => {
         });
 
         writer.write({
+          id: toolCallId,
           type: "data-scrape-url",
           data: { url, status: "done", content: processedContent },
         });
@@ -71,6 +74,7 @@ export const createScrape = ({ writer }: Params) => {
       } catch (error) {
         const errorMessage = `Failed to crawl: ${error}`;
         writer.write({
+          id: toolCallId,
           type: "data-scrape-url",
           data: {
             url,
@@ -95,8 +99,9 @@ export const createWebSearch = ({ writer }: Params) => {
     description:
       "Search the web for up-to-date information and as universal fallback for ANY topic when Nakafa content is insufficient. Use exactly the citation field for inline citations.",
     inputSchema: webSearchInputSchema,
-    execute: async ({ query }) => {
+    execute: async ({ query }, { toolCallId }) => {
       writer.write({
+        id: toolCallId,
         type: "data-web-search",
         data: { query, status: "loading", sources: [] },
       });
@@ -176,6 +181,7 @@ export const createWebSearch = ({ writer }: Params) => {
           });
 
         writer.write({
+          id: toolCallId,
           type: "data-web-search",
           data: { query, status: "done", sources: sourcesWithCitation },
         });
@@ -183,6 +189,7 @@ export const createWebSearch = ({ writer }: Params) => {
         return { sources: sourcesWithCitation, error: undefined };
       } catch (error) {
         writer.write({
+          id: toolCallId,
           type: "data-web-search",
           data: {
             query,
