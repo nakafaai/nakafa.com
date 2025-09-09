@@ -129,6 +129,7 @@ export async function POST(req: Request) {
       sessionLogger.error("Unknown error in chat stream");
       return t("error-message");
     },
+    originalMessages: compressedMessages,
     execute: async ({ writer }) => {
       const streamTextResult = streamText({
         model: model.languageModel(selectedModel),
@@ -219,6 +220,10 @@ export async function POST(req: Request) {
       writer.merge(
         streamTextResult.toUIMessageStream({
           sendReasoning: true,
+          sendStart: false,
+          messageMetadata: () => ({
+            model: selectedModel,
+          }),
           onError: (error) => {
             // Log the error with context
             if (error instanceof Error) {
