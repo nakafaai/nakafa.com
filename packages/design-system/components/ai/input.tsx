@@ -619,7 +619,7 @@ export const PromptInputSubmit = ({
       className={cn("gap-1.5 rounded-lg", className)}
       size={size}
       type="submit"
-      variant={variant}
+      variant={status === "streaming" ? "destructive" : variant}
       {...props}
     >
       {children ?? Icon}
