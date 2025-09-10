@@ -29,6 +29,10 @@ export const AiMessagePart = memo(({ part, partIndex, messageId }: Props) => {
         </MessageContent>
       );
     case "reasoning":
+      if (part.state === "done" && !part.text) {
+        return null;
+      }
+
       return (
         <Reasoning
           className="w-full"
