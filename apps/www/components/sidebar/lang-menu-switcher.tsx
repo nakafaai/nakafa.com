@@ -49,7 +49,7 @@ export function LangMenuSwitcher() {
       );
 
       // reboot the pagefind because of the language change
-      if (typeof window !== "undefined" && window.pagefind) {
+      if (window?.pagefind) {
         await window.pagefind.destroy?.();
 
         queryClient.invalidateQueries({ queryKey: ["search"] });

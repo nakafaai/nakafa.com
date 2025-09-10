@@ -50,7 +50,7 @@ export function LangSwitcher() {
         { locale }
       );
 
-      if (typeof window !== "undefined" && window.pagefind) {
+      if (window?.pagefind) {
         // reboot the pagefind because of the language change
         await window.pagefind.destroy?.();
 
