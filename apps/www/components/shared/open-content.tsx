@@ -102,7 +102,7 @@ function LLmCopyButton({ slug }: { slug: string }) {
       ) : (
         <CopyIcon className="size-4" />
       )}
-      {t("copy-markdown")}
+      {t("copy")}
     </Button>
   );
 }
