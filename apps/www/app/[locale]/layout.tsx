@@ -140,7 +140,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   minimumScale: 1,
   maximumScale: 5,
-  userScalable: true,
+  userScalable: false,
   viewportFit: "cover",
   interactiveWidget: "resizes-visual",
 };
