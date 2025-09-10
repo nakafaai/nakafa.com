@@ -30,11 +30,11 @@ export const CalculatorPart = memo(({ message }: Props) => {
 
   return (
     <Collapsible
-      className="rounded-md border"
+      className="overflow-hidden rounded-md border"
       defaultOpen={open}
       onOpenChange={setOpen}
     >
-      <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between px-4 py-3">
+      <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between bg-muted/80 px-4 py-3">
         <div className="flex items-center gap-2">
           {error ? (
             <CircleXIcon className="size-4 text-destructive" />
@@ -50,10 +50,10 @@ export const CalculatorPart = memo(({ message }: Props) => {
           )}
         />
       </CollapsibleTrigger>
-      <CollapsibleContent className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t px-4 text-sm">
+      <CollapsibleContent className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t bg-muted/40 px-4 text-sm">
         <BlockMath>{message.original.latex}</BlockMath>
 
-        <EqualIcon className="size-4 text-muted-foreground" />
+        <EqualIcon className="size-4" />
 
         <BlockMath>{message.result.latex}</BlockMath>
       </CollapsibleContent>
