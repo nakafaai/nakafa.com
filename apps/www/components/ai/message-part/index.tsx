@@ -10,6 +10,7 @@ import {
 import { Response } from "@repo/design-system/components/ai/response";
 import { memo } from "react";
 import { CalculatorPart } from "./calculator";
+import { ContentPart } from "./content-tool";
 import { SuggestionsPart } from "./suggestions";
 import { WebSearchPart } from "./web-search";
 
@@ -46,6 +47,8 @@ export const AiMessagePart = memo(({ part, partIndex, messageId }: Props) => {
       return <SuggestionsPart message={part.data} />;
     case "data-calculator":
       return <CalculatorPart message={part.data} />;
+    case "data-get-content":
+      return <ContentPart message={part.data} />;
     default:
       null;
   }

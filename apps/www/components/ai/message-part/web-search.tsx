@@ -7,7 +7,7 @@ import {
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
-import { CircleXIcon, SearchIcon } from "lucide-react";
+import { FrownIcon, SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -37,8 +37,10 @@ export const WebSearchPart = memo(({ message }: Props) => {
   if (isError) {
     return (
       <div className="flex items-center gap-2">
-        <CircleXIcon className="size-4 shrink-0 text-destructive" />
-        <span className="text-muted-foreground text-sm">{t("web-search")}</span>
+        <FrownIcon className="size-4 shrink-0 text-destructive" />
+        <span className="text-muted-foreground text-sm">
+          {t("web-search-error")}
+        </span>
       </div>
     );
   }

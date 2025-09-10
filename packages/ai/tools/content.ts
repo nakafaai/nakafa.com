@@ -34,6 +34,8 @@ export const createGetContent = ({ writer }: Params) => {
         type: "data-get-content",
         data: {
           url,
+          title: "",
+          description: "",
           status: "loading",
           content: "",
         },
@@ -48,6 +50,8 @@ export const createGetContent = ({ writer }: Params) => {
             type: "data-get-content",
             data: {
               url,
+              title: "",
+              description: "",
               status: "error",
               content: "",
               error: {
@@ -76,6 +80,8 @@ export const createGetContent = ({ writer }: Params) => {
             type: "data-get-content",
             data: {
               url,
+              title: "",
+              description: "",
               status: "error",
               content: "",
               error: surahError,
@@ -88,11 +94,37 @@ export const createGetContent = ({ writer }: Params) => {
           };
         }
 
+        if (!surahData) {
+          writer.write({
+            id: toolCallId,
+            type: "data-get-content",
+            data: {
+              url,
+              title: "",
+              description: "",
+              status: "error",
+              content: "",
+              error: {
+                message:
+                  "Surah not found. Maybe not available or still in development.",
+              },
+            },
+          });
+
+          return {
+            url,
+            content: "",
+          };
+        }
+
         writer.write({
           id: toolCallId,
           type: "data-get-content",
           data: {
             url,
+            title: surahData.name.translation[locale] || surahData.name.short,
+            description:
+              surahData.revelation[locale] || surahData.revelation.arab,
             status: "done",
             content: JSON.stringify(surahData, null, 2),
           },
@@ -114,6 +146,8 @@ export const createGetContent = ({ writer }: Params) => {
           type: "data-get-content",
           data: {
             url,
+            title: "",
+            description: "",
             status: "error",
             content: "",
             error,
@@ -126,19 +160,40 @@ export const createGetContent = ({ writer }: Params) => {
         };
       }
 
+      if (!data) {
+        writer.write({
+          id: toolCallId,
+          type: "data-get-content",
+          data: {
+            url,
+            title: "",
+            description: "",
+            status: "error",
+            content: "",
+          },
+        });
+
+        return {
+          url,
+          content: "",
+        };
+      }
+
       writer.write({
         id: toolCallId,
         type: "data-get-content",
         data: {
           url,
+          title: data.metadata.title,
+          description: data.metadata.description || "",
           status: "done",
-          content: data,
+          content: data.raw,
         },
       });
 
       return {
         url,
-        content: data,
+        content: data.raw,
       };
     },
   });

@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     .getContent({
       slug: `${locale}/${cleanSlug(slug)}`,
     })
-    .then((res) => res.data !== "");
+    .then((res) => res.data !== null);
 
   const currentDate = new Date().toLocaleString("en-US", {
     year: "numeric",

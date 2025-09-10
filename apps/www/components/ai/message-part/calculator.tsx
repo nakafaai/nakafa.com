@@ -10,8 +10,8 @@ import { cn } from "@repo/design-system/lib/utils";
 import {
   CalculatorIcon,
   ChevronDownIcon,
-  CircleXIcon,
   EqualIcon,
+  FrownIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
@@ -37,7 +37,7 @@ export const CalculatorPart = memo(({ message }: Props) => {
       <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between bg-muted/80 px-4 py-3">
         <div className="flex items-center gap-2">
           {error ? (
-            <CircleXIcon className="size-4 text-destructive" />
+            <FrownIcon className="size-4 text-destructive" />
           ) : (
             <CalculatorIcon className="size-4" />
           )}

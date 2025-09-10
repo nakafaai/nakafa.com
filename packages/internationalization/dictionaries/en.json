@@ -98,7 +98,7 @@
     "report": "Report",
     "copy-markdown": "Copy Markdown",
     "copy-success": "Copied to clipboard",
-    "copy-success-gemini": "Copied to clipboard. You can now paste it in Gemini.",
+    "copy-error": "Failed to copy",
     "open": "Open",
     "open-in-github": "Open in GitHub",
     "open-in-chatgpt": "Open in ChatGPT",
@@ -203,6 +203,8 @@
     "error-message": "An error occurred, please try again later.",
     "rate-limit-message": "Rate limit exceeded. Please try again later.",
     "get-content": "Material",
+    "get-content-loading": "Getting material...",
+    "get-content-error": "Failed to get material.",
     "get-contents": "Contents",
     "get-articles": "Articles",
     "get-subjects": "Subjects",
@@ -227,6 +229,7 @@
     "scrape": "Scrape",
     "web-search": "Web search",
     "web-search-loading": "Finding relevant information...",
+    "web-search-error": "Failed to find relevant information.",
     "model": "Model"
   }
 }

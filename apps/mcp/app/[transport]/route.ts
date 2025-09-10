@@ -81,7 +81,7 @@ const handler = createMcpHandler(
           content: [
             {
               type: "text",
-              text: data,
+              text: data?.raw ?? "",
             },
           ],
         };

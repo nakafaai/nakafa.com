@@ -98,7 +98,7 @@
     "report": "Laporkan",
     "copy-markdown": "Salin Markdown",
     "copy-success": "Berhasil disalin ke papan klip",
-    "copy-success-gemini": "Berhasil disalin. Sekarang kamu dapat menempelkannya di Gemini.",
+    "copy-error": "Gagal disalin",
     "open": "Buka",
     "open-in-github": "Buka di GitHub",
     "open-in-chatgpt": "Buka di ChatGPT",
@@ -203,6 +203,8 @@
     "error-message": "Terjadi kesalahan, silakan coba lagi nanti.",
     "rate-limit-message": "Batas waktu habis. Silakan coba lagi nanti.",
     "get-content": "Materi",
+    "get-content-loading": "Mendapatkan materi...",
+    "get-content-error": "Gagal mendapatkan materi.",
     "get-contents": "Konten",
     "get-articles": "Artikel",
     "get-subjects": "Mata pelajaran",
@@ -227,6 +229,7 @@
     "scrape": "Scrape",
     "web-search": "Pencarian web",
     "web-search-loading": "Mencari informasi terkait...",
+    "web-search-error": "Gagal menemukan informasi terkait.",
     "model": "Model"
   }
 }

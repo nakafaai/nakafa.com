@@ -68,8 +68,15 @@ function LLmCopyButton({ slug }: { slug: string }) {
         return;
       }
 
+      if (!data) {
+        toast.error(t("copy-error"), {
+          position: "bottom-center",
+        });
+        return;
+      }
+
       navigator.clipboard
-        .writeText(data)
+        .writeText(data.raw)
         .then(() => {
           toast.success(t("copy-success"), {
             position: "bottom-center",

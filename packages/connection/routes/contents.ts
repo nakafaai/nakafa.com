@@ -60,7 +60,7 @@ async function getContent({
   ...base
 }: {
   slug: string;
-} & RequestInit): Promise<FetchResult<string>> {
+} & RequestInit): Promise<FetchResult<Content | null>> {
   const cleanedSlug = cleanSlug(slug);
   const url = `${PREFIX}/${cleanedSlug}`;
   const { data, error } = await fetcher<Content[]>(url, {
@@ -70,7 +70,7 @@ async function getContent({
 
   if (error) {
     return {
-      data: "",
+      data: null,
       error,
     };
   }
@@ -81,7 +81,7 @@ async function getContent({
 
   if (!content) {
     return {
-      data: "",
+      data: null,
       error: {
         status: 404,
         message: "Content not found. Please find another content.",
@@ -90,7 +90,7 @@ async function getContent({
   }
 
   return {
-    data: content.raw,
+    data: content,
     error,
   };
 }
