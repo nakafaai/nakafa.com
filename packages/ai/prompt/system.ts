@@ -47,10 +47,6 @@ type SystemPromptProps = {
      */
     longitude: string;
   };
-  /**
-   * The injection of the system prompt. Must be valid XML.
-   */
-  injection?: string;
 };
 
 export function nakafaPrompt({
@@ -58,7 +54,6 @@ export function nakafaPrompt({
   currentPage,
   currentDate,
   userLocation,
-  injection,
 }: SystemPromptProps) {
   return createPrompt({
     // Core identity and role definition
@@ -161,13 +156,6 @@ export function nakafaPrompt({
       When concluding, generate a brief, focused summary (2-3 lines) that recaps the session's key results, omitting the initial plan or checklist.
 
       Transform user prompts into executable actions for the tools. Organize actions, utilize the right tools in the correct sequence, and ensure all results are functional.
-    `,
-
-    // Main directive and mission
-    finalRequest: `
-      # Final Request
-
-      ${injection ? `${injection}` : "NONE"}
     `,
 
     // Response formatting guidelines

@@ -16,7 +16,7 @@ export function createPrompt(opts: {
   // Conversation history between the user and the assistant
   conversationHistory?: string;
   // The "ask" for the LLM: "Create an annotated version of the transcript..."
-  finalRequest: string;
+  finalRequest?: string;
   // "Think about your answer first", if needed
   chainOfThought?: string;
   // "Reply in <response></response> tags"
