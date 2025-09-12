@@ -207,7 +207,7 @@ export const CodeBlock = ({
           data-code-block-header
           data-language={language}
         >
-          <span className="ml-1 font-mono lowercase">{language}</span>
+          <span className="ml-1 font-mono lowercase">{language || "txt"}</span>
           <div className="flex items-center gap-2">{children}</div>
         </div>
         <div className="w-full">

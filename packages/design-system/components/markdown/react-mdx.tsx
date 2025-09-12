@@ -299,7 +299,11 @@ export const reactMdxComponents: Options["components"] = {
 
       if (language === "math") {
         return (
-          <BlockMath className="my-4" data-nakafa="math-block" math={code} />
+          <BlockMath
+            className="my-4 shadow-none"
+            data-nakafa="math-block"
+            math={code}
+          />
         );
       }
 

@@ -7,6 +7,8 @@ export function createPrompt(opts: {
   toneContext?: string;
   // Background data, documents, etc.
   backgroundData?: string;
+  // Tool usage guidelines
+  toolUsageGuidelines?: string;
   // Detailed task instructions & rules
   detailedTaskInstructions?: string;
   // Exemplars of good/bad output
@@ -25,6 +27,7 @@ export function createPrompt(opts: {
       opts.taskContext,
       opts.toneContext,
       opts.backgroundData,
+      opts.toolUsageGuidelines,
       opts.detailedTaskInstructions,
       opts.examples,
       opts.conversationHistory,
