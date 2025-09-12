@@ -36,17 +36,17 @@
     "next": "15.5.3",
     "nuqs": "^2.6.0",
     "react": "19.1.1",
-    "react-aria-components": "^1.12.1",
+    "react-aria-components": "^1.12.2",
     "react-dom": "19.1.1",
     "use-context-selector": "^2.0.0",
     "use-sound": "^5.0.0",
-    "virtua": "^0.43.0"
+    "virtua": "^0.43.1"
   },
   "devDependencies": {
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.3.1",
-    "@types/react": "19.1.12",
+    "@types/node": "24.3.2",
+    "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
     "jsdom": "^26.1.0",
     "tailwindcss": "^4.1.13",
