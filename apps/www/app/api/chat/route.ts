@@ -287,7 +287,7 @@ export async function POST(req: Request) {
       const streamObjectResult = streamObject({
         model: model.languageModel("google-flash"),
         system: nakafaSuggestions(),
-        messages: messagesFromResponse,
+        messages: [...finalMessages, ...messagesFromResponse],
         schemaName: "Suggestions",
         schemaDescription:
           "An array of suggested questions or statements that a student would want to ask or tell next",

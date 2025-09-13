@@ -18,6 +18,7 @@ const languageModels = {
   "kimi-k2": gateway("moonshotai/kimi-k2-0905"),
   "openai-oss": gateway("openai/gpt-oss-120b"),
   "openai-gpt-5": gateway("openai/gpt-5-mini"),
+  "longcat-flash": gateway("meituan/longcat-flash-chat"),
   "sonoma-sky": gateway("stealth/sonoma-sky-alpha"),
   "sonoma-dusk": gateway("stealth/sonoma-dusk-alpha"),
   "qwen-3": gateway("alibaba/qwen-3-235b"),
