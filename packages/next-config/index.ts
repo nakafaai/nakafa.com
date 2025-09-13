@@ -62,6 +62,11 @@ export const config: NextConfig = {
         destination: "https://discord.gg/CPCSfKhvfQ",
         permanent: false,
       },
+      {
+        source: "/community",
+        destination: "https://discord.gg/CPCSfKhvfQ",
+        permanent: false,
+      },
     ];
   },
 };
