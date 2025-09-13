@@ -1,5 +1,6 @@
 import { DeepSeek, Gemini, Moonshot, OpenAI, Qwen, XAI } from "@lobehub/icons";
 import type { ModelId } from "@repo/ai/lib/providers";
+import { HatGlassesIcon } from "lucide-react";
 import type { ComponentType } from "react";
 
 export const models: { icon: ComponentType; value: ModelId; label: string }[] =
@@ -23,6 +24,16 @@ export const models: { icon: ComponentType; value: ModelId; label: string }[] =
       icon: Gemini,
       value: "google-pro",
       label: "Gemini 2.5 Pro",
+    },
+    {
+      icon: HatGlassesIcon,
+      value: "sonoma-sky",
+      label: "Sonoma Sky",
+    },
+    {
+      icon: HatGlassesIcon,
+      value: "sonoma-dusk",
+      label: "Sonoma Dusk",
     },
     {
       icon: Moonshot,
