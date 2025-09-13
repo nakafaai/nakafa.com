@@ -25,11 +25,45 @@ import { getTranslations } from "next-intl/server";
 import * as z from "zod";
 
 const MAX_STEPS = 10;
+const QURAN_SLUG_PARTS_COUNT = 3;
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
 
 const corsValidator = new CorsValidator();
+
+async function getVerified(url: string) {
+  const cleanedUrl = cleanSlug(url);
+
+  // [0] is locale, [1] is slug
+  const slugParts = cleanedUrl.split("/");
+
+  if (slugParts[1] === "quran") {
+    if (slugParts.length !== QURAN_SLUG_PARTS_COUNT) {
+      return false;
+    }
+    // example: locale/quran/surah
+    const surah = slugParts[2];
+    const { data: surahData, error: surahError } = await api.contents.getSurah({
+      surah: Number.parseInt(surah, 10),
+    });
+    if (surahError) {
+      return false;
+    }
+    return surahData !== null;
+  }
+
+  const { data: contentData, error: contentError } =
+    await api.contents.getContent({
+      slug: cleanedUrl,
+    });
+
+  if (contentError) {
+    return false;
+  }
+
+  return contentData !== null;
+}
 
 export async function POST(req: Request) {
   // Only allow requests from allowed domain
@@ -54,11 +88,7 @@ export async function POST(req: Request) {
   const url = `/${locale}/${cleanSlug(slug)}`;
 
   // Check if the slug is verified by calling api
-  const verified = await api.contents
-    .getContent({
-      slug: `${locale}/${cleanSlug(slug)}`,
-    })
-    .then((res) => res.data !== null);
+  const verified = await getVerified(url);
 
   const currentDate = new Date().toLocaleString("en-US", {
     year: "numeric",

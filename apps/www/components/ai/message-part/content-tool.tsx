@@ -27,10 +27,8 @@ export const ContentPart = memo(({ message }: Props) => {
   if (isLoading) {
     return (
       <ContentCard>
-        <SpinnerIcon className="size-4 text-muted-foreground" />
-        <p className="text-muted-foreground text-sm">
-          {t("get-content-loading")}
-        </p>
+        <SpinnerIcon className="size-4" />
+        <p className="text-sm">{t("get-content-loading")}</p>
       </ContentCard>
     );
   }
@@ -38,10 +36,8 @@ export const ContentPart = memo(({ message }: Props) => {
   if (isError) {
     return (
       <ContentCard>
-        <FrownIcon className="size-4 text-muted-foreground" />
-        <p className="text-muted-foreground text-sm">
-          {t("get-content-error")}
-        </p>
+        <FrownIcon className="size-4" />
+        <p className="text-sm">{t("get-content-error")}</p>
       </ContentCard>
     );
   }
@@ -83,10 +79,21 @@ export const ContentPart = memo(({ message }: Props) => {
 });
 ContentPart.displayName = "ContentPart";
 
-function ContentCard({ children }: { children: React.ReactNode }) {
+function ContentCard({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div className="overflow-hidden rounded-md border">
-      <div className="flex w-full items-center justify-between bg-muted/80 px-4 py-3">
+      <div
+        className={cn(
+          "flex w-full items-center gap-2 bg-muted/80 px-4 py-3",
+          className
+        )}
+      >
         {children}
       </div>
     </div>

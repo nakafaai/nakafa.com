@@ -4,7 +4,7 @@ import { cleanSlug } from "../lib/utils";
 import { getContentInputSchema } from "../schema/tools";
 import type { MyUIMessage } from "../types/message";
 
-const QURAN_SLUG_PARTS_COUNT = 3;
+const QURAN_SLUG_PARTS_COUNT = 2;
 
 type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;
@@ -41,8 +41,8 @@ export const createGetContent = ({ writer }: Params) => {
         },
       });
 
-      if (slug.startsWith("/quran")) {
-        const slugParts = slug.split("/");
+      if (cleanedSlug.startsWith("quran")) {
+        const slugParts = cleanedSlug.split("/");
 
         if (slugParts.length !== QURAN_SLUG_PARTS_COUNT) {
           writer.write({
@@ -67,7 +67,8 @@ export const createGetContent = ({ writer }: Params) => {
           };
         }
 
-        const surah = slugParts[2];
+        // quran/surah
+        const surah = slugParts[1];
 
         const { data: surahData, error: surahError } =
           await api.contents.getSurah({
