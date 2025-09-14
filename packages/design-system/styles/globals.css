@@ -179,7 +179,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground selection:bg-primary selection:text-primary-foreground overscroll-y-none;
+    @apply bg-background text-foreground selection:bg-primary/10 selection:text-primary overscroll-y-none;
   }
 }
 
