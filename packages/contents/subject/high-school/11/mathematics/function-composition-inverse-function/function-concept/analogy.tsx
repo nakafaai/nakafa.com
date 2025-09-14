@@ -56,7 +56,7 @@ function Machine() {
     <>
       <CardContent>
         <div className="flex flex-col items-center justify-center gap-8 py-8 sm:flex-row">
-          <UIButton className="pointer-events-none">
+          <UIButton className="pointer-events-none" variant="default">
             <InlineMath math={`x = ${input}`} />
           </UIButton>
 
@@ -70,7 +70,7 @@ function Machine() {
           <ArrowDownIcon className="block size-4 sm:hidden" />
           <ArrowRightIcon className="hidden size-4 sm:block" />
 
-          <UIButton className="pointer-events-none" variant="destructive">
+          <UIButton className="pointer-events-none" variant="secondary">
             <InlineMath math={`f(x) = ${output}`} />
           </UIButton>
         </div>
