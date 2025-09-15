@@ -86,7 +86,7 @@ If you do like this:
 text 1
 text 2
 
-It is not gonan work.
+It is not gonna work.
 
 - **Blockquote** If something important, you can use blockquote, just directly tell it.
 - **List** Please be careful on you write content of the list! the indent should be clean otherwise it will break the layout (like python programming language)
