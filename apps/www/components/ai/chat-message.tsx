@@ -1,19 +1,19 @@
 "use client";
 
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { ChatStatus } from "ai";
 import { memo } from "react";
+import { useChat } from "@/lib/context/use-chat";
 import { AIChatMessageActions } from "./chat-actions";
 import { AIChatLoading } from "./chat-loading";
 import { AiMessagePart } from "./message-part";
 
 type Props = {
   message: MyUIMessage;
-  regenerate: ({ messageId }: { messageId: string }) => void;
-  status: ChatStatus;
 };
 
-export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
+export const AiChatMessage = memo(({ message }: Props) => {
+  const status = useChat((state) => state.chat.status);
+
   // We are not showing the reasoning parts in the chat message, and not include step-start
   const parts = message.parts.filter((p) => p.type !== "step-start");
 
@@ -36,7 +36,6 @@ export const AiChatMessage = memo(({ message, regenerate, status }: Props) => {
 
       <AIChatMessageActions
         messageId={message.id}
-        regenerate={regenerate}
         text={parts
           .filter((p) => p.type === "text")
           .map((p) => p.text)

@@ -22,7 +22,7 @@ import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
 
 export function AiChat() {
-  const { messages, status, regenerate } = useChat((state) => state.chat);
+  const { messages } = useChat((state) => state.chat);
 
   return (
     <main className="h-[calc(100svh-4rem)] lg:h-svh">
@@ -34,11 +34,7 @@ export function AiChat() {
                 from={message.role === "user" ? "user" : "assistant"}
                 key={message.id}
               >
-                <AiChatMessage
-                  message={message}
-                  regenerate={regenerate}
-                  status={status}
-                />
+                <AiChatMessage message={message} />
               </Message>
             ))}
           </ConversationContent>

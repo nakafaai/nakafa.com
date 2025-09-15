@@ -54,9 +54,7 @@ export function AiSheet() {
     maxWidth: MAX_WIDTH,
   });
 
-  const { messages, status, regenerate, setMessages } = useChat(
-    (state) => state.chat
-  );
+  const { messages, setMessages } = useChat((state) => state.chat);
 
   return (
     <Sheet defaultOpen={open} modal={false} onOpenChange={setOpen} open={open}>
@@ -127,11 +125,7 @@ export function AiSheet() {
                   from={message.role === "user" ? "user" : "assistant"}
                   key={message.id}
                 >
-                  <AiChatMessage
-                    message={message}
-                    regenerate={regenerate}
-                    status={status}
-                  />
+                  <AiChatMessage message={message} />
                 </Message>
               ))}
             </ConversationContent>
