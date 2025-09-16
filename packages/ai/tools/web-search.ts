@@ -1,96 +1,12 @@
-import FirecrawlApp from "@mendable/firecrawl-js";
 import { tool, type UIMessageStreamWriter } from "ai";
-import { keys } from "../keys";
 import { selectRelevantContent } from "../lib/content-selection";
+import { firecrawlApp } from "../lib/firecrawl";
 import { extractDomain } from "../lib/utils";
-import { scrapeInputSchema, webSearchInputSchema } from "../schema/tools";
+import { webSearchInputSchema } from "../schema/tools";
 import type { MyUIMessage } from "../types/message";
-
-const app = new FirecrawlApp({ apiKey: keys().FIRECRAWL_API_KEY });
 
 type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;
-};
-
-export const createScrape = ({ writer }: Params) => {
-  return tool({
-    name: "scrape",
-    description:
-      "Scrape a URL and return the content. Use this for specific URLs to get the content of the url.",
-    inputSchema: scrapeInputSchema,
-    execute: async ({ urlToCrawl }, { toolCallId }) => {
-      const url = urlToCrawl;
-
-      writer.write({
-        id: toolCallId,
-        type: "data-scrape-url",
-        data: { url, status: "loading", content: "" },
-      });
-
-      try {
-        const response = await app.scrape(url, {
-          formats: ["markdown"],
-          timeout: 5000, // 5 second timeout
-        });
-
-        const markdown = response.markdown;
-
-        if (!markdown) {
-          writer.write({
-            id: toolCallId,
-            type: "data-scrape-url",
-            data: {
-              url,
-              status: "error",
-              content: "",
-              error: {
-                message: "No content found.",
-              },
-            },
-          });
-
-          return { data: { url, content: "" }, error: "No content found." };
-        }
-
-        // Use smart content selection to truncate long content while preserving readability
-        const processedContent = selectRelevantContent({
-          content: markdown,
-          maxLength: 3000, // Longer limit for scraped content
-        });
-
-        writer.write({
-          id: toolCallId,
-          type: "data-scrape-url",
-          data: { url, status: "done", content: processedContent },
-        });
-
-        return {
-          data: {
-            url,
-            content: processedContent,
-          },
-          error: undefined,
-        };
-      } catch (error) {
-        const errorMessage = `Failed to crawl: ${error}`;
-        writer.write({
-          id: toolCallId,
-          type: "data-scrape-url",
-          data: {
-            url,
-            status: "error",
-            content: "",
-            error: { message: errorMessage },
-          },
-        });
-
-        return {
-          data: { url, content: "" },
-          error: errorMessage,
-        };
-      }
-    },
-  });
 };
 
 export const createWebSearch = ({ writer }: Params) => {
@@ -107,7 +23,7 @@ export const createWebSearch = ({ writer }: Params) => {
       });
 
       try {
-        const response = await app.search(query, {
+        const response = await firecrawlApp.search(query, {
           limit: 5,
           sources: ["web", "news"],
           scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
