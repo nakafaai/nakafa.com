@@ -1,9 +1,9 @@
+import { cleanSlug } from "@repo/ai/lib/utils";
+import { nakafaContent } from "@repo/ai/prompt/content";
+import { getContentInputSchema } from "@repo/ai/schema/tools";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/connection/routes";
 import { tool, type UIMessageStreamWriter } from "ai";
-import { cleanSlug } from "../lib/utils";
-import { nakafaContent } from "../prompt/content";
-import { getContentInputSchema } from "../schema/tools";
-import type { MyUIMessage } from "../types/message";
 
 const QURAN_SLUG_PARTS_COUNT = 2;
 

@@ -1,4 +1,4 @@
-import { createPrompt } from "./utils";
+import { createPrompt } from "@repo/ai/prompt/utils";
 
 export function nakafaArticles() {
   return createPrompt({

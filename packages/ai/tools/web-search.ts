@@ -1,10 +1,10 @@
+import { selectRelevantContent } from "@repo/ai/lib/content-selection";
+import { firecrawlApp } from "@repo/ai/lib/firecrawl";
+import { extractDomain } from "@repo/ai/lib/utils";
+import { nakafaWebSearch } from "@repo/ai/prompt/web-search";
+import { webSearchInputSchema } from "@repo/ai/schema/tools";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
-import { selectRelevantContent } from "../lib/content-selection";
-import { firecrawlApp } from "../lib/firecrawl";
-import { extractDomain } from "../lib/utils";
-import { nakafaWebSearch } from "../prompt/web-search";
-import { webSearchInputSchema } from "../schema/tools";
-import type { MyUIMessage } from "../types/message";
 
 type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;

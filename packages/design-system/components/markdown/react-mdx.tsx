@@ -26,7 +26,6 @@ import type { BundledLanguage } from "shiki";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
-// Types for markdown component props with `node.position` info
 type MarkdownPoint = { line?: number; column?: number };
 type MarkdownPosition = { start?: MarkdownPoint; end?: MarkdownPoint };
 type MarkdownNode = {
@@ -34,16 +33,34 @@ type MarkdownNode = {
   properties?: { className?: string };
 };
 
-function sameNodePosition(a?: MarkdownNode, b?: MarkdownNode) {
-  const as = a?.position?.start;
-  const ae = a?.position?.end;
-  const bs = b?.position?.start;
-  const be = b?.position?.end;
+function sameNodePosition(prev?: MarkdownNode, next?: MarkdownNode): boolean {
+  if (!(prev?.position || next?.position)) {
+    return true;
+  }
+  if (!(prev?.position && next?.position)) {
+    return false;
+  }
+
+  const prevStart = prev.position.start;
+  const nextStart = next.position.start;
+  const prevEnd = prev.position.end;
+  const nextEnd = next.position.end;
+
   return (
-    as?.line === bs?.line &&
-    as?.column === bs?.column &&
-    ae?.line === be?.line &&
-    ae?.column === be?.column
+    prevStart?.line === nextStart?.line &&
+    prevStart?.column === nextStart?.column &&
+    prevEnd?.line === nextEnd?.line &&
+    prevEnd?.column === nextEnd?.column
+  );
+}
+
+// Shared comparators
+function sameClassAndNode(
+  prev: { className?: string; node?: MarkdownNode },
+  next: { className?: string; node?: MarkdownNode }
+) {
+  return (
+    prev.className === next.className && sameNodePosition(prev.node, next.node)
   );
 }
 
@@ -58,7 +75,7 @@ export const reactMdxComponents: Options["components"] = {
         enableLink={false}
       />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   h2: memo(
     ({ ...props }) => (
@@ -70,7 +87,7 @@ export const reactMdxComponents: Options["components"] = {
         enableLink={false}
       />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   h3: memo(
     ({ ...props }) => (
@@ -82,7 +99,7 @@ export const reactMdxComponents: Options["components"] = {
         enableLink={false}
       />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   h4: memo(
     ({ ...props }) => (
@@ -94,7 +111,7 @@ export const reactMdxComponents: Options["components"] = {
         enableLink={false}
       />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   h5: memo(
     ({ ...props }) => (
@@ -106,7 +123,7 @@ export const reactMdxComponents: Options["components"] = {
         enableLink={false}
       />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   h6: memo(
     ({ ...props }) => (
@@ -118,11 +135,11 @@ export const reactMdxComponents: Options["components"] = {
         enableLink={false}
       />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   p: memo(
     ({ ...props }) => <Paragraph data-nakafa="paragraph" {...props} />,
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   ol: memo(
     ({ ...props }) => (
@@ -132,7 +149,7 @@ export const reactMdxComponents: Options["components"] = {
         {...props}
       />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   ul: memo(
     ({ ...props }) => (
@@ -142,7 +159,7 @@ export const reactMdxComponents: Options["components"] = {
         {...props}
       />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   li: memo(
     ({ ...props }) => (
@@ -152,19 +169,19 @@ export const reactMdxComponents: Options["components"] = {
         {...props}
       />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   em: memo(
     ({ ...props }) => (
       <em className="font-medium" data-nakafa="italic" {...props} />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   strong: memo(
     ({ ...props }) => (
       <strong className="font-medium" data-nakafa="bold" {...props} />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   blockquote: memo(
     ({ ...props }) => (
@@ -174,11 +191,11 @@ export const reactMdxComponents: Options["components"] = {
         {...props}
       />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   a: memo(
     ({ ...props }) => <Anchor data-nakafa="anchor" {...props} />,
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   table: memo(
     ({ children, ...props }) => (
@@ -190,7 +207,7 @@ export const reactMdxComponents: Options["components"] = {
         {filterWhitespaceNodes(children)}
       </Table>
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   thead: memo(
     ({ children, ...props }) => (
@@ -202,13 +219,13 @@ export const reactMdxComponents: Options["components"] = {
         {filterWhitespaceNodes(children)}
       </TableHeader>
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   hr: memo(
     ({ ...props }) => (
       <hr className="my-4 border-border" data-nakafa="hr" {...props} />
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   tbody: memo(
     ({ children, ...props }) => (
@@ -216,7 +233,7 @@ export const reactMdxComponents: Options["components"] = {
         {filterWhitespaceNodes(children)}
       </TableBody>
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   tr: memo(
     ({ children, ...props }) => (
@@ -228,7 +245,7 @@ export const reactMdxComponents: Options["components"] = {
         {filterWhitespaceNodes(children)}
       </TableRow>
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   th: memo(
     ({ children, ...props }) => (
@@ -240,7 +257,7 @@ export const reactMdxComponents: Options["components"] = {
         {filterWhitespaceNodes(children)}
       </TableHead>
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   td: memo(
     ({ children, ...props }) => (
@@ -252,7 +269,7 @@ export const reactMdxComponents: Options["components"] = {
         {filterWhitespaceNodes(children)}
       </TableCell>
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   code: memo(
     ({ node, children, className, ...props }) => {
@@ -327,7 +344,7 @@ export const reactMdxComponents: Options["components"] = {
         </CodeBlock>
       );
     },
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   pre: ({ children }) => children,
   sup: memo(
@@ -340,7 +357,7 @@ export const reactMdxComponents: Options["components"] = {
         {children}
       </sup>
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
   sub: memo(
     ({ node, children, className, ...props }) => (
@@ -352,6 +369,6 @@ export const reactMdxComponents: Options["components"] = {
         {children}
       </sub>
     ),
-    (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+    (p, n) => sameClassAndNode(p, n)
   ),
 };

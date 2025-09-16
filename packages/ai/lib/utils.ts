@@ -1,8 +1,8 @@
+import { DEFAULT_LIMIT, isWithinLimit } from "@repo/ai/lib/tokens";
+import type { MyUIMessage, MyUITools } from "@repo/ai/types/message";
 import type { UIDataTypes, UIMessagePart } from "ai";
 import dedent from "dedent";
 import { fromUrl, ParseResultType, parseDomain } from "parse-domain";
-import type { MyUIMessage, MyUITools } from "../types/message";
-import { DEFAULT_LIMIT, isWithinLimit } from "./tokens";
 
 /**
  * Build a content slug

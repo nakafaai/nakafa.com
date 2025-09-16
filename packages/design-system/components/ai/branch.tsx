@@ -1,6 +1,6 @@
 "use client";
 
-import type { MyUIMessage } from "@repo/ai/lib/types";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import { Button } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";

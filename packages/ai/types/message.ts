@@ -1,7 +1,7 @@
+import type { tools } from "@repo/ai/tools";
+import type { DataPart } from "@repo/ai/types/data-parts";
+import type { Metadata } from "@repo/ai/types/metadata";
 import type { InferUITools, UIMessage } from "ai";
-import type { tools } from "../tools";
-import type { DataPart } from "./data-parts";
-import type { Metadata } from "./metadata";
 
 export type MyUITools = InferUITools<ReturnType<typeof tools>>;
 export type MyUIDataTypes = DataPart;

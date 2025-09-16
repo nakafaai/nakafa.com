@@ -1,9 +1,9 @@
+import { buildContentSlug } from "@repo/ai/lib/utils";
+import { nakafaArticles } from "@repo/ai/prompt/articles";
+import { getArticlesInputSchema } from "@repo/ai/schema/tools";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/connection/routes";
 import { tool, type UIMessageStreamWriter } from "ai";
-import { buildContentSlug } from "../lib/utils";
-import { nakafaArticles } from "../prompt/articles";
-import { getArticlesInputSchema } from "../schema/tools";
-import type { MyUIMessage } from "../types/message";
 
 type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;

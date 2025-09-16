@@ -1,11 +1,11 @@
+import { createGetArticles } from "@repo/ai/tools/articles";
+import { createCalculator } from "@repo/ai/tools/calculator";
+import { createGetContent } from "@repo/ai/tools/content";
+import { createScrape } from "@repo/ai/tools/scrape";
+import { createGetSubjects } from "@repo/ai/tools/subjects";
+import { createWebSearch } from "@repo/ai/tools/web-search";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
-import type { MyUIMessage } from "../types/message";
-import { createGetArticles } from "./articles";
-import { createCalculator } from "./calculator";
-import { createGetContent } from "./content";
-import { createScrape } from "./scrape";
-import { createGetSubjects } from "./subjects";
-import { createWebSearch } from "./web-search";
 
 type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;

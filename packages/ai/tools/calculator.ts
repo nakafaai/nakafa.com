@@ -1,8 +1,8 @@
+import { nakafaCalculator } from "@repo/ai/prompt/calculator";
+import { calculatorInputSchema } from "@repo/ai/schema/tools";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as math from "mathjs";
-import { nakafaCalculator } from "../prompt/calculator";
-import { calculatorInputSchema } from "../schema/tools";
-import type { MyUIMessage } from "../types/message";
 
 type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;

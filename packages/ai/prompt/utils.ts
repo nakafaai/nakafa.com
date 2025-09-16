@@ -1,4 +1,4 @@
-import { dedentString } from "../lib/utils";
+import { dedentString } from "@repo/ai/lib/utils";
 
 export function createPrompt(opts: {
   // The context of the task

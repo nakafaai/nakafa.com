@@ -1,9 +1,9 @@
+import { selectRelevantContent } from "@repo/ai/lib/content-selection";
+import { firecrawlApp } from "@repo/ai/lib/firecrawl";
+import { nakafaScrape } from "@repo/ai/prompt/scrape";
+import { scrapeInputSchema } from "@repo/ai/schema/tools";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
-import { selectRelevantContent } from "../lib/content-selection";
-import { firecrawlApp } from "../lib/firecrawl";
-import { nakafaScrape } from "../prompt/scrape";
-import { scrapeInputSchema } from "../schema/tools";
-import type { MyUIMessage } from "../types/message";
 
 type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;
