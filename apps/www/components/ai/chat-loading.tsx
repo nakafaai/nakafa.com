@@ -1,15 +1,16 @@
 import { Message } from "@repo/design-system/components/ai/message";
 import { TypingLoader } from "@repo/design-system/components/ui/icons";
-import type { ChatStatus } from "ai";
 import { memo } from "react";
+import { useChat } from "@/lib/context/use-chat";
 
 type Props = {
-  status: ChatStatus;
   force?: boolean;
 };
 
-export const AIChatLoading = memo(({ status, force = false }: Props) => {
-  if (status !== "submitted" && !force) {
+export const AIChatLoading = memo(({ force = false }: Props) => {
+  const status = useChat((state) => state.chat.status);
+
+  if (status && status !== "submitted" && !force) {
     return null;
   }
 

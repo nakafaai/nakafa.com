@@ -36,6 +36,7 @@ import { useTranslations } from "next-intl";
 import { memo } from "react";
 import { useAi } from "@/lib/context/use-ai";
 import { useChat } from "@/lib/context/use-chat";
+import { AIChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
 
@@ -128,6 +129,8 @@ export function AiSheet() {
                   <AiChatMessage message={message} />
                 </Message>
               ))}
+
+              <AIChatLoading />
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>

@@ -18,6 +18,7 @@ export const config: NextConfig = {
     },
     optimizePackageImports: ["three"],
     reactCompiler: true,
+    viewTransition: true,
   },
   images: {
     contentDispositionType: "inline",
