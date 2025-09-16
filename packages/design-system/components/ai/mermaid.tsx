@@ -3,6 +3,7 @@
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { cn } from "@repo/design-system/lib/utils";
 import type { MermaidConfig } from "mermaid";
+import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 const ALPHANUMERIC_BASE = 36;
@@ -43,6 +44,8 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   const [svgContent, setSvgContent] = useState<string>("");
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
 
+  const { resolvedTheme } = useTheme();
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: "Required for Mermaid"
   useEffect(() => {
     const renderChart = async () => {
@@ -51,7 +54,10 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
         setIsLoading(true);
 
         // Initialize mermaid with optional custom config
-        const mermaid = await initializeMermaid(config);
+        const mermaid = await initializeMermaid({
+          ...config,
+          theme: resolvedTheme === "dark" ? "dark" : "default",
+        });
 
         // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
         const chartHash = chart.split("").reduce((acc, char) => {
@@ -83,7 +89,7 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
     };
 
     renderChart();
-  }, [chart, config]);
+  }, [chart, config, resolvedTheme]);
 
   // Show loading only on initial load when we have no content
   if (isLoading && !svgContent && !lastValidSvg) {
