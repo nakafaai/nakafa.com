@@ -1,0 +1,278 @@
+export const metadata = {
+    title: "String Objects",
+    description: "Learn Python string objects complete with definition, multiline strings, concatenation literals and variables. Understand how str data type works.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/16/2025",
+    subject: "AI Programming",
+};
+
+## Defining String Objects
+
+Strings in Python are ordered sequences of characters arranged neatly, like a series of letters forming words or sentences. Imagine a string like a necklace of beads where each bead represents one character.
+
+Strings have three main characteristics you need to understand:
+
+1. **Ordered character sequence** - each character has a fixed position
+2. **Enclosed in quotes** - can be single or double quotes  
+3. **Type `str`** - Python recognizes this as a string data type
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "string_definition.py",
+      code: `# Example string with single quotes
+>>> 'hello'
+'hello'
+
+# Example string with double quotes  
+>>> "hello"
+'hello'
+
+# Displaying string with print
+>>> print("hello")
+hello
+
+# Storing string in a variable
+>>> text = 'hello'
+>>> text
+'hello'`
+    }
+  ]}
+/>
+
+Notice that when you type a string in Python, the output will always display single quotes even if you use double quotes. However, when using `print()`, the string is displayed without quotes.
+
+## Empty Strings and str() Function
+
+Python allows you to create empty strings and convert other data types to strings.
+
+### Empty Strings
+
+Empty strings are like empty containers ready to be filled with characters. You can create them with quotes containing nothing.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "empty_string.py",
+      code: `# Creating an empty string
+>>> str = ""
+>>> str
+''`
+    }
+  ]}
+/>
+
+### str() Function
+
+The `str()` function acts like a translator that converts various data types into string form. This is very useful when you need to convert numbers to text.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "str_function.py",
+      code: `# Converting number to string
+>>> str(5)
+'5'
+
+# Converting float to string
+>>> xstr = str(3.4)
+>>> print(xstr)
+3.4`
+    }
+  ]}
+/>
+
+## Multi-line Strings
+
+When you need to write long text or text consisting of multiple lines, Python provides several ways to handle it.
+
+### Line Continuation Character
+
+You can use the backslash (`\`) character to continue a string to the next line. This is useful when a string is too long for one line.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "line_continuation.py",
+      code: `# Using backslash for line continuation
+>>> text = 'xxx' \
+...: 'yyy'
+
+>>> text
+'xxxyyy'
+
+>>> print(text)
+xxxyyy`
+    }
+  ]}
+/>
+
+### Line Continuation with Parentheses
+
+Another alternative is using parentheses to group multi-line strings. This method is often more readable.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "parentheses_continuation.py",
+      code: `# Using parentheses for line continuation
+>>> text = ('xxx'
+...: 'yyy')
+
+>>> text
+'xxxyyy'
+
+>>> print(text)
+xxxyyy`
+    }
+  ]}
+/>
+
+### Triple Quotes
+
+Triple quotes (three quote marks) allow you to write strings that are truly multi-line with actual line breaks.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "triple_quotes.py",
+      code: `# Triple single quotes
+>>> text = '''xxx
+...: yyy
+...: zzz'''
+
+>>> text
+'xxx\\nyyy\\nzzz'
+
+>>> print(text)
+xxx
+yyy
+zzz`
+    }
+  ]}
+/>
+
+Triple double quotes work the same way as triple single quotes, providing flexibility in quote selection.
+
+## String Literal Concatenation
+
+Python provides several ways to combine strings, both literals and variables.
+
+### Adjacent Literal Concatenation
+
+When you place string literals next to each other without operators, Python will automatically combine them. This is like joining two words without needing glue.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "literal_concatenation.py",
+      code: `# Adjacent string literals are automatically combined
+>>> 'hello ' 'world'
+'hello world'
+
+# Combining multiple strings at once
+>>> "hel" 'lo' " world" '!'
+'hello world!'`
+    }
+  ]}
+/>
+
+### Plus Operator (+)
+
+The plus operator functions like glue that combines strings into one unit.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "plus_operator.py",
+      code: `# Using + operator for concatenation
+>>> 'hello ' + 'world'
+'hello world'`
+    }
+  ]}
+/>
+
+### Multiplication Operator (*)
+
+The multiplication operator allows you to repeat a string as many times as desired, like copying text multiple times.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "multiplication_operator.py",
+      code: `# Repeating string with * operator
+>>> 3 * '+o+'
+'+o++o++o+'`
+    }
+  ]}
+/>
+
+## String Variable Concatenation
+
+When working with string variables, there are special rules you need to understand.
+
+### Using Operators
+
+To combine strings stored in variables, you must use the `+` or `*` operators. Unlike string literals, variables cannot be combined just by placing them adjacent to each other.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "variable_concatenation.py",
+      code: `# Defining string variables
+>>> text1 = 'hello'
+>>> text2 = 'world!'
+>>> text3 = '+o+'
+>>> a = 3
+
+# Combining with + operator
+>>> text1 + ' world'
+'hello world!'
+
+>>> 'hello ' + text2
+'hello world!'
+
+>>> text1 + ' ' + text2
+'hello world!'
+
+# Repeating with * operator
+>>> a * text3
+'+o++o++o+'
+
+>>> text3 * a
+'+o++o++o+'`
+    }
+  ]}
+/>
+
+### Common Errors
+
+It's important to understand that placing string variables adjacent without operators will cause syntax errors.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "concatenation_errors.py",
+      code: `# ERROR: Cannot combine variables without operators
+>>> text1 'world'
+SyntaxError ...
+
+>>> 'hello ' text2
+SyntaxError ...
+
+>>> text1 text2
+SyntaxError ...`
+    }
+  ]}
+/>

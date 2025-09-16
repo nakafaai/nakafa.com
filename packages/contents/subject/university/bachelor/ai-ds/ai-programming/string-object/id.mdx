@@ -1,0 +1,278 @@
+export const metadata = {
+    title: "Objek String",
+    description: "Pelajari objek string Python lengkap dengan definisi, multiline strings, concatenation literals dan variabel. Pahami cara kerja tipe data str.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/16/2025",
+    subject: "Pemrograman AI",
+};
+
+## Mendefinisikan Objek String
+
+String dalam Python adalah urutan karakter yang tersusun rapi, seperti rangkaian huruf yang membentuk kata atau kalimat. Bayangkan string seperti kalung manik-manik dimana setiap manik mewakili satu karakter.
+
+String memiliki tiga karakteristik utama yang perlu kamu pahami:
+
+1. **Urutan karakter yang teratur** - setiap karakter memiliki posisi tetap
+2. **Dibungkus dengan tanda kutip** - bisa kutip tunggal atau ganda  
+3. **Bertipe `str`** - Python mengenali ini sebagai tipe data string
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "string_definition.py",
+      code: `# Contoh string dengan kutip tunggal
+>>> 'hello'
+'hello'
+
+# Contoh string dengan kutip ganda  
+>>> "hello"
+'hello'
+
+# Menampilkan string dengan print
+>>> print("hello")
+hello
+
+# Menyimpan string dalam variabel
+>>> text = 'hello'
+>>> text
+'hello'`
+    }
+  ]}
+/>
+
+Perhatikan bahwa ketika kamu mengetik string di Python, output akan selalu menampilkan kutip tunggal meskipun kamu menggunakan kutip ganda. Namun ketika menggunakan `print()`, string ditampilkan tanpa tanda kutip.
+
+## String Kosong dan Fungsi str()
+
+Python memungkinkan kamu membuat string kosong dan mengubah tipe data lain menjadi string.
+
+### String Kosong
+
+String kosong seperti wadah kosong yang siap diisi karakter. Kamu bisa membuatnya dengan tanda kutip tanpa isi.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "empty_string.py",
+      code: `# Membuat string kosong
+>>> str = ""
+>>> str
+''`
+    }
+  ]}
+/>
+
+### Fungsi str()
+
+Fungsi `str()` berperan seperti penerjemah yang mengubah berbagai tipe data menjadi bentuk string. Ini sangat berguna ketika kamu perlu mengubah angka menjadi teks.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "str_function.py",
+      code: `# Mengubah angka menjadi string
+>>> str(5)
+'5'
+
+# Mengubah float menjadi string
+>>> xstr = str(3.4)
+>>> print(xstr)
+3.4`
+    }
+  ]}
+/>
+
+## String Multi-baris
+
+Ketika kamu perlu menulis teks yang panjang atau terdiri dari beberapa baris, Python menyediakan beberapa cara untuk menanganinya.
+
+### Karakter Lanjutan Baris
+
+Kamu dapat menggunakan karakter backslash (`\`) untuk melanjutkan string ke baris berikutnya. Ini berguna ketika string terlalu panjang untuk satu baris.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "line_continuation.py",
+      code: `# Menggunakan backslash untuk lanjutan baris
+>>> text = 'xxx' \
+...: 'yyy'
+
+>>> text
+'xxxyyy'
+
+>>> print(text)
+xxxyyy`
+    }
+  ]}
+/>
+
+### Lanjutan Baris dengan Tanda Kurung
+
+Alternatif lain adalah menggunakan tanda kurung untuk mengelompokkan string multi-baris. Metode ini sering lebih mudah dibaca.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "parentheses_continuation.py",
+      code: `# Menggunakan tanda kurung untuk lanjutan baris
+>>> text = ('xxx'
+...: 'yyy')
+
+>>> text
+'xxxyyy'
+
+>>> print(text)
+xxxyyy`
+    }
+  ]}
+/>
+
+### Triple Quotes
+
+Triple quotes (tiga tanda kutip) memungkinkan kamu menulis string yang benar-benar multi-baris dengan baris baru yang sesungguhnya.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "triple_quotes.py",
+      code: `# Triple single quotes
+>>> text = '''xxx
+...: yyy
+...: zzz'''
+
+>>> text
+'xxx\\nyyy\\nzzz'
+
+>>> print(text)
+xxx
+yyy
+zzz`
+    }
+  ]}
+/>
+
+Triple double quotes bekerja dengan cara yang sama seperti triple single quotes, memberikan fleksibilitas dalam pemilihan tanda kutip.
+
+## Penggabungan String Literal
+
+Python memberikan beberapa cara untuk menggabungkan string, baik yang berupa literal maupun variabel.
+
+### Penggabungan Literal Berdekatan
+
+Ketika kamu meletakkan string literal bersebelahan tanpa operator, Python akan secara otomatis menggabungkannya. Ini seperti menyatukan dua kata tanpa perlu lem.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "literal_concatenation.py",
+      code: `# String literal berdekatan otomatis digabung
+>>> 'hello ' 'world'
+'hello world'
+
+# Menggabungkan beberapa string sekaligus
+>>> "hel" 'lo' " world" '!'
+'hello world!'`
+    }
+  ]}
+/>
+
+### Operator Plus (+)
+
+Operator plus berfungsi seperti perekat yang menggabungkan string menjadi satu kesatuan.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "plus_operator.py",
+      code: `# Menggunakan operator + untuk penggabungan
+>>> 'hello ' + 'world'
+'hello world'`
+    }
+  ]}
+/>
+
+### Operator Perkalian (*)
+
+Operator perkalian memungkinkan kamu mengulang string sebanyak yang diinginkan, seperti menyalin teks berkali-kali.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "multiplication_operator.py",
+      code: `# Mengulang string dengan operator *
+>>> 3 * '+o+'
+'+o++o++o+'`
+    }
+  ]}
+/>
+
+## Penggabungan String Variabel
+
+Ketika bekerja dengan variabel string, ada aturan khusus yang perlu kamu pahami.
+
+### Menggunakan Operator
+
+Untuk menggabungkan string yang tersimpan dalam variabel, kamu harus menggunakan operator `+` atau `*`. Tidak seperti string literal, variabel tidak dapat digabung hanya dengan meletakkannya berdekatan.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "variable_concatenation.py",
+      code: `# Mendefinisikan variabel string
+>>> text1 = 'hello'
+>>> text2 = 'world!'
+>>> text3 = '+o+'
+>>> a = 3
+
+# Menggabungkan dengan operator +
+>>> text1 + ' world'
+'hello world!'
+
+>>> 'hello ' + text2
+'hello world!'
+
+>>> text1 + ' ' + text2
+'hello world!'
+
+# Mengulang dengan operator *
+>>> a * text3
+'+o++o++o+'
+
+>>> text3 * a
+'+o++o++o+'`
+    }
+  ]}
+/>
+
+### Kesalahan Umum
+
+Penting untuk memahami bahwa meletakkan variabel string berdekatan tanpa operator akan menyebabkan error sintaks.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "concatenation_errors.py",
+      code: `# KESALAHAN: Tidak dapat menggabung variabel tanpa operator
+>>> text1 'world'
+SyntaxError ...
+
+>>> 'hello ' text2
+SyntaxError ...
+
+>>> text1 text2
+SyntaxError ...`
+    }
+  ]}
+/>
