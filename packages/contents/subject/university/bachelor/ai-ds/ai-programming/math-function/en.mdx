@@ -1,0 +1,341 @@
+export const metadata = {
+    title: "Mathematical Functions",
+    description: "Learn how to use Python's math module for sqrt(), round(), abs() functions, and pi constant. Complete guide to importing and practical usage.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/16/2025",
+    subject: "AI Programming",
+};
+
+## Module Concept in Python
+
+Python is designed as a simple programming language with a small core language that can be greatly extended through modules. Think of Python like a house with a small living room, but with many additional rooms that you can open as needed. Modules are those additional rooms that contain special functions and constants.
+
+A module is a unit of Python code organization that is loaded through the import process. When you need special mathematical functions, you don't need to create them from scratch, but simply import a module that already provides those functions.
+
+## The math Module for Mathematical Functions
+
+The `math` module provides mathematical functions that are useful for `int` and `float` data types. Meanwhile, for calculations involving complex numbers, Python provides the `cmath` module that supports `int`, `float`, and `complex` data types.
+
+## How to Import the math Module
+
+Python offers several ways to import modules, each with different characteristics and usage.
+
+### Basic Import with Namespace
+
+The most basic way to import a module is using the `import math` command. This way, all function and constant names remain bound to the `math` namespace.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "import_basic.py",
+      code: `import math
+
+# Using sqrt function with math prefix
+print(math.sqrt(9))  # Output: 3.0
+
+# Accessing pi constant
+print(math.pi)  # Output: 3.141592653589793
+
+# If trying without prefix, an error will occur
+# sqrt(9)  # NameError: name 'sqrt' is not defined`
+    }
+  ]}
+/>
+
+### Import with Alias
+
+To make code more concise, you can give an alias to the imported module. This is very useful when the module name is long or frequently used.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "import_alias.py",
+      code: `import math as m
+
+# Using alias 'm' instead of 'math'
+print(m.sqrt(9))  # Output: 3.0
+print(m.pi)       # Output: 3.141592653589793
+
+# Original name 'math' is no longer available
+# math.sqrt(9)  # NameError: name 'math' is not defined`
+    }
+  ]}
+/>
+
+### Import All Functions
+
+This method imports all names from the `math` module to the global namespace so they can be accessed directly without a prefix. Although practical for interactive sessions, this method is not recommended for complex Python programs.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "import_all.py",
+      code: `from math import *
+
+# Functions can be called directly without prefix
+print(sqrt(9))  # Output: 3.0
+print(pi)       # Output: 3.141592653589793
+
+# Name 'math' is not available because it wasn't imported
+# math.sqrt(9)  # NameError: name 'math' is not defined`
+    }
+  ]}
+/>
+
+Using `from math import *` has several drawbacks that you need to understand. First, there's a risk of name conflicts if you import multiple modules that have functions with the same name. Second, it's difficult to trace the origin of specific functions when reading code. Third, code becomes more difficult to maintain in the long term.
+
+### Import Specific Functions
+
+A more selective approach is to import only the specific functions needed. This provides direct access without a prefix while maintaining code clarity.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "import_specific.py",
+      code: `from math import sqrt
+
+# sqrt function can be called directly
+print(sqrt(9))  # Output: 3.0
+
+# pi constant is not available because it wasn't imported
+# print(pi)  # NameError: name 'pi' is not defined
+
+# Name 'math' is also not available
+# math.sqrt(9)  # NameError: name 'math' is not defined`
+    }
+  ]}
+/>
+
+### Import with Function Alias
+
+You can also give an alias to specific functions when importing them. This is useful for making function names more concise or avoiding name conflicts.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "import_function_alias.py",
+      code: `from math import factorial as fac
+
+# Using alias 'fac' for factorial function
+print(fac(5))  # Output: 120
+
+# Original name 'factorial' is not available
+# factorial(5)  # NameError: name 'factorial' is not defined
+
+# Same with 'math'
+# math.factorial(5)  # NameError: name 'math' is not defined`
+    }
+  ]}
+/>
+
+## Built-in Functions vs Module Functions
+
+Python provides several basic mathematical functions as built-in functions that can be used directly without import. Examples are `abs()` and `round()`. These built-in functions demonstrate the concept of function overloading, where one function name can handle various data types.
+
+### Absolute Value Function
+
+The `abs()` function returns the absolute value of a number. This function can handle integers, floats, and even complex numbers.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "abs_function.py",
+      code: `# Absolute value for negative integer
+print(abs(-5))    # Output: 5
+
+# Absolute value for negative float
+print(abs(-1.4))  # Output: 1.4
+
+# Absolute value for complex number (modulus)
+print(abs(4 + 3j))  # Output: 5.0`
+    }
+  ]}
+/>
+
+For complex numbers, the `abs()` function calculates the modulus or distance from the origin point in the complex plane. The result for `4 + 3j` is <InlineMath math="5.0" /> because <InlineMath math="\sqrt{4^2 + 3^2} = \sqrt{16 + 9} = \sqrt{25} = 5" />.
+
+### Rounding Function
+
+The `round()` function rounds floating-point numbers to the nearest integer using the Banker's rounding system. In this system, numbers that are exactly in the middle (like 0.5) are rounded to the nearest even number.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "round_function.py",
+      code: `# Standard rounding
+print(round(-3.8))  # Output: -4
+print(round(3.5))   # Output: 4
+print(round(4.5))   # Output: 4 (not 5!)
+
+# Rounding with specific precision
+print(round(3.141592653589793, 3))  # Output: 3.142
+print(round(1234.4321, -2))         # Output: 1200.0`
+    }
+  ]}
+/>
+
+Note that `round(4.5)` produces 4, not 5. This is because Python uses Banker's rounding which rounds to the nearest even number for cases exactly in the middle. The `round()` function also accepts a second parameter to determine the number of decimal digits or rounding position.
+
+## Functions and Constants in the math Module
+
+The `math` module provides various mathematical functions and constants that are frequently used in scientific and technical calculations.
+
+### Square Root and Logarithm Functions
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "math_functions.py",
+      code: `import math
+
+# Square root function
+print(f"Square root of 16: {math.sqrt(16)}")  # Output: 4.0
+
+# Exponential function (e^x)
+print(f"e to the power of 2: {math.exp(2)}")  # Output: 7.38905609893065
+
+# Natural logarithm function
+print(f"ln(10): {math.log(10)}")  # Output: 2.302585092994046
+
+# Base 10 logarithm function
+print(f"log10(100): {math.log10(100)}")  # Output: 2.0
+
+# Logarithm with specific base
+print(f"log2(8): {math.log(8, 2)}")  # Output: 3.0`
+    }
+  ]}
+/>
+
+### Trigonometry Functions
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "trigonometry.py",
+      code: `import math
+
+# Trigonometry functions (input in radians)
+angle_rad = math.pi / 4  # 45 degrees in radians
+
+print(f"sin(π/4): {math.sin(angle_rad)}")  # Output: 0.7071067811865475
+print(f"cos(π/4): {math.cos(angle_rad)}")  # Output: 0.7071067811865476
+print(f"tan(π/4): {math.tan(angle_rad)}")  # Output: 0.9999999999999999
+
+# Converting degrees to radians
+angle_deg = 45
+angle_rad = math.radians(angle_deg)
+print(f"45 degrees = {angle_rad} radians")  # Output: 0.7853981633974483`
+    }
+  ]}
+/>
+
+### Ceiling Floor and Factorial Functions
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "ceiling_floor.py",
+      code: `import math
+
+number = 4.7
+
+# Ceiling: smallest integer >= x
+print(f"ceil(4.7): {math.ceil(number)}")    # Output: 5
+
+# Floor: largest integer <= x
+print(f"floor(4.7): {math.floor(number)}")  # Output: 4
+
+# Factorial
+print(f"5!: {math.factorial(5)}")  # Output: 120`
+    }
+  ]}
+/>
+
+### Mathematical Constants
+
+The `math` module also provides important mathematical constants that are frequently used in calculations.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "math_constants.py",
+      code: `import math
+
+# Pi constant (π ≈ 3.141592...)
+print(f"Value of π: {math.pi}")
+
+# e constant (Euler's number ≈ 2.718281...)
+print(f"Value of e: {math.e}")
+
+# Infinity (positive infinity)
+print(f"Infinity: {math.inf}")
+
+# Not a Number
+print(f"NaN: {math.nan}")
+
+# Example usage of constants
+circle_radius = 5
+circle_area = math.pi * circle_radius ** 2
+print(f"Circle area with radius {circle_radius}: {circle_area}")`
+    }
+  ]}
+/>
+
+## Choosing the Right Import Method
+
+The choice of the right import method depends on the usage context and complexity of the program you're creating.
+
+### Guide to Choosing Import Methods
+
+1. **Use `import math`** for programs that need many mathematical functions and you want clarity of function origin
+2. **Use `import math as m`** when you frequently use mathematical functions and want more concise code
+3. **Use `from math import sqrt, pi`** when you only need a few specific functions
+4. **Avoid `from math import *`** in production programs because it can cause name conflicts and reduce code readability
+
+### Implementation in Real Applications
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "practical_example.py",
+      code: `import math
+
+def calculate_euclidean_distance(x1, y1, x2, y2):
+    """Calculate Euclidean distance between two points"""
+    return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+def calculate_triangle_area(a, b, c):
+    """Calculate triangle area using Heron's formula"""
+    # Calculate semi-perimeter
+    s = (a + b + c) / 2
+    
+    # Heron's formula
+    area = math.sqrt(s * (s - a) * (s - b) * (s - c))
+    return area
+
+# Usage example
+point1 = (0, 0)
+point2 = (3, 4)
+distance = calculate_euclidean_distance(*point1, *point2)
+print(f"Distance between {point1} and {point2}: {distance}")
+
+# Calculate triangle area with sides 3, 4, 5
+area = calculate_triangle_area(3, 4, 5)
+print(f"Triangle area with sides 3, 4, 5: {area}")`
+    }
+  ]}
+/>
+
+By mastering various import methods and functions in the `math` module like `sqrt()`, `round()`, trigonometry functions, and the `pi` constant, you can build applications that perform complex calculations with clean and efficient code. The choice of the right import method will determine how easy your code is to read and maintain in the long term.

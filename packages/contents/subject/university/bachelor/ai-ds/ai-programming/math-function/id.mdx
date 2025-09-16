@@ -1,0 +1,341 @@
+export const metadata = {
+    title: "Fungsi Matematika",
+    description: "Pelajari cara menggunakan modul math Python untuk fungsi sqrt(), round(), abs(), dan konstanta pi. Panduan lengkap import dan penggunaan praktis.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/16/2025",
+    subject: "Pemrograman AI",
+};
+
+## Konsep Modul dalam Python
+
+Python dirancang sebagai bahasa pemrograman yang sederhana dengan inti bahasa yang kecil namun sangat dapat diperluas melalui modul. Bayangkan Python seperti sebuah rumah dengan ruang tamu kecil, tetapi memiliki banyak ruangan tambahan yang bisa kamu buka sesuai kebutuhan. Modul adalah ruangan tambahan tersebut yang berisi fungsi dan konstanta khusus.
+
+Modul merupakan unit organisasi kode Python yang dimuat melalui proses import. Ketika kamu membutuhkan fungsi matematika khusus, kamu tidak perlu membuatnya dari awal, melainkan cukup mengimpor modul yang sudah menyediakan fungsi tersebut.
+
+## Modul math untuk Fungsi Matematika
+
+Modul `math` menyediakan fungsi matematika yang berguna untuk tipe data `int` dan `float`. Sementara itu, untuk perhitungan yang melibatkan bilangan kompleks, Python menyediakan modul `cmath` yang mendukung tipe data `int`, `float`, dan `complex`.
+
+## Cara Mengimpor Modul math
+
+Python menawarkan beberapa cara untuk mengimpor modul, masing-masing dengan karakteristik dan penggunaan yang berbeda.
+
+### Import Dasar dengan Namespace
+
+Cara paling dasar untuk mengimpor modul adalah menggunakan perintah `import math`. Dengan cara ini, semua nama fungsi dan konstanta tetap terikat pada namespace `math`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "import_basic.py",
+      code: `import math
+
+# Menggunakan fungsi sqrt dengan prefix math
+print(math.sqrt(9))  # Output: 3.0
+
+# Mengakses konstanta pi
+print(math.pi)  # Output: 3.141592653589793
+
+# Jika mencoba tanpa prefix, akan terjadi error
+# sqrt(9)  # NameError: name 'sqrt' is not defined`
+    }
+  ]}
+/>
+
+### Import dengan Alias
+
+Untuk membuat kode lebih ringkas, kamu bisa memberikan alias pada modul yang diimpor. Ini sangat berguna ketika nama modul panjang atau sering digunakan.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "import_alias.py",
+      code: `import math as m
+
+# Menggunakan alias 'm' sebagai pengganti 'math'
+print(m.sqrt(9))  # Output: 3.0
+print(m.pi)       # Output: 3.141592653589793
+
+# Nama asli 'math' tidak lagi tersedia
+# math.sqrt(9)  # NameError: name 'math' is not defined`
+    }
+  ]}
+/>
+
+### Import Semua Fungsi
+
+Cara ini mengimpor semua nama dari modul `math` ke namespace global sehingga bisa diakses langsung tanpa prefix. Meskipun praktis untuk sesi interaktif, cara ini tidak disarankan untuk program Python yang kompleks.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "import_all.py",
+      code: `from math import *
+
+# Fungsi dapat dipanggil langsung tanpa prefix
+print(sqrt(9))  # Output: 3.0
+print(pi)       # Output: 3.141592653589793
+
+# Nama 'math' tidak tersedia karena tidak diimpor
+# math.sqrt(9)  # NameError: name 'math' is not defined`
+    }
+  ]}
+/>
+
+Penggunaan `from math import *` memiliki beberapa kelemahan yang perlu kamu pahami. Pertama, ada risiko konflik nama jika kamu mengimpor beberapa modul yang memiliki fungsi dengan nama sama. Kedua, sulit untuk melacak asal fungsi tertentu ketika membaca kode. Ketiga, kode menjadi lebih sulit untuk dipelihara dalam jangka panjang.
+
+### Import Fungsi Spesifik
+
+Cara yang lebih selektif adalah mengimpor hanya fungsi tertentu yang dibutuhkan. Ini memberikan akses langsung tanpa prefix sambil tetap menjaga kejelasan kode.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "import_specific.py",
+      code: `from math import sqrt
+
+# Fungsi sqrt dapat dipanggil langsung
+print(sqrt(9))  # Output: 3.0
+
+# Konstanta pi tidak tersedia karena tidak diimpor
+# print(pi)  # NameError: name 'pi' is not defined
+
+# Nama 'math' juga tidak tersedia
+# math.sqrt(9)  # NameError: name 'math' is not defined`
+    }
+  ]}
+/>
+
+### Import dengan Alias Fungsi
+
+Kamu juga bisa memberikan alias pada fungsi tertentu saat mengimpornya. Ini berguna untuk membuat nama fungsi lebih ringkas atau menghindari konflik nama.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "import_function_alias.py",
+      code: `from math import factorial as fac
+
+# Menggunakan alias 'fac' untuk fungsi factorial
+print(fac(5))  # Output: 120
+
+# Nama asli 'factorial' tidak tersedia
+# factorial(5)  # NameError: name 'factorial' is not defined
+
+# Begitu juga dengan 'math'
+# math.factorial(5)  # NameError: name 'math' is not defined`
+    }
+  ]}
+/>
+
+## Fungsi Built-in vs Fungsi Modul
+
+Python menyediakan beberapa fungsi matematika dasar sebagai built-in function yang bisa langsung digunakan tanpa import. Contohnya adalah `abs()` dan `round()`. Fungsi built-in ini menunjukkan konsep function overloading, dimana satu nama fungsi dapat menangani berbagai tipe data.
+
+### Fungsi Nilai Absolut
+
+Fungsi `abs()` mengembalikan nilai absolut dari sebuah bilangan. Fungsi ini dapat menangani bilangan integer, float, bahkan bilangan kompleks.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "abs_function.py",
+      code: `# Nilai absolut untuk bilangan integer negatif
+print(abs(-5))    # Output: 5
+
+# Nilai absolut untuk bilangan float negatif
+print(abs(-1.4))  # Output: 1.4
+
+# Nilai absolut untuk bilangan kompleks (modulus)
+print(abs(4 + 3j))  # Output: 5.0`
+    }
+  ]}
+/>
+
+Untuk bilangan kompleks, fungsi `abs()` menghitung modulus atau jarak dari titik origin dalam bidang kompleks. Hasil untuk `4 + 3j` adalah <InlineMath math="5.0" /> karena <InlineMath math="\sqrt{4^2 + 3^2} = \sqrt{16 + 9} = \sqrt{25} = 5" />.
+
+### Fungsi Pembulatan
+
+Fungsi `round()` membulatkan bilangan floating-point ke bilangan bulat terdekat menggunakan sistem Banker's rounding. Dalam sistem ini, angka yang berada tepat di tengah (seperti 0.5) dibulatkan ke bilangan genap terdekat.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "round_function.py",
+      code: `# Pembulatan standar
+print(round(-3.8))  # Output: -4
+print(round(3.5))   # Output: 4
+print(round(4.5))   # Output: 4 (bukan 5!)
+
+# Pembulatan dengan presisi tertentu
+print(round(3.141592653589793, 3))  # Output: 3.142
+print(round(1234.4321, -2))         # Output: 1200.0`
+    }
+  ]}
+/>
+
+Perhatikan bahwa `round(4.5)` menghasilkan 4, bukan 5. Ini karena Python menggunakan Banker's rounding yang membulatkan ke bilangan genap terdekat untuk kasus tepat di tengah. Fungsi `round()` juga menerima parameter kedua untuk menentukan jumlah digit desimal atau posisi pembulatan.
+
+## Fungsi dan Konstanta dalam Modul math
+
+Modul `math` menyediakan berbagai fungsi matematika dan konstanta yang sering digunakan dalam perhitungan ilmiah dan teknik.
+
+### Fungsi Akar dan Logaritma
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "math_functions.py",
+      code: `import math
+
+# Fungsi akar kuadrat
+print(f"Akar kuadrat 16: {math.sqrt(16)}")  # Output: 4.0
+
+# Fungsi eksponensial (e^x)
+print(f"e pangkat 2: {math.exp(2)}")  # Output: 7.38905609893065
+
+# Fungsi logaritma natural
+print(f"ln(10): {math.log(10)}")  # Output: 2.302585092994046
+
+# Fungsi logaritma basis 10
+print(f"log10(100): {math.log10(100)}")  # Output: 2.0
+
+# Fungsi logaritma dengan basis tertentu
+print(f"log2(8): {math.log(8, 2)}")  # Output: 3.0`
+    }
+  ]}
+/>
+
+### Fungsi Trigonometri
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "trigonometry.py",
+      code: `import math
+
+# Fungsi trigonometri (input dalam radian)
+angle_rad = math.pi / 4  # 45 derajat dalam radian
+
+print(f"sin(π/4): {math.sin(angle_rad)}")  # Output: 0.7071067811865475
+print(f"cos(π/4): {math.cos(angle_rad)}")  # Output: 0.7071067811865476
+print(f"tan(π/4): {math.tan(angle_rad)}")  # Output: 0.9999999999999999
+
+# Konversi derajat ke radian
+angle_deg = 45
+angle_rad = math.radians(angle_deg)
+print(f"45 derajat = {angle_rad} radian")  # Output: 0.7853981633974483`
+    }
+  ]}
+/>
+
+### Fungsi Ceiling Floor dan Faktorial
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "ceiling_floor.py",
+      code: `import math
+
+number = 4.7
+
+# Ceiling: bilangan bulat terkecil yang >= x
+print(f"ceil(4.7): {math.ceil(number)}")    # Output: 5
+
+# Floor: bilangan bulat terbesar yang <= x
+print(f"floor(4.7): {math.floor(number)}")  # Output: 4
+
+# Faktorial
+print(f"5!: {math.factorial(5)}")  # Output: 120`
+    }
+  ]}
+/>
+
+### Konstanta Matematika
+
+Modul `math` juga menyediakan konstanta matematika penting yang sering digunakan dalam perhitungan.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "math_constants.py",
+      code: `import math
+
+# Konstanta pi (π ≈ 3.141592...)
+print(f"Nilai π: {math.pi}")
+
+# Konstanta e (bilangan Euler ≈ 2.718281...)
+print(f"Nilai e: {math.e}")
+
+# Infinity (tak terhingga positif)
+print(f"Infinity: {math.inf}")
+
+# Not a Number (bukan bilangan)
+print(f"NaN: {math.nan}")
+
+# Contoh penggunaan konstanta
+lingkaran_radius = 5
+luas_lingkaran = math.pi * lingkaran_radius ** 2
+print(f"Luas lingkaran dengan radius {lingkaran_radius}: {luas_lingkaran}")`
+    }
+  ]}
+/>
+
+## Memilih Cara Import yang Tepat
+
+Pemilihan cara import yang tepat tergantung pada konteks penggunaan dan kompleksitas program yang kamu buat.
+
+### Panduan Memilih Metode Import
+
+1. **Gunakan `import math`** untuk program yang membutuhkan banyak fungsi matematika dan kamu ingin kejelasan asal fungsi
+2. **Gunakan `import math as m`** ketika kamu sering menggunakan fungsi matematika dan ingin kode lebih ringkas
+3. **Gunakan `from math import sqrt, pi`** ketika kamu hanya membutuhkan beberapa fungsi tertentu
+4. **Hindari `from math import *`** dalam program production karena dapat menyebabkan konflik nama dan mengurangi keterbacaan kode
+
+### Implementasi dalam Aplikasi Nyata
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "practical_example.py",
+      code: `import math
+
+def hitung_jarak_euclidean(x1, y1, x2, y2):
+    """Menghitung jarak Euclidean antara dua titik"""
+    return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+def hitung_luas_segitiga(a, b, c):
+    """Menghitung luas segitiga menggunakan rumus Heron"""
+    # Menghitung semi-perimeter
+    s = (a + b + c) / 2
+    
+    # Rumus Heron
+    luas = math.sqrt(s * (s - a) * (s - b) * (s - c))
+    return luas
+
+# Contoh penggunaan
+titik1 = (0, 0)
+titik2 = (3, 4)
+jarak = hitung_jarak_euclidean(*titik1, *titik2)
+print(f"Jarak antara {titik1} dan {titik2}: {jarak}")
+
+# Menghitung luas segitiga dengan sisi 3, 4, 5
+luas = hitung_luas_segitiga(3, 4, 5)
+print(f"Luas segitiga dengan sisi 3, 4, 5: {luas}")`
+    }
+  ]}
+/>
+
+Dengan menguasai berbagai cara import dan fungsi dalam modul `math` seperti `sqrt()`, `round()`, fungsi trigonometri, dan konstanta `pi`, kamu dapat membangun aplikasi yang melakukan perhitungan kompleks dengan kode yang bersih dan efisien. Pilihan metode import yang tepat akan menentukan seberapa mudah kode kamu dibaca dan dipelihara dalam jangka panjang.
