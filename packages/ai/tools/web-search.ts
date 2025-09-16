@@ -2,6 +2,7 @@ import { tool, type UIMessageStreamWriter } from "ai";
 import { selectRelevantContent } from "../lib/content-selection";
 import { firecrawlApp } from "../lib/firecrawl";
 import { extractDomain } from "../lib/utils";
+import { nakafaWebSearch } from "../prompt/web-search";
 import { webSearchInputSchema } from "../schema/tools";
 import type { MyUIMessage } from "../types/message";
 
@@ -12,8 +13,7 @@ type Params = {
 export const createWebSearch = ({ writer }: Params) => {
   return tool({
     name: "webSearch",
-    description:
-      "Search the web for up-to-date information and as universal fallback for ANY topic when Nakafa content is insufficient. Use exactly the citation field for inline citations.",
+    description: nakafaWebSearch(),
     inputSchema: webSearchInputSchema,
     execute: async ({ query }, { toolCallId }) => {
       writer.write({

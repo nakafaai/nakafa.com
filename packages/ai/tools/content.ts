@@ -1,6 +1,7 @@
 import { api } from "@repo/connection/routes";
 import { tool, type UIMessageStreamWriter } from "ai";
 import { cleanSlug } from "../lib/utils";
+import { nakafaContent } from "../prompt/content";
 import { getContentInputSchema } from "../schema/tools";
 import type { MyUIMessage } from "../types/message";
 
@@ -13,8 +14,7 @@ type Params = {
 export const createGetContent = ({ writer }: Params) => {
   return tool({
     name: "getContent",
-    description:
-      "Fetches the full content from Nakafa platform. CRITICAL: ONLY use this with slugs that were returned from getSubjects or getArticles responses. NEVER use with guessed, assumed, or unverified slugs. Can also retrieve Quran chapters.",
+    description: nakafaContent(),
     inputSchema: getContentInputSchema,
     execute: async ({ slug, locale }, { toolCallId }) => {
       let cleanedSlug = cleanSlug(slug);

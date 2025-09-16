@@ -1,5 +1,6 @@
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as math from "mathjs";
+import { nakafaCalculator } from "../prompt/calculator";
 import { calculatorInputSchema } from "../schema/tools";
 import type { MyUIMessage } from "../types/message";
 
@@ -10,8 +11,7 @@ type Params = {
 export const createCalculator = ({ writer }: Params) => {
   return tool({
     name: "calculator",
-    description:
-      "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation including simple arithmetic. NEVER calculate manually. Only use for evaluable expressions with concrete numbers, not algebraic variables. Uses Math.js to evaluate expressions.",
+    description: nakafaCalculator(),
     inputSchema: calculatorInputSchema,
     execute: ({ expression }, { toolCallId }) => {
       const node = math.parse(expression);

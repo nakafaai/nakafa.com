@@ -1,6 +1,7 @@
 import { api } from "@repo/connection/routes";
 import { tool, type UIMessageStreamWriter } from "ai";
 import { buildContentSlug } from "../lib/utils";
+import { nakafaArticles } from "../prompt/articles";
 import { getArticlesInputSchema } from "../schema/tools";
 import type { MyUIMessage } from "../types/message";
 
@@ -11,8 +12,7 @@ type Params = {
 export const createGetArticles = ({ writer }: Params) => {
   return tool({
     name: "getArticles",
-    description:
-      "Retrieves articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, politics, and general publications. Use this for research questions, current events, scientific studies, news analysis, and academic research topics.",
+    description: nakafaArticles(),
     inputSchema: getArticlesInputSchema,
     execute: async ({ locale, category }, { toolCallId }) => {
       const slug = buildContentSlug({

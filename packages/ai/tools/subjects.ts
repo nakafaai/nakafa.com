@@ -1,6 +1,7 @@
 import { api } from "@repo/connection/routes";
 import { tool, type UIMessageStreamWriter } from "ai";
 import { buildContentSlug } from "../lib/utils";
+import { nakafaSubjects } from "../prompt/subjects";
 import { getSubjectsInputSchema } from "../schema/tools";
 import type { MyUIMessage } from "../types/message";
 
@@ -11,8 +12,7 @@ type Params = {
 export const createGetSubjects = ({ writer }: Params) => {
   return tool({
     name: "getSubjects",
-    description:
-      "Retrieves educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for study questions, homework help, learning concepts, educational content, and curriculum-based topics.",
+    description: nakafaSubjects(),
     inputSchema: getSubjectsInputSchema,
     execute: async ({ locale, category, grade, material }, { toolCallId }) => {
       const slug = buildContentSlug({

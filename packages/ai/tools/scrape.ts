@@ -1,6 +1,7 @@
 import { tool, type UIMessageStreamWriter } from "ai";
 import { selectRelevantContent } from "../lib/content-selection";
 import { firecrawlApp } from "../lib/firecrawl";
+import { nakafaScrape } from "../prompt/scrape";
 import { scrapeInputSchema } from "../schema/tools";
 import type { MyUIMessage } from "../types/message";
 
@@ -11,8 +12,7 @@ type Params = {
 export const createScrape = ({ writer }: Params) => {
   return tool({
     name: "scrape",
-    description:
-      "Scrape a URL and return the content. Use this for specific URLs to get the content of the url.",
+    description: nakafaScrape(),
     inputSchema: scrapeInputSchema,
     execute: async ({ urlToCrawl }, { toolCallId }) => {
       const url = urlToCrawl;
