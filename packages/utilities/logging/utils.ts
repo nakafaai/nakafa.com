@@ -1,4 +1,4 @@
-import type { LogContext, Logger } from "./types";
+import type { LogContext, Logger } from "@repo/utilities/logging/types";
 
 /**
  * Utility functions for enhanced logging functionality

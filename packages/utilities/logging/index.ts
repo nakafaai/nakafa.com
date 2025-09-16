@@ -25,14 +25,14 @@
  * ```
  */
 
-export type { LoggerConfig } from "./logger";
+export type { LoggerConfig } from "@repo/utilities/logging/logger";
 export {
   createChildLogger,
   createDevLogger,
   createLogger,
   createServiceLogger,
   logger,
-} from "./logger";
+} from "@repo/utilities/logging/logger";
 
 export type {
   LogContext,
@@ -40,7 +40,7 @@ export type {
   LogLevel,
   LogMethods,
   ServiceLoggerOptions,
-} from "./types";
+} from "@repo/utilities/logging/types";
 export {
   createTimer,
   logCacheOperation,
@@ -48,4 +48,4 @@ export {
   logError,
   logHttpRequest,
   logMetric,
-} from "./utils";
+} from "@repo/utilities/logging/utils";

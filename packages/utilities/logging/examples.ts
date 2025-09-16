@@ -16,7 +16,7 @@ import {
   logger,
   logHttpRequest,
   logMetric,
-} from "./index";
+} from "@repo/utilities/logging";
 
 // Constants for example values
 const EXAMPLE_PORT = 3000;

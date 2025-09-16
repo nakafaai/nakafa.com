@@ -3,7 +3,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@repo/*": ["../*"]
+      "@repo/*": ["../*"],
+      "@repo/connection/*": ["./*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],

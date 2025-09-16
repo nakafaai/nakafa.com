@@ -1,5 +1,5 @@
+import type { FetchResult } from "@repo/connection/lib/types";
 import ky, { HTTPError, TimeoutError } from "ky";
-import type { FetchResult } from "./types";
 
 const url =
   process.env.NODE_ENV === "development"

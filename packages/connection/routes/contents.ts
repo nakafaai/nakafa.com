@@ -1,8 +1,8 @@
+import { fetcher } from "@repo/connection/lib/fetcher";
+import type { FetchResult } from "@repo/connection/lib/types";
 import { cleanSlug } from "@repo/connection/lib/utils";
 import type { Content } from "@repo/contents/_types/content";
 import type { Surah } from "@repo/contents/_types/quran";
-import { fetcher } from "../lib/fetcher";
-import type { FetchResult } from "../lib/types";
 
 const PREFIX = "/contents";
 
