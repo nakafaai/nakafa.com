@@ -300,7 +300,7 @@ export const reactMdxComponents: Options["components"] = {
       if (language === "math") {
         return (
           <BlockMath
-            className="my-4 shadow-none"
+            className={cn("my-4 shadow-none", className)}
             data-nakafa="math-block"
             math={code}
           />
@@ -308,7 +308,9 @@ export const reactMdxComponents: Options["components"] = {
       }
 
       if (language === "mermaid") {
-        return <MermaidMdx chart={code} className={className} />;
+        return (
+          <MermaidMdx chart={code} className={`shadow-none ${className}`} />
+        );
       }
 
       return (
