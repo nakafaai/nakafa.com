@@ -1,0 +1,294 @@
+export const metadata = {
+    title: "Atribut dan Metode Bilangan",
+    description: "Pelajari cara menggunakan atribut real, imag, dan metode conjugate() pada bilangan kompleks Python. Panduan lengkap dengan contoh kode praktis.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/16/2025",
+    subject: "Pemrograman AI",
+};
+
+## Konsep Dasar Bilangan sebagai Objek
+
+Dalam Python, setiap bilangan adalah sebuah objek yang memiliki atribut dan metode tersendiri. Konsep ini mungkin terdengar asing pada awalnya, tetapi sebenarnya sangat sederhana. Bayangkan bilangan seperti sebuah kotak yang tidak hanya berisi nilai, tetapi juga memiliki kemampuan khusus yang bisa kamu gunakan.
+
+Ketika kamu menulis <InlineMath math="5" /> atau <InlineMath math="3.14" />, Python tidak hanya menyimpan angka tersebut, tetapi juga menyediakan berbagai fungsi yang bisa kamu panggil untuk memanipulasi atau mendapatkan informasi dari bilangan tersebut.
+
+## Mengakses Atribut dan Metode
+
+Untuk mengakses atribut dari sebuah objek bilangan, kamu menggunakan sintaks `objek.atribut`. Sedangkan untuk memanggil metode, kamu menggunakan sintaks `objek.metode()`.
+
+Mari kita lihat contoh praktis dengan bilangan kompleks:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "complex_example.py",
+      code: `# Membuat bilangan kompleks
+c = 2 + 3j
+
+# Mengakses atribut real (bagian riil)
+print(c.real)  # Output: 2.0
+
+# Mengakses atribut imag (bagian imajiner)
+print(c.imag)  # Output: 3.0
+
+# Memanggil metode conjugate() untuk mendapatkan konjugat
+print(c.conjugate())  # Output: (2-3j)`
+    }
+  ]}
+/>
+
+## Cara Melihat Atribut dan Metode yang Tersedia
+
+Python menyediakan beberapa cara untuk melihat atribut dan metode apa saja yang tersedia pada sebuah objek bilangan.
+
+### Menggunakan Fungsi type()
+
+Fungsi `type()` menunjukkan jenis objek yang sedang kamu tangani:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "type_example.py",
+      code: `# Melihat tipe data bilangan
+print(type(42))        # Output: <class 'int'>
+print(type(3.14))      # Output: <class 'float'>
+print(type(2+3j))      # Output: <class 'complex'>`
+    }
+  ]}
+/>
+
+## Atribut Bilangan Kompleks
+
+Bilangan kompleks memiliki dua atribut utama yang sangat berguna:
+
+### Atribut real
+
+Atribut `real` memberikan bagian riil dari bilangan kompleks:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "real_attribute.py",
+      code: `# Contoh penggunaan atribut real
+z1 = 4 + 5j
+z2 = -2 + 7j
+z3 = 10 + 0j  # Bilangan riil murni
+
+print(f"Bagian riil dari {z1} adalah {z1.real}")
+print(f"Bagian riil dari {z2} adalah {z2.real}")
+print(f"Bagian riil dari {z3} adalah {z3.real}")
+
+# Output:
+# Bagian riil dari (4+5j) adalah 4.0
+# Bagian riil dari (-2+7j) adalah -2.0
+# Bagian riil dari (10+0j) adalah 10.0`
+    }
+  ]}
+/>
+
+### Atribut imag
+
+Atribut `imag` memberikan bagian imajiner dari bilangan kompleks:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "imag_attribute.py",
+      code: `# Contoh penggunaan atribut imag
+z1 = 3 + 8j
+z2 = 6 - 4j
+z3 = 0 + 9j  # Bilangan imajiner murni
+
+print(f"Bagian imajiner dari {z1} adalah {z1.imag}")
+print(f"Bagian imajiner dari {z2} adalah {z2.imag}")
+print(f"Bagian imajiner dari {z3} adalah {z3.imag}")
+
+# Output:
+# Bagian imajiner dari (3+8j) adalah 8.0
+# Bagian imajiner dari (6-4j) adalah -4.0
+# Bagian imajiner dari 9j adalah 9.0`
+    }
+  ]}
+/>
+
+## Metode Bilangan Kompleks
+
+### Metode conjugate()
+
+Metode `conjugate()` mengembalikan konjugat kompleks dari bilangan. Konjugat kompleks adalah bilangan dengan bagian riil yang sama tetapi bagian imajiner yang berlawanan tanda.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "conjugate_method.py",
+      code: `# Contoh penggunaan metode conjugate()
+z1 = 3 + 4j
+z2 = -2 - 5j
+z3 = 7 + 0j
+
+print(f"Konjugat dari {z1} adalah {z1.conjugate()}")
+print(f"Konjugat dari {z2} adalah {z2.conjugate()}")
+print(f"Konjugat dari {z3} adalah {z3.conjugate()}")
+
+# Output:
+# Konjugat dari (3+4j) adalah (3-4j)
+# Konjugat dari (-2-5j) adalah (-2+5j)
+# Konjugat dari (7+0j) adalah (7-0j)`
+    }
+  ]}
+/>
+
+### Penggunaan Praktis Konjugat
+
+Konjugat kompleks sangat berguna dalam berbagai perhitungan matematika, terutama untuk menghitung modulus bilangan kompleks:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "conjugate_practical.py",
+      code: `import math
+
+# Menghitung modulus bilangan kompleks menggunakan konjugat
+z = 3 + 4j
+modulus_squared = z * z.conjugate()
+modulus = math.sqrt(modulus_squared.real)
+
+print(f"Bilangan kompleks: {z}")
+print(f"Konjugatnya: {z.conjugate()}")
+print(f"z × z*: {modulus_squared}")
+print(f"Modulus |z|: {modulus}")
+
+# Output:
+# Bilangan kompleks: (3+4j)
+# Konjugatnya: (3-4j)
+# z × z*: (25+0j)
+# Modulus |z|: 5.0`
+    }
+  ]}
+/>
+
+## Atribut dan Metode pada Bilangan Lain
+
+Meskipun contoh di atas fokus pada bilangan kompleks, bilangan integer dan float juga memiliki atribut dan metode tersendiri.
+
+### Bilangan Integer
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "integer_methods.py",
+      code: `# Beberapa metode pada bilangan integer
+n = 42
+
+# Metode bit_length() - menghitung jumlah bit yang diperlukan
+print(f"Jumlah bit untuk {n}: {n.bit_length()}")
+
+# Metode to_bytes() - mengkonversi ke bytes
+byte_representation = n.to_bytes(2, byteorder='big')
+print(f"Representasi byte dari {n}: {byte_representation}")
+
+# Output:
+# Jumlah bit untuk 42: 6
+# Representasi byte dari 42: b'\x00*'`
+    }
+  ]}
+/>
+
+### Bilangan Float
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "float_methods.py",
+      code: `# Beberapa metode pada bilangan float
+f = 3.14159
+
+# Metode is_integer() - mengecek apakah float adalah bilangan bulat
+print(f"{f} adalah bilangan bulat: {f.is_integer()}")
+print(f"{4.0} adalah bilangan bulat: {(4.0).is_integer()}")
+
+# Metode as_integer_ratio() - mengembalikan rasio sebagai pecahan
+ratio = f.as_integer_ratio()
+print(f"Rasio dari {f}: {ratio}")
+
+# Output:
+# 3.14159 adalah bilangan bulat: False
+# 4.0 adalah bilangan bulat: True
+# Rasio dari 3.14159: (3537115888337719, 1125899906842624)`
+    }
+  ]}
+/>
+
+## Aplikasi Praktis dalam Pemrograman
+
+### Validasi Data
+
+Atribut dan metode bilangan sangat berguna untuk validasi data:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "data_validation.py",
+      code: `def validate_complex_input(z):
+    """Fungsi untuk memvalidasi input bilangan kompleks"""
+    if not isinstance(z, complex):
+        return False, "Input bukan bilangan kompleks"
+    
+    if z.real < 0:
+        return False, "Bagian riil tidak boleh negatif"
+    
+    if z.imag == 0:
+        return False, "Bagian imajiner tidak boleh nol"
+    
+    return True, "Input valid"
+
+# Testing fungsi validasi
+test_numbers = [3+4j, -2+5j, 7+0j, 2.5+1.5j]
+
+for num in test_numbers:
+    is_valid, message = validate_complex_input(num)
+    print(f"{num}: {message}")`
+    }
+  ]}
+/>
+
+### Perhitungan Matematika
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "math_calculations.py",
+      code: `def complex_operations(z1, z2):
+    """Melakukan berbagai operasi pada bilangan kompleks"""
+    print(f"Bilangan 1: {z1}")
+    print(f"Bilangan 2: {z2}")
+    print(f"Bagian riil z1: {z1.real}")
+    print(f"Bagian imajiner z1: {z1.imag}")
+    print(f"Konjugat z1: {z1.conjugate()}")
+    
+    # Operasi matematika
+    penjumlahan = z1 + z2
+    perkalian = z1 * z2.conjugate()
+    
+    print(f"z1 + z2 = {penjumlahan}")
+    print(f"z1 × z2* = {perkalian}")
+
+# Contoh penggunaan
+z1 = 2 + 3j
+z2 = 1 - 2j
+complex_operations(z1, z2)`
+    }
+  ]}
+/>
+
+Pemahaman tentang atribut dan metode bilangan akan sangat membantu ketika kamu bekerja dengan perhitungan matematika yang lebih kompleks, terutama dalam konteks pemrograman AI yang sering melibatkan operasi numerik tingkat lanjut.

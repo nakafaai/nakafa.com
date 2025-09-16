@@ -1,0 +1,294 @@
+export const metadata = {
+    title: "Number Attributes and Methods",
+    description: "Master Python number attributes like real, imag and methods like conjugate() for complex numbers. Complete guide with practical code examples.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/16/2025",
+    subject: "AI Programming",
+};
+
+## Basic Concept of Numbers as Objects
+
+In Python, every number is an object that has its own attributes and methods. This concept might sound strange at first, but it's actually very simple. Think of numbers like a box that not only contains a value, but also has special capabilities that you can use.
+
+When you write <InlineMath math="5" /> or <InlineMath math="3.14" />, Python doesn't just store that number, but also provides various functions that you can call to manipulate or get information from that number.
+
+## Accessing Attributes and Methods
+
+To access attributes from a number object, you use the syntax `object.attribute`. While to call methods, you use the syntax `object.method()`.
+
+Let's look at a practical example with complex numbers:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "complex_example.py",
+      code: `# Creating a complex number
+c = 2 + 3j
+
+# Accessing real attribute (real part)
+print(c.real)  # Output: 2.0
+
+# Accessing imag attribute (imaginary part)
+print(c.imag)  # Output: 3.0
+
+# Calling conjugate() method to get conjugate
+print(c.conjugate())  # Output: (2-3j)`
+    }
+  ]}
+/>
+
+## Ways to View Available Attributes and Methods
+
+Python provides several ways to see what attributes and methods are available on a number object.
+
+### Using the type() Function
+
+The `type()` function shows the type of object you're dealing with:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "type_example.py",
+      code: `# Viewing number data types
+print(type(42))        # Output: <class 'int'>
+print(type(3.14))      # Output: <class 'float'>
+print(type(2+3j))      # Output: <class 'complex'>`
+    }
+  ]}
+/>
+
+## Complex Number Attributes
+
+Complex numbers have two main attributes that are very useful:
+
+### The real Attribute
+
+The `real` attribute gives the real part of a complex number:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "real_attribute.py",
+      code: `# Example usage of real attribute
+z1 = 4 + 5j
+z2 = -2 + 7j
+z3 = 10 + 0j  # Pure real number
+
+print(f"Real part of {z1} is {z1.real}")
+print(f"Real part of {z2} is {z2.real}")
+print(f"Real part of {z3} is {z3.real}")
+
+# Output:
+# Real part of (4+5j) is 4.0
+# Real part of (-2+7j) is -2.0
+# Real part of (10+0j) is 10.0`
+    }
+  ]}
+/>
+
+### The imag Attribute
+
+The `imag` attribute gives the imaginary part of a complex number:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "imag_attribute.py",
+      code: `# Example usage of imag attribute
+z1 = 3 + 8j
+z2 = 6 - 4j
+z3 = 0 + 9j  # Pure imaginary number
+
+print(f"Imaginary part of {z1} is {z1.imag}")
+print(f"Imaginary part of {z2} is {z2.imag}")
+print(f"Imaginary part of {z3} is {z3.imag}")
+
+# Output:
+# Imaginary part of (3+8j) is 8.0
+# Imaginary part of (6-4j) is -4.0
+# Imaginary part of 9j is 9.0`
+    }
+  ]}
+/>
+
+## Complex Number Methods
+
+### The conjugate() Method
+
+The `conjugate()` method returns the complex conjugate of a number. A complex conjugate is a number with the same real part but opposite sign imaginary part.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "conjugate_method.py",
+      code: `# Example usage of conjugate() method
+z1 = 3 + 4j
+z2 = -2 - 5j
+z3 = 7 + 0j
+
+print(f"Conjugate of {z1} is {z1.conjugate()}")
+print(f"Conjugate of {z2} is {z2.conjugate()}")
+print(f"Conjugate of {z3} is {z3.conjugate()}")
+
+# Output:
+# Conjugate of (3+4j) is (3-4j)
+# Conjugate of (-2-5j) is (-2+5j)
+# Conjugate of (7+0j) is (7-0j)`
+    }
+  ]}
+/>
+
+### Practical Use of Conjugate
+
+Complex conjugates are very useful in various mathematical calculations, especially for calculating the modulus of complex numbers:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "conjugate_practical.py",
+      code: `import math
+
+# Calculating complex number modulus using conjugate
+z = 3 + 4j
+modulus_squared = z * z.conjugate()
+modulus = math.sqrt(modulus_squared.real)
+
+print(f"Complex number: {z}")
+print(f"Its conjugate: {z.conjugate()}")
+print(f"z × z*: {modulus_squared}")
+print(f"Modulus |z|: {modulus}")
+
+# Output:
+# Complex number: (3+4j)
+# Its conjugate: (3-4j)
+# z × z*: (25+0j)
+# Modulus |z|: 5.0`
+    }
+  ]}
+/>
+
+## Attributes and Methods on Other Numbers
+
+Although the examples above focus on complex numbers, integers and floats also have their own attributes and methods.
+
+### Integer Numbers
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "integer_methods.py",
+      code: `# Some methods on integer numbers
+n = 42
+
+# bit_length() method - calculates the number of bits needed
+print(f"Number of bits for {n}: {n.bit_length()}")
+
+# to_bytes() method - converts to bytes
+byte_representation = n.to_bytes(2, byteorder='big')
+print(f"Byte representation of {n}: {byte_representation}")
+
+# Output:
+# Number of bits for 42: 6
+# Byte representation of 42: b'\\x00*'`
+    }
+  ]}
+/>
+
+### Float Numbers
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "float_methods.py",
+      code: `# Some methods on float numbers
+f = 3.14159
+
+# is_integer() method - checks if float is a whole number
+print(f"{f} is a whole number: {f.is_integer()}")
+print(f"{4.0} is a whole number: {(4.0).is_integer()}")
+
+# as_integer_ratio() method - returns ratio as a fraction
+ratio = f.as_integer_ratio()
+print(f"Ratio of {f}: {ratio}")
+
+# Output:
+# 3.14159 is a whole number: False
+# 4.0 is a whole number: True
+# Ratio of 3.14159: (3537115888337719, 1125899906842624)`
+    }
+  ]}
+/>
+
+## Practical Applications in Programming
+
+### Data Validation
+
+Number attributes and methods are very useful for data validation:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "data_validation.py",
+      code: `def validate_complex_input(z):
+    """Function to validate complex number input"""
+    if not isinstance(z, complex):
+        return False, "Input is not a complex number"
+    
+    if z.real < 0:
+        return False, "Real part cannot be negative"
+    
+    if z.imag == 0:
+        return False, "Imaginary part cannot be zero"
+    
+    return True, "Valid input"
+
+# Testing validation function
+test_numbers = [3+4j, -2+5j, 7+0j, 2.5+1.5j]
+
+for num in test_numbers:
+    is_valid, message = validate_complex_input(num)
+    print(f"{num}: {message}")`
+    }
+  ]}
+/>
+
+### Mathematical Calculations
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "math_calculations.py",
+      code: `def complex_operations(z1, z2):
+    """Performing various operations on complex numbers"""
+    print(f"Number 1: {z1}")
+    print(f"Number 2: {z2}")
+    print(f"Real part of z1: {z1.real}")
+    print(f"Imaginary part of z1: {z1.imag}")
+    print(f"Conjugate of z1: {z1.conjugate()}")
+    
+    # Mathematical operations
+    addition = z1 + z2
+    multiplication = z1 * z2.conjugate()
+    
+    print(f"z1 + z2 = {addition}")
+    print(f"z1 × z2* = {multiplication}")
+
+# Usage example
+z1 = 2 + 3j
+z2 = 1 - 2j
+complex_operations(z1, z2)`
+    }
+  ]}
+/>
+
+Understanding number attributes and methods will be very helpful when you work with more complex mathematical calculations, especially in the context of AI programming which often involves advanced numerical operations.
