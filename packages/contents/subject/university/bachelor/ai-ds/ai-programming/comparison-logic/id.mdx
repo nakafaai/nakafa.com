@@ -1,0 +1,247 @@
+export const metadata = {
+    title: "Perbandingan dan Logika",
+    description: "Pelajari operator perbandingan dan logika Python dengan diagram interaktif. Pahami prioritas operator, boolean, nilai falsy/truthy, dan perbandingan float.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/16/2025",
+    subject: "Pemrograman AI",
+};
+
+## Urutan Prioritas Operator
+
+Dalam pemrograman, komputer menjalankan operasi berdasarkan urutan prioritas tertentu. Bayangkan seperti aturan matematika dimana perkalian dikerjakan sebelum penjumlahan. Python memiliki aturan serupa untuk semua operatornya.
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A["**<br/>(pangkat)"] --> B["*, /, //, %<br/>(aritmatika)"]
+        B --> C["+, -<br/>(tambah, kurang)"]
+        C --> D["==, !=, <, <=, >, >=<br/>(perbandingan)"]
+        D --> E["not<br/>(boolean NOT)"]
+        E --> F["and<br/>(boolean AND)"]
+        F --> G["or<br/>(boolean OR)"]
+  `}
+/>
+
+Ketika kamu menulis ekspresi kompleks, Python akan mengevaluasi operator dengan prioritas tinggi terlebih dahulu. Jika beberapa operator memiliki prioritas sama, evaluasi dilakukan dari kiri ke kanan.
+
+## Operator Perbandingan
+
+Operator perbandingan digunakan untuk membandingkan dua nilai dan menghasilkan nilai boolean (`True` atau `False`). Operator perbandingan yang tersedia dalam Python:
+
+- `==` sama dengan
+- `!=` tidak sama dengan  
+- `<` kurang dari
+- `<=` kurang dari atau sama dengan
+- `>` lebih dari
+- `>=` lebih dari atau sama dengan
+
+Operator perbandingan memiliki sifat penting yaitu membandingkan nilai dari dua objek, objek tidak harus memiliki tipe data yang sama, semua operator perbandingan memiliki prioritas yang sama, dan selalu menghasilkan nilai `True` atau `False` dengan tipe `bool`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "comparison_example.py",
+      code: `# Contoh penggunaan operator perbandingan
+>>> 4 == 5
+False
+
+>>> 3 > 2.1  # integer 3 dipromosikan menjadi float untuk perbandingan dengan 2.1
+True`
+    }
+  ]}
+/>
+
+## Operator Boolean
+
+Operator boolean memungkinkan kamu menggabungkan beberapa kondisi atau memodifikasi nilai boolean. Python menyediakan tiga operator boolean utama:
+
+<Mermaid
+  chart={`
+    flowchart LR
+        A[Input A] --> AND{and}
+        B[Input B] --> AND
+        AND --> C[Output:<br/>A jika A false,<br/>B jika A true]
+        
+        D[Input A] --> OR{or}
+        E[Input B] --> OR
+        OR --> F[Output:<br/>A jika A true,<br/>B jika A false]
+        
+        G[Input] --> NOT{not}
+        NOT --> H[Output:<br/>boolean kebalikan dari Input]
+  `}
+/>
+
+1. **Operator `and`** mengembalikan nilai pertama jika bernilai false, atau nilai kedua jika nilai pertama bernilai true.
+
+2. **Operator `or`** mengembalikan nilai pertama jika bernilai true, atau nilai kedua jika nilai pertama bernilai false.
+
+3. **Operator `not`** berbeda dari operator `and` dan `or` karena selalu menghasilkan nilai boolean baru.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "boolean_operators.py",
+      code: `# Contoh operator boolean
+>>> 4.0 and 5.0  # mengevaluasi 4.0 sebagai true, mengevaluasi 5.0 sebagai true, mengembalikan 5.0
+5.0
+
+>>> 0 and 5  # mengevaluasi 0 sebagai false, mengembalikan 0 (short-circuit)
+0
+
+>>> 4.0 or 5.0  # mengevaluasi 4.0 sebagai true, mengembalikan 4.0 (short-circuit)
+4.0
+
+>>> 0 or 5  # mengevaluasi 0 sebagai false, mengevaluasi 5 sebagai true, mengembalikan 5
+5
+
+>>> not 4.0  # mengevaluasi 4.0 sebagai true, mengembalikan False
+False
+
+>>> not 0  # mengevaluasi 0 sebagai false, mengembalikan True
+True`
+    }
+  ]}
+/>
+
+Operator `and` dan `or` menggunakan evaluasi short-circuit, yang berarti evaluasi berhenti ketika hasil sudah dapat ditentukan tanpa mengevaluasi semua operand. Keduanya mengembalikan argumen terakhir yang dievaluasi, sedangkan operator `not` selalu membuat nilai boolean baru.
+
+## Nilai dalam Konteks Boolean
+
+Python memiliki aturan khusus untuk menentukan nilai mana yang dianggap `False` atau `True` dalam konteks boolean.
+
+### Nilai Falsy dan Truthy
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A[Nilai Python] --> B{Evaluasi Boolean}
+        B -->|Falsy| C[False<br/>None<br/>0, 0.0, 0j<br/>String kosong<br/>List kosong<br/>Dict kosong]
+        B -->|Truthy| D[Semua nilai lainnya<br/>Angka bukan nol<br/>String berisi<br/>Container berisi]
+  `}
+/>
+
+**Nilai yang dianggap `False` (Falsy):**
+
+1. `False` itu sendiri
+2. `None` (dari tipe NoneType)
+3. Angka nol dari semua tipe data numerik:
+   - `0` (integer nol)
+   - `0.0` (float nol)
+   - `0j` (bilangan kompleks nol, dimana j adalah unit imajiner)
+4. String kosong `""`
+5. Kontainer kosong: `[]`, `{}`, `()`, `set()`
+
+**Nilai yang dianggap `True` (Truthy):**
+
+1. Semua nilai lainnya
+
+### Tipe Data Boolean
+
+Tipe `bool` dalam Python merepresentasikan nilai kebenaran `False` dan `True`, merupakan subtipe dari integer (`int`), dan boolean berperilaku seperti 0 dan 1 dalam operasi matematika.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "boolean_values.py",
+      code: `# Konstruktor bool dan operasi aritmatika
+>>> bool(-1)
+True
+
+>>> bool(0.0)
+False
+
+>>> True + True
+2
+
+>>> 3 * False
+0`
+    }
+  ]}
+/>
+
+## Menggabungkan Operator
+
+Kamu dapat menggabungkan operator perbandingan dengan operator boolean untuk membuat kondisi yang lebih kompleks. Python juga memungkinkan rantai perbandingan yang lebih natural seperti `1 < 2 < 3`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "combined_operators.py",
+      code: `# Contoh penggabungan operator
+>>> 4.0 > 3 and 2 >= 3  # ⇔ True and False
+False
+
+>>> 7 < 6 or 4 != 2  # ⇔ False or True
+True
+
+>>> not 0 < 2  # ⇔ not (0 < 2) ⇔ not True
+True
+
+# Rantai perbandingan
+>>> 1 < 2 < 3  # ⇔ (1 < 2) and (2 < 3)
+True
+
+>>> 5 <= 7 < 10  # ⇔ (5 <= 7) and (7 < 10) --- aplikasi: tes interval
+True`
+    }
+  ]}
+/>
+
+## Perbandingan Bilangan Floating Point
+
+Membandingkan bilangan floating point memerlukan perhatian khusus karena keterbatasan presisi dalam representasi digital. Kehilangan presisi dapat menyebabkan hasil yang tidak terduga.
+
+### Masalah Presisi Float
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A[Bilangan Desimal] --> B[Konversi ke Biner]
+        B --> C[Representasi Float]
+        C --> D{Presisi Terbatas?}
+        D -->|Ya| E[Kesalahan Pembulatan]
+        D -->|Tidak| F[Representasi Tepat]
+        E --> G[Perbandingan Gagal]
+        F --> H[Perbandingan Berhasil]
+        
+        I[Solusi math.isclose] --> J[Toleransi Relatif]
+        I --> K[Toleransi Absolut]
+        J --> L[Perbandingan Aman]
+        K --> L
+  `}
+/>
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "float_comparison.py",
+      code: `# Masalah presisi floating point
+>>> a = 0.01
+>>> b = 0.1**2  # b adalah 0.010000000000000002
+>>> a == b
+False
+
+# Solusi dengan math.isclose()
+>>> import math
+>>> math.isclose(0.01, 0.1**2)
+True
+
+>>> math.isclose(100, 95, rel_tol=0.05)  # toleransi relatif adalah 5%
+True
+
+>>> math.isclose(100, 95, abs_tol=5)  # toleransi absolut adalah 5
+True`
+    }
+  ]}
+/>
+
+### Solusi dengan math.isclose()
+
+Python menyediakan fungsi `math.isclose(a, b, rel_tol=1e-09, abs_tol=0.0)` untuk menguji kesetaraan aproksimasi. Fungsi ini menggunakan toleransi relatif (rel_tol) dan toleransi absolut (abs_tol) untuk menentukan apakah dua nilai cukup dekat.
+
+> Hindari membandingkan floating point dengan `==` atau `!=`. Gunakan `math.isclose(a, b)` untuk menguji kesetaraan aproksimasi. Gunakan `abs_tol` jika salah satu angka mendekati nol.

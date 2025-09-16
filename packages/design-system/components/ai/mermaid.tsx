@@ -16,6 +16,7 @@ const initializeMermaid = async (customConfig?: MermaidConfig) => {
     theme: "default",
     securityLevel: "strict",
     fontFamily: "monospace",
+    fontSize: 14,
     suppressErrorRendering: true,
   } as MermaidConfig;
 
@@ -98,12 +99,7 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   // Only show error if we have no valid SVG to display
   if (error && !svgContent && !lastValidSvg) {
     return (
-      <div
-        className={cn(
-          "rounded-lg border border-red-200 bg-red-50 p-4",
-          className
-        )}
-      >
+      <div className={cn("bg-red-50 p-4", className)}>
         <p className="font-mono text-red-700 text-sm">Mermaid Error: {error}</p>
         <details className="mt-2">
           <summary className="cursor-pointer text-red-600 text-xs">

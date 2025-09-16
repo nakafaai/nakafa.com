@@ -1,0 +1,247 @@
+export const metadata = {
+    title: "Comparison and Logic",
+    description: "Master Python comparison and boolean operators with interactive diagrams. Learn operator precedence, falsy/truthy values, and safe float comparisons.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/16/2025",
+    subject: "AI Programming",
+};
+
+## Operator Precedence Order
+
+In programming, computers execute operations based on a specific precedence order. Imagine it like mathematical rules where multiplication is performed before addition. Python has similar rules for all its operators.
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A["**<br/>(exponent)"] --> B["*, /, //, %<br/>(arithmetic)"]
+        B --> C["+, -<br/>(add, subtract)"]
+        C --> D["==, !=, <, <=, >, >=<br/>(comparison)"]
+        D --> E["not<br/>(boolean NOT)"]
+        E --> F["and<br/>(boolean AND)"]
+        F --> G["or<br/>(boolean OR)"]
+  `}
+/>
+
+When you write complex expressions, Python will evaluate operators with higher precedence first. If multiple operators have the same precedence, evaluation is done from left to right.
+
+## Comparison Operators
+
+Comparison operators are used to compare two values and produce boolean values (`True` or `False`). Comparison operators available in Python:
+
+- `==` equal to
+- `!=` not equal to  
+- `<` less than
+- `<=` less than or equal to
+- `>` greater than
+- `>=` greater than or equal to
+
+Comparison operators have important characteristics: they compare values of two objects, objects don't have to be of the same data type, all comparison operators have the same precedence, and they always produce `True` or `False` values with type `bool`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "comparison_example.py",
+      code: `# Example of comparison operator usage
+>>> 4 == 5
+False
+
+>>> 3 > 2.1  # integer 3 is promoted to float for comparison with 2.1
+True`
+    }
+  ]}
+/>
+
+## Boolean Operators
+
+Boolean operators allow you to combine multiple conditions or modify boolean values. Python provides three main boolean operators:
+
+<Mermaid
+  chart={`
+    flowchart LR
+        A[Input A] --> AND{and}
+        B[Input B] --> AND
+        AND --> C[Output:<br/>A if A false,<br/>B if A true]
+        
+        D[Input A] --> OR{or}
+        E[Input B] --> OR
+        OR --> F[Output:<br/>A if A true,<br/>B if A false]
+        
+        G[Input] --> NOT{not}
+        NOT --> H[Output:<br/>boolean opposite of Input]
+  `}
+/>
+
+1. **Operator `and`** returns the first value if it's false, or the second value if the first value is true.
+
+2. **Operator `or`** returns the first value if it's true, or the second value if the first value is false.
+
+3. **Operator `not`** differs from `and` and `or` operators because it always produces a new boolean value.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "boolean_operators.py",
+      code: `# Example of boolean operators
+>>> 4.0 and 5.0  # evaluates 4.0 as true, evaluates 5.0 as true, returns 5.0
+5.0
+
+>>> 0 and 5  # evaluates 0 as false, returns 0 (short-circuit)
+0
+
+>>> 4.0 or 5.0  # evaluates 4.0 as true, returns 4.0 (short-circuit)
+4.0
+
+>>> 0 or 5  # evaluates 0 as false, evaluates 5 as true, returns 5
+5
+
+>>> not 4.0  # evaluates 4.0 as true, returns False
+False
+
+>>> not 0  # evaluates 0 as false, returns True
+True`
+    }
+  ]}
+/>
+
+The `and` and `or` operators use short-circuit evaluation, meaning evaluation stops when the result can be determined without evaluating all operands. Both return the last evaluated argument, while the `not` operator always creates a new boolean value.
+
+## Values in Boolean Context
+
+Python has special rules for determining which values are considered `False` or `True` in boolean context.
+
+### Falsy and Truthy Values
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A[Python Values] --> B{Boolean Evaluation}
+        B -->|Falsy| C[False<br/>None<br/>0, 0.0, 0j<br/>Empty string<br/>Empty list<br/>Empty dict]
+        B -->|Truthy| D[All other values<br/>Non-zero numbers<br/>Non-empty strings<br/>Non-empty containers]
+  `}
+/>
+
+**Values considered `False` (Falsy):**
+
+1. `False` itself
+2. `None` (from NoneType)
+3. Zero from all numeric data types:
+   - `0` (integer zero)
+   - `0.0` (float zero)
+   - `0j` (complex zero, where j is the imaginary unit)
+4. Empty string `""`
+5. Empty containers: `[]`, `{}`, `()`, `set()`
+
+**Values considered `True` (Truthy):**
+
+1. All other values
+
+### Boolean Data Type
+
+The `bool` type in Python represents truth values `False` and `True`, is a subtype of integer (`int`), and booleans behave like 0 and 1 in mathematical operations.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "boolean_values.py",
+      code: `# Bool constructor and arithmetic operations
+>>> bool(-1)
+True
+
+>>> bool(0.0)
+False
+
+>>> True + True
+2
+
+>>> 3 * False
+0`
+    }
+  ]}
+/>
+
+## Combining Operators
+
+You can combine comparison operators with boolean operators to create more complex conditions. Python also allows more natural comparison chaining like `1 < 2 < 3`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "combined_operators.py",
+      code: `# Example of operator combination
+>>> 4.0 > 3 and 2 >= 3  # ⇔ True and False
+False
+
+>>> 7 < 6 or 4 != 2  # ⇔ False or True
+True
+
+>>> not 0 < 2  # ⇔ not (0 < 2) ⇔ not True
+True
+
+# Comparison chaining
+>>> 1 < 2 < 3  # ⇔ (1 < 2) and (2 < 3)
+True
+
+>>> 5 <= 7 < 10  # ⇔ (5 <= 7) and (7 < 10) --- application: interval test
+True`
+    }
+  ]}
+/>
+
+## Floating Point Number Comparison
+
+Comparing floating point numbers requires special attention due to precision limitations in digital representation. Loss of precision can cause unexpected results.
+
+### Float Precision Issues
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A[Decimal Numbers] --> B[Binary Conversion]
+        B --> C[Float Representation]
+        C --> D{Limited Precision?}
+        D -->|Yes| E[Rounding Error]
+        D -->|No| F[Exact Representation]
+        E --> G[Comparison Fails]
+        F --> H[Comparison Succeeds]
+        
+        I[Solution math.isclose] --> J[Relative Tolerance]
+        I --> K[Absolute Tolerance]
+        J --> L[Safe Comparison]
+        K --> L
+  `}
+/>
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "float_comparison.py",
+      code: `# Floating point precision problem
+>>> a = 0.01
+>>> b = 0.1**2  # b is 0.010000000000000002
+>>> a == b
+False
+
+# Solution with math.isclose()
+>>> import math
+>>> math.isclose(0.01, 0.1**2)
+True
+
+>>> math.isclose(100, 95, rel_tol=0.05)  # relative tolerance is 5%
+True
+
+>>> math.isclose(100, 95, abs_tol=5)  # absolute tolerance is 5
+True`
+    }
+  ]}
+/>
+
+### Solution with math.isclose()
+
+Python provides the `math.isclose(a, b, rel_tol=1e-09, abs_tol=0.0)` function to test approximate equality. This function uses relative tolerance (rel_tol) and absolute tolerance (abs_tol) to determine whether two values are close enough.
+
+> Avoid comparing floating point with `==` or `!=`. Use `math.isclose(a, b)` to test approximate equality. Use `abs_tol` if one of the numbers is close to zero.
