@@ -1,0 +1,419 @@
+export const metadata = {
+    title: "Variables",
+    description: "Learn Python variable concepts, naming rules, keywords that cannot be used, and how memory works. Complete guide with practical examples.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/16/2025",
+    subject: "AI Programming",
+};
+
+## Basic Concept of Variables in Python
+
+Variables in Python are names that refer to specific objects in computer memory. Think of variables like labels or nicknames that you give to a storage box. The box contains values or data, while the label makes it easy for you to find and use the contents of the box whenever needed.
+
+When you write `x = 2`, Python does three important things. First, Python creates an object with the value 2 in memory. Second, Python stores that object at a specific memory address. Third, Python connects the variable name `x` to that memory address.
+
+## How Variables and Memory Work
+
+Every time you create a new variable, Python allocates space in computer memory to store that value. Each memory location has a unique address that you can see using the `id()` function.
+
+<Mermaid
+  chart={`graph TB
+    subgraph "Memory"
+        M1["Address: 1004<br/>Value: 2<br/>Type: int"]
+        M2["Address: 2008<br/>Value: 'Hello'<br/>Type: str"]
+        M3["Address: 3012<br/>Value: [1,2,3]<br/>Type: list"]
+    end
+    
+    subgraph "Variables"
+        V1["x"]
+        V2["y"] 
+        V3["z"]
+        V4["text"]
+        V5["numbers"]
+    end
+    
+    V1 --> M1
+    V2 --> M1
+    V3 --> M1
+    V4 --> M2
+    V5 --> M3`}
+/>
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "variable_memory.py",
+      code: `# Creating variable x with value 2
+x = 2
+print(x)        # Output: 2
+print(id(x))    # Output: 1004 (memory address)
+
+# id() function displays object memory address
+print(id(2))    # Output: 1004 (same address)
+
+# Creating variable y that refers to variable x
+y = x
+print(y)        # Output: 2
+print(id(y))    # Output: 1004 (same address as x)
+
+# Creating variable z with the same value
+z = 2
+print(z)        # Output: 2
+print(id(z))    # Output: 1004 (same address)`
+    }
+  ]}
+/>
+
+The example above shows an important concept in Python. When multiple variables have the same value, Python often makes them refer to the same object in memory. This is an optimization that Python performs to save memory usage, especially for frequently used objects like small numbers and short strings.
+
+## Python Variable Characteristics
+
+Python has several unique characteristics in variable handling that distinguish it from other programming languages.
+
+### No Variable Declaration
+
+Unlike programming languages such as C or Java, Python does not require explicit variable declaration. You don't need to specify the variable's data type before using it. Python will automatically determine the data type based on the given value.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "no_declaration.py",
+      code: `# Python does not require variable declaration
+nama = "Budi"           # String
+umur = 25               # Integer
+tinggi = 175.5          # Float
+aktif = True            # Boolean
+
+# Python determines data type automatically
+print(type(nama))       # Output: <class 'str'>
+print(type(umur))       # Output: <class 'int'>
+print(type(tinggi))     # Output: <class 'float'>
+print(type(aktif))      # Output: <class 'bool'>`
+    }
+  ]}
+/>
+
+### Dynamic Data Types
+
+Python uses a dynamic data type system, which means variable data types can change while the program is running. One variable can store an integer at one time, then be changed to a string at another time.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dynamic_typing.py",
+      code: `# Variable with dynamic data types
+data = 42               # Integer
+print(f"Value: {data}, Type: {type(data)}")
+
+data = "Hello World"    # String
+print(f"Value: {data}, Type: {type(data)}")
+
+data = [1, 2, 3]        # List
+print(f"Value: {data}, Type: {type(data)}")
+
+data = 3.14             # Float
+print(f"Value: {data}, Type: {type(data)}")`
+    }
+  ]}
+/>
+
+## Variable Naming Rules
+
+Python has strict rules for variable naming that you must follow for code to run correctly.
+
+### Variable Name Components
+
+Variable names in Python can consist of three main components. First are letters, both lowercase (a, b, c, ..., z) and uppercase (A, B, C, ..., Z). Second are numbers (0, 1, 2, ..., 9). Third is the underscore character (_).
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "valid_names.py",
+      code: `# Valid variable names
+student_name = "Ahmad"      # Using letters and underscore
+score1 = 85                 # Using letters and numbers
+_total = 100                # Starting with underscore
+MAX_SIZE = 1000             # All uppercase letters
+camelCase = "valid"         # camelCase style
+snake_case = "valid"        # snake_case style
+
+print(student_name, score1, _total, MAX_SIZE, camelCase, snake_case)`
+    }
+  ]}
+/>
+
+### Mandatory Rules
+
+Several mandatory rules that you must follow in Python variable naming. Variable names cannot start with a number. Python will generate a syntax error if you try to create a variable that starts with a number.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "naming_rules.py",
+      code: `# CORRECT variable names
+data1 = "valid"
+data_2 = "valid"
+_data3 = "valid"
+
+# WRONG variable names (will cause error)
+# 1data = "invalid"     # SyntaxError
+# 2nilai = "invalid"    # SyntaxError
+# 9test = "invalid"     # SyntaxError
+
+print(data1, data_2, _data3)`
+    }
+  ]}
+/>
+
+### Case Sensitivity
+
+Python distinguishes between uppercase and lowercase letters in variable names. This means `nama`, `Nama`, and `NAMA` are three different variables.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "case_sensitive.py",
+      code: `# Python distinguishes uppercase and lowercase
+nama = "budi"
+Nama = "Siti"
+NAMA = "Ahmad"
+
+print(f"nama: {nama}")      # Output: nama: budi
+print(f"Nama: {Nama}")      # Output: Nama: Siti
+print(f"NAMA: {NAMA}")      # Output: NAMA: Ahmad
+
+# These three variables are different from each other
+print(nama == Nama)         # Output: False
+print(Nama == NAMA)         # Output: False`
+    }
+  ]}
+/>
+
+## Keywords That Cannot Be Used
+
+Python has a list of keywords that cannot be used as variable names because these words have special functions in the Python language.
+
+### Python Keywords List
+
+Here are the keywords that cannot be used as variable names. The first group includes `and`, `as`, `assert`, `async`, `await`, `break`, `class`, `continue`, `def`, `del`, `elif`, `else`. The second group covers `except`, `finally`, `for`, `from`, `global`, `if`, `import`, `in`, `is`, `lambda`, `nonlocal`, `not`. The third group consists of `or`, `pass`, `raise`, `return`, `try`, `while`, `with`, `yield`, `False`, `True`, `None`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "keywords_example.py",
+      code: `# Examples of WRONG usage (will cause error)
+# if = 10          # SyntaxError: invalid syntax
+# for = "hello"    # SyntaxError: invalid syntax
+# def = 25         # SyntaxError: invalid syntax
+# class = "test"   # SyntaxError: invalid syntax
+
+# CORRECT way for similar variable names
+kondisi_if = 10
+loop_for = "hello"
+fungsi_def = 25
+kelas_class = "test"
+
+print(kondisi_if, loop_for, fungsi_def, kelas_class)`
+    }
+  ]}
+/>
+
+### Checking Keywords
+
+Python provides the `keyword` module to check whether a word is a keyword or not.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "check_keywords.py",
+      code: `import keyword
+
+# View all Python keywords
+print("Number of keywords:", len(keyword.kwlist))
+print("Keyword list:")
+for i, kw in enumerate(keyword.kwlist, 1):
+    print(f"{i:2d}. {kw}")
+
+# Check if a word is a keyword
+print(f"\\nIs 'if' a keyword? {keyword.iskeyword('if')}")
+print(f"Is 'nama' a keyword? {keyword.iskeyword('nama')}")
+print(f"Is 'class' a keyword? {keyword.iskeyword('class')}")`
+    }
+  ]}
+/>
+
+## Variable Naming Best Practices
+
+Although Python provides flexibility in variable naming, there are several best practices you should follow to make code more readable and maintainable.
+
+### Meaningful Names
+
+Use variable names that clearly explain what is stored in the variable. Meaningful names make code easier to understand, both for yourself and others.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "meaningful_names.py",
+      code: `# POOR variable names
+h = 175
+w = 70
+a = 25
+
+# GOOD variable names
+body_height = 175
+body_weight = 70
+age = 25
+
+# Calculate BMI with clear variable names
+bmi = body_weight / ((body_height / 100) ** 2)
+print(f"BMI: {bmi:.2f}")
+
+# Easier to understand the meaning of each variable
+print(f"Height: {body_height} cm")
+print(f"Weight: {body_weight} kg")
+print(f"Age: {age} years")`
+    }
+  ]}
+/>
+
+### Appropriate Name Length
+
+Avoid variable names that are too long as they will make code hard to read. Conversely, names that are too short may not provide enough information.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "name_length.py",
+      code: `# Name too long (POOR)
+student_height_class_12_science_odd_semester = 175
+
+# Name too short (POOR)
+h = 175
+
+# Appropriate name (GOOD)
+student_height = 175
+height = 175  # If context is already clear
+
+# For counter variables, short names are acceptable
+for i in range(10):
+    print(f"Iteration {i}")
+
+# For more complex data, use clear names
+student_count = 30
+average_score = 85.5`
+    }
+  ]}
+/>
+
+### Consistent Writing Style
+
+Python uses snake_case style for variable names, where words are separated by underscores and all letters use lowercase.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "naming_style.py",
+      code: `# snake_case style (RECOMMENDED for Python)
+full_name = "Ahmad Budi"
+birth_date = "1995-05-15"
+home_address = "Jl. Merdeka No. 123"
+
+# camelCase style (more common in JavaScript/Java)
+fullName = "Ahmad Budi"  # Not wrong, but less Python-like
+
+# PascalCase style (usually for class names)
+FullName = "Ahmad Budi"  # Not recommended for variables
+
+# Consistency within one program
+math_score = 90
+physics_score = 85
+chemistry_score = 88
+average_score = (math_score + physics_score + chemistry_score) / 3
+
+print(f"Average score: {average_score:.2f}")`
+    }
+  ]}
+/>
+
+### Avoiding Confusion
+
+Avoid using characters that can cause confusion, especially letters that look similar to numbers.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "avoid_confusion.py",
+      code: `# Confusing characters (AVOID)
+# l = 1        # Letter 'l' looks like number '1'
+# I = 1        # Letter 'I' looks like number '1'  
+# O = 0        # Letter 'O' looks like number '0'
+
+# Clearer alternatives
+length = 1      # Use clear words
+index = 1       # Or more descriptive names
+empty = 0       # Names that explain the meaning
+
+# Example usage in clear context
+item_count = 10
+for number in range(1, item_count + 1):
+    print(f"Item number {number}")
+
+# Boolean variables with clear names
+is_active = True
+has_permission = False
+can_edit = True`
+    }
+  ]}
+/>
+
+## Example of Variable Usage in Programs
+
+Let's look at how variables are used in a simple program that calculates the area and perimeter of a rectangle.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "rectangle_calculator.py",
+      code: `# Program to calculate rectangle area and perimeter
+print("=== Rectangle Calculator ===")
+
+# User input
+length = float(input("Enter length (cm): "))
+width = float(input("Enter width (cm): "))
+
+# Calculations
+area = length * width
+perimeter = 2 * (length + width)
+
+# Display results
+print(f"\\nCalculation Results:")
+print(f"Length: {length} cm")
+print(f"Width: {width} cm")
+print(f"Area: {area} cm²")
+print(f"Perimeter: {perimeter} cm")
+
+# Input validation
+if length <= 0 or width <= 0:
+    print("\\nWarning: Length and width must be greater than 0!")
+else:
+    print("\\nCalculation is valid.")`
+    }
+  ]}
+/>
+
+The example program above shows the use of variables with meaningful names, mathematical calculations, and data validation. Each variable has a clear purpose and a name that explains its contents.
+
+Understanding variable concepts, naming rules, and best practices will help you write cleaner, more readable, and maintainable Python code. Variables are the basic foundation in programming, and good mastery of this concept will facilitate learning more advanced programming concepts.

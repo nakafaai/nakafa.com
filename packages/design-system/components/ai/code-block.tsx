@@ -1,5 +1,7 @@
 "use client";
 
+import { SiGnometerminal } from "@icons-pack/react-simple-icons";
+import { languageIconMap } from "@repo/design-system/lib/programming";
 import { cn, save } from "@repo/design-system/lib/utils";
 import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
 import {
@@ -17,6 +19,7 @@ import {
   createHighlighter,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+import { Button } from "../ui/button";
 
 const PRE_TAG_REGEX = /<pre(\s|>)/;
 
@@ -178,6 +181,10 @@ export const CodeBlock = ({
   const mounted = useRef(false);
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
 
+  const Icon =
+    languageIconMap[language as keyof typeof languageIconMap] ??
+    SiGnometerminal;
+
   useEffect(() => {
     mounted.current = true;
 
@@ -203,12 +210,15 @@ export const CodeBlock = ({
         data-language={language}
       >
         <div
-          className="flex items-center justify-between bg-muted/80 p-3 text-muted-foreground text-sm"
+          className="flex items-center justify-between bg-muted/80 p-1 text-muted-foreground text-sm"
           data-code-block-header
           data-language={language}
         >
-          <span className="ml-1 font-mono lowercase">{language || "txt"}</span>
-          <div className="flex items-center gap-2">{children}</div>
+          <div className="flex items-center gap-2 px-4 py-1.5">
+            <Icon className="size-4" />
+            <span className="font-mono lowercase">{language || "txt"}</span>
+          </div>
+          <div className="flex items-center">{children}</div>
         </div>
         <div className="w-full">
           <div className="min-w-full">
@@ -586,18 +596,16 @@ export const CodeBlockDownloadButton = ({
   };
 
   return (
-    <button
-      className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
-        className
-      )}
+    <Button
+      className={cn("shrink-0", className)}
       onClick={downloadCode}
+      size="icon"
       title="Download file"
-      type="button"
+      variant="ghost"
       {...props}
     >
-      {children ?? <DownloadIcon size={14} />}
-    </button>
+      {children ?? <DownloadIcon className="size-4 shrink-0" />}
+    </Button>
   );
 };
 
@@ -645,16 +653,14 @@ export const CodeBlockCopyButton = ({
   const Icon = isCopied ? CheckIcon : CopyIcon;
 
   return (
-    <button
-      className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
-        className
-      )}
+    <Button
+      className={cn("shrink-0", className)}
       onClick={copyToClipboard}
-      type="button"
+      size="icon"
+      variant="ghost"
       {...props}
     >
-      {children ?? <Icon size={14} />}
-    </button>
+      {children ?? <Icon className="size-4 shrink-0" />}
+    </Button>
   );
 };

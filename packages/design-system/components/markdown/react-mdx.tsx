@@ -9,6 +9,7 @@ import {
   BlockMath,
   InlineMath,
 } from "@repo/design-system/components/markdown/math";
+import { MermaidMdx } from "@repo/design-system/components/markdown/mermaid";
 import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
 import {
   Table,
@@ -22,7 +23,6 @@ import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
 import { isValidElement, memo } from "react";
 import type { Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
-import { Mermaid } from "./mermaid";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
@@ -308,20 +308,7 @@ export const reactMdxComponents: Options["components"] = {
       }
 
       if (language === "mermaid") {
-        return (
-          <div
-            className={cn(
-              "group relative my-4 h-auto rounded-xl border p-4",
-              className
-            )}
-            data-nakafa="mermaid-block"
-          >
-            <div className="flex items-center justify-end">
-              <CodeBlockCopyButton code={code} />
-            </div>
-            <Mermaid chart={code} />
-          </div>
-        );
+        return <MermaidMdx chart={code} className={className} />;
       }
 
       return (

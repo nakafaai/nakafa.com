@@ -30,6 +30,7 @@ import {
   SiLess,
   SiMarkdown,
   SiMdx,
+  SiMermaid,
   SiMintlify,
   SiMocha,
   SiMysql,
@@ -149,6 +150,7 @@ export const filenameIconMap = {
   "vite.config.*": SiVite,
   "*.vue": SiVuedotjs,
   "*.wasm": SiWebassembly,
+  "*.mermaid": SiMermaid,
 };
 
 export const languageIconMap = {
@@ -175,6 +177,7 @@ export const languageIconMap = {
   markdown: SiMarkdown,
   md: SiMarkdown,
   mdx: SiMdx,
+  mermaid: SiMermaid,
   sql: SiMysql,
   mysql: SiMysql,
   perl: SiPerl,

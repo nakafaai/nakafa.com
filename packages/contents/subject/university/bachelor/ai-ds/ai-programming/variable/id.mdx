@@ -1,0 +1,419 @@
+export const metadata = {
+    title: "Variabel",
+    description: "Pelajari konsep variabel Python, aturan penamaan, keyword yang tidak boleh digunakan, dan cara kerja memori. Panduan lengkap dengan contoh praktis.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/16/2025",
+    subject: "Pemrograman AI",
+};
+
+## Konsep Dasar Variabel dalam Python
+
+Variabel dalam Python adalah nama yang merujuk pada objek tertentu di dalam memori komputer. Bayangkan variabel seperti label atau nama panggilan yang kamu berikan pada sebuah kotak penyimpanan. Kotak tersebut berisi nilai atau data, sedangkan label memudahkan kamu untuk menemukan dan menggunakan isi kotak tersebut kapan saja diperlukan.
+
+Ketika kamu menuliskan `x = 2`, Python melakukan tiga hal penting. Pertama, Python membuat objek dengan nilai 2 di dalam memori. Kedua, Python menyimpan objek tersebut di alamat memori tertentu. Ketiga, Python menghubungkan nama variabel `x` dengan alamat memori tersebut.
+
+## Cara Kerja Variabel dan Memori
+
+Setiap kali kamu membuat variabel baru, Python mengalokasikan ruang di memori komputer untuk menyimpan nilai tersebut. Setiap lokasi memori memiliki alamat unik yang dapat kamu lihat menggunakan fungsi `id()`.
+
+<Mermaid
+  chart={`graph TB
+    subgraph "Memory"
+        M1["Address: 1004<br/>Value: 2<br/>Type: int"]
+        M2["Address: 2008<br/>Value: 'Hello'<br/>Type: str"]
+        M3["Address: 3012<br/>Value: [1,2,3]<br/>Type: list"]
+    end
+    
+    subgraph "Variables"
+        V1["x"]
+        V2["y"] 
+        V3["z"]
+        V4["text"]
+        V5["numbers"]
+    end
+    
+    V1 --> M1
+    V2 --> M1
+    V3 --> M1
+    V4 --> M2
+    V5 --> M3`}
+/>
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "variable_memory.py",
+      code: `# Membuat variabel x dengan nilai 2
+x = 2
+print(x)        # Output: 2
+print(id(x))    # Output: 1004 (alamat memori)
+
+# Fungsi id() menampilkan alamat memori objek
+print(id(2))    # Output: 1004 (alamat yang sama)
+
+# Membuat variabel y yang merujuk ke variabel x
+y = x
+print(y)        # Output: 2
+print(id(y))    # Output: 1004 (alamat yang sama dengan x)
+
+# Membuat variabel z dengan nilai yang sama
+z = 2
+print(z)        # Output: 2
+print(id(z))    # Output: 1004 (alamat yang sama)`
+    }
+  ]}
+/>
+
+Contoh di atas menunjukkan konsep penting dalam Python. Ketika beberapa variabel memiliki nilai yang sama, Python sering kali membuat mereka merujuk ke objek yang sama di memori. Ini adalah optimasi yang dilakukan Python untuk menghemat penggunaan memori, terutama untuk objek yang sering digunakan seperti bilangan kecil dan string pendek.
+
+## Karakteristik Variabel Python
+
+Python memiliki beberapa karakteristik unik dalam penanganan variabel yang membedakannya dari bahasa pemrograman lain.
+
+### Tidak Ada Deklarasi Variabel
+
+Berbeda dengan bahasa pemrograman seperti C atau Java, Python tidak memerlukan deklarasi variabel secara eksplisit. Kamu tidak perlu menentukan tipe data variabel sebelum menggunakannya. Python akan secara otomatis menentukan tipe data berdasarkan nilai yang diberikan.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "no_declaration.py",
+      code: `# Python tidak memerlukan deklarasi variabel
+nama = "Budi"           # String
+umur = 25               # Integer
+tinggi = 175.5          # Float
+aktif = True            # Boolean
+
+# Python menentukan tipe data secara otomatis
+print(type(nama))       # Output: <class 'str'>
+print(type(umur))       # Output: <class 'int'>
+print(type(tinggi))     # Output: <class 'float'>
+print(type(aktif))      # Output: <class 'bool'>`
+    }
+  ]}
+/>
+
+### Tipe Data Dinamis
+
+Python menggunakan sistem tipe data dinamis, yang berarti tipe data variabel dapat berubah selama program berjalan. Satu variabel dapat menyimpan integer pada satu waktu, kemudian diubah menjadi string pada waktu yang lain.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dynamic_typing.py",
+      code: `# Variabel dengan tipe data dinamis
+data = 42               # Integer
+print(f"Nilai: {data}, Tipe: {type(data)}")
+
+data = "Hello World"    # String
+print(f"Nilai: {data}, Tipe: {type(data)}")
+
+data = [1, 2, 3]        # List
+print(f"Nilai: {data}, Tipe: {type(data)}")
+
+data = 3.14             # Float
+print(f"Nilai: {data}, Tipe: {type(data)}")`
+    }
+  ]}
+/>
+
+## Aturan Penamaan Variabel
+
+Python memiliki aturan ketat untuk penamaan variabel yang harus kamu ikuti agar kode dapat berjalan dengan benar.
+
+### Komponen Nama Variabel
+
+Nama variabel dalam Python dapat terdiri dari tiga komponen utama. Pertama adalah huruf, baik huruf kecil (a, b, c, ..., z) maupun huruf besar (A, B, C, ..., Z). Kedua adalah angka (0, 1, 2, ..., 9). Ketiga adalah karakter underscore (_).
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "valid_names.py",
+      code: `# Nama variabel yang valid
+nama_siswa = "Ahmad"        # Menggunakan huruf dan underscore
+nilai1 = 85                 # Menggunakan huruf dan angka
+_total = 100                # Dimulai dengan underscore
+MAX_SIZE = 1000             # Huruf besar semua
+camelCase = "valid"         # Gaya camelCase
+snake_case = "valid"        # Gaya snake_case
+
+print(nama_siswa, nilai1, _total, MAX_SIZE, camelCase, snake_case)`
+    }
+  ]}
+/>
+
+### Aturan Wajib
+
+Beberapa aturan wajib yang harus kamu patuhi dalam penamaan variabel Python. Nama variabel tidak boleh dimulai dengan angka. Python akan menghasilkan error sintaks jika kamu mencoba membuat variabel yang dimulai dengan angka.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "naming_rules.py",
+      code: `# Nama variabel yang BENAR
+data1 = "valid"
+data_2 = "valid"
+_data3 = "valid"
+
+# Nama variabel yang SALAH (akan menyebabkan error)
+# 1data = "invalid"     # SyntaxError
+# 2nilai = "invalid"    # SyntaxError
+# 9test = "invalid"     # SyntaxError
+
+print(data1, data_2, _data3)`
+    }
+  ]}
+/>
+
+### Sensitivitas Huruf Besar Kecil
+
+Python membedakan antara huruf besar dan huruf kecil dalam nama variabel. Ini berarti `nama`, `Nama`, dan `NAMA` adalah tiga variabel yang berbeda.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "case_sensitive.py",
+      code: `# Python membedakan huruf besar dan kecil
+nama = "budi"
+Nama = "Siti"
+NAMA = "Ahmad"
+
+print(f"nama: {nama}")      # Output: nama: budi
+print(f"Nama: {Nama}")      # Output: Nama: Siti
+print(f"NAMA: {NAMA}")      # Output: NAMA: Ahmad
+
+# Ketiga variabel ini berbeda satu sama lain
+print(nama == Nama)         # Output: False
+print(Nama == NAMA)         # Output: False`
+    }
+  ]}
+/>
+
+## Kata Kunci yang Tidak Boleh Digunakan
+
+Python memiliki daftar kata kunci (keywords) yang tidak boleh digunakan sebagai nama variabel karena kata-kata tersebut memiliki fungsi khusus dalam bahasa Python.
+
+### Daftar Kata Kunci Python
+
+Berikut adalah kata kunci yang tidak boleh digunakan sebagai nama variabel. Kelompok pertama meliputi `and`, `as`, `assert`, `async`, `await`, `break`, `class`, `continue`, `def`, `del`, `elif`, `else`. Kelompok kedua mencakup `except`, `finally`, `for`, `from`, `global`, `if`, `import`, `in`, `is`, `lambda`, `nonlocal`, `not`. Kelompok ketiga terdiri dari `or`, `pass`, `raise`, `return`, `try`, `while`, `with`, `yield`, `False`, `True`, `None`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "keywords_example.py",
+      code: `# Contoh penggunaan yang SALAH (akan menyebabkan error)
+# if = 10          # SyntaxError: invalid syntax
+# for = "hello"    # SyntaxError: invalid syntax
+# def = 25         # SyntaxError: invalid syntax
+# class = "test"   # SyntaxError: invalid syntax
+
+# Cara yang BENAR untuk nama variabel serupa
+kondisi_if = 10
+loop_for = "hello"
+fungsi_def = 25
+kelas_class = "test"
+
+print(kondisi_if, loop_for, fungsi_def, kelas_class)`
+    }
+  ]}
+/>
+
+### Memeriksa Kata Kunci
+
+Python menyediakan modul `keyword` untuk memeriksa apakah suatu kata adalah kata kunci atau tidak.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "check_keywords.py",
+      code: `import keyword
+
+# Melihat semua kata kunci Python
+print("Jumlah kata kunci:", len(keyword.kwlist))
+print("Daftar kata kunci:")
+for i, kw in enumerate(keyword.kwlist, 1):
+    print(f"{i:2d}. {kw}")
+
+# Memeriksa apakah suatu kata adalah kata kunci
+print(f"\\nApakah 'if' kata kunci? {keyword.iskeyword('if')}")
+print(f"Apakah 'nama' kata kunci? {keyword.iskeyword('nama')}")
+print(f"Apakah 'class' kata kunci? {keyword.iskeyword('class')}")`
+    }
+  ]}
+/>
+
+## Praktik Terbaik Penamaan Variabel
+
+Meskipun Python memberikan fleksibilitas dalam penamaan variabel, ada beberapa praktik terbaik yang sebaiknya kamu ikuti untuk membuat kode lebih mudah dibaca dan dipelihara.
+
+### Nama yang Bermakna
+
+Gunakan nama variabel yang menjelaskan dengan jelas apa yang disimpan dalam variabel tersebut. Nama yang bermakna membuat kode lebih mudah dipahami, baik oleh diri sendiri maupun orang lain.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "meaningful_names.py",
+      code: `# Nama variabel yang KURANG BAIK
+h = 175
+w = 70
+a = 25
+
+# Nama variabel yang BAIK
+tinggi_badan = 175
+berat_badan = 70
+umur = 25
+
+# Menghitung BMI dengan nama variabel yang jelas
+bmi = berat_badan / ((tinggi_badan / 100) ** 2)
+print(f"BMI: {bmi:.2f}")
+
+# Lebih mudah dipahami maksud dari setiap variabel
+print(f"Tinggi: {tinggi_badan} cm")
+print(f"Berat: {berat_badan} kg")
+print(f"Umur: {umur} tahun")`
+    }
+  ]}
+/>
+
+### Panjang Nama yang Sesuai
+
+Hindari nama variabel yang terlalu panjang karena akan membuat kode sulit dibaca. Sebaliknya, nama yang terlalu pendek mungkin tidak memberikan informasi yang cukup.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "name_length.py",
+      code: `# Nama terlalu panjang (KURANG BAIK)
+tinggi_badan_siswa_kelas_12_ipa_semester_ganjil = 175
+
+# Nama terlalu pendek (KURANG BAIK)
+h = 175
+
+# Nama yang tepat (BAIK)
+tinggi_siswa = 175
+tinggi = 175  # Jika konteks sudah jelas
+
+# Untuk variabel penghitung, nama pendek dapat diterima
+for i in range(10):
+    print(f"Iterasi ke-{i}")
+
+# Untuk data yang lebih kompleks, gunakan nama yang jelas
+jumlah_siswa = 30
+rata_rata_nilai = 85.5`
+    }
+  ]}
+/>
+
+### Gaya Penulisan yang Konsisten
+
+Python menggunakan gaya snake_case untuk nama variabel, dimana kata-kata dipisahkan dengan underscore dan semua huruf menggunakan huruf kecil.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "naming_style.py",
+      code: `# Gaya snake_case (DIREKOMENDASIKAN untuk Python)
+nama_lengkap = "Ahmad Budi"
+tanggal_lahir = "1995-05-15"
+alamat_rumah = "Jl. Merdeka No. 123"
+
+# Gaya camelCase (lebih umum di JavaScript/Java)
+namaLengkap = "Ahmad Budi"  # Tidak salah, tapi kurang Python-like
+
+# Gaya PascalCase (biasanya untuk nama kelas)
+NamaLengkap = "Ahmad Budi"  # Tidak disarankan untuk variabel
+
+# Konsistensi dalam satu program
+skor_matematika = 90
+skor_fisika = 85
+skor_kimia = 88
+rata_rata_skor = (skor_matematika + skor_fisika + skor_kimia) / 3
+
+print(f"Rata-rata skor: {rata_rata_skor:.2f}")`
+    }
+  ]}
+/>
+
+### Menghindari Kebingungan
+
+Hindari menggunakan karakter yang dapat menyebabkan kebingungan, terutama huruf yang mirip dengan angka.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "avoid_confusion.py",
+      code: `# Karakter yang dapat membingungkan (HINDARI)
+# l = 1        # Huruf 'l' mirip angka '1'
+# I = 1        # Huruf 'I' mirip angka '1'  
+# O = 0        # Huruf 'O' mirip angka '0'
+
+# Alternatif yang lebih jelas
+panjang = 1      # Gunakan kata yang jelas
+indeks = 1       # Atau nama yang lebih deskriptif
+kosong = 0       # Nama yang menjelaskan maksud
+
+# Contoh penggunaan dalam konteks yang jelas
+jumlah_item = 10
+for nomor in range(1, jumlah_item + 1):
+    print(f"Item nomor {nomor}")
+
+# Variabel boolean dengan nama yang jelas
+is_active = True
+has_permission = False
+can_edit = True`
+    }
+  ]}
+/>
+
+## Contoh Penggunaan Variabel dalam Program
+
+Mari lihat bagaimana variabel digunakan dalam program sederhana yang menghitung luas dan keliling persegi panjang.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "rectangle_calculator.py",
+      code: `# Program menghitung luas dan keliling persegi panjang
+print("=== Kalkulator Persegi Panjang ===")
+
+# Input dari pengguna
+panjang = float(input("Masukkan panjang (cm): "))
+lebar = float(input("Masukkan lebar (cm): "))
+
+# Perhitungan
+luas = panjang * lebar
+keliling = 2 * (panjang + lebar)
+
+# Menampilkan hasil
+print(f"\\nHasil Perhitungan:")
+print(f"Panjang: {panjang} cm")
+print(f"Lebar: {lebar} cm")
+print(f"Luas: {luas} cm²")
+print(f"Keliling: {keliling} cm")
+
+# Validasi input
+if panjang <= 0 or lebar <= 0:
+    print("\\nPeringatan: Panjang dan lebar harus lebih besar dari 0!")
+else:
+    print("\\nPerhitungan valid.")`
+    }
+  ]}
+/>
+
+Contoh program di atas menunjukkan penggunaan variabel dengan nama yang bermakna, perhitungan matematis, dan validasi data. Setiap variabel memiliki tujuan yang jelas dan nama yang menjelaskan isinya.
+
+Memahami konsep variabel, aturan penamaan, dan praktik terbaik akan membantu kamu menulis kode Python yang lebih bersih, mudah dibaca, dan mudah dipelihara. Variabel adalah fondasi dasar dalam pemrograman, dan penguasaan yang baik terhadap konsep ini akan mempermudah pembelajaran konsep pemrograman yang lebih lanjut.

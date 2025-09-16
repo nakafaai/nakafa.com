@@ -6,7 +6,7 @@ import {
   InlineMath,
   MathContainer,
 } from "@repo/design-system/components/markdown/math";
-import { Mermaid } from "@repo/design-system/components/markdown/mermaid";
+import { MermaidMdx } from "@repo/design-system/components/markdown/mermaid";
 import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
 import { Youtube } from "@repo/design-system/components/markdown/youtube";
 import {
@@ -81,7 +81,7 @@ export const components = {
     />
   ),
   Youtube,
-  Mermaid,
+  Mermaid: MermaidMdx,
   MathContainer,
   InlineMath,
   BlockMath,

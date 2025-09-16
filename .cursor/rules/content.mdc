@@ -145,6 +145,7 @@ Reference components in [packages/design-system/markdown/](mdc:packages/design-s
 - `InlineMath` - Inline mathematical expressions (No need import this, it has the config already in mdx)
 - `LineEquation` - 3D line visualization component from [packages/contents/_components/line-equation.tsx](mdc:packages/contents/_components/line-equation.tsx)
 - `CodeBlock` - Interactive code display with syntax highlighting and multiple file tabs (No need import this, it has the config already in mdx)
+- `Mermaid` - Interactive diagram and flowchart visualization component (No need import this, it has the config already in mdx)
 - Standard markdown elements (headings, paragraphs, lists, tables, blockquotes)
 
 ### Code Block Usage Standards
@@ -217,6 +218,89 @@ function greet(user: User): string {
 - **Include complete, runnable examples** when possible - students should be able to copy and run the code
 - **Break long code into multiple files** - use separate entries in the data array for better organization
 - **Use different languages to show concepts** - demonstrate the same concept across different programming languages if needed
+
+### Mermaid Diagram Usage Standards
+
+- **Use Mermaid component directly** - available without import, configured in MDX
+- **Required chart prop** - string containing valid Mermaid diagram syntax
+- **Automatic error handling** - component gracefully handles syntax errors and displays fallback content
+- **Responsive design** - diagrams automatically adjust to container width
+- **Loading states** - shows loading indicator while rendering complex diagrams
+
+### Mermaid Implementation Pattern
+
+```jsx
+// CORRECT: Basic flowchart diagram
+<Mermaid
+  chart={`
+    flowchart TD
+        A[Start] --> B{Decision}
+        B -->|Yes| C[Action 1]
+        B -->|No| D[Action 2]
+        C --> E[End]
+        D --> E
+  `}
+/>
+
+// CORRECT: Sequence diagram for process flow
+<Mermaid
+  chart={`
+    sequenceDiagram
+        participant User
+        participant System
+        participant Database
+        
+        User->>System: Request data
+        System->>Database: Query
+        Database-->>System: Result
+        System-->>User: Response
+  `}
+/>
+
+// CORRECT: Class diagram for object relationships
+<Mermaid
+  chart={`
+    classDiagram
+        class Animal {
+            +String name
+            +int age
+            +makeSound()
+        }
+        class Dog {
+            +String breed
+            +bark()
+        }
+        class Cat {
+            +String color
+            +meow()
+        }
+        Animal <|-- Dog
+        Animal <|-- Cat
+  `}
+/>
+```
+
+### Mermaid Best Practices
+
+- **Use appropriate diagram types** - flowchart for processes, sequence for interactions, class for relationships
+- **Keep diagrams focused** - show only relevant elements for the concept being taught
+- **Use clear node labels** - descriptive text that explains each step or component
+- **Maintain consistent styling** - let the component handle colors and fonts automatically
+- **Test diagram syntax** - ensure valid Mermaid syntax to avoid rendering errors
+- **Educational value first** - each diagram must clearly demonstrate a concept or process
+- **Proper indentation** - maintain clean indentation in chart strings for readability
+
+### Supported Mermaid Diagram Types
+
+- **Flowchart** - Process flows, decision trees, algorithmic steps
+- **Sequence Diagram** - Interaction patterns, communication flows
+- **Class Diagram** - Object relationships, inheritance structures  
+- **State Diagram** - System states, transitions, lifecycle processes
+- **Entity Relationship** - Database schemas, data relationships
+- **User Journey** - User experience flows, process mapping
+- **Gantt Chart** - Project timelines, task scheduling
+- **Pie Chart** - Data distribution, statistical representation
+- **Git Graph** - Version control workflows, branching strategies
 
 ## 3D Visualizations and Line Equations
 
