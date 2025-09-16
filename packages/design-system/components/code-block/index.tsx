@@ -194,7 +194,7 @@ export const CodeBlock = ({
     <CodeBlockContext.Provider value={{ value, onValueChange, data }}>
       <div
         className={cn(
-          "grid size-full grid-cols-1 overflow-hidden rounded-md border shadow-sm",
+          "grid size-full grid-cols-1 overflow-hidden rounded-xl border shadow-sm",
           className
         )}
         {...props}
