@@ -1,5 +1,5 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
-import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
+import { convex } from "@convex-dev/better-auth/plugins";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
@@ -63,8 +63,6 @@ export const createAuth = (
       },
     },
     plugins: [
-      // The cross domain plugin is required for client side frameworks
-      crossDomain({ siteUrl }),
       // The Convex plugin is required for Convex compatibility
       convex(),
     ],

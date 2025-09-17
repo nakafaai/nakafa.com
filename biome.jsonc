@@ -33,7 +33,8 @@
     "includes": [
       "**/*",
       "!packages/contents/_data/quran.ts",
-      "!packages/backend/convex/_generated/**/*"
+      "!packages/backend/convex/_generated/**/*",
+      "!packages/backend/convex/betterAuth/_generated/**/*"
     ]
   }
 }
