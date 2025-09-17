@@ -1,0 +1,409 @@
+export const metadata = {
+    title: "Containers",
+    description: "Learn Python container data types like list, tuple, dictionary, and set. Complete guide to indexing, slicing, and data manipulation with practical examples.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "AI Programming",
+};
+
+## Container Concepts in Python
+
+Containers are data types that can store collections of items or elements. Imagine containers like storage boxes that can hold various kinds of items. Python provides several types of containers with different ways of organizing and manipulating data.
+
+Containers in Python have the main characteristic of being able to store various types of objects in one container. Each type of container has its own advantages depending on program needs.
+
+
+Python provides five main container types with different characteristics:
+
+- **String** - sequence of characters that cannot be changed
+- **List** - sequence of items that can be changed and indexed  
+- **Tuple** - sequence of items that cannot be changed
+- **Dictionary** - key-value pairs
+- **Set** - collection of unique items without order
+
+## Introduction to Lists
+
+List is the most flexible container in Python. List has three important characteristics: ordered (sequential), heterogeneous (can hold various data types), and mutable (can be changed).
+
+Lists in Python are similar to arrays in C or vectors in C++, but with more flexible capabilities because they can hold objects of different data types in the same list.
+
+
+### List Characteristics
+
+| Characteristic | Explanation | Example |
+|---------------|-------------|---------|
+| Ordered | Elements have fixed order | `[1, 2, 3]` different from `[3, 2, 1]` |
+| Heterogeneous | Can hold various data types | `[1, 'text', 3.14, True]` |
+| Mutable | Contents can be changed after creation | Can add, remove, or modify elements |
+
+### List Creation Syntax
+
+Lists are created using square brackets with elements separated by commas. Lists can contain items of different data types or even other lists.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "list_creation.py",
+      code: `# Various list types based on data types
+a = [True, False, True]              # Output: [True, False, True] # list of bools
+b = [1, 2, 3]                        # Output: [1, 2, 3] # list of ints  
+c = [1.5, 2.5, 3.5]                  # Output: [1.5, 2.5, 3.5] # list of floats
+d = ['red', 'green', 'blue']         # Output: ['red', 'green', 'blue'] # list of strings
+
+# Empty lists
+empty1 = []                          # Output: []
+empty2 = list()                      # Output: []
+
+# Heterogeneous list (mixed data types)
+mixed = [False, 2, 3.5, 'blue']      # Output: [False, 2, 3.5, 'blue']
+
+# Nested list
+nested = [1, [2.5, False, 'red'], 3.5, 'blue']  # Output: [1, [2.5, False, 'red'], 3.5, 'blue']`
+    }
+  ]}
+/>
+
+## List Indexing
+
+Indexing is a way to access individual elements in a list using position numbers. Python uses zero-based indexing, meaning the first element has index 0.
+
+
+Indexing in Python has special rules that need to be understood:
+
+- **Positive indices** start from 0 for the first element
+- **Negative indices** start from -1 for the last element  
+- **Indices out of range** will result in IndexError
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "list_indexing.py",
+      code: `# Example of indexing on nested lists
+nested = [1, [2.5, False, 'red'], 3.5, 'blue']
+
+print('nested =', nested)                    # Output: nested = [1, [2.5, False, 'red'], 3.5, 'blue']
+
+# Indexing main elements
+print('nested[0] =', nested[0])              # Output: nested[0] = 1
+print('nested[-1] =', nested[-1])            # Output: nested[-1] = blue
+print('nested[1] =', nested[1])              # Output: nested[1] = [2.5, False, 'red']
+
+# Indexing elements in nested lists
+print('nested[1][2] =', nested[1][2])        # Output: nested[1][2] = red
+
+# Indexing characters in strings (double indexing)
+print('nested[1][2][1] =', nested[1][2][1])  # Output: nested[1][2][1] = e`
+    }
+  ]}
+/>
+
+## Slicing with Stride
+
+Slicing is a technique to take part of elements from a list. Stride allows us to take elements at certain intervals, not just consecutive elements.
+
+
+Complete slicing syntax is `list[start:stop:step]` where:
+- `start` is the starting index (inclusive)
+- `stop` is the ending index (exclusive)  
+- `step` is the interval for taking elements
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "list_slicing.py",
+      code: `# List for slicing examples
+x = [0, 1, 2, 3, 4, 5]
+print('x =', x)                              # Output: x = [0, 1, 2, 3, 4, 5]
+
+# Basic slicing
+print('x[1:4] =', x[1:4])                    # Output: x[1:4] = [1, 2, 3]
+
+# Slicing from negative index to end
+print('x[-3:] =', x[-3:])                    # Output: x[-3:] = [3, 4, 5]
+
+# Slicing with step (stride)
+print('x[1:4:2] =', x[1:4:2])                # Output: x[1:4:2] = [1, 3]
+
+# Reversing list with negative step
+print('x[::-1] =', x[::-1])                  # Output: x[::-1] = [5, 4, 3, 2, 1, 0]`
+    }
+  ]}
+/>
+
+Slicing is like cutting bread slices. If you have 6 bread slices (indices 0-5), then `x[1:4]` means taking slices 2 to 4 (not including slice 5). While `x[1:4:2]` means taking only slices 2 and 4 (skipping 1 slice).
+
+## Operations and Similarities with Strings
+
+Lists support various operations for displaying and manipulating data. Lists also have similarities with strings in terms of element access.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "list_output.py",
+      code: `# Various ways to display lists
+nested = [1, [2.5, False, 'red'], 3.5, 'blue']
+
+# Display with assignment
+print('nested =', nested)
+# Output: nested = [1, [2.5, False, 'red'], 3.5, 'blue']
+
+# Display without assignment  
+print(nested)
+# Output: [1, [2.5, False, 'red'], 3.5, 'blue']
+
+# Display with print function
+print('List content:', nested)
+# Output: List content: [1, [2.5, False, 'red'], 3.5, 'blue']`
+    }
+  ]}
+/>
+
+
+Lists and strings have similarities in terms of element access. Both support indexing and slicing with the same patterns.
+
+| Operation | String | List |
+|---------|--------|------|
+| **Indexing** | Get individual characters | Get individual elements |
+| **Slicing with stride** | Get substring | Get sub-list |
+
+The main difference is that strings are immutable (cannot be changed) while lists are mutable (can be changed). Because of this mutable nature, lists have various methods for data manipulation.
+
+<Mermaid
+  chart={`
+    flowchart LR
+        A[List Methods] --> B[Adding]
+        A --> C[Removing]
+        A --> D[Organizing]
+        
+        B --> E[append<br/>extend<br/>insert]
+        C --> F[pop<br/>remove]
+        D --> G[sort<br/>reverse<br/>copy]
+  `}
+/>
+
+| Method | Description | Usage Example |
+|--------|-------------|---------------|
+| `append(element)` | Add element at end of list | Adding new item |
+| `extend(list2)` | Merge with elements from another list | Combining two lists |
+| `insert(index, element)` | Insert element at specific position | Adding in middle of list |
+| `index(element)` | Find first index of element | Finding item position |
+| `pop()` | Remove and return last element | Taking last item |
+| `reverse()` | Reverse list order directly | Reversing order |
+| `remove(element)` | Remove first occurrence of element | Removing specific item |
+| `sort()` | Sort list directly | Sorting data |
+| `copy()` | Create list copy | Duplicating list |
+| `count(element)` | Count occurrences of element | Counting frequency |
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "list_methods.py",
+      code: `# Demonstration of various list methods
+my_list = [1, 2, 3]
+print('Original list:', my_list)            # Output: Original list: [1, 2, 3]
+
+# Adding elements
+my_list.append(4)
+print('After append(4):', my_list)          # Output: After append(4): [1, 2, 3, 4]
+
+my_list.extend([5, 6])
+print('After extend([5, 6]):', my_list)     # Output: After extend([5, 6]): [1, 2, 3, 4, 5, 6]
+
+my_list.insert(0, 0)
+print('After insert(0, 0):', my_list)       # Output: After insert(0, 0): [0, 1, 2, 3, 4, 5, 6]
+
+# Searching elements
+idx = my_list.index(3)
+print('Index of 3:', idx)                   # Output: Index of 3: 3
+
+my_list.append(3)
+count = my_list.count(3)
+print('Count of 3:', count)                 # Output: Count of 3: 2
+
+# Removing elements
+my_list.remove(3)
+print('After remove(3):', my_list)          # Output: After remove(3): [0, 1, 2, 4, 5, 6, 3]
+
+popped = my_list.pop()
+print('Popped element:', popped)            # Output: Popped element: 3
+print('After pop():', my_list)              # Output: After pop(): [0, 1, 2, 4, 5, 6]
+
+# Organizing elements
+my_list.reverse()
+print('After reverse():', my_list)          # Output: After reverse(): [6, 5, 4, 2, 1, 0]
+
+my_list.sort()
+print('After sort():', my_list)             # Output: After sort(): [0, 1, 2, 4, 5, 6]
+
+copied = my_list.copy()
+print('Copied list:', copied)               # Output: Copied list: [0, 1, 2, 4, 5, 6]`
+    }
+  ]}
+/>
+
+## Special List Types
+
+Python supports several special list types with different characteristics and uses:
+
+1. **Empty Lists**
+
+   Empty lists are useful as initial containers to be filled with data later. There are two ways to create empty lists with the same result.
+
+2. **Heterogeneous Lists**
+
+   Heterogeneous lists can hold elements of different data types in one container. This provides high flexibility in data storage.
+
+3. **Nested Lists**
+
+   Nested lists are lists that contain other lists as elements. This concept enables creation of multidimensional data structures like matrices or tables.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "special_lists.py",
+      code: `# Empty lists - two creation methods
+a = []                                       # Output: []
+b = list()                                   # Output: []
+
+# Heterogeneous list - various data types
+mixed = [False, 2, 3.5, 'blue']             # Output: [False, 2, 3.5, 'blue']
+
+# Nested list - list within list
+nested = [1, [2.5, False, 'red'], 3.5, 'blue']  # Output: [1, [2.5, False, 'red'], 3.5, 'blue']
+
+print('Empty list 1:', a)
+print('Empty list 2:', b) 
+print('Mixed types:', mixed)
+print('Nested structure:', nested)`
+    }
+  ]}
+/>
+
+Nested lists are very useful for representing structured data like tables, matrices, or other hierarchical data. Accessing elements in nested lists uses multiple indexing like `nested[1][2]` to access elements at deeper levels.
+
+## Other Containers
+
+Besides lists, Python provides three other container types with different characteristics and uses.
+
+### Tuple
+
+Tuple is a data structure similar to list but immutable. Tuple supports packing and unpacking operations useful for data exchange. Although tuples are immutable, tuples can contain references to mutable objects like lists.
+
+An important concept in tuples is the difference between the immutable tuple itself and the mutable objects it contains. Tuples cannot change their structure, but the contents of mutable objects within them can still be modified.
+
+| Aspect | Tuple | List |
+|-------|-------|------|
+| **Mutability** | Immutable | Mutable |
+| **Syntax** | `()` or without parentheses | `[]` |
+| **Usage** | Fixed data, coordinates | Changing data |
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "tuple_operations.py",
+      code: `# Tuple syntax - two creation methods
+t1 = (0, 1, 2)                               # Output: t1 = (0, 1, 2)
+t2 = 3, 4, 5                                 # Output: t2 = (3, 4, 5)
+print('t1 =', t1)
+print('t2 =', t2)
+
+# Tuple unpacking - separating values
+a, b, c = t2
+print('a, b, c =', a, b, c)                  # Output: a, b, c = 3 4 5
+
+# Error handling for unpacking
+try:
+    a, b = (0, 1, 2)                         # Too many values
+except ValueError as e:
+    print('ValueError:', e)                  # Output: ValueError: too many values to unpack (expected 2)
+
+try:
+    a, b, c, d = 0, 1, 2                     # Not enough values
+except ValueError as e:
+    print('ValueError:', e)                  # Output: ValueError: not enough values to unpack (expected 4, got 3)
+
+# Tuple with mutable objects
+t = (0, [1, 2, 3], 4)
+print('Original t =', t)                    # Output: Original t = (0, [1, 2, 3], 4)
+t[1][0] = 'x'                               # Modifying list contents in tuple
+print('After modifying inner list:', t)     # Output: After modifying inner list: (0, ['x', 2, 3], 4)
+
+# Tuple immutable but objects inside can be mutable
+# t[1] = [9, 8, 7]  # Error: cannot change reference
+# t[1][0] = 'y'     # OK: can modify mutable object contents`
+    }
+  ]}
+/>
+
+### Dictionary
+
+Dictionary stores data in key-value pairs. Each key must be unique and is used to access the associated value. Dictionary uses curly braces `{}`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_examples.py",
+      code: `# Creating dictionary
+kontak = {'Alice': 'alice@example.com', 'Bob': 'bob@example.com'}
+print('kontak =', kontak)
+# Output: kontak = {'Alice': 'alice@example.com', 'Bob': 'bob@example.com'}
+
+# Accessing values by key
+print("kontak['Alice'] =", kontak['Alice'])  # Output: kontak['Alice'] = alice@example.com
+
+# Adding new key-value pairs
+kontak['David'] = 'david@example.com'
+print('After adding David:', kontak)
+# Output: After adding David: {'Alice': 'alice@example.com', 'Bob': 'bob@example.com', 'David': 'david@example.com'}`
+    }
+  ]}
+/>
+
+### Set
+
+Set is a collection of unique and unordered elements. Set automatically removes duplicates and supports mathematical set operations. Set uses curly braces `{}` without key-value pairs.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "set_examples.py",
+      code: `# Creating set
+angka = {1, 2, 3, 4, 5}
+print('angka =', angka)                      # Output: angka = {1, 2, 3, 4, 5}
+
+# Adding elements to set
+angka.add(6)
+print('After adding 6:', angka)              # Output: After adding 6: {1, 2, 3, 4, 5, 6}
+
+# Set operations
+genap = {2, 4, 6, 8}
+ganjil = {1, 3, 5, 7}
+
+# Union (combination)
+print('genap | ganjil =', genap | ganjil)    # Output: genap | ganjil = {1, 2, 3, 4, 5, 6, 7, 8}
+
+# Intersection
+print('genap & ganjil =', genap & ganjil)    # Output: genap & ganjil = set()`
+    }
+  ]}
+/>
+
+### Container Types Comparison
+
+| Container | Syntax | Ordered | Mutable | Duplicates | Main Usage |
+|-----------|---------|---------|---------|------------|------------|
+| **List** | `[1, 2, 3]` | Yes | Yes | Yes | Data that needs changing |
+| **Tuple** | `(1, 2, 3)` | Yes | No | Yes | Fixed data, coordinates |
+| **Dictionary** | `{'a': 1}` | Yes* | Yes | No (keys) | Key-value mapping |
+| **Set** | `{1, 2, 3}` | No | Yes | No | Unique elements, set operations |
+
+*Dictionary maintains insertion order since Python 3.7+
