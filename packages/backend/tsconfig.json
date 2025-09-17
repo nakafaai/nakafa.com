@@ -2,16 +2,15 @@
   "compilerOptions": {
     "allowJs": true,
     "strict": true,
-    "moduleResolution": "Bundler",
-    "jsx": "react-jsx",
     "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
+    "jsx": "react",
 
-    "baseUrl": ".",
     "target": "ESNext",
-    "lib": ["ES2021", "dom", "DOM.Iterable"],
+    "lib": ["ES2021", "dom", "ESNext.Array", "DOM.Iterable"],
     "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
     "module": "ESNext",
+    "moduleResolution": "Bundler",
     "isolatedModules": true,
     "noEmit": true,
 

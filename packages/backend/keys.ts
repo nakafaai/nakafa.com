@@ -12,6 +12,7 @@ export const keys = () =>
     },
     client: {
       NEXT_PUBLIC_CONVEX_URL: z.string(),
+      NEXT_PUBLIC_CONVEX_SITE_URL: z.url(),
     },
     runtimeEnv: {
       CONVEX_URL: process.env.CONVEX_URL,
@@ -20,5 +21,6 @@ export const keys = () =>
       AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
       AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
       NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
+      NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
     },
   });

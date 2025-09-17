@@ -1,13 +1,89 @@
-import Google from "@auth/core/providers/google";
-import { convexAuth } from "@convex-dev/auth/server";
-import { internal } from "./_generated/api";
+import { createClient, type GenericCtx } from "@convex-dev/better-auth";
+import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
+import { type BetterAuthOptions, betterAuth } from "better-auth";
+import { components } from "./_generated/api";
+import type { DataModel } from "./_generated/dataModel";
+import { type QueryCtx, query } from "./_generated/server";
+import authSchema from "./betterAuth/schema";
 
-export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-  providers: [Google],
-  callbacks: {
-    async afterUserCreatedOrUpdated(ctx, { userId }) {
-      // Automatically generate access token for new users
-      await ctx.runMutation(internal.users.ensureAccessToken, { userId });
+const siteUrl =
+  process.env.SITE_URL ??
+  process.env.CONVEX_SITE_URL ??
+  "http://localhost:3000";
+
+// The component client has methods needed for integrating Convex with Better Auth,
+// as well as helper methods for general use.
+export const authComponent = createClient<DataModel, typeof authSchema>(
+  components.betterAuth,
+  {
+    local: {
+      schema: authSchema,
     },
+    verbose: true,
+  }
+);
+
+export const createAuth = (
+  ctx: GenericCtx<DataModel>,
+  { optionsOnly } = { optionsOnly: false }
+): ReturnType<typeof betterAuth> => {
+  const authConfig = {
+    baseURL: siteUrl,
+    // disable logging when createAuth is called just to generate options.
+    // this is not required, but there's a lot of noise in logs without it.
+    logger: {
+      disabled: optionsOnly,
+    },
+
+    database: authComponent.adapter(ctx),
+    account: {
+      accountLinking: {
+        enabled: true,
+        allowDifferentEmails: true,
+      },
+    },
+    socialProviders: {
+      google: {
+        clientId: process.env.AUTH_GOOGLE_ID as string,
+        clientSecret: process.env.AUTH_GOOGLE_SECRET as string,
+        accessType: "offline",
+        prompt: "select_account consent",
+      },
+    },
+    user: {
+      additionalFields: {
+        apiKey: {
+          type: "string",
+          required: false,
+          defaultValue: () => crypto.randomUUID(),
+        },
+      },
+      deleteUser: {
+        enabled: true,
+      },
+    },
+    plugins: [
+      // The cross domain plugin is required for client side frameworks
+      crossDomain({ siteUrl }),
+      // The Convex plugin is required for Convex compatibility
+      convex(),
+    ],
+  } satisfies BetterAuthOptions;
+
+  return betterAuth(authConfig);
+};
+
+export const safeGetUser = (ctx: QueryCtx) => {
+  return authComponent.safeGetAuthUser(ctx);
+};
+
+export const getUser = (ctx: QueryCtx) => {
+  return authComponent.getAuthUser(ctx);
+};
+
+export const getCurrentUser = query({
+  args: {},
+  handler: (ctx) => {
+    return safeGetUser(ctx);
   },
 });

@@ -1,7 +1,5 @@
 "use client";
 
-import { useAuthActions } from "@convex-dev/auth/react";
-import { api } from "@repo/backend/convex/_generated/api";
 import {
   Avatar,
   AvatarFallback,
@@ -22,7 +20,6 @@ import {
   useSidebar,
 } from "@repo/design-system/components/ui/sidebar";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useQuery } from "convex/react";
 import {
   EllipsisVerticalIcon,
   LogInIcon,
@@ -31,6 +28,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
+import { authClient } from "@/lib/auth/client";
 import { getInitialName } from "@/lib/utils/helper";
 
 const prefetchLinks = ["/settings", "/auth"] as const;
@@ -39,9 +37,8 @@ export function NavUser() {
   const t = useTranslations("Auth");
 
   const router = useRouter();
-  const user = useQuery(api.users.getUser);
+  const { data } = authClient.useSession();
 
-  const { signOut } = useAuthActions();
   const { isMobile } = useSidebar();
 
   useEffect(() => {
@@ -51,7 +48,7 @@ export function NavUser() {
     }
   });
 
-  if (!user) {
+  if (!data) {
     return (
       <SidebarMenuItem>
         <SidebarMenuButton onClick={() => router.push("/auth")}>
@@ -62,19 +59,29 @@ export function NavUser() {
     );
   }
 
+  const handleSignOut = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.replace("/");
+        },
+      },
+    });
+  };
+
   return (
     <SidebarMenuItem>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
             <Avatar className="size-6 rounded-lg">
-              <AvatarImage alt={user.name} src={user.avatarUrl ?? ""} />
+              <AvatarImage alt={data.user.name} src={data.user.image ?? ""} />
               <AvatarFallback className="rounded-lg text-xs">
-                {getInitialName(user.name)}
+                {getInitialName(data.user.name)}
               </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate">{user.name}</span>
+              <span className="truncate">{data.user.name}</span>
             </div>
             <EllipsisVerticalIcon className="ml-auto size-4" />
           </SidebarMenuButton>
@@ -88,15 +95,15 @@ export function NavUser() {
           <DropdownMenuLabel className="p-0 font-normal">
             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
               <Avatar className="size-8 rounded-lg">
-                <AvatarImage alt={user.name} src={user.avatarUrl ?? ""} />
+                <AvatarImage alt={data.user.name} src={data.user.image ?? ""} />
                 <AvatarFallback className="rounded-lg">
-                  {getInitialName(user.name)}
+                  {getInitialName(data.user.name)}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate font-medium">{data.user.name}</span>
                 <span className="truncate text-muted-foreground text-xs">
-                  {user.email}
+                  {data.user.email}
                 </span>
               </div>
             </div>
@@ -112,10 +119,7 @@ export function NavUser() {
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onSelect={() => signOut()}
-          >
+          <DropdownMenuItem className="cursor-pointer" onSelect={handleSignOut}>
             <LogOutIcon />
             {t("logout")}
           </DropdownMenuItem>

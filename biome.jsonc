@@ -23,6 +23,9 @@
       "performance": {
         "noNamespaceImport": "off",
         "noBarrelFile": "off"
+      },
+      "style": {
+        "useFilenamingConvention": "off"
       }
     }
   },

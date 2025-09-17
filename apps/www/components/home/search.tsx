@@ -20,7 +20,7 @@ import { AiChatModel } from "../ai/chat-model";
 export function HomeSearch() {
   const t = useTranslations("Ai");
 
-  const user = useQuery(api.users.getUser);
+  const user = useQuery(api.auth.getCurrentUser);
 
   const router = useRouter();
 

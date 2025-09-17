@@ -1,3 +1,3 @@
-export function generateAccessToken(): string {
+export function generateApiKey(): string {
   return crypto.randomUUID();
 }
