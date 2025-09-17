@@ -1,0 +1,611 @@
+export const metadata = {
+    title: "String Methods",
+    description: "Learn Python string methods for text manipulation. Master transformation, search, character validation, and advanced string operations.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/17/2025",
+    subject: "AI Programming",
+};
+
+## Immutable String Nature
+
+Strings in Python have a special property called immutable, meaning that after a string is created, its contents cannot be changed directly. Imagine a string like a book that has already been printed, you cannot change words in it without reprinting the entire page.
+
+When you try to change characters in a string directly, Python will display a TypeError. This is different from lists which can be modified element by element.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "immutable_string.py",
+      code: `# Demonstration of immutable string nature
+s = "hello"
+print(f"Initial string: {s}")
+
+# Trying to change character directly
+try:
+    s[1] = "a"  # This will cause an error
+except TypeError as e:
+    print(f"Error: {e}")
+
+# The correct way: creating new string
+s_new = s[:1] + "a" + s[2:]
+print(f"New string: {s_new}")
+
+# Original string remains unchanged
+print(f"Original string still: {s}")`
+    }
+  ]}
+/>
+
+Although strings cannot be changed directly, you can create new strings based on old strings. Operations like concatenation with the `+` operator will produce new strings, not modify existing ones.
+
+## Measuring String Length
+
+The `len()` function is used to find out the number of characters in a string. Every character, including spaces and punctuation, is counted as one unit.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "string_length.py",
+      code: `# Measuring length of various string types
+strings = [
+    "hello",
+    "Hello World!",
+    "Python programming",
+    "",  # empty string
+    "   ",  # string containing spaces
+    "123456"
+]
+
+for s in strings:
+    print(f"'{s}' has length: {len(s)}")
+
+# String length with special characters
+special = "Hello\\nWorld\\t!"
+print(f"String with escape sequence: {len(special)} characters")
+print(f"String display: {repr(special)}")`
+    }
+  ]}
+/>
+
+It's important to understand that escape sequences like `\n` and `\t` are counted as one character even though they are written with two symbols.
+
+## String Transformation Methods
+
+### Changing Letter Case
+
+Python provides several methods to change the letter format in strings. Each method produces a new string with the desired format.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "case_transformation.py",
+      code: `# Example of case transformation on strings
+text = "Python Programming Language"
+
+# Convert to all uppercase
+upper_text = text.upper()
+print(f"Upper: {upper_text}")
+
+# Convert to all lowercase
+lower_text = text.lower()
+print(f"Lower: {lower_text}")
+
+# Title case: first letter of each word capitalized
+title_text = text.title()
+print(f"Title: {title_text}")
+
+# Example with mixed string
+mixed = "hELLo WoRLd PyThOn"
+print(f"Original: {mixed}")
+print(f"Title case: {mixed.title()}")
+
+# Title case on string with numbers and symbols
+complex_text = "python3.9 is-awesome!"
+print(f"Complex title: {complex_text.title()}")`
+    }
+  ]}
+/>
+
+The `title()` method is very useful for formatting names or titles, where each word starts with a capital letter.
+
+### Removing Characters at Start and End
+
+Strip methods are useful for cleaning strings from unwanted characters at the beginning or end of strings.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "strip_methods.py",
+      code: `# Demonstration of various strip methods
+text = "   Hello World   "
+print(f"Original: '{text}'")
+
+# Remove spaces on both sides
+stripped = text.strip()
+print(f"Strip: '{stripped}'")
+
+# Remove spaces only on the left
+left_stripped = text.lstrip()
+print(f"Left strip: '{left_stripped}'")
+
+# Remove spaces only on the right
+right_stripped = text.rstrip()
+print(f"Right strip: '{right_stripped}'")
+
+# Strip with special characters
+special_text = "+++Hello World+++"
+custom_stripped = special_text.strip("+")
+print(f"Custom strip: '{custom_stripped}'")
+
+# Strip multiple characters
+messy_text = "---+++Hello World+++---"
+clean_text = messy_text.strip("-+")
+print(f"Multiple char strip: '{clean_text}'")`
+    }
+  ]}
+/>
+
+Strip methods are very useful in data processing, especially when reading input from users or files that may contain extra spaces.
+
+## Search and Validation Methods
+
+### Finding Substring Position
+
+The `index()` and `find()` methods are used to search for substring positions in strings. The difference lies in how they handle cases when the substring is not found.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "substring_search.py",
+      code: `# Substring search with various methods
+text = "Python is a powerful programming language"
+
+# Using index() - will error if not found
+try:
+    pos = text.index("powerful")
+    print(f"'powerful' found at position: {pos}")
+    
+    # Search for non-existent substring
+    pos_not_found = text.index("Java")
+except ValueError as e:
+    print(f"Error with index(): {e}")
+
+# Using find() - returns -1 if not found
+pos_find = text.find("powerful")
+print(f"find('powerful'): {pos_find}")
+
+pos_not_found = text.find("Java")
+print(f"find('Java'): {pos_not_found}")
+
+# Search with start and end parameters
+substring = "programming"
+start_pos = text.find(substring, 20)  # start from position 20
+print(f"'{substring}' after position 20: {start_pos}")
+
+# Count substring occurrences
+count = text.count("a")
+print(f"Letter 'a' appears {count} times")`
+    }
+  ]}
+/>
+
+Use `find()` when you're not sure if the substring exists in the string, and use `index()` when you're certain the substring definitely exists.
+
+### String Character Validation
+
+Python provides several methods to validate character types in strings.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "character_validation.py",
+      code: `# Example of validating various character types
+test_strings = [
+    "Python",
+    "Python3",
+    "12345",
+    "Hello World",
+    "hello123",
+    "UPPERCASE",
+    "lowercase",
+    "",
+    "   "
+]
+
+print("String\\t\\tAlpha\\tDigit\\tAlnum\\tUpper\\tLower")
+print("-" * 60)
+
+for s in test_strings:
+    alpha = s.isalpha()
+    digit = s.isdigit()
+    alnum = s.isalnum()
+    upper = s.isupper()
+    lower = s.islower()
+    
+    print(f"'{s:<10}'\\t{alpha}\\t{digit}\\t{alnum}\\t{upper}\\t{lower}")
+
+# Practical example for input validation
+def validate_username(username):
+    if not username:
+        return "Username cannot be empty"
+    if not username.isalnum():
+        return "Username can only contain letters and numbers"
+    if len(username) < 3:
+        return "Username must be at least 3 characters"
+    return "Username is valid"
+
+# Test validation
+usernames = ["user123", "user@123", "ab", "ValidUser"]
+for username in usernames:
+    result = validate_username(username)
+    print(f"'{username}': {result}")`
+    }
+  ]}
+/>
+
+These validation methods are very useful for verifying user input formats, such as phone numbers, postal codes, or usernames.
+
+## Prefix and Suffix Search Methods
+
+The `startswith()` and `endswith()` methods allow you to check if a string starts or ends with a specific substring.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "prefix_suffix.py",
+      code: `# Example usage of startswith and endswith
+files = [
+    "document.pdf",
+    "image.jpg",
+    "script.py",
+    "data.csv",
+    "README.md",
+    "backup.zip"
+]
+
+# Check file extensions
+print("Files with specific extensions:")
+for file in files:
+    if file.endswith(".py"):
+        print(f"Python file: {file}")
+    elif file.endswith((".jpg", ".png", ".gif")):
+        print(f"Image file: {file}")
+    elif file.endswith(".pdf"):
+        print(f"PDF file: {file}")
+
+# Check prefixes
+urls = [
+    "https://www.google.com",
+    "http://example.com",
+    "ftp://files.example.com",
+    "mailto:user@example.com"
+]
+
+print("\\nURL analysis:")
+for url in urls:
+    if url.startswith("https://"):
+        print(f"Secure web: {url}")
+    elif url.startswith("http://"):
+        print(f"Web: {url}")
+    elif url.startswith("ftp://"):
+        print(f"FTP: {url}")
+    elif url.startswith("mailto:"):
+        print(f"Email: {url}")
+
+# Using tuple for multiple prefix/suffix
+text = "Hello World"
+print(f"\\nStarts with greeting: {text.startswith(('Hi', 'Hello', 'Hey'))}")`
+    }
+  ]}
+/>
+
+Both methods support tuples as parameters, allowing checking of multiple prefixes or suffixes simultaneously.
+
+## Replace and Split Methods
+
+### Replacing Substrings
+
+The `replace()` method is used to replace all occurrences of a substring with a new string.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "replace_method.py",
+      code: `# Example usage of replace method
+text = "Python is great. Python is powerful. Python is easy."
+print(f"Original: {text}")
+
+# Replace all occurrences
+replaced = text.replace("Python", "Java")
+print(f"Replace all: {replaced}")
+
+# Replace with count limit
+limited_replace = text.replace("Python", "Java", 2)
+print(f"Replace 2 first: {limited_replace}")
+
+# Replace with empty string (remove)
+no_dots = text.replace(".", "")
+print(f"Remove dots: {no_dots}")
+
+# Chaining replace for multiple replacements
+sentence = "I love cats and dogs"
+animal_replace = sentence.replace("cats", "birds").replace("dogs", "fish")
+print(f"Chain replace: {animal_replace}")
+
+# Case-sensitive replace
+case_text = "Hello hello HELLO"
+case_replace = case_text.replace("hello", "hi")
+print(f"Case sensitive: {case_replace}")
+
+# Practical example: cleaning phone number
+phone = "+62-812-3456-7890"
+clean_phone = phone.replace("-", "").replace("+", "")
+print(f"Clean phone: {clean_phone}")`
+    }
+  ]}
+/>
+
+The `replace()` method is case-sensitive and replaces all occurrences unless limited by the third parameter.
+
+### Splitting Strings
+
+The `split()` method breaks a string into a list based on a specified delimiter.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "split_method.py",
+      code: `# Various ways to use split
+text = "apple,banana,orange,grape"
+print(f"Original: {text}")
+
+# Split with comma delimiter
+fruits = text.split(",")
+print(f"Split by comma: {fruits}")
+
+# Split without parameter (default whitespace)
+sentence = "Python is a great language"
+words = sentence.split()
+print(f"Split by space: {words}")
+
+# Split with limit
+limited_split = text.split(",", 2)
+print(f"Split max 2: {limited_split}")
+
+# Split with multiple whitespace
+messy_text = "word1    word2\\t\\tword3\\n\\nword4"
+clean_split = messy_text.split()
+print(f"Clean split: {clean_split}")
+
+# Practical example: parsing CSV data
+csv_line = "John,25,Engineer,New York"
+data = csv_line.split(",")
+name, age, job, city = data
+print(f"Name: {name}, Age: {age}, Job: {job}, City: {city}")
+
+# Split with non-existent character
+no_delimiter = "no-delimiter-here"
+result = no_delimiter.split(",")
+print(f"No delimiter found: {result}")
+
+# Joining back with join
+joined = " | ".join(fruits)
+print(f"Joined with pipe: {joined}")`
+    }
+  ]}
+/>
+
+The `split()` method is very useful for processing structured data like CSV, parsing user input, or breaking file paths.
+
+## String Method Chaining
+
+Since each string method returns a new string, you can combine multiple methods in one expression. This is called method chaining.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "method_chaining.py",
+      code: `# Example of method chaining on strings
+messy_input = "   +++ Python Programming for Beginners ---   "
+print(f"Input: '{messy_input}'")
+
+# Chaining multiple methods
+clean_result = (messy_input
+                .strip()  # remove spaces at start/end
+                .strip("+-")  # remove + and - characters
+                .lower()  # convert to lowercase
+                .replace("beginners", "experts"))  # replace word
+
+print(f"Clean result: '{clean_result}'")
+
+# Example chaining for name formatting
+names = ["  JOHN DOE  ", "  jane SMITH  ", "  BOB johnson  "]
+formatted_names = []
+
+for name in names:
+    formatted = name.strip().title()
+    formatted_names.append(formatted)
+
+print("Formatted names:")
+for name in formatted_names:
+    print(f"- {name}")
+
+# Chaining in list comprehension
+sentences = [
+    "  hello WORLD  ",
+    "  PYTHON programming  ",
+    "  DATA science  "
+]
+
+processed = [s.strip().title() for s in sentences]
+print(f"Processed sentences: {processed}")
+
+# Example chaining for validation and formatting
+def process_email(email):
+    return email.strip().lower().replace(" ", "")
+
+emails = ["  USER@EXAMPLE.COM  ", "Test User@Gmail.com", "admin@site.org"]
+for email in emails:
+    processed = process_email(email)
+    print(f"'{email}' -> '{processed}'")`
+    }
+  ]}
+/>
+
+Method chaining makes code more concise and readable, especially when you need to perform several transformations consecutively on strings.
+
+## Practical String Method Applications
+
+String methods are often used in real programming scenarios to process and validate text data.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "practical_applications.py",
+      code: `# Practical string method applications in various scenarios
+
+# 1. Phone number validation and formatting
+def format_phone_number(phone):
+    # Remove all non-digit characters
+    digits_only = ""
+    for char in phone:
+        if char.isdigit():
+            digits_only += char
+    
+    # Format according to Indonesian standard
+    if len(digits_only) == 13 and digits_only.startswith("62"):
+        return f"+{digits_only[:2]}-{digits_only[2:5]}-{digits_only[5:9]}-{digits_only[9:]}"
+    elif len(digits_only) == 12 and digits_only.startswith("08"):
+        return f"{digits_only[:4]}-{digits_only[4:8]}-{digits_only[8:]}"
+    else:
+        return "Invalid number format"
+
+phone_numbers = ["081234567890", "+6281234567890", "0812-3456-7890"]
+for phone in phone_numbers:
+    formatted = format_phone_number(phone)
+    print(f"'{phone}' -> '{formatted}'")
+
+# 2. Extract information from filename
+def analyze_filename(filename):
+    # Separate name and extension
+    if "." in filename:
+        name, ext = filename.rsplit(".", 1)
+        ext = ext.lower()
+    else:
+        name, ext = filename, ""
+    
+    # Analyze file type
+    image_exts = ["jpg", "jpeg", "png", "gif", "bmp"]
+    doc_exts = ["pdf", "doc", "docx", "txt"]
+    code_exts = ["py", "js", "html", "css", "java"]
+    
+    if ext in image_exts:
+        file_type = "Image"
+    elif ext in doc_exts:
+        file_type = "Document"
+    elif ext in code_exts:
+        file_type = "Code"
+    else:
+        file_type = "Unknown"
+    
+    return {
+        "name": name,
+        "extension": ext,
+        "type": file_type,
+        "length": len(filename)
+    }
+
+files = ["photo.jpg", "report.pdf", "script.py", "data", "image.PNG"]
+for file in files:
+    info = analyze_filename(file)
+    print(f"{file}: {info}")
+
+# 3. Simple log file parser
+def parse_log_entry(log_line):
+    # Format: [TIMESTAMP] LEVEL: MESSAGE
+    if not log_line.strip():
+        return None
+    
+    # Extract timestamp
+    if log_line.startswith("[") and "]" in log_line:
+        end_bracket = log_line.index("]")
+        timestamp = log_line[1:end_bracket]
+        rest = log_line[end_bracket + 1:].strip()
+    else:
+        timestamp = "Unknown"
+        rest = log_line.strip()
+    
+    # Extract level
+    if ":" in rest:
+        level, message = rest.split(":", 1)
+        level = level.strip()
+        message = message.strip()
+    else:
+        level = "INFO"
+        message = rest
+    
+    return {
+        "timestamp": timestamp,
+        "level": level,
+        "message": message
+    }
+
+log_entries = [
+    "[2023-09-17 10:30:15] ERROR: Database connection failed",
+    "[2023-09-17 10:30:16] INFO: Retrying connection",
+    "WARNING: Low disk space",
+    ""
+]
+
+print("\\nLog parsing results:")
+for entry in log_entries:
+    parsed = parse_log_entry(entry)
+    if parsed:
+        print(f"Time: {parsed['timestamp']}, Level: {parsed['level']}, Message: {parsed['message']}")
+
+# 4. URL slug generator from title
+def create_slug(title):
+    # Convert to lowercase and replace spaces with dash
+    slug = title.lower()
+    
+    # Replace non-alphanumeric characters with dash
+    clean_slug = ""
+    for char in slug:
+        if char.isalnum():
+            clean_slug += char
+        elif char == " " or not char.isalnum():
+            if clean_slug and clean_slug[-1] != "-":
+                clean_slug += "-"
+    
+    # Remove dashes at start and end
+    return clean_slug.strip("-")
+
+titles = [
+    "Learn Python for Beginners",
+    "Tips & Tricks Programming",
+    "Data Science: Complete Guide",
+    "Machine Learning 101"
+]
+
+print("\\nSlug generation:")
+for title in titles:
+    slug = create_slug(title)
+    print(f"'{title}' -> '{slug}'")`
+    }
+  ]}
+/>
+
+These four application examples demonstrate the power of combining string methods to solve real-world problems. Method chaining enables complex string transformations in a single line of code, while the immutable nature of strings ensures safe and predictable operations.
+
+By mastering these methods, you can build applications that handle input validation, data parsing, and text transformation efficiently.

@@ -1,0 +1,611 @@
+export const metadata = {
+    title: "Metode String",
+    description: "Pelajari metode string Python untuk manipulasi teks. Kuasai transformasi, pencarian, validasi karakter, dan operasi string lanjutan.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/17/2025",
+    subject: "Pemrograman AI",
+};
+
+## Sifat Immutable String
+
+String dalam Python memiliki sifat khusus yang disebut immutable, artinya setelah string dibuat, isinya tidak dapat diubah secara langsung. Bayangkan string seperti buku yang sudah dicetak, kamu tidak bisa mengubah kata di dalamnya tanpa mencetak ulang seluruh halaman.
+
+Ketika kamu mencoba mengubah karakter dalam string secara langsung, Python akan menampilkan TypeError. Ini berbeda dengan list yang bisa dimodifikasi elemen per elemen.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "immutable_string.py",
+      code: `# Demonstrasi sifat immutable string
+s = "hello"
+print(f"String awal: {s}")
+
+# Mencoba mengubah karakter secara langsung
+try:
+    s[1] = "a"  # Ini akan menyebabkan error
+except TypeError as e:
+    print(f"Error: {e}")
+
+# Cara yang benar: membuat string baru
+s_new = s[:1] + "a" + s[2:]
+print(f"String baru: {s_new}")
+
+# String asli tetap tidak berubah
+print(f"String asli masih: {s}")`
+    }
+  ]}
+/>
+
+Meskipun string tidak dapat diubah secara langsung, kamu dapat membuat string baru berdasarkan string lama. Operasi seperti concatenation (penggabungan) dengan operator `+` akan menghasilkan string baru, bukan mengubah string yang sudah ada.
+
+## Mengukur Panjang String
+
+Fungsi `len()` digunakan untuk mengetahui jumlah karakter dalam string. Setiap karakter, termasuk spasi dan tanda baca, dihitung sebagai satu unit.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "panjang_string.py",
+      code: `# Mengukur panjang berbagai jenis string
+strings = [
+    "hello",
+    "Hello World!",
+    "Python programming",
+    "",  # string kosong
+    "   ",  # string berisi spasi
+    "123456"
+]
+
+for s in strings:
+    print(f"'{s}' memiliki panjang: {len(s)}")
+
+# Panjang string dengan karakter khusus
+special = "Hello\\nWorld\\t!"
+print(f"String dengan escape sequence: {len(special)} karakter")
+print(f"Tampilan string: {repr(special)}")`
+    }
+  ]}
+/>
+
+Penting untuk memahami bahwa escape sequence seperti `\n` dan `\t` dihitung sebagai satu karakter meskipun ditulis dengan dua simbol.
+
+## Metode Transformasi String
+
+### Mengubah Case Huruf
+
+Python menyediakan beberapa metode untuk mengubah format huruf dalam string. Setiap metode menghasilkan string baru dengan format yang diinginkan.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "transformasi_case.py",
+      code: `# Contoh transformasi case pada string
+text = "Python Programming Language"
+
+# Mengubah ke huruf besar semua
+upper_text = text.upper()
+print(f"Upper: {upper_text}")
+
+# Mengubah ke huruf kecil semua
+lower_text = text.lower()
+print(f"Lower: {lower_text}")
+
+# Title case: huruf pertama setiap kata besar
+title_text = text.title()
+print(f"Title: {title_text}")
+
+# Contoh dengan string campuran
+mixed = "hELLo WoRLd PyThOn"
+print(f"Original: {mixed}")
+print(f"Title case: {mixed.title()}")
+
+# Title case pada string dengan angka dan simbol
+complex_text = "python3.9 is-awesome!"
+print(f"Complex title: {complex_text.title()}")`
+    }
+  ]}
+/>
+
+Metode `title()` sangat berguna untuk memformat nama atau judul, di mana setiap kata dimulai dengan huruf kapital.
+
+### Menghapus Karakter di Awal dan Akhir
+
+Metode strip berguna untuk membersihkan string dari karakter yang tidak diinginkan di awal atau akhir string.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "strip_methods.py",
+      code: `# Demonstrasi berbagai metode strip
+text = "   Hello World   "
+print(f"Original: '{text}'")
+
+# Menghapus spasi di kedua sisi
+stripped = text.strip()
+print(f"Strip: '{stripped}'")
+
+# Menghapus spasi hanya di kiri
+left_stripped = text.lstrip()
+print(f"Left strip: '{left_stripped}'")
+
+# Menghapus spasi hanya di kanan
+right_stripped = text.rstrip()
+print(f"Right strip: '{right_stripped}'")
+
+# Strip dengan karakter khusus
+special_text = "+++Hello World+++"
+custom_stripped = special_text.strip("+")
+print(f"Custom strip: '{custom_stripped}'")
+
+# Strip multiple characters
+messy_text = "---+++Hello World+++---"
+clean_text = messy_text.strip("-+")
+print(f"Multiple char strip: '{clean_text}'")`
+    }
+  ]}
+/>
+
+Metode strip sangat berguna dalam pemrosesan data, terutama ketika membaca input dari pengguna atau file yang mungkin mengandung spasi ekstra.
+
+## Metode Pencarian dan Validasi
+
+### Mencari Posisi Substring
+
+Metode `index()` dan `find()` digunakan untuk mencari posisi substring dalam string. Perbedaannya terletak pada cara menangani kasus ketika substring tidak ditemukan.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "pencarian_substring.py",
+      code: `# Pencarian substring dengan berbagai metode
+text = "Python is a powerful programming language"
+
+# Menggunakan index() - akan error jika tidak ditemukan
+try:
+    pos = text.index("powerful")
+    print(f"'powerful' ditemukan di posisi: {pos}")
+    
+    # Mencari yang tidak ada
+    pos_not_found = text.index("Java")
+except ValueError as e:
+    print(f"Error dengan index(): {e}")
+
+# Menggunakan find() - mengembalikan -1 jika tidak ditemukan
+pos_find = text.find("powerful")
+print(f"find('powerful'): {pos_find}")
+
+pos_not_found = text.find("Java")
+print(f"find('Java'): {pos_not_found}")
+
+# Pencarian dengan parameter start dan end
+substring = "programming"
+start_pos = text.find(substring, 20)  # mulai dari posisi 20
+print(f"'{substring}' setelah posisi 20: {start_pos}")
+
+# Menghitung kemunculan substring
+count = text.count("a")
+print(f"Huruf 'a' muncul {count} kali")`
+    }
+  ]}
+/>
+
+Gunakan `find()` ketika kamu tidak yakin apakah substring ada dalam string, dan gunakan `index()` ketika kamu yakin substring pasti ada.
+
+### Validasi Karakter String
+
+Python menyediakan beberapa metode untuk memvalidasi jenis karakter dalam string.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "validasi_karakter.py",
+      code: `# Contoh validasi berbagai jenis karakter
+test_strings = [
+    "Python",
+    "Python3",
+    "12345",
+    "Hello World",
+    "hello123",
+    "UPPERCASE",
+    "lowercase",
+    "",
+    "   "
+]
+
+print("String\\t\\tAlpha\\tDigit\\tAlnum\\tUpper\\tLower")
+print("-" * 60)
+
+for s in test_strings:
+    alpha = s.isalpha()
+    digit = s.isdigit()
+    alnum = s.isalnum()
+    upper = s.isupper()
+    lower = s.islower()
+    
+    print(f"'{s:<10}'\\t{alpha}\\t{digit}\\t{alnum}\\t{upper}\\t{lower}")
+
+# Contoh penggunaan praktis untuk validasi input
+def validate_username(username):
+    if not username:
+        return "Username tidak boleh kosong"
+    if not username.isalnum():
+        return "Username hanya boleh berisi huruf dan angka"
+    if len(username) < 3:
+        return "Username minimal 3 karakter"
+    return "Username valid"
+
+# Test validasi
+usernames = ["user123", "user@123", "ab", "ValidUser"]
+for username in usernames:
+    result = validate_username(username)
+    print(f"'{username}': {result}")`
+    }
+  ]}
+/>
+
+Metode validasi ini sangat berguna untuk memverifikasi format input pengguna, seperti nomor telepon, kode pos, atau username.
+
+## Metode Pencarian Awalan dan Akhiran
+
+Metode `startswith()` dan `endswith()` memungkinkan kamu memeriksa apakah string dimulai atau diakhiri dengan substring tertentu.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "awalan_akhiran.py",
+      code: `# Contoh penggunaan startswith dan endswith
+files = [
+    "document.pdf",
+    "image.jpg",
+    "script.py",
+    "data.csv",
+    "README.md",
+    "backup.zip"
+]
+
+# Memeriksa ekstensi file
+print("File dengan ekstensi tertentu:")
+for file in files:
+    if file.endswith(".py"):
+        print(f"Python file: {file}")
+    elif file.endswith((".jpg", ".png", ".gif")):
+        print(f"Image file: {file}")
+    elif file.endswith(".pdf"):
+        print(f"PDF file: {file}")
+
+# Memeriksa awalan
+urls = [
+    "https://www.google.com",
+    "http://example.com",
+    "ftp://files.example.com",
+    "mailto:user@example.com"
+]
+
+print("\\nAnalisis URL:")
+for url in urls:
+    if url.startswith("https://"):
+        print(f"Secure web: {url}")
+    elif url.startswith("http://"):
+        print(f"Web: {url}")
+    elif url.startswith("ftp://"):
+        print(f"FTP: {url}")
+    elif url.startswith("mailto:"):
+        print(f"Email: {url}")
+
+# Penggunaan dengan tuple untuk multiple prefix/suffix
+text = "Hello World"
+print(f"\\nStarts with greeting: {text.startswith(('Hi', 'Hello', 'Hey'))}")`
+    }
+  ]}
+/>
+
+Kedua metode ini mendukung tuple sebagai parameter, memungkinkan pengecekan multiple prefix atau suffix sekaligus.
+
+## Metode Replace dan Split
+
+### Mengganti Substring
+
+Metode `replace()` digunakan untuk mengganti semua kemunculan substring dengan string baru.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "replace_method.py",
+      code: `# Contoh penggunaan metode replace
+text = "Python is great. Python is powerful. Python is easy."
+print(f"Original: {text}")
+
+# Replace semua kemunculan
+replaced = text.replace("Python", "Java")
+print(f"Replace all: {replaced}")
+
+# Replace dengan batasan jumlah
+limited_replace = text.replace("Python", "Java", 2)
+print(f"Replace 2 first: {limited_replace}")
+
+# Replace dengan string kosong (menghapus)
+no_dots = text.replace(".", "")
+print(f"Remove dots: {no_dots}")
+
+# Chaining replace untuk multiple replacements
+sentence = "I love cats and dogs"
+animal_replace = sentence.replace("cats", "birds").replace("dogs", "fish")
+print(f"Chain replace: {animal_replace}")
+
+# Replace case-sensitive
+case_text = "Hello hello HELLO"
+case_replace = case_text.replace("hello", "hi")
+print(f"Case sensitive: {case_replace}")
+
+# Contoh praktis: membersihkan nomor telepon
+phone = "+62-812-3456-7890"
+clean_phone = phone.replace("-", "").replace("+", "")
+print(f"Clean phone: {clean_phone}")`
+    }
+  ]}
+/>
+
+Metode `replace()` bersifat case-sensitive dan mengganti semua kemunculan kecuali jika dibatasi dengan parameter ketiga.
+
+### Memisahkan String
+
+Metode `split()` memecah string menjadi list berdasarkan delimiter yang ditentukan.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "split_method.py",
+      code: `# Berbagai cara menggunakan split
+text = "apple,banana,orange,grape"
+print(f"Original: {text}")
+
+# Split dengan delimiter koma
+fruits = text.split(",")
+print(f"Split by comma: {fruits}")
+
+# Split tanpa parameter (default whitespace)
+sentence = "Python is a great language"
+words = sentence.split()
+print(f"Split by space: {words}")
+
+# Split dengan batasan
+limited_split = text.split(",", 2)
+print(f"Split max 2: {limited_split}")
+
+# Split dengan multiple whitespace
+messy_text = "word1    word2\\t\\tword3\\n\\nword4"
+clean_split = messy_text.split()
+print(f"Clean split: {clean_split}")
+
+# Contoh praktis: parsing data CSV
+csv_line = "John,25,Engineer,New York"
+data = csv_line.split(",")
+name, age, job, city = data
+print(f"Name: {name}, Age: {age}, Job: {job}, City: {city}")
+
+# Split dengan karakter yang tidak ada
+no_delimiter = "no-delimiter-here"
+result = no_delimiter.split(",")
+print(f"No delimiter found: {result}")
+
+# Menggabungkan kembali dengan join
+joined = " | ".join(fruits)
+print(f"Joined with pipe: {joined}")`
+    }
+  ]}
+/>
+
+Metode `split()` sangat berguna untuk memproses data terstruktur seperti CSV, parsing input pengguna, atau memecah path file.
+
+## Chaining Metode String
+
+Karena setiap metode string mengembalikan string baru, kamu dapat menggabungkan beberapa metode dalam satu ekspresi. Ini disebut method chaining.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "method_chaining.py",
+      code: `# Contoh method chaining pada string
+messy_input = "   +++ Python Programming for Beginners ---   "
+print(f"Input: '{messy_input}'")
+
+# Chaining multiple methods
+clean_result = (messy_input
+                .strip()  # hapus spasi di awal/akhir
+                .strip("+-")  # hapus karakter + dan -
+                .lower()  # ubah ke lowercase
+                .replace("beginners", "experts"))  # ganti kata
+
+print(f"Clean result: '{clean_result}'")
+
+# Contoh chaining untuk format nama
+names = ["  JOHN DOE  ", "  jane SMITH  ", "  BOB johnson  "]
+formatted_names = []
+
+for name in names:
+    formatted = name.strip().title()
+    formatted_names.append(formatted)
+
+print("Formatted names:")
+for name in formatted_names:
+    print(f"- {name}")
+
+# Chaining dalam list comprehension
+sentences = [
+    "  hello WORLD  ",
+    "  PYTHON programming  ",
+    "  DATA science  "
+]
+
+processed = [s.strip().title() for s in sentences]
+print(f"Processed sentences: {processed}")
+
+# Contoh chaining untuk validasi dan formatting
+def process_email(email):
+    return email.strip().lower().replace(" ", "")
+
+emails = ["  USER@EXAMPLE.COM  ", "Test User@Gmail.com", "admin@site.org"]
+for email in emails:
+    processed = process_email(email)
+    print(f"'{email}' -> '{processed}'")`
+    }
+  ]}
+/>
+
+Method chaining membuat kode lebih ringkas dan mudah dibaca, terutama ketika kamu perlu melakukan beberapa transformasi berturut-turut pada string.
+
+## Aplikasi Praktis Metode String
+
+Metode string sering digunakan dalam skenario pemrograman nyata untuk memproses dan memvalidasi data teks.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "aplikasi_praktis.py",
+      code: `# Aplikasi praktis metode string dalam berbagai skenario
+
+# 1. Validasi dan format nomor telepon
+def format_phone_number(phone):
+    # Hapus semua karakter non-digit
+    digits_only = ""
+    for char in phone:
+        if char.isdigit():
+            digits_only += char
+    
+    # Format sesuai standar Indonesia
+    if len(digits_only) == 13 and digits_only.startswith("62"):
+        return f"+{digits_only[:2]}-{digits_only[2:5]}-{digits_only[5:9]}-{digits_only[9:]}"
+    elif len(digits_only) == 12 and digits_only.startswith("08"):
+        return f"{digits_only[:4]}-{digits_only[4:8]}-{digits_only[8:]}"
+    else:
+        return "Format nomor tidak valid"
+
+phone_numbers = ["081234567890", "+6281234567890", "0812-3456-7890"]
+for phone in phone_numbers:
+    formatted = format_phone_number(phone)
+    print(f"'{phone}' -> '{formatted}'")
+
+# 2. Ekstrak informasi dari nama file
+def analyze_filename(filename):
+    # Pisahkan nama dan ekstensi
+    if "." in filename:
+        name, ext = filename.rsplit(".", 1)
+        ext = ext.lower()
+    else:
+        name, ext = filename, ""
+    
+    # Analisis jenis file
+    image_exts = ["jpg", "jpeg", "png", "gif", "bmp"]
+    doc_exts = ["pdf", "doc", "docx", "txt"]
+    code_exts = ["py", "js", "html", "css", "java"]
+    
+    if ext in image_exts:
+        file_type = "Image"
+    elif ext in doc_exts:
+        file_type = "Document"
+    elif ext in code_exts:
+        file_type = "Code"
+    else:
+        file_type = "Unknown"
+    
+    return {
+        "name": name,
+        "extension": ext,
+        "type": file_type,
+        "length": len(filename)
+    }
+
+files = ["photo.jpg", "report.pdf", "script.py", "data", "image.PNG"]
+for file in files:
+    info = analyze_filename(file)
+    print(f"{file}: {info}")
+
+# 3. Parser sederhana untuk log file
+def parse_log_entry(log_line):
+    # Format: [TIMESTAMP] LEVEL: MESSAGE
+    if not log_line.strip():
+        return None
+    
+    # Ekstrak timestamp
+    if log_line.startswith("[") and "]" in log_line:
+        end_bracket = log_line.index("]")
+        timestamp = log_line[1:end_bracket]
+        rest = log_line[end_bracket + 1:].strip()
+    else:
+        timestamp = "Unknown"
+        rest = log_line.strip()
+    
+    # Ekstrak level
+    if ":" in rest:
+        level, message = rest.split(":", 1)
+        level = level.strip()
+        message = message.strip()
+    else:
+        level = "INFO"
+        message = rest
+    
+    return {
+        "timestamp": timestamp,
+        "level": level,
+        "message": message
+    }
+
+log_entries = [
+    "[2023-09-17 10:30:15] ERROR: Database connection failed",
+    "[2023-09-17 10:30:16] INFO: Retrying connection",
+    "WARNING: Low disk space",
+    ""
+]
+
+print("\\nLog parsing results:")
+for entry in log_entries:
+    parsed = parse_log_entry(entry)
+    if parsed:
+        print(f"Time: {parsed['timestamp']}, Level: {parsed['level']}, Message: {parsed['message']}")
+
+# 4. Pembuat slug URL dari judul
+def create_slug(title):
+    # Konversi ke lowercase dan ganti spasi dengan dash
+    slug = title.lower()
+    
+    # Ganti karakter non-alphanumeric dengan dash
+    clean_slug = ""
+    for char in slug:
+        if char.isalnum():
+            clean_slug += char
+        elif char == " " or not char.isalnum():
+            if clean_slug and clean_slug[-1] != "-":
+                clean_slug += "-"
+    
+    # Hapus dash di awal dan akhir
+    return clean_slug.strip("-")
+
+titles = [
+    "Belajar Python untuk Pemula",
+    "Tips & Trik Programming",
+    "Data Science: Panduan Lengkap",
+    "Machine Learning 101"
+]
+
+print("\\nSlug generation:")
+for title in titles:
+    slug = create_slug(title)
+    print(f"'{title}' -> '{slug}'")`
+    }
+  ]}
+/>
+
+Keempat contoh aplikasi ini menunjukkan kekuatan kombinasi metode string untuk menyelesaikan masalah real-world. Method chaining memungkinkan transformasi string yang kompleks dalam satu baris kode, sementara sifat immutable string memastikan operasi yang aman dan predictable.
+
+Dengan menguasai metode-metode ini, kamu dapat membangun aplikasi yang menangani validasi input, parsing data, dan transformasi teks dengan efisien.
