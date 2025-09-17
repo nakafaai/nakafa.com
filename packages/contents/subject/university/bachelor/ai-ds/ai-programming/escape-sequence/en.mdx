@@ -1,0 +1,158 @@
+export const metadata = {
+    title: "Escape Sequence",
+    description: "Master Python escape sequences with backslash notation. Learn to handle quotes, newlines, tabs & special characters in strings with examples.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/17/2025",
+    subject: "AI Programming",
+};
+
+## Introduction to Escape Sequences
+
+An escape sequence is a combination of special characters that starts with a backslash (`\`) followed by specific characters. Imagine when you want to write quotation marks inside a string that already uses the same quotation marks. The computer will be confused about which marks indicate the beginning and end of the string.
+
+Escape sequences provide a way to solve this problem by using special symbols that tell the computer that the next character has a special meaning, not its usual meaning.
+
+## Problems in String Writing
+
+### Quote Conflicts
+
+When you write strings in programming, sometimes you need to insert quotation marks inside the string itself. This creates a conflict because the computer doesn't know which quotation marks mark the beginning/end of the string and which are part of the text.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "quote_problem.py",
+      code: `# Problem: single quote inside string
+>>> 'I'm Bob.'
+SyntaxError: invalid syntax
+
+# Solution: use double quotes for string
+>>> "I'm Bob."
+"I'm Bob."
+
+# Problem: both types of quotes in string
+>>> 'He said: "I'm Bob."'
+SyntaxError: invalid syntax`
+    }
+  ]}
+/>
+
+When you use single quotes to create a string, but there's also a single quote inside that string, Python will consider the second quote as the string closer. As a result, the part after it is considered invalid code.
+
+### Solution with Backslash
+
+Escape sequences provide a solution by using a backslash (`\`) before the character you want to insert. The backslash tells the computer that the next character should be treated as a regular character, not as a special character.
+
+<CodeBlock
+  data={[
+    {
+      language: "python", 
+      filename: "escape_solution.py",
+      code: `# Using escape sequence for single quote
+>>> 'He said: "I\\'m Bob."'
+'He said: "I\\'m Bob."'
+
+# When printed, escape sequence is interpreted
+>>> print('He said: "I\\'m Bob."')
+He said: "I'm Bob."`
+    }
+  ]}
+/>
+
+In this example, `\'` tells Python that the single quote is part of the text, not the string end marker.
+
+### Displaying Backslash Characters
+
+Since backslash has a special meaning in escape sequences, how do you display the backslash itself? You need to use two backslashes consecutively.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "escape_backslash.py", 
+      code: `# Displaying backslash in string
+>>> print('The escape sequence for a new line is \\\\n.')
+The escape sequence for a new line is \\n.
+
+# Using raw string (prefix r)
+>>> text = r'The escape sequence for a new line is \\n.'
+>>> text
+'The escape sequence for a new line is \\\\n.'
+>>> print(text)
+The escape sequence for a new line is \\n.`
+    }
+  ]}
+/>
+
+Raw string (with prefix `r`) tells Python not to interpret escape sequences, so backslashes are treated as regular characters.
+
+## Escape Sequence Reference
+
+Here are escape sequences commonly used in programming:
+
+| Escape Sequence | Meaning |
+|---|---|
+| `\'` | Single quote (') |
+| `\"` | Double quote (") |
+| `\n` | New line (newline) |
+| `\r` | Carriage return |
+| `\t` | Horizontal tab |
+| `\b` | Backspace |
+| `\\` | Backslash character (\) |
+| `\u`, `\U`, `\N{}` | Unicode character |
+| `\x` | Hexadecimal encoded byte |
+
+Each escape sequence has a specific function to control the display or format of text in programs.
+
+### String Formatting and Curly Braces
+
+In string formatting, curly braces have special meaning. To display curly braces as regular characters, you need to use special escape sequences.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "escape_braces.py",
+      code: `# Escape sequence for curly braces: {{ }}
+>>> '{{}}'.format('text')
+'{}'
+
+# Displaying text with curly braces
+>>> '{{{}}}'.format('text')
+'{text}'`
+    }
+  ]}
+/>
+
+To display a single curly brace, you need to write two curly braces consecutively. The escape sequence `{{}}` tells Python that those curly braces are regular characters, not replacement field markers.
+
+## Practical Implementation
+
+Let's see how escape sequences are used in real situations to create neat and well-formatted output.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "practical_example.py",
+      code: `# Creating formatted output with tab and newline
+print("Name\\t: John Doe")
+print("Age\\t: 25 years")
+print("Address\\t: Jakarta\\n")
+
+# Displaying dialog with quotation marks
+print('He said: "Today the weather is very bright!"')
+
+# Displaying file path with backslash
+print("File saved at: C:\\\\Users\\\\Documents\\\\data.txt")
+
+# Combination of various escape sequences
+print("First line\\nSecond line\\t(with tab)\\nThird line")`
+    }
+  ]}
+/>
+
+In this example, `\t` creates neat columns, `\n` separates lines, and `\\` displays Windows file paths correctly.
+
+Escape sequences are important tools in programming that allow you to control text formatting and display special characters precisely. By understanding how they work, you can create programs that produce more professional and readable output.
