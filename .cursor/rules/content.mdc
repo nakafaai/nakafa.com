@@ -92,11 +92,52 @@ It is not gonna work.
 - **List** Please be careful on you write content of the list! the indent should be clean otherwise it will break the layout (like python programming language)
 - **No nested list** Avoid using nested list
 
+### Code vs Math Formatting Standards
+
+- **Use inline code for programming elements** - function names, variables, keywords, file names, commands
+  - Function names: `print()`, `len()`, `range()`
+  - Variable names: `username`, `total_score`, `data_list`
+  - Keywords: `if`, `else`, `for`, `while`, `def`, `class`
+  - File names: `main.py`, `config.json`, `index.html`
+  - Commands: `pip install`, `python script.py`, `git commit`
+  - Data types: `int`, `str`, `list`, `dict`, `bool`
+  - Error messages: `TypeError`, `ValueError`, `IndexError`
+- **Use InlineMath for mathematical elements** - numbers, mathematical variables, expressions, equations
+  - Numbers: <InlineMath math="5" />, <InlineMath math="-3.14" />, <InlineMath math="0.5" />
+  - Mathematical variables: <InlineMath math="x" />, <InlineMath math="y" />, <InlineMath math="\theta" />
+  - Simple expressions: <InlineMath math="x + 1" />, <InlineMath math="2n + 1" />
+  - Mathematical constants: <InlineMath math="\pi" />, <InlineMath math="e" />, <InlineMath math="\infty" />
+
+### Practical Examples of Code vs Math Formatting
+
+**CORRECT Usage Examples:**
+
+Programming context:
+
+- Fungsi `print()` digunakan untuk menampilkan output
+- Variabel `age` menyimpan nilai umur pengguna
+- File `data.csv` berisi informasi pelanggan
+- Jalankan perintah `python main.py` untuk eksekusi
+
+Mathematical context:
+
+- Nilai <InlineMath math="x = 5" /> adalah solusi persamaan
+- Hasil perhitungan adalah <InlineMath math="2.5" />
+- Fungsi matematika <InlineMath math="f(x) = x^2 + 1" />
+- Konstanta <InlineMath math="\pi \approx 3.14159" />
+
+**WRONG Usage Examples:**
+
+- ❌ Don't use InlineMath for code: <InlineMath math="print()" />
+- ❌ Don't use inline code for math: The result is `5 + 3 = 8`
+- ❌ Don't mix contexts: Variable `x` has value <InlineMath math="x = 5" />
+- ✅ Correct: Variable `x` has mathematical value <InlineMath math="5" />
+
 ### Mathematical Content Standards
 
 - **ALL math expressions in InlineMath or BlockMath** - never use plain text for mathematical content
-- **InlineMath for simple expressions**: `<InlineMath math="x + 1" />`
-- **InlineMath preferred for decimals/negatives** - better than BlockMath for simple numbers
+- **InlineMath for simple mathematical expressions**: `<InlineMath math="x + 1" />`
+- **InlineMath preferred for mathematical decimals/negatives** - better than BlockMath for simple numbers
 - **BlockMath for complex equations**: `<BlockMath math="\frac{a}{b} = c" />`
 - **Break long math strings** - split into multiple BlockMath segments when too long
 - **Wrap consecutive BlockMath with MathContainer**:

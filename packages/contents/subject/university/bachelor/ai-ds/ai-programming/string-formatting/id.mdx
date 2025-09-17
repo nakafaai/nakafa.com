@@ -1,0 +1,272 @@
+export const metadata = {
+    title: "Pemformatan String",
+    description: "Pelajari teknik pemformatan string Python dengan format(), f-strings, alignment, precision control, dan error handling. Panduan lengkap dengan contoh praktis.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/17/2025",
+    subject: "Pemrograman AI",
+};
+
+## Konsep Dasar dan Width Control
+
+Pemformatan string mengatur tampilan data dalam program Python. Bayangkan menyusun data dalam tabel yang rapi, setiap kolom memiliki lebar konsisten. Python menyediakan metode `format()` dan f-strings untuk mengontrol tampilan output.
+
+Sintaks dasar replacement field adalah `{name : width}`, dimana `name` menentukan argumen dan `width` mengatur lebar minimum output. Ketika width lebih kecil dari panjang string asli, Python tetap menampilkan string lengkap.
+
+### Format Types untuk Sistem Bilangan
+
+| Format Type | Simbol | Contoh Input | Output | Kegunaan |
+|-------------|---------|--------------|--------|----------|
+| Desimal | `d` | `45` | `45` | Default untuk integer |
+| Biner | `b` | `45` | `101101` | Representasi bit |
+| Oktal | `o` | `45` | `55` | Sistem Unix |
+| Heksadesimal | `x/X` | `45` | `2d/2D` | Pemrograman tingkat rendah |
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "width_and_types.py",
+      code: `# Width control dengan berbagai format
+print('|{0:15}|'.format('xxx'))     # Output: |xxx            |
+print('a = {0:6d}'.format(45))      # Output: a =     45
+print('a = {0:10b}'.format(45))     # Output: a =     101101
+print('a = {0:6x}'.format(45))      # Output: a =     2d
+
+# Width lebih kecil dari string - tidak dipotong
+print('|{0:1}|'.format('xxx'))      # Output: |xxx|`
+    }
+  ]}
+/>
+
+## Pengaturan Posisi dan Karakter Pengisi
+
+### Opsi Alignment
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A["Input String: 'xxx'"] --> B["Pilihan Alignment"]
+        
+        B --> C["< (Left)"]
+        B --> D["> (Right)"] 
+        B --> E["^ (Center)"]
+        
+        C --> F["Output:<br/>'xxx            '"]
+        D --> G["Output:<br/>'            xxx'"]
+        E --> H["Output:<br/>'      xxx      '"]
+  `}
+/>
+
+| Simbol | Nama | Behavior | Default untuk |
+|--------|------|----------|---------------|
+| `<` | Left | Teks di kiri, padding di kanan | String, objek |
+| `>` | Right | Teks di kanan, padding di kiri | Angka |
+| `^` | Center | Teks di tengah, padding merata | - |
+
+### Karakter Pengisi dan Format Lanjutan
+
+Fill character menentukan karakter pengisi ruang kosong. Default menggunakan spasi, tapi bisa diganti dengan karakter apapun kecuali `{` dan `}`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "alignment_fill.py",
+      code: `# Basic alignment
+print('|{0:<15}|'.format('xxx'))    # Output: |xxx            |
+print('|{0:>15}|'.format('xxx'))    # Output: |            xxx|
+print('|{0:^15}|'.format('xxx'))    # Output: |      xxx      |
+
+# Custom fill characters
+print('|{0:-<15}|'.format('xxx'))   # Output: |xxx------------|
+print('|{0:*>15}|'.format('xxx'))   # Output: |************xxx|
+print('|{0:^^15}|'.format('xxx'))   # Output: |^^^^^^xxx^^^^^^|
+
+# Decimal formatting
+x = 123.98
+print('x = {0:12f}'.format(x))      # Output: x =   123.980000
+print('x = {0:12e}'.format(x))      # Output: x = 1.239800e+02`
+    }
+  ]}
+/>
+
+## Metode Referensi Argumen
+
+Python menyediakan tiga cara mereferensikan argumen dalam replacement fields, masing-masing dengan aturan berbeda.
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A["Pemformatan String"] --> B["Metode Referensi Argumen"]
+        
+        B --> C["Numbered Fields<br/>{0} {1} {2}"]
+        B --> D["Keyword Fields<br/>{name} {age}"]
+        B --> E["Automatic Fields<br/>{} {} {}"]
+        
+        C --> F["✓ Kontrol eksplisit<br/>✓ Bisa diulang<br/>✗ Harus sesuai jumlah"]
+        D --> G["✓ Mudah dibaca<br/>✓ Urutan fleksibel<br/>✗ Nama harus cocok"]
+        E --> H["✓ Sintaks sederhana<br/>✓ Urutan berurutan<br/>✗ Tidak bisa dicampur"]
+  `}
+/>
+
+### Perbandingan Metode Referensi
+
+| Metode | Sintaks | Kelebihan | Batasan |
+|--------|---------|-----------|---------|
+| Numbered | `{0}, {1}` | Kontrol eksplisit, bisa diulang | Harus sesuai jumlah argumen |
+| Keyword | `{name}, {age}` | Mudah dibaca, fleksibel | Nama harus cocok |
+| Automatic | `{}, {}` | Sintaks sederhana | Tidak bisa dicampur dengan numbered |
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "argument_methods.py",
+      code: `# Numbered fields - kontrol eksplisit
+print('{2} - {0} - {1}'.format('first', 'second', 'third'))
+# Output: third - first - second
+
+# Keyword fields - menggunakan nama
+print('{name} is {age} years old'.format(name='Alice', age=25))
+# Output: Alice is 25 years old
+
+# Automatic numbering - urutan berurutan
+print('{} + {} = {}'.format(5, 3, 8))
+# Output: 5 + 3 = 8
+
+# Error handling
+try:
+    print('{a} - {b}'.format(a='xxx'))  # Akan error
+except KeyError as e:
+    print(f"KeyError: {e}")  # Output: KeyError: 'b'
+    
+try:
+    print('{0} - {1}'.format('xxx'))    # Akan error
+except IndexError as e:
+    print(f"IndexError: {e}")  # Output: IndexError: Replacement index 1 out of range for positional args tuple`
+    }
+  ]}
+/>
+
+## Kontrol Presisi dan Spesifikasi Tanda
+
+### Presisi untuk Angka Desimal
+
+Precision mengontrol jumlah digit desimal atau digit signifikan dalam tampilan angka.
+
+| Format Type | Precision Behavior | Contoh |
+|-------------|-------------------|--------|
+| `f/F` | Tempat desimal | `{:.2f}` → `123.99` |
+| `e/E` | Tempat desimal dalam eksponensial | `{:.2e}` → `1.24e+02` |
+| `g/G` | Digit signifikan | `{:.3g}` → `124` |
+
+### Opsi Tanda
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A["Input Angka"] --> B{"Pilihan Sign"}
+        
+        B --> C["+ (selalu tampilkan)"]
+        B --> D["- (default)"]
+        B --> E["spasi (untuk positif)"]
+        
+        C --> F["Output:<br/>+100, -200"]
+        D --> G["Output:<br/>100, -200"]
+        E --> H["Output:<br/> 100, -200"]
+  `}
+/>
+
+| Simbol | Behavior | Contoh |
+|--------|----------|--------|
+| `+` | Selalu tampilkan tanda | `+100`, `-200` |
+| `-` | Hanya tanda negatif (default) | `100`, `-200` |
+| ` ` (spasi) | Spasi untuk positif | ` 100`, `-200` |
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "precision_sign.py",
+      code: `# Precision control
+print('x = {0:.3f}'.format(123.98765))     # Output: x = 123.988
+print('x = {0:12.2e}'.format(1.987e-10))   # Output: x =     1.99e-10
+print('x = {0:.3g}'.format(1.123456))      # Output: x = 1.12
+
+# Sign specification
+numbers = [-100, 200, -300]
+print('Default:', ['{:d}'.format(n) for n in numbers])
+# Output: Default: ['-100', '200', '-300']
+print('Always sign:', ['{:+d}'.format(n) for n in numbers])
+# Output: Always sign: ['-100', '+200', '-300']
+print('Space positive:', ['{: d}'.format(n) for n in numbers])
+# Output: Space positive: ['-100', ' 200', '-300']
+
+# Rounding behavior
+print('Tiny number f: {0:12f}'.format(1.1e-10))  # Output: Tiny number f:     0.000000
+print('Tiny number g: {0:12g}'.format(1.1e-10))  # Output: Tiny number g:      1.1e-10`
+    }
+  ]}
+/>
+
+## F-Strings dan Template Dinamis
+
+### F-Strings (Python 3.6+)
+
+F-strings menyediakan sintaks paling sederhana dengan evaluasi ekspresi langsung. Lebih cepat dan mudah dibaca dibandingkan `format()`.
+
+### Template Format Dinamis
+
+Template format dapat menggunakan variabel untuk specification, berguna ketika format ditentukan secara dinamis.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "fstrings_dynamic.py",
+      code: `# F-strings - sintaks sederhana
+name, age = 'Alice', 25
+print(f'{name} is {age} years old')           # Output: Alice is 25 years old
+print(f'Next year: {name} will be {age + 1}') # Output: Next year: Alice will be 26
+
+# Dynamic format templates
+value, width, fill, align = 'data', 12, '-', '^'
+template = '|{val:{f}{a}{w}}|'
+result = template.format(val=value, w=width, f=fill, a=align)
+print(result)                                 # Output: |----data----|
+
+# Comparison - same output, different methods
+x = 123.456
+print('Old style: %8.2f' % x)                # Output: Old style:   123.46
+print('Format method: {0:8.2f}'.format(x))   # Output: Format method:   123.46
+print(f'F-string: {x:8.2f}')                 # Output: F-string:   123.46
+
+# Complex f-string with format spec
+import math
+radius = 5.7
+print(f'Area: {math.pi * radius**2:.2f} cm²') # Output: Area: 102.07 cm²`
+    }
+  ]}
+/>
+
+### Pola Lengkap Format Specification
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A["Format Specification"] --> B["Urutan Komponen"]
+        
+        B --> C[": (mulai)"]
+        C --> D["fill (karakter pengisi)"]
+        D --> E["align (posisi: < > ^)"]
+        E --> F["sign (tanda: + - spasi)"]
+        F --> G["width (lebar minimum)"]
+        G --> H[".prec (presisi desimal)"]
+        H --> I["type (tipe: d b o x f e g)"]
+        
+        J["Contoh Lengkap"] --> K["{nilai:*^+10.2f}"]
+        K --> L["* = fill character<br/>^ = center align<br/>+ = always show sign<br/>10 = width minimum<br/>.2 = 2 decimal places<br/>f = float type"]
+  `}
+/>
+
+Format specification mengikuti pola `{name:fill align sign width .prec type}` dimana setiap komponen opsional dan memiliki fungsi spesifik untuk mengontrol tampilan output.

@@ -1,0 +1,272 @@
+export const metadata = {
+    title: "String Formatting",
+    description: "Master Python string formatting with format(), f-strings, width control, alignment options, and sign specification. Complete guide with tested examples.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/17/2025",
+    subject: "AI Programming",
+};
+
+## Basic Concepts and Width Control
+
+String formatting controls data display in Python programs. Imagine arranging data in a neat table where each column has consistent width. Python provides `format()` method and f-strings to control output display.
+
+The basic replacement field syntax is `{name : width}`, where `name` determines the argument and `width` sets the minimum output width. When width is smaller than the original string length, Python still displays the complete string.
+
+### Format Types for Number Systems
+
+| Format Type | Symbol | Example Input | Output | Usage |
+|-------------|---------|--------------|--------|-------|
+| Decimal | `d` | `45` | `45` | Default for integer |
+| Binary | `b` | `45` | `101101` | Bit representation |
+| Octal | `o` | `45` | `55` | Unix systems |
+| Hexadecimal | `x/X` | `45` | `2d/2D` | Low-level programming |
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "width_and_types.py",
+      code: `# Width control with various formats
+print('|{0:15}|'.format('xxx'))     # Output: |xxx            |
+print('a = {0:6d}'.format(45))      # Output: a =     45
+print('a = {0:10b}'.format(45))     # Output: a =     101101
+print('a = {0:6x}'.format(45))      # Output: a =     2d
+
+# Width smaller than string - not truncated
+print('|{0:1}|'.format('xxx'))      # Output: |xxx|`
+    }
+  ]}
+/>
+
+## Position Settings and Fill Characters
+
+### Alignment Options
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A["Input String: 'xxx'"] --> B["Alignment Choice"]
+        
+        B --> C["< (Left)"]
+        B --> D["> (Right)"] 
+        B --> E["^ (Center)"]
+        
+        C --> F["Output:<br/>'xxx            '"]
+        D --> G["Output:<br/>'            xxx'"]
+        E --> H["Output:<br/>'      xxx      '"]
+  `}
+/>
+
+| Symbol | Name | Behavior | Default for |
+|--------|------|----------|-------------|
+| `<` | Left | Text on left, padding on right | String, objects |
+| `>` | Right | Text on right, padding on left | Numbers |
+| `^` | Center | Text in center, even padding | - |
+
+### Fill Characters and Advanced Formatting
+
+Fill character determines the character to fill empty space. Default uses space, but can be replaced with any character except `{` and `}`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "alignment_fill.py",
+      code: `# Basic alignment
+print('|{0:<15}|'.format('xxx'))    # Output: |xxx            |
+print('|{0:>15}|'.format('xxx'))    # Output: |            xxx|
+print('|{0:^15}|'.format('xxx'))    # Output: |      xxx      |
+
+# Custom fill characters
+print('|{0:-<15}|'.format('xxx'))   # Output: |xxx------------|
+print('|{0:*>15}|'.format('xxx'))   # Output: |************xxx|
+print('|{0:^^15}|'.format('xxx'))   # Output: |^^^^^^xxx^^^^^^|
+
+# Decimal formatting
+x = 123.98
+print('x = {0:12f}'.format(x))      # Output: x =   123.980000
+print('x = {0:12e}'.format(x))      # Output: x = 1.239800e+02`
+    }
+  ]}
+/>
+
+## Argument Reference Methods
+
+Python provides three ways to reference arguments in replacement fields, each with different rules.
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A["String Formatting"] --> B["Argument Reference Methods"]
+        
+        B --> C["Numbered Fields<br/>{0} {1} {2}"]
+        B --> D["Keyword Fields<br/>{name} {age}"]
+        B --> E["Automatic Fields<br/>{} {} {}"]
+        
+        C --> F["✓ Explicit control<br/>✓ Can repeat<br/>✗ Must match count"]
+        D --> G["✓ Easy to read<br/>✓ Flexible order<br/>✗ Names must match"]
+        E --> H["✓ Simple syntax<br/>✓ Sequential order<br/>✗ Cannot mix with numbered"]
+  `}
+/>
+
+### Reference Method Comparison
+
+| Method | Syntax | Advantages | Limitations |
+|--------|---------|-----------|-------------|
+| Numbered | `{0}, {1}` | Explicit control, can repeat | Must match argument count |
+| Keyword | `{name}, {age}` | Easy to read, flexible | Names must match |
+| Automatic | `{}, {}` | Simple syntax | Cannot mix with numbered |
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "argument_methods.py",
+      code: `# Numbered fields - explicit control
+print('{2} - {0} - {1}'.format('first', 'second', 'third'))
+# Output: third - first - second
+
+# Keyword fields - using names
+print('{name} is {age} years old'.format(name='Alice', age=25))
+# Output: Alice is 25 years old
+
+# Automatic numbering - sequential order
+print('{} + {} = {}'.format(5, 3, 8))
+# Output: 5 + 3 = 8
+
+# Error handling
+try:
+    print('{a} - {b}'.format(a='xxx'))  # Will error
+except KeyError as e:
+    print(f"KeyError: {e}")  # Output: KeyError: 'b'
+    
+try:
+    print('{0} - {1}'.format('xxx'))    # Will error
+except IndexError as e:
+    print(f"IndexError: {e}")  # Output: IndexError: Replacement index 1 out of range for positional args tuple`
+    }
+  ]}
+/>
+
+## Precision Control and Sign Specification
+
+### Precision for Decimal Numbers
+
+Precision controls the number of decimal places or significant digits in number display.
+
+| Format Type | Precision Behavior | Example |
+|-------------|-------------------|---------|
+| `f/F` | Decimal places | `{:.2f}` → `123.99` |
+| `e/E` | Decimal places in exponential | `{:.2e}` → `1.24e+02` |
+| `g/G` | Significant digits | `{:.3g}` → `124` |
+
+### Sign Options
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A["Number Input"] --> B{"Sign Choice"}
+        
+        B --> C["+ (always show)"]
+        B --> D["- (default)"]
+        B --> E["space (for positive)"]
+        
+        C --> F["Output:<br/>+100, -200"]
+        D --> G["Output:<br/>100, -200"]
+        E --> H["Output:<br/> 100, -200"]
+  `}
+/>
+
+| Symbol | Behavior | Example |
+|--------|----------|---------|
+| `+` | Always show sign | `+100`, `-200` |
+| `-` | Only negative sign (default) | `100`, `-200` |
+| ` ` (space) | Space for positive | ` 100`, `-200` |
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "precision_sign.py",
+      code: `# Precision control
+print('x = {0:.3f}'.format(123.98765))     # Output: x = 123.988
+print('x = {0:12.2e}'.format(1.987e-10))   # Output: x =     1.99e-10
+print('x = {0:.3g}'.format(1.123456))      # Output: x = 1.12
+
+# Sign specification
+numbers = [-100, 200, -300]
+print('Default:', ['{:d}'.format(n) for n in numbers])
+# Output: Default: ['-100', '200', '-300']
+print('Always sign:', ['{:+d}'.format(n) for n in numbers])
+# Output: Always sign: ['-100', '+200', '-300']
+print('Space positive:', ['{: d}'.format(n) for n in numbers])
+# Output: Space positive: ['-100', ' 200', '-300']
+
+# Rounding behavior
+print('Tiny number f: {0:12f}'.format(1.1e-10))  # Output: Tiny number f:     0.000000
+print('Tiny number g: {0:12g}'.format(1.1e-10))  # Output: Tiny number g:      1.1e-10`
+    }
+  ]}
+/>
+
+## F-Strings and Dynamic Templates
+
+### F-Strings (Python 3.6+)
+
+F-strings provide the simplest syntax with direct expression evaluation. Faster and more readable compared to `format()`.
+
+### Dynamic Format Templates
+
+Format templates can use variables for specification, useful when format is determined dynamically.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "fstrings_dynamic.py",
+      code: `# F-strings - simple syntax
+name, age = 'Alice', 25
+print(f'{name} is {age} years old')           # Output: Alice is 25 years old
+print(f'Next year: {name} will be {age + 1}') # Output: Next year: Alice will be 26
+
+# Dynamic format templates
+value, width, fill, align = 'data', 12, '-', '^'
+template = '|{val:{f}{a}{w}}|'
+result = template.format(val=value, w=width, f=fill, a=align)
+print(result)                                 # Output: |----data----|
+
+# Comparison - same output, different methods
+x = 123.456
+print('Old style: %8.2f' % x)                # Output: Old style:   123.46
+print('Format method: {0:8.2f}'.format(x))   # Output: Format method:   123.46
+print(f'F-string: {x:8.2f}')                 # Output: F-string:   123.46
+
+# Complex f-string with format spec
+import math
+radius = 5.7
+print(f'Area: {math.pi * radius**2:.2f} cm²') # Output: Area: 102.07 cm²`
+    }
+  ]}
+/>
+
+### Complete Format Specification Pattern
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A["Format Specification"] --> B["Component Order"]
+        
+        B --> C[": (start)"]
+        C --> D["fill (fill character)"]
+        D --> E["align (position: < > ^)"]
+        E --> F["sign (sign: + - space)"]
+        F --> G["width (minimum width)"]
+        G --> H[".prec (decimal precision)"]
+        H --> I["type (type: d b o x f e g)"]
+        
+        J["Complete Example"] --> K["{value:*^+10.2f}"]
+        K --> L["* = fill character<br/>^ = center align<br/>+ = always show sign<br/>10 = width minimum<br/>.2 = 2 decimal places<br/>f = float type"]
+  `}
+/>
+
+Format specification follows the pattern `{name:fill align sign width .prec type}` where each component is optional and has a specific function to control output display.
