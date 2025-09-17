@@ -1,0 +1,256 @@
+export const metadata = {
+    title: "Print Function",
+    description: "Learn Python print function for displaying output. Master sep, end parameters and formatting techniques for precise output control.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/17/2025",
+    subject: "AI Programming",
+};
+
+## Introduction to Print Function
+
+The `print()` function is one of the most frequently used built-in Python functions for displaying output to the screen. Imagine the print function like a loudspeaker that announces information to everyone. Every time you want to show calculation results, messages, or data to users, the print function becomes a communication bridge between the program and humans.
+
+The print function belongs to the built-in function category, just like `len()`, `abs()`, and `round()`. This means you don't need to import additional modules to use it.
+
+## Basic Print Function Syntax
+
+The complete print function syntax has several parameters that can be customized to control how output is displayed.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "print_syntax.py",
+      code: `# Complete print function syntax
+# print(*objects, sep=' ', end='\\n', file=sys.stdout, flush=False)
+
+# Basic usage example
+print("Hello, World!")
+
+# Print with multiple objects
+print("Name:", "Ahmad", "Age:", 25)
+
+# Displaying calculation results
+x = 10
+y = 5
+print("Addition result", x, "+", y, "=", x + y)`
+    }
+  ]}
+/>
+
+The `*objects` parameter allows the print function to accept unlimited number of arguments. Each argument will be separated by the character specified by the `sep` parameter.
+
+## Separator Parameter (sep)
+
+The `sep` parameter determines the character or string used to separate multiple objects in a single print call. The default value of `sep` is a single space.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "separator_param.py",
+      code: `# Examples of using sep parameter
+x = 8
+
+# Default separator (space)
+print("Solve", 2, "x =", x, "for x")
+
+# Custom separator with empty string
+print("Solve", 2, "x =", x, "for x", sep="")
+
+# Custom separator with dash
+print("Solve", 2, "x =", x, "for x", sep="-")
+
+# Custom separator with comma and space
+print("Ahmad", "Budi", "Citra", sep=", ")
+
+# Multiple separator characters
+print("Python", "Java", "JavaScript", sep=" | ")
+
+# Separator with special characters
+print("Data", "Science", "Machine", "Learning", sep="\\t")  # tab
+print("First", "Line", "Second", "Line", sep="\\n")     # newline`
+    }
+  ]}
+/>
+
+Using the right separator can make output more readable and match the desired format.
+
+## End Parameter
+
+The `end` parameter determines the character or string added at the end of output. The default value of `end` is newline (`\n`), which causes each print call to create a new line.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "end_parameter.py",
+      code: `# Examples of using end parameter
+
+# Default end (newline)
+print("First line")
+print("Second line")
+
+print()  # Print empty line for separator
+
+# Custom end with empty string
+print("First word", end="")
+print("Second word")
+
+print()  # Print empty line for separator
+
+# Custom end with space
+print("Number:", end=" ")
+print(42)
+
+print()  # Print empty line for separator
+
+# Custom end with special characters
+print("Loading", end="")
+for i in range(5):
+    print(".", end="")
+print(" Done!")
+
+print()  # Print empty line for separator
+
+# Combination of sep and end
+print("A", "B", "C", sep="-", end=" | ")
+print("D", "E", "F", sep="-", end="\\n")`
+    }
+  ]}
+/>
+
+Changing the `end` parameter is very useful when you want to combine output from multiple print calls on one line or provide special formatting.
+
+## Displaying Various Data Types
+
+The print function can display various Python data types automatically. Python will convert each object to its string representation before displaying it.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "data_types_print.py",
+      code: `# Print various data types
+integer_num = 42
+decimal_num = 3.14159
+string_text = "Python Programming"
+boolean_value = True
+list_data = [1, 2, 3, 4, 5]
+dict_data = {"name": "Ahmad", "age": 25}
+
+print("Integer:", integer_num)
+print("Float:", decimal_num)
+print("String:", string_text)
+print("Boolean:", boolean_value)
+print("List:", list_data)
+print("Dictionary:", dict_data)
+
+# Print with better formatting
+print("\\nBetter formatting:")
+print(f"Name: {dict_data['name']}")
+print(f"Age: {dict_data['age']} years")
+print(f"Pi: {decimal_num:.2f}")
+
+# Print multiple types in one line
+print("Result:", integer_num, "+", decimal_num, "=", integer_num + decimal_num)`
+    }
+  ]}
+/>
+
+The ability of print to handle various data types makes it very flexible for debugging and displaying program information.
+
+## Output Formatting Techniques
+
+### Print with F-String
+
+F-string is a modern and efficient way to format output in Python. This technique allows direct variable insertion within strings.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "fstring_formatting.py",
+      code: `# Examples of formatting with f-string
+name = "Sari"
+age = 23
+score = 87.5
+
+# Basic f-string formatting
+print(f"Name: {name}")
+print(f"Age: {age} years")
+print(f"Score: {score}")
+
+# F-string with mathematical operations
+x = 10
+y = 3
+print(f"{x} + {y} = {x + y}")
+print(f"{x} / {y} = {x / y:.2f}")
+
+# F-string with method calls
+text = "python programming"
+print(f"Original: {text}")
+print(f"Title case: {text.title()}")
+print(f"Length: {len(text)} characters")
+
+# F-string with conditional
+score = 85
+status = "Pass" if score >= 70 else "Fail"
+print(f"Score: {score}, Status: {status}")
+
+# F-string with number formatting
+pi = 3.14159265359
+print(f"Pi with 2 decimals: {pi:.2f}")
+print(f"Pi with 4 decimals: {pi:.4f}")
+print(f"Pi as percentage: {pi:.1%}")`
+    }
+  ]}
+/>
+
+F-string provides a very readable and efficient way to combine text with variables or calculation results.
+
+### Print Without Newline
+
+When you want to display output on one line gradually, the `end` parameter can be changed to avoid automatic newlines.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "print_no_newline.py",
+      code: `# Examples of print without newline
+import time
+
+# Loading simulation with dots
+print("Processing", end="")
+for i in range(5):
+    time.sleep(0.5)  # Half second delay
+    print(".", end="")
+print(" Done!")
+
+# Creating simple progress bar
+print("\\nProgress: [", end="")
+for i in range(10):
+    time.sleep(0.2)
+    print("#", end="")
+print("] 100%")
+
+# Print counter in one line
+print("\\nCountdown: ", end="")
+for i in range(5, 0, -1):
+    print(i, end=" ")
+    time.sleep(1)
+print("Start!")
+
+# Displaying data in table format
+print("\\nData Table:")
+print("Name", "Age", "City", sep="\\t")
+print("-" * 30)
+print("Ahmad", 25, "Jakarta", sep="\\t")
+print("Budi", 30, "Bandung", sep="\\t")
+print("Citra", 28, "Surabaya", sep="\\t")`
+    }
+  ]}
+/>
+
+This technique is very useful for creating interactive interfaces or displaying progress from time-consuming operations.

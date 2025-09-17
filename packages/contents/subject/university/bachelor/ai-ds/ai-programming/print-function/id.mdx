@@ -1,0 +1,256 @@
+export const metadata = {
+    title: "Fungsi Print",
+    description: "Pelajari fungsi print Python untuk menampilkan output. Kuasai parameter sep, end, dan teknik formatting untuk kontrol output yang presisi.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/17/2025",
+    subject: "Pemrograman AI",
+};
+
+## Pengenalan Fungsi Print
+
+Fungsi `print()` adalah salah satu fungsi bawaan Python yang paling sering digunakan untuk menampilkan output ke layar. Bayangkan fungsi print seperti pengeras suara yang mengumumkan informasi kepada semua orang. Setiap kali kamu ingin menunjukkan hasil perhitungan, pesan, atau data kepada pengguna, fungsi print menjadi jembatan komunikasi antara program dan manusia.
+
+Fungsi print termasuk dalam kategori built-in function, sama seperti `len()`, `abs()`, dan `round()`. Artinya kamu tidak perlu mengimpor modul tambahan untuk menggunakannya.
+
+## Sintaks Dasar Fungsi Print
+
+Sintaks lengkap fungsi print memiliki beberapa parameter yang dapat dikustomisasi untuk mengontrol cara output ditampilkan.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "sintaks_print.py",
+      code: `# Sintaks lengkap fungsi print
+# print(*objects, sep=' ', end='\\n', file=sys.stdout, flush=False)
+
+# Contoh penggunaan dasar
+print("Hello, World!")
+
+# Print dengan multiple objects
+print("Nama:", "Ahmad", "Umur:", 25)
+
+# Menampilkan hasil perhitungan
+x = 10
+y = 5
+print("Hasil penjumlahan", x, "+", y, "=", x + y)`
+    }
+  ]}
+/>
+
+Parameter `*objects` memungkinkan fungsi print menerima jumlah argumen yang tidak terbatas. Setiap argumen akan dipisahkan dengan karakter yang ditentukan oleh parameter `sep`.
+
+## Parameter Separator (sep)
+
+Parameter `sep` menentukan karakter atau string yang digunakan untuk memisahkan multiple objects dalam satu pemanggilan print. Default value dari `sep` adalah spasi tunggal.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "parameter_sep.py",
+      code: `# Contoh penggunaan parameter sep
+x = 8
+
+# Default separator (spasi)
+print("Solve", 2, "x =", x, "for x")
+
+# Custom separator dengan string kosong
+print("Solve", 2, "x =", x, "for x", sep="")
+
+# Custom separator dengan tanda hubung
+print("Solve", 2, "x =", x, "for x", sep="-")
+
+# Custom separator dengan koma dan spasi
+print("Ahmad", "Budi", "Citra", sep=", ")
+
+# Multiple separator characters
+print("Python", "Java", "JavaScript", sep=" | ")
+
+# Separator dengan karakter khusus
+print("Data", "Science", "Machine", "Learning", sep="\\t")  # tab
+print("Baris", "Pertama", "Baris", "Kedua", sep="\\n")     # newline`
+    }
+  ]}
+/>
+
+Penggunaan separator yang tepat dapat membuat output lebih mudah dibaca dan sesuai dengan format yang diinginkan.
+
+## Parameter End
+
+Parameter `end` menentukan karakter atau string yang ditambahkan di akhir output. Default value dari `end` adalah newline (`\n`), yang menyebabkan setiap pemanggilan print membuat baris baru.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "parameter_end.py",
+      code: `# Contoh penggunaan parameter end
+
+# Default end (newline)
+print("Baris pertama")
+print("Baris kedua")
+
+print()  # Print baris kosong untuk pemisah
+
+# Custom end dengan string kosong
+print("Kata pertama", end="")
+print("Kata kedua")
+
+print()  # Print baris kosong untuk pemisah
+
+# Custom end dengan spasi
+print("Angka:", end=" ")
+print(42)
+
+print()  # Print baris kosong untuk pemisah
+
+# Custom end dengan karakter khusus
+print("Loading", end="")
+for i in range(5):
+    print(".", end="")
+print(" Selesai!")
+
+print()  # Print baris kosong untuk pemisah
+
+# Kombinasi sep dan end
+print("A", "B", "C", sep="-", end=" | ")
+print("D", "E", "F", sep="-", end="\\n")`
+    }
+  ]}
+/>
+
+Mengubah parameter `end` sangat berguna ketika kamu ingin menggabungkan output dari beberapa pemanggilan print dalam satu baris atau memberikan format khusus.
+
+## Menampilkan Berbagai Tipe Data
+
+Fungsi print dapat menampilkan berbagai tipe data Python secara otomatis. Python akan mengkonversi setiap object menjadi representasi string sebelum menampilkannya.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "tipe_data_print.py",
+      code: `# Print berbagai tipe data
+angka_bulat = 42
+angka_desimal = 3.14159
+string_text = "Python Programming"
+boolean_value = True
+list_data = [1, 2, 3, 4, 5]
+dict_data = {"nama": "Ahmad", "umur": 25}
+
+print("Integer:", angka_bulat)
+print("Float:", angka_desimal)
+print("String:", string_text)
+print("Boolean:", boolean_value)
+print("List:", list_data)
+print("Dictionary:", dict_data)
+
+# Print dengan format yang lebih rapi
+print("\\nFormat yang lebih rapi:")
+print(f"Nama: {dict_data['nama']}")
+print(f"Umur: {dict_data['umur']} tahun")
+print(f"Pi: {angka_desimal:.2f}")
+
+# Print multiple types dalam satu baris
+print("Hasil:", angka_bulat, "+", angka_desimal, "=", angka_bulat + angka_desimal)`
+    }
+  ]}
+/>
+
+Kemampuan print untuk menangani berbagai tipe data membuatnya sangat fleksibel untuk debugging dan menampilkan informasi program.
+
+## Teknik Formatting Output
+
+### Print dengan F-String
+
+F-string adalah cara modern dan efisien untuk memformat output dalam Python. Teknik ini memungkinkan penyisipan variabel langsung dalam string.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "fstring_formatting.py",
+      code: `# Contoh formatting dengan f-string
+nama = "Sari"
+umur = 23
+nilai = 87.5
+
+# Basic f-string formatting
+print(f"Nama: {nama}")
+print(f"Umur: {umur} tahun")
+print(f"Nilai: {nilai}")
+
+# F-string dengan operasi matematika
+x = 10
+y = 3
+print(f"{x} + {y} = {x + y}")
+print(f"{x} / {y} = {x / y:.2f}")
+
+# F-string dengan method calls
+text = "python programming"
+print(f"Original: {text}")
+print(f"Title case: {text.title()}")
+print(f"Length: {len(text)} characters")
+
+# F-string dengan conditional
+score = 85
+status = "Lulus" if score >= 70 else "Tidak Lulus"
+print(f"Nilai: {score}, Status: {status}")
+
+# F-string dengan formatting angka
+pi = 3.14159265359
+print(f"Pi dengan 2 desimal: {pi:.2f}")
+print(f"Pi dengan 4 desimal: {pi:.4f}")
+print(f"Pi dalam persen: {pi:.1%}")`
+    }
+  ]}
+/>
+
+F-string memberikan cara yang sangat readable dan efisien untuk menggabungkan teks dengan variabel atau hasil perhitungan.
+
+### Print Tanpa Newline
+
+Ketika kamu ingin menampilkan output dalam satu baris secara bertahap, parameter `end` dapat diubah untuk menghindari newline otomatis.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "print_tanpa_newline.py",
+      code: `# Contoh print tanpa newline
+import time
+
+# Simulasi loading dengan dots
+print("Memproses", end="")
+for i in range(5):
+    time.sleep(0.5)  # Delay setengah detik
+    print(".", end="")
+print(" Selesai!")
+
+# Membuat progress bar sederhana
+print("\\nProgress: [", end="")
+for i in range(10):
+    time.sleep(0.2)
+    print("#", end="")
+print("] 100%")
+
+# Print counter dalam satu baris
+print("\\nCountdown: ", end="")
+for i in range(5, 0, -1):
+    print(i, end=" ")
+    time.sleep(1)
+print("Start!")
+
+# Menampilkan data dalam format tabel
+print("\\nTabel Data:")
+print("Nama", "Umur", "Kota", sep="\\t")
+print("-" * 30)
+print("Ahmad", 25, "Jakarta", sep="\\t")
+print("Budi", 30, "Bandung", sep="\\t")
+print("Citra", 28, "Surabaya", sep="\\t")`
+    }
+  ]}
+/>
+
+Teknik ini sangat berguna untuk membuat interface yang interaktif atau menampilkan progress dari operasi yang memakan waktu.
