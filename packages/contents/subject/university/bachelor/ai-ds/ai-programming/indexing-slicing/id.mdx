@@ -1,0 +1,278 @@
+export const metadata = {
+    title: "Indexing dan Slicing",
+    description: "Pelajari teknik indexing dan slicing Python untuk mengakses elemen string dan list. Kuasai penggunaan indeks positif, negatif, dan stride.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/17/2025",
+    subject: "Pemrograman AI",
+};
+
+## Pengenalan Indexing
+
+Indexing adalah cara untuk mengakses elemen tertentu dalam string atau list dengan menggunakan nomor posisi. Bayangkan kamu memiliki deretan buku di rak, dan setiap buku memiliki nomor urut. Indexing memungkinkan kamu mengambil buku tertentu berdasarkan nomor urutnya.
+
+Python menggunakan sistem penomoran yang dimulai dari 0, bukan 1. Jadi elemen pertama memiliki indeks 0, elemen kedua memiliki indeks 1, dan seterusnya. Selain itu, Python juga mendukung indeks negatif yang menghitung mundur dari akhir.
+
+### Indeks Positif dan Negatif
+
+Dalam string atau list, setiap karakter atau elemen memiliki dua jenis indeks. Indeks positif dimulai dari 0 di awal, sedangkan indeks negatif dimulai dari -1 di akhir.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "indexing_dasar.py",
+      code: `# Contoh indexing pada string
+s = "Hello"
+
+# Mengakses karakter dengan indeks positif
+print(s[0])    # Output: 'H'
+print(s[4])    # Output: 'o'
+
+# Mengakses karakter dengan indeks negatif
+print(s[-1])   # Output: 'o' (karakter terakhir)
+print(s[-5])   # Output: 'H' (karakter pertama)
+
+# Mencoba mengakses indeks yang tidak ada
+try:
+    print(s[5])
+except IndexError:
+    print("IndexError: indeks di luar jangkauan")`
+    }
+  ]}
+/>
+
+Ketika kamu menggunakan indeks yang melebihi panjang string atau list, Python akan menampilkan error IndexError. Ini adalah mekanisme perlindungan untuk mencegah akses ke memori yang tidak valid.
+
+## Konsep Slicing
+
+Slicing memungkinkan kamu mengambil bagian tertentu dari string atau list, bukan hanya satu elemen. Ini seperti memotong sepotong roti dari roti utuh, kamu bisa menentukan dari mana mulai memotong dan di mana berhenti.
+
+### Slicing Sederhana
+
+Sintaks dasar slicing menggunakan format `[i:j]` di mana `i` adalah indeks awal dan `j` adalah indeks akhir. Penting untuk diingat bahwa indeks akhir tidak termasuk dalam hasil.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "slicing_dasar.py",
+      code: `# Contoh slicing pada string
+s = "Hello"
+
+# Slicing dari indeks 1 sampai 3 (tidak termasuk 3)
+print(s[1:3])    # Output: 'el'
+
+# Slicing dari indeks 3 sampai akhir
+print(s[3:])     # Output: 'lo'
+
+# Slicing dari awal sampai indeks 3
+print(s[:3])     # Output: 'Hel'
+
+# Slicing dengan indeks negatif
+print(s[-4:-2])  # Output: 'el'
+print(s[-2:-4])  # Output: '' (string kosong)`
+    }
+  ]}
+/>
+
+Ketika indeks awal lebih besar dari indeks akhir dalam slicing biasa, hasilnya adalah string atau list kosong. Ini berbeda dengan slicing menggunakan stride negatif.
+
+### Slicing dengan Stride
+
+Stride adalah parameter ketiga dalam slicing yang menentukan langkah atau jarak antar elemen yang diambil. Stride memungkinkan kamu mengambil elemen dengan pola tertentu.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "slicing_stride.py",
+      code: `# Contoh slicing dengan stride
+s = "Hello World!"
+
+# Mengambil setiap karakter kedua
+print(s[::2])      # Output: 'HloWrd'
+
+# Mengambil setiap karakter kedua dari indeks 1
+print(s[1::2])     # Output: 'el ol!'
+
+# Membalik string dengan stride negatif
+print(s[::-1])     # Output: '!dlroW olleH'
+
+# Slicing dengan stride negatif dari indeks tertentu
+print(s[-1:4:-1])  # Output: '!dlroW'`
+    }
+  ]}
+/>
+
+Stride negatif sangat berguna untuk membalik urutan elemen. Ketika stride bernilai -1, Python akan mengambil semua elemen dari akhir ke awal.
+
+## Properti Slicing
+
+Slicing memiliki beberapa properti penting yang perlu dipahami untuk menghindari kesalahan dalam penggunaan.
+
+### Panjang Hasil Slicing
+
+Panjang hasil slicing dapat dihitung dengan rumus sederhana. Untuk slicing positif `s[i:j]`, panjangnya adalah `j - i` jika kedua nilai positif dan `j > i`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "properti_slicing.py",
+      code: `# Menghitung panjang hasil slicing
+s = "Hello"
+
+# Slicing s[1:4]
+result = s[1:4]
+print(f"Hasil: '{result}', Panjang: {len(result)}")  # Output: 'ell', 3
+
+# Membuktikan bahwa s[:i] + s[i:] == s
+i = 2
+left_part = s[:i]
+right_part = s[i:]
+print(f"'{left_part}' + '{right_part}' = '{left_part + right_part}'")
+
+# Slicing di luar batas tidak menyebabkan error
+print(s[3:10])   # Output: 'lo'
+print(s[10:])    # Output: '' (string kosong)`
+    }
+  ]}
+/>
+
+Salah satu keunggulan slicing adalah tidak akan menyebabkan error meskipun indeks melebihi panjang string atau list. Python secara otomatis menyesuaikan batas yang valid.
+
+## Slicing sebagai Loop
+
+Slicing dapat dipahami sebagai bentuk singkat dari loop for. Setiap operasi slicing sebenarnya equivalent dengan loop yang mengiterasi indeks tertentu.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "slicing_sebagai_loop.py",
+      code: `# Memahami slicing sebagai loop
+s = "Hello World!"
+
+# s[1:8:2] equivalent dengan loop berikut:
+result_manual = ""
+for index in range(1, 8, 2):
+    result_manual += s[index]
+
+result_slicing = s[1:8:2]
+
+print(f"Manual loop: '{result_manual}'")    # Output: 'el o'
+print(f"Slicing: '{result_slicing}'")       # Output: 'el o'
+print(f"Sama? {result_manual == result_slicing}")  # Output: True
+
+# Contoh dengan stride negatif
+print("\\nStride negatif:")
+print(f"s[::-2] = '{s[::-2]}'")            # Output: '!lo le'
+
+# Equivalent manual loop untuk stride negatif
+result_negative = ""
+for index in range(len(s)-1, -1, -2):
+    result_negative += s[index]
+print(f"Manual: '{result_negative}'")`
+    }
+  ]}
+/>
+
+Pemahaman hubungan antara slicing dan loop membantu kamu memahami bagaimana Python memproses operasi slicing secara internal.
+
+## Variasi Slicing
+
+Python menyediakan beberapa cara singkat untuk melakukan slicing yang sering digunakan.
+
+### Slicing dari Awal dan Akhir
+
+Kamu dapat mengosongkan parameter awal atau akhir untuk mengambil elemen dari awal atau sampai akhir string/list.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "variasi_slicing.py",
+      code: `# Variasi slicing yang berguna
+s = "Hello"
+
+# Mengambil 3 karakter pertama
+print(s[:3])     # Output: 'Hel'
+
+# Mengambil karakter dari indeks 3 sampai akhir
+print(s[3:])     # Output: 'lo'
+
+# Mengambil semua karakter (menyalin string)
+print(s[:])      # Output: 'Hello'
+
+# Contoh praktis dengan list
+numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+# Mengambil 5 elemen pertama
+first_five = numbers[:5]
+print(f"Lima pertama: {first_five}")
+
+# Mengambil 5 elemen terakhir
+last_five = numbers[-5:]
+print(f"Lima terakhir: {last_five}")
+
+# Mengambil elemen tengah (skip 2 pertama dan 2 terakhir)
+middle = numbers[2:-2]
+print(f"Bagian tengah: {middle}")`
+    }
+  ]}
+/>
+
+Variasi slicing ini sangat berguna dalam pemrosesan data ketika kamu perlu mengambil bagian tertentu dari dataset besar.
+
+## Aplikasi Praktis
+
+Indexing dan slicing sering digunakan dalam berbagai skenario pemrograman, mulai dari manipulasi string hingga pemrosesan data.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "aplikasi_praktis.py",
+      code: `# Contoh aplikasi praktis indexing dan slicing
+
+# 1. Membalik nama
+nama_depan = "Ahmad"
+nama_belakang = "Wijaya"
+nama_terbalik = (nama_depan + " " + nama_belakang)[::-1]
+print(f"Nama terbalik: {nama_terbalik}")
+
+# 2. Mengambil ekstensi file
+nama_file = "dokumen_penting.pdf"
+ekstensi = nama_file[-3:]  # 3 karakter terakhir
+print(f"Ekstensi: .{ekstensi}")
+
+# 3. Memformat nomor telepon
+nomor = "081234567890"
+formatted = f"{nomor[:4]}-{nomor[4:8]}-{nomor[8:]}"
+print(f"Nomor terformat: {formatted}")
+
+# 4. Mengambil inisial nama
+nama_lengkap = "Siti Nurhaliza Binti Ahmad"
+kata_kata = nama_lengkap.split()
+inisial = ""
+for kata in kata_kata:
+    if kata[0].isupper():  # Hanya ambil kata yang dimulai huruf besar
+        inisial += kata[0]
+print(f"Inisial: {inisial}")
+
+# 5. Palindrome checker
+def is_palindrome(text):
+    cleaned = text.lower().replace(" ", "")
+    return cleaned == cleaned[::-1]
+
+print(f"'katak' palindrome? {is_palindrome('katak')}")
+print(f"'kasur rusak' palindrome? {is_palindrome('kasur rusak')}")`
+    }
+  ]}
+/>
+
+Dari kelima contoh aplikasi ini, terlihat bahwa operasi indexing dan slicing dapat menggantikan logika pemrograman yang kompleks. Misalnya, membalik string dengan `[::-1]` jauh lebih ringkas dibandingkan menggunakan loop manual, dan mengambil ekstensi file dengan `[-3:]` lebih intuitif daripada mencari posisi titik terakhir.
+
+Keunggulan utama teknik ini terletak pada kemampuannya menangani data berurutan tanpa risiko IndexError pada slicing. Ketika kamu melakukan `s[10:]` pada string pendek, Python tidak akan crash melainkan mengembalikan string kosong. Fleksibilitas ini membuat kode lebih robust, terutama ketika bekerja dengan data yang panjangnya tidak dapat diprediksi.
+
+Penguasaan indeks negatif memberikan perspektif baru dalam mengakses data. Alih-alih menghitung dari depan, kamu bisa langsung mengambil elemen dari belakang dengan `s[-1]` untuk elemen terakhir atau `s[-3:]` untuk tiga elemen terakhir. Pendekatan ini sangat berguna dalam pemrosesan file, parsing teks, dan manipulasi dataset di mana posisi relatif dari akhir lebih penting daripada posisi absolut dari awal.

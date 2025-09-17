@@ -1,0 +1,278 @@
+export const metadata = {
+    title: "Indexing and Slicing",
+    description: "Learn Python indexing and slicing techniques to access string and list elements. Master positive, negative indices and stride usage.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/17/2025",
+    subject: "AI Programming",
+};
+
+## Introduction to Indexing
+
+Indexing is a way to access specific elements in strings or lists using position numbers. Imagine you have a row of books on a shelf, and each book has a sequential number. Indexing allows you to pick a specific book based on its sequence number.
+
+Python uses a numbering system that starts from 0, not 1. So the first element has index 0, the second element has index 1, and so on. Additionally, Python also supports negative indices that count backwards from the end.
+
+### Positive and Negative Indices
+
+In strings or lists, each character or element has two types of indices. Positive indices start from 0 at the beginning, while negative indices start from -1 at the end.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "basic_indexing.py",
+      code: `# Example of indexing on string
+s = "Hello"
+
+# Accessing characters with positive indices
+print(s[0])    # Output: 'H'
+print(s[4])    # Output: 'o'
+
+# Accessing characters with negative indices
+print(s[-1])   # Output: 'o' (last character)
+print(s[-5])   # Output: 'H' (first character)
+
+# Trying to access non-existent index
+try:
+    print(s[5])
+except IndexError:
+    print("IndexError: index out of range")`
+    }
+  ]}
+/>
+
+When you use an index that exceeds the length of a string or list, Python will display an IndexError. This is a protection mechanism to prevent access to invalid memory.
+
+## Slicing Concept
+
+Slicing allows you to take a specific part of a string or list, not just a single element. It's like cutting a slice of bread from a whole loaf, you can determine where to start cutting and where to stop.
+
+### Simple Slicing
+
+Basic slicing syntax uses the format `[i:j]` where `i` is the start index and `j` is the end index. It's important to remember that the end index is not included in the result.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "basic_slicing.py",
+      code: `# Example of slicing on string
+s = "Hello"
+
+# Slicing from index 1 to 3 (not including 3)
+print(s[1:3])    # Output: 'el'
+
+# Slicing from index 3 to end
+print(s[3:])     # Output: 'lo'
+
+# Slicing from start to index 3
+print(s[:3])     # Output: 'Hel'
+
+# Slicing with negative indices
+print(s[-4:-2])  # Output: 'el'
+print(s[-2:-4])  # Output: '' (empty string)`
+    }
+  ]}
+/>
+
+When the start index is greater than the end index in regular slicing, the result is an empty string or list. This is different from slicing using negative stride.
+
+### Slicing with Stride
+
+Stride is the third parameter in slicing that determines the step or distance between elements taken. Stride allows you to take elements with specific patterns.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "stride_slicing.py",
+      code: `# Example of slicing with stride
+s = "Hello World!"
+
+# Taking every second character
+print(s[::2])      # Output: 'HloWrd'
+
+# Taking every second character from index 1
+print(s[1::2])     # Output: 'el ol!'
+
+# Reversing string with negative stride
+print(s[::-1])     # Output: '!dlroW olleH'
+
+# Slicing with negative stride from specific index
+print(s[-1:4:-1])  # Output: '!dlroW'`
+    }
+  ]}
+/>
+
+Negative stride is very useful for reversing element order. When stride is -1, Python will take all elements from end to start.
+
+## Slicing Properties
+
+Slicing has several important properties that need to be understood to avoid errors in usage.
+
+### Length of Slicing Result
+
+The length of slicing result can be calculated with a simple formula. For positive slicing `s[i:j]`, the length is `j - i` if both values are positive and `j > i`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "slicing_properties.py",
+      code: `# Calculating slicing result length
+s = "Hello"
+
+# Slicing s[1:4]
+result = s[1:4]
+print(f"Result: '{result}', Length: {len(result)}")  # Output: 'ell', 3
+
+# Proving that s[:i] + s[i:] == s
+i = 2
+left_part = s[:i]
+right_part = s[i:]
+print(f"'{left_part}' + '{right_part}' = '{left_part + right_part}'")
+
+# Slicing outside bounds doesn't cause error
+print(s[3:10])   # Output: 'lo'
+print(s[10:])    # Output: '' (empty string)`
+    }
+  ]}
+/>
+
+One advantage of slicing is that it won't cause an error even if indices exceed the string or list length. Python automatically adjusts to valid bounds.
+
+## Slicing as Loop
+
+Slicing can be understood as a short form of for loop. Every slicing operation is actually equivalent to a loop that iterates specific indices.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "slicing_as_loop.py",
+      code: `# Understanding slicing as loop
+s = "Hello World!"
+
+# s[1:8:2] equivalent to the following loop:
+result_manual = ""
+for index in range(1, 8, 2):
+    result_manual += s[index]
+
+result_slicing = s[1:8:2]
+
+print(f"Manual loop: '{result_manual}'")    # Output: 'el o'
+print(f"Slicing: '{result_slicing}'")       # Output: 'el o'
+print(f"Same? {result_manual == result_slicing}")  # Output: True
+
+# Example with negative stride
+print("\\nNegative stride:")
+print(f"s[::-2] = '{s[::-2]}'")            # Output: '!lo le'
+
+# Equivalent manual loop for negative stride
+result_negative = ""
+for index in range(len(s)-1, -1, -2):
+    result_negative += s[index]
+print(f"Manual: '{result_negative}'")`
+    }
+  ]}
+/>
+
+Understanding the relationship between slicing and loops helps you understand how Python processes slicing operations internally.
+
+## Slicing Variations
+
+Python provides several shorthand ways to perform commonly used slicing.
+
+### Slicing from Start and End
+
+You can leave the start or end parameter empty to take elements from the beginning or to the end of string/list.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "slicing_variations.py",
+      code: `# Useful slicing variations
+s = "Hello"
+
+# Taking first 3 characters
+print(s[:3])     # Output: 'Hel'
+
+# Taking characters from index 3 to end
+print(s[3:])     # Output: 'lo'
+
+# Taking all characters (copying string)
+print(s[:])      # Output: 'Hello'
+
+# Practical example with list
+numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+# Taking first 5 elements
+first_five = numbers[:5]
+print(f"First five: {first_five}")
+
+# Taking last 5 elements
+last_five = numbers[-5:]
+print(f"Last five: {last_five}")
+
+# Taking middle elements (skip first 2 and last 2)
+middle = numbers[2:-2]
+print(f"Middle part: {middle}")`
+    }
+  ]}
+/>
+
+These slicing variations are very useful in data processing when you need to take specific parts from large datasets.
+
+## Practical Applications
+
+Indexing and slicing are often used in various programming scenarios, from string manipulation to data processing.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "practical_applications.py",
+      code: `# Practical examples of indexing and slicing
+
+# 1. Reversing name
+first_name = "Ahmad"
+last_name = "Wijaya"
+reversed_name = (first_name + " " + last_name)[::-1]
+print(f"Reversed name: {reversed_name}")
+
+# 2. Getting file extension
+filename = "important_document.pdf"
+extension = filename[-3:]  # Last 3 characters
+print(f"Extension: .{extension}")
+
+# 3. Formatting phone number
+number = "081234567890"
+formatted = f"{number[:4]}-{number[4:8]}-{number[8:]}"
+print(f"Formatted number: {formatted}")
+
+# 4. Getting name initials
+full_name = "Siti Nurhaliza Binti Ahmad"
+words = full_name.split()
+initials = ""
+for word in words:
+    if word[0].isupper():  # Only take words starting with capital letter
+        initials += word[0]
+print(f"Initials: {initials}")
+
+# 5. Palindrome checker
+def is_palindrome(text):
+    cleaned = text.lower().replace(" ", "")
+    return cleaned == cleaned[::-1]
+
+print(f"'katak' palindrome? {is_palindrome('katak')}")
+print(f"'kasur rusak' palindrome? {is_palindrome('kasur rusak')}")`
+    }
+  ]}
+/>
+
+From these five application examples, it's clear that indexing and slicing operations can replace complex programming logic. For instance, reversing a string with `[::-1]` is much more concise compared to using manual loops, and getting file extension with `[-3:]` is more intuitive than searching for the last dot position.
+
+The main advantage of this technique lies in its ability to handle sequential data without the risk of IndexError in slicing. When you perform `s[10:]` on a short string, Python won't crash but will return an empty string. This flexibility makes code more robust, especially when working with data whose length cannot be predicted.
+
+Mastering negative indices provides a new perspective in accessing data. Instead of counting from the front, you can directly take elements from the back with `s[-1]` for the last element or `s[-3:]` for the last three elements. This approach is very useful in file processing, text parsing, and dataset manipulation where relative position from the end is more important than absolute position from the start.
