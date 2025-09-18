@@ -1,0 +1,397 @@
+export const metadata = {
+    title: "Control Flow",
+    description: "Learn control flow in Python including break, continue, pass, else, enumerate, while loops, zip, range, and if/elif/else with practical examples.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "AI Programming",
+};
+
+## Loop Control Statements
+
+Python provides several special statements to control the execution flow in loops. These statements allow you to control when loops should stop, continue, or perform certain actions.
+
+### Break, Continue, Pass, and Else
+
+The `break` statement is used to stop a loop completely when a certain condition is met. Think of it like an emergency button that immediately stops a machine.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "break_example.py",
+      code: `# Finding number divisible by 15 and 25
+x = 0
+while True:
+    x += 1
+    if not (x % 15 or x % 25):
+        break
+print(x, 'is divisible by 15 and 25')
+# Output: 75 is divisible by 15 and 25`
+    }
+  ]}
+/>
+
+The `continue` statement skips the rest of the code in the current iteration and continues to the next iteration. This is different from `break` which stops the entire loop.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "continue_example.py",
+      code: `# Printing only even numbers
+for i in range(1, 11):
+    if i % 2:
+        continue
+    print(i, 'is even.')
+# Output:
+# 2 is even.
+# 4 is even.
+# 6 is even.
+# 8 is even.
+# 10 is even.`
+    }
+  ]}
+/>
+
+The `pass` statement does nothing but is useful as a placeholder for code that hasn't been written yet. Python requires at least one statement in every code block.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "pass_example.py",
+      code: `# Using pass to skip certain numbers
+for i in range(1, 11):
+    if i == 6:
+        pass  # Do nothing for number 6
+    if not i % 3:
+        print(i, 'is divisible by 3')
+# Output:
+# 3 is divisible by 3
+# 6 is divisible by 3
+# 9 is divisible by 3`
+    }
+  ]}
+/>
+
+The `else` block in loops will be executed when the loop ends normally, not because of a `break`. This is useful for providing special actions when the loop completes without interruption.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "loop_else_example.py",
+      code: `# Searching for negative numbers in list
+numbers = [0, 4, 2, 5]
+for i in numbers:
+    if i < 0:
+        break
+else:
+    print('no negative number in list')
+# Output: no negative number in list`
+    }
+  ]}
+/>
+
+## Enumerate Function
+
+The `enumerate()` function is very useful when you need both the index and value of each element during iteration. This function takes an iterable object and returns tuples containing (index, value) pairs.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "enumerate_basic.py",
+      code: `# Using enumerate to get index and value
+fruits = ['apple', 'banana', 'mango', 'melon']
+
+for i, fruit in enumerate(fruits):
+    print(i, ':', fruit)
+# Output:
+# 0 : apple
+# 1 : banana
+# 2 : mango
+# 3 : melon`
+    }
+  ]}
+/>
+
+By default, `enumerate()` starts counting from 0, but you can set the starting value with the second parameter.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "enumerate_custom_start.py",
+      code: `# Setting custom start index for enumerate
+fruits = ['apple', 'banana', 'mango', 'melon']
+
+for i, fruit in enumerate(fruits, 5):
+    print(i, ':', fruit)
+# Output:
+# 5 : apple
+# 6 : banana
+# 7 : mango
+# 8 : melon`
+    }
+  ]}
+/>
+
+It's important to remember that each tuple (item, count) in the for loop will be automatically unpacked into variables `i` and `fruit`.
+
+## While Loop
+
+The `while` loop executes a code block as long as the given condition is `True`. Unlike `for` loops where the number of iterations is known, `while` loops are used when the number of iterations is unknown at the start.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "while_loop_example.py",
+      code: `# Example while loop with mathematical calculation
+z = 1
+while abs(z) < 100:
+    z = z**2 + 1
+print(z)
+# Output: 677`
+    }
+  ]}
+/>
+
+The `while` loop is suitable when you need to iterate until a certain condition is met and don't know how many iterations are required.
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A[Start] --> B{While condition True?}
+        B -->|Yes| C[Execute code block]
+        C --> D[Update variables]
+        D --> B
+        B -->|No| E[Exit loop]
+        E --> F[Continue program]
+  `}
+/>
+
+## Zip Function
+
+The `zip()` function allows you to iterate over multiple iterables simultaneously. Think of it like a zipper that combines two sides into one.
+
+### Basic Zip Usage
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "zip_basic.py",
+      code: `# Combining two lists with zip
+p = [1, 2, 3, 4]
+q = ['a', 'b', 'c', 'd']
+
+for pair in zip(p, q):
+    print(pair)
+# Output:
+# (1, 'a')
+# (2, 'b')
+# (3, 'c')
+# (4, 'd')`
+    }
+  ]}
+/>
+
+The `zip()` function returns an iterator containing tuples. Each tuple contains the i-th element from each input iterable. The iterator stops when the shortest iterable is exhausted.
+
+### Converting Zip Results
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "zip_conversion.py",
+      code: `# Converting zip results to list or tuple
+p = [1, 2, 3, 4]
+q = ['a', 'b', 'c', 'd']
+
+zipped = zip(p, q)
+print(list(zipped))  # Convert to list
+# Output: [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd')]
+
+# Zip object already consumed, create new one
+zipped_new = zip(p, q)
+print(tuple(zipped_new))  # Convert to tuple
+# Output: ((1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'))`
+    }
+  ]}
+/>
+
+### Unzipping with Operator *
+
+You can reverse the zip process using the unpacking operator (*).
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "zip_unpacking.py",
+      code: `# Separating data that has been zipped
+pairs = [(1, 'a'), (2, 'b'), (3, 'd')]
+numbers, letters = zip(*pairs)
+print(numbers, letters)
+# Output: (1, 2, 3) ('a', 'b', 'd')`
+    }
+  ]}
+/>
+
+This process is called "unzipping" because it separates data that has been combined.
+
+## Range and For Loop
+
+The `range()` function creates a sequence of numbers that can be iterated. This is very useful for loops with numeric indices.
+
+### Range Syntax
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "range_syntax.py",
+      code: `# Various ways to use range
+# range(stop) - from 0 to stop-1
+for i in range(4):
+    print(i)
+# Output: 0, 1, 2, 3
+
+print()
+
+# range(start, stop) - from start to stop-1  
+for i in range(2, 6):
+    print(i)
+# Output: 2, 3, 4, 5
+
+print()
+
+# range(start, stop, step) - with specific step
+for i in range(8, 4, -1):
+    print(i)
+# Output: 8, 7, 6, 5`
+    }
+  ]}
+/>
+
+Range follows an arithmetic formula where each i-th element is `start + i * step` for all `i` from 0 to `n-1`.
+
+### Range vs List Efficiency
+
+Range is more efficient than creating a list containing all numbers because range generates numbers on-demand, rather than storing them all in memory.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "range_efficiency.py",
+      code: `# Comparing range vs list efficiency
+n = 10000
+k = 10
+
+# Inefficient - creates complete list in memory
+index = [0, 1, 2, ..., n]  # Memory wasteful
+for i in index:
+    if i < k:
+        print(i)
+    else:
+        break
+
+# More efficient - using range
+for i in range(n):  # Doesn't store all numbers in memory
+    if i < k:
+        print(i)
+    else:
+        break`
+    }
+  ]}
+/>
+
+## Conditional Statements
+
+Conditional statements allow programs to make decisions based on certain conditions. Python uses indentation (spaces or tabs) to determine which code blocks belong to conditions.
+
+### If/Elif/Else Syntax
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "conditional_syntax.py",
+      code: `# Complete if/elif/else structure
+age = 20
+
+if age <= 5:
+    print("free entrance")
+elif age <= 14:
+    print("15.00 EUR")
+elif age <= 65:
+    print("30.00 EUR")
+else:
+    print("20.00 EUR")
+# Output: 30.00 EUR`
+    }
+  ]}
+/>
+
+Conditions don't need to be wrapped in parentheses, and a colon (:) after the condition is mandatory. Statement blocks must be indented with the same number of spaces.
+
+### Nested If Statement
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "nested_if.py",
+      code: `# Determining quadrant from coordinate point
+x = (-1, -3)
+
+if x[0] >= 0:
+    if x[1] >= 0:
+        print('first quadrant')
+    else:
+        print('fourth quadrant')
+elif x[1] >= 0:
+    print('second quadrant')
+else:
+    print('third quadrant')
+# Output: third quadrant`
+    }
+  ]}
+/>
+
+Nested if is useful for making more complex decisions with multiple levels of conditions.
+
+## For Loop Syntax
+
+For loops in Python are used to iterate elements in iterable objects like lists, tuples, strings, or ranges.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "for_loop_syntax.py",
+      code: `# Example list iteration
+fruit_list = ['apple', 'banana', 'mango']
+for fruit in fruit_list:
+    print(fruit)
+# Output:
+# apple
+# banana  
+# mango
+
+# Example string iteration
+text = 'hi'
+for char in text:
+    print(char)
+# Output:
+# h
+# i`
+    }
+  ]}
+/>
+
+Iterable objects are ordered sequences of items, where each item can be taken one by one. The `in` operator is used for membership testing, colons mark the beginning of statement blocks, and statement blocks must be indented with spaces.

@@ -1,0 +1,397 @@
+export const metadata = {
+    title: "Control Flow",
+    description: "Pelajari kontrol alur dalam Python meliputi break, continue, pass, else, enumerate, while loops, zip, range, dan if/elif/else dengan contoh praktis.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "Pemrograman AI",
+};
+
+## Statement Kontrol Loop
+
+Python menyediakan beberapa statement khusus untuk mengendalikan alur eksekusi dalam perulangan. Statement ini memungkinkan kamu mengatur kapan perulangan harus berhenti, melanjutkan, atau melakukan tindakan tertentu.
+
+### Break, Continue, Pass, dan Else
+
+Statement `break` digunakan untuk menghentikan perulangan sepenuhnya ketika kondisi tertentu terpenuhi. Bayangkan seperti tombol darurat yang langsung menghentikan mesin.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "break_example.py",
+      code: `# Mencari angka yang dapat dibagi 15 dan 25
+x = 0
+while True:
+    x += 1
+    if not (x % 15 or x % 25):
+        break
+print(x, 'dapat dibagi 15 dan 25')
+# Output: 75 dapat dibagi 15 dan 25`
+    }
+  ]}
+/>
+
+Statement `continue` melewati sisa kode dalam iterasi saat ini dan melanjutkan ke iterasi berikutnya. Ini berbeda dengan `break` yang menghentikan seluruh perulangan.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "continue_example.py",
+      code: `# Mencetak hanya angka genap
+for i in range(1, 11):
+    if i % 2:
+        continue
+    print(i, 'adalah genap.')
+# Output:
+# 2 adalah genap.
+# 4 adalah genap.
+# 6 adalah genap.
+# 8 adalah genap.
+# 10 adalah genap.`
+    }
+  ]}
+/>
+
+Statement `pass` tidak melakukan apa-apa tetapi berguna sebagai placeholder untuk kode yang belum ditulis. Python membutuhkan setidaknya satu statement dalam setiap blok kode.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "pass_example.py",
+      code: `# Menggunakan pass untuk melewati angka tertentu
+for i in range(1, 11):
+    if i == 6:
+        pass  # Tidak melakukan apa-apa untuk angka 6
+    if not i % 3:
+        print(i, 'dapat dibagi 3')
+# Output:
+# 3 dapat dibagi 3
+# 6 dapat dibagi 3
+# 9 dapat dibagi 3`
+    }
+  ]}
+/>
+
+Blok `else` pada perulangan akan dieksekusi ketika perulangan berakhir secara normal, bukan karena `break`. Ini berguna untuk memberikan aksi khusus ketika perulangan selesai tanpa interupsi.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "loop_else_example.py",
+      code: `# Mencari angka negatif dalam list
+numbers = [0, 4, 2, 5]
+for i in numbers:
+    if i < 0:
+        break
+else:
+    print('tidak ada angka negatif dalam list')
+# Output: tidak ada angka negatif dalam list`
+    }
+  ]}
+/>
+
+## Fungsi Enumerate
+
+Fungsi `enumerate()` sangat berguna ketika kamu membutuhkan indeks dan nilai dari setiap elemen dalam iterasi. Fungsi ini mengambil objek iterable dan mengembalikan tuple berisi pasangan (indeks, nilai).
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "enumerate_basic.py",
+      code: `# Menggunakan enumerate untuk mendapatkan indeks dan nilai
+fruits = ['apple', 'banana', 'mango', 'melon']
+
+for i, fruit in enumerate(fruits):
+    print(i, ':', fruit)
+# Output:
+# 0 : apple
+# 1 : banana
+# 2 : mango
+# 3 : melon`
+    }
+  ]}
+/>
+
+Secara default, `enumerate()` mulai menghitung dari 0, tetapi kamu dapat mengatur nilai awal dengan parameter kedua.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "enumerate_custom_start.py",
+      code: `# Mengatur indeks awal enumerate
+fruits = ['apple', 'banana', 'mango', 'melon']
+
+for i, fruit in enumerate(fruits, 5):
+    print(i, ':', fruit)
+# Output:
+# 5 : apple
+# 6 : banana
+# 7 : mango
+# 8 : melon`
+    }
+  ]}
+/>
+
+Penting untuk diingat bahwa setiap tuple (item, count) dalam perulangan for akan di-unpack secara otomatis menjadi variabel `i` dan `fruit`.
+
+## While Loop
+
+Perulangan `while` mengeksekusi blok kode selama kondisi yang diberikan bernilai `True`. Berbeda dengan `for` loop yang iterasi jumlahnya sudah diketahui, `while` loop digunakan ketika jumlah iterasi tidak diketahui di awal.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "while_loop_example.py",
+      code: `# Contoh while loop dengan perhitungan matematika
+z = 1
+while abs(z) < 100:
+    z = z**2 + 1
+print(z)
+# Output: 677`
+    }
+  ]}
+/>
+
+Perulangan `while` cocok digunakan ketika kamu perlu mengiterasi sampai kondisi tertentu terpenuhi dan tidak tahu berapa kali iterasi diperlukan.
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A[Mulai] --> B{Kondisi while True?}
+        B -->|Ya| C[Eksekusi blok kode]
+        C --> D[Update variabel]
+        D --> B
+        B -->|Tidak| E[Keluar dari loop]
+        E --> F[Lanjutkan program]
+  `}
+/>
+
+## Fungsi Zip
+
+Fungsi `zip()` memungkinkan kamu mengiterasi beberapa iterable secara bersamaan. Bayangkan seperti resleting yang menggabungkan dua sisi menjadi satu.
+
+### Penggunaan Dasar Zip
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "zip_basic.py",
+      code: `# Menggabungkan dua list dengan zip
+p = [1, 2, 3, 4]
+q = ['a', 'b', 'c', 'd']
+
+for pair in zip(p, q):
+    print(pair)
+# Output:
+# (1, 'a')
+# (2, 'b')
+# (3, 'c')
+# (4, 'd')`
+    }
+  ]}
+/>
+
+Fungsi `zip()` mengembalikan iterator yang berisi tuple. Setiap tuple berisi elemen ke-i dari setiap iterable input. Iterator berhenti ketika iterable terpendek habis.
+
+### Mengonversi Hasil Zip
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "zip_conversion.py",
+      code: `# Mengonversi hasil zip menjadi list atau tuple
+p = [1, 2, 3, 4]
+q = ['a', 'b', 'c', 'd']
+
+zipped = zip(p, q)
+print(list(zipped))  # Mengonversi ke list
+# Output: [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd')]
+
+# Zip object sudah dikonsumsi, buat yang baru
+zipped_new = zip(p, q)
+print(tuple(zipped_new))  # Mengonversi ke tuple
+# Output: ((1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'))`
+    }
+  ]}
+/>
+
+### Unzipping dengan Operator *
+
+Kamu dapat membalik proses zip dengan menggunakan operator unpacking (*).
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "zip_unpacking.py",
+      code: `# Memisahkan kembali data yang sudah di-zip
+pairs = [(1, 'a'), (2, 'b'), (3, 'd')]
+numbers, letters = zip(*pairs)
+print(numbers, letters)
+# Output: (1, 2, 3) ('a', 'b', 'd')`
+    }
+  ]}
+/>
+
+Proses ini disebut "unzipping" karena memisahkan kembali data yang telah digabungkan.
+
+## Range dan For Loop
+
+Fungsi `range()` menciptakan urutan angka yang dapat diiterasi. Ini sangat berguna untuk perulangan dengan indeks numerik.
+
+### Sintaks Range
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "range_syntax.py",
+      code: `# Berbagai cara menggunakan range
+# range(stop) - dari 0 sampai stop-1
+for i in range(4):
+    print(i)
+# Output: 0, 1, 2, 3
+
+print()
+
+# range(start, stop) - dari start sampai stop-1  
+for i in range(2, 6):
+    print(i)
+# Output: 2, 3, 4, 5
+
+print()
+
+# range(start, stop, step) - dengan langkah tertentu
+for i in range(8, 4, -1):
+    print(i)
+# Output: 8, 7, 6, 5`
+    }
+  ]}
+/>
+
+Range mengikuti formula aritmatika dimana setiap elemen ke-i adalah `start + i * step` untuk semua `i` dari 0 sampai `n-1`.
+
+### Efisiensi Range vs List
+
+Range lebih efisien dibandingkan membuat list berisi semua angka karena range menghasilkan angka sesuai kebutuhan (on-demand), bukan menyimpan semuanya di memori.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "range_efficiency.py",
+      code: `# Perbandingan efisiensi range vs list
+n = 10000
+k = 10
+
+# Tidak efisien - membuat list lengkap di memori
+index = [0, 1, 2, ..., n]  # Boros memori
+for i in index:
+    if i < k:
+        print(i)
+    else:
+        break
+
+# Lebih efisien - menggunakan range
+for i in range(n):  # Tidak menyimpan semua angka di memori
+    if i < k:
+        print(i)
+    else:
+        break`
+    }
+  ]}
+/>
+
+## Pernyataan Kondisional
+
+Pernyataan kondisional memungkinkan program membuat keputusan berdasarkan kondisi tertentu. Python menggunakan indentasi (spasi atau tab) untuk menentukan blok kode yang termasuk dalam kondisi.
+
+### Sintaks If/Elif/Else
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "conditional_syntax.py",
+      code: `# Struktur lengkap if/elif/else
+age = 20
+
+if age <= 5:
+    print("masuk gratis")
+elif age <= 14:
+    print("15.00 EUR")
+elif age <= 65:
+    print("30.00 EUR")
+else:
+    print("20.00 EUR")
+# Output: 30.00 EUR`
+    }
+  ]}
+/>
+
+Kondisi tidak perlu dibungkus dalam tanda kurung, dan titik dua (:) setelah kondisi adalah wajib. Blok statement harus diindentasi dengan jumlah spasi yang sama.
+
+### Nested If Statement
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "nested_if.py",
+      code: `# Menentukan kuadran dari koordinat titik
+x = (-1, -3)
+
+if x[0] >= 0:
+    if x[1] >= 0:
+        print('kuadran pertama')
+    else:
+        print('kuadran keempat')
+elif x[1] >= 0:
+    print('kuadran kedua')
+else:
+    print('kuadran ketiga')
+# Output: kuadran ketiga`
+    }
+  ]}
+/>
+
+Nested if berguna untuk membuat keputusan yang lebih kompleks dengan beberapa tingkat kondisi.
+
+## Sintaks For Loop
+
+For loop dalam Python digunakan untuk mengiterasi elemen dalam objek iterable seperti list, tuple, string, atau range.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "for_loop_syntax.py",
+      code: `# Contoh iterasi list
+fruit_list = ['apple', 'banana', 'mango']
+for fruit in fruit_list:
+    print(fruit)
+# Output:
+# apple
+# banana  
+# mango
+
+# Contoh iterasi string
+text = 'hi'
+for char in text:
+    print(char)
+# Output:
+# h
+# i`
+    }
+  ]}
+/>
+
+Objek iterable adalah urutan item yang tersusun, dimana setiap item dapat diambil satu per satu. Operator `in` digunakan untuk tes keanggotaan, titik dua menandai awal blok statement, dan blok statement harus diindentasi dengan spasi.
