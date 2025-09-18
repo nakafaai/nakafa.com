@@ -18,7 +18,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
     local: {
       schema: authSchema,
     },
-    verbose: false,
+    verbose: process.env.NODE_ENV === "development",
   }
 );
 
