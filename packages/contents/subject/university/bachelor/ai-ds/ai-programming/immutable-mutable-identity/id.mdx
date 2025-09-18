@@ -1,0 +1,235 @@
+export const metadata = {
+    title: "Immutable, Mutable, dan Identity",
+    description: "Kuasai konsep mutabilitas, identitas, dan manajemen memori objek Python. Pelajari cara kerja list, referensi, dan identitas objek dengan contoh praktis.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "Pemrograman AI",
+};
+
+## List dan Mutabilitas
+
+Dalam Python, list merupakan struktur data yang dapat diubah setelah dibuat. Mari kita pahami bagaimana perilaku list ketika kita melakukan operasi tertentu.
+
+Ketika kamu membuat sebuah list dan menyimpannya dalam variabel, Python tidak menyalin isi list tersebut. Sebaliknya, variabel tersebut menyimpan referensi atau alamat memori tempat list berada. Bayangkan seperti alamat rumah, variabel hanya menyimpan alamat, bukan rumahnya sendiri.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "list_reference.py",
+      code: `# Membuat list dan memberikan referensi
+list1 = [0, 1, 2]
+list2 = ['a', list1, True]
+
+print(list2)  # ['a', [0, 1, 2], True]
+
+# Mengubah elemen dalam list1
+list1[1] = [3, 4, 5]
+print(list2)  # ['a', [0, [3, 4, 5], 2], True]`
+    }
+  ]}
+/>
+
+Perhatikan bagaimana perubahan pada `list1` juga mempengaruhi `list2`. Ini terjadi karena `list2` tidak menyimpan salinan `list1`, melainkan referensi ke objek list yang sama di memori.
+
+### Operasi Slice Menciptakan Salinan Baru
+
+Berbeda dengan assignment biasa, operasi slice pada list akan menciptakan objek list baru di memori. Kamu dapat membuktikan ini dengan menggunakan fungsi `id()` yang mengembalikan alamat memori objek.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "slice_copy.py",
+      code: `# Operasi slice menciptakan list baru
+list1 = [0, 1, 2]
+list2 = list1[:]  # Mengambil semua elemen dengan slice
+
+print(id(list1))  # Contoh: 3104
+print(id(list2))  # Contoh: 8864 (berbeda dari list1)
+
+# Mengubah elemen di list2 tidak mempengaruhi list1
+list2[0] = 'x'
+print(list1)  # [0, 1, 2] (tidak berubah)
+print(list2)  # ['x', 1, 2]`
+    }
+  ]}
+/>
+
+## Identitas, Tipe, dan Nilai Objek
+
+Setiap objek dalam Python memiliki tiga karakteristik penting yang membedakannya dari objek lain.
+
+<Mermaid
+  chart={`
+    flowchart LR
+        A[Objek Python] --> B[Identitas]
+        A --> C[Tipe]
+        A --> D[Nilai]
+        
+        B --> B1[Alamat memori unik]
+        C --> C1[Menentukan operasi]
+        D --> D1[Data yang disimpan]
+  `}
+/>
+
+### Identitas Objek
+
+Identitas adalah alamat memori unik tempat objek disimpan. Python menyediakan fungsi `id()` untuk melihat identitas objek dan operator `is` untuk membandingkan identitas dua objek.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "object_identity.py",
+      code: `a = 300
+print(a)          # 300
+print(type(a))    # <class 'int'>
+print(id(a))      # 10120
+
+b = a  # b mereferensi objek yang sama dengan a
+print(id(b))      # 10120 (sama dengan a)
+
+a = a + 1  # Membuat objek baru
+print(id(a))      # 10492 (berbeda dari sebelumnya)`
+    }
+  ]}
+/>
+
+### Perbandingan Identitas dan Nilai
+
+Python memiliki optimisasi khusus untuk integer kecil (biasanya <InlineMath math="-5" /> sampai <InlineMath math="256" />). Integer dalam rentang ini menggunakan objek yang sama di memori untuk menghemat ruang.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "identity_comparison.py",
+      code: `# Integer besar mungkin menggunakan objek berbeda
+a = 300
+b = 300
+print(a is b)      # Mungkin True atau False (tergantung implementasi)
+print(a == b)      # True (nilai sama)
+
+# Integer dalam rentang -5 sampai 256 biasanya sama
+a = 100
+b = 100
+print(a is b)      # True (optimisasi untuk integer kecil)
+print(a == b)      # True (nilai sama)`
+    }
+  ]}
+/>
+
+## Objek Mutable dan Immutable
+
+Python mengklasifikasikan objek berdasarkan kemampuannya untuk diubah setelah dibuat.
+
+### Objek Immutable
+
+Objek immutable tidak dapat diubah setelah dibuat. Setiap operasi yang tampak mengubah objek sebenarnya menciptakan objek baru.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "immutable_objects.py",
+      code: `# Integer adalah immutable
+a = 300
+print(id(a))  # 10120
+
+a = a + 1     # Membuat objek baru
+print(id(a))  # 10492 (berbeda)
+
+# String juga immutable
+str_var = 'hello'
+print(id(str_var))  # 75568
+
+# Mencoba mengubah string akan menghasilkan error
+# str_var[1] = 'a'  # TypeError`
+    }
+  ]}
+/>
+
+Tipe data immutable dalam Python meliputi:
+    - `bool` (boolean)
+    - `int` (integer)
+    - `float` (floating point)
+    - `complex` (bilangan kompleks)
+    - `str` (string)
+    - `tuple` (tuple)
+
+### Objek Mutable
+
+Objek mutable dapat diubah setelah dibuat tanpa menciptakan objek baru. Identitas objek tetap sama meskipun nilainya berubah.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "mutable_objects.py",
+      code: `# List adalah mutable
+list_var = [0, 1, 2]
+print(id(list_var))  # 15296
+
+# Mengubah elemen tidak mengubah identitas objek
+list_var = [0, 0, 0]
+print(id(list_var))  # 60960 (objek baru karena assignment)
+
+# Modifikasi in-place mempertahankan identitas
+list_var[:] = ['a', 'b', 'c']
+print(id(list_var))  # 60960 (sama)`
+    }
+  ]}
+/>
+
+Tipe data mutable dalam Python meliputi:
+    - `list` (list)
+    - `dict` (dictionary)
+    - `set` (set)
+
+### Perilaku Assignment vs Modifikasi
+
+Penting untuk membedakan antara assignment (pemberian nilai baru) dan modifikasi in-place.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "assignment_vs_modification.py",
+      code: `list1 = [0, 1, 2]
+list2 = list1  # Kedua variabel mereferensi objek yang sama
+
+print(id(list1))     # 700
+print(id(list2))     # 700 (sama)
+
+# Modifikasi in-place mempengaruhi kedua variabel
+list1[1] = 'x'
+print(list1)         # [0, 'x', 2]
+print(list2)         # [0, 'x', 2] (ikut berubah)
+
+# Assignment membuat referensi baru
+list1 = [1, 2, 3]
+print(list1)         # [1, 2, 3]
+print(list2)         # [0, 'x', 2] (tidak berubah)`
+    }
+  ]}
+/>
+
+<Mermaid
+  chart={`
+    flowchart TD
+        subgraph Sebelum ["Sebelum Modifikasi"]
+            A[list1] --> C[Objek List<br/>Data: 0, 1, 2]
+            B[list2] --> C
+        end
+        
+        subgraph Sesudah ["Sesudah list1[1] = x"]
+            D[list1] --> F[Objek List yang sama<br/>Data: 0, x, 2]
+            E[list2] --> F
+        end
+        
+        Sebelum -.-> Sesudah
+  `}
+/>
+
+Pemahaman tentang mutabilitas sangat penting dalam pemrograman Python. Objek immutable lebih aman untuk digunakan dalam konteks multi-threading karena tidak dapat diubah, sedangkan objek mutable memberikan fleksibilitas untuk memodifikasi data secara efisien tanpa menciptakan objek baru setiap kali.

@@ -1,0 +1,235 @@
+export const metadata = {
+  title: "Immutable, Mutable, and Identity",
+  description: "Master Python object mutability, identity, and memory management. Learn how lists, references, and object identity work with practical examples and code.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "09/18/2025",
+  subject: "AI Programming",
+};
+
+## Lists and Mutability
+
+In Python, lists are data structures that can be modified after they are created. Let's understand how lists behave when we perform certain operations.
+
+When you create a list and store it in a variable, Python doesn't copy the contents of that list. Instead, the variable stores a reference or memory address where the list is located. Think of it like a house address, the variable only stores the address, not the house itself.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "list_reference.py",
+      code: `# Creating list and providing reference
+list1 = [0, 1, 2]
+list2 = ['a', list1, True]
+
+print(list2)  # ['a', [0, 1, 2], True]
+
+# Changing elements in list1
+list1[1] = [3, 4, 5]
+print(list2)  # ['a', [0, [3, 4, 5], 2], True]`
+    }
+  ]}
+/>
+
+Notice how changes to `list1` also affect `list2`. This happens because `list2` doesn't store a copy of `list1`, but rather a reference to the same list object in memory.
+
+### Slice Operations Create New Copies
+
+Unlike regular assignment, slice operations on lists will create a new list object in memory. You can prove this by using the `id()` function which returns the memory address of an object.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "slice_copy.py",
+      code: `# Slice operations create new lists
+list1 = [0, 1, 2]
+list2 = list1[:]  # Taking all elements with slice
+
+print(id(list1))  # Example: 3104
+print(id(list2))  # Example: 8864 (different from list1)
+
+# Changing elements in list2 doesn't affect list1
+list2[0] = 'x'
+print(list1)  # [0, 1, 2] (unchanged)
+print(list2)  # ['x', 1, 2]`
+    }
+  ]}
+/>
+
+## Object Identity, Type, and Value
+
+Every object in Python has three important characteristics that distinguish it from other objects.
+
+<Mermaid
+  chart={`
+    flowchart LR
+        A[Python Object] --> B[Identity]
+        A --> C[Type]
+        A --> D[Value]
+        
+        B --> B1[Unique memory address]
+        C --> C1[Determines operations]
+        D --> D1[Stored data]
+  `}
+/>
+
+### Object Identity
+
+Identity is the unique memory address where an object is stored. Python provides the `id()` function to view an object's identity and the `is` operator to compare the identity of two objects.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "object_identity.py",
+      code: `a = 300
+print(a)          # 300
+print(type(a))    # <class 'int'>
+print(id(a))      # 10120
+
+b = a  # b references the same object as a
+print(id(b))      # 10120 (same as a)
+
+a = a + 1  # Creates new object
+print(id(a))      # 10492 (different from before)`
+    }
+  ]}
+/>
+
+### Identity and Value Comparison
+
+Python has special optimization for small integers (usually <InlineMath math="-5" /> to <InlineMath math="256" />). Integers in this range use the same object in memory to save space.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "identity_comparison.py",
+      code: `# Large integers may use different objects
+a = 300
+b = 300
+print(a is b)      # May be True or False (implementation dependent)
+print(a == b)      # True (same value)
+
+# Integers in range -5 to 256 usually same
+a = 100
+b = 100
+print(a is b)      # True (optimization for small integers)
+print(a == b)      # True (same value)`
+    }
+  ]}
+/>
+
+## Mutable and Immutable Objects
+
+Python classifies objects based on their ability to be changed after creation.
+
+### Immutable Objects
+
+Immutable objects cannot be changed after creation. Any operation that appears to change the object actually creates a new object.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "immutable_objects.py",
+      code: `# Integer is immutable
+a = 300
+print(id(a))  # 10120
+
+a = a + 1     # Creates new object
+print(id(a))  # 10492 (different)
+
+# String is also immutable
+str_var = 'hello'
+print(id(str_var))  # 75568
+
+# Trying to change string will result in error
+# str_var[1] = 'a'  # TypeError`
+    }
+  ]}
+/>
+
+Immutable data types in Python include:
+    - `bool` (boolean)
+    - `int` (integer)
+    - `float` (floating point)
+    - `complex` (complex numbers)
+    - `str` (string)
+    - `tuple` (tuple)
+
+### Mutable Objects
+
+Mutable objects can be changed after creation without creating a new object. The object's identity remains the same even though its value changes.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "mutable_objects.py",
+      code: `# List is mutable
+list_var = [0, 1, 2]
+print(id(list_var))  # 15296
+
+# Changing elements doesn't change object identity
+list_var = [0, 0, 0]
+print(id(list_var))  # 60960 (new object due to assignment)
+
+# In-place modification maintains identity
+list_var[:] = ['a', 'b', 'c']
+print(id(list_var))  # 60960 (same)`
+    }
+  ]}
+/>
+
+Mutable data types in Python include:
+    - `list` (list)
+    - `dict` (dictionary)
+    - `set` (set)
+
+### Assignment vs Modification Behavior
+
+It's important to distinguish between assignment (giving new value) and in-place modification.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "assignment_vs_modification.py",
+      code: `list1 = [0, 1, 2]
+list2 = list1  # Both variables reference the same object
+
+print(id(list1))     # 700
+print(id(list2))     # 700 (same)
+
+# In-place modification affects both variables
+list1[1] = 'x'
+print(list1)         # [0, 'x', 2]
+print(list2)         # [0, 'x', 2] (also changed)
+
+# Assignment creates new reference
+list1 = [1, 2, 3]
+print(list1)         # [1, 2, 3]
+print(list2)         # [0, 'x', 2] (unchanged)`
+    }
+  ]}
+/>
+
+<Mermaid
+  chart={`
+    flowchart TD
+        subgraph Before ["Before Modification"]
+            A[list1] --> C[List Object<br/>Data: 0, 1, 2]
+            B[list2] --> C
+        end
+        
+        subgraph After ["After list1[1] = x"]
+            D[list1] --> F[Same List Object<br/>Data: 0, x, 2]
+            E[list2] --> F
+        end
+        
+        Before -.-> After
+  `}
+/>
+
+Understanding mutability is very important in Python programming. Immutable objects are safer to use in multi-threading contexts because they cannot be changed, while mutable objects provide flexibility to modify data efficiently without creating new objects every time.
