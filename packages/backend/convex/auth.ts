@@ -8,7 +8,7 @@ import { type QueryCtx, query } from "./_generated/server";
 import authSchema from "./betterAuth/schema";
 import { generateApiKey } from "./utils/helper";
 
-const siteUrl = process.env.SITE_URL;
+const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
 // The component client has methods needed for integrating Convex with Better Auth,
 // as well as helper methods for general use.
@@ -18,7 +18,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
     local: {
       schema: authSchema,
     },
-    verbose: process.env.NODE_ENV === "development",
+    verbose: true,
   }
 );
 
@@ -64,17 +64,17 @@ export const createAuth = (
   return betterAuth(authConfig);
 };
 
-export const safeGetUser = async (ctx: QueryCtx) => {
-  return await authComponent.safeGetAuthUser(ctx);
+export const safeGetUser = (ctx: QueryCtx) => {
+  return authComponent.safeGetAuthUser(ctx);
 };
 
-export const getUser = async (ctx: QueryCtx) => {
-  return await authComponent.getAuthUser(ctx);
+export const getUser = (ctx: QueryCtx) => {
+  return authComponent.getAuthUser(ctx);
 };
 
 export const getCurrentUser = query({
   args: {},
-  handler: async (ctx) => {
-    return await safeGetUser(ctx);
+  handler: (ctx) => {
+    return safeGetUser(ctx);
   },
 });
