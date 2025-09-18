@@ -70,17 +70,17 @@ export const createAuth = (
   return betterAuth(authConfig);
 };
 
-export const safeGetUser = (ctx: QueryCtx) => {
-  return authComponent.safeGetAuthUser(ctx);
+export const safeGetUser = async (ctx: QueryCtx) => {
+  return await authComponent.safeGetAuthUser(ctx);
 };
 
-export const getUser = (ctx: QueryCtx) => {
-  return authComponent.getAuthUser(ctx);
+export const getUser = async (ctx: QueryCtx) => {
+  return await authComponent.getAuthUser(ctx);
 };
 
 export const getCurrentUser = query({
   args: {},
-  handler: (ctx) => {
-    return safeGetUser(ctx);
+  handler: async (ctx) => {
+    return await safeGetUser(ctx);
   },
 });
