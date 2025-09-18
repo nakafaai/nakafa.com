@@ -24,15 +24,14 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 );
 
 export const createAuth = (
-  ctx: GenericCtx<DataModel>,
-  { optionsOnly } = { optionsOnly: false }
+  ctx: GenericCtx<DataModel>
 ): ReturnType<typeof betterAuth> => {
   const authConfig = {
     baseURL: siteUrl,
     // disable logging when createAuth is called just to generate options.
     // this is not required, but there's a lot of noise in logs without it.
     logger: {
-      disabled: optionsOnly,
+      disabled: true,
     },
 
     database: authComponent.adapter(ctx),

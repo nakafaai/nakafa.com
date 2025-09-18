@@ -1,7 +1,8 @@
 "use client";
 
 import { Particles } from "@repo/design-system/components/ui/particles";
-import { Authenticated, Unauthenticated } from "convex/react";
+import { Skeleton } from "@repo/design-system/components/ui/skeleton";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useTranslations } from "next-intl";
 import { AuthGoogle } from "@/components/auth/google";
 import { AuthLogout } from "@/components/auth/logout";
@@ -31,6 +32,10 @@ export default function Page() {
           <Authenticated>
             <AuthLogout />
           </Authenticated>
+
+          <AuthLoading>
+            <Skeleton className="mx-auto h-9 w-2/3" />
+          </AuthLoading>
         </div>
       </div>
     </main>
