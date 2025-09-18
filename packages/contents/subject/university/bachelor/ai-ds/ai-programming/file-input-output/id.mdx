@@ -1,0 +1,255 @@
+export const metadata = {
+    title: "File Input dan Output",
+    description: "Pelajari cara membaca dan menulis file dalam Python, mode pembukaan file, metode read(), readline(), dan pengalihan output dengan contoh praktis.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "Pemrograman AI",
+};
+
+## Membaca File
+
+Dalam Python, membaca file adalah proses mengambil data dari file yang tersimpan di sistem. Bayangkan seperti membuka buku dan membaca isinya, Python dapat membuka file dan mengakses informasi di dalamnya.
+
+### Membaca Seluruh Isi File
+
+Cara paling sederhana untuk membaca file adalah mengambil seluruh isinya sekaligus ke dalam memori.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "read_entire_file.py",
+      code: `# Membaca seluruh isi file sekaligus
+f = open('file.txt', 'r')
+txt = f.read()
+f.close()
+
+print(txt)
+# Output: [isi lengkap file akan ditampilkan]`
+    }
+  ]}
+/>
+
+Proses ini melibatkan tiga langkah utama. Pertama, buka file dengan fungsi `open()`. Kedua, baca isinya dengan metode `read()`. Ketiga, tutup file dengan metode `close()` untuk membebaskan sumber daya sistem.
+
+### Membaca File Baris per Baris
+
+Untuk file yang besar, membaca baris per baris lebih efisien karena tidak memuat seluruh file ke memori sekaligus.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "read_line_by_line.py",
+      code: `# Membaca file baris per baris
+f = open('file.txt', 'r')
+for line in f:
+    print(line, end='')
+f.close()
+
+# Catatan: setiap baris mempertahankan karakter newline
+# Parameter end='' mencegah penambahan newline tambahan`
+    }
+  ]}
+/>
+
+Ketika membaca baris per baris, setiap baris mempertahankan karakter newline (`\n`) di akhirnya. Parameter `end=''` pada fungsi `print()` mencegah penambahan newline tambahan.
+
+## Menulis ke File
+
+Menulis file memungkinkan program menyimpan data atau hasil perhitungan ke dalam file untuk digunakan kemudian.
+
+### Menulis String ke File
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "write_string_to_file.py",
+      code: `# Menulis string ke file
+f = open('file.txt', 'w')
+for i in range(1, 11):
+    f.write(f'Line {i}\n')
+f.close()
+
+# File akan berisi:
+# Line 1
+# Line 2
+# Line 3
+# ... (sampai Line 10)`
+    }
+  ]}
+/>
+
+### Mengalihkan Output Print ke File
+
+Kamu dapat mengalihkan output fungsi `print()` langsung ke file menggunakan parameter `file`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "redirect_print_output.py",
+      code: `# Mengalihkan output print ke file
+f = open('file.txt', 'w')
+for i in range(1, 21):
+    print("Line", i, file=f)
+f.close()
+
+# File akan berisi output print yang dialihkan
+# Line 1
+# Line 2
+# ... (sampai Line 20)`
+    }
+  ]}
+/>
+
+Metode ini sangat berguna ketika kamu ingin menyimpan hasil output program ke file tanpa mengubah struktur kode yang sudah ada.
+
+## Mode Pembukaan File
+
+Python menyediakan berbagai mode untuk membuka file sesuai dengan kebutuhan operasi yang akan dilakukan.
+
+<Mermaid
+  chart={`
+    flowchart LR
+        A[Mode File] --> B[Text Mode]
+        A --> C[Binary Mode]
+        
+        B --> B1[r - baca saja]
+        B --> B2[w - tulis baru]
+        B --> B3[a - tambah akhir]
+        B --> B4[r+ - baca dan tulis]
+        
+        C --> C1[rb - baca binary]
+        C --> C2[wb - tulis binary]
+        C --> C3[ab - tambah binary]
+        C --> C4[rb+ - baca tulis binary]
+  `}
+/>
+
+### Sintaks Pembukaan File
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "file_opening_syntax.py",
+      code: `# Sintaks dasar pembukaan file
+f = open('nama_file', 'mode')
+# Operasi file
+f.close()
+
+# Contoh berbagai mode
+f_read = open('data.txt', 'r')      # Baca saja (default)
+f_write = open('output.txt', 'w')   # Tulis (timpa jika ada)
+f_append = open('log.txt', 'a')     # Tambah di akhir file
+f_read_write = open('data.txt', 'r+')  # Baca dan tulis
+
+# Jangan lupa tutup file
+f_read.close()
+f_write.close()
+f_append.close()
+f_read_write.close()`
+    }
+  ]}
+/>
+
+Parameter `mode` menentukan bagaimana file akan diakses. Mode `r` untuk membaca, `w` untuk menulis (menimpa file lama), `a` untuk menambah di akhir file, dan `r+` untuk membaca dan menulis.
+
+## Metode Pembacaan File
+
+Python menyediakan beberapa metode untuk membaca file dengan cara yang berbeda sesuai kebutuhan.
+
+### Metode read() dengan Parameter
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "read_methods.py",
+      code: `# Berbagai metode pembacaan file
+f = open('file.txt', 'r')
+
+# Membaca n karakter dari file
+s = f.read(10)  # Membaca 10 karakter pertama
+print("10 karakter:", s)
+
+# Membaca seluruh file
+f.seek(0)  # Kembali ke awal file
+s = f.read()  # Membaca seluruh file
+print("Seluruh file:", s)
+
+# Membaca satu baris termasuk newline
+f.seek(0)  # Kembali ke awal file
+s = f.readline()  # Membaca satu baris
+print("Satu baris:", repr(s))
+
+f.close()`
+    }
+  ]}
+/>
+
+### Posisi File dan Pembacaan
+
+Ketika kamu membuka file, posisi file dimulai dari awal. Setiap operasi pembacaan memajukan posisi file sesuai dengan jumlah data yang dibaca.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "file_position.py",
+      code: `# Demonstrasi posisi file
+f = open('sample.txt', 'r')
+
+# Posisi awal di karakter ke-0
+first_read = f.read(5)  # Baca 5 karakter
+print("Bacaan pertama:", first_read)
+
+# Posisi sekarang di karakter ke-5
+second_read = f.read(3)  # Baca 3 karakter berikutnya
+print("Bacaan kedua:", second_read)
+
+# Menggunakan seek() untuk mengatur posisi
+f.seek(0)  # Kembali ke awal file
+third_read = f.read(2)  # Baca 2 karakter dari awal
+print("Bacaan ketiga:", third_read)
+
+f.close()`
+    }
+  ]}
+/>
+
+Setiap metode pembacaan mengembalikan string yang dibaca. Ketika mencapai akhir file, metode pembacaan mengembalikan string kosong.
+
+## Penanganan File yang Aman
+
+Python menyediakan statement `with` untuk penanganan file yang lebih aman dan otomatis.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "safe_file_handling.py",
+      code: `# Menggunakan with statement untuk penanganan file aman
+with open('file.txt', 'r') as f:
+    content = f.read()
+    print(content)
+# File otomatis tertutup setelah keluar dari blok with
+
+# Menulis dengan with statement
+with open('output.txt', 'w') as f:
+    f.write("Hello World!")
+    f.write("\nBaris kedua")
+# File otomatis tertutup dan disimpan
+
+# Membaca dan menulis bersamaan
+with open('input.txt', 'r') as input_file, open('output.txt', 'w') as output_file:
+    data = input_file.read()
+    output_file.write(data.upper())
+# Kedua file otomatis tertutup`
+    }
+  ]}
+/>
+
+Statement `with` memastikan file selalu tertutup dengan benar, bahkan jika terjadi error dalam program. Ini mencegah masalah seperti file yang terbuka terus dan menghabiskan sumber daya sistem.

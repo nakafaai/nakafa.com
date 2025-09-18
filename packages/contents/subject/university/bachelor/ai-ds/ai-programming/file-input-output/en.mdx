@@ -1,0 +1,255 @@
+export const metadata = {
+    title: "File Input and Output",
+    description: "Learn how to read and write files in Python, file opening modes, read(), readline() methods, and output redirection with practical examples.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "AI Programming",
+};
+
+## Reading Files
+
+In Python, reading files is the process of retrieving data from files stored in the system. Think of it like opening a book and reading its contents, Python can open files and access the information within them.
+
+### Reading Entire File Content
+
+The simplest way to read a file is to take all its contents at once into memory.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "read_entire_file.py",
+      code: `# Reading entire file content at once
+f = open('file.txt', 'r')
+txt = f.read()
+f.close()
+
+print(txt)
+# Output: [complete file content will be displayed]`
+    }
+  ]}
+/>
+
+This process involves three main steps. First, open the file with the `open()` function. Second, read its contents with the `read()` method. Third, close the file with the `close()` method to free system resources.
+
+### Reading File Line by Line
+
+For large files, reading line by line is more efficient because it doesn't load the entire file into memory at once.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "read_line_by_line.py",
+      code: `# Reading file line by line
+f = open('file.txt', 'r')
+for line in f:
+    print(line, end='')
+f.close()
+
+# Note: each line retains its newline character
+# Parameter end='' prevents adding additional newline`
+    }
+  ]}
+/>
+
+When reading line by line, each line retains the newline character (`\n`) at the end. The `end=''` parameter in the `print()` function prevents adding an additional newline.
+
+## Writing to Files
+
+Writing files allows programs to save data or calculation results into files for later use.
+
+### Writing Strings to Files
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "write_string_to_file.py",
+      code: `# Writing strings to file
+f = open('file.txt', 'w')
+for i in range(1, 11):
+    f.write(f'Line {i}\n')
+f.close()
+
+# File will contain:
+# Line 1
+# Line 2
+# Line 3
+# ... (up to Line 10)`
+    }
+  ]}
+/>
+
+### Redirecting Print Output to File
+
+You can redirect the output of the `print()` function directly to a file using the `file` parameter.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "redirect_print_output.py",
+      code: `# Redirecting print output to file
+f = open('file.txt', 'w')
+for i in range(1, 21):
+    print("Line", i, file=f)
+f.close()
+
+# File will contain redirected print output
+# Line 1
+# Line 2
+# ... (up to Line 20)`
+    }
+  ]}
+/>
+
+This method is very useful when you want to save program output results to a file without changing the existing code structure.
+
+## File Opening Modes
+
+Python provides various modes for opening files according to the needs of the operations to be performed.
+
+<Mermaid
+  chart={`
+    flowchart LR
+        A[File Modes] --> B[Text Mode]
+        A --> C[Binary Mode]
+        
+        B --> B1[r - read only]
+        B --> B2[w - write new]
+        B --> B3[a - append end]
+        B --> B4[r+ - read and write]
+        
+        C --> C1[rb - read binary]
+        C --> C2[wb - write binary]
+        C --> C3[ab - append binary]
+        C --> C4[rb+ - read write binary]
+  `}
+/>
+
+### File Opening Syntax
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "file_opening_syntax.py",
+      code: `# Basic file opening syntax
+f = open('file_name', 'mode')
+# File operations
+f.close()
+
+# Examples of various modes
+f_read = open('data.txt', 'r')      # Read only (default)
+f_write = open('output.txt', 'w')   # Write (overwrite if exists)
+f_append = open('log.txt', 'a')     # Append to end of file
+f_read_write = open('data.txt', 'r+')  # Read and write
+
+# Don't forget to close files
+f_read.close()
+f_write.close()
+f_append.close()
+f_read_write.close()`
+    }
+  ]}
+/>
+
+The `mode` parameter determines how the file will be accessed. Mode `r` for reading, `w` for writing (overwrites old file), `a` for appending to the end of file, and `r+` for reading and writing.
+
+## File Reading Methods
+
+Python provides several methods to read files in different ways according to needs.
+
+### read() Method with Parameters
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "read_methods.py",
+      code: `# Various file reading methods
+f = open('file.txt', 'r')
+
+# Reading n characters from file
+s = f.read(10)  # Read first 10 characters
+print("10 characters:", s)
+
+# Reading entire file
+f.seek(0)  # Return to beginning of file
+s = f.read()  # Read entire file
+print("Entire file:", s)
+
+# Reading one line including newline
+f.seek(0)  # Return to beginning of file
+s = f.readline()  # Read one line
+print("One line:", repr(s))
+
+f.close()`
+    }
+  ]}
+/>
+
+### File Position and Reading
+
+When you open a file, the file position starts from the beginning. Each reading operation advances the file position according to the amount of data read.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "file_position.py",
+      code: `# File position demonstration
+f = open('sample.txt', 'r')
+
+# Initial position at character 0
+first_read = f.read(5)  # Read 5 characters
+print("First read:", first_read)
+
+# Position now at character 5
+second_read = f.read(3)  # Read next 3 characters
+print("Second read:", second_read)
+
+# Using seek() to set position
+f.seek(0)  # Return to beginning of file
+third_read = f.read(2)  # Read 2 characters from start
+print("Third read:", third_read)
+
+f.close()`
+    }
+  ]}
+/>
+
+Each reading method returns the string that was read. When reaching the end of the file, reading methods return an empty string.
+
+## Safe File Handling
+
+Python provides the `with` statement for safer and automatic file handling.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "safe_file_handling.py",
+      code: `# Using with statement for safe file handling
+with open('file.txt', 'r') as f:
+    content = f.read()
+    print(content)
+# File automatically closed after exiting with block
+
+# Writing with with statement
+with open('output.txt', 'w') as f:
+    f.write("Hello World!")
+    f.write("\nSecond line")
+# File automatically closed and saved
+
+# Reading and writing simultaneously
+with open('input.txt', 'r') as input_file, open('output.txt', 'w') as output_file:
+    data = input_file.read()
+    output_file.write(data.upper())
+# Both files automatically closed`
+    }
+  ]}
+/>
+
+The `with` statement ensures files are always closed properly, even if an error occurs in the program. This prevents problems like files staying open and consuming system resources.
