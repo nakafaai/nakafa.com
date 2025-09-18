@@ -1,0 +1,437 @@
+export const metadata = {
+    title: "Functions",
+    description: "Master Python functions: parameters, return values, variable scope, closures, error handling. Complete guide with tested code examples for AI programming students.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "AI Programming",
+};
+
+## Basic Function Concepts
+
+Functions in Python are blocks of code that can be used repeatedly to perform specific tasks. Imagine a function like an automatic coffee machine where you provide ingredients (input), then the machine processes and produces coffee (output). Every time you want coffee, you don't need to create a new machine, just use the same machine.
+
+In programming, functions help us avoid writing the same code repeatedly. Functions have names, can accept parameters (input data), and can return values.
+
+## Function Structure and Syntax
+
+Every function in Python has a basic structure consisting of several important components.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "function_structure.py",
+      code: `def function_name(parameter_list):
+    """Optional docstring to explain the function"""
+    # Code block to be executed
+    statement_1
+    statement_2
+    return return_value  # Optional`
+    }
+  ]}
+/>
+
+Function components consist of:
+
+1. The `def` keyword to start function definition
+2. Function name that follows Python variable naming rules
+3. Parentheses containing parameter list (can be empty)
+4. Colon to end the definition line
+5. Indented code block
+6. Optional `return` statement to return a value
+
+## How Function Calls Work
+
+When you call a function, Python will execute the code inside that function. Let's look at a simple example of how functions work.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "function_example.py",
+      code: `# Function definition
+def greet(name):
+    message = f"Hello, {name}!"
+    return message
+
+# Function call
+result = greet("Alice")
+print(result)  # Output: Hello, Alice!
+
+# Direct call in print
+print(greet("Bob"))  # Output: Hello, Bob!`
+    }
+  ]}
+/>
+
+Process that occurs during function call:
+
+1. Python searches for the function definition with the called name
+2. Given arguments are sent to function parameters
+3. Code inside the function is executed
+4. If there's a `return`, the value is returned to the calling location
+
+## Parameters and Arguments
+
+Parameters are variables defined in functions, while arguments are actual values sent when calling functions. Python provides several types of parameters for greater flexibility.
+
+### Positional and Keyword Parameters
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "function_parameters.py",
+      code: `def introduction(name, age, city="Jakarta"):
+    return f"My name is {name}, {age} years old, living in {city}"
+
+# Using positional parameters
+print(introduction("Sari", 25))
+# Output: My name is Sari, 25 years old, living in Jakarta
+
+# Using keyword parameters
+print(introduction(age=30, name="Budi", city="Bandung"))
+# Output: My name is Budi, 30 years old, living in Bandung
+
+# Mix of positional and keyword parameters
+print(introduction("Andi", age=28, city="Surabaya"))
+# Output: My name is Andi, 28 years old, living in Surabaya`
+    }
+  ]}
+/>
+
+Important rules in parameter usage:
+
+1. Positional parameters must be given in order
+2. Keyword parameters can be given in any order
+3. Positional parameters must be written before keyword parameters
+4. Parameters with default values are optional
+
+### Variable Number of Parameters
+
+Python allows functions to accept unlimited number of arguments using `*args` and `**kwargs`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "variable_parameters.py",
+      code: `def calculate_total(*numbers):
+    """Calculate total from a number of numbers"""
+    total = 0
+    for num in numbers:
+        total += num
+    return total
+
+# Calling with various number of arguments
+print(calculate_total(1, 2, 3))        # Output: 6
+print(calculate_total(5, 10, 15, 20))  # Output: 50
+
+def student_info(name, **details):
+    """Display student information with additional details"""
+    print(f"Name: {name}")
+    for key, value in details.items():
+        print(f"{key.capitalize()}: {value}")
+
+# Calling with keyword arguments
+student_info("Maya", age=20, major="Informatics", gpa=3.8)
+# Output:
+# Name: Maya
+# Age: 20
+# Major: Informatics
+# Gpa: 3.8`
+    }
+  ]}
+/>
+
+Parameter `*args` collects additional positional arguments into a tuple, while `**kwargs` collects additional keyword arguments into a dictionary.
+
+## Function Return Values
+
+Functions can return values using the `return` statement. If there's no `return` or `return` without a value, the function will return `None`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "return_values.py",
+      code: `def circle_area(radius):
+    """Calculate circle area"""
+    import math
+    return math.pi * radius ** 2
+
+def find_min_max(number_list):
+    """Return minimum and maximum values"""
+    if not number_list:
+        return None, None
+    return min(number_list), max(number_list)
+
+def print_message(message):
+    """Function without explicit return"""
+    print(f"Message: {message}")
+    # No return, automatically return None
+
+# Usage example
+area = circle_area(5)
+print(f"Circle area: {area:.2f}")  # Output: Circle area: 78.54
+
+min_val, max_val = find_min_max([3, 1, 4, 1, 5, 9])
+print(f"Min: {min_val}, Max: {max_val}")  # Output: Min: 1, Max: 9
+
+result = print_message("Hello World")  # Output: Message: Hello World
+print(f"print_message function result: {result}")  # Output: print_message function result: None`
+    }
+  ]}
+/>
+
+## Variable Scope in Functions
+
+Variables in Python have scope that determines where variables can be accessed. Understanding variable scope is important to avoid errors in programs.
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A[Built-in Scope] --> B[Global Scope]
+        B --> C[Enclosing Scope]
+        C --> D[Local Scope]
+        A1[Python built-in functions print, len, range] --> A
+        B1[Variables outside functions can be accessed anywhere] --> B
+        C1[Variables in outer functions for nested functions] --> C
+        D1[Variables inside functions can only be accessed locally] --> D
+  `}
+/>
+
+### Local and Global Variables
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "scope_variables.py",
+      code: `# Global variable
+counter = 0
+
+def add_counter():
+    # Local variable with same name
+    counter = 10
+    print(f"Local counter: {counter}")
+
+def add_global_counter():
+    global counter
+    counter += 1
+    print(f"Global counter: {counter}")
+
+# Usage demonstration
+print(f"Initial counter: {counter}")       # Output: Initial counter: 0
+add_counter()                        # Output: Local counter: 10
+print(f"Counter after function: {counter}")  # Output: Counter after function: 0
+add_global_counter()                 # Output: Global counter: 1
+print(f"Final counter: {counter}")      # Output: Final counter: 1`
+    }
+  ]}
+/>
+
+Variable lookup rules follow LEGB order:
+
+1. **Local** - inside current function
+2. **Enclosing** - in enclosing function (for nested functions)
+3. **Global** - at module level
+4. **Built-in** - Python built-in names
+
+## Functions as First-Class Objects
+
+In Python, functions are first-class objects, meaning functions can be treated like other data. You can store functions in variables, pass functions as arguments, or return functions from other functions.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "first_class_functions.py",
+      code: `def multiply_two(x):
+    return x * 2
+
+def multiply_three(x):
+    return x * 3
+
+def apply_operation(function, value):
+    """Apply function to value"""
+    return function(value)
+
+# Store function in variable
+operation = multiply_two
+print(operation(5))  # Output: 10
+
+# Store functions in list
+operation_list = [multiply_two, multiply_three]
+for op in operation_list:
+    print(op(4))  # Output: 8 then 12
+
+# Pass function as argument
+result1 = apply_operation(multiply_two, 7)
+result2 = apply_operation(multiply_three, 7)
+print(f"Results: {result1}, {result2}")  # Output: Results: 14, 21`
+    }
+  ]}
+/>
+
+## Function Documentation with Docstring
+
+Docstring is a string literal that appears as the first statement in a function definition. Docstring serves as documentation to explain the purpose and usage of the function.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "docstring_example.py",
+      code: `def calculate_factorial(n):
+    """
+    Calculate factorial of a positive integer.
+    
+    Parameters:
+        n (int): Positive integer
+    
+    Returns:
+        int: Factorial value of n
+    
+    Raises:
+        ValueError: If n is negative
+        TypeError: If n is not an integer
+    
+    Example:
+        >>> calculate_factorial(5)
+        120
+        >>> calculate_factorial(0)
+        1
+    """
+    if not isinstance(n, int):
+        raise TypeError("Input must be an integer")
+    if n < 0:
+        raise ValueError("Input must be positive or zero")
+    
+    if n <= 1:
+        return 1
+    return n * calculate_factorial(n - 1)
+
+# Access docstring
+print(calculate_factorial.__doc__)
+
+# Use function
+print(calculate_factorial(5))  # Output: 120
+print(calculate_factorial(0))  # Output: 1`
+    }
+  ]}
+/>
+
+Good docstring writing conventions:
+
+1. First line contains brief function summary
+2. If detailed explanation is needed, separate with blank line
+3. Explain parameters, return values, and possible exceptions
+4. Provide usage examples if helpful
+
+## Nested Functions and Closure
+
+Python allows function definitions inside other functions. Inner functions can access variables from outer functions, creating a concept called closure.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "nested_functions.py",
+      code: `def create_multiplier(factor):
+    """Create multiplier function with specific factor"""
+    
+    def multiplier(value):
+        """Inner function that multiplies value by factor"""
+        return value * factor
+    
+    return multiplier
+
+# Create specific multiplier functions
+multiply_two = create_multiplier(2)
+multiply_five = create_multiplier(5)
+
+print(multiply_two(10))   # Output: 20
+print(multiply_five(4))   # Output: 20
+
+def simple_calculator():
+    """Calculator with nested functions"""
+    
+    def add(a, b):
+        return a + b
+    
+    def subtract(a, b):
+        return a - b
+    
+    def multiply(a, b):
+        return a * b
+    
+    # Return dictionary containing functions
+    return {
+        'add': add,
+        'subtract': subtract,
+        'multiply': multiply
+    }
+
+# Use calculator
+calc = simple_calculator()
+print(calc['add'](5, 3))  # Output: 8
+print(calc['subtract'](10, 4)) # Output: 6
+print(calc['multiply'](6, 7))    # Output: 42`
+    }
+  ]}
+/>
+
+## Error Handling in Functions
+
+Good functions should be able to handle error situations gracefully. Python provides exception handling mechanisms to handle possible errors.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "error_handling.py",
+      code: `def safe_divide(numerator, denominator):
+    """
+    Perform division with error handling.
+    
+    Returns:
+        tuple: (result, error_message)
+    """
+    try:
+        result = numerator / denominator
+        return result, None
+    except ZeroDivisionError:
+        return None, "Error: Cannot divide by zero"
+    except TypeError:
+        return None, "Error: Input must be numbers"
+
+def convert_to_int(value):
+    """Convert value to integer with validation"""
+    try:
+        return int(value)
+    except ValueError:
+        print(f"Warning: '{value}' cannot be converted to integer")
+        return None
+    except TypeError:
+        print("Error: Invalid input for conversion")
+        return None
+
+# Usage example
+result, error = safe_divide(10, 2)
+if error:
+    print(error)
+else:
+    print(f"Division result: {result}")  # Output: Division result: 5.0
+
+result, error = safe_divide(10, 0)
+if error:
+    print(error)  # Output: Error: Cannot divide by zero
+
+# Test conversion
+number1 = convert_to_int("123")    # Success, return 123
+number2 = convert_to_int("abc")    # Output: Warning: 'abc' cannot be converted to integer
+number3 = convert_to_int([1, 2])   # Output: Error: Invalid input for conversion`
+    }
+  ]}
+/>

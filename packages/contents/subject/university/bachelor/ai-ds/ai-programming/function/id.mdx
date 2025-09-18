@@ -1,0 +1,437 @@
+export const metadata = {
+    title: "Fungsi",
+    description: "Pelajari fungsi Python: parameter, return values, scope variabel, closure, error handling. Panduan lengkap dengan contoh kode teruji untuk mahasiswa AI programming.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "Pemrograman AI",
+};
+
+## Konsep Dasar Fungsi
+
+Fungsi dalam Python adalah blok kode yang dapat digunakan berulang kali untuk melakukan tugas tertentu. Bayangkan fungsi seperti mesin kopi otomatis yang kamu berikan bahan (input), kemudian mesin tersebut memproses dan menghasilkan kopi (output). Setiap kali kamu ingin kopi, kamu tidak perlu membuat mesin baru, cukup gunakan mesin yang sama.
+
+Dalam pemrograman, fungsi membantu kita menghindari penulisan kode yang sama berulang kali. Fungsi memiliki nama, dapat menerima parameter (data masukan), dan dapat mengembalikan nilai.
+
+## Struktur dan Sintaks Fungsi
+
+Setiap fungsi dalam Python memiliki struktur dasar yang terdiri dari beberapa komponen penting.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "struktur_fungsi.py",
+      code: `def nama_fungsi(parameter_list):
+    """Docstring opsional untuk menjelaskan fungsi"""
+    # Blok kode yang akan dijalankan
+    statement_1
+    statement_2
+    return nilai_kembalian  # Opsional`
+    }
+  ]}
+/>
+
+Komponen fungsi terdiri dari:
+
+1. Kata kunci `def` untuk memulai definisi fungsi
+2. Nama fungsi yang mengikuti aturan penamaan variabel Python
+3. Tanda kurung yang berisi daftar parameter (bisa kosong)
+4. Titik dua untuk mengakhiri baris definisi
+5. Blok kode yang diindentasi
+6. Pernyataan `return` opsional untuk mengembalikan nilai
+
+## Cara Kerja Pemanggilan Fungsi
+
+Ketika kamu memanggil fungsi, Python akan menjalankan kode di dalam fungsi tersebut. Mari kita lihat contoh sederhana bagaimana fungsi bekerja.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "contoh_fungsi.py",
+      code: `# Definisi fungsi
+def sapa(nama):
+    pesan = f"Halo, {nama}!"
+    return pesan
+
+# Pemanggilan fungsi
+hasil = sapa("Alice")
+print(hasil)  # Output: Halo, Alice!
+
+# Pemanggilan langsung dalam print
+print(sapa("Bob"))  # Output: Halo, Bob!`
+    }
+  ]}
+/>
+
+Proses yang terjadi saat pemanggilan fungsi:
+
+1. Python mencari definisi fungsi dengan nama yang dipanggil
+2. Argumen yang diberikan dikirim ke parameter fungsi
+3. Kode di dalam fungsi dieksekusi
+4. Jika ada `return`, nilai dikembalikan ke tempat pemanggilan
+
+## Parameter dan Argumen
+
+Parameter adalah variabel yang didefinisikan dalam fungsi, sedangkan argumen adalah nilai aktual yang dikirimkan saat memanggil fungsi. Python menyediakan beberapa jenis parameter untuk fleksibilitas yang lebih besar.
+
+### Parameter Posisi dan Kata Kunci
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "parameter_fungsi.py",
+      code: `def perkenalan(nama, umur, kota="Jakarta"):
+    return f"Nama saya {nama}, umur {umur} tahun, tinggal di {kota}"
+
+# Menggunakan parameter posisi
+print(perkenalan("Sari", 25))
+# Output: Nama saya Sari, umur 25 tahun, tinggal di Jakarta
+
+# Menggunakan parameter kata kunci
+print(perkenalan(umur=30, nama="Budi", kota="Bandung"))
+# Output: Nama saya Budi, umur 30 tahun, tinggal di Bandung
+
+# Campuran parameter posisi dan kata kunci
+print(perkenalan("Andi", umur=28, kota="Surabaya"))
+# Output: Nama saya Andi, umur 28 tahun, tinggal di Surabaya`
+    }
+  ]}
+/>
+
+Aturan penting dalam penggunaan parameter:
+
+1. Parameter posisi harus diberikan sesuai urutan
+2. Parameter kata kunci dapat diberikan dalam urutan apa saja
+3. Parameter posisi harus ditulis sebelum parameter kata kunci
+4. Parameter dengan nilai default bersifat opsional
+
+### Parameter dengan Jumlah Variabel
+
+Python memungkinkan fungsi menerima jumlah argumen yang tidak terbatas menggunakan `*args` dan `**kwargs`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "parameter_variabel.py",
+      code: `def hitung_total(*angka):
+    """Menghitung total dari sejumlah angka"""
+    total = 0
+    for num in angka:
+        total += num
+    return total
+
+# Memanggil dengan berbagai jumlah argumen
+print(hitung_total(1, 2, 3))        # Output: 6
+print(hitung_total(5, 10, 15, 20))  # Output: 50
+
+def info_siswa(nama, **detail):
+    """Menampilkan informasi siswa dengan detail tambahan"""
+    print(f"Nama: {nama}")
+    for kunci, nilai in detail.items():
+        print(f"{kunci.capitalize()}: {nilai}")
+
+# Memanggil dengan keyword arguments
+info_siswa("Maya", umur=20, jurusan="Informatika", ipk=3.8)
+# Output:
+# Nama: Maya
+# Umur: 20
+# Jurusan: Informatika
+# Ipk: 3.8`
+    }
+  ]}
+/>
+
+Parameter `*args` mengumpulkan argumen posisi tambahan ke dalam tuple, sedangkan `**kwargs` mengumpulkan argumen kata kunci tambahan ke dalam dictionary.
+
+## Nilai Kembalian Fungsi
+
+Fungsi dapat mengembalikan nilai menggunakan pernyataan `return`. Jika tidak ada `return` atau `return` tanpa nilai, fungsi akan mengembalikan `None`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "return_values.py",
+      code: `def luas_lingkaran(radius):
+    """Menghitung luas lingkaran"""
+    import math
+    return math.pi * radius ** 2
+
+def cari_min_max(daftar_angka):
+    """Mengembalikan nilai minimum dan maksimum"""
+    if not daftar_angka:
+        return None, None
+    return min(daftar_angka), max(daftar_angka)
+
+def cetak_pesan(pesan):
+    """Fungsi tanpa return eksplisit"""
+    print(f"Pesan: {pesan}")
+    # Tidak ada return, otomatis return None
+
+# Contoh penggunaan
+luas = luas_lingkaran(5)
+print(f"Luas lingkaran: {luas:.2f}")  # Output: Luas lingkaran: 78.54
+
+nilai_min, nilai_max = cari_min_max([3, 1, 4, 1, 5, 9])
+print(f"Min: {nilai_min}, Max: {nilai_max}")  # Output: Min: 1, Max: 9
+
+hasil = cetak_pesan("Hello World")  # Output: Pesan: Hello World
+print(f"Hasil fungsi cetak_pesan: {hasil}")  # Output: Hasil fungsi cetak_pesan: None`
+    }
+  ]}
+/>
+
+## Lingkup Variabel dalam Fungsi
+
+Variabel dalam Python memiliki lingkup (scope) yang menentukan di mana variabel dapat diakses. Pemahaman tentang lingkup variabel penting untuk menghindari kesalahan dalam program.
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A[Built-in Scope] --> B[Global Scope]
+        B --> C[Enclosing Scope]
+        C --> D[Local Scope]
+        A1[Fungsi built-in Python print, len, range] --> A
+        B1[Variabel di luar fungsi dapat diakses di mana saja] --> B
+        C1[Variabel di fungsi luar untuk nested functions] --> C
+        D1[Variabel di dalam fungsi hanya dapat diakses lokal] --> D
+  `}
+/>
+
+### Variabel Lokal dan Global
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "scope_variables.py",
+      code: `# Variabel global
+counter = 0
+
+def tambah_counter():
+    # Variabel lokal dengan nama sama
+    counter = 10
+    print(f"Counter lokal: {counter}")
+
+def tambah_global_counter():
+    global counter
+    counter += 1
+    print(f"Counter global: {counter}")
+
+# Demonstrasi penggunaan
+print(f"Counter awal: {counter}")       # Output: Counter awal: 0
+tambah_counter()                        # Output: Counter lokal: 10
+print(f"Counter setelah fungsi: {counter}")  # Output: Counter setelah fungsi: 0
+tambah_global_counter()                 # Output: Counter global: 1
+print(f"Counter akhir: {counter}")      # Output: Counter akhir: 1`
+    }
+  ]}
+/>
+
+Aturan pencarian variabel mengikuti urutan LEGB:
+
+1. **Local** - di dalam fungsi saat ini
+2. **Enclosing** - di fungsi yang membungkus (untuk nested functions)
+3. **Global** - di level modul
+4. **Built-in** - nama built-in Python
+
+## Fungsi sebagai Objek Kelas Pertama
+
+Dalam Python, fungsi adalah objek kelas pertama, yang berarti fungsi dapat diperlakukan seperti data lainnya. Kamu dapat menyimpan fungsi dalam variabel, mengirimkan fungsi sebagai argumen, atau mengembalikan fungsi dari fungsi lain.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "first_class_functions.py",
+      code: `def kali_dua(x):
+    return x * 2
+
+def kali_tiga(x):
+    return x * 3
+
+def terapkan_operasi(fungsi, nilai):
+    """Menerapkan fungsi pada nilai"""
+    return fungsi(nilai)
+
+# Menyimpan fungsi dalam variabel
+operasi = kali_dua
+print(operasi(5))  # Output: 10
+
+# Menyimpan fungsi dalam list
+daftar_operasi = [kali_dua, kali_tiga]
+for op in daftar_operasi:
+    print(op(4))  # Output: 8 kemudian 12
+
+# Mengirim fungsi sebagai argumen
+hasil1 = terapkan_operasi(kali_dua, 7)
+hasil2 = terapkan_operasi(kali_tiga, 7)
+print(f"Hasil: {hasil1}, {hasil2}")  # Output: Hasil: 14, 21`
+    }
+  ]}
+/>
+
+## Dokumentasi Fungsi dengan Docstring
+
+Docstring adalah string literal yang muncul sebagai pernyataan pertama dalam definisi fungsi. Docstring berfungsi sebagai dokumentasi untuk menjelaskan tujuan dan cara penggunaan fungsi.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "docstring_example.py",
+      code: `def hitung_faktorial(n):
+    """
+    Menghitung faktorial dari bilangan bulat positif.
+    
+    Parameter:
+        n (int): Bilangan bulat positif
+    
+    Returns:
+        int: Nilai faktorial dari n
+    
+    Raises:
+        ValueError: Jika n negatif
+        TypeError: Jika n bukan bilangan bulat
+    
+    Contoh:
+        >>> hitung_faktorial(5)
+        120
+        >>> hitung_faktorial(0)
+        1
+    """
+    if not isinstance(n, int):
+        raise TypeError("Input harus berupa bilangan bulat")
+    if n < 0:
+        raise ValueError("Input harus bilangan positif atau nol")
+    
+    if n <= 1:
+        return 1
+    return n * hitung_faktorial(n - 1)
+
+# Mengakses docstring
+print(hitung_faktorial.__doc__)
+
+# Menggunakan fungsi
+print(hitung_faktorial(5))  # Output: 120
+print(hitung_faktorial(0))  # Output: 1`
+    }
+  ]}
+/>
+
+Konvensi penulisan docstring yang baik:
+
+1. Baris pertama berisi ringkasan singkat fungsi
+2. Jika perlu penjelasan detail, pisahkan dengan baris kosong
+3. Jelaskan parameter, nilai kembalian, dan exception yang mungkin terjadi
+4. Berikan contoh penggunaan jika membantu
+
+## Fungsi Bersarang dan Closure
+
+Python memungkinkan definisi fungsi di dalam fungsi lain. Fungsi dalam dapat mengakses variabel dari fungsi luar, menciptakan konsep yang disebut closure.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "nested_functions.py",
+      code: `def buat_pengali(faktor):
+    """Membuat fungsi pengali dengan faktor tertentu"""
+    
+    def pengali(nilai):
+        """Fungsi dalam yang mengali nilai dengan faktor"""
+        return nilai * faktor
+    
+    return pengali
+
+# Membuat fungsi pengali khusus
+pengali_dua = buat_pengali(2)
+pengali_lima = buat_pengali(5)
+
+print(pengali_dua(10))   # Output: 20
+print(pengali_lima(4))   # Output: 20
+
+def kalkulator_sederhana():
+    """Kalkulator dengan fungsi bersarang"""
+    
+    def tambah(a, b):
+        return a + b
+    
+    def kurang(a, b):
+        return a - b
+    
+    def kali(a, b):
+        return a * b
+    
+    # Mengembalikan dictionary berisi fungsi-fungsi
+    return {
+        'tambah': tambah,
+        'kurang': kurang,
+        'kali': kali
+    }
+
+# Menggunakan kalkulator
+calc = kalkulator_sederhana()
+print(calc['tambah'](5, 3))  # Output: 8
+print(calc['kurang'](10, 4)) # Output: 6
+print(calc['kali'](6, 7))    # Output: 42`
+    }
+  ]}
+/>
+
+## Penanganan Error dalam Fungsi
+
+Fungsi yang baik harus dapat menangani situasi error dengan graceful. Python menyediakan mekanisme exception handling untuk menangani kesalahan yang mungkin terjadi.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "error_handling.py",
+      code: `def bagi_aman(pembilang, penyebut):
+    """
+    Melakukan pembagian dengan penanganan error.
+    
+    Returns:
+        tuple: (hasil, pesan_error)
+    """
+    try:
+        hasil = pembilang / penyebut
+        return hasil, None
+    except ZeroDivisionError:
+        return None, "Error: Tidak dapat membagi dengan nol"
+    except TypeError:
+        return None, "Error: Input harus berupa angka"
+
+def konversi_ke_int(nilai):
+    """Konversi nilai ke integer dengan validasi"""
+    try:
+        return int(nilai)
+    except ValueError:
+        print(f"Warning: '{nilai}' tidak dapat dikonversi ke integer")
+        return None
+    except TypeError:
+        print("Error: Input tidak valid untuk konversi")
+        return None
+
+# Contoh penggunaan
+hasil, error = bagi_aman(10, 2)
+if error:
+    print(error)
+else:
+    print(f"Hasil pembagian: {hasil}")  # Output: Hasil pembagian: 5.0
+
+hasil, error = bagi_aman(10, 0)
+if error:
+    print(error)  # Output: Error: Tidak dapat membagi dengan nol
+
+# Test konversi
+angka1 = konversi_ke_int("123")    # Berhasil, return 123
+angka2 = konversi_ke_int("abc")    # Output: Warning: 'abc' tidak dapat dikonversi ke integer
+angka3 = konversi_ke_int([1, 2])   # Output: Error: Input tidak valid untuk konversi`
+    }
+  ]}
+/>
