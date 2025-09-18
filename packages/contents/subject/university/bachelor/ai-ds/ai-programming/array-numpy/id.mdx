@@ -1,0 +1,481 @@
+export const metadata = {
+    title: "Membuat Array dengan NumPy",
+    description: "Pelajari cara membuat array NumPy: manual, fungsi bawaan, sequence, dan operasi dasar. Panduan lengkap dengan contoh kode teruji untuk pemrograman AI dan data science.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "Pemrograman AI",
+};
+
+## Pengenalan NumPy
+
+NumPy (Numerical Python) adalah pustaka fundamental untuk komputasi ilmiah dalam Python. Bayangkan NumPy seperti kotak perkakas khusus untuk bekerja dengan angka dalam jumlah besar. Jika list Python seperti tas biasa yang bisa menyimpan berbagai barang, maka array NumPy seperti lemari arsip yang sangat terorganisir dan efisien untuk menyimpan data numerik.
+
+> Untuk referensi lengkap dan panduan mendalam, kamu bisa mengunjungi [dokumentasi resmi NumPy](https://numpy.org/doc/stable/) yang menyediakan tutorial, API reference, dan contoh-contoh praktis untuk memperdalam pemahamanmu.
+
+Objek inti dalam NumPy adalah `ndarray` (n-dimensional array), yaitu wadah multidimensi untuk menyimpan elemen dengan tipe data yang sama. Array NumPy memiliki ukuran yang tetap dan memberikan performa yang jauh lebih baik dibandingkan list Python biasa.
+
+NumPy menyediakan beberapa keunggulan penting untuk pemrograman ilmiah:
+
+1. **Efisiensi tinggi** karena diimplementasikan dalam bahasa C yang terkompilasi
+2. **Vektorisasi** memungkinkan operasi pada seluruh array tanpa loop eksplisit
+3. **Konsumsi memori lebih kecil** dibandingkan list Python
+4. **Operasi matematika yang lengkap** dan optimized
+
+Vektorisasi adalah kemampuan untuk menerapkan operasi tunggal pada seluruh array sekaligus. Ini seperti memberi perintah kepada seluruh barisan tentara sekaligus, bukan satu per satu.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "vectorization_comparison.py",
+      code: `# Perkalian elemen menggunakan list Python (lambat)
+x = [1, 2, 3, 4, 5]
+y = [2, 3, 4, 5, 6]
+z = []
+for i in range(len(x)):
+    z.append(x[i] * y[i])
+print("Hasil list:", z)  # Output: Hasil list: [2, 6, 12, 20, 30]
+
+# Perkalian elemen menggunakan NumPy (cepat)
+import numpy as np
+x_np = np.array([1, 2, 3, 4, 5])
+y_np = np.array([2, 3, 4, 5, 6])
+z_np = x_np * y_np
+print("Hasil NumPy:", z_np)  # Output: Hasil NumPy: [ 2  6 12 20 30]`
+    }
+  ]}
+/>
+
+## Pembuatan Array Manual
+
+Cara paling dasar untuk membuat array NumPy adalah mengkonversi struktur data Python yang sudah ada menjadi array.
+
+Array satu dimensi seperti barisan angka dalam satu baris. Kamu dapat membuatnya dari list Python menggunakan fungsi `np.array()`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_1d.py",
+      code: `import numpy as np
+
+# Membuat array 1D dari list
+a = np.array([0, 1, 2, 3])
+print("Array 1D:", a)  # Output: Array 1D: [0 1 2 3]
+print("Tipe data:", type(a))  # Output: Tipe data: <class 'numpy.ndarray'>
+print("Shape:", a.shape)  # Output: Shape: (4,)
+print("Dimensi:", a.ndim)  # Output: Dimensi: 1`
+    }
+  ]}
+/>
+
+Array dua dimensi seperti tabel dengan baris dan kolom. Kamu bisa membuatnya dari list bertingkat (nested list).
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_2d.py",
+      code: `import numpy as np
+
+# Membuat array 2D dari nested list
+a = np.array([[0, 1], [2, 3]])
+print("Array 2D:")
+print(a)
+# Output:
+# [[0 1]
+#  [2 3]]
+
+print("Shape:", a.shape)  # Output: Shape: (2, 2)
+print("Dimensi:", a.ndim)  # Output: Dimensi: 2
+print("Total elemen:", a.size)  # Output: Total elemen: 4`
+    }
+  ]}
+/>
+
+Array tiga dimensi dapat diilustrasikan sebagai tumpukan tabel. Bayangkan seperti beberapa lembar kertas yang ditumpuk, di mana setiap lembar berisi tabel data.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_3d.py",
+      code: `import numpy as np
+
+# Membuat array 3D
+a = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]])
+print("Array 3D:")
+print(a)
+# Output:
+# [[[ 1  2  3]
+#   [ 4  5  6]]
+#  [[ 7  8  9]
+#   [10 11 12]]]
+
+print("Shape:", a.shape)  # Output: Shape: (2, 2, 3)
+print("Axis 0 (planes):", a.shape[0])  # Output: Axis 0 (planes): 2
+print("Axis 1 (rows):", a.shape[1])  # Output: Axis 1 (rows): 2
+print("Axis 2 (columns):", a.shape[2])  # Output: Axis 2 (columns): 3`
+    }
+  ]}
+/>
+
+### Struktur Multidimensi
+
+| Dimensi | Shape | Struktur | Contoh | Axis |
+|---------|--------|----------|---------|------|
+| **1D** | `(4,)` | Barisan angka dalam satu baris | `[0, 1, 2, 3]` | Axis 0 untuk indeks elemen |
+| **2D** | `(2, 2)` | Tabel dengan baris dan kolom | `[[0, 1], [2, 3]]` | Axis 0 untuk baris, Axis 1 untuk kolom |
+| **3D** | `(2, 2, 3)` | Tumpukan tabel (planes) | 2 planes, setiap plane 2x3 | Axis 0 kedalaman, Axis 1 tinggi, Axis 2 lebar |
+
+Semakin tinggi dimensi array, semakin kompleks struktur datanya, tetapi prinsip dasarnya tetap sama. Setiap axis mewakili satu dimensi pengorganisasian data.
+
+NumPy dapat membuat array dari berbagai struktur data Python, termasuk list, tuple, dan campuran keduanya.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_from_various_types.py",
+      code: `import numpy as np
+
+# Dari list
+arr_from_list = np.array([0, 1, 2, 3])
+print("Dari list:", arr_from_list)  # Output: Dari list: [0 1 2 3]
+
+# Dari tuple
+arr_from_tuple = np.array((0, 1, 2, 3))
+print("Dari tuple:", arr_from_tuple)  # Output: Dari tuple: [0 1 2 3]
+
+# Dari campuran (akan dikonversi ke tipe yang kompatibel)
+arr_mixed = np.array([0, 1, 2.5, 3])
+print("Dari campuran:", arr_mixed)  # Output: Dari campuran: [0.  1.  2.5 3. ]
+print("Tipe data otomatis:", arr_mixed.dtype)  # Output: Tipe data otomatis: float64`
+    }
+  ]}
+/>
+
+## Fungsi Pembuat Array
+
+NumPy menyediakan berbagai fungsi khusus untuk membuat array dengan pola atau nilai tertentu. Ini seperti memiliki cetakan khusus untuk membuat kue dengan bentuk yang konsisten.
+
+### Fungsi Nilai Konstan
+
+Fungsi `np.ones()` membuat array yang diisi dengan angka 1. Berguna ketika kamu perlu inisialisasi dengan nilai dasar.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "ones_arrays.py",
+      code: `import numpy as np
+
+# Array 1D dengan nilai 1
+a = np.ones(3)
+print("1D ones:", a)  # Output: 1D ones: [1. 1. 1.]
+
+# Array 2D dengan nilai 1
+a = np.ones((2, 3))
+print("2D ones:")
+print(a)
+# Output:
+# [[1. 1. 1.]
+#  [1. 1. 1.]]
+
+# Array 3D dengan nilai 1
+a = np.ones((2, 2, 3))
+print("3D ones shape:", a.shape)  # Output: 3D ones shape: (2, 2, 3)
+print("3D ones:")
+print(a)
+# Output:
+# [[[1. 1. 1.]
+#   [1. 1. 1.]]
+#  [[1. 1. 1.]
+#   [1. 1. 1.]]]`
+    }
+  ]}
+/>
+
+Selain `np.ones()`, terdapat fungsi lain untuk membuat array dengan pola khusus:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "special_arrays.py",
+      code: `import numpy as np
+
+# Array dengan nilai nol
+a = np.zeros((2, 3))
+print("Zeros array:")
+print(a)
+# Output:
+# [[0. 0. 0.]
+#  [0. 0. 0.]]
+
+# Array identitas (diagonal 1, lainnya 0)
+a = np.eye(3, 3)
+print("Identity matrix:")
+print(a)
+# Output:
+# [[1. 0. 0.]
+#  [0. 1. 0.]
+#  [0. 0. 1.]]
+
+# Array diagonal dengan nilai khusus
+a = np.diag((1, 2, 3))
+print("Diagonal array:")
+print(a)
+# Output:
+# [[1 0 0]
+#  [0 2 0]
+#  [0 0 3]]`
+    }
+  ]}
+/>
+
+### Fungsi Random
+
+Fungsi random berguna untuk membuat data simulasi atau inisialisasi dengan nilai acak.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "random_arrays.py",
+      code: `import numpy as np
+
+# Set seed untuk hasil yang konsisten
+np.random.seed(10)
+
+# Array dengan nilai acak uniform antara 0 dan 1
+a = np.random.rand(2, 3)
+print("Random uniform [0,1]:")
+print(a)
+# Output:
+# [[0.77132064 0.02075195 0.63364823]
+#  [0.74880388 0.49850701 0.22479665]]
+
+# Array dengan distribusi normal (mean=0, std=1)
+a = np.random.randn(3)
+print("Random normal:", a)  # Output: Random normal: [ 0.62133597 -0.72008556  0.26551159]
+
+# Array dengan integer acak dalam rentang tertentu
+a = np.random.randint(1, 10, size=(2, 3))
+print("Random integers [1,10):")
+print(a)
+# Output:
+# [[7 9 2]
+#  [9 5 2]]`
+    }
+  ]}
+/>
+
+### Fungsi Matematika
+
+Fungsi `np.fromfunction` memungkinkan pembuatan array berdasarkan fungsi matematika. Ini seperti memiliki formula untuk menghasilkan nilai setiap elemen berdasarkan posisinya.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "fromfunction_array.py",
+      code: `import numpy as np
+
+# Membuat array menggunakan fungsi
+def f(i, j):
+    return i + j
+
+# Array 2x3 dengan nilai berdasarkan fungsi f(i,j) = i + j
+a = np.fromfunction(f, (2, 3))
+print("Array dari fungsi f(i,j) = i + j:")
+print(a)
+# Output:
+# [[0. 1. 2.]
+#  [1. 2. 3.]]
+
+# Fungsi yang lebih kompleks
+def g(i, j):
+    return i * j + 1
+
+b = np.fromfunction(g, (3, 3))
+print("Array dari fungsi g(i,j) = i*j + 1:")
+print(b)
+# Output:
+# [[1. 1. 1.]
+#  [1. 2. 3.]
+#  [1. 3. 5.]]`
+    }
+  ]}
+/>
+
+Fungsi `np.empty` membuat array tanpa menginisialisasi nilai elemennya. Ini berguna ketika kamu akan mengisi array dengan nilai nanti dan ingin menghemat waktu inisialisasi.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "empty_array.py",
+      code: `import numpy as np
+
+# Membuat array kosong (nilai tidak terdefinisi)
+a = np.empty((3, 2))
+print("Empty array (nilai acak dari memori):")
+print(a)
+# Output akan bervariasi karena nilai tidak diinisialisasi
+# Contoh output:
+# [[0. 0.]
+#  [0. 0.]
+#  [0. 0.]]
+
+print("Shape:", a.shape)  # Output: Shape: (3, 2)
+print("Dtype:", a.dtype)  # Output: Dtype: float64`
+    }
+  ]}
+/>
+
+## Array dari Sequence
+
+NumPy menyediakan fungsi khusus untuk membuat array dari urutan nilai dengan pola tertentu.
+
+### Fungsi np.arange
+
+Fungsi `np.arange` adalah versi NumPy dari `range()` Python, tetapi dapat menghasilkan array dengan tipe data floating-point dan mengalokasikan memori langsung untuk elemen.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "arange_arrays.py",
+      code: `import numpy as np
+
+# Array dari 0 hingga 4
+a = np.arange(5)
+print("arange(5):", a)  # Output: arange(5): [0 1 2 3 4]
+
+# Array dengan start, stop, dan step
+a = np.arange(1.5, 3., 0.5)
+print("arange(1.5, 3., 0.5):", a)  # Output: arange(1.5, 3., 0.5): [1.5 2.  2.5]
+
+# Array dengan step yang menghasilkan nilai desimal
+a = np.arange(1.5, 4.)
+print("arange(1.5, 4.):", a)  # Output: arange(1.5, 4.): [1.5 2.5 3.5]
+
+# Demonstrasi parameter
+print("\\nParameter arange(start, end, step):")
+print("- start, end, step dapat berupa float")
+print("- end dikecualikan dari hasil")
+print("- step default adalah 1")
+print("- start default adalah 0")`
+    }
+  ]}
+/>
+
+### Fungsi np.linspace
+
+Berbeda dengan `np.arange` yang menggunakan step tetap, `np.linspace` membagi rentang menjadi sejumlah titik yang sama rata.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "linspace_arrays.py",
+      code: `import numpy as np
+
+# Membuat 5 titik merata antara 0 dan 10
+a = np.linspace(0, 10, 5)
+print("linspace(0, 10, 5):", a)  # Output: linspace(0, 10, 5): [ 0.   2.5  5.   7.5 10. ]
+
+# Membuat 11 titik merata antara -1 dan 1
+a = np.linspace(-1, 1, 11)
+print("linspace(-1, 1, 11):", a)
+# Output: linspace(-1, 1, 11): [-1.  -0.8 -0.6 -0.4 -0.2  0.   0.2  0.4  0.6  0.8  1. ]
+
+# Perbandingan linspace vs arange
+print("\\nPerbedaan linspace vs arange:")
+print("linspace: jumlah elemen diketahui, jarak dihitung")
+print("arange: jarak diketahui, jumlah elemen dihitung")`
+    }
+  ]}
+/>
+
+### Perbandingan arange vs linspace
+
+| Aspek | `np.arange` | `np.linspace` |
+|-------|-------------|---------------|
+| Parameter utama | start, stop, step | start, stop, num |
+| Kontrol | Jarak antar elemen | Jumlah total elemen |
+| Endpoint | Dikecualikan | Disertakan (default) |
+| Tipe data | Mengikuti input | Selalu float (default) |
+| Kegunaan | Sequence dengan jarak tetap | Pembagian rentang merata |
+
+## Operasi Dasar
+
+Setelah membuat array, kamu dapat melakukan berbagai operasi untuk memanipulasi dan menganalisis data.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_info.py",
+      code: `import numpy as np
+
+# Membuat array contoh
+a = np.array([[1, 2, 3], [4, 5, 6]])
+print("Array:")
+print(a)
+# Output:
+# [[1 2 3]
+#  [4 5 6]]
+
+print("Shape (bentuk):", a.shape)  # Output: Shape (bentuk): (2, 3)
+print("Size (total elemen):", a.size)  # Output: Size (total elemen): 6
+print("Ndim (dimensi):", a.ndim)  # Output: Ndim (dimensi): 2
+print("Dtype (tipe data):", a.dtype)  # Output: Dtype (tipe data): int64
+print("Itemsize (bytes per elemen):", a.itemsize)  # Output: Itemsize (bytes per elemen): 8`
+    }
+  ]}
+/>
+
+Array dapat diubah bentuknya menggunakan fungsi `reshape()` untuk mengatur ulang dimensi tanpa mengubah data:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_reshape.py",
+      code: `import numpy as np
+
+# Array 1D dengan 12 elemen
+a = np.arange(12)
+print("Array original:", a)  # Output: Array original: [ 0  1  2  3  4  5  6  7  8  9 10 11]
+
+# Reshape ke 3x4
+b = a.reshape(3, 4)
+print("Reshape 3x4:")
+print(b)
+# Output:
+# [[ 0  1  2  3]
+#  [ 4  5  6  7]
+#  [ 8  9 10 11]]
+
+# Reshape ke 2x6
+c = a.reshape(2, 6)
+print("Reshape 2x6:")
+print(c)
+# Output:
+# [[ 0  1  2  3  4  5]
+#  [ 6  7  8  9 10 11]]
+
+# Reshape dengan -1 (otomatis menghitung dimensi)
+d = a.reshape(4, -1)
+print("Reshape 4x-1 (otomatis):")
+print(d)
+# Output:
+# [[ 0  1  2]
+#  [ 3  4  5]
+#  [ 6  7  8]
+#  [ 9 10 11]]`
+    }
+  ]}
+/>

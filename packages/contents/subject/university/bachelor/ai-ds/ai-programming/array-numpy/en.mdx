@@ -1,0 +1,481 @@
+export const metadata = {
+    title: "Creating Arrays with NumPy",
+    description: "Learn how to create NumPy arrays: manual, built-in functions, sequences, and basic operations. Complete guide with tested code examples for AI programming and data science.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "AI Programming",
+};
+
+## NumPy Introduction
+
+NumPy (Numerical Python) is a fundamental library for scientific computing in Python. Imagine NumPy as a special toolbox for working with large amounts of numbers. If Python lists are like regular bags that can store various items, then NumPy arrays are like highly organized and efficient filing cabinets for storing numerical data.
+
+> For complete reference and in-depth guides, you can visit the [official NumPy documentation](https://numpy.org/doc/stable/) which provides tutorials, API reference, and practical examples to deepen your understanding.
+
+The core object in NumPy is `ndarray` (n-dimensional array), which is a multidimensional container for storing elements with the same data type. NumPy arrays have fixed sizes and provide much better performance compared to regular Python lists.
+
+NumPy provides several important advantages for scientific programming:
+
+1. **High efficiency** because it's implemented in compiled C language
+2. **Vectorization** allows operations on entire arrays without explicit loops
+3. **Lower memory consumption** compared to Python lists
+4. **Complete and optimized mathematical operations**
+
+Vectorization is the ability to apply a single operation to an entire array at once. It's like giving commands to an entire army formation simultaneously, rather than one by one.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "vectorization_comparison.py",
+      code: `# Element multiplication using Python list (slow)
+x = [1, 2, 3, 4, 5]
+y = [2, 3, 4, 5, 6]
+z = []
+for i in range(len(x)):
+    z.append(x[i] * y[i])
+print("List result:", z)  # Output: List result: [2, 6, 12, 20, 30]
+
+# Element multiplication using NumPy (fast)
+import numpy as np
+x_np = np.array([1, 2, 3, 4, 5])
+y_np = np.array([2, 3, 4, 5, 6])
+z_np = x_np * y_np
+print("NumPy result:", z_np)  # Output: NumPy result: [ 2  6 12 20 30]`
+    }
+  ]}
+/>
+
+## Manual Array Creation
+
+The most basic way to create NumPy arrays is to convert existing Python data structures into arrays.
+
+One-dimensional arrays are like a sequence of numbers in a single row. You can create them from Python lists using the `np.array()` function.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_1d.py",
+      code: `import numpy as np
+
+# Create 1D array from list
+a = np.array([0, 1, 2, 3])
+print("1D Array:", a)  # Output: 1D Array: [0 1 2 3]
+print("Data type:", type(a))  # Output: Data type: <class 'numpy.ndarray'>
+print("Shape:", a.shape)  # Output: Shape: (4,)
+print("Dimensions:", a.ndim)  # Output: Dimensions: 1`
+    }
+  ]}
+/>
+
+Two-dimensional arrays are like tables with rows and columns. You can create them from nested lists.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_2d.py",
+      code: `import numpy as np
+
+# Create 2D array from nested list
+a = np.array([[0, 1], [2, 3]])
+print("2D Array:")
+print(a)
+# Output:
+# [[0 1]
+#  [2 3]]
+
+print("Shape:", a.shape)  # Output: Shape: (2, 2)
+print("Dimensions:", a.ndim)  # Output: Dimensions: 2
+print("Total elements:", a.size)  # Output: Total elements: 4`
+    }
+  ]}
+/>
+
+Three-dimensional arrays can be illustrated as stacks of tables. Imagine like several sheets of paper stacked, where each sheet contains table data.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_3d.py",
+      code: `import numpy as np
+
+# Create 3D array
+a = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]])
+print("3D Array:")
+print(a)
+# Output:
+# [[[ 1  2  3]
+#   [ 4  5  6]]
+#  [[ 7  8  9]
+#   [10 11 12]]]
+
+print("Shape:", a.shape)  # Output: Shape: (2, 2, 3)
+print("Axis 0 (planes):", a.shape[0])  # Output: Axis 0 (planes): 2
+print("Axis 1 (rows):", a.shape[1])  # Output: Axis 1 (rows): 2
+print("Axis 2 (columns):", a.shape[2])  # Output: Axis 2 (columns): 3`
+    }
+  ]}
+/>
+
+### Multidimensional Structure
+
+| Dimension | Shape | Structure | Example | Axis |
+|-----------|-------|-----------|---------|------|
+| **1D** | `(4,)` | Number sequence in single row | `[0, 1, 2, 3]` | Axis 0 for element index |
+| **2D** | `(2, 2)` | Table with rows and columns | `[[0, 1], [2, 3]]` | Axis 0 for rows, Axis 1 for columns |
+| **3D** | `(2, 2, 3)` | Stack of tables (planes) | 2 planes, each plane 2x3 | Axis 0 depth, Axis 1 height, Axis 2 width |
+
+The higher the array dimension, the more complex the data structure, but the basic principle remains the same. Each axis represents one dimension of data organization.
+
+NumPy can create arrays from various Python data structures, including lists, tuples, and mixtures of both.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_from_various_types.py",
+      code: `import numpy as np
+
+# From list
+arr_from_list = np.array([0, 1, 2, 3])
+print("From list:", arr_from_list)  # Output: From list: [0 1 2 3]
+
+# From tuple
+arr_from_tuple = np.array((0, 1, 2, 3))
+print("From tuple:", arr_from_tuple)  # Output: From tuple: [0 1 2 3]
+
+# From mixture (will be converted to compatible type)
+arr_mixed = np.array([0, 1, 2.5, 3])
+print("From mixture:", arr_mixed)  # Output: From mixture: [0.  1.  2.5 3. ]
+print("Automatic data type:", arr_mixed.dtype)  # Output: Automatic data type: float64`
+    }
+  ]}
+/>
+
+## Array Creation Functions
+
+NumPy provides various specialized functions for creating arrays with specific patterns or values. This is like having special molds for making cakes with consistent shapes.
+
+### Constant Value Functions
+
+The `np.ones()` function creates arrays filled with the number 1. Useful when you need initialization with base values.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "ones_arrays.py",
+      code: `import numpy as np
+
+# 1D array with value 1
+a = np.ones(3)
+print("1D ones:", a)  # Output: 1D ones: [1. 1. 1.]
+
+# 2D array with value 1
+a = np.ones((2, 3))
+print("2D ones:")
+print(a)
+# Output:
+# [[1. 1. 1.]
+#  [1. 1. 1.]]
+
+# 3D array with value 1
+a = np.ones((2, 2, 3))
+print("3D ones shape:", a.shape)  # Output: 3D ones shape: (2, 2, 3)
+print("3D ones:")
+print(a)
+# Output:
+# [[[1. 1. 1.]
+#   [1. 1. 1.]]
+#  [[1. 1. 1.]
+#   [1. 1. 1.]]]`
+    }
+  ]}
+/>
+
+Besides `np.ones()`, there are other functions for creating arrays with special patterns:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "special_arrays.py",
+      code: `import numpy as np
+
+# Array with zero values
+a = np.zeros((2, 3))
+print("Zeros array:")
+print(a)
+# Output:
+# [[0. 0. 0.]
+#  [0. 0. 0.]]
+
+# Identity array (diagonal 1, others 0)
+a = np.eye(3, 3)
+print("Identity matrix:")
+print(a)
+# Output:
+# [[1. 0. 0.]
+#  [0. 1. 0.]
+#  [0. 0. 1.]]
+
+# Diagonal array with specific values
+a = np.diag((1, 2, 3))
+print("Diagonal array:")
+print(a)
+# Output:
+# [[1 0 0]
+#  [0 2 0]
+#  [0 0 3]]`
+    }
+  ]}
+/>
+
+### Random Functions
+
+Random functions are useful for creating simulation data or initialization with random values.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "random_arrays.py",
+      code: `import numpy as np
+
+# Set seed for consistent results
+np.random.seed(10)
+
+# Array with uniform random values between 0 and 1
+a = np.random.rand(2, 3)
+print("Random uniform [0,1]:")
+print(a)
+# Output:
+# [[0.77132064 0.02075195 0.63364823]
+#  [0.74880388 0.49850701 0.22479665]]
+
+# Array with normal distribution (mean=0, std=1)
+a = np.random.randn(3)
+print("Random normal:", a)  # Output: Random normal: [ 0.62133597 -0.72008556  0.26551159]
+
+# Array with random integers in specific range
+a = np.random.randint(1, 10, size=(2, 3))
+print("Random integers [1,10):")
+print(a)
+# Output:
+# [[7 9 2]
+#  [9 5 2]]`
+    }
+  ]}
+/>
+
+### Mathematical Functions
+
+The `np.fromfunction` function enables array creation based on mathematical functions. This is like having a formula to generate the value of each element based on its position.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "fromfunction_array.py",
+      code: `import numpy as np
+
+# Create array using function
+def f(i, j):
+    return i + j
+
+# 2x3 array with values based on function f(i,j) = i + j
+a = np.fromfunction(f, (2, 3))
+print("Array from function f(i,j) = i + j:")
+print(a)
+# Output:
+# [[0. 1. 2.]
+#  [1. 2. 3.]]
+
+# More complex function
+def g(i, j):
+    return i * j + 1
+
+b = np.fromfunction(g, (3, 3))
+print("Array from function g(i,j) = i*j + 1:")
+print(b)
+# Output:
+# [[1. 1. 1.]
+#  [1. 2. 3.]
+#  [1. 3. 5.]]`
+    }
+  ]}
+/>
+
+The `np.empty` function creates arrays without initializing element values. This is useful when you will fill the array with values later and want to save initialization time.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "empty_array.py",
+      code: `import numpy as np
+
+# Create empty array (undefined values)
+a = np.empty((3, 2))
+print("Empty array (random values from memory):")
+print(a)
+# Output will vary because values are not initialized
+# Example output:
+# [[0. 0.]
+#  [0. 0.]
+#  [0. 0.]]
+
+print("Shape:", a.shape)  # Output: Shape: (3, 2)
+print("Dtype:", a.dtype)  # Output: Dtype: float64`
+    }
+  ]}
+/>
+
+## Arrays from Sequences
+
+NumPy provides specialized functions for creating arrays from value sequences with specific patterns.
+
+### np.arange Function
+
+The `np.arange` function is the NumPy version of Python's `range()`, but can generate arrays with floating-point data types and directly allocate memory for elements.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "arange_arrays.py",
+      code: `import numpy as np
+
+# Array from 0 to 4
+a = np.arange(5)
+print("arange(5):", a)  # Output: arange(5): [0 1 2 3 4]
+
+# Array with start, stop, and step
+a = np.arange(1.5, 3., 0.5)
+print("arange(1.5, 3., 0.5):", a)  # Output: arange(1.5, 3., 0.5): [1.5 2.  2.5]
+
+# Array with step that produces decimal values
+a = np.arange(1.5, 4.)
+print("arange(1.5, 4.):", a)  # Output: arange(1.5, 4.): [1.5 2.5 3.5]
+
+# Parameter demonstration
+print("\\nParameter arange(start, end, step):")
+print("- start, end, step can be float")
+print("- end is excluded from result")
+print("- step default is 1")
+print("- start default is 0")`
+    }
+  ]}
+/>
+
+### np.linspace Function
+
+Unlike `np.arange` which uses fixed steps, `np.linspace` divides a range into a number of evenly spaced points.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "linspace_arrays.py",
+      code: `import numpy as np
+
+# Create 5 evenly spaced points between 0 and 10
+a = np.linspace(0, 10, 5)
+print("linspace(0, 10, 5):", a)  # Output: linspace(0, 10, 5): [ 0.   2.5  5.   7.5 10. ]
+
+# Create 11 evenly spaced points between -1 and 1
+a = np.linspace(-1, 1, 11)
+print("linspace(-1, 1, 11):", a)
+# Output: linspace(-1, 1, 11): [-1.  -0.8 -0.6 -0.4 -0.2  0.   0.2  0.4  0.6  0.8  1. ]
+
+# Comparison linspace vs arange
+print("\\nDifference linspace vs arange:")
+print("linspace: number of elements known, distance calculated")
+print("arange: distance known, number of elements calculated")`
+    }
+  ]}
+/>
+
+### Comparison arange vs linspace
+
+| Aspect | `np.arange` | `np.linspace` |
+|--------|-------------|---------------|
+| Main parameters | start, stop, step | start, stop, num |
+| Control | Distance between elements | Total number of elements |
+| Endpoint | Excluded | Included (default) |
+| Data type | Follows input | Always float (default) |
+| Usage | Sequence with fixed distance | Even range division |
+
+## Basic Operations
+
+After creating arrays, you can perform various operations to manipulate and analyze data.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_info.py",
+      code: `import numpy as np
+
+# Create example array
+a = np.array([[1, 2, 3], [4, 5, 6]])
+print("Array:")
+print(a)
+# Output:
+# [[1 2 3]
+#  [4 5 6]]
+
+print("Shape:", a.shape)  # Output: Shape: (2, 3)
+print("Size (total elements):", a.size)  # Output: Size (total elements): 6
+print("Ndim (dimensions):", a.ndim)  # Output: Ndim (dimensions): 2
+print("Dtype (data type):", a.dtype)  # Output: Dtype (data type): int64
+print("Itemsize (bytes per element):", a.itemsize)  # Output: Itemsize (bytes per element): 8`
+    }
+  ]}
+/>
+
+Arrays can be reshaped using the `reshape()` function to rearrange dimensions without changing the data:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_reshape.py",
+      code: `import numpy as np
+
+# 1D array with 12 elements
+a = np.arange(12)
+print("Original array:", a)  # Output: Original array: [ 0  1  2  3  4  5  6  7  8  9 10 11]
+
+# Reshape to 3x4
+b = a.reshape(3, 4)
+print("Reshape 3x4:")
+print(b)
+# Output:
+# [[ 0  1  2  3]
+#  [ 4  5  6  7]
+#  [ 8  9 10 11]]
+
+# Reshape to 2x6
+c = a.reshape(2, 6)
+print("Reshape 2x6:")
+print(c)
+# Output:
+# [[ 0  1  2  3  4  5]
+#  [ 6  7  8  9 10 11]]
+
+# Reshape with -1 (automatically calculate dimension)
+d = a.reshape(4, -1)
+print("Reshape 4x-1 (automatic):")
+print(d)
+# Output:
+# [[ 0  1  2]
+#  [ 3  4  5]
+#  [ 6  7  8]
+#  [ 9 10 11]]`
+    }
+  ]}
+/>
