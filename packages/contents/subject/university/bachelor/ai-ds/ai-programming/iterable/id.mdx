@@ -1,0 +1,339 @@
+export const metadata = {
+    title: "Iterable",
+    description: "Pelajari konsep iterable dalam Python, operator in/not in, fungsi any/all, dan unpacking operator dengan contoh praktis dan implementasi nyata.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "Pemrograman AI",
+};
+
+## Konsep Dasar Iterable
+
+Dalam Python, iterable adalah objek yang dapat diiterasi atau dilewati satu per satu. Bayangkan seperti buku yang bisa kamu baca halaman demi halaman, iterable memungkinkan kamu mengakses elemen-elemen di dalamnya secara berurutan.
+
+Iterable memiliki dua karakteristik utama yang membuatnya berbeda dari objek biasa. Pertama, iterable merupakan urutan teratur dari item-item yang tersusun. Kedua, setiap item dalam iterable dapat diambil satu per satu dalam proses yang disebut iterasi.
+
+### Jenis-jenis Iterable
+
+Python menyediakan berbagai jenis iterable yang sering kamu gunakan dalam pemrograman sehari-hari.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "iterable_examples.py",
+      code: `# String sebagai iterable
+text = "hello"
+print("Karakter dalam string:")
+for char in text:
+    print(char)
+# Output:
+# Karakter dalam string:
+# h
+# e
+# l
+# l
+# o
+
+print()
+
+# List sebagai iterable  
+numbers = [1, 2, 3, 4, 5]
+print("Elemen dalam list:")
+for num in numbers:
+    print(num)
+# Output:
+# Elemen dalam list:
+# 1
+# 2
+# 3
+# 4
+# 5
+
+print()
+
+# Tuple sebagai iterable
+coordinates = (10, 20, 30)
+print("Elemen dalam tuple:")
+for coord in coordinates:
+    print(coord)
+# Output:
+# Elemen dalam tuple:
+# 10
+# 20
+# 30`
+    }
+  ]}
+/>
+
+Dalam contoh string, setiap karakter individual menjadi item yang dapat diakses. Untuk list dan tuple, setiap elemen yang tersimpan di dalamnya menjadi item yang bisa diiterasi.
+
+## Operator Keanggotaan
+
+Python menyediakan operator khusus untuk memeriksa apakah suatu item ada dalam iterable atau tidak. Operator `in` dan `not in` memungkinkan kamu melakukan pengecekan keanggotaan dengan mudah.
+
+### Penggunaan Operator in dan not in
+
+Operator ini bekerja dengan cara memeriksa setiap elemen dalam iterable sampai menemukan kecocokan atau sampai semua elemen habis diperiksa.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "membership_operators.py",
+      code: `# Pengecekan keanggotaan dalam list
+fruits = ["apel", "jeruk", "mangga"]
+
+# Menggunakan operator in
+if "apel" in fruits:
+    print("Apel tersedia dalam daftar buah")
+# Output: Apel tersedia dalam daftar buah
+
+# Menggunakan operator not in  
+if "durian" not in fruits:
+    print("Durian tidak tersedia dalam daftar buah")
+# Output: Durian tidak tersedia dalam daftar buah
+
+print()
+
+# Pengecekan keanggotaan dalam string
+message = "Python adalah bahasa pemrograman"
+
+# Mencari substring dalam string
+if "Python" in message:
+    print("Kata Python ditemukan dalam pesan")
+# Output: Kata Python ditemukan dalam pesan
+
+if "Java" not in message:
+    print("Kata Java tidak ditemukan dalam pesan")
+# Output: Kata Java tidak ditemukan dalam pesan`
+    }
+  ]}
+/>
+
+### Kasus Khusus pada String
+
+Operator keanggotaan pada string memiliki perilaku khusus yang perlu kamu pahami. Ketika menggunakan `in` pada string, Python tidak hanya mencari karakter individual, tetapi juga substring atau bagian dari string.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "string_membership.py",
+      code: `# Pengecekan karakter dalam string
+text = "programming"
+
+# Mencari karakter tunggal
+print("g" in text)        # Output: True
+print("z" in text)        # Output: False
+
+print()
+
+# Mencari substring dalam string
+print("gram" in text)     # Output: True
+print("program" in text)  # Output: True
+print("java" in text)     # Output: False
+
+# Contoh praktis
+email = "user@example.com"
+if "@" in email and ".com" in email:
+    print("Format email valid")
+# Output: Format email valid`
+    }
+  ]}
+/>
+
+## Fungsi any dan all
+
+Python menyediakan dua fungsi bawaan yang sangat berguna untuk memeriksa kondisi pada seluruh elemen iterable. Fungsi `any()` dan `all()` membantu kamu membuat keputusan berdasarkan nilai boolean dari elemen-elemen dalam iterable.
+
+### Fungsi any()
+
+Fungsi `any()` mengembalikan `True` jika minimal ada satu elemen dalam iterable yang bernilai `True`. Jika semua elemen bernilai `False` atau iterable kosong, fungsi ini mengembalikan `False`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "any_function.py",
+      code: `# Contoh penggunaan any()
+grades = [60, 75, 45, 80]
+
+# Cek apakah ada nilai di atas 70
+high_grades = [grade > 70 for grade in grades]
+print("Ada nilai tinggi:", any(high_grades))
+# Output: Ada nilai tinggi: True
+
+# Contoh dengan boolean langsung
+conditions = [False, False, True, False]
+print("Ada kondisi yang benar:", any(conditions))
+# Output: Ada kondisi yang benar: True
+
+# Contoh dengan list kosong
+empty_list = []
+print("Any pada list kosong:", any(empty_list))
+# Output: Any pada list kosong: False
+
+# Contoh praktis
+numbers = [0, 0, 5, 0]
+if any(numbers):
+    print("Ada angka selain nol dalam list")
+# Output: Ada angka selain nol dalam list`
+    }
+  ]}
+/>
+
+### Fungsi all()
+
+Fungsi `all()` mengembalikan `True` hanya jika semua elemen dalam iterable bernilai `True`. Jika ada satu saja elemen yang bernilai `False`, fungsi ini mengembalikan `False`. Untuk iterable kosong, `all()` mengembalikan `True`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "all_function.py",
+      code: `# Contoh penggunaan all()
+scores = [85, 90, 78, 92]
+
+# Cek apakah semua nilai di atas 70
+passing_grades = [score >= 70 for score in scores]
+print("Semua nilai lulus:", all(passing_grades))
+# Output: Semua nilai lulus: True
+
+# Contoh dengan boolean langsung
+conditions = [True, True, True, True]
+print("Semua kondisi benar:", all(conditions))
+# Output: Semua kondisi benar: True
+
+# Contoh dengan satu kondisi false
+mixed_conditions = [True, True, False, True]
+print("Semua kondisi benar:", all(mixed_conditions))
+# Output: Semua kondisi benar: False
+
+# Contoh praktis
+ages = [18, 21, 25, 30]
+if all(age >= 18 for age in ages):
+    print("Semua peserta sudah dewasa")
+# Output: Semua peserta sudah dewasa`
+    }
+  ]}
+/>
+
+## Operator Unpacking
+
+Operator unpacking menggunakan tanda asterisk (`*`) untuk membongkar elemen-elemen dalam iterable menjadi argumen terpisah. Ini sangat berguna ketika kamu perlu memanggil fungsi dengan argumen yang berasal dari list atau tuple.
+
+### Masalah Tanpa Unpacking
+
+Sebelum memahami solusi unpacking, mari lihat masalah yang sering muncul ketika kamu mencoba memanggil fungsi dengan argumen dari iterable.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "unpacking_problem.py",
+      code: `import math
+
+# Masalah: fungsi math.hypot membutuhkan argumen terpisah
+coordinates = [3, 4]
+
+# Cara yang salah - akan menghasilkan error
+try:
+    result = math.hypot(coordinates)
+    print(result)
+except TypeError as e:
+    print("Error:", e)
+# Output: Error: must be real number, not list
+
+# Cara manual yang merepotkan untuk banyak argumen
+result = math.hypot(coordinates[0], coordinates[1])
+print("Hasil manual:", result)
+# Output: Hasil manual: 5.0
+
+# Contoh dengan lebih banyak argumen
+points = [1, 1, 1, 1]
+# Cara manual menjadi sangat merepotkan
+result = math.hypot(points[0], points[1], points[2], points[3])
+print("Hasil dengan 4 argumen:", result)
+# Output: Hasil dengan 4 argumen: 2.0`
+    }
+  ]}
+/>
+
+### Solusi dengan Operator Unpacking
+
+Operator unpacking memecahkan masalah ini dengan cara yang elegan dan mudah dibaca. Dengan menambahkan tanda `*` sebelum nama iterable, Python akan membongkar semua elemen menjadi argumen terpisah.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "unpacking_solution.py",
+      code: `import math
+
+# Solusi dengan unpacking operator
+coordinates = [3, 4]
+result = math.hypot(*coordinates)
+print("Jarak dari origin:", result)
+# Output: Jarak dari origin: 5.0
+
+# Contoh dengan tuple
+point_3d = (1, 2, 2)
+distance = math.hypot(*point_3d)
+print("Jarak 3D:", distance)
+# Output: Jarak 3D: 3.0
+
+# Contoh dengan banyak argumen
+dimensions = [2, 3, 6, 1, 4]
+euclidean_distance = math.hypot(*dimensions)
+print("Jarak Euclidean:", euclidean_distance)
+# Output: Jarak Euclidean: 8.12403840463596
+
+# Contoh praktis lainnya
+def calculate_average(a, b, c):
+    return (a + b + c) / 3
+
+grades = [85, 90, 78]
+average = calculate_average(*grades)
+print("Rata-rata nilai:", average)
+# Output: Rata-rata nilai: 84.33333333333333`
+    }
+  ]}
+/>
+
+### Penggunaan Praktis Unpacking
+
+Operator unpacking memiliki banyak kegunaan praktis dalam pemrograman Python sehari-hari, terutama ketika bekerja dengan fungsi yang membutuhkan argumen dalam jumlah variabel.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "unpacking_practical.py",
+      code: `# Unpacking untuk fungsi print
+items = ["apel", "jeruk", "mangga"]
+print("Buah-buahan:", *items)
+# Output: Buah-buahan: apel jeruk mangga
+
+# Unpacking untuk fungsi max dan min
+numbers = [45, 23, 67, 12, 89, 34]
+print("Nilai tertinggi:", max(*numbers))
+# Output: Nilai tertinggi: 89
+print("Nilai terendah:", min(*numbers))
+# Output: Nilai terendah: 12
+
+# Unpacking untuk menggabungkan list
+list1 = [1, 2, 3]
+list2 = [4, 5, 6]
+combined = [*list1, *list2]
+print("List gabungan:", combined)
+# Output: List gabungan: [1, 2, 3, 4, 5, 6]
+
+# Unpacking dalam fungsi format string
+template = "Nama: {}, Umur: {}, Kota: {}"
+data = ["Alice", 25, "Jakarta"]
+formatted = template.format(*data)
+print(formatted)
+# Output: Nama: Alice, Umur: 25, Kota: Jakarta`
+    }
+  ]}
+/>

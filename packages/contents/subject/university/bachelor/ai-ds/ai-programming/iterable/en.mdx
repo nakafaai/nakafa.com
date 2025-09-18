@@ -1,0 +1,339 @@
+export const metadata = {
+    title: "Iterables",
+    description: "Learn iterable concepts in Python, in/not in operators, any/all functions, and unpacking operators with practical examples and real implementations.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "AI Programming",
+};
+
+## Basic Iterable Concepts
+
+In Python, an iterable is an object that can be iterated or traversed one by one. Think of it like a book that you can read page by page, iterables allow you to access elements within them sequentially.
+
+Iterables have two main characteristics that make them different from regular objects. First, iterables are ordered sequences of arranged items. Second, each item in an iterable can be taken one by one in a process called iteration.
+
+### Types of Iterables
+
+Python provides various types of iterables that you commonly use in everyday programming.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "iterable_examples.py",
+      code: `# String as iterable
+text = "hello"
+print("Characters in string:")
+for char in text:
+    print(char)
+# Output:
+# Characters in string:
+# h
+# e
+# l
+# l
+# o
+
+print()
+
+# List as iterable  
+numbers = [1, 2, 3, 4, 5]
+print("Elements in list:")
+for num in numbers:
+    print(num)
+# Output:
+# Elements in list:
+# 1
+# 2
+# 3
+# 4
+# 5
+
+print()
+
+# Tuple as iterable
+coordinates = (10, 20, 30)
+print("Elements in tuple:")
+for coord in coordinates:
+    print(coord)
+# Output:
+# Elements in tuple:
+# 10
+# 20
+# 30`
+    }
+  ]}
+/>
+
+In the string example, each individual character becomes an item that can be accessed. For lists and tuples, each element stored within them becomes an item that can be iterated.
+
+## Membership Operators
+
+Python provides special operators to check whether an item exists in an iterable or not. The `in` and `not in` operators allow you to perform membership checks easily.
+
+### Using in and not in Operators
+
+These operators work by checking each element in the iterable until they find a match or until all elements have been checked.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "membership_operators.py",
+      code: `# Membership checking in list
+fruits = ["apple", "orange", "mango"]
+
+# Using in operator
+if "apple" in fruits:
+    print("Apple is available in the fruit list")
+# Output: Apple is available in the fruit list
+
+# Using not in operator  
+if "durian" not in fruits:
+    print("Durian is not available in the fruit list")
+# Output: Durian is not available in the fruit list
+
+print()
+
+# Membership checking in string
+message = "Python is a programming language"
+
+# Searching substring in string
+if "Python" in message:
+    print("Python word found in message")
+# Output: Python word found in message
+
+if "Java" not in message:
+    print("Java word not found in message")
+# Output: Java word not found in message`
+    }
+  ]}
+/>
+
+### Special Cases in Strings
+
+Membership operators on strings have special behavior that you need to understand. When using `in` on strings, Python not only searches for individual characters, but also substrings or parts of strings.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "string_membership.py",
+      code: `# Character checking in string
+text = "programming"
+
+# Searching single character
+print("g" in text)        # Output: True
+print("z" in text)        # Output: False
+
+print()
+
+# Searching substring in string
+print("gram" in text)     # Output: True
+print("program" in text)  # Output: True
+print("java" in text)     # Output: False
+
+# Practical example
+email = "user@example.com"
+if "@" in email and ".com" in email:
+    print("Valid email format")
+# Output: Valid email format`
+    }
+  ]}
+/>
+
+## any and all Functions
+
+Python provides two built-in functions that are very useful for checking conditions on all elements of an iterable. The `any()` and `all()` functions help you make decisions based on boolean values of elements in the iterable.
+
+### any() Function
+
+The `any()` function returns `True` if at least one element in the iterable is `True`. If all elements are `False` or the iterable is empty, this function returns `False`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "any_function.py",
+      code: `# Example using any()
+grades = [60, 75, 45, 80]
+
+# Check if there are values above 70
+high_grades = [grade > 70 for grade in grades]
+print("High grades exist:", any(high_grades))
+# Output: High grades exist: True
+
+# Example with direct boolean
+conditions = [False, False, True, False]
+print("True condition exists:", any(conditions))
+# Output: True condition exists: True
+
+# Example with empty list
+empty_list = []
+print("Any on empty list:", any(empty_list))
+# Output: Any on empty list: False
+
+# Practical example
+numbers = [0, 0, 5, 0]
+if any(numbers):
+    print("Non-zero numbers exist in list")
+# Output: Non-zero numbers exist in list`
+    }
+  ]}
+/>
+
+### all() Function
+
+The `all()` function returns `True` only if all elements in the iterable are `True`. If there is even one element that is `False`, this function returns `False`. For empty iterables, `all()` returns `True`.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "all_function.py",
+      code: `# Example using all()
+scores = [85, 90, 78, 92]
+
+# Check if all values are above 70
+passing_grades = [score >= 70 for score in scores]
+print("All grades pass:", all(passing_grades))
+# Output: All grades pass: True
+
+# Example with direct boolean
+conditions = [True, True, True, True]
+print("All conditions true:", all(conditions))
+# Output: All conditions true: True
+
+# Example with one false condition
+mixed_conditions = [True, True, False, True]
+print("All conditions true:", all(mixed_conditions))
+# Output: All conditions true: False
+
+# Practical example
+ages = [18, 21, 25, 30]
+if all(age >= 18 for age in ages):
+    print("All participants are adults")
+# Output: All participants are adults`
+    }
+  ]}
+/>
+
+## Unpacking Operator
+
+The unpacking operator uses an asterisk (`*`) to unpack elements in an iterable into separate arguments. This is very useful when you need to call functions with arguments that come from lists or tuples.
+
+### Problems Without Unpacking
+
+Before understanding the unpacking solution, let's look at problems that often arise when you try to call functions with arguments from iterables.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "unpacking_problem.py",
+      code: `import math
+
+# Problem: math.hypot function needs separate arguments
+coordinates = [3, 4]
+
+# Wrong way - will result in error
+try:
+    result = math.hypot(coordinates)
+    print(result)
+except TypeError as e:
+    print("Error:", e)
+# Output: Error: must be real number, not list
+
+# Manual way that's troublesome for many arguments
+result = math.hypot(coordinates[0], coordinates[1])
+print("Manual result:", result)
+# Output: Manual result: 5.0
+
+# Example with more arguments
+points = [1, 1, 1, 1]
+# Manual way becomes very troublesome
+result = math.hypot(points[0], points[1], points[2], points[3])
+print("Result with 4 arguments:", result)
+# Output: Result with 4 arguments: 2.0`
+    }
+  ]}
+/>
+
+### Solution with Unpacking Operator
+
+The unpacking operator solves this problem in an elegant and readable way. By adding a `*` sign before the iterable name, Python will unpack all elements into separate arguments.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "unpacking_solution.py",
+      code: `import math
+
+# Solution with unpacking operator
+coordinates = [3, 4]
+result = math.hypot(*coordinates)
+print("Distance from origin:", result)
+# Output: Distance from origin: 5.0
+
+# Example with tuple
+point_3d = (1, 2, 2)
+distance = math.hypot(*point_3d)
+print("3D distance:", distance)
+# Output: 3D distance: 3.0
+
+# Example with many arguments
+dimensions = [2, 3, 6, 1, 4]
+euclidean_distance = math.hypot(*dimensions)
+print("Euclidean distance:", euclidean_distance)
+# Output: Euclidean distance: 8.12403840463596
+
+# Other practical example
+def calculate_average(a, b, c):
+    return (a + b + c) / 3
+
+grades = [85, 90, 78]
+average = calculate_average(*grades)
+print("Average grade:", average)
+# Output: Average grade: 84.33333333333333`
+    }
+  ]}
+/>
+
+### Practical Uses of Unpacking
+
+The unpacking operator has many practical uses in everyday Python programming, especially when working with functions that require variable numbers of arguments.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "unpacking_practical.py",
+      code: `# Unpacking for print function
+items = ["apple", "orange", "mango"]
+print("Fruits:", *items)
+# Output: Fruits: apple orange mango
+
+# Unpacking for max and min functions
+numbers = [45, 23, 67, 12, 89, 34]
+print("Highest value:", max(*numbers))
+# Output: Highest value: 89
+print("Lowest value:", min(*numbers))
+# Output: Lowest value: 12
+
+# Unpacking to combine lists
+list1 = [1, 2, 3]
+list2 = [4, 5, 6]
+combined = [*list1, *list2]
+print("Combined list:", combined)
+# Output: Combined list: [1, 2, 3, 4, 5, 6]
+
+# Unpacking in string format function
+template = "Name: {}, Age: {}, City: {}"
+data = ["Alice", 25, "Jakarta"]
+formatted = template.format(*data)
+print(formatted)
+# Output: Name: Alice, Age: 25, City: Jakarta`
+    }
+  ]}
+/>
