@@ -1,0 +1,288 @@
+export const metadata = {
+    title: "Dictionary",
+    description: "Learn dictionary data structure in Python, keys(), values(), items() methods, indexing, for loops, and get() method with practical examples.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "AI Programming",
+};
+
+## Definition and Creating Dictionaries
+
+Dictionary is a data structure that stores key-value pairs. Think of it like a language dictionary where each word (key) has a meaning (value) associated with it.
+
+### Ways to Create Dictionaries
+
+Python provides several ways to create dictionaries, from empty ones to those already containing data.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_creation.py",
+      code: `# Creating empty dictionaries
+a = {}
+b = dict()
+print("Empty dictionary a:", a)
+print("Empty dictionary b:", b)
+# Output: Empty dictionary a: {}
+# Output: Empty dictionary b: {}
+
+# Creating dictionary with data
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'dan': 999}
+print("Dictionary phone:", phone)
+# Output: Dictionary phone: {'ann': 110, 'bob': 991, 'cat': 112, 'dan': 999}
+
+# Creating nested dictionary
+person = {1: {'name': 'ann', 'age': 23}, 2: {'name': 'bob', 'age': 21}}
+print("Nested dictionary:", person)
+# Output: Nested dictionary: {1: {'name': 'ann', 'age': 23}, 2: {'name': 'bob', 'age': 21}}
+
+# Creating dictionary with constructor
+month = dict([(1, 'Jan'), (2, 'Feb'), (3, 'Mar')])
+mass = dict(Mercury=3.3e23, Venus=4.9e24, Earth=6.0e24)
+print("Dictionary month:", month)
+print("Dictionary mass:", mass)
+# Output: Dictionary month: {1: 'Jan', 2: 'Feb', 3: 'Mar'}
+# Output: Dictionary mass: {'Mercury': 3.3e23, 'Venus': 4.9e24, 'Earth': 6.0e24}`
+    }
+  ]}
+/>
+
+### Dictionary Syntax
+
+Dictionaries are written with curly braces `{}` and contain a list of key-value pairs separated by commas. Each key and value pair is separated by a colon.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_syntax.py",
+      code: `# Basic dictionary syntax
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'don': 999}
+print(phone)
+# Output: {'ann': 110, 'bob': 991, 'cat': 112, 'don': 999}`
+    }
+  ]}
+/>
+
+Dictionaries are enclosed in curly braces, contain a list of key-value pairs separated by commas, and each key-value pair is separated by a colon.
+
+## Dictionary as Container
+
+Dictionary belongs to the container category, which are objects that can store collections of other items. Containers differ in how they organize and manipulate the stored items.
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A[Python Containers] --> B[String]
+        A --> C[List]
+        A --> D[Tuple]
+        A --> E[Dictionary]
+        A --> F[Set]
+        
+        E --> E1[Key-value pairs]
+        E --> E2[Unique keys]
+        E --> E3[Mutable]
+        E --> E4[Unordered]
+  `}
+/>
+
+Dictionary has special characteristics as a container. Dictionary stores collections of items in the form of key-value pairs. Containers differ in how items are organized and manipulated.
+
+## Dictionary Characteristics
+
+Dictionary has several important characteristics that distinguish it from other data structures in Python.
+
+### Insertion Order and Unique Keys
+
+Since Python 3.6, dictionaries maintain the insertion order of elements. When you redefine the value of an existing key, only the latest value is stored without changing the key's insertion order.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_order.py",
+      code: `# Insertion order is preserved
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'bob': 999}
+print(phone)
+# Output: {'ann': 110, 'bob': 999, 'cat': 112}
+
+# Key 'bob' stays in second position even though its value changed`
+    }
+  ]}
+/>
+
+Keys in dictionaries are unique, only the most recently assigned value will persist. Redefining values does not change the insertion order of keys.
+
+## Accessing Dictionaries
+
+Dictionary uses a key-based indexing system to access stored values.
+
+### Indexing with Keys
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_indexing.py",
+      code: `# Accessing values with keys
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'dan': 999}
+
+# Retrieving values
+print(phone['cat'])
+# Output: 112
+
+# Using variable as key
+name = 'bob'
+print(phone[name])
+# Output: 991
+
+# Adding or changing values
+phone['bob'] = 999  # Change existing key value
+phone['eve'] = 111  # Add new key
+print(phone)
+# Output: {'ann': 110, 'bob': 999, 'cat': 112, 'dan': 999, 'eve': 111}`
+    }
+  ]}
+/>
+
+Dictionary uses keys to index values. You can retrieve values by specifying the key in square brackets, change values of existing keys, or add new key-value pairs.
+
+## Dictionary Iteration
+
+Dictionary can be iterated in various ways depending on the information you want to access.
+
+### Simple For Loop
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_simple_loop.py",
+      code: `# Iterating dictionary keys
+phone = {'ann': 110, 'bob': 999, 'cat': 112, 'dan': 999}
+
+for key in phone:
+    print(key, phone[key])
+# Output:
+# ann 110
+# bob 999
+# cat 112
+# dan 999`
+    }
+  ]}
+/>
+
+When you iterate a dictionary directly, Python retrieves keys in their insertion order.
+
+### For Loop with items() Method
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_items_loop.py",
+      code: `# Iterating key-value pairs with items()
+phone = {'ann': 110, 'bob': 999, 'cat': 112, 'dan': 999}
+
+for key, val in phone.items():
+    print(key, val)
+# Output:
+# ann 110
+# bob 999
+# cat 112
+# dan 999`
+    }
+  ]}
+/>
+
+The `items()` method retrieves key-value pairs simultaneously, allowing you to access both in a single iteration.
+
+## Dictionary Methods
+
+Dictionary provides several methods to access keys, values, and key-value pairs.
+
+### keys(), values(), and items() Methods
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_methods.py",
+      code: `# Using dictionary methods
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'dan': 999}
+
+# Getting all keys
+keys = phone.keys()
+print("Keys:", list(keys))
+# Output: Keys: ['ann', 'bob', 'cat', 'dan']
+
+# Getting all values
+values = phone.values()
+print("Values:", list(values))
+# Output: Values: [110, 991, 112, 999]
+
+# Getting key-value pairs
+items = phone.items()
+print("Items:", list(items))
+# Output: Items: [('ann', 110), ('bob', 991), ('cat', 112), ('dan', 999)]`
+    }
+  ]}
+/>
+
+These methods return dynamic view objects. View objects are not lists and cannot be indexed or assigned. Lists can be obtained through the `list()` constructor. View objects maintain reference to the parent dictionary and are efficient for iteration.
+
+## get() Method
+
+The `get()` method provides a safe way to access dictionary values without the risk of errors when keys are not found.
+
+### Regular Indexing Problems
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_indexing_problem.py",
+      code: `# Problem accessing non-existing keys
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'dan': 999}
+
+try:
+    print(phone['pat'])
+except KeyError as e:
+    print("KeyError:", e)
+# Output: KeyError: 'pat'`
+    }
+  ]}
+/>
+
+Indexing a dictionary with a non-existing key will result in a `KeyError`.
+
+### Solution with get() Method
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_get_method.py",
+      code: `# Using get() method for safe access
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'dan': 999}
+
+# get() returns None if key doesn't exist
+result = phone.get('pat')
+print("Result get('pat'):", result)
+# Output: Result get('pat'): None
+
+# get() with default value
+result = phone.get('pat', -1)
+print("Result get('pat', -1):", result)
+# Output: Result get('pat', -1): -1
+
+# get() for existing key
+result = phone.get('ann')
+print("Result get('ann'):", result)
+# Output: Result get('ann'): 110`
+    }
+  ]}
+/>
+
+The `get()` method retrieves the key's value if it exists, or returns a default value if the key is not found. This prevents the program from stopping due to errors and provides better control in handling incomplete data.

@@ -1,0 +1,288 @@
+export const metadata = {
+    title: "Dictionary",
+    description: "Pelajari struktur data dictionary dalam Python, metode keys(), values(), items(), indexing, for loops, dan metode get() dengan contoh praktis.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/18/2025",
+    subject: "Pemrograman AI",
+};
+
+## Definisi dan Pembuatan Dictionary
+
+Dictionary adalah struktur data yang menyimpan pasangan kunci-nilai (key-value pairs). Bayangkan seperti kamus bahasa dimana setiap kata (kunci) memiliki arti (nilai) yang terkait dengannya.
+
+### Cara Membuat Dictionary
+
+Python menyediakan beberapa cara untuk membuat dictionary, mulai dari yang kosong hingga yang sudah berisi data.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_creation.py",
+      code: `# Membuat dictionary kosong
+a = {}
+b = dict()
+print("Dictionary kosong a:", a)
+print("Dictionary kosong b:", b)
+# Output: Dictionary kosong a: {}
+# Output: Dictionary kosong b: {}
+
+# Membuat dictionary dengan data
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'dan': 999}
+print("Dictionary phone:", phone)
+# Output: Dictionary phone: {'ann': 110, 'bob': 991, 'cat': 112, 'dan': 999}
+
+# Membuat dictionary bersarang
+person = {1: {'name': 'ann', 'age': 23}, 2: {'name': 'bob', 'age': 21}}
+print("Dictionary bersarang:", person)
+# Output: Dictionary bersarang: {1: {'name': 'ann', 'age': 23}, 2: {'name': 'bob', 'age': 21}}
+
+# Membuat dictionary dengan constructor
+month = dict([(1, 'Jan'), (2, 'Feb'), (3, 'Mar')])
+mass = dict(Mercury=3.3e23, Venus=4.9e24, Earth=6.0e24)
+print("Dictionary month:", month)
+print("Dictionary mass:", mass)
+# Output: Dictionary month: {1: 'Jan', 2: 'Feb', 3: 'Mar'}
+# Output: Dictionary mass: {'Mercury': 3.3e23, 'Venus': 4.9e24, 'Earth': 6.0e24}`
+    }
+  ]}
+/>
+
+### Sintaks Dictionary
+
+Dictionary ditulis dengan kurung kurawal `{}` dan berisi daftar pasangan kunci-nilai yang dipisahkan koma. Setiap pasangan kunci dan nilai dipisahkan oleh titik dua.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_syntax.py",
+      code: `# Sintaks dasar dictionary
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'don': 999}
+print(phone)
+# Output: {'ann': 110, 'bob': 991, 'cat': 112, 'don': 999}`
+    }
+  ]}
+/>
+
+Dictionary dibungkus dalam kurung kurawal, berisi daftar pasangan kunci-nilai yang dipisahkan koma, dan setiap pasangan kunci dengan nilai dipisahkan oleh titik dua.
+
+## Dictionary sebagai Container
+
+Dictionary termasuk dalam kategori container, yaitu objek yang dapat menyimpan kumpulan item lainnya. Container berbeda dalam cara mereka mengorganisasi dan memanipulasi item yang disimpan.
+
+<Mermaid
+  chart={`
+    flowchart TD
+        A[Container Python] --> B[String]
+        A --> C[List]
+        A --> D[Tuple]
+        A --> E[Dictionary]
+        A --> F[Set]
+        
+        E --> E1[Pasangan kunci-nilai]
+        E --> E2[Kunci unik]
+        E --> E3[Dapat diubah]
+        E --> E4[Tidak berurutan]
+  `}
+/>
+
+Dictionary memiliki karakteristik khusus sebagai container. Dictionary menyimpan kumpulan item dalam bentuk pasangan kunci-nilai. Container berbeda dalam cara item diorganisasi dan dimanipulasi.
+
+## Karakteristik Dictionary
+
+Dictionary memiliki beberapa karakteristik penting yang membedakannya dari struktur data lain dalam Python.
+
+### Urutan Penyisipan dan Kunci Unik
+
+Sejak Python 3.6, dictionary mempertahankan urutan penyisipan elemen. Ketika kamu mendefinisikan ulang nilai dari kunci yang sudah ada, hanya nilai terbaru yang tersimpan tanpa mengubah urutan penyisipan kunci.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_order.py",
+      code: `# Urutan penyisipan dipertahankan
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'bob': 999}
+print(phone)
+# Output: {'ann': 110, 'bob': 999, 'cat': 112}
+
+# Kunci 'bob' tetap di posisi kedua meski nilainya diubah`
+    }
+  ]}
+/>
+
+Kunci dalam dictionary bersifat unik, hanya nilai yang paling baru ditugaskan yang akan bertahan. Mendefinisikan ulang nilai tidak mengubah urutan penyisipan kunci.
+
+## Mengakses Dictionary
+
+Dictionary menggunakan sistem indexing berdasarkan kunci untuk mengakses nilai yang tersimpan.
+
+### Indexing dengan Kunci
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_indexing.py",
+      code: `# Mengakses nilai dengan kunci
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'dan': 999}
+
+# Mengambil nilai
+print(phone['cat'])
+# Output: 112
+
+# Menggunakan variabel sebagai kunci
+name = 'bob'
+print(phone[name])
+# Output: 991
+
+# Menambah atau mengubah nilai
+phone['bob'] = 999  # Mengubah nilai kunci yang ada
+phone['eve'] = 111  # Menambah kunci baru
+print(phone)
+# Output: {'ann': 110, 'bob': 999, 'cat': 112, 'dan': 999, 'eve': 111}`
+    }
+  ]}
+/>
+
+Dictionary menggunakan kunci untuk mengindeks nilai. Kamu dapat mengambil nilai dengan menyebutkan kunci dalam kurung siku, mengubah nilai kunci yang sudah ada, atau menambah pasangan kunci-nilai baru.
+
+## Iterasi Dictionary
+
+Dictionary dapat diiterasi dengan berbagai cara tergantung pada informasi yang ingin kamu akses.
+
+### For Loop Sederhana
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_simple_loop.py",
+      code: `# Iterasi kunci dictionary
+phone = {'ann': 110, 'bob': 999, 'cat': 112, 'dan': 999}
+
+for key in phone:
+    print(key, phone[key])
+# Output:
+# ann 110
+# bob 999
+# cat 112
+# dan 999`
+    }
+  ]}
+/>
+
+Ketika kamu mengiterasi dictionary secara langsung, Python mengambil kunci-kunci dalam urutan penyisipannya.
+
+### For Loop dengan Metode items()
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_items_loop.py",
+      code: `# Iterasi pasangan kunci-nilai dengan items()
+phone = {'ann': 110, 'bob': 999, 'cat': 112, 'dan': 999}
+
+for key, val in phone.items():
+    print(key, val)
+# Output:
+# ann 110
+# bob 999
+# cat 112
+# dan 999`
+    }
+  ]}
+/>
+
+Metode `items()` mengambil pasangan kunci-nilai secara bersamaan, memungkinkan kamu mengakses keduanya dalam satu iterasi.
+
+## Metode Dictionary
+
+Dictionary menyediakan beberapa metode untuk mengakses kunci, nilai, dan pasangan kunci-nilai.
+
+### Metode keys(), values(), dan items()
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_methods.py",
+      code: `# Menggunakan metode dictionary
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'dan': 999}
+
+# Mendapatkan semua kunci
+keys = phone.keys()
+print("Kunci:", list(keys))
+# Output: Kunci: ['ann', 'bob', 'cat', 'dan']
+
+# Mendapatkan semua nilai
+values = phone.values()
+print("Nilai:", list(values))
+# Output: Nilai: [110, 991, 112, 999]
+
+# Mendapatkan pasangan kunci-nilai
+items = phone.items()
+print("Items:", list(items))
+# Output: Items: [('ann', 110), ('bob', 991), ('cat', 112), ('dan', 999)]`
+    }
+  ]}
+/>
+
+Metode ini mengembalikan objek view yang dinamis. View object bukan list dan tidak dapat diindeks atau ditugaskan. List dapat diperoleh melalui constructor `list()`. View object mempertahankan referensi ke dictionary induk dan efisien untuk iterasi.
+
+## Metode get()
+
+Metode `get()` menyediakan cara aman untuk mengakses nilai dictionary tanpa risiko error ketika kunci tidak ditemukan.
+
+### Masalah Indexing Biasa
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_indexing_problem.py",
+      code: `# Masalah mengakses kunci yang tidak ada
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'dan': 999}
+
+try:
+    print(phone['pat'])
+except KeyError as e:
+    print("KeyError:", e)
+# Output: KeyError: 'pat'`
+    }
+  ]}
+/>
+
+Mengindeks dictionary dengan kunci yang tidak ada akan menghasilkan error `KeyError`.
+
+### Solusi dengan Metode get()
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dictionary_get_method.py",
+      code: `# Menggunakan metode get() untuk akses aman
+phone = {'ann': 110, 'bob': 991, 'cat': 112, 'dan': 999}
+
+# get() mengembalikan None jika kunci tidak ada
+result = phone.get('pat')
+print("Hasil get('pat'):", result)
+# Output: Hasil get('pat'): None
+
+# get() dengan nilai default
+result = phone.get('pat', -1)
+print("Hasil get('pat', -1):", result)
+# Output: Hasil get('pat', -1): -1
+
+# get() untuk kunci yang ada
+result = phone.get('ann')
+print("Hasil get('ann'):", result)
+# Output: Hasil get('ann'): 110`
+    }
+  ]}
+/>
+
+Metode `get()` mengambil nilai kunci jika ada, atau mengembalikan nilai default jika kunci tidak ditemukan. Ini mencegah program berhenti karena error dan memberikan kontrol lebih baik dalam penanganan data yang tidak lengkap.
