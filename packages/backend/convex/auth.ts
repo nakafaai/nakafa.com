@@ -1,15 +1,14 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
+import { anonymous, username } from "better-auth/plugins";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
 import authSchema from "./betterAuth/schema";
+import { generateApiKey } from "./utils/helper";
 
-const siteUrl =
-  process.env.SITE_URL ??
-  process.env.CONVEX_SITE_URL ??
-  "http://localhost:3000";
+const siteUrl = process.env.SITE_URL;
 
 // The component client has methods needed for integrating Convex with Better Auth,
 // as well as helper methods for general use.
@@ -19,21 +18,19 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
     local: {
       schema: authSchema,
     },
-    verbose: true,
+    verbose: false,
   }
 );
 
 export const createAuth = (
-  ctx: GenericCtx<DataModel>
+  ctx: GenericCtx<DataModel>,
+  { optionsOnly } = { optionsOnly: false }
 ): ReturnType<typeof betterAuth> => {
   const authConfig = {
     baseURL: siteUrl,
-    // disable logging when createAuth is called just to generate options.
-    // this is not required, but there's a lot of noise in logs without it.
     logger: {
-      disabled: true,
+      disabled: optionsOnly,
     },
-
     database: authComponent.adapter(ctx),
     account: {
       accountLinking: {
@@ -54,17 +51,14 @@ export const createAuth = (
         apiKey: {
           type: "string",
           required: false,
-          defaultValue: () => crypto.randomUUID(),
+          defaultValue: () => generateApiKey(),
         },
       },
       deleteUser: {
         enabled: true,
       },
     },
-    plugins: [
-      // The Convex plugin is required for Convex compatibility
-      convex(),
-    ],
+    plugins: [anonymous(), username(), convex()],
   } satisfies BetterAuthOptions;
 
   return betterAuth(authConfig);

@@ -42,12 +42,15 @@ export type Mounts = {
               data: {
                 apiKey?: null | string;
                 createdAt: number;
+                displayUsername?: null | string;
                 email: string;
                 emailVerified: boolean;
                 image?: null | string;
+                isAnonymous?: null | boolean;
                 name: string;
                 updatedAt: number;
                 userId?: null | string;
+                username?: null | string;
               };
               model: "user";
             }
@@ -119,6 +122,9 @@ export type Mounts = {
                   | "image"
                   | "createdAt"
                   | "updatedAt"
+                  | "isAnonymous"
+                  | "username"
+                  | "displayUsername"
                   | "userId"
                   | "apiKey"
                   | "id";
@@ -297,6 +303,9 @@ export type Mounts = {
                   | "image"
                   | "createdAt"
                   | "updatedAt"
+                  | "isAnonymous"
+                  | "username"
+                  | "displayUsername"
                   | "userId"
                   | "apiKey"
                   | "id";
@@ -533,12 +542,15 @@ export type Mounts = {
               update: {
                 apiKey?: null | string;
                 createdAt?: number;
+                displayUsername?: null | string;
                 email?: string;
                 emailVerified?: boolean;
                 image?: null | string;
+                isAnonymous?: null | boolean;
                 name?: string;
                 updatedAt?: number;
                 userId?: null | string;
+                username?: null | string;
               };
               where?: Array<{
                 connector?: "AND" | "OR";
@@ -549,6 +561,9 @@ export type Mounts = {
                   | "image"
                   | "createdAt"
                   | "updatedAt"
+                  | "isAnonymous"
+                  | "username"
+                  | "displayUsername"
                   | "userId"
                   | "apiKey"
                   | "id";
@@ -756,12 +771,15 @@ export type Mounts = {
               update: {
                 apiKey?: null | string;
                 createdAt?: number;
+                displayUsername?: null | string;
                 email?: string;
                 emailVerified?: boolean;
                 image?: null | string;
+                isAnonymous?: null | boolean;
                 name?: string;
                 updatedAt?: number;
                 userId?: null | string;
+                username?: null | string;
               };
               where?: Array<{
                 connector?: "AND" | "OR";
@@ -772,6 +790,9 @@ export type Mounts = {
                   | "image"
                   | "createdAt"
                   | "updatedAt"
+                  | "isAnonymous"
+                  | "username"
+                  | "displayUsername"
                   | "userId"
                   | "apiKey"
                   | "id";

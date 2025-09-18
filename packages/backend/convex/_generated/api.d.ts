@@ -64,12 +64,15 @@ export declare const components: {
                 data: {
                   apiKey?: null | string;
                   createdAt: number;
+                  displayUsername?: null | string;
                   email: string;
                   emailVerified: boolean;
                   image?: null | string;
+                  isAnonymous?: null | boolean;
                   name: string;
                   updatedAt: number;
                   userId?: null | string;
+                  username?: null | string;
                 };
                 model: "user";
               }
@@ -141,6 +144,9 @@ export declare const components: {
                     | "image"
                     | "createdAt"
                     | "updatedAt"
+                    | "isAnonymous"
+                    | "username"
+                    | "displayUsername"
                     | "userId"
                     | "apiKey"
                     | "id";
@@ -319,6 +325,9 @@ export declare const components: {
                     | "image"
                     | "createdAt"
                     | "updatedAt"
+                    | "isAnonymous"
+                    | "username"
+                    | "displayUsername"
                     | "userId"
                     | "apiKey"
                     | "id";
@@ -555,12 +564,15 @@ export declare const components: {
                 update: {
                   apiKey?: null | string;
                   createdAt?: number;
+                  displayUsername?: null | string;
                   email?: string;
                   emailVerified?: boolean;
                   image?: null | string;
+                  isAnonymous?: null | boolean;
                   name?: string;
                   updatedAt?: number;
                   userId?: null | string;
+                  username?: null | string;
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
@@ -571,6 +583,9 @@ export declare const components: {
                     | "image"
                     | "createdAt"
                     | "updatedAt"
+                    | "isAnonymous"
+                    | "username"
+                    | "displayUsername"
                     | "userId"
                     | "apiKey"
                     | "id";
@@ -778,12 +793,15 @@ export declare const components: {
                 update: {
                   apiKey?: null | string;
                   createdAt?: number;
+                  displayUsername?: null | string;
                   email?: string;
                   emailVerified?: boolean;
                   image?: null | string;
+                  isAnonymous?: null | boolean;
                   name?: string;
                   updatedAt?: number;
                   userId?: null | string;
+                  username?: null | string;
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
@@ -794,6 +812,9 @@ export declare const components: {
                     | "image"
                     | "createdAt"
                     | "updatedAt"
+                    | "isAnonymous"
+                    | "username"
+                    | "displayUsername"
                     | "userId"
                     | "apiKey"
                     | "id";
