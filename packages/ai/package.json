@@ -9,17 +9,17 @@
   "dependencies": {
     "@ai-sdk/google-vertex": "^3.0.27",
     "@ai-sdk/openai": "^2.0.32",
-    "@ai-sdk/react": "^2.0.45",
+    "@ai-sdk/react": "^2.0.47",
     "@mendable/firecrawl-js": "^4.3.5",
     "@t3-oss/env-nextjs": "^0.13.8",
-    "ai": "^5.0.45",
+    "ai": "^5.0.47",
     "dedent": "^1.7.0",
     "gpt-tokenizer": "^3.0.1",
     "parse-domain": "^8.2.2"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.5.1",
+    "@types/node": "24.5.2",
     "@types/react": "19.1.13",
     "@types/react-dom": "^19.1.9"
   }
