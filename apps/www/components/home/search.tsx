@@ -1,6 +1,5 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
 import {
   PromptInput,
   type PromptInputMessage,
@@ -10,7 +9,6 @@ import {
   PromptInputTools,
 } from "@repo/design-system/components/ai/input";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { AiChatModel } from "@/components/ai/chat-model";
@@ -25,8 +23,6 @@ export function HomeSearch() {
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
 
-  const user = useQuery(api.auth.getCurrentUser);
-
   const { status, sendMessage, setMessages } = useChat((state) => state.chat);
 
   const [isPending, startTransition] = useTransition();
@@ -34,11 +30,6 @@ export function HomeSearch() {
   const handleSubmit = (message: PromptInputMessage) => {
     startTransition(() => {
       if (!message.text?.trim()) {
-        return;
-      }
-
-      if (!user) {
-        router.push("/auth");
         return;
       }
 
