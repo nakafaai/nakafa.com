@@ -33,7 +33,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         };
       },
     }),
-    experimental_throttle: 50,
     onError: ({ message }) => {
       toast.error(message, { position: "bottom-center" });
     },
