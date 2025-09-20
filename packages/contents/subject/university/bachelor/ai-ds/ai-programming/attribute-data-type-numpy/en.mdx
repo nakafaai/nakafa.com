@@ -1,0 +1,444 @@
+export const metadata = {
+    title: "Attributes and Data Types with NumPy",
+    description: "Learn NumPy array attributes and data type systems: shape, dtype, size, ndim. Complete guide with tested code examples for AI programming and data science.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/20/2025",
+    subject: "AI Programming",
+};
+
+## NumPy Data Type System
+
+NumPy has a very powerful and flexible data type system for optimizing storage and numerical operations. Imagine NumPy's data type system like a classification system in a library that organizes books based on their type and size. Each data type has specific characteristics in terms of precision, value range, and memory usage.
+
+> For complete reference about NumPy data types, you can visit the [official NumPy documentation](https://numpy.org/doc/stable/user/basics.types.html) which provides technical details and usage examples for each data type.
+
+NumPy controls how items are stored in memory and must conform to precompiled C code. All elements in a NumPy array must have the same data type to ensure operational efficiency.
+
+### Basic Data Types
+
+NumPy supports Python native data types with trailing underscore additions for compatibility with C code:
+
+1. **Boolean** (`bool_`) for True or False values stored as bytes
+2. **Integer** (`int_`) as default integer type, usually same as C long
+3. **Float** (`float_`) for decimal numbers with double precision
+4. **Complex** (`complex_`) for complex numbers with two float components
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "basic_data_types.py",
+      code: `import numpy as np
+
+# Basic data type examples
+bool_array = np.array([True, False, True], dtype=bool)
+print("Boolean array:", bool_array)  # Output: Boolean array: [ True False  True]
+print("Dtype:", bool_array.dtype)  # Output: Dtype: bool
+
+int_array = np.array([1, 2, 3], dtype=int)
+print("Integer array:", int_array)  # Output: Integer array: [1 2 3]
+print("Dtype:", int_array.dtype)  # Output: Dtype: int64
+
+float_array = np.array([1.0, 2.5, 3.7], dtype=float)
+print("Float array:", float_array)  # Output: Float array: [1.  2.5 3.7]
+print("Dtype:", float_array.dtype)  # Output: Dtype: float64`
+    }
+  ]}
+/>
+
+### Specific Numeric Data Types
+
+NumPy provides detailed precision control with various sizes of numeric data types:
+
+| Category | Data Type | Description | Value Range |
+|----------|-----------|-------------|-------------|
+| **Signed Integer** | `int8` | 8-bit signed integer | -128 to 127 |
+| | `int16` | 16-bit signed integer | -32768 to 32767 |
+| | `int32` | 32-bit signed integer | -2147483648 to 2147483647 |
+| | `int64` | 64-bit signed integer | Very large range |
+| **Unsigned Integer** | `uint8` | 8-bit unsigned integer | 0 to 255 |
+| | `uint16` | 16-bit unsigned integer | 0 to 65535 |
+| | `uint32` | 32-bit unsigned integer | 0 to 4294967295 |
+| | `uint64` | 64-bit unsigned integer | Very large positive range |
+| **Float** | `float16` | Half-precision float | 5 bit exponent, 10 bit mantissa |
+| | `float32` | Single-precision float | 8 bit exponent, 23 bit mantissa |
+| | `float64` | Double-precision float | 11 bit exponent, 52 bit mantissa |
+| **Complex** | `complex64` | Complex number | Two 32-bit floats |
+| | `complex128` | Complex number | Two 64-bit floats |
+
+### Specifying Data Types
+
+You can specify data types when creating arrays or change them after array creation:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "specify_data_types.py",
+      code: `import numpy as np
+
+# Specify data type during array creation
+a = np.array([0, 1, 2], dtype=float)
+print("Array with float dtype:", a)  # Output: Array with float dtype: [0. 1. 2.]
+print("Dtype:", a.dtype)  # Output: Dtype: float64
+
+# Default is float for ones function
+a = np.ones((3, 3))
+print("Default ones dtype:", a.dtype)  # Output: Default ones dtype: float64
+
+# Change to integer
+a = np.ones((3, 3), dtype=int)
+print("Ones with int dtype:", a.dtype)  # Output: Ones with int dtype: int64
+print("Array:")
+print(a)
+# Output:
+# [[1 1 1]
+#  [1 1 1]
+#  [1 1 1]]`
+    }
+  ]}
+/>
+
+### Automatic Data Type Detection
+
+NumPy automatically detects data types based on provided elements:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "automatic_dtype_detection.py",
+      code: `import numpy as np
+
+# All integers
+a = np.array([0, 1, 2])
+print("All int - dtype:", a.dtype)  # Output: All int - dtype: int64
+
+# All floats
+a = np.array([0., 1., 2.])
+print("All float - dtype:", a.dtype)  # Output: All float - dtype: float64
+
+# Mixed int and float
+a = np.array([0, 1, 2.])
+print("Mixed - dtype:", a.dtype)  # Output: Mixed - dtype: float64
+print("Array result:", a)  # Output: Array result: [0. 1. 2.]`
+    }
+  ]}
+/>
+
+## NumPy Array Attributes
+
+Every NumPy array has attributes that provide important information about its structure and characteristics. These attributes are like identity cards that explain all important details about the array.
+
+### Dimension and Shape Attributes
+
+Dimension and shape attributes provide important structural information about arrays. Let's see how to access and interpret these attributes.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "array_attributes.py",
+      code: `import numpy as np
+
+# Create 2D array as example
+a = np.array([[0, 1, 2], [3, 4, 5]])
+print("Array:")
+print(a)
+# Output:
+# [[0 1 2]
+#  [3 4 5]]
+
+print("Shape:", a.shape)  # Output: Shape: (2, 3)
+print("Ndim (dimensions):", a.ndim)  # Output: Ndim (dimensions): 2
+print("Size (total elements):", a.size)  # Output: Size (total elements): 6
+print("Dtype (data type):", a.dtype)  # Output: Dtype (data type): int64
+print("Data pointer:", a.data)  # Output: Data pointer: <memory at 0x...>`
+    }
+  ]}
+/>
+
+### Important Attribute Explanations
+
+| Attribute | Function | Example Result |
+|-----------|----------|----------------|
+| `ndarray.shape` | Number of elements in each axis | `(2, 3)` for 2x3 array |
+| `ndarray.ndim` | Number of axes/dimensions | `2` for 2D array |
+| `ndarray.size` | Total number of elements | `6` for 2x3 array |
+| `ndarray.dtype` | Element data type | `int64`, `float64`, etc |
+| `ndarray.data` | Pointer to array data start | Memory address |
+
+### Data Type Consistency
+
+All elements in a NumPy array must have the same data type. The `numpy.dtype` object explains how items are stored and interpreted in memory. When you mix different data types, NumPy will automatically convert to the most common data type.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dtype_consistency.py",
+      code: `import numpy as np
+
+# All integers
+a = np.array([0, 1, 2])
+print("All int - dtype:", a.dtype)  # Output: All int - dtype: int64
+
+# All floats
+a = np.array([0., 1., 2.])
+print("All float - dtype:", a.dtype)  # Output: All float - dtype: float64
+
+# Mixed integer and float (automatically becomes float)
+a = np.array([0, 1, 2.])
+print("Mixed - dtype:", a.dtype)  # Output: Mixed - dtype: float64
+print("Mixed result:", a)  # Output: Mixed result: [0. 1. 2.]`
+    }
+  ]}
+/>
+
+## Data Type Conversion and Manipulation
+
+NumPy provides various ways to convert and manipulate array data types according to data analysis needs.
+
+### Data Type Conversion Methods
+
+Data type conversion allows you to change data representation according to analysis needs. The `astype()` method is the most common way to perform explicit conversion.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dtype_conversion.py",
+      code: `import numpy as np
+
+# Original float array
+original = np.array([1.1, 2.7, 3.9])
+print("Original array:", original)  # Output: Original array: [1.1 2.7 3.9]
+print("Original dtype:", original.dtype)  # Output: Original dtype: float64
+
+# Convert to integer using astype
+converted = original.astype(int)
+print("Converted to int:", converted)  # Output: Converted to int: [1 2 3]
+print("Converted dtype:", converted.dtype)  # Output: Converted dtype: int64
+
+# Convert to specific data type
+float32_array = original.astype(np.float32)
+print("Float32 dtype:", float32_array.dtype)  # Output: Float32 dtype: float32
+
+# Convert string to integer
+string_array = np.array(['1', '2', '3'])
+int_from_string = string_array.astype(int)
+print("From string:", int_from_string)  # Output: From string: [1 2 3]
+print("String to int dtype:", int_from_string.dtype)  # Output: String to int dtype: int64`
+    }
+  ]}
+/>
+
+### Memory Optimization with Data Types
+
+Choosing the right data type can save memory significantly, especially for large datasets. Data type size differences can provide dramatic savings in large-scale applications.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "memory_optimization.py",
+      code: `import numpy as np
+
+# Array with default data type (int64)
+large_array_int64 = np.arange(1000000)
+print("Int64 itemsize:", large_array_int64.itemsize, "bytes")  # Output: Int64 itemsize: 8 bytes
+print("Int64 total memory:", large_array_int64.nbytes, "bytes")  # Output: Int64 total memory: 8000000 bytes
+
+# Array with smaller data type (int32)
+large_array_int32 = np.arange(1000000, dtype=np.int32)
+print("Int32 itemsize:", large_array_int32.itemsize, "bytes")  # Output: Int32 itemsize: 4 bytes
+print("Int32 total memory:", large_array_int32.nbytes, "bytes")  # Output: Int32 total memory: 4000000 bytes
+
+# Memory savings
+memory_saved = large_array_int64.nbytes - large_array_int32.nbytes
+print("Memory saved:", memory_saved, "bytes")  # Output: Memory saved: 4000000 bytes
+print("Memory saved percentage:", (memory_saved / large_array_int64.nbytes) * 100, "%")  # Output: Memory saved percentage: 50.0 %`
+    }
+  ]}
+/>
+
+### Detailed Data Type Information
+
+NumPy provides detailed information about each data type that can help in optimization. This information is useful for understanding trade-offs between precision and memory usage.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "dtype_info.py",
+      code: `import numpy as np
+
+# Create arrays with various data types
+arrays = {
+    'int8': np.array([1, 2, 3], dtype=np.int8),
+    'int32': np.array([1, 2, 3], dtype=np.int32),
+    'int64': np.array([1, 2, 3], dtype=np.int64),
+    'float32': np.array([1.0, 2.0, 3.0], dtype=np.float32),
+    'float64': np.array([1.0, 2.0, 3.0], dtype=np.float64)
+}
+
+print("Data Type Information:")
+print("=" * 50)
+for name, arr in arrays.items():
+    print(f"{name:8} - itemsize: {arr.itemsize:2} bytes, dtype: {arr.dtype}")
+
+# Output:
+# Data Type Information:
+# ==================================================
+# int8     - itemsize:  1 bytes, dtype: int8
+# int32    - itemsize:  4 bytes, dtype: int32
+# int64    - itemsize:  8 bytes, dtype: int64
+# float32  - itemsize:  4 bytes, dtype: float32
+# float64  - itemsize:  8 bytes, dtype: float64`
+    }
+  ]}
+/>
+
+## Practical Array Attribute Usage
+
+Understanding array attributes is crucial for debugging, optimization, and effective data manipulation in scientific programming.
+
+### Data Structure Analysis
+
+Analysis functions help you understand array characteristics comprehensively. This is very useful when working with complex data or debugging programs.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "data_structure_analysis.py",
+      code: `import numpy as np
+
+def analyze_array(arr, name="Array"):
+    """Function to analyze array structure"""
+    print(f"\\n=== Analysis {name} ===")
+    print(f"Shape: {arr.shape}")
+    print(f"Dimensions: {arr.ndim}")
+    print(f"Size: {arr.size}")
+    print(f"Data type: {arr.dtype}")
+    print(f"Item size: {arr.itemsize} bytes")
+    print(f"Total memory: {arr.nbytes} bytes")
+    
+    if arr.ndim <= 2:
+        print(f"Array content:\\n{arr}")
+
+# Example analysis of various arrays
+array_1d = np.array([1, 2, 3, 4, 5])
+array_2d = np.array([[1, 2, 3], [4, 5, 6]])
+array_3d = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+
+analyze_array(array_1d, "1D")
+analyze_array(array_2d, "2D") 
+analyze_array(array_3d, "3D")
+
+# Output:
+# === Analysis 1D ===
+# Shape: (5,)
+# Dimensions: 1
+# Size: 5
+# Data type: int64
+# Item size: 8 bytes
+# Total memory: 40 bytes
+# Array content:
+# [1 2 3 4 5]
+# 
+# === Analysis 2D ===
+# Shape: (2, 3)
+# Dimensions: 2
+# Size: 6
+# Data type: int64
+# Item size: 8 bytes
+# Total memory: 48 bytes
+# Array content:
+# [[1 2 3]
+#  [4 5 6]]
+# 
+# === Analysis 3D ===
+# Shape: (2, 2, 2)
+# Dimensions: 3
+# Size: 8
+# Data type: int64
+# Item size: 8 bytes
+# Total memory: 64 bytes`
+    }
+  ]}
+/>
+
+### Data Validation and Debugging
+
+Data validation is an important step before performing analysis or machine learning. Validation functions help identify potential problems in datasets.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "data_validation.py",
+      code: `import numpy as np
+
+def validate_array_for_ml(arr):
+    """Validate array for machine learning"""
+    print("=== ML Array Validation ===")
+    
+    # Check dimensions
+    if arr.ndim != 2:
+        print(f"WARNING: Array is not 2D (current: {arr.ndim}D)")
+    else:
+        print(f"✓ 2D Array with shape: {arr.shape}")
+    
+    # Check data type
+    if arr.dtype in [np.float32, np.float64]:
+        print(f"✓ Suitable data type: {arr.dtype}")
+    else:
+        print(f"WARNING: Data type may need conversion: {arr.dtype}")
+    
+    # Check missing values (NaN)
+    if np.isnan(arr).any():
+        nan_count = np.isnan(arr).sum()
+        print(f"WARNING: Found {nan_count} NaN values")
+    else:
+        print("✓ No NaN values")
+    
+    # Memory information
+    memory_mb = arr.nbytes / (1024 * 1024)
+    print(f"Memory usage: {memory_mb:.2f} MB")
+
+# Test with various arrays
+test_arrays = [
+    np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float64),
+    np.array([1, 2, 3, 4, 5]),
+    np.array([[1, 2, np.nan], [4, 5, 6]], dtype=np.float64)
+]
+
+for i, arr in enumerate(test_arrays):
+    print(f"\\n--- Test Array {i+1} ---")
+    validate_array_for_ml(arr)
+
+# Output:
+# --- Test Array 1 ---
+# === ML Array Validation ===
+# ✓ 2D Array with shape: (2, 3)
+# ✓ Suitable data type: float64
+# ✓ No NaN values
+# Memory usage: 0.00 MB
+# 
+# --- Test Array 2 ---
+# === ML Array Validation ===
+# WARNING: Array is not 2D (current: 1D)
+# WARNING: Data type may need conversion: int64
+# ✓ No NaN values
+# Memory usage: 0.00 MB
+# 
+# --- Test Array 3 ---
+# === ML Array Validation ===
+# ✓ 2D Array with shape: (2, 3)
+# ✓ Suitable data type: float64
+# WARNING: Found 1 NaN values
+# Memory usage: 0.00 MB`
+    }
+  ]}
+/>
