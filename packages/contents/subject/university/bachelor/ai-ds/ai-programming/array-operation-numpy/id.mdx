@@ -1,0 +1,488 @@
+export const metadata = {
+    title: "Operasi pada Array dengan NumPy",
+    description: "Pelajari operasi matematika pada array dengan NumPy: broadcasting, vektorisasi, aritmetika, statistik, dan manipulasi bentuk. Panduan lengkap dengan contoh kode teruji untuk pemrograman AI dan data science.", description: "Master NumPy array operations: broadcasting, vectorization, arithmetic, statistics, and shape manipulation with practical examples for data science.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/20/2025",
+    subject: "Pemrograman AI",
+};
+
+## Broadcasting dalam NumPy
+
+NumPy memungkinkan kamu melakukan operasi matematika pada array dengan cara yang sangat efisien. Bayangkan kamu punya dua kalkulator, satu bisa menghitung satu angka saja, sedangkan yang lain bisa menghitung ribuan angka sekaligus dalam waktu yang sama. NumPy adalah kalkulator yang kedua.
+
+Vektorisasi adalah kemampuan NumPy untuk melakukan operasi pada seluruh elemen array tanpa perlu menulis loop manual. Proses ini mempercepat perhitungan karena operasi dilakukan secara bersamaan pada level yang lebih rendah.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "vectorization_example.py",
+      code: `import numpy as np
+
+# Membuat dua array
+a = np.array([0, 1, 2])
+b = np.array([2, 2, 2])
+
+# Operasi vektorisasi (elemen per elemen)
+hasil = a + b
+print(hasil)
+# Output: [2 3 4]`
+    }
+  ]}
+/>
+
+Dalam contoh di atas, NumPy secara otomatis menjumlahkan setiap elemen pada posisi yang sama dari kedua array. Tidak perlu menulis loop untuk mengakses setiap elemen satu per satu.
+
+### Aturan Broadcasting
+
+Broadcasting adalah sistem aturan yang memungkinkan NumPy melakukan operasi pada array dengan bentuk yang berbeda. Seperti saat kamu ingin menambahkan angka yang sama ke semua elemen dalam daftar, NumPy bisa melakukannya secara otomatis.
+
+Terdapat tiga aturan utama dalam broadcasting:
+
+1. **Aturan 1**: Jika dimensi berbeda, tambahkan dimensi dengan ukuran 1 dari sebelah kiri pada array yang dimensinya lebih kecil
+2. **Aturan 2**: Regangkan dimensi berukuran 1 agar sesuai dengan nilai dimensi yang bersesuaian pada array lain  
+3. **Aturan 3**: Jika bentuk tidak kompatibel, akan muncul error
+
+### Array dengan Skalar
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "broadcasting_1d_scalar.py",
+      code: `import numpy as np
+
+# Array 1D dengan skalar
+a = np.arange(3)  # [0, 1, 2]
+b = 5
+
+hasil = a + b
+print(f"Array a: {a}")
+print(f"Skalar b: {b}")
+print(f"Hasil a + b: {hasil}")
+
+# Penjelasan bentuk:
+# a memiliki bentuk (3,)
+# b memiliki bentuk () - skalar
+# Setelah broadcasting: b menjadi [5, 5, 5]
+# Output: [5 6 7]`
+    }
+  ]}
+/>
+
+### Array 2D dengan 1D
+
+Ketika kamu bekerja dengan array yang memiliki dimensi berbeda, NumPy akan mencoba menyesuaikan bentuknya secara otomatis. Proses ini sangat berguna saat kamu ingin menerapkan operasi yang sama pada setiap baris atau kolom dari matriks.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "broadcasting_2d_1d.py",
+      code: `import numpy as np
+
+# Array 2D dengan array 1D
+a = np.ones((3, 3))  # Matriks 3x3 berisi angka 1
+b = np.arange(3)     # [0, 1, 2]
+
+hasil = a + b
+print("Array a (3x3):")
+print(a)
+print(f"Array b (1D): {b}")
+print("Hasil a + b:")
+print(hasil)
+
+# Broadcasting terjadi:
+# a: bentuk (3, 3)
+# b: bentuk (3,) -> diperluas menjadi (1, 3) -> (3, 3)
+# b ditambahkan ke setiap baris dari a`
+    }
+  ]}
+/>
+
+### Kasus Broadcasting Gagal
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "broadcasting_error.py",
+      code: `import numpy as np
+
+try:
+    # Array dengan bentuk yang tidak kompatibel
+    a = np.arange(6).reshape(2, 3)  # bentuk (2, 3)
+    b = np.arange(2)                # bentuk (2,)
+    
+    print(f"Array a bentuk: {a.shape}")
+    print(f"Array b bentuk: {b.shape}")
+    
+    # Ini akan menghasilkan error
+    hasil = a + b
+except ValueError as e:
+    print(f"Error: {e}")
+    print("Bentuk array tidak kompatibel untuk broadcasting")`
+    }
+  ]}
+/>
+
+## Operasi Aritmetika Array
+
+NumPy menyediakan berbagai operasi aritmetika yang dapat diterapkan pada array. Operasi ini bekerja secara elemen per elemen, mirip seperti kalkulator yang bisa menghitung banyak angka sekaligus.
+
+Ketika kamu melakukan operasi aritmetika dengan skalar, NumPy akan menerapkan operasi tersebut pada setiap elemen dalam array. Ini sangat efisien karena tidak perlu menulis loop manual.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "arithmetic_scalar.py",
+      code: `import numpy as np
+
+a = np.array([0, 1, 2, 3, 4])
+
+# Penjumlahan dengan skalar
+print("Penjumlahan:")
+print(f"a + 1 = {a + 1}")
+# Output: [1 2 3 4 5]
+
+# Perkalian dengan skalar  
+print("Perkalian:")
+a *= 2
+print(f"a *= 2: {a}")
+# Output: [0 2 4 6 8]
+
+# Pangkat
+print("Pangkat:")
+print(f"2**a = {2**a}")
+# Output: [  1   4  16  64 256]`
+    }
+  ]}
+/>
+
+### Operasi Antar Array
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "arithmetic_arrays.py",
+      code: `import numpy as np
+
+a = np.array([0, 1, 2, 3, 4])
+b = np.array([4, 3, 2, 1, 0])
+
+# Pengurangan elemen per elemen
+print("Pengurangan:")
+print(f"a - b = {a - b}")
+# Output: [-4 -2  0  2  4]
+
+# Perkalian elemen per elemen
+print("Perkalian elemen per elemen:")
+print(f"a * b = {a * b}")
+# Output: [0 3 4 3 0]
+
+# Perkalian matriks (dot product)
+print("Perkalian matriks:")
+print(f"a @ b = {a @ b}")
+# Output: 10 (hasil dot product)`
+    }
+  ]}
+/>
+
+Penting untuk memahami perbedaan antara perkalian elemen per elemen (`*`) dan perkalian matriks (`@` atau `np.dot()`). Perkalian elemen per elemen mengalikan elemen pada posisi yang sama, sedangkan perkalian matriks mengikuti aturan aljabar linear.
+
+### Perbandingan dan Logika
+
+NumPy juga mendukung operasi perbandingan yang menghasilkan array boolean. Operasi ini sangat berguna untuk filtering data atau membuat kondisi kompleks.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "comparison_logical.py",
+      code: `import numpy as np
+
+a = np.array([0, 1, 2, 3, 4])
+b = np.array([0, 0, 2, 4, 4])
+
+# Operasi perbandingan
+print("Perbandingan lebih besar:")
+print(f"a > 2: {a > 2}")
+# Output: [False False False  True  True]
+
+print("Perbandingan sama dengan:")
+print(f"a == b: {a == b}")
+# Output: [ True False  True False  True]
+
+# Operasi logika
+print("Operasi logika OR:")
+print(f"(a > 2) | (a == b): {(a > 2) | (a == b)}")
+# Output: [ True False  True  True  True]`
+    }
+  ]}
+/>
+
+Operator logika dalam NumPy menggunakan simbol khusus. Gunakan `~` untuk NOT, `&` untuk AND, dan `|` untuk OR, bukan operator Python biasa seperti `not`, `and`, `or`.
+
+## Fungsi Statistik dan Reduksi
+
+Fungsi reduksi memungkinkan kamu menghitung nilai tunggal dari seluruh array atau sepanjang sumbu tertentu. Bayangkan kamu punya tabel nilai ujian dan ingin menghitung rata-rata untuk setiap mata pelajaran atau untuk setiap siswa.
+
+NumPy menyediakan berbagai fungsi statistik yang sangat berguna untuk analisis data. Fungsi ini dapat diterapkan pada seluruh array atau hanya pada sumbu tertentu.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "basic_statistics.py",
+      code: `import numpy as np
+
+# Membuat array 2D untuk contoh
+data = np.array([[3, 0, -1, 1],
+                 [2, -1, -2, 4],
+                 [1, 7, 0, 4]])
+
+print("Data array:")
+print(data)
+
+# Statistik pada seluruh array
+print(f"Jumlah total: {np.sum(data)}")
+print(f"Rata-rata: {np.mean(data):.2f}")
+print(f"Nilai minimum: {np.min(data)}")
+print(f"Nilai maksimum: {np.max(data)}")
+print(f"Standar deviasi: {np.std(data):.2f}")
+# Output:
+# Jumlah total: 18
+# Rata-rata: 1.50
+# Nilai minimum: -2
+# Nilai maksimum: 7
+# Standar deviasi: 2.50`
+    }
+  ]}
+/>
+
+### Operasi dengan Sumbu
+
+Konsep sumbu (axis) dalam NumPy sangat penting. Untuk array 2D, `axis=0` berarti operasi dilakukan sepanjang baris (menghasilkan nilai untuk setiap kolom), sedangkan `axis=1` berarti operasi dilakukan sepanjang kolom (menghasilkan nilai untuk setiap baris).
+
+Pemahaman tentang sumbu ini membantu kamu mengontrol bagaimana fungsi statistik bekerja pada data multidimensi. Misalnya, jika kamu punya data penjualan per bulan untuk berbagai produk, kamu bisa menghitung total penjualan per produk atau per bulan.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "axis_operations.py",
+      code: `import numpy as np
+
+data = np.array([[3, 0, -1, 1],
+                 [2, -1, -2, 4],
+                 [1, 7, 0, 4]])
+
+# Operasi sepanjang axis=0 (untuk setiap kolom)
+print("Maksimum setiap kolom (axis=0):")
+print(f"max(axis=0): {np.max(data, axis=0)}")
+# Output: [3 7 0 4]
+
+print("Indeks maksimum setiap kolom:")
+print(f"argmax(axis=0): {np.argmax(data, axis=0)}")
+# Output: [0 2 2 1]
+
+# Operasi sepanjang axis=1 (untuk setiap baris)  
+print("Maksimum setiap baris (axis=1):")
+print(f"max(axis=1): {np.max(data, axis=1)}")
+# Output: [3 4 7]
+
+print("Indeks maksimum setiap baris:")
+print(f"argmax(axis=1): {np.argmax(data, axis=1)}")
+# Output: [0 3 1]`
+    }
+  ]}
+/>
+
+## Manipulasi Bentuk Array
+
+Manipulasi bentuk array memungkinkan kamu mengubah dimensi dan struktur data tanpa mengubah isi datanya. Seperti mengatur ulang buku di rak, kamu bisa menyusunnya dalam baris yang berbeda tanpa menambah atau mengurangi jumlah buku.
+
+NumPy menyimpan array multidimensi secara internal sebagai array satu dimensi dengan urutan row-major (elemen pada indeks terakhir disimpan secara berurutan). Pemahaman ini penting untuk operasi reshape dan flatten.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "internal_storage.py",
+      code: `import numpy as np
+
+# Membuat array 2D
+a = np.array([[0, 1], [2, 3]])
+print("Array 2D:")
+print(a)
+print(f"Bentuk: {a.shape}")
+
+# Melihat bagaimana disimpan dalam memori
+print(f"Disimpan dalam memori sebagai: {a.ravel()}")
+# Output: [0 1 2 3] (row-major order)`
+    }
+  ]}
+/>
+
+### Flatten dan Ravel
+
+Fungsi `flatten()` dan `ravel()` keduanya mengubah array multidimensi menjadi array 1D, tetapi dengan cara yang berbeda. Flatten membuat salinan baru dari data, sedangkan ravel mencoba membuat view yang lebih efisien dari segi memori.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "flatten_ravel.py",
+      code: `import numpy as np
+
+# Membuat array diagonal
+a = np.diag([1, 2, 3])
+print("Array diagonal:")
+print(a)
+
+# Flatten - membuat salinan independen
+b_flatten = a.flatten()
+print(f"Hasil flatten: {b_flatten}")
+
+# Mengubah nilai flatten tidak mempengaruhi array asli
+b_flatten[0] = 9
+print(f"Setelah mengubah flatten: {b_flatten}")
+print("Array asli tetap sama:")
+print(a)
+
+print()
+
+# Ravel - mencoba membuat view (lebih efisien)
+b_ravel = a.ravel()
+print(f"Hasil ravel: {b_ravel}")
+
+# Mengubah nilai ravel mempengaruhi array asli
+b_ravel[0] = 9
+print(f"Setelah mengubah ravel: {b_ravel}")
+print("Array asli berubah:")
+print(a)`
+    }
+  ]}
+/>
+
+### Reshape dan Resize
+
+Operasi reshape memungkinkan kamu mengubah bentuk array tanpa mengubah datanya, asalkan jumlah total elemen tetap sama. Sedangkan resize mengubah array secara langsung (in-place).
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "reshape_resize.py",
+      code: `import numpy as np
+
+# Membuat array diagonal dan flatten
+a = np.diag([1, 2, 3])
+a_flat = a.flatten()
+print(f"Array flat: {a_flat}")
+
+# Reshape - mengubah bentuk dengan jumlah elemen yang sama
+b = a_flat.reshape(3, 3)
+print("Hasil reshape ke (3,3):")
+print(b)
+
+# Mengubah nilai dalam reshape
+b[0, 0] = 9
+print("Setelah mengubah nilai:")
+print(b)
+print(f"Array flat asli: {a_flat}")  # Berubah karena reshape membuat view
+
+# Resize - mengubah bentuk in-place (tanpa return value)
+a_flat.resize(3, 3)
+print("Setelah resize:")
+print(a_flat)  # Sekarang a_flat sudah menjadi 2D`
+    }
+  ]}
+/>
+
+### Transpose
+
+Transpose adalah operasi yang membalik sumbu array, sangat berguna dalam operasi aljabar linear. NumPy menyediakan dua cara untuk melakukan transpose: menggunakan method `transpose()` atau atribut `.T` yang lebih singkat.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "transpose.py",
+      code: `import numpy as np
+
+# Membuat array 2x4
+a = np.linspace(1, 8, 8).reshape(2, 4)
+print("Array asli (2x4):")
+print(a)
+
+# Transpose menggunakan method
+b = a.transpose()
+print("Hasil transpose (4x2):")
+print(b)
+
+# Transpose menggunakan atribut .T (lebih singkat)
+c = a.T
+print("Menggunakan .T:")
+print(c)
+
+# Memverifikasi bahwa transpose adalah view
+print("Apakah transpose adalah view?", np.shares_memory(a, b))`
+    }
+  ]}
+/>
+
+## Standardisasi Data dengan Z-Transform
+
+Z-Transform adalah teknik standardisasi yang mengubah data agar memiliki rata-rata 0 dan standar deviasi 1. Teknik ini sangat berguna dalam machine learning untuk memastikan semua fitur memiliki skala yang sama.
+
+Formula Z-Transform adalah <InlineMath math="Z = \frac{X - \mu}{\sigma}" />, dimana:
+- <InlineMath math="X" /> adalah matriks fitur berukuran <InlineMath math="n \times k" />
+- <InlineMath math="n" /> adalah jumlah observasi (baris)
+- <InlineMath math="k" /> adalah jumlah fitur (kolom)
+- <InlineMath math="\mu" /> adalah vektor rata-rata untuk setiap kolom
+- <InlineMath math="\sigma" /> adalah vektor standar deviasi untuk setiap kolom
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "z_transform.py",
+      code: `import numpy as np
+
+# Membuat data contoh (5 observasi, 3 fitur)
+np.random.seed(42)
+X = np.random.randn(5, 3) * 10 + 50  # Data dengan mean~50, std~10
+
+print("Data asli:")
+print(X)
+print(f"Bentuk data: {X.shape}")
+
+# Menghitung rata-rata dan standar deviasi setiap kolom
+mu = np.mean(X, axis=0)  # Rata-rata setiap kolom
+sigma = np.std(X, axis=0)  # Standar deviasi setiap kolom
+
+print(f"Rata-rata setiap fitur: {mu}")
+print(f"Standar deviasi setiap fitur: {sigma}")
+
+# Melakukan Z-Transform
+Z = (X - mu) / sigma
+
+print("Data setelah Z-Transform:")
+print(Z)
+
+# Verifikasi hasil standardisasi
+print("Verifikasi standardisasi:")
+print(f"Rata-rata baru: {np.mean(Z, axis=0)}")  # Harus mendekati 0
+print(f"Standar deviasi baru: {np.std(Z, axis=0)}")  # Harus mendekati 1
+# Output rata-rata baru: [ 1.24344979e-15  8.88178420e-17 -1.77635684e-16] (mendekati 0)
+# Output standar deviasi baru: [1. 1. 1.]`
+    }
+  ]}
+/>
+
+Proses standardisasi ini memastikan bahwa setiap fitur berkontribusi secara setara dalam algoritma machine learning, terlepas dari skala asli datanya. Misalnya, jika kamu memiliki data tinggi badan dalam sentimeter dan berat badan dalam kilogram, standardisasi akan membuat keduanya memiliki pengaruh yang sama dalam model.
+
+Untuk dokumentasi lengkap dan informasi lebih lanjut tentang operasi array NumPy, kamu dapat mengunjungi [dokumentasi resmi NumPy](https://numpy.org/doc/stable/user/basics.html) yang menyediakan panduan komprehensif dan contoh-contoh praktis.
