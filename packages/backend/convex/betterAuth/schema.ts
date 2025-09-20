@@ -10,8 +10,6 @@ import { tables } from "./generatedSchema";
 // <add link to triggers doc>
 const schema = defineSchema({
   ...tables,
-  // Spread the generated schema and add a custom index
-  user: tables.user.index("api_key", ["apiKey"]),
 });
 
 export default schema;

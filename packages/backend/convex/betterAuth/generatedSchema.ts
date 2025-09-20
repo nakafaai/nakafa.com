@@ -17,7 +17,6 @@ export const tables = {
     username: v.optional(v.union(v.null(), v.string())),
     displayUsername: v.optional(v.union(v.null(), v.string())),
     userId: v.optional(v.union(v.null(), v.string())),
-    apiKey: v.optional(v.union(v.null(), v.string())),
   })
     .index("email_name", ["email", "name"])
     .index("name", ["name"])
@@ -31,6 +30,7 @@ export const tables = {
     ipAddress: v.optional(v.union(v.null(), v.string())),
     userAgent: v.optional(v.union(v.null(), v.string())),
     userId: v.string(),
+    activeOrganizationId: v.optional(v.union(v.null(), v.string())),
   })
     .index("expiresAt", ["expiresAt"])
     .index("expiresAt_userId", ["expiresAt", "userId"])
@@ -63,6 +63,61 @@ export const tables = {
   })
     .index("expiresAt", ["expiresAt"])
     .index("identifier", ["identifier"]),
+  organization: defineTable({
+    name: v.string(),
+    slug: v.optional(v.union(v.null(), v.string())),
+    logo: v.optional(v.union(v.null(), v.string())),
+    createdAt: v.number(),
+    metadata: v.optional(v.union(v.null(), v.string())),
+  })
+    .index("name", ["name"])
+    .index("slug", ["slug"]),
+  member: defineTable({
+    organizationId: v.string(),
+    userId: v.string(),
+    role: v.string(),
+    createdAt: v.number(),
+  })
+    .index("organizationId_userId", ["organizationId", "userId"])
+    .index("userId", ["userId"])
+    .index("role", ["role"]),
+  invitation: defineTable({
+    organizationId: v.string(),
+    email: v.string(),
+    role: v.optional(v.union(v.null(), v.string())),
+    status: v.string(),
+    expiresAt: v.number(),
+    inviterId: v.string(),
+  })
+    .index("email_organizationId_status", ["email", "organizationId", "status"])
+    .index("organizationId_status", ["organizationId", "status"])
+    .index("role", ["role"])
+    .index("status", ["status"])
+    .index("inviterId", ["inviterId"]),
+  apikey: defineTable({
+    name: v.optional(v.union(v.null(), v.string())),
+    start: v.optional(v.union(v.null(), v.string())),
+    prefix: v.optional(v.union(v.null(), v.string())),
+    key: v.string(),
+    userId: v.string(),
+    refillInterval: v.optional(v.union(v.null(), v.number())),
+    refillAmount: v.optional(v.union(v.null(), v.number())),
+    lastRefillAt: v.optional(v.union(v.null(), v.number())),
+    enabled: v.optional(v.union(v.null(), v.boolean())),
+    rateLimitEnabled: v.optional(v.union(v.null(), v.boolean())),
+    rateLimitTimeWindow: v.optional(v.union(v.null(), v.number())),
+    rateLimitMax: v.optional(v.union(v.null(), v.number())),
+    requestCount: v.optional(v.union(v.null(), v.number())),
+    remaining: v.optional(v.union(v.null(), v.number())),
+    lastRequest: v.optional(v.union(v.null(), v.number())),
+    expiresAt: v.optional(v.union(v.null(), v.number())),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    permissions: v.optional(v.union(v.null(), v.string())),
+    metadata: v.optional(v.union(v.null(), v.string())),
+  })
+    .index("key", ["key"])
+    .index("userId", ["userId"]),
   jwks: defineTable({
     publicKey: v.string(),
     privateKey: v.string(),

@@ -1,12 +1,17 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
-import { anonymous, username } from "better-auth/plugins";
+import {
+  anonymous,
+  apiKey,
+  openAPI,
+  organization,
+  username,
+} from "better-auth/plugins";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
 import authSchema from "./betterAuth/schema";
-import { generateApiKey } from "./utils/helper";
 
 const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
@@ -19,6 +24,22 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
       schema: authSchema,
     },
     verbose: true,
+    triggers: {
+      user: {
+        onCreate: async (_ctx, _authUser) => {
+          // Handle user creation logic here if needed
+          // This is where you can sync changes to your application user table
+        },
+        onUpdate: async (_ctx, _oldUser, _newUser) => {
+          // Handle user update logic here if needed
+          // This is where you can sync changes to your application user table
+        },
+        onDelete: async (_ctx, _authUser) => {
+          // Handle user deletion logic here if needed
+          // This is where you can clean up related data
+        },
+      },
+    },
   }
 );
 
@@ -47,18 +68,18 @@ export const createAuth = (
       },
     },
     user: {
-      additionalFields: {
-        apiKey: {
-          type: "string",
-          required: false,
-          defaultValue: () => generateApiKey(),
-        },
-      },
       deleteUser: {
         enabled: true,
       },
     },
-    plugins: [anonymous(), username(), convex()],
+    plugins: [
+      anonymous(),
+      username(),
+      organization(),
+      apiKey(),
+      openAPI(),
+      convex(),
+    ],
   } satisfies BetterAuthOptions;
 
   return betterAuth(authConfig);
@@ -78,3 +99,5 @@ export const getCurrentUser = query({
     return safeGetUser(ctx);
   },
 });
+
+export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();
