@@ -1,0 +1,252 @@
+export const metadata = {
+    title: "Syntactic Sugar",
+    description: "Pelajari fitur syntactic sugar Python seperti list comprehension, lambda functions, dan operator assignment untuk menulis kode yang lebih bersih dan efisien.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/20/2025",
+    subject: "Pemrograman AI",
+};
+
+## Apa itu Syntactic Sugar
+
+Syntactic sugar adalah fitur dalam bahasa pemrograman yang membuat kode lebih mudah dibaca dan ditulis tanpa mengubah fungsionalitas dasarnya. Bayangkan seperti menambahkan gula pada kopi, kamu masih mendapatkan kopi yang sama tetapi dengan rasa yang lebih manis dan menyenangkan.
+
+Dalam Python, syntactic sugar memungkinkan kamu menulis kode yang lebih ringkas dan elegan. Fitur ini dapat dihilangkan tanpa mempengaruhi hasil akhir program, tetapi kehadirannya membuat proses coding menjadi lebih efisien dan kode lebih mudah dipahami.
+
+## List Comprehension
+
+List comprehension adalah salah satu bentuk syntactic sugar paling populer dalam Python. Fitur ini memungkinkan kamu membuat list baru berdasarkan list yang sudah ada dengan cara yang sangat ringkas.
+
+List comprehension memiliki beberapa bentuk sintaks:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "basic_syntax.py",
+      code: `# Bentuk dasar
+newlist = [expression for item in iterable]
+
+# Dengan kondisi
+newlist = [expression for item in iterable if condition]
+
+# Dengan if-else (conditional expression harus sebelum for)
+newlist = [if_expr if condition else else_expr for item in iterable]`
+    }
+  ]}
+/>
+
+Perhatikan bahwa pada bentuk ketiga, ekspresi if-else harus muncul sebelum loop `for`. Ini berbeda dengan bentuk kedua di mana kondisi `if` muncul setelah loop.
+
+### Implementasi List Comprehension
+
+Mari lihat bagaimana list comprehension bekerja dalam praktik:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "list_comprehension_example.py",
+      code: `# Data awal
+x = [1, 2, 3, 4, 5, 6]
+
+# List comprehension dengan kondisi if
+x2 = [i*2 if i%2 else 2*i for i in x]
+print(x2)
+# Output: [2, 4, 6, 8, 10, 12]
+
+# Contoh lain dengan kondisi
+numbers = [1, 2, 3, 4, 5, 6]
+result = [i**2 for i in numbers if i%2 == 0]
+print(result)
+# Output: [4, 16, 36]`
+    }
+  ]}
+/>
+
+### Nested List Comprehension
+
+Python juga mendukung list comprehension bersarang untuk menangani struktur data yang lebih kompleks:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "nested_comprehension.py",
+      code: `# Data matriks
+x = [[1, 2], [3, 4], [5, 6]]
+
+# List comprehension bersarang
+y = [col for row in x for col in row]
+print(y)
+# Output: [1, 2, 3, 4, 5, 6]
+
+# Bandingkan dengan sintaks standar
+y_standard = []
+for row in x:
+    for col in row:
+        y_standard.append(col)
+print(y_standard)
+# Output yang sama: [1, 2, 3, 4, 5, 6]`
+    }
+  ]}
+/>
+
+List comprehension memiliki beberapa keunggulan dibandingkan loop tradisional. Pertama, lebih ringkas karena mengurangi jumlah baris kode secara signifikan. Kedua, umumnya memiliki performa yang lebih baik dibanding loop biasa. Ketiga, setelah terbiasa, sintaksnya sangat intuitif dan mudah dibaca. Keempat, mirip dengan notasi matematika, menyerupai set notation.
+
+Sebagai contoh, `[i**2 for i in x]` dapat dibaca sebagai "kuadrat dari i untuk setiap i dalam x", yang sangat mirip dengan notasi matematika <InlineMath math="\{i^2 : i \in X\}" />.
+
+## Lambda Functions
+
+Lambda adalah fungsi anonim dalam Python yang memungkinkan kamu membuat fungsi sederhana tanpa harus mendefinisikannya secara formal dengan kata kunci `def`.
+
+Lambda memiliki beberapa karakteristik khusus. Pertama, lambda adalah fungsi anonim yang tidak memiliki nama. Kedua, lambda mengembalikan objek fungsi yang dapat disimpan dalam variabel. Ketiga, body lambda harus berupa ekspresi, bukan statement. Keempat, lambda tidak boleh mengandung statement seperti `print`, `return`, atau assignment.
+
+### Cara Menggunakan Lambda
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "lambda_syntax.py",
+      code: `# Sintaks dasar lambda
+lambda parameters : expression
+
+# Contoh lambda sederhana
+square = lambda x: x**2
+print(square(5))  # Output: 25
+
+# Lambda dengan multiple parameter
+add = lambda x, y: x + y
+print(add(3, 4))  # Output: 7
+
+# Bandingkan dengan fungsi biasa
+def square_normal(x):
+    return x**2
+
+def add_normal(x, y):
+    return x + y`
+    }
+  ]}
+/>
+
+### Lambda dengan Built-in Functions
+
+Lambda sangat berguna ketika digunakan bersama dengan fungsi built-in seperti `map()`, `filter()`, dan `sorted()`:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "lambda_with_builtins.py",
+      code: `# Dengan map()
+numbers = [1, 2, 3, 4, 5]
+squared = list(map(lambda x: x**2, numbers))
+print(squared)  # Output: [1, 4, 9, 16, 25]
+
+# Dengan filter()
+even_numbers = list(filter(lambda x: x%2 == 0, numbers))
+print(even_numbers)  # Output: [2, 4]
+
+# Dengan sorted()
+students = [('Alice', 85), ('Bob', 90), ('Charlie', 78)]
+sorted_by_grade = sorted(students, key=lambda student: student[1])
+print(sorted_by_grade)  # Output: [('Charlie', 78), ('Alice', 85), ('Bob', 90)]`
+    }
+  ]}
+/>
+
+## Fitur Syntactic Sugar Lainnya
+
+Python memiliki berbagai bentuk syntactic sugar lainnya yang membuat kode lebih pythonic dan efisien.
+
+### Assignment Operators
+
+Python menyediakan operator assignment yang lebih ringkas untuk operasi umum:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "assignment_operators.py",
+      code: `# Compound assignment
+a = 10
+a += 1    # sama dengan: a = a + 1
+print(a)  # Output: 11
+
+a -= 2    # sama dengan: a = a - 2
+print(a)  # Output: 9
+
+a *= 3    # sama dengan: a = a * 3
+print(a)  # Output: 27
+
+a /= 3    # sama dengan: a = a / 3
+print(a)  # Output: 9.0`
+    }
+  ]}
+/>
+
+### Negative Indexing
+
+Python memungkinkan penggunaan indeks negatif untuk mengakses elemen dari belakang:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "negative_indexing.py",
+      code: `# Negative indexing
+data = [10, 20, 30, 40, 50]
+
+# Mengakses elemen terakhir
+print(data[-1])    # Output: 50
+# sama dengan: data[len(data) - 1]
+
+print(data[-2])    # Output: 40
+print(data[-3])    # Output: 30
+
+# Slicing dengan negative index
+print(data[-3:])   # Output: [30, 40, 50]
+print(data[:-2])   # Output: [10, 20, 30]`
+    }
+  ]}
+/>
+
+### Multiple Assignment
+
+Python memungkinkan assignment multiple variabel dalam satu baris:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "multiple_assignment.py",
+      code: `# Multiple assignment
+x, y, z = 1, 2, 3
+print(f"x={x}, y={y}, z={z}")  # Output: x=1, y=2, z=3
+
+# Unpacking list
+coordinates = [10, 20]
+x, y = coordinates
+print(f"x={x}, y={y}")  # Output: x=10, y=20
+
+# Swapping variables
+a, b = 5, 10
+print(f"Before: a={a}, b={b}")
+a, b = b, a  # Swap tanpa variabel temporary
+print(f"After: a={a}, b={b}")  # Output: After: a=10, b=5`
+    }
+  ]}
+/>
+
+## Perbandingan Sintaks
+
+Untuk memahami keunggulan syntactic sugar, mari bandingkan cara penulisan yang berbeda:
+
+| Konsep | Sintaks Standar | Syntactic Sugar |
+|--------|----------------|-----------------|
+| Membuat list kuadrat | `result = []` kemudian loop dengan `append()` | `result = [i**2 for i in range(5)]` |
+| Fungsi sederhana | `def double(x): return x * 2` | `double = lambda x: x * 2` |
+| Assignment | `a = a + 5` | `a += 5` |
+| Akses elemen terakhir | `data[len(data) - 1]` | `data[-1]` |
+
+Tabel ini menunjukkan bagaimana syntactic sugar membuat kode lebih ringkas dan mudah dibaca tanpa mengubah fungsionalitas dasar.
