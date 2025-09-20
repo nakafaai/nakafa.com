@@ -31,7 +31,7 @@ export function CardMaterial({ material }: Props) {
     <Card className="overflow-hidden pb-0">
       <CardHeader className="gap-0">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex flex-col gap-1.5">
+          <div className="flex w-full flex-col gap-1.5">
             <CardTitle className="group flex items-center font-medium">
               <h2
                 className="inline-block scroll-mt-28"
@@ -67,7 +67,7 @@ export function CardMaterial({ material }: Props) {
             </span>
             <ChevronDownIcon
               className={cn(
-                "size-4 text-muted-foreground transition-all",
+                "size-4 text-muted-foreground transition-transform",
                 isOpen ? "" : "rotate-180"
               )}
             />

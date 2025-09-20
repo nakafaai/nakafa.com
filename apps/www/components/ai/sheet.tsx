@@ -61,7 +61,7 @@ export function AiSheet() {
     <Sheet defaultOpen={open} modal={false} onOpenChange={setOpen} open={open}>
       <SheetContent
         className={cn(
-          "max-w-none gap-0 transition-all duration-0 sm:max-w-none",
+          "max-w-none gap-0 transition-[width] duration-0 sm:max-w-none",
           isResizing && "transition-none"
         )}
         closeButton={false}
