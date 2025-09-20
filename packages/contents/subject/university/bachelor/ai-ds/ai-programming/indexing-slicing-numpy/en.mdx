@@ -1,0 +1,577 @@
+export const metadata = {
+    title: "Indexing and Slicing with NumPy",
+    description: "Learn NumPy indexing and slicing techniques: 1D, 2D arrays, boolean masks, advanced indexing. Complete guide with tested code examples for AI programming.",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "09/20/2025",
+    subject: "AI Programming",
+};
+
+## Basic Indexing and Slicing Concepts
+
+Indexing and slicing in NumPy are techniques for accessing and manipulating specific elements or parts of arrays. Imagine arrays like bookshelves in a library, where indexing is the way to find a specific book based on its position, while slicing is the way to take several books at once from the shelf.
+
+> Further exploration is available in the [NumPy indexing guide](https://numpy.org/doc/stable/user/basics.indexing.html) which covers advanced techniques and special use cases.
+
+NumPy uses syntax similar to Python lists, but with much more powerful capabilities for multidimensional arrays. The main difference is that NumPy slicing returns a view of the original data, not a copy like Python lists.
+
+## 1D Array Operations
+
+One-dimensional arrays use the same syntax as Python lists. Slicing returns a view of the data, not a copy, so changes to the view will affect the original array.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "indexing_1d.py",
+      code: `import numpy as np
+
+# Create 1D array
+a = np.linspace(0, 7, 8)
+print("Original array:", a)  # Output: Original array: [0. 1. 2. 3. 4. 5. 6. 7.]
+
+# Single element indexing
+print("3rd element:", a[3])  # Output: 3rd element: 3.0
+print("Last element:", a[-1])  # Output: Last element: 7.0
+
+# Basic slicing
+print("Slice [2:6]:", a[2:6])  # Output: Slice [2:6]: [2. 3. 4. 5.]
+print("Slice [3:-2]:", a[3:-2])  # Output: Slice [3:-2]: [3. 4. 5.]
+
+# Modification through slicing (changes original array)
+a[:3] = 0
+print("After a[:3] = 0:", a)  # Output: After a[:3] = 0: [0. 0. 0. 3. 4. 5. 6. 7.]`
+    }
+  ]}
+/>
+
+An important concept in NumPy slicing is the difference between view and copy. Views share memory with the original array, while copies are independent duplicates.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "view_vs_copy.py",
+      code: `import numpy as np
+
+# Original array
+original = np.array([1, 2, 3, 4, 5])
+print("Original:", original)  # Output: Original: [1 2 3 4 5]
+
+# Create view through slicing
+view = original[1:4]
+print("View:", view)  # Output: View: [2 3 4]
+
+# Modify view (affects original)
+view[0] = 999
+print("After modifying view:")
+print("Original:", original)  # Output: Original: [  1 999   3   4   5]
+print("View:", view)  # Output: View: [999   3   4]
+
+# Create explicit copy
+copy_array = original[1:4].copy()
+copy_array[0] = 777
+print("After modifying copy:")
+print("Original:", original)  # Output: Original: [  1 999   3   4   5]
+print("Copy:", copy_array)  # Output: Copy: [777   3   4]`
+    }
+  ]}
+/>
+
+## Multidimensional Array Operations
+
+Multidimensional arrays use integer tuples for indexing. Each dimension is separated by commas within square brackets. Assignment and slicing can be combined for complex operations.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "indexing_2d.py",
+      code: `import numpy as np
+
+# Create 2D array
+a = np.array([[1., 2., 3.],
+              [4., 5., 6.],
+              [7., 8., 9.],
+              [10., 11., 12.]])
+print("2D Array:")
+print(a)
+# Output:
+# [[ 1.  2.  3.]
+#  [ 4.  5.  6.]
+#  [ 7.  8.  9.]
+#  [10. 11. 12.]]
+
+# Specific element indexing
+print("a[2,1]:", a[2,1])  # Output: a[2,1]: 8.0
+
+# Row slicing
+print("a[1,:]:", a[1,:])  # Output: a[1,:]: [4. 5. 6.]
+
+# Column slicing
+print("a[:,2]:", a[:,2])  # Output: a[:,2]: [ 3.  6.  9. 12.]`
+    }
+  ]}
+/>
+
+Advanced slicing allows extraction of subarrays with complex patterns:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "advanced_slicing_2d.py",
+      code: `import numpy as np
+
+# 2D array for demonstration
+a = np.array([[1., 2., 3.],
+              [4., 5., 6.],
+              [7., 8., 9.],
+              [10., 11., 12.]])
+
+# Subarray slicing
+print("a[1:3, 0:2]:")
+print(a[1:3, 0:2])
+# Output:
+# [[4. 5.]
+#  [7. 8.]]
+
+# Slicing with step
+print("a[::2, :]:")
+print(a[::2, :])
+# Output:
+# [[ 1.  2.  3.]
+#  [ 7.  8.  9.]]
+
+# Column slicing with step
+print("a[:, ::2]:")
+print(a[:, ::2])
+# Output:
+# [[ 1.  3.]
+#  [ 4.  6.]
+#  [ 7.  9.]
+#  [10. 12.]]`
+    }
+  ]}
+/>
+
+### 2D Operations Summary
+
+| Operation | Description | Example Result |
+|-----------|-------------|----------------|
+| `a[2,1]` | Element at row 2, column 1 | Single value: `8.0` |
+| `a[1,:]` | Entire row 1 | 1D Array: `[4. 5. 6.]` |
+| `a[:,2]` | Entire column 2 | 1D Array: `[3. 6. 9. 12.]` |
+| `a[1:3, 0:2]` | Subarray rows 1-2, columns 0-1 | 2D Array: `[[4. 5.], [7. 8.]]` |
+| `a[::2, :]` | Every second row | 2D Array with rows 0, 2 |
+| `a[:, ::2]` | Every second column | 2D Array with columns 0, 2 |
+
+## Advanced Indexing
+
+Advanced indexing allows the use of integer or boolean arrays to access elements with complex patterns. Indexing with integer arrays creates new copies rather than views. Copies have the same shape as the index array.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "integer_array_indexing.py",
+      code: `import numpy as np
+
+# Array for demonstration
+a = np.array([0, 1, 2, 3, 4])
+print("Original array:", a)  # Output: Original array: [0 1 2 3 4]
+
+# Indexing with list of indices
+i = [1, 3, 2, 1, 4]
+print("Index array:", i)  # Output: Index array: [1, 3, 2, 1, 4]
+print("a[i]:", a[i])  # Output: a[i]: [1 3 2 1 4]
+
+# Indexing and reshaping with 2D index array
+i = np.array([[1, 2], [3, 4]])
+print("2D index array:")
+print(i)
+# Output:
+# [[1 2]
+#  [3 4]]
+print("a[i]:")
+print(a[i])
+# Output:
+# [[1 2]
+#  [3 4]]`
+    }
+  ]}
+/>
+
+Boolean masks are powerful techniques for filtering data based on specific conditions. Indexing with boolean arrays takes elements where True values are found.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "boolean_mask_indexing.py",
+      code: `import numpy as np
+
+# Array for demonstration
+a = np.linspace(0, 5, 6)
+print("Array:", a)  # Output: Array: [0. 1. 2. 3. 4. 5.]
+
+# Create boolean mask
+mask = np.array([True, False, True, False, True, False])
+print("Boolean mask:", mask)  # Output: Boolean mask: [ True False  True False  True False]
+print("a[mask]:", a[mask])  # Output: a[mask]: [0. 2. 4.]
+
+# Boolean mask from condition
+condition_mask = a % 2 == 0
+print("Condition mask (a % 2 == 0):", condition_mask)  # Output: Condition mask (a % 2 == 0): [ True False  True False  True False]
+print("a[condition_mask]:", a[condition_mask])  # Output: a[condition_mask]: [0. 2. 4.]
+
+# Boolean mask with complex conditions
+complex_mask = (a > 1) & (a < 4)
+print("Complex mask (a > 1) & (a < 4):", complex_mask)  # Output: Complex mask (a > 1) & (a < 4): [False False  True  True False False]
+print("a[complex_mask]:", a[complex_mask])  # Output: a[complex_mask]: [2. 3.]`
+    }
+  ]}
+/>
+
+Advanced indexing can be combined with regular slicing for very flexible operations:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "combined_indexing.py",
+      code: `import numpy as np
+
+# 2D array for demonstration
+a = np.arange(24).reshape(4, 6)
+print("2D Array:")
+print(a)
+# Output:
+# [[ 0  1  2  3  4  5]
+#  [ 6  7  8  9 10 11]
+#  [12 13 14 15 16 17]
+#  [18 19 20 21 22 23]]
+
+# Combination of slicing and indexing
+print("a[1:3, [0, 2, 5]]:")
+print(a[1:3, [0, 2, 5]])
+# Output:
+# [[ 6  8 11]
+#  [12 14 17]]
+
+# Boolean indexing on rows, slicing on columns
+row_mask = np.array([True, False, True, False])
+print("a[row_mask, 2:5]:")
+print(a[row_mask, 2:5])
+# Output:
+# [[ 2  3  4]
+#  [14 15 16]]`
+    }
+  ]}
+/>
+
+## Advanced Techniques
+
+NumPy provides various slicing techniques that enable efficient and flexible data manipulation. Step parameters allow you to take elements at specific intervals, such as taking every second or third element.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "step_slicing.py",
+      code: `import numpy as np
+
+# Array for demonstration
+a = np.arange(20)
+print("Array:", a)  # Output: Array: [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19]
+
+# Slicing with step
+print("a[::2] (every second element):", a[::2])  # Output: a[::2] (every second element): [ 0  2  4  6  8 10 12 14 16 18]
+print("a[1::3] (start index 1, every third):", a[1::3])  # Output: a[1::3] (start index 1, every third): [ 1  4  7 10 13 16 19]
+print("a[::-1] (reverse array):", a[::-1])  # Output: a[::-1] (reverse array): [19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0]
+
+# Step on 2D array
+b = np.arange(12).reshape(3, 4)
+print("2D Array:")
+print(b)
+# Output:
+# [[ 0  1  2  3]
+#  [ 4  5  6  7]
+#  [ 8  9 10 11]]
+
+print("b[::2, ::2] (every second row and column):")
+print(b[::2, ::2])
+# Output:
+# [[ 0  2]
+#  [ 8 10]]`
+    }
+  ]}
+/>
+
+Ellipsis (`...`) is shorthand for full slice on unspecified dimensions. Very useful for high-dimensional arrays.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "ellipsis_slicing.py",
+      code: `import numpy as np
+
+# 3D array for demonstration
+a = np.arange(24).reshape(2, 3, 4)
+print("3D Array shape:", a.shape)  # Output: 3D Array shape: (2, 3, 4)
+
+# Using ellipsis
+print("a[0, ...] (same as a[0, :, :]):")
+print(a[0, ...])
+# Output:
+# [[ 0  1  2  3]
+#  [ 4  5  6  7]
+#  [ 8  9 10 11]]
+
+print("a[..., 2] (same as a[:, :, 2]):")
+print(a[..., 2])
+# Output:
+# [[ 2  6 10]
+#  [14 18 22]]
+
+print("a[1, ..., ::2] (same as a[1, :, ::2]):")
+print(a[1, ..., ::2])
+# Output:
+# [[12 14]
+#  [16 18]
+#  [20 22]]`
+    }
+  ]}
+/>
+
+## Boolean Indexing
+
+Boolean indexing uses boolean arrays to filter elements based on specific conditions. True indexes take elements in the target array, while False ignores them.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "boolean_operations.py",
+      code: `import numpy as np
+
+# Array for demonstration
+a = np.linspace(0, 5, 6)
+print("Array:", a)  # Output: Array: [0. 1. 2. 3. 4. 5.]
+
+# Manual boolean mask
+mask = np.array([True, False, True, False, True, False], dtype=bool)
+print("Manual mask:", mask)  # Output: Manual mask: [ True False  True False  True False]
+print("a[mask]:", a[mask])  # Output: a[mask]: [0. 2. 4.]
+
+# Boolean mask from comparison
+greater_than_2 = a > 2
+print("a > 2:", greater_than_2)  # Output: a > 2: [False False False  True  True  True]
+print("a[a > 2]:", a[a > 2])  # Output: a[a > 2]: [3. 4. 5.]
+
+# Boolean mask with compound conditions
+even_and_greater_than_1 = (a % 2 == 0) & (a > 1)
+print("(a % 2 == 0) & (a > 1):", even_and_greater_than_1)  # Output: (a % 2 == 0) & (a > 1): [False False  True False  True False]
+print("a[even_and_greater_than_1]:", a[even_and_greater_than_1])  # Output: a[even_and_greater_than_1]: [2. 4.]`
+    }
+  ]}
+/>
+
+Boolean indexing on 2D arrays can be applied for filtering elements based on conditions:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "boolean_2d.py",
+      code: `import numpy as np
+
+# 2D array for demonstration
+a = np.arange(12).reshape(3, 4)
+print("2D Array:")
+print(a)
+# Output:
+# [[ 0  1  2  3]
+#  [ 4  5  6  7]
+#  [ 8  9 10 11]]
+
+# Boolean mask for specific elements
+mask = a > 5
+print("Mask a > 5:")
+print(mask)
+# Output:
+# [[False False False False]
+#  [False False  True  True]
+#  [ True  True  True  True]]
+
+print("a[mask]:", a[mask])  # Output: a[mask]: [ 6  7  8  9 10 11]
+
+# Boolean indexing with assignment
+a[a < 5] = 0
+print("After a[a < 5] = 0:")
+print(a)
+# Output:
+# [[ 0  0  0  0]
+#  [ 0  0  6  7]
+#  [ 8  9 10 11]]`
+    }
+  ]}
+/>
+
+## Fancy Indexing
+
+Fancy indexing uses integer arrays to access elements with specific order or patterns. This technique is very useful for data sampling and reorganization.
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "fancy_indexing_1d.py",
+      code: `import numpy as np
+
+# Array for demonstration
+a = np.array([10, 20, 30, 40, 50, 60])
+print("Array:", a)  # Output: Array: [10 20 30 40 50 60]
+
+# Fancy indexing with list of indices
+indices = [0, 2, 4, 1]
+print("Indices:", indices)  # Output: Indices: [0, 2, 4, 1]
+print("a[indices]:", a[indices])  # Output: a[indices]: [10 30 50 20]
+
+# Fancy indexing with NumPy array
+np_indices = np.array([5, 1, 3, 1, 0])
+print("NumPy indices:", np_indices)  # Output: NumPy indices: [5 1 3 1 0]
+print("a[np_indices]:", a[np_indices])  # Output: a[np_indices]: [60 20 40 20 10]
+
+# Fancy indexing with 2D index array
+indices_2d = np.array([[0, 1], [2, 3]])
+print("2D Indices:")
+print(indices_2d)
+# Output:
+# [[0 1]
+#  [2 3]]
+print("a[indices_2d]:")
+print(a[indices_2d])
+# Output:
+# [[10 20]
+#  [30 40]]`
+    }
+  ]}
+/>
+
+Fancy indexing on 2D arrays enables selection of rows and columns with complex patterns:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "fancy_indexing_2d.py",
+      code: `import numpy as np
+
+# 2D array for demonstration
+a = np.arange(24).reshape(4, 6)
+print("2D Array:")
+print(a)
+# Output:
+# [[ 0  1  2  3  4  5]
+#  [ 6  7  8  9 10 11]
+#  [12 13 14 15 16 17]
+#  [18 19 20 21 22 23]]
+
+# Fancy indexing for specific rows
+row_indices = [0, 2, 3]
+print("a[row_indices, :]:")
+print(a[row_indices, :])
+# Output:
+# [[ 0  1  2  3  4  5]
+#  [12 13 14 15 16 17]
+#  [18 19 20 21 22 23]]
+
+# Fancy indexing for specific elements
+row_idx = [0, 1, 2, 3]
+col_idx = [1, 2, 3, 4]
+print("a[row_idx, col_idx]:", a[row_idx, col_idx])  # Output: a[row_idx, col_idx]: [ 1  8 15 22]
+
+# Combination of fancy indexing with slicing
+print("a[[0, 2], 1:4]:")
+print(a[[0, 2], 1:4])
+# Output:
+# [[ 1  2  3]
+#  [13 14 15]]`
+    }
+  ]}
+/>
+
+## Practical Applications
+
+Indexing and slicing have many practical applications in data analysis and machine learning.
+
+Filtering techniques are very useful for data preprocessing in machine learning and statistical analysis:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "data_filtering.py",
+      code: `import numpy as np
+
+# Temperature sensor data simulation
+temperatures = np.array([22.5, 25.1, 19.8, 30.2, 18.5, 27.3, 31.1, 24.8])
+print("Temperature data:", temperatures)  # Output: Temperature data: [22.5 25.1 19.8 30.2 18.5 27.3 31.1 24.8]
+
+# Filter normal temperatures (20-28 degrees)
+normal_temp_mask = (temperatures >= 20) & (temperatures <= 28)
+normal_temps = temperatures[normal_temp_mask]
+print("Normal temperatures:", normal_temps)  # Output: Normal temperatures: [22.5 25.1 27.3 24.8]
+
+# Filter extreme temperatures
+extreme_temp_mask = (temperatures < 20) | (temperatures > 30)
+extreme_temps = temperatures[extreme_temp_mask]
+print("Extreme temperatures:", extreme_temps)  # Output: Extreme temperatures: [19.8 30.2 18.5 31.1]
+
+# Replace extreme values with average
+mean_temp = temperatures[normal_temp_mask].mean()
+temperatures_cleaned = temperatures.copy()
+temperatures_cleaned[extreme_temp_mask] = mean_temp
+print("Data after cleaning:", temperatures_cleaned)  # Output: Data after cleaning: [22.5   25.1   24.925 24.925 24.925 27.3   24.925 24.8  ]`
+    }
+  ]}
+/>
+
+Sampling and data reorganization are important techniques for machine learning and large dataset analysis:
+
+<CodeBlock
+  data={[
+    {
+      language: "python",
+      filename: "data_sampling.py",
+      code: `import numpy as np
+
+# Simulation dataset
+data = np.arange(100).reshape(10, 10)
+print("Dataset shape:", data.shape)  # Output: Dataset shape: (10, 10)
+
+# Random row sampling
+np.random.seed(42)
+sample_indices = np.random.choice(10, size=5, replace=False)
+sample_indices.sort()
+print("Sample indices:", sample_indices)  # Output: Sample indices: [0 1 5 7 8]
+
+sampled_data = data[sample_indices, :]
+print("Sampled data shape:", sampled_data.shape)  # Output: Sampled data shape: (5, 10)
+print("First 3 columns of sampled data:")
+print(sampled_data[:, :3])
+# Output:
+# [[ 0  1  2]
+#  [10 11 12]
+#  [50 51 52]
+#  [70 71 72]
+#  [80 81 82]]
+
+# Column reorganization
+column_order = [9, 0, 5, 2, 7, 1, 8, 3, 6, 4]
+reorganized_data = data[:, column_order]
+print("Reorganized first row:", reorganized_data[0, :])  # Output: Reorganized first row: [9 0 5 2 7 1 8 3 6 4]`
+    }
+  ]}
+/>
