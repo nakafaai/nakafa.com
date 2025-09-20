@@ -13,7 +13,6 @@ import {
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { IconMenu3 } from "@tabler/icons-react";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -28,7 +27,6 @@ import { Fragment, useEffect, useTransition } from "react";
 import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
 import { useSearch } from "@/lib/context/use-search";
 import { useSearchQuery } from "@/lib/react-query/use-search";
-import { getAnchorStyle } from "@/lib/utils/search";
 import type { PagefindResult } from "@/types/pagefind";
 import { articlesMenu } from "../sidebar/_data/articles";
 import { holyMenu } from "../sidebar/_data/holy";
@@ -63,42 +61,35 @@ export function SearchCommand() {
 }
 
 function SearchMain() {
-  const { query, setQuery } = useSearch((state) => ({
-    query: state.query,
-    setQuery: state.setQuery,
-  }));
-
   return (
     <>
-      <SearchInput onChange={setQuery} value={query} />
-      <SearchList search={query} />
+      <SearchInput />
+      <SearchList />
     </>
   );
 }
 
-function SearchInput({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
+function SearchInput() {
   const t = useTranslations("Utils");
+
+  const setQuery = useSearch((state) => state.setQuery);
+  const query = useSearch((state) => state.query);
 
   return (
     <CommandInput
       autoFocus
-      onValueChange={onChange}
+      onValueChange={setQuery}
       placeholder={t("search-placeholder")}
-      value={value}
+      value={query}
     />
   );
 }
 
-function SearchList({ search }: { search: string }) {
+function SearchList() {
+  const query = useSearch((state) => state.query);
   const pagefindError = usePagefind((context) => context.error);
 
-  const [debouncedSearch] = useDebouncedValue(search, DEBOUNCE_TIME);
+  const [debouncedSearch] = useDebouncedValue(query, DEBOUNCE_TIME);
 
   const {
     data: results = [],
@@ -181,7 +172,7 @@ function SearchListItems({
       <CommandGroup heading={result.meta.title}>
         {result.sub_results.map((subResult) => (
           <CommandItem
-            className={cn("cursor-pointer", getAnchorStyle(subResult.anchor))}
+            className="group cursor-pointer flex-col items-start"
             disabled={isPending}
             key={`${subResult.url}-${subResult.title}`}
             onSelect={() => {
@@ -192,12 +183,15 @@ function SearchListItems({
             }}
             value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
           >
-            {subResult.anchor?.element === "h2" ? (
+            <div className="flex items-center gap-2">
               <FileTextIcon />
-            ) : (
-              <IconMenu3 />
-            )}
-            <span className="line-clamp-1">{subResult.title}</span>
+              <span className="line-clamp-1">{subResult.title}</span>
+            </div>
+            <p
+              className="line-clamp-3 text-muted-foreground text-xs group-data-[selected=true]:text-accent-foreground"
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: It's fine
+              dangerouslySetInnerHTML={{ __html: subResult.excerpt }}
+            />
           </CommandItem>
         ))}
       </CommandGroup>

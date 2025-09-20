@@ -5,7 +5,6 @@ import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { cn } from "@repo/design-system/lib/utils";
-import { IconMenu3 } from "@tabler/icons-react";
 import {
   FileTextIcon,
   HeartCrackIcon,
@@ -18,7 +17,6 @@ import { Fragment } from "react";
 import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
 import { searchParsers } from "@/lib/nuqs/search";
 import { useSearchQuery } from "@/lib/react-query/use-search";
-import { getAnchorStyle } from "@/lib/utils/search";
 
 const DEBOUNCE_TIME = 300;
 
@@ -100,18 +98,13 @@ export function SearchResults() {
               {result.sub_results.map((subResult) => (
                 <NavigationLink
                   className={cn(
-                    "group flex items-center gap-2 p-2 px-4 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
-                    getAnchorStyle(subResult.anchor)
+                    "group flex items-center gap-2 p-2 px-4 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
                   )}
                   href={subResult.url}
                   key={`${subResult.url}-${subResult.title}`}
                   title={subResult.title}
                 >
-                  {subResult.anchor?.element === "h2" ? (
-                    <FileTextIcon className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground" />
-                  ) : (
-                    <IconMenu3 className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground" />
-                  )}
+                  <FileTextIcon className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground" />
                   <span className="line-clamp-1">{subResult.title}</span>
                 </NavigationLink>
               ))}

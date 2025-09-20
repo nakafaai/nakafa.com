@@ -224,3 +224,8 @@
 .katex .katex-html > .newline {
   margin-block: 1rem;
 }
+
+/* Search result highlighting */
+mark {
+  @apply bg-primary/10 text-primary rounded-sm px-1 py-0.5;
+}
