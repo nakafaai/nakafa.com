@@ -1,18 +1,16 @@
 export const metadata = {
-    title: "Indexing dan Slicing dengan NumPy",
-    description: "Pelajari teknik indexing dan slicing NumPy: array 1D, 2D, boolean mask, advanced indexing. Panduan lengkap dengan contoh kode teruji untuk pemrograman AI.",
-    authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "09/20/2025",
-    subject: "Pemrograman AI",
+  title: "Indexing dan Slicing dengan NumPy",
+  description: "Pelajari teknik indexing dan slicing NumPy: array 1D, 2D, boolean mask, advanced indexing. Panduan lengkap dengan contoh kode teruji untuk pemrograman AI.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "09/20/2025",
+  subject: "Pemrograman AI",
 };
 
 ## Konsep Dasar Indexing dan Slicing
 
-Indexing dan slicing dalam NumPy adalah teknik untuk mengakses dan memanipulasi elemen atau bagian tertentu dari array. Bayangkan array seperti rak buku di perpustakaan, di mana indexing adalah cara untuk menemukan buku tertentu berdasarkan posisinya, sedangkan slicing adalah cara untuk mengambil beberapa buku sekaligus dari rak tersebut.
+Indexing dan slicing adalah alat untuk mengekstrak data spesifik dari array NumPy. Bayangkan indexing sebagai penunjuk ke lokasi tepat, sedangkan slicing mengambil seluruh bagian sekaligus. Berbeda dengan list Python yang membuat copy, slicing NumPy membuat view yang berbagi memori dengan array asli.
 
-> Eksplorasi lebih mendalam tersedia di [panduan indexing NumPy](https://numpy.org/doc/stable/user/basics.indexing.html) yang mencakup teknik lanjutan dan kasus penggunaan khusus.
-
-NumPy menggunakan sintaks yang mirip dengan list Python, tetapi dengan kemampuan yang jauh lebih kuat untuk array multidimensi. Perbedaan utama adalah bahwa slicing NumPy mengembalikan view dari data asli, bukan copy seperti pada list Python.
+Perilaku berbagi memori ini membuat NumPy sangat efisien tetapi memerlukan perhatian khusus untuk menghindari modifikasi yang tidak diinginkan. [Dokumentasi indexing NumPy](https://numpy.org/doc/stable/user/basics.indexing.html) menyediakan contoh ekstensif pola indexing lanjutan ketika kamu butuh seleksi data yang lebih canggih.
 
 ## Operasi Array 1D
 

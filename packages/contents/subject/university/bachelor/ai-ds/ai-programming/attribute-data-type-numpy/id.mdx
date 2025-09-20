@@ -8,11 +8,9 @@ export const metadata = {
 
 ## Sistem Tipe Data NumPy
 
-NumPy memiliki sistem tipe data yang sangat kuat dan fleksibel untuk mengoptimalkan penyimpanan dan operasi numerik. Bayangkan sistem tipe data NumPy seperti sistem klasifikasi di perpustakaan yang mengatur buku berdasarkan jenis dan ukurannya. Setiap tipe data memiliki karakteristik khusus dalam hal presisi, rentang nilai, dan penggunaan memori.
+Setiap data dalam NumPy memiliki tipe spesifik yang menentukan cara penyimpanan dan pemrosesannya. Bayangkan tipe data seperti wadah berbeda, masing-masing dirancang untuk jenis informasi tertentu. Boolean hanya butuh satu bit, sedangkan bilangan kompleks memerlukan ruang jauh lebih besar.
 
-> Informasi mendalam tentang sistem tipe data tersedia di [NumPy Data Types Reference](https://numpy.org/doc/stable/user/basics.types.html) dengan penjelasan teknis dan implementasi praktis untuk setiap tipe data.
-
-NumPy mengontrol bagaimana item disimpan dalam memori dan harus sesuai dengan kode C yang telah dikompilasi. Semua elemen dalam array NumPy harus memiliki tipe data yang sama untuk memastikan efisiensi operasi.
+Sistem tipe NumPy memastikan semua elemen array berbagi tipe data yang sama untuk efisiensi maksimal. Keseragaman ini memungkinkan kode C di bawahnya memproses data dengan kecepatan luar biasa. Untuk detail lengkap setiap tipe data, lihat [dokumentasi tipe data NumPy](https://numpy.org/doc/stable/user/basics.types.html) yang mencakup spesifikasi teknis dan pertimbangan memori.
 
 ### Tipe Data Dasar
 
