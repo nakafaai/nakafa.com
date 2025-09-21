@@ -1,6 +1,6 @@
 "use client";
 
-import { type UseChatHelpers, useChat as useAIChat } from "@ai-sdk/react";
+import { type UseChatHelpers, useChat as useAiChat } from "@ai-sdk/react";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { DefaultChatTransport } from "ai";
 import { type ReactNode, useMemo } from "react";
@@ -19,19 +19,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const getLocale = useAi((state) => state.getLocale);
   const getSlug = useAi((state) => state.getSlug);
 
-  const chat = useAIChat<MyUIMessage>({
+  const chat = useAiChat<MyUIMessage>({
     transport: new DefaultChatTransport({
       api: "/api/chat",
-      prepareSendMessagesRequest: ({ messages: ms }) => {
-        return {
-          body: {
-            messages: ms,
-            locale: getLocale(),
-            slug: getSlug(),
-            model: getModel(),
-          },
-        };
-      },
+      prepareSendMessagesRequest: ({ messages: ms }) => ({
+        body: {
+          messages: ms,
+          locale: getLocale(),
+          slug: getSlug(),
+          model: getModel(),
+        },
+      }),
     }),
     onError: ({ message }) => {
       toast.error(message, { position: "bottom-center" });

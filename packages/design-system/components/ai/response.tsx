@@ -34,9 +34,7 @@ export type ResponseProps = {
 
 const MemoizedHardenedMarkdown = memo(
   hardenReactMarkdown(ReactMarkdown),
-  (prevProps, nextProps) => {
-    return prevProps.children === nextProps.children;
-  }
+  (prevProps, nextProps) => prevProps.children === nextProps.children
 );
 MemoizedHardenedMarkdown.displayName = "MemoizedHardenedMarkdown";
 
@@ -80,9 +78,7 @@ const Blocks = memo(
     children,
     ...props
   }: HardenedMarkdownProps & Pick<ResponseProps, "children" | "id">) => {
-    const blocks = useMemo(() => {
-      return parseMarkdownIntoBlocks(children);
-    }, [children]);
+    const blocks = useMemo(() => parseMarkdownIntoBlocks(children), [children]);
 
     return blocks.map((block, index) => (
       <Block
@@ -106,25 +102,23 @@ const ResponseContent = memo(
     allowedLinkPrefixes = ["*"],
     defaultOrigin = "https://nakafa.com",
     ...props
-  }: ResponseProps) => {
-    return (
-      <div
-        className={cn(
-          "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-          className
-        )}
+  }: ResponseProps) => (
+    <div
+      className={cn(
+        "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+        className
+      )}
+    >
+      <Blocks
+        allowedImagePrefixes={allowedImagePrefixes}
+        allowedLinkPrefixes={allowedLinkPrefixes}
+        defaultOrigin={defaultOrigin}
+        {...props}
       >
-        <Blocks
-          allowedImagePrefixes={allowedImagePrefixes}
-          allowedLinkPrefixes={allowedLinkPrefixes}
-          defaultOrigin={defaultOrigin}
-          {...props}
-        >
-          {children}
-        </Blocks>
-      </div>
-    );
-  },
+        {children}
+      </Blocks>
+    </div>
+  ),
   (prevProps, nextProps) => prevProps.children === nextProps.children
 );
 ResponseContent.displayName = "ResponseContent";

@@ -19,8 +19,8 @@ const initialState: State = {
   open: false,
 };
 
-export const createSearchStore = () => {
-  return createStore<SearchStore>()(
+export const createSearchStore = () =>
+  createStore<SearchStore>()(
     persist(
       immer((set) => ({
         ...initialState,
@@ -42,4 +42,3 @@ export const createSearchStore = () => {
       }
     )
   );
-};

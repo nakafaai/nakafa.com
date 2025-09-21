@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Label as LabelUI } from "@repo/design-system/components/ui/label";
+import { Label as LabelUi } from "@repo/design-system/components/ui/label";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   getCos,
@@ -107,11 +107,11 @@ function Content({
 
           <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
             <div className="flex items-center gap-2">
-              <LabelUI htmlFor="angle">
+              <LabelUi htmlFor="angle">
                 <Badge className="font-mono" variant="outline">
                   {angleValue}°
                 </Badge>
-              </LabelUI>
+              </LabelUi>
               <Badge className="font-mono" variant="outline">
                 {getRadians(angleValue).toFixed(2)} {t("radian")}
               </Badge>

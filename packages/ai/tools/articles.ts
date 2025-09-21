@@ -9,8 +9,8 @@ type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;
 };
 
-export const createGetArticles = ({ writer }: Params) => {
-  return tool({
+export const createGetArticles = ({ writer }: Params) =>
+  tool({
     name: "getArticles",
     description: nakafaArticles(),
     inputSchema: getArticlesInputSchema,
@@ -77,4 +77,3 @@ export const createGetArticles = ({ writer }: Params) => {
       };
     },
   });
-};

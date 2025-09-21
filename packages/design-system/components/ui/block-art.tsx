@@ -56,9 +56,9 @@ export function BlockArt({
   waveColor = DEFAULT_WAVE_COLOR,
   waveDuration = DEFAULT_WAVE_DURATION,
 }: Props) {
-  const COLS = Math.max(1, Math.floor(gridCols));
-  const ROWS = Math.max(1, Math.floor(gridRows));
-  const totalCells = COLS * ROWS;
+  const Cols = Math.max(1, Math.floor(gridCols));
+  const Rows = Math.max(1, Math.floor(gridRows));
+  const totalCells = Cols * Rows;
 
   const [activeIndices, setActiveIndices] = useState<Set<number>>(new Set());
   const [ripples, setRipples] = useState<Ripple[]>([]);
@@ -68,7 +68,7 @@ export function BlockArt({
   const containerRef = useRef<HTMLButtonElement>(null);
   const animationFrameRef = useRef<number>(0);
   const rippleIdRef = useRef(0);
-  const rngRef = useRef(createSeededRandom(COLS, ROWS, animatedCellCount));
+  const rngRef = useRef(createSeededRandom(Cols, Rows, animatedCellCount));
 
   useEffect(() => {
     if (totalCells === 0 || animatedCellCount === 0) {
@@ -109,12 +109,12 @@ export function BlockArt({
         const elapsed = currentTime - ripple.startTime;
         const progress = elapsed / waveDuration;
         const radius =
-          progress * Math.max(COLS, ROWS) * RIPPLE_RADIUS_MULTIPLIER;
+          progress * Math.max(Cols, Rows) * RIPPLE_RADIUS_MULTIPLIER;
 
         const minRow = Math.max(0, Math.floor(ripple.y - radius - 2));
-        const maxRow = Math.min(ROWS - 1, Math.ceil(ripple.y + radius + 2));
+        const maxRow = Math.min(Rows - 1, Math.ceil(ripple.y + radius + 2));
         const minCol = Math.max(0, Math.floor(ripple.x - radius - 2));
-        const maxCol = Math.min(COLS - 1, Math.ceil(ripple.x + radius + 2));
+        const maxCol = Math.min(Cols - 1, Math.ceil(ripple.x + radius + 2));
 
         for (let row = minRow; row <= maxRow; row++) {
           for (let col = minCol; col <= maxCol; col++) {
@@ -126,7 +126,7 @@ export function BlockArt({
               distance >= radius - RIPPLE_WAVE_INNER_BOUND &&
               distance <= radius + RIPPLE_WAVE_OUTER_BOUND
             ) {
-              const cellIndex = row * COLS + col;
+              const cellIndex = row * Cols + col;
               const intensity = 1 - Math.abs(distance - radius) / 2;
               const fadeOut = 1 - progress;
               affectedCells.set(
@@ -146,7 +146,7 @@ export function BlockArt({
     if (ripples.length > 0) {
       animationFrameRef.current = requestAnimationFrame(animateRipples);
     }
-  }, [COLS, ROWS, waveDuration, ripples.length]);
+  }, [Cols, Rows, waveDuration, ripples.length]);
 
   useEffect(() => {
     if (ripples.length > 0) {
@@ -206,8 +206,8 @@ export function BlockArt({
         const cellIndex = cells.indexOf(target);
 
         if (cellIndex >= 0) {
-          const col = cellIndex % COLS;
-          const row = Math.floor(cellIndex / COLS);
+          const col = cellIndex % Cols;
+          const row = Math.floor(cellIndex / Cols);
           throttledHandleRipple(col, row);
           return;
         }
@@ -219,25 +219,25 @@ export function BlockArt({
       const clickY = e.clientY - rect.top;
 
       // Simple calculation without gap compensation for fallback
-      const col = Math.min(Math.floor((clickX / rect.width) * COLS), COLS - 1);
-      const row = Math.min(Math.floor((clickY / rect.height) * ROWS), ROWS - 1);
+      const col = Math.min(Math.floor((clickX / rect.width) * Cols), Cols - 1);
+      const row = Math.min(Math.floor((clickY / rect.height) * Rows), Rows - 1);
 
       throttledHandleRipple(col, row);
     },
-    [COLS, ROWS, throttledHandleRipple]
+    [Cols, Rows, throttledHandleRipple]
   );
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLButtonElement>) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        const centerCol = Math.floor(COLS / 2);
-        const centerRow = Math.floor(ROWS / 2);
+        const centerCol = Math.floor(Cols / 2);
+        const centerRow = Math.floor(Rows / 2);
 
         throttledHandleRipple(centerCol, centerRow);
       }
     },
-    [COLS, ROWS, throttledHandleRipple]
+    [Cols, Rows, throttledHandleRipple]
   );
 
   return (
@@ -250,8 +250,8 @@ export function BlockArt({
         ref={containerRef}
         style={{
           display: "grid",
-          gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
-          gridTemplateRows: `repeat(${ROWS}, auto)`,
+          gridTemplateColumns: `repeat(${Cols}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${Rows}, auto)`,
           gap: "1px",
         }}
         type="button"
@@ -259,8 +259,8 @@ export function BlockArt({
         {Array.from({ length: totalCells }).map((_, i) => {
           const rippleIntensity = rippleAffectedCells.get(i) || 0;
           const isActive = activeIndices.has(i);
-          const row = Math.floor(i / COLS);
-          const col = i % COLS;
+          const row = Math.floor(i / Cols);
+          const col = i % Cols;
 
           const getCellColor = () => {
             if (rippleIntensity > 0) {

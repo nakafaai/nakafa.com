@@ -188,12 +188,11 @@ class HighlighterManager {
 const highlighterManager = new HighlighterManager();
 
 // Remove background styles from <pre> tags (inline style)
-const removePreBackground = (html: string) => {
-  return html.replace(
+const removePreBackground = (html: string) =>
+  html.replace(
     /(<pre[^>]*)(style="[^"]*background[^";]*;?[^"]*")([^>]*>)/g,
     "$1$3"
   );
-};
 
 export const CodeBlock = ({
   code,
@@ -671,11 +670,12 @@ export const CodeBlockCopyButton = ({
     }
   };
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       window.clearTimeout(timeoutRef.current);
-    };
-  }, []);
+    },
+    []
+  );
 
   const Icon = isCopied ? CheckIcon : CopyIcon;
 

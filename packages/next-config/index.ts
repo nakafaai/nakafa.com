@@ -1,5 +1,5 @@
 import withBundleAnalyzer from "@next/bundle-analyzer";
-import createMDX from "@next/mdx";
+import createMdx from "@next/mdx";
 
 import type { NextConfig } from "next";
 
@@ -75,4 +75,4 @@ export const withAnalyzer = (sourceConfig: NextConfig): NextConfig =>
   withBundleAnalyzer()(sourceConfig);
 
 export const withMDX = (sourceConfig: NextConfig): NextConfig =>
-  createMDX()(sourceConfig);
+  createMdx()(sourceConfig);

@@ -2,13 +2,12 @@ import { NextRequest } from "next/server";
 import { describe, expect, it, vi } from "vitest";
 
 // Mock Next.js server functions for testing
-const mockRequest = (url: string, locale = "en") => {
-  return new NextRequest(new URL(url, "http://localhost:3000"), {
+const mockRequest = (url: string, locale = "en") =>
+  new NextRequest(new URL(url, "http://localhost:3000"), {
     headers: {
       "accept-language": locale,
     },
   });
-};
 
 // Mock the middleware and routing
 vi.mock("@repo/internationalization/src/routing", () => ({

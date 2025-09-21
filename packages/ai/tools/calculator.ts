@@ -8,8 +8,8 @@ type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;
 };
 
-export const createCalculator = ({ writer }: Params) => {
-  return tool({
+export const createCalculator = ({ writer }: Params) =>
+  tool({
     name: "calculator",
     description: nakafaCalculator(),
     inputSchema: calculatorInputSchema,
@@ -67,4 +67,3 @@ export const createCalculator = ({ writer }: Params) => {
       };
     },
   });
-};

@@ -116,9 +116,7 @@ export function ScatterDiagram({
                 offset: 10,
                 style: { textAnchor: "middle" },
               }}
-              tickFormatter={(value) => {
-                return value.toString();
-              }}
+              tickFormatter={(value) => value.toString()}
               tickMargin={8}
               type="number"
             />
@@ -192,13 +190,13 @@ function calculateLeastSquares(
 
   let sumX = 0;
   let sumY = 0;
-  let sumXY = 0;
+  let sumXy = 0;
   let sumX2 = 0;
 
   for (const p of points) {
     sumX += p.x;
     sumY += p.y;
-    sumXY += p.x * p.y;
+    sumXy += p.x * p.y;
     sumX2 += p.x * p.x;
   }
 
@@ -207,7 +205,7 @@ function calculateLeastSquares(
     return null;
   }
 
-  const m = (n * sumXY - sumX * sumY) / denominator;
+  const m = (n * sumXy - sumX * sumY) / denominator;
   const b = (sumY - m * sumX) / n;
 
   return { m, b };

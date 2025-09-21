@@ -190,11 +190,13 @@ export function getFolderChildNames(folder: string, exclude?: string[]) {
 
     // Filter out excluded directories if exclude parameter is provided
     if (effectiveExclude.length > 0) {
-      dirNames = dirNames.filter((name) => {
-        return !effectiveExclude.some(
-          (excludeItem) => name === excludeItem || name.startsWith(excludeItem)
-        );
-      });
+      dirNames = dirNames.filter(
+        (name) =>
+          !effectiveExclude.some(
+            (excludeItem) =>
+              name === excludeItem || name.startsWith(excludeItem)
+          )
+      );
     }
 
     return dirNames;

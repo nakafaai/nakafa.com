@@ -362,9 +362,9 @@ export function ElectabilityChart({
               content={
                 <ChartTooltipContent
                   indicator="line"
-                  labelFormatter={(value) => {
-                    return format(new Date(value), "MMMM yyyy");
-                  }}
+                  labelFormatter={(value) =>
+                    format(new Date(value), "MMMM yyyy")
+                  }
                 />
               }
               cursor={false}

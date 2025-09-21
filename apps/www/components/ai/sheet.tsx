@@ -135,14 +135,14 @@ export function AiSheet() {
             <ConversationScrollButton />
           </Conversation>
 
-          <AISheetToolbar />
+          <AiSheetToolbar />
         </div>
       </SheetContent>
     </Sheet>
   );
 }
 
-const AISheetToolbar = memo(() => {
+const AiSheetToolbar = memo(() => {
   const t = useTranslations("Ai");
 
   const text = useAi((state) => state.text);
@@ -192,4 +192,4 @@ const AISheetToolbar = memo(() => {
     </div>
   );
 });
-AISheetToolbar.displayName = "AISheetToolbar";
+AiSheetToolbar.displayName = "AISheetToolbar";

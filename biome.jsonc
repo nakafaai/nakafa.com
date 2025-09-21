@@ -25,7 +25,8 @@
         "noBarrelFile": "off"
       },
       "style": {
-        "useFilenamingConvention": "off"
+        "useFilenamingConvention": "off",
+        "useNamingConvention": "off"
       }
     }
   },

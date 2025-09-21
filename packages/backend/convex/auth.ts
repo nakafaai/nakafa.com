@@ -85,19 +85,14 @@ export const createAuth = (
   return betterAuth(authConfig);
 };
 
-export const safeGetUser = (ctx: QueryCtx) => {
-  return authComponent.safeGetAuthUser(ctx);
-};
+export const safeGetUser = (ctx: QueryCtx) =>
+  authComponent.safeGetAuthUser(ctx);
 
-export const getUser = (ctx: QueryCtx) => {
-  return authComponent.getAuthUser(ctx);
-};
+export const getUser = (ctx: QueryCtx) => authComponent.getAuthUser(ctx);
 
 export const getCurrentUser = query({
   args: {},
-  handler: (ctx) => {
-    return safeGetUser(ctx);
-  },
+  handler: (ctx) => safeGetUser(ctx),
 });
 
 export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();

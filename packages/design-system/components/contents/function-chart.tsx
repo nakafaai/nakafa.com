@@ -65,9 +65,7 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
             <CartesianGrid />
             <XAxis
               dataKey="x"
-              tickFormatter={(value) => {
-                return value.toString();
-              }}
+              tickFormatter={(value) => value.toString()}
               tickMargin={8}
             />
             <YAxis

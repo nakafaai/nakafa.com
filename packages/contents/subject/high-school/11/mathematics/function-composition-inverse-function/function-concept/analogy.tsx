@@ -1,6 +1,6 @@
 "use client";
 
-import { Button as UIButton } from "@repo/design-system/components/ui/button";
+import { Button as UiButton } from "@repo/design-system/components/ui/button";
 import {
   Card,
   CardContent,
@@ -56,9 +56,9 @@ function Machine() {
     <>
       <CardContent>
         <div className="flex flex-col items-center justify-center gap-8 py-8 sm:flex-row">
-          <UIButton className="pointer-events-none" variant="default">
+          <UiButton className="pointer-events-none" variant="default">
             <InlineMath math={`x = ${input}`} />
-          </UIButton>
+          </UiButton>
 
           <ArrowRightIcon className="hidden size-4 sm:block" />
           <ArrowDownIcon className="block size-4 sm:hidden" />
@@ -70,9 +70,9 @@ function Machine() {
           <ArrowDownIcon className="block size-4 sm:hidden" />
           <ArrowRightIcon className="hidden size-4 sm:block" />
 
-          <UIButton className="pointer-events-none" variant="secondary">
+          <UiButton className="pointer-events-none" variant="secondary">
             <InlineMath math={`f(x) = ${output}`} />
-          </UIButton>
+          </UiButton>
         </div>
       </CardContent>
       <CardFooter className="justify-center border-t">

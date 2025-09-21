@@ -107,9 +107,11 @@ function SidebarProvider({
   );
 
   // Helper to toggle the sidebar.
-  const toggleSidebar = useCallback(() => {
-    return isMobile ? setOpenMobile((prev) => !prev) : setOpen((prev) => !prev);
-  }, [isMobile, setOpen]);
+  const toggleSidebar = useCallback(
+    () =>
+      isMobile ? setOpenMobile((prev) => !prev) : setOpen((prev) => !prev),
+    [isMobile, setOpen]
+  );
 
   // Adds a keyboard shortcut to toggle the sidebar.
   useHotkeys([

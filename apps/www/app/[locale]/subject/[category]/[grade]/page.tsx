@@ -36,11 +36,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, category, grade } = await params;
   const t = await getTranslations("Subject");
 
-  const FILE_PATH = getGradePath(category, grade);
+  const FilePath = getGradePath(category, grade);
 
-  const path = `/${locale}${FILE_PATH}`;
+  const path = `/${locale}${FilePath}`;
   const image = {
-    url: getOgUrl(locale, FILE_PATH),
+    url: getOgUrl(locale, FilePath),
     width: 1200,
     height: 630,
   };
@@ -77,7 +77,7 @@ export default async function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  const FILE_PATH = getGradePath(category, grade);
+  const FilePath = getGradePath(category, grade);
 
   const subjects = await getGradeSubjects(category, grade);
 
@@ -111,7 +111,7 @@ export default async function Page({ params }: Props) {
       </LayoutContent>
       <FooterContent>
         <RefContent
-          githubUrl={getGithubUrl({ path: `/packages/contents${FILE_PATH}` })}
+          githubUrl={getGithubUrl({ path: `/packages/contents${FilePath}` })}
         />
       </FooterContent>
     </>

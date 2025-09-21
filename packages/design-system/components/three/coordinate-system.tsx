@@ -99,9 +99,10 @@ export function CoordinateSystem({
   }, [resolvedTheme]);
 
   // Origin point color based on theme
-  const originColor = useMemo(() => {
-    return resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
-  }, [resolvedTheme]);
+  const originColor = useMemo(
+    () => (resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK),
+    [resolvedTheme]
+  );
 
   // Handle button clicks with proper invalidation for on-demand rendering
   const handleGridToggle = useCallback(() => {

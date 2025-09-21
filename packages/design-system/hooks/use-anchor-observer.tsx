@@ -49,11 +49,11 @@ export function useAnchorObserver(watch: string[], single: boolean): string[] {
         top + element.clientHeight >=
         element.scrollHeight - SCROLL_BOTTOM_TOLERANCE
       ) {
-        setActiveAnchor((active) => {
-          return active.length > 0 && !single
+        setActiveAnchor((active) =>
+          active.length > 0 && !single
             ? watch.slice(watch.indexOf(active[0]))
-            : watch.slice(-1);
-        });
+            : watch.slice(-1)
+        );
       }
     }
 

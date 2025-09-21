@@ -44,13 +44,13 @@ export function AiChat() {
           <ConversationScrollButton />
         </Conversation>
 
-        <AIChatToolbar />
+        <AiChatToolbar />
       </div>
     </main>
   );
 }
 
-const AIChatToolbar = memo(() => {
+const AiChatToolbar = memo(() => {
   const t = useTranslations("Ai");
 
   const text = useAi((state) => state.text);
@@ -96,4 +96,4 @@ const AIChatToolbar = memo(() => {
     </div>
   );
 });
-AIChatToolbar.displayName = "AIChatToolbar";
+AiChatToolbar.displayName = "AIChatToolbar";

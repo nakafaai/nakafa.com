@@ -55,9 +55,9 @@ export async function generateMetadata({
   const { locale, category, grade, material } = await params;
   const t = await getTranslations("Subject");
 
-  const FILE_PATH = getMaterialPath(category, grade, material);
+  const FilePath = getMaterialPath(category, grade, material);
 
-  let ogUrl: string = getOgUrl(locale, FILE_PATH);
+  let ogUrl: string = getOgUrl(locale, FilePath);
 
   const publicPath = `/open-graph/subject/${locale}-${material}.png` as const;
   const fullPathToCheck = path.join(process.cwd(), `public${publicPath}`);
@@ -67,7 +67,7 @@ export async function generateMetadata({
     ogUrl = publicPath;
   }
 
-  const urlPath = `/${locale}${FILE_PATH}`;
+  const urlPath = `/${locale}${FilePath}`;
   const image = {
     url: ogUrl,
     width: 1200,
@@ -105,9 +105,9 @@ export default async function Page({ params }: Props) {
   setRequestLocale(locale);
 
   const gradePath = getGradePath(category, grade);
-  const FILE_PATH = getMaterialPath(category, grade, material);
+  const FilePath = getMaterialPath(category, grade, material);
 
-  const materials = await getMaterials(FILE_PATH, locale);
+  const materials = await getMaterials(FilePath, locale);
 
   const chapters: ParsedHeading[] = materials.map((mat) => ({
     label: mat.title,
@@ -150,7 +150,7 @@ export default async function Page({ params }: Props) {
           <LayoutMaterialFooter>
             <RefContent
               githubUrl={getGithubUrl({
-                path: `/packages/contents${FILE_PATH}`,
+                path: `/packages/contents${FilePath}`,
               })}
             />
           </LayoutMaterialFooter>
@@ -162,7 +162,7 @@ export default async function Page({ params }: Props) {
           }}
           header={{
             title: t(material),
-            href: FILE_PATH,
+            href: FilePath,
             description: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
           }}
         />

@@ -59,16 +59,16 @@ export async function generateMetadata({
   const { locale, category, grade, material, slug } = await params;
   const t = await getTranslations("Subject");
 
-  const FILE_PATH = getSlugPath(category, grade, material, slug);
+  const FilePath = getSlugPath(category, grade, material, slug);
 
-  const content = await getContent(locale, FILE_PATH);
+  const content = await getContent(locale, FilePath);
 
-  const path = `/${locale}${FILE_PATH}`;
+  const path = `/${locale}${FilePath}`;
   const alternates = {
     canonical: path,
   };
   const image = {
-    url: getOgUrl(locale, FILE_PATH),
+    url: getOgUrl(locale, FilePath),
     width: 1200,
     height: 630,
   };
@@ -132,7 +132,7 @@ export default async function Page({ params }: Props) {
   setRequestLocale(locale);
 
   const materialPath = getMaterialPath(category, grade, material);
-  const FILE_PATH = getSlugPath(category, grade, material, slug);
+  const FilePath = getSlugPath(category, grade, material, slug);
 
   // Means it only contains the chapter name, not the section name
   // The slugs usually have 2 items, chapter and section
@@ -143,9 +143,9 @@ export default async function Page({ params }: Props) {
 
   try {
     const [content, pagination] = await Promise.all([
-      getContent(locale, FILE_PATH),
+      getContent(locale, FilePath),
       getMaterials(materialPath, locale).then((materials) =>
-        getMaterialsPagination(FILE_PATH, materials)
+        getMaterialsPagination(FilePath, materials)
       ),
     ]);
 
@@ -162,10 +162,10 @@ export default async function Page({ params }: Props) {
         <BreadcrumbJsonLd
           breadcrumbItems={headings.map((heading, index) => ({
             "@type": "ListItem",
-            "@id": `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
+            "@id": `https://nakafa.com/${locale}${FilePath}${heading.href}`,
             position: index + 1,
             name: heading.label,
-            item: `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
+            item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
           }))}
           locale={locale}
           // this will only work for the first heading, not for the nested headings
@@ -180,7 +180,7 @@ export default async function Page({ params }: Props) {
           datePublished={formatISO(metadata.date)}
           description={metadata.description ?? metadata.subject ?? ""}
           headline={metadata.title}
-          image={getOgUrl(locale, FILE_PATH)}
+          image={getOgUrl(locale, FilePath)}
         />
         <LearningResourceJsonLd
           author={metadata.authors.map((author) => ({
@@ -204,7 +204,7 @@ export default async function Page({ params }: Props) {
                 label: metadata.subject ?? "",
               }}
               showAskAi
-              slug={`/${locale}${FILE_PATH}`}
+              slug={`/${locale}${FilePath}`}
               title={metadata.title}
             />
             <LayoutMaterialMain>
@@ -214,7 +214,7 @@ export default async function Page({ params }: Props) {
             <LayoutMaterialFooter>
               <RefContent
                 githubUrl={getGithubUrl({
-                  path: `/packages/contents${FILE_PATH}`,
+                  path: `/packages/contents${FilePath}`,
                 })}
               />
             </LayoutMaterialFooter>
@@ -226,7 +226,7 @@ export default async function Page({ params }: Props) {
             }}
             header={{
               title: metadata.title,
-              href: FILE_PATH,
+              href: FilePath,
               description: metadata.description ?? metadata.subject,
             }}
           />

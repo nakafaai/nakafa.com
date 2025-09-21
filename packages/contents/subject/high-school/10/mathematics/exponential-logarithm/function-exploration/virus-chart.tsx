@@ -87,9 +87,7 @@ export function VirusChart({
             <CartesianGrid />
             <XAxis
               dataKey="phase"
-              tickFormatter={(value) => {
-                return value.toString();
-              }}
+              tickFormatter={(value) => value.toString()}
               tickMargin={8}
             />
             <YAxis

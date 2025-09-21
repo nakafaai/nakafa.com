@@ -31,8 +31,8 @@ const initialState: State = {
   slug: "",
 };
 
-export const createAiStore = () => {
-  return createStore<AiStore>()(
+export const createAiStore = () =>
+  createStore<AiStore>()(
     immer((set, get) => ({
       ...initialState,
 
@@ -44,4 +44,3 @@ export const createAiStore = () => {
       getSlug: () => get().slug,
     }))
   );
-};

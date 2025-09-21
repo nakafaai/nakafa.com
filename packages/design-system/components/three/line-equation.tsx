@@ -283,31 +283,33 @@ export function LineEquation({
   });
 
   // Pre-calculate label data to avoid recreating in render
-  const labelData = useMemo(() => {
-    return labels
-      .map((label, idx) => {
-        const mid = Math.floor(vectorPoints.length / 2);
-        const index = label.at ?? mid;
-        const base = vectorPoints[index];
-        if (!base) {
-          return null;
-        }
-        const [ox = 0, oy = 0, oz = 0] = label.offset || [0, 0, 0];
-        const pos: [number, number, number] = [
-          base.x + ox,
-          base.y + oy,
-          base.z + oz,
-        ];
-        return {
-          key: `label-${idx}`,
-          position: pos,
-          color: label.color ?? color,
-          fontSize: label.fontSize ?? DEFAULT_FONT_SIZE,
-          text: label.text,
-        };
-      })
-      .filter(Boolean);
-  }, [labels, vectorPoints, color]);
+  const labelData = useMemo(
+    () =>
+      labels
+        .map((label, idx) => {
+          const mid = Math.floor(vectorPoints.length / 2);
+          const index = label.at ?? mid;
+          const base = vectorPoints[index];
+          if (!base) {
+            return null;
+          }
+          const [ox = 0, oy = 0, oz = 0] = label.offset || [0, 0, 0];
+          const pos: [number, number, number] = [
+            base.x + ox,
+            base.y + oy,
+            base.z + oz,
+          ];
+          return {
+            key: `label-${idx}`,
+            position: pos,
+            color: label.color ?? color,
+            fontSize: label.fontSize ?? DEFAULT_FONT_SIZE,
+            text: label.text,
+          };
+        })
+        .filter(Boolean),
+    [labels, vectorPoints, color]
+  );
 
   return (
     <group ref={groupRef}>

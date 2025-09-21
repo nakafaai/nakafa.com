@@ -28,10 +28,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, category } = await params;
   const t = await getTranslations("Articles");
 
-  const FILE_PATH = getCategoryPath(category);
+  const FilePath = getCategoryPath(category);
 
   const image = {
-    url: getOgUrl(locale, FILE_PATH),
+    url: getOgUrl(locale, FilePath),
     width: 1200,
     height: 630,
   };
@@ -40,10 +40,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: t(category),
     description: t("description"),
     alternates: {
-      canonical: `/${locale}${FILE_PATH}`,
+      canonical: `/${locale}${FilePath}`,
     },
     openGraph: {
-      url: `/${locale}${FILE_PATH}`,
+      url: `/${locale}${FilePath}`,
       images: [image],
     },
   };
@@ -65,7 +65,7 @@ export default async function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  const FILE_PATH = getCategoryPath(category);
+  const FilePath = getCategoryPath(category);
 
   // Statically get all articles
   const articles = await getArticles(category, locale);
@@ -75,10 +75,10 @@ export default async function Page({ params }: Props) {
       <BreadcrumbJsonLd
         breadcrumbItems={articles.map((article, index) => ({
           "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}${FILE_PATH}/${article.slug}`,
+          "@id": `https://nakafa.com/${locale}${FilePath}/${article.slug}`,
           position: index + 1,
           name: article.title,
-          item: `https://nakafa.com/${locale}${FILE_PATH}/${article.slug}`,
+          item: `https://nakafa.com/${locale}${FilePath}/${article.slug}`,
         }))}
         locale={locale}
       />
@@ -100,7 +100,7 @@ export default async function Page({ params }: Props) {
       </LayoutContent>
       <FooterContent className="mt-0">
         <RefContent
-          githubUrl={getGithubUrl({ path: `/packages/contents${FILE_PATH}` })}
+          githubUrl={getGithubUrl({ path: `/packages/contents${FilePath}` })}
         />
       </FooterContent>
     </>

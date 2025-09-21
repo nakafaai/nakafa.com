@@ -40,16 +40,16 @@ export async function generateMetadata({
   const { locale, category, slug } = await params;
   const t = await getTranslations("Articles");
 
-  const FILE_PATH = getSlugPath(category, slug);
+  const FilePath = getSlugPath(category, slug);
 
-  const content = await getContent(locale, FILE_PATH);
+  const content = await getContent(locale, FilePath);
 
-  const path = `/${locale}${FILE_PATH}`;
+  const path = `/${locale}${FilePath}`;
   const alternates = {
     canonical: path,
   };
   const image = {
-    url: getOgUrl(locale, FILE_PATH),
+    url: getOgUrl(locale, FilePath),
     width: 1200,
     height: 630,
   };
@@ -103,13 +103,13 @@ export default async function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  const FILE_PATH = getSlugPath(category, slug);
+  const FilePath = getSlugPath(category, slug);
 
   try {
     // Get the file, headings
     const [content, references] = await Promise.all([
-      getContent(locale, FILE_PATH),
-      getReferences(FILE_PATH),
+      getContent(locale, FilePath),
+      getReferences(FilePath),
     ]);
 
     if (!content) {
@@ -125,10 +125,10 @@ export default async function Page({ params }: Props) {
         <BreadcrumbJsonLd
           breadcrumbItems={headings.map((heading, index) => ({
             "@type": "ListItem",
-            "@id": `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
+            "@id": `https://nakafa.com/${locale}${FilePath}${heading.href}`,
             position: index + 1,
             name: heading.label,
-            item: `https://nakafa.com/${locale}${FILE_PATH}${heading.href}`,
+            item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
           }))}
           description={metadata.description ?? ""}
           locale={locale}
@@ -143,7 +143,7 @@ export default async function Page({ params }: Props) {
           datePublished={formatISO(metadata.date)}
           description={metadata.description ?? ""}
           headline={metadata.title}
-          image={getOgUrl(locale, FILE_PATH)}
+          image={getOgUrl(locale, FilePath)}
         />
         <LearningResourceJsonLd
           author={metadata.authors.map((author) => ({
@@ -166,7 +166,7 @@ export default async function Page({ params }: Props) {
             date={metadata.date}
             description={metadata.description}
             showAskAi
-            slug={`/${locale}${FILE_PATH}`}
+            slug={`/${locale}${FilePath}`}
             title={metadata.title}
           />
           <LayoutArticleContent>
@@ -175,7 +175,7 @@ export default async function Page({ params }: Props) {
           <LayoutArticleFooter>
             <RefContent
               githubUrl={getGithubUrl({
-                path: `/packages/contents${FILE_PATH}`,
+                path: `/packages/contents${FilePath}`,
               })}
               references={references}
               title={metadata.title}

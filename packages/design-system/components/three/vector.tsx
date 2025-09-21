@@ -1,6 +1,6 @@
 "use client";
 
-import type * as THREE from "three";
+import type * as Three from "three";
 import { ArrowHelper } from "./arrow-helper";
 
 type VectorProps = {
@@ -9,7 +9,7 @@ type VectorProps = {
   /** End point of the vector [x, y, z] */
   to: [number, number, number];
   /** Color of the vector */
-  color?: string | THREE.Color;
+  color?: string | Three.Color;
   /** Width of the vector line */
   lineWidth?: number;
   /** Show arrowhead */

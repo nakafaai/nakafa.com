@@ -196,25 +196,27 @@ export function BacterialGrowth({
   }, [isPlaying, generation, maxGenerations]);
 
   // Generate time buttons
-  const timeButtons = useMemo(() => {
-    return Array.from({ length: maxGenerations + 1 }).map((_, i) => {
-      const time = i * timeInterval;
-      return (
-        <Button
-          key={time.toString()}
-          onClick={() => {
-            setGeneration(i);
-            setIsPlaying(false);
-          }}
-          size="sm"
-          variant={generation === i ? "default" : "outline"}
-        >
-          {time}
-          {timeUnit}
-        </Button>
-      );
-    });
-  }, [generation, maxGenerations, timeInterval, timeUnit]);
+  const timeButtons = useMemo(
+    () =>
+      Array.from({ length: maxGenerations + 1 }).map((_, i) => {
+        const time = i * timeInterval;
+        return (
+          <Button
+            key={time.toString()}
+            onClick={() => {
+              setGeneration(i);
+              setIsPlaying(false);
+            }}
+            size="sm"
+            variant={generation === i ? "default" : "outline"}
+          >
+            {time}
+            {timeUnit}
+          </Button>
+        );
+      }),
+    [generation, maxGenerations, timeInterval, timeUnit]
+  );
 
   return (
     <Card>

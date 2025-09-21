@@ -12,13 +12,11 @@ import { type ComponentProps, memo } from "react";
 export type ActionsProps = ComponentProps<"div">;
 
 export const Actions = memo(
-  ({ className, children, ...props }: ActionsProps) => {
-    return (
-      <div className={cn("flex items-center gap-1", className)} {...props}>
-        {children}
-      </div>
-    );
-  }
+  ({ className, children, ...props }: ActionsProps) => (
+    <div className={cn("flex items-center gap-1", className)} {...props}>
+      {children}
+    </div>
+  )
 );
 Actions.displayName = "Actions";
 

@@ -117,11 +117,10 @@ export function compressMessages(
   }
 
   // Helper function to get content from all messages
-  const getMessagesContent = (msgs: MyUIMessage[]): string => {
-    return msgs
+  const getMessagesContent = (msgs: MyUIMessage[]): string =>
+    msgs
       .flatMap((m) => m.parts.map(extractContentFromPart).filter(Boolean))
       .join("\n");
-  };
 
   // Helper function to format token information
   const formatTokenInfo = (
