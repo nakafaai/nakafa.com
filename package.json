@@ -33,7 +33,7 @@
     "tsup": "^8.5.0",
     "turbo": "^2.5.6",
     "typescript": "^5.9.2",
-    "ultracite": "^5.4.4",
+    "ultracite": "^5.4.5",
     "vitest": "^3.2.4"
   },
   "packageManager": "bun@1.2.22",
