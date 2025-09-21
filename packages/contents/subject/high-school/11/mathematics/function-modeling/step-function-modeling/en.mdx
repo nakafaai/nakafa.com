@@ -58,6 +58,7 @@ To make it easier to understand, let's look at the following example:
       }),
       color: getColor("PURPLE"),
       showPoints: false,
+      smooth: false,
       labels: [{ text: "f(x) = ⌊x⌋", at: 30, offset: [1, -1, 0] }],
     },
   ]}
@@ -99,6 +100,7 @@ Let's look at the following example:
       }),
       color: getColor("ORANGE"),
       showPoints: false,
+      smooth: false,
       labels: [{ text: "f(x) = ⌈x⌉", at: 30, offset: [1, -1, 0] }],
     },
   ]}
@@ -134,6 +136,7 @@ Unlike the floor and ceiling functions, the unit step function has a value of 0 
       }),
       color: getColor("TEAL"),
       showPoints: false,
+      smooth: false,
       labels: [{ text: "H(x)", at: 12, offset: [1, 0.5, 0] }],
     },
   ]}
@@ -189,6 +192,7 @@ The function <InlineMath math="f(x) = \lfloor x \rfloor + k" /> shifts the floor
       }),
       color: getColor("PURPLE"),
       showPoints: false,
+      smooth: false,
       labels: [{ text: "f(x) = ⌊x⌋", at: 30, offset: [0, 0.5, 0] }],
     },
     {
@@ -198,6 +202,7 @@ The function <InlineMath math="f(x) = \lfloor x \rfloor + k" /> shifts the floor
       }),
       color: getColor("CYAN"),
       showPoints: false,
+      smooth: false,
       labels: [{ text: "g(x) = ⌊x⌋ + 2", at: 30, offset: [0, 0.5, 0] }],
     },
     {
@@ -207,6 +212,7 @@ The function <InlineMath math="f(x) = \lfloor x \rfloor + k" /> shifts the floor
       }),
       color: getColor("ROSE"),
       showPoints: false,
+      smooth: false,
       labels: [{ text: "h(x) = ⌊x⌋ - 1", at: 30, offset: [2, 0.5, 0] }],
     },
   ]}
@@ -288,6 +294,7 @@ The function <InlineMath math="f(x) = \lfloor x - h \rfloor" /> shifts the graph
          }),
          color: getColor("VIOLET"),
          showPoints: false,
+         smooth: false,
          labels: [{ text: "f(x) = 2⌊x⌋ - 1", at: 18, offset: [1, 1, 0] }],
        },
      ]}
