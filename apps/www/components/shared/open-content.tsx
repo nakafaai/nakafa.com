@@ -178,7 +178,7 @@ function ViewOptions({ slug }: { slug: string }) {
             icon: <MessageCircleIcon />,
           },
         ].map((item) => (
-          <DropdownMenuItem asChild key={item.title}>
+          <DropdownMenuItem asChild className="cursor-pointer" key={item.title}>
             <Link href={item.href} target="_blank">
               {item.icon}
               {item.title}

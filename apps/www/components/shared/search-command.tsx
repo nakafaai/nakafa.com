@@ -107,7 +107,7 @@ function SearchList() {
   const displayError = pagefindError || (error ? getErrorMessage(error) : "");
 
   return (
-    <CommandList className="h-[300px] max-h-none md:h-[400px]">
+    <CommandList className="h-[300px] max-h-none md:h-[450px]">
       <SearchListItems
         error={hasError ? displayError : ""}
         isLoading={isLoading && !hasError && !isPlaceholderData}
