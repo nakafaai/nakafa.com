@@ -14,6 +14,6 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/lodash.merge": "^4.6.9",
-    "next": "15.5.3"
+    "next": "15.5.4"
   }
 }
