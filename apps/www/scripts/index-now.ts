@@ -89,10 +89,10 @@ function saveSubmissionHistory(history: {
 }
 
 // Get all URLs from the sitemap that haven't been submitted yet
-function getUnsubmittedUrls(service: "indexNow" | "bing"): {
+async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
   urls: string[];
   history: { indexNow: Record<string, string>; bing: Record<string, string> };
-} {
+}> {
   // Load existing submission history
   const history = loadSubmissionHistory();
 
@@ -101,7 +101,11 @@ function getUnsubmittedUrls(service: "indexNow" | "bing"): {
   const ogRoutes = getOgRoutes(routes);
   const quranRoutes = getQuranRoutes();
   const allRoutes = [...baseRoutes, ...routes, ...ogRoutes, ...quranRoutes];
-  const allEntries = allRoutes.flatMap((route) => getEntries(route));
+
+  // Get all entries asynchronously
+  const allEntriesPromises = allRoutes.map((route) => getEntries(route));
+  const allEntriesArrays = await Promise.all(allEntriesPromises);
+  const allEntries = allEntriesArrays.flat();
 
   // Extract unique URLs
   const allUrls = new Set<string>();
@@ -455,7 +459,7 @@ async function runIndexNow(): Promise<void> {
   logger.header("IndexNow Submission");
 
   // Get unsubmitted URLs for IndexNow
-  const indexNowData = getUnsubmittedUrls("indexNow");
+  const indexNowData = await getUnsubmittedUrls("indexNow");
 
   if (indexNowData.urls.length === 0) {
     logger.info(
@@ -494,7 +498,7 @@ async function runIndexNow(): Promise<void> {
     const bingApiKey = process.env.BING_WEBMASTER_API_KEY;
 
     // Get unsubmitted URLs for Bing
-    const bingData = getUnsubmittedUrls("bing");
+    const bingData = await getUnsubmittedUrls("bing");
 
     if (bingData.urls.length === 0) {
       logger.info(

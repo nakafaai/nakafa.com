@@ -98,14 +98,21 @@ export function SearchResults() {
               {result.sub_results.map((subResult) => (
                 <NavigationLink
                   className={cn(
-                    "group flex items-center gap-2 p-2 px-4 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                    "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
                   )}
                   href={subResult.url}
                   key={`${subResult.url}-${subResult.title}`}
                   title={subResult.title}
                 >
-                  <FileTextIcon className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground" />
-                  <span className="line-clamp-1">{subResult.title}</span>
+                  <div className="flex items-center gap-2">
+                    <FileTextIcon className="size-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground" />
+                    <span className="line-clamp-1">{subResult.title}</span>
+                  </div>
+                  <p
+                    className="line-clamp-3 text-muted-foreground text-sm group-hover:text-accent-foreground group-data-[selected=true]:text-accent-foreground"
+                    // biome-ignore lint/security/noDangerouslySetInnerHtml: It's fine
+                    dangerouslySetInnerHTML={{ __html: subResult.excerpt }}
+                  />
                 </NavigationLink>
               ))}
             </div>
