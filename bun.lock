@@ -274,6 +274,7 @@
         "lodash.merge": "^4.6.2",
         "react": "^19.1.1",
         "schema-dts": "^1.1.5",
+        "zod": "^4.1.11",
       },
       "devDependencies": {
         "@repo/typescript-config": "workspace:*",
