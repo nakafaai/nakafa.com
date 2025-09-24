@@ -106,6 +106,10 @@ export async function generateMetadata({
     alternates,
     authors: metadata.authors,
     category: t(material),
+    keywords: metadata.title
+      .split(" ")
+      .concat(metadata.description?.split(" ") ?? [])
+      .filter((keyword) => keyword.length > 0),
     openGraph,
     twitter,
   };
