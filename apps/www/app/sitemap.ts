@@ -1,6 +1,7 @@
 import { getContent, getFolderChildNames } from "@repo/contents/_lib/utils";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
+import { askSeo } from "@repo/seo/ask";
 import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
 
@@ -103,6 +104,10 @@ export function getQuranRoutes(): string[] {
   return Array.from({ length: 114 }, (_, index) => `/quran/${index + 1}`);
 }
 
+export function getAskRoutes(): string[] {
+  return askSeo().map((data) => `/ask/${data.slug}`);
+}
+
 // Function to recursively get all directories
 export function getContentRoutes(currentPath = ""): string[] {
   const children = getFolderChildNames(currentPath || ".");
@@ -154,7 +159,10 @@ export async function getEntries(href: Href): Promise<MetadataRoute.Sitemap> {
     lastModified = new Date("2025-01-01");
   } else if (routeString.includes("/og/")) {
     // OG images, set to a reasonable date after founding
-    lastModified = new Date("2025-03-01");
+    lastModified = new Date("2025-01-01");
+  } else if (routeString.startsWith("/ask/")) {
+    // Ask content is very stable, set to founding date
+    lastModified = new Date("2025-01-01");
   }
 
   return routing.locales.map((locale) => ({
@@ -190,11 +198,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const ogRoutes = getOgRoutes(contentRoutes);
   const quranRoutes = getQuranRoutes();
 
+  const askRoutes = getAskRoutes();
+
   const allBaseRoutes = [
     ...baseRoutes,
     ...contentRoutes,
     ...ogRoutes,
     ...quranRoutes,
+    ...askRoutes,
   ];
 
   // Generate sitemap entries for all routes, including localized versions
