@@ -200,6 +200,7 @@
     "account": "Account"
   },
   "Ai": {
+    "ask-ai": "Ask AI",
     "ask-nina": "Ask Nina",
     "text-placeholder": "Ask Nina anything...",
     "error-message": "An error occurred, please try again later.",

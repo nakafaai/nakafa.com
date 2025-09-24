@@ -1,6 +1,6 @@
 import { HomeTitle } from "@/components/home/title";
 import { InputSearch } from "@/components/search/input";
-import { SearchResults } from "@/components/search/results";
+import { SearchListItems } from "@/components/search/results";
 import { FooterContent } from "@/components/shared/footer-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
@@ -18,12 +18,12 @@ export default function Page() {
           <HomeTitle />
         </div>
         <div className="sticky top-20 z-10 sm:top-10">
-          <div className="mx-auto w-full max-w-xl px-6">
+          <div className="mx-auto w-full max-w-3xl px-6">
             <InputSearch />
           </div>
         </div>
-        <div className="mx-auto mt-8 w-full max-w-xl px-6">
-          <SearchResults />
+        <div className="mx-auto mt-8 w-full max-w-3xl px-6">
+          <SearchListItems />
         </div>
       </div>
       <FooterContent>

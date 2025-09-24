@@ -1,20 +1,15 @@
 "use client";
 
-import { useDebouncedValue } from "@mantine/hooks";
-import { useQueryStates } from "nuqs";
 import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
-import { searchParsers } from "@/lib/nuqs/search";
 import { useSearchQuery } from "@/lib/react-query/use-search";
 import { SearchResults } from "../shared/search-results";
 
-const DEBOUNCE_TIME = 300;
+type Props = {
+  query: string;
+};
 
-export function SearchListItems() {
+export function AskListItems({ query }: Props) {
   const pagefindError = usePagefind((context) => context.error);
-
-  const [{ q }] = useQueryStates(searchParsers);
-
-  const [debouncedQuery] = useDebouncedValue(q, DEBOUNCE_TIME);
 
   const {
     data: results = [],
@@ -23,8 +18,8 @@ export function SearchListItems() {
     isLoading,
     isPlaceholderData,
   } = useSearchQuery({
-    query: debouncedQuery,
-    enabled: Boolean(debouncedQuery),
+    query,
+    enabled: Boolean(query),
   });
 
   const hasError = isError || Boolean(pagefindError);
@@ -36,7 +31,7 @@ export function SearchListItems() {
       error={displayError}
       isError={hasError}
       isLoading={queryLoading}
-      query={debouncedQuery}
+      query={query}
       results={results}
     />
   );

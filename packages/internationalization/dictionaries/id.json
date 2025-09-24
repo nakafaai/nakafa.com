@@ -200,6 +200,7 @@
     "account": "Akun"
   },
   "Ai": {
+    "ask-ai": "Tanya AI",
     "ask-nina": "Tanya Nina",
     "text-placeholder": "Tanya Nina apa saja...",
     "error-message": "Terjadi kesalahan, silakan coba lagi nanti.",
