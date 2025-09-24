@@ -46,6 +46,10 @@ type SystemPromptProps = {
      * The longitude of the user's location.
      */
     longitude: string;
+    /**
+     * The country region of the user's location.
+     */
+    countryRegion: string;
   };
 };
 
@@ -90,11 +94,12 @@ export function nakafaPrompt({
 
       ## User Date and Location
 
-      date: ${currentDate}
-      city: ${userLocation.city}
-      country: ${userLocation.country}
-      latitude: ${userLocation.latitude}
-      longitude: ${userLocation.longitude}
+      Date: ${currentDate}
+      City: ${userLocation.city}
+      Country: ${userLocation.country}
+      Latitude: ${userLocation.latitude}
+      Longitude: ${userLocation.longitude}
+      Country Region: ${userLocation.countryRegion}
     `,
 
     // Core rules and tool usage guidelines

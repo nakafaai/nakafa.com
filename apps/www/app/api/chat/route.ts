@@ -100,7 +100,8 @@ export async function POST(req: Request) {
     timeZoneName: "short",
   });
 
-  const { latitude, longitude, city, country } = geolocation(req);
+  const { latitude, longitude, city, countryRegion, country } =
+    geolocation(req);
 
   // Create logger with context for this chat session
   const sessionLogger = createChildLogger({
@@ -115,6 +116,7 @@ export async function POST(req: Request) {
       latitude: latitude ?? "Unknown",
       longitude: longitude ?? "Unknown",
       city: city ?? "Unknown",
+      countryRegion: countryRegion ?? "Unknown",
       country: country ?? "Unknown",
     },
     url,
@@ -175,6 +177,7 @@ export async function POST(req: Request) {
             latitude: latitude ?? "Unknown",
             longitude: longitude ?? "Unknown",
             city: city ?? "Unknown",
+            countryRegion: countryRegion ?? "Unknown",
             country: country ?? "Unknown",
           },
         }),
