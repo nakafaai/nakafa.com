@@ -197,7 +197,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const contentRoutes = getContentRoutes(); // Get routes from 'contents' directory
   const ogRoutes = getOgRoutes(contentRoutes);
   const quranRoutes = getQuranRoutes();
-
   const askRoutes = getAskRoutes();
 
   const allBaseRoutes = [

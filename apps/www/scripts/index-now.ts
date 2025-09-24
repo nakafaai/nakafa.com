@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   baseRoutes,
+  getAskRoutes,
   getContentRoutes,
   getEntries,
   getOgRoutes,
@@ -100,7 +101,15 @@ async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
   const routes = getContentRoutes();
   const ogRoutes = getOgRoutes(routes);
   const quranRoutes = getQuranRoutes();
-  const allRoutes = [...baseRoutes, ...routes, ...ogRoutes, ...quranRoutes];
+  const askRoutes = getAskRoutes();
+
+  const allRoutes = [
+    ...baseRoutes,
+    ...routes,
+    ...ogRoutes,
+    ...quranRoutes,
+    ...askRoutes,
+  ];
 
   // Get all entries asynchronously
   const allEntriesPromises = allRoutes.map((route) => getEntries(route));
