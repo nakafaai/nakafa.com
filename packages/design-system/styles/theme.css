@@ -1240,3 +1240,57 @@
     hsl(0 63% 18% / 0.12);
   --shadow-2xl: 1px 1px 16px -2px hsl(0 63% 18% / 0.3);
 }
+
+.shell {
+  --background: oklch(0.9721 0.0158 110.5501);
+  --foreground: oklch(0.5066 0.2501 271.8903);
+  --card: oklch(0.9721 0.0158 110.5501);
+  --card-foreground: oklch(0.5066 0.2501 271.8903);
+  --popover: oklch(0.9721 0.0158 110.5501);
+  --popover-foreground: oklch(0.5066 0.2501 271.8903);
+  --primary: oklch(0.5066 0.2501 271.8903);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(1 0 0);
+  --secondary-foreground: oklch(0.5066 0.2501 271.8903);
+  --muted: oklch(0.9189 0.0147 106.6853);
+  --muted-foreground: oklch(0.5066 0.2501 271.8903);
+  --accent: oklch(0.9168 0.0214 109.7161);
+  --accent-foreground: oklch(0.4486 0.2266 271.5512);
+  --destructive: oklch(0.629 0.1902 23.0704);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.5066 0.2501 271.8903);
+  --input: oklch(0.5066 0.2501 271.8903);
+  --ring: oklch(0.468 0.2721 279.6007);
+  --chart-1: oklch(0.5066 0.2501 271.8903);
+  --chart-2: oklch(0.5499 0.2197 264.4382);
+  --chart-3: oklch(0.7187 0 0);
+  --chart-4: oklch(0.9189 0 0);
+  --chart-5: oklch(0.559 0 0);
+  --sidebar: oklch(0.9721 0.0158 110.5501);
+  --sidebar-foreground: oklch(0.5066 0.2501 271.8903);
+  --sidebar-primary: oklch(0.5066 0.2501 271.8903);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.9168 0.0214 109.7161);
+  --sidebar-accent-foreground: oklch(0.4486 0.2266 271.5512);
+  --sidebar-border: oklch(0.4486 0.2266 271.5512);
+  --sidebar-ring: oklch(0.4486 0.2266 271.5512);
+  --radius: 0.25rem;
+  --shadow-2xs: 2px 2px 4px 0px hsl(255 86% 66% / 0.1);
+  --shadow-xs: 2px 2px 4px 0px hsl(255 86% 66% / 0.1);
+  --shadow-sm:
+    2px 2px 4px 0px hsl(255 86% 66% / 0.2), 2px 1px 2px -1px
+    hsl(255 86% 66% / 0.2);
+  --shadow:
+    2px 2px 4px 0px hsl(255 86% 66% / 0.2), 2px 1px 2px -1px
+    hsl(255 86% 66% / 0.2);
+  --shadow-md:
+    2px 2px 4px 0px hsl(255 86% 66% / 0.2), 2px 2px 4px -1px
+    hsl(255 86% 66% / 0.2);
+  --shadow-lg:
+    2px 2px 4px 0px hsl(255 86% 66% / 0.2), 2px 4px 6px -1px
+    hsl(255 86% 66% / 0.2);
+  --shadow-xl:
+    2px 2px 4px 0px hsl(255 86% 66% / 0.2), 2px 8px 10px -1px
+    hsl(255 86% 66% / 0.2);
+  --shadow-2xl: 2px 2px 4px 0px hsl(255 86% 66% / 0.5);
+}

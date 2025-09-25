@@ -20,6 +20,7 @@ import {
   NotebookPenIcon,
   PopsicleIcon,
   RabbitIcon,
+  ShellIcon,
   SparkleIcon,
   SunIcon,
   SunsetIcon,
@@ -105,6 +106,10 @@ export const themes = [
   {
     value: "retro",
     icon: TvIcon,
+  },
+  {
+    value: "shell",
+    icon: ShellIcon,
   },
   {
     value: "solar",
