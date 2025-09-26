@@ -29,7 +29,7 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^0.544.0",
     "marked": "^16.3.0",
-    "mathjs": "^14.8.0",
+    "mathjs": "^14.8.1",
     "mermaid": "11.12.0",
     "motion": "^12.23.22",
     "next-themes": "^0.4.6",
