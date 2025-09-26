@@ -1,4 +1,4 @@
-import { getAllSeoDomains } from "@repo/next-config/domains";
+import { SEO_DOMAINS } from "@repo/next-config/domains";
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
     },
     sitemap: [
       "https://nakafa.com/sitemap.xml",
-      ...getAllSeoDomains().map((domain) => `https://${domain}/sitemap.xml`),
+      ...SEO_DOMAINS.map((domain) => `https://${domain}/sitemap.xml`),
     ],
   };
 }
