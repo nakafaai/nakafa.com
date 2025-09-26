@@ -1,3 +1,4 @@
+import { getAllSeoDomains } from "@repo/next-config/domains";
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
@@ -6,6 +7,9 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://nakafa.com/sitemap.xml",
+    sitemap: [
+      "https://nakafa.com/sitemap.xml",
+      ...getAllSeoDomains().map((domain) => `https://${domain}/sitemap.xml`),
+    ],
   };
 }
