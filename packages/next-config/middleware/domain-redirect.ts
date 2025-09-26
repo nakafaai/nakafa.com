@@ -20,14 +20,13 @@ export function domainRedirectMiddleware(request: NextRequest) {
   // BUT skip XML files entirely (let route handlers handle them directly)
   if (hostname === MAIN_DOMAIN || hostname === `www.${MAIN_DOMAIN}`) {
     // For XML files on main domain, skip all middleware processing
-    if (pathname === "/sitemap.xml" || pathname === "/rss.xml") {
+    if (
+      pathname === "/sitemap.xml" ||
+      pathname === "/rss.xml" ||
+      pathname === "/sitemap-domain.xml"
+    ) {
       return NextResponse.next();
     }
-    return null;
-  }
-
-  // Skip RSS files on all domains - let them be handled normally
-  if (pathname === "/rss.xml") {
     return null;
   }
 
