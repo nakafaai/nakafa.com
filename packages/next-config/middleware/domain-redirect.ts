@@ -31,7 +31,11 @@ export function domainRedirectMiddleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.hostname = MAIN_DOMAIN;
     url.pathname = "/sitemap-domain.xml";
-    return NextResponse.rewrite(url);
+
+    // Pass the original hostname through a header so sitemap-domain.xml can use it
+    const response = NextResponse.rewrite(url);
+    response.headers.set("x-original-host", hostname);
+    return response;
   }
 
   // Handle different types of requests

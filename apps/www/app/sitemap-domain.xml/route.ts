@@ -10,8 +10,9 @@ import {
 } from "../sitemap";
 
 export async function GET(request: NextRequest) {
-  // Get the host from the request
-  const hostname = request.nextUrl.hostname;
+  // Get the original host from the header (set by middleware)
+  const hostname =
+    request.headers.get("x-original-host") || request.nextUrl.hostname;
 
   // Check if this is a valid SEO domain
   if (!isSeoDomain(hostname)) {
