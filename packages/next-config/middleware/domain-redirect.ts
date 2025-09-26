@@ -17,7 +17,17 @@ export function domainRedirectMiddleware(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
 
   // Skip if already on main domain - let internationalization handle it
+  // BUT skip XML files entirely (let route handlers handle them directly)
   if (hostname === MAIN_DOMAIN || hostname === `www.${MAIN_DOMAIN}`) {
+    // For XML files on main domain, skip all middleware processing
+    if (pathname === "/sitemap.xml" || pathname === "/rss.xml") {
+      return NextResponse.next();
+    }
+    return null;
+  }
+
+  // Skip RSS files on all domains - let them be handled normally
+  if (pathname === "/rss.xml") {
     return null;
   }
 
