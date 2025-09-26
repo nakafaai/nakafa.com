@@ -1,7 +1,7 @@
 import { getContent, getFolderChildNames } from "@repo/contents/_lib/utils";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
-import { getAllSeoDomains, MAIN_DOMAIN } from "@repo/next-config/domains";
+import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { askSeo } from "@repo/seo/ask";
 import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
@@ -9,8 +9,7 @@ import type { Locale } from "next-intl";
 // Main domain host
 const host = `https://${MAIN_DOMAIN}`;
 
-// Get all domains (main + SEO domains)
-const allDomains = [MAIN_DOMAIN, ...getAllSeoDomains()];
+// Main domain for sitemap generation
 
 export const baseRoutes = ["/search", "/contributor", "/quran"];
 
@@ -215,23 +214,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...askRoutes,
   ];
 
-  // Generate sitemap entries for all domains
-  const allSitemapEntries: MetadataRoute.Sitemap = [];
+  // Generate sitemap entries only for main domain
+  const sitemapEntriesPromises = allBaseRoutes.map(
+    async (route) => await getEntries(route, MAIN_DOMAIN)
+  );
 
-  for (const domain of allDomains) {
-    // Generate entries for each route on each domain
-    const domainEntriesPromises = allBaseRoutes.map(
-      async (route) => await getEntries(route, domain)
-    );
+  const sitemapEntriesArrays = await Promise.all(sitemapEntriesPromises);
+  const sitemapEntries = sitemapEntriesArrays.flat();
 
-    const domainEntriesArrays = await Promise.all(domainEntriesPromises);
-    const domainEntries = domainEntriesArrays.flat();
+  // Add homepage entry for main domain
+  const homeEntries = await getEntries("/", MAIN_DOMAIN);
 
-    // Add homepage entry for this domain
-    const homeEntries = await getEntries("/", domain);
-
-    allSitemapEntries.push(...homeEntries, ...domainEntries);
-  }
-
-  return allSitemapEntries;
+  return [...homeEntries, ...sitemapEntries];
 }
