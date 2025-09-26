@@ -1,12 +1,16 @@
 import { getContent, getFolderChildNames } from "@repo/contents/_lib/utils";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
+import { getAllSeoDomains, MAIN_DOMAIN } from "@repo/next-config/domains";
 import { askSeo } from "@repo/seo/ask";
 import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
 
-// Adapt this as necessary
-const host = "https://nakafa.com";
+// Main domain host
+const host = `https://${MAIN_DOMAIN}`;
+
+// Get all domains (main + SEO domains)
+const allDomains = [MAIN_DOMAIN, ...getAllSeoDomains()];
 
 export const baseRoutes = ["/search", "/contributor", "/quran"];
 
@@ -125,7 +129,10 @@ export function getContentRoutes(currentPath = ""): string[] {
 
 type Href = Parameters<typeof getPathname>[number]["href"];
 
-export async function getEntries(href: Href): Promise<MetadataRoute.Sitemap> {
+export async function getEntries(
+  href: Href,
+  domain?: string
+): Promise<MetadataRoute.Sitemap> {
   // Handle both string and object href types
   const routeString = typeof href === "string" ? href : href.pathname;
   const { changeFrequency, priority } = getContentSeoSettings(routeString);
@@ -166,10 +173,10 @@ export async function getEntries(href: Href): Promise<MetadataRoute.Sitemap> {
   }
 
   return routing.locales.map((locale) => ({
-    url: getUrl(href, locale),
+    url: getUrl(href, locale, domain),
     alternates: {
       languages: Object.fromEntries(
-        routing.locales.map((cur) => [cur, getUrl(href, cur)])
+        routing.locales.map((cur) => [cur, getUrl(href, cur, domain)])
       ),
     },
     changeFrequency,
@@ -178,9 +185,10 @@ export async function getEntries(href: Href): Promise<MetadataRoute.Sitemap> {
   }));
 }
 
-export function getUrl(href: Href, locale: Locale): string {
+export function getUrl(href: Href, locale: Locale, domain?: string): string {
   const pathname = getPathname({ locale, href, forcePrefix: true });
-  return host + pathname;
+  const domainHost = domain ? `https://${domain}` : host;
+  return domainHost + pathname;
 }
 
 // Return OG routes based on regular routes
@@ -207,19 +215,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...askRoutes,
   ];
 
-  // Generate sitemap entries for all routes, including localized versions
-  const sitemapEntriesPromises = allBaseRoutes.map(async (route) => {
-    // The getEntries function now returns a promise and creates entries for all locales
-    return await getEntries(route);
-  });
+  // Generate sitemap entries for all domains
+  const allSitemapEntries: MetadataRoute.Sitemap = [];
 
-  const sitemapEntriesArrays = await Promise.all(sitemapEntriesPromises);
-  const sitemapEntries = sitemapEntriesArrays.flat();
+  for (const domain of allDomains) {
+    // Generate entries for each route on each domain
+    const domainEntriesPromises = allBaseRoutes.map(
+      async (route) => await getEntries(route, domain)
+    );
 
-  // Add the main homepage entry separately
-  const homeEntries = await getEntries("/");
+    const domainEntriesArrays = await Promise.all(domainEntriesPromises);
+    const domainEntries = domainEntriesArrays.flat();
 
-  const sitemaps = [...homeEntries, ...sitemapEntries];
+    // Add homepage entry for this domain
+    const homeEntries = await getEntries("/", domain);
 
-  return sitemaps;
+    allSitemapEntries.push(...homeEntries, ...domainEntries);
+  }
+
+  return allSitemapEntries;
 }

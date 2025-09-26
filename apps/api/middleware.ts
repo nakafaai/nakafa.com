@@ -1,7 +1,10 @@
+import { getAllSeoDomains } from "@repo/next-config/domains";
 import { CorsValidator } from "@repo/security";
 import { type NextRequest, NextResponse } from "next/server";
 
-const corsValidator = new CorsValidator();
+const corsValidator = new CorsValidator({
+  seoDomains: getAllSeoDomains(),
+});
 
 export function middleware(request: NextRequest) {
   // Check the origin from the request

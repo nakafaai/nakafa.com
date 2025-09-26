@@ -1,8 +1,17 @@
 import { internationalizationMiddleware } from "@repo/internationalization/middleware";
+import { domainRedirectMiddleware } from "@repo/next-config/middleware/domain-redirect";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  // Continue with internationalization middleware
+  // First, handle domain-based redirects for SEO domains
+  const domainResponse = domainRedirectMiddleware(request);
+
+  // If domain middleware handled the request (redirect, rewrite, or sitemap), use it
+  if (domainResponse) {
+    return domainResponse;
+  }
+
+  // Continue with internationalization middleware for main domain
   return internationalizationMiddleware(request);
 }
 

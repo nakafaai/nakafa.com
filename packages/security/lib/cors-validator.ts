@@ -9,6 +9,8 @@ export type CorsValidatorConfig = {
   additionalOrigins?: string[];
   /** Whether to allow all subdomains */
   allowSubdomains?: boolean;
+  /** SEO domains that should be allowed */
+  seoDomains?: string[];
 };
 
 export class CorsValidator {
@@ -20,11 +22,14 @@ export class CorsValidator {
     allowedDomain = "nakafa.com",
     additionalOrigins = [],
     allowSubdomains = true,
+    seoDomains = [],
   }: CorsValidatorConfig = {}) {
     this.allowedDomain = allowedDomain;
     this.additionalOrigins = [
       ...this.getDefaultDevelopmentOrigins(),
       ...additionalOrigins,
+      // Add SEO domains as HTTPS origins
+      ...seoDomains.map((domain) => `https://${domain}`),
     ];
     this.allowSubdomains = allowSubdomains;
   }
