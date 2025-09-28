@@ -10,7 +10,8 @@
     "test": "NODE_ENV=test vitest run",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
-    "index-now": "node --env-file=.env.local --import tsx scripts/index-now.ts"
+    "index-now": "node --env-file=.env.local --import tsx scripts/index-now.ts",
+    "google-index": "node --env-file=.env.local --import tsx scripts/google-index.ts"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
@@ -31,6 +32,7 @@
     "@vercel/functions": "^3.1.0",
     "babel-plugin-react-compiler": "^19.1.0-rc.3",
     "feed": "^5.1.0",
+    "google-auth-library": "^10.3.0",
     "immer": "^10.1.3",
     "lucide-react": "^0.544.0",
     "next": "15.5.4",
