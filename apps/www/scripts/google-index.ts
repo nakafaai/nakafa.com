@@ -40,13 +40,9 @@ import {
 } from "../app/sitemap";
 import { logger } from "./utils";
 
-const BATCH_SIZE = 100; // Google's maximum batch size
-const RATE_LIMIT_DELAY = 2000; // 2 seconds between batches to be safe
+const RATE_LIMIT_DELAY = 1000; // 1 second between requests
 const MAX_BACKOFF_DELAY = 30_000; // 30 seconds maximum backoff
 const BACKOFF_MULTIPLIER = 2; // Double the delay on each retry
-const BATCH_ITEM_INDEX_OFFSET = 1;
-const RADIX_BASE_36 = 36;
-const BOUNDARY_SUBSTRING_START = 2;
 const PERCENTAGE_MULTIPLIER = 100;
 const LOG_RESPONSE_MAX_LENGTH = 500;
 
@@ -55,10 +51,6 @@ const HTTP_STATUS_CODE_UNAUTHORIZED = 401;
 const HTTP_STATUS_CODE_FORBIDDEN = 403;
 const HTTP_STATUS_CODE_TOO_MANY_REQUESTS = 429;
 const SUCCESS_RATE_THRESHOLD = 50;
-const MAX_FAILED_URLS_TO_LOG = 3;
-
-// Regex for parsing HTTP status from multipart responses
-const HTTP_STATUS_REGEX = /HTTP\/1\.1 (\d+)/;
 
 // References:
 // - https://developers.google.com/search/apis/indexing-api/v3/using-api
@@ -81,7 +73,8 @@ if (!fs.existsSync(DATA_FOLDER)) {
 
 // Google API configuration
 const GOOGLE_INDEXING_SCOPE = "https://www.googleapis.com/auth/indexing";
-const GOOGLE_BATCH_ENDPOINT = "https://indexing.googleapis.com/batch";
+const GOOGLE_PUBLISH_ENDPOINT =
+  "https://indexing.googleapis.com/v3/urlNotifications:publish";
 
 // Initialize Google Auth client
 function initializeGoogleAuth(): GoogleAuth {
@@ -195,218 +188,66 @@ function updateGoogleIndexHistory(
   return history;
 }
 
-// Helper function to create batch request body
-function createBatchRequestBody(urls: string[], boundary: string): string {
-  let batchBody = "";
-
-  urls.forEach((url, index) => {
-    const requestBody = JSON.stringify({
-      url,
-      type: "URL_UPDATED",
-    });
-
-    batchBody += `--${boundary}\r\n`;
-    batchBody += "Content-Type: application/http\r\n";
-    batchBody += "Content-Transfer-Encoding: binary\r\n";
-    batchBody += `Content-ID: <${Math.random().toString(RADIX_BASE_36).substring(BOUNDARY_SUBSTRING_START)}-${index + BATCH_ITEM_INDEX_OFFSET}>\r\n\r\n`;
-    batchBody += "POST /v3/urlNotifications:publish HTTP/1.1\r\n";
-    batchBody += "Content-Type: application/json\r\n";
-    batchBody += "accept: application/json\r\n";
-    batchBody += `content-length: ${requestBody.length}\r\n\r\n`;
-    batchBody += requestBody;
-    batchBody += "\r\n";
-  });
-
-  batchBody += `--${boundary}--\r\n`;
-
-  return batchBody;
-}
-
-// Parse multipart batch response to check individual URL results
-function parseBatchResponse(
-  responseText: string,
-  boundary: string
-): {
-  successfulUrls: number;
-  hasErrors: boolean;
-  errorDetails: string[];
-} {
-  const parts = responseText.split(`--${boundary}`);
-  let successfulUrls = 0;
-  let hasErrors = false;
-  const errorDetails: string[] = [];
-
-  for (const part of parts) {
-    if (part.includes("HTTP/1.1")) {
-      const statusMatch = part.match(HTTP_STATUS_REGEX);
-      if (statusMatch) {
-        const status = Number.parseInt(statusMatch[1], 10);
-        if (status === HTTP_STATUS_CODE_OK) {
-          successfulUrls++;
-        } else {
-          hasErrors = true;
-          errorDetails.push(`HTTP ${status}`);
-
-          // Check for specific error types
-          if (status === HTTP_STATUS_CODE_TOO_MANY_REQUESTS) {
-            errorDetails.push("Rate limit exceeded");
-          } else if (status === HTTP_STATUS_CODE_FORBIDDEN) {
-            errorDetails.push("Forbidden - check permissions");
-          } else if (status === HTTP_STATUS_CODE_UNAUTHORIZED) {
-            errorDetails.push("Unauthorized - check authentication");
-          }
-        }
-      }
-    }
-  }
-
-  return { successfulUrls, hasErrors, errorDetails };
-}
-
-// Helper function to submit a single batch to Google Indexing API
-async function submitBatchToGoogle(
-  batch: string[],
+// Helper function to submit a single URL to Google Indexing API
+async function submitUrlToGoogle(
+  url: string,
   accessToken: string,
-  batchCount: number,
-  totalBatches: number
-): Promise<{ successfulUrls: string[]; shouldStop: boolean }> {
-  logger.progress(
-    batchCount,
-    totalBatches,
-    `Submitting batch ${batchCount} of ${totalBatches}`
-  );
-
-  // Generate a unique boundary for this batch
-  const boundary = `===============${Math.random().toString(RADIX_BASE_36).substring(BOUNDARY_SUBSTRING_START)}==`;
-  const batchBody = createBatchRequestBody(batch, boundary);
+  index: number,
+  totalUrls: number
+): Promise<{ success: boolean; shouldStop: boolean }> {
+  logger.progress(index, totalUrls, `Submitting URL ${index} of ${totalUrls}`);
 
   try {
-    const response = await fetch(GOOGLE_BATCH_ENDPOINT, {
+    const response = await fetch(GOOGLE_PUBLISH_ENDPOINT, {
       method: "POST",
       headers: {
-        "Content-Type": `multipart/mixed; boundary="${boundary}"`,
+        "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
-        Host: "indexing.googleapis.com",
       },
-      body: batchBody,
+      body: JSON.stringify({
+        url,
+        type: "URL_UPDATED",
+      }),
     });
 
     const status = response.status;
     const responseText = await response.text();
 
-    logger.info(`Batch ${batchCount} response status: ${status}`);
-
-    // Log request details for debugging
-    logger.info(`Batch ${batchCount} contained ${batch.length} URLs`);
-    logger.info(`First URL in batch: ${batch[0]}`);
-
-    // Handle non-200 status codes at the batch level
-    if (status !== HTTP_STATUS_CODE_OK) {
-      logger.error(`Batch ${batchCount} failed with status: ${status}`);
-      logger.error(
-        `Response headers: ${JSON.stringify(Object.fromEntries(response.headers))}`
-      );
-      logger.error(
-        `Response body: ${responseText.substring(0, LOG_RESPONSE_MAX_LENGTH)}...`
-      );
-
-      // Stop on critical errors
-      if (status === HTTP_STATUS_CODE_TOO_MANY_REQUESTS) {
-        logger.error(
-          "❌ RATE LIMIT EXCEEDED - Stopping script to avoid further penalties"
-        );
-        return { successfulUrls: [], shouldStop: true };
-      }
-
-      if (
-        status === HTTP_STATUS_CODE_UNAUTHORIZED ||
-        status === HTTP_STATUS_CODE_FORBIDDEN
-      ) {
-        logger.error("❌ AUTHENTICATION/PERMISSION ERROR - Stopping script");
-        return { successfulUrls: [], shouldStop: true };
-      }
-
-      // Check for quota exceeded in response text
-      if (
-        responseText.toLowerCase().includes("quota") ||
-        responseText.toLowerCase().includes("limit exceeded")
-      ) {
-        logger.error("❌ API QUOTA EXCEEDED - Stopping script");
-        return { successfulUrls: [], shouldStop: true };
-      }
-
-      return { successfulUrls: [], shouldStop: false };
+    if (status === HTTP_STATUS_CODE_OK) {
+      logger.info(`✅ Successfully submitted ${url}`);
+      return { success: true, shouldStop: false };
     }
 
-    // Parse the multipart response to check individual URL results
-    const parseResult = parseBatchResponse(responseText, boundary);
-
-    logger.info(
-      `Batch ${batchCount} results: ${parseResult.successfulUrls}/${batch.length} URLs successful`
+    logger.error(`❌ Failed to submit ${url} - Status: ${status}`);
+    logger.error(
+      `   Response: ${responseText.substring(0, LOG_RESPONSE_MAX_LENGTH)}...`
     );
 
-    // Log individual URL results for debugging
-    if (parseResult.successfulUrls > 0) {
-      logger.info(
-        `✅ Successfully indexed ${parseResult.successfulUrls} URLs from batch ${batchCount}`
-      );
-      // Log first successful URL as sample
-      if (batch.length > 0) {
-        logger.info(`   Sample successful URL: ${batch[0]}`);
-      }
-    }
-    if (parseResult.hasErrors) {
-      const failedCount = batch.length - parseResult.successfulUrls;
-      logger.warn(
-        `❌ Failed to index ${failedCount} URLs from batch ${batchCount}`
-      );
-      // Log failed URLs if any
-      if (parseResult.successfulUrls < batch.length) {
-        const failedUrls = batch.slice(parseResult.successfulUrls);
-        logger.warn(
-          `   Failed URLs: ${failedUrls.slice(0, MAX_FAILED_URLS_TO_LOG).join(", ")}${failedUrls.length > MAX_FAILED_URLS_TO_LOG ? "..." : ""}`
-        );
-      }
+    if (status === HTTP_STATUS_CODE_TOO_MANY_REQUESTS) {
+      logger.error("   RATE LIMIT EXCEEDED - Stopping script");
+      return { success: false, shouldStop: true };
     }
 
-    if (parseResult.hasErrors) {
-      logger.warn(
-        `Batch ${batchCount} had errors: ${parseResult.errorDetails.join(", ")}`
-      );
-
-      // Stop if we hit rate limits in individual responses
-      if (
-        parseResult.errorDetails.some(
-          (error) =>
-            error.includes(HTTP_STATUS_CODE_TOO_MANY_REQUESTS.toString()) ||
-            error.includes("Rate limit")
-        )
-      ) {
-        logger.error(
-          "❌ RATE LIMIT DETECTED IN BATCH RESPONSES - Stopping script"
-        );
-        return { successfulUrls: [], shouldStop: true };
-      }
+    if (
+      status === HTTP_STATUS_CODE_UNAUTHORIZED ||
+      status === HTTP_STATUS_CODE_FORBIDDEN
+    ) {
+      logger.error("   AUTHENTICATION/PERMISSION ERROR - Stopping script");
+      return { success: false, shouldStop: true };
     }
 
-    // Only return URLs that were actually successful
-    const successfulUrls =
-      parseResult.successfulUrls > 0
-        ? batch.slice(0, parseResult.successfulUrls)
-        : [];
-
-    if (successfulUrls.length > 0) {
-      logger.success(
-        `Batch ${batchCount} completed (${successfulUrls.length} URLs successfully indexed)`
-      );
-    } else {
-      logger.warn(`Batch ${batchCount} completed with no successful indexing`);
+    if (
+      responseText.toLowerCase().includes("quota") ||
+      responseText.toLowerCase().includes("limit exceeded")
+    ) {
+      logger.error("   API QUOTA EXCEEDED - Stopping script");
+      return { success: false, shouldStop: true };
     }
 
-    return { successfulUrls, shouldStop: false };
+    return { success: false, shouldStop: false };
   } catch (error) {
-    logger.error(`Network error in batch ${batchCount}: ${error}`);
-    return { successfulUrls: [], shouldStop: false };
+    logger.error(`   Network error submitting ${url}: ${error}`);
+    return { success: false, shouldStop: false };
   }
 }
 
@@ -420,81 +261,63 @@ async function submitUrlsToGoogle(
     return [];
   }
 
-  // Split URLs into batches
-  const batchSize = BATCH_SIZE;
-  const batches: string[][] = [];
-  for (let i = 0; i < urls.length; i += batchSize) {
-    batches.push(urls.slice(i, i + batchSize));
-  }
-
-  logger.info(`Submitting ${urls.length} URLs to Google Indexing API...`);
-  logger.info(`Processing ${batches.length} batches of ${batchSize} URLs each`);
+  logger.info(
+    `Submitting ${urls.length} URLs to Google Indexing API individually...`
+  );
 
   const successfullySubmitted: string[] = [];
-  const totalBatches = batches.length;
   let shouldStop = false;
   let currentDelay = RATE_LIMIT_DELAY;
 
-  // Process batches sequentially to respect rate limits
-  for (let index = 0; index < batches.length; index++) {
+  for (let index = 0; index < urls.length; index++) {
     if (shouldStop) {
-      logger.warn(`Stopping at batch ${index + 1} due to API errors`);
+      logger.warn(`Stopping at URL ${index + 1} due to API errors.`);
       break;
     }
 
-    const batch = batches[index];
+    const url = urls[index];
 
     try {
-      const batchResult = await submitBatchToGoogle(
-        batch,
+      const result = await submitUrlToGoogle(
+        url,
         accessToken,
         index + 1,
-        totalBatches
+        urls.length
       );
 
-      // Check if we should stop
-      if (batchResult.shouldStop) {
+      if (result.shouldStop) {
         shouldStop = true;
-        logger.error("Stopping submission process due to API errors");
         break;
       }
 
-      // Add only successfully submitted URLs
-      if (batchResult.successfulUrls.length > 0) {
-        successfullySubmitted.push(...batchResult.successfulUrls);
+      if (result.success) {
+        successfullySubmitted.push(url);
         logger.info(
-          `Total successfully submitted so far: ${successfullySubmitted.length}`
+          `📈 TOTAL INDEXED SO FAR: ${successfullySubmitted.length} URLs`
         );
-
-        // Reset delay on successful batch
-        currentDelay = RATE_LIMIT_DELAY;
-      } else if (batchResult.successfulUrls.length === 0) {
-        // Increase delay if no URLs were successful (likely hitting rate limits)
+        currentDelay = RATE_LIMIT_DELAY; // Reset delay on success
+      } else {
+        // Increase delay on failure
         currentDelay = Math.min(
           currentDelay * BACKOFF_MULTIPLIER,
           MAX_BACKOFF_DELAY
         );
-        logger.warn(
-          `No URLs successful in batch ${index + 1}, increasing delay to ${currentDelay}ms`
-        );
+        logger.warn(`⏳ Increasing delay to ${currentDelay}ms due to failure`);
       }
 
-      // Rate limiting delay between batches (but not after the last batch or if stopping)
-      if (index < totalBatches - 1 && !shouldStop) {
-        logger.info(`Waiting ${currentDelay}ms before next batch...`);
+      if (index < urls.length - 1 && !shouldStop) {
+        logger.info(`⏱️  Waiting ${currentDelay}ms before next request...`);
+        logger.info(`${"═".repeat(60)}`);
         await new Promise((resolve) => setTimeout(resolve, currentDelay));
       }
     } catch (error) {
-      logger.error(`Error submitting batch ${index + 1}: ${error}`);
-
-      // Stop on critical network errors
+      logger.error(`Error submitting URL ${index + 1} (${url}): ${error}`);
       if (
         error?.toString().includes("fetch failed") ||
         error?.toString().includes("network")
       ) {
         logger.error("Network error detected - stopping script");
         shouldStop = true;
-        break;
       }
     }
   }
@@ -519,7 +342,6 @@ async function runGoogleIndexing(): Promise<void> {
 
     logger.stats("Google service account", "Authenticated successfully");
     logger.stats("Website URL", host);
-    logger.stats("Batch size", BATCH_SIZE);
     logger.stats("Rate limit delay", `${RATE_LIMIT_DELAY}ms`);
 
     // Get unsubmitted URLs
@@ -551,20 +373,27 @@ async function runGoogleIndexing(): Promise<void> {
       logger.warn("No URLs were successfully submitted to Google Indexing API");
     }
 
-    // Final summary
-    logger.info(`Total URLs processed: ${urls.length}`);
-    logger.info(`Successfully submitted: ${successfullySubmitted.length}`);
+    // Final summary with clear explanation
+    logger.info("📊 FINAL RESULTS:");
+    logger.info(`   📤 Total URLs submitted: ${urls.length}`);
+    logger.info(
+      `   ✅ URLs actually indexed by Google: ${successfullySubmitted.length}`
+    );
+    logger.info(
+      `   ❌ URLs rejected by Google: ${urls.length - successfullySubmitted.length}`
+    );
 
     if (urls.length > 0) {
       const successRate = Math.round(
         (successfullySubmitted.length / urls.length) * PERCENTAGE_MULTIPLIER
       );
-      logger.info(`Success rate: ${successRate}%`);
+      logger.info(`   📈 Success rate: ${successRate}%`);
 
-      // Warn if success rate is low
+      // Explain what happened
       if (successRate < SUCCESS_RATE_THRESHOLD) {
+        logger.warn("   ⚠️  Low success rate indicates Google rate limiting");
         logger.warn(
-          "⚠️  Low success rate detected. Check for API quota limits or authentication issues."
+          "   💡 This is normal for large batches - Google limits indexing requests"
         );
       }
     }
