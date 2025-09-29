@@ -1,8 +1,13 @@
+import { dedentString } from "@repo/ai/lib/utils";
 import { nakafaCalculator } from "@repo/ai/prompt/calculator";
-import { calculatorInputSchema } from "@repo/ai/schema/tools";
+import {
+  type CalculatorOutput,
+  calculatorInputSchema,
+} from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as math from "mathjs";
+import * as z from "zod";
 
 type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;
@@ -13,6 +18,7 @@ export const createCalculator = ({ writer }: Params) =>
     name: "calculator",
     description: nakafaCalculator(),
     inputSchema: calculatorInputSchema,
+    outputSchema: z.string(),
     execute: ({ expression }, { toolCallId }) => {
       const node = math.parse(expression);
       const original = {
@@ -61,9 +67,22 @@ export const createCalculator = ({ writer }: Params) =>
         });
       }
 
-      return {
-        original,
-        result,
-      };
+      return createOutput({ output: { original, result } });
     },
   });
+
+function createOutput({ output }: { output: CalculatorOutput }): string {
+  return dedentString(`
+    <calculatorOutput>
+      <original>
+        <expression>${output.original.expression}</expression>
+        <latex>${output.original.latex}</latex>
+      </original>
+      <result>
+        <expression>${output.result.expression}</expression>
+        <latex>${output.result.latex}</latex>
+        <value>${output.result.value}</value>
+      </result>
+    </calculatorOutput>
+  `);
+}

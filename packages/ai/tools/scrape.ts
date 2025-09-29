@@ -1,9 +1,11 @@
 import { selectRelevantContent } from "@repo/ai/lib/content-selection";
 import { firecrawlApp } from "@repo/ai/lib/firecrawl";
+import { dedentString } from "@repo/ai/lib/utils";
 import { nakafaScrape } from "@repo/ai/prompt/scrape";
-import { scrapeInputSchema } from "@repo/ai/schema/tools";
+import { type ScrapeOutput, scrapeInputSchema } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
+import * as z from "zod";
 
 type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;
@@ -14,6 +16,7 @@ export const createScrape = ({ writer }: Params) => {
     name: "scrape",
     description: nakafaScrape(),
     inputSchema: scrapeInputSchema,
+    outputSchema: z.string(),
     execute: async ({ urlToCrawl }, { toolCallId }) => {
       const url = urlToCrawl;
 
@@ -45,7 +48,9 @@ export const createScrape = ({ writer }: Params) => {
             },
           });
 
-          return { data: { url, content: "" }, error: "No content found." };
+          return createOutput({
+            output: { data: { url, content: "" }, error: "No content found." },
+          });
         }
 
         // Use smart content selection to truncate long content while preserving readability
@@ -60,13 +65,15 @@ export const createScrape = ({ writer }: Params) => {
           data: { url, status: "done", content: processedContent },
         });
 
-        return {
-          data: {
-            url,
-            content: processedContent,
+        return createOutput({
+          output: {
+            data: {
+              url,
+              content: processedContent,
+            },
+            error: undefined,
           },
-          error: undefined,
-        };
+        });
       } catch (error) {
         const errorMessage = `Failed to crawl: ${error}`;
         writer.write({
@@ -80,11 +87,22 @@ export const createScrape = ({ writer }: Params) => {
           },
         });
 
-        return {
-          data: { url, content: "" },
-          error: errorMessage,
-        };
+        return createOutput({
+          output: { data: { url, content: "" }, error: errorMessage },
+        });
       }
     },
   });
 };
+
+function createOutput({ output }: { output: ScrapeOutput }): string {
+  return dedentString(`
+    <scrapeOutput>
+      <data>
+        <url>${output.data.url}</url>
+        <content>${output.data.content}</content>
+      </data>
+      <error>${output.error ?? ""}</error>
+    </scrapeOutput>
+  `);
+}

@@ -1,9 +1,13 @@
-import { buildContentSlug } from "@repo/ai/lib/utils";
+import { buildContentSlug, dedentString } from "@repo/ai/lib/utils";
 import { nakafaSubjects } from "@repo/ai/prompt/subjects";
-import { getSubjectsInputSchema } from "@repo/ai/schema/tools";
+import {
+  type GetSubjectsOutput,
+  getSubjectsInputSchema,
+} from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/connection/routes";
 import { tool, type UIMessageStreamWriter } from "ai";
+import * as z from "zod";
 
 type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;
@@ -14,6 +18,7 @@ export const createGetSubjects = ({ writer }: Params) =>
     name: "getSubjects",
     description: nakafaSubjects(),
     inputSchema: getSubjectsInputSchema,
+    outputSchema: z.string(),
     execute: async ({ locale, category, grade, material }, { toolCallId }) => {
       const slug = buildContentSlug({
         locale,
@@ -48,10 +53,7 @@ export const createGetSubjects = ({ writer }: Params) =>
           },
         });
 
-        return {
-          baseUrl,
-          subjects: [],
-        };
+        return createOutput({ output: { baseUrl, subjects: [] } });
       }
 
       const subjects = data.map((item) => ({
@@ -71,9 +73,28 @@ export const createGetSubjects = ({ writer }: Params) =>
         },
       });
 
-      return {
-        baseUrl,
-        subjects,
-      };
+      return createOutput({ output: { baseUrl, subjects } });
     },
   });
+
+function createOutput({ output }: { output: GetSubjectsOutput }): string {
+  return dedentString(`
+    <getSubjectsOutput>
+      <baseUrl>${output.baseUrl}</baseUrl>
+      <subjects>
+        ${output.subjects
+          .map(
+            (subject, index) => `
+          <subject index="${index}">
+            <title>${subject.title}</title>
+            <url>${subject.url}</url>
+            <slug>${subject.slug}</slug>
+            <locale>${subject.locale}</locale>
+          </subject>
+        `
+          )
+          .join("")}
+      </subjects>
+    </getSubjectsOutput>
+  `);
+}

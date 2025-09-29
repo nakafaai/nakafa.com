@@ -1,10 +1,14 @@
 import { selectRelevantContent } from "@repo/ai/lib/content-selection";
 import { firecrawlApp } from "@repo/ai/lib/firecrawl";
-import { extractDomain } from "@repo/ai/lib/utils";
+import { dedentString, extractDomain } from "@repo/ai/lib/utils";
 import { nakafaWebSearch } from "@repo/ai/prompt/web-search";
-import { webSearchInputSchema } from "@repo/ai/schema/tools";
+import {
+  type WebSearchOutput,
+  webSearchInputSchema,
+} from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
+import * as z from "zod";
 
 type Params = {
   writer: UIMessageStreamWriter<MyUIMessage>;
@@ -15,6 +19,7 @@ export const createWebSearch = ({ writer }: Params) => {
     name: "webSearch",
     description: nakafaWebSearch(),
     inputSchema: webSearchInputSchema,
+    outputSchema: z.string(),
     execute: async ({ query }, { toolCallId }) => {
       writer.write({
         id: toolCallId,
@@ -102,7 +107,9 @@ export const createWebSearch = ({ writer }: Params) => {
           data: { query, status: "done", sources: sourcesWithCitation },
         });
 
-        return { sources: sourcesWithCitation, error: undefined };
+        return createOutput({
+          output: { sources: sourcesWithCitation, error: undefined },
+        });
       } catch (error) {
         writer.write({
           id: toolCallId,
@@ -115,11 +122,33 @@ export const createWebSearch = ({ writer }: Params) => {
           },
         });
 
-        return {
-          sources: [],
-          error: `Failed to search: ${error}`,
-        };
+        return createOutput({
+          output: { sources: [], error: `Failed to search: ${error}` },
+        });
       }
     },
   });
 };
+
+function createOutput({ output }: { output: WebSearchOutput }): string {
+  return dedentString(`
+    <webSearchOutput>
+      <sources>
+        ${output.sources
+          .map(
+            (source, index) => `
+          <source index="${index}">
+            <title>${source.title}</title>
+            <description>${source.description}</description>
+            <url>${source.url}</url>
+            <content>${source.content}</content>
+            <citation>${source.citation}</citation>
+          </source>
+        `
+          )
+          .join("")}
+      </sources>
+      <error>${output.error ?? ""}</error>
+    </webSearchOutput>
+  `);
+}

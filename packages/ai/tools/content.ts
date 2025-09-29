@@ -1,9 +1,13 @@
-import { cleanSlug } from "@repo/ai/lib/utils";
+import { cleanSlug, dedentString } from "@repo/ai/lib/utils";
 import { nakafaContent } from "@repo/ai/prompt/content";
-import { getContentInputSchema } from "@repo/ai/schema/tools";
+import {
+  type GetContentOutput,
+  getContentInputSchema,
+} from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/connection/routes";
 import { tool, type UIMessageStreamWriter } from "ai";
+import * as z from "zod";
 
 const QURAN_SLUG_PARTS_COUNT = 2;
 
@@ -16,6 +20,7 @@ export const createGetContent = ({ writer }: Params) => {
     name: "getContent",
     description: nakafaContent(),
     inputSchema: getContentInputSchema,
+    outputSchema: z.string(),
     execute: async ({ slug, locale }, { toolCallId }) => {
       let cleanedSlug = cleanSlug(slug);
 
@@ -61,10 +66,7 @@ export const createGetContent = ({ writer }: Params) => {
             },
           });
 
-          return {
-            url,
-            content: "",
-          };
+          return createOutput({ output: { url, content: "" } });
         }
 
         // quran/surah
@@ -89,10 +91,9 @@ export const createGetContent = ({ writer }: Params) => {
             },
           });
 
-          return {
-            url,
-            content: surahError.message,
-          };
+          return createOutput({
+            output: { url, content: surahError.message },
+          });
         }
 
         if (!surahData) {
@@ -112,10 +113,7 @@ export const createGetContent = ({ writer }: Params) => {
             },
           });
 
-          return {
-            url,
-            content: "",
-          };
+          return createOutput({ output: { url, content: "" } });
         }
 
         writer.write({
@@ -131,10 +129,9 @@ export const createGetContent = ({ writer }: Params) => {
           },
         });
 
-        return {
-          url,
-          content: JSON.stringify(surahData, null, 2),
-        };
+        return createOutput({
+          output: { url, content: JSON.stringify(surahData, null, 2) },
+        });
       }
 
       const { data, error } = await api.contents.getContent({
@@ -155,10 +152,7 @@ export const createGetContent = ({ writer }: Params) => {
           },
         });
 
-        return {
-          url,
-          content: error.message,
-        };
+        return createOutput({ output: { url, content: error.message } });
       }
 
       if (!data) {
@@ -174,10 +168,7 @@ export const createGetContent = ({ writer }: Params) => {
           },
         });
 
-        return {
-          url,
-          content: "",
-        };
+        return createOutput({ output: { url, content: "" } });
       }
 
       writer.write({
@@ -192,10 +183,16 @@ export const createGetContent = ({ writer }: Params) => {
         },
       });
 
-      return {
-        url,
-        content: data.raw,
-      };
+      return createOutput({ output: { url, content: data.raw } });
     },
   });
 };
+
+function createOutput({ output }: { output: GetContentOutput }): string {
+  return dedentString(`
+    <getContentOutput>
+      <url>${output.url}</url>
+      <content>${output.content}</content>
+    </getContentOutput>
+  `);
+}
