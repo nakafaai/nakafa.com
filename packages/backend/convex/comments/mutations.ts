@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation } from "../_generated/server";
 import { safeGetUser } from "../auth";
 
-const MAX_DEPTH = 3;
+const MAX_DEPTH = 2;
 
 export const addComment = mutation({
   args: {
@@ -18,7 +18,7 @@ export const addComment = mutation({
       throw new Error("You must be logged in to comment.");
     }
 
-    let depth = 1;
+    let depth = 0;
 
     if (args.parentId) {
       const parentComment = await ctx.db.get(args.parentId);

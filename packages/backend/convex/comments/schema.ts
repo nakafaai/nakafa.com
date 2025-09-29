@@ -8,7 +8,7 @@ const tables = {
     text: v.string(),
     parentId: v.optional(v.id("comments")),
     // The depth of the comment in the thread.
-    // A top-level comment has depth 1. A reply has depth parent.depth + 1.
+    // A top-level comment has depth 0. A reply has depth parent.depth + 1.
     // This is capped at 3 to keep threads from getting too nested.
     depth: v.number(),
     mentions: v.optional(v.array(v.id("user"))),
