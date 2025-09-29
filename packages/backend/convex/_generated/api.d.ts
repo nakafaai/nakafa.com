@@ -14,6 +14,8 @@ import type * as betterAuth__generated_server from "../betterAuth/_generated/ser
 import type * as betterAuth_adapter from "../betterAuth/adapter.js";
 import type * as betterAuth_auth from "../betterAuth/auth.js";
 import type * as betterAuth_generatedSchema from "../betterAuth/generatedSchema.js";
+import type * as comments_mutations from "../comments/mutations.js";
+import type * as comments_queries from "../comments/queries.js";
 import type * as http from "../http.js";
 import type * as utils_helper from "../utils/helper.js";
 
@@ -38,6 +40,8 @@ declare const fullApi: ApiFromModules<{
   "betterAuth/adapter": typeof betterAuth_adapter;
   "betterAuth/auth": typeof betterAuth_auth;
   "betterAuth/generatedSchema": typeof betterAuth_generatedSchema;
+  "comments/mutations": typeof comments_mutations;
+  "comments/queries": typeof comments_queries;
   http: typeof http;
   "utils/helper": typeof utils_helper;
 }>;

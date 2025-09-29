@@ -59,6 +59,9 @@ export const createAuth = (
         allowDifferentEmails: true,
       },
     },
+    emailAndPassword: {
+      enabled: true,
+    },
     socialProviders: {
       google: {
         clientId: process.env.AUTH_GOOGLE_ID as string,
@@ -87,8 +90,6 @@ export const createAuth = (
 
 export const safeGetUser = (ctx: QueryCtx) =>
   authComponent.safeGetAuthUser(ctx);
-
-export const getUser = (ctx: QueryCtx) => authComponent.getAuthUser(ctx);
 
 export const getCurrentUser = query({
   args: {},
