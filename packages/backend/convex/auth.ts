@@ -68,6 +68,10 @@ export const createAuth = (
         clientSecret: process.env.AUTH_GOOGLE_SECRET as string,
         accessType: "offline",
         prompt: "select_account consent",
+        mapProfileToUser: (profile) => ({
+          username: profile.email,
+          displayUsername: profile.email.split("@")[0],
+        }),
       },
     },
     user: {
