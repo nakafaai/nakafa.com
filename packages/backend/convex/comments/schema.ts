@@ -12,9 +12,20 @@ const tables = {
     // This is capped at 3 to keep threads from getting too nested.
     depth: v.number(),
     mentions: v.optional(v.array(v.id("user"))),
+    upvoteCount: v.number(),
+    downvoteCount: v.number(),
+    score: v.number(),
   })
     .index("contentSlug", ["contentSlug"])
     .index("parentId", ["parentId"]),
+  commentVotes: defineTable({
+    commentId: v.id("comments"),
+    userId: v.id("user"),
+    vote: v.union(v.literal(-1), v.literal(1)),
+  })
+    .index("commentId", ["commentId"])
+    .index("userId", ["userId"])
+    .index("commentId_userId", ["commentId", "userId"]),
 };
 
 export default tables;
