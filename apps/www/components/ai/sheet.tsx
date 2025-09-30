@@ -40,7 +40,7 @@ import { AIChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
 
-const MIN_WIDTH = 448;
+const MIN_WIDTH = 384;
 const MAX_WIDTH = 672;
 
 export function AiSheet() {

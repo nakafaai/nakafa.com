@@ -2,8 +2,9 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
 import type { ReactNode } from "react";
 
-export function Anchor({ href, children, ...props }: AnchorProps) {
+export function Anchor({ href, children, popover, ...props }: AnchorProps) {
   const isNakafa = href?.includes("nakafa.com");
+  const anchorOnlyProps = popover === undefined ? {} : { popover };
 
   if (href?.startsWith("/")) {
     return (
@@ -24,6 +25,7 @@ export function Anchor({ href, children, ...props }: AnchorProps) {
         className="h-auto p-0 font-normal text-primary underline underline-offset-4"
         href={href}
         title={href}
+        {...anchorOnlyProps}
         {...props}
       >
         {children}
@@ -38,6 +40,7 @@ export function Anchor({ href, children, ...props }: AnchorProps) {
       rel="noopener noreferrer"
       target={isNakafa ? undefined : "_blank"}
       title={href}
+      {...anchorOnlyProps}
       {...props}
     >
       {truncate({ children })}
