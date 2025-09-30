@@ -53,4 +53,12 @@ export const contributors: Contributor[] = [
       linkedin: "https://www.linkedin.com/in/achmad-miftahul-ulum-84b92a237/",
     },
   },
+  {
+    name: "Asfira Chisara Hasan",
+    username: "asfira",
+    official: false,
+    social: {
+      linkedin: "https://www.linkedin.com/in/asfira-chisara-hasan-38a6aa24a/",
+    },
+  },
 ];
