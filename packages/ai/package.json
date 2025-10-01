@@ -10,7 +10,7 @@
     "@ai-sdk/google-vertex": "^3.0.33",
     "@ai-sdk/openai": "^2.0.42",
     "@ai-sdk/react": "^2.0.59",
-    "@mendable/firecrawl-js": "^4.3.6",
+    "@mendable/firecrawl-js": "^4.3.7",
     "@t3-oss/env-nextjs": "^0.13.8",
     "ai": "^5.0.59",
     "dedent": "^1.7.0",
@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.6.0",
+    "@types/node": "24.6.1",
     "@types/react": "19.1.16",
     "@types/react-dom": "^19.1.9"
   }
