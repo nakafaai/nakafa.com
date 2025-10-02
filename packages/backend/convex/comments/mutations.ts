@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation } from "../_generated/server";
 import { safeGetUser } from "../auth";
+import { cleanSlug } from "../utils/helper";
 
 const MAX_DEPTH = 2;
 
@@ -31,7 +32,7 @@ export const addComment = mutation({
     }
 
     const newComment = {
-      contentSlug: args.contentSlug,
+      contentSlug: cleanSlug(args.contentSlug),
       userId: user._id,
       text: args.text,
       parentId: args.parentId,
