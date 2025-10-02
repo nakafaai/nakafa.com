@@ -7,7 +7,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/google-vertex": "^3.0.33",
+    "@ai-sdk/google-vertex": "^3.0.34",
     "@ai-sdk/openai": "^2.0.42",
     "@ai-sdk/react": "^2.0.59",
     "@mendable/firecrawl-js": "^4.3.7",
@@ -19,8 +19,8 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.6.1",
-    "@types/react": "19.1.16",
-    "@types/react-dom": "^19.1.9"
+    "@types/node": "24.6.2",
+    "@types/react": "19.2.0",
+    "@types/react-dom": "^19.2.0"
   }
 }

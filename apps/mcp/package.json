@@ -16,14 +16,14 @@
     "@repo/connection": "workspace:*",
     "mcp-handler": "1.0.2",
     "next": "15.5.4",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "redis": "^5.8.2"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "redis": "^5.8.3"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.6.1",
-    "@types/react": "19.1.16",
+    "@types/node": "24.6.2",
+    "@types/react": "19.2.0",
     "typescript": "^5.9.3"
   }
 }

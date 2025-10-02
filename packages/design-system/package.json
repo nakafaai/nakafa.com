@@ -34,7 +34,7 @@
     "motion": "^12.23.22",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.4.3",
-    "react": "19.1.1",
+    "react": "19.2.0",
     "react-day-picker": "^8.10.1",
     "react-error-boundary": "^6.0.0",
     "react-hook-form": "^7.63.0",
@@ -61,14 +61,14 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@tailwindcss/postcss": "^4.1.13",
+    "@tailwindcss/postcss": "^4.1.14",
     "@tailwindcss/typography": "^0.5.19",
-    "@types/node": "^24.6.1",
-    "@types/react": "^19.1.16",
+    "@types/node": "^24.6.2",
+    "@types/react": "^19.2.0",
     "@types/react-katex": "^3.0.4",
     "@types/react-syntax-highlighter": "^15.5.13",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.13",
+    "tailwindcss": "^4.1.14",
     "typescript": "^5.9.3"
   }
 }
