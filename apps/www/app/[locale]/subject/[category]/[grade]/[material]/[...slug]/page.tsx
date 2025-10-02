@@ -32,7 +32,6 @@ import {
   LayoutMaterialPagination,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
-import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
@@ -215,19 +214,16 @@ export default async function Page({ params }: Props) {
               {headings.length === 0 ? <ComingSoon /> : <Content />}
             </LayoutMaterialMain>
             <LayoutMaterialPagination pagination={pagination} />
-            <LayoutMaterialFooter>
-              <RefContent
-                githubUrl={getGithubUrl({
-                  path: `/packages/contents${FilePath}`,
-                })}
-              />
-            </LayoutMaterialFooter>
+            <LayoutMaterialFooter />
           </LayoutMaterialContent>
           <LayoutMaterialToc
             chapters={{
               label: tCommon("on-this-page"),
               data: headings,
             }}
+            githubUrl={getGithubUrl({
+              path: `/packages/contents${FilePath}`,
+            })}
             header={{
               title: metadata.title,
               href: FilePath,

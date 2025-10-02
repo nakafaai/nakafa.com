@@ -50,7 +50,7 @@ export function LayoutMaterialFooter({
   children,
   className,
 }: {
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
 }) {
   return <FooterContent className={cn(className)}>{children}</FooterContent>;
@@ -59,15 +59,19 @@ export function LayoutMaterialFooter({
 export function LayoutMaterialToc({
   chapters,
   header,
+  githubUrl,
+  references,
 }: {
   chapters: {
     label: string;
     data: ParsedHeading[];
   };
   header?: ComponentProps<typeof SidebarRight>["header"];
+  githubUrl?: ComponentProps<typeof SidebarRight>["githubUrl"];
+  references?: ComponentProps<typeof SidebarRight>["references"];
 }) {
   return (
-    <SidebarRight header={header}>
+    <SidebarRight githubUrl={githubUrl} header={header} references={references}>
       <SidebarTree data={chapters.data} title={chapters.label} />
     </SidebarRight>
   );

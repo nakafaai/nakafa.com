@@ -11,13 +11,15 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { ComingSoon } from "@/components/shared/coming-soon";
 import {
-  LayoutArticle,
-  LayoutArticleContent,
-  LayoutArticleFooter,
-  LayoutArticleHeader,
-} from "@/components/shared/layout-article";
-import { RefContent } from "@/components/shared/ref-content";
+  LayoutMaterial,
+  LayoutMaterialContent,
+  LayoutMaterialFooter,
+  LayoutMaterialHeader,
+  LayoutMaterialMain,
+  LayoutMaterialToc,
+} from "@/components/shared/layout-material";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
@@ -102,7 +104,10 @@ export function generateStaticParams() {
 
 export default async function Page({ params }: Props) {
   const { locale, category, slug } = await params;
-  const t = await getTranslations("Articles");
+  const [tCommon, tArticles] = await Promise.all([
+    getTranslations("Common"),
+    getTranslations("Articles"),
+  ]);
 
   // Enable static rendering
   setRequestLocale(locale);
@@ -157,35 +162,45 @@ export default async function Page({ params }: Props) {
           }))}
           datePublished={formatISO(metadata.date)}
           description={metadata.description ?? ""}
-          educationalLevel={t(category)}
+          educationalLevel={tArticles(category)}
           name={metadata.title}
         />
-        <LayoutArticle onThisPage={headings}>
-          <LayoutArticleHeader
-            authors={metadata.authors}
-            category={{
-              icon: getCategoryIcon(category),
-              name: t(category),
-            }}
-            date={metadata.date}
-            description={metadata.description}
-            showAskAi
-            slug={`/${locale}${FilePath}`}
-            title={metadata.title}
-          />
-          <LayoutArticleContent>
-            <Content />
-          </LayoutArticleContent>
-          <LayoutArticleFooter>
-            <RefContent
-              githubUrl={getGithubUrl({
-                path: `/packages/contents${FilePath}`,
-              })}
-              references={references}
+        <LayoutMaterial>
+          <LayoutMaterialContent>
+            <LayoutMaterialHeader
+              icon={getCategoryIcon(category)}
+              link={{
+                href: `/articles/${category}`,
+                label: tArticles(category),
+              }}
+              showAskAi
+              slug={`/${locale}${FilePath}`}
               title={metadata.title}
             />
-          </LayoutArticleFooter>
-        </LayoutArticle>
+            <LayoutMaterialMain>
+              {headings.length === 0 ? <ComingSoon /> : <Content />}
+            </LayoutMaterialMain>
+            <LayoutMaterialFooter />
+          </LayoutMaterialContent>
+          <LayoutMaterialToc
+            chapters={{
+              label: tCommon("on-this-page"),
+              data: headings,
+            }}
+            githubUrl={getGithubUrl({
+              path: `/packages/contents${FilePath}`,
+            })}
+            header={{
+              title: metadata.title,
+              href: FilePath,
+              description: metadata.description,
+            }}
+            references={{
+              title: metadata.title,
+              data: references,
+            }}
+          />
+        </LayoutMaterial>
       </>
     );
   } catch {

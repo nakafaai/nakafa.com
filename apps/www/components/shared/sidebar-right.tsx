@@ -1,3 +1,4 @@
+import type { Reference } from "@repo/contents/_types/content";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   Sidebar,
@@ -17,6 +18,8 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { MenuIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
+import { GithubButton } from "../sidebar/github-button";
+import { ReferenceButton } from "../sidebar/reference-button";
 import { ReportButton } from "../sidebar/report-button";
 import { ShareButton } from "../sidebar/share-button";
 
@@ -26,6 +29,11 @@ export type SidebarRightProps = {
     title: string;
     href: string;
     description?: string;
+  };
+  githubUrl?: string;
+  references?: {
+    title: string;
+    data: Reference[];
   };
 } & ComponentProps<typeof Sidebar>;
 
@@ -73,11 +81,21 @@ function SidebarRightHeader({
   );
 }
 
-function SidebarRightFooter() {
+function SidebarRightFooter({
+  references,
+  githubUrl,
+}: Pick<SidebarRightProps, "references" | "githubUrl">) {
   return (
     <SidebarFooter className="border-t">
       <SidebarMenu>
+        {references && (
+          <ReferenceButton
+            references={references.data}
+            title={references.title}
+          />
+        )}
         <ReportButton />
+        {githubUrl && <GithubButton githubUrl={githubUrl} />}
         <ShareButton />
       </SidebarMenu>
     </SidebarFooter>
@@ -87,6 +105,8 @@ function SidebarRightFooter() {
 export function SidebarRight({
   children,
   header,
+  references,
+  githubUrl,
   ...props
 }: SidebarRightProps) {
   return (
@@ -113,7 +133,7 @@ export function SidebarRight({
         >
           <SidebarRightHeader header={header} />
           <SidebarContent>{children}</SidebarContent>
-          <SidebarRightFooter />
+          <SidebarRightFooter githubUrl={githubUrl} references={references} />
         </Sidebar>
       </SidebarProvider>
     </div>
