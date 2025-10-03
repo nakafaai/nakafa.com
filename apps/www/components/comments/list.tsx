@@ -51,7 +51,7 @@ export function CommentsList({ slug }: Props) {
                   {getInitialName(userName)}
                 </AvatarFallback>
               </Avatar>
-              <div className="grid gap-2">
+              <div className="grid gap-1">
                 <div className="grid">
                   <span className="truncate font-medium text-xs">
                     {userName}
