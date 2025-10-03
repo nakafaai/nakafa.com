@@ -98,6 +98,7 @@ function CommentAction({ comment }: { comment: Comment }) {
   return (
     <div className="-translate-x-2 flex items-center">
       <Button
+        className="group"
         disabled={isPending}
         onClick={() => handleVote(1)}
         size="sm"
@@ -105,11 +106,12 @@ function CommentAction({ comment }: { comment: Comment }) {
       >
         <ThumbsUpIcon />
         <NumberFormat
-          className="font-mono text-muted-foreground text-xs tracking-tight"
+          className="font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground"
           value={comment.upvoteCount}
         />
       </Button>
       <Button
+        className="group"
         disabled={isPending}
         onClick={() => handleVote(-1)}
         size="sm"
@@ -117,7 +119,7 @@ function CommentAction({ comment }: { comment: Comment }) {
       >
         <ThumbsDownIcon />
         <NumberFormat
-          className="font-mono text-muted-foreground text-xs tracking-tight"
+          className="font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground"
           value={comment.downvoteCount}
         />
       </Button>
