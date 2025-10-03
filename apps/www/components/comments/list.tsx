@@ -37,14 +37,14 @@ export function CommentsList({ slug }: Props) {
   }
 
   return (
-    <div className="divide-y rounded-xl border shadow-sm">
+    <div className="flex flex-col">
       {results.map((comment) => {
         const userName = comment.user?.name ?? t("anonymous");
         const userImage = comment.user?.image ?? "";
 
         return (
-          <div className="p-3" key={comment._id}>
-            <div className="flex items-start gap-4 text-left">
+          <div className="py-3 first:pt-0 last:pb-0" key={comment._id}>
+            <div className="flex items-start gap-3 text-left">
               <Avatar className="size-10 rounded-full">
                 <AvatarImage alt={userName} src={userImage} />
                 <AvatarFallback className="rounded-lg">
@@ -53,7 +53,7 @@ export function CommentsList({ slug }: Props) {
               </Avatar>
               <div className="grid gap-1">
                 <div className="grid gap-0.5">
-                  <span className="truncate font-medium text-xs">
+                  <span className="truncate font-medium text-sm">
                     {userName}
                   </span>
                   <Response id={comment._id}>{comment.text}</Response>
@@ -101,12 +101,16 @@ function CommentAction({ comment }: { comment: Comment }) {
         className="group"
         disabled={isPending}
         onClick={() => handleVote(1)}
-        size="sm"
+        size={comment.upvoteCount === 0 ? "icon-sm" : "sm"}
         variant="ghost"
       >
         <ThumbsUpIcon />
         <NumberFormat
-          className="font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground"
+          className={cn(
+            "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
+            comment.upvoteCount === 0 && "hidden"
+          )}
+          isolate={true}
           value={comment.upvoteCount}
         />
       </Button>
@@ -114,12 +118,16 @@ function CommentAction({ comment }: { comment: Comment }) {
         className="group"
         disabled={isPending}
         onClick={() => handleVote(-1)}
-        size="sm"
+        size={comment.downvoteCount === 0 ? "icon-sm" : "sm"}
         variant="ghost"
       >
         <ThumbsDownIcon />
         <NumberFormat
-          className="font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground"
+          className={cn(
+            "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
+            comment.downvoteCount === 0 && "hidden"
+          )}
+          isolate={true}
           value={comment.downvoteCount}
         />
       </Button>
