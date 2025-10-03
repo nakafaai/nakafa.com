@@ -111,10 +111,12 @@
     "see-on-youtube": "Lihat di YouTube",
     "subscribe": "Berlangganan",
     "comments": "Komentar",
-    "anonymous": "Anonim"
+    "anonymous": "Anonim",
+    "delete": "Hapus"
   },
   "Comments": {
-    "add-comment-placeholder": "Tambahkan komentar..."
+    "add-comment-placeholder": "Tambahkan komentar...",
+    "comment": "Komentar"
   },
   "Subject": {
     "elementary-school": "SD",

@@ -24,7 +24,7 @@ type Props = {
   slug: string;
 };
 
-export function AddComment({ slug }: Props) {
+export function CommentsAdd({ slug }: Props) {
   const t = useTranslations("Comments");
 
   const user = useQuery(api.auth.getCurrentUser);
@@ -41,8 +41,8 @@ export function AddComment({ slug }: Props) {
       return;
     }
 
-    startTransition(() => {
-      addComment({
+    startTransition(async () => {
+      await addComment({
         contentSlug: slug,
         text,
       });
@@ -67,15 +67,15 @@ export function AddComment({ slug }: Props) {
         name="text"
         placeholder={t("add-comment-placeholder")}
       />
-      <div className="flex items-center justify-between p-1">
+      <div className="flex items-center justify-between gap-4 p-1">
         <UserAvatar />
         <Button
           className="rounded-lg"
           disabled={isPending || !user}
-          size="icon"
           type="submit"
         >
           {isPending ? <SpinnerIcon /> : <SendIcon />}
+          {t("comment")}
         </Button>
       </div>
     </form>
@@ -102,14 +102,16 @@ function UserAvatar() {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Avatar className="size-8 rounded-lg">
+    <div className="flex min-w-0 items-center gap-2 px-3" title={user.name}>
+      <Avatar className="size-6 rounded-lg">
         <AvatarImage alt={user.name} src={user.image ?? ""} />
         <AvatarFallback className="rounded-lg">
           {getInitialName(user.name)}
         </AvatarFallback>
       </Avatar>
-      <p className="text-muted-foreground text-sm">{user.name}</p>
+      <p className="max-w-28 truncate text-muted-foreground text-xs sm:max-w-36">
+        {user.name}
+      </p>
     </div>
   );
 }

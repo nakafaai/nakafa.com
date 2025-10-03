@@ -114,3 +114,28 @@ export const voteOnComment = mutation({
     };
   },
 });
+
+export const deleteComment = mutation({
+  args: {
+    commentId: v.id("comments"),
+  },
+  handler: async (ctx, args) => {
+    const user = await safeGetUser(ctx);
+
+    if (!user) {
+      throw new Error("You must be logged in to delete a comment.");
+    }
+
+    const comment = await ctx.db.get(args.commentId);
+
+    if (!comment) {
+      throw new Error("Comment not found.");
+    }
+
+    if (comment.userId !== user._id) {
+      throw new Error("You can only delete your own comments.");
+    }
+
+    await ctx.db.delete(args.commentId);
+  },
+});

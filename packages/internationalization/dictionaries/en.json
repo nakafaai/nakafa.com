@@ -111,10 +111,12 @@
     "see-on-youtube": "See on YouTube",
     "subscribe": "Subscribe",
     "comments": "Comments",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "delete": "Delete"
   },
   "Comments": {
-    "add-comment-placeholder": "Add a comment..."
+    "add-comment-placeholder": "Add a comment...",
+    "comment": "Comment"
   },
   "Subject": {
     "elementary-school": "Elementary School",
