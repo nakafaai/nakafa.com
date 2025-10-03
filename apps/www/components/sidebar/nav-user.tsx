@@ -20,7 +20,10 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@repo/design-system/components/ui/sidebar";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import {
+  usePathname,
+  useRouter,
+} from "@repo/internationalization/src/navigation";
 import { useQuery } from "convex/react";
 import {
   EllipsisVerticalIcon,
@@ -38,6 +41,8 @@ const prefetchLinks = ["/settings", "/auth"] as const;
 export function NavUser() {
   const t = useTranslations("Auth");
 
+  const pathname = usePathname();
+
   const router = useRouter();
   const user = useQuery(api.auth.getCurrentUser);
 
@@ -53,7 +58,9 @@ export function NavUser() {
   if (!user) {
     return (
       <SidebarMenuItem>
-        <SidebarMenuButton onClick={() => router.push("/auth")}>
+        <SidebarMenuButton
+          onClick={() => router.push(`/auth?redirect=${pathname}`)}
+        >
           <LogInIcon />
           {t("login")}
         </SidebarMenuButton>
@@ -62,13 +69,7 @@ export function NavUser() {
   }
 
   const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.replace("/");
-        },
-      },
-    });
+    await authClient.signOut();
   };
 
   return (

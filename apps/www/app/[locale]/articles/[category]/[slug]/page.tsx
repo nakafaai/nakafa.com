@@ -11,6 +11,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Comments } from "@/components/comments";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import {
   LayoutMaterial,
@@ -180,7 +181,9 @@ export default async function Page({ params }: Props) {
             <LayoutMaterialMain>
               {headings.length === 0 ? <ComingSoon /> : <Content />}
             </LayoutMaterialMain>
-            <LayoutMaterialFooter />
+            <LayoutMaterialFooter>
+              <Comments slug={FilePath} />
+            </LayoutMaterialFooter>
           </LayoutMaterialContent>
           <LayoutMaterialToc
             chapters={{

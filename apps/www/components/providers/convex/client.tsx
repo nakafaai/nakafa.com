@@ -7,8 +7,8 @@ import { env } from "@/env";
 import { authClient } from "@/lib/auth/client";
 
 const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL, {
-  // Optionally pause queries until the user is authenticated
-  expectAuth: true,
+  // Change this for debugging
+  verbose: false,
 });
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {

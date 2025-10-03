@@ -109,7 +109,12 @@
     "open-in-t3-chat": "Buka di T3 Chat",
     "open-in-gemini": "Buka di Gemini",
     "see-on-youtube": "Lihat di YouTube",
-    "subscribe": "Berlangganan"
+    "subscribe": "Berlangganan",
+    "comments": "Komentar",
+    "anonymous": "Anonim"
+  },
+  "Comments": {
+    "add-comment-placeholder": "Tambahkan komentar..."
   },
   "Subject": {
     "elementary-school": "SD",

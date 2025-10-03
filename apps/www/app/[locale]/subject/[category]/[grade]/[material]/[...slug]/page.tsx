@@ -22,6 +22,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Comments } from "@/components/comments";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import {
   LayoutMaterial,
@@ -214,7 +215,9 @@ export default async function Page({ params }: Props) {
               {headings.length === 0 ? <ComingSoon /> : <Content />}
             </LayoutMaterialMain>
             <LayoutMaterialPagination pagination={pagination} />
-            <LayoutMaterialFooter />
+            <LayoutMaterialFooter>
+              <Comments slug={FilePath} />
+            </LayoutMaterialFooter>
           </LayoutMaterialContent>
           <LayoutMaterialToc
             chapters={{

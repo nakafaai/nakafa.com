@@ -109,7 +109,12 @@
     "open-in-t3-chat": "Open in T3 Chat",
     "open-in-gemini": "Open in Gemini",
     "see-on-youtube": "See on YouTube",
-    "subscribe": "Subscribe"
+    "subscribe": "Subscribe",
+    "comments": "Comments",
+    "anonymous": "Anonymous"
+  },
+  "Comments": {
+    "add-comment-placeholder": "Add a comment..."
   },
   "Subject": {
     "elementary-school": "Elementary School",

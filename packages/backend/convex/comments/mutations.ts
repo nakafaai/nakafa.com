@@ -10,7 +10,7 @@ export const addComment = mutation({
     contentSlug: v.string(),
     text: v.string(),
     parentId: v.optional(v.id("comments")),
-    mentions: v.optional(v.array(v.id("user"))),
+    mentions: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const user = await safeGetUser(ctx);
