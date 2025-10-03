@@ -16,7 +16,7 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link, usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation, useQuery } from "convex/react";
-import { LogInIcon, SendIcon } from "lucide-react";
+import { LogInIcon, SendIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type FormEventHandler, useTransition } from "react";
 import { getInitialName } from "@/lib/utils/helper";
@@ -88,19 +88,22 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
             <Button
               className="rounded-lg"
               onClick={closeButton.onClick}
+              size="icon"
               type="button"
               variant="secondary"
             >
-              {tCommon("cancel")}
+              <XIcon />
+              <span className="sr-only">{tCommon("cancel")}</span>
             </Button>
           )}
           <Button
             className="rounded-lg"
             disabled={isPending || !user}
+            size="icon"
             type="submit"
           >
             {isPending ? <SpinnerIcon /> : <SendIcon />}
-            {t("comment")}
+            <span className="sr-only">{t("comment")}</span>
           </Button>
         </div>
       </div>
@@ -135,7 +138,7 @@ function UserAvatar() {
           {getInitialName(user.name)}
         </AvatarFallback>
       </Avatar>
-      <p className="max-w-28 truncate text-muted-foreground text-xs sm:max-w-36">
+      <p className="hidden max-w-36 truncate text-muted-foreground text-xs sm:block">
         {user.name}
       </p>
     </div>

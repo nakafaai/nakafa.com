@@ -25,6 +25,10 @@ import { getInitialName } from "@/lib/utils/helper";
 import { CommentsAdd } from "./add";
 
 type Comment = Doc<"comments">;
+type CommentWithUser = Comment & { user?: CommentUser | null };
+
+// Keep in sync with MAX_DEPTH in packages/backend/convex/comments/mutations.ts
+const MAX_REPLY_DEPTH = 2;
 
 type Props = {
   slug: string;
@@ -42,21 +46,24 @@ export function CommentsList({ slug }: Props) {
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-3">
       {results.map((comment) => (
-        <div className="py-3 first:pt-0 last:pb-0" key={comment._id}>
-          <CommentMain comment={comment} />
-        </div>
+        <CommentThread comment={comment} key={comment._id} />
       ))}
     </div>
   );
 }
 
-function CommentMain({
-  comment,
-}: {
-  comment: Comment & { user: CommentUser | null };
-}) {
+function CommentThread({ comment }: { comment: CommentWithUser }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <CommentMain comment={comment} />
+      <CommentReplies comment={comment} />
+    </div>
+  );
+}
+
+function CommentMain({ comment }: { comment: CommentWithUser }) {
   const t = useTranslations("Common");
 
   const userName = comment.user?.name ?? t("anonymous");
@@ -82,10 +89,10 @@ function CommentMain({
   );
 }
 
-function CommentFooter({ comment }: { comment: Comment }) {
+function CommentFooter({ comment }: { comment: CommentWithUser }) {
   const [isReplyOpen, setIsReplyOpen] = useState(false);
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-3">
       <CommentAction
         comment={comment}
         replyOpen={isReplyOpen}
@@ -98,6 +105,30 @@ function CommentFooter({ comment }: { comment: Comment }) {
           slug={comment.contentSlug}
         />
       )}
+    </div>
+  );
+}
+
+function CommentReplies({ comment }: { comment: CommentWithUser }) {
+  const replyDepth = Math.min(comment.depth + 1, MAX_REPLY_DEPTH);
+
+  const repliesQuery = usePaginatedQuery(
+    api.comments.queries.getRepliesByCommentId,
+    { commentId: comment._id, depth: replyDepth },
+    { initialNumItems: 25 }
+  );
+
+  const replies = repliesQuery.results as CommentWithUser[];
+
+  if (replies.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col gap-3 border-l pl-4 md:pl-6">
+      {replies.map((reply) => (
+        <CommentThread comment={reply} key={reply._id} />
+      ))}
     </div>
   );
 }
