@@ -112,7 +112,9 @@
     "subscribe": "Subscribe",
     "comments": "Comments",
     "anonymous": "Anonymous",
-    "delete": "Delete"
+    "delete": "Delete",
+    "reply": "Reply",
+    "cancel": "Cancel"
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",

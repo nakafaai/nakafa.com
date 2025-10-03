@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   Avatar,
   AvatarFallback,
@@ -22,10 +23,16 @@ import { getInitialName } from "@/lib/utils/helper";
 
 type Props = {
   slug: string;
+  /* If comment is provided, the comment will be replied to */
+  comment?: Doc<"comments">;
+  closeButton?: {
+    onClick: () => void;
+  };
 };
 
-export function CommentsAdd({ slug }: Props) {
+export function CommentsAdd({ slug, comment, closeButton }: Props) {
   const t = useTranslations("Comments");
+  const tCommon = useTranslations("Common");
 
   const user = useQuery(api.auth.getCurrentUser);
   const addComment = useMutation(api.comments.mutations.addComment);
@@ -45,11 +52,17 @@ export function CommentsAdd({ slug }: Props) {
       await addComment({
         contentSlug: slug,
         text,
+        parentId: comment?._id,
+        mentions: comment?.userId ? [comment.userId] : undefined,
       });
-    });
 
-    // Reset the textarea
-    event.currentTarget.text.value = "";
+      if (closeButton) {
+        closeButton.onClick();
+      }
+
+      // Reset the textarea
+      event.currentTarget.text.value = "";
+    });
   };
 
   return (
@@ -69,14 +82,27 @@ export function CommentsAdd({ slug }: Props) {
       />
       <div className="flex items-center justify-between gap-4 p-1">
         <UserAvatar />
-        <Button
-          className="rounded-lg"
-          disabled={isPending || !user}
-          type="submit"
-        >
-          {isPending ? <SpinnerIcon /> : <SendIcon />}
-          {t("comment")}
-        </Button>
+
+        <div className="flex items-center gap-1">
+          {closeButton && (
+            <Button
+              className="rounded-lg"
+              onClick={closeButton.onClick}
+              type="button"
+              variant="secondary"
+            >
+              {tCommon("cancel")}
+            </Button>
+          )}
+          <Button
+            className="rounded-lg"
+            disabled={isPending || !user}
+            type="submit"
+          >
+            {isPending ? <SpinnerIcon /> : <SendIcon />}
+            {t("comment")}
+          </Button>
+        </div>
       </div>
     </form>
   );

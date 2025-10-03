@@ -2,6 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { CommentUser } from "@repo/backend/convex/comments/queries";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -12,10 +13,16 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
-import { ThumbsDownIcon, ThumbsUpIcon, Trash2Icon } from "lucide-react";
+import {
+  ReplyIcon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { getInitialName } from "@/lib/utils/helper";
+import { CommentsAdd } from "./add";
 
 type Comment = Doc<"comments">;
 
@@ -24,8 +31,6 @@ type Props = {
 };
 
 export function CommentsList({ slug }: Props) {
-  const t = useTranslations("Common");
-
   const { results } = usePaginatedQuery(
     api.comments.queries.getParentCommentsBySlug,
     { slug },
@@ -38,38 +43,74 @@ export function CommentsList({ slug }: Props) {
 
   return (
     <div className="flex flex-col">
-      {results.map((comment) => {
-        const userName = comment.user?.name ?? t("anonymous");
-        const userImage = comment.user?.image ?? "";
-
-        return (
-          <div className="py-3 first:pt-0 last:pb-0" key={comment._id}>
-            <div className="flex items-start gap-3 text-left">
-              <Avatar className="size-10 rounded-full">
-                <AvatarImage alt={userName} src={userImage} />
-                <AvatarFallback className="rounded-lg">
-                  {getInitialName(userName)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <div className="grid gap-0.5">
-                  <span className="truncate font-medium text-sm">
-                    {userName}
-                  </span>
-                  <Response id={comment._id}>{comment.text}</Response>
-                </div>
-
-                <CommentAction comment={comment} />
-              </div>
-            </div>
-          </div>
-        );
-      })}
+      {results.map((comment) => (
+        <div className="py-3 first:pt-0 last:pb-0" key={comment._id}>
+          <CommentMain comment={comment} />
+        </div>
+      ))}
     </div>
   );
 }
 
-function CommentAction({ comment }: { comment: Comment }) {
+function CommentMain({
+  comment,
+}: {
+  comment: Comment & { user: CommentUser | null };
+}) {
+  const t = useTranslations("Common");
+
+  const userName = comment.user?.name ?? t("anonymous");
+  const userImage = comment.user?.image ?? "";
+
+  return (
+    <div className="flex items-start gap-3 text-left">
+      <Avatar className="size-10 rounded-full">
+        <AvatarImage alt={userName} src={userImage} />
+        <AvatarFallback className="rounded-lg">
+          {getInitialName(userName)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="grid w-full gap-1">
+        <div className="grid gap-0.5">
+          <span className="truncate font-medium text-sm">{userName}</span>
+          <Response id={comment._id}>{comment.text}</Response>
+        </div>
+
+        <CommentFooter comment={comment} />
+      </div>
+    </div>
+  );
+}
+
+function CommentFooter({ comment }: { comment: Comment }) {
+  const [isReplyOpen, setIsReplyOpen] = useState(false);
+  return (
+    <div className="grid gap-2">
+      <CommentAction
+        comment={comment}
+        replyOpen={isReplyOpen}
+        setReplyOpen={setIsReplyOpen}
+      />
+      {isReplyOpen && (
+        <CommentsAdd
+          closeButton={{ onClick: () => setIsReplyOpen(false) }}
+          comment={comment}
+          slug={comment.contentSlug}
+        />
+      )}
+    </div>
+  );
+}
+
+function CommentAction({
+  comment,
+  replyOpen,
+  setReplyOpen,
+}: {
+  comment: Comment;
+  replyOpen: boolean;
+  setReplyOpen: (isReplyOpen: boolean) => void;
+}) {
   const t = useTranslations("Common");
   const currentUser = useQuery(api.auth.getCurrentUser);
 
@@ -141,6 +182,16 @@ function CommentAction({ comment }: { comment: Comment }) {
       >
         <Trash2Icon />
         <span className="sr-only">{t("delete")}</span>
+      </Button>
+
+      <Button
+        disabled={isPending}
+        onClick={() => setReplyOpen(!replyOpen)}
+        size="icon-sm"
+        variant="ghost"
+      >
+        <ReplyIcon />
+        <span className="sr-only">{t("reply")}</span>
       </Button>
     </div>
   );

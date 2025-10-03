@@ -112,7 +112,9 @@
     "subscribe": "Berlangganan",
     "comments": "Komentar",
     "anonymous": "Anonim",
-    "delete": "Hapus"
+    "delete": "Hapus",
+    "reply": "Balas",
+    "cancel": "Batal"
   },
   "Comments": {
     "add-comment-placeholder": "Tambahkan komentar...",

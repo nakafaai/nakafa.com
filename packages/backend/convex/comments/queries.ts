@@ -5,7 +5,7 @@ import { query } from "../_generated/server";
 import type { DataModel } from "../betterAuth/_generated/dataModel";
 import { cleanSlug } from "../utils/helper";
 
-type CommentUser = {
+export type CommentUser = {
   name: DataModel["user"]["document"]["name"];
   image: DataModel["user"]["document"]["image"];
 };
