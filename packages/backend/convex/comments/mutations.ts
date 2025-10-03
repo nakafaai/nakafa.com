@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { mutation } from "../_generated/server";
 import { safeGetUser } from "../auth";
+import { mutation } from "../functions";
 import { cleanSlug } from "../utils/helper";
 
 const MAX_DEPTH = 2;

@@ -186,6 +186,7 @@ function CommentAction({
           value={comment.upvoteCount}
         />
       </Button>
+
       <Button
         className="group"
         disabled={isPending}
@@ -205,6 +206,16 @@ function CommentAction({
       </Button>
 
       <Button
+        disabled={isPending}
+        onClick={() => setReplyOpen(!replyOpen)}
+        size="icon-sm"
+        variant="ghost"
+      >
+        <ReplyIcon />
+        <span className="sr-only">{t("reply")}</span>
+      </Button>
+
+      <Button
         className={cn(comment.userId !== currentUser?._id && "hidden")}
         disabled={isPending}
         onClick={handleDelete}
@@ -213,16 +224,6 @@ function CommentAction({
       >
         <Trash2Icon />
         <span className="sr-only">{t("delete")}</span>
-      </Button>
-
-      <Button
-        disabled={isPending}
-        onClick={() => setReplyOpen(!replyOpen)}
-        size="icon-sm"
-        variant="ghost"
-      >
-        <ReplyIcon />
-        <span className="sr-only">{t("reply")}</span>
       </Button>
     </div>
   );

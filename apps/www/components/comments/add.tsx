@@ -18,7 +18,7 @@ import { Link, usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { LogInIcon, SendIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { type FormEventHandler, useTransition } from "react";
+import { type FormEventHandler, useState, useTransition } from "react";
 import { getInitialName } from "@/lib/utils/helper";
 
 type Props = {
@@ -34,6 +34,8 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
   const t = useTranslations("Comments");
   const tCommon = useTranslations("Common");
 
+  const [commentText, setCommentText] = useState("");
+
   const user = useQuery(api.auth.getCurrentUser);
   const addComment = useMutation(api.comments.mutations.addComment);
 
@@ -42,7 +44,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
   const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
 
-    const text = event.currentTarget.text.value.trim();
+    const text = event.currentTarget?.text?.value?.trim();
 
     if (!text) {
       return;
@@ -56,12 +58,11 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
         mentions: comment?.userId ? [comment.userId] : undefined,
       });
 
+      setCommentText("");
+
       if (closeButton) {
         closeButton.onClick();
       }
-
-      // Reset the textarea
-      event.currentTarget.text.value = "";
     });
   };
 
@@ -77,8 +78,11 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
           "max-h-48 min-h-16",
           "focus-visible:ring-0"
         )}
+        id="text"
         name="text"
+        onChange={(e) => setCommentText(e.target.value)}
         placeholder={t("add-comment-placeholder")}
+        value={commentText}
       />
       <div className="flex items-center justify-between gap-4 p-1">
         <UserAvatar />
