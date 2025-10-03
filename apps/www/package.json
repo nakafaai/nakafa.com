@@ -38,7 +38,7 @@
     "next": "15.5.4",
     "nuqs": "^2.7.0",
     "react": "19.2.0",
-    "react-aria-components": "^1.12.2",
+    "react-aria-components": "^1.13.0",
     "react-dom": "19.2.0",
     "use-context-selector": "^2.0.0",
     "use-sound": "^5.0.0",
