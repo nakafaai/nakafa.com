@@ -20,6 +20,14 @@ export const contributors: Contributor[] = [
     },
   },
   {
+    name: "Zuhdi Guntur Aditya",
+    username: "zuhdi",
+    official: true,
+    social: {
+      linkedin: "https://www.linkedin.com/in/zuhdi-guntur-aditya-3910321b8",
+    },
+  },
+  {
     name: "Shifna Zihdatal Haq",
     username: "shifnahaq",
     official: true,
