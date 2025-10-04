@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { Doc } from "../_generated/dataModel";
 import { safeGetUser } from "../auth";
 import { mutation } from "../functions";
 import { cleanSlug } from "../utils/helper";
@@ -20,9 +21,10 @@ export const addComment = mutation({
     }
 
     let depth = 0;
+    let parentComment: Doc<"comments"> | null = null;
 
     if (args.parentId) {
-      const parentComment = await ctx.db.get(args.parentId);
+      parentComment = await ctx.db.get(args.parentId);
       if (parentComment) {
         // Increment depth from the parent, but cap it at the maximum depth.
         // This makes it so a reply to a depth-5 comment also becomes depth 5,
@@ -41,9 +43,18 @@ export const addComment = mutation({
       upvoteCount: 0,
       downvoteCount: 0,
       score: 0,
+      replyCount: 0,
     };
 
-    await ctx.db.insert("comments", newComment);
+    const newCommentId = await ctx.db.insert("comments", newComment);
+
+    if (parentComment) {
+      await ctx.db.patch(parentComment._id, {
+        replyCount: (parentComment.replyCount ?? 0) + 1,
+      });
+    }
+
+    return newCommentId;
   },
 });
 

@@ -114,7 +114,9 @@
     "anonymous": "Anonim",
     "delete": "Hapus",
     "reply": "Balas",
-    "cancel": "Batal"
+    "cancel": "Batal",
+    "like": "Suka",
+    "dislike": "Tidak suka"
   },
   "Comments": {
     "add-comment-placeholder": "Tambahkan komentar...",

@@ -43,4 +43,13 @@ triggers.register("comments", async (ctx, change) => {
   for (const reply of replies) {
     await ctx.db.delete(reply._id);
   }
+
+  if (change.oldDoc.parentId) {
+    const parentComment = await ctx.db.get(change.oldDoc.parentId);
+    if (parentComment) {
+      await ctx.db.patch(change.oldDoc.parentId, {
+        replyCount: Math.max((parentComment.replyCount ?? 0) - 1, 0),
+      });
+    }
+  }
 });

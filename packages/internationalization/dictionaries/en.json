@@ -114,7 +114,9 @@
     "anonymous": "Anonymous",
     "delete": "Delete",
     "reply": "Reply",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "like": "Like",
+    "dislike": "Dislike"
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",

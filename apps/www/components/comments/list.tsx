@@ -11,10 +11,15 @@ import {
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import {
-  ReplyIcon,
+  MessageCircleIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
   Trash2Icon,
@@ -55,15 +60,40 @@ export function CommentsList({ slug }: Props) {
 }
 
 function CommentThread({ comment }: { comment: CommentWithUser }) {
+  const [isReplyOpen, setIsReplyOpen] = useState(false);
+  const [isRepliesOpen, setIsRepliesOpen] = useState(false);
+
+  const handleReplyToggle = () => {
+    const newReplyState = !isReplyOpen;
+    setIsReplyOpen(newReplyState);
+    // Open replies when opening reply box, toggle when closing
+    setIsRepliesOpen(newReplyState || !isRepliesOpen);
+  };
+
   return (
-    <div className="flex flex-col gap-3">
-      <CommentMain comment={comment} />
-      <CommentReplies comment={comment} />
+    <div className="flex flex-col gap-6">
+      <CommentMain
+        comment={comment}
+        isReplyOpen={isReplyOpen}
+        onReplyClose={() => setIsReplyOpen(false)}
+        onReplyToggle={handleReplyToggle}
+      />
+      <CommentReplies comment={comment} isOpen={isRepliesOpen} />
     </div>
   );
 }
 
-function CommentMain({ comment }: { comment: CommentWithUser }) {
+function CommentMain({
+  comment,
+  isReplyOpen,
+  onReplyToggle,
+  onReplyClose,
+}: {
+  comment: CommentWithUser;
+  isReplyOpen: boolean;
+  onReplyToggle: () => void;
+  onReplyClose: () => void;
+}) {
   const t = useTranslations("Common");
 
   const userName = comment.user?.name ?? t("anonymous");
@@ -83,24 +113,34 @@ function CommentMain({ comment }: { comment: CommentWithUser }) {
           <Response id={comment._id}>{comment.text}</Response>
         </div>
 
-        <CommentFooter comment={comment} />
+        <CommentFooter
+          comment={comment}
+          isReplyOpen={isReplyOpen}
+          onReplyClose={onReplyClose}
+          onReplyToggle={onReplyToggle}
+        />
       </div>
     </div>
   );
 }
 
-function CommentFooter({ comment }: { comment: CommentWithUser }) {
-  const [isReplyOpen, setIsReplyOpen] = useState(false);
+function CommentFooter({
+  comment,
+  isReplyOpen,
+  onReplyToggle,
+  onReplyClose,
+}: {
+  comment: CommentWithUser;
+  isReplyOpen: boolean;
+  onReplyToggle: () => void;
+  onReplyClose: () => void;
+}) {
   return (
     <div className="grid gap-3">
-      <CommentAction
-        comment={comment}
-        replyOpen={isReplyOpen}
-        setReplyOpen={setIsReplyOpen}
-      />
+      <CommentAction comment={comment} onReplyToggle={onReplyToggle} />
       {isReplyOpen && (
         <CommentsAdd
-          closeButton={{ onClick: () => setIsReplyOpen(false) }}
+          closeButton={{ onClick: onReplyClose }}
           comment={comment}
           slug={comment.contentSlug}
         />
@@ -109,7 +149,13 @@ function CommentFooter({ comment }: { comment: CommentWithUser }) {
   );
 }
 
-function CommentReplies({ comment }: { comment: CommentWithUser }) {
+function CommentReplies({
+  comment,
+  isOpen,
+}: {
+  comment: CommentWithUser;
+  isOpen: boolean;
+}) {
   const isMaxDepth = comment.depth >= MAX_REPLY_DEPTH;
   const replyDepth = Math.min(comment.depth + 1, MAX_REPLY_DEPTH);
 
@@ -119,14 +165,14 @@ function CommentReplies({ comment }: { comment: CommentWithUser }) {
     { initialNumItems: 25 }
   );
 
-  if (results.length === 0) {
+  if (!isOpen || results.length === 0) {
     return null;
   }
 
   return (
     <div
       className={cn(
-        "flex flex-col gap-3",
+        "flex flex-col gap-6",
         !isMaxDepth && "border-l pl-4 md:pl-6"
       )}
     >
@@ -139,12 +185,10 @@ function CommentReplies({ comment }: { comment: CommentWithUser }) {
 
 function CommentAction({
   comment,
-  replyOpen,
-  setReplyOpen,
+  onReplyToggle,
 }: {
-  comment: Comment;
-  replyOpen: boolean;
-  setReplyOpen: (isReplyOpen: boolean) => void;
+  comment: CommentWithUser;
+  onReplyToggle: () => void;
 }) {
   const t = useTranslations("Common");
   const currentUser = useQuery(api.auth.getCurrentUser);
@@ -173,62 +217,89 @@ function CommentAction({
 
   return (
     <div className="-translate-x-2 flex items-center">
-      <Button
-        className="group"
-        disabled={isPending}
-        onClick={() => handleVote(1)}
-        size={comment.upvoteCount === 0 ? "icon-sm" : "sm"}
-        variant="ghost"
-      >
-        <ThumbsUpIcon />
-        <NumberFormat
-          className={cn(
-            "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
-            comment.upvoteCount === 0 && "hidden"
-          )}
-          isolate={true}
-          value={comment.upvoteCount}
-        />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            className="group"
+            disabled={isPending}
+            onClick={() => handleVote(1)}
+            size={comment.upvoteCount === 0 ? "icon-sm" : "sm"}
+            variant="ghost"
+          >
+            <ThumbsUpIcon />
+            <NumberFormat
+              className={cn(
+                "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
+                comment.upvoteCount === 0 && "hidden"
+              )}
+              isolate={true}
+              value={comment.upvoteCount}
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t("like")}</TooltipContent>
+      </Tooltip>
 
-      <Button
-        className="group"
-        disabled={isPending}
-        onClick={() => handleVote(-1)}
-        size={comment.downvoteCount === 0 ? "icon-sm" : "sm"}
-        variant="ghost"
-      >
-        <ThumbsDownIcon />
-        <NumberFormat
-          className={cn(
-            "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
-            comment.downvoteCount === 0 && "hidden"
-          )}
-          isolate={true}
-          value={comment.downvoteCount}
-        />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            className="group"
+            disabled={isPending}
+            onClick={() => handleVote(-1)}
+            size={comment.downvoteCount === 0 ? "icon-sm" : "sm"}
+            variant="ghost"
+          >
+            <ThumbsDownIcon />
+            <NumberFormat
+              className={cn(
+                "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
+                comment.downvoteCount === 0 && "hidden"
+              )}
+              isolate={true}
+              value={comment.downvoteCount}
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t("dislike")}</TooltipContent>
+      </Tooltip>
 
-      <Button
-        disabled={isPending}
-        onClick={() => setReplyOpen(!replyOpen)}
-        size="icon-sm"
-        variant="ghost"
-      >
-        <ReplyIcon />
-        <span className="sr-only">{t("reply")}</span>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            disabled={isPending}
+            onClick={onReplyToggle}
+            size={comment.replyCount === 0 ? "icon-sm" : "sm"}
+            variant="ghost"
+          >
+            <MessageCircleIcon />
+            <NumberFormat
+              className={cn(
+                "font-mono text-muted-foreground text-xs tracking-tight",
+                comment.replyCount === 0 && "hidden"
+              )}
+              isolate={true}
+              value={comment.replyCount}
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t("reply")}</TooltipContent>
+      </Tooltip>
 
-      <Button
-        className={cn(comment.userId !== currentUser?._id && "hidden")}
-        disabled={isPending}
-        onClick={handleDelete}
-        size="icon-sm"
-        variant="ghost"
-      >
-        <Trash2Icon />
-        <span className="sr-only">{t("delete")}</span>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            className={cn(comment.userId !== currentUser?._id && "hidden")}
+            disabled={isPending}
+            onClick={handleDelete}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <Trash2Icon />
+            <span className="sr-only">{t("delete")}</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t("delete")}</TooltipContent>
+      </Tooltip>
     </div>
   );
 }

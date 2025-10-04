@@ -18,6 +18,7 @@ const tables = {
     upvoteCount: v.number(),
     downvoteCount: v.number(),
     score: v.number(),
+    replyCount: v.number(),
   })
     .index("contentSlug", ["contentSlug"])
     .index("parentId", ["parentId"])

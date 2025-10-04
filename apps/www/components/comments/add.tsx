@@ -138,7 +138,7 @@ function UserAvatar() {
     <div className="flex min-w-0 items-center gap-2 px-3" title={user.name}>
       <Avatar className="size-6 rounded-lg">
         <AvatarImage alt={user.name} src={user.image ?? ""} />
-        <AvatarFallback className="rounded-lg">
+        <AvatarFallback className="rounded-lg text-xs">
           {getInitialName(user.name)}
         </AvatarFallback>
       </Avatar>
