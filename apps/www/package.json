@@ -42,7 +42,7 @@
     "react-dom": "19.2.0",
     "use-context-selector": "^2.0.0",
     "use-sound": "^5.0.0",
-    "virtua": "^0.44.1"
+    "virtua": "^0.44.2"
   },
   "devDependencies": {
     "@repo/testing": "workspace:*",
