@@ -5,6 +5,10 @@ import { routing } from "@repo/internationalization/src/routing";
 import { useSelectedLayoutSegment } from "next/navigation";
 import type { ComponentProps } from "react";
 
+const EXTERNAL_URL_REGEX = /^https?:\/\//;
+const PROTOCOL_RELATIVE_REGEX = /^\/\//;
+const MAIL_OR_TEL_REGEX = /^(mailto:|tel:)/;
+
 /**
  * A navigation link component that is styled to look like a button.
  *
@@ -32,6 +36,25 @@ export default function NavigationLink({
   const locale = routing.locales.find((l) => l === firstSegment);
   if (locale) {
     cleanHref = href.toString().replace(`/${locale}`, ""); // remove locale from href
+  }
+
+  if (typeof cleanHref === "string") {
+    const isExternal = EXTERNAL_URL_REGEX.test(cleanHref);
+    const isProtocolRelative = PROTOCOL_RELATIVE_REGEX.test(cleanHref);
+    const isHash = cleanHref.startsWith("#");
+    const isMailOrTel = MAIL_OR_TEL_REGEX.test(cleanHref);
+
+    const shouldNormalize =
+      cleanHref.length > 0 &&
+      !cleanHref.startsWith("/") &&
+      !isExternal &&
+      !isProtocolRelative &&
+      !isHash &&
+      !isMailOrTel;
+
+    if (shouldNormalize) {
+      cleanHref = `/${cleanHref}`;
+    }
   }
 
   return (

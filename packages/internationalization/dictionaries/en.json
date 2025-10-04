@@ -117,11 +117,13 @@
     "cancel": "Cancel",
     "like": "Like",
     "dislike": "Dislike",
-    "former-official": "Former Official"
+    "former-official": "Former Official",
+    "see": "See"
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",
-    "comment": "Comment"
+    "comment": "Comment",
+    "no-comments": "No comments yet."
   },
   "Subject": {
     "elementary-school": "Elementary School",

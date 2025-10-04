@@ -103,3 +103,19 @@ export const getRepliesByCommentId = query({
     };
   },
 });
+
+export const getCommentsByUserId = query({
+  args: {
+    userId: v.string(),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("userId", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    return comments;
+  },
+});

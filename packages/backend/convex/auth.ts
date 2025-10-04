@@ -8,6 +8,7 @@ import {
   organization,
   username,
 } from "better-auth/plugins";
+import { v } from "convex/values";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
@@ -95,9 +96,17 @@ export const createAuth = (
 export const safeGetUser = (ctx: QueryCtx) =>
   authComponent.safeGetAuthUser(ctx);
 
+export const getAnyUserById = (ctx: QueryCtx, userId: string) =>
+  authComponent.getAnyUserById(ctx, userId);
+
 export const getCurrentUser = query({
   args: {},
   handler: (ctx) => safeGetUser(ctx),
+});
+
+export const getUserById = query({
+  args: { userId: v.string() },
+  handler: (ctx, args) => getAnyUserById(ctx, args.userId),
 });
 
 export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();

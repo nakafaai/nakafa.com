@@ -23,7 +23,8 @@ const tables = {
     .index("contentSlug", ["contentSlug"])
     .index("parentId", ["parentId"])
     .index("contentSlug_depth", ["contentSlug", "depth"])
-    .index("parentId_depth", ["parentId", "depth"]),
+    .index("parentId_depth", ["parentId", "depth"])
+    .index("userId", ["userId"]),
   commentVotes: defineTable({
     commentId: v.id("comments"),
     // userId is v.string() for the same reason as above

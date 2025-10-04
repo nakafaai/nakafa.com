@@ -36,7 +36,7 @@ import { useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
 import { getInitialName } from "@/lib/utils/helper";
 
-const prefetchLinks = ["/settings", "/auth"] as const;
+const prefetchLinks = ["/auth"] as const;
 
 export function NavUser() {
   const t = useTranslations("Auth");
@@ -47,6 +47,10 @@ export function NavUser() {
   const user = useQuery(api.auth.getCurrentUser);
 
   const { isMobile } = useSidebar();
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+  };
 
   useEffect(() => {
     // prefetch all the links
@@ -67,10 +71,6 @@ export function NavUser() {
       </SidebarMenuItem>
     );
   }
-
-  const handleSignOut = async () => {
-    await authClient.signOut();
-  };
 
   return (
     <SidebarMenuItem>
@@ -115,7 +115,7 @@ export function NavUser() {
           <DropdownMenuGroup>
             <DropdownMenuItem
               className="cursor-pointer"
-              onSelect={() => router.push("/settings")}
+              onSelect={() => router.push(`/user/${user._id}`)}
             >
               <UserIcon />
               {t("account")}

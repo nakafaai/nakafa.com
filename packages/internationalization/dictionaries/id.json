@@ -117,11 +117,13 @@
     "cancel": "Batal",
     "like": "Suka",
     "dislike": "Tidak suka",
-    "former-official": "Resmi Lama"
+    "former-official": "Resmi Lama",
+    "see": "Lihat"
   },
   "Comments": {
     "add-comment-placeholder": "Tambahkan komentar...",
-    "comment": "Komentar"
+    "comment": "Komentar",
+    "no-comments": "Belum ada komentar."
   },
   "Subject": {
     "elementary-school": "SD",
