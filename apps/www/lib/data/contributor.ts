@@ -69,4 +69,12 @@ export const contributors: Contributor[] = [
       linkedin: "https://www.linkedin.com/in/asfira-chisara-hasan-38a6aa24a/",
     },
   },
+  {
+    name: "Reka Tiyasayu Sapitri",
+    username: "reka",
+    official: false,
+    social: {
+      linkedin: "https://www.linkedin.com/in/reka-tiyasayu-sapitri/",
+    },
+  },
 ];
