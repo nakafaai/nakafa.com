@@ -3,7 +3,7 @@ import * as z from "zod";
 export const contributorSchema = z.object({
   name: z.string(),
   username: z.string(),
-  official: z.boolean(),
+  type: z.enum(["official", "former-official", "community"]),
   social: z
     .object({
       twitter: z.url().optional(),

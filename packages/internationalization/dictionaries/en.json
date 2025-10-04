@@ -116,7 +116,8 @@
     "reply": "Reply",
     "cancel": "Cancel",
     "like": "Like",
-    "dislike": "Dislike"
+    "dislike": "Dislike",
+    "former-official": "Former Official"
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",

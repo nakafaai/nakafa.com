@@ -46,11 +46,9 @@ export function Avatar({ contributor }: Props) {
             name={`${contributor.name} - ${contributor.username}`}
           />
           <DrawerTitle className="text-center">{contributor.name}</DrawerTitle>
-          {contributor.official && (
-            <DrawerDescription className="text-center">
-              <Badge>{t("official")}</Badge>
-            </DrawerDescription>
-          )}
+          <DrawerDescription className="text-center">
+            <Badge>{t(contributor.type)}</Badge>
+          </DrawerDescription>
         </DrawerHeader>
         <DrawerFooter>
           {contributor.social && (
