@@ -19,7 +19,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation, usePaginatedQuery } from "convex/react";
+import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import {
   EyeIcon,
   MessageCircleIcon,
@@ -65,6 +65,9 @@ function CommentThread({
   user: UserDoc<"user">;
 }) {
   const t = useTranslations("Common");
+
+  const currentUser = useQuery(api.auth.getCurrentUser);
+
   const userName = user.name ?? t("anonymous");
   const userImage = user.image ?? "";
 
@@ -191,6 +194,7 @@ function CommentThread({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                className={cn(comment.userId !== currentUser?._id && "hidden")}
                 disabled={isPending}
                 onClick={handleDelete}
                 size="icon-sm"
