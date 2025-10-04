@@ -50,7 +50,7 @@ export const addComment = mutation({
 
     if (parentComment) {
       await ctx.db.patch(parentComment._id, {
-        replyCount: (parentComment.replyCount ?? 0) + 1,
+        replyCount: parentComment.replyCount + 1,
       });
     }
 
