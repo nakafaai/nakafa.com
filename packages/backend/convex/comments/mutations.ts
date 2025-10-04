@@ -3,7 +3,7 @@ import { safeGetUser } from "../auth";
 import { mutation } from "../functions";
 import { cleanSlug } from "../utils/helper";
 
-const MAX_DEPTH = 2;
+const MAX_DEPTH = 5;
 
 export const addComment = mutation({
   args: {
@@ -24,8 +24,8 @@ export const addComment = mutation({
     if (args.parentId) {
       const parentComment = await ctx.db.get(args.parentId);
       if (parentComment) {
-        // Increment depth from the parent, but cap it at 3.
-        // This makes it so a reply to a depth 3 comment also becomes depth 3,
+        // Increment depth from the parent, but cap it at the maximum depth.
+        // This makes it so a reply to a depth-5 comment also becomes depth 5,
         // creating a flat thread at the maximum depth.
         depth = Math.min(parentComment.depth + 1, MAX_DEPTH);
       }

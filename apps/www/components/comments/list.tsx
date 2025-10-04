@@ -28,7 +28,7 @@ type Comment = Doc<"comments">;
 type CommentWithUser = Comment & { user?: CommentUser | null };
 
 // Keep in sync with MAX_DEPTH in packages/backend/convex/comments/mutations.ts
-const MAX_REPLY_DEPTH = 2;
+const MAX_REPLY_DEPTH = 5;
 
 type Props = {
   slug: string;
@@ -110,23 +110,27 @@ function CommentFooter({ comment }: { comment: CommentWithUser }) {
 }
 
 function CommentReplies({ comment }: { comment: CommentWithUser }) {
+  const isMaxDepth = comment.depth >= MAX_REPLY_DEPTH;
   const replyDepth = Math.min(comment.depth + 1, MAX_REPLY_DEPTH);
 
-  const repliesQuery = usePaginatedQuery(
+  const { results } = usePaginatedQuery(
     api.comments.queries.getRepliesByCommentId,
     { commentId: comment._id, depth: replyDepth },
     { initialNumItems: 25 }
   );
 
-  const replies = repliesQuery.results as CommentWithUser[];
-
-  if (replies.length === 0) {
+  if (results.length === 0) {
     return null;
   }
 
   return (
-    <div className="flex flex-col gap-3 border-l pl-4 md:pl-6">
-      {replies.map((reply) => (
+    <div
+      className={cn(
+        "flex flex-col gap-3",
+        !isMaxDepth && "border-l pl-4 md:pl-6"
+      )}
+    >
+      {results.map((reply) => (
         <CommentThread comment={reply} key={reply._id} />
       ))}
     </div>
