@@ -77,8 +77,8 @@ function CommentMain({ comment }: { comment: CommentWithUser }) {
           {getInitialName(userName)}
         </AvatarFallback>
       </Avatar>
-      <div className="grid w-full gap-1">
-        <div className="grid gap-0.5">
+      <div className="grid w-full gap-2">
+        <div className="grid gap-1">
           <span className="truncate font-medium text-sm">{userName}</span>
           <Response id={comment._id}>{comment.text}</Response>
         </div>
