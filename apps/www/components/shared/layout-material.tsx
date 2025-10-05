@@ -61,6 +61,7 @@ export function LayoutMaterialToc({
   header,
   githubUrl,
   references,
+  showComments,
 }: {
   chapters: {
     label: string;
@@ -69,9 +70,15 @@ export function LayoutMaterialToc({
   header?: ComponentProps<typeof SidebarRight>["header"];
   githubUrl?: ComponentProps<typeof SidebarRight>["githubUrl"];
   references?: ComponentProps<typeof SidebarRight>["references"];
+  showComments?: ComponentProps<typeof SidebarRight>["showComments"];
 }) {
   return (
-    <SidebarRight githubUrl={githubUrl} header={header} references={references}>
+    <SidebarRight
+      githubUrl={githubUrl}
+      header={header}
+      references={references}
+      showComments={showComments}
+    >
       <SidebarTree data={chapters.data} title={chapters.label} />
     </SidebarRight>
   );

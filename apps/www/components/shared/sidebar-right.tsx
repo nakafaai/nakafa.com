@@ -18,6 +18,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { MenuIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
+import { CommentsButton } from "../sidebar/comments-button";
 import { GithubButton } from "../sidebar/github-button";
 import { ReferenceButton } from "../sidebar/reference-button";
 import { ReportButton } from "../sidebar/report-button";
@@ -31,6 +32,7 @@ export type SidebarRightProps = {
     description?: string;
   };
   githubUrl?: string;
+  showComments?: boolean;
   references?: {
     title: string;
     data: Reference[];
@@ -84,10 +86,12 @@ function SidebarRightHeader({
 function SidebarRightFooter({
   references,
   githubUrl,
-}: Pick<SidebarRightProps, "references" | "githubUrl">) {
+  showComments = false,
+}: Pick<SidebarRightProps, "references" | "githubUrl" | "showComments">) {
   return (
     <SidebarFooter className="border-t">
       <SidebarMenu>
+        {showComments && <CommentsButton />}
         {references && (
           <ReferenceButton
             references={references.data}
@@ -107,6 +111,7 @@ export function SidebarRight({
   header,
   references,
   githubUrl,
+  showComments,
   ...props
 }: SidebarRightProps) {
   return (
@@ -133,7 +138,11 @@ export function SidebarRight({
         >
           <SidebarRightHeader header={header} />
           <SidebarContent>{children}</SidebarContent>
-          <SidebarRightFooter githubUrl={githubUrl} references={references} />
+          <SidebarRightFooter
+            githubUrl={githubUrl}
+            references={references}
+            showComments={showComments}
+          />
         </Sidebar>
       </SidebarProvider>
     </div>

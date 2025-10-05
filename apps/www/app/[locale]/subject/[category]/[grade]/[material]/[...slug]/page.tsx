@@ -232,6 +232,7 @@ export default async function Page({ params }: Props) {
               href: FilePath,
               description: metadata.description ?? metadata.subject,
             }}
+            showComments
           />
         </LayoutMaterial>
       </>

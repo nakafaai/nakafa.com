@@ -49,11 +49,17 @@ export function useAnchorObserver(watch: string[], single: boolean): string[] {
         top + element.clientHeight >=
         element.scrollHeight - SCROLL_BOTTOM_TOLERANCE
       ) {
-        setActiveAnchor((active) =>
-          active.length > 0 && !single
-            ? watch.slice(watch.indexOf(active[0]))
-            : watch.slice(-1)
-        );
+        const visibleIds = new Set(Array.from(visible, (el) => el.id));
+        const orderedVisible = watch.filter((id) => visibleIds.has(id));
+
+        if (orderedVisible.length > 0) {
+          setActiveAnchor(single ? orderedVisible.slice(0, 1) : orderedVisible);
+        } else {
+          const lastId = watch.at(-1);
+          if (lastId) {
+            setActiveAnchor([lastId]);
+          }
+        }
       }
     }
 
