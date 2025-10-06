@@ -77,6 +77,10 @@ function CommentThread({
   const deleteComment = useMutation(api.comments.mutations.deleteComment);
 
   const handleVote = (vote: -1 | 1) => {
+    if (!currentUser) {
+      return;
+    }
+
     startTransition(async () => {
       await voteOnComment({
         commentId: comment._id,
@@ -86,6 +90,10 @@ function CommentThread({
   };
 
   const handleDelete = () => {
+    if (!currentUser) {
+      return;
+    }
+
     startTransition(async () => {
       await deleteComment({
         commentId: comment._id,
