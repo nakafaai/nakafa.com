@@ -54,7 +54,7 @@ export const AiMessagePart = memo(({ part, partIndex, messageId }: Props) => {
     case "data-get-content":
       return <ContentPart message={part.data} />;
     default:
-      null;
+      return null;
   }
 });
 AiMessagePart.displayName = "AiMessagePart";
