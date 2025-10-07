@@ -786,6 +786,467 @@ const data: BaseAsk[] = [
       },
     },
   },
+  {
+    slug: "how-to-solve-quadratic-equations",
+    locales: {
+      id: {
+        title: "Bagaimana cara menyelesaikan persamaan kuadrat?",
+        description:
+          "Pelajari tiga metode utama untuk menyelesaikan persamaan kuadrat: faktorisasi, melengkapkan kuadrat sempurna, dan rumus kuadrat (rumus ABC). Kuasai penyelesaian ax²+bx+c=0 dengan contoh.",
+      },
+      en: {
+        title: "How do you solve quadratic equations?",
+        description:
+          "Learn three main methods to solve quadratic equations: factorization, completing the square, and the quadratic formula (ABC formula). Master solving ax²+bx+c=0 with examples.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-quadratic-equation-and-how-to-identify",
+    locales: {
+      id: {
+        title:
+          "Apa itu persamaan kuadrat dan bagaimana cara mengidentifikasinya?",
+        description:
+          "Pahami definisi persamaan kuadrat (ax²+bx+c=0 dengan a≠0). Belajar membedakan persamaan kuadrat dari jenis persamaan lain seperti persamaan kubik atau pecahan.",
+      },
+      en: {
+        title: "What is a quadratic equation and how to identify one?",
+        description:
+          "Understand the definition of a quadratic equation (ax²+bx+c=0 where a≠0). Learn to distinguish quadratic equations from other types of equations like cubic or fractional equations.",
+      },
+    },
+  },
+  {
+    slug: "what-are-real-world-examples-of-quadratic-equations",
+    locales: {
+      id: {
+        title: "Apa saja contoh penerapan persamaan kuadrat di dunia nyata?",
+        description:
+          "Temukan bagaimana persamaan kuadrat digunakan untuk memodelkan masalah kehidupan nyata, seperti menghitung luas ruangan, menentukan kecepatan kendaraan, atau menyelesaikan masalah bilangan.",
+      },
+      en: {
+        title: "What are real-world examples of quadratic equations?",
+        description:
+          "Discover how quadratic equations are used to model real-life problems, such as calculating the area of a room, determining vehicle speed, or solving number problems.",
+      },
+    },
+  },
+  {
+    slug: "how-to-factor-quadratic-equations-step-by-step",
+    locales: {
+      id: {
+        title:
+          "Bagaimana cara memfaktorkan persamaan kuadrat langkah demi langkah?",
+        description:
+          "Pelajari proses sistematis untuk memfaktorkan persamaan ax²+bx+c=0, mulai dari mencari dua bilangan yang dikalikan menghasilkan 'ac' dan dijumlahkan 'b', hingga menemukan akar-akarnya.",
+      },
+      en: {
+        title: "How to factor quadratic equations step-by-step?",
+        description:
+          "Learn the systematic process of factoring ax²+bx+c=0, from finding two numbers that multiply to 'ac' and add to 'b', to finding the roots of the equation.",
+      },
+    },
+  },
+  {
+    slug: "how-to-factor-quadratics-when-a-is-not-1",
+    locales: {
+      id: {
+        title:
+          "Bagaimana cara memfaktorkan persamaan kuadrat jika 'a' bukan 1?",
+        description:
+          "Kuasai metode pengelompokan untuk memfaktorkan ax²+bx+c=0 saat a>1. Cari faktor dari 'ac' yang jumlahnya 'b', pecah suku tengah, dan faktorkan untuk menemukan solusi.",
+      },
+      en: {
+        title: "How to factor quadratic equations when 'a' is not 1?",
+        description:
+          "Master the grouping method for factoring ax²+bx+c=0 when a>1. Find factors of 'ac' that sum to 'b', split the middle term, and factor by grouping to find the solution.",
+      },
+    },
+  },
+  {
+    slug: "how-to-factor-special-quadratic-equations",
+    locales: {
+      id: {
+        title: "Bagaimana cara memfaktorkan persamaan kuadrat bentuk khusus?",
+        description:
+          "Pelajari cara cepat memfaktorkan bentuk khusus seperti ax²+bx=0 dengan mengeluarkan x, dan ax²-c=0 menggunakan metode selisih dua kuadrat untuk menemukan akarnya.",
+      },
+      en: {
+        title: "How to factor special forms of quadratic equations?",
+        description:
+          "Learn how to quickly factor special forms like ax²+bx=0 by factoring out x, and ax²-c=0 using the difference of squares method to find the roots.",
+      },
+    },
+  },
+  {
+    slug: "how-to-use-the-quadratic-formula",
+    locales: {
+      id: {
+        title:
+          "Bagaimana cara menggunakan rumus kuadrat untuk menyelesaikan persamaan?",
+        description:
+          "Pelajari cara menggunakan rumus x = [-b ± sqrt(b²-4ac)]/2a untuk menemukan akar persamaan ax²+bx+c=0. Ikuti langkah-langkah untuk mengidentifikasi a, b, c dan menyelesaikannya.",
+      },
+      en: {
+        title: "How to use the quadratic formula to solve equations?",
+        description:
+          "Learn how to use the formula x = [-b ± sqrt(b²-4ac)]/2a to find the roots of any ax²+bx+c=0 equation. Follow the steps to identify a, b, c and solve for x.",
+      },
+    },
+  },
+  {
+    slug: "what-is-the-discriminant-in-a-quadratic-equation",
+    locales: {
+      id: {
+        title: "Apa fungsi diskriminan dalam persamaan kuadrat?",
+        description:
+          "Pahami peran diskriminan, b²-4ac, dalam menentukan sifat akar. Pelajari bagaimana nilainya menunjukkan apakah ada dua akar real, satu akar kembar, atau tidak ada akar real.",
+      },
+      en: {
+        title: "What is the discriminant in a quadratic equation?",
+        description:
+          "Understand the role of the discriminant, b²-4ac, in determining the nature of the roots. Learn how its value indicates whether there are two real roots, one repeated root, or no real roots.",
+      },
+    },
+  },
+  {
+    slug: "how-to-create-a-new-quadratic-equation-from-its-roots",
+    locales: {
+      id: {
+        title: "Bagaimana cara membuat persamaan kuadrat baru dari akarnya?",
+        description:
+          "Pelajari cara membentuk persamaan kuadrat baru jika akarnya diketahui. Gunakan hubungan jumlah akar (x₁+x₂ = -b/a) dan hasil kali akar (x₁·x₂ = c/a) untuk menyusun persamaan.",
+      },
+      en: {
+        title: "How to create a new quadratic equation from its roots?",
+        description:
+          "Learn how to form a new quadratic equation if its roots are known. Use the relationship between the sum of roots (x₁+x₂ = -b/a) and the product of roots (x₁·x₂ = c/a) to construct the equation.",
+      },
+    },
+  },
+  {
+    slug: "when-does-a-quadratic-equation-have-imaginary-roots",
+    locales: {
+      id: {
+        title: "Kapan persamaan kuadrat memiliki akar imajiner?",
+        description:
+          "Pelajari kondisi yang menyebabkan persamaan kuadrat memiliki akar imajiner. Pahami bahwa jika diskriminan (D = b²-4ac) bernilai negatif, akarnya akan berupa bilangan kompleks.",
+      },
+      en: {
+        title: "When does a quadratic equation have imaginary roots?",
+        description:
+          "Learn the condition that causes a quadratic equation to have imaginary roots. Understand that if the discriminant (D = b²-4ac) is negative, the roots will be complex numbers.",
+      },
+    },
+  },
+  {
+    slug: "how-to-find-imaginary-roots-of-a-quadratic-equation",
+    locales: {
+      id: {
+        title: "Bagaimana cara mencari akar imajiner dari persamaan kuadrat?",
+        description:
+          "Kuasai langkah-langkah untuk menemukan akar imajiner menggunakan rumus kuadrat. Pelajari cara memasukkan diskriminan negatif ke dalam rumus untuk mendapatkan solusi kompleks a ± bi.",
+      },
+      en: {
+        title: "How to find the imaginary roots of a quadratic equation?",
+        description:
+          "Master the steps to find imaginary roots using the quadratic formula. Learn how to handle a negative discriminant in the formula to get complex solutions in the form a ± bi.",
+      },
+    },
+  },
+  {
+    slug: "why-do-imaginary-roots-come-in-conjugate-pairs",
+    locales: {
+      id: {
+        title: "Mengapa akar imajiner selalu muncul dalam pasangan konjugat?",
+        description:
+          "Pahami mengapa akar imajiner selalu berpasangan sebagai konjugat kompleks (a + bi dan a - bi). Temukan bagaimana tanda '±' dalam rumus kuadrat menghasilkan pasangan akar ini.",
+      },
+      en: {
+        title: "Why do imaginary roots always come in conjugate pairs?",
+        description:
+          "Understand why imaginary roots always appear in complex conjugate pairs (a + bi and a - bi). Discover how the '±' sign in the quadratic formula naturally leads to these paired roots.",
+      },
+    },
+  },
+  {
+    slug: "how-to-solve-quadratic-equation-by-completing-the-square",
+    locales: {
+      id: {
+        title:
+          "Bagaimana cara menyelesaikan persamaan kuadrat dengan melengkapi kuadrat sempurna?",
+        description:
+          "Pelajari metode langkah demi langkah untuk mengubah persamaan ax²+bx+c=0 menjadi bentuk (x+p)²=q untuk menemukan akarnya, bahkan saat faktorisasi sulit dilakukan.",
+      },
+      en: {
+        title: "How to solve a quadratic equation by completing the square?",
+        description:
+          "Learn the step-by-step method of transforming ax²+bx+c=0 into the form (x+p)²=q to find its roots, especially when factorization is difficult.",
+      },
+    },
+  },
+  {
+    slug: "when-to-use-completing-the-square-method",
+    locales: {
+      id: {
+        title:
+          "Kapan sebaiknya menggunakan metode melengkapi kuadrat sempurna?",
+        description:
+          "Pahami kapan metode melengkapi kuadrat sempurna menjadi pilihan terbaik, terutama untuk persamaan kuadrat yang tidak dapat difaktorkan dengan mudah menggunakan bilangan rasional.",
+      },
+      en: {
+        title: "When should you use the completing the square method?",
+        description:
+          "Understand when completing the square is the best choice, especially for quadratic equations that cannot be easily factored using rational numbers.",
+      },
+    },
+  },
+  {
+    slug: "how-to-handle-a-coefficient-not-1-in-completing-square",
+    locales: {
+      id: {
+        title:
+          "Bagaimana menangani koefisien 'a' yang bukan 1 saat melengkapi kuadrat?",
+        description:
+          "Kuasai langkah pertama yang krusial saat melengkapi kuadrat: cara membagi seluruh persamaan dengan koefisien 'a' untuk memulai proses dengan benar.",
+      },
+      en: {
+        title:
+          "How to handle an 'a' coefficient that isn't 1 in completing the square?",
+        description:
+          "Master the crucial first step when completing the square: how to divide the entire equation by the 'a' coefficient to begin the process correctly.",
+      },
+    },
+  },
+  {
+    slug: "how-to-determine-the-type-of-roots-of-a-quadratic-equation",
+    locales: {
+      id: {
+        title: "Bagaimana cara menentukan jenis akar dari persamaan kuadrat?",
+        description:
+          "Pelajari cara menggunakan diskriminan (D = b²-4ac) untuk menentukan jenis akar persamaan kuadrat: dua akar real berbeda (D>0), satu akar kembar (D=0), atau akar imajiner (D<0).",
+      },
+      en: {
+        title: "How to determine the type of roots of a quadratic equation?",
+        description:
+          "Learn how to use the discriminant (D = b²-4ac) to determine the type of roots a quadratic equation has: two distinct real roots (D>0), one repeated root (D=0), or imaginary roots (D<0).",
+      },
+    },
+  },
+  {
+    slug: "what-do-different-discriminant-values-mean",
+    locales: {
+      id: {
+        title: "Apa arti dari nilai diskriminan yang berbeda?",
+        description:
+          "Pahami arti di balik nilai diskriminan. D>0 berarti dua solusi real, D=0 berarti satu solusi real, dan D<0 berarti tidak ada solusi real (akar imajiner).",
+      },
+      en: {
+        title: "What do different discriminant values mean?",
+        description:
+          "Understand the meaning behind the discriminant's value. A positive D means two real solutions, D=0 means one real solution, and a negative D means no real solutions (imaginary roots).",
+      },
+    },
+  },
+  {
+    slug: "how-to-find-sum-and-product-of-quadratic-roots",
+    locales: {
+      id: {
+        title:
+          "Bagaimana cara mencari jumlah dan hasil kali akar-akar persamaan kuadrat?",
+        description:
+          "Pelajari rumus cepat untuk menemukan jumlah (x₁+x₂ = -b/a) dan hasil kali (x₁·x₂ = c/a) dari akar-akar persamaan kuadrat tanpa harus mencari nilai akarnya terlebih dahulu.",
+      },
+      en: {
+        title:
+          "How to find the sum and product of quadratic roots from the equation?",
+        description:
+          "Learn the quick formulas to find the sum (x₁+x₂ = -b/a) and product (x₁·x₂ = c/a) of the roots of a quadratic equation directly from its coefficients without solving for the roots.",
+      },
+    },
+  },
+  {
+    slug: "how-a-value-affects-parabola-shape",
+    locales: {
+      id: {
+        title: "Bagaimana nilai 'a' mempengaruhi bentuk parabola?",
+        description:
+          "Pelajari bagaimana koefisien 'a' menentukan arah parabola. Jika a > 0, parabola terbuka ke atas (minimum), dan jika a < 0, terbuka ke bawah (maksimum).",
+      },
+      en: {
+        title: "How does the 'a' value affect a parabola's shape?",
+        description:
+          "Learn how the 'a' coefficient determines a parabola's direction. If a > 0, it opens upward (minimum), and if a < 0, it opens downward (maximum).",
+      },
+    },
+  },
+  {
+    slug: "what-are-key-features-of-a-parabola",
+    locales: {
+      id: {
+        title: "Apa saja fitur utama dari sebuah parabola?",
+        description:
+          "Temukan karakteristik penting dari grafik fungsi kuadrat: titik puncak (vertex), sumbu simetri, dan titik potong sumbu x dan y untuk memahami bentuknya.",
+      },
+      en: {
+        title: "What are the key features of a parabola?",
+        description:
+          "Discover the essential characteristics of a quadratic function's graph: the vertex, axis of symmetry, and x/y-intercepts to understand its shape.",
+      },
+    },
+  },
+  {
+    slug: "how-to-find-vertex-and-axis-of-symmetry-of-a-parabola",
+    locales: {
+      id: {
+        title:
+          "Bagaimana cara menemukan titik puncak dan sumbu simetri parabola?",
+        description:
+          "Pelajari rumus x = -b/2a untuk menemukan sumbu simetri dan koordinat titik puncak, yang merupakan titik terendah atau tertinggi dari grafik fungsi kuadrat.",
+      },
+      en: {
+        title: "How to find a parabola's vertex and axis of symmetry?",
+        description:
+          "Learn the formula x = -b/2a to find the axis of symmetry and the coordinates of the vertex, which is the minimum or maximum point of the quadratic graph.",
+      },
+    },
+  },
+  {
+    slug: "how-to-build-quadratic-equation-from-three-points",
+    locales: {
+      id: {
+        title: "Cara buat persamaan kuadrat dari 3 titik?",
+        description:
+          "Pelajari cara membuat fungsi kuadrat dengan substitusi tiga titik ke y = ax²+bx+c, lalu selesaikan sistem persamaan untuk menemukan a, b, dan c.",
+      },
+      en: {
+        title: "How to build a quadratic equation from 3 points?",
+        description:
+          "Learn to construct a quadratic function by substituting three points into y = ax²+bx+c, then solving the system of equations to find a, b, and c.",
+      },
+    },
+  },
+  {
+    slug: "how-to-build-quadratic-equation-from-vertex-and-point",
+    locales: {
+      id: {
+        title: "Cara buat persamaan kuadrat dari titik puncak & 1 titik lain?",
+        description:
+          "Gunakan bentuk puncak f(x) = a(x-h)²+k. Substitusikan titik puncak (h,k) dan satu titik lain untuk menemukan nilai 'a' dan membentuk persamaan.",
+      },
+      en: {
+        title: "How to build quadratic equation from vertex & one point?",
+        description:
+          "Use the vertex form f(x) = a(x-h)²+k. Substitute the vertex (h,k) and another point to find the value of 'a' and form the equation.",
+      },
+    },
+  },
+  {
+    slug: "how-to-build-quadratic-equation-from-roots-and-point",
+    locales: {
+      id: {
+        title: "Cara buat persamaan kuadrat dari akar-akar & 1 titik lain?",
+        description:
+          "Gunakan bentuk faktor f(x) = a(x-p)(x-q). Substitusikan akar-akar (p,q) dan satu titik lain untuk menemukan nilai 'a' dan membentuk persamaan.",
+      },
+      en: {
+        title: "How to build quadratic equation from roots & one point?",
+        description:
+          "Use the factored form f(x) = a(x-p)(x-q). Substitute the roots (p,q) and another point to find the value of 'a' and form the equation.",
+      },
+    },
+  },
+  {
+    slug: "how-to-maximize-area-with-fixed-perimeter",
+    locales: {
+      id: {
+        title: "Gimana cara maksimalkan luas dengan keliling tetap?",
+        description:
+          "Pelajari cara memodelkan masalah nyata, seperti memagari kebun, dengan membuat fungsi kuadrat untuk luas. Gunakan rumus puncak x=-b/2a untuk menemukan ukuran yang memberikan luas maksimum.",
+      },
+      en: {
+        title: "How to maximize area with a fixed perimeter?",
+        description:
+          "Learn to model a real-world problem, like fencing a garden, by creating a quadratic area function. Use the vertex formula x=-b/2a to find the dimensions that give the maximum area.",
+      },
+    },
+  },
+  {
+    slug: "how-to-find-maximum-value-of-quadratic-function",
+    locales: {
+      id: {
+        title: "Bagaimana cara cari nilai maks fungsi kuadrat?",
+        description:
+          "Pahami bahwa nilai maksimum fungsi kuadrat f(x)=ax²+bx+c (dengan a<0) ada di puncaknya. Gunakan rumus x=-b/2a untuk mencari inputnya, lalu hitung f(x) untuk nilai maks.",
+      },
+      en: {
+        title: "How to find the max value of a quadratic function?",
+        description:
+          "Understand that the maximum value of a quadratic function f(x)=ax²+bx+c (with a<0) is found at its vertex. Use the formula x=-b/2a to find the input, and then calculate f(x) for the max value.",
+      },
+    },
+  },
+  {
+    slug: "what-are-real-life-applications-of-quadratic-maximization",
+    locales: {
+      id: {
+        title: "Apa penggunaan nyata maksimisasi kuadrat?",
+        description:
+          "Temukan bagaimana mencari titik puncak parabola membantu memecahkan masalah nyata, seperti memaksimalkan laba perusahaan, menghitung tinggi puncak benda yang dilempar, atau mencari luas kebun terbesar.",
+      },
+      en: {
+        title: "What are real-life uses of quadratic maximization?",
+        description:
+          "Discover how finding the vertex of a parabola helps solve real problems, like maximizing a company's profit, calculating the peak height of a thrown object, or finding the largest area for a garden.",
+      },
+    },
+  },
+  {
+    slug: "how-to-find-minimum-value-of-quadratic-function",
+    locales: {
+      id: {
+        title: "Gimana cara cari nilai minimum fungsi kuadrat?",
+        description:
+          "Pelajari cara menemukan nilai terkecil dari fungsi kuadrat f(x)=ax²+bx+c. Gunakan rumus puncak x=-b/2a saat a>0 untuk menemukan titik terendah pada grafik 'senyum'.",
+      },
+      en: {
+        title: "How to find a quadratic function's minimum value?",
+        description:
+          "Learn how to find the smallest value of a quadratic function f(x)=ax²+bx+c. Use the vertex formula x=-b/2a when a>0 to find the lowest point on the 'smile' graph.",
+      },
+    },
+  },
+  {
+    slug: "how-to-minimize-cost-with-quadratic-functions",
+    locales: {
+      id: {
+        title: "Bagaimana cara meminimalkan biaya dengan fungsi kuadrat?",
+        description:
+          "Terapkan fungsi kuadrat untuk masalah bisnis nyata. Pelajari cara menemukan jumlah unit produksi yang menghasilkan biaya total minimum dengan menganalisis fungsi biaya.",
+      },
+      en: {
+        title: "How to minimize cost with quadratic functions?",
+        description:
+          "Apply quadratic functions to real business problems. Learn how to find the number of production units that results in the minimum total cost by analyzing a cost function.",
+      },
+    },
+  },
+  {
+    slug: "how-to-solve-minimum-sum-of-squares-problem",
+    locales: {
+      id: {
+        title: "Gimana cara selesaikan soal jumlah kuadrat minimum?",
+        description:
+          "Ikuti contoh untuk menemukan dua bilangan dengan jumlah tetap (misal 16) yang menghasilkan jumlah kuadrat terkecil. Modelkan masalahnya sebagai fungsi kuadrat dan temukan puncaknya.",
+      },
+      en: {
+        title: "How to solve a minimum sum of squares problem?",
+        description:
+          "Follow an example to find two numbers with a fixed sum (e.g., 16) that yield the smallest sum of their squares. Model the problem as a quadratic function and find its vertex.",
+      },
+    },
+  },
 ];
 
 export const highSchool10MathematicsData = data.map((item) => ({
