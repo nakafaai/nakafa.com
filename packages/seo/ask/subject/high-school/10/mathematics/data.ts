@@ -1247,6 +1247,502 @@ const data: BaseAsk[] = [
       },
     },
   },
+  {
+    slug: "what-is-an-arithmetic-sequence",
+    locales: {
+      id: {
+        title: "Apa itu barisan aritmetika?",
+        description:
+          "Pelajari definisi barisan aritmetika, pahami konsep beda yang konstan, dan lihat contoh barisan bilangan yang mengikuti pola ini.",
+      },
+      en: {
+        title: "What is an arithmetic sequence?",
+        description:
+          "Learn the definition of an arithmetic sequence, understand the concept of a common difference, and see examples of number sequences that follow this pattern.",
+      },
+    },
+  },
+  {
+    slug: "how-to-find-nth-term-arithmetic-sequence",
+    locales: {
+      id: {
+        title: "Bagaimana cara mencari suku ke-n barisan aritmetika?",
+        description:
+          "Temukan rumus suku ke-n dari barisan aritmetika, U_n = a + (n-1)b, dan pahami cara menggunakannya untuk mencari suku manapun dalam suatu barisan.",
+      },
+      en: {
+        title: "How to find the nth term of an arithmetic sequence?",
+        description:
+          "Discover the formula for the nth term of an arithmetic sequence, U_n = a + (n-1)b, and understand how to use it to find any term in a sequence.",
+      },
+    },
+  },
+  {
+    slug: "real-life-examples-arithmetic-sequence",
+    locales: {
+      id: {
+        title: "Apa contoh penerapan barisan aritmetika dalam kehidupan nyata?",
+        description:
+          "Jelajahi penerapan barisan aritmetika di dunia nyata melalui contoh praktis, seperti menghitung jumlah tabungan atau menentukan susunan kursi di gedung pertunjukan.",
+      },
+      en: {
+        title: "What are real-life examples of arithmetic sequences?",
+        description:
+          "Explore real-world applications of arithmetic sequences through practical examples, such as calculating savings over time or determining seating arrangements in a theater.",
+      },
+    },
+  },
+  {
+    slug: "what-is-an-arithmetic-series-and-gauss-method",
+    locales: {
+      id: {
+        title: "Apa itu deret aritmetika dan bagaimana metode Gauss?",
+        description:
+          "Pelajari tentang deret aritmetika, penjumlahan dari barisan aritmetika, dan temukan metode cerdas yang digunakan Carl Friedrich Gauss untuk menjumlahkan angka 1 sampai 100 dengan cepat.",
+      },
+      en: {
+        title: "What is an arithmetic series and how did Gauss solve it?",
+        description:
+          "Learn about arithmetic series, the sum of arithmetic sequences, and discover the clever method Carl Friedrich Gauss used to quickly sum numbers from 1 to 100.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-sum-of-arithmetic-series",
+    locales: {
+      id: {
+        title: "Bagaimana cara menghitung jumlah deret aritmetika?",
+        description:
+          "Kuasai dua rumus utama untuk menghitung jumlah deret aritmetika, S_n = n/2(2a + (n-1)b) dan S_n = n/2(a + U_n), dan pahami kapan harus menggunakan masing-masing rumus.",
+      },
+      en: {
+        title: "How do you calculate the sum of an arithmetic series?",
+        description:
+          "Master the two primary formulas for calculating the sum of an arithmetic series, S_n = n/2(2a + (n-1)b) and S_n = n/2(a + U_n), and know when to use each one.",
+      },
+    },
+  },
+  {
+    slug: "how-to-solve-arithmetic-series-problems",
+    locales: {
+      id: {
+        title: "Bagaimana cara menyelesaikan soal deret aritmetika?",
+        description:
+          "Pelajari cara menerapkan rumus deret aritmetika untuk menyelesaikan soal-soal praktis. Lihat contoh langkah demi langkah menghitung jumlah suku dari suatu deret.",
+      },
+      en: {
+        title: "How do you solve problems involving arithmetic series?",
+        description:
+          "Learn how to apply the arithmetic series formulas to solve practical problems. See step-by-step examples of calculating the sum of a given number of terms.",
+      },
+    },
+  },
+  {
+    slug: "difference-between-convergent-and-divergent-series",
+    locales: {
+      id: {
+        title: "Apa perbedaan antara deret konvergen dan divergen?",
+        description:
+          "Pahami perbedaan mendasar antara deret konvergen yang jumlahnya mendekati nilai terbatas dan deret divergen yang jumlahnya tidak terbatas atau berosilasi.",
+      },
+      en: {
+        title:
+          "What is the difference between convergent and divergent series?",
+        description:
+          "Understand the fundamental difference between a convergent series, which sums to a finite limit, and a divergent series, which does not.",
+      },
+    },
+  },
+  {
+    slug: "how-to-know-if-a-series-is-convergent",
+    locales: {
+      id: {
+        title: "Bagaimana cara mengetahui apakah suatu deret konvergen?",
+        description:
+          "Pelajari ciri-ciri utama deret konvergen, termasuk syarat perlu bahwa suku ke-n harus mendekati nol, dan lihat contoh deret geometri dengan rasio |r| < 1.",
+      },
+      en: {
+        title: "How can you tell if a series is convergent?",
+        description:
+          "Learn the key characteristics of a convergent series, including the necessary condition that the nth term must approach zero, and see examples like geometric series with a ratio |r| < 1.",
+      },
+    },
+  },
+  {
+    slug: "what-are-examples-of-divergent-series",
+    locales: {
+      id: {
+        title: "Apa saja contoh deret divergen?",
+        description:
+          "Temukan contoh-contoh umum dari deret divergen, seperti deret aritmetika, deret geometri dengan rasio |r| ≥ 1, dan deret harmonik yang menarik.",
+      },
+      en: {
+        title: "What are some examples of divergent series?",
+        description:
+          "Discover common examples of divergent series, including arithmetic series, geometric series with a ratio |r| ≥ 1, and the interesting case of the harmonic series.",
+      },
+    },
+  },
+  {
+    slug: "arithmetic-vs-geometric-sequence-difference",
+    locales: {
+      id: {
+        title: "Apa beda barisan aritmetika dan geometri?",
+        description:
+          "Pahami perbedaan kunci: barisan aritmetika menggunakan selisih (beda) konstan, sedangkan barisan geometri menggunakan perbandingan (rasio) konstan.",
+      },
+      en: {
+        title: "Arithmetic vs Geometric Sequence What's The Difference?",
+        description:
+          "Understand the key difference: arithmetic sequences use a constant difference, while geometric sequences use a constant ratio.",
+      },
+    },
+  },
+  {
+    slug: "how-to-identify-arithmetic-or-geometric-sequence",
+    locales: {
+      id: {
+        title: "Bagaimana cara membedakan barisan aritmetika dan geometri?",
+        description:
+          "Pelajari cara mengidentifikasi jenis barisan. Jika selisih antar suku tetap, itu aritmetika. Jika rasio antar suku tetap, itu geometri.",
+      },
+      en: {
+        title: "How to tell if a sequence is arithmetic or geometric?",
+        description:
+          "Learn how to identify sequence types. If the difference between terms is constant, it's arithmetic. If the ratio is constant, it's geometric.",
+      },
+    },
+  },
+  {
+    slug: "real-life-examples-arithmetic-vs-geometric",
+    locales: {
+      id: {
+        title: "Apa contoh nyata barisan aritmetika vs geometri?",
+        description:
+          "Lihat penerapan di dunia nyata: tabungan rutin dengan kenaikan tetap (aritmetika) versus pertumbuhan investasi dengan bunga majemuk (geometri).",
+      },
+      en: {
+        title: "Real Life Examples Arithmetic vs Geometric Sequence?",
+        description:
+          "See real-world applications: regular savings with a fixed increase (arithmetic) versus investment growth with compound interest (geometric).",
+      },
+    },
+  },
+  {
+    slug: "arithmetic-vs-geometric-series-whats-the-difference",
+    locales: {
+      id: {
+        title: "Apa beda deret aritmetika dan geometri?",
+        description:
+          "Pahami perbedaan utama: deret aritmetika adalah jumlah barisan dengan beda tetap, sedangkan deret geometri adalah jumlah barisan dengan rasio tetap.",
+      },
+      en: {
+        title: "Arithmetic vs Geometric Series What's The Difference?",
+        description:
+          "Understand the key difference: an arithmetic series sums a sequence with a common difference, while a geometric series sums a sequence with a common ratio.",
+      },
+    },
+  },
+  {
+    slug: "sum-formulas-for-arithmetic-and-geometric-series",
+    locales: {
+      id: {
+        title: "Apa rumus jumlah untuk deret aritmetika dan geometri?",
+        description:
+          "Bandingkan rumus jumlah untuk deret aritmetika, Sn = n/2(2a+(n-1)b), dengan rumus untuk deret geometri, Sn = a(r^n-1)/(r-1).",
+      },
+      en: {
+        title: "What are the sum formulas for arithmetic and geometric series?",
+        description:
+          "Compare the sum formula for an arithmetic series, Sn = n/2(2a+(n-1)b), with the formula for a geometric series, Sn = a(r^n-1)/(r-1).",
+      },
+    },
+  },
+  {
+    slug: "real-life-analogy-arithmetic-vs-geometric-series",
+    locales: {
+      id: {
+        title: "Apa analogi nyata deret aritmetika vs geometri?",
+        description:
+          "Lihat perbedaan pola pertumbuhan: deret aritmetika seperti total tumpukan bata (linear), sedangkan deret geometri seperti total bakteri (eksponensial).",
+      },
+      en: {
+        title: "Real-Life Analogy Arithmetic vs Geometric Series?",
+        description:
+          "See the difference in growth patterns: an arithmetic series is like the total bricks in a stack (linear), while a geometric series is like the total bacteria count (exponential).",
+      },
+    },
+  },
+  {
+    slug: "sequence-vs-series-whats-the-difference",
+    locales: {
+      id: {
+        title: "Apa beda antara barisan dan deret?",
+        description:
+          "Pahami perbedaan inti: barisan adalah urutan bilangan yang dipisahkan koma, sedangkan deret adalah hasil penjumlahan bilangan tersebut.",
+      },
+      en: {
+        title: "Sequence vs Series What's The Difference?",
+        description:
+          "Understand the core difference: a sequence is an ordered list of numbers separated by commas, while a series is the sum of those numbers.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-sequence-in-mathematics",
+    locales: {
+      id: {
+        title: "Apa itu barisan dalam matematika?",
+        description:
+          "Pelajari bahwa barisan adalah daftar bilangan terurut yang mengikuti pola tertentu. Analogi sederhananya adalah setiap anak tangga.",
+      },
+      en: {
+        title: "What is a sequence in mathematics?",
+        description:
+          "Learn that a sequence is an ordered list of numbers that follows a specific pattern. A simple analogy is the individual steps of a staircase.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-series-in-mathematics",
+    locales: {
+      id: {
+        title: "Apa itu deret dalam matematika?",
+        description:
+          "Pahami bahwa deret adalah hasil penjumlahan dari suku-suku dalam suatu barisan. Analogi sederhananya adalah total ketinggian yang dicapai setelah menaiki tangga.",
+      },
+      en: {
+        title: "What is a series in mathematics?",
+        description:
+          "Understand that a series is the result of summing the terms of a sequence. A simple analogy is the total height climbed after ascending a staircase.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-geometric-sequence",
+    locales: {
+      id: {
+        title: "Apa itu barisan geometri?",
+        description:
+          "Pelajari definisi barisan geometri, di mana setiap suku memiliki rasio konstan terhadap suku sebelumnya. Lihat contoh dari melipat kertas hingga pertumbuhan bakteri.",
+      },
+      en: {
+        title: "What is a geometric sequence?",
+        description:
+          "Learn the definition of a geometric sequence, where each term has a constant ratio to the previous term. See examples from paper folding to bacterial growth.",
+      },
+    },
+  },
+  {
+    slug: "how-to-find-nth-term-geometric-sequence",
+    locales: {
+      id: {
+        title: "Bagaimana cara mencari suku ke-n barisan geometri?",
+        description:
+          "Temukan rumus suku ke-n, U_n = a * r^(n-1), dan pelajari cara menggunakannya untuk menentukan nilai suku mana pun dalam barisan geometri.",
+      },
+      en: {
+        title: "How to find the nth term of a geometric sequence?",
+        description:
+          "Discover the formula for the nth term, U_n = a * r^(n-1), and learn how to use it to determine the value of any term in a geometric sequence.",
+      },
+    },
+  },
+  {
+    slug: "real-life-examples-geometric-sequence",
+    locales: {
+      id: {
+        title: "Apa contoh nyata dari barisan geometri?",
+        description:
+          "Jelajahi penerapan barisan geometri dalam kehidupan nyata, seperti pertumbuhan populasi bakteri, bunga majemuk dalam investasi, dan peluruhan radioaktif.",
+      },
+      en: {
+        title: "What are real-life examples of a geometric sequence?",
+        description:
+          "Explore real-world applications of geometric sequences, such as bacterial population growth, compound interest in investments, and radioactive decay.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-geometric-series",
+    locales: {
+      id: {
+        title: "Apa itu deret geometri?",
+        description:
+          "Pahami konsep deret geometri sebagai penjumlahan suku-suku dari barisan geometri. Lihat contohnya dalam menghitung total pasien COVID-19 dari waktu ke waktu.",
+      },
+      en: {
+        title: "What is a geometric series?",
+        description:
+          "Understand the concept of a geometric series as the sum of the terms of a geometric sequence. See an example in calculating the total number of COVID-19 patients over time.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-sum-of-geometric-series",
+    locales: {
+      id: {
+        title: "Bagaimana cara menghitung jumlah deret geometri?",
+        description:
+          "Pelajari rumus untuk menghitung jumlah n suku pertama deret geometri, Sn = a(r^n - 1)/(r - 1), dan cara menurunkannya dari pola deret.",
+      },
+      en: {
+        title: "How to calculate the sum of a geometric series?",
+        description:
+          "Learn the formula for calculating the sum of the first n terms of a geometric series, Sn = a(r^n - 1)/(r - 1), and how it's derived from the series pattern.",
+      },
+    },
+  },
+  {
+    slug: "how-to-solve-geometric-series-problems",
+    locales: {
+      id: {
+        title: "Bagaimana cara menyelesaikan soal deret geometri?",
+        description:
+          "Terapkan rumus deret geometri untuk menyelesaikan masalah di dunia nyata, seperti menghitung total produksi perusahaan yang meningkat secara eksponensial.",
+      },
+      en: {
+        title: "How to solve geometric series problems?",
+        description:
+          "Apply the geometric series formula to solve real-world problems, such as calculating the total production of a company with exponential growth.",
+      },
+    },
+  },
+  {
+    slug: "what-is-an-infinite-geometric-series",
+    locales: {
+      id: {
+        title: "Apa itu deret geometri tak hingga?",
+        description:
+          "Pahami konsep deret geometri tak hingga melalui contoh bola memantul, dan pelajari bagaimana kita bisa menjumlahkan suku yang tak terbatas.",
+      },
+      en: {
+        title: "What is an infinite geometric series?",
+        description:
+          "Understand the concept of an infinite geometric series through the example of a bouncing ball, and learn how an infinite number of terms can be summed.",
+      },
+    },
+  },
+  {
+    slug: "when-does-an-infinite-geometric-series-converge",
+    locales: {
+      id: {
+        title: "Kapan deret geometri tak hingga memiliki jumlah?",
+        description:
+          "Pelajari syarat konvergensi deret geometri tak hingga, yaitu ketika rasio |r| < 1, yang memungkinkan jumlahnya bisa dihitung.",
+      },
+      en: {
+        title: "When does an infinite geometric series have a sum?",
+        description:
+          "Learn the condition for convergence of an infinite geometric series, which is when the ratio |r| < 1, allowing its sum to be calculated.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-sum-of-infinite-geometric-series",
+    locales: {
+      id: {
+        title: "Bagaimana cara menghitung jumlah deret geometri tak hingga?",
+        description:
+          "Kuasai rumus jumlah deret geometri tak hingga, S∞ = a/(1-r), dan terapkan untuk menyelesaikan masalah seperti total jarak bola memantul.",
+      },
+      en: {
+        title: "How to calculate the sum of an infinite geometric series?",
+        description:
+          "Master the formula for the sum of an infinite geometric series, S∞ = a/(1-r), and apply it to solve problems like the total distance a bouncing ball travels.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-number-sequence",
+    locales: {
+      id: {
+        title: "Apa itu barisan bilangan?",
+        description:
+          "Pelajari definisi barisan bilangan sebagai susunan angka yang terurut mengikuti pola tertentu, di mana setiap angka disebut suku.",
+      },
+      en: {
+        title: "What is a number sequence?",
+        description:
+          "Learn the definition of a number sequence as an ordered list of numbers following a specific pattern, with each number called a term.",
+      },
+    },
+  },
+  {
+    slug: "how-to-find-formula-for-a-sequence-pattern",
+    locales: {
+      id: {
+        title: "Bagaimana cara menemukan rumus dari pola barisan?",
+        description:
+          "Jelajahi cara menentukan rumus barisan bilangan dengan mengamati pola, seperti pada susunan meja dan kursi yang menghasilkan rumus U_n = 2n + 2.",
+      },
+      en: {
+        title: "How to find the formula for a sequence pattern?",
+        description:
+          "Explore how to determine the formula for a number sequence by observing patterns, like the arrangement of tables and chairs giving the formula U_n = 2n + 2.",
+      },
+    },
+  },
+  {
+    slug: "what-are-different-types-of-number-sequences",
+    locales: {
+      id: {
+        title: "Apa saja jenis-jenis barisan bilangan?",
+        description:
+          "Temukan jenis-jenis utama barisan, termasuk aritmetika (beda tetap), geometri (rasio tetap), dan pola lain seperti barisan Fibonacci.",
+      },
+      en: {
+        title: "What are the different types of number sequences?",
+        description:
+          "Discover the main types of sequences, including arithmetic (constant difference), geometric (constant ratio), and other patterns like the Fibonacci sequence.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-number-series",
+    locales: {
+      id: {
+        title: "Apa itu deret bilangan?",
+        description:
+          "Pahami konsep deret sebagai hasil penjumlahan berurutan dari suku-suku dalam barisan bilangan. Temukan perbedaannya dengan barisan.",
+      },
+      en: {
+        title: "What is a number series?",
+        description:
+          "Understand the concept of a series as the result of sequentially adding the terms of a number sequence. Discover how it differs from a sequence.",
+      },
+    },
+  },
+  {
+    slug: "how-does-handshake-problem-illustrate-series",
+    locales: {
+      id: {
+        title: "Bagaimana soal jabat tangan mencontohkan deret?",
+        description:
+          "Jelajahi bagaimana total jabat tangan dalam sebuah grup membentuk deret bilangan, seperti 1+2+3, yang merupakan penjumlahan dari barisan bilangan asli.",
+      },
+      en: {
+        title: "How does the handshake problem illustrate a series?",
+        description:
+          "Explore how the total handshakes in a group form a number series, such as 1+2+3, which is the sum of a sequence of natural numbers.",
+      },
+    },
+  },
+  {
+    slug: "what-are-main-types-of-number-series",
+    locales: {
+      id: {
+        title: "Apa saja jenis-jenis utama deret bilangan?",
+        description:
+          "Kenali dua jenis utama deret: deret aritmetika (berasal dari barisan aritmetika) dan deret geometri (berasal dari barisan geometri).",
+      },
+      en: {
+        title: "What are the main types of number series?",
+        description:
+          "Learn about the two main types of series: arithmetic series (derived from an arithmetic sequence) and geometric series (derived from a geometric sequence).",
+      },
+    },
+  },
 ];
 
 export const highSchool10MathematicsData = data.map((item) => ({
