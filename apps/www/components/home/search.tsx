@@ -57,7 +57,6 @@ export function HomeSearch() {
   return (
     <PromptInput onSubmit={handleSubmit}>
       <PromptInputTextarea
-        autoFocus
         className="p-4"
         onChange={(e) => setText(e.target.value)}
         placeholder={t("text-placeholder")}

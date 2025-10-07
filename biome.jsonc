@@ -9,6 +9,9 @@
   },
   "linter": {
     "rules": {
+      "a11y": {
+        "noNoninteractiveElementInteractions": "off"
+      },
       "complexity": {
         "noExcessiveCognitiveComplexity": {
           "level": "warn",

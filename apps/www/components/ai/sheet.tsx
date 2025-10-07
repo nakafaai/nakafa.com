@@ -118,7 +118,7 @@ export function AiSheet() {
           </SheetTitle>
         </SheetHeader>
 
-        <div className="relative flex size-full flex-col divide-y overflow-hidden">
+        <div className="relative flex size-full flex-col overflow-hidden">
           <Conversation>
             <ConversationContent>
               {messages.map((message) => (
@@ -168,13 +168,9 @@ const AiSheetToolbar = memo(() => {
   };
 
   return (
-    <div className="grid shrink-0">
-      <PromptInput
-        className="rounded-none border-0 shadow-none"
-        onSubmit={handleSubmit}
-      >
+    <div className="grid shrink-0 px-2 pb-2">
+      <PromptInput onSubmit={handleSubmit}>
         <PromptInputTextarea
-          autoFocus
           onChange={(e) => setText(e.target.value)}
           placeholder={t("text-placeholder")}
           value={text}

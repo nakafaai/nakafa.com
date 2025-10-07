@@ -26,7 +26,7 @@ export type AiStore = State & Actions;
 const initialState: State = {
   open: false,
   text: "",
-  model: "sonoma-sky", // TODO: NEED TO CHANGE WHEN IT'S NOT FREE ANYMORE
+  model: "openai-oss",
   locale: routing.defaultLocale,
   slug: "",
 };
