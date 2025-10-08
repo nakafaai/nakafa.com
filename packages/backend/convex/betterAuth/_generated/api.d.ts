@@ -99,7 +99,7 @@ export type Mounts = {
                 logo?: null | string;
                 metadata?: null | string;
                 name: string;
-                slug?: null | string;
+                slug: string;
               };
               model: "organization";
             }
@@ -1107,7 +1107,7 @@ export type Mounts = {
                 logo?: null | string;
                 metadata?: null | string;
                 name?: string;
-                slug?: null | string;
+                slug?: string;
               };
               where?: Array<{
                 connector?: "AND" | "OR";
@@ -1527,7 +1527,7 @@ export type Mounts = {
                 logo?: null | string;
                 metadata?: null | string;
                 name?: string;
-                slug?: null | string;
+                slug?: string;
               };
               where?: Array<{
                 connector?: "AND" | "OR";
@@ -1739,6 +1739,14 @@ export type Mounts = {
             };
         onUpdateHandle?: string;
       },
+      any
+    >;
+  };
+  auth: {
+    setUserId: FunctionReference<
+      "mutation",
+      "public",
+      { authId: string; userId: string },
       any
     >;
   };

@@ -129,7 +129,7 @@ export declare const components: {
                   logo?: null | string;
                   metadata?: null | string;
                   name: string;
-                  slug?: null | string;
+                  slug: string;
                 };
                 model: "organization";
               }
@@ -1137,7 +1137,7 @@ export declare const components: {
                   logo?: null | string;
                   metadata?: null | string;
                   name?: string;
-                  slug?: null | string;
+                  slug?: string;
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
@@ -1557,7 +1557,7 @@ export declare const components: {
                   logo?: null | string;
                   metadata?: null | string;
                   name?: string;
-                  slug?: null | string;
+                  slug?: string;
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
@@ -1769,6 +1769,14 @@ export declare const components: {
               };
           onUpdateHandle?: string;
         },
+        any
+      >;
+    };
+    auth: {
+      setUserId: FunctionReference<
+        "mutation",
+        "internal",
+        { authId: string; userId: string },
         any
       >;
     };
