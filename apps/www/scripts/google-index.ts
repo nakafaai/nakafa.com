@@ -29,7 +29,7 @@
 // Environment variables loaded via Node.js --env-file flag
 import fs from "node:fs";
 import path from "node:path";
-import { GoogleAuth } from "google-auth-library";
+import { JWT } from "google-auth-library";
 import {
   baseRoutes,
   getAskRoutes,
@@ -77,18 +77,23 @@ const GOOGLE_PUBLISH_ENDPOINT =
   "https://indexing.googleapis.com/v3/urlNotifications:publish";
 
 // Initialize Google Auth client
-function initializeGoogleAuth(): GoogleAuth {
-  return new GoogleAuth({
-    keyFile: GOOGLE_KEY_FILE,
+function initializeGoogleAuth(): JWT {
+  // Load credentials from file
+  const keyFileContent = fs.readFileSync(GOOGLE_KEY_FILE, "utf8");
+  const credentials = JSON.parse(keyFileContent);
+
+  // Use JWT constructor directly (recommended approach)
+  return new JWT({
+    email: credentials.client_email,
+    key: credentials.private_key,
     scopes: [GOOGLE_INDEXING_SCOPE],
   });
 }
 
 // Get access token for Google API
-async function getGoogleAccessToken(auth: GoogleAuth): Promise<string> {
+async function getGoogleAccessToken(auth: JWT): Promise<string> {
   try {
-    const client = await auth.getClient();
-    const accessTokenResponse = await client.getAccessToken();
+    const accessTokenResponse = await auth.getAccessToken();
     const accessToken = accessTokenResponse.token;
 
     if (!accessToken) {
