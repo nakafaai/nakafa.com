@@ -1743,6 +1743,872 @@ const data: BaseAsk[] = [
       },
     },
   },
+  {
+    slug: "when-to-use-mean-median-mode",
+    locales: {
+      id: {
+        title: "Kapan Sebaiknya Menggunakan Mean, Median, atau Modus?",
+        description:
+          "Pelajari cara memilih ukuran pemusatan data yang tepat. Pahami bagaimana pencilan memengaruhi data Anda dan kapan harus menggunakan mean, median, atau modus.",
+      },
+      en: {
+        title: "When Should I Use Mean, Median, or Mode?",
+        description:
+          "Learn to choose the right measure of central tendency. Understand how outliers impact your data and when to use mean, median, or mode for accurate analysis.",
+      },
+    },
+  },
+  {
+    slug: "how-outliers-affect-mean-median",
+    locales: {
+      id: {
+        title: "Bagaimana Pencilan Memengaruhi Mean dan Median?",
+        description:
+          "Temukan perbedaan utama bagaimana pencilan memengaruhi mean dan median. Pahami mengapa median menjadi ukuran yang lebih kuat untuk kumpulan data yang tidak simetris.",
+      },
+      en: {
+        title: "How Do Outliers Affect Mean and Median?",
+        description:
+          "Discover the key differences in how outliers affect mean and median. See why median is a more robust measure for skewed data sets in statistical analysis.",
+      },
+    },
+  },
+  {
+    slug: "best-measure-for-skewed-data",
+    locales: {
+      id: {
+        title: "Ukuran Apa yang Terbaik untuk Data Miring?",
+        description:
+          "Temukan ukuran pemusatan terbaik untuk distribusi data yang miring. Pelajari mengapa median memberikan representasi data yang lebih akurat dengan adanya pencilan.",
+      },
+      en: {
+        title: "What Is the Best Measure for Skewed Data?",
+        description:
+          "Find out the best measure of central tendency for skewed distributions. Learn why the median provides a more accurate representation of data with outliers.",
+      },
+    },
+  },
+  {
+    slug: "what-is-difference-between-histogram-and-bar-chart",
+    locales: {
+      id: {
+        title: "Apa Perbedaan Antara Histogram dan Diagram Batang?",
+        description:
+          "Pelajari perbedaan utama antara histogram dan diagram batang. Pahami kapan harus menggunakan setiap grafik untuk memvisualisasikan data kuantitatif dan kategorikal.",
+      },
+      en: {
+        title: "What's the Difference Between a Histogram and a Bar Chart?",
+        description:
+          "Learn the key differences between a histogram and a bar chart. Understand when to use each graph to visualize quantitative versus categorical data effectively.",
+      },
+    },
+  },
+  {
+    slug: "how-to-interpret-data-distribution-with-histogram",
+    locales: {
+      id: {
+        title: "Bagaimana Cara Membaca Distribusi Data dengan Histogram?",
+        description:
+          "Temukan cara menafsirkan histogram untuk memahami distribusi data. Pelajari cara mengidentifikasi pola, frekuensi, dan bentuk keseluruhan dari data numerik Anda.",
+      },
+      en: {
+        title: "How to Read Data Distribution with a Histogram?",
+        description:
+          "Discover how to interpret a histogram to understand data distribution. Learn to identify patterns, frequency, and the overall shape of your numerical data.",
+      },
+    },
+  },
+  {
+    slug: "when-to-use-histogram-for-data-visualization",
+    locales: {
+      id: {
+        title: "Kapan Sebaiknya Menggunakan Histogram untuk Visualisasi Data?",
+        description:
+          "Pahami skenario terbaik untuk menggunakan histogram. Pelajari bagaimana histogram membantu memvisualisasikan sebaran data numerik kontinu yang dikelompokkan ke dalam interval.",
+      },
+      en: {
+        title: "When Should You Use a Histogram for Data Visualization?",
+        description:
+          "Understand the best scenarios for using a histogram. Learn how it helps visualize the distribution of continuous numerical data that is grouped into intervals.",
+      },
+    },
+  },
+  {
+    slug: "what-is-interquartile-range-and-why-is-it-useful",
+    locales: {
+      id: {
+        title: "Apa Itu Jangkauan Interkuartil (IQR) dan Mengapa Itu Penting?",
+        description:
+          "Pelajari apa itu Jangkauan Interkuartil (IQR) dan mengapa ini merupakan ukuran sebaran data yang kuat, dengan fokus pada variasi 50% data di bagian tengah.",
+      },
+      en: {
+        title: "What Is the Interquartile Range (IQR) and Why Is It Important?",
+        description:
+          "Learn what the Interquartile Range (IQR) is and why it's a robust measure of data spread, focusing on the variability within the middle 50% of data.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-interquartile-range-from-data-set",
+    locales: {
+      id: {
+        title: "Bagaimana Cara Menghitung Jangkauan Interkuartil (IQR)?",
+        description:
+          "Pahami langkah-langkah untuk menghitung Jangkauan Interkuartil (IQR) dengan menentukan kuartil Q1 dan Q3 untuk mengukur sebaran data secara akurat.",
+      },
+      en: {
+        title: "How Do You Calculate the Interquartile Range (IQR)?",
+        description:
+          "Understand the steps to calculate the Interquartile Range (IQR) by determining the Q1 and Q3 quartiles to accurately measure the spread of a data set.",
+      },
+    },
+  },
+  {
+    slug: "why-iqr-is-better-measure-of-spread-than-range",
+    locales: {
+      id: {
+        title: "Mengapa IQR Ukuran Sebaran yang Lebih Baik Daripada Range?",
+        description:
+          "Temukan mengapa Jangkauan Interkuartil (IQR) seringkali lebih unggul daripada range. Pelajari bagaimana IQR kebal terhadap pencilan untuk analisis data yang lebih baik.",
+      },
+      en: {
+        title: "Why Is IQR a Better Measure of Spread Than Range?",
+        description:
+          "Discover why the Interquartile Range (IQR) is often superior to the range. Learn how its resistance to outliers provides a better analysis of data.",
+      },
+    },
+  },
+  {
+    slug: "what-is-mean-and-how-to-calculate-it",
+    locales: {
+      id: {
+        title: "Apa Itu Mean dan Bagaimana Cara Menghitungnya?",
+        description:
+          "Pelajari definisi mean (rata-rata) dalam statistika. Pahami rumus sederhana untuk menghitungnya dengan menjumlahkan semua nilai dan membaginya dengan jumlah data.",
+      },
+      en: {
+        title: "What Is the Mean and How Do You Calculate It?",
+        description:
+          "Learn the definition of the mean (average) in statistics. Understand the simple formula for calculating it by summing all values and dividing by the data count.",
+      },
+    },
+  },
+  {
+    slug: "how-do-outliers-affect-the-mean",
+    locales: {
+      id: {
+        title: "Bagaimana Pencilan Memengaruhi Nilai Mean?",
+        description:
+          "Temukan bagaimana nilai ekstrem atau pencilan dapat secara signifikan mengubah mean. Pahami mengapa mean sensitif terhadap nilai yang jauh berbeda dari data lainnya.",
+      },
+      en: {
+        title: "How Do Outliers Affect the Mean?",
+        description:
+          "Discover how extreme values or outliers can significantly alter the mean. Understand why the mean is sensitive to values that are far from the rest of the data.",
+      },
+    },
+  },
+  {
+    slug: "mean-vs-median-which-is-more-sensitive-to-change",
+    locales: {
+      id: {
+        title: "Mean vs Median Mana yang Lebih Sensitif Terhadap Perubahan?",
+        description:
+          "Bandingkan bagaimana mean dan median bereaksi terhadap data baru. Pelajari mengapa mean lebih terpengaruh oleh penambahan nilai, terutama pencilan, daripada median.",
+      },
+      en: {
+        title: "Mean vs Median Which is More Sensitive to Change?",
+        description:
+          "Compare how the mean and median react to new data. Learn why the mean is more affected by additional values, especially outliers, compared to the median.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-mean-for-grouped-data",
+    locales: {
+      id: {
+        title: "Bagaimana Cara Menghitung Rata-Rata untuk Data Berkelompok?",
+        description:
+          "Pelajari metode langkah demi langkah untuk menghitung rata-rata dari tabel distribusi frekuensi. Kuasai penggunaan nilai tengah kelas dan rumusnya untuk analisis data.",
+      },
+      en: {
+        title: "How Do You Calculate the Mean for Grouped Data?",
+        description:
+          "Learn the step-by-step method for calculating the mean from a frequency distribution table. Master using class midpoints and the formula for data analysis.",
+      },
+    },
+  },
+  {
+    slug: "why-use-midpoints-for-mean-of-grouped-data",
+    locales: {
+      id: {
+        title:
+          "Mengapa Menggunakan Nilai Tengah untuk Rata-Rata Data Kelompok?",
+        description:
+          "Pahami peran penting nilai tengah kelas dalam mengestimasi rata-rata untuk data berkelompok. Temukan mengapa pendekatan ini diperlukan saat nilai data asli tidak diketahui.",
+      },
+      en: {
+        title: "Why Use Midpoints for the Mean of Grouped Data?",
+        description:
+          "Understand the key role of class midpoints in estimating the mean for grouped data. Discover why this approximation is necessary when original data values are unknown.",
+      },
+    },
+  },
+  {
+    slug: "what-is-formula-for-mean-of-grouped-data",
+    locales: {
+      id: {
+        title: "Apa Rumus untuk Menghitung Rata-Rata Data Berkelompok?",
+        description:
+          "Kuasai rumus untuk menghitung rata-rata data berkelompok. Pelajari apa arti setiap variabel (fi, xi) dan cara menerapkannya pada tabel frekuensi untuk hasil yang akurat.",
+      },
+      en: {
+        title: "What Is the Formula for the Mean of Grouped Data?",
+        description:
+          "Master the formula for calculating the mean of grouped data. Learn what each variable (fi, xi) represents and how to apply it to frequency tables for accurate results.",
+      },
+    },
+  },
+  {
+    slug: "how-to-find-median-in-odd-and-even-data-sets",
+    locales: {
+      id: {
+        title:
+          "Bagaimana Cara Menemukan Median dalam Kumpulan Data Ganjil dan Genap?",
+        description:
+          "Pelajari metode yang benar untuk menemukan median. Pahami perbedaan dalam menghitung nilai tengah untuk kumpulan data dengan jumlah ganjil versus genap.",
+      },
+      en: {
+        title: "How to Find the Median in Odd and Even Data Sets?",
+        description:
+          "Learn the correct method for finding the median. Understand the difference in calculating the middle value for data sets with an odd versus an even count.",
+      },
+    },
+  },
+  {
+    slug: "what-is-the-difference-between-mode-and-median",
+    locales: {
+      id: {
+        title: "Apa Perbedaan Antara Modus dan Median?",
+        description:
+          "Temukan perbedaan utama antara modus dan median. Pahami bagaimana modus mengidentifikasi nilai paling sering, sementara median menemukan titik tengah dari data.",
+      },
+      en: {
+        title: "What Is the Difference Between Mode and Median?",
+        description:
+          "Discover the key difference between mode and median. Understand how the mode identifies the most frequent value, while the median finds the central point of data.",
+      },
+    },
+  },
+  {
+    slug: "can-a-data-set-have-more-than-one-mode",
+    locales: {
+      id: {
+        title: "Bisakah Kumpulan Data Memiliki Lebih dari Satu Modus?",
+        description:
+          "Jelajahi konsep bimodal dan multimodal dalam statistika. Pahami bagaimana sebuah kumpulan data dapat memiliki dua atau lebih modus, atau bahkan tidak sama sekali.",
+      },
+      en: {
+        title: "Can a Data Set Have More Than One Mode?",
+        description:
+          "Explore the concepts of bimodal and multimodal in statistics. Understand how a data set can have two or more modes, or sometimes none at all.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-percentiles-for-grouped-data",
+    locales: {
+      id: {
+        title: "Bagaimana Cara Menghitung Persentil untuk Data Berkelompok?",
+        description:
+          "Pelajari rumus interpolasi untuk menghitung persentil dari tabel frekuensi. Kuasai langkah-langkah menemukan kelas persentil dan menginterpretasikan hasilnya.",
+      },
+      en: {
+        title: "How to Calculate Percentiles for Grouped Data?",
+        description:
+          "Learn the interpolation formula to calculate percentiles from a frequency table. Master the steps to find the percentile class and interpret the results.",
+      },
+    },
+  },
+  {
+    slug: "what-is-the-difference-between-percentiles-and-quartiles",
+    locales: {
+      id: {
+        title: "Apa Perbedaan Antara Persentil dan Kuartil?",
+        description:
+          "Pahami perbedaan utama antara persentil dan kuartil. Temukan bagaimana persentil membagi data menjadi 100 bagian untuk analisis yang lebih detail daripada kuartil.",
+      },
+      en: {
+        title: "What's the Difference Between Percentiles and Quartiles?",
+        description:
+          "Understand the key difference between percentiles and quartiles. Find out how percentiles divide data into 100 parts for a more detailed analysis than quartiles.",
+      },
+    },
+  },
+  {
+    slug: "how-to-interpret-percentile-rankings-in-data",
+    locales: {
+      id: {
+        title:
+          "Bagaimana Cara Menginterpretasikan Peringkat Persentil dalam Data?",
+        description:
+          "Pelajari apa arti peringkat persentil, seperti P85. Pahami bagaimana persentil menunjukkan posisi suatu nilai relatif terhadap keseluruhan kumpulan data.",
+      },
+      en: {
+        title: "How Do You Interpret Percentile Rankings in Data?",
+        description:
+          "Learn what a percentile rank, such as P85, signifies. Understand how percentiles indicate a value's position relative to the entire dataset for clear insights.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-quartiles-for-grouped-data",
+    locales: {
+      id: {
+        title: "Bagaimana Cara Menghitung Kuartil untuk Data Berkelompok?",
+        description:
+          "Pelajari proses langkah demi langkah untuk menemukan Q1, Q2, dan Q3 pada data berkelompok menggunakan rumus interpolasi, frekuensi kumulatif, dan tepi kelas.",
+      },
+      en: {
+        title: "How Do You Calculate Quartiles for Grouped Data?",
+        description:
+          "Learn the step-by-step process for finding Q1, Q2, and Q3 in grouped data using the interpolation formula, cumulative frequency, and class boundaries.",
+      },
+    },
+  },
+  {
+    slug: "what-is-role-of-cumulative-frequency-in-finding-quartiles",
+    locales: {
+      id: {
+        title: "Apa Peran Frekuensi Kumulatif dalam Menemukan Kuartil?",
+        description:
+          "Pahami bagaimana tabel frekuensi kumulatif sangat penting untuk menentukan interval kelas yang benar untuk Q1, Q2, dan Q3 dalam analisis data berkelompok.",
+      },
+      en: {
+        title: "What Is the Role of Cumulative Frequency in Finding Quartiles?",
+        description:
+          "Understand how cumulative frequency tables are essential for determining the correct class interval for Q1, Q2, and Q3 in grouped data analysis.",
+      },
+    },
+  },
+  {
+    slug: "why-use-interpolation-for-grouped-data-quartiles",
+    locales: {
+      id: {
+        title: "Mengapa Interpolasi Digunakan untuk Kuartil Data Berkelompok?",
+        description:
+          "Temukan mengapa metode interpolasi diperlukan untuk memperkirakan nilai kuartil dalam data berkelompok, di mana nilai-nilai data yang pasti tidak diketahui.",
+      },
+      en: {
+        title: "Why Is Interpolation Used for Grouped Data Quartiles?",
+        description:
+          "Discover why the interpolation method is necessary to estimate quartile values in grouped data, where the exact data points are not known individually.",
+      },
+    },
+  },
+  {
+    slug: "what-are-quartiles-and-how-do-they-divide-data",
+    locales: {
+      id: {
+        title: "Apa Itu Kuartil dan Bagaimana Cara Membagi Data?",
+        description:
+          "Pelajari dasar-dasar kuartil (Q1, Q2, Q3) dan bagaimana mereka membagi kumpulan data yang diurutkan menjadi empat bagian yang sama untuk menganalisis distribusi data.",
+      },
+      en: {
+        title: "What Are Quartiles and How Do They Divide Data?",
+        description:
+          "Learn the basics of quartiles (Q1, Q2, Q3) and how they divide a sorted dataset into four equal parts to effectively analyze data distribution.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-q1-q2-q3-for-ungrouped-data",
+    locales: {
+      id: {
+        title: "Bagaimana Cara Menghitung Q1, Q2, dan Q3 untuk Data Tunggal?",
+        description:
+          "Kuasai rumus sederhana untuk menemukan posisi kuartil bawah (Q1), tengah (Q2), dan atas (Q3) dalam setiap kumpulan data tunggal yang telah diurutkan.",
+      },
+      en: {
+        title: "How to Calculate Q1, Q2, and Q3 for Ungrouped Data?",
+        description:
+          "Master the simple formulas to find the position of the lower (Q1), middle (Q2), and upper (Q3) quartiles in any ungrouped, sorted dataset.",
+      },
+    },
+  },
+  {
+    slug: "is-the-second-quartile-q2-always-the-median",
+    locales: {
+      id: {
+        title: "Apakah Kuartil Kedua (Q2) Selalu Sama dengan Median?",
+        description:
+          "Pahami hubungan antara kuartil kedua (Q2) dan median. Pelajari mengapa Q2 selalu setara dengan median, yang mewakili titik tengah dari kumpulan data.",
+      },
+      en: {
+        title: "Is the Second Quartile (Q2) Always the Same as the Median?",
+        description:
+          "Understand the relationship between the second quartile (Q2) and the median. Learn why Q2 is always equivalent to the median, representing the midpoint of a dataset.",
+      },
+    },
+  },
+  {
+    slug: "what-is-relative-frequency-and-why-is-it-useful",
+    locales: {
+      id: {
+        title: "Apa Itu Frekuensi Relatif dan Mengapa Itu Berguna?",
+        description:
+          "Pelajari definisi frekuensi relatif dan bagaimana ini membantu dalam membandingkan proporsi data antar kelompok, terutama ketika jumlah total data berbeda.",
+      },
+      en: {
+        title: "What Is Relative Frequency and Why Is It Useful?",
+        description:
+          "Learn the definition of relative frequency and how it helps in comparing data proportions between groups, especially when total data counts differ.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-relative-frequency-from-a-frequency-table",
+    locales: {
+      id: {
+        title:
+          "Bagaimana Cara Menghitung Frekuensi Relatif dari Tabel Frekuensi?",
+        description:
+          "Kuasai rumus sederhana untuk menghitung frekuensi relatif. Pelajari cara mengubah frekuensi absolut menjadi desimal atau persentase untuk analisis yang lebih baik.",
+      },
+      en: {
+        title: "How to Calculate Relative Frequency from a Frequency Table?",
+        description:
+          "Master the simple formula to calculate relative frequency. Learn how to convert absolute frequencies into decimals or percentages for better data analysis.",
+      },
+    },
+  },
+  {
+    slug: "how-does-relative-frequency-help-in-data-comparison",
+    locales: {
+      id: {
+        title: "Bagaimana Frekuensi Relatif Membantu dalam Perbandingan Data?",
+        description:
+          "Pahami bagaimana frekuensi relatif memungkinkan perbandingan yang adil antara kelompok data dengan ukuran yang berbeda dengan menstandarisasi frekuensi menjadi proporsi.",
+      },
+      en: {
+        title: "How Does Relative Frequency Help in Data Comparison?",
+        description:
+          "Understand how relative frequency allows for a fair comparison between data groups of different sizes by standardizing frequencies into proportions.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-variance-for-grouped-data",
+    locales: {
+      id: {
+        title: "Bagaimana Cara Menghitung Varian untuk Data Berkelompok?",
+        description:
+          "Pelajari rumus dan langkah-langkah untuk menghitung varian dari tabel distribusi frekuensi menggunakan nilai tengah kelas untuk mengukur sebaran data.",
+      },
+      en: {
+        title: "How to Calculate Variance for Grouped Data?",
+        description:
+          "Learn the formula and steps to calculate variance from a frequency distribution table using class midpoints to measure the spread of your data.",
+      },
+    },
+  },
+  {
+    slug: "what-is-the-formula-for-standard-deviation-of-grouped-data",
+    locales: {
+      id: {
+        title: "Apa Rumus Simpangan Baku untuk Data Berkelompok?",
+        description:
+          "Kuasai rumus untuk menghitung simpangan baku data berkelompok dengan mengambil akar kuadrat dari varian untuk memahami konsistensi data.",
+      },
+      en: {
+        title: "What's the Formula for Standard Deviation of Grouped Data?",
+        description:
+          "Master the formula for calculating the standard deviation of grouped data by taking the square root of the variance to understand data consistency.",
+      },
+    },
+  },
+  {
+    slug: "why-use-midpoints-to-calculate-variance-in-grouped-data",
+    locales: {
+      id: {
+        title: "Mengapa Menggunakan Nilai Tengah untuk Varian Data Kelompok?",
+        description:
+          "Pahami mengapa nilai tengah kelas digunakan sebagai perwakilan untuk menghitung varian dan simpangan baku ketika nilai data individu tidak diketahui.",
+      },
+      en: {
+        title: "Why Use Midpoints to Calculate Variance in Grouped Data?",
+        description:
+          "Understand why class midpoints are used as a representative value to calculate variance and standard deviation when individual data points are unknown.",
+      },
+    },
+  },
+  {
+    slug: "what-do-variance-and-standard-deviation-measure",
+    locales: {
+      id: {
+        title: "Apa yang Diukur oleh Varian dan Simpangan Baku?",
+        description:
+          "Pelajari bagaimana varian dan simpangan baku mengukur penyebaran data. Pahami bagaimana nilai yang kecil atau besar menunjukkan apakah data seragam atau tersebar.",
+      },
+      en: {
+        title: "What Do Variance and Standard Deviation Measure?",
+        description:
+          "Learn how variance and standard deviation measure data spread. Understand how small or large values indicate whether data is uniform or widely dispersed.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-variance-for-ungrouped-data",
+    locales: {
+      id: {
+        title: "Bagaimana Cara Menghitung Varian untuk Data Tunggal?",
+        description:
+          "Kuasai rumus langkah demi langkah untuk menghitung varian dari kumpulan data tunggal. Pelajari cara menghitung rata-rata selisih kuadrat dari mean.",
+      },
+      en: {
+        title: "How to Calculate Variance for Ungrouped Data?",
+        description:
+          "Master the step-by-step formula for calculating variance from an ungrouped dataset. Learn to find the average of the squared differences from the mean.",
+      },
+    },
+  },
+  {
+    slug: "why-standard-deviation-shows-data-consistency",
+    locales: {
+      id: {
+        title: "Mengapa Simpangan Baku Menunjukkan Konsistensi Data?",
+        description:
+          "Lihat bagaimana dua set data dengan mean yang sama dapat memiliki simpangan baku yang sangat berbeda, yang mengungkapkan tingkat sebaran dan konsistensi data.",
+      },
+      en: {
+        title: "Why Does Standard Deviation Show Data Consistency?",
+        description:
+          "See how two datasets with the same mean can have vastly different standard deviations, revealing the true level of data spread and consistency.",
+      },
+    },
+  },
+  {
+    slug: "what-are-the-three-sides-of-a-right-triangle-called",
+    locales: {
+      id: {
+        title: "Apa Nama Tiga Sisi Segitiga Siku-Siku?",
+        description:
+          "Pelajari nama-nama fundamental dari sisi segitiga siku-siku: sisi depan, sisi samping, dan sisi miring (hipotenusa), dan pahami peran masing-masing dalam trigonometri.",
+      },
+      en: {
+        title: "What Are the Three Sides of a Right Triangle Called?",
+        description:
+          "Learn the fundamental names of the sides of a right triangle: opposite, adjacent, and hypotenuse, and understand the role each plays in trigonometry.",
+      },
+    },
+  },
+  {
+    slug: "how-to-identify-opposite-adjacent-and-hypotenuse-sides",
+    locales: {
+      id: {
+        title:
+          "Bagaimana Cara Mengidentifikasi Sisi Depan, Samping, dan Miring?",
+        description:
+          "Kuasai cara mengidentifikasi sisi depan, samping, dan miring dengan benar relatif terhadap sudut acuan (theta) dalam segitiga siku-siku mana pun.",
+      },
+      en: {
+        title: "How to Identify Opposite, Adjacent, and Hypotenuse Sides?",
+        description:
+          "Master how to correctly identify the opposite, adjacent, and hypotenuse sides relative to a reference angle (theta) in any right-angled triangle.",
+      },
+    },
+  },
+  {
+    slug: "why-is-side-naming-in-right-triangles-important",
+    locales: {
+      id: {
+        title: "Mengapa Penamaan Sisi dalam Segitiga Siku-Siku Penting?",
+        description:
+          "Pahami mengapa sistem penamaan sisi (depan, samping, miring) adalah langkah pertama yang krusial dalam trigonometri untuk mendefinisikan rasio sinus, cosinus, dan tangen.",
+      },
+      en: {
+        title: "Why Is Side Naming in Right Triangles Important?",
+        description:
+          "Understand why the side naming system (opposite, adjacent, hypotenuse) is a crucial first step in trigonometry for defining sine, cosine, and tangent ratios.",
+      },
+    },
+  },
+  {
+    slug: "what-is-the-difference-between-sine-and-cosine-ratios",
+    locales: {
+      id: {
+        title: "Apa Perbedaan Antara Rasio Sinus dan Cosinus?",
+        description:
+          "Pelajari perbedaan mendasar antara sinus (sisi depan/miring) dan cosinus (sisi samping/miring) dalam trigonometri segitiga siku-siku.",
+      },
+      en: {
+        title: "What Is the Difference Between Sine and Cosine Ratios?",
+        description:
+          "Learn the fundamental difference between the sine (opposite/hypotenuse) and cosine (adjacent/hypotenuse) ratios in right-angled trigonometry.",
+      },
+    },
+  },
+  {
+    slug: "how-to-use-sine-and-cosine-to-solve-real-world-problems",
+    locales: {
+      id: {
+        title:
+          "Bagaimana Cara Menggunakan Sinus dan Cosinus untuk Masalah Nyata?",
+        description:
+          "Lihat contoh praktis tentang cara menerapkan rasio sinus dan cosinus untuk menghitung ketinggian atau jarak yang tidak diketahui, seperti pada piramida.",
+      },
+      en: {
+        title: "How to Use Sine and Cosine for Real-World Problems?",
+        description:
+          "See practical examples of how to apply sine and cosine ratios to calculate unknown heights or distances, such as in the case of a pyramid.",
+      },
+    },
+  },
+  {
+    slug: "what-is-the-relationship-between-sine-cosine-and-tangent",
+    locales: {
+      id: {
+        title: "Apa Hubungan Antara Sinus, Cosinus, dan Tangen?",
+        description:
+          "Pahami hubungan matematis utama antara tiga fungsi trigonometri dasar, di mana tangen suatu sudut sama dengan sinus dibagi cosinus.",
+      },
+      en: {
+        title: "What Is the Relationship Between Sine, Cosine, and Tangent?",
+        description:
+          "Understand the key mathematical relationship between the three basic trigonometric functions, where the tangent of an angle equals its sine divided by its cosine.",
+      },
+    },
+  },
+  {
+    slug: "what-are-special-angles-in-trigonometry",
+    locales: {
+      id: {
+        title: "Apa Saja Sudut Istimewa dalam Trigonometri?",
+        description:
+          "Pelajari tentang sudut istimewa (0°, 30°, 45°, 60°, 90°) yang memiliki nilai sinus, cosinus, dan tangen yang pasti dan mudah diingat tanpa kalkulator.",
+      },
+      en: {
+        title: "What Are the Special Angles in Trigonometry?",
+        description:
+          "Learn about the special angles (0°, 30°, 45°, 60°, 90°) that have exact, easy-to-remember sine, cosine, and tangent values without a calculator.",
+      },
+    },
+  },
+  {
+    slug: "what-are-the-exact-values-for-sin-cos-tan-of-special-angles",
+    locales: {
+      id: {
+        title: "Berapa Nilai Tepat Sin, Cos, dan Tan untuk Sudut Istimewa?",
+        description:
+          "Dapatkan tabel lengkap nilai trigonometri yang tepat untuk sudut 30°, 45°, dan 60°. Kuasai rasio yang harus dihafal untuk perhitungan cepat dan akurat.",
+      },
+      en: {
+        title:
+          "What Are the Exact Values for Sin, Cos, and Tan of Special Angles?",
+        description:
+          "Get a complete table of the exact trigonometric values for 30°, 45°, and 60° angles. Master the must-know ratios for fast and accurate calculations.",
+      },
+    },
+  },
+  {
+    slug: "how-are-trigonometric-values-for-special-angles-derived",
+    locales: {
+      id: {
+        title: "Bagaimana Nilai Trigonometri untuk Sudut Istimewa Didapatkan?",
+        description:
+          "Pahami asal-usul nilai-nilai trigonometri yang tepat untuk sudut 30°, 45°, dan 60°, yang berasal dari rasio sisi segitiga siku-siku khusus.",
+      },
+      en: {
+        title: "How Are Trigonometric Values for Special Angles Derived?",
+        description:
+          "Understand the origin of the exact trigonometric values for 30°, 45°, and 60° angles, which are derived from the side ratios of special right triangles.",
+      },
+    },
+  },
+  {
+    slug: "what-is-the-tangent-ratio-in-trigonometry",
+    locales: {
+      id: {
+        title: "Apa Itu Rasio Tangen dalam Trigonometri?",
+        description:
+          "Pelajari definisi dasar dari rasio tangen (tan), yang merupakan perbandingan antara sisi depan dan sisi samping dalam segitiga siku-siku.",
+      },
+      en: {
+        title: "What Is the Tangent Ratio in Trigonometry?",
+        description:
+          "Learn the fundamental definition of the tangent (tan) ratio, which is the comparison between the opposite and adjacent sides in a right-angled triangle.",
+      },
+    },
+  },
+  {
+    slug: "how-to-use-tangent-to-calculate-height-and-slope",
+    locales: {
+      id: {
+        title:
+          "Bagaimana Cara Menggunakan Tangen untuk Menghitung Tinggi dan Kemiringan?",
+        description:
+          "Temukan aplikasi praktis dari rasio tangen dalam menghitung ketinggian objek seperti pohon atau bangunan, serta menentukan kemiringan suatu permukaan.",
+      },
+      en: {
+        title: "How to Use Tangent to Calculate Height and Slope?",
+        description:
+          "Discover practical applications of the tangent ratio in calculating the height of objects like trees or buildings, as well as determining the slope of a surface.",
+      },
+    },
+  },
+  {
+    slug: "how-do-you-calculate-the-tangent-of-an-angle",
+    locales: {
+      id: {
+        title: "Bagaimana Cara Menghitung Nilai Tangen dari Suatu Sudut?",
+        description:
+          "Pahami metode untuk menghitung nilai tangen suatu sudut dalam segitiga siku-siku dengan membagi panjang sisi depan dengan panjang sisi samping.",
+      },
+      en: {
+        title: "How Do You Calculate the Tangent of an Angle?",
+        description:
+          "Understand the method for calculating the tangent value of an angle in a right triangle by dividing the length of the opposite side by the adjacent side.",
+      },
+    },
+  },
+  {
+    slug: "how-to-use-tangent-to-measure-height-with-shadows",
+    locales: {
+      id: {
+        title:
+          "Bagaimana Cara Menggunakan Tangen untuk Mengukur Tinggi dengan Bayangan?",
+        description:
+          "Pelajari langkah-langkah praktis untuk menghitung tinggi pohon atau bangunan dengan mengukur panjang bayangannya dan mengetahui sudut elevasi.",
+      },
+      en: {
+        title: "How to Use Tangent to Measure Height with Shadows?",
+        description:
+          "Learn the practical steps to calculate the height of a tree or building by measuring its shadow's length and knowing the angle of elevation.",
+      },
+    },
+  },
+  {
+    slug: "how-can-similar-triangles-solve-height-problems",
+    locales: {
+      id: {
+        title:
+          "Bagaimana Segitiga Sebangun Dapat Menyelesaikan Masalah Tinggi?",
+        description:
+          "Pahami prinsip segitiga sebangun untuk membandingkan rasio tinggi dan bayangan, memungkinkan Anda menghitung ketinggian yang tidak diketahui tanpa sudut.",
+      },
+      en: {
+        title: "How Can Similar Triangles Solve Height Problems?",
+        description:
+          "Understand the principle of similar triangles to compare height-to-shadow ratios, allowing you to calculate an unknown height without an angle.",
+      },
+    },
+  },
+  {
+    slug: "what-are-real-world-applications-of-the-tangent-ratio",
+    locales: {
+      id: {
+        title: "Apa Saja Aplikasi Dunia Nyata dari Rasio Tangen?",
+        description:
+          "Temukan bagaimana rasio tangen digunakan dalam kehidupan sehari-hari, mulai dari mengukur ketinggian objek hingga menentukan kemiringan suatu permukaan.",
+      },
+      en: {
+        title: "What Are Real-World Applications of the Tangent Ratio?",
+        description:
+          "Discover how the tangent ratio is used in everyday life, from measuring the height of objects to determining the slope or gradient of a surface.",
+      },
+    },
+  },
+  {
+    slug: "what-are-the-three-primary-trigonometric-ratios",
+    locales: {
+      id: {
+        title: "Apa Saja Tiga Perbandingan Trigonometri Utama?",
+        description:
+          "Pelajari definisi dasar dari sinus, cosinus, dan tangen. Pahami bagaimana ketiga rasio ini menghubungkan sudut dengan perbandingan sisi dalam segitiga siku-siku.",
+      },
+      en: {
+        title: "What Are the Three Primary Trigonometric Ratios?",
+        description:
+          "Learn the fundamental definitions of sine, cosine, and tangent. Understand how these three ratios relate an angle to the side lengths in a right triangle.",
+      },
+    },
+  },
+  {
+    slug: "what-is-the-relationship-between-sine-cosine-and-tangent",
+    locales: {
+      id: {
+        title: "Apa Hubungan Antara Sinus, Cosinus, dan Tangen?",
+        description:
+          "Temukan hubungan matematis utama antara sin, cos, dan tan, termasuk identitas dasar seperti tan θ = sin θ / cos θ dan sin²θ + cos²θ = 1.",
+      },
+      en: {
+        title: "What Is the Relationship Between Sine, Cosine, and Tangent?",
+        description:
+          "Discover the key mathematical relationships between sin, cos, and tan, including fundamental identities like tan θ = sin θ / cos θ and sin²θ + cos²θ = 1.",
+      },
+    },
+  },
+  {
+    slug: "how-does-the-unit-circle-explain-trigonometric-ratios",
+    locales: {
+      id: {
+        title: "Bagaimana Lingkaran Satuan Menjelaskan Rasio Trigonometri?",
+        description:
+          "Pahami bagaimana lingkaran satuan secara visual merepresentasikan nilai cosinus (koordinat x) dan sinus (koordinat y) untuk setiap sudut tertentu.",
+      },
+      en: {
+        title: "How Does the Unit Circle Explain Trigonometric Ratios?",
+        description:
+          "Understand how the unit circle visually represents the cosine (x-coordinate) and sine (y-coordinate) values for any given angle, providing a comprehensive view.",
+      },
+    },
+  },
+  {
+    slug: "what-is-trigonometry-and-its-basic-concepts",
+    locales: {
+      id: {
+        title: "Apa Itu Trigonometri dan Konsep Dasarnya?",
+        description:
+          "Pelajari dasar-dasar trigonometri, mulai dari Teorema Pythagoras hingga bagaimana perbandingan sisi dalam segitiga siku-siku dapat memecahkan masalah nyata.",
+      },
+      en: {
+        title: "What Is Trigonometry and Its Basic Concepts?",
+        description:
+          "Learn the fundamentals of trigonometry, from the Pythagorean theorem to how side ratios in right-angled triangles can solve real-world problems.",
+      },
+    },
+  },
+  {
+    slug: "what-are-the-six-trigonometric-ratios-in-a-right-triangle",
+    locales: {
+      id: {
+        title:
+          "Apa Saja Enam Perbandingan Trigonometri dalam Segitiga Siku-Siku?",
+        description:
+          "Kuasai enam perbandingan trigonometri dasar: sinus, cosinus, tangen, cosecan, secan, dan cotangen, dan pahami bagaimana masing-masing mendefinisikan hubungan sisi.",
+      },
+      en: {
+        title: "What Are the Six Trigonometric Ratios in a Right Triangle?",
+        description:
+          "Master the six basic trigonometric ratios: sine, cosine, tangent, cosecant, secant, and cotangent, and understand how each one defines a side relationship.",
+      },
+    },
+  },
+  {
+    slug: "how-do-similar-triangles-explain-trigonometry",
+    locales: {
+      id: {
+        title: "Bagaimana Segitiga Sebangun Menjelaskan Konsep Trigonometri?",
+        description:
+          "Pahami mengapa perbandingan trigonometri tetap konstan untuk sudut yang sama, tidak peduli ukuran segitiganya, berkat prinsip segitiga sebangun.",
+      },
+      en: {
+        title: "How Do Similar Triangles Explain Trigonometry Concepts?",
+        description:
+          "Understand why trigonometric ratios remain constant for the same angle, regardless of the triangle's size, thanks to the principle of similar triangles.",
+      },
+    },
+  },
 ];
 
 export const highSchool10MathematicsData = data.map((item) => ({
