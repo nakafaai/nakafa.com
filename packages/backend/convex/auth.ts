@@ -31,11 +31,10 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
           // Handle user creation logic here if needed
           // This is where you can sync changes to your application user table
 
-          const userId = await ctx.db.insert("users", {
+          await ctx.db.insert("users", {
             email: authUser.email,
             authId: authUser._id,
           });
-          await authComponent.setUserId(ctx, authUser._id, userId);
         },
         onUpdate: async (_ctx, _newDoc, _oldDoc) => {
           // Handle user update logic here if needed
