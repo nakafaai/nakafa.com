@@ -1,4 +1,8 @@
-import { createClient, type GenericCtx } from "@convex-dev/better-auth";
+import {
+  type AuthFunctions,
+  createClient,
+  type GenericCtx,
+} from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
 import {
@@ -10,18 +14,21 @@ import {
 } from "better-auth/plugins";
 import { v } from "convex/values";
 import { withoutSystemFields } from "convex-helpers";
-import { components } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import type { DataModel, Id } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
 import authSchema from "./betterAuth/schema";
 
 const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
+const authFunctions: AuthFunctions = internal.auth;
+
 // The component client has methods needed for integrating Convex with Better Auth,
 // as well as helper methods for general use.
 export const authComponent = createClient<DataModel, typeof authSchema>(
   components.betterAuth,
   {
+    authFunctions,
     local: {
       schema: authSchema,
     },
@@ -85,12 +92,6 @@ export const createAuth = (
       },
     },
     user: {
-      additionalFields: {
-        userId: {
-          type: "string",
-          required: false,
-        },
-      },
       deleteUser: {
         enabled: true,
       },
