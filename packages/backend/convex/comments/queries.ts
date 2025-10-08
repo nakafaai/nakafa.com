@@ -1,45 +1,34 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import { components } from "../_generated/api";
+import { withoutSystemFields } from "convex-helpers";
 import type { Doc } from "../_generated/dataModel";
 import { type QueryCtx, query } from "../_generated/server";
-import type { DataModel } from "../betterAuth/_generated/dataModel";
-
+import { getAnyUserById } from "../auth";
 import { cleanSlug } from "../utils/helper";
-
-export type CommentUser = {
-  name: DataModel["user"]["document"]["name"];
-  image: DataModel["user"]["document"]["image"];
-};
 
 async function attachUsers(ctx: QueryCtx, comments: Doc<"comments">[]) {
   const uniqueUserIds = [...new Set(comments.map((c) => c.userId))];
   const users = await Promise.all(
     uniqueUserIds.map(async (userId) => {
-      const user = await ctx.runQuery(components.betterAuth.adapter.findOne, {
-        model: "user",
-        select: ["name", "image"],
-        where: [
-          {
-            field: "_id",
-            value: userId,
-            operator: "eq",
-          },
-        ],
-      });
-      return { userId, user };
+      // Get the app user
+      const appUser = await ctx.db.get(userId);
+      if (!appUser) {
+        return { userId, user: null };
+      }
+
+      // Get the Better Auth user data
+      const authUser = await getAnyUserById(ctx, appUser.authId);
+      if (!authUser) {
+        return { userId, user: null };
+      }
+
+      return { userId, user: { ...appUser, ...withoutSystemFields(authUser) } };
     })
   );
-  return new Map<string, CommentUser>(
+  return new Map(
     users
-      .filter((item) => item.user !== null && item.user !== undefined)
-      .map(({ userId, user }) => [
-        userId,
-        {
-          name: user.name,
-          image: user.image,
-        },
-      ])
+      .filter((item) => item.user !== null)
+      .map(({ userId, user }) => [userId, user])
   );
 }
 
@@ -106,7 +95,7 @@ export const getRepliesByCommentId = query({
 
 export const getCommentsByUserId = query({
   args: {
-    userId: v.string(),
+    userId: v.id("users"),
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {

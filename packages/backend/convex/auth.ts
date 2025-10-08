@@ -9,6 +9,7 @@ import {
   username,
 } from "better-auth/plugins";
 import { v } from "convex/values";
+import { withoutSystemFields } from "convex-helpers";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
@@ -106,6 +107,24 @@ export const safeGetUser = (ctx: QueryCtx) =>
 
 export const getAnyUserById = (ctx: QueryCtx, userId: string) =>
   authComponent.getAnyUserById(ctx, userId);
+
+// Get the current app user (not Better Auth user)
+export const safeGetAppUser = async (ctx: QueryCtx) => {
+  const authUser = await authComponent.safeGetAuthUser(ctx);
+  if (!authUser) {
+    return null;
+  }
+
+  const user = await ctx.db
+    .query("users")
+    .withIndex("authId", (q) => q.eq("authId", authUser._id))
+    .unique();
+  if (!user) {
+    return null;
+  }
+
+  return { ...user, ...withoutSystemFields(authUser) };
+};
 
 export const getCurrentUser = query({
   args: {},

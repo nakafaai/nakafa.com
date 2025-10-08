@@ -6,7 +6,7 @@ export const tables = {
     createdAt: v.number(), // Unix timestamp
     updatedAt: v.number(), // Unix timestamp for last message
     title: v.optional(v.string()), // Optional chat title
-    userId: v.optional(v.string()), // Optional user association
+    userId: v.id("users"), // Optional user association
   })
     .index("userId", ["userId"])
     .index("createdAt", ["createdAt"])

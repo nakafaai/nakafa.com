@@ -1,4 +1,5 @@
 import { components } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { internalMutation } from "./_generated/server";
 import { authComponent } from "./auth";
 
@@ -119,5 +120,145 @@ export const migrationAddUserId = internalMutation({
     }
 
     return { updated, skipped, total: appUsers.length };
+  },
+});
+
+// Migration to convert comments userId from Better Auth ID to app user ID
+export const migrationConvertCommentsUserId = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const comments = await ctx.db.query("comments").collect();
+
+    let updated = 0;
+    let skipped = 0;
+    let notFound = 0;
+
+    for (const comment of comments) {
+      // Find the app user by authId (the current userId is actually the authId)
+      const appUser = await ctx.db
+        .query("users")
+        .withIndex("authId", (q) => q.eq("authId", comment.userId as string))
+        .unique();
+
+      if (!appUser) {
+        notFound++;
+        continue;
+      }
+
+      // Check if it's already converted (would be a valid user ID)
+      try {
+        const existingUser = await ctx.db.get(comment.userId as Id<"users">);
+        if (existingUser) {
+          skipped++;
+          continue;
+        }
+      } catch {
+        // Not a valid ID, needs conversion
+      }
+
+      // Update the comment with the app user ID
+      await ctx.db.patch(comment._id, {
+        userId: appUser._id,
+      });
+
+      updated++;
+    }
+
+    return { updated, skipped, notFound, total: comments.length };
+  },
+});
+
+// Migration to convert commentVotes userId from Better Auth ID to app user ID
+export const migrationConvertCommentVotesUserId = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const votes = await ctx.db.query("commentVotes").collect();
+
+    let updated = 0;
+    let skipped = 0;
+    let notFound = 0;
+
+    for (const vote of votes) {
+      // Find the app user by authId (the current userId is actually the authId)
+      const appUser = await ctx.db
+        .query("users")
+        .withIndex("authId", (q) => q.eq("authId", vote.userId as string))
+        .unique();
+
+      if (!appUser) {
+        notFound++;
+        continue;
+      }
+
+      // Check if it's already converted (would be a valid user ID)
+      try {
+        const existingUser = await ctx.db.get(vote.userId as Id<"users">);
+        if (existingUser) {
+          skipped++;
+          continue;
+        }
+      } catch {
+        // Not a valid ID, needs conversion
+      }
+
+      // Update the vote with the app user ID
+      await ctx.db.patch(vote._id, {
+        userId: appUser._id,
+      });
+
+      updated++;
+    }
+
+    return { updated, skipped, notFound, total: votes.length };
+  },
+});
+
+// Migration to convert chats userId from Better Auth ID to app user ID
+export const migrationConvertChatsUserId = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const chats = await ctx.db.query("chats").collect();
+
+    let updated = 0;
+    let skipped = 0;
+    let notFound = 0;
+
+    for (const chat of chats) {
+      if (!chat.userId) {
+        skipped++;
+        continue;
+      }
+
+      // Find the app user by authId (the current userId is actually the authId)
+      const appUser = await ctx.db
+        .query("users")
+        .withIndex("authId", (q) => q.eq("authId", chat.userId as string))
+        .unique();
+
+      if (!appUser) {
+        notFound++;
+        continue;
+      }
+
+      // Check if it's already converted (would be a valid user ID)
+      try {
+        const existingUser = await ctx.db.get(chat.userId as Id<"users">);
+        if (existingUser) {
+          skipped++;
+          continue;
+        }
+      } catch {
+        // Not a valid ID, needs conversion
+      }
+
+      // Update the chat with the app user ID
+      await ctx.db.patch(chat._id, {
+        userId: appUser._id,
+      });
+
+      updated++;
+    }
+
+    return { updated, skipped, notFound, total: chats.length };
   },
 });

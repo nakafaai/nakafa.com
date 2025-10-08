@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
-import { safeGetUser } from "../auth";
+import { safeGetAppUser } from "../auth";
 import { mutation } from "../functions";
 import { cleanSlug } from "../utils/helper";
 
@@ -14,7 +14,7 @@ export const addComment = mutation({
     mentions: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetUser(ctx);
+    const user = await safeGetAppUser(ctx);
 
     if (!user) {
       throw new Error("You must be logged in to comment.");
@@ -64,7 +64,7 @@ export const voteOnComment = mutation({
     vote: v.union(v.literal(-1), v.literal(0), v.literal(1)),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetUser(ctx);
+    const user = await safeGetAppUser(ctx);
 
     if (!user) {
       throw new Error("You must be logged in to vote.");
@@ -131,7 +131,7 @@ export const deleteComment = mutation({
     commentId: v.id("comments"),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetUser(ctx);
+    const user = await safeGetAppUser(ctx);
 
     if (!user) {
       throw new Error("You must be logged in to delete a comment.");

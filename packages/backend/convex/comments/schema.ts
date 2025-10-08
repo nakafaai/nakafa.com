@@ -4,10 +4,8 @@ import { v } from "convex/values";
 const tables = {
   comments: defineTable({
     contentSlug: v.string(),
-    // userId is v.string() because it references Better Auth's user table
-    // which lives in the betterAuth component, not in this schema.
-    // Using v.id("user") would fail because the user table is not in this database.
-    userId: v.string(),
+    // userId references the app users table
+    userId: v.id("users"),
     text: v.string(),
     parentId: v.optional(v.id("comments")),
     // The depth of the comment in the thread.
@@ -27,8 +25,8 @@ const tables = {
     .index("userId", ["userId"]),
   commentVotes: defineTable({
     commentId: v.id("comments"),
-    // userId is v.string() for the same reason as above
-    userId: v.string(),
+    // userId references the app users table
+    userId: v.id("users"),
     vote: v.union(v.literal(-1), v.literal(1)),
   })
     .index("commentId", ["commentId"])
