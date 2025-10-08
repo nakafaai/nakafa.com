@@ -85,6 +85,12 @@ export const createAuth = (
       },
     },
     user: {
+      additionalFields: {
+        userId: {
+          type: "string",
+          required: false,
+        },
+      },
       deleteUser: {
         enabled: true,
       },
