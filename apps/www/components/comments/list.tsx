@@ -2,7 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { CommentUser } from "@repo/backend/convex/comments/queries";
+import type { AnyAppUser } from "@repo/backend/convex/auth";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -30,7 +30,7 @@ import { getInitialName } from "@/lib/utils/helper";
 import { CommentsAdd } from "./add";
 
 type Comment = Doc<"comments">;
-type CommentWithUser = Comment & { user?: CommentUser | null };
+type CommentWithUser = Comment & { user?: AnyAppUser | null };
 
 // Keep in sync with MAX_DEPTH in packages/backend/convex/comments/mutations.ts
 const MAX_REPLY_DEPTH = 5;

@@ -1,9 +1,10 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
 import { UserMain } from "@/components/user/main";
 
 type Props = {
   params: Promise<{
-    id: string;
+    id: Id<"users">;
   }>;
 };
 
