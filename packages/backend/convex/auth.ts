@@ -11,7 +11,7 @@ import {
 import { v } from "convex/values";
 import { withoutSystemFields } from "convex-helpers";
 import { components } from "./_generated/api";
-import type { DataModel } from "./_generated/dataModel";
+import type { DataModel, Id } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
 import authSchema from "./betterAuth/schema";
 
@@ -110,7 +110,7 @@ export const getAnyUserById = (ctx: QueryCtx, userId: string) =>
 
 // Get the current app user (not Better Auth user)
 export const safeGetAppUser = async (ctx: QueryCtx) => {
-  const authUser = await authComponent.safeGetAuthUser(ctx);
+  const authUser = await safeGetUser(ctx);
   if (!authUser) {
     return null;
   }
@@ -126,14 +126,33 @@ export const safeGetAppUser = async (ctx: QueryCtx) => {
   return { ...user, ...withoutSystemFields(authUser) };
 };
 
+export const getAnyAppUserById = async (ctx: QueryCtx, userId: Id<"users">) => {
+  const user = await ctx.db.get(userId);
+  if (!user) {
+    return null;
+  }
+
+  const authUser = await getAnyUserById(ctx, user.authId);
+  if (!authUser) {
+    return null;
+  }
+
+  return { ...user, ...withoutSystemFields(authUser) };
+};
+
 export const getCurrentUser = query({
   args: {},
-  handler: (ctx) => safeGetUser(ctx),
+  handler: (ctx) => safeGetAppUser(ctx),
 });
 
 export const getUserById = query({
-  args: { userId: v.string() },
-  handler: (ctx, args) => getAnyUserById(ctx, args.userId),
+  args: { userId: v.id("users") },
+  handler: (ctx, args) => getAnyAppUserById(ctx, args.userId),
 });
 
 export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();
+
+export type AppUser = NonNullable<Awaited<ReturnType<typeof safeGetAppUser>>>;
+export type AnyAppUser = NonNullable<
+  Awaited<ReturnType<typeof getAnyAppUserById>>
+>;

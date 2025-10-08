@@ -1,4 +1,4 @@
-import type { Doc } from "@repo/backend/convex/betterAuth/_generated/dataModel";
+import type { AnyAppUser } from "@repo/backend/convex/auth";
 import {
   Avatar,
   AvatarFallback,
@@ -7,7 +7,7 @@ import {
 import { getInitialName } from "@/lib/utils/helper";
 
 type Props = {
-  user: Doc<"user">;
+  user: AnyAppUser;
 };
 
 export function UserHeader({ user }: Props) {

@@ -1,13 +1,14 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { UserComments } from "./comments";
 import { UserHeader } from "./header";
 import { UserTabs } from "./tabs";
 
 type Props = {
-  userId: string;
+  userId: Id<"users">;
 };
 
 export function UserMain({ userId }: Props) {

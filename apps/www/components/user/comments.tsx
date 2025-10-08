@@ -1,6 +1,6 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { Doc as UserDoc } from "@repo/backend/convex/betterAuth/_generated/dataModel";
+import type { AnyAppUser } from "@repo/backend/convex/auth";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -32,7 +32,7 @@ import { useTransition } from "react";
 import { getInitialName } from "@/lib/utils/helper";
 
 type Props = {
-  user: UserDoc<"user">;
+  user: AnyAppUser;
 };
 
 export function UserComments({ user }: Props) {
@@ -62,7 +62,7 @@ function CommentThread({
   user,
 }: {
   comment: Doc<"comments">;
-  user: UserDoc<"user">;
+  user: AnyAppUser;
 }) {
   const t = useTranslations("Common");
 
