@@ -21,7 +21,7 @@ async function attachUsers(ctx: QueryCtx, comments: Doc<"comments">[]) {
         select: ["name", "image"],
         where: [
           {
-            field: "id",
+            field: "_id",
             value: userId,
             operator: "eq",
           },

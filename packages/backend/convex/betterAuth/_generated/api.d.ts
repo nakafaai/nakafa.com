@@ -181,7 +181,7 @@ export type Mounts = {
                   | "username"
                   | "displayUsername"
                   | "userId"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -189,6 +189,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -215,7 +216,7 @@ export type Mounts = {
                   | "userAgent"
                   | "userId"
                   | "activeOrganizationId"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -223,6 +224,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -253,7 +255,7 @@ export type Mounts = {
                   | "password"
                   | "createdAt"
                   | "updatedAt"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -261,6 +263,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -284,7 +287,7 @@ export type Mounts = {
                   | "expiresAt"
                   | "createdAt"
                   | "updatedAt"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -292,6 +295,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -315,7 +319,7 @@ export type Mounts = {
                   | "logo"
                   | "createdAt"
                   | "metadata"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -323,6 +327,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -345,7 +350,7 @@ export type Mounts = {
                   | "userId"
                   | "role"
                   | "createdAt"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -353,6 +358,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -377,7 +383,7 @@ export type Mounts = {
                   | "status"
                   | "expiresAt"
                   | "inviterId"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -385,6 +391,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -423,7 +430,7 @@ export type Mounts = {
                   | "updatedAt"
                   | "permissions"
                   | "metadata"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -431,6 +438,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -448,7 +456,7 @@ export type Mounts = {
               model: "jwks";
               where?: Array<{
                 connector?: "AND" | "OR";
-                field: "publicKey" | "privateKey" | "createdAt" | "id";
+                field: "publicKey" | "privateKey" | "createdAt" | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -456,6 +464,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -501,7 +510,7 @@ export type Mounts = {
                   | "username"
                   | "displayUsername"
                   | "userId"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -509,6 +518,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -535,7 +545,7 @@ export type Mounts = {
                   | "userAgent"
                   | "userId"
                   | "activeOrganizationId"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -543,6 +553,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -573,7 +584,7 @@ export type Mounts = {
                   | "password"
                   | "createdAt"
                   | "updatedAt"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -581,6 +592,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -604,7 +616,7 @@ export type Mounts = {
                   | "expiresAt"
                   | "createdAt"
                   | "updatedAt"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -612,6 +624,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -635,7 +648,7 @@ export type Mounts = {
                   | "logo"
                   | "createdAt"
                   | "metadata"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -643,6 +656,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -665,7 +679,7 @@ export type Mounts = {
                   | "userId"
                   | "role"
                   | "createdAt"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -673,6 +687,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -697,7 +712,7 @@ export type Mounts = {
                   | "status"
                   | "expiresAt"
                   | "inviterId"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -705,6 +720,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -743,7 +759,7 @@ export type Mounts = {
                   | "updatedAt"
                   | "permissions"
                   | "metadata"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -751,6 +767,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -768,7 +785,7 @@ export type Mounts = {
               model: "jwks";
               where?: Array<{
                 connector?: "AND" | "OR";
-                field: "publicKey" | "privateKey" | "createdAt" | "id";
+                field: "publicKey" | "privateKey" | "createdAt" | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -776,6 +793,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -828,6 +846,7 @@ export type Mounts = {
             | "gte"
             | "eq"
             | "in"
+            | "not_in"
             | "ne"
             | "contains"
             | "starts_with"
@@ -868,6 +887,7 @@ export type Mounts = {
             | "gte"
             | "eq"
             | "in"
+            | "not_in"
             | "ne"
             | "contains"
             | "starts_with"
@@ -881,6 +901,12 @@ export type Mounts = {
             | null;
         }>;
       },
+      any
+    >;
+    migrationRemoveUserId: FunctionReference<
+      "mutation",
+      "public",
+      { userId: string },
       any
     >;
     updateMany: FunctionReference<
@@ -915,7 +941,7 @@ export type Mounts = {
                   | "username"
                   | "displayUsername"
                   | "userId"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -923,6 +949,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -959,7 +986,7 @@ export type Mounts = {
                   | "userAgent"
                   | "userId"
                   | "activeOrganizationId"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -967,6 +994,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1011,7 +1039,7 @@ export type Mounts = {
                   | "password"
                   | "createdAt"
                   | "updatedAt"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1019,6 +1047,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1049,7 +1078,7 @@ export type Mounts = {
                   | "expiresAt"
                   | "createdAt"
                   | "updatedAt"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1057,6 +1086,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1087,7 +1117,7 @@ export type Mounts = {
                   | "logo"
                   | "createdAt"
                   | "metadata"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1095,6 +1125,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1123,7 +1154,7 @@ export type Mounts = {
                   | "userId"
                   | "role"
                   | "createdAt"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1131,6 +1162,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1163,7 +1195,7 @@ export type Mounts = {
                   | "status"
                   | "expiresAt"
                   | "inviterId"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1171,6 +1203,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1231,7 +1264,7 @@ export type Mounts = {
                   | "updatedAt"
                   | "permissions"
                   | "metadata"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1239,6 +1272,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1261,7 +1295,7 @@ export type Mounts = {
               };
               where?: Array<{
                 connector?: "AND" | "OR";
-                field: "publicKey" | "privateKey" | "createdAt" | "id";
+                field: "publicKey" | "privateKey" | "createdAt" | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1269,6 +1303,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1326,7 +1361,7 @@ export type Mounts = {
                   | "username"
                   | "displayUsername"
                   | "userId"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1334,6 +1369,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1370,7 +1406,7 @@ export type Mounts = {
                   | "userAgent"
                   | "userId"
                   | "activeOrganizationId"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1378,6 +1414,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1422,7 +1459,7 @@ export type Mounts = {
                   | "password"
                   | "createdAt"
                   | "updatedAt"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1430,6 +1467,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1460,7 +1498,7 @@ export type Mounts = {
                   | "expiresAt"
                   | "createdAt"
                   | "updatedAt"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1468,6 +1506,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1498,7 +1537,7 @@ export type Mounts = {
                   | "logo"
                   | "createdAt"
                   | "metadata"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1506,6 +1545,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1534,7 +1574,7 @@ export type Mounts = {
                   | "userId"
                   | "role"
                   | "createdAt"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1542,6 +1582,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1574,7 +1615,7 @@ export type Mounts = {
                   | "status"
                   | "expiresAt"
                   | "inviterId"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1582,6 +1623,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1642,7 +1684,7 @@ export type Mounts = {
                   | "updatedAt"
                   | "permissions"
                   | "metadata"
-                  | "id";
+                  | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1650,6 +1692,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"
@@ -1672,7 +1715,7 @@ export type Mounts = {
               };
               where?: Array<{
                 connector?: "AND" | "OR";
-                field: "publicKey" | "privateKey" | "createdAt" | "id";
+                field: "publicKey" | "privateKey" | "createdAt" | "_id";
                 operator?:
                   | "lt"
                   | "lte"
@@ -1680,6 +1723,7 @@ export type Mounts = {
                   | "gte"
                   | "eq"
                   | "in"
+                  | "not_in"
                   | "ne"
                   | "contains"
                   | "starts_with"

@@ -3,6 +3,7 @@
  */
 export const SEO_DOMAINS = [
   "alternatifa.app",
+  "belajar.app",
   "bimbel.app",
   "pahamify.app",
   "quipper.app",
