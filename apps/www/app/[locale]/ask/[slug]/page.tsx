@@ -9,8 +9,6 @@ import {
   LayoutMaterialFooter,
   LayoutMaterialMain,
 } from "@/components/shared/layout-material";
-import { RefContent } from "@/components/shared/ref-content";
-import { getGithubUrl } from "@/lib/utils/github";
 import { convertSlugToTitle } from "@/lib/utils/helper";
 
 export const revalidate = false;
@@ -93,13 +91,7 @@ export default async function Page({ params }: Props) {
             <AskListItems query={title} />
           </LayoutMaterialMain>
 
-          <LayoutMaterialFooter>
-            <RefContent
-              githubUrl={getGithubUrl({
-                path: encodeURI("/app/[locale]/ask/[slug]"),
-              })}
-            />
-          </LayoutMaterialFooter>
+          <LayoutMaterialFooter />
         </LayoutMaterialContent>
       </LayoutMaterial>
     </div>
