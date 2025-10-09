@@ -8,11 +8,18 @@ import { SparklesIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
+import { useAi } from "@/lib/context/use-ai";
 
-export function AskCta() {
+type Props = {
+  title: string;
+};
+
+export function AskCta({ title }: Props) {
   const t = useTranslations("Ai");
   const user = useQuery(api.auth.getCurrentUser);
   const router = useRouter();
+
+  const setText = useAi((state) => state.setText);
 
   const handleGoogleSignIn = async () => {
     await authClient.signIn.social({
@@ -21,6 +28,8 @@ export function AskCta() {
   };
 
   const handleAsk = () => {
+    setText(title);
+
     if (!user) {
       handleGoogleSignIn();
       return;

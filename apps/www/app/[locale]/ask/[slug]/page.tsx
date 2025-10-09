@@ -85,7 +85,7 @@ export default async function Page({ params }: Props) {
                 </p>
               )}
 
-              <AskCta />
+              <AskCta title={title} />
             </div>
           </div>
 
