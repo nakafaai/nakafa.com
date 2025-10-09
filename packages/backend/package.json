@@ -16,7 +16,7 @@
     "@convex-dev/better-auth": "^0.9.0",
     "@convex-dev/migrations": "^0.2.9",
     "better-auth": "1.3.27",
-    "convex": "^1.27.4",
+    "convex": "^1.27.5",
     "convex-helpers": "^0.1.104"
   },
   "devDependencies": {
