@@ -55,7 +55,10 @@ export function HomeSearch() {
   };
 
   return (
-    <PromptInput onSubmit={handleSubmit}>
+    <PromptInput
+      className="border-border bg-background"
+      onSubmit={handleSubmit}
+    >
       <PromptInputTextarea
         className="p-4"
         onChange={(e) => setText(e.target.value)}
