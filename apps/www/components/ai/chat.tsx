@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   Conversation,
   ConversationContent,
@@ -14,6 +15,8 @@ import {
   PromptInputTools,
 } from "@repo/design-system/components/ai/input";
 import { Message } from "@repo/design-system/components/ai/message";
+import { useRouter } from "@repo/internationalization/src/navigation";
+import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 import { useAi } from "@/lib/context/use-ai";
@@ -53,13 +56,22 @@ export function AiChat() {
 const AiChatToolbar = memo(() => {
   const t = useTranslations("Ai");
 
+  const router = useRouter();
+
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
+
+  const user = useQuery(api.auth.getCurrentUser);
 
   const { sendMessage, status } = useChat((state) => state.chat);
 
   const handleSubmit = (message: PromptInputMessage) => {
     if (!message.text?.trim()) {
+      return;
+    }
+
+    if (!user) {
+      router.push("/auth?redirect=/chat");
       return;
     }
 

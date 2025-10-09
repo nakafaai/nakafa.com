@@ -14,7 +14,7 @@ export function AuthGoogle() {
   const handleGoogleSignIn = async () => {
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: redirect ?? undefined,
+      callbackURL: redirect ?? "/",
     });
   };
 

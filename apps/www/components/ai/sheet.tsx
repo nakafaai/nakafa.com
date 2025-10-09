@@ -1,6 +1,7 @@
 "use client";
 
 import { useMediaQuery } from "@mantine/hooks";
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   Conversation,
   ConversationContent,
@@ -25,6 +26,11 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
+import {
+  usePathname,
+  useRouter,
+} from "@repo/internationalization/src/navigation";
+import { useQuery } from "convex/react";
 import {
   Maximize2Icon,
   Minimize2Icon,
@@ -145,8 +151,14 @@ export function AiSheet() {
 const AiSheetToolbar = memo(() => {
   const t = useTranslations("Ai");
 
+  const router = useRouter();
+  const pathname = usePathname();
+
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
+  const setOpen = useAi((state) => state.setOpen);
+
+  const user = useQuery(api.auth.getCurrentUser);
 
   const { sendMessage, status, stop } = useChat((state) => state.chat);
 
@@ -157,6 +169,12 @@ const AiSheetToolbar = memo(() => {
     }
 
     if (!message.text?.trim()) {
+      return;
+    }
+
+    if (!user) {
+      setOpen(false);
+      router.push(`/auth?redirect=${pathname}`);
       return;
     }
 
