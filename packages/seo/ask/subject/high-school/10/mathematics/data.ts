@@ -2609,6 +2609,730 @@ const data: BaseAsk[] = [
       },
     },
   },
+  {
+    slug: "difference-between-column-and-row-vectors",
+    locales: {
+      en: {
+        title:
+          "What is the difference between a column vector and a row vector?",
+        description:
+          "Learn the key differences between column and row vectors, including their notation, orientation, and how the transpose operation connects them in linear algebra.",
+      },
+      id: {
+        title: "Apa perbedaan antara vektor kolom dan vektor baris?",
+        description:
+          "Pelajari perbedaan utama antara vektor kolom dan vektor baris, termasuk notasi, orientasi, dan bagaimana operasi transpos menghubungkan keduanya dalam aljabar linear.",
+      },
+    },
+  },
+  {
+    slug: "how-to-convert-row-vector-to-column-vector",
+    locales: {
+      en: {
+        title: "How do you convert a row vector to a column vector?",
+        description:
+          "Discover the transpose operation to easily convert a row vector into a column vector and vice versa. See examples for 2D and 3D vectors for clear understanding.",
+      },
+      id: {
+        title: "Bagaimana cara mengubah vektor baris menjadi vektor kolom?",
+        description:
+          "Temukan operasi transpos untuk mengubah vektor baris menjadi vektor kolom dengan mudah dan sebaliknya. Lihat contoh untuk vektor 2D dan 3D untuk pemahaman yang jelas.",
+      },
+    },
+  },
+  {
+    slug: "different-notations-for-column-vectors",
+    locales: {
+      en: {
+        title: "What are the different notations for a column vector?",
+        description:
+          "Explore various notations for representing column vectors in mathematics using parentheses, square brackets, and vertical bars, essential for linear algebra studies.",
+      },
+      id: {
+        title: "Apa saja notasi yang berbeda untuk sebuah vektor kolom?",
+        description:
+          "Jelajahi berbagai notasi untuk merepresentasikan vektor kolom dalam matematika menggunakan kurung biasa, kurung siku, dan garis vertikal yang penting untuk aljabar.",
+      },
+    },
+  },
+  {
+    slug: "what-makes-two-vectors-equivalent",
+    locales: {
+      en: {
+        title: "What makes two vectors equivalent in linear algebra?",
+        description:
+          "Learn the two key conditions for vectors to be equivalent: they must have the same magnitude and the same direction, regardless of their position in space.",
+      },
+      id: {
+        title:
+          "Apa yang membuat dua vektor disebut ekuivalen dalam aljabar linear?",
+        description:
+          "Pelajari dua syarat utama agar vektor dapat disebut ekuivalen: keduanya harus memiliki besar (panjang) dan arah yang sama, terlepas dari posisinya di dalam ruang.",
+      },
+    },
+  },
+  {
+    slug: "how-to-prove-vectors-are-equivalent-from-points",
+    locales: {
+      en: {
+        title:
+          "How do you prove two vectors are equivalent using their start and end points?",
+        description:
+          "Understand how to demonstrate vector equivalence by calculating their components from initial and terminal points. Vectors are equivalent if their components match.",
+      },
+      id: {
+        title:
+          "Bagaimana cara membuktikan dua vektor ekuivalen dari titik pangkal dan ujungnya?",
+        description:
+          "Pahami cara menunjukkan ekuivalensi vektor dengan menghitung komponennya dari titik pangkal dan titik ujung. Vektor dikatakan ekuivalen jika komponennya cocok.",
+      },
+    },
+  },
+  {
+    slug: "properties-of-equivalent-vectors",
+    locales: {
+      en: {
+        title:
+          "What are the reflexive, symmetric, and transitive properties of equivalent vectors?",
+        description:
+          "Explore the fundamental properties of equivalent vectors, including the reflexive, symmetric, and transitive rules that govern their relationships in vector mathematics.",
+      },
+      id: {
+        title:
+          "Apa saja sifat refleksif, simetris, dan transitif dari vektor ekuivalen?",
+        description:
+          "Jelajahi sifat-sifat fundamental dari vektor ekuivalen, termasuk aturan refleksif, simetris, dan transitif yang mengatur hubungan antarvektor dalam matematika.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-reciprocal-vector-and-how-to-calculate-it",
+    locales: {
+      en: {
+        title: "What is a reciprocal vector and how do you calculate it?",
+        description:
+          "Learn the definition of a reciprocal vector, which has an inverse magnitude but the same direction, and use the formula to calculate one from any given vector.",
+      },
+      id: {
+        title: "Apa itu vektor berkebalikan dan bagaimana cara menghitungnya?",
+        description:
+          "Pelajari definisi vektor berkebalikan, yang memiliki magnitudo terbalik namun arah yang sama, dan gunakan rumusnya untuk menghitungnya dari vektor manapun.",
+      },
+    },
+  },
+  {
+    slug: "relationship-between-reciprocal-and-unit-vector",
+    locales: {
+      en: {
+        title:
+          "What is the relationship between a reciprocal vector and a unit vector?",
+        description:
+          "Discover the direct relationship between a reciprocal vector and a unit vector. Learn how a reciprocal vector can be found by dividing a unit vector by its magnitude.",
+      },
+      id: {
+        title: "Apa hubungan antara vektor berkebalikan dan vektor satuan?",
+        description:
+          "Temukan hubungan langsung antara vektor berkebalikan dan vektor satuan. Pelajari bagaimana vektor berkebalikan dapat ditemukan dengan membagi vektor satuan dengan besarnya.",
+      },
+    },
+  },
+  {
+    slug: "what-are-the-properties-of-reciprocal-vectors",
+    locales: {
+      en: {
+        title: "What are the key properties of a reciprocal vector?",
+        description:
+          "Explore the essential properties of reciprocal vectors, such as having an inverse magnitude, the same direction, and a dot product with the original vector equal to one.",
+      },
+      id: {
+        title: "Apa saja sifat-sifat utama dari vektor berkebalikan?",
+        description:
+          "Jelajahi sifat-sifat penting dari vektor berkebalikan, seperti memiliki magnitudo terbalik, arah yang sama, dan hasil perkalian titik dengan vektor aslinya sama dengan satu.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-position-vector-and-its-characteristics",
+    locales: {
+      en: {
+        title: "What is a position vector and its main characteristics?",
+        description:
+          "Learn the definition of a position vector, which always starts from the origin (O) to locate a point, and its key characteristics in a coordinate system.",
+      },
+      id: {
+        title: "Apa itu vektor posisi dan apa saja karakteristik utamanya?",
+        description:
+          "Pelajari definisi vektor posisi, yang selalu dimulai dari titik asal (O) untuk menemukan suatu titik, beserta karakteristik utamanya dalam sistem koordinat.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-displacement-vector-from-position-vectors",
+    locales: {
+      en: {
+        title:
+          "How do you calculate a displacement vector from two position vectors?",
+        description:
+          "Understand how to find the displacement vector between two points by calculating the difference between their individual position vectors, such as OB - OA.",
+      },
+      id: {
+        title:
+          "Bagaimana cara menghitung vektor perpindahan dari dua vektor posisi?",
+        description:
+          "Pahami cara menemukan vektor perpindahan antara dua titik dengan menghitung selisih antara masing-masing vektor posisinya, seperti OB - OA.",
+      },
+    },
+  },
+  {
+    slug: "how-are-position-vectors-represented-in-2d-and-3d-space",
+    locales: {
+      en: {
+        title: "How are position vectors represented in 2D and 3D space?",
+        description:
+          "Discover how a position vector's coordinates are the same as its endpoint's coordinates, making it simple to represent any point in 2D (x, y) or 3D (x, y, z) space.",
+      },
+      id: {
+        title:
+          "Bagaimana vektor posisi direpresentasikan dalam ruang 2D dan 3D?",
+        description:
+          "Temukan bagaimana koordinat vektor posisi sama dengan koordinat titik ujungnya, sehingga memudahkan representasi titik mana pun dalam ruang 2D (x, y) atau 3D (x, y, z).",
+      },
+    },
+  },
+  {
+    slug: "how-scalar-multiplication-affects-a-vector",
+    locales: {
+      en: {
+        title: "How does multiplying a vector by a scalar number affect it?",
+        description:
+          "Learn how scalar multiplication changes a vector's magnitude and direction. A positive scalar scales its length, while a negative scalar reverses its direction.",
+      },
+      id: {
+        title: "Bagaimana perkalian vektor dengan angka skalar memengaruhinya?",
+        description:
+          "Pelajari bagaimana perkalian skalar mengubah besar dan arah vektor. Skalar positif mengubah panjangnya, sedangkan skalar negatif membalikkan arahnya.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-scalar-multiplication-of-vector",
+    locales: {
+      en: {
+        title: "How do you calculate the scalar multiplication of a vector?",
+        description:
+          "Discover the simple algebraic method for scalar multiplication by multiplying each component of the vector by the scalar value. See examples for clarity.",
+      },
+      id: {
+        title: "Bagaimana cara menghitung perkalian skalar dari sebuah vektor?",
+        description:
+          "Temukan metode aljabar sederhana untuk perkalian skalar dengan mengalikan setiap komponen vektor dengan nilai skalar. Lihat contoh untuk kejelasan.",
+      },
+    },
+  },
+  {
+    slug: "what-happens-when-multiplying-vector-by-negative-number",
+    locales: {
+      en: {
+        title: "What happens when you multiply a vector by a negative number?",
+        description:
+          "Understand the effect of multiplying a vector by a negative scalar. This operation scales the vector's magnitude and completely reverses its direction by 180 degrees.",
+      },
+      id: {
+        title:
+          "Apa yang terjadi jika sebuah vektor dikalikan dengan bilangan negatif?",
+        description:
+          "Pahami efek dari mengalikan vektor dengan skalar negatif. Operasi ini mengubah besar vektor dan membalikkan arahnya sepenuhnya sebesar 180 derajat.",
+      },
+    },
+  },
+  {
+    slug: "what-is-difference-between-dot-and-cross-product",
+    locales: {
+      en: {
+        title:
+          "What is the difference between the dot product and cross product of 3D vectors?",
+        description:
+          "Learn the key difference: the dot product of two vectors results in a scalar value, while the cross product results in a new vector perpendicular to both.",
+      },
+      id: {
+        title:
+          "Apa perbedaan antara perkalian titik dan perkalian silang pada vektor 3D?",
+        description:
+          "Pelajari perbedaan utama: perkalian titik dari dua vektor menghasilkan nilai skalar, sedangkan perkalian silang menghasilkan vektor baru yang tegak lurus.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-magnitude-of-3d-vector",
+    locales: {
+      en: {
+        title:
+          "How do you find the magnitude or length of a three-dimensional vector?",
+        description:
+          "Learn to calculate a 3D vector's magnitude using its x, y, and z components with the formula based on the Pythagorean theorem, √(ax² + ay² + az²).",
+      },
+      id: {
+        title:
+          "Bagaimana cara mencari magnitudo atau panjang dari sebuah vektor tiga dimensi?",
+        description:
+          "Pelajari cara menghitung magnitudo vektor 3D menggunakan komponen x, y, dan z dengan rumus berdasarkan teorema Pythagoras, yaitu √(ax² + ay² + az²).",
+      },
+    },
+  },
+  {
+    slug: "how-are-3d-vectors-represented",
+    locales: {
+      en: {
+        title:
+          "What are the different ways to represent a three-dimensional vector?",
+        description:
+          "Explore the common notations for 3D vectors, including component form (ax, ay, az) and basis vector notation using i, j, and k unit vectors.",
+      },
+      id: {
+        title:
+          "Apa saja cara yang berbeda untuk merepresentasikan vektor tiga dimensi?",
+        description:
+          "Jelajahi notasi umum untuk vektor 3D, termasuk bentuk komponen (ax, ay, az) dan notasi vektor basis menggunakan vektor satuan i, j, dan k.",
+      },
+    },
+  },
+  {
+    slug: "what-are-components-of-2d-vector",
+    locales: {
+      en: {
+        title:
+          "What are the horizontal and vertical components of a 2D vector?",
+        description:
+          "Learn how a two-dimensional vector is broken down into its horizontal (x) and vertical (y) components, representing its movement along the x and y axes.",
+      },
+      id: {
+        title:
+          "Apa itu komponen horizontal dan vertikal dari sebuah vektor 2D?",
+        description:
+          "Pelajari bagaimana sebuah vektor dua dimensi diuraikan menjadi komponen horizontal (x) dan vertikal (y), yang mewakili pergerakannya di sepanjang sumbu x dan y.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-magnitude-of-2d-vector",
+    locales: {
+      en: {
+        title:
+          "How do you calculate the magnitude or length of a two-dimensional vector?",
+        description:
+          "Understand how to find a 2D vector's magnitude using the Pythagorean theorem with its horizontal (x) and vertical (y) components, using the formula |v| = √(x² + y²).",
+      },
+      id: {
+        title:
+          "Bagaimana cara menghitung magnitudo atau panjang dari vektor dua dimensi?",
+        description:
+          "Pahami cara menemukan magnitudo vektor 2D menggunakan teorema Pythagoras dengan komponen horizontal (x) dan vertikal (y), menggunakan rumus |v| = √(x² + y²).",
+      },
+    },
+  },
+  {
+    slug: "how-to-express-2d-vector-using-unit-vectors",
+    locales: {
+      en: {
+        title: "How do you express a 2D vector using the unit vectors i and j?",
+        description:
+          "Learn to represent any two-dimensional vector as a combination of its components multiplied by the unit vectors i (for the x-axis) and j (for the y-axis).",
+      },
+      id: {
+        title:
+          "Bagaimana cara menyatakan vektor 2D menggunakan vektor satuan i dan j?",
+        description:
+          "Pelajari cara merepresentasikan vektor dua dimensi sebagai kombinasi dari komponen-komponennya yang dikalikan dengan vektor satuan i (untuk sumbu x) dan j (untuk sumbu y).",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-unit-vector-and-its-purpose",
+    locales: {
+      en: {
+        title: "What is a unit vector and what is its main purpose?",
+        description:
+          "Learn that a unit vector has a magnitude of 1 and is primarily used to represent a specific direction in space, separate from the vector's length.",
+      },
+      id: {
+        title: "Apa itu vektor satuan dan apa tujuan utamanya?",
+        description:
+          "Pelajari bahwa vektor satuan memiliki magnitudo 1 dan utamanya digunakan untuk merepresentasikan arah tertentu dalam ruang, terpisah dari panjang vektornya.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-a-unit-vector-from-any-vector",
+    locales: {
+      en: {
+        title: "How do you calculate a unit vector from any given vector?",
+        description:
+          "Discover the simple two-step process to find a unit vector: first, calculate the magnitude of the original vector, then divide the vector by that magnitude.",
+      },
+      id: {
+        title: "Bagaimana cara menghitung vektor satuan dari sembarang vektor?",
+        description:
+          "Temukan proses dua langkah sederhana untuk mencari vektor satuan: pertama, hitung magnitudo vektor asli, lalu bagi vektor tersebut dengan magnitudonya.",
+      },
+    },
+  },
+  {
+    slug: "what-are-the-standard-unit-vectors-i-j-k",
+    locales: {
+      en: {
+        title:
+          "What are the standard unit vectors î, ĵ, and k̂ in a coordinate system?",
+        description:
+          "Understand that î, ĵ, and k̂ are the standard unit vectors that represent the directions along the positive x, y, and z axes in a Cartesian coordinate system.",
+      },
+      id: {
+        title:
+          "Apa itu vektor satuan standar î, ĵ, dan k̂ dalam sistem koordinat?",
+        description:
+          "Pahami bahwa î, ĵ, dan k̂ adalah vektor satuan standar yang merepresentasikan arah di sepanjang sumbu x, y, dan z positif dalam sistem koordinat Kartesius.",
+      },
+    },
+  },
+  {
+    slug: "how-to-add-vectors-graphically",
+    locales: {
+      en: {
+        title:
+          "How do you add two vectors graphically using the triangle and parallelogram methods?",
+        description:
+          "Learn the two main graphical techniques for vector addition: the triangle method (tip-to-tail) and the parallelogram method, which uses a common origin point.",
+      },
+      id: {
+        title:
+          "Bagaimana cara menjumlahkan vektor secara grafis dengan metode segitiga dan jajar genjang?",
+        description:
+          "Pelajari dua teknik grafis utama untuk penjumlahan vektor: metode segitiga (ujung-ke-pangkal) dan metode jajar genjang, yang menggunakan titik pangkal bersama.",
+      },
+    },
+  },
+  {
+    slug: "how-to-add-vectors-using-components",
+    locales: {
+      en: {
+        title:
+          "How do you perform vector addition by adding their individual components?",
+        description:
+          "Discover the algebraic approach to vector addition by simply summing the corresponding x and y components of each vector to find the resultant vector.",
+      },
+      id: {
+        title:
+          "Bagaimana cara melakukan penjumlahan vektor dengan menambahkan komponennya?",
+        description:
+          "Temukan pendekatan aljabar untuk penjumlahan vektor dengan hanya menjumlahkan komponen x dan y yang sesuai dari setiap vektor untuk menemukan vektor resultan.",
+      },
+    },
+  },
+  {
+    slug: "difference-between-vector-and-scalar-addition",
+    locales: {
+      en: {
+        title:
+          "What is the difference between vector addition and scalar addition?",
+        description:
+          "Understand the fundamental difference: vector addition considers both magnitude and direction to find a resultant, while scalar addition simply sums up magnitudes.",
+      },
+      id: {
+        title:
+          "Apa perbedaan antara penjumlahan vektor dan penjumlahan skalar?",
+        description:
+          "Pahami perbedaan mendasar: penjumlahan vektor mempertimbangkan besar dan arah untuk menemukan resultan, sedangkan penjumlahan skalar hanya menjumlahkan besaran.",
+      },
+    },
+  },
+  {
+    slug: "what-are-the-components-of-a-vector",
+    locales: {
+      en: {
+        title: "What are the components of a vector in 2D and 3D space?",
+        description:
+          "Learn how any vector can be broken down into its x, y, and z components, which represent its projection and movement along each coordinate axis in space.",
+      },
+      id: {
+        title: "Apa saja komponen dari sebuah vektor dalam ruang 2D dan 3D?",
+        description:
+          "Pelajari bagaimana setiap vektor dapat diuraikan menjadi komponen x, y, dan z, yang mewakili proyeksi dan pergerakannya di sepanjang setiap sumbu koordinat.",
+      },
+    },
+  },
+  {
+    slug: "how-to-calculate-vector-magnitude-from-components",
+    locales: {
+      en: {
+        title: "How do you calculate a vector's magnitude from its components?",
+        description:
+          "Discover how to calculate a vector's magnitude, or length, by applying the Pythagorean theorem to its components with the formula |v| = √(a² + b² + c²).",
+      },
+      id: {
+        title: "Bagaimana cara menghitung magnitudo vektor dari komponennya?",
+        description:
+          "Temukan cara menghitung magnitudo atau panjang vektor dengan menerapkan teorema Pythagoras pada komponennya menggunakan rumus |v| = √(a² + b² + c²).",
+      },
+    },
+  },
+  {
+    slug: "how-to-find-a-vectors-direction-using-unit-vector",
+    locales: {
+      en: {
+        title: "How do you find a vector's direction using a unit vector?",
+        description:
+          "Understand how to find a vector's direction by calculating its unit vector, which is done by dividing the vector by its own magnitude to normalize its length to 1.",
+      },
+      id: {
+        title:
+          "Bagaimana cara menemukan arah vektor menggunakan vektor satuan?",
+        description:
+          "Pahami cara menemukan arah vektor dengan menghitung vektor satuannya, yang dilakukan dengan membagi vektor tersebut dengan magnitudonya sendiri untuk menormalkan panjangnya.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-vector-in-mathematics",
+    locales: {
+      en: {
+        title: "What is a vector and what are its two main properties?",
+        description:
+          "Learn the fundamental concept of a vector, a quantity defined by its two key properties: magnitude (size or length) and a specific direction, unlike scalar values.",
+      },
+      id: {
+        title: "Apa itu vektor dan apa dua sifat utamanya?",
+        description:
+          "Pelajari konsep dasar vektor, yaitu besaran yang ditentukan oleh dua sifat utamanya: magnitudo (ukuran atau panjang) dan arah yang spesifik, tidak seperti nilai skalar.",
+      },
+    },
+  },
+  {
+    slug: "what-are-the-key-components-of-a-vector",
+    locales: {
+      en: {
+        title:
+          "What are the four key components that define a vector's structure?",
+        description:
+          "Discover the four essential components of a vector: a starting initial point, an ending terminal point, a magnitude (length), and a clear direction shown by an arrow.",
+      },
+      id: {
+        title:
+          "Apa saja empat komponen utama yang mendefinisikan struktur sebuah vektor?",
+        description:
+          "Temukan empat komponen esensial dari sebuah vektor: titik pangkal sebagai awal, titik ujung sebagai akhir, magnitudo (panjang), dan arah yang jelas ditunjukkan oleh panah.",
+      },
+    },
+  },
+  {
+    slug: "what-makes-a-drawing-a-valid-vector",
+    locales: {
+      en: {
+        title: "What characteristics must a drawing have to be a valid vector?",
+        description:
+          "Understand that for a shape to be a valid vector, it must be represented by a single, straight line and have only one clear direction indicated by an arrowhead.",
+      },
+      id: {
+        title:
+          "Karakteristik apa yang harus dimiliki sebuah gambar agar menjadi vektor yang valid?",
+        description:
+          "Pahami bahwa agar sebuah bentuk menjadi vektor yang valid, ia harus direpresentasikan oleh satu garis lurus tunggal dan hanya memiliki satu arah yang jelas.",
+      },
+    },
+  },
+  {
+    slug: "difference-between-position-and-displacement-vector",
+    locales: {
+      en: {
+        title:
+          "What is the difference between a position vector and a displacement vector?",
+        description:
+          "Learn the key distinction: position vectors always start from the origin (0,0) to define a point's location, while displacement vectors connect any two points.",
+      },
+      id: {
+        title: "Apa perbedaan antara vektor posisi dan vektor perpindahan?",
+        description:
+          "Pelajari perbedaan utama: vektor posisi selalu dimulai dari titik asal (0,0) untuk menentukan lokasi, sedangkan vektor perpindahan menghubungkan dua titik mana pun.",
+      },
+    },
+  },
+  {
+    slug: "how-to-represent-a-vector",
+    locales: {
+      en: {
+        title: "What are the different ways to represent or notate a vector?",
+        description:
+          "Explore the common methods for writing vectors, including as a row vector (x, y), a column vector, or using unit vector notation with i, j, and k.",
+      },
+      id: {
+        title:
+          "Apa saja cara yang berbeda untuk merepresentasikan atau menuliskan notasi vektor?",
+        description:
+          "Jelajahi metode umum untuk menulis vektor, termasuk sebagai vektor baris (x, y), vektor kolom, atau menggunakan notasi vektor satuan dengan i, j, dan k.",
+      },
+    },
+  },
+  {
+    slug: "how-cartesian-coordinates-define-vectors",
+    locales: {
+      en: {
+        title:
+          "How does the Cartesian coordinate system define a vector in 2D and 3D?",
+        description:
+          "Understand how the x, y, and z axes of the Cartesian system provide a frame of reference to specify a vector's components, length, and direction in space.",
+      },
+      id: {
+        title:
+          "Bagaimana sistem koordinat Kartesius mendefinisikan vektor dalam 2D dan 3D?",
+        description:
+          "Pahami bagaimana sumbu x, y, dan z dari sistem Kartesius memberikan kerangka acuan untuk menentukan komponen, panjang, dan arah sebuah vektor di dalam ruang.",
+      },
+    },
+  },
+  {
+    slug: "how-is-vector-subtraction-related-to-vector-addition",
+    locales: {
+      en: {
+        title:
+          "How is vector subtraction defined in relation to vector addition?",
+        description:
+          "Learn the fundamental rule of vector subtraction, which defines subtracting a vector (b) as adding the negative of that vector (-b) to the first vector (a).",
+      },
+      id: {
+        title:
+          "Bagaimana pengurangan vektor didefinisikan dalam kaitannya dengan penjumlahan vektor?",
+        description:
+          "Pelajari aturan dasar pengurangan vektor, yang mendefinisikan pengurangan vektor (b) sebagai penambahan negatif dari vektor tersebut (-b) ke vektor pertama (a).",
+      },
+    },
+  },
+  {
+    slug: "how-to-subtract-vectors-using-components",
+    locales: {
+      en: {
+        title: "How do you subtract two vectors by using their components?",
+        description:
+          "Discover the straightforward algebraic method for vector subtraction by simply subtracting the corresponding components (x, y, z) of each vector to find the result.",
+      },
+      id: {
+        title:
+          "Bagaimana cara mengurangkan dua vektor menggunakan komponennya?",
+        description:
+          "Temukan metode aljabar langsung untuk pengurangan vektor dengan hanya mengurangkan komponen yang sesuai (x, y, z) dari setiap vektor untuk menemukan hasilnya.",
+      },
+    },
+  },
+  {
+    slug: "how-vector-subtraction-calculates-displacement",
+    locales: {
+      en: {
+        title:
+          "How is vector subtraction used to calculate a displacement vector?",
+        description:
+          "Understand how vector subtraction is used to find displacement by subtracting the initial position vector from the final position vector, giving the resultant change.",
+      },
+      id: {
+        title:
+          "Bagaimana pengurangan vektor digunakan untuk menghitung vektor perpindahan?",
+        description:
+          "Pahami bagaimana pengurangan vektor digunakan untuk mencari perpindahan dengan mengurangkan vektor posisi awal dari vektor posisi akhir, yang memberikan hasil perubahannya.",
+      },
+    },
+  },
+  {
+    slug: "what-makes-vectors-equivalent",
+    locales: {
+      en: {
+        title: "When are two vectors considered equivalent or equal?",
+        description:
+          "Learn that two vectors are equivalent if they share the exact same magnitude (length) and direction, even if they have different starting positions in space.",
+      },
+      id: {
+        title: "Kapan dua vektor dianggap ekuivalen atau sama?",
+        description:
+          "Pelajari bahwa dua vektor dianggap ekuivalen jika keduanya memiliki magnitudo (panjang) dan arah yang sama persis, meskipun posisi awalnya berbeda di dalam ruang.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-negative-or-opposite-vector",
+    locales: {
+      en: {
+        title:
+          "What is a negative or opposite vector, and how does it relate to the original?",
+        description:
+          "Understand that a negative vector has the same magnitude as the original vector but points in the exact opposite direction, representing a 180-degree difference.",
+      },
+      id: {
+        title:
+          "Apa itu vektor negatif atau vektor lawan, dan bagaimana hubungannya dengan aslinya?",
+        description:
+          "Pahami bahwa vektor negatif memiliki magnitudo yang sama dengan vektor aslinya tetapi menunjuk ke arah yang berlawanan, yang merepresentasikan perbedaan 180 derajat.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-zero-vector",
+    locales: {
+      en: {
+        title: "What is a zero vector and what are its unique properties?",
+        description:
+          "Discover the unique properties of a zero vector, which has a magnitude of zero and, as a result, does not have a specific or defined direction in space.",
+      },
+      id: {
+        title: "Apa itu vektor nol dan apa saja sifat uniknya?",
+        description:
+          "Temukan sifat unik dari vektor nol, yang memiliki magnitudo nol dan, sebagai hasilnya, tidak memiliki arah yang spesifik atau terdefinisi di dalam ruang.",
+      },
+    },
+  },
+  {
+    slug: "what-is-a-zero-vector-and-its-properties",
+    locales: {
+      en: {
+        title: "What is a zero vector and what are its unique properties?",
+        description:
+          "Learn about the zero vector, a unique vector with a magnitude of zero and no defined direction, represented as (0, 0) in 2D or (0, 0, 0) in 3D space.",
+      },
+      id: {
+        title: "Apa itu vektor nol dan apa saja sifat uniknya?",
+        description:
+          "Pelajari tentang vektor nol, sebuah vektor unik dengan magnitudo nol dan tanpa arah yang pasti, yang direpresentasikan sebagai (0, 0) dalam 2D atau (0, 0, 0) dalam 3D.",
+      },
+    },
+  },
+  {
+    slug: "why-is-the-zero-vector-the-identity-element",
+    locales: {
+      en: {
+        title:
+          "Why is the zero vector called the identity element in vector addition?",
+        description:
+          "Discover how the zero vector acts as the identity element because adding it to any other vector leaves the original vector completely unchanged (v + 0 = v).",
+      },
+      id: {
+        title:
+          "Mengapa vektor nol disebut sebagai elemen identitas dalam penjumlahan vektor?",
+        description:
+          "Temukan bagaimana vektor nol bertindak sebagai elemen identitas karena menambahkannya ke vektor lain akan membuat vektor asli tidak berubah sama sekali (v + 0 = v).",
+      },
+    },
+  },
+  {
+    slug: "how-can-displacement-be-a-zero-vector",
+    locales: {
+      en: {
+        title:
+          "How can total displacement be a zero vector even after traveling a distance?",
+        description:
+          "Understand how displacement becomes a zero vector when you return to your starting point, as displacement measures the change from start to finish, not the total path.",
+      },
+      id: {
+        title:
+          "Bagaimana total perpindahan bisa menjadi vektor nol meskipun sudah menempuh jarak?",
+        description:
+          "Pahami bagaimana perpindahan menjadi vektor nol ketika Anda kembali ke titik awal, karena perpindahan mengukur perubahan dari awal ke akhir, bukan total lintasan.",
+      },
+    },
+  },
 ];
 
 export const highSchool10MathematicsData = data.map((item) => ({
