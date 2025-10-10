@@ -36,6 +36,11 @@ export const contributors: Contributor[] = [
     },
   },
   {
+    name: "Nisrina Hana Nabilah",
+    username: "nisrina",
+    type: "former-official",
+  },
+  {
     name: "Juju",
     username: "juju",
     type: "community",

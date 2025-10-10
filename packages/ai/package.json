@@ -8,11 +8,11 @@
   },
   "dependencies": {
     "@ai-sdk/google-vertex": "^3.0.37",
-    "@ai-sdk/openai": "^2.0.46",
-    "@ai-sdk/react": "^2.0.65",
+    "@ai-sdk/openai": "^2.0.47",
+    "@ai-sdk/react": "^2.0.66",
     "@mendable/firecrawl-js": "^4.3.8",
     "@t3-oss/env-nextjs": "^0.13.8",
-    "ai": "^5.0.65",
+    "ai": "^5.0.66",
     "dedent": "^1.7.0",
     "gpt-tokenizer": "^3.2.0",
     "parse-domain": "^8.2.2"
