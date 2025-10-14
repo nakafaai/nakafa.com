@@ -249,5 +249,14 @@
     "web-search-loading": "Finding relevant information...",
     "web-search-error": "Failed to find relevant information.",
     "model": "Model"
+  },
+  "About": {
+    "title": "Fck closed education, enjoy free open education",
+    "description": "Our core mission is to provide high-quality, comprehensive educational content across a wide spectrum of subjects and topics.",
+    "contribute": "Contribute",
+    "start-learning": "Start learning",
+    "join-our-community": "Join our community",
+    "join-community": "Join community",
+    "join-our-community-description": "Community is the heart of Nakafa. Join hundreds of people contributing to shape the future of education."
   }
 }

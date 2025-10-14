@@ -1,6 +1,7 @@
 import { SiGithub, SiX } from "@icons-pack/react-simple-icons";
 import type { Contributor } from "@repo/contents/_types/contributor";
 import { Character } from "@repo/design-system/components/ui/character";
+import { cn } from "@repo/design-system/lib/utils";
 import { IconBrandLinkedin } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { Badge } from "../ui/badge";
@@ -18,9 +19,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 type Props = {
   contributor: Contributor;
+  size?: "sm" | "md" | "lg";
 };
 
-export function Avatar({ contributor }: Props) {
+export function Avatar({ contributor, size = "md" }: Props) {
   const t = useTranslations("Common");
 
   return (
@@ -29,7 +31,11 @@ export function Avatar({ contributor }: Props) {
         <TooltipTrigger asChild>
           <DrawerTrigger className="cursor-pointer">
             <Character
-              className="size-16 shadow-xs"
+              className={cn(
+                "size-16 shadow-xs",
+                size === "sm" && "size-12",
+                size === "lg" && "size-20"
+              )}
               name={`${contributor.name} - ${contributor.username}`}
             />
           </DrawerTrigger>

@@ -249,5 +249,14 @@
     "web-search-loading": "Mencari informasi terkait...",
     "web-search-error": "Gagal menemukan informasi terkait.",
     "model": "Model"
+  },
+  "About": {
+    "title": "Fck pendidikan tertutup, nikmati pendidikan terbuka gratis",
+    "description": "Misi inti kami adalah menyediakan konten edukasi berkualitas tinggi dan komprehensif di berbagai spektrum subjek dan topik.",
+    "contribute": "Kontribusi",
+    "start-learning": "Mulai belajar",
+    "join-our-community": "Bergabung dengan komunitas kami",
+    "join-community": "Bergabung komunitas",
+    "join-our-community-description": "Komunitas adalah jantung dari Nakafa. Bergabunglah dengan ratusan orang yang berkontribusi membentuk masa depan pendidikan."
   }
 }
