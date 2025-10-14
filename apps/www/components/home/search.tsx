@@ -31,7 +31,7 @@ export function HomeSearch() {
 
   const [isPending, startTransition] = useTransition();
 
-  const handleSubmit = (message: PromptInputMessage) => {
+  function handleSubmit(message: PromptInputMessage) {
     startTransition(() => {
       if (!message.text?.trim()) {
         return;
@@ -52,7 +52,7 @@ export function HomeSearch() {
       });
       setText("");
     });
-  };
+  }
 
   return (
     <PromptInput

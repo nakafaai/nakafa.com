@@ -30,11 +30,11 @@ export function CameraControls({
     }
   });
 
-  const handleChange = () => {
+  function handleChange() {
     // Trigger performance regression on control changes (movement)
     performance.regress();
     invalidate();
-  };
+  }
 
   return (
     <>

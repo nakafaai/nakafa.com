@@ -23,13 +23,13 @@ type ReasoningContextValue = {
 
 const ReasoningContext = createContext<ReasoningContextValue | null>(null);
 
-const useReasoning = () => {
+function useReasoning() {
   const context = useContext(ReasoningContext);
   if (!context) {
     throw new Error("Reasoning components must be used within Reasoning");
   }
   return context;
-};
+}
 
 export type ReasoningProps = ComponentProps<typeof Collapsible> & {
   isStreaming?: boolean;
@@ -91,9 +91,9 @@ export const Reasoning = memo(
       }
     }, [isStreaming, isOpen, defaultOpen, setIsOpen, hasAutoClosed]);
 
-    const handleOpenChange = (newOpen: boolean) => {
+    function handleOpenChange(newOpen: boolean) {
       setIsOpen(newOpen);
-    };
+    }
 
     return (
       <ReasoningContext.Provider

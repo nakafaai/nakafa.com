@@ -11,7 +11,7 @@ export function AuthLogout() {
 
   const router = useRouter();
 
-  const handleSignOut = async () => {
+  async function handleSignOut() {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
@@ -19,7 +19,7 @@ export function AuthLogout() {
         },
       },
     });
-  };
+  }
 
   return (
     <Button onClick={handleSignOut}>

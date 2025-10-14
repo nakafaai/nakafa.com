@@ -113,12 +113,12 @@ const codeBlockClassName = cn(
   "[&_.line]:relative"
 );
 
-const highlight = (
+function highlight(
   html: string,
   language?: BundledLanguage,
   themes?: CodeOptionsMultipleThemes["themes"]
-) =>
-  codeToHtml(html, {
+) {
+  return codeToHtml(html, {
     lang: language ?? "typescript",
     themes: themes ?? {
       light: "github-light",
@@ -142,6 +142,7 @@ const highlight = (
       }),
     ],
   });
+}
 
 export type CodeBlockData = {
   language: string;
@@ -366,7 +367,7 @@ export const CodeBlockCopyButton = ({
   }));
   const code = data.find((item) => item.language === value)?.code;
 
-  const copyToClipboard = () => {
+  function copyToClipboard() {
     if (
       typeof window === "undefined" ||
       !navigator.clipboard.writeText ||
@@ -381,7 +382,7 @@ export const CodeBlockCopyButton = ({
 
       setTimeout(() => setIsCopied(false), timeout);
     }, onError);
-  };
+  }
 
   if (asChild) {
     return cloneElement(children as ReactElement, {
@@ -407,22 +408,24 @@ export const CodeBlockCopyButton = ({
 
 type CodeBlockFallbackProps = HTMLAttributes<HTMLDivElement>;
 
-const CodeBlockFallback = ({ children, ...props }: CodeBlockFallbackProps) => (
-  <div {...props}>
-    <pre className="w-full">
-      <code>
-        {children
-          ?.toString()
-          .split("\n")
-          .map((line, i) => (
-            <span className="line" key={`${i}-${line}`}>
-              {line}
-            </span>
-          ))}
-      </code>
-    </pre>
-  </div>
-);
+function CodeBlockFallback({ children, ...props }: CodeBlockFallbackProps) {
+  return (
+    <div {...props}>
+      <pre className="w-full">
+        <code>
+          {children
+            ?.toString()
+            .split("\n")
+            .map((line, i) => (
+              <span className="line" key={`${i}-${line}`}>
+                {line}
+              </span>
+            ))}
+        </code>
+      </pre>
+    </div>
+  );
+}
 
 export type CodeBlockBodyProps = Omit<
   HTMLAttributes<HTMLDivElement>,

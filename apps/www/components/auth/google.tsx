@@ -11,12 +11,12 @@ export function AuthGoogle() {
 
   const [redirect] = useQueryState("redirect");
 
-  const handleGoogleSignIn = async () => {
+  async function handleGoogleSignIn() {
     await authClient.signIn.social({
       provider: "google",
       callbackURL: redirect ?? "/",
     });
-  };
+  }
 
   return (
     <Button onClick={handleGoogleSignIn}>

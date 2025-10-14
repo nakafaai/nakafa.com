@@ -6,7 +6,7 @@ const HTML_EXT_REGEX = /\.html$/;
 const HTML_ANCHOR_REGEX = /\.html#/;
 const SEARCH_OPTIONS: PagefindSearchOptions = {};
 
-const fetchSearchResults = async (query: string): Promise<PagefindResult[]> => {
+async function fetchSearchResults(query: string): Promise<PagefindResult[]> {
   if (!window.pagefind?.debouncedSearch) {
     // Should not happen if isPagefindReady is true, but good practice
     throw new Error("Pagefind not initialized correctly.");
@@ -32,7 +32,7 @@ const fetchSearchResults = async (query: string): Promise<PagefindResult[]> => {
       return { ...r, url };
     }),
   }));
-};
+}
 
 export function useSearchQuery({
   query,

@@ -25,7 +25,7 @@ export function PagefindProvider({ children }: { children: ReactNode }) {
 
   // Initialize Pagefind on mount
   useEffect(() => {
-    const init = async () => {
+    async function init() {
       setError(""); // Reset error on attempt
       if (window.pagefind) {
         setReady(true);
@@ -38,7 +38,7 @@ export function PagefindProvider({ children }: { children: ReactNode }) {
         setError(getErrorMessage(err));
         setReady(false); // Explicitly set to false on error
       }
-    };
+    }
     init();
   }, []);
 

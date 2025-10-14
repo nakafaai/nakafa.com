@@ -38,7 +38,7 @@ export type ToolHeaderProps = {
   className?: string;
 };
 
-const getStatusBadge = (status: ToolUIPart["state"]) => {
+function getStatusBadge(status: ToolUIPart["state"]) {
   const labels = {
     "input-streaming": "pending",
     "input-available": "running",
@@ -57,7 +57,7 @@ const getStatusBadge = (status: ToolUIPart["state"]) => {
     label: labels[status],
     icon: icons[status],
   };
-};
+}
 
 export const ToolHeader = memo(
   ({ className, type, state, icon, ...props }: ToolHeaderProps) => {

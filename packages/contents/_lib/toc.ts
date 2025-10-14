@@ -66,7 +66,7 @@ export function getHeadings(content: string): ParsedHeading[] {
       }
 
       // Clean up empty children arrays
-      const cleanupChildren = (items: ParsedHeading[]): void => {
+      function cleanupChildren(items: ParsedHeading[]): void {
         for (const item of items) {
           if (item.children && item.children.length === 0) {
             // Set to undefined instead of using delete
@@ -75,7 +75,7 @@ export function getHeadings(content: string): ParsedHeading[] {
             cleanupChildren(item.children);
           }
         }
-      };
+      }
 
       cleanupChildren(headings);
       return headings;

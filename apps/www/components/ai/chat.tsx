@@ -65,7 +65,7 @@ const AiChatToolbar = memo(() => {
 
   const { sendMessage, status } = useChat((state) => state.chat);
 
-  const handleSubmit = (message: PromptInputMessage) => {
+  function handleSubmit(message: PromptInputMessage) {
     if (!message.text?.trim()) {
       return;
     }
@@ -80,7 +80,7 @@ const AiChatToolbar = memo(() => {
       files: message.files,
     });
     setText("");
-  };
+  }
 
   return (
     <div className="mx-auto mb-2 grid w-full max-w-3xl shrink-0">

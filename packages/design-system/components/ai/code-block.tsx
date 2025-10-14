@@ -170,12 +170,12 @@ class HighlighterManager {
       theme: darkTheme,
     });
 
-    const addPreClass = (html: string) => {
+    function addPreClass(html: string) {
       if (!preClassName) {
         return html;
       }
       return html.replace(PRE_TAG_REGEX, `<pre class="${preClassName}"$1`);
-    };
+    }
 
     return [
       removePreBackground(addPreClass(light ?? "")),
@@ -188,11 +188,12 @@ class HighlighterManager {
 const highlighterManager = new HighlighterManager();
 
 // Remove background styles from <pre> tags (inline style)
-const removePreBackground = (html: string) =>
-  html.replace(
+function removePreBackground(html: string) {
+  return html.replace(
     /(<pre[^>]*)(style="[^"]*background[^";]*;?[^"]*")([^>]*>)/g,
     "$1$3"
   );
+}
 
 export const CodeBlock = ({
   code,
@@ -612,14 +613,14 @@ export const CodeBlockDownloadButton = ({
   const filename = `file.${extension}`;
   const mimeType = "text/plain";
 
-  const downloadCode = () => {
+  function downloadCode() {
     try {
       save(filename, code, mimeType);
       onDownload?.();
     } catch (error) {
       onError?.(error as Error);
     }
-  };
+  }
 
   return (
     <Button
@@ -649,7 +650,7 @@ export const CodeBlockCopyButton = ({
   const contextCode = useContext(CodeBlockContext).code;
   const code = propCode ?? contextCode;
 
-  const copyToClipboard = async () => {
+  async function copyToClipboard() {
     if (typeof window === "undefined" || !navigator?.clipboard?.writeText) {
       onError?.(new Error("Clipboard API not available"));
       return;
@@ -668,7 +669,7 @@ export const CodeBlockCopyButton = ({
     } catch (error) {
       onError?.(error as Error);
     }
-  };
+  }
 
   useEffect(
     () => () => {

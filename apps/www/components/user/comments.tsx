@@ -76,7 +76,7 @@ function CommentThread({
   const voteOnComment = useMutation(api.comments.mutations.voteOnComment);
   const deleteComment = useMutation(api.comments.mutations.deleteComment);
 
-  const handleVote = (vote: -1 | 1) => {
+  function handleVote(vote: -1 | 1) {
     if (!currentUser) {
       return;
     }
@@ -87,9 +87,9 @@ function CommentThread({
         vote,
       });
     });
-  };
+  }
 
-  const handleDelete = () => {
+  function handleDelete() {
     if (!currentUser) {
       return;
     }
@@ -99,7 +99,7 @@ function CommentThread({
         commentId: comment._id,
       });
     });
-  };
+  }
 
   return (
     <div className="flex items-start gap-3 text-left">

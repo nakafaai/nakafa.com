@@ -107,9 +107,11 @@ export const usePromptInputController = () => {
 };
 
 // Optional variants (do NOT throw). Useful for dual-mode components.
-const useOptionalPromptInputController = () => useContext(PromptInputContext);
+function useOptionalPromptInputController() {
+  return useContext(PromptInputContext);
+}
 
-export const useProviderAttachments = () => {
+export function useProviderAttachments() {
   const ctx = useContext(ProviderAttachmentsContext);
   if (!ctx) {
     throw new Error(
@@ -117,10 +119,11 @@ export const useProviderAttachments = () => {
     );
   }
   return ctx;
-};
+}
 
-const useOptionalProviderAttachments = () =>
-  useContext(ProviderAttachmentsContext);
+function useOptionalProviderAttachments() {
+  return useContext(ProviderAttachmentsContext);
+}
 
 export type PromptInputProviderProps = PropsWithChildren<{
   initialInput?: string;
@@ -239,7 +242,7 @@ export function PromptInputProvider({
 
 const LocalAttachmentsContext = createContext<AttachmentsContext | null>(null);
 
-export const usePromptInputAttachments = () => {
+export function usePromptInputAttachments() {
   // Dual-mode: prefer provider if present, otherwise use local
   const provider = useOptionalProviderAttachments();
   const local = useContext(LocalAttachmentsContext);
@@ -250,7 +253,7 @@ export const usePromptInputAttachments = () => {
     );
   }
   return context;
-};
+}
 
 export type PromptInputAttachmentProps = HTMLAttributes<HTMLDivElement> & {
   data: FileUIPart & { id: string };

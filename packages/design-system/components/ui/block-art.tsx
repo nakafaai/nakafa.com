@@ -262,7 +262,7 @@ export function BlockArt({
           const row = Math.floor(i / Cols);
           const col = i % Cols;
 
-          const getCellColor = () => {
+          function getCellColor() {
             if (rippleIntensity > 0) {
               return waveColor;
             }
@@ -270,7 +270,7 @@ export function BlockArt({
               return animationColor;
             }
             return "bg-background";
-          };
+          }
 
           return (
             <div

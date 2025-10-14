@@ -11,7 +11,7 @@ const MAGIC_NUMBER = 0;
 const RANDOM_STRING_LENGTH = 9;
 const SHIFT_5 = 5;
 
-const initializeMermaid = async (customConfig?: MermaidConfig) => {
+async function initializeMermaid(customConfig?: MermaidConfig) {
   const defaultConfig: MermaidConfig = {
     startOnLoad: false,
     theme: "default",
@@ -30,7 +30,7 @@ const initializeMermaid = async (customConfig?: MermaidConfig) => {
   mermaid.initialize(config);
 
   return mermaid;
-};
+}
 
 type MermaidProps = {
   chart: string;
@@ -48,7 +48,7 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: "Required for Mermaid"
   useEffect(() => {
-    const renderChart = async () => {
+    async function renderChart() {
       try {
         setError(null);
         setIsLoading(true);
@@ -86,7 +86,7 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
       } finally {
         setIsLoading(false);
       }
-    };
+    }
 
     renderChart();
   }, [chart, config, resolvedTheme]);

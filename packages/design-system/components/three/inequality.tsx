@@ -146,7 +146,7 @@ export function Inequality({
     const yStep = (yRange[1] - yRange[0]) / adaptiveResolution;
 
     // Helper function to add a quad (two triangles) to the geometry - optimized
-    const addQuad = (p1: Point, p2: Point, p3: Point, p4: Point) => {
+    function addQuad(p1: Point, p2: Point, p3: Point, p4: Point) {
       const index = vertexIndex / COMPONENTS_PER_VERTEX;
 
       // Add vertices directly to array
@@ -170,10 +170,10 @@ export function Inequality({
       indices[indexOffset++] = index;
       indices[indexOffset++] = index + 2;
       indices[indexOffset++] = index + LAST_VERTEX_OFFSET_IN_QUAD;
-    };
+    }
 
     // Helper function to create all faces of a complete cell - optimized
-    const addCompleteCell = ({
+    function addCompleteCell({
       x1,
       y1,
       x2,
@@ -187,7 +187,7 @@ export function Inequality({
       y2: number;
       z1: number;
       z2: number;
-    }) => {
+    }) {
       // Only add visible faces for performance (basic culling)
       // Bottom face (at minimum z)
       addQuad([x1, y1, z1], [x2, y1, z1], [x2, y2, z1], [x1, y2, z1]);
@@ -212,7 +212,7 @@ export function Inequality({
         // Back face
         addQuad([x1, y2, z1], [x1, y2, z2], [x2, y2, z2], [x2, y2, z1]);
       }
-    };
+    }
 
     if (is2D && boundaryLine2D) {
       // Handle 2D inequality (like x + y <= 10) visualized as extruded along z-axis

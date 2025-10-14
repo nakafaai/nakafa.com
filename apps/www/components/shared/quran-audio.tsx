@@ -20,7 +20,7 @@ export function QuranAudio({ audio }: Props) {
     interrupt: true,
   });
 
-  const handleToggle = () => {
+  function handleToggle() {
     if (isPlaying) {
       stop();
       setIsPlaying(false);
@@ -28,7 +28,7 @@ export function QuranAudio({ audio }: Props) {
       play();
       setIsPlaying(true);
     }
-  };
+  }
 
   return (
     <Button

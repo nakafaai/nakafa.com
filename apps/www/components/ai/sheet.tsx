@@ -162,7 +162,7 @@ const AiSheetToolbar = memo(() => {
 
   const { sendMessage, status, stop } = useChat((state) => state.chat);
 
-  const handleSubmit = (message: PromptInputMessage) => {
+  function handleSubmit(message: PromptInputMessage) {
     if (status === "streaming") {
       stop();
       return;
@@ -183,7 +183,7 @@ const AiSheetToolbar = memo(() => {
       files: message.files,
     });
     setText("");
-  };
+  }
 
   return (
     <div className="grid shrink-0 px-2 pb-2">

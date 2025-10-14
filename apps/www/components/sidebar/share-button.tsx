@@ -16,14 +16,14 @@ export function ShareButton() {
   // use pathname hook from nextjs to get the locale
   const pathname = usePathname();
 
-  const handleShare = () => {
+  function handleShare() {
     const url = `${getAppUrl()}${pathname}`;
     navigator.clipboard.writeText(url);
     toast.success(t("share-copied"), {
       description: url,
       position: "bottom-center",
     });
-  };
+  }
 
   return (
     <SidebarMenuItem>

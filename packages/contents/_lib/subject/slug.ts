@@ -55,9 +55,9 @@ export function getMaterialsPagination(
   }
 
   // Extract navigation data from an item or return empty values if not available
-  const getItemData = (item: (typeof allItems)[number] | null) =>
-    item ? { href: item.href, title: item.title } : emptyItem;
-
+  function getItemData(item: (typeof allItems)[number] | null) {
+    return item ? { href: item.href, title: item.title } : emptyItem;
+  }
   // Get previous and next items based on current index
   const prevItem = currentIndex > 0 ? allItems[currentIndex - 1] : null;
   const nextItem =

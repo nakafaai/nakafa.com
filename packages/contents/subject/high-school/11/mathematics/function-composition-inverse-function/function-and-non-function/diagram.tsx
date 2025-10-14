@@ -68,19 +68,19 @@ const domainTextX = domainEllipseCx;
 const codomainTextX = codomainEllipseCx;
 
 // Helper to calculate Text Y position dynamically within an ellipse
-const calculateTextY = (
+function calculateTextY(
   index: number,
   total: number,
   ry: number,
   cy: number
-): number => {
+): number {
   // Calculate the effective height available for text
   const textHeightArea = ry * 2 - TEXT_PADDING * 2;
   // Calculate the height of each slot
   const slotHeight = textHeightArea / total;
   // Calculate the center Y of the slot, offset by top padding and ellipse center
   return cy - ry + TEXT_PADDING + slotHeight * (index + SLOT_CENTER_OFFSET);
-};
+}
 
 export function RelationVisualizer({
   domain,

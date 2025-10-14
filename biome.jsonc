@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.2.5/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
   "extends": ["ultracite"],
   "javascript": {
     "formatter": {
@@ -30,6 +30,9 @@
       "style": {
         "useFilenamingConvention": "off",
         "useNamingConvention": "off"
+      },
+      "nursery": {
+        "useQwikValidLexicalScope": "off"
       }
     }
   },

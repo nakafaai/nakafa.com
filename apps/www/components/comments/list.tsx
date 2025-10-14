@@ -198,7 +198,7 @@ function CommentAction({
   const voteOnComment = useMutation(api.comments.mutations.voteOnComment);
   const deleteComment = useMutation(api.comments.mutations.deleteComment);
 
-  const handleVote = (vote: -1 | 1) => {
+  function handleVote(vote: -1 | 1) {
     if (!currentUser) {
       return;
     }
@@ -209,9 +209,9 @@ function CommentAction({
         vote,
       });
     });
-  };
+  }
 
-  const handleDelete = () => {
+  function handleDelete() {
     if (!currentUser) {
       return;
     }
@@ -221,7 +221,7 @@ function CommentAction({
         commentId: comment._id,
       });
     });
-  };
+  }
 
   return (
     <div className="-translate-x-2 flex items-center">

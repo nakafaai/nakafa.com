@@ -48,9 +48,9 @@ export function NavUser() {
 
   const { isMobile } = useSidebar();
 
-  const handleSignOut = async () => {
+  async function handleSignOut() {
     await authClient.signOut();
-  };
+  }
 
   useEffect(() => {
     // prefetch all the links

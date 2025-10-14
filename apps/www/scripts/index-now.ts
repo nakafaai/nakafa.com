@@ -368,7 +368,7 @@ async function submitUrlsToBing(
   const successfullySubmitted: string[] = [];
 
   // Process URLs in batches using async iteration
-  const processBatch = async (): Promise<boolean> => {
+  async function processBatch(): Promise<boolean> {
     if (submitted >= urls.length) {
       return false;
     }
@@ -434,15 +434,15 @@ async function submitUrlsToBing(
       }
       return true;
     }
-  };
+  }
 
   // Use tail recursion to avoid await in loop
-  const processAllBatches = async (): Promise<void> => {
+  async function processAllBatches(): Promise<void> {
     const shouldContinue = await processBatch();
     if (shouldContinue && submitted < urls.length) {
       await processAllBatches();
     }
-  };
+  }
 
   await processAllBatches();
 

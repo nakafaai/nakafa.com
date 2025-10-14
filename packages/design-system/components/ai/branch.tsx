@@ -18,7 +18,7 @@ type BranchContextType = {
 
 const BranchContext = createContext<BranchContextType | null>(null);
 
-const useBranch = () => {
+function useBranch() {
   const context = useContext(BranchContext);
 
   if (!context) {
@@ -26,7 +26,7 @@ const useBranch = () => {
   }
 
   return context;
-};
+}
 
 export type BranchProps = HTMLAttributes<HTMLDivElement> & {
   defaultBranch?: number;
@@ -42,22 +42,22 @@ export const Branch = ({
   const [currentBranch, setCurrentBranch] = useState(defaultBranch);
   const [branches, setBranches] = useState<ReactElement[]>([]);
 
-  const handleBranchChange = (newBranch: number) => {
+  function handleBranchChange(newBranch: number) {
     setCurrentBranch(newBranch);
     onBranchChange?.(newBranch);
-  };
+  }
 
-  const goToPrevious = () => {
+  function goToPrevious() {
     const newBranch =
       currentBranch > 0 ? currentBranch - 1 : branches.length - 1;
     handleBranchChange(newBranch);
-  };
+  }
 
-  const goToNext = () => {
+  function goToNext() {
     const newBranch =
       currentBranch < branches.length - 1 ? currentBranch + 1 : 0;
     handleBranchChange(newBranch);
-  };
+  }
 
   const contextValue: BranchContextType = {
     currentBranch,

@@ -55,7 +55,7 @@ function LLmCopyButton({ slug }: { slug: string }) {
   const t = useTranslations("Common");
   const [isPending, startTransition] = useTransition();
 
-  const handleCopy = () => {
+  function handleCopy() {
     startTransition(async () => {
       const { data, error } = await api.contents.getContent({
         slug,
@@ -88,7 +88,7 @@ function LLmCopyButton({ slug }: { slug: string }) {
           });
         });
     });
-  };
+  }
 
   return (
     <Button

@@ -39,7 +39,9 @@ export function ThemeMenu() {
 
   const isMobile = useMediaQuery("(max-width: 640px)");
 
-  const isActive = (value: string) => currentTheme === value;
+  function isActive(value: string) {
+    return currentTheme === value;
+  }
 
   return (
     <DropdownMenu>

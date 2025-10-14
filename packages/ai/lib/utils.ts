@@ -117,16 +117,17 @@ export function compressMessages(
   }
 
   // Helper function to get content from all messages
-  const getMessagesContent = (msgs: MyUIMessage[]): string =>
-    msgs
+  function getMessagesContent(msgs: MyUIMessage[]): string {
+    return msgs
       .flatMap((m) => m.parts.map(extractContentFromPart).filter(Boolean))
       .join("\n");
+  }
 
   // Helper function to format token information
-  const formatTokenInfo = (
+  function formatTokenInfo(
     messageContent: string,
     tokenLimitOverride?: number
-  ): string => {
+  ): string {
     const tokenResult = isWithinLimit({
       content: messageContent,
       limit: tokenLimitOverride,
@@ -136,7 +137,7 @@ export function compressMessages(
       return `more than ${actualLimit}`;
     }
     return tokenResult.toString();
-  };
+  }
 
   // Start with all messages
   let workingMessages = [...messages];

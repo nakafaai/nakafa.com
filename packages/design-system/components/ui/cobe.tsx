@@ -125,11 +125,11 @@ export function Cobe({
     let phi = 0;
     let width = 0;
 
-    const onResize = () => {
+    function onResize() {
       if (canvasRef.current) {
         width = canvasRef.current.offsetWidth;
       }
-    };
+    }
     window.addEventListener("resize", onResize);
     onResize();
     if (!canvasRef.current) {
