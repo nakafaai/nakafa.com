@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: {
-      absolute: t("title"),
+      absolute: t("meta-title"),
     },
     description: t("description"),
     alternates: {

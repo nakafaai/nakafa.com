@@ -251,7 +251,8 @@
     "model": "Model"
   },
   "About": {
-    "title": "Fck closed education, enjoy free open education",
+    "meta-title": "Fck closed education, enjoy free open education",
+    "title": "Fck closed education, enjoy <mark>free open education</mark>",
     "description": "Our core mission is to provide high-quality, comprehensive educational content across a wide spectrum of subjects and topics.",
     "contribute": "Contribute",
     "start-learning": "Start learning",
