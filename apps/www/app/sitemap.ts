@@ -11,7 +11,7 @@ const host = `https://${MAIN_DOMAIN}`;
 
 // Main domain for sitemap generation
 
-export const baseRoutes = ["/search", "/contributor", "/quran"];
+export const baseRoutes = ["/search", "/contributor", "/quran", "/about"];
 
 // Constants for date calculations
 const MONTHS_IN_FALLBACK_PERIOD = 6;
@@ -168,6 +168,12 @@ export async function getEntries(
     lastModified = new Date("2025-01-01");
   } else if (routeString.startsWith("/ask/")) {
     // Ask content is very stable, set to founding date
+    lastModified = new Date("2025-01-01");
+  } else if (routeString.startsWith("/about")) {
+    // About page is very stable, set to founding date
+    lastModified = new Date("2025-01-01");
+  } else if (routeString.startsWith("/contributor")) {
+    // Contributor page is very stable, set to founding date
     lastModified = new Date("2025-01-01");
   }
 
