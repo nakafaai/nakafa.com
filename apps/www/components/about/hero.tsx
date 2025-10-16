@@ -10,7 +10,7 @@ export function Hero() {
   return (
     <section className="grid scroll-mt-28 items-center gap-12" id="hero">
       <div className="grid gap-6">
-        <h1 className="mb-0 max-w-2xl text-balance font-semibold text-4xl tracking-tighter md:text-5xl [&_mark]:selection:bg-primary/10 [&_mark]:selection:text-primary">
+        <h1 className="mb-0 max-w-2xl text-balance font-semibold text-4xl tracking-tighter md:text-5xl">
           {t.rich("title", {
             mark: (chunks) => <mark>{chunks}</mark>,
           })}

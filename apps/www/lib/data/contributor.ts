@@ -82,4 +82,12 @@ export const contributors: Contributor[] = [
       linkedin: "https://www.linkedin.com/in/reka-tiyasayu-sapitri/",
     },
   },
+  {
+    name: "Emerald Durra",
+    username: "emerald",
+    type: "community",
+    social: {
+      linkedin: "https://www.linkedin.com/in/emeralddurra/",
+    },
+  },
 ];

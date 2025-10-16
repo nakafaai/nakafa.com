@@ -15,7 +15,7 @@ export function Community() {
         <h2 className="font-semibold text-3xl tracking-tight sm:text-4xl">
           {t("join-our-community")}
         </h2>
-        <p className="max-w-xl text-balance text-lg text-muted-foreground md:text-xl">
+        <p className="max-w-2xl text-balance text-lg text-muted-foreground md:text-xl">
           {t("join-our-community-description")}
         </p>
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Community } from "@/components/about/community";
+import { Curriculum } from "@/components/about/curriculum";
 import { Hero } from "@/components/about/hero";
 
 type Props = {
@@ -30,6 +31,7 @@ export default function Page() {
       data-pagefind-ignore
     >
       <Hero />
+      <Curriculum />
       <Community />
     </main>
   );
