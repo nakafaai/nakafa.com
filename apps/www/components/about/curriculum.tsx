@@ -29,7 +29,7 @@ export function Curriculum() {
         <h3 className="font-medium text-2xl tracking-tight">
           {tCommon("subject")}
         </h3>
-        <div className="rounded-xl border">
+        <div className="overflow-hidden rounded-xl border">
           {subjectAll.map((subject) => (
             <div
               className="flex flex-col border-b last:border-b-0"
