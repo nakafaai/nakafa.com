@@ -20,6 +20,7 @@ type Props = {
   animationInterval?: number;
   waveColor?: string;
   waveDuration?: number;
+  onCellClick?: () => void;
 };
 
 type Ripple = {
@@ -55,6 +56,7 @@ export function BlockArt({
   animationInterval = DEFAULT_ANIMATION_INTERVAL,
   waveColor = DEFAULT_WAVE_COLOR,
   waveDuration = DEFAULT_WAVE_DURATION,
+  onCellClick,
 }: Props) {
   const Cols = Math.max(1, Math.floor(gridCols));
   const Rows = Math.max(1, Math.floor(gridRows));
@@ -209,6 +211,7 @@ export function BlockArt({
           const col = cellIndex % Cols;
           const row = Math.floor(cellIndex / Cols);
           throttledHandleRipple(col, row);
+          onCellClick?.();
           return;
         }
       }
@@ -223,8 +226,9 @@ export function BlockArt({
       const row = Math.min(Math.floor((clickY / rect.height) * Rows), Rows - 1);
 
       throttledHandleRipple(col, row);
+      onCellClick?.();
     },
-    [Cols, Rows, throttledHandleRipple]
+    [Cols, Rows, throttledHandleRipple, onCellClick]
   );
 
   const handleKeyDown = useCallback(

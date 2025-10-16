@@ -1,9 +1,9 @@
-import { BlockArt } from "@repo/design-system/components/ui/block-art";
 import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ArrowUpRightIcon, HeartHandshakeIcon } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { HeroArt } from "./hero-art";
 
 export function Hero() {
   const t = useTranslations("About");
@@ -35,7 +35,7 @@ export function Hero() {
       </div>
 
       <div className="relative">
-        <BlockArt className="border-x" />
+        <HeroArt />
       </div>
     </section>
   );
