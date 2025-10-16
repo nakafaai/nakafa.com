@@ -182,21 +182,14 @@ export function BlockArt({
   const throttledHandleRipple = useCallback(
     (x: number, y: number) => {
       if (!isThrottled) {
+        onCellClick?.();
         handleRipple(x, y);
         setIsThrottled(true);
         setTimeout(() => setIsThrottled(false), throttleDelay);
       }
     },
-    [handleRipple, isThrottled]
+    [handleRipple, isThrottled, onCellClick]
   );
-
-  const throttledOnCellClick = useCallback(() => {
-    if (!isThrottled) {
-      onCellClick?.();
-      setIsThrottled(true);
-      setTimeout(() => setIsThrottled(false), throttleDelay);
-    }
-  }, [onCellClick, isThrottled]);
 
   const handleClick = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
@@ -219,7 +212,7 @@ export function BlockArt({
           const col = cellIndex % Cols;
           const row = Math.floor(cellIndex / Cols);
           throttledHandleRipple(col, row);
-          throttledOnCellClick();
+
           return;
         }
       }
@@ -234,9 +227,8 @@ export function BlockArt({
       const row = Math.min(Math.floor((clickY / rect.height) * Rows), Rows - 1);
 
       throttledHandleRipple(col, row);
-      throttledOnCellClick();
     },
-    [Cols, Rows, throttledHandleRipple, throttledOnCellClick]
+    [Cols, Rows, throttledHandleRipple]
   );
 
   const handleKeyDown = useCallback(
