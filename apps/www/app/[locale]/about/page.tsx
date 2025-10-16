@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default function Page() {
   return (
     <main
-      className="relative mx-auto grid max-w-6xl gap-24 px-6 py-16 sm:gap-32"
+      className="relative mx-auto grid max-w-5xl gap-24 px-6 py-16 sm:gap-32"
       data-pagefind-ignore
     >
       <Hero />
