@@ -29,7 +29,7 @@ export function Curriculum() {
         <h3 className="font-medium text-2xl tracking-tight">
           {tCommon("subject")}
         </h3>
-        <div className="overflow-hidden rounded-xl border">
+        <div className="overflow-hidden rounded-xl border shadow-sm">
           {subjectAll.map((subject) => (
             <div
               className="flex flex-col border-b last:border-b-0"
@@ -63,45 +63,49 @@ export function Curriculum() {
         </div>
       </div>
 
-      <div className="grid gap-4">
-        <h3 className="font-medium text-2xl tracking-tight">{tHoly("holy")}</h3>
-        <div className="overflow-hidden rounded-xl border">
-          {holyMenu.map((item) => (
-            <div
-              className="flex flex-col border-b last:border-b-0"
-              key={item.title}
-            >
-              <NavigationLink
-                className="flex cursor-pointer items-center gap-2 p-6 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-                href={item.href}
+      <div className="grid gap-12 sm:grid-cols-2">
+        <div className="grid gap-4">
+          <h3 className="font-medium text-2xl tracking-tight">
+            {tHoly("holy")}
+          </h3>
+          <div className="overflow-hidden rounded-xl border shadow-sm">
+            {holyMenu.map((item) => (
+              <div
+                className="flex flex-col border-b last:border-b-0"
+                key={item.title}
               >
-                {item.icon && <item.icon className="size-5 shrink-0" />}
-                <h4>{tHoly(item.title)}</h4>
-              </NavigationLink>
-            </div>
-          ))}
+                <NavigationLink
+                  className="flex cursor-pointer items-center gap-2 p-6 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+                  href={item.href}
+                >
+                  {item.icon && <item.icon className="size-5 shrink-0" />}
+                  <h4>{tHoly(item.title)}</h4>
+                </NavigationLink>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="grid gap-4">
-        <h3 className="font-medium text-2xl tracking-tight">
-          {tCommon("articles")}
-        </h3>
-        <div className="overflow-hidden rounded-xl border">
-          {articlesMenu.map((item) => (
-            <div
-              className="flex flex-col border-b last:border-b-0"
-              key={item.title}
-            >
-              <NavigationLink
-                className="flex cursor-pointer items-center gap-2 p-6 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-                href={item.href}
+        <div className="grid gap-4">
+          <h3 className="font-medium text-2xl tracking-tight">
+            {tCommon("articles")}
+          </h3>
+          <div className="overflow-hidden rounded-xl border shadow-sm">
+            {articlesMenu.map((item) => (
+              <div
+                className="flex flex-col border-b last:border-b-0"
+                key={item.title}
               >
-                {item.icon && <item.icon className="size-5 shrink-0" />}
-                <h4>{tArticles(item.title)}</h4>
-              </NavigationLink>
-            </div>
-          ))}
+                <NavigationLink
+                  className="flex cursor-pointer items-center gap-2 p-6 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+                  href={item.href}
+                >
+                  {item.icon && <item.icon className="size-5 shrink-0" />}
+                  <h4>{tArticles(item.title)}</h4>
+                </NavigationLink>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

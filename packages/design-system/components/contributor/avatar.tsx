@@ -32,7 +32,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
           <DrawerTrigger className="cursor-pointer">
             <Character
               className={cn(
-                "size-16 shadow-xs",
+                "size-16 shadow-sm",
                 size === "sm" && "size-12",
                 size === "lg" && "size-20"
               )}
@@ -48,7 +48,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
       <DrawerContent className="mx-auto sm:max-w-xs">
         <DrawerHeader className="items-center">
           <Character
-            className="size-16 shadow-xs"
+            className="size-16 shadow-sm"
             name={`${contributor.name} - ${contributor.username}`}
           />
           <DrawerTitle className="text-center">{contributor.name}</DrawerTitle>
