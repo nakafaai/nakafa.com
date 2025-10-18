@@ -245,7 +245,7 @@ export function BlockArt({
   );
 
   return (
-    <section className={cn("size-full bg-border py-px", className)}>
+    <section className={cn("size-full bg-border p-px", className)}>
       <button
         aria-label="Interactive grid art with wave effect"
         className="size-full cursor-pointer"

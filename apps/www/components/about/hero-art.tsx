@@ -17,7 +17,5 @@ export function HeroArt() {
     }
   }
 
-  return (
-    <BlockArt className="border-x shadow-sm" onCellClick={handleCellClick} />
-  );
+  return <BlockArt className="shadow-sm" onCellClick={handleCellClick} />;
 }
