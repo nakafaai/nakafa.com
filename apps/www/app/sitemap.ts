@@ -11,7 +11,15 @@ const host = `https://${MAIN_DOMAIN}`;
 
 // Main domain for sitemap generation
 
-export const baseRoutes = ["/search", "/contributor", "/quran", "/about"];
+export const baseRoutes = [
+  "/search",
+  "/contributor",
+  "/quran",
+  "/about",
+  "/terms-of-service",
+  "/privacy-policy",
+  "/security-policy",
+];
 
 // Constants for date calculations
 const MONTHS_IN_FALLBACK_PERIOD = 6;
