@@ -49,10 +49,6 @@ export function AiChatModel() {
         (s) => s.productId === products.pro.id
       );
       if (subscription) {
-        await authClient.checkout({
-          products: [products.pro.id],
-          slug: products.pro.slug,
-        });
         return;
       }
     }

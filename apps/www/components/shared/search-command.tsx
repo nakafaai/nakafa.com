@@ -139,7 +139,7 @@ function SearchListItems({
         <InfoIcon className="size-4" />
         <div className="mt-1">{t("search-error")}</div>
         {typeof error === "string" || typeof error === "object" ? (
-          <div className="mt-2 max-w-xs break-words text-xs">{error}</div>
+          <div className="wrap-break-word mt-2 max-w-xs text-xs">{error}</div>
         ) : null}
       </CommandEmpty>
     );
