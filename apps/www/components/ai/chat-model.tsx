@@ -40,7 +40,7 @@ export function AiChatModel() {
   const label = models.find((m) => m.value === model)?.label;
 
   const handleCheckout = async ({ type }: { type: "premium" | "free" }) => {
-    if (type === "free") {
+    if (type === "free" || !user) {
       return;
     }
     const { data: customerState } = await authClient.customer.state();
@@ -55,6 +55,11 @@ export function AiChatModel() {
     await authClient.checkout({
       products: [products.pro.id],
       slug: products.pro.slug,
+      // https://polar.sh/docs/features/checkout/links#prepopulate-fields
+      customFieldData: {
+        customer_email: user.email,
+        customer_name: user.name,
+      },
     });
   };
 
