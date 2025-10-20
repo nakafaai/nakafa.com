@@ -10,21 +10,63 @@ const gateway = createGateway({
   },
 });
 
-const languageModels = {
-  deepseek: gateway("deepseek/deepseek-v3.1"),
-  "google-flash": gateway("google/gemini-2.5-flash"),
-  "google-pro": gateway("google/gemini-2.5-pro"),
-  meta: gateway("meta/llama-4-maverick"),
+const anthropic = {
+  "claude-haiku-4.5": gateway("anthropic/claude-haiku-4.5"),
+  "claude-sonnet-4.5": gateway("anthropic/claude-sonnet-4.5"),
+};
+
+const deepseek = {
+  "deepseek-v3.1": gateway("deepseek/deepseek-v3.1"),
+};
+
+const google = {
+  "gemini-2.5-flash": gateway("google/gemini-2.5-flash"),
+  "gemini-2.5-pro": gateway("google/gemini-2.5-pro"),
+};
+
+const meta = {
+  "llama-4-maverick": gateway("meta/llama-4-maverick"),
+};
+
+const moonshot = {
   "kimi-k2": gateway("moonshotai/kimi-k2-0905"),
-  "openai-oss": gateway("openai/gpt-oss-120b"),
-  "openai-gpt-5": gateway("openai/gpt-5-mini"),
+};
+
+const openai = {
+  "gpt-oss-120b": gateway("openai/gpt-oss-120b"),
+  "gpt-5": gateway("openai/gpt-5"),
+  "gpt-5-nano": gateway("openai/gpt-5-nano"),
+};
+
+const meituan = {
   "longcat-flash": gateway("meituan/longcat-flash-chat"),
-  "sonoma-sky": gateway("stealth/sonoma-sky-alpha"),
-  "sonoma-dusk": gateway("stealth/sonoma-dusk-alpha"),
-  "qwen-3": gateway("alibaba/qwen-3-235b"),
-  "qwen-coder": gateway("alibaba/qwen3-coder"),
-  "grok-code": gateway("xai/grok-code-fast-1"),
-  zai: gateway("zai/glm-4.5"),
+};
+
+const alibaba = {
+  "qwen-3-coder": gateway("alibaba/qwen3-coder"),
+  "qwen-3-max": gateway("alibaba/qwen3-max"),
+};
+
+const xai = {
+  "grok-4-fast": gateway("xai/grok-4-fast-reasoning"),
+  "grok-4": gateway("xai/grok-4"),
+};
+
+const zai = {
+  "glm-4.6": gateway("zai/glm-4.6"),
+};
+
+const languageModels = {
+  ...anthropic,
+  ...deepseek,
+  ...google,
+  ...meta,
+  ...moonshot,
+  ...openai,
+  ...meituan,
+  ...alibaba,
+  ...xai,
+  ...zai,
 };
 
 export const model = customProvider({
@@ -35,6 +77,6 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "google-flash";
+export const defaultModel: ModelId = "gpt-oss-120b";
 
 export const order = ["cerebras", "groq", "baseten", "azure", "vertex"];

@@ -248,7 +248,9 @@
     "web-search": "Web search",
     "web-search-loading": "Finding relevant information...",
     "web-search-error": "Failed to find relevant information.",
-    "model": "Model"
+    "model": "Model",
+    "premium-models": "Premium Models",
+    "free-models": "Free Models"
   },
   "About": {
     "meta-title": "Fck Closed Education, Enjoy Free Open Education",

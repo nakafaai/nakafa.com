@@ -26,7 +26,7 @@ export type AiStore = State & Actions;
 const initialState: State = {
   open: false,
   text: "",
-  model: "openai-oss",
+  model: "gpt-oss-120b",
   locale: routing.defaultLocale,
   slug: "",
 };

@@ -4,6 +4,7 @@ import {
   type GenericCtx,
 } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
+import { checkout, polar, portal, usage } from "@polar-sh/better-auth";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
 import {
   anonymous,
@@ -18,6 +19,7 @@ import { components, internal } from "./_generated/api";
 import type { DataModel, Id } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
 import authSchema from "./betterAuth/schema";
+import { polarClient, products } from "./polar";
 
 const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
@@ -25,40 +27,39 @@ const authFunctions: AuthFunctions = internal.auth;
 
 // The component client has methods needed for integrating Convex with Better Auth,
 // as well as helper methods for general use.
-export const authComponent = createClient<DataModel, typeof authSchema>(
-  components.betterAuth,
-  {
-    authFunctions,
-    local: {
-      schema: authSchema,
-    },
-    verbose: true,
-    triggers: {
-      user: {
-        onCreate: async (ctx, authUser) => {
-          // Handle user creation logic here if needed
-          // This is where you can sync changes to your application user table
-          const userId = await ctx.db.insert("users", {
-            email: authUser.email,
-            authId: authUser._id,
-          });
-          await ctx.runMutation(components.betterAuth.auth.setUserId, {
-            authId: authUser._id,
-            userId,
-          });
-        },
-        onUpdate: async (_ctx, _newDoc, _oldDoc) => {
-          // Handle user update logic here if needed
-          // This is where you can sync changes to your application user table
-        },
-        onDelete: async (_ctx, _authUser) => {
-          // Handle user deletion logic here if needed
-          // This is where you can clean up related data
-        },
+export const authComponent: ReturnType<
+  typeof createClient<DataModel, typeof authSchema>
+> = createClient<DataModel, typeof authSchema>(components.betterAuth, {
+  authFunctions,
+  local: {
+    schema: authSchema,
+  },
+  verbose: true,
+  triggers: {
+    user: {
+      onCreate: async (ctx, authUser) => {
+        // Handle user creation logic here if needed
+        // This is where you can sync changes to your application user table
+        const userId = await ctx.db.insert("users", {
+          email: authUser.email,
+          authId: authUser._id,
+        });
+        await ctx.runMutation(components.betterAuth.auth.setUserId, {
+          authId: authUser._id,
+          userId,
+        });
+      },
+      onUpdate: async (_ctx, _newDoc, _oldDoc) => {
+        // Handle user update logic here if needed
+        // This is where you can sync changes to your application user table
+      },
+      onDelete: async (_ctx, _authUser) => {
+        // Handle user deletion logic here if needed
+        // This is where you can clean up related data
       },
     },
-  }
-);
+  },
+});
 
 export const createAuth = (
   ctx: GenericCtx<DataModel>,
@@ -103,6 +104,31 @@ export const createAuth = (
       apiKey(),
       openAPI(),
       convex(),
+      polar({
+        client: polarClient,
+        createCustomerOnSignUp: true,
+        getCustomerCreateParams: async ({ user }) => ({
+          metadata: {
+            // Add any custom metadata you want to store with the customer
+            userId: user.id ?? "",
+            email: user.email ?? "",
+          },
+        }),
+        use: [
+          checkout({
+            products: [
+              {
+                productId: products.pro.id,
+                slug: products.pro.slug,
+              },
+            ],
+            successUrl: `${siteUrl}/checkout/success?checkout_id={CHECKOUT_ID}`,
+            authenticatedUsersOnly: true,
+          }),
+          portal(),
+          usage(),
+        ],
+      }),
     ],
   } satisfies BetterAuthOptions;
 

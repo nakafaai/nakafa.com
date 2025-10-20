@@ -248,7 +248,9 @@
     "web-search": "Pencarian web",
     "web-search-loading": "Mencari informasi terkait...",
     "web-search-error": "Gagal menemukan informasi terkait.",
-    "model": "Model"
+    "model": "Model",
+    "premium-models": "Model Premium",
+    "free-models": "Model Gratis"
   },
   "About": {
     "meta-title": "Fck Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",

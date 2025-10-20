@@ -1,6 +1,8 @@
 "use client";
 
 import type { ModelId } from "@repo/ai/lib/providers";
+import { api } from "@repo/backend/convex/_generated/api";
+import { products } from "@repo/backend/convex/polar";
 import {
   PromptInputModelSelect,
   PromptInputModelSelectContent,
@@ -11,13 +13,25 @@ import {
 import {
   SelectGroup,
   SelectLabel,
+  SelectSeparator,
 } from "@repo/design-system/components/ui/select";
+import {
+  usePathname,
+  useRouter,
+} from "@repo/internationalization/src/navigation";
+import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
+import { authClient } from "@/lib/auth/client";
 import { useAi } from "@/lib/context/use-ai";
-import { models } from "@/lib/data/models";
+import { freeModels, models, premiumModels } from "@/lib/data/models";
 
 export function AiChatModel() {
   const t = useTranslations("Ai");
+
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const user = useQuery(api.auth.getCurrentUser);
 
   const model = useAi((state) => state.model);
   const setModel = useAi((state) => state.setModel);
@@ -25,13 +39,41 @@ export function AiChatModel() {
   const Icon = models.find((m) => m.value === model)?.icon;
   const label = models.find((m) => m.value === model)?.label;
 
+  const handleCheckout = async ({ type }: { type: "premium" | "free" }) => {
+    if (type === "free") {
+      return;
+    }
+    const { data: customerState } = await authClient.customer.state();
+    if (customerState) {
+      const subscription = customerState.activeSubscriptions.find(
+        (s) => s.productId === products.pro.id
+      );
+      if (subscription) {
+        await authClient.checkout({
+          products: [products.pro.id],
+          slug: products.pro.slug,
+        });
+        return;
+      }
+    }
+    await authClient.checkout({
+      products: [products.pro.id],
+      slug: products.pro.slug,
+    });
+  };
+
+  const handleOnChange = (value: ModelId) => {
+    if (!user) {
+      router.push(`/auth?redirect=${pathname}`);
+      return;
+    }
+    const isPremium = premiumModels.some((m) => m.value === value);
+    handleCheckout({ type: isPremium ? "premium" : "free" });
+    setModel(value);
+  };
+
   return (
-    <PromptInputModelSelect
-      onValueChange={(value: ModelId) => {
-        setModel(value);
-      }}
-      value={model}
-    >
+    <PromptInputModelSelect onValueChange={handleOnChange} value={model}>
       <PromptInputModelSelectTrigger>
         <PromptInputModelSelectValue>
           {Icon && <Icon />}
@@ -40,8 +82,18 @@ export function AiChatModel() {
       </PromptInputModelSelectTrigger>
       <PromptInputModelSelectContent>
         <SelectGroup>
-          <SelectLabel>{t("model")}</SelectLabel>
-          {models.map((m) => (
+          <SelectLabel>{t("premium-models")}</SelectLabel>
+          {premiumModels.map((m) => (
+            <PromptInputModelSelectItem key={m.value} value={m.value}>
+              <m.icon />
+              {m.label}
+            </PromptInputModelSelectItem>
+          ))}
+        </SelectGroup>
+        <SelectSeparator />
+        <SelectGroup>
+          <SelectLabel>{t("free-models")}</SelectLabel>
+          {freeModels.map((m) => (
             <PromptInputModelSelectItem key={m.value} value={m.value}>
               <m.icon />
               {m.label}

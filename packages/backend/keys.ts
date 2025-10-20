@@ -9,6 +9,7 @@ export const keys = () =>
       SITE_URL: z.url(),
       AUTH_GOOGLE_ID: z.string().min(1),
       AUTH_GOOGLE_SECRET: z.string().min(1),
+      POLAR_ACCESS_TOKEN: z.string().min(1),
     },
     client: {
       NEXT_PUBLIC_CONVEX_URL: z.string(),
@@ -20,6 +21,7 @@ export const keys = () =>
       SITE_URL: process.env.SITE_URL,
       AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
       AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
+      POLAR_ACCESS_TOKEN: process.env.POLAR_ACCESS_TOKEN,
       NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
       NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
     },
