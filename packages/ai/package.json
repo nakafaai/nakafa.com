@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@ai-sdk/google-vertex": "^3.0.49",
-    "@ai-sdk/openai": "^2.0.52",
+    "@ai-sdk/openai": "^2.0.53",
     "@ai-sdk/react": "^2.0.76",
     "@mendable/firecrawl-js": "^4.4.1",
     "@t3-oss/env-nextjs": "^0.13.8",

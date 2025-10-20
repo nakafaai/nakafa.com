@@ -42,7 +42,7 @@
     "react-dom": "19.2.0",
     "use-context-selector": "^2.0.0",
     "use-sound": "^5.0.0",
-    "virtua": "^0.45.3"
+    "virtua": "^0.46.2"
   },
   "devDependencies": {
     "@repo/testing": "workspace:*",
@@ -51,7 +51,7 @@
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "jsdom": "^27.0.1",
-    "tailwindcss": "^4.1.14",
+    "tailwindcss": "^4.1.15",
     "pagefind": "^1.4.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
