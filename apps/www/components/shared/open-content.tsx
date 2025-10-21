@@ -22,12 +22,10 @@ import {
   CopyIcon,
   ExternalLinkIcon,
   MessageCircleIcon,
-  SparklesIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { useAi } from "@/lib/context/use-ai";
 import { getGithubUrl } from "@/lib/utils/github";
 
 export function OpenContent({ slug }: { slug: string }) {
@@ -36,18 +34,6 @@ export function OpenContent({ slug }: { slug: string }) {
       <LLmCopyButton slug={slug} />
       <ViewOptions slug={slug} />
     </div>
-  );
-}
-
-export function AskAiButton() {
-  const setOpen = useAi((state) => state.setOpen);
-  const t = useTranslations("Ai");
-
-  return (
-    <Button onClick={() => setOpen(true)}>
-      <SparklesIcon />
-      {t("ask-nina")}
-    </Button>
   );
 }
 

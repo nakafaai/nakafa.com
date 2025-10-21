@@ -3,7 +3,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { format } from "date-fns";
 import { CalendarIcon, type LucideIcon, UserPenIcon } from "lucide-react";
-import { AskAiButton, OpenContent } from "@/components/shared/open-content";
+import { OpenContent } from "@/components/shared/open-content";
 
 type Props = {
   /** The title of the content */
@@ -32,8 +32,6 @@ type Props = {
   slug?: string;
   /** The github url of the content */
   githubUrl?: string;
-  /** The show ask ai button, make sure only show when the content is available */
-  showAskAi?: boolean;
 };
 
 export function HeaderContent({
@@ -45,7 +43,6 @@ export function HeaderContent({
   authors,
   date,
   slug,
-  showAskAi = false,
 }: Props) {
   const showFooter = authors || date;
   return (
@@ -111,12 +108,7 @@ export function HeaderContent({
           </div>
         )}
 
-        {(slug || showAskAi) && (
-          <div className="flex flex-wrap items-center gap-2">
-            {slug && <OpenContent slug={slug} />}
-            {showAskAi && <AskAiButton />}
-          </div>
-        )}
+        {slug && <OpenContent slug={slug} />}
       </div>
     </div>
   );

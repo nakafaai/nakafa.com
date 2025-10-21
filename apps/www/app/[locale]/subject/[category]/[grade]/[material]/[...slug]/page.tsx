@@ -200,14 +200,13 @@ export default async function Page({ params }: Props) {
           name={metadata.title}
         />
         <LayoutMaterial>
-          <LayoutMaterialContent>
+          <LayoutMaterialContent showAskButton>
             <LayoutMaterialHeader
               icon={getMaterialIcon(material)}
               link={{
                 href: `${materialPath}#${slugify(metadata.subject ?? "")}`,
                 label: metadata.subject ?? "",
               }}
-              showAskAi
               slug={`/${locale}${FilePath}`}
               title={metadata.title}
             />

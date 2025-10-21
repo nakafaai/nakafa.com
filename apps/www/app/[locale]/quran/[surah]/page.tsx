@@ -134,7 +134,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <LayoutMaterial>
-      <LayoutMaterialContent>
+      <LayoutMaterialContent showAskButton>
         <LayoutMaterialHeader
           description={translation}
           icon={MoonStarIcon}
@@ -142,7 +142,6 @@ export default async function Page({ params }: Props) {
             href: "/quran",
             label: t("quran"),
           }}
-          showAskAi
           title={title}
         />
         <LayoutMaterialMain>
