@@ -207,7 +207,7 @@ export async function POST(req: Request) {
             availableTools[toolCall.toolName as keyof typeof availableTools];
 
           const { object: repairedArgs } = await generateObject({
-            model: model.languageModel("google-flash"),
+            model: model.languageModel("gemini-2.5-flash"),
             schema: tool.inputSchema,
             prompt: [
               `The model tried to call the tool "${toolCall.toolName}"` +
@@ -288,7 +288,7 @@ export async function POST(req: Request) {
       ).messages.filter((message) => message.role === "assistant");
 
       const streamObjectResult = streamObject({
-        model: model.languageModel("google-flash"),
+        model: model.languageModel("gemini-2.5-flash"),
         system: nakafaSuggestions(),
         messages: [...finalMessages, ...messagesFromResponse],
         schemaName: "Suggestions",
