@@ -31,7 +31,13 @@ export function AiSheetOpen() {
 
   return (
     <AnimatePresence mode="popLayout">
-      {!shouldHide && (
+      {shouldHide ? (
+        <div className="px-6 pb-6">
+          <div className="mx-auto sm:max-w-xs">
+            <div className="block h-10 w-full" />
+          </div>
+        </div>
+      ) : (
         <motion.aside
           animate={{
             y: 0,
@@ -43,6 +49,7 @@ export function AiSheetOpen() {
             opacity: 0,
           }}
           initial={{ y: SLIDE_DISTANCE, opacity: 0 }}
+          key="button"
           transition={{
             duration: 0.4,
             ease: "easeOut",
