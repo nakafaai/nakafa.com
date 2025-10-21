@@ -54,14 +54,29 @@ export const premiumModels: Model[] = [
 
 export const freeModels: Model[] = [
   {
-    icon: DeepSeek,
-    value: "deepseek-v3.1",
-    label: "DeepSeek V3.1",
+    icon: OpenAI,
+    value: "gpt-oss-120b",
+    label: "GPT OSS 120B",
+  },
+  {
+    icon: OpenAI,
+    value: "gpt-5-nano",
+    label: "GPT 5 Nano",
+  },
+  {
+    icon: XAI,
+    value: "grok-4-fast",
+    label: "Grok 4 Fast",
   },
   {
     icon: Gemini,
     value: "gemini-2.5-flash",
     label: "Gemini 2.5 Flash",
+  },
+  {
+    icon: DeepSeek,
+    value: "deepseek-v3.1",
+    label: "DeepSeek V3.1",
   },
   {
     icon: Meta,
@@ -74,16 +89,6 @@ export const freeModels: Model[] = [
     label: "Kimi K2",
   },
   {
-    icon: OpenAI,
-    value: "gpt-oss-120b",
-    label: "GPT OSS 120B",
-  },
-  {
-    icon: OpenAI,
-    value: "gpt-5-nano",
-    label: "GPT 5 Nano",
-  },
-  {
     icon: SiMeituan,
     value: "longcat-flash",
     label: "LongCat Flash",
@@ -92,11 +97,6 @@ export const freeModels: Model[] = [
     icon: Qwen,
     value: "qwen-3-coder",
     label: "Qwen 3 Coder",
-  },
-  {
-    icon: XAI,
-    value: "grok-4-fast",
-    label: "Grok 4 Fast",
   },
   {
     icon: ZAI,
