@@ -1,8 +1,4 @@
-import {
-  type AuthFunctions,
-  createClient,
-  type GenericCtx,
-} from "@convex-dev/better-auth";
+import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { checkout, polar, portal, usage } from "@polar-sh/better-auth";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
@@ -22,14 +18,12 @@ import { polarClient, products } from "./polar";
 
 const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
-const authFunctions: AuthFunctions = internal.auth;
-
 // The component client has methods needed for integrating Convex with Better Auth,
 // as well as helper methods for general use.
 export const authComponent: ReturnType<
   typeof createClient<DataModel, typeof authSchema>
 > = createClient<DataModel, typeof authSchema>(components.betterAuth, {
-  authFunctions,
+  authFunctions: internal.auth,
   local: {
     schema: authSchema,
   },
