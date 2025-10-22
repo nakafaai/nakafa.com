@@ -11,12 +11,14 @@
   "dependencies": {
     "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
+    "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@repo/security": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
     "next": "16.0.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "shiki": "^3.13.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
