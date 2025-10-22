@@ -1,5 +1,6 @@
+import { createGateway } from "@ai-sdk/gateway";
 import { keys } from "@repo/ai/keys";
-import { createGateway, customProvider } from "ai";
+import { customProvider } from "ai";
 
 const gateway = createGateway({
   apiKey: keys().AI_GATEWAY_API_KEY,
