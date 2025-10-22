@@ -19,10 +19,10 @@ export function UserMain({ userId }: Props) {
   }
 
   return (
-    <main className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <UserHeader user={user} />
       <UserTabs userId={userId} />
       <UserComments user={user} />
-    </main>
+    </div>
   );
 }

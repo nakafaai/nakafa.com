@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const corsValidator = new CorsValidator();
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Check the origin from the request
   const origin = request.headers.get("origin") ?? "";
   const isAllowedOrigin = corsValidator.isOriginAllowed(origin);

@@ -12,12 +12,9 @@ export const config: NextConfig = {
     },
   },
   pageExtensions: ["mdx", "ts", "tsx"],
+  reactCompiler: true,
   experimental: {
-    mdxRs: {
-      mdxType: "gfm",
-    },
     optimizePackageImports: ["three"],
-    reactCompiler: true,
   },
   images: {
     contentDispositionType: "inline",

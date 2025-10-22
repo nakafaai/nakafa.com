@@ -29,6 +29,7 @@ import {
   EllipsisVerticalIcon,
   LogInIcon,
   LogOutIcon,
+  SettingsIcon,
   UserIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -119,6 +120,13 @@ export function NavUser() {
             >
               <UserIcon />
               {t("account")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onSelect={() => router.push("/user/settings")}
+            >
+              <SettingsIcon />
+              {t("settings")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />

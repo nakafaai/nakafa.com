@@ -35,6 +35,7 @@ export function AiChatModel() {
 
   const model = useAi((state) => state.model);
   const setModel = useAi((state) => state.setModel);
+  const setOpen = useAi((state) => state.setOpen);
 
   const Icon = models.find((m) => m.value === model)?.icon;
   const label = models.find((m) => m.value === model)?.label;
@@ -65,6 +66,7 @@ export function AiChatModel() {
 
   const handleOnChange = (value: ModelId) => {
     if (!user) {
+      setOpen(false);
       router.push(`/auth?redirect=${pathname}`);
       return;
     }

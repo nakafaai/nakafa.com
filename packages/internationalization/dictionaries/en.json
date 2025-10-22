@@ -212,7 +212,8 @@
     "continue-with-google": "Continue with Google",
     "logout": "Logout",
     "login": "Login",
-    "account": "Account"
+    "account": "Account",
+    "settings": "Settings"
   },
   "Ai": {
     "ask-ai": "Ask AI",

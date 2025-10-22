@@ -7,10 +7,10 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "next-intl": "^4.3.12"
+    "next-intl": "^4.4.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "next": "15.5.6"
+    "next": "16.0.0"
   }
 }
