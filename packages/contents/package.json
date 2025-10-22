@@ -18,6 +18,7 @@
     "date-fns": "^4.1.0",
     "ky": "^1.13.0",
     "lucide-react": "^0.546.0",
+    "motion": "^12.23.24",
     "next-intl": "^4.4.0",
     "react-aria-components": "^1.13.0",
     "react-katex": "^3.1.0",
