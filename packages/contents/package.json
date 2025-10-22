@@ -20,6 +20,7 @@
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "next-intl": "^4.4.0",
+    "react": "19.2.0",
     "react-aria-components": "^1.13.0",
     "react-katex": "^3.1.0",
     "recharts": "^3.3.0",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.9.1"
+    "@types/node": "24.9.1",
+    "@types/react": "^19.2.2"
   }
 }
