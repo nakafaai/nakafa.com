@@ -22,7 +22,9 @@ async function attachUsers(ctx: QueryCtx, comments: Doc<"comments">[]) {
         return { userId, user: null };
       }
 
-      return { userId, user: { ...appUser, ...withoutSystemFields(authUser) } };
+      const cleanedAuthUser = withoutSystemFields(authUser);
+
+      return { userId, user: { ...appUser, ...cleanedAuthUser } };
     })
   );
   return new Map(

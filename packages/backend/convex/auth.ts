@@ -151,7 +151,9 @@ export const safeGetAppUser = async (ctx: QueryCtx) => {
     return null;
   }
 
-  return { ...user, ...withoutSystemFields(authUser) };
+  const cleanedAuthUser = withoutSystemFields(authUser);
+
+  return { ...user, ...cleanedAuthUser };
 };
 
 export const getAnyAppUserById = async (ctx: QueryCtx, userId: Id<"users">) => {
@@ -165,7 +167,9 @@ export const getAnyAppUserById = async (ctx: QueryCtx, userId: Id<"users">) => {
     return null;
   }
 
-  return { ...user, ...withoutSystemFields(authUser) };
+  const cleanedAuthUser = withoutSystemFields(authUser);
+
+  return { ...user, ...cleanedAuthUser };
 };
 
 export const getCurrentUser = query({
