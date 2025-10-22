@@ -137,6 +137,7 @@ export const getAnyUserById = (ctx: QueryCtx, userId: string) =>
 // Get the current app user (not Better Auth user)
 export const safeGetAppUser = async (ctx: QueryCtx) => {
   const authUser = await safeGetUser(ctx);
+
   if (!authUser) {
     return null;
   }
@@ -145,6 +146,7 @@ export const safeGetAppUser = async (ctx: QueryCtx) => {
     .query("users")
     .withIndex("authId", (q) => q.eq("authId", authUser._id))
     .unique();
+
   if (!user) {
     return null;
   }

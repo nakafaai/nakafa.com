@@ -20,6 +20,7 @@ import type * as functions from "../functions.js";
 import type * as http from "../http.js";
 import type * as migrations from "../migrations.js";
 import type * as polar from "../polar.js";
+import type * as users_queries from "../users/queries.js";
 import type * as utils_helper from "../utils/helper.js";
 
 import type {
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   migrations: typeof migrations;
   polar: typeof polar;
+  "users/queries": typeof users_queries;
   "utils/helper": typeof utils_helper;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
