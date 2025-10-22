@@ -10,7 +10,6 @@
     "next-intl": "^4.4.0"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
-    "next": "16.0.0"
+    "@repo/typescript-config": "workspace:*"
   }
 }
