@@ -1,9 +1,7 @@
-import { internationalizationMiddleware } from "@repo/internationalization/middleware";
-import type { NextRequest } from "next/server";
+import { routing } from "@repo/internationalization/src/routing";
+import createMiddleware from "next-intl/middleware";
 
-export function proxy(request: NextRequest) {
-  return internationalizationMiddleware(request);
-}
+export default createMiddleware(routing);
 
 export const config = {
   matcher: [
