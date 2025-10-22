@@ -1,6 +1,5 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import { withoutSystemFields } from "convex-helpers";
 import type { Doc } from "../_generated/dataModel";
 import { type QueryCtx, query } from "../_generated/server";
 import { getAnyUserById } from "../auth";
@@ -13,24 +12,22 @@ async function attachUsers(ctx: QueryCtx, comments: Doc<"comments">[]) {
       // Get the app user
       const appUser = await ctx.db.get(userId);
       if (!appUser) {
-        return { userId, user: null };
+        return { userId, data: null };
       }
 
       // Get the Better Auth user data
       const authUser = await getAnyUserById(ctx, appUser.authId);
       if (!authUser) {
-        return { userId, user: null };
+        return { userId, data: null };
       }
 
-      const cleanedAuthUser = withoutSystemFields(authUser);
-
-      return { userId, user: { ...appUser, ...cleanedAuthUser } };
+      return { userId, data: { appUser, authUser } };
     })
   );
   return new Map(
     users
-      .filter((item) => item.user !== null)
-      .map(({ userId, user }) => [userId, user])
+      .filter((item) => item.data !== null)
+      .map(({ userId, data }) => [userId, data])
   );
 }
 

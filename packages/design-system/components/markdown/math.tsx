@@ -10,6 +10,15 @@ import {
 } from "react-katex";
 import { cn } from "../../lib/utils";
 
+export function BlockMathKatex(props: MathComponentProps) {
+  return (
+    <BlockMathReactKatex
+      errorColor="var(--color-muted-foreground)"
+      {...props}
+    />
+  );
+}
+
 export function MathContainer({
   className,
   ...props

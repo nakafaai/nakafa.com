@@ -14,7 +14,6 @@ import {
   username,
 } from "better-auth/plugins";
 import { v } from "convex/values";
-import { withoutSystemFields } from "convex-helpers";
 import { components, internal } from "./_generated/api";
 import type { DataModel, Id } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
@@ -151,9 +150,10 @@ export const safeGetAppUser = async (ctx: QueryCtx) => {
     return null;
   }
 
-  const cleanedAuthUser = withoutSystemFields(authUser);
-
-  return { ...user, ...cleanedAuthUser };
+  return {
+    appUser: user,
+    authUser,
+  };
 };
 
 export const getAnyAppUserById = async (ctx: QueryCtx, userId: Id<"users">) => {
@@ -167,9 +167,10 @@ export const getAnyAppUserById = async (ctx: QueryCtx, userId: Id<"users">) => {
     return null;
   }
 
-  const cleanedAuthUser = withoutSystemFields(authUser);
-
-  return { ...user, ...cleanedAuthUser };
+  return {
+    appUser: user,
+    authUser,
+  };
 };
 
 export const getCurrentUser = query({

@@ -135,15 +135,18 @@ function UserAvatar() {
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-2 px-3" title={user.name}>
+    <div
+      className="flex min-w-0 items-center gap-2 px-3"
+      title={user.authUser.name}
+    >
       <Avatar className="size-6 rounded-lg">
-        <AvatarImage alt={user.name} src={user.image ?? ""} />
+        <AvatarImage alt={user.authUser.name} src={user.authUser.image ?? ""} />
         <AvatarFallback className="rounded-lg text-xs">
-          {getInitialName(user.name)}
+          {getInitialName(user.authUser.name)}
         </AvatarFallback>
       </Avatar>
       <p className="hidden max-w-36 truncate text-muted-foreground text-xs sm:block">
-        {user.name}
+        {user.authUser.name}
       </p>
     </div>
   );

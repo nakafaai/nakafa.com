@@ -40,7 +40,7 @@ export function UserComments({ user }: Props) {
 
   const { results } = usePaginatedQuery(
     api.comments.queries.getCommentsByUserId,
-    { userId: user._id },
+    { userId: user.appUser._id },
     { initialNumItems: 25 }
   );
 
@@ -68,8 +68,8 @@ function CommentThread({
 
   const currentUser = useQuery(api.auth.getCurrentUser);
 
-  const userName = user.name ?? t("anonymous");
-  const userImage = user.image ?? "";
+  const userName = user.authUser.name ?? t("anonymous");
+  const userImage = user.authUser.image ?? "";
 
   const [isPending, startTransition] = useTransition();
 
@@ -202,7 +202,9 @@ function CommentThread({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                className={cn(comment.userId !== currentUser?._id && "hidden")}
+                className={cn(
+                  comment.userId !== currentUser?.appUser._id && "hidden"
+                )}
                 disabled={isPending}
                 onClick={handleDelete}
                 size="icon-sm"

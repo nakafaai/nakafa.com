@@ -79,13 +79,16 @@ export function NavUser() {
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
             <Avatar className="size-6 rounded-lg">
-              <AvatarImage alt={user.name} src={user.image ?? ""} />
+              <AvatarImage
+                alt={user.authUser.name}
+                src={user.authUser.image ?? ""}
+              />
               <AvatarFallback className="rounded-lg text-xs">
-                {getInitialName(user.name)}
+                {getInitialName(user.authUser.name)}
               </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate">{user.name}</span>
+              <span className="truncate">{user.authUser.name}</span>
             </div>
             <EllipsisVerticalIcon className="ml-auto size-4" />
           </SidebarMenuButton>
@@ -99,15 +102,20 @@ export function NavUser() {
           <DropdownMenuLabel className="p-0 font-normal">
             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
               <Avatar className="size-8 rounded-lg">
-                <AvatarImage alt={user.name} src={user.image ?? ""} />
+                <AvatarImage
+                  alt={user.authUser.name}
+                  src={user.authUser.image ?? ""}
+                />
                 <AvatarFallback className="rounded-lg">
-                  {getInitialName(user.name)}
+                  {getInitialName(user.authUser.name)}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate font-medium">
+                  {user.authUser.name}
+                </span>
                 <span className="truncate text-muted-foreground text-xs">
-                  {user.email}
+                  {user.authUser.email}
                 </span>
               </div>
             </div>
@@ -116,7 +124,7 @@ export function NavUser() {
           <DropdownMenuGroup>
             <DropdownMenuItem
               className="cursor-pointer"
-              onSelect={() => router.push(`/user/${user._id}`)}
+              onSelect={() => router.push(`/user/${user.appUser._id}`)}
             >
               <UserIcon />
               {t("account")}

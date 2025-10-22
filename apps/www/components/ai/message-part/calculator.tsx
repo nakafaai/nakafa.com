@@ -1,6 +1,7 @@
 "use client";
 
 import type { DataPart } from "@repo/ai/types/data-parts";
+import { BlockMathKatex } from "@repo/design-system/components/markdown/math";
 import {
   Collapsible,
   CollapsibleContent,
@@ -15,7 +16,6 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
-import { BlockMath } from "react-katex";
 
 type Props = {
   message: DataPart["calculator"];
@@ -51,11 +51,11 @@ export const CalculatorPart = memo(({ message }: Props) => {
         />
       </CollapsibleTrigger>
       <CollapsibleContent className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t bg-muted/40 px-4 text-sm">
-        <BlockMath>{message.original.latex}</BlockMath>
+        <BlockMathKatex>{message.original.latex}</BlockMathKatex>
 
         <EqualIcon className="size-4" />
 
-        <BlockMath>{message.result.latex}</BlockMath>
+        <BlockMathKatex>{message.result.latex}</BlockMathKatex>
       </CollapsibleContent>
     </Collapsible>
   );

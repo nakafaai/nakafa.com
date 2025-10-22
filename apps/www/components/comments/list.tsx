@@ -96,8 +96,8 @@ function CommentMain({
 }) {
   const t = useTranslations("Common");
 
-  const userName = comment.user?.name ?? t("anonymous");
-  const userImage = comment.user?.image ?? "";
+  const userName = comment.user?.authUser.name ?? t("anonymous");
+  const userImage = comment.user?.authUser.image ?? "";
 
   return (
     <div className="flex items-start gap-3 text-left">
@@ -296,7 +296,9 @@ function CommentAction({
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            className={cn(comment.userId !== currentUser?._id && "hidden")}
+            className={cn(
+              comment.userId !== currentUser?.appUser._id && "hidden"
+            )}
             disabled={isPending}
             onClick={handleDelete}
             size="icon-sm"

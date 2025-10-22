@@ -35,7 +35,7 @@ export const addComment = mutation({
 
     const newComment = {
       contentSlug: cleanSlug(args.contentSlug),
-      userId: user._id,
+      userId: user.appUser._id,
       text: args.text,
       parentId: args.parentId,
       mentions: args.mentions,
@@ -79,7 +79,7 @@ export const voteOnComment = mutation({
     const existingVote = await ctx.db
       .query("commentVotes")
       .withIndex("commentId_userId", (q) =>
-        q.eq("commentId", args.commentId).eq("userId", user._id)
+        q.eq("commentId", args.commentId).eq("userId", user.appUser._id)
       )
       .unique();
 
@@ -99,7 +99,7 @@ export const voteOnComment = mutation({
     if (args.vote !== 0) {
       await ctx.db.insert("commentVotes", {
         commentId: args.commentId,
-        userId: user._id,
+        userId: user.appUser._id,
         vote: args.vote as -1 | 1,
       });
 
@@ -143,7 +143,7 @@ export const deleteComment = mutation({
       throw new Error("Comment not found.");
     }
 
-    if (comment.userId !== user._id) {
+    if (comment.userId !== user.appUser._id) {
       throw new Error("You can only delete your own comments.");
     }
 

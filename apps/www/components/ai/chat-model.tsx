@@ -58,7 +58,8 @@ export function AiChatModel() {
       slug: products.pro.slug,
       // https://polar.sh/docs/features/checkout/links#prepopulate-fields
       customFieldData: {
-        customer_email: user.email,
+        customer_email: user.authUser.email,
+        customer_name: user.authUser.name,
       },
     });
   };

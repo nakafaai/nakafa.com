@@ -22,21 +22,24 @@ export function UserHeader({ user }: Props) {
 
   const currentUser = useQuery(api.auth.getCurrentUser);
 
+  const authUser = user.authUser;
+  const appUser = user.appUser;
+
   return (
     <header className="flex items-start justify-between gap-4">
       <section className="flex flex-1 items-start gap-4 text-left">
         <Avatar className="size-12 rounded-full sm:size-16">
-          <AvatarImage alt={user.name} src={user.image ?? ""} />
+          <AvatarImage alt={authUser.name} src={authUser.image ?? ""} />
           <AvatarFallback className="rounded-lg">
-            {getInitialName(user.name)}
+            {getInitialName(authUser.name)}
           </AvatarFallback>
         </Avatar>
         <div className="grid text-left">
           <span className="truncate font-semibold text-base sm:text-lg">
-            {user.name}
+            {authUser.name}
           </span>
           <span className="truncate text-muted-foreground text-sm sm:text-base">
-            {user.email}
+            {authUser.email}
           </span>
         </div>
       </section>
@@ -45,7 +48,7 @@ export function UserHeader({ user }: Props) {
         asChild
         className={cn(
           "w-9 sm:w-auto",
-          currentUser?._id !== user._id && "hidden"
+          currentUser?.appUser._id !== appUser._id && "hidden"
         )}
         variant="outline"
       >
