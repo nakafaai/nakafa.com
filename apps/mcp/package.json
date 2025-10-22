@@ -11,9 +11,10 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@repo/next-config": "workspace:*",
-    "@repo/contents": "workspace:*",
     "@repo/connection": "workspace:*",
+    "@repo/contents": "workspace:*",
+    "@repo/next-config": "workspace:*",
+    "@t3-oss/env-nextjs": "^0.13.8",
     "mcp-handler": "1.0.3",
     "next": "16.0.0",
     "react": "^19.2.0",
