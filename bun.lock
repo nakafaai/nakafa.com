@@ -18,16 +18,12 @@
     "apps/api": {
       "name": "api",
       "dependencies": {
-        "@repo/analytics": "workspace:*",
         "@repo/contents": "workspace:*",
         "@repo/design-system": "workspace:*",
         "@repo/next-config": "workspace:*",
         "@repo/security": "workspace:*",
         "@t3-oss/env-nextjs": "^0.13.8",
-        "@tailwindcss/postcss": "^4.1.15",
-        "motion": "^12.23.24",
         "next": "16.0.0",
-        "postcss": "^8.5.6",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
       },
@@ -41,10 +37,8 @@
     "apps/mcp": {
       "name": "mcp",
       "dependencies": {
-        "@repo/analytics": "workspace:*",
         "@repo/connection": "workspace:*",
         "@repo/contents": "workspace:*",
-        "@repo/design-system": "workspace:*",
         "@repo/next-config": "workspace:*",
         "@t3-oss/env-nextjs": "^0.13.8",
         "mcp-handler": "1.0.3",

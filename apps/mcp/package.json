@@ -11,11 +11,9 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@repo/analytics": "workspace:*",
     "@repo/connection": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/next-config": "workspace:*",
-    "@repo/design-system": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
     "mcp-handler": "1.0.3",
     "next": "16.0.0",
