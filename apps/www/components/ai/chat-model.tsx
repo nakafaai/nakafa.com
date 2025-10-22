@@ -59,7 +59,6 @@ export function AiChatModel() {
       // https://polar.sh/docs/features/checkout/links#prepopulate-fields
       customFieldData: {
         customer_email: user.email,
-        customer_name: user.name,
       },
     });
   };
