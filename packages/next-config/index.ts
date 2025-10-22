@@ -16,6 +16,7 @@ export const config: NextConfig = {
   serverExternalPackages: ["shiki"],
   experimental: {
     optimizePackageImports: ["three"],
+    cacheComponents: true,
   },
   images: {
     contentDispositionType: "inline",
