@@ -38,8 +38,10 @@
     "apps/mcp": {
       "name": "mcp",
       "dependencies": {
+        "@repo/analytics": "workspace:*",
         "@repo/connection": "workspace:*",
         "@repo/contents": "workspace:*",
+        "@repo/design-system": "workspace:*",
         "@repo/next-config": "workspace:*",
         "@t3-oss/env-nextjs": "^0.13.8",
         "mcp-handler": "1.0.3",
