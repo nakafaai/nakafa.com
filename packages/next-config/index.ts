@@ -13,6 +13,7 @@ export const config: NextConfig = {
   },
   pageExtensions: ["mdx", "ts", "tsx"],
   reactCompiler: true,
+  serverExternalPackages: ["shiki"],
   experimental: {
     optimizePackageImports: ["three"],
   },
