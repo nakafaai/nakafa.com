@@ -12,63 +12,42 @@ const gateway = createGateway({
   },
 });
 
-const anthropic = {
+const languageModels = {
+  // Anthropic
   "claude-haiku-4.5": gateway("anthropic/claude-haiku-4.5"),
   "claude-sonnet-4.5": gateway("anthropic/claude-sonnet-4.5"),
-};
 
-const deepseek = {
+  // DeepSeek
   "deepseek-v3.1": gateway("deepseek/deepseek-v3.1"),
-};
 
-const google = {
+  // Google
   "gemini-2.5-flash": gateway("google/gemini-2.5-flash"),
   "gemini-2.5-pro": gateway("google/gemini-2.5-pro"),
-};
 
-const meta = {
+  // Meta
   "llama-4-maverick": gateway("meta/llama-4-maverick"),
-};
 
-const moonshot = {
+  // Moonshot
   "kimi-k2": gateway("moonshotai/kimi-k2-0905"),
-};
 
-const openai = {
+  // OpenAI
   "gpt-oss-120b": gateway("openai/gpt-oss-120b"),
   "gpt-5": gateway("openai/gpt-5"),
   "gpt-5-nano": gateway("openai/gpt-5-nano"),
-};
 
-const meituan = {
+  // Meituan
   "longcat-flash": gateway("meituan/longcat-flash-chat"),
-};
 
-const alibaba = {
+  // Alibaba
   "qwen-3-coder": gateway("alibaba/qwen3-coder"),
   "qwen-3-max": gateway("alibaba/qwen3-max"),
-};
 
-const xai = {
+  // XAI
   "grok-4-fast": gateway("xai/grok-4-fast-reasoning"),
   "grok-4": gateway("xai/grok-4"),
-};
 
-const zai = {
+  // ZAI
   "glm-4.6": gateway("zai/glm-4.6"),
-};
-
-const languageModels = {
-  ...anthropic,
-  ...deepseek,
-  ...google,
-  ...meta,
-  ...moonshot,
-  ...openai,
-  ...meituan,
-  ...alibaba,
-  ...xai,
-  ...zai,
 };
 
 export const model = customProvider({
