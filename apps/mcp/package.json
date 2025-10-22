@@ -19,7 +19,8 @@
     "next": "16.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "redis": "^5.8.3"
+    "redis": "^5.8.3",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
