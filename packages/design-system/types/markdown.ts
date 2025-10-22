@@ -1,3 +1,4 @@
+import type { MDXComponents as MDXComponentsType } from "mdx/types";
 import type { ComponentPropsWithoutRef } from "react";
 
 export type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
@@ -20,3 +21,4 @@ export type TableCellProps = ComponentPropsWithoutRef<"td">;
 export type BlockquoteProps = ComponentPropsWithoutRef<"blockquote">;
 export type SupProps = ComponentPropsWithoutRef<"sup">;
 export type SubProps = ComponentPropsWithoutRef<"sub">;
+export type MDXComponents = MDXComponentsType;
