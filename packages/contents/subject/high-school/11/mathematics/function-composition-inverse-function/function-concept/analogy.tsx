@@ -1,5 +1,6 @@
 "use client";
 
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Button as UiButton } from "@repo/design-system/components/ui/button";
 import {
   Card,
@@ -23,7 +24,6 @@ import {
   Label,
   NumberField,
 } from "react-aria-components";
-import { InlineMath } from "react-katex";
 
 const DEFAULT_INPUT = 5;
 

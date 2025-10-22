@@ -11,6 +11,7 @@ export const config: NextConfig = {
       fullUrl: true,
     },
   },
+  pageExtensions: ["mdx", "tsx", "ts", "jsx", "js"],
   reactCompiler: true,
   serverExternalPackages: ["shiki"],
   experimental: {
