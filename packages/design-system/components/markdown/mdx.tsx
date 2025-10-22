@@ -25,6 +25,7 @@ import type {
   HeadingProps,
   ListItemProps,
   ListProps,
+  MDXComponents,
   ParagraphProps,
   PreProps,
   StrongProps,
@@ -154,4 +155,4 @@ export const components = {
       {children}
     </sub>
   ),
-};
+} satisfies MDXComponents;
