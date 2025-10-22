@@ -7,16 +7,7 @@ const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
 );
 
-let nextConfig: NextConfig = {
-  ...config,
-  typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
-    ignoreBuildErrors: true,
-  },
-};
+let nextConfig: NextConfig = config;
 
 if (env.ANALYZE === "true") {
   nextConfig = withAnalyzer(nextConfig);
