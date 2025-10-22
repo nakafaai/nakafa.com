@@ -1,4 +1,6 @@
-import { createGateway } from "@ai-sdk/gateway";
+import { createGateway, type GatewayProviderOptions } from "@ai-sdk/gateway";
+import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
+import type { OpenAIResponsesProviderOptions } from "@ai-sdk/openai";
 import { keys } from "@repo/ai/keys";
 import { customProvider } from "ai";
 
@@ -80,3 +82,7 @@ export const MODELS = Object.keys(languageModels) as ModelId[];
 export const defaultModel: ModelId = "gpt-oss-120b";
 
 export const order = ["cerebras", "groq", "baseten", "azure", "vertex"];
+
+export type GatewayProvider = GatewayProviderOptions;
+export type GoogleProvider = GoogleGenerativeAIProviderOptions;
+export type OpenAIProvider = OpenAIResponsesProviderOptions;

@@ -1,6 +1,11 @@
-import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
-import type { OpenAIResponsesProviderOptions } from "@ai-sdk/openai";
-import { type ModelId, model, order } from "@repo/ai/lib/providers";
+import {
+  type GatewayProvider,
+  type GoogleProvider,
+  type ModelId,
+  model,
+  type OpenAIProvider,
+  order,
+} from "@repo/ai/lib/providers";
 import { cleanSlug, compressMessages } from "@repo/ai/lib/utils";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
@@ -224,7 +229,7 @@ export async function POST(req: Request) {
                   thinkingBudget: 0, // Disable thinking
                   includeThoughts: false,
                 },
-              } satisfies GoogleGenerativeAIProviderOptions,
+              } satisfies GoogleProvider,
             },
           });
 
@@ -242,13 +247,13 @@ export async function POST(req: Request) {
             include: ["reasoning.encrypted_content"],
             reasoningSummary: "detailed", // 'auto' for condensed or 'detailed' for comprehensive
             serviceTier: "priority",
-          } satisfies OpenAIResponsesProviderOptions,
+          } satisfies OpenAIProvider,
           google: {
             thinkingConfig: {
               thinkingBudget: -1, // Dynamic thinking budget
               includeThoughts: true,
             },
-          } satisfies GoogleGenerativeAIProviderOptions,
+          } satisfies GoogleProvider,
         },
       });
 
@@ -298,13 +303,13 @@ export async function POST(req: Request) {
           suggestions: z.array(z.string()),
         }),
         providerOptions: {
-          gateway: { order },
+          gateway: { order } satisfies GatewayProvider,
           google: {
             thinkingConfig: {
               thinkingBudget: 0,
               includeThoughts: false,
             },
-          } satisfies GoogleGenerativeAIProviderOptions,
+          } satisfies GoogleProvider,
         },
       });
 
