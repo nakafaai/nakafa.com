@@ -107,13 +107,6 @@ export const createAuth = (
       polar({
         client: polarClient,
         createCustomerOnSignUp: true,
-        getCustomerCreateParams: async ({ user }) => ({
-          metadata: {
-            // Add any custom metadata you want to store with the customer
-            userId: user.id ?? "",
-            email: user.email ?? "",
-          },
-        }),
         use: [
           checkout({
             products: [
