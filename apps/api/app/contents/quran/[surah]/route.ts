@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export function generateStaticParams() {
   // surah 1-114
   return Array.from({ length: 114 }, (_, i) => ({
-    id: (i + 1).toString(),
+    surah: (i + 1).toString(),
   }));
 }
 
