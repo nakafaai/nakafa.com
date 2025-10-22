@@ -56,6 +56,11 @@ export function AiChatModel() {
     await authClient.checkout({
       products: [products.pro.id],
       slug: products.pro.slug,
+      // https://polar.sh/docs/features/checkout/links#prepopulate-fields
+      customFieldData: {
+        customer_email: user.authUser.email,
+        customer_name: user.authUser.name,
+      },
     });
   };
 
