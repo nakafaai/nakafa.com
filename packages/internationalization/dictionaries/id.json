@@ -213,7 +213,11 @@
     "logout": "Keluar",
     "login": "Masuk",
     "account": "Akun",
-    "settings": "Pengaturan"
+    "settings": "Pengaturan",
+    "profile": "Profil",
+    "subscriptions": "Langganan",
+    "subscriptions-description": "Nikmati pengalaman belajar terbaik dengan Nakafa Pro.",
+    "get-pro": "Dapatkan Pro"
   },
   "Ai": {
     "ask-ai": "Tanya AI",

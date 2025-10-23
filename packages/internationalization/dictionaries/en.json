@@ -213,7 +213,11 @@
     "logout": "Logout",
     "login": "Login",
     "account": "Account",
-    "settings": "Settings"
+    "settings": "Settings",
+    "profile": "Profile",
+    "subscriptions": "Subscriptions",
+    "subscriptions-description": "Unlock the most powerful learning experience with Nakafa Pro.",
+    "get-pro": "Get Pro"
   },
   "Ai": {
     "ask-ai": "Ask AI",

@@ -2,7 +2,7 @@
 
 import type { ModelId } from "@repo/ai/lib/providers";
 import { api } from "@repo/backend/convex/_generated/api";
-import { products } from "@repo/backend/convex/polar";
+import { products } from "@repo/backend/convex/utils/polar";
 import {
   PromptInputModelSelect,
   PromptInputModelSelectContent,

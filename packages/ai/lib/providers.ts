@@ -58,7 +58,7 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "gpt-oss-120b";
+export const defaultModel: ModelId = "grok-4-fast";
 
 export const order = ["cerebras", "groq", "baseten", "azure", "vertex"];
 

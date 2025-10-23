@@ -37,7 +37,7 @@ export default function Page() {
           </Authenticated>
 
           <AuthLoading>
-            <Skeleton className="mx-auto h-9 w-2/3" />
+            <Skeleton className="mx-auto h-9 w-1/2" />
           </AuthLoading>
 
           <div className="flex flex-col">

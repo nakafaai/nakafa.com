@@ -1,6 +1,7 @@
+"use client";
+
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { AnyAppUser } from "@repo/backend/convex/auth";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -31,16 +32,12 @@ import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { getInitialName } from "@/lib/utils/helper";
 
-type Props = {
-  user: AnyAppUser;
-};
-
-export function UserComments({ user }: Props) {
+export function UserComments({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Comments");
 
   const { results } = usePaginatedQuery(
     api.comments.queries.getCommentsByUserId,
-    { userId: user.appUser._id },
+    { userId },
     { initialNumItems: 25 }
   );
 
@@ -51,25 +48,20 @@ export function UserComments({ user }: Props) {
   return (
     <div className="flex flex-col gap-6">
       {results.map((comment) => (
-        <CommentThread comment={comment} key={comment._id} user={user} />
+        <CommentThread comment={comment} key={comment._id} />
       ))}
     </div>
   );
 }
 
-function CommentThread({
-  comment,
-  user,
-}: {
-  comment: Doc<"comments">;
-  user: AnyAppUser;
-}) {
+function CommentThread({ comment }: { comment: Doc<"comments"> }) {
   const t = useTranslations("Common");
 
+  const user = useQuery(api.auth.getUserById, { userId: comment.userId });
   const currentUser = useQuery(api.auth.getCurrentUser);
 
-  const userName = user.authUser.name ?? t("anonymous");
-  const userImage = user.authUser.image ?? "";
+  const userName = user?.authUser.name ?? t("anonymous");
+  const userImage = user?.authUser.image ?? "";
 
   const [isPending, startTransition] = useTransition();
 

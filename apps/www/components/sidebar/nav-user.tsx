@@ -30,7 +30,7 @@ import {
   LogInIcon,
   LogOutIcon,
   SettingsIcon,
-  UserIcon,
+  UserRoundIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
@@ -51,6 +51,7 @@ export function NavUser() {
 
   async function handleSignOut() {
     await authClient.signOut();
+    router.replace(`/auth?redirect=${pathname}`);
   }
 
   useEffect(() => {
@@ -126,8 +127,8 @@ export function NavUser() {
               className="cursor-pointer"
               onSelect={() => router.push(`/user/${user.appUser._id}`)}
             >
-              <UserIcon />
-              {t("account")}
+              <UserRoundIcon />
+              {t("profile")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"

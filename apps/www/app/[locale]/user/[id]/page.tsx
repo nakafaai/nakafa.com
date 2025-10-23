@@ -1,6 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
-import { UserMain } from "@/components/user/main";
+import { UserComments } from "@/components/user/comments";
 
 type Props = {
   params: Promise<{
@@ -10,9 +9,6 @@ type Props = {
 
 export default async function Page({ params }: Props) {
   const { id } = await params;
-  return (
-    <ErrorBoundary fallback={null}>
-      <UserMain userId={id} />
-    </ErrorBoundary>
-  );
+
+  return <UserComments userId={id} />;
 }

@@ -1,6 +1,8 @@
-import { AnimateTabs } from "@repo/design-system/components/ui/animate-tabs";
+"use client";
+
 import { MessagesSquareIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { SharedTabs } from "@/components/user/shared-tabs";
 
 export function UserTabs({ userId }: { userId: string }) {
   const t = useTranslations("Common");
@@ -13,9 +15,5 @@ export function UserTabs({ userId }: { userId: string }) {
     },
   ];
 
-  return (
-    <div className="border-b">
-      <AnimateTabs tabs={tabs} />
-    </div>
-  );
+  return <SharedTabs tabs={tabs} />;
 }

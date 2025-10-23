@@ -1,6 +1,6 @@
 "use client";
 
-import { SiGoogle } from "@icons-pack/react-simple-icons";
+import { Google } from "@lobehub/icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
@@ -20,7 +20,7 @@ export function AuthGoogle() {
 
   return (
     <Button onClick={handleGoogleSignIn}>
-      <SiGoogle />
+      <Google />
       {t("continue-with-google")}
     </Button>
   );

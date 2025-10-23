@@ -26,7 +26,7 @@ export type AiStore = State & Actions;
 const initialState: State = {
   open: false,
   text: "",
-  model: "gpt-oss-120b",
+  model: "grok-4-fast",
   locale: routing.defaultLocale,
   slug: "",
 };

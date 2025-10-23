@@ -1,5 +1,7 @@
+"use client";
+
 import { api } from "@repo/backend/convex/_generated/api";
-import type { AnyAppUser } from "@repo/backend/convex/auth";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   Avatar,
   AvatarFallback,
@@ -13,17 +15,38 @@ import { SettingsIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getInitialName } from "@/lib/utils/helper";
 
-type Props = {
-  user: AnyAppUser;
-};
-
-export function UserHeader({ user }: Props) {
+export function UserHeader({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
 
+  const user = useQuery(api.auth.getUserById, { userId });
   const currentUser = useQuery(api.auth.getCurrentUser);
 
-  const authUser = user.authUser;
-  const appUser = user.appUser;
+  const authUser = user?.authUser;
+  const appUser = user?.appUser;
+
+  if (!(authUser && appUser)) {
+    return (
+      <header className="flex items-start justify-between gap-4">
+        <section className="flex flex-1 items-start gap-4 text-left">
+          <Avatar className="size-12 rounded-full sm:size-16">
+            <AvatarImage alt={tCommon("anonymous")} src="" />
+            <AvatarFallback className="rounded-lg">
+              {getInitialName(tCommon("anonymous"))}
+            </AvatarFallback>
+          </Avatar>
+          <div className="grid text-left">
+            <span className="truncate font-semibold text-base sm:text-lg">
+              {tCommon("anonymous")}
+            </span>
+            <span className="truncate text-muted-foreground text-sm sm:text-base">
+              {tCommon("anonymous")}
+            </span>
+          </div>
+        </section>
+      </header>
+    );
+  }
 
   return (
     <header className="flex items-start justify-between gap-4">

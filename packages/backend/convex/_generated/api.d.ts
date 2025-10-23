@@ -16,12 +16,18 @@ import type * as betterAuth_auth from "../betterAuth/auth.js";
 import type * as betterAuth_generatedSchema from "../betterAuth/generatedSchema.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
+import type * as customers_mutation from "../customers/mutation.js";
+import type * as customers_queries from "../customers/queries.js";
+import type * as customers_utils from "../customers/utils.js";
 import type * as functions from "../functions.js";
 import type * as http from "../http.js";
 import type * as migrations from "../migrations.js";
-import type * as polar from "../polar.js";
+import type * as polyfills from "../polyfills.js";
+import type * as subscriptions_mutation from "../subscriptions/mutation.js";
+import type * as subscriptions_utils from "../subscriptions/utils.js";
 import type * as users_queries from "../users/queries.js";
 import type * as utils_helper from "../utils/helper.js";
+import type * as utils_polar from "../utils/polar.js";
 
 import type {
   ApiFromModules,
@@ -46,12 +52,18 @@ declare const fullApi: ApiFromModules<{
   "betterAuth/generatedSchema": typeof betterAuth_generatedSchema;
   "comments/mutations": typeof comments_mutations;
   "comments/queries": typeof comments_queries;
+  "customers/mutation": typeof customers_mutation;
+  "customers/queries": typeof customers_queries;
+  "customers/utils": typeof customers_utils;
   functions: typeof functions;
   http: typeof http;
   migrations: typeof migrations;
-  polar: typeof polar;
+  polyfills: typeof polyfills;
+  "subscriptions/mutation": typeof subscriptions_mutation;
+  "subscriptions/utils": typeof subscriptions_utils;
   "users/queries": typeof users_queries;
   "utils/helper": typeof utils_helper;
+  "utils/polar": typeof utils_polar;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

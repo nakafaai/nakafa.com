@@ -18,7 +18,7 @@ import { components, internal } from "./_generated/api";
 import type { DataModel, Id } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
 import authSchema from "./betterAuth/schema";
-import { polarClient, products } from "./polar";
+import { polarClient, products } from "./utils/polar";
 
 const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
