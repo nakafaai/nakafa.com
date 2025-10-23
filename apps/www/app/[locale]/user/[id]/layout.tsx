@@ -3,21 +3,17 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
 
-type Props = {
-  children: React.ReactNode;
-  params: Promise<{
-    id: Id<"users">;
-  }>;
-};
-
-export default async function Layout(props: Props) {
+export default async function Layout(
+  props: LayoutProps<"/[locale]/user/[id]">
+) {
   const { children, params } = props;
   const { id } = await params;
+  const userId = id as Id<"users">;
 
   return (
     <ErrorBoundary fallback={null}>
       <div className="flex flex-col gap-6">
-        <UserHeader userId={id} />
+        <UserHeader userId={userId} />
         <UserTabs userId={id} />
         {children}
       </div>

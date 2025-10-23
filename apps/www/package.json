@@ -14,7 +14,7 @@
     "google-index": "node --env-file=.env.local --import tsx scripts/google-index.ts"
   },
   "dependencies": {
-    "@ai-sdk/react": "^2.0.76",
+    "@ai-sdk/react": "^2.0.77",
     "@convex-dev/better-auth": "^0.9.6",
     "@icons-pack/react-simple-icons": "^13.8.0",
     "@lobehub/icons": "^2.43.1",
@@ -35,11 +35,11 @@
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tabler/icons-react": "^3.35.0",
-    "@tailwindcss/postcss": "^4.1.15",
+    "@tailwindcss/postcss": "^4.1.16",
     "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-query-devtools": "^5.90.2",
     "@vercel/functions": "^3.1.4",
-    "ai": "^5.0.76",
+    "ai": "^5.0.77",
     "babel-plugin-react-compiler": "^1.0.0",
     "better-auth": "1.3.27",
     "convex": "^1.28.0",
@@ -71,9 +71,9 @@
     "@types/react-dom": "19.2.2",
     "jsdom": "^27.0.1",
     "pagefind": "^1.4.0",
-    "tailwindcss": "^4.1.15",
+    "tailwindcss": "^4.1.16",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.1"
+    "vitest": "^4.0.2"
   }
 }
