@@ -17,3 +17,15 @@ export const setUserId = mutation({
     });
   },
 });
+
+export const updateName = mutation({
+  args: {
+    authId: v.id("user"),
+    name: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.authId, {
+      name: args.name,
+    });
+  },
+});

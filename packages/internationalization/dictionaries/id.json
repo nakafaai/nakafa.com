@@ -217,7 +217,12 @@
     "profile": "Profil",
     "subscriptions": "Langganan",
     "subscriptions-description": "Nikmati pengalaman belajar terbaik dengan Nakafa Pro.",
-    "get-pro": "Dapatkan Pro"
+    "get-pro": "Dapatkan Pro",
+    "name": "Nama",
+    "name-description": "Nama akan ditampilkan di profil dan komentar.",
+    "name-footer": "Silakan gunakan minimum 3 dan maksimum 32 karakter.",
+    "name-placeholder": "Masukkan nama kamu...",
+    "save": "Simpan"
   },
   "Ai": {
     "ask-ai": "Tanya AI",

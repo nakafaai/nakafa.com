@@ -1795,6 +1795,12 @@ export declare const components: {
         { authId: string; userId: string },
         any
       >;
+      updateName: FunctionReference<
+        "mutation",
+        "internal",
+        { authId: string; name: string },
+        any
+      >;
     };
   };
   migrations: {

@@ -1749,6 +1749,12 @@ export type Mounts = {
       { authId: string; userId: string },
       any
     >;
+    updateName: FunctionReference<
+      "mutation",
+      "public",
+      { authId: string; name: string },
+      any
+    >;
   };
 };
 // For now fullApiWithMounts is only fullApi which provides

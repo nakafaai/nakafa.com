@@ -217,7 +217,12 @@
     "profile": "Profile",
     "subscriptions": "Subscriptions",
     "subscriptions-description": "Unlock the most powerful learning experience with Nakafa Pro.",
-    "get-pro": "Get Pro"
+    "get-pro": "Get Pro",
+    "name": "Name",
+    "name-description": "The name will be displayed in your profile and comments.",
+    "name-footer": "Please use minimum 3 and maximum 32 characters.",
+    "name-placeholder": "Enter your name...",
+    "save": "Save"
   },
   "Ai": {
     "ask-ai": "Ask AI",
