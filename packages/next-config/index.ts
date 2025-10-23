@@ -79,6 +79,5 @@ export const withMDX = (sourceConfig: NextConfig): NextConfig =>
         ["remark-math", { singleDollarTextMath: false }],
         "remark-rehype",
       ],
-      rehypePlugins: ["rehype-raw"],
     },
   })(sourceConfig);
