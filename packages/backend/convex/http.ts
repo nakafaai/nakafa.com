@@ -76,6 +76,12 @@ http.route({
           });
           break;
         }
+        case "subscription.updated": {
+          await ctx.runMutation(api.subscriptions.mutation.updateSubscription, {
+            subscription: convertToDatabaseSubscription(event.data),
+          });
+          break;
+        }
         default:
           break;
       }

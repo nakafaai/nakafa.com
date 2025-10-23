@@ -22,3 +22,22 @@ export const createSubscription = mutation({
     return subscriptionId;
   },
 });
+
+export const updateSubscription = mutation({
+  args: {
+    subscription: tables.subscriptions.validator,
+  },
+  handler: async (ctx, args) => {
+    const existingSubscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("id", (q) => q.eq("id", args.subscription.id))
+      .unique();
+    if (!existingSubscription) {
+      throw new Error(`Subscription not found: ${args.subscription.id}`);
+    }
+    await ctx.db.patch(existingSubscription._id, {
+      ...args.subscription,
+      metadata: args.subscription.metadata,
+    });
+  },
+});
