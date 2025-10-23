@@ -33,8 +33,23 @@ export async function findUserIdFromCustomer(
     }
   }
 
+  // fallback to email, get from app users table
   const user = await ctx.runQuery(internal.users.queries.getUserByEmail, {
     email: customerData.email,
   });
-  return user?._id ?? null;
+
+  if (user) {
+    return user._id;
+  }
+
+  // fallback to email, get from betterAuth user table
+  const authUser = await ctx.runQuery(internal.betterAuth.auth.getUserByEmail, {
+    email: customerData.email,
+  });
+
+  if (authUser?.userId) {
+    return authUser.userId as Id<"users">;
+  }
+
+  return null;
 }
