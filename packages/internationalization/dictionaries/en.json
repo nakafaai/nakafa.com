@@ -268,6 +268,7 @@
   "Legal": {
     "terms-of-service": "Terms of Service",
     "privacy-policy": "Privacy Policy",
-    "security-policy": "Security Policy"
+    "security-policy": "Security Policy",
+    "legal-description": "By using our services, you agree to our <terms-of-service>Terms of Service</terms-of-service> and <privacy-policy>Privacy Policy</privacy-policy>."
   }
 }
