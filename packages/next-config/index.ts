@@ -1,6 +1,5 @@
 import withBundleAnalyzer from "@next/bundle-analyzer";
 import createMdx from "@next/mdx";
-
 import type { NextConfig } from "next";
 
 export const config: NextConfig = {
@@ -73,4 +72,13 @@ export const withAnalyzer = (sourceConfig: NextConfig): NextConfig =>
   withBundleAnalyzer()(sourceConfig);
 
 export const withMDX = (sourceConfig: NextConfig): NextConfig =>
-  createMdx()(sourceConfig);
+  createMdx({
+    options: {
+      remarkPlugins: [
+        "remark-gfm",
+        ["remark-math", { singleDollarTextMath: false }],
+        "remark-rehype",
+      ],
+      rehypePlugins: ["rehype-raw"],
+    },
+  })(sourceConfig);
