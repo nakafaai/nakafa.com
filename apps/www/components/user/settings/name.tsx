@@ -43,9 +43,6 @@ export function UserSettingsName({ user }: { user: AppUser }) {
   });
 
   const onSubmit = (values: FormSchema) => {
-    if (!user) {
-      return;
-    }
     startTransition(async () => {
       await updateName({
         authId: user.authUser._id,
@@ -53,10 +50,6 @@ export function UserSettingsName({ user }: { user: AppUser }) {
       });
     });
   };
-
-  if (!user) {
-    return null;
-  }
 
   return (
     <Form {...form}>
