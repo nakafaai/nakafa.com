@@ -358,7 +358,7 @@ The logger automatically disables pretty formatting in production to prevent the
 **Option 1: Environment variable approach:**
 
 ```bash
-NODE_ENV=development bun run build  # Force development mode
+NODE_ENV=development pnpm run build  # Force development mode
 ```
 
 **Option 2: Conditional logger:**

@@ -55,7 +55,7 @@ Make nakafa faster and more accessible! Use our [Performance & Accessibility tem
 ### 📋 Prerequisites
 
 - **Node.js**: Version 18+
-- **Bun**: We use Bun as our package manager and runtime
+- **pnpm**: We use pnpm as our package manager
 - **Git**: For version control
 
 ### ⚡ Quick Start
@@ -70,14 +70,14 @@ Make nakafa faster and more accessible! Use our [Performance & Accessibility tem
 2. **📦 Install Dependencies**
 
    ```bash
-   bun install
+   pnpm install
    ```
 
 3. **🚀 Start Development Server**
 
    ```bash
    cd apps/www
-   bun dev
+   pnpm dev
    ```
 
 4. **🌐 Open in Browser**
@@ -100,16 +100,16 @@ nakafa/
 
 ```bash
 # Run tests
-bun test
+pnpm test
 
 # Run linter
-bun lint
+pnpm lint
 
 # Format code
-bun format
+pnpm format
 
 # Type check
-bun type-check
+pnpm type-check
 ```
 
 ## 📝 Pull Request Process
@@ -117,9 +117,9 @@ bun type-check
 ### 🚀 Ready to Submit?
 
 1. **🔍 Check Your Work**
-   - All tests pass: `bun test`
-   - No linting errors: `bun lint`
-   - TypeScript compiles: `bun type-check`
+   - All tests pass: `pnpm test`
+   - No linting errors: `pnpm lint`
+   - TypeScript compiles: `pnpm type-check`
    - Tested on mobile and desktop
 
 2. **📝 Create Pull Request**

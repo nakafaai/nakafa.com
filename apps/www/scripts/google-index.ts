@@ -13,7 +13,7 @@
  * - Automatic URL collection from sitemap
  *
  * Usage:
- *   bun run google-index
+ *   pnpm run google-index
  *
  * Requirements:
  * - google-key.json file with service account credentials

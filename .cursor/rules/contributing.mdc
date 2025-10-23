@@ -11,7 +11,7 @@ Follow these steps to contribute:
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/name`
 3. Make changes following established patterns
-4. Run `bun lint` and `bun test`
+4. Run `pnpm lint` and `pnpm test`
 5. Submit a pull request
 
 ## Code Standards

@@ -5,7 +5,7 @@ description: Overview of the Nakafa project structure and key components
 
 # Nakafa Project Structure
 
-Nakafa is an open-source educational platform built as a monorepo using Next.js and Bun. The project is organized into apps and packages for modularity.
+Nakafa is an open-source educational platform built as a monorepo using Next.js and pnpm. The project is organized into apps and packages for modularity.
 
 ## Root Directory
 
@@ -40,8 +40,8 @@ Shared packages used across apps:
 
 ## Key Development Notes
 
-- Use Bun for package management and scripts.
-- Development server: bun dev
+- Use pnpm for package management and scripts.
+- Development server: pnpm dev
 - Content is written in MDX files within packages/contents.
 - The platform supports English and Indonesian locales.
 

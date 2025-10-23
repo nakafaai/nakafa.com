@@ -12,7 +12,8 @@
 
 ### Prerequisites
 
-- Node.js 18+ or Bun
+- Node.js 18+
+- pnpm
 - Git
 
 ### Installation
@@ -21,10 +22,10 @@
 # Clone & install
 git clone https://github.com/nakafaai/nakafa.git
 cd nakafa
-bun install
+pnpm install
 
 # Start development
-bun dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
@@ -32,12 +33,12 @@ Open [http://localhost:3000](http://localhost:3000)
 ### Available Scripts
 
 ```bash
-bun dev          # Development server (Turbopack)
-bun run build    # Production build
-bun start        # Production server
-bun lint         # Lint & format check
-bun test         # Run tests
-bun clean        # Clean dependencies
+pnpm dev          # Development server (Turbopack)
+pnpm build        # Production build
+pnpm start        # Production server
+pnpm lint         # Lint & format check
+pnpm test         # Run tests
+pnpm clean        # Clean dependencies
 ```
 
 ## Development
@@ -51,14 +52,14 @@ Detailed technical documentation available on [DeepWiki](https://deepwiki.com/na
 1. Navigate to appropriate level in `packages/contents/subject/`
 2. Create MDX files following existing structure
 3. Update data files in `_data/` directories
-4. Test locally with `bun dev`
+4. Test locally with `pnpm dev`
 
 ### Contributing
 
 1. Fork repository
 2. Create feature branch: `git checkout -b feature/name`
 3. Make changes following established patterns
-4. Run `bun lint` and `bun test`
+4. Run `pnpm lint` and `pnpm test`
 5. Submit pull request
 
 ## License

@@ -39,7 +39,7 @@ body:
       label: 🤔 What's confusing or missing?
       description: Describe the current issue with the documentation
       placeholder: |
-        Example: "The Getting Started guide mentions installing dependencies with 'npm install', but doesn't explain what to do if you're using Bun instead. Also, the setup steps skip over creating environment variables, which caused me to get stuck for hours..."
+        Example: "The Getting Started guide mentions installing dependencies with 'npm install', but doesn't explain what to do if you're using pnpm instead. Also, the setup steps skip over creating environment variables, which caused me to get stuck for hours..."
     validations:
       required: true
       
@@ -50,7 +50,7 @@ body:
       description: Share your specific suggestions for improvement
       placeholder: |
         💡 Your improvement ideas (e.g.):
-        - Add a section about package manager alternatives (npm, yarn, bun)
+        - Add a section about package manager alternatives (npm, yarn, pnpm)
         - Include step-by-step screenshots for environment setup
         - Add troubleshooting section for common setup issues
         - Provide examples for different operating systems

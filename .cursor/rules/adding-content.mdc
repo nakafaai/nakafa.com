@@ -12,7 +12,7 @@ To add new educational content:
    - For articles: [packages/contents/articles/](mdc:packages/contents/articles/)
    - For subjects: Create in relevant grade/material directory
 3. Update data files in `_data/` directories (e.g., subject.ts)
-4. Test locally with `bun dev`
+4. Test locally with `pnpm dev`
 
 ## Content Structure
 
