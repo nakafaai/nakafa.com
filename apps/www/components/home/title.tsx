@@ -12,7 +12,7 @@ export function HomeTitle({ className }: Props) {
     <h1
       className={cn(
         "mb-8 font-medium text-4xl leading-none tracking-tighter md:text-center",
-        className,
+        className
       )}
     >
       {t("title")}

@@ -133,10 +133,10 @@ export function Inequality({
       adaptiveResolution *
         adaptiveResolution *
         VERTICES_PER_CELL *
-        COMPONENTS_PER_VERTEX,
+        COMPONENTS_PER_VERTEX
     ); // Pre-allocate
     const indices: Uint32Array = new Uint32Array(
-      adaptiveResolution * adaptiveResolution * INDICES_PER_CELL,
+      adaptiveResolution * adaptiveResolution * INDICES_PER_CELL
     ); // Pre-allocate
     let vertexIndex = 0;
     let indexOffset = 0;
@@ -233,7 +233,7 @@ export function Inequality({
 
           // If center is far from boundary, we can make a quick decision
           const cellDiagonal = Math.sqrt(
-            (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1),
+            (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)
           );
           const distanceToLine =
             Math.abs(centerValue) / Math.sqrt(a * a + b * b);
@@ -285,7 +285,7 @@ export function Inequality({
               [x1, y1, zBoundary],
               [x2, y1, zBoundary],
               [x2, y2, zBoundary],
-              [x1, y2, zBoundary],
+              [x1, y2, zBoundary]
             );
           }
         }
@@ -298,7 +298,7 @@ export function Inequality({
 
     geo.setAttribute(
       "position",
-      new Float32BufferAttribute(finalVertices, COMPONENTS_PER_VERTEX),
+      new Float32BufferAttribute(finalVertices, COMPONENTS_PER_VERTEX)
     );
     geo.setIndex(new BufferAttribute(finalIndices, 1));
     geo.computeVertexNormals();
@@ -440,7 +440,7 @@ export function Inequality({
     const geom = new BufferGeometry();
     geom.setAttribute(
       "position",
-      new Float32BufferAttribute(vertices, COMPONENTS_PER_VERTEX),
+      new Float32BufferAttribute(vertices, COMPONENTS_PER_VERTEX)
     );
     return geom;
   }, [

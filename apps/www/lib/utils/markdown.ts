@@ -8,6 +8,6 @@ import { Children } from "react";
  */
 export function filterWhitespaceNodes(children: ReactNode) {
   return Children.toArray(children).filter(
-    (child) => !(typeof child === "string" && child.trim() === ""),
+    (child) => !(typeof child === "string" && child.trim() === "")
   );
 }

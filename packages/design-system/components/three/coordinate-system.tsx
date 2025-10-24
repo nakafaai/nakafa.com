@@ -101,7 +101,7 @@ export function CoordinateSystem({
   // Origin point color based on theme
   const originColor = useMemo(
     () => (resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK),
-    [resolvedTheme],
+    [resolvedTheme]
   );
 
   // Handle button clicks with proper invalidation for on-demand rendering
@@ -127,7 +127,7 @@ export function CoordinateSystem({
       className={cn(
         "relative grid aspect-square overflow-hidden rounded-md sm:aspect-[1.43/1]", // IMAX aspect ratio
         isDragging ? "cursor-grabbing" : "cursor-grab",
-        className,
+        className
       )}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
@@ -211,7 +211,7 @@ export function CoordinateSystem({
       <div
         className={cn(
           "absolute bottom-3 left-3 flex gap-2 transition-opacity duration-300 ease-out",
-          sceneReady ? "opacity-100" : "opacity-0",
+          sceneReady ? "opacity-100" : "opacity-0"
         )}
       >
         <Button onClick={handleGridToggle} size="icon" variant="secondary">

@@ -4,7 +4,7 @@ import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
 
 export default async function Layout(
-  props: LayoutProps<"/[locale]/user/[id]">,
+  props: LayoutProps<"/[locale]/user/[id]">
 ) {
   const { children, params } = props;
   const { id } = await params;

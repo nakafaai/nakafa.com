@@ -30,7 +30,7 @@ const MONTHS_IN_CONTENT_FALLBACK = 3;
  */
 async function getContentLastModified(
   contentPath: string,
-  locale: Locale = "en",
+  locale: Locale = "en"
 ): Promise<Date> {
   try {
     const content = await getContent(locale, contentPath);
@@ -40,7 +40,7 @@ async function getContentLastModified(
       const metadataDate = new Date(
         Number(year),
         Number(month) - 1,
-        Number(day),
+        Number(day)
       );
       if (metadataDate.getTime() > 0) {
         return metadataDate;
@@ -138,7 +138,7 @@ type Href = Parameters<typeof getPathname>[number]["href"];
 
 export async function getEntries(
   href: Href,
-  domain?: string,
+  domain?: string
 ): Promise<MetadataRoute.Sitemap> {
   // Handle both string and object href types
   const routeString = typeof href === "string" ? href : href.pathname;
@@ -164,7 +164,7 @@ export async function getEntries(
       // Educational content typically doesn't change very frequently
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(
-        threeMonthsAgo.getMonth() - MONTHS_IN_CONTENT_FALLBACK,
+        threeMonthsAgo.getMonth() - MONTHS_IN_CONTENT_FALLBACK
       );
       lastModified = threeMonthsAgo;
     }
@@ -189,7 +189,7 @@ export async function getEntries(
     url: getUrl(href, locale, domain),
     alternates: {
       languages: Object.fromEntries(
-        routing.locales.map((cur) => [cur, getUrl(href, cur, domain)]),
+        routing.locales.map((cur) => [cur, getUrl(href, cur, domain)])
       ),
     },
     changeFrequency,
@@ -230,7 +230,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Generate sitemap entries only for main domain
   const sitemapEntriesPromises = allBaseRoutes.map(
-    async (route) => await getEntries(route, MAIN_DOMAIN),
+    async (route) => await getEntries(route, MAIN_DOMAIN)
   );
 
   const sitemapEntriesArrays = await Promise.all(sitemapEntriesPromises);

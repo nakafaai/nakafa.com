@@ -51,7 +51,7 @@ const lineNumberClassNames = cn(
   "[&_.line]:before:text-right",
   "[&_.line]:before:text-muted-foreground/50",
   "[&_.line]:before:font-mono",
-  "[&_.line]:before:select-none",
+  "[&_.line]:before:select-none"
 );
 
 const darkModeClassNames = cn(
@@ -62,7 +62,7 @@ const darkModeClassNames = cn(
   "dark:[&_.shiki_span]:!text-[var(--shiki-dark)]",
   "dark:[&_.shiki_span]:![font-style:var(--shiki-dark-font-style)]",
   "dark:[&_.shiki_span]:![font-weight:var(--shiki-dark-font-weight)]",
-  "dark:[&_.shiki_span]:![text-decoration:var(--shiki-dark-text-decoration)]",
+  "dark:[&_.shiki_span]:![text-decoration:var(--shiki-dark-text-decoration)]"
 );
 
 const lineHighlightClassNames = cn(
@@ -73,7 +73,7 @@ const lineHighlightClassNames = cn(
   "[&_.line.highlighted]:after:top-0",
   "[&_.line.highlighted]:after:bottom-0",
   "[&_.line.highlighted]:after:w-0.5",
-  "dark:[&_.line.highlighted]:!bg-blue-500/10",
+  "dark:[&_.line.highlighted]:!bg-blue-500/10"
 );
 
 const lineDiffClassNames = cn(
@@ -87,17 +87,17 @@ const lineDiffClassNames = cn(
   "[&_.line.diff.remove]:bg-rose-50",
   "[&_.line.diff.remove]:after:bg-rose-500",
   "dark:[&_.line.diff.add]:!bg-emerald-500/10",
-  "dark:[&_.line.diff.remove]:!bg-rose-500/10",
+  "dark:[&_.line.diff.remove]:!bg-rose-500/10"
 );
 
 const lineFocusedClassNames = cn(
   "[&_code:has(.focused)_.line]:blur-[2px]",
-  "[&_code:has(.focused)_.line.focused]:blur-none",
+  "[&_code:has(.focused)_.line.focused]:blur-none"
 );
 
 const wordHighlightClassNames = cn(
   "[&_.highlighted-word]:bg-blue-50",
-  "dark:[&_.highlighted-word]:!bg-blue-500/10",
+  "dark:[&_.highlighted-word]:!bg-blue-500/10"
 );
 
 const codeBlockClassName = cn(
@@ -110,13 +110,13 @@ const codeBlockClassName = cn(
   "[&_code]:bg-transparent",
   "[&_.line]:px-4",
   "[&_.line]:w-full",
-  "[&_.line]:relative",
+  "[&_.line]:relative"
 );
 
 function highlight(
   html: string,
   language?: BundledLanguage,
-  themes?: CodeOptionsMultipleThemes["themes"],
+  themes?: CodeOptionsMultipleThemes["themes"]
 ) {
   return codeToHtml(html, {
     lang: language ?? "typescript",
@@ -196,7 +196,7 @@ export const CodeBlock = ({
       <div
         className={cn(
           "grid size-full grid-cols-1 overflow-hidden rounded-xl border shadow-sm",
-          className,
+          className
         )}
         {...props}
       />
@@ -213,7 +213,7 @@ export const CodeBlockHeader = ({
   <div
     className={cn(
       "flex flex-row items-center border-b bg-muted/80 p-1",
-      className,
+      className
     )}
     {...props}
   />
@@ -258,7 +258,7 @@ export const CodeBlockFilename = ({
   const activeValue = useCodeBlock((state) => state.value);
   const defaultIcon = Object.entries(filenameIconMap).find(([pattern]) => {
     const regex = new RegExp(
-      `^${pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*")}$`,
+      `^${pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*")}$`
     );
     return regex.test(children?.toString() ?? "");
   })?.[1];
@@ -299,7 +299,7 @@ export const CodeBlockSelectTrigger = ({
   <SelectTrigger
     className={cn(
       "w-fit border-none text-muted-foreground text-sm shadow-none",
-      className,
+      className
     )}
     size="sm"
     {...props}
@@ -468,7 +468,7 @@ export const CodeBlockItem = ({
         wordHighlightClassNames,
         darkModeClassNames,
         lineNumbers && lineNumberClassNames,
-        className,
+        className
       )}
       {...props}
     >

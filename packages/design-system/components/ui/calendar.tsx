@@ -34,11 +34,11 @@ function Calendar({
     nav: "absolute top-0 flex w-full justify-between z-10",
     button_previous: cn(
       buttonVariants({ variant: "ghost" }),
-      "size-9 p-0 text-muted-foreground/80 hover:text-foreground",
+      "size-9 p-0 text-muted-foreground/80 hover:text-foreground"
     ),
     button_next: cn(
       buttonVariants({ variant: "ghost" }),
-      "size-9 p-0 text-muted-foreground/80 hover:text-foreground",
+      "size-9 p-0 text-muted-foreground/80 hover:text-foreground"
     ),
     weekday: "size-9 p-0 text-xs font-medium text-muted-foreground/80",
     day_button:
@@ -56,7 +56,7 @@ function Calendar({
   };
 
   const mergedClassNames: typeof defaultClassNames = Object.keys(
-    defaultClassNames,
+    defaultClassNames
   ).reduce(
     (acc, key) => {
       acc[key as keyof typeof defaultClassNames] = classNames?.[
@@ -64,12 +64,12 @@ function Calendar({
       ]
         ? cn(
             defaultClassNames[key as keyof typeof defaultClassNames],
-            classNames[key as keyof typeof classNames],
+            classNames[key as keyof typeof classNames]
           )
         : defaultClassNames[key as keyof typeof defaultClassNames];
       return acc;
     },
-    {} as typeof defaultClassNames,
+    {} as typeof defaultClassNames
   );
 
   const defaultComponents = {

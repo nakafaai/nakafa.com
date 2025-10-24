@@ -43,7 +43,7 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
           y: p * a ** i,
         };
       }),
-    [a, p, n],
+    [a, p, n]
   );
 
   const chartConfig = {

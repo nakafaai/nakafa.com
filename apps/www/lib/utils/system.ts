@@ -18,7 +18,7 @@ type ParamConfig = {
  * @returns Array of parameter objects for generateStaticParams
  */
 export function getStaticParams(
-  config: ParamConfig,
+  config: ParamConfig
 ): Record<string, string | string[]>[] {
   const { basePath, paramNames, slugParam, isDeep = false } = config;
 
@@ -108,7 +108,7 @@ export function getStaticParams(
  */
 export async function getMetadataFromSlug(
   locale: string,
-  slug: string[],
+  slug: string[]
 ): Promise<ContentMetadata> {
   const [tCommon, tMetadata] = await Promise.all([
     getTranslations("Common"),

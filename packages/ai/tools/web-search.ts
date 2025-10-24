@@ -144,7 +144,7 @@ function createOutput({ output }: { output: WebSearchOutput }): string {
             <content>${source.content}</content>
             <citation>${source.citation}</citation>
           </source>
-        `,
+        `
           )
           .join("")}
       </sources>

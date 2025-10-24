@@ -8,7 +8,7 @@ import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 
 export function convertToDatabaseCustomer(
-  customer: Customer & { userId: Id<"users"> },
+  customer: Customer & { userId: Id<"users"> }
 ): WithoutSystemFields<Doc<"customers">> {
   return {
     id: customer.id,
@@ -20,7 +20,7 @@ export function convertToDatabaseCustomer(
 
 export async function findUserIdFromCustomer(
   ctx: GenericActionCtx<GenericDataModel>,
-  customerData: { externalId?: string | null; email: string },
+  customerData: { externalId?: string | null; email: string }
 ): Promise<Id<"users"> | null> {
   // externalId is the authId from Better Auth
   const authId = customerData.externalId;

@@ -42,5 +42,5 @@ export const createAiStore = () =>
       getModel: () => get().model,
       getLocale: () => get().locale,
       getSlug: () => get().slug,
-    })),
+    }))
   );

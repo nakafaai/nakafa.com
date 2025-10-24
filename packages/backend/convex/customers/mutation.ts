@@ -14,7 +14,7 @@ export const insertCustomer = mutation({
       .unique();
     if (existingCustomer) {
       throw new Error(
-        `Customer already exists for user: ${args.customer.userId}`,
+        `Customer already exists for user: ${args.customer.userId}`
       );
     }
     const customerId = await ctx.db.insert("customers", {

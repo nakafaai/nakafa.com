@@ -120,7 +120,7 @@ function ParticlesComponent({
     const size = rng.nextInt(MIN_PARTICLE_SIZE, MAX_PARTICLE_SIZE);
     const alpha = 0;
     const targetAlpha = Number.parseFloat(
-      rng.nextFloat(MIN_TARGET_ALPHA, MAX_TARGET_ALPHA).toFixed(1),
+      rng.nextFloat(MIN_TARGET_ALPHA, MAX_TARGET_ALPHA).toFixed(1)
     );
     const dx = rng.nextFloat(MIN_PARTICLE_SPEED, MAX_PARTICLE_SPEED);
     const dy = rng.nextFloat(MIN_PARTICLE_SPEED, MAX_PARTICLE_SPEED);
@@ -157,7 +157,7 @@ function ParticlesComponent({
         }
       }
     },
-    [dpr, isThemeDark],
+    [dpr, isThemeDark]
   );
 
   const clearContext = useCallback(() => {
@@ -166,7 +166,7 @@ function ParticlesComponent({
         0,
         0,
         canvasSize.current.w,
-        canvasSize.current.h,
+        canvasSize.current.h
       );
     }
   }, []);
@@ -223,7 +223,7 @@ function ParticlesComponent({
         ((value - start1) * (end2 - start2)) / (end1 - start1) + start2;
       return remapped > 0 ? remapped : 0;
     },
-    [],
+    []
   );
 
   const animate = useCallback(() => {
@@ -244,7 +244,7 @@ function ParticlesComponent({
           end1: REMAP_EDGE_END,
           start2: 0,
           end2: 1,
-        }).toFixed(2),
+        }).toFixed(2)
       );
       if (remapClosestEdge > 1) {
         circle.alpha += ALPHA_FADE_IN_SPEED;
@@ -296,7 +296,7 @@ function ParticlesComponent({
             translateY: circle.translateY,
             alpha: circle.alpha,
           },
-          true,
+          true
         );
       }
     });

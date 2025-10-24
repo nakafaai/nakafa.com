@@ -19,7 +19,7 @@ export function getHeadings(content: string): ParsedHeading[] {
     // Handle markdown style headings (# Heading)
     const markdownHeadingRegex = /^(#{1,6})\s+(.*)$/gm;
     const markdownMatches = Array.from(
-      cleanedContent.matchAll(markdownHeadingRegex),
+      cleanedContent.matchAll(markdownHeadingRegex)
     );
 
     if (markdownMatches && markdownMatches.length > 0) {

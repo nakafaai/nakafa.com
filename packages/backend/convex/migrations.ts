@@ -16,7 +16,7 @@ export const migrationCreateAppUsers = internalMutation({
           cursor: null,
           numItems: 1000,
         },
-      },
+      }
     );
 
     let created = 0;
@@ -97,7 +97,7 @@ export const migrationAddUserId = internalMutation({
               operator: "eq",
             },
           ],
-        },
+        }
       );
 
       if (!authUser) {

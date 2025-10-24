@@ -36,7 +36,7 @@ export function BlockMath({
     <div
       className={cn(
         "overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm",
-        className,
+        className
       )}
     >
       <ScrollArea className="grid" type="hover">

@@ -4,7 +4,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 import { env } from "@/env";
 
 const withNextIntl = createNextIntlPlugin(
-  "../../packages/internationalization/src/request.ts",
+  "../../packages/internationalization/src/request.ts"
 );
 
 let nextConfig: NextConfig = config;

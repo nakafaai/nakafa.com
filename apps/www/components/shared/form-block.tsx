@@ -29,7 +29,7 @@ export function FormBlock({
       className={cn(
         "overflow-hidden",
         variant === "destructive" && "border-destructive",
-        footer && "pb-0",
+        footer && "pb-0"
       )}
     >
       <CardHeader>
@@ -41,7 +41,7 @@ export function FormBlock({
         <CardFooter
           className={cn(
             "border-t bg-muted/20 py-3 [.border-t]:pt-3",
-            variant === "destructive" && "border-destructive bg-destructive/20",
+            variant === "destructive" && "border-destructive bg-destructive/20"
           )}
         >
           {footer}

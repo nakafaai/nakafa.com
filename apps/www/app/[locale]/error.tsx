@@ -30,7 +30,7 @@ export default function ErrorPage({
     <div
       className={cn(
         "relative flex h-[calc(100svh-4rem)] items-center justify-center",
-        pathname === "/" && "lg:h-svh",
+        pathname === "/" && "lg:h-svh"
       )}
       data-pagefind-ignore
     >

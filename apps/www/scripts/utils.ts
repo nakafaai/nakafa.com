@@ -46,50 +46,50 @@ export const logger = {
   // Log methods
   info: (message: string): void => {
     console.info(
-      `${logger.fg.blue}${logger.bright}ℹ INFO:${logger.reset} ${message}`,
+      `${logger.fg.blue}${logger.bright}ℹ INFO:${logger.reset} ${message}`
     );
   },
 
   success: (message: string): void => {
     console.info(
-      `${logger.fg.green}${logger.bright}✓ SUCCESS:${logger.reset} ${message}`,
+      `${logger.fg.green}${logger.bright}✓ SUCCESS:${logger.reset} ${message}`
     );
   },
 
   warn: (message: string): void => {
     console.warn(
-      `${logger.fg.yellow}${logger.bright}⚠ WARNING:${logger.reset} ${message}`,
+      `${logger.fg.yellow}${logger.bright}⚠ WARNING:${logger.reset} ${message}`
     );
   },
 
   error: (message: string): void => {
     console.error(
-      `${logger.fg.red}${logger.bright}✗ ERROR:${logger.reset} ${message}`,
+      `${logger.fg.red}${logger.bright}✗ ERROR:${logger.reset} ${message}`
     );
   },
 
   header: (message: string): void => {
     console.info(
-      `\n${logger.fg.cyan}${logger.bright}═══════════════════════════════════════════════════════════════════${logger.reset}`,
+      `\n${logger.fg.cyan}${logger.bright}═══════════════════════════════════════════════════════════════════${logger.reset}`
     );
     console.info(
-      `${logger.fg.cyan}${logger.bright}  ${message}${logger.reset}`,
+      `${logger.fg.cyan}${logger.bright}  ${message}${logger.reset}`
     );
     console.info(
-      `${logger.fg.cyan}${logger.bright}═══════════════════════════════════════════════════════════════════${logger.reset}\n`,
+      `${logger.fg.cyan}${logger.bright}═══════════════════════════════════════════════════════════════════${logger.reset}\n`
     );
   },
 
   stats: (label: string, value: string | number): void => {
     console.info(
-      `${logger.fg.magenta}${logger.bright}▸ ${label}:${logger.reset} ${value}`,
+      `${logger.fg.magenta}${logger.bright}▸ ${label}:${logger.reset} ${value}`
     );
   },
 
   progress: (current: number, total: number, label: string): void => {
     const percentage = Math.round((current / total) * PERCENTAGE_PRECISION);
     console.info(
-      `${logger.fg.cyan}${logger.bright}▸ ${label}:${logger.reset} ${current}/${total} (${percentage}%)`,
+      `${logger.fg.cyan}${logger.bright}▸ ${label}:${logger.reset} ${current}/${total} (${percentage}%)`
     );
   },
 };

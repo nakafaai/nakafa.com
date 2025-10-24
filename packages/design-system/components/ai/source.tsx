@@ -64,7 +64,7 @@ export function SourceTrigger({
         className={cn(
           "inline-flex h-5 max-w-32 items-center gap-1 overflow-hidden rounded-full bg-muted py-0 text-muted-foreground text-xs leading-none no-underline transition-colors duration-150 hover:bg-muted-foreground/30 hover:text-primary",
           showFavicon ? "pr-2 pl-1" : "px-1",
-          className,
+          className
         )}
         href={href}
         rel="noopener noreferrer"
@@ -76,7 +76,7 @@ export function SourceTrigger({
             className="size-3.5 rounded-full"
             height={14}
             src={`https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
-              href,
+              href
             )}`}
             width={14}
           />
@@ -114,7 +114,7 @@ export function SourceContent({
             className="size-4 rounded-full"
             height={16}
             src={`https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
-              href,
+              href
             )}`}
             width={16}
           />

@@ -17,7 +17,7 @@ export const Conversation = memo(
       role="log"
       {...props}
     />
-  ),
+  )
 );
 Conversation.displayName = "Conversation";
 
@@ -31,7 +31,7 @@ export const ConversationContent = memo(
       className={cn("flex flex-col gap-6 p-6", className)}
       {...props}
     />
-  ),
+  )
 );
 ConversationContent.displayName = "ConversationContent";
 
@@ -50,7 +50,7 @@ export const ConversationScrollButton = memo(
         <Button
           className={cn(
             "absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full",
-            className,
+            className
           )}
           onClick={handleScrollToBottom}
           size="icon"
@@ -62,6 +62,6 @@ export const ConversationScrollButton = memo(
         </Button>
       )
     );
-  },
+  }
 );
 ConversationScrollButton.displayName = "ConversationScrollButton";

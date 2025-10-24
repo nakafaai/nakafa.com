@@ -64,7 +64,7 @@ function ContextMenuSubTrigger({
     <ContextMenuPrimitive.SubTrigger
       className={cn(
         "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[inset]:pl-8 data-[state=open]:text-accent-foreground [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className,
+        className
       )}
       data-inset={inset}
       data-slot="context-menu-sub-trigger"
@@ -84,7 +84,7 @@ function ContextMenuSubContent({
     <ContextMenuPrimitive.SubContent
       className={cn(
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] origin-(--radix-context-menu-content-transform-origin) overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-lg data-[state=closed]:animate-out data-[state=open]:animate-in",
-        className,
+        className
       )}
       data-slot="context-menu-sub-content"
       {...props}
@@ -101,7 +101,7 @@ function ContextMenuContent({
       <ContextMenuPrimitive.Content
         className={cn(
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-h-(--radix-context-menu-content-available-height) min-w-[8rem] origin-(--radix-context-menu-content-transform-origin) overflow-y-auto overflow-x-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=closed]:animate-out data-[state=open]:animate-in",
-          className,
+          className
         )}
         data-slot="context-menu-content"
         {...props}
@@ -123,7 +123,7 @@ function ContextMenuItem({
     <ContextMenuPrimitive.Item
       className={cn(
         "data-[variant=destructive]:*:[svg]:!text-destructive relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[inset]:pl-8 data-[variant=destructive]:text-destructive data-[disabled]:opacity-50 data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className,
+        className
       )}
       data-inset={inset}
       data-slot="context-menu-item"
@@ -144,7 +144,7 @@ function ContextMenuCheckboxItem({
       checked={checked}
       className={cn(
         "relative flex cursor-default select-none items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className,
+        className
       )}
       data-slot="context-menu-checkbox-item"
       {...props}
@@ -168,7 +168,7 @@ function ContextMenuRadioItem({
     <ContextMenuPrimitive.RadioItem
       className={cn(
         "relative flex cursor-default select-none items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className,
+        className
       )}
       data-slot="context-menu-radio-item"
       {...props}
@@ -194,7 +194,7 @@ function ContextMenuLabel({
     <ContextMenuPrimitive.Label
       className={cn(
         "px-2 py-1.5 font-medium text-foreground text-sm data-[inset]:pl-8",
-        className,
+        className
       )}
       data-inset={inset}
       data-slot="context-menu-label"
@@ -224,7 +224,7 @@ function ContextMenuShortcut({
     <span
       className={cn(
         "ml-auto text-muted-foreground text-xs tracking-widest",
-        className,
+        className
       )}
       data-slot="context-menu-shortcut"
       {...props}

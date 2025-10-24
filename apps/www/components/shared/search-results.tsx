@@ -80,7 +80,7 @@ export function SearchResults({
               {result.sub_results.map((subResult) => (
                 <NavigationLink
                   className={cn(
-                    "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground",
+                    "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
                   )}
                   href={subResult.url}
                   key={`${subResult.url}-${subResult.title}`}

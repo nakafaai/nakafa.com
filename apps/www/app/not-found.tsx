@@ -24,7 +24,7 @@ export default function NotFound() {
       className={cn(
         "font-sans antialiased",
         geistSans.variable,
-        geistMono.variable,
+        geistMono.variable
       )}
       lang="en"
       suppressHydrationWarning

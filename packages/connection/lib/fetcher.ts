@@ -10,7 +10,7 @@ const URL_DETAILS_REGEX = /:.*$/;
 
 export async function fetcher<T>(
   endpoint: string,
-  options: RequestInit,
+  options: RequestInit
 ): Promise<FetchResult<T | null>> {
   try {
     const response = await ky<T>(`${url}${endpoint}`, {

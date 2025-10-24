@@ -31,7 +31,7 @@ const hardcodedKey = "e22d548f7fd2482a9022e3b84e944901";
 const DATA_FOLDER = path.join(__dirname, "_data");
 const SUBMISSION_HISTORY_FILE = path.join(
   DATA_FOLDER,
-  "submission-history.json",
+  "submission-history.json"
 );
 
 // Ensure data folder exists
@@ -67,7 +67,7 @@ function loadSubmissionHistory(): {
     }
   } catch (error) {
     logger.warn(
-      `Error loading submission history: ${error}. Starting with empty history.`,
+      `Error loading submission history: ${error}. Starting with empty history.`
     );
   }
   return { indexNow: {}, bing: {} };
@@ -82,7 +82,7 @@ function saveSubmissionHistory(history: {
     fs.writeFileSync(
       SUBMISSION_HISTORY_FILE,
       JSON.stringify(history, null, 2),
-      "utf8",
+      "utf8"
     );
   } catch (error) {
     logger.error(`Error saving submission history: ${error}`);
@@ -128,7 +128,7 @@ async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
   logger.stats("Total URLs in sitemap", allUrls.size);
   logger.stats(
     `Previously submitted URLs to ${service}`,
-    Object.keys(history[service]).length,
+    Object.keys(history[service]).length
   );
   logger.stats(`New URLs to submit to ${service}`, urls.length);
 
@@ -139,7 +139,7 @@ async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
 function updateSubmissionHistory(
   history: { indexNow: Record<string, string>; bing: Record<string, string> },
   urls: string[],
-  service: "indexNow" | "bing",
+  service: "indexNow" | "bing"
 ): { indexNow: Record<string, string>; bing: Record<string, string> } {
   const timestamp = new Date().toISOString();
   for (const url of urls) {
@@ -158,14 +158,14 @@ async function submitBatchToIndexNow(
   batch: string[],
   key: string,
   batchCount: number,
-  totalBatches: number,
+  totalBatches: number
 ): Promise<string[]> {
   const apiEndpoint = "https://api.indexnow.org";
 
   logger.progress(
     batchCount,
     totalBatches,
-    `Submitting batch ${batchCount} of ${totalBatches}`,
+    `Submitting batch ${batchCount} of ${totalBatches}`
   );
 
   const response = await fetch(apiEndpoint, {
@@ -194,7 +194,7 @@ async function submitBatchToIndexNow(
 // Submit URLs to IndexNow
 async function submitUrlsToIndexNow(
   urls: string[],
-  key: string,
+  key: string
 ): Promise<string[]> {
   if (urls.length === 0) {
     logger.info("No new URLs to submit to IndexNow.");
@@ -222,7 +222,7 @@ async function submitUrlsToIndexNow(
         batch,
         key,
         index + 1,
-        totalBatches,
+        totalBatches
       );
       successfullySubmitted.push(...batchResult);
 
@@ -236,7 +236,7 @@ async function submitUrlsToIndexNow(
   }, Promise.resolve());
 
   logger.info(
-    `IndexNow submission completed. Successfully submitted ${successfullySubmitted.length}/${urls.length} URLs.`,
+    `IndexNow submission completed. Successfully submitted ${successfullySubmitted.length}/${urls.length} URLs.`
   );
 
   return successfullySubmitted;
@@ -264,7 +264,7 @@ function extractRemainingQuota(responseText: string): number | null {
 // Helper function to process API response
 async function processBingResponse(
   response: Response,
-  batch: string[],
+  batch: string[]
 ): Promise<{
   success: boolean;
   quotaRemaining: number | null;
@@ -290,7 +290,7 @@ async function processBingResponse(
       const quotaRemaining = extractRemainingQuota(responseText);
       if (quotaRemaining) {
         logger.info(
-          `Adjusting batch size to respect quota. New batch size: ${quotaRemaining}`,
+          `Adjusting batch size to respect quota. New batch size: ${quotaRemaining}`
         );
         return { success: false, quotaRemaining, shouldBreak: false };
       }
@@ -300,7 +300,7 @@ async function processBingResponse(
   }
 
   logger.success(
-    `Successfully submitted ${batch.length} URLs to Bing URL Submission API.`,
+    `Successfully submitted ${batch.length} URLs to Bing URL Submission API.`
   );
   return { success: true, quotaRemaining: null, shouldBreak: false };
 }
@@ -310,7 +310,7 @@ async function submitBatchToBing(
   batch: string[],
   apiKey: string,
   startIdx: number,
-  endIdx: number,
+  endIdx: number
 ): Promise<{
   success: boolean;
   urls: string[];
@@ -321,7 +321,7 @@ async function submitBatchToBing(
     "https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch";
 
   logger.info(
-    `Submitting batch of ${batch.length} URLs to Bing (${startIdx} to ${endIdx})`,
+    `Submitting batch of ${batch.length} URLs to Bing (${startIdx} to ${endIdx})`
   );
 
   const response = await fetch(`${apiEndpoint}?apikey=${apiKey}`, {
@@ -349,7 +349,7 @@ async function submitBatchToBing(
 // Submit URLs to Bing URL Submission API
 async function submitUrlsToBing(
   urls: string[],
-  apiKey: string,
+  apiKey: string
 ): Promise<string[]> {
   if (urls.length === 0) {
     logger.info("No new URLs to submit to Bing.");
@@ -400,7 +400,7 @@ async function submitUrlsToBing(
           // If the batch was too large, retry with the smaller batch size
           if (batch.length > result.quotaRemaining) {
             logger.info(
-              `Retrying with smaller batch size of ${result.quotaRemaining}`,
+              `Retrying with smaller batch size of ${result.quotaRemaining}`
             );
             return true; // Continue processing
           }
@@ -410,7 +410,7 @@ async function submitUrlsToBing(
         retryCount++;
         if (retryCount >= MAX_RETRIES) {
           logger.warn(
-            `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`,
+            `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`
           );
           return false;
         }
@@ -428,7 +428,7 @@ async function submitUrlsToBing(
       retryCount++;
       if (retryCount >= MAX_RETRIES) {
         logger.warn(
-          `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`,
+          `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`
         );
         return false;
       }
@@ -447,7 +447,7 @@ async function submitUrlsToBing(
   await processAllBatches();
 
   logger.info(
-    `Bing URL Submission API process completed. Submitted ${submitted}/${urls.length} URLs.`,
+    `Bing URL Submission API process completed. Submitted ${submitted}/${urls.length} URLs.`
   );
 
   return successfullySubmitted;
@@ -472,13 +472,13 @@ async function runIndexNow(): Promise<void> {
 
   if (indexNowData.urls.length === 0) {
     logger.info(
-      "No new URLs to submit to IndexNow. All URLs have been previously submitted.",
+      "No new URLs to submit to IndexNow. All URLs have been previously submitted."
     );
   } else {
     // Submit URLs to IndexNow
     const indexNowSuccessful = await submitUrlsToIndexNow(
       indexNowData.urls,
-      apiKey,
+      apiKey
     );
     logger.success("IndexNow submission completed.");
 
@@ -487,11 +487,11 @@ async function runIndexNow(): Promise<void> {
       const updatedHistory = updateSubmissionHistory(
         indexNowData.history,
         indexNowSuccessful,
-        "indexNow",
+        "indexNow"
       );
       saveSubmissionHistory(updatedHistory);
       logger.success(
-        `Submission history updated for IndexNow with ${indexNowSuccessful.length} successfully submitted URLs.`,
+        `Submission history updated for IndexNow with ${indexNowSuccessful.length} successfully submitted URLs.`
       );
     }
   }
@@ -511,7 +511,7 @@ async function runIndexNow(): Promise<void> {
 
     if (bingData.urls.length === 0) {
       logger.info(
-        "No new URLs to submit to Bing. All URLs have been previously submitted.",
+        "No new URLs to submit to Bing. All URLs have been previously submitted."
       );
     } else {
       // Submit URLs to Bing URL Submission API
@@ -522,20 +522,20 @@ async function runIndexNow(): Promise<void> {
         const updatedHistory = updateSubmissionHistory(
           bingData.history,
           bingSuccessful,
-          "bing",
+          "bing"
         );
         saveSubmissionHistory(updatedHistory);
         logger.success(
-          `Submission history updated for Bing with ${bingSuccessful.length} successfully submitted URLs.`,
+          `Submission history updated for Bing with ${bingSuccessful.length} successfully submitted URLs.`
         );
       }
     }
   } else {
     logger.warn(
-      "Bing Webmaster API key not configured. Skipping Bing URL Submission.",
+      "Bing Webmaster API key not configured. Skipping Bing URL Submission."
     );
     logger.info(
-      "To enable Bing URL Submission, add your Bing Webmaster API key to the .env file as BING_WEBMASTER_API_KEY=your_key",
+      "To enable Bing URL Submission, add your Bing Webmaster API key to the .env file as BING_WEBMASTER_API_KEY=your_key"
     );
   }
 

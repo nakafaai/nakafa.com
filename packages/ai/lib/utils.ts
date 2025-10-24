@@ -76,7 +76,7 @@ export function extractDomain(url: string): string {
  * @returns The extracted content
  */
 export function extractContentFromPart(
-  part: UIMessagePart<UIDataTypes, MyUITools>,
+  part: UIMessagePart<UIDataTypes, MyUITools>
 ): string {
   // Extract content from different part types
   if (part.type === "text" || part.type === "reasoning") {
@@ -104,7 +104,7 @@ export function extractContentFromPart(
  */
 export function compressMessages(
   messages: MyUIMessage[],
-  tokenLimit?: number,
+  tokenLimit?: number
 ): {
   messages: MyUIMessage[];
   tokens: string;
@@ -126,7 +126,7 @@ export function compressMessages(
   // Helper function to format token information
   function formatTokenInfo(
     messageContent: string,
-    tokenLimitOverride?: number,
+    tokenLimitOverride?: number
   ): string {
     const tokenResult = isWithinLimit({
       content: messageContent,

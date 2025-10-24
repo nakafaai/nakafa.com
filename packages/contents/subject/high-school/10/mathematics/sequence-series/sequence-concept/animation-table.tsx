@@ -89,7 +89,7 @@ export default function TableChairsAnimation({
   // Calculate chair count based on the formula U_n = 2n + 2
   const chairCount = useMemo(
     () => 2 * deferredTableCount + 2,
-    [deferredTableCount],
+    [deferredTableCount]
   );
 
   useEffect(() => {
@@ -179,7 +179,7 @@ export default function TableChairsAnimation({
           x: tableWidth / 2 - CHAIR_SIZE / 2,
           y: tableHeight + chairOffset,
           side: "bottom",
-        },
+        }
       );
     } else {
       // For multiple tables

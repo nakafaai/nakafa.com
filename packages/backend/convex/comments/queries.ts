@@ -13,7 +13,7 @@ export const getParentCommentsBySlug = query({
     const comments = await ctx.db
       .query("comments")
       .withIndex("contentSlug_depth", (q) =>
-        q.eq("contentSlug", cleanSlug(args.slug)).eq("depth", 0),
+        q.eq("contentSlug", cleanSlug(args.slug)).eq("depth", 0)
       )
       .order("desc")
       .paginate(args.paginationOpts);
@@ -44,7 +44,7 @@ export const getRepliesByCommentId = query({
     const replies = await ctx.db
       .query("comments")
       .withIndex("parentId_depth", (q) =>
-        q.eq("parentId", args.commentId).eq("depth", args.depth),
+        q.eq("parentId", args.commentId).eq("depth", args.depth)
       )
       .order("desc")
       .paginate(args.paginationOpts);

@@ -34,7 +34,7 @@ export function LangMenuSwitcher() {
       // are used in combination with a given `pathname`. Since the two will
       // always match for the current route, we can skip runtime checks.
       { pathname, params },
-      { locale },
+      { locale }
     );
   }
 
@@ -45,7 +45,7 @@ export function LangMenuSwitcher() {
         // are used in combination with a given `pathname`. Since the two will
         // always match for the current route, we can skip runtime checks.
         { pathname, params },
-        { locale },
+        { locale }
       );
 
       // reboot the pagefind because of the language change
@@ -72,7 +72,7 @@ export function LangMenuSwitcher() {
           <IconCircleFilled
             className={cn(
               "ml-auto size-3 text-primary opacity-0 transition-opacity",
-              currentLocale === language.value && "opacity-100",
+              currentLocale === language.value && "opacity-100"
             )}
           />
         </DropdownMenuItem>

@@ -71,7 +71,7 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
         asChild
         className={cn(
           "w-9 sm:w-auto",
-          currentUser?.appUser._id !== appUser._id && "hidden",
+          currentUser?.appUser._id !== appUser._id && "hidden"
         )}
         variant="outline"
       >

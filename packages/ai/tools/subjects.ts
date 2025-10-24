@@ -91,7 +91,7 @@ function createOutput({ output }: { output: GetSubjectsOutput }): string {
             <slug>${subject.slug}</slug>
             <locale>${subject.locale}</locale>
           </subject>
-        `,
+        `
           )
           .join("")}
       </subjects>

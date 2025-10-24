@@ -9,9 +9,9 @@ export const MaterialListSchema = z.array(
       z.object({
         title: z.string(),
         href: z.string(),
-      }),
+      })
     ),
-  }),
+  })
 );
 export type MaterialList = z.infer<typeof MaterialListSchema>;
 

@@ -26,7 +26,7 @@ export function SkeletonText({
           {Array.from({ length: lines }).map((_, index) => {
             const widthPercentage = Math.max(
               WIDTH_PERCENTAGE_MIN,
-              WIDTH_PERCENTAGE_MAX - index * WIDTH_PERCENTAGE_DIFFERENCE,
+              WIDTH_PERCENTAGE_MAX - index * WIDTH_PERCENTAGE_DIFFERENCE
             );
             const width = index === 0 ? "100%" : `${widthPercentage}%`;
             return <Skeleton className="h-4" key={width} style={{ width }} />;

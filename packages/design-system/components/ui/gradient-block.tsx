@@ -173,12 +173,12 @@ export function GradientBlock({
           oklch(
             baseL + LIGHTNESS_ADJ_1,
             Math.min(baseC + CHROMA_ADJ_1, MAX_CHROMA),
-            (baseHue + HUE_ADJ_ANALOGOUS_1 + hueOffset) % MAX_DEGREES,
+            (baseHue + HUE_ADJ_ANALOGOUS_1 + hueOffset) % MAX_DEGREES
           ),
           oklch(
             baseL - LIGHTNESS_ADJ_1,
             baseC,
-            (baseHue + HUE_ADJ_ANALOGOUS_2 + hueOffset * 2) % MAX_DEGREES,
+            (baseHue + HUE_ADJ_ANALOGOUS_2 + hueOffset * 2) % MAX_DEGREES
           ),
         ];
         break;
@@ -190,12 +190,12 @@ export function GradientBlock({
           oklch(
             baseL - LIGHTNESS_ADJ_1,
             baseC,
-            (baseHue + HUE_ADJ_SPLIT_1 + hueOffset) % MAX_DEGREES,
+            (baseHue + HUE_ADJ_SPLIT_1 + hueOffset) % MAX_DEGREES
           ),
           oklch(
             baseL - LIGHTNESS_ADJ_2,
             baseC,
-            (baseHue + HUE_ADJ_SPLIT_2 - hueOffset) % MAX_DEGREES,
+            (baseHue + HUE_ADJ_SPLIT_2 - hueOffset) % MAX_DEGREES
           ),
         ];
         break;
@@ -210,12 +210,12 @@ export function GradientBlock({
             (baseHue +
               HUE_ADJ_COMPLEMENTARY_1 +
               hueOffset / COMPLEMENTARY_HUE_DIV) %
-              MAX_DEGREES,
+              MAX_DEGREES
           ),
           oklch(
             Math.max(baseL - LIGHTNESS_ADJ_1, MIN_LIGHTNESS),
             baseC,
-            (baseHue + HUE_ADJ_COMPLEMENTARY_2 + hueOffset) % MAX_DEGREES,
+            (baseHue + HUE_ADJ_COMPLEMENTARY_2 + hueOffset) % MAX_DEGREES
           ),
         ];
         break;
@@ -227,12 +227,12 @@ export function GradientBlock({
           oklch(
             Math.max(baseL - LIGHTNESS_ADJ_1, MIN_LIGHTNESS),
             baseC,
-            (baseHue + HUE_ADJ_TRIADIC_1 + hueOffset) % MAX_DEGREES,
+            (baseHue + HUE_ADJ_TRIADIC_1 + hueOffset) % MAX_DEGREES
           ),
           oklch(
             Math.max(baseL - LIGHTNESS_ADJ_2, MIN_LIGHTNESS),
             baseC,
-            (baseHue + HUE_ADJ_TRIADIC_2 - hueOffset) % MAX_DEGREES,
+            (baseHue + HUE_ADJ_TRIADIC_2 - hueOffset) % MAX_DEGREES
           ),
         ];
         break;
@@ -243,13 +243,13 @@ export function GradientBlock({
           oklch(
             Math.min(baseL + LIGHTNESS_ADJ_2, MAX_LIGHTNESS),
             Math.min(baseC + CHROMA_ADJ_1, MAX_CHROMA),
-            (baseHue + (hueOffset % HUE_OFFSET_MONO)) % MAX_DEGREES,
+            (baseHue + (hueOffset % HUE_OFFSET_MONO)) % MAX_DEGREES
           ),
           oklch(baseL, baseC, baseHue),
           oklch(
             Math.max(baseL - LIGHTNESS_ADJ_2, MIN_LIGHTNESS),
             Math.max(baseC - CHROMA_ADJ_1, MIN_CHROMA),
-            (baseHue - (hueOffset % HUE_OFFSET_MONO)) % MAX_DEGREES,
+            (baseHue - (hueOffset % HUE_OFFSET_MONO)) % MAX_DEGREES
           ),
         ];
         break;
@@ -264,7 +264,7 @@ export function GradientBlock({
             (baseHue +
               HUE_ADJ_ANALOGOUS_1 +
               (hueOffset % HUE_OFFSET_ANALOGOUS_1)) %
-              MAX_DEGREES,
+              MAX_DEGREES
           ),
           oklch(
             Math.max(baseL - LIGHTNESS_ADJ_2, MIN_LIGHTNESS),
@@ -272,7 +272,7 @@ export function GradientBlock({
             (baseHue +
               HUE_ADJ_ANALOGOUS_2 +
               (hueOffset % HUE_OFFSET_ANALOGOUS_2)) %
-              MAX_DEGREES,
+              MAX_DEGREES
           ),
         ];
         break;

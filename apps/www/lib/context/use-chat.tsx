@@ -40,7 +40,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     () => ({
       chat,
     }),
-    [chat],
+    [chat]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

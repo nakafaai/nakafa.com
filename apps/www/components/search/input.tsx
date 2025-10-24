@@ -16,7 +16,7 @@ export function InputSearch() {
       setSearch({ q: value });
       setQuery(value);
     },
-    [setSearch, setQuery],
+    [setSearch, setQuery]
   );
 
   return <SearchInput autoFocus setValue={setValue} value={q} />;

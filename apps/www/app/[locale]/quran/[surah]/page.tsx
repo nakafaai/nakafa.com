@@ -162,7 +162,7 @@ export default async function Page({ params }: Props) {
                 verse.translation[locale] ?? verse.translation.en;
 
               const id = slugify(
-                t("verse-count", { count: verse.number.inSurah }),
+                t("verse-count", { count: verse.number.inSurah })
               );
 
               return (
@@ -170,7 +170,7 @@ export default async function Page({ params }: Props) {
                   className={cn(
                     "mb-6 space-y-6 border-b pb-6",
                     index === surahData.verses.length - 1 &&
-                      "mb-0 border-b-0 pb-0",
+                      "mb-0 border-b-0 pb-0"
                   )}
                   key={verse.number.inQuran}
                 >

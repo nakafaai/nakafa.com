@@ -1,14 +1,14 @@
 import type { PagefindSearchOptions } from "./types/pagefind";
 
 declare global {
-  // biome-ignore lint/nursery/useConsistentTypeDefinitions: Must use interface to work
+  // biome-ignore lint/style/useConsistentTypeDefinitions: Must use interface
   interface Window {
     pagefind:
       | {
           debouncedSearch: <T>(
             term: string,
             options?: PagefindSearchOptions,
-            debounceTimeoutMs?: number,
+            debounceTimeoutMs?: number
           ) => Promise<{
             results: {
               data: () => Promise<T>;

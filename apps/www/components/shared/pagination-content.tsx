@@ -32,7 +32,7 @@ function PaginationButton({
         buttonVariants({ variant: "outline" }),
         "group flex h-auto flex-col whitespace-normal py-3 shadow-sm",
         !href && "pointer-events-none hidden opacity-50 sm:flex",
-        className,
+        className
       )}
       href={href}
       title={title}
@@ -45,7 +45,7 @@ function PaginationButton({
       <p
         className={cn(
           "w-full font-medium text-foreground transition-colors group-hover:text-accent-foreground",
-          iconPosition === "right" ? "text-right" : "",
+          iconPosition === "right" ? "text-right" : ""
         )}
       >
         {title}

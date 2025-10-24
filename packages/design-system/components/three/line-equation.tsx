@@ -34,7 +34,7 @@ function getSharedSphereGeometry(): SphereGeometry {
     sharedSphereGeometry = new SphereGeometry(
       SPHERE_GEOMETRY_RADIUS,
       SPHERE_GEOMETRY_SEGMENTS,
-      SPHERE_GEOMETRY_SEGMENTS,
+      SPHERE_GEOMETRY_SEGMENTS
     );
   }
   return sharedSphereGeometry;
@@ -50,8 +50,8 @@ function getSharedConeGeometry(size: number): ConeGeometry {
         size / 2,
         size,
         CONE_GEOMETRY_SEGMENTS,
-        CONE_GEOMETRY_HEIGHT_SEGMENTS,
-      ),
+        CONE_GEOMETRY_HEIGHT_SEGMENTS
+      )
     );
   }
   const geometry = sharedConeGeometries.get(key);
@@ -68,7 +68,7 @@ function getSharedMaterial(color: string | Color): MeshBasicMaterial {
       colorKey,
       new MeshBasicMaterial({
         color: color instanceof Color ? color : new Color(color),
-      }),
+      })
     );
   }
   const material = sharedMaterials.get(colorKey);
@@ -142,7 +142,7 @@ export function LineEquation({
 
   const vectorPoints = useMemo(
     () => points.map((point) => new Vector3(point.x, point.y, point.z)),
-    [points],
+    [points]
   );
 
   // Define cone size (default to 0.5 if not provided in cone prop)
@@ -214,11 +214,11 @@ export function LineEquation({
   // Cone geometry and material (reused from ArrowHelper logic)
   const coneGeometry = useMemo(
     () => (cone ? getSharedConeGeometry(arrowSize) : null),
-    [cone, arrowSize],
+    [cone, arrowSize]
   );
   const coneMaterial = useMemo(
     () => (cone ? getSharedMaterial(color) : null),
-    [cone, color],
+    [cone, color]
   );
 
   // Calculate cone position and orientation
@@ -245,7 +245,7 @@ export function LineEquation({
           .add(direction.clone().multiplyScalar(arrowSize / 2));
         const quaternion = new Quaternion().setFromUnitVectors(
           new Vector3(0, 1, 0),
-          direction.clone().negate(),
+          direction.clone().negate()
         );
         cones.push({ position: conePosition, quaternion });
       }
@@ -266,7 +266,7 @@ export function LineEquation({
           .sub(direction.clone().multiplyScalar(arrowSize / 2));
         const quaternion = new Quaternion().setFromUnitVectors(
           new Vector3(0, 1, 0),
-          direction,
+          direction
         );
         cones.push({ position: conePosition, quaternion });
       }
@@ -308,7 +308,7 @@ export function LineEquation({
           };
         })
         .filter(Boolean),
-    [labels, vectorPoints, color],
+    [labels, vectorPoints, color]
   );
 
   return (

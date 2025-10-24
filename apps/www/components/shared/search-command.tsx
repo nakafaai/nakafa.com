@@ -346,7 +346,7 @@ function FooterKbd({
     <kbd
       className={cn(
         "pointer-events-none flex size-5 select-none items-center justify-center rounded border bg-muted text-xs",
-        className,
+        className
       )}
     >
       {children}

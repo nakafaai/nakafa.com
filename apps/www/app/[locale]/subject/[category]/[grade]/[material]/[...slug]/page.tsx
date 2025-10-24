@@ -149,7 +149,7 @@ export default async function Page({ params }: Props) {
     const [content, pagination] = await Promise.all([
       getContent(locale, FilePath),
       getMaterials(materialPath, locale).then((materials) =>
-        getMaterialsPagination(FilePath, materials),
+        getMaterialsPagination(FilePath, materials)
       ),
     ]);
 

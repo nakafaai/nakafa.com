@@ -36,7 +36,7 @@ export function SearchInput({
         autoComplete="off"
         className={cn(
           "h-12 border-border bg-card/80 px-9 backdrop-blur-sm sm:w-full",
-          className,
+          className
         )}
         id={id}
         onChange={(e) => setValue(e.target.value)}
@@ -58,7 +58,7 @@ export function SearchInput({
         className={cn(
           "absolute inset-y-0 right-0 flex h-full w-9 cursor-pointer items-center justify-center rounded-e-md text-muted-foreground opacity-0 outline-none transition-[color,box-shadow] hover:text-foreground",
           value && "opacity-100",
-          action && "right-9",
+          action && "right-9"
         )}
         disabled={loading}
         onClick={() => setValue("")}

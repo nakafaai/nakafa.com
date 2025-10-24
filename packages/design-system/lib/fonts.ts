@@ -13,5 +13,5 @@ export const fonts = cn(
   GeistSans.variable,
   GeistMono.variable,
   quranSans.variable,
-  "touch-manipulation font-sans antialiased",
+  "touch-manipulation font-sans antialiased"
 );

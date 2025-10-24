@@ -56,7 +56,7 @@ export const ContentPart = memo(({ message }: Props) => {
         <ChevronDownIcon
           className={cn(
             "size-4 transition-transform",
-            open ? "rotate-180" : "rotate-0",
+            open ? "rotate-180" : "rotate-0"
           )}
         />
       </CollapsibleTrigger>
@@ -91,7 +91,7 @@ function ContentCard({
       <div
         className={cn(
           "flex w-full items-center gap-2 bg-muted/80 px-4 py-3",
-          className,
+          className
         )}
       >
         {children}

@@ -16,7 +16,7 @@ export const Message = memo(({ className, from, ...props }: MessageProps) => (
     className={cn(
       "group flex w-full items-end justify-end gap-2",
       from === "user" ? "is-user" : "is-assistant flex-row-reverse justify-end",
-      className,
+      className
     )}
     {...props}
   />
@@ -32,14 +32,14 @@ export const MessageContent = memo(
         "overflow-hidden rounded-lg",
         "group-[.is-user]:bg-muted group-[.is-user]:px-3 group-[.is-user]:py-2",
         "group-[.is-assistant]:rounded-none",
-        className,
+        className
       )}
       {...props}
     >
       <div className="is-user:dark flex flex-col gap-4">{children}</div>
     </div>
   ),
-  (prevProps, nextProps) => prevProps.children === nextProps.children,
+  (prevProps, nextProps) => prevProps.children === nextProps.children
 );
 MessageContent.displayName = "MessageContent";
 
@@ -54,6 +54,6 @@ export const MessageAvatar = memo(
       <AvatarImage alt="" className="mt-0 mb-0" src={src} />
       <AvatarFallback>{name?.slice(0, 2) || "ME"}</AvatarFallback>
     </Avatar>
-  ),
+  )
 );
 MessageAvatar.displayName = "MessageAvatar";

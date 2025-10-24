@@ -10,7 +10,7 @@ export function generateStaticParams() {
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ surah: string }> },
+  { params }: { params: Promise<{ surah: string }> }
 ) {
   const { surah } = await params;
 

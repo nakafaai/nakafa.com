@@ -101,7 +101,7 @@ export function createSeed(...inputs: (string | number)[]): number {
       // Convert string to number using character codes
       seed += Array.from(input).reduce(
         (acc, char) => acc + char.charCodeAt(0),
-        0,
+        0
       );
     }
   }

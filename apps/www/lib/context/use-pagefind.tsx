@@ -16,7 +16,7 @@ type PagefindContextType = {
 };
 
 const PagefindContext = createContext<PagefindContextType | undefined>(
-  undefined,
+  undefined
 );
 
 export function PagefindProvider({ children }: { children: ReactNode }) {

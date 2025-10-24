@@ -137,7 +137,7 @@ function Highlight<T extends React.ElementType = "div">({
   React.useImperativeHandle(ref, () => localRef.current as HTMLDivElement);
 
   const [activeValue, setActiveValue] = React.useState<string | null>(
-    value ?? defaultValue ?? null,
+    value ?? defaultValue ?? null
   );
   const [boundsState, setBoundsState] = React.useState<Bounds | null>(null);
   const [activeClassNameState, setActiveClassNameState] =
@@ -150,7 +150,7 @@ function Highlight<T extends React.ElementType = "div">({
         onValueChange?.(newId);
       }
     },
-    [activeValue, onValueChange],
+    [activeValue, onValueChange]
   );
 
   const boundsOffsetProp = (props as ParentModeHighlightProps)?.boundsOffset;
@@ -189,7 +189,7 @@ function Highlight<T extends React.ElementType = "div">({
         return newBounds;
       });
     },
-    [boundsOffsetProp],
+    [boundsOffsetProp]
   );
 
   const clearBounds = React.useCallback(() => {
@@ -220,7 +220,7 @@ function Highlight<T extends React.ElementType = "div">({
         return;
       }
       const activeEl = container.querySelector<HTMLElement>(
-        `[data-value="${activeValue}"][data-highlight="true"]`,
+        `[data-value="${activeValue}"][data-highlight="true"]`
       );
       if (activeEl) {
         safeSetBounds(activeEl.getBoundingClientRect());
@@ -279,7 +279,7 @@ function Highlight<T extends React.ElementType = "div">({
               )}
             </AnimatePresence>
             {renderChildren}
-          </>,
+          </>
         );
       }
 
@@ -295,7 +295,7 @@ function Highlight<T extends React.ElementType = "div">({
       style,
       className,
       activeClassNameState,
-    ],
+    ]
   );
 
   return (
@@ -346,7 +346,7 @@ function Highlight<T extends React.ElementType = "div">({
                 {child}
               </HighlightItem>
             );
-          }),
+          })
         );
       })()}
     </HighlightContext.Provider>
@@ -355,7 +355,7 @@ function Highlight<T extends React.ElementType = "div">({
 
 function getNonOverridingDataAttributes(
   element: React.ReactElement,
-  dataAttributes: Record<string, unknown>,
+  dataAttributes: Record<string, unknown>
 ): Record<string, unknown> {
   return Object.keys(dataAttributes).reduce<Record<string, unknown>>(
     (acc, key) => {
@@ -364,7 +364,7 @@ function getNonOverridingDataAttributes(
       }
       return acc;
     },
-    {},
+    {}
   );
 }
 
@@ -584,7 +584,7 @@ function HighlightItem<T extends React.ElementType>({
           >
             {children}
           </Component>
-        </>,
+        </>
       );
     }
 

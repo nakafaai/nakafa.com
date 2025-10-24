@@ -287,7 +287,7 @@ export async function complexWorkflowExample() {
   const authTimer = createTimer(
     authLogger,
     "user_authentication",
-    requestContext,
+    requestContext
   );
   await new Promise((resolve) => setTimeout(resolve, AUTH_DELAY_MS));
   authTimer();

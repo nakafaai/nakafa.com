@@ -68,7 +68,7 @@ export function AiSheet() {
       <SheetContent
         className={cn(
           "max-w-none gap-0 transition-[width] duration-0 sm:max-w-none",
-          isResizing && "transition-none",
+          isResizing && "transition-none"
         )}
         closeButton={false}
         style={{ width: isMobile ? "100%" : `${width}px` }}
@@ -77,7 +77,7 @@ export function AiSheet() {
           className={cn(
             "-left-1 absolute top-0 bottom-0 z-10 w-1 cursor-col-resize outline-0 ring-0 transition-colors hover:bg-accent",
             isResizing && "bg-accent",
-            isMobile && "hidden",
+            isMobile && "hidden"
           )}
           onKeyDown={resizerProps.onKeyDown}
           onMouseDown={resizerProps.onMouseDown}

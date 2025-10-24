@@ -134,11 +134,11 @@ export async function POST(req: Request) {
   // Log compression results
   if (compressedMessages.length < originalMessageCount) {
     sessionLogger.warn(
-      `Messages compressed from ${originalMessageCount} to ${compressedMessages.length} messages (${tokens} tokens) to stay within token limit`,
+      `Messages compressed from ${originalMessageCount} to ${compressedMessages.length} messages (${tokens} tokens) to stay within token limit`
     );
   } else {
     sessionLogger.info(
-      `All ${originalMessageCount} messages fit within token limit (${tokens} tokens)`,
+      `All ${originalMessageCount} messages fit within token limit (${tokens} tokens)`
     );
   }
 
@@ -282,7 +282,7 @@ export async function POST(req: Request) {
             sessionLogger.error("Unknown error in message stream");
             return t("error-message");
           },
-        }),
+        })
       );
 
       await streamTextResult.consumeStream();
@@ -329,7 +329,7 @@ export async function POST(req: Request) {
               chunk.suggestions?.filter(
                 // Because of some AI SDK type weirdness,
                 // we need to filter out undefined suggestions
-                (suggestion) => suggestion !== undefined,
+                (suggestion) => suggestion !== undefined
               ) ?? [],
           },
         });

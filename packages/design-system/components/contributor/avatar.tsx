@@ -34,7 +34,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
               className={cn(
                 "size-16 shadow-sm",
                 size === "sm" && "size-12",
-                size === "lg" && "size-20",
+                size === "lg" && "size-20"
               )}
               name={`${contributor.name} - ${contributor.username}`}
             />

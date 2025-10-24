@@ -15,5 +15,5 @@ export default defineSchema(
   },
   {
     schemaValidation: true,
-  },
+  }
 );

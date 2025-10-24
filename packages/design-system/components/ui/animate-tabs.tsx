@@ -36,13 +36,13 @@ export function AnimateTabs({ id, tabs, className }: Props) {
         href.includes("[id]") && id ? href.replace("[id]", id) : href;
       return removeQuery ? processedHref.split("?")[0] : processedHref;
     },
-    [id],
+    [id]
   );
 
   // Find active tab index
   const activeIndex = useMemo(
     () => tabs.findIndex((tab) => pathname === processTabUrl(tab.href, true)),
-    [pathname, tabs, processTabUrl],
+    [pathname, tabs, processTabUrl]
   );
 
   // Update hover position when hovering a tab
@@ -94,7 +94,7 @@ export function AnimateTabs({ id, tabs, className }: Props) {
       <nav
         className={cn(
           "scrollbar-hide relative mx-auto flex w-full max-w-4xl items-center overflow-x-auto",
-          className,
+          className
         )}
       >
         {/* Hover Highlight */}
@@ -124,7 +124,7 @@ export function AnimateTabs({ id, tabs, className }: Props) {
             <Link
               className={cn(
                 "relative flex items-center gap-2 px-3 py-2.5 text-sm transition-colors ease-out hover:text-accent-foreground",
-                isActive ? "text-foreground" : "text-muted-foreground",
+                isActive ? "text-foreground" : "text-muted-foreground"
               )}
               href={processTabUrl(tab.href)}
               key={tab.href}

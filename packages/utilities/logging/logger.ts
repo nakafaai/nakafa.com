@@ -96,7 +96,7 @@ export function createChildLogger(context: Record<string, unknown>) {
  */
 export function createServiceLogger(
   serviceName: string,
-  config: Omit<LoggerConfig, "service"> = {},
+  config: Omit<LoggerConfig, "service"> = {}
 ) {
   return createLogger({ ...config, service: serviceName });
 }

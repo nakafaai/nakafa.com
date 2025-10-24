@@ -27,7 +27,7 @@ function CheckerBadge({ isActive }: { isActive: boolean }) {
     <IconCircleFilled
       className={cn(
         "ml-auto size-3 text-primary opacity-0 transition-opacity",
-        isActive && "opacity-100",
+        isActive && "opacity-100"
       )}
     />
   );

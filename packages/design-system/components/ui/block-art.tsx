@@ -121,7 +121,7 @@ export function BlockArt({
         for (let row = minRow; row <= maxRow; row++) {
           for (let col = minCol; col <= maxCol; col++) {
             const distance = Math.sqrt(
-              (col - ripple.x) ** 2 + (row - ripple.y) ** 2,
+              (col - ripple.x) ** 2 + (row - ripple.y) ** 2
             );
 
             if (
@@ -133,10 +133,7 @@ export function BlockArt({
               const fadeOut = 1 - progress;
               affectedCells.set(
                 cellIndex,
-                Math.max(
-                  affectedCells.get(cellIndex) || 0,
-                  intensity * fadeOut,
-                ),
+                Math.max(affectedCells.get(cellIndex) || 0, intensity * fadeOut)
               );
             }
           }
@@ -191,7 +188,7 @@ export function BlockArt({
         setTimeout(() => setIsThrottled(false), throttleDelay);
       }
     },
-    [handleRipple, isThrottled, onCellClick],
+    [handleRipple, isThrottled, onCellClick]
   );
 
   const handleClick = useCallback(
@@ -231,7 +228,7 @@ export function BlockArt({
 
       throttledHandleRipple(col, row);
     },
-    [Cols, Rows, throttledHandleRipple],
+    [Cols, Rows, throttledHandleRipple]
   );
 
   const handleKeyDown = useCallback(
@@ -244,7 +241,7 @@ export function BlockArt({
         throttledHandleRipple(centerCol, centerRow);
       }
     },
-    [Cols, Rows, throttledHandleRipple],
+    [Cols, Rows, throttledHandleRipple]
   );
 
   return (
@@ -284,7 +281,7 @@ export function BlockArt({
               className={cn(
                 "size-full transition-all duration-300 ease-out",
                 getCellColor(),
-                "hover:bg-primary",
+                "hover:bg-primary"
               )}
               key={`${row}-${col}`}
               style={{
