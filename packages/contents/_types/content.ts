@@ -26,7 +26,7 @@ export const ContentMetadataSchema = z.object({
   authors: z.array(
     z.object({
       name: z.string(),
-    })
+    }),
   ),
   date: z.string(),
   subject: z.string().optional(),

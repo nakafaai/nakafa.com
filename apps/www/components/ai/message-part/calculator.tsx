@@ -46,7 +46,7 @@ export const CalculatorPart = memo(({ message }: Props) => {
         <ChevronDownIcon
           className={cn(
             "size-4 transition-transform",
-            open ? "rotate-180" : "rotate-0"
+            open ? "rotate-180" : "rotate-0",
           )}
         />
       </CollapsibleTrigger>

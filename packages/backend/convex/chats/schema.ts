@@ -18,7 +18,7 @@ export const tables = {
     role: v.union(
       v.literal("user"),
       v.literal("assistant"),
-      v.literal("system")
+      v.literal("system"),
     ),
   })
     .index("chatId", ["chatId"])
@@ -50,7 +50,7 @@ export const tables = {
       v.literal("data-get-content"),
       v.literal("data-calculator"),
       v.literal("data-scrape-url"),
-      v.literal("data-web-search")
+      v.literal("data-web-search"),
     ),
     createdAt: v.number(), // Unix timestamp
     order: v.number(), // Order within message (0-based)
@@ -84,8 +84,8 @@ export const tables = {
         v.literal("input-streaming"),
         v.literal("input-available"),
         v.literal("output-available"),
-        v.literal("output-error")
-      )
+        v.literal("output-error"),
+      ),
     ),
     tool_errorText: v.optional(v.string()),
 
@@ -102,11 +102,11 @@ export const tables = {
           url: v.string(),
           slug: v.string(),
           locale: v.string(),
-        })
-      )
+        }),
+      ),
     ),
     data_get_articles_status: v.optional(
-      v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
+      v.union(v.literal("loading"), v.literal("done"), v.literal("error")),
     ),
     data_get_articles_error: v.optional(v.string()),
 
@@ -119,11 +119,11 @@ export const tables = {
           url: v.string(),
           slug: v.string(),
           locale: v.string(),
-        })
-      )
+        }),
+      ),
     ),
     data_get_subjects_status: v.optional(
-      v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
+      v.union(v.literal("loading"), v.literal("done"), v.literal("error")),
     ),
     data_get_subjects_error: v.optional(v.string()),
 
@@ -133,7 +133,7 @@ export const tables = {
     data_get_content_description: v.optional(v.string()),
     data_get_content_content: v.optional(v.string()),
     data_get_content_status: v.optional(
-      v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
+      v.union(v.literal("loading"), v.literal("done"), v.literal("error")),
     ),
     data_get_content_error: v.optional(v.string()),
 
@@ -142,17 +142,17 @@ export const tables = {
       v.object({
         expression: v.string(),
         latex: v.string(),
-      })
+      }),
     ),
     data_calculator_result: v.optional(
       v.object({
         expression: v.string(),
         latex: v.string(),
         value: v.string(),
-      })
+      }),
     ),
     data_calculator_status: v.optional(
-      v.union(v.literal("done"), v.literal("error"))
+      v.union(v.literal("done"), v.literal("error")),
     ),
     data_calculator_error: v.optional(v.string()),
 
@@ -160,7 +160,7 @@ export const tables = {
     data_scrape_url_url: v.optional(v.string()),
     data_scrape_url_content: v.optional(v.string()),
     data_scrape_url_status: v.optional(
-      v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
+      v.union(v.literal("loading"), v.literal("done"), v.literal("error")),
     ),
     data_scrape_url_error: v.optional(v.string()),
 
@@ -174,11 +174,11 @@ export const tables = {
           url: v.string(),
           content: v.string(),
           citation: v.string(),
-        })
-      )
+        }),
+      ),
     ),
     data_web_search_status: v.optional(
-      v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
+      v.union(v.literal("loading"), v.literal("done"), v.literal("error")),
     ),
     data_web_search_error: v.optional(v.string()),
 
@@ -191,12 +191,12 @@ export const tables = {
             input: v.optional(v.number()),
             output: v.optional(v.number()),
             total: v.optional(v.number()),
-          })
+          }),
         ),
         cost: v.optional(v.number()),
         latency: v.optional(v.number()),
         provider: v.optional(v.string()),
-      })
+      }),
     ),
   })
     .index("messageId", ["messageId"])

@@ -27,7 +27,7 @@ function getSharedConeGeometry(size: number): ConeGeometry {
     // Reduced segments from 32 to 16 for better performance
     coneGeometryCache.set(
       key,
-      new ConeGeometry(size / 2, size, ARROW_SEGMENTS, 1)
+      new ConeGeometry(size / 2, size, ARROW_SEGMENTS, 1),
     );
   }
   const geometry = coneGeometryCache.get(key);
@@ -44,7 +44,7 @@ function getSharedMaterial(color: string | Color): MeshBasicMaterial {
       colorKey,
       new MeshBasicMaterial({
         color: color instanceof Color ? color : new Color(color),
-      })
+      }),
     );
   }
   const material = materialCache.get(colorKey);
@@ -104,7 +104,7 @@ export function ArrowHelper({
   const labelPos = useMemo(() => {
     const midPoint = new Vector3().addVectors(
       vectors.fromVec,
-      new Vector3().copy(vectors.direction).multiplyScalar(vectors.length / 2)
+      new Vector3().copy(vectors.direction).multiplyScalar(vectors.length / 2),
     );
     const endPoint = new Vector3().copy(vectors.toVec);
 
@@ -121,8 +121,8 @@ export function ArrowHelper({
             new Vector3(
               ARROW_SEGMENT_OFFSET,
               ARROW_SEGMENT_OFFSET,
-              ARROW_SEGMENT_OFFSET
-            )
+              ARROW_SEGMENT_OFFSET,
+            ),
           );
     }
   }, [vectors, labelPosition]);
@@ -130,12 +130,12 @@ export function ArrowHelper({
   // Use shared geometry and material
   const coneGeometry = useMemo(
     () => (showArrow ? getSharedConeGeometry(arrowSize) : null),
-    [showArrow, arrowSize]
+    [showArrow, arrowSize],
   );
 
   const material = useMemo(
     () => (showArrow ? getSharedMaterial(color) : null),
-    [showArrow, color]
+    [showArrow, color],
   );
 
   // Define the shaft points - from the start point to just before the cone
@@ -145,10 +145,10 @@ export function ArrowHelper({
       new Vector3(
         vectors.toVec.x - vectors.direction.x * arrowSize,
         vectors.toVec.y - vectors.direction.y * arrowSize,
-        vectors.toVec.z - vectors.direction.z * arrowSize
+        vectors.toVec.z - vectors.direction.z * arrowSize,
       ),
     ],
-    [vectors, arrowSize]
+    [vectors, arrowSize],
   );
 
   // Memoize cone position and quaternion
@@ -160,12 +160,12 @@ export function ArrowHelper({
     const position = new Vector3(
       vectors.toVec.x - (vectors.direction.x * arrowSize) / 2,
       vectors.toVec.y - (vectors.direction.y * arrowSize) / 2,
-      vectors.toVec.z - (vectors.direction.z * arrowSize) / 2
+      vectors.toVec.z - (vectors.direction.z * arrowSize) / 2,
     );
 
     const quaternion = new Quaternion().setFromUnitVectors(
       new Vector3(0, 1, 0),
-      vectors.direction
+      vectors.direction,
     );
 
     return { position, quaternion };
@@ -174,7 +174,7 @@ export function ArrowHelper({
   // Memoize font path
   const fontPath = useMemo(
     () => (useMonoFont ? MONO_FONT_PATH : FONT_PATH),
-    [useMonoFont]
+    [useMonoFont],
   );
 
   // Enable frustum culling for the entire group

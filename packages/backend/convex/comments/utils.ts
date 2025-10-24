@@ -19,11 +19,11 @@ export async function attachUsers(ctx: QueryCtx, comments: Doc<"comments">[]) {
       }
 
       return { userId, data: { appUser, authUser } };
-    })
+    }),
   );
   return new Map(
     users
       .filter((item) => item.data !== null)
-      .map(({ userId, data }) => [userId, data])
+      .map(({ userId, data }) => [userId, data]),
   );
 }

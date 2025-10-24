@@ -116,7 +116,7 @@ function loadGoogleIndexHistory(): Record<string, string> {
     }
   } catch (error) {
     logger.warn(
-      `Error loading Google index history: ${error}. Starting with empty history.`
+      `Error loading Google index history: ${error}. Starting with empty history.`,
     );
   }
   return {};
@@ -128,7 +128,7 @@ function saveGoogleIndexHistory(history: Record<string, string>): void {
     fs.writeFileSync(
       GOOGLE_INDEX_HISTORY_FILE,
       JSON.stringify(history, null, 2),
-      "utf8"
+      "utf8",
     );
   } catch (error) {
     logger.error(`Error saving Google index history: ${error}`);
@@ -174,7 +174,7 @@ async function getUnsubmittedUrls(): Promise<{
   logger.stats("Total URLs in sitemap", allUrls.size);
   logger.stats(
     "Previously submitted URLs to Google",
-    Object.keys(history).length
+    Object.keys(history).length,
   );
   logger.stats("New URLs to submit to Google", urls.length);
 
@@ -184,7 +184,7 @@ async function getUnsubmittedUrls(): Promise<{
 // Update submission history with successfully submitted URLs
 function updateGoogleIndexHistory(
   history: Record<string, string>,
-  urls: string[]
+  urls: string[],
 ): Record<string, string> {
   const timestamp = new Date().toISOString();
   for (const url of urls) {
@@ -198,7 +198,7 @@ async function submitUrlToGoogle(
   url: string,
   accessToken: string,
   index: number,
-  totalUrls: number
+  totalUrls: number,
 ): Promise<{ success: boolean; shouldStop: boolean }> {
   logger.progress(index, totalUrls, `Submitting URL ${index} of ${totalUrls}`);
 
@@ -225,7 +225,7 @@ async function submitUrlToGoogle(
 
     logger.error(`❌ Failed to submit ${url} - Status: ${status}`);
     logger.error(
-      `   Response: ${responseText.substring(0, LOG_RESPONSE_MAX_LENGTH)}...`
+      `   Response: ${responseText.substring(0, LOG_RESPONSE_MAX_LENGTH)}...`,
     );
 
     if (status === HTTP_STATUS_CODE_TOO_MANY_REQUESTS) {
@@ -259,7 +259,7 @@ async function submitUrlToGoogle(
 // Submit URLs to Google Indexing API
 async function submitUrlsToGoogle(
   urls: string[],
-  accessToken: string
+  accessToken: string,
 ): Promise<string[]> {
   if (urls.length === 0) {
     logger.info("No new URLs to submit to Google Indexing API.");
@@ -267,7 +267,7 @@ async function submitUrlsToGoogle(
   }
 
   logger.info(
-    `Submitting ${urls.length} URLs to Google Indexing API individually...`
+    `Submitting ${urls.length} URLs to Google Indexing API individually...`,
   );
 
   const successfullySubmitted: string[] = [];
@@ -287,7 +287,7 @@ async function submitUrlsToGoogle(
         url,
         accessToken,
         index + 1,
-        urls.length
+        urls.length,
       );
 
       if (result.shouldStop) {
@@ -298,14 +298,14 @@ async function submitUrlsToGoogle(
       if (result.success) {
         successfullySubmitted.push(url);
         logger.info(
-          `📈 TOTAL INDEXED SO FAR: ${successfullySubmitted.length} URLs`
+          `📈 TOTAL INDEXED SO FAR: ${successfullySubmitted.length} URLs`,
         );
         currentDelay = RATE_LIMIT_DELAY; // Reset delay on success
       } else {
         // Increase delay on failure
         currentDelay = Math.min(
           currentDelay * BACKOFF_MULTIPLIER,
-          MAX_BACKOFF_DELAY
+          MAX_BACKOFF_DELAY,
         );
         logger.warn(`⏳ Increasing delay to ${currentDelay}ms due to failure`);
       }
@@ -354,7 +354,7 @@ async function runGoogleIndexing(): Promise<void> {
 
     if (urls.length === 0) {
       logger.info(
-        "No new URLs to submit to Google Indexing API. All URLs have been previously submitted."
+        "No new URLs to submit to Google Indexing API. All URLs have been previously submitted.",
       );
       return;
     }
@@ -367,12 +367,12 @@ async function runGoogleIndexing(): Promise<void> {
       // Update and save submission history
       const updatedHistory = updateGoogleIndexHistory(
         history,
-        successfullySubmitted
+        successfullySubmitted,
       );
       saveGoogleIndexHistory(updatedHistory);
 
       logger.success(
-        `Google Index history updated with ${successfullySubmitted.length} successfully submitted URLs.`
+        `Google Index history updated with ${successfullySubmitted.length} successfully submitted URLs.`,
       );
     } else {
       logger.warn("No URLs were successfully submitted to Google Indexing API");
@@ -382,15 +382,15 @@ async function runGoogleIndexing(): Promise<void> {
     logger.info("📊 FINAL RESULTS:");
     logger.info(`   📤 Total URLs submitted: ${urls.length}`);
     logger.info(
-      `   ✅ URLs actually indexed by Google: ${successfullySubmitted.length}`
+      `   ✅ URLs actually indexed by Google: ${successfullySubmitted.length}`,
     );
     logger.info(
-      `   ❌ URLs rejected by Google: ${urls.length - successfullySubmitted.length}`
+      `   ❌ URLs rejected by Google: ${urls.length - successfullySubmitted.length}`,
     );
 
     if (urls.length > 0) {
       const successRate = Math.round(
-        (successfullySubmitted.length / urls.length) * PERCENTAGE_MULTIPLIER
+        (successfullySubmitted.length / urls.length) * PERCENTAGE_MULTIPLIER,
       );
       logger.info(`   📈 Success rate: ${successRate}%`);
 
@@ -398,7 +398,7 @@ async function runGoogleIndexing(): Promise<void> {
       if (successRate < SUCCESS_RATE_THRESHOLD) {
         logger.warn("   ⚠️  Low success rate indicates Google rate limiting");
         logger.warn(
-          "   💡 This is normal for large batches - Google limits indexing requests"
+          "   💡 This is normal for large batches - Google limits indexing requests",
         );
       }
     }
@@ -406,20 +406,20 @@ async function runGoogleIndexing(): Promise<void> {
     if (successfullySubmitted.length > 0) {
       logger.info("✅ URLs have been submitted to Google Indexing API");
       logger.info(
-        "📊 Check API usage: Google Cloud Console → APIs & Services → Dashboard → Indexing API"
+        "📊 Check API usage: Google Cloud Console → APIs & Services → Dashboard → Indexing API",
       );
       logger.info(
-        "🔍 Monitor indexing: Google Search Console → Coverage or URL Inspection"
+        "🔍 Monitor indexing: Google Search Console → Coverage or URL Inspection",
       );
       logger.info(
-        "⏰ Note: It may take time for Google to process and index the URLs"
+        "⏰ Note: It may take time for Google to process and index the URLs",
       );
     }
 
     // Exit with error code if no URLs were successfully submitted
     if (successfullySubmitted.length === 0 && urls.length > 0) {
       logger.error(
-        "❌ No URLs were successfully submitted. Check the errors above."
+        "❌ No URLs were successfully submitted. Check the errors above.",
       );
       logger.header("Google Indexing API Submission Process Failed");
       process.exit(1);
@@ -435,14 +435,14 @@ async function runGoogleIndexing(): Promise<void> {
       error?.toString().includes("authentication")
     ) {
       logger.error(
-        "Authentication failed. Please check your google-key.json file."
+        "Authentication failed. Please check your google-key.json file.",
       );
     } else if (
       error?.toString().includes("quota") ||
       error?.toString().includes("limit")
     ) {
       logger.error(
-        "API quota exceeded. Please try again later or contact Google Support to increase your quota."
+        "API quota exceeded. Please try again later or contact Google Support to increase your quota.",
       );
     }
 

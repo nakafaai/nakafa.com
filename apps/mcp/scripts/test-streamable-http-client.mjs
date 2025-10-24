@@ -17,7 +17,7 @@ async function main() {
         resources: {},
         tools: {},
       },
-    }
+    },
   );
 
   await client.connect(transport);

@@ -38,7 +38,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
   const { results } = usePaginatedQuery(
     api.comments.queries.getCommentsByUserId,
     { userId },
-    { initialNumItems: 25 }
+    { initialNumItems: 25 },
   );
 
   if (results.length === 0) {
@@ -121,7 +121,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                 <NumberFormat
                   className={cn(
                     "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
-                    comment.upvoteCount === 0 && "hidden"
+                    comment.upvoteCount === 0 && "hidden",
                   )}
                   isolate={true}
                   value={comment.upvoteCount}
@@ -144,7 +144,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                 <NumberFormat
                   className={cn(
                     "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
-                    comment.downvoteCount === 0 && "hidden"
+                    comment.downvoteCount === 0 && "hidden",
                   )}
                   isolate={true}
                   value={comment.downvoteCount}
@@ -165,7 +165,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                 <NumberFormat
                   className={cn(
                     "font-mono text-muted-foreground text-xs tracking-tight",
-                    comment.replyCount === 0 && "hidden"
+                    comment.replyCount === 0 && "hidden",
                   )}
                   isolate={true}
                   value={comment.replyCount}
@@ -179,7 +179,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
             <TooltipTrigger asChild>
               <NavigationLink
                 className={cn(
-                  buttonVariants({ variant: "ghost", size: "icon-sm" })
+                  buttonVariants({ variant: "ghost", size: "icon-sm" }),
                 )}
                 href={comment.contentSlug}
                 target="_blank"
@@ -195,7 +195,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
             <TooltipTrigger asChild>
               <Button
                 className={cn(
-                  comment.userId !== currentUser?.appUser._id && "hidden"
+                  comment.userId !== currentUser?.appUser._id && "hidden",
                 )}
                 disabled={isPending}
                 onClick={handleDelete}

@@ -3,7 +3,7 @@ import type { WithoutSystemFields } from "convex/server";
 import type { Doc } from "../_generated/dataModel";
 
 export function convertToDatabaseSubscription(
-  subscription: Subscription
+  subscription: Subscription,
 ): WithoutSystemFields<Doc<"subscriptions">> {
   return {
     id: subscription.id,

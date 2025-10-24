@@ -14,7 +14,7 @@ async function fetchSearchResults(query: string): Promise<PagefindResult[]> {
 
   const response = await window.pagefind.debouncedSearch<PagefindResult>(
     query,
-    SEARCH_OPTIONS
+    SEARCH_OPTIONS,
   );
 
   if (!response) {

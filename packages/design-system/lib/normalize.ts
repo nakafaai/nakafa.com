@@ -21,6 +21,6 @@ const NORMALIZATION_RULES = [
 export function normalizeText(str: string): string {
   return NORMALIZATION_RULES.reduce(
     (text, rule) => text.replace(rule.from, rule.to),
-    str
+    str,
   );
 }

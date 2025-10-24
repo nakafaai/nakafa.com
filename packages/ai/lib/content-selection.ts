@@ -98,7 +98,7 @@ function extractKeywords(query: string): string[] {
  */
 function calculateRelevanceScore(
   paragraph: string,
-  keywords: string[]
+  keywords: string[],
 ): number {
   if (keywords.length === 0) {
     return 0;
@@ -172,7 +172,7 @@ function truncateAtBoundary(text: string, maxLength: number): string {
  * Select and combine the most relevant content based on query and constraints
  */
 export function selectRelevantContent(
-  params: SelectRelevantContentParams
+  params: SelectRelevantContentParams,
 ): string {
   const {
     content,
@@ -214,7 +214,7 @@ export function selectRelevantContent(
       score: calculateRelevanceScore(text, keywords),
       index,
       length: text.length,
-    })
+    }),
   );
 
   // Structure-aware selection
@@ -237,7 +237,7 @@ export function selectRelevantContent(
 
     // Sort back to original order and add if space allows
     const sortedMiddleParagraphs = middleParagraphs.sort(
-      (a, b) => a.index - b.index
+      (a, b) => a.index - b.index,
     );
     for (const paragraph of sortedMiddleParagraphs) {
       if (currentLength + paragraph.length + 2 < targetLength) {

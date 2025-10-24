@@ -8,11 +8,11 @@ export const getArticlesInputSchema = z
   .object({
     locale: z.enum(["en", "id"]).describe("The locale of the article to get."),
     category: ArticleCategorySchema.describe(
-      "The category of the article to get."
+      "The category of the article to get.",
     ),
   })
   .describe(
-    "Get articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, politics, and general publications. Use this for research questions, current events, scientific studies, news analysis, and academic research topics."
+    "Get articles from Nakafa platform - includes scientific journals, research papers, internet articles, news, analysis, politics, and general publications. Use this for research questions, current events, scientific studies, news analysis, and academic research topics.",
   );
 export type GetArticlesInput = z.input<typeof getArticlesInputSchema>;
 
@@ -25,11 +25,11 @@ export const getArticlesOutputSchema = z
         url: z.string().describe("The url of the article."),
         slug: z.string().describe("The slug of the article."),
         locale: z.string().describe("The locale of the article."),
-      })
+      }),
     ),
   })
   .describe(
-    "The output schema for the getArticles tool. The articles are from Nakafa platform."
+    "The output schema for the getArticles tool. The articles are from Nakafa platform.",
   );
 export type GetArticlesOutput = z.output<typeof getArticlesOutputSchema>;
 
@@ -37,13 +37,13 @@ export const getSubjectsInputSchema = z
   .object({
     locale: z.enum(["en", "id"]).describe("The locale of the subject to get."),
     category: SubjectCategorySchema.describe(
-      "The category of the subject to get."
+      "The category of the subject to get.",
     ),
     grade: GradeSchema.describe("The grade of the subject to get."),
     material: MaterialSchema.describe("The material of the subject to get."),
   })
   .describe(
-    "Get educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for study questions, homework help, learning concepts, educational content, and curriculum-based topics."
+    "Get educational subjects from Nakafa platform - structured learning materials and curricula from K-12 through university level. Use this for study questions, homework help, learning concepts, educational content, and curriculum-based topics.",
   );
 export type GetSubjectsInput = z.input<typeof getSubjectsInputSchema>;
 
@@ -56,11 +56,11 @@ export const getSubjectsOutputSchema = z
         url: z.string().describe("The url of the subject."),
         slug: z.string().describe("The slug of the subject."),
         locale: z.string().describe("The locale of the subject."),
-      })
+      }),
     ),
   })
   .describe(
-    "The output schema for the getSubjects tool. The subjects are K-12 to university level."
+    "The output schema for the getSubjects tool. The subjects are K-12 to university level.",
   );
 export type GetSubjectsOutput = z.output<typeof getSubjectsOutputSchema>;
 
@@ -70,11 +70,11 @@ export const getContentInputSchema = z
     slug: z
       .string()
       .describe(
-        "The slug of the content to get - MUST be a verified slug returned from getSubjects or getArticles responses. Use slug exactly as returned. Always start with slash (/). DO NOT include locale in the slug. NEVER use unverified slugs."
+        "The slug of the content to get - MUST be a verified slug returned from getSubjects or getArticles responses. Use slug exactly as returned. Always start with slash (/). DO NOT include locale in the slug. NEVER use unverified slugs.",
       ),
   })
   .describe(
-    "Get the full content from Nakafa platform. CRITICAL: ONLY use this with slugs that were returned from getSubjects or getArticles responses. NEVER use with guessed, assumed, or unverified slugs."
+    "Get the full content from Nakafa platform. CRITICAL: ONLY use this with slugs that were returned from getSubjects or getArticles responses. NEVER use with guessed, assumed, or unverified slugs.",
   );
 export type GetContentInput = z.input<typeof getContentInputSchema>;
 
@@ -84,7 +84,7 @@ export const getContentOutputSchema = z
     content: z.string().describe("The content of the page."),
   })
   .describe(
-    "The output schema for the getContent tool. The content is the full content of the page."
+    "The output schema for the getContent tool. The content is the full content of the page.",
   );
 export type GetContentOutput = z.output<typeof getContentOutputSchema>;
 
@@ -93,11 +93,11 @@ export const calculatorInputSchema = z
     expression: z
       .string()
       .describe(
-        "A mathematical expression with concrete numbers and operations. Use ONLY evaluable expressions with numbers - NOT algebraic variables. Compatible with Math.js."
+        "A mathematical expression with concrete numbers and operations. Use ONLY evaluable expressions with numbers - NOT algebraic variables. Compatible with Math.js.",
       ),
   })
   .describe(
-    "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation including simple arithmetic. NEVER calculate manually. Only use for evaluable expressions with concrete numbers, not algebraic variables."
+    "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation including simple arithmetic. NEVER calculate manually. Only use for evaluable expressions with concrete numbers, not algebraic variables.",
   );
 export type CalculatorInput = z.input<typeof calculatorInputSchema>;
 
@@ -154,11 +154,11 @@ export const webSearchOutputSchema = z
         url: z.string(),
         content: z.string(),
         citation: z.string(),
-      })
+      }),
     ),
     error: z.string().optional(),
   })
   .describe(
-    "The output schema for web search results. Use exactly the citation field for inline citations."
+    "The output schema for web search results. Use exactly the citation field for inline citations.",
   );
 export type WebSearchOutput = z.output<typeof webSearchOutputSchema>;

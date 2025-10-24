@@ -72,7 +72,7 @@ function calculateTextY(
   index: number,
   total: number,
   ry: number,
-  cy: number
+  cy: number,
 ): number {
   // Calculate the effective height available for text
   const textHeightArea = ry * 2 - TEXT_PADDING * 2;

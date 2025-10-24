@@ -79,7 +79,7 @@ export const voteOnComment = mutation({
     const existingVote = await ctx.db
       .query("commentVotes")
       .withIndex("commentId_userId", (q) =>
-        q.eq("commentId", args.commentId).eq("userId", user.appUser._id)
+        q.eq("commentId", args.commentId).eq("userId", user.appUser._id),
       )
       .unique();
 

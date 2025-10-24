@@ -68,7 +68,7 @@ export function CardMaterial({ material }: Props) {
             <ChevronDownIcon
               className={cn(
                 "size-4 text-muted-foreground transition-transform",
-                isOpen ? "" : "rotate-180"
+                isOpen ? "" : "rotate-180",
               )}
             />
           </Button>

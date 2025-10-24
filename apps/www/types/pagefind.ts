@@ -19,7 +19,7 @@ export const PagefindResultSchema = z.object({
       excerpt: z.string(),
       title: z.string(),
       url: z.string(),
-    })
+    }),
   ),
   url: z.string(),
 });

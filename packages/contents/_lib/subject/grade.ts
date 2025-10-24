@@ -40,7 +40,7 @@ export function getGradeNonNumeric(grade: Grade) {
  */
 export async function getGradeSubjects(
   category: SubjectCategory,
-  grade: Grade
+  grade: Grade,
 ): Promise<
   {
     icon: LucideIcon;

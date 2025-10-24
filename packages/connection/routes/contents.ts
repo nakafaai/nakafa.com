@@ -76,7 +76,7 @@ async function getContent({
   }
 
   const content = data?.find(
-    (c) => cleanSlug(`/${c.locale}/${c.slug}`) === cleanedSlug
+    (c) => cleanSlug(`/${c.locale}/${c.slug}`) === cleanedSlug,
   );
 
   if (!content) {

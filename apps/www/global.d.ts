@@ -8,7 +8,7 @@ declare global {
           debouncedSearch: <T>(
             term: string,
             options?: PagefindSearchOptions,
-            debounceTimeoutMs?: number
+            debounceTimeoutMs?: number,
           ) => Promise<{
             results: {
               data: () => Promise<T>;

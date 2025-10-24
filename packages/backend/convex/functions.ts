@@ -17,7 +17,7 @@ export const mutation = customMutation(rawMutation, customCtx(triggers.wrapDB));
 
 export const internalMutation = customMutation(
   rawInternalMutation,
-  customCtx(triggers.wrapDB)
+  customCtx(triggers.wrapDB),
 );
 
 // This is a trigger that deletes all votes and replies when a comment is deleted.

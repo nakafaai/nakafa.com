@@ -106,5 +106,5 @@ export const ThreeCanvas = dynamic(
         <SpinnerIcon aria-hidden="true" className="size-6 shrink-0" />
       </div>
     ),
-  }
+  },
 );

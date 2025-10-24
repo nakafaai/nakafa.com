@@ -34,7 +34,7 @@ export type ResponseProps = {
 
 const MemoizedHardenedMarkdown = memo(
   hardenReactMarkdown(ReactMarkdown),
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  (prevProps, nextProps) => prevProps.children === nextProps.children,
 );
 MemoizedHardenedMarkdown.displayName = "MemoizedHardenedMarkdown";
 
@@ -45,7 +45,7 @@ const Block = memo(
   }: HardenedMarkdownProps & Pick<ResponseProps, "children">) => {
     const parsedContent = useMemo(
       () => preprocessLaTeX(children.trim()),
-      [children]
+      [children],
     );
 
     // Return null if content is empty after trimming whitespace
@@ -68,7 +68,7 @@ const Block = memo(
       </MemoizedHardenedMarkdown>
     );
   },
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  (prevProps, nextProps) => prevProps.children === nextProps.children,
 );
 Block.displayName = "Block";
 
@@ -90,7 +90,7 @@ const Blocks = memo(
       </Block>
     ));
   },
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  (prevProps, nextProps) => prevProps.children === nextProps.children,
 );
 Blocks.displayName = "Blocks";
 
@@ -106,7 +106,7 @@ const ResponseContent = memo(
     <div
       className={cn(
         "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-        className
+        className,
       )}
     >
       <Blocks
@@ -119,7 +119,7 @@ const ResponseContent = memo(
       </Blocks>
     </div>
   ),
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  (prevProps, nextProps) => prevProps.children === nextProps.children,
 );
 ResponseContent.displayName = "ResponseContent";
 
@@ -147,11 +147,11 @@ export const Response = memo(
           </ResponseContent>
         );
       },
-      [id, className, allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin]
+      [id, className, allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin],
     );
 
     return wrap(children);
   },
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  (prevProps, nextProps) => prevProps.children === nextProps.children,
 );
 Response.displayName = "Response";

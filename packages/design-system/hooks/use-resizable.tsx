@@ -41,7 +41,7 @@ export function useResizable({
 
       setWidth(newWidth);
     },
-    [minWidth, maxWidth]
+    [minWidth, maxWidth],
   );
 
   const handleKeyDown = useCallback(
@@ -64,7 +64,7 @@ export function useResizable({
         });
       }
     },
-    [minWidth, maxWidth]
+    [minWidth, maxWidth],
   );
 
   useEffect(() => {

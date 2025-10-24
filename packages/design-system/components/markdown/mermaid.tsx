@@ -17,7 +17,7 @@ export function MermaidMdx({ chart, className }: Props) {
     <div
       className={cn(
         "my-4 w-full divide-y overflow-hidden rounded-xl border shadow-sm",
-        className
+        className,
       )}
     >
       <div className="flex items-center justify-between gap-2 bg-muted/80 p-1 text-muted-foreground text-sm">

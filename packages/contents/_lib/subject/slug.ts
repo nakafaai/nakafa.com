@@ -18,7 +18,7 @@ export function getSlugPath(
   category: SubjectCategory,
   grade: Grade,
   material: Material,
-  slug: string[]
+  slug: string[],
 ) {
   return `/subject/${category}/${grade}/${material}/${slug.join("/")}` as const;
 }
@@ -34,7 +34,7 @@ export function getSlugPath(
  */
 export function getMaterialsPagination(
   currentPath: string,
-  materials: MaterialList
+  materials: MaterialList,
 ): ContentPagination {
   // Default empty navigation item
   const emptyItem = { href: "", title: "" };
@@ -43,7 +43,7 @@ export function getMaterialsPagination(
   const allItems = materials.flatMap((subject) =>
     subject.items.map((item) => ({
       ...item,
-    }))
+    })),
   );
 
   // Find the index of the current item in the flattened array

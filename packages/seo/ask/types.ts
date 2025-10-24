@@ -38,9 +38,9 @@ export const AskSchema = z.discriminatedUnion("type", [
 export type Ask = z.infer<typeof AskSchema>;
 
 export const isAskSubject = (
-  ask: Ask
+  ask: Ask,
 ): ask is z.infer<typeof AskSubjectSchema> => ask.type === "subject";
 
 export const isAskArticle = (
-  ask: Ask
+  ask: Ask,
 ): ask is z.infer<typeof AskArticleSchema> => ask.type === "articles";

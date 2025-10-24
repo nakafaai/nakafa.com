@@ -19,7 +19,7 @@ export function HeaderContainer({ children }: { children: ReactNode }) {
   const borderOpacity = useTransform(
     scrollY,
     [BORDER_OPACITY_THRESHOLD_MIN, BORDER_OPACITY_THRESHOLD_MAX],
-    [BORDER_OPACITY_MIN, BORDER_OPACITY_MAX]
+    [BORDER_OPACITY_MIN, BORDER_OPACITY_MAX],
   );
 
   return (

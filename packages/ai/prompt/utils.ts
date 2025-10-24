@@ -36,6 +36,6 @@ export function createPrompt(opts: {
       opts.outputFormatting,
     ]
       .filter(Boolean)
-      .join("\n\n")
+      .join("\n\n"),
   );
 }

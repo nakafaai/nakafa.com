@@ -66,7 +66,7 @@ class HighlighterManager {
 
   private async ensureHighlightersInitialized(
     themes: [BundledTheme, BundledTheme],
-    language: BundledLanguage
+    language: BundledLanguage,
   ): Promise<void> {
     const [lightTheme, darkTheme] = themes;
     const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
@@ -108,7 +108,7 @@ class HighlighterManager {
       // If recreating dark highlighter, load all previously loaded languages plus the new one
       const langsToLoad = needsLanguageLoad
         ? [...this.loadedLanguages].concat(
-            isLanguageSupported ? [language] : []
+            isLanguageSupported ? [language] : [],
           )
         : Array.from(this.loadedLanguages);
 
@@ -140,7 +140,7 @@ class HighlighterManager {
     code: string,
     language: BundledLanguage,
     themes: [BundledTheme, BundledTheme],
-    preClassName?: string
+    preClassName?: string,
   ): Promise<[string, string]> {
     // Ensure only one initialization happens at a time
     if (this.initializationPromise) {
@@ -149,7 +149,7 @@ class HighlighterManager {
     // Initialize or load language
     this.initializationPromise = this.ensureHighlightersInitialized(
       themes,
-      language
+      language,
     );
     await this.initializationPromise;
     this.initializationPromise = null;
@@ -191,7 +191,7 @@ const highlighterManager = new HighlighterManager();
 function removePreBackground(html: string) {
   return html.replace(
     /(<pre[^>]*)(style="[^"]*background[^";]*;?[^"]*")([^>]*>)/g,
-    "$1$3"
+    "$1$3",
   );
 }
 
@@ -663,7 +663,7 @@ export const CodeBlockCopyButton = ({
         onCopy?.();
         timeoutRef.current = window.setTimeout(
           () => setIsCopied(false),
-          timeout
+          timeout,
         );
       }
     } catch (error) {
@@ -675,7 +675,7 @@ export const CodeBlockCopyButton = ({
     () => () => {
       window.clearTimeout(timeoutRef.current);
     },
-    []
+    [],
   );
 
   const Icon = isCopied ? CheckIcon : CopyIcon;

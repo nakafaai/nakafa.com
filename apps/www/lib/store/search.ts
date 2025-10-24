@@ -39,6 +39,6 @@ export const createSearchStore = () =>
       {
         name: "nakafa-search",
         storage: createJSONStorage(() => sessionStorage),
-      }
-    )
+      },
+    ),
   );

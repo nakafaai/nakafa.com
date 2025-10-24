@@ -20,7 +20,7 @@ function truncateText(text: string, maxLength: number): string {
 }
 
 export function generateOGImage(
-  options: GenerateProps & ImageResponseOptions
+  options: GenerateProps & ImageResponseOptions,
 ): ImageResponse {
   const { title, description, ...rest } = options;
 
@@ -33,7 +33,7 @@ export function generateOGImage(
       width: 1200,
       height: 630,
       ...rest,
-    }
+    },
   );
 }
 

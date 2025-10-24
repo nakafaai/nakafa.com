@@ -69,7 +69,7 @@ export const ToolHeader = memo(
       <CollapsibleTrigger
         className={cn(
           "flex w-full cursor-pointer items-center justify-between gap-4 p-3",
-          className
+          className,
         )}
         {...props}
       >
@@ -90,7 +90,7 @@ export const ToolHeader = memo(
         <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
       </CollapsibleTrigger>
     );
-  }
+  },
 );
 ToolHeader.displayName = "ToolHeader";
 
@@ -101,7 +101,7 @@ export const ToolContent = memo(({ className, ...props }: ToolContentProps) => (
     className={cn(
       "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
       "border-t",
-      className
+      className,
     )}
     {...props}
   />
@@ -122,7 +122,7 @@ export const ToolInput = memo(
         <CodeBlock code={JSON.stringify(input, null, 2)} language="json" />
       </div>
     </div>
-  )
+  ),
 );
 ToolInput.displayName = "ToolInput";
 
@@ -147,7 +147,7 @@ export const ToolOutput = memo(
             "overflow-x-auto rounded-md text-xs [&_table]:w-full",
             errorText
               ? "bg-destructive/10 text-destructive"
-              : "bg-muted/50 text-foreground"
+              : "bg-muted/50 text-foreground",
           )}
         >
           {errorText && <div>{errorText}</div>}
@@ -155,6 +155,6 @@ export const ToolOutput = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 ToolOutput.displayName = "ToolOutput";

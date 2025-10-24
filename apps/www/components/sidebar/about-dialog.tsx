@@ -40,7 +40,7 @@ function AboutDialogContent({
     <div
       className={cn(
         "grid justify-center gap-4 px-4 pb-4 text-center",
-        className
+        className,
       )}
     >
       <div className="relative mx-auto aspect-square size-16 overflow-hidden rounded-lg border">
@@ -56,7 +56,7 @@ function AboutDialogContent({
       <Link
         className={cn(
           buttonVariants({ variant: "outline", size: "sm" }),
-          "mx-auto w-fit"
+          "mx-auto w-fit",
         )}
         href="/contributor"
         onClick={() => onOpenChange(false)}

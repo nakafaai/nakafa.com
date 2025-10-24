@@ -44,10 +44,10 @@ export function getColor(color: keyof typeof COLORS) {
  */
 export function randomColor(
   exclude?: (keyof typeof COLORS)[],
-  seed?: string | number
+  seed?: string | number,
 ) {
   const availableKeys = COLOR_KEYS.filter(
-    (key) => !exclude?.some((excludeKey) => excludeKey === key)
+    (key) => !exclude?.some((excludeKey) => excludeKey === key),
   );
 
   if (availableKeys.length === 0) {
@@ -61,7 +61,7 @@ export function randomColor(
   } else if (seed) {
     seedNum = Array.from(seed).reduce(
       (acc, char) => acc + char.charCodeAt(0),
-      0
+      0,
     );
   }
   const index = seedNum % availableKeys.length;

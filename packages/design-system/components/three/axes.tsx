@@ -42,17 +42,17 @@ export function Axes({
   // Create points for each axis (now extending in both positive and negative directions)
   const xPoints = useMemo(
     () => [new Vector3(-size, 0, 0), new Vector3(size, 0, 0)],
-    [size]
+    [size],
   );
 
   const yPoints = useMemo(
     () => [new Vector3(0, -size, 0), new Vector3(0, size, 0)],
-    [size]
+    [size],
   );
 
   const zPoints = useMemo(
     () => [new Vector3(0, 0, -size), new Vector3(0, 0, size)],
-    [size]
+    [size],
   );
 
   const fontToUse = font === "mono" ? MONO_FONT_PATH : FONT_PATH;

@@ -26,24 +26,24 @@ export function GET() {
           used: Math.round(
             process.memoryUsage().heapUsed /
               MEMORY_USAGE_FACTOR /
-              MEMORY_USAGE_FACTOR
+              MEMORY_USAGE_FACTOR,
           ),
           total: Math.round(
             process.memoryUsage().heapTotal /
               MEMORY_USAGE_FACTOR /
-              MEMORY_USAGE_FACTOR
+              MEMORY_USAGE_FACTOR,
           ),
           unit: "MB",
         },
       },
       null,
-      2
+      2,
     ),
     {
       status: 200,
       headers: {
         "Content-Type": "application/json",
       },
-    }
+    },
   );
 }

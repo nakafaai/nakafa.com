@@ -17,7 +17,7 @@ async function main() {
         resources: {},
         tools: {},
       },
-    }
+    },
   );
 
   console.info("Connecting to", origin);

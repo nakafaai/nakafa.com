@@ -33,7 +33,7 @@ export function useAnchorObserver(watch: string[], single: boolean): string[] {
       {
         rootMargin: single ? "-80px 0% -70% 0%" : "-20px 0% -40% 0%",
         threshold: 1,
-      }
+      },
     );
 
     function onScroll(): void {

@@ -43,7 +43,7 @@ export function CommentsList({ slug }: Props) {
   const { results } = usePaginatedQuery(
     api.comments.queries.getParentCommentsBySlug,
     { slug },
-    { initialNumItems: 25 }
+    { initialNumItems: 25 },
   );
 
   if (results.length === 0) {
@@ -162,7 +162,7 @@ function CommentReplies({
   const { results } = usePaginatedQuery(
     api.comments.queries.getRepliesByCommentId,
     { commentId: comment._id, depth: replyDepth },
-    { initialNumItems: 25 }
+    { initialNumItems: 25 },
   );
 
   if (!isOpen || results.length === 0) {
@@ -173,7 +173,7 @@ function CommentReplies({
     <div
       className={cn(
         "flex flex-col gap-6",
-        !isMaxDepth && "border-l pl-4 md:pl-6"
+        !isMaxDepth && "border-l pl-4 md:pl-6",
       )}
     >
       {results.map((reply) => (
@@ -238,7 +238,7 @@ function CommentAction({
             <NumberFormat
               className={cn(
                 "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
-                comment.upvoteCount === 0 && "hidden"
+                comment.upvoteCount === 0 && "hidden",
               )}
               isolate={true}
               value={comment.upvoteCount}
@@ -261,7 +261,7 @@ function CommentAction({
             <NumberFormat
               className={cn(
                 "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
-                comment.downvoteCount === 0 && "hidden"
+                comment.downvoteCount === 0 && "hidden",
               )}
               isolate={true}
               value={comment.downvoteCount}
@@ -283,7 +283,7 @@ function CommentAction({
             <NumberFormat
               className={cn(
                 "font-mono text-muted-foreground text-xs tracking-tight",
-                comment.replyCount === 0 && "hidden"
+                comment.replyCount === 0 && "hidden",
               )}
               isolate={true}
               value={comment.replyCount}
@@ -297,7 +297,7 @@ function CommentAction({
         <TooltipTrigger asChild>
           <Button
             className={cn(
-              comment.userId !== currentUser?.appUser._id && "hidden"
+              comment.userId !== currentUser?.appUser._id && "hidden",
             )}
             disabled={isPending}
             onClick={handleDelete}

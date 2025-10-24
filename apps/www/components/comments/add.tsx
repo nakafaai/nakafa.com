@@ -76,7 +76,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
           "w-full resize-none rounded-none border-none p-4 shadow-none outline-none ring-0",
           "field-sizing-content bg-transparent dark:bg-transparent",
           "max-h-48 min-h-16",
-          "focus-visible:ring-0"
+          "focus-visible:ring-0",
         )}
         id="text"
         name="text"

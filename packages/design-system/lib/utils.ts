@@ -70,7 +70,7 @@ export function slugify(text: string): string {
  */
 export function filterWhitespaceNodes(children: ReactNode) {
   return Children.toArray(children).filter(
-    (child) => !(typeof child === "string" && child.trim() === "")
+    (child) => !(typeof child === "string" && child.trim() === ""),
   );
 }
 
@@ -83,7 +83,7 @@ export function filterWhitespaceNodes(children: ReactNode) {
 export function save(
   filename: string,
   content: string | Blob,
-  mimeType: string
+  mimeType: string,
 ) {
   const blob =
     typeof content === "string"

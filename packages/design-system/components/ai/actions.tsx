@@ -16,7 +16,7 @@ export const Actions = memo(
     <div className={cn("flex items-center gap-1", className)} {...props}>
       {children}
     </div>
-  )
+  ),
 );
 Actions.displayName = "Actions";
 
@@ -60,6 +60,6 @@ export const Action = memo(
     }
 
     return button;
-  }
+  },
 );
 Action.displayName = "Action";

@@ -105,14 +105,14 @@ export function TypingLoader({
       className={cn(
         "flex items-center space-x-1",
         containerSizes[size],
-        className
+        className,
       )}
     >
       {Array.from({ length: 3 }).map((_, i) => (
         <div
           className={cn(
             "animate-[typing_1s_infinite] rounded-full bg-primary",
-            dotSizes[size]
+            dotSizes[size],
           )}
           key={`dot-${i + 1}`}
           style={{

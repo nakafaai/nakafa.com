@@ -65,7 +65,7 @@ function getSharedSphereGeometry() {
     sharedSphereGeometry = new SphereGeometry(
       1,
       SPHERE_SEGMENTS,
-      SPHERE_SEGMENTS
+      SPHERE_SEGMENTS,
     );
   }
   return sharedSphereGeometry;
@@ -147,7 +147,7 @@ export function Triangle({
     for (let i = 0; i <= ARC_SEGMENTS; i++) {
       const a = (i / ARC_SEGMENTS) * angleInRadians;
       pts.push(
-        new Vector3(Math.cos(a) * arcRadius, Math.sin(a) * arcRadius, 0)
+        new Vector3(Math.cos(a) * arcRadius, Math.sin(a) * arcRadius, 0),
       );
     }
     return pts;

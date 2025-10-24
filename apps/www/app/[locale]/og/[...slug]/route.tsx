@@ -42,7 +42,7 @@ export function generateStaticParams() {
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ locale: string; slug: string[] }> }
+  { params }: { params: Promise<{ locale: string; slug: string[] }> },
 ) {
   const { locale, slug } = await params;
 
@@ -55,10 +55,10 @@ export async function GET(
 
   // Fetch fonts from public directory
   const fontData = await fetch(
-    new URL("/fonts/GeistMono-Regular.ttf", _req.url)
+    new URL("/fonts/GeistMono-Regular.ttf", _req.url),
   ).then((res) => res.arrayBuffer());
   const fontBoldData = await fetch(
-    new URL("/fonts/GeistMono-Bold.ttf", _req.url)
+    new URL("/fonts/GeistMono-Bold.ttf", _req.url),
   ).then((res) => res.arrayBuffer());
 
   return generateOGImage({

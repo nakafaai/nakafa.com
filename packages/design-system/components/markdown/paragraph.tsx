@@ -6,7 +6,7 @@ export function Paragraph({ children, className, ...props }: ParagraphProps) {
     <p
       className={cn(
         "my-4 text-pretty leading-relaxed first:mt-0 last:mb-0",
-        className
+        className,
       )}
       {...props}
     >

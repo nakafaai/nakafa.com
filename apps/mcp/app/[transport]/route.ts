@@ -56,7 +56,7 @@ const handler = createMcpHandler(
             },
           ],
         };
-      }
+      },
     );
 
     server.tool(
@@ -85,7 +85,7 @@ const handler = createMcpHandler(
             },
           ],
         };
-      }
+      },
     );
   },
   {
@@ -101,7 +101,7 @@ const handler = createMcpHandler(
     basePath: "",
     verboseLogs: true,
     maxDuration: 60,
-  }
+  },
 );
 
 export { handler as GET, handler as POST, handler as DELETE };

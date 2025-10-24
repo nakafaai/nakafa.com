@@ -17,7 +17,7 @@ export function logHttpRequest(
     url: string;
     statusCode: number;
     duration: number;
-  }
+  },
 ) {
   const { method, url, statusCode, duration } = requestData;
 
@@ -36,7 +36,7 @@ export function logHttpRequest(
       statusCode,
       duration: `${duration}ms`,
     },
-    `${method} ${url} - ${statusCode} (${duration}ms)`
+    `${method} ${url} - ${statusCode} (${duration}ms)`,
   );
 }
 
@@ -46,7 +46,7 @@ export function logHttpRequest(
 export function logError(
   logger: Logger,
   error: Error,
-  context: LogContext = {}
+  context: LogContext = {},
 ) {
   logger.error(
     {
@@ -58,7 +58,7 @@ export function logError(
       },
       ...context,
     },
-    error.message
+    error.message,
   );
 }
 
@@ -72,7 +72,7 @@ export function logMetric(
     value: number;
     unit?: string;
     context?: LogContext;
-  }
+  },
 ) {
   const { metric, value, unit = "count", context = {} } = metricData;
 
@@ -84,7 +84,7 @@ export function logMetric(
       unit,
       ...context,
     },
-    `${metric}: ${value}${unit}`
+    `${metric}: ${value}${unit}`,
   );
 }
 
@@ -94,7 +94,7 @@ export function logMetric(
 export function createTimer(
   logger: Logger,
   label: string,
-  context: LogContext = {}
+  context: LogContext = {},
 ) {
   const start = Date.now();
 
@@ -107,7 +107,7 @@ export function createTimer(
         duration: `${duration}ms`,
         ...context,
       },
-      `${label} completed in ${duration}ms`
+      `${label} completed in ${duration}ms`,
     );
 
     return duration;
@@ -124,7 +124,7 @@ export function logDatabaseOperation(
     table: string;
     duration: number;
     rowsAffected?: number;
-  }
+  },
 ) {
   const { operation, table, duration, rowsAffected } = operationData;
 
@@ -136,7 +136,7 @@ export function logDatabaseOperation(
       duration: `${duration}ms`,
       ...(rowsAffected !== undefined && { rowsAffected }),
     },
-    `${operation} ${table} (${duration}ms)${rowsAffected !== undefined ? ` - ${rowsAffected} rows` : ""}`
+    `${operation} ${table} (${duration}ms)${rowsAffected !== undefined ? ` - ${rowsAffected} rows` : ""}`,
   );
 }
 
@@ -149,7 +149,7 @@ export function logCacheOperation(
     key: string;
     hit: boolean;
     ttl?: number;
-  }
+  },
 ) {
   const { key, hit, ttl } = cacheData;
 
@@ -160,6 +160,6 @@ export function logCacheOperation(
       hit,
       ...(ttl !== undefined && { ttl: `${ttl}s` }),
     },
-    `Cache ${hit ? "HIT" : "MISS"}: ${key}${ttl !== undefined ? ` (TTL: ${ttl}s)` : ""}`
+    `Cache ${hit ? "HIT" : "MISS"}: ${key}${ttl !== undefined ? ` (TTL: ${ttl}s)` : ""}`,
   );
 }

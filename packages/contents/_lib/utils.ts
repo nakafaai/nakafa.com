@@ -42,7 +42,7 @@ export async function getRawContent(filePath: string): Promise<string> {
   // Fallback to fetching from GitHub, return empty string if it fails
   return await ky
     .get(
-      `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${cleanPath}`
+      `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${cleanPath}`,
     )
     .text()
     .catch(() => "");
@@ -56,7 +56,7 @@ export async function getRawContent(filePath: string): Promise<string> {
  */
 export async function getContent(
   locale: Locale,
-  filePath: string
+  filePath: string,
 ): Promise<{
   metadata: ContentMetadata;
   default: ComponentType<unknown>;
@@ -114,7 +114,7 @@ export async function getContents({
 
     const url = new URL(
       `/${locale}/${item.slug.join("/")}`,
-      "https://nakafa.com"
+      "https://nakafa.com",
     );
 
     const { data, error } = ContentSchema.safeParse({
@@ -133,7 +133,7 @@ export async function getContents({
   });
 
   const contents = await Promise.all(promises).then((results) =>
-    results.filter((item) => item !== null)
+    results.filter((item) => item !== null),
   );
 
   return contents;
@@ -194,8 +194,8 @@ export function getFolderChildNames(folder: string, exclude?: string[]) {
         (name) =>
           !effectiveExclude.some(
             (excludeItem) =>
-              name === excludeItem || name.startsWith(excludeItem)
-          )
+              name === excludeItem || name.startsWith(excludeItem),
+          ),
       );
     }
 
@@ -215,7 +215,7 @@ export function getFolderChildNames(folder: string, exclude?: string[]) {
 export function getNestedSlugs(
   basePath: string,
   currentPath: string[] = [],
-  result: string[][] = []
+  result: string[][] = [],
 ): string[][] {
   let cleanBasePath = basePath;
   // if basePath empty string, use "."

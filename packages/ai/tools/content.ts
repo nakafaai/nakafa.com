@@ -31,7 +31,7 @@ export const createGetContent = ({ writer }: Params) => {
 
       const url = new URL(
         `/${locale}/${cleanedSlug}`,
-        "https://nakafa.com"
+        "https://nakafa.com",
       ).toString();
 
       writer.write({

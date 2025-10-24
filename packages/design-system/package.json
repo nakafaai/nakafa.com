@@ -32,7 +32,7 @@
     "harden-react-markdown": "^1.1.5",
     "input-otp": "^1.4.2",
     "katex": "^0.16.25",
-    "lucide-react": "^0.546.0",
+    "lucide-react": "^0.548.0",
     "marked": "^16.4.1",
     "mathjs": "^15.0.0",
     "mermaid": "11.12.0",

@@ -37,7 +37,7 @@ import type { Locale } from "next-intl";
 export function getMaterialPath(
   category: SubjectCategory,
   grade: Grade,
-  material: Material
+  material: Material,
 ) {
   return `/subject/${category}/${grade}/${material}` as const;
 }
@@ -50,7 +50,7 @@ export function getMaterialPath(
  */
 export async function getMaterials(
   path: string,
-  locale: Locale
+  locale: Locale,
 ): Promise<MaterialList> {
   try {
     // Strip leading slash if present for consistency

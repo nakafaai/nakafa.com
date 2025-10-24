@@ -10,7 +10,7 @@ export const contentsSchema = z.array(
     url: z.string(),
     slug: z.string(),
     locale: z.string(),
-  })
+  }),
 );
 
 export const dataPartSchema = z.object({
@@ -65,7 +65,7 @@ export const dataPartSchema = z.object({
         url: z.string(),
         content: z.string(),
         citation: z.string(),
-      })
+      }),
     ),
     status: z.enum(["loading", "done", "error"]),
     error: errorSchema.optional(),

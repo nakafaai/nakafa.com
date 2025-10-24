@@ -70,7 +70,7 @@ function getSharedSphereGeometry() {
     sharedSphereGeometry = new SphereGeometry(
       SPHERE_RADIUS,
       SPHERE_SEGMENTS,
-      SPHERE_SEGMENTS
+      SPHERE_SEGMENTS,
     );
   }
   return sharedSphereGeometry;
@@ -113,7 +113,7 @@ export function UnitCircle({
     for (let i = 0; i <= UNIT_ARC_SEGMENTS; i++) {
       const a = (i / UNIT_ARC_SEGMENTS) * angleInRadians;
       pts.push(
-        new Vector3(Math.cos(a) * ARC_RADIUS, Math.sin(a) * ARC_RADIUS, 0)
+        new Vector3(Math.cos(a) * ARC_RADIUS, Math.sin(a) * ARC_RADIUS, 0),
       );
     }
     return pts;
@@ -166,7 +166,7 @@ export function UnitCircle({
       cos: `cos(${angle}°) = ${formatValue(cos)}`,
       tan: `tan(${angle}°) = ${formatValue(tan)}`,
     }),
-    [angle, sin, cos, tan, formatValue]
+    [angle, sin, cos, tan, formatValue],
   );
 
   const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
@@ -187,7 +187,7 @@ export function UnitCircle({
       sine: [cosPoint, pointPosition],
       cosine: [origin, cosPoint],
     }),
-    [origin, pointPosition, cosPoint]
+    [origin, pointPosition, cosPoint],
   );
 
   // Use frustum culling

@@ -34,7 +34,7 @@ const NON_WHITESPACE_START_PATTERN = /^\S/;
  */
 function applyOutsideCodeFences(
   input: string,
-  transform: (segment: string) => string
+  transform: (segment: string) => string,
 ): string {
   if (!TRIPLE_BACKTICKS.test(input)) {
     // Reset lastIndex side-effect of .test with global regex
@@ -76,7 +76,7 @@ function applyOutsideCodeFences(
  */
 function getListContext(
   text: string,
-  position: number
+  position: number,
 ): { isInList: boolean; indentation: string } {
   // Check if current line or recent lines contain list markers
   const lines = text.slice(0, position).split("\n");
@@ -124,7 +124,7 @@ function getListContext(
 function createFencedMathBlock(
   inner: string,
   fullText: string,
-  matchStart: number
+  matchStart: number,
 ): string {
   const context = getListContext(fullText, matchStart);
 
@@ -156,7 +156,7 @@ function normalizeMathDelimiters(input: string): string {
   processedInput = processedInput.replace(
     CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN,
     (_, inner: string, offset: number) =>
-      createFencedMathBlock(inner, processedInput, offset)
+      createFencedMathBlock(inner, processedInput, offset),
   );
 
   // Then, clean up any malformed fenced math blocks. This is done before
@@ -164,7 +164,7 @@ function normalizeMathDelimiters(input: string): string {
   processedInput = processedInput.replace(
     FENCED_MATH_PATTERN,
     (_, inner: string, offset: number) =>
-      createFencedMathBlock(inner, processedInput, offset)
+      createFencedMathBlock(inner, processedInput, offset),
   );
 
   // Now, process the rest of the math delimiters outside of any code fences.
@@ -174,12 +174,12 @@ function normalizeMathDelimiters(input: string): string {
     // Convert MDX math components (LLM hallucinations) to proper formats
     s = s.replace(
       INLINE_MATH_COMPONENT_PATTERN, // <InlineMath math="x^2" /> → $$x^2$$
-      (_, content: string) => `$$${content.trim()}$$`
+      (_, content: string) => `$$${content.trim()}$$`,
     );
     s = s.replace(
       BLOCK_MATH_COMPONENT_PATTERN, // <BlockMath math="x^2" /> → ```math\nx^2\n```
       (_, inner: string, offset: number) =>
-        createFencedMathBlock(inner, s, offset)
+        createFencedMathBlock(inner, s, offset),
     );
 
     // Convert various inline math patterns to standard $$...$$ format
@@ -202,7 +202,7 @@ function normalizeMathDelimiters(input: string): string {
 
     for (const pattern of displayMathPatterns) {
       s = s.replace(pattern, (_, inner: string, offset: number) =>
-        createFencedMathBlock(inner, s, offset)
+        createFencedMathBlock(inner, s, offset),
       );
     }
 

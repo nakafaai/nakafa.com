@@ -65,7 +65,7 @@ export async function GET() {
 
   // Sort by date (newest first) and add to feed
   const sortedItems = feedItems.sort(
-    (a, b) => b.date.getTime() - a.date.getTime()
+    (a, b) => b.date.getTime() - a.date.getTime(),
   );
   for (const item of sortedItems) {
     feed.addItem(item);

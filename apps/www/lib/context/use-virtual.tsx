@@ -25,7 +25,7 @@ export function VirtualProvider({ children }: { children: React.ReactNode }) {
       virtualRef,
       scrollToIndex,
     }),
-    [scrollToIndex]
+    [scrollToIndex],
   );
 
   return (

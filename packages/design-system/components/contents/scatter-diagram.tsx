@@ -73,7 +73,7 @@ export function ScatterDiagram({
     {
       x: { label: xAxisLabel || "X" },
       y: { label: yAxisLabel || "Y" },
-    }
+    },
   );
 
   let regressionLineData: { x: number; y: number }[] | undefined;
@@ -170,7 +170,7 @@ export function ScatterDiagram({
                       strokeDasharray="2 2"
                     />
                   );
-                })
+                }),
               )}
             <ChartLegend content={<ChartLegendContent className="mt-6" />} />
           </ComposedChart>
@@ -181,7 +181,7 @@ export function ScatterDiagram({
 }
 
 function calculateLeastSquares(
-  points: Point[]
+  points: Point[],
 ): { m: number; b: number } | null {
   const n = points.length;
   if (n < 2) {

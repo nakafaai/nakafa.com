@@ -14,7 +14,7 @@ const tables = {
       v.literal("week"),
       v.literal("month"),
       v.literal("year"),
-      v.null()
+      v.null(),
     ),
     status: v.string(),
     currentPeriodStart: v.string(),

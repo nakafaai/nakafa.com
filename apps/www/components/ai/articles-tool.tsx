@@ -44,7 +44,7 @@ export const ArticlesTool = memo(({ status, output }: Props) => {
             </p>
             <NavigationLink
               className={cn(
-                buttonVariants({ variant: "secondary", size: "sm" })
+                buttonVariants({ variant: "secondary", size: "sm" }),
               )}
               href={output?.baseUrl ?? ""}
             >

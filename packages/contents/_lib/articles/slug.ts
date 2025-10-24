@@ -20,7 +20,7 @@ export function getSlugPath(category: ArticleCategory, slug: string) {
 
 export async function getArticles(
   category: ArticleCategory,
-  locale: Locale
+  locale: Locale,
 ): Promise<Article[]> {
   // Extract the actual category name if a full path is provided
   const categoryName = category.includes("/")
@@ -46,7 +46,7 @@ export async function getArticles(
         const parsedMetadata = ContentMetadataSchema.parse(metadata);
 
         const authors: string[] = parsedMetadata.authors.map(
-          (author: { name: string }) => author.name
+          (author: { name: string }) => author.name,
         );
 
         return {
@@ -60,7 +60,7 @@ export async function getArticles(
         // TODO: Add monitoring for missing articles
         return null;
       }
-    })
+    }),
   );
 
   // Filter out any null values and sort by date (newest first)

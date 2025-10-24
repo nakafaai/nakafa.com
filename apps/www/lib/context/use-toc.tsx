@@ -25,7 +25,7 @@ export function TocProvider({
     () => ({
       activeHeadings,
     }),
-    [activeHeadings]
+    [activeHeadings],
   );
 
   return <TocContext.Provider value={value}>{children}</TocContext.Provider>;

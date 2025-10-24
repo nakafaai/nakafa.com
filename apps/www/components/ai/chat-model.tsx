@@ -47,7 +47,7 @@ export function AiChatModel() {
     const { data: customerState } = await authClient.customer.state();
     if (customerState) {
       const subscription = customerState.activeSubscriptions.find(
-        (s) => s.productId === products.pro.id
+        (s) => s.productId === products.pro.id,
       );
       if (subscription) {
         return;

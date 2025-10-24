@@ -27,7 +27,7 @@ const SCALE_INCREASE = 1.1;
 const SPEED_VALUES_DIFFERENCE = 0.25;
 const SPEED_VALUES = Array.from(
   { length: 5 },
-  (_, i) => SPEED_VALUES_DIFFERENCE * (i + 1)
+  (_, i) => SPEED_VALUES_DIFFERENCE * (i + 1),
 );
 
 type FormulaType = "geometric" | "exponential" | "custom";
@@ -59,7 +59,7 @@ type BacterialGrowthProps = {
   customFormula?: (
     initialCount: number,
     ratio: number,
-    generation: number
+    generation: number,
   ) => number;
   /**
    * The time interval in hours.
@@ -140,21 +140,21 @@ export function BacterialGrowth({
     () =>
       Array.from(
         { length: Math.min(Math.round(bacteriaCount), MAX_BACTERIA_COUNT) },
-        (_, i) => i
+        (_, i) => i,
       ),
-    [bacteriaCount]
+    [bacteriaCount],
   );
 
   // Calculate how many bacteria to actually show (cap at 100 for performance)
   const displayCount = useMemo(
     () => Math.min(Math.round(bacteriaCount), MAX_BACTERIA_COUNT),
-    [bacteriaCount]
+    [bacteriaCount],
   );
 
   // Calculate grid dimensions based on bacteria count
   const gridCols = useMemo(
     () => Math.min(Math.ceil(Math.sqrt(displayCount)), 10),
-    [displayCount]
+    [displayCount],
   );
 
   useEffect(() => {
@@ -215,7 +215,7 @@ export function BacterialGrowth({
           </Button>
         );
       }),
-    [generation, maxGenerations, timeInterval, timeUnit]
+    [generation, maxGenerations, timeInterval, timeUnit],
   );
 
   return (
