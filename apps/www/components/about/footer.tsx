@@ -153,7 +153,7 @@ export function Footer() {
               ))}
             </div>
 
-            <p className="text-sm md:pr-2">
+            <p className="text-balance px-2 text-center text-sm">
               {tCommon("copyright", { year: "2025" })}
             </p>
           </div>
