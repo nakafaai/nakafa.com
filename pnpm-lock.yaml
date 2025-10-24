@@ -88,8 +88,8 @@ importers:
   apps/mcp:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.20.1
-        version: 1.20.1
+        specifier: ^1.20.2
+        version: 1.20.2
       '@repo/connection':
         specifier: workspace:*
         version: link:../../packages/connection
@@ -104,7 +104,7 @@ importers:
         version: 0.13.8(typescript@5.9.3)(zod@4.1.12)
       mcp-handler:
         specifier: 1.0.3
-        version: 1.0.3(@modelcontextprotocol/sdk@1.20.1)(next@16.0.0(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))
+        version: 1.0.3(@modelcontextprotocol/sdk@1.20.2)(next@16.0.0(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))
       next:
         specifier: 16.0.0
         version: 16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -137,11 +137,11 @@ importers:
   apps/www:
     dependencies:
       '@ai-sdk/react':
-        specifier: ^2.0.77
-        version: 2.0.77(react@19.2.0)(zod@4.1.12)
+        specifier: ^2.0.78
+        version: 2.0.78(react@19.2.0)(zod@4.1.12)
       '@convex-dev/better-auth':
         specifier: ^0.9.6
-        version: 0.9.6(@standard-schema/spec@1.0.0)(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.28.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+        version: 0.9.6(@standard-schema/spec@1.0.0)(better-auth@1.3.27(next@16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.28.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.65.0(react@19.2.0))
@@ -215,8 +215,8 @@ importers:
         specifier: ^3.1.4
         version: 3.1.4
       ai:
-        specifier: ^5.0.77
-        version: 5.0.77(zod@4.1.12)
+        specifier: ^5.0.78
+        version: 5.0.78(zod@4.1.12)
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0
@@ -249,7 +249,7 @@ importers:
         version: 16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       next-intl:
         specifier: ^4.4.0
-        version: 4.4.0(next@16.0.0(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+        version: 4.4.0(next@16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -324,8 +324,8 @@ importers:
   packages/ai:
     dependencies:
       '@ai-sdk/gateway':
-        specifier: ^2.0.0
-        version: 2.0.0(zod@4.1.12)
+        specifier: ^2.0.1
+        version: 2.0.1(zod@4.1.12)
       '@ai-sdk/google':
         specifier: ^2.0.23
         version: 2.0.23(zod@4.1.12)
@@ -336,8 +336,8 @@ importers:
         specifier: ^2.0.53
         version: 2.0.53(zod@4.1.12)
       '@ai-sdk/react':
-        specifier: ^2.0.77
-        version: 2.0.77(react@19.2.0)(zod@4.1.12)
+        specifier: ^2.0.78
+        version: 2.0.78(react@19.2.0)(zod@4.1.12)
       '@mendable/firecrawl-js':
         specifier: ^4.4.1
         version: 4.4.1
@@ -345,8 +345,8 @@ importers:
         specifier: ^0.13.8
         version: 0.13.8(typescript@5.9.3)(zod@4.1.12)
       ai:
-        specifier: ^5.0.77
-        version: 5.0.77(zod@4.1.12)
+        specifier: ^5.0.78
+        version: 5.0.78(zod@4.1.12)
       dedent:
         specifier: ^1.7.0
         version: 1.7.0(babel-plugin-macros@3.1.0)
@@ -390,7 +390,7 @@ importers:
     dependencies:
       '@convex-dev/better-auth':
         specifier: ^0.9.6
-        version: 0.9.6(@standard-schema/spec@1.0.0)(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.28.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+        version: 0.9.6(@standard-schema/spec@1.0.0)(better-auth@1.3.27(next@16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.28.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       '@convex-dev/migrations':
         specifier: ^0.2.9
         version: 0.2.9(convex@1.28.0(react@19.2.0))
@@ -452,7 +452,7 @@ importers:
         version: 12.23.24(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       next-intl:
         specifier: ^4.4.0
-        version: 4.4.0(next@16.0.0(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+        version: 4.4.0(next@16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       react:
         specifier: 19.2.0
         version: 19.2.0
@@ -521,8 +521,8 @@ importers:
         specifier: ^2.0.13
         version: 2.0.13
       ai:
-        specifier: ^5.0.77
-        version: 5.0.77(zod@4.1.12)
+        specifier: ^5.0.78
+        version: 5.0.78(zod@4.1.12)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -576,7 +576,7 @@ importers:
         version: 16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       next-intl:
         specifier: ^4.4.0
-        version: 4.4.0(next@16.0.0(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+        version: 4.4.0(next@16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -697,7 +697,7 @@ importers:
     dependencies:
       next-intl:
         specifier: ^4.4.0
-        version: 4.4.0(next@16.0.0(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+        version: 4.4.0(next@16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
@@ -741,7 +741,7 @@ importers:
         version: 4.6.2
       next-intl:
         specifier: ^4.4.0
-        version: 4.4.0(next@16.0.0(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+        version: 4.4.0(next@16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -794,8 +794,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/gateway@2.0.0':
-    resolution: {integrity: sha512-Gj0PuawK7NkZuyYgO/h5kDK/l6hFOjhLdTq3/Lli1FTl47iGmwhH1IZQpAL3Z09BeFYWakcwUmn02ovIm2wy9g==}
+  '@ai-sdk/gateway@2.0.1':
+    resolution: {integrity: sha512-vPVIbnP35ZnayS937XLo85vynR85fpBQWHCdUweq7apzqFOTU2YkUd4V3msebEHbQ2Zro60ZShDDy9SMiyWTqA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -828,8 +828,8 @@ packages:
     resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@2.0.77':
-    resolution: {integrity: sha512-nL3xaSGEJAdT8tIj+dRA3WtoqqfBncQ2uV7chV6usFDCPQlvpYukzbr5+v4oK86AEZCs/LSnNlKnqSDa0aTfhg==}
+  '@ai-sdk/react@2.0.78':
+    resolution: {integrity: sha512-f5inDBHJyUEzbtNxc9HiTxbcGjtot0uuc//0/khGrl8IZlLxw+yTxO/T1Qq95Rw5QPwTx9/Aw7wIZei3qws9hA==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
@@ -1981,8 +1981,8 @@ packages:
   '@mermaid-js/parser@0.6.3':
     resolution: {integrity: sha512-lnjOhe7zyHjc+If7yT4zoedx2vo4sHaTmtkl1+or8BRTnCtDmcTpAjpzDSfCZrshM5bCoz0GyidzadJAH1xobA==}
 
-  '@modelcontextprotocol/sdk@1.20.1':
-    resolution: {integrity: sha512-j/P+yuxXfgxb+mW7OEoRCM3G47zCTDqUPivJo/VzpjbG8I9csTXtOprCf5FfOfHK4whOJny0aHuBEON+kS7CCA==}
+  '@modelcontextprotocol/sdk@1.20.2':
+    resolution: {integrity: sha512-6rqTdFt67AAAzln3NOKsXRmv5ZzPkgbfaebKBqUbts7vK1GZudqnrun5a8d3M/h955cam9RHZ6Jb4Y1XhnmFPg==}
     engines: {node: '>=18'}
 
   '@monogrid/gainmap-js@3.1.0':
@@ -4628,8 +4628,8 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  ai@5.0.77:
-    resolution: {integrity: sha512-w0xP/guV27qLUR+60ru7dSDfF1Wlk6lPEHtXPBLfa8TNQ8Qc4FZ1RE9UGAdZmZU396FA6lKtP9P89Jzb5Z+Hnw==}
+  ai@5.0.78:
+    resolution: {integrity: sha512-ec77fmQwJGLduswMrW4AAUGSOiu8dZaIwMmWHHGKsrMUFFS6ugfkTyx0srtuKYHNRRLRC2dT7cPirnUl98VnxA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -9855,7 +9855,7 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.12(zod@4.1.12)
       zod: 4.1.12
 
-  '@ai-sdk/gateway@2.0.0(zod@4.1.12)':
+  '@ai-sdk/gateway@2.0.1(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.12(zod@4.1.12)
@@ -9897,10 +9897,10 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@2.0.77(react@19.2.0)(zod@4.1.12)':
+  '@ai-sdk/react@2.0.78(react@19.2.0)(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider-utils': 3.0.12(zod@4.1.12)
-      ai: 5.0.77(zod@4.1.12)
+      ai: 5.0.78(zod@4.1.12)
       react: 19.2.0
       swr: 2.3.6(react@19.2.0)
       throttleit: 2.1.0
@@ -10277,7 +10277,7 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@convex-dev/better-auth@0.9.6(@standard-schema/spec@1.0.0)(better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.28.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)':
+  '@convex-dev/better-auth@0.9.6(@standard-schema/spec@1.0.0)(better-auth@1.3.27(next@16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.28.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)':
     dependencies:
       better-auth: 1.3.27(next@16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       common-tags: 1.8.2
@@ -11123,7 +11123,7 @@ snapshots:
     dependencies:
       langium: 3.3.1
 
-  '@modelcontextprotocol/sdk@1.20.1':
+  '@modelcontextprotocol/sdk@1.20.2':
     dependencies:
       ajv: 6.12.6
       content-type: 1.0.5
@@ -14447,9 +14447,9 @@ snapshots:
       screenfull: 5.2.0
       tslib: 2.8.1
 
-  ai@5.0.77(zod@4.1.12):
+  ai@5.0.78(zod@4.1.12):
     dependencies:
-      '@ai-sdk/gateway': 2.0.0(zod@4.1.12)
+      '@ai-sdk/gateway': 2.0.1(zod@4.1.12)
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.12(zod@4.1.12)
       '@opentelemetry/api': 1.9.0
@@ -17078,9 +17078,9 @@ snapshots:
       tiny-emitter: 2.1.0
       typed-function: 4.2.1
 
-  mcp-handler@1.0.3(@modelcontextprotocol/sdk@1.20.1)(next@16.0.0(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)):
+  mcp-handler@1.0.3(@modelcontextprotocol/sdk@1.20.2)(next@16.0.0(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)):
     dependencies:
-      '@modelcontextprotocol/sdk': 1.20.1
+      '@modelcontextprotocol/sdk': 1.20.2
       chalk: 5.6.2
       commander: 11.1.0
       redis: 4.7.1
@@ -17890,7 +17890,7 @@ snapshots:
 
   netmask@2.0.2: {}
 
-  next-intl@4.4.0(next@16.0.0(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3):
+  next-intl@4.4.0(next@16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(typescript@5.9.3):
     dependencies:
       '@formatjs/intl-localematcher': 0.5.10
       negotiator: 1.0.0
