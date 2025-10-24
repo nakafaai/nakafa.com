@@ -2,6 +2,10 @@ import { v } from "convex/values";
 import { query } from "../_generated/server";
 import tables from "./schema";
 
+/**
+ * Get customer record by user ID.
+ * Returns null if customer doesn't exist.
+ */
 export const getCustomerByUserId = query({
   args: {
     userId: v.id("users"),

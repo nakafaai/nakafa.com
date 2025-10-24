@@ -19,7 +19,7 @@ import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
-import { useQuery } from "convex/react";
+import { useAction, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 import { useAi } from "@/lib/context/use-ai";
@@ -31,6 +31,9 @@ export function AiChatModel() {
   const pathname = usePathname();
   const router = useRouter();
 
+  const syncCustomer = useAction(
+    api.customers.actions.syncPolarCustomerFromUserId
+  );
   const user = useQuery(api.auth.getCurrentUser);
 
   const model = useAi((state) => state.model);
@@ -44,24 +47,40 @@ export function AiChatModel() {
     if (type === "free" || !user) {
       return;
     }
-    const { data: customerState } = await authClient.customer.state();
-    if (customerState) {
-      const subscription = customerState.activeSubscriptions.find(
-        (s) => s.productId === products.pro.id
-      );
-      if (subscription) {
-        return;
+
+    try {
+      // Check if user has active subscription
+      const { data: customerState } = await authClient.customer.state();
+      if (customerState) {
+        const subscription = customerState.activeSubscriptions.find(
+          (s) => s.productId === products.pro.id
+        );
+        if (subscription) {
+          // User already has an active subscription
+          return;
+        }
       }
+
+      // Sync customer between Polar and local DB before checkout
+      // This is idempotent - safe to call multiple times
+      await syncCustomer({ userId: user.appUser._id });
+
+      // Proceed to checkout
+      await authClient.checkout({
+        products: [products.pro.id],
+        slug: products.pro.slug,
+        // https://polar.sh/docs/features/checkout/links#prepopulate-fields
+        customFieldData: {
+          customer_email: user.authUser.email,
+          customer_name: user.authUser.name,
+        },
+      });
+    } catch {
+      // TODO: Add proper error handling and user notification
+      // You might want to show a toast notification here:
+      // toast.error("Failed to start checkout. Please try again.");
+      // Or log to your error tracking service
     }
-    await authClient.checkout({
-      products: [products.pro.id],
-      slug: products.pro.slug,
-      // https://polar.sh/docs/features/checkout/links#prepopulate-fields
-      customFieldData: {
-        customer_email: user.authUser.email,
-        customer_name: user.authUser.name,
-      },
-    });
   };
 
   const handleOnChange = (value: ModelId) => {

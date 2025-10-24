@@ -4,6 +4,10 @@ import { query } from "../_generated/server";
 import { cleanSlug } from "../utils/helper";
 import { attachUsers } from "./utils";
 
+/**
+ * Get top-level comments for a content page.
+ * Returns comments with user data attached.
+ */
 export const getParentCommentsBySlug = query({
   args: {
     slug: v.string(),
@@ -18,10 +22,8 @@ export const getParentCommentsBySlug = query({
       .order("desc")
       .paginate(args.paginationOpts);
 
-    // Get user data for comments
     const userMap = await attachUsers(ctx, comments.page);
 
-    // Enrich comments with user data and replies
     const enrichedComments = comments.page.map((comment) => ({
       ...comment,
       user: userMap.get(comment.userId) ?? null,
@@ -34,6 +36,10 @@ export const getParentCommentsBySlug = query({
   },
 });
 
+/**
+ * Get replies to a specific comment.
+ * Returns replies with user data attached.
+ */
 export const getRepliesByCommentId = query({
   args: {
     commentId: v.id("comments"),
@@ -49,10 +55,8 @@ export const getRepliesByCommentId = query({
       .order("desc")
       .paginate(args.paginationOpts);
 
-    // Get user data for replies
     const userMap = await attachUsers(ctx, replies.page);
 
-    // Enrich replies with user data
     const enrichedReplies = replies.page.map((reply) => ({
       ...reply,
       user: userMap.get(reply.userId) ?? null,
@@ -65,6 +69,10 @@ export const getRepliesByCommentId = query({
   },
 });
 
+/**
+ * Get all comments by a specific user.
+ * Used for user profile pages.
+ */
 export const getCommentsByUserId = query({
   args: {
     userId: v.id("users"),

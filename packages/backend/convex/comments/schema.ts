@@ -4,34 +4,29 @@ import { v } from "convex/values";
 const tables = {
   comments: defineTable({
     contentSlug: v.string(),
-    // userId references the app users table
     userId: v.id("users"),
     text: v.string(),
     parentId: v.optional(v.id("comments")),
-    // The depth of the comment in the thread.
-    // A top-level comment has depth 0. A reply has depth parent.depth + 1.
-    // This is capped at 5 to keep threads from getting too nested.
-    depth: v.number(),
+    depth: v.number(), // 0 = top-level, max 5 to prevent deep nesting
     mentions: v.optional(v.array(v.string())),
     upvoteCount: v.number(),
     downvoteCount: v.number(),
-    score: v.number(),
+    score: v.number(), // upvoteCount - downvoteCount
     replyCount: v.number(),
   })
-    .index("contentSlug", ["contentSlug"])
-    .index("parentId", ["parentId"])
-    .index("contentSlug_depth", ["contentSlug", "depth"])
-    .index("parentId_depth", ["parentId", "depth"])
-    .index("userId", ["userId"]),
+    .index("contentSlug", ["contentSlug"]) // Query by content page
+    .index("parentId", ["parentId"]) // Query replies
+    .index("contentSlug_depth", ["contentSlug", "depth"]) // Query top-level comments
+    .index("parentId_depth", ["parentId", "depth"]) // Query nested replies
+    .index("userId", ["userId"]), // Query by user
   commentVotes: defineTable({
     commentId: v.id("comments"),
-    // userId references the app users table
     userId: v.id("users"),
-    vote: v.union(v.literal(-1), v.literal(1)),
+    vote: v.union(v.literal(-1), v.literal(1)), // -1 = downvote, 1 = upvote
   })
-    .index("commentId", ["commentId"])
-    .index("userId", ["userId"])
-    .index("commentId_userId", ["commentId", "userId"]),
+    .index("commentId", ["commentId"]) // Query by comment
+    .index("userId", ["userId"]) // Query by user
+    .index("commentId_userId", ["commentId", "userId"]), // Check existing vote
 };
 
 export default tables;

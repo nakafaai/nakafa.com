@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { safeGetAppUser } from "../auth";
 import { mutation } from "../functions";
@@ -6,6 +6,10 @@ import { cleanSlug } from "../utils/helper";
 
 const MAX_DEPTH = 5;
 
+/**
+ * Add a new comment or reply.
+ * Depth is capped at 5 to prevent deeply nested threads.
+ */
 export const addComment = mutation({
   args: {
     contentSlug: v.string(),
@@ -17,7 +21,10 @@ export const addComment = mutation({
     const user = await safeGetAppUser(ctx);
 
     if (!user) {
-      throw new Error("You must be logged in to comment.");
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to comment.",
+      });
     }
 
     let depth = 0;
@@ -26,9 +33,6 @@ export const addComment = mutation({
     if (args.parentId) {
       parentComment = await ctx.db.get(args.parentId);
       if (parentComment) {
-        // Increment depth from the parent, but cap it at the maximum depth.
-        // This makes it so a reply to a depth-5 comment also becomes depth 5,
-        // creating a flat thread at the maximum depth.
         depth = Math.min(parentComment.depth + 1, MAX_DEPTH);
       }
     }
@@ -58,6 +62,10 @@ export const addComment = mutation({
   },
 });
 
+/**
+ * Vote on a comment (upvote, downvote, or remove vote).
+ * Vote values: 1 = upvote, -1 = downvote, 0 = remove vote.
+ */
 export const voteOnComment = mutation({
   args: {
     commentId: v.id("comments"),
@@ -67,13 +75,19 @@ export const voteOnComment = mutation({
     const user = await safeGetAppUser(ctx);
 
     if (!user) {
-      throw new Error("You must be logged in to vote.");
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to vote.",
+      });
     }
 
     const comment = await ctx.db.get(args.commentId);
 
     if (!comment) {
-      throw new Error("Comment not found.");
+      throw new ConvexError({
+        code: "COMMENT_NOT_FOUND",
+        message: "Comment not found.",
+      });
     }
 
     const existingVote = await ctx.db
@@ -86,16 +100,17 @@ export const voteOnComment = mutation({
     let upvoteCount = comment.upvoteCount;
     let downvoteCount = comment.downvoteCount;
 
+    // Remove existing vote
     if (existingVote) {
       if (existingVote.vote === 1) {
         upvoteCount -= 1;
       } else if (existingVote.vote === -1) {
         downvoteCount -= 1;
       }
-
       await ctx.db.delete(existingVote._id);
     }
 
+    // Add new vote if not removing
     if (args.vote !== 0) {
       await ctx.db.insert("commentVotes", {
         commentId: args.commentId,
@@ -126,6 +141,10 @@ export const voteOnComment = mutation({
   },
 });
 
+/**
+ * Delete a comment.
+ * Only the comment author can delete their own comments.
+ */
 export const deleteComment = mutation({
   args: {
     commentId: v.id("comments"),
@@ -134,17 +153,26 @@ export const deleteComment = mutation({
     const user = await safeGetAppUser(ctx);
 
     if (!user) {
-      throw new Error("You must be logged in to delete a comment.");
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to delete a comment.",
+      });
     }
 
     const comment = await ctx.db.get(args.commentId);
 
     if (!comment) {
-      throw new Error("Comment not found.");
+      throw new ConvexError({
+        code: "COMMENT_NOT_FOUND",
+        message: "Comment not found.",
+      });
     }
 
     if (comment.userId !== user.appUser._id) {
-      throw new Error("You can only delete your own comments.");
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "You can only delete your own comments.",
+      });
     }
 
     await ctx.db.delete(args.commentId);

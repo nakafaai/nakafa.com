@@ -4,10 +4,10 @@ import { v } from "convex/values";
 const tables = {
   users: defineTable({
     email: v.string(),
-    authId: v.string(), // Reference to Better Auth user
+    authId: v.string(), // Better Auth user ID
   })
-    .index("email", ["email"])
-    .index("authId", ["authId"]),
+    .index("email", ["email"]) // Query by email
+    .index("authId", ["authId"]), // Query by Better Auth ID
 };
 
 export default tables;

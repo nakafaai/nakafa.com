@@ -29,10 +29,10 @@ const tables = {
     customerCancellationReason: v.optional(v.union(v.string(), v.null())),
     customerCancellationComment: v.optional(v.union(v.string(), v.null())),
   })
-    .index("id", ["id"])
-    .index("customerId", ["customerId"])
-    .index("customerId_status", ["customerId", "status"])
-    .index("customerId_endedAt", ["customerId", "endedAt"]),
+    .index("id", ["id"]) // Query by Polar subscription ID
+    .index("customerId", ["customerId"]) // Query by customer
+    .index("customerId_status", ["customerId", "status"]) // Query active subscriptions
+    .index("customerId_endedAt", ["customerId", "endedAt"]), // Query subscription history
 };
 
 export default tables;

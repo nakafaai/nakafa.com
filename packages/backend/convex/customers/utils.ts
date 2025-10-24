@@ -7,6 +7,10 @@ import type {
 import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 
+/**
+ * Convert Polar customer to database format.
+ * Maps Polar customer fields to local database schema.
+ */
 export function convertToDatabaseCustomer(
   customer: Customer & { userId: Id<"users"> }
 ): WithoutSystemFields<Doc<"customers">> {
@@ -18,11 +22,21 @@ export function convertToDatabaseCustomer(
   };
 }
 
+/**
+ * Find app user ID from Polar customer data.
+ *
+ * Tries to match customer to app user by:
+ * 1. externalId (Better Auth user ID)
+ * 2. Email in app users table
+ * 3. Email in Better Auth table
+ *
+ * Used by webhooks to sync customer data to correct user.
+ */
 export async function findUserIdFromCustomer(
   ctx: GenericActionCtx<GenericDataModel>,
   customerData: { externalId?: string | null; email: string }
 ): Promise<Id<"users"> | null> {
-  // externalId is the authId from Better Auth
+  // Try to find by externalId (Better Auth user ID)
   const authId = customerData.externalId;
   if (authId) {
     const user = await ctx.runQuery(internal.users.queries.getUserByAuthId, {
@@ -33,20 +47,18 @@ export async function findUserIdFromCustomer(
     }
   }
 
-  // fallback to email, get from app users table
+  // Try to find by email in app users table
   const user = await ctx.runQuery(internal.users.queries.getUserByEmail, {
     email: customerData.email,
   });
-
   if (user) {
     return user._id;
   }
 
-  // fallback to email, get from betterAuth user table
+  // Try to find by email in Better Auth table
   const authUser = await ctx.runQuery(internal.betterAuth.auth.getUserByEmail, {
     email: customerData.email,
   });
-
   if (authUser?.userId) {
     return authUser.userId as Id<"users">;
   }

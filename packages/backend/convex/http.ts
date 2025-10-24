@@ -56,7 +56,7 @@ http.route({
             });
           }
 
-          await ctx.runMutation(api.customers.mutation.upsertCustomer, {
+          await ctx.runMutation(api.customers.mutation.updateCustomer, {
             customer: convertToDatabaseCustomer({
               ...event.data,
               userId,

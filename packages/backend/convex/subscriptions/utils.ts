@@ -2,6 +2,10 @@ import type { Subscription } from "@polar-sh/sdk/models/components/subscription.
 import type { WithoutSystemFields } from "convex/server";
 import type { Doc } from "../_generated/dataModel";
 
+/**
+ * Convert Polar subscription to database format.
+ * Converts Date objects to ISO strings for storage.
+ */
 export function convertToDatabaseSubscription(
   subscription: Subscription
 ): WithoutSystemFields<Doc<"subscriptions">> {

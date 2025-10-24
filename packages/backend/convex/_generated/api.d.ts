@@ -17,6 +17,7 @@ import type * as betterAuth_generatedSchema from "../betterAuth/generatedSchema.
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
 import type * as comments_utils from "../comments/utils.js";
+import type * as customers_actions from "../customers/actions.js";
 import type * as customers_mutation from "../customers/mutation.js";
 import type * as customers_queries from "../customers/queries.js";
 import type * as customers_utils from "../customers/utils.js";
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   "comments/mutations": typeof comments_mutations;
   "comments/queries": typeof comments_queries;
   "comments/utils": typeof comments_utils;
+  "customers/actions": typeof customers_actions;
   "customers/mutation": typeof customers_mutation;
   "customers/queries": typeof customers_queries;
   "customers/utils": typeof customers_utils;

@@ -6,6 +6,10 @@ import { internalQuery, mutation } from "./_generated/server";
 // Export a static instance for Better Auth schema generation
 export const auth = getStaticAuth(createAuth);
 
+/**
+ * Link Better Auth user to app user.
+ * Called when app user is created.
+ */
 export const setUserId = mutation({
   args: {
     authId: v.id("user"),
@@ -18,6 +22,9 @@ export const setUserId = mutation({
   },
 });
 
+/**
+ * Update Better Auth user's display name.
+ */
 export const updateName = mutation({
   args: {
     authId: v.id("user"),
@@ -30,6 +37,10 @@ export const updateName = mutation({
   },
 });
 
+/**
+ * Get Better Auth user by email address.
+ * Returns null if user doesn't exist.
+ */
 export const getUserByEmail = internalQuery({
   args: {
     email: v.string(),
@@ -39,9 +50,11 @@ export const getUserByEmail = internalQuery({
       .query("user")
       .withIndex("email_name", (q) => q.eq("email", args.email))
       .unique();
+
     if (!user) {
       return null;
     }
+
     return user;
   },
 });

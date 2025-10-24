@@ -24,8 +24,6 @@ const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
 const authFunctions: AuthFunctions = internal.auth;
 
-// The component client has methods needed for integrating Convex with Better Auth,
-// as well as helper methods for general use.
 export const authComponent = createClient<DataModel, typeof authSchema>(
   components.betterAuth,
   {
@@ -37,8 +35,6 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
     triggers: {
       user: {
         onCreate: async (ctx, authUser) => {
-          // Handle user creation logic here if needed
-          // This is where you can sync changes to your application user table
           const userId = await ctx.db.insert("users", {
             email: authUser.email,
             authId: authUser._id,
@@ -49,12 +45,10 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
           });
         },
         onUpdate: async (_ctx, _newDoc, _oldDoc) => {
-          // Handle user update logic here if needed
-          // This is where you can sync changes to your application user table
+          // TODO: Sync user updates if needed
         },
         onDelete: async (_ctx, _authUser) => {
-          // Handle user deletion logic here if needed
-          // This is where you can clean up related data
+          // TODO: Clean up related data on user deletion
         },
       },
     },
@@ -128,13 +122,22 @@ export const createAuth = (
   return betterAuth(authConfig);
 };
 
+/**
+ * Get Better Auth user from session.
+ */
 export const safeGetUser = (ctx: QueryCtx) =>
   authComponent.safeGetAuthUser(ctx);
 
+/**
+ * Get Better Auth user by ID (bypasses session check).
+ */
 export const getAnyUserById = (ctx: QueryCtx, userId: string) =>
   authComponent.getAnyUserById(ctx, userId);
 
-// Get the current app user (not Better Auth user)
+/**
+ * Get current logged-in app user with auth data.
+ * Returns null if not logged in.
+ */
 export const safeGetAppUser = async (ctx: QueryCtx) => {
   const authUser = await safeGetUser(ctx);
 
@@ -157,6 +160,9 @@ export const safeGetAppUser = async (ctx: QueryCtx) => {
   };
 };
 
+/**
+ * Get any app user by ID with auth data (bypasses session check).
+ */
 export const getAnyAppUserById = async (ctx: QueryCtx, userId: Id<"users">) => {
   const user = await ctx.db.get(userId);
   if (!user) {
@@ -174,11 +180,17 @@ export const getAnyAppUserById = async (ctx: QueryCtx, userId: Id<"users">) => {
   };
 };
 
+/**
+ * Query to get current logged-in user.
+ */
 export const getCurrentUser = query({
   args: {},
   handler: (ctx) => safeGetAppUser(ctx),
 });
 
+/**
+ * Query to get any user by ID.
+ */
 export const getUserById = query({
   args: { userId: v.id("users") },
   handler: (ctx, args) => getAnyAppUserById(ctx, args.userId),
