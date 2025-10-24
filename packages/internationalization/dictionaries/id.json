@@ -272,9 +272,14 @@
     "join-community": "Bergabung komunitas",
     "join-our-community-description": "Komunitas adalah jantung dari Nakafa. Bergabunglah dengan ratusan orang yang berkontribusi membentuk masa depan pendidikan.",
     "curriculum-title": "Belajar <mark>apa yang kamu butuhin</mark>, <mark>pas kamu butuhin</mark>",
-    "curriculum-description": "Pilih tingkat kamu, langsung terjun ke materi apapun, atau cari apa yang bikin kamu stuck. Tanpa scroll berkepanjangan."
+    "curriculum-description": "Pilih tingkat kamu, langsung terjun ke materi apapun, atau cari apa yang bikin kamu stuck. Tanpa scroll berkepanjangan.",
+    "company": "Perusahaan",
+    "community": "Komunitas",
+    "about-us": "Tentang Kami",
+    "events": "Acara"
   },
   "Legal": {
+    "terms-and-policies": "Syarat dan Kebijakan",
     "terms-of-service": "Syarat dan Ketentuan",
     "privacy-policy": "Kebijakan Privasi",
     "security-policy": "Kebijakan Keamanan",
