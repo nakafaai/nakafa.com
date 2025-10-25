@@ -4,10 +4,7 @@ import type {
   NumericGrade,
 } from "@repo/contents/_types/subject/grade";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import {
-  Button,
-  buttonVariants,
-} from "@repo/design-system/components/ui/button";
+import { Button } from "@repo/design-system/components/ui/button";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
@@ -19,7 +16,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
-import { cn } from "@repo/design-system/lib/utils";
 import {
   ArrowUpRightIcon,
   FrownIcon,
@@ -77,28 +73,7 @@ export const SubjectsPart = memo(({ message }: Props) => {
           <Badge variant="muted">{subjects.length}</Badge>
         </div>
         {subjects.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-2">
-            {subjects.slice(0, MAX_SHOWN_SUBJECTS).map((subject) => (
-              <NavigationLink
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "sm" })
-                )}
-                href={`/${subject.slug}`}
-                key={subject.url}
-                target="_blank"
-              >
-                {subject.title}
-                <ArrowUpRightIcon />
-              </NavigationLink>
-            ))}
-
-            {subjects.length > MAX_SHOWN_SUBJECTS && (
-              <Button onClick={() => setOpen(true)} size="sm" variant="outline">
-                {t("view-all")}
-                <Layers2Icon />
-              </Button>
-            )}
-          </div>
+          <SubjectsPartPreview setOpen={setOpen} subjects={subjects} />
         ) : (
           <div className="text-muted-foreground text-sm">
             {t("found-subjects", { count: subjects.length })}
@@ -114,6 +89,40 @@ export const SubjectsPart = memo(({ message }: Props) => {
     </>
   );
 });
+
+const SubjectsPartPreview = memo(
+  ({
+    subjects,
+    setOpen,
+  }: {
+    subjects: DataPart["get-subjects"]["subjects"];
+    setOpen: (open: boolean) => void;
+  }) => {
+    const t = useTranslations("Ai");
+
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        {subjects.slice(0, MAX_SHOWN_SUBJECTS).map((subject) => (
+          <NavigationLink
+            href={`/${subject.slug}`}
+            key={subject.url}
+            target="_blank"
+          >
+            {subject.title}
+          </NavigationLink>
+        ))}
+
+        {subjects.length > MAX_SHOWN_SUBJECTS && (
+          <Button onClick={() => setOpen(true)} size="sm" variant="outline">
+            {t("view-all")}
+            <Layers2Icon />
+          </Button>
+        )}
+      </div>
+    );
+  }
+);
+SubjectsPartPreview.displayName = "SubjectsPartPreview";
 
 const SubjectsPartSheet = memo(
   ({

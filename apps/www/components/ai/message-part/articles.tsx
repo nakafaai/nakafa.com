@@ -28,6 +28,7 @@ import { memo, useState } from "react";
 const MAX_SHOWN_ARTICLES = 5;
 
 type Props = {
+  id: string;
   message: DataPart["get-articles"];
 };
 
@@ -73,28 +74,7 @@ export const ArticlesPart = memo(({ message }: Props) => {
           <Badge variant="muted">{articles.length}</Badge>
         </div>
         {articles.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-2">
-            {articles.slice(0, MAX_SHOWN_ARTICLES).map((article) => (
-              <NavigationLink
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "sm" })
-                )}
-                href={`/${article.slug}`}
-                key={article.url}
-                target="_blank"
-              >
-                {article.title}
-                <ArrowUpRightIcon />
-              </NavigationLink>
-            ))}
-
-            {articles.length > MAX_SHOWN_ARTICLES && (
-              <Button onClick={() => setOpen(true)} size="sm" variant="outline">
-                {t("view-all")}
-                <Layers2Icon />
-              </Button>
-            )}
-          </div>
+          <ArticlesPartPreview articles={articles} setOpen={setOpen} />
         ) : (
           <div className="text-muted-foreground text-sm">
             {t("found-articles", { count: articles.length })}
@@ -110,6 +90,42 @@ export const ArticlesPart = memo(({ message }: Props) => {
     </>
   );
 });
+
+const ArticlesPartPreview = memo(
+  ({
+    articles,
+    setOpen,
+  }: {
+    articles: DataPart["get-articles"]["articles"];
+    setOpen: (open: boolean) => void;
+  }) => {
+    const t = useTranslations("Ai");
+
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        {articles.slice(0, MAX_SHOWN_ARTICLES).map((article) => (
+          <NavigationLink
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            href={`/${article.slug}`}
+            key={article.url}
+            target="_blank"
+          >
+            {article.title}
+            <ArrowUpRightIcon />
+          </NavigationLink>
+        ))}
+
+        {articles.length > MAX_SHOWN_ARTICLES && (
+          <Button onClick={() => setOpen(true)} size="sm" variant="outline">
+            {t("view-all")}
+            <Layers2Icon />
+          </Button>
+        )}
+      </div>
+    );
+  }
+);
+ArticlesPartPreview.displayName = "ArticlesPartPreview";
 
 const ArticlesPartSheet = memo(
   ({
