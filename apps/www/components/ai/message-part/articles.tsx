@@ -72,13 +72,7 @@ export const ArticlesPart = memo(({ message }: Props) => {
           </span>
           <Badge variant="muted">{articles.length}</Badge>
         </div>
-        {articles.length > 0 ? (
-          <ArticlesPartPreview articles={articles} setOpen={setOpen} />
-        ) : (
-          <div className="text-muted-foreground text-sm">
-            {t("found-articles", { count: articles.length })}
-          </div>
-        )}
+        <ArticlesPartPreview articles={articles} setOpen={setOpen} />
       </div>
       <ArticlesPartSheet
         articles={articles}
@@ -99,6 +93,10 @@ const ArticlesPartPreview = memo(
     setOpen: (open: boolean) => void;
   }) => {
     const t = useTranslations("Ai");
+
+    if (articles.length === 0) {
+      return null;
+    }
 
     return (
       <div className="flex flex-wrap items-center gap-2">

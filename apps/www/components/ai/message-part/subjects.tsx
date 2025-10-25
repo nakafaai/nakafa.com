@@ -72,13 +72,7 @@ export const SubjectsPart = memo(({ message }: Props) => {
           </span>
           <Badge variant="muted">{subjects.length}</Badge>
         </div>
-        {subjects.length > 0 ? (
-          <SubjectsPartPreview setOpen={setOpen} subjects={subjects} />
-        ) : (
-          <div className="text-muted-foreground text-sm">
-            {t("found-subjects", { count: subjects.length })}
-          </div>
-        )}
+        <SubjectsPartPreview setOpen={setOpen} subjects={subjects} />
       </div>
       <SubjectsPartSheet
         input={message.input}
@@ -99,6 +93,10 @@ const SubjectsPartPreview = memo(
     setOpen: (open: boolean) => void;
   }) => {
     const t = useTranslations("Ai");
+
+    if (subjects.length === 0) {
+      return null;
+    }
 
     return (
       <div className="flex flex-wrap items-center gap-2">
