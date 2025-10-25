@@ -28,7 +28,6 @@ import { memo, useState } from "react";
 const MAX_SHOWN_ARTICLES = 5;
 
 type Props = {
-  id: string;
   message: DataPart["get-articles"];
 };
 
