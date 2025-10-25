@@ -168,7 +168,6 @@ function LinkItem({ href, label }: { href: string; label: string }) {
     <NavigationLink
       className="text-sm transition-colors ease-out hover:text-primary"
       href={href}
-      target="_blank"
     >
       {label}
     </NavigationLink>
