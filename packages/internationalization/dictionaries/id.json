@@ -260,7 +260,14 @@
     "web-search-error": "Gagal menemukan informasi terkait.",
     "model": "Model",
     "premium-models": "Model Premium",
-    "free-models": "Model Gratis"
+    "free-models": "Model Gratis",
+    "get-subjects-title": "Mata pelajaran",
+    "get-subjects-loading": "Mendapatkan mata pelajaran...",
+    "get-subjects-error": "Gagal mendapatkan mata pelajaran.",
+    "view-all": "Lihat semua",
+    "get-articles-title": "Artikel",
+    "get-articles-loading": "Mendapatkan artikel...",
+    "get-articles-error": "Gagal mendapatkan artikel."
   },
   "About": {
     "meta-title": "Fck Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",

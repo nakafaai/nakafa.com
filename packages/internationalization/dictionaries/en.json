@@ -260,7 +260,14 @@
     "web-search-error": "Failed to find relevant information.",
     "model": "Model",
     "premium-models": "Premium Models",
-    "free-models": "Free Models"
+    "free-models": "Free Models",
+    "get-subjects-title": "Subjects",
+    "get-subjects-loading": "Getting subjects...",
+    "get-subjects-error": "Failed to get subjects.",
+    "view-all": "View all",
+    "get-articles-title": "Articles",
+    "get-articles-loading": "Getting articles...",
+    "get-articles-error": "Failed to get articles."
   },
   "About": {
     "meta-title": "Fck Closed Education, Enjoy Free Open Education",

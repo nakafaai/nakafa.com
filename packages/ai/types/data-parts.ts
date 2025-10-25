@@ -1,17 +1,19 @@
 import * as z from "zod";
+import {
+  getArticlesInputSchema,
+  getSubjectsInputSchema,
+} from "../schema/tools";
 
 export const errorSchema = z.object({
   message: z.string(),
 });
 
-export const contentsSchema = z.array(
-  z.object({
-    title: z.string(),
-    url: z.string(),
-    slug: z.string(),
-    locale: z.string(),
-  })
-);
+export const contentsSchema = z.object({
+  title: z.string(),
+  url: z.string(),
+  slug: z.string(),
+  locale: z.string(),
+});
 
 export const dataPartSchema = z.object({
   suggestions: z.object({
@@ -19,13 +21,15 @@ export const dataPartSchema = z.object({
   }),
   "get-articles": z.object({
     baseUrl: z.string(),
-    articles: contentsSchema,
+    input: getArticlesInputSchema,
+    articles: z.array(contentsSchema),
     status: z.enum(["loading", "done", "error"]),
     error: errorSchema.optional(),
   }),
   "get-subjects": z.object({
     baseUrl: z.string(),
-    subjects: contentsSchema,
+    input: getSubjectsInputSchema,
+    subjects: z.array(contentsSchema),
     status: z.enum(["loading", "done", "error"]),
     error: errorSchema.optional(),
   }),

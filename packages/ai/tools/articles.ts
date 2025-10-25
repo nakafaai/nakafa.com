@@ -32,6 +32,7 @@ export const createGetArticles = ({ writer }: Params) =>
         type: "data-get-articles",
         data: {
           baseUrl,
+          input: { locale, category },
           status: "loading",
           articles: [],
         },
@@ -47,6 +48,7 @@ export const createGetArticles = ({ writer }: Params) =>
           type: "data-get-articles",
           data: {
             baseUrl,
+            input: { locale, category },
             articles: [],
             status: "error",
             error,
@@ -68,6 +70,7 @@ export const createGetArticles = ({ writer }: Params) =>
         type: "data-get-articles",
         data: {
           baseUrl,
+          input: { locale, category },
           articles,
           status: "done",
         },

@@ -9,8 +9,10 @@ import {
 } from "@repo/design-system/components/ai/reasoning";
 import { Response } from "@repo/design-system/components/ai/response";
 import { memo } from "react";
+import { ArticlesPart } from "./articles";
 import { CalculatorPart } from "./calculator";
-import { ContentPart } from "./content-tool";
+import { ContentPart } from "./content";
+import { SubjectsPart } from "./subjects";
 import { SuggestionsPart } from "./suggestions";
 import { WebSearchPart } from "./web-search";
 
@@ -53,6 +55,10 @@ export const AiMessagePart = memo(({ part, partIndex, messageId }: Props) => {
       return <CalculatorPart message={part.data} />;
     case "data-get-content":
       return <ContentPart message={part.data} />;
+    case "data-get-subjects":
+      return <SubjectsPart message={part.data} />;
+    case "data-get-articles":
+      return <ArticlesPart message={part.data} />;
     default:
       return null;
   }

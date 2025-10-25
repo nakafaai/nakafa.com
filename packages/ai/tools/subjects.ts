@@ -32,6 +32,7 @@ export const createGetSubjects = ({ writer }: Params) =>
         type: "data-get-subjects",
         data: {
           baseUrl,
+          input: { locale, category, grade, material },
           status: "loading",
           subjects: [],
         },
@@ -47,6 +48,7 @@ export const createGetSubjects = ({ writer }: Params) =>
           type: "data-get-subjects",
           data: {
             baseUrl,
+            input: { locale, category, grade, material },
             subjects: [],
             status: "error",
             error,
@@ -68,6 +70,7 @@ export const createGetSubjects = ({ writer }: Params) =>
         type: "data-get-subjects",
         data: {
           baseUrl,
+          input: { locale, category, grade, material },
           subjects,
           status: "done",
         },

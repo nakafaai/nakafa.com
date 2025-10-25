@@ -150,10 +150,10 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
 
       {showSheet && (
         <Sheet modal={false} onOpenChange={setOpen} open={open}>
-          <SheetContent className="w-6/7 sm:max-w-xl">
+          <SheetContent className="w-full sm:max-w-xl">
             <div className="flex h-full flex-col">
               <SheetHeader>
-                <SheetTitle className="text-2xl">
+                <SheetTitle className="text-xl">
                   {references.length} {t("references")}
                 </SheetTitle>
                 <SheetDescription>{title}</SheetDescription>
