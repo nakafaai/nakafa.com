@@ -10,7 +10,7 @@ import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { BookOpenIcon, ChevronDownIcon, FrownIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { memo, useState } from "react";
+import { memo, type PropsWithChildren, useState } from "react";
 
 type Props = {
   message: DataPart["get-content"];
@@ -79,14 +79,8 @@ export const ContentPart = memo(({ message }: Props) => {
 });
 ContentPart.displayName = "ContentPart";
 
-function ContentCard({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
+const ContentCard = memo(
+  ({ children, className }: PropsWithChildren<{ className?: string }>) => (
     <div className="overflow-hidden rounded-md border">
       <div
         className={cn(
@@ -97,5 +91,6 @@ function ContentCard({
         {children}
       </div>
     </div>
-  );
-}
+  )
+);
+ContentCard.displayName = "ContentCard";

@@ -20,7 +20,7 @@ import {
   ArrowUpRightIcon,
   FrownIcon,
   Layers2Icon,
-  SearchIcon,
+  NewspaperIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
@@ -66,7 +66,7 @@ export const ArticlesPart = memo(({ message }: Props) => {
     <>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
+          <NewspaperIcon className="size-4 shrink-0 text-muted-foreground" />
           <span className="text-muted-foreground text-sm">
             {t("get-articles-title")}
           </span>

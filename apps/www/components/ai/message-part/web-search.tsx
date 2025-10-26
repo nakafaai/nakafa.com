@@ -6,8 +6,9 @@ import {
   SourceContent,
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
+import { Badge } from "@repo/design-system/components/ui/badge";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
-import { FrownIcon, SearchIcon } from "lucide-react";
+import { FrownIcon, GlobeIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -21,7 +22,7 @@ export const WebSearchPart = memo(({ message }: Props) => {
   const isLoading = message.status === "loading";
   const isError = message.status === "error";
 
-  const results = message.sources ?? [];
+  const results = message.sources;
 
   if (isLoading) {
     return (
@@ -48,27 +49,32 @@ export const WebSearchPart = memo(({ message }: Props) => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
+        <GlobeIcon className="size-4 shrink-0 text-muted-foreground" />
         <span className="text-muted-foreground text-sm">{t("web-search")}</span>
+        <Badge variant="muted">{results.length}</Badge>
       </div>
-      {results.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          {results.map((item, index) => (
-            <Source href={item.url} key={`${item.url}-${index}`}>
-              <SourceTrigger showFavicon />
-              <SourceContent
-                description={item.description}
-                title={item.title}
-              />
-            </Source>
-          ))}
-        </div>
-      ) : (
-        <div className="text-muted-foreground text-sm">
-          {t("found-results", { count: results.length })}
-        </div>
-      )}
+      <WebSearchPartPreview results={results} />
     </div>
   );
 });
 WebSearchPart.displayName = "WebSearchPart";
+
+const WebSearchPartPreview = memo(
+  ({ results }: { results: DataPart["web-search"]["sources"] }) => {
+    if (results.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        {results.map((item, index) => (
+          <Source href={item.url} key={`${item.url}-${index}`}>
+            <SourceTrigger showFavicon />
+            <SourceContent description={item.description} title={item.title} />
+          </Source>
+        ))}
+      </div>
+    );
+  }
+);
+WebSearchPartPreview.displayName = "WebSearchPartPreview";

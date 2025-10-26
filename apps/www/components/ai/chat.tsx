@@ -29,27 +29,25 @@ export function AiChat() {
   const { messages } = useChat((state) => state.chat);
 
   return (
-    <main className="h-[calc(100svh-4rem)] lg:h-svh">
-      <div className="relative flex size-full flex-col overflow-hidden">
-        <Conversation>
-          <ConversationContent className="mx-auto max-w-3xl">
-            {messages.map((message) => (
-              <Message
-                from={message.role === "user" ? "user" : "assistant"}
-                key={message.id}
-              >
-                <AiChatMessage message={message} />
-              </Message>
-            ))}
+    <div className="relative flex size-full flex-col overflow-hidden">
+      <Conversation>
+        <ConversationContent className="mx-auto max-w-3xl">
+          {messages.map((message) => (
+            <Message
+              from={message.role === "user" ? "user" : "assistant"}
+              key={message.id}
+            >
+              <AiChatMessage message={message} />
+            </Message>
+          ))}
 
-            <AIChatLoading />
-          </ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
+          <AIChatLoading />
+        </ConversationContent>
+        <ConversationScrollButton />
+      </Conversation>
 
-        <AiChatToolbar />
-      </div>
-    </main>
+      <AiChatToolbar />
+    </div>
   );
 }
 

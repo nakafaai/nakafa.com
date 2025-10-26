@@ -8,7 +8,7 @@ export function nakafaWebSearch() {
       Use this tool to search the web for up-to-date information and as universal fallback for ANY topic when Nakafa content is insufficient.
       The tool uses Mendable's Firecrawl API under the hood.
       Use exactly the citation field for inline citations.
-      Write inline citations at the end of every sentence.
+      Write inline citations before the period at the end of every sentence.
     `,
 
     toolUsageGuidelines: `
@@ -29,7 +29,7 @@ export function nakafaWebSearch() {
       After searching the web, the webSearch allows you to:
 
       - Explain the content to the user in a way that is easy to understand
-      - Use exactly the citation field for inline citations at the end of every sentence
+      - Use exactly the citation field for inline citations before the period at the end of every sentence
     `,
 
     detailedTaskInstructions: `
@@ -38,7 +38,7 @@ export function nakafaWebSearch() {
       - Search the web for up-to-date information
       - Explain the content to the user in a way that is easy to understand
       - Use exactly the citation field for inline citations
-      - Write inline citations at the end of every sentence
+      - Write inline citations before the period at the end of every sentence
     `,
 
     examples: `
@@ -49,6 +49,13 @@ export function nakafaWebSearch() {
         Assistant: I'll find the latest news about the stock market for you.
         *Calls webSearch tool*
       </example>
+
+      ## Examples of how to write inline citations
+
+      <example>
+        User: what is the latest news about the stock market?
+        Assistant: The stock market is down today [source](https://www.google.com).
+      </example>
     `,
 
     finalRequest: `
@@ -56,7 +63,7 @@ export function nakafaWebSearch() {
 
       Use webSearch tool when the user asks to search the web for up-to-date information.
       Treat the content as a source of information to explain the content to the user.
-      Write inline citations at the end of every sentence.
+      Write inline citations before the period at the end of every sentence.
     `,
   });
 }

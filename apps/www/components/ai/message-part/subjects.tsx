@@ -18,9 +18,9 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import {
   ArrowUpRightIcon,
+  BookOpenIcon,
   FrownIcon,
   Layers2Icon,
-  SearchIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, useMemo, useState } from "react";
@@ -66,7 +66,7 @@ export const SubjectsPart = memo(({ message }: Props) => {
     <>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
+          <BookOpenIcon className="size-4 shrink-0 text-muted-foreground" />
           <span className="text-muted-foreground text-sm">
             {t("get-subjects-title")}
           </span>
