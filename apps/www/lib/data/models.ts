@@ -54,16 +54,6 @@ export const premiumModels: Model[] = [
 
 export const freeModels: Model[] = [
   {
-    icon: OpenAI,
-    value: "gpt-oss-120b",
-    label: "GPT OSS 120B",
-  },
-  {
-    icon: OpenAI,
-    value: "gpt-5-nano",
-    label: "GPT 5 Nano",
-  },
-  {
     icon: XAI,
     value: "grok-4-fast",
     label: "Grok 4 Fast",
@@ -72,6 +62,16 @@ export const freeModels: Model[] = [
     icon: Gemini,
     value: "gemini-2.5-flash",
     label: "Gemini 2.5 Flash",
+  },
+  {
+    icon: OpenAI,
+    value: "gpt-oss-120b",
+    label: "GPT OSS 120B",
+  },
+  {
+    icon: OpenAI,
+    value: "gpt-5-nano",
+    label: "GPT 5 Nano",
   },
   {
     icon: DeepSeek,
