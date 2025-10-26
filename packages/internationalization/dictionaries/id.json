@@ -195,6 +195,9 @@
     "high": "T",
     "low": "R"
   },
+  "Videos": {
+    "discover": "Temukan video"
+  },
   "NotFound": {
     "title": "Halaman Tidak Ditemukan",
     "description": "Oops! Halaman yang kamu cari tidak ada atau belum diimplementasikan.",

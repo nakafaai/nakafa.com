@@ -4,6 +4,7 @@ import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { HomeSearch } from "@/components/home/search";
 import { HomeTitle } from "@/components/home/title";
+import { Videos } from "@/components/home/videos";
 import { Weather } from "@/components/home/weather";
 
 export const revalidate = false;
@@ -70,6 +71,7 @@ export default async function Page({ params }: Props) {
 
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
               <Weather />
+              <Videos />
             </div>
           </div>
         </div>
