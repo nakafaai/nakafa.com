@@ -90,4 +90,12 @@ export const contributors: Contributor[] = [
       linkedin: "https://www.linkedin.com/in/emeralddurra/",
     },
   },
+  {
+    name: "Rahmawati Rahayu",
+    username: "yayu",
+    type: "community",
+    social: {
+      linkedin: "https://www.linkedin.com/in/rahmawati-rahayu-a884b7205/",
+    },
+  },
 ];
