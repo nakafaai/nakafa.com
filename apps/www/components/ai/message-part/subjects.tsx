@@ -4,7 +4,10 @@ import type {
   NumericGrade,
 } from "@repo/contents/_types/subject/grade";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { Button } from "@repo/design-system/components/ui/button";
+import {
+  Button,
+  buttonVariants,
+} from "@repo/design-system/components/ui/button";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
@@ -16,6 +19,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
+import { cn } from "@repo/design-system/lib/utils";
 import {
   ArrowUpRightIcon,
   BookOpenIcon,
@@ -102,11 +106,13 @@ const SubjectsPartPreview = memo(
       <div className="flex flex-wrap items-center gap-2">
         {subjects.slice(0, MAX_SHOWN_SUBJECTS).map((subject) => (
           <NavigationLink
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             href={`/${subject.slug}`}
             key={subject.url}
             target="_blank"
           >
             {subject.title}
+            <ArrowUpRightIcon />
           </NavigationLink>
         ))}
 
