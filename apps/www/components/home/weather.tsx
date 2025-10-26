@@ -16,7 +16,7 @@ import {
   SunIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useWeather } from "@/lib/react-query/weather";
+import { useWeather } from "@/lib/react-query/use-weather";
 
 // Constants
 const KELVIN_TO_CELSIUS = 273.15;
