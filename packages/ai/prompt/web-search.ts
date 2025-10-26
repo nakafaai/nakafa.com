@@ -7,8 +7,9 @@ export function nakafaWebSearch() {
 
       Use this tool to search the web for up-to-date information and as universal fallback for ANY topic when Nakafa content is insufficient.
       The tool uses Mendable's Firecrawl API under the hood.
-      Use exactly the citation field for inline citations.
+      Use exactly the citation field for inline citations as LINKS (not images).
       Write inline citations before the period at the end of every sentence.
+      CRITICAL: Always use link markdown syntax [text](url), NEVER use image markdown syntax ![alt](url).
     `,
 
     toolUsageGuidelines: `
@@ -29,7 +30,8 @@ export function nakafaWebSearch() {
       After searching the web, the webSearch allows you to:
 
       - Explain the content to the user in a way that is easy to understand
-      - Use exactly the citation field for inline citations before the period at the end of every sentence
+      - Use exactly the citation field for inline citations as LINKS before the period at the end of every sentence
+      - IMPORTANT: Citations must be links [text](url), NOT images ![alt](url)
     `,
 
     detailedTaskInstructions: `
@@ -37,8 +39,9 @@ export function nakafaWebSearch() {
 
       - Search the web for up-to-date information
       - Explain the content to the user in a way that is easy to understand
-      - Use exactly the citation field for inline citations
+      - Use exactly the citation field for inline citations as LINKS (not images)
       - Write inline citations before the period at the end of every sentence
+      - Always use link syntax [text](url), NEVER image syntax ![alt](url)
     `,
 
     examples: `
@@ -52,10 +55,15 @@ export function nakafaWebSearch() {
 
       ## Examples of how to write inline citations
 
-      <example>
-        User: what is the latest news about the stock market?
+      <good-example>
+        DO write citations as links [text](url):
         Assistant: The stock market is down today [source](https://www.google.com).
-      </example>
+      </good-example>
+
+      <bad-example>
+        DON'T write citations as images ![alt](url):
+        Assistant: The stock market is down today ![source](https://www.google.com).
+      </bad-example>
     `,
 
     finalRequest: `
@@ -63,7 +71,8 @@ export function nakafaWebSearch() {
 
       Use webSearch tool when the user asks to search the web for up-to-date information.
       Treat the content as a source of information to explain the content to the user.
-      Write inline citations before the period at the end of every sentence.
+      Write inline citations as LINKS before the period at the end of every sentence.
+      NEVER use image markdown syntax ![alt](url) for citations - always use link syntax [text](url).
     `,
   });
 }
