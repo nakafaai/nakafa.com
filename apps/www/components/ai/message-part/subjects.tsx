@@ -22,7 +22,7 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import {
   ArrowUpRightIcon,
-  BookOpenIcon,
+  BookIcon,
   FrownIcon,
   Layers2Icon,
 } from "lucide-react";
@@ -70,7 +70,7 @@ export const SubjectsPart = memo(({ message }: Props) => {
     <>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <BookOpenIcon className="size-4 shrink-0 text-muted-foreground" />
+          <BookIcon className="size-4 shrink-0 text-muted-foreground" />
           <span className="text-muted-foreground text-sm">
             {t("get-subjects-title")}
           </span>
