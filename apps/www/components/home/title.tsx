@@ -11,7 +11,7 @@ export function HomeTitle({ className }: Props) {
   return (
     <h1
       className={cn(
-        "mb-8 text-balance font-medium text-4xl leading-none tracking-tighter md:text-center",
+        "mb-8 text-pretty font-medium text-4xl leading-none tracking-tighter md:text-center",
         className
       )}
     >

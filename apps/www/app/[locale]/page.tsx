@@ -1,14 +1,10 @@
-import { SiYoutube } from "@icons-pack/react-simple-icons";
-import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
-import { cn } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { HeartHandshakeIcon } from "lucide-react";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { LangSwitcher } from "@/components/home/lang-switcher";
 import { HomeSearch } from "@/components/home/search";
 import { HomeTitle } from "@/components/home/title";
+import { Weather } from "@/components/home/weather";
 
 export const revalidate = false;
 
@@ -62,41 +58,18 @@ export default async function Page({ params }: Props) {
         locale={locale}
       />
       <div
-        className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh"
+        className="relative flex min-h-[calc(100svh-4rem)] items-center justify-center lg:min-h-svh"
         data-pagefind-ignore
       >
         <Particles className="pointer-events-none absolute inset-0 opacity-80" />
         <div className="mx-auto w-full max-w-xl px-6">
-          <div className="relative flex h-full flex-col">
+          <div className="relative flex h-full flex-col space-y-4">
             <HomeTitle />
 
             <HomeSearch />
 
-            <div className="mt-4 flex justify-between gap-6 gap-y-3 sm:items-center">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <a
-                  className={cn(buttonVariants({ variant: "outline" }))}
-                  href="https://github.com/nakafaai/nakafa.com"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  title={tHome("contribute")}
-                >
-                  <HeartHandshakeIcon className="size-4" />
-                  {tHome("contribute")}
-                </a>
-                <a
-                  className={cn(buttonVariants({ variant: "outline" }))}
-                  href="https://www.youtube.com/@nakafaa"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  title={tHome("videos")}
-                >
-                  <SiYoutube className="size-4" />
-                  {tHome("videos")}
-                </a>
-              </div>
-
-              <LangSwitcher />
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+              <Weather />
             </div>
           </div>
         </div>

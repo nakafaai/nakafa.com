@@ -49,6 +49,7 @@
     "google-auth-library": "^10.4.2",
     "immer": "^10.2.0",
     "jsonrepair": "^3.13.1",
+    "ky": "^1.13.0",
     "lucide-react": "^0.548.0",
     "motion": "^12.23.24",
     "next": "16.0.0",

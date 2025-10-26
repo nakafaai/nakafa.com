@@ -187,6 +187,13 @@
     "contribute": "Kontribusi",
     "videos": "Video"
   },
+  "Weather": {
+    "loading": "Memuat cuaca...",
+    "error": "Tidak dapat memuat data cuaca",
+    "unknown-location": "Lokasi Tidak Diketahui",
+    "high": "T",
+    "low": "R"
+  },
   "NotFound": {
     "title": "Halaman Tidak Ditemukan",
     "description": "Oops! Halaman yang kamu cari tidak ada atau belum diimplementasikan.",

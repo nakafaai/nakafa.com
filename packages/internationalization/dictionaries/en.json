@@ -187,6 +187,13 @@
     "contribute": "Contribute",
     "videos": "Videos"
   },
+  "Weather": {
+    "loading": "Loading weather...",
+    "error": "Unable to load weather data",
+    "unknown-location": "Unknown Location",
+    "high": "H",
+    "low": "L"
+  },
   "NotFound": {
     "title": "Page Not Found",
     "description": "Oops! The page you're looking for doesn't exist or has not been implemented yet.",

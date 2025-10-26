@@ -241,6 +241,9 @@ importers:
       jsonrepair:
         specifier: ^3.13.1
         version: 3.13.1
+      ky:
+        specifier: ^1.13.0
+        version: 1.13.0
       lucide-react:
         specifier: ^0.548.0
         version: 0.548.0(react@19.2.0)
@@ -344,6 +347,9 @@ importers:
       '@mendable/firecrawl-js':
         specifier: ^4.4.1
         version: 4.4.1
+      '@repo/utilities':
+        specifier: workspace:*
+        version: link:../utilities
       '@t3-oss/env-nextjs':
         specifier: ^0.13.8
         version: 0.13.8(typescript@5.9.3)(zod@4.1.12)
@@ -356,6 +362,9 @@ importers:
       gpt-tokenizer:
         specifier: ^3.2.0
         version: 3.2.0
+      ky:
+        specifier: ^1.13.0
+        version: 1.13.0
       mathjs:
         specifier: ^15.0.0
         version: 15.0.0

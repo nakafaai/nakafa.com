@@ -6,9 +6,11 @@ export const keys = () =>
     server: {
       AI_GATEWAY_API_KEY: z.string(),
       FIRECRAWL_API_KEY: z.string(),
+      OPENWEATHER_API_KEY: z.string(),
     },
     runtimeEnv: {
       AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
       FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY,
+      OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY,
     },
   });
