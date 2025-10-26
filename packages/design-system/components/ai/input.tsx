@@ -766,7 +766,7 @@ export const PromptInput = ({
         type="file"
       />
       <form className="w-full" onSubmit={handleSubmit} {...props}>
-        <InputGroup className={cn("border-border", className)}>
+        <InputGroup className={cn("border-border bg-card", className)}>
           {children}
         </InputGroup>
       </form>
