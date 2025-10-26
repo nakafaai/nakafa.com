@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from "clsx";
+import lookup from "country-code-lookup";
 import { Children, type ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -97,4 +98,23 @@ export function save(
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Gets the country name from a country code
+ * @param countryCode - The country code to get the name from
+ * @returns The country name
+ */
+export function getCountryName(
+  countryCode?: string | null
+): string | undefined {
+  if (!countryCode) {
+    return;
+  }
+  try {
+    const country = lookup.byIso(countryCode) || lookup.byFips(countryCode);
+    return country ? country.country : countryCode;
+  } catch {
+    return countryCode;
+  }
 }

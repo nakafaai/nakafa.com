@@ -1,7 +1,7 @@
 "use client";
 
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn, getCountryName } from "@repo/design-system/lib/utils";
 import {
   CloudFogIcon,
   CloudIcon,
@@ -88,7 +88,8 @@ export function Weather() {
 
   const currentWeather = data.list[0];
   const city = data.geocoding?.city || t("unknown-location");
-  const country = data.geocoding?.country || t("unknown-country");
+  const country =
+    getCountryName(data.geocoding?.country) || t("unknown-country");
   const currentTemp = kelvinToCelsius(currentWeather.main.temp);
   const condition = currentWeather.weather[0]?.description || "Clear";
   const conditionTitle = condition.charAt(0).toUpperCase() + condition.slice(1);
