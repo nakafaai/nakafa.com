@@ -88,6 +88,7 @@ export function Weather() {
 
   const currentWeather = data.list[0];
   const city = data.geocoding?.city || t("unknown-location");
+  const country = data.geocoding?.country || t("unknown-country");
   const currentTemp = kelvinToCelsius(currentWeather.main.temp);
   const condition = currentWeather.weather[0]?.description || "Clear";
   const conditionTitle = condition.charAt(0).toUpperCase() + condition.slice(1);
@@ -103,7 +104,9 @@ export function Weather() {
         {getWeatherIcon(currentWeather.weather[0]?.icon || "01d", "size-8")}
       </WeatherCardHeader>
 
-      <p className="text-pretty text-xs">{city}</p>
+      <p className="text-pretty text-xs">
+        {city}, {country}
+      </p>
     </WeatherCard>
   );
 }

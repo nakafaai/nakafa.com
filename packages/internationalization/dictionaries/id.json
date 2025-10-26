@@ -191,6 +191,7 @@
     "loading": "Memuat cuaca...",
     "error": "Tidak dapat memuat data cuaca",
     "unknown-location": "Lokasi Tidak Diketahui",
+    "unknown-country": "Negara Tidak Diketahui",
     "high": "T",
     "low": "R"
   },

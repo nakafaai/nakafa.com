@@ -191,6 +191,7 @@
     "loading": "Loading weather...",
     "error": "Unable to load weather data",
     "unknown-location": "Unknown Location",
+    "unknown-country": "Unknown Country",
     "high": "H",
     "low": "L"
   },
