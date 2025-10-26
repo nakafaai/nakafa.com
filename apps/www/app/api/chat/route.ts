@@ -26,6 +26,7 @@ import {
   streamObject,
   streamText,
 } from "ai";
+import { jsonrepair } from "jsonrepair";
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
 
@@ -222,6 +223,7 @@ export async function POST(req: Request) {
               JSON.stringify(inputSchema(toolCall), null, 2),
               "Please fix the arguments.",
             ].join("\n"),
+            experimental_repairText: async ({ text }) => jsonrepair(text),
             providerOptions: {
               gateway: { order },
               google: {
