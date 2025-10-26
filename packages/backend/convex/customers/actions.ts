@@ -2,9 +2,8 @@ import { customersCreate } from "@polar-sh/sdk/funcs/customersCreate.js";
 import { customersGet } from "@polar-sh/sdk/funcs/customersGet.js";
 import { ConvexError, v } from "convex/values";
 import { api } from "../_generated/api";
-import type { Doc, Id } from "../_generated/dataModel";
+import type { Id } from "../_generated/dataModel";
 import { action } from "../_generated/server";
-import type { AppUser } from "../auth";
 import { polarClient } from "../utils/polar";
 import { convertToDatabaseCustomer } from "./utils";
 
@@ -21,7 +20,7 @@ export const syncPolarCustomerFromUserId = action({
   returns: v.id("customers"),
   handler: async (ctx, args): Promise<Id<"customers">> => {
     // 1. Get user data
-    const user: AppUser | null = await ctx.runQuery(api.auth.getUserById, {
+    const user = await ctx.runQuery(api.auth.getUserById, {
       userId: args.userId,
     });
 
@@ -33,7 +32,7 @@ export const syncPolarCustomerFromUserId = action({
     }
 
     // 2. Check if customer exists in local database
-    const existingCustomer: Doc<"customers"> | null = await ctx.runQuery(
+    const existingCustomer = await ctx.runQuery(
       api.customers.queries.getCustomerByUserId,
       {
         userId: args.userId,

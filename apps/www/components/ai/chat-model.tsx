@@ -56,7 +56,6 @@ export function AiChatModel() {
           (s) => s.productId === products.pro.id
         );
         if (subscription) {
-          // User already has an active subscription
           return;
         }
       }
