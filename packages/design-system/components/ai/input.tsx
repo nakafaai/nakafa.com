@@ -877,7 +877,7 @@ export const PromptInputToolbar = ({
 }: PromptInputToolbarProps) => (
   <InputGroupAddon
     align="block-end"
-    className={cn("justify-between gap-1 p-1", className)}
+    className={cn("justify-between gap-1 p-2", className)}
     {...props}
   />
 );
