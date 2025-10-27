@@ -10,7 +10,7 @@ export function Videos() {
     <VideoCard>
       <div />
 
-      <div className="mx-auto w-fit rounded-sm bg-card/90 px-3 py-2 backdrop-blur-sm">
+      <div className="mx-auto w-fit rounded-sm bg-card/80 px-3 py-2 backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-2">
           <SiYoutube className="hidden size-4 sm:block" />
           <span className="text-pretty text-xs">{t("discover")}</span>
