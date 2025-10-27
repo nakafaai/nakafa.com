@@ -49,6 +49,10 @@ export function AiChatModel() {
     }
 
     try {
+      // Sync customer between Polar and local DB before checkout
+      // This is idempotent - safe to call multiple times
+      await syncCustomer({ userId: user.appUser._id });
+
       // Check if user has active subscription
       const { data: customerState } = await authClient.customer.state();
       if (customerState) {
@@ -59,10 +63,6 @@ export function AiChatModel() {
           return;
         }
       }
-
-      // Sync customer between Polar and local DB before checkout
-      // This is idempotent - safe to call multiple times
-      await syncCustomer({ userId: user.appUser._id });
 
       // Proceed to checkout
       await authClient.checkout({

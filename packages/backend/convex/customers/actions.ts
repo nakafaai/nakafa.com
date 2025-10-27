@@ -1,5 +1,7 @@
 import { customersCreate } from "@polar-sh/sdk/funcs/customersCreate.js";
 import { customersGet } from "@polar-sh/sdk/funcs/customersGet.js";
+import { customersGetExternal } from "@polar-sh/sdk/funcs/customersGetExternal.js";
+import type { Customer } from "@polar-sh/sdk/models/components/customer.js";
 import { ConvexError, v } from "convex/values";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
@@ -32,62 +34,65 @@ export const syncPolarCustomerFromUserId = action({
     }
 
     // 2. Check if customer exists in local database
-    const existingCustomer = await ctx.runQuery(
+    const existingLocalCustomer = await ctx.runQuery(
       api.customers.queries.getCustomerByUserId,
       {
         userId: args.userId,
       }
     );
 
-    // 3. If customer exists locally, verify and sync with Polar
-    if (existingCustomer) {
+    // 3. Try to get customer from Polar
+    let polarCustomer: Customer | undefined;
+
+    // 3a. If we have a local customer, try getting by Polar ID first (more efficient)
+    if (existingLocalCustomer) {
       const polarGetResult = await customersGet(polarClient, {
-        id: existingCustomer.id,
+        id: existingLocalCustomer.id,
       });
 
-      // Customer exists in both - update local DB with latest Polar data
-      if (polarGetResult.ok && polarGetResult.value) {
+      if (polarGetResult.value) {
+        polarCustomer = polarGetResult.value;
+      }
+    }
+
+    // 3b. Fallback: Try getting by externalId if not found by ID
+    if (!polarCustomer) {
+      const polarExternalResult = await customersGetExternal(polarClient, {
+        externalId: user.authUser._id,
+      });
+
+      if (polarExternalResult.value) {
+        polarCustomer = polarExternalResult.value;
+      }
+    }
+
+    // 4. If customer exists in Polar, sync to local DB
+    if (polarCustomer) {
+      if (existingLocalCustomer) {
+        // Update existing local customer with latest Polar data
         await ctx.runMutation(api.customers.mutation.updateCustomer, {
           customer: convertToDatabaseCustomer({
-            ...polarGetResult.value,
+            ...polarCustomer,
             userId: args.userId,
           }),
         });
-        return existingCustomer._id;
+        return existingLocalCustomer._id;
       }
 
-      // Customer exists locally but not in Polar - this shouldn't happen but handle it
-      // The local customer.id might be invalid, so create fresh in Polar
-      const polarCreateResult = await customersCreate(polarClient, {
-        externalId: user.authUser._id,
-        email: user.authUser.email,
-        name: user.authUser.name,
-        metadata: {
-          userId: args.userId,
-        },
-      });
-
-      if (!polarCreateResult.value) {
-        throw new ConvexError({
-          code: "POLAR_CUSTOMER_CREATION_FAILED",
-          message:
-            polarCreateResult.error?.message ||
-            `Failed to create customer in Polar for user: ${user.authUser.email}`,
-        });
-      }
-
-      // Update local DB with new Polar customer ID
-      await ctx.runMutation(api.customers.mutation.updateCustomer, {
-        customer: convertToDatabaseCustomer({
-          ...polarCreateResult.value,
-          userId: args.userId,
-        }),
-      });
-
-      return existingCustomer._id;
+      // Insert Polar customer to local DB
+      const customerId = await ctx.runMutation(
+        api.customers.mutation.insertCustomer,
+        {
+          customer: convertToDatabaseCustomer({
+            ...polarCustomer,
+            userId: args.userId,
+          }),
+        }
+      );
+      return customerId;
     }
 
-    // 4. Neither exists - create customer in Polar first, then sync to local DB
+    // 5. Customer doesn't exist in Polar - create it
     const polarCreateResult = await customersCreate(polarClient, {
       externalId: user.authUser._id,
       email: user.authUser.email,
@@ -106,7 +111,19 @@ export const syncPolarCustomerFromUserId = action({
       });
     }
 
-    // 5. Sync to local database
+    // 6. Sync new customer to local database
+    if (existingLocalCustomer) {
+      // Update existing local customer with new Polar data
+      await ctx.runMutation(api.customers.mutation.updateCustomer, {
+        customer: convertToDatabaseCustomer({
+          ...polarCreateResult.value,
+          userId: args.userId,
+        }),
+      });
+      return existingLocalCustomer._id;
+    }
+
+    // Insert new customer to local database
     const customerId = await ctx.runMutation(
       api.customers.mutation.insertCustomer,
       {
