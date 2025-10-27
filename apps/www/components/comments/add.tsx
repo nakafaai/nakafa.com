@@ -84,7 +84,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
         placeholder={t("add-comment-placeholder")}
         value={commentText}
       />
-      <div className="flex items-center justify-between gap-4 p-1">
+      <div className="flex items-center justify-between gap-4 p-2">
         <UserAvatar />
 
         <div className="flex items-center gap-1">
@@ -136,16 +136,16 @@ function UserAvatar() {
 
   return (
     <div
-      className="flex min-w-0 items-center gap-2 px-3"
+      className="flex min-w-0 items-center gap-2 px-2"
       title={user.authUser.name}
     >
-      <Avatar className="size-6 rounded-lg">
+      <Avatar className="size-8 rounded-lg">
         <AvatarImage alt={user.authUser.name} src={user.authUser.image ?? ""} />
         <AvatarFallback className="rounded-lg text-xs">
           {getInitialName(user.authUser.name)}
         </AvatarFallback>
       </Avatar>
-      <p className="hidden max-w-36 truncate text-muted-foreground text-xs sm:block">
+      <p className="max-w-36 truncate text-muted-foreground text-sm">
         {user.authUser.name}
       </p>
     </div>
