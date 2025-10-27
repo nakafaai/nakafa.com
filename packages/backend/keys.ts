@@ -10,10 +10,12 @@ export const keys = () =>
       AUTH_GOOGLE_ID: z.string().min(1),
       AUTH_GOOGLE_SECRET: z.string().min(1),
       POLAR_ACCESS_TOKEN: z.string().min(1),
+      POLAR_WEBHOOK_SECRET: z.string().min(1),
     },
     client: {
       NEXT_PUBLIC_CONVEX_URL: z.string(),
       NEXT_PUBLIC_CONVEX_SITE_URL: z.url(),
+      NEXT_PUBLIC_POLAR_SERVER: z.enum(["production", "sandbox"]),
     },
     runtimeEnv: {
       CONVEX_URL: process.env.CONVEX_URL,
@@ -22,7 +24,9 @@ export const keys = () =>
       AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
       AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
       POLAR_ACCESS_TOKEN: process.env.POLAR_ACCESS_TOKEN,
+      POLAR_WEBHOOK_SECRET: process.env.POLAR_WEBHOOK_SECRET,
       NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
       NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
+      NEXT_PUBLIC_POLAR_SERVER: process.env.NEXT_PUBLIC_POLAR_SERVER,
     },
   });
