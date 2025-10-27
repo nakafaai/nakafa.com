@@ -11,11 +11,12 @@ export function HomeTitle({ className }: Props) {
   return (
     <h1
       className={cn(
-        "mb-8 text-pretty font-medium text-4xl leading-none tracking-tighter md:text-center",
+        "mb-8 text-pretty text-center font-medium text-4xl leading-none tracking-tighter",
         className
       )}
     >
-      {t("title")}
+      <span className="hidden md:inline">{t("title")}</span>
+      <span className="inline md:hidden">Nakafa</span>
     </h1>
   );
 }

@@ -7,10 +7,11 @@ import {
   CloudIcon,
   CloudLightningIcon,
   CloudMoonIcon,
-  CloudRainIcon,
+  CloudMoonRainIcon,
   CloudRainWindIcon,
   CloudSnowIcon,
   CloudSunIcon,
+  CloudSunRainIcon,
   CloudyIcon,
   MoonIcon,
   SunIcon,
@@ -39,6 +40,7 @@ function getWeatherIcon(iconCode: string, className?: string) {
       return <CloudMoonIcon className={cn("shrink-0", className)} />;
     case "03d":
     case "03n":
+      return <CloudIcon className={cn("shrink-0", className)} />;
     case "04d":
     case "04n":
       return <CloudyIcon className={cn("shrink-0", className)} />;
@@ -46,8 +48,9 @@ function getWeatherIcon(iconCode: string, className?: string) {
     case "09n":
       return <CloudRainWindIcon className={cn("shrink-0", className)} />;
     case "10d":
+      return <CloudSunRainIcon className={cn("shrink-0", className)} />;
     case "10n":
-      return <CloudRainIcon className={cn("shrink-0", className)} />;
+      return <CloudMoonRainIcon className={cn("shrink-0", className)} />;
     case "11d":
     case "11n":
       return <CloudLightningIcon className={cn("shrink-0", className)} />;
@@ -71,13 +74,13 @@ export function Weather() {
       <WeatherCard>
         <WeatherCardHeader>
           <div className="flex flex-col gap-2">
-            <Skeleton className="h-6 w-16" />
-            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-6 w-16 bg-card-foreground/80" />
+            <Skeleton className="h-3 w-20 bg-card-foreground/80" />
           </div>
-          <Skeleton className="h-8 w-8" />
+          <Skeleton className="h-8 w-8 bg-card-foreground/80" />
         </WeatherCardHeader>
 
-        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-3 w-24 bg-card-foreground/80" />
       </WeatherCard>
     );
   }
@@ -98,8 +101,8 @@ export function Weather() {
     <WeatherCard>
       <WeatherCardHeader>
         <div className="flex flex-col">
-          <p className="font-mono text-lg tracking-tight">{currentTemp}° C</p>
-          <p className="text-muted-foreground text-xs">{conditionTitle}</p>
+          <p className="font-mono text-xl tracking-tight">{currentTemp}° C</p>
+          <p className="text-card-foreground/80 text-xs">{conditionTitle}</p>
         </div>
 
         {getWeatherIcon(currentWeather.weather[0]?.icon || "01d", "size-8")}
@@ -114,7 +117,7 @@ export function Weather() {
 
 function WeatherCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex aspect-square flex-col justify-between overflow-hidden rounded-md border bg-card bg-linear-to-br from-secondary/20 to-primary/20 p-3 text-card-foreground shadow-xs">
+    <div className="flex aspect-square flex-col justify-between overflow-hidden rounded-md border bg-linear-to-br from-[color-mix(in_oklch,var(--secondary)_50%,var(--card))] to-[color-mix(in_oklch,var(--primary)_50%,var(--card))] p-3 text-card-foreground shadow-xs">
       {children}
     </div>
   );
