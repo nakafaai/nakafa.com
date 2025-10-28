@@ -3,12 +3,11 @@ import { HeartHandshakeIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { Footer } from "@/components/about/footer";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
-import { RefContent } from "@/components/shared/ref-content";
 import { contributors } from "@/lib/data/contributor";
-import { getGithubUrl } from "@/lib/utils/github";
 
 export const revalidate = false;
 
@@ -46,12 +45,8 @@ export default function Page() {
           ))}
         </div>
       </LayoutContent>
-      <FooterContent>
-        <RefContent
-          githubUrl={getGithubUrl({
-            path: encodeURI("/app/[locale]/contributor"),
-          })}
-        />
+      <FooterContent childrenClassName="max-w-5xl">
+        <Footer />
       </FooterContent>
     </>
   );

@@ -3,18 +3,16 @@ import { v } from "convex/values";
 
 export const tables = {
   chats: defineTable({
-    createdAt: v.number(), // Unix timestamp
     updatedAt: v.number(), // Unix timestamp for last message
     title: v.optional(v.string()), // Optional chat title
     userId: v.id("users"), // Optional user association
   })
     .index("userId", ["userId"])
-    .index("createdAt", ["createdAt"])
     .index("updatedAt", ["updatedAt"]),
 
   messages: defineTable({
+    identifier: v.string(), // Unique identifier for the message https://ai-sdk.dev/docs/reference/ai-sdk-core/ui-message#uimessage-interface
     chatId: v.id("chats"), // Reference to chats table
-    createdAt: v.number(), // Unix timestamp
     role: v.union(
       v.literal("user"),
       v.literal("assistant"),
@@ -22,7 +20,7 @@ export const tables = {
     ),
   })
     .index("chatId", ["chatId"])
-    .index("chatId_createdAt", ["chatId", "createdAt"]),
+    .index("identifier", ["identifier"]),
 
   parts: defineTable({
     messageId: v.id("messages"), // Reference to messages table
@@ -35,13 +33,14 @@ export const tables = {
       v.literal("file"),
       v.literal("step-start"),
 
-      // Tool Part type
-      v.literal("tool-get-articles"),
-      v.literal("tool-get-subjects"),
-      v.literal("tool-get-content"),
+      // Tool Part type (matches AI SDK tool names)
+      v.literal("tool-getArticles"),
+      v.literal("tool-getSubjects"),
+      v.literal("tool-getContent"),
       v.literal("tool-calculator"),
-      v.literal("tool-scrape-url"),
-      v.literal("tool-web-search"),
+      v.literal("tool-scrape"),
+      v.literal("tool-webSearch"),
+      v.literal("dynamic-tool"),
 
       // Data Part type
       v.literal("data-suggestions"),
@@ -52,34 +51,37 @@ export const tables = {
       v.literal("data-scrape-url"),
       v.literal("data-web-search")
     ),
-    createdAt: v.number(), // Unix timestamp
     order: v.number(), // Order within message (0-based)
 
     // Text fields
-    text_text: v.optional(v.string()),
+    textText: v.optional(v.string()),
+    textState: v.optional(v.union(v.literal("streaming"), v.literal("done"))),
 
     // Reasoning fields
-    reasoning_text: v.optional(v.string()),
+    reasoningText: v.optional(v.string()),
+    reasoningState: v.optional(
+      v.union(v.literal("streaming"), v.literal("done"))
+    ),
 
     // File fields
-    file_mediaType: v.optional(v.string()),
-    file_filename: v.optional(v.string()),
-    file_url: v.optional(v.string()),
+    fileMediaType: v.optional(v.string()),
+    fileFilename: v.optional(v.string()),
+    fileUrl: v.optional(v.string()),
 
     // Source URL fields
-    source_url_sourceId: v.optional(v.string()),
-    source_url_url: v.optional(v.string()),
-    source_url_title: v.optional(v.string()),
+    sourceUrlSourceId: v.optional(v.string()),
+    sourceUrlUrl: v.optional(v.string()),
+    sourceUrlTitle: v.optional(v.string()),
 
     // Source document fields
-    source_document_sourceId: v.optional(v.string()),
-    source_document_mediaType: v.optional(v.string()),
-    source_document_title: v.optional(v.string()),
-    source_document_filename: v.optional(v.string()),
+    sourceDocumentSourceId: v.optional(v.string()),
+    sourceDocumentMediaType: v.optional(v.string()),
+    sourceDocumentTitle: v.optional(v.string()),
+    sourceDocumentFilename: v.optional(v.string()),
 
     // Shared tool call columns
-    tool_toolCallId: v.optional(v.string()),
-    tool_state: v.optional(
+    toolToolCallId: v.optional(v.string()),
+    toolState: v.optional(
       v.union(
         v.literal("input-streaming"),
         v.literal("input-available"),
@@ -87,15 +89,111 @@ export const tables = {
         v.literal("output-error")
       )
     ),
-    tool_errorText: v.optional(v.string()),
+    toolErrorText: v.optional(v.string()),
+
+    toolGetArticlesInput: v.optional(
+      v.object({
+        locale: v.optional(v.union(v.literal("en"), v.literal("id"))),
+        category: v.optional(v.literal("politics")),
+      })
+    ),
+    toolGetArticlesOutput: v.optional(v.string()),
+
+    toolGetSubjectsInput: v.optional(
+      v.object({
+        locale: v.optional(v.union(v.literal("en"), v.literal("id"))),
+        category: v.optional(
+          v.union(
+            v.literal("elementary-school"),
+            v.literal("middle-school"),
+            v.literal("high-school"),
+            v.literal("university")
+          )
+        ),
+        grade: v.optional(
+          v.union(
+            v.literal("1"),
+            v.literal("2"),
+            v.literal("3"),
+            v.literal("4"),
+            v.literal("5"),
+            v.literal("6"),
+            v.literal("7"),
+            v.literal("8"),
+            v.literal("9"),
+            v.literal("10"),
+            v.literal("11"),
+            v.literal("12"),
+            v.literal("bachelor"),
+            v.literal("master"),
+            v.literal("phd")
+          )
+        ),
+        material: v.optional(
+          v.union(
+            v.literal("mathematics"),
+            v.literal("physics"),
+            v.literal("chemistry"),
+            v.literal("biology"),
+            v.literal("geography"),
+            v.literal("economy"),
+            v.literal("history"),
+            v.literal("informatics"),
+            v.literal("geospatial"),
+            v.literal("sociology"),
+            v.literal("ai-ds"),
+            v.literal("game-engineering"),
+            v.literal("computer-science"),
+            v.literal("technology-electro-medical"),
+            v.literal("political-science"),
+            v.literal("informatics-engineering"),
+            v.literal("international-relations")
+          )
+        ),
+      })
+    ),
+    toolGetSubjectsOutput: v.optional(v.string()),
+
+    toolGetContentInput: v.optional(
+      v.object({
+        locale: v.optional(v.union(v.literal("en"), v.literal("id"))),
+        slug: v.optional(v.string()),
+      })
+    ),
+    toolGetContentOutput: v.optional(v.string()),
+
+    toolCalculatorInput: v.optional(
+      v.object({
+        expression: v.optional(v.string()),
+      })
+    ),
+    toolCalculatorOutput: v.optional(v.string()),
+
+    toolScrapeUrlInput: v.optional(
+      v.object({
+        urlToCrawl: v.optional(v.string()),
+      })
+    ),
+    toolScrapeUrlOutput: v.optional(v.string()),
+
+    toolWebSearchInput: v.optional(
+      v.object({
+        query: v.optional(v.string()),
+      })
+    ),
+    toolWebSearchOutput: v.optional(v.string()),
 
     // Data part fields
-    data_suggestions_id: v.optional(v.string()),
-    data_suggestions_data: v.optional(v.array(v.string())),
+    dataSuggestionsId: v.optional(v.string()),
+    dataSuggestionsData: v.optional(v.array(v.string())),
 
-    data_get_articles_id: v.optional(v.string()),
-    data_get_articles_baseUrl: v.optional(v.string()),
-    data_get_articles_articles: v.optional(
+    dataGetArticlesId: v.optional(v.string()),
+    dataGetArticlesBaseUrl: v.optional(v.string()),
+    dataGetArticlesInputLocale: v.optional(
+      v.union(v.literal("en"), v.literal("id"))
+    ),
+    dataGetArticlesInputCategory: v.optional(v.literal("politics")),
+    dataGetArticlesArticles: v.optional(
       v.array(
         v.object({
           title: v.string(),
@@ -105,14 +203,65 @@ export const tables = {
         })
       )
     ),
-    data_get_articles_status: v.optional(
+    dataGetArticlesStatus: v.optional(
       v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
     ),
-    data_get_articles_error: v.optional(v.string()),
+    dataGetArticlesError: v.optional(v.string()),
 
-    data_get_subjects_id: v.optional(v.string()),
-    data_get_subjects_baseUrl: v.optional(v.string()),
-    data_get_subjects_subjects: v.optional(
+    dataGetSubjectsId: v.optional(v.string()),
+    dataGetSubjectsBaseUrl: v.optional(v.string()),
+    dataGetSubjectsInputLocale: v.optional(
+      v.union(v.literal("en"), v.literal("id"))
+    ),
+    dataGetSubjectsInputCategory: v.optional(
+      v.union(
+        v.literal("elementary-school"),
+        v.literal("middle-school"),
+        v.literal("high-school"),
+        v.literal("university")
+      )
+    ),
+    dataGetSubjectsInputGrade: v.optional(
+      v.union(
+        v.literal("1"),
+        v.literal("2"),
+        v.literal("3"),
+        v.literal("4"),
+        v.literal("5"),
+        v.literal("6"),
+        v.literal("7"),
+        v.literal("8"),
+        v.literal("9"),
+        v.literal("10"),
+        v.literal("11"),
+        v.literal("12"),
+        v.literal("bachelor"),
+        v.literal("master"),
+        v.literal("phd")
+      )
+    ),
+    dataGetSubjectsInputMaterial: v.optional(
+      v.union(
+        v.literal("mathematics"),
+        v.literal("physics"),
+        v.literal("chemistry"),
+        v.literal("biology"),
+        v.literal("geography"),
+        v.literal("economy"),
+        v.literal("history"),
+        v.literal("informatics"),
+        v.literal("geospatial"),
+        v.literal("sociology"),
+        v.literal("ai-ds"),
+        v.literal("game-engineering"),
+        v.literal("computer-science"),
+        v.literal("technology-electro-medical"),
+        v.literal("political-science"),
+        v.literal("informatics-engineering"),
+        v.literal("international-relations")
+      )
+    ),
+    dataGetSubjectsSubjects: v.optional(
       v.array(
         v.object({
           title: v.string(),
@@ -122,51 +271,51 @@ export const tables = {
         })
       )
     ),
-    data_get_subjects_status: v.optional(
+    dataGetSubjectsStatus: v.optional(
       v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
     ),
-    data_get_subjects_error: v.optional(v.string()),
+    dataGetSubjectsError: v.optional(v.string()),
 
-    data_get_content_id: v.optional(v.string()),
-    data_get_content_url: v.optional(v.string()),
-    data_get_content_title: v.optional(v.string()),
-    data_get_content_description: v.optional(v.string()),
-    data_get_content_content: v.optional(v.string()),
-    data_get_content_status: v.optional(
+    dataGetContentId: v.optional(v.string()),
+    dataGetContentUrl: v.optional(v.string()),
+    dataGetContentTitle: v.optional(v.string()),
+    dataGetContentDescription: v.optional(v.string()),
+    dataGetContentContent: v.optional(v.string()),
+    dataGetContentStatus: v.optional(
       v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
     ),
-    data_get_content_error: v.optional(v.string()),
+    dataGetContentError: v.optional(v.string()),
 
-    data_calculator_id: v.optional(v.string()),
-    data_calculator_original: v.optional(
+    dataCalculatorId: v.optional(v.string()),
+    dataCalculatorOriginal: v.optional(
       v.object({
         expression: v.string(),
         latex: v.string(),
       })
     ),
-    data_calculator_result: v.optional(
+    dataCalculatorResult: v.optional(
       v.object({
         expression: v.string(),
         latex: v.string(),
         value: v.string(),
       })
     ),
-    data_calculator_status: v.optional(
+    dataCalculatorStatus: v.optional(
       v.union(v.literal("done"), v.literal("error"))
     ),
-    data_calculator_error: v.optional(v.string()),
+    dataCalculatorError: v.optional(v.string()),
 
-    data_scrape_url_id: v.optional(v.string()),
-    data_scrape_url_url: v.optional(v.string()),
-    data_scrape_url_content: v.optional(v.string()),
-    data_scrape_url_status: v.optional(
+    dataScrapeUrlId: v.optional(v.string()),
+    dataScrapeUrlUrl: v.optional(v.string()),
+    dataScrapeUrlContent: v.optional(v.string()),
+    dataScrapeUrlStatus: v.optional(
       v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
     ),
-    data_scrape_url_error: v.optional(v.string()),
+    dataScrapeUrlError: v.optional(v.string()),
 
-    data_web_search_id: v.optional(v.string()),
-    data_web_search_query: v.optional(v.string()),
-    data_web_search_sources: v.optional(
+    dataWebSearchId: v.optional(v.string()),
+    dataWebSearchQuery: v.optional(v.string()),
+    dataWebSearchSources: v.optional(
       v.array(
         v.object({
           title: v.string(),
@@ -177,32 +326,19 @@ export const tables = {
         })
       )
     ),
-    data_web_search_status: v.optional(
+    dataWebSearchStatus: v.optional(
       v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
     ),
-    data_web_search_error: v.optional(v.string()),
+    dataWebSearchError: v.optional(v.string()),
 
     // Provider metadata (flexible for AI provider-specific data)
     providerMetadata: v.optional(
-      v.object({
-        model: v.optional(v.string()),
-        tokens: v.optional(
-          v.object({
-            input: v.optional(v.number()),
-            output: v.optional(v.number()),
-            total: v.optional(v.number()),
-          })
-        ),
-        cost: v.optional(v.number()),
-        latency: v.optional(v.number()),
-        provider: v.optional(v.string()),
-      })
+      v.record(v.string(), v.record(v.string(), v.any()))
     ),
   })
     .index("messageId", ["messageId"])
     .index("messageId_order", ["messageId", "order"])
-    .index("type", ["type"])
-    .index("createdAt", ["createdAt"]),
+    .index("type", ["type"]),
 };
 
 export default tables;

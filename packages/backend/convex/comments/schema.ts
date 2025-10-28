@@ -14,8 +14,7 @@ const tables = {
     score: v.number(), // upvoteCount - downvoteCount
     replyCount: v.number(),
   })
-    .index("contentSlug", ["contentSlug"]) // Query by content page
-    .index("parentId", ["parentId"]) // Query replies
+    .index("parentId", ["parentId"]) // Query replies (used in trigger)
     .index("contentSlug_depth", ["contentSlug", "depth"]) // Query top-level comments
     .index("parentId_depth", ["parentId", "depth"]) // Query nested replies
     .index("userId", ["userId"]), // Query by user

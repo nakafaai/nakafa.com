@@ -412,6 +412,9 @@ importers:
       '@polar-sh/sdk':
         specifier: ^0.38.1
         version: 0.38.1
+      '@repo/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@t3-oss/env-nextjs':
         specifier: ^0.13.8
         version: 0.13.8(typescript@5.9.3)(zod@4.1.12)

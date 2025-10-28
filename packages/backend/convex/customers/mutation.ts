@@ -1,12 +1,13 @@
 import { ConvexError, v } from "convex/values";
-import { mutation } from "../_generated/server";
+import { internalMutation } from "../_generated/server";
 import tables from "./schema";
 
 /**
  * Insert a new customer record.
+ * Internal function - called from actions and webhooks only.
  * Throws error if customer already exists for this user.
  */
-export const insertCustomer = mutation({
+export const insertCustomer = internalMutation({
   args: {
     customer: tables.customers.validator,
   },
@@ -33,10 +34,11 @@ export const insertCustomer = mutation({
 });
 
 /**
- * Insert or update a customer record.
- * Creates if doesn't exist, updates if exists.
+ * Update an existing customer record.
+ * Internal function - called from actions and webhooks only.
+ * Throws error if customer doesn't exist.
  */
-export const updateCustomer = mutation({
+export const updateCustomer = internalMutation({
   args: {
     customer: tables.customers.validator,
   },
@@ -73,9 +75,9 @@ export const updateCustomer = mutation({
 
 /**
  * Delete a customer by Polar customer ID.
- * Used by Polar webhooks when customer is deleted.
+ * Internal function - called from Polar webhooks only.
  */
-export const deleteCustomerById = mutation({
+export const deleteCustomerById = internalMutation({
   args: v.object({
     id: v.string(),
   }),
@@ -93,5 +95,43 @@ export const deleteCustomerById = mutation({
     }
 
     await ctx.db.delete(customer._id);
+  },
+});
+
+/**
+ * Atomically sync customer data from Polar to local database.
+ * Handles both insert and update in a single transaction.
+ */
+export const syncCustomerFromPolar = internalMutation({
+  args: {
+    customer: tables.customers.validator,
+  },
+  returns: v.id("customers"),
+  handler: async (ctx, args) => {
+    // Check if customer exists
+    const existingCustomer = await ctx.db
+      .query("customers")
+      .withIndex("userId", (q) => q.eq("userId", args.customer.userId))
+      .unique();
+
+    if (existingCustomer) {
+      // Update existing customer
+      await ctx.db.patch(existingCustomer._id, {
+        id: args.customer.id,
+        externalId: args.customer.externalId,
+        metadata: args.customer.metadata,
+      });
+      return existingCustomer._id;
+    }
+
+    // Insert new customer
+    const customerId = await ctx.db.insert("customers", {
+      id: args.customer.id,
+      externalId: args.customer.externalId,
+      userId: args.customer.userId,
+      metadata: args.customer.metadata,
+    });
+
+    return customerId;
   },
 });

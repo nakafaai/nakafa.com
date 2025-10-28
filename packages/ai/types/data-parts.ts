@@ -4,10 +4,6 @@ import {
   getSubjectsInputSchema,
 } from "../schema/tools";
 
-export const errorSchema = z.object({
-  message: z.string(),
-});
-
 export const contentsSchema = z.object({
   title: z.string(),
   url: z.string(),
@@ -24,14 +20,14 @@ export const dataPartSchema = z.object({
     input: getArticlesInputSchema,
     articles: z.array(contentsSchema),
     status: z.enum(["loading", "done", "error"]),
-    error: errorSchema.optional(),
+    error: z.string().optional(),
   }),
   "get-subjects": z.object({
     baseUrl: z.string(),
     input: getSubjectsInputSchema,
     subjects: z.array(contentsSchema),
     status: z.enum(["loading", "done", "error"]),
-    error: errorSchema.optional(),
+    error: z.string().optional(),
   }),
   "get-content": z.object({
     url: z.string(),
@@ -39,7 +35,7 @@ export const dataPartSchema = z.object({
     description: z.string(),
     content: z.string(),
     status: z.enum(["loading", "done", "error"]),
-    error: errorSchema.optional(),
+    error: z.string().optional(),
   }),
   calculator: z.object({
     original: z.object({
@@ -52,13 +48,13 @@ export const dataPartSchema = z.object({
       value: z.string(),
     }),
     status: z.enum(["done", "error"]),
-    error: errorSchema.optional(),
+    error: z.string().optional(),
   }),
   "scrape-url": z.object({
     url: z.string(),
     content: z.string(),
     status: z.enum(["loading", "done", "error"]),
-    error: errorSchema.optional(),
+    error: z.string().optional(),
   }),
   "web-search": z.object({
     query: z.string(),
@@ -72,7 +68,7 @@ export const dataPartSchema = z.object({
       })
     ),
     status: z.enum(["loading", "done", "error"]),
-    error: errorSchema.optional(),
+    error: z.string().optional(),
   }),
 });
 

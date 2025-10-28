@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@repo/ai": "workspace:*",
     "@convex-dev/better-auth": "^0.9.6",
     "@convex-dev/migrations": "^0.2.9",
     "@polar-sh/better-auth": "^1.1.11",

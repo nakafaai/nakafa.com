@@ -10,12 +10,11 @@ import {
   PromptInputTools,
 } from "@repo/design-system/components/ai/input";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { AiChatModel } from "@/components/ai/chat-model";
 import { useAi } from "@/lib/context/use-ai";
-import { useChat } from "@/lib/context/use-chat";
 
 export function HomeSearch() {
   const t = useTranslations("Ai");
@@ -24,15 +23,15 @@ export function HomeSearch() {
 
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
+  const setQuery = useAi((state) => state.setQuery);
 
   const user = useQuery(api.auth.getCurrentUser);
-
-  const { status, sendMessage, setMessages } = useChat((state) => state.chat);
+  const createChat = useMutation(api.chats.mutation.createChat);
 
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(message: PromptInputMessage) {
-    startTransition(() => {
+    startTransition(async () => {
       if (!message.text?.trim()) {
         return;
       }
@@ -42,15 +41,13 @@ export function HomeSearch() {
         return;
       }
 
-      setMessages([]);
-
-      router.push("/chat");
-
-      sendMessage({
-        text: message.text,
-        files: message.files,
+      const chatId = await createChat({
+        title: "New Chat",
       });
-      setText("");
+
+      setQuery(message.text);
+
+      router.push(`/chat/${chatId}`);
     });
   }
 
@@ -66,11 +63,7 @@ export function HomeSearch() {
         <PromptInputTools>
           <AiChatModel />
         </PromptInputTools>
-        <PromptInputSubmit
-          disabled={isPending}
-          isPending={isPending}
-          status={status}
-        />
+        <PromptInputSubmit disabled={isPending} isPending={isPending} />
       </PromptInputToolbar>
     </PromptInput>
   );

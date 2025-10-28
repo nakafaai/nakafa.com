@@ -1,8 +1,8 @@
 /**
- * Generate a random API key
- * @returns The generated API key
+ * Generate a random id
+ * @returns The generated id
  */
-export function generateApiKey(): string {
+export function generateId(): string {
   return crypto.randomUUID();
 }
 

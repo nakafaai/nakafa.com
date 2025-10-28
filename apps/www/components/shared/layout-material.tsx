@@ -55,13 +55,9 @@ export function LayoutMaterialPagination({
 }
 
 export function LayoutMaterialFooter({
-  children,
-  className,
-}: {
-  children?: ReactNode;
-  className?: string;
-}) {
-  return <FooterContent className={cn(className)}>{children}</FooterContent>;
+  ...props
+}: ComponentProps<typeof FooterContent>) {
+  return <FooterContent {...props} />;
 }
 
 export function LayoutMaterialToc({

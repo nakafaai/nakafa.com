@@ -51,7 +51,7 @@ export const createGetArticles = ({ writer }: Params) =>
             input: { locale, category },
             articles: [],
             status: "error",
-            error,
+            error: error.message,
           },
         });
 

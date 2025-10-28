@@ -1,6 +1,7 @@
 import { askSeo } from "@repo/seo/ask";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
+import { Footer } from "@/components/about/footer";
 import { AskCta } from "@/components/ask/cta";
 import { AskListItems } from "@/components/ask/results";
 import {
@@ -91,7 +92,9 @@ export default async function Page({ params }: Props) {
             <AskListItems query={title} />
           </LayoutMaterialMain>
 
-          <LayoutMaterialFooter />
+          <LayoutMaterialFooter childrenClassName="max-w-5xl">
+            <Footer />
+          </LayoutMaterialFooter>
         </LayoutMaterialContent>
       </LayoutMaterial>
     </div>

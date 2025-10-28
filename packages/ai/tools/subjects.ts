@@ -51,7 +51,7 @@ export const createGetSubjects = ({ writer }: Params) =>
             input: { locale, category, grade, material },
             subjects: [],
             status: "error",
-            error,
+            error: error.message,
           },
         });
 

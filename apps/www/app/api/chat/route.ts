@@ -11,6 +11,9 @@ import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
 import { tools } from "@repo/ai/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
+import { api as convexApi } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/utils";
 import { api } from "@repo/connection/routes";
 import { CorsValidator } from "@repo/security";
 import { createChildLogger, logError } from "@repo/utilities/logging";
@@ -26,9 +29,11 @@ import {
   streamObject,
   streamText,
 } from "ai";
+import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { jsonrepair } from "jsonrepair";
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
+import { getToken } from "@/lib/auth/server";
 
 const MAX_STEPS = 10;
 const QURAN_SLUG_PARTS_COUNT = 3;
@@ -37,39 +42,6 @@ const QURAN_SLUG_PARTS_COUNT = 3;
 export const maxDuration = 60;
 
 const corsValidator = new CorsValidator();
-
-async function getVerified(url: string) {
-  const cleanedUrl = cleanSlug(url);
-
-  // [0] is locale, [1] is slug
-  const slugParts = cleanedUrl.split("/");
-
-  if (slugParts[1] === "quran") {
-    if (slugParts.length !== QURAN_SLUG_PARTS_COUNT) {
-      return false;
-    }
-    // example: locale/quran/surah
-    const surah = slugParts[2];
-    const { data: surahData, error: surahError } = await api.contents.getSurah({
-      surah: Number.parseInt(surah, 10),
-    });
-    if (surahError) {
-      return false;
-    }
-    return surahData !== null;
-  }
-
-  const { data: contentData, error: contentError } =
-    await api.contents.getContent({
-      slug: cleanedUrl,
-    });
-
-  if (contentError) {
-    return false;
-  }
-
-  return contentData !== null;
-}
 
 export async function POST(req: Request) {
   // Only allow requests from allowed domain
@@ -80,12 +52,14 @@ export async function POST(req: Request) {
   const t = await getTranslations("Ai");
 
   const {
-    messages,
+    message,
+    chatId,
     locale,
     slug,
     model: selectedModel,
   }: {
-    messages: MyUIMessage[];
+    message: MyUIMessage | undefined;
+    chatId: Id<"chats"> | undefined;
     locale: string;
     slug: string;
     model: ModelId;
@@ -94,7 +68,7 @@ export async function POST(req: Request) {
   const url = `/${locale}/${cleanSlug(slug)}`;
 
   // Check if the slug is verified by calling api
-  const verified = await getVerified(url);
+  const [verified, token] = await Promise.all([getVerified(url), getToken()]);
 
   const currentDate = new Date().toLocaleString("en-US", {
     year: "numeric",
@@ -127,6 +101,61 @@ export async function POST(req: Request) {
     },
     url,
   });
+
+  if (!token) {
+    sessionLogger.error("Token is not found");
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  if (!message) {
+    sessionLogger.error("Message is not provided");
+    return new Response("Bad Request", { status: 400 });
+  }
+
+  let chatIdToUse: Id<"chats"> | undefined = chatId;
+
+  const dbParts = mapUIMessagePartsToDBParts({
+    messageParts: message.parts,
+  });
+
+  // Upsert user message with parts (supports regenerate if message.id exists)
+  if (chatIdToUse) {
+    // Upsert message with parts for existing chat
+    await fetchMutation(
+      convexApi.chats.mutation.upsertMessageWithParts,
+      {
+        message: {
+          chatId: chatIdToUse,
+          role: message.role,
+          identifier: message.id,
+        },
+        parts: dbParts,
+        messageId: message.id,
+      },
+      { token }
+    );
+  } else {
+    const result = await fetchMutation(
+      convexApi.chats.mutation.createChatWithMessage,
+      {
+        message: {
+          role: message.role,
+          identifier: message.id,
+        },
+        parts: dbParts,
+      },
+      { token }
+    );
+    chatIdToUse = result.chatId;
+  }
+
+  const messages = await fetchQuery(
+    convexApi.chats.queries.loadMessages,
+    {
+      chatId: chatIdToUse,
+    },
+    { token }
+  );
 
   // Use smart message compression to stay within token limits
   const originalMessageCount = messages.length;
@@ -168,6 +197,24 @@ export async function POST(req: Request) {
       return t("error-message");
     },
     originalMessages: compressedMessages,
+    onFinish: async ({ responseMessage }) => {
+      // Upsert assistant response with parts
+      await fetchMutation(
+        convexApi.chats.mutation.upsertMessageWithParts,
+        {
+          message: {
+            chatId: chatIdToUse,
+            role: responseMessage.role,
+            identifier: responseMessage.id,
+          },
+          parts: mapUIMessagePartsToDBParts({
+            messageParts: responseMessage.parts,
+          }),
+          messageId: responseMessage.id,
+        },
+        { token }
+      );
+    },
     execute: async ({ writer }) => {
       const streamTextResult = streamText({
         model: model.languageModel(selectedModel),
@@ -213,7 +260,7 @@ export async function POST(req: Request) {
             availableTools[toolCall.toolName as keyof typeof availableTools];
 
           const { object: repairedArgs } = await generateObject({
-            model: model.languageModel("gemini-2.5-flash"),
+            model: model.languageModel("grok-4-fast-non-reasoning"),
             schema: tool.inputSchema,
             prompt: [
               `The model tried to call the tool "${toolCall.toolName}"` +
@@ -263,9 +310,24 @@ export async function POST(req: Request) {
         streamTextResult.toUIMessageStream({
           sendReasoning: true,
           sendStart: false,
-          messageMetadata: () => ({
-            model: selectedModel,
-          }),
+          messageMetadata: ({ part }) => {
+            if (part.type === "start") {
+              return {
+                model: selectedModel,
+              };
+            }
+
+            if (part.type === "finish") {
+              return {
+                model: selectedModel,
+                token: {
+                  input: part.totalUsage.inputTokens,
+                  output: part.totalUsage.outputTokens,
+                  total: part.totalUsage.totalTokens,
+                },
+              };
+            }
+          },
           onError: (error) => {
             // Log the error with context
             if (error instanceof Error) {
@@ -292,7 +354,7 @@ export async function POST(req: Request) {
       // Return the messages from the response, to be used in the followup suggestions
       const messagesFromResponse = (
         await streamTextResult.response
-      ).messages.filter((message) => message.role === "assistant");
+      ).messages.filter((m) => m.role === "assistant");
 
       const streamObjectResult = streamObject({
         model: model.languageModel("gemini-2.5-flash"),
@@ -340,4 +402,37 @@ export async function POST(req: Request) {
   });
 
   return createUIMessageStreamResponse({ stream });
+}
+
+async function getVerified(url: string) {
+  const cleanedUrl = cleanSlug(url);
+
+  // [0] is locale, [1] is slug
+  const slugParts = cleanedUrl.split("/");
+
+  if (slugParts[1] === "quran") {
+    if (slugParts.length !== QURAN_SLUG_PARTS_COUNT) {
+      return false;
+    }
+    // example: locale/quran/surah
+    const surah = slugParts[2];
+    const { data: surahData, error: surahError } = await api.contents.getSurah({
+      surah: Number.parseInt(surah, 10),
+    });
+    if (surahError) {
+      return false;
+    }
+    return surahData !== null;
+  }
+
+  const { data: contentData, error: contentError } =
+    await api.contents.getContent({
+      slug: cleanedUrl,
+    });
+
+  if (contentError) {
+    return false;
+  }
+
+  return contentData !== null;
 }

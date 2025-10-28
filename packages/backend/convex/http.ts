@@ -4,7 +4,7 @@ import {
   WebhookVerificationError,
 } from "@polar-sh/sdk/webhooks";
 import { httpActionGeneric, httpRouter } from "convex/server";
-import { api } from "./_generated/api";
+import { internal } from "./_generated/api";
 import { authComponent, createAuth } from "./auth";
 import {
   convertToDatabaseCustomer,
@@ -39,7 +39,7 @@ http.route({
             });
           }
 
-          await ctx.runMutation(api.customers.mutation.insertCustomer, {
+          await ctx.runMutation(internal.customers.mutation.insertCustomer, {
             customer: convertToDatabaseCustomer({
               ...event.data,
               userId,
@@ -56,7 +56,7 @@ http.route({
             });
           }
 
-          await ctx.runMutation(api.customers.mutation.updateCustomer, {
+          await ctx.runMutation(internal.customers.mutation.updateCustomer, {
             customer: convertToDatabaseCustomer({
               ...event.data,
               userId,
@@ -65,21 +65,30 @@ http.route({
           break;
         }
         case "customer.deleted": {
-          await ctx.runMutation(api.customers.mutation.deleteCustomerById, {
-            id: event.data.id,
-          });
+          await ctx.runMutation(
+            internal.customers.mutation.deleteCustomerById,
+            {
+              id: event.data.id,
+            }
+          );
           break;
         }
         case "subscription.created": {
-          await ctx.runMutation(api.subscriptions.mutation.createSubscription, {
-            subscription: convertToDatabaseSubscription(event.data),
-          });
+          await ctx.runMutation(
+            internal.subscriptions.mutation.createSubscription,
+            {
+              subscription: convertToDatabaseSubscription(event.data),
+            }
+          );
           break;
         }
         case "subscription.updated": {
-          await ctx.runMutation(api.subscriptions.mutation.updateSubscription, {
-            subscription: convertToDatabaseSubscription(event.data),
-          });
+          await ctx.runMutation(
+            internal.subscriptions.mutation.updateSubscription,
+            {
+              subscription: convertToDatabaseSubscription(event.data),
+            }
+          );
           break;
         }
         default:

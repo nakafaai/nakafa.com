@@ -14,6 +14,9 @@ import type * as betterAuth__generated_server from "../betterAuth/_generated/ser
 import type * as betterAuth_adapter from "../betterAuth/adapter.js";
 import type * as betterAuth_auth from "../betterAuth/auth.js";
 import type * as betterAuth_generatedSchema from "../betterAuth/generatedSchema.js";
+import type * as chats_mutation from "../chats/mutation.js";
+import type * as chats_queries from "../chats/queries.js";
+import type * as chats_utils from "../chats/utils.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
 import type * as comments_utils from "../comments/utils.js";
@@ -30,6 +33,7 @@ import type * as subscriptions_utils from "../subscriptions/utils.js";
 import type * as users_queries from "../users/queries.js";
 import type * as utils_helper from "../utils/helper.js";
 import type * as utils_polar from "../utils/polar.js";
+import type * as utils_type from "../utils/type.js";
 
 import type {
   ApiFromModules,
@@ -52,6 +56,9 @@ declare const fullApi: ApiFromModules<{
   "betterAuth/adapter": typeof betterAuth_adapter;
   "betterAuth/auth": typeof betterAuth_auth;
   "betterAuth/generatedSchema": typeof betterAuth_generatedSchema;
+  "chats/mutation": typeof chats_mutation;
+  "chats/queries": typeof chats_queries;
+  "chats/utils": typeof chats_utils;
   "comments/mutations": typeof comments_mutations;
   "comments/queries": typeof comments_queries;
   "comments/utils": typeof comments_utils;
@@ -68,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   "users/queries": typeof users_queries;
   "utils/helper": typeof utils_helper;
   "utils/polar": typeof utils_polar;
+  "utils/type": typeof utils_type;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

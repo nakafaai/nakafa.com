@@ -1,11 +1,12 @@
 import { v } from "convex/values";
-import { query } from "../_generated/server";
+import { internalQuery } from "../_generated/server";
 
 /**
  * Get customer record by user ID.
+ * Internal function - called from actions only.
  * Returns null if customer doesn't exist.
  */
-export const getCustomerByUserId = query({
+export const getCustomerByUserId = internalQuery({
   args: {
     userId: v.id("users"),
   },

@@ -42,9 +42,7 @@ export const createScrape = ({ writer }: Params) => {
               url,
               status: "error",
               content: "",
-              error: {
-                message: "No content found.",
-              },
+              error: "No content found.",
             },
           });
 
@@ -83,7 +81,7 @@ export const createScrape = ({ writer }: Params) => {
             url,
             status: "error",
             content: "",
-            error: { message: errorMessage },
+            error: errorMessage,
           },
         });
 

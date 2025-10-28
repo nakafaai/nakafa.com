@@ -59,10 +59,8 @@ export const createGetContent = ({ writer }: Params) => {
               description: "",
               status: "error",
               content: "",
-              error: {
-                message:
-                  "Surah not found. Maybe not available or still in development.",
-              },
+              error:
+                "Surah not found. Maybe not available or still in development.",
             },
           });
 
@@ -87,7 +85,7 @@ export const createGetContent = ({ writer }: Params) => {
               description: "",
               status: "error",
               content: "",
-              error: surahError,
+              error: surahError.message,
             },
           });
 
@@ -106,10 +104,8 @@ export const createGetContent = ({ writer }: Params) => {
               description: "",
               status: "error",
               content: "",
-              error: {
-                message:
-                  "Surah not found. Maybe not available or still in development.",
-              },
+              error:
+                "Surah not found. Maybe not available or still in development.",
             },
           });
 
@@ -148,7 +144,7 @@ export const createGetContent = ({ writer }: Params) => {
             description: "",
             status: "error",
             content: "",
-            error,
+            error: error.message,
           },
         });
 

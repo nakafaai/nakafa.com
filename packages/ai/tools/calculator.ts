@@ -62,7 +62,7 @@ export const createCalculator = ({ writer }: Params) =>
             original,
             result,
             status: "error",
-            error: { message: "Cannot be evaluated." },
+            error: "Cannot be evaluated.",
           },
         });
       }

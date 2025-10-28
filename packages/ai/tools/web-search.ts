@@ -118,7 +118,7 @@ export const createWebSearch = ({ writer }: Params) => {
             query,
             status: "error",
             sources: [],
-            error: { message: `Failed to search: ${error}` },
+            error: `Failed to search: ${error}`,
           },
         });
 

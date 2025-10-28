@@ -1,12 +1,12 @@
 import { ConvexError, v } from "convex/values";
-import { mutation } from "../_generated/server";
+import { internalMutation } from "../_generated/server";
 import tables from "./schema";
 
 /**
  * Create a new subscription record.
- * Called by Polar webhooks when subscription is created.
+ * Internal function - called by Polar webhooks only.
  */
-export const createSubscription = mutation({
+export const createSubscription = internalMutation({
   args: {
     subscription: tables.subscriptions.validator,
   },
@@ -32,9 +32,9 @@ export const createSubscription = mutation({
 
 /**
  * Update an existing subscription record.
- * Called by Polar webhooks when subscription changes.
+ * Internal function - called by Polar webhooks only.
  */
-export const updateSubscription = mutation({
+export const updateSubscription = internalMutation({
   args: {
     subscription: tables.subscriptions.validator,
   },
