@@ -86,7 +86,7 @@ export function BlockArt({
 
       const shuffledIndices = rngRef.current.shuffle(availableIndices);
 
-      for (let i = 0; i < effectiveAnimatedCellCount; i++) {
+      for (let i = 0; i < effectiveAnimatedCellCount; i += 1) {
         newActiveIndices.add(shuffledIndices[i]);
       }
       setActiveIndices(newActiveIndices);
@@ -118,8 +118,8 @@ export function BlockArt({
         const minCol = Math.max(0, Math.floor(ripple.x - radius - 2));
         const maxCol = Math.min(Cols - 1, Math.ceil(ripple.x + radius + 2));
 
-        for (let row = minRow; row <= maxRow; row++) {
-          for (let col = minCol; col <= maxCol; col++) {
+        for (let row = minRow; row <= maxRow; row += 1) {
+          for (let col = minCol; col <= maxCol; col += 1) {
             const distance = Math.sqrt(
               (col - ripple.x) ** 2 + (row - ripple.y) ** 2
             );
@@ -163,16 +163,16 @@ export function BlockArt({
 
   const handleRipple = useCallback((x: number, y: number) => {
     setRipples((prev) => {
+      const currentId = rippleIdRef.current;
+      rippleIdRef.current += 1;
+
       if (prev.length >= MAX_CONCURRENT_RIPPLES) {
         return [
           ...prev.slice(1),
-          { x, y, startTime: performance.now(), id: rippleIdRef.current++ },
+          { x, y, startTime: performance.now(), id: currentId },
         ];
       }
-      return [
-        ...prev,
-        { x, y, startTime: performance.now(), id: rippleIdRef.current++ },
-      ];
+      return [...prev, { x, y, startTime: performance.now(), id: currentId }];
     });
   }, []);
 

@@ -15,14 +15,14 @@
     "@repo/next-config": "workspace:*",
     "@repo/security": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
-    "next": "16.0.0",
+    "next": "16.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "shiki": "^3.14.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.9.1",
+    "@types/node": "24.9.2",
     "@types/react": "19.2.2",
     "typescript": "^5.9.3"
   }

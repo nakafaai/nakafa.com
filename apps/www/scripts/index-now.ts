@@ -407,7 +407,7 @@ async function submitUrlsToBing(
         }
 
         // Increment retry count on error and exit if max retries reached
-        retryCount++;
+        retryCount += 1;
         if (retryCount >= MAX_RETRIES) {
           logger.warn(
             `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`
@@ -425,7 +425,7 @@ async function submitUrlsToBing(
     } catch (error) {
       logger.error(`Error submitting URLs to Bing: ${error}`);
       // Increment retry count and exit if max retries reached
-      retryCount++;
+      retryCount += 1;
       if (retryCount >= MAX_RETRIES) {
         logger.warn(
           `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`

@@ -83,7 +83,7 @@ function generateColorStops(colors: string[]): string {
   const result: string[] = [];
 
   // Add all colors as stops
-  for (let i = 0; i < colors.length; i++) {
+  for (let i = 0; i < colors.length; i += 1) {
     const percentage = (i / (colors.length - 1)) * MAX_PERCENTAGE;
     result.push(`${colors[i]} ${percentage}%`);
   }

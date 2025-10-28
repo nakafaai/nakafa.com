@@ -174,7 +174,7 @@ function ParticlesComponent({
   const drawParticles = useCallback(() => {
     clearContext();
     const particleCount = quantity;
-    for (let i = 0; i < particleCount; i++) {
+    for (let i = 0; i < particleCount; i += 1) {
       const circle = circleParams();
       drawCircle(circle);
     }

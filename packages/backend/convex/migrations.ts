@@ -30,7 +30,7 @@ export const migrationCreateAppUsers = internalMutation({
         .unique();
 
       if (existingUser) {
-        skipped++;
+        skipped += 1;
         continue;
       }
 
@@ -40,7 +40,7 @@ export const migrationCreateAppUsers = internalMutation({
         authId: authUser._id,
       });
 
-      created++;
+      created += 1;
     }
 
     return { created, skipped, total: authUsers.page.length };
@@ -63,7 +63,7 @@ export const migrationRemoveUserId = internalMutation({
 
       // Remove userId from Better Auth user using the authId
       await authComponent.migrationRemoveUserId(ctx, appUser.authId);
-      updated++;
+      updated += 1;
     }
 
     return { updated, total: appUsers.length };
@@ -106,7 +106,7 @@ export const migrationAddUserId = internalMutation({
 
       // Skip if userId is already set
       if (authUser.userId) {
-        skipped++;
+        skipped += 1;
         continue;
       }
 
@@ -116,7 +116,7 @@ export const migrationAddUserId = internalMutation({
         userId: appUser._id,
       });
 
-      updated++;
+      updated += 1;
     }
 
     return { updated, skipped, total: appUsers.length };
@@ -141,7 +141,7 @@ export const migrationConvertCommentsUserId = internalMutation({
         .unique();
 
       if (!appUser) {
-        notFound++;
+        notFound += 1;
         continue;
       }
 
@@ -149,7 +149,7 @@ export const migrationConvertCommentsUserId = internalMutation({
       try {
         const existingUser = await ctx.db.get(comment.userId as Id<"users">);
         if (existingUser) {
-          skipped++;
+          skipped += 1;
           continue;
         }
       } catch {
@@ -161,7 +161,7 @@ export const migrationConvertCommentsUserId = internalMutation({
         userId: appUser._id,
       });
 
-      updated++;
+      updated += 1;
     }
 
     return { updated, skipped, notFound, total: comments.length };
@@ -186,7 +186,7 @@ export const migrationConvertCommentVotesUserId = internalMutation({
         .unique();
 
       if (!appUser) {
-        notFound++;
+        notFound += 1;
         continue;
       }
 
@@ -194,7 +194,7 @@ export const migrationConvertCommentVotesUserId = internalMutation({
       try {
         const existingUser = await ctx.db.get(vote.userId as Id<"users">);
         if (existingUser) {
-          skipped++;
+          skipped += 1;
           continue;
         }
       } catch {
@@ -206,7 +206,7 @@ export const migrationConvertCommentVotesUserId = internalMutation({
         userId: appUser._id,
       });
 
-      updated++;
+      updated += 1;
     }
 
     return { updated, skipped, notFound, total: votes.length };
@@ -225,7 +225,7 @@ export const migrationConvertChatsUserId = internalMutation({
 
     for (const chat of chats) {
       if (!chat.userId) {
-        skipped++;
+        skipped += 1;
         continue;
       }
 
@@ -236,7 +236,7 @@ export const migrationConvertChatsUserId = internalMutation({
         .unique();
 
       if (!appUser) {
-        notFound++;
+        notFound += 1;
         continue;
       }
 
@@ -244,7 +244,7 @@ export const migrationConvertChatsUserId = internalMutation({
       try {
         const existingUser = await ctx.db.get(chat.userId as Id<"users">);
         if (existingUser) {
-          skipped++;
+          skipped += 1;
           continue;
         }
       } catch {
@@ -256,7 +256,7 @@ export const migrationConvertChatsUserId = internalMutation({
         userId: appUser._id,
       });
 
-      updated++;
+      updated += 1;
     }
 
     return { updated, skipped, notFound, total: chats.length };

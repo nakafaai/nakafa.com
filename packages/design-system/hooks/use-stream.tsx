@@ -44,7 +44,7 @@ export function useStream() {
     const animate = (time: number) => {
       if (streamIndexRef.current < fullText.length) {
         if (time - lastTimeRef.current > typewriterSpeed) {
-          streamIndexRef.current++;
+          streamIndexRef.current += 1;
           setStream(fullText.slice(0, streamIndexRef.current));
           lastTimeRef.current = time;
         }

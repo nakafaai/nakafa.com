@@ -48,7 +48,7 @@ export function getHeadings(content: string): ParsedHeading[] {
           // Find the parent heading (the closest heading with a lower level)
           let parentLevel = level - 1;
           while (parentLevel > 0 && !lastHeadingAtLevel[parentLevel]) {
-            parentLevel--;
+            parentLevel -= 1;
           }
 
           // If a parent was found, add this heading as its child

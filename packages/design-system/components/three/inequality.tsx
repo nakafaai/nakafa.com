@@ -150,26 +150,44 @@ export function Inequality({
       const index = vertexIndex / COMPONENTS_PER_VERTEX;
 
       // Add vertices directly to array
-      vertices[vertexIndex++] = p1[0];
-      vertices[vertexIndex++] = p1[1];
-      vertices[vertexIndex++] = p1[2];
-      vertices[vertexIndex++] = p2[0];
-      vertices[vertexIndex++] = p2[1];
-      vertices[vertexIndex++] = p2[2];
-      vertices[vertexIndex++] = p3[0];
-      vertices[vertexIndex++] = p3[1];
-      vertices[vertexIndex++] = p3[2];
-      vertices[vertexIndex++] = p4[0];
-      vertices[vertexIndex++] = p4[1];
-      vertices[vertexIndex++] = p4[2];
+      vertices[vertexIndex] = p1[0];
+      vertexIndex += 1;
+      vertices[vertexIndex] = p1[1];
+      vertexIndex += 1;
+      vertices[vertexIndex] = p1[2];
+      vertexIndex += 1;
+      vertices[vertexIndex] = p2[0];
+      vertexIndex += 1;
+      vertices[vertexIndex] = p2[1];
+      vertexIndex += 1;
+      vertices[vertexIndex] = p2[2];
+      vertexIndex += 1;
+      vertices[vertexIndex] = p3[0];
+      vertexIndex += 1;
+      vertices[vertexIndex] = p3[1];
+      vertexIndex += 1;
+      vertices[vertexIndex] = p3[2];
+      vertexIndex += 1;
+      vertices[vertexIndex] = p4[0];
+      vertexIndex += 1;
+      vertices[vertexIndex] = p4[1];
+      vertexIndex += 1;
+      vertices[vertexIndex] = p4[2];
+      vertexIndex += 1;
 
       // Add indices for two triangles
-      indices[indexOffset++] = index;
-      indices[indexOffset++] = index + 1;
-      indices[indexOffset++] = index + 2;
-      indices[indexOffset++] = index;
-      indices[indexOffset++] = index + 2;
-      indices[indexOffset++] = index + LAST_VERTEX_OFFSET_IN_QUAD;
+      indices[indexOffset] = index;
+      indexOffset += 1;
+      indices[indexOffset] = index + 1;
+      indexOffset += 1;
+      indices[indexOffset] = index + 2;
+      indexOffset += 1;
+      indices[indexOffset] = index;
+      indexOffset += 1;
+      indices[indexOffset] = index + 2;
+      indexOffset += 1;
+      indices[indexOffset] = index + LAST_VERTEX_OFFSET_IN_QUAD;
+      indexOffset += 1;
     }
 
     // Helper function to create all faces of a complete cell - optimized
@@ -219,8 +237,8 @@ export function Inequality({
       const [a, b, c] = boundaryLine2D;
 
       // Optimized grid traversal with early termination
-      for (let ix = 0; ix < adaptiveResolution; ix++) {
-        for (let iy = 0; iy < adaptiveResolution; iy++) {
+      for (let ix = 0; ix < adaptiveResolution; ix += 1) {
+        for (let iy = 0; iy < adaptiveResolution; iy += 1) {
           const x1 = xRange[0] + ix * xStep;
           const x2 = xRange[0] + (ix + 1) * xStep;
           const y1 = yRange[0] + iy * yStep;
@@ -344,7 +362,7 @@ export function Inequality({
       // Create boundary lines more efficiently
       if (Math.abs(b) > EPSILON) {
         // Express y as a function of x
-        for (let ix = 0; ix <= lineResolution; ix++) {
+        for (let ix = 0; ix <= lineResolution; ix += 1) {
           const x = xRange[0] + ix * xStep;
           const y = (-a * x - c) / b;
 
@@ -374,7 +392,7 @@ export function Inequality({
         }
       } else if (Math.abs(a) > EPSILON) {
         // Express x as a function of y
-        for (let iy = 0; iy <= lineResolution; iy++) {
+        for (let iy = 0; iy <= lineResolution; iy += 1) {
           const y = yRange[0] + iy * yStep;
           const x = (-b * y - c) / a;
 
@@ -395,7 +413,7 @@ export function Inequality({
       // Lines along x-axis
       for (let iy = 0; iy <= lineResolution; iy += gridStep) {
         const y = yRange[0] + iy * yStep;
-        for (let ix = 1; ix <= lineResolution; ix++) {
+        for (let ix = 1; ix <= lineResolution; ix += 1) {
           const x = xRange[0] + ix * xStep;
           const prevX = xRange[0] + (ix - 1) * xStep;
           const z = boundaryFunction(x, y);
@@ -415,7 +433,7 @@ export function Inequality({
       // Lines along y-axis
       for (let ix = 0; ix <= lineResolution; ix += gridStep) {
         const x = xRange[0] + ix * xStep;
-        for (let iy = 1; iy <= lineResolution; iy++) {
+        for (let iy = 1; iy <= lineResolution; iy += 1) {
           const y = yRange[0] + iy * yStep;
           const prevY = yRange[0] + (iy - 1) * yStep;
           const z = boundaryFunction(x, y);

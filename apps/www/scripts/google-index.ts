@@ -274,7 +274,7 @@ async function submitUrlsToGoogle(
   let shouldStop = false;
   let currentDelay = RATE_LIMIT_DELAY;
 
-  for (let index = 0; index < urls.length; index++) {
+  for (let index = 0; index < urls.length; index += 1) {
     if (shouldStop) {
       logger.warn(`Stopping at URL ${index + 1} due to API errors.`);
       break;

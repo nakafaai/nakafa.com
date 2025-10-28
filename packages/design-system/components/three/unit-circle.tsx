@@ -54,7 +54,7 @@ const ONE = 1;
 // Pre-calculate static circle points once
 const STATIC_CIRCLE_POINTS: Vector3[] = (() => {
   const pts: Vector3[] = [];
-  for (let i = 0; i <= UNIT_CIRCLE_SEGMENTS; i++) {
+  for (let i = 0; i <= UNIT_CIRCLE_SEGMENTS; i += 1) {
     const a = (i / UNIT_CIRCLE_SEGMENTS) * Math.PI * 2;
     pts.push(new Vector3(Math.cos(a), Math.sin(a), 0));
   }
@@ -110,7 +110,7 @@ export function UnitCircle({
   // Memoize angle arc points with reduced segments
   const arcPoints = useMemo(() => {
     const pts: Vector3[] = [];
-    for (let i = 0; i <= UNIT_ARC_SEGMENTS; i++) {
+    for (let i = 0; i <= UNIT_ARC_SEGMENTS; i += 1) {
       const a = (i / UNIT_ARC_SEGMENTS) * angleInRadians;
       pts.push(
         new Vector3(Math.cos(a) * ARC_RADIUS, Math.sin(a) * ARC_RADIUS, 0)

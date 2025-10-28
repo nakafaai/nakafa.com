@@ -144,7 +144,7 @@ export function Triangle({
   // Memoize the angle arc points with fewer segments for performance
   const triangleArcPoints = useMemo(() => {
     const pts: Vector3[] = [];
-    for (let i = 0; i <= ARC_SEGMENTS; i++) {
+    for (let i = 0; i <= ARC_SEGMENTS; i += 1) {
       const a = (i / ARC_SEGMENTS) * angleInRadians;
       pts.push(
         new Vector3(Math.cos(a) * arcRadius, Math.sin(a) * arcRadius, 0)

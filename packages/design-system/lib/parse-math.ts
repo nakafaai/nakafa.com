@@ -81,7 +81,7 @@ function getListContext(
   // Check if current line or recent lines contain list markers
   const lines = text.slice(0, position).split("\n");
 
-  for (let i = lines.length - 1; i >= 0; i--) {
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
     const line = lines[i];
     const trimmed = line.trim();
 

@@ -183,7 +183,7 @@ export default function TableChairsAnimation({
       );
     } else {
       // For multiple tables
-      for (let i = 0; i < deferredTableCount; i++) {
+      for (let i = 0; i < deferredTableCount; i += 1) {
         tables.push({
           id: i + 1,
           x: i * (tableWidth + tableSpacing),
@@ -210,7 +210,7 @@ export default function TableChairsAnimation({
       });
 
       // Add chairs on the top of each table
-      for (let i = 0; i < deferredTableCount; i++) {
+      for (let i = 0; i < deferredTableCount; i += 1) {
         chairs.push({
           id: INITIAL_SIDE_CHAIRS + 1 + i,
           x:
@@ -221,7 +221,7 @@ export default function TableChairsAnimation({
       }
 
       // Add chairs on the bottom of each table
-      for (let i = 0; i < deferredTableCount; i++) {
+      for (let i = 0; i < deferredTableCount; i += 1) {
         chairs.push({
           id: INITIAL_SIDE_CHAIRS + 1 + deferredTableCount + i,
           x:
