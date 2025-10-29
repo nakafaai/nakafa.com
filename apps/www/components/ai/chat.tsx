@@ -91,7 +91,7 @@ const AiChatToolbar = memo(() => {
   }
 
   return (
-    <div className="mx-auto mb-2 grid w-full max-w-3xl shrink-0">
+    <div className="mx-auto mb-2 grid w-full max-w-3xl shrink-0 px-2">
       <PromptInput onSubmit={handleSubmit}>
         <PromptInputTextarea
           className="p-4"
