@@ -42,6 +42,27 @@ export function nakafaWebSearch() {
       - Use exactly the citation field for inline citations as LINKS (not images)
       - Write inline citations before the period at the end of every sentence
       - Always use link syntax [text](url), NEVER image syntax ![alt](url)
+
+      ## CRITICAL: Temporal Context in Search Queries
+
+      ALWAYS include date/time context in search queries:
+
+      - For current events: "latest", "${new Date().getFullYear()}", "today", "current", "recent"
+      - For historical info: specific years or date ranges
+      - For time-sensitive topics: "newest", "updated", "${new Date().getFullYear()}"
+      - NO TEMPORAL ASSUMPTIONS: Never assume time periods - always be explicit about dates/years
+
+      <example>
+        Query: "latest AI news ${new Date().getFullYear()}"
+      </example>
+
+      <example>
+        Query: "current stock prices today"
+      </example>
+
+      <example>
+        Query: "recent developments in ${new Date().getFullYear()}"
+      </example>
     `,
 
     examples: `
