@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@mantine/hooks": "^8.3.5",
+    "@mantine/hooks": "^8.3.6",
     "date-fns": "^4.1.0",
     "ky": "^1.13.0",
     "lucide-react": "^0.548.0",

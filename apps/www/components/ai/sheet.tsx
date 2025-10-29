@@ -167,6 +167,7 @@ const AiSheetNewChat = memo(() => {
   const router = useRouter();
   const pathname = usePathname();
 
+  const setOpen = useAi((state) => state.setOpen);
   const setQuery = useAi((state) => state.setQuery);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
 
@@ -182,6 +183,7 @@ const AiSheetNewChat = memo(() => {
       }
 
       if (!user) {
+        setOpen(false);
         router.push(`/auth?redirect=${pathname}`);
         return;
       }
