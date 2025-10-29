@@ -1,26 +1,23 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Authenticated, useQuery } from "convex/react";
 import { useCallback, useEffect, useRef } from "react";
 import { useAi } from "@/lib/context/use-ai";
 import { ChatProvider, useChat } from "@/lib/context/use-chat";
 import { AiChat } from "./chat";
+import { useChatId } from "./chat-provider";
 
-type Props = {
-  chatId: Id<"chats">;
-};
-
-export function AiChatPage({ chatId }: Props) {
+export function AiChatPage() {
   return (
     <Authenticated>
-      <AiChatMain chatId={chatId} />
+      <AiChatMain />
     </Authenticated>
   );
 }
 
-function AiChatMain({ chatId }: Props) {
+function AiChatMain() {
+  const chatId = useChatId((s) => s.chatId);
   const messages = useQuery(api.chats.queries.loadMessages, {
     chatId,
   });

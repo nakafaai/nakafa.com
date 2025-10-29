@@ -29,7 +29,7 @@ export const syncPolarCustomerFromUserId = action({
 
     // Step 2: Sync to database in a single atomic mutation
     const customerId = await ctx.runMutation(
-      internal.customers.mutation.syncCustomerFromPolar,
+      internal.customers.mutations.syncCustomerFromPolar,
       {
         customer: convertToDatabaseCustomer({
           ...polarCustomerData,

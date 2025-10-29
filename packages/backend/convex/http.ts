@@ -39,7 +39,7 @@ http.route({
             });
           }
 
-          await ctx.runMutation(internal.customers.mutation.insertCustomer, {
+          await ctx.runMutation(internal.customers.mutations.insertCustomer, {
             customer: convertToDatabaseCustomer({
               ...event.data,
               userId,
@@ -56,7 +56,7 @@ http.route({
             });
           }
 
-          await ctx.runMutation(internal.customers.mutation.updateCustomer, {
+          await ctx.runMutation(internal.customers.mutations.updateCustomer, {
             customer: convertToDatabaseCustomer({
               ...event.data,
               userId,
@@ -66,7 +66,7 @@ http.route({
         }
         case "customer.deleted": {
           await ctx.runMutation(
-            internal.customers.mutation.deleteCustomerById,
+            internal.customers.mutations.deleteCustomerById,
             {
               id: event.data.id,
             }
@@ -75,7 +75,7 @@ http.route({
         }
         case "subscription.created": {
           await ctx.runMutation(
-            internal.subscriptions.mutation.createSubscription,
+            internal.subscriptions.mutations.createSubscription,
             {
               subscription: convertToDatabaseSubscription(event.data),
             }
@@ -84,7 +84,7 @@ http.route({
         }
         case "subscription.updated": {
           await ctx.runMutation(
-            internal.subscriptions.mutation.updateSubscription,
+            internal.subscriptions.mutations.updateSubscription,
             {
               subscription: convertToDatabaseSubscription(event.data),
             }

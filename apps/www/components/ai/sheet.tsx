@@ -171,7 +171,7 @@ const AiSheetNewChat = memo(() => {
   const setActiveChatId = useAi((state) => state.setActiveChatId);
 
   const user = useQuery(api.auth.getCurrentUser);
-  const createChat = useMutation(api.chats.mutation.createChat);
+  const createChat = useMutation(api.chats.mutations.createChat);
 
   const [isPending, startTransition] = useTransition();
 
@@ -191,7 +191,6 @@ const AiSheetNewChat = memo(() => {
       });
 
       setQuery(message.text);
-
       setActiveChatId(chatId);
     });
   }

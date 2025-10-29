@@ -73,6 +73,45 @@ export const createChat = mutation({
 });
 
 /**
+ * Update the title of a chat.
+ * Only the chat owner can update the title.
+ */
+export const updateChatTitle = mutation({
+  args: {
+    chatId: v.id("chats"),
+    title: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await safeGetAppUser(ctx);
+    if (!user) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to update the chat title.",
+      });
+    }
+
+    const chat = await ctx.db.get(args.chatId);
+    if (!chat) {
+      throw new ConvexError({
+        code: "CHAT_NOT_FOUND",
+        message: `Chat not found for chatId: ${args.chatId}`,
+      });
+    }
+
+    if (chat.userId !== user.appUser._id) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "You do not have permission to update the chat title.",
+      });
+    }
+
+    await ctx.db.patch(chat._id, { title: args.title });
+
+    return chat._id;
+  },
+});
+
+/**
  * Atomically upsert a message with parts.
  * If messageId provided, deletes from that message onwards before inserting (for regenerate).
  * Parts messageId is omitted - set internally after message creation.

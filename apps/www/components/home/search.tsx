@@ -26,7 +26,7 @@ export function HomeSearch() {
   const setQuery = useAi((state) => state.setQuery);
 
   const user = useQuery(api.auth.getCurrentUser);
-  const createChat = useMutation(api.chats.mutation.createChat);
+  const createChat = useMutation(api.chats.mutations.createChat);
 
   const [isPending, startTransition] = useTransition();
 

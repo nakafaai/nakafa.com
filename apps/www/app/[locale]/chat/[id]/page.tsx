@@ -1,6 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
 import { AiChatPage } from "@/components/ai/chat-page";
+import { ChatIdProvider } from "@/components/ai/chat-provider";
 
 type Props = {
   params: Promise<{
@@ -13,7 +14,9 @@ export default async function Page({ params }: Props) {
 
   return (
     <ErrorBoundary fallback={null}>
-      <AiChatPage chatId={id} />
+      <ChatIdProvider chatId={id}>
+        <AiChatPage />
+      </ChatIdProvider>
     </ErrorBoundary>
   );
 }

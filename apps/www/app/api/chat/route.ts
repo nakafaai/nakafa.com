@@ -122,7 +122,7 @@ export async function POST(req: Request) {
   if (chatIdToUse) {
     // Upsert message with parts for existing chat
     await fetchMutation(
-      convexApi.chats.mutation.upsertMessageWithParts,
+      convexApi.chats.mutations.upsertMessageWithParts,
       {
         message: {
           chatId: chatIdToUse,
@@ -136,7 +136,7 @@ export async function POST(req: Request) {
     );
   } else {
     const result = await fetchMutation(
-      convexApi.chats.mutation.createChatWithMessage,
+      convexApi.chats.mutations.createChatWithMessage,
       {
         message: {
           role: message.role,
@@ -200,7 +200,7 @@ export async function POST(req: Request) {
     onFinish: async ({ responseMessage }) => {
       // Upsert assistant response with parts
       await fetchMutation(
-        convexApi.chats.mutation.upsertMessageWithParts,
+        convexApi.chats.mutations.upsertMessageWithParts,
         {
           message: {
             chatId: chatIdToUse,

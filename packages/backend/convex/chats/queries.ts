@@ -5,6 +5,42 @@ import { safeGetAppUser } from "../auth";
 import { mapDBPartToUIMessagePart } from "./utils";
 
 /**
+ * Get a chat by its ID.
+ * Only accessible by the chat owner.
+ */
+export const getChat = query({
+  args: {
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, args) => {
+    const user = await safeGetAppUser(ctx);
+    if (!user) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to get a chat.",
+      });
+    }
+
+    const chat = await ctx.db.get(args.chatId);
+    if (!chat) {
+      throw new ConvexError({
+        code: "CHAT_NOT_FOUND",
+        message: `Chat not found for chatId: ${args.chatId}`,
+      });
+    }
+
+    if (chat.userId !== user.appUser._id) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "You do not have permission to access this chat.",
+      });
+    }
+
+    return chat;
+  },
+});
+
+/**
  * Load messages for a chat.
  * Messages are ordered by creation time, parts by order field.
  * Only accessible by the chat owner.

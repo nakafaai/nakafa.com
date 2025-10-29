@@ -21,35 +21,45 @@ import { useTranslations } from "next-intl";
 import { memo } from "react";
 import { useAi } from "@/lib/context/use-ai";
 import { useChat } from "@/lib/context/use-chat";
+import { AiChatHeader } from "./chat-header";
 import { AIChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
 
 export function AiChat() {
-  const { messages } = useChat((state) => state.chat);
-
   return (
     <div className="relative flex size-full flex-col overflow-hidden">
-      <Conversation>
-        <ConversationContent className="mx-auto max-w-3xl">
-          {messages.map((message) => (
-            <Message
-              from={message.role === "user" ? "user" : "assistant"}
-              key={message.id}
-            >
-              <AiChatMessage message={message} />
-            </Message>
-          ))}
+      <AiChatHeader />
 
-          <AIChatLoading />
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
+      <AiChatConversation />
 
       <AiChatToolbar />
     </div>
   );
 }
+
+const AiChatConversation = memo(() => {
+  const messages = useChat((state) => state.chat.messages);
+
+  return (
+    <Conversation>
+      <ConversationContent className="mx-auto max-w-3xl">
+        {messages.map((message) => (
+          <Message
+            from={message.role === "user" ? "user" : "assistant"}
+            key={message.id}
+          >
+            <AiChatMessage message={message} />
+          </Message>
+        ))}
+
+        <AIChatLoading />
+      </ConversationContent>
+      <ConversationScrollButton />
+    </Conversation>
+  );
+});
+AiChatConversation.displayName = "AiChatConversation";
 
 const AiChatToolbar = memo(() => {
   const t = useTranslations("Ai");
