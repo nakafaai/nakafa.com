@@ -97,7 +97,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
       </Activity>
 
       <Activity mode={isEditing ? "visible" : "hidden"}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Button
             disabled={isPending}
             onClick={() => setIsEditing(false)}
