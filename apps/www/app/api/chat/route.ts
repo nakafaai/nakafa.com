@@ -6,6 +6,7 @@ import {
   type OpenAIProvider,
   order,
 } from "@repo/ai/lib/providers";
+import { generateTitle } from "@repo/ai/lib/title";
 import { cleanSlug, compressMessages } from "@repo/ai/lib/utils";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
@@ -197,7 +198,20 @@ export async function POST(req: Request) {
       return t("error-message");
     },
     originalMessages: compressedMessages,
-    onFinish: async ({ responseMessage }) => {
+    onFinish: async ({ messages: updatedMessages, responseMessage }) => {
+      // If updatedMessage length is 2, means it is new chat, so we need to update the chat title
+      if (updatedMessages.length === 2) {
+        const title = await generateTitle({ messages: updatedMessages });
+        await fetchMutation(
+          convexApi.chats.mutations.updateChatTitle,
+          {
+            chatId: chatIdToUse,
+            title,
+          },
+          { token }
+        );
+      }
+
       // Upsert assistant response with parts
       await fetchMutation(
         convexApi.chats.mutations.upsertMessageWithParts,
@@ -357,7 +371,7 @@ export async function POST(req: Request) {
       ).messages.filter((m) => m.role === "assistant");
 
       const streamObjectResult = streamObject({
-        model: model.languageModel("gemini-2.5-flash"),
+        model: model.languageModel("grok-4-fast-non-reasoning"),
         system: nakafaSuggestions(),
         messages: [...finalMessages, ...messagesFromResponse],
         schemaName: "Suggestions",
