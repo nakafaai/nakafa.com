@@ -41,6 +41,20 @@ export const getChat = query({
 });
 
 /**
+ * Get the title of a chat.
+ * Accessible by anyone.
+ */
+export const getChatTitle = query({
+  args: {
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, args) => {
+    const chat = await ctx.db.get(args.chatId);
+    return chat?.title;
+  },
+});
+
+/**
  * Load messages for a chat.
  * Messages are ordered by creation time, parts by order field.
  * Only accessible by the chat owner.
