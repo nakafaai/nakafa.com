@@ -32,8 +32,7 @@
       },
       "style": {
         "useFilenamingConvention": "off",
-        "useNamingConvention": "off",
-        "noHeadElement": "off"
+        "useNamingConvention": "off"
       },
       "nursery": {
         "useQwikValidLexicalScope": "off"

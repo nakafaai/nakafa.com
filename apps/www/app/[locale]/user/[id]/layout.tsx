@@ -14,7 +14,7 @@ export default async function Layout(
     <ErrorBoundary fallback={null}>
       <div className="flex flex-col gap-6">
         <UserHeader userId={userId} />
-        <UserTabs userId={id} />
+        <UserTabs userId={userId} />
         {children}
       </div>
     </ErrorBoundary>
