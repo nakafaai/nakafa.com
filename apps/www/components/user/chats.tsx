@@ -45,7 +45,7 @@ export function UserChatsList({
   }
 
   return (
-    <div className="flex flex-col divide-y rounded-xl border shadow-sm">
+    <div className="flex flex-col divide-y overflow-hidden rounded-xl border shadow-sm">
       {chats.map((chat) => (
         <NavigationLink
           className="group flex items-center justify-between gap-2 px-4 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
