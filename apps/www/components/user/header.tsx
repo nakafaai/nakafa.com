@@ -29,7 +29,7 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
     return (
       <header className="flex items-start justify-between gap-4">
         <section className="flex flex-1 items-start gap-4 text-left">
-          <Avatar className="size-12 rounded-full sm:size-16">
+          <Avatar className="size-12 rounded-full border sm:size-16">
             <AvatarImage alt={tCommon("anonymous")} src="" />
             <AvatarFallback className="rounded-lg">
               {getInitialName(tCommon("anonymous"))}
@@ -51,7 +51,7 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
   return (
     <header className="flex items-start justify-between gap-4">
       <section className="flex flex-1 items-start gap-4 text-left">
-        <Avatar className="size-12 rounded-full sm:size-16">
+        <Avatar className="size-12 rounded-full border sm:size-16">
           <AvatarImage alt={authUser.name} src={authUser.image ?? ""} />
           <AvatarFallback className="rounded-lg">
             {getInitialName(authUser.name)}
