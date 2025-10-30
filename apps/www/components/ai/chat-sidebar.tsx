@@ -78,7 +78,7 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
 
         <SidebarMenu>
           <SidebarMenuItem>
-            <InputGroup className="bg-background shadow-none">
+            <InputGroup className="border-sidebar-border bg-background shadow-none">
               <InputGroupInput
                 onChange={(e) => setQ(e.target.value)}
                 placeholder={t("search-chats")}

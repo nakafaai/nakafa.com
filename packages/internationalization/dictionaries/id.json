@@ -233,7 +233,8 @@
     "name-description": "Nama akan ditampilkan di profil dan komentar.",
     "name-footer": "Silakan gunakan minimum 3 dan maksimum 32 karakter.",
     "name-placeholder": "Masukkan nama kamu...",
-    "save": "Simpan"
+    "save": "Simpan",
+    "chat": "Obrolan"
   },
   "Ai": {
     "ask-ai": "Tanya AI",

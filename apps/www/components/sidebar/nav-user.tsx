@@ -29,6 +29,7 @@ import {
   EllipsisVerticalIcon,
   LogInIcon,
   LogOutIcon,
+  MessageCircleIcon,
   SettingsIcon,
   UserRoundIcon,
 } from "lucide-react";
@@ -129,6 +130,13 @@ export function NavUser() {
             >
               <UserRoundIcon />
               {t("profile")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onSelect={() => router.push("/chat")}
+            >
+              <MessageCircleIcon />
+              {t("chat")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"

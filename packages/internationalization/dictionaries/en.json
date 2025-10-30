@@ -233,7 +233,8 @@
     "name-description": "The name will be displayed in your profile and comments.",
     "name-footer": "Please use minimum 3 and maximum 32 characters.",
     "name-placeholder": "Enter your name...",
-    "save": "Save"
+    "save": "Save",
+    "chat": "Chat"
   },
   "Ai": {
     "ask-ai": "Ask AI",

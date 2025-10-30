@@ -5,7 +5,7 @@ import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, useQuery } from "convex/react";
-import { CheckIcon, Edit2Icon, XIcon } from "lucide-react";
+import { CheckIcon, Edit2Icon, MessageCircleIcon, XIcon } from "lucide-react";
 import {
   Activity,
   type ComponentProps,
@@ -85,7 +85,10 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
         />
       </Activity>
       <Activity mode={isEditing ? "hidden" : "visible"}>
-        <h1 className="max-w-xs truncate px-2 font-medium">{chat.title}</h1>
+        <h1 className="flex items-center gap-2 px-2">
+          <MessageCircleIcon className="size-4 shrink-0" />
+          <span className="max-w-xs truncate font-medium">{chat.title}</span>
+        </h1>
       </Activity>
 
       <Activity mode={isEditing ? "visible" : "hidden"}>
