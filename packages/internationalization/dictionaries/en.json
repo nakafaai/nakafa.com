@@ -118,7 +118,9 @@
     "like": "Like",
     "dislike": "Dislike",
     "former-official": "Former Official",
-    "see": "See"
+    "see": "See",
+    "chat": "Chat",
+    "no-chats": "No chats yet."
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",

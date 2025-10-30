@@ -20,5 +20,5 @@ export function UserSettingsTabs() {
     },
   ];
 
-  return <SharedTabs tabs={tabs} />;
+  return <SharedTabs defaultValue="/user/settings" tabs={tabs} />;
 }

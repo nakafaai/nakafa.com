@@ -67,6 +67,7 @@ export const createChat = mutation({
       updatedAt: Date.now(),
       title: args.title || "New Chat",
       userId: user.appUser._id,
+      visibility: "private", // default to private
     });
     return chatId;
   },
@@ -106,6 +107,45 @@ export const updateChatTitle = mutation({
     }
 
     await ctx.db.patch(chat._id, { title: args.title });
+
+    return chat._id;
+  },
+});
+
+/**
+ * Update the visibility of a chat.
+ * Only the chat owner can update the visibility.
+ */
+export const updateChatVisibility = mutation({
+  args: {
+    chatId: v.id("chats"),
+    visibility: v.union(v.literal("public"), v.literal("private")),
+  },
+  handler: async (ctx, args) => {
+    const user = await safeGetAppUser(ctx);
+    if (!user) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to update the chat visibility.",
+      });
+    }
+
+    const chat = await ctx.db.get(args.chatId);
+    if (!chat) {
+      throw new ConvexError({
+        code: "CHAT_NOT_FOUND",
+        message: `Chat not found for chatId: ${args.chatId}`,
+      });
+    }
+
+    if (chat.userId !== user.appUser._id) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "You do not have permission to update the chat visibility.",
+      });
+    }
+
+    await ctx.db.patch(chat._id, { visibility: args.visibility });
 
     return chat._id;
   },
@@ -226,6 +266,7 @@ export const createChatWithMessage = mutation({
       updatedAt: Date.now(),
       title: args.title || "New Chat",
       userId: user.appUser._id,
+      visibility: "private", // default to private
     });
 
     // Create first message

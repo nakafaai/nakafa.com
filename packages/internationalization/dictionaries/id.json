@@ -118,7 +118,9 @@
     "like": "Suka",
     "dislike": "Tidak suka",
     "former-official": "Resmi Lama",
-    "see": "Lihat"
+    "see": "Lihat",
+    "chat": "Obrolan",
+    "no-chats": "Belum ada obrolan."
   },
   "Comments": {
     "add-comment-placeholder": "Tambahkan komentar...",

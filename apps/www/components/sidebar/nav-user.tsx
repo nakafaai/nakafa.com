@@ -133,7 +133,7 @@ export function NavUser() {
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
-              onSelect={() => router.push("/chat")}
+              onSelect={() => router.push(`/user/${user.appUser._id}/chat`)}
             >
               <MessageCircleIcon />
               {t("chat")}

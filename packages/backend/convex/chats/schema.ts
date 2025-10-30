@@ -6,12 +6,15 @@ export const tables = {
     updatedAt: v.number(), // Unix timestamp for last message
     title: v.optional(v.string()), // Optional chat title
     userId: v.id("users"), // Optional user association
+    visibility: v.union(v.literal("public"), v.literal("private")),
   })
     .index("userId", ["userId"])
+    .index("userId_visibility", ["userId", "visibility"])
+    .index("visibility", ["visibility"])
     .index("updatedAt", ["updatedAt"])
     .searchIndex("search_title", {
       searchField: "title",
-      filterFields: ["userId"],
+      filterFields: ["userId", "visibility"],
     }),
 
   messages: defineTable({

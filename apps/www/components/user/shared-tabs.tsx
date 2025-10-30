@@ -8,14 +8,15 @@ type Props = {
     href: string;
     icon: ComponentType<SVGProps<SVGSVGElement>>;
   }[];
+  defaultValue: string;
 };
 
-export function SharedTabs({ tabs }: Props) {
+export function SharedTabs({ tabs, defaultValue }: Props) {
   return (
-    <div className="flex rounded-xl border p-1 shadow-sm">
+    <div className="flex rounded-xl border p-1 shadow-xs">
       <Highlight
         className="inset-0 rounded-lg bg-accent"
-        defaultValue={tabs[0]?.href}
+        defaultValue={defaultValue}
       >
         {tabs.map((tab) => (
           <NavigationLink

@@ -21,7 +21,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar";
-import { Authenticated, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { HistoryIcon, SearchIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -38,7 +38,7 @@ export function AiChatSidebar({ ...props }: Props) {
         sidebarDesktop={1280}
       >
         <SidebarTrigger
-          className="fixed top-32 left-2 size-9 bg-background/80 backdrop-blur-xs xl:hidden"
+          className="fixed top-32 left-2 size-9 bg-background/80 backdrop-blur-xs sm:left-6 lg:hidden"
           icon={<HistoryIcon />}
           size="icon"
           variant="outline"
@@ -100,21 +100,34 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
 }
 
 function AiChatSidebarHistory({ q }: { q?: string }) {
+  const user = useQuery(api.auth.getCurrentUser);
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <SidebarGroup>
       <SidebarGroupContent>
-        <Authenticated>
-          <AiChatSidebarChats q={q} />
-        </Authenticated>
+        <AiChatSidebarChats q={q} userId={user.appUser._id} />
       </SidebarGroupContent>
     </SidebarGroup>
   );
 }
 
-function AiChatSidebarChats({ q }: { q?: string }) {
+function AiChatSidebarChats({
+  userId,
+  q,
+}: {
+  userId: Id<"users">;
+  q?: string;
+}) {
   const params = useParams();
   const id = params.id as Id<"chats">;
-  const chats = useQuery(api.chats.queries.getChats, { q });
+  const chats = useQuery(api.chats.queries.getChats, {
+    userId,
+    q,
+  });
 
   if (!chats) {
     return null;
