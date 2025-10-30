@@ -282,7 +282,8 @@
     "new-chat-title": "What do you want to learn?",
     "new-chat-description": "Ask me anything, and I'll help you learn.",
     "new-chat": "New chat",
-    "chats": "Chats"
+    "chats": "Chats",
+    "search-chats": "Search your chats..."
   },
   "About": {
     "meta-title": "Fck Closed Education, Enjoy Free Open Education",

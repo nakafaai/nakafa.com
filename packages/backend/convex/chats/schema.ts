@@ -8,7 +8,11 @@ export const tables = {
     userId: v.id("users"), // Optional user association
   })
     .index("userId", ["userId"])
-    .index("updatedAt", ["updatedAt"]),
+    .index("updatedAt", ["updatedAt"])
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["userId"],
+    }),
 
   messages: defineTable({
     identifier: v.string(), // Unique identifier for the message https://ai-sdk.dev/docs/reference/ai-sdk-core/ui-message#uimessage-interface

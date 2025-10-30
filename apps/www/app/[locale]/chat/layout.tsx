@@ -3,14 +3,12 @@ import { AiChatSidebar } from "@/components/ai/chat-sidebar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <ErrorBoundary fallback={null}>
-      <main className="h-[calc(100svh-4rem)] lg:h-svh">
-        <div className="flex h-full">
-          {children}
+    <main className="h-[calc(100svh-4rem)] lg:h-svh">
+      <div className="flex h-full">
+        <ErrorBoundary fallback={null}>{children}</ErrorBoundary>
 
-          <AiChatSidebar />
-        </div>
-      </main>
-    </ErrorBoundary>
+        <AiChatSidebar />
+      </div>
+    </main>
   );
 }

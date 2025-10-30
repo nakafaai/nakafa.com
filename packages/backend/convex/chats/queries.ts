@@ -43,9 +43,13 @@ export const getChat = query({
 /**
  * Get all chats for the authenticated user.
  * Only accessible by the authenticated user.
+ * Supports optional full-text search by title.
  */
 export const getChats = query({
-  handler: async (ctx) => {
+  args: {
+    q: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
     const user = await safeGetAppUser(ctx);
     if (!user) {
       throw new ConvexError({
@@ -54,6 +58,20 @@ export const getChats = query({
       });
     }
 
+    // If search query is provided and not empty, use full-text search
+    if (args.q && args.q.trim().length > 0) {
+      const searchQuery = args.q;
+      const chats = await ctx.db
+        .query("chats")
+        .withSearchIndex("search_title", (q) =>
+          q.search("title", searchQuery).eq("userId", user.appUser._id)
+        )
+        .collect();
+
+      return chats;
+    }
+
+    // Otherwise, return all chats ordered by most recent
     const chats = await ctx.db
       .query("chats")
       .withIndex("userId", (q) => q.eq("userId", user.appUser._id))

@@ -10,7 +10,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
     <fieldset
       className={cn(
-        "group/input-group relative flex w-full items-center rounded-md border border-input shadow-xs outline-none transition-[color,box-shadow]",
+        "group/input-group relative flex w-full items-center rounded-md border border-input shadow-xs outline-none transition-[color,box-shadow] ease-out",
         "h-9 min-w-0 has-[>textarea]:h-auto",
 
         // Variants based on alignment.

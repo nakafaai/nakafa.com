@@ -2,13 +2,18 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Button } from "@repo/design-system/components/ui/button";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@repo/design-system/components/ui/input-group";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -17,16 +22,14 @@ import {
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar";
 import { Authenticated, useQuery } from "convex/react";
-import { EditIcon, HistoryIcon } from "lucide-react";
+import { HistoryIcon, SearchIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import type { ComponentProps } from "react";
+import { type ComponentProps, useState } from "react";
 
 type Props = ComponentProps<typeof Sidebar>;
 
 export function AiChatSidebar({ ...props }: Props) {
-  const t = useTranslations("Ai");
-
   return (
     <div data-pagefind-ignore>
       <SidebarProvider
@@ -34,7 +37,6 @@ export function AiChatSidebar({ ...props }: Props) {
         keyboardShortcut="h"
         sidebarDesktop={1280}
       >
-        {/* Mobile trigger button */}
         <SidebarTrigger
           className="fixed top-20 right-6 size-9 bg-background/80 backdrop-blur-xs xl:hidden"
           icon={<HistoryIcon />}
@@ -42,49 +44,77 @@ export function AiChatSidebar({ ...props }: Props) {
           variant="outline"
         />
 
-        {/* Right sidebar */}
-        <Sidebar
-          containerClassName="lg:hidden xl:block"
-          side="right"
-          variant="floating"
-          {...props}
-        >
-          <SidebarHeader>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavigationLink href="/" title={t("new-chat")}>
-                    <EditIcon />
-                    {t("new-chat")}
-                  </NavigationLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarHeader>
-
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel className="gap-2">
-                <HistoryIcon />
-                {t("chats")}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <Authenticated>
-                  <AiChatSidebarChats />
-                </Authenticated>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
+        <AiChatSidebarContent {...props} />
       </SidebarProvider>
     </div>
   );
 }
 
-function AiChatSidebarChats() {
+function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
+  const t = useTranslations("Ai");
+  const [q, setQ] = useState("");
+
+  return (
+    <Sidebar
+      containerClassName="lg:hidden xl:block"
+      side="right"
+      variant="floating"
+      {...props}
+    >
+      <SidebarHeader className="border-b">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Button
+              asChild
+              className="w-full border border-sidebar-border shadow-none"
+              variant="secondary"
+            >
+              <NavigationLink href="/" title={t("new-chat")}>
+                {t("new-chat")}
+              </NavigationLink>
+            </Button>
+          </SidebarMenuItem>
+        </SidebarMenu>
+
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <InputGroup className="bg-background shadow-none">
+              <InputGroupInput
+                onChange={(e) => setQ(e.target.value)}
+                placeholder={t("search-chats")}
+                value={q}
+              />
+              <InputGroupAddon>
+                <SearchIcon />
+              </InputGroupAddon>
+            </InputGroup>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <AiChatSidebarHistory q={q} />
+      </SidebarContent>
+    </Sidebar>
+  );
+}
+
+function AiChatSidebarHistory({ q }: { q?: string }) {
+  return (
+    <SidebarGroup>
+      <SidebarGroupContent>
+        <Authenticated>
+          <AiChatSidebarChats q={q} />
+        </Authenticated>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
+
+function AiChatSidebarChats({ q }: { q?: string }) {
   const params = useParams();
   const id = params.id as Id<"chats">;
-  const chats = useQuery(api.chats.queries.getChats);
+  const chats = useQuery(api.chats.queries.getChats, { q });
 
   if (!chats) {
     return null;
