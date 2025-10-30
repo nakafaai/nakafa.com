@@ -18,7 +18,8 @@ export function UserChats({ userId }: { userId: Id<"users"> }) {
   return (
     <UserChatsList
       userId={user.appUser._id}
-      visibility={userId !== user.appUser._id ? "private" : undefined}
+      // If userId is not the current user, only show public chats
+      visibility={userId !== user.appUser._id ? "public" : undefined}
     />
   );
 }
