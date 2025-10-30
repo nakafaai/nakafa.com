@@ -16,12 +16,16 @@ export const AIChatMessageActions = memo(({ messageId, text }: Props) => {
   const t = useTranslations("Ai");
 
   const regenerate = useChat((state) => state.chat.regenerate);
+  const status = useChat((state) => state.chat.status);
 
   const clipboard = useClipboard({ timeout: 1000 });
+
+  const disabled = status === "submitted" || status === "streaming";
 
   return (
     <Actions className="opacity-0 transition-opacity ease-out group-hover:opacity-100">
       <Action
+        disabled={disabled}
         label={t("retry-message")}
         onClick={() => regenerate({ messageId })}
         tooltip={t("retry-message")}

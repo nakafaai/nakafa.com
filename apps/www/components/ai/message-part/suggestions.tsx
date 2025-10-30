@@ -30,11 +30,14 @@ SuggestionsPart.displayName = "SuggestionsPart";
 
 const SuggestionsPartButton = memo(
   ({ suggestion }: { suggestion: DataPart["suggestions"]["data"][number] }) => {
-    const { sendMessage } = useChat((state) => state.chat);
+    const { sendMessage, status } = useChat((state) => state.chat);
+
+    const disabled = status === "submitted" || status === "streaming";
 
     return (
       <button
         className="flex w-full cursor-pointer items-center justify-between gap-6 border-t py-2 text-start transition-colors ease-out hover:text-primary"
+        disabled={disabled}
         onClick={() => sendMessage({ text: suggestion })}
         type="button"
       >
