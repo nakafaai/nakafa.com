@@ -38,7 +38,7 @@ export function AiChatSidebar({ ...props }: Props) {
         sidebarDesktop={1280}
       >
         <SidebarTrigger
-          className="fixed top-20 right-6 size-9 bg-background/80 backdrop-blur-xs xl:hidden"
+          className="fixed top-32 left-2 size-9 bg-background/80 backdrop-blur-xs xl:hidden"
           icon={<HistoryIcon />}
           size="icon"
           variant="outline"

@@ -85,7 +85,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
         />
       </Activity>
       <Activity mode={isEditing ? "hidden" : "visible"}>
-        <h1 className="flex items-center gap-2 px-2">
+        <h1 className="flex items-center gap-2 px-1.5">
           <MessageCircleIcon className="size-4 shrink-0" />
           <span className="max-w-xs truncate font-medium">{chat.title}</span>
         </h1>
