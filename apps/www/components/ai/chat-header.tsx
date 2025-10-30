@@ -3,12 +3,12 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import { CheckIcon, Edit2Icon, XIcon } from "lucide-react";
 import {
   Activity,
+  type ComponentProps,
   type PropsWithChildren,
   useRef,
   useState,
@@ -31,15 +31,7 @@ export function AiChatHeader() {
 }
 
 function AiChatHeaderPlaceholder() {
-  return (
-    <Header className="py-3">
-      <Skeleton className="h-6 w-1/4" />
-
-      <HeaderGroup>
-        <Skeleton className="size-6" />
-      </HeaderGroup>
-    </Header>
-  );
+  return <Header className="h-[50px]" />;
 }
 
 function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
@@ -97,7 +89,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
       </Activity>
 
       <Activity mode={isEditing ? "visible" : "hidden"}>
-        <div className="flex items-center gap-1.5">
+        <HeaderGroup>
           <Button
             disabled={isPending}
             onClick={() => setIsEditing(false)}
@@ -116,7 +108,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
             {isPending ? <SpinnerIcon /> : <CheckIcon />}
             <span className="sr-only">Save</span>
           </Button>
-        </div>
+        </HeaderGroup>
       </Activity>
 
       <Activity mode={isEditing ? "hidden" : "visible"}>
@@ -147,9 +139,8 @@ function Header({
   );
 }
 
-function HeaderGroup({
-  className,
-  children,
-}: PropsWithChildren<{ className?: string }>) {
-  return <div className={cn("flex items-center", className)}>{children}</div>;
+function HeaderGroup({ className, ...props }: ComponentProps<"div">) {
+  return (
+    <div className={cn("flex items-center gap-1.5", className)} {...props} />
+  );
 }

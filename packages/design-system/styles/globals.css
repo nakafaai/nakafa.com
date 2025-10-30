@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tailwind-scrollbar-hide/v4";
 @import "tw-animate-css";
 
 @source "../../**/*.{ts,tsx}";
@@ -180,6 +179,32 @@
   }
   body {
     @apply bg-background text-foreground selection:bg-primary/10 selection:text-primary overscroll-y-none;
+  }
+}
+
+@utility scrollbar-hide {
+  /* Firefox */
+  scrollbar-width: none;
+
+  /* IE and Edge */
+  -ms-overflow-style: none;
+
+  /* Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility scrollbar-default {
+  /* Firefox */
+  scrollbar-width: auto;
+
+  /* IE and Edge */
+  -ms-overflow-style: auto;
+
+  /* Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: block;
   }
 }
 

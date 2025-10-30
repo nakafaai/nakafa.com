@@ -88,16 +88,10 @@ export function LayoutMaterialToc({
   );
 }
 
-export function LayoutMaterial({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function LayoutMaterial({ className, ...props }: ComponentProps<"div">) {
   return (
     <VirtualProvider>
-      <div className={cn("flex", className)}>{children}</div>
+      <div className={cn("flex", className)} {...props} />
     </VirtualProvider>
   );
 }

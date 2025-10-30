@@ -1,6 +1,5 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
 import { fetchQuery } from "convex/nextjs";
 import type { Metadata } from "next";
 import { AiChatPage } from "@/components/ai/chat-page";
@@ -14,27 +13,31 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const title = await fetchQuery(api.chats.queries.getChatTitle, {
-    chatId: id,
-  });
-  if (!title) {
-    return {};
+  const defaultMetadata = {};
+  // Use try-catch to handle errors gracefully when title is not found
+  try {
+    const title = await fetchQuery(api.chats.queries.getChatTitle, {
+      chatId: id,
+    });
+    if (!title) {
+      return defaultMetadata;
+    }
+    return {
+      title: {
+        absolute: title,
+      },
+    };
+  } catch {
+    return defaultMetadata;
   }
-  return {
-    title: {
-      absolute: title,
-    },
-  };
 }
 
 export default async function Page({ params }: Props) {
   const { id } = await params;
 
   return (
-    <ErrorBoundary fallback={null}>
-      <ChatIdProvider chatId={id}>
-        <AiChatPage />
-      </ChatIdProvider>
-    </ErrorBoundary>
+    <ChatIdProvider chatId={id}>
+      <AiChatPage />
+    </ChatIdProvider>
   );
 }

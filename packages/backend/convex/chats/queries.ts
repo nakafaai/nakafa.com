@@ -41,6 +41,30 @@ export const getChat = query({
 });
 
 /**
+ * Get all chats for the authenticated user.
+ * Only accessible by the authenticated user.
+ */
+export const getChats = query({
+  handler: async (ctx) => {
+    const user = await safeGetAppUser(ctx);
+    if (!user) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to get chats.",
+      });
+    }
+
+    const chats = await ctx.db
+      .query("chats")
+      .withIndex("userId", (q) => q.eq("userId", user.appUser._id))
+      .order("desc")
+      .collect();
+
+    return chats;
+  },
+});
+
+/**
  * Get the title of a chat.
  * Accessible by anyone.
  */

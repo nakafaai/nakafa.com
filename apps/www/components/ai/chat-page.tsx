@@ -57,9 +57,5 @@ function AiChatPageContent() {
     }
   }, [query, sendMessage, handleClearQuery]);
 
-  return (
-    <main className="h-[calc(100svh-4rem)] lg:h-svh">
-      <AiChat />
-    </main>
-  );
+  return <AiChat />;
 }

@@ -17,7 +17,7 @@ export async function generateTitle({ messages }: { messages: MyUIMessage[] }) {
           "You are an expert title generator. You are given a message in the prompt and you need to generate a short, descriptive title based on it.",
         detailedTaskInstructions: `
           - Focus on the main topic or question being asked
-          - Keep it between 3-8 words
+          - Keep it between 3-5 words
           - Ensure it is not more than ${MAX_TITLE_LENGTH} characters long
           - The title should be creative and unique
           - The title should be a summary of the user's message

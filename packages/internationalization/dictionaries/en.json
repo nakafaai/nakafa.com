@@ -280,7 +280,9 @@
     "get-articles-loading": "Getting articles...",
     "get-articles-error": "Failed to get articles.",
     "new-chat-title": "What do you want to learn?",
-    "new-chat-description": "Ask me anything, and I'll help you learn."
+    "new-chat-description": "Ask me anything, and I'll help you learn.",
+    "new-chat": "New chat",
+    "chats": "Chats"
   },
   "About": {
     "meta-title": "Fck Closed Education, Enjoy Free Open Education",

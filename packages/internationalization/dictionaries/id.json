@@ -280,7 +280,9 @@
     "get-articles-loading": "Mendapatkan artikel...",
     "get-articles-error": "Gagal mendapatkan artikel.",
     "new-chat-title": "Mau belajar apa hari ini?",
-    "new-chat-description": "Tanya Nina apa saja, dan aku akan membantu kamu belajar."
+    "new-chat-description": "Tanya Nina apa saja, dan aku akan membantu kamu belajar.",
+    "new-chat": "Obrolan baru",
+    "chats": "Obrolan"
   },
   "About": {
     "meta-title": "Fck Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",
