@@ -86,7 +86,7 @@ export function UserChatsList({
             </div>
 
             <div className="flex items-center gap-2">
-              <time className="text-muted-foreground text-sm group-hover:text-accent-foreground/80">
+              <time className="shrink-0 text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground/80">
                 {formatDistanceToNow(chat.updatedAt, {
                   locale: getLocale(locale),
                   addSuffix: true,
