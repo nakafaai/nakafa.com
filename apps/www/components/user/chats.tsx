@@ -68,7 +68,7 @@ export function UserChatsList({
         const isPrivate = chat.visibility === "private";
         return (
           <div
-            className="group relative flex items-center justify-between gap-2 px-4 py-2 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+            className="group relative flex items-center justify-between gap-2 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
             key={chat._id}
           >
             <NavigationLink
