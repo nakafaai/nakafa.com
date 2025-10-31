@@ -37,6 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const FilePath = getGradePath(category, grade);
 
+  const title = `${t(getGradeNonNumeric(grade) ?? "grade", { grade })} - ${t(category)}`;
   const path = `/${locale}${FilePath}`;
   const image = {
     url: getOgUrl(locale, FilePath),
@@ -46,14 +47,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: {
-      absolute: `${t(getGradeNonNumeric(grade) ?? "grade", { grade })} - ${t(category)}`,
+      absolute: title,
     },
     description: t("grade-description"),
     alternates: {
       canonical: path,
     },
     openGraph: {
+      title,
       url: path,
+      siteName: "Nakafa",
+      locale,
+      type: "website",
       images: [image],
     },
     twitter: {

@@ -41,7 +41,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       canonical: `/${locale}${FilePath}`,
     },
     openGraph: {
+      title: t(category),
+      description: t("description"),
       url: `/${locale}${FilePath}`,
+      siteName: "Nakafa",
+      locale,
+      type: "website",
       images: [image],
     },
   };

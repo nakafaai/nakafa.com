@@ -66,6 +66,7 @@ export async function generateMetadata({
     ogUrl = publicPath;
   }
 
+  const title = `${t(material)} - ${t(getGradeNonNumeric(grade) ?? "grade", { grade })} - ${t(category)}`;
   const urlPath = `/${locale}${FilePath}`;
   const image = {
     url: ogUrl,
@@ -75,13 +76,17 @@ export async function generateMetadata({
 
   return {
     title: {
-      absolute: `${t(material)} - ${t(getGradeNonNumeric(grade) ?? "grade", { grade })} - ${t(category)}`,
+      absolute: title,
     },
     alternates: {
       canonical: urlPath,
     },
     openGraph: {
+      title,
       url: urlPath,
+      siteName: "Nakafa",
+      locale,
+      type: "website",
       images: [image],
     },
     twitter: {
