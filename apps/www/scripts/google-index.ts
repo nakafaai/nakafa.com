@@ -35,6 +35,7 @@ import {
   getAskRoutes,
   getContentRoutes,
   getEntries,
+  getLlmRoutes,
   getOgRoutes,
   getQuranRoutes,
 } from "../app/sitemap";
@@ -149,12 +150,21 @@ async function getUnsubmittedUrls(): Promise<{
   const quranRoutes = getQuranRoutes();
   const askRoutes = getAskRoutes();
 
+  // Generate LLM-friendly routes for AI/LLM accessibility
+  const llmRoutes = getLlmRoutes([
+    ...baseRoutes,
+    ...routes,
+    ...quranRoutes,
+    ...askRoutes,
+  ]);
+
   const allRoutes = [
     ...baseRoutes,
     ...routes,
     ...ogRoutes,
     ...quranRoutes,
     ...askRoutes,
+    ...llmRoutes,
   ];
 
   // Get all entries asynchronously

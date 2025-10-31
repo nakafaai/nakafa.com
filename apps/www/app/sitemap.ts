@@ -119,6 +119,20 @@ export function getAskRoutes(): string[] {
   return askSeo().map((data) => `/ask/${data.slug}`);
 }
 
+// Generate LLM-friendly routes by adding .md, .mdx, and /llms.txt extensions
+export function getLlmRoutes(routes: string[]): string[] {
+  const llmExtensions = [".md", ".mdx", "/llms.txt"];
+  const llmRoutes: string[] = [];
+
+  for (const route of routes) {
+    for (const ext of llmExtensions) {
+      llmRoutes.push(`${route}${ext}`);
+    }
+  }
+
+  return llmRoutes;
+}
+
 // Function to recursively get all directories
 export function getContentRoutes(currentPath = ""): string[] {
   const children = getFolderChildNames(currentPath || ".");
@@ -220,12 +234,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const quranRoutes = getQuranRoutes();
   const askRoutes = getAskRoutes();
 
+  // Generate LLM-friendly routes for AI/LLM accessibility
+  const llmRoutes = getLlmRoutes([
+    ...baseRoutes,
+    ...contentRoutes,
+    ...quranRoutes,
+    ...askRoutes,
+  ]);
+
   const allBaseRoutes = [
     ...baseRoutes,
     ...contentRoutes,
     ...ogRoutes,
     ...quranRoutes,
     ...askRoutes,
+    ...llmRoutes,
   ];
 
   // Generate sitemap entries only for main domain
