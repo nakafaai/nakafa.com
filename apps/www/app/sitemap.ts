@@ -12,6 +12,7 @@ const host = `https://${MAIN_DOMAIN}`;
 // Main domain for sitemap generation
 
 export const baseRoutes = [
+  "/",
   "/search",
   "/contributor",
   "/quran",
@@ -24,6 +25,11 @@ export const baseRoutes = [
 // Constants for date calculations
 const MONTHS_IN_FALLBACK_PERIOD = 6;
 const MONTHS_IN_CONTENT_FALLBACK = 3;
+
+// Constants for LLM route processing
+const LLM_EXTENSION_PATTERN = /\.mdx?$/;
+const LLM_TXT_PATTERN = /\/llms\.txt$/;
+const LLM_ROUTE_PRIORITY_MULTIPLIER = 0.8;
 
 /**
  * Get actual last modified date for content based on metadata date
@@ -218,6 +224,52 @@ export function getUrl(href: Href, locale: Locale, domain?: string): string {
   return domainHost + pathname;
 }
 
+// Generate sitemap entries for LLM routes without locale prefix (main domain only)
+export async function getLlmEntries(
+  href: Href,
+  domain?: string
+): Promise<MetadataRoute.Sitemap> {
+  const routeString = typeof href === "string" ? href : href.pathname;
+  const { changeFrequency, priority } = getContentSeoSettings(routeString);
+
+  // For LLM routes, use a reasonable default date
+  let lastModified = new Date("2025-01-01");
+
+  // Try to get actual modification date for content routes
+  if (
+    routeString !== "/" &&
+    !baseRoutes.includes(routeString) &&
+    !routeString.includes("/og/") &&
+    !routeString.startsWith("/quran") &&
+    !routeString.startsWith("/ask/")
+  ) {
+    try {
+      const contentPath = routeString.startsWith("/")
+        ? routeString.substring(1)
+        : routeString;
+      // Remove LLM extensions to get actual content path
+      const cleanPath = contentPath
+        .replace(LLM_EXTENSION_PATTERN, "")
+        .replace(LLM_TXT_PATTERN, "");
+      lastModified = await getContentLastModified(cleanPath);
+    } catch {
+      lastModified = new Date("2025-01-01");
+    }
+  }
+
+  const domainHost = domain ? `https://${domain}` : host;
+  const url = `${domainHost}${routeString}`;
+
+  return [
+    {
+      url,
+      changeFrequency,
+      lastModified,
+      priority: priority * LLM_ROUTE_PRIORITY_MULTIPLIER, // Slightly lower priority for LLM routes
+    },
+  ];
+}
+
 // Return OG routes based on regular routes
 export function getOgRoutes(routes: string[]): string[] {
   return routes.map((route) => {
@@ -242,25 +294,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...askRoutes,
   ]);
 
-  const allBaseRoutes = [
+  const regularRoutes = [
     ...baseRoutes,
     ...contentRoutes,
     ...ogRoutes,
     ...quranRoutes,
     ...askRoutes,
-    ...llmRoutes,
   ];
 
-  // Generate sitemap entries only for main domain
-  const sitemapEntriesPromises = allBaseRoutes.map(
+  // Generate sitemap entries for regular routes (with locale prefixes)
+  const regularEntriesPromises = regularRoutes.map(
     async (route) => await getEntries(route, MAIN_DOMAIN)
   );
 
-  const sitemapEntriesArrays = await Promise.all(sitemapEntriesPromises);
-  const sitemapEntries = sitemapEntriesArrays.flat();
+  // Generate sitemap entries for LLM routes (without locale prefixes for main domain)
+  const llmEntriesPromises = llmRoutes.map(
+    async (route) => await getLlmEntries(route, MAIN_DOMAIN)
+  );
 
-  // Add homepage entry for main domain
-  const homeEntries = await getEntries("/", MAIN_DOMAIN);
+  const [regularEntriesArrays, llmEntriesArrays] = await Promise.all([
+    Promise.all(regularEntriesPromises),
+    Promise.all(llmEntriesPromises),
+  ]);
 
-  return [...homeEntries, ...sitemapEntries];
+  const regularEntries = regularEntriesArrays.flat();
+  const llmEntries = llmEntriesArrays.flat();
+
+  return [...regularEntries, ...llmEntries];
 }

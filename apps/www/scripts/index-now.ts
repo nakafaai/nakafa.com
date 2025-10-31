@@ -6,6 +6,7 @@ import {
   getAskRoutes,
   getContentRoutes,
   getEntries,
+  getLlmEntries,
   getLlmRoutes,
   getOgRoutes,
   getQuranRoutes,
@@ -112,19 +113,30 @@ async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
     ...askRoutes,
   ]);
 
-  const allRoutes = [
+  const regularRoutes = [
     ...baseRoutes,
     ...routes,
     ...ogRoutes,
     ...quranRoutes,
     ...askRoutes,
-    ...llmRoutes,
   ];
 
   // Get all entries asynchronously
-  const allEntriesPromises = allRoutes.map((route) => getEntries(route));
-  const allEntriesArrays = await Promise.all(allEntriesPromises);
-  const allEntries = allEntriesArrays.flat();
+  // Regular routes get locale prefixes, LLM routes don't (main domain only)
+  const regularEntriesPromises = regularRoutes.map((route) =>
+    getEntries(route)
+  );
+  const llmEntriesPromises = llmRoutes.map((route) => getLlmEntries(route));
+
+  const [regularEntriesArrays, llmEntriesArrays] = await Promise.all([
+    Promise.all(regularEntriesPromises),
+    Promise.all(llmEntriesPromises),
+  ]);
+
+  const allEntries = [
+    ...regularEntriesArrays.flat(),
+    ...llmEntriesArrays.flat(),
+  ];
 
   // Extract unique URLs
   const allUrls = new Set<string>();
