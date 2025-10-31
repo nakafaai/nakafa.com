@@ -75,18 +75,18 @@ export function UserChatsList({
               className="absolute inset-0"
               href={`/chat/${chat._id}`}
             />
-            <div className="flex items-center gap-2">
+            <div className="flex flex-1 items-center gap-2">
               {isPrivate ? (
                 <LockIcon className="size-4 shrink-0" />
               ) : (
                 <GlobeIcon className="size-4 shrink-0" />
               )}
-              <span className="line-clamp-1 text-sm">{chat.title}</span>
+              <span className="truncate text-sm">{chat.title}</span>
               <ArrowDownIcon className="-rotate-90 size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100" />
             </div>
 
-            <div className="flex items-center gap-2">
-              <time className="shrink-0 text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground/80">
+            <div className="flex shrink-0 items-center gap-2">
+              <time className="text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground/80">
                 {formatDistanceToNow(chat.updatedAt, {
                   locale: getLocale(locale),
                   addSuffix: true,
