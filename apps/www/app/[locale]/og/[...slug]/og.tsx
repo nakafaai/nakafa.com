@@ -45,16 +45,16 @@ export function generate(props: GenerateProps): ReactElement {
     : 0;
 
   // Dynamic title font size (larger for shorter titles)
-  let titleFontSize = "52px";
+  let titleFontSize = "56px";
   if (titleLength < MAX_TITLE_FIRST_LENGTH) {
-    titleFontSize = "68px";
+    titleFontSize = "72px";
   } else if (titleLength < MAX_TITLE_SECOND_LENGTH) {
-    titleFontSize = "60px";
+    titleFontSize = "64px";
   }
 
   // Dynamic description font size
   const descriptionFontSize =
-    descriptionLength < MAX_DESCRIPTION_LENGTH ? "28px" : "24px";
+    descriptionLength < MAX_DESCRIPTION_LENGTH ? "32px" : "28px";
 
   // Dynamic gap based on content amount
   const contentGap =
@@ -110,7 +110,7 @@ export function generate(props: GenerateProps): ReactElement {
           flexDirection: "column",
           width: "100%",
           height: "100%",
-          padding: "60px 80px 60px 80px",
+          padding: "60px 80px",
           position: "relative",
           zIndex: 1,
         }}
@@ -123,8 +123,6 @@ export function generate(props: GenerateProps): ReactElement {
             gap: contentGap,
             flex: "1",
             minHeight: "0",
-            maxHeight: "420px", // Limit content height to prevent overlap
-            overflow: "hidden",
           }}
         >
           {/* Simple accent line */}
@@ -146,12 +144,8 @@ export function generate(props: GenerateProps): ReactElement {
               lineHeight: 1.2,
               letterSpacing: "-0.03em",
               color: "#000000",
-              maxWidth: "900px",
-              fontFamily: "system-ui, -apple-system, sans-serif",
               wordWrap: "break-word",
               overflowWrap: "break-word",
-              flex: "1",
-              minHeight: "0",
             }}
           >
             {props.title}
@@ -164,9 +158,7 @@ export function generate(props: GenerateProps): ReactElement {
                 color: "#666666",
                 margin: 0,
                 lineHeight: 1.4,
-                maxWidth: "700px",
                 fontWeight: 400,
-                fontFamily: "system-ui, -apple-system, sans-serif",
                 flexShrink: 0,
                 wordWrap: "break-word",
                 overflowWrap: "break-word",
@@ -185,7 +177,7 @@ export function generate(props: GenerateProps): ReactElement {
             alignItems: "center",
             justifyContent: "space-between",
             marginTop: "40px",
-            flexShrink: 0, // Prevent footer from shrinking
+            flexShrink: 0,
           }}
         >
           <div

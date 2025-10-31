@@ -8,6 +8,8 @@ import { HomeTitle } from "@/components/home/title";
 import { Videos } from "@/components/home/videos";
 import { Weather } from "@/components/home/weather";
 
+export const revalidate = false;
+
 type Props = {
   params: Promise<{ locale: Locale }>;
 };

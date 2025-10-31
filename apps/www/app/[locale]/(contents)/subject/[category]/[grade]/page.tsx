@@ -21,6 +21,8 @@ import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
 
+export const revalidate = false;
+
 type Params = {
   locale: Locale;
   category: SubjectCategory;

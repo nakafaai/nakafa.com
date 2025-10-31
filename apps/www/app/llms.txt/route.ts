@@ -1,15 +1,17 @@
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { getContents } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
-import type { NextRequest } from "next/server";
 
-export async function GET(req: NextRequest) {
+const BASE_URL = "https://nakafa.com";
+
+export const revalidate = false;
+
+export async function GET() {
   const locales = routing.locales;
   const scanned: string[] = [];
-  const baseUrl = new URL(req.url).origin;
 
   scanned.push("# Nakafa Framework: LLM");
-  scanned.push(`URL: ${baseUrl}/llms.txt`);
+  scanned.push(`URL: ${BASE_URL}/llms.txt`);
   scanned.push("Complete list of all content available on Nakafa.");
   scanned.push("---");
 
@@ -61,7 +63,7 @@ export async function GET(req: NextRequest) {
       const translation =
         surah.name.translation[locale] || surah.name.translation.en;
       quranEntries.push(
-        `- [${surah.number}. ${title}](${baseUrl}/${locale}/quran/${surah.number}): ${translation}`
+        `- [${surah.number}. ${title}](${BASE_URL}/${locale}/quran/${surah.number}): ${translation}`
       );
     }
   }

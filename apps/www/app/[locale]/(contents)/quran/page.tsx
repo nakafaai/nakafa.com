@@ -11,6 +11,8 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 
+export const revalidate = false;
+
 type Params = {
   locale: Locale;
 };

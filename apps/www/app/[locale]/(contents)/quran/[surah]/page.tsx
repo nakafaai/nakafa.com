@@ -21,6 +21,8 @@ import { QuranText } from "@/components/shared/quran-text";
 import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
 
+export const revalidate = false;
+
 type Props = {
   params: Promise<{
     locale: Locale;

@@ -7,6 +7,8 @@ import { Curriculum } from "@/components/about/curriculum";
 import { Footer } from "@/components/about/footer";
 import { Hero } from "@/components/about/hero";
 
+export const revalidate = false;
+
 type Props = {
   params: Promise<{ locale: Locale }>;
 };

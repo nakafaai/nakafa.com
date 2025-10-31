@@ -6,6 +6,8 @@ import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { Auth } from "@/components/auth";
 
+export const revalidate = false;
+
 type Props = {
   params: Promise<{ locale: Locale }>;
 };

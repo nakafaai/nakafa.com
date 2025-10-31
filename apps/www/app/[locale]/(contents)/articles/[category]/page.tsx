@@ -13,10 +13,13 @@ import { CardArticle } from "@/components/shared/card-article";
 import { ContainerList } from "@/components/shared/container-list";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
+
+export const revalidate = false;
 
 type Props = {
   params: Promise<{ locale: Locale; category: ArticleCategory }>;
@@ -114,15 +117,17 @@ async function PageArticles({
 
       {header}
 
-      <ContainerList>
-        {articles.map((article) => (
-          <CardArticle
-            article={article}
-            category={category}
-            key={article.slug}
-          />
-        ))}
-      </ContainerList>
+      <LayoutContent>
+        <ContainerList>
+          {articles.map((article) => (
+            <CardArticle
+              article={article}
+              category={category}
+              key={article.slug}
+            />
+          ))}
+        </ContainerList>
+      </LayoutContent>
     </>
   );
 }

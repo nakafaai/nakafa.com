@@ -8,6 +8,8 @@ import { FooterContent } from "@/components/shared/footer-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 
+export const revalidate = false;
+
 export default function Page({
   params,
 }: {

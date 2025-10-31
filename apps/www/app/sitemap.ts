@@ -281,11 +281,11 @@ export async function getLlmEntries(
 
 // Return OG routes based on regular routes
 export function getOgRoutes(routes: string[]): string[] {
-  return routes.map((route) => {
+  return routes.flatMap((route) => {
     if (route === "/") {
-      return "/og/image.png";
+      return ["/og/image.png"];
     }
-    return `/og${route}/image.png`;
+    return [`/og${route}`, `/og${route}/image.png`];
   });
 }
 

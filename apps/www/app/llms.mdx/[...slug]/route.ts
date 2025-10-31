@@ -5,11 +5,54 @@ import {
   getNestedSlugs,
 } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
+import ky from "ky";
 import type { NextRequest } from "next/server";
 import { hasLocale, type Locale } from "next-intl";
 import { getRawGithubUrl } from "@/lib/utils/github";
 
 const TOTAL_SURAH = 114;
+const BASE_URL = "https://nakafa.com";
+
+export const revalidate = false;
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ slug: string[] }> }
+) {
+  const slug = (await params).slug;
+
+  // Parse locale from slug
+  const locale: Locale = hasLocale(routing.locales, slug[0])
+    ? slug[0]
+    : routing.defaultLocale;
+  const cleanSlug = hasLocale(routing.locales, slug[0])
+    ? slug.slice(1).join("/")
+    : slug.join("/");
+
+  // Handle Quran content
+  if (cleanSlug.startsWith("quran")) {
+    const quranResponse = handleQuranContent({
+      cleanSlug,
+      locale,
+    });
+    if (quranResponse) {
+      return quranResponse;
+    }
+  }
+
+  // Handle MDX content
+  const content = await getContent(locale, cleanSlug);
+  if (content) {
+    return buildMdxResponse({ content, locale, cleanSlug });
+  }
+
+  // Fallback to /llms.txt for everything not found
+  const fallbackResponse = await ky
+    .get(`${BASE_URL}/llms.txt`)
+    .text()
+    .catch(() => "");
+  return new Response(fallbackResponse);
+}
 
 function buildHeader({
   url,
@@ -38,53 +81,12 @@ function getTranslation(
   return translations[locale] || translations.en;
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ slug: string[] }> }
-) {
-  const slug = (await params).slug;
-  const baseUrl = new URL(req.url).origin;
-
-  // Parse locale from slug
-  const locale: Locale = hasLocale(routing.locales, slug[0])
-    ? slug[0]
-    : routing.defaultLocale;
-  const cleanSlug = hasLocale(routing.locales, slug[0])
-    ? slug.slice(1).join("/")
-    : slug.join("/");
-
-  // Handle Quran content
-  if (cleanSlug.startsWith("quran")) {
-    const quranResponse = handleQuranContent({
-      cleanSlug,
-      locale,
-      baseUrl,
-    });
-    if (quranResponse) {
-      return quranResponse;
-    }
-  }
-
-  // Handle MDX content
-  const content = await getContent(locale, cleanSlug);
-  if (content) {
-    return buildMdxResponse({ content, locale, cleanSlug, baseUrl });
-  }
-
-  // Fallback to /llms.txt for everything not found
-  const fallbackUrl = new URL("/llms.txt", req.url);
-  const response = await fetch(fallbackUrl);
-  return new Response(await response.text());
-}
-
 function handleQuranContent({
   cleanSlug,
   locale,
-  baseUrl,
 }: {
   cleanSlug: string;
   locale: Locale;
-  baseUrl: string;
 }): Response | null {
   const parts = cleanSlug.split("/");
   const scanned: string[] = [];
@@ -92,7 +94,7 @@ function handleQuranContent({
   // List all surahs
   if (parts.length === 1) {
     const surahs = getAllSurah();
-    const url = `${baseUrl}/${locale}/quran`;
+    const url = `${BASE_URL}/${locale}/quran`;
     scanned.push(
       ...buildHeader({
         url,
@@ -124,7 +126,7 @@ function handleQuranContent({
     if (surahData) {
       const title = getSurahName({ locale, name: surahData.name });
       const translation = getTranslation(surahData.name.translation, locale);
-      const url = `${baseUrl}/${locale}/quran/${surahNumber}`;
+      const url = `${BASE_URL}/${locale}/quran/${surahNumber}`;
 
       scanned.push(
         ...buildHeader({
@@ -182,14 +184,12 @@ function buildMdxResponse({
   content,
   locale,
   cleanSlug,
-  baseUrl,
 }: {
   content: NonNullable<Awaited<ReturnType<typeof getContent>>>;
   locale: Locale;
   cleanSlug: string;
-  baseUrl: string;
 }): Response {
-  const url = `${baseUrl}/${locale}/${cleanSlug}`;
+  const url = `${BASE_URL}/${locale}/${cleanSlug}`;
   const source = getRawGithubUrl(
     `/packages/contents/${cleanSlug}/${locale}.mdx`
   );

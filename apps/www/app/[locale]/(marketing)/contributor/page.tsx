@@ -10,6 +10,8 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { contributors } from "@/lib/data/contributor";
 
+export const revalidate = false;
+
 type Props = {
   params: Promise<{ locale: Locale }>;
 };

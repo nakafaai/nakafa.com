@@ -1,8 +1,11 @@
+import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { getContents } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 import { Feed, type Item } from "feed";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+
+export const revalidate = false;
 
 const baseUrl = "https://nakafa.com";
 
@@ -57,6 +60,24 @@ export async function GET() {
         date: new Date(content.metadata.date),
         id: content.url,
         author: content.metadata.authors,
+      });
+    }
+  }
+
+  // Add Quran surahs to feed
+  const surahs = getAllSurah();
+  for (const locale of locales) {
+    for (const surah of surahs) {
+      const title = getSurahName({ locale, name: surah.name });
+      const translation =
+        surah.name.translation[locale] || surah.name.translation.en;
+
+      feedItems.push({
+        title: `${surah.number}. ${title}`,
+        description: translation,
+        link: `${baseUrl}/${locale}/quran/${surah.number}`,
+        date: new Date("2025-01-01"), // Static date for Quran content
+        id: `/${locale}/quran/${surah.number}`,
       });
     }
   }

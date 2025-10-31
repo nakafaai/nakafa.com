@@ -1,4 +1,3 @@
-import { getCategoryIcon } from "@repo/contents/_lib/articles/category";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { getContent, getReferences } from "@repo/contents/_lib/utils";
@@ -25,6 +24,8 @@ import {
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
+
+export const revalidate = false;
 
 type Props = {
   params: Promise<{
@@ -181,7 +182,7 @@ async function PageContent({
         <LayoutMaterial>
           <LayoutMaterialContent showAskButton>
             <LayoutMaterialHeader
-              icon={getCategoryIcon(category)}
+              description={metadata.description}
               link={{
                 href: `/articles/${category}`,
                 label: tArticles(category),

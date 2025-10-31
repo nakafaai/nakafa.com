@@ -1,8 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
+import { hasLocale, type Locale } from "next-intl";
+import { generateOGImage } from "@/app/[locale]/og/[...slug]/og";
 import { getMetadataFromSlug } from "@/lib/utils/system";
-import { generateOGImage } from "./og";
 
 export const revalidate = false;
 
@@ -49,13 +50,22 @@ export function generateStaticParams() {
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ locale: string; slug: string[] }> }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
-  const { locale, slug } = await params;
+  const slug = (await params).slug;
+
+  // Parse locale from slug
+  const locale: Locale = hasLocale(routing.locales, slug[0])
+    ? slug[0]
+    : routing.defaultLocale;
+  const cleanSlug: string[] = hasLocale(routing.locales, slug[0])
+    ? slug.slice(1)
+    : slug;
 
   // If last element is "image.png", remove it
   // The rest of the path is the content path
-  const contentSlug = slug.at(-1) === "image.png" ? slug.slice(0, -1) : slug;
+  const contentSlug =
+    cleanSlug.at(-1) === "image.png" ? cleanSlug.slice(0, -1) : cleanSlug;
 
   // Get metadata from the content path
   const { title, description } = await getMetadataFromSlug(locale, contentSlug);
