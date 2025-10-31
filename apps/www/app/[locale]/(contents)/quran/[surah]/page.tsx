@@ -3,8 +3,9 @@ import { cn, slugify } from "@repo/design-system/lib/utils";
 import { MoonStarIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import type { Locale } from "next-intl";
-import { getTranslations } from "next-intl/server";
+import { type Locale, useTranslations } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { use } from "react";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
@@ -20,8 +21,6 @@ import { QuranText } from "@/components/shared/quran-text";
 import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
 
-export const revalidate = false;
-
 type Props = {
   params: Promise<{
     locale: Locale;
@@ -36,7 +35,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, surah } = await params;
 
-  const t = await getTranslations("Holy");
+  const t = await getTranslations({ locale, namespace: "Holy" });
 
   const path = `/${locale}/quran/${surah}`;
 
@@ -90,13 +89,20 @@ export function generateStaticParams() {
   }));
 }
 
-export default async function Page({ params }: Props) {
-  const { locale, surah } = await params;
+export default function Page({ params }: Props) {
+  const { locale, surah } = use(params);
 
-  const t = await getTranslations("Holy");
+  // Enable static rendering
+  setRequestLocale(locale);
 
-  // check if surah is a number
+  return <PageContent locale={locale} surah={surah} />;
+}
+
+function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
+  const t = useTranslations("Holy");
+
   if (Number.isNaN(Number(surah))) {
+    // check if surah is a number
     notFound();
   }
 

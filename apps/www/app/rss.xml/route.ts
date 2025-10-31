@@ -4,8 +4,6 @@ import { Feed, type Item } from "feed";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 
-export const revalidate = false;
-
 const baseUrl = "https://nakafa.com";
 
 export async function GET() {

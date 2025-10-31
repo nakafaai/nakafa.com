@@ -2,11 +2,15 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { fetchQuery } from "convex/nextjs";
 import type { Metadata } from "next";
+import type { Locale } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
+import { use } from "react";
 import { AiChatPage } from "@/components/ai/chat-page";
 import { ChatIdProvider } from "@/components/ai/chat-provider";
 
 type Props = {
   params: Promise<{
+    locale: Locale;
     id: Id<"chats">;
   }>;
 };
@@ -32,8 +36,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function Page({ params }: Props) {
-  const { id } = await params;
+export default function Page({ params }: Props) {
+  const { locale, id } = use(params);
+
+  // Enable static rendering
+  setRequestLocale(locale);
 
   return (
     <ChatIdProvider chatId={id}>

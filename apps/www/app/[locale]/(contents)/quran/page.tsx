@@ -3,14 +3,13 @@ import { Link } from "@repo/internationalization/src/navigation";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { MoonStarIcon } from "lucide-react";
 import type { Metadata } from "next";
-import type { Locale } from "next-intl";
-import { getTranslations } from "next-intl/server";
+import { type Locale, useTranslations } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { use } from "react";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
-
-export const revalidate = false;
 
 type Params = {
   locale: Locale;
@@ -27,7 +26,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
 
-  const t = await getTranslations("Holy");
+  const t = await getTranslations({ locale, namespace: "Holy" });
 
   const path = `/${locale}/quran`;
 
@@ -61,9 +60,17 @@ export async function generateMetadata({
   };
 }
 
-export default async function Page({ params }: Props) {
-  const { locale } = await params;
-  const t = await getTranslations("Holy");
+export default function Page({ params }: Props) {
+  const { locale } = use(params);
+
+  // Enable static rendering
+  setRequestLocale(locale);
+
+  return <PageContent locale={locale} />;
+}
+
+function PageContent({ locale }: { locale: Locale }) {
+  const t = useTranslations("Holy");
 
   const surahs = getAllSurah();
 

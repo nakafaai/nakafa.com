@@ -11,6 +11,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { use } from "react";
 import { Comments } from "@/components/comments";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import {
@@ -24,8 +25,6 @@ import {
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
-
-export const revalidate = false;
 
 type Props = {
   params: Promise<{
@@ -41,7 +40,7 @@ export async function generateMetadata({
   params: Props["params"];
 }): Promise<Metadata> {
   const { locale, category, slug } = await params;
-  const t = await getTranslations("Articles");
+  const t = await getTranslations({ locale, namespace: "Articles" });
 
   const FilePath = getSlugPath(category, slug);
 
@@ -103,15 +102,28 @@ export function generateStaticParams() {
   });
 }
 
-export default async function Page({ params }: Props) {
-  const { locale, category, slug } = await params;
-  const [tCommon, tArticles] = await Promise.all([
-    getTranslations("Common"),
-    getTranslations("Articles"),
-  ]);
+export default function Page({ params }: Props) {
+  const { locale, category, slug } = use(params);
 
   // Enable static rendering
   setRequestLocale(locale);
+
+  return <PageContent category={category} locale={locale} slug={slug} />;
+}
+
+async function PageContent({
+  locale,
+  category,
+  slug,
+}: {
+  locale: Locale;
+  category: ArticleCategory;
+  slug: string;
+}) {
+  const [tCommon, tArticles] = await Promise.all([
+    getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "Articles" }),
+  ]);
 
   const FilePath = getSlugPath(category, slug);
 

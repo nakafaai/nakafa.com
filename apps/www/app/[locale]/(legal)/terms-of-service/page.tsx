@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { use } from "react";
 
 type Props = {
   params: Promise<{ locale: Locale }>;
@@ -9,7 +10,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations("Legal");
+  const t = await getTranslations({ locale, namespace: "Legal" });
 
   return {
     title: t("terms-of-service"),
@@ -19,9 +20,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function Page({ params }: Props) {
-  const { locale } = await params;
+export default function Page({ params }: Props) {
+  const { locale } = use(params);
 
+  // Enable static rendering
+  setRequestLocale(locale);
+
+  return <PageContent locale={locale} />;
+}
+
+async function PageContent({ locale }: { locale: Locale }) {
   try {
     const { default: Content } = await import(`./${locale}.mdx`);
 

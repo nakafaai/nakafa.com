@@ -1,8 +1,6 @@
 import { getContents } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 
-export const revalidate = false;
-
 export async function GET() {
   const locales = routing.locales;
   const scanned: string[] = [];

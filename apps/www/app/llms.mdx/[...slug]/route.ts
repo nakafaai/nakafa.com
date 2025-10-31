@@ -9,8 +9,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { hasLocale, type Locale } from "next-intl";
 import { getRawGithubUrl } from "@/lib/utils/github";
 
-export const revalidate = false;
-
 async function getAllContentsResponse() {
   const locales = routing.locales;
   const scanned: string[] = [];

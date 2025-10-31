@@ -22,6 +22,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { use } from "react";
 import { Comments } from "@/components/comments";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import {
@@ -36,8 +37,6 @@ import {
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
-
-export const revalidate = false;
 
 type Params = {
   locale: Locale;
@@ -57,7 +56,7 @@ export async function generateMetadata({
   params: Props["params"];
 }): Promise<Metadata> {
   const { locale, category, grade, material, slug } = await params;
-  const t = await getTranslations("Subject");
+  const t = await getTranslations({ locale, namespace: "Subject" });
 
   const FilePath = getSlugPath(category, grade, material, slug);
 
@@ -124,24 +123,48 @@ export function generateStaticParams() {
   });
 }
 
-export default async function Page({ params }: Props) {
-  const { locale, category, grade, material, slug } = await params;
-
-  const [tCommon, tSubject] = await Promise.all([
-    getTranslations("Common"),
-    getTranslations("Subject"),
-  ]);
+export default function Page({ params }: Props) {
+  const { locale, category, grade, material, slug } = use(params);
 
   // Enable static rendering
   setRequestLocale(locale);
 
+  return (
+    <PageContent
+      category={category}
+      grade={grade}
+      locale={locale}
+      material={material}
+      slug={slug}
+    />
+  );
+}
+
+async function PageContent({
+  locale,
+  category,
+  grade,
+  material,
+  slug,
+}: {
+  locale: Locale;
+  category: SubjectCategory;
+  grade: Grade;
+  material: Material;
+  slug: string[];
+}) {
+  const [tCommon, tSubject] = await Promise.all([
+    getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "Subject" }),
+  ]);
+
   const materialPath = getMaterialPath(category, grade, material);
   const FilePath = getSlugPath(category, grade, material, slug);
 
-  // Means it only contains the chapter name, not the section name
-  // The slugs usually have 2 items, chapter and section
-  // In the future, we can add a new page specifically for the section
   if (slug.length === 1) {
+    // Means it only contains the chapter name, not the section name
+    // The slugs usually have 2 items, chapter and section
+    // In the future, we can add a new page specifically for the section
     redirect(materialPath);
   }
 

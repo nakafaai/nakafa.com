@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { use } from "react";
 import { Community } from "@/components/about/community";
 import { Curriculum } from "@/components/about/curriculum";
 import { Footer } from "@/components/about/footer";
@@ -12,7 +13,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations("About");
+  const t = await getTranslations({ locale, namespace: "About" });
 
   return {
     title: {
@@ -25,7 +26,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function Page() {
+export default function Page({ params }: Props) {
+  const { locale } = use(params);
+
+  // Enable static rendering
+  setRequestLocale(locale);
+
   return (
     <main
       className="relative mx-auto grid max-w-5xl gap-24 px-6 py-16 sm:gap-32"

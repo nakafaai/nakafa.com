@@ -1,3 +1,6 @@
+import type { Locale } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
+import { Suspense, use } from "react";
 import { HomeTitle } from "@/components/home/title";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
@@ -5,9 +8,16 @@ import { FooterContent } from "@/components/shared/footer-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 
-export const revalidate = false;
+export default function Page({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}) {
+  const { locale } = use(params);
 
-export default function Page() {
+  // Enable static rendering
+  setRequestLocale(locale);
+
   return (
     <>
       <div
@@ -19,11 +29,15 @@ export default function Page() {
         </div>
         <div className="sticky top-20 z-10 sm:top-10">
           <div className="mx-auto w-full max-w-3xl px-6">
-            <InputSearch />
+            <Suspense>
+              <InputSearch />
+            </Suspense>
           </div>
         </div>
         <div className="mx-auto mt-8 w-full max-w-3xl px-6">
-          <SearchListItems />
+          <Suspense>
+            <SearchListItems />
+          </Suspense>
         </div>
       </div>
       <FooterContent>

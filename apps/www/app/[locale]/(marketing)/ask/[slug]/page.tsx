@@ -1,6 +1,8 @@
 import { askSeo } from "@repo/seo/ask";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
+import { use } from "react";
 import { Footer } from "@/components/about/footer";
 import { AskCta } from "@/components/ask/cta";
 import { AskListItems } from "@/components/ask/results";
@@ -11,8 +13,6 @@ import {
   LayoutMaterialMain,
 } from "@/components/shared/layout-material";
 import { convertSlugToTitle } from "@/lib/utils/helper";
-
-export const revalidate = false;
 
 const askData = askSeo();
 
@@ -60,8 +60,11 @@ export function generateStaticParams() {
   }));
 }
 
-export default async function Page({ params }: Props) {
-  const { locale, slug } = await params;
+export default function Page({ params }: Props) {
+  const { locale, slug } = use(params);
+
+  // Enable static rendering
+  setRequestLocale(locale);
 
   const seoData = askData.find((data) => data.slug === slug);
 

@@ -1,63 +1,25 @@
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import type { Locale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { type Locale, useTranslations } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
+import { use } from "react";
 import { HomeSearch } from "@/components/home/search";
 import { HomeTitle } from "@/components/home/title";
 import { Videos } from "@/components/home/videos";
 import { Weather } from "@/components/home/weather";
 
-export const revalidate = false;
-
 type Props = {
   params: Promise<{ locale: Locale }>;
 };
 
-export default async function Page({ params }: Props) {
-  const { locale } = await params;
-
-  const [tHome, tCommon] = await Promise.all([
-    getTranslations("Home"),
-    getTranslations("Common"),
-  ]);
+export default function Page({ params }: Props) {
+  const { locale } = use(params);
 
   setRequestLocale(locale);
 
   return (
     <>
-      <BreadcrumbJsonLd
-        breadcrumbItems={[
-          {
-            "@type": "ListItem",
-            "@id": `https://nakafa.com/${locale}`,
-            position: 1,
-            name: tHome("title"),
-            item: `https://nakafa.com/${locale}`,
-          },
-          {
-            "@type": "ListItem",
-            "@id": `https://nakafa.com/${locale}/subject`,
-            position: 2,
-            name: tCommon("subject"),
-            item: `https://nakafa.com/${locale}/subject`,
-          },
-          {
-            "@type": "ListItem",
-            "@id": `https://nakafa.com/${locale}/articles`,
-            position: 3,
-            name: tCommon("articles"),
-            item: `https://nakafa.com/${locale}/articles`,
-          },
-          {
-            "@type": "ListItem",
-            "@id": `https://nakafa.com/${locale}/contributor`,
-            position: 4,
-            name: tCommon("contributor"),
-            item: `https://nakafa.com/${locale}/contributor`,
-          },
-        ]}
-        locale={locale}
-      />
+      <PageBreadcrumb locale={locale} />
       <div
         className="relative flex min-h-[calc(100svh-4rem)] items-center justify-center lg:min-h-svh"
         data-pagefind-ignore
@@ -77,5 +39,46 @@ export default async function Page({ params }: Props) {
         </div>
       </div>
     </>
+  );
+}
+
+function PageBreadcrumb({ locale }: { locale: Locale }) {
+  const tHome = useTranslations("Home");
+  const tCommon = useTranslations("Common");
+
+  return (
+    <BreadcrumbJsonLd
+      breadcrumbItems={[
+        {
+          "@type": "ListItem",
+          "@id": `https://nakafa.com/${locale}`,
+          position: 1,
+          name: tHome("title"),
+          item: `https://nakafa.com/${locale}`,
+        },
+        {
+          "@type": "ListItem",
+          "@id": `https://nakafa.com/${locale}/subject`,
+          position: 2,
+          name: tCommon("subject"),
+          item: `https://nakafa.com/${locale}/subject`,
+        },
+        {
+          "@type": "ListItem",
+          "@id": `https://nakafa.com/${locale}/articles`,
+          position: 3,
+          name: tCommon("articles"),
+          item: `https://nakafa.com/${locale}/articles`,
+        },
+        {
+          "@type": "ListItem",
+          "@id": `https://nakafa.com/${locale}/contributor`,
+          position: 4,
+          name: tCommon("contributor"),
+          item: `https://nakafa.com/${locale}/contributor`,
+        },
+      ]}
+      locale={locale}
+    />
   );
 }
