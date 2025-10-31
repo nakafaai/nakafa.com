@@ -5,7 +5,7 @@ import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, useQuery } from "convex/react";
-import { CheckIcon, Edit2Icon, MessageCircleIcon, XIcon } from "lucide-react";
+import { CheckIcon, Edit2Icon, GlobeIcon, LockIcon, XIcon } from "lucide-react";
 import {
   Activity,
   type ComponentProps,
@@ -64,6 +64,8 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
     });
   };
 
+  const isPrivate = chat.visibility === "private";
+
   return (
     <Header>
       <Activity mode={isEditing ? "visible" : "hidden"}>
@@ -86,7 +88,11 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
       </Activity>
       <Activity mode={isEditing ? "hidden" : "visible"}>
         <h1 className="flex items-center gap-2 px-1.5">
-          <MessageCircleIcon className="size-4 shrink-0" />
+          {isPrivate ? (
+            <LockIcon className="size-4 shrink-0" />
+          ) : (
+            <GlobeIcon className="size-4 shrink-0" />
+          )}
           <span className="max-w-xs truncate font-medium">{chat.title}</span>
         </h1>
       </Activity>
