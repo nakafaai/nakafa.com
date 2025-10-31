@@ -3,9 +3,21 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Input } from "@repo/design-system/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, useQuery } from "convex/react";
-import { CheckIcon, Edit2Icon, GlobeIcon, LockIcon, XIcon } from "lucide-react";
+import {
+  CheckIcon,
+  GlobeIcon,
+  LockIcon,
+  TextCursorIcon,
+  XIcon,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   Activity,
   type ComponentProps,
@@ -35,6 +47,8 @@ function AiChatHeaderPlaceholder() {
 }
 
 function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
+  const t = useTranslations("Ai");
+
   const [isEditing, setIsEditing] = useState(false);
   const [chatTitle, setChatTitle] = useState(chat.title);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -93,7 +107,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
           ) : (
             <GlobeIcon className="size-4 shrink-0" />
           )}
-          <span className="max-w-xs truncate font-medium">{chat.title}</span>
+          <span className="line-clamp-1 font-medium">{chat.title}</span>
         </h1>
       </Activity>
 
@@ -121,10 +135,15 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
       </Activity>
 
       <Activity mode={isEditing ? "hidden" : "visible"}>
-        <Button onClick={handleEdit} size="icon-sm" variant="ghost">
-          <Edit2Icon />
-          <span className="sr-only">Edit</span>
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button onClick={handleEdit} size="icon-sm" variant="ghost">
+              <TextCursorIcon />
+              <span className="sr-only">Edit</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t("rename-chat")}</TooltipContent>
+        </Tooltip>
       </Activity>
     </Header>
   );
