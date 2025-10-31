@@ -4,6 +4,7 @@ import {
   DeepSeek,
   Gemini,
   Meta,
+  Minimax,
   Moonshot,
   OpenAI,
   Qwen,
@@ -72,6 +73,11 @@ export const freeModels: Model[] = [
     icon: OpenAI,
     value: "gpt-5-nano",
     label: "GPT 5 Nano",
+  },
+  {
+    icon: Minimax,
+    value: "minimax-m2",
+    label: "Minimax M2",
   },
   {
     icon: DeepSeek,

@@ -38,6 +38,9 @@ const languageModels = {
   // Meituan
   "longcat-flash": gateway("meituan/longcat-flash-chat"),
 
+  // Minimax
+  "minimax-m2": gateway("minimax/minimax-m2"),
+
   // Alibaba
   "qwen-3-coder": gateway("alibaba/qwen3-coder"),
   "qwen-3-max": gateway("alibaba/qwen3-max"),

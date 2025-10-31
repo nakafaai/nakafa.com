@@ -22,7 +22,7 @@ import {
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar";
 import { useQuery } from "convex/react";
-import { HistoryIcon, SearchIcon } from "lucide-react";
+import { GlobeIcon, HistoryIcon, LockIcon, SearchIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useState } from "react";
@@ -135,15 +135,19 @@ function AiChatSidebarChats({
 
   return (
     <SidebarMenu>
-      {chats.map((chat) => (
-        <SidebarMenuItem key={chat._id}>
-          <SidebarMenuButton asChild isActive={id === chat._id}>
-            <NavigationLink href={`/chat/${chat._id}`} title={chat.title}>
-              <span className="truncate">{chat.title}</span>
-            </NavigationLink>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
+      {chats.map((chat) => {
+        const isPrivate = chat.visibility === "private";
+        return (
+          <SidebarMenuItem key={chat._id}>
+            <SidebarMenuButton asChild isActive={id === chat._id}>
+              <NavigationLink href={`/chat/${chat._id}`} title={chat.title}>
+                {isPrivate ? <LockIcon /> : <GlobeIcon />}
+                <span className="truncate">{chat.title}</span>
+              </NavigationLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      })}
     </SidebarMenu>
   );
 }
