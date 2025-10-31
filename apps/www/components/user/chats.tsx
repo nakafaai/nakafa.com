@@ -68,7 +68,7 @@ export function UserChatsList({
         const isPrivate = chat.visibility === "private";
         return (
           <div
-            className="group relative flex items-center justify-between gap-2 px-4 py-2 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+            className="group relative flex flex-col justify-between gap-2 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground sm:flex-row sm:items-center"
             key={chat._id}
           >
             <NavigationLink
@@ -81,12 +81,12 @@ export function UserChatsList({
               ) : (
                 <GlobeIcon className="size-4 shrink-0" />
               )}
-              <span className="min-w-0 truncate text-sm">{chat.title}</span>
+              <span className="truncate text-sm">{chat.title}</span>
               <ArrowDownIcon className="-rotate-90 size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100" />
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              <time className="text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground/80">
+            <div className="flex shrink-0 items-center justify-between gap-2">
+              <time className="truncate text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground/80">
                 {formatDistanceToNow(chat.updatedAt, {
                   locale: getLocale(locale),
                   addSuffix: true,
