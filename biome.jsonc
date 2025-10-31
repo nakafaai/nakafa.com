@@ -42,6 +42,7 @@
   "files": {
     "includes": [
       "**/*",
+      "!apps/www/scripts/_data/**/*",
       "!packages/contents/_data/quran.ts",
       "!packages/backend/convex/_generated/**/*",
       "!packages/backend/convex/betterAuth/_generated/**/*"
