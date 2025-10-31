@@ -25,9 +25,14 @@ export async function GET(
   const locale: Locale = hasLocale(routing.locales, slug[0])
     ? slug[0]
     : routing.defaultLocale;
-  const cleanSlug = hasLocale(routing.locales, slug[0])
+  let cleanSlug = hasLocale(routing.locales, slug[0])
     ? slug.slice(1).join("/")
     : slug.join("/");
+
+  // if last element is llms.txt, we must remove it
+  if (cleanSlug.endsWith("llms.txt")) {
+    cleanSlug = cleanSlug.slice(0, -"llms.txt".length);
+  }
 
   // Handle Quran content
   if (cleanSlug.startsWith("quran")) {

@@ -38,7 +38,7 @@ export const config: NextConfig = {
       "/:path*/llms.txt",
     ];
     const llmDestination = "/llms.mdx/:path*";
-    const ogSource = ["/:path*.png", "/:path*.og"];
+    const ogSource = ["/:path*.png", "/:path*.og", "/:path*/image.png"];
     const ogDestination = "/og/:path*";
     return [
       ...llmSource.map((source) => ({
