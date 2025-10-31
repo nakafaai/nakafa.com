@@ -81,7 +81,7 @@ export function UserChatsList({
               ) : (
                 <GlobeIcon className="size-4 shrink-0" />
               )}
-              <span className="truncate text-sm">{chat.title}</span>
+              <span className="min-w-0 truncate text-sm">{chat.title}</span>
               <ArrowDownIcon className="-rotate-90 size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100" />
             </div>
 
