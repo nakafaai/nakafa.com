@@ -105,37 +105,55 @@ async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
   const quranRoutes = getQuranRoutes();
   const askRoutes = getAskRoutes();
 
-  // Generate LLM-friendly routes for AI/LLM accessibility
-  const llmRoutes = getLlmRoutes([
+  // Deduplicate all base routes (contentRoutes might include "/" which is also in baseRoutes)
+  const allBaseRoutesSet = new Set([
     ...baseRoutes,
     ...routes,
     ...quranRoutes,
     ...askRoutes,
   ]);
+  const allBaseRoutes = Array.from(allBaseRoutesSet);
 
-  const regularRoutes = [
-    ...baseRoutes,
-    ...routes,
-    ...ogRoutes,
-    ...quranRoutes,
-    ...askRoutes,
-  ];
+  // Generate LLM-friendly routes for AI/LLM accessibility
+  const llmRoutes = getLlmRoutes(allBaseRoutes);
 
-  // Get all entries asynchronously
-  // Regular routes get locale prefixes, LLM routes don't (main domain only)
-  const regularEntriesPromises = regularRoutes.map((route) =>
+  // Regular routes including OG images
+  const regularRoutesSet = new Set([...allBaseRoutes, ...ogRoutes]);
+  const regularRoutes = Array.from(regularRoutesSet);
+
+  // Get all entries asynchronously - 4 types for maximum GEO coverage
+  // 1. Regular routes WITH locale prefixes
+  const regularWithLocalePromises = regularRoutes.map((route) =>
     getEntries(route)
   );
-  const llmEntriesPromises = llmRoutes.map((route) => getLlmEntries(route));
+  // 2. Regular routes WITHOUT locale prefixes
+  const regularWithoutLocalePromises = allBaseRoutes.map((route) =>
+    getLlmEntries(route)
+  );
+  // 3. LLM routes WITH locale prefixes
+  const llmWithLocalePromises = llmRoutes.map((route) => getEntries(route));
+  // 4. LLM routes WITHOUT locale prefixes
+  const llmWithoutLocalePromises = llmRoutes.map((route) =>
+    getLlmEntries(route)
+  );
 
-  const [regularEntriesArrays, llmEntriesArrays] = await Promise.all([
-    Promise.all(regularEntriesPromises),
-    Promise.all(llmEntriesPromises),
+  const [
+    regularWithLocaleArrays,
+    regularWithoutLocaleArrays,
+    llmWithLocaleArrays,
+    llmWithoutLocaleArrays,
+  ] = await Promise.all([
+    Promise.all(regularWithLocalePromises),
+    Promise.all(regularWithoutLocalePromises),
+    Promise.all(llmWithLocalePromises),
+    Promise.all(llmWithoutLocalePromises),
   ]);
 
   const allEntries = [
-    ...regularEntriesArrays.flat(),
-    ...llmEntriesArrays.flat(),
+    ...regularWithLocaleArrays.flat(),
+    ...regularWithoutLocaleArrays.flat(),
+    ...llmWithLocaleArrays.flat(),
+    ...llmWithoutLocaleArrays.flat(),
   ];
 
   // Extract unique URLs

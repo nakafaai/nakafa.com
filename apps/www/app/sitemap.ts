@@ -27,7 +27,7 @@ const MONTHS_IN_FALLBACK_PERIOD = 6;
 const MONTHS_IN_CONTENT_FALLBACK = 3;
 
 // Constants for LLM route processing
-const LLM_EXTENSION_PATTERN = /\.mdx?$/;
+const LLM_EXTENSION_PATTERN = /\.(mdx?|txt)$/;
 const LLM_TXT_PATTERN = /\/llms\.txt$/;
 const LLM_ROUTE_PRIORITY_MULTIPLIER = 0.8;
 
@@ -125,14 +125,23 @@ export function getAskRoutes(): string[] {
   return askSeo().map((data) => `/ask/${data.slug}`);
 }
 
-// Generate LLM-friendly routes by adding .md, .mdx, and /llms.txt extensions
+// Generate LLM-friendly routes by adding .md, .mdx, .txt, and /llms.txt extensions
 export function getLlmRoutes(routes: string[]): string[] {
-  const llmExtensions = [".md", ".mdx", "/llms.txt"];
   const llmRoutes: string[] = [];
 
   for (const route of routes) {
-    for (const ext of llmExtensions) {
-      llmRoutes.push(`${route}${ext}`);
+    // For homepage, handle specially to avoid double slashes
+    if (route === "/") {
+      llmRoutes.push("/.md");
+      llmRoutes.push("/.mdx");
+      llmRoutes.push("/.txt");
+      llmRoutes.push("/llms.txt");
+    } else {
+      // For other routes, add extensions normally
+      llmRoutes.push(`${route}.md`);
+      llmRoutes.push(`${route}.mdx`);
+      llmRoutes.push(`${route}.txt`);
+      llmRoutes.push(`${route}/llms.txt`);
     }
   }
 
@@ -286,39 +295,68 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const quranRoutes = getQuranRoutes();
   const askRoutes = getAskRoutes();
 
-  // Generate LLM-friendly routes for AI/LLM accessibility
-  const llmRoutes = getLlmRoutes([
+  // Deduplicate all base routes (contentRoutes might include "/" which is also in baseRoutes)
+  const allBaseRoutesSet = new Set([
     ...baseRoutes,
     ...contentRoutes,
     ...quranRoutes,
     ...askRoutes,
   ]);
+  const allBaseRoutes = Array.from(allBaseRoutesSet);
 
-  const regularRoutes = [
-    ...baseRoutes,
-    ...contentRoutes,
-    ...ogRoutes,
-    ...quranRoutes,
-    ...askRoutes,
-  ];
+  // Generate LLM-friendly routes for AI/LLM accessibility
+  const llmRoutes = getLlmRoutes(allBaseRoutes);
+
+  // Regular routes including OG images
+  const regularRoutesSet = new Set([...allBaseRoutes, ...ogRoutes]);
+  const regularRoutes = Array.from(regularRoutesSet);
 
   // Generate sitemap entries for regular routes (with locale prefixes)
-  const regularEntriesPromises = regularRoutes.map(
+  const regularWithLocalePromises = regularRoutes.map(
     async (route) => await getEntries(route, MAIN_DOMAIN)
   );
 
-  // Generate sitemap entries for LLM routes (without locale prefixes for main domain)
-  const llmEntriesPromises = llmRoutes.map(
+  // Generate sitemap entries for regular routes (without locale prefixes)
+  const regularWithoutLocalePromises = allBaseRoutes.map(
     async (route) => await getLlmEntries(route, MAIN_DOMAIN)
   );
 
-  const [regularEntriesArrays, llmEntriesArrays] = await Promise.all([
-    Promise.all(regularEntriesPromises),
-    Promise.all(llmEntriesPromises),
+  // Generate sitemap entries for LLM routes (with locale prefixes)
+  const llmWithLocalePromises = llmRoutes.map(
+    async (route) => await getEntries(route, MAIN_DOMAIN)
+  );
+
+  // Generate sitemap entries for LLM routes (without locale prefixes)
+  const llmWithoutLocalePromises = llmRoutes.map(
+    async (route) => await getLlmEntries(route, MAIN_DOMAIN)
+  );
+
+  const [
+    regularWithLocaleArrays,
+    regularWithoutLocaleArrays,
+    llmWithLocaleArrays,
+    llmWithoutLocaleArrays,
+  ] = await Promise.all([
+    Promise.all(regularWithLocalePromises),
+    Promise.all(regularWithoutLocalePromises),
+    Promise.all(llmWithLocalePromises),
+    Promise.all(llmWithoutLocalePromises),
   ]);
 
-  const regularEntries = regularEntriesArrays.flat();
-  const llmEntries = llmEntriesArrays.flat();
+  const allEntries = [
+    ...regularWithLocaleArrays.flat(),
+    ...regularWithoutLocaleArrays.flat(),
+    ...llmWithLocaleArrays.flat(),
+    ...llmWithoutLocaleArrays.flat(),
+  ];
 
-  return [...regularEntries, ...llmEntries];
+  // Deduplicate final URLs to ensure no duplicates in sitemap
+  const uniqueUrlsMap = new Map<string, MetadataRoute.Sitemap[number]>();
+  for (const entry of allEntries) {
+    if (!uniqueUrlsMap.has(entry.url)) {
+      uniqueUrlsMap.set(entry.url, entry);
+    }
+  }
+
+  return Array.from(uniqueUrlsMap.values());
 }

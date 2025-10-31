@@ -31,7 +31,12 @@ export const config: NextConfig = {
 
   async rewrites() {
     await Promise.resolve();
-    const llmSource = ["/:path*.md", "/:path*.mdx", "/:path*/llms.txt"];
+    const llmSource = [
+      "/:path*.md",
+      "/:path*.mdx",
+      "/:path*.txt",
+      "/:path*/llms.txt",
+    ];
     const llmDestination = "/llms.mdx/:path*";
     return [
       ...llmSource.map((source) => ({
