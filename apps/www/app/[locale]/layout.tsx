@@ -16,7 +16,7 @@ import { OrganizationJsonLd } from "@repo/seo/json-ld/organization";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
-import { hasLocale, NextIntlClientProvider } from "next-intl";
+import { hasLocale, type Locale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AiSheet } from "@/components/ai/sheet";
 import { AppProviders } from "@/components/providers";
@@ -30,7 +30,10 @@ export async function generateMetadata({
   params: LayoutProps<"/[locale]">["params"];
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations("Metadata");
+  const t = await getTranslations({
+    locale: locale as Locale,
+    namespace: "Metadata",
+  });
 
   return {
     title: {
