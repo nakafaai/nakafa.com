@@ -1,3 +1,4 @@
+import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { getContents } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 
@@ -42,6 +43,24 @@ export async function GET() {
     scanned.push(`## ${key}`);
     scanned.push(value.join("\n"));
   }
+
+  // Add Quran section
+  scanned.push("## Quran");
+  const surahs = getAllSurah();
+  const quranEntries: string[] = [];
+
+  for (const locale of locales) {
+    for (const surah of surahs) {
+      const title = getSurahName({ locale, name: surah.name });
+      const translation =
+        surah.name.translation[locale] || surah.name.translation.en;
+      quranEntries.push(
+        `- [${surah.number}. ${title}](https://nakafa.com/${locale}/quran/${surah.number}): ${translation}`
+      );
+    }
+  }
+
+  scanned.push(quranEntries.join("\n"));
 
   return new Response(scanned.join("\n\n"));
 }
