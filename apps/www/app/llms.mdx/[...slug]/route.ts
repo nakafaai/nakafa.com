@@ -29,9 +29,9 @@ export async function GET(
     ? slug.slice(1).join("/")
     : slug.join("/");
 
-  // if last element is llms.txt, we must remove it
-  if (cleanSlug.endsWith("llms.txt")) {
-    cleanSlug = cleanSlug.slice(0, -"llms.txt".length);
+  // if last element is /llms.txt, we must remove it
+  if (cleanSlug.endsWith("/llms.txt")) {
+    cleanSlug = cleanSlug.slice(0, -"/llms.txt".length);
   }
 
   // Handle Quran content
