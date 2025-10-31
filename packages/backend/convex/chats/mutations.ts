@@ -1,8 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
-import { mutation } from "../_generated/server";
 import { safeGetAppUser } from "../auth";
+import { mutation } from "../functions";
 import tables from "./schema";
 
 /**
@@ -287,5 +287,41 @@ export const createChatWithMessage = mutation({
     }
 
     return { chatId, messageId, partIds };
+  },
+});
+
+/**
+ * Delete a chat.
+ * Only the chat owner can delete their own chats.
+ */
+export const deleteChat = mutation({
+  args: {
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, args) => {
+    const user = await safeGetAppUser(ctx);
+    if (!user) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to delete a chat.",
+      });
+    }
+
+    const chat = await ctx.db.get(args.chatId);
+    if (!chat) {
+      throw new ConvexError({
+        code: "CHAT_NOT_FOUND",
+        message: `Chat not found for chatId: ${args.chatId}`,
+      });
+    }
+
+    if (chat.userId !== user.appUser._id) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "You can only delete your own chats.",
+      });
+    }
+
+    await ctx.db.delete(args.chatId);
   },
 });

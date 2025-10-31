@@ -42,7 +42,11 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
   );
 
   if (results.length === 0) {
-    return <p className="text-muted-foreground text-sm">{t("no-comments")}</p>;
+    return (
+      <p className="text-center text-muted-foreground text-sm">
+        {t("no-comments")}
+      </p>
+    );
   }
 
   return (

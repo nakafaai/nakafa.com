@@ -53,3 +53,30 @@ triggers.register("comments", async (ctx, change) => {
     }
   }
 });
+
+// This is a trigger that deletes all messages and parts when a chat is deleted.
+triggers.register("chats", async (ctx, change) => {
+  if (change.operation !== "delete") {
+    return;
+  }
+
+  // Get all messages for this chat
+  const messages = await ctx.db
+    .query("messages")
+    .withIndex("chatId", (q) => q.eq("chatId", change.id))
+    .collect();
+
+  // Delete all parts for each message, then delete the messages
+  for (const message of messages) {
+    const parts = await ctx.db
+      .query("parts")
+      .withIndex("messageId", (q) => q.eq("messageId", message._id))
+      .collect();
+
+    for (const part of parts) {
+      await ctx.db.delete(part._id);
+    }
+
+    await ctx.db.delete(message._id);
+  }
+});

@@ -164,7 +164,7 @@ export const deleteComment = mutation({
     if (!comment) {
       throw new ConvexError({
         code: "COMMENT_NOT_FOUND",
-        message: "Comment not found.",
+        message: `Comment not found for commentId: ${args.commentId}`,
       });
     }
 
