@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { useMutation, useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -51,7 +52,7 @@ export function UserChatsList({
   const locale = useLocale();
 
   if (!chats) {
-    return null;
+    return <Skeleton className="h-12 w-full rounded-xl border shadow-sm" />;
   }
 
   if (chats.length === 0) {

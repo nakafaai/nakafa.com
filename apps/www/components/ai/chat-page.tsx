@@ -23,7 +23,7 @@ function AiChatMain() {
   });
 
   if (!messages) {
-    return null;
+    return <div className="relative flex size-full flex-col overflow-hidden" />;
   }
 
   return (
