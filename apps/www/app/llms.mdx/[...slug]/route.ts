@@ -11,141 +11,197 @@ import { getRawGithubUrl } from "@/lib/utils/github";
 
 const TOTAL_SURAH = 114;
 
+function buildHeader({
+  url,
+  description,
+  source,
+}: {
+  url: string;
+  description: string;
+  source?: string;
+}): string[] {
+  const header = ["# Nakafa Framework: LLM", "", `URL: ${url}`];
+
+  if (source) {
+    header.push(`Source: ${source}`);
+  }
+
+  header.push("", description, "", "---", "");
+
+  return header;
+}
+
+function getTranslation(
+  translations: Record<Locale, string>,
+  locale: Locale
+): string {
+  return translations[locale] || translations.en;
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> }
 ) {
   const slug = (await params).slug;
-  const scanned: string[] = [];
+  const baseUrl = new URL(req.url).origin;
 
-  // get the locale from slug
-  let locale: Locale;
-  let cleanSlug: string;
-
-  if (hasLocale(routing.locales, slug[0])) {
-    locale = slug[0];
-    cleanSlug = slug.slice(1).join("/");
-  } else {
-    locale = routing.defaultLocale;
-    cleanSlug = slug.join("/");
-  }
+  // Parse locale from slug
+  const locale: Locale = hasLocale(routing.locales, slug[0])
+    ? slug[0]
+    : routing.defaultLocale;
+  const cleanSlug = hasLocale(routing.locales, slug[0])
+    ? slug.slice(1).join("/")
+    : slug.join("/");
 
   // Handle Quran content
   if (cleanSlug.startsWith("quran")) {
-    const parts = cleanSlug.split("/");
+    const quranResponse = handleQuranContent({
+      cleanSlug,
+      locale,
+      baseUrl,
+    });
+    if (quranResponse) {
+      return quranResponse;
+    }
+  }
 
-    // If just "quran", return list of all surahs
-    if (parts.length === 1) {
-      const surahs = getAllSurah();
-      scanned.push("# Al-Quran");
+  // Handle MDX content
+  const content = await getContent(locale, cleanSlug);
+  if (content) {
+    return buildMdxResponse({ content, locale, cleanSlug, baseUrl });
+  }
+
+  // Fallback to /llms.txt for everything not found
+  const fallbackUrl = new URL("/llms.txt", req.url);
+  const response = await fetch(fallbackUrl);
+  return new Response(await response.text());
+}
+
+function handleQuranContent({
+  cleanSlug,
+  locale,
+  baseUrl,
+}: {
+  cleanSlug: string;
+  locale: Locale;
+  baseUrl: string;
+}): Response | null {
+  const parts = cleanSlug.split("/");
+  const scanned: string[] = [];
+
+  // List all surahs
+  if (parts.length === 1) {
+    const surahs = getAllSurah();
+    const url = `${baseUrl}/${locale}/quran`;
+    scanned.push(
+      ...buildHeader({
+        url,
+        description: "Al-Quran - List of all 114 Surahs in the Holy Quran.",
+      })
+    );
+
+    for (const surah of surahs) {
+      const title = getSurahName({ locale, name: surah.name });
+      const translation = getTranslation(surah.name.translation, locale);
+      scanned.push(`## ${surah.number}. ${title}`);
       scanned.push("");
-      scanned.push(`URL: /${locale}/quran`);
+      scanned.push(`**Translation:** ${translation}`);
       scanned.push("");
-      scanned.push("List of all 114 Surahs in the Holy Quran.");
+      scanned.push(`**Revelation:** ${surah.revelation.en}`);
       scanned.push("");
-      scanned.push("---");
+      scanned.push(`**Number of Verses:** ${surah.numberOfVerses}`);
+      scanned.push("");
+    }
+
+    return new Response(scanned.join("\n"));
+  }
+
+  // Show specific surah
+  if (parts.length === 2) {
+    const surahNumber = Number(parts[1]);
+    const surahData = getSurah(surahNumber);
+
+    if (surahData) {
+      const title = getSurahName({ locale, name: surahData.name });
+      const translation = getTranslation(surahData.name.translation, locale);
+      const url = `${baseUrl}/${locale}/quran/${surahNumber}`;
+
+      scanned.push(
+        ...buildHeader({
+          url,
+          description: `Al-Quran - Surah ${title} (${translation})`,
+        })
+      );
+
+      scanned.push(`## ${title}`);
+      scanned.push("");
+      scanned.push(`**Translation:** ${translation}`);
+      scanned.push(`**Revelation:** ${surahData.revelation.en}`);
+      scanned.push(`**Number of Verses:** ${surahData.numberOfVerses}`);
       scanned.push("");
 
-      for (const surah of surahs) {
-        const title = getSurahName({ locale, name: surah.name });
-        const translation =
-          surah.name.translation[locale] || surah.name.translation.en;
-        scanned.push(`## ${surah.number}. ${title}`);
+      // Add pre-bismillah if exists
+      if (surahData.preBismillah) {
+        scanned.push("### Pre-Bismillah");
         scanned.push("");
-        scanned.push(`**Translation:** ${translation}`);
+        scanned.push(surahData.preBismillah.text.arab);
         scanned.push("");
-        scanned.push(`**Revelation:** ${surah.revelation.en}`);
+        const preBismillahTranslation = getTranslation(
+          surahData.preBismillah.translation,
+          locale
+        );
+        scanned.push(`*${preBismillahTranslation}*`);
         scanned.push("");
-        scanned.push(`**Number of Verses:** ${surah.numberOfVerses}`);
+      }
+
+      // Add all verses
+      scanned.push("### Verses");
+      scanned.push("");
+
+      for (const verse of surahData.verses) {
+        scanned.push(`#### Verse ${verse.number.inSurah}`);
+        scanned.push("");
+        scanned.push(verse.text.arab);
+        scanned.push("");
+        scanned.push(`**Transliteration:** ${verse.text.transliteration.en}`);
+        scanned.push("");
+        scanned.push(
+          `**Translation:** ${getTranslation(verse.translation, locale)}`
+        );
         scanned.push("");
       }
 
       return new Response(scanned.join("\n"));
     }
-
-    // If "quran/[number]", return specific surah
-    if (parts.length === 2) {
-      const surahNumber = Number(parts[1]);
-      const surahData = getSurah(surahNumber);
-
-      if (surahData) {
-        const title = getSurahName({ locale, name: surahData.name });
-        const translation =
-          surahData.name.translation[locale] || surahData.name.translation.en;
-
-        scanned.push("# Al-Quran");
-        scanned.push("");
-        scanned.push(`URL: /${locale}/quran/${surahNumber}`);
-        scanned.push("");
-        scanned.push(`Surah ${title} - ${translation}`);
-        scanned.push("");
-        scanned.push("---");
-        scanned.push("");
-        scanned.push(`## ${title}`);
-        scanned.push("");
-        scanned.push(`**Translation:** ${translation}`);
-        scanned.push(`**Revelation:** ${surahData.revelation.en}`);
-        scanned.push(`**Number of Verses:** ${surahData.numberOfVerses}`);
-        scanned.push("");
-
-        // Add pre-bismillah if exists
-        if (surahData.preBismillah) {
-          scanned.push("### Pre-Bismillah");
-          scanned.push("");
-          scanned.push(surahData.preBismillah.text.arab);
-          scanned.push("");
-          const preBismillahTranslation =
-            surahData.preBismillah.translation[locale] ||
-            surahData.preBismillah.translation.en;
-          scanned.push(`*${preBismillahTranslation}*`);
-          scanned.push("");
-        }
-
-        // Add all verses
-        scanned.push("### Verses");
-        scanned.push("");
-
-        for (const verse of surahData.verses) {
-          scanned.push(`#### Verse ${verse.number.inSurah}`);
-          scanned.push("");
-          scanned.push(verse.text.arab);
-          scanned.push("");
-          scanned.push(`**Transliteration:** ${verse.text.transliteration.en}`);
-          scanned.push("");
-          const verseTranslation =
-            verse.translation[locale] || verse.translation.en;
-          scanned.push(`**Translation:** ${verseTranslation}`);
-          scanned.push("");
-        }
-
-        return new Response(scanned.join("\n"));
-      }
-    }
   }
 
-  const content = await getContent(locale, cleanSlug);
+  return null;
+}
 
-  if (!content) {
-    const url = new URL("/llms.txt", req.url);
-    const response = await fetch(url);
-    const text = await response.text();
-    return new Response(text);
-  }
+function buildMdxResponse({
+  content,
+  locale,
+  cleanSlug,
+  baseUrl,
+}: {
+  content: NonNullable<Awaited<ReturnType<typeof getContent>>>;
+  locale: Locale;
+  cleanSlug: string;
+  baseUrl: string;
+}): Response {
+  const url = `${baseUrl}/${locale}/${cleanSlug}`;
+  const source = getRawGithubUrl(
+    `/packages/contents/${cleanSlug}/${locale}.mdx`
+  );
 
-  // Construct the header information
-  const urlPath = `/${locale}/${cleanSlug}`;
-  const githubSourcePath = `/packages/contents/${cleanSlug}/${locale}.mdx`;
-
-  scanned.push("# Nakafa Framework: LLM");
-  scanned.push("");
-  scanned.push(`URL: ${urlPath}`);
-  scanned.push(`Source: ${getRawGithubUrl(githubSourcePath)}`);
-  scanned.push("");
-  scanned.push("Output docs content for large language models.");
-  scanned.push("");
-  scanned.push("---");
-  scanned.push("");
-  scanned.push(content.raw);
+  const scanned = [
+    ...buildHeader({
+      url,
+      description: "Output docs content for large language models.",
+      source,
+    }),
+    content.raw,
+  ];
 
   return new Response(scanned.join("\n"));
 }

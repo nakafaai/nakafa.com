@@ -1,11 +1,17 @@
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { getContents } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
+import type { NextRequest } from "next/server";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const locales = routing.locales;
   const scanned: string[] = [];
-  scanned.push("# Nakafa Content");
+  const baseUrl = new URL(req.url).origin;
+
+  scanned.push("# Nakafa Framework: LLM");
+  scanned.push(`URL: ${baseUrl}/llms.txt`);
+  scanned.push("Complete list of all content available on Nakafa.");
+  scanned.push("---");
 
   // Fetch all articles and subjects for all locales in parallel
   const contentPromises = locales.flatMap((locale) => [
@@ -55,7 +61,7 @@ export async function GET() {
       const translation =
         surah.name.translation[locale] || surah.name.translation.en;
       quranEntries.push(
-        `- [${surah.number}. ${title}](https://nakafa.com/${locale}/quran/${surah.number}): ${translation}`
+        `- [${surah.number}. ${title}](${baseUrl}/${locale}/quran/${surah.number}): ${translation}`
       );
     }
   }
