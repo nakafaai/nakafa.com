@@ -6,7 +6,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -194,7 +193,6 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t("options")}</DropdownMenuLabel>
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   className="cursor-pointer"
