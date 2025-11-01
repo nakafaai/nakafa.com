@@ -294,7 +294,12 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
       <ResponsiveDialog
         description={t("delete-chat-description")}
         footer={
-          <Button onClick={handleDelete} variant="destructive">
+          <Button
+            disabled={isPending}
+            onClick={handleDelete}
+            variant="destructive"
+          >
+            {isPending ? <SpinnerIcon /> : <TrashIcon />}
             {t("confirm")}
           </Button>
         }
