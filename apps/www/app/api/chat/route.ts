@@ -44,6 +44,8 @@ export const maxDuration = 60;
 
 const corsValidator = new CorsValidator();
 
+const possibleVerifiedUrls = ["/articles", "/quran", "/subject"] as const;
+
 export async function POST(req: Request) {
   // Only allow requests from allowed domain
   if (!corsValidator.isRequestFromAllowedDomain(req)) {
@@ -68,8 +70,20 @@ export async function POST(req: Request) {
 
   const url = `/${locale}/${cleanSlug(slug)}`;
 
-  // Check if the slug is verified by calling api
-  const [verified, token] = await Promise.all([getVerified(url), getToken()]);
+  let verified = false;
+  let token: string | undefined;
+
+  // Early return optimization with parallel execution when needed
+  // Check if URL contains any of the verified URL segments (e.g., /en/subject/... matches "subject")
+  const shouldVerify = possibleVerifiedUrls.some((segment) =>
+    url.includes(segment)
+  );
+
+  if (shouldVerify) {
+    [verified, token] = await Promise.all([getVerified(url), getToken()]);
+  } else {
+    token = await getToken();
+  }
 
   const currentDate = new Date().toLocaleString("en-US", {
     year: "numeric",

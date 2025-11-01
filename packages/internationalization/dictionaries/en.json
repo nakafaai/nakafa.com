@@ -287,7 +287,20 @@
     "new-chat": "New chat",
     "chats": "Chats",
     "search-chats": "Search your chats...",
-    "rename-chat": "Rename chat"
+    "rename-chat": "Rename chat",
+    "delete-chat": "Delete chat",
+    "delete-chat-description": "Are you sure you want to delete this chat? This action cannot be undone.",
+    "options": "Options",
+    "confirm": "Confirm",
+    "share-chat": "Share chat",
+    "share-chat-description": "Be aware of sharing the link with unknown people.",
+    "private": "Private",
+    "private-description": "Only people who have the link can view the chat.",
+    "public": "Public",
+    "public-description": "Everyone can view the chat.",
+    "create-link": "Create link",
+    "copy-link": "Copy link",
+    "link-copied": "Link copied to clipboard"
   },
   "About": {
     "meta-title": "Fck Closed Education, Enjoy Free Open Education",

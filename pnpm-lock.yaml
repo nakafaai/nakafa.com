@@ -144,7 +144,7 @@ importers:
         version: 0.9.6(@standard-schema/spec@1.0.0)(better-auth@1.3.27(next@16.0.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.28.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
       '@hookform/resolvers':
         specifier: ^5.2.2
-        version: 5.2.2(react-hook-form@7.65.0(react@19.2.0))
+        version: 5.2.2(react-hook-form@7.66.0(react@19.2.0))
       '@icons-pack/react-simple-icons':
         specifier: ^13.8.0
         version: 13.8.0(react@19.2.0)
@@ -269,8 +269,8 @@ importers:
         specifier: 19.2.0
         version: 19.2.0(react@19.2.0)
       react-hook-form:
-        specifier: ^7.65.0
-        version: 7.65.0(react@19.2.0)
+        specifier: ^7.66.0
+        version: 7.66.0(react@19.2.0)
       shiki:
         specifier: ^3.14.0
         version: 3.14.0
@@ -284,8 +284,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(react@19.2.0)
       virtua:
-        specifier: ^0.46.4
-        version: 0.46.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        specifier: ^0.46.5
+        version: 0.46.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       zod:
         specifier: ^4.1.12
         version: 4.1.12
@@ -495,7 +495,7 @@ importers:
     dependencies:
       '@hookform/resolvers':
         specifier: ^5.2.2
-        version: 5.2.2(react-hook-form@7.65.0(react@19.2.0))
+        version: 5.2.2(react-hook-form@7.66.0(react@19.2.0))
       '@icons-pack/react-simple-icons':
         specifier: ^13.8.0
         version: 13.8.0(react@19.2.0)
@@ -617,8 +617,8 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0(react@19.2.0)
       react-hook-form:
-        specifier: ^7.65.0
-        version: 7.65.0(react@19.2.0)
+        specifier: ^7.66.0
+        version: 7.66.0(react@19.2.0)
       react-katex:
         specifier: ^3.1.0
         version: 3.1.0(prop-types@15.8.1)(react@19.2.0)
@@ -8193,8 +8193,8 @@ packages:
   react-fast-compare@3.2.2:
     resolution: {integrity: sha512-nsO+KSNgo1SbJqJEYRE9ERzo7YtYbou/OqjSQKxV7jcKox7+usiUVZOAC+XnDOABXggQTno0Y1CpVnuWEc1boQ==}
 
-  react-hook-form@7.65.0:
-    resolution: {integrity: sha512-xtOzDz063WcXvGWaHgLNrNzlsdFgtUWcb32E6WFaGTd7kPZG3EeDusjdZfUsPwKCKVXy1ZlntifaHZ4l8pAsmw==}
+  react-hook-form@7.66.0:
+    resolution: {integrity: sha512-xXBqsWGKrY46ZqaHDo+ZUYiMUgi8suYu5kdrS20EG8KiL7VRQitEbNjm+UcrDYrNi1YLyfpmAeGjCZYXLT9YBw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
@@ -9512,8 +9512,8 @@ packages:
   victory-vendor@37.3.6:
     resolution: {integrity: sha512-SbPDPdDBYp+5MJHhBCAyI7wKM3d5ivekigc2Dk2s7pgbZ9wIgIBYGVw4zGHBml/qTFbexrofXW6Gu4noGxrOwQ==}
 
-  virtua@0.46.4:
-    resolution: {integrity: sha512-2adGT8c3N2BrFUIUnLp5jYWgIPSgTC4AbHDwgVQA8IAK1lDWC79KcF/WEhfgfV8vbGJjMGtMPhkTCZGxzd0Jaw==}
+  virtua@0.46.5:
+    resolution: {integrity: sha512-wmG6+vVCk0pnPa+2KN/kBBRK+cxyY1PrkPFGF4JOY0XhvEsdGBQKFFxQx3uV65msDh0nrWJx+tOwT2TqFPBEZQ==}
     peerDependencies:
       react: '>=16.14.0'
       react-dom: '>=16.14.0'
@@ -10718,10 +10718,10 @@ snapshots:
 
   '@hexagon/base64@1.1.28': {}
 
-  '@hookform/resolvers@5.2.2(react-hook-form@7.65.0(react@19.2.0))':
+  '@hookform/resolvers@5.2.2(react-hook-form@7.66.0(react@19.2.0))':
     dependencies:
       '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.65.0(react@19.2.0)
+      react-hook-form: 7.66.0(react@19.2.0)
 
   '@iconify/types@2.0.0': {}
 
@@ -11382,7 +11382,7 @@ snapshots:
       eventemitter3: 5.0.1
       markdown-to-jsx: 7.7.16(react@19.2.0)
       react: 19.2.0
-      react-hook-form: 7.65.0(react@19.2.0)
+      react-hook-form: 7.66.0(react@19.2.0)
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
@@ -11423,7 +11423,7 @@ snapshots:
       react: 19.2.0
       react-day-picker: 8.10.1(date-fns@3.6.0)(react@19.2.0)
       react-dom: 19.2.0(react@19.2.0)
-      react-hook-form: 7.65.0(react@19.2.0)
+      react-hook-form: 7.66.0(react@19.2.0)
       react-timeago: 7.2.0(react@19.2.0)
       tailwind-merge: 2.6.0
     transitivePeerDependencies:
@@ -18984,7 +18984,7 @@ snapshots:
 
   react-fast-compare@3.2.2: {}
 
-  react-hook-form@7.65.0(react@19.2.0):
+  react-hook-form@7.66.0(react@19.2.0):
     dependencies:
       react: 19.2.0
 
@@ -20564,7 +20564,7 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
-  virtua@0.46.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+  virtua@0.46.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     optionalDependencies:
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)

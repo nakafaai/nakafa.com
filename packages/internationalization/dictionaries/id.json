@@ -287,7 +287,20 @@
     "new-chat": "Obrolan baru",
     "chats": "Obrolan",
     "search-chats": "Cari obrolan kamu...",
-    "rename-chat": "Ubah nama obrolan"
+    "rename-chat": "Ubah nama obrolan",
+    "delete-chat": "Hapus obrolan",
+    "delete-chat-description": "Apakah kamu yakin ingin menghapus obrolan ini? Aksi ini tidak dapat dibatalkan.",
+    "options": "Opsi",
+    "confirm": "Konfirmasi",
+    "share-chat": "Bagikan obrolan",
+    "share-chat-description": "Berhati-hati dalam membagikan link dengan orang-orang yang tidak dikenal.",
+    "private": "Pribadi",
+    "private-description": "Obrolan hanya dapat dilihat oleh orang yang memiliki link.",
+    "public": "Publik",
+    "public-description": "Obrolan dapat dilihat oleh siapa saja.",
+    "create-link": "Buat link",
+    "copy-link": "Salin link",
+    "link-copied": "Link berhasil disalin ke papan klip"
   },
   "About": {
     "meta-title": "Fck Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",
