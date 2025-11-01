@@ -57,7 +57,10 @@ export function ResponsiveDialog({
   if (isDesktop) {
     return (
       <Dialog onOpenChange={setOpen} open={open}>
-        <DialogContent className={styleClassName?.dialog?.content}>
+        <DialogContent
+          className={styleClassName?.dialog?.content}
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <DialogHeader className={styleClassName?.dialog?.header}>
             <DialogTitle className={styleClassName?.dialog?.title}>
               {title}
