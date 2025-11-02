@@ -261,7 +261,7 @@ const AiSheetHistory = memo(() => {
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button size="icon-sm" variant="ghost">
           <HistoryIcon />
