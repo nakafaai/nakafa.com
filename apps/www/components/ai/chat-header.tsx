@@ -37,14 +37,10 @@ import {
   useTransition,
 } from "react";
 import { toast } from "sonner";
-import { useChatId } from "./chat-provider";
+import { useCurrentChat } from "./chat-provider";
 
 export function AiChatHeader() {
-  const chatId = useChatId((s) => s.chatId);
-
-  const chat = useQuery(api.chats.queries.getChat, {
-    chatId,
-  });
+  const chat = useCurrentChat((s) => s.chat);
 
   if (!chat) {
     return <AiChatHeaderPlaceholder />;

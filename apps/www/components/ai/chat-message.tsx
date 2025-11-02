@@ -1,6 +1,7 @@
 "use client";
 
 import type { MyUIMessage } from "@repo/ai/types/message";
+import type { ComponentProps } from "react";
 import { memo } from "react";
 import { AIChatMessageActions } from "./chat-actions";
 import { AIChatLoading } from "./chat-loading";
@@ -8,9 +9,10 @@ import { AiMessagePart } from "./message-part";
 
 type Props = {
   message: MyUIMessage;
+  showActions?: ComponentProps<typeof AIChatMessageActions>["showActions"];
 };
 
-export const AiChatMessage = memo(({ message }: Props) => {
+export const AiChatMessage = memo(({ message, showActions }: Props) => {
   // We are not showing the reasoning parts in the chat message, and not include step-start
   const parts = message.parts.filter((p) => p.type !== "step-start");
 
@@ -33,6 +35,7 @@ export const AiChatMessage = memo(({ message }: Props) => {
 
       <AIChatMessageActions
         messageId={message.id}
+        showActions={showActions}
         text={parts
           .filter((p) => p.type === "text")
           .map((p) => p.text)

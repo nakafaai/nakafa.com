@@ -10,36 +10,43 @@ import { useChat } from "@/lib/context/use-chat";
 type Props = {
   messageId: string;
   text: string;
+  showActions?: boolean;
 };
 
-export const AIChatMessageActions = memo(({ messageId, text }: Props) => {
-  const t = useTranslations("Ai");
+export const AIChatMessageActions = memo(
+  ({ messageId, text, showActions = true }: Props) => {
+    const t = useTranslations("Ai");
 
-  const regenerate = useChat((state) => state.chat.regenerate);
-  const status = useChat((state) => state.chat.status);
+    const regenerate = useChat((state) => state.chat.regenerate);
+    const status = useChat((state) => state.chat.status);
 
-  const clipboard = useClipboard({ timeout: 1000 });
+    const clipboard = useClipboard({ timeout: 1000 });
 
-  const disabled = status === "submitted" || status === "streaming";
+    const disabled = status === "submitted" || status === "streaming";
 
-  return (
-    <Actions className="opacity-0 transition-opacity ease-out group-hover:opacity-100">
-      <Action
-        disabled={disabled}
-        label={t("retry-message")}
-        onClick={() => regenerate({ messageId })}
-        tooltip={t("retry-message")}
-      >
-        <RefreshCcwIcon />
-      </Action>
-      <Action
-        label={t("copy-message")}
-        onClick={() => clipboard.copy(text)}
-        tooltip={t("copy-message")}
-      >
-        {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
-      </Action>
-    </Actions>
-  );
-});
+    if (!showActions) {
+      return null;
+    }
+
+    return (
+      <Actions className="opacity-0 transition-opacity ease-out group-hover:opacity-100">
+        <Action
+          disabled={disabled}
+          label={t("retry-message")}
+          onClick={() => regenerate({ messageId })}
+          tooltip={t("retry-message")}
+        >
+          <RefreshCcwIcon />
+        </Action>
+        <Action
+          label={t("copy-message")}
+          onClick={() => clipboard.copy(text)}
+          tooltip={t("copy-message")}
+        >
+          {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
+        </Action>
+      </Actions>
+    );
+  }
+);
 AIChatMessageActions.displayName = "AIChatMessageActions";

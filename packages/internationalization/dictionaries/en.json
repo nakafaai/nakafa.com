@@ -300,7 +300,9 @@
     "public-description": "Everyone can view the chat.",
     "create-link": "Create link",
     "copy-link": "Copy link",
-    "link-copied": "Link copied to clipboard"
+    "link-copied": "Link copied to clipboard",
+    "private-chat-error": "Access denied",
+    "private-chat-error-description": "You are not the owner of this chat. Please contact the owner to get access."
   },
   "About": {
     "meta-title": "Fck Closed Education, Enjoy Free Open Education",

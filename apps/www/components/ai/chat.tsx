@@ -25,6 +25,7 @@ import { AiChatHeader } from "./chat-header";
 import { AIChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
+import { useCurrentChat } from "./chat-provider";
 
 export function AiChat() {
   return (
@@ -39,6 +40,11 @@ export function AiChat() {
 }
 
 const AiChatConversation = memo(() => {
+  const chat = useCurrentChat((s) => s.chat);
+
+  const currentUser = useQuery(api.auth.getCurrentUser);
+  const showActions = chat?.userId === currentUser?.appUser._id;
+
   const messages = useChat((state) => state.chat.messages);
 
   return (
@@ -49,7 +55,7 @@ const AiChatConversation = memo(() => {
             from={message.role === "user" ? "user" : "assistant"}
             key={message.id}
           >
-            <AiChatMessage message={message} />
+            <AiChatMessage message={message} showActions={showActions} />
           </Message>
         ))}
 
@@ -66,6 +72,9 @@ const AiChatToolbar = memo(() => {
 
   const router = useRouter();
 
+  const chat = useCurrentChat((s) => s.chat);
+
+  const currentUser = useQuery(api.auth.getCurrentUser);
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
 
@@ -79,7 +88,7 @@ const AiChatToolbar = memo(() => {
     }
 
     if (!user) {
-      router.push("/auth?redirect=/chat");
+      router.push(`/auth?redirect=/chat/${chat?._id}`);
       return;
     }
 
@@ -88,6 +97,11 @@ const AiChatToolbar = memo(() => {
       files: message.files,
     });
     setText("");
+  }
+
+  // only show when user is the owner of the chat
+  if (chat?.userId !== currentUser?.appUser._id) {
+    return null;
   }
 
   return (

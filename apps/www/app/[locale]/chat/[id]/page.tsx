@@ -6,7 +6,6 @@ import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { AiChatPage } from "@/components/ai/chat-page";
-import { ChatIdProvider } from "@/components/ai/chat-provider";
 
 type Props = {
   params: Promise<{
@@ -42,9 +41,5 @@ export default function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  return (
-    <ChatIdProvider chatId={id}>
-      <AiChatPage />
-    </ChatIdProvider>
-  );
+  return <AiChatPage chatId={id} />;
 }

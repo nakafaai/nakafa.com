@@ -6,18 +6,20 @@ import { mapDBPartToUIMessagePart } from "./utils";
 
 /**
  * Get a chat by its ID.
- * Only accessible by the chat owner.
+ * Requires authentication. Public chats are accessible by any logged-in user.
+ * Private chats are only accessible by the owner.
  */
 export const getChat = query({
   args: {
     chatId: v.id("chats"),
   },
   handler: async (ctx, args) => {
+    // Authentication check - must be logged in
     const user = await safeGetAppUser(ctx);
     if (!user) {
       throw new ConvexError({
         code: "UNAUTHORIZED",
-        message: "You must be logged in to get a chat.",
+        message: "You must be logged in to view this chat.",
       });
     }
 
@@ -29,10 +31,11 @@ export const getChat = query({
       });
     }
 
-    if (chat.userId !== user.appUser._id) {
+    // Authorization check - only private chats require ownership
+    if (chat.visibility === "private" && chat.userId !== user.appUser._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "You do not have permission to access this chat.",
+        message: "You do not have permission to access this private chat.",
       });
     }
 
@@ -112,7 +115,8 @@ export const getChatTitle = query({
 /**
  * Load messages for a chat.
  * Messages are ordered by creation time, parts by order field.
- * Only accessible by the chat owner.
+ * Requires authentication. Public chats are accessible by any logged-in user.
+ * Private chats are only accessible by the owner.
  *
  * Note: If you have chats with 100+ messages, consider implementing pagination
  * to avoid loading all messages at once.
@@ -122,12 +126,12 @@ export const loadMessages = query({
     chatId: v.id("chats"),
   },
   handler: async (ctx, args): Promise<MyUIMessage[]> => {
-    // Authentication check
+    // Authentication check - must be logged in
     const user = await safeGetAppUser(ctx);
     if (!user) {
       throw new ConvexError({
         code: "UNAUTHORIZED",
-        message: "You must be logged in to load messages.",
+        message: "You must be logged in to view messages.",
       });
     }
 
@@ -139,11 +143,11 @@ export const loadMessages = query({
       });
     }
 
-    // Authorization check - verify user owns this chat
-    if (chat.userId !== user.appUser._id) {
+    // Authorization check - only private chats require ownership
+    if (chat.visibility === "private" && chat.userId !== user.appUser._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "You do not have permission to access this chat.",
+        message: "You do not have permission to access this private chat.",
       });
     }
 

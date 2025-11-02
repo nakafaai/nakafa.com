@@ -300,7 +300,9 @@
     "public-description": "Obrolan dapat dilihat oleh siapa saja.",
     "create-link": "Buat link",
     "copy-link": "Salin link",
-    "link-copied": "Link berhasil disalin ke papan klip"
+    "link-copied": "Link berhasil disalin ke papan klip",
+    "private-chat-error": "Akses ditolak",
+    "private-chat-error-description": "Anda bukan pemilik obrolan ini. Silakan hubungi pemilik obrolan untuk mendapatkan akses."
   },
   "About": {
     "meta-title": "Fck Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",

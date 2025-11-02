@@ -1,33 +1,53 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { Authenticated, useQuery } from "convex/react";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
+import { Authenticated } from "convex/react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef } from "react";
 import { useAi } from "@/lib/context/use-ai";
 import { ChatProvider, useChat } from "@/lib/context/use-chat";
 import { AiChat } from "./chat";
-import { useChatId } from "./chat-provider";
+import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
 
-export function AiChatPage() {
+export function AiChatPage({ chatId }: { chatId: Id<"chats"> }) {
+  const t = useTranslations("Ai");
   return (
     <Authenticated>
-      <AiChatMain />
+      <ErrorBoundary
+        fallback={
+          <div className="relative flex size-full flex-col overflow-hidden">
+            <div className="flex size-full flex-col items-center justify-center">
+              <div className="mx-6 flex max-w-sm flex-col items-center justify-center gap-2 rounded-xl border p-4 shadow-sm">
+                <h1 className="font-semibold text-xl">
+                  {t("private-chat-error")}
+                </h1>
+                <p className="text-center text-muted-foreground text-sm">
+                  {t("private-chat-error-description")}
+                </p>
+              </div>
+            </div>
+          </div>
+        }
+      >
+        <CurrentChatProvider chatId={chatId}>
+          <AiChatMain />
+        </CurrentChatProvider>
+      </ErrorBoundary>
     </Authenticated>
   );
 }
 
 function AiChatMain() {
-  const chatId = useChatId((s) => s.chatId);
-  const messages = useQuery(api.chats.queries.loadMessages, {
-    chatId,
-  });
+  const chat = useCurrentChat((s) => s.chat);
+  const messages = useCurrentChat((s) => s.messages);
 
-  if (!messages) {
+  if (!(chat && messages)) {
     return <div className="relative flex size-full flex-col overflow-hidden" />;
   }
 
   return (
-    <ChatProvider chatId={chatId} initialMessages={messages}>
+    <ChatProvider chatId={chat._id} initialMessages={messages}>
       <AiChatPageContent />
     </ChatProvider>
   );
