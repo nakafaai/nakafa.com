@@ -260,36 +260,41 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
         title={t("share-chat")}
       >
         <div className="flex flex-col divide-y overflow-hidden rounded-lg border">
-          {(["public", "private"] as const).map((visibility) => (
-            <button
-              className="group flex cursor-pointer items-start gap-4 bg-card p-4 text-card-foreground transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-              disabled={isPending}
-              key={visibility}
-              onClick={() => handleUpdateVisibility(visibility)}
-              type="button"
-            >
-              <div className="flex flex-1 flex-col items-start justify-start gap-1">
-                <div className="flex items-center gap-2">
-                  {visibility === "public" ? (
-                    <GlobeIcon className="size-4 shrink-0" />
-                  ) : (
-                    <LockIcon className="size-4 shrink-0" />
-                  )}
-                  <span className="text-sm">{t(visibility)}</span>
-                </div>
-                <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground/80">
-                  {t(`${visibility}-description`)}
-                </p>
-              </div>
+          {(["public", "private"] as const).map((visibility) => {
+            const isSelected = visibility === chat.visibility;
+            const isPublic = visibility === "public";
 
-              <CheckIcon
-                className={cn(
-                  "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out",
-                  visibility === chat.visibility && "opacity-100"
-                )}
-              />
-            </button>
-          ))}
+            return (
+              <button
+                className="group flex cursor-pointer items-start gap-4 bg-card p-4 text-card-foreground transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+                disabled={isPending}
+                key={visibility}
+                onClick={() => handleUpdateVisibility(visibility)}
+                type="button"
+              >
+                <div className="flex flex-1 flex-col items-start justify-start gap-1">
+                  <div className="flex items-center gap-2">
+                    {isPublic ? (
+                      <GlobeIcon className="size-4 shrink-0" />
+                    ) : (
+                      <LockIcon className="size-4 shrink-0" />
+                    )}
+                    <span className="text-sm">{t(visibility)}</span>
+                  </div>
+                  <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground/80">
+                    {t(`${visibility}-description`)}
+                  </p>
+                </div>
+
+                <CheckIcon
+                  className={cn(
+                    "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out",
+                    isSelected && "opacity-100"
+                  )}
+                />
+              </button>
+            );
+          })}
         </div>
       </ResponsiveDialog>
 
