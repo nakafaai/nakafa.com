@@ -111,9 +111,9 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
       return;
     }
 
-    startTransition(async () => {
-      await deleteChat({ chatId: chat._id });
+    startTransition(() => {
       router.replace(`/user/${user.appUser._id}/chat`);
+      deleteChat({ chatId: chat._id });
     });
   };
 

@@ -53,22 +53,24 @@ function SidebarRightHeader({
       <SidebarMenu>
         <SidebarMenuItem>
           <Tooltip>
-            <TooltipTrigger asChild>
-              <SidebarMenuButton asChild size="lg">
-                <NavigationLink href={header.href} title={header.title}>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {header.title}
-                    </span>
-                    {header.description && (
-                      <span className="truncate text-xs">
-                        {header.description}
+            <TooltipTrigger
+              render={
+                <SidebarMenuButton asChild size="lg">
+                  <NavigationLink href={header.href} title={header.title}>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">
+                        {header.title}
                       </span>
-                    )}
-                  </div>
-                </NavigationLink>
-              </SidebarMenuButton>
-            </TooltipTrigger>
+                      {header.description && (
+                        <span className="truncate text-xs">
+                          {header.description}
+                        </span>
+                      )}
+                    </div>
+                  </NavigationLink>
+                </SidebarMenuButton>
+              }
+            />
             <TooltipContent
               align="center"
               className="hidden max-w-xs sm:block"

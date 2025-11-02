@@ -67,17 +67,19 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
         <div className="flex flex-wrap items-center gap-2">
           {showSheet && (
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  aria-label={t("bibliography")}
-                  onClick={() => setOpen(!open)}
-                  size="icon"
-                  variant="outline"
-                >
-                  <span className="sr-only">{t("bibliography")}</span>
-                  <LayersIcon className="size-4" />
-                </Button>
-              </TooltipTrigger>
+              <TooltipTrigger
+                render={
+                  <Button
+                    aria-label={t("bibliography")}
+                    onClick={() => setOpen(!open)}
+                    size="icon"
+                    variant="outline"
+                  >
+                    <span className="sr-only">{t("bibliography")}</span>
+                    <LayersIcon className="size-4" />
+                  </Button>
+                }
+              />
               <TooltipContent side="bottom">
                 <p>{t("bibliography")}</p>
               </TooltipContent>
@@ -85,62 +87,68 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
           )}
 
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                aria-label={t("source-code")}
-                asChild
-                size="icon"
-                variant="outline"
-              >
-                <a
-                  href={githubUrl ?? "https://github.com/nakafaai/nakafa.com"}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  title={t("source-code")}
+            <TooltipTrigger
+              render={
+                <Button
+                  aria-label={t("source-code")}
+                  asChild
+                  size="icon"
+                  variant="outline"
                 >
-                  <span className="sr-only">{t("source-code")}</span>
-                  <SiGithub className="size-4" />
-                </a>
-              </Button>
-            </TooltipTrigger>
+                  <a
+                    href={githubUrl ?? "https://github.com/nakafaai/nakafa.com"}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    title={t("source-code")}
+                  >
+                    <span className="sr-only">{t("source-code")}</span>
+                    <SiGithub className="size-4" />
+                  </a>
+                </Button>
+              }
+            />
             <TooltipContent side="bottom">
               <p>{t("source-code")}</p>
             </TooltipContent>
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button asChild size="icon" variant="outline">
-                <a
-                  href="https://www.youtube.com/@nakafaa"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  title={t("videos")}
-                >
-                  <span className="sr-only">{t("videos")}</span>
-                  <SiYoutube className="size-4" />
-                </a>
-              </Button>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <Button asChild size="icon" variant="outline">
+                  <a
+                    href="https://www.youtube.com/@nakafaa"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    title={t("videos")}
+                  >
+                    <span className="sr-only">{t("videos")}</span>
+                    <SiYoutube className="size-4" />
+                  </a>
+                </Button>
+              }
+            />
             <TooltipContent side="bottom">
               <p>{t("videos")}</p>
             </TooltipContent>
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button asChild size="icon" variant="outline">
-                <a
-                  href="https://discord.gg/CPCSfKhvfQ"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  title={t("community")}
-                >
-                  <span className="sr-only">{t("community")}</span>
-                  <SiDiscord className="size-4" />
-                </a>
-              </Button>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <Button asChild size="icon" variant="outline">
+                  <a
+                    href="https://discord.gg/CPCSfKhvfQ"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    title={t("community")}
+                  >
+                    <span className="sr-only">{t("community")}</span>
+                    <SiDiscord className="size-4" />
+                  </a>
+                </Button>
+              }
+            />
             <TooltipContent side="bottom">
               <p>{t("community")}</p>
             </TooltipContent>

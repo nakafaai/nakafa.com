@@ -2,7 +2,6 @@
 
 import { useMediaQuery } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   Conversation,
   ConversationContent,
@@ -38,9 +37,9 @@ import { Authenticated, useMutation, useQuery } from "convex/react";
 import {
   Maximize2Icon,
   Minimize2Icon,
+  PlusIcon,
   ShapesIcon,
   SparklesIcon,
-  Trash2Icon,
   XIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -57,6 +56,7 @@ import { ChatProvider, useChat } from "@/lib/context/use-chat";
 import { AIChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
+import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
 
 const MIN_WIDTH = 384;
 const MAX_WIDTH = 672;
@@ -106,14 +106,16 @@ export function AiSheet() {
             </div>
 
             <div className="flex items-center">
-              <Button
-                onClick={() => setActiveChatId(null)}
-                size="icon-sm"
-                variant="ghost"
-              >
-                <Trash2Icon />
-                <span className="sr-only">Clear</span>
-              </Button>
+              <Activity mode={activeChatId ? "visible" : "hidden"}>
+                <Button
+                  onClick={() => setActiveChatId(null)}
+                  size="icon-sm"
+                  variant="ghost"
+                >
+                  <PlusIcon />
+                  <span className="sr-only">New Chat</span>
+                </Button>
+              </Activity>
               <Button
                 onClick={() => {
                   setWidth(width === MAX_WIDTH ? MIN_WIDTH : MAX_WIDTH);
@@ -142,7 +144,11 @@ export function AiSheet() {
         <Activity mode={activeChatId ? "visible" : "hidden"}>
           <ErrorBoundary fallback={<AiSheetError />}>
             <Authenticated>
-              {activeChatId && <AiSheetMain chatId={activeChatId} />}
+              {activeChatId && (
+                <CurrentChatProvider chatId={activeChatId}>
+                  <AiSheetMain />
+                </CurrentChatProvider>
+              )}
             </Authenticated>
           </ErrorBoundary>
         </Activity>
@@ -221,17 +227,16 @@ const AiSheetNewChat = memo(() => {
 });
 AiSheetNewChat.displayName = "AiSheetNewChat";
 
-const AiSheetMain = memo(({ chatId }: { chatId: Id<"chats"> }) => {
-  const messages = useQuery(api.chats.queries.loadMessages, {
-    chatId,
-  });
+const AiSheetMain = memo(() => {
+  const chat = useCurrentChat((s) => s.chat);
+  const messages = useCurrentChat((s) => s.messages);
 
-  if (!messages) {
+  if (!(chat && messages)) {
     return <AiSheetMainPlaceholder />;
   }
 
   return (
-    <ChatProvider chatId={chatId} initialMessages={messages}>
+    <ChatProvider chatId={chat._id} initialMessages={messages}>
       <AiSheetMainContent />
     </ChatProvider>
   );

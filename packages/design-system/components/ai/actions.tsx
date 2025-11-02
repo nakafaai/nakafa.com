@@ -51,7 +51,7 @@ export const Action = memo(
     if (tooltip) {
       return (
         <Tooltip>
-          <TooltipTrigger asChild>{button}</TooltipTrigger>
+          <TooltipTrigger render={button} />
           <TooltipContent side="bottom">
             <p>{tooltip}</p>
           </TooltipContent>

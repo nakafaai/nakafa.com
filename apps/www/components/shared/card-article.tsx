@@ -48,11 +48,13 @@ export function CardArticle({ category, article }: Props) {
             {format(article.date, "d MMM, yyyy")}
           </time>
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant="secondary">
-                {article.official ? t("official") : t("contributor")}
-              </Badge>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <Badge variant="secondary">
+                  {article.official ? t("official") : t("contributor")}
+                </Badge>
+              }
+            />
 
             <TooltipContent>
               <p>

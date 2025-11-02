@@ -104,6 +104,7 @@ export async function POST(req: Request) {
     currentPage: {
       locale,
       slug: cleanSlug(slug),
+      url,
       verified,
     },
     currentDate,

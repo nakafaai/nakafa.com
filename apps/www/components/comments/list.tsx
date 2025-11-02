@@ -226,88 +226,96 @@ function CommentAction({
   return (
     <div className="-translate-x-2 flex items-center">
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            className="group"
-            disabled={isPending}
-            onClick={() => handleVote(1)}
-            size={comment.upvoteCount === 0 ? "icon-sm" : "sm"}
-            variant="ghost"
-          >
-            <ThumbsUpIcon />
-            <NumberFormat
-              className={cn(
-                "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
-                comment.upvoteCount === 0 && "hidden"
-              )}
-              isolate={true}
-              value={comment.upvoteCount}
-            />
-          </Button>
-        </TooltipTrigger>
+        <TooltipTrigger
+          render={
+            <Button
+              className="group"
+              disabled={isPending}
+              onClick={() => handleVote(1)}
+              size={comment.upvoteCount === 0 ? "icon-sm" : "sm"}
+              variant="ghost"
+            >
+              <ThumbsUpIcon />
+              <NumberFormat
+                className={cn(
+                  "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
+                  comment.upvoteCount === 0 && "hidden"
+                )}
+                isolate={true}
+                value={comment.upvoteCount}
+              />
+            </Button>
+          }
+        />
         <TooltipContent side="bottom">{t("like")}</TooltipContent>
       </Tooltip>
 
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            className="group"
-            disabled={isPending}
-            onClick={() => handleVote(-1)}
-            size={comment.downvoteCount === 0 ? "icon-sm" : "sm"}
-            variant="ghost"
-          >
-            <ThumbsDownIcon />
-            <NumberFormat
-              className={cn(
-                "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
-                comment.downvoteCount === 0 && "hidden"
-              )}
-              isolate={true}
-              value={comment.downvoteCount}
-            />
-          </Button>
-        </TooltipTrigger>
+        <TooltipTrigger
+          render={
+            <Button
+              className="group"
+              disabled={isPending}
+              onClick={() => handleVote(-1)}
+              size={comment.downvoteCount === 0 ? "icon-sm" : "sm"}
+              variant="ghost"
+            >
+              <ThumbsDownIcon />
+              <NumberFormat
+                className={cn(
+                  "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
+                  comment.downvoteCount === 0 && "hidden"
+                )}
+                isolate={true}
+                value={comment.downvoteCount}
+              />
+            </Button>
+          }
+        />
         <TooltipContent side="bottom">{t("dislike")}</TooltipContent>
       </Tooltip>
 
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            disabled={isPending}
-            onClick={onReplyToggle}
-            size={comment.replyCount === 0 ? "icon-sm" : "sm"}
-            variant="ghost"
-          >
-            <MessageCircleIcon />
-            <NumberFormat
-              className={cn(
-                "font-mono text-muted-foreground text-xs tracking-tight",
-                comment.replyCount === 0 && "hidden"
-              )}
-              isolate={true}
-              value={comment.replyCount}
-            />
-          </Button>
-        </TooltipTrigger>
+        <TooltipTrigger
+          render={
+            <Button
+              disabled={isPending}
+              onClick={onReplyToggle}
+              size={comment.replyCount === 0 ? "icon-sm" : "sm"}
+              variant="ghost"
+            >
+              <MessageCircleIcon />
+              <NumberFormat
+                className={cn(
+                  "font-mono text-muted-foreground text-xs tracking-tight",
+                  comment.replyCount === 0 && "hidden"
+                )}
+                isolate={true}
+                value={comment.replyCount}
+              />
+            </Button>
+          }
+        />
         <TooltipContent side="bottom">{t("reply")}</TooltipContent>
       </Tooltip>
 
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            className={cn(
-              comment.userId !== currentUser?.appUser._id && "hidden"
-            )}
-            disabled={isPending}
-            onClick={handleDelete}
-            size="icon-sm"
-            variant="ghost"
-          >
-            <Trash2Icon />
-            <span className="sr-only">{t("delete")}</span>
-          </Button>
-        </TooltipTrigger>
+        <TooltipTrigger
+          render={
+            <Button
+              className={cn(
+                comment.userId !== currentUser?.appUser._id && "hidden"
+              )}
+              disabled={isPending}
+              onClick={handleDelete}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <Trash2Icon />
+              <span className="sr-only">{t("delete")}</span>
+            </Button>
+          }
+        />
         <TooltipContent side="bottom">{t("delete")}</TooltipContent>
       </Tooltip>
     </div>

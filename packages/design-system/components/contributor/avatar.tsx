@@ -28,18 +28,20 @@ export function Avatar({ contributor, size = "md" }: Props) {
   return (
     <Drawer>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <DrawerTrigger className="cursor-pointer">
-            <Character
-              className={cn(
-                "size-16 shadow-sm",
-                size === "sm" && "size-14",
-                size === "lg" && "size-18"
-              )}
-              name={`${contributor.name} - ${contributor.username}`}
-            />
-          </DrawerTrigger>
-        </TooltipTrigger>
+        <TooltipTrigger
+          render={
+            <DrawerTrigger className="cursor-pointer">
+              <Character
+                className={cn(
+                  "size-16 shadow-sm",
+                  size === "sm" && "size-14",
+                  size === "lg" && "size-18"
+                )}
+                name={`${contributor.name} - ${contributor.username}`}
+              />
+            </DrawerTrigger>
+          }
+        />
         <TooltipContent>
           <p>{contributor.name}</p>
         </TooltipContent>

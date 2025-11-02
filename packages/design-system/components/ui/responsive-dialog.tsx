@@ -100,7 +100,8 @@ export function ResponsiveDialog({
         <div
           className={cn(
             "flex-1 overflow-y-auto border-y p-4",
-            !footer && "border-b-0"
+            !footer && "border-b-0",
+            !children && "hidden"
           )}
         >
           {children}

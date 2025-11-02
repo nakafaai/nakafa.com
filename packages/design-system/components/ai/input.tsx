@@ -291,7 +291,7 @@ export function PromptInputAttachment({
       ) : (
         <div className="flex size-full max-w-full cursor-pointer items-center justify-start gap-2 overflow-hidden px-2 text-muted-foreground">
           <PaperclipIcon className="size-4 shrink-0" />
-          <Tooltip delayDuration={400}>
+          <Tooltip>
             <TooltipTrigger className="min-w-0 flex-1">
               <h4 className="w-full truncate text-left font-medium text-sm">
                 {data.filename || "Unknown file"}

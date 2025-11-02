@@ -173,23 +173,25 @@ export default async function Layout(props: LayoutProps<"/[locale]">) {
           <OrganizationJsonLd />
           <WebsiteJsonLd locale={locale} />
         </head>
-        <body>
-          <AppProviders>
-            <DesignSystemProvider>
-              <SidebarProvider>
-                <AppSidebar />
-                <SidebarInset>
-                  <Header />
-                  <SearchCommand />
-                  <AiSheet />
-                  <div className="relative" data-pagefind-body>
-                    {children}
-                  </div>
-                </SidebarInset>
-              </SidebarProvider>
-              <Toaster />
-            </DesignSystemProvider>
-          </AppProviders>
+        <body className="relative">
+          <div className="isolate">
+            <AppProviders>
+              <DesignSystemProvider>
+                <SidebarProvider>
+                  <AppSidebar />
+                  <SidebarInset>
+                    <Header />
+                    <SearchCommand />
+                    <AiSheet />
+                    <div className="relative" data-pagefind-body>
+                      {children}
+                    </div>
+                  </SidebarInset>
+                </SidebarProvider>
+                <Toaster />
+              </DesignSystemProvider>
+            </AppProviders>
+          </div>
 
           <VercelAnalytics />
           <TailwindIndicator />

@@ -110,8 +110,8 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
-    startTransition(async () => {
-      await deleteChat({ chatId: chat._id });
+    startTransition(() => {
+      deleteChat({ chatId: chat._id });
     });
   }
 
@@ -120,6 +120,7 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
       <DropdownMenuTrigger asChild>
         <Button
           className="z-1 hover:bg-background hover:text-foreground hover:[&_svg]:text-foreground"
+          disabled={isPending}
           size="icon-sm"
           variant="ghost"
         >
