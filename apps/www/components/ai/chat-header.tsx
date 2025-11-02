@@ -32,6 +32,7 @@ import {
   Activity,
   type ComponentProps,
   type PropsWithChildren,
+  useEffect,
   useRef,
   useState,
   useTransition,
@@ -62,6 +63,13 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
   const [confirmShare, setConfirmShare] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [chatTitle, setChatTitle] = useState(chat.title);
+
+  useEffect(() => {
+    if (!chat.title) {
+      return;
+    }
+    setChatTitle(chat.title);
+  }, [chat.title]);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
