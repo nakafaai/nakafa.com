@@ -295,7 +295,7 @@
     "share-chat": "Bagikan obrolan",
     "share-chat-description": "Berhati-hati dalam membagikan link dengan orang-orang yang tidak dikenal.",
     "private": "Pribadi",
-    "private-description": "Obrolan hanya dapat dilihat oleh orang yang memiliki link.",
+    "private-description": "Obrolan hanya dapat dilihat oleh kamu.",
     "public": "Publik",
     "public-description": "Obrolan dapat dilihat oleh siapa saja.",
     "create-link": "Buat link",

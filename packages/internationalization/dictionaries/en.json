@@ -295,7 +295,7 @@
     "share-chat": "Share chat",
     "share-chat-description": "Be aware of sharing the link with unknown people.",
     "private": "Private",
-    "private-description": "Only people who have the link can view the chat.",
+    "private-description": "Only you can view the chat.",
     "public": "Public",
     "public-description": "Everyone can view the chat.",
     "create-link": "Create link",

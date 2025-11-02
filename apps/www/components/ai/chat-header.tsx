@@ -232,7 +232,6 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
             <Button
               disabled={isPending}
               onClick={() => handleUpdateVisibility("public")}
-              variant="secondary"
             >
               {isPending ? <SpinnerIcon /> : <LinkIcon />}
               {t("create-link")}
@@ -246,7 +245,6 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
                   position: "bottom-center",
                 });
               }}
-              variant="secondary"
             >
               <CopyIcon />
               {t("copy-link")}
