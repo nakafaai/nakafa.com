@@ -23,6 +23,7 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
@@ -76,10 +77,10 @@ export function AiSheet() {
   });
 
   return (
-    <Sheet defaultOpen={open} modal={false} onOpenChange={setOpen} open={open}>
+    <Sheet modal={false} onOpenChange={setOpen} open={open}>
       <SheetContent
         className={cn(
-          "max-w-none gap-0 transition-[width] duration-0 sm:max-w-none",
+          "max-w-none gap-0 sm:max-w-none",
           isResizing && "transition-none"
         )}
         closeButton={false}
@@ -136,6 +137,9 @@ export function AiSheet() {
               </Button>
             </div>
           </SheetTitle>
+          <SheetDescription className="sr-only">
+            Nina is a chatbot that can help you with your questions.
+          </SheetDescription>
         </SheetHeader>
 
         <Activity mode={activeChatId ? "hidden" : "visible"}>

@@ -188,10 +188,11 @@ export default async function Layout(props: LayoutProps<"/[locale]">) {
                     </div>
                   </SidebarInset>
                 </SidebarProvider>
-                <Toaster />
               </DesignSystemProvider>
             </AppProviders>
           </div>
+
+          <Toaster />
 
           <VercelAnalytics />
           <TailwindIndicator />

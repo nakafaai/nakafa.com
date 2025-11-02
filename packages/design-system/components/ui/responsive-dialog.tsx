@@ -57,10 +57,7 @@ export function ResponsiveDialog({
   if (isDesktop) {
     return (
       <Dialog onOpenChange={setOpen} open={open}>
-        <DialogContent
-          className={styleClassName?.dialog?.content}
-          onOpenAutoFocus={(e) => e.preventDefault()}
-        >
+        <DialogContent className={styleClassName?.dialog?.content}>
           <DialogHeader className={styleClassName?.dialog?.header}>
             <DialogTitle className={styleClassName?.dialog?.title}>
               {title}
@@ -87,7 +84,13 @@ export function ResponsiveDialog({
   return (
     <Drawer onOpenChange={setOpen} open={open}>
       <DrawerContent className={styleClassName?.drawer?.content}>
-        <DrawerHeader className={styleClassName?.drawer?.header}>
+        <DrawerHeader
+          className={cn(
+            "border-b",
+            !children && "border-b-0",
+            styleClassName?.drawer?.header
+          )}
+        >
           <DrawerTitle className={styleClassName?.drawer?.title}>
             {title}
           </DrawerTitle>
@@ -98,11 +101,7 @@ export function ResponsiveDialog({
           )}
         </DrawerHeader>
         <div
-          className={cn(
-            "flex-1 overflow-y-auto border-y p-4",
-            !footer && "border-b-0",
-            !children && "hidden"
-          )}
+          className={cn("flex-1 overflow-y-auto p-4", !children && "hidden")}
         >
           {children}
         </div>

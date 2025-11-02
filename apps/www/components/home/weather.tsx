@@ -74,13 +74,13 @@ export function Weather() {
       <WeatherCard>
         <WeatherCardHeader>
           <div className="flex flex-col gap-2">
-            <Skeleton className="h-6 w-16 bg-card-foreground/80" />
-            <Skeleton className="h-3 w-20 bg-card-foreground/80" />
+            <Skeleton className="h-6 w-16" />
+            <Skeleton className="h-3 w-20" />
           </div>
-          <Skeleton className="h-8 w-8 bg-card-foreground/80" />
+          <Skeleton className="h-8 w-8" />
         </WeatherCardHeader>
 
-        <Skeleton className="h-3 w-24 bg-card-foreground/80" />
+        <Skeleton className="h-3 w-24" />
       </WeatherCard>
     );
   }
