@@ -2,6 +2,7 @@
 
 import { useMediaQuery } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   Conversation,
   ConversationContent,
@@ -19,6 +20,14 @@ import {
 import { Message } from "@repo/design-system/components/ai/message";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
 import {
   Sheet,
@@ -34,8 +43,17 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import type { ChatStatus } from "ai";
-import { Authenticated, useMutation, useQuery } from "convex/react";
 import {
+  Authenticated,
+  Unauthenticated,
+  useMutation,
+  useQuery,
+} from "convex/react";
+import {
+  CheckIcon,
+  GlobeIcon,
+  HistoryIcon,
+  LockIcon,
   Maximize2Icon,
   Minimize2Icon,
   PlusIcon,
@@ -117,6 +135,7 @@ export function AiSheet() {
                   <span className="sr-only">New Chat</span>
                 </Button>
               </Activity>
+              <AiSheetHistory />
               <Button
                 onClick={() => {
                   setWidth(width === MAX_WIDTH ? MIN_WIDTH : MAX_WIDTH);
@@ -154,6 +173,9 @@ export function AiSheet() {
                 </CurrentChatProvider>
               )}
             </Authenticated>
+            <Unauthenticated>
+              <AiSheetNewChat />
+            </Unauthenticated>
           </ErrorBoundary>
         </Activity>
       </SheetContent>
@@ -230,6 +252,68 @@ const AiSheetNewChat = memo(() => {
   );
 });
 AiSheetNewChat.displayName = "AiSheetNewChat";
+
+const AiSheetHistory = memo(() => {
+  const user = useQuery(api.auth.getCurrentUser);
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="icon-sm" variant="ghost">
+          <HistoryIcon />
+          <span className="sr-only">History</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <Authenticated>
+        <AiSheetHistoryContent userId={user.appUser._id} />
+      </Authenticated>
+    </DropdownMenu>
+  );
+});
+AiSheetHistory.displayName = "AiSheetHistory";
+
+const AiSheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
+  const activeChatId = useAi((state) => state.activeChatId);
+  const setActiveChatId = useAi((state) => state.setActiveChatId);
+  const chats = useQuery(api.chats.queries.getChats, { userId });
+
+  if (!chats) {
+    return null;
+  }
+
+  return (
+    <DropdownMenuContent align="end">
+      <DropdownMenuGroup>
+        {chats.map((chat) => {
+          const isPrivate = chat.visibility === "private";
+          return (
+            <DropdownMenuItem
+              className="cursor-pointer"
+              key={chat._id}
+              onSelect={() => {
+                setActiveChatId(chat._id);
+              }}
+            >
+              {isPrivate ? <LockIcon /> : <GlobeIcon />}
+              <span className="max-w-[250px] truncate">{chat.title}</span>
+              <DropdownMenuShortcut>
+                <CheckIcon
+                  className={cn(
+                    activeChatId === chat._id ? "opacity-100" : "opacity-0"
+                  )}
+                />
+              </DropdownMenuShortcut>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuGroup>
+    </DropdownMenuContent>
+  );
+});
 
 const AiSheetMain = memo(() => {
   const chat = useCurrentChat((s) => s.chat);
