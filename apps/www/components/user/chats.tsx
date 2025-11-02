@@ -26,15 +26,15 @@ import { getLocale } from "@/lib/utils/date";
 
 export function UserChats({ userId }: { userId: Id<"users"> }) {
   const user = useQuery(api.auth.getCurrentUser);
-  if (!user) {
-    return null;
-  }
+
+  // Determine if viewing own profile or someone else's
+  const isOwnProfile = user?.appUser._id === userId;
 
   return (
     <UserChatsList
-      userId={user.appUser._id}
-      // If userId is not the current user, only show public chats
-      visibility={userId !== user.appUser._id ? "public" : undefined}
+      userId={userId}
+      // If viewing own profile, show all chats; otherwise only public ones
+      visibility={isOwnProfile ? undefined : "public"}
     />
   );
 }
