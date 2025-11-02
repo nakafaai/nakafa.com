@@ -4,7 +4,7 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { type PropsWithChildren, useMemo } from "react";
+import type { PropsWithChildren } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 type Props = {
@@ -29,10 +29,8 @@ export function CurrentChatProvider({
     chatId,
   });
 
-  const values = useMemo(() => ({ chat, messages }), [chat, messages]);
-
   return (
-    <CurrentChatContext.Provider value={values}>
+    <CurrentChatContext.Provider value={{ chat, messages }}>
       {children}
     </CurrentChatContext.Provider>
   );

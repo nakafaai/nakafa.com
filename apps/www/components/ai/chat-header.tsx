@@ -254,7 +254,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
         <div className="flex flex-col divide-y overflow-hidden rounded-lg border">
           {(["public", "private"] as const).map((visibility) => (
             <button
-              className="flex cursor-pointer items-start gap-4 bg-card p-4 text-card-foreground transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+              className="group flex cursor-pointer items-start gap-4 bg-card p-4 text-card-foreground transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
               disabled={isPending}
               key={visibility}
               onClick={() => handleUpdateVisibility(visibility)}
@@ -269,7 +269,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
                   )}
                   <span className="text-sm">{t(visibility)}</span>
                 </div>
-                <p className="text-start text-muted-foreground text-sm">
+                <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground/80">
                   {t(`${visibility}-description`)}
                 </p>
               </div>
