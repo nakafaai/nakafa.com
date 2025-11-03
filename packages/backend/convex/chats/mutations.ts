@@ -152,23 +152,24 @@ export const updateChatVisibility = mutation({
 });
 
 /**
- * Atomically upsert a message with parts.
- * If messageId provided, deletes from that message onwards before inserting (for regenerate).
+ * Atomically replace a message with parts.
+ * If identifier exists, deletes that message (and all subsequent messages) before inserting.
+ * This ensures one message per identifier, but creates a new _id each time.
  * Parts messageId is omitted - set internally after message creation.
  * Only the chat owner can add messages.
  */
-export const upsertMessageWithParts = mutation({
+export const replaceMessageWithParts = mutation({
   args: {
     message: tables.messages.validator,
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,
-        messageId: v.optional(v.id("messages")),
+        messageId: v.optional(v.id("messages")), // make it optional here to allow for upserting parts without a messageId
       })
     ),
-    messageId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const { message, parts } = args;
     // Authentication check
     const user = await safeGetAppUser(ctx);
     if (!user) {
@@ -179,11 +180,11 @@ export const upsertMessageWithParts = mutation({
     }
 
     // Authorization check - verify user owns the chat
-    const chat = await ctx.db.get(args.message.chatId);
+    const chat = await ctx.db.get(message.chatId);
     if (!chat) {
       throw new ConvexError({
         code: "CHAT_NOT_FOUND",
-        message: `Chat not found for chatId: ${args.message.chatId}`,
+        message: `Chat not found for chatId: ${message.chatId}`,
       });
     }
 
@@ -194,12 +195,10 @@ export const upsertMessageWithParts = mutation({
       });
     }
 
-    if (args.messageId) {
+    if (message.identifier) {
       const targetMessage = await ctx.db
         .query("messages")
-        .withIndex("identifier", (q) =>
-          q.eq("identifier", args.message.identifier)
-        )
+        .withIndex("identifier", (q) => q.eq("identifier", message.identifier))
         .unique();
 
       if (targetMessage) {
@@ -213,14 +212,14 @@ export const upsertMessageWithParts = mutation({
 
     // Create message
     const messageId = await ctx.db.insert("messages", {
-      chatId: args.message.chatId,
-      role: args.message.role,
-      identifier: args.message.identifier,
+      chatId: message.chatId,
+      role: message.role,
+      identifier: message.identifier,
     });
 
     // Insert parts with messageId
     const partIds: Id<"parts">[] = [];
-    for (const part of args.parts) {
+    for (const part of parts) {
       const partId = await ctx.db.insert("parts", {
         ...part,
         messageId,
@@ -242,12 +241,12 @@ export const createChatWithMessage = mutation({
     title: v.optional(v.string()),
     message: v.object({
       ...tables.messages.validator.fields,
-      chatId: v.optional(v.id("chats")),
+      chatId: v.optional(v.id("chats")), // make it optional here to allow for creating a chat with a message without a chatId
     }),
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,
-        messageId: v.optional(v.id("messages")),
+        messageId: v.optional(v.id("messages")), // make it optional here to allow for creating a chat with a message without a messageId
       })
     ),
   },

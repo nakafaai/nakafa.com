@@ -135,11 +135,11 @@ export async function POST(req: Request) {
     messageParts: message.parts,
   });
 
-  // Upsert user message with parts (supports regenerate if message.id exists)
+  // Replace user message with parts
   if (chatIdToUse) {
-    // Upsert message with parts for existing chat
+    // Replace message with parts for existing chat
     await fetchMutation(
-      convexApi.chats.mutations.upsertMessageWithParts,
+      convexApi.chats.mutations.replaceMessageWithParts,
       {
         message: {
           chatId: chatIdToUse,
@@ -147,7 +147,6 @@ export async function POST(req: Request) {
           identifier: message.id,
         },
         parts: dbParts,
-        messageId: message.id,
       },
       { token }
     );
@@ -228,9 +227,9 @@ export async function POST(req: Request) {
         );
       }
 
-      // Upsert assistant response with parts
+      // Replace assistant response with parts
       await fetchMutation(
-        convexApi.chats.mutations.upsertMessageWithParts,
+        convexApi.chats.mutations.replaceMessageWithParts,
         {
           message: {
             chatId: chatIdToUse,
@@ -240,7 +239,6 @@ export async function POST(req: Request) {
           parts: mapUIMessagePartsToDBParts({
             messageParts: responseMessage.parts,
           }),
-          messageId: responseMessage.id,
         },
         { token }
       );
