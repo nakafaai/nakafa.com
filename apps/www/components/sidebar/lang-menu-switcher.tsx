@@ -13,9 +13,16 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import GB from "country-flag-icons/react/3x2/GB";
+import ID from "country-flag-icons/react/3x2/ID";
 import { useParams } from "next/navigation";
 import { type Locale, useLocale } from "next-intl";
 import { useTransition } from "react";
+
+const flagMap = {
+  en: GB,
+  id: ID,
+};
 
 export function LangMenuSwitcher() {
   const router = useRouter();
@@ -59,24 +66,28 @@ export function LangMenuSwitcher() {
 
   return (
     <DropdownMenuContent align="end" side={isMobile ? "top" : "right"}>
-      {languages.map((language) => (
-        <DropdownMenuItem
-          className="cursor-pointer"
-          disabled={isPending}
-          key={language.value}
-          onFocus={() => handlePrefetch(language.value)}
-          onMouseEnter={() => handlePrefetch(language.value)}
-          onSelect={() => handleChangeLocale(language.value)}
-        >
-          <span className="truncate">{language.label}</span>
-          <IconCircleFilled
-            className={cn(
-              "ml-auto size-3 text-primary opacity-0 transition-opacity",
-              currentLocale === language.value && "opacity-100"
-            )}
-          />
-        </DropdownMenuItem>
-      ))}
+      {languages.map((language) => {
+        const Flag = flagMap[language.value];
+        return (
+          <DropdownMenuItem
+            className="cursor-pointer"
+            disabled={isPending}
+            key={language.value}
+            onFocus={() => handlePrefetch(language.value)}
+            onMouseEnter={() => handlePrefetch(language.value)}
+            onSelect={() => handleChangeLocale(language.value)}
+          >
+            <Flag className="size-4 shrink-0" />
+            <span className="truncate">{language.label}</span>
+            <IconCircleFilled
+              className={cn(
+                "ml-auto size-3 text-primary opacity-0 transition-opacity",
+                currentLocale === language.value && "opacity-100"
+              )}
+            />
+          </DropdownMenuItem>
+        );
+      })}
     </DropdownMenuContent>
   );
 }
