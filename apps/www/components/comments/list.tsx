@@ -10,6 +10,7 @@ import {
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import {
   Tooltip,
@@ -18,14 +19,16 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { formatDistanceToNow } from "date-fns";
 import {
   MessageCircleIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
   Trash2Icon,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 import { CommentsAdd } from "./add";
 
@@ -95,7 +98,9 @@ function CommentMain({
   onReplyClose: () => void;
 }) {
   const t = useTranslations("Common");
+  const locale = useLocale();
 
+  const userId = comment.user?.appUser._id;
   const userName = comment.user?.authUser.name ?? t("anonymous");
   const userImage = comment.user?.authUser.image ?? "";
 
@@ -107,10 +112,32 @@ function CommentMain({
           {getInitialName(userName)}
         </AvatarFallback>
       </Avatar>
-      <div className="grid w-full gap-2">
+      <div className="grid gap-2">
         <div className="grid gap-1">
-          <span className="truncate font-medium text-sm">{userName}</span>
-          <Response id={comment._id}>{comment.text}</Response>
+          <div className="flex items-center gap-2">
+            {userId ? (
+              <NavigationLink
+                className="max-w-36 truncate font-medium text-sm transition-colors ease-out hover:text-primary"
+                href={`/user/${userId}`}
+                target="_blank"
+                title={userName}
+              >
+                {userName}
+              </NavigationLink>
+            ) : (
+              <span className="truncate font-medium text-sm">{userName}</span>
+            )}
+
+            <time className="shrink-0 text-muted-foreground text-sm tracking-tight">
+              {formatDistanceToNow(comment._creationTime, {
+                locale: getLocale(locale),
+                addSuffix: true,
+              })}
+            </time>
+          </div>
+          <div className="wrap-break-word min-w-0">
+            <Response id={comment._id}>{comment.text}</Response>
+          </div>
         </div>
 
         <CommentFooter
