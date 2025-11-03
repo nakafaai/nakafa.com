@@ -16,7 +16,7 @@ import {
 import { v } from "convex/values";
 import { components, internal } from "./_generated/api";
 import type { DataModel, Id } from "./_generated/dataModel";
-import { mutation, type QueryCtx, query } from "./_generated/server";
+import { type QueryCtx, query } from "./_generated/server";
 import authSchema from "./betterAuth/schema";
 import { polarClient, products } from "./utils/polar";
 
@@ -58,7 +58,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 export const createAuth = (
   ctx: GenericCtx<DataModel>,
   { optionsOnly } = { optionsOnly: false }
-): ReturnType<typeof betterAuth> => {
+) => {
   const authConfig = {
     baseURL: siteUrl,
     logger: {
@@ -194,15 +194,6 @@ export const getCurrentUser = query({
 export const getUserById = query({
   args: { userId: v.id("users") },
   handler: (ctx, args) => getAnyAppUserById(ctx, args.userId),
-});
-
-export const updateName = mutation({
-  args: { authId: v.id("user"), name: v.string() },
-  handler: (ctx, args) =>
-    ctx.runMutation(components.betterAuth.auth.updateName, {
-      authId: args.authId,
-      name: args.name,
-    }),
 });
 
 export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();

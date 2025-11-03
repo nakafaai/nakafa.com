@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { api } from "@repo/backend/convex/_generated/api";
 import type { AppUser } from "@repo/backend/convex/auth";
-import { api } from "@repo/backend/convex/betterAuth/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Form,
@@ -32,7 +32,7 @@ type FormSchema = z.infer<typeof formSchema>;
 export function UserSettingsName({ user }: { user: AppUser }) {
   const t = useTranslations("Auth");
 
-  const updateName = useMutation(api.auth.updateName);
+  const updateName = useMutation(api.users.mutations.updateName);
 
   const [isPending, startTransition] = useTransition();
 
@@ -47,7 +47,6 @@ export function UserSettingsName({ user }: { user: AppUser }) {
   const onSubmit = (values: FormSchema) => {
     startTransition(async () => {
       await updateName({
-        authId: user.authUser._id,
         name: values.name,
       });
     });

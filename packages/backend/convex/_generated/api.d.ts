@@ -25,6 +25,7 @@ import type * as migrations from "../migrations.js";
 import type * as polyfills from "../polyfills.js";
 import type * as subscriptions_mutations from "../subscriptions/mutations.js";
 import type * as subscriptions_utils from "../subscriptions/utils.js";
+import type * as users_mutations from "../users/mutations.js";
 import type * as users_queries from "../users/queries.js";
 import type * as utils_helper from "../utils/helper.js";
 import type * as utils_polar from "../utils/polar.js";
@@ -62,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   polyfills: typeof polyfills;
   "subscriptions/mutations": typeof subscriptions_mutations;
   "subscriptions/utils": typeof subscriptions_utils;
+  "users/mutations": typeof users_mutations;
   "users/queries": typeof users_queries;
   "utils/helper": typeof utils_helper;
   "utils/polar": typeof utils_polar;
