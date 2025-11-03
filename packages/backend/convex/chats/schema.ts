@@ -98,96 +98,78 @@ export const tables = {
     ),
     toolErrorText: v.optional(v.string()),
 
-    toolGetArticlesInput: v.optional(
-      v.object({
-        locale: v.optional(v.union(v.literal("en"), v.literal("id"))),
-        category: v.optional(v.literal("politics")),
-      })
+    toolGetArticlesInputLocale: v.optional(
+      v.union(v.literal("en"), v.literal("id"))
     ),
+    toolGetArticlesInputCategory: v.optional(v.literal("politics")),
     toolGetArticlesOutput: v.optional(v.string()),
 
-    toolGetSubjectsInput: v.optional(
-      v.object({
-        locale: v.optional(v.union(v.literal("en"), v.literal("id"))),
-        category: v.optional(
-          v.union(
-            v.literal("elementary-school"),
-            v.literal("middle-school"),
-            v.literal("high-school"),
-            v.literal("university")
-          )
-        ),
-        grade: v.optional(
-          v.union(
-            v.literal("1"),
-            v.literal("2"),
-            v.literal("3"),
-            v.literal("4"),
-            v.literal("5"),
-            v.literal("6"),
-            v.literal("7"),
-            v.literal("8"),
-            v.literal("9"),
-            v.literal("10"),
-            v.literal("11"),
-            v.literal("12"),
-            v.literal("bachelor"),
-            v.literal("master"),
-            v.literal("phd")
-          )
-        ),
-        material: v.optional(
-          v.union(
-            v.literal("mathematics"),
-            v.literal("physics"),
-            v.literal("chemistry"),
-            v.literal("biology"),
-            v.literal("geography"),
-            v.literal("economy"),
-            v.literal("history"),
-            v.literal("informatics"),
-            v.literal("geospatial"),
-            v.literal("sociology"),
-            v.literal("ai-ds"),
-            v.literal("game-engineering"),
-            v.literal("computer-science"),
-            v.literal("technology-electro-medical"),
-            v.literal("political-science"),
-            v.literal("informatics-engineering"),
-            v.literal("international-relations")
-          )
-        ),
-      })
+    toolGetSubjectsInputLocale: v.optional(
+      v.union(v.literal("en"), v.literal("id"))
+    ),
+    toolGetSubjectsInputCategory: v.optional(
+      v.union(
+        v.literal("elementary-school"),
+        v.literal("middle-school"),
+        v.literal("high-school"),
+        v.literal("university")
+      )
+    ),
+    toolGetSubjectsInputGrade: v.optional(
+      v.union(
+        v.literal("1"),
+        v.literal("2"),
+        v.literal("3"),
+        v.literal("4"),
+        v.literal("5"),
+        v.literal("6"),
+        v.literal("7"),
+        v.literal("8"),
+        v.literal("9"),
+        v.literal("10"),
+        v.literal("11"),
+        v.literal("12"),
+        v.literal("bachelor"),
+        v.literal("master"),
+        v.literal("phd")
+      )
+    ),
+    toolGetSubjectsInputMaterial: v.optional(
+      v.union(
+        v.literal("mathematics"),
+        v.literal("physics"),
+        v.literal("chemistry"),
+        v.literal("biology"),
+        v.literal("geography"),
+        v.literal("economy"),
+        v.literal("history"),
+        v.literal("informatics"),
+        v.literal("geospatial"),
+        v.literal("sociology"),
+        v.literal("ai-ds"),
+        v.literal("game-engineering"),
+        v.literal("computer-science"),
+        v.literal("technology-electro-medical"),
+        v.literal("political-science"),
+        v.literal("informatics-engineering"),
+        v.literal("international-relations")
+      )
     ),
     toolGetSubjectsOutput: v.optional(v.string()),
 
-    toolGetContentInput: v.optional(
-      v.object({
-        locale: v.optional(v.union(v.literal("en"), v.literal("id"))),
-        slug: v.optional(v.string()),
-      })
+    toolGetContentInputLocale: v.optional(
+      v.union(v.literal("en"), v.literal("id"))
     ),
+    toolGetContentInputSlug: v.optional(v.string()),
     toolGetContentOutput: v.optional(v.string()),
 
-    toolCalculatorInput: v.optional(
-      v.object({
-        expression: v.optional(v.string()),
-      })
-    ),
+    toolCalculatorInputExpression: v.optional(v.string()),
     toolCalculatorOutput: v.optional(v.string()),
 
-    toolScrapeUrlInput: v.optional(
-      v.object({
-        urlToCrawl: v.optional(v.string()),
-      })
-    ),
+    toolScrapeUrlInputUrlToCrawl: v.optional(v.string()),
     toolScrapeUrlOutput: v.optional(v.string()),
 
-    toolWebSearchInput: v.optional(
-      v.object({
-        query: v.optional(v.string()),
-      })
-    ),
+    toolWebSearchInputQuery: v.optional(v.string()),
     toolWebSearchOutput: v.optional(v.string()),
 
     // Data part fields

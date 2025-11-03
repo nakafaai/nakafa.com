@@ -16,6 +16,8 @@ import {
 const apiKey = keys().OPENWEATHER_API_KEY;
 const GEO_BASE_URL = "https://api.openweathermap.org/geo/1.0";
 const WEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5";
+export const DEFAULT_LATITUDE = "-6.2088";
+export const DEFAULT_LONGITUDE = "106.8456";
 
 const weatherLogger = createServiceLogger("weather");
 

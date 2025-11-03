@@ -8,6 +8,7 @@ import {
 } from "@repo/ai/lib/providers";
 import { generateTitle } from "@repo/ai/lib/title";
 import { cleanSlug, compressMessages } from "@repo/ai/lib/utils";
+import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from "@repo/ai/lib/weather";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
 import { tools } from "@repo/ai/tools";
@@ -109,8 +110,8 @@ export async function POST(req: Request) {
     },
     currentDate,
     userLocation: {
-      latitude: latitude ?? "Unknown",
-      longitude: longitude ?? "Unknown",
+      latitude: latitude ?? DEFAULT_LATITUDE,
+      longitude: longitude ?? DEFAULT_LONGITUDE,
       city: city ?? "Unknown",
       countryRegion: countryRegion ?? "Unknown",
       country: country ?? "Unknown",
@@ -256,8 +257,8 @@ export async function POST(req: Request) {
           },
           currentDate,
           userLocation: {
-            latitude: latitude ?? "Unknown",
-            longitude: longitude ?? "Unknown",
+            latitude: latitude ?? DEFAULT_LATITUDE,
+            longitude: longitude ?? DEFAULT_LONGITUDE,
             city: city ?? "Unknown",
             countryRegion: countryRegion ?? "Unknown",
             country: country ?? "Unknown",

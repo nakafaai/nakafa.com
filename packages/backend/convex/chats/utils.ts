@@ -74,7 +74,8 @@ export function mapUIMessagePartsToDBParts({
           type: part.type,
           toolToolCallId: part.toolCallId,
           toolState: part.state,
-          toolGetArticlesInput: part.input,
+          toolGetArticlesInputLocale: part.input?.locale,
+          toolGetArticlesInputCategory: part.input?.category,
           toolGetArticlesOutput: part.output,
           toolErrorText: part.errorText,
         };
@@ -84,7 +85,10 @@ export function mapUIMessagePartsToDBParts({
           type: part.type,
           toolToolCallId: part.toolCallId,
           toolState: part.state,
-          toolGetSubjectsInput: part.input,
+          toolGetSubjectsInputLocale: part.input?.locale,
+          toolGetSubjectsInputCategory: part.input?.category,
+          toolGetSubjectsInputGrade: part.input?.grade,
+          toolGetSubjectsInputMaterial: part.input?.material,
           toolGetSubjectsOutput: part.output,
           toolErrorText: part.errorText,
         };
@@ -94,7 +98,8 @@ export function mapUIMessagePartsToDBParts({
           type: part.type,
           toolToolCallId: part.toolCallId,
           toolState: part.state,
-          toolGetContentInput: part.input,
+          toolGetContentInputLocale: part.input?.locale,
+          toolGetContentInputSlug: part.input?.slug,
           toolGetContentOutput: part.output,
           toolErrorText: part.errorText,
         };
@@ -104,7 +109,7 @@ export function mapUIMessagePartsToDBParts({
           type: part.type,
           toolToolCallId: part.toolCallId,
           toolState: part.state,
-          toolCalculatorInput: part.input,
+          toolCalculatorInputExpression: part.input?.expression,
           toolCalculatorOutput: part.output,
           toolErrorText: part.errorText,
         };
@@ -114,7 +119,7 @@ export function mapUIMessagePartsToDBParts({
           type: part.type,
           toolToolCallId: part.toolCallId,
           toolState: part.state,
-          toolScrapeUrlInput: part.input,
+          toolScrapeUrlInputUrlToCrawl: part.input?.urlToCrawl,
           toolScrapeUrlOutput: part.output,
           toolErrorText: part.errorText,
         };
@@ -124,7 +129,7 @@ export function mapUIMessagePartsToDBParts({
           type: part.type,
           toolToolCallId: part.toolCallId,
           toolState: part.state,
-          toolWebSearchInput: part.input,
+          toolWebSearchInputQuery: part.input?.query,
           toolWebSearchOutput: part.output,
           toolErrorText: part.errorText,
         };
@@ -336,6 +341,10 @@ export function mapDBPartToUIMessagePart({
       if (!part.toolState) {
         throw new Error("tool_state is undefined");
       }
+      const reconstructedInput = {
+        locale: part.toolGetArticlesInputLocale,
+        category: part.toolGetArticlesInputCategory,
+      };
       switch (part.toolState) {
         case "input-streaming":
           return {
@@ -346,11 +355,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireField({
-              value: part.toolGetArticlesInput,
-              fieldName: "toolGetArticlesInput",
-              partType: part.type,
-            }),
+            input: reconstructedInput,
           };
         case "input-available":
           return {
@@ -361,13 +366,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolGetArticlesInput,
-                fieldName: "toolGetArticlesInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
           };
         case "output-available":
           return {
@@ -378,13 +377,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolGetArticlesInput,
-                fieldName: "toolGetArticlesInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
             output: requireField({
               value: part.toolGetArticlesOutput,
               fieldName: "toolGetArticlesOutput",
@@ -400,13 +393,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolGetArticlesInput,
-                fieldName: "toolGetArticlesInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
             errorText: requireField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
@@ -421,6 +408,12 @@ export function mapDBPartToUIMessagePart({
       if (!part.toolState) {
         throw new Error("tool_state is undefined");
       }
+      const reconstructedInput = {
+        locale: part.toolGetSubjectsInputLocale,
+        category: part.toolGetSubjectsInputCategory,
+        grade: part.toolGetSubjectsInputGrade,
+        material: part.toolGetSubjectsInputMaterial,
+      };
       switch (part.toolState) {
         case "input-streaming":
           return {
@@ -431,11 +424,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireField({
-              value: part.toolGetSubjectsInput,
-              fieldName: "toolGetSubjectsInput",
-              partType: part.type,
-            }),
+            input: reconstructedInput,
           };
         case "input-available":
           return {
@@ -446,13 +435,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolGetSubjectsInput,
-                fieldName: "toolGetSubjectsInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
           };
         case "output-available":
           return {
@@ -463,13 +446,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolGetSubjectsInput,
-                fieldName: "toolGetSubjectsInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
             output: requireField({
               value: part.toolGetSubjectsOutput,
               fieldName: "toolGetSubjectsOutput",
@@ -485,13 +462,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolGetSubjectsInput,
-                fieldName: "toolGetSubjectsInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
             errorText: requireField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
@@ -506,6 +477,10 @@ export function mapDBPartToUIMessagePart({
       if (!part.toolState) {
         throw new Error("tool_state is undefined");
       }
+      const reconstructedInput = {
+        locale: part.toolGetContentInputLocale,
+        slug: part.toolGetContentInputSlug,
+      };
       switch (part.toolState) {
         case "input-streaming":
           return {
@@ -516,11 +491,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireField({
-              value: part.toolGetContentInput,
-              fieldName: "toolGetContentInput",
-              partType: part.type,
-            }),
+            input: reconstructedInput,
           };
         case "input-available":
           return {
@@ -531,13 +502,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolGetContentInput,
-                fieldName: "toolGetContentInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
           };
         case "output-available":
           return {
@@ -548,13 +513,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolGetContentInput,
-                fieldName: "toolGetContentInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
             output: requireField({
               value: part.toolGetContentOutput,
               fieldName: "toolGetContentOutput",
@@ -570,13 +529,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolGetContentInput,
-                fieldName: "toolGetContentInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
             errorText: requireField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
@@ -591,6 +544,9 @@ export function mapDBPartToUIMessagePart({
       if (!part.toolState) {
         throw new Error("tool_state is undefined");
       }
+      const reconstructedInput = {
+        expression: part.toolCalculatorInputExpression,
+      };
       switch (part.toolState) {
         case "input-streaming":
           return {
@@ -601,11 +557,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireField({
-              value: part.toolCalculatorInput,
-              fieldName: "toolCalculatorInput",
-              partType: part.type,
-            }),
+            input: reconstructedInput,
           };
         case "input-available":
           return {
@@ -616,13 +568,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolCalculatorInput,
-                fieldName: "toolCalculatorInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
           };
         case "output-available":
           return {
@@ -633,13 +579,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolCalculatorInput,
-                fieldName: "toolCalculatorInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
             output: requireField({
               value: part.toolCalculatorOutput,
               fieldName: "toolCalculatorOutput",
@@ -655,13 +595,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolCalculatorInput,
-                fieldName: "toolCalculatorInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
             errorText: requireField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
@@ -676,6 +610,9 @@ export function mapDBPartToUIMessagePart({
       if (!part.toolState) {
         throw new Error("tool_state is undefined");
       }
+      const reconstructedInput = {
+        urlToCrawl: part.toolScrapeUrlInputUrlToCrawl,
+      };
       switch (part.toolState) {
         case "input-streaming":
           return {
@@ -686,11 +623,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireField({
-              value: part.toolScrapeUrlInput,
-              fieldName: "toolScrapeUrlInput",
-              partType: part.type,
-            }),
+            input: reconstructedInput,
           };
         case "input-available":
           return {
@@ -701,13 +634,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolScrapeUrlInput,
-                fieldName: "toolScrapeUrlInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
           };
         case "output-available":
           return {
@@ -718,13 +645,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolScrapeUrlInput,
-                fieldName: "toolScrapeUrlInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
             output: requireField({
               value: part.toolScrapeUrlOutput,
               fieldName: "toolScrapeUrlOutput",
@@ -740,13 +661,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolScrapeUrlInput,
-                fieldName: "toolScrapeUrlInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
             errorText: requireField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
@@ -761,6 +676,9 @@ export function mapDBPartToUIMessagePart({
       if (!part.toolState) {
         throw new Error("tool_state is undefined");
       }
+      const reconstructedInput = {
+        query: part.toolWebSearchInputQuery,
+      };
       switch (part.toolState) {
         case "input-streaming":
           return {
@@ -771,11 +689,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireField({
-              value: part.toolWebSearchInput,
-              fieldName: "toolWebSearchInput",
-              partType: part.type,
-            }),
+            input: reconstructedInput,
           };
         case "input-available":
           return {
@@ -786,13 +700,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolWebSearchInput,
-                fieldName: "toolWebSearchInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
           };
         case "output-available":
           return {
@@ -803,13 +711,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolWebSearchInput,
-                fieldName: "toolWebSearchInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
             output: requireField({
               value: part.toolWebSearchOutput,
               fieldName: "toolWebSearchOutput",
@@ -825,13 +727,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: buildRequiredObject(
-              requireField({
-                value: part.toolWebSearchInput,
-                fieldName: "toolWebSearchInput",
-                partType: part.type,
-              })
-            ),
+            input: buildRequiredObject(reconstructedInput),
             errorText: requireField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",

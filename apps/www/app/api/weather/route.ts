@@ -1,4 +1,8 @@
-import { getWeather } from "@repo/ai/lib/weather";
+import {
+  DEFAULT_LATITUDE,
+  DEFAULT_LONGITUDE,
+  getWeather,
+} from "@repo/ai/lib/weather";
 import {
   createServiceLogger,
   createTimer,
@@ -7,9 +11,6 @@ import {
 } from "@repo/utilities/logging";
 import { geolocation } from "@vercel/functions";
 import { NextResponse } from "next/server";
-
-const DEFAULT_LATITUDE = "-6.2088";
-const DEFAULT_LONGITUDE = "106.8456";
 
 const apiLogger = createServiceLogger("weather-api");
 
