@@ -281,7 +281,7 @@ const AiSheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const chats = useQuery(api.chats.queries.getChats, { userId });
 
-  if (!chats) {
+  if (!chats || chats.length === 0) {
     return null;
   }
 
