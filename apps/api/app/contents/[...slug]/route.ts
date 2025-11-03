@@ -4,11 +4,7 @@ import {
   getNestedSlugs,
 } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
-import {
-  createServiceLogger,
-  createTimer,
-  logError,
-} from "@repo/utilities/logging";
+import { createServiceLogger, logError } from "@repo/utilities/logging";
 import { NextResponse } from "next/server";
 
 export const revalidate = false;
@@ -63,42 +59,21 @@ export async function GET(
     basePath = slug.slice(1).join("/");
   }
 
-  const requestContext = {
-    locale,
-    basePath: basePath || "/",
-    slugLength: slug.length,
-  };
-
-  logger.info(requestContext, "Fetching content");
-
-  const endTimer = createTimer(logger, "get-contents", requestContext);
-
   try {
     const content = await getContents({
       locale,
       basePath,
     });
 
-    const duration = endTimer();
-
-    logger.info(
-      {
-        ...requestContext,
-        duration,
-        hasContent: !!content,
-      },
-      "Content fetched successfully"
-    );
-
     return NextResponse.json(content);
   } catch (error) {
-    endTimer();
-
     logError(
       logger,
       error instanceof Error ? error : new Error(String(error)),
       {
-        ...requestContext,
+        locale,
+        basePath: basePath || "/",
+        slugLength: slug.length,
         message: "Failed to fetch content",
       }
     );

@@ -1,7 +1,6 @@
 import { getSurah } from "@repo/contents/_lib/quran";
 import {
   createServiceLogger,
-  createTimer,
   logError,
 } from "@repo/utilities/logging";
 import { NextResponse } from "next/server";
@@ -24,37 +23,17 @@ export async function GET(
   const { surah } = await params;
 
   const surahNumber = Number.parseInt(surah, 10);
-  const requestContext = {
-    surah: surahNumber,
-  };
-
-  logger.info(requestContext, "Fetching surah");
-
-  const endTimer = createTimer(logger, "get-surah", requestContext);
 
   try {
     const surahData = getSurah(surahNumber);
 
-    const duration = endTimer();
-
-    logger.info(
-      {
-        ...requestContext,
-        duration,
-        hasSurahData: !!surahData,
-      },
-      "Surah fetched successfully"
-    );
-
     return NextResponse.json(surahData);
   } catch (error) {
-    endTimer();
-
     logError(
       logger,
       error instanceof Error ? error : new Error(String(error)),
       {
-        ...requestContext,
+        surah: surahNumber,
         message: "Failed to fetch surah",
       }
     );
