@@ -1,7 +1,14 @@
 import { getSurah } from "@repo/contents/_lib/quran";
+import {
+  createServiceLogger,
+  createTimer,
+  logError,
+} from "@repo/utilities/logging";
 import { NextResponse } from "next/server";
 
 export const revalidate = false;
+
+const logger = createServiceLogger("api-quran");
 
 export function generateStaticParams() {
   // surah 1-114
@@ -16,7 +23,45 @@ export async function GET(
 ) {
   const { surah } = await params;
 
-  const surahData = getSurah(Number.parseInt(surah, 10));
+  const surahNumber = Number.parseInt(surah, 10);
+  const requestContext = {
+    surah: surahNumber,
+  };
 
-  return NextResponse.json(surahData);
+  logger.info(requestContext, "Fetching surah");
+
+  const endTimer = createTimer(logger, "get-surah", requestContext);
+
+  try {
+    const surahData = getSurah(surahNumber);
+
+    const duration = endTimer();
+
+    logger.info(
+      {
+        ...requestContext,
+        duration,
+        hasSurahData: !!surahData,
+      },
+      "Surah fetched successfully"
+    );
+
+    return NextResponse.json(surahData);
+  } catch (error) {
+    endTimer();
+
+    logError(
+      logger,
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        ...requestContext,
+        message: "Failed to fetch surah",
+      }
+    );
+
+    return NextResponse.json(
+      { error: "Failed to fetch surah" },
+      { status: 500 }
+    );
+  }
 }

@@ -4,9 +4,16 @@ import {
   getNestedSlugs,
 } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
+import {
+  createServiceLogger,
+  createTimer,
+  logError,
+} from "@repo/utilities/logging";
 import { NextResponse } from "next/server";
 
 export const revalidate = false;
+
+const logger = createServiceLogger("api-contents");
 
 export function generateStaticParams() {
   // Top level directories in contents
@@ -56,10 +63,49 @@ export async function GET(
     basePath = slug.slice(1).join("/");
   }
 
-  const content = await getContents({
+  const requestContext = {
     locale,
-    basePath,
-  });
+    basePath: basePath || "/",
+    slugLength: slug.length,
+  };
 
-  return NextResponse.json(content);
+  logger.info(requestContext, "Fetching content");
+
+  const endTimer = createTimer(logger, "get-contents", requestContext);
+
+  try {
+    const content = await getContents({
+      locale,
+      basePath,
+    });
+
+    const duration = endTimer();
+
+    logger.info(
+      {
+        ...requestContext,
+        duration,
+        hasContent: !!content,
+      },
+      "Content fetched successfully"
+    );
+
+    return NextResponse.json(content);
+  } catch (error) {
+    endTimer();
+
+    logError(
+      logger,
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        ...requestContext,
+        message: "Failed to fetch content",
+      }
+    );
+
+    return NextResponse.json(
+      { error: "Failed to fetch content" },
+      { status: 500 }
+    );
+  }
 }
