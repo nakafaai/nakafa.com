@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { api } from "@repo/backend/convex/_generated/api";
 import type { AppUser } from "@repo/backend/convex/auth";
+import { api } from "@repo/backend/convex/betterAuth/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Form,
@@ -11,8 +11,10 @@ import {
   FormItem,
   FormLabel,
 } from "@repo/design-system/components/ui/form";
+import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { useMutation } from "convex/react";
+import { SaveIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -30,7 +32,7 @@ type FormSchema = z.infer<typeof formSchema>;
 export function UserSettingsName({ user }: { user: AppUser }) {
   const t = useTranslations("Auth");
 
-  const updateName = useMutation(api.betterAuth.auth.updateName);
+  const updateName = useMutation(api.auth.updateName);
 
   const [isPending, startTransition] = useTransition();
 
@@ -66,6 +68,7 @@ export function UserSettingsName({ user }: { user: AppUser }) {
                 size="sm"
                 type="submit"
               >
+                {isPending ? <SpinnerIcon /> : <SaveIcon />}
                 {t("save")}
               </Button>
             </div>

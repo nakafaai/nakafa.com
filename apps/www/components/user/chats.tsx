@@ -18,7 +18,7 @@ import {
   EllipsisIcon,
   GlobeIcon,
   LockIcon,
-  TrashIcon,
+  Trash2Icon,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -135,7 +135,7 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
           onSelect={handleDelete}
           variant="destructive"
         >
-          <TrashIcon className="size-4" />
+          <Trash2Icon className="size-4" />
           {t("delete")}
         </DropdownMenuItem>
       </DropdownMenuContent>

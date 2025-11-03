@@ -44,7 +44,7 @@ export const Task = ({
 }: TaskProps) => (
   <Collapsible
     className={cn(
-      "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 data-[state=closed]:animate-out data-[state=open]:animate-in",
+      "data-[open=false]:fade-out-0 data-[open=false]:slide-out-to-top-2 data-open:slide-in-from-top-2 data-[open=false]:animate-out data-open:animate-in",
       className
     )}
     defaultOpen={defaultOpen}
@@ -64,17 +64,26 @@ export const TaskTrigger = ({
   icon,
   ...props
 }: TaskTriggerProps) => (
-  <CollapsibleTrigger asChild className={cn("group", className)} {...props}>
-    {children ?? (
-      <div className="flex cursor-pointer items-center gap-2 text-muted-foreground hover:text-foreground [&_svg]:shrink-0">
-        {icon ?? <BlocksIcon className="size-4" />}
-        <p className="line-clamp-1 text-sm" title={title}>
-          {title}
-        </p>
-        <ChevronDownIcon className="size-4 transition-transform group-data-[state=open]:rotate-180" />
-      </div>
-    )}
-  </CollapsibleTrigger>
+  <CollapsibleTrigger
+    className={cn("group", className)}
+    {...props}
+    render={
+      children
+        ? (triggerProps) => <div {...triggerProps}>{children}</div>
+        : (triggerProps) => (
+            <div
+              {...triggerProps}
+              className="flex cursor-pointer items-center gap-2 text-muted-foreground hover:text-foreground [&_svg]:shrink-0"
+            >
+              {icon ?? <BlocksIcon className="size-4" />}
+              <p className="line-clamp-1 text-sm" title={title}>
+                {title}
+              </p>
+              <ChevronDownIcon className="size-4 transition-transform group-data-panel-open:rotate-180" />
+            </div>
+          )
+    }
+  />
 );
 
 export type TaskContentProps = ComponentProps<typeof CollapsibleContent>;
@@ -86,7 +95,7 @@ export const TaskContent = ({
 }: TaskContentProps) => (
   <CollapsibleContent
     className={cn(
-      "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
+      "data-[open=false]:fade-out-0 data-[open=false]:slide-out-to-top-2 data-open:slide-in-from-top-2 text-popover-foreground outline-none data-[open=false]:animate-out data-open:animate-in",
       className
     )}
     {...props}

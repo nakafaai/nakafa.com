@@ -96,7 +96,7 @@ function createOutput({ output }: { output: GetSubjectsOutput }): string {
           </subject>
         `
           )
-          .join("")}
+          .join("\n")}
       </subjects>
     </getSubjectsOutput>
   `);

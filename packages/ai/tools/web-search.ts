@@ -146,7 +146,7 @@ function createOutput({ output }: { output: WebSearchOutput }): string {
           </source>
         `
           )
-          .join("")}
+          .join("\n")}
       </sources>
       <error>${output.error ?? ""}</error>
     </webSearchOutput>

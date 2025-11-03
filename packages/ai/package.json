@@ -11,7 +11,7 @@
     "@ai-sdk/gateway": "^2.0.5",
     "@ai-sdk/google": "^2.0.26",
     "@ai-sdk/google-vertex": "^3.0.56",
-    "@ai-sdk/openai": "^2.0.59",
+    "@ai-sdk/openai": "^2.0.60",
     "@ai-sdk/react": "^2.0.86",
     "@mendable/firecrawl-js": "^4.4.1",
     "@t3-oss/env-nextjs": "^0.13.8",
@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.9.2",
+    "@types/node": "24.10.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "^19.2.2"
   }

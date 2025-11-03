@@ -1743,6 +1743,25 @@ export type Mounts = {
     >;
   };
   auth: {
+    getUserByEmail: FunctionReference<
+      "query",
+      "public",
+      { email: string },
+      null | {
+        _creationTime: number;
+        _id: string;
+        createdAt: number;
+        displayUsername?: null | string;
+        email: string;
+        emailVerified: boolean;
+        image?: null | string;
+        isAnonymous?: null | boolean;
+        name: string;
+        updatedAt: number;
+        userId?: null | string;
+        username?: null | string;
+      }
+    >;
     setUserId: FunctionReference<
       "mutation",
       "public",

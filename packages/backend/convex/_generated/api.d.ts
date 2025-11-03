@@ -9,11 +9,6 @@
  */
 
 import type * as auth from "../auth.js";
-import type * as betterAuth__generated_api from "../betterAuth/_generated/api.js";
-import type * as betterAuth__generated_server from "../betterAuth/_generated/server.js";
-import type * as betterAuth_adapter from "../betterAuth/adapter.js";
-import type * as betterAuth_auth from "../betterAuth/auth.js";
-import type * as betterAuth_generatedSchema from "../betterAuth/generatedSchema.js";
 import type * as chats_mutations from "../chats/mutations.js";
 import type * as chats_queries from "../chats/queries.js";
 import type * as chats_utils from "../chats/utils.js";
@@ -51,11 +46,6 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
-  "betterAuth/_generated/api": typeof betterAuth__generated_api;
-  "betterAuth/_generated/server": typeof betterAuth__generated_server;
-  "betterAuth/adapter": typeof betterAuth_adapter;
-  "betterAuth/auth": typeof betterAuth_auth;
-  "betterAuth/generatedSchema": typeof betterAuth_generatedSchema;
   "chats/mutations": typeof chats_mutations;
   "chats/queries": typeof chats_queries;
   "chats/utils": typeof chats_utils;
@@ -1801,6 +1791,25 @@ export declare const components: {
       >;
     };
     auth: {
+      getUserByEmail: FunctionReference<
+        "query",
+        "internal",
+        { email: string },
+        null | {
+          _creationTime: number;
+          _id: string;
+          createdAt: number;
+          displayUsername?: null | string;
+          email: string;
+          emailVerified: boolean;
+          image?: null | string;
+          isAnonymous?: null | boolean;
+          name: string;
+          updatedAt: number;
+          userId?: null | string;
+          username?: null | string;
+        }
+      >;
       setUserId: FunctionReference<
         "mutation",
         "internal",

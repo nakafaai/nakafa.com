@@ -30,47 +30,48 @@ function MenuItem() {
     <SidebarMenu>
       {subjectAll.map((item) => (
         <Collapsible
-          asChild
-          className="group/collapsible"
           defaultOpen
           key={item.title}
-        >
-          <SidebarMenuItem>
-            <CollapsibleTrigger asChild>
-              <SidebarMenuButton tooltip={t(item.title)}>
-                {item.icon && <item.icon />}
-                <span className="truncate">{t(item.title)}</span>
-                <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-              </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarMenuSub>
-                {item.items.map((subItem) => {
-                  let title = "";
-                  // Only grade that has value
-                  if ("value" in subItem) {
-                    title = t(subItem.title, { grade: subItem.value });
-                  } else {
-                    title = t(subItem.title);
-                  }
+          render={
+            <SidebarMenuItem>
+              <CollapsibleTrigger
+                render={
+                  <SidebarMenuButton className="group" tooltip={t(item.title)}>
+                    {item.icon && <item.icon />}
+                    <span className="truncate">{t(item.title)}</span>
+                    <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-panel-open:rotate-90" />
+                  </SidebarMenuButton>
+                }
+              />
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  {item.items.map((subItem) => {
+                    let title = "";
+                    // Only grade that has value
+                    if ("value" in subItem) {
+                      title = t(subItem.title, { grade: subItem.value });
+                    } else {
+                      title = t(subItem.title);
+                    }
 
-                  return (
-                    <SidebarMenuSubItem key={title}>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname.includes(subItem.href)}
-                      >
-                        <NavigationLink href={subItem.href} title={title}>
-                          <span>{title}</span>
-                        </NavigationLink>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  );
-                })}
-              </SidebarMenuSub>
-            </CollapsibleContent>
-          </SidebarMenuItem>
-        </Collapsible>
+                    return (
+                      <SidebarMenuSubItem key={title}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname.includes(subItem.href)}
+                        >
+                          <NavigationLink href={subItem.href} title={title}>
+                            <span>{title}</span>
+                          </NavigationLink>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    );
+                  })}
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          }
+        />
       ))}
     </SidebarMenu>
   );

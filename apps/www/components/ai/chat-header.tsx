@@ -24,7 +24,7 @@ import {
   LinkIcon,
   LockIcon,
   PenLineIcon,
-  TrashIcon,
+  Trash2Icon,
   XIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -220,7 +220,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
                   onSelect={() => setConfirmDelete(true)}
                   variant="destructive"
                 >
-                  <TrashIcon />
+                  <Trash2Icon />
                   {t("delete-chat")}
                 </DropdownMenuItem>
               </DropdownMenuGroup>
@@ -306,7 +306,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
             onClick={handleDelete}
             variant="destructive"
           >
-            {isPending ? <SpinnerIcon /> : <TrashIcon />}
+            {isPending ? <SpinnerIcon /> : <Trash2Icon />}
             {t("confirm")}
           </Button>
         }

@@ -100,7 +100,7 @@ export const Reasoning = memo(
         value={{ isStreaming, isOpen, setIsOpen, duration }}
       >
         <Collapsible
-          className={cn("not-prose", className)}
+          className={cn("not-prose flex flex-col gap-2", className)}
           onOpenChange={handleOpenChange}
           open={isOpen}
           {...props}
@@ -171,11 +171,7 @@ export type ReasoningContentProps = ComponentProps<
 export const ReasoningContent = memo(
   ({ className, children, id, ...props }: ReasoningContentProps) => (
     <CollapsibleContent
-      className={cn(
-        "mt-4 text-sm",
-        "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-muted-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
-        className
-      )}
+      className={cn("text-sm", "text-muted-foreground outline-none", className)}
       {...props}
     >
       <Response id={id}>{children}</Response>

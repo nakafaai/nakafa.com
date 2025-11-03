@@ -4,7 +4,7 @@ import type {
   GenericDataModel,
   WithoutSystemFields,
 } from "convex/server";
-import { internal } from "../_generated/api";
+import { components, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 
 /**
@@ -56,9 +56,12 @@ export async function findUserIdFromCustomer(
   }
 
   // Try to find by email in Better Auth table
-  const authUser = await ctx.runQuery(internal.betterAuth.auth.getUserByEmail, {
-    email: customerData.email,
-  });
+  const authUser = await ctx.runQuery(
+    components.betterAuth.auth.getUserByEmail,
+    {
+      email: customerData.email,
+    }
+  );
   if (authUser?.userId) {
     return authUser.userId as Id<"users">;
   }

@@ -20,7 +20,7 @@
     "@t3-oss/env-nextjs": "^0.13.8",
     "better-auth": "1.3.27",
     "buffer": "^6.0.3",
-    "convex": "^1.28.1",
+    "convex": "^1.28.2",
     "convex-helpers": "^0.1.104",
     "zod": "^4.1.12"
   },

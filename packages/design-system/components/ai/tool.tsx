@@ -87,7 +87,7 @@ export const ToolHeader = memo(
             {t(getStatusBadge(state).label)}
           </Badge>
         </div>
-        <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+        <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-panel-open:rotate-180" />
       </CollapsibleTrigger>
     );
   }
@@ -99,7 +99,7 @@ export type ToolContentProps = ComponentProps<typeof CollapsibleContent>;
 export const ToolContent = memo(({ className, ...props }: ToolContentProps) => (
   <CollapsibleContent
     className={cn(
-      "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
+      "data-[open=false]:fade-out-0 data-[open=false]:slide-out-to-top-2 data-open:slide-in-from-top-2 text-popover-foreground outline-none data-[open=false]:animate-out data-open:animate-in",
       "border-t",
       className
     )}

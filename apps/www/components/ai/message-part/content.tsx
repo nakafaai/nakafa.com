@@ -45,8 +45,8 @@ export const ContentPart = memo(({ message }: Props) => {
   return (
     <Collapsible
       className="overflow-hidden rounded-md border"
-      defaultOpen={open}
       onOpenChange={setOpen}
+      open={open}
     >
       <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between bg-muted/80 px-4 py-3">
         <div className="flex items-center gap-2">

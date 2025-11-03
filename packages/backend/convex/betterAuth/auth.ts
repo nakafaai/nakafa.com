@@ -1,7 +1,9 @@
 import { getStaticAuth } from "@convex-dev/better-auth";
 import { v } from "convex/values";
+import { doc } from "convex-helpers/validators";
 import { createAuth } from "../auth";
-import { internalQuery, mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
+import schema from "./schema";
 
 // Export a static instance for Better Auth schema generation
 export const auth = getStaticAuth(createAuth);
@@ -41,10 +43,11 @@ export const updateName = mutation({
  * Get Better Auth user by email address.
  * Returns null if user doesn't exist.
  */
-export const getUserByEmail = internalQuery({
+export const getUserByEmail = query({
   args: {
     email: v.string(),
   },
+  returns: v.union(v.null(), doc(schema, "user")),
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("user")
