@@ -7,7 +7,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "ky": "^1.13.0"
+    "ky": "^1.14.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*"
