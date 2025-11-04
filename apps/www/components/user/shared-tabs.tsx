@@ -13,7 +13,7 @@ type Props = {
 
 export function SharedTabs({ tabs, defaultValue }: Props) {
   return (
-    <div className="flex rounded-xl border p-1 shadow-xs">
+    <div className="scrollbar-hide flex overflow-x-auto rounded-xl border p-1 shadow-xs">
       <Highlight
         className="inset-0 rounded-lg bg-accent"
         defaultValue={defaultValue}

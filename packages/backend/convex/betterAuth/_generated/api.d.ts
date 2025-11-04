@@ -1743,6 +1743,35 @@ export type Mounts = {
     >;
   };
   auth: {
+    getApiKeysByUserId: FunctionReference<
+      "query",
+      "public",
+      { userId: string },
+      Array<{
+        _creationTime: number;
+        _id: string;
+        createdAt: number;
+        enabled?: null | boolean;
+        expiresAt?: null | number;
+        key: string;
+        lastRefillAt?: null | number;
+        lastRequest?: null | number;
+        metadata?: null | string;
+        name?: null | string;
+        permissions?: null | string;
+        prefix?: null | string;
+        rateLimitEnabled?: null | boolean;
+        rateLimitMax?: null | number;
+        rateLimitTimeWindow?: null | number;
+        refillAmount?: null | number;
+        refillInterval?: null | number;
+        remaining?: null | number;
+        requestCount?: null | number;
+        start?: null | string;
+        updatedAt: number;
+        userId: string;
+      }>
+    >;
     getUserByEmail: FunctionReference<
       "query",
       "public",

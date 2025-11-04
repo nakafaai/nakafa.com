@@ -1,24 +1,41 @@
 "use client";
 
-import { HeartPlusIcon, UserRoundIcon } from "lucide-react";
+import { usePathname } from "@repo/internationalization/src/navigation";
+import { CodeIcon, HeartPlusIcon, UserRoundIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 import { SharedTabs } from "@/components/user/shared-tabs";
 
 export function UserSettingsTabs() {
   const t = useTranslations("Auth");
 
-  const tabs = [
-    {
-      icon: UserRoundIcon,
-      label: t("account"),
-      href: "/user/settings",
-    },
-    {
-      icon: HeartPlusIcon,
-      label: t("subscriptions"),
-      href: "/user/settings/subscriptions",
-    },
-  ];
+  const pathname = usePathname();
 
-  return <SharedTabs defaultValue="/user/settings" tabs={tabs} />;
+  const tabs = useMemo(
+    () => [
+      {
+        icon: UserRoundIcon,
+        label: t("account"),
+        href: "/user/settings",
+      },
+      {
+        icon: HeartPlusIcon,
+        label: t("subscriptions"),
+        href: "/user/settings/subscriptions",
+      },
+      {
+        icon: CodeIcon,
+        label: t("developers"),
+        href: "/user/settings/developers",
+      },
+    ],
+    [t]
+  );
+
+  const defaultValue = useMemo(
+    () => tabs.find((tab) => pathname === tab.href)?.href || tabs[0]?.href,
+    [pathname, tabs]
+  );
+
+  return <SharedTabs defaultValue={defaultValue} tabs={tabs} />;
 }

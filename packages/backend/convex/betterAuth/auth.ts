@@ -61,3 +61,22 @@ export const getUserByEmail = query({
     return user;
   },
 });
+
+/**
+ * Get API keys by user ID.
+ * Returns API keys for the user.
+ */
+export const getApiKeysByUserId = query({
+  args: {
+    userId: v.id("user"),
+  },
+  returns: v.array(doc(schema, "apikey")),
+  handler: async (ctx, args) => {
+    const apiKeys = await ctx.db
+      .query("apikey")
+      .withIndex("userId", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    return apiKeys;
+  },
+});

@@ -1,5 +1,7 @@
-import { v } from "convex/values";
-import { internalQuery } from "../_generated/server";
+import { ConvexError, v } from "convex/values";
+import { components } from "../_generated/api";
+import { internalQuery, query } from "../_generated/server";
+import { safeGetAppUser } from "../auth";
 
 /**
  * Get app user by Better Auth user ID.
@@ -42,5 +44,32 @@ export const getUserByEmail = internalQuery({
     }
 
     return user;
+  },
+});
+
+/**
+ * Get current user's API keys.
+ * Requires authentication.
+ * Returns API keys for the current user.
+ */
+export const getCurrentUserApiKeys = query({
+  args: {},
+  handler: async (ctx) => {
+    // Authentication check
+    const user = await safeGetAppUser(ctx);
+    if (!user) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to get your API keys.",
+      });
+    }
+
+    const apiKeys = await ctx.runQuery(
+      components.betterAuth.auth.getApiKeysByUserId,
+      {
+        userId: user.authUser._id,
+      }
+    );
+    return apiKeys;
   },
 });
