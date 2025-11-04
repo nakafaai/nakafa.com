@@ -40,7 +40,12 @@ import { useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
 import { getInitialName } from "@/lib/utils/helper";
 
-const prefetchLinks = ["/auth"] as const;
+const prefetchLinks = [
+  "/auth",
+  "/terms-of-service",
+  "/privacy-policy",
+  "/user/settings",
+] as const;
 
 export function NavUser() {
   const t = useTranslations("Auth");
