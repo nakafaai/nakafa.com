@@ -73,3 +73,16 @@ export const getCurrentUserApiKeys = query({
     return apiKeys;
   },
 });
+
+/**
+ * Get all user IDs.
+ * Useful for generating static params for user pages.
+ * Returns an array of user IDs.
+ */
+export const getAllUserIds = query({
+  args: {},
+  handler: async (ctx) => {
+    const userIds = await ctx.db.query("users").collect();
+    return userIds.map((user) => user._id);
+  },
+});

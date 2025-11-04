@@ -1,6 +1,6 @@
 import type { ImageResponseOptions } from "next/dist/compiled/@vercel/og/types";
 import { ImageResponse } from "next/og";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 const MAX_TITLE_FIRST_LENGTH = 30;
 const MAX_TITLE_SECOND_LENGTH = 60;
@@ -25,10 +25,7 @@ export function generateOGImage(
   const { title, description, ...rest } = options;
 
   return new ImageResponse(
-    generate({
-      title,
-      description,
-    }),
+    <OgImage description={description} title={title} />,
     {
       width: 1200,
       height: 630,
@@ -37,7 +34,7 @@ export function generateOGImage(
   );
 }
 
-export function generate(props: GenerateProps): ReactElement {
+export function OgImage(props: GenerateProps) {
   // Calculate dynamic font sizes based on content length
   const titleLength = String(props.title).length;
   const descriptionLength = props.description
