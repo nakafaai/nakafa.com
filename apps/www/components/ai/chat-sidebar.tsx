@@ -67,6 +67,7 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
             <Button
               asChild
               className="w-full border border-sidebar-border shadow-none"
+              size="sm"
               variant="secondary"
             >
               <NavigationLink href="/" title={t("new-chat")}>
@@ -78,8 +79,9 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
 
         <SidebarMenu>
           <SidebarMenuItem>
-            <InputGroup className="border-sidebar-border bg-background shadow-none">
+            <InputGroup className="h-8 border-sidebar-border bg-background shadow-none">
               <InputGroupInput
+                className="h-8"
                 onChange={(e) => setQ(e.target.value)}
                 placeholder={t("search-chats")}
                 value={q}
