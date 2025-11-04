@@ -155,8 +155,8 @@ const ArticlesPartSheet = memo(
             <Separator />
 
             <div className="flex flex-1 flex-col overflow-hidden">
-              <ScrollArea className="h-full px-4">
-                <div className="my-4 flex flex-col divide-y overflow-hidden rounded-md border">
+              <ScrollArea className="h-full">
+                <div className="flex flex-col divide-y overflow-hidden">
                   {articles.map((article) => (
                     <NavigationLink
                       className="group flex items-center gap-2 px-4 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
@@ -165,7 +165,7 @@ const ArticlesPartSheet = memo(
                       target="_blank"
                     >
                       {article.title}
-                      <ArrowUpRightIcon className="size-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground" />
+                      <ArrowUpRightIcon className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity ease-out group-hover:text-accent-foreground group-hover:opacity-100" />
                     </NavigationLink>
                   ))}
                 </div>
