@@ -1,13 +1,12 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
+import { use } from "react";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
 
-export default async function Layout(
-  props: LayoutProps<"/[locale]/user/[id]">
-) {
+export default function Layout(props: LayoutProps<"/[locale]/user/[id]">) {
   const { children, params } = props;
-  const { id } = await params;
+  const { id } = use(params);
   const userId = id as Id<"users">;
 
   return (

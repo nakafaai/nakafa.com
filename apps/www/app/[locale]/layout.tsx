@@ -18,6 +18,7 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale, type Locale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { use } from "react";
 import { AiSheet } from "@/components/ai/sheet";
 import { AppProviders } from "@/components/providers";
 import { SearchCommand } from "@/components/shared/search-command";
@@ -152,9 +153,9 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export default async function Layout(props: LayoutProps<"/[locale]">) {
+export default function Layout(props: LayoutProps<"/[locale]">) {
   const { children, params } = props;
-  const { locale } = await params;
+  const { locale } = use(params);
   // Ensure that the incoming `locale` is valid
   if (!hasLocale(routing.locales, locale)) {
     notFound();
