@@ -73,7 +73,7 @@ export function UserChatsList({
             key={chat._id}
           >
             <NavigationLink
-              className="absolute inset-0"
+              className="absolute inset-0 z-1"
               href={`/chat/${chat._id}`}
             />
             <div className="flex flex-1 items-center gap-2">
@@ -119,7 +119,7 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          className="z-1 hover:bg-background hover:text-foreground hover:[&_svg]:text-foreground"
+          className="z-2 hover:bg-background hover:text-foreground hover:[&_svg]:text-foreground"
           disabled={isPending}
           size="icon-sm"
           variant="ghost"
