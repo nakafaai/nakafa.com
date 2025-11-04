@@ -19,10 +19,12 @@ async function getContents({
 }: { slug: string; withRaw?: boolean } & RequestInit): Promise<
   FetchResult<Content[]>
 > {
-  const url = `${PREFIX}/${cleanSlug(slug)}`;
-  const { data, error } = await fetcher<Content[]>(url, {
-    method: "GET",
-    ...base,
+  const { data, error } = await fetcher<Content[]>({
+    endpoint: `${PREFIX}/${cleanSlug(slug)}`,
+    options: {
+      method: "GET",
+      ...base,
+    },
   });
 
   if (error) {
@@ -62,10 +64,12 @@ async function getContent({
   slug: string;
 } & RequestInit): Promise<FetchResult<Content | null>> {
   const cleanedSlug = cleanSlug(slug);
-  const url = `${PREFIX}/${cleanedSlug}`;
-  const { data, error } = await fetcher<Content[]>(url, {
-    method: "GET",
-    ...base,
+  const { data, error } = await fetcher<Content[]>({
+    endpoint: `${PREFIX}/${cleanedSlug}`,
+    options: {
+      method: "GET",
+      ...base,
+    },
   });
 
   if (error) {
@@ -101,10 +105,12 @@ async function getSurah({
 }: {
   surah: number;
 } & RequestInit): Promise<FetchResult<Surah | null>> {
-  const url = `${PREFIX}/quran/${surah}`;
-  const { data, error } = await fetcher<Surah>(url, {
-    method: "GET",
-    ...base,
+  const { data, error } = await fetcher<Surah>({
+    endpoint: `${PREFIX}/quran/${surah}`,
+    options: {
+      method: "GET",
+      ...base,
+    },
   });
 
   if (error) {

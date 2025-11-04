@@ -3,6 +3,7 @@ import {
   DEFAULT_LONGITUDE,
   getWeather,
 } from "@repo/ai/lib/weather";
+import { CorsValidator } from "@repo/security/lib/cors-validator";
 import {
   createServiceLogger,
   createTimer,
@@ -12,9 +13,16 @@ import {
 import { geolocation } from "@vercel/functions";
 import { NextResponse } from "next/server";
 
+const corsValidator = new CorsValidator();
+
 const apiLogger = createServiceLogger("weather-api");
 
 export async function POST(req: Request) {
+  // Only allow requests from allowed domain
+  if (!corsValidator.isRequestFromAllowedDomain(req)) {
+    return corsValidator.createForbiddenResponse();
+  }
+
   const endTimer = createTimer(apiLogger, "weather_api_request");
 
   try {
