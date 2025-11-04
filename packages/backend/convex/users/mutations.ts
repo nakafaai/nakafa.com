@@ -6,7 +6,7 @@ import { safeGetAppUser } from "../auth";
 /**
  * Update Better Auth user's display name.
  */
-export const updateName = mutation({
+export const updateUserName = mutation({
   args: {
     name: v.string(),
   },
@@ -18,9 +18,24 @@ export const updateName = mutation({
         message: "You must be logged in to update your name.",
       });
     }
-    await ctx.runMutation(components.betterAuth.auth.updateName, {
+    await ctx.runMutation(components.betterAuth.auth.updateUserName, {
       authId: user.authUser._id,
       name: args.name,
     });
   },
+});
+
+/**
+ * Verify an API key with optional permissions.
+ */
+export const verifyApiKey = mutation({
+  args: {
+    key: v.string(),
+    permissions: v.optional(v.string()),
+  },
+  handler: async (ctx, args) =>
+    await ctx.runMutation(components.betterAuth.auth.verifyApiKey, {
+      key: args.key,
+      permissions: args.permissions,
+    }),
 });

@@ -11,6 +11,7 @@
 import type * as adapter from "../adapter.js";
 import type * as auth from "../auth.js";
 import type * as generatedSchema from "../generatedSchema.js";
+import type * as utils from "../utils.js";
 
 import type {
   ApiFromModules,
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   adapter: typeof adapter;
   auth: typeof auth;
   generatedSchema: typeof generatedSchema;
+  utils: typeof utils;
 }>;
 export type Mounts = {
   adapter: {
@@ -1797,11 +1799,21 @@ export type Mounts = {
       { authId: string; userId: string },
       any
     >;
-    updateName: FunctionReference<
+    updateUserName: FunctionReference<
       "mutation",
       "public",
       { authId: string; name: string },
       any
+    >;
+    verifyApiKey: FunctionReference<
+      "mutation",
+      "public",
+      { key: string; permissions?: string },
+      {
+        error: null | { code: string; message: string };
+        userId: null | string;
+        valid: boolean;
+      }
     >;
   };
 };

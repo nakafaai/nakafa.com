@@ -1849,11 +1849,21 @@ export declare const components: {
         { authId: string; userId: string },
         any
       >;
-      updateName: FunctionReference<
+      updateUserName: FunctionReference<
         "mutation",
         "internal",
         { authId: string; name: string },
         any
+      >;
+      verifyApiKey: FunctionReference<
+        "mutation",
+        "internal",
+        { key: string; permissions?: string },
+        {
+          error: null | { code: string; message: string };
+          userId: null | string;
+          valid: boolean;
+        }
       >;
     };
   };

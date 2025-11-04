@@ -32,7 +32,7 @@ type FormSchema = z.infer<typeof formSchema>;
 export function UserSettingsName({ user }: { user: AppUser }) {
   const t = useTranslations("Auth");
 
-  const updateName = useMutation(api.users.mutations.updateName);
+  const updateUserName = useMutation(api.users.mutations.updateUserName);
 
   const [isPending, startTransition] = useTransition();
 
@@ -46,7 +46,7 @@ export function UserSettingsName({ user }: { user: AppUser }) {
 
   const onSubmit = (values: FormSchema) => {
     startTransition(async () => {
-      await updateName({
+      await updateUserName({
         name: values.name,
       });
     });
