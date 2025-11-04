@@ -26,7 +26,9 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useQuery } from "convex/react";
 import {
+  EarthLockIcon,
   EllipsisVerticalIcon,
+  FileIcon,
   LogInIcon,
   LogOutIcon,
   MessageCircleIcon,
@@ -42,6 +44,7 @@ const prefetchLinks = ["/auth"] as const;
 
 export function NavUser() {
   const t = useTranslations("Auth");
+  const tLegal = useTranslations("Legal");
 
   const pathname = usePathname();
 
@@ -147,10 +150,32 @@ export function NavUser() {
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="cursor-pointer" onSelect={handleSignOut}>
-            <LogOutIcon />
-            {t("logout")}
-          </DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onSelect={() => router.push("/terms-of-service")}
+            >
+              <FileIcon />
+              {tLegal("terms-of-service")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onSelect={() => router.push("/privacy-policy")}
+            >
+              <EarthLockIcon />
+              {tLegal("privacy-policy")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onSelect={handleSignOut}
+            >
+              <LogOutIcon />
+              {t("logout")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </SidebarMenuItem>
