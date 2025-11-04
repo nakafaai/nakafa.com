@@ -1,14 +1,45 @@
 import "./polyfills";
-import { httpRouter } from "convex/server";
-import { authComponent, createAuth } from "./auth";
+import {
+  type HonoWithConvex,
+  HttpRouterWithHono,
+} from "convex-helpers/server/hono";
+import { Hono } from "hono";
+import { logger } from "hono/logger";
+import stripAnsi from "strip-ansi";
+import type { ActionCtx } from "./_generated/server";
+import { createAuth } from "./auth";
 import { registerPolarRoutes } from "./routes/polar";
+import v1 from "./routes/v1";
 
-const http = httpRouter();
+const app: HonoWithConvex<ActionCtx> = new Hono();
 
-// Register auth routes
-authComponent.registerRoutes(http, createAuth);
+// Logging middleware - strip ANSI for Convex dashboard
+app.use(
+  "*",
+  logger((...args) => {
+    // biome-ignore lint/suspicious/noConsole: Required for Hono logger middleware
+    console.log(...args.map(stripAnsi));
+  })
+);
 
-// Register Polar webhook routes
-registerPolarRoutes(http);
+// Note: CORS is handled in Next.js middleware (apps/api/proxy.ts)
+// All requests to Convex come from Next.js (server-to-server)
 
-export default http;
+// OpenID Connect discovery - redirect to Better Auth endpoint
+app.get("/.well-known/openid-configuration", (c) =>
+  c.redirect("/api/auth/convex/.well-known/openid-configuration")
+);
+
+// Register better-auth routes (internal - not exposed in API docs)
+app.all("/api/auth/*", async (c) => {
+  const auth = createAuth(c.env);
+  return await auth.handler(c.req.raw);
+});
+
+// Register public API v1 routes
+app.route("/v1", v1);
+
+// Register webhook routes (internal - called by external services)
+registerPolarRoutes(app);
+
+export default new HttpRouterWithHono(app);

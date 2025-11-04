@@ -12,16 +12,18 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@repo/ai": "workspace:*",
     "@convex-dev/better-auth": "^0.9.7",
     "@convex-dev/migrations": "^0.2.9",
     "@polar-sh/better-auth": "^1.1.11",
     "@polar-sh/sdk": "^0.38.1",
+    "@repo/ai": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
     "better-auth": "1.3.27",
     "buffer": "^6.0.3",
     "convex": "^1.28.2",
     "convex-helpers": "^0.1.104",
+    "hono": "^4.10.4",
+    "strip-ansi": "^7.1.2",
     "zod": "^4.1.12"
   },
   "devDependencies": {
