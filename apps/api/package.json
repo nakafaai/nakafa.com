@@ -9,11 +9,13 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@repo/backend": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@repo/security": "workspace:*",
+    "@convex-dev/better-auth": "^0.9.7",
     "@t3-oss/env-nextjs": "^0.13.8",
     "next": "16.0.1",
     "react": "^19.2.0",

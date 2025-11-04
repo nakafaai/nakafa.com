@@ -41,6 +41,12 @@ importers:
 
   apps/api:
     dependencies:
+      '@convex-dev/better-auth':
+        specifier: ^0.9.7
+        version: 0.9.7(@standard-schema/spec@1.0.0)(better-auth@1.3.27(next@16.0.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.28.2(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+      '@repo/backend':
+        specifier: workspace:*
+        version: link:../../packages/backend
       '@repo/contents':
         specifier: workspace:*
         version: link:../../packages/contents
@@ -58,7 +64,7 @@ importers:
         version: link:../../packages/security
       '@t3-oss/env-nextjs':
         specifier: ^0.13.8
-        version: 0.13.8(typescript@5.9.3)(zod@4.1.12)
+        version: 0.13.8(typescript@5.9.3)(zod@3.25.76)
       next:
         specifier: 16.0.1
         version: 16.0.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -10411,6 +10417,24 @@ snapshots:
       - hono
       - typescript
 
+  '@convex-dev/better-auth@0.9.7(@standard-schema/spec@1.0.0)(better-auth@1.3.27(next@16.0.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.28.2(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)':
+    dependencies:
+      better-auth: 1.3.27(next@16.0.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      common-tags: 1.8.2
+      convex: 1.28.2(react@19.2.0)
+      convex-helpers: 0.1.104(@standard-schema/spec@1.0.0)(convex@1.28.2(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(zod@3.25.76)
+      jose: 6.1.0
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+      remeda: 2.32.0
+      semver: 7.7.3
+      type-fest: 4.41.0
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - '@standard-schema/spec'
+      - hono
+      - typescript
+
   '@convex-dev/migrations@0.2.9(convex@1.28.2(react@19.2.0))':
     dependencies:
       convex: 1.28.2(react@19.2.0)
@@ -13971,10 +13995,22 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@t3-oss/env-core@0.13.8(typescript@5.9.3)(zod@3.25.76)':
+    optionalDependencies:
+      typescript: 5.9.3
+      zod: 3.25.76
+
   '@t3-oss/env-core@0.13.8(typescript@5.9.3)(zod@4.1.12)':
     optionalDependencies:
       typescript: 5.9.3
       zod: 4.1.12
+
+  '@t3-oss/env-nextjs@0.13.8(typescript@5.9.3)(zod@3.25.76)':
+    dependencies:
+      '@t3-oss/env-core': 0.13.8(typescript@5.9.3)(zod@3.25.76)
+    optionalDependencies:
+      typescript: 5.9.3
+      zod: 3.25.76
 
   '@t3-oss/env-nextjs@0.13.8(typescript@5.9.3)(zod@4.1.12)':
     dependencies:
@@ -14850,6 +14886,26 @@ snapshots:
   basic-ftp@5.0.5: {}
 
   better-auth@1.3.27(next@16.0.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+    dependencies:
+      '@better-auth/core': 1.3.27
+      '@better-auth/utils': 0.3.0
+      '@better-fetch/fetch': 1.1.18
+      '@noble/ciphers': 2.0.1
+      '@noble/hashes': 2.0.1
+      '@simplewebauthn/browser': 13.2.2
+      '@simplewebauthn/server': 13.2.2
+      better-call: 1.0.19
+      defu: 6.1.4
+      jose: 6.1.0
+      kysely: 0.28.8
+      nanostores: 1.0.1
+      zod: 4.1.12
+    optionalDependencies:
+      next: 16.0.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+
+  better-auth@1.3.27(next@16.0.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     dependencies:
       '@better-auth/core': 1.3.27
       '@better-auth/utils': 0.3.0
