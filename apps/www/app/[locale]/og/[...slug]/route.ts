@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
+import { hasLocale, type Locale } from "next-intl";
 import { getMetadataFromSlug } from "@/lib/utils/system";
 import { generateOGImage } from "./og";
 
@@ -53,12 +54,19 @@ export async function GET(
 ) {
   const { locale, slug } = await params;
 
+  const cleanedLocale: Locale = hasLocale(routing.locales, locale)
+    ? locale
+    : routing.defaultLocale;
+
   // If last element is "image.png", remove it
   // The rest of the path is the content path
   const contentSlug = slug.at(-1) === "image.png" ? slug.slice(0, -1) : slug;
 
   // Get metadata from the content path
-  const { title, description } = await getMetadataFromSlug(locale, contentSlug);
+  const { title, description } = await getMetadataFromSlug(
+    cleanedLocale,
+    contentSlug
+  );
 
   return generateOGImage({
     title,

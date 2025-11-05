@@ -3,6 +3,7 @@ import {
   type ContentMetadata,
   ContentMetadataSchema,
 } from "@repo/contents/_types/content";
+import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 
 type ParamConfig = {
@@ -107,7 +108,7 @@ export function getStaticParams(
  * @returns An object containing the title and description, or default values if not found
  */
 export async function getMetadataFromSlug(
-  locale: string,
+  locale: Locale,
   slug: string[]
 ): Promise<ContentMetadata> {
   const [tCommon, tMetadata] = await Promise.all([

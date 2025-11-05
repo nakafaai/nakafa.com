@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { type PropsWithChildren, useMemo } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
+import { getLocale, getPathname } from "@/lib/utils/browser";
 import { useAi } from "./use-ai";
 
 type ChatContextValue = {
@@ -24,8 +25,6 @@ export function ChatProvider({
   const t = useTranslations("Ai");
 
   const getModel = useAi((state) => state.getModel);
-  const getLocale = useAi((state) => state.getLocale);
-  const getSlug = useAi((state) => state.getSlug);
 
   const chat = useAiChat<MyUIMessage>({
     id: chatId,
@@ -43,7 +42,7 @@ export function ChatProvider({
             message: lastMessage,
             chatId,
             locale: getLocale(),
-            slug: getSlug(),
+            slug: getPathname(),
             model: getModel(),
           },
         };
