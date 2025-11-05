@@ -120,7 +120,8 @@
     "former-official": "Resmi Lama",
     "see": "Lihat",
     "chat": "Obrolan",
-    "no-chats": "Belum ada obrolan."
+    "no-chats": "Belum ada obrolan.",
+    "exercises": "Latihan"
   },
   "Comments": {
     "add-comment-placeholder": "Tambahkan komentar...",
@@ -174,6 +175,13 @@
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
     "interpretation": "Tafsir"
+  },
+  "Exercises": {
+    "high-school": "SMA",
+    "tka": "TKA",
+    "snbt": "SNBT",
+    "type-description": "Persiapkan diri kamu untuk ujian dengan latihan nyata.",
+    "mathematics": "Matematika"
   },
   "Utils": {
     "search": "Cari",

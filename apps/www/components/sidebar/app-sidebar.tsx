@@ -16,6 +16,7 @@ import { AboutMenu } from "./about-menu";
 import { CommunityButton } from "./community-button";
 import { LangMenu } from "./lang-menu";
 import { NavArticles } from "./nav-articles";
+import { NavExercises } from "./nav-exercises";
 import { NavHoly } from "./nav-holy";
 import { NavSubject } from "./nav-subject";
 import { NavUser } from "./nav-user";
@@ -61,6 +62,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavSubject />
+        <NavExercises />
         <NavHoly />
         <NavArticles />
       </SidebarContent>

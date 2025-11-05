@@ -120,7 +120,8 @@
     "former-official": "Former Official",
     "see": "See",
     "chat": "Chat",
-    "no-chats": "No chats yet."
+    "no-chats": "No chats yet.",
+    "exercises": "Exercises"
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",
@@ -174,6 +175,13 @@
     "verse": "Verse",
     "verse-count": "Verse {count}",
     "interpretation": "Interpretation"
+  },
+  "Exercises": {
+    "high-school": "High School",
+    "tka": "TKA",
+    "snbt": "SNBT",
+    "type-description": "Prepare yourself for the exam with real-world practice.",
+    "mathematics": "Mathematics"
   },
   "Utils": {
     "search": "Search",

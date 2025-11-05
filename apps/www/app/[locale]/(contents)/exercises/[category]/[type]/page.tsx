@@ -1,11 +1,10 @@
-import { getCategoryIcon } from "@repo/contents/_lib/subject/category";
+import { getCategoryIcon } from "@repo/contents/_lib/exercises/category";
 import {
-  getGradeNonNumeric,
-  getGradePath,
-  getGradeSubjects,
-} from "@repo/contents/_lib/subject/grade";
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import type { Grade } from "@repo/contents/_types/subject/grade";
+  getExercisesPath,
+  getSubjects,
+} from "@repo/contents/_lib/exercises/type";
+import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
+import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
@@ -26,8 +25,8 @@ export const revalidate = false;
 
 type Params = {
   locale: Locale;
-  category: SubjectCategory;
-  grade: Grade;
+  category: ExercisesCategory;
+  type: ExercisesType;
 };
 
 type Props = {
@@ -35,12 +34,12 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, category, grade } = await params;
-  const t = await getTranslations({ locale, namespace: "Subject" });
+  const { locale, category, type } = await params;
+  const t = await getTranslations({ locale, namespace: "Exercises" });
 
-  const FilePath = getGradePath(category, grade);
+  const FilePath = getExercisesPath(category, type);
 
-  const title = `${t(getGradeNonNumeric(grade) ?? "grade", { grade })} - ${t(category)}`;
+  const title = `${t(type)} - ${t(category)}`;
   const path = `/${locale}${FilePath}`;
   const image = {
     url: getOgUrl(locale, FilePath),
@@ -52,7 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: {
       absolute: title,
     },
-    description: t("grade-description"),
+    description: t("type-description"),
     alternates: {
       canonical: path,
     },
@@ -72,34 +71,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export function generateStaticParams() {
   return getStaticParams({
-    basePath: "subject",
-    paramNames: ["category", "grade"],
+    basePath: "exercises",
+    paramNames: ["category", "type"],
   });
 }
 
 export default function Page({ params }: Props) {
-  const { locale, category, grade } = use(params);
+  const { locale, category, type } = use(params);
 
   // Enable static rendering
   setRequestLocale(locale);
 
-  return <PageContent category={category} grade={grade} locale={locale} />;
+  return <PageContent category={category} locale={locale} type={type} />;
 }
 
 async function PageContent({
   locale,
   category,
-  grade,
+  type,
 }: {
   locale: Locale;
-  category: SubjectCategory;
-  grade: Grade;
+  category: ExercisesCategory;
+  type: ExercisesType;
 }) {
-  const FilePath = getGradePath(category, grade);
+  const FilePath = getExercisesPath(category, type);
 
   const [subjects, t] = await Promise.all([
-    getGradeSubjects(category, grade),
-    getTranslations({ locale, namespace: "Subject" }),
+    getSubjects(category, type),
+    getTranslations({ locale, namespace: "Exercises" }),
   ]);
 
   return (
@@ -115,9 +114,9 @@ async function PageContent({
         locale={locale}
       />
       <HeaderContent
-        description={t("grade-description")}
+        description={t("type-description")}
         icon={getCategoryIcon(category)}
-        title={t(getGradeNonNumeric(grade) ?? "grade", { grade })}
+        title={t(type)}
       />
       <LayoutContent>
         {subjects.length === 0 ? (

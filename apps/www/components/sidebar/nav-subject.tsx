@@ -28,51 +28,56 @@ function MenuItem() {
 
   return (
     <SidebarMenu>
-      {subjectAll.map((item) => (
-        <Collapsible
-          defaultOpen
-          key={item.title}
-          render={
-            <SidebarMenuItem>
-              <CollapsibleTrigger
-                render={
-                  <SidebarMenuButton className="group" tooltip={t(item.title)}>
-                    {item.icon && <item.icon />}
-                    <span className="truncate">{t(item.title)}</span>
-                    <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-panel-open:rotate-90" />
-                  </SidebarMenuButton>
-                }
-              />
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {item.items.map((subItem) => {
-                    let title = "";
-                    // Only grade that has value
-                    if ("value" in subItem) {
-                      title = t(subItem.title, { grade: subItem.value });
-                    } else {
-                      title = t(subItem.title);
-                    }
+      {subjectAll.map((item) => {
+        return (
+          <Collapsible
+            defaultOpen
+            key={item.title}
+            render={
+              <SidebarMenuItem>
+                <CollapsibleTrigger
+                  render={
+                    <SidebarMenuButton
+                      className="group"
+                      tooltip={t(item.title)}
+                    >
+                      {item.icon && <item.icon />}
+                      <span className="truncate">{t(item.title)}</span>
+                      <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-panel-open:rotate-90" />
+                    </SidebarMenuButton>
+                  }
+                />
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {item.items.map((subItem) => {
+                      let title = "";
+                      // Only grade that has value
+                      if ("value" in subItem) {
+                        title = t(subItem.title, { grade: subItem.value });
+                      } else {
+                        title = t(subItem.title);
+                      }
 
-                    return (
-                      <SidebarMenuSubItem key={title}>
-                        <SidebarMenuSubButton
-                          asChild
-                          isActive={pathname.includes(subItem.href)}
-                        >
-                          <NavigationLink href={subItem.href} title={title}>
-                            <span>{title}</span>
-                          </NavigationLink>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    );
-                  })}
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          }
-        />
-      ))}
+                      return (
+                        <SidebarMenuSubItem key={title}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={pathname.includes(subItem.href)}
+                          >
+                            <NavigationLink href={subItem.href} title={title}>
+                              <span>{title}</span>
+                            </NavigationLink>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      );
+                    })}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            }
+          />
+        );
+      })}
     </SidebarMenu>
   );
 }
