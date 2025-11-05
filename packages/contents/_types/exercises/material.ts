@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-export const MaterialListSchema = z.array(
+export const ExercisesMaterialListSchema = z.array(
   z.object({
     title: z.string(),
     description: z.string().optional(),
@@ -13,7 +13,7 @@ export const MaterialListSchema = z.array(
     ),
   })
 );
-export type MaterialList = z.infer<typeof MaterialListSchema>;
+export type ExercisesMaterialList = z.infer<typeof ExercisesMaterialListSchema>;
 
 export const ExercisesMaterialSchema = z.enum(["mathematics"]);
 export type ExercisesMaterial = z.infer<typeof ExercisesMaterialSchema>;

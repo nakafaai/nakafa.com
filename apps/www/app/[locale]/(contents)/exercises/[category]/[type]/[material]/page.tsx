@@ -1,13 +1,34 @@
 import fs from "node:fs";
 import path from "node:path";
-import { getMaterialPath } from "@repo/contents/_lib/exercises/material";
+import {
+  getMaterialPath,
+  getMaterials,
+} from "@repo/contents/_lib/exercises/material";
+import { getExercisesPath } from "@repo/contents/_lib/exercises/type";
+import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import type { ParsedHeading } from "@repo/contents/_types/toc";
+import { slugify } from "@repo/design-system/lib/utils";
+import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { CardMaterial } from "@/components/shared/card-material";
+import { ComingSoon } from "@/components/shared/coming-soon";
+import { ContainerList } from "@/components/shared/container-list";
+import {
+  LayoutMaterial,
+  LayoutMaterialContent,
+  LayoutMaterialFooter,
+  LayoutMaterialHeader,
+  LayoutMaterialMain,
+  LayoutMaterialToc,
+} from "@/components/shared/layout-material";
+import { RefContent } from "@/components/shared/ref-content";
+import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
 
@@ -81,10 +102,98 @@ export function generateStaticParams() {
 }
 
 export default function Page({ params }: Props) {
-  const { locale } = use(params);
+  const { locale, category, type, material } = use(params);
 
   // Enable static rendering
   setRequestLocale(locale);
 
-  return null;
+  return (
+    <PageContent
+      category={category}
+      locale={locale}
+      material={material}
+      type={type}
+    />
+  );
+}
+
+async function PageContent({
+  locale,
+  category,
+  type,
+  material,
+}: {
+  locale: Locale;
+  category: ExercisesCategory;
+  type: ExercisesType;
+  material: ExercisesMaterial;
+}) {
+  const typePath = getExercisesPath(category, type);
+  const FilePath = getMaterialPath(category, type, material);
+
+  const [materials, t] = await Promise.all([
+    getMaterials(FilePath, locale),
+    getTranslations({ locale, namespace: "Exercises" }),
+  ]);
+
+  const chapters: ParsedHeading[] = materials.map((mat) => ({
+    label: mat.title,
+    href: `#${slugify(mat.title)}`,
+  }));
+
+  return (
+    <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={materials.map((mat, index) => ({
+          "@type": "ListItem",
+          "@id": `https://nakafa.com/${locale}${mat.href}`,
+          position: index + 1,
+          name: mat.title,
+          item: `https://nakafa.com/${locale}${mat.href}`,
+        }))}
+        locale={locale}
+      />
+      <LayoutMaterial>
+        <LayoutMaterialContent>
+          <LayoutMaterialHeader
+            icon={getMaterialIcon(material)}
+            link={{
+              href: typePath,
+              label: t(type),
+            }}
+            title={t(material)}
+          />
+          <LayoutMaterialMain>
+            {materials.length === 0 ? (
+              <ComingSoon />
+            ) : (
+              <ContainerList className="sm:grid-cols-1">
+                {materials.map((mat) => (
+                  <CardMaterial key={mat.title} material={mat} />
+                ))}
+              </ContainerList>
+            )}
+          </LayoutMaterialMain>
+          <LayoutMaterialFooter>
+            <RefContent
+              githubUrl={getGithubUrl({
+                path: `/packages/contents${FilePath}`,
+              })}
+            />
+          </LayoutMaterialFooter>
+        </LayoutMaterialContent>
+        <LayoutMaterialToc
+          chapters={{
+            label: t("exercises"),
+            data: chapters,
+          }}
+          header={{
+            title: t(material),
+            href: FilePath,
+            description: t(type),
+          }}
+        />
+      </LayoutMaterial>
+    </>
+  );
 }
