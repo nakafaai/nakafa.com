@@ -32,7 +32,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
       variant="floating"
       {...props}
     >
-      <SidebarHeader>
+      <SidebarHeader className="border-b">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
@@ -57,9 +57,9 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <SearchMenu />
       </SidebarHeader>
       <SidebarContent>
-        <SearchMenu />
         <NavSubject />
         <NavHoly />
         <NavArticles />

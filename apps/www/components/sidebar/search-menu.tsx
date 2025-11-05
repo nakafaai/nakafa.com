@@ -1,9 +1,6 @@
 "use client";
 
 import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -21,35 +18,30 @@ export function SearchMenu() {
   }));
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel className="sr-only">{t("search")}</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              className="cursor-pointer justify-between text-muted-foreground"
-              isActive={open}
-              onClick={() => setOpen(true)}
-              variant="outline"
-            >
-              <div className="flex items-center gap-2">
-                <SearchIcon className="size-4" />
-                <span>{t("search-bar-placeholder")}</span>
-              </div>
-              <div className="hidden items-center lg:flex">
-                <kbd className="rounded">
-                  <IconCommand className="size-3.5 shrink-0" />
-                  <span className="sr-only">Command/Ctrl</span>
-                </kbd>
-                <kbd className="rounded">
-                  <IconLetterK className="size-3.5 shrink-0" />
-                  <span className="sr-only">K</span>
-                </kbd>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          className="cursor-pointer justify-between text-muted-foreground"
+          isActive={open}
+          onClick={() => setOpen(true)}
+          variant="outline"
+        >
+          <div className="flex items-center gap-2">
+            <SearchIcon className="size-4" />
+            <span>{t("search-bar-placeholder")}</span>
+          </div>
+          <div className="hidden items-center lg:flex">
+            <kbd className="rounded">
+              <IconCommand className="size-3.5 shrink-0" />
+              <span className="sr-only">Command/Ctrl</span>
+            </kbd>
+            <kbd className="rounded">
+              <IconLetterK className="size-3.5 shrink-0" />
+              <span className="sr-only">K</span>
+            </kbd>
+          </div>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
   );
 }
