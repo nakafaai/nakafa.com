@@ -42,7 +42,10 @@ export async function getRawContent(filePath: string): Promise<string> {
   // Fallback to fetching from GitHub, return empty string if it fails
   return await ky
     .get(
-      `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${cleanPath}`
+      `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${cleanPath}`,
+      {
+        cache: "force-cache",
+      }
     )
     .text()
     .catch(() => "");

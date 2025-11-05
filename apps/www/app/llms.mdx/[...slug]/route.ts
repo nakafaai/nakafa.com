@@ -53,7 +53,9 @@ export async function GET(
 
   // Fallback to /llms.txt for everything not found
   const fallbackResponse = await ky
-    .get(`${BASE_URL}/llms.txt`)
+    .get(`${BASE_URL}/llms.txt`, {
+      cache: "force-cache",
+    })
     .text()
     .catch(() => "");
   return new Response(fallbackResponse);
