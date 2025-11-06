@@ -18,14 +18,20 @@ import { SaveIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+import * as z from "zod/mini";
 import { FormBlock } from "@/components/shared/form-block";
 
 const MAX_NAME_LENGTH = 32;
 const MIN_NAME_LENGTH = 3;
 
 const formSchema = z.object({
-  name: z.string().min(MIN_NAME_LENGTH).max(MAX_NAME_LENGTH),
+  name: z
+    .string()
+    .check(
+      z.minLength(MIN_NAME_LENGTH),
+      z.maxLength(MAX_NAME_LENGTH),
+      z.trim()
+    ),
 });
 type FormSchema = z.infer<typeof formSchema>;
 

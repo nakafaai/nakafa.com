@@ -36,7 +36,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import * as z from "zod";
+import * as z from "zod/mini";
 import { FormBlock } from "@/components/shared/form-block";
 import { authClient } from "@/lib/auth/client";
 import { getLocale } from "@/lib/utils/date";
@@ -51,8 +51,14 @@ const DAYS_PER_YEAR = 365;
 const SECONDS_PER_DAY = 60 * 60 * 24;
 
 const formSchema = z.object({
-  name: z.string().min(MIN_NAME_LENGTH).max(MAX_NAME_LENGTH),
-  expiresIn: z.number().optional(),
+  name: z
+    .string()
+    .check(
+      z.minLength(MIN_NAME_LENGTH),
+      z.maxLength(MAX_NAME_LENGTH),
+      z.trim()
+    ),
+  expiresIn: z.optional(z.number()),
 });
 type FormSchema = z.infer<typeof formSchema>;
 

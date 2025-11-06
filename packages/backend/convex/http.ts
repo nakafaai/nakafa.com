@@ -17,8 +17,7 @@ const app: HonoWithConvex<ActionCtx> = new Hono();
 app.use(
   "*",
   logger((...args) => {
-    // biome-ignore lint/suspicious/noConsole: Required for Hono logger middleware
-    console.log(...args.map(stripAnsi));
+    console.info(...args.map(stripAnsi));
   })
 );
 
