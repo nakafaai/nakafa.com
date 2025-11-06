@@ -147,10 +147,7 @@ async function PageContent({
                   t("number-count", { count: exercise.number })
                 );
                 return (
-                  <section
-                    className={cn("mb-6 space-y-6 pb-6")}
-                    key={exercise.number}
-                  >
+                  <section className={cn("mb-6 pb-6")} key={exercise.number}>
                     <div className="flex items-center gap-4">
                       <a
                         className="flex w-full flex-1 shrink-0 scroll-mt-44"
@@ -169,7 +166,9 @@ async function PageContent({
                       <ExerciseAnswerAction exerciseNumber={exercise.number} />
                     </div>
 
-                    <exercise.question.default />
+                    <section className="my-6">
+                      <exercise.question.default />
+                    </section>
 
                     <ExerciseChoices
                       choices={exercise.choices[locale]}
