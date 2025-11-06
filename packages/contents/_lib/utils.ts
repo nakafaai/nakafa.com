@@ -10,6 +10,10 @@ import {
 import ky from "ky";
 import type { Locale } from "next-intl";
 import type { ComponentType } from "react";
+import {
+  type ExercisesChoices,
+  ExercisesChoicesSchema,
+} from "../_types/exercises/choices";
 
 // Get the directory where this file is located and resolve to contents directory
 const __filename = fileURLToPath(import.meta.url);
@@ -140,6 +144,113 @@ export async function getContents({
   );
 
   return contents;
+}
+
+/**
+ * Gets the exercises content for a specific file path.
+ * @param locale - The locale to get the exercises content for.
+ * @param filePath - The path to the exercises content file.
+ * @returns The exercises content.
+ */
+export async function getExercisesContent(
+  locale: Locale,
+  filePath: string
+): Promise<
+  | {
+      number: number;
+      choices: ExercisesChoices;
+      question: {
+        default: ComponentType<unknown>;
+        raw: string;
+      };
+      answer: {
+        default: ComponentType<unknown>;
+        raw: string;
+      };
+    }[]
+  | null
+> {
+  try {
+    // Strip leading slash if present for consistency
+    const cleanPath = filePath.startsWith("/")
+      ? filePath.substring(1)
+      : filePath;
+
+    // Get all numbered folders (exercise questions)
+    const questionNumbers = getFolderChildNames(cleanPath);
+
+    if (questionNumbers.length === 0) {
+      return null;
+    }
+
+    // Load all exercises in parallel
+    const exercisesPromises = questionNumbers.map(async (numberStr) => {
+      // Validate that the folder name is a valid number
+      const number = Number.parseInt(numberStr, 10);
+      if (Number.isNaN(number)) {
+        return null;
+      }
+
+      // Construct paths for question, answer, and choices
+      const questionPath = `${cleanPath}/${numberStr}/_question`;
+      const answerPath = `${cleanPath}/${numberStr}/_answer`;
+      const choicesPath = `${cleanPath}/${numberStr}/choices.ts`;
+
+      // Load question, answer, and choices in parallel
+      const [questionContent, answerContent, choicesModule] = await Promise.all(
+        [
+          getContent(locale, questionPath),
+          getContent(locale, answerPath),
+          import(`@repo/contents/${choicesPath}`).catch(() => null),
+        ]
+      );
+
+      // Validate all required content is present
+      const hasAllContent =
+        questionContent && answerContent && choicesModule?.default;
+
+      if (!hasAllContent) {
+        return null;
+      }
+
+      // Parse choices with schema validation
+      const parsedChoices = ExercisesChoicesSchema.safeParse(
+        choicesModule.default
+      );
+
+      if (!parsedChoices.success) {
+        return null;
+      }
+
+      return {
+        number,
+        choices: parsedChoices.data,
+        question: {
+          default: questionContent.default,
+          raw: questionContent.raw,
+        },
+        answer: {
+          default: answerContent.default,
+          raw: answerContent.raw,
+        },
+      };
+    });
+
+    const exercises = await Promise.all(exercisesPromises);
+
+    // Filter out any failed loads and sort by number
+    const validExercises = exercises
+      .filter((exercise) => exercise !== null)
+      .sort((a, b) => a.number - b.number);
+
+    if (validExercises.length === 0) {
+      return null;
+    }
+
+    return validExercises;
+  } catch {
+    return null;
+  }
 }
 
 /**

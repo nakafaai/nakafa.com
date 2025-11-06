@@ -178,6 +178,13 @@
   },
   "Exercises": {
     "exercises": "Exercises",
+    "answer": "Answer",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "score": "Score",
+    "reset": "Reset",
+    "explanation": "Explanation",
+    "number-count": "Number {count}",
     "high-school": "High School",
     "tka": "TKA",
     "snbt": "SNBT",

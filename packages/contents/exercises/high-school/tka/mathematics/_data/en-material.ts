@@ -1,7 +1,7 @@
-import type { MaterialList } from "@repo/contents/_types/exercises/material";
+import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
 import { BASE_PATH } from ".";
 
-const enMaterials: MaterialList = [
+const enMaterials: ExercisesMaterialList = [
   {
     title: "Try Out",
     description:

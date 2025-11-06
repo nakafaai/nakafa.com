@@ -2,8 +2,6 @@
   "name": "@repo/testing",
   "version": "0.0.0",
   "private": true,
-  "main": "./index.ts",
-  "type": "module",
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"

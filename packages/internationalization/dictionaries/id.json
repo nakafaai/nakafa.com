@@ -178,6 +178,13 @@
   },
   "Exercises": {
     "exercises": "Latihan",
+    "answer": "Jawaban",
+    "correct": "Benar",
+    "incorrect": "Salah",
+    "score": "Nilai",
+    "reset": "Ulangi",
+    "explanation": "Pembahasan",
+    "number-count": "Nomor {count}",
     "high-school": "SMA",
     "tka": "TKA",
     "snbt": "SNBT",

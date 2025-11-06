@@ -14,6 +14,8 @@ const buttonVariants = cva(
           "border border-primary bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] text-primary shadow-xs hover:bg-[color-mix(in_oklch,var(--primary)_10%,var(--background))]",
         destructive:
           "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20",
+        "destructive-outline":
+          "border border-destructive bg-[color-mix(in_oklch,var(--destructive)_5%,var(--background))] text-destructive shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_10%,var(--background))]",
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
         secondary:
