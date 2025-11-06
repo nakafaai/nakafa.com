@@ -10,7 +10,6 @@ type State = {
 };
 
 type Actions = {
-  setExerciseSetId: (id: string) => void;
   selectAnswer: ({
     exerciseNumber,
     choice,
@@ -52,15 +51,6 @@ export const createExerciseStore = ({
     persist(
       immer((set, get) => ({
         ...initialState({ setId, totalExercises }),
-
-        setExerciseSetId: (id) =>
-          set((state) => {
-            if (state.setId !== id) {
-              state.setId = id;
-              state.answers = {};
-              state.visibleExplanations = {};
-            }
-          }),
 
         selectAnswer: ({ exerciseNumber, choice, correctAnswer }) =>
           set((state) => {
