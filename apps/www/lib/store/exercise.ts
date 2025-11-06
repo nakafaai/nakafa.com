@@ -94,6 +94,7 @@ export const createExerciseStore = ({
       {
         name: "nakafa-exercise",
         storage: createJSONStorage(() => sessionStorage),
+        version: 1,
       }
     )
   );
