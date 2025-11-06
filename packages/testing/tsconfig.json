@@ -7,6 +7,6 @@
       "@repo/testing/*": ["./*"]
     }
   },
-  "include": ["./src/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]
 }
