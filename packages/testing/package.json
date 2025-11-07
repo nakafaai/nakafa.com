@@ -8,6 +8,6 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.0",
-    "vitest": "^4.0.7"
+    "vitest": "^4.0.8"
   }
 }
