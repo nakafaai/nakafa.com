@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
+import type { NextRequest } from "next/server";
 import { hasLocale, type Locale } from "next-intl";
 import { generateOGImage } from "@/app/[locale]/og/[...slug]/og";
 import { getMetadataFromSlug } from "@/lib/utils/system";
@@ -49,10 +50,10 @@ export function generateStaticParams() {
 }
 
 export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ slug: string[] }> }
+  _req: NextRequest,
+  ctx: RouteContext<"/og/[...slug]">
 ) {
-  const slug = (await params).slug;
+  const { slug } = await ctx.params;
 
   // Parse locale from slug
   const locale: Locale = hasLocale(routing.locales, slug[0])
