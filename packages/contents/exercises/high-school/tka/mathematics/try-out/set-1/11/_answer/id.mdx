@@ -1,0 +1,55 @@
+export const metadata = {
+  title: "Pembahasan Soal 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Matriks Transformasi Skala
+
+Matriks skala <InlineMath math="(T_1)" /> dengan faktor <InlineMath math="2" /> pada sumbu-x dan <InlineMath math="0.5" /> pada sumbu-y
+
+<BlockMath math="M_1 = \begin{pmatrix} 2 & 0 \\ 0 & 0.5 \end{pmatrix}" />
+
+#### Matriks Transformasi Geser
+
+Matriks geser (shear) sejajar sumbu-x dengan faktor <InlineMath math="1" /> <InlineMath math="(T_2)" />
+
+<BlockMath math="M_2 = \begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}" />
+
+#### Matriks Komposisi
+
+Matriks komposisi <InlineMath math="(T_2 \circ T_1)" /> adalah <InlineMath math="M_2 \times M_1" />
+
+<BlockMath math="M_2 \times M_1 = \begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix} \begin{pmatrix} 2 & 0 \\ 0 & 0.5 \end{pmatrix} = \begin{pmatrix} 2 & 0.5 \\ 0 & 0.5 \end{pmatrix}" />
+
+#### Menghitung Luas Awal
+
+Persegi dengan sisi <InlineMath math="2" /> satuan memiliki luas awal
+
+<BlockMath math="\text{Luas awal} = 2 \times 2 = 4 \text{ satuan luas}" />
+
+#### Menentukan Faktor Skala Perubahan Luas
+
+Determinan matriks komposisi <InlineMath math="M_2 \cdot M_1" /> memberikan faktor skala perubahan luas
+
+<MathContainer>
+<BlockMath math="\det(M_2 M_1) = (2 \times 0.5) - (0.5 \times 0)" />
+
+<BlockMath math="= 1 - 0 = 1" />
+</MathContainer>
+
+#### Luas Setelah Transformasi
+
+Luas setelah transformasi dihitung dengan
+
+<MathContainer>
+<BlockMath math="\text{Luas baru} = |\det(M_2 M_1)| \times \text{Luas awal}" />
+
+<BlockMath math="= |1| \times 4 = 4 \text{ satuan luas}" />
+</MathContainer>
+
+Meskipun terjadi transformasi skala dan geser, luas persegi tetap sama karena determinan matriks komposisi adalah <InlineMath math="1" />
+
+Jadi, luas persegi setelah kedua transformasi adalah <InlineMath math="4" /> satuan luas
+
+

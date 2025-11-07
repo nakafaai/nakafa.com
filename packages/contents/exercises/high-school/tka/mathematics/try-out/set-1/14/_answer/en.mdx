@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "Solution to Question 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Given <InlineMath math="A = \begin{pmatrix} 1 & 2 \\ 1 & 3 \end{pmatrix}" /> and <InlineMath math="B = \begin{pmatrix} 4 & 1 \\ 1 & 3 \end{pmatrix}" /> with <InlineMath math="AC = B" />
+
+#### Finding Matrix C
+
+From the equation <InlineMath math="AC = B" />, multiply both sides by <InlineMath math="A^{-1}" />
+
+<MathContainer>
+<BlockMath math="AC = B" />
+
+<BlockMath math="A^{-1}AC = A^{-1}B" />
+
+<BlockMath math="C = A^{-1}B" />
+</MathContainer>
+
+However, since the order of matrix multiplication matters
+
+<BlockMath math="C = BA^{-1}" />
+
+#### Determining Inverse of Matrix A
+
+For matrix <InlineMath math="A = \begin{pmatrix} 1 & 2 \\ 1 & 3 \end{pmatrix}" />, its inverse is
+
+<MathContainer>
+<BlockMath math="A^{-1} = \frac{1}{(1 \cdot 3) - (1 \cdot 2)} \begin{pmatrix} 3 & -2 \\ -1 & 1 \end{pmatrix}" />
+
+<BlockMath math="= \frac{1}{3 - 2} \begin{pmatrix} 3 & -2 \\ -1 & 1 \end{pmatrix}" />
+
+<BlockMath math="= \begin{pmatrix} 3 & -2 \\ -1 & 1 \end{pmatrix}" />
+</MathContainer>
+
+#### Calculating Matrix C
+
+Calculate <InlineMath math="C = BA^{-1}" />
+
+<MathContainer>
+<BlockMath math="C = \begin{pmatrix} 4 & 1 \\ 1 & 3 \end{pmatrix} \begin{pmatrix} 3 & -2 \\ -1 & 1 \end{pmatrix}" />
+
+<BlockMath math="= \begin{pmatrix} 4(3) + 1(-1) & 4(-2) + 1(1) \\ 1(3) + 3(-1) & 1(-2) + 3(1) \end{pmatrix}" />
+
+<BlockMath math="= \begin{pmatrix} 12 - 1 & -8 + 1 \\ 3 - 3 & -2 + 3 \end{pmatrix}" />
+
+<BlockMath math="= \begin{pmatrix} 11 & -7 \\ 0 & 1 \end{pmatrix}" />
+</MathContainer>
+
+#### Calculating Determinant of C
+
+The determinant of matrix <InlineMath math="C" /> is
+
+<MathContainer>
+<BlockMath math="|C| = (11 \cdot 1) - (-7 \cdot 0)" />
+
+<BlockMath math="= 11 - 0 = 11" />
+</MathContainer>
+
+Therefore, the determinant of matrix <InlineMath math="C" /> is <InlineMath math="11" />
+
+

@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Solution to Question 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Given an arithmetic series with <InlineMath math="S_n = 2n^2 + 4n" />
+
+#### Determining the nth Term Formula
+
+If <InlineMath math="U_n = S_n - S_{n-1}" />, then
+
+<MathContainer>
+<BlockMath math="U_n = (2n^2 + 4n) - (2(n-1)^2 + 4(n-1))" />
+
+<BlockMath math="= 2n^2 + 4n - (2(n^2 - 2n + 1) + 4n - 4)" />
+
+<BlockMath math="= 2n^2 + 4n - (2n^2 - 4n + 2 + 4n - 4)" />
+
+<BlockMath math="= 2n^2 + 4n - 2n^2 + 4n - 2 - 4n + 4" />
+
+<BlockMath math="= 4n + 2" />
+</MathContainer>
+
+#### Calculating the 10th Term
+
+The 10th term of the series is
+
+<MathContainer>
+<BlockMath math="U_n = 4n + 2" />
+
+<BlockMath math="U_{10} = 4(10) + 2" />
+
+<BlockMath math="= 40 + 2 = 42" />
+</MathContainer>
+
+Therefore, the 10th term of the series is <InlineMath math="42" />
+
+

@@ -1,0 +1,55 @@
+export const metadata = {
+  title: "Solution to Question 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Scale Transformation Matrix
+
+Scale matrix <InlineMath math="(T_1)" /> with factor <InlineMath math="2" /> on the x-axis and <InlineMath math="0.5" /> on the y-axis
+
+<BlockMath math="M_1 = \begin{pmatrix} 2 & 0 \\ 0 & 0.5 \end{pmatrix}" />
+
+#### Shear Transformation Matrix
+
+Shear matrix along the x-axis with factor <InlineMath math="1" /> <InlineMath math="(T_2)" />
+
+<BlockMath math="M_2 = \begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}" />
+
+#### Composition Matrix
+
+The composition matrix <InlineMath math="(T_2 \circ T_1)" /> is <InlineMath math="M_2 \times M_1" />
+
+<BlockMath math="M_2 \times M_1 = \begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix} \begin{pmatrix} 2 & 0 \\ 0 & 0.5 \end{pmatrix} = \begin{pmatrix} 2 & 0.5 \\ 0 & 0.5 \end{pmatrix}" />
+
+#### Calculating Initial Area
+
+A square with side <InlineMath math="2" /> units has an initial area of
+
+<BlockMath math="\text{Initial area} = 2 \times 2 = 4 \text{ square units}" />
+
+#### Determining Area Change Scale Factor
+
+The determinant of the composition matrix <InlineMath math="M_2 \cdot M_1" /> gives the area change scale factor
+
+<MathContainer>
+<BlockMath math="\det(M_2 M_1) = (2 \times 0.5) - (0.5 \times 0)" />
+
+<BlockMath math="= 1 - 0 = 1" />
+</MathContainer>
+
+#### Area After Transformation
+
+The area after transformation is calculated by
+
+<MathContainer>
+<BlockMath math="\text{New area} = |\det(M_2 M_1)| \times \text{Initial area}" />
+
+<BlockMath math="= |1| \times 4 = 4 \text{ square units}" />
+</MathContainer>
+
+Although scale and shear transformations occurred, the area of the square remains the same because the determinant of the composition matrix is <InlineMath math="1" />
+
+Therefore, the area of the square after both transformations is <InlineMath math="4" /> square units
+
+

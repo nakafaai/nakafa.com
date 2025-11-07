@@ -1,4 +1,3 @@
-import { generateNanoId } from "@repo/design-system/lib/utils";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
@@ -93,7 +92,7 @@ export const createExerciseStore = ({
           }),
       })),
       {
-        name: `nakafa-exercise-${generateNanoId(setId.length)}`,
+        name: `nakafa-exercise-${setId}`,
         storage: createJSONStorage(() => sessionStorage),
         version: 1,
         migrate: (persistedState) => {
