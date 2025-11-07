@@ -20,8 +20,8 @@ export function ExerciseAnswer({ children, exerciseNumber }: Props) {
     <Activity mode={showAnswer ? "visible" : "hidden"}>
       <section className="space-y-6">
         <Separator orientation="horizontal" />
-        <div className="space-y-4">
-          <p className="font-medium">{t("explanation")}</p>
+        <div className="space-y-6">
+          <h3 className="font-medium text-lg">{t("explanation")}</h3>
           {children}
         </div>
       </section>

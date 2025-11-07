@@ -1,0 +1,49 @@
+export const metadata = {
+  title: "Solution to Question 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Given <InlineMath math="f(x) = \frac{2x - 5}{x - 4}" /> with <InlineMath math="x \neq 4" /> and <InlineMath math="g(x) = 3x + 8" />
+
+#### Determining the Composite Function
+
+Calculate the composite function <InlineMath math="(f \circ g)(x) = f(g(x))" />
+
+<MathContainer>
+<BlockMath math="(f \circ g)(x) = f(g(x))" />
+
+<BlockMath math="= f(3x + 8)" />
+
+<BlockMath math="= \frac{2(3x + 8) - 5}{(3x + 8) - 4}" />
+
+<BlockMath math="= \frac{6x + 16 - 5}{3x + 8 - 4}" />
+
+<BlockMath math="= \frac{6x + 11}{3x + 4}" />
+</MathContainer>
+
+#### Determining the Inverse Function
+
+Let <InlineMath math="y = \frac{6x + 11}{3x + 4}" />, then solve for <InlineMath math="x" /> in terms of <InlineMath math="y" />
+
+<MathContainer>
+<BlockMath math="y = \frac{6x + 11}{3x + 4}" />
+
+<BlockMath math="3xy + 4y = 6x + 11" />
+
+<BlockMath math="3xy - 6x = 11 - 4y" />
+
+<BlockMath math="x(3y - 6) = 11 - 4y" />
+
+<BlockMath math="x = \frac{11 - 4y}{3y - 6}" />
+</MathContainer>
+
+Replace <InlineMath math="y" /> with <InlineMath math="x" /> to get the inverse function
+
+<BlockMath math="(f \circ g)^{-1}(x) = \frac{11 - 4x}{3x - 6}" />
+
+The condition is <InlineMath math="3x - 6 \neq 0 \Rightarrow x \neq 2" />
+
+Therefore, the inverse of <InlineMath math="(f \circ g)(x)" /> is <InlineMath math="\frac{11 - 4x}{3x - 6}" /> with <InlineMath math="x \neq 2" />
+
+

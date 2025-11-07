@@ -1,0 +1,47 @@
+export const metadata = {
+    title: "Solution to Question 5",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "06/11/2025",
+};
+
+Given the quadratic equation <InlineMath math="x^2 + ax - 4 = 0" /> with roots <InlineMath math="p" /> and <InlineMath math="q" />
+
+Based on Vieta's formulas, we know that
+
+<MathContainer>
+<BlockMath math="p + q = -\frac{b}{a} = -a" />
+
+<BlockMath math="p \cdot q = \frac{c}{a} = -4" />
+</MathContainer>
+
+If <InlineMath math="p^2 - 2pq + q^2 = 8a" />, then we can simplify the left side
+
+<MathContainer>
+<BlockMath math="p^2 + q^2 - 2pq = 8a" />
+
+<BlockMath math="(p + q)^2 - 2pq - 2pq = 8a" />
+
+<BlockMath math="(p + q)^2 - 4pq = 8a" />
+</MathContainer>
+
+Substitute the values <InlineMath math="p + q = -a" /> and <InlineMath math="pq = -4" />
+
+<MathContainer>
+<BlockMath math="(-a)^2 - 4(-4) = 8a" />
+
+<BlockMath math="a^2 + 16 = 8a" />
+
+<BlockMath math="a^2 - 8a + 16 = 0" />
+</MathContainer>
+
+Factor the quadratic equation
+
+<MathContainer>
+<BlockMath math="(a - 4)^2 = 0" />
+
+<BlockMath math="a = 4" />
+</MathContainer>
+
+Therefore, the value of <InlineMath math="a" /> that satisfies is <InlineMath math="4" />
+
+

@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Pembahasan Soal 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Untuk menyelesaikan pertidaksamaan ini, kita perlu memfaktorkan terlebih dahulu.
+
+Misalkan <InlineMath math="u = 9^x" />, sehingga pertidaksamaan menjadi
+
+<MathContainer>
+<BlockMath math="9^{2x} - 10 \cdot 9^x + 9 > 0" />
+
+<BlockMath math="(9^x)^2 - 10(9^x) + 9 > 0" />
+
+<BlockMath math="u^2 - 10u + 9 > 0" />
+</MathContainer>
+
+Faktorkan persamaan kuadrat
+
+<BlockMath math="(u - 1)(u - 9) > 0" />
+
+Substitusi kembali <InlineMath math="u = 9^x" />
+
+<BlockMath math="(9^x - 1)(9^x - 9) > 0" />
+
+Cari nilai <InlineMath math="x" /> ketika ekspresi sama dengan nol
+
+1. <InlineMath math="9^x = 1 \Rightarrow 9^x = 9^0 \Rightarrow x = 0" />
+2. <InlineMath math="9^x = 9 \Rightarrow 9^x = 9^1 \Rightarrow x = 1" />
+
+Dengan menggunakan garis bilangan, kita dapat menentukan daerah yang memenuhi pertidaksamaan
+
+> Untuk <InlineMath math="x < 0" />, kedua faktor bernilai negatif, sehingga hasilnya positif
+
+> Untuk <InlineMath math="0 < x < 1" />, satu faktor positif dan satu negatif, sehingga hasilnya negatif
+
+> Untuk <InlineMath math="x > 1" />, kedua faktor bernilai positif, sehingga hasilnya positif
+
+Jadi, himpunan penyelesaiannya adalah <InlineMath math="\{x < 0 \text{ atau } x > 1, x \in \mathbb{R}\}" />
+
+

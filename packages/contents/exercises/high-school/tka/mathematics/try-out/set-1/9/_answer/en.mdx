@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Solution to Question 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Given <InlineMath math="f(x) = 2x^2 - 3" /> and <InlineMath math="g(x) = 3x - 1" />
+
+The composite function <InlineMath math="(f \circ g)(x)" /> is <InlineMath math="f(g(x))" />
+
+Substitute function <InlineMath math="g(x)" /> into function <InlineMath math="f(x)" />
+
+<MathContainer>
+<BlockMath math="(f \circ g)(x) = f(g(x))" />
+
+<BlockMath math="= 2(g(x))^2 - 3" />
+
+<BlockMath math="= 2(3x - 1)^2 - 3" />
+</MathContainer>
+
+Expand <InlineMath math="(3x - 1)^2" /> using the formula <InlineMath math="(a - b)^2 = a^2 - 2ab + b^2" />
+
+<MathContainer>
+<BlockMath math="= 2(9x^2 - 6x + 1) - 3" />
+
+<BlockMath math="= 18x^2 - 12x + 2 - 3" />
+
+<BlockMath math="= 18x^2 - 12x - 1" />
+</MathContainer>
+
+Therefore, the composite function <InlineMath math="(f \circ g)(x) = 18x^2 - 12x - 1" />
+
+

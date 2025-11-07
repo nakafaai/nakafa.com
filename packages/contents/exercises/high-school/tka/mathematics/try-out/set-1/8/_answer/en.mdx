@@ -1,0 +1,104 @@
+export const metadata = {
+  title: "Solution to Question 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+Let capsule <InlineMath math="= x" />, tablet <InlineMath math="= y" />, with <InlineMath math="x \geq 0" /> and <InlineMath math="y \geq 0" />
+
+We obtain the mathematical model
+
+<MathContainer>
+<BlockMath math="5x + 2y \leq 60 \quad \text{...(i)}" />
+
+<BlockMath math="2x + 2y \leq 30 \quad \text{...(ii)}" />
+</MathContainer>
+
+#### Finding the Intersection Point
+
+If both line equations are eliminated, we get the intersection point
+
+<BlockMath math="\begin{array}{rcrcrcl} 5x & + & 2y & = & 60 & & \\ 2x & + & 2y & = & 30 & & - \\ \hline 3x & & & = & 30 & & \\ x & & & = & 10 & \Rightarrow & y = 5 \end{array}" />
+
+#### Solution Region Graph
+
+From the inequalities, we obtain the graph
+
+<LineEquation
+  title="Solution Region"
+  description="Linear inequality graph for calcium and iron requirements."
+  showZAxis={false}
+  cameraPosition={[12, 12, 20]}
+  data={[
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const x = i * 13.5;
+        const y = (60 - 5 * x) / 2;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "5x + 2y = 60",
+          at: 1,
+          offset: [-5, 7, 0],
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const x = i * 16.5;
+        const y = (30 - 2 * x) / 2;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "2x + 2y = 30",
+          at: 1,
+          offset: [-10, 7, 0],
+        },
+      ],
+    },
+    {
+      points: [
+        { x: 10, y: 5, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        {
+          text: "(10, 5)",
+          at: 0,
+          offset: [1, 1, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+#### Determining Minimum Cost
+
+The minimum cost function for capsules and tablets is <InlineMath math="f(x, y) = 1{,}000x + 800y" />
+
+Values at each corner point
+
+<MathContainer>
+<BlockMath math="f(12, 0) = 1{,}000(12) + 800(0) = 12{,}000" />
+
+<BlockMath math="f(10, 5) = 1{,}000(10) + 800(5) = 14{,}000" />
+
+<BlockMath math="f(0, 15) = 1{,}000(0) + 800(15) = 12{,}000" />
+</MathContainer>
+
+Therefore, the minimum cost that must be spent to meet the calcium and iron needs of the toddler is <InlineMath math="\text{Rp}12{,}000" />
+
+

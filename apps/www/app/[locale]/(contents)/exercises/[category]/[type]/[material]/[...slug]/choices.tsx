@@ -43,7 +43,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-2 pt-4 pb-8">
+    <div className="grid grid-cols-1 gap-2 pt-4 pb-8 md:grid-cols-2">
       {choices.map((choice) => {
         const isCorrect =
           answer?.isCorrect && choice.value === correctChoice?.value;
@@ -59,7 +59,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
 
         return (
           <Label
-            className={cn(buttonVariants({ variant }), "justify-start")}
+            className={cn(buttonVariants({ variant }), "h-auto justify-start")}
             key={choice.label}
           >
             <Checkbox

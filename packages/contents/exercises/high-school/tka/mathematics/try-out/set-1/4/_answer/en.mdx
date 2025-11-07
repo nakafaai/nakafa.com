@@ -1,0 +1,42 @@
+export const metadata = {
+    title: "Solution to Question 4",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "06/11/2025",
+};
+
+To solve this inequality, we need to factor it first.
+
+Let <InlineMath math="u = 9^x" />, so the inequality becomes
+
+<MathContainer>
+<BlockMath math="9^{2x} - 10 \cdot 9^x + 9 > 0" />
+
+<BlockMath math="(9^x)^2 - 10(9^x) + 9 > 0" />
+
+<BlockMath math="u^2 - 10u + 9 > 0" />
+</MathContainer>
+
+Factor the quadratic equation
+
+<BlockMath math="(u - 1)(u - 9) > 0" />
+
+Substitute back <InlineMath math="u = 9^x" />
+
+<BlockMath math="(9^x - 1)(9^x - 9) > 0" />
+
+Find the values of <InlineMath math="x" /> when the expression equals zero
+
+1. <InlineMath math="9^x = 1 \Rightarrow 9^x = 9^0 \Rightarrow x = 0" />
+2. <InlineMath math="9^x = 9 \Rightarrow 9^x = 9^1 \Rightarrow x = 1" />
+
+Using a number line, we can determine the regions that satisfy the inequality
+
+> For <InlineMath math="x < 0" />, both factors are negative, so the result is positive
+
+> For <InlineMath math="0 < x < 1" />, one factor is positive and one is negative, so the result is negative
+
+> For <InlineMath math="x > 1" />, both factors are positive, so the result is positive
+
+Therefore, the solution set is <InlineMath math="\{x < 0 \text{ or } x > 1, x \in \mathbb{R}\}" />
+
+

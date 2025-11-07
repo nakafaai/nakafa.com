@@ -20,7 +20,7 @@ export function ExerciseAnswerAction({ exerciseNumber }: Props) {
   return (
     <div className="flex items-center gap-2">
       <Button onClick={() => toggleAnswer(exerciseNumber)} variant="outline">
-        {t("answer")}
+        {t("explanation")}
         <ChevronDownIcon
           className={cn(
             "transition-transform ease-out",
