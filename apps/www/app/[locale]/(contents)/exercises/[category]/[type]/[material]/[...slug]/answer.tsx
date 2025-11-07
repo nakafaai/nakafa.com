@@ -1,8 +1,8 @@
 "use client";
 
 import { Separator } from "@repo/design-system/components/ui/separator";
+import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
-import { Activity } from "react";
 import { useExercise } from "@/lib/context/use-exercise";
 
 type Props = {
@@ -17,14 +17,12 @@ export function ExerciseAnswer({ children, exerciseNumber }: Props) {
   );
 
   return (
-    <Activity mode={showAnswer ? "visible" : "hidden"}>
-      <section className="space-y-6">
-        <Separator orientation="horizontal" />
-        <div className="space-y-6">
-          <h3 className="font-medium text-lg">{t("explanation")}</h3>
-          {children}
-        </div>
-      </section>
-    </Activity>
+    <section className={cn("space-y-6", showAnswer ? "visible" : "hidden")}>
+      <Separator orientation="horizontal" />
+      <div className="space-y-6">
+        <h3 className="font-medium text-lg">{t("explanation")}</h3>
+        {children}
+      </div>
+    </section>
   );
 }
