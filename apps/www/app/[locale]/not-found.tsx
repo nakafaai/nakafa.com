@@ -1,3 +1,5 @@
+"use client";
+
 import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { cn } from "@repo/design-system/lib/utils";
