@@ -10,13 +10,13 @@ import { cn } from "@repo/design-system/lib/utils";
 import { IconBrandLinkedin } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { holyMenu } from "@/components/sidebar/_data/holy";
-import { subjectAll } from "@/components/sidebar/_data/subject";
+import { subjectMenu } from "@/components/sidebar/_data/subject";
 import { articlesMenu } from "../sidebar/_data/articles";
 
 const highSchoolSubjects =
-  subjectAll.find((subject) => subject.title === "high-school")?.items || [];
+  subjectMenu.find((subject) => subject.title === "high-school")?.items || [];
 const universitySubjects =
-  subjectAll.find((subject) => subject.title === "university")?.items || [];
+  subjectMenu.find((subject) => subject.title === "university")?.items || [];
 
 export function Footer() {
   const t = useTranslations("About");

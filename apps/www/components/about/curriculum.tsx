@@ -2,7 +2,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useTranslations } from "next-intl";
 import { articlesMenu } from "@/components/sidebar/_data/articles";
 import { holyMenu } from "@/components/sidebar/_data/holy";
-import { subjectAll } from "@/components/sidebar/_data/subject";
+import { subjectMenu } from "@/components/sidebar/_data/subject";
 
 export function Curriculum() {
   const tHoly = useTranslations("Holy");
@@ -30,7 +30,7 @@ export function Curriculum() {
           {tCommon("subject")}
         </h3>
         <div className="overflow-hidden rounded-xl border shadow-sm">
-          {subjectAll.map((subject) => (
+          {subjectMenu.map((subject) => (
             <div
               className="flex flex-col border-b last:border-b-0"
               key={subject.title}

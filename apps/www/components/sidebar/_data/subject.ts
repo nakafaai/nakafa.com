@@ -1,9 +1,8 @@
 import { getCategoryIcon } from "@repo/contents/_lib/subject/category";
 
-export const subjectAll = [
+const data = [
   {
     title: "high-school",
-    icon: getCategoryIcon("high-school"),
     items: [
       {
         title: "grade",
@@ -24,7 +23,6 @@ export const subjectAll = [
   },
   {
     title: "university",
-    icon: getCategoryIcon("university"),
     items: [
       {
         title: "bachelor",
@@ -33,3 +31,8 @@ export const subjectAll = [
     ],
   },
 ] as const;
+
+export const subjectMenu = data.map((item) => ({
+  ...item,
+  icon: getCategoryIcon(item.title),
+}));

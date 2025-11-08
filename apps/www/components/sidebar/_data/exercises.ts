@@ -1,9 +1,8 @@
 import { getCategoryIcon } from "@repo/contents/_lib/exercises/category";
 
-export const exercisesMenu = [
+const data = [
   {
     title: "high-school",
-    icon: getCategoryIcon("high-school"),
     items: [
       {
         title: "tka",
@@ -16,3 +15,8 @@ export const exercisesMenu = [
     ],
   },
 ] as const;
+
+export const exercisesMenu = data.map((item) => ({
+  ...item,
+  icon: getCategoryIcon(item.title),
+}));

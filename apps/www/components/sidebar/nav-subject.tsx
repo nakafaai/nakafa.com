@@ -20,7 +20,7 @@ import {
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { ChevronRightIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { subjectAll } from "./_data/subject";
+import { subjectMenu } from "./_data/subject";
 
 function MenuItem() {
   const pathname = usePathname();
@@ -28,7 +28,7 @@ function MenuItem() {
 
   return (
     <SidebarMenu>
-      {subjectAll.map((item) => {
+      {subjectMenu.map((item) => {
         return (
           <Collapsible
             defaultOpen

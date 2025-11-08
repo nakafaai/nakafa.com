@@ -30,7 +30,7 @@ import { useSearchQuery } from "@/lib/react-query/use-search";
 import type { PagefindResult } from "@/types/pagefind";
 import { articlesMenu } from "../sidebar/_data/articles";
 import { holyMenu } from "../sidebar/_data/holy";
-import { subjectAll } from "../sidebar/_data/subject";
+import { subjectMenu } from "../sidebar/_data/subject";
 
 const DEBOUNCE_TIME = 300;
 
@@ -214,7 +214,7 @@ function DefaultItems() {
 
   useEffect(() => {
     // prefetch all the links
-    for (const item of subjectAll) {
+    for (const item of subjectMenu) {
       for (const subItem of item.items) {
         router.prefetch(subItem.href);
       }
@@ -231,7 +231,7 @@ function DefaultItems() {
 
   return (
     <>
-      {subjectAll.map((item) => (
+      {subjectMenu.map((item) => (
         <CommandGroup heading={t(item.title)} key={item.title}>
           {item.items.map((subItem) => {
             let title = "";
