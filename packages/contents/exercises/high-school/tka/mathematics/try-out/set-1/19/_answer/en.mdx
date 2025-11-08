@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Solution to Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { Graph } from "../graph";
+
+Given the trigonometric function graph
+
+<Graph 
+  title="Trigonometric Function Graph"
+  description="Sine function graph with horizontal transformation."
+/>
+
+#### Determining the Function Equation
+
+Let the graph equation be <InlineMath math="y = \sin(2x + 60^\circ)" />
+
+Verify with several points
+
+For <InlineMath math="x = 0" />
+
+<MathContainer>
+<BlockMath math="y = \sin(2 \cdot 0 + 60^\circ)" />
+
+<BlockMath math="= \sin 60^\circ = \frac{1}{2}\sqrt{3}" />
+</MathContainer>
+
+For <InlineMath math="x = 15^\circ" />
+
+<MathContainer>
+<BlockMath math="y = \sin(2 \cdot 15^\circ + 60^\circ)" />
+
+<BlockMath math="= \sin 90^\circ = 1" />
+</MathContainer>
+
+For <InlineMath math="x = 60^\circ" />
+
+<MathContainer>
+<BlockMath math="y = \sin(2 \cdot 60^\circ + 60^\circ)" />
+
+<BlockMath math="= \sin 180^\circ = 0" />
+</MathContainer>
+
+#### Verification of Intersection Points
+
+We obtain the intersection points
+
+<BlockMath math="\left(0, \frac{1}{2}\sqrt{3}\right); (15^\circ, 1); (60^\circ, 0)" />
+
+which match the graph.
+
+Therefore, the equation of the trigonometric function graph is <InlineMath math="y = \sin(2x + 60^\circ)" />

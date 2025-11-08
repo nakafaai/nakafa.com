@@ -218,8 +218,8 @@ importers:
         specifier: ^5.90.2
         version: 5.90.2(@tanstack/react-query@5.90.7(react@19.2.0))(react@19.2.0)
       '@vercel/functions':
-        specifier: ^3.2.0
-        version: 3.2.0
+        specifier: ^3.3.0
+        version: 3.3.0
       ai:
         specifier: ^5.0.89
         version: 5.0.89(zod@4.1.12)
@@ -345,8 +345,8 @@ importers:
         specifier: ^2.0.29
         version: 2.0.29(zod@4.1.12)
       '@ai-sdk/google-vertex':
-        specifier: ^3.0.59
-        version: 3.0.59(zod@4.1.12)
+        specifier: ^3.0.60
+        version: 3.0.60(zod@4.1.12)
       '@ai-sdk/openai':
         specifier: ^2.0.64
         version: 2.0.64(zod@4.1.12)
@@ -369,8 +369,8 @@ importers:
         specifier: ^1.7.0
         version: 1.7.0(babel-plugin-macros@3.1.0)
       gpt-tokenizer:
-        specifier: ^3.3.0
-        version: 3.3.0
+        specifier: ^3.4.0
+        version: 3.4.0
       ky:
         specifier: ^1.14.0
         version: 1.14.0
@@ -824,8 +824,8 @@ packages:
   '@acemir/cssom@0.9.19':
     resolution: {integrity: sha512-Pp2gAQXPZ2o7lt4j0IMwNRXqQ3pagxtDj5wctL5U2Lz4oV0ocDNlkgx4DpxfyKav4S/bePuI+SMqcBSUHLy9kg==}
 
-  '@ai-sdk/anthropic@2.0.41':
-    resolution: {integrity: sha512-ZQebpyE6rM3JoeEyhJXUNDiRfVegw8ZrxT+rB8yurxI5JXDnlGpYQvSPmdR8TQfMbps4YkggfbcOwMeEZaTS+g==}
+  '@ai-sdk/anthropic@2.0.42':
+    resolution: {integrity: sha512-5BcXMx6VTYPeA4csd1SvJgpCn5Nu9qHqsNqOr1e/R7UHq83Vv4j4OcgbFwdWgaW/wihNla5B+y4OGqTFIw216w==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -836,8 +836,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google-vertex@3.0.59':
-    resolution: {integrity: sha512-Sy+opBRC/tH9orH52KwoJuu88b2Ukf4Zn7A+ui729WUZpoQX6Ij98xe0moe6iRxC6hR6o7RekMShf02k2xeu8Q==}
+  '@ai-sdk/google-vertex@3.0.60':
+    resolution: {integrity: sha512-L6VhW6ZijQ0YUneeJXufrksXXOc6doGUASpIrvJjkALvmCeHTNU4Ofge5l0s5Lpy44mrfiqefAOHF7f7T7Uglg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -4666,8 +4666,8 @@ packages:
       vue-router:
         optional: true
 
-  '@vercel/functions@3.2.0':
-    resolution: {integrity: sha512-JK50S8CJFsw9wdFfNYqS9wKIu8ok+n5JlBBBtEIB+/YuVBfW80OY9chAaYoYweA7firKH6c3H3JfyCw3X13jvw==}
+  '@vercel/functions@3.3.0':
+    resolution: {integrity: sha512-u5UrM2BX7gdMMXaJph3ZxgjAczv5/3oCG4H37BcnDDiXO7hJnN9C7pNX1v4mSmMLQ22n44C2bqN0d87lxfxYXQ==}
     engines: {node: '>= 20'}
     peerDependencies:
       '@aws-sdk/credential-provider-web-identity': '*'
@@ -6331,8 +6331,8 @@ packages:
     resolution: {integrity: sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==}
     engines: {node: '>= 0.4'}
 
-  gpt-tokenizer@3.3.0:
-    resolution: {integrity: sha512-3cWaYQkQkMoqVR6h1lIsE+fjvasElSfl48+Gy2/88gCFvzXPYGFr0Cl6Ac483rvsXcsdBRyDxFDPuVIB+bsCzw==}
+  gpt-tokenizer@3.4.0:
+    resolution: {integrity: sha512-wxFLnhIXTDjYebd9A9pGl3e31ZpSypbpIJSOswbgop5jLte/AsZVDvjlbEuVFlsqZixVKqbcoNmRlFDf6pz/UQ==}
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
@@ -10039,7 +10039,7 @@ snapshots:
 
   '@acemir/cssom@0.9.19': {}
 
-  '@ai-sdk/anthropic@2.0.41(zod@4.1.12)':
+  '@ai-sdk/anthropic@2.0.42(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.16(zod@4.1.12)
@@ -10052,9 +10052,9 @@ snapshots:
       '@vercel/oidc': 3.0.3
       zod: 4.1.12
 
-  '@ai-sdk/google-vertex@3.0.59(zod@4.1.12)':
+  '@ai-sdk/google-vertex@3.0.60(zod@4.1.12)':
     dependencies:
-      '@ai-sdk/anthropic': 2.0.41(zod@4.1.12)
+      '@ai-sdk/anthropic': 2.0.42(zod@4.1.12)
       '@ai-sdk/google': 2.0.29(zod@4.1.12)
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.16(zod@4.1.12)
@@ -14616,7 +14616,7 @@ snapshots:
       next: 16.0.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       react: 19.2.0
 
-  '@vercel/functions@3.2.0':
+  '@vercel/functions@3.3.0':
     dependencies:
       '@vercel/oidc': 3.0.3
 
@@ -16527,7 +16527,7 @@ snapshots:
 
   gopd@1.2.0: {}
 
-  gpt-tokenizer@3.3.0: {}
+  gpt-tokenizer@3.4.0: {}
 
   graceful-fs@4.2.11: {}
 

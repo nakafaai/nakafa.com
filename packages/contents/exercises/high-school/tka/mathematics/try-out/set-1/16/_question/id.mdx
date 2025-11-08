@@ -1,0 +1,30 @@
+export const metadata = {
+  title: "Soal 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Lintasan dihitung mulai dari kotak hingga ke B10 sehingga didapatkan sebuah deret aritmetika dari jarak tempuh <InlineMath math="10, 18, 26, 34, \ldots" />
+
+<Mermaid
+  chart={`
+    graph LR
+      START[START] -->|mulai| B10[B10]
+      B10 -->|8m| B9[B9]
+      B9 -->|8m| B8[B8]
+      B8 -->|8m| B7[B7]
+      B7 -->|8m| B6[B6]
+      B6 -->|8m| B5[B5]
+      B5 -->|8m| B4[B4]
+      B4 -->|8m| B3[B3]
+      B3 -->|8m| B2[B2]
+      B2 -->|8m| B1[B1]
+      B1 -->|10m| KOTAK[KOTAK]
+  `}
+/>
+
+Dalam kotak tersedia <InlineMath math="10" /> bendera dan harus dipindahkan ke dalam botol yang tersedia satu demi satu (tidak sekaligus). Semua peserta lomba mulai bergerak (start) dari botol nomor <InlineMath math="10" /> untuk mengambil bendera dalam kotak.
+
+Jarak start ke kotak adalah ....
+
+

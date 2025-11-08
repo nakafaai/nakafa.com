@@ -39,7 +39,7 @@
     "@tailwindcss/postcss": "^4.1.17",
     "@tanstack/react-query": "^5.90.7",
     "@tanstack/react-query-devtools": "^5.90.2",
-    "@vercel/functions": "^3.2.0",
+    "@vercel/functions": "^3.3.0",
     "ai": "^5.0.89",
     "babel-plugin-react-compiler": "^1.0.0",
     "better-auth": "1.3.27",

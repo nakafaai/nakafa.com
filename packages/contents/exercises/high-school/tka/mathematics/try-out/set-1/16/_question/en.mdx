@@ -1,0 +1,30 @@
+export const metadata = {
+  title: "Question 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+The path is calculated from the box to B10, forming an arithmetic sequence of distances <InlineMath math="10, 18, 26, 34, \ldots" />
+
+<Mermaid
+  chart={`
+    graph LR
+      START[START] -->|start| B10[B10]
+      B10 -->|8m| B9[B9]
+      B9 -->|8m| B8[B8]
+      B8 -->|8m| B7[B7]
+      B7 -->|8m| B6[B6]
+      B6 -->|8m| B5[B5]
+      B5 -->|8m| B4[B4]
+      B4 -->|8m| B3[B3]
+      B3 -->|8m| B2[B2]
+      B2 -->|8m| B1[B1]
+      B1 -->|10m| BOX[BOX]
+  `}
+/>
+
+There are <InlineMath math="10" /> flags in the box that must be moved into the available bottles one by one (not all at once). All race participants start from bottle number <InlineMath math="10" /> to retrieve flags from the box.
+
+The distance from the start to the box is ....
+
+

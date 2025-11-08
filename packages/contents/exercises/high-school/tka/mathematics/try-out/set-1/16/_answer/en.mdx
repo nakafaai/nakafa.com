@@ -1,0 +1,47 @@
+export const metadata = {
+  title: "Solution to Question 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+The path is calculated from the box to B10, forming an arithmetic sequence of distances <InlineMath math="10, 18, 26, 34, \ldots" />
+
+#### Determining Series Parameters
+
+From the series <InlineMath math="10, 18, 26, 34, \ldots" />, we get
+
+- First term <InlineMath math="a = 10" />
+- Common difference <InlineMath math="b = 18 - 10 = 8" />
+- Number of terms <InlineMath math="n = 10" /> (from box to B10)
+
+#### Calculating the 10th Term
+
+The formula for the nth term of an arithmetic series
+
+<MathContainer>
+<BlockMath math="U_n = a + (n - 1)b" />
+
+<BlockMath math="U_{10} = 10 + (10 - 1) \cdot 8" />
+
+<BlockMath math="= 10 + 9 \cdot 8" />
+
+<BlockMath math="= 10 + 72 = 82" />
+</MathContainer>
+
+#### Calculating the Sum of Series
+
+The sum of distances from the box to B10
+
+<MathContainer>
+<BlockMath math="S_n = \frac{n}{2}(a + U_n)" />
+
+<BlockMath math="S_{10} = \frac{10}{2}(a + U_{10})" />
+
+<BlockMath math="= 5(10 + 82)" />
+
+<BlockMath math="= 5 \cdot 92 = 460" />
+</MathContainer>
+
+Therefore, the distance from the start to the box is <InlineMath math="460" /> meters
+
+

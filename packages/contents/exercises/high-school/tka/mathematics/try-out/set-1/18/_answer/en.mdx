@@ -1,0 +1,55 @@
+export const metadata = {
+  title: "Solution to Question 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Given the equation <InlineMath math="\cos 2x - 2\cos x = -1" /> for <InlineMath math="0 \leq x \leq 2\pi" />
+
+#### Transforming the Equation
+
+Use the trigonometric identity <InlineMath math="\cos 2x = 2\cos^2 x - 1" />
+
+<MathContainer>
+<BlockMath math="\cos 2x - 2\cos x = -1" />
+
+<BlockMath math="(2\cos^2 x - 1) - 2\cos x + 1 = 0" />
+
+<BlockMath math="2\cos^2 x - 2\cos x = 0" />
+
+<BlockMath math="\cos x(\cos x - 1) = 0" />
+</MathContainer>
+
+Therefore <InlineMath math="\cos x = 0" /> or <InlineMath math="\cos x = 1" />
+
+#### Solving for cos x = 0
+
+If <InlineMath math="\cos x = \cos \alpha" />, then
+
+<BlockMath math="x_1 = \alpha + k \cdot 2\pi \quad \text{and} \quad x_2 = -\alpha + k \cdot 2\pi" />
+
+For <InlineMath math="\cos x = \cos \frac{\pi}{2} = 0" />
+
+<MathContainer>
+<BlockMath math="k = 0 \Rightarrow x_1 = \frac{\pi}{2} + 0 \cdot 2\pi = \frac{1}{2}\pi" />
+
+<BlockMath math="k = 1 \Rightarrow x_2 = -\frac{\pi}{2} + 2\pi = \frac{3}{2}\pi" />
+</MathContainer>
+
+#### Solving for cos x = 1
+
+For <InlineMath math="\cos x = \cos 0 = 1" />
+
+<MathContainer>
+<BlockMath math="k = 0 \Rightarrow x_1 = 0 + 0 \cdot 2\pi = 0" />
+
+<BlockMath math="k = 1 \Rightarrow x_2 = -0 + 2\pi = 2\pi" />
+</MathContainer>
+
+#### Solution Set
+
+Therefore, the solution set of the equation <InlineMath math="\cos 2x - 2\cos x = -1" /> for <InlineMath math="0 \leq x \leq 2\pi" /> is
+
+<BlockMath math="\left\{0, \frac{1}{2}\pi, \frac{3}{2}\pi, 2\pi\right\}" />
+
+
