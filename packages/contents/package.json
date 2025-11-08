@@ -22,7 +22,7 @@
     "next-intl": "^4.5.0",
     "react": "19.2.0",
     "react-aria-components": "^1.13.0",
-    "recharts": "^3.3.0",
+    "recharts": "^2.15.4",
     "zod": "^4.1.12"
   },
   "devDependencies": {
