@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 import type { NextRequest } from "next/server";
@@ -7,12 +6,6 @@ import { getMetadataFromSlug } from "@/lib/utils/system";
 import { generateOGImage } from "./og";
 
 export const revalidate = false;
-
-// Load fonts at module level (once at build time)
-const fontRegular = readFile(
-  `${process.cwd()}/public/fonts/GeistMono-Regular.ttf`
-);
-const fontBold = readFile(`${process.cwd()}/public/fonts/GeistMono-Bold.ttf`);
 
 export function generateStaticParams() {
   // Top level directories in contents
@@ -72,17 +65,5 @@ export async function GET(
   return generateOGImage({
     title,
     description,
-    fonts: [
-      {
-        name: "GeistMono",
-        data: await fontRegular,
-        weight: 400,
-      },
-      {
-        name: "GeistMono",
-        data: await fontBold,
-        weight: 600,
-      },
-    ],
   });
 }
