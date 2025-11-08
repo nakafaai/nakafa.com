@@ -2,7 +2,6 @@ import { getCategoryPath } from "@repo/contents/_lib/exercises/category";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
-import type { LucideIcon } from "lucide-react";
 
 /**
  * Gets the path to the type of the exercises.
@@ -28,7 +27,6 @@ export async function getSubjects(
   type: ExercisesType
 ): Promise<
   {
-    icon: LucideIcon;
     label: ExercisesMaterial;
     href: string;
   }[]

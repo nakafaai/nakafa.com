@@ -3,6 +3,7 @@ import {
   getExercisesPath,
   getSubjects,
 } from "@repo/contents/_lib/exercises/type";
+import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -125,8 +126,9 @@ async function PageContent({
           <ContainerList>
             {subjects.map((subject) => (
               <CardSubject
+                href={subject.href}
+                icon={getMaterialIcon(subject.label)}
                 key={subject.label}
-                {...subject}
                 label={t(subject.label)}
               />
             ))}

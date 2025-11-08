@@ -9,7 +9,7 @@ import {
 } from "@repo/contents/_types/content";
 import ky from "ky";
 import type { Locale } from "next-intl";
-import type { ComponentType } from "react";
+import { createElement } from "react";
 import {
   type ExercisesChoices,
   ExercisesChoicesSchema,
@@ -66,7 +66,7 @@ export async function getContent(
   filePath: string
 ): Promise<{
   metadata: ContentMetadata;
-  default: ComponentType<unknown>;
+  default: ReturnType<typeof createElement>;
   raw: string;
 } | null> {
   try {
@@ -88,7 +88,7 @@ export async function getContent(
 
     return {
       metadata: parsedMetadata,
-      default: contentModule.default,
+      default: createElement(contentModule.default),
       raw,
     };
   } catch {
@@ -160,11 +160,11 @@ export async function getExercisesContent(
       number: number;
       choices: ExercisesChoices;
       question: {
-        default: ComponentType<unknown>;
+        default: ReturnType<typeof createElement>;
         raw: string;
       };
       answer: {
-        default: ComponentType<unknown>;
+        default: ReturnType<typeof createElement>;
         raw: string;
       };
     }[]

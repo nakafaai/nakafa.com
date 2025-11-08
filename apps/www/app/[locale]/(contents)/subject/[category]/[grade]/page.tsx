@@ -4,6 +4,7 @@ import {
   getGradePath,
   getGradeSubjects,
 } from "@repo/contents/_lib/subject/grade";
+import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -126,8 +127,9 @@ async function PageContent({
           <ContainerList>
             {subjects.map((subject) => (
               <CardSubject
+                href={subject.href}
+                icon={getMaterialIcon(subject.label)}
                 key={subject.label}
-                {...subject}
                 label={t(subject.label)}
               />
             ))}

@@ -167,7 +167,7 @@ async function PageContent({
                     </div>
 
                     <section className="my-6">
-                      <exercise.question.default />
+                      {exercise.question.default}
                     </section>
 
                     <ExerciseChoices
@@ -177,7 +177,7 @@ async function PageContent({
                     />
 
                     <ExerciseAnswer exerciseNumber={exercise.number}>
-                      <exercise.answer.default />
+                      {exercise.answer.default}
                     </ExerciseAnswer>
                   </section>
                 );

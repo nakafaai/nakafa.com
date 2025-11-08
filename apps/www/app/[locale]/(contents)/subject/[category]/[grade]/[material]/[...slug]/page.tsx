@@ -236,7 +236,7 @@ async function PageContent({
               title={metadata.title}
             />
             <LayoutMaterialMain>
-              {headings.length === 0 ? <ComingSoon /> : <Content />}
+              {headings.length === 0 ? <ComingSoon /> : Content}
             </LayoutMaterialMain>
             <LayoutMaterialPagination pagination={pagination} />
             <LayoutMaterialFooter>
