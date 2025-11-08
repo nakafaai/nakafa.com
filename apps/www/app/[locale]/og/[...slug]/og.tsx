@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import anyAscii from "any-ascii";
 import type { ImageResponseOptions } from "next/dist/compiled/@vercel/og/types";
 import { ImageResponse } from "next/og";
 import type { ReactNode } from "react";
@@ -50,11 +51,15 @@ export function generateOGImage(
 }
 
 export function OgImage(props: GenerateProps) {
+  // Sanitize text to ensure all characters are supported by GeistMono font
+  const sanitizedTitle = anyAscii(String(props.title));
+  const sanitizedDescription = props.description
+    ? anyAscii(String(props.description))
+    : undefined;
+
   // Calculate dynamic font sizes based on content length
-  const titleLength = String(props.title).length;
-  const descriptionLength = props.description
-    ? String(props.description).length
-    : 0;
+  const titleLength = sanitizedTitle.length;
+  const descriptionLength = sanitizedDescription?.length ?? 0;
 
   // Dynamic title font size (larger for shorter titles)
   let titleFontSize = "56px";
@@ -75,8 +80,8 @@ export function OgImage(props: GenerateProps) {
       ? "32px"
       : "24px";
 
-  const truncatedDescription = props.description
-    ? truncateText(String(props.description), MAX_DESCRIPTION_TRUNCATED_LENGTH)
+  const truncatedDescription = sanitizedDescription
+    ? truncateText(sanitizedDescription, MAX_DESCRIPTION_TRUNCATED_LENGTH)
     : undefined;
 
   return (
@@ -124,7 +129,6 @@ export function OgImage(props: GenerateProps) {
           height: "100%",
           padding: "60px 80px",
           position: "relative",
-          zIndex: 1,
         }}
       >
         {/* Content area with controlled spacing */}
@@ -161,7 +165,7 @@ export function OgImage(props: GenerateProps) {
               fontFamily: "Mono",
             }}
           >
-            {props.title}
+            {sanitizedTitle}
           </h1>
 
           {truncatedDescription && (
