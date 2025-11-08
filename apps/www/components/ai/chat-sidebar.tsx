@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   InputGroup,
@@ -25,7 +25,7 @@ import { useQuery } from "convex/react";
 import { GlobeIcon, HistoryIcon, LockIcon, SearchIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { type ComponentProps, useState } from "react";
+import { type ComponentProps, Suspense, useState } from "react";
 
 type Props = ComponentProps<typeof Sidebar>;
 
@@ -124,8 +124,6 @@ function AiChatSidebarChats({
   userId: Id<"users">;
   q?: string;
 }) {
-  const params = useParams();
-  const id = params.id as Id<"chats">;
   const chats = useQuery(api.chats.queries.getChats, {
     userId,
     q,
@@ -137,19 +135,27 @@ function AiChatSidebarChats({
 
   return (
     <SidebarMenu>
-      {chats.map((chat) => {
-        const isPrivate = chat.visibility === "private";
-        return (
-          <SidebarMenuItem key={chat._id}>
-            <SidebarMenuButton asChild isActive={id === chat._id}>
-              <NavigationLink href={`/chat/${chat._id}`} title={chat.title}>
-                {isPrivate ? <LockIcon /> : <GlobeIcon />}
-                <span className="truncate">{chat.title}</span>
-              </NavigationLink>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        );
-      })}
+      {chats.map((chat) => (
+        <SidebarMenuItem key={chat._id}>
+          <Suspense>
+            <AiChatSidebarChatsMenuButton chat={chat} />
+          </Suspense>
+        </SidebarMenuItem>
+      ))}
     </SidebarMenu>
+  );
+}
+
+function AiChatSidebarChatsMenuButton({ chat }: { chat: Doc<"chats"> }) {
+  const params = useParams();
+  const id = params.id as Id<"chats">;
+  const isPrivate = chat.visibility === "private";
+  return (
+    <SidebarMenuButton asChild isActive={id === chat._id}>
+      <NavigationLink href={`/chat/${chat._id}`} title={chat.title}>
+        {isPrivate ? <LockIcon /> : <GlobeIcon />}
+        <span className="truncate">{chat.title}</span>
+      </NavigationLink>
+    </SidebarMenuButton>
   );
 }

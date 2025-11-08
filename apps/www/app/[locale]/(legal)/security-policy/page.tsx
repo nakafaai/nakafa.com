@@ -4,8 +4,6 @@ import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 
-export const revalidate = false;
-
 type Props = {
   params: Promise<{ locale: Locale }>;
 };

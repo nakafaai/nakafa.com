@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { createElement, use } from "react";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
@@ -20,8 +20,6 @@ import { QuranInterpretation } from "@/components/shared/quran-interpretation";
 import { QuranText } from "@/components/shared/quran-text";
 import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
-
-export const revalidate = false;
 
 type Props = {
   params: Promise<{
@@ -145,7 +143,7 @@ function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
       <LayoutMaterialContent showAskButton>
         <LayoutMaterialHeader
           description={translation}
-          icon={MoonStarIcon}
+          icon={createElement(MoonStarIcon)}
           link={{
             href: "/quran",
             label: t("quran"),

@@ -5,9 +5,8 @@ import {
 } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 import { createServiceLogger, logError } from "@repo/utilities/logging";
+import { cacheLife } from "next/cache";
 import { NextResponse } from "next/server";
-
-export const revalidate = false;
 
 const logger = createServiceLogger("api-contents");
 
@@ -60,10 +59,7 @@ export async function GET(
   }
 
   try {
-    const content = await getContents({
-      locale,
-      basePath,
-    });
+    const content = await fetchContents(locale, basePath);
 
     return NextResponse.json(content);
   } catch (error) {
@@ -83,4 +79,14 @@ export async function GET(
       { status: 500 }
     );
   }
+}
+
+async function fetchContents(locale: string, basePath: string) {
+  "use cache";
+  cacheLife("max");
+  const content = await getContents({
+    locale,
+    basePath,
+  });
+  return content;
 }

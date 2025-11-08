@@ -13,6 +13,7 @@ import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -31,8 +32,6 @@ import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
-
-export const revalidate = false;
 
 type Params = {
   locale: Locale;
@@ -131,10 +130,9 @@ async function PageContent({
   const typePath = getExercisesPath(category, type);
   const FilePath = getMaterialPath(category, type, material);
 
-  const [materials, t] = await Promise.all([
-    getMaterials(FilePath, locale),
-    getTranslations({ locale, namespace: "Exercises" }),
-  ]);
+  const t = await getTranslations({ locale, namespace: "Exercises" });
+
+  const { materials } = await fetchContent(locale, FilePath);
 
   const chapters: ParsedHeading[] = materials.map((mat) => ({
     label: mat.title,
@@ -196,4 +194,12 @@ async function PageContent({
       </LayoutMaterial>
     </>
   );
+}
+
+async function fetchContent(locale: Locale, FilePath: string) {
+  "use cache";
+  cacheLife("max");
+  const materials = await getMaterials(FilePath, locale);
+
+  return { materials };
 }

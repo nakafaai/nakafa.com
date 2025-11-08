@@ -1,7 +1,10 @@
 "use client";
 
 import { useClipboard } from "@mantine/hooks";
-import { Action, Actions } from "@repo/design-system/components/ai/actions";
+import {
+  MessageAction,
+  MessageActions,
+} from "@repo/design-system/components/ai/message";
 import { CheckIcon, CopyIcon, RefreshCcwIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
@@ -29,23 +32,23 @@ export const AIChatMessageActions = memo(
     }
 
     return (
-      <Actions className="transition-opacity ease-out group-hover:opacity-100 lg:opacity-0">
-        <Action
+      <MessageActions className="transition-opacity ease-out group-hover:opacity-100 lg:opacity-0">
+        <MessageAction
           disabled={disabled}
           label={t("retry-message")}
           onClick={() => regenerate({ messageId })}
           tooltip={t("retry-message")}
         >
           <RefreshCcwIcon />
-        </Action>
-        <Action
+        </MessageAction>
+        <MessageAction
           label={t("copy-message")}
           onClick={() => clipboard.copy(text)}
           tooltip={t("copy-message")}
         >
           {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
-        </Action>
-      </Actions>
+        </MessageAction>
+      </MessageActions>
     );
   }
 );

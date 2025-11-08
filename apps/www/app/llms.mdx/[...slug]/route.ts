@@ -13,8 +13,6 @@ import { getRawGithubUrl } from "@/lib/utils/github";
 const TOTAL_SURAH = 114;
 const BASE_URL = "https://nakafa.com";
 
-export const revalidate = false;
-
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> }
@@ -80,6 +78,19 @@ function buildHeader({
 
   return header;
 }
+
+// async function fetchContent({
+//   locale,
+//   cleanSlug,
+// }: {
+//   locale: Locale;
+//   cleanSlug: string;
+// }) {
+//   "use cache";
+//   cacheLife("max");
+//   const content = await getContent(locale, cleanSlug);
+//   return content;
+// }
 
 function getTranslation(
   translations: Record<Locale, string>,

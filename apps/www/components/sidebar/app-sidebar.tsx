@@ -11,7 +11,7 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import type { ComponentProps } from "react";
+import { type ComponentProps, Suspense } from "react";
 import { AboutMenu } from "./about-menu";
 import { CommunityButton } from "./community-button";
 import { LangMenu } from "./lang-menu";
@@ -72,7 +72,9 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
           <ThemeMenu />
           <CommunityButton />
           <AboutMenu />
-          <NavUser />
+          <Suspense>
+            <NavUser />
+          </Suspense>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

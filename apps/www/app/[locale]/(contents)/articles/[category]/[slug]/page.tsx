@@ -7,12 +7,14 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { formatISO } from "date-fns";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { Comments } from "@/components/comments";
 import { ComingSoon } from "@/components/shared/coming-soon";
+import { DynamicMarker } from "@/components/shared/dynamic-marker";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
@@ -24,8 +26,6 @@ import {
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
-
-export const revalidate = false;
 
 type Props = {
   params: Promise<{
@@ -109,7 +109,12 @@ export default function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  return <PageContent category={category} locale={locale} slug={slug} />;
+  return (
+    <>
+      <PageContent category={category} locale={locale} slug={slug} />
+      <DynamicMarker />
+    </>
+  );
 }
 
 async function PageContent({
@@ -130,10 +135,7 @@ async function PageContent({
 
   try {
     // Get the file, headings
-    const [content, references] = await Promise.all([
-      getContent(locale, FilePath),
-      getReferences(FilePath),
-    ]);
+    const { content, references } = await fetchContent(locale, FilePath);
 
     if (!content) {
       notFound();
@@ -191,7 +193,7 @@ async function PageContent({
               title={metadata.title}
             />
             <LayoutMaterialMain>
-              {headings.length === 0 ? <ComingSoon /> : <Content />}
+              {headings.length === 0 ? <ComingSoon /> : Content}
             </LayoutMaterialMain>
             <LayoutMaterialFooter>
               <Comments slug={FilePath} />
@@ -219,7 +221,20 @@ async function PageContent({
         </LayoutMaterial>
       </>
     );
-  } catch {
+  } catch (error) {
+    console.error(error);
     notFound();
   }
+}
+
+async function fetchContent(locale: Locale, FilePath: string) {
+  "use cache";
+  cacheLife("max");
+  // Get the file, headings
+  const [content, references] = await Promise.all([
+    getContent(locale, FilePath),
+    getReferences(FilePath),
+  ]);
+
+  return { content, references };
 }

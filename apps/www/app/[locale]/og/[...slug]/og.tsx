@@ -1,6 +1,7 @@
-import type { ImageResponseOptions } from "next/dist/compiled/@vercel/og/types";
+import { readFileSync } from "node:fs";
 import { ImageResponse } from "next/og";
 import type { ReactNode } from "react";
+import { truncateText } from "@/lib/utils/helper";
 
 const MAX_TITLE_FIRST_LENGTH = 30;
 const MAX_TITLE_SECOND_LENGTH = 60;
@@ -12,26 +13,31 @@ type GenerateProps = {
   description?: ReactNode;
 };
 
-function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) {
-    return text;
-  }
-  return `${text.substring(0, maxLength).trim()}...`;
-}
+// Load fonts synchronously to avoid hanging promises during static generation
+const fontRegular = readFileSync(
+  `${process.cwd()}/public/fonts/GeistMono-Regular.ttf`
+);
+const fontBold = readFileSync(
+  `${process.cwd()}/public/fonts/GeistMono-Bold.ttf`
+);
 
-export function generateOGImage(
-  options: GenerateProps & ImageResponseOptions
-): ImageResponse {
-  const { title, description, ...rest } = options;
-
-  return new ImageResponse(
-    <OgImage description={description} title={title} />,
-    {
-      width: 1200,
-      height: 630,
-      ...rest,
-    }
-  );
+export function generateOgImage(props: GenerateProps) {
+  return new ImageResponse(<OgImage {...props} />, {
+    width: 1200,
+    height: 630,
+    fonts: [
+      {
+        name: "Mono",
+        data: fontRegular,
+        weight: 400,
+      },
+      {
+        name: "Mono",
+        data: fontBold,
+        weight: 600,
+      },
+    ],
+  });
 }
 
 export function OgImage(props: GenerateProps) {
@@ -143,6 +149,7 @@ export function OgImage(props: GenerateProps) {
               color: "#000000",
               wordWrap: "break-word",
               overflowWrap: "break-word",
+              fontFamily: "Mono",
             }}
           >
             {props.title}
@@ -159,6 +166,7 @@ export function OgImage(props: GenerateProps) {
                 flexShrink: 0,
                 wordWrap: "break-word",
                 overflowWrap: "break-word",
+                fontFamily: "Mono",
               }}
             >
               {truncatedDescription}
@@ -197,7 +205,7 @@ export function OgImage(props: GenerateProps) {
                 fontSize: "20px",
                 fontWeight: 600,
                 color: "#ffffff",
-                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontFamily: "Mono",
               }}
             >
               N
@@ -210,7 +218,7 @@ export function OgImage(props: GenerateProps) {
                 margin: 0,
                 color: "#000000",
                 letterSpacing: "-0.01em",
-                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontFamily: "Mono",
               }}
             >
               Nakafa

@@ -1,5 +1,6 @@
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { DramaIcon, NewspaperIcon } from "lucide-react";
+import { createElement } from "react";
 
 /**
  * Gets the icon for the category of the article.
@@ -9,9 +10,9 @@ import { DramaIcon, NewspaperIcon } from "lucide-react";
 export function getCategoryIcon(category: ArticleCategory) {
   switch (category) {
     case "politics":
-      return DramaIcon;
+      return createElement(DramaIcon);
     default:
-      return NewspaperIcon;
+      return createElement(NewspaperIcon);
   }
 }
 

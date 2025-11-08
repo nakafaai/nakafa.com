@@ -8,6 +8,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { ChevronRightIcon, LanguagesIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Suspense } from "react";
 import { LangMenuSwitcher } from "./lang-menu-switcher";
 
 export function LangMenu() {
@@ -25,7 +26,9 @@ export function LangMenu() {
           </SidebarMenuButton>
         </DropdownMenuTrigger>
 
-        <LangMenuSwitcher />
+        <Suspense>
+          <LangMenuSwitcher />
+        </Suspense>
       </SidebarMenuItem>
     </DropdownMenu>
   );

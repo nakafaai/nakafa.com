@@ -6,6 +6,7 @@ import { getArticles } from "@repo/contents/_lib/articles/slug";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -18,8 +19,6 @@ import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
-
-export const revalidate = false;
 
 type Props = {
   params: Promise<{ locale: Locale; category: ArticleCategory }>;
@@ -100,7 +99,7 @@ async function PageArticles({
   FilePath: string;
   header: React.ReactNode;
 }) {
-  const articles = await getArticles(category, locale);
+  const articles = await fetchArticles(locale, category);
 
   return (
     <>
@@ -142,4 +141,10 @@ function PageHeader({ category }: { category: ArticleCategory }) {
       title={t(category)}
     />
   );
+}
+
+async function fetchArticles(locale: Locale, category: ArticleCategory) {
+  "use cache";
+  cacheLife("max");
+  return await getArticles(category, locale);
 }

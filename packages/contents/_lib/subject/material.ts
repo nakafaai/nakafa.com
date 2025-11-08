@@ -26,6 +26,7 @@ import {
   SpeechIcon,
 } from "lucide-react";
 import type { Locale } from "next-intl";
+import { createElement } from "react";
 
 /**
  * Gets the path to a material.
@@ -76,40 +77,40 @@ export async function getMaterials(
 export function getMaterialIcon(material: Material) {
   switch (material) {
     case "mathematics":
-      return PiIcon;
+      return createElement(PiIcon);
     case "physics":
-      return DraftingCompassIcon;
+      return createElement(DraftingCompassIcon);
     case "chemistry":
-      return FlaskConicalIcon;
+      return createElement(FlaskConicalIcon);
     case "biology":
-      return PawPrintIcon;
+      return createElement(PawPrintIcon);
     case "geography":
-      return EarthIcon;
+      return createElement(EarthIcon);
     case "economy":
-      return ChartPieIcon;
+      return createElement(ChartPieIcon);
     case "history":
-      return HourglassIcon;
+      return createElement(HourglassIcon);
     case "sociology":
-      return SpeechIcon;
+      return createElement(SpeechIcon);
     case "informatics":
-      return CodeIcon;
+      return createElement(CodeIcon);
     case "geospatial":
-      return MapPinIcon;
+      return createElement(MapPinIcon);
     case "ai-ds":
-      return BrainCircuitIcon;
+      return createElement(BrainCircuitIcon);
     case "game-engineering":
-      return Gamepad2Icon;
+      return createElement(Gamepad2Icon);
     case "political-science":
-      return ScaleIcon;
+      return createElement(ScaleIcon);
     case "computer-science":
-      return CodeXmlIcon;
+      return createElement(CodeXmlIcon);
     case "technology-electro-medical":
-      return CableIcon;
+      return createElement(CableIcon);
     case "informatics-engineering":
-      return ComputerIcon;
+      return createElement(ComputerIcon);
     case "international-relations":
-      return HandshakeIcon;
+      return createElement(HandshakeIcon);
     default:
-      return LightbulbIcon;
+      return createElement(LightbulbIcon);
   }
 }

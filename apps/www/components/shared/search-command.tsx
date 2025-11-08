@@ -254,7 +254,7 @@ function DefaultItems() {
                 }}
                 value={title}
               >
-                <item.icon />
+                {item.icon}
                 <span className="line-clamp-1">{title}</span>
               </CommandItem>
             );
@@ -277,7 +277,7 @@ function DefaultItems() {
             }}
             value={tArticles(item.title)}
           >
-            <item.icon />
+            {item.icon}
             <span className="line-clamp-1">{tArticles(item.title)}</span>
           </CommandItem>
         ))}
@@ -298,7 +298,7 @@ function DefaultItems() {
             }}
             value={tHoly(item.title)}
           >
-            <item.icon />
+            {item.icon}
             <span className="line-clamp-1">{tHoly(item.title)}</span>
           </CommandItem>
         ))}

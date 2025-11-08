@@ -4,21 +4,22 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Link } from "@repo/internationalization/src/navigation";
-import type { LucideIcon } from "lucide-react";
+import type { ReactElement } from "react";
+import { cloneElement } from "react";
 
 type Props = {
-  icon: LucideIcon;
+  icon: ReactElement<{ className?: string }>;
   label: string;
   href: string;
 };
 
-export function CardSubject({ icon: Icon, label, href }: Props) {
+export function CardSubject({ icon, label, href }: Props) {
   return (
     <Link className="group" href={href} prefetch title={label}>
       <Card className="relative overflow-hidden">
         <CardHeader className="gap-0">
           <div className="flex items-center gap-2">
-            <Icon className="size-5 shrink-0" />
+            {cloneElement(icon, { className: "size-5 shrink-0" })}
             <CardTitle
               className="line-clamp-1 pr-9 font-medium tracking-tight"
               title={label}

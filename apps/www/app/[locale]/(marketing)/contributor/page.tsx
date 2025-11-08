@@ -3,14 +3,12 @@ import { HeartHandshakeIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { createElement, use } from "react";
 import { Footer } from "@/components/about/footer";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { contributors } from "@/lib/data/contributor";
-
-export const revalidate = false;
 
 type Props = {
   params: Promise<{ locale: Locale }>;
@@ -58,7 +56,7 @@ function PageHeader() {
   return (
     <HeaderContent
       description={t("description")}
-      icon={HeartHandshakeIcon}
+      icon={createElement(HeartHandshakeIcon)}
       title={t("title")}
     />
   );

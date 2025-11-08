@@ -1,41 +1,45 @@
 "use client";
 
 import { Tooltip as TooltipPrimitive } from "@base-ui-components/react/tooltip";
-
 import { cn } from "@repo/design-system/lib/utils";
+import { memo } from "react";
 
-function TooltipProvider({
-  delay = 0,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
-  return (
+const TooltipProvider = memo(
+  ({
+    delay = 0,
+    ...props
+  }: React.ComponentProps<typeof TooltipPrimitive.Provider>) => (
     <TooltipPrimitive.Provider
       data-slot="tooltip-provider"
       delay={delay}
       {...props}
     />
-  );
-}
+  )
+);
+TooltipProvider.displayName = "TooltipProvider";
 
-const Tooltip = TooltipPrimitive.Root;
+const Tooltip = memo((props: TooltipPrimitive.Root.Props) => (
+  <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+));
+Tooltip.displayName = "Tooltip";
 
-function TooltipTrigger(props: TooltipPrimitive.Trigger.Props) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
-}
+const TooltipTrigger = memo((props: TooltipPrimitive.Trigger.Props) => (
+  <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+));
 
-function TooltipPopup({
-  className,
-  align = "center",
-  sideOffset = 4,
-  side = "top",
-  children,
-  ...props
-}: TooltipPrimitive.Popup.Props & {
-  align?: TooltipPrimitive.Positioner.Props["align"];
-  side?: TooltipPrimitive.Positioner.Props["side"];
-  sideOffset?: TooltipPrimitive.Positioner.Props["sideOffset"];
-}) {
-  return (
+const TooltipPopup = memo(
+  ({
+    className,
+    align = "center",
+    sideOffset = 4,
+    side = "top",
+    children,
+    ...props
+  }: TooltipPrimitive.Popup.Props & {
+    align?: TooltipPrimitive.Positioner.Props["align"];
+    side?: TooltipPrimitive.Positioner.Props["side"];
+    sideOffset?: TooltipPrimitive.Positioner.Props["sideOffset"];
+  }) => (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Positioner
         align={align}
@@ -56,8 +60,9 @@ function TooltipPopup({
         </TooltipPrimitive.Popup>
       </TooltipPrimitive.Positioner>
     </TooltipPrimitive.Portal>
-  );
-}
+  )
+);
+TooltipPopup.displayName = "TooltipPopup";
 
 export {
   TooltipProvider,

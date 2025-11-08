@@ -2,50 +2,27 @@ import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { getContents } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
 import { Feed, type Item } from "feed";
+import { cacheLife } from "next/cache";
 import { NextResponse } from "next/server";
-import { getTranslations } from "next-intl/server";
-
-export const revalidate = false;
 
 const baseUrl = "https://nakafa.com";
 
 export async function GET() {
   const locales = routing.locales;
 
-  const [t, tCommon] = await Promise.all([
-    getTranslations({
-      namespace: "Metadata",
-      locale: routing.defaultLocale,
-    }),
-    getTranslations({
-      namespace: "Common",
-      locale: routing.defaultLocale,
-    }),
-  ]);
-
-  // Fetch all articles and subjects for all locales in parallel
-  const contentPromises = locales.flatMap((locale) => [
-    getContents({ locale, basePath: "articles" }).then((contents) => ({
-      locale,
-      contents,
-    })),
-    getContents({ locale, basePath: "subject" }).then((contents) => ({
-      locale,
-      contents,
-    })),
-  ]);
-
-  const results = await Promise.all(contentPromises);
+  const results = await fetchContents();
 
   const feed = new Feed({
-    title: t("title"),
-    description: t("description"),
+    title: "Nakafa: Free High-Quality Learning Platform (K-12 to University)",
+    description:
+      "Access free, high-quality learning resources on Nakafa. Covering K-12, university subjects (Math, Science, CS, AI), exam prep & more. Start learning!",
     id: `${baseUrl}`,
     link: `${baseUrl}`,
     language: routing.defaultLocale,
     image: `${baseUrl}/og.png`,
     favicon: `${baseUrl}/icon.png`,
-    copyright: tCommon("copyright", { year: new Date().getFullYear() }),
+    copyright:
+      "Copyright © 2025 PT. Nakafa Tekno Kreatif. All rights reserved.",
   });
 
   // Collect all feed items
@@ -91,4 +68,24 @@ export async function GET() {
   }
 
   return new NextResponse(feed.rss2());
+}
+
+async function fetchContents() {
+  "use cache";
+  cacheLife("max");
+  // Fetch all articles and subjects for all locales in parallel
+  const contentPromises = routing.locales.flatMap((locale) => [
+    getContents({ locale, basePath: "articles" }).then((contents) => ({
+      locale,
+      contents,
+    })),
+    getContents({ locale, basePath: "subject" }).then((contents) => ({
+      locale,
+      contents,
+    })),
+  ]);
+
+  const results = await Promise.all(contentPromises);
+
+  return results;
 }

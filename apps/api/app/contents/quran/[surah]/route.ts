@@ -2,8 +2,6 @@ import { getSurah } from "@repo/contents/_lib/quran";
 import { createServiceLogger, logError } from "@repo/utilities/logging";
 import { NextResponse } from "next/server";
 
-export const revalidate = false;
-
 const logger = createServiceLogger("api-quran");
 
 export function generateStaticParams() {

@@ -2,7 +2,9 @@ import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { format } from "date-fns";
-import { CalendarIcon, type LucideIcon, UserPenIcon } from "lucide-react";
+import { CalendarIcon, UserPenIcon } from "lucide-react";
+import type { ReactElement } from "react";
+import { cloneElement } from "react";
 import { OpenContent } from "@/components/shared/open-content";
 
 type Props = {
@@ -16,10 +18,10 @@ type Props = {
   /** The description of the content */
   description?: string;
   /** The icon of the title */
-  icon?: LucideIcon;
+  icon?: ReactElement<{ className?: string }>;
   /** The category of the content */
   category?: {
-    icon: LucideIcon;
+    icon: ReactElement<{ className?: string }>;
     name: string;
   };
   /** The authors of the content */
@@ -38,7 +40,7 @@ export function HeaderContent({
   title,
   link,
   description,
-  icon: Icon,
+  icon,
   category,
   authors,
   date,
@@ -61,9 +63,10 @@ export function HeaderContent({
             </Link>
           )}
           <div className="flex items-start gap-2">
-            {Icon && (
-              <Icon className="hidden size-7 shrink-0 translate-y-1 sm:block" />
-            )}
+            {icon &&
+              cloneElement(icon, {
+                className: "hidden size-7 shrink-0 translate-y-1 sm:block",
+              })}
             <h1 className="font-medium text-3xl leading-tight tracking-tight">
               {title}
             </h1>
@@ -98,7 +101,9 @@ export function HeaderContent({
 
                   {category && (
                     <p className="inline-flex items-center gap-1 text-muted-foreground">
-                      <category.icon className="size-4 shrink-0" />
+                      {cloneElement(category.icon, {
+                        className: "size-4 shrink-0",
+                      })}
                       <span className="text-sm">{category.name}</span>
                     </p>
                   )}

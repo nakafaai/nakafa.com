@@ -26,19 +26,21 @@ export const ContentPart = memo(({ message }: Props) => {
 
   if (isLoading) {
     return (
-      <ContentCard>
+      <div className="flex items-center gap-2">
         <SpinnerIcon className="size-4" />
         <p className="text-sm">{t("get-content-loading")}</p>
-      </ContentCard>
+      </div>
     );
   }
 
   if (isError) {
     return (
-      <ContentCard>
-        <FrownIcon className="size-4" />
-        <p className="text-sm">{t("get-content-error")}</p>
-      </ContentCard>
+      <div className="flex items-center gap-2">
+        <FrownIcon className="size-4 shrink-0 text-destructive" />
+        <p className="text-muted-foreground text-sm">
+          {t("get-content-error")}
+        </p>
+      </div>
     );
   }
 

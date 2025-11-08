@@ -3,7 +3,7 @@
 import { Link } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { useSelectedLayoutSegment } from "next/navigation";
-import type { ComponentProps } from "react";
+import { type ComponentProps, Suspense } from "react";
 
 const EXTERNAL_URL_REGEX = /^https?:\/\//;
 const PROTOCOL_RELATIVE_REGEX = /^\/\//;
@@ -17,10 +17,7 @@ const MAIL_OR_TEL_REGEX = /^(mailto:|tel:)/;
  * @returns A navigation link component
  * https://next-intl.dev/docs/routing/navigation#link-active
  */
-export default function NavigationLink({
-  href,
-  ...props
-}: ComponentProps<typeof Link>) {
+function NavLink({ href, ...props }: ComponentProps<typeof Link>) {
   let cleanHref = href;
 
   const selectedLayoutSegment = useSelectedLayoutSegment();
@@ -64,5 +61,16 @@ export default function NavigationLink({
       {...props}
       prefetch // always prefetch the link
     />
+  );
+}
+
+export default function NavigationLink({
+  ...props
+}: ComponentProps<typeof NavLink>) {
+  // Needed for cache components to work, because here we access headers
+  return (
+    <Suspense>
+      <NavLink {...props} />
+    </Suspense>
   );
 }

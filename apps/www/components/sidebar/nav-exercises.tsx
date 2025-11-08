@@ -20,10 +20,10 @@ import {
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { ChevronRightIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Suspense } from "react";
 import { exercisesMenu } from "./_data/exercises";
 
 function MenuItem() {
-  const pathname = usePathname();
   const t = useTranslations("Exercises");
 
   return (
@@ -37,7 +37,7 @@ function MenuItem() {
               <CollapsibleTrigger
                 render={
                   <SidebarMenuButton className="group" tooltip={t(item.title)}>
-                    {item.icon && <item.icon />}
+                    {item.icon}
                     <span className="truncate">{t(item.title)}</span>
                     <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-panel-open:rotate-90" />
                   </SidebarMenuButton>
@@ -50,14 +50,12 @@ function MenuItem() {
 
                     return (
                       <SidebarMenuSubItem key={title}>
-                        <SidebarMenuSubButton
-                          asChild
-                          isActive={pathname.includes(subItem.href)}
-                        >
-                          <NavigationLink href={subItem.href} title={title}>
-                            <span>{title}</span>
-                          </NavigationLink>
-                        </SidebarMenuSubButton>
+                        <Suspense>
+                          <MenuItemSubButton
+                            href={subItem.href}
+                            title={title}
+                          />
+                        </Suspense>
                       </SidebarMenuSubItem>
                     );
                   })}
@@ -68,6 +66,18 @@ function MenuItem() {
         />
       ))}
     </SidebarMenu>
+  );
+}
+
+function MenuItemSubButton({ href, title }: { href: string; title: string }) {
+  const pathname = usePathname();
+
+  return (
+    <SidebarMenuSubButton asChild isActive={pathname.includes(href)}>
+      <NavigationLink href={href} title={title}>
+        <span>{title}</span>
+      </NavigationLink>
+    </SidebarMenuSubButton>
   );
 }
 

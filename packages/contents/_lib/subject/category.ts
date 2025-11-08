@@ -6,6 +6,7 @@ import {
   NotebookIcon,
   UniversityIcon,
 } from "lucide-react";
+import { createElement } from "react";
 
 /**
  * Gets the path to the category of the subject.
@@ -24,14 +25,14 @@ export function getCategoryPath(category: SubjectCategory) {
 export function getCategoryIcon(category: SubjectCategory) {
   switch (category) {
     case "elementary-school":
-      return BackpackIcon;
+      return createElement(BackpackIcon);
     case "middle-school":
-      return NotebookIcon;
+      return createElement(NotebookIcon);
     case "high-school":
-      return LibraryIcon;
+      return createElement(LibraryIcon);
     case "university":
-      return UniversityIcon;
+      return createElement(UniversityIcon);
     default:
-      return GraduationCapIcon;
+      return createElement(GraduationCapIcon);
   }
 }

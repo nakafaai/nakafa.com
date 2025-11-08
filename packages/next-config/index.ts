@@ -11,6 +11,7 @@ export const config: NextConfig = {
     },
   },
   pageExtensions: ["mdx", "tsx", "ts", "jsx", "js"],
+  cacheComponents: true,
   reactCompiler: true,
   serverExternalPackages: ["shiki"],
   experimental: {

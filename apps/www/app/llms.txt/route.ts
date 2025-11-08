@@ -1,10 +1,9 @@
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { getContents } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
+import { cacheLife } from "next/cache";
 
 const BASE_URL = "https://nakafa.com";
-
-export const revalidate = false;
 
 export async function GET() {
   const locales = routing.locales;
@@ -15,21 +14,7 @@ export async function GET() {
   scanned.push("Complete list of all content available on Nakafa.");
   scanned.push("---");
 
-  // Fetch all articles and subjects for all locales in parallel
-  const contentPromises = locales.flatMap((locale) => [
-    getContents({ locale, basePath: "articles" }).then((contents) => ({
-      section: "Articles",
-      locale,
-      contents,
-    })),
-    getContents({ locale, basePath: "subject" }).then((contents) => ({
-      section: "Subjects",
-      locale,
-      contents,
-    })),
-  ]);
-
-  const results = await Promise.all(contentPromises);
+  const results = await fetchContents();
 
   // Group results by section
   const map = new Map<string, string[]>();
@@ -71,4 +56,26 @@ export async function GET() {
   scanned.push(quranEntries.join("\n"));
 
   return new Response(scanned.join("\n\n"));
+}
+
+async function fetchContents() {
+  "use cache";
+  cacheLife("max");
+  // Fetch all articles and subjects for all locales in parallel
+  const contentPromises = routing.locales.flatMap((locale) => [
+    getContents({ locale, basePath: "articles" }).then((contents) => ({
+      section: "Articles",
+      locale,
+      contents,
+    })),
+    getContents({ locale, basePath: "subject" }).then((contents) => ({
+      section: "Subjects",
+      locale,
+      contents,
+    })),
+  ]);
+
+  const results = await Promise.all(contentPromises);
+
+  return results;
 }

@@ -3,10 +3,12 @@ import {
   getExercisesPath,
   getSubjects,
 } from "@repo/contents/_lib/exercises/type";
+import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -20,8 +22,6 @@ import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
-
-export const revalidate = false;
 
 type Params = {
   locale: Locale;
@@ -96,10 +96,9 @@ async function PageContent({
 }) {
   const FilePath = getExercisesPath(category, type);
 
-  const [subjects, t] = await Promise.all([
-    getSubjects(category, type),
-    getTranslations({ locale, namespace: "Exercises" }),
-  ]);
+  const t = await getTranslations({ locale, namespace: "Exercises" });
+
+  const { subjects } = await fetchContent(category, type);
 
   return (
     <>
@@ -125,8 +124,9 @@ async function PageContent({
           <ContainerList>
             {subjects.map((subject) => (
               <CardSubject
+                href={subject.href}
+                icon={getMaterialIcon(subject.label)}
                 key={subject.label}
-                {...subject}
                 label={t(subject.label)}
               />
             ))}
@@ -140,4 +140,12 @@ async function PageContent({
       </FooterContent>
     </>
   );
+}
+
+async function fetchContent(category: ExercisesCategory, type: ExercisesType) {
+  "use cache";
+  cacheLife("max");
+  const subjects = await getSubjects(category, type);
+
+  return { subjects };
 }

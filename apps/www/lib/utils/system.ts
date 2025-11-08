@@ -112,8 +112,8 @@ export async function getMetadataFromSlug(
   slug: string[]
 ): Promise<ContentMetadata> {
   const [tCommon, tMetadata] = await Promise.all([
-    getTranslations("Common"),
-    getTranslations("Metadata"),
+    getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "Metadata" }),
   ]);
   const defaultTitle = tCommon("made-with-love");
   try {

@@ -11,29 +11,33 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
+import { Suspense } from "react";
 import { articlesMenu } from "./_data/articles";
 
 function MenuItem() {
-  const t = useTranslations("Articles");
-  const pathname = usePathname();
-
   return (
     <SidebarMenu>
       {articlesMenu.map((item) => (
         <SidebarMenuItem key={item.title}>
-          <SidebarMenuButton
-            asChild
-            isActive={pathname.includes(item.href)}
-            tooltip={t(item.title)}
-          >
-            <NavigationLink href={item.href} title={t(item.title)}>
-              {item.icon && <item.icon />}
-              <span className="truncate">{t(item.title)}</span>
-            </NavigationLink>
-          </SidebarMenuButton>
+          <Suspense>
+            <MenuItemButton item={item} />
+          </Suspense>
         </SidebarMenuItem>
       ))}
     </SidebarMenu>
+  );
+}
+
+function MenuItemButton({ item }: { item: (typeof articlesMenu)[number] }) {
+  const pathname = usePathname();
+  const t = useTranslations("Articles");
+  return (
+    <SidebarMenuButton asChild isActive={pathname.includes(item.href)}>
+      <NavigationLink href={item.href} title={t(item.title)}>
+        {item.icon}
+        <span className="truncate">{t(item.title)}</span>
+      </NavigationLink>
+    </SidebarMenuButton>
   );
 }
 

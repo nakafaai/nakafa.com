@@ -1,7 +1,7 @@
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
 import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { Suspense, use } from "react";
 import { AiChatSidebar } from "@/components/ai/chat-sidebar";
 
 export default function Layout(props: LayoutProps<"/[locale]/chat">) {
@@ -14,7 +14,9 @@ export default function Layout(props: LayoutProps<"/[locale]/chat">) {
   return (
     <main className="h-[calc(100svh-4rem)] lg:h-svh" data-pagefind-ignore>
       <div className="flex h-full">
-        <ErrorBoundary fallback={null}>{children}</ErrorBoundary>
+        <ErrorBoundary fallback={null}>
+          <Suspense>{children}</Suspense>
+        </ErrorBoundary>
 
         <AiChatSidebar />
       </div>

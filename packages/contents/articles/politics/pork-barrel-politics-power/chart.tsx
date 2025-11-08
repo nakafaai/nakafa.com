@@ -17,7 +17,6 @@ import {
   ChartTooltipContent,
 } from "@repo/design-system/components/ui/chart";
 import { format } from "date-fns";
-import { useTranslations } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -29,11 +28,23 @@ import {
   YAxis,
 } from "recharts";
 
-type Props = {
+type BaseProps = {
   title: string;
   description: string;
   footnote: string;
   yLabel: string;
+};
+
+type BudgetChartProps = Omit<BaseProps, "description"> & {
+  labels: {
+    budget: string;
+  };
+};
+
+type FundChartProps = BaseProps & {
+  labels: {
+    fund: string;
+  };
 };
 
 const BudgetChartData = [
@@ -63,12 +74,11 @@ export function BudgetChart({
   title,
   yLabel,
   footnote,
-}: Omit<Props, "description">) {
-  const t = useTranslations("Common");
-
+  labels,
+}: BudgetChartProps) {
   const chartConfig = {
     budget: {
-      label: t("budget"),
+      label: labels.budget,
       color: "var(--chart-4)",
     },
     label: {
@@ -151,12 +161,16 @@ const FundChartData = [
   },
 ];
 
-export function FundChart({ title, description, yLabel, footnote }: Props) {
-  const t = useTranslations("Common");
-
+export function FundChart({
+  title,
+  description,
+  yLabel,
+  footnote,
+  labels,
+}: FundChartProps) {
   const chartConfig = {
     fund: {
-      label: t("fund"),
+      label: labels.fund,
       color: "var(--chart-5)",
     },
     label: {
@@ -327,7 +341,7 @@ export function ElectabilityChart({
   description,
   yLabel,
   footnote,
-}: Props) {
+}: BaseProps) {
   return (
     <Card>
       <CardHeader>

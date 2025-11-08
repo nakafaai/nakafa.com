@@ -1,15 +1,17 @@
-import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
+import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 
 const BASE_PATH = "/exercises/high-school";
 
-const subjects = [
+const subjects: Array<{
+  type: readonly ExercisesType[];
+  label: ExercisesMaterial;
+}> = [
   {
     type: ["tka"],
-    icon: getMaterialIcon("mathematics"),
     label: "mathematics",
   },
-] as const;
+];
 
 export function getSubjects(type: ExercisesType) {
   const types = new Set<ExercisesType>(["tka"]);
@@ -21,7 +23,6 @@ export function getSubjects(type: ExercisesType) {
   return subjects
     .filter((subject) => subject.type.includes(type))
     .map((subject) => ({
-      icon: subject.icon,
       label: subject.label,
       href: `${BASE_PATH}/${type}/${subject.label}`,
     }));

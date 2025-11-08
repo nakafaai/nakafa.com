@@ -19,12 +19,14 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { formatISO } from "date-fns";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { Comments } from "@/components/comments";
 import { ComingSoon } from "@/components/shared/coming-soon";
+import { DynamicMarker } from "@/components/shared/dynamic-marker";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
@@ -37,8 +39,6 @@ import {
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
-
-export const revalidate = false;
 
 type Params = {
   locale: Locale;
@@ -132,13 +132,16 @@ export default function Page({ params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <PageContent
-      category={category}
-      grade={grade}
-      locale={locale}
-      material={material}
-      slug={slug}
-    />
+    <>
+      <PageContent
+        category={category}
+        grade={grade}
+        locale={locale}
+        material={material}
+        slug={slug}
+      />
+      <DynamicMarker />
+    </>
   );
 }
 
@@ -171,12 +174,11 @@ async function PageContent({
   }
 
   try {
-    const [content, pagination] = await Promise.all([
-      getContent(locale, FilePath),
-      getMaterials(materialPath, locale).then((materials) =>
-        getMaterialsPagination(FilePath, materials)
-      ),
-    ]);
+    const { content, pagination } = await fetchContent(
+      locale,
+      FilePath,
+      materialPath
+    );
 
     if (!content) {
       notFound();
@@ -236,7 +238,7 @@ async function PageContent({
               title={metadata.title}
             />
             <LayoutMaterialMain>
-              {headings.length === 0 ? <ComingSoon /> : <Content />}
+              {headings.length === 0 ? <ComingSoon /> : Content}
             </LayoutMaterialMain>
             <LayoutMaterialPagination pagination={pagination} />
             <LayoutMaterialFooter>
@@ -264,4 +266,20 @@ async function PageContent({
   } catch {
     notFound();
   }
+}
+
+async function fetchContent(
+  locale: Locale,
+  FilePath: string,
+  materialPath: string
+) {
+  "use cache";
+  cacheLife("max");
+  const [content, pagination] = await Promise.all([
+    getContent(locale, FilePath),
+    getMaterials(materialPath, locale).then((materials) =>
+      getMaterialsPagination(FilePath, materials)
+    ),
+  ]);
+  return { content, pagination };
 }

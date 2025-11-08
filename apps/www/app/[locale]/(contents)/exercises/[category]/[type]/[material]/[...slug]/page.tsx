@@ -9,10 +9,12 @@ import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { cn, slugify } from "@repo/design-system/lib/utils";
+import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { DynamicMarker } from "@/components/shared/dynamic-marker";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
@@ -26,8 +28,6 @@ import { getStaticParams } from "@/lib/utils/system";
 import { ExerciseAnswerAction } from "./actions";
 import { ExerciseAnswer } from "./answer";
 import { ExerciseChoices } from "./choices";
-
-export const revalidate = false;
 
 type Params = {
   locale: Locale;
@@ -64,13 +64,16 @@ export default function Page({ params }: Props) {
   }
 
   return (
-    <PageContent
-      category={category}
-      locale={locale}
-      material={material}
-      slug={slug}
-      type={type}
-    />
+    <>
+      <PageContent
+        category={category}
+        locale={locale}
+        material={material}
+        slug={slug}
+        type={type}
+      />
+      <DynamicMarker />
+    </>
   );
 }
 
@@ -93,10 +96,11 @@ async function PageContent({
   const FilePath = getSlugPath(category, type, material, slug);
 
   try {
-    const [exercises, materials] = await Promise.all([
-      getExercisesContent(locale, FilePath),
-      getMaterials(materialPath, locale),
-    ]);
+    const { exercises, materials } = await fetchContent(
+      locale,
+      FilePath,
+      materialPath
+    );
 
     if (!exercises) {
       notFound();
@@ -167,7 +171,7 @@ async function PageContent({
                     </div>
 
                     <section className="my-6">
-                      <exercise.question.default />
+                      {exercise.question.default}
                     </section>
 
                     <ExerciseChoices
@@ -177,7 +181,7 @@ async function PageContent({
                     />
 
                     <ExerciseAnswer exerciseNumber={exercise.number}>
-                      <exercise.answer.default />
+                      {exercise.answer.default}
                     </ExerciseAnswer>
                   </section>
                 );
@@ -201,4 +205,20 @@ async function PageContent({
   } catch {
     notFound();
   }
+}
+
+async function fetchContent(
+  locale: Locale,
+  FilePath: string,
+  materialPath: string
+) {
+  "use cache";
+  cacheLife("max");
+
+  const [exercises, materials] = await Promise.all([
+    getExercisesContent(locale, FilePath),
+    getMaterials(materialPath, locale),
+  ]);
+
+  return { exercises, materials };
 }

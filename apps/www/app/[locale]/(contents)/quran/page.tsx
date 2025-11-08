@@ -5,13 +5,11 @@ import { MoonStarIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { createElement, use } from "react";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
-
-export const revalidate = false;
 
 type Params = {
   locale: Locale;
@@ -90,7 +88,7 @@ function PageContent({ locale }: { locale: Locale }) {
       />
       <HeaderContent
         description={t("quran-description")}
-        icon={MoonStarIcon}
+        icon={createElement(MoonStarIcon)}
         title={t("quran")}
       />
       <LayoutContent>

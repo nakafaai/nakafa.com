@@ -1,3 +1,5 @@
+"use client";
+
 import { SiYoutube } from "@icons-pack/react-simple-icons";
 import { YouTubeEmbed } from "@next/third-parties/google";
 import { Button } from "@repo/design-system/components/ui/button";
