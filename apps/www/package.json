@@ -19,7 +19,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@icons-pack/react-simple-icons": "^13.8.0",
     "@lobehub/icons": "^2.43.1",
-    "@mantine/hooks": "^8.3.6",
+    "@mantine/hooks": "^8.3.7",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@polar-sh/better-auth": "^1.1.11",
@@ -65,7 +65,7 @@
     "sonner": "^2.0.7",
     "use-context-selector": "^2.0.0",
     "use-sound": "^5.0.0",
-    "virtua": "^0.46.6",
+    "virtua": "^0.46.7",
     "zod": "^4.1.12",
     "zustand": "^5.0.8"
   },

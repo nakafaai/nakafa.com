@@ -11,10 +11,8 @@ import {
   FormItem,
   FormLabel,
 } from "@repo/design-system/components/ui/form";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { useMutation } from "convex/react";
-import { SaveIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -69,11 +67,14 @@ export function UserSettingsName({ user }: { user: AppUser }) {
                 {t("name-footer")}
               </p>
               <Button
-                disabled={isPending || !form.formState.isValid}
+                disabled={
+                  isPending ||
+                  !form.formState.isValid ||
+                  !form.formState.isDirty
+                }
                 size="sm"
                 type="submit"
               >
-                {isPending ? <SpinnerIcon /> : <SaveIcon />}
                 {t("save")}
               </Button>
             </div>

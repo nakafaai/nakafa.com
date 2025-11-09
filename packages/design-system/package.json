@@ -11,7 +11,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@icons-pack/react-simple-icons": "^13.8.0",
     "@lobehub/icons": "^2.43.1",
-    "@mantine/hooks": "^8.3.6",
+    "@mantine/hooks": "^8.3.7",
     "@next/third-parties": "16.0.1",
     "@number-flow/react": "^0.5.10",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
