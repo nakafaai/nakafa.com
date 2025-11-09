@@ -53,21 +53,7 @@ export async function generateMetadata({
 
   const FilePath = getMaterialPath(category, type, material);
 
-  const materials = await getMaterials(FilePath, locale);
-
-  // Find material and item in a single pass
-  let materialTitle: string | undefined;
-
-  for (const mat of materials) {
-    const foundItem = mat.items.find((itm) => itm.href === FilePath);
-    if (foundItem) {
-      materialTitle = mat.title;
-      break;
-    }
-  }
-
   const title = `${t(material)} - ${t(type)} - ${t(category)}`;
-  const finalTitle = materialTitle ? `${materialTitle} - ${title}` : title;
   const urlPath = `/${locale}${FilePath}`;
   const image = {
     url: getOgUrl(locale, FilePath),
@@ -77,13 +63,13 @@ export async function generateMetadata({
 
   return {
     title: {
-      absolute: finalTitle,
+      absolute: title,
     },
     alternates: {
       canonical: urlPath,
     },
     openGraph: {
-      title: finalTitle,
+      title,
       url: urlPath,
       siteName: "Nakafa",
       locale,
