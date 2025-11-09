@@ -1,0 +1,79 @@
+export const metadata = {
+  title: "Pembahasan Soal 30",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { Illustration } from "../illustration";
+
+Sebidang tanah akan dibatasi oleh pagar dengan menggunakan kawat berduri
+
+<Illustration 
+  labels={{
+    wall: "tembok",
+    landArea: "Area Tanah",
+    fence: "Pagar",
+    fenceShape: "Bentuk Pagar",
+    barbedWire: "Kawat Berduri"
+  }}
+/>
+
+#### Menentukan Variabel
+
+Misalkan panjang area tanah <InlineMath math="= x" /> dan lebar area tanah <InlineMath math="= y" />
+
+#### Kendala Kawat
+
+Perhatikan bentuk pagar yang terdiri dari <InlineMath math="4" /> lapis. Artinya
+
+<MathContainer>
+<BlockMath math="800 \text{ m} : 4 \text{ lapis} = 200 \text{ m/lapis}" />
+</MathContainer>
+
+Maka tanah yang dipagari dapat dinyatakan
+
+<MathContainer>
+<BlockMath math="x + 2y = 200" />
+
+<BlockMath math="x = 200 - 2y" />
+</MathContainer>
+
+#### Fungsi Luas
+
+Jika luas tanah <InlineMath math="= xy" />, maka
+
+<MathContainer>
+<BlockMath math="L = (200 - 2y) \cdot y" />
+
+<BlockMath math="= 200y - 2y^2" />
+</MathContainer>
+
+#### Luas Maksimum
+
+Untuk mencari luas maksimum, turunkan <InlineMath math="L" /> terhadap <InlineMath math="y" /> dan samakan dengan <InlineMath math="0" />
+
+<MathContainer>
+<BlockMath math="L' = 0" />
+
+<BlockMath math="200 - 4y = 0" />
+
+<BlockMath math="4y = 200" />
+
+<BlockMath math="y = 50" />
+</MathContainer>
+
+Substitusi <InlineMath math="y = 50" /> ke fungsi luas
+
+<MathContainer>
+<BlockMath math="L = 200y - 2y^2" />
+
+<BlockMath math="= 200(50) - 2(50)^2" />
+
+<BlockMath math="= 10.000 - 5.000" />
+
+<BlockMath math="= 5.000" />
+</MathContainer>
+
+Jadi, luas maksimum tanah yang dipagari (dalam <InlineMath math="\text{m}^2" />) adalah <InlineMath math="5.000 \text{ m}^2" />
+
+

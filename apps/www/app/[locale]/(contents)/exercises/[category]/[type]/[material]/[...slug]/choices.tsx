@@ -59,7 +59,10 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
 
         return (
           <Label
-            className={cn(buttonVariants({ variant }), "h-auto justify-start")}
+            className={cn(
+              buttonVariants({ variant }),
+              "h-auto justify-start text-base"
+            )}
             key={choice.label}
           >
             <Checkbox

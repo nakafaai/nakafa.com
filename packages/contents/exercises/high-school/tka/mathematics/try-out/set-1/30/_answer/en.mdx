@@ -1,0 +1,79 @@
+export const metadata = {
+  title: "Solution to Question 30",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { Illustration } from "../illustration";
+
+A piece of land will be bordered by a fence using barbed wire
+
+<Illustration 
+  labels={{
+    wall: "wall",
+    landArea: "Land Area",
+    fence: "Fence",
+    fenceShape: "Fence Shape",
+    barbedWire: "Barbed Wire"
+  }}
+/>
+
+#### Determining Variables
+
+Let the length of the land area <InlineMath math="= x" /> and the width of the land area <InlineMath math="= y" />
+
+#### Wire Constraint
+
+Notice the fence shape consists of <InlineMath math="4" /> layers. This means
+
+<MathContainer>
+<BlockMath math="800 \text{ m} : 4 \text{ layers} = 200 \text{ m/layer}" />
+</MathContainer>
+
+Therefore, the fenced land can be expressed as
+
+<MathContainer>
+<BlockMath math="x + 2y = 200" />
+
+<BlockMath math="x = 200 - 2y" />
+</MathContainer>
+
+#### Area Function
+
+If the land area <InlineMath math="= xy" />, then
+
+<MathContainer>
+<BlockMath math="L = (200 - 2y) \cdot y" />
+
+<BlockMath math="= 200y - 2y^2" />
+</MathContainer>
+
+#### Maximum Area
+
+To find the maximum area, differentiate <InlineMath math="L" /> with respect to <InlineMath math="y" /> and set it equal to <InlineMath math="0" />
+
+<MathContainer>
+<BlockMath math="L' = 0" />
+
+<BlockMath math="200 - 4y = 0" />
+
+<BlockMath math="4y = 200" />
+
+<BlockMath math="y = 50" />
+</MathContainer>
+
+Substitute <InlineMath math="y = 50" /> into the area function
+
+<MathContainer>
+<BlockMath math="L = 200y - 2y^2" />
+
+<BlockMath math="= 200(50) - 2(50)^2" />
+
+<BlockMath math="= 10{,}000 - 5{,}000" />
+
+<BlockMath math="= 5{,}000" />
+</MathContainer>
+
+Therefore, the maximum area of the fenced land (in <InlineMath math="\text{m}^2" />) is <InlineMath math="5{,}000 \text{ m}^2" />
+
+

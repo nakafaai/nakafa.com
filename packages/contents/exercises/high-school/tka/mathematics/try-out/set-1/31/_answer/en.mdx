@@ -1,0 +1,47 @@
+export const metadata = {
+  title: "Solution to Question 31",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+If integration by parts <InlineMath math="\int u \cdot dv = u \cdot v - \int v \, du" />, then <InlineMath math="\int 2x(5 - x)^3 dx" />
+
+#### Let
+
+Let
+
+<MathContainer>
+<BlockMath math="u = 2x \Rightarrow du = 2dx" />
+
+<BlockMath math="dv = (5 - x)^3 dx \Rightarrow v = \int dv = -\frac{1}{4}(5 - x)^4" />
+</MathContainer>
+
+#### Applying Integration by Parts Formula
+
+Therefore
+
+<MathContainer>
+<BlockMath math="\int u \cdot dv = 2x \left(-\frac{1}{4}(5 - x)^4\right) - \int \left(-\frac{1}{4}(5 - x)^4\right) 2dx" />
+
+<BlockMath math="= \left(-\frac{x}{2}(5 - x)^4\right) + \frac{1}{2}\left(-\frac{1}{5}(5 - x)^5\right) + C" />
+
+<BlockMath math="= -\frac{x}{2}(5 - x)^4 - \frac{1}{10}(5 - x)^5 + C" />
+</MathContainer>
+
+#### Simplifying
+
+Factor out <InlineMath math="(5 - x)^4" />
+
+<MathContainer>
+<BlockMath math="= \left(\frac{-x}{2} - \frac{(5 - x)}{10}\right)(5 - x)^4 + C" />
+
+<BlockMath math="= \left(\frac{-5x - (5 - x)}{10}\right)(5 - x)^4 + C" />
+
+<BlockMath math="= \left(\frac{-5x - 5 + x}{10}\right)(5 - x)^4 + C" />
+
+<BlockMath math="= -\frac{1}{10}(4x + 5)(5 - x)^4 + C" />
+</MathContainer>
+
+Therefore, the result of <InlineMath math="\int 2x(5 - x)^3 dx = -\frac{1}{10}(4x + 5)(5 - x)^4 + C" />
+
+

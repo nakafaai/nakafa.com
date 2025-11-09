@@ -1,0 +1,126 @@
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Solution to Question 35",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+To calculate the area of the region bounded by both curves, first find the intersection points between the parabola and the line.
+
+#### Finding Intersection Points
+
+The intersection points are obtained by equating both equations
+
+<MathContainer>
+<BlockMath math="x^2 - 4x + 3 = 3 - x" />
+
+<BlockMath math="x^2 - 3x = 0" />
+
+<BlockMath math="x(x - 3) = 0" />
+</MathContainer>
+
+Therefore, <InlineMath math="x_1 = 0" /> or <InlineMath math="x_2 = 3" />
+
+#### Determining Upper and Lower Curves
+
+In the interval between <InlineMath math="x = 0" /> and <InlineMath math="x = 3" />, the line <InlineMath math="y = 3 - x" /> is above the parabola <InlineMath math="y = x^2 - 4x + 3" />
+
+#### Graph Visualization
+
+<LineEquation
+  title={<>Graph of <InlineMath math="y = x^2 - 4x + 3" /> and <InlineMath math="y = 3 - x" /></>}
+  description="Visualization of both curves forming a bounded region with intersection points."
+  showZAxis={false}
+  cameraPosition={[0, 0, 15]}
+  data={[
+    {
+      points: Array.from({ length: 100 }, (_, i) => {
+        const x = -1 + (i / 99) * 5;
+        const y = x * x - 4 * x + 3;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("PURPLE"),
+      smooth: true,
+      showPoints: false,
+      labels: [
+        {
+          text: "y = x² - 4x + 3",
+          at: 85,
+          offset: [1.5, 0.5, 0],  
+        },
+      ],
+    },
+    {
+      points: Array.from({ length: 100 }, (_, i) => {
+        const x = -1 + (i / 99) * 5;
+        const y = 3 - x;
+        return { x, y, z: 0 };
+      }),
+      color: getColor("ORANGE"),
+      smooth: true,
+      showPoints: false,
+      labels: [
+        {
+          text: "y = 3 - x",
+          at: 10,
+          offset: [2.5, 0, 0],
+        },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 3, z: 0 },
+        { x: 3, y: 0, z: 0 },
+        { x: 1, y: 0, z: 0 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: true,
+      lineWidth: 0,
+      labels: [
+        {
+          text: "(0, 3)",
+          at: 0,
+          offset: [-1, 0, 0],
+        },
+        {
+          text: "(3, 0)",
+          at: 1,
+          offset: [0, -1.5, 0],
+        },
+        {
+          text: "(1, 0)",
+          at: 2,
+          offset: [0, -1.5, 0],
+        },
+      ],
+    },
+  ]}
+/>
+
+#### Calculating the Area
+
+The area of the region is calculated using integration
+
+<MathContainer>
+<BlockMath math="L = \int_{x_1}^{x_2} (y_{\text{upper}} - y_{\text{lower}}) dx" />
+
+<BlockMath math="= \int_0^3 [(3 - x) - (x^2 - 4x + 3)] dx" />
+
+<BlockMath math="= \int_0^3 (-x^2 + 3x) dx" />
+
+<BlockMath math="= \left[-\frac{1}{3}x^3 + \frac{3}{2}x^2\right]_0^3" />
+
+<BlockMath math="= \left(-\frac{1}{3}(3)^3 + \frac{3}{2}(3)^2\right) - \left(-\frac{1}{3}(0)^3 + \frac{3}{2}(0)^2\right)" />
+
+<BlockMath math="= -9 + \frac{27}{2}" />
+
+<BlockMath math="= \frac{9}{2}" />
+</MathContainer>
+
+Therefore, the area of the region between the two curves is <InlineMath math="\frac{9}{2}" /> square units.
+
+
+

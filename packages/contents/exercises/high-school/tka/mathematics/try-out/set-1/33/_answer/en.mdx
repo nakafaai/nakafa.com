@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Solution to Question 33",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+To solve <InlineMath math="\int (2\sin 2x - 3\cos x) dx" />, integrate each term separately
+
+#### Separating the Integral
+
+<MathContainer>
+<BlockMath math="\int (2\sin 2x - 3\cos x) dx = 2\int \sin 2x \, dx - 3\int \cos x \, dx" />
+</MathContainer>
+
+#### Integrating Each Term
+
+For <InlineMath math="\int \sin 2x \, dx" />, use substitution <InlineMath math="u = 2x" />
+
+<MathContainer>
+<BlockMath math="\int \sin 2x \, dx = -\frac{1}{2}\cos 2x" />
+</MathContainer>
+
+For <InlineMath math="\int \cos x \, dx" />
+
+<MathContainer>
+<BlockMath math="\int \cos x \, dx = \sin x" />
+</MathContainer>
+
+#### Combining Results
+
+<MathContainer>
+<BlockMath math="\int (2\sin 2x - 3\cos x) dx = 2\left(-\frac{1}{2}\cos 2x\right) - 3\sin x + C" />
+
+<BlockMath math="= -\cos 2x - 3\sin x + C" />
+</MathContainer>
+
+Therefore, the result of <InlineMath math="\int (2\sin 2x - 3\cos x) dx = -\cos 2x - 3\sin x + C" />
+
+

@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Pembahasan Soal 33",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Untuk menyelesaikan <InlineMath math="\int (2\sin 2x - 3\cos x) dx" />, integralkan masing-masing suku
+
+#### Memisahkan Integral
+
+<MathContainer>
+<BlockMath math="\int (2\sin 2x - 3\cos x) dx = 2\int \sin 2x \, dx - 3\int \cos x \, dx" />
+</MathContainer>
+
+#### Mengintegralkan Setiap Suku
+
+Untuk <InlineMath math="\int \sin 2x \, dx" />, gunakan substitusi <InlineMath math="u = 2x" />
+
+<MathContainer>
+<BlockMath math="\int \sin 2x \, dx = -\frac{1}{2}\cos 2x" />
+</MathContainer>
+
+Untuk <InlineMath math="\int \cos x \, dx" />
+
+<MathContainer>
+<BlockMath math="\int \cos x \, dx = \sin x" />
+</MathContainer>
+
+#### Menggabungkan Hasil
+
+<MathContainer>
+<BlockMath math="\int (2\sin 2x - 3\cos x) dx = 2\left(-\frac{1}{2}\cos 2x\right) - 3\sin x + C" />
+
+<BlockMath math="= -\cos 2x - 3\sin x + C" />
+</MathContainer>
+
+Jadi, hasil dari <InlineMath math="\int (2\sin 2x - 3\cos x) dx = -\cos 2x - 3\sin x + C" />
+
+

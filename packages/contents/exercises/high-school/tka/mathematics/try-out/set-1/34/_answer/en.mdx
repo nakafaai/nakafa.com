@@ -1,0 +1,52 @@
+export const metadata = {
+  title: "Solution to Question 34",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+To solve this integral, use the substitution method by letting <InlineMath math="u = 3x^2 - 2x + 7" />
+
+#### Determining the Substitution
+
+Let <InlineMath math="u = 3x^2 - 2x + 7" />, then its derivative is
+
+<MathContainer>
+<BlockMath math="\frac{du}{dx} = 6x - 2" />
+
+<BlockMath math="du = 2(3x - 1)dx" />
+</MathContainer>
+
+From this, we obtain <InlineMath math="(3x - 1)dx = \frac{1}{2}du" />
+
+#### Transforming the Integral
+
+Substitute into the integral
+
+<MathContainer>
+<BlockMath math="\int \frac{3x - 1}{(3x^2 - 2x + 7)^7} dx = \int \frac{1}{u^7} \cdot \frac{1}{2} du" />
+
+<BlockMath math="= \frac{1}{2} \int u^{-7} du" />
+</MathContainer>
+
+#### Integrating
+
+<MathContainer>
+<BlockMath math="\frac{1}{2} \int u^{-7} du = \frac{1}{2} \cdot \frac{u^{-6}}{-6} + C" />
+
+<BlockMath math="= \frac{1}{2} \cdot \left(-\frac{1}{6}\right) u^{-6} + C" />
+
+<BlockMath math="= -\frac{1}{12} u^{-6} + C" />
+</MathContainer>
+
+#### Substituting Back
+
+Substitute back <InlineMath math="u = 3x^2 - 2x + 7" />
+
+<MathContainer>
+<BlockMath math="-\frac{1}{12} u^{-6} + C = \frac{-1}{12(3x^2 - 2x + 7)^6} + C" />
+</MathContainer>
+
+Therefore, the result of <InlineMath math="\int \frac{3x - 1}{(3x^2 - 2x + 7)^7} dx = \frac{-1}{12(3x^2 - 2x + 7)^6} + C" />
+
+
+
