@@ -98,4 +98,9 @@ export const contributors: Contributor[] = [
       linkedin: "https://www.linkedin.com/in/rahmawati-rahayu-a884b7205/",
     },
   },
+  {
+    name: "Salsa Putri Regitamadari",
+    username: "nyawsal",
+    type: "community",
+  },
 ];
