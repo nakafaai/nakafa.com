@@ -48,12 +48,13 @@ export async function generateMetadata({
 }: {
   params: Props["params"];
 }): Promise<Metadata> {
-  const { locale, category, type, material } = await params;
+  const { locale, category, type, material, slug } = await params;
   const t = await getTranslations({ locale, namespace: "Exercises" });
 
-  const FilePath = getMaterialPath(category, type, material);
+  const materialPath = getMaterialPath(category, type, material);
+  const FilePath = getSlugPath(category, type, material, slug);
 
-  const materials = await getMaterials(FilePath, locale);
+  const materials = await getMaterials(materialPath, locale);
 
   // Find material and item in a single pass
   let materialTitle: string | undefined;
