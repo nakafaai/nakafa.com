@@ -1,0 +1,171 @@
+export const metadata = {
+  title: "Solution to Question 22",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+Given cube ABCD.EFGH with edge <InlineMath math="12" /> cm
+
+<LineEquation
+  title="Cube ABCD.EFGH"
+  description="Visualization of a cube with edge 12 cm and point P at the midpoint of CG."
+  cameraPosition={[10, 8, 10]}
+  data={[
+    {
+      points: [
+        { x: -3, y: 0, z: -3 },
+        { x: 3, y: 0, z: -3 },
+        { x: 3, y: 0, z: 3 },
+        { x: -3, y: 0, z: 3 },
+        { x: -3, y: 0, z: -3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [-0.5, -0.5, -0.5] },
+        { text: "B", at: 1, offset: [0.5, -0.5, -0.5] },
+        { text: "C", at: 2, offset: [0.5, -0.5, 0.5] },
+        { text: "D", at: 3, offset: [-0.5, -0.5, 0.5] },
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 6, z: -3 },
+        { x: 3, y: 6, z: -3 },
+        { x: 3, y: 6, z: 3 },
+        { x: -3, y: 6, z: 3 },
+        { x: -3, y: 6, z: -3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "E", at: 0, offset: [-0.5, 0.5, -0.5] },
+        { text: "F", at: 1, offset: [0.5, 0.5, -0.5] },
+        { text: "G", at: 2, offset: [0.5, 0.5, 0.5] },
+        { text: "H", at: 3, offset: [-0.5, 0.5, 0.5] },
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: -3 },
+        { x: -3, y: 6, z: -3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: -3 },
+        { x: 3, y: 6, z: -3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: 3 },
+        { x: 3, y: 6, z: 3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "12 cm", at: 0, offset: [1, 1.5, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 3 },
+        { x: -3, y: 6, z: 3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: 3 },
+        { x: 3, y: 0, z: -3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "12 cm", at: 0, offset: [0.5, -0.75, -1.5] },
+      ],
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: -3 },
+        { x: -3, y: 0, z: -3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "12 cm", at: 0, offset: [-1.5, -0.75, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 3, y: 3, z: 3 },
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "P", at: 0, offset: [1, 0, 1] },
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 6, z: 3 },
+        { x: 3, y: 0, z: -3 },
+      ],
+      color: getColor("PURPLE"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "HB", at: 0, offset: [1, -2, -1] },
+      ],
+    },
+    {
+      points: [
+        { x: 3, y: 3, z: 3 },
+        { x: 0, y: 3, z: 0 },
+      ],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: false,
+    },
+  ]}
+/>
+
+#### Determining Face Diagonal
+
+If <InlineMath math="AC" /> and <InlineMath math="PR" /> are face diagonals, then
+
+<BlockMath math="AC = PR = 12\sqrt{2}" />
+
+#### Calculating Distance from Point P to Line HB
+
+Since <InlineMath math="P" /> is the midpoint of <InlineMath math="CG" /> and <InlineMath math="O" /> is the center of the cube, then
+
+<MathContainer>
+<BlockMath math="PO = \frac{1}{2}PR" />
+
+<BlockMath math="= \frac{1}{2} \cdot 12\sqrt{2}" />
+
+<BlockMath math="= 6\sqrt{2}" />
+</MathContainer>
+
+Therefore, the distance from point <InlineMath math="P" /> to line <InlineMath math="HB" /> is <InlineMath math="6\sqrt{2}" /> cm
+
+

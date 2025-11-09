@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Solution to Question 27",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+To solve the limit <InlineMath math="\lim_{x \to 0} \left(\frac{1 - \cos 2x}{x \tan 2x}\right)" />, use trigonometric identities
+
+#### Using Trigonometric Identities
+
+Use the identity <InlineMath math="1 - \cos 2x = 2\sin^2 x" />
+
+<MathContainer>
+<BlockMath math="\lim_{x \to 0} \left(\frac{1 - \cos 2x}{x \tan 2x}\right) = \lim_{x \to 0} \left(\frac{2\sin^2 x}{x \tan 2x}\right)" />
+
+<BlockMath math="= \lim_{x \to 0} \left(\frac{2\sin^2 x}{x \tan 2x}\right)" />
+</MathContainer>
+
+#### Separating the Limit
+
+Separate into several parts using limit properties
+
+<MathContainer>
+<BlockMath math="= 2 \lim_{x \to 0} \left(\frac{\sin x}{x}\right) \cdot \left(\frac{\sin x}{x}\right) \cdot \frac{1}{2x} \cdot \left(\frac{2x}{\tan 2x}\right)" />
+
+<BlockMath math="= 2 \lim_{x \to 0} \left(\frac{\sin x}{x}\right) \cdot \left(\frac{\sin x}{x}\right) \cdot \frac{1}{2x} \cdot \left(\frac{2x}{\tan 2x}\right)" />
+</MathContainer>
+
+Use the fact that <InlineMath math="\lim_{x \to 0} \frac{\sin x}{x} = 1" />
+
+<MathContainer>
+<BlockMath math="= 2 \cdot 1 \cdot 1 \cdot \frac{1}{2x} \cdot \lim_{x \to 0} \left(\frac{2x}{\tan 2x}\right)" />
+
+<BlockMath math="= 2 \cdot \frac{1}{2x} \cdot x = 1" />
+</MathContainer>
+
+Therefore, the value of <InlineMath math="\lim_{x \to 0} \left(\frac{1 - \cos 2x}{x \tan 2x}\right) = 1" />
+
+

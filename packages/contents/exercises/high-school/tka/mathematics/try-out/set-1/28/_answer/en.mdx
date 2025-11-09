@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Solution to Question 28",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Given <InlineMath math="y = \cos^3 x" />
+
+#### Derivative Using Chain Rule
+
+Use the chain rule to differentiate the composite function
+
+<MathContainer>
+<BlockMath math="y' = 3(\cos^2 x) \cdot (-\sin x)" />
+
+<BlockMath math="= -3\cos^2 x \sin x" />
+
+<BlockMath math="= -3\cos x \cos x \sin x" />
+</MathContainer>
+
+#### Using Trigonometric Identity
+
+Use the identity <InlineMath math="2\sin x \cos x = \sin 2x" />
+
+<MathContainer>
+<BlockMath math="= \frac{-3}{2}\cos x (2\sin x \cos x)" />
+
+<BlockMath math="= \frac{-3}{2}\cos x \cdot \sin 2x" />
+</MathContainer>
+
+Therefore, the first derivative of <InlineMath math="y = \cos^3 x" /> is <InlineMath math="y' = \frac{-3}{2}\cos x \cdot \sin 2x" />
+
+

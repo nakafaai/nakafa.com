@@ -1,0 +1,199 @@
+export const metadata = {
+    title: "Pembahasan Soal 23",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "06/11/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+Diketahui limas segi empat beraturan P.QRST dengan rusuk alas <InlineMath math="3" /> cm dan rusuk tegak <InlineMath math="3\sqrt{2}" /> cm
+
+<LineEquation
+  title="Limas P.QRST"
+  description="Visualisasi limas segi empat beraturan dengan rusuk alas 3 cm dan rusuk tegak 3√2 cm."
+  cameraPosition={[8, 6, 8]}
+  data={[
+    {
+      points: [
+        { x: -1.5, y: 0, z: -1.5 },
+        { x: 1.5, y: 0, z: -1.5 },
+        { x: 1.5, y: 0, z: 1.5 },
+        { x: -1.5, y: 0, z: 1.5 },
+        { x: -1.5, y: 0, z: -1.5 },
+      ],
+      color: getColor("YELLOW"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "Q", at: 0, offset: [-0.5, -0.5, -0.5] },
+        { text: "R", at: 1, offset: [0.5, -0.5, -0.5] },
+        { text: "S", at: 2, offset: [0.5, -0.5, 0.5] },
+        { text: "T", at: 3, offset: [-0.5, -0.5, 0.5] },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 3.674, z: 0 },
+        { x: -1.5, y: 0, z: -1.5 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 3.674, z: 0 },
+        { x: 1.5, y: 0, z: -1.5 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 3.674, z: 0 },
+        { x: 1.5, y: 0, z: 1.5 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "4√2 cm", at: 0, offset: [1.5, -1.5, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 3.674, z: 0 },
+        { x: -1.5, y: 0, z: 1.5 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 0, y: 3.674, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "P", at: 0, offset: [0.5, 0, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [0, -0.8, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: -1.5, y: 0, z: -1.5 },
+        { x: 1.5, y: 0, z: 1.5 },
+      ],
+      color: getColor("YELLOW"),
+      smooth: false,
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 1.5, y: 0, z: -1.5 },
+        { x: -1.5, y: 0, z: 1.5 },
+      ],
+      color: getColor("YELLOW"),
+      smooth: false,
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 1.5, y: 0, z: 1.5 },
+        { x: 1.5, y: 0, z: -1.5 },
+      ],
+      color: getColor("YELLOW"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "4 cm", at: 0, offset: [1, -0.5, -0.5] },
+      ],
+    },
+    {
+      points: [
+        { x: 1.5, y: 0, z: -1.5 },
+        { x: -1.5, y: 0, z: -1.5 },
+      ],
+      color: getColor("YELLOW"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "4 cm", at: 0, offset: [-0.5, 0.5, -0.5] },
+      ],
+    },
+  ]}
+/>
+
+#### Perhatikan Segitiga TQR
+
+Hitung panjang <InlineMath math="TR" /> menggunakan teorema Pythagoras pada segitiga siku-siku di alas
+
+<MathContainer>
+<BlockMath math="TR = \sqrt{QR^2 + QT^2}" />
+
+<BlockMath math="= \sqrt{3^2 + 3^2}" />
+
+<BlockMath math="= \sqrt{18} = 3\sqrt{2}" />
+</MathContainer>
+
+#### Menghitung TO
+
+Karena <InlineMath math="O" /> adalah pusat alas, maka <InlineMath math="TO" /> adalah setengah dari diagonal <InlineMath math="TR" />
+
+<MathContainer>
+<BlockMath math="TO = \frac{1}{2}TR" />
+
+<BlockMath math="= \frac{1}{2} \cdot 3\sqrt{2}" />
+
+<BlockMath math="= \frac{3}{2}\sqrt{2}" />
+</MathContainer>
+
+#### Menghitung PO
+
+Gunakan teorema Pythagoras pada segitiga <InlineMath math="PTO" />
+
+<MathContainer>
+<BlockMath math="PO = \sqrt{PR^2 - RO^2}" />
+
+<BlockMath math="= \sqrt{(3\sqrt{2})^2 - \left(\frac{3}{2}\sqrt{2}\right)^2}" />
+
+<BlockMath math="= \sqrt{18 - \frac{9}{2}}" />
+
+<BlockMath math="= \sqrt{\frac{36 - 9}{2}} = \sqrt{\frac{27}{2}}" />
+</MathContainer>
+
+#### Menghitung Tangen Sudut
+
+Tangen sudut <InlineMath math="\alpha" /> antara garis PT dan alas QRST
+
+<MathContainer>
+<BlockMath math="\tan \alpha = \frac{PO}{TO}" />
+
+<BlockMath math="= \frac{\sqrt{\frac{27}{2}}}{\frac{3}{2}\sqrt{2}}" />
+
+<BlockMath math="= \frac{\sqrt{27}}{\sqrt{2}} \cdot \frac{1}{\frac{3}{2}\sqrt{2}}" />
+
+<BlockMath math="= \frac{\sqrt{27}}{\sqrt{2}} \cdot \frac{2}{3\sqrt{2}}" />
+
+<BlockMath math="= \frac{2\sqrt{27}}{3 \cdot 2}" />
+
+<BlockMath math="= \frac{\sqrt{27}}{3} = \frac{3\sqrt{3}}{3} = \sqrt{3}" />
+</MathContainer>
+
+Jadi, tangen sudut antara garis PT dan alas QRST adalah <InlineMath math="\sqrt{3}" />
+
+

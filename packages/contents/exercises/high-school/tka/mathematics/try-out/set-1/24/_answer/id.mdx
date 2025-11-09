@@ -1,0 +1,60 @@
+export const metadata = {
+  title: "Pembahasan Soal 24",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Variabel dan Parameter
+
+Misalkan <InlineMath math="X" /> adalah berat badan bayi baru lahir (terdistribusi normal)
+
+- Rata-rata <InlineMath math="\mu = 3.200" /> gram
+- Simpangan baku <InlineMath math="\sigma = 450" /> gram
+
+#### Standarisasi (Z-score)
+
+Kita perlu mengubah batas berat badan menjadi Z-score untuk menggunakan tabel distribusi normal standar.
+
+#### Batas Bawah
+
+Untuk <InlineMath math="x_1 = 2.750" /> gram
+
+<MathContainer>
+<BlockMath math="z_1 = \frac{x_1 - \mu}{\sigma}" />
+
+<BlockMath math="= \frac{2.750 - 3.200}{450}" />
+
+<BlockMath math="= \frac{-450}{450} = -1" />
+</MathContainer>
+
+#### Batas Atas
+
+Untuk <InlineMath math="x_2 = 3.650" /> gram
+
+<MathContainer>
+<BlockMath math="z_2 = \frac{x_2 - \mu}{\sigma}" />
+
+<BlockMath math="= \frac{3.650 - 3.200}{450}" />
+
+<BlockMath math="= \frac{450}{450} = 1" />
+</MathContainer>
+
+#### Menghitung Probabilitas
+
+Kita ingin mencari <InlineMath math="P(2.750 \leq X \leq 3.650)" />, yang setara dengan <InlineMath math="P(-1 \leq Z \leq 1)" /> dalam distribusi normal standar.
+
+Menggunakan fungsi distribusi kumulatif (CDF) distribusi normal
+
+<MathContainer>
+<BlockMath math="P(-1 \leq Z \leq 1) = P(Z \leq 1) - P(Z < -1)" />
+
+<BlockMath math="= P(Z < 1) - P(Z < -1)" />
+</MathContainer>
+
+Dalam notasi fungsi distribusi kumulatif standar (CDF) distribusi normal, <InlineMath math="P(Z \leq z)" /> sering ditulis sebagai <InlineMath math="\Phi(z)" /> atau <InlineMath math="P(Z < z)" /> (karena distribusi normal kontinu, <InlineMath math="P(Z \leq z) = P(Z < z)" />).
+
+Jadi, <InlineMath math="P(-1 \leq Z \leq 1) = P(Z \leq 1) - P(Z < -1)" />
+
+Pilihan jawaban yang paling tepat adalah A.
+
+

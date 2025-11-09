@@ -1,0 +1,60 @@
+export const metadata = {
+  title: "Solution to Question 24",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Variables and Parameters
+
+Let <InlineMath math="X" /> be the weight of a newborn baby (normally distributed)
+
+- Mean <InlineMath math="\mu = 3{,}200" /> grams
+- Standard deviation <InlineMath math="\sigma = 450" /> grams
+
+#### Standardization (Z-score)
+
+We need to convert weight limits to Z-scores to use the standard normal distribution table.
+
+#### Lower Bound
+
+For <InlineMath math="x_1 = 2{,}750" /> grams
+
+<MathContainer>
+<BlockMath math="z_1 = \frac{x_1 - \mu}{\sigma}" />
+
+<BlockMath math="= \frac{2{,}750 - 3{,}200}{450}" />
+
+<BlockMath math="= \frac{-450}{450} = -1" />
+</MathContainer>
+
+#### Upper Bound
+
+For <InlineMath math="x_2 = 3{,}650" /> grams
+
+<MathContainer>
+<BlockMath math="z_2 = \frac{x_2 - \mu}{\sigma}" />
+
+<BlockMath math="= \frac{3{,}650 - 3{,}200}{450}" />
+
+<BlockMath math="= \frac{450}{450} = 1" />
+</MathContainer>
+
+#### Calculating Probability
+
+We want to find <InlineMath math="P(2{,}750 \leq X \leq 3{,}650)" />, which is equivalent to <InlineMath math="P(-1 \leq Z \leq 1)" /> in the standard normal distribution.
+
+Using the cumulative distribution function (CDF) of the normal distribution
+
+<MathContainer>
+<BlockMath math="P(-1 \leq Z \leq 1) = P(Z \leq 1) - P(Z < -1)" />
+
+<BlockMath math="= P(Z < 1) - P(Z < -1)" />
+</MathContainer>
+
+In the notation of the standard normal distribution CDF, <InlineMath math="P(Z \leq z)" /> is often written as <InlineMath math="\Phi(z)" /> or <InlineMath math="P(Z < z)" /> (since the normal distribution is continuous, <InlineMath math="P(Z \leq z) = P(Z < z)" />).
+
+Therefore, <InlineMath math="P(-1 \leq Z \leq 1) = P(Z \leq 1) - P(Z < -1)" />
+
+The most appropriate answer is A.
+
+

@@ -1,0 +1,171 @@
+export const metadata = {
+  title: "Pembahasan Soal 22",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+Diketahui kubus ABCD.EFGH dengan rusuk <InlineMath math="12" /> cm
+
+<LineEquation
+  title="Kubus ABCD.EFGH"
+  description="Visualisasi kubus dengan rusuk 12 cm dan titik P di tengah CG."
+  cameraPosition={[10, 8, 10]}
+  data={[
+    {
+      points: [
+        { x: -3, y: 0, z: -3 },
+        { x: 3, y: 0, z: -3 },
+        { x: 3, y: 0, z: 3 },
+        { x: -3, y: 0, z: 3 },
+        { x: -3, y: 0, z: -3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [-0.5, -0.5, -0.5] },
+        { text: "B", at: 1, offset: [0.5, -0.5, -0.5] },
+        { text: "C", at: 2, offset: [0.5, -0.5, 0.5] },
+        { text: "D", at: 3, offset: [-0.5, -0.5, 0.5] },
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 6, z: -3 },
+        { x: 3, y: 6, z: -3 },
+        { x: 3, y: 6, z: 3 },
+        { x: -3, y: 6, z: 3 },
+        { x: -3, y: 6, z: -3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "E", at: 0, offset: [-0.5, 0.5, -0.5] },
+        { text: "F", at: 1, offset: [0.5, 0.5, -0.5] },
+        { text: "G", at: 2, offset: [0.5, 0.5, 0.5] },
+        { text: "H", at: 3, offset: [-0.5, 0.5, 0.5] },
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: -3 },
+        { x: -3, y: 6, z: -3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: -3 },
+        { x: 3, y: 6, z: -3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: 3 },
+        { x: 3, y: 6, z: 3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "12 cm", at: 0, offset: [1, 1.5, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 0, z: 3 },
+        { x: -3, y: 6, z: 3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: 3 },
+        { x: 3, y: 0, z: -3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "12 cm", at: 0, offset: [0.5, -0.75, -1.5] },
+      ],
+    },
+    {
+      points: [
+        { x: 3, y: 0, z: -3 },
+        { x: -3, y: 0, z: -3 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "12 cm", at: 0, offset: [-1.5, -0.75, 0] },
+      ],
+    },
+    {
+      points: [
+        { x: 3, y: 3, z: 3 },
+      ],
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: true,
+      labels: [
+        { text: "P", at: 0, offset: [1, 0, 1] },
+      ],
+    },
+    {
+      points: [
+        { x: -3, y: 6, z: 3 },
+        { x: 3, y: 0, z: -3 },
+      ],
+      color: getColor("PURPLE"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        { text: "HB", at: 0, offset: [1, -2, -1] },
+      ],
+    },
+    {
+      points: [
+        { x: 3, y: 3, z: 3 },
+        { x: 0, y: 3, z: 0 },
+      ],
+      color: getColor("VIOLET"),
+      smooth: false,
+      showPoints: false,
+    },
+  ]}
+/>
+
+#### Menentukan Diagonal Bidang
+
+Jika <InlineMath math="AC" /> dan <InlineMath math="PR" /> adalah diagonal bidang, maka
+
+<BlockMath math="AC = PR = 12\sqrt{2}" />
+
+#### Menghitung Jarak Titik P ke Garis HB
+
+Karena <InlineMath math="P" /> adalah titik di tengah <InlineMath math="CG" /> dan <InlineMath math="O" /> adalah pusat kubus, maka
+
+<MathContainer>
+<BlockMath math="PO = \frac{1}{2}PR" />
+
+<BlockMath math="= \frac{1}{2} \cdot 12\sqrt{2}" />
+
+<BlockMath math="= 6\sqrt{2}" />
+</MathContainer>
+
+Jadi, jarak titik <InlineMath math="P" /> dengan garis <InlineMath math="HB" /> adalah <InlineMath math="6\sqrt{2}" /> cm
+
+
