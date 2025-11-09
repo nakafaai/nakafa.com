@@ -186,12 +186,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
         <HeaderGroup>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                disabled={isPending}
-                onClick={handleEdit}
-                size="icon-sm"
-                variant="ghost"
-              >
+              <Button disabled={isPending} size="icon-sm" variant="ghost">
                 <EllipsisIcon />
                 <span className="sr-only">More actions</span>
               </Button>
