@@ -3,45 +3,45 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "$$2\\cos 2x - 3\\sin x + C$$",
+      label: "$$61{,}0$$",
       value: false,
     },
     {
-      label: "$$-2\\cos 2x + 3\\sin x + C$$",
+      label: "$$61{,}5$$",
       value: false,
     },
     {
-      label: "$$-2\\cos 2x - 3\\sin x + C$$",
+      label: "$$62{,}0$$",
       value: false,
     },
     {
-      label: "$$-\\cos 2x - 3\\sin x + C$$",
+      label: "$$62{,}6$$",
       value: true,
     },
     {
-      label: "$$\\cos 2x + 3\\sin x + C$$",
+      label: "$$63{,}5$$",
       value: false,
     },
   ],
   en: [
     {
-      label: "$$2\\cos 2x - 3\\sin x + C$$",
+      label: "$$61{,}0$$",
       value: false,
     },
     {
-      label: "$$-2\\cos 2x + 3\\sin x + C$$",
+      label: "$$61{,}5$$",
       value: false,
     },
     {
-      label: "$$-2\\cos 2x - 3\\sin x + C$$",
+      label: "$$62{,}0$$",
       value: false,
     },
     {
-      label: "$$-\\cos 2x - 3\\sin x + C$$",
+      label: "$$62{,}6$$",
       value: true,
     },
     {
-      label: "$$\\cos 2x + 3\\sin x + C$$",
+      label: "$$63{,}5$$",
       value: false,
     },
   ],

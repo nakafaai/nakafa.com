@@ -1,0 +1,50 @@
+export const metadata = {
+  title: "Solution to Question 36",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+To solve this probability problem, first determine the sample space and the required events.
+
+#### Determining the Sample Space
+
+When two dice are thrown together, the total possible outcomes are
+
+<BlockMath math="n(S) = 6 \times 6 = 36" />
+
+#### Event A with Sum of Dice Equal to 5
+
+The pairs of dice with sum 5 are <InlineMath math="(1,4)" />, <InlineMath math="(4,1)" />, <InlineMath math="(2,3)" />, <InlineMath math="(3,2)" />
+
+The number of outcomes in event A is <InlineMath math="n(A) = 4" />
+
+Probability of event A
+
+<BlockMath math="P(A) = \frac{n(A)}{n(S)} = \frac{4}{36}" />
+
+#### Event B with Sum of Dice Equal to 7
+
+The pairs of dice with sum 7 are <InlineMath math="(2,5)" />, <InlineMath math="(5,2)" />, <InlineMath math="(4,3)" />, <InlineMath math="(3,4)" />, <InlineMath math="(6,1)" />, <InlineMath math="(1,6)" />
+
+The number of outcomes in event B is <InlineMath math="n(B) = 6" />
+
+Probability of event B
+
+<BlockMath math="P(B) = \frac{n(B)}{n(S)} = \frac{6}{36}" />
+
+#### Calculating the Combined Probability
+
+Since events A and B are mutually exclusive (cannot occur simultaneously), then
+
+<MathContainer>
+<BlockMath math="P(A \cup B) = P(A) + P(B)" />
+
+<BlockMath math="= \frac{4}{36} + \frac{6}{36}" />
+
+<BlockMath math="= \frac{10}{36}" />
+</MathContainer>
+
+Therefore, the probability that the sum of the dice is 5 or 7 is <InlineMath math="\frac{10}{36}" />
+
+
+

@@ -3,45 +3,45 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "$$2\\cos 2x - 3\\sin x + C$$",
+      label: "$$9$$ satuan luas",
       value: false,
     },
     {
-      label: "$$-2\\cos 2x + 3\\sin x + C$$",
+      label: "$$18$$ satuan luas",
       value: false,
     },
     {
-      label: "$$-2\\cos 2x - 3\\sin x + C$$",
+      label: "$$27$$ satuan luas",
       value: false,
     },
     {
-      label: "$$-\\cos 2x - 3\\sin x + C$$",
+      label: "$$36$$ satuan luas",
       value: true,
     },
     {
-      label: "$$\\cos 2x + 3\\sin x + C$$",
+      label: "$$54$$ satuan luas",
       value: false,
     },
   ],
   en: [
     {
-      label: "$$2\\cos 2x - 3\\sin x + C$$",
+      label: "$$9$$ square units",
       value: false,
     },
     {
-      label: "$$-2\\cos 2x + 3\\sin x + C$$",
+      label: "$$18$$ square units",
       value: false,
     },
     {
-      label: "$$-2\\cos 2x - 3\\sin x + C$$",
+      label: "$$27$$ square units",
       value: false,
     },
     {
-      label: "$$-\\cos 2x - 3\\sin x + C$$",
+      label: "$$36$$ square units",
       value: true,
     },
     {
-      label: "$$\\cos 2x + 3\\sin x + C$$",
+      label: "$$54$$ square units",
       value: false,
     },
   ],

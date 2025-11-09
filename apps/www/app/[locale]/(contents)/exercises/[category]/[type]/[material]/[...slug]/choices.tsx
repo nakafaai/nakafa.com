@@ -61,7 +61,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
           <Label
             className={cn(
               buttonVariants({ variant }),
-              "h-auto justify-start text-base"
+              "h-auto justify-start font-normal text-base"
             )}
             key={choice.label}
           >

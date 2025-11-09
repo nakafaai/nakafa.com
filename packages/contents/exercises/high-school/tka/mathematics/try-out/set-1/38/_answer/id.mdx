@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Pembahasan Soal 38",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Untuk menghitung kuartil atas dari data berkelompok, gunakan rumus kuartil ketiga.
+
+#### Tabel Data
+
+| Nilai                                                               | Frekuensi                  |
+| ------------------------------------------------------------------- | -------------------------- |
+| <InlineMath math="40" /> — <InlineMath math="49" />                | <InlineMath math="7" />    |
+| <InlineMath math="50" /> — <InlineMath math="59" />                | <InlineMath math="11" />   |
+| <InlineMath math="60" /> — <InlineMath math="69" />                | <InlineMath math="9" />    |
+| <InlineMath math="70" /> — <InlineMath math="79" />                | <InlineMath math="6" />    |
+| <InlineMath math="80" /> — <InlineMath math="89" />                | <InlineMath math="5" />    |
+| <InlineMath math="90" /> — <InlineMath math="99" />                | <InlineMath math="2" />    |
+| **Total**                                                           | <InlineMath math="40" />   |
+
+#### Menentukan Letak Kuartil Atas
+
+Kuartil atas terletak pada posisi
+
+<MathContainer>
+<BlockMath math="f_{K_3} = \frac{3}{4} \cdot n = \frac{3}{4} \cdot 40 = 30" />
+</MathContainer>
+
+Posisi ke-<InlineMath math="30" /> berada pada interval <InlineMath math="70" />—<InlineMath math="79" />
+
+#### Menghitung Frekuensi Kumulatif
+
+Frekuensi kumulatif sebelum kelas kuartil atas
+
+<BlockMath math="f_{ks} = 7 + 11 + 9 = 27" />
+
+Frekuensi kelas kuartil atas
+
+<BlockMath math="f_{K_3} = 6" />
+
+#### Menentukan Parameter
+
+Batas bawah kelas kuartil atas
+
+<BlockMath math="T_b = 70 - 0{,}5 = 69{,}5" />
+
+Panjang kelas
+
+<BlockMath math="c = 79{,}5 - 69{,}5 = 10" />
+
+#### Menghitung Kuartil Atas
+
+Gunakan rumus kuartil atas untuk data berkelompok
+
+<MathContainer>
+<BlockMath math="K_3 = T_b + \left(\frac{\frac{3}{4}n - f_{ks}}{f_{K_3}}\right) \cdot c" />
+
+<BlockMath math="= 69{,}5 + \left(\frac{30 - 27}{6}\right) \cdot 10" />
+
+<BlockMath math="= 69{,}5 + \frac{3}{6} \cdot 10" />
+
+<BlockMath math="= 69{,}5 + 5" />
+
+<BlockMath math="= 74{,}5" />
+</MathContainer>
+
+Jadi, kuartil atas dari data pada tabel tersebut adalah <InlineMath math="74{,}5" />
+
+
+

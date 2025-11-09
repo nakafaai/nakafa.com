@@ -1,0 +1,60 @@
+export const metadata = {
+  title: "Solution to Question 39",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+To calculate the area under the curve, first find the intersection points of the curve with the x-axis to determine the integration bounds.
+
+#### Finding Intersection with the x-axis
+
+The region is bounded by the curve <InlineMath math="f(x) = 6x - x^2" /> and the x-axis <InlineMath math="(y = 0)" />
+
+The intersection points of the curve with the x-axis are obtained when <InlineMath math="f(x) = 0" />
+
+<MathContainer>
+<BlockMath math="6x - x^2 = 0" />
+
+<BlockMath math="x(6 - x) = 0" />
+</MathContainer>
+
+Therefore, <InlineMath math="x = 0" /> or <InlineMath math="x = 6" />
+
+#### Determining Integration Bounds
+
+Since the question asks for <InlineMath math="x \geq 0" />, the integration bounds are from <InlineMath math="x = 0" /> to <InlineMath math="x = 6" />
+
+#### Calculating the Area
+
+The area under the curve <InlineMath math="f(x)" /> from <InlineMath math="x = 0" /> to <InlineMath math="x = 6" /> is calculated using a definite integral
+
+<MathContainer>
+<BlockMath math="\text{Area} = \int_0^6 (6x - x^2) dx" />
+</MathContainer>
+
+#### Evaluating the Integral
+
+<MathContainer>
+<BlockMath math="\int (6x - x^2) dx = 3x^2 - \frac{1}{3}x^3 + C" />
+</MathContainer>
+
+#### Applying Integration Bounds
+
+<MathContainer>
+<BlockMath math="\text{Area} = \left[3x^2 - \frac{1}{3}x^3\right]_0^6" />
+
+<BlockMath math="= \left[3(6)^2 - \frac{1}{3}(6)^3\right] - \left[3(0)^2 - \frac{1}{3}(0)^3\right]" />
+
+<BlockMath math="= \left[3(36) - \frac{1}{3}(216)\right] - 0" />
+
+<BlockMath math="= [108 - 72] - 0" />
+
+<BlockMath math="= 108 - 72" />
+
+<BlockMath math="= 36 \text{ square units}" />
+</MathContainer>
+
+Therefore, the area bounded by the curve and the x-axis is <InlineMath math="36" /> square units.
+
+
+

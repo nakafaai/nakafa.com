@@ -1,0 +1,94 @@
+import { HistogramChart } from "@repo/design-system/components/contents/bar-chart";
+
+export const metadata = {
+    title: "Solution to Question 37",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "06/11/2025",
+};
+
+To calculate the mode from histogram data, use the mode formula for grouped data.
+
+#### Data Histogram
+
+<HistogramChart
+  title="Score Distribution Histogram"
+  description="Frequency distribution of student scores with the modal class indicated."
+  yAxisLabel="Frequency"
+  data={[
+    { name: "49.5-54.5", value: 5, fill: "var(--chart-1)" },
+    { name: "54.5-59.5", value: 9, fill: "var(--chart-2)" },
+    { name: "59.5-64.5", value: 14, fill: "var(--chart-3)" },
+    { name: "64.5-69.5", value: 11, fill: "var(--chart-4)" },
+    { name: "69.5-74.5", value: 6, fill: "var(--chart-5)" },
+  ]}
+  chartConfig={{
+    value: {
+      label: "Frequency",
+    },
+    "49.5-54.5": {
+      label: "49.5-54.5",
+      color: "var(--chart-1)",
+    },
+    "54.5-59.5": {
+      label: "54.5-59.5",
+      color: "var(--chart-2)",
+    },
+    "59.5-64.5": {
+      label: "59.5-64.5",
+      color: "var(--chart-3)",
+    },
+    "64.5-69.5": {
+      label: "64.5-69.5",
+      color: "var(--chart-4)",
+    },
+    "69.5-74.5": {
+      label: "69.5-74.5",
+      color: "var(--chart-5)",
+    },
+  }}
+/>
+
+#### Determining the Modal Class
+
+The modal class is the interval with the highest frequency, which is the interval <InlineMath math="59.5 - 64.5" /> with frequency <InlineMath math="14" />
+
+#### Calculating Frequency Differences
+
+Difference between modal class frequency and previous class frequency
+
+<BlockMath math="d_1 = 14 - 9 = 5" />
+
+Difference between modal class frequency and next class frequency
+
+<BlockMath math="d_2 = 14 - 11 = 3" />
+
+#### Determining Parameters
+
+Lower boundary of modal class
+
+<BlockMath math="T_b = 59.5" />
+
+Class width
+
+<BlockMath math="L = 64.5 - 59.5 = 5" />
+
+#### Calculating the Mode
+
+Using the mode formula for grouped data
+
+<MathContainer>
+<BlockMath math="M_o = T_b + \left(\frac{d_1}{d_1 + d_2}\right) \cdot L" />
+
+<BlockMath math="= 59.5 + \left(\frac{5}{5 + 3}\right) \cdot 5" />
+
+<BlockMath math="= 59.5 + \left(\frac{5}{8}\right) \cdot 5" />
+
+<BlockMath math="= 59.5 + 3.125" />
+
+<BlockMath math="= 62.625 \approx 62.6" />
+</MathContainer>
+
+Therefore, the mode of the data shown in the histogram is <InlineMath math="62.6" />
+
+
+

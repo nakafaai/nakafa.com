@@ -1,0 +1,52 @@
+export const metadata = {
+  title: "Solution to Question 40",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+To solve this combination problem, first determine which questions are required and how many questions still need to be selected.
+
+#### Identifying the Conditions
+
+1. Total number of questions is <InlineMath math="10" /> questions
+2. Questions to be worked on are <InlineMath math="7" /> questions
+3. Required questions are numbers <InlineMath math="1" />, <InlineMath math="2" />, and <InlineMath math="3" />
+
+#### Determining Questions to be Selected
+
+Since participants must work on questions number <InlineMath math="1" />, <InlineMath math="2" />, and <InlineMath math="3" />, participants have already worked on <InlineMath math="3" /> questions.
+
+Questions still to be selected
+
+<BlockMath math="7 - 3 = 4 \text{ questions}" />
+
+#### Determining Available Questions to Choose From
+
+Available questions to choose from are those other than numbers <InlineMath math="1" />, <InlineMath math="2" />, and <InlineMath math="3" />
+
+Number of available questions to choose from
+
+<BlockMath math="10 - 3 = 7 \text{ questions}" />
+
+#### Calculating the Number of Ways to Choose
+
+Participants must choose <InlineMath math="4" /> questions from <InlineMath math="7" /> available questions. Use combination
+
+<MathContainer>
+<BlockMath math="C_4^7 = \frac{7!}{(7-4)! \cdot 4!}" />
+
+<BlockMath math="= \frac{7!}{3! \cdot 4!}" />
+
+<BlockMath math="= \frac{7 \cdot 6 \cdot 5 \cdot 4!}{3! \cdot 4!}" />
+
+<BlockMath math="= \frac{7 \cdot 6 \cdot 5}{3 \cdot 2 \cdot 1}" />
+
+<BlockMath math="= \frac{210}{6}" />
+
+<BlockMath math="= 35" />
+</MathContainer>
+
+Therefore, the number of ways participants can choose the questions to work on is <InlineMath math="35" /> ways.
+
+
+

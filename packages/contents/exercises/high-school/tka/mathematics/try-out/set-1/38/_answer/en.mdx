@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Solution to Question 38",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+To calculate the upper quartile from grouped data, use the third quartile formula.
+
+#### Data Table
+
+| Score                                                               | Frequency                  |
+| ------------------------------------------------------------------- | -------------------------- |
+| <InlineMath math="40" /> — <InlineMath math="49" />                | <InlineMath math="7" />    |
+| <InlineMath math="50" /> — <InlineMath math="59" />                | <InlineMath math="11" />   |
+| <InlineMath math="60" /> — <InlineMath math="69" />                | <InlineMath math="9" />    |
+| <InlineMath math="70" /> — <InlineMath math="79" />                | <InlineMath math="6" />    |
+| <InlineMath math="80" /> — <InlineMath math="89" />                | <InlineMath math="5" />    |
+| <InlineMath math="90" /> — <InlineMath math="99" />                | <InlineMath math="2" />    |
+| **Total**                                                           | <InlineMath math="40" />   |
+
+#### Determining the Upper Quartile Position
+
+The upper quartile is located at position
+
+<MathContainer>
+<BlockMath math="f_{K_3} = \frac{3}{4} \cdot n = \frac{3}{4} \cdot 40 = 30" />
+</MathContainer>
+
+The <InlineMath math="30" />th position is in the interval <InlineMath math="70" />—<InlineMath math="79" />
+
+#### Calculating Cumulative Frequency
+
+Cumulative frequency before the upper quartile class
+
+<BlockMath math="f_{ks} = 7 + 11 + 9 = 27" />
+
+Frequency of the upper quartile class
+
+<BlockMath math="f_{K_3} = 6" />
+
+#### Determining Parameters
+
+Lower boundary of the upper quartile class
+
+<BlockMath math="T_b = 70 - 0.5 = 69.5" />
+
+Class width
+
+<BlockMath math="c = 79.5 - 69.5 = 10" />
+
+#### Calculating the Upper Quartile
+
+Using the upper quartile formula for grouped data
+
+<MathContainer>
+<BlockMath math="K_3 = T_b + \left(\frac{\frac{3}{4}n - f_{ks}}{f_{K_3}}\right) \cdot c" />
+
+<BlockMath math="= 69.5 + \left(\frac{30 - 27}{6}\right) \cdot 10" />
+
+<BlockMath math="= 69.5 + \frac{3}{6} \cdot 10" />
+
+<BlockMath math="= 69.5 + 5" />
+
+<BlockMath math="= 74.5" />
+</MathContainer>
+
+Therefore, the upper quartile of the data in the table is <InlineMath math="74.5" />
+
+
+

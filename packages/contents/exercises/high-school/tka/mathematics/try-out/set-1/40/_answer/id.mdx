@@ -1,0 +1,52 @@
+export const metadata = {
+  title: "Pembahasan Soal 40",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Untuk menyelesaikan soal kombinasi ini, tentukan terlebih dahulu soal mana yang wajib dikerjakan dan berapa soal yang masih harus dipilih.
+
+#### Mengidentifikasi Kondisi
+
+1. Jumlah soal total adalah <InlineMath math="10" /> soal
+2. Soal yang dikerjakan adalah <InlineMath math="7" /> soal
+3. Soal yang wajib dikerjakan adalah nomor <InlineMath math="1" />, <InlineMath math="2" />, dan <InlineMath math="3" />
+
+#### Menentukan Soal yang Harus Dipilih
+
+Karena peserta wajib mengerjakan soal nomor <InlineMath math="1" />, <InlineMath math="2" />, dan <InlineMath math="3" />, maka peserta sudah mengerjakan <InlineMath math="3" /> soal.
+
+Soal yang masih harus dipilih
+
+<BlockMath math="7 - 3 = 4 \text{ soal}" />
+
+#### Menentukan Soal yang Tersedia untuk Dipilih
+
+Soal yang tersedia untuk dipilih adalah selain nomor <InlineMath math="1" />, <InlineMath math="2" />, dan <InlineMath math="3" />
+
+Jumlah soal yang tersedia untuk dipilih
+
+<BlockMath math="10 - 3 = 7 \text{ soal}" />
+
+#### Menghitung Banyak Cara Memilih
+
+Peserta harus memilih <InlineMath math="4" /> soal dari <InlineMath math="7" /> soal yang tersedia. Gunakan kombinasi
+
+<MathContainer>
+<BlockMath math="C_4^7 = \frac{7!}{(7-4)! \cdot 4!}" />
+
+<BlockMath math="= \frac{7!}{3! \cdot 4!}" />
+
+<BlockMath math="= \frac{7 \cdot 6 \cdot 5 \cdot 4!}{3! \cdot 4!}" />
+
+<BlockMath math="= \frac{7 \cdot 6 \cdot 5}{3 \cdot 2 \cdot 1}" />
+
+<BlockMath math="= \frac{210}{6}" />
+
+<BlockMath math="= 35" />
+</MathContainer>
+
+Jadi, banyak cara peserta ujian memilih soal yang dikerjakan adalah <InlineMath math="35" /> cara.
+
+
+
