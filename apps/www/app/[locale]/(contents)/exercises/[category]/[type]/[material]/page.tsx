@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
 import {
   getMaterialPath,
   getMaterials,
@@ -55,33 +53,37 @@ export async function generateMetadata({
 
   const FilePath = getMaterialPath(category, type, material);
 
-  let ogUrl: string = getOgUrl(locale, FilePath);
+  const materials = await getMaterials(FilePath, locale);
 
-  const publicPath = `/open-graph/subject/${locale}-${material}.png` as const;
-  const fullPathToCheck = path.join(process.cwd(), `public${publicPath}`);
+  // Find material and item in a single pass
+  let materialTitle: string | undefined;
 
-  // if the og image exists in public directory, use it
-  if (fs.existsSync(fullPathToCheck)) {
-    ogUrl = publicPath;
+  for (const mat of materials) {
+    const foundItem = mat.items.find((itm) => itm.href === FilePath);
+    if (foundItem) {
+      materialTitle = mat.title;
+      break;
+    }
   }
 
   const title = `${t(material)} - ${t(type)} - ${t(category)}`;
+  const finalTitle = materialTitle ? `${materialTitle} - ${title}` : title;
   const urlPath = `/${locale}${FilePath}`;
   const image = {
-    url: ogUrl,
+    url: getOgUrl(locale, FilePath),
     width: 1200,
     height: 630,
   };
 
   return {
     title: {
-      absolute: title,
+      absolute: finalTitle,
     },
     alternates: {
       canonical: urlPath,
     },
     openGraph: {
-      title,
+      title: finalTitle,
       url: urlPath,
       siteName: "Nakafa",
       locale,

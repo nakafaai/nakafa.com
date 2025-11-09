@@ -9,6 +9,7 @@ import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { cn, slugify } from "@repo/design-system/lib/utils";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -21,6 +22,7 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { ExerciseContextProvider } from "@/lib/context/use-exercise";
+import { getOgUrl } from "@/lib/utils/metadata";
 import { isNumber } from "@/lib/utils/number";
 import { getStaticParams } from "@/lib/utils/system";
 import { ExerciseAnswerAction } from "./actions";
@@ -40,6 +42,59 @@ type Params = {
 type Props = {
   params: Promise<Params>;
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Props["params"];
+}): Promise<Metadata> {
+  const { locale, category, type, material } = await params;
+  const t = await getTranslations({ locale, namespace: "Exercises" });
+
+  const FilePath = getMaterialPath(category, type, material);
+
+  const materials = await getMaterials(FilePath, locale);
+
+  // Find material and item in a single pass
+  let materialTitle: string | undefined;
+
+  for (const mat of materials) {
+    const foundItem = mat.items.find((itm) => itm.href === FilePath);
+    if (foundItem) {
+      materialTitle = mat.title;
+      break;
+    }
+  }
+
+  const title = `${t(material)} - ${t(type)} - ${t(category)}`;
+  const finalTitle = materialTitle ? `${materialTitle} - ${title}` : title;
+  const urlPath = `/${locale}${FilePath}`;
+  const image = {
+    url: getOgUrl(locale, FilePath),
+    width: 1200,
+    height: 630,
+  };
+
+  return {
+    title: {
+      absolute: finalTitle,
+    },
+    alternates: {
+      canonical: urlPath,
+    },
+    openGraph: {
+      title: finalTitle,
+      url: urlPath,
+      siteName: "Nakafa",
+      locale,
+      type: "website",
+      images: [image],
+    },
+    twitter: {
+      images: [image],
+    },
+  };
+}
 
 export function generateStaticParams() {
   return getStaticParams({
