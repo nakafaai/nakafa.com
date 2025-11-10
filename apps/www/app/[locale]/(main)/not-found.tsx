@@ -1,6 +1,7 @@
 "use client";
 
 import { buttonVariants } from "@repo/design-system/components/ui/button";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
@@ -28,7 +29,7 @@ export default function NotFound() {
             </p>
           </div>
 
-          <div className="mx-auto w-fit">
+          <div className="mx-auto flex w-fit items-center gap-2">
             <a
               className={cn(buttonVariants({ variant: "secondary" }))}
               href="https://github.com/nakafaai/nakafa.com"
@@ -38,6 +39,13 @@ export default function NotFound() {
             >
               {t("contribute-button")}
             </a>
+            <NavigationLink
+              className={cn(buttonVariants({ variant: "default" }))}
+              href="/"
+              title={t("home-button")}
+            >
+              {t("home-button")}
+            </NavigationLink>
           </div>
         </div>
       </div>

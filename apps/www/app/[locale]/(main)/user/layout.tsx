@@ -1,13 +1,19 @@
-import type { Locale } from "next-intl";
+import { routing } from "@repo/internationalization/src/routing";
+import { notFound } from "next/navigation";
+import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 
 export default function Layout(props: LayoutProps<"/[locale]/user">) {
   const { children, params } = props;
   const { locale } = use(params);
+  if (!hasLocale(routing.locales, locale)) {
+    // Ensure that the incoming `locale` is valid
+    notFound();
+  }
 
   // Enable static rendering
-  setRequestLocale(locale as Locale);
+  setRequestLocale(locale);
 
   return (
     <main
