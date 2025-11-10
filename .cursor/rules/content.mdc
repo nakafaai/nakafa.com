@@ -103,10 +103,10 @@ It is not gonna work.
   - Data types: `int`, `str`, `list`, `dict`, `bool`
   - Error messages: `TypeError`, `ValueError`, `IndexError`
 - **Use InlineMath for mathematical elements** - numbers, mathematical variables, expressions, equations
-  - Numbers: <InlineMath math="5" />, <InlineMath math="-3.14" />, <InlineMath math="0.5" />
-  - Mathematical variables: <InlineMath math="x" />, <InlineMath math="y" />, <InlineMath math="\theta" />
-  - Simple expressions: <InlineMath math="x + 1" />, <InlineMath math="2n + 1" />
-  - Mathematical constants: <InlineMath math="\pi" />, <InlineMath math="e" />, <InlineMath math="\infty" />
+  - Numbers: `<InlineMath math="5" />`, `<InlineMath math="-3.14" />`, `<InlineMath math="0.5" />`
+  - Mathematical variables: `<InlineMath math="x" />`, `<InlineMath math="y" />`, `<InlineMath math="\theta" />`
+  - Simple expressions: `<InlineMath math="x + 1" />`, `<InlineMath math="2n + 1" />`
+  - Mathematical constants: `<InlineMath math="\pi" />`, `<InlineMath math="e" />`, `<InlineMath math="\infty" />`
 
 ### Practical Examples of Code vs Math Formatting
 
@@ -121,17 +121,17 @@ Programming context:
 
 Mathematical context:
 
-- Nilai <InlineMath math="x = 5" /> adalah solusi persamaan
-- Hasil perhitungan adalah <InlineMath math="2.5" />
-- Fungsi matematika <InlineMath math="f(x) = x^2 + 1" />
-- Konstanta <InlineMath math="\pi \approx 3.14159" />
+- Nilai `<InlineMath math="x = 5" />` adalah solusi persamaan
+- Hasil perhitungan adalah `<InlineMath math="2.5" />`
+- Fungsi matematika `<InlineMath math="f(x) = x^2 + 1" />`
+- Konstanta `<InlineMath math="\pi \approx 3.14159" />`
 
 **WRONG Usage Examples:**
 
-- ❌ Don't use InlineMath for code: <InlineMath math="print()" />
+- ❌ Don't use InlineMath for code: `<InlineMath math="print()" />`
 - ❌ Don't use inline code for math: The result is `5 + 3 = 8`
-- ❌ Don't mix contexts: Variable `x` has value <InlineMath math="x = 5" />
-- ✅ Correct: Variable `x` has mathematical value <InlineMath math="5" />
+- ❌ Don't mix contexts: Variable `x` has value `<InlineMath math="x = 5" />`
+- ✅ Correct: Variable `x` has mathematical value `<InlineMath math="5" />`
 
 ### Mathematical Content Standards
 
@@ -342,6 +342,72 @@ function greet(user: User): string {
 - **Gantt Chart** - Project timelines, task scheduling
 - **Pie Chart** - Data distribution, statistical representation
 - **Git Graph** - Version control workflows, branching strategies
+
+### Number Line Component
+
+The `NumberLine` component visualizes mathematical intervals and inequalities on a number line. It must be imported and requires title and description props.
+
+**Import Required:**
+
+```jsx
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+```
+
+**Required Props:**
+
+- `title` - ReactNode for the card title
+- `description` - ReactNode for explanation (use InlineMath for numbers)
+- `segments` - Array of interval segments to display
+
+**Segment Properties:**
+
+- `start` - Start value (can be `Number.NEGATIVE_INFINITY`)
+- `end` - End value (can be `Number.POSITIVE_INFINITY`)
+- `label` - ReactNode label above segment (typically `<InlineMath math="+" />` or `<InlineMath math="-" />`)
+- `startInclusive` - Boolean, filled dot if true (default: false)
+- `endInclusive` - Boolean, filled dot if true (default: false)
+- `backgroundColor` - String color or "transparent" (default: semi-transparent secondary)
+- `shaded` - Boolean, show background shading (default: true)
+- `showPoints` - Boolean, display endpoint dots (default: auto-detect, false for infinity)
+
+**Implementation Pattern:**
+
+```jsx
+<NumberLine
+  title="Interval Solution"
+  description={<>Closed interval from <InlineMath math="-3" /> to <InlineMath math="4" /> with positive values.</>}
+  segments={[
+    { 
+      start: Number.NEGATIVE_INFINITY, 
+      end: -3, 
+      label: <InlineMath math="-" />, 
+      backgroundColor: "transparent" 
+    },
+    { 
+      start: -3, 
+      end: 4, 
+      label: <InlineMath math="+" />, 
+      startInclusive: true, 
+      endInclusive: true 
+    },
+    { 
+      start: 4, 
+      end: Number.POSITIVE_INFINITY, 
+      label: <InlineMath math="-" />, 
+      backgroundColor: "transparent" 
+    }
+  ]}
+/>
+```
+
+**Best Practices:**
+
+- **Always use InlineMath for numbers** in title, description, and labels
+- **Use Fragment `<>...</>`** to wrap description with mixed text and InlineMath
+- **Infinity segments auto-hide points** - no need to set `showPoints: false`
+- **Use `backgroundColor: "transparent"`** for segments without shading
+- **Inclusive endpoints** - set `startInclusive`/`endInclusive: true` for filled dots
+- **Exclusive endpoints** - leave false (default) for hollow dots
 
 ## 3D Visualizations and Line Equations
 
