@@ -184,7 +184,7 @@ Reference components in [packages/design-system/components/markdown/](mdc:packag
 - `MathContainer` - Wraps multiple consecutive math blocks or any component, e.g `LineEquation` (No need import this, it has the config already in mdx)
 - `BlockMath` - Display mathematical equations (No need import this, it has the config already in mdx)
 - `InlineMath` - Inline mathematical expressions (No need import this, it has the config already in mdx)
-- `LineEquation` - 3D line visualization component from [packages/components/contents/line-equation.tsx](mdc:packages/components/contents/line-equation.tsx)
+- `LineEquation` - 3D line visualization component from [packages/design-system/components/contents/line-equation.tsx](mdc:packages/design-system/components/contents/line-equation.tsx)
 - `CodeBlock` - Interactive code display with syntax highlighting and multiple file tabs (No need import this, it has the config already in mdx)
 - `Mermaid` - Interactive diagram and flowchart visualization component (No need import this, it has the config already in mdx)
 - Standard markdown elements (headings, paragraphs, lists, tables, blockquotes)

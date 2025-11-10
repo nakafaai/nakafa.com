@@ -1,0 +1,38 @@
+export const metadata = {
+  title: "Solution to Question 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Add the two equations
+
+<BlockMath math="\begin{array}{rcccccccl} x^2 &+& 2xy &+& 4x &=& -3 & & \\ 9y^2 &+& 4xy &+& 12y &=& -1 & & + \\ \hline x^2 &+& 6xy &+& 9y^2 &+& 4x &+& 12y = -4 \end{array}" />
+
+Since we are asked for the value of <InlineMath math="x + 3y" />, we use the substitution <InlineMath math="x + 3y = p" />
+
+<MathContainer>
+<BlockMath math="x^2 + 6xy + 9y^2 + 4x + 12y = -4" />
+
+<BlockMath math="x^2 + 6xy + 9y^2 + 4(x + 3y) = -4" />
+</MathContainer>
+
+Apply factorization
+
+<MathContainer>
+<BlockMath math="(x + 3y)^2 + 4(x + 3y) = -4" />
+
+<BlockMath math="p^2 + 4p = -4" />
+
+<BlockMath math="p^2 + 4p + 4 = 0" />
+
+<BlockMath math="(p + 2)^2 = 0" />
+</MathContainer>
+
+Take the square root of both sides
+
+<BlockMath math="p + 2 = 0" />
+
+<BlockMath math="p = -2" />
+
+This means <InlineMath math="x + 3y = p \rightarrow x + 3y = -2" />.
+

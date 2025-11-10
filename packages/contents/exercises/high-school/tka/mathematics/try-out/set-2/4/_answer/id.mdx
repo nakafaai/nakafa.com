@@ -1,0 +1,56 @@
+export const metadata = {
+  title: "Pembahasan Soal 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Diketahui <InlineMath math="f(a) = 19" /> maka
+
+<MathContainer>
+<BlockMath math="f(x) = ax^2 + 2ax + a + 1" />
+
+<BlockMath math="f(a) = 19" />
+
+<BlockMath math="a \cdot a^2 + 2a \cdot a + a + 1 = 19" />
+
+<BlockMath math="a^3 + 2a^2 + a - 18 = 0" />
+</MathContainer>
+
+Faktorkan dengan metode Horner sehingga didapat
+
+<MathContainer>
+<BlockMath math="a^3 + 2a^2 + a - 18 = 0" />
+
+<BlockMath math="(a - 2)(a^2 + 4a + 9) = 0" />
+
+<BlockMath math="a - 2 = 0 \cup (a^2 + 4a + 9) = 0" />
+
+<BlockMath math="a = 2 \cup a^2 + 4a + 9 = 0" />
+</MathContainer>
+
+Sehingga diperoleh <InlineMath math="a = 2" />, dan fungsi kuadratnya menjadi
+
+<MathContainer>
+<BlockMath math="f(x) = ax^2 + 2ax + a + 1" />
+
+<BlockMath math="f(x) = 2x^2 + 2 \cdot 2x + 2 + 1" />
+
+<BlockMath math="f(x) = 2x^2 + 4x + 3" />
+</MathContainer>
+
+Titik puncak <InlineMath math="p" />
+
+<MathContainer>
+<BlockMath math="p = \frac{-b}{2a} = \frac{-4}{2(2)} = -1" />
+
+<BlockMath math="q = f(p) = f(-1)" />
+
+<BlockMath math="= 2(-1)^2 + 4(-1) + 3" />
+
+<BlockMath math="q = 1" />
+</MathContainer>
+
+Maka nilai dari <InlineMath math="p + 2q + 3a" /> adalah
+
+<BlockMath math="-1 + 2(1) + 3(2) = -1 + 2 + 6 = 7" />
+

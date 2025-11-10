@@ -1,0 +1,141 @@
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+
+export const metadata = {
+    title: "Pembahasan Soal 5",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "10/11/2025",
+};
+
+Membuat persamaan garis dari titik yang dilaluinya yaitu <InlineMath math="(0, -2)" /> dan <InlineMath math="\left(\frac{3}{2}, 0\right)" />
+
+<MathContainer>
+<BlockMath math="\frac{y - y_1}{y_2 - y_1} = \frac{x - x_1}{x_2 - x_1}" />
+
+<BlockMath math="\frac{y - (-2)}{0 - (-2)} = \frac{x - 0}{\frac{3}{2} - 0}" />
+
+<BlockMath math="\frac{y + 2}{2} = \frac{2x}{3}" />
+
+<BlockMath math="3y + 6 = 4x" />
+
+<BlockMath math="-4x + 3y + 6 = 0" />
+</MathContainer>
+
+Gak bisa langsung mencari jarak titik ke garis. Cari titik yang posisinya terdekat dari garis. Anggap aja titiknya <InlineMath math="(a, b)" /> sehingga
+
+<MathContainer>
+<BlockMath math="y = x^2 - 1" />
+
+<BlockMath math="b = a^2 - 1" />
+</MathContainer>
+
+Titik tersebut menjadi <InlineMath math="(a, a^2 - 1)" /> seperti pada ilustrasi berikut
+
+<LineEquation
+  title="Visualisasi Parabola dan Garis"
+  description={<>Grafik menunjukkan parabola <InlineMath math="y = x^2 - 1" /> dan garis <InlineMath math="-4x + 3y + 6 = 0" /> dengan titik terdekat <InlineMath math="\left(\frac{2}{3}, -\frac{5}{9}\right)" />.</>}
+  data={[
+    {
+      points: Array.from({ length: 100 }, (_, i) => {
+        const x = -3 + (i / 99) * 6;
+        return {
+          x: x,
+          y: x * x - 1,
+          z: 0
+        };
+      }),
+      color: getColor("PURPLE"),
+      smooth: true,
+      showPoints: false,
+      labels: [
+        {
+          text: "y = x² - 1",
+          at: 70,
+          offset: [-4.5, 0, 0]
+        }
+      ]
+    },
+    {
+      points: Array.from({ length: 2 }, (_, i) => {
+        const x = -3 + i * 8;
+        const y = (4 * x - 6) / 3;
+        return {
+          x: x,
+          y: y,
+          z: 0
+        };
+      }),
+      color: getColor("ORANGE"),
+      smooth: false,
+      showPoints: false,
+      labels: [
+        {
+          text: "-4x + 3y + 6 = 0",
+          at: 1,
+          offset: [1, -2, 0]
+        }
+      ]
+    },
+    {
+      points: [
+        { x: 2/3, y: -5/9, z: 0 },
+        { x: 14/15, y: -34/45, z: 0 }
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+      labels: [
+        {
+          text: "(2/3, -5/9)",
+          at: 0,
+          offset: [-2, 0, 0]
+        },
+        {
+          text: "Jarak",
+          at: 1,
+          offset: [1.5, -0.5, 0]
+        }
+      ]
+    },
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+Kita perlu menentukan jarak dari titik <InlineMath math="(a, a^2 - 1)" /> ke garis <InlineMath math="-4x + 3y + 6 = 0" />
+
+<MathContainer>
+<BlockMath math="jarak = \frac{|-4x + 3y + 6|}{\sqrt{(-4)^2 + 3^2}}" />
+
+<BlockMath math="f(a) = \frac{|-4a + 3(a^2 - 1) + 6|}{5}" />
+
+<BlockMath math="f(a) = \frac{|3a^2 - 4a + 3|}{5}" />
+
+<BlockMath math="f(a) = \frac{1}{5}(3a^2 - 4a + 3)" />
+</MathContainer>
+
+Syarat nilai minimum adalah <InlineMath math="f'(x) = 0" />
+
+<MathContainer>
+<BlockMath math="f'(a) = \frac{1}{5}(6a - 4)" />
+
+<BlockMath math="f'(a) = 0" />
+
+<BlockMath math="\frac{1}{5}(6a - 4) = 0" />
+
+<BlockMath math="6a = 4" />
+
+<BlockMath math="a = \frac{4}{6} = \frac{2}{3}" />
+</MathContainer>
+
+Jarak garis dan parabola saat <InlineMath math="a = \frac{2}{3}" />
+
+<MathContainer>
+<BlockMath math="f(a) = \frac{1}{5}(3a^2 - 4a + 3)" />
+
+<BlockMath math="f(a) = \frac{1}{5}\left(3\left(\frac{2}{3}\right)^2 - 4\left(\frac{2}{3}\right) + 3\right)" />
+
+<BlockMath math="f(a) = \frac{1}{5}\left(\frac{4}{3} - \frac{8}{3} + \frac{9}{3}\right)" />
+
+<BlockMath math="f(a) = \frac{1}{5}\left(\frac{5}{3}\right) = \frac{1}{3}" />
+</MathContainer>
+
