@@ -48,4 +48,3 @@ const choices: ExercisesChoices = {
 };
 
 export default choices;
-

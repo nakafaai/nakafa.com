@@ -1,0 +1,84 @@
+export const metadata = {
+  title: "Solution to Question 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Given quadratic equation
+
+<BlockMath math="x^2 - (2k + 4)x + (3k + 4) = 0" />
+
+With roots <InlineMath math="x_1" /> and <InlineMath math="x_2" />, the product of roots is
+
+<MathContainer>
+<BlockMath math="x_1 \cdot x_2 = \frac{c}{a}" />
+
+<BlockMath math="x_1 \cdot x_2 = \frac{3k + 4}{1}" />
+
+<BlockMath math="x_1 \cdot x_2 = 3k + 4" />
+</MathContainer>
+
+So the geometric sequence is <InlineMath math="x_1, k, x_2" />.
+
+The ratio between terms is
+
+<MathContainer>
+<BlockMath math="\frac{k}{x_1} = \frac{x_2}{k}" />
+
+<BlockMath math="k^2 = x_1 \cdot x_2" />
+
+<BlockMath math="k^2 = 3k + 4" />
+
+<BlockMath math="k^2 - 3k - 4 = 0" />
+</MathContainer>
+
+Factorize
+
+<MathContainer>
+<BlockMath math="(k - 4)(k + 1) = 0" />
+
+<BlockMath math="k = 4 \vee k = -1" />
+</MathContainer>
+
+Determine the form of the quadratic equation based on the obtained value of <InlineMath math="k" />.
+
+<InlineMath math="k = 4" />
+
+<MathContainer>
+<BlockMath math="x^2 - (2 \cdot 4 + 4)x + (3 \cdot 4 + 4) = 0" />
+
+<BlockMath math="x^2 - 12x + 16 = 0" />
+</MathContainer>
+
+Check the discriminant value, the roots are not integers.
+
+<InlineMath math="k = -1" />
+
+<MathContainer>
+<BlockMath math="x^2 - (2(-1) + 4)x + (3(-1) + 4) = 0" />
+
+<BlockMath math="x^2 - 2x + 1 = 0" />
+
+<BlockMath math="(x - 1)(x - 1) = 0" />
+
+<BlockMath math="x = 1 \vee x = 1" />
+</MathContainer>
+
+Therefore the sequence is
+
+<BlockMath math="x_1, k, x_2 = 1, -1, 1" />
+
+The ratio between terms is
+
+<BlockMath math="r = \frac{u_2}{u_1} = \frac{-1}{1} = -1" />
+
+Then the <InlineMath math="n" />th term of the sequence is
+
+<MathContainer>
+<BlockMath math="u_n = ar^{n-1}" />
+
+<BlockMath math="u_n = (1)(-1)^{n-1}" />
+
+<BlockMath math="u_n = \frac{(-1)^n}{(-1)} = -(-1)^n" />
+</MathContainer>
+

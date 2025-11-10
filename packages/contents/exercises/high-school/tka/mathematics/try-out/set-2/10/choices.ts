@@ -3,45 +3,45 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "$$-5$$",
+      label: "$$1 - (-1)^n$$",
       value: false,
     },
     {
-      label: "$$-3$$",
+      label: "$$1 + (-1)^n$$",
+      value: false,
+    },
+    {
+      label: "$$-(-1)^n$$",
+      value: true,
+    },
+    {
+      label: "$$2(-1)^n$$",
       value: false,
     },
     {
       label: "$$-1$$",
-      value: true,
-    },
-    {
-      label: "$$3$$",
-      value: false,
-    },
-    {
-      label: "$$5$$",
       value: false,
     },
   ],
   en: [
     {
-      label: "$$-5$$",
+      label: "$$1 - (-1)^n$$",
       value: false,
     },
     {
-      label: "$$-3$$",
+      label: "$$1 + (-1)^n$$",
+      value: false,
+    },
+    {
+      label: "$$-(-1)^n$$",
+      value: true,
+    },
+    {
+      label: "$$2(-1)^n$$",
       value: false,
     },
     {
       label: "$$-1$$",
-      value: true,
-    },
-    {
-      label: "$$3$$",
-      value: false,
-    },
-    {
-      label: "$$5$$",
       value: false,
     },
   ],

@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Solution to Question 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Given sequence
+
+<BlockMath math="0, \frac{5}{6}, \frac{5}{36}, \frac{35}{216}, ..." />
+
+Each term if expanded becomes
+
+<MathContainer>
+<BlockMath math="u_1 = 0 = \frac{1}{2^0} - \frac{1}{3^0} = \frac{1}{2^{1-1}} + (-1)^1 \cdot \frac{1}{3^{(1-1)}}" />
+
+<BlockMath math="u_2 = \frac{5}{6} = \frac{1}{2^1} + \frac{1}{3^1} = \frac{1}{2^{2-1}} + (-1)^2 \cdot \frac{1}{3^{(2-1)}}" />
+
+<BlockMath math="u_3 = \frac{5}{36} = \frac{1}{2^2} - \frac{1}{3^2} = \frac{1}{2^{3-1}} + (-1)^3 \cdot \frac{1}{3^{(3-1)}}" />
+
+<BlockMath math="u_4 = \frac{35}{216} = \frac{1}{2^3} + \frac{1}{3^3} = \frac{1}{2^{4-1}} + (-1)^4 \cdot \frac{1}{3^{(4-1)}}" />
+</MathContainer>
+
+Therefore, the <InlineMath math="n" />th term can be formulated as follows
+
+<BlockMath math="u_n = \frac{1}{2^{n-1}} + (-1)^n \cdot \frac{1}{3^{(n-1)}}" />
+
+Then the <InlineMath math="12" />th term is
+
+<MathContainer>
+<BlockMath math="u_{12} = \frac{1}{2^{12-1}} + (-1)^{12} \cdot \frac{1}{3^{(12-1)}}" />
+
+<BlockMath math="u_{12} = \frac{1}{2^{11}} + 1 \left(\frac{1}{3^{(11)}}\right)" />
+
+<BlockMath math="u_{12} = \frac{1}{2^{11}} + \frac{1}{3^{11}}" />
+</MathContainer>
+
