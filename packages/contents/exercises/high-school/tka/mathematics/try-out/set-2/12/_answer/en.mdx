@@ -1,0 +1,38 @@
+export const metadata = {
+  title: "Solution to Question 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Given
+
+<BlockMath math="f(x) = \sin^2 x" />
+
+Asked
+
+<BlockMath math="\lim_{h \to \infty} h \left[f'\left(x + \frac{1}{h}\right) - f'(x)\right] = ... ?" />
+
+Let <InlineMath math="\frac{1}{h} = a" />; <InlineMath math="h \to \infty" /> so the value <InlineMath math="a \to 0" />.
+
+<MathContainer>
+<BlockMath math="\lim_{h \to \infty} h \left[f'\left(x + \frac{1}{h}\right) - f'(x)\right]" />
+
+<BlockMath math="\lim_{h \to \infty} \frac{f'(x + a) - f'(x)}{a}" />
+
+<BlockMath math="f''(x)" />
+</MathContainer>
+
+Since <InlineMath math="f(x) = \sin^2 x" />, then
+
+<MathContainer>
+<BlockMath math="f(x) = \sin^2 x" />
+
+<BlockMath math="f'(x) = 2 \sin x \cos x" />
+
+<BlockMath math="f''(x) = 2 \cos 2x" />
+</MathContainer>
+
+Therefore, the value of
+
+<BlockMath math="\lim_{h \to \infty} h \left[f'\left(x + \frac{1}{h}\right) - f'(x)\right] = 2 \cos 2x" />
+

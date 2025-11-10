@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Pembahasan Soal 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Turunkan dahulu fungsinya
+
+<MathContainer>
+<BlockMath math="f(x) = \sqrt{1 + x}" />
+
+<BlockMath math="f'(x) = \frac{1}{2\sqrt{1 + x}}" />
+</MathContainer>
+
+Jika diketahui <InlineMath math="y = f(g(x))" /> maka turnan pertamanya adalah <InlineMath math="y' = g'(x) \cdot f'(g(x))" />. Cek nilai limitnya
+
+<BlockMath math="\lim_{h \to 0} \frac{f(3 + 2h^2) - f(3 - 3h^2)}{h^2} = \frac{0}{0}" />
+
+Maka kita gunakan metode lain yaitu L'Hospital atau turunan pertama
+
+<MathContainer>
+<BlockMath math="\lim_{h \to 0} \frac{f(3 + 2h^2) - f(3 - 3h^2)}{h^2}" />
+
+<BlockMath math="= \lim_{h \to 0} \frac{4h f'(3 + 2h^2) - (-6h) f'(3 - 3h^2)}{2h}" />
+
+<BlockMath math="= \lim_{h \to 0} \frac{4f'(3 + 2h^2) + 6f'(3 - 3h^2)}{2}" />
+
+<BlockMath math="= \lim_{h \to 0} \frac{10f'(3 + 2h^2)}{2}" />
+
+<BlockMath math="= \lim_{h \to 0} 5f'(3 + 2h^2)" />
+
+<BlockMath math="= 5f'(3 + 2 \cdot 0^2)" />
+
+<BlockMath math="= 5f'(3)" />
+
+<BlockMath math="= 5 \left(\frac{1}{2\sqrt{1 + 3}}\right)" />
+
+<BlockMath math="= \frac{5}{4}" />
+</MathContainer>
+

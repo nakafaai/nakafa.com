@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Solution to Question 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+The requirement for logarithm <InlineMath math="\log_a b" /> is that <InlineMath math="a > 0" />. Therefore
+
+<BlockMath math="2 \log_4 x - \log_4(4x + 3) = -1" />
+
+Where the value <InlineMath math="x > 0" />.
+
+Determine the value of <InlineMath math="x" />
+
+<MathContainer>
+<BlockMath math="2 \log_4 x - \log_4(4x + 3) = -1" />
+
+<BlockMath math="\log_4 x^2 - \log_4(4x + 3) = \log_4 4^{-1}" />
+
+<BlockMath math="\log_4 \frac{x^2}{4x + 3} = \log_4 \frac{1}{4}" />
+
+<BlockMath math="\frac{x^2}{4x + 3} = \frac{1}{4}" />
+
+<BlockMath math="4x^2 = 4x + 3" />
+
+<BlockMath math="4x^2 - 4x - 3 = 0" />
+</MathContainer>
+
+Factor
+
+<MathContainer>
+<BlockMath math="(2x + 1)(2x - 3) = 0" />
+
+<BlockMath math="2x + 1 = 0 \cup 2x - 3 = 0" />
+
+<BlockMath math="x = -\frac{1}{2} \cup x = \frac{3}{2}" />
+</MathContainer>
+
+Since the requirement is <InlineMath math="x > 0" />, then <InlineMath math="x = \frac{3}{2}" /> satisfies. Therefore
+
+<MathContainer>
+<BlockMath math="\log_2 x = \log_2 \frac{3}{2}" />
+
+<BlockMath math="\log_2 x = \log_2 3 - \log_2 2" />
+
+<BlockMath math="\log_2 x = \log_2 3 - 1" />
+</MathContainer>
+
