@@ -46,7 +46,7 @@ export function UserSettingsRole({ user }: { user: AppUser }) {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      role: user.appUser.role,
+      role: user.appUser.role ?? undefined,
     },
     mode: "onChange",
   });

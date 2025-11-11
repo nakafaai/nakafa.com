@@ -78,7 +78,7 @@ function OnboardingContent({ user }: { user: AppUser }) {
           </DialogHeader>
 
           <Select
-            defaultValue={user.appUser.role}
+            defaultValue={user.appUser.role ?? undefined}
             onValueChange={handleUpdateUserRole}
           >
             <SelectTrigger className="w-full">
