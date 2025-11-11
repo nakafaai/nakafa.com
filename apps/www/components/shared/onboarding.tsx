@@ -26,6 +26,8 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { roles } from "@/lib/data/roles";
 
+type Role = (typeof roles)[number]["value"];
+
 export function Onboarding() {
   const user = useQuery(api.auth.getCurrentUser);
 
@@ -39,24 +41,30 @@ export function Onboarding() {
 function OnboardingContent({ user }: { user: AppUser }) {
   const t = useTranslations("Onboarding");
 
-  // Capture initial state - if user had no role when component mounted
-  const [initiallyHadNoRole] = useState(!user.appUser.role);
-  const [hasClickedStart, setHasClickedStart] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | undefined>(undefined);
 
   const updateUserRole = useMutation(api.users.mutations.updateUserRole);
 
   const [isPending, startTransition] = useTransition();
 
-  const handleUpdateUserRole = (role: (typeof roles)[number]["value"]) => {
+  const handleRoleChange = (value: Role) => {
+    setSelectedRole(value);
+  };
+
+  const handleStartLearning = () => {
+    if (!selectedRole) {
+      return;
+    }
+
     startTransition(async () => {
       await updateUserRole({
-        role,
+        role: selectedRole,
       });
     });
   };
 
-  // Dialog stays open until user clicks the start button
-  const open = initiallyHadNoRole && !hasClickedStart;
+  // Dialog stays open until user has a role
+  const open = !user.appUser.role;
 
   return (
     <Dialog open={open}>
@@ -77,20 +85,13 @@ function OnboardingContent({ user }: { user: AppUser }) {
             <DialogDescription>{t("description")}</DialogDescription>
           </DialogHeader>
 
-          <Select
-            defaultValue={user.appUser.role ?? undefined}
-            onValueChange={handleUpdateUserRole}
-          >
+          <Select disabled={isPending} onValueChange={handleRoleChange}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder={t("select-role")} />
             </SelectTrigger>
             <SelectContent>
               {roles.map((role) => (
-                <SelectItem
-                  disabled={isPending}
-                  key={role.value}
-                  value={role.value}
-                >
+                <SelectItem key={role.value} value={role.value}>
                   <role.icon />
                   {t(role.value)}
                 </SelectItem>
@@ -100,8 +101,8 @@ function OnboardingContent({ user }: { user: AppUser }) {
 
           <DialogFooter>
             <Button
-              disabled={isPending}
-              onClick={() => setHasClickedStart(true)}
+              disabled={!selectedRole || isPending}
+              onClick={handleStartLearning}
             >
               {isPending ? <SpinnerIcon /> : <PartyPopperIcon />}
               {t("button")}
