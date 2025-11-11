@@ -1,0 +1,92 @@
+export const metadata = {
+  title: "Solution to Question 35",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/11/2025",
+};
+
+#### Factor the first divisor
+
+The divisor is <InlineMath math="x^2 + 3x + 2 = (x + 1)(x + 2) \rightarrow x = -1 \vee x = -2" />.
+
+The remainder is <InlineMath math="s(x) = 3bx + a - 2" />.
+
+For <InlineMath math="x = -1" />
+
+<MathContainer>
+<BlockMath math="f(-1) = s(-1)" />
+
+<BlockMath math="f(-1) = 3b(-1) + a - 2" />
+
+<BlockMath math="f(-1) = -3b + a - 2 \quad ...(1)" />
+</MathContainer>
+
+For <InlineMath math="x = -2" />
+
+<MathContainer>
+<BlockMath math="f(-2) = s(-2)" />
+
+<BlockMath math="f(-2) = 3b(-2) + a - 2" />
+
+<BlockMath math="f(-2) = -6b + a - 2 \quad ...(2)" />
+</MathContainer>
+
+#### Factor the second divisor
+
+For the second polynomial, the divisor is <InlineMath math="x^2 - 2x - 3 = (x + 1)(x - 3) \rightarrow x = -1 \vee x = 3" />.
+
+The remainder is <InlineMath math="s(x) = ax - 2b" />.
+
+For <InlineMath math="x = -1" />
+
+<MathContainer>
+<BlockMath math="f(-1) = s(-1)" />
+
+<BlockMath math="f(-1) = a(-1) - 2b" />
+
+<BlockMath math="f(-1) = -a - 2b \quad ...(3)" />
+</MathContainer>
+
+For <InlineMath math="x = 3" />
+
+<MathContainer>
+<BlockMath math="f(3) = s(3)" />
+
+<BlockMath math="f(3) = a(3) - 2b" />
+
+<BlockMath math="f(3) = 3a - 2b \quad ...(4)" />
+</MathContainer>
+
+#### Solve the system of equations
+
+From the first and third equations, we get
+
+<MathContainer>
+<BlockMath math="f(-1) = f(-1)" />
+
+<BlockMath math="-3b + a - 2 = -a - 2b" />
+
+<BlockMath math="b = 2a - 2 \quad ...(5)" />
+</MathContainer>
+
+Then combine equations two, four, and five into
+
+<MathContainer>
+<BlockMath math="f(3) + f(-2) = 6" />
+
+<BlockMath math="3a - 2b + (-6b + a - 2) = 6" />
+
+<BlockMath math="4a - 8b = 8" />
+
+<BlockMath math="a - 2b = 2" />
+
+<BlockMath math="a - 2(2a - 2) = 2" />
+
+<BlockMath math="-3a = -2" />
+
+<BlockMath math="a = \frac{2}{3}" />
+</MathContainer>
+
+Then the value of <InlineMath math="b = 2a - 2 = 2\left(\frac{2}{3}\right) - 2 = -\frac{2}{3}" />.
+
+Therefore, <InlineMath math="a + b = \frac{2}{3} + \left(-\frac{2}{3}\right) = 0" />.
+

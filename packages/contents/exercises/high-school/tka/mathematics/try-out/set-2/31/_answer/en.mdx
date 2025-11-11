@@ -1,0 +1,34 @@
+export const metadata = {
+  title: "Solution to Question 31",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/11/2025",
+};
+
+Given that <InlineMath math="f(x)" /> is divisible by <InlineMath math="(x - 1)" />, then <InlineMath math="f(1) = 0" />.
+
+We are asked to find the remainder when <InlineMath math="f(x)" /> is divided by <InlineMath math="(x - 1)(x + 1)" />.
+
+The formula used is if <InlineMath math="f(x)" /> is divided by <InlineMath math="(x - a)(x - b)" />, then the remainder is
+
+<BlockMath math="S = \frac{(x - a)}{(b - a)}f(b) + \frac{(x - b)}{(a - b)}f(a)" />
+
+Therefore, when <InlineMath math="f(x)" /> is divided by <InlineMath math="(x - 1)(x + 1)" />, the remainder is
+
+<MathContainer>
+<BlockMath math="S = \frac{(x - 1)}{(-1 - 1)}f(-1) + \frac{(x + 1)}{(1 + 1)}f(1)" />
+
+<BlockMath math="S = \frac{(x - 1)}{-2}f(-1) + \frac{(x + 1)}{2}f(1)" />
+</MathContainer>
+
+Since <InlineMath math="f(1) = 0" />, then
+
+<MathContainer>
+<BlockMath math="S = \frac{(x - 1)}{-2}f(-1)" />
+
+<BlockMath math="S = \frac{(1 - x)}{2}f(-1)" />
+
+<BlockMath math="S = \frac{f(-1)}{2}(1 - x)" />
+</MathContainer>
+
+Therefore, the remainder when <InlineMath math="f(x)" /> is divided by <InlineMath math="(x - 1)(x + 1)" /> is <InlineMath math="\frac{f(-1)}{2}(1 - x)" />.
+

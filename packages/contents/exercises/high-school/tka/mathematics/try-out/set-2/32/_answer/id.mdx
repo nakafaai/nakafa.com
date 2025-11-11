@@ -1,0 +1,92 @@
+export const metadata = {
+  title: "Pembahasan Soal 32",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/11/2025",
+};
+
+Diketahui suku banyak <InlineMath math="ax^3 + 2x^2 + 5x + b" /> dibagi <InlineMath math="(x^2 - 1)" /> bersisa <InlineMath math="(6x + 5)" />.
+
+Yang bisa kita lakukan adalah mencari akar-akar dari persamaan <InlineMath math="x^2 - 1" />.
+
+<MathContainer>
+<BlockMath math="x^2 - 1 = 0" />
+
+<BlockMath math="(x + 1)(x - 1) = 0" />
+
+<BlockMath math="x = -1 \text{ atau } x = 1" />
+</MathContainer>
+
+#### Substitusi untuk x = -1
+
+<MathContainer>
+<BlockMath math="P(x) = ax^3 + 2x^2 + 5x + b" />
+
+<BlockMath math="P(-1) = a(-1)^3 + 2(-1)^2 + 5(-1) + b" />
+
+<BlockMath math="P(-1) = -a + b - 3" />
+</MathContainer>
+
+#### Substitusi untuk x = 1
+
+<MathContainer>
+<BlockMath math="P(x) = ax^3 + 2x^2 + 5x + b" />
+
+<BlockMath math="P(1) = a(1)^3 + 2(1)^2 + 5(1) + b" />
+
+<BlockMath math="P(1) = a + b + 7" />
+</MathContainer>
+
+#### Substitusi akar-akar ke sisa pembagian
+
+Lalu substitusikan akar-akar <InlineMath math="x^2 - 1" /> ke sisa bagi <InlineMath math="(6x + 5)" />.
+
+Untuk <InlineMath math="x = -1" />
+
+<MathContainer>
+<BlockMath math="P(x) = 6x + 5" />
+
+<BlockMath math="P(-1) = 6(-1) + 5" />
+
+<BlockMath math="-a + b - 3 = -6 + 5" />
+
+<BlockMath math="-a + b = 2 \quad ...(1)" />
+</MathContainer>
+
+Untuk <InlineMath math="x = 1" />
+
+<MathContainer>
+<BlockMath math="P(x) = 6x + 5" />
+
+<BlockMath math="P(1) = 6(1) + 5" />
+
+<BlockMath math="a + b + 7 = 6 + 5" />
+
+<BlockMath math="a + b = 4 \quad ...(2)" />
+</MathContainer>
+
+#### Eliminasi persamaan
+
+Selanjutnya, eliminasi persamaan pertama dan kedua untuk mendapatkan nilai <InlineMath math="a" /> dan <InlineMath math="b" />.
+
+<MathContainer>
+<BlockMath math="-a + b = 2" />
+
+<BlockMath math="a + b = 4 \quad -" />
+
+<BlockMath math="-2a = -2" />
+
+<BlockMath math="a = 1" />
+</MathContainer>
+
+Substitusi nilai <InlineMath math="a" /> ke persamaan kedua untuk mendapatkan nilai <InlineMath math="b" />.
+
+<MathContainer>
+<BlockMath math="a + b = 4" />
+
+<BlockMath math="1 + b = 4" />
+
+<BlockMath math="b = 3" />
+</MathContainer>
+
+Jadi, nilai <InlineMath math="a + 3b = 1 + 3(3) = 10" />.
+
