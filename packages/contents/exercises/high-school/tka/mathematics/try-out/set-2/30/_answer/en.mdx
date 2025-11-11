@@ -1,0 +1,128 @@
+export const metadata = {
+  title: "Solution to Question 30",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/11/2025",
+};
+
+Given two quadratic functions
+
+<MathContainer>
+<BlockMath math="f(x) = (k - 1)x^2 + kx - 1, \quad k \neq 1" />
+
+<BlockMath math="g(x) = (k - 2)x^2 + x + 2k, \quad k \neq 2" />
+</MathContainer>
+
+#### Finding the condition for intersection
+
+Eliminate <InlineMath math="y" /> from both functions by equating <InlineMath math="f(x) = g(x)" />.
+
+<MathContainer>
+<BlockMath math="(k - 1)x^2 + kx - 1 = (k - 2)x^2 + x + 2k" />
+
+<BlockMath math="x^2 + (k - 1)x - (2k + 1) = 0 \quad ...(1)" />
+</MathContainer>
+
+The condition for both functions to intersect at two different points is that the discriminant must be positive, namely <InlineMath math="D > 0" />.
+
+<MathContainer>
+<BlockMath math="D > 0" />
+
+<BlockMath math="(k - 1)^2 - 4(1)(-2k - 1) > 0" />
+
+<BlockMath math="k^2 - 2k + 1 + 8k + 4 > 0" />
+
+<BlockMath math="k^2 + 6k + 5 > 0" />
+
+<BlockMath math="(k + 5)(k + 1) > 0" />
+</MathContainer>
+
+From the inequality <InlineMath math="(k + 5)(k + 1) > 0" />, we get <InlineMath math="k < -5" /> or <InlineMath math="k > -1" />.
+
+Since <InlineMath math="k \neq 1" /> and <InlineMath math="k \neq 2" />, the smallest positive integer that satisfies the condition is <InlineMath math="k = 3" />.
+
+#### Substituting the value of k
+
+Substitute the value <InlineMath math="k = 3" /> into the first equation to find the sum of roots <InlineMath math="x" />.
+
+<MathContainer>
+<BlockMath math="x^2 + (k - 1)x - (2k + 1) = 0" />
+
+<BlockMath math="x^2 + (3 - 1)x - (2(3) + 1) = 0" />
+
+<BlockMath math="x^2 + 2x - 7 = 0" />
+</MathContainer>
+
+From this quadratic equation, the sum of its roots is
+
+<BlockMath math="x_1 + x_2 = -2" />
+
+#### Finding the value of y
+
+Substitute the value <InlineMath math="k = 3" /> into functions <InlineMath math="f(x)" /> and <InlineMath math="g(x)" />.
+
+For <InlineMath math="f(x)" />
+
+<MathContainer>
+<BlockMath math="f(x) = (k - 1)x^2 + kx - 1" />
+
+<BlockMath math="f(3) = (3 - 1)x^2 + 3x - 1" />
+
+<BlockMath math="f(3) = 2x^2 + 3x - 1" />
+</MathContainer>
+
+For <InlineMath math="g(x)" />
+
+<MathContainer>
+<BlockMath math="g(x) = (k - 2)x^2 + x + 2k" />
+
+<BlockMath math="g(3) = (3 - 2)x^2 + x + 2(3)" />
+
+<BlockMath math="g(3) = x^2 + x + 6" />
+</MathContainer>
+
+Then find the value of <InlineMath math="x" /> by eliminating <InlineMath math="x^2" />.
+
+<MathContainer>
+<BlockMath math="y = 2x^2 + 3x - 1 \quad |\times 1|" />
+
+<BlockMath math="y = x^2 + x + 6 \quad |\times 2|" />
+
+<BlockMath math="y = 2x^2 + 3x - 1" />
+
+<BlockMath math="2y = 2x^2 + 2x + 12 \quad -" />
+
+<BlockMath math="-y = x - 13" />
+
+<BlockMath math="x = 13 - y" />
+</MathContainer>
+
+Substitute <InlineMath math="x = 13 - y" /> into <InlineMath math="g(x)" />.
+
+<MathContainer>
+<BlockMath math="y = x^2 + x + 6" />
+
+<BlockMath math="y = (13 - y)^2 + (13 - y) + 6" />
+
+<BlockMath math="y = 169 - 26y + y^2 + 13 - y + 6" />
+
+<BlockMath math="y^2 - 28y + 176 = 0" />
+</MathContainer>
+
+From this quadratic equation, the sum of its roots is
+
+<BlockMath math="y_1 + y_2 = 28" />
+
+#### Forming the new quadratic equation
+
+The new quadratic equation with roots <InlineMath math="x_1 + x_2" /> and <InlineMath math="y_1 + y_2" /> is
+
+<MathContainer>
+<BlockMath math="x^2 - ((x_1 + x_2) + (y_1 + y_2))x + ((x_1 x_2)(y_1 y_2)) = 0" />
+
+<BlockMath math="x^2 - (-2 + 28)x + (-2)(28) = 0" />
+
+<BlockMath math="x^2 - 26x - 56 = 0" />
+</MathContainer>
+
+Therefore, the quadratic equation with roots <InlineMath math="x_1 + x_2" /> and <InlineMath math="y_1 + y_2" /> is <InlineMath math="x^2 - 26x - 56 = 0" />.
+

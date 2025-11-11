@@ -1,0 +1,98 @@
+export const metadata = {
+  title: "Solution to Question 27",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/11/2025",
+};
+
+Given the system of equations
+
+<MathContainer>
+<BlockMath math="3x + 2y - z = 3 \quad ...(1)" />
+
+<BlockMath math="2x + y - 3z = 4 \quad ...(2)" />
+
+<BlockMath math="x - y + 2z = -1 \quad ...(3)" />
+</MathContainer>
+
+#### Eliminate the first and second equations
+
+Multiply the first equation by <InlineMath math="3" /> and the second equation by <InlineMath math="1" />, then subtract.
+
+<MathContainer>
+<BlockMath math="3x + 2y - z = 3 \quad |\times 3| \quad 9x + 6y - 3z = 9" />
+
+<BlockMath math="2x + y - 3z = 4 \quad |\times 1| \quad 2x + y - 3z = 4 \quad -" />
+
+<BlockMath math="7x + 5y = 5 \quad ...(4)" />
+</MathContainer>
+
+#### Eliminate the first and third equations
+
+Multiply the first equation by <InlineMath math="2" /> and the third equation by <InlineMath math="1" />, then subtract.
+
+<MathContainer>
+<BlockMath math="3x + 2y - z = 3 \quad |\times 2| \quad 6x + 4y - 2z = 6" />
+
+<BlockMath math="x - y + 2z = -1 \quad |\times 1| \quad x - y + 2z = -1 \quad -" />
+
+<BlockMath math="7x + 3y = 5 \quad ...(5)" />
+</MathContainer>
+
+#### Eliminate the fourth and fifth equations
+
+Subtract the fifth equation from the fourth equation to find the value of <InlineMath math="y" />.
+
+<MathContainer>
+<BlockMath math="7x + 5y = 5" />
+
+<BlockMath math="7x + 3y = 5 \quad -" />
+
+<BlockMath math="2y = 0" />
+
+<BlockMath math="y = 0" />
+</MathContainer>
+
+#### Substitute the value of y
+
+Substitute <InlineMath math="y = 0" /> into the fourth equation to find the value of <InlineMath math="x" />.
+
+<MathContainer>
+<BlockMath math="7x + 5y = 5" />
+
+<BlockMath math="7x + 5(0) = 5" />
+
+<BlockMath math="7x = 5" />
+
+<BlockMath math="x = \frac{5}{7}" />
+</MathContainer>
+
+#### Substitute the values of x and y
+
+Substitute <InlineMath math="x = \frac{5}{7}" /> and <InlineMath math="y = 0" /> into the third equation to find the value of <InlineMath math="z" />.
+
+<MathContainer>
+<BlockMath math="x - y + 2z = -1" />
+
+<BlockMath math="\frac{5}{7} - 0 + 2z = -1" />
+
+<BlockMath math="2z = -\frac{12}{7}" />
+
+<BlockMath math="z = -\frac{6}{7}" />
+</MathContainer>
+
+#### Calculate the requested value
+
+Substitute the values <InlineMath math="x = \frac{5}{7}" />, <InlineMath math="y = 0" />, and <InlineMath math="z = -\frac{6}{7}" /> into <InlineMath math="2x + 2y - 3z" />.
+
+<MathContainer>
+<BlockMath math="2x + 2y - 3z = 2\left(\frac{5}{7}\right) + 2(0) - 3\left(-\frac{6}{7}\right)" />
+
+<BlockMath math="2x + 2y - 3z = \frac{10}{7} - 0 + \frac{18}{7}" />
+
+<BlockMath math="2x + 2y - 3z = \frac{28}{7}" />
+
+<BlockMath math="2x + 2y - 3z = 4" />
+</MathContainer>
+
+Therefore, the value of <InlineMath math="2x + 2y - 3z" /> is <InlineMath math="4" />.
+

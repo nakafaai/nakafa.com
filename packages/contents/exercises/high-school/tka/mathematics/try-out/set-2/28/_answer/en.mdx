@@ -1,0 +1,66 @@
+export const metadata = {
+  title: "Solution to Question 28",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/11/2025",
+};
+
+Since both quadratic equations have the same roots, their coefficients can be equated.
+
+<MathContainer>
+<BlockMath math="2x^2 - (a + 3)x + (3b - 2) = 2(x^2 - ax + b)" />
+
+<BlockMath math="2x^2 - (a + 3)x + (3b - 2) = 2x^2 - 2ax + 2b" />
+</MathContainer>
+
+#### Testing the first statement
+
+Equate the coefficient of <InlineMath math="x" /> from both equations.
+
+<MathContainer>
+<BlockMath math="-(a + 3) = -2a" />
+
+<BlockMath math="-a - 3 = -2a" />
+
+<BlockMath math="a = 3" />
+</MathContainer>
+
+The first statement is correct.
+
+#### Testing the second statement
+
+Equate the constant from both equations.
+
+<MathContainer>
+<BlockMath math="3b - 2 = 2b" />
+
+<BlockMath math="b = 2" />
+</MathContainer>
+
+The second statement is correct.
+
+#### Testing the third statement
+
+Substitute the values <InlineMath math="a = 3" /> and <InlineMath math="b = 2" /> into the third statement.
+
+<MathContainer>
+<BlockMath math="2a - 2ab + 3b = 2(3) - 2(3)(2) + 3(2)" />
+
+<BlockMath math="2a - 2ab + 3b = 6 - 12 + 6" />
+
+<BlockMath math="2a - 2ab + 3b = 0" />
+</MathContainer>
+
+The third statement is correct.
+
+#### Testing the fourth statement
+
+Substitute the values <InlineMath math="a = 3" /> and <InlineMath math="b = 2" /> into the fourth statement.
+
+<MathContainer>
+<BlockMath math="ab = (2)(3) = 6" />
+</MathContainer>
+
+The fourth statement is incorrect because the result is not <InlineMath math="5" />.
+
+Therefore, the correct statements are the first, second, and third.
+

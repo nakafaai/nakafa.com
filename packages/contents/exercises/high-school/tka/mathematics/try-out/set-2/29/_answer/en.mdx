@@ -1,0 +1,82 @@
+export const metadata = {
+  title: "Solution to Question 29",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/11/2025",
+};
+
+Given the function <InlineMath math="y = \sqrt{x^2 - 7}" />. The derivative of this function is
+
+<BlockMath math="y' = \frac{x}{\sqrt{x^2 - 7}}" />
+
+#### Testing the first statement
+
+The ordinate of the point on the curve with abscissa <InlineMath math="4" /> is
+
+<BlockMath math="f(4) = \sqrt{4^2 - 7} = \sqrt{9} = 3" />
+
+The gradient of the tangent line at point <InlineMath math="(4,3)" /> can be found by substituting <InlineMath math="x = 4" /> into the derivative.
+
+<MathContainer>
+<BlockMath math="y' = f'(x) = \frac{x}{\sqrt{x^2 - 7}}" />
+
+<BlockMath math="f'(4) = \frac{4}{\sqrt{4^2 - 7}} = \frac{4}{\sqrt{9}} = \frac{4}{3}" />
+</MathContainer>
+
+With gradient <InlineMath math="m = \frac{4}{3}" /> and point <InlineMath math="(4,3)" />, the equation of the tangent line is
+
+<MathContainer>
+<BlockMath math="y - y_1 = m(x - x_1)" />
+
+<BlockMath math="y - 3 = \frac{4}{3}(x - 4)" />
+
+<BlockMath math="y - 3 = \frac{4}{3}x - \frac{16}{3}" />
+
+<BlockMath math="y = \frac{4}{3}x - \frac{7}{3}" />
+</MathContainer>
+
+The first statement is correct.
+
+#### Testing the second statement
+
+For values of <InlineMath math="x" /> and <InlineMath math="y" /> that satisfy the condition, square both sides.
+
+<MathContainer>
+<BlockMath math="y = \sqrt{x^2 - 7}" />
+
+<BlockMath math="y^2 = \left(\sqrt{x^2 - 7}\right)^2" />
+
+<BlockMath math="y^2 = x^2 - 7" />
+
+<BlockMath math="x^2 - y^2 = 7" />
+</MathContainer>
+
+The form <InlineMath math="x^2 - y^2 = 7" /> is not the equation of a circle.
+
+The second statement is incorrect.
+
+#### Testing the third statement
+
+The line <InlineMath math="y = -\frac{3}{4}x + 6" /> has gradient <InlineMath math="m_1 = -\frac{3}{4}" />.
+
+From the first statement, the gradient of the tangent line at <InlineMath math="x = 4" /> is <InlineMath math="m_2 = \frac{4}{3}" />.
+
+Check if both lines are perpendicular by multiplying both gradients.
+
+<BlockMath math="m_1 \cdot m_2 = -\frac{3}{4} \cdot \frac{4}{3} = -1" />
+
+Since <InlineMath math="m_1 \cdot m_2 = -1" />, both lines are perpendicular.
+
+The third statement is correct.
+
+#### Testing the fourth statement
+
+Check if the curve passes through point <InlineMath math="(4, -3)" /> by substituting the value <InlineMath math="x = 4" />.
+
+<BlockMath math="y = \sqrt{4^2 - 7} = \sqrt{9} = 3" />
+
+The curve does not pass through point <InlineMath math="(4, -3)" />, but passes through point <InlineMath math="(4,3)" />.
+
+The fourth statement is incorrect.
+
+Therefore, the correct statements are the first and third.
+
