@@ -1,0 +1,64 @@
+export const metadata = {
+  title: "Solution to Question 36",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/11/2025",
+};
+
+Recall the trigonometric concepts for angle addition
+
+<MathContainer>
+<BlockMath math="\tan(x + y) = \frac{\tan x + \tan y}{1 - \tan x \cdot \tan y}" />
+
+<BlockMath math="\tan(2x) = \frac{2 \tan x}{1 - \tan^2 x}" />
+</MathContainer>
+
+#### Solve the system of equations
+
+Get the first equation by transforming to find <InlineMath math="\tan B" />.
+
+<BlockMath math="2 \tan A + \tan B = 4 \rightarrow \tan B = 4 - 2 \tan A" />
+
+Then substitute into the second equation
+
+<MathContainer>
+<BlockMath math="\tan A - 3 \tan B = -\frac{17}{2}" />
+
+<BlockMath math="\tan A - 3(4 - 2 \tan A) = -\frac{17}{2}" />
+
+<BlockMath math="\tan A - 12 + 6 \tan A = -\frac{17}{2}" />
+
+<BlockMath math="7 \tan A = -\frac{17}{2} + 12" />
+
+<BlockMath math="7 \tan A = \frac{7}{2}" />
+
+<BlockMath math="\tan A = \frac{1}{2}" />
+</MathContainer>
+
+Therefore, the value of <InlineMath math="\tan B = 4 - 2 \tan A = 4 - 2\left(\frac{1}{2}\right) = 3" />.
+
+#### Determine the value of tan 2A
+
+<MathContainer>
+<BlockMath math="\tan(2A) = \frac{2 \tan A}{1 - \tan^2 A}" />
+
+<BlockMath math="\tan(2A) = \frac{2\left(\frac{1}{2}\right)}{1 - \left(\frac{1}{2}\right)^2}" />
+
+<BlockMath math="\tan(2A) = \frac{1}{1 - \frac{1}{4}} = \frac{4}{3}" />
+</MathContainer>
+
+#### Determine the value of tan(2A + B)
+
+<MathContainer>
+<BlockMath math="\tan(2A + B) = \frac{\tan 2A + \tan B}{1 - \tan 2A \cdot \tan B}" />
+
+<BlockMath math="\tan(2A + B) = \frac{\frac{4}{3} + 3}{1 - \frac{4}{3}(3)}" />
+
+<BlockMath math="\tan(2A + B) = \frac{\frac{13}{3}}{1 - 4}" />
+
+<BlockMath math="\tan(2A + B) = \frac{\frac{13}{3}}{-3}" />
+
+<BlockMath math="\tan(2A + B) = -\frac{13}{9}" />
+</MathContainer>
+
+Therefore, the value of <InlineMath math="\tan(2A + B)" /> is <InlineMath math="-\frac{13}{9}" />.
+

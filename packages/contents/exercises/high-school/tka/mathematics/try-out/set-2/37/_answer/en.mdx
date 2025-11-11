@@ -1,0 +1,208 @@
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+
+export const metadata = {
+  title: "Solution to Question 37",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/11/2025",
+};
+
+Consider the following rectangular prism illustration.
+
+<LineEquation
+  title={<>Rectangular Prism <InlineMath math="ABCD.EFGH" /></>}
+  description="Visualization of the rectangular prism with given dimensions and relevant lines for calculating the angle."
+  cameraPosition={[9, 6, 9]}
+  data={[
+    {
+      points: [
+        { x: -1.5, y: 0, z: 2 },
+        { x: 1.5, y: 0, z: 2 },
+      ],
+      color: getColor("ORANGE"),
+      labels: [
+        { text: "A", at: 0, offset: [-0.25, -0.25, 0.25] },
+        { text: "B", at: 1, offset: [0.25, -0.25, 0.25] },
+        { text: "6 cm", at: 0, offset: [1.5, 0, 0.8] },
+      ],
+    },
+    {
+      points: [
+        { x: 1.5, y: 0, z: 2 },
+        { x: 1.5, y: 0, z: -2 },
+      ],
+      color: getColor("ORANGE"),
+      labels: [
+        { text: "C", at: 1, offset: [0.25, -0.25, -0.25] },
+        { text: "8 cm", at: 0, offset: [0.8, 0, -1.5] },
+      ],
+    },
+    {
+      points: [
+        { x: 1.5, y: 0, z: -2 },
+        { x: -1.5, y: 0, z: -2 },
+      ],
+      color: getColor("ORANGE"),
+      labels: [
+        { text: "D", at: 1, offset: [-0.25, -0.25, -0.25] },
+      ],
+    },
+    {
+      points: [
+        { x: -1.5, y: 0, z: -2 },
+        { x: -1.5, y: 0, z: 2 },
+      ],
+      color: getColor("ORANGE"),
+    },
+    {
+      points: [
+        { x: -1.5, y: 2, z: 2 },
+        { x: 1.5, y: 2, z: 2 },
+      ],
+      color: getColor("ORANGE"),
+      labels: [
+        { text: "E", at: 0, offset: [-0.25, 0.25, 0.25] },
+        { text: "F", at: 1, offset: [0.25, 0.25, 0.25] },
+      ],
+    },
+    {
+      points: [
+        { x: 1.5, y: 2, z: 2 },
+        { x: 1.5, y: 2, z: -2 },
+      ],
+      color: getColor("ORANGE"),
+      labels: [
+        { text: "G", at: 1, offset: [0.25, 0.25, -0.25] },
+      ],
+    },
+    {
+      points: [
+        { x: 1.5, y: 2, z: -2 },
+        { x: -1.5, y: 2, z: -2 },
+      ],
+      color: getColor("ORANGE"),
+      labels: [
+        { text: "H", at: 1, offset: [-0.25, 0.25, -0.25] },
+      ],
+    },
+    {
+      points: [
+        { x: -1.5, y: 2, z: -2 },
+        { x: -1.5, y: 2, z: 2 },
+      ],
+      color: getColor("ORANGE"),
+    },
+    {
+      points: [
+        { x: -1.5, y: 0, z: 2 },
+        { x: -1.5, y: 2, z: 2 },
+      ],
+      color: getColor("ORANGE"),
+    },
+    {
+      points: [
+        { x: 1.5, y: 0, z: 2 },
+        { x: 1.5, y: 2, z: 2 },
+      ],
+      color: getColor("ORANGE"),
+      labels: [
+        { text: "4 cm", at: 0, offset: [0.8, 1, 0.5] },
+      ],
+    },
+    {
+      points: [
+        { x: 1.5, y: 0, z: -2 },
+        { x: 1.5, y: 2, z: -2 },
+      ],
+      color: getColor("ORANGE"),
+    },
+    {
+      points: [
+        { x: -1.5, y: 0, z: -2 },
+        { x: -1.5, y: 2, z: -2 },
+      ],
+      color: getColor("ORANGE"),
+    },
+    {
+      points: [
+        { x: -1.5, y: 0, z: 2 },
+        { x: -1.5, y: 2, z: -2 },
+      ],
+      color: getColor("CYAN"),
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 1.5, y: 0, z: 2 },
+        { x: -1.5, y: 0, z: -2 },
+      ],
+      color: getColor("PURPLE"),
+      smooth: false,
+    },
+    {
+      points: [
+        { x: 1.5, y: 0, z: 2 },
+        { x: 1.5, y: 2, z: -2 },
+      ],
+      color: getColor("TEAL"),
+      smooth: false,
+    },
+    {
+      points: [
+        { x: -1.5, y: 0, z: -2 },
+        { x: 1.5, y: 2, z: -2 },
+      ],
+      color: getColor("TEAL"),
+      smooth: false,
+    },
+  ]}
+/>
+
+Lines <InlineMath math="AH" /> and <InlineMath math="BD" /> do not intersect, so we need to shift one of them so they intersect, namely shift line <InlineMath math="AH" /> to line <InlineMath math="BG" /> (because <InlineMath math="AH" /> is parallel to <InlineMath math="BG" />), so the angle is between lines <InlineMath math="BG" /> and <InlineMath math="BD" />.
+
+<BlockMath math="\alpha = \angle(AH, BD) = \angle(BG, BD)" />
+
+#### Determine segment lengths
+
+Then determine the length of <InlineMath math="\triangle BDG" />
+
+<MathContainer>
+<BlockMath math="BD = \sqrt{AB^2 + AD^2} = \sqrt{6^2 + 8^2} = 10" />
+
+<BlockMath math="DG = \sqrt{CD^2 + CG^2} = \sqrt{6^2 + 4^2} = \sqrt{52} = 2\sqrt{13}" />
+
+<BlockMath math="BG = \sqrt{CB^2 + CG^2} = \sqrt{8^2 + 4^2} = \sqrt{80} = 4\sqrt{5}" />
+</MathContainer>
+
+#### Use the cosine rule
+
+Use the cosine rule on <InlineMath math="\triangle BDG" />
+
+<MathContainer>
+<BlockMath math="\cos \angle DBG = \frac{BD^2 + BG^2 - DG^2}{2 \cdot BD \cdot BG}" />
+
+<BlockMath math="\cos \alpha = \frac{10^2 + (4\sqrt{5})^2 - (2\sqrt{13})^2}{2(10)(4\sqrt{5})}" />
+
+<BlockMath math="\cos \alpha = \frac{100 + 80 - 52}{80\sqrt{5}}" />
+
+<BlockMath math="\cos \alpha = \frac{128}{80\sqrt{5}}" />
+
+<BlockMath math="\cos \alpha = \frac{8}{5\sqrt{5}}" />
+</MathContainer>
+
+Then the value of <InlineMath math="\cos 2\alpha" /> can be calculated using the double angle formula
+
+<MathContainer>
+<BlockMath math="\cos 2\alpha = 2\cos^2 \alpha - 1" />
+
+<BlockMath math="\cos 2\alpha = 2\left(\frac{8}{5\sqrt{5}}\right)^2 - 1" />
+
+<BlockMath math="\cos 2\alpha = 2\left(\frac{64}{125}\right) - 1" />
+
+<BlockMath math="\cos 2\alpha = \frac{128}{125} - \frac{125}{125}" />
+
+<BlockMath math="\cos 2\alpha = \frac{3}{125}" />
+</MathContainer>
+
+Therefore, the value of <InlineMath math="\cos 2\alpha" /> is <InlineMath math="\frac{3}{125}" />.
+
