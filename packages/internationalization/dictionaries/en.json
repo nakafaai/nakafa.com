@@ -124,6 +124,16 @@
     "no-chats": "No chats yet.",
     "exercises": "Exercises"
   },
+  "Onboarding": {
+    "title": "Welcome to Nakafa!",
+    "description": "We're excited to have you here. Let's personalize your learning experience by getting to know you better.",
+    "teacher": "Teacher",
+    "student": "Student",
+    "parent": "Parent",
+    "admin": "Administrator",
+    "select-role": "Select your role",
+    "button": "Start learning"
+  },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",
     "comment": "Comment",
@@ -252,6 +262,14 @@
     "name-description": "The name will be displayed in your profile and comments.",
     "name-footer": "Please use minimum 3 and maximum 32 characters.",
     "name-placeholder": "Enter your name...",
+    "role": "Role",
+    "role-description": "Your role helps us personalize your learning experience.",
+    "role-footer": "You can change your role anytime.",
+    "role-placeholder": "Select a role",
+    "teacher": "Teacher",
+    "student": "Student",
+    "parent": "Parent",
+    "admin": "Administrator",
     "save": "Save",
     "chat": "Chat",
     "developers": "Developers",

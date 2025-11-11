@@ -11,47 +11,50 @@ import {
   FormItem,
   FormLabel,
 } from "@repo/design-system/components/ui/form";
-import { Input } from "@repo/design-system/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod/mini";
 import { FormBlock } from "@/components/shared/form-block";
-
-const MAX_NAME_LENGTH = 32;
-const MIN_NAME_LENGTH = 3;
+import { roles } from "@/lib/data/roles";
 
 const formSchema = z.object({
-  name: z
-    .string()
-    .check(
-      z.minLength(MIN_NAME_LENGTH),
-      z.maxLength(MAX_NAME_LENGTH),
-      z.trim()
-    ),
+  role: z.union([
+    z.literal("teacher"),
+    z.literal("student"),
+    z.literal("parent"),
+    z.literal("admin"),
+  ]),
 });
 type FormSchema = z.infer<typeof formSchema>;
 
-export function UserSettingsName({ user }: { user: AppUser }) {
+export function UserSettingsRole({ user }: { user: AppUser }) {
   const t = useTranslations("Auth");
 
-  const updateUserName = useMutation(api.users.mutations.updateUserName);
+  const updateUserRole = useMutation(api.users.mutations.updateUserRole);
 
   const [isPending, startTransition] = useTransition();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: user.authUser.name,
+      role: user.appUser.role,
     },
     mode: "onChange",
   });
 
   const onSubmit = (values: FormSchema) => {
     startTransition(async () => {
-      await updateUserName({
-        name: values.name,
+      await updateUserRole({
+        role: values.role,
       });
       // Reset form state after successful save
       form.reset(values);
@@ -62,11 +65,11 @@ export function UserSettingsName({ user }: { user: AppUser }) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <FormBlock
-          description={t("name-description")}
+          description={t("role-description")}
           footer={
             <div className="flex w-full items-center justify-between gap-4">
               <p className="text-muted-foreground text-sm">
-                {t("name-footer")}
+                {t("role-footer")}
               </p>
               <Button
                 disabled={
@@ -81,20 +84,31 @@ export function UserSettingsName({ user }: { user: AppUser }) {
               </Button>
             </div>
           }
-          title={t("name")}
+          title={t("role")}
         >
           <FormField
             control={form.control}
-            name="name"
+            name="role"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="sr-only">{t("name")}</FormLabel>
+                <FormLabel className="sr-only">{t("role")}</FormLabel>
                 <FormControl>
-                  <Input
-                    className="max-w-xs"
-                    placeholder={t("name-placeholder")}
-                    {...field}
-                  />
+                  <Select
+                    defaultValue={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger className="w-full max-w-xs">
+                      <SelectValue placeholder={t("role-placeholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((role) => (
+                        <SelectItem key={role.value} value={role.value}>
+                          <role.icon />
+                          {t(role.value)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
               </FormItem>
             )}

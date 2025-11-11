@@ -2,7 +2,6 @@ import { Particles } from "@repo/design-system/components/ui/particles";
 import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
-import { School } from "@/components/school";
 import { ComingSoon } from "@/components/shared/coming-soon";
 
 type Props = {
@@ -15,16 +14,14 @@ export default function Page({ params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <School>
-      <div
-        className="relative flex h-[calc(100svh-4rem)] items-center justify-center"
-        data-pagefind-ignore
-      >
-        <Particles className="pointer-events-none absolute inset-0 opacity-80" />
-        <div className="mx-auto w-full max-w-xl px-6">
-          <ComingSoon />
-        </div>
+    <div
+      className="relative flex h-[calc(100svh-4rem)] items-center justify-center"
+      data-pagefind-ignore
+    >
+      <Particles className="pointer-events-none absolute inset-0 opacity-80" />
+      <div className="mx-auto w-full max-w-xl px-6">
+        <ComingSoon />
       </div>
-    </School>
+    </div>
   );
 }

@@ -16,6 +16,7 @@ import { hasLocale, type Locale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { AppProviders } from "@/components/providers";
+import { Onboarding } from "@/components/shared/onboarding";
 
 export async function generateMetadata({
   params,
@@ -169,7 +170,11 @@ export default function Layout(props: LayoutProps<"/[locale]">) {
         <body className="relative">
           <div className="isolate">
             <AppProviders>
-              <DesignSystemProvider>{children}</DesignSystemProvider>
+              <DesignSystemProvider>
+                {children}
+
+                <Onboarding />
+              </DesignSystemProvider>
             </AppProviders>
           </div>
 

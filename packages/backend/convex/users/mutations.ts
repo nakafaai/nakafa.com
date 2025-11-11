@@ -4,6 +4,32 @@ import { mutation } from "../_generated/server";
 import { safeGetAppUser } from "../auth";
 
 /**
+ * Update the app user's role.
+ */
+export const updateUserRole = mutation({
+  args: {
+    role: v.union(
+      v.literal("teacher"),
+      v.literal("student"),
+      v.literal("parent"),
+      v.literal("admin")
+    ),
+  },
+  handler: async (ctx, args) => {
+    const user = await safeGetAppUser(ctx);
+    if (!user) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to update your role.",
+      });
+    }
+    await ctx.db.patch(user.appUser._id, {
+      role: args.role,
+    });
+  },
+});
+
+/**
  * Update Better Auth user's display name.
  */
 export const updateUserName = mutation({

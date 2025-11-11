@@ -124,6 +124,16 @@
     "no-chats": "Belum ada obrolan.",
     "exercises": "Latihan"
   },
+  "Onboarding": {
+    "title": "Selamat datang di Nakafa!",
+    "description": "Senang kamu ada di sini. Yuk, sesuaikan pengalaman belajar kamu biar lebih pas.",
+    "teacher": "Guru",
+    "student": "Siswa",
+    "parent": "Orang tua",
+    "admin": "Administrator",
+    "select-role": "Pilih peran kamu",
+    "button": "Mulai belajar"
+  },
   "Comments": {
     "add-comment-placeholder": "Tambahkan komentar...",
     "comment": "Komentar",
@@ -252,6 +262,14 @@
     "name-description": "Nama akan ditampilkan di profil dan komentar.",
     "name-footer": "Silakan gunakan minimum 3 dan maksimum 32 karakter.",
     "name-placeholder": "Masukkan nama kamu...",
+    "role": "Peran",
+    "role-description": "Peran kamu membantu kami menyesuaikan pengalaman belajar kamu.",
+    "role-footer": "Kamu bisa mengubah peran kapan saja.",
+    "role-placeholder": "Pilih peran",
+    "teacher": "Guru",
+    "student": "Siswa",
+    "parent": "Orang tua",
+    "admin": "Administrator",
     "save": "Simpan",
     "chat": "Obrolan",
     "developers": "Developer",
