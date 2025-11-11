@@ -206,7 +206,7 @@ async function PageContent({
                   <section className={cn("mb-6 pb-6")} key={exercise.number}>
                     <div className="flex items-center gap-4">
                       <a
-                        className="flex w-full flex-1 shrink-0 scroll-mt-44"
+                        className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
                         href={`#${id}`}
                         id={id}
                       >
