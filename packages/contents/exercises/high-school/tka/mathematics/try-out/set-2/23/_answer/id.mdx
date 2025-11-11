@@ -1,0 +1,112 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Pembahasan Soal 23",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Nilai mutlaknya memiliki definisi yaitu
+
+<BlockMath math="|x + 4| = \begin{cases} x + 4 ; \text{untuk } x \geq -4 \\ -(x + 4) ; \text{untuk } x < -4 \end{cases}" />
+
+Selesaikan pertidaksamaannya
+
+Untuk <InlineMath math="x \geq -4" />
+
+<MathContainer>
+<BlockMath math="16 - x^2 \leq |x + 4|" />
+
+<BlockMath math="16 - x^2 \leq x + 4" />
+
+<BlockMath math="-x^2 - x + 12 \leq 0" />
+
+<BlockMath math="(-x + 3)(x + 4) \leq 0" />
+
+<BlockMath math="x = 3 \vee x = -4" />
+</MathContainer>
+
+Membuat garis bilangannya
+
+<NumberLine
+  title={<>Garis Bilangan untuk <InlineMath math="x \geq -4" /></>}
+  description={<>Interval <InlineMath math="(-\infty, -4] \cup [3, \infty)" /> menunjukkan daerah dengan tanda negatif atau nol.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: -4,
+      shaded: true,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: -4,
+      end: 3,
+      startInclusive: true,
+      endInclusive: true,
+      shaded: false,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 3,
+      end: Number.POSITIVE_INFINITY,
+      shaded: true,
+      label: <InlineMath math="-" />,
+    },
+  ]}
+/>
+
+Dari syarat <InlineMath math="x \geq -4" /> dan daerah garis bilangan diatas, diperoleh himpunan penyelesaian <InlineMath math="\{x \leq -4 \vee x \geq 3\}" />.
+
+Untuk <InlineMath math="x < -4" />
+
+<MathContainer>
+<BlockMath math="16 - x^2 \leq |x + 4|" />
+
+<BlockMath math="16 - x^2 \leq -(x + 4)" />
+
+<BlockMath math="-x^2 + x + 20 \leq 0" />
+
+<BlockMath math="(-x - 4)(x - 5) \leq 0" />
+
+<BlockMath math="x = -4 \vee x = 5" />
+</MathContainer>
+
+Garis bilangannya
+
+<NumberLine
+  title={<>Garis Bilangan untuk <InlineMath math="x < -4" /></>}
+  description={<>Interval <InlineMath math="(-\infty, -4] \cup [5, \infty)" /> menunjukkan daerah dengan tanda negatif atau nol.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: -4,
+      shaded: true,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: -4,
+      end: 5,
+      startInclusive: true,
+      endInclusive: true,
+      shaded: false,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 5,
+      end: Number.POSITIVE_INFINITY,
+      shaded: true,
+      label: <InlineMath math="-" />,
+    },
+  ]}
+/>
+
+Dari syarat <InlineMath math="x < -4" /> dan daerah garis bilangan kedua diatas diperoleh bahwa himpunan penyelesaiannya adalah <InlineMath math="\{x < -4\}" />.
+
+Maka solusi gabungannya adalah
+
+<MathContainer>
+<BlockMath math="HP = \{x \leq -4 \vee x \geq 3\} \cup \{x < -4\}" />
+
+<BlockMath math="HP = \{x \leq -4 \vee x \geq 3\}" />
+</MathContainer>
+

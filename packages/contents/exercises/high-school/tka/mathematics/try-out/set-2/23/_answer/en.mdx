@@ -1,0 +1,112 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Solution to Question 23",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+The absolute value has the definition
+
+<BlockMath math="|x + 4| = \begin{cases} x + 4 ; \text{for } x \geq -4 \\ -(x + 4) ; \text{for } x < -4 \end{cases}" />
+
+Solve the inequality
+
+For <InlineMath math="x \geq -4" />
+
+<MathContainer>
+<BlockMath math="16 - x^2 \leq |x + 4|" />
+
+<BlockMath math="16 - x^2 \leq x + 4" />
+
+<BlockMath math="-x^2 - x + 12 \leq 0" />
+
+<BlockMath math="(-x + 3)(x + 4) \leq 0" />
+
+<BlockMath math="x = 3 \vee x = -4" />
+</MathContainer>
+
+Create the number line
+
+<NumberLine
+  title={<>Number Line for <InlineMath math="x \geq -4" /></>}
+  description={<>Interval <InlineMath math="(-\infty, -4] \cup [3, \infty)" /> indicates regions with negative or zero sign.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: -4,
+      shaded: true,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: -4,
+      end: 3,
+      startInclusive: true,
+      endInclusive: true,
+      shaded: false,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 3,
+      end: Number.POSITIVE_INFINITY,
+      shaded: true,
+      label: <InlineMath math="-" />,
+    },
+  ]}
+/>
+
+From the condition <InlineMath math="x \geq -4" /> and the number line region above, the solution set is <InlineMath math="\{x \leq -4 \vee x \geq 3\}" />.
+
+For <InlineMath math="x < -4" />
+
+<MathContainer>
+<BlockMath math="16 - x^2 \leq |x + 4|" />
+
+<BlockMath math="16 - x^2 \leq -(x + 4)" />
+
+<BlockMath math="-x^2 + x + 20 \leq 0" />
+
+<BlockMath math="(-x - 4)(x - 5) \leq 0" />
+
+<BlockMath math="x = -4 \vee x = 5" />
+</MathContainer>
+
+The number line
+
+<NumberLine
+  title={<>Number Line for <InlineMath math="x < -4" /></>}
+  description={<>Interval <InlineMath math="(-\infty, -4] \cup [5, \infty)" /> indicates regions with negative or zero sign.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: -4,
+      shaded: true,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: -4,
+      end: 5,
+      startInclusive: true,
+      endInclusive: true,
+      shaded: false,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 5,
+      end: Number.POSITIVE_INFINITY,
+      shaded: true,
+      label: <InlineMath math="-" />,
+    },
+  ]}
+/>
+
+From the condition <InlineMath math="x < -4" /> and the second number line region above, the solution set is <InlineMath math="\{x < -4\}" />.
+
+Therefore the combined solution is
+
+<MathContainer>
+<BlockMath math="HP = \{x \leq -4 \vee x \geq 3\} \cup \{x < -4\}" />
+
+<BlockMath math="HP = \{x \leq -4 \vee x \geq 3\}" />
+</MathContainer>
+

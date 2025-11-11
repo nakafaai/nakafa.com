@@ -1,0 +1,77 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Pembahasan Soal 24",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Syarat logaritmanya adalah
+
+<MathContainer>
+<BlockMath math="|x + 1| > 0 \rightarrow x \neq -1" />
+
+<BlockMath math="|2x - 1| > 0 \rightarrow x \neq \frac{1}{2}" />
+</MathContainer>
+
+Ingat beberapa konsep dasar pertidaksamaan nilai mutlak
+
+<BlockMath math="\log_a f(x) \geq \log_a g(x) \rightarrow f(x) \geq g(x)" />
+
+Dengan syarat <InlineMath math="a > 1" />.
+
+Mari selesaikan pertidaksamaannya
+
+<MathContainer>
+<BlockMath math="\log|x + 1| \geq \log 3 + \log|2x - 1|" />
+
+<BlockMath math="\log|x + 1| \geq \log 3|2x - 1|" />
+
+<BlockMath math="\log|x + 1| \geq \log|6x - 3|" />
+
+<BlockMath math="|x + 1| \geq |6x - 3|" />
+</MathContainer>
+
+Penyelesaiannya
+
+<MathContainer>
+<BlockMath math="[(x + 1) + (6x - 3)][(x + 1) - (6x - 3)] \geq 0" />
+
+<BlockMath math="(7x - 2)(-5x + 4) \geq 0" />
+
+<BlockMath math="x = \frac{2}{7} \vee x = \frac{4}{5}" />
+</MathContainer>
+
+Garis bilangannya
+
+<NumberLine
+  title={<>Garis Bilangan Penyelesaian</>}
+  description={<>Interval <InlineMath math="\left[\frac{2}{7}, \frac{4}{5}\right]" /> menunjukkan kedua ujung termasuk dalam himpunan penyelesaian.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: 2/7,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: 2/7,
+      end: 4/5,
+      startInclusive: true,
+      endInclusive: true,
+      shaded: true,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 4/5,
+      end: Number.POSITIVE_INFINITY,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+  ]}
+/>
+
+Maka solusinya adalah
+
+<BlockMath math="\left\{\frac{2}{7} \leq x \leq \frac{4}{5}, x \neq \frac{1}{2}\right\}" />
+

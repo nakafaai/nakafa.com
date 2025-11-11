@@ -1,0 +1,77 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Solution to Question 24",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+The logarithm conditions are
+
+<MathContainer>
+<BlockMath math="|x + 1| > 0 \rightarrow x \neq -1" />
+
+<BlockMath math="|2x - 1| > 0 \rightarrow x \neq \frac{1}{2}" />
+</MathContainer>
+
+Recall some basic concepts of absolute value inequality
+
+<BlockMath math="\log_a f(x) \geq \log_a g(x) \rightarrow f(x) \geq g(x)" />
+
+With condition <InlineMath math="a > 1" />.
+
+Let's solve the inequality
+
+<MathContainer>
+<BlockMath math="\log|x + 1| \geq \log 3 + \log|2x - 1|" />
+
+<BlockMath math="\log|x + 1| \geq \log 3|2x - 1|" />
+
+<BlockMath math="\log|x + 1| \geq \log|6x - 3|" />
+
+<BlockMath math="|x + 1| \geq |6x - 3|" />
+</MathContainer>
+
+The solution
+
+<MathContainer>
+<BlockMath math="[(x + 1) + (6x - 3)][(x + 1) - (6x - 3)] \geq 0" />
+
+<BlockMath math="(7x - 2)(-5x + 4) \geq 0" />
+
+<BlockMath math="x = \frac{2}{7} \vee x = \frac{4}{5}" />
+</MathContainer>
+
+The number line
+
+<NumberLine
+  title={<>Solution Number Line</>}
+  description={<>Interval <InlineMath math="\left[\frac{2}{7}, \frac{4}{5}\right]" /> indicates both endpoints are included in the solution set.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: 2/7,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: 2/7,
+      end: 4/5,
+      startInclusive: true,
+      endInclusive: true,
+      shaded: true,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 4/5,
+      end: Number.POSITIVE_INFINITY,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+  ]}
+/>
+
+Therefore the solution is
+
+<BlockMath math="\left\{\frac{2}{7} \leq x \leq \frac{4}{5}, x \neq \frac{1}{2}\right\}" />
+

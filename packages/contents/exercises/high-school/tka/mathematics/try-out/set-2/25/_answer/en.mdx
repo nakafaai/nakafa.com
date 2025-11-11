@@ -1,0 +1,84 @@
+export const metadata = {
+  title: "Solution to Question 25",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Define the first absolute value for <InlineMath math="|x - 2|" />.
+
+<InlineMath math="x - 2" /> is positive for <InlineMath math="x - 2 \geq 0 \rightarrow x \geq 0" />.
+
+<InlineMath math="x - 2" /> is negative for <InlineMath math="x - 2 < 0 \rightarrow x < 2" />.
+
+So the definition is
+
+<BlockMath math="|x - 2| = \begin{cases} x - 2; \text{for } x \geq 2 \\ -(x - 2); \text{for } x < 2 \end{cases}" />
+
+For <InlineMath math="|x^2 - 4|" />
+
+<InlineMath math="x^2 - 4" /> is positive for <InlineMath math="x^2 - 4 \geq 0 \rightarrow x \leq -2 \vee x \geq 0" />.
+
+<InlineMath math="x^2 - 4" /> is negative for <InlineMath math="x^2 - 4 < 0 \rightarrow -2 < x < 2" />.
+
+So the definition is
+
+<BlockMath math="|x^2 - 4| = \begin{cases} x^2 - 4; \text{for } x \leq -2 \vee x \geq 2 \\ -(x^2 - 4); \text{for } -2 < x < 2 \end{cases}" />
+
+Based on the definitions above, the absolute value is bounded by <InlineMath math="x = -2" /> and <InlineMath math="x = 2" />. This means there are <InlineMath math="3" /> possible regions/values of <InlineMath math="x" />.
+
+Solve the problem based on regions.
+
+Region I when <InlineMath math="x < -2" />
+
+<MathContainer>
+<BlockMath math="|x^2 - 4| = x + |x - 2|" />
+
+<BlockMath math="x^2 - 4 = x + (-x + 2)" />
+
+<BlockMath math="x^2 = 6" />
+
+<BlockMath math="x = \pm\sqrt{6}" />
+</MathContainer>
+
+Since region I is negative, the root that satisfies is <InlineMath math="x_1 = -\sqrt{6}" />.
+
+Region II when <InlineMath math="-2 \leq x < 2" />
+
+<MathContainer>
+<BlockMath math="|x^2 - 4| = x + |x - 2|" />
+
+<BlockMath math="-x^2 + 4 = x + (-x + 2)" />
+
+<BlockMath math="x^2 = 2" />
+
+<BlockMath math="x = \pm\sqrt{2}" />
+</MathContainer>
+
+Since region II includes both positive and negative, all roots satisfy region II.
+
+Region III when <InlineMath math="x \geq 2" />
+
+<MathContainer>
+<BlockMath math="|x^2 - 4| = x + |x - 2|" />
+
+<BlockMath math="x^2 - 4 = x + x - 2" />
+
+<BlockMath math="x^2 - 2x - 2 = 0" />
+</MathContainer>
+
+Determine the discriminant value to find the type of roots.
+
+<MathContainer>
+<BlockMath math="D = b^2 - 4ac" />
+
+<BlockMath math="D = (-2)^2 - 4(1)(-2)" />
+
+<BlockMath math="D = 4 + 8" />
+
+<BlockMath math="D = 12" />
+</MathContainer>
+
+Since <InlineMath math="D > 0" />, the roots are distinct, one positive root satisfies region III.
+
+Therefore the total number of solutions is <InlineMath math="4" /> solutions.
+

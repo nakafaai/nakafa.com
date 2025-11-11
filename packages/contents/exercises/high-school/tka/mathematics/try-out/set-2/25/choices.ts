@@ -3,45 +3,45 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "$$3a \\leq x \\leq 2b + a$$",
+      label: "$$0$$",
       value: false,
     },
     {
-      label: "$$x \\geq -b + 3a$$",
+      label: "$$1$$",
       value: false,
     },
     {
-      label: "$$x \\leq b + a$$",
+      label: "$$2$$",
       value: false,
     },
     {
-      label: "$$b - 3a \\leq x \\leq -b + a$$",
+      label: "$$3$$",
       value: false,
     },
     {
-      label: "$$-b + 3a \\leq x \\leq b + a$$",
+      label: "$$4$$",
       value: true,
     },
   ],
   en: [
     {
-      label: "$$3a \\leq x \\leq 2b + a$$",
+      label: "$$0$$",
       value: false,
     },
     {
-      label: "$$x \\geq -b + 3a$$",
+      label: "$$1$$",
       value: false,
     },
     {
-      label: "$$x \\leq b + a$$",
+      label: "$$2$$",
       value: false,
     },
     {
-      label: "$$b - 3a \\leq x \\leq -b + a$$",
+      label: "$$3$$",
       value: false,
     },
     {
-      label: "$$-b + 3a \\leq x \\leq b + a$$",
+      label: "$$4$$",
       value: true,
     },
   ],
