@@ -364,6 +364,8 @@ import { NumberLine } from "@repo/design-system/components/contents/number-line"
 - `start` - Start value (can be `Number.NEGATIVE_INFINITY`)
 - `end` - End value (can be `Number.POSITIVE_INFINITY`)
 - `label` - ReactNode label above segment (typically `<InlineMath math="+" />` or `<InlineMath math="-" />`)
+- `startLabel` - Optional ReactNode for custom start point label (e.g., fractions in LaTeX)
+- `endLabel` - Optional ReactNode for custom end point label (e.g., fractions in LaTeX)
 - `startInclusive` - Boolean, filled dot if true (default: false)
 - `endInclusive` - Boolean, filled dot if true (default: false)
 - `backgroundColor` - String color or "transparent" (default: semi-transparent secondary)
@@ -373,6 +375,7 @@ import { NumberLine } from "@repo/design-system/components/contents/number-line"
 **Implementation Pattern:**
 
 ```jsx
+// Example with integer values
 <NumberLine
   title="Interval Solution"
   description={<>Closed interval from <InlineMath math="-3" /> to <InlineMath math="4" /> with positive values.</>}
@@ -398,12 +401,44 @@ import { NumberLine } from "@repo/design-system/components/contents/number-line"
     }
   ]}
 />
+
+// Example with fractions (using startLabel and endLabel)
+<NumberLine
+  title="Interval Solution"
+  description={<>Interval <InlineMath math="\left[\frac{2}{7}, \frac{4}{5}\right]" /> shows both endpoints included.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: 2/7,
+      endLabel: <InlineMath math="\frac{2}{7}" />,
+      label: <InlineMath math="-" />,
+      backgroundColor: "transparent"
+    },
+    {
+      start: 2/7,
+      end: 4/5,
+      startLabel: <InlineMath math="\frac{2}{7}" />,
+      endLabel: <InlineMath math="\frac{4}{5}" />,
+      label: <InlineMath math="+" />,
+      startInclusive: true,
+      endInclusive: true
+    },
+    {
+      start: 4/5,
+      end: Number.POSITIVE_INFINITY,
+      startLabel: <InlineMath math="\frac{4}{5}" />,
+      label: <InlineMath math="-" />,
+      backgroundColor: "transparent"
+    }
+  ]}
+/>
 ```
 
 **Best Practices:**
 
 - **Always use InlineMath for numbers** in title, description, and labels
 - **Use Fragment `<>...</>`** to wrap description with mixed text and InlineMath
+- **Use startLabel/endLabel for fractions** - display fractions in LaTeX format instead of decimals
 - **Infinity segments auto-hide points** - no need to set `showPoints: false`
 - **Use `backgroundColor: "transparent"`** for segments without shading
 - **Inclusive endpoints** - set `startInclusive`/`endInclusive: true` for filled dots

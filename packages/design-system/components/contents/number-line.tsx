@@ -19,7 +19,11 @@ type NumberLineSegment = {
   /** Whether the end value is inclusive */
   endInclusive?: boolean;
   /** The label of the segment */
-  label?: string;
+  label?: ReactNode;
+  /** Custom label for the start point (e.g., fraction in LaTeX) */
+  startLabel?: ReactNode;
+  /** Custom label for the end point (e.g., fraction in LaTeX) */
+  endLabel?: ReactNode;
   /** Whether the segment is shaded */
   shaded?: boolean;
   /** Whether the segment should show points */
@@ -169,7 +173,9 @@ export function NumberLine({
                           )}
                         />
                         <div className="-translate-x-1/2 absolute top-6 left-1/2 whitespace-nowrap text-sm">
-                          <InlineMath math={segment.start.toString()} />
+                          {segment.startLabel ?? (
+                            <InlineMath math={segment.start.toString()} />
+                          )}
                         </div>
                       </div>
                     )}
@@ -188,7 +194,9 @@ export function NumberLine({
                           )}
                         />
                         <div className="-translate-x-1/2 absolute top-6 left-1/2 whitespace-nowrap text-sm">
-                          <InlineMath math={segment.end.toString()} />
+                          {segment.endLabel ?? (
+                            <InlineMath math={segment.end.toString()} />
+                          )}
                         </div>
                       </div>
                     )}
