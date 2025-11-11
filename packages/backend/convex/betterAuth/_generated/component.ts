@@ -1,6 +1,6 @@
 /* eslint-disable */
 /**
- * Generated `api` utility.
+ * Generated `ComponentApi` utility.
  *
  * THIS CODE IS AUTOMATICALLY GENERATED.
  *
@@ -8,96 +8,21 @@
  * @module
  */
 
-import type * as auth from "../auth.js";
-import type * as chats_mutations from "../chats/mutations.js";
-import type * as chats_queries from "../chats/queries.js";
-import type * as chats_utils from "../chats/utils.js";
-import type * as comments_mutations from "../comments/mutations.js";
-import type * as comments_queries from "../comments/queries.js";
-import type * as comments_utils from "../comments/utils.js";
-import type * as customers_actions from "../customers/actions.js";
-import type * as customers_mutations from "../customers/mutations.js";
-import type * as customers_queries from "../customers/queries.js";
-import type * as customers_utils from "../customers/utils.js";
-import type * as functions from "../functions.js";
-import type * as http from "../http.js";
-import type * as migrations from "../migrations.js";
-import type * as polyfills from "../polyfills.js";
-import type * as routes_constants from "../routes/constants.js";
-import type * as routes_middleware_auth from "../routes/middleware/auth.js";
-import type * as routes_polar from "../routes/polar.js";
-import type * as routes_v1_index from "../routes/v1/index.js";
-import type * as subscriptions_mutations from "../subscriptions/mutations.js";
-import type * as subscriptions_utils from "../subscriptions/utils.js";
-import type * as users_mutations from "../users/mutations.js";
-import type * as users_queries from "../users/queries.js";
-import type * as utils_helper from "../utils/helper.js";
-import type * as utils_polar from "../utils/polar.js";
-import type * as utils_type from "../utils/type.js";
-
-import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
-} from "convex/server";
-
-declare const fullApi: ApiFromModules<{
-  auth: typeof auth;
-  "chats/mutations": typeof chats_mutations;
-  "chats/queries": typeof chats_queries;
-  "chats/utils": typeof chats_utils;
-  "comments/mutations": typeof comments_mutations;
-  "comments/queries": typeof comments_queries;
-  "comments/utils": typeof comments_utils;
-  "customers/actions": typeof customers_actions;
-  "customers/mutations": typeof customers_mutations;
-  "customers/queries": typeof customers_queries;
-  "customers/utils": typeof customers_utils;
-  functions: typeof functions;
-  http: typeof http;
-  migrations: typeof migrations;
-  polyfills: typeof polyfills;
-  "routes/constants": typeof routes_constants;
-  "routes/middleware/auth": typeof routes_middleware_auth;
-  "routes/polar": typeof routes_polar;
-  "routes/v1/index": typeof routes_v1_index;
-  "subscriptions/mutations": typeof subscriptions_mutations;
-  "subscriptions/utils": typeof subscriptions_utils;
-  "users/mutations": typeof users_mutations;
-  "users/queries": typeof users_queries;
-  "utils/helper": typeof utils_helper;
-  "utils/polar": typeof utils_polar;
-  "utils/type": typeof utils_type;
-}>;
+import type { FunctionReference } from "convex/server";
 
 /**
- * A utility for referencing Convex functions in your app's public API.
+ * A utility for referencing a Convex component's exposed API.
  *
+ * Useful when expecting a parameter like `components.myComponent`.
  * Usage:
- * ```js
- * const myFunctionReference = api.myModule.myFunction;
+ * ```ts
+ * async function myFunction(ctx: QueryCtx, component: ComponentApi) {
+ *   return ctx.runQuery(component.someFile.someQuery, { ...args });
+ * }
  * ```
  */
-export declare const api: FilterApi<
-  typeof fullApi,
-  FunctionReference<any, "public">
->;
-
-/**
- * A utility for referencing Convex functions in your app's internal API.
- *
- * Usage:
- * ```js
- * const myFunctionReference = internal.myModule.myFunction;
- * ```
- */
-export declare const internal: FilterApi<
-  typeof fullApi,
-  FunctionReference<any, "internal">
->;
-
-export declare const components: {
-  betterAuth: {
+export type ComponentApi<Name extends string | undefined = string | undefined> =
+  {
     adapter: {
       create: FunctionReference<
         "mutation",
@@ -225,7 +150,8 @@ export declare const components: {
           onCreateHandle?: string;
           select?: Array<string>;
         },
-        any
+        any,
+        Name
       >;
       deleteMany: FunctionReference<
         "mutation",
@@ -554,7 +480,8 @@ export declare const components: {
             numItems: number;
           };
         },
-        any
+        any,
+        Name
       >;
       deleteOne: FunctionReference<
         "mutation",
@@ -875,7 +802,8 @@ export declare const components: {
               };
           onDeleteHandle?: string;
         },
-        any
+        any,
+        Name
       >;
       findMany: FunctionReference<
         "query",
@@ -926,7 +854,8 @@ export declare const components: {
               | null;
           }>;
         },
-        any
+        any,
+        Name
       >;
       findOne: FunctionReference<
         "query",
@@ -967,13 +896,15 @@ export declare const components: {
               | null;
           }>;
         },
-        any
+        any,
+        Name
       >;
       migrationRemoveUserId: FunctionReference<
         "mutation",
         "internal",
         { userId: string },
-        any
+        any,
+        Name
       >;
       updateMany: FunctionReference<
         "mutation",
@@ -1393,7 +1324,8 @@ export declare const components: {
             numItems: number;
           };
         },
-        any
+        any,
+        Name
       >;
       updateOne: FunctionReference<
         "mutation",
@@ -1805,7 +1737,8 @@ export declare const components: {
               };
           onUpdateHandle?: string;
         },
-        any
+        any,
+        Name
       >;
     };
     auth: {
@@ -1836,7 +1769,8 @@ export declare const components: {
           start?: null | string;
           updatedAt: number;
           userId: string;
-        }>
+        }>,
+        Name
       >;
       getUserByEmail: FunctionReference<
         "query",
@@ -1855,19 +1789,22 @@ export declare const components: {
           updatedAt: number;
           userId?: null | string;
           username?: null | string;
-        }
+        },
+        Name
       >;
       setUserId: FunctionReference<
         "mutation",
         "internal",
         { authId: string; userId: string },
-        any
+        any,
+        Name
       >;
       updateUserName: FunctionReference<
         "mutation",
         "internal",
         { authId: string; name: string },
-        any
+        any,
+        Name
       >;
       verifyApiKey: FunctionReference<
         "mutation",
@@ -1877,93 +1814,8 @@ export declare const components: {
           error: null | { code: string; message: string };
           userId: null | string;
           valid: boolean;
-        }
-      >;
-    };
-  };
-  migrations: {
-    lib: {
-      cancel: FunctionReference<
-        "mutation",
-        "internal",
-        { name: string },
-        {
-          batchSize?: number;
-          cursor?: string | null;
-          error?: string;
-          isDone: boolean;
-          latestEnd?: number;
-          latestStart: number;
-          name: string;
-          next?: Array<string>;
-          processed: number;
-          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
-        }
-      >;
-      cancelAll: FunctionReference<
-        "mutation",
-        "internal",
-        { sinceTs?: number },
-        Array<{
-          batchSize?: number;
-          cursor?: string | null;
-          error?: string;
-          isDone: boolean;
-          latestEnd?: number;
-          latestStart: number;
-          name: string;
-          next?: Array<string>;
-          processed: number;
-          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
-        }>
-      >;
-      clearAll: FunctionReference<
-        "mutation",
-        "internal",
-        { before?: number },
-        null
-      >;
-      getStatus: FunctionReference<
-        "query",
-        "internal",
-        { limit?: number; names?: Array<string> },
-        Array<{
-          batchSize?: number;
-          cursor?: string | null;
-          error?: string;
-          isDone: boolean;
-          latestEnd?: number;
-          latestStart: number;
-          name: string;
-          next?: Array<string>;
-          processed: number;
-          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
-        }>
-      >;
-      migrate: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          batchSize?: number;
-          cursor?: string | null;
-          dryRun: boolean;
-          fnHandle: string;
-          name: string;
-          next?: Array<{ fnHandle: string; name: string }>;
         },
-        {
-          batchSize?: number;
-          cursor?: string | null;
-          error?: string;
-          isDone: boolean;
-          latestEnd?: number;
-          latestStart: number;
-          name: string;
-          next?: Array<string>;
-          processed: number;
-          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
-        }
+        Name
       >;
     };
   };
-};
