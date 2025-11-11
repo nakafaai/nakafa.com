@@ -37,6 +37,11 @@ export const premiumModels: Model[] = [
     label: "Gemini 2.5 Pro",
   },
   {
+    icon: Moonshot,
+    value: "kimi-k2-thinking",
+    label: "Kimi K2 Thinking",
+  },
+  {
     icon: OpenAI,
     value: "gpt-5",
     label: "GPT 5",

@@ -29,6 +29,7 @@ const languageModels = {
 
   // Moonshot
   "kimi-k2": gateway("moonshotai/kimi-k2-0905"),
+  "kimi-k2-thinking": gateway("moonshotai/kimi-k2-thinking"),
 
   // OpenAI
   "gpt-oss-120b": gateway("openai/gpt-oss-120b"),
