@@ -32,6 +32,8 @@ const formSchema = z.object({
     z.literal("student"),
     z.literal("parent"),
     z.literal("admin"),
+    z.null(),
+    z.undefined(),
   ]),
 });
 type FormSchema = z.infer<typeof formSchema>;
@@ -52,9 +54,14 @@ export function UserSettingsRole({ user }: { user: AppUser }) {
   });
 
   const onSubmit = (values: FormSchema) => {
+    const { role } = values;
+    if (!role) {
+      return;
+    }
+
     startTransition(async () => {
       await updateUserRole({
-        role: values.role,
+        role,
       });
       // Reset form state after successful save
       form.reset(values);
@@ -94,7 +101,7 @@ export function UserSettingsRole({ user }: { user: AppUser }) {
                 <FormLabel className="sr-only">{t("role")}</FormLabel>
                 <FormControl>
                   <Select
-                    defaultValue={field.value}
+                    defaultValue={field.value ?? undefined}
                     onValueChange={field.onChange}
                   >
                     <SelectTrigger className="w-full max-w-xs">
