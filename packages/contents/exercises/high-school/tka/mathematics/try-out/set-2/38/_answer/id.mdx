@@ -1,0 +1,58 @@
+export const metadata = {
+  title: "Pembahasan Soal 38",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/11/2025",
+};
+
+Ingatlah konsep turunan fungsi trigonometri berikut
+
+<MathContainer>
+<BlockMath math="y = a \cdot \sin x \rightarrow y' = a \cdot \cos x" />
+
+<BlockMath math="y = a \cdot \cos x \rightarrow y' = -a \cdot \sin x" />
+</MathContainer>
+
+#### Mencari titik stasioner
+
+Syarat nilai maksimum ketika <InlineMath math="f'(x) = 0" />.
+
+<MathContainer>
+<BlockMath math="f'(x) = 0" />
+
+<BlockMath math="3 \cos x - 3 \sin x = 0" />
+
+<BlockMath math="3 \cos x = 3 \sin x" />
+
+<BlockMath math="\frac{\sin x}{\cos x} = 1" />
+
+<BlockMath math="\tan x = 1" />
+</MathContainer>
+
+Maka nilai <InlineMath math="x" /> yang memenuhi <InlineMath math="\tan x = 1" /> yaitu <InlineMath math="x = \frac{\pi}{4}" /> dan <InlineMath math="x = \frac{5\pi}{4}" />.
+
+#### Menguji nilai maksimum dan minimum
+
+Cek terlebih dahulu mana fungsi yang bernilai maksimum dan minimum.
+
+Untuk nilai <InlineMath math="x = \frac{\pi}{4}" />
+
+<MathContainer>
+<BlockMath math="x = \frac{\pi}{4} \rightarrow f\left(\frac{\pi}{4}\right) = 3 \sin \frac{\pi}{4} + 3 \cos \frac{\pi}{4}" />
+
+<BlockMath math="x = \frac{\pi}{4} \rightarrow f\left(\frac{\pi}{4}\right) = 3\left(\frac{1}{2}\sqrt{2}\right) + 3\left(\frac{1}{2}\sqrt{2}\right)" />
+
+<BlockMath math="x = \frac{\pi}{4} \rightarrow f\left(\frac{\pi}{4}\right) = 3\sqrt{2} \text{ (maks)}" />
+</MathContainer>
+
+Untuk nilai <InlineMath math="x = \frac{5\pi}{4}" />
+
+<MathContainer>
+<BlockMath math="x = \frac{5\pi}{4} \rightarrow f\left(\frac{5\pi}{4}\right) = 3 \sin \frac{5\pi}{4} + 3 \cos \frac{5\pi}{4}" />
+
+<BlockMath math="x = \frac{5\pi}{4} \rightarrow f\left(\frac{5\pi}{4}\right) = 3\left(-\frac{1}{2}\sqrt{2}\right) + 3\left(-\frac{1}{2}\sqrt{2}\right)" />
+
+<BlockMath math="x = \frac{5\pi}{4} \rightarrow f\left(\frac{5\pi}{4}\right) = -3\sqrt{2} \text{ (min)}" />
+</MathContainer>
+
+Maka nilai maksimum dicapai saat <InlineMath math="x = \frac{\pi}{4}" />.
+

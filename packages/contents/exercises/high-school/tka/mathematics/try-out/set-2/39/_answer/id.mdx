@@ -1,0 +1,52 @@
+export const metadata = {
+  title: "Pembahasan Soal 39",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/11/2025",
+};
+
+Diketahui matriks
+
+<BlockMath math="\begin{bmatrix} \tan x & 1 \\ 1 & \tan x \end{bmatrix} \begin{bmatrix} \cos^2 x \\ \sin x \cos x \end{bmatrix} = \begin{bmatrix} a \\ b \end{bmatrix}" />
+
+#### Kalikan matriks
+
+Ini merupakan perkalian matriks, sehingga
+
+<BlockMath math="\begin{bmatrix} a \\ b \end{bmatrix} = \begin{bmatrix} \tan x \cdot \cos^2 x + \sin x \cdot \cos x \\ \cos^2 x + \tan x \cdot \sin x \cos x \end{bmatrix}" />
+
+Ubah <InlineMath math="\tan x = \frac{\sin x}{\cos x}" />, menjadi
+
+<BlockMath math="\begin{bmatrix} a \\ b \end{bmatrix} = \begin{bmatrix} \left(\frac{\sin x}{\cos x}\right) \cdot \cos^2 x + \sin x \cdot \cos x \\ \cos^2 x + \left(\frac{\sin x}{\cos x}\right) \cdot \sin x \cos x \end{bmatrix}" />
+
+Sederhanakan menjadi
+
+<MathContainer>
+<BlockMath math="\begin{bmatrix} a \\ b \end{bmatrix} = \begin{bmatrix} \sin x \cdot \cos x + \sin x \cdot \cos x \\ \cos^2 x + \sin^2 x \end{bmatrix}" />
+
+<BlockMath math="\begin{bmatrix} a \\ b \end{bmatrix} = \begin{bmatrix} 2 \sin x \cdot \cos x \\ \sin^2 x + \cos^2 x \end{bmatrix}" />
+</MathContainer>
+
+Kita tahu bahwa nilai <InlineMath math="2 \sin x \cdot \cos x = \sin 2x" /> dan nilai <InlineMath math="\sin^2 x + \cos^2 x = 1" />, maka
+
+<BlockMath math="\begin{bmatrix} a \\ b \end{bmatrix} = \begin{bmatrix} \sin 2x \\ 1 \end{bmatrix}" />
+
+Jadi, nilai <InlineMath math="a = \sin 2x" /> dan <InlineMath math="b = 1" />.
+
+#### Substitusi ke kondisi yang diberikan
+
+Substitusi <InlineMath math="b = 1" /> ke <InlineMath math="b = 2a" /> sehingga dapat <InlineMath math="a = \frac{1}{2}" />.
+
+Kemudian, substitusi <InlineMath math="a = \frac{1}{2}" /> ke <InlineMath math="a = \sin 2x" /> sehingga dapat <InlineMath math="\sin 2x = \frac{1}{2}" />.
+
+Nilai <InlineMath math="2x" /> yang memenuhi adalah
+
+<MathContainer>
+<BlockMath math="2x_1 = \frac{\pi}{6} + k \cdot 2\pi \quad \text{atau} \quad 2x_2 = \frac{5\pi}{6} + k \cdot 2\pi" />
+
+<BlockMath math="x_1 = \frac{\pi}{12} + k\pi \quad \text{atau} \quad x_2 = \frac{5\pi}{12} + k\pi" />
+</MathContainer>
+
+Nilai <InlineMath math="x" /> yang mememnuhi adalah <InlineMath math="\frac{\pi}{12}" /> atau <InlineMath math="\frac{5\pi}{12}" />.
+
+Jadi, pernyataan yang benar adalah pernyataan kedua dan keempat.
+
