@@ -31,7 +31,7 @@ const formSchema = z.object({
     z.literal("teacher"),
     z.literal("student"),
     z.literal("parent"),
-    z.literal("admin"),
+    z.literal("administrator"),
     z.null(),
     z.undefined(),
   ]),

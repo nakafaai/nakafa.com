@@ -9,5 +9,5 @@ export const roles = [
   { value: "teacher", icon: SpeechIcon },
   { value: "student", icon: GraduationCapIcon },
   { value: "parent", icon: UsersIcon },
-  { value: "admin", icon: SchoolIcon },
+  { value: "administrator", icon: SchoolIcon },
 ] as const;

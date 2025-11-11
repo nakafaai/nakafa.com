@@ -130,7 +130,7 @@
     "teacher": "Guru",
     "student": "Siswa",
     "parent": "Orang tua",
-    "admin": "Administrator",
+    "administrator": "Administrator",
     "select-role": "Pilih peran kamu",
     "button": "Mulai belajar"
   },
@@ -269,7 +269,7 @@
     "teacher": "Guru",
     "student": "Siswa",
     "parent": "Orang tua",
-    "admin": "Administrator",
+    "administrator": "Administrator",
     "save": "Simpan",
     "chat": "Obrolan",
     "developers": "Developer",

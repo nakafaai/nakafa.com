@@ -12,7 +12,7 @@ export const updateUserRole = mutation({
       v.literal("teacher"),
       v.literal("student"),
       v.literal("parent"),
-      v.literal("admin")
+      v.literal("administrator")
     ),
   },
   handler: async (ctx, args) => {

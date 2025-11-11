@@ -130,7 +130,7 @@
     "teacher": "Teacher",
     "student": "Student",
     "parent": "Parent",
-    "admin": "Administrator",
+    "administrator": "Administrator",
     "select-role": "Select your role",
     "button": "Start learning"
   },
@@ -269,7 +269,7 @@
     "teacher": "Teacher",
     "student": "Student",
     "parent": "Parent",
-    "admin": "Administrator",
+    "administrator": "Administrator",
     "save": "Save",
     "chat": "Chat",
     "developers": "Developers",

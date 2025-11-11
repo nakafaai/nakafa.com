@@ -26,7 +26,7 @@ export function School({ children }: Props) {
       redirect("/school/parent");
     }
 
-    if (user.appUser.role === "admin") {
+    if (user.appUser.role === "administrator") {
       redirect("/school/admin");
     }
 
