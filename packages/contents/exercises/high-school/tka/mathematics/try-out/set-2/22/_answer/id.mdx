@@ -1,0 +1,112 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Pembahasan Soal 22",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Nilai mutlaknya memiliki definisi yaitu
+
+<BlockMath math="|x + 3| = \begin{cases} x + 3 ; \text{untuk } x \geq -3 \\ -(x + 3) ; \text{untuk } x < -3 \end{cases}" />
+
+Selesaikan pertidaksamaannya
+
+Untuk <InlineMath math="x \geq -3" />
+
+<MathContainer>
+<BlockMath math="9 - x^2 \geq |x + 3|" />
+
+<BlockMath math="9 - x^2 \geq x + 3" />
+
+<BlockMath math="-x^2 - x + 6 \geq 0" />
+
+<BlockMath math="(-x + 2)(x + 3) \geq 0" />
+
+<BlockMath math="x = 2 \vee x = -3" />
+</MathContainer>
+
+Membuat garis bilangannya
+
+<NumberLine
+  title={<>Garis Bilangan untuk <InlineMath math="x \geq -3" /></>}
+  description={<>Interval <InlineMath math="[-3, 2]" /> menunjukkan kedua ujung termasuk dalam himpunan penyelesaian.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: -3,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: -3,
+      end: 2,
+      startInclusive: true,
+      endInclusive: true,
+      shaded: true,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 2,
+      end: Number.POSITIVE_INFINITY,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+  ]}
+/>
+
+Dari syarat <InlineMath math="x \geq -3" /> dan daerah garis bilangan diatas, diperoleh himpunan penyelesaian <InlineMath math="\{-3 \leq x \leq 2\}" />.
+
+Untuk <InlineMath math="x < -3" />
+
+<MathContainer>
+<BlockMath math="9 - x^2 \geq |x + 3|" />
+
+<BlockMath math="9 - x^2 \geq -(x + 3)" />
+
+<BlockMath math="-x^2 + x + 12 \geq 0" />
+
+<BlockMath math="-(x - 4)(x + 3) \geq 0" />
+
+<BlockMath math="x = 4 \vee x = -3" />
+</MathContainer>
+
+Garis bilangannya
+
+<NumberLine
+  title={<>Garis Bilangan untuk <InlineMath math="x < -3" /></>}
+  description={<>Interval <InlineMath math="[-3, 4]" /> menunjukkan kedua ujung termasuk dalam himpunan penyelesaian.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: -3,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: -3,
+      end: 4,
+      startInclusive: true,
+      endInclusive: true,
+      shaded: true,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 4,
+      end: Number.POSITIVE_INFINITY,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+  ]}
+/>
+
+Dari syarat <InlineMath math="x < -3" /> dan daerah garis bilangan kedua diatas diperoleh bahwa himpunan penyelesaiannya adalah himpunan kosong.
+
+Maka solusi gabungannya adalah
+
+<MathContainer>
+<BlockMath math="HP = \{-3 \leq x \leq 2\} \cup \{ \quad \}" />
+
+<BlockMath math="HP = \{-3 \leq x \leq 2\}" />
+</MathContainer>
+

@@ -80,13 +80,13 @@ export function NumberLine({
     const showPoints =
       segment.showPoints ?? !(isStartInfinity || isEndInfinity);
 
-    let roundedClass = "rounded";
+    let roundedClass = "rounded-sm";
     if (isStartInfinity && isEndInfinity) {
       roundedClass = "";
     } else if (isStartInfinity) {
-      roundedClass = "rounded-r";
+      roundedClass = "rounded-r-sm";
     } else if (isEndInfinity) {
-      roundedClass = "rounded-l";
+      roundedClass = "rounded-l-sm";
     }
 
     return {
@@ -111,15 +111,13 @@ export function NumberLine({
       <CardContent>
         <div className="mx-auto">
           <div className="relative h-20 w-full">
-            <div className="absolute top-1/2 h-0.25 w-full bg-foreground" />
-
             {processedSegments.map((segment) => (
               <div key={`bg-${segment.start}-${segment.end}-${segment.index}`}>
                 {segment.shaded && (
                   <div
                     className={cn(
                       "-translate-y-1/2 absolute top-1/2 h-8",
-                      !segment.bgColor && "bg-secondary/30",
+                      !segment.bgColor && "bg-chart-1/80",
                       segment.roundedClass
                     )}
                     style={{
@@ -133,6 +131,8 @@ export function NumberLine({
                 )}
               </div>
             ))}
+
+            <div className="absolute top-1/2 h-0.25 w-full bg-foreground" />
 
             {processedSegments.map((segment) => (
               <div

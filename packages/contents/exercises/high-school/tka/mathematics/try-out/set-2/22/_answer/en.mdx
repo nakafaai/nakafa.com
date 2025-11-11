@@ -1,0 +1,112 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Solution to Question 22",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+The absolute value has the definition
+
+<BlockMath math="|x + 3| = \begin{cases} x + 3 ; \text{for } x \geq -3 \\ -(x + 3) ; \text{for } x < -3 \end{cases}" />
+
+Solve the inequality
+
+For <InlineMath math="x \geq -3" />
+
+<MathContainer>
+<BlockMath math="9 - x^2 \geq |x + 3|" />
+
+<BlockMath math="9 - x^2 \geq x + 3" />
+
+<BlockMath math="-x^2 - x + 6 \geq 0" />
+
+<BlockMath math="(-x + 2)(x + 3) \geq 0" />
+
+<BlockMath math="x = 2 \vee x = -3" />
+</MathContainer>
+
+Create the number line
+
+<NumberLine
+  title={<>Number Line for <InlineMath math="x \geq -3" /></>}
+  description={<>Interval <InlineMath math="[-3, 2]" /> indicates both endpoints are included in the solution set.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: -3,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: -3,
+      end: 2,
+      startInclusive: true,
+      endInclusive: true,
+      shaded: true,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 2,
+      end: Number.POSITIVE_INFINITY,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+  ]}
+/>
+
+From the condition <InlineMath math="x \geq -3" /> and the number line region above, the solution set is <InlineMath math="\{-3 \leq x \leq 2\}" />.
+
+For <InlineMath math="x < -3" />
+
+<MathContainer>
+<BlockMath math="9 - x^2 \geq |x + 3|" />
+
+<BlockMath math="9 - x^2 \geq -(x + 3)" />
+
+<BlockMath math="-x^2 + x + 12 \geq 0" />
+
+<BlockMath math="-(x - 4)(x + 3) \geq 0" />
+
+<BlockMath math="x = 4 \vee x = -3" />
+</MathContainer>
+
+The number line
+
+<NumberLine
+  title={<>Number Line for <InlineMath math="x < -3" /></>}
+  description={<>Interval <InlineMath math="[-3, 4]" /> indicates both endpoints are included in the solution set.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: -3,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: -3,
+      end: 4,
+      startInclusive: true,
+      endInclusive: true,
+      shaded: true,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 4,
+      end: Number.POSITIVE_INFINITY,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+  ]}
+/>
+
+From the condition <InlineMath math="x < -3" /> and the second number line region above, the solution set is an empty set.
+
+Therefore the combined solution is
+
+<MathContainer>
+<BlockMath math="HP = \{-3 \leq x \leq 2\} \cup \{ \quad \}" />
+
+<BlockMath math="HP = \{-3 \leq x \leq 2\}" />
+</MathContainer>
+
