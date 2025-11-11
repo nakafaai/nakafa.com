@@ -24,12 +24,13 @@
     "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker,recharts,better-auth,@polar-sh/better-auth,@polar-sh/sdk",
     "bump-ui": "npx shadcn@latest add --all --overwrite -c packages/design-system",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/.turbo packages/*/.turbo .turbo .next apps/*/.next",
+    "clean:ts": "find . -name '*.tsbuildinfo' -type f -delete && find . -name 'tsconfig.tsbuildinfo' -type f -delete",
     "deps-check-www": "cd apps/www && depcheck --ignore-dirs=node_modules || true",
     "deps-check-api": "cd apps/api && depcheck --ignore-dirs=node_modules || true",
     "deps-check-mcp": "cd apps/mcp && depcheck --ignore-dirs=node_modules || true"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.4",
+    "@biomejs/biome": "2.3.5",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.6.1",
     "@types/node": "^24.10.0",

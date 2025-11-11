@@ -114,21 +114,21 @@ export async function getContents({
   }
 
   const promises = result.map(async (item) => {
-    const content = await getContent(locale, item.slug.join("/"));
+    // Cache joined slug to avoid computing it multiple times
+    const joinedSlug = item.slug.join("/");
+
+    const content = await getContent(locale, joinedSlug);
     if (!content) {
       return null;
     }
 
-    const url = new URL(
-      `/${locale}/${item.slug.join("/")}`,
-      "https://nakafa.com"
-    );
+    const url = new URL(`/${locale}/${joinedSlug}`, "https://nakafa.com");
 
     const { data, error } = ContentSchema.safeParse({
       metadata: content.metadata,
       raw: content.raw,
       url: url.toString(),
-      slug: item.slug.join("/"),
+      slug: joinedSlug,
       locale,
     });
 
@@ -284,8 +284,6 @@ export async function getReferences(filePath: string): Promise<Reference[]> {
 export function getFolderChildNames(folder: string, exclude?: string[]) {
   const defaultExclude = ["_", "node_modules", ".", "dist"];
 
-  const effectiveExclude = [...defaultExclude, ...(exclude ?? [])];
-
   try {
     // Resolve path relative to the contents directory
     const contentDir = path.resolve(contentsDir, folder);
@@ -298,19 +296,40 @@ export function getFolderChildNames(folder: string, exclude?: string[]) {
     // Read directory synchronously - required for Next.js static generation
     const files = fs.readdirSync(contentDir, { withFileTypes: true });
 
-    // Filter directories and return their names
-    const dirs = files.filter((dirent) => dirent.isDirectory());
-    let dirNames = dirs.map((dirent) => dirent.name);
+    // Combine exclusion logic - only allocate array once if exclude provided
+    const hasCustomExclude = exclude && exclude.length > 0;
 
-    // Filter out excluded directories if exclude parameter is provided
-    if (effectiveExclude.length > 0) {
-      dirNames = dirNames.filter(
-        (name) =>
-          !effectiveExclude.some(
-            (excludeItem) =>
-              name === excludeItem || name.startsWith(excludeItem)
-          )
-      );
+    // Filter and map in one pass for better performance
+    const dirNames: string[] = [];
+    for (const dirent of files) {
+      if (!dirent.isDirectory()) {
+        continue;
+      }
+
+      const name = dirent.name;
+
+      // Check default exclusions first (most common case)
+      let shouldExclude = false;
+      for (const excludeItem of defaultExclude) {
+        if (name === excludeItem || name.startsWith(excludeItem)) {
+          shouldExclude = true;
+          break;
+        }
+      }
+
+      // Check custom exclusions only if needed
+      if (!shouldExclude && hasCustomExclude) {
+        for (const excludeItem of exclude) {
+          if (name === excludeItem || name.startsWith(excludeItem)) {
+            shouldExclude = true;
+            break;
+          }
+        }
+      }
+
+      if (!shouldExclude) {
+        dirNames.push(name);
+      }
     }
 
     return dirNames;
@@ -320,47 +339,52 @@ export function getFolderChildNames(folder: string, exclude?: string[]) {
 }
 
 /**
- * Recursively builds slug arrays from nested folder structure
+ * Iteratively builds slug arrays from nested folder structure
+ * Optimized to avoid call stack overhead and reduce array operations
  * @param basePath - Base path to start folder traversal
- * @param currentPath - Current path traversed (used internally for recursion)
- * @param result - Current result array (used internally for recursion)
  * @returns Array of string arrays representing possible slug paths
  */
-export function getNestedSlugs(
-  basePath: string,
-  currentPath: string[] = [],
-  result: string[][] = []
-): string[][] {
-  let cleanBasePath = basePath;
-  // if basePath empty string, use "."
-  if (basePath === "") {
-    cleanBasePath = ".";
-  }
+export function getNestedSlugs(basePath: string): string[][] {
+  const cleanBasePath = basePath === "" ? "." : basePath;
+  const results: string[][] = [];
 
-  const fullPath =
-    currentPath.length === 0
-      ? cleanBasePath
-      : `${cleanBasePath}/${currentPath.join("/")}`;
+  // Stack entries: [pathSegments, fullPathString]
+  // By maintaining fullPathString, we avoid repeated joins
+  const stack: [string[], string][] = [[[], cleanBasePath]];
 
-  const children = getFolderChildNames(fullPath);
-
-  if (children.length === 0) {
-    // Add leaf nodes as valid slug paths
-    if (currentPath.length > 0) {
-      result.push([...currentPath]);
+  while (stack.length > 0) {
+    const entry = stack.pop();
+    if (!entry) {
+      continue;
     }
-    return result;
+    const [pathSegments, fullPath] = entry;
+    const children = getFolderChildNames(fullPath);
+
+    if (children.length === 0) {
+      // Add leaf nodes as valid slug paths
+      if (pathSegments.length > 0) {
+        results.push(pathSegments);
+      }
+      continue;
+    }
+
+    // Check if there are any files at this level
+    if (pathSegments.length > 0) {
+      results.push([...pathSegments]);
+    }
+
+    // Process children in reverse order to maintain the same traversal order as recursion
+    for (let i = children.length - 1; i >= 0; i--) {
+      const child = children[i];
+      // Build new path incrementally to avoid array spreading and joining on each iteration
+      const newSegments = [...pathSegments, child];
+      const newFullPath =
+        pathSegments.length === 0
+          ? `${cleanBasePath}/${child}`
+          : `${fullPath}/${child}`;
+      stack.push([newSegments, newFullPath]);
+    }
   }
 
-  // Check if there are any files at this level
-  if (currentPath.length > 0) {
-    result.push([...currentPath]);
-  }
-
-  // Recursive case: explore children
-  for (const child of children) {
-    getNestedSlugs(basePath, [...currentPath, child], result);
-  }
-
-  return result;
+  return results;
 }
