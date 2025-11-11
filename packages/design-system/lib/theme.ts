@@ -8,6 +8,7 @@ import {
   CloudyIcon,
   CoffeeIcon,
   CpuIcon,
+  CupSodaIcon,
   Disc3Icon,
   EclipseIcon,
   GemIcon,
@@ -78,6 +79,10 @@ export const themes = [
   {
     value: "luxury",
     icon: GemIcon,
+  },
+  {
+    value: "matcha",
+    icon: CupSodaIcon,
   },
   {
     value: "nature",
