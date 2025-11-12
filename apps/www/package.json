@@ -72,10 +72,10 @@
   "devDependencies": {
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.10.0",
+    "@types/node": "24.10.1",
     "@types/react": "19.2.3",
-    "@types/react-dom": "19.2.2",
-    "jsdom": "^27.1.0",
+    "@types/react-dom": "19.2.3",
+    "jsdom": "^27.2.0",
     "pagefind": "^1.4.0",
     "tailwindcss": "^4.1.17",
     "tsx": "^4.20.6",
