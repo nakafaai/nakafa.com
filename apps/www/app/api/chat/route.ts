@@ -86,6 +86,9 @@ export async function POST(req: Request) {
     token = await getToken();
   }
 
+  // Get user role after token is available
+  const userRole = token ? await getUserRole(token) : undefined;
+
   const currentDate = new Date().toLocaleString("en-US", {
     year: "numeric",
     month: "long",
@@ -116,6 +119,7 @@ export async function POST(req: Request) {
       countryRegion: countryRegion ?? "Unknown",
       country: country ?? "Unknown",
     },
+    userRole,
     url,
   });
 
@@ -261,6 +265,7 @@ export async function POST(req: Request) {
             countryRegion: countryRegion ?? "Unknown",
             country: country ?? "Unknown",
           },
+          userRole,
         }),
         messages: finalMessages,
         stopWhen: stepCountIs(MAX_STEPS),
@@ -463,4 +468,19 @@ async function getVerified(url: string) {
   }
 
   return contentData !== null;
+}
+
+async function getUserRole(token: string) {
+  const user = await fetchQuery(
+    convexApi.auth.getCurrentUser,
+    {},
+    {
+      token,
+    }
+  );
+  const userRole = user?.appUser?.role;
+  if (userRole === null) {
+    return;
+  }
+  return userRole;
 }
