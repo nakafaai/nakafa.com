@@ -21,7 +21,7 @@ export function SearchMenu() {
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton
-          className="cursor-pointer justify-between text-muted-foreground"
+          className="justify-between text-muted-foreground"
           isActive={open}
           onClick={() => setOpen(true)}
           variant="outline"

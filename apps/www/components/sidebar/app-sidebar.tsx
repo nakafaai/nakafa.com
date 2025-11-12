@@ -9,6 +9,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
 import { cn } from "@repo/design-system/lib/utils";
+import { ArrowUpRightIcon, GalleryVerticalEndIcon } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
@@ -53,6 +54,21 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                   <span className="truncate text-xs">
                     {t("very-short-description")}
                   </span>
+                </div>
+              </NavigationLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild className="group/school justify-between">
+              <NavigationLink href="/school" title="Nakafa School">
+                <div className="flex items-center gap-2">
+                  <GalleryVerticalEndIcon className="size-4" />
+                  Nakafa School
+                </div>
+                <div className="hidden items-center opacity-0 transition-opacity ease-out group-hover/school:opacity-100 lg:flex">
+                  <ArrowUpRightIcon className="size-3.5 shrink-0" />
                 </div>
               </NavigationLink>
             </SidebarMenuButton>
