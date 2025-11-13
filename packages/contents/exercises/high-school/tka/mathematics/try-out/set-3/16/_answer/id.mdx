@@ -1,0 +1,102 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Pembahasan Soal 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Syarat agar pertidaksamaan terpenuhi adalah
+
+<MathContainer>
+<BlockMath math="x^2 - x > 0" />
+
+<BlockMath math="x(x - 1) > 0" />
+
+<BlockMath math="x = 0 \cup x = 1" />
+</MathContainer>
+
+Buat garis bilangannya
+
+<NumberLine
+  title={<>Garis Bilangan Syarat</>}
+  description={<>Penyelesaian <InlineMath math="x^2 - x > 0" /> adalah <InlineMath math="x < 0" /> atau <InlineMath math="x > 1" />.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: 0,
+      endLabel: <InlineMath math="0" />,
+      shaded: true,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 0,
+      end: 1,
+      startLabel: <InlineMath math="0" />,
+      endLabel: <InlineMath math="1" />,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: 1,
+      end: Number.POSITIVE_INFINITY,
+      startLabel: <InlineMath math="1" />,
+      shaded: true,
+      label: <InlineMath math="+" />,
+    },
+  ]}
+/>
+
+Maka penyelesaiannya <InlineMath math="\{x < 0 \cup x > 1\}" />. Sedangkan solusi umum dari pertidaksamannya adalah
+
+<MathContainer>
+<BlockMath math="\log_2(x^2 - x) \leq 1" />
+
+<BlockMath math="\log_2(x^2 - x) \leq \log_2 2" />
+
+<BlockMath math="x^2 - x \leq 2" />
+
+<BlockMath math="x^2 - x - 2 \leq 0" />
+
+<BlockMath math="(x + 1)(x - 2) \leq 0" />
+
+<BlockMath math="x = -1 \cup x = 2" />
+</MathContainer>
+
+Garis bilangan kedua
+
+<NumberLine
+  title={<>Garis Bilangan Penyelesaian</>}
+  description={<>Penyelesaian <InlineMath math="x^2 - x - 2 \leq 0" /> adalah <InlineMath math="-1 \leq x \leq 2" />.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: -1,
+      endLabel: <InlineMath math="-1" />,
+      shaded: false,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: -1,
+      end: 2,
+      startLabel: <InlineMath math="-1" />,
+      endLabel: <InlineMath math="2" />,
+      startInclusive: true,
+      endInclusive: true,
+      shaded: true,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: 2,
+      end: Number.POSITIVE_INFINITY,
+      startLabel: <InlineMath math="2" />,
+      shaded: false,
+      label: <InlineMath math="+" />,
+    },
+  ]}
+/>
+
+Penyelesaiannya adalah <InlineMath math="\{-1 \leq x \leq 2\}" />. Maka solusi gabungannya adalah
+
+<BlockMath math="\{x < 0 \cup x > 1\} \cap \{-1 \leq x \leq 2\} = \{-1 \leq x < 0 \cup 1 < x \leq 2\}" />
+

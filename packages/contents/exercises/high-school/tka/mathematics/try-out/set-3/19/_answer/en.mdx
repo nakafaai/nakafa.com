@@ -1,0 +1,79 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Solution for Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+The logarithmic inequality has special solutions for its conditions
+
+<MathContainer>
+<BlockMath math="2x - 1 > 0 \rightarrow x > \frac{1}{2}" />
+
+<BlockMath math="2 - x > 0 \rightarrow x < 2" />
+
+<BlockMath math="x > 0" />
+</MathContainer>
+
+The special solution is <InlineMath math="\{\frac{1}{2} < x < 2\}" />. The general solution of the inequality is
+
+<MathContainer>
+<BlockMath math="\log_{\frac{1}{2}}(2x - 1) + \log_{\frac{1}{2}}(2 - x) \geq 2 \log_{\frac{1}{2}} x" />
+
+<BlockMath math="\log_{\frac{1}{2}}((2x - 1)(2 - x)) \geq \log_{\frac{1}{2}} x^2" />
+
+<BlockMath math="\log_{\frac{1}{2}}(-2x^2 + 5x - 2) \geq \log_{\frac{1}{2}} x^2" />
+
+<BlockMath math="-2x^2 + 5x - 2 \leq x^2" />
+
+<BlockMath math="-3x^2 + 5x - 2 \leq 0" />
+</MathContainer>
+
+Multiply by <InlineMath math="-1" />, so the sign is flipped
+
+<MathContainer>
+<BlockMath math="3x^2 - 5x + 2 \geq 0" />
+
+<BlockMath math="(3x - 2)(x - 1) \geq 0" />
+
+<BlockMath math="x = \frac{2}{3} \cup x = 1" />
+</MathContainer>
+
+Number line
+
+<NumberLine
+  title={<>Number Line Solution</>}
+  description={<>The solution of <InlineMath math="(3x - 2)(x - 1) \geq 0" /> is <InlineMath math="x \leq \frac{2}{3}" /> or <InlineMath math="x \geq 1" />.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: 2/3,
+      endLabel: <InlineMath math="\frac{2}{3}" />,
+      endInclusive: true,
+      shaded: true,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 2/3,
+      end: 1,
+      startLabel: <InlineMath math="\frac{2}{3}" />,
+      endLabel: <InlineMath math="1" />,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: 1,
+      end: Number.POSITIVE_INFINITY,
+      startLabel: <InlineMath math="1" />,
+      startInclusive: true,
+      shaded: true,
+      label: <InlineMath math="+" />,
+    },
+  ]}
+/>
+
+The solution set is <InlineMath math="\{x \leq \frac{2}{3} \cup x \geq 1\}" />. So the intersection of its solutions
+
+<BlockMath math="\left\{\frac{1}{2} < x < 2\right\} \cap \left\{x \leq \frac{2}{3} \cup x \geq 1\right\} = \left\{\frac{1}{2} < x \leq \frac{2}{3} \cup 1 \leq x < 2\right\}" />
+

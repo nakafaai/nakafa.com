@@ -1,0 +1,30 @@
+export const metadata = {
+  title: "Solution for Question 17",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Change the logarithmic form to
+
+<MathContainer>
+<BlockMath math="\log(x^2 + y^2 + 2xy) = 2 \log(x^2 - y^2)" />
+
+<BlockMath math="\log(x + y)^2 = \log(x^2 - y^2)^2" />
+
+<BlockMath math="(x + y)^2 = (x^2 - y^2)^2" />
+
+<BlockMath math="(x + y)^2 = [(x + y)(x - y)]^2" />
+
+<BlockMath math="(x + y)^2 = (x + y)^2(x - y)^2" />
+
+<BlockMath math="1 = (x - y)^2" />
+</MathContainer>
+
+Take the square root of both sides
+
+<BlockMath math="x - y = \pm 1" />
+
+Because <InlineMath math="x > y \geq 1" />, then <InlineMath math="x - y = 1" /> satisfies. So <InlineMath math="x - y = 1 \rightarrow x = y + 1" />. Therefore
+
+<BlockMath math="\log_x(1 + y) = \log_x x = 1" />
+

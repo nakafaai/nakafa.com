@@ -1,0 +1,79 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Pembahasan Soal 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Pertidaksamaan logaritma memiliki solusi khusus untuk syaratnya yaitu
+
+<MathContainer>
+<BlockMath math="2x - 1 > 0 \rightarrow x > \frac{1}{2}" />
+
+<BlockMath math="2 - x > 0 \rightarrow x < 2" />
+
+<BlockMath math="x > 0" />
+</MathContainer>
+
+Solusi khususnya adalah <InlineMath math="\{\frac{1}{2} < x < 2\}" />. Solusi umum dari pertidaksamannya adalah
+
+<MathContainer>
+<BlockMath math="\log_{\frac{1}{2}}(2x - 1) + \log_{\frac{1}{2}}(2 - x) \geq 2 \log_{\frac{1}{2}} x" />
+
+<BlockMath math="\log_{\frac{1}{2}}((2x - 1)(2 - x)) \geq \log_{\frac{1}{2}} x^2" />
+
+<BlockMath math="\log_{\frac{1}{2}}(-2x^2 + 5x - 2) \geq \log_{\frac{1}{2}} x^2" />
+
+<BlockMath math="-2x^2 + 5x - 2 \leq x^2" />
+
+<BlockMath math="-3x^2 + 5x - 2 \leq 0" />
+</MathContainer>
+
+Dikali <InlineMath math="-1" /> maka tanda dibalik
+
+<MathContainer>
+<BlockMath math="3x^2 - 5x + 2 \geq 0" />
+
+<BlockMath math="(3x - 2)(x - 1) \geq 0" />
+
+<BlockMath math="x = \frac{2}{3} \cup x = 1" />
+</MathContainer>
+
+Garis bilangannya
+
+<NumberLine
+  title={<>Garis Bilangan Penyelesaian</>}
+  description={<>Penyelesaian <InlineMath math="(3x - 2)(x - 1) \geq 0" /> adalah <InlineMath math="x \leq \frac{2}{3}" /> atau <InlineMath math="x \geq 1" />.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: 2/3,
+      endLabel: <InlineMath math="\frac{2}{3}" />,
+      endInclusive: true,
+      shaded: true,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 2/3,
+      end: 1,
+      startLabel: <InlineMath math="\frac{2}{3}" />,
+      endLabel: <InlineMath math="1" />,
+      shaded: false,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: 1,
+      end: Number.POSITIVE_INFINITY,
+      startLabel: <InlineMath math="1" />,
+      startInclusive: true,
+      shaded: true,
+      label: <InlineMath math="+" />,
+    },
+  ]}
+/>
+
+Himpunan penyelesaiannya adalah <InlineMath math="\{x \leq \frac{2}{3} \cup x \geq 1\}" />. Maka irisan dari solusinya
+
+<BlockMath math="\left\{\frac{1}{2} < x < 2\right\} \cap \left\{x \leq \frac{2}{3} \cup x \geq 1\right\} = \left\{\frac{1}{2} < x \leq \frac{2}{3} \cup 1 \leq x < 2\right\}" />
+

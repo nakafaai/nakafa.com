@@ -1,0 +1,34 @@
+export const metadata = {
+  title: "Solution for Question 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Let <InlineMath math="p = \log_{10} x = \log x" />, then
+
+<MathContainer>
+<BlockMath math="(2 \log x - 1) \cdot \frac{1}{\log_x 10} = \log 10" />
+
+<BlockMath math="(2 \log_{10} x - 1) \cdot \log_{10} x = 1" />
+
+<BlockMath math="(2p - 1)p = 1" />
+
+<BlockMath math="2p^2 - p - 1 = 0" />
+
+<BlockMath math="(2p + 1)(p - 1) = 0" />
+
+<BlockMath math="p = -\frac{1}{2} \cup p = 1" />
+</MathContainer>
+
+Determining the value of <InlineMath math="x" /> from <InlineMath math="p" />
+
+<MathContainer>
+<BlockMath math="p = -\frac{1}{2} \rightarrow \log_{10} x = -\frac{1}{2} \rightarrow x_1 = 10^{-\frac{1}{2}}" />
+
+<BlockMath math="p = 1 \rightarrow \log_{10} x = 1 \rightarrow x_2 = 10" />
+</MathContainer>
+
+So the product of <InlineMath math="x_1x_2" />
+
+<BlockMath math="10^{-\frac{1}{2}} \cdot 10 = 10^{\frac{1}{2}} = \sqrt{10}" />
+
