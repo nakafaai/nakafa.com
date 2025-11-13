@@ -1,0 +1,38 @@
+export const metadata = {
+  title: "Pembahasan Soal 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Misalkan <InlineMath math="y = x - \frac{\pi}{2}" /> maka <InlineMath math="x = y + \frac{\pi}{2}" />. Selesaikan limit dengan permisalan di atas.
+
+<MathContainer>
+<BlockMath math="= \lim_{y \to 0} \frac{\sec 2\left(y + \frac{\pi}{2}\right) + 2}{\tan 2\left(y + \frac{\pi}{2}\right)}" />
+
+<BlockMath math="= \lim_{y \to 0} \frac{-\sec 2y + 2}{\tan 2y}" />
+
+<BlockMath math="= \lim_{y \to 0} \frac{-\frac{1}{\cos 2y} + 2}{\frac{\sin 2y}{\cos 2y}}" />
+
+<BlockMath math="= \lim_{y \to 0} \frac{\frac{-1 + 2 \cos 2y}{\cos 2y}}{\frac{\sin 2y}{\cos 2y}}" />
+
+<BlockMath math="= \lim_{y \to 0} \frac{-1 + 2 \cos 2y}{\sin 2y}" />
+</MathContainer>
+
+Gunakan konsep L'Hospital
+
+<MathContainer>
+<BlockMath math="= \lim_{y \to 0} \frac{-4 \sin 2y}{2 \cos 2y}" />
+
+<BlockMath math="= \lim_{y \to 0} -2 \frac{\sin 2y}{\cos 2y}" />
+
+<BlockMath math="= \lim_{y \to 0} -2 \tan 2y" />
+
+<BlockMath math="= -2 \tan(2 \cdot 0)" />
+
+<BlockMath math="= -2 \tan 0" />
+
+<BlockMath math="= -2 \cdot 0" />
+
+<BlockMath math="= 0" />
+</MathContainer>
+

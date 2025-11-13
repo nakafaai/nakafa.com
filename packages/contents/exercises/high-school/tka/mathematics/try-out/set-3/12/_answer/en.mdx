@@ -1,0 +1,56 @@
+export const metadata = {
+  title: "Solution for Question 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Let <InlineMath math="x = p" /> for the numerator, then
+
+<MathContainer>
+<BlockMath math="x^3 + px^2 + qx = 0" />
+
+<BlockMath math="p^3 + p \cdot p^2 + q \cdot p = 0" />
+
+<BlockMath math="2p^3 + pq = 0" />
+
+<BlockMath math="2p^2 + q = 0 \quad ...(1)" />
+</MathContainer>
+
+Use L'Hôpital's rule
+
+<MathContainer>
+<BlockMath math="\lim_{x \to p} \frac{3x^2 + 2px + q}{1} = 12" />
+
+<BlockMath math="3p^2 + 2p \cdot p + q = 12" />
+
+<BlockMath math="3p^2 + 2p^2 + q = 12" />
+
+<BlockMath math="5p^2 + q = 12 \quad ...(2)" />
+</MathContainer>
+
+Substitute equation <InlineMath math="(1)" /> into equation <InlineMath math="(2)" />
+
+<MathContainer>
+<BlockMath math="5p^2 + q = 12" />
+
+<BlockMath math="5p^2 + (-2p^2) = 12" />
+
+<BlockMath math="3p^2 = 12" />
+
+<BlockMath math="p^2 = 4" />
+
+<BlockMath math="p = \pm 2" />
+</MathContainer>
+
+Because the condition is <InlineMath math="p > 0" />, then <InlineMath math="p = 2" />. Substitute into
+
+<MathContainer>
+<BlockMath math="2p^2 + q = 0" />
+
+<BlockMath math="2 \cdot 2^2 + q = 0" />
+
+<BlockMath math="q = -8" />
+</MathContainer>
+
+Thus <InlineMath math="p - q = 2 - (-8) = 10" />.
+

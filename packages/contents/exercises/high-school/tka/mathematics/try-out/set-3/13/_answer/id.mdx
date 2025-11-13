@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Pembahasan Soal 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Ingat konsepnya bahwa
+
+<BlockMath math="\lim_{x \to a} \frac{\tan m(x - a)}{n(x - a)} = \frac{m}{n}" />
+
+Maka
+
+<MathContainer>
+<BlockMath math="\lim_{x \to -y} \frac{\tan x + \tan y}{\frac{x^2 - y^2}{-2y^2} \cdot (1 - \tan x \tan y)}" />
+
+<BlockMath math="= \lim_{x \to -y} \frac{1}{\frac{x^2 - y^2}{-2y^2}} \cdot \frac{\tan x + \tan y}{1 - \tan x \tan y}" />
+
+<BlockMath math="= \lim_{x \to -y} \frac{-2y^2}{x^2 - y^2} \cdot \tan(x + y)" />
+
+<BlockMath math="= \lim_{x \to -y} \frac{-2y^2}{(x - y)(x + y)} \cdot \tan(x + y)" />
+
+<BlockMath math="= \lim_{x \to -y} \frac{-2y^2}{x - y} \cdot \frac{\tan(x + y)}{x + y}" />
+</MathContainer>
+
+Karena <InlineMath math="x \to -y" /> maka <InlineMath math="x + y \to 0" />, sehingga <InlineMath math="\lim_{x + y \to 0} \frac{\tan(x + y)}{x + y} = 1" />. Maka
+
+<MathContainer>
+<BlockMath math="= \lim_{x \to -y} \frac{-2y^2}{x - y}" />
+
+<BlockMath math="= \frac{-2y^2}{-y - y}" />
+
+<BlockMath math="= \frac{-2y^2}{-2y}" />
+
+<BlockMath math="= y" />
+</MathContainer>
+

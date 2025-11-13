@@ -1,0 +1,32 @@
+export const metadata = {
+  title: "Pembahasan Soal 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Ubah penyebut menjadi
+
+<MathContainer>
+<BlockMath math="\lim_{x \to a} \frac{(x - a) \tan(b(a - x))}{\cos(c(x - a)) - 1} = d" />
+
+<BlockMath math="\lim_{x \to a} \frac{(x - a) \tan(b(a - x))}{-2 \sin^2\left(\frac{1}{2}c(x - a)\right)} = d" />
+
+<BlockMath math="\lim_{x \to a} \frac{x - a}{-2 \sin\left(\frac{1}{2}c(x - a)\right)} \cdot \frac{\tan(b(a - x))}{\sin\left(\frac{1}{2}c(x - a)\right)} = d" />
+</MathContainer>
+
+Karena <InlineMath math="x \to a" />, maka <InlineMath math="x - a \to 0" /> dan <InlineMath math="a - x \to 0" />. Menggunakan sifat limit <InlineMath math="\lim_{u \to 0} \frac{\sin u}{u} = 1" /> dan <InlineMath math="\lim_{u \to 0} \frac{\tan u}{u} = 1" />
+
+<MathContainer>
+<BlockMath math="\frac{1}{-2 \cdot \frac{1}{2}c} \cdot \frac{b(-1)}{\frac{1}{2}c} = d" />
+
+<BlockMath math="\frac{1}{-c} \cdot \frac{-b}{\frac{1}{2}c} = d" />
+
+<BlockMath math="\frac{b}{\frac{1}{2}c^2} = d" />
+
+<BlockMath math="\frac{2b}{c^2} = d" />
+
+<BlockMath math="2b = c^2d" />
+
+<BlockMath math="b = \frac{1}{2}c^2d" />
+</MathContainer>
+
