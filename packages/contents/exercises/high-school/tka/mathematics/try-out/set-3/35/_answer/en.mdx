@@ -1,0 +1,46 @@
+export const metadata = {
+  title: "Solution for Question 35",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Understand the concept of the remainder theorem below
+
+<BlockMath math="f(x) : (x - a) \Rightarrow \text{remainder} = f(a)" />
+
+Substitute <InlineMath math="x = a" /> into <InlineMath math="f(x)" /> with the result being the remainder.
+
+Determining the value of <InlineMath math="b" /> in <InlineMath math="g(x)" />
+
+<InlineMath math="g(x) : (x - 1) \Rightarrow \text{remainder} = g(1)" />. Because it is perfectly divisible, the remainder is equal to zero
+
+<MathContainer>
+<BlockMath math="\text{remainder} = g(1)" />
+
+<BlockMath math="0 = g(1)" />
+
+<BlockMath math="0 = 1^3 + 1^2 - 1 + b" />
+
+<BlockMath math="0 = 1 + 1 - 1 + b" />
+
+<BlockMath math="0 = 1 + b" />
+
+<BlockMath math="b = -1" />
+</MathContainer>
+
+So the function becomes <InlineMath math="g(x) = x^3 + x^2 - x - 1" />.
+
+Determine the remainder of <InlineMath math="g(x)" /> divided by <InlineMath math="x^2 - 1" /> using long division
+
+<BlockMath math="\begin{array}{c|l}
+& x + 1 \\
+\hline
+x^2 - 1 & x^3 + x^2 - x - 1 \\
+& \underline{x^3 + 0x^2 - x \phantom{+ x^2}} \; - \\
+& \phantom{x^3 + 0} x^2 - 1 \\
+& \phantom{x^3 + 0} \underline{x^2 + 0x - 1} \; - \\
+& \phantom{x^3 + x^2 +} 0
+\end{array}" />
+
+So the remainder of the division is <InlineMath math="0" />.
+

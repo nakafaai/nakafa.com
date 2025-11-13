@@ -1,0 +1,90 @@
+export const metadata = {
+  title: "Solution for Question 31",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+The first polynomial has divisor <InlineMath math="x^2 + x - 2" />. Factor the divisor
+
+<BlockMath math="x^2 + x - 2 = (x - 1)(x + 2) \Rightarrow x = 1 \text{ or } x = -2" />
+
+The remainder is <InlineMath math="s(x) = ax + b" />.
+
+When <InlineMath math="x = 1" />
+
+<MathContainer>
+<BlockMath math="f(1) = s(1)" />
+
+<BlockMath math="f(1) = a(1) + b" />
+
+<BlockMath math="f(1) = a + b \quad \ldots (1)" />
+</MathContainer>
+
+When <InlineMath math="x = -2" />
+
+<MathContainer>
+<BlockMath math="f(-2) = s(-2)" />
+
+<BlockMath math="f(-2) = a(-2) + b" />
+
+<BlockMath math="f(-2) = -2a + b \quad \ldots (2)" />
+</MathContainer>
+
+The second polynomial has divisor <InlineMath math="x^2 - 4x + 3" />. Factor the divisor
+
+<BlockMath math="x^2 - 4x + 3 = (x - 1)(x - 3) \Rightarrow x = 1 \text{ or } x = 3" />
+
+The remainder is <InlineMath math="s(x) = 2bx + a - 1" />.
+
+When <InlineMath math="x = 1" />
+
+<MathContainer>
+<BlockMath math="f(1) = s(1)" />
+
+<BlockMath math="f(1) = 2b(1) + a - 1" />
+
+<BlockMath math="f(1) = a + 2b - 1 \quad \ldots (3)" />
+</MathContainer>
+
+When <InlineMath math="x = 3" />
+
+<MathContainer>
+<BlockMath math="f(3) = s(3)" />
+
+<BlockMath math="f(3) = 2b(3) + a - 1" />
+
+<BlockMath math="f(3) = 6b + a - 1 \quad \ldots (4)" />
+</MathContainer>
+
+From equations (1) and (3) we obtain
+
+<MathContainer>
+<BlockMath math="f(1) = f(1)" />
+
+<BlockMath math="a + b = a + 2b - 1" />
+
+<BlockMath math="b = 1" />
+</MathContainer>
+
+From equation (2) and given <InlineMath math="f(-2) = 7" />, then
+
+<MathContainer>
+<BlockMath math="f(-2) = 7" />
+
+<BlockMath math="-2a + b = 7 \quad \ldots (5)" />
+</MathContainer>
+
+Substitute <InlineMath math="b = 1" /> into equation (5)
+
+<MathContainer>
+<BlockMath math="-2a + 1 = 7" />
+
+<BlockMath math="-2a = 6" />
+
+<BlockMath math="a = -3" />
+</MathContainer>
+
+So the value of
+
+<BlockMath math="a^2 + b^2 = (-3)^2 + (1)^2 = 9 + 1 = 10" />
+

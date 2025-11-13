@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Solution for Question 38",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Recall the concept of identities
+
+<MathContainer>
+<BlockMath math="\sin x - \sin y = 2 \cos \frac{x + y}{2} \sin \frac{x - y}{2}" />
+
+<BlockMath math="\cos x - \cos y = -2 \sin \frac{x + y}{2} \sin \frac{x - y}{2}" />
+</MathContainer>
+
+Then we will get two equations from what is known, namely
+
+<MathContainer>
+<BlockMath math="2 \cos \frac{x + y}{2} \sin \frac{x - y}{2} = -\frac{1}{3} \quad \ldots \text{(1)}" />
+
+<BlockMath math="-2 \sin \frac{x + y}{2} \sin \frac{x - y}{2} = \frac{1}{2} \quad \ldots \text{(2)}" />
+</MathContainer>
+
+Equation <InlineMath math="\text{(2)}" /> divided by equation <InlineMath math="\text{(1)}" />
+
+<BlockMath math="\frac{\text{(2)}}{\text{(1)}}: \quad \frac{-2 \sin \frac{x + y}{2} \sin \frac{x - y}{2}}{2 \cos \frac{x + y}{2} \sin \frac{x - y}{2}} = \frac{\frac{1}{2}}{-\frac{1}{3}}" />
+
+<MathContainer>
+<BlockMath math="-\tan \frac{x + y}{2} = -\frac{3}{2}" />
+
+<BlockMath math="\tan \frac{x + y}{2} = \frac{3}{2}" />
+</MathContainer>
+
+The opposite side is <InlineMath math="3" />, and the adjacent side is <InlineMath math="2" />. Then, using Pythagoras, the hypotenuse is obtained
+
+<BlockMath math="\text{Hyp} = \sqrt{3^2 + 2^2} = \sqrt{9 + 4} = \sqrt{13}" />
+
+Thus
+
+<MathContainer>
+<BlockMath math="\sin \frac{x + y}{2} = \frac{\text{opp}}{\text{hyp}} = \frac{3}{\sqrt{13}}" />
+
+<BlockMath math="\cos \frac{x + y}{2} = \frac{\text{adj}}{\text{hyp}} = \frac{2}{\sqrt{13}}" />
+</MathContainer>
+
+Then the value of <InlineMath math="\sin(x + y)" />
+
+<MathContainer>
+<BlockMath math="\sin(x + y) = 2 \sin \frac{x + y}{2} \cos \frac{x + y}{2}" />
+
+<BlockMath math="\sin(x + y) = 2 \cdot \frac{3}{\sqrt{13}} \cdot \frac{2}{\sqrt{13}}" />
+
+<BlockMath math="\sin(x + y) = \frac{12}{13}" />
+</MathContainer>
+

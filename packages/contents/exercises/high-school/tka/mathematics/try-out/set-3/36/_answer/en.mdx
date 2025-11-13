@@ -1,0 +1,56 @@
+export const metadata = {
+  title: "Solution for Question 36",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Determine the derivative of the function
+
+<MathContainer>
+<BlockMath math="y = 4 \sin x \sin(x - 60°)" />
+
+<BlockMath math="y' = 4[\cos x \cdot \sin(x - 60°) + \sin x \cdot \cos(x - 60°)]" />
+</MathContainer>
+
+Use trigonometric identities <InlineMath math="\sin A \cos B + \cos A \sin B = \sin(A + B)" /> and <InlineMath math="\cos A \cos B - \sin A \sin B = \cos(A + B)" />
+
+<MathContainer>
+<BlockMath math="y' = 4[\sin(x - 60°) \cos x + \cos(x - 60°) \sin x]" />
+
+<BlockMath math="y' = 4 \sin[(x - 60°) + x]" />
+
+<BlockMath math="y' = 4 \sin(2x - 60°)" />
+</MathContainer>
+
+Or using the identity <InlineMath math="\sin A \sin B = \frac{1}{2}[\cos(A - B) - \cos(A + B)]" />
+
+<MathContainer>
+<BlockMath math="y = 4 \sin x \sin(x - 60°)" />
+
+<BlockMath math="y = 4 \cdot \frac{1}{2}[\cos(x - (x - 60°)) - \cos(x + (x - 60°))]" />
+
+<BlockMath math="y = 2[\cos(60°) - \cos(2x - 60°)]" />
+
+<BlockMath math="y = 2 \cos 60° - 2 \cos(2x - 60°)" />
+
+<BlockMath math="y' = -2 \cdot (-\sin(2x - 60°)) \cdot 2" />
+
+<BlockMath math="y' = 4 \sin(2x - 60°)" />
+</MathContainer>
+
+The maximum value occurs when <InlineMath math="y' = 0" /> or when <InlineMath math="\sin(2x - 60°)" /> reaches its maximum value, which is <InlineMath math="\sin(2x - 60°) = 1" />.
+
+However, since <InlineMath math="y = 2 \cos 60° - 2 \cos(2x - 60°) = 1 - 2 \cos(2x - 60°)" />, the maximum value occurs when <InlineMath math="\cos(2x - 60°)" /> is minimum, which is <InlineMath math="\cos(2x - 60°) = -1" />.
+
+<MathContainer>
+<BlockMath math="\cos(2x - 60°) = -1" />
+
+<BlockMath math="2x - 60° = 180° + k \cdot 360°" />
+
+<BlockMath math="2x = 240° + k \cdot 360°" />
+
+<BlockMath math="x = 120° + k \cdot 180°" />
+</MathContainer>
+
+With <InlineMath math="k" /> an integer.
+

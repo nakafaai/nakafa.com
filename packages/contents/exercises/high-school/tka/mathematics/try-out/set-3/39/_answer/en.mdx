@@ -1,0 +1,64 @@
+export const metadata = {
+  title: "Solution for Question 39",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Recall the concept of sine addition
+
+<BlockMath math="\sin(A + B) = \sin A \cos B + \cos A \sin B" />
+
+Thus
+
+<MathContainer>
+<BlockMath math="3 \cos \theta - \sin \theta = r \sin(\theta + \alpha)" />
+
+<BlockMath math="3 \cos \theta - \sin \theta = r(\sin \theta \cos \alpha + \cos \theta \sin \alpha)" />
+
+<BlockMath math="3 \cos \theta - \sin \theta = r \sin \alpha \cos \theta + r \cos \alpha \sin \theta" />
+</MathContainer>
+
+By comparing the coefficients of <InlineMath math="\cos \theta" /> and <InlineMath math="\sin \theta" />, we obtain
+
+<MathContainer>
+<BlockMath math="r \sin \alpha = 3 \quad \ldots \text{(1)}" />
+
+<BlockMath math="r \cos \alpha = -1 \quad \ldots \text{(2)}" />
+</MathContainer>
+
+Square both equations
+
+<MathContainer>
+<BlockMath math="r^2 \sin^2 \alpha = 9" />
+
+<BlockMath math="r^2 \cos^2 \alpha = 1" />
+</MathContainer>
+
+By adding both equations above, we obtain
+
+<MathContainer>
+<BlockMath math="r^2 \sin^2 \alpha + r^2 \cos^2 \alpha = 9 + 1" />
+
+<BlockMath math="r^2(\sin^2 \alpha + \cos^2 \alpha) = 10" />
+
+<BlockMath math="r^2 \cdot 1 = 10" />
+
+<BlockMath math="r^2 = 10" />
+
+<BlockMath math="r = \sqrt{10}" />
+</MathContainer>
+
+To determine the quadrant of <InlineMath math="\alpha" />, divide equation <InlineMath math="\text{(1)}" /> by equation <InlineMath math="\text{(2)}" />
+
+<BlockMath math="\frac{\text{(1)}}{\text{(2)}}: \quad \frac{r \sin \alpha}{r \cos \alpha} = \frac{3}{-1}" />
+
+<MathContainer>
+<BlockMath math="\tan \alpha = -3" />
+</MathContainer>
+
+From equation <InlineMath math="\text{(1)}" />: <InlineMath math="r \sin \alpha = 3" />. Since <InlineMath math="r > 0" />, then <InlineMath math="\sin \alpha > 0" />.
+
+From equation <InlineMath math="\text{(2)}" />: <InlineMath math="r \cos \alpha = -1" />. Since <InlineMath math="r > 0" />, then <InlineMath math="\cos \alpha < 0" />.
+
+Thus <InlineMath math="\alpha" /> is in quadrant <InlineMath math="\text{II}" />.
+

@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Solution for Question 28",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+This system of linear equations can be written in matrix form <InlineMath math="AX = B" />, where
+
+<BlockMath math="A = \begin{pmatrix} -2 & 1 \\ 3 & 2 \end{pmatrix}, \quad X = \begin{pmatrix} x \\ y \end{pmatrix}, \quad B = \begin{pmatrix} a^2 - 1 \\ 2a^2 + 7a + 5 \end{pmatrix}" />
+
+Cramer's rule can be used because the determinant of the coefficient matrix <InlineMath math="\det(A) = -4 - 3 = -7 \neq 0" /> (determinant is nonzero). Cramer's rule states that for the system <InlineMath math="AX = B" /> with <InlineMath math="\det(A) \neq 0" />, the solution is
+
+<BlockMath math="x = \frac{\det(A_x)}{\det(A)}, \quad y = \frac{\det(A_y)}{\det(A)}" />
+
+where <InlineMath math="A_x" /> is the matrix <InlineMath math="A" /> with the first column replaced by <InlineMath math="B" />, and <InlineMath math="A_y" /> is the matrix <InlineMath math="A" /> with the second column replaced by <InlineMath math="B" />.
+
+By using Cramer's rule, we obtain
+
+<BlockMath math="x = \frac{\begin{vmatrix} a^2 - 1 & 1 \\ 2a^2 + 7a + 5 & 2 \end{vmatrix}}{\begin{vmatrix} -2 & 1 \\ 3 & 2 \end{vmatrix}} = \frac{2(a^2 - 1) - (2a^2 + 7a + 5)}{-4 - 3} = \frac{-7a - 7}{-7} = a + 1" />
+
+<BlockMath math="y = \frac{\begin{vmatrix} -2 & a^2 - 1 \\ 3 & 2a^2 + 7a + 5 \end{vmatrix}}{\begin{vmatrix} -2 & 1 \\ 3 & 2 \end{vmatrix}} = \frac{-2(2a^2 + 7a + 5) - 3(a^2 - 1)}{-7} = \frac{-7a^2 - 14a - 7}{-7} = a^2 + 2a + 1 = (a + 1)^2" />
+
+Next, substitute the values of <InlineMath math="x" /> and <InlineMath math="y" /> into <InlineMath math="x\sqrt{y} + 3 > 0" /> to obtain
+
+<MathContainer>
+<BlockMath math="x\sqrt{y} + 3 > 0" />
+
+<BlockMath math="(a + 1)\sqrt{(a + 1)^2} + 3 > 0" />
+</MathContainer>
+
+To simplify <InlineMath math="\sqrt{(a + 1)^2}" />, note that <InlineMath math="\sqrt{(a + 1)^2} = |a + 1|" />. For <InlineMath math="\sqrt{y}" /> to be defined, we must have <InlineMath math="y \geq 0" />, that is <InlineMath math="(a + 1)^2 \geq 0" />, which is always true.
+
+Choose <InlineMath math="a < -1" /> so that the form <InlineMath math="\sqrt{(a + 1)^2} = -(a + 1)" />, thus we obtain
+
+<MathContainer>
+<BlockMath math="(a + 1)[-(a + 1)] + 3 > 0" />
+
+<BlockMath math="-(a + 1)^2 + 3 > 0" />
+
+<BlockMath math="(a + 1)^2 < 3" />
+
+<BlockMath math="a^2 + 2a + 1 < 3" />
+
+<BlockMath math="a^2 + 2a - 2 < 0" />
+</MathContainer>
+
+To find the value of <InlineMath math="a" />, we can use the quadratic formula. The quadratic equation <InlineMath math="a^2 + 2a - 2 = 0" /> has roots
+
+<MathContainer>
+<BlockMath math="a_{1,2} = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+
+<BlockMath math="a_{1,2} = \frac{-2 \pm \sqrt{2^2 - 4(1)(-2)}}{2(1)}" />
+
+<BlockMath math="a_{1,2} = \frac{-2 \pm \sqrt{4 + 8}}{2}" />
+
+<BlockMath math="a_{1,2} = \frac{-2 \pm \sqrt{12}}{2}" />
+
+<BlockMath math="a_{1,2} = \frac{-2 \pm 2\sqrt{3}}{2}" />
+
+<BlockMath math="a_{1,2} = -1 \pm \sqrt{3}" />
+</MathContainer>
+
+For the inequality <InlineMath math="a^2 + 2a - 2 < 0" />, since the coefficient of <InlineMath math="a^2" /> is positive, the inequality is satisfied for values of <InlineMath math="a" /> between its two roots, that is <InlineMath math="-1 - \sqrt{3} < a < -1 + \sqrt{3}" />.
+
+Since we chose <InlineMath math="a < -1" />, the intersection is <InlineMath math="-1 - \sqrt{3} < a < -1" />.
+
+However, since <InlineMath math="a = -1 - \sqrt{3}" /> is a root of the equation <InlineMath math="a^2 + 2a - 2 = 0" />, and for <InlineMath math="a < -1" /> we require <InlineMath math="(a + 1)^2 < 3" />, the values of <InlineMath math="a" /> that satisfy are <InlineMath math="a < -1 - \sqrt{3}" />.
+
+Therefore, the values of <InlineMath math="a" /> that satisfy are <InlineMath math="a < -1 - \sqrt{3}" />.
+

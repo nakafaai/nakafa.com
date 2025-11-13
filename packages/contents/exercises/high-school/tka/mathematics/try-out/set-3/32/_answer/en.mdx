@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Solution for Question 32",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+It's easy, just use the long division method or "porogapit" as follows:
+
+<BlockMath math="\begin{array}{c|l}
+& 5x^2 + 23 \\
+\hline
+x^2 - 5 & 5x^4 + 0x^3 - 2x^2 + 7x + 9 \\
+& \underline{5x^4 + 0x^3 - 25x^2 \phantom{+ 7x + 9}} \; - \\
+& \phantom{5x^4 + 0x^3} \; 23x^2 + 7x + 9 \\
+& \phantom{5x^4 + 0x^3} \; \underline{23x^2 + 0x - 115} \; - \\
+& \phantom{5x^4 + 0x^3 - 2x^2} \; 7x + 124
+\end{array}" />
+
+The remainder of the division is <InlineMath math="h(x)" />. Based on the method above, the remainder is <InlineMath math="7x + 124" />. So the value of <InlineMath math="h(1)" />
+
+<MathContainer>
+<BlockMath math="h(x) = 7x + 124" />
+
+<BlockMath math="h(1) = 7(1) + 124 = 131" />
+</MathContainer>
+

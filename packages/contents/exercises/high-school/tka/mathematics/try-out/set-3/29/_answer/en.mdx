@@ -1,0 +1,68 @@
+export const metadata = {
+  title: "Solution for Question 29",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+We recall the concept of quadratic equations. For a quadratic equation <InlineMath math="ax^2 + bx + c = 0" /> with roots <InlineMath math="x_1" /> and <InlineMath math="x_2" />, we have
+
+<MathContainer>
+<BlockMath math="x_1 + x_2 = -\frac{b}{a}" />
+
+<BlockMath math="x_1 \cdot x_2 = \frac{c}{a}" />
+</MathContainer>
+
+Let the roots be <InlineMath math="a" /> and <InlineMath math="b" />. Since one root is three times the other, the roots are <InlineMath math="a" /> and <InlineMath math="3a" /> (because <InlineMath math="b = 3a" />).
+
+Sum of roots
+
+<MathContainer>
+<BlockMath math="a + 3a = -\frac{-4(k + 1)}{1}" />
+
+<BlockMath math="4a = 4(k + 1)" />
+
+<BlockMath math="a = k + 1 \quad \ldots (1)" />
+</MathContainer>
+
+Product of roots
+
+<MathContainer>
+<BlockMath math="a \cdot 3a = \frac{k^2 - k + 7}{1}" />
+
+<BlockMath math="3a^2 = k^2 - k + 7 \quad \ldots (2)" />
+</MathContainer>
+
+Substitute equation (1) into (2)
+
+<MathContainer>
+<BlockMath math="3(k + 1)^2 = k^2 - k + 7" />
+
+<BlockMath math="3(k^2 + 2k + 1) = k^2 - k + 7" />
+
+<BlockMath math="3k^2 + 6k + 3 = k^2 - k + 7" />
+
+<BlockMath math="3k^2 + 6k + 3 - k^2 + k - 7 = 0" />
+
+<BlockMath math="2k^2 + 7k - 4 = 0" />
+
+<BlockMath math="(k + 4)(2k - 1) = 0" />
+</MathContainer>
+
+So <InlineMath math="k = -4" /> or <InlineMath math="k = \frac{1}{2}" />.
+
+Now we check whether both values of <InlineMath math="k" /> satisfy the condition that all roots are greater than <InlineMath math="2" />.
+
+For <InlineMath math="k = -4" />
+
+<BlockMath math="a = k + 1 = -4 + 1 = -3" />
+
+Since <InlineMath math="a = -3 < 2" />, then <InlineMath math="k = -4" /> does not satisfy the condition.
+
+For <InlineMath math="k = \frac{1}{2}" />
+
+<BlockMath math="a = k + 1 = \frac{1}{2} + 1 = \frac{3}{2}" />
+
+Since <InlineMath math="a = \frac{3}{2} < 2" />, then <InlineMath math="k = \frac{1}{2}" /> also does not satisfy the condition.
+
+Both values of <InlineMath math="k" /> do not satisfy the condition because the root <InlineMath math="a = k + 1" /> has a value less than <InlineMath math="2" />. Therefore, no value satisfies.
+

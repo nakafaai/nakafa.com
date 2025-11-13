@@ -1,0 +1,71 @@
+export const metadata = {
+  title: "Solution for Question 26",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Multiply the first equation by <InlineMath math="x^2" /> and the second equation by <InlineMath math="y^2" />
+
+<MathContainer>
+<BlockMath math="(x + y^2 = y^3) \times x^2 \Rightarrow x^3 + x^2y^2 = x^2y^3" />
+
+<BlockMath math="(y + x^2 = x^3) \times y^2 \Rightarrow y^3 + x^2y^2 = x^3y^2" />
+</MathContainer>
+
+Subtract the second equation from the first equation
+
+<BlockMath math="\begin{aligned}
+(x^3 + x^2y^2) - (y^3 + x^2y^2) &= x^2y^3 - x^3y^2 \\
+x^3 - y^3 &= x^2y^3 - x^3y^2
+\end{aligned}" />
+
+Factor both sides
+
+<MathContainer>
+<BlockMath math="x^3 - y^3 = (x - y)(x^2 + xy + y^2)" />
+
+<BlockMath math="x^2y^3 - x^3y^2 = x^2y^2(y - x) = -x^2y^2(x - y)" />
+</MathContainer>
+
+Substitute into the equation
+
+<MathContainer>
+<BlockMath math="(x - y)(x^2 + xy + y^2) = -x^2y^2(x - y)" />
+
+<BlockMath math="(x - y)(x^2 + xy + y^2) + x^2y^2(x - y) = 0" />
+
+<BlockMath math="(x - y)(x^2 + xy + y^2 + x^2y^2) = 0" />
+</MathContainer>
+
+So there are two cases
+
+<BlockMath math="x - y = 0 \quad \text{or} \quad x^2 + xy + y^2 + x^2y^2 = 0" />
+
+For the first case, <InlineMath math="x = y" />. Substitute <InlineMath math="y = x" /> into the first equation
+
+<MathContainer>
+<BlockMath math="x + y^2 = y^3" />
+
+<BlockMath math="x + x^2 = x^3" />
+
+<BlockMath math="x^3 - x^2 - x = 0" />
+
+<BlockMath math="x(x^2 - x - 1) = 0" />
+</MathContainer>
+
+So <InlineMath math="x = 0" /> or <InlineMath math="x^2 - x - 1 = 0" />.
+
+For <InlineMath math="x^2 - x - 1 = 0" />, the discriminant value is
+
+<BlockMath math="D = b^2 - 4ac = (-1)^2 - 4(1)(-1) = 1 + 4 = 5" />
+
+The discriminant value <InlineMath math="D = 5 > 0" />, which means the quadratic equation has 2 distinct real roots.
+
+So from the first case we obtain:
+- <InlineMath math="x = 0" />, then <InlineMath math="y = 0" />, so the pair <InlineMath math="(0, 0)" />
+- <InlineMath math="x^2 - x - 1 = 0" /> has 2 distinct real roots, so 2 pairs <InlineMath math="(x, y)" /> with <InlineMath math="y = x" />
+
+For the second case <InlineMath math="x^2 + xy + y^2 + x^2y^2 = 0" />, since all terms are non-negative and <InlineMath math="x^2y^2 \geq 0" />, this equation is only satisfied if <InlineMath math="x = 0" /> and <InlineMath math="y = 0" />, which is already included in the first case.
+
+So the system of equations has 3 distinct pairs.
+

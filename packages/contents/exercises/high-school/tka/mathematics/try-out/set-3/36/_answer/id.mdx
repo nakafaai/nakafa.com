@@ -1,0 +1,56 @@
+export const metadata = {
+  title: "Pembahasan Soal 36",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Tentukan turunan fungsinya
+
+<MathContainer>
+<BlockMath math="y = 4 \sin x \sin(x - 60°)" />
+
+<BlockMath math="y' = 4[\cos x \cdot \sin(x - 60°) + \sin x \cdot \cos(x - 60°)]" />
+</MathContainer>
+
+Gunakan identitas trigonometri <InlineMath math="\sin A \cos B + \cos A \sin B = \sin(A + B)" /> dan <InlineMath math="\cos A \cos B - \sin A \sin B = \cos(A + B)" />
+
+<MathContainer>
+<BlockMath math="y' = 4[\sin(x - 60°) \cos x + \cos(x - 60°) \sin x]" />
+
+<BlockMath math="y' = 4 \sin[(x - 60°) + x]" />
+
+<BlockMath math="y' = 4 \sin(2x - 60°)" />
+</MathContainer>
+
+Atau dengan menggunakan identitas <InlineMath math="\sin A \sin B = \frac{1}{2}[\cos(A - B) - \cos(A + B)]" />
+
+<MathContainer>
+<BlockMath math="y = 4 \sin x \sin(x - 60°)" />
+
+<BlockMath math="y = 4 \cdot \frac{1}{2}[\cos(x - (x - 60°)) - \cos(x + (x - 60°))]" />
+
+<BlockMath math="y = 2[\cos(60°) - \cos(2x - 60°)]" />
+
+<BlockMath math="y = 2 \cos 60° - 2 \cos(2x - 60°)" />
+
+<BlockMath math="y' = -2 \cdot (-\sin(2x - 60°)) \cdot 2" />
+
+<BlockMath math="y' = 4 \sin(2x - 60°)" />
+</MathContainer>
+
+Nilai maksimum terjadi saat <InlineMath math="y' = 0" /> atau saat <InlineMath math="\sin(2x - 60°)" /> mencapai nilai maksimumnya, yaitu <InlineMath math="\sin(2x - 60°) = 1" />.
+
+Namun, karena <InlineMath math="y = 2 \cos 60° - 2 \cos(2x - 60°) = 1 - 2 \cos(2x - 60°)" />, maka nilai maksimum terjadi saat <InlineMath math="\cos(2x - 60°)" /> minimum, yaitu <InlineMath math="\cos(2x - 60°) = -1" />.
+
+<MathContainer>
+<BlockMath math="\cos(2x - 60°) = -1" />
+
+<BlockMath math="2x - 60° = 180° + k \cdot 360°" />
+
+<BlockMath math="2x = 240° + k \cdot 360°" />
+
+<BlockMath math="x = 120° + k \cdot 180°" />
+</MathContainer>
+
+Dengan <InlineMath math="k" /> bilangan bulat.
+

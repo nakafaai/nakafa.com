@@ -1,0 +1,107 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Pembahasan Soal 37",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Diketahui bentuk pertidaksamaannya
+
+<BlockMath math="\sin x + \sin 2x > \sin 3x" />
+
+Kedua ruas dikurang <InlineMath math="\sin x" />
+
+<BlockMath math="\sin 2x > \sin 3x - \sin x" />
+
+Gunakan identitas trigonometri <InlineMath math="\sin 2x = 2 \sin x \cos x" /> dan <InlineMath math="\sin A - \sin B = 2 \cos \frac{A + B}{2} \sin \frac{A - B}{2}" />
+
+<MathContainer>
+<BlockMath math="2 \sin x \cos x > 2 \cos \frac{3x + x}{2} \sin \frac{3x - x}{2}" />
+
+<BlockMath math="2 \sin x \cos x > 2 \cos 2x \sin x" />
+</MathContainer>
+
+Kedua ruas dibagi <InlineMath math="2" /> dan gunakan identitas <InlineMath math="\cos 2x = 2 \cos^2 x - 1" />
+
+<MathContainer>
+<BlockMath math="\sin x \cos x > \cos 2x \sin x" />
+
+<BlockMath math="\sin x \cos x > (2 \cos^2 x - 1) \sin x" />
+
+<BlockMath math="\sin x \cos x - (2 \cos^2 x - 1) \sin x > 0" />
+
+<BlockMath math="\sin x (\cos x - 2 \cos^2 x + 1) > 0" />
+
+<BlockMath math="\sin x (2 \cos^2 x - \cos x - 1) < 0" />
+</MathContainer>
+
+Faktorkan <InlineMath math="2 \cos^2 x - \cos x - 1 = (2 \cos x + 1)(\cos x - 1)" />
+
+<BlockMath math="\sin x (2 \cos x + 1)(\cos x - 1) < 0" />
+
+Dengan begitu <InlineMath math="x" /> pembuat nolnya
+
+<MathContainer>
+<BlockMath math="\sin x = 0 \Rightarrow x = 0°, 180°, 360°" />
+
+<BlockMath math="2 \cos x + 1 = 0 \Rightarrow \cos x = -\frac{1}{2} \Rightarrow x = 120°, 240°" />
+
+<BlockMath math="\cos x - 1 = 0 \Rightarrow \cos x = 1 \Rightarrow x = 0°, 360°" />
+</MathContainer>
+
+Titik-titik kritisnya adalah <InlineMath math="x = 0°" />, <InlineMath math="x = 120°" />, <InlineMath math="x = 180°" />, <InlineMath math="x = 240°" />, dan <InlineMath math="x = 360°" />.
+
+Garis bilangannya seperti berikut
+
+<NumberLine
+  title={<>Garis Bilangan</>}
+  description={<>Titik-titik kritis: <InlineMath math="0°" />, <InlineMath math="120°" />, <InlineMath math="180°" />, <InlineMath math="240°" />, dan <InlineMath math="360°" />.</>}
+  segments={[
+    {
+      start: 0,
+      end: 120,
+      startLabel: <InlineMath math="0°" />,
+      endLabel: <InlineMath math="120°" />,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: true,
+      label: <InlineMath math="\text{Interval 1}" />,
+    },
+    {
+      start: 120,
+      end: 180,
+      startLabel: <InlineMath math="120°" />,
+      endLabel: <InlineMath math="180°" />,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: false,
+      label: <InlineMath math="\text{Interval 2}" />,
+    },
+    {
+      start: 180,
+      end: 240,
+      startLabel: <InlineMath math="180°" />,
+      endLabel: <InlineMath math="240°" />,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: true,
+      label: <InlineMath math="\text{Interval 3}" />,
+    },
+    {
+      start: 240,
+      end: 360,
+      startLabel: <InlineMath math="240°" />,
+      endLabel: <InlineMath math="360°" />,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: false,
+      label: <InlineMath math="\text{Interval 4}" />,
+    },
+  ]}
+/>
+
+Dengan menguji tanda pada setiap interval, diperoleh bahwa pertidaksamaan <InlineMath math="\sin x (2 \cos x + 1)(\cos x - 1) < 0" /> terpenuhi untuk <InlineMath math="0° < x < 120°" /> dan <InlineMath math="180° < x < 240°" />.
+
+Maka himpunan penyelesaiannya adalah <InlineMath math="0° < x < 120°, 180° < x < 240°" />.
+

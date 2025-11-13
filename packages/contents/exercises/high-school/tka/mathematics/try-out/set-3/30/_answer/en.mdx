@@ -1,0 +1,68 @@
+export const metadata = {
+  title: "Solution for Question 30",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Given the quadratic equation <InlineMath math="(m + 2)x^2 - (2m - 1)x + m + 1 = 0" /> with the condition that <InlineMath math="x_1 < 0" /> and <InlineMath math="x_2 < 0" />.
+
+For the equation to be a quadratic equation, the coefficient of <InlineMath math="x^2" /> must not be zero, that is <InlineMath math="m + 2 \neq 0" /> or <InlineMath math="m \neq -2" />.
+
+The discriminant condition is <InlineMath math="D \geq 0" />, then we obtain
+
+<MathContainer>
+<BlockMath math="D = b^2 - 4ac \geq 0" />
+
+<BlockMath math="[-(2m - 1)]^2 - 4(m + 2)(m + 1) \geq 0" />
+
+<BlockMath math="(2m - 1)^2 - 4(m + 2)(m + 1) \geq 0" />
+
+<BlockMath math="4m^2 - 4m + 1 - 4(m^2 + 3m + 2) \geq 0" />
+
+<BlockMath math="4m^2 - 4m + 1 - 4m^2 - 12m - 8 \geq 0" />
+
+<BlockMath math="-16m - 7 \geq 0" />
+
+<BlockMath math="-16m \geq 7" />
+
+<BlockMath math="m \leq -\frac{7}{16}" />
+</MathContainer>
+
+Condition for sum of roots: <InlineMath math="x_1 + x_2 < 0" />
+
+<MathContainer>
+<BlockMath math="x_1 + x_2 = -\frac{b}{a} = -\frac{-(2m - 1)}{m + 2} = \frac{2m - 1}{m + 2}" />
+
+<BlockMath math="\frac{2m - 1}{m + 2} < 0" />
+</MathContainer>
+
+The inequality <InlineMath math="\frac{2m - 1}{m + 2} < 0" /> is satisfied if the numerator and denominator have different signs. Then
+
+<BlockMath math="(2m - 1)(m + 2) < 0" />
+
+This inequality is satisfied for <InlineMath math="-2 < m < \frac{1}{2}" />.
+
+Condition for product of roots: <InlineMath math="x_1x_2 > 0" />
+
+<MathContainer>
+<BlockMath math="x_1x_2 = \frac{c}{a} = \frac{m + 1}{m + 2}" />
+
+<BlockMath math="\frac{m + 1}{m + 2} > 0" />
+</MathContainer>
+
+The inequality <InlineMath math="\frac{m + 1}{m + 2} > 0" /> is satisfied if the numerator and denominator have the same sign. Then
+
+<BlockMath math="(m + 1)(m + 2) > 0" />
+
+This inequality is satisfied for <InlineMath math="m < -2" /> or <InlineMath math="m > -1" />.
+
+Now we combine all conditions:
+- <InlineMath math="m \neq -2" /> (for the equation to be quadratic)
+- <InlineMath math="m \leq -\frac{7}{16}" /> (from discriminant)
+- <InlineMath math="-2 < m < \frac{1}{2}" /> (from sum of roots)
+- <InlineMath math="m < -2" /> or <InlineMath math="m > -1" /> (from product of roots)
+
+The intersection of all these conditions is <InlineMath math="-1 < m \leq -\frac{7}{16}" />.
+
+Therefore, the values of <InlineMath math="m" /> that satisfy are <InlineMath math="-1 < m \leq -\frac{7}{16}" />.
+

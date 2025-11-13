@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Pembahasan Soal 28",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Sistem persamaan linear ini dapat ditulis dalam bentuk matriks <InlineMath math="AX = B" />, dimana
+
+<BlockMath math="A = \begin{pmatrix} -2 & 1 \\ 3 & 2 \end{pmatrix}, \quad X = \begin{pmatrix} x \\ y \end{pmatrix}, \quad B = \begin{pmatrix} a^2 - 1 \\ 2a^2 + 7a + 5 \end{pmatrix}" />
+
+Aturan Cramer dapat digunakan karena determinan matriks koefisien <InlineMath math="\det(A) = -4 - 3 = -7 \neq 0" /> (determinan tidak nol). Aturan Cramer menyatakan bahwa untuk sistem <InlineMath math="AX = B" /> dengan <InlineMath math="\det(A) \neq 0" />, solusinya adalah
+
+<BlockMath math="x = \frac{\det(A_x)}{\det(A)}, \quad y = \frac{\det(A_y)}{\det(A)}" />
+
+dimana <InlineMath math="A_x" /> adalah matriks <InlineMath math="A" /> dengan kolom pertama diganti <InlineMath math="B" />, dan <InlineMath math="A_y" /> adalah matriks <InlineMath math="A" /> dengan kolom kedua diganti <InlineMath math="B" />.
+
+Dengan menggunakan aturan Cramer, diperoleh
+
+<BlockMath math="x = \frac{\begin{vmatrix} a^2 - 1 & 1 \\ 2a^2 + 7a + 5 & 2 \end{vmatrix}}{\begin{vmatrix} -2 & 1 \\ 3 & 2 \end{vmatrix}} = \frac{2(a^2 - 1) - (2a^2 + 7a + 5)}{-4 - 3} = \frac{-7a - 7}{-7} = a + 1" />
+
+<BlockMath math="y = \frac{\begin{vmatrix} -2 & a^2 - 1 \\ 3 & 2a^2 + 7a + 5 \end{vmatrix}}{\begin{vmatrix} -2 & 1 \\ 3 & 2 \end{vmatrix}} = \frac{-2(2a^2 + 7a + 5) - 3(a^2 - 1)}{-7} = \frac{-7a^2 - 14a - 7}{-7} = a^2 + 2a + 1 = (a + 1)^2" />
+
+Selanjutnya nilai <InlineMath math="x" /> dan <InlineMath math="y" /> disubstitusi ke <InlineMath math="x\sqrt{y} + 3 > 0" /> sehingga diperoleh
+
+<MathContainer>
+<BlockMath math="x\sqrt{y} + 3 > 0" />
+
+<BlockMath math="(a + 1)\sqrt{(a + 1)^2} + 3 > 0" />
+</MathContainer>
+
+Untuk menyederhanakan <InlineMath math="\sqrt{(a + 1)^2}" />, perlu diperhatikan bahwa <InlineMath math="\sqrt{(a + 1)^2} = |a + 1|" />. Agar <InlineMath math="\sqrt{y}" /> terdefinisi, haruslah <InlineMath math="y \geq 0" />, yaitu <InlineMath math="(a + 1)^2 \geq 0" /> yang selalu benar.
+
+Pilih <InlineMath math="a < -1" /> sehingga bentuk <InlineMath math="\sqrt{(a + 1)^2} = -(a + 1)" />, sehingga diperoleh
+
+<MathContainer>
+<BlockMath math="(a + 1)[-(a + 1)] + 3 > 0" />
+
+<BlockMath math="-(a + 1)^2 + 3 > 0" />
+
+<BlockMath math="(a + 1)^2 < 3" />
+
+<BlockMath math="a^2 + 2a + 1 < 3" />
+
+<BlockMath math="a^2 + 2a - 2 < 0" />
+</MathContainer>
+
+Mencari nilai <InlineMath math="a" /> bisa menggunakan rumus ABC. Persamaan kuadrat <InlineMath math="a^2 + 2a - 2 = 0" /> mempunyai akar-akar
+
+<MathContainer>
+<BlockMath math="a_{1,2} = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" />
+
+<BlockMath math="a_{1,2} = \frac{-2 \pm \sqrt{2^2 - 4(1)(-2)}}{2(1)}" />
+
+<BlockMath math="a_{1,2} = \frac{-2 \pm \sqrt{4 + 8}}{2}" />
+
+<BlockMath math="a_{1,2} = \frac{-2 \pm \sqrt{12}}{2}" />
+
+<BlockMath math="a_{1,2} = \frac{-2 \pm 2\sqrt{3}}{2}" />
+
+<BlockMath math="a_{1,2} = -1 \pm \sqrt{3}" />
+</MathContainer>
+
+Untuk pertidaksamaan <InlineMath math="a^2 + 2a - 2 < 0" />, karena koefisien <InlineMath math="a^2" /> positif, maka pertidaksamaan terpenuhi untuk nilai <InlineMath math="a" /> di antara kedua akarnya, yaitu <InlineMath math="-1 - \sqrt{3} < a < -1 + \sqrt{3}" />.
+
+Karena kita memilih <InlineMath math="a < -1" />, maka irisannya adalah <InlineMath math="-1 - \sqrt{3} < a < -1" />.
+
+Namun, karena <InlineMath math="a = -1 - \sqrt{3}" /> adalah akar dari persamaan <InlineMath math="a^2 + 2a - 2 = 0" />, dan untuk <InlineMath math="a < -1" /> kita memerlukan <InlineMath math="(a + 1)^2 < 3" />, maka nilai <InlineMath math="a" /> yang memenuhi adalah <InlineMath math="a < -1 - \sqrt{3}" />.
+
+Jadi, nilai <InlineMath math="a" /> yang memenuhi adalah <InlineMath math="a < -1 - \sqrt{3}" />.
+

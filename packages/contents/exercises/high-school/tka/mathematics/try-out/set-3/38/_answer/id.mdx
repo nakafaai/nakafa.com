@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Pembahasan Soal 38",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Ingat konsep identitas
+
+<MathContainer>
+<BlockMath math="\sin x - \sin y = 2 \cos \frac{x + y}{2} \sin \frac{x - y}{2}" />
+
+<BlockMath math="\cos x - \cos y = -2 \sin \frac{x + y}{2} \sin \frac{x - y}{2}" />
+</MathContainer>
+
+Maka akan kita dapatkan dua persamaan dari yang diketahui yaitu
+
+<MathContainer>
+<BlockMath math="2 \cos \frac{x + y}{2} \sin \frac{x - y}{2} = -\frac{1}{3} \quad \ldots \text{(1)}" />
+
+<BlockMath math="-2 \sin \frac{x + y}{2} \sin \frac{x - y}{2} = \frac{1}{2} \quad \ldots \text{(2)}" />
+</MathContainer>
+
+Persamaan <InlineMath math="\text{(2)}" /> dibagi dengan persamaan <InlineMath math="\text{(1)}" />
+
+<BlockMath math="\frac{\text{(2)}}{\text{(1)}}: \quad \frac{-2 \sin \frac{x + y}{2} \sin \frac{x - y}{2}}{2 \cos \frac{x + y}{2} \sin \frac{x - y}{2}} = \frac{\frac{1}{2}}{-\frac{1}{3}}" />
+
+<MathContainer>
+<BlockMath math="-\tan \frac{x + y}{2} = -\frac{3}{2}" />
+
+<BlockMath math="\tan \frac{x + y}{2} = \frac{3}{2}" />
+</MathContainer>
+
+Sisi depannya adalah <InlineMath math="3" />, dan sisi sampingnya <InlineMath math="2" />. Maka dengan phytagoras didapat sisi miringnya
+
+<BlockMath math="\text{Mi} = \sqrt{3^2 + 2^2} = \sqrt{9 + 4} = \sqrt{13}" />
+
+Dengan begitu
+
+<MathContainer>
+<BlockMath math="\sin \frac{x + y}{2} = \frac{\text{de}}{\text{mi}} = \frac{3}{\sqrt{13}}" />
+
+<BlockMath math="\cos \frac{x + y}{2} = \frac{\text{sa}}{\text{mi}} = \frac{2}{\sqrt{13}}" />
+</MathContainer>
+
+Maka nilai <InlineMath math="\sin(x + y)" />
+
+<MathContainer>
+<BlockMath math="\sin(x + y) = 2 \sin \frac{x + y}{2} \cos \frac{x + y}{2}" />
+
+<BlockMath math="\sin(x + y) = 2 \cdot \frac{3}{\sqrt{13}} \cdot \frac{2}{\sqrt{13}}" />
+
+<BlockMath math="\sin(x + y) = \frac{12}{13}" />
+</MathContainer>
+

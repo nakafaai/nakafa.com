@@ -1,0 +1,71 @@
+export const metadata = {
+  title: "Pembahasan Soal 26",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Kalikan persamaan pertama dengan <InlineMath math="x^2" /> dan persamaan kedua dengan <InlineMath math="y^2" />
+
+<MathContainer>
+<BlockMath math="(x + y^2 = y^3) \times x^2 \Rightarrow x^3 + x^2y^2 = x^2y^3" />
+
+<BlockMath math="(y + x^2 = x^3) \times y^2 \Rightarrow y^3 + x^2y^2 = x^3y^2" />
+</MathContainer>
+
+Kurangi persamaan pertama dengan persamaan kedua
+
+<BlockMath math="\begin{aligned}
+(x^3 + x^2y^2) - (y^3 + x^2y^2) &= x^2y^3 - x^3y^2 \\
+x^3 - y^3 &= x^2y^3 - x^3y^2
+\end{aligned}" />
+
+Faktorkan kedua ruas
+
+<MathContainer>
+<BlockMath math="x^3 - y^3 = (x - y)(x^2 + xy + y^2)" />
+
+<BlockMath math="x^2y^3 - x^3y^2 = x^2y^2(y - x) = -x^2y^2(x - y)" />
+</MathContainer>
+
+Substitusikan ke persamaan
+
+<MathContainer>
+<BlockMath math="(x - y)(x^2 + xy + y^2) = -x^2y^2(x - y)" />
+
+<BlockMath math="(x - y)(x^2 + xy + y^2) + x^2y^2(x - y) = 0" />
+
+<BlockMath math="(x - y)(x^2 + xy + y^2 + x^2y^2) = 0" />
+</MathContainer>
+
+Maka ada dua kasus
+
+<BlockMath math="x - y = 0 \quad \text{atau} \quad x^2 + xy + y^2 + x^2y^2 = 0" />
+
+Untuk kasus pertama, <InlineMath math="x = y" />. Substitusikan <InlineMath math="y = x" /> ke persamaan pertama
+
+<MathContainer>
+<BlockMath math="x + y^2 = y^3" />
+
+<BlockMath math="x + x^2 = x^3" />
+
+<BlockMath math="x^3 - x^2 - x = 0" />
+
+<BlockMath math="x(x^2 - x - 1) = 0" />
+</MathContainer>
+
+Maka <InlineMath math="x = 0" /> atau <InlineMath math="x^2 - x - 1 = 0" />.
+
+Untuk <InlineMath math="x^2 - x - 1 = 0" />, nilai diskriminannya adalah
+
+<BlockMath math="D = b^2 - 4ac = (-1)^2 - 4(1)(-1) = 1 + 4 = 5" />
+
+Nilai diskriminan <InlineMath math="D = 5 > 0" />, yang berarti persamaan kuadrat tersebut mempunyai 2 akar real yang berbeda.
+
+Jadi dari kasus pertama diperoleh:
+- <InlineMath math="x = 0" />, maka <InlineMath math="y = 0" />, sehingga pasangan <InlineMath math="(0, 0)" />
+- <InlineMath math="x^2 - x - 1 = 0" /> mempunyai 2 akar real berbeda, sehingga 2 pasangan <InlineMath math="(x, y)" /> dengan <InlineMath math="y = x" />
+
+Untuk kasus kedua <InlineMath math="x^2 + xy + y^2 + x^2y^2 = 0" />, karena semua suku non-negatif dan <InlineMath math="x^2y^2 \geq 0" />, maka persamaan ini hanya terpenuhi jika <InlineMath math="x = 0" /> dan <InlineMath math="y = 0" />, yang sudah termasuk dalam kasus pertama.
+
+Jadi sistem persamaan tersebut memiliki 3 pasangan yang berbeda.
+

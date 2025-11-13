@@ -1,0 +1,107 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Solution for Question 37",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Given the form of the inequality
+
+<BlockMath math="\sin x + \sin 2x > \sin 3x" />
+
+Subtract <InlineMath math="\sin x" /> from both sides
+
+<BlockMath math="\sin 2x > \sin 3x - \sin x" />
+
+Use trigonometric identities <InlineMath math="\sin 2x = 2 \sin x \cos x" /> and <InlineMath math="\sin A - \sin B = 2 \cos \frac{A + B}{2} \sin \frac{A - B}{2}" />
+
+<MathContainer>
+<BlockMath math="2 \sin x \cos x > 2 \cos \frac{3x + x}{2} \sin \frac{3x - x}{2}" />
+
+<BlockMath math="2 \sin x \cos x > 2 \cos 2x \sin x" />
+</MathContainer>
+
+Divide both sides by <InlineMath math="2" /> and use the identity <InlineMath math="\cos 2x = 2 \cos^2 x - 1" />
+
+<MathContainer>
+<BlockMath math="\sin x \cos x > \cos 2x \sin x" />
+
+<BlockMath math="\sin x \cos x > (2 \cos^2 x - 1) \sin x" />
+
+<BlockMath math="\sin x \cos x - (2 \cos^2 x - 1) \sin x > 0" />
+
+<BlockMath math="\sin x (\cos x - 2 \cos^2 x + 1) > 0" />
+
+<BlockMath math="\sin x (2 \cos^2 x - \cos x - 1) < 0" />
+</MathContainer>
+
+Factor <InlineMath math="2 \cos^2 x - \cos x - 1 = (2 \cos x + 1)(\cos x - 1)" />
+
+<BlockMath math="\sin x (2 \cos x + 1)(\cos x - 1) < 0" />
+
+Thus, the zeros are
+
+<MathContainer>
+<BlockMath math="\sin x = 0 \Rightarrow x = 0°, 180°, 360°" />
+
+<BlockMath math="2 \cos x + 1 = 0 \Rightarrow \cos x = -\frac{1}{2} \Rightarrow x = 120°, 240°" />
+
+<BlockMath math="\cos x - 1 = 0 \Rightarrow \cos x = 1 \Rightarrow x = 0°, 360°" />
+</MathContainer>
+
+The critical points are <InlineMath math="x = 0°" />, <InlineMath math="x = 120°" />, <InlineMath math="x = 180°" />, <InlineMath math="x = 240°" />, and <InlineMath math="x = 360°" />.
+
+The number line is as follows
+
+<NumberLine
+  title={<>Number Line</>}
+  description={<>Critical points: <InlineMath math="0°" />, <InlineMath math="120°" />, <InlineMath math="180°" />, <InlineMath math="240°" />, and <InlineMath math="360°" />.</>}
+  segments={[
+    {
+      start: 0,
+      end: 120,
+      startLabel: <InlineMath math="0°" />,
+      endLabel: <InlineMath math="120°" />,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: true,
+      label: <InlineMath math="\text{Interval 1}" />,
+    },
+    {
+      start: 120,
+      end: 180,
+      startLabel: <InlineMath math="120°" />,
+      endLabel: <InlineMath math="180°" />,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: false,
+      label: <InlineMath math="\text{Interval 2}" />,
+    },
+    {
+      start: 180,
+      end: 240,
+      startLabel: <InlineMath math="180°" />,
+      endLabel: <InlineMath math="240°" />,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: true,
+      label: <InlineMath math="\text{Interval 3}" />,
+    },
+    {
+      start: 240,
+      end: 360,
+      startLabel: <InlineMath math="240°" />,
+      endLabel: <InlineMath math="360°" />,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: false,
+      label: <InlineMath math="\text{Interval 4}" />,
+    },
+  ]}
+/>
+
+By testing the sign on each interval, we obtain that the inequality <InlineMath math="\sin x (2 \cos x + 1)(\cos x - 1) < 0" /> is satisfied for <InlineMath math="0° < x < 120°" /> and <InlineMath math="180° < x < 240°" />.
+
+So the solution set is <InlineMath math="0° < x < 120°, 180° < x < 240°" />.
+
