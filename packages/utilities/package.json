@@ -7,8 +7,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "pino": "^10.1.0",
-    "pino-pretty": "^13.1.2"
+    "pino": "^10.1.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*"

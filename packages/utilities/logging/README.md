@@ -1,16 +1,16 @@
 # Logging Utilities
 
-A comprehensive logging solution for the Nakafa project using [Pino](https://getpino.io/) with support for both pretty-printed development logs and raw JSON production logs.
+A comprehensive logging solution for the Nakafa project using [Pino](https://getpino.io/) with structured JSON logging.
 
 ## Features
 
-- 🎨 **Colorful Output**: Beautiful, colorized logs (enabled by default)
-- 🔄 **Pretty by Default**: Pretty logs everywhere unless explicitly disabled
+- 📊 **Structured Logging**: JSON-formatted logs for easy parsing and searching
 - 🏷️ **Service Loggers**: Create dedicated loggers for different services
 - 👶 **Child Loggers**: Add contextual information to all logs
 - 🛠️ **Utility Functions**: Pre-built functions for common logging patterns
 - ⚡ **High Performance**: Built on Pino, one of the fastest Node.js loggers
 - 📝 **TypeScript**: Full TypeScript support with comprehensive types
+- 🔍 **Production Ready**: JSON logs work seamlessly with log aggregation tools (Datadog, CloudWatch, etc.)
 
 ## Installation
 
@@ -19,8 +19,7 @@ The logging utilities are already included in the `@repo/utilities` package with
 ```json
 {
   "dependencies": {
-    "pino": "^9.9.0",
-    "pino-pretty": "^13.1.1"
+    "pino": "^10.1.0"
   }
 }
 ```
@@ -67,42 +66,32 @@ requestLogger.error('Request failed')
 
 ### Default Configuration
 
-The logger uses pretty-printed, colorized logs by default in development:
+The logger uses JSON-formatted logs in all environments for consistency and ease of parsing:
 
-- **Development**: Pretty-printed, colorized logs by default (`pretty: true`)
-- **Production**: Raw JSON logs for performance and build safety (`pretty: false`)
-- **Override**: Explicitly set `pretty: true/false` to override default behavior
+- **Development**: JSON logs (same as production for consistency)
+- **Production**: JSON logs optimized for log aggregation tools
+- **Log Level**: `info` by default, configurable via `level` option
 
 ### Custom Logger Configuration
 
 ```typescript
 import { createLogger } from '@repo/utilities/logging'
 
-// Development: pretty logs enabled by default
+// Development logger with debug level
 const devLogger = createLogger({
   level: 'debug',
   service: 'my-service'
 })
 
-// Production: raw JSON logs (default behavior)
+// Production logger with info level
 const prodLogger = createLogger({
   level: 'info',
   service: 'my-service'
 })
 
-// Force pretty logs in production (not recommended due to build issues)
-const prettyProdLogger = createLogger({
-  level: 'info',
-  pretty: true,
-  service: 'my-service'
-})
-
-// Custom: pretty without colors
-const customLogger = createLogger({
-  level: 'debug',
-  pretty: true,
-  colorize: false,
-  service: 'my-service'
+// Custom log level
+const traceLogger = createLogger({
+  level: 'trace'
 })
 ```
 
@@ -111,13 +100,11 @@ const customLogger = createLogger({
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `level` | `'trace' \| 'debug' \| 'info' \| 'warn' \| 'error' \| 'fatal'` | `'info'` | Minimum log level |
-| `pretty` | `boolean` | `true` | Enable pretty printing |
-| `colorize` | `boolean` | `true` | Enable colors in pretty mode |
 | `service` | `string` | `undefined` | Service name for context |
 
 ## Log Levels
 
-The logger supports standard log levels with colorized output in pretty mode:
+The logger supports standard log levels:
 
 | Level | Description |
 |-------|-------------|
@@ -286,9 +273,6 @@ Control logging behavior with environment variables:
 ```bash
 # Set log level
 LOG_LEVEL=debug
-
-# Disable pretty logs via environment (useful for production)
-DISABLE_PRETTY_LOGS=true
 ```
 
 And handle it in code:
@@ -296,20 +280,14 @@ And handle it in code:
 ```typescript
 import { createLogger } from '@repo/utilities/logging'
 
-// Option 1: Use environment variable
-const logger = createLogger({
-  pretty: process.env.DISABLE_PRETTY_LOGS !== 'true'
+// Development logger with debug level
+const devLogger = createLogger({
+  level: process.env.LOG_LEVEL || 'debug'
 })
 
-// Option 2: Environment-aware (like the old behavior)
-const envLogger = createLogger({
-  pretty: process.env.NODE_ENV === 'development'
-})
-
-// Option 3: Production-optimized
+// Production-optimized logger
 const prodLogger = createLogger({
-  level: 'warn',
-  pretty: false
+  level: 'warn'
 })
 ```
 
@@ -347,37 +325,11 @@ The structured JSON format includes:
 
 ## Troubleshooting
 
-### Build Errors with Worker Threads
-
-If you encounter errors like "the worker has exited" or "Cannot find module 'thread-stream/lib/worker.js'", this is because `pino-pretty` uses worker threads which can cause issues during Next.js builds.
-
-**Solution:**
-
-The logger automatically disables pretty formatting in production to prevent these issues. If you need pretty logs in production, consider:
-
-**Option 1: Environment variable approach:**
-
-```bash
-NODE_ENV=development pnpm run build  # Force development mode
-```
-
-**Option 2: Conditional logger:**
-
-```typescript
-const logger = createLogger({
-  pretty: process.env.FORCE_PRETTY === 'true'
-})
-```
-
-**Option 3: Post-build pretty formatting:**
-
-Use a log formatter tool in your deployment pipeline instead of runtime formatting.
-
 ### Common Issues
 
-- **Worker thread errors**: Disable pretty logging in production
-- **Missing colors**: Ensure your terminal supports ANSI colors
-- **Performance concerns**: Use raw JSON logs for high-throughput applications
+- **Log level not filtering**: Ensure the log level is set correctly in your logger configuration
+- **Missing logs**: Check that the log level is not too high (e.g., `warn` will not show `info` logs)
+- **Performance concerns**: Pino is already optimized, but you can reduce log levels in production for even better performance
 
 ## Contributing
 
@@ -388,4 +340,4 @@ When adding new utility functions or improving the logger:
 3. Add usage examples
 4. Update this README
 5. Ensure backward compatibility
-6. Test with both pretty and raw JSON modes
+6. Test with JSON logging in both development and production

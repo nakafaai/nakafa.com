@@ -251,16 +251,12 @@ export function customLoggerExample() {
   // Logger with custom configuration for testing
   const testLogger = createLogger({
     level: "debug",
-    pretty: true,
-    colorize: true,
     service: "test-runner",
   });
 
   // Logger for production-like environment
   const prodLogger = createLogger({
     level: "warn",
-    pretty: false,
-    colorize: false,
     service: "production-app",
   });
 

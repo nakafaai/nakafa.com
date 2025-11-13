@@ -35,7 +35,7 @@
     "@turbo/gen": "^2.6.1",
     "@types/node": "^24.10.1",
     "depcheck": "^1.4.7",
-    "tsup": "^8.5.0",
+    "tsup": "^8.5.1",
     "turbo": "^2.6.1",
     "typescript": "^5.9.3",
     "ultracite": "^6.3.2",
@@ -44,6 +44,6 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@10.21.0",
+  "packageManager": "pnpm@10.22.0",
   "type": "module"
 }

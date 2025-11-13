@@ -28,7 +28,6 @@
 export type { LoggerConfig } from "@repo/utilities/logging/logger";
 export {
   createChildLogger,
-  createDevLogger,
   createLogger,
   createServiceLogger,
   logger,

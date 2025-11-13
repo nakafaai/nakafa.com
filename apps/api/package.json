@@ -15,9 +15,11 @@
     "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@repo/security": "workspace:*",
+    "@repo/utilities": "workspace:*",
     "@convex-dev/better-auth": "^0.9.7",
     "@t3-oss/env-nextjs": "^0.13.8",
-    "next": "16.0.1",
+    "next": "16.0.3",
+    "pino": "^10.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "shiki": "^3.15.0"
@@ -25,7 +27,7 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "24.10.1",
-    "@types/react": "19.2.3",
+    "@types/react": "19.2.4",
     "typescript": "^5.9.3"
   }
 }
