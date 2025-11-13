@@ -1,0 +1,80 @@
+export const metadata = {
+  title: "Solution for Question 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+The tangent line has the general equation <InlineMath math="y = mx + c" /> which passes through the point <InlineMath math="(-8, 0)" />. Substitute the point to get
+
+<MathContainer>
+<BlockMath math="y = mx + c" />
+
+<BlockMath math="0 = -8m + c" />
+
+<BlockMath math="c = 8m" />
+</MathContainer>
+
+Thus the tangent line becomes
+
+<MathContainer>
+<BlockMath math="y = mx + 8m" />
+
+<BlockMath math="x = \frac{y - 8m}{m}" />
+</MathContainer>
+
+Change the parabola function into <InlineMath math="x" /> form
+
+<MathContainer>
+<BlockMath math="y = \sqrt{x} + 1" />
+
+<BlockMath math="\sqrt{x} = y - 1" />
+
+<BlockMath math="x = (y - 1)^2" />
+</MathContainer>
+
+Substitute the line into the parabola
+
+<MathContainer>
+<BlockMath math="\frac{y - 8m}{m} = (y - 1)^2" />
+
+<BlockMath math="\frac{y - 8m}{m} = y^2 - 2y + 1" />
+
+<BlockMath math="y - 8m = my^2 - 2my + m" />
+
+<BlockMath math="0 = my^2 - 2my - y + m + 8m" />
+
+<BlockMath math="my^2 - (2m + 1)y + 9m = 0" />
+</MathContainer>
+
+This becomes a quadratic equation with <InlineMath math="a = m" />, <InlineMath math="b = -(2m + 1)" />, <InlineMath math="c = 9m" />. The condition for tangency is <InlineMath math="D = 0" />
+
+<MathContainer>
+<BlockMath math="b^2 - 4ac = 0" />
+
+<BlockMath math="\{-(2m + 1)\}^2 - 4m(9m) = 0" />
+
+<BlockMath math="4m^2 + 4m + 1 - 36m^2 = 0" />
+
+<BlockMath math="-32m^2 + 4m + 1 = 0" />
+
+<BlockMath math="32m^2 - 4m - 1 = 0" />
+
+<BlockMath math="(8m + 1)(4m - 1) = 0" />
+
+<BlockMath math="m = -\frac{1}{8} \cup m = \frac{1}{4}" />
+</MathContainer>
+
+Because the form of <InlineMath math="y = \sqrt{x} + 1" /> is always an increasing function, then <InlineMath math="m = \frac{1}{4}" /> satisfies. So the equation of the tangent line is
+
+<MathContainer>
+<BlockMath math="y = mx + 8m" />
+
+<BlockMath math="y = \frac{1}{4}x + 8 \cdot \frac{1}{4}" />
+
+<BlockMath math="y = \frac{1}{4}x + 2" />
+
+<BlockMath math="4y = x + 8" />
+
+<BlockMath math="4y - x - 8 = 0" />
+</MathContainer>
+

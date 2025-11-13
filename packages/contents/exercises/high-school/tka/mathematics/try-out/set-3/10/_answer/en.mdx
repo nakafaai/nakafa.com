@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Solution for Question 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+The polynomial <InlineMath math="x^3 - 12x^2 + (p + 4)x - (p + 8) = 0" /> with <InlineMath math="a = 1" />, <InlineMath math="b = -12" />, <InlineMath math="c = p + 4" />, and <InlineMath math="d = -(p + 8)" />. The roots <InlineMath math="x_1, x_2, x_3" /> form an arithmetic sequence with common difference <InlineMath math="2" />. So <InlineMath math="x_1 = k" />, <InlineMath math="x_2 = k + 2" />, <InlineMath math="x_3 = k + 4" />.
+
+Determining the value of <InlineMath math="k" /> using the sum of roots
+
+<MathContainer>
+<BlockMath math="x_1 + x_2 + x_3 = -\frac{b}{a}" />
+
+<BlockMath math="k + (k + 2) + (k + 4) = -\frac{(-12)}{1}" />
+
+<BlockMath math="3k + 6 = 12" />
+
+<BlockMath math="3k = 6" />
+
+<BlockMath math="k = 2" />
+</MathContainer>
+
+So the roots are <InlineMath math="x_1 = 2" />, <InlineMath math="x_2 = 4" />, <InlineMath math="x_3 = 6" />. Then determining the value of <InlineMath math="p" /> from the product of its roots
+
+<MathContainer>
+<BlockMath math="x_1 \cdot x_2 \cdot x_3 = -\frac{d}{a}" />
+
+<BlockMath math="2(4)(6) = -\frac{[-(p + 8)]}{1}" />
+
+<BlockMath math="48 = p + 8" />
+
+<BlockMath math="p = 40" />
+</MathContainer>
+
+So the value of <InlineMath math="p - 36 = 40 - 36 = 4" />.
+

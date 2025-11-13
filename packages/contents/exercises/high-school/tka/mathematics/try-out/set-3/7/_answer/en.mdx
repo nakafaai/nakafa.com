@@ -1,0 +1,66 @@
+export const metadata = {
+  title: "Solution for Question 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+The general form of the <InlineMath math="n" />-th term of an arithmetic sequence is <InlineMath math="u_n = a + (n - 1)b" />. Then
+
+<MathContainer>
+<BlockMath math="u_1 \times u_2 = a \times (a + (2 - 1)b) = 10" />
+
+<BlockMath math="a(a + b) = 10 \quad ...(1)" />
+</MathContainer>
+
+And also
+
+<MathContainer>
+<BlockMath math="u_1 \times u_3 = a \times (a + (3 - 1)b)" />
+
+<BlockMath math="a(a + 2b) = 16 \quad ...(2)" />
+</MathContainer>
+
+Divide equation <InlineMath math="(1)" /> by <InlineMath math="(2)" />
+
+<MathContainer>
+<BlockMath math="\frac{a(a + b)}{a(a + 2b)} = \frac{10}{16}" />
+
+<BlockMath math="\frac{a + b}{a + 2b} = \frac{5}{8}" />
+
+<BlockMath math="8(a + b) = 5(a + 2b)" />
+
+<BlockMath math="8a + 8b = 5a + 10b" />
+
+<BlockMath math="3a = 2b" />
+
+<BlockMath math="b = \frac{3}{2}a" />
+</MathContainer>
+
+Substitute <InlineMath math="2b = 3a" /> into equation <InlineMath math="(2)" />
+
+<MathContainer>
+<BlockMath math="a(a + 2b) = 16" />
+
+<BlockMath math="a(a + 3a) = 16" />
+
+<BlockMath math="a(4a) = 16" />
+
+<BlockMath math="4a^2 = 16" />
+
+<BlockMath math="a^2 = 4" />
+
+<BlockMath math="a = \pm 2" />
+</MathContainer>
+
+Because the terms are positive then <InlineMath math="a > 0" /> or what satisfies is <InlineMath math="a = 2" />. So <InlineMath math="b = \frac{3}{2}(2) = 3" />. Then the 10th term of the sequence is
+
+<MathContainer>
+<BlockMath math="u_{10} = a + (10 - 1)b" />
+
+<BlockMath math="u_{10} = 2 + (9)(3)" />
+
+<BlockMath math="u_{10} = 2 + 27" />
+
+<BlockMath math="u_{10} = 29" />
+</MathContainer>
+

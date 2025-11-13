@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Solution for Question 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Point <InlineMath math="(a, b)" /> is located on the curve <InlineMath math="y = x^2 + 2" />. Substitute <InlineMath math="a" /> and <InlineMath math="b" /> into the curve function to get
+
+<BlockMath math="b = a^2 + 2" />
+
+The point becomes <InlineMath math="(a, a^2 + 2)" />. Then determine the distance from point <InlineMath math="(a, a^2 + 2)" /> to the line <InlineMath math="y = x" />
+
+<MathContainer>
+<BlockMath math="\text{distance} = \frac{|pm + qn + c|}{\sqrt{p^2 + q^2}}" />
+
+<BlockMath math="f(a) = \frac{|a - (a^2 + 2)|}{\sqrt{1^2 + (-1)^2}}" />
+
+<BlockMath math="f(a) = \frac{a^2 - a + 2}{\sqrt{2}}" />
+
+<BlockMath math="f'(a) = \frac{1}{\sqrt{2}}(2a - 1)" />
+</MathContainer>
+
+The closest distance is the minimum distance. The minimum distance occurs when
+
+<MathContainer>
+<BlockMath math="f'(a) = 0" />
+
+<BlockMath math="\frac{1}{\sqrt{2}}(2a - 1) = 0" />
+
+<BlockMath math="a = \frac{1}{2}" />
+</MathContainer>
+
+The minimum distance occurs when <InlineMath math="a = \frac{1}{2}" />, substitute to get the value of <InlineMath math="b" />
+
+<MathContainer>
+<BlockMath math="b = a^2 + 2" />
+
+<BlockMath math="b = \left(\frac{1}{2}\right)^2 + 2" />
+
+<BlockMath math="b = \frac{9}{4}" />
+</MathContainer>
+
+The sum <InlineMath math="a + b" />
+
+<BlockMath math="\frac{1}{2} + \frac{9}{4} = \frac{11}{4} = 2\frac{3}{4}" />

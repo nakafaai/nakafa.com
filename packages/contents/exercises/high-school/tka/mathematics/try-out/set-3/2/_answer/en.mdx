@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Solution for Question 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+The condition for a quadratic equation to have no real roots is
+
+<BlockMath math="D < 0" />
+
+<BlockMath math="b^2 - 4ac < 0 \quad ...(1)" />
+
+Because the line is tangent to the curve, the relationship between them applies
+
+<MathContainer>
+<BlockMath math="ax^2 + bx + c = -x" />
+
+<BlockMath math="ax^2 + bx + x + c = 0" />
+
+<BlockMath math="ax^2 + (b + 1)x + c = 0" />
+</MathContainer>
+
+The condition for tangency is
+
+<BlockMath math="D = 0" />
+
+<BlockMath math="(b + 1)^2 - 4ac = 0" />
+
+<BlockMath math="4ac = (b + 1)^2 \quad ...(2)" />
+
+Substitute equation <InlineMath math="(2)" /> into <InlineMath math="(1)" />
+
+<MathContainer>
+<BlockMath math="b^2 - 4ac < 0" />
+
+<BlockMath math="b^2 - (b + 1)^2 < 0" />
+
+<BlockMath math="b^2 - (b^2 + 2b + 1) < 0" />
+
+<BlockMath math="b^2 - b^2 - 2b - 1 < 0" />
+
+<BlockMath math="-2b - 1 < 0" />
+
+<BlockMath math="-2b < 1" />
+
+<BlockMath math="b > -\frac{1}{2}" />
+</MathContainer>
+
