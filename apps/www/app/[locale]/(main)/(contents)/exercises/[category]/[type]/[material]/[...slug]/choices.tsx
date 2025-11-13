@@ -43,7 +43,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-2 pt-4 pb-8 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
       {choices.map((choice) => {
         const isCorrect =
           answer?.isCorrect && choice.value === correctChoice?.value;

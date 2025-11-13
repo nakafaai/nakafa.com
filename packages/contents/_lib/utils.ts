@@ -146,6 +146,21 @@ export async function getContents({
   return contents;
 }
 
+type Exercise = {
+  number: number;
+  choices: ExercisesChoices;
+  question: {
+    metadata: ContentMetadata;
+    default: ReturnType<typeof createElement>;
+    raw: string;
+  };
+  answer: {
+    metadata: ContentMetadata;
+    default: ReturnType<typeof createElement>;
+    raw: string;
+  };
+};
+
 /**
  * Gets the exercises content for a specific file path.
  * @param locale - The locale to get the exercises content for.
@@ -155,21 +170,7 @@ export async function getContents({
 export async function getExercisesContent(
   locale: Locale,
   filePath: string
-): Promise<
-  | {
-      number: number;
-      choices: ExercisesChoices;
-      question: {
-        default: ReturnType<typeof createElement>;
-        raw: string;
-      };
-      answer: {
-        default: ReturnType<typeof createElement>;
-        raw: string;
-      };
-    }[]
-  | null
-> {
+): Promise<Exercise[] | null> {
   try {
     // Strip leading slash if present for consistency
     const cleanPath = filePath.startsWith("/")
@@ -226,10 +227,12 @@ export async function getExercisesContent(
         number,
         choices: parsedChoices.data,
         question: {
+          metadata: questionContent.metadata,
           default: questionContent.default,
           raw: questionContent.raw,
         },
         answer: {
+          metadata: answerContent.metadata,
           default: answerContent.default,
           raw: answerContent.raw,
         },
@@ -248,6 +251,31 @@ export async function getExercisesContent(
     }
 
     return validExercises;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Gets a specific exercise by its number from the exercises content.
+ * @param locale - The locale to get the exercise content for.
+ * @param filePath - The path to the exercises content file.
+ * @param exerciseNumber - The number of the exercise to retrieve.
+ * @returns The specific exercise, or null if not found.
+ */
+export async function getExerciseByNumber(
+  locale: Locale,
+  filePath: string,
+  exerciseNumber: number
+): Promise<Exercise | null> {
+  try {
+    const exercises = await getExercisesContent(locale, filePath);
+    if (!exercises) {
+      return null;
+    }
+
+    const exercise = exercises.find((ex) => ex.number === exerciseNumber);
+    return exercise || null;
   } catch {
     return null;
   }

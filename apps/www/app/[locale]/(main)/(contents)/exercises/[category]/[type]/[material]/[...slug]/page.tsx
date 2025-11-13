@@ -3,20 +3,25 @@ import {
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
 import { getSlugPath } from "@repo/contents/_lib/exercises/slug";
-import { getExercisesContent } from "@repo/contents/_lib/utils";
+import {
+  getExerciseByNumber,
+  getExercisesContent,
+} from "@repo/contents/_lib/utils";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
-import { cn, slugify } from "@repo/design-system/lib/utils";
+import { slugify } from "@repo/design-system/lib/utils";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { Comments } from "@/components/comments";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
+  LayoutMaterialFooter,
   LayoutMaterialHeader,
   LayoutMaterialMain,
   LayoutMaterialToc,
@@ -52,26 +57,61 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "Exercises" });
 
   const materialPath = getMaterialPath(category, type, material);
-  const FilePath = getSlugPath(category, type, material, slug);
+
+  // Check if last slug is a number (specific exercise)
+  const lastSlug = slug.at(-1);
+  const isSpecificExercise = lastSlug && isNumber(lastSlug);
+
+  const baseSlug = isSpecificExercise ? slug.slice(0, -1) : slug;
+  const FilePath = getSlugPath(category, type, material, baseSlug);
+  const fullPath = getSlugPath(category, type, material, slug);
+
+  let exerciseTitle: string | undefined;
+  if (isSpecificExercise) {
+    const exerciseNumber = Number.parseInt(lastSlug, 10);
+    const exercise = await getExerciseByNumber(
+      locale,
+      FilePath,
+      exerciseNumber
+    );
+    if (exercise) {
+      exerciseTitle = exercise.question.metadata.title;
+    }
+  }
 
   const materials = await getMaterials(materialPath, locale);
 
   // Find material and item in a single pass
   let materialTitle: string | undefined;
+  let itemTitle: string | undefined;
 
   for (const mat of materials) {
     const foundItem = mat.items.find((itm) => itm.href === FilePath);
     if (foundItem) {
       materialTitle = mat.title;
+      itemTitle = foundItem.title;
       break;
     }
   }
 
   const title = `${t(material)} - ${t(type)} - ${t(category)}`;
-  const finalTitle = materialTitle ? `${materialTitle} - ${title}` : title;
-  const urlPath = `/${locale}${FilePath}`;
+  let finalTitle = materialTitle ? `${materialTitle} - ${title}` : title;
+
+  // Prepend item title if available
+  if (itemTitle) {
+    finalTitle = `${itemTitle} - ${finalTitle}`;
+  }
+
+  // Prepend exercise title if it's a specific exercise
+  if (isSpecificExercise && exerciseTitle) {
+    finalTitle = `${exerciseTitle} - ${finalTitle}`;
+  }
+
+  // Use full slug path for URL and image if it's a specific exercise
+  const urlPath = `/${locale}${fullPath}`;
+  const imagePath = fullPath;
   const image = {
-    url: getOgUrl(locale, FilePath),
+    url: getOgUrl(locale, imagePath),
     width: 1200,
     height: 630,
   };
@@ -115,8 +155,18 @@ export default function Page({ params }: Props) {
   // if last slug can be converted to a number, means it is a specific exercise
   const lastSlug = slug.at(-1);
   if (lastSlug && isNumber(lastSlug)) {
-    // TODO: get specific exercise
-    return null;
+    const exerciseNumber = Number.parseInt(lastSlug, 10);
+    const baseSlug = slug.slice(0, -1);
+    return (
+      <SingleExerciseContent
+        category={category}
+        exerciseNumber={exerciseNumber}
+        locale={locale}
+        material={material}
+        slug={baseSlug}
+        type={type}
+      />
+    );
   }
 
   return (
@@ -193,7 +243,7 @@ async function PageContent({
             title={currentMaterialItem.title}
           />
 
-          <LayoutMaterialMain>
+          <LayoutMaterialMain className="space-y-12">
             <ExerciseContextProvider
               setId={FilePath}
               totalExercises={exercises.length}
@@ -203,7 +253,7 @@ async function PageContent({
                   t("number-count", { count: exercise.number })
                 );
                 return (
-                  <section className={cn("mb-6 pb-6")} key={exercise.number}>
+                  <section key={exercise.number}>
                     <div className="flex items-center gap-4">
                       <a
                         className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
@@ -226,11 +276,13 @@ async function PageContent({
                       {exercise.question.default}
                     </section>
 
-                    <ExerciseChoices
-                      choices={exercise.choices[locale]}
-                      exerciseNumber={exercise.number}
-                      id={id}
-                    />
+                    <section className="my-8">
+                      <ExerciseChoices
+                        choices={exercise.choices[locale]}
+                        exerciseNumber={exercise.number}
+                        id={id}
+                      />
+                    </section>
 
                     <ExerciseAnswer exerciseNumber={exercise.number}>
                       {exercise.answer.default}
@@ -240,6 +292,9 @@ async function PageContent({
               })}
             </ExerciseContextProvider>
           </LayoutMaterialMain>
+          <LayoutMaterialFooter>
+            <Comments slug={FilePath} />
+          </LayoutMaterialFooter>
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{
@@ -250,6 +305,133 @@ async function PageContent({
             title: currentMaterialItem.title,
             href: FilePath,
             description: currentMaterial.title,
+          }}
+        />
+      </LayoutMaterial>
+    );
+  } catch {
+    notFound();
+  }
+}
+
+async function SingleExerciseContent({
+  locale,
+  category,
+  type,
+  material,
+  slug,
+  exerciseNumber,
+}: {
+  locale: Locale;
+  category: ExercisesCategory;
+  type: ExercisesType;
+  material: ExercisesMaterial;
+  slug: string[];
+  exerciseNumber: number;
+}) {
+  const t = await getTranslations({ locale, namespace: "Exercises" });
+
+  const materialPath = getMaterialPath(category, type, material);
+  const FilePath = getSlugPath(category, type, material, slug);
+  const exerciseFilePath = `${FilePath}/${exerciseNumber}`;
+
+  try {
+    const [exercise, materials] = await Promise.all([
+      getExerciseByNumber(locale, FilePath, exerciseNumber),
+      getMaterials(materialPath, locale),
+    ]);
+
+    if (!exercise) {
+      notFound();
+    }
+
+    // Find material and item in a single pass
+    let currentMaterial: (typeof materials)[number] | undefined;
+    let currentMaterialItem:
+      | (typeof materials)[number]["items"][number]
+      | undefined;
+
+    for (const mat of materials) {
+      const foundItem = mat.items.find((itm) => itm.href === FilePath);
+      if (foundItem) {
+        currentMaterial = mat;
+        currentMaterialItem = foundItem;
+        break;
+      }
+    }
+
+    if (!(currentMaterial && currentMaterialItem)) {
+      notFound();
+    }
+
+    const id = slugify(t("number-count", { count: exercise.number }));
+
+    return (
+      <LayoutMaterial>
+        <LayoutMaterialContent>
+          <LayoutMaterialHeader
+            link={{
+              href: FilePath,
+              label: currentMaterialItem.title,
+            }}
+            title={exercise.question.metadata.title}
+          />
+
+          <LayoutMaterialMain>
+            <ExerciseContextProvider setId={FilePath} totalExercises={1}>
+              <section>
+                <div className="flex items-center gap-4">
+                  <a
+                    className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
+                    href={`#${id}`}
+                    id={id}
+                  >
+                    <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
+                      <span className="font-mono text-xs tracking-tighter">
+                        {exercise.number}
+                      </span>
+                      <h2 className="sr-only">
+                        {t("number-count", { count: exercise.number })}
+                      </h2>
+                    </div>
+                  </a>
+                  <ExerciseAnswerAction exerciseNumber={exercise.number} />
+                </div>
+
+                <section className="my-6">{exercise.question.default}</section>
+
+                <section className="my-8">
+                  <ExerciseChoices
+                    choices={exercise.choices[locale]}
+                    exerciseNumber={exercise.number}
+                    id={id}
+                  />
+                </section>
+
+                <ExerciseAnswer exerciseNumber={exercise.number}>
+                  {exercise.answer.default}
+                </ExerciseAnswer>
+              </section>
+            </ExerciseContextProvider>
+          </LayoutMaterialMain>
+          <LayoutMaterialFooter>
+            <Comments slug={exerciseFilePath} />
+          </LayoutMaterialFooter>
+        </LayoutMaterialContent>
+        <LayoutMaterialToc
+          chapters={{
+            label: t("exercises"),
+            data: [
+              {
+                label: t("number-count", { count: exercise.number }),
+                href: `#${id}`,
+              },
+            ],
+          }}
+          header={{
+            title: exercise.question.metadata.title,
+            href: exerciseFilePath,
+            description: currentMaterialItem.title,
           }}
         />
       </LayoutMaterial>
