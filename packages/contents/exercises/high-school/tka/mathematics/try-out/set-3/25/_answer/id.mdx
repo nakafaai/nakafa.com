@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Pembahasan Soal 25",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Ubah dulu agar bentuk pecahannya hilang
+
+<MathContainer>
+<BlockMath math="\left|\frac{x}{3} - \frac{1}{4}\right| = \frac{1}{12}" />
+
+<BlockMath math="\left|\frac{4x - 3}{12}\right| = \frac{1}{12}" />
+
+<BlockMath math="|4x - 3| = 1" />
+</MathContainer>
+
+Definisinya adalah
+
+<BlockMath math="|4x - 3| = \begin{cases} 4x - 3, & \text{untuk } x \geq \frac{3}{4} \\ -(4x - 3), & \text{untuk } x < \frac{3}{4} \end{cases}" />
+
+Untuk <InlineMath math="x \geq \frac{3}{4}" /> maka
+
+<MathContainer>
+<BlockMath math="|4x - 3| = 1" />
+
+<BlockMath math="4x - 3 = 1" />
+
+<BlockMath math="4x = 4" />
+
+<BlockMath math="x = 1" />
+</MathContainer>
+
+Untuk <InlineMath math="x < \frac{3}{4}" /> maka
+
+<MathContainer>
+<BlockMath math="|4x - 3| = 1" />
+
+<BlockMath math="-(4x - 3) = 1" />
+
+<BlockMath math="-4x + 3 = 1" />
+
+<BlockMath math="-4x = -2" />
+
+<BlockMath math="x = \frac{1}{2}" />
+</MathContainer>
+
+Maka himpunan penyelesaiannya adalah <InlineMath math="\left\{\frac{1}{2}, 1\right\}" />.
+

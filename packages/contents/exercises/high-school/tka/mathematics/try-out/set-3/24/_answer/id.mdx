@@ -1,0 +1,76 @@
+export const metadata = {
+  title: "Pembahasan Soal 24",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Definisikan masing-masing nilai mutlaknya
+
+<MathContainer>
+<BlockMath math="|2x + 1| = \begin{cases} 2x + 1, & \text{untuk } 2x + 1 \geq 0 \text{ atau } x \geq -\frac{1}{2} \\ -(2x + 1), & \text{untuk } 2x + 1 < 0 \text{ atau } x < -\frac{1}{2} \end{cases}" />
+
+<BlockMath math="|2x| = \begin{cases} 2x, & \text{untuk } 2x \geq 0 \text{ atau } x \geq 0 \\ -2x, & \text{untuk } 2x < 0 \text{ atau } x < 0 \end{cases}" />
+</MathContainer>
+
+Terlihat bahwa pembatas nilai <InlineMath math="x" /> dari kedua mutlak adalah <InlineMath math="x = -\frac{1}{2}" /> dan <InlineMath math="x = 0" />. Artinya batas akan membentuk tiga daerah yaitu <InlineMath math="\text{Daerah I } (x < -\frac{1}{2})" />, <InlineMath math="\text{Daerah II } (-\frac{1}{2} \leq x < 0)" />, dan <InlineMath math="\text{Daerah III } (x \geq 0)" />. Berdasarkan daerah dan definisinya, soal dapat diselesaikan.
+
+<InlineMath math="\text{Daerah I:}" /> <InlineMath math="(x < -\frac{1}{2})" />
+
+<MathContainer>
+<BlockMath math="|2x + 1| = -(2x + 1)" />
+
+<BlockMath math="|2x| = -2x" />
+
+<BlockMath math="|2x + 1| < 5 - |2x|" />
+
+<BlockMath math="-(2x + 1) < 5 - (-2x)" />
+
+<BlockMath math="-2x - 1 < 5 + 2x" />
+
+<BlockMath math="-4x < 6" />
+
+<BlockMath math="x > -\frac{3}{2}" />
+</MathContainer>
+
+Solusi untuk daerah I adalah <InlineMath math="\{x < -\frac{1}{2}\} \cap \{x > -\frac{3}{2}\} = \{-\frac{3}{2} < x < -\frac{1}{2}\}" />.
+
+<InlineMath math="\text{Daerah II:}" /> <InlineMath math="(-\frac{1}{2} \leq x < 0)" />
+
+<MathContainer>
+<BlockMath math="|2x + 1| = 2x + 1" />
+
+<BlockMath math="|2x| = -2x" />
+
+<BlockMath math="|2x + 1| < 5 - |2x|" />
+
+<BlockMath math="2x + 1 < 5 - (-2x)" />
+
+<BlockMath math="2x + 1 < 5 + 2x" />
+
+<BlockMath math="1 < 5" />
+</MathContainer>
+
+Semua <InlineMath math="x" /> di daerah II bernilai benar, maka solusinya <InlineMath math="\{-\frac{1}{2} \leq x < 0\}" />.
+
+<InlineMath math="\text{Daerah III:}" /> <InlineMath math="(x \geq 0)" />
+
+<MathContainer>
+<BlockMath math="|2x + 1| = 2x + 1" />
+
+<BlockMath math="|2x| = 2x" />
+
+<BlockMath math="|2x + 1| < 5 - |2x|" />
+
+<BlockMath math="2x + 1 < 5 - 2x" />
+
+<BlockMath math="4x < 4" />
+
+<BlockMath math="x < 1" />
+</MathContainer>
+
+Solusinya adalah <InlineMath math="\{x \geq 0\} \cap \{x < 1\} = \{0 \leq x < 1\}" />.
+
+Maka solusi keseluruhannya adalah gabungan
+
+<BlockMath math="\left\{-\frac{3}{2} < x < -\frac{1}{2}\right\} \cup \left\{-\frac{1}{2} \leq x < 0\right\} \cup \{0 \leq x < 1\} = \left\{-\frac{3}{2} < x < 1\right\}" />
+

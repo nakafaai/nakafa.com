@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Solution for Question 25",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+First change it so that the fractional form disappears
+
+<MathContainer>
+<BlockMath math="\left|\frac{x}{3} - \frac{1}{4}\right| = \frac{1}{12}" />
+
+<BlockMath math="\left|\frac{4x - 3}{12}\right| = \frac{1}{12}" />
+
+<BlockMath math="|4x - 3| = 1" />
+</MathContainer>
+
+Its definition is
+
+<BlockMath math="|4x - 3| = \begin{cases} 4x - 3, & \text{for } x \geq \frac{3}{4} \\ -(4x - 3), & \text{for } x < \frac{3}{4} \end{cases}" />
+
+For <InlineMath math="x \geq \frac{3}{4}" /> then
+
+<MathContainer>
+<BlockMath math="|4x - 3| = 1" />
+
+<BlockMath math="4x - 3 = 1" />
+
+<BlockMath math="4x = 4" />
+
+<BlockMath math="x = 1" />
+</MathContainer>
+
+For <InlineMath math="x < \frac{3}{4}" /> then
+
+<MathContainer>
+<BlockMath math="|4x - 3| = 1" />
+
+<BlockMath math="-(4x - 3) = 1" />
+
+<BlockMath math="-4x + 3 = 1" />
+
+<BlockMath math="-4x = -2" />
+
+<BlockMath math="x = \frac{1}{2}" />
+</MathContainer>
+
+So the solution set is <InlineMath math="\left\{\frac{1}{2}, 1\right\}" />.
+

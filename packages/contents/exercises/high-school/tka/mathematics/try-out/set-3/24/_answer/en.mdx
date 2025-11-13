@@ -1,0 +1,76 @@
+export const metadata = {
+  title: "Solution for Question 24",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Define each absolute value
+
+<MathContainer>
+<BlockMath math="|2x + 1| = \begin{cases} 2x + 1, & \text{for } 2x + 1 \geq 0 \text{ or } x \geq -\frac{1}{2} \\ -(2x + 1), & \text{for } 2x + 1 < 0 \text{ or } x < -\frac{1}{2} \end{cases}" />
+
+<BlockMath math="|2x| = \begin{cases} 2x, & \text{for } 2x \geq 0 \text{ or } x \geq 0 \\ -2x, & \text{for } 2x < 0 \text{ or } x < 0 \end{cases}" />
+</MathContainer>
+
+It is seen that the boundary values of <InlineMath math="x" /> from both absolute values are <InlineMath math="x = -\frac{1}{2}" /> and <InlineMath math="x = 0" />. This means the boundaries will form three regions, namely <InlineMath math="\text{Region I } (x < -\frac{1}{2})" />, <InlineMath math="\text{Region II } (-\frac{1}{2} \leq x < 0)" />, and <InlineMath math="\text{Region III } (x \geq 0)" />. Based on the regions and their definitions, the problem can be solved.
+
+<InlineMath math="\text{Region I:}" /> <InlineMath math="(x < -\frac{1}{2})" />
+
+<MathContainer>
+<BlockMath math="|2x + 1| = -(2x + 1)" />
+
+<BlockMath math="|2x| = -2x" />
+
+<BlockMath math="|2x + 1| < 5 - |2x|" />
+
+<BlockMath math="-(2x + 1) < 5 - (-2x)" />
+
+<BlockMath math="-2x - 1 < 5 + 2x" />
+
+<BlockMath math="-4x < 6" />
+
+<BlockMath math="x > -\frac{3}{2}" />
+</MathContainer>
+
+The solution for Region I is <InlineMath math="\{x < -\frac{1}{2}\} \cap \{x > -\frac{3}{2}\} = \{-\frac{3}{2} < x < -\frac{1}{2}\}" />.
+
+<InlineMath math="\text{Region II:}" /> <InlineMath math="(-\frac{1}{2} \leq x < 0)" />
+
+<MathContainer>
+<BlockMath math="|2x + 1| = 2x + 1" />
+
+<BlockMath math="|2x| = -2x" />
+
+<BlockMath math="|2x + 1| < 5 - |2x|" />
+
+<BlockMath math="2x + 1 < 5 - (-2x)" />
+
+<BlockMath math="2x + 1 < 5 + 2x" />
+
+<BlockMath math="1 < 5" />
+</MathContainer>
+
+All <InlineMath math="x" /> in Region II are true, so the solution is <InlineMath math="\{-\frac{1}{2} \leq x < 0\}" />.
+
+<InlineMath math="\text{Region III:}" /> <InlineMath math="(x \geq 0)" />
+
+<MathContainer>
+<BlockMath math="|2x + 1| = 2x + 1" />
+
+<BlockMath math="|2x| = 2x" />
+
+<BlockMath math="|2x + 1| < 5 - |2x|" />
+
+<BlockMath math="2x + 1 < 5 - 2x" />
+
+<BlockMath math="4x < 4" />
+
+<BlockMath math="x < 1" />
+</MathContainer>
+
+The solution is <InlineMath math="\{x \geq 0\} \cap \{x < 1\} = \{0 \leq x < 1\}" />.
+
+So the overall solution is the union
+
+<BlockMath math="\left\{-\frac{3}{2} < x < -\frac{1}{2}\right\} \cup \left\{-\frac{1}{2} \leq x < 0\right\} \cup \{0 \leq x < 1\} = \left\{-\frac{3}{2} < x < 1\right\}" />
+

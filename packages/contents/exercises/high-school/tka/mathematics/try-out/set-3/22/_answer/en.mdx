@@ -1,0 +1,105 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Solution for Question 22",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+The definition of absolute value <InlineMath math="|x - 2|" /> is
+
+<BlockMath math="|x - 2| = \begin{cases} x - 2, & \text{for } x \geq 2 \\ -(x - 2), & \text{for } x < 2 \end{cases}" />
+
+To facilitate finding the solution, we divide it into 3 regions based on the definition of absolute value above
+
+<NumberLine
+  title={<>Region Division</>}
+  description={<>Three regions based on absolute value definition: <InlineMath math="x < 0" />, <InlineMath math="0 \leq x < 2" />, and <InlineMath math="x \geq 2" />.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: 0,
+      endLabel: <InlineMath math="0" />,
+      shaded: false,
+      label: <InlineMath math="\text{Region I}" />,
+    },
+    {
+      start: 0,
+      end: 2,
+      startLabel: <InlineMath math="0" />,
+      endLabel: <InlineMath math="2" />,
+      startInclusive: true,
+      shaded: false,
+      label: <InlineMath math="\text{Region II}" />,
+    },
+    {
+      start: 2,
+      end: Number.POSITIVE_INFINITY,
+      startLabel: <InlineMath math="2" />,
+      startInclusive: true,
+      shaded: false,
+      label: <InlineMath math="\text{Region III}" />,
+    },
+  ]}
+/>
+
+<InlineMath math="\text{Region I:}" /> <InlineMath math="(x < 0)" />
+
+<MathContainer>
+<BlockMath math="|x| = -x" />
+
+<BlockMath math="|x - 2| = -(x - 2) = -x + 2" />
+
+<BlockMath math="|x| + |x - 2| > 3" />
+
+<BlockMath math="-x + (-x + 2) > 3" />
+
+<BlockMath math="-2x + 2 > 3" />
+
+<BlockMath math="-2x > 1" />
+
+<BlockMath math="x < -\frac{1}{2}" />
+</MathContainer>
+
+So the solution set is <InlineMath math="\{x < 0\} \cap \{x < -\frac{1}{2}\} = \{x < -\frac{1}{2}\}" />.
+
+<InlineMath math="\text{Region II:}" /> <InlineMath math="(0 \leq x < 2)" />
+
+<MathContainer>
+<BlockMath math="|x| = x" />
+
+<BlockMath math="|x - 2| = -(x - 2) = -x + 2" />
+
+<BlockMath math="|x| + |x - 2| > 3" />
+
+<BlockMath math="x + (-x + 2) > 3" />
+
+<BlockMath math="2 > 3" />
+</MathContainer>
+
+This means there is no value of <InlineMath math="x" /> that satisfies region II.
+
+<InlineMath math="\text{Region III:}" /> <InlineMath math="(x \geq 2)" />
+
+<MathContainer>
+<BlockMath math="|x| = x" />
+
+<BlockMath math="|x - 2| = x - 2" />
+
+<BlockMath math="|x| + |x - 2| > 3" />
+
+<BlockMath math="x + (x - 2) > 3" />
+
+<BlockMath math="2x > 5" />
+
+<BlockMath math="x > \frac{5}{2}" />
+</MathContainer>
+
+So the solution set is <InlineMath math="\{x \geq 2\} \cap \{x > \frac{5}{2}\} = \{x > \frac{5}{2}\}" />.
+
+So the total solution is the union of the three regions
+
+<BlockMath math="\{x < -\frac{1}{2}\} \cup \{x > \frac{5}{2}\}" />
+
+So the solution is <InlineMath math="\{x < -\frac{1}{2} \cup x > \frac{5}{2}\}" />.
+

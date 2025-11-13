@@ -1,0 +1,77 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Pembahasan Soal 21",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+Permisalan bahwa <InlineMath math="|x - 5| = p" />, kita dapat menyelesaikan pertidaksamaan menjadi
+
+<MathContainer>
+<BlockMath math="|x - 5|^2 - 3|x - 5| + 2 < 0" />
+
+<BlockMath math="p^2 - 3p + 2 < 0" />
+
+<BlockMath math="(p - 1)(p - 2) < 0" />
+
+<BlockMath math="p = 1 \cup p = 2" />
+</MathContainer>
+
+Kembalikan ke bentuk asal
+
+<MathContainer>
+<BlockMath math="p = 1 \rightarrow |x - 5| = 1 \rightarrow x = 6 \cup x = 4" />
+
+<BlockMath math="p = 2 \rightarrow |x - 5| = 2 \rightarrow x = 7 \cup x = 3" />
+</MathContainer>
+
+Garis bilangannya seperti berikut
+
+<NumberLine
+  title={<>Garis Bilangan Penyelesaian</>}
+  description={<>Penyelesaian <InlineMath math="(p - 1)(p - 2) < 0" /> untuk <InlineMath math="p = |x - 5|" /> menghasilkan <InlineMath math="3 < x < 4" /> atau <InlineMath math="6 < x < 7" />.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: 3,
+      endLabel: <InlineMath math="3" />,
+      shaded: false,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 3,
+      end: 4,
+      startLabel: <InlineMath math="3" />,
+      endLabel: <InlineMath math="4" />,
+      shaded: true,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: 4,
+      end: 6,
+      startLabel: <InlineMath math="4" />,
+      endLabel: <InlineMath math="6" />,
+      shaded: false,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 6,
+      end: 7,
+      startLabel: <InlineMath math="6" />,
+      endLabel: <InlineMath math="7" />,
+      shaded: true,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: 7,
+      end: Number.POSITIVE_INFINITY,
+      startLabel: <InlineMath math="7" />,
+      shaded: false,
+      label: <InlineMath math="+" />,
+    },
+  ]}
+/>
+
+Sehingga memiliki dua solusi yaitu <InlineMath math="HP = \{3 < x < 4\} \cup \{6 < x < 7\}" />. Jika dipersingkat menjadi <InlineMath math="(3,4) \cup (6,7)" />.
+

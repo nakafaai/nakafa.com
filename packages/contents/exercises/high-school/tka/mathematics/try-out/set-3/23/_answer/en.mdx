@@ -1,0 +1,60 @@
+export const metadata = {
+  title: "Solution for Question 23",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "10/11/2025",
+};
+
+The definition of absolute value <InlineMath math="|x + 1|" /> is
+
+<BlockMath math="|x + 1| = \begin{cases} x + 1, & \text{for } x + 1 \geq 0 \text{ or } x \geq -1 \\ -(x + 1), & \text{for } x + 1 < 0 \text{ or } x < -1 \end{cases}" />
+
+For <InlineMath math="x \geq -1" />
+
+<MathContainer>
+<BlockMath math="|x + 1| = x + 1" />
+
+<BlockMath math="|x + 1| > x + 3" />
+
+<BlockMath math="x + 1 > x + 3" />
+
+<BlockMath math="1 > 3" />
+</MathContainer>
+
+There is no value of <InlineMath math="x" /> that satisfies for <InlineMath math="x \geq -1" />.
+
+For <InlineMath math="x < -1" />
+
+<MathContainer>
+<BlockMath math="|x + 1| = -(x + 1)" />
+
+<BlockMath math="|x + 1| > x + 3" />
+
+<BlockMath math="-(x + 1) > x + 3" />
+
+<BlockMath math="-x - 1 > x + 3" />
+
+<BlockMath math="-2x > 4" />
+
+<BlockMath math="x < -2" />
+</MathContainer>
+
+The value of <InlineMath math="x" /> that satisfies is <InlineMath math="x < -2" />. So the solution set is <InlineMath math="\{x < -2\}" />.
+
+Solve the following form <InlineMath math="|x + 2| < 3" />
+
+<MathContainer>
+<BlockMath math="|x + 2| < 3" />
+
+<BlockMath math="-3 < x + 2 < 3" />
+
+<BlockMath math="-3 - 2 < x < 3 - 2" />
+
+<BlockMath math="-5 < x < 1" />
+</MathContainer>
+
+So the solution set is <InlineMath math="\{-5 < x < 1\}" />.
+
+Because the value of <InlineMath math="x" /> must satisfy the form of <InlineMath math="|x + 1| > x + 3" /> and <InlineMath math="|x + 2| < 3" />, then we make the intersection of both, which is
+
+<BlockMath math="\{x < -2\} \cap \{-5 < x < 1\} = \{-5 < x < -2\}" />
+
