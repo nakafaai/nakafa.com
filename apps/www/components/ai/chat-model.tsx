@@ -21,6 +21,7 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useAction, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
+import { useTransition } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useAi } from "@/lib/context/use-ai";
 import { freeModels, models, premiumModels } from "@/lib/data/models";
@@ -30,6 +31,8 @@ export function AiChatModel() {
 
   const pathname = usePathname();
   const router = useRouter();
+
+  const [isPending, startTransition] = useTransition();
 
   const syncCustomer = useAction(
     api.customers.actions.syncPolarCustomerFromUserId
@@ -89,12 +92,18 @@ export function AiChatModel() {
       return;
     }
     const isPremium = premiumModels.some((m) => m.value === value);
-    handleCheckout({ type: isPremium ? "premium" : "free" });
     setModel(value);
+    startTransition(async () => {
+      await handleCheckout({ type: isPremium ? "premium" : "free" });
+    });
   };
 
   return (
-    <PromptInputModelSelect onValueChange={handleOnChange} value={model}>
+    <PromptInputModelSelect
+      disabled={isPending}
+      onValueChange={handleOnChange}
+      value={model}
+    >
       <PromptInputModelSelectTrigger>
         <PromptInputModelSelectValue>
           {Icon && <Icon />}
