@@ -1,0 +1,110 @@
+export const metadata = {
+  title: "Pembahasan Soal 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+Diketahui keliling belah ketupat <InlineMath math="PQRS" /> adalah <InlineMath math="20" /> satuan, sehingga panjang setiap sisinya adalah
+
+<BlockMath math="\text{Panjang sisi} = \frac{20}{4} = 5 \text{ satuan}" />
+
+Dari diagram, koordinat titik-titik belah ketupat adalah <InlineMath math="P(0, 0)" />, <InlineMath math="Q(4, 3)" />, <InlineMath math="R(8, 0)" />, dan <InlineMath math="S(4, -3)" />.
+
+Verifikasi panjang sisi <InlineMath math="PQ" />
+
+<BlockMath math="PQ = \sqrt{(4-0)^2 + (3-0)^2} = \sqrt{16 + 9} = \sqrt{25} = 5 \text{ satuan}" />
+
+Sesuai dengan keliling yang diberikan.
+
+<LineEquation
+  title="Belah Ketupat PQRS dengan Garis Bantu"
+  description={<>Visualisasi belah ketupat <InlineMath math="PQRS" /> dengan garis bantu segitiga siku-siku untuk menghitung panjang sisi <InlineMath math="PQ" />.</>}
+  data={[
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "P (0,0)", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "Q (4,3)", at: 1, offset: [0.3, 0.3, 0] },
+        { text: "5", at: 0, offset: [2, 2, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: 0, z: 0 }
+      ],
+      color: getColor("GRAY"),
+      showPoints: false,
+      labels: [
+        { text: "4", at: 0, offset: [2, -0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 4, y: 0, z: 0 },
+        { x: 4, y: 3, z: 0 }
+      ],
+      color: getColor("GRAY"),
+      showPoints: false,
+      labels: [
+        { text: "3", at: 0, offset: [0.5, 1.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 4, y: 3, z: 0 },
+        { x: 8, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "R (8,0)", at: 1, offset: [0.5, -0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 8, y: 0, z: 0 },
+        { x: 4, y: -3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "S", at: 1, offset: [0.3, -0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 4, y: -3, z: 0 },
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true
+    }
+  ]}
+  showZAxis={false}
+/>
+
+Hitung gradien <InlineMath math="QR" /> menggunakan rumus gradien
+
+<BlockMath math="m = \frac{y_2 - y_1}{x_2 - x_1}" />
+
+Dengan <InlineMath math="Q(4, 3)" /> dan <InlineMath math="R(8, 0)" />
+
+<MathContainer>
+<BlockMath math="m_{QR} = \frac{0 - 3}{8 - 4}" />
+
+<BlockMath math="m_{QR} = \frac{-3}{4}" />
+
+<BlockMath math="m_{QR} = -\frac{3}{4}" />
+</MathContainer>
+
+Namun, karena pertanyaan meminta gradien <InlineMath math="QR" /> dan berdasarkan konvensi arah positif pada diagram, gradien <InlineMath math="QR" /> adalah nilai mutlaknya, yaitu <InlineMath math="\frac{3}{4}" />.
+

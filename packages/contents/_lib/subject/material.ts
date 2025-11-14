@@ -1,3 +1,4 @@
+import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import type {
@@ -23,6 +24,7 @@ import {
   PawPrintIcon,
   PiIcon,
   ScaleIcon,
+  SigmaIcon,
   SpeechIcon,
 } from "lucide-react";
 import type { Locale } from "next-intl";
@@ -73,7 +75,7 @@ export async function getMaterials(
  * @param material - The material to get the icon for.
  * @returns The icon for the material.
  */
-export function getMaterialIcon(material: Material) {
+export function getMaterialIcon(material: Material | ExercisesMaterial) {
   switch (material) {
     case "mathematics":
       return PiIcon;
@@ -109,6 +111,8 @@ export function getMaterialIcon(material: Material) {
       return ComputerIcon;
     case "international-relations":
       return HandshakeIcon;
+    case "quantitative-reasoning":
+      return SigmaIcon;
     default:
       return LightbulbIcon;
   }

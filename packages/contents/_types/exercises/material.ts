@@ -15,5 +15,8 @@ export const ExercisesMaterialListSchema = z.array(
 );
 export type ExercisesMaterialList = z.infer<typeof ExercisesMaterialListSchema>;
 
-export const ExercisesMaterialSchema = z.enum(["mathematics"]);
+export const ExercisesMaterialSchema = z.enum([
+  "mathematics",
+  "quantitative-reasoning",
+]);
 export type ExercisesMaterial = z.infer<typeof ExercisesMaterialSchema>;

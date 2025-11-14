@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Solution to Question 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Given map scale <InlineMath math="1 : 200,000" />, map distance <InlineMath math="12 \text{ cm}" />, and travel time <InlineMath math="12 \text{ minutes}" />.
+
+Calculate the actual distance using the map scale
+
+<BlockMath math="\frac{\text{Map distance}}{\text{Actual distance}} = \frac{1}{200,000}" />
+
+<BlockMath math="\frac{12 \text{ cm}}{x} = \frac{1}{200,000}" />
+
+<BlockMath math="x = 12 \times 200,000 = 2,400,000 \text{ cm}" />
+
+Convert to kilometers
+
+<BlockMath math="x = 2,400,000 \text{ cm} = 24 \text{ km}" />
+
+Convert time to hours
+
+<BlockMath math="t = 12 \text{ minutes} = \frac{12}{60} \text{ hours} = \frac{1}{5} \text{ hours}" />
+
+Calculate average speed
+
+<MathContainer>
+<BlockMath math="v = \frac{x}{t}" />
+
+<BlockMath math="v = \frac{24 \text{ km}}{\frac{1}{5} \text{ hours}}" />
+
+<BlockMath math="v = 24 \times 5 = 120 \text{ km/h}" />
+</MathContainer>
+
+Therefore, the average speed of the airplane is <InlineMath math="120 \text{ km/h}" />.
+

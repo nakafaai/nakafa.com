@@ -70,7 +70,9 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
               className="cursor-pointer"
               onCheckedChange={() => handleChoiceClick(choice.label)}
             />
-            <Response id={`${id}-${choice.label}`}>{choice.label}</Response>
+            <Response className="h-auto" id={`${id}-${choice.label}`}>
+              {choice.label}
+            </Response>
           </Label>
         );
       })}

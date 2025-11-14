@@ -26,6 +26,12 @@ type Props = {
   precision?: number;
   /** Use mono font for the labels */
   useMonoFont?: boolean;
+  /** Exact trigonometric values as fractions (e.g., "5/13", "12/13", "5/12") */
+  trigValues?: {
+    sin?: string;
+    cos?: string;
+    tan?: string;
+  };
   /** Additional props */
   [key: string]: unknown;
 };
@@ -40,7 +46,7 @@ const LABEL_FONT_SIZE = 0.12;
 const EPSILON = 1e-10;
 
 // Label positioning constants
-const ANGLE_LABEL_X_FACTOR = 0.5;
+const ANGLE_LABEL_X_FACTOR = 0.55;
 const ANGLE_LABEL_Y_FACTOR = 0.4;
 const COS_LABEL_Y_OFFSET = -0.2;
 const SIN_LABEL_X_OFFSET = 0.2;
@@ -93,6 +99,7 @@ export function UnitCircle({
   displayMode = "exact",
   precision = 2,
   useMonoFont = true,
+  trigValues,
   ...props
 }: Props) {
   const t = useTranslations("Common");
@@ -160,14 +167,28 @@ export function UnitCircle({
   }, [displayMode, precision, t]);
 
   // Memoize labels
-  const labels = useMemo(
-    () => ({
+  const labels = useMemo(() => {
+    // If trigValues are provided, use them for fraction display
+    if (trigValues) {
+      return {
+        sin: trigValues.sin
+          ? `sin(${angle}°) = ${trigValues.sin}`
+          : `sin(${angle}°) = ${formatValue(sin)}`,
+        cos: trigValues.cos
+          ? `cos(${angle}°) = ${trigValues.cos}`
+          : `cos(${angle}°) = ${formatValue(cos)}`,
+        tan: trigValues.tan
+          ? `tan(${angle}°) = ${trigValues.tan}`
+          : `tan(${angle}°) = ${formatValue(tan)}`,
+      };
+    }
+
+    return {
       sin: `sin(${angle}°) = ${formatValue(sin)}`,
       cos: `cos(${angle}°) = ${formatValue(cos)}`,
       tan: `tan(${angle}°) = ${formatValue(tan)}`,
-    }),
-    [angle, sin, cos, tan, formatValue]
-  );
+    };
+  }, [angle, sin, cos, tan, formatValue, trigValues]);
 
   const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
 

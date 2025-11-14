@@ -1,0 +1,90 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+Diketahui fungsi <InlineMath math="f(x) = \frac{1}{\sqrt{-x^2 + 4x + 21}}" />.
+
+Kuantitas <InlineMath math="P = 7" />.
+
+Untuk menentukan kuantitas <InlineMath math="Q" />, kita perlu mencari nilai <InlineMath math="x" /> agar <InlineMath math="f(x)" /> terdefinisi sebagai bilangan real.
+
+Agar <InlineMath math="f(x)" /> terdefinisi, penyebut tidak boleh nol dan ekspresi di dalam akar harus lebih besar dari nol
+
+<MathContainer>
+<BlockMath math="\sqrt{-x^2 + 4x + 21} \neq 0" />
+
+<BlockMath math="-x^2 + 4x + 21 > 0" />
+</MathContainer>
+
+Kalikan kedua ruas dengan <InlineMath math="-1" /> (ingat tanda pertidaksamaan berubah)
+
+<MathContainer>
+<BlockMath math="x^2 - 4x - 21 < 0" />
+</MathContainer>
+
+Faktorkan bentuk kuadrat tersebut
+
+<MathContainer>
+<BlockMath math="(x - 7)(x + 3) < 0" />
+</MathContainer>
+
+Akar-akar dari <InlineMath math="(x - 7)(x + 3) = 0" /> adalah <InlineMath math="x = 7" /> dan <InlineMath math="x = -3" />.
+
+Dengan menggunakan garis bilangan, pertidaksamaan <InlineMath math="(x - 7)(x + 3) < 0" /> dipenuhi untuk <InlineMath math="-3 < x < 7" />.
+
+<NumberLine
+  title="Garis Bilangan"
+  description={<>Visualisasi solusi pertidaksamaan <InlineMath math="(x - 7)(x + 3) < 0" /> pada garis bilangan.</>}
+  min={-5}
+  max={9}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: -3,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: false,
+      showPoints: true,
+      startLabel: <InlineMath math="-\infty" />,
+      endLabel: <InlineMath math="-3" />,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: -3,
+      end: 7,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: true,
+      showPoints: true,
+      startLabel: <InlineMath math="-3" />,
+      endLabel: <InlineMath math="7" />,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 7,
+      end: Number.POSITIVE_INFINITY,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: false,
+      showPoints: true,
+      startLabel: <InlineMath math="7" />,
+      endLabel: <InlineMath math="+\infty" />,
+      label: <InlineMath math="-" />,
+    },
+  ]}
+/>
+
+Jadi domain fungsi <InlineMath math="f" /> adalah <InlineMath math="-3 < x < 7" />.
+
+Nilai <InlineMath math="x" /> yang memenuhi adalah bilangan bulat dalam interval <InlineMath math="(-3, 7)" />, yaitu <InlineMath math="x = -2, -1, 0, 1, 2, 3, 4, 5, 6" />.
+
+Banyaknya nilai <InlineMath math="x" /> adalah <InlineMath math="9" />, sehingga <InlineMath math="Q = 9" />.
+
+Karena <InlineMath math="P = 7" /> dan <InlineMath math="Q = 9" />, maka <InlineMath math="P < Q" />.
+
+Jadi kuantitas <InlineMath math="P" /> lebih kecil daripada <InlineMath math="Q" />.
+

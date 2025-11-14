@@ -7,17 +7,23 @@ const subjects = [
     type: ["tka"],
     label: "mathematics",
   },
+  {
+    type: ["snbt"],
+    label: "quantitative-reasoning",
+  },
 ] as const;
 
 export function getSubjects(type: ExercisesType) {
-  const types = new Set<ExercisesType>(["tka"]);
+  const types = new Set<ExercisesType>(["tka", "snbt"]);
 
   if (!types.has(type)) {
     return [];
   }
 
   return subjects
-    .filter((subject) => subject.type.includes(type))
+    .filter((subject) =>
+      (subject.type as readonly ExercisesType[]).includes(type)
+    )
     .map((subject) => ({
       label: subject.label,
       href: `${BASE_PATH}/${type}/${subject.label}`,

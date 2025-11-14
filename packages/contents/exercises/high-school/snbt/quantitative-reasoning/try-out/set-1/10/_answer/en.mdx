@@ -1,0 +1,90 @@
+export const metadata = {
+  title: "Solution to Question 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+Given function <InlineMath math="f(x) = \frac{1}{\sqrt{-x^2 + 4x + 21}}" />.
+
+Quantity <InlineMath math="P = 7" />.
+
+To determine quantity <InlineMath math="Q" />, we need to find the values of <InlineMath math="x" /> such that <InlineMath math="f(x)" /> is defined as a real number.
+
+For <InlineMath math="f(x)" /> to be defined, the denominator must not be zero and the expression under the square root must be greater than zero
+
+<MathContainer>
+<BlockMath math="\sqrt{-x^2 + 4x + 21} \neq 0" />
+
+<BlockMath math="-x^2 + 4x + 21 > 0" />
+</MathContainer>
+
+Multiply both sides by <InlineMath math="-1" /> (remember the inequality sign reverses)
+
+<MathContainer>
+<BlockMath math="x^2 - 4x - 21 < 0" />
+</MathContainer>
+
+Factor the quadratic expression
+
+<MathContainer>
+<BlockMath math="(x - 7)(x + 3) < 0" />
+</MathContainer>
+
+The roots of <InlineMath math="(x - 7)(x + 3) = 0" /> are <InlineMath math="x = 7" /> and <InlineMath math="x = -3" />.
+
+Using a number line, the inequality <InlineMath math="(x - 7)(x + 3) < 0" /> is satisfied for <InlineMath math="-3 < x < 7" />.
+
+<NumberLine
+  title="Number Line"
+  description={<>Visualization of the solution to the inequality <InlineMath math="(x - 7)(x + 3) < 0" /> on a number line.</>}
+  min={-5}
+  max={9}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: -3,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: false,
+      showPoints: true,
+      startLabel: <InlineMath math="-\infty" />,
+      endLabel: <InlineMath math="-3" />,
+      label: <InlineMath math="-" />,
+    },
+    {
+      start: -3,
+      end: 7,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: true,
+      showPoints: true,
+      startLabel: <InlineMath math="-3" />,
+      endLabel: <InlineMath math="7" />,
+      label: <InlineMath math="+" />,
+    },
+    {
+      start: 7,
+      end: Number.POSITIVE_INFINITY,
+      startInclusive: false,
+      endInclusive: false,
+      shaded: false,
+      showPoints: true,
+      startLabel: <InlineMath math="7" />,
+      endLabel: <InlineMath math="+\infty" />,
+      label: <InlineMath math="-" />,
+    },
+  ]}
+/>
+
+So the domain of function <InlineMath math="f" /> is <InlineMath math="-3 < x < 7" />.
+
+The integer values of <InlineMath math="x" /> that satisfy this are the integers in the interval <InlineMath math="(-3, 7)" />, which are <InlineMath math="x = -2, -1, 0, 1, 2, 3, 4, 5, 6" />.
+
+The number of such values of <InlineMath math="x" /> is <InlineMath math="9" />, so <InlineMath math="Q = 9" />.
+
+Since <InlineMath math="P = 7" /> and <InlineMath math="Q = 9" />, we have <InlineMath math="P < Q" />.
+
+Therefore, quantity <InlineMath math="P" /> is less than quantity <InlineMath math="Q" />.
+

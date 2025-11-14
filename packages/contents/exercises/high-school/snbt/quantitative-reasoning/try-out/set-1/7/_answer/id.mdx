@@ -1,0 +1,106 @@
+export const metadata = {
+  title: "Pembahasan Soal 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { UnitCircle } from "@repo/design-system/components/contents/unit-circle";
+
+Diketahui <InlineMath math="\sin A = \frac{5}{13}" /> dan <InlineMath math="\cos B = \frac{8}{17}" /> dengan <InlineMath math="A" /> dan <InlineMath math="B" /> adalah sudut lancip.
+
+Dari <InlineMath math="\sin A = \frac{5}{13}" />, sisi depannya adalah <InlineMath math="5" /> dan sisi miringnya <InlineMath math="13" />. Maka sisi sampingnya adalah
+
+<BlockMath math="\text{Sisi samping} = \sqrt{13^2 - 5^2} = \sqrt{169 - 25} = \sqrt{144} = 12" />
+
+Jadi untuk sudut <InlineMath math="A" />
+
+<MathContainer>
+<BlockMath math="\sin A = \frac{5}{13}, \quad \cos A = \frac{12}{13}, \quad \tan A = \frac{5}{12}" />
+</MathContainer>
+
+<UnitCircle
+  title="Sudut A"
+  description={<>Visualisasi sudut <InlineMath math="A" /> dengan <InlineMath math="\sin A = \frac{5}{13}" />, <InlineMath math="\cos A = \frac{12}{13}" />, dan <InlineMath math="\tan A = \frac{5}{12}" />.</>}
+  angle={22.62}
+  trigValues={{
+    sin: "5/13",
+    cos: "12/13",
+    tan: "5/12",
+  }}
+/>
+
+Dari <InlineMath math="\cos B = \frac{8}{17}" />, sisi sampingnya adalah <InlineMath math="8" /> dan sisi miringnya <InlineMath math="17" />. Maka sisi depannya adalah
+
+<BlockMath math="\text{Sisi depan} = \sqrt{17^2 - 8^2} = \sqrt{289 - 64} = \sqrt{225} = 15" />
+
+Jadi untuk sudut <InlineMath math="B" />
+
+<MathContainer>
+<BlockMath math="\sin B = \frac{15}{17}, \quad \cos B = \frac{8}{17}, \quad \tan B = \frac{15}{8}" />
+</MathContainer>
+
+<UnitCircle
+  title="Sudut B"
+  description={<>Visualisasi sudut <InlineMath math="B" /> dengan <InlineMath math="\sin B = \frac{15}{17}" />, <InlineMath math="\cos B = \frac{8}{17}" />, dan <InlineMath math="\tan B = \frac{15}{8}" />.</>}
+  angle={61.93}
+  trigValues={{
+    sin: "15/17",
+    cos: "8/17",
+    tan: "15/8",
+  }}
+/>
+
+**Pernyataan <InlineMath math="\text{(1)}" />: <InlineMath math="\tan A + \tan B = \frac{19}{20}" />**
+
+<MathContainer>
+<BlockMath math="\tan A + \tan B = \frac{5}{12} + \frac{15}{8}" />
+
+<BlockMath math="= \frac{10}{24} + \frac{45}{24}" />
+
+<BlockMath math="= \frac{55}{24}" />
+</MathContainer>
+
+Jadi <InlineMath math="\tan A + \tan B = \frac{55}{24}" />, bukan <InlineMath math="\frac{19}{20}" />. Pernyataan <InlineMath math="\text{(1)}" /> salah.
+
+**Pernyataan <InlineMath math="\text{(2)}" />: <InlineMath math="\cos A \sin B + \cos B \sin A = \frac{220}{221}" />**
+
+<MathContainer>
+<BlockMath math="\cos A \sin B + \cos B \sin A = \frac{12}{13} \cdot \frac{15}{17} + \frac{8}{17} \cdot \frac{5}{13}" />
+
+<BlockMath math="= \frac{180}{221} + \frac{40}{221}" />
+
+<BlockMath math="= \frac{220}{221}" />
+</MathContainer>
+
+Pernyataan <InlineMath math="\text{(2)}" /> benar.
+
+**Pernyataan <InlineMath math="\text{(3)}" />: <InlineMath math="\frac{\tan A}{\tan B} = \frac{25}{32}" />**
+
+<MathContainer>
+<BlockMath math="\frac{\tan A}{\tan B} = \frac{\frac{5}{12}}{\frac{15}{8}}" />
+
+<BlockMath math="= \frac{5}{12} \cdot \frac{8}{15}" />
+
+<BlockMath math="= \frac{40}{180}" />
+
+<BlockMath math="= \frac{2}{9}" />
+</MathContainer>
+
+Jadi <InlineMath math="\frac{\tan A}{\tan B} = \frac{2}{9}" />, bukan <InlineMath math="\frac{25}{32}" />. Pernyataan <InlineMath math="\text{(3)}" /> salah.
+
+**Pernyataan <InlineMath math="\text{(4)}" />: <InlineMath math="\frac{\sin A \cos B}{\sin B \cos A} = \frac{2}{9}" />**
+
+<MathContainer>
+<BlockMath math="\frac{\sin A \cos B}{\sin B \cos A} = \frac{\sin A}{\cos A} \cdot \frac{\cos B}{\sin B}" />
+
+<BlockMath math="= \tan A \cdot \frac{1}{\tan B}" />
+
+<BlockMath math="= \frac{\tan A}{\tan B}" />
+
+<BlockMath math="= \frac{2}{9}" />
+</MathContainer>
+
+Pernyataan <InlineMath math="\text{(4)}" /> benar.
+
+Jadi pernyataan yang benar adalah <InlineMath math="\text{(2)}" /> dan <InlineMath math="\text{(4)}" />. Banyaknya pernyataan yang benar adalah <InlineMath math="2" />.
+

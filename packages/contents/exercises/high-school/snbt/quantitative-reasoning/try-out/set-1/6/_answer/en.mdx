@@ -1,0 +1,111 @@
+export const metadata = {
+  title: "Solution to Question 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+From the diagram, the coordinates of the rhombus vertices are <InlineMath math="P(0, 0)" />, <InlineMath math="Q(4, 3)" />, <InlineMath math="R(8, 0)" />, and <InlineMath math="S(4, -3)" />.
+
+Calculate the slope of line <InlineMath math="PS" />
+
+<BlockMath math="m = \frac{y_2 - y_1}{x_2 - x_1}" />
+
+With <InlineMath math="P(0, 0)" /> and <InlineMath math="S(4, -3)" />
+
+<MathContainer>
+<BlockMath math="m_{PS} = \frac{-3 - 0}{4 - 0}" />
+
+<BlockMath math="m_{PS} = \frac{-3}{4}" />
+
+<BlockMath math="m_{PS} = -\frac{3}{4}" />
+</MathContainer>
+
+Since the line we're looking for is perpendicular to <InlineMath math="PS" />, then
+
+<BlockMath math="m_1 \cdot m_2 = -1" />
+
+<BlockMath math="-\frac{3}{4} \cdot m_2 = -1" />
+
+<BlockMath math="m_2 = \frac{-1}{-\frac{3}{4}} = \frac{4}{3}" />
+
+So the slope of the line passing through <InlineMath math="Q" /> and perpendicular to <InlineMath math="PS" /> is <InlineMath math="m = \frac{4}{3}" />.
+
+For a line equation in the form <InlineMath math="ax + by = c" />, its slope is <InlineMath math="m = -\frac{a}{b}" />.
+
+Find the answer option that has slope <InlineMath math="\frac{4}{3}" />.
+
+<LineEquation
+  title="Line Through Q Perpendicular to PS"
+  description={<>Visualization of line <InlineMath math="PS" /> and the line passing through <InlineMath math="Q" /> that is perpendicular to <InlineMath math="PS" />.</>}
+  data={[
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: -3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "P (0,0)", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "S (4,-3)", at: 1, offset: [0.3, -0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 8, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "R (8,0)", at: 1, offset: [0.5, -0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 4, y: 3, z: 0 },
+        { x: 8, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "Q (4,3)", at: 0, offset: [0.3, 0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 4, y: -3, z: 0 },
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true
+    },
+    {
+      points: [
+        { x: -2, y: -5, z: 0 },
+        { x: 4, y: 3, z: 0 },
+        { x: 10, y: 11, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [
+        { text: "4x - 3y = 7", at: 1, offset: [0.5, -2, 0] }
+      ]
+    }
+  ]}
+  showZAxis={false}
+/>
+
+Option <InlineMath math="4x - 3y = 7" /> has slope
+
+<BlockMath math="m = -\frac{4}{-3} = \frac{4}{3}" />
+
+Verify that this line passes through <InlineMath math="Q(4, 3)" />
+
+<BlockMath math="4(4) - 3(3) = 16 - 9 = 7" />
+
+Correct. Therefore, the equation of the line passing through <InlineMath math="Q" /> and perpendicular to <InlineMath math="PS" /> is <InlineMath math="4x - 3y = 7" />.
+

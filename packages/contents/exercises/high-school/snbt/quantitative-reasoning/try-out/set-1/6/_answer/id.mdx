@@ -1,0 +1,111 @@
+export const metadata = {
+  title: "Pembahasan Soal 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+Dari diagram, koordinat titik-titik belah ketupat adalah <InlineMath math="P(0, 0)" />, <InlineMath math="Q(4, 3)" />, <InlineMath math="R(8, 0)" />, dan <InlineMath math="S(4, -3)" />.
+
+Hitung gradien garis <InlineMath math="PS" />
+
+<BlockMath math="m = \frac{y_2 - y_1}{x_2 - x_1}" />
+
+Dengan <InlineMath math="P(0, 0)" /> dan <InlineMath math="S(4, -3)" />
+
+<MathContainer>
+<BlockMath math="m_{PS} = \frac{-3 - 0}{4 - 0}" />
+
+<BlockMath math="m_{PS} = \frac{-3}{4}" />
+
+<BlockMath math="m_{PS} = -\frac{3}{4}" />
+</MathContainer>
+
+Karena garis yang dicari tegak lurus terhadap <InlineMath math="PS" />, maka
+
+<BlockMath math="m_1 \cdot m_2 = -1" />
+
+<BlockMath math="-\frac{3}{4} \cdot m_2 = -1" />
+
+<BlockMath math="m_2 = \frac{-1}{-\frac{3}{4}} = \frac{4}{3}" />
+
+Jadi gradien garis yang melalui <InlineMath math="Q" /> dan tegak lurus <InlineMath math="PS" /> adalah <InlineMath math="m = \frac{4}{3}" />.
+
+Untuk persamaan garis dalam bentuk <InlineMath math="ax + by = c" />, gradiennya adalah <InlineMath math="m = -\frac{a}{b}" />.
+
+Cari opsi jawaban yang memiliki gradien <InlineMath math="\frac{4}{3}" />.
+
+<LineEquation
+  title="Garis Melalui Q dan Tegak Lurus PS"
+  description={<>Visualisasi garis <InlineMath math="PS" /> dan garis yang melalui <InlineMath math="Q" /> dan tegak lurus terhadap <InlineMath math="PS" />.</>}
+  data={[
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: -3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "P (0,0)", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "S (4,-3)", at: 1, offset: [0.3, -0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 8, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "R (8,0)", at: 1, offset: [0.5, -0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 4, y: 3, z: 0 },
+        { x: 8, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "Q (4,3)", at: 0, offset: [0.3, 0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 4, y: -3, z: 0 },
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true
+    },
+    {
+      points: [
+        { x: -2, y: -5, z: 0 },
+        { x: 4, y: 3, z: 0 },
+        { x: 10, y: 11, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [
+        { text: "4x - 3y = 7", at: 1, offset: [0.5, -2, 0] }
+      ]
+    }
+  ]}
+  showZAxis={false}
+/>
+
+Opsi <InlineMath math="4x - 3y = 7" /> memiliki gradien
+
+<BlockMath math="m = -\frac{4}{-3} = \frac{4}{3}" />
+
+Verifikasi bahwa garis ini melalui <InlineMath math="Q(4, 3)" />
+
+<BlockMath math="4(4) - 3(3) = 16 - 9 = 7" />
+
+Sesuai. Jadi persamaan garis yang melalui <InlineMath math="Q" /> dan tegak lurus terhadap <InlineMath math="PS" /> adalah <InlineMath math="4x - 3y = 7" />.
+

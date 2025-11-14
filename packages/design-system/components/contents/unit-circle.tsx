@@ -36,21 +36,42 @@ type Props = {
   title: ReactNode;
   description: ReactNode;
   angle?: number;
+  /** Exact trigonometric values as fractions (e.g., "5/13", "12/13", "5/12") */
+  trigValues?: {
+    sin?: string;
+    cos?: string;
+    tan?: string;
+  };
 };
 
-export function UnitCircle({ title, description, angle = 45 }: Props) {
+export function UnitCircle({
+  title,
+  description,
+  angle = 45,
+  trigValues,
+}: Props) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <Content angle={angle} />
+      <Content angle={angle} trigValues={trigValues} />
     </Card>
   );
 }
 
-function Content({ angle }: { angle: number }) {
+function Content({
+  angle,
+  trigValues,
+}: {
+  angle: number;
+  trigValues?: {
+    sin?: string;
+    cos?: string;
+    tan?: string;
+  };
+}) {
   const t = useTranslations("Common");
   const [angleValue, setAngleValue] = useState(angle);
 
@@ -62,23 +83,26 @@ function Content({ angle }: { angle: number }) {
           showOrigin={false}
           showZAxis={false}
         >
-          <UnitCircle3D angle={angleValue} />
+          <UnitCircle3D angle={angleValue} trigValues={trigValues} />
         </CoordinateSystem>
       </CardContent>
       <CardFooter className="border-t px-0">
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">
             <Badge className="font-mono" variant="outline">
-              Sin ({angleValue}°) = {getSin(angleValue).toFixed(2)}
+              Sin ({angleValue}°) ={" "}
+              {trigValues?.sin ?? getSin(angleValue).toFixed(2)}
             </Badge>
             <Badge className="font-mono" variant="outline">
-              Cos ({angleValue}°) = {getCos(angleValue).toFixed(2)}
+              Cos ({angleValue}°) ={" "}
+              {trigValues?.cos ?? getCos(angleValue).toFixed(2)}
             </Badge>
             <Badge className="font-mono" variant="outline">
               Tan ({angleValue}°) ={" "}
-              {Number.isFinite(getTan(angleValue))
-                ? getTan(angleValue).toFixed(2)
-                : t("undefined")}
+              {trigValues?.tan ??
+                (Number.isFinite(getTan(angleValue))
+                  ? getTan(angleValue).toFixed(2)
+                  : t("undefined"))}
             </Badge>
           </div>
 

@@ -1,0 +1,46 @@
+export const metadata = {
+  title: "Solution to Question 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Given that <InlineMath math="a = 2 \times b" /> and <InlineMath math="b" /> is divisible by <InlineMath math="5" />, where <InlineMath math="a" /> and <InlineMath math="b" /> are natural numbers.
+
+**Statement <InlineMath math="\text{(1)}" />: <InlineMath math="a" /> is an even number**
+
+Since <InlineMath math="a = 2b" />, <InlineMath math="a" /> is the result of multiplying any number by <InlineMath math="2" />. Any number multiplied by <InlineMath math="2" /> will always result in an even number. Therefore, statement <InlineMath math="\text{(1)}" /> is true.
+
+**Statement <InlineMath math="\text{(2)}" />: The unit digit of <InlineMath math="a" /> is always <InlineMath math="0" />**
+
+Since <InlineMath math="b" /> is divisible by <InlineMath math="5" />, <InlineMath math="b" /> can be <InlineMath math="5, 10, 15, 20, \ldots" />.
+
+- If <InlineMath math="b = 5" />, then <InlineMath math="a = 2 \times 5 = 10" /> (unit digit <InlineMath math="0" />)
+
+- If <InlineMath math="b = 10" />, then <InlineMath math="a = 2 \times 10 = 20" /> (unit digit <InlineMath math="0" />)
+
+- If <InlineMath math="b = 15" />, then <InlineMath math="a = 2 \times 15 = 30" /> (unit digit <InlineMath math="0" />)
+
+Since <InlineMath math="b" /> is always a multiple of <InlineMath math="5" />, <InlineMath math="2b" /> is always a multiple of <InlineMath math="10" />, so the unit digit of <InlineMath math="a" /> is always <InlineMath math="0" />. Therefore, statement <InlineMath math="\text{(2)}" /> is true.
+
+**Statement <InlineMath math="\text{(3)}" />: <InlineMath math="a + b" /> is divisible by <InlineMath math="5" />**
+
+<MathContainer>
+<BlockMath math="a + b = 2b + b = 3b" />
+</MathContainer>
+
+Since <InlineMath math="b" /> is divisible by <InlineMath math="5" />, <InlineMath math="3b" /> is also divisible by <InlineMath math="5" />. Therefore, statement <InlineMath math="\text{(3)}" /> is true.
+
+**Statement <InlineMath math="\text{(4)}" />: <InlineMath math="3a + 2b" /> is an odd number**
+
+<MathContainer>
+<BlockMath math="3a + 2b = 3(2b) + 2b" />
+
+<BlockMath math="= 6b + 2b" />
+
+<BlockMath math="= 8b" />
+</MathContainer>
+
+Since <InlineMath math="8" /> is an even number, <InlineMath math="8b" /> is always an even number, not an odd number. Therefore, statement <InlineMath math="\text{(4)}" /> is false.
+
+Therefore, the true statements are <InlineMath math="\text{(1)}" />, <InlineMath math="\text{(2)}" />, and <InlineMath math="\text{(3)}" />. The number of true statements is <InlineMath math="3" />.
+

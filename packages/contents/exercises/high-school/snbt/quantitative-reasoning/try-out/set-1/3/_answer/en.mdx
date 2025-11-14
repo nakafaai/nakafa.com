@@ -1,0 +1,56 @@
+export const metadata = {
+  title: "Solution to Question 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+Given the geometric sequence <InlineMath math="\frac{3}{2}, p, 6, q" /> with a positive ratio.
+
+Let the first term be <InlineMath math="U_1 = a = \frac{3}{2}" /> and the ratio be <InlineMath math="r > 0" />.
+
+From <InlineMath math="U_3 = 6" />, we get
+
+<BlockMath math="U_3 = ar^2 = \frac{3}{2} \cdot r^2 = 6" />
+
+<BlockMath math="r^2 = 6 \cdot \frac{2}{3} = 4" />
+
+<BlockMath math="r = 2" />
+
+Since <InlineMath math="r > 0" />, then <InlineMath math="r = 2" />.
+
+**Statement <InlineMath math="\text{(1)}" />: The ratio of the sequence is <InlineMath math="2" />.**
+
+True. From the calculation above, we get <InlineMath math="r = 2" />.
+
+Calculate the values of <InlineMath math="p" /> and <InlineMath math="q" />
+
+<MathContainer>
+<BlockMath math="p = U_2 = ar = \frac{3}{2} \cdot 2 = 3" />
+
+<BlockMath math="q = U_4 = ar^3 = \frac{3}{2} \cdot 2^3 = \frac{3}{2} \cdot 8 = 12" />
+</MathContainer>
+
+**Statement <InlineMath math="\text{(2)}" />: The value of <InlineMath math="pq" /> is <InlineMath math="72" />.**
+
+False. From the calculation above, <InlineMath math="p = 3" /> and <InlineMath math="q = 12" />, so
+
+<BlockMath math="pq = 3 \cdot 12 = 36" />
+
+So the value of <InlineMath math="pq" /> is <InlineMath math="36" />, not <InlineMath math="72" />.
+
+Calculate the sixth term
+
+<BlockMath math="U_6 = ar^5 = \frac{3}{2} \cdot 2^5 = \frac{3}{2} \cdot 32 = 48" />
+
+**Statement <InlineMath math="\text{(3)}" />: The difference between the sixth and second term is <InlineMath math="45" />.**
+
+True. From the calculation above, <InlineMath math="U_6 = 48" /> and <InlineMath math="U_2 = 3" />, so
+
+<BlockMath math="U_6 - U_2 = 48 - 3 = 45" />
+
+**Statement <InlineMath math="\text{(4)}" />: Every term in the sequence is an even number.**
+
+False. From the calculation above, <InlineMath math="U_1 = \frac{3}{2}" /> is not an integer, and <InlineMath math="U_2 = 3" /> is an odd number. So not all terms are even numbers.
+
+Therefore, the true statements are <InlineMath math="\text{(1)}" /> and <InlineMath math="\text{(3)}" />.
+

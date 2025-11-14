@@ -1,0 +1,106 @@
+export const metadata = {
+  title: "Solution to Question 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { UnitCircle } from "@repo/design-system/components/contents/unit-circle";
+
+Given <InlineMath math="\sin A = \frac{5}{13}" /> and <InlineMath math="\cos B = \frac{8}{17}" /> where <InlineMath math="A" /> and <InlineMath math="B" /> are acute angles.
+
+From <InlineMath math="\sin A = \frac{5}{13}" />, the opposite side is <InlineMath math="5" /> and the hypotenuse is <InlineMath math="13" />. Then the adjacent side is
+
+<BlockMath math="\text{Adjacent side} = \sqrt{13^2 - 5^2} = \sqrt{169 - 25} = \sqrt{144} = 12" />
+
+So for angle <InlineMath math="A" />
+
+<MathContainer>
+<BlockMath math="\sin A = \frac{5}{13}, \quad \cos A = \frac{12}{13}, \quad \tan A = \frac{5}{12}" />
+</MathContainer>
+
+<UnitCircle
+  title="Angle A"
+  description={<>Visualization of angle <InlineMath math="A" /> with <InlineMath math="\sin A = \frac{5}{13}" />, <InlineMath math="\cos A = \frac{12}{13}" />, and <InlineMath math="\tan A = \frac{5}{12}" />.</>}
+  angle={22.62}
+  trigValues={{
+    sin: "5/13",
+    cos: "12/13",
+    tan: "5/12",
+  }}
+/>
+
+From <InlineMath math="\cos B = \frac{8}{17}" />, the adjacent side is <InlineMath math="8" /> and the hypotenuse is <InlineMath math="17" />. Then the opposite side is
+
+<BlockMath math="\text{Opposite side} = \sqrt{17^2 - 8^2} = \sqrt{289 - 64} = \sqrt{225} = 15" />
+
+So for angle <InlineMath math="B" />
+
+<MathContainer>
+<BlockMath math="\sin B = \frac{15}{17}, \quad \cos B = \frac{8}{17}, \quad \tan B = \frac{15}{8}" />
+</MathContainer>
+
+<UnitCircle
+  title="Angle B"
+  description={<>Visualization of angle <InlineMath math="B" /> with <InlineMath math="\sin B = \frac{15}{17}" />, <InlineMath math="\cos B = \frac{8}{17}" />, and <InlineMath math="\tan B = \frac{15}{8}" />.</>}
+  angle={61.93}
+  trigValues={{
+    sin: "15/17",
+    cos: "8/17",
+    tan: "15/8",
+  }}
+/>
+
+**Statement <InlineMath math="\text{(1)}" />: <InlineMath math="\tan A + \tan B = \frac{19}{20}" />**
+
+<MathContainer>
+<BlockMath math="\tan A + \tan B = \frac{5}{12} + \frac{15}{8}" />
+
+<BlockMath math="= \frac{10}{24} + \frac{45}{24}" />
+
+<BlockMath math="= \frac{55}{24}" />
+</MathContainer>
+
+So <InlineMath math="\tan A + \tan B = \frac{55}{24}" />, not <InlineMath math="\frac{19}{20}" />. Statement <InlineMath math="\text{(1)}" /> is false.
+
+**Statement <InlineMath math="\text{(2)}" />: <InlineMath math="\cos A \sin B + \cos B \sin A = \frac{220}{221}" />**
+
+<MathContainer>
+<BlockMath math="\cos A \sin B + \cos B \sin A = \frac{12}{13} \cdot \frac{15}{17} + \frac{8}{17} \cdot \frac{5}{13}" />
+
+<BlockMath math="= \frac{180}{221} + \frac{40}{221}" />
+
+<BlockMath math="= \frac{220}{221}" />
+</MathContainer>
+
+Statement <InlineMath math="\text{(2)}" /> is true.
+
+**Statement <InlineMath math="\text{(3)}" />: <InlineMath math="\frac{\tan A}{\tan B} = \frac{25}{32}" />**
+
+<MathContainer>
+<BlockMath math="\frac{\tan A}{\tan B} = \frac{\frac{5}{12}}{\frac{15}{8}}" />
+
+<BlockMath math="= \frac{5}{12} \cdot \frac{8}{15}" />
+
+<BlockMath math="= \frac{40}{180}" />
+
+<BlockMath math="= \frac{2}{9}" />
+</MathContainer>
+
+So <InlineMath math="\frac{\tan A}{\tan B} = \frac{2}{9}" />, not <InlineMath math="\frac{25}{32}" />. Statement <InlineMath math="\text{(3)}" /> is false.
+
+**Statement <InlineMath math="\text{(4)}" />: <InlineMath math="\frac{\sin A \cos B}{\sin B \cos A} = \frac{2}{9}" />**
+
+<MathContainer>
+<BlockMath math="\frac{\sin A \cos B}{\sin B \cos A} = \frac{\sin A}{\cos A} \cdot \frac{\cos B}{\sin B}" />
+
+<BlockMath math="= \tan A \cdot \frac{1}{\tan B}" />
+
+<BlockMath math="= \frac{\tan A}{\tan B}" />
+
+<BlockMath math="= \frac{2}{9}" />
+</MathContainer>
+
+Statement <InlineMath math="\text{(4)}" /> is true.
+
+Therefore, the true statements are <InlineMath math="\text{(2)}" /> and <InlineMath math="\text{(4)}" />. The number of true statements is <InlineMath math="2" />.
+

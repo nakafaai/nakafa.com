@@ -1,0 +1,61 @@
+export const metadata = {
+  title: "Question 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+Rhombus <InlineMath math="PQRS" /> has a perimeter of <InlineMath math="20" /> units. Diagonal <InlineMath math="PR" /> is perpendicular to diagonal <InlineMath math="QS" />. The equation of the line that passes through <InlineMath math="Q" /> and is perpendicular to <InlineMath math="PS" /> is ....
+
+<LineEquation
+  title="Rhombus PQRS"
+  description={<>Diagram of rhombus <InlineMath math="PQRS" /> on the coordinate plane.</>}
+  data={[
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 4, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "P (0,0)", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "Q", at: 1, offset: [0.3, 0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 4, y: 3, z: 0 },
+        { x: 8, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "R (8,0)", at: 1, offset: [0.5, -0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 8, y: 0, z: 0 },
+        { x: 4, y: -3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "S", at: 1, offset: [0.3, -0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 4, y: -3, z: 0 },
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true
+    }
+  ]}
+  showZAxis={false}
+/>
+
