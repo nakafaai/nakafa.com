@@ -2,6 +2,7 @@
  * SEO domains that redirect to nakafa.com
  */
 export const SEO_DOMAINS = [
+  "nakafa.id",
   "alternatifa.app",
   "belajar.app",
   "bimbel.app",
