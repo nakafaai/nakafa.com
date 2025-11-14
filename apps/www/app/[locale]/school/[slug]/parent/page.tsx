@@ -15,7 +15,7 @@ export default function Page({ params }: Props) {
 
   return (
     <div
-      className="relative flex h-[calc(100svh-4rem)] items-center justify-center"
+      className="relative flex h-svh items-center justify-center"
       data-pagefind-ignore
     >
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />

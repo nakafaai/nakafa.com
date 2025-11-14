@@ -6,7 +6,6 @@ import {
 } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { cn } from "@repo/design-system/lib/utils";
-import { usePathname } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
@@ -17,7 +16,6 @@ export default function ErrorPage({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const pathname = usePathname();
   const t = useTranslations("Error");
 
   useEffect(() => {
@@ -27,10 +25,7 @@ export default function ErrorPage({
 
   return (
     <div
-      className={cn(
-        "relative flex h-[calc(100svh-4rem)] items-center justify-center",
-        pathname === "/" && "lg:h-svh"
-      )}
+      className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh"
       data-pagefind-ignore
     >
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />

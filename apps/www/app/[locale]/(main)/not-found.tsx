@@ -11,7 +11,7 @@ export default function NotFound() {
 
   return (
     <div
-      className="relative flex h-[calc(100svh-4rem)] items-center justify-center"
+      className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh"
       data-pagefind-ignore
     >
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />

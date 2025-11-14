@@ -1,7 +1,7 @@
 "use client";
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Authenticated } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef } from "react";

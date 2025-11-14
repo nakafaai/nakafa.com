@@ -74,7 +74,7 @@
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "24.10.1",
-    "@types/react": "19.2.4",
+    "@types/react": "19.2.5",
     "@types/react-dom": "19.2.3",
     "jsdom": "^27.2.0",
     "pagefind": "^1.4.0",

@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";

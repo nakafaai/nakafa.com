@@ -27,6 +27,7 @@ import type * as routes_constants from "../routes/constants.js";
 import type * as routes_middleware_auth from "../routes/middleware/auth.js";
 import type * as routes_polar from "../routes/polar.js";
 import type * as routes_v1_index from "../routes/v1/index.js";
+import type * as schools_queries from "../schools/queries.js";
 import type * as subscriptions_mutations from "../subscriptions/mutations.js";
 import type * as subscriptions_utils from "../subscriptions/utils.js";
 import type * as users_mutations from "../users/mutations.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   "routes/middleware/auth": typeof routes_middleware_auth;
   "routes/polar": typeof routes_polar;
   "routes/v1/index": typeof routes_v1_index;
+  "schools/queries": typeof schools_queries;
   "subscriptions/mutations": typeof subscriptions_mutations;
   "subscriptions/utils": typeof subscriptions_utils;
   "users/mutations": typeof users_mutations;

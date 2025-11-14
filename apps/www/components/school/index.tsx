@@ -1,8 +1,7 @@
-"use client";
-
 import { api } from "@repo/backend/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { fetchQuery } from "convex/nextjs";
 import { redirect } from "next/navigation";
+import { getToken } from "@/lib/auth/server";
 
 type Props = {
   /**
@@ -11,13 +10,35 @@ type Props = {
   children: React.ReactNode;
 };
 
-export function School({ children }: Props) {
-  const user = useQuery(api.auth.getCurrentUser);
+export async function School({ children }: Props) {
+  const token = await getToken();
+  const [user, memberships] = await Promise.all([
+    fetchQuery(api.auth.getCurrentUser, {}, { token }),
+    fetchQuery(api.schools.queries.getSchoolMemberships, {}, { token }),
+  ]);
 
   if (user) {
-    redirect("/school/onboarding");
+    if (memberships.length === 0) {
+      redirect("/school/onboarding");
+    }
 
-    // TODO: Check if user has school membership, redirect to appropriate page
+    // If has 1 school membership, redirect to school page
+    if (memberships.length === 1) {
+      const membership = memberships[0];
+      const school = await fetchQuery(
+        api.schools.queries.getSchool,
+        { schoolId: membership.schoolId },
+        { token }
+      );
+      if (school) {
+        redirect(`/school/${school.slug}/${membership.role}`);
+      }
+    }
+
+    // If has multiple school memberships, redirect to school selection page
+    if (memberships.length > 1) {
+      redirect("/school/select");
+    }
   }
 
   return children;

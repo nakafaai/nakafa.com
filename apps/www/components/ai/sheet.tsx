@@ -28,7 +28,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundry";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import {
   Sheet,
   SheetContent,
