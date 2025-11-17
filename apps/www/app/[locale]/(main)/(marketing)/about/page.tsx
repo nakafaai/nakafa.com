@@ -25,6 +25,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: `/${locale}/about`,
     },
+    twitter: {
+      card: "summary_large_image",
+      title: t("meta-title"),
+      description: t("description"),
+      images: [
+        {
+          url: `/open-graph/${locale}-about.png`,
+          alt: t("meta-title"),
+          width: 1200,
+          height: 630,
+        },
+      ],
+      creator: "@nabilfatih_",
+      site: "@nabilfatih_",
+    },
+    openGraph: {
+      title: t("meta-title"),
+      description: t("description"),
+      url: `https://nakafa.com/${locale}/about`,
+      siteName: "Nakafa",
+      locale,
+      type: "website",
+      images: [
+        {
+          url: `/open-graph/${locale}-about.png`,
+          alt: t("meta-title"),
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
   };
 }
 
