@@ -12,12 +12,15 @@ type Props = {
 
 export async function School({ children }: Props) {
   const token = await getToken();
-  const [user, memberships] = await Promise.all([
-    fetchQuery(api.auth.getCurrentUser, {}, { token }),
-    fetchQuery(api.schools.queries.getSchoolMemberships, {}, { token }),
-  ]);
+  const user = await fetchQuery(api.auth.getCurrentUser, {}, { token });
 
   if (user) {
+    const memberships = await fetchQuery(
+      api.schools.queries.getSchoolMemberships,
+      {},
+      { token }
+    );
+
     if (memberships.length === 0) {
       redirect("/school/onboarding");
     }
