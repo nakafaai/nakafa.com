@@ -14,10 +14,10 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@mantine/hooks": "^8.3.7",
+    "@mantine/hooks": "^8.3.8",
     "date-fns": "^4.1.0",
     "ky": "^1.14.0",
-    "lucide-react": "^0.553.0",
+    "lucide-react": "^0.554.0",
     "motion": "^12.23.24",
     "next-intl": "^4.5.3",
     "react": "19.2.0",

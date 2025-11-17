@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@biomejs/biome':
-        specifier: 2.3.5
-        version: 2.3.5
+        specifier: 2.3.6
+        version: 2.3.6
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:packages/typescript-config
@@ -164,8 +164,8 @@ importers:
         specifier: ^2.43.1
         version: 2.43.1(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(antd@5.28.1(date-fns@4.1.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(framer-motion@12.23.24(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@mantine/hooks':
-        specifier: ^8.3.7
-        version: 8.3.7(react@19.2.0)
+        specifier: ^8.3.8
+        version: 8.3.8(react@19.2.0)
       '@mdx-js/loader':
         specifier: ^3.1.1
         version: 3.1.1
@@ -218,11 +218,11 @@ importers:
         specifier: ^4.1.17
         version: 4.1.17
       '@tanstack/react-query':
-        specifier: ^5.90.9
-        version: 5.90.9(react@19.2.0)
+        specifier: ^5.90.10
+        version: 5.90.10(react@19.2.0)
       '@tanstack/react-query-devtools':
         specifier: ^5.90.2
-        version: 5.90.2(@tanstack/react-query@5.90.9(react@19.2.0))(react@19.2.0)
+        version: 5.90.2(@tanstack/react-query@5.90.10(react@19.2.0))(react@19.2.0)
       '@vercel/functions':
         specifier: ^3.3.2
         version: 3.3.2
@@ -263,8 +263,8 @@ importers:
         specifier: ^1.14.0
         version: 1.14.0
       lucide-react:
-        specifier: ^0.553.0
-        version: 0.553.0(react@19.2.0)
+        specifier: ^0.554.0
+        version: 0.554.0(react@19.2.0)
       motion:
         specifier: ^12.23.24
         version: 12.23.24(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -305,8 +305,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(react@19.2.0)
       virtua:
-        specifier: ^0.46.7
-        version: 0.46.7(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        specifier: ^0.47.0
+        version: 0.47.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       zod:
         specifier: ^4.1.12
         version: 4.1.12
@@ -354,14 +354,14 @@ importers:
         specifier: ^2.0.9
         version: 2.0.9(zod@4.1.12)
       '@ai-sdk/google':
-        specifier: ^2.0.31
-        version: 2.0.31(zod@4.1.12)
+        specifier: ^2.0.33
+        version: 2.0.33(zod@4.1.12)
       '@ai-sdk/google-vertex':
-        specifier: ^3.0.62
-        version: 3.0.62(zod@4.1.12)
+        specifier: ^3.0.64
+        version: 3.0.64(zod@4.1.12)
       '@ai-sdk/openai':
-        specifier: ^2.0.67
-        version: 2.0.67(zod@4.1.12)
+        specifier: ^2.0.68
+        version: 2.0.68(zod@4.1.12)
       '@ai-sdk/react':
         specifier: ^2.0.93
         version: 2.0.93(react@19.2.0)(zod@4.1.12)
@@ -478,8 +478,8 @@ importers:
   packages/contents:
     dependencies:
       '@mantine/hooks':
-        specifier: ^8.3.7
-        version: 8.3.7(react@19.2.0)
+        specifier: ^8.3.8
+        version: 8.3.8(react@19.2.0)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -487,8 +487,8 @@ importers:
         specifier: ^1.14.0
         version: 1.14.0
       lucide-react:
-        specifier: ^0.553.0
-        version: 0.553.0(react@19.2.0)
+        specifier: ^0.554.0
+        version: 0.554.0(react@19.2.0)
       motion:
         specifier: ^12.23.24
         version: 12.23.24(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -536,8 +536,8 @@ importers:
         specifier: ^2.43.1
         version: 2.43.1(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.5))(@types/react@19.2.5)(antd@5.28.1(date-fns@4.1.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(framer-motion@12.23.24(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@mantine/hooks':
-        specifier: ^8.3.7
-        version: 8.3.7(react@19.2.0)
+        specifier: ^8.3.8
+        version: 8.3.8(react@19.2.0)
       '@next/third-parties':
         specifier: 16.0.3
         version: 16.0.3(next@16.0.3(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(sass@1.94.0))(react@19.2.0)
@@ -644,8 +644,8 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
       lucide-react:
-        specifier: ^0.553.0
-        version: 0.553.0(react@19.2.0)
+        specifier: ^0.554.0
+        version: 0.554.0(react@19.2.0)
       marked:
         specifier: ^17.0.0
         version: 17.0.0
@@ -902,20 +902,20 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google-vertex@3.0.62':
-    resolution: {integrity: sha512-2TvmbxJ8BR7tFpvIcNWKcMaKS7G2yoIO2ZZXMX4F6UfJLuwZkO5j2xGeVs5TNbILEYVOTzN+CfjUTKsLpe7DRQ==}
+  '@ai-sdk/google-vertex@3.0.64':
+    resolution: {integrity: sha512-HaSMD4RWarbd6a8D5zh+mrvIF207Tw8i3Eq/fVyzpaJKvCuX+oCr4s78mNmL1Xi/YykumKeeFAXe/WyFZSqK7w==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google@2.0.31':
-    resolution: {integrity: sha512-wOlUkrXHuL73sXPZd251+30BQ378zn2Zo8pW+Hq+8d9FmSJpZXOSK8cmYle1SE5ZWe/TS+eSj3eBCZ6AW+q2EA==}
+  '@ai-sdk/google@2.0.33':
+    resolution: {integrity: sha512-Mi8GbW6hw7VFvyrghjP8JI7FQoXRs0w1MOS/shrksN+X8hMEcIF/+KXNFrjopOy7EA12NUpKAlJkWiTpjsLHGw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai@2.0.67':
-    resolution: {integrity: sha512-JhB3fUpY+IxAocyJt2PHuhfNwH+e+rDbZ8Q+d0hgSyNycuPRrV0xutLaf7mgDTvjr5FCrVEkXmM73tJprzZMiA==}
+  '@ai-sdk/openai@2.0.68':
+    resolution: {integrity: sha512-qUSLFkqgUoFArzBwttu0KWVAZYjbsdZGOklSJXpfZ2nDC61yseHxtcnuG8u6tqKnGXDh4eakEgREDWU2sRht7A==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1204,55 +1204,55 @@ packages:
   '@better-fetch/fetch@1.1.18':
     resolution: {integrity: sha512-rEFOE1MYIsBmoMJtQbl32PGHHXuG2hDxvEd7rUHE0vCBoFQVSDqaVs9hkZEtHCxRoY+CljXKFCOuJ8uxqw1LcA==}
 
-  '@biomejs/biome@2.3.5':
-    resolution: {integrity: sha512-HvLhNlIlBIbAV77VysRIBEwp55oM/QAjQEin74QQX9Xb259/XP/D5AGGnZMOyF1el4zcvlNYYR3AyTMUV3ILhg==}
+  '@biomejs/biome@2.3.6':
+    resolution: {integrity: sha512-oqUhWyU6tae0MFsr/7iLe++QWRg+6jtUhlx9/0GmCWDYFFrK366sBLamNM7D9Y+c7YSynUFKr8lpEp1r6Sk7eA==}
     engines: {node: '>=14.21.3'}
     hasBin: true
 
-  '@biomejs/cli-darwin-arm64@2.3.5':
-    resolution: {integrity: sha512-fLdTur8cJU33HxHUUsii3GLx/TR0BsfQx8FkeqIiW33cGMtUD56fAtrh+2Fx1uhiCsVZlFh6iLKUU3pniZREQw==}
+  '@biomejs/cli-darwin-arm64@2.3.6':
+    resolution: {integrity: sha512-P4JWE5d8UayBxYe197QJwyW4ZHp0B+zvRIGCusOm1WbxmlhpAQA1zEqQuunHgSIzvyEEp4TVxiKGXNFZPg7r9Q==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [darwin]
 
-  '@biomejs/cli-darwin-x64@2.3.5':
-    resolution: {integrity: sha512-qpT8XDqeUlzrOW8zb4k3tjhT7rmvVRumhi2657I2aGcY4B+Ft5fNwDdZGACzn8zj7/K1fdWjgwYE3i2mSZ+vOA==}
+  '@biomejs/cli-darwin-x64@2.3.6':
+    resolution: {integrity: sha512-I4rTebj+F/L9K93IU7yTFs8nQ6EhaCOivxduRha4w4WEZK80yoZ8OAdR1F33m4yJ/NfUuTUbP/Wjs+vKjlCoWA==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [darwin]
 
-  '@biomejs/cli-linux-arm64-musl@2.3.5':
-    resolution: {integrity: sha512-eGUG7+hcLgGnMNl1KHVZUYxahYAhC462jF/wQolqu4qso2MSk32Q+QrpN7eN4jAHAg7FUMIo897muIhK4hXhqg==}
+  '@biomejs/cli-linux-arm64-musl@2.3.6':
+    resolution: {integrity: sha512-oK1NpIXIixbJ/4Tcx40cwiieqah6rRUtMGOHDeK2ToT7yUFVEvXUGRKqH0O4hqZ9tW8TcXNZKfgRH6xrsjVtGg==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [linux]
 
-  '@biomejs/cli-linux-arm64@2.3.5':
-    resolution: {integrity: sha512-u/pybjTBPGBHB66ku4pK1gj+Dxgx7/+Z0jAriZISPX1ocTO8aHh8x8e7Kb1rB4Ms0nA/SzjtNOVJ4exVavQBCw==}
+  '@biomejs/cli-linux-arm64@2.3.6':
+    resolution: {integrity: sha512-JjYy83eVBnvuINZiqyFO7xx72v8Srh4hsgaacSBCjC22DwM6+ZvnX1/fj8/SBiLuUOfZ8YhU2pfq2Dzakeyg1A==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [linux]
 
-  '@biomejs/cli-linux-x64-musl@2.3.5':
-    resolution: {integrity: sha512-awVuycTPpVTH/+WDVnEEYSf6nbCBHf/4wB3lquwT7puhNg8R4XvonWNZzUsfHZrCkjkLhFH/vCZK5jHatD9FEg==}
+  '@biomejs/cli-linux-x64-musl@2.3.6':
+    resolution: {integrity: sha512-QvxB8GHQeaO4FCtwJpJjCgJkbHBbWxRHUxQlod+xeaYE6gtJdSkYkuxdKAQUZEOIsec+PeaDAhW9xjzYbwmOFA==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [linux]
 
-  '@biomejs/cli-linux-x64@2.3.5':
-    resolution: {integrity: sha512-XrIVi9YAW6ye0CGQ+yax0gLfx+BFOtKaNX74n+xHWla6Cl6huUmcKNO7HPx7BiKnJUzrxXY1qYlm7xMvi08X4g==}
+  '@biomejs/cli-linux-x64@2.3.6':
+    resolution: {integrity: sha512-ZjPXzy5yN9wusIoX+8Zp4p6cL8r0NzJCXg/4r1KLVveIPXd2jKVlqZ6ZyzEq385WwU3OX5KOwQYLQsOc788waQ==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [linux]
 
-  '@biomejs/cli-win32-arm64@2.3.5':
-    resolution: {integrity: sha512-DlBiMlBZZ9eIq4H7RimDSGsYcOtfOIfZOaI5CqsWiSlbTfqbPVfWtCf92wNzx8GNMbu1s7/g3ZZESr6+GwM/SA==}
+  '@biomejs/cli-win32-arm64@2.3.6':
+    resolution: {integrity: sha512-YM7hLHpwjdt8R7+O2zS1Vo2cKgqEeptiXB1tWW1rgjN5LlpZovBVKtg7zfwfRrFx3i08aNZThYpTcowpTlczug==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [win32]
 
-  '@biomejs/cli-win32-x64@2.3.5':
-    resolution: {integrity: sha512-nUmR8gb6yvrKhtRgzwo/gDimPwnO5a4sCydf8ZS2kHIJhEmSmk+STsusr1LHTuM//wXppBawvSQi2xFXJCdgKQ==}
+  '@biomejs/cli-win32-x64@2.3.6':
+    resolution: {integrity: sha512-psgNEYgMAobY5h+QHRBVR9xvg2KocFuBKm6axZWB/aD12NWhQjiVFQUjV6wMXhlH4iT0Q9c3yK5JFRiDC/rzHA==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
@@ -2239,8 +2239,8 @@ packages:
       react: ^19.0.0
       react-dom: ^19.0.0
 
-  '@mantine/hooks@8.3.7':
-    resolution: {integrity: sha512-2xnKS8C6fTzMoq1dtOJGrh2bIBuWnVrijL/DsDk60UaUgbABh8zScwU5ndX+p02ds2bebo34LovscP9fH38uPg==}
+  '@mantine/hooks@8.3.8':
+    resolution: {integrity: sha512-2YCUk5IWz+Ebi7VpbdscUz1MwulyaVPKr236ugMfpK0PFwsun4aBaLCAc8UeMGP0LtoSkuFvnsCPR4U6rhNfeQ==}
     peerDependencies:
       react: ^18.x || ^19.x
 
@@ -4593,8 +4593,8 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
-  '@tanstack/query-core@5.90.9':
-    resolution: {integrity: sha512-UFOCQzi6pRGeVTVlPNwNdnAvT35zugcIydqjvFUzG62dvz2iVjElmNp/hJkUoM5eqbUPfSU/GJIr/wbvD8bTUw==}
+  '@tanstack/query-core@5.90.10':
+    resolution: {integrity: sha512-EhZVFu9rl7GfRNuJLJ3Y7wtbTnENsvzp+YpcAV7kCYiXni1v8qZh++lpw4ch4rrwC0u/EZRnBHIehzCGzwXDSQ==}
 
   '@tanstack/query-devtools@5.90.1':
     resolution: {integrity: sha512-GtINOPjPUH0OegJExZ70UahT9ykmAhmtNVcmtdnOZbxLwT7R5OmRztR5Ahe3/Cu7LArEmR6/588tAycuaWb1xQ==}
@@ -4605,8 +4605,8 @@ packages:
       '@tanstack/react-query': ^5.90.2
       react: ^18 || ^19
 
-  '@tanstack/react-query@5.90.9':
-    resolution: {integrity: sha512-Zke2AaXiaSfnG8jqPZR52m8SsclKT2d9//AgE/QIzyNvbpj/Q2ln+FsZjb1j69bJZUouBvX2tg9PHirkTm8arw==}
+  '@tanstack/react-query@5.90.10':
+    resolution: {integrity: sha512-BKLss9Y8PQ9IUjPYQiv3/Zmlx92uxffUOX8ZZNoQlCIZBJPT5M+GOMQj7xislvVQ6l1BstBjcX0XB/aHfFYVNw==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -7557,6 +7557,11 @@ packages:
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
+  lucide-react@0.554.0:
+    resolution: {integrity: sha512-St+z29uthEJVx0Is7ellNkgTEhaeSoA42I7JjOCBCrc5X6LYMGSv0P/2uS5HDLTExP5tpiqRD2PyUEOS6s9UXA==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   maath@0.10.8:
     resolution: {integrity: sha512-tRvbDF0Pgqz+9XUa4jjfgAQ8/aPKmQdWXilFu2tMy4GWj4NOsx99HlULO4IeREfbO3a0sA145DZYyvXPkybm0g==}
     peerDependencies:
@@ -10343,8 +10348,8 @@ packages:
   victory-vendor@37.3.6:
     resolution: {integrity: sha512-SbPDPdDBYp+5MJHhBCAyI7wKM3d5ivekigc2Dk2s7pgbZ9wIgIBYGVw4zGHBml/qTFbexrofXW6Gu4noGxrOwQ==}
 
-  virtua@0.46.7:
-    resolution: {integrity: sha512-tQcigCJLiskShPc+/h6zKfexXcbgqRq+Q56N+Qsm4mBGvmaqeHywOY03t7teYsue/IY30/fWxxLa3Vxwr6rhnA==}
+  virtua@0.47.0:
+    resolution: {integrity: sha512-ihUpsZKbw+lqG9ET1zXHOHVV9nSLszLSE8Z2m3kWJKey9HCd7OG3QKK3quJZs1/jRJgMpYBffi3pYP0X0jxAzA==}
     peerDependencies:
       react: '>=16.14.0'
       react-dom: '>=16.14.0'
@@ -10713,10 +10718,10 @@ snapshots:
       '@vercel/oidc': 3.0.3
       zod: 4.1.12
 
-  '@ai-sdk/google-vertex@3.0.62(zod@4.1.12)':
+  '@ai-sdk/google-vertex@3.0.64(zod@4.1.12)':
     dependencies:
       '@ai-sdk/anthropic': 2.0.44(zod@4.1.12)
-      '@ai-sdk/google': 2.0.31(zod@4.1.12)
+      '@ai-sdk/google': 2.0.33(zod@4.1.12)
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.17(zod@4.1.12)
       google-auth-library: 9.15.1
@@ -10725,13 +10730,13 @@ snapshots:
       - encoding
       - supports-color
 
-  '@ai-sdk/google@2.0.31(zod@4.1.12)':
+  '@ai-sdk/google@2.0.33(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.17(zod@4.1.12)
       zod: 4.1.12
 
-  '@ai-sdk/openai@2.0.67(zod@4.1.12)':
+  '@ai-sdk/openai@2.0.68(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.17(zod@4.1.12)
@@ -11084,39 +11089,39 @@ snapshots:
 
   '@better-fetch/fetch@1.1.18': {}
 
-  '@biomejs/biome@2.3.5':
+  '@biomejs/biome@2.3.6':
     optionalDependencies:
-      '@biomejs/cli-darwin-arm64': 2.3.5
-      '@biomejs/cli-darwin-x64': 2.3.5
-      '@biomejs/cli-linux-arm64': 2.3.5
-      '@biomejs/cli-linux-arm64-musl': 2.3.5
-      '@biomejs/cli-linux-x64': 2.3.5
-      '@biomejs/cli-linux-x64-musl': 2.3.5
-      '@biomejs/cli-win32-arm64': 2.3.5
-      '@biomejs/cli-win32-x64': 2.3.5
+      '@biomejs/cli-darwin-arm64': 2.3.6
+      '@biomejs/cli-darwin-x64': 2.3.6
+      '@biomejs/cli-linux-arm64': 2.3.6
+      '@biomejs/cli-linux-arm64-musl': 2.3.6
+      '@biomejs/cli-linux-x64': 2.3.6
+      '@biomejs/cli-linux-x64-musl': 2.3.6
+      '@biomejs/cli-win32-arm64': 2.3.6
+      '@biomejs/cli-win32-x64': 2.3.6
 
-  '@biomejs/cli-darwin-arm64@2.3.5':
+  '@biomejs/cli-darwin-arm64@2.3.6':
     optional: true
 
-  '@biomejs/cli-darwin-x64@2.3.5':
+  '@biomejs/cli-darwin-x64@2.3.6':
     optional: true
 
-  '@biomejs/cli-linux-arm64-musl@2.3.5':
+  '@biomejs/cli-linux-arm64-musl@2.3.6':
     optional: true
 
-  '@biomejs/cli-linux-arm64@2.3.5':
+  '@biomejs/cli-linux-arm64@2.3.6':
     optional: true
 
-  '@biomejs/cli-linux-x64-musl@2.3.5':
+  '@biomejs/cli-linux-x64-musl@2.3.6':
     optional: true
 
-  '@biomejs/cli-linux-x64@2.3.5':
+  '@biomejs/cli-linux-x64@2.3.6':
     optional: true
 
-  '@biomejs/cli-win32-arm64@2.3.5':
+  '@biomejs/cli-win32-arm64@2.3.6':
     optional: true
 
-  '@biomejs/cli-win32-x64@2.3.5':
+  '@biomejs/cli-win32-x64@2.3.6':
     optional: true
 
   '@braintree/sanitize-url@7.1.1': {}
@@ -12044,7 +12049,7 @@ snapshots:
       - supports-color
       - vue
 
-  '@mantine/hooks@8.3.7(react@19.2.0)':
+  '@mantine/hooks@8.3.8(react@19.2.0)':
     dependencies:
       react: 19.2.0
 
@@ -14975,19 +14980,19 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 4.1.17
 
-  '@tanstack/query-core@5.90.9': {}
+  '@tanstack/query-core@5.90.10': {}
 
   '@tanstack/query-devtools@5.90.1': {}
 
-  '@tanstack/react-query-devtools@5.90.2(@tanstack/react-query@5.90.9(react@19.2.0))(react@19.2.0)':
+  '@tanstack/react-query-devtools@5.90.2(@tanstack/react-query@5.90.10(react@19.2.0))(react@19.2.0)':
     dependencies:
       '@tanstack/query-devtools': 5.90.1
-      '@tanstack/react-query': 5.90.9(react@19.2.0)
+      '@tanstack/react-query': 5.90.10(react@19.2.0)
       react: 19.2.0
 
-  '@tanstack/react-query@5.90.9(react@19.2.0)':
+  '@tanstack/react-query@5.90.10(react@19.2.0)':
     dependencies:
-      '@tanstack/query-core': 5.90.9
+      '@tanstack/query-core': 5.90.10
       react: 19.2.0
 
   '@tanstack/react-table@8.21.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
@@ -18363,6 +18368,10 @@ snapshots:
       react: 19.2.0
 
   lucide-react@0.553.0(react@19.2.0):
+    dependencies:
+      react: 19.2.0
+
+  lucide-react@0.554.0(react@19.2.0):
     dependencies:
       react: 19.2.0
 
@@ -22087,7 +22096,7 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
-  virtua@0.46.7(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+  virtua@0.47.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     optionalDependencies:
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)

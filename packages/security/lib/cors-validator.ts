@@ -25,8 +25,18 @@ export class CorsValidator {
     seoDomains = [],
   }: CorsValidatorConfig = {}) {
     this.allowedDomain = allowedDomain;
+    // Only include localhost in development
+    const defaultDevelopmentOrigins =
+      process.env.NODE_ENV === "development" ||
+      process.env.VERCEL_TARGET_ENV === "development"
+        ? [
+            "http://localhost:3000", // www app
+            "http://localhost:3001", // mcp app
+            "http://localhost:3002", // api app
+          ]
+        : [];
     this.additionalOrigins = [
-      ...this.getDefaultDevelopmentOrigins(),
+      ...defaultDevelopmentOrigins,
       ...additionalOrigins,
       // Add SEO domains as HTTPS origins
       ...seoDomains.map((domain) => `https://${domain}`),
@@ -34,29 +44,14 @@ export class CorsValidator {
     this.allowSubdomains = allowSubdomains;
   }
 
-  private getDefaultDevelopmentOrigins(): string[] {
-    // Only include localhost in development
-    if (
-      process.env.NODE_ENV === "development" ||
-      process.env.VERCEL_TARGET_ENV === "development"
-    ) {
-      return [
-        "http://localhost:3000", // www app
-        "http://localhost:3001", // mcp app
-        "http://localhost:3002", // api app
-      ];
-    }
-    return [];
-  }
-
   private getAllowedOrigins(): string[] {
-    const origins = [
-      `https://${this.allowedDomain}`,
-      ...this.additionalOrigins,
-    ];
-
     // Note: For subdomain validation, we check dynamically in validation methods
     // rather than pre-generating all possible subdomains
+    const origins: string[] = [`https://${this.allowedDomain}`];
+    // Explicitly iterate to ensure Biome recognizes usage
+    for (const origin of this.additionalOrigins) {
+      origins.push(origin);
+    }
     return origins;
   }
 
