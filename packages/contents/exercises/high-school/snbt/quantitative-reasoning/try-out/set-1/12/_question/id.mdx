@@ -1,0 +1,140 @@
+export const metadata = {
+  title: "Soal 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+Diberikan limas beraturan <InlineMath math="T.ABCD" /> dengan <InlineMath math="AB = 4 \text{ cm}" /> dan titik <InlineMath math="O" /> merupakan titik potong garis <InlineMath math="AC" /> dengan <InlineMath math="BD" />. Berapa volume dari limas <InlineMath math="T.ABCD" />?
+
+<LineEquation
+  title="Limas Beraturan T.ABCD"
+  description={<>Visualisasi limas beraturan <InlineMath math="T.ABCD" /> dengan alas persegi <InlineMath math="ABCD" /> dan pusat alas di titik <InlineMath math="O" />.</>}
+  cameraPosition={[6, 4, 8]}
+  data={[
+    {
+      points: [
+        { x: -2, y: 0, z: -2 },
+        { x: 2, y: 0, z: -2 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "A", at: 0, offset: [-0.3, 0, -0.3] },
+        { text: "B", at: 1, offset: [0.3, 0, -0.3] }
+      ]
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: -2 },
+        { x: 2, y: 0, z: 2 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "C", at: 1, offset: [0.3, 0, 0.3] }
+      ]
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: 2 },
+        { x: -2, y: 0, z: 2 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true,
+      labels: [
+        { text: "D", at: 1, offset: [-0.3, 0, 0.3] }
+      ]
+    },
+    {
+      points: [
+        { x: -2, y: 0, z: 2 },
+        { x: -2, y: 0, z: -2 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: true
+    },
+    {
+      points: [
+        { x: -2, y: 0, z: -2 },
+        { x: 2, y: 0, z: 2 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: -2 },
+        { x: -2, y: 0, z: 2 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: true,
+      labels: [
+        { text: "O", at: 0, offset: [0.3, 0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      showPoints: true,
+      labels: [
+        { text: "T", at: 1, offset: [0.3, 0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: -2, y: 0, z: -2 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: -2 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: 2 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false
+    },
+    {
+      points: [
+        { x: -2, y: 0, z: 2 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false
+    }
+  ]}
+  showZAxis={false}
+/>
+
+Putuskan apakah pernyataan <InlineMath math="(1)" /> dan <InlineMath math="(2)" /> berikut cukup untuk menjawab pertanyaan tersebut.
+
+<MathContainer>
+<BlockMath math="(1) \quad AC = 4\sqrt{2} \text{ cm}" />
+
+<BlockMath math="(2) \quad AT = \sqrt{17} \text{ cm}" />
+</MathContainer>
+

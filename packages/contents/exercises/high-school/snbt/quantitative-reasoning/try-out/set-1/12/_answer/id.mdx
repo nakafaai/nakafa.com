@@ -1,0 +1,212 @@
+export const metadata = {
+  title: "Pembahasan Soal 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+Diketahui limas beraturan <InlineMath math="T.ABCD" /> dengan <InlineMath math="AB = 4 \text{ cm}" /> dan titik <InlineMath math="O" /> merupakan titik potong garis <InlineMath math="AC" /> dengan <InlineMath math="BD" />.
+
+Volume limas dapat dihitung dengan rumus:
+
+<BlockMath math="V = \frac{1}{3} \times L_{\text{alas}} \times t = \frac{1}{3} \times s^2 \times t" />
+
+dengan <InlineMath math="s" /> adalah panjang sisi alas dan <InlineMath math="t" /> adalah tinggi limas.
+
+Karena <InlineMath math="AB = 4 \text{ cm}" />, maka luas alas <InlineMath math="L_{\text{alas}} = 4^2 = 16 \text{ cm}^2" />.
+
+Untuk menghitung volume, kita perlu mengetahui tinggi limas <InlineMath math="t = TO" />.
+
+**Analisis Pernyataan <InlineMath math="(1)" />:** <InlineMath math="AC = 4\sqrt{2} \text{ cm}" />
+
+Diagonal persegi dengan sisi <InlineMath math="s" /> adalah <InlineMath math="s\sqrt{2}" />.
+
+Jika <InlineMath math="AC = 4\sqrt{2} \text{ cm}" />, maka:
+
+<BlockMath math="s\sqrt{2} = 4\sqrt{2}" />
+
+<BlockMath math="s = 4" />
+
+Ini konsisten dengan informasi yang diberikan (<InlineMath math="AB = 4 \text{ cm}" />).
+
+Titik <InlineMath math="O" /> adalah titik tengah diagonal, sehingga:
+
+<BlockMath math="AO = OC = \frac{AC}{2} = \frac{4\sqrt{2}}{2} = 2\sqrt{2} \text{ cm}" />
+
+Namun, pernyataan <InlineMath math="(1)" /> tidak memberikan informasi tentang tinggi limas <InlineMath math="TO" />. Tanpa informasi tinggi, volume tidak dapat ditentukan.
+
+Jadi, pernyataan <InlineMath math="(1)" /> SAJA tidak cukup.
+
+**Analisis Pernyataan <InlineMath math="(2)" />:** <InlineMath math="AT = \sqrt{17} \text{ cm}" />
+
+Karena <InlineMath math="AB = 4 \text{ cm}" />, diagonal alas <InlineMath math="AC = 4\sqrt{2} \text{ cm}" />.
+
+Titik <InlineMath math="O" /> adalah titik tengah diagonal, sehingga:
+
+<BlockMath math="AO = \frac{AC}{2} = \frac{4\sqrt{2}}{2} = 2\sqrt{2} \text{ cm}" />
+
+Perhatikan segitiga siku-siku <InlineMath math="AOT" /> dengan sudut siku-siku di <InlineMath math="O" /> (karena <InlineMath math="TO" /> tegak lurus alas).
+
+Dengan menggunakan teorema Pythagoras:
+
+<BlockMath math="AT^2 = AO^2 + TO^2" />
+
+<BlockMath math="(\sqrt{17})^2 = (2\sqrt{2})^2 + TO^2" />
+
+<BlockMath math="17 = 8 + TO^2" />
+
+<BlockMath math="TO^2 = 9" />
+
+<BlockMath math="TO = 3 \text{ cm}" />
+
+Dengan tinggi <InlineMath math="TO = 3 \text{ cm}" /> dan luas alas <InlineMath math="L_{\text{alas}} = 16 \text{ cm}^2" />, volume limas dapat dihitung:
+
+<BlockMath math="V = \frac{1}{3} \times 16 \times 3 = 16 \text{ cm}^3" />
+
+Jadi, pernyataan <InlineMath math="(2)" /> SAJA cukup untuk menjawab pertanyaan.
+
+<LineEquation
+  title="Limas Beraturan T.ABCD dengan Label Panjang Sisi"
+  description={<>Visualisasi limas beraturan <InlineMath math="T.ABCD" /> dengan label panjang sisi-sisinya.</>}
+  cameraPosition={[6, 4, 8]}
+  data={[
+    {
+      points: [
+        { x: -2, y: 0, z: -2 },
+        { x: 0, y: 0, z: -2 },
+        { x: 2, y: 0, z: -2 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [
+        { text: "A", at: 0, offset: [-0.3, 0, -0.3] },
+        { text: "B", at: 2, offset: [0.3, 0, -0.3] },
+        { text: "4", at: 1, offset: [0, 0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: -2 },
+        { x: 2, y: 0, z: 0 },
+        { x: 2, y: 0, z: 2 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [
+        { text: "C", at: 2, offset: [0.3, 0, 0.3] },
+        { text: "4", at: 1, offset: [0.3, 0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: 2 },
+        { x: 0, y: 0, z: 2 },
+        { x: -2, y: 0, z: 2 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [
+        { text: "D", at: 2, offset: [-0.3, 0, 0.3] },
+        { text: "4", at: 1, offset: [0, 0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: -2, y: 0, z: 2 },
+        { x: -2, y: 0, z: 0 },
+        { x: -2, y: 0, z: -2 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [
+        { text: "4", at: 1, offset: [-0.3, 0.3, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: -2, y: 0, z: -2 },
+        { x: 0, y: 0, z: 0 },
+        { x: 2, y: 0, z: 2 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [
+        { text: "4√2", at: 1, offset: [0.5, 0.2, -0.5] }
+      ]
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: -2 },
+        { x: -2, y: 0, z: 2 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false
+    },
+    {
+      points: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("PURPLE"),
+      showPoints: false,
+      labels: [
+        { text: "T", at: 1, offset: [0.3, 0.3, 0] },
+        { text: "3", at: 0, offset: [0.2, 1.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: -2, y: 0, z: -2 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [
+        { text: "√17", at: 0, offset: [1, 2, 1] }
+      ]
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: -2 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false
+    },
+    {
+      points: [
+        { x: 2, y: 0, z: 2 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false
+    },
+    {
+      points: [
+        { x: -2, y: 0, z: 2 },
+        { x: 0, y: 3, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false
+    },
+    {
+      points: [
+        { x: -2, y: 0, z: -2 },
+        { x: 0, y: 0, z: 0 }
+      ],
+      color: getColor("CYAN"),
+      showPoints: false,
+      labels: [
+        { text: "2√2", at: 0, offset: [1, 0, 1] }
+      ]
+    }
+  ]}
+  showZAxis={false}
+/>
+
+**Kesimpulan:**
+
+Pernyataan <InlineMath math="(1)" /> SAJA tidak cukup, tetapi pernyataan <InlineMath math="(2)" /> SAJA cukup untuk menjawab pertanyaan.
+
