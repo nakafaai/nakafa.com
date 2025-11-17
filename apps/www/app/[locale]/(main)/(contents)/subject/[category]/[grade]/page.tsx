@@ -43,8 +43,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${t(getGradeNonNumeric(grade) ?? "grade", { grade })} - ${t(category)}`;
   const path = `/${locale}${FilePath}`;
+
+  let ogUrl: string = getOgUrl(locale, FilePath);
+
+  // Currently only available for grade 10, 11, and 12
+  if (grade === "10" || grade === "11" || grade === "12") {
+    ogUrl = `/open-graph/grade/${locale}-${grade}.png`;
+  }
+
   const image = {
-    url: getOgUrl(locale, FilePath),
+    url: ogUrl,
     width: 1200,
     height: 630,
   };
@@ -57,15 +65,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: path,
     },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: t("grade-description"),
+      images: [
+        {
+          url: ogUrl,
+          alt: title,
+          width: 1200,
+          height: 630,
+        },
+      ],
+      creator: "@nabilfatih_",
+      site: "@nabilfatih_",
+    },
     openGraph: {
       title,
       url: path,
       siteName: "Nakafa",
       locale,
       type: "website",
-      images: [image],
-    },
-    twitter: {
       images: [image],
     },
   };
