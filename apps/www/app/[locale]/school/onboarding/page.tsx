@@ -30,7 +30,7 @@ export default function Page({ params }: Props) {
       <Particles className="-z-1 pointer-events-none absolute inset-0 opacity-80" />
       <div className="mx-auto w-full max-w-xl space-y-8 px-6 py-12">
         <header className="space-y-4 text-center">
-          <h1 className="text-pretty font-medium text-2xl tracking-tight sm:text-3xl">
+          <h1 className="text-pretty font-medium text-2xl tracking-tighter sm:text-3xl">
             {t("title")}
           </h1>
           <p className="text-pretty text-muted-foreground sm:text-lg">
