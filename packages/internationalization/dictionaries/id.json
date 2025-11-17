@@ -388,5 +388,15 @@
     "privacy-policy": "Kebijakan Privasi",
     "security-policy": "Kebijakan Keamanan",
     "legal-description": "Dengan menggunakan layanan kami, Anda setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> dan <privacy-policy>Kebijakan Privasi</privacy-policy>."
+  },
+  "School": {
+    "Onboarding": {
+      "title": "Selamat datang di Nakafa School!",
+      "description": "Apa yang ingin kamu lakukan?",
+      "create": "Buat Sekolah",
+      "create-description": "Aku administrator atau Kepala Sekolah yang ingin setup Nakafa School.",
+      "join": "Bergabung Sekolah",
+      "join-description": "Aku guru, siswa, atau orang tua yang ingin bergabung sekolah yang sudah ada."
+    }
   }
 }

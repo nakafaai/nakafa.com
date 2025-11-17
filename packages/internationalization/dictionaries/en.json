@@ -388,5 +388,15 @@
     "privacy-policy": "Privacy Policy",
     "security-policy": "Security Policy",
     "legal-description": "By using our services, you agree to our <terms-of-service>Terms of Service</terms-of-service> and <privacy-policy>Privacy Policy</privacy-policy>."
+  },
+  "School": {
+    "Onboarding": {
+      "title": "Welcome to Nakafa School!",
+      "description": "What are you going to do?",
+      "create": "Create a School",
+      "create-description": "I'm administrator or Head of School who want to setup Nakafa School.",
+      "join": "Join a School",
+      "join-description": "I'm a teacher, student, or parent who want to join an existing school."
+    }
   }
 }

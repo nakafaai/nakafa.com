@@ -73,10 +73,10 @@ function OnboardingContent({ user }: { user: AppUser }) {
           <Image
             alt="Nakafa"
             className="w-full rounded-md"
-            height={630}
+            height={216}
             src="/og.png"
             title="Nakafa"
-            width={1200}
+            width={382}
           />
         </div>
         <div className="space-y-6 px-6 pt-3 pb-6">
