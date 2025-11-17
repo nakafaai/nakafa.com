@@ -3,45 +3,45 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "$$-15$$",
+      label: "$$\\frac{x + y}{12}$$",
       value: false,
     },
     {
-      label: "$$-12$$",
+      label: "$$\\frac{2x + y}{12}$$",
       value: false,
     },
     {
-      label: "$$12$$",
+      label: "$$\\frac{3x + y}{12}$$",
       value: false,
     },
     {
-      label: "$$15$$",
+      label: "$$\\frac{4x + y}{12}$$",
       value: true,
     },
     {
-      label: "$$18$$",
+      label: "$$\\frac{5x + y}{12}$$",
       value: false,
     },
   ],
   en: [
     {
-      label: "$$-15$$",
+      label: "$$\\frac{x + y}{12}$$",
       value: false,
     },
     {
-      label: "$$-12$$",
+      label: "$$\\frac{2x + y}{12}$$",
       value: false,
     },
     {
-      label: "$$12$$",
+      label: "$$\\frac{3x + y}{12}$$",
       value: false,
     },
     {
-      label: "$$15$$",
+      label: "$$\\frac{4x + y}{12}$$",
       value: true,
     },
     {
-      label: "$$18$$",
+      label: "$$\\frac{5x + y}{12}$$",
       value: false,
     },
   ],

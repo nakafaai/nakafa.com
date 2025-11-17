@@ -1,0 +1,59 @@
+export const metadata = {
+  title: "Pembahasan Soal 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/17/2025",
+};
+
+Diketahui ekspresi
+
+<BlockMath math="\frac{x + 2y}{3} + \frac{2x - y}{4} - \frac{3x + 2y}{6}" />
+
+#### Mencari Penyebut Persekutuan
+
+Untuk menyederhanakan ekspresi ini, kita perlu mencari penyebut persekutuan terkecil (PPK) dari <InlineMath math="3" />, <InlineMath math="4" />, dan <InlineMath math="6" />.
+
+Faktorisasi prima:
+- <InlineMath math="3 = 3" />
+- <InlineMath math="4 = 2^2" />
+- <InlineMath math="6 = 2 \times 3" />
+
+PPK dari <InlineMath math="3" />, <InlineMath math="4" />, dan <InlineMath math="6" /> adalah <InlineMath math="2^2 \times 3 = 12" />.
+
+#### Menyamakan Penyebut
+
+Ubah setiap pecahan agar memiliki penyebut <InlineMath math="12" />:
+
+<MathContainer>
+<BlockMath math="\frac{x + 2y}{3} = \frac{4(x + 2y)}{12} = \frac{4x + 8y}{12}" />
+
+<BlockMath math="\frac{2x - y}{4} = \frac{3(2x - y)}{12} = \frac{6x - 3y}{12}" />
+
+<BlockMath math="\frac{3x + 2y}{6} = \frac{2(3x + 2y)}{12} = \frac{6x + 4y}{12}" />
+</MathContainer>
+
+#### Menyederhanakan Ekspresi
+
+Substitusi ke ekspresi awal:
+
+<BlockMath math="\frac{x + 2y}{3} + \frac{2x - y}{4} - \frac{3x + 2y}{6} = \frac{4x + 8y}{12} + \frac{6x - 3y}{12} - \frac{6x + 4y}{12}" />
+
+Karena semua pecahan memiliki penyebut yang sama, kita dapat menggabungkan pembilangnya:
+
+<BlockMath math="= \frac{(4x + 8y) + (6x - 3y) - (6x + 4y)}{12}" />
+
+Sederhanakan pembilang dengan menggabungkan suku-suku sejenis:
+
+<MathContainer>
+<BlockMath math="= \frac{4x + 8y + 6x - 3y - 6x - 4y}{12}" />
+
+<BlockMath math="= \frac{(4x + 6x - 6x) + (8y - 3y - 4y)}{12}" />
+
+<BlockMath math="= \frac{4x + y}{12}" />
+</MathContainer>
+
+Jadi, hasil dari
+
+<BlockMath math="\frac{x + 2y}{3} + \frac{2x - y}{4} - \frac{3x + 2y}{6}" />
+
+adalah <InlineMath math="\frac{4x + y}{12}" />.
+

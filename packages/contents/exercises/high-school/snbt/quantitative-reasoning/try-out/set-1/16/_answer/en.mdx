@@ -1,0 +1,59 @@
+export const metadata = {
+  title: "Solution for Question 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/17/2025",
+};
+
+Given the expression
+
+<BlockMath math="\frac{x + 2y}{3} + \frac{2x - y}{4} - \frac{3x + 2y}{6}" />
+
+#### Finding the Common Denominator
+
+To simplify this expression, we need to find the least common multiple (LCM) of <InlineMath math="3" />, <InlineMath math="4" />, and <InlineMath math="6" />.
+
+Prime factorization:
+- <InlineMath math="3 = 3" />
+- <InlineMath math="4 = 2^2" />
+- <InlineMath math="6 = 2 \times 3" />
+
+The LCM of <InlineMath math="3" />, <InlineMath math="4" />, and <InlineMath math="6" /> is <InlineMath math="2^2 \times 3 = 12" />.
+
+#### Equalizing Denominators
+
+Convert each fraction to have denominator <InlineMath math="12" />:
+
+<MathContainer>
+<BlockMath math="\frac{x + 2y}{3} = \frac{4(x + 2y)}{12} = \frac{4x + 8y}{12}" />
+
+<BlockMath math="\frac{2x - y}{4} = \frac{3(2x - y)}{12} = \frac{6x - 3y}{12}" />
+
+<BlockMath math="\frac{3x + 2y}{6} = \frac{2(3x + 2y)}{12} = \frac{6x + 4y}{12}" />
+</MathContainer>
+
+#### Simplifying the Expression
+
+Substitute into the original expression:
+
+<BlockMath math="\frac{x + 2y}{3} + \frac{2x - y}{4} - \frac{3x + 2y}{6} = \frac{4x + 8y}{12} + \frac{6x - 3y}{12} - \frac{6x + 4y}{12}" />
+
+Since all fractions have the same denominator, we can combine the numerators:
+
+<BlockMath math="= \frac{(4x + 8y) + (6x - 3y) - (6x + 4y)}{12}" />
+
+Simplify the numerator by combining like terms:
+
+<MathContainer>
+<BlockMath math="= \frac{4x + 8y + 6x - 3y - 6x - 4y}{12}" />
+
+<BlockMath math="= \frac{(4x + 6x - 6x) + (8y - 3y - 4y)}{12}" />
+
+<BlockMath math="= \frac{4x + y}{12}" />
+</MathContainer>
+
+Therefore, the result of
+
+<BlockMath math="\frac{x + 2y}{3} + \frac{2x - y}{4} - \frac{3x + 2y}{6}" />
+
+is <InlineMath math="\frac{4x + y}{12}" />.
+

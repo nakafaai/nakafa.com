@@ -1,0 +1,114 @@
+export const metadata = {
+  title: "Solution for Question 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/17/2025",
+};
+
+Given the arithmetic sequence <InlineMath math="5, 8, 11, \ldots" />.
+
+From the sequence:
+- First term <InlineMath math="a = 5" />
+- Common difference <InlineMath math="b = 8 - 5 = 3" />
+
+Formula for the <InlineMath math="n" />-th term of an arithmetic sequence:
+
+<BlockMath math="U_n = a + (n-1)b" />
+
+Formula for the sum of the first <InlineMath math="n" /> terms:
+
+<BlockMath math="S_n = \frac{n}{2}(2a + (n-1)b)" />
+
+#### Evaluating Statement (1)
+
+Statement: The value of <InlineMath math="a" /> is greater than the value of <InlineMath math="b" />.
+
+<BlockMath math="a = 5 \text{ and } b = 3" />
+
+<BlockMath math="5 > 3" />
+
+Therefore, statement <InlineMath math="(1)" /> is true.
+
+#### Evaluating Statement (2)
+
+Statement: <InlineMath math="U_{11} = a \times 7" />.
+
+Calculate <InlineMath math="U_{11}" />:
+
+<MathContainer>
+<BlockMath math="U_{11} = a + (11-1)b" />
+
+<BlockMath math="= 5 + 10 \times 3" />
+
+<BlockMath math="= 5 + 30" />
+
+<BlockMath math="= 35" />
+</MathContainer>
+
+Calculate <InlineMath math="a \times 7" />:
+
+<BlockMath math="a \times 7 = 5 \times 7 = 35" />
+
+Since <InlineMath math="U_{11} = 35" /> and <InlineMath math="a \times 7 = 35" />, then <InlineMath math="U_{11} = a \times 7" />.
+
+Therefore, statement <InlineMath math="(2)" /> is true.
+
+#### Evaluating Statement (3)
+
+Statement: <InlineMath math="S_6 = b \times 25" />.
+
+Calculate <InlineMath math="S_6" />:
+
+<MathContainer>
+<BlockMath math="S_6 = \frac{6}{2}(2a + (6-1)b)" />
+
+<BlockMath math="= 3(2 \times 5 + 5 \times 3)" />
+
+<BlockMath math="= 3(10 + 15)" />
+
+<BlockMath math="= 3 \times 25" />
+
+<BlockMath math="= 75" />
+</MathContainer>
+
+Calculate <InlineMath math="b \times 25" />:
+
+<BlockMath math="b \times 25 = 3 \times 25 = 75" />
+
+Since <InlineMath math="S_6 = 75" /> and <InlineMath math="b \times 25 = 75" />, then <InlineMath math="S_6 = b \times 25" />.
+
+Therefore, statement <InlineMath math="(3)" /> is true.
+
+#### Evaluating Statement (4)
+
+Statement: <InlineMath math="U_{18} = S_5" />.
+
+Calculate <InlineMath math="U_{18}" />:
+
+<MathContainer>
+<BlockMath math="U_{18} = a + (18-1)b" />
+
+<BlockMath math="= 5 + 17 \times 3" />
+
+<BlockMath math="= 5 + 51" />
+
+<BlockMath math="= 56" />
+</MathContainer>
+
+Calculate <InlineMath math="S_5" />:
+
+<MathContainer>
+<BlockMath math="S_5 = \frac{5}{2}(2a + (5-1)b)" />
+
+<BlockMath math="= \frac{5}{2}(2 \times 5 + 4 \times 3)" />
+
+<BlockMath math="= \frac{5}{2}(10 + 12)" />
+
+<BlockMath math="= \frac{5}{2} \times 22" />
+
+<BlockMath math="= 55" />
+</MathContainer>
+
+Since <InlineMath math="U_{18} = 56" /> and <InlineMath math="S_5 = 55" />, then <InlineMath math="U_{18} \neq S_5" />.
+
+Therefore, statement <InlineMath math="(4)" /> is false.
+

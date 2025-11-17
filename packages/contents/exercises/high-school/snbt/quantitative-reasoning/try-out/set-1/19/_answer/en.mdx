@@ -1,0 +1,116 @@
+export const metadata = {
+  title: "Solution for Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/17/2025",
+};
+
+Given line <InlineMath math="g_1" /> passes through point <InlineMath math="A(-1, 1)" /> and <InlineMath math="B(2, 3)" />, and the equation of line <InlineMath math="g_2" />: <InlineMath math="mx + ny - 7 = 0" />.
+
+#### Calculating the Gradient of Line g₁
+
+The gradient of a line passing through two points can be calculated as:
+
+<BlockMath math="m = \frac{y_2 - y_1}{x_2 - x_1}" />
+
+For line <InlineMath math="g_1" /> passing through <InlineMath math="A(-1, 1)" /> and <InlineMath math="B(2, 3)" />:
+
+<MathContainer>
+<BlockMath math="m_1 = \frac{3 - 1}{2 - (-1)}" />
+
+<BlockMath math="= \frac{2}{3}" />
+</MathContainer>
+
+Therefore, the gradient of line <InlineMath math="g_1" /> is <InlineMath math="m_1 = \frac{2}{3}" />.
+
+#### Determining the Gradient of Line g₂
+
+The equation of line <InlineMath math="g_2" />: <InlineMath math="mx + ny - 7 = 0" />.
+
+Convert to the form <InlineMath math="y = mx + c" />:
+
+<MathContainer>
+<BlockMath math="mx + ny - 7 = 0" />
+
+<BlockMath math="ny = -mx + 7" />
+
+<BlockMath math="y = -\frac{m}{n}x + \frac{7}{n}" />
+</MathContainer>
+
+Therefore, the gradient of line <InlineMath math="g_2" /> is <InlineMath math="m_2 = -\frac{m}{n}" />.
+
+#### Evaluating Statement (1)
+
+Statement: Line <InlineMath math="g_1" /> and <InlineMath math="g_2" /> are parallel if <InlineMath math="m = 4" /> and <InlineMath math="n = 6" />.
+
+Two lines are parallel if their gradients are equal.
+
+If <InlineMath math="m = 4" /> and <InlineMath math="n = 6" />, then:
+
+<BlockMath math="m_2 = -\frac{m}{n} = -\frac{4}{6} = -\frac{2}{3}" />
+
+Since <InlineMath math="m_1 = \frac{2}{3}" /> and <InlineMath math="m_2 = -\frac{2}{3}" />, then <InlineMath math="m_1 \neq m_2" />.
+
+Therefore, statement <InlineMath math="(1)" /> is false.
+
+#### Evaluating Statement (2)
+
+Statement: Point <InlineMath math="B" /> passes through line <InlineMath math="g_2" /> if <InlineMath math="m = 2" /> and <InlineMath math="n = -1" />.
+
+Point <InlineMath math="B(2, 3)" /> passes through line <InlineMath math="g_2" /> if it satisfies the equation <InlineMath math="mx + ny - 7 = 0" />.
+
+Substitute <InlineMath math="m = 2" />, <InlineMath math="n = -1" />, and <InlineMath math="B(2, 3)" />:
+
+<MathContainer>
+<BlockMath math="mx + ny - 7 = 2(2) + (-1)(3) - 7" />
+
+<BlockMath math="= 4 - 3 - 7" />
+
+<BlockMath math="= -6" />
+
+<BlockMath math="\neq 0" />
+</MathContainer>
+
+Since the result is not equal to <InlineMath math="0" />, point <InlineMath math="B" /> does not pass through line <InlineMath math="g_2" />.
+
+Therefore, statement <InlineMath math="(2)" /> is false.
+
+#### Evaluating Statement (3)
+
+Statement: If <InlineMath math="g_1" /> and <InlineMath math="g_2" /> are parallel, then <InlineMath math="\frac{m}{n} = -\frac{3}{2}" />.
+
+If both lines are parallel, then <InlineMath math="m_1 = m_2" />:
+
+<MathContainer>
+<BlockMath math="\frac{2}{3} = -\frac{m}{n}" />
+
+<BlockMath math="\frac{m}{n} = -\frac{2}{3}" />
+</MathContainer>
+
+Therefore, if <InlineMath math="g_1" /> and <InlineMath math="g_2" /> are parallel, then <InlineMath math="\frac{m}{n} = -\frac{2}{3}" />, not <InlineMath math="-\frac{3}{2}" />.
+
+Therefore, statement <InlineMath math="(3)" /> is false.
+
+#### Evaluating Statement (4)
+
+Statement: If <InlineMath math="m = 3" /> and <InlineMath math="n = 2" />, then <InlineMath math="g_1" /> and <InlineMath math="g_2" /> are perpendicular.
+
+Two lines are perpendicular if the product of their gradients equals <InlineMath math="-1" />, i.e., <InlineMath math="m_1 \times m_2 = -1" />.
+
+If <InlineMath math="m = 3" /> and <InlineMath math="n = 2" />, then:
+
+<BlockMath math="m_2 = -\frac{m}{n} = -\frac{3}{2}" />
+
+Check if <InlineMath math="m_1 \times m_2 = -1" />:
+
+<MathContainer>
+<BlockMath math="m_1 \times m_2 = \frac{2}{3} \times \left(-\frac{3}{2}\right)" />
+
+<BlockMath math="= -\frac{6}{6}" />
+
+<BlockMath math="= -1" />
+</MathContainer>
+
+Since <InlineMath math="m_1 \times m_2 = -1" />, then <InlineMath math="g_1" /> and <InlineMath math="g_2" /> are perpendicular.
+
+Therefore, statement <InlineMath math="(4)" /> is true.
+

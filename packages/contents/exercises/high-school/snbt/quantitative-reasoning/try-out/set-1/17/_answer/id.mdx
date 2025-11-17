@@ -1,0 +1,88 @@
+export const metadata = {
+  title: "Pembahasan Soal 17",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/17/2025",
+};
+
+Diketahui fungsi <InlineMath math="f(x) = (x+3)(x^2+6x+8)^4" /> dan <InlineMath math="F(x) = \int f(x) \, dx" /> dengan kondisi <InlineMath math="F(-3) = 2" />.
+
+#### Substitusi U
+
+Untuk menyelesaikan integral ini, kita gunakan metode substitusi.
+
+Misalkan <InlineMath math="u = x^2 + 6x + 8" />.
+
+Turunan <InlineMath math="u" /> terhadap <InlineMath math="x" />:
+
+<BlockMath math="\frac{du}{dx} = 2x + 6" />
+
+Faktorkan:
+
+<BlockMath math="\frac{du}{dx} = 2(x + 3)" />
+
+Kalikan kedua ruas dengan <InlineMath math="dx" />:
+
+<BlockMath math="du = 2(x + 3) \, dx" />
+
+Bagi kedua ruas dengan <InlineMath math="2" />:
+
+<BlockMath math="\frac{du}{2} = (x + 3) \, dx" />
+
+#### Menyelesaikan Integral
+
+Substitusi ke dalam integral:
+
+<BlockMath math="F(x) = \int f(x) \, dx = \int (x+3)(x^2+6x+8)^4 \, dx" />
+
+Dengan substitusi <InlineMath math="u = x^2 + 6x + 8" /> dan <InlineMath math="(x+3) \, dx = \frac{du}{2}" />:
+
+<MathContainer>
+<BlockMath math="F(x) = \int u^4 \cdot \frac{du}{2}" />
+
+<BlockMath math="= \frac{1}{2} \int u^4 \, du" />
+
+<BlockMath math="= \frac{1}{2} \cdot \frac{u^5}{5} + C" />
+
+<BlockMath math="= \frac{1}{10} u^5 + C" />
+</MathContainer>
+
+Substitusi kembali <InlineMath math="u = x^2 + 6x + 8" />:
+
+<BlockMath math="F(x) = \frac{1}{10}(x^2 + 6x + 8)^5 + C" />
+
+#### Menentukan Konstanta C
+
+Gunakan kondisi <InlineMath math="F(-3) = 2" />:
+
+<BlockMath math="F(-3) = \frac{1}{10}((-3)^2 + 6(-3) + 8)^5 + C = 2" />
+
+Hitung nilai di dalam kurung:
+
+<MathContainer>
+<BlockMath math="(-3)^2 + 6(-3) + 8 = 9 - 18 + 8 = -1" />
+</MathContainer>
+
+Substitusi:
+
+<MathContainer>
+<BlockMath math="\frac{1}{10}(-1)^5 + C = 2" />
+
+<BlockMath math="\frac{1}{10}(-1) + C = 2" />
+
+<BlockMath math="-\frac{1}{10} + C = 2" />
+
+<BlockMath math="C = 2 + \frac{1}{10}" />
+
+<BlockMath math="C = \frac{20}{10} + \frac{1}{10}" />
+
+<BlockMath math="C = \frac{21}{10}" />
+</MathContainer>
+
+#### Fungsi F(x)
+
+Substitusi nilai <InlineMath math="C" /> ke dalam <InlineMath math="F(x)" />:
+
+<BlockMath math="F(x) = \frac{1}{10}(x^2 + 6x + 8)^5 + \frac{21}{10}" />
+
+Jadi, fungsi <InlineMath math="F(x)" /> adalah <InlineMath math="\frac{1}{10}(x^2 + 6x + 8)^5 + \frac{21}{10}" />.
+
