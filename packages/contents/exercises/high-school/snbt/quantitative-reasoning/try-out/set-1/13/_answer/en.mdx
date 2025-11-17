@@ -1,0 +1,81 @@
+export const metadata = {
+    title: "Solution for Question 13",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "11/17/2025",
+};
+
+Given functions <InlineMath math="f(x) = \frac{x-a}{x+a}" /> for <InlineMath math="x \neq -a" /> and <InlineMath math="g(x) = bx^2 - x + 2" />.
+
+The question asks whether <InlineMath math="\frac{g(-2)}{f(-2)} > 0" />.
+
+#### Calculate Function Values
+
+First, calculate the values of <InlineMath math="g(-2)" /> and <InlineMath math="f(-2)" />.
+
+For <InlineMath math="g(-2)" />, substitute <InlineMath math="x = -2" /> into function <InlineMath math="g(x)" />:
+
+<MathContainer>
+<BlockMath math="g(-2) = b(-2)^2 - (-2) + 2" />
+
+<BlockMath math="g(-2) = 4b + 2 + 2" />
+
+<BlockMath math="g(-2) = 4b + 4" />
+</MathContainer>
+
+For <InlineMath math="f(-2)" />, substitute <InlineMath math="x = -2" /> into function <InlineMath math="f(x)" />:
+
+<MathContainer>
+<BlockMath math="f(-2) = \frac{-2-a}{-2+a}" />
+
+<BlockMath math="f(-2) = \frac{-(2+a)}{-(2-a)}" />
+
+<BlockMath math="f(-2) = \frac{2+a}{2-a}" />
+</MathContainer>
+
+Therefore, the ratio we are looking for is:
+
+<BlockMath math="\frac{g(-2)}{f(-2)} = \frac{4b + 4}{\frac{2+a}{2-a}} = \frac{(4b + 4)(2-a)}{2+a}" />
+
+We can simplify by factoring the numerator:
+
+<BlockMath math="\frac{g(-2)}{f(-2)} = \frac{4(b + 1)(2-a)}{2+a}" />
+
+For <InlineMath math="\frac{g(-2)}{f(-2)} > 0" />, we need <InlineMath math="\frac{4(b + 1)(2-a)}{2+a} > 0" />.
+
+Since <InlineMath math="4" /> is always positive, we need to analyze the sign of <InlineMath math="\frac{(b + 1)(2-a)}{2+a}" />.
+
+#### Statement Analysis
+
+**Analysis of Statement <InlineMath math="(1)" />:** <InlineMath math="a < 5" /> and <InlineMath math="b < 5" />
+
+From this statement, we only know that both <InlineMath math="a" /> and <InlineMath math="b" /> are less than <InlineMath math="5" />. However, there is no definite information about the signs of the factors involved.
+
+Let's check some possibilities:
+
+1. If <InlineMath math="b = 0" />, then <InlineMath math="b + 1 = 1 > 0" />
+2. If <InlineMath math="b = -2" />, then <InlineMath math="b + 1 = -1 < 0" />
+3. For <InlineMath math="2-a" />, if <InlineMath math="a = 1" />, then <InlineMath math="2-a = 1 > 0" />
+4. For <InlineMath math="2-a" />, if <InlineMath math="a = 3" />, then <InlineMath math="2-a = -1 < 0" />
+5. For <InlineMath math="2+a" />, if <InlineMath math="a = 0" />, then <InlineMath math="2+a = 2 > 0" />
+6. For <InlineMath math="2+a" />, if <InlineMath math="a = -3" />, then <InlineMath math="2+a = -1 < 0" />
+
+Since the signs of these factors can vary with many possible combinations, we cannot determine whether <InlineMath math="\frac{g(-2)}{f(-2)} > 0" />.
+
+Therefore, statement <InlineMath math="(1)" /> ALONE is not sufficient.
+
+**Analysis of Statement <InlineMath math="(2)" />:** <InlineMath math="a > 2" /> and <InlineMath math="b > 0" />
+
+From this statement, let's analyze the sign of each factor:
+
+1. Since <InlineMath math="b > 0" />, then <InlineMath math="b + 1 > 1 > 0" /> (positive)
+2. Since <InlineMath math="a > 2" />, then <InlineMath math="2 - a < 0" /> (negative)
+3. Since <InlineMath math="a > 2" />, then <InlineMath math="2 + a > 4 > 0" /> (positive)
+
+Thus, we have:
+
+<BlockMath math="\frac{(b + 1)(2-a)}{2+a} = \frac{(+)(-)}{(+)} = \frac{(-)}{(+)} = (-)" />
+
+Since the result is negative, <InlineMath math="\frac{g(-2)}{f(-2)} < 0" />, so the answer is no, <InlineMath math="\frac{g(-2)}{f(-2)}" /> is not greater than <InlineMath math="0" />.
+
+Therefore, statement <InlineMath math="(2)" /> ALONE is sufficient to answer the question definitively (the answer is no).
+

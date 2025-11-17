@@ -1,0 +1,89 @@
+export const metadata = {
+  title: "Soal 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/17/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+Segitiga <InlineMath math="ABC" /> sebangun dengan segitiga <InlineMath math="ADE" />.
+
+<LineEquation
+  title="Segitiga ABC dan ADE"
+  description="Visualisasi dua segitiga yang sebangun dengan titik sudut yang ditandai."
+  cameraPosition={[0, 0, 17]}
+  showZAxis={false}
+  data={[
+    {
+      points: [
+        { x: 2, y: 1, z: 0 },
+        { x: 5, y: 1, z: 0 },
+        { x: 8, y: 1, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [
+        { text: "A (2,1)", at: 0, offset: [-0.8, 0.4, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 8, y: 1, z: 0 },
+        { x: 8, y: 2.5, z: 0 },
+        { x: 8, y: 4, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [
+        { text: "B (8,4)", at: 2, offset: [0.8, 0.4, 0] },
+        { text: "C", at: 0, offset: [0.5, 0.5, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 8, y: 4, z: 0 },
+        { x: 5, y: 2.5, z: 0 },
+        { x: 2, y: 1, z: 0 }
+      ],
+      color: getColor("VIOLET"),
+      showPoints: false
+    },
+    {
+      points: [
+        { x: 8, y: 1, z: 0 },
+        { x: 9, y: 1, z: 0 },
+        { x: 10, y: 1, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [
+        { text: "D", at: 2, offset: [0.5, 0.4, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 2, y: 1, z: 0 },
+        { x: 2, y: -1, z: 0 },
+        { x: 2, y: -3, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [
+        { text: "E (2,-3)", at: 2, offset: [-0.5, -0.4, 0] }
+      ]
+    },
+    {
+      points: [
+        { x: 2, y: -3, z: 0 },
+        { x: 6, y: -1, z: 0 },
+        { x: 10, y: 1, z: 0 }
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false
+    }
+  ]}
+/>
+
+Luas segitiga <InlineMath math="ADE" /> adalah ....
+

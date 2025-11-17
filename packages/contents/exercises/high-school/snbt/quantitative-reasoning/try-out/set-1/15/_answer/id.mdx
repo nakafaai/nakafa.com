@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Pembahasan Soal 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/17/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+Diketahui segitiga <InlineMath math="ABC" /> sebangun dengan segitiga <InlineMath math="ADE" />.
+
+Dari visualisasi, dapat dilihat koordinat titik-titik sebagai berikut:
+- <InlineMath math="A(2, 1)" />
+- <InlineMath math="B(8, 4)" />
+- <InlineMath math="C(8, 1)" />
+- <InlineMath math="E(2, -3)" />
+- <InlineMath math="D(10, 1)" /> (perkiraan dari gambar)
+
+#### Menghitung Panjang Sisi
+
+Untuk segitiga <InlineMath math="ABC" /> yang merupakan segitiga siku-siku di <InlineMath math="C" />:
+
+<MathContainer>
+<BlockMath math="AC = |8 - 2| = 6" />
+
+<BlockMath math="BC = |4 - 1| = 3" />
+</MathContainer>
+
+Untuk segitiga <InlineMath math="ADE" />:
+
+<MathContainer>
+<BlockMath math="AE = |1 - (-3)| = 4" />
+</MathContainer>
+
+#### Menggunakan Kesebangunan
+
+Karena kedua segitiga sebangun, perbandingan sisi-sisi yang bersesuaian sama.
+
+<BlockMath math="\frac{AE}{BC} = \frac{AD}{AC}" />
+
+Substitusi nilai yang diketahui:
+
+<BlockMath math="\frac{4}{3} = \frac{AD}{6}" />
+
+Kalikan kedua ruas dengan <InlineMath math="6" />:
+
+<BlockMath math="AD = \frac{4 \times 6}{3} = \frac{24}{3} = 8" />
+
+#### Menghitung Luas Segitiga ADE
+
+Kedua segitiga memiliki sudut siku-siku (segitiga ABC di C, segitiga ADE di A).
+
+Luas segitiga siku-siku dapat dihitung dengan rumus:
+
+<BlockMath math="\text{Luas} = \frac{1}{2} \times \text{alas} \times \text{tinggi}" />
+
+Untuk segitiga <InlineMath math="ADE" />:
+
+<MathContainer>
+<BlockMath math="\text{Luas ADE} = \frac{1}{2} \times AD \times AE" />
+
+<BlockMath math="= \frac{1}{2} \times 8 \times 4" />
+
+<BlockMath math="= \frac{32}{2}" />
+
+<BlockMath math="= 16" />
+</MathContainer>
+
+Jadi, luas segitiga <InlineMath math="ADE" /> adalah <InlineMath math="16" />.
+

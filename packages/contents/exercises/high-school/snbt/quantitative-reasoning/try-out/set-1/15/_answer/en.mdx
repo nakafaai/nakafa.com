@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Solution for Question 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/17/2025",
+};
+
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+Given that triangle <InlineMath math="ABC" /> is similar to triangle <InlineMath math="ADE" />.
+
+From the visualization, we can see the coordinates of the points as follows:
+- <InlineMath math="A(2, 1)" />
+- <InlineMath math="B(8, 4)" />
+- <InlineMath math="C(8, 1)" />
+- <InlineMath math="E(2, -3)" />
+- <InlineMath math="D(10, 1)" /> (approximate from the diagram)
+
+#### Calculating Side Lengths
+
+For triangle <InlineMath math="ABC" />, which is a right triangle at <InlineMath math="C" />:
+
+<MathContainer>
+<BlockMath math="AC = |8 - 2| = 6" />
+
+<BlockMath math="BC = |4 - 1| = 3" />
+</MathContainer>
+
+For triangle <InlineMath math="ADE" />:
+
+<MathContainer>
+<BlockMath math="AE = |1 - (-3)| = 4" />
+</MathContainer>
+
+#### Using Similarity
+
+Since both triangles are similar, the ratios of corresponding sides are equal.
+
+<BlockMath math="\frac{AE}{BC} = \frac{AD}{AC}" />
+
+Substitute the known values:
+
+<BlockMath math="\frac{4}{3} = \frac{AD}{6}" />
+
+Multiply both sides by <InlineMath math="6" />:
+
+<BlockMath math="AD = \frac{4 \times 6}{3} = \frac{24}{3} = 8" />
+
+#### Calculating the Area of Triangle ADE
+
+Both triangles have right angles (triangle ABC at C, triangle ADE at A).
+
+The area of a right triangle can be calculated using the formula:
+
+<BlockMath math="\text{Area} = \frac{1}{2} \times \text{base} \times \text{height}" />
+
+For triangle <InlineMath math="ADE" />:
+
+<MathContainer>
+<BlockMath math="\text{Area of ADE} = \frac{1}{2} \times AD \times AE" />
+
+<BlockMath math="= \frac{1}{2} \times 8 \times 4" />
+
+<BlockMath math="= \frac{32}{2}" />
+
+<BlockMath math="= 16" />
+</MathContainer>
+
+Therefore, the area of triangle <InlineMath math="ADE" /> is <InlineMath math="16" />.
+

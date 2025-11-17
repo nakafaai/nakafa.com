@@ -1,0 +1,81 @@
+export const metadata = {
+  title: "Pembahasan Soal 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/17/2025",
+};
+
+Diketahui fungsi <InlineMath math="f(x) = \frac{x-a}{x+a}" /> untuk <InlineMath math="x \neq -a" /> dan <InlineMath math="g(x) = bx^2 - x + 2" />.
+
+Pertanyaan yang harus dijawab adalah apakah <InlineMath math="\frac{g(-2)}{f(-2)} > 0" />.
+
+#### Menghitung Nilai Fungsi
+
+Pertama, kita hitung nilai dari <InlineMath math="g(-2)" /> dan <InlineMath math="f(-2)" />.
+
+Untuk <InlineMath math="g(-2)" />, substitusi <InlineMath math="x = -2" /> ke dalam fungsi <InlineMath math="g(x)" />:
+
+<MathContainer>
+<BlockMath math="g(-2) = b(-2)^2 - (-2) + 2" />
+
+<BlockMath math="g(-2) = 4b + 2 + 2" />
+
+<BlockMath math="g(-2) = 4b + 4" />
+</MathContainer>
+
+Untuk <InlineMath math="f(-2)" />, substitusi <InlineMath math="x = -2" /> ke dalam fungsi <InlineMath math="f(x)" />:
+
+<MathContainer>
+<BlockMath math="f(-2) = \frac{-2-a}{-2+a}" />
+
+<BlockMath math="f(-2) = \frac{-(2+a)}{-(2-a)}" />
+
+<BlockMath math="f(-2) = \frac{2+a}{2-a}" />
+</MathContainer>
+
+Sehingga perbandingan yang kita cari adalah:
+
+<BlockMath math="\frac{g(-2)}{f(-2)} = \frac{4b + 4}{\frac{2+a}{2-a}} = \frac{(4b + 4)(2-a)}{2+a}" />
+
+Kita dapat menyederhanakan dengan memfaktorkan pembilang:
+
+<BlockMath math="\frac{g(-2)}{f(-2)} = \frac{4(b + 1)(2-a)}{2+a}" />
+
+Agar <InlineMath math="\frac{g(-2)}{f(-2)} > 0" />, maka <InlineMath math="\frac{4(b + 1)(2-a)}{2+a} > 0" />.
+
+Karena <InlineMath math="4" /> selalu positif, maka kita perlu menganalisis tanda dari <InlineMath math="\frac{(b + 1)(2-a)}{2+a}" />.
+
+#### Analisis Pernyataan
+
+**Analisis Pernyataan <InlineMath math="(1)" />:** <InlineMath math="a < 5" /> dan <InlineMath math="b < 5" />
+
+Dari pernyataan ini, kita hanya tahu bahwa <InlineMath math="a" /> dan <InlineMath math="b" /> keduanya kurang dari <InlineMath math="5" />. Namun, tidak ada informasi pasti mengenai tanda dari faktor-faktor yang terlibat.
+
+Mari kita periksa beberapa kemungkinan:
+
+1. Jika <InlineMath math="b = 0" />, maka <InlineMath math="b + 1 = 1 > 0" />
+2. Jika <InlineMath math="b = -2" />, maka <InlineMath math="b + 1 = -1 < 0" />
+3. Untuk <InlineMath math="2-a" />, jika <InlineMath math="a = 1" />, maka <InlineMath math="2-a = 1 > 0" />
+4. Untuk <InlineMath math="2-a" />, jika <InlineMath math="a = 3" />, maka <InlineMath math="2-a = -1 < 0" />
+5. Untuk <InlineMath math="2+a" />, jika <InlineMath math="a = 0" />, maka <InlineMath math="2+a = 2 > 0" />
+6. Untuk <InlineMath math="2+a" />, jika <InlineMath math="a = -3" />, maka <InlineMath math="2+a = -1 < 0" />
+
+Karena tanda dari faktor-faktor tersebut dapat bervariasi dengan banyak kemungkinan kombinasi, kita tidak bisa memastikan apakah <InlineMath math="\frac{g(-2)}{f(-2)} > 0" />.
+
+Jadi, pernyataan <InlineMath math="(1)" /> SAJA tidak cukup.
+
+**Analisis Pernyataan <InlineMath math="(2)" />:** <InlineMath math="a > 2" /> dan <InlineMath math="b > 0" />
+
+Dari pernyataan ini, mari kita analisis tanda dari setiap faktor:
+
+1. Karena <InlineMath math="b > 0" />, maka <InlineMath math="b + 1 > 1 > 0" /> (positif)
+2. Karena <InlineMath math="a > 2" />, maka <InlineMath math="2 - a < 0" /> (negatif)
+3. Karena <InlineMath math="a > 2" />, maka <InlineMath math="2 + a > 4 > 0" /> (positif)
+
+Sehingga kita punya:
+
+<BlockMath math="\frac{(b + 1)(2-a)}{2+a} = \frac{(+)(-)}{(+)} = \frac{(-)}{(+)} = (-)" />
+
+Karena hasilnya negatif, maka <InlineMath math="\frac{g(-2)}{f(-2)} < 0" />, sehingga jawabannya adalah tidak, <InlineMath math="\frac{g(-2)}{f(-2)}" /> tidak lebih besar dari <InlineMath math="0" />.
+
+Dengan demikian, pernyataan <InlineMath math="(2)" /> SAJA cukup untuk menjawab pertanyaan dengan pasti (jawabannya adalah tidak).
+
