@@ -1,5 +1,7 @@
-import { Particles } from "@repo/design-system/components/ui/particles";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { ArrowLeftIcon } from "lucide-react";
 import type { Locale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 
@@ -12,13 +14,22 @@ export default function Page({ params }: Props) {
 
   setRequestLocale(locale);
 
+  const t = useTranslations("School.Onboarding");
+
   return (
-    <div
-      className="relative flex min-h-svh items-center justify-center"
-      data-pagefind-ignore
-    >
-      <Particles className="-z-1 pointer-events-none absolute inset-0 opacity-80" />
-      <div className="mx-auto w-full max-w-xl space-y-8 px-6 py-12" />
+    <div className="mx-auto w-full max-w-xl space-y-8 px-6 py-18">
+      <header className="space-y-2">
+        <NavigationLink
+          className="flex items-center gap-2 text-primary text-sm underline-offset-4 hover:underline"
+          href="/school/onboarding"
+        >
+          <ArrowLeftIcon className="size-4" />
+          {t("back")}
+        </NavigationLink>
+        <h1 className="text-pretty font-medium text-lg">{t("create")}</h1>
+      </header>
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm" />
     </div>
   );
 }

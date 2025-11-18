@@ -396,7 +396,8 @@
       "create": "Create a School",
       "create-description": "I'm administrator or Head of School who want to setup Nakafa School.",
       "join": "Join a School",
-      "join-description": "I'm a teacher, student, or parent who want to join an existing school."
+      "join-description": "I'm a teacher, student, or parent who want to join an existing school.",
+      "back": "Back"
     }
   }
 }

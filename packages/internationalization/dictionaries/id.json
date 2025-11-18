@@ -396,7 +396,8 @@
       "create": "Buat Sekolah",
       "create-description": "Aku administrator atau Kepala Sekolah yang ingin setup Nakafa School.",
       "join": "Bergabung Sekolah",
-      "join-description": "Aku guru, siswa, atau orang tua yang ingin bergabung sekolah yang sudah ada."
+      "join-description": "Aku guru, siswa, atau orang tua yang ingin bergabung sekolah yang sudah ada.",
+      "back": "Kembali"
     }
   }
 }

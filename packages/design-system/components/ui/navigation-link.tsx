@@ -4,6 +4,7 @@ import { Link } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { useSelectedLayoutSegment } from "next/navigation";
 import type { ComponentProps } from "react";
+import { useMemo } from "react";
 
 const EXTERNAL_URL_REGEX = /^https?:\/\//;
 const PROTOCOL_RELATIVE_REGEX = /^\/\//;
@@ -21,41 +22,60 @@ export default function NavigationLink({
   href,
   ...props
 }: ComponentProps<typeof Link>) {
-  let cleanHref = href;
-
   const selectedLayoutSegment = useSelectedLayoutSegment();
   const pathname = selectedLayoutSegment ? `/${selectedLayoutSegment}` : "/";
-  const isActive = typeof href === "string" && pathname.includes(href);
 
-  const hrefSplit = href.toString().split("/");
-  const firstSegment = href.toString().startsWith("/")
-    ? hrefSplit[1]
-    : hrefSplit[0];
+  const cleanHref = useMemo(() => {
+    let result = href;
+    const hrefString = typeof href === "string" ? href : href.toString();
 
-  // if in href still containing locale, remove it, because <Link> supports built-in locale
-  const locale = routing.locales.find((l) => l === firstSegment);
-  if (locale) {
-    cleanHref = href.toString().replace(`/${locale}`, ""); // remove locale from href
-  }
+    const hrefSplit = hrefString.split("/");
+    const firstSegment = hrefString.startsWith("/")
+      ? hrefSplit[1]
+      : hrefSplit[0];
 
-  if (typeof cleanHref === "string") {
-    const isExternal = EXTERNAL_URL_REGEX.test(cleanHref);
-    const isProtocolRelative = PROTOCOL_RELATIVE_REGEX.test(cleanHref);
-    const isHash = cleanHref.startsWith("#");
-    const isMailOrTel = MAIL_OR_TEL_REGEX.test(cleanHref);
-
-    const shouldNormalize =
-      cleanHref.length > 0 &&
-      !cleanHref.startsWith("/") &&
-      !isExternal &&
-      !isProtocolRelative &&
-      !isHash &&
-      !isMailOrTel;
-
-    if (shouldNormalize) {
-      cleanHref = `/${cleanHref}`;
+    // if in href still containing locale, remove it, because <Link> supports built-in locale
+    const locale = routing.locales.find((l) => l === firstSegment);
+    if (locale) {
+      result = hrefString.replace(`/${locale}`, ""); // remove locale from href
     }
-  }
+
+    if (typeof result === "string") {
+      const isExternal = EXTERNAL_URL_REGEX.test(result);
+      const isProtocolRelative = PROTOCOL_RELATIVE_REGEX.test(result);
+      const isHash = result.startsWith("#");
+      const isMailOrTel = MAIL_OR_TEL_REGEX.test(result);
+
+      const shouldNormalize =
+        result.length > 0 &&
+        !result.startsWith("/") &&
+        !isExternal &&
+        !isProtocolRelative &&
+        !isHash &&
+        !isMailOrTel;
+
+      if (shouldNormalize) {
+        result = `/${result}`;
+      }
+    }
+
+    return result;
+  }, [href]);
+
+  // More accurate active state check - exact match or starts with the href followed by /
+  const isActive = useMemo(() => {
+    if (typeof href !== "string") {
+      return false;
+    }
+    const normalizedHref = href.endsWith("/") ? href.slice(0, -1) : href;
+    const normalizedPathname = pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
+    return (
+      normalizedPathname === normalizedHref ||
+      normalizedPathname.startsWith(`${normalizedHref}/`)
+    );
+  }, [href, pathname]);
 
   return (
     <Link
