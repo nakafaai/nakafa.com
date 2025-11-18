@@ -10,7 +10,7 @@ import { use } from "react";
 import { SchoolSidebar } from "@/components/school/sidebar";
 import { Header } from "@/components/sidebar/header";
 
-export default function Layout(props: LayoutProps<"/[locale]/school">) {
+export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
   const { children, params } = props;
   const { locale } = use(params);
   // Ensure that the incoming `locale` is valid
