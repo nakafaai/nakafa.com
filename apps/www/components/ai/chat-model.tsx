@@ -3,25 +3,25 @@
 import type { ModelId } from "@repo/ai/lib/providers";
 import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar";
+import { Button } from "@repo/design-system/components/ui/button";
 import {
-  PromptInputModelSelect,
-  PromptInputModelSelectContent,
-  PromptInputModelSelectItem,
-  PromptInputModelSelectTrigger,
-  PromptInputModelSelectValue,
-} from "@repo/design-system/components/ai/input";
-import {
-  SelectGroup,
-  SelectLabel,
-  SelectSeparator,
-} from "@repo/design-system/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { cn } from "@repo/design-system/lib/utils";
 import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useAction, useQuery } from "convex/react";
+import { CheckIcon, ChevronDownIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useAi } from "@/lib/context/use-ai";
 import { freeModels, models, premiumModels } from "@/lib/data/models";
@@ -42,6 +42,8 @@ export function AiChatModel() {
   const model = useAi((state) => state.model);
   const setModel = useAi((state) => state.setModel);
   const setOpen = useAi((state) => state.setOpen);
+
+  const [openModelMenu, setOpenModelMenu] = useState(false);
 
   const Icon = models.find((m) => m.value === model)?.icon;
   const label = models.find((m) => m.value === model)?.label;
@@ -99,38 +101,68 @@ export function AiChatModel() {
   };
 
   return (
-    <PromptInputModelSelect
-      disabled={isPending}
-      onValueChange={handleOnChange}
-      value={model}
+    <DropdownMenu
+      modal={false}
+      onOpenChange={setOpenModelMenu}
+      open={openModelMenu}
     >
-      <PromptInputModelSelectTrigger>
-        <PromptInputModelSelectValue>
+      <DropdownMenuTrigger asChild disabled={isPending}>
+        <Button disabled={isPending} variant="ghost">
           {Icon && <Icon />}
           {label}
-        </PromptInputModelSelectValue>
-      </PromptInputModelSelectTrigger>
-      <PromptInputModelSelectContent>
-        <SelectGroup>
-          <SelectLabel>{t("premium-models")}</SelectLabel>
+          <ChevronDownIcon
+            className={cn(
+              "ml-auto size-4 transition-transform ease-out",
+              openModelMenu && "rotate-180"
+            )}
+          />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="max-h-[calc(100svh-16rem)]">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("premium-models")}</DropdownMenuLabel>
           {premiumModels.map((m) => (
-            <PromptInputModelSelectItem key={m.value} value={m.value}>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              key={m.value}
+              onSelect={() => {
+                handleOnChange(m.value);
+              }}
+            >
               <m.icon />
               {m.label}
-            </PromptInputModelSelectItem>
+              <CheckIcon
+                className={cn(
+                  "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                  model === m.value && "opacity-100"
+                )}
+              />
+            </DropdownMenuItem>
           ))}
-        </SelectGroup>
-        <SelectSeparator />
-        <SelectGroup>
-          <SelectLabel>{t("free-models")}</SelectLabel>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("free-models")}</DropdownMenuLabel>
           {freeModels.map((m) => (
-            <PromptInputModelSelectItem key={m.value} value={m.value}>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              key={m.value}
+              onSelect={() => {
+                handleOnChange(m.value);
+              }}
+            >
               <m.icon />
               {m.label}
-            </PromptInputModelSelectItem>
+              <CheckIcon
+                className={cn(
+                  "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                  model === m.value && "opacity-100"
+                )}
+              />
+            </DropdownMenuItem>
           ))}
-        </SelectGroup>
-      </PromptInputModelSelectContent>
-    </PromptInputModelSelect>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
