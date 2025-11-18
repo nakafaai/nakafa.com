@@ -7,7 +7,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@base-ui-components/react": "1.0.0-beta.4",
+    "@base-ui-components/react": "1.0.0-beta.6",
     "@floating-ui/react": "^0.27.16",
     "@hookform/resolvers": "^5.2.2",
     "@icons-pack/react-simple-icons": "^13.8.0",
@@ -63,7 +63,7 @@
     "react-aria-components": "^1.13.0",
     "react-day-picker": "^8.10.1",
     "react-error-boundary": "^6.0.0",
-    "react-hook-form": "^7.66.0",
+    "react-hook-form": "^7.66.1",
     "react-hotkeys-hook": "^5.2.1",
     "react-katex": "^3.1.0",
     "react-markdown": "^10.1.0",
@@ -93,11 +93,11 @@
     "@tailwindcss/typography": "^0.5.19",
     "@types/lodash.throttle": "^4.1.9",
     "@types/node": "^24.10.1",
-    "@types/react": "^19.2.5",
+    "@types/react": "^19.2.6",
     "@types/react-katex": "^3.0.4",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/three": "^0.181.0",
-    "sass": "^1.94.0",
+    "sass": "^1.94.1",
     "sass-embedded": "^1.93.3",
     "typescript": "^5.9.3"
   }

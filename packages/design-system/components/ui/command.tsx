@@ -35,6 +35,7 @@ function CommandDialog({
   commandProps,
   ...props
 }: React.ComponentProps<typeof Dialog> & {
+  children?: React.ReactNode;
   title?: string;
   description?: string;
   commandProps?: React.ComponentProps<typeof CommandPrimitive>;
