@@ -9,7 +9,6 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
 import { cn } from "@repo/design-system/lib/utils";
-import { ArrowUpRightIcon, GalleryVerticalEndIcon } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
@@ -59,7 +58,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <SidebarMenu>
+        {/* <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="group/school justify-between">
               <NavigationLink href="/school" title="Nakafa School">
@@ -73,7 +72,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
               </NavigationLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
-        </SidebarMenu>
+        </SidebarMenu> */}
         <SearchMenu />
       </SidebarHeader>
       <SidebarContent>
