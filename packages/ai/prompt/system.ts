@@ -200,6 +200,11 @@ export function nakafaPrompt({
       - Inline math: \\(...\\). Examples: \\(10 \\text{ meters}\\).
       - Block math: \\[...\\]. Use \\\\ for line breaks. Examples: \\[A = \\left[x^{2} - \\frac{x^{3}}{3}\\right]_{0}^{2} \\\\ = 4 - \\frac{8}{3} \\\\ = \\frac{4}{3}\\], \\[x^2 + y^2 = z^2\\].
       - Text inside math: ALWAYS use \\text{...} for text inside math. Examples: \\(10 \\text{ meters}\\).
+
+      ### Bad examples of mathematical format
+
+      - Using dollar delimiter format: $10 \\text{ meters}$.
+      - Using inline code for mathematical content: The result is \`5 + 3 = 8\`.
       
       ## Code block format
 
