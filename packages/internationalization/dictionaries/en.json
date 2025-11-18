@@ -419,7 +419,14 @@
       "high-school": "High School",
       "vocational-school": "Vocational School",
       "university": "University",
-      "other": "Other"
+      "other": "Other",
+      "role": "I'm a",
+      "role-placeholder": "Select a role...",
+      "code": "Code",
+      "code-placeholder": "Enter the code...",
+      "teacher": "Teacher",
+      "student": "Student",
+      "parent": "Parent"
     }
   }
 }

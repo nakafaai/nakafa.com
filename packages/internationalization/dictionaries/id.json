@@ -419,7 +419,14 @@
       "high-school": "SMA",
       "vocational-school": "SMK",
       "university": "Universitas",
-      "other": "Lainnya"
+      "other": "Lainnya",
+      "role": "Aku adalah",
+      "role-placeholder": "Pilih peran...",
+      "code": "Kode",
+      "code-placeholder": "Masukkan kode...",
+      "teacher": "Guru",
+      "student": "Siswa",
+      "parent": "Orang tua"
     }
   }
 }

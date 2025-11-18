@@ -4,6 +4,7 @@ import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { SchoolOnboardingJoinForm } from "./form";
 
 type Props = {
   params: Promise<{ locale: Locale }>;
@@ -29,7 +30,9 @@ export default function Page({ params }: Props) {
         <h1 className="text-pretty font-medium text-lg">{t("join")}</h1>
       </header>
 
-      <div className="rounded-xl border bg-card p-6 shadow-sm" />
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <SchoolOnboardingJoinForm />
+      </div>
     </div>
   );
 }
