@@ -122,7 +122,9 @@
     "see": "Lihat",
     "chat": "Obrolan",
     "no-chats": "Belum ada obrolan.",
-    "exercises": "Latihan"
+    "exercises": "Latihan",
+    "search-country-placeholder": "Cari negara...",
+    "no-country-found": "Negara tidak ditemukan."
   },
   "Onboarding": {
     "title": "Selamat datang di Nakafa!",
@@ -397,7 +399,27 @@
       "create-description": "Aku administrator atau Kepala Sekolah yang ingin setup Nakafa School.",
       "join": "Bergabung Sekolah",
       "join-description": "Aku guru, siswa, atau orang tua yang ingin bergabung sekolah yang sudah ada.",
-      "back": "Kembali"
+      "back": "Kembali",
+      "school-name": "Nama Sekolah",
+      "school-name-placeholder": "SMA Negeri 1 Jakarta",
+      "school-email": "Email Sekolah",
+      "school-email-placeholder": "sma1@example.com",
+      "school-phone": "Telepon Sekolah",
+      "school-phone-placeholder": "+62 123 456 7890",
+      "school-address": "Alamat Sekolah",
+      "school-address-placeholder": "Jl. Raya Jakarta No. 123",
+      "school-city": "Kota Sekolah",
+      "school-city-placeholder": "Jakarta",
+      "school-province": "Provinsi Sekolah",
+      "school-province-placeholder": "DKI Jakarta",
+      "school-type": "Jenjang Sekolah",
+      "school-type-placeholder": "Pilih jenjang sekolah...",
+      "elementary-school": "SD",
+      "middle-school": "SMP",
+      "high-school": "SMA",
+      "vocational-school": "SMK",
+      "university": "Universitas",
+      "other": "Lainnya"
     }
   }
 }

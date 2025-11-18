@@ -122,7 +122,9 @@
     "see": "See",
     "chat": "Chat",
     "no-chats": "No chats yet.",
-    "exercises": "Exercises"
+    "exercises": "Exercises",
+    "search-country-placeholder": "Search country...",
+    "no-country-found": "No country found."
   },
   "Onboarding": {
     "title": "Welcome to Nakafa!",
@@ -397,7 +399,27 @@
       "create-description": "I'm administrator or Head of School who want to setup Nakafa School.",
       "join": "Join a School",
       "join-description": "I'm a teacher, student, or parent who want to join an existing school.",
-      "back": "Back"
+      "back": "Back",
+      "school-name": "School Name",
+      "school-name-placeholder": "SMA Negeri 1 Jakarta",
+      "school-email": "School Email",
+      "school-email-placeholder": "sma1@example.com",
+      "school-phone": "School Phone",
+      "school-phone-placeholder": "+62 123 456 7890",
+      "school-address": "School Address",
+      "school-address-placeholder": "Jl. Raya Jakarta No. 123",
+      "school-city": "School City",
+      "school-city-placeholder": "Jakarta",
+      "school-province": "School Province",
+      "school-province-placeholder": "DKI Jakarta",
+      "school-type": "School Type",
+      "school-type-placeholder": "Select a school type...",
+      "elementary-school": "Elementary School",
+      "middle-school": "Middle School",
+      "high-school": "High School",
+      "vocational-school": "Vocational School",
+      "university": "University",
+      "other": "Other"
     }
   }
 }

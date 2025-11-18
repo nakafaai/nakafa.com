@@ -21,7 +21,7 @@ export default function Layout(props: LayoutProps<"/[locale]/user/settings">) {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-medium text-lg sm:text-xl">{t("settings")}</h1>
+      <h1 className="px-2 font-medium text-lg sm:text-xl">{t("settings")}</h1>
 
       <UserSettingsTabs />
       {children}

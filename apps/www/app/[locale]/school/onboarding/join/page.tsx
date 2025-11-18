@@ -17,8 +17,8 @@ export default function Page({ params }: Props) {
   const t = useTranslations("School.Onboarding");
 
   return (
-    <div className="mx-auto w-full max-w-xl space-y-8 px-6 py-18">
-      <header className="space-y-2">
+    <div className="mx-auto w-full max-w-xl space-y-8 px-6 py-12">
+      <header className="space-y-2 px-2">
         <NavigationLink
           className="flex items-center gap-2 text-primary text-sm underline-offset-4 hover:underline"
           href="/school/onboarding"

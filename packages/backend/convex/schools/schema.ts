@@ -10,6 +10,14 @@ const tables = {
     address: v.optional(v.string()),
     city: v.string(),
     province: v.string(),
+    type: v.union(
+      v.literal("elementary-school"),
+      v.literal("middle-school"),
+      v.literal("high-school"),
+      v.literal("vocational-school"),
+      v.literal("university"),
+      v.literal("other")
+    ),
 
     // Analytics (denormalized counts, updated via triggers)
     currentStudents: v.number(),
