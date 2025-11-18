@@ -112,7 +112,7 @@ function CommentMain({
           {getInitialName(userName)}
         </AvatarFallback>
       </Avatar>
-      <div className="grid gap-2">
+      <div className="grid w-full gap-2">
         <div className="grid gap-1">
           <div className="flex items-center gap-2">
             {userId ? (
