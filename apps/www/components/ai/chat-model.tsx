@@ -118,7 +118,7 @@ export function AiChatModel() {
           />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="max-h-[calc(100svh-16rem)]">
+      <DropdownMenuContent align="start">
         <DropdownMenuGroup>
           <DropdownMenuLabel>{t("premium-models")}</DropdownMenuLabel>
           {premiumModels.map((m) => (
