@@ -8,6 +8,7 @@ import {
   type ComponentProps,
   createContext,
   type HTMLAttributes,
+  startTransition,
   useContext,
   useEffect,
   useRef,
@@ -219,8 +220,10 @@ export const CodeBlock = ({
       .highlightCode(code, language, [lightTheme, darkTheme], preClassName)
       .then(([light, dark]) => {
         if (mounted.current) {
-          setHtml(light);
-          setDarkHtml(dark);
+          startTransition(() => {
+            setHtml(light);
+            setDarkHtml(dark);
+          });
         }
       });
 
