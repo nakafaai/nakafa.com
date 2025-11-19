@@ -20,8 +20,13 @@ const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 export function ChatProvider({
   chatId,
   initialMessages,
+  apiUrl = "/api/chat",
   children,
-}: PropsWithChildren<{ chatId: Id<"chats">; initialMessages: MyUIMessage[] }>) {
+}: PropsWithChildren<{
+  chatId: Id<"chats">;
+  initialMessages: MyUIMessage[];
+  apiUrl?: string;
+}>) {
   const t = useTranslations("Ai");
 
   const getModel = useAi((state) => state.getModel);
@@ -30,7 +35,7 @@ export function ChatProvider({
     id: chatId,
     messages: initialMessages,
     transport: new DefaultChatTransport({
-      api: "/api/chat",
+      api: apiUrl,
       prepareSendMessagesRequest: ({ messages }) => {
         // send only the last message and chat id
         // we will then fetch message history (for our chatId) on server
