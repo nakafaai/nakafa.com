@@ -1,4 +1,5 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
+import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { query } from "../_generated/server";
 import { safeGetAppUser } from "../auth";
@@ -44,57 +45,80 @@ export const getChat = query({
 });
 
 /**
- * Get all chats for the authenticated user.
- * Only accessible by the authenticated user.
- * Supports optional full-text search by title and filtering by visibility.
+ * Get all chats by user ID, type, visibility, and search query.
+ * Only accessible by the user ID passed as an argument.
+ * Supports optional full-text search by title and filtering by visibility and type.
  */
 export const getChats = query({
   args: {
     userId: v.id("users"),
     q: v.optional(v.string()),
     visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+    type: v.optional(v.union(v.literal("study"), v.literal("finance"))),
+    paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
-    const { userId, q: searchQuery, visibility } = args;
+    const { userId, q: searchQuery, visibility, type, paginationOpts } = args;
+
     // If search query is provided and not empty, use full-text search
     if (searchQuery && searchQuery.trim().length > 0) {
-      const searchBuilder = ctx.db
+      return await ctx.db
         .query("chats")
         .withSearchIndex("search_title", (q) => {
           let builder = q.search("title", searchQuery).eq("userId", userId);
-          // Add visibility filter if provided
           if (visibility) {
             builder = builder.eq("visibility", visibility);
           }
+          if (type) {
+            builder = builder.eq("type", type);
+          }
           return builder;
-        });
-
-      const chats = await searchBuilder.collect();
-      return chats;
+        })
+        .paginate(paginationOpts);
     }
 
-    // Otherwise, return chats with optional visibility filter
+    // Use the most specific index available based on filters
+    // Priority: userId_visibility_type > userId_type > userId_visibility > userId
+
+    if (visibility && type) {
+      // Use compound index for all three fields
+      return await ctx.db
+        .query("chats")
+        .withIndex("userId_visibility_type", (q) =>
+          q.eq("userId", userId).eq("visibility", visibility).eq("type", type)
+        )
+        .order("desc")
+        .paginate(paginationOpts);
+    }
+
+    if (type) {
+      // Use userId_type index
+      return await ctx.db
+        .query("chats")
+        .withIndex("userId_type", (q) =>
+          q.eq("userId", userId).eq("type", type)
+        )
+        .order("desc")
+        .paginate(paginationOpts);
+    }
+
     if (visibility) {
-      // Use compound index for userId + visibility
-      const chats = await ctx.db
+      // Use userId_visibility index
+      return await ctx.db
         .query("chats")
         .withIndex("userId_visibility", (q) =>
           q.eq("userId", userId).eq("visibility", visibility)
         )
         .order("desc")
-        .collect();
-
-      return chats;
+        .paginate(paginationOpts);
     }
 
     // No filters, return all user's chats
-    const chats = await ctx.db
+    return await ctx.db
       .query("chats")
       .withIndex("userId", (q) => q.eq("userId", userId))
       .order("desc")
-      .collect();
-
-    return chats;
+      .paginate(paginationOpts);
   },
 });
 

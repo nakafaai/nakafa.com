@@ -21,7 +21,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar";
-import { useQuery } from "convex/react";
+import { usePaginatedQuery, useQuery } from "convex/react";
 import { GlobeIcon, HistoryIcon, LockIcon, SearchIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -126,18 +126,23 @@ function AiChatSidebarChats({
 }) {
   const params = useParams();
   const id = params.id as Id<"chats">;
-  const chats = useQuery(api.chats.queries.getChats, {
-    userId,
-    q,
-  });
+  const { results, status } = usePaginatedQuery(
+    api.chats.queries.getChats,
+    {
+      userId,
+      q,
+      type: "study",
+    },
+    { initialNumItems: 50 }
+  );
 
-  if (!chats) {
+  if (status === "LoadingFirstPage") {
     return null;
   }
 
   return (
     <SidebarMenu>
-      {chats.map((chat) => {
+      {results.map((chat) => {
         const isPrivate = chat.visibility === "private";
         return (
           <SidebarMenuItem key={chat._id}>

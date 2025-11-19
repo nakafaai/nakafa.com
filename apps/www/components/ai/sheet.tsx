@@ -47,6 +47,7 @@ import {
   Authenticated,
   Unauthenticated,
   useMutation,
+  usePaginatedQuery,
   useQuery,
 } from "convex/react";
 import {
@@ -280,16 +281,20 @@ AiSheetHistory.displayName = "AiSheetHistory";
 const AiSheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
-  const chats = useQuery(api.chats.queries.getChats, { userId });
+  const { results, status } = usePaginatedQuery(
+    api.chats.queries.getChats,
+    { userId, type: "study" },
+    { initialNumItems: 50 }
+  );
 
-  if (!chats || chats.length === 0) {
+  if (status === "LoadingFirstPage" || results.length === 0) {
     return null;
   }
 
   return (
     <DropdownMenuContent align="end">
       <DropdownMenuGroup>
-        {chats.map((chat) => {
+        {results.map((chat) => {
           const isPrivate = chat.visibility === "private";
           return (
             <DropdownMenuItem

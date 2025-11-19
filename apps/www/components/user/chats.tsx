@@ -11,7 +11,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import {
   ArrowDownIcon,
@@ -47,15 +47,19 @@ export function UserChatsList({
   visibility?: "public" | "private";
 }) {
   const t = useTranslations("Common");
-  const chats = useQuery(api.chats.queries.getChats, { userId, visibility });
+  const { results, status } = usePaginatedQuery(
+    api.chats.queries.getChats,
+    { userId, visibility, type: "study" },
+    { initialNumItems: 50 }
+  );
 
   const locale = useLocale();
 
-  if (!chats) {
+  if (status === "LoadingFirstPage") {
     return <Skeleton className="h-12 w-full rounded-xl border shadow-sm" />;
   }
 
-  if (chats.length === 0) {
+  if (results.length === 0) {
     return (
       <p className="text-center text-muted-foreground text-sm">
         {t("no-chats")}
@@ -65,7 +69,7 @@ export function UserChatsList({
 
   return (
     <div className="flex flex-col divide-y overflow-hidden rounded-xl border shadow-sm">
-      {chats.map((chat) => {
+      {results.map((chat) => {
         const isPrivate = chat.visibility === "private";
         return (
           <div

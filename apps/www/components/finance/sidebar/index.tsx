@@ -11,6 +11,7 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
+import { FinanceSidebarChatList } from "@/components/finance/sidebar/chat-list";
 import { LangMenu } from "@/components/sidebar/lang-menu";
 import { ThemeMenu } from "@/components/sidebar/theme-menu";
 
@@ -35,7 +36,9 @@ export function FinanceSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent />
+      <SidebarContent>
+        <FinanceSidebarChatList />
+      </SidebarContent>
       <SidebarFooter className="border-t">
         <SidebarMenu>
           <LangMenu />
