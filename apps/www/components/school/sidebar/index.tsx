@@ -12,8 +12,8 @@ import { cn } from "@repo/design-system/lib/utils";
 import { ArrowUpRightIcon, PencilRulerIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
-import { LangMenu } from "../sidebar/lang-menu";
-import { ThemeMenu } from "../sidebar/theme-menu";
+import { LangMenu } from "@/components/sidebar/lang-menu";
+import { ThemeMenu } from "@/components/sidebar/theme-menu";
 
 export function SchoolSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const t = useTranslations("Onboarding");
