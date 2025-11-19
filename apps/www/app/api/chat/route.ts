@@ -158,6 +158,7 @@ export async function POST(req: Request) {
     const result = await fetchMutation(
       convexApi.chats.mutations.createChatWithMessage,
       {
+        type: "study",
         message: {
           role: message.role,
           identifier: message.id,

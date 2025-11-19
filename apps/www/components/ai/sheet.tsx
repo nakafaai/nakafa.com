@@ -222,6 +222,7 @@ const AiSheetNewChat = memo(() => {
 
       const chatId = await createChat({
         title: "New Chat",
+        type: "study",
       });
 
       setQuery(message.text);

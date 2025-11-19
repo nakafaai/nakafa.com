@@ -52,6 +52,7 @@ async function deleteMessagesFromPoint(
 export const createChat = mutation({
   args: {
     title: v.optional(v.string()),
+    type: v.union(v.literal("study"), v.literal("finance")),
   },
   handler: async (ctx, args) => {
     // Authentication check
@@ -68,6 +69,7 @@ export const createChat = mutation({
       title: args.title || "New Chat",
       userId: user.appUser._id,
       visibility: "private", // default to private
+      type: args.type,
     });
     return chatId;
   },
@@ -239,6 +241,7 @@ export const replaceMessageWithParts = mutation({
 export const createChatWithMessage = mutation({
   args: {
     title: v.optional(v.string()),
+    type: v.union(v.literal("study"), v.literal("finance")),
     message: v.object({
       ...tables.messages.validator.fields,
       chatId: v.optional(v.id("chats")), // make it optional here to allow for creating a chat with a message without a chatId
@@ -266,6 +269,7 @@ export const createChatWithMessage = mutation({
       title: args.title || "New Chat",
       userId: user.appUser._id,
       visibility: "private", // default to private
+      type: args.type,
     });
 
     // Create first message

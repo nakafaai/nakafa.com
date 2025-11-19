@@ -43,6 +43,7 @@ export function HomeSearch() {
 
       const chatId = await createChat({
         title: "New Chat",
+        type: "study",
       });
 
       setQuery(message.text);

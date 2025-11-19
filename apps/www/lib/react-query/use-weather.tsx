@@ -12,10 +12,5 @@ export function useWeather() {
   return useQuery({
     queryKey: ["weather"],
     queryFn: fetchWeather,
-    staleTime: Number.POSITIVE_INFINITY,
-    gcTime: Number.POSITIVE_INFINITY,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
   });
 }

@@ -7,14 +7,17 @@ export const tables = {
     title: v.optional(v.string()), // Optional chat title
     userId: v.id("users"), // Optional user association
     visibility: v.union(v.literal("public"), v.literal("private")),
+    type: v.optional(v.union(v.literal("study"), v.literal("finance"))),
   })
     .index("userId", ["userId"])
     .index("userId_visibility", ["userId", "visibility"])
+    .index("userId_type", ["userId", "type"])
     .index("visibility", ["visibility"])
+    .index("type", ["type"])
     .index("updatedAt", ["updatedAt"])
     .searchIndex("search_title", {
       searchField: "title",
-      filterFields: ["userId", "visibility"],
+      filterFields: ["userId", "visibility", "type"],
     }),
 
   messages: defineTable({
