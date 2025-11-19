@@ -28,7 +28,7 @@ export function FinanceSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
               size="sm"
               variant="secondary"
             >
-              <NavigationLink href="/" title={t("new-chat")}>
+              <NavigationLink href="/finance" title={t("new-chat")}>
                 {t("new-chat")}
               </NavigationLink>
             </Button>
