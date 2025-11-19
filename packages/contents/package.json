@@ -19,7 +19,7 @@
     "ky": "^1.14.0",
     "lucide-react": "^0.554.0",
     "motion": "^12.23.24",
-    "next-intl": "^4.5.3",
+    "next-intl": "^4.5.5",
     "react": "19.2.0",
     "react-aria-components": "^1.13.0",
     "recharts": "^2.15.4",
