@@ -30,7 +30,7 @@
     "deps-check-mcp": "cd apps/mcp && depcheck --ignore-dirs=node_modules || true"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.6",
+    "@biomejs/biome": "2.3.7",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.6.1",
     "@types/node": "^24.10.1",
@@ -39,11 +39,11 @@
     "turbo": "^2.6.1",
     "typescript": "^5.9.3",
     "ultracite": "^6.3.4",
-    "vitest": "^4.0.10"
+    "vitest": "^4.0.13"
   },
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@10.22.0",
+  "packageManager": "pnpm@10.23.0",
   "type": "module"
 }

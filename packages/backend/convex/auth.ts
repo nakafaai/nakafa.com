@@ -31,7 +31,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
     local: {
       schema: authSchema,
     },
-    verbose: true,
+    verbose: false,
     triggers: {
       user: {
         onCreate: async (ctx, authUser) => {
@@ -57,7 +57,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 
 export const createAuth = (
   ctx: GenericCtx<DataModel>,
-  { optionsOnly } = { optionsOnly: false }
+  { optionsOnly } = { optionsOnly: true }
 ) => {
   const authConfig = {
     baseURL: siteUrl,

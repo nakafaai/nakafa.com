@@ -14,7 +14,6 @@ const triggers = new Triggers<DataModel>();
 export { triggers };
 
 export const mutation = customMutation(rawMutation, customCtx(triggers.wrapDB));
-
 export const internalMutation = customMutation(
   rawInternalMutation,
   customCtx(triggers.wrapDB)

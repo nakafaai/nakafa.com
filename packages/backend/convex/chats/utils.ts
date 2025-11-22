@@ -133,6 +133,17 @@ export function mapUIMessagePartsToDBParts({
           toolWebSearchOutput: part.output,
           toolErrorText: part.errorText,
         };
+      case "tool-createDataset":
+        return {
+          ...baseFields,
+          type: part.type,
+          toolToolCallId: part.toolCallId,
+          toolState: part.state,
+          toolCreateDatasetInputQuery: part.input?.query,
+          toolCreateDatasetInputTargetRows: part.input?.targetRows,
+          toolCreateDatasetOutput: part.output,
+          toolErrorText: part.errorText,
+        };
 
       // Data parts - these contain the actual data
       case "data-suggestions":
@@ -209,6 +220,17 @@ export function mapUIMessagePartsToDBParts({
           dataWebSearchSources: part.data.sources,
           dataWebSearchStatus: part.data.status,
           dataWebSearchError: part.data.error,
+        };
+      case "data-create-dataset":
+        return {
+          ...baseFields,
+          type: part.type,
+          dataCreateDatasetId: part.id,
+          dataCreateDatasetDatasetId: part.data.datasetId,
+          dataCreateDatasetQuery: part.data.query,
+          dataCreateDatasetTargetRows: part.data.targetRows,
+          dataCreateDatasetStatus: part.data.status,
+          dataCreateDatasetError: part.data.error,
         };
       default: {
         throw new Error(`Unsupported part type: ${JSON.stringify(part)}`);
@@ -738,6 +760,73 @@ export function mapDBPartToUIMessagePart({
           throw new Error(`Unsupported tool state: ${part.toolState}`);
       }
     }
+    case "tool-createDataset": {
+      if (!part.toolState) {
+        throw new Error("tool_state is undefined");
+      }
+      const reconstructedInput = {
+        query: part.toolCreateDatasetInputQuery,
+        targetRows: part.toolCreateDatasetInputTargetRows,
+      };
+      switch (part.toolState) {
+        case "input-streaming":
+          return {
+            type: part.type,
+            state: part.toolState,
+            toolCallId: requireField({
+              value: part.toolToolCallId,
+              fieldName: "toolToolCallId",
+              partType: part.type,
+            }),
+            input: reconstructedInput,
+          };
+        case "input-available":
+          return {
+            type: part.type,
+            state: part.toolState,
+            toolCallId: requireField({
+              value: part.toolToolCallId,
+              fieldName: "toolToolCallId",
+              partType: part.type,
+            }),
+            input: buildRequiredObject(reconstructedInput),
+          };
+        case "output-available":
+          return {
+            type: part.type,
+            state: part.toolState,
+            toolCallId: requireField({
+              value: part.toolToolCallId,
+              fieldName: "toolToolCallId",
+              partType: part.type,
+            }),
+            input: buildRequiredObject(reconstructedInput),
+            output: requireField({
+              value: part.toolCreateDatasetOutput,
+              fieldName: "toolCreateDatasetOutput",
+              partType: part.type,
+            }),
+          };
+        case "output-error":
+          return {
+            type: part.type,
+            state: part.toolState,
+            toolCallId: requireField({
+              value: part.toolToolCallId,
+              fieldName: "toolToolCallId",
+              partType: part.type,
+            }),
+            input: buildRequiredObject(reconstructedInput),
+            errorText: requireField({
+              value: part.toolErrorText,
+              fieldName: "toolErrorText",
+              partType: part.type,
+            }),
+          };
+        default:
+          throw new Error(`Unsupported tool state: ${part.toolState}`);
+      }
+    }
 
     // Data parts
     case "data-suggestions":
@@ -960,6 +1049,34 @@ export function mapDBPartToUIMessagePart({
             partType: part.type,
           }),
           error: part.dataWebSearchError,
+        },
+      };
+    case "data-create-dataset":
+      return {
+        type: part.type,
+        id: requireField({
+          value: part.dataCreateDatasetId,
+          fieldName: "dataCreateDatasetId",
+          partType: part.type,
+        }),
+        data: {
+          datasetId: part.dataCreateDatasetDatasetId,
+          query: requireField({
+            value: part.dataCreateDatasetQuery,
+            fieldName: "dataCreateDatasetQuery",
+            partType: part.type,
+          }),
+          targetRows: requireField({
+            value: part.dataCreateDatasetTargetRows,
+            fieldName: "dataCreateDatasetTargetRows",
+            partType: part.type,
+          }),
+          status: requireField({
+            value: part.dataCreateDatasetStatus,
+            fieldName: "dataCreateDatasetStatus",
+            partType: part.type,
+          }),
+          error: part.dataCreateDatasetError,
         },
       };
     default: {

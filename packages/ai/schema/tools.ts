@@ -4,6 +4,29 @@ import { GradeSchema } from "@repo/contents/_types/subject/grade";
 import { MaterialSchema } from "@repo/contents/_types/subject/material";
 import * as z from "zod";
 
+export const createDatasetInputSchema = z.object({
+  query: z
+    .string()
+    .describe(
+      "User's research goal (e.g., 'Find 50 European SaaS companies with revenue and team size')"
+    ),
+  targetRows: z
+    .number()
+    .min(1)
+    .max(1000)
+    .default(10)
+    .describe(
+      "Number of entities to research (10-1000). Default: 10 if not specified by user."
+    ),
+});
+
+const createDatasetOutputSchema = z.object({
+  datasetId: z.string(),
+  query: z.string(),
+  targetRows: z.number(),
+});
+export type CreateDatasetOutput = z.infer<typeof createDatasetOutputSchema>;
+
 export const getArticlesInputSchema = z
   .object({
     locale: z.enum(["en", "id"]).describe("The locale of the article to get."),

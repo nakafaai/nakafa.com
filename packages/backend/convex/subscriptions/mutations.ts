@@ -1,4 +1,4 @@
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import tables from "./schema";
 
@@ -45,10 +45,12 @@ export const updateSubscription = internalMutation({
       .unique();
 
     if (!existingSubscription) {
-      throw new ConvexError({
-        code: "SUBSCRIPTION_NOT_FOUND",
-        message: `Subscription not found: ${args.subscription.id}`,
+      // If not found, create a new subscription
+      await ctx.db.insert("subscriptions", {
+        ...args.subscription,
+        metadata: args.subscription.metadata,
       });
+      return;
     }
 
     await ctx.db.patch(existingSubscription._id, {

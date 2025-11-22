@@ -70,6 +70,13 @@ export const dataPartSchema = z.object({
     status: z.enum(["loading", "done", "error"]),
     error: z.string().optional(),
   }),
+  "create-dataset": z.object({
+    datasetId: z.string().optional(),
+    query: z.string(),
+    targetRows: z.number(),
+    status: z.enum(["loading", "done", "error"]),
+    error: z.string().optional(),
+  }),
 });
 
 export type DataPart = z.infer<typeof dataPartSchema>;

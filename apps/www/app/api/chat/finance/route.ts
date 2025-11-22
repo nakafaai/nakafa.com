@@ -7,16 +7,15 @@ import {
   order,
 } from "@repo/ai/lib/providers";
 import { generateTitle } from "@repo/ai/lib/title";
-import { cleanSlug, compressMessages } from "@repo/ai/lib/utils";
+import { compressMessages } from "@repo/ai/lib/utils";
 import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from "@repo/ai/lib/weather";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
-import { nakafaPrompt } from "@repo/ai/prompt/system";
-import { tools } from "@repo/ai/tools";
+import { nakafaFinancePrompt } from "@repo/ai/prompt/system";
+import { financeTools } from "@repo/ai/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/utils";
-import { api } from "@repo/connection/routes";
 import { CorsValidator } from "@repo/security";
 import { createChildLogger, logError } from "@repo/utilities/logging";
 import { geolocation } from "@vercel/functions";
@@ -38,14 +37,11 @@ import * as z from "zod";
 import { getToken } from "@/lib/auth/server";
 
 const MAX_STEPS = 10;
-const QURAN_SLUG_PARTS_COUNT = 3;
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
 
 const corsValidator = new CorsValidator();
-
-const possibleVerifiedUrls = ["/articles", "/quran", "/subject"] as const;
 
 export async function POST(req: Request) {
   // Only allow requests from allowed domain
@@ -58,36 +54,16 @@ export async function POST(req: Request) {
   const {
     message,
     chatId,
-    locale,
-    slug,
     model: selectedModel,
   }: {
     message: MyUIMessage | undefined;
     chatId: Id<"chats"> | undefined;
-    locale: string;
-    slug: string;
     model: ModelId;
   } = await req.json();
 
-  const url = `/${locale}/${cleanSlug(slug)}`;
-
-  let verified = false;
   let token: string | undefined;
 
-  // Early return optimization with parallel execution when needed
-  // Check if URL contains any of the verified URL segments (e.g., /en/subject/... matches "subject")
-  const shouldVerify = possibleVerifiedUrls.some((segment) =>
-    url.includes(segment)
-  );
-
-  if (shouldVerify) {
-    [verified, token] = await Promise.all([getVerified(url), getToken()]);
-  } else {
-    token = await getToken();
-  }
-
-  // Get user role after token is available
-  const userRole = token ? await getUserRole(token) : undefined;
+  token = await getToken();
 
   const currentDate = new Date().toLocaleString("en-US", {
     year: "numeric",
@@ -106,10 +82,7 @@ export async function POST(req: Request) {
   const sessionLogger = createChildLogger({
     service: "chat-api",
     currentPage: {
-      locale,
-      slug: cleanSlug(slug),
-      url,
-      verified,
+      type: "finance",
     },
     currentDate,
     userLocation: {
@@ -119,8 +92,6 @@ export async function POST(req: Request) {
       countryRegion: countryRegion ?? "Unknown",
       country: country ?? "Unknown",
     },
-    userRole,
-    url,
   });
 
   if (!token) {
@@ -158,7 +129,7 @@ export async function POST(req: Request) {
     const result = await fetchMutation(
       convexApi.chats.mutations.createChatWithMessage,
       {
-        type: "study",
+        type: "finance",
         message: {
           role: message.role,
           identifier: message.id,
@@ -177,6 +148,33 @@ export async function POST(req: Request) {
     },
     { token }
   );
+
+  // Get current dataset for this chat (if exists)
+  const currentDataset = await fetchQuery(
+    convexApi.datasets.queries.getDataset,
+    {
+      chatId: chatIdToUse,
+    },
+    { token }
+  );
+
+  // Build system prompt with dataset context
+  const systemPrompt = nakafaFinancePrompt({
+    currentDate,
+    userLocation: {
+      city: city ?? "Unknown",
+      country: country ?? "Unknown",
+      latitude: latitude ?? DEFAULT_LATITUDE,
+      longitude: longitude ?? DEFAULT_LONGITUDE,
+      countryRegion: countryRegion ?? "Unknown",
+    },
+    currentDataset: currentDataset
+      ? {
+          datasetId: currentDataset._id,
+          name: currentDataset.name,
+        }
+      : undefined,
+  });
 
   // Use smart message compression to stay within token limits
   const originalMessageCount = messages.length;
@@ -251,26 +249,10 @@ export async function POST(req: Request) {
     execute: async ({ writer }) => {
       const streamTextResult = streamText({
         model: model.languageModel(selectedModel),
-        system: nakafaPrompt({
-          url,
-          currentPage: {
-            locale,
-            slug,
-            verified,
-          },
-          currentDate,
-          userLocation: {
-            latitude: latitude ?? DEFAULT_LATITUDE,
-            longitude: longitude ?? DEFAULT_LONGITUDE,
-            city: city ?? "Unknown",
-            countryRegion: countryRegion ?? "Unknown",
-            country: country ?? "Unknown",
-          },
-          userRole,
-        }),
+        system: systemPrompt,
         messages: finalMessages,
         stopWhen: stepCountIs(MAX_STEPS),
-        tools: tools({ writer }),
+        tools: financeTools({ writer, chatId: chatIdToUse, token }),
         experimental_repairToolCall: async ({
           toolCall,
           tools: availableTools,
@@ -436,52 +418,4 @@ export async function POST(req: Request) {
   });
 
   return createUIMessageStreamResponse({ stream });
-}
-
-async function getVerified(url: string) {
-  const cleanedUrl = cleanSlug(url);
-
-  // [0] is locale, [1] is slug
-  const slugParts = cleanedUrl.split("/");
-
-  if (slugParts[1] === "quran") {
-    if (slugParts.length !== QURAN_SLUG_PARTS_COUNT) {
-      return false;
-    }
-    // example: locale/quran/surah
-    const surah = slugParts[2];
-    const { data: surahData, error: surahError } = await api.contents.getSurah({
-      surah: Number.parseInt(surah, 10),
-    });
-    if (surahError) {
-      return false;
-    }
-    return surahData !== null;
-  }
-
-  const { data: contentData, error: contentError } =
-    await api.contents.getContent({
-      slug: cleanedUrl,
-    });
-
-  if (contentError) {
-    return false;
-  }
-
-  return contentData !== null;
-}
-
-async function getUserRole(token: string) {
-  const user = await fetchQuery(
-    convexApi.auth.getCurrentUser,
-    {},
-    {
-      token,
-    }
-  );
-  const userRole = user?.appUser?.role;
-  if (userRole === null) {
-    return;
-  }
-  return userRole;
 }

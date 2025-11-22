@@ -35,7 +35,7 @@
     "@tiptap/react": "^3.11.0",
     "@tiptap/starter-kit": "^3.11.0",
     "@types/mdx": "^2.0.13",
-    "ai": "^5.0.97",
+    "ai": "^5.0.98",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -49,7 +49,7 @@
     "katex": "^0.16.25",
     "lodash.throttle": "^4.1.1",
     "lucide-react": "^0.554.0",
-    "marked": "^17.0.0",
+    "marked": "^17.0.1",
     "mathjs": "^15.1.0",
     "mermaid": "11.12.1",
     "motion": "^12.23.24",
@@ -88,7 +88,7 @@
     "use-context-selector": "^2.0.0",
     "use-stick-to-bottom": "^1.1.1",
     "vaul": "^1.1.2",
-    "virtua": "^0.47.0"
+    "virtua": "^0.47.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
@@ -99,7 +99,7 @@
     "@types/react-katex": "^3.0.4",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/three": "^0.181.0",
-    "sass": "^1.94.1",
+    "sass": "^1.94.2",
     "sass-embedded": "^1.93.3",
     "typescript": "^5.9.3"
   }
