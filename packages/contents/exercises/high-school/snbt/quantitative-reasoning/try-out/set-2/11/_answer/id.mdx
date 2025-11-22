@@ -1,0 +1,50 @@
+export const metadata = {
+  title: "Pembahasan Soal 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+Kita diminta mencari interval nilai <InlineMath math="x" /> dimana nilai fungsi <InlineMath math="f(x)" /> lebih besar atau sama dengan <InlineMath math="5" /> (<InlineMath math="f(x) \geq 5" />).
+
+Mari kita cek setiap bagian dari fungsi tersebut satu per satu:
+
+1. **Interval <InlineMath math="0 \leq x < 2" />**
+
+   Pada interval ini, <InlineMath math="f(x) = 3" />.
+   Apakah <InlineMath math="3 \geq 5" />? **Tidak**.
+   Jadi, interval ini **tidak memenuhi**.
+
+2. **Interval <InlineMath math="2 \leq x < 5" />**
+
+   Pada interval ini, <InlineMath math="f(x) = 5" />.
+   Apakah <InlineMath math="5 \geq 5" />? **Ya**.
+   Jadi, interval <InlineMath math="[2, 5)" /> **memenuhi**.
+
+3. **Interval <InlineMath math="5 \leq x < 8" />**
+
+   Pada interval ini, <InlineMath math="f(x) = 7" />.
+   Apakah <InlineMath math="7 \geq 5" />? **Ya**.
+   Jadi, interval <InlineMath math="[5, 8)" /> **memenuhi**.
+
+4. **Interval <InlineMath math="8 \leq x < 10" />**
+
+   Pada interval ini, <InlineMath math="f(x) = 9" />.
+   Apakah <InlineMath math="9 \geq 5" />? **Ya**.
+   Jadi, interval <InlineMath math="[8, 10)" /> **memenuhi**.
+
+#### Gabungan Interval
+
+Kita gabungkan semua interval yang memenuhi syarat:
+
+<MathContainer>
+  <BlockMath math="[2, 5) \cup [5, 8) \cup [8, 10)" />
+</MathContainer>
+
+Perhatikan bahwa ujung kanan interval pertama (<InlineMath math="5" />) adalah ujung kiri interval kedua, dan ujung kanan interval kedua (<InlineMath math="8" />) adalah ujung kiri interval ketiga. Karena sambungannya kontinu (tertutup di awal, terbuka di akhir, lalu tertutup lagi di awal berikutnya), kita bisa menyatukannya menjadi satu interval tunggal.
+
+<MathContainer>
+  <BlockMath math="[2, 10)" />
+</MathContainer>
+
+Jadi, interval nilai <InlineMath math="x" /> yang memenuhi adalah <InlineMath math="x \in [2, 10)" />.
+

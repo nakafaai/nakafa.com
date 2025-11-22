@@ -1,0 +1,52 @@
+export const metadata = {
+  title: "Pembahasan Soal 17",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+Langkah pertama adalah menentukan nilai <InlineMath math="a" /> agar data pada Kelompok II lengkap.
+
+#### Menentukan nilai a
+
+- **Modus Kelompok I**: Nilai yang paling sering muncul pada data <InlineMath math="3, 5, 5, 8, 9" /> adalah <InlineMath math="5" />.
+- **Rata-rata Kelompok II**: Diketahui dua lebihnya dari modus Kelompok I, yaitu <InlineMath math="5 + 2 = 7" />.
+
+Kita hitung nilai <InlineMath math="a" /> menggunakan rumus rata-rata:
+
+<MathContainer>
+  <BlockMath math="\frac{4 + 6 + 8 + 8 + a}{5} = 7" />
+  <BlockMath math="\frac{26 + a}{5} = 7" />
+  <BlockMath math="26 + a = 35" />
+  <BlockMath math="a = 9" />
+</MathContainer>
+
+Jadi, data lengkapnya adalah:
+- Kelompok I: <InlineMath math="3, 5, 5, 8, 9" /> (Jumlah = <InlineMath math="30" />)
+- Kelompok II: <InlineMath math="4, 6, 8, 8, 9" /> (Jumlah = <InlineMath math="35" />)
+
+#### Mengganti data terendah
+
+Kita akan mengganti data terendah pada masing-masing kelompok.
+- Data terendah Kelompok I adalah <InlineMath math="3" />. Misalkan diganti dengan <InlineMath math="x" />.
+- Data terendah Kelompok II adalah <InlineMath math="4" />. Misalkan diganti dengan <InlineMath math="y" />.
+
+Tujuannya adalah agar rata-rata kedua kelompok menjadi sama. Karena banyak data sama (<InlineMath math="n=5" />), maka jumlah data kedua kelompok juga harus sama.
+
+#### Menghitung selisih bilangan pengganti
+
+Jumlah baru Kelompok I = Jumlah awal - Data lama + Data baru
+<BlockMath math="\text{Jumlah I} = 30 - 3 + x = 27 + x" />
+
+Jumlah baru Kelompok II = Jumlah awal - Data lama + Data baru
+<BlockMath math="\text{Jumlah II} = 35 - 4 + y = 31 + y" />
+
+Syarat rata-rata sama (maka jumlah sama):
+
+<MathContainer>
+  <BlockMath math="27 + x = 31 + y" />
+  <BlockMath math="x - y = 31 - 27" />
+  <BlockMath math="x - y = 4" />
+</MathContainer>
+
+Selisih antara kedua bilangan pengganti tersebut adalah <InlineMath math="4" />.
+

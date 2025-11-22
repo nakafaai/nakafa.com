@@ -1,0 +1,49 @@
+export const metadata = {
+  title: "Explanation 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+We are asked to find a number that divides the difference between two consecutive terms, <InlineMath math="a_{2025} - a_{2024}" />.
+
+To make it easier, let's find the pattern of the difference between consecutive terms by calculating the initial terms first.
+
+We know <InlineMath math="a_4 = 85" /> and the formula <InlineMath math="a_{n+1} = 4a_n + 1" />. We can find the previous term by reversing the formula:
+
+<BlockMath math="a_n = \frac{a_{n+1} - 1}{4}" />
+
+#### Finding the values of initial terms
+
+- **Find <InlineMath math="a_3" />**:
+
+  <BlockMath math="a_3 = \frac{a_4 - 1}{4} = \frac{85 - 1}{4} = \frac{84}{4} = 21" />
+
+- **Find <InlineMath math="a_2" />**:
+
+  <BlockMath math="a_2 = \frac{a_3 - 1}{4} = \frac{21 - 1}{4} = \frac{20}{4} = 5" />
+
+- **Find <InlineMath math="a_1" />**:
+
+  <BlockMath math="a_1 = \frac{a_2 - 1}{4} = \frac{5 - 1}{4} = \frac{4}{4} = 1" />
+
+#### Observing the pattern of differences between terms
+
+Let's calculate the difference between adjacent terms:
+
+- <InlineMath math="a_2 - a_1 = 5 - 1 = 4 = 4^1" />
+- <InlineMath math="a_3 - a_2 = 21 - 5 = 16 = 4^2" />
+- <InlineMath math="a_4 - a_3 = 85 - 21 = 64 = 4^3" />
+
+From the pattern above, we can see that the difference between the <InlineMath math="(n+1)" />-th and <InlineMath math="n" />-th term is a power of 4:
+
+<BlockMath math="a_{n+1} - a_n = 4^n" />
+
+#### Determining the divisor
+
+Based on the pattern we found, the difference <InlineMath math="a_{2025} - a_{2024}" /> is:
+
+<BlockMath math="a_{2025} - a_{2024} = 4^{2024}" />
+
+The value <InlineMath math="4^{2024}" /> is a power of 4. Therefore, this number is definitely divisible by **4**.
+
+Thus, the number that divides <InlineMath math="a_{2025} - a_{2024}" /> is <InlineMath math="4" />.

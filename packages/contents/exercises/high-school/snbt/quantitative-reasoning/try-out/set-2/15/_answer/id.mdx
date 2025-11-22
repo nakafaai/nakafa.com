@@ -1,0 +1,49 @@
+export const metadata = {
+    title: "Pembahasan Soal 15",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "11/22/2025",
+};
+
+Kita diminta mencari angka yang habis membagi selisih dua suku berurutan, yaitu <InlineMath math="a_{2025} - a_{2024}" />.
+
+Agar lebih mudah, mari kita cari pola selisih antar suku berurutan terlebih dahulu dengan mencari nilai suku-suku awal.
+
+Diketahui <InlineMath math="a_4 = 85" /> dan rumus <InlineMath math="a_{n+1} = 4a_n + 1" />. Kita bisa mencari suku sebelumnya dengan membalik rumus:
+
+<BlockMath math="a_n = \frac{a_{n+1} - 1}{4}" />
+
+#### Mencari nilai suku-suku awal
+
+- **Mencari <InlineMath math="a_3" />**:
+
+  <BlockMath math="a_3 = \frac{a_4 - 1}{4} = \frac{85 - 1}{4} = \frac{84}{4} = 21" />
+
+- **Mencari <InlineMath math="a_2" />**:
+
+  <BlockMath math="a_2 = \frac{a_3 - 1}{4} = \frac{21 - 1}{4} = \frac{20}{4} = 5" />
+
+- **Mencari <InlineMath math="a_1" />**:
+
+  <BlockMath math="a_1 = \frac{a_2 - 1}{4} = \frac{5 - 1}{4} = \frac{4}{4} = 1" />
+
+#### Mengamati pola selisih antar suku
+
+Mari kita hitung selisih antara suku yang berdekatan:
+
+- <InlineMath math="a_2 - a_1 = 5 - 1 = 4 = 4^1" />
+- <InlineMath math="a_3 - a_2 = 21 - 5 = 16 = 4^2" />
+- <InlineMath math="a_4 - a_3 = 85 - 21 = 64 = 4^3" />
+
+Dari pola di atas, kita bisa melihat bahwa selisih suku ke-<InlineMath math="(n+1)" /> dan ke-<InlineMath math="n" /> adalah pangkat dari 4:
+
+<BlockMath math="a_{n+1} - a_n = 4^n" />
+
+#### Menentukan pembagi
+
+Berdasarkan pola yang kita temukan, selisih <InlineMath math="a_{2025} - a_{2024}" /> adalah:
+
+<BlockMath math="a_{2025} - a_{2024} = 4^{2024}" />
+
+Nilai <InlineMath math="4^{2024}" /> adalah bilangan perpangkatan dari 4. Oleh karena itu, bilangan ini pasti habis dibagi oleh **4**.
+
+Jadi, angka yang habis membagi <InlineMath math="a_{2025} - a_{2024}" /> adalah <InlineMath math="4" />.

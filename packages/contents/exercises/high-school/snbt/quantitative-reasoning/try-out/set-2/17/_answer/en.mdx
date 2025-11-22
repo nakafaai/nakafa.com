@@ -1,0 +1,52 @@
+export const metadata = {
+  title: "Explanation 17",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+The first step is to determine the value of <InlineMath math="a" /> so that the data in Group II is complete.
+
+#### Determining the value of a
+
+- **Mode of Group I**: The value that appears most frequently in the data <InlineMath math="3, 5, 5, 8, 9" /> is <InlineMath math="5" />.
+- **Average of Group II**: It is given as two more than the mode of Group I, which is <InlineMath math="5 + 2 = 7" />.
+
+We calculate the value of <InlineMath math="a" /> using the average formula:
+
+<MathContainer>
+  <BlockMath math="\frac{4 + 6 + 8 + 8 + a}{5} = 7" />
+  <BlockMath math="\frac{26 + a}{5} = 7" />
+  <BlockMath math="26 + a = 35" />
+  <BlockMath math="a = 9" />
+</MathContainer>
+
+So, the complete data is:
+- Group I: <InlineMath math="3, 5, 5, 8, 9" /> (Sum = <InlineMath math="30" />)
+- Group II: <InlineMath math="4, 6, 8, 8, 9" /> (Sum = <InlineMath math="35" />)
+
+#### Replacing the lowest data
+
+We will replace the lowest data in each group.
+- The lowest data in Group I is <InlineMath math="3" />. Let's replace it with <InlineMath math="x" />.
+- The lowest data in Group II is <InlineMath math="4" />. Let's replace it with <InlineMath math="y" />.
+
+The goal is for the averages of both groups to be equal. Since the number of data points is the same (<InlineMath math="n=5" />), the sum of the data in both groups must also be equal.
+
+#### Calculating the difference between replacement numbers
+
+New Sum of Group I = Initial Sum - Old Data + New Data
+<BlockMath math="\text{Sum I} = 30 - 3 + x = 27 + x" />
+
+New Sum of Group II = Initial Sum - Old Data + New Data
+<BlockMath math="\text{Sum II} = 35 - 4 + y = 31 + y" />
+
+Condition for equal averages (thus equal sums):
+
+<MathContainer>
+  <BlockMath math="27 + x = 31 + y" />
+  <BlockMath math="x - y = 31 - 27" />
+  <BlockMath math="x - y = 4" />
+</MathContainer>
+
+The difference between the two replacement numbers is <InlineMath math="4" />.
+

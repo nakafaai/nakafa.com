@@ -1,0 +1,51 @@
+export const metadata = {
+  title: "Explanation 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+Given the recursive formula <InlineMath math="a_{n+1} = 4a_n + 1" /> and <InlineMath math="a_4 = 85" />.
+
+We want to find the divisibility pattern of <InlineMath math="a_n" /> by <InlineMath math="5" />. Let's calculate the first few terms modulo <InlineMath math="5" />.
+
+First, let's find <InlineMath math="a_3, a_2," /> and <InlineMath math="a_1" />:
+
+<MathContainer>
+  <BlockMath math="a_4 = 85 \implies a_4 \equiv 0 \pmod{5}" />
+  <BlockMath math="a_4 = 4a_3 + 1 \implies 85 = 4a_3 + 1 \implies 84 = 4a_3 \implies a_3 = 21" />
+  <BlockMath math="a_3 = 21 \implies a_3 \equiv 1 \pmod{5}" />
+</MathContainer>
+
+Continue backwards to <InlineMath math="a_2" />:
+
+<MathContainer>
+  <BlockMath math="a_3 = 4a_2 + 1 \implies 21 = 4a_2 + 1 \implies 20 = 4a_2 \implies a_2 = 5" />
+  <BlockMath math="a_2 = 5 \implies a_2 \equiv 0 \pmod{5}" />
+</MathContainer>
+
+Continue backwards to <InlineMath math="a_1" />:
+
+<MathContainer>
+  <BlockMath math="a_2 = 4a_1 + 1 \implies 5 = 4a_1 + 1 \implies 4 = 4a_1 \implies a_1 = 1" />
+  <BlockMath math="a_1 = 1 \implies a_1 \equiv 1 \pmod{5}" />
+</MathContainer>
+
+The pattern of remainders when <InlineMath math="a_n" /> is divided by <InlineMath math="5" /> is:
+- <InlineMath math="a_1 \equiv 1" />
+- <InlineMath math="a_2 \equiv 0" /> (divisible by 5)
+- <InlineMath math="a_3 \equiv 1" />
+- <InlineMath math="a_4 \equiv 0" /> (divisible by 5)
+
+It appears that <InlineMath math="a_n" /> is divisible by <InlineMath math="5" /> if and only if <InlineMath math="n" /> is an **even** number.
+
+Let's check the available options:
+- <InlineMath math="1" /> (Odd)
+- <InlineMath math="29" /> (Odd)
+- <InlineMath math="73" /> (Odd)
+- <InlineMath math="364" /> (Even)
+- <InlineMath math="473" /> (Odd)
+
+The only even number among the choices is <InlineMath math="364" />.
+
+Thus, the value of <InlineMath math="n" /> such that <InlineMath math="a_n" /> is divisible by <InlineMath math="5" /> is <InlineMath math="364" />.
+

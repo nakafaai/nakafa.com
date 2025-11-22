@@ -1,0 +1,74 @@
+export const metadata = {
+  title: "Pembahasan Soal 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+Untuk menghitung luas daerah <InlineMath math="S" />, kita perlu menentukan titik-titik pojok (vertices) dari daerah penyelesaian sistem pertidaksamaan tersebut. Daerah ini dibatasi oleh tiga garis:
+
+1. Garis 1: <InlineMath math="y = 2x + 4" />
+2. Garis 2: <InlineMath math="y + x - 4 = 0 \Rightarrow y = -x + 4" />
+3. Garis 3: <InlineMath math="x = 4" />
+
+Mari kita cari titik potong antar garis-garis tersebut.
+
+#### Titik Potong Garis 1 dan Garis 2
+
+Samakan nilai <InlineMath math="y" /> dari kedua persamaan:
+
+<MathContainer>
+  <BlockMath math="2x + 4 = -x + 4" />
+  <BlockMath math="3x = 0" />
+  <BlockMath math="x = 0" />
+</MathContainer>
+
+Substitusi <InlineMath math="x = 0" /> ke salah satu persamaan (misal Garis 2):
+
+<BlockMath math="y = -0 + 4 = 4" />
+
+Jadi, titik potong pertama adalah <InlineMath math="A(0, 4)" />.
+
+#### Titik Potong Garis 1 dan Garis 3
+
+Substitusi <InlineMath math="x = 4" /> ke persamaan Garis 1:
+
+<MathContainer>
+  <BlockMath math="y = 2(4) + 4" />
+  <BlockMath math="y = 8 + 4 = 12" />
+</MathContainer>
+
+Jadi, titik potong kedua adalah <InlineMath math="B(4, 12)" />.
+
+#### Titik Potong Garis 2 dan Garis 3
+
+Substitusi <InlineMath math="x = 4" /> ke persamaan Garis 2:
+
+<MathContainer>
+  <BlockMath math="y = -(4) + 4" />
+  <BlockMath math="y = 0" />
+</MathContainer>
+
+Jadi, titik potong ketiga adalah <InlineMath math="C(4, 0)" />.
+
+#### Menghitung Luas Daerah
+
+Daerah <InlineMath math="S" /> berbentuk segitiga dengan titik sudut <InlineMath math="A(0, 4)" />, <InlineMath math="B(4, 12)" />, dan <InlineMath math="C(4, 0)" />.
+
+Kita dapat menghitung luasnya dengan menggunakan alas dan tinggi.
+
+- **Alas**: Garis vertikal yang menghubungkan titik <InlineMath math="B" /> dan <InlineMath math="C" /> (karena keduanya memiliki <InlineMath math="x = 4" />).
+  Panjang alas <InlineMath math="= y_B - y_C = 12 - 0 = 12" />.
+
+- **Tinggi**: Jarak horizontal dari titik <InlineMath math="A" /> ke garis <InlineMath math="x = 4" />.
+  Tinggi <InlineMath math="= x_{BC} - x_A = 4 - 0 = 4" />.
+
+Luas segitiga:
+
+<MathContainer>
+  <BlockMath math="\text{Luas} = \frac{1}{2} \times \text{alas} \times \text{tinggi}" />
+  <BlockMath math="\text{Luas} = \frac{1}{2} \times 12 \times 4" />
+  <BlockMath math="\text{Luas} = 6 \times 4 = 24" />
+</MathContainer>
+
+Jadi, luas daerah <InlineMath math="S" /> adalah <InlineMath math="24" /> satuan luas.
+

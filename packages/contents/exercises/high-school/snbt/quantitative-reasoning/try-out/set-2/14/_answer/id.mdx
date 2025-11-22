@@ -1,0 +1,51 @@
+export const metadata = {
+  title: "Pembahasan Soal 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+Diketahui rumus rekursif <InlineMath math="a_{n+1} = 4a_n + 1" /> dan <InlineMath math="a_4 = 85" />.
+
+Kita ingin mencari pola keterbagian <InlineMath math="a_n" /> dengan <InlineMath math="5" />. Mari kita hitung beberapa suku pertama modulo <InlineMath math="5" />.
+
+Pertama, kita cari <InlineMath math="a_3, a_2," /> dan <InlineMath math="a_1" /> terlebih dahulu:
+
+<MathContainer>
+  <BlockMath math="a_4 = 85 \implies a_4 \equiv 0 \pmod{5}" />
+  <BlockMath math="a_4 = 4a_3 + 1 \implies 85 = 4a_3 + 1 \implies 84 = 4a_3 \implies a_3 = 21" />
+  <BlockMath math="a_3 = 21 \implies a_3 \equiv 1 \pmod{5}" />
+</MathContainer>
+
+Lanjutkan mundur ke <InlineMath math="a_2" />:
+
+<MathContainer>
+  <BlockMath math="a_3 = 4a_2 + 1 \implies 21 = 4a_2 + 1 \implies 20 = 4a_2 \implies a_2 = 5" />
+  <BlockMath math="a_2 = 5 \implies a_2 \equiv 0 \pmod{5}" />
+</MathContainer>
+
+Lanjutkan mundur ke <InlineMath math="a_1" />:
+
+<MathContainer>
+  <BlockMath math="a_2 = 4a_1 + 1 \implies 5 = 4a_1 + 1 \implies 4 = 4a_1 \implies a_1 = 1" />
+  <BlockMath math="a_1 = 1 \implies a_1 \equiv 1 \pmod{5}" />
+</MathContainer>
+
+Pola sisa pembagian <InlineMath math="a_n" /> dengan <InlineMath math="5" /> adalah:
+- <InlineMath math="a_1 \equiv 1" />
+- <InlineMath math="a_2 \equiv 0" /> (habis dibagi 5)
+- <InlineMath math="a_3 \equiv 1" />
+- <InlineMath math="a_4 \equiv 0" /> (habis dibagi 5)
+
+Terlihat bahwa <InlineMath math="a_n" /> habis dibagi <InlineMath math="5" /> jika dan hanya jika <InlineMath math="n" /> adalah bilangan **genap**.
+
+Mari kita cek pilihan jawaban yang tersedia:
+- <InlineMath math="1" /> (Ganjil)
+- <InlineMath math="29" /> (Ganjil)
+- <InlineMath math="73" /> (Ganjil)
+- <InlineMath math="364" /> (Genap)
+- <InlineMath math="473" /> (Ganjil)
+
+Satu-satunya bilangan genap di antara pilihan adalah <InlineMath math="364" />.
+
+Jadi, nilai <InlineMath math="n" /> agar <InlineMath math="a_n" /> habis dibagi <InlineMath math="5" /> adalah <InlineMath math="364" />.
+

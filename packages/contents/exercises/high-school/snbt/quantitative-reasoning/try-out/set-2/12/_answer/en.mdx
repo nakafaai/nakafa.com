@@ -1,0 +1,74 @@
+export const metadata = {
+  title: "Explanation 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+To calculate the area of region <InlineMath math="S" />, we need to determine the vertices of the solution region for the system of inequalities. This region is bounded by three lines:
+
+1. Line 1: <InlineMath math="y = 2x + 4" />
+2. Line 2: <InlineMath math="y + x - 4 = 0 \Rightarrow y = -x + 4" />
+3. Line 3: <InlineMath math="x = 4" />
+
+Let's find the intersection points between these lines.
+
+#### Intersection of Line 1 and Line 2
+
+Equate the <InlineMath math="y" /> values from both equations:
+
+<MathContainer>
+  <BlockMath math="2x + 4 = -x + 4" />
+  <BlockMath math="3x = 0" />
+  <BlockMath math="x = 0" />
+</MathContainer>
+
+Substitute <InlineMath math="x = 0" /> into one of the equations (e.g., Line 2):
+
+<BlockMath math="y = -0 + 4 = 4" />
+
+So, the first intersection point is <InlineMath math="A(0, 4)" />.
+
+#### Intersection of Line 1 and Line 3
+
+Substitute <InlineMath math="x = 4" /> into the equation of Line 1:
+
+<MathContainer>
+  <BlockMath math="y = 2(4) + 4" />
+  <BlockMath math="y = 8 + 4 = 12" />
+</MathContainer>
+
+So, the second intersection point is <InlineMath math="B(4, 12)" />.
+
+#### Intersection of Line 2 and Line 3
+
+Substitute <InlineMath math="x = 4" /> into the equation of Line 2:
+
+<MathContainer>
+  <BlockMath math="y = -(4) + 4" />
+  <BlockMath math="y = 0" />
+</MathContainer>
+
+So, the third intersection point is <InlineMath math="C(4, 0)" />.
+
+#### Calculating the Area
+
+Region <InlineMath math="S" /> is a triangle with vertices <InlineMath math="A(0, 4)" />, <InlineMath math="B(4, 12)" />, and <InlineMath math="C(4, 0)" />.
+
+We can calculate the area using the base and height.
+
+- **Base**: The vertical line connecting point <InlineMath math="B" /> and <InlineMath math="C" /> (since both have <InlineMath math="x = 4" />).
+  Length of base <InlineMath math="= y_B - y_C = 12 - 0 = 12" />.
+
+- **Height**: The horizontal distance from point <InlineMath math="A" /> to the line <InlineMath math="x = 4" />.
+  Height <InlineMath math="= x_{BC} - x_A = 4 - 0 = 4" />.
+
+Area of the triangle:
+
+<MathContainer>
+  <BlockMath math="\text{Area} = \frac{1}{2} \times \text{base} \times \text{height}" />
+  <BlockMath math="\text{Area} = \frac{1}{2} \times 12 \times 4" />
+  <BlockMath math="\text{Area} = 6 \times 4 = 24" />
+</MathContainer>
+
+Thus, the area of region <InlineMath math="S" /> is <InlineMath math="24" /> square units.
+

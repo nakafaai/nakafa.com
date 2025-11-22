@@ -1,0 +1,46 @@
+export const metadata = {
+  title: "Explanation 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+We will calculate the value of each integral first.
+
+#### Calculating the first integral
+
+<MathContainer>
+  <BlockMath math="\int_{1}^{3} (3x + 5) dx = \left[ \frac{3}{2}x^2 + 5x \right]_{1}^{3}" />
+  <BlockMath math="= \left( \frac{3}{2}(3)^2 + 5(3) \right) - \left( \frac{3}{2}(1)^2 + 5(1) \right)" />
+  <BlockMath math="= \left( \frac{27}{2} + 15 \right) - \left( \frac{3}{2} + 5 \right)" />
+  <BlockMath math="= \frac{27}{2} + \frac{30}{2} - \frac{3}{2} - \frac{10}{2}" />
+  <BlockMath math="= \frac{44}{2} = 22" />
+</MathContainer>
+
+#### Calculating the second integral
+
+<MathContainer>
+  <BlockMath math="\int_{2}^{b} (2x - 3) dx = \left[ x^2 - 3x \right]_{2}^{b}" />
+  <BlockMath math="= (b^2 - 3b) - (2^2 - 3(2))" />
+  <BlockMath math="= (b^2 - 3b) - (4 - 6)" />
+  <BlockMath math="= b^2 - 3b - (-2)" />
+  <BlockMath math="= b^2 - 3b + 2" />
+</MathContainer>
+
+#### Solving the equation
+
+It is given that the sum of the two integrals is <InlineMath math="28" />.
+
+<MathContainer>
+  <BlockMath math="22 + (b^2 - 3b + 2) = 28" />
+  <BlockMath math="b^2 - 3b + 24 = 28" />
+  <BlockMath math="b^2 - 3b - 4 = 0" />
+</MathContainer>
+
+Factor the quadratic equation:
+
+<BlockMath math="(b - 4)(b + 1) = 0" />
+
+This gives <InlineMath math="b = 4" /> or <InlineMath math="b = -1" />.
+
+Since the condition is <InlineMath math="b > 0" />, the valid value is <InlineMath math="b = 4" />.
+
