@@ -1,0 +1,61 @@
+export const metadata = {
+  title: "Explanation 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+To determine the passing percentage, we must check two passing conditions for each student:
+1. The Science score must be higher than the median Science score of all students.
+2. The average exam score (Math + Science) divided by <InlineMath math="2" /> must be greater than <InlineMath math="85" />.
+
+#### Determining the Median Science Score
+
+The Science scores are: <InlineMath math="78, 82, 87, 85, 79, 88, 81, 80" />.
+
+Sort the data from smallest to largest:
+<InlineMath math="78, 79, 80, 81, 82, 85, 87, 88" />.
+
+Since there are <InlineMath math="8" /> data points, the median is the average of the 4th and 5th data points:
+<BlockMath math="\text{Median} = \frac{81 + 82}{2} = 81.5" />
+
+Students who satisfy the first condition (Science Score <InlineMath math="> 81.5" />) are:
+- Boni (<InlineMath math="82" />)
+- Cindy (<InlineMath math="87" />)
+- Dita (<InlineMath math="85" />)
+- Fani (<InlineMath math="88" />)
+
+The other students (Ayu, Erfan, Gilang, Herman) have Science scores below the median, so they automatically do not pass.
+
+#### Checking the Average Score Condition
+
+Now we check the second condition for students who passed the first condition:
+
+1. **Boni:**
+   <BlockMath math="\text{Average} = \frac{92 + 82}{2} = \frac{174}{2} = 87" />
+   Since <InlineMath math="87 > 85" />, Boni **Passes**.
+
+2. **Cindy:**
+   <BlockMath math="\text{Average} = \frac{90 + 87}{2} = \frac{177}{2} = 88.5" />
+   Since <InlineMath math="88.5 > 85" />, Cindy **Passes**.
+
+3. **Dita:**
+   <BlockMath math="\text{Average} = \frac{86 + 85}{2} = \frac{171}{2} = 85.5" />
+   Since <InlineMath math="85.5 > 85" />, Dita **Passes**.
+
+4. **Fani:**
+   <BlockMath math="\text{Average} = \frac{88 + 88}{2} = \frac{176}{2} = 88" />
+   Since <InlineMath math="88 > 85" />, Fani **Passes**.
+
+So, there are <InlineMath math="4" /> students who pass out of a total of <InlineMath math="8" /> students.
+
+#### Calculating Quantity <InlineMath math="P" />
+
+<BlockMath math="P = \frac{4}{8} \times 100\% = 50\%" />
+
+#### Comparing <InlineMath math="P" /> and <InlineMath math="Q" />
+
+Given <InlineMath math="Q = 65\%" />.
+
+Thus:
+<BlockMath math="50\% < 65\% \Rightarrow P < Q \text{ or } Q > P" />
+

@@ -1,0 +1,77 @@
+export const metadata = {
+  title: "Explanation 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+First, we need to determine the function <InlineMath math="g(x)" />.
+
+Given <InlineMath math="f(x) = 2x + 5" /> and <InlineMath math="(f \circ g)(x) = 2x^2 - 6x + 9" />.
+
+Based on the definition of function composition <InlineMath math="(f \circ g)(x) = f(g(x))" />, we have:
+
+<MathContainer>
+  <BlockMath math="f(g(x)) = 2(g(x)) + 5" />
+  <BlockMath math="2(g(x)) + 5 = 2x^2 - 6x + 9" />
+  <BlockMath math="2(g(x)) = 2x^2 - 6x + 4" />
+  <BlockMath math="g(x) = x^2 - 3x + 2" />
+</MathContainer>
+
+Now, let's check the truth of each statement.
+
+#### Statement 1
+
+The value of <InlineMath math="g(1)" />:
+
+<BlockMath math="g(1) = 1^2 - 3(1) + 2 = 1 - 3 + 2 = 0" />
+
+Statement <InlineMath math="(1)" /> is **True**.
+
+#### Statement 2
+
+To determine the number of intersection points of the quadratic function <InlineMath math="g(x) = x^2 - 3x + 2" /> with the x-axis, we check the discriminant (<InlineMath math="D = b^2 - 4ac" />).
+
+<MathContainer>
+  <BlockMath math="a = 1, b = -3, c = 2" />
+  <BlockMath math="D = (-3)^2 - 4(1)(2) = 9 - 8 = 1" />
+</MathContainer>
+
+Since <InlineMath math="D > 0" />, the function <InlineMath math="g" /> intersects the x-axis at **two distinct points**, not one.
+
+Statement <InlineMath math="(2)" /> is **False**.
+
+#### Statement 3
+
+Finding the inverse of <InlineMath math="f(x) = 2x + 5" />:
+
+Let <InlineMath math="f(x) = y" />, then:
+
+<MathContainer>
+  <BlockMath math="y = 2x + 5" />
+  <BlockMath math="2x = y - 5" />
+  <BlockMath math="x = \frac{y - 5}{2}" />
+  <BlockMath math="x = \frac{1}{2}y - \frac{5}{2}" />
+</MathContainer>
+
+So the inverse is:
+
+<BlockMath math="f^{-1}(x) = \frac{1}{2}x - \frac{5}{2}" />
+
+Statement <InlineMath math="(3)" /> is **False** (it should be minus <InlineMath math="\frac{5}{2}" />, not plus).
+
+#### Statement 4
+
+Summing <InlineMath math="f(x)" /> and <InlineMath math="g(x)" />:
+
+<MathContainer>
+  <BlockMath math="f(x) + g(x) = (2x + 5) + (x^2 - 3x + 2)" />
+  <BlockMath math="= x^2 + (2x - 3x) + (5 + 2)" />
+  <BlockMath math="= x^2 - x + 7" />
+</MathContainer>
+
+Statement <InlineMath math="(4)" /> is **True**.
+
+#### Conclusion
+
+The correct statements are statements <InlineMath math="(1)" /> and <InlineMath math="(4)" />. Thus, there are **2** true statements.
+

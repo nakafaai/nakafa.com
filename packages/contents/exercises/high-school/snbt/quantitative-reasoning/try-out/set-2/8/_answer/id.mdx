@@ -1,0 +1,77 @@
+export const metadata = {
+  title: "Pembahasan Soal 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+Mari kita periksa kebenaran masing-masing pernyataan.
+
+#### Pernyataan 1
+
+Kita akan mencari fungsi invers dari <InlineMath math="f(x) = \frac{2x + 1}{3x - 5}" />.
+
+Misalkan <InlineMath math="f(x) = y" />, maka:
+
+<MathContainer>
+  <BlockMath math="y = \frac{2x + 1}{3x - 5}" />
+  <BlockMath math="y(3x - 5) = 2x + 1" />
+  <BlockMath math="3xy - 5y = 2x + 1" />
+  <BlockMath math="3xy - 2x = 5y + 1" />
+  <BlockMath math="x(3y - 2) = 5y + 1" />
+  <BlockMath math="x = \frac{5y + 1}{3y - 2}" />
+</MathContainer>
+
+Jadi, fungsi inversnya adalah:
+<BlockMath math="f^{-1}(x) = \frac{5x + 1}{3x - 2}" />
+
+Pernyataan 1 **Benar**.
+
+#### Pernyataan 2
+
+Daerah hasil (range) dari fungsi invers <InlineMath math="f^{-1}(x)" /> adalah sama dengan daerah asal (domain) dari fungsi aslinya <InlineMath math="f(x)" />.
+
+Fungsi <InlineMath math="f(x) = \frac{2x + 1}{3x - 5}" /> terdefinisi jika penyebut tidak sama dengan nol:
+
+<MathContainer>
+  <BlockMath math="3x - 5 \neq 0" />
+  <BlockMath math="3x \neq 5" />
+  <BlockMath math="x \neq \frac{5}{3}" />
+</MathContainer>
+
+Artinya, domain dari <InlineMath math="f(x)" /> adalah semua bilangan real kecuali <InlineMath math="\frac{5}{3}" />.
+
+Oleh karena itu, daerah hasil dari <InlineMath math="f^{-1}(x)" /> adalah semua bilangan real kecuali <InlineMath math="\frac{5}{3}" />.
+
+Jadi, nilai <InlineMath math="y = \frac{5}{3}" /> memang **bukan** anggota daerah hasil <InlineMath math="f^{-1}(x)" />.
+
+Pernyataan 2 **Benar**.
+
+#### Pernyataan 3
+
+Kita cek apakah <InlineMath math="x = \frac{1}{2}" /> memenuhi <InlineMath math="f(x) = f^{-1}(x)" />.
+
+Hitung nilai <InlineMath math="f\left(\frac{1}{2}\right)" />:
+
+<MathContainer>
+  <BlockMath math="f\left(\frac{1}{2}\right) = \frac{2(\frac{1}{2}) + 1}{3(\frac{1}{2}) - 5}" />
+  <BlockMath math="= \frac{1 + 1}{\frac{3}{2} - \frac{10}{2}}" />
+  <BlockMath math="= \frac{2}{-\frac{7}{2}}" />
+  <BlockMath math="= 2 \times \left(-\frac{2}{7}\right) = -\frac{4}{7}" />
+</MathContainer>
+
+Hitung nilai <InlineMath math="f^{-1}\left(\frac{1}{2}\right)" />:
+
+<MathContainer>
+  <BlockMath math="f^{-1}\left(\frac{1}{2}\right) = \frac{5(\frac{1}{2}) + 1}{3(\frac{1}{2}) - 2}" />
+  <BlockMath math="= \frac{\frac{5}{2} + \frac{2}{2}}{\frac{3}{2} - \frac{4}{2}}" />
+  <BlockMath math="= \frac{\frac{7}{2}}{-\frac{1}{2}}" />
+  <BlockMath math="= \frac{7}{2} \times (-2) = -7" />
+</MathContainer>
+
+Karena <InlineMath math="-\frac{4}{7} \neq -7" />, maka <InlineMath math="x = \frac{1}{2}" /> **tidak** memenuhi persamaan tersebut.
+
+Pernyataan 3 **Salah**.
+
+#### Kesimpulan
+
+Urutan nilai kebenaran yang tepat adalah **Benar, Benar, Salah**.

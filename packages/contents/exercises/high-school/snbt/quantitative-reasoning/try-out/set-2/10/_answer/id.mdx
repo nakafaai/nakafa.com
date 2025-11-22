@@ -1,0 +1,78 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+Ruang sampel (<InlineMath math="S" />) adalah pemilihan 3 bilangan dari himpunan bilangan cacah kurang dari <InlineMath math="10" />, yaitu <InlineMath math="\{0, 1, 2, 3, 4, 5, 6, 7, 8, 9\}" />.
+Jumlah anggota himpunan tersebut adalah <InlineMath math="n = 10" />.
+
+Banyaknya cara memilih 3 bilangan dari 10 bilangan adalah:
+<BlockMath math="n(S) = C(10, 3) = \frac{10 \times 9 \times 8}{3 \times 2 \times 1} = 120" />
+
+Mari kita periksa setiap pernyataan.
+
+#### Pernyataan 1
+
+Himpunan bilangan genap: <InlineMath math="\{0, 2, 4, 6, 8\}" /> (5 bilangan).
+Banyaknya cara memilih 3 bilangan genap dari 5 bilangan:
+<BlockMath math="n(A) = C(5, 3) = \frac{5 \times 4 \times 3}{3 \times 2 \times 1} = 10" />
+
+Peluang:
+<BlockMath math="P(A) = \frac{10}{120} = \frac{1}{12}" />
+
+Apakah <InlineMath math="\frac{1}{12} > \frac{1}{20}" />?
+<BlockMath math="\frac{1}{12} = \frac{5}{60}, \quad \frac{1}{20} = \frac{3}{60}" />
+Karena <InlineMath math="\frac{5}{60} > \frac{3}{60}" />, maka pernyataan 1 **Benar**.
+
+#### Pernyataan 2
+
+Bilangan <InlineMath math="3" /> harus terpilih. Maka kita tinggal memilih 2 bilangan lagi dari sisa 9 bilangan.
+<BlockMath math="n(B) = C(9, 2) = \frac{9 \times 8}{2 \times 1} = 36" />
+
+Peluang:
+<BlockMath math="P(B) = \frac{36}{120} = \frac{3}{10}" />
+
+Pernyataan 2 **Benar**.
+
+#### Pernyataan 3
+
+Faktor dari 9 dalam himpunan tersebut adalah <InlineMath math="\{1, 3, 9\}" /> (3 bilangan).
+Bilangan yang bukan faktor dari 9 adalah <InlineMath math="\{0, 2, 4, 5, 6, 7, 8\}" /> (7 bilangan).
+
+Peluang setidaknya satu bilangan faktor dari 9 terpilih adalah <InlineMath math="1" /> dikurangi peluang tidak ada faktor dari 9 yang terpilih.
+
+Banyak cara memilih 3 bilangan yang **bukan** faktor dari 9:
+<BlockMath math="n(\text{Bukan faktor 9}) = C(7, 3) = \frac{7 \times 6 \times 5}{3 \times 2 \times 1} = 35" />
+
+Peluang tidak ada faktor dari 9:
+<BlockMath math="P(\text{Tidak ada}) = \frac{35}{120} = \frac{7}{24}" />
+
+Peluang setidaknya satu:
+<BlockMath math="P(\text{Setidaknya satu}) = 1 - \frac{7}{24} = \frac{17}{24}" />
+
+Apakah <InlineMath math="\frac{17}{24} < \frac{1}{2}" />?
+<InlineMath math="\frac{1}{2} = \frac{12}{24}" />.
+Karena <InlineMath math="\frac{17}{24} > \frac{12}{24}" />, maka pernyataan 3 **Salah**.
+
+#### Pernyataan 4
+
+Bilangan prima ganjil dalam himpunan: <InlineMath math="\{3, 5, 7\}" /> (3 bilangan).
+Bilangan yang **bukan** prima ganjil: <InlineMath math="\{0, 1, 2, 4, 6, 8, 9\}" /> (7 bilangan).
+
+Kejadian "bilangan yang terpilih bukan merupakan bilangan prima ganjil" berarti ketiga bilangan yang diambil berasal dari himpunan bilangan bukan prima ganjil.
+
+Banyak cara memilih 3 bilangan dari 7 bilangan bukan prima ganjil:
+<BlockMath math="n(D) = C(7, 3) = 35" />
+
+Peluang:
+<BlockMath math="P(D) = \frac{35}{120} = \frac{7}{24}" />
+
+Apakah <InlineMath math="\frac{7}{24} < \frac{1}{3}" />?
+<InlineMath math="\frac{1}{3} = \frac{8}{24}" />.
+Karena <InlineMath math="\frac{7}{24} < \frac{8}{24}" />, maka pernyataan 4 **Benar**.
+
+#### Kesimpulan
+
+Pernyataan yang benar adalah 1, 2, dan 4. Ada **3** pernyataan yang benar.
+

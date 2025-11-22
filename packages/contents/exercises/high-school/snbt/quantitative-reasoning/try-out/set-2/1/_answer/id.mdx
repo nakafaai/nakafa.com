@@ -1,0 +1,73 @@
+export const metadata = {
+  title: "Pembahasan Soal 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+Misalkan bilangan pertama adalah <InlineMath math="A" /> dan bilangan kedua adalah <InlineMath math="B" />.
+
+Dari soal, kita mendapatkan sistem persamaan sebagai berikut:
+
+1. Dua kali bilangan pertama dikurangi tiga kali bilangan kedua menghasilkan <InlineMath math="14" />:
+
+   <BlockMath math="2A - 3B = 14" />
+
+2. Bilangan pertama dikali <InlineMath math="k" /> ditambah dua kali bilangan kedua menghasilkan <InlineMath math="4" />:
+
+   <BlockMath math="Ak + 2B = 4" />
+
+3. Nilai <InlineMath math="k" /> sama dengan penjumlahan bilangan pertama dan kedua:
+
+   <BlockMath math="k = A + B" />
+
+   Dengan syarat <InlineMath math="k > 0" />.
+
+#### Langkah Penyelesaian
+
+Langkah pertama adalah substitusi persamaan <InlineMath math="(3)" /> ke dalam persamaan <InlineMath math="(2)" />:
+
+<MathContainer>
+  <BlockMath math="A(A + B) + 2B = 4" />
+  <BlockMath math="A^2 + AB + 2B = 4" />
+</MathContainer>
+
+Faktorkan suku yang memuat <InlineMath math="B" />:
+
+<MathContainer>
+  <BlockMath math="A^2 + B(A + 2) = 4" />
+  <BlockMath math="B(A + 2) = 4 - A^2" />
+</MathContainer>
+
+Perhatikan bahwa <InlineMath math="4 - A^2" /> adalah selisih dua kuadrat, sehingga dapat difaktorkan menjadi <InlineMath math="(2 - A)(2 + A)" />:
+
+<BlockMath math="B(A + 2) = (2 - A)(2 + A)" />
+
+Karena <InlineMath math="2 + A" /> sama dengan <InlineMath math="A + 2" />, kita dapat membagi kedua ruas dengan <InlineMath math="A + 2" /> (asumsi <InlineMath math="A \neq -2" />):
+
+<BlockMath math="B = 2 - A" />
+
+Selanjutnya, substitusi nilai <InlineMath math="B" /> ke dalam persamaan <InlineMath math="(1)" />:
+
+<MathContainer>
+  <BlockMath math="2A - 3(2 - A) = 14" />
+  <BlockMath math="2A - 6 + 3A = 14" />
+  <BlockMath math="5A - 6 = 14" />
+  <BlockMath math="5A = 20" />
+  <BlockMath math="A = 4" />
+</MathContainer>
+
+Jadi, nilai bilangan pertama adalah <InlineMath math="4" />.
+
+#### Verifikasi
+
+Kita dapat memverifikasi hasilnya:
+
+Jika <InlineMath math="A = 4" />, maka <InlineMath math="B = 2 - 4 = -2" />.
+
+Nilai <InlineMath math="k = A + B = 4 + (-2) = 2" />.
+
+Syarat <InlineMath math="k > 0" /> terpenuhi karena <InlineMath math="2 > 0" />.
+
+Cek persamaan <InlineMath math="(1)" />: <InlineMath math="2(4) - 3(-2) = 8 + 6 = 14" /> (Benar).
+
+Cek persamaan <InlineMath math="(2)" />: <InlineMath math="4(2) + 2(-2) = 8 - 4 = 4" /> (Benar).

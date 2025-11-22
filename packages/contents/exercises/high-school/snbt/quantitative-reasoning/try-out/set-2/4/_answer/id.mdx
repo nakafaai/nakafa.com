@@ -1,0 +1,61 @@
+export const metadata = {
+  title: "Pembahasan Soal 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+Untuk menentukan persentase kelulusan, kita harus memeriksa dua syarat kelulusan untuk setiap siswa:
+1. Nilai IPA harus lebih tinggi dari median nilai IPA seluruh siswa.
+2. Rata-rata nilai ujian (Matematika + IPA) dibagi <InlineMath math="2" /> harus lebih dari <InlineMath math="85" />.
+
+#### Menentukan Median Nilai IPA
+
+Data nilai IPA yang ada adalah: <InlineMath math="78, 82, 87, 85, 79, 88, 81, 80" />.
+
+Urutkan data tersebut dari terkecil ke terbesar:
+<InlineMath math="78, 79, 80, 81, 82, 85, 87, 88" />.
+
+Karena ada <InlineMath math="8" /> data, median adalah rata-rata dari data ke-<InlineMath math="4" /> dan ke-<InlineMath math="5" />:
+<BlockMath math="\text{Median} = \frac{81 + 82}{2} = 81,5" />
+
+Siswa yang memenuhi syarat pertama (Nilai IPA <InlineMath math="> 81,5" />) adalah:
+- Boni (<InlineMath math="82" />)
+- Cindy (<InlineMath math="87" />)
+- Dita (<InlineMath math="85" />)
+- Fani (<InlineMath math="88" />)
+
+Siswa lainnya (Ayu, Erfan, Gilang, Herman) memiliki nilai IPA di bawah median, sehingga otomatis tidak lulus.
+
+#### Memeriksa Syarat Rata-rata Nilai
+
+Sekarang kita cek syarat kedua untuk siswa yang lolos syarat pertama:
+
+1. **Boni:**
+   <BlockMath math="\text{Rata-rata} = \frac{92 + 82}{2} = \frac{174}{2} = 87" />
+   Karena <InlineMath math="87 > 85" />, Boni **Lulus**.
+
+2. **Cindy:**
+   <BlockMath math="\text{Rata-rata} = \frac{90 + 87}{2} = \frac{177}{2} = 88,5" />
+   Karena <InlineMath math="88,5 > 85" />, Cindy **Lulus**.
+
+3. **Dita:**
+   <BlockMath math="\text{Rata-rata} = \frac{86 + 85}{2} = \frac{171}{2} = 85,5" />
+   Karena <InlineMath math="85,5 > 85" />, Dita **Lulus**.
+
+4. **Fani:**
+   <BlockMath math="\text{Rata-rata} = \frac{88 + 88}{2} = \frac{176}{2} = 88" />
+   Karena <InlineMath math="88 > 85" />, Fani **Lulus**.
+
+Jadi, terdapat <InlineMath math="4" /> siswa yang lulus dari total <InlineMath math="8" /> siswa.
+
+#### Menghitung Nilai <InlineMath math="P" />
+
+<BlockMath math="P = \frac{4}{8} \times 100\% = 50\%" />
+
+#### Membandingkan <InlineMath math="P" /> dan <InlineMath math="Q" />
+
+Diketahui <InlineMath math="Q = 65\%" />.
+
+Maka:
+<BlockMath math="50\% < 65\% \Rightarrow P < Q \text{ atau } Q > P" />
+

@@ -1,0 +1,73 @@
+export const metadata = {
+  title: "Explanation 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+Let the first number be <InlineMath math="A" /> and the second number be <InlineMath math="B" />.
+
+From the problem, we get the following system of equations:
+
+1. Twice the first number minus three times the second number equals <InlineMath math="14" />:
+
+   <BlockMath math="2A - 3B = 14" />
+
+2. The first number multiplied by <InlineMath math="k" /> plus twice the second number equals <InlineMath math="4" />:
+
+   <BlockMath math="Ak + 2B = 4" />
+
+3. The value of <InlineMath math="k" /> is equal to the sum of the first and second numbers:
+
+   <BlockMath math="k = A + B" />
+
+   With the condition <InlineMath math="k > 0" />.
+
+#### Solution Steps
+
+First, substitute equation <InlineMath math="(3)" /> into equation <InlineMath math="(2)" />:
+
+<MathContainer>
+  <BlockMath math="A(A + B) + 2B = 4" />
+  <BlockMath math="A^2 + AB + 2B = 4" />
+</MathContainer>
+
+Factor the terms containing <InlineMath math="B" />:
+
+<MathContainer>
+  <BlockMath math="A^2 + B(A + 2) = 4" />
+  <BlockMath math="B(A + 2) = 4 - A^2" />
+</MathContainer>
+
+Note that <InlineMath math="4 - A^2" /> is a difference of squares, so it can be factored as <InlineMath math="(2 - A)(2 + A)" />:
+
+<BlockMath math="B(A + 2) = (2 - A)(2 + A)" />
+
+Since <InlineMath math="2 + A" /> is the same as <InlineMath math="A + 2" />, we can divide both sides by <InlineMath math="A + 2" /> (assuming <InlineMath math="A \neq -2" />):
+
+<BlockMath math="B = 2 - A" />
+
+Next, substitute the value of <InlineMath math="B" /> into equation <InlineMath math="(1)" />:
+
+<MathContainer>
+  <BlockMath math="2A - 3(2 - A) = 14" />
+  <BlockMath math="2A - 6 + 3A = 14" />
+  <BlockMath math="5A - 6 = 14" />
+  <BlockMath math="5A = 20" />
+  <BlockMath math="A = 4" />
+</MathContainer>
+
+So, the value of the first number is <InlineMath math="4" />.
+
+#### Verification
+
+We can verify the result:
+
+If <InlineMath math="A = 4" />, then <InlineMath math="B = 2 - 4 = -2" />.
+
+The value of <InlineMath math="k = A + B = 4 + (-2) = 2" />.
+
+The condition <InlineMath math="k > 0" /> is satisfied since <InlineMath math="2 > 0" />.
+
+Check equation <InlineMath math="(1)" />: <InlineMath math="2(4) - 3(-2) = 8 + 6 = 14" /> (Correct).
+
+Check equation <InlineMath math="(2)" />: <InlineMath math="4(2) + 2(-2) = 8 - 4 = 4" /> (Correct).

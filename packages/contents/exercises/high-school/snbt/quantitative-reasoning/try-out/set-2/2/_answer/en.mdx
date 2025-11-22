@@ -1,0 +1,80 @@
+export const metadata = {
+  title: "Explanation 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+Let the first number be <InlineMath math="A" /> and the second number be <InlineMath math="B" />.
+
+From the problem, we get the following information:
+
+1. Twice the first number minus three times the second number equals <InlineMath math="14" />:
+
+   <BlockMath math="2A - 3B = 14" />
+
+2. The first number multiplied by <InlineMath math="k" /> plus twice the second number equals <InlineMath math="4" />:
+
+   <BlockMath math="Ak + 2B = 4" />
+
+3. The value of the first number is <InlineMath math="2" /> more than <InlineMath math="k" /> (meaning <InlineMath math="A = k + 2" /> or <InlineMath math="k = A - 2" />).
+
+#### Solution Steps
+
+Substitute <InlineMath math="k = A - 2" /> into equation <InlineMath math="(2)" />:
+
+<MathContainer>
+  <BlockMath math="A(A - 2) + 2B = 4" />
+  <BlockMath math="A^2 - 2A + 2B = 4" />
+</MathContainer>
+
+Rearrange the equation to solve for <InlineMath math="B" />:
+
+<MathContainer>
+  <BlockMath math="2B = 4 + 2A - A^2" />
+  <BlockMath math="B = \frac{-A^2 + 2A + 4}{2}" />
+</MathContainer>
+
+Next, substitute this value of <InlineMath math="B" /> into equation <InlineMath math="(1)" />:
+
+<MathContainer>
+  <BlockMath math="2A - 3\left(\frac{-A^2 + 2A + 4}{2}\right) = 14" />
+</MathContainer>
+
+Multiply both sides by <InlineMath math="2" /> to eliminate the denominator:
+
+<MathContainer>
+  <BlockMath math="4A - 3(-A^2 + 2A + 4) = 28" />
+  <BlockMath math="4A + 3A^2 - 6A - 12 = 28" />
+  <BlockMath math="3A^2 - 2A - 12 = 28" />
+  <BlockMath math="3A^2 - 2A - 40 = 0" />
+</MathContainer>
+
+Factor the quadratic equation:
+
+<MathContainer>
+  <BlockMath math="(3A - 12)(3A + 10) = 0" />
+  <BlockMath math="3(A - 4)(3A + 10) = 0" />
+</MathContainer>
+
+This gives two possible values for <InlineMath math="A" />:
+
+<BlockMath math="A = 4 \quad \text{or} \quad A = -\frac{10}{3}" />
+
+#### Determining the Largest Value of the Second Number
+
+We find the value of <InlineMath math="B" /> for each value of <InlineMath math="A" /> using equation <InlineMath math="2A - 3B = 14 \Rightarrow 3B = 2A - 14 \Rightarrow B = \frac{2A - 14}{3}" />.
+
+**Case 1:** For <InlineMath math="A = 4" />
+
+<BlockMath math="B = \frac{2(4) - 14}{3} = \frac{8 - 14}{3} = \frac{-6}{3} = -2" />
+
+**Case 2:** For <InlineMath math="A = -\frac{10}{3}" />
+
+<BlockMath math="B = \frac{2(-\frac{10}{3}) - 14}{3} = \frac{-\frac{20}{3} - \frac{42}{3}}{3} = \frac{-\frac{62}{3}}{3} = -\frac{62}{9} \approx -6.88" />
+
+Compare the two obtained values of <InlineMath math="B" />: <InlineMath math="-2" /> and <InlineMath math="-\frac{62}{9}" />.
+
+The value <InlineMath math="-2" /> is larger than <InlineMath math="-\frac{62}{9}" />.
+
+Thus, the largest possible value of the second number is <InlineMath math="-2" />.
+

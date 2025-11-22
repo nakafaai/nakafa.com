@@ -1,0 +1,78 @@
+export const metadata = {
+  title: "Explanation 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+The sample space (<InlineMath math="S" />) is the selection of 3 numbers from the set of whole numbers less than <InlineMath math="10" />, which is <InlineMath math="\{0, 1, 2, 3, 4, 5, 6, 7, 8, 9\}" />.
+The number of elements in this set is <InlineMath math="n = 10" />.
+
+The number of ways to choose 3 numbers from 10 is:
+<BlockMath math="n(S) = C(10, 3) = \frac{10 \times 9 \times 8}{3 \times 2 \times 1} = 120" />
+
+Let's check each statement.
+
+#### Statement 1
+
+Set of even numbers: <InlineMath math="\{0, 2, 4, 6, 8\}" /> (5 numbers).
+Number of ways to choose 3 even numbers from 5:
+<BlockMath math="n(A) = C(5, 3) = \frac{5 \times 4 \times 3}{3 \times 2 \times 1} = 10" />
+
+Probability:
+<BlockMath math="P(A) = \frac{10}{120} = \frac{1}{12}" />
+
+Is <InlineMath math="\frac{1}{12} > \frac{1}{20}" />?
+<BlockMath math="\frac{1}{12} = \frac{5}{60}, \quad \frac{1}{20} = \frac{3}{60}" />
+Since <InlineMath math="\frac{5}{60} > \frac{3}{60}" />, statement 1 is **True**.
+
+#### Statement 2
+
+The number <InlineMath math="3" /> must be selected. So we just need to choose 2 more numbers from the remaining 9.
+<BlockMath math="n(B) = C(9, 2) = \frac{9 \times 8}{2 \times 1} = 36" />
+
+Probability:
+<BlockMath math="P(B) = \frac{36}{120} = \frac{3}{10}" />
+
+Statement 2 is **True**.
+
+#### Statement 3
+
+Factors of 9 in the set are <InlineMath math="\{1, 3, 9\}" /> (3 numbers).
+Numbers that are not factors of 9 are <InlineMath math="\{0, 2, 4, 5, 6, 7, 8\}" /> (7 numbers).
+
+The probability that at least one factor of 9 is selected is <InlineMath math="1" /> minus the probability that no factor of 9 is selected.
+
+Number of ways to choose 3 numbers that are **not** factors of 9:
+<BlockMath math="n(\text{Not factor of 9}) = C(7, 3) = \frac{7 \times 6 \times 5}{3 \times 2 \times 1} = 35" />
+
+Probability of no factor of 9:
+<BlockMath math="P(\text{None}) = \frac{35}{120} = \frac{7}{24}" />
+
+Probability of at least one:
+<BlockMath math="P(\text{At least one}) = 1 - \frac{7}{24} = \frac{17}{24}" />
+
+Is <InlineMath math="\frac{17}{24} < \frac{1}{2}" />?
+<InlineMath math="\frac{1}{2} = \frac{12}{24}" />.
+Since <InlineMath math="\frac{17}{24} > \frac{12}{24}" />, statement 3 is **False**.
+
+#### Statement 4
+
+Odd prime numbers in the set: <InlineMath math="\{3, 5, 7\}" /> (3 numbers).
+Numbers that are **not** odd primes: <InlineMath math="\{0, 1, 2, 4, 6, 8, 9\}" /> (7 numbers).
+
+The event "the selected numbers are not odd prime numbers" means all three numbers are chosen from the set of non-odd-prime numbers.
+
+Number of ways to choose 3 numbers from 7 non-odd-prime numbers:
+<BlockMath math="n(D) = C(7, 3) = 35" />
+
+Probability:
+<BlockMath math="P(D) = \frac{35}{120} = \frac{7}{24}" />
+
+Is <InlineMath math="\frac{7}{24} < \frac{1}{3}" />?
+<InlineMath math="\frac{1}{3} = \frac{8}{24}" />.
+Since <InlineMath math="\frac{7}{24} < \frac{8}{24}" />, statement 4 is **True**.
+
+#### Conclusion
+
+The correct statements are 1, 2, and 4. There are **3** true statements.
+

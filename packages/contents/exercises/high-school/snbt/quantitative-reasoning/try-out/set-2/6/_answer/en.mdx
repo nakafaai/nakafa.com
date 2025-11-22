@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Explanation 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/22/2025",
+};
+
+To form a distinct four-digit odd number from the digits <InlineMath math="1, 2, 3, 4, 5, 6" />, we can use the filling slots method.
+
+There are <InlineMath math="4" /> digit positions: Thousands, Hundreds, Tens, and Units.
+
+#### Step 1: Filling the Units Position
+
+For the number to be odd, the units digit must be an odd number. From the available digits (<InlineMath math="1, 2, 3, 4, 5, 6" />), the odd numbers are <InlineMath math="1, 3, 5" />.
+
+So, there are **<InlineMath math="3" />** choices for the units position.
+
+#### Step 2: Filling the Thousands Position
+
+After one digit is used for the units position, there are <InlineMath math="6 - 1 = 5" /> digits remaining for the thousands position (since the digits must be distinct).
+
+So, there are **<InlineMath math="5" />** choices for the thousands position.
+
+#### Step 3: Filling the Hundreds Position
+
+After two digits are used (for units and thousands), there are <InlineMath math="6 - 2 = 4" /> digits remaining.
+
+So, there are **<InlineMath math="4" />** choices for the hundreds position.
+
+#### Step 4: Filling the Tens Position
+
+After three digits are used, there are <InlineMath math="6 - 3 = 3" /> digits remaining.
+
+So, there are **<InlineMath math="3" />** choices for the tens position.
+
+#### Total Calculation
+
+The number of numbers that can be formed is the product of the number of choices for each position:
+
+<MathContainer>
+  <BlockMath math="\text{Total} = 5 \times 4 \times 3 \times 3" />
+  <BlockMath math="\text{Total} = 180" />
+</MathContainer>
+
+So, there are <InlineMath math="180" /> numbers that can be formed.
+
