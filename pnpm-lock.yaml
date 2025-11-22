@@ -33,8 +33,8 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       ultracite:
-        specifier: ^6.3.4
-        version: 6.3.4(typescript@5.9.3)
+        specifier: ^6.3.5
+        version: 6.3.5(typescript@5.9.3)
       vitest:
         specifier: ^4.0.13
         version: 4.0.13(@opentelemetry/api@1.9.0)(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@2.6.1)(jsdom@27.2.0)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.94.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
@@ -149,8 +149,8 @@ importers:
   apps/www:
     dependencies:
       '@ai-sdk/react':
-        specifier: ^2.0.98
-        version: 2.0.98(react@19.2.0)(zod@4.1.12)
+        specifier: ^2.0.99
+        version: 2.0.99(react@19.2.0)(zod@4.1.12)
       '@convex-dev/better-auth':
         specifier: ^0.9.7
         version: 0.9.7(@standard-schema/spec@1.0.0)(better-auth@1.3.27(next@16.0.3(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(sass@1.94.2))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(convex@1.29.3(react@19.2.0))(hono@4.10.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
@@ -164,8 +164,8 @@ importers:
         specifier: ^2.43.1
         version: 2.43.1(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(antd@5.28.1(date-fns@4.1.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(framer-motion@12.23.24(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@mantine/hooks':
-        specifier: ^8.3.8
-        version: 8.3.8(react@19.2.0)
+        specifier: ^8.3.9
+        version: 8.3.9(react@19.2.0)
       '@mdx-js/loader':
         specifier: ^3.1.1
         version: 3.1.1
@@ -221,14 +221,14 @@ importers:
         specifier: ^5.90.10
         version: 5.90.10(react@19.2.0)
       '@tanstack/react-query-devtools':
-        specifier: ^5.90.2
-        version: 5.90.2(@tanstack/react-query@5.90.10(react@19.2.0))(react@19.2.0)
+        specifier: ^5.91.0
+        version: 5.91.0(@tanstack/react-query@5.90.10(react@19.2.0))(react@19.2.0)
       '@vercel/functions':
         specifier: ^3.3.3
         version: 3.3.3
       ai:
-        specifier: ^5.0.98
-        version: 5.0.98(zod@4.1.12)
+        specifier: ^5.0.99
+        version: 5.0.99(zod@4.1.12)
       any-ascii:
         specifier: ^0.3.3
         version: 0.3.3
@@ -242,8 +242,8 @@ importers:
         specifier: ^1.29.3
         version: 1.29.3(react@19.2.0)
       country-flag-icons:
-        specifier: ^1.6.3
-        version: 1.6.3
+        specifier: ^1.6.4
+        version: 1.6.4
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -354,17 +354,17 @@ importers:
         specifier: ^2.0.13
         version: 2.0.13(zod@4.1.12)
       '@ai-sdk/google':
-        specifier: ^2.0.40
-        version: 2.0.40(zod@4.1.12)
+        specifier: ^2.0.41
+        version: 2.0.41(zod@4.1.12)
       '@ai-sdk/google-vertex':
-        specifier: ^3.0.72
-        version: 3.0.72(zod@4.1.12)
+        specifier: ^3.0.73
+        version: 3.0.73(zod@4.1.12)
       '@ai-sdk/openai':
         specifier: ^2.0.71
         version: 2.0.71(zod@4.1.12)
       '@ai-sdk/react':
-        specifier: ^2.0.98
-        version: 2.0.98(react@19.2.0)(zod@4.1.12)
+        specifier: ^2.0.99
+        version: 2.0.99(react@19.2.0)(zod@4.1.12)
       '@mendable/firecrawl-js':
         specifier: ^4.6.2
         version: 4.6.2
@@ -375,8 +375,8 @@ importers:
         specifier: ^0.13.8
         version: 0.13.8(typescript@5.9.3)(zod@4.1.12)
       ai:
-        specifier: ^5.0.98
-        version: 5.0.98(zod@4.1.12)
+        specifier: ^5.0.99
+        version: 5.0.99(zod@4.1.12)
       convex:
         specifier: ^1.29.3
         version: 1.29.3(react@19.2.0)
@@ -446,8 +446,8 @@ importers:
         specifier: ^0.13.8
         version: 0.13.8(typescript@5.9.3)(zod@4.1.12)
       ai:
-        specifier: ^5.0.98
-        version: 5.0.98(zod@4.1.12)
+        specifier: ^5.0.99
+        version: 5.0.99(zod@4.1.12)
       better-auth:
         specifier: 1.3.27
         version: 1.3.27(next@16.0.3(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(sass@1.94.2))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -490,8 +490,8 @@ importers:
   packages/contents:
     dependencies:
       '@mantine/hooks':
-        specifier: ^8.3.8
-        version: 8.3.8(react@19.2.0)
+        specifier: ^8.3.9
+        version: 8.3.9(react@19.2.0)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -548,8 +548,8 @@ importers:
         specifier: ^2.43.1
         version: 2.43.1(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(antd@5.28.1(date-fns@4.1.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(framer-motion@12.23.24(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@mantine/hooks':
-        specifier: ^8.3.8
-        version: 8.3.8(react@19.2.0)
+        specifier: ^8.3.9
+        version: 8.3.9(react@19.2.0)
       '@next/third-parties':
         specifier: 16.0.3
         version: 16.0.3(next@16.0.3(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(sass@1.94.2))(react@19.2.0)
@@ -617,8 +617,8 @@ importers:
         specifier: ^2.0.13
         version: 2.0.13
       ai:
-        specifier: ^5.0.98
-        version: 5.0.98(zod@4.1.12)
+        specifier: ^5.0.99
+        version: 5.0.99(zod@4.1.12)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -920,14 +920,14 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google-vertex@3.0.72':
-    resolution: {integrity: sha512-uRJXkFrCjm2o9xHw1eWga0ee4+q5qKl4smgRYnWAnumIYwpTPtwU2yMQzdJDAozXNsgZOhv5OcalbGHsc219sQ==}
+  '@ai-sdk/google-vertex@3.0.73':
+    resolution: {integrity: sha512-slWp+64gj2OHF0+/JofXkj1kq8L18WZitVgYlLbwCTG22PaXQG0tvX7ngNLp7l3n2zv/J7XGsS4x5KJRWa1lbQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google@2.0.40':
-    resolution: {integrity: sha512-E7MTVE6vhWXQJzXQDvojwA9t5xlhWpxttCH3R/kUyiE6y0tT8Ay2dmZLO+bLpFBQ5qrvBMrjKWpDVQMoo6TJZg==}
+  '@ai-sdk/google@2.0.41':
+    resolution: {integrity: sha512-8C0TitxacNhKG2DXI+lsiR+f/2rNBFSpDxYg5vr3zPU+bkDMu53IeHjJpVxsX22hg4+uDzGrV91/saDrqUcXjw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -948,8 +948,8 @@ packages:
     resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@2.0.98':
-    resolution: {integrity: sha512-iXhTc1jFkcCqtIp2o9OmgpDkjVozxiWFK8fBrDq9mvqxXIuTsYzjjQtbWt0bPf8YsKMjoDxHjGChL9BN6r4raw==}
+  '@ai-sdk/react@2.0.99':
+    resolution: {integrity: sha512-HeWpXxiVk3/Yi2W/lg/GvstK5zNr7egaulqkp5rJjinUJ8+XGEbYyqf+cNUB662v7Sjas2mZaLwaY3IK3yLD2Q==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
@@ -2270,8 +2270,8 @@ packages:
       react: ^19.0.0
       react-dom: ^19.0.0
 
-  '@mantine/hooks@8.3.8':
-    resolution: {integrity: sha512-2YCUk5IWz+Ebi7VpbdscUz1MwulyaVPKr236ugMfpK0PFwsun4aBaLCAc8UeMGP0LtoSkuFvnsCPR4U6rhNfeQ==}
+  '@mantine/hooks@8.3.9':
+    resolution: {integrity: sha512-Dfz7W0+K1cq4Gb1WFQCZn8tsMXkLH6MV409wZR/ToqsxdNDUMJ/xxbfnwEXWEZjXNJd1wDETHgc+cZG2lTe3Xw==}
     peerDependencies:
       react: ^18.x || ^19.x
 
@@ -4627,13 +4627,13 @@ packages:
   '@tanstack/query-core@5.90.10':
     resolution: {integrity: sha512-EhZVFu9rl7GfRNuJLJ3Y7wtbTnENsvzp+YpcAV7kCYiXni1v8qZh++lpw4ch4rrwC0u/EZRnBHIehzCGzwXDSQ==}
 
-  '@tanstack/query-devtools@5.90.1':
-    resolution: {integrity: sha512-GtINOPjPUH0OegJExZ70UahT9ykmAhmtNVcmtdnOZbxLwT7R5OmRztR5Ahe3/Cu7LArEmR6/588tAycuaWb1xQ==}
+  '@tanstack/query-devtools@5.91.0':
+    resolution: {integrity: sha512-uNWkqWTiIKCv8Iaahb7bftmDaZVkBetB+l+OQhQeCEZAedyqxw2eyaRUc8sAQ2LzD843tVdYL6bzOtRWJHJSbQ==}
 
-  '@tanstack/react-query-devtools@5.90.2':
-    resolution: {integrity: sha512-vAXJzZuBXtCQtrY3F/yUNJCV4obT/A/n81kb3+YqLbro5Z2+phdAbceO+deU3ywPw8B42oyJlp4FhO0SoivDFQ==}
+  '@tanstack/react-query-devtools@5.91.0':
+    resolution: {integrity: sha512-s7g8Zn8HN05HNe22n/KdNm8wXaRbkcsVkqpkdYIQuCfjVmEUoTQqtJsN2iZtgd9CU36xNS38trWIofxzyW5vbQ==}
     peerDependencies:
-      '@tanstack/react-query': ^5.90.2
+      '@tanstack/react-query': ^5.90.10
       react: ^18 || ^19
 
   '@tanstack/react-query@5.90.10':
@@ -5266,8 +5266,8 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  ai@5.0.98:
-    resolution: {integrity: sha512-RpMnwnml68Swblobvk6IdF7HLZrog72Ve6H5J3aN+A/JPg4y5CjCXeQyK1N4wJStyuTa6AoKYfJR5F4e/aVpHQ==}
+  ai@5.0.99:
+    resolution: {integrity: sha512-omnQLLi5yNQWLLJAaQdACsgBSj+c9LTCWwl9z+6albiqlATNF3AGdpr1ZMTJosGkupwswZc6LDIMa3cfHR4x/g==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -5948,8 +5948,8 @@ packages:
   country-flag-icons@1.6.1:
     resolution: {integrity: sha512-Xz65n4sCUi1CEZ3miUfElcuYmPa2NKjSZCqVoLBuRqUSwXKs+FekBu8VJXRcDcdkPdsIDx55R+15a+Zx/SaBmQ==}
 
-  country-flag-icons@1.6.3:
-    resolution: {integrity: sha512-frltrKmvnWgq8vacW70ldyOi+p6M78lWB9LDoGma7B/Ca6WE6O2wclVPtjtm4oey77ihxOb9PqoJcaz/PSNGmA==}
+  country-flag-icons@1.6.4:
+    resolution: {integrity: sha512-Z3Zi419FI889tlElMsVhCIS5eRkiLDWixr576J5DPiTe5RGxpbRi+enMpHdYVp5iK5WFjr8P/RgyIFAGhFsiFg==}
 
   create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
@@ -10256,8 +10256,8 @@ packages:
     engines: {node: '>=0.8.0'}
     hasBin: true
 
-  ultracite@6.3.4:
-    resolution: {integrity: sha512-paAJhYTOjJjqrsILFQW1e7I52YknebEXEHYNOXeFBBhAYUP72DkRG7V0vclwMuLsDFwSSXDkiXxQNf/TGpmydg==}
+  ultracite@6.3.5:
+    resolution: {integrity: sha512-LCMs7FDnm6za2xTwAWykJL3vJcpCkZTmZDhQToPcuiQstCGSulHXHWB3kdJfumP/0uzJTZKHjSLNTwhydmmNfA==}
     hasBin: true
 
   uncrypto@0.1.3:
@@ -10805,10 +10805,10 @@ snapshots:
       '@vercel/oidc': 3.0.5
       zod: 4.1.12
 
-  '@ai-sdk/google-vertex@3.0.72(zod@4.1.12)':
+  '@ai-sdk/google-vertex@3.0.73(zod@4.1.12)':
     dependencies:
       '@ai-sdk/anthropic': 2.0.45(zod@4.1.12)
-      '@ai-sdk/google': 2.0.40(zod@4.1.12)
+      '@ai-sdk/google': 2.0.41(zod@4.1.12)
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.17(zod@4.1.12)
       google-auth-library: 9.15.1
@@ -10817,7 +10817,7 @@ snapshots:
       - encoding
       - supports-color
 
-  '@ai-sdk/google@2.0.40(zod@4.1.12)':
+  '@ai-sdk/google@2.0.41(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.17(zod@4.1.12)
@@ -10840,10 +10840,10 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@2.0.98(react@19.2.0)(zod@4.1.12)':
+  '@ai-sdk/react@2.0.99(react@19.2.0)(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider-utils': 3.0.17(zod@4.1.12)
-      ai: 5.0.98(zod@4.1.12)
+      ai: 5.0.99(zod@4.1.12)
       react: 19.2.0
       swr: 2.3.6(react@19.2.0)
       throttleit: 2.1.0
@@ -12148,7 +12148,7 @@ snapshots:
       - supports-color
       - vue
 
-  '@mantine/hooks@8.3.8(react@19.2.0)':
+  '@mantine/hooks@8.3.9(react@19.2.0)':
     dependencies:
       react: 19.2.0
 
@@ -15084,11 +15084,11 @@ snapshots:
 
   '@tanstack/query-core@5.90.10': {}
 
-  '@tanstack/query-devtools@5.90.1': {}
+  '@tanstack/query-devtools@5.91.0': {}
 
-  '@tanstack/react-query-devtools@5.90.2(@tanstack/react-query@5.90.10(react@19.2.0))(react@19.2.0)':
+  '@tanstack/react-query-devtools@5.91.0(@tanstack/react-query@5.90.10(react@19.2.0))(react@19.2.0)':
     dependencies:
-      '@tanstack/query-devtools': 5.90.1
+      '@tanstack/query-devtools': 5.91.0
       '@tanstack/react-query': 5.90.10(react@19.2.0)
       react: 19.2.0
 
@@ -15805,7 +15805,7 @@ snapshots:
       screenfull: 5.2.0
       tslib: 2.8.1
 
-  ai@5.0.98(zod@4.1.12):
+  ai@5.0.99(zod@4.1.12):
     dependencies:
       '@ai-sdk/gateway': 2.0.13(zod@4.1.12)
       '@ai-sdk/provider': 2.0.0
@@ -16551,7 +16551,7 @@ snapshots:
 
   country-flag-icons@1.6.1: {}
 
-  country-flag-icons@1.6.3: {}
+  country-flag-icons@1.6.4: {}
 
   create-require@1.1.1: {}
 
@@ -22012,7 +22012,7 @@ snapshots:
   uglify-js@3.19.3:
     optional: true
 
-  ultracite@6.3.4(typescript@5.9.3):
+  ultracite@6.3.5(typescript@5.9.3):
     dependencies:
       '@clack/prompts': 0.11.0
       '@trpc/server': 11.7.1(typescript@5.9.3)
