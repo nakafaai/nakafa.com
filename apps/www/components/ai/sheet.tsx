@@ -96,18 +96,23 @@ export function AiSheet() {
   });
 
   return (
-    <Sheet modal={false} onOpenChange={setOpen} open={open}>
+    <Sheet
+      disablePointerDismissal
+      modal={false}
+      onOpenChange={setOpen}
+      open={open}
+    >
       <SheetContent
         className={cn(
           "max-w-none gap-0 sm:max-w-none",
           isResizing && "transition-none"
         )}
-        closeButton={false}
+        showCloseButton={false}
         style={{ width: isMobile ? "100%" : `${width}px` }}
       >
         <button
           className={cn(
-            "-left-1 absolute top-0 bottom-0 z-10 w-1 cursor-col-resize outline-0 ring-0 transition-colors hover:bg-accent",
+            "absolute top-0 bottom-0 left-0 z-10 w-1 cursor-col-resize outline-0 ring-0 transition-colors hover:bg-accent",
             isResizing && "bg-accent",
             isMobile && "hidden"
           )}

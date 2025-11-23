@@ -51,13 +51,13 @@ export function AiSheetOpen() {
           initial={{ y: SLIDE_DISTANCE, opacity: 0 }}
           key="button"
           transition={{
-            duration: 0.4,
+            duration: 0.3,
             ease: "easeOut",
           }}
         >
           <div className="mx-auto sm:max-w-xs">
             <Button
-              className="w-full justify-between duration-300 hover:scale-105"
+              className="w-full justify-between duration-200 hover:scale-105"
               onClick={() => setOpen(true)}
               size="lg"
               variant="default-outline"

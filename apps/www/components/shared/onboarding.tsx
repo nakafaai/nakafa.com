@@ -15,6 +15,7 @@ import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -90,12 +91,14 @@ function OnboardingContent({ user }: { user: AppUser }) {
               <SelectValue placeholder={t("select-role")} />
             </SelectTrigger>
             <SelectContent>
-              {roles.map((role) => (
-                <SelectItem key={role.value} value={role.value}>
-                  <role.icon />
-                  {t(role.value)}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                {roles.map((role) => (
+                  <SelectItem key={role.value} value={role.value}>
+                    <role.icon />
+                    {t(role.value)}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
 

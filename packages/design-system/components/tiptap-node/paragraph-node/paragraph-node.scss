@@ -165,8 +165,8 @@
   // Base styles for inline threads
   .tiptap-thread.tiptap-thread--unresolved.tiptap-thread--inline {
     transition:
-      color 0.2s ease-in-out,
-      background-color 0.2s ease-in-out;
+      color 0.2s ease-out,
+      background-color 0.2s ease-out;
     color: var(--thread-text);
     border-bottom: 2px dashed var(--tt-color-yellow-base);
     font-weight: 600;
