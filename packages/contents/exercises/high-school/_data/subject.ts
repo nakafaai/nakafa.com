@@ -9,7 +9,11 @@ const subjects = [
   },
   {
     type: ["snbt"],
-    label: "quantitative-reasoning",
+    label: "quantitative-knowledge",
+  },
+  {
+    type: ["snbt"],
+    label: "mathematical-reasoning",
   },
 ] as const;
 

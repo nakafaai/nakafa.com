@@ -31,10 +31,10 @@ let nextConfig: NextConfig = {
       })),
     ];
   },
-
   async redirects() {
     await Promise.resolve();
-    return [
+
+    const redirects = [
       {
         source: "/subject/junior-high-school/:path*",
         destination: "/subject/middle-school/:path*",
@@ -43,6 +43,12 @@ let nextConfig: NextConfig = {
       {
         source: "/subject/senior-high-school/:path*",
         destination: "/subject/high-school/:path*",
+        permanent: true,
+      },
+      {
+        source: "/exercises/high-school/snbt/quantitative-reasoning/:path*",
+        destination:
+          "/exercises/high-school/snbt/quantitative-knowledge/:path*",
         permanent: true,
       },
       {
@@ -55,7 +61,23 @@ let nextConfig: NextConfig = {
         destination: "https://discord.gg/CPCSfKhvfQ",
         permanent: false,
       },
-    ];
+    ] as const;
+
+    return redirects.flatMap(({ source, destination, permanent }) => {
+      const isExternal = destination.startsWith("http");
+      return [
+        {
+          source,
+          destination,
+          permanent,
+        },
+        {
+          source: `/:locale${source}`,
+          destination: isExternal ? destination : `/:locale${destination}`,
+          permanent,
+        },
+      ];
+    });
   },
 };
 

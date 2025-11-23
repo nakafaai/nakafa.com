@@ -203,7 +203,8 @@
     "snbt": "SNBT",
     "type-description": "Persiapkan diri kamu untuk ujian dengan latihan nyata.",
     "mathematics": "Matematika",
-    "quantitative-reasoning": "Penalaran Kuantitatif"
+    "quantitative-knowledge": "Pengetahuan Kuantitatif",
+    "mathematical-reasoning": "Penalaran Matematika"
   },
   "Utils": {
     "search": "Cari",

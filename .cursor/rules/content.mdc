@@ -71,25 +71,21 @@ When creating educational content, you are a teacher who is an expert in the sub
 - **Different from metadata titles** - avoid duplication with document metadata
 - **Limited quantity** - focus on essential organization, merge very short sections
 - **No symbol** - no symbol like ":", "-" in heading, be consise and direct
+- **NO InlineMath in headings** - headings must be plain text. Do not use math components inside headings.
+- **Descriptive Step Headings** - Avoid generic "Step 1" or "Langkah 1". Use descriptive titles like "#### Calculating the Area".
 
 ### Paraghraph Requirements
 
-- **Proper line breaking** If you want add line breaking between text, add like this:
-text 1
-{spacing line breaking}
-text 2
-{spacing line breaking}
-text 3
-
-If you do like this:
-
-text 1
-text 2
-
-It is not gonna work.
-
+- **Proper line breaking** - Add a blank line between text paragraphs and any math block (`BlockMath` or `MathContainer`) for better readability.
+  
+  Example:
+  
+  text paragraph
+  
+  <BlockMath ... />
+  
 - **Blockquote** If something important, you can use blockquote, just directly tell it.
-- **List** Please be careful on you write content of the list! the indent should be clean otherwise it will break the layout (like python programming language)
+- **List** Use hyphen `-` for unordered lists. Ensure clean indentation to avoid breaking layout.
 - **No nested list** Avoid using nested list
 
 ### Code vs Math Formatting Standards
@@ -138,6 +134,9 @@ Mathematical context:
 - **ALL math expressions in InlineMath or BlockMath** - never use plain text for mathematical content
 - **InlineMath for simple mathematical expressions**: `<InlineMath math="x + 1" />`
 - **InlineMath preferred for mathematical decimals/negatives** - better than BlockMath for simple numbers
+- **Units inside InlineMath** - When writing values with units, put the unit inside the math tag using `\text{}`.
+  - Correct: `<InlineMath math="3 \text{ m}" />`, `<InlineMath math="\text{Rp}40.000,00" />`
+  - Wrong: `<InlineMath math="3" /> m`
 - **BlockMath for complex equations**: `<BlockMath math="\frac{a}{b} = c" />`
 - **Break long math strings** - split into multiple BlockMath segments when too long
 - **Wrap consecutive BlockMath with MathContainer**:

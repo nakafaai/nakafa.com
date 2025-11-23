@@ -203,7 +203,8 @@
     "snbt": "SNBT",
     "type-description": "Prepare yourself for the exam with real-world practice.",
     "mathematics": "Mathematics",
-    "quantitative-reasoning": "Quantitative Reasoning"
+    "quantitative-knowledge": "Quantitative Knowledge",
+    "mathematical-reasoning": "Mathematical Reasoning"
   },
   "Utils": {
     "search": "Search",

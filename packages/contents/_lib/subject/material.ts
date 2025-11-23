@@ -22,6 +22,7 @@ import {
   LightbulbIcon,
   MapPinIcon,
   PawPrintIcon,
+  PercentIcon,
   PiIcon,
   ScaleIcon,
   SigmaIcon,
@@ -111,8 +112,10 @@ export function getMaterialIcon(material: Material | ExercisesMaterial) {
       return ComputerIcon;
     case "international-relations":
       return HandshakeIcon;
-    case "quantitative-reasoning":
+    case "quantitative-knowledge":
       return SigmaIcon;
+    case "mathematical-reasoning":
+      return PercentIcon;
     default:
       return LightbulbIcon;
   }

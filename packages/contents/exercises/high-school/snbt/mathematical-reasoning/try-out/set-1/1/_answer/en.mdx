@@ -1,0 +1,59 @@
+export const metadata = {
+  title: "Solution for Question 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+We will determine the coop dimensions and the number of panels needed.
+
+#### Coop Dimension Analysis
+
+Given:
+- Coop height <InlineMath math="= 3 \text{ m}" />.
+- Base area <InlineMath math="= 256 \text{ m}^2" />.
+- Panel size <InlineMath math="= 80 \text{ cm} \times 300 \text{ cm} = 0.8 \text{ m} \times 3 \text{ m}" />.
+
+Since the panel height matches the coop height (<InlineMath math="3 \text{ m}" />), panels are installed vertically. To avoid cutting, the length and width of the coop must be multiples of the panel width, which is <InlineMath math="0.8 \text{ m}" />.
+
+Width constraint (<InlineMath math="w" />):
+
+<BlockMath math="5 \leq w \leq 7.5" />
+
+We look for multiples of <InlineMath math="0.8" /> within that range:
+- <InlineMath math="0.8 \times 7 = 5.6" />
+- <InlineMath math="0.8 \times 8 = 6.4" />
+- <InlineMath math="0.8 \times 9 = 7.2" />
+
+Check corresponding length (<InlineMath math="l" />) so that area is <InlineMath math="256" /> and <InlineMath math="l" /> is also a multiple of <InlineMath math="0.8" />:
+
+1. If <InlineMath math="w = 5.6" />, then <InlineMath math="l = \frac{256}{5.6} \approx 45.71" /> (Not a multiple of <InlineMath math="0.8" />).
+2. If <InlineMath math="w = 6.4" />, then <InlineMath math="l = \frac{256}{6.4} = 40" />.
+   Check multiple: <InlineMath math="\frac{40}{0.8} = 50" /> (Valid).
+3. If <InlineMath math="w = 7.2" />, then <InlineMath math="l = \frac{256}{7.2} \approx 35.56" /> (Not a multiple of <InlineMath math="0.8" />).
+
+So, the possible coop dimensions are **width <InlineMath math="6.4 \text{ m}" />** and **length <InlineMath math="40 \text{ m}" />**.
+
+#### Calculating Number of Panels
+
+Number of panels for width side:
+
+<BlockMath math="\frac{6.4}{0.8} = 8 \text{ panels}" />
+
+Number of panels for length side:
+
+<BlockMath math="\frac{40}{0.8} = 50 \text{ panels}" />
+
+Total panels needed to surround the coop (2 width sides + 2 length sides):
+
+<BlockMath math="\text{Total} = 2 \times (8 + 50) = 2 \times 58 = 116 \text{ panels}" />
+
+#### Calculating Cost
+
+The price of one panel is <InlineMath math="\text{Rp}40,000.00" />.
+
+<MathContainer>
+  <BlockMath math="\text{Cost} = 116 \times 40,000" />
+  <BlockMath math="\text{Cost} = 4,640,000" />
+</MathContainer>
+
+Thus, the required cost is <InlineMath math="\text{Rp}4,640,000.00" />.
