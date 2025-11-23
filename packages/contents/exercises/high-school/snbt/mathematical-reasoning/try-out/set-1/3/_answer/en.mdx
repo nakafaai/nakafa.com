@@ -1,0 +1,46 @@
+export const metadata = {
+  title: "Solution for Question 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+We will calculate the monthly interest Juju has to pay based on the laptop price, down payment, and applicable interest rate. Note that the <InlineMath math="20\%" /> discount only applies to series <InlineMath math="A" /> laptops, while Juju buys a series <InlineMath math="B" /> laptop, so the normal price applies.
+
+#### Calculating Down Payment
+
+Juju buys a laptop for <InlineMath math="\text{Rp}20,000,000.00" /> and pays a down payment of <InlineMath math="10\%" />.
+
+<BlockMath math="\text{Down Payment} = 10\% \times 20,000,000 = 2,000,000" />
+
+So, the down payment paid is <InlineMath math="\text{Rp}2,000,000.00" />.
+
+#### Calculating Remaining Loan Amount
+
+The remaining loan amount (principal) is the initial price minus the down payment.
+
+<BlockMath math="\text{Remaining Loan} = 20,000,000 - 2,000,000 = 18,000,000" />
+
+The remaining amount to be paid in installments is <InlineMath math="\text{Rp}18,000,000.00" />.
+
+#### Determining Interest Rate
+
+The normal simple interest is known to be <InlineMath math="6\%" /> per year. There is a provision for interest reduction if the down payment is greater than <InlineMath math="10\%" /> (subsequent multiples). Since Juju only pays the minimum down payment of <InlineMath math="10\%" />, she does not get an interest reduction.
+
+The applicable interest rate remains <InlineMath math="6\%" /> per year.
+
+#### Calculating Monthly Interest
+
+Annual interest is calculated from the remaining loan:
+
+<BlockMath math="\text{Annual Interest} = 6\% \times 18,000,000" />
+
+Since the question asks for monthly interest, we divide the annual interest by 12:
+
+<MathContainer>
+  <BlockMath math="\text{Monthly Interest} = \frac{6\%}{12} \times 18,000,000" />
+  <BlockMath math="\text{Monthly Interest} = 0.5\% \times 18,000,000" />
+  <BlockMath math="\text{Monthly Interest} = 90,000" />
+</MathContainer>
+
+So, the interest Juju has to pay per month is <InlineMath math="\text{Rp}90,000.00" />.
+

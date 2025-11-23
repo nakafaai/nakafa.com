@@ -1,0 +1,62 @@
+export const metadata = {
+  title: "Solution for Question 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+We will calculate the total cost to be paid through this special installment scheme and compare it with the initial price of the laptop.
+
+#### Installment Pattern
+
+The installments paid form a decreasing arithmetic sequence:
+- First installment (<InlineMath math="a" />) = <InlineMath math="2,000,000" />
+- Second installment = <InlineMath math="1,800,000" />
+- Difference (<InlineMath math="b" />) = <InlineMath math="1,800,000 - 2,000,000 = -200,000" />
+
+The installments continue until the value approaches zero (the last valid payment cannot be zero rupiah as it adds no cost, so we calculate until the last positive payment).
+
+We determine the number of installments (<InlineMath math="n" />) assuming the last installment (<InlineMath math="U_n" />) is <InlineMath math="200,000" /> (one step before zero):
+
+<MathContainer>
+  <BlockMath math="U_n = a + (n-1)b" />
+  <BlockMath math="200,000 = 2,000,000 + (n-1)(-200,000)" />
+</MathContainer>
+
+We divide both sides by <InlineMath math="200,000" /> to simplify:
+
+<MathContainer>
+  <BlockMath math="1 = 10 + (n-1)(-1)" />
+  <BlockMath math="1 = 10 - n + 1" />
+  <BlockMath math="n = 10" />
+</MathContainer>
+
+So, there are 10 installments.
+
+#### Calculating Total Payment
+
+The total payment is the sum of the arithmetic series (<InlineMath math="S_{10}" />):
+
+<MathContainer>
+  <BlockMath math="S_n = \frac{n}{2}(a + U_n)" />
+  <BlockMath math="S_{10} = \frac{10}{2}(2,000,000 + 200,000)" />
+  <BlockMath math="S_{10} = 5(2,200,000)" />
+  <BlockMath math="S_{10} = 11,000,000" />
+</MathContainer>
+
+The total paid is <InlineMath math="\text{Rp}11,000,000.00" />.
+
+#### Calculating Price Increase Percentage
+
+The initial price of the series <InlineMath math="B" /> laptop is <InlineMath math="\text{Rp}10,000,000.00" />.
+Price difference = <InlineMath math="11,000,000 - 10,000,000 = 1,000,000" />.
+
+Percentage price increase:
+
+<MathContainer>
+  <BlockMath math="\text{Percentage} = \frac{\text{Difference}}{\text{Initial Price}} \times 100\%" />
+  <BlockMath math="\text{Percentage} = \frac{1,000,000}{10,000,000} \times 100\%" />
+  <BlockMath math="\text{Percentage} = 10\%" />
+</MathContainer>
+
+So, the price of the series <InlineMath math="B" /> laptop is **<InlineMath math="10\%" />** more expensive compared to the initial price.
+

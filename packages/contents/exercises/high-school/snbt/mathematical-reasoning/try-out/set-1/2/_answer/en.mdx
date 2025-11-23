@@ -1,0 +1,83 @@
+export const metadata = {
+  title: "Solution for Question 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+We will calculate the total cost required by Rani, which consists of the purchase price of the seedling packages and the cost of fertilizer for the land used.
+
+#### Determining the Number of Seedlings
+
+Rani buys 2 packages of fruit seedlings. Each package contains 2 strawberry seedlings, 1 orange seedling, and 4 mango seedlings. Thus, the total seedlings obtained from 2 packages are:
+
+- Strawberry: <InlineMath math="2 \times 2 = 4" /> seedlings.
+- Orange: <InlineMath math="2 \times 1 = 2" /> seedlings.
+- Mango: <InlineMath math="2 \times 4 = 8" /> seedlings.
+
+#### Calculating the Required Land Area
+
+We calculate the land area for each type of seedling:
+
+**Strawberry Seedlings**
+
+The land size for one strawberry seedling is <InlineMath math="10 \text{ cm} \times 5 \text{ cm}" />.
+
+<BlockMath math="L_{\text{strawberry}} = 10 \times 5 = 50 \text{ cm}^2" />
+
+Total area for 4 strawberry seedlings:
+
+<BlockMath math="L_{\text{total strawberry}} = 4 \times 50 = 200 \text{ cm}^2" />
+
+**Orange Seedlings**
+
+The land size for an orange seedling is twice the size of the land for a strawberry seedling. In this context, the length and width dimensions are each doubled (<InlineMath math="20 \text{ cm} \times 10 \text{ cm}" />).
+
+<BlockMath math="L_{\text{orange}} = 20 \times 10 = 200 \text{ cm}^2" />
+
+Total area for 2 orange seedlings:
+
+<BlockMath math="L_{\text{total orange}} = 2 \times 200 = 400 \text{ cm}^2" />
+
+**Mango Seedlings**
+
+The land size for one mango seedling is <InlineMath math="5 \text{ cm} \times 2.5 \text{ cm}" />.
+
+<BlockMath math="L_{\text{mango}} = 5 \times 2.5 = 12.5 \text{ cm}^2" />
+
+Total area for 8 mango seedlings:
+
+<BlockMath math="L_{\text{total mango}} = 8 \times 12.5 = 100 \text{ cm}^2" />
+
+**Total Land Area**
+
+<MathContainer>
+  <BlockMath math="L_{\text{total}} = 200 + 400 + 100" />
+  <BlockMath math="L_{\text{total}} = 700 \text{ cm}^2" />
+</MathContainer>
+
+We convert the area unit to square meters (<InlineMath math="1 \text{ m}^2 = 10,000 \text{ cm}^2" />):
+
+<BlockMath math="L_{\text{total}} = \frac{700}{10,000} = 0.07 \text{ m}^2" />
+
+#### Calculating Total Cost
+
+**Seed Cost**
+
+The price of 1 package is <InlineMath math="\text{Rp}45,000.00" />. For 2 packages:
+
+<BlockMath math="\text{Seed Cost} = 2 \times 45,000 = \text{Rp}90,000.00" />
+
+**Fertilizer Cost**
+
+The price of fertilizer is <InlineMath math="\text{Rp}100,000.00/\text{m}^2" />. For land with an area of <InlineMath math="0.07 \text{ m}^2" />:
+
+<BlockMath math="\text{Fertilizer Cost} = 0.07 \times 100,000 = \text{Rp}7,000.00" />
+
+**Total Expenditure**
+
+<MathContainer>
+  <BlockMath math="\text{Total} = 90,000 + 7,000" />
+  <BlockMath math="\text{Total} = 97,000" />
+</MathContainer>
+
+So, the amount of money Rani has to spend is <InlineMath math="\text{Rp}97,000.00" />.

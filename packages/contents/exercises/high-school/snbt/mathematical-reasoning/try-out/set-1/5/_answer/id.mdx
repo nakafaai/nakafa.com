@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Pembahasan Soal 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+Kita akan menentukan jumlah angsuran minimal agar cicilan bulanan Jojo tidak melebihi batas yang ditentukan.
+
+#### Menghitung Harga Setelah Diskon
+
+Jojo membeli laptop seri <InlineMath math="A" /> seharga <InlineMath math="\text{Rp}15.000.000,00" />. Karena ada diskon <InlineMath math="20\%" />, maka harga yang harus dibayar adalah:
+
+<BlockMath math="\text{Harga Diskon} = (100\% - 20\%) \times 15.000.000" />
+<BlockMath math="\text{Harga Diskon} = 80\% \times 15.000.000 = 12.000.000" />
+
+Harga pokok pinjaman adalah <InlineMath math="\text{Rp}12.000.000,00" />.
+
+#### Menentukan Bunga dan Cicilan Pokok
+
+Dalam promo ulang tahun ini, Jojo mendapatkan penawaran bunga angsuran paling kecil. Berdasarkan aturan toko, bunga minimal yang bisa didapatkan adalah <InlineMath math="4\%" /> per tahun (pengurangan maksimal <InlineMath math="2\%" /> dari bunga dasar <InlineMath math="6\%" />).
+
+Kita hitung komponen bunga per bulan:
+
+<BlockMath math="\text{Bunga per Bulan} = \frac{4\%}{12} \times 12.000.000" />
+<BlockMath math="\text{Bunga per Bulan} = \frac{1}{300} \times 12.000.000 = 40.000" />
+
+Besar angsuran per bulan terdiri dari cicilan pokok dan bunga:
+
+<BlockMath math="\text{Angsuran} = \frac{\text{Pokok Pinjaman}}{n} + \text{Bunga per Bulan}" />
+
+Dimana <InlineMath math="n" /> adalah banyaknya kali angsuran.
+
+#### Menghitung Lama Angsuran Minimal
+
+Diketahui angsuran per bulan tidak boleh lebih dari <InlineMath math="\text{Rp}600.000,00" />.
+
+<MathContainer>
+  <BlockMath math="\frac{12.000.000}{n} + 40.000 \le 600.000" />
+  <BlockMath math="\frac{12.000.000}{n} \le 560.000" />
+  <BlockMath math="n \ge \frac{12.000.000}{560.000}" />
+  <BlockMath math="n \ge 21,42" />
+</MathContainer>
+
+Karena jumlah angsuran harus berupa bilangan bulat, maka Jojo harus mengangsur minimal sebanyak **22 kali**.
+

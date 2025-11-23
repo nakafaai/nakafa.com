@@ -1,0 +1,46 @@
+export const metadata = {
+  title: "Pembahasan Soal 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+Kita akan menghitung bunga per bulan yang harus dibayarkan Juju berdasarkan harga laptop, uang muka, dan tingkat bunga yang berlaku. Perhatikan bahwa diskon <InlineMath math="20\%" /> hanya berlaku untuk laptop seri <InlineMath math="A" />, sedangkan Juju membeli laptop seri <InlineMath math="B" />, sehingga harga yang digunakan adalah harga normal.
+
+#### Menghitung Uang Muka
+
+Juju membeli laptop seharga <InlineMath math="\text{Rp}20.000.000,00" /> dan membayar uang muka sebesar <InlineMath math="10\%" />.
+
+<BlockMath math="\text{Uang Muka} = 10\% \times 20.000.000 = 2.000.000" />
+
+Jadi, uang muka yang dibayarkan adalah <InlineMath math="\text{Rp}2.000.000,00" />.
+
+#### Menghitung Sisa Pinjaman
+
+Sisa pinjaman (pokok utang) adalah harga awal dikurangi uang muka.
+
+<BlockMath math="\text{Sisa Pinjaman} = 20.000.000 - 2.000.000 = 18.000.000" />
+
+Sisa yang harus diangsur adalah <InlineMath math="\text{Rp}18.000.000,00" />.
+
+#### Menentukan Suku Bunga
+
+Diketahui bunga tunggal normal adalah <InlineMath math="6\%" /> per tahun. Ada ketentuan pengurangan bunga jika uang muka lebih besar dari <InlineMath math="10\%" /> (kelipatan selanjutnya). Karena Juju hanya membayar uang muka minimal sebesar <InlineMath math="10\%" />, maka ia tidak mendapatkan pengurangan bunga.
+
+Suku bunga yang berlaku tetap <InlineMath math="6\%" /> per tahun.
+
+#### Menghitung Bunga per Bulan
+
+Bunga per tahun dihitung dari sisa pinjaman:
+
+<BlockMath math="\text{Bunga per Tahun} = 6\% \times 18.000.000" />
+
+Karena yang ditanyakan adalah bunga per bulan, kita bagi bunga per tahun dengan 12:
+
+<MathContainer>
+  <BlockMath math="\text{Bunga per Bulan} = \frac{6\%}{12} \times 18.000.000" />
+  <BlockMath math="\text{Bunga per Bulan} = 0,5\% \times 18.000.000" />
+  <BlockMath math="\text{Bunga per Bulan} = 90.000" />
+</MathContainer>
+
+Jadi, bunga yang harus dibayar Juju per bulan adalah <InlineMath math="\text{Rp}90.000,00" />.
+

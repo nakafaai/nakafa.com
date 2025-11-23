@@ -1,0 +1,78 @@
+export const metadata = {
+  title: "Solution for Question 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+We will find the value of <InlineMath math="x" /> that maximizes the surface area of the box, and then calculate that surface area.
+
+#### Determining Surface Area Formula
+
+The surface area of a cuboid (<InlineMath math="L" />) can be calculated with the formula:
+
+<BlockMath math="L = 2 \times \text{Base Area} + \text{Base Perimeter} \times \text{Height}" />
+
+From previous questions, we know the box dimensions in terms of <InlineMath math="x" />:
+- Length (<InlineMath math="p" />) = <InlineMath math="5 - x" />
+- Width (<InlineMath math="l" />) = <InlineMath math="4x - 5" />
+- Base Perimeter (<InlineMath math="K" />) = <InlineMath math="6x" />
+- Height (<InlineMath math="t" />) = <InlineMath math="5 - \frac{1}{3}x" />
+
+Substitute these dimensions into the surface area formula:
+
+<MathContainer>
+  <BlockMath math="L(x) = 2(p \times l) + K \times t" />
+  <BlockMath math="L(x) = 2((5 - x)(4x - 5)) + 6x\left(5 - \frac{1}{3}x\right)" />
+</MathContainer>
+
+#### Simplifying the Surface Area Function
+
+We expand the equation above:
+
+**Base Area Part:**
+
+<MathContainer>
+  <BlockMath math="2((5 - x)(4x - 5)) = 2(20x - 25 - 4x^2 + 5x)" />
+  <BlockMath math="= 2(-4x^2 + 25x - 25)" />
+  <BlockMath math="= -8x^2 + 50x - 50" />
+</MathContainer>
+
+**Perimeter times Height Part:**
+
+<MathContainer>
+  <BlockMath math="6x\left(5 - \frac{1}{3}x\right) = 30x - 2x^2" />
+</MathContainer>
+
+**Total Surface Area:**
+
+<MathContainer>
+  <BlockMath math="L(x) = (-8x^2 + 50x - 50) + (30x - 2x^2)" />
+  <BlockMath math="L(x) = -10x^2 + 80x - 50" />
+</MathContainer>
+
+#### Finding the Maximum Value
+
+The function <InlineMath math="L(x)" /> is a quadratic function with a negative <InlineMath math="x^2" /> coefficient, so its parabolic graph opens downwards and has a maximum value. The maximum value is reached when its first derivative equals zero (<InlineMath math="L'(x) = 0" />).
+
+<MathContainer>
+  <BlockMath math="L'(x) = -20x + 80" />
+  <BlockMath math="-20x + 80 = 0" />
+  <BlockMath math="20x = 80" />
+  <BlockMath math="x = 4" />
+</MathContainer>
+
+We check if <InlineMath math="x = 4" /> satisfies set <InlineMath math="A" /> (positive dimension condition) found previously, which is <InlineMath math="\frac{5}{4} < x < 5" />. Since <InlineMath math="1.25 < 4 < 5" />, the value <InlineMath math="x = 4" /> is valid.
+
+#### Calculating Maximum Surface Area
+
+Substitute <InlineMath math="x = 4" /> into the function <InlineMath math="L(x)" />:
+
+<MathContainer>
+  <BlockMath math="L(4) = -10(4)^2 + 80(4) - 50" />
+  <BlockMath math="L(4) = -10(16) + 320 - 50" />
+  <BlockMath math="L(4) = -160 + 320 - 50" />
+  <BlockMath math="L(4) = 110" />
+</MathContainer>
+
+So, the maximum surface area of the box is <InlineMath math="110 \text{ cm}^2" />.
+

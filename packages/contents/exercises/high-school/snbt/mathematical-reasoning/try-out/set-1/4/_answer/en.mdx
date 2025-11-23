@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Solution for Question 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+We need to determine the minimum down payment amount that allows Jeje to get the lowest interest rate.
+
+#### Interest Rate Analysis
+
+The initial interest rate is <InlineMath math="6\%" /> per year with a minimum down payment of <InlineMath math="10\%" />. Each subsequent multiple of the minimum down payment (i.e., multiples of <InlineMath math="10\%" />) will provide an interest reduction of <InlineMath math="1\%" /> per year, with a maximum reduction of <InlineMath math="2\%" />.
+
+- **10% Down Payment**: Interest <InlineMath math="6\%" /> (base).
+- **20% Down Payment**: Interest <InlineMath math="6\% - 1\% = 5\%" />.
+- **30% Down Payment**: Interest <InlineMath math="6\% - 2\% = 4\%" />.
+- **40% Down Payment and above**: Interest remains <InlineMath math="4\%" /> (since the maximum reduction is <InlineMath math="2\%" />).
+
+Thus, to get the lowest interest rate (<InlineMath math="4\%" />), Jeje must pay a minimum down payment of **<InlineMath math="30\%" />**.
+
+#### Calculating Down Payment Amount
+
+The price of the laptop is <InlineMath math="\text{Rp}12,000,000.00" />. We calculate <InlineMath math="30\%" /> of that price:
+
+<MathContainer>
+  <BlockMath math="\text{Down Payment} = 30\% \times 12,000,000" />
+  <BlockMath math="\text{Down Payment} = \frac{30}{100} \times 12,000,000" />
+  <BlockMath math="\text{Down Payment} = 3,600,000" />
+</MathContainer>
+
+So, the down payment Jeje has to pay is <InlineMath math="\text{Rp}3,600,000.00" />.
+

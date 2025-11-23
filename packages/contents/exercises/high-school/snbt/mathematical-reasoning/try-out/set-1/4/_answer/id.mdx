@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Pembahasan Soal 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+Kita harus menentukan besarnya uang muka minimal yang memungkinkan Jeje mendapatkan suku bunga terendah.
+
+#### Analisis Suku Bunga
+
+Suku bunga awal adalah <InlineMath math="6\%" /> per tahun dengan uang muka minimal <InlineMath math="10\%" />. Setiap kelipatan selanjutnya dari uang muka minimal (yaitu kelipatan <InlineMath math="10\%" />) akan memberikan pengurangan bunga sebesar <InlineMath math="1\%" /> per tahun, dengan batas maksimal pengurangan sebesar <InlineMath math="2\%" />.
+
+- **Uang Muka 10%**: Bunga <InlineMath math="6\%" /> (dasar).
+- **Uang Muka 20%**: Bunga <InlineMath math="6\% - 1\% = 5\%" />.
+- **Uang Muka 30%**: Bunga <InlineMath math="6\% - 2\% = 4\%" />.
+- **Uang Muka 40% ke atas**: Bunga tetap <InlineMath math="4\%" /> (karena maksimal pengurangan adalah <InlineMath math="2\%" />).
+
+Jadi, untuk mendapatkan bunga paling kecil (<InlineMath math="4\%" />), Jeje harus membayar uang muka minimal sebesar **<InlineMath math="30\%" />**.
+
+#### Menghitung Besar Uang Muka
+
+Harga laptop adalah <InlineMath math="\text{Rp}12.000.000,00" />. Kita hitung <InlineMath math="30\%" /> dari harga tersebut:
+
+<MathContainer>
+  <BlockMath math="\text{Uang Muka} = 30\% \times 12.000.000" />
+  <BlockMath math="\text{Uang Muka} = \frac{30}{100} \times 12.000.000" />
+  <BlockMath math="\text{Uang Muka} = 3.600.000" />
+</MathContainer>
+
+Jadi, uang muka yang harus dibayarkan Jeje adalah <InlineMath math="\text{Rp}3.600.000,00" />.
+

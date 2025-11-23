@@ -1,0 +1,92 @@
+import { NumberLine } from "@repo/design-system/components/contents/number-line";
+
+export const metadata = {
+  title: "Solution for Question 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+We will determine the set of values for <InlineMath math="x" /> that satisfies the condition for the cuboid to have real (positive) dimensions.
+
+#### Determining Cuboid Dimensions
+
+Based on the previous question and the given information:
+- Length (<InlineMath math="p" />) = <InlineMath math="5 - x" />
+- Width (<InlineMath math="l" />) = <InlineMath math="4x - 5" />
+- Height (<InlineMath math="t" />) = <InlineMath math="5 - \frac{1}{3}x" />
+
+#### Positive Dimension Conditions
+
+For the cuboid to be real, all its dimensions must be positive (<InlineMath math="> 0" />).
+
+**Condition 1: <InlineMath math="p > 0" />**
+
+<MathContainer>
+  <BlockMath math="p > 0" />
+  <BlockMath math="5 - x > 0" />
+  <BlockMath math="5 > x" />
+  <BlockMath math="x < 5" />
+</MathContainer>
+
+**Condition 2: <InlineMath math="l > 0" />**
+
+<MathContainer>
+  <BlockMath math="l > 0" />
+  <BlockMath math="4x - 5 > 0" />
+  <BlockMath math="4x > 5" />
+  <BlockMath math="x > \frac{5}{4}" />
+</MathContainer>
+
+**Condition 3: <InlineMath math="t > 0" />**
+
+<MathContainer>
+  <BlockMath math="t > 0" />
+  <BlockMath math="5 - \frac{1}{3}x > 0" />
+  <BlockMath math="5 > \frac{1}{3}x" />
+  <BlockMath math="15 > x" />
+  <BlockMath math="x < 15" />
+</MathContainer>
+
+#### Determining Set Intersection
+
+We find the intersection of these three conditions:
+1. <InlineMath math="x < 5" />
+2. <InlineMath math="x > \frac{5}{4}" /> (or <InlineMath math="1.25" />)
+3. <InlineMath math="x < 15" />
+
+From conditions 1 and 3, we take the stricter one, which is <InlineMath math="x < 5" />. Combined with condition 2, we get the range:
+
+<BlockMath math="\frac{5}{4} < x < 5" />
+
+<NumberLine
+  title="Solution Set A"
+  description={<>The intersection of all positive dimension conditions is <InlineMath math="\frac{5}{4} < x < 5" />.</>}
+  segments={[
+    {
+      start: Number.NEGATIVE_INFINITY,
+      end: 1.25,
+      label: <InlineMath math="-" />,
+      backgroundColor: "transparent"
+    },
+    {
+      start: 1.25,
+      end: 5,
+      label: <InlineMath math="A" />,
+      startLabel: <InlineMath math="\frac{5}{4}" />,
+      endLabel: <InlineMath math="5" />,
+      startInclusive: false,
+      endInclusive: false
+    },
+    {
+      start: 5,
+      end: Number.POSITIVE_INFINITY,
+      label: <InlineMath math="-" />,
+      backgroundColor: "transparent"
+    }
+  ]}
+/>
+
+So, the set <InlineMath math="A" /> is:
+
+<BlockMath math="A = \left\{ x \mid \frac{5}{4} < x < 5, x \in \mathbb{R} \right\}" />
+

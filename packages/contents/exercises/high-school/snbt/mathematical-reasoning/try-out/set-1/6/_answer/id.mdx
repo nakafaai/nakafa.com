@@ -1,0 +1,62 @@
+export const metadata = {
+  title: "Pembahasan Soal 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+Kita akan menghitung total biaya yang harus dibayarkan melalui skema angsuran khusus ini dan membandingkannya dengan harga awal laptop.
+
+#### Pola Angsuran
+
+Angsuran yang dibayarkan membentuk barisan aritmetika yang menurun:
+- Angsuran pertama (<InlineMath math="a" />) = <InlineMath math="2.000.000" />
+- Angsuran kedua = <InlineMath math="1.800.000" />
+- Beda (<InlineMath math="b" />) = <InlineMath math="1.800.000 - 2.000.000 = -200.000" />
+
+Angsuran berlanjut hingga nilainya mendekati nol (pembayaran terakhir yang valid tidak mungkin nol rupiah karena tidak menambah biaya, jadi kita hitung sampai pembayaran terakhir yang bernilai positif).
+
+Kita tentukan banyaknya angsuran (<InlineMath math="n" />) dengan asumsi angsuran terakhir (<InlineMath math="U_n" />) adalah <InlineMath math="200.000" /> (satu langkah sebelum nol):
+
+<MathContainer>
+  <BlockMath math="U_n = a + (n-1)b" />
+  <BlockMath math="200.000 = 2.000.000 + (n-1)(-200.000)" />
+</MathContainer>
+
+Kita bagi kedua ruas dengan <InlineMath math="200.000" /> untuk menyederhanakan:
+
+<MathContainer>
+  <BlockMath math="1 = 10 + (n-1)(-1)" />
+  <BlockMath math="1 = 10 - n + 1" />
+  <BlockMath math="n = 10" />
+</MathContainer>
+
+Jadi, terdapat 10 kali angsuran.
+
+#### Menghitung Total Pembayaran
+
+Total pembayaran adalah jumlah dari deret aritmetika tersebut (<InlineMath math="S_{10}" />):
+
+<MathContainer>
+  <BlockMath math="S_n = \frac{n}{2}(a + U_n)" />
+  <BlockMath math="S_{10} = \frac{10}{2}(2.000.000 + 200.000)" />
+  <BlockMath math="S_{10} = 5(2.200.000)" />
+  <BlockMath math="S_{10} = 11.000.000" />
+</MathContainer>
+
+Total yang dibayarkan adalah <InlineMath math="\text{Rp}11.000.000,00" />.
+
+#### Menghitung Persentase Kenaikan Harga
+
+Harga awal laptop seri <InlineMath math="B" /> adalah <InlineMath math="\text{Rp}10.000.000,00" />.
+Selisih harga = <InlineMath math="11.000.000 - 10.000.000 = 1.000.000" />.
+
+Persentase kenaikan harga:
+
+<MathContainer>
+  <BlockMath math="\text{Persentase} = \frac{\text{Selisih}}{\text{Harga Awal}} \times 100\%" />
+  <BlockMath math="\text{Persentase} = \frac{1.000.000}{10.000.000} \times 100\%" />
+  <BlockMath math="\text{Persentase} = 10\%" />
+</MathContainer>
+
+Jadi, harga laptop seri <InlineMath math="B" /> menjadi lebih mahal **<InlineMath math="10\%" />** dibandingkan harga awal.
+
