@@ -1,0 +1,59 @@
+export const metadata = {
+  title: "Pembahasan Soal 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+Kita akan menghitung pendapatan normal terlebih dahulu, kemudian menentukan harga baru dan jumlah penjualan baru agar pendapatan tetap sama namun jumlah penjualan meningkat.
+
+#### Menghitung Pendapatan Normal
+
+Pendapatan normal (<InlineMath math="I_{\text{normal}}" />) adalah:
+
+<MathContainer>
+  <BlockMath math="I_{\text{normal}} = \text{Harga} \times \text{Jumlah Terjual}" />
+  <BlockMath math="I_{\text{normal}} = 12.000 \times 200" />
+  <BlockMath math="I_{\text{normal}} = 2.400.000" />
+</MathContainer>
+
+#### Menentukan Hubungan Harga dan Penjualan Baru
+
+Misalkan <InlineMath math="x" /> adalah banyaknya penurunan harga sebesar <InlineMath math="\text{Rp}1.000,00" />.
+- Harga baru: <InlineMath math="H = 12.000 - 1.000x" />
+- Jumlah terjual baru: <InlineMath math="J = 200 + 20x" />
+
+Kita ingin pendapatan tetap sama (<InlineMath math="\text{Rp}2.400.000,00" />):
+
+<MathContainer>
+  <BlockMath math="H \times J = 2.400.000" />
+  <BlockMath math="(12.000 - 1.000x)(200 + 20x) = 2.400.000" />
+</MathContainer>
+
+Kita sederhanakan dengan membagi faktor-faktornya (misal bagi <InlineMath math="1.000" /> pada harga dan bagi <InlineMath math="20" /> pada jumlah):
+
+<MathContainer>
+  <BlockMath math="(12 - x)(10 + x) = \frac{2.400.000}{1.000 \times 20}" />
+  <BlockMath math="(12 - x)(10 + x) = 120" />
+  <BlockMath math="120 + 12x - 10x - x^2 = 120" />
+  <BlockMath math="2x - x^2 = 0" />
+  <BlockMath math="x(2 - x) = 0" />
+</MathContainer>
+
+Diperoleh dua solusi:
+1. <InlineMath math="x = 0" /> (Kondisi normal, tidak ada perubahan)
+2. <InlineMath math="x = 2" /> (Terjadi penurunan harga)
+
+Karena pemilik kedai ingin **meningkatkan** penjualan, kita pilih <InlineMath math="x = 2" />.
+
+#### Menghitung Banyak Es Kopi yang Terjual
+
+Substitusikan <InlineMath math="x = 2" /> ke rumus jumlah terjual baru:
+
+<MathContainer>
+  <BlockMath math="J = 200 + 20(2)" />
+  <BlockMath math="J = 200 + 40" />
+  <BlockMath math="J = 240" />
+</MathContainer>
+
+Jadi, banyak es kopi yang terjual adalah 240 gelas.
+

@@ -1,0 +1,65 @@
+export const metadata = {
+  title: "Solution for Question 17",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+We will combine all apple mass data from Ferdian and Belle, sort it, and then evaluate each statement.
+
+#### Combining and Sorting Data
+
+Ferdian's apple mass data (with <InlineMath math="x = 180" />):
+
+<BlockMath math="157, 163, 182, 171, 167, 180" />
+
+Belle's apple mass data:
+
+<BlockMath math="180, 175, 162, 154, 161, 170" />
+
+Combined data (total <InlineMath math="12" /> apples):
+
+<BlockMath math="157, 163, 182, 171, 167, 180, 180, 175, 162, 154, 161, 170" />
+
+Sorted data from smallest to largest:
+
+<BlockMath math="154, 157, 161, 162, 163, 167, 170, 171, 175, 180, 180, 182" />
+
+Total data (<InlineMath math="n" />) = <InlineMath math="12" />.
+
+#### Evaluating First Statement
+
+**Statement:** <InlineMath math="25\%" /> of the smallest apples have a mass of <InlineMath math="< 162 \text{ grams}" />.
+
+We calculate <InlineMath math="25\%" /> of the total data:
+
+<BlockMath math="25\% \times 12 = 3 \text{ items}" />
+
+The <InlineMath math="3" /> smallest data points are <InlineMath math="154" />, <InlineMath math="157" />, <InlineMath math="161" />. All these values are less than <InlineMath math="162" /> grams.
+
+**Conclusion:** First statement is **TRUE**.
+
+#### Evaluating Second Statement
+
+**Statement:** <InlineMath math="25\%" /> of the largest apples have a mass of <InlineMath math="> 180 \text{ grams}" />.
+
+We calculate <InlineMath math="25\%" /> of the total data:
+
+<BlockMath math="25\% \times 12 = 3 \text{ items}" />
+
+The <InlineMath math="3" /> largest data points are <InlineMath math="182" />, <InlineMath math="180" />, <InlineMath math="180" />. Not all of these are greater than <InlineMath math="180" /> (since two values are exactly <InlineMath math="180" />).
+
+**Conclusion:** Second statement is **FALSE**.
+
+#### Evaluating Third Statement
+
+**Statement:** <InlineMath math="50\%" /> of the smallest apples have a mass of <InlineMath math="< 170 \text{ grams}" />.
+
+We calculate <InlineMath math="50\%" /> of the total data:
+
+<BlockMath math="50\% \times 12 = 6 \text{ items}" />
+
+The <InlineMath math="6" /> smallest data points are <InlineMath math="154" />, <InlineMath math="157" />, <InlineMath math="161" />, <InlineMath math="162" />, <InlineMath math="163" />, <InlineMath math="167" />. The largest value in this group is <InlineMath math="167" />, which is less than <InlineMath math="170" />.
+
+**Conclusion:** Third statement is **TRUE**.
+
+So, the sequence of truth is **TRUE - FALSE - TRUE**.

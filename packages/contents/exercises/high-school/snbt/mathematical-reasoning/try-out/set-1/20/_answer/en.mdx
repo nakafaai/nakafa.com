@@ -1,0 +1,59 @@
+export const metadata = {
+  title: "Solution for Question 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/23/2025",
+};
+
+We will calculate the normal income first, then determine the new price and new sales quantity so that the income remains the same but sales increase.
+
+#### Calculating Normal Income
+
+Normal income (<InlineMath math="I_{\text{normal}}" />) is:
+
+<MathContainer>
+  <BlockMath math="I_{\text{normal}} = \text{Price} \times \text{Quantity Sold}" />
+  <BlockMath math="I_{\text{normal}} = 12,000 \times 200" />
+  <BlockMath math="I_{\text{normal}} = 2,400,000" />
+</MathContainer>
+
+#### Determining Relationship between Price and New Sales
+
+Let <InlineMath math="x" /> be the number of price reductions of <InlineMath math="\text{Rp}1,000.00" />.
+- New Price: <InlineMath math="H = 12,000 - 1,000x" />
+- New Quantity Sold: <InlineMath math="J = 200 + 20x" />
+
+We want the income to remain the same (<InlineMath math="\text{Rp}2,400,000.00" />):
+
+<MathContainer>
+  <BlockMath math="H \times J = 2,400,000" />
+  <BlockMath math="(12,000 - 1,000x)(200 + 20x) = 2,400,000" />
+</MathContainer>
+
+We simplify by dividing the factors (e.g., divide by <InlineMath math="1,000" /> on price and by <InlineMath math="20" /> on quantity):
+
+<MathContainer>
+  <BlockMath math="(12 - x)(10 + x) = \frac{2,400,000}{1,000 \times 20}" />
+  <BlockMath math="(12 - x)(10 + x) = 120" />
+  <BlockMath math="120 + 12x - 10x - x^2 = 120" />
+  <BlockMath math="2x - x^2 = 0" />
+  <BlockMath math="x(2 - x) = 0" />
+</MathContainer>
+
+We obtain two solutions:
+1. <InlineMath math="x = 0" /> (Normal condition, no change)
+2. <InlineMath math="x = 2" /> (Price reduction occurs)
+
+Since the shop owner wants to **increase** sales, we choose <InlineMath math="x = 2" />.
+
+#### Calculating Number of Iced Coffees Sold
+
+Substitute <InlineMath math="x = 2" /> into the new quantity formula:
+
+<MathContainer>
+  <BlockMath math="J = 200 + 20(2)" />
+  <BlockMath math="J = 200 + 40" />
+  <BlockMath math="J = 240" />
+</MathContainer>
+
+So, the number of iced coffees sold is 240 cups.
+
