@@ -104,7 +104,7 @@ export function AiSheet() {
     >
       <SheetContent
         className={cn(
-          "max-w-none gap-0 sm:max-w-none",
+          "max-w-none gap-0 border-l-0 sm:max-w-none sm:border-l",
           isResizing && "transition-none"
         )}
         showCloseButton={false}
