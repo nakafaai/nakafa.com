@@ -1,0 +1,107 @@
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Question 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/24/2025",
+};
+
+Consider the following illustration!
+
+<LineEquation
+  title="Circle Illustration"
+  description={<>A circle with center <InlineMath math="O" /> and angle <InlineMath math="\angle BOC = 50^\circ" />.</>}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    {
+      // Circle
+      points: Array.from({ length: 65 }, (_, i) => {
+        const angle = (i / 64) * 2 * Math.PI;
+        return {
+          x: 3 * Math.cos(angle),
+          y: 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+    },
+    {
+      // Line AB (Diameter)
+      points: Array.from({ length: 11 }, (_, i) => {
+        const t = i / 10;
+        return {
+          x: -3 + t * 6,
+          y: 0,
+          z: 0,
+        };
+      }),
+      color: getColor("YELLOW"),
+      showPoints: false,
+      labels: [
+        { text: "A", at: 0, offset: [-0.5, 0.5, 0] },
+        { text: "O", at: 5, offset: [0, 0.5, 0] },
+        { text: "B", at: 10, offset: [0.5, 0.5, 0] },
+      ],
+    },
+    {
+      // Line OC (Radius)
+      points: Array.from({ length: 11 }, (_, i) => {
+        const t = i / 10;
+        const angle = (-50 * Math.PI) / 180;
+        return {
+          x: t * 3 * Math.cos(angle),
+          y: t * 3 * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("ORANGE"),
+      showPoints: false,
+      labels: [
+        { text: "C", at: 10, offset: [0.3, -0.4, 0] },
+      ],
+    },
+    {
+      // Line AC (Chord)
+      points: Array.from({ length: 11 }, (_, i) => {
+        const t = i / 10;
+        const ax = -3;
+        const ay = 0;
+        const angle = (-50 * Math.PI) / 180;
+        const cx = 3 * Math.cos(angle);
+        const cy = 3 * Math.sin(angle);
+        
+        return {
+          x: ax + t * (cx - ax),
+          y: ay + t * (cy - ay),
+          z: 0,
+        };
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+    },
+    {
+      // Arc for 50 degree angle (from OB to OC)
+      points: Array.from({ length: 11 }, (_, i) => {
+        const startAngle = 0; // Angle for OB (positive x-axis)
+        const endAngle = (-50 * Math.PI) / 180; // Angle for OC
+        const angle = startAngle + (i / 10) * (endAngle - startAngle);
+        const radius = 0.8; // Arc radius smaller than circle
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: 0,
+        };
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+      labels: [
+        { text: "50°", at: 5, offset: [0.5, -0.2, 0], fontSize: 0.35 },
+      ],
+    },
+  ]}
+/>
+
+If <InlineMath math="O" /> is the center of the circle, then the measure of <InlineMath math="\angle OAC" /> is ....

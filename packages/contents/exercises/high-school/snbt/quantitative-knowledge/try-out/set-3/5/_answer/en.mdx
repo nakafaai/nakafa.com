@@ -1,0 +1,30 @@
+export const metadata = {
+  title: "Solution for Question 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/24/2025",
+};
+
+Given:
+*   Perimeter (<InlineMath math="K" />) = <InlineMath math="x \text{ cm}" />
+*   Length (<InlineMath math="p" />) = <InlineMath math="(8y + 5) \text{ cm}" />
+*   Width (<InlineMath math="l" />) = <InlineMath math="(6y + 1) \text{ cm}" />
+
+The formula for the perimeter of a rectangle is <InlineMath math="K = 2(p + l)" />. We substitute the known values into the formula.
+
+<MathContainer>
+  <BlockMath math="x = 2((8y + 5) + (6y + 1))" />
+  <BlockMath math="x = 2(14y + 6)" />
+  <BlockMath math="x = 28y + 12" />
+</MathContainer>
+
+Next, we rearrange the equation to solve for <InlineMath math="y" />.
+
+<MathContainer>
+  <BlockMath math="28y = x - 12" />
+  <BlockMath math="y = \frac{x - 12}{28}" />
+  <BlockMath math="y = \frac{x}{28} - \frac{12}{28}" />
+  <BlockMath math="y = \frac{x}{28} - \frac{3}{7}" />
+</MathContainer>
+
+Thus, the value of <InlineMath math="y" /> is <InlineMath math="\left(\frac{x}{28} - \frac{3}{7}\right) \text{ cm}" />.
+

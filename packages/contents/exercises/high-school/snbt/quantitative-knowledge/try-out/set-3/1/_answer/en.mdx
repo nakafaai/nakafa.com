@@ -1,0 +1,32 @@
+export const metadata = {
+  title: "Solution for Question 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/24/2025",
+};
+
+Observe the pattern of the following number series.
+
+<BlockMath math="3, \quad 6, \quad 18, \quad 15, \quad m, \quad 54, \quad 51, \quad 54, \quad 162" />
+
+The pattern formed is as follows.
+
+1.  <InlineMath math="3 \xrightarrow{+3} 6" />
+2.  <InlineMath math="6 \xrightarrow{\times 3} 18" />
+3.  <InlineMath math="18 \xrightarrow{-3} 15" />
+4.  <InlineMath math="15 \xrightarrow{+3} m" />
+5.  <InlineMath math="m \xrightarrow{\times 3} 54" />
+6.  <InlineMath math="54 \xrightarrow{-3} 51" />
+7.  <InlineMath math="51 \xrightarrow{+3} 54" />
+8.  <InlineMath math="54 \xrightarrow{\times 3} 162" />
+
+It can be seen that the operation pattern repeats: <InlineMath math="+3, \;\times 3, \; -3" />.
+
+To determine the value of <InlineMath math="m" />, we continue the pattern after <InlineMath math="15" />, which is adding <InlineMath math="3" />.
+
+<BlockMath math="m = 15 + 3 = 18" />
+
+We can verify the value of <InlineMath math="m" /> with the next step (multiplying by <InlineMath math="3" />).
+
+<BlockMath math="18 \times 3 = 54 \quad (\text{Correct})" />
+
+Thus, the value of <InlineMath math="m" /> is <InlineMath math="18" />.

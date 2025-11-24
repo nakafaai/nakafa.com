@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Solution for Question 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/24/2025",
+};
+
+Given:
+*   Initial jacket price = <InlineMath math="\text{Rp}250.000,00" />
+*   Discount = <InlineMath math="25\%" />
+*   Tax = <InlineMath math="5\%" />
+
+First, we calculate the price after the discount. Since the discount is <InlineMath math="25\%" />, Mrs. Kartika pays <InlineMath math="100\% - 25\% = 75\%" /> of the initial price.
+
+<MathContainer>
+  <BlockMath math="\text{Price after discount} = 75\% \times 250.000" />
+  <BlockMath math="= \frac{75}{100} \times 250.000" />
+  <BlockMath math="= 187.500" />
+</MathContainer>
+
+Next, a tax of <InlineMath math="5\%" /> is applied to the price after discount. Thus, the total to be paid is <InlineMath math="100\% + 5\% = 105\%" /> of the price after discount.
+
+<MathContainer>
+  <BlockMath math="\text{Price to pay} = 105\% \times 187.500" />
+  <BlockMath math="= \frac{105}{100} \times 187.500" />
+  <BlockMath math="= 1,05 \times 187.500" />
+  <BlockMath math="= 196.875" />
+</MathContainer>
+
+Directly, the calculation can be written as:
+
+<MathContainer>
+  <BlockMath math="\text{Price} = (100 - 25)\% \times (100 + 5)\% \times 250.000" />
+  <BlockMath math="= 75\% \times 105\% \times 250.000" />
+  <BlockMath math="= 0,75 \times 1,05 \times 250.000" />
+  <BlockMath math="= 196.875" />
+</MathContainer>
+
+So, the price Mrs. Kartika has to pay is <InlineMath math="\text{Rp}196.875,00" />.
+

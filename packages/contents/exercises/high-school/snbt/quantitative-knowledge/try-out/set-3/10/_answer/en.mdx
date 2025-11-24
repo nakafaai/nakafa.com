@@ -1,0 +1,53 @@
+export const metadata = {
+  title: "Solution for Question 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/24/2025",
+};
+
+Given the data: <InlineMath math="55, a, 73, b" />.
+The average of these numbers is <InlineMath math="68" />.
+
+<MathContainer>
+  <BlockMath math="\frac{55 + a + 73 + b}{4} = 68" />
+  <BlockMath math="128 + a + b = 272" />
+  <BlockMath math="a + b = 272 - 128" />
+  <BlockMath math="a + b = 144 \quad \ldots \text{(1)}" />
+</MathContainer>
+
+The difference between <InlineMath math="b" /> and <InlineMath math="a" /> is <InlineMath math="22" />.
+
+<MathContainer>
+  <BlockMath math="b - a = 22 \quad \ldots \text{(2)}" />
+</MathContainer>
+
+We eliminate equations (1) and (2).
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} a + b &= 144 \\ -a + b &= 22 \end{aligned}" />
+</MathContainer>
+
+Add both equations:
+
+<MathContainer>
+  <BlockMath math="2b = 166 \Rightarrow b = 83" />
+</MathContainer>
+
+Substitute <InlineMath math="b = 83" /> into equation (1):
+
+<MathContainer>
+  <BlockMath math="a + 83 = 144" />
+  <BlockMath math="a = 144 - 83" />
+  <BlockMath math="a = 61" />
+</MathContainer>
+
+Thus, the four numbers are <InlineMath math="55, 61, 73, 83" />. These are already ordered.
+The median is the middle value of the sorted data. For 4 data points, the median is the average of the 2nd and 3rd values.
+
+<MathContainer>
+  <BlockMath math="\text{Median} = \frac{a + 73}{2} = \frac{61 + 73}{2}" />
+  <BlockMath math="= \frac{134}{2}" />
+  <BlockMath math="= 67" />
+</MathContainer>
+
+So, the median of the four data points is <InlineMath math="67" />.
+
