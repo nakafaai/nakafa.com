@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Solution for Question 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/24/2025",
+};
+
+Given <InlineMath math="-1 < x < 1" />, with:
+-   <InlineMath math="P = \frac{1 + x^4}{1 - x^2}" />
+-   <InlineMath math="Q = 1 + x^4" />
+
+#### Analyzing the range of x
+
+For <InlineMath math="-1 < x < 1" />, we check the value of <InlineMath math="1 - x^2" />.
+
+Since <InlineMath math="x^2" /> is always positive for <InlineMath math="x \neq 0" />, then:
+
+<BlockMath math="0 < x^2 < 1" />
+
+Therefore:
+
+<BlockMath math="0 < 1 - x^2 \leq 1" />
+
+#### Comparing P and Q
+
+We divide <InlineMath math="P" /> by <InlineMath math="Q" />:
+
+<MathContainer>
+  <BlockMath math="\frac{P}{Q} = \frac{\frac{1 + x^4}{1 - x^2}}{1 + x^4} = \frac{1}{1 - x^2}" />
+</MathContainer>
+
+Now we analyze two cases:
+
+**Case 1:** If <InlineMath math="0 < 1 - x^2 < 1" />
+
+Then <InlineMath math="\frac{1}{1 - x^2} > 1" />, so <InlineMath math="P > Q" />.
+
+**Case 2:** If <InlineMath math="1 - x^2 = 1" /> (i.e., when <InlineMath math="x = 0" />)
+
+Then <InlineMath math="\frac{1}{1 - x^2} = 1" />, so <InlineMath math="P = Q" />.
+
+#### Conclusion
+
+Since the value of <InlineMath math="x" /> in the interval <InlineMath math="-1 < x < 1" /> can result in <InlineMath math="P > Q" /> (for <InlineMath math="x \neq 0" />) or <InlineMath math="P = Q" /> (for <InlineMath math="x = 0" />), the information provided is not sufficient to decide on one of the three options.
+

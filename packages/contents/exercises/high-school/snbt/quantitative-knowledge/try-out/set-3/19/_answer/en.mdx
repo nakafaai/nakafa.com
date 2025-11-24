@@ -1,0 +1,34 @@
+export const metadata = {
+  title: "Solution for Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/24/2025",
+};
+
+Given:
+-   Actual rectangle area = <InlineMath math="810 \text{ m}^2" />
+-   Actual width = <InlineMath math="18 \text{ m}" />
+-   Drawing scale = <InlineMath math="3 : 90" />
+
+#### Finding the actual length
+
+Use the rectangle area formula <InlineMath math="A = p \times \ell" />.
+
+<MathContainer>
+  <BlockMath math="810 = p \times 18" />
+  <BlockMath math="p = \frac{810}{18}" />
+  <BlockMath math="p = 45 \text{ m}" />
+</MathContainer>
+
+#### Finding the length in the drawing
+
+The scale <InlineMath math="3 : 90" /> can be simplified to <InlineMath math="1 : 30" />, meaning every <InlineMath math="1" /> unit in the drawing represents <InlineMath math="30" /> units in reality.
+
+<MathContainer>
+  <BlockMath math="p_{\text{drawing}} = \frac{3}{90} \times p_{\text{actual}}" />
+  <BlockMath math="p_{\text{drawing}} = \frac{3}{90} \times 45" />
+  <BlockMath math="p_{\text{drawing}} = \frac{135}{90}" />
+  <BlockMath math="p_{\text{drawing}} = 1.5 \text{ cm}" />
+</MathContainer>
+
+Thus, the length in the drawing is <InlineMath math="1.5 \text{ cm}" />.
+

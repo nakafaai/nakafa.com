@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Solution for Question 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/24/2025",
+};
+
+Given:
+-   <InlineMath math="B_3 = 2" />
+-   <InlineMath math="B_5 = -1" />
+-   <InlineMath math="B_n = B_{n+2} + B_{n-1}" />
+
+We will find the value of <InlineMath math="B_2" /> using the given recursive formula.
+
+#### Finding the value of B2
+
+Use the formula with <InlineMath math="n = 3" />.
+
+<MathContainer>
+  <BlockMath math="B_3 = B_{3+2} + B_{3-1}" />
+  <BlockMath math="B_3 = B_5 + B_2" />
+</MathContainer>
+
+Substitute the values <InlineMath math="B_3 = 2" /> and <InlineMath math="B_5 = -1" />.
+
+<MathContainer>
+  <BlockMath math="2 = -1 + B_2" />
+  <BlockMath math="B_2 = 2 - (-1)" />
+  <BlockMath math="B_2 = 2 + 1" />
+  <BlockMath math="B_2 = 3" />
+</MathContainer>
+
+#### Verification
+
+To ensure the answer is correct, we could check with another formula if needed. However, from the calculation above, it is clear that <InlineMath math="B_2 = 3" />.
+
+Thus, the value of <InlineMath math="B_2" /> is <InlineMath math="3" />.
+

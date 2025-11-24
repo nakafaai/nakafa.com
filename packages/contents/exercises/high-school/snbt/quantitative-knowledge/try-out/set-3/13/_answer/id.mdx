@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Pembahasan Soal 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/24/2025",
+};
+
+Terdapat <InlineMath math="3" /> kotak yang tersedia.
+Dua kelereng akan dimasukkan ke dalam kotak tersebut, dengan syarat satu kotak hanya memuat satu kelereng.
+
+Misalkan kotak diberi nomor 1, 2, 3 (dari kiri ke kanan).
+
+**Ruang sampel**
+
+Total cara memilih 2 kotak dari 3 kotak yang tersedia:
+
+<MathContainer>
+  <BlockMath math="n(S) = C(3, 2) = \frac{3!}{2!(3-2)!} = \frac{3 \times 2!}{2! \times 1!} = 3" />
+</MathContainer>
+
+Kemungkinan pasangan kotak yang terisi:
+-   Kotak {1, 2} - Berdekatan
+-   Kotak {2, 3} - Berdekatan
+-   Kotak {1, 3} - Tidak berdekatan
+
+**Kejadian yang diinginkan**
+
+Kejadian kelereng tidak berdekatan (<InlineMath math="A" />) adalah jika kotak yang terisi adalah {1, 3}.
+
+<BlockMath math="n(A) = 1" />
+
+**Peluang**
+
+Peluang kelereng disimpan tidak boleh berdekatan:
+
+<MathContainer>
+  <BlockMath math="P(A) = \frac{n(A)}{n(S)} = \frac{1}{3}" />
+</MathContainer>
+
+Jadi, peluang kelereng disimpan tidak boleh berdekatan adalah <InlineMath math="\frac{1}{3}" />.

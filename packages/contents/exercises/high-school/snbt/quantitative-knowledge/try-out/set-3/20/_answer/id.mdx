@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Pembahasan Soal 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/24/2025",
+};
+
+Diketahui <InlineMath math="-1 < x < 1" />, dengan:
+-   <InlineMath math="P = \frac{1 + x^4}{1 - x^2}" />
+-   <InlineMath math="Q = 1 + x^4" />
+
+#### Analisis rentang nilai x
+
+Untuk <InlineMath math="-1 < x < 1" />, kita periksa nilai <InlineMath math="1 - x^2" />.
+
+Karena <InlineMath math="x^2" /> selalu positif untuk <InlineMath math="x \neq 0" />, maka:
+
+<BlockMath math="0 < x^2 < 1" />
+
+Dengan demikian:
+
+<BlockMath math="0 < 1 - x^2 \leq 1" />
+
+#### Membandingkan P dan Q
+
+Kita bagi <InlineMath math="P" /> dengan <InlineMath math="Q" />:
+
+<MathContainer>
+  <BlockMath math="\frac{P}{Q} = \frac{\frac{1 + x^4}{1 - x^2}}{1 + x^4} = \frac{1}{1 - x^2}" />
+</MathContainer>
+
+Sekarang kita analisis dua kasus:
+
+**Kasus 1:** Jika <InlineMath math="0 < 1 - x^2 < 1" />
+
+Maka <InlineMath math="\frac{1}{1 - x^2} > 1" />, sehingga <InlineMath math="P > Q" />.
+
+**Kasus 2:** Jika <InlineMath math="1 - x^2 = 1" /> (yaitu saat <InlineMath math="x = 0" />)
+
+Maka <InlineMath math="\frac{1}{1 - x^2} = 1" />, sehingga <InlineMath math="P = Q" />.
+
+#### Kesimpulan
+
+Karena nilai <InlineMath math="x" /> dalam interval <InlineMath math="-1 < x < 1" /> dapat menghasilkan <InlineMath math="P > Q" /> (untuk <InlineMath math="x \neq 0" />) atau <InlineMath math="P = Q" /> (untuk <InlineMath math="x = 0" />), maka informasi yang diberikan tidak cukup untuk memutuskan salah satu dari tiga pilihan.
+

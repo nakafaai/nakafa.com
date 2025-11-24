@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Pembahasan Soal 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/24/2025",
+};
+
+Diketahui:
+-   <InlineMath math="B_3 = 2" />
+-   <InlineMath math="B_5 = -1" />
+-   <InlineMath math="B_n = B_{n+2} + B_{n-1}" />
+
+Kita akan mencari nilai <InlineMath math="B_2" /> menggunakan rumus rekursif yang diberikan.
+
+#### Mencari nilai B2
+
+Gunakan rumus dengan <InlineMath math="n = 3" />.
+
+<MathContainer>
+  <BlockMath math="B_3 = B_{3+2} + B_{3-1}" />
+  <BlockMath math="B_3 = B_5 + B_2" />
+</MathContainer>
+
+Substitusikan nilai <InlineMath math="B_3 = 2" /> dan <InlineMath math="B_5 = -1" />.
+
+<MathContainer>
+  <BlockMath math="2 = -1 + B_2" />
+  <BlockMath math="B_2 = 2 - (-1)" />
+  <BlockMath math="B_2 = 2 + 1" />
+  <BlockMath math="B_2 = 3" />
+</MathContainer>
+
+#### Verifikasi
+
+Untuk memastikan jawabannya benar, kita bisa cek dengan rumus lain jika diperlukan. Namun dari perhitungan di atas sudah jelas bahwa <InlineMath math="B_2 = 3" />.
+
+Jadi, nilai <InlineMath math="B_2" /> adalah <InlineMath math="3" />.
+
