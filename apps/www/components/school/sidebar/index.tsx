@@ -12,6 +12,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { ArrowUpRightIcon, PencilRulerIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
+import { NavUser } from "@/components/school/sidebar/nav-user";
 import { LangMenu } from "@/components/sidebar/lang-menu";
 import { ThemeMenu } from "@/components/sidebar/theme-menu";
 
@@ -22,7 +23,7 @@ export function SchoolSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
     <Sidebar
       className={cn("z-20", props.className)}
       side="left"
-      variant="floating"
+      variant="inset"
       {...props}
     >
       <SidebarHeader className="border-b">
@@ -47,6 +48,7 @@ export function SchoolSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <LangMenu />
           <ThemeMenu />
+          <NavUser />
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

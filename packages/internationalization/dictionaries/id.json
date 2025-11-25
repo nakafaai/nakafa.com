@@ -427,7 +427,8 @@
       "code-placeholder": "Masukkan kode...",
       "teacher": "Guru",
       "student": "Siswa",
-      "parent": "Orang tua"
+      "parent": "Orang tua",
+      "school-creation-failed": "Gagal membuat sekolah. Silakan coba dengan email yang berbeda."
     }
   }
 }

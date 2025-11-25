@@ -79,3 +79,220 @@ triggers.register("chats", async (ctx, change) => {
     await ctx.db.delete(message._id);
   }
 });
+
+// This is a trigger that creates activity logs when a school is created, updated, or deleted.
+triggers.register("schools", async (ctx, change) => {
+  const school = change.newDoc;
+  const oldSchool = change.oldDoc;
+  const schoolId = change.id;
+
+  switch (change.operation) {
+    case "insert": {
+      if (!school) {
+        break;
+      }
+
+      // Find the admin member for this school (creator becomes admin)
+      const adminMember = await ctx.db
+        .query("schoolMembers")
+        .withIndex("schoolId_userId", (q) =>
+          q.eq("schoolId", schoolId).eq("userId", school.createdBy)
+        )
+        .filter((q) => q.eq(q.field("role"), "admin"))
+        .first();
+
+      // Create activity log entry
+      await ctx.db.insert("activityLogs", {
+        schoolId,
+        userId: school.createdBy,
+        action: "school_created",
+        entityType: "schools",
+        entityId: schoolId,
+        metadata: {
+          schoolName: school.name,
+          memberId: adminMember?._id,
+        },
+      });
+      break;
+    }
+
+    case "update": {
+      if (!(school && oldSchool)) {
+        break;
+      }
+
+      // Create activity log entry for school update
+      await ctx.db.insert("activityLogs", {
+        schoolId,
+        userId: school.updatedBy ?? school.createdBy,
+        action: "school_updated",
+        entityType: "schools",
+        entityId: schoolId,
+        metadata: {
+          schoolName: school.name,
+        },
+      });
+      break;
+    }
+
+    case "delete": {
+      if (!oldSchool) {
+        break;
+      }
+
+      // Create activity log entry for school deletion
+      await ctx.db.insert("activityLogs", {
+        schoolId,
+        userId: oldSchool.updatedBy ?? oldSchool.createdBy,
+        action: "school_deleted",
+        entityType: "schools",
+        entityId: schoolId,
+        metadata: {
+          schoolName: oldSchool.name,
+        },
+      });
+      break;
+    }
+
+    default: {
+      // Other operations don't need logging
+      break;
+    }
+  }
+});
+
+// This is a trigger that creates activity logs when school members are added, updated, or removed.
+triggers.register("schoolMembers", async (ctx, change) => {
+  const member = change.newDoc;
+  const oldMember = change.oldDoc;
+
+  switch (change.operation) {
+    case "insert": {
+      if (!member) {
+        break;
+      }
+
+      switch (member.status) {
+        case "active": {
+          // Member joined the school
+          await ctx.db.insert("activityLogs", {
+            schoolId: member.schoolId,
+            userId: member.userId,
+            action: "member_joined",
+            entityType: "schoolMembers",
+            entityId: change.id,
+            metadata: {
+              role: member.role,
+              joinedAt: member.joinedAt,
+            },
+          });
+          break;
+        }
+        case "invited": {
+          // Member was invited
+          await ctx.db.insert("activityLogs", {
+            schoolId: member.schoolId,
+            userId: member.invitedBy ?? member.userId,
+            action: "member_invited",
+            entityType: "schoolMembers",
+            entityId: change.id,
+            metadata: {
+              invitedUserId: member.userId,
+              role: member.role,
+              invitedAt: member.invitedAt,
+            },
+          });
+          break;
+        }
+        default: {
+          // Other statuses don't need logging
+          break;
+        }
+      }
+      break;
+    }
+
+    case "update": {
+      if (!(member && oldMember)) {
+        break;
+      }
+
+      // Check if role changed
+      if (oldMember.role !== member.role) {
+        await ctx.db.insert("activityLogs", {
+          schoolId: member.schoolId,
+          userId: member.userId,
+          action: "member_role_changed",
+          entityType: "schoolMembers",
+          entityId: change.id,
+          metadata: {
+            oldRole: oldMember.role,
+            newRole: member.role,
+          },
+        });
+      }
+
+      // Check status changes
+      const statusTransition = `${oldMember.status}-${member.status}` as const;
+      switch (statusTransition) {
+        case "invited-active": {
+          // Member accepted invitation
+          await ctx.db.insert("activityLogs", {
+            schoolId: member.schoolId,
+            userId: member.userId,
+            action: "member_joined",
+            entityType: "schoolMembers",
+            entityId: change.id,
+            metadata: {
+              role: member.role,
+              joinedAt: member.joinedAt,
+            },
+          });
+          break;
+        }
+        default: {
+          // Check if status changed to "removed"
+          if (oldMember.status !== "removed" && member.status === "removed") {
+            await ctx.db.insert("activityLogs", {
+              schoolId: member.schoolId,
+              userId: member.removedBy ?? member.userId,
+              action: "member_removed",
+              entityType: "schoolMembers",
+              entityId: change.id,
+              metadata: {
+                removedUserId: member.userId,
+                role: member.role,
+                removedAt: member.removedAt,
+              },
+            });
+          }
+          break;
+        }
+      }
+      break;
+    }
+
+    case "delete": {
+      if (!oldMember) {
+        break;
+      }
+
+      await ctx.db.insert("activityLogs", {
+        schoolId: oldMember.schoolId,
+        userId: oldMember.userId,
+        action: "member_removed",
+        entityType: "schoolMembers",
+        entityId: change.id,
+        metadata: {
+          removedUserId: oldMember.userId,
+          role: oldMember.role,
+        },
+      });
+      break;
+    }
+    default: {
+      // Other operations don't need logging
+      break;
+    }
+  }
+});

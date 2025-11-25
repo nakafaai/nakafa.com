@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Form,
@@ -19,10 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { useRouter } from "@repo/internationalization/src/navigation";
+import { useMutation } from "convex/react";
 import { PartyPopperIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod/mini";
 
 const MIN_NAME_LENGTH = 3;
@@ -37,10 +41,10 @@ const formSchema = z.object({
       z.trim()
     ),
   email: z.string().check(z.email()),
-  phone: z.string().check(z.trim()),
-  address: z.string().check(z.trim()),
-  city: z.string().check(z.trim()),
-  province: z.string().check(z.trim()),
+  phone: z.string().check(z.minLength(1), z.trim()),
+  address: z.string().check(z.minLength(1), z.trim()),
+  city: z.string().check(z.minLength(1), z.trim()),
+  province: z.string().check(z.minLength(1), z.trim()),
   type: z.union([
     z.literal("elementary-school"),
     z.literal("middle-school"),
@@ -55,7 +59,11 @@ type FormSchema = z.infer<typeof formSchema>;
 export function SchoolOnboardingCreateForm() {
   const t = useTranslations("School.Onboarding");
 
+  const router = useRouter();
+
   const [isPending, startTransition] = useTransition();
+
+  const createSchool = useMutation(api.schools.mutations.createSchool);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -72,9 +80,13 @@ export function SchoolOnboardingCreateForm() {
   });
 
   const onSubmit = (values: FormSchema) => {
-    startTransition(() => {
-      // TODO: Create school
-      form.reset(values);
+    startTransition(async () => {
+      try {
+        const { slug } = await createSchool(values);
+        router.push(`/school/${slug}`);
+      } catch {
+        toast.error(t("school-creation-failed"));
+      }
     });
   };
 

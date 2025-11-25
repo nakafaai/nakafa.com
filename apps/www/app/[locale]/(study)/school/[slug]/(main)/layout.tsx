@@ -1,14 +1,10 @@
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@repo/design-system/components/ui/sidebar";
+import { SidebarProvider } from "@repo/design-system/components/ui/sidebar";
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { SchoolSidebar } from "@/components/school/sidebar";
-import { Header } from "@/components/sidebar/header";
 
 export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
   const { children, params } = props;
@@ -24,10 +20,12 @@ export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
   return (
     <SidebarProvider>
       <SchoolSidebar />
-      <SidebarInset>
-        <Header />
-        <div className="relative">{children}</div>
-      </SidebarInset>
+      <main className="h-svh w-full overflow-hidden lg:p-2 lg:pl-0 lg:peer-data-[state=collapsed]:pl-2">
+        <div className="flex h-full w-full flex-col items-center justify-start overflow-hidden bg-background bg-container lg:rounded-lg lg:border">
+          <div className="w-full" />
+          <div className="w-full flex-1 overflow-hidden">{children}</div>
+        </div>
+      </main>
     </SidebarProvider>
   );
 }

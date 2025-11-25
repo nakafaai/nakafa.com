@@ -14,3 +14,12 @@ export function generateId(): string {
 export function cleanSlug(slug: string): string {
   return slug.replace(/^\/+|\/+$/g, "");
 }
+
+/**
+ * Slugifies a text
+ * @param text - The text to slugify
+ * @returns The slugified text, example: "Hello World" -> "hello-world"
+ */
+export function slugify(text: string): string {
+  return text.toLowerCase().replace(/\s+/g, "-");
+}

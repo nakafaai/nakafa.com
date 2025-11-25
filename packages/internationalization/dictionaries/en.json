@@ -427,7 +427,8 @@
       "code-placeholder": "Enter the code...",
       "teacher": "Teacher",
       "student": "Student",
-      "parent": "Parent"
+      "parent": "Parent",
+      "school-creation-failed": "Failed to create school. Please try with a different email."
     }
   }
 }

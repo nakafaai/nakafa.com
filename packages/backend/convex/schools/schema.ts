@@ -29,7 +29,8 @@ const tables = {
     updatedBy: v.optional(v.id("users")), // Who last updated
   })
     .index("slug", ["slug"]) // GET /school/[slug] (unique lookup)
-    .index("createdBy", ["createdBy"]), // User's schools
+    .index("createdBy", ["createdBy"]) // User's schools
+    .index("email", ["email"]),
 
   schoolMembers: defineTable({
     schoolId: v.id("schools"),
@@ -64,6 +65,7 @@ const tables = {
     .index("userId", ["userId"]) // All schools for a user
     .index("schoolId_role", ["schoolId", "role"]) // All teachers/students in school
     .index("schoolId_userId", ["schoolId", "userId"]) // Check membership (O(1), unique)
+    .index("schoolId_userId_status", ["schoolId", "userId", "status"]) // Check membership (O(1), unique)
     .index("schoolId_status", ["schoolId", "status"]) // Filter by status
     .index("inviteToken", ["inviteToken"]),
 

@@ -31,6 +31,52 @@ export const getSchool = query({
   },
 });
 
+export const getSchoolBySlug = query({
+  args: {
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await safeGetAppUser(ctx);
+    if (!user) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to view this school.",
+      });
+    }
+
+    const school = await ctx.db
+      .query("schools")
+      .withIndex("slug", (q) => q.eq("slug", args.slug))
+      .first();
+
+    if (!school) {
+      throw new ConvexError({
+        code: "SCHOOL_NOT_FOUND",
+        message: `School not found for slug: ${args.slug}`,
+      });
+    }
+
+    const membership = await ctx.db
+      .query("schoolMembers")
+      .withIndex("schoolId_userId_status", (q) =>
+        q
+          .eq("schoolId", school._id)
+          .eq("userId", user.appUser._id)
+          .eq("status", "active")
+      )
+      .unique();
+
+    if (!membership) {
+      throw new ConvexError({
+        code: "MEMBERSHIP_NOT_FOUND",
+        message: `Membership not found for schoolId: ${school._id} and userId: ${user.appUser._id}`,
+      });
+    }
+
+    return { school, membership };
+  },
+});
+
 /**
  * Get all school memberships for the current user.
  */
