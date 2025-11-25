@@ -102,7 +102,7 @@ triggers.register("schools", async (ctx, change) => {
         .first();
 
       // Create activity log entry
-      await ctx.db.insert("activityLogs", {
+      await ctx.db.insert("schoolActivityLogs", {
         schoolId,
         userId: school.createdBy,
         action: "school_created",
@@ -122,7 +122,7 @@ triggers.register("schools", async (ctx, change) => {
       }
 
       // Create activity log entry for school update
-      await ctx.db.insert("activityLogs", {
+      await ctx.db.insert("schoolActivityLogs", {
         schoolId,
         userId: school.updatedBy ?? school.createdBy,
         action: "school_updated",
@@ -141,7 +141,7 @@ triggers.register("schools", async (ctx, change) => {
       }
 
       // Create activity log entry for school deletion
-      await ctx.db.insert("activityLogs", {
+      await ctx.db.insert("schoolActivityLogs", {
         schoolId,
         userId: oldSchool.updatedBy ?? oldSchool.createdBy,
         action: "school_deleted",
@@ -175,7 +175,7 @@ triggers.register("schoolMembers", async (ctx, change) => {
       switch (member.status) {
         case "active": {
           // Member joined the school
-          await ctx.db.insert("activityLogs", {
+          await ctx.db.insert("schoolActivityLogs", {
             schoolId: member.schoolId,
             userId: member.userId,
             action: "member_joined",
@@ -190,7 +190,7 @@ triggers.register("schoolMembers", async (ctx, change) => {
         }
         case "invited": {
           // Member was invited
-          await ctx.db.insert("activityLogs", {
+          await ctx.db.insert("schoolActivityLogs", {
             schoolId: member.schoolId,
             userId: member.invitedBy ?? member.userId,
             action: "member_invited",
@@ -219,7 +219,7 @@ triggers.register("schoolMembers", async (ctx, change) => {
 
       // Check if role changed
       if (oldMember.role !== member.role) {
-        await ctx.db.insert("activityLogs", {
+        await ctx.db.insert("schoolActivityLogs", {
           schoolId: member.schoolId,
           userId: member.userId,
           action: "member_role_changed",
@@ -237,7 +237,7 @@ triggers.register("schoolMembers", async (ctx, change) => {
       switch (statusTransition) {
         case "invited-active": {
           // Member accepted invitation
-          await ctx.db.insert("activityLogs", {
+          await ctx.db.insert("schoolActivityLogs", {
             schoolId: member.schoolId,
             userId: member.userId,
             action: "member_joined",
@@ -253,7 +253,7 @@ triggers.register("schoolMembers", async (ctx, change) => {
         default: {
           // Check if status changed to "removed"
           if (oldMember.status !== "removed" && member.status === "removed") {
-            await ctx.db.insert("activityLogs", {
+            await ctx.db.insert("schoolActivityLogs", {
               schoolId: member.schoolId,
               userId: member.removedBy ?? member.userId,
               action: "member_removed",
@@ -277,7 +277,7 @@ triggers.register("schoolMembers", async (ctx, change) => {
         break;
       }
 
-      await ctx.db.insert("activityLogs", {
+      await ctx.db.insert("schoolActivityLogs", {
         schoolId: oldMember.schoolId,
         userId: oldMember.userId,
         action: "member_removed",
