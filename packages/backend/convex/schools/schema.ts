@@ -69,7 +69,7 @@ const tables = {
     .index("schoolId_status", ["schoolId", "status"]) // Filter by status
     .index("inviteToken", ["inviteToken"]),
 
-  parentStudents: defineTable({
+  schoolParentStudents: defineTable({
     parentId: v.id("users"),
     studentId: v.id("users"),
     schoolId: v.id("schools"),
@@ -106,7 +106,7 @@ const tables = {
     .index("schoolId", ["schoolId"]) // Query by school
     .index("status", ["status"]), // Filter by verification status
 
-  activityLogs: defineTable({
+  schoolActivityLogs: defineTable({
     schoolId: v.id("schools"),
     userId: v.id("users"), // Who did the action
 

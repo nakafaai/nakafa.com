@@ -2,7 +2,7 @@ import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
 const tables = {
-  classes: defineTable({
+  schoolClasses: defineTable({
     schoolId: v.id("schools"),
 
     // Class info
@@ -34,8 +34,8 @@ const tables = {
     .index("schoolId_isArchived", ["schoolId", "isArchived"]) // Active classes only
     .index("createdBy", ["createdBy"]), // Teacher's classes
 
-  classMembers: defineTable({
-    classId: v.id("classes"),
+  schoolClassMembers: defineTable({
+    classId: v.id("schoolClasses"),
     userId: v.id("users"),
     schoolId: v.id("schools"), // Denormalized for querying
 
