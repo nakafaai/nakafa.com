@@ -17,7 +17,7 @@
     "@mantine/hooks": "^8.3.9",
     "date-fns": "^4.1.0",
     "ky": "^1.14.0",
-    "lucide-react": "^0.554.0",
+    "lucide-react": "^0.555.0",
     "motion": "^12.23.24",
     "next-intl": "^4.5.5",
     "react": "19.2.0",

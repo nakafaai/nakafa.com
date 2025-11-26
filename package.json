@@ -39,7 +39,7 @@
     "turbo": "^2.6.1",
     "typescript": "^5.9.3",
     "ultracite": "^6.3.6",
-    "vitest": "^4.0.13"
+    "vitest": "^4.0.14"
   },
   "engines": {
     "node": ">=22"

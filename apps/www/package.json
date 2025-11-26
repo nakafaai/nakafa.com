@@ -14,7 +14,7 @@
     "google-index": "node --env-file=.env.local --import tsx scripts/google-index.ts"
   },
   "dependencies": {
-    "@ai-sdk/react": "^2.0.101",
+    "@ai-sdk/react": "^2.0.102",
     "@convex-dev/better-auth": "^0.9.7",
     "@hookform/resolvers": "^5.2.2",
     "@icons-pack/react-simple-icons": "^13.8.0",
@@ -37,10 +37,10 @@
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tabler/icons-react": "^3.35.0",
     "@tailwindcss/postcss": "^4.1.17",
-    "@tanstack/react-query": "^5.90.10",
-    "@tanstack/react-query-devtools": "^5.91.0",
-    "@vercel/functions": "^3.3.3",
-    "ai": "^5.0.101",
+    "@tanstack/react-query": "^5.90.11",
+    "@tanstack/react-query-devtools": "^5.91.1",
+    "@vercel/functions": "^3.3.4",
+    "ai": "^5.0.102",
     "any-ascii": "^0.3.3",
     "babel-plugin-react-compiler": "^1.0.0",
     "better-auth": "1.3.27",
@@ -52,7 +52,7 @@
     "immer": "^11.0.0",
     "jsonrepair": "^3.13.1",
     "ky": "^1.14.0",
-    "lucide-react": "^0.554.0",
+    "lucide-react": "^0.555.0",
     "motion": "^12.23.24",
     "next": "16.0.4",
     "next-intl": "^4.5.5",
@@ -81,6 +81,6 @@
     "tailwindcss": "^4.1.17",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.13"
+    "vitest": "^4.0.14"
   }
 }

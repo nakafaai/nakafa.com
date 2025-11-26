@@ -103,4 +103,12 @@ export const contributors: Contributor[] = [
     username: "nyawsal",
     type: "community",
   },
+  {
+    name: "Muhammad Zidan Anandika",
+    username: "zidan",
+    type: "community",
+    social: {
+      linkedin: "https://www.linkedin.com/in/zidananandika/",
+    },
+  },
 ];
