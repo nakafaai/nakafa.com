@@ -53,7 +53,7 @@ export const searchAndValidateEntities = internalAction({
     if (searchesNeeded > 1) {
       console.log("[SEARCH] Generating diverse search queries with AI...");
       const { object } = await generateObject({
-        model: model.languageModel("grok-4-fast-non-reasoning"),
+        model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
         schema: z.object({
           queries: z.array(z.string()).min(searchesNeeded),
         }),
@@ -237,7 +237,7 @@ async function extractEntitiesWithRetry(
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const { object } = await generateObject({
-        model: model.languageModel("grok-4-fast-non-reasoning"),
+        model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
         schema: z.object({
           entities: z.array(
             z.object({
@@ -413,7 +413,7 @@ async function generateDescriptionsWithAI(
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const { object } = await generateObject({
-        model: model.languageModel("grok-4-fast-non-reasoning"),
+        model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
         schema: z.object({
           descriptions: z.array(
             z.object({
@@ -599,7 +599,7 @@ async function researchSingleField(
 
   // Step 1: Generate 3 search queries with AI
   const { object: queriesObj } = await generateObject({
-    model: model.languageModel("grok-4-fast-non-reasoning"),
+    model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
     schema: z.object({
       queries: z.array(z.string()).length(3),
     }),
@@ -698,7 +698,7 @@ async function researchSingleField(
     .join("\n\n---\n\n");
 
   const { object } = await generateObject({
-    model: model.languageModel("grok-4-fast-non-reasoning"),
+    model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
     schema: z.object({
       value: z.union([z.string(), z.number(), z.boolean(), z.null()]),
       confidence: z.number().min(0).max(1),

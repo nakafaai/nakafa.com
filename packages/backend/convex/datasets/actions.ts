@@ -37,7 +37,7 @@ export const generateColumns = internalAction({
     );
 
     const { object } = await generateObject({
-      model: model.languageModel("grok-4-fast-non-reasoning"),
+      model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
       schema: z.object({
         columns: z.array(ColumnSchema),
       }),

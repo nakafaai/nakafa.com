@@ -48,8 +48,8 @@ const languageModels = {
   "qwen-3-max": gateway("alibaba/qwen3-max"),
 
   // XAI
-  "grok-4-fast-reasoning": gateway("xai/grok-4-fast-reasoning"),
-  "grok-4-fast-non-reasoning": gateway("xai/grok-4-fast-non-reasoning"),
+  "xai/grok-4.1-fast-reasoning": gateway("xai/grok-4.1-fast-reasoning"),
+  "xai/grok-4.1-fast-non-reasoning": gateway("xai/grok-4.1-fast-non-reasoning"),
   "grok-4": gateway("xai/grok-4"),
 
   // ZAI
@@ -64,7 +64,7 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "grok-4-fast-reasoning";
+export const defaultModel: ModelId = "xai/grok-4.1-fast-reasoning";
 
 export const order = ["cerebras", "groq", "baseten", "azure", "vertex"];
 

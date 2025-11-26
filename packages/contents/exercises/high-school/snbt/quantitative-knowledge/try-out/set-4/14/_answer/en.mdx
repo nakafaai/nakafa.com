@@ -1,0 +1,47 @@
+export const metadata = {
+  title: "Explanation for Question 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Given sorted data: <InlineMath math="1, 1, 2, x, 10, y, 17, 18" /> (total <InlineMath math="8" /> data points).
+
+The mean and median of the data are <InlineMath math="9" />.
+
+#### Finding the Value of x from Median
+
+Since there are <InlineMath math="8" /> data points (even), the median is the average of the 4th and 5th data points.
+
+<MathContainer>
+  <BlockMath math="\text{Median} = \frac{x + 10}{2} = 9" />
+  <BlockMath math="x + 10 = 18" />
+  <BlockMath math="x = 8" />
+</MathContainer>
+
+#### Finding the Value of y from Mean
+
+The total of all data divided by the number of data equals the mean.
+
+<MathContainer>
+  <BlockMath math="\bar{x} = \frac{1 + 1 + 2 + 8 + 10 + y + 17 + 18}{8} = 9" />
+  <BlockMath math="\frac{57 + y}{8} = 9" />
+  <BlockMath math="57 + y = 72" />
+  <BlockMath math="y = 15" />
+</MathContainer>
+
+#### Calculating the Average of the Last 4 Numbers
+
+Complete data: <InlineMath math="1, 1, 2, 8, 10, 15, 17, 18" />.
+
+The last 4 numbers are: <InlineMath math="10, 15, 17, 18" />.
+
+<MathContainer>
+  <BlockMath math="P = \frac{10 + 15 + 17 + 18}{4} = \frac{60}{4} = 15" />
+</MathContainer>
+
+#### Comparing P and Q
+
+The value <InlineMath math="P = 15" /> and <InlineMath math="Q = 15" />.
+
+Therefore, <InlineMath math="P = Q" />.
+

@@ -1,0 +1,81 @@
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+
+export const metadata = {
+  title: "Question 17",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+<LineEquation
+  title="Triangle ABC"
+  description={<>Illustration of triangle <InlineMath math="ABC" /> with lines <InlineMath math="AP" />, <InlineMath math="BQ" />, and <InlineMath math="CR" /> intersecting at point <InlineMath math="O" />.</>}
+  data={[
+    // Triangle ABC (centroid at 0,0)
+    {
+      points: [
+        { x: -5, y: -2.887, z: 0 }, // B
+        { x: 5, y: -2.887, z: 0 }, // C
+        { x: 0, y: 5.773, z: 0 }, // A
+        { x: -5, y: -2.887, z: 0 }, // Back to B
+      ],
+      color: getColor("BLUE"),
+      showPoints: false,
+      smooth: false,
+      labels: [
+        { text: "B", at: 0, offset: [-0.5, -0.5, 0], color: getColor("INDIGO") },
+        { text: "C", at: 1, offset: [0.5, -0.5, 0], color: getColor("INDIGO") },
+        { text: "A", at: 2, offset: [0, 0.5, 0], color: getColor("INDIGO") },
+      ],
+    },
+    // Line AP (Median from A to BC)
+    {
+      points: [
+        { x: 0, y: 5.773, z: 0 }, // A
+        { x: 0, y: -2.887, z: 0 }, // P (midpoint BC, also centroid)
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: false,
+      labels: [
+        { text: "P", at: 1, offset: [0, -0.5, 0], color: getColor("INDIGO") },
+      ],
+    },
+    // Line BQ (Median from B to AC)
+    {
+      points: [
+        { x: -5, y: -2.887, z: 0 }, // B
+        { x: 2.5, y: 1.443, z: 0 }, // Q (Midpoint AC)
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: false,
+      labels: [
+        { text: "Q", at: 1, offset: [0.5, 0, 0], color: getColor("INDIGO") },
+      ],
+    },
+    // Line CR (Median from C to AB)
+    {
+      points: [
+        { x: 5, y: -2.887, z: 0 }, // C
+        { x: -2.5, y: 1.443, z: 0 }, // R (Midpoint AB)
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: false,
+      labels: [
+        { text: "R", at: 1, offset: [-0.5, 0, 0], color: getColor("INDIGO") },
+      ],
+    },
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+Triangle ABC is an equilateral triangle. If lines AP, BQ, and CR intersect at a single point, which is point O.
+Determine the measure of angle <InlineMath math="\angle BOC" />?
+
+Decide whether statements (1) and (2) below are sufficient to answer the question!
+
+1.  <InlineMath math="BC = 10 \text{ cm}" />.
+2.  Lines AP, BQ, and CR are angle bisectors of triangle ABC.

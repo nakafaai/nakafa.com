@@ -66,8 +66,8 @@ export const premiumModels: Model[] = [
 export const freeModels: Model[] = [
   {
     icon: XAI,
-    value: "grok-4-fast-reasoning",
-    label: "Grok 4 Fast",
+    value: "xai/grok-4.1-fast-reasoning",
+    label: "Grok 4.1 Fast",
   },
   {
     icon: Gemini,

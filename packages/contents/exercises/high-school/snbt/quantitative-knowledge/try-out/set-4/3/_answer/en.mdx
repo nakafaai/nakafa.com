@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Explanation for Question 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Let's analyze the project conditions before and after workers get sick.
+
+**Initial Plan:**
+
+The work is planned to be completed by <InlineMath math="12" /> people in <InlineMath math="16" /> days.
+Total workload = <InlineMath math="12 \times 16 = 192" /> work units.
+
+**After 4 Days:**
+
+The work has been done for <InlineMath math="4" /> days by <InlineMath math="12" /> people.
+Completed work = <InlineMath math="12 \times 4 = 48" /> units.
+Remaining workload = <InlineMath math="192 - 48 = 144" /> units.
+
+Also, the remaining normal time is <InlineMath math="16 - 4 = 12" /> days if done by <InlineMath math="12" /> people.
+
+**Changed Condition:**
+
+There are <InlineMath math="4" /> sick people, so the remaining workers are <InlineMath math="12 - 4 = 8" /> people.
+We use inverse proportion to find the additional time (<InlineMath math="w" />) needed by <InlineMath math="8" /> people to complete the remaining work.
+
+<MathContainer>
+  <BlockMath math="12 \text{ people} \times 12 \text{ days} = 8 \text{ people} \times w \text{ days}" />
+  <BlockMath math="144 = 8w" />
+  <BlockMath math="w = \frac{144}{8}" />
+  <BlockMath math="w = 18 \text{ days}" />
+</MathContainer>
+
+So, <InlineMath math="8" /> workers need <InlineMath math="18" /> more days to complete the remaining project.
+
+The total project completion time is the time already elapsed plus the remaining time needed.
+
+<MathContainer>
+  <BlockMath math="\text{Total Time} = 4 \text{ days} + 18 \text{ days} = 22 \text{ days}" />
+</MathContainer>
+
+So, the project can be completed in <InlineMath math="22" /> days.

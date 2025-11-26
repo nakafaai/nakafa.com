@@ -26,7 +26,7 @@ export type AiStore = State & Actions;
 const initialState: State = {
   open: false,
   text: "",
-  model: "grok-4-fast-reasoning",
+  model: "xai/grok-4.1-fast-reasoning",
   query: "",
   activeChatId: null,
 };

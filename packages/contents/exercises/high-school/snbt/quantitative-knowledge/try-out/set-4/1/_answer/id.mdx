@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Pembahasan Soal 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Diketahui fungsi <InlineMath math="f(x) = 2x - 1" />. Kita akan mencari nilai <InlineMath math="x_1 + x_2" /> yang memenuhi persamaan <InlineMath math="6f(x^2) - f^2(x) = 6x^2 - x" />.
+
+Pertama, kita cari bentuk dari <InlineMath math="f(x^2)" /> dan <InlineMath math="f^2(x)" /> atau <InlineMath math="(f(x))^2" /> terlebih dahulu.
+
+<MathContainer>
+  <BlockMath math="f(x^2) = 2(x^2) - 1 = 2x^2 - 1" />
+  <BlockMath math="f^2(x) = (2x - 1)^2 = 4x^2 - 4x + 1" />
+</MathContainer>
+
+Selanjutnya, kita substitusikan hasil tersebut ke dalam persamaan yang diketahui.
+
+<MathContainer>
+  <BlockMath math="6f(x^2) - f^2(x) = 6x^2 - x" />
+  <BlockMath math="6(2x^2 - 1) - (4x^2 - 4x + 1) = 6x^2 - x" />
+  <BlockMath math="12x^2 - 6 - 4x^2 + 4x - 1 = 6x^2 - x" />
+  <BlockMath math="8x^2 + 4x - 7 = 6x^2 - x" />
+</MathContainer>
+
+Kita pindahkan semua suku ke ruas kiri untuk membentuk persamaan kuadrat <InlineMath math="ax^2 + bx + c = 0" />.
+
+<MathContainer>
+  <BlockMath math="8x^2 - 6x^2 + 4x + x - 7 = 0" />
+  <BlockMath math="2x^2 + 5x - 7 = 0" />
+</MathContainer>
+
+Dari persamaan kuadrat <InlineMath math="2x^2 + 5x - 7 = 0" />, kita peroleh nilai <InlineMath math="a = 2" />, <InlineMath math="b = 5" />, dan <InlineMath math="c = -7" />.
+
+Jumlah akar-akar persamaan kuadrat (<InlineMath math="x_1 + x_2" />) dapat dihitung dengan rumus <InlineMath math="-\frac{b}{a}" />.
+
+<MathContainer>
+  <BlockMath math="x_1 + x_2 = -\frac{5}{2}" />
+</MathContainer>
+
+Jadi, nilai <InlineMath math="x_1 + x_2" /> adalah <InlineMath math="-\frac{5}{2}" />.

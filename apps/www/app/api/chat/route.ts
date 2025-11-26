@@ -294,7 +294,7 @@ export async function POST(req: Request) {
             availableTools[toolCall.toolName as keyof typeof availableTools];
 
           const { object: repairedArgs } = await generateObject({
-            model: model.languageModel("grok-4-fast-non-reasoning"),
+            model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
             schema: tool.inputSchema,
             prompt: [
               `The model tried to call the tool "${toolCall.toolName}"` +
@@ -391,7 +391,7 @@ export async function POST(req: Request) {
       ).messages.filter((m) => m.role === "assistant");
 
       const streamObjectResult = streamObject({
-        model: model.languageModel("grok-4-fast-non-reasoning"),
+        model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
         system: nakafaSuggestions(),
         messages: [...finalMessages, ...messagesFromResponse],
         schemaName: "Suggestions",

@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "Explanation for Question 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+First, let's find the sum of the initial data.
+
+<MathContainer>
+  <BlockMath math="1 + 2 + 3 + 4 + 5 + 6 + 7 = 28" />
+</MathContainer>
+
+Let <InlineMath math="x" /> be the datum that is replaced. Since it is replaced by the number <InlineMath math="34" />, the new sum of data becomes:
+
+<MathContainer>
+  <BlockMath math="\text{New Sum} = 28 - x + 34 = 62 - x" />
+</MathContainer>
+
+The number of data points (<InlineMath math="n" />) remains <InlineMath math="7" />. The formula for the new average (<InlineMath math="\bar{x}_{new}" />) is:
+
+<MathContainer>
+  <BlockMath math="\bar{x}_{new} = \frac{62 - x}{7}" />
+</MathContainer>
+
+It is given that the new average is equal to twice the new median (<InlineMath math="\bar{x}_{new} = 2 \times \text{Median}_{new}" />). We need to check the possible values for the new median.
+
+The initial data is ordered: <InlineMath math="1, 2, 3, 4, 5, 6, 7" />. The initial median is <InlineMath math="4" />.
+The replacement number <InlineMath math="34" /> will definitely be in the last position because it is the largest.
+
+**Case 1: If the replaced number is 1, 2, 3, or 4**
+
+For example, if we replace <InlineMath math="1" />, the data becomes <InlineMath math="2, 3, 4, 5, 6, 7, 34" />. The median becomes <InlineMath math="5" />.
+The same applies if we replace <InlineMath math="2, 3" />, or <InlineMath math="4" />. The data will shift so that the median becomes <InlineMath math="5" />.
+
+Let's test this in the equation:
+
+<MathContainer>
+  <BlockMath math="\frac{62 - x}{7} = 2 \times 5" />
+  <BlockMath math="62 - x = 70" />
+  <BlockMath math="x = -8" />
+</MathContainer>
+
+The result <InlineMath math="x = -8" /> is **invalid** because the data must be from the initial set (<InlineMath math="1" /> to <InlineMath math="7" />).
+
+**Case 2: If the replaced number is 5, 6, or 7**
+
+For example, if we replace <InlineMath math="7" />, the data becomes <InlineMath math="1, 2, 3, 4, 5, 6, 34" />. The median remains <InlineMath math="4" />.
+The same applies if we replace <InlineMath math="5" /> or <InlineMath math="6" />. The median remains <InlineMath math="4" />.
+
+Let's test this in the equation:
+
+<MathContainer>
+  <BlockMath math="\frac{62 - x}{7} = 2 \times 4" />
+  <BlockMath math="62 - x = 56" />
+  <BlockMath math="x = 6" />
+</MathContainer>
+
+The result <InlineMath math="x = 6" /> is **valid** because <InlineMath math="6" /> is in the initial data.
+
+So, the replaced number is <InlineMath math="6" />.
+Thus, <InlineMath math="P = 6" /> and <InlineMath math="Q = 6" />.
+
+In conclusion, <InlineMath math="P = Q" />.

@@ -1,0 +1,88 @@
+export const metadata = {
+  title: "Explanation for Question 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Let's analyze each statement one by one based on the given graph.
+
+**1. Checking the Y-Axis Intercept (Statement 1)**
+
+From the image, the intersection point with the <InlineMath math="y" />-axis appears to be at <InlineMath math="(0, -1)" /> and another point at the top.
+
+Let's find the equation first. The vertex of the parabola is at <InlineMath math="(4, 1)" />.
+
+The general form of a horizontal parabola equation with vertex <InlineMath math="(x_p, y_p)" /> is <InlineMath math="x = a(y - y_p)^2 + x_p" />.
+
+Substitute <InlineMath math="x_p = 4" /> and <InlineMath math="y_p = 1" />:
+
+<MathContainer>
+  <BlockMath math="x = a(y - 1)^2 + 4" />
+</MathContainer>
+
+The curve passes through the point <InlineMath math="(0, -1)" />. We substitute this point to find the value of <InlineMath math="a" />.
+
+<MathContainer>
+  <BlockMath math="0 = a(-1 - 1)^2 + 4" />
+  <BlockMath math="0 = a(-2)^2 + 4" />
+  <BlockMath math="0 = 4a + 4" />
+  <BlockMath math="4a = -4" />
+  <BlockMath math="a = -1" />
+</MathContainer>
+
+So, the equation of the curve is <InlineMath math="x = -(y - 1)^2 + 4" />.
+
+Now we find the intersection points with the <InlineMath math="y" />-axis (when <InlineMath math="x = 0" />):
+
+<MathContainer>
+  <BlockMath math="0 = -(y - 1)^2 + 4" />
+  <BlockMath math="(y - 1)^2 = 4" />
+  <BlockMath math="y - 1 = \pm 2" />
+</MathContainer>
+
+Solution 1: <InlineMath math="y - 1 = 2 \Rightarrow y = 3" />. The intersection point is <InlineMath math="(0, 3)" />.
+
+Solution 2: <InlineMath math="y - 1 = -2 \Rightarrow y = -1" />. The intersection point is <InlineMath math="(0, -1)" />.
+
+Statement (1) states <InlineMath math="(0, 2)" />, which is **FALSE**.
+
+**2. Checking the Curve Equation (Statement 2)**
+
+From the calculation above, we have obtained the equation of the curve is:
+
+<MathContainer>
+  <BlockMath math="x = -(y - 1)^2 + 4" />
+</MathContainer>
+
+In function notation <InlineMath math="f(y)" />, this is written as <InlineMath math="f(y) = -(y - 1)^2 + 4" />.
+
+Statement (2) is **TRUE**.
+
+**3. Checking the X-Axis Intercept (Statement 3)**
+
+The intersection point with the <InlineMath math="x" />-axis occurs when <InlineMath math="y = 0" />.
+
+<MathContainer>
+  <BlockMath math="x = -(0 - 1)^2 + 4" />
+  <BlockMath math="x = -(-1)^2 + 4" />
+  <BlockMath math="x = -1 + 4" />
+  <BlockMath math="x = 3" />
+</MathContainer>
+
+So, the intersection point with the <InlineMath math="x" />-axis is <InlineMath math="(3, 0)" />.
+
+Statement (3) states <InlineMath math="(1, 0)" />, which is **FALSE**.
+
+**4. Checking the Vertex (Statement 4)**
+
+From the graph, it is clearly visible that the vertex is <InlineMath math="(4, 1)" />.
+
+The abscissa (<InlineMath math="x" /> value) of the vertex is <InlineMath math="4" />.
+
+Statement (4) is **TRUE**.
+
+**Conclusion:**
+
+The correct statements are (2) and (4).
+
+Thus, the answer is **C**.

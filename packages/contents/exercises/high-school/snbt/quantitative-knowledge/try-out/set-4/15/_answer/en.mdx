@@ -1,0 +1,62 @@
+export const metadata = {
+  title: "Explanation for Question 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+We will simplify the forms of P and Q first.
+
+#### Simplifying P
+
+Recall that <InlineMath math="a^2 - b^2 = (a - b)(a + b)" />.
+Note that <InlineMath math="16^x = (4^x)^2" />.
+
+<MathContainer>
+  <BlockMath math="P = \frac{1 - 16^x}{1 - 4^x} = \frac{1 - (4^x)^2}{1 - 4^x}" />
+  <BlockMath math="P = \frac{(1 - 4^x)(1 + 4^x)}{1 - 4^x}" />
+  <BlockMath math="P = 1 + 4^x" />
+</MathContainer>
+
+#### Simplifying Q
+
+Similarly, note that <InlineMath math="16^{-x} = (4^{-x})^2" />.
+
+<MathContainer>
+  <BlockMath math="Q = \frac{1 - 16^{-x}}{1 - 4^{-x}} = \frac{1 - (4^{-x})^2}{1 - 4^{-x}}" />
+  <BlockMath math="Q = \frac{(1 - 4^{-x})(1 + 4^{-x})}{1 - 4^{-x}}" />
+  <BlockMath math="Q = 1 + 4^{-x}" />
+</MathContainer>
+
+#### Analyzing the Value of P
+
+Given <InlineMath math="1 < x < 2" />.
+
+<MathContainer>
+  <BlockMath math="4^1 < 4^x < 4^2" />
+  <BlockMath math="4 < 4^x < 16" />
+  <BlockMath math="1 + 4 < 1 + 4^x < 1 + 16" />
+  <BlockMath math="5 < P < 17" />
+</MathContainer>
+
+#### Analyzing the Value of Q
+
+Given <InlineMath math="1 < x < 2" />. Multiply by <InlineMath math="-1" /> (inequality signs flip).
+
+<MathContainer>
+  <BlockMath math="-2 < -x < -1" />
+  <BlockMath math="4^{-2} < 4^{-x} < 4^{-1}" />
+  <BlockMath math="\frac{1}{16} < 4^{-x} < \frac{1}{4}" />
+  <BlockMath math="1 + \frac{1}{16} < 1 + 4^{-x} < 1 + \frac{1}{4}" />
+  <BlockMath math="\frac{17}{16} < Q < \frac{5}{4}" />
+</MathContainer>
+
+#### Comparing P and Q
+
+From the results above, we get:
+*   <InlineMath math="P > 5" />
+*   <InlineMath math="Q < \frac{5}{4} = 1.25" />
+
+It is clearly visible that the value of <InlineMath math="P" /> is always greater than <InlineMath math="Q" /> for the given range of <InlineMath math="x" />.
+
+So, <InlineMath math="P > Q" />.
+

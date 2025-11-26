@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Explanation for Question 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Given the recursive formula of the sequence is <InlineMath math="b_{n+2} = b_{n+1} - 3b_n" />.
+We also know the values <InlineMath math="b_4 = 5" /> and <InlineMath math="b_5 = -1" />.
+We are asked to find the value of <InlineMath math="b_2" />. We will find it by working backwards from <InlineMath math="b_5" /> to <InlineMath math="b_3" />, and then to <InlineMath math="b_2" />.
+
+#### Finding the Value of b3
+
+Use the formula with <InlineMath math="n = 3" />:
+
+<MathContainer>
+  <BlockMath math="b_{3+2} = b_{3+1} - 3b_3" />
+  <BlockMath math="b_5 = b_4 - 3b_3" />
+</MathContainer>
+
+Substitute the values <InlineMath math="b_5 = -1" /> and <InlineMath math="b_4 = 5" />:
+
+<MathContainer>
+  <BlockMath math="-1 = 5 - 3b_3" />
+  <BlockMath math="3b_3 = 5 + 1" />
+  <BlockMath math="3b_3 = 6" />
+  <BlockMath math="b_3 = 2" />
+</MathContainer>
+
+#### Finding the Value of b2
+
+Use the formula with <InlineMath math="n = 2" />:
+
+<MathContainer>
+  <BlockMath math="b_{2+2} = b_{2+1} - 3b_2" />
+  <BlockMath math="b_4 = b_3 - 3b_2" />
+</MathContainer>
+
+Substitute the values <InlineMath math="b_4 = 5" /> and <InlineMath math="b_3 = 2" />:
+
+<MathContainer>
+  <BlockMath math="5 = 2 - 3b_2" />
+  <BlockMath math="3b_2 = 2 - 5" />
+  <BlockMath math="3b_2 = -3" />
+  <BlockMath math="b_2 = -1" />
+</MathContainer>
+
+So, the value of <InlineMath math="b_2" /> is <InlineMath math="-1" />.
+

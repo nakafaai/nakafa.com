@@ -1,0 +1,62 @@
+export const metadata = {
+  title: "Pembahasan Soal 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Kita akan menyederhanakan bentuk P dan Q terlebih dahulu.
+
+#### Menyederhanakan Bentuk P
+
+Ingat bahwa <InlineMath math="a^2 - b^2 = (a - b)(a + b)" />.
+Perhatikan bahwa <InlineMath math="16^x = (4^x)^2" />.
+
+<MathContainer>
+  <BlockMath math="P = \frac{1 - 16^x}{1 - 4^x} = \frac{1 - (4^x)^2}{1 - 4^x}" />
+  <BlockMath math="P = \frac{(1 - 4^x)(1 + 4^x)}{1 - 4^x}" />
+  <BlockMath math="P = 1 + 4^x" />
+</MathContainer>
+
+#### Menyederhanakan Bentuk Q
+
+Dengan cara yang sama, perhatikan bahwa <InlineMath math="16^{-x} = (4^{-x})^2" />.
+
+<MathContainer>
+  <BlockMath math="Q = \frac{1 - 16^{-x}}{1 - 4^{-x}} = \frac{1 - (4^{-x})^2}{1 - 4^{-x}}" />
+  <BlockMath math="Q = \frac{(1 - 4^{-x})(1 + 4^{-x})}{1 - 4^{-x}}" />
+  <BlockMath math="Q = 1 + 4^{-x}" />
+</MathContainer>
+
+#### Menganalisis Nilai P
+
+Diketahui <InlineMath math="1 < x < 2" />.
+
+<MathContainer>
+  <BlockMath math="4^1 < 4^x < 4^2" />
+  <BlockMath math="4 < 4^x < 16" />
+  <BlockMath math="1 + 4 < 1 + 4^x < 1 + 16" />
+  <BlockMath math="5 < P < 17" />
+</MathContainer>
+
+#### Menganalisis Nilai Q
+
+Diketahui <InlineMath math="1 < x < 2" />. Kalikan dengan <InlineMath math="-1" /> (tanda pertidaksamaan berbalik).
+
+<MathContainer>
+  <BlockMath math="-2 < -x < -1" />
+  <BlockMath math="4^{-2} < 4^{-x} < 4^{-1}" />
+  <BlockMath math="\frac{1}{16} < 4^{-x} < \frac{1}{4}" />
+  <BlockMath math="1 + \frac{1}{16} < 1 + 4^{-x} < 1 + \frac{1}{4}" />
+  <BlockMath math="\frac{17}{16} < Q < \frac{5}{4}" />
+</MathContainer>
+
+#### Membandingkan P dan Q
+
+Dari hasil di atas, kita peroleh:
+*   <InlineMath math="P > 5" />
+*   <InlineMath math="Q < \frac{5}{4} = 1.25" />
+
+Jelas terlihat bahwa nilai <InlineMath math="P" /> selalu lebih besar daripada <InlineMath math="Q" /> untuk rentang <InlineMath math="x" /> yang diberikan.
+
+Jadi, <InlineMath math="P > Q" />.
+

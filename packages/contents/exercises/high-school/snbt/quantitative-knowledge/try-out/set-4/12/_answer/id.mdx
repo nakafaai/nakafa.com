@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Pembahasan Soal 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Diketahui:
+*   Total siswa (<InlineMath math="S" />) = <InlineMath math="800" /> orang.
+*   Siswa suka Matematika (<InlineMath math="M" />) = <InlineMath math="400" /> orang.
+*   Siswa suka Fisika (<InlineMath math="F" />) = <InlineMath math="500" /> orang.
+
+Kita akan mencari nilai maksimum (<InlineMath math="x" />) dan minimum (<InlineMath math="y" />) dari irisan kedua himpunan tersebut (siswa yang menyukai keduanya).
+
+#### Mencari Nilai Maksimum x
+
+Jumlah siswa yang menyukai keduanya akan maksimum jika himpunan yang lebih kecil merupakan bagian dari himpunan yang lebih besar.
+Di sini, jumlah siswa yang suka Matematika (<InlineMath math="400" />) lebih sedikit daripada Fisika (<InlineMath math="500" />).
+Maka, nilai maksimum irisannya adalah jumlah siswa pada grup terkecil.
+
+<MathContainer>
+  <BlockMath math="x = 400" />
+</MathContainer>
+
+#### Mencari Nilai Minimum y
+
+Jumlah siswa yang menyukai keduanya akan minimum jika penyebarannya merata sebisa mungkin sehingga total gabungannya maksimal (sama dengan total siswa seluruhnya).
+
+Gunakan rumus himpunan: <InlineMath math="n(M \cup F) = n(M) + n(F) - n(M \cap F)" />.
+
+Untuk mendapatkan irisan minimum, kita anggap semua siswa (<InlineMath math="800" />) menyukai setidaknya satu dari kedua pelajaran tersebut (tidak ada yang tidak suka keduanya).
+
+<MathContainer>
+  <BlockMath math="800 = 400 + 500 - y" />
+  <BlockMath math="800 = 900 - y" />
+  <BlockMath math="y = 900 - 800" />
+  <BlockMath math="y = 100" />
+</MathContainer>
+
+#### Menghitung Selisih
+
+Terakhir, kita hitung selisih antara nilai maksimum dan minimum.
+
+<MathContainer>
+  <BlockMath math="x - y = 400 - 100 = 300" />
+</MathContainer>
+
+Jadi, nilai dari <InlineMath math="x - y" /> adalah <InlineMath math="300" /> orang.
+

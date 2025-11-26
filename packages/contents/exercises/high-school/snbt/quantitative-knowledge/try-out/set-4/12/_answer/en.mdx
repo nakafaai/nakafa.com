@@ -1,0 +1,48 @@
+export const metadata = {
+    title: "Explanation for Question 12",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "11/26/2025",
+};
+
+Given:
+*   Total students (<InlineMath math="S" />) = <InlineMath math="800" /> people.
+*   Students who like Mathematics (<InlineMath math="M" />) = <InlineMath math="400" /> people.
+*   Students who like Physics (<InlineMath math="F" />) = <InlineMath math="500" /> people.
+
+We want to find the maximum value (<InlineMath math="x" />) and minimum value (<InlineMath math="y" />) of the intersection of these two sets (students who like both).
+
+#### Finding Maximum Value x
+
+The number of students who like both will be maximum if the smaller set is a subset of the larger set.
+Here, the number of students who like Mathematics (<InlineMath math="400" />) is less than those who like Physics (<InlineMath math="500" />).
+So, the maximum value of the intersection is the number of students in the smallest group.
+
+<MathContainer>
+  <BlockMath math="x = 400" />
+</MathContainer>
+
+#### Finding Minimum Value y
+
+The number of students who like both will be minimum if the distribution is spread out as much as possible so that the total union is maximum (equal to the total number of students).
+
+Use the set formula: <InlineMath math="n(M \cup F) = n(M) + n(F) - n(M \cap F)" />.
+
+To get the minimum intersection, we assume all students (<InlineMath math="800" />) like at least one of the two subjects (no one dislikes both).
+
+<MathContainer>
+  <BlockMath math="800 = 400 + 500 - y" />
+  <BlockMath math="800 = 900 - y" />
+  <BlockMath math="y = 900 - 800" />
+  <BlockMath math="y = 100" />
+</MathContainer>
+
+#### Calculating the Difference
+
+Finally, we calculate the difference between the maximum and minimum values.
+
+<MathContainer>
+  <BlockMath math="x - y = 400 - 100 = 300" />
+</MathContainer>
+
+So, the value of <InlineMath math="x - y" /> is <InlineMath math="300" /> people.
+

@@ -1,0 +1,81 @@
+import { getColor } from "@repo/design-system/lib/color";
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+
+export const metadata = {
+    title: "Soal 17",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "11/26/2025",
+};
+
+<LineEquation
+  title="Segitiga ABC"
+  description={<>Ilustrasi segitiga <InlineMath math="ABC" /> dengan garis <InlineMath math="AP" />, <InlineMath math="BQ" />, dan <InlineMath math="CR" /> berpotongan di titik <InlineMath math="O" />.</>}
+  data={[
+    // Segitiga ABC (centroid di 0,0)
+    {
+      points: [
+        { x: -5, y: -2.887, z: 0 }, // B
+        { x: 5, y: -2.887, z: 0 }, // C
+        { x: 0, y: 5.773, z: 0 }, // A
+        { x: -5, y: -2.887, z: 0 }, // Kembali ke B
+      ],
+      color: getColor("BLUE"),
+      showPoints: false,
+      smooth: false,
+      labels: [
+        { text: "B", at: 0, offset: [-0.5, -0.5, 0], color: getColor("INDIGO") },
+        { text: "C", at: 1, offset: [0.5, -0.5, 0], color: getColor("INDIGO") },
+        { text: "A", at: 2, offset: [0, 0.5, 0], color: getColor("INDIGO") },
+      ],
+    },
+    // Garis AP (Median dari A ke BC)
+    {
+      points: [
+        { x: 0, y: 5.773, z: 0 }, // A
+        { x: 0, y: -2.887, z: 0 }, // P (midpoint BC, juga centroid)
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: false,
+      labels: [
+        { text: "P", at: 1, offset: [0, -0.5, 0], color: getColor("INDIGO") },
+      ],
+    },
+    // Garis BQ (Median dari B ke AC)
+    {
+      points: [
+        { x: -5, y: -2.887, z: 0 }, // B
+        { x: 2.5, y: 1.443, z: 0 }, // Q (Midpoint AC)
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: false,
+      labels: [
+        { text: "Q", at: 1, offset: [0.5, 0, 0], color: getColor("INDIGO") },
+      ],
+    },
+    // Garis CR (Median dari C ke AB)
+    {
+      points: [
+        { x: 5, y: -2.887, z: 0 }, // C
+        { x: -2.5, y: 1.443, z: 0 }, // R (Midpoint AB)
+      ],
+      color: getColor("ORANGE"),
+      showPoints: false,
+      smooth: false,
+      labels: [
+        { text: "R", at: 1, offset: [-0.5, 0, 0], color: getColor("INDIGO") },
+      ],
+    },
+  ]}
+  cameraPosition={[0, 0, 15]}
+  showZAxis={false}
+/>
+
+Segitiga ABC merupakan segitiga sama sisi. Jika garis AP, BQ, dan CR berpotongan di satu titik yaitu titik O.
+Tentukan besar sudut <InlineMath math="\angle BOC" />?
+
+Putuskan apakah pernyataan (1) dan (2) berikut cukup untuk menjawab pertanyaan tersebut!
+
+1.  <InlineMath math="BC = 10 \text{ cm}" />.
+2.  Garis AP, BQ, dan CR merupakan garis bagi segitiga ABC.

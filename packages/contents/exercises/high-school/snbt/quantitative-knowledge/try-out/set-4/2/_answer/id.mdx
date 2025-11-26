@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "Pembahasan Soal 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Kita cari terlebih dahulu jumlah data awal.
+
+<MathContainer>
+  <BlockMath math="1 + 2 + 3 + 4 + 5 + 6 + 7 = 28" />
+</MathContainer>
+
+Misalkan <InlineMath math="x" /> adalah datum yang diganti. Karena diganti dengan angka <InlineMath math="34" />, maka jumlah data baru menjadi:
+
+<MathContainer>
+  <BlockMath math="\text{Jumlah Baru} = 28 - x + 34 = 62 - x" />
+</MathContainer>
+
+Banyaknya data (<InlineMath math="n" />) tetap <InlineMath math="7" />. Rumus rata-rata baru (<InlineMath math="\bar{x}_{baru}" />) adalah:
+
+<MathContainer>
+  <BlockMath math="\bar{x}_{baru} = \frac{62 - x}{7}" />
+</MathContainer>
+
+Diketahui rata-rata baru sama dengan dua kali median baru (<InlineMath math="\bar{x}_{baru} = 2 \times \text{Median}_{baru}" />). Kita perlu mengecek kemungkinan nilai median baru.
+
+Data awal terurut: <InlineMath math="1, 2, 3, 4, 5, 6, 7" />. Median awal adalah <InlineMath math="4" />.
+Angka pengganti <InlineMath math="34" /> pasti berada di posisi terakhir karena nilainya paling besar.
+
+**Kasus 1: Jika angka yang diganti adalah 1, 2, 3, atau 4**
+
+Misalnya kita ganti <InlineMath math="1" />, data menjadi <InlineMath math="2, 3, 4, 5, 6, 7, 34" />. Mediannya menjadi <InlineMath math="5" />.
+Hal yang sama berlaku jika kita ganti <InlineMath math="2, 3" />, atau <InlineMath math="4" />. Data akan bergeser sehingga median menjadi <InlineMath math="5" />.
+
+Mari kita uji ke persamaan:
+
+<MathContainer>
+  <BlockMath math="\frac{62 - x}{7} = 2 \times 5" />
+  <BlockMath math="62 - x = 70" />
+  <BlockMath math="x = -8" />
+</MathContainer>
+
+Hasil <InlineMath math="x = -8" /> **tidak memenuhi** karena data harus diambil dari himpunan awal (<InlineMath math="1" /> s.d. <InlineMath math="7" />).
+
+**Kasus 2: Jika angka yang diganti adalah 5, 6, atau 7**
+
+Misalnya kita ganti <InlineMath math="7" />, data menjadi <InlineMath math="1, 2, 3, 4, 5, 6, 34" />. Mediannya tetap <InlineMath math="4" />.
+Hal yang sama berlaku jika kita ganti <InlineMath math="5" /> atau <InlineMath math="6" />. Median tetap <InlineMath math="4" />.
+
+Mari kita uji ke persamaan:
+
+<MathContainer>
+  <BlockMath math="\frac{62 - x}{7} = 2 \times 4" />
+  <BlockMath math="62 - x = 56" />
+  <BlockMath math="x = 6" />
+</MathContainer>
+
+Hasil <InlineMath math="x = 6" /> **memenuhi** karena <InlineMath math="6" /> ada di dalam data awal.
+
+Jadi, angka yang diganti adalah <InlineMath math="6" />.
+Maka, <InlineMath math="P = 6" /> dan <InlineMath math="Q = 6" />.
+
+Kesimpulannya, <InlineMath math="P = Q" />.

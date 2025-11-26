@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "Pembahasan Soal 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Kita akan menentukan jumlah sandi yang mungkin dengan menggunakan aturan perkalian kombinatorik.
+
+Susunan sandi: **Angka - Huruf - Angka - Huruf** (diawali angka dan berselang-seling).
+
+#### Menghitung Pilihan Posisi 1 (Angka Pertama)
+
+Angka pertama adalah bilangan ganjil (<InlineMath math="1, 3, 5, 7, 9" />).
+
+Banyaknya pilihan = <InlineMath math="5" />.
+
+#### Menghitung Pilihan Posisi 2 (Huruf Pertama)
+
+Huruf vokal: <InlineMath math="A, E, I, O, U" /> (total <InlineMath math="5" /> huruf vokal).
+
+Huruf pertama bukan huruf <InlineMath math="A" />, maka pilihan yang tersisa: <InlineMath math="E, I, O, U" />.
+
+Banyaknya pilihan = <InlineMath math="4" />.
+
+#### Menghitung Pilihan Posisi 3 (Angka Kedua)
+
+Angka kedua dipilih dari <InlineMath math="2, 4, 6, 8" /> (total <InlineMath math="4" /> pilihan).
+
+Karena angka tidak boleh berulang, maka kita harus pastikan angka kedua berbeda dari angka pertama. Namun angka pertama ganjil dan angka kedua genap, sehingga otomatis tidak ada yang berulang.
+
+Banyaknya pilihan = <InlineMath math="4" />.
+
+#### Menghitung Pilihan Posisi 4 (Huruf Kedua)
+
+Huruf kedua adalah huruf <InlineMath math="O" /> (tetap/pasti).
+
+Banyaknya pilihan = <InlineMath math="1" />.
+
+#### Menghitung Total Sandi
+
+Gunakan aturan perkalian:
+
+<MathContainer>
+  <BlockMath math="\text{Total Sandi} = 5 \times 4 \times 4 \times 1 = 80" />
+</MathContainer>
+
+Namun, kita harus memeriksa apakah huruf bisa berulang. Dari soal, huruf tidak boleh berulang. Mari kita cek kasus di mana huruf pertama adalah <InlineMath math="O" /> (sama dengan huruf kedua).
+
+Jika huruf pertama = <InlineMath math="O" />, maka terjadi pengulangan huruf. Pilihan huruf pertama yang valid adalah <InlineMath math="E, I, U" /> (tidak boleh <InlineMath math="A" /> dan tidak boleh <InlineMath math="O" /> karena <InlineMath math="O" /> sudah digunakan di posisi kedua).
+
+Jadi:
+
+*   Angka pertama = <InlineMath math="5" /> pilihan.
+*   Huruf pertama = <InlineMath math="3" /> pilihan (<InlineMath math="E, I, U" />).
+*   Angka kedua = <InlineMath math="4" /> pilihan.
+*   Huruf kedua = <InlineMath math="1" /> pilihan (<InlineMath math="O" />).
+
+<MathContainer>
+  <BlockMath math="\text{Total Sandi} = 5 \times 3 \times 4 \times 1 = 60" />
+</MathContainer>
+
+Jadi, banyak sandi yang dapat dibentuk adalah <InlineMath math="60" />.
+

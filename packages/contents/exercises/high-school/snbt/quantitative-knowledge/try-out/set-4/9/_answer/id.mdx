@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Pembahasan Soal 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Diketahui rumus rekursif barisan adalah <InlineMath math="b_{n+2} = b_{n+1} - 3b_n" />.
+Kita juga mengetahui nilai <InlineMath math="b_4 = 5" /> dan <InlineMath math="b_5 = -1" />.
+Kita diminta untuk mencari nilai <InlineMath math="b_2" />. Kita akan mencarinya dengan mundur dari <InlineMath math="b_5" /> ke <InlineMath math="b_3" />, lalu ke <InlineMath math="b_2" />.
+
+#### Mencari Nilai b3
+
+Gunakan rumus dengan <InlineMath math="n = 3" />:
+
+<MathContainer>
+  <BlockMath math="b_{3+2} = b_{3+1} - 3b_3" />
+  <BlockMath math="b_5 = b_4 - 3b_3" />
+</MathContainer>
+
+Substitusikan nilai <InlineMath math="b_5 = -1" /> dan <InlineMath math="b_4 = 5" />:
+
+<MathContainer>
+  <BlockMath math="-1 = 5 - 3b_3" />
+  <BlockMath math="3b_3 = 5 + 1" />
+  <BlockMath math="3b_3 = 6" />
+  <BlockMath math="b_3 = 2" />
+</MathContainer>
+
+#### Mencari Nilai b2
+
+Gunakan rumus dengan <InlineMath math="n = 2" />:
+
+<MathContainer>
+  <BlockMath math="b_{2+2} = b_{2+1} - 3b_2" />
+  <BlockMath math="b_4 = b_3 - 3b_2" />
+</MathContainer>
+
+Substitusikan nilai <InlineMath math="b_4 = 5" /> dan <InlineMath math="b_3 = 2" />:
+
+<MathContainer>
+  <BlockMath math="5 = 2 - 3b_2" />
+  <BlockMath math="3b_2 = 2 - 5" />
+  <BlockMath math="3b_2 = -3" />
+  <BlockMath math="b_2 = -1" />
+</MathContainer>
+
+Jadi, nilai <InlineMath math="b_2" /> adalah <InlineMath math="-1" />.
+

@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Explanation for Question 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Given information from the question:
+*   Initial barn stock = <InlineMath math="55" /> tons.
+*   Daily harvest (<InlineMath math="x" />) ranges between <InlineMath math="0.04" /> and <InlineMath math="0.09" /> tons.
+*   <InlineMath math="P = 55" /> tons.
+*   <InlineMath math="Q =" /> Total rice collected after <InlineMath math="8" /> days.
+
+#### Calculating Quantity Q
+
+The total rice in the barn (<InlineMath math="Q" />) is the initial stock plus the harvest collected over <InlineMath math="8" /> days.
+
+<MathContainer>
+  <BlockMath math="Q = \text{Initial Stock} + (8 \times \text{Daily Harvest})" />
+  <BlockMath math="Q = 55 + 8x" />
+</MathContainer>
+
+We calculate the range of additional rice from harvesting for <InlineMath math="8" /> days:
+*   Minimum additional: <InlineMath math="8 \times 0.04 = 0.32" /> tons.
+*   Maximum additional: <InlineMath math="8 \times 0.09 = 0.72" /> tons.
+
+Thus, the range for the total rice (<InlineMath math="Q" />) is:
+
+<MathContainer>
+  <BlockMath math="55 + 0.32 \le Q \le 55 + 0.72" />
+  <BlockMath math="55.32 \le Q \le 55.72" />
+</MathContainer>
+
+#### Comparing P and Q
+
+Now we compare the values of <InlineMath math="P" /> and <InlineMath math="Q" />:
+*   <InlineMath math="P = 55" />
+*   <InlineMath math="Q" /> is at least <InlineMath math="55.32" />
+
+Since the minimum value of <InlineMath math="Q" /> (<InlineMath math="55.32" />) is already greater than <InlineMath math="P" /> (<InlineMath math="55" />), it is certain that <InlineMath math="Q" /> is always greater than <InlineMath math="P" />.
+
+<MathContainer>
+  <BlockMath math="P < Q" />
+</MathContainer>
+
+So, the correct relationship is <InlineMath math="P < Q" />.

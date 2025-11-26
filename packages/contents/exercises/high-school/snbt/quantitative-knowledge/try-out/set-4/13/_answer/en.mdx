@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "Explanation for Question 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+We will determine the number of possible passwords using the multiplication rule of combinatorics.
+
+Password structure: **Digit - Letter - Digit - Letter** (starts with a digit and alternates).
+
+#### Counting Choices for Position 1 (First Digit)
+
+The first digit is an odd number (<InlineMath math="1, 3, 5, 7, 9" />).
+
+Number of choices = <InlineMath math="5" />.
+
+#### Counting Choices for Position 2 (First Letter)
+
+Vowels: <InlineMath math="A, E, I, O, U" /> (total <InlineMath math="5" /> vowels).
+
+The first letter is not the letter <InlineMath math="A" />, so the remaining choices are: <InlineMath math="E, I, O, U" />.
+
+Number of choices = <InlineMath math="4" />.
+
+#### Counting Choices for Position 3 (Second Digit)
+
+The second digit is chosen from <InlineMath math="2, 4, 6, 8" /> (total <InlineMath math="4" /> choices).
+
+Since digits cannot repeat, we must ensure the second digit is different from the first digit. However, the first digit is odd and the second digit is even, so they automatically do not repeat.
+
+Number of choices = <InlineMath math="4" />.
+
+#### Counting Choices for Position 4 (Second Letter)
+
+The second letter is the letter <InlineMath math="O" /> (fixed).
+
+Number of choices = <InlineMath math="1" />.
+
+#### Calculating Total Passwords
+
+Using the multiplication rule:
+
+<MathContainer>
+  <BlockMath math="\text{Total Passwords} = 5 \times 4 \times 4 \times 1 = 80" />
+</MathContainer>
+
+However, we need to check if letters can repeat. From the problem, letters cannot repeat. Let's check the case where the first letter is <InlineMath math="O" /> (same as the second letter).
+
+If the first letter = <InlineMath math="O" />, then there is letter repetition. Valid choices for the first letter are <InlineMath math="E, I, U" /> (cannot be <InlineMath math="A" /> and cannot be <InlineMath math="O" /> because <InlineMath math="O" /> is already used in the second position).
+
+So:
+
+*   First digit = <InlineMath math="5" /> choices.
+*   First letter = <InlineMath math="3" /> choices (<InlineMath math="E, I, U" />).
+*   Second digit = <InlineMath math="4" /> choices.
+*   Second letter = <InlineMath math="1" /> choice (<InlineMath math="O" />).
+
+<MathContainer>
+  <BlockMath math="\text{Total Passwords} = 5 \times 3 \times 4 \times 1 = 60" />
+</MathContainer>
+
+So, the number of passwords that can be formed is <InlineMath math="60" />.
+

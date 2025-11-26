@@ -10,7 +10,7 @@ const DEFAULT_TITLE = "New Chat";
 export async function generateTitle({ messages }: { messages: MyUIMessage[] }) {
   try {
     const { text } = await generateText({
-      model: model.languageModel("grok-4-fast-non-reasoning"),
+      model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
       prompt: JSON.stringify(messages, null, 2),
       system: createPrompt({
         taskContext:

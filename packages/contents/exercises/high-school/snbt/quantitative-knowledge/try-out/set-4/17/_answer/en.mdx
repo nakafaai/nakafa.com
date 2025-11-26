@@ -1,0 +1,58 @@
+export const metadata = {
+  title: "Explanation for Question 17",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+We are asked to determine the measure of angle <InlineMath math="\angle BOC" /> in equilateral triangle ABC with the intersection of lines AP, BQ, and CR at point O.
+
+#### Analyzing Initial Information
+
+Triangle ABC is an equilateral triangle. This means:
+
+*   <InlineMath math="AB = BC = CA" />
+*   <InlineMath math="\angle A = \angle B = \angle C = 60^\circ" />
+
+However, we do not yet know the properties of lines AP, BQ, and CR for certain from the initial problem, except that they intersect at O.
+
+#### Analyzing Statement (1)
+
+Statement (1): <InlineMath math="BC = 10 \text{ cm}" />.
+
+This information only provides the length of the triangle's side. Without knowing the properties of lines BQ and CR (whether they are altitudes, angle bisectors, or medians), we cannot determine the position of point O and the angles within it with certainty.
+
+So, statement (1) ALONE is **not sufficient**.
+
+#### Analyzing Statement (2)
+
+Statement (2): Lines AP, BQ, and CR are angle bisectors of triangle ABC.
+
+If BQ is the angle bisector of angle B, then:
+
+<MathContainer>
+  <BlockMath math="\angle OB C = \frac{1}{2} \times \angle B = \frac{1}{2} \times 60^\circ = 30^\circ" />
+</MathContainer>
+
+If CR is the angle bisector of angle C, then:
+
+<MathContainer>
+  <BlockMath math="\angle OCB = \frac{1}{2} \times \angle C = \frac{1}{2} \times 60^\circ = 30^\circ" />
+</MathContainer>
+
+Now consider triangle BOC. The sum of angles in a triangle is <InlineMath math="180^\circ" />.
+
+<MathContainer>
+  <BlockMath math="\angle BOC + \angle OBC + \angle OCB = 180^\circ" />
+  <BlockMath math="\angle BOC + 30^\circ + 30^\circ = 180^\circ" />
+  <BlockMath math="\angle BOC + 60^\circ = 180^\circ" />
+  <BlockMath math="\angle BOC = 120^\circ" />
+</MathContainer>
+
+We can determine the measure of angle <InlineMath math="\angle BOC" /> using only statement (2).
+
+So, statement (2) ALONE is **sufficient**.
+
+#### Conclusion
+
+Statement (1) is not sufficient, but statement (2) is sufficient. Thus, the answer is **B**.
+
