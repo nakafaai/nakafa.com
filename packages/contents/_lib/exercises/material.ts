@@ -47,3 +47,30 @@ export async function getMaterials(
     return [];
   }
 }
+
+/**
+ * Gets the current material and item from the materials list.
+ * @param path - The path to the material.
+ * @param materials - The materials list.
+ * @returns The current material and item.
+ */
+export function getCurrentMaterial(
+  path: string,
+  materials: ExercisesMaterialList
+) {
+  let currentMaterial: (typeof materials)[number] | undefined;
+  let currentMaterialItem:
+    | (typeof materials)[number]["items"][number]
+    | undefined;
+
+  for (const mat of materials) {
+    const foundItem = mat.items.find((itm) => itm.href === path);
+    if (foundItem) {
+      currentMaterial = mat;
+      currentMaterialItem = foundItem;
+      break;
+    }
+  }
+
+  return { currentMaterial, currentMaterialItem };
+}

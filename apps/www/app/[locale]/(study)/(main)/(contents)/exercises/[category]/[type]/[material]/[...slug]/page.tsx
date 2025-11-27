@@ -1,4 +1,5 @@
 import {
+  getCurrentMaterial,
   getMaterialPath,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
@@ -81,25 +82,19 @@ export async function generateMetadata({
 
   const materials = await getMaterials(materialPath, locale);
 
-  // Find material and item in a single pass
-  let materialTitle: string | undefined;
-  let itemTitle: string | undefined;
-
-  for (const mat of materials) {
-    const foundItem = mat.items.find((itm) => itm.href === FilePath);
-    if (foundItem) {
-      materialTitle = mat.title;
-      itemTitle = foundItem.title;
-      break;
-    }
-  }
+  const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
+    FilePath,
+    materials
+  );
 
   const title = `${t(material)} - ${t(type)} - ${t(category)}`;
-  let finalTitle = materialTitle ? `${materialTitle} - ${title}` : title;
+  let finalTitle = currentMaterial
+    ? `${currentMaterial.title} - ${title}`
+    : title;
 
   // Prepend item title if available
-  if (itemTitle) {
-    finalTitle = `${itemTitle} - ${finalTitle}`;
+  if (currentMaterialItem) {
+    finalTitle = `${currentMaterialItem.title} - ${finalTitle}`;
   }
 
   // Prepend exercise title if it's a specific exercise
@@ -208,20 +203,10 @@ async function PageContent({
       notFound();
     }
 
-    // Find material and item in a single pass
-    let currentMaterial: (typeof materials)[number] | undefined;
-    let currentMaterialItem:
-      | (typeof materials)[number]["items"][number]
-      | undefined;
-
-    for (const mat of materials) {
-      const foundItem = mat.items.find((itm) => itm.href === FilePath);
-      if (foundItem) {
-        currentMaterial = mat;
-        currentMaterialItem = foundItem;
-        break;
-      }
-    }
+    const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
+      FilePath,
+      materials
+    );
 
     if (!(currentMaterial && currentMaterialItem)) {
       notFound();
@@ -345,20 +330,10 @@ async function SingleExerciseContent({
       notFound();
     }
 
-    // Find material and item in a single pass
-    let currentMaterial: (typeof materials)[number] | undefined;
-    let currentMaterialItem:
-      | (typeof materials)[number]["items"][number]
-      | undefined;
-
-    for (const mat of materials) {
-      const foundItem = mat.items.find((itm) => itm.href === FilePath);
-      if (foundItem) {
-        currentMaterial = mat;
-        currentMaterialItem = foundItem;
-        break;
-      }
-    }
+    const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
+      FilePath,
+      materials
+    );
 
     if (!(currentMaterial && currentMaterialItem)) {
       notFound();

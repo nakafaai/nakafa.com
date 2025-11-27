@@ -4,12 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@repo/design-system/components/ui/form";
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import PhoneInput from "@repo/design-system/components/ui/phone-input";
@@ -25,7 +23,7 @@ import { useMutation } from "convex/react";
 import { PartyPopperIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 
@@ -91,142 +89,152 @@ export function SchoolOnboardingCreateForm() {
   };
 
   return (
-    <Form {...form}>
-      <form
-        className="flex flex-col gap-6"
-        onSubmit={form.handleSubmit(onSubmit)}
-      >
-        <section className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="px-2">{t("school-name")}</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={t("school-name-placeholder")}
-                    {...field}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+    <form
+      className="flex flex-col gap-6"
+      id="school-onboarding-create-form"
+      onSubmit={form.handleSubmit(onSubmit)}
+    >
+      <FieldGroup>
+        <Controller
+          control={form.control}
+          name="name"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="school-name">{t("school-name")}</FieldLabel>
+              <Input
+                {...field}
+                aria-invalid={fieldState.invalid}
+                id="school-name"
+                placeholder={t("school-name-placeholder")}
+              />
+            </Field>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="px-2">{t("school-email")}</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={t("school-email-placeholder")}
-                    {...field}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+        <Controller
+          control={form.control}
+          name="email"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="school-email">
+                {t("school-email")}
+              </FieldLabel>
+              <Input
+                {...field}
+                aria-invalid={fieldState.invalid}
+                id="school-email"
+                placeholder={t("school-email-placeholder")}
+              />
+            </Field>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="px-2">{t("school-phone")}</FormLabel>
-                <FormControl>
-                  <PhoneInput
-                    placeholder={t("school-phone-placeholder")}
-                    {...field}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+        <Controller
+          control={form.control}
+          name="phone"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="school-phone">
+                {t("school-phone")}
+              </FieldLabel>
+              <PhoneInput
+                {...field}
+                aria-invalid={fieldState.invalid}
+                id="school-phone"
+                placeholder={t("school-phone-placeholder")}
+              />
+            </Field>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="px-2">{t("school-address")}</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={t("school-address-placeholder")}
-                    {...field}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+        <Controller
+          control={form.control}
+          name="address"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="school-address">
+                {t("school-address")}
+              </FieldLabel>
+              <Input
+                {...field}
+                aria-invalid={fieldState.invalid}
+                id="school-address"
+                placeholder={t("school-address-placeholder")}
+              />
+            </Field>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="city"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="px-2">{t("school-city")}</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={t("school-city-placeholder")}
-                    {...field}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+        <Controller
+          control={form.control}
+          name="city"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="school-city">{t("school-city")}</FieldLabel>
+              <Input
+                {...field}
+                aria-invalid={fieldState.invalid}
+                id="school-city"
+                placeholder={t("school-city-placeholder")}
+              />
+            </Field>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="province"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="px-2">{t("school-province")}</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={t("school-province-placeholder")}
-                    {...field}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+        <Controller
+          control={form.control}
+          name="province"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="school-province">
+                {t("school-province")}
+              </FieldLabel>
+              <Input
+                {...field}
+                aria-invalid={fieldState.invalid}
+                id="school-province"
+                placeholder={t("school-province-placeholder")}
+              />
+            </Field>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="px-2">{t("school-type")}</FormLabel>
-                <FormControl>
-                  <Select
-                    defaultValue={field.value ?? undefined}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t("school-type-placeholder")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {schoolTypeOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {t(option.value)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </section>
+        <Controller
+          control={form.control}
+          name="type"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="school-type">{t("school-type")}</FieldLabel>
 
-        <Button disabled={isPending || !form.formState.isValid} type="submit">
-          {isPending ? <SpinnerIcon /> : <PartyPopperIcon />}
-          {t("create")}
-        </Button>
-      </form>
-    </Form>
+              <Select
+                defaultValue={field.value ?? undefined}
+                onValueChange={field.onChange}
+              >
+                <SelectTrigger
+                  aria-invalid={fieldState.invalid}
+                  className="w-full"
+                  id="school-type"
+                >
+                  <SelectValue placeholder={t("school-type-placeholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {schoolTypeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {t(option.value)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
+        />
+      </FieldGroup>
+
+      <Button disabled={isPending || !form.formState.isValid} type="submit">
+        {isPending ? <SpinnerIcon /> : <PartyPopperIcon />}
+        {t("create")}
+      </Button>
+    </form>
   );
 }
 

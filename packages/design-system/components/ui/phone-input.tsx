@@ -21,6 +21,7 @@ import { Input } from "./input";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 type PhoneInputProps = {
+  id?: string;
   placeholder: string;
   value?: string;
   onChangeAction?: (value: string) => void;
@@ -28,13 +29,14 @@ type PhoneInputProps = {
 };
 
 export default function PhoneInput({
+  id,
   placeholder,
   value,
   onChangeAction,
   className,
   ...props
 }: PhoneInputProps) {
-  const id = useId();
+  const inputId = useId();
 
   return (
     <div className={cn("*:not-first:mt-2", className)} dir="ltr">
@@ -43,7 +45,7 @@ export default function PhoneInput({
         countrySelectComponent={CountrySelect}
         defaultCountry="ID"
         flagComponent={FlagComponent}
-        id={id}
+        id={id ?? inputId}
         inputComponent={Phone}
         international
         onChange={(newValue) => onChangeAction?.(newValue ?? "")}

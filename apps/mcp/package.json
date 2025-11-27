@@ -17,7 +17,7 @@
     "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
     "mcp-handler": "1.0.4",
-    "next": "16.0.4",
+    "next": "16.0.5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "redis": "^5.10.0",

@@ -4,18 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { AppUser } from "@repo/backend/convex/auth";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@repo/design-system/components/ui/form";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import * as z from "zod/mini";
 import { FormBlock } from "@/components/shared/form-block";
 
@@ -59,48 +53,44 @@ export function UserSettingsName({ user }: { user: AppUser }) {
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <FormBlock
-          description={t("name-description")}
-          footer={
-            <div className="flex w-full items-center justify-between gap-4">
-              <p className="text-muted-foreground text-sm">
-                {t("name-footer")}
-              </p>
-              <Button
-                disabled={
-                  isPending ||
-                  !form.formState.isValid ||
-                  !form.formState.isDirty
-                }
-                size="sm"
-                type="submit"
-              >
-                {t("save")}
-              </Button>
-            </div>
-          }
-          title={t("name")}
-        >
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="sr-only">{t("name")}</FormLabel>
-                <FormControl>
-                  <Input
-                    className="max-w-xs"
-                    placeholder={t("name-placeholder")}
-                    {...field}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </FormBlock>
-      </form>
-    </Form>
+    <form id="user-settings-name-form" onSubmit={form.handleSubmit(onSubmit)}>
+      <FormBlock
+        description={t("name-description")}
+        footer={
+          <div className="flex w-full items-center justify-between gap-4">
+            <p className="text-muted-foreground text-sm">{t("name-footer")}</p>
+            <Button
+              disabled={
+                isPending || !form.formState.isValid || !form.formState.isDirty
+              }
+              size="sm"
+              type="submit"
+            >
+              {t("save")}
+            </Button>
+          </div>
+        }
+        title={t("name")}
+      >
+        <Controller
+          control={form.control}
+          name="name"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel className="sr-only" htmlFor="user-settings-name">
+                {t("name")}
+              </FieldLabel>
+              <Input
+                className="max-w-xs"
+                {...field}
+                aria-invalid={fieldState.invalid}
+                id="user-settings-name"
+                placeholder={t("name-placeholder")}
+              />
+            </Field>
+          )}
+        />
+      </FormBlock>
+    </form>
   );
 }

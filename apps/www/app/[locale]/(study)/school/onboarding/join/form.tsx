@@ -3,12 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@repo/design-system/components/ui/form";
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
@@ -21,7 +19,7 @@ import {
 import { MergeIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import * as z from "zod/mini";
 import { roles } from "@/lib/data/roles";
 
@@ -57,60 +55,68 @@ export function SchoolOnboardingJoinForm() {
   };
 
   return (
-    <Form {...form}>
-      <form
-        className="flex flex-col gap-6"
-        onSubmit={form.handleSubmit(onSubmit)}
-      >
-        <section className="space-y-4">
-          <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="px-2">{t("role")}</FormLabel>
-                <FormControl>
-                  <Select
-                    defaultValue={field.value ?? undefined}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t("role-placeholder")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roleOptions.map((role) => (
-                        <SelectItem key={role.value} value={role.value}>
-                          <role.icon />
-                          {t(role.value)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-              </FormItem>
-            )}
-          />
+    <form
+      className="flex flex-col gap-6"
+      id="school-onboarding-join-form"
+      onSubmit={form.handleSubmit(onSubmit)}
+    >
+      <FieldGroup>
+        <Controller
+          control={form.control}
+          name="role"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="school-onboarding-join-role">
+                {t("role")}
+              </FieldLabel>
+              <Select
+                defaultValue={field.value ?? undefined}
+                onValueChange={field.onChange}
+              >
+                <SelectTrigger
+                  aria-invalid={fieldState.invalid}
+                  className="w-full"
+                  id="school-onboarding-join-role"
+                >
+                  <SelectValue placeholder={t("role-placeholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {roleOptions.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      <role.icon />
+                      {t(role.value)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="code"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="px-2">{t("code")}</FormLabel>
-                <FormControl>
-                  <Input placeholder={t("code-placeholder")} {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </section>
+        <Controller
+          control={form.control}
+          name="code"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="school-onboarding-join-code">
+                {t("code")}
+              </FieldLabel>
+              <Input
+                {...field}
+                aria-invalid={fieldState.invalid}
+                id="school-onboarding-join-code"
+                placeholder={t("code-placeholder")}
+              />
+            </Field>
+          )}
+        />
+      </FieldGroup>
 
-        <Button disabled={isPending || !form.formState.isValid} type="submit">
-          {isPending ? <SpinnerIcon /> : <MergeIcon />}
-          {t("join")}
-        </Button>
-      </form>
-    </Form>
+      <Button disabled={isPending || !form.formState.isValid} type="submit">
+        {isPending ? <SpinnerIcon /> : <MergeIcon />}
+        {t("join")}
+      </Button>
+    </form>
   );
 }
 

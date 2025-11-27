@@ -18,11 +18,11 @@
     "@repo/utilities": "workspace:*",
     "@convex-dev/better-auth": "^0.9.7",
     "@t3-oss/env-nextjs": "^0.13.8",
-    "next": "16.0.4",
+    "next": "16.0.5",
     "pino": "^10.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "shiki": "^3.15.0"
+    "shiki": "^3.17.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

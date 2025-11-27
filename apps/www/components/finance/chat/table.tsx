@@ -26,8 +26,6 @@ export function FinanceDatasetTable({ datasetId }: Props) {
     limit: 100,
   });
 
-  console.log("rows", rows);
-
   // Loading state
   if (columns === undefined || rows === undefined) {
     return (

@@ -5,23 +5,20 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@repo/design-system/components/ui/form";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import {
   Tooltip,
@@ -31,10 +28,16 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import { useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
-import { CopyIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  CopyIcon,
+  PlusIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 import { FormBlock } from "@/components/shared/form-block";
@@ -171,207 +174,214 @@ export function UserSettingsApiKey() {
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <FormBlock
-          description={t("api-key-description")}
-          footer={
-            <div className="flex w-full items-center justify-between gap-4">
-              <p className="text-muted-foreground text-sm">
-                {t("api-key-footer")}
-              </p>
-              <Button
-                disabled={isPending}
-                onClick={() => setConfirmCreateApiKey(true)}
-                size="sm"
-                type="button"
-              >
-                <PlusIcon />
-                {t("new-api-key")}
-              </Button>
-            </div>
-          }
-          title={t("api-key")}
-        >
-          {apiKeys ? (
-            <div className="flex flex-col divide-y rounded-md border">
-              {apiKeys.length > 0 ? (
-                apiKeys.map((apiKey) => (
-                  <div className="flex flex-col gap-4 p-4" key={apiKey._id}>
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="flex flex-col gap-1">
-                        <p className="truncate font-medium text-sm">
-                          {apiKey.name}
-                        </p>
-                        <button
-                          className="w-fit cursor-pointer truncate font-mono text-muted-foreground text-sm tracking-tight"
-                          onClick={() => handleCopyApiKey(apiKey.key)}
-                          type="button"
-                        >
-                          {encryptApiKey(apiKey.key)}
-                        </button>
-                      </div>
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <Badge className="lowercase" variant="muted">
-                              {apiKey.expiresAt
-                                ? formatDistanceToNow(apiKey.expiresAt, {
-                                    locale: getLocale(locale),
-                                  })
-                                : t("never")}
-                            </Badge>
-                          }
-                        />
-                        <TooltipContent>{t("expires")}</TooltipContent>
-                      </Tooltip>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        onClick={() => handleCopyApiKey(apiKey.key)}
-                        size="icon-sm"
-                        type="button"
-                        variant="secondary"
-                      >
-                        <CopyIcon className="size-4" />
-                        <span className="sr-only">Copy API Key</span>
-                      </Button>
-                      <Button
-                        onClick={() => setConfirmDeleteApiKey(apiKey._id)}
-                        size="icon-sm"
-                        type="button"
-                        variant="destructive"
-                      >
-                        <Trash2Icon className="size-4" />
-                        <span className="sr-only">Delete API Key</span>
-                      </Button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="flex items-center justify-center p-4 text-muted-foreground text-sm">
-                  {t("no-api-keys")}
-                </p>
-              )}
-            </div>
-          ) : (
-            <Skeleton className="h-[54px] w-full border" />
-          )}
-        </FormBlock>
-
-        <ResponsiveDialog
-          description={t("delete-api-key-description")}
-          footer={
+    <form
+      id="user-settings-api-key-form"
+      onSubmit={form.handleSubmit(onSubmit)}
+    >
+      <FormBlock
+        description={t("api-key-description")}
+        footer={
+          <div className="flex w-full items-center justify-between gap-4">
+            <p className="text-muted-foreground text-sm">
+              {t("api-key-footer")}
+            </p>
             <Button
               disabled={isPending}
-              onClick={() => {
-                if (confirmDeleteApiKey) {
-                  handleDeleteApiKey(confirmDeleteApiKey);
-                }
-              }}
-              variant="destructive"
-            >
-              {isPending ? <SpinnerIcon /> : <Trash2Icon />}
-              {t("delete")}
-            </Button>
-          }
-          open={Boolean(confirmDeleteApiKey)}
-          setOpen={(open) =>
-            setConfirmDeleteApiKey(open ? confirmDeleteApiKey : null)
-          }
-          title={t("delete-api-key")}
-        />
-
-        <ResponsiveDialog
-          description={t("api-key-confirmation-description")}
-          footer={
-            <Button
-              disabled={isPending || !form.formState.isValid}
-              onClick={() => form.handleSubmit(onSubmit)()}
+              onClick={() => setConfirmCreateApiKey(true)}
+              size="sm"
               type="button"
             >
-              {isPending ? <SpinnerIcon /> : <PlusIcon />}
-              {t("create")}
+              <PlusIcon />
+              {t("new-api-key")}
             </Button>
-          }
-          open={confirmCreateApiKey}
-          setOpen={setConfirmCreateApiKey}
-          title={t("new-api-key")}
-        >
-          <div className="grid gap-4 py-2">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("api-key-name")}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t("api-key-name-placeholder")}
-                      {...field}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="expiresIn"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("expires-in")}</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(
-                        value === "never" ? undefined : Number(value)
-                      );
-                    }}
-                    value={
-                      field.value === undefined ? "never" : String(field.value)
-                    }
-                  >
-                    <FormControl>
-                      <SelectTrigger
-                        className={cn(
-                          "w-full",
-                          field.value === undefined &&
-                            "[&_span]:text-destructive!"
-                        )}
-                      >
-                        <SelectValue
-                          placeholder={t("expires-in-placeholder")}
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectGroup>
-                        {expiresInList.map((item) => (
-                          <SelectItem
-                            className={cn(
-                              item.label === "never" && "text-destructive!"
-                            )}
-                            key={item.label}
-                            value={
-                              item.value === undefined
-                                ? "never"
-                                : String(item.value)
-                            }
-                          >
-                            {t(item.label)}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
           </div>
-        </ResponsiveDialog>
-      </form>
-    </Form>
+        }
+        title={t("api-key")}
+      >
+        {apiKeys ? (
+          <div className="flex flex-col divide-y rounded-md border">
+            {apiKeys.length > 0 ? (
+              apiKeys.map((apiKey) => (
+                <div className="flex flex-col gap-4 p-4" key={apiKey._id}>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="flex flex-col gap-1">
+                      <p className="truncate font-medium text-sm">
+                        {apiKey.name}
+                      </p>
+                      <button
+                        className="w-fit cursor-pointer truncate font-mono text-muted-foreground text-sm tracking-tight"
+                        onClick={() => handleCopyApiKey(apiKey.key)}
+                        type="button"
+                      >
+                        {encryptApiKey(apiKey.key)}
+                      </button>
+                    </div>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Badge className="lowercase" variant="muted">
+                            {apiKey.expiresAt
+                              ? formatDistanceToNow(apiKey.expiresAt, {
+                                  locale: getLocale(locale),
+                                })
+                              : t("never")}
+                          </Badge>
+                        }
+                      />
+                      <TooltipContent>{t("expires")}</TooltipContent>
+                    </Tooltip>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => handleCopyApiKey(apiKey.key)}
+                      size="icon-sm"
+                      type="button"
+                      variant="secondary"
+                    >
+                      <CopyIcon className="size-4" />
+                      <span className="sr-only">Copy API Key</span>
+                    </Button>
+                    <Button
+                      onClick={() => setConfirmDeleteApiKey(apiKey._id)}
+                      size="icon-sm"
+                      type="button"
+                      variant="destructive"
+                    >
+                      <Trash2Icon className="size-4" />
+                      <span className="sr-only">Delete API Key</span>
+                    </Button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="flex items-center justify-center p-4 text-muted-foreground text-sm">
+                {t("no-api-keys")}
+              </p>
+            )}
+          </div>
+        ) : (
+          <Skeleton className="h-[54px] w-full border" />
+        )}
+      </FormBlock>
+
+      <ResponsiveDialog
+        description={t("delete-api-key-description")}
+        footer={
+          <Button
+            disabled={isPending}
+            onClick={() => {
+              if (confirmDeleteApiKey) {
+                handleDeleteApiKey(confirmDeleteApiKey);
+              }
+            }}
+            variant="destructive"
+          >
+            {isPending ? <SpinnerIcon /> : <Trash2Icon />}
+            {t("delete")}
+          </Button>
+        }
+        open={Boolean(confirmDeleteApiKey)}
+        setOpen={(open) =>
+          setConfirmDeleteApiKey(open ? confirmDeleteApiKey : null)
+        }
+        title={t("delete-api-key")}
+      />
+
+      <ResponsiveDialog
+        description={t("api-key-confirmation-description")}
+        footer={
+          <Button
+            disabled={isPending || !form.formState.isValid}
+            onClick={() => form.handleSubmit(onSubmit)()}
+            type="button"
+          >
+            {isPending ? <SpinnerIcon /> : <PlusIcon />}
+            {t("create")}
+          </Button>
+        }
+        open={confirmCreateApiKey}
+        setOpen={setConfirmCreateApiKey}
+        title={t("new-api-key")}
+      >
+        <FieldGroup>
+          <Controller
+            control={form.control}
+            name="name"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="api-key-name">
+                  {t("api-key-name")}
+                </FieldLabel>
+                <Input
+                  {...field}
+                  aria-invalid={fieldState.invalid}
+                  id="api-key-name"
+                  placeholder={t("api-key-name-placeholder")}
+                />
+              </Field>
+            )}
+          />
+
+          <Controller
+            control={form.control}
+            name="expiresIn"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="api-key-expires-in">
+                  {t("expires-in")}
+                </FieldLabel>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    aria-invalid={fieldState.invalid}
+                    asChild
+                    id="api-key-expires-in"
+                  >
+                    <Button
+                      className={cn(
+                        "justify-between font-normal",
+                        field.value === undefined && "text-destructive!"
+                      )}
+                      variant="outline"
+                    >
+                      {t(
+                        expiresInList.find((item) => item.value === field.value)
+                          ?.label ?? "never"
+                      )}
+                      <ChevronDownIcon className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuGroup>
+                      {expiresInList.map((item) => (
+                        <DropdownMenuItem
+                          className={cn(
+                            "cursor-pointer",
+                            item.label === "never" && "text-destructive!"
+                          )}
+                          key={item.label}
+                          onSelect={() => field.onChange(item.value)}
+                        >
+                          {t(item.label)}
+
+                          <CheckIcon
+                            className={cn(
+                              "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                              field.value === item.value && "opacity-100",
+                              field.value === undefined && "text-destructive!"
+                            )}
+                          />
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </Field>
+            )}
+          />
+        </FieldGroup>
+      </ResponsiveDialog>
+    </form>
   );
 }
 
