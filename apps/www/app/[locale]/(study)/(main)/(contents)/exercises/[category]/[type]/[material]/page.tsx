@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import {
   getMaterialPath,
   getMaterials,
@@ -53,10 +55,20 @@ export async function generateMetadata({
 
   const FilePath = getMaterialPath(category, type, material);
 
+  let ogUrl: string = getOgUrl(locale, FilePath);
+
+  const publicPath = `/open-graph/exercises/${locale}-${material}.png` as const;
+  const fullPathToCheck = path.join(process.cwd(), `public${publicPath}`);
+
+  // if the og image exists in public directory, use it
+  if (fs.existsSync(fullPathToCheck)) {
+    ogUrl = publicPath;
+  }
+
   const title = `${t(material)} - ${t(type)} - ${t(category)}`;
   const urlPath = `/${locale}${FilePath}`;
   const image = {
-    url: getOgUrl(locale, FilePath),
+    url: ogUrl,
     width: 1200,
     height: 630,
   };

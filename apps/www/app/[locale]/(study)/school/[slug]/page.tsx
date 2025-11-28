@@ -26,19 +26,29 @@ export default function Page({ params }: Props) {
 }
 
 async function PageContent({ slug }: { slug: string }) {
+  // Decode URL-encoded characters (e.g., %2c -> ,)
+  let decodedSlug: string;
+  try {
+    decodedSlug = decodeURIComponent(slug);
+  } catch {
+    // Fallback to original slug if decoding fails
+    decodedSlug = slug;
+  }
+
   const token = await getToken();
   const school = await fetchQuery(
     api.schools.queries.getSchoolBySlug,
     {
-      slug,
+      slug: decodedSlug,
     },
     { token }
   );
+
   if (!school) {
     notFound();
   }
 
-  redirect(`/school/${slug}/${school.membership.role}`);
+  redirect(`/school/${decodedSlug}/dashboard`);
 
   return null;
 }

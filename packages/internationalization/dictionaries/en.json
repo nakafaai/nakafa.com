@@ -393,6 +393,10 @@
     "legal-description": "By using our services, you agree to our <terms-of-service>Terms of Service</terms-of-service> and <privacy-policy>Privacy Policy</privacy-policy>."
   },
   "School": {
+    "Common": {
+      "dashboard": "Dashboard",
+      "classes": "Classes"
+    },
     "Onboarding": {
       "title": "Welcome to Nakafa School!",
       "description": "What are you going to do?",

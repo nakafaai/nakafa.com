@@ -9,10 +9,11 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
 import { cn } from "@repo/design-system/lib/utils";
-import { ArrowUpRightIcon, PencilRulerIcon } from "lucide-react";
+import { ArrowLeftIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
-import { NavUser } from "@/components/school/sidebar/nav-user";
+import { SchoolSidebarNavMain } from "@/components/school/sidebar/nav-main";
+import { SchoolSidebarNavUser } from "@/components/school/sidebar/nav-user";
 import { LangMenu } from "@/components/sidebar/lang-menu";
 import { ThemeMenu } from "@/components/sidebar/theme-menu";
 
@@ -29,26 +30,23 @@ export function SchoolSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="border-b">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="group/main justify-between">
+            <SidebarMenuButton asChild>
               <NavigationLink href="/" title="Start Learning">
-                <div className="flex items-center gap-2">
-                  <PencilRulerIcon className="size-4" />
-                  {t("button")}
-                </div>
-                <div className="hidden items-center opacity-0 transition-opacity ease-out group-hover/main:opacity-100 lg:flex">
-                  <ArrowUpRightIcon className="size-3.5 shrink-0" />
-                </div>
+                <ArrowLeftIcon />
+                {t("button")}
               </NavigationLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent />
+      <SidebarContent>
+        <SchoolSidebarNavMain />
+      </SidebarContent>
       <SidebarFooter className="border-t">
         <SidebarMenu>
           <LangMenu />
           <ThemeMenu />
-          <NavUser />
+          <SchoolSidebarNavUser />
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

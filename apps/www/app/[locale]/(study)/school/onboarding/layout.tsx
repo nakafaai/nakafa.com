@@ -19,9 +19,9 @@ export default function Layout(
   setRequestLocale(locale);
 
   return (
-    <div className="relative flex min-h-svh" data-pagefind-ignore>
+    <main className="relative flex min-h-svh">
       <Particles className="-z-1 pointer-events-none absolute inset-0 opacity-80" />
       {children}
-    </div>
+    </main>
   );
 }

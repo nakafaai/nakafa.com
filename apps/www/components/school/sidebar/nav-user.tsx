@@ -30,7 +30,7 @@ import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 import { getInitialName } from "@/lib/utils/helper";
 
-export function NavUser() {
+export function SchoolSidebarNavUser() {
   const t = useTranslations("Auth");
 
   const pathname = usePathname();

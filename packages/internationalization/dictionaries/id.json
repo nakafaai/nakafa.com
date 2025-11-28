@@ -393,6 +393,10 @@
     "legal-description": "Dengan menggunakan layanan kami, Anda setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> dan <privacy-policy>Kebijakan Privasi</privacy-policy>."
   },
   "School": {
+    "Common": {
+      "dashboard": "Dashboard",
+      "classes": "Kelas"
+    },
     "Onboarding": {
       "title": "Selamat datang di Nakafa School!",
       "description": "Apa yang ingin kamu lakukan?",

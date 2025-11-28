@@ -42,8 +42,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${t(type)} - ${t(category)}`;
   const path = `/${locale}${FilePath}`;
+
+  let ogUrl: string = getOgUrl(locale, FilePath);
+
+  // Currently only available for SNBT type
+  if (type === "snbt") {
+    ogUrl = `/open-graph/type/${locale}-${type}.png`;
+  }
+
   const image = {
-    url: getOgUrl(locale, FilePath),
+    url: ogUrl,
     width: 1200,
     height: 630,
   };

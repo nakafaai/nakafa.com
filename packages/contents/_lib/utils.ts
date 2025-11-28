@@ -29,8 +29,18 @@ export async function getRawContent(filePath: string): Promise<string> {
   // Strip leading slash if present for consistency
   const cleanPath = filePath.startsWith("/") ? filePath.substring(1) : filePath;
 
+  // Validate path to prevent directory traversal
+  if (cleanPath.includes("..") || path.isAbsolute(cleanPath)) {
+    return "";
+  }
+
   // Resolve path relative to the contents directory
-  const fullPath = path.resolve(contentsDir, cleanPath);
+  const fullPath = path.join(contentsDir, cleanPath);
+
+  // Verify the resolved path is still within contents directory
+  if (!fullPath.startsWith(contentsDir)) {
+    return "";
+  }
 
   // Check if file exists locally
   const exists = await fsPromises
@@ -313,8 +323,18 @@ export function getFolderChildNames(folder: string, exclude?: string[]) {
   const defaultExclude = ["_", "node_modules", ".", "dist"];
 
   try {
+    // Validate folder path to prevent directory traversal
+    if (folder.includes("..") || path.isAbsolute(folder)) {
+      return [];
+    }
+
     // Resolve path relative to the contents directory
-    const contentDir = path.resolve(contentsDir, folder);
+    const contentDir = path.join(contentsDir, folder);
+
+    // Verify the resolved path is still within contents directory
+    if (!contentDir.startsWith(contentsDir)) {
+      return [];
+    }
 
     // Check if directory exists first
     if (!fs.existsSync(contentDir)) {
