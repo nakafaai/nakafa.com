@@ -284,7 +284,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
                 <CheckIcon
                   className={cn(
                     "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out",
-                    isSelected && "opacity-100"
+                    !!isSelected && "opacity-100"
                   )}
                 />
               </button>

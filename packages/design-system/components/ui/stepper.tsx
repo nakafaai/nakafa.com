@@ -221,7 +221,7 @@ function StepperIndicator({
             className="absolute scale-0 opacity-0 transition-all group-data-[state=completed]/step:scale-100 group-data-[state=completed]/step:opacity-100"
             size={16}
           />
-          {isLoading && (
+          {!!isLoading && (
             <span className="absolute transition-all">
               <LoaderCircleIcon
                 aria-hidden="true"

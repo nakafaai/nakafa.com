@@ -168,7 +168,7 @@ export function OgImage(props: GenerateProps) {
             {sanitizedTitle}
           </h1>
 
-          {truncatedDescription && (
+          {!!truncatedDescription && (
             <p
               style={{
                 fontSize: descriptionFontSize,

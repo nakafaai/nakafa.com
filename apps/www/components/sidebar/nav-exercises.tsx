@@ -37,7 +37,7 @@ function MenuItem() {
               <CollapsibleTrigger
                 render={
                   <SidebarMenuButton className="group" tooltip={t(item.title)}>
-                    {item.icon && <item.icon />}
+                    {!!item.icon && <item.icon />}
                     <span className="truncate">{t(item.title)}</span>
                     <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-panel-open:rotate-90" />
                   </SidebarMenuButton>

@@ -78,13 +78,13 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
               tickFormatter={(value) =>
                 value >= THRESHOLD_VALUE
                   ? `${(value / THRESHOLD_VALUE).toFixed(THRESHOLD_VALUE_DECIMAL_PLACES)}k`
-                  : value
+                  : String(value)
               }
               tickMargin={8}
             />
             <ChartTooltip
               content={({ active, payload }) => {
-                if (active && payload && payload.length) {
+                if (!!active && !!payload && payload.length > 0) {
                   const xValue = payload[0].payload.x;
                   const yValue = payload[0].payload.y;
 

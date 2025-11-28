@@ -49,7 +49,7 @@ export function HeaderContent({
     <div className="relative py-20" data-pagefind-ignore>
       <div className="z-10 mx-auto max-w-3xl space-y-6 px-6">
         <div className="space-y-3">
-          {link && (
+          {!!link && (
             <Link
               aria-label={link.label}
               className={cn(buttonVariants({ variant: "link" }), "h-auto p-0")}
@@ -61,7 +61,7 @@ export function HeaderContent({
             </Link>
           )}
           <div className="flex items-start gap-2">
-            {Icon && (
+            {!!Icon && (
               <Icon className="hidden size-7 shrink-0 translate-y-1 sm:block" />
             )}
             <h1 className="font-medium text-3xl leading-tight tracking-tight">
@@ -70,14 +70,14 @@ export function HeaderContent({
           </div>
         </div>
 
-        {(description || showFooter) && (
+        {(!!description || !!showFooter) && (
           <div className="space-y-3">
-            {description && (
+            {!!description && (
               <p className="text-muted-foreground">{description}</p>
             )}
-            {showFooter && (
+            {!!showFooter && (
               <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
-                {authors && (
+                {!!authors && (
                   <p className="inline-flex items-center gap-1 text-muted-foreground">
                     <UserPenIcon className="size-4 shrink-0" />
                     <span className="text-sm">
@@ -87,7 +87,7 @@ export function HeaderContent({
                 )}
 
                 <div className="flex items-center gap-4">
-                  {date && (
+                  {!!date && (
                     <p className="inline-flex items-center gap-1 text-muted-foreground">
                       <CalendarIcon className="size-4 shrink-0" />
                       <span className="text-sm">
@@ -96,7 +96,7 @@ export function HeaderContent({
                     </p>
                   )}
 
-                  {category && (
+                  {!!category && (
                     <p className="inline-flex items-center gap-1 text-muted-foreground">
                       <category.icon className="size-4 shrink-0" />
                       <span className="text-sm">{category.name}</span>
@@ -108,7 +108,7 @@ export function HeaderContent({
           </div>
         )}
 
-        {slug && <OpenContent slug={slug} />}
+        {!!slug && <OpenContent slug={slug} />}
       </div>
     </div>
   );

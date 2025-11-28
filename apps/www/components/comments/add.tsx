@@ -88,7 +88,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
         <UserAvatar />
 
         <div className="flex items-center gap-1">
-          {closeButton && (
+          {!!closeButton && (
             <Button
               className="rounded-lg"
               onClick={closeButton.onClick}

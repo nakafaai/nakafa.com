@@ -49,7 +49,7 @@ export function CardMaterial({ material }: Props) {
                 <LinkIcon className="size-4" />
               </a>
             </CardTitle>
-            {material.description && (
+            {!!material.description && (
               <CardDescription title={material.description}>
                 {material.description}
               </CardDescription>

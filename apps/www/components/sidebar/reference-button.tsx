@@ -115,7 +115,7 @@ export function ReferenceButton({ references, title }: Props) {
                             <span className="text-sm">{reference.year}</span>
                           </div>
 
-                          {reference.publication && (
+                          {!!reference.publication && (
                             <div className="flex items-center gap-1">
                               <BookOpenIcon className="size-4 shrink-0" />
                               <span className="line-clamp-1 text-sm">
@@ -124,7 +124,7 @@ export function ReferenceButton({ references, title }: Props) {
                             </div>
                           )}
 
-                          {reference.details && (
+                          {!!reference.details && (
                             <div className="flex items-center gap-1">
                               <BookIcon className="size-4 shrink-0" />
                               <span className="text-sm">

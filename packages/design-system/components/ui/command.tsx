@@ -86,7 +86,7 @@ function CommandInput({
         <XIcon
           className={cn(
             "size-4 shrink-0 opacity-0 transition-opacity",
-            props.value && "opacity-50 group-hover:opacity-100"
+            !!props.value && "opacity-50 group-hover:opacity-100"
           )}
         />
       </button>

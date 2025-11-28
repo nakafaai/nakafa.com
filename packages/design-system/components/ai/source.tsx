@@ -70,7 +70,7 @@ export function SourceTrigger({
         rel="noopener noreferrer"
         target="_blank"
       >
-        {showFavicon && (
+        {!!showFavicon && (
           <Image
             alt="favicon"
             className="size-3.5 rounded-full"
@@ -123,7 +123,7 @@ export function SourceContent({
           </div>
         </div>
         <div className="line-clamp-2 font-medium text-sm">{title}</div>
-        {description && (
+        {!!description && (
           <div className="line-clamp-2 text-muted-foreground text-sm">
             {description}
           </div>

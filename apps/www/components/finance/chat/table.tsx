@@ -56,7 +56,7 @@ export function FinanceDatasetTable({ datasetId }: Props) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {rows && rows.length > 0 ? (
+        {!!rows && rows.length > 0 ? (
           rows.map((row) => (
             <TableRow key={row._id}>
               {/* Dynamic data */}

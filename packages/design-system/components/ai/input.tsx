@@ -295,7 +295,7 @@ export function PromptInputAttachment({
                 <h4 className="wrap-break-word max-w-[240px] overflow-hidden whitespace-normal text-left font-semibold text-sm">
                   {data.filename || "Unknown file"}
                 </h4>
-                {data.mediaType && <div>{data.mediaType}</div>}
+                {!!data.mediaType && <div>{data.mediaType}</div>}
               </div>
             </TooltipContent>
           </Tooltip>
@@ -1130,7 +1130,7 @@ export const PromptInputSpeechButton = ({
     <PromptInputButton
       className={cn(
         "relative transition-all duration-200",
-        isListening && "animate-pulse bg-accent text-accent-foreground",
+        !!isListening && "animate-pulse bg-accent text-accent-foreground",
         className
       )}
       disabled={!recognition}

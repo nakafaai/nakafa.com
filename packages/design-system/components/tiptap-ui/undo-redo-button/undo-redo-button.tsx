@@ -102,8 +102,8 @@ export const UndoRedoButton = ({
       {children ?? (
         <>
           <Icon className="tiptap-button-icon" />
-          {text && <span className="tiptap-button-text">{text}</span>}
-          {showShortcut && (
+          {!!text && <span className="tiptap-button-text">{text}</span>}
+          {!!showShortcut && (
             <HistoryShortcutBadge action={action} shortcutKeys={shortcutKeys} />
           )}
         </>

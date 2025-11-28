@@ -4,7 +4,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { CheckIcon, ChevronDownIcon, PhoneIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type React from "react";
-import { useId, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import * as RpnInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 import { VList } from "virtua";
@@ -21,23 +21,10 @@ import { Input } from "./input";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 type PhoneInputProps = {
-  id?: string;
-  placeholder: string;
-  value?: string;
-  onChangeAction?: (value: string) => void;
   className?: string;
-};
+} & React.ComponentProps<typeof RpnInput.default>;
 
-export default function PhoneInput({
-  id,
-  placeholder,
-  value,
-  onChangeAction,
-  className,
-  ...props
-}: PhoneInputProps) {
-  const inputId = useId();
-
+export default function PhoneInput({ className, ...props }: PhoneInputProps) {
   return (
     <div className={cn("*:not-first:mt-2", className)} dir="ltr">
       <RpnInput.default
@@ -45,12 +32,8 @@ export default function PhoneInput({
         countrySelectComponent={CountrySelect}
         defaultCountry="ID"
         flagComponent={FlagComponent}
-        id={id ?? inputId}
         inputComponent={Phone}
         international
-        onChange={(newValue) => onChangeAction?.(newValue ?? "")}
-        placeholder={placeholder}
-        value={value}
         {...props}
       />
     </div>

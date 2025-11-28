@@ -117,7 +117,7 @@ export function NumberLine({
           <div className="relative h-20 w-full">
             {processedSegments.map((segment) => (
               <div key={`bg-${segment.start}-${segment.end}-${segment.index}`}>
-                {segment.shaded && (
+                {!!segment.shaded && (
                   <div
                     className={cn(
                       "-translate-y-1/2 absolute top-1/2 h-8",
@@ -127,7 +127,7 @@ export function NumberLine({
                     style={{
                       left: `${segment.startPos}%`,
                       width: `${segment.width}%`,
-                      ...(segment.bgColor && {
+                      ...(!!segment.bgColor && {
                         backgroundColor: segment.bgColor,
                       }),
                     }}
@@ -142,7 +142,7 @@ export function NumberLine({
               <div
                 key={`label-${segment.start}-${segment.end}-${segment.index}`}
               >
-                {segment.label && (
+                {!!segment.label && (
                   <div
                     className="-translate-x-1/2 absolute top-0 font-medium text-sm"
                     style={{ left: `${segment.startPos + segment.width / 2}%` }}
@@ -157,7 +157,7 @@ export function NumberLine({
               <div
                 key={`points-${segment.start}-${segment.end}-${segment.index}`}
               >
-                {segment.showPoints && (
+                {!!segment.showPoints && (
                   <>
                     {Number.isFinite(segment.start) && (
                       <div

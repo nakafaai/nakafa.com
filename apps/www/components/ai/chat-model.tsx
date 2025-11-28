@@ -108,12 +108,12 @@ export function AiChatModel() {
     >
       <DropdownMenuTrigger asChild disabled={isPending}>
         <Button disabled={isPending} variant="ghost">
-          {Icon && <Icon />}
+          {!!Icon && <Icon />}
           {label}
           <ChevronDownIcon
             className={cn(
               "ml-auto size-4 transition-transform ease-out",
-              openModelMenu && "rotate-180"
+              !!openModelMenu && "rotate-180"
             )}
           />
         </Button>

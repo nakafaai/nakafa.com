@@ -107,9 +107,7 @@ export function ScatterDiagram({
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="x"
-              domain={
-                xAxisDomain === "min-max" ? ["dataMin", "dataMax"] : undefined
-              }
+              domain={xAxisDomain === "min-max" ? ["dataMin", "dataMax"] : null}
               label={{
                 value: xAxisLabel || "X",
                 position: "bottom",
@@ -140,7 +138,7 @@ export function ScatterDiagram({
                 name={dataset.name}
               />
             ))}
-            {regressionLineData && calculateRegressionLine && (
+            {!!regressionLineData && !!calculateRegressionLine && (
               <Line
                 activeDot={false}
                 data={regressionLineData}
@@ -152,8 +150,8 @@ export function ScatterDiagram({
                 type="linear"
               />
             )}
-            {showResiduals &&
-              regressionParams &&
+            {!!showResiduals &&
+              !!regressionParams &&
               datasets.flatMap((dataset) =>
                 dataset.points.map((point, index) => {
                   const yPredicted =

@@ -156,7 +156,7 @@ export function Axes({
         frustumCulled
         material={blueMaterial}
         position={labelPositions.zPos}
-        visible={showZAxis && showLabels}
+        visible={!!showZAxis && !!showLabels}
       >
         Z
       </Text>
@@ -168,7 +168,7 @@ export function Axes({
         frustumCulled
         material={blueMaterial}
         position={labelPositions.zNeg}
-        visible={showZAxis && showLabels}
+        visible={!!showZAxis && !!showLabels}
       >
         -Z
       </Text>

@@ -247,7 +247,7 @@ function Highlight<T extends React.ElementType = "div">({
           },
           <>
             <AnimatePresence initial={false} mode="wait">
-              {boundsState && (
+              {!!boundsState && (
                 <motion.div
                   animate={{
                     top: boundsState.top,
@@ -548,7 +548,7 @@ function HighlightItem<T extends React.ElementType>({
         },
         <>
           <AnimatePresence initial={false} mode="wait">
-            {isActive && !isDisabled && (
+            {!!isActive && !isDisabled && (
               <motion.div
                 animate={{ opacity: 1 }}
                 className={cn(contextClassName, activeClassName)}
@@ -610,7 +610,7 @@ function HighlightItem<T extends React.ElementType>({
     >
       {mode === "children" && (
         <AnimatePresence initial={false} mode="wait">
-          {isActive && !isDisabled && (
+          {!!isActive && !isDisabled && (
             <motion.div
               animate={{ opacity: 1 }}
               className={cn(contextClassName, activeClassName)}

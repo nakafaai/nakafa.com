@@ -61,7 +61,7 @@ function SidebarRightHeader({
                       <span className="truncate font-semibold">
                         {header.title}
                       </span>
-                      {header.description && (
+                      {!!header.description && (
                         <span className="truncate text-xs">
                           {header.description}
                         </span>
@@ -93,15 +93,15 @@ function SidebarRightFooter({
   return (
     <SidebarFooter className="border-t">
       <SidebarMenu>
-        {showComments && <CommentsButton />}
-        {references && (
+        {!!showComments && <CommentsButton />}
+        {!!references && (
           <ReferenceButton
             references={references.data}
             title={references.title}
           />
         )}
         <ReportButton />
-        {githubUrl && <GithubButton githubUrl={githubUrl} />}
+        {!!githubUrl && <GithubButton githubUrl={githubUrl} />}
         <ShareButton />
       </SidebarMenu>
     </SidebarFooter>

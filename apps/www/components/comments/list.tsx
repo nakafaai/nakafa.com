@@ -165,7 +165,7 @@ function CommentFooter({
   return (
     <div className="grid gap-3">
       <CommentAction comment={comment} onReplyToggle={onReplyToggle} />
-      {isReplyOpen && (
+      {!!isReplyOpen && (
         <CommentsAdd
           closeButton={{ onClick: onReplyClose }}
           comment={comment}

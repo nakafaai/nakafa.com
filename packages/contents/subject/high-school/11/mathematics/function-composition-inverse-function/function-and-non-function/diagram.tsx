@@ -204,7 +204,7 @@ export function RelationVisualizer({
           const endCoords = elementCoords[mapping.to];
 
           // Check if coordinates exist before drawing
-          if (!(startCoords && endCoords)) {
+          if (!(!!startCoords && !!endCoords)) {
             return null;
           }
 

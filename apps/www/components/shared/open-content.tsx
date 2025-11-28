@@ -132,7 +132,10 @@ function ViewOptions({ slug }: { slug: string }) {
         >
           <span className="sr-only">{t("open")}</span>
           <ChevronDownIcon
-            className={cn("size-4 transition-transform", open && "rotate-180")}
+            className={cn(
+              "size-4 transition-transform",
+              !!open && "rotate-180"
+            )}
           />
         </Button>
       </DropdownMenuTrigger>

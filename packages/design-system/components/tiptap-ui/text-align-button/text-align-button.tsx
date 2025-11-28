@@ -121,8 +121,8 @@ export const TextAlignButton = ({
       {children ?? (
         <>
           <RenderIcon className="tiptap-button-icon" />
-          {text && <span className="tiptap-button-text">{text}</span>}
-          {showShortcut && (
+          {!!text && <span className="tiptap-button-text">{text}</span>}
+          {!!showShortcut && (
             <TextAlignShortcutBadge align={align} shortcutKeys={shortcutKeys} />
           )}
         </>

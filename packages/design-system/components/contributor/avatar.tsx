@@ -59,9 +59,9 @@ export function Avatar({ contributor, size = "md" }: Props) {
           </DrawerDescription>
         </DrawerHeader>
         <DrawerFooter>
-          {contributor.social && (
+          {!!contributor.social && (
             <div className="flex flex-wrap items-center justify-center gap-2">
-              {contributor.social.twitter && (
+              {!!contributor.social.twitter && (
                 <a
                   className={buttonVariants({
                     variant: "outline",
@@ -76,7 +76,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
                   <span className="sr-only">Twitter</span>
                 </a>
               )}
-              {contributor.social.github && (
+              {!!contributor.social.github && (
                 <a
                   className={buttonVariants({
                     variant: "outline",
@@ -91,7 +91,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
                   <span className="sr-only">GitHub</span>
                 </a>
               )}
-              {contributor.social.linkedin && (
+              {!!contributor.social.linkedin && (
                 <a
                   className={buttonVariants({
                     variant: "outline",

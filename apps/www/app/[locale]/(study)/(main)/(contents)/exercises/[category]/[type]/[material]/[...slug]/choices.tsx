@@ -46,7 +46,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
       {choices.map((choice) => {
         const isCorrect =
-          answer?.isCorrect && choice.value === correctChoice?.value;
+          !!answer?.isCorrect && choice.value === correctChoice?.value;
         const isIncorrect = answer?.selected === choice.label && !isCorrect;
 
         let variant: ComponentProps<typeof Button>["variant"] = "outline";

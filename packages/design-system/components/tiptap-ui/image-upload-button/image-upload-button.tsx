@@ -114,8 +114,8 @@ export const ImageUploadButton = ({
       {children ?? (
         <>
           <RenderIcon className="tiptap-button-icon" />
-          {text && <span className="tiptap-button-text">{text}</span>}
-          {showShortcut && <ImageShortcutBadge shortcutKeys={shortcutKeys} />}
+          {!!text && <span className="tiptap-button-text">{text}</span>}
+          {!!showShortcut && <ImageShortcutBadge shortcutKeys={shortcutKeys} />}
         </>
       )}
     </Button>

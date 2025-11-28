@@ -322,9 +322,9 @@ export function LineEquation({
       />
 
       {/* Render the cone(s) if configured */}
-      {coneData &&
-        coneGeometry &&
-        coneMaterial &&
+      {!!coneData &&
+        !!coneGeometry &&
+        !!coneMaterial &&
         coneData.map((data) => (
           <mesh
             frustumCulled

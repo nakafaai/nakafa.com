@@ -110,7 +110,7 @@ function SearchList() {
     <CommandList className="h-[300px] max-h-none md:h-[450px]">
       <SearchListItems
         error={hasError ? displayError : ""}
-        isLoading={isLoading && !hasError && !isPlaceholderData}
+        isLoading={!!isLoading && !hasError && !isPlaceholderData}
         results={results}
         search={debouncedSearch}
       />

@@ -153,7 +153,7 @@ function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
           title={title}
         />
         <LayoutMaterialMain>
-          {preBismillah && (
+          {!!preBismillah && (
             <div className="mb-20 flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center shadow-sm">
               <QuranText>{preBismillah.text.arab}</QuranText>
               <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">

@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -16,10 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { useForm } from "@tanstack/react-form";
 import { MergeIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
 import * as z from "zod/mini";
 import { roles } from "@/lib/data/roles";
 
@@ -31,91 +29,115 @@ const formSchema = z.object({
   ]),
   code: z.string().check(z.minLength(1), z.trim()),
 });
-type FormSchema = z.infer<typeof formSchema>;
+const roleSchema = formSchema.shape.role;
 
 export function SchoolOnboardingJoinForm() {
   const t = useTranslations("School.Onboarding");
 
-  const [isPending, startTransition] = useTransition();
-
   const form = useForm({
-    resolver: zodResolver(formSchema),
     defaultValues: {
       role: "teacher",
       code: "",
-    } as const,
-    mode: "onChange",
-  });
-
-  const onSubmit = (values: FormSchema) => {
-    startTransition(() => {
+    },
+    validators: {
+      onChange: formSchema,
+    },
+    onSubmit: ({ value }) => {
       // TODO: Create school
-      form.reset(values);
-    });
-  };
+      form.reset(value);
+    },
+  });
 
   return (
     <form
       className="flex flex-col gap-6"
       id="school-onboarding-join-form"
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
     >
       <FieldGroup>
-        <Controller
-          control={form.control}
-          name="role"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="school-onboarding-join-role">
-                {t("role")}
-              </FieldLabel>
-              <Select
-                defaultValue={field.value ?? undefined}
-                onValueChange={field.onChange}
-              >
-                <SelectTrigger
-                  aria-invalid={fieldState.invalid}
-                  className="w-full"
-                  id="school-onboarding-join-role"
+        <form.Field name="role">
+          {(field) => {
+            const isInvalid =
+              Boolean(field.state.meta.isTouched) &&
+              Boolean(!field.state.meta.isValid);
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor="school-onboarding-join-role">
+                  {t("role")}
+                </FieldLabel>
+                <Select
+                  name={field.name}
+                  onValueChange={(value) => {
+                    const parsed = roleSchema.safeParse(value);
+                    if (parsed.success) {
+                      field.handleChange(parsed.data);
+                    }
+                  }}
+                  value={field.state.value ?? undefined}
                 >
-                  <SelectValue placeholder={t("role-placeholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {roleOptions.map((role) => (
-                    <SelectItem key={role.value} value={role.value}>
-                      <role.icon />
-                      {t(role.value)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          )}
-        />
+                  <SelectTrigger
+                    aria-invalid={isInvalid}
+                    className="w-full"
+                    id="school-onboarding-join-role"
+                  >
+                    <SelectValue placeholder={t("role-placeholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roleOptions.map((role) => (
+                      <SelectItem key={role.value} value={role.value}>
+                        <role.icon />
+                        {t(role.value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            );
+          }}
+        </form.Field>
 
-        <Controller
-          control={form.control}
-          name="code"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="school-onboarding-join-code">
-                {t("code")}
-              </FieldLabel>
-              <Input
-                {...field}
-                aria-invalid={fieldState.invalid}
-                id="school-onboarding-join-code"
-                placeholder={t("code-placeholder")}
-              />
-            </Field>
-          )}
-        />
+        <form.Field name="code">
+          {(field) => {
+            const isInvalid =
+              Boolean(field.state.meta.isTouched) &&
+              Boolean(!field.state.meta.isValid);
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor="school-onboarding-join-code">
+                  {t("code")}
+                </FieldLabel>
+                <Input
+                  aria-invalid={isInvalid}
+                  id="school-onboarding-join-code"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder={t("code-placeholder")}
+                  value={field.state.value}
+                />
+              </Field>
+            );
+          }}
+        </form.Field>
       </FieldGroup>
 
-      <Button disabled={isPending || !form.formState.isValid} type="submit">
-        {isPending ? <SpinnerIcon /> : <MergeIcon />}
-        {t("join")}
-      </Button>
+      <form.Subscribe
+        selector={(state) => [state.isValid, state.isDirty, state.isSubmitting]}
+      >
+        {([isValid, isDirty, isSubmitting]) => {
+          const canSubmit = Boolean(isValid) && Boolean(isDirty);
+          const isDisabled = !canSubmit || Boolean(isSubmitting);
+          return (
+            <Button disabled={isDisabled} type="submit">
+              {isSubmitting ? <SpinnerIcon /> : <MergeIcon />}
+              {t("join")}
+            </Button>
+          );
+        }}
+      </form.Subscribe>
     </form>
   );
 }

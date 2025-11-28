@@ -105,7 +105,7 @@ export function AiSheet() {
       <SheetContent
         className={cn(
           "max-w-none gap-0 border-l-0 sm:max-w-none sm:border-l",
-          isResizing && "transition-none"
+          !!isResizing && "transition-none"
         )}
         showCloseButton={false}
         style={{ width: isMobile ? "100%" : `${width}px` }}
@@ -113,8 +113,8 @@ export function AiSheet() {
         <button
           className={cn(
             "absolute top-0 bottom-0 left-0 z-10 w-1 cursor-col-resize outline-0 ring-0 transition-colors hover:bg-accent",
-            isResizing && "bg-accent",
-            isMobile && "hidden"
+            !!isResizing && "bg-accent",
+            !!isMobile && "hidden"
           )}
           onKeyDown={resizerProps.onKeyDown}
           onMouseDown={resizerProps.onMouseDown}
@@ -144,7 +144,9 @@ export function AiSheet() {
               <AiSheetHistory />
               <Button
                 onClick={() => {
-                  setWidth(width === MAX_WIDTH ? MIN_WIDTH : MAX_WIDTH);
+                  setWidth(
+                    width === MAX_WIDTH ? (MIN_WIDTH ?? 0) : (MAX_WIDTH ?? 0)
+                  );
                 }}
                 size="icon-sm"
                 variant="ghost"
@@ -173,7 +175,7 @@ export function AiSheet() {
         <Activity mode={activeChatId ? "visible" : "hidden"}>
           <ErrorBoundary fallback={<AiSheetError />}>
             <Authenticated>
-              {activeChatId && (
+              {!!activeChatId && (
                 <CurrentChatProvider chatId={activeChatId}>
                   <AiSheetMain />
                 </CurrentChatProvider>

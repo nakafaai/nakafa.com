@@ -150,8 +150,8 @@ export const ToolOutput = memo(
               : "bg-muted/50 text-foreground"
           )}
         >
-          {errorText && <div>{errorText}</div>}
-          {output && <div>{output}</div>}
+          {!!errorText && <div>{errorText}</div>}
+          {!!output && <div>{output}</div>}
         </div>
       </div>
     );

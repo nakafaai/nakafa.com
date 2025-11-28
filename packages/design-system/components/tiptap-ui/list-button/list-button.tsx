@@ -112,8 +112,8 @@ export const ListButton = ({
       {children ?? (
         <>
           <Icon className="tiptap-button-icon" />
-          {text && <span className="tiptap-button-text">{text}</span>}
-          {showShortcut && (
+          {!!text && <span className="tiptap-button-text">{text}</span>}
+          {!!showShortcut && (
             <ListShortcutBadge shortcutKeys={shortcutKeys} type={type} />
           )}
         </>

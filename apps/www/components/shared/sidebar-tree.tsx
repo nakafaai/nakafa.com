@@ -84,7 +84,7 @@ function SidebarTreeItem({
         </TooltipContent>
       </Tooltip>
 
-      {heading.children && heading.children.length > 0 && (
+      {!!heading.children && heading.children.length > 0 && (
         <SidebarMenuSub>
           {heading.children.map((child) => (
             <SidebarTreeItem

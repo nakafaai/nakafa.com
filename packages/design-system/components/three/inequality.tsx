@@ -488,7 +488,7 @@ export function Inequality({
       <mesh frustumCulled geometry={geometry} material={material} />
 
       {/* Render the boundary as one lineSegments for better performance */}
-      {showBoundary && boundarySegmentsGeometry && (
+      {!!showBoundary && !!boundarySegmentsGeometry && (
         <lineSegments frustumCulled geometry={boundarySegmentsGeometry}>
           <lineBasicMaterial
             color={finalBoundaryColor}
@@ -498,7 +498,7 @@ export function Inequality({
       )}
 
       {/* Render label if provided */}
-      {label && (
+      {!!label && (
         <Text
           anchorX="center"
           anchorY="middle"

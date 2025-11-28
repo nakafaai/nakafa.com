@@ -62,7 +62,7 @@ export function ResponsiveDialog({
             <DialogTitle className={styleClassName?.dialog?.title}>
               {title}
             </DialogTitle>
-            {description && (
+            {!!description && (
               <DialogDescription
                 className={styleClassName?.dialog?.description}
               >
@@ -71,7 +71,7 @@ export function ResponsiveDialog({
             )}
           </DialogHeader>
           {children}
-          {footer && (
+          {!!footer && (
             <DialogFooter className={styleClassName?.dialog?.footer}>
               {footer}
             </DialogFooter>
@@ -94,7 +94,7 @@ export function ResponsiveDialog({
           <DrawerTitle className={styleClassName?.drawer?.title}>
             {title}
           </DrawerTitle>
-          {description && (
+          {!!description && (
             <DrawerDescription className={styleClassName?.drawer?.description}>
               {description}
             </DrawerDescription>
@@ -105,7 +105,7 @@ export function ResponsiveDialog({
         >
           {children}
         </div>
-        {footer && (
+        {!!footer && (
           <DrawerFooter className={styleClassName?.drawer?.footer}>
             {footer}
           </DrawerFooter>

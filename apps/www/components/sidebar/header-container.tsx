@@ -26,7 +26,7 @@ export function HeaderContainer({ children }: { children: ReactNode }) {
     <motion.header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 bg-background/80 backdrop-blur-xs lg:hidden">
       <motion.div
         className="absolute right-0 bottom-0 left-0 h-[1px] bg-border"
-        style={{ opacity: isChat ? 1 : borderOpacity }}
+        style={{ opacity: isChat ? 1 : (borderOpacity ?? 0) }}
       />
       {children}
     </motion.header>

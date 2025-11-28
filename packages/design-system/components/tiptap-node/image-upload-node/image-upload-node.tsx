@@ -526,7 +526,7 @@ export const ImageUploadNode: React.FC<NodeViewProps> = (props) => {
         </ImageUploadDragArea>
       )}
 
-      {hasFiles && (
+      {!!hasFiles && (
         <div className="tiptap-image-upload-previews">
           {fileItems.length > 1 && (
             <div className="tiptap-image-upload-header">

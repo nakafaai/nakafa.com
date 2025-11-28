@@ -291,18 +291,11 @@ export function BlockArt({
                     ? RIPPLE_BASE_OPACITY +
                       RIPPLE_OPACITY_INTENSITY_FACTOR * rippleIntensity
                     : 1,
-                transform:
-                  rippleIntensity > 0
-                    ? `scale(${1 + rippleIntensity * RIPPLE_SCALE_INTENSITY_FACTOR})`
-                    : undefined,
-                boxShadow:
-                  rippleIntensity > 0
-                    ? `0 0 ${RIPPLE_SHADOW_BLUR_FACTOR * rippleIntensity}px color-mix(in oklch, var(--primary) ${RIPPLE_SHADOW_COLOR_MIX_FACTOR * rippleIntensity}%, transparent)`
-                    : undefined,
-                transition:
-                  rippleIntensity > 0
-                    ? "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-                    : undefined,
+                ...(rippleIntensity > 0 && {
+                  transform: `scale(${1 + rippleIntensity * RIPPLE_SCALE_INTENSITY_FACTOR})`,
+                  boxShadow: `0 0 ${RIPPLE_SHADOW_BLUR_FACTOR * rippleIntensity}px color-mix(in oklch, var(--primary) ${RIPPLE_SHADOW_COLOR_MIX_FACTOR * rippleIntensity}%, transparent)`,
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                }),
               }}
             />
           );

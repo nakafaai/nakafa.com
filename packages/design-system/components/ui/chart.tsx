@@ -170,11 +170,11 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
+        "grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
         className
       )}
     >
-      {nestLabel ? null : tooltipLabel}
+      {!nestLabel && tooltipLabel}
       <div className="grid gap-1.5">
         {payload.map((item, index) => {
           const key = `${nameKey || item.name || item.dataKey || "value"}`;
@@ -189,7 +189,7 @@ function ChartTooltipContent({
               )}
               key={item.dataKey}
             >
-              {formatter && item?.value !== undefined && item.name ? (
+              {!!formatter && item?.value !== undefined && !!item.name ? (
                 formatter(item.value, item.name, item, index, item.payload)
               ) : (
                 <>
@@ -205,7 +205,7 @@ function ChartTooltipContent({
                             "w-1": indicator === "line",
                             "w-0 border-[1.5px] border-dashed bg-transparent":
                               indicator === "dashed",
-                            "my-0.5": nestLabel && indicator === "dashed",
+                            "my-0.5": !!nestLabel && indicator === "dashed",
                           }
                         )}
                         style={
@@ -229,7 +229,7 @@ function ChartTooltipContent({
                         {itemConfig?.label || item.name}
                       </span>
                     </div>
-                    {item.value && (
+                    {!!item.value && (
                       <span className="font-medium font-mono text-foreground tabular-nums">
                         {item.value.toLocaleString()}
                       </span>
@@ -283,7 +283,7 @@ function ChartLegendContent({
             )}
             key={item.value}
           >
-            {itemConfig?.icon && !hideIcon ? (
+            {!!itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />
             ) : (
               <div

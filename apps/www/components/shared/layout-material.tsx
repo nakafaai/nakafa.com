@@ -28,7 +28,7 @@ export function LayoutMaterialContent({
   return (
     <div className={cn("flex-1", className)}>
       {children}
-      {showAskButton && <AiSheetOpen />}
+      {!!showAskButton && <AiSheetOpen />}
     </div>
   );
 }

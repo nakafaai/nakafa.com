@@ -110,8 +110,8 @@ export const HeadingButton = ({
       {children ?? (
         <>
           <Icon className="tiptap-button-icon" />
-          {text && <span className="tiptap-button-text">{text}</span>}
-          {showShortcut && (
+          {!!text && <span className="tiptap-button-text">{text}</span>}
+          {!!showShortcut && (
             <HeadingShortcutBadge level={level} shortcutKeys={shortcutKeys} />
           )}
         </>

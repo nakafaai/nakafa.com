@@ -135,7 +135,7 @@ export function AnimateTabs({ id, tabs, className }: Props) {
                 tabRefs.current[index] = el;
               }}
             >
-              {Icon && <Icon className="size-4 shrink-0" />}
+              {!!Icon && <Icon className="size-4 shrink-0" />}
               <span>{tab.label}</span>
             </Link>
           );

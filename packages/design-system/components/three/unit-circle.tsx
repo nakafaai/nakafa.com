@@ -293,7 +293,7 @@ export function UnitCircle({
         />
 
         {/* Trig value labels - only render if visible */}
-        {showLabels && (
+        {!!showLabels && (
           <>
             <Text
               anchorX="center"

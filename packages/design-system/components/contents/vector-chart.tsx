@@ -262,7 +262,7 @@ export function VectorChart({
 
             <ChartTooltip
               content={({ active, payload }) => {
-                if (active && payload && payload.length) {
+                if (!!active && !!payload && payload.length > 0) {
                   const xValue = payload[0]?.payload.x;
 
                   return (

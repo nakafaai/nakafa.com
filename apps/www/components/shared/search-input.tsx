@@ -57,8 +57,8 @@ export function SearchInput({
         aria-label="Clear search"
         className={cn(
           "absolute inset-y-0 right-0 flex h-full w-9 cursor-pointer items-center justify-center rounded-e-md text-muted-foreground opacity-0 outline-none transition-[color,box-shadow] hover:text-foreground",
-          value && "opacity-100",
-          action && "right-9"
+          !!value && "opacity-100",
+          !!action && "right-9"
         )}
         disabled={loading}
         onClick={() => setValue("")}
@@ -68,7 +68,7 @@ export function SearchInput({
         <span className="sr-only">Clear search</span>
       </button>
 
-      {action && (
+      {!!action && (
         <button
           className="absolute inset-y-0 end-0 flex h-full cursor-pointer items-center justify-center pe-3 text-muted-foreground disabled:cursor-default disabled:opacity-50 peer-disabled:opacity-50"
           disabled={loading || !value}

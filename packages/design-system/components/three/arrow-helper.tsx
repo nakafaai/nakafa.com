@@ -195,7 +195,7 @@ export function ArrowHelper({
       />
 
       {/* Cone arrowhead with optimized segments */}
-      {showArrow && coneGeometry && material && coneTransform && (
+      {!!showArrow && !!coneGeometry && !!material && !!coneTransform && (
         <mesh
           frustumCulled
           geometry={coneGeometry}
@@ -208,7 +208,7 @@ export function ArrowHelper({
       {/* Label text */}
       <Text
         anchorX="left"
-        color={color instanceof Color ? color.getStyle() : color}
+        color={color instanceof Color ? color.getStyle() : color || ""}
         font={fontPath}
         fontSize={0.5}
         frustumCulled

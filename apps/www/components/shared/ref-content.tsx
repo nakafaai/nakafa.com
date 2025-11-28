@@ -65,7 +65,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
         </h2>
 
         <div className="flex flex-wrap items-center gap-2">
-          {showSheet && (
+          {!!showSheet && (
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -156,7 +156,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
         </div>
       </div>
 
-      {showSheet && (
+      {!!showSheet && (
         <Sheet modal={false} onOpenChange={setOpen} open={open}>
           <SheetContent className="w-full sm:max-w-xl">
             <div className="flex h-full flex-col">
@@ -217,7 +217,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                               <span className="text-sm">{reference.year}</span>
                             </div>
 
-                            {reference.publication && (
+                            {!!reference.publication && (
                               <div className="flex items-center gap-1">
                                 <BookOpenIcon className="size-4 shrink-0" />
                                 <span className="line-clamp-1 text-sm">
@@ -226,7 +226,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                               </div>
                             )}
 
-                            {reference.details && (
+                            {!!reference.details && (
                               <div className="flex items-center gap-1">
                                 <BookIcon className="size-4 shrink-0" />
                                 <span className="text-sm">

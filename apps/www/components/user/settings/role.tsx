@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { AppUser } from "@repo/backend/convex/auth";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -12,10 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import { useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
 import * as z from "zod/mini";
 import { FormBlock } from "@/components/shared/form-block";
 import { roles } from "@/lib/data/roles";
@@ -26,76 +24,84 @@ const formSchema = z.object({
     z.literal("student"),
     z.literal("parent"),
     z.literal("administrator"),
-    z.null(),
-    z.undefined(),
   ]),
 });
-type FormSchema = z.infer<typeof formSchema>;
+const roleSchema = formSchema.shape.role;
 
 export function UserSettingsRole({ user }: { user: AppUser }) {
   const t = useTranslations("Auth");
 
   const updateUserRole = useMutation(api.users.mutations.updateUserRole);
 
-  const [isPending, startTransition] = useTransition();
-
   const form = useForm({
-    resolver: zodResolver(formSchema),
     defaultValues: {
-      role: user.appUser.role ?? undefined,
+      role: user.appUser.role,
     },
-    mode: "onChange",
-  });
+    validators: {
+      onChange: formSchema,
+    },
+    onSubmit: async ({ value }) => {
+      const { role } = value;
+      if (!role) {
+        return;
+      }
 
-  const onSubmit = (values: FormSchema) => {
-    const { role } = values;
-    if (!role) {
-      return;
-    }
-
-    startTransition(async () => {
       await updateUserRole({
         role,
       });
-      // Reset form state after successful save
-      form.reset(values);
-    });
-  };
+      form.reset(value);
+    },
+  });
 
   return (
-    <form id="user-settings-role-form" onSubmit={form.handleSubmit(onSubmit)}>
+    <form
+      id="user-settings-role-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
+    >
       <FormBlock
         description={t("role-description")}
         footer={
-          <div className="flex w-full items-center justify-between gap-4">
-            <p className="text-muted-foreground text-sm">{t("role-footer")}</p>
-            <Button
-              disabled={
-                isPending || !form.formState.isValid || !form.formState.isDirty
-              }
-              size="sm"
-              type="submit"
-            >
-              {t("save")}
-            </Button>
-          </div>
+          <form.Subscribe
+            selector={(state) => [state.isDirty, state.isSubmitting]}
+          >
+            {([isDirty, isSubmitting]) => (
+              <div className="flex w-full items-center justify-between gap-4">
+                <p className="text-muted-foreground text-sm">
+                  {t("role-footer")}
+                </p>
+                <Button
+                  disabled={!isDirty || isSubmitting}
+                  size="sm"
+                  type="submit"
+                >
+                  {t("save")}
+                </Button>
+              </div>
+            )}
+          </form.Subscribe>
         }
         title={t("role")}
       >
-        <Controller
-          control={form.control}
-          name="role"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
+        <form.Field name="role">
+          {(field) => (
+            <Field>
               <FieldLabel className="sr-only" htmlFor="user-settings-role">
                 {t("role")}
               </FieldLabel>
               <Select
-                defaultValue={field.value ?? undefined}
-                onValueChange={field.onChange}
+                name={field.name}
+                onValueChange={(value) => {
+                  const parsed = roleSchema.safeParse(value);
+                  if (parsed.success) {
+                    field.handleChange(parsed.data);
+                  }
+                }}
+                value={field.state.value ?? undefined}
               >
                 <SelectTrigger
-                  aria-invalid={fieldState.invalid}
                   className="w-full max-w-xs"
                   id="user-settings-role"
                 >
@@ -112,7 +118,7 @@ export function UserSettingsRole({ user }: { user: AppUser }) {
               </Select>
             </Field>
           )}
-        />
+        </form.Field>
       </FormBlock>
     </form>
   );

@@ -77,9 +77,16 @@ export default function NavigationLink({
     );
   }, [href, pathname]);
 
+  const ariaCurrent = useMemo(() => {
+    if (isActive) {
+      return "page";
+    }
+    return;
+  }, [isActive]);
+
   return (
     <Link
-      aria-current={isActive ? "page" : undefined}
+      aria-current={ariaCurrent}
       href={cleanHref}
       {...props}
       prefetch // always prefetch the link

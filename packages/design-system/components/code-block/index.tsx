@@ -273,7 +273,7 @@ export const CodeBlockFilename = ({
       className="flex min-w-0 items-center gap-2 px-4 py-1.5 text-muted-foreground text-sm"
       {...props}
     >
-      {Icon && <Icon className="size-4 shrink-0" />}
+      {!!Icon && <Icon className="size-4 shrink-0" />}
       <span className="min-w-0 flex-1 truncate">{children}</span>
     </div>
   );
@@ -467,7 +467,7 @@ export const CodeBlockItem = ({
         lineFocusedClassNames,
         wordHighlightClassNames,
         darkModeClassNames,
-        lineNumbers && lineNumberClassNames,
+        !!lineNumbers && lineNumberClassNames,
         className
       )}
       {...props}

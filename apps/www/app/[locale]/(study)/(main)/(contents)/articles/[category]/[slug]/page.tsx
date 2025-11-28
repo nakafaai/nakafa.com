@@ -191,7 +191,8 @@ async function PageContent({
               title={metadata.title}
             />
             <LayoutMaterialMain>
-              {headings.length === 0 ? <ComingSoon /> : Content}
+              {headings.length === 0 && <ComingSoon />}
+              {headings.length > 0 && Content}
             </LayoutMaterialMain>
             <LayoutMaterialFooter>
               <Comments slug={FilePath} />

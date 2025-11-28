@@ -150,8 +150,8 @@ export const ColorHighlightButton = ({
               { "--highlight-color": highlightColor } as React.CSSProperties
             }
           />
-          {text && <span className="tiptap-button-text">{text}</span>}
-          {showShortcut && (
+          {!!text && <span className="tiptap-button-text">{text}</span>}
+          {!!showShortcut && (
             <ColorHighlightShortcutBadge shortcutKeys={shortcutKeys} />
           )}
         </>

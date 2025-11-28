@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -19,11 +18,10 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { PartyPopperIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 
@@ -52,188 +50,253 @@ const formSchema = z.object({
     z.literal("other"),
   ]),
 });
-type FormSchema = z.infer<typeof formSchema>;
+const typeSchema = formSchema.shape.type;
+
+const defaultValues: z.infer<typeof formSchema> = {
+  name: "",
+  email: "",
+  phone: "",
+  address: "",
+  city: "",
+  province: "",
+  type: "high-school",
+};
 
 export function SchoolOnboardingCreateForm() {
   const t = useTranslations("School.Onboarding");
 
   const router = useRouter();
 
-  const [isPending, startTransition] = useTransition();
-
   const createSchool = useMutation(api.schools.mutations.createSchool);
 
   const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-      city: "",
-      province: "",
-      type: "high-school",
-    } as const,
-    mode: "onChange",
-  });
-
-  const onSubmit = (values: FormSchema) => {
-    startTransition(async () => {
+    defaultValues,
+    validators: {
+      onChange: formSchema,
+    },
+    onSubmit: async ({ value }) => {
       try {
-        const { slug } = await createSchool(values);
+        const { slug } = await createSchool(value);
         router.push(`/school/${slug}`);
       } catch {
         toast.error(t("school-creation-failed"));
       }
-    });
-  };
+    },
+  });
 
   return (
     <form
       className="flex flex-col gap-6"
       id="school-onboarding-create-form"
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
     >
       <FieldGroup>
-        <Controller
-          control={form.control}
-          name="name"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="school-name">{t("school-name")}</FieldLabel>
-              <Input
-                {...field}
-                aria-invalid={fieldState.invalid}
-                id="school-name"
-                placeholder={t("school-name-placeholder")}
-              />
-            </Field>
-          )}
-        />
+        <form.Field name="name">
+          {(field) => {
+            const isInvalid =
+              Boolean(field.state.meta.isTouched) &&
+              Boolean(!field.state.meta.isValid);
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor="school-name">
+                  {t("school-name")}
+                </FieldLabel>
+                <Input
+                  aria-invalid={isInvalid}
+                  id="school-name"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder={t("school-name-placeholder")}
+                  value={field.state.value}
+                />
+              </Field>
+            );
+          }}
+        </form.Field>
 
-        <Controller
-          control={form.control}
-          name="email"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="school-email">
-                {t("school-email")}
-              </FieldLabel>
-              <Input
-                {...field}
-                aria-invalid={fieldState.invalid}
-                id="school-email"
-                placeholder={t("school-email-placeholder")}
-              />
-            </Field>
-          )}
-        />
+        <form.Field name="email">
+          {(field) => {
+            const isInvalid =
+              Boolean(field.state.meta.isTouched) &&
+              Boolean(!field.state.meta.isValid);
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor="school-email">
+                  {t("school-email")}
+                </FieldLabel>
+                <Input
+                  aria-invalid={isInvalid}
+                  id="school-email"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder={t("school-email-placeholder")}
+                  value={field.state.value}
+                />
+              </Field>
+            );
+          }}
+        </form.Field>
 
-        <Controller
-          control={form.control}
-          name="phone"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="school-phone">
-                {t("school-phone")}
-              </FieldLabel>
-              <PhoneInput
-                {...field}
-                aria-invalid={fieldState.invalid}
-                id="school-phone"
-                placeholder={t("school-phone-placeholder")}
-              />
-            </Field>
-          )}
-        />
+        <form.Field name="phone">
+          {(field) => {
+            const isInvalid =
+              Boolean(field.state.meta.isTouched) &&
+              Boolean(!field.state.meta.isValid);
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor="school-phone">
+                  {t("school-phone")}
+                </FieldLabel>
+                <PhoneInput
+                  aria-invalid={isInvalid}
+                  id="school-phone"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(value) => {
+                    if (value) {
+                      field.handleChange(value);
+                    }
+                  }}
+                  placeholder={t("school-phone-placeholder")}
+                  value={field.state.value}
+                />
+              </Field>
+            );
+          }}
+        </form.Field>
 
-        <Controller
-          control={form.control}
-          name="address"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="school-address">
-                {t("school-address")}
-              </FieldLabel>
-              <Input
-                {...field}
-                aria-invalid={fieldState.invalid}
-                id="school-address"
-                placeholder={t("school-address-placeholder")}
-              />
-            </Field>
-          )}
-        />
+        <form.Field name="address">
+          {(field) => {
+            const isInvalid =
+              Boolean(field.state.meta.isTouched) &&
+              Boolean(!field.state.meta.isValid);
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor="school-address">
+                  {t("school-address")}
+                </FieldLabel>
+                <Input
+                  aria-invalid={isInvalid}
+                  id="school-address"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder={t("school-address-placeholder")}
+                  value={field.state.value}
+                />
+              </Field>
+            );
+          }}
+        </form.Field>
 
-        <Controller
-          control={form.control}
-          name="city"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="school-city">{t("school-city")}</FieldLabel>
-              <Input
-                {...field}
-                aria-invalid={fieldState.invalid}
-                id="school-city"
-                placeholder={t("school-city-placeholder")}
-              />
-            </Field>
-          )}
-        />
+        <form.Field name="city">
+          {(field) => {
+            const isInvalid =
+              Boolean(field.state.meta.isTouched) &&
+              Boolean(!field.state.meta.isValid);
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor="school-city">
+                  {t("school-city")}
+                </FieldLabel>
+                <Input
+                  aria-invalid={isInvalid}
+                  id="school-city"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder={t("school-city-placeholder")}
+                  value={field.state.value}
+                />
+              </Field>
+            );
+          }}
+        </form.Field>
 
-        <Controller
-          control={form.control}
-          name="province"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="school-province">
-                {t("school-province")}
-              </FieldLabel>
-              <Input
-                {...field}
-                aria-invalid={fieldState.invalid}
-                id="school-province"
-                placeholder={t("school-province-placeholder")}
-              />
-            </Field>
-          )}
-        />
+        <form.Field name="province">
+          {(field) => {
+            const isInvalid =
+              Boolean(field.state.meta.isTouched) &&
+              Boolean(!field.state.meta.isValid);
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor="school-province">
+                  {t("school-province")}
+                </FieldLabel>
+                <Input
+                  aria-invalid={isInvalid}
+                  id="school-province"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder={t("school-province-placeholder")}
+                  value={field.state.value}
+                />
+              </Field>
+            );
+          }}
+        </form.Field>
 
-        <Controller
-          control={form.control}
-          name="type"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="school-type">{t("school-type")}</FieldLabel>
-
-              <Select
-                defaultValue={field.value ?? undefined}
-                onValueChange={field.onChange}
-              >
-                <SelectTrigger
-                  aria-invalid={fieldState.invalid}
-                  className="w-full"
-                  id="school-type"
+        <form.Field name="type">
+          {(field) => {
+            const isInvalid =
+              Boolean(field.state.meta.isTouched) &&
+              Boolean(!field.state.meta.isValid);
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor="school-type">
+                  {t("school-type")}
+                </FieldLabel>
+                <Select
+                  name={field.name}
+                  onValueChange={(value) => {
+                    const parsed = typeSchema.safeParse(value);
+                    if (parsed.success) {
+                      field.handleChange(parsed.data);
+                    }
+                  }}
+                  value={field.state.value ?? undefined}
                 >
-                  <SelectValue placeholder={t("school-type-placeholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {schoolTypeOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {t(option.value)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          )}
-        />
+                  <SelectTrigger
+                    aria-invalid={isInvalid}
+                    className="w-full"
+                    id="school-type"
+                  >
+                    <SelectValue placeholder={t("school-type-placeholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {schoolTypeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {t(option.value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            );
+          }}
+        </form.Field>
       </FieldGroup>
 
-      <Button disabled={isPending || !form.formState.isValid} type="submit">
-        {isPending ? <SpinnerIcon /> : <PartyPopperIcon />}
-        {t("create")}
-      </Button>
+      <form.Subscribe
+        selector={(state) => [state.isValid, state.isDirty, state.isSubmitting]}
+      >
+        {([isValid, isDirty, isSubmitting]) => {
+          const canSubmit = Boolean(isValid) && Boolean(isDirty);
+          const isDisabled = !canSubmit || Boolean(isSubmitting);
+          return (
+            <Button disabled={isDisabled} type="submit">
+              {isSubmitting ? <SpinnerIcon /> : <PartyPopperIcon />}
+              {t("create")}
+            </Button>
+          );
+        }}
+      </form.Subscribe>
     </form>
   );
 }

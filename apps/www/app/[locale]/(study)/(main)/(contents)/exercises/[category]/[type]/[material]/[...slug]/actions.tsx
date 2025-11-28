@@ -24,7 +24,7 @@ export function ExerciseAnswerAction({ exerciseNumber }: Props) {
         <ChevronDownIcon
           className={cn(
             "transition-transform ease-out",
-            showAnswer && "rotate-180"
+            !!showAnswer && "rotate-180"
           )}
         />
       </Button>

@@ -83,7 +83,7 @@ export default function Page({ params }: Props) {
                 {title}
               </h1>
 
-              {description && (
+              {!!description && (
                 <p className="text-balance text-center text-muted-foreground">
                   {description}
                 </p>

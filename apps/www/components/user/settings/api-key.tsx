@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -26,6 +25,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
+import { useForm } from "@tanstack/react-form";
 import { useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -37,7 +37,6 @@ import {
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 import { FormBlock } from "@/components/shared/form-block";
@@ -61,9 +60,8 @@ const formSchema = z.object({
       z.maxLength(MAX_NAME_LENGTH),
       z.trim()
     ),
-  expiresIn: z.optional(z.number()),
+  expiresIn: z.number(),
 });
-type FormSchema = z.infer<typeof formSchema>;
 
 // value in seconds
 const expiresInList = [
@@ -93,7 +91,7 @@ const expiresInList = [
   },
   {
     label: "never",
-    value: undefined,
+    value: 0, // 0 means never expires
   },
 ] as const;
 
@@ -111,19 +109,17 @@ export function UserSettingsApiKey() {
   const apiKeys = useQuery(api.users.queries.getCurrentUserApiKeys);
 
   const form = useForm({
-    resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      expiresIn: undefined,
+      expiresIn: 0,
     },
-    mode: "onChange",
-  });
-
-  const onSubmit = (values: FormSchema) => {
-    startTransition(async () => {
+    validators: {
+      onChange: formSchema,
+    },
+    onSubmit: async ({ value }) => {
       const { data, error } = await authClient.apiKey.create({
-        name: values.name,
-        expiresIn: values.expiresIn,
+        name: value.name || "nakafa-api-key",
+        expiresIn: value.expiresIn === 0 ? undefined : value.expiresIn,
         prefix: "nakafa",
       });
 
@@ -141,8 +137,8 @@ export function UserSettingsApiKey() {
         setConfirmCreateApiKey(false);
         form.reset();
       }
-    });
-  };
+    },
+  });
 
   const handleCopyApiKey = (apiKey: string) => {
     navigator.clipboard.writeText(apiKey);
@@ -176,7 +172,10 @@ export function UserSettingsApiKey() {
   return (
     <form
       id="user-settings-api-key-form"
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
     >
       <FormBlock
         description={t("api-key-description")}
@@ -291,94 +290,118 @@ export function UserSettingsApiKey() {
       <ResponsiveDialog
         description={t("api-key-confirmation-description")}
         footer={
-          <Button
-            disabled={isPending || !form.formState.isValid}
-            onClick={() => form.handleSubmit(onSubmit)()}
-            type="button"
+          <form.Subscribe
+            selector={(state) => [
+              state.isValid,
+              state.isDirty,
+              state.isSubmitting,
+            ]}
           >
-            {isPending ? <SpinnerIcon /> : <PlusIcon />}
-            {t("create")}
-          </Button>
+            {([isValid, isDirty, isSubmitting]) => {
+              const canSubmit = Boolean(isValid) && Boolean(isDirty);
+              const isDisabled = !canSubmit || Boolean(isSubmitting);
+              return (
+                <Button
+                  disabled={isDisabled}
+                  form="user-settings-api-key-form"
+                  type="submit"
+                >
+                  {isSubmitting ? <SpinnerIcon /> : <PlusIcon />}
+                  {t("create")}
+                </Button>
+              );
+            }}
+          </form.Subscribe>
         }
         open={confirmCreateApiKey}
         setOpen={setConfirmCreateApiKey}
         title={t("new-api-key")}
       >
         <FieldGroup>
-          <Controller
-            control={form.control}
-            name="name"
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="api-key-name">
-                  {t("api-key-name")}
-                </FieldLabel>
-                <Input
-                  {...field}
-                  aria-invalid={fieldState.invalid}
-                  id="api-key-name"
-                  placeholder={t("api-key-name-placeholder")}
-                />
-              </Field>
-            )}
-          />
+          <form.Field name="name">
+            {(field) => {
+              const isInvalid =
+                Boolean(field.state.meta.isTouched) &&
+                Boolean(!field.state.meta.isValid);
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor="api-key-name">
+                    {t("api-key-name")}
+                  </FieldLabel>
+                  <Input
+                    aria-invalid={isInvalid}
+                    id="api-key-name"
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder={t("api-key-name-placeholder")}
+                    value={field.state.value}
+                  />
+                </Field>
+              );
+            }}
+          </form.Field>
 
-          <Controller
-            control={form.control}
-            name="expiresIn"
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="api-key-expires-in">
-                  {t("expires-in")}
-                </FieldLabel>
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    aria-invalid={fieldState.invalid}
-                    asChild
-                    id="api-key-expires-in"
-                  >
-                    <Button
-                      className={cn(
-                        "justify-between font-normal",
-                        field.value === undefined && "text-destructive!"
-                      )}
-                      variant="outline"
-                    >
-                      {t(
-                        expiresInList.find((item) => item.value === field.value)
-                          ?.label ?? "never"
-                      )}
-                      <ChevronDownIcon className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuGroup>
-                      {expiresInList.map((item) => (
-                        <DropdownMenuItem
-                          className={cn(
-                            "cursor-pointer",
-                            item.label === "never" && "text-destructive!"
-                          )}
-                          key={item.label}
-                          onSelect={() => field.onChange(item.value)}
-                        >
-                          {t(item.label)}
-
-                          <CheckIcon
+          <form.Field name="expiresIn">
+            {(field) => {
+              const isInvalid =
+                Boolean(field.state.meta.isTouched) &&
+                Boolean(!field.state.meta.isValid);
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor="api-key-expires-in">
+                    {t("expires-in")}
+                  </FieldLabel>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        aria-invalid={isInvalid}
+                        className={cn(
+                          "justify-between font-normal",
+                          field.state.value === 0 && "text-secondary!"
+                        )}
+                        id="api-key-expires-in"
+                        name={field.name}
+                        variant="outline"
+                      >
+                        {t(
+                          expiresInList.find(
+                            (item) => item.value === field.state.value
+                          )?.label ?? "never"
+                        )}
+                        <ChevronDownIcon className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuGroup>
+                        {expiresInList.map((item) => (
+                          <DropdownMenuItem
                             className={cn(
-                              "ml-auto size-4 opacity-0 transition-opacity ease-out",
-                              field.value === item.value && "opacity-100",
-                              field.value === undefined && "text-destructive!"
+                              "cursor-pointer",
+                              item.label === "never" && "text-secondary!"
                             )}
-                          />
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </Field>
-            )}
-          />
+                            key={item.label}
+                            onSelect={() => field.handleChange(item.value)}
+                          >
+                            {t(item.label)}
+
+                            <CheckIcon
+                              className={cn(
+                                "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                                field.state.value === item.value &&
+                                  "opacity-100",
+                                field.state.value === 0 && "text-secondary!"
+                              )}
+                            />
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </Field>
+              );
+            }}
+          </form.Field>
         </FieldGroup>
       </ResponsiveDialog>
     </form>

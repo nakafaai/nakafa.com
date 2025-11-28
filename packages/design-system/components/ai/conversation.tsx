@@ -62,10 +62,10 @@ export const ConversationEmptyState = memo(
     >
       {children ?? (
         <>
-          {icon && <div className="text-muted-foreground">{icon}</div>}
+          {!!icon && <div className="text-muted-foreground">{icon}</div>}
           <div className="space-y-1">
             <h3 className="font-medium text-sm">{title}</h3>
-            {description && (
+            {!!description && (
               <p className="text-muted-foreground text-sm">{description}</p>
             )}
           </div>
