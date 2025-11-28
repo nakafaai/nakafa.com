@@ -18,7 +18,7 @@ import {
 // Get the directory where this file is located and resolve to contents directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const contentsDir = path.resolve(__dirname, "..");
+const contentsDir = path.dirname(__dirname);
 
 /**
  * Reads the raw content of a file from the contents directory.
@@ -333,11 +333,6 @@ export function getFolderChildNames(folder: string, exclude?: string[]) {
 
     // Verify the resolved path is still within contents directory
     if (!contentDir.startsWith(contentsDir)) {
-      return [];
-    }
-
-    // Check if directory exists first
-    if (!fs.existsSync(contentDir)) {
       return [];
     }
 
