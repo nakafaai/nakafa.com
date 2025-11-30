@@ -279,7 +279,6 @@ export const tables = {
     dataGetContentUrl: v.optional(v.string()),
     dataGetContentTitle: v.optional(v.string()),
     dataGetContentDescription: v.optional(v.string()),
-    dataGetContentContent: v.optional(v.string()),
     dataGetContentStatus: v.optional(
       v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
     ),

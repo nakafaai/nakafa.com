@@ -73,16 +73,15 @@ export const createCalculator = ({ writer }: Params) =>
 
 function createOutput({ output }: { output: CalculatorOutput }): string {
   return dedentString(`
-    <calculatorOutput>
-      <original>
-        <expression>${output.original.expression}</expression>
-        <latex>${output.original.latex}</latex>
-      </original>
-      <result>
-        <expression>${output.result.expression}</expression>
-        <latex>${output.result.latex}</latex>
-        <value>${output.result.value}</value>
-      </result>
-    </calculatorOutput>
+    # Calculator Result
+
+    ## Original Expression
+    - Input: ${output.original.expression}
+    - LaTeX: ${output.original.latex}
+
+    ## Evaluation
+    - Result: ${output.result.value}
+    - Formatted: ${output.result.expression}
+    - LaTeX: ${output.result.latex}
   `);
 }

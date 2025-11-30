@@ -68,10 +68,9 @@ export const createCreateDataset = ({
 
 function createOutput({ output }: { output: CreateDatasetOutput }): string {
   return dedentString(`
-    <createDatasetOutput>
-      <datasetId>${output.datasetId}</datasetId>
-      <query>${output.query}</query>
-      <targetRows>${output.targetRows}</targetRows>
-    </createDatasetOutput>
+    # Dataset Created
+    - ID: ${output.datasetId}
+    - Query: ${output.query}
+    - Target Rows: ${output.targetRows}
   `);
 }

@@ -33,7 +33,6 @@ export const dataPartSchema = z.object({
     url: z.string(),
     title: z.string(),
     description: z.string(),
-    content: z.string(),
     status: z.enum(["loading", "done", "error"]),
     error: z.string().optional(),
   }),

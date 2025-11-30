@@ -2,6 +2,10 @@ import { fetcher } from "@repo/connection/lib/fetcher";
 import type { FetchResult } from "@repo/connection/lib/types";
 import { cleanSlug } from "@repo/connection/lib/utils";
 import type { Content } from "@repo/contents/_types/content";
+import type {
+  Exercise,
+  ExerciseWithoutDefaults,
+} from "@repo/contents/_types/exercises/shared";
 import type { Surah } from "@repo/contents/_types/quran";
 
 const PREFIX = "/contents";
@@ -10,6 +14,7 @@ export const contents = {
   getContents,
   getContent,
   getSurah,
+  getExercises,
 };
 
 async function getContents({
@@ -39,7 +44,7 @@ async function getContents({
       data: [],
       error: {
         status: 404,
-        message: "Contents not found",
+        message: "Contents not found.",
       },
     };
   }
@@ -122,6 +127,58 @@ async function getSurah({
 
   return {
     data,
+    error,
+  };
+}
+
+async function getExercises({
+  slug,
+  withRaw = true,
+  ...base
+}: {
+  slug: string;
+  withRaw?: boolean;
+} & RequestInit): Promise<FetchResult<ExerciseWithoutDefaults[] | null>> {
+  const cleanedSlug = cleanSlug(slug);
+  const { data, error } = await fetcher<Exercise[]>({
+    endpoint: `${PREFIX}/${cleanedSlug}`,
+    options: {
+      method: "GET",
+      ...base,
+    },
+  });
+
+  if (error) {
+    return {
+      data: null,
+      error,
+    };
+  }
+
+  if (!data) {
+    return {
+      data: null,
+      error: {
+        status: 404,
+        message: "Exercises not found.",
+      },
+    };
+  }
+
+  const processedData: ExerciseWithoutDefaults[] = data.map((item) => ({
+    ...item,
+    question: {
+      metadata: item.question.metadata,
+      raw: withRaw ? item.question.raw : "",
+    },
+    answer: {
+      metadata: item.answer.metadata,
+      raw: withRaw ? item.answer.raw : "",
+    },
+  }));
+
+  return {
+    data: processedData,
     error,
   };
 }

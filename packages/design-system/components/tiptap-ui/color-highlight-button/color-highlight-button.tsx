@@ -66,7 +66,7 @@ export function ColorHighlightShortcutBadge({
  * <ColorHighlightButton
  *   highlightColor="red"
  *   mode="mark"
- *   onAppliedAction={({ color, mode }) => console.log(`Applied ${color} in ${mode} mode`)}
+ *   onAppliedAction={({ color, mode }) => {}}
  * />
  * ```
  */

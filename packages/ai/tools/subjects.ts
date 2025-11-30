@@ -82,22 +82,18 @@ export const createGetSubjects = ({ writer }: Params) =>
 
 function createOutput({ output }: { output: GetSubjectsOutput }): string {
   return dedentString(`
-    <getSubjectsOutput>
-      <baseUrl>${output.baseUrl}</baseUrl>
-      <subjects>
-        ${output.subjects
-          .map(
-            (subject, index) => `
-          <subject index="${index}">
-            <title>${subject.title}</title>
-            <url>${subject.url}</url>
-            <slug>${subject.slug}</slug>
-            <locale>${subject.locale}</locale>
-          </subject>
-        `
-          )
-          .join("\n")}
-      </subjects>
-    </getSubjectsOutput>
+    # Subjects List
+    - Base URL: ${output.baseUrl}
+
+    ${output.subjects
+      .map(
+        (subject, index) => `
+    ## Subject ${index + 1}
+    - Title: ${subject.title}
+    - URL: ${subject.url}
+    - Slug: ${subject.slug}
+    - Locale: ${subject.locale}`
+      )
+      .join("\n")}
   `);
 }

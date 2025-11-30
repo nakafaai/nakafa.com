@@ -31,12 +31,12 @@ export async function GET(
       error instanceof Error ? error : new Error(String(error)),
       {
         surah: surahNumber,
-        message: "Failed to fetch surah",
+        message: "Failed to fetch surah.",
       }
     );
 
     return NextResponse.json(
-      { error: "Failed to fetch surah" },
+      { error: "Failed to fetch surah." },
       { status: 500 }
     );
   }

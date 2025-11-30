@@ -219,7 +219,7 @@ async function PageContent({
 
     return (
       <LayoutMaterial>
-        <LayoutMaterialContent>
+        <LayoutMaterialContent showAskButton>
           <LayoutMaterialHeader
             link={{
               href: materialPath,
@@ -343,7 +343,7 @@ async function SingleExerciseContent({
 
     return (
       <LayoutMaterial>
-        <LayoutMaterialContent>
+        <LayoutMaterialContent showAskButton>
           <LayoutMaterialHeader
             link={{
               href: FilePath,

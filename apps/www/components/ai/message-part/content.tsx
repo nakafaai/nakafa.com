@@ -36,7 +36,7 @@ export const ContentPart = memo(({ message }: Props) => {
   if (isError) {
     return (
       <ContentCard>
-        <FrownIcon className="size-4" />
+        <FrownIcon className="size-4 shrink-0 text-destructive" />
         <p className="text-sm">{t("get-content-error")}</p>
       </ContentCard>
     );

@@ -6,6 +6,12 @@ import {
 } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/connection/routes";
+import {
+  getCurrentMaterial,
+  getMaterials,
+} from "@repo/contents/_lib/exercises/material";
+import type { ExerciseWithoutDefaults } from "@repo/contents/_types/exercises/shared";
+import type { Surah } from "@repo/contents/_types/quran";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";
 
@@ -42,7 +48,6 @@ export const createGetContent = ({ writer }: Params) => {
           title: "",
           description: "",
           status: "loading",
-          content: "",
         },
       });
 
@@ -58,7 +63,6 @@ export const createGetContent = ({ writer }: Params) => {
               title: "",
               description: "",
               status: "error",
-              content: "",
               error:
                 "Surah not found. Maybe not available or still in development.",
             },
@@ -84,7 +88,6 @@ export const createGetContent = ({ writer }: Params) => {
               title: "",
               description: "",
               status: "error",
-              content: "",
               error: surahError.message,
             },
           });
@@ -103,7 +106,6 @@ export const createGetContent = ({ writer }: Params) => {
               title: "",
               description: "",
               status: "error",
-              content: "",
               error:
                 "Surah not found. Maybe not available or still in development.",
             },
@@ -121,12 +123,120 @@ export const createGetContent = ({ writer }: Params) => {
             description:
               surahData.revelation[locale] || surahData.revelation.arab,
             status: "done",
-            content: JSON.stringify(surahData, null, 2),
           },
         });
 
         return createOutput({
-          output: { url, content: JSON.stringify(surahData, null, 2) },
+          output: {
+            url,
+            content: createQuranOutput({
+              output: surahData,
+              locale,
+            }),
+          },
+        });
+      }
+
+      if (cleanedSlug.startsWith("exercises")) {
+        const { data: exercisesData, error: exercisesError } =
+          await api.contents.getExercises({
+            slug: `${locale}/${cleanedSlug}`,
+            withRaw: true,
+          });
+
+        if (exercisesError) {
+          writer.write({
+            id: toolCallId,
+            type: "data-get-content",
+            data: {
+              url,
+              title: "",
+              description: "",
+              status: "error",
+              error: exercisesError.message,
+            },
+          });
+
+          return createOutput({
+            output: { url, content: exercisesError.message },
+          });
+        }
+
+        if (!exercisesData || exercisesData.length === 0) {
+          writer.write({
+            id: toolCallId,
+            type: "data-get-content",
+            data: {
+              url,
+              title: "",
+              description: "",
+              status: "error",
+              error:
+                "Exercises not found. Maybe not available or still in development.",
+            },
+          });
+
+          return createOutput({ output: { url, content: "" } });
+        }
+
+        const slugParts = cleanedSlug.split("/").filter(Boolean);
+
+        const [, category, type, material] = slugParts;
+
+        const hasRequiredParts = Boolean(category && type && material);
+
+        if (!hasRequiredParts) {
+          writer.write({
+            id: toolCallId,
+            type: "data-get-content",
+            data: {
+              url,
+              title: "",
+              description: "",
+              status: "error",
+              error:
+                "Exercises material not found. Maybe not available or still in development.",
+            },
+          });
+
+          return createOutput({ output: { url, content: "" } });
+        }
+
+        const materialPath =
+          `/exercises/${category}/${type}/${material}` as const;
+
+        const materials = await getMaterials(materialPath, locale);
+
+        const lastSlug = slugParts.at(-1);
+        const filePath =
+          lastSlug && isNumericString(lastSlug)
+            ? slugParts.slice(0, -1).join("/")
+            : cleanedSlug;
+
+        const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
+          filePath,
+          materials
+        );
+
+        writer.write({
+          id: toolCallId,
+          type: "data-get-content",
+          data: {
+            url,
+            title: currentMaterialItem?.title || "",
+            description: currentMaterial?.description || "",
+            status: "done",
+          },
+        });
+
+        return createOutput({
+          output: {
+            url,
+            content: createExercisesOutput({
+              output: exercisesData,
+              locale,
+            }),
+          },
         });
       }
 
@@ -143,7 +253,6 @@ export const createGetContent = ({ writer }: Params) => {
             title: "",
             description: "",
             status: "error",
-            content: "",
             error: error.message,
           },
         });
@@ -160,7 +269,6 @@ export const createGetContent = ({ writer }: Params) => {
             title: "",
             description: "",
             status: "error",
-            content: "",
           },
         });
 
@@ -175,7 +283,6 @@ export const createGetContent = ({ writer }: Params) => {
           title: data.metadata.title,
           description: data.metadata.description || "",
           status: "done",
-          content: data.raw,
         },
       });
 
@@ -186,9 +293,91 @@ export const createGetContent = ({ writer }: Params) => {
 
 function createOutput({ output }: { output: GetContentOutput }): string {
   return dedentString(`
-    <getContentOutput>
-      <url>${output.url}</url>
-      <content>${output.content}</content>
-    </getContentOutput>
+    # Source
+    - URL: ${output.url}
+
+    # Content
+    ${output.content}
   `);
+}
+
+function createExercisesOutput({
+  output,
+  locale,
+}: {
+  output: ExerciseWithoutDefaults[];
+  locale: "en" | "id";
+}): string {
+  return dedentString(`
+    # Exercises
+    ${output
+      .map(
+        (exercise) => `
+    ## Exercise ${exercise.number}
+
+    ### Question
+    ${exercise.question.raw}
+
+    ### Choices
+    ${exercise.choices[locale]
+      .map(
+        (choice) =>
+          `- ${choice.label} (Correct: ${choice.value ? "Yes" : "No"})`
+      )
+      .join("\n")}
+
+    ### Answer
+    ${exercise.answer.raw}`
+      )
+      .join("\n\n")}
+  `);
+}
+
+function createQuranOutput({
+  output,
+  locale,
+}: {
+  output: Surah;
+  locale: "en" | "id";
+}): string {
+  return dedentString(`
+    # Surah ${output.number}
+
+    ## Info
+    - Name: ${output.name.transliteration[locale]} (${output.name.translation[locale]})
+    - Sequence: ${output.sequence}
+    - Total Verses: ${output.numberOfVerses}
+    - Revelation: ${output.revelation[locale]}
+    ${
+      output.preBismillah
+        ? `
+    ## Pre-Bismillah
+    - Arabic: ${output.preBismillah.text.arab}
+    - Transliteration: ${output.preBismillah.text.transliteration.en}
+    - Translation: ${output.preBismillah.translation[locale]}`
+        : ""
+    }
+
+    ## Verses
+    ${output.verses
+      .map(
+        (verse) => `
+    ### Verse ${verse.number.inSurah}
+    - Arabic: ${verse.text.arab}
+    - Transliteration: ${verse.text.transliteration.en}
+    - Translation: ${verse.translation[locale]}
+    ${verse.tafsir.id.short ? `- Tafsir Short: ${verse.tafsir.id.short}` : ""}
+    ${verse.tafsir.id.long ? `- Tafsir Long: ${verse.tafsir.id.long}` : ""}`
+      )
+      .join("\n")}
+  `);
+}
+
+/**
+ * Checks if a string represents a valid integer (only digits).
+ */
+function isNumericString(str: string): boolean {
+  return (
+    str.trim() !== "" && Number.parseInt(str, 10).toString() === str.trim()
+  );
 }

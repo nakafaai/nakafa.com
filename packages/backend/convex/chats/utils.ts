@@ -187,7 +187,6 @@ export function mapUIMessagePartsToDBParts({
           dataGetContentUrl: part.data.url,
           dataGetContentTitle: part.data.title,
           dataGetContentDescription: part.data.description,
-          dataGetContentContent: part.data.content,
           dataGetContentStatus: part.data.status,
           dataGetContentError: part.data.error,
         };
@@ -955,11 +954,6 @@ export function mapDBPartToUIMessagePart({
           description: requireField({
             value: part.dataGetContentDescription,
             fieldName: "dataGetContentDescription",
-            partType: part.type,
-          }),
-          content: requireField({
-            value: part.dataGetContentContent,
-            fieldName: "dataGetContentContent",
             partType: part.type,
           }),
           status: requireField({

@@ -128,7 +128,7 @@ export function shouldShowButton(props: {
  *     editor: myEditor,
  *     action: "redo",
  *     hideWhenUnavailable: true,
- *     onExecuted: () => console.log('Action executed!')
+ *     onExecuted: () => {}
  *   })
  *
  *   if (!isVisible) return null

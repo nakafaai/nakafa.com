@@ -13,30 +13,28 @@ const logger = createServiceLogger("api-contents");
 
 export function generateStaticParams() {
   // Top level directories in contents
-  const topDirs = getFolderChildNames(".");
-  const result: { slug: string[] }[] = [];
+  const topDirs = getFolderChildNames("articles");
+  const result: { locale: string; slug: string[] }[] = [];
   const locales = routing.locales;
 
   // For each locale
   for (const locale of locales) {
-    result.push({
-      slug: [locale],
-    });
-
-    // For each top directory (articles, subject, etc)
+    // For each top directory (articles)
     for (const topDir of topDirs) {
       // Get all nested paths starting from this folder
-      const nestedPaths = getNestedSlugs(topDir);
+      const nestedPaths = getNestedSlugs(`articles/${topDir}`);
 
       // Add the top-level folder itself
       result.push({
-        slug: [locale, topDir],
+        locale,
+        slug: [topDir],
       });
 
       // Add each nested path
       for (const path of nestedPaths) {
         result.push({
-          slug: [locale, topDir, ...path],
+          locale,
+          slug: [topDir, ...path],
         });
       }
     }
@@ -47,22 +45,18 @@ export function generateStaticParams() {
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ slug: string[] }> }
+  { params }: { params: Promise<{ locale: string; slug: string[] }> }
 ) {
-  const { slug } = await params;
+  const { locale, slug } = await params;
 
-  let locale = "en";
-  let basePath = "";
+  const basePath = slug.join("/");
 
-  if (slug.length >= 2) {
-    locale = slug.at(0) ?? "en";
-    basePath = slug.slice(1).join("/");
-  }
+  const cleanPath = `articles/${basePath}` as const;
 
   try {
     const content = await getContents({
       locale,
-      basePath,
+      basePath: cleanPath,
     });
 
     return NextResponse.json(content);
@@ -74,12 +68,12 @@ export async function GET(
         locale,
         basePath: basePath || "/",
         slugLength: slug.length,
-        message: "Failed to fetch content",
+        message: "Failed to fetch contents.",
       }
     );
 
     return NextResponse.json(
-      { error: "Failed to fetch content" },
+      { error: "Failed to fetch contents." },
       { status: 500 }
     );
   }

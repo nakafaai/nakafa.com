@@ -1,3 +1,4 @@
+import { cleanSlug } from "@repo/contents/_lib/helpers";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type {
   ExercisesMaterial,
@@ -64,7 +65,9 @@ export function getCurrentMaterial(
     | undefined;
 
   for (const mat of materials) {
-    const foundItem = mat.items.find((itm) => itm.href === path);
+    const foundItem = mat.items.find(
+      (itm) => cleanSlug(itm.href) === cleanSlug(path)
+    );
     if (foundItem) {
       currentMaterial = mat;
       currentMaterialItem = foundItem;

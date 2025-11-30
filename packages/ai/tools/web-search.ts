@@ -132,23 +132,20 @@ export const createWebSearch = ({ writer }: Params) => {
 
 function createOutput({ output }: { output: WebSearchOutput }): string {
   return dedentString(`
-    <webSearchOutput>
-      <sources>
-        ${output.sources
-          .map(
-            (source, index) => `
-          <source index="${index}">
-            <title>${source.title}</title>
-            <description>${source.description}</description>
-            <url>${source.url}</url>
-            <content>${source.content}</content>
-            <citation>${source.citation}</citation>
-          </source>
-        `
-          )
-          .join("\n")}
-      </sources>
-      <error>${output.error ?? ""}</error>
-    </webSearchOutput>
+    # Web Search Results
+    ${output.error ? `- Error: ${output.error}` : ""}
+
+    ${output.sources
+      .map(
+        (source, index) => `
+    ## Source ${index + 1}: ${source.title}
+    - URL: ${source.url}
+    - Citation: ${source.citation}
+    - Description: ${source.description}
+
+    ### Content
+    ${source.content}`
+      )
+      .join("\n\n")}
   `);
 }

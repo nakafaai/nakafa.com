@@ -82,22 +82,18 @@ export const createGetArticles = ({ writer }: Params) =>
 
 function createOutput({ output }: { output: GetArticlesOutput }): string {
   return dedentString(`
-    <getArticlesOutput>
-      <baseUrl>${output.baseUrl}</baseUrl>
-      <articles>
-        ${output.articles
-          .map(
-            (article, index) => `
-          <article index="${index}">
-            <title>${article.title}</title>
-            <url>${article.url}</url>
-            <slug>${article.slug}</slug>
-            <locale>${article.locale}</locale>
-          </article>
-        `
-          )
-          .join("\n")}
-      </articles>
-    </getArticlesOutput>
+    # Articles List
+    - Base URL: ${output.baseUrl}
+
+    ${output.articles
+      .map(
+        (article, index) => `
+    ## Article ${index + 1}
+    - Title: ${article.title}
+    - URL: ${article.url}
+    - Slug: ${article.slug}
+    - Locale: ${article.locale}`
+      )
+      .join("\n")}
   `);
 }

@@ -45,7 +45,12 @@ export const maxDuration = 60;
 
 const corsValidator = new CorsValidator();
 
-const possibleVerifiedUrls = ["/articles", "/quran", "/subject"] as const;
+const possibleVerifiedUrls = [
+  "/articles",
+  "/quran",
+  "/subject",
+  "/exercises",
+] as const;
 
 export async function POST(req: Request) {
   // Only allow requests from allowed domain
@@ -457,6 +462,17 @@ async function getVerified(url: string) {
       return false;
     }
     return surahData !== null;
+  }
+
+  if (slugParts[1] === "exercises") {
+    const { data: exercisesData, error: exercisesError } =
+      await api.contents.getExercises({
+        slug: cleanedUrl,
+      });
+    if (exercisesError) {
+      return false;
+    }
+    return exercisesData !== null;
   }
 
   const { data: contentData, error: contentError } =

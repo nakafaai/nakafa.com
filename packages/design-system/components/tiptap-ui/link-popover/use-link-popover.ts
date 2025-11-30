@@ -253,7 +253,7 @@ export function useLinkState(props: {
  *   const { isVisible, canSet, isActive, Icon, label } = useLinkPopover({
  *     editor: myEditor,
  *     hideWhenUnavailable: true,
- *     onSetLink: () => console.log('Link set!')
+ *     onSetLink: () => {}
  *   })
  *
  *   if (!isVisible) return null

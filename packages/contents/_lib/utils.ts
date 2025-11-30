@@ -1,19 +1,18 @@
 import fs, { promises as fsPromises } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { cleanSlug } from "@repo/contents/_lib/helpers";
 import type { ContentMetadata } from "@repo/contents/_types/content";
 import {
   ContentMetadataSchema,
   ContentSchema,
   type Reference,
 } from "@repo/contents/_types/content";
+import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
+import type { Exercise } from "@repo/contents/_types/exercises/shared";
 import ky from "ky";
 import type { Locale } from "next-intl";
 import { createElement } from "react";
-import {
-  type ExercisesChoices,
-  ExercisesChoicesSchema,
-} from "../_types/exercises/choices";
 
 // Get the directory where this file is located and resolve to contents directory
 const __filename = fileURLToPath(import.meta.url);
@@ -27,7 +26,7 @@ const contentsDir = path.dirname(__dirname);
  */
 export async function getRawContent(filePath: string): Promise<string> {
   // Strip leading slash if present for consistency
-  const cleanPath = filePath.startsWith("/") ? filePath.substring(1) : filePath;
+  const cleanPath = cleanSlug(filePath);
 
   // Validate path to prevent directory traversal
   if (cleanPath.includes("..") || path.isAbsolute(cleanPath)) {
@@ -81,9 +80,7 @@ export async function getContent(
 } | null> {
   try {
     // Strip leading slash if present for consistency
-    const cleanPath = filePath.startsWith("/")
-      ? filePath.substring(1)
-      : filePath;
+    const cleanPath = cleanSlug(filePath);
 
     const contentPath = `${cleanPath}/${locale}.mdx`;
 
@@ -125,7 +122,7 @@ export async function getContents({
 
   const promises = result.map(async (item) => {
     // Cache joined slug to avoid computing it multiple times
-    const joinedSlug = item.slug.join("/");
+    const joinedSlug = cleanSlug(item.slug.join("/"));
 
     const content = await getContent(locale, joinedSlug);
     if (!content) {
@@ -156,21 +153,6 @@ export async function getContents({
   return contents;
 }
 
-type Exercise = {
-  number: number;
-  choices: ExercisesChoices;
-  question: {
-    metadata: ContentMetadata;
-    default: ReturnType<typeof createElement>;
-    raw: string;
-  };
-  answer: {
-    metadata: ContentMetadata;
-    default: ReturnType<typeof createElement>;
-    raw: string;
-  };
-};
-
 /**
  * Gets the exercises content for a specific file path.
  * @param locale - The locale to get the exercises content for.
@@ -183,9 +165,7 @@ export async function getExercisesContent(
 ): Promise<Exercise[] | null> {
   try {
     // Strip leading slash if present for consistency
-    const cleanPath = filePath.startsWith("/")
-      ? filePath.substring(1)
-      : filePath;
+    const cleanPath = cleanSlug(filePath);
 
     // Get all numbered folders (exercise questions)
     const questionNumbers = getFolderChildNames(cleanPath);
@@ -299,9 +279,7 @@ export async function getExerciseByNumber(
 export async function getReferences(filePath: string): Promise<Reference[]> {
   try {
     // Strip leading slash if present for consistency
-    const cleanPath = filePath.startsWith("/")
-      ? filePath.substring(1)
-      : filePath;
+    const cleanPath = cleanSlug(filePath);
 
     // Create a dynamic import path that works reliably with Next.js
     // Using a relative path from the location of this file (lib/utils)
@@ -388,7 +366,7 @@ export function getFolderChildNames(folder: string, exclude?: string[]) {
  * @returns Array of string arrays representing possible slug paths
  */
 export function getNestedSlugs(basePath: string): string[][] {
-  const cleanBasePath = basePath === "" ? "." : basePath;
+  const cleanBasePath = basePath === "" ? "." : cleanSlug(basePath);
   const results: string[][] = [];
 
   // Stack entries: [pathSegments, fullPathString]

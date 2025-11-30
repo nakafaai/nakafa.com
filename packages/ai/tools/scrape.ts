@@ -95,12 +95,11 @@ export const createScrape = ({ writer }: Params) => {
 
 function createOutput({ output }: { output: ScrapeOutput }): string {
   return dedentString(`
-    <scrapeOutput>
-      <data>
-        <url>${output.data.url}</url>
-        <content>${output.data.content}</content>
-      </data>
-      <error>${output.error ?? ""}</error>
-    </scrapeOutput>
+    # Scrape Result
+    - URL: ${output.data.url}
+    ${output.error ? `- Error: ${output.error}` : ""}
+
+    ## Content
+    ${output.data.content}
   `);
 }
