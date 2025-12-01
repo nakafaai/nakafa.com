@@ -48,7 +48,8 @@ function AboutDialogContent({
           alt="Nakafa"
           className="object-contain"
           fill
-          priority
+          loading="eager"
+          preload
           src="/logo.svg"
           title="Nakafa"
         />

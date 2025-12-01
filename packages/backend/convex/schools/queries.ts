@@ -56,24 +56,7 @@ export const getSchoolBySlug = query({
       });
     }
 
-    const membership = await ctx.db
-      .query("schoolMembers")
-      .withIndex("schoolId_userId_status", (q) =>
-        q
-          .eq("schoolId", school._id)
-          .eq("userId", user.appUser._id)
-          .eq("status", "active")
-      )
-      .unique();
-
-    if (!membership) {
-      throw new ConvexError({
-        code: "MEMBERSHIP_NOT_FOUND",
-        message: `Membership not found for schoolId: ${school._id} and userId: ${user.appUser._id}`,
-      });
-    }
-
-    return { school, membership };
+    return school;
   },
 });
 

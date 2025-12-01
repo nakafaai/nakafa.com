@@ -397,6 +397,10 @@
       "dashboard": "Dashboard",
       "classes": "Kelas"
     },
+    "Classes": {
+      "search-placeholder": "Cari kelas...",
+      "create-class": "Buat kelas"
+    },
     "Onboarding": {
       "title": "Selamat datang di Nakafa School!",
       "description": "Apa yang ingin kamu lakukan?",

@@ -397,6 +397,10 @@
       "dashboard": "Dashboard",
       "classes": "Classes"
     },
+    "Classes": {
+      "search-placeholder": "Search classes...",
+      "create-class": "Create class"
+    },
     "Onboarding": {
       "title": "Welcome to Nakafa School!",
       "description": "What are you going to do?",

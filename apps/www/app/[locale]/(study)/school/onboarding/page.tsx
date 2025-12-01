@@ -42,6 +42,8 @@ export default function Page({ params }: Props) {
               alt="Nakafa School Create"
               className="w-full rounded-md bg-[color-mix(in_oklch,var(--primary)_2.5%,var(--background))]"
               height={IMAGE_HEIGHT}
+              loading="eager"
+              preload
               src={SchoolCreateImage}
               title="Nakafa School Create"
               width={IMAGE_WIDTH}
@@ -66,6 +68,8 @@ export default function Page({ params }: Props) {
               alt="Nakafa School Join"
               className="w-full rounded-md bg-[color-mix(in_oklch,var(--primary)_2.5%,var(--background))]"
               height={IMAGE_HEIGHT}
+              loading="eager"
+              preload
               src={SchoolJoinImage}
               title="Nakafa School Join"
               width={IMAGE_WIDTH}

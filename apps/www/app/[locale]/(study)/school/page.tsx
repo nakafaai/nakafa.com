@@ -27,10 +27,7 @@ export default function Page({ params }: Props) {
       }
     >
       <School>
-        <div
-          className="relative flex h-svh items-center justify-center"
-          data-pagefind-ignore
-        >
+        <div className="relative flex h-svh items-center justify-center">
           <Particles className="pointer-events-none absolute inset-0 opacity-80" />
           <div className="mx-auto w-full max-w-xl px-6">
             <ComingSoon />

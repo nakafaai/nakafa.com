@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: "School.Common" });
 
   return {
-    title: t("classes"),
+    title: t("dashboard"),
   };
 }
 
@@ -21,5 +21,5 @@ export default function Page({ params }: Props) {
 
   setRequestLocale(locale);
 
-  return <div className="relative flex min-h-svh" />;
+  return <div className="size-full overflow-y-auto overflow-x-hidden" />;
 }

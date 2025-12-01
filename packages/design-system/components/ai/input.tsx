@@ -278,6 +278,8 @@ export function PromptInputAttachment({
           alt={data.filename || "attachment"}
           className="size-full rounded-md object-cover"
           height={56}
+          loading="eager"
+          preload
           src={data.url}
           width={56}
         />

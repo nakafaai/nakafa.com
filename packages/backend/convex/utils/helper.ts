@@ -21,5 +21,10 @@ export function cleanSlug(slug: string): string {
  * @returns The slugified text, example: "Hello World" -> "hello-world"
  */
 export function slugify(text: string): string {
-  return text.toLowerCase().replace(/\s+/g, "-");
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "") // Remove non-alphanumeric characters
+    .replace(/[\s-]+/g, "-") // Replace spaces and dashes with a single dash
+    .replace(/^-+|-+$/g, ""); // Remove leading and trailing dashes
 }

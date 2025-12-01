@@ -34,7 +34,7 @@ export async function School({ children }: Props) {
         { token }
       );
       if (school) {
-        redirect(`/school/${school.slug}/${membership.role}`);
+        redirect(`/school/${school.slug}`);
       }
     }
 

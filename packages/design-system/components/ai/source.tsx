@@ -75,6 +75,8 @@ export function SourceTrigger({
             alt="favicon"
             className="size-3.5 rounded-full"
             height={14}
+            loading="eager"
+            preload
             src={`https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
               href
             )}`}

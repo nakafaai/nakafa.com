@@ -31,6 +31,8 @@ function VideoCard({ children }: { children: React.ReactNode }) {
         alt="Video Thumbnail"
         className="absolute inset-0 object-cover transition-transform duration-300 group-hover:scale-110"
         fill
+        loading="eager"
+        preload
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         src="/stars.png"
       />

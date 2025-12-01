@@ -9,10 +9,11 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
 import { HouseIcon, ShapesIcon } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 export function SchoolSidebarNavMain() {
+  const pathname = usePathname();
   const t = useTranslations("School.Common");
 
   const params = useParams<{ slug: string }>();
@@ -23,7 +24,10 @@ export function SchoolSidebarNavMain() {
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname.includes("/dashboard")}
+            >
               <NavigationLink
                 href={`/school/${slug}/dashboard`}
                 title={t("dashboard")}
@@ -34,7 +38,7 @@ export function SchoolSidebarNavMain() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild isActive={pathname.includes("/classes")}>
               <NavigationLink
                 href={`/school/${slug}/classes`}
                 title={t("classes")}

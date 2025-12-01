@@ -5,34 +5,30 @@ const tables = {
   schoolClasses: defineTable({
     schoolId: v.id("schools"),
 
-    // Class info
     name: v.string(), // "Matematika 10A"
     subject: v.string(), // "mathematics" (from Nakafa taxonomy)
     year: v.string(), // "2024/2025"
 
-    // Enrollment
-    code: v.string(), // "MTK-ABC123" (for student self-enroll, unique per school)
-    codeEnabled: v.boolean(), // Can students join with code?
+    code: v.string(),
+    codeEnabled: v.boolean(),
 
-    // Status
-    isArchived: v.boolean(), // Soft delete
+    isArchived: v.boolean(),
 
     // Denormalized counts (updated via triggers on classMembers changes)
     studentCount: v.number(),
     teacherCount: v.number(),
 
-    // Audit fields (use _creationTime for createdAt)
-    updatedAt: v.number(), // Last update time
-    createdBy: v.id("users"), // Who created (usually first teacher)
-    updatedBy: v.optional(v.id("users")), // Who last updated
-    archivedBy: v.optional(v.id("users")), // Who archived (if isArchived=true)
-    archivedAt: v.optional(v.number()), // When archived (if isArchived=true)
+    updatedAt: v.number(),
+    createdBy: v.id("users"),
+    updatedBy: v.optional(v.id("users")),
+    archivedBy: v.optional(v.id("users")),
+    archivedAt: v.optional(v.number()),
   })
-    .index("schoolId", ["schoolId"]) // School's classes
-    .index("code", ["code"]) // Join by code (O(1), should be unique per school)
-    .index("schoolId_code", ["schoolId", "code"]) // Unique code per school
-    .index("schoolId_isArchived", ["schoolId", "isArchived"]) // Active classes only
-    .index("createdBy", ["createdBy"]), // Teacher's classes
+    .index("schoolId", ["schoolId"])
+    .index("code", ["code"])
+    .index("schoolId_code", ["schoolId", "code"])
+    .index("schoolId_isArchived", ["schoolId", "isArchived"])
+    .index("createdBy", ["createdBy"]),
 
   schoolClassMembers: defineTable({
     classId: v.id("schoolClasses"),

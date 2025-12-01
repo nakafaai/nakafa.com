@@ -75,6 +75,8 @@ function OnboardingContent({ user }: { user: AppUser }) {
             alt="Nakafa"
             className="w-full rounded-md"
             height={216}
+            loading="eager"
+            preload
             src="/og.png"
             title="Nakafa"
             width={382}
