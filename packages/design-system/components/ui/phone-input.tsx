@@ -110,7 +110,10 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-full border-input p-0">
+      <PopoverContent
+        align="start"
+        className="w-full border-[color-mix(in_oklch,var(--input)_5%,var(--border))] p-0"
+      >
         <Command shouldFilter={false}>
           <CommandInput
             onValueChange={setSearchQuery}

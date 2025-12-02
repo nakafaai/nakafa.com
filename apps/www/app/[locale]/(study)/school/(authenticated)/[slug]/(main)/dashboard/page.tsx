@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { SchoolLayoutContent } from "@/components/school/layout-content";
 
 type Props = {
   params: Promise<{ locale: Locale }>;
@@ -21,5 +22,5 @@ export default function Page({ params }: Props) {
 
   setRequestLocale(locale);
 
-  return <div className="size-full overflow-y-auto overflow-x-hidden" />;
+  return <SchoolLayoutContent />;
 }

@@ -8,6 +8,7 @@ import { createContext, useContextSelector } from "use-context-selector";
 
 type SchoolContextValue = {
   school: Doc<"schools">;
+  membership: Doc<"schoolMembers">;
 };
 
 const SchoolContext = createContext<SchoolContextValue | null>(null);
@@ -19,9 +20,12 @@ export function SchoolContextProvider({
   children: React.ReactNode;
   slug: string;
 }) {
-  const school = useQuery(api.schools.queries.getSchoolBySlug, { slug });
+  const results = useQuery(api.schools.queries.getSchoolBySlug, { slug });
 
-  if (!school) {
+  const school = results?.school;
+  const membership = results?.membership;
+
+  if (!(school && membership)) {
     return (
       <div className="relative flex h-svh items-center justify-center">
         <SpinnerIcon
@@ -33,7 +37,7 @@ export function SchoolContextProvider({
   }
 
   return (
-    <SchoolContext.Provider value={{ school }}>
+    <SchoolContext.Provider value={{ school, membership }}>
       {children}
     </SchoolContext.Provider>
   );

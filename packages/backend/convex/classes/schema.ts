@@ -1,5 +1,6 @@
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
+import { TEACHER_PERMISSIONS } from "./constants";
 
 const tables = {
   schoolClasses: defineTable({
@@ -8,6 +9,7 @@ const tables = {
     name: v.string(), // "Matematika 10A"
     subject: v.string(), // "mathematics" (from Nakafa taxonomy)
     year: v.string(), // "2024/2025"
+    image: v.optional(v.string()),
 
     code: v.string(),
     codeEnabled: v.boolean(),
@@ -28,7 +30,11 @@ const tables = {
     .index("code", ["code"])
     .index("schoolId_code", ["schoolId", "code"])
     .index("schoolId_isArchived", ["schoolId", "isArchived"])
-    .index("createdBy", ["createdBy"]),
+    .index("createdBy", ["createdBy"])
+    .searchIndex("search_name", {
+      searchField: "name",
+      filterFields: ["schoolId", "isArchived"],
+    }),
 
   schoolClassMembers: defineTable({
     classId: v.id("schoolClasses"),
@@ -49,7 +55,27 @@ const tables = {
         v.literal("assistant") // Teaching assistant
       )
     ),
-    teacherPermissions: v.optional(v.array(v.string())), // ["edit", "grade", "create_assignments"]
+    teacherPermissions: v.optional(
+      v.array(
+        v.union(
+          v.literal(TEACHER_PERMISSIONS.CLASS_MANAGE),
+          v.literal(TEACHER_PERMISSIONS.CLASS_ARCHIVE),
+          v.literal(TEACHER_PERMISSIONS.CLASS_DELETE),
+          v.literal(TEACHER_PERMISSIONS.MEMBER_MANAGE),
+          v.literal(TEACHER_PERMISSIONS.CONTENT_CREATE),
+          v.literal(TEACHER_PERMISSIONS.CONTENT_EDIT),
+          v.literal(TEACHER_PERMISSIONS.CONTENT_DELETE),
+          v.literal(TEACHER_PERMISSIONS.CONTENT_PUBLISH),
+          v.literal(TEACHER_PERMISSIONS.GRADE_VIEW),
+          v.literal(TEACHER_PERMISSIONS.GRADE_SCORE),
+          v.literal(TEACHER_PERMISSIONS.GRADE_SETUP),
+          v.literal(TEACHER_PERMISSIONS.COMM_ANNOUNCE),
+          v.literal(TEACHER_PERMISSIONS.COMM_MODERATE),
+          v.literal(TEACHER_PERMISSIONS.COMM_MESSAGE),
+          v.literal(TEACHER_PERMISSIONS.STATS_VIEW)
+        )
+      )
+    ),
 
     // Student-specific fields (only if role="student")
     enrollMethod: v.optional(

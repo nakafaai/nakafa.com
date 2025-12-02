@@ -56,7 +56,24 @@ export const getSchoolBySlug = query({
       });
     }
 
-    return school;
+    const membership = await ctx.db
+      .query("schoolMembers")
+      .withIndex("schoolId_userId_status", (q) =>
+        q
+          .eq("schoolId", school._id)
+          .eq("userId", user.appUser._id)
+          .eq("status", "active")
+      )
+      .unique();
+
+    if (!membership) {
+      throw new ConvexError({
+        code: "MEMBERSHIP_NOT_FOUND",
+        message: `Membership not found for schoolId: ${school._id} and userId: ${user.appUser._id}`,
+      });
+    }
+
+    return { school, membership };
   },
 });
 
@@ -81,5 +98,36 @@ export const getSchoolMemberships = query({
       .collect();
 
     return memberships;
+  },
+});
+
+export const getMySchools = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await safeGetAppUser(ctx);
+    if (!user) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to view your schools.",
+      });
+    }
+
+    // Get all active memberships for the user
+    const memberships = await ctx.db
+      .query("schoolMembers")
+      .withIndex("userId", (q) => q.eq("userId", user.appUser._id))
+      .filter((q) => q.eq(q.field("status"), "active"))
+      .collect();
+
+    // Fetch school details for each membership
+    const schools = await Promise.all(
+      memberships.map(async (membership) => {
+        const school = await ctx.db.get(membership.schoolId);
+        return school;
+      })
+    );
+
+    // Filter out null values (in case a school was deleted)
+    return schools.filter((school) => school !== null);
   },
 });

@@ -1,3 +1,5 @@
+import { nanoid } from "nanoid";
+
 /**
  * Generate a random id
  * @returns The generated id
@@ -27,4 +29,13 @@ export function slugify(text: string): string {
     .replace(/[^a-z0-9\s-]/g, "") // Remove non-alphanumeric characters
     .replace(/[\s-]+/g, "-") // Replace spaces and dashes with a single dash
     .replace(/^-+|-+$/g, ""); // Remove leading and trailing dashes
+}
+
+/**
+ * Generates a nanoid
+ * @param length - The length of the nanoid
+ * @returns The generated nanoid
+ */
+export function generateNanoId(length?: number): string {
+  return nanoid(length ?? 10);
 }

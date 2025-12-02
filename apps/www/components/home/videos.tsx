@@ -29,7 +29,7 @@ function VideoCard({ children }: { children: React.ReactNode }) {
     >
       <Image
         alt="Video Thumbnail"
-        className="absolute inset-0 object-cover transition-transform duration-300 group-hover:scale-110"
+        className="absolute inset-0 object-cover transition-transform duration-300 group-hover:scale-105"
         fill
         loading="eager"
         preload

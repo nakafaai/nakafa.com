@@ -372,7 +372,10 @@ export function UserSettingsApiKey() {
                         <ChevronDownIcon className="size-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
+                    <DropdownMenuContent
+                      align="start"
+                      className="w-(--radix-dropdown-menu-trigger-width)"
+                    >
                       <DropdownMenuGroup>
                         {expiresInList.map((item) => (
                           <DropdownMenuItem

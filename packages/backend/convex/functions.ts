@@ -3,7 +3,8 @@ import {
   customMutation,
 } from "convex-helpers/server/customFunctions";
 import { Triggers } from "convex-helpers/server/triggers";
-import type { DataModel } from "./_generated/dataModel";
+import type { DataModel, Id } from "./_generated/dataModel";
+import type { DatabaseReader, DatabaseWriter } from "./_generated/server";
 import {
   internalMutation as rawInternalMutation,
   mutation as rawMutation,
@@ -296,3 +297,325 @@ triggers.register("schoolMembers", async (ctx, change) => {
     }
   }
 });
+
+// This is a trigger that creates activity logs when a class is created, updated, archived, or deleted.
+triggers.register("schoolClasses", async (ctx, change) => {
+  const classDoc = change.newDoc;
+  const oldClassDoc = change.oldDoc;
+  const classId = change.id;
+
+  switch (change.operation) {
+    case "insert": {
+      if (!classDoc) {
+        break;
+      }
+
+      // Create activity log for class creation
+      await ctx.db.insert("schoolActivityLogs", {
+        schoolId: classDoc.schoolId,
+        userId: classDoc.createdBy,
+        action: "class_created",
+        entityType: "classes",
+        entityId: classId,
+        metadata: {
+          className: classDoc.name,
+          subject: classDoc.subject,
+          year: classDoc.year,
+        },
+      });
+      break;
+    }
+
+    case "update": {
+      if (!(classDoc && oldClassDoc)) {
+        break;
+      }
+
+      // Check if class was archived/unarchived
+      if (oldClassDoc.isArchived !== classDoc.isArchived) {
+        await ctx.db.insert("schoolActivityLogs", {
+          schoolId: classDoc.schoolId,
+          userId:
+            classDoc.archivedBy ?? classDoc.updatedBy ?? classDoc.createdBy,
+          action: "class_archived",
+          entityType: "classes",
+          entityId: classId,
+          metadata: {
+            className: classDoc.name,
+            isArchived: classDoc.isArchived,
+            archivedAt: classDoc.archivedAt,
+          },
+        });
+      }
+
+      // Check if class code was regenerated
+      if (oldClassDoc.code !== classDoc.code) {
+        await ctx.db.insert("schoolActivityLogs", {
+          schoolId: classDoc.schoolId,
+          userId: classDoc.updatedBy ?? classDoc.createdBy,
+          action: "class_code_regenerated",
+          entityType: "classes",
+          entityId: classId,
+          metadata: {
+            className: classDoc.name,
+            oldCode: oldClassDoc.code,
+            newCode: classDoc.code,
+          },
+        });
+      }
+
+      // General class update (if not just archive or code change)
+      if (
+        oldClassDoc.name !== classDoc.name ||
+        oldClassDoc.subject !== classDoc.subject ||
+        oldClassDoc.year !== classDoc.year
+      ) {
+        await ctx.db.insert("schoolActivityLogs", {
+          schoolId: classDoc.schoolId,
+          userId: classDoc.updatedBy ?? classDoc.createdBy,
+          action: "class_updated",
+          entityType: "classes",
+          entityId: classId,
+          metadata: {
+            className: classDoc.name,
+            oldName:
+              oldClassDoc.name !== classDoc.name ? oldClassDoc.name : undefined,
+            newName:
+              oldClassDoc.name !== classDoc.name ? classDoc.name : undefined,
+            oldSubject:
+              oldClassDoc.subject !== classDoc.subject
+                ? oldClassDoc.subject
+                : undefined,
+            newSubject:
+              oldClassDoc.subject !== classDoc.subject
+                ? classDoc.subject
+                : undefined,
+            oldYear:
+              oldClassDoc.year !== classDoc.year ? oldClassDoc.year : undefined,
+            newYear:
+              oldClassDoc.year !== classDoc.year ? classDoc.year : undefined,
+          },
+        });
+      }
+      break;
+    }
+
+    case "delete": {
+      if (!oldClassDoc) {
+        break;
+      }
+
+      // Create activity log for class deletion
+      await ctx.db.insert("schoolActivityLogs", {
+        schoolId: oldClassDoc.schoolId,
+        userId: oldClassDoc.updatedBy ?? oldClassDoc.createdBy,
+        action: "class_deleted",
+        entityType: "classes",
+        entityId: classId,
+        metadata: {
+          className: oldClassDoc.name,
+          subject: oldClassDoc.subject,
+          year: oldClassDoc.year,
+        },
+      });
+
+      // Clean up: Delete all class members
+      const classMembers = await ctx.db
+        .query("schoolClassMembers")
+        .withIndex("classId", (q) => q.eq("classId", classId))
+        .collect();
+
+      for (const member of classMembers) {
+        await ctx.db.delete(member._id);
+      }
+      break;
+    }
+
+    default: {
+      break;
+    }
+  }
+});
+
+// This is a trigger that manages class member activity logs and updates denormalized counts.
+triggers.register("schoolClassMembers", async (ctx, change) => {
+  const member = change.newDoc;
+  const oldMember = change.oldDoc;
+
+  switch (change.operation) {
+    case "insert": {
+      if (!member) {
+        break;
+      }
+
+      // Update denormalized counts
+      await updateClassMemberCount(ctx, member.classId, member.role, 1);
+
+      // Create activity log
+      await ctx.db.insert("schoolActivityLogs", {
+        schoolId: member.schoolId,
+        userId: member.addedBy ?? member.userId,
+        action: "class_member_added",
+        entityType: "classMembers",
+        entityId: change.id,
+        metadata: {
+          classId: member.classId,
+          addedUserId: member.userId,
+          role: member.role,
+          teacherRole: member.teacherRole,
+          enrollMethod: member.enrollMethod,
+        },
+      });
+      break;
+    }
+
+    case "update": {
+      if (!(member && oldMember)) {
+        break;
+      }
+
+      // Handle role change
+      if (oldMember.role !== member.role) {
+        await handleRoleChange(ctx, change.id, member, oldMember);
+      }
+
+      // Handle teacher role change (primary -> co-teacher, etc.)
+      if (
+        oldMember.teacherRole !== member.teacherRole &&
+        member.role === "teacher"
+      ) {
+        await ctx.db.insert("schoolActivityLogs", {
+          schoolId: member.schoolId,
+          userId: member.userId,
+          action: "class_member_role_changed",
+          entityType: "classMembers",
+          entityId: change.id,
+          metadata: {
+            classId: member.classId,
+            oldTeacherRole: oldMember.teacherRole,
+            newTeacherRole: member.teacherRole,
+          },
+        });
+      }
+
+      // Handle permissions change
+      if (
+        JSON.stringify(oldMember.teacherPermissions) !==
+        JSON.stringify(member.teacherPermissions)
+      ) {
+        await ctx.db.insert("schoolActivityLogs", {
+          schoolId: member.schoolId,
+          userId: member.userId,
+          action: "class_member_permissions_changed",
+          entityType: "classMembers",
+          entityId: change.id,
+          metadata: {
+            classId: member.classId,
+            oldPermissions: oldMember.teacherPermissions,
+            newPermissions: member.teacherPermissions,
+          },
+        });
+      }
+      break;
+    }
+
+    case "delete": {
+      if (!oldMember) {
+        break;
+      }
+
+      // Update denormalized counts
+      await updateClassMemberCount(ctx, oldMember.classId, oldMember.role, -1);
+
+      // Create activity log
+      await ctx.db.insert("schoolActivityLogs", {
+        schoolId: oldMember.schoolId,
+        userId: oldMember.removedBy ?? oldMember.userId,
+        action: "class_member_removed",
+        entityType: "classMembers",
+        entityId: change.id,
+        metadata: {
+          classId: oldMember.classId,
+          removedUserId: oldMember.userId,
+          role: oldMember.role,
+          removedAt: oldMember.removedAt,
+        },
+      });
+      break;
+    }
+
+    default: {
+      break;
+    }
+  }
+});
+
+// Helper function to update class member counts
+async function updateClassMemberCount(
+  ctx: { db: DatabaseReader & DatabaseWriter },
+  classId: Id<"schoolClasses">,
+  role: "teacher" | "student",
+  delta: number
+) {
+  const classDoc = await ctx.db.get(classId);
+  if (!classDoc) {
+    return;
+  }
+
+  if (role === "teacher") {
+    await ctx.db.patch(classId, {
+      teacherCount: Math.max(classDoc.teacherCount + delta, 0),
+    });
+  } else if (role === "student") {
+    await ctx.db.patch(classId, {
+      studentCount: Math.max(classDoc.studentCount + delta, 0),
+    });
+  }
+}
+
+// Helper function to handle role changes
+async function handleRoleChange(
+  ctx: { db: DatabaseReader & DatabaseWriter },
+  memberId: Id<"schoolClassMembers">,
+  member: {
+    classId: Id<"schoolClasses">;
+    schoolId: Id<"schools">;
+    userId: Id<"users">;
+    role: "teacher" | "student";
+  },
+  oldMember: { role: "teacher" | "student" }
+) {
+  // Update counts
+  const classDoc = await ctx.db.get(member.classId);
+  if (classDoc) {
+    let teacherDelta = 0;
+    let studentDelta = 0;
+
+    if (oldMember.role === "teacher" && member.role === "student") {
+      teacherDelta = -1;
+      studentDelta = 1;
+    } else if (oldMember.role === "student" && member.role === "teacher") {
+      teacherDelta = 1;
+      studentDelta = -1;
+    }
+
+    await ctx.db.patch(member.classId, {
+      teacherCount: Math.max(classDoc.teacherCount + teacherDelta, 0),
+      studentCount: Math.max(classDoc.studentCount + studentDelta, 0),
+    });
+  }
+
+  // Log the change
+  await ctx.db.insert("schoolActivityLogs", {
+    schoolId: member.schoolId,
+    userId: member.userId,
+    action: "class_member_role_changed",
+    entityType: "classMembers",
+    entityId: memberId,
+    metadata: {
+      classId: member.classId,
+      oldRole: oldMember.role,
+      newRole: member.role,
+    },
+  });
+}

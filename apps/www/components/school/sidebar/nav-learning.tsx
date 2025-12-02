@@ -4,15 +4,16 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
-import { HouseIcon, ShapesIcon } from "lucide-react";
+import { ShapesIcon } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-export function SchoolSidebarNavMain() {
+export function SchoolSidebarNavLearning() {
   const pathname = usePathname();
   const t = useTranslations("School.Common");
 
@@ -21,22 +22,9 @@ export function SchoolSidebarNavMain() {
 
   return (
     <SidebarGroup>
+      <SidebarGroupLabel>{t("learning")}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname.includes("/dashboard")}
-            >
-              <NavigationLink
-                href={`/school/${slug}/dashboard`}
-                title={t("dashboard")}
-              >
-                <HouseIcon />
-                {t("dashboard")}
-              </NavigationLink>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={pathname.includes("/classes")}>
               <NavigationLink

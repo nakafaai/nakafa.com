@@ -25,7 +25,7 @@ export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
         <div className="flex h-full w-full flex-col items-center justify-start overflow-hidden bg-background lg:rounded-lg lg:border">
           <SchoolHeader />
 
-          <div className="flex-1">{children}</div>
+          <div className="min-h-0 w-full flex-1">{children}</div>
         </div>
       </main>
     </SidebarProvider>

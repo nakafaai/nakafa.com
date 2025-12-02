@@ -38,7 +38,7 @@ export function HeaderSearch() {
           <SearchIcon className="size-4 text-muted-foreground" />
         </div>
         <Input
-          className="pointer-events-none h-8 border border-border bg-background pl-9 shadow-xs transition-colors placeholder:text-sm hover:bg-accent hover:text-accent-foreground focus-visible:ring-0 sm:w-80 dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
+          className="pointer-events-none h-8 border border-border bg-background pl-9 shadow-xs transition-colors placeholder:text-sm hover:bg-accent hover:text-accent-foreground focus-visible:ring-0 sm:w-80 dark:hover:bg-input/50"
           id={id}
           placeholder={t("search-bar-placeholder")}
           type="text"
