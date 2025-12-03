@@ -413,6 +413,12 @@
       "no-classes-found": "Belum ada kelas.",
       "no-subjects-found": "Mata pelajaran tidak ditemukan.",
       "search-subjects-placeholder": "Cari mata pelajaran...",
+      "join-class": "Gabung kelas",
+      "join-class-description": "Masukkan kode untuk bergabung ke kelas.",
+      "join": "Gabung",
+      "code": "Kode",
+      "code-placeholder": "Masukkan kode...",
+      "join-class-failed": "Gagal bergabung ke kelas. Silakan coba dengan kode yang berbeda.",
       "mathematics": "Matematika",
       "advanced-mathematics": "Matematika Peminatan",
       "natural-science": "IPA",
@@ -464,7 +470,7 @@
       "description": "Apa yang ingin kamu lakukan?",
       "create": "Buat Sekolah",
       "create-description": "Aku administrator atau Kepala Sekolah yang ingin setup Nakafa School.",
-      "join": "Bergabung Sekolah",
+      "join": "Gabung Sekolah",
       "join-description": "Aku guru, siswa, atau orang tua yang ingin bergabung sekolah yang sudah ada.",
       "back": "Kembali",
       "school-name": "Nama Sekolah",
@@ -496,7 +502,8 @@
       "parent": "Orang tua",
       "school-creation-failed": "Gagal membuat sekolah. Silakan coba dengan email yang berbeda.",
       "add-school": "Tambah sekolah",
-      "schools": "Sekolah"
+      "schools": "Sekolah",
+      "school-joining-failed": "Gagal bergabung sekolah. Pastikan kode yang kamu masukkan benar."
     }
   }
 }

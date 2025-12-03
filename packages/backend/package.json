@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@convex-dev/better-auth": "^0.9.9",
+    "@convex-dev/better-auth": "^0.9.11",
     "@convex-dev/migrations": "^0.3.1",
     "@convex-dev/workflow": "^0.3.3",
     "@polar-sh/better-auth": "^1.1.11",

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: Triggers are complex */
 import {
   customCtx,
   customMutation,
@@ -122,17 +123,58 @@ triggers.register("schools", async (ctx, change) => {
         break;
       }
 
-      // Create activity log entry for school update
-      await ctx.db.insert("schoolActivityLogs", {
-        schoolId,
-        userId: school.updatedBy ?? school.createdBy,
-        action: "school_updated",
-        entityType: "schools",
-        entityId: schoolId,
-        metadata: {
-          schoolName: school.name,
-        },
-      });
+      // General school update
+      if (
+        oldSchool.name !== school.name ||
+        oldSchool.email !== school.email ||
+        oldSchool.phone !== school.phone ||
+        oldSchool.address !== school.address ||
+        oldSchool.city !== school.city ||
+        oldSchool.province !== school.province ||
+        oldSchool.type !== school.type
+      ) {
+        await ctx.db.insert("schoolActivityLogs", {
+          schoolId,
+          userId: school.updatedBy ?? school.createdBy,
+          action: "school_updated",
+          entityType: "schools",
+          entityId: schoolId,
+          metadata: {
+            schoolName: school.name,
+            oldName:
+              oldSchool.name !== school.name ? oldSchool.name : undefined,
+            newName: oldSchool.name !== school.name ? school.name : undefined,
+            oldEmail:
+              oldSchool.email !== school.email ? oldSchool.email : undefined,
+            newEmail:
+              oldSchool.email !== school.email ? school.email : undefined,
+            oldPhone:
+              oldSchool.phone !== school.phone ? oldSchool.phone : undefined,
+            newPhone:
+              oldSchool.phone !== school.phone ? school.phone : undefined,
+            oldAddress:
+              oldSchool.address !== school.address
+                ? oldSchool.address
+                : undefined,
+            newAddress:
+              oldSchool.address !== school.address ? school.address : undefined,
+            oldCity:
+              oldSchool.city !== school.city ? oldSchool.city : undefined,
+            newCity: oldSchool.city !== school.city ? school.city : undefined,
+            oldProvince:
+              oldSchool.province !== school.province
+                ? oldSchool.province
+                : undefined,
+            newProvince:
+              oldSchool.province !== school.province
+                ? school.province
+                : undefined,
+            oldType:
+              oldSchool.type !== school.type ? oldSchool.type : undefined,
+            newType: oldSchool.type !== school.type ? school.type : undefined,
+          },
+        });
+      }
       break;
     }
 
@@ -171,6 +213,17 @@ triggers.register("schoolMembers", async (ctx, change) => {
     case "insert": {
       if (!member) {
         break;
+      }
+
+      // Update invite code usage count if member joined via invite code
+      if (member.inviteCodeId) {
+        const inviteCode = await ctx.db.get(member.inviteCodeId);
+        if (inviteCode) {
+          await ctx.db.patch(member.inviteCodeId, {
+            currentUsage: inviteCode.currentUsage + 1,
+            updatedAt: Date.now(),
+          });
+        }
       }
 
       switch (member.status) {
@@ -348,23 +401,7 @@ triggers.register("schoolClasses", async (ctx, change) => {
         });
       }
 
-      // Check if class code was regenerated
-      if (oldClassDoc.code !== classDoc.code) {
-        await ctx.db.insert("schoolActivityLogs", {
-          schoolId: classDoc.schoolId,
-          userId: classDoc.updatedBy ?? classDoc.createdBy,
-          action: "class_code_regenerated",
-          entityType: "classes",
-          entityId: classId,
-          metadata: {
-            className: classDoc.name,
-            oldCode: oldClassDoc.code,
-            newCode: classDoc.code,
-          },
-        });
-      }
-
-      // General class update (if not just archive or code change)
+      // General class update
       if (
         oldClassDoc.name !== classDoc.name ||
         oldClassDoc.subject !== classDoc.subject ||
@@ -446,6 +483,17 @@ triggers.register("schoolClassMembers", async (ctx, change) => {
     case "insert": {
       if (!member) {
         break;
+      }
+
+      // Update invite code usage count if member joined via invite code
+      if (member.inviteCodeId) {
+        const inviteCode = await ctx.db.get(member.inviteCodeId);
+        if (inviteCode) {
+          await ctx.db.patch(member.inviteCodeId, {
+            currentUsage: inviteCode.currentUsage + 1,
+            updatedAt: Date.now(),
+          });
+        }
       }
 
       // Update denormalized counts

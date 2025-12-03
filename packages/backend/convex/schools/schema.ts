@@ -41,7 +41,8 @@ const tables = {
       v.literal("admin"), // Can manage school settings
       v.literal("teacher"), // Can create classes
       v.literal("student"), // Can view assignments
-      v.literal("parent") // Can monitor children
+      v.literal("parent"), // Can monitor children
+      v.literal("demo") // Same like admin, but can't do destructive actions (demo purpose)
     ),
 
     status: v.union(
@@ -54,6 +55,7 @@ const tables = {
     invitedBy: v.optional(v.id("users")),
     invitedAt: v.optional(v.number()),
     inviteToken: v.optional(v.string()), // For email invitation links
+    inviteCodeId: v.optional(v.id("schoolInviteCodes")), // Which invite code was used (for usage tracking)
 
     // Audit fields (use _creationTime for createdAt)
     updatedAt: v.number(), // Last update time
@@ -106,6 +108,42 @@ const tables = {
     .index("schoolId", ["schoolId"]) // Query by school
     .index("status", ["status"]), // Filter by verification status
 
+  schoolInviteCodes: defineTable({
+    schoolId: v.id("schools"),
+
+    // Role this code is for
+    role: v.union(
+      v.literal("teacher"),
+      v.literal("student"),
+      v.literal("parent"),
+      v.literal("demo")
+    ),
+
+    // The actual invite code
+    code: v.string(), // "ABC123XYZ"
+
+    // Code settings
+    enabled: v.boolean(), // Can this code be used?
+
+    // Optional limits
+    expiresAt: v.optional(v.number()), // When code expires (null = never)
+    maxUsage: v.optional(v.number()), // Max times code can be used (null = unlimited)
+    currentUsage: v.number(), // How many times used
+
+    // Metadata
+    description: v.optional(v.string()), // "Student intake 2024/2025"
+
+    // Audit fields
+    createdBy: v.id("users"),
+    updatedBy: v.optional(v.id("users")),
+    updatedAt: v.number(),
+  })
+    .index("schoolId", ["schoolId"]) // All codes for a school
+    .index("schoolId_role", ["schoolId", "role"]) // Codes for specific role
+    .index("code", ["code"]) // Lookup by code (for joining)
+    .index("schoolId_code", ["schoolId", "code"]) // Unique code per school
+    .index("schoolId_enabled", ["schoolId", "enabled"]), // Active codes
+
   schoolActivityLogs: defineTable({
     schoolId: v.id("schools"),
     userId: v.id("users"), // Who did the action
@@ -116,6 +154,7 @@ const tables = {
       v.literal("school_created"),
       v.literal("school_updated"),
       v.literal("school_deleted"),
+      v.literal("school_code_regenerated"),
 
       // Member actions
       v.literal("member_invited"),

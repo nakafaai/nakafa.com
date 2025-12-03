@@ -63,7 +63,6 @@ export function SchoolHeaderClassesAdd() {
   const [subjectPopoverOpen, setSubjectPopoverOpen] = useState(false);
 
   const schoolId = useSchool((s) => s.school._id);
-  const membership = useSchool((s) => s.membership);
   const createClass = useMutation(api.classes.mutations.createClass);
 
   const form = useForm({
@@ -91,11 +90,6 @@ export function SchoolHeaderClassesAdd() {
       }
     },
   });
-
-  // Only show when membership is admin or teacher
-  if (membership.role !== "admin" && membership.role !== "teacher") {
-    return null;
-  }
 
   return (
     <form

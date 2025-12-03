@@ -1,10 +1,10 @@
 "use client";
 
+import { usePathname } from "@repo/internationalization/src/navigation";
 import { redirect } from "next/navigation";
-import { useSchool } from "@/lib/context/use-school";
 
 export default function Page() {
-  const school = useSchool((state) => state.school);
+  const pathname = usePathname();
 
-  redirect(`/school/${school.slug}/dashboard`);
+  redirect(`${pathname}/dashboard`);
 }

@@ -8,6 +8,7 @@ import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { AiSheet } from "@/components/ai/sheet";
+import { Onboarding } from "@/components/shared/onboarding";
 import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
@@ -33,6 +34,7 @@ export default function Layout(props: LayoutProps<"/[locale]">) {
         <div className="relative" data-pagefind-body>
           {children}
         </div>
+        <Onboarding />
       </SidebarInset>
     </SidebarProvider>
   );

@@ -9,10 +9,7 @@ const tables = {
     name: v.string(), // "Matematika 10A"
     subject: v.string(), // "mathematics" (from Nakafa taxonomy)
     year: v.string(), // "2024/2025"
-    image: v.optional(v.string()),
-
-    code: v.string(),
-    codeEnabled: v.boolean(),
+    image: v.string(),
 
     isArchived: v.boolean(),
 
@@ -27,8 +24,6 @@ const tables = {
     archivedAt: v.optional(v.number()),
   })
     .index("schoolId", ["schoolId"])
-    .index("code", ["code"])
-    .index("schoolId_code", ["schoolId", "code"])
     .index("schoolId_isArchived", ["schoolId", "isArchived"])
     .index("createdBy", ["createdBy"])
     .searchIndex("search_name", {
@@ -87,6 +82,9 @@ const tables = {
       )
     ),
 
+    // Invitation tracking
+    inviteCodeId: v.optional(v.id("schoolClassInviteCodes")), // Which invite code was used (for usage tracking)
+
     // Audit fields (use _creationTime for createdAt)
     updatedAt: v.number(), // Last update time
     addedBy: v.optional(v.id("users")), // Who added them
@@ -97,6 +95,42 @@ const tables = {
     .index("userId", ["userId"]) // All classes for a user
     .index("classId_userId", ["classId", "userId"]) // Prevent duplicates (O(1), unique)
     .index("classId_role", ["classId", "role"]) // All teachers or all students
+    .index("schoolId", ["schoolId"]), // Query by school
+
+  schoolClassInviteCodes: defineTable({
+    classId: v.id("schoolClasses"),
+    schoolId: v.id("schools"), // Denormalized for querying
+
+    // Role this code is for
+    role: v.union(
+      v.literal("teacher"), // Teacher invite code
+      v.literal("student") // Student invite code
+    ),
+
+    // The actual invite code
+    code: v.string(), // "ABC123XYZ"
+
+    // Code settings
+    enabled: v.boolean(), // Can this code be used?
+
+    // Optional limits
+    expiresAt: v.optional(v.number()), // When code expires (null = never)
+    maxUsage: v.optional(v.number()), // Max times code can be used (null = unlimited)
+    currentUsage: v.number(), // How many times used
+
+    // Metadata
+    description: v.optional(v.string()), // "Student enrollment Q1 2024"
+
+    // Audit fields
+    createdBy: v.id("users"),
+    updatedBy: v.optional(v.id("users")),
+    updatedAt: v.number(),
+  })
+    .index("classId", ["classId"]) // All codes for a class
+    .index("classId_role", ["classId", "role"]) // Codes for specific role
+    .index("code", ["code"]) // Lookup by code (for joining)
+    .index("classId_code", ["classId", "code"]) // Unique code per class
+    .index("classId_enabled", ["classId", "enabled"]) // Active codes
     .index("schoolId", ["schoolId"]), // Query by school
 };
 

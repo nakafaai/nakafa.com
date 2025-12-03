@@ -1,15 +1,19 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { SchoolClassesValidation } from "@/components/school/classes/validation";
 import { SchoolNotFound } from "@/components/school/not-found";
-import { SchoolContextProvider } from "@/lib/context/use-school";
+import { ClassContextProvider } from "@/lib/context/use-class";
 
-export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
+export default function Layout(
+  props: LayoutProps<"/[locale]/school/[slug]/classes/[id]">
+) {
   const { children, params } = props;
-  const { locale, slug } = use(params);
+  const { locale, id } = use(params);
   if (!hasLocale(routing.locales, locale)) {
     // Ensure that the incoming `locale` is valid
     notFound();
@@ -18,11 +22,15 @@ export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
   // Enable static rendering
   setRequestLocale(locale);
 
+  const classId = id as Id<"schoolClasses">;
+
   return (
     <ErrorBoundary fallback={<SchoolNotFound />}>
-      <SchoolContextProvider slug={decodeURIComponent(slug)}>
-        {children}
-      </SchoolContextProvider>
+      <SchoolClassesValidation classId={classId}>
+        <ClassContextProvider classId={classId}>
+          {children}
+        </ClassContextProvider>
+      </SchoolClassesValidation>
     </ErrorBoundary>
   );
 }

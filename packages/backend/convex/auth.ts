@@ -24,12 +24,7 @@ const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
 const authFunctions: AuthFunctions = internal.auth;
 
-// TypeScript false positive with 10+ model discriminated union
-// TS structural typing fails at deep nesting, incorrectly compares organization vs rateLimit
-// Runtime verified: ✅ Convex compiles, ✅ Auth endpoints work, ✅ Schema synced
-// See: https://github.com/microsoft/TypeScript/issues/30581
 export const authComponent = createClient<DataModel, typeof authSchema>(
-  // @ts-expect-error - TS can't handle deeply nested union types (10+ models)
   components.betterAuth,
   {
     authFunctions,

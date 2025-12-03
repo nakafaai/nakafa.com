@@ -16,13 +16,13 @@
     "@repo/next-config": "workspace:*",
     "@repo/security": "workspace:*",
     "@repo/utilities": "workspace:*",
-    "@convex-dev/better-auth": "^0.9.9",
+    "@convex-dev/better-auth": "^0.9.11",
     "@t3-oss/env-nextjs": "^0.13.8",
-    "next": "16.0.6",
+    "next": "16.0.7",
     "pino": "^10.1.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "shiki": "^3.18.0"
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "shiki": "^3.19.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

@@ -41,7 +41,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                 <div className="relative aspect-square size-8">
                   <Image
                     alt="Nakafa"
-                    className="rounded-lg border object-contain"
+                    className="rounded-md border object-contain"
                     fill
                     loading="eager"
                     preload

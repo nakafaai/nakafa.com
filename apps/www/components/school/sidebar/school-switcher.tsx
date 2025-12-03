@@ -52,7 +52,7 @@ export function SchoolSwitcher() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg border bg-sidebar-primary text-sidebar-primary-foreground">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-md border bg-sidebar-primary text-sidebar-primary-foreground">
                 <CurrentSchoolIcon className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">

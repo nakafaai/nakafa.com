@@ -1,4 +1,3 @@
-// @ts-nocheck MCP IS NOT SUPPORT zod 4? Got type error suddenly
 import { api } from "@repo/connection/routes";
 import { createMcpHandler } from "mcp-handler";
 import { env } from "@/env";
@@ -99,8 +98,7 @@ const handler = createMcpHandler(
   {
     capabilities: {
       tools: {
-        [tools.getContents.name]: tools.getContents.description,
-        [tools.getContent.name]: tools.getContent.description,
+        listChanged: true,
       },
     },
   },

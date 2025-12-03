@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -8,43 +9,40 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
+import { useMutation } from "convex/react";
 import { MergeIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import * as z from "zod/mini";
-import { roles } from "@/lib/data/roles";
 
 const formSchema = z.object({
-  role: z.union([
-    z.literal("teacher"),
-    z.literal("student"),
-    z.literal("parent"),
-  ]),
   code: z.string().check(z.minLength(1), z.trim()),
 });
-const roleSchema = formSchema.shape.role;
+
+const defaultValues: z.infer<typeof formSchema> = {
+  code: "",
+};
 
 export function SchoolOnboardingJoinForm() {
   const t = useTranslations("School.Onboarding");
 
+  const router = useRouter();
+  const joinSchool = useMutation(api.schools.mutations.joinSchool);
+
   const form = useForm({
-    defaultValues: {
-      role: "teacher",
-      code: "",
-    },
+    defaultValues,
     validators: {
       onChange: formSchema,
     },
-    onSubmit: ({ value }) => {
-      // TODO: Create school
-      form.reset(value);
+    onSubmit: async ({ value }) => {
+      try {
+        const { slug } = await joinSchool(value);
+        router.push(`/school/${slug}`);
+      } catch {
+        toast.error(t("school-joining-failed"));
+      }
     },
   });
 
@@ -58,47 +56,6 @@ export function SchoolOnboardingJoinForm() {
       }}
     >
       <FieldGroup>
-        <form.Field name="role">
-          {(field) => {
-            const isInvalid =
-              Boolean(field.state.meta.isTouched) &&
-              Boolean(!field.state.meta.isValid);
-            return (
-              <Field data-invalid={isInvalid}>
-                <FieldLabel htmlFor="school-onboarding-join-role">
-                  {t("role")}
-                </FieldLabel>
-                <Select
-                  name={field.name}
-                  onValueChange={(value) => {
-                    const parsed = roleSchema.safeParse(value);
-                    if (parsed.success) {
-                      field.handleChange(parsed.data);
-                    }
-                  }}
-                  value={field.state.value ?? undefined}
-                >
-                  <SelectTrigger
-                    aria-invalid={isInvalid}
-                    className="w-full"
-                    id="school-onboarding-join-role"
-                  >
-                    <SelectValue placeholder={t("role-placeholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roleOptions.map((role) => (
-                      <SelectItem key={role.value} value={role.value}>
-                        <role.icon />
-                        {t(role.value)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-            );
-          }}
-        </form.Field>
-
         <form.Field name="code">
           {(field) => {
             const isInvalid =
@@ -124,11 +81,9 @@ export function SchoolOnboardingJoinForm() {
         </form.Field>
       </FieldGroup>
 
-      <form.Subscribe
-        selector={(state) => [state.isValid, state.isDirty, state.isSubmitting]}
-      >
-        {([isValid, isDirty, isSubmitting]) => {
-          const canSubmit = Boolean(isValid) && Boolean(isDirty);
+      <form.Subscribe selector={(state) => [state.isValid, state.isSubmitting]}>
+        {([isValid, isSubmitting]) => {
+          const canSubmit = Boolean(isValid);
           const isDisabled = !canSubmit || Boolean(isSubmitting);
           return (
             <Button disabled={isDisabled} type="submit">
@@ -141,5 +96,3 @@ export function SchoolOnboardingJoinForm() {
     </form>
   );
 }
-
-const roleOptions = roles.filter((role) => role.value !== "administrator");

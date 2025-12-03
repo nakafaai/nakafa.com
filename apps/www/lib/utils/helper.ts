@@ -63,3 +63,13 @@ export function truncateText(text: string, maxLength: number): string {
   }
   return `${text.substring(0, maxLength).trim()}...`;
 }
+
+/**
+ * Helper function to check if pathname ends with a specific segment
+ * Example: /school/slug/classes -> matches "classes"
+ * Example: /school/slug/classes/123 -> does not match "classes"
+ */
+export function pathEndsWith(pathname: string, segment: string): boolean {
+  const parts = pathname.split("/").filter(Boolean);
+  return parts.at(-1) === segment;
+}

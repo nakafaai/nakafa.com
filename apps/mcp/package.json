@@ -11,16 +11,16 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.24.0",
+    "@modelcontextprotocol/sdk": "^1.24.2",
     "@repo/connection": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
     "express": "^5.2.1",
     "mcp-handler": "1.0.4",
-    "next": "16.0.6",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "next": "16.0.7",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "redis": "^5.10.0",
     "zod": "^4.1.13"
   },

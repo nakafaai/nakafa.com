@@ -3,6 +3,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { getRandomClassImage } from "@repo/backend/convex/classes/constants";
+import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
@@ -61,8 +62,7 @@ export function SchoolClassesList() {
 function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
   const pathname = usePathname();
   const [imageError, setImageError] = useState(false);
-  const imageSrc =
-    imageError || !cls.image ? getRandomClassImage(`${cls._id}`) : cls.image;
+  const imageSrc = imageError ? getRandomClassImage(`${cls._id}`) : cls.image;
 
   return (
     <Card className="group relative gap-0 overflow-hidden p-0">
@@ -70,36 +70,35 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
         className="absolute inset-0 z-1"
         href={`${pathname}/${cls._id}`}
       />
-      <div className="relative h-28 overflow-hidden border-b">
-        <Image
-          alt={cls.name}
-          className="object-cover opacity-80 transition-opacity ease-out group-hover:opacity-100"
-          fill
-          loading="eager"
-          onError={() => setImageError(true)}
-          preload
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          src={imageSrc}
-          title={cls.name}
-        />
-        <div className="absolute inset-0 flex items-center p-6">
-          <div className="w-fit max-w-full rounded-sm border bg-card px-3 py-1.5 shadow-xs">
-            <h2 className="truncate font-medium leading-tight tracking-tight">
-              {cls.name}
-            </h2>
-          </div>
+      <div className="p-2">
+        <div className="relative h-32 overflow-hidden rounded-md">
+          <Image
+            alt={cls.name}
+            className="object-cover transition-transform ease-out group-hover:scale-105"
+            fill
+            loading="eager"
+            onError={() => setImageError(true)}
+            preload
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            src={imageSrc}
+            title={cls.name}
+          />
         </div>
       </div>
-      <CardContent className="px-6 py-4">
-        <div className="flex items-center justify-between gap-4 text-sm">
-          <div className="flex min-w-0 items-center gap-1.5">
+      <CardContent className="space-y-3 px-6 py-4">
+        <h2 className="truncate font-medium leading-tight tracking-tight">
+          {cls.name}
+        </h2>
+
+        <div className="flex items-center gap-2 text-sm">
+          <Badge className="min-w-0 shrink" variant="muted">
             <BookOpen className="size-4 shrink-0" />
             <span className="truncate">{cls.subject}</span>
-          </div>
-          <div className="flex min-w-0 shrink-0 items-center gap-1.5">
+          </Badge>
+          <Badge className="min-w-0 shrink-0" variant="muted">
             <CalendarIcon className="size-4 shrink-0" />
             <span className="truncate">{cls.year}</span>
-          </div>
+          </Badge>
         </div>
       </CardContent>
       <CardFooter className="z-2 justify-end border-t px-4 pb-2 [.border-t]:pt-2">
