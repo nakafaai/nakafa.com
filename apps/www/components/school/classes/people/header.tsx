@@ -1,3 +1,5 @@
+"use client";
+
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { SchoolClassesPeopleInvite } from "@/components/school/classes/people/invite";
 import { SchoolClassesPeopleSearch } from "@/components/school/classes/people/search";
