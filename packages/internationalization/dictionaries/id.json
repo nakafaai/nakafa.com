@@ -399,6 +399,7 @@
       "classes": "Kelas"
     },
     "Classes": {
+      "classes": "Kelas",
       "search-placeholder": "Cari kelas...",
       "create-class": "Buat kelas",
       "create-class-description": "Siapkan kelas baru untuk mengorganisir siswa dan melacak kemajuan mereka selama tahun ajaran.",
@@ -463,7 +464,21 @@
       "accounting": "Akuntansi",
       "business": "Bisnis",
       "entrepreneurship": "Kewirausahaan",
-      "guidance-counseling": "Bimbingan Konseling"
+      "guidance-counseling": "Bimbingan Konseling",
+      "people-search-placeholder": "Cari orang...",
+      "no-people-found": "Tidak ada orang.",
+      "people": "Orang",
+      "timeline": "Timeline",
+      "teacher": "Guru",
+      "student": "Siswa",
+      "invite": "Undang",
+      "role": "Peran",
+      "copy": "Salin",
+      "invite-teacher-title": "Undang Guru",
+      "invite-teacher-description": "Salin dan bagikan kode ini ke guru untuk bergabung ke kelas.",
+      "invite-student-title": "Undang Siswa",
+      "invite-student-description": "Salin dan bagikan kode ini ke siswa untuk bergabung ke kelas.",
+      "invite-code-copied": "Kode undangan berhasil disalin ke clipboard."
     },
     "Onboarding": {
       "title": "Selamat datang di Nakafa School!",

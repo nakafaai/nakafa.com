@@ -7,13 +7,14 @@ export function SchoolLayoutContent({
   ...props
 }: ComponentProps<"div">) {
   return (
-    <div className="size-full overflow-y-auto overflow-x-hidden py-6">
-      <div
-        className={cn("mx-auto w-full max-w-6xl px-6", className)}
-        {...props}
-      >
-        {children}
-      </div>
+    <div
+      className={cn(
+        "relative mx-auto w-full max-w-5xl space-y-4 p-6",
+        className
+      )}
+      {...props}
+    >
+      {children}
     </div>
   );
 }

@@ -31,7 +31,7 @@ const defaultValues: z.infer<typeof formSchema> = {
   code: "",
 };
 
-export function SchoolHeaderClassesJoin() {
+export function SchoolClassesHeaderJoin() {
   const t = useTranslations("School.Classes");
 
   const pathname = usePathname();
@@ -60,7 +60,7 @@ export function SchoolHeaderClassesJoin() {
 
   return (
     <form
-      id="school-header-classes-join-form"
+      id="school-classes-header-join-form"
       onSubmit={(e) => {
         e.preventDefault();
         form.handleSubmit();
@@ -82,7 +82,7 @@ export function SchoolHeaderClassesJoin() {
             {([isValid, isSubmitting]) => (
               <Button
                 disabled={!isValid || isSubmitting}
-                form="school-header-classes-join-form"
+                form="school-classes-header-join-form"
                 type="submit"
               >
                 {isSubmitting ? <SpinnerIcon /> : <MergeIcon />}
@@ -103,12 +103,12 @@ export function SchoolHeaderClassesJoin() {
                 Boolean(!field.state.meta.isValid);
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor="school-header-classes-join-code">
+                  <FieldLabel htmlFor="school-classes-header-join-code">
                     {t("code")}
                   </FieldLabel>
                   <Input
                     aria-invalid={isInvalid}
-                    id="school-header-classes-join-code"
+                    id="school-classes-header-join-code"
                     name={field.name}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}

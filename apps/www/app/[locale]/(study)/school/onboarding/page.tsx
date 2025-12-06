@@ -34,7 +34,7 @@ export default function Page({ params }: Props) {
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <NavigationLink
-          className="group flex flex-col justify-between rounded-xl border bg-card shadow-xs transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))]"
+          className="group flex flex-col justify-between rounded-xl border bg-card shadow-sm transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))]"
           href="/school/onboarding/create"
         >
           <div className="p-2">
@@ -60,7 +60,7 @@ export default function Page({ params }: Props) {
         </NavigationLink>
 
         <NavigationLink
-          className="flex flex-col justify-between rounded-xl border bg-card shadow-xs transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))]"
+          className="flex flex-col justify-between rounded-xl border bg-card shadow-sm transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))]"
           href="/school/onboarding/join"
         >
           <div className="p-2">

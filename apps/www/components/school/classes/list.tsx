@@ -65,7 +65,7 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
   const imageSrc = imageError ? getRandomClassImage(`${cls._id}`) : cls.image;
 
   return (
-    <Card className="group relative gap-0 overflow-hidden p-0">
+    <Card className="relative gap-0 overflow-hidden p-0 transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))]">
       <NavigationLink
         className="absolute inset-0 z-1"
         href={`${pathname}/${cls._id}`}
@@ -74,7 +74,7 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
         <div className="relative h-32 overflow-hidden rounded-md">
           <Image
             alt={cls.name}
-            className="object-cover transition-transform ease-out group-hover:scale-105"
+            className="bg-[color-mix(in_oklch,var(--primary)_2.5%,var(--background))] object-cover"
             fill
             loading="eager"
             onError={() => setImageError(true)}
@@ -85,17 +85,17 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
           />
         </div>
       </div>
-      <CardContent className="space-y-3 px-6 py-4">
+      <CardContent className="space-y-2 px-6 pt-2 pb-4">
         <h2 className="truncate font-medium leading-tight tracking-tight">
           {cls.name}
         </h2>
 
         <div className="flex items-center gap-2 text-sm">
-          <Badge className="min-w-0 shrink" variant="muted">
+          <Badge className="min-w-0 shrink" variant="outline">
             <BookOpen className="size-4 shrink-0" />
             <span className="truncate">{cls.subject}</span>
           </Badge>
-          <Badge className="min-w-0 shrink-0" variant="muted">
+          <Badge className="min-w-0 shrink-0" variant="outline">
             <CalendarIcon className="size-4 shrink-0" />
             <span className="truncate">{cls.year}</span>
           </Badge>

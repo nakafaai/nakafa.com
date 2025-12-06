@@ -95,13 +95,13 @@ triggers.register("schools", async (ctx, change) => {
       }
 
       // Find the admin member for this school (creator becomes admin)
-      const adminMember = await ctx.db
+      const member = await ctx.db
         .query("schoolMembers")
         .withIndex("schoolId_userId", (q) =>
           q.eq("schoolId", schoolId).eq("userId", school.createdBy)
         )
-        .filter((q) => q.eq(q.field("role"), "admin"))
         .first();
+      const adminMember = member?.role === "admin" ? member : null;
 
       // Create activity log entry
       await ctx.db.insert("schoolActivityLogs", {

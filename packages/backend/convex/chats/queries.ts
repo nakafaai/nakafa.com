@@ -2,7 +2,8 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { query } from "../_generated/server";
-import { safeGetAppUser } from "../auth";
+import { requireAuth, requireChatAccess } from "../lib/authHelpers";
+import { asyncMap, getManyFrom } from "../lib/relationships";
 import { mapDBPartToUIMessagePart } from "./utils";
 
 /**
@@ -15,14 +16,7 @@ export const getChat = query({
     chatId: v.id("chats"),
   },
   handler: async (ctx, args) => {
-    // Authentication check - must be logged in
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to view this chat.",
-      });
-    }
+    const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get(args.chatId);
     if (!chat) {
@@ -32,13 +26,8 @@ export const getChat = query({
       });
     }
 
-    // Authorization check - only private chats require ownership
-    if (chat.visibility === "private" && chat.userId !== user.appUser._id) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "You do not have permission to access this private chat.",
-      });
-    }
+    // Use centralized chat access check
+    requireChatAccess(chat.userId, user.appUser._id, chat.visibility);
 
     return chat;
   },
@@ -150,14 +139,7 @@ export const loadMessages = query({
     chatId: v.id("chats"),
   },
   handler: async (ctx, args): Promise<MyUIMessage[]> => {
-    // Authentication check - must be logged in
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to view messages.",
-      });
-    }
+    const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get(args.chatId);
     if (!chat) {
@@ -167,37 +149,28 @@ export const loadMessages = query({
       });
     }
 
-    // Authorization check - only private chats require ownership
-    if (chat.visibility === "private" && chat.userId !== user.appUser._id) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "You do not have permission to access this private chat.",
-      });
-    }
+    // Use centralized chat access check
+    requireChatAccess(chat.userId, user.appUser._id, chat.visibility);
 
     // Get messages ordered by creation time using index
-    const messages = await ctx.db
-      .query("messages")
-      .withIndex("chatId", (q) => q.eq("chatId", args.chatId))
-      .order("asc")
-      .collect();
-
-    // Fetch parts for all messages concurrently
-    const messagesWithParts = await Promise.all(
-      messages.map(async (message) => {
-        // Get parts ordered by order field using compound index
-        const parts = await ctx.db
-          .query("parts")
-          .withIndex("messageId_order", (q) => q.eq("messageId", message._id))
-          .order("asc")
-          .collect();
-
-        return {
-          ...message,
-          parts,
-        };
-      })
+    const messages = await getManyFrom(
+      ctx.db,
+      "messages",
+      "chatId",
+      args.chatId
     );
+
+    // Fetch parts for all messages concurrently using asyncMap
+    const messagesWithParts = await asyncMap(messages, async (message) => {
+      // Get parts ordered by order field using compound index
+      const parts = await ctx.db
+        .query("parts")
+        .withIndex("messageId_order", (q) => q.eq("messageId", message._id))
+        .order("asc")
+        .collect();
+
+      return { ...message, parts };
+    });
 
     return messagesWithParts.map((message) => ({
       id: message.identifier,

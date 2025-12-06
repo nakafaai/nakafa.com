@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { SchoolClassesHeaderInfo } from "@/components/school/classes/info";
+import { SchoolClassesTabs } from "@/components/school/classes/tabs";
 import { SchoolClassesValidation } from "@/components/school/classes/validation";
 import { SchoolNotFound } from "@/components/school/not-found";
 import { ClassContextProvider } from "@/lib/context/use-class";
@@ -28,6 +30,8 @@ export default function Layout(
     <ErrorBoundary fallback={<SchoolNotFound />}>
       <SchoolClassesValidation classId={classId}>
         <ClassContextProvider classId={classId}>
+          <SchoolClassesHeaderInfo />
+          <SchoolClassesTabs />
           {children}
         </ClassContextProvider>
       </SchoolClassesValidation>

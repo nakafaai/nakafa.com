@@ -65,6 +65,7 @@ const tables = {
   })
     .index("schoolId", ["schoolId"]) // All members of a school
     .index("userId", ["userId"]) // All schools for a user
+    .index("userId_status", ["userId", "status"]) // User's memberships filtered by status
     .index("schoolId_role", ["schoolId", "role"]) // All teachers/students in school
     .index("schoolId_userId", ["schoolId", "userId"]) // Check membership (O(1), unique)
     .index("schoolId_userId_status", ["schoolId", "userId", "status"]) // Check membership (O(1), unique)

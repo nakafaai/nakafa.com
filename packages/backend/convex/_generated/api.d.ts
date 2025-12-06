@@ -30,6 +30,8 @@ import type * as datasets_queries from "../datasets/queries.js";
 import type * as datasets_workflows from "../datasets/workflows.js";
 import type * as functions from "../functions.js";
 import type * as http from "../http.js";
+import type * as lib_authHelpers from "../lib/authHelpers.js";
+import type * as lib_relationships from "../lib/relationships.js";
 import type * as migrations from "../migrations.js";
 import type * as polyfills from "../polyfills.js";
 import type * as routes_constants from "../routes/constants.js";
@@ -77,6 +79,8 @@ declare const fullApi: ApiFromModules<{
   "datasets/workflows": typeof datasets_workflows;
   functions: typeof functions;
   http: typeof http;
+  "lib/authHelpers": typeof lib_authHelpers;
+  "lib/relationships": typeof lib_relationships;
   migrations: typeof migrations;
   polyfills: typeof polyfills;
   "routes/constants": typeof routes_constants;

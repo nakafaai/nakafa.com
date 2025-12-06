@@ -10,6 +10,7 @@ export const tables = {
     type: v.union(v.literal("study"), v.literal("finance")),
   })
     .index("userId", ["userId"])
+    .index("userId_updatedAt", ["userId", "updatedAt"]) // User's chats sorted by update time
     .index("userId_visibility", ["userId", "visibility"])
     .index("userId_type", ["userId", "type"])
     .index("userId_visibility_type", ["userId", "visibility", "type"])

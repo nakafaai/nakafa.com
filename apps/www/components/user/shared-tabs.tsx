@@ -15,7 +15,7 @@ export function SharedTabs({ tabs, defaultValue }: Props) {
   return (
     <div className="scrollbar-hide flex overflow-x-auto rounded-xl border p-1 shadow-xs">
       <Highlight
-        className="inset-0 rounded-lg bg-accent"
+        className="inset-0 rounded-md bg-accent"
         defaultValue={defaultValue}
       >
         {tabs.map((tab) => (

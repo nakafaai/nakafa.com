@@ -24,5 +24,5 @@ export function SchoolClassesValidation({
     return <SchoolClassesJoinForm />;
   }
 
-  return <>{children}</>;
+  return children;
 }

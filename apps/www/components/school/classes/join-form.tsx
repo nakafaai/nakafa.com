@@ -9,14 +9,16 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Input } from "@repo/design-system/components/ui/input";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { MergeIcon } from "lucide-react";
+import { ArrowLeftIcon, MergeIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import * as z from "zod/mini";
+import { useSchool } from "@/lib/context/use-school";
 
 const formSchema = z.object({
   code: z.string().check(z.minLength(1), z.trim()),
@@ -30,6 +32,7 @@ export function SchoolClassesJoinForm() {
   const t = useTranslations("School.Classes");
 
   const router = useRouter();
+  const schoolSlug = useSchool((state) => state.school.slug);
   const joinClass = useMutation(api.classes.mutations.joinClass);
 
   const form = useForm({
@@ -48,9 +51,19 @@ export function SchoolClassesJoinForm() {
   });
 
   return (
-    <main className="relative flex h-full">
+    <main className="relative flex h-[calc(100svh-4rem)] items-center justify-center">
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />
       <div className="z-1 m-auto w-full max-w-xl space-y-6 px-6 py-12">
+        <header className="space-y-2 px-2">
+          <NavigationLink
+            className="flex items-center gap-2 text-primary text-sm underline-offset-4 hover:underline"
+            href={`/school/${schoolSlug}/classes`}
+          >
+            <ArrowLeftIcon className="size-4" />
+            {t("classes")}
+          </NavigationLink>
+          <h2 className="text-pretty font-medium text-lg">{t("join-class")}</h2>
+        </header>
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <form
             className="flex flex-col gap-6"

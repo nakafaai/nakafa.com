@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { SchoolClassesHeader } from "@/components/school/classes/header";
 import { SchoolClassesList } from "@/components/school/classes/list";
 import { SchoolLayoutContent } from "@/components/school/layout-content";
 
@@ -24,8 +25,11 @@ export default function Page({ params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <SchoolLayoutContent>
-      <SchoolClassesList />
-    </SchoolLayoutContent>
+    <div className="relative">
+      <SchoolClassesHeader />
+      <SchoolLayoutContent>
+        <SchoolClassesList />
+      </SchoolLayoutContent>
+    </div>
   );
 }

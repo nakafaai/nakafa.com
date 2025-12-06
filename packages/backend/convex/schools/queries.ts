@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { query } from "../_generated/server";
-import { safeGetAppUser } from "../auth";
+import { requireAuth } from "../lib/authHelpers";
+import { getAll } from "../lib/relationships";
 
 /**
  * Get a school by its ID. Requires authentication.
@@ -10,14 +11,7 @@ export const getSchool = query({
     schoolId: v.id("schools"),
   },
   handler: async (ctx, args) => {
-    // Authentication check - must be logged in
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to view this school.",
-      });
-    }
+    await requireAuth(ctx);
 
     const school = await ctx.db.get(args.schoolId);
     if (!school) {
@@ -36,13 +30,7 @@ export const getSchoolBySlug = query({
     slug: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to view this school.",
-      });
-    }
+    const user = await requireAuth(ctx);
 
     const school = await ctx.db
       .query("schools")
@@ -79,22 +67,19 @@ export const getSchoolBySlug = query({
 
 /**
  * Get all school memberships for the current user.
+ * Uses userId_status index for better query performance.
  */
 export const getSchoolMemberships = query({
   args: {},
   handler: async (ctx) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to view your school memberships.",
-      });
-    }
+    const user = await requireAuth(ctx);
 
+    // Use the new userId_status index instead of filter
     const memberships = await ctx.db
       .query("schoolMembers")
-      .withIndex("userId", (q) => q.eq("userId", user.appUser._id))
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .withIndex("userId_status", (q) =>
+        q.eq("userId", user.appUser._id).eq("status", "active")
+      )
       .collect();
 
     return memberships;
@@ -104,28 +89,19 @@ export const getSchoolMemberships = query({
 export const getMySchools = query({
   args: {},
   handler: async (ctx) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to view your schools.",
-      });
-    }
+    const user = await requireAuth(ctx);
 
-    // Get all active memberships for the user
+    // Get all active memberships using userId_status index
     const memberships = await ctx.db
       .query("schoolMembers")
-      .withIndex("userId", (q) => q.eq("userId", user.appUser._id))
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .withIndex("userId_status", (q) =>
+        q.eq("userId", user.appUser._id).eq("status", "active")
+      )
       .collect();
 
-    // Fetch school details for each membership
-    const schools = await Promise.all(
-      memberships.map(async (membership) => {
-        const school = await ctx.db.get(membership.schoolId);
-        return school;
-      })
-    );
+    // Batch fetch all schools at once using getAll
+    const schoolIds = memberships.map((m) => m.schoolId);
+    const schools = await getAll(ctx.db, schoolIds);
 
     // Filter out null values (in case a school was deleted)
     return schools.filter((school) => school !== null);

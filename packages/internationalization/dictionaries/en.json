@@ -399,6 +399,7 @@
       "classes": "Classes"
     },
     "Classes": {
+      "classes": "Classes",
       "search-placeholder": "Search classes...",
       "create-class": "Create class",
       "create-class-description": "Set up a new class to organize students and track their progress throughout the academic year.",
@@ -463,7 +464,21 @@
       "accounting": "Accounting",
       "business": "Business",
       "entrepreneurship": "Entrepreneurship",
-      "guidance-counseling": "Guidance & Counseling"
+      "guidance-counseling": "Guidance & Counseling",
+      "people-search-placeholder": "Search people...",
+      "no-people-found": "No people found.",
+      "people": "People",
+      "timeline": "Timeline",
+      "teacher": "Teacher",
+      "student": "Student",
+      "invite": "Invite",
+      "role": "Role",
+      "copy": "Copy",
+      "invite-teacher-title": "Invite Teacher",
+      "invite-teacher-description": "Copy and share this code with teachers to join the class.",
+      "invite-student-title": "Invite Student",
+      "invite-student-description": "Copy and share this code with students to join the class.",
+      "invite-code-copied": "Invite code copied to clipboard."
     },
     "Onboarding": {
       "title": "Welcome to Nakafa School!",

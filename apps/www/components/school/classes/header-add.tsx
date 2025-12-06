@@ -43,7 +43,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 import { useSchool } from "@/lib/context/use-school";
-import { subjectList } from "./data";
+import { subjectList } from "./_data/subject";
 
 const MIN_NAME_LENGTH = 3;
 
@@ -53,7 +53,7 @@ const formSchema = z.object({
   year: z.string().check(z.minLength(MIN_NAME_LENGTH), z.trim()),
 });
 
-export function SchoolHeaderClassesAdd() {
+export function SchoolClassesHeaderAdd() {
   const t = useTranslations("School.Classes");
 
   const router = useRouter();
@@ -93,7 +93,7 @@ export function SchoolHeaderClassesAdd() {
 
   return (
     <form
-      id="school-header-classes-add-form"
+      id="school-classes-header-add-form"
       onSubmit={(e) => {
         e.preventDefault();
         form.handleSubmit();
@@ -115,7 +115,7 @@ export function SchoolHeaderClassesAdd() {
             {([isValid, isSubmitting]) => (
               <Button
                 disabled={!isValid || isSubmitting}
-                form="school-header-classes-add-form"
+                form="school-classes-header-add-form"
                 type="submit"
               >
                 {isSubmitting ? <SpinnerIcon /> : <PlusIcon />}
@@ -136,12 +136,12 @@ export function SchoolHeaderClassesAdd() {
                 Boolean(!field.state.meta.isValid);
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor="class-name">
+                  <FieldLabel htmlFor="school-classes-header-add-name">
                     {t("name-label")}
                   </FieldLabel>
                   <Input
                     aria-invalid={isInvalid}
-                    id="class-name"
+                    id="school-classes-header-add-name"
                     name={field.name}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
@@ -160,13 +160,13 @@ export function SchoolHeaderClassesAdd() {
                 Boolean(!field.state.meta.isValid);
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor="class-subject">
+                  <FieldLabel htmlFor="school-classes-header-add-subject">
                     {t("subject-label")}
                   </FieldLabel>
                   <ButtonGroup>
                     <Input
                       aria-invalid={isInvalid}
-                      id="class-subject"
+                      id="school-classes-header-add-subject"
                       name={field.name}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
@@ -235,7 +235,7 @@ export function SchoolHeaderClassesAdd() {
                 Boolean(!field.state.meta.isValid);
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor="class-year">
+                  <FieldLabel htmlFor="school-classes-header-add-year">
                     {t("year-label")}
                   </FieldLabel>
                   <DropdownMenu>
@@ -243,7 +243,7 @@ export function SchoolHeaderClassesAdd() {
                       <Button
                         aria-invalid={isInvalid}
                         className="w-full justify-between font-normal"
-                        id="class-year"
+                        id="school-classes-header-add-year"
                         name={field.name}
                         variant="outline"
                       >

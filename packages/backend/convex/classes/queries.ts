@@ -1,7 +1,13 @@
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { query } from "../_generated/server";
-import { safeGetAppUser } from "../auth";
+import { getAnyAppUserById, safeGetAppUser } from "../auth";
+import {
+  checkClassAccess,
+  requireAuth,
+  requireClassAccess,
+} from "../lib/authHelpers";
+import { asyncMap } from "../lib/relationships";
 
 /**
  * Get all classes for a school with optional search and filtering.
@@ -98,33 +104,19 @@ export const verifyClassMembership = query({
       return { allow: false };
     }
 
-    // Get user's school membership (needed for admin check)
-    const schoolMembership = await ctx.db
-      .query("schoolMembers")
-      .withIndex("schoolId_userId_status", (q) =>
-        q
-          .eq("schoolId", classData.schoolId)
-          .eq("userId", user.appUser._id)
-          .eq("status", "active")
-      )
-      .unique();
+    // Use centralized access check
+    const { hasAccess, schoolMembership } = await checkClassAccess(
+      ctx,
+      args.classId,
+      classData.schoolId,
+      user.appUser._id
+    );
 
     if (!schoolMembership) {
       return { allow: false };
     }
 
-    // Get user's class membership (may be null for admins)
-    const classMembership = await ctx.db
-      .query("schoolClassMembers")
-      .withIndex("classId_userId", (q) =>
-        q.eq("classId", args.classId).eq("userId", user.appUser._id)
-      )
-      .unique();
-
-    // Check access: either class member OR school admin
-    const allow = classMembership !== null || schoolMembership.role === "admin";
-
-    return { allow };
+    return { allow: hasAccess };
   },
 });
 
@@ -144,13 +136,7 @@ export const getClass = query({
     classId: v.id("schoolClasses"),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to view this class.",
-      });
-    }
+    const user = await requireAuth(ctx);
 
     // Get the class
     const classData = await ctx.db.get(args.classId);
@@ -161,48 +147,131 @@ export const getClass = query({
       });
     }
 
-    // Get user's school membership (needed for admin check)
-    const schoolMembership = await ctx.db
-      .query("schoolMembers")
-      .withIndex("schoolId_userId_status", (q) =>
-        q
-          .eq("schoolId", classData.schoolId)
-          .eq("userId", user.appUser._id)
-          .eq("status", "active")
-      )
-      .unique();
-
-    // User must be a school member to access any class
-    if (!schoolMembership) {
-      throw new ConvexError({
-        code: "ACCESS_DENIED",
-        message: "You must be a member of this school to access this class.",
-      });
-    }
-
-    // Get user's class membership (may be null for admins)
-    const classMembership = await ctx.db
-      .query("schoolClassMembers")
-      .withIndex("classId_userId", (q) =>
-        q.eq("classId", args.classId).eq("userId", user.appUser._id)
-      )
-      .unique();
-
-    // Check access: either class member OR school admin
-    const hasAccess =
-      classMembership !== null || schoolMembership.role === "admin";
-
-    if (!hasAccess) {
-      throw new ConvexError({
-        code: "ACCESS_DENIED",
-        message: "You do not have access to this class.",
-      });
-    }
+    // Use centralized access check (throws on access denied)
+    const { classMembership, schoolMembership } = await requireClassAccess(
+      ctx,
+      args.classId,
+      classData.schoolId,
+      user.appUser._id
+    );
 
     return {
       class: classData,
       classMembership, // null if admin-only access
       schoolMembership, // Always present - frontend can check role
     };
+  },
+});
+
+/**
+ * Get all members of a class with search and pagination.
+ * Returns enriched user data (name, email, image) for each member.
+ */
+export const getPeople = query({
+  args: {
+    classId: v.id("schoolClasses"),
+    q: v.optional(v.string()),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    const { classId, q, paginationOpts } = args;
+
+    // Require authentication
+    const user = await requireAuth(ctx);
+
+    // Get the class to verify it exists
+    const classData = await ctx.db.get(classId);
+    if (!classData) {
+      throw new ConvexError({
+        code: "CLASS_NOT_FOUND",
+        message: `Class not found for classId: ${classId}`,
+      });
+    }
+
+    // Verify user has access to this class
+    await requireClassAccess(
+      ctx,
+      classId,
+      classData.schoolId,
+      user.appUser._id
+    );
+
+    // Paginate class members
+    const membersPage = await ctx.db
+      .query("schoolClassMembers")
+      .withIndex("classId", (idx) => idx.eq("classId", classId))
+      .paginate(paginationOpts);
+
+    // Enrich with user data
+    const enrichedPeople = await asyncMap(membersPage.page, async (member) => {
+      const userData = await getAnyAppUserById(ctx, member.userId);
+      if (!userData) {
+        return null;
+      }
+
+      return {
+        ...member,
+        user: {
+          _id: userData.appUser._id,
+          name: userData.authUser.name,
+          email: userData.authUser.email,
+          image: userData.authUser.image,
+        },
+      };
+    });
+
+    // Filter nulls and apply search if provided
+    let people = enrichedPeople.filter((p) => p !== null);
+
+    if (q && q.trim().length > 0) {
+      const searchLower = q.toLowerCase().trim();
+      people = people.filter(
+        (p) =>
+          p.user.name.toLowerCase().includes(searchLower) ||
+          p.user.email.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return {
+      ...membersPage,
+      page: people,
+    };
+  },
+});
+
+/**
+ * Get all invite codes for a class.
+ * Only accessible by authenticated users who have access to the class.
+ */
+export const getInviteCodes = query({
+  args: {
+    classId: v.id("schoolClasses"),
+  },
+  handler: async (ctx, args) => {
+    // Require authentication
+    const user = await requireAuth(ctx);
+
+    // Get the class to verify it exists
+    const classData = await ctx.db.get(args.classId);
+    if (!classData) {
+      throw new ConvexError({
+        code: "CLASS_NOT_FOUND",
+        message: `Class not found for classId: ${args.classId}`,
+      });
+    }
+
+    // Verify user has access to this class
+    await requireClassAccess(
+      ctx,
+      args.classId,
+      classData.schoolId,
+      user.appUser._id
+    );
+
+    // Get all invite codes for the class
+    return await ctx.db
+      .query("schoolClassInviteCodes")
+      .withIndex("classId", (idx) => idx.eq("classId", args.classId))
+      .collect();
   },
 });

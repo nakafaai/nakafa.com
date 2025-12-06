@@ -15,12 +15,7 @@ import { ThemeMenu } from "@/components/sidebar/theme-menu";
 
 export function SchoolSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar
-      className={cn("z-20", props.className)}
-      side="left"
-      variant="inset"
-      {...props}
-    >
+    <Sidebar className={cn("z-20", props.className)} side="left" {...props}>
       <SidebarHeader className="border-b">
         <SchoolSwitcher />
       </SidebarHeader>

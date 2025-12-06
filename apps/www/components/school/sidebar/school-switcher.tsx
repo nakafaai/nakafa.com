@@ -99,7 +99,7 @@ export function SchoolSwitcher() {
             })}
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild className="cursor-pointer">
-              <NavigationLink href="/school/onboarding/create">
+              <NavigationLink href="/school/onboarding">
                 <Plus className="shrink-0" />
                 <span className="truncate">{t("add-school")}</span>
               </NavigationLink>
