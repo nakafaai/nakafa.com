@@ -1,6 +1,6 @@
+import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@repo/design-system/lib/utils";
 import { ChevronRight, MoreHorizontal } from "lucide-react";
-import { Slot as SlotPrimitive } from "radix-ui";
 import type * as React from "react";
 
 function Breadcrumb({ ...props }: React.ComponentProps<"nav">) {
@@ -37,7 +37,7 @@ function BreadcrumbLink({
 }: React.ComponentProps<"a"> & {
   asChild?: boolean;
 }) {
-  const Comp = asChild ? SlotPrimitive.Slot : "a";
+  const Comp = asChild ? Slot : "a";
 
   return (
     <Comp
@@ -52,6 +52,7 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       aria-current="page"
+      aria-disabled="true"
       className={cn("font-normal text-foreground", className)}
       data-slot="breadcrumb-page"
       {...props}

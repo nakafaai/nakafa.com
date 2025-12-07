@@ -3,7 +3,7 @@
 import { Highlight } from "@repo/design-system/components/animate-ui/primitives/effects/highlight";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { LayoutDashboardIcon, UsersIcon } from "lucide-react";
+import { MessagesSquareIcon, UsersIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
@@ -18,9 +18,9 @@ export function SchoolClassesTabs() {
   const tabs = useMemo(
     () => [
       {
-        icon: LayoutDashboardIcon,
-        label: t("timeline"),
-        href: `/school/${slug}/classes/${id}/timeline`,
+        icon: MessagesSquareIcon,
+        label: t("forum"),
+        href: `/school/${slug}/classes/${id}/forum`,
       },
       {
         icon: UsersIcon,

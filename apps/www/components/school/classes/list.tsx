@@ -13,7 +13,7 @@ import {
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { usePaginatedQuery } from "convex/react";
-import { BookOpen, CalendarIcon, EllipsisIcon, UsersIcon } from "lucide-react";
+import { CalendarIcon, EllipsisIcon, UsersIcon } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
@@ -85,31 +85,28 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
           />
         </div>
       </div>
-      <CardContent className="space-y-2 px-6 pt-2 pb-4">
+      <CardContent className="px-6 pt-2 pb-4">
         <h2 className="truncate font-medium leading-tight tracking-tight">
           {cls.name}
         </h2>
-
-        <div className="flex items-center gap-2 text-sm">
-          <Badge className="min-w-0 shrink" variant="outline">
-            <BookOpen className="size-4 shrink-0" />
-            <span className="truncate">{cls.subject}</span>
-          </Badge>
-          <Badge className="min-w-0 shrink-0" variant="outline">
-            <CalendarIcon className="size-4 shrink-0" />
-            <span className="truncate">{cls.year}</span>
-          </Badge>
-        </div>
+        <p className="truncate text-muted-foreground text-sm">{cls.subject}</p>
       </CardContent>
-      <CardFooter className="z-2 justify-end border-t px-4 pb-2 [.border-t]:pt-2">
-        <Button asChild size="icon-sm" variant="ghost">
-          <NavigationLink href={`${pathname}/${cls._id}/people`}>
-            <UsersIcon />
-          </NavigationLink>
-        </Button>
-        <Button size="icon-sm" variant="ghost">
-          <EllipsisIcon />
-        </Button>
+      <CardFooter className="z-2 justify-between border-t px-4 pb-2 [.border-t]:pt-2">
+        <Badge className="min-w-0 shrink-0" variant="muted">
+          <CalendarIcon className="size-4 shrink-0" />
+          <span className="truncate">{cls.year}</span>
+        </Badge>
+
+        <div className="flex items-center">
+          <Button asChild size="icon-sm" variant="ghost">
+            <NavigationLink href={`${pathname}/${cls._id}/people`}>
+              <UsersIcon />
+            </NavigationLink>
+          </Button>
+          <Button size="icon-sm" variant="ghost">
+            <EllipsisIcon />
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

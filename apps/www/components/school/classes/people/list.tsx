@@ -61,7 +61,7 @@ export function SchoolClassesPeopleList() {
                 {getInitialName(person.user.name)}
               </AvatarFallback>
             </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
+            <div className="grid flex-1 text-left text-sm">
               <span className="truncate font-medium text-foreground">
                 {person.user.name}
               </span>
