@@ -192,7 +192,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "icon-sm" })
                   )}
-                  href={comment.contentSlug}
+                  href={comment.slug}
                   target="_blank"
                 >
                   <EyeIcon />

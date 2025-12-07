@@ -38,7 +38,7 @@
     "tsup": "^8.5.1",
     "turbo": "^2.6.3",
     "typescript": "^5.9.3",
-    "ultracite": "^6.3.9",
+    "ultracite": "^6.3.10",
     "vitest": "^4.0.15"
   },
   "engines": {

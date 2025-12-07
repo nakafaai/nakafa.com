@@ -5,18 +5,13 @@ import { TEACHER_PERMISSIONS } from "./constants";
 const tables = {
   schoolClasses: defineTable({
     schoolId: v.id("schools"),
-
-    name: v.string(), // "Matematika 10A"
-    subject: v.string(), // "mathematics" (from Nakafa taxonomy)
-    year: v.string(), // "2024/2025"
+    name: v.string(),
+    subject: v.string(),
+    year: v.string(),
     image: v.string(),
-
     isArchived: v.boolean(),
-
-    // Denormalized counts (updated via triggers on classMembers changes)
     studentCount: v.number(),
     teacherCount: v.number(),
-
     updatedAt: v.number(),
     createdBy: v.id("users"),
     updatedBy: v.optional(v.id("users")),
@@ -34,20 +29,13 @@ const tables = {
   schoolClassMembers: defineTable({
     classId: v.id("schoolClasses"),
     userId: v.id("users"),
-    schoolId: v.id("schools"), // Denormalized for querying
-
-    // Role in this class
-    role: v.union(
-      v.literal("teacher"), // Teacher in this class
-      v.literal("student") // Student enrolled
-    ),
-
-    // Teacher-specific fields (only if role="teacher")
+    schoolId: v.id("schools"),
+    role: v.union(v.literal("teacher"), v.literal("student")),
     teacherRole: v.optional(
       v.union(
-        v.literal("primary"), // Main teacher (can delete class)
-        v.literal("co-teacher"), // Collaborating teacher
-        v.literal("assistant") // Teaching assistant
+        v.literal("primary"),
+        v.literal("co-teacher"),
+        v.literal("assistant")
       )
     ),
     teacherPermissions: v.optional(
@@ -71,67 +59,144 @@ const tables = {
         )
       )
     ),
-
-    // Student-specific fields (only if role="student")
     enrollMethod: v.optional(
       v.union(
-        v.literal("code"), // Self-enrolled with class code
-        v.literal("teacher"), // Added by teacher
-        v.literal("admin"), // Bulk import by admin
-        v.literal("invite") // Email invitation
+        v.literal("code"),
+        v.literal("teacher"),
+        v.literal("admin"),
+        v.literal("invite")
       )
     ),
-
-    // Invitation tracking
-    inviteCodeId: v.optional(v.id("schoolClassInviteCodes")), // Which invite code was used (for usage tracking)
-
-    // Audit fields (use _creationTime for createdAt)
-    updatedAt: v.number(), // Last update time
-    addedBy: v.optional(v.id("users")), // Who added them
-    removedBy: v.optional(v.id("users")), // Who removed (if deleted)
-    removedAt: v.optional(v.number()), // When removed (if deleted)
+    inviteCodeId: v.optional(v.id("schoolClassInviteCodes")),
+    updatedAt: v.number(),
+    addedBy: v.optional(v.id("users")),
+    removedBy: v.optional(v.id("users")),
+    removedAt: v.optional(v.number()),
   })
-    .index("classId", ["classId"]) // All members of a class
-    .index("userId", ["userId"]) // All classes for a user
-    .index("classId_userId", ["classId", "userId"]) // Prevent duplicates (O(1), unique)
-    .index("classId_role", ["classId", "role"]) // All teachers or all students
-    .index("schoolId", ["schoolId"]), // Query by school
+    .index("classId", ["classId"])
+    .index("userId", ["userId"])
+    .index("classId_userId", ["classId", "userId"])
+    .index("classId_role", ["classId", "role"])
+    .index("schoolId", ["schoolId"]),
 
   schoolClassInviteCodes: defineTable({
     classId: v.id("schoolClasses"),
-    schoolId: v.id("schools"), // Denormalized for querying
-
-    // Role this code is for
-    role: v.union(
-      v.literal("teacher"), // Teacher invite code
-      v.literal("student") // Student invite code
-    ),
-
-    // The actual invite code
-    code: v.string(), // "ABC123XYZ"
-
-    // Code settings
-    enabled: v.boolean(), // Can this code be used?
-
-    // Optional limits
-    expiresAt: v.optional(v.number()), // When code expires (null = never)
-    maxUsage: v.optional(v.number()), // Max times code can be used (null = unlimited)
-    currentUsage: v.number(), // How many times used
-
-    // Metadata
-    description: v.optional(v.string()), // "Student enrollment Q1 2024"
-
-    // Audit fields
+    schoolId: v.id("schools"),
+    role: v.union(v.literal("teacher"), v.literal("student")),
+    code: v.string(),
+    enabled: v.boolean(),
+    expiresAt: v.optional(v.number()),
+    maxUsage: v.optional(v.number()),
+    currentUsage: v.number(),
+    description: v.optional(v.string()),
     createdBy: v.id("users"),
     updatedBy: v.optional(v.id("users")),
     updatedAt: v.number(),
   })
-    .index("classId", ["classId"]) // All codes for a class
-    .index("classId_role", ["classId", "role"]) // Codes for specific role
-    .index("code", ["code"]) // Lookup by code (for joining)
-    .index("classId_code", ["classId", "code"]) // Unique code per class
-    .index("classId_enabled", ["classId", "enabled"]) // Active codes
-    .index("schoolId", ["schoolId"]), // Query by school
+    .index("classId", ["classId"])
+    .index("classId_role", ["classId", "role"])
+    .index("code", ["code"])
+    .index("classId_code", ["classId", "code"])
+    .index("classId_enabled", ["classId", "enabled"])
+    .index("schoolId", ["schoolId"]),
+
+  // FORUM: Threads
+  schoolClassForumThreads: defineTable({
+    classId: v.id("schoolClasses"),
+    schoolId: v.id("schools"),
+    title: v.string(),
+    body: v.optional(v.string()),
+    tag: v.union(
+      v.literal("general"),
+      v.literal("question"),
+      v.literal("announcement"),
+      v.literal("assignment"),
+      v.literal("resource")
+    ),
+    status: v.union(
+      v.literal("open"),
+      v.literal("locked"),
+      v.literal("archived")
+    ),
+    isPinned: v.boolean(),
+    postCount: v.number(),
+    participantCount: v.number(),
+    lastPostAt: v.number(),
+    lastPostBy: v.optional(v.id("users")),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+  })
+    .index("classId_status_lastPostAt", ["classId", "status", "lastPostAt"])
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["classId", "status"],
+    }),
+
+  // FORUM: Posts
+  schoolClassForumPosts: defineTable({
+    threadId: v.id("schoolClassForumThreads"),
+    classId: v.id("schoolClasses"),
+    body: v.string(),
+    mentions: v.array(v.id("users")),
+    parentId: v.optional(v.id("schoolClassForumPosts")),
+    replyToUserId: v.optional(v.id("users")),
+    replyCount: v.number(),
+    reactionLikeCount: v.number(),
+    reactionInsightfulCount: v.number(),
+    reactionQuestionCount: v.number(),
+    reactionCelebrateCount: v.number(),
+    reactionResolvedCount: v.number(),
+    isDeleted: v.boolean(),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+    editedAt: v.optional(v.number()),
+  })
+    .index("threadId", ["threadId"])
+    .index("threadId_parentId", ["threadId", "parentId"])
+    .index("createdBy", ["createdBy"]),
+
+  // FORUM: Attachments (separate table for flat schema)
+  schoolClassForumAttachments: defineTable({
+    postId: v.id("schoolClassForumPosts"),
+    threadId: v.id("schoolClassForumThreads"),
+    classId: v.id("schoolClasses"),
+    attachmentName: v.string(),
+    attachmentType: v.union(v.literal("file"), v.literal("link")),
+    attachmentFileId: v.optional(v.id("_storage")),
+    attachmentUrl: v.optional(v.string()),
+    attachmentSize: v.optional(v.number()),
+    createdBy: v.id("users"),
+  }).index("postId", ["postId"]),
+
+  // FORUM: Reactions
+  schoolClassForumReactions: defineTable({
+    postId: v.id("schoolClassForumPosts"),
+    userId: v.id("users"),
+    reaction: v.union(
+      v.literal("like"),
+      v.literal("insightful"),
+      v.literal("question"),
+      v.literal("celebrate"),
+      v.literal("resolved")
+    ),
+  })
+    .index("postId_userId", ["postId", "userId"])
+    .index("userId", ["userId"]),
+
+  // FORUM: Read States
+  schoolClassForumReadStates: defineTable({
+    threadId: v.id("schoolClassForumThreads"),
+    classId: v.id("schoolClasses"),
+    userId: v.id("users"),
+    lastReadAt: v.number(),
+    notification: v.union(
+      v.literal("all"),
+      v.literal("mentions"),
+      v.literal("muted")
+    ),
+  })
+    .index("threadId_userId", ["threadId", "userId"])
+    .index("userId_notification", ["userId", "notification"]),
 };
 
 export default tables;

@@ -30,7 +30,7 @@ function PaginationButton({
     <NavigationLink
       className={cn(
         buttonVariants({ variant: "outline" }),
-        "group flex h-auto flex-col whitespace-normal py-3 shadow-sm",
+        "group flex h-auto flex-col whitespace-normal py-3 shadow-xs",
         !href && "pointer-events-none hidden opacity-50 sm:flex",
         className
       )}

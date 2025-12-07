@@ -61,18 +61,16 @@ export function SchoolClassesPeopleList() {
                 {getInitialName(person.user.name)}
               </AvatarFallback>
             </Avatar>
-            <div className="grid flex-1 text-left text-sm">
-              <span className="truncate font-medium text-foreground">
-                {person.user.name}
-              </span>
-              <span className="truncate text-muted-foreground">
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <p className="truncate text-foreground">{person.user.name}</p>
+              <span className="truncate text-muted-foreground text-xs">
                 {person.user.email}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge variant={person.role === "teacher" ? "secondary" : "muted"}>
+            <Badge variant="muted">
               {person.role === "teacher" ? (
                 <SpeechIcon />
               ) : (

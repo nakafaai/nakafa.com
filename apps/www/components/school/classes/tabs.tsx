@@ -37,8 +37,8 @@ export function SchoolClassesTabs() {
   );
 
   return (
-    <div className="-mt-2.5 sticky top-0 z-10 flex h-12 w-full shrink-0 border-b bg-background">
-      <div className="mx-auto flex w-full max-w-5xl items-center">
+    <div className="-mt-2 sticky top-0 z-10 flex h-12 w-full shrink-0 border-b bg-background">
+      <div className="mx-auto flex w-full max-w-3xl items-center">
         <div className="scrollbar-hide flex w-full overflow-x-auto px-6">
           <Highlight
             className="inset-0 rounded-md bg-accent"

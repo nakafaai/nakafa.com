@@ -9,7 +9,7 @@ export function SchoolLayoutContent({
   return (
     <div
       className={cn(
-        "relative mx-auto w-full max-w-5xl space-y-4 p-6",
+        "relative mx-auto w-full max-w-3xl space-y-4 p-6",
         className
       )}
       {...props}

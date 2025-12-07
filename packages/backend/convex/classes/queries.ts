@@ -77,6 +77,7 @@ export const getClassInfo = query({
       name: classData.name,
       subject: classData.subject,
       year: classData.year,
+      image: classData.image,
     };
   },
 });

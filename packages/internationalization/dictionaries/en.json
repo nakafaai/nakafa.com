@@ -115,6 +115,7 @@
     "anonymous": "Anonymous",
     "delete": "Delete",
     "reply": "Reply",
+    "replying-to-user": "Replying to <name></name>",
     "cancel": "Cancel",
     "like": "Like",
     "dislike": "Dislike",

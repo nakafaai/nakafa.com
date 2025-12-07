@@ -30,8 +30,7 @@ export function SchoolClassesPeopleInvite() {
   const classId = useClass((state) => state.class._id);
 
   const [openInviteDialog, setOpenInviteDialog] = useState(false);
-  const [selectedRole, setSelectedRole] =
-    useState<(typeof roles)[number]["value"]>("student");
+  const [selectedRole, setSelectedRole] = useState<Role>("student");
 
   const inviteCodes = useQuery(api.classes.queries.getInviteCodes, {
     classId,
@@ -40,10 +39,7 @@ export function SchoolClassesPeopleInvite() {
   // Create map of invite codes by role for O(1) lookup with type safety
   const inviteCodesByRole = useMemo(() => {
     if (!inviteCodes) {
-      return new Map<
-        (typeof roles)[number]["value"],
-        NonNullable<typeof inviteCodes>[number]
-      >();
+      return new Map<Role, NonNullable<typeof inviteCodes>[number]>();
     }
     return new Map(inviteCodes.map((c) => [c.role, c] as const));
   }, [inviteCodes]);
@@ -115,3 +111,4 @@ const roles = [
   { value: "teacher", icon: SpeechIcon },
   { value: "student", icon: GraduationCapIcon },
 ] as const;
+type Role = (typeof roles)[number]["value"];

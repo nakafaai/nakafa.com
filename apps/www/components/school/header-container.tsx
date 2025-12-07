@@ -14,7 +14,7 @@ export function HeaderContainer({
       )}
       {...props}
     >
-      <div className="mx-auto flex w-full max-w-5xl gap-3 px-6">{children}</div>
+      <div className="mx-auto flex w-full max-w-3xl gap-3 px-6">{children}</div>
     </header>
   );
 }

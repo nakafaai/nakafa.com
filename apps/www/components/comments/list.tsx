@@ -21,22 +21,23 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import {
+  CornerDownRightIcon,
   MessageCircleIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
   Trash2Icon,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { Activity, useState, useTransition } from "react";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 import { CommentsAdd } from "./add";
 
 type Comment = Doc<"comments">;
-type CommentWithUser = Comment & { user?: AnyAppUser | null };
-
-// Keep in sync with MAX_DEPTH in packages/backend/convex/comments/mutations.ts
-const MAX_REPLY_DEPTH = 5;
+type CommentWithUser = Comment & {
+  user?: AnyAppUser | null;
+  replyToUser?: AnyAppUser | null;
+};
 
 type Props = {
   slug: string;
@@ -44,7 +45,7 @@ type Props = {
 
 export function CommentsList({ slug }: Props) {
   const { results } = usePaginatedQuery(
-    api.comments.queries.getParentCommentsBySlug,
+    api.comments.queries.getCommentsBySlug,
     { slug },
     { initialNumItems: 25 }
   );
@@ -54,70 +55,77 @@ export function CommentsList({ slug }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {results.map((comment) => (
-        <CommentThread comment={comment} key={comment._id} />
+        <CommentItem comment={comment} key={comment._id} slug={slug} />
       ))}
     </div>
   );
 }
 
-function CommentThread({ comment }: { comment: CommentWithUser }) {
+function CommentItem({
+  comment,
+  slug,
+}: {
+  comment: CommentWithUser;
+  slug: string;
+}) {
   const [isReplyOpen, setIsReplyOpen] = useState(false);
-  const [isRepliesOpen, setIsRepliesOpen] = useState(false);
-
-  const handleReplyToggle = () => {
-    const newReplyState = !isReplyOpen;
-    setIsReplyOpen(newReplyState);
-    // Open replies when opening reply box, toggle when closing
-    setIsRepliesOpen(newReplyState || !isRepliesOpen);
-  };
 
   return (
-    <div className="flex flex-col gap-6">
-      <CommentMain
+    <div className="flex flex-col gap-2" id={comment._id}>
+      <CommentContent
         comment={comment}
-        isReplyOpen={isReplyOpen}
-        onReplyClose={() => setIsReplyOpen(false)}
-        onReplyToggle={handleReplyToggle}
+        onReplyToggle={() => setIsReplyOpen((prev) => !prev)}
       />
-      <CommentReplies comment={comment} isOpen={isRepliesOpen} />
+      <Activity mode={isReplyOpen ? "visible" : "hidden"}>
+        <CommentsAdd
+          closeButton={{ onClick: () => setIsReplyOpen(false) }}
+          comment={comment}
+          slug={slug}
+        />
+      </Activity>
     </div>
   );
 }
 
-function CommentMain({
+function CommentContent({
   comment,
-  isReplyOpen,
   onReplyToggle,
-  onReplyClose,
 }: {
   comment: CommentWithUser;
-  isReplyOpen: boolean;
   onReplyToggle: () => void;
-  onReplyClose: () => void;
 }) {
   const t = useTranslations("Common");
   const locale = useLocale();
+  const currentUser = useQuery(api.auth.getCurrentUser);
 
   const userId = comment.user?.appUser._id;
   const userName = comment.user?.authUser.name ?? t("anonymous");
   const userImage = comment.user?.authUser.image ?? "";
 
+  const isReplyToMe =
+    currentUser && comment.replyToUser?.appUser._id === currentUser.appUser._id;
+
   return (
-    <div className="flex items-start gap-3 text-left">
+    <div
+      className={cn(
+        "flex items-start gap-3 rounded-xl p-2 text-left transition-colors",
+        !!isReplyToMe && "rounded-l-none border-primary border-l bg-primary/5"
+      )}
+    >
       <Avatar className="size-10 rounded-full">
         <AvatarImage alt={userName} src={userImage} />
         <AvatarFallback className="rounded-lg">
           {getInitialName(userName)}
         </AvatarFallback>
       </Avatar>
-      <div className="grid w-full gap-2">
+      <div className="grid min-w-0 flex-1 gap-2">
         <div className="grid gap-1">
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             {userId ? (
               <NavigationLink
-                className="max-w-36 truncate font-medium text-sm transition-colors ease-out hover:text-primary"
+                className="min-w-0 max-w-36 truncate font-medium text-sm transition-colors ease-out hover:text-primary"
                 href={`/user/${userId}`}
                 target="_blank"
                 title={userName}
@@ -125,92 +133,32 @@ function CommentMain({
                 {userName}
               </NavigationLink>
             ) : (
-              <span className="truncate font-medium text-sm">{userName}</span>
+              <span className="min-w-0 truncate font-medium text-sm">
+                {userName}
+              </span>
             )}
-
-            <time className="shrink-0 text-muted-foreground text-sm tracking-tight">
+            <time className="min-w-0 truncate text-muted-foreground text-sm tracking-tight">
               {formatDistanceToNow(comment._creationTime, {
                 locale: getLocale(locale),
                 addSuffix: true,
               })}
             </time>
           </div>
+
+          <ReplyToIndicator comment={comment} />
+
           <div className="wrap-break-word min-w-0">
             <Response id={comment._id}>{comment.text}</Response>
           </div>
         </div>
 
-        <CommentFooter
-          comment={comment}
-          isReplyOpen={isReplyOpen}
-          onReplyClose={onReplyClose}
-          onReplyToggle={onReplyToggle}
-        />
+        <CommentActions comment={comment} onReplyToggle={onReplyToggle} />
       </div>
     </div>
   );
 }
 
-function CommentFooter({
-  comment,
-  isReplyOpen,
-  onReplyToggle,
-  onReplyClose,
-}: {
-  comment: CommentWithUser;
-  isReplyOpen: boolean;
-  onReplyToggle: () => void;
-  onReplyClose: () => void;
-}) {
-  return (
-    <div className="grid gap-3">
-      <CommentAction comment={comment} onReplyToggle={onReplyToggle} />
-      {!!isReplyOpen && (
-        <CommentsAdd
-          closeButton={{ onClick: onReplyClose }}
-          comment={comment}
-          slug={comment.contentSlug}
-        />
-      )}
-    </div>
-  );
-}
-
-function CommentReplies({
-  comment,
-  isOpen,
-}: {
-  comment: CommentWithUser;
-  isOpen: boolean;
-}) {
-  const isMaxDepth = comment.depth >= MAX_REPLY_DEPTH;
-  const replyDepth = Math.min(comment.depth + 1, MAX_REPLY_DEPTH);
-
-  const { results } = usePaginatedQuery(
-    api.comments.queries.getRepliesByCommentId,
-    { commentId: comment._id, depth: replyDepth },
-    { initialNumItems: 25 }
-  );
-
-  if (!isOpen || results.length === 0) {
-    return null;
-  }
-
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-6",
-        !isMaxDepth && "border-l pl-4 md:pl-6"
-      )}
-    >
-      {results.map((reply) => (
-        <CommentThread comment={reply} key={reply._id} />
-      ))}
-    </div>
-  );
-}
-
-function CommentAction({
+function CommentActions({
   comment,
   onReplyToggle,
 }: {
@@ -229,12 +177,8 @@ function CommentAction({
     if (!currentUser) {
       return;
     }
-
     startTransition(async () => {
-      await voteOnComment({
-        commentId: comment._id,
-        vote,
-      });
+      await voteOnComment({ commentId: comment._id, vote });
     });
   }
 
@@ -242,11 +186,8 @@ function CommentAction({
     if (!currentUser) {
       return;
     }
-
     startTransition(async () => {
-      await deleteComment({
-        commentId: comment._id,
-      });
+      await deleteComment({ commentId: comment._id });
     });
   }
 
@@ -345,6 +286,42 @@ function CommentAction({
         />
         <TooltipContent side="bottom">{t("delete")}</TooltipContent>
       </Tooltip>
+    </div>
+  );
+}
+
+function ReplyToIndicator({ comment }: { comment: CommentWithUser }) {
+  const t = useTranslations("Common");
+
+  const replyToUser = comment.replyToUser;
+  const parentId = comment.parentId;
+
+  if (!(replyToUser && parentId)) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center gap-1 text-muted-foreground text-xs">
+      <CornerDownRightIcon className="size-3" />
+      <span>
+        {t.rich("replying-to-user", {
+          name: () => (
+            <a
+              className="text-primary underline-offset-2 hover:underline"
+              href={`#${parentId}`}
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById(parentId)?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+              }}
+            >
+              {replyToUser.authUser.name}
+            </a>
+          ),
+        })}
+      </span>
     </div>
   );
 }

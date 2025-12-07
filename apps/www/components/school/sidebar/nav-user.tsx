@@ -96,7 +96,7 @@ export function SchoolSidebarNavUser() {
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium text-foreground">
+                <span className="truncate text-foreground">
                   {user.authUser.name}
                 </span>
                 <span className="truncate text-muted-foreground text-xs">

@@ -21,7 +21,6 @@ export const internalMutation = customMutation(
   customCtx(triggers.wrapDB)
 );
 
-// This is a trigger that deletes all votes and replies when a comment is deleted.
 triggers.register("comments", async (ctx, change) => {
   if (change.operation !== "delete") {
     return;
@@ -29,7 +28,7 @@ triggers.register("comments", async (ctx, change) => {
 
   const votes = await ctx.db
     .query("commentVotes")
-    .withIndex("commentId", (q) => q.eq("commentId", change.id))
+    .withIndex("commentId_userId", (q) => q.eq("commentId", change.id))
     .collect();
 
   for (const vote of votes) {

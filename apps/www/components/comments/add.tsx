@@ -52,10 +52,9 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
 
     startTransition(async () => {
       await addComment({
-        contentSlug: slug,
+        slug,
         text,
         parentId: comment?._id,
-        mentions: comment?.userId ? [comment.userId] : undefined,
       });
 
       setCommentText("");
@@ -68,7 +67,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
 
   return (
     <form
-      className="w-full divide-y overflow-hidden rounded-xl border bg-background shadow-sm"
+      className="w-full divide-y overflow-hidden rounded-xl border bg-background shadow-xs"
       onSubmit={handleSubmit}
     >
       <Textarea

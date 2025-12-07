@@ -41,7 +41,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                 <div className="relative aspect-square size-8">
                   <Image
                     alt="Nakafa"
-                    className="rounded-md border object-contain"
+                    className="rounded-sm border object-contain"
                     fill
                     loading="eager"
                     preload
@@ -50,7 +50,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                   />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Nakafa</span>
+                  <p className="truncate font-medium">Nakafa</p>
                   <span className="truncate text-xs">
                     {t("very-short-description")}
                   </span>

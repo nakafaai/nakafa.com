@@ -51,7 +51,7 @@ export function SchoolClassesList() {
   }
 
   return (
-    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {results.map((c) => (
         <ClassItem cls={c} key={c._id} />
       ))}
@@ -85,10 +85,8 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
           />
         </div>
       </div>
-      <CardContent className="px-6 pt-2 pb-4">
-        <h2 className="truncate font-medium leading-tight tracking-tight">
-          {cls.name}
-        </h2>
+      <CardContent className="px-6 pt-2 pb-4 leading-tight">
+        <h2 className="truncate font-medium">{cls.name}</h2>
         <p className="truncate text-muted-foreground text-sm">{cls.subject}</p>
       </CardContent>
       <CardFooter className="z-2 justify-between border-t px-4 pb-2 [.border-t]:pt-2">

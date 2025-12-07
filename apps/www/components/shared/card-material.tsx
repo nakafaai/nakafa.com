@@ -42,7 +42,7 @@ export function CardMaterial({ material }: Props) {
               </h2>
               <a
                 aria-label={`Link to ${material.title}`}
-                className="ml-2 hidden shrink-0 text-muted-foreground group-hover:inline-block"
+                className="ml-3 hidden shrink-0 text-muted-foreground group-hover:inline-block"
                 href={`#${id}`}
                 title={material.title}
               >

@@ -3,7 +3,7 @@ import type {
   HeadingProps,
   HeadingTag,
 } from "@repo/design-system/types/markdown";
-import { LinkIcon } from "lucide-react";
+import { Link2Icon } from "lucide-react";
 
 export function Heading({
   Tag,
@@ -43,12 +43,14 @@ export function Heading({
     >
       <a
         aria-label={`Link to ${props.children}`}
-        className="group/heading inline-flex items-center gap-2"
+        className="group/heading inline-flex items-center gap-4"
         href={`#${id}`}
         title={props.children?.toString()}
       >
         <span className="text-pretty">{props.children}</span>
-        <LinkIcon className="invisible size-4 shrink-0 text-muted-foreground group-hover/heading:visible" />
+        <div className="rounded-sm border p-2 opacity-0 transition-opacity ease-out group-hover/heading:opacity-100">
+          <Link2Icon className="size-4 shrink-0 text-muted-foreground" />
+        </div>
       </a>
     </Tag>
   );

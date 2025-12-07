@@ -1,21 +1,13 @@
 import { ConvexError, v } from "convex/values";
-import type { Doc } from "../_generated/dataModel";
 import { safeGetAppUser } from "../auth";
 import { mutation } from "../functions";
 import { cleanSlug } from "../utils/helper";
 
-const MAX_DEPTH = 5;
-
-/**
- * Add a new comment or reply.
- * Depth is capped at 5 to prevent deeply nested threads.
- */
 export const addComment = mutation({
   args: {
-    contentSlug: v.string(),
+    slug: v.string(),
     text: v.string(),
     parentId: v.optional(v.id("comments")),
-    mentions: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const user = await safeGetAppUser(ctx);
@@ -27,30 +19,20 @@ export const addComment = mutation({
       });
     }
 
-    let depth = 0;
-    let parentComment: Doc<"comments"> | null = null;
+    const parentComment = args.parentId
+      ? await ctx.db.get(args.parentId)
+      : null;
 
-    if (args.parentId) {
-      parentComment = await ctx.db.get(args.parentId);
-      if (parentComment) {
-        depth = Math.min(parentComment.depth + 1, MAX_DEPTH);
-      }
-    }
-
-    const newComment = {
-      contentSlug: cleanSlug(args.contentSlug),
+    const newCommentId = await ctx.db.insert("comments", {
+      slug: cleanSlug(args.slug),
       userId: user.appUser._id,
       text: args.text,
       parentId: args.parentId,
-      mentions: args.mentions,
-      depth,
+      replyToUserId: parentComment?.userId,
       upvoteCount: 0,
       downvoteCount: 0,
-      score: 0,
       replyCount: 0,
-    };
-
-    const newCommentId = await ctx.db.insert("comments", newComment);
+    });
 
     if (parentComment) {
       await ctx.db.patch(parentComment._id, {
@@ -125,19 +107,12 @@ export const voteOnComment = mutation({
       }
     }
 
-    const score = upvoteCount - downvoteCount;
-
     await ctx.db.patch(args.commentId, {
       upvoteCount,
       downvoteCount,
-      score,
     });
 
-    return {
-      upvoteCount,
-      downvoteCount,
-      score,
-    };
+    return { upvoteCount, downvoteCount };
   },
 });
 
