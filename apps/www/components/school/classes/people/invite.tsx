@@ -1,5 +1,6 @@
 "use client";
 
+import { useClipboard } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -14,6 +15,7 @@ import {
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useQuery } from "convex/react";
 import {
+  CheckIcon,
   CopyIcon,
   GraduationCapIcon,
   PlusIcon,
@@ -31,6 +33,8 @@ export function SchoolClassesPeopleInvite() {
 
   const [openInviteDialog, setOpenInviteDialog] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role>("student");
+
+  const clipboard = useClipboard({ timeout: 500 });
 
   const inviteCodes = useQuery(api.classes.queries.getInviteCodes, {
     classId,
@@ -50,7 +54,7 @@ export function SchoolClassesPeopleInvite() {
   );
 
   return (
-    <ButtonGroup className="divide-x divide-border/20">
+    <ButtonGroup>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button>
@@ -84,14 +88,14 @@ export function SchoolClassesPeopleInvite() {
           <Button
             onClick={() => {
               if (code) {
-                navigator.clipboard.writeText(code);
+                clipboard.copy(code);
                 toast.success(t("invite-code-copied"), {
                   position: "bottom-center",
                 });
               }
             }}
           >
-            <CopyIcon />
+            {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
             {t("copy")}
           </Button>
         }

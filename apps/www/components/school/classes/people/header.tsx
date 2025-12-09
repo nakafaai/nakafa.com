@@ -7,13 +7,11 @@ import { useClass } from "@/lib/context/use-class";
 
 export function SchoolClassesPeopleHeader() {
   return (
-    <div className="flex w-full items-center justify-between gap-3">
+    <ButtonGroup className="w-full">
       <SchoolClassesPeopleSearch />
 
-      <ButtonGroup>
-        <SchoolClassesPeopleHeaderAction />
-      </ButtonGroup>
-    </div>
+      <SchoolClassesPeopleHeaderAction />
+    </ButtonGroup>
   );
 }
 

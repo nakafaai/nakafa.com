@@ -291,6 +291,7 @@ async function PageContent({
             href: FilePath,
             description: currentMaterial.title,
           }}
+          showComments
         />
       </LayoutMaterial>
     );
@@ -408,6 +409,7 @@ async function SingleExerciseContent({
             href: exerciseFilePath,
             description: currentMaterialItem.title,
           }}
+          showComments
         />
       </LayoutMaterial>
     );

@@ -7,7 +7,7 @@ import { searchParsers } from "@/lib/nuqs/search";
 import { useSearchQuery } from "@/lib/react-query/use-search";
 import { SearchResults } from "../shared/search-results";
 
-const DEBOUNCE_TIME = 300;
+const DEBOUNCE_TIME = 500;
 
 export function SearchListItems() {
   const pagefindError = usePagefind((context) => context.error);

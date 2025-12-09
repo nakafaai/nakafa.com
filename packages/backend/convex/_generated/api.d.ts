@@ -15,6 +15,7 @@ import type * as chats_utils from "../chats/utils.js";
 import type * as classes_constants from "../classes/constants.js";
 import type * as classes_mutations from "../classes/mutations.js";
 import type * as classes_queries from "../classes/queries.js";
+import type * as classes_utils from "../classes/utils.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
 import type * as comments_utils from "../comments/utils.js";
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   "classes/constants": typeof classes_constants;
   "classes/mutations": typeof classes_mutations;
   "classes/queries": typeof classes_queries;
+  "classes/utils": typeof classes_utils;
   "comments/mutations": typeof comments_mutations;
   "comments/queries": typeof comments_queries;
   "comments/utils": typeof comments_utils;

@@ -8,6 +8,7 @@ import { createContext, useContextSelector } from "use-context-selector";
 type ClassContextValue = {
   class: Doc<"schoolClasses">;
   classMembership: Doc<"schoolClassMembers"> | null;
+  schoolMembership: Doc<"schoolMembers"> | null;
 };
 
 const ClassContext = createContext<ClassContextValue | null>(null);
@@ -25,13 +26,16 @@ export function ClassContextProvider({
 
   const classData = results?.class;
   const classMembership = results?.classMembership ?? null;
+  const schoolMembership = results?.schoolMembership ?? null;
 
-  if (!classData) {
+  if (!(classData && schoolMembership)) {
     return null;
   }
 
   return (
-    <ClassContext.Provider value={{ class: classData, classMembership }}>
+    <ClassContext.Provider
+      value={{ class: classData, classMembership, schoolMembership }}
+    >
       {children}
     </ClassContext.Provider>
   );

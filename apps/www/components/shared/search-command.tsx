@@ -32,7 +32,7 @@ import { articlesMenu } from "../sidebar/_data/articles";
 import { holyMenu } from "../sidebar/_data/holy";
 import { subjectMenu } from "../sidebar/_data/subject";
 
-const DEBOUNCE_TIME = 300;
+const DEBOUNCE_TIME = 500;
 
 export function SearchCommand() {
   const { open, setOpen } = useSearch((state) => ({

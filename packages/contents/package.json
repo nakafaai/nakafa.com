@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@mantine/hooks": "^8.3.9",
+    "@mantine/hooks": "^8.3.10",
     "date-fns": "^4.1.0",
     "ky": "^1.14.1",
     "lucide-react": "^0.556.0",
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.10.1",
+    "@types/node": "24.10.2",
     "@types/react": "^19.2.7"
   }
 }

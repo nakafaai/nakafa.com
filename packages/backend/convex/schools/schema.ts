@@ -1,5 +1,15 @@
 import { defineTable } from "convex/server";
+import type { Infer } from "convex/values";
 import { v } from "convex/values";
+
+const schoolMemberRoles = v.union(
+  v.literal("admin"), // Can manage school settings
+  v.literal("teacher"), // Can create classes
+  v.literal("student"), // Can view assignments
+  v.literal("parent"), // Can monitor children
+  v.literal("demo") // Same like admin, but can't do destructive actions (demo purpose)
+);
+export type SchoolMemberRole = Infer<typeof schoolMemberRoles>;
 
 const tables = {
   schools: defineTable({
@@ -37,13 +47,7 @@ const tables = {
     userId: v.id("users"),
 
     // Role in this school (can be different per school)
-    role: v.union(
-      v.literal("admin"), // Can manage school settings
-      v.literal("teacher"), // Can create classes
-      v.literal("student"), // Can view assignments
-      v.literal("parent"), // Can monitor children
-      v.literal("demo") // Same like admin, but can't do destructive actions (demo purpose)
-    ),
+    role: schoolMemberRoles,
 
     status: v.union(
       v.literal("active"), // Active member
@@ -113,12 +117,7 @@ const tables = {
     schoolId: v.id("schools"),
 
     // Role this code is for
-    role: v.union(
-      v.literal("teacher"),
-      v.literal("student"),
-      v.literal("parent"),
-      v.literal("demo")
-    ),
+    role: schoolMemberRoles,
 
     // The actual invite code
     code: v.string(), // "ABC123XYZ"

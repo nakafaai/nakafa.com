@@ -13,7 +13,7 @@ import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { searchParsers } from "@/lib/nuqs/search";
 
-export function SchoolClassesPeopleSearch() {
+export function SchoolClassesForumSearch() {
   const t = useTranslations("School.Classes");
 
   const [{ q }, setSearch] = useQueryStates(searchParsers);
@@ -26,7 +26,7 @@ export function SchoolClassesPeopleSearch() {
         </InputGroupAddon>
         <InputGroupInput
           onChange={(e) => setSearch({ q: e.target.value })}
-          placeholder={t("people-search-placeholder")}
+          placeholder={t("forum-search-placeholder")}
           value={q}
         />
         <InputGroupAddon

@@ -1,6 +1,10 @@
 import { ConvexError, v } from "convex/values";
-import { safeGetAppUser } from "../auth";
 import { mutation } from "../functions";
+import {
+  isSchoolAdmin,
+  requireAuth,
+  requireClassAccess,
+} from "../lib/authHelpers";
 import { generateNanoId } from "../utils/helper";
 import { getRandomClassImage, PERMISSION_SETS } from "./constants";
 
@@ -15,17 +19,10 @@ export const createClass = mutation({
     year: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to create a class.",
-      });
-    }
-
+    const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
-    // Verify school membership and permissions
+    // Verify school membership and permissions (admin or teacher can create classes)
     const schoolMember = await ctx.db
       .query("schoolMembers")
       .withIndex("schoolId_userId_status", (q) =>
@@ -53,7 +50,7 @@ export const createClass = mutation({
       name: args.name,
       subject: args.subject,
       year: args.year,
-      image: getRandomClassImage(now.toString()), // Use class name as seed for consistent image
+      image: getRandomClassImage(now.toString()),
       isArchived: false,
       studentCount: 0,
       teacherCount: 0,
@@ -102,13 +99,8 @@ export const joinClass = mutation({
     code: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to join a class.",
-      });
-    }
+    const user = await requireAuth(ctx);
+    const userId = user.appUser._id;
 
     // Find invite code
     const inviteCode = await ctx.db
@@ -165,7 +157,6 @@ export const joinClass = mutation({
     }
 
     const now = Date.now();
-    const userId = user.appUser._id;
 
     // Check if user is already a member
     const existingMember = await ctx.db
@@ -209,7 +200,7 @@ export const joinClass = mutation({
         role: "teacher",
         teacherRole: "co-teacher",
         teacherPermissions: PERMISSION_SETS.CO_TEACHER,
-        inviteCodeId: inviteCode._id, // Track which code was used (trigger will update usage count)
+        inviteCodeId: inviteCode._id,
         updatedAt: now,
       });
     } else {
@@ -219,11 +210,87 @@ export const joinClass = mutation({
         schoolId: classData.schoolId,
         role: "student",
         enrollMethod: "code",
-        inviteCodeId: inviteCode._id, // Track which code was used (trigger will update usage count)
+        inviteCodeId: inviteCode._id,
         updatedAt: now,
       });
     }
 
     return { classId: classData._id };
+  },
+});
+
+/**
+ * Create a new forum in a class.
+ */
+export const createForum = mutation({
+  args: {
+    classId: v.id("schoolClasses"),
+    title: v.string(),
+    body: v.string(),
+    tag: v.union(
+      v.literal("general"),
+      v.literal("question"),
+      v.literal("announcement"),
+      v.literal("assignment"),
+      v.literal("resource")
+    ),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+    const userId = user.appUser._id;
+
+    // Get class to verify existence
+    const classData = await ctx.db.get(args.classId);
+    if (!classData) {
+      throw new ConvexError({
+        code: "CLASS_NOT_FOUND",
+        message: "Class not found.",
+      });
+    }
+
+    // Check if class is archived
+    if (classData.isArchived) {
+      throw new ConvexError({
+        code: "CLASS_ARCHIVED",
+        message: "Cannot create a forum in an archived class.",
+      });
+    }
+
+    // Require class access and get membership
+    const { classMembership, schoolMembership } = await requireClassAccess(
+      ctx,
+      args.classId,
+      classData.schoolId,
+      userId
+    );
+
+    // School admins can do anything, otherwise must be a class member
+    const canCreateForum = isSchoolAdmin(schoolMembership) || classMembership;
+    if (!canCreateForum) {
+      throw new ConvexError({
+        code: "NOT_CLASS_MEMBER",
+        message: "You must be a member of the class to create a forum.",
+      });
+    }
+
+    const now = Date.now();
+
+    const forumId = await ctx.db.insert("schoolClassForums", {
+      classId: args.classId,
+      schoolId: classData.schoolId,
+      title: args.title,
+      body: args.body,
+      tag: args.tag,
+      status: "open",
+      isPinned: false,
+      postCount: 0,
+      participantCount: 1,
+      lastPostAt: now,
+      lastPostBy: userId,
+      createdBy: userId,
+      updatedAt: now,
+    });
+
+    return forumId;
   },
 });

@@ -1,6 +1,9 @@
 import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { SchoolClassesForumHeader } from "@/components/school/classes/forum/header";
+import { SchoolClassesForumList } from "@/components/school/classes/forum/list";
+import { SchoolLayoutContent } from "@/components/school/layout-content";
 
 type Props = {
   params: Promise<{ locale: Locale }>;
@@ -11,5 +14,10 @@ export default function Page({ params }: Props) {
 
   setRequestLocale(locale);
 
-  return null;
+  return (
+    <SchoolLayoutContent>
+      <SchoolClassesForumHeader />
+      <SchoolClassesForumList />
+    </SchoolLayoutContent>
+  );
 }

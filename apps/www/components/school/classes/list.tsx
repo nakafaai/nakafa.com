@@ -1,5 +1,6 @@
 "use client";
 
+import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { getRandomClassImage } from "@repo/backend/convex/classes/constants";
@@ -21,17 +22,21 @@ import { useState } from "react";
 import { useSchool } from "@/lib/context/use-school";
 import { searchParsers } from "@/lib/nuqs/search";
 
+const DEBOUNCE_TIME = 300;
+
 export function SchoolClassesList() {
   const t = useTranslations("School.Classes");
 
   const schoolId = useSchool((state) => state.school._id);
   const [{ q }] = useQueryStates(searchParsers);
 
+  const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
+
   const { results, status } = usePaginatedQuery(
     api.classes.queries.getClasses,
     {
       schoolId,
-      q,
+      q: debouncedQ,
     },
     { initialNumItems: 50 }
   );

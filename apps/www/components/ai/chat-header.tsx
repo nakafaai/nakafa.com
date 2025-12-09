@@ -1,3 +1,4 @@
+import { useClipboard } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -72,6 +73,8 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
   }, [chat.title]);
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const clipboard = useClipboard({ timeout: 500 });
 
   const user = useQuery(api.auth.getCurrentUser);
   const isOwner = user?.appUser._id === chat.userId;
@@ -239,13 +242,13 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
             <Button
               disabled={isPending}
               onClick={() => {
-                navigator.clipboard.writeText(link);
+                clipboard.copy(link);
                 toast.success(t("link-copied"), {
                   position: "bottom-center",
                 });
               }}
             >
-              <CopyIcon />
+              {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
               {t("copy-link")}
             </Button>
           )

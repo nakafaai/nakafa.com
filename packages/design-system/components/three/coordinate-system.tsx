@@ -138,7 +138,7 @@ export function CoordinateSystem({
         }
         style={{ background: backgroundColor }}
       >
-        <Suspense fallback={null}>
+        <Suspense>
           {/* Camera Controls */}
           <CameraControls autoRotate={play} cameraPosition={cameraPosition} />
 

@@ -19,12 +19,14 @@ import {
   LeafIcon,
   MoonIcon,
   NotebookPenIcon,
+  PandaIcon,
   PopsicleIcon,
   RabbitIcon,
   ShellIcon,
   SparkleIcon,
   SunIcon,
   SunsetIcon,
+  SwordIcon,
   TreePineIcon,
   TvIcon,
   WindIcon,
@@ -97,6 +99,10 @@ export const themes = [
     icon: NotebookPenIcon,
   },
   {
+    value: "pacman",
+    icon: PandaIcon,
+  },
+  {
     value: "perpetuity",
     icon: HourglassIcon,
   },
@@ -147,5 +153,9 @@ export const themes = [
   {
     value: "windy",
     icon: WindIcon,
+  },
+  {
+    value: "zelda",
+    icon: SwordIcon,
   },
 ] as const;

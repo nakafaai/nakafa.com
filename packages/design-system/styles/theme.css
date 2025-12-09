@@ -1348,3 +1348,98 @@
     hsl(225 27.7778% 14.1176% / 0.04);
   --shadow-2xl: 0px 1px 2px 0px hsl(225 27.7778% 14.1176% / 0.1);
 }
+
+.pacman {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.2101 0.0318 264.6645);
+  --card: oklch(0.9846 0.0017 247.8389);
+  --card-foreground: oklch(0.2101 0.0318 264.6645);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2101 0.0318 264.6645);
+  --primary: oklch(0.8369 0.1644 84.4286);
+  --primary-foreground: oklch(0.2857 0.0639 53.8133);
+  --secondary: oklch(0.6231 0.188 259.8145);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.967 0.0029 264.5419);
+  --muted-foreground: oklch(0.551 0.0234 264.3637);
+  --accent: oklch(0.9319 0.0316 255.5855);
+  --accent-foreground: oklch(0.4244 0.1809 265.6377);
+  --destructive: oklch(0.6368 0.2078 25.3313);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.8823 0.0571 254.1284);
+  --input: oklch(0.8823 0.0571 254.1284);
+  --ring: oklch(0.6231 0.188 259.8145);
+  --chart-1: oklch(0.8369 0.1644 84.4286);
+  --chart-2: oklch(0.6231 0.188 259.8145);
+  --chart-3: oklch(0.6368 0.2078 25.3313);
+  --chart-4: oklch(0.7227 0.192 149.5793);
+  --chart-5: oklch(0.6268 0.2325 303.9004);
+  --sidebar: oklch(0.9846 0.0017 247.8389);
+  --sidebar-foreground: oklch(0.2101 0.0318 264.6645);
+  --sidebar-primary: oklch(0.8369 0.1644 84.4286);
+  --sidebar-primary-foreground: oklch(0.2857 0.0639 53.8133);
+  --sidebar-accent: oklch(0.9319 0.0316 255.5855);
+  --sidebar-accent-foreground: oklch(0.4244 0.1809 265.6377);
+  --sidebar-border: oklch(0.8823 0.0571 254.1284);
+  --sidebar-ring: oklch(0.6231 0.188 259.8145);
+  --radius: 0.5rem;
+  --shadow-2xs: 0px 0px 0px 0px hsl(0 0% 0% / 0);
+  --shadow-xs: 0px 0px 0px 0px hsl(0 0% 0% / 0);
+  --shadow-sm:
+    0px 0px 0px 0px hsl(0 0% 0% / 0), 0px 1px 2px -1px hsl(0 0% 0% / 0);
+  --shadow: 0px 0px 0px 0px hsl(0 0% 0% / 0), 0px 1px 2px -1px hsl(0 0% 0% / 0);
+  --shadow-md:
+    0px 0px 0px 0px hsl(0 0% 0% / 0), 0px 2px 4px -1px hsl(0 0% 0% / 0);
+  --shadow-lg:
+    0px 0px 0px 0px hsl(0 0% 0% / 0), 0px 4px 6px -1px hsl(0 0% 0% / 0);
+  --shadow-xl:
+    0px 0px 0px 0px hsl(0 0% 0% / 0), 0px 8px 10px -1px hsl(0 0% 0% / 0);
+  --shadow-2xl: 0px 0px 0px 0px hsl(0 0% 0% / 0);
+}
+
+.zelda {
+  --primary: oklch(0.75 0.2 90);
+  --primary-foreground: oklch(0.1 0.02 10);
+  --background: oklch(0.95 0.02 95);
+  --foreground: oklch(0.5 0.15 120);
+  --card: oklch(0.96 0.02 95);
+  --card-foreground: oklch(0.15 0.05 120);
+  --popover: oklch(0.96 0.02 95);
+  --popover-foreground: oklch(0.15 0.05 120);
+  --secondary: oklch(0.5 0.15 120);
+  --secondary-foreground: oklch(0.95 0.02 95);
+  --muted: oklch(0.9 0.02 120);
+  --muted-foreground: oklch(0.4 0.05 120);
+  --accent: oklch(0.85 0.2 90);
+  --accent-foreground: oklch(0.1 0.02 10);
+  --destructive: oklch(0.55 0.25 30);
+  --border: oklch(0.6 0.05 90);
+  --input: oklch(0.6 0.05 90);
+  --ring: oklch(0.75 0.2 90);
+  --chart-1: oklch(0.75 0.2 90);
+  --chart-2: oklch(0.5 0.15 120);
+  --chart-3: oklch(0.85 0.2 90);
+  --chart-4: oklch(0.15 0.05 120);
+  --chart-5: oklch(0.95 0.02 95);
+  --sidebar: oklch(0.9 0.02 95);
+  --sidebar-foreground: oklch(0.15 0.05 120);
+  --sidebar-primary: oklch(0.75 0.2 90);
+  --sidebar-primary-foreground: oklch(0.1 0.02 10);
+  --sidebar-accent: oklch(0.5 0.15 120);
+  --sidebar-accent-foreground: oklch(0.95 0.02 95);
+  --sidebar-border: oklch(0.6 0.05 90);
+  --sidebar-ring: oklch(0.75 0.2 90);
+  --radius: 0.5rem;
+  --shadow-2xs: 0px 0px 0px 0px hsl(0 0% 0% / 0);
+  --shadow-xs: 0px 0px 0px 0px hsl(0 0% 0% / 0);
+  --shadow-sm:
+    0px 0px 0px 0px hsl(0 0% 0% / 0), 0px 1px 2px -1px hsl(0 0% 0% / 0);
+  --shadow: 0px 0px 0px 0px hsl(0 0% 0% / 0), 0px 1px 2px -1px hsl(0 0% 0% / 0);
+  --shadow-md:
+    0px 0px 0px 0px hsl(0 0% 0% / 0), 0px 2px 4px -1px hsl(0 0% 0% / 0);
+  --shadow-lg:
+    0px 0px 0px 0px hsl(0 0% 0% / 0), 0px 4px 6px -1px hsl(0 0% 0% / 0);
+  --shadow-xl:
+    0px 0px 0px 0px hsl(0 0% 0% / 0), 0px 8px 10px -1px hsl(0 0% 0% / 0);
+  --shadow-2xl: 0px 0px 0px 0px hsl(0 0% 0% / 0);
+}

@@ -1,11 +1,12 @@
 "use client";
 
+import { useClipboard } from "@mantine/hooks";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
 import { getAppUrl } from "@repo/design-system/lib/utils";
-import { Share2Icon } from "lucide-react";
+import { CheckIcon, Share2Icon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -16,9 +17,11 @@ export function ShareButton() {
   // use pathname hook from nextjs to get the locale
   const pathname = usePathname();
 
+  const clipboard = useClipboard({ timeout: 500 });
+
   function handleShare() {
     const url = `${getAppUrl()}${pathname}`;
-    navigator.clipboard.writeText(url);
+    clipboard.copy(url);
     toast.success(t("share-copied"), {
       description: url,
       position: "bottom-center",
@@ -28,7 +31,7 @@ export function ShareButton() {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton onClick={handleShare} tooltip={t("share")}>
-        <Share2Icon className="size-4 shrink-0" />
+        {clipboard.copied ? <CheckIcon /> : <Share2Icon />}
         <span className="truncate">{t("share")}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>

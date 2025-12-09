@@ -1,5 +1,6 @@
 "use client";
 
+import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   Avatar,
@@ -15,17 +16,21 @@ import { useClass } from "@/lib/context/use-class";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getInitialName } from "@/lib/utils/helper";
 
+const DEBOUNCE_TIME = 500;
+
 export function SchoolClassesPeopleList() {
   const t = useTranslations("School.Classes");
 
   const classId = useClass((state) => state.class._id);
   const [{ q }] = useQueryStates(searchParsers);
 
+  const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
+
   const { results, status } = usePaginatedQuery(
     api.classes.queries.getPeople,
     {
       classId,
-      q,
+      q: debouncedQ,
     },
     { initialNumItems: 50 }
   );
@@ -47,7 +52,7 @@ export function SchoolClassesPeopleList() {
   return (
     <section className="flex flex-col divide-y rounded-md border shadow-sm">
       {results.map((person) => (
-        <div
+        <article
           className="flex items-center justify-between gap-4 p-4"
           key={person._id}
         >
@@ -62,15 +67,23 @@ export function SchoolClassesPeopleList() {
               </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <p className="truncate text-foreground">{person.user.name}</p>
-              <span className="truncate text-muted-foreground text-xs">
+              <p className="truncate font-medium text-foreground">
+                {person.user.name}
+              </p>
+              <span className="truncate text-muted-foreground">
                 {person.user.email}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge variant="muted">
+            <Badge
+              variant={
+                person.role === "teacher"
+                  ? "default-subtle"
+                  : "secondary-subtle"
+              }
+            >
               {person.role === "teacher" ? (
                 <SpeechIcon />
               ) : (
@@ -79,7 +92,7 @@ export function SchoolClassesPeopleList() {
               {t(person.role)}
             </Badge>
           </div>
-        </div>
+        </article>
       ))}
     </section>
   );

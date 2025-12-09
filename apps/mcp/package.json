@@ -18,7 +18,7 @@
     "@t3-oss/env-nextjs": "^0.13.8",
     "express": "^5.2.1",
     "mcp-handler": "1.0.4",
-    "next": "16.0.7",
+    "next": "16.0.8",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "redis": "^5.10.0",
@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.10.1",
+    "@types/node": "24.10.2",
     "@types/react": "19.2.7",
     "typescript": "^5.9.3"
   }

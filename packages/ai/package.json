@@ -8,9 +8,9 @@
   },
   "dependencies": {
     "@ai-sdk/gateway": "^2.0.18",
-    "@ai-sdk/google": "^2.0.44",
-    "@ai-sdk/google-vertex": "^3.0.86",
-    "@ai-sdk/openai": "^2.0.79",
+    "@ai-sdk/google": "^2.0.45",
+    "@ai-sdk/google-vertex": "^3.0.87",
+    "@ai-sdk/openai": "^2.0.80",
     "@ai-sdk/react": "^2.0.109",
     "@mendable/firecrawl-js": "^4.8.3",
     "@repo/utilities": "workspace:*",
@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.10.1",
+    "@types/node": "24.10.2",
     "@types/react": "19.2.7",
     "@types/react-dom": "^19.2.3"
   }

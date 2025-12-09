@@ -37,7 +37,12 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { CheckIcon, ChevronDownIcon, PlusIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  PlusIcon,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -77,9 +82,7 @@ export function SchoolClassesHeaderAdd() {
     onSubmit: async ({ value }) => {
       try {
         const classId = await createClass({
-          name: value.name,
-          subject: value.subject,
-          year: value.year,
+          ...value,
           schoolId,
         });
         router.push(`${pathname}/${classId}`);
@@ -242,13 +245,14 @@ export function SchoolClassesHeaderAdd() {
                     <DropdownMenuTrigger asChild>
                       <Button
                         aria-invalid={isInvalid}
-                        className="w-full justify-between font-normal"
+                        className="w-full font-normal"
                         id="school-classes-header-add-year"
                         name={field.name}
                         variant="outline"
                       >
+                        <CalendarIcon />
                         {field.state.value || t("year-placeholder")}
-                        <ChevronDownIcon className="size-4" />
+                        <ChevronDownIcon className="ml-auto" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent

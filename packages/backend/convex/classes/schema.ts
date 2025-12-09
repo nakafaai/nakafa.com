@@ -1,6 +1,13 @@
 import { defineTable } from "convex/server";
+import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { TEACHER_PERMISSIONS } from "./constants";
+
+const schoolClassMemberRoles = v.union(
+  v.literal("teacher"),
+  v.literal("student")
+);
+export type SchoolClassMemberRole = Infer<typeof schoolClassMemberRoles>;
 
 const tables = {
   schoolClasses: defineTable({
@@ -30,7 +37,7 @@ const tables = {
     classId: v.id("schoolClasses"),
     userId: v.id("users"),
     schoolId: v.id("schools"),
-    role: v.union(v.literal("teacher"), v.literal("student")),
+    role: schoolClassMemberRoles,
     teacherRole: v.optional(
       v.union(
         v.literal("primary"),
@@ -82,7 +89,7 @@ const tables = {
   schoolClassInviteCodes: defineTable({
     classId: v.id("schoolClasses"),
     schoolId: v.id("schools"),
-    role: v.union(v.literal("teacher"), v.literal("student")),
+    role: schoolClassMemberRoles,
     code: v.string(),
     enabled: v.boolean(),
     expiresAt: v.optional(v.number()),
@@ -100,8 +107,8 @@ const tables = {
     .index("classId_enabled", ["classId", "enabled"])
     .index("schoolId", ["schoolId"]),
 
-  // FORUM: Threads
-  schoolClassForumThreads: defineTable({
+  // FORUM: Main Threads (Topics)
+  schoolClassForums: defineTable({
     classId: v.id("schoolClasses"),
     schoolId: v.id("schools"),
     title: v.string(),
@@ -132,9 +139,9 @@ const tables = {
       filterFields: ["classId", "status"],
     }),
 
-  // FORUM: Posts
+  // FORUM: Posts (Messages within a forum thread)
   schoolClassForumPosts: defineTable({
-    threadId: v.id("schoolClassForumThreads"),
+    forumId: v.id("schoolClassForums"),
     classId: v.id("schoolClasses"),
     body: v.string(),
     mentions: v.array(v.id("users")),
@@ -151,25 +158,25 @@ const tables = {
     updatedAt: v.number(),
     editedAt: v.optional(v.number()),
   })
-    .index("threadId", ["threadId"])
-    .index("threadId_parentId", ["threadId", "parentId"])
+    .index("forumId", ["forumId"])
+    .index("forumId_parentId", ["forumId", "parentId"])
     .index("createdBy", ["createdBy"]),
 
-  // FORUM: Attachments (separate table for flat schema)
-  schoolClassForumAttachments: defineTable({
+  // FORUM: Attachments (Children of Posts)
+  schoolClassForumPostAttachments: defineTable({
     postId: v.id("schoolClassForumPosts"),
-    threadId: v.id("schoolClassForumThreads"),
+    forumId: v.id("schoolClassForums"),
     classId: v.id("schoolClasses"),
-    attachmentName: v.string(),
-    attachmentType: v.union(v.literal("file"), v.literal("link")),
-    attachmentFileId: v.optional(v.id("_storage")),
-    attachmentUrl: v.optional(v.string()),
-    attachmentSize: v.optional(v.number()),
+    name: v.string(),
+    type: v.union(v.literal("file"), v.literal("link")),
+    fileId: v.optional(v.id("_storage")),
+    url: v.optional(v.string()),
+    size: v.optional(v.number()),
     createdBy: v.id("users"),
   }).index("postId", ["postId"]),
 
-  // FORUM: Reactions
-  schoolClassForumReactions: defineTable({
+  // FORUM: Reactions (Children of Posts)
+  schoolClassForumPostReactions: defineTable({
     postId: v.id("schoolClassForumPosts"),
     userId: v.id("users"),
     reaction: v.union(
@@ -183,9 +190,9 @@ const tables = {
     .index("postId_userId", ["postId", "userId"])
     .index("userId", ["userId"]),
 
-  // FORUM: Read States
+  // FORUM: Read States (Children of Forums/Threads)
   schoolClassForumReadStates: defineTable({
-    threadId: v.id("schoolClassForumThreads"),
+    forumId: v.id("schoolClassForums"),
     classId: v.id("schoolClasses"),
     userId: v.id("users"),
     lastReadAt: v.number(),
@@ -195,7 +202,7 @@ const tables = {
       v.literal("muted")
     ),
   })
-    .index("threadId_userId", ["threadId", "userId"])
+    .index("forumId_userId", ["forumId", "userId"])
     .index("userId_notification", ["userId", "notification"]),
 };
 

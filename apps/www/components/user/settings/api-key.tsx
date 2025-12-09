@@ -1,5 +1,6 @@
 "use client";
 
+import { useClipboard } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -99,6 +100,8 @@ export function UserSettingsApiKey() {
   const t = useTranslations("Auth");
   const locale = useLocale();
 
+  const clipboard = useClipboard({ timeout: 500 });
+
   const [confirmCreateApiKey, setConfirmCreateApiKey] = useState(false);
   const [confirmDeleteApiKey, setConfirmDeleteApiKey] = useState<string | null>(
     null
@@ -141,7 +144,7 @@ export function UserSettingsApiKey() {
   });
 
   const handleCopyApiKey = (apiKey: string) => {
-    navigator.clipboard.writeText(apiKey);
+    clipboard.copy(apiKey);
     toast.success(t("api-key-copied"), {
       position: "bottom-center",
     });
@@ -218,7 +221,10 @@ export function UserSettingsApiKey() {
                     <Tooltip>
                       <TooltipTrigger
                         render={
-                          <Badge className="lowercase" variant="muted">
+                          <Badge
+                            className="lowercase"
+                            variant="secondary-subtle"
+                          >
                             {apiKey.expiresAt
                               ? formatDistanceToNow(apiKey.expiresAt, {
                                   locale: getLocale(locale),
@@ -238,7 +244,7 @@ export function UserSettingsApiKey() {
                       type="button"
                       variant="secondary"
                     >
-                      <CopyIcon className="size-4" />
+                      {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
                       <span className="sr-only">Copy API Key</span>
                     </Button>
                     <Button
@@ -247,7 +253,7 @@ export function UserSettingsApiKey() {
                       type="button"
                       variant="destructive"
                     >
-                      <Trash2Icon className="size-4" />
+                      <Trash2Icon />
                       <span className="sr-only">Delete API Key</span>
                     </Button>
                   </div>

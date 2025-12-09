@@ -8,6 +8,7 @@ import {
   requireClassAccess,
 } from "../lib/authHelpers";
 import { asyncMap } from "../lib/relationships";
+import { attachForumUsers } from "./utils";
 
 /**
  * Get all classes for a school with optional search and filtering.
@@ -274,5 +275,68 @@ export const getInviteCodes = query({
       .query("schoolClassInviteCodes")
       .withIndex("classId", (idx) => idx.eq("classId", args.classId))
       .collect();
+  },
+});
+
+/**
+ * Get all forums for a class with optional search and pagination.
+ * Supports full-text search by title.
+ * Returns enriched data with user info for createdBy.
+ */
+export const getForums = query({
+  args: {
+    classId: v.id("schoolClasses"),
+    q: v.optional(v.string()),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    const { classId, q: searchQuery, paginationOpts } = args;
+
+    const user = await requireAuth(ctx);
+
+    // Get the class to verify it exists
+    const classData = await ctx.db.get(classId);
+    if (!classData) {
+      throw new ConvexError({
+        code: "CLASS_NOT_FOUND",
+        message: `Class not found for classId: ${classId}`,
+      });
+    }
+
+    // Verify user has access to this class
+    await requireClassAccess(
+      ctx,
+      classId,
+      classData.schoolId,
+      user.appUser._id
+    );
+
+    // If search query is provided, use full-text search
+    const forumsPage =
+      searchQuery && searchQuery.trim().length > 0
+        ? await ctx.db
+            .query("schoolClassForums")
+            .withSearchIndex("search_title", (q) =>
+              q.search("title", searchQuery).eq("classId", classId)
+            )
+            .paginate(paginationOpts)
+        : await ctx.db
+            .query("schoolClassForums")
+            .withIndex("classId_status_lastPostAt", (q) =>
+              q.eq("classId", classId)
+            )
+            .order("desc")
+            .paginate(paginationOpts);
+
+    // Attach user data
+    const userMap = await attachForumUsers(ctx, forumsPage.page);
+
+    return {
+      ...forumsPage,
+      page: forumsPage.page.map((forum) => ({
+        ...forum,
+        user: userMap.get(forum.createdBy) ?? null,
+      })),
+    };
   },
 });
