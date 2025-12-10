@@ -8,10 +8,11 @@ import { formatDistanceToNow } from "date-fns";
 import { CornerDownRightIcon, DotIcon, MessageSquareIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
+import { getTagIcon } from "@/components/school/classes/_data/tag";
 import { useClass } from "@/lib/context/use-class";
+import { useForum } from "@/lib/context/use-forum";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getLocale } from "@/lib/utils/date";
-import { getTagIcon } from "../_data/tag";
 
 const DEBOUNCE_TIME = 500;
 
@@ -22,6 +23,7 @@ export function SchoolClassesForumList() {
 
   const classId = useClass((state) => state.class._id);
   const [{ q }] = useQueryStates(searchParsers);
+  const setActiveForumId = useForum((f) => f.setActiveForumId);
 
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
@@ -49,17 +51,24 @@ export function SchoolClassesForumList() {
   }
 
   return (
-    <section className="flex flex-col divide-y rounded-md border shadow-sm">
+    <section className="flex flex-col divide-y overflow-hidden rounded-md border shadow-sm">
       {results.map((forum) => {
         const Icon = getTagIcon(forum.tag);
         return (
-          <article className="flex flex-col gap-3 p-4" key={forum._id}>
-            <Badge variant="secondary-subtle">
+          <button
+            className="flex cursor-pointer flex-col gap-3 p-4 transition-colors ease-out hover:bg-accent/20"
+            key={forum._id}
+            onClick={() => {
+              setActiveForumId(forum._id);
+            }}
+            type="button"
+          >
+            <Badge variant="secondary">
               <Icon />
               {t(forum.tag)}
             </Badge>
 
-            <div className="grid gap-1">
+            <div className="grid gap-1 text-left">
               <h3 className="truncate font-medium">{forum.title}</h3>
 
               <div className="flex min-w-0 flex-col items-start gap-1 text-muted-foreground text-sm sm:flex-row sm:items-center">
@@ -78,7 +87,7 @@ export function SchoolClassesForumList() {
             <div className="flex items-center gap-1 text-muted-foreground text-sm">
               <div className="flex items-center gap-1">
                 <MessageSquareIcon className="size-3.5" />
-                <span className="font-mono">{forum.postCount}</span>
+                <span className="tracking-tight">{forum.postCount}</span>
               </div>
 
               <DotIcon className="size-3.5 shrink-0" />
@@ -90,7 +99,7 @@ export function SchoolClassesForumList() {
                 })}
               </time>
             </div>
-          </article>
+          </button>
         );
       })}
     </section>

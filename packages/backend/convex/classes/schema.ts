@@ -25,9 +25,8 @@ const tables = {
     archivedBy: v.optional(v.id("users")),
     archivedAt: v.optional(v.number()),
   })
-    .index("schoolId", ["schoolId"])
+    // Single index covers: eq("schoolId") OR eq("schoolId").eq("isArchived")
     .index("schoolId_isArchived", ["schoolId", "isArchived"])
-    .index("createdBy", ["createdBy"])
     .searchIndex("search_name", {
       searchField: "name",
       filterFields: ["schoolId", "isArchived"],
@@ -80,10 +79,9 @@ const tables = {
     removedBy: v.optional(v.id("users")),
     removedAt: v.optional(v.number()),
   })
-    .index("classId", ["classId"])
-    .index("userId", ["userId"])
+    // Single index covers: eq("classId") OR eq("classId").eq("userId")
     .index("classId_userId", ["classId", "userId"])
-    .index("classId_role", ["classId", "role"])
+    .index("userId", ["userId"])
     .index("schoolId", ["schoolId"]),
 
   schoolClassInviteCodes: defineTable({
@@ -100,11 +98,9 @@ const tables = {
     updatedBy: v.optional(v.id("users")),
     updatedAt: v.number(),
   })
-    .index("classId", ["classId"])
+    // Use classId_role for all classId queries (can omit role condition)
     .index("classId_role", ["classId", "role"])
     .index("code", ["code"])
-    .index("classId_code", ["classId", "code"])
-    .index("classId_enabled", ["classId", "enabled"])
     .index("schoolId", ["schoolId"]),
 
   // FORUM: Main Threads (Topics)
@@ -112,7 +108,7 @@ const tables = {
     classId: v.id("schoolClasses"),
     schoolId: v.id("schools"),
     title: v.string(),
-    body: v.optional(v.string()),
+    body: v.string(),
     tag: v.union(
       v.literal("general"),
       v.literal("question"),
@@ -147,20 +143,21 @@ const tables = {
     mentions: v.array(v.id("users")),
     parentId: v.optional(v.id("schoolClassForumPosts")),
     replyToUserId: v.optional(v.id("users")),
+    // Denormalized preview of parent post (stored at reply time, like Discord)
+    replyToBody: v.optional(v.string()),
     replyCount: v.number(),
-    reactionLikeCount: v.number(),
-    reactionInsightfulCount: v.number(),
-    reactionQuestionCount: v.number(),
-    reactionCelebrateCount: v.number(),
-    reactionResolvedCount: v.number(),
+    // Array of reactions - emoji as value (not key) to support non-ASCII characters
+    reactionCounts: v.array(
+      v.object({
+        emoji: v.string(),
+        count: v.number(),
+      })
+    ),
     isDeleted: v.boolean(),
     createdBy: v.id("users"),
     updatedAt: v.number(),
     editedAt: v.optional(v.number()),
-  })
-    .index("forumId", ["forumId"])
-    .index("forumId_parentId", ["forumId", "parentId"])
-    .index("createdBy", ["createdBy"]),
+  }).index("forumId", ["forumId"]),
 
   // FORUM: Attachments (Children of Posts)
   schoolClassForumPostAttachments: defineTable({
@@ -175,20 +172,16 @@ const tables = {
     createdBy: v.id("users"),
   }).index("postId", ["postId"]),
 
-  // FORUM: Reactions (Children of Posts)
+  // FORUM: Reactions (Children of Posts) - Discord-style emoji reactions
   schoolClassForumPostReactions: defineTable({
     postId: v.id("schoolClassForumPosts"),
     userId: v.id("users"),
-    reaction: v.union(
-      v.literal("like"),
-      v.literal("insightful"),
-      v.literal("question"),
-      v.literal("celebrate"),
-      v.literal("resolved")
-    ),
+    emoji: v.string(), // Any emoji: "👍", "🎉", "❤️", "🔥", etc.
   })
-    .index("postId_userId", ["postId", "userId"])
-    .index("userId", ["userId"]),
+    // Single index covers both use cases:
+    // 1. Toggle: eq("postId", x).eq("userId", y).eq("emoji", z)
+    // 2. Get my reactions: eq("postId", x).eq("userId", y)
+    .index("postId_userId_emoji", ["postId", "userId", "emoji"]),
 
   // FORUM: Read States (Children of Forums/Threads)
   schoolClassForumReadStates: defineTable({

@@ -153,7 +153,7 @@ function InputGroupInput({
 function InputGroupTextarea({
   className,
   ...props
-}: React.ComponentProps<"textarea">) {
+}: React.ComponentProps<typeof Textarea>) {
   return (
     <Textarea
       className={cn(

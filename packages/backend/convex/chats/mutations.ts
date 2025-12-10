@@ -13,9 +13,10 @@ async function deletePartsForMessage(
   ctx: MutationCtx,
   messageId: Id<"messages">
 ) {
+  // Use compound index, omit order condition to get all parts
   const parts = await ctx.db
     .query("parts")
-    .withIndex("messageId", (q) => q.eq("messageId", messageId))
+    .withIndex("messageId_order", (q) => q.eq("messageId", messageId))
     .collect();
 
   for (const part of parts) {

@@ -22,34 +22,116 @@ export const internalMutation = customMutation(
 );
 
 triggers.register("comments", async (ctx, change) => {
-  if (change.operation !== "delete") {
-    return;
+  const comment = change.newDoc;
+  const oldComment = change.oldDoc;
+
+  switch (change.operation) {
+    case "insert": {
+      if (!comment?.parentId) {
+        break;
+      }
+
+      // Increment parent's reply count
+      const parentComment = await ctx.db.get(comment.parentId);
+      if (parentComment) {
+        await ctx.db.patch(comment.parentId, {
+          replyCount: parentComment.replyCount + 1,
+        });
+      }
+      break;
+    }
+
+    case "delete": {
+      if (!oldComment) {
+        break;
+      }
+
+      // Delete all votes for this comment
+      const votes = await ctx.db
+        .query("commentVotes")
+        .withIndex("commentId_userId", (q) => q.eq("commentId", change.id))
+        .collect();
+
+      for (const vote of votes) {
+        await ctx.db.delete(vote._id);
+      }
+
+      // Delete all replies (cascading)
+      const replies = await ctx.db
+        .query("comments")
+        .withIndex("parentId", (q) => q.eq("parentId", change.id))
+        .collect();
+
+      for (const reply of replies) {
+        await ctx.db.delete(reply._id);
+      }
+
+      // Decrement parent's reply count
+      if (oldComment.parentId) {
+        const parentComment = await ctx.db.get(oldComment.parentId);
+        if (parentComment) {
+          await ctx.db.patch(oldComment.parentId, {
+            replyCount: Math.max(parentComment.replyCount - 1, 0),
+          });
+        }
+      }
+      break;
+    }
+
+    default: {
+      break;
+    }
   }
+});
 
-  const votes = await ctx.db
-    .query("commentVotes")
-    .withIndex("commentId_userId", (q) => q.eq("commentId", change.id))
-    .collect();
+// Trigger for comment votes - updates denormalized vote counts on comments
+triggers.register("commentVotes", async (ctx, change) => {
+  const vote = change.newDoc;
+  const oldVote = change.oldDoc;
 
-  for (const vote of votes) {
-    await ctx.db.delete(vote._id);
-  }
+  switch (change.operation) {
+    case "insert": {
+      if (!vote) {
+        break;
+      }
 
-  const replies = await ctx.db
-    .query("comments")
-    .withIndex("parentId", (q) => q.eq("parentId", change.id))
-    .collect();
+      const comment = await ctx.db.get(vote.commentId);
+      if (comment) {
+        if (vote.vote === 1) {
+          await ctx.db.patch(vote.commentId, {
+            upvoteCount: comment.upvoteCount + 1,
+          });
+        } else if (vote.vote === -1) {
+          await ctx.db.patch(vote.commentId, {
+            downvoteCount: comment.downvoteCount + 1,
+          });
+        }
+      }
+      break;
+    }
 
-  for (const reply of replies) {
-    await ctx.db.delete(reply._id);
-  }
+    case "delete": {
+      if (!oldVote) {
+        break;
+      }
 
-  if (change.oldDoc.parentId) {
-    const parentComment = await ctx.db.get(change.oldDoc.parentId);
-    if (parentComment) {
-      await ctx.db.patch(change.oldDoc.parentId, {
-        replyCount: Math.max(parentComment.replyCount - 1, 0),
-      });
+      const comment = await ctx.db.get(oldVote.commentId);
+      if (comment) {
+        if (oldVote.vote === 1) {
+          await ctx.db.patch(oldVote.commentId, {
+            upvoteCount: Math.max(comment.upvoteCount - 1, 0),
+          });
+        } else if (oldVote.vote === -1) {
+          await ctx.db.patch(oldVote.commentId, {
+            downvoteCount: Math.max(comment.downvoteCount - 1, 0),
+          });
+        }
+      }
+      break;
+    }
+
+    default: {
+      break;
     }
   }
 });
@@ -70,7 +152,7 @@ triggers.register("chats", async (ctx, change) => {
   for (const message of messages) {
     const parts = await ctx.db
       .query("parts")
-      .withIndex("messageId", (q) => q.eq("messageId", message._id))
+      .withIndex("messageId_order", (q) => q.eq("messageId", message._id))
       .collect();
 
     for (const part of parts) {
@@ -458,7 +540,7 @@ triggers.register("schoolClasses", async (ctx, change) => {
       // Clean up: Delete all class members
       const classMembers = await ctx.db
         .query("schoolClassMembers")
-        .withIndex("classId", (q) => q.eq("classId", classId))
+        .withIndex("classId_userId", (q) => q.eq("classId", classId))
         .collect();
 
       for (const member of classMembers) {
@@ -588,6 +670,136 @@ triggers.register("schoolClassMembers", async (ctx, change) => {
           removedAt: oldMember.removedAt,
         },
       });
+      break;
+    }
+
+    default: {
+      break;
+    }
+  }
+});
+
+// Trigger for forum posts - updates forum stats and reply counts
+triggers.register("schoolClassForumPosts", async (ctx, change) => {
+  const post = change.newDoc;
+  const oldPost = change.oldDoc;
+
+  switch (change.operation) {
+    case "insert": {
+      if (!post) {
+        break;
+      }
+
+      const forum = await ctx.db.get(post.forumId);
+      if (forum) {
+        await ctx.db.patch(post.forumId, {
+          postCount: forum.postCount + 1,
+          lastPostAt: post._creationTime,
+          lastPostBy: post.createdBy,
+          updatedAt: Date.now(),
+        });
+      }
+
+      if (post.parentId) {
+        const parentPost = await ctx.db.get(post.parentId);
+        if (parentPost) {
+          await ctx.db.patch(post.parentId, {
+            replyCount: parentPost.replyCount + 1,
+            updatedAt: Date.now(),
+          });
+        }
+      }
+      break;
+    }
+
+    case "delete": {
+      if (!oldPost) {
+        break;
+      }
+
+      const forum = await ctx.db.get(oldPost.forumId);
+      if (forum) {
+        await ctx.db.patch(oldPost.forumId, {
+          postCount: Math.max(forum.postCount - 1, 0),
+          updatedAt: Date.now(),
+        });
+      }
+
+      if (oldPost.parentId) {
+        const parentPost = await ctx.db.get(oldPost.parentId);
+        if (parentPost) {
+          await ctx.db.patch(oldPost.parentId, {
+            replyCount: Math.max(parentPost.replyCount - 1, 0),
+            updatedAt: Date.now(),
+          });
+        }
+      }
+      break;
+    }
+
+    default: {
+      break;
+    }
+  }
+});
+
+// Trigger for forum post reactions - updates denormalized reaction counts on posts
+triggers.register("schoolClassForumPostReactions", async (ctx, change) => {
+  const reaction = change.newDoc;
+  const oldReaction = change.oldDoc;
+
+  switch (change.operation) {
+    case "insert": {
+      if (!reaction) {
+        break;
+      }
+
+      const post = await ctx.db.get(reaction.postId);
+      if (post) {
+        const reactionCounts = [...post.reactionCounts];
+        const existingIndex = reactionCounts.findIndex(
+          (r) => r.emoji === reaction.emoji
+        );
+
+        if (existingIndex >= 0) {
+          reactionCounts[existingIndex] = {
+            emoji: reaction.emoji,
+            count: reactionCounts[existingIndex].count + 1,
+          };
+        } else {
+          reactionCounts.push({ emoji: reaction.emoji, count: 1 });
+        }
+
+        await ctx.db.patch(reaction.postId, { reactionCounts });
+      }
+      break;
+    }
+
+    case "delete": {
+      if (!oldReaction) {
+        break;
+      }
+
+      const post = await ctx.db.get(oldReaction.postId);
+      if (post) {
+        const reactionCounts = [...post.reactionCounts];
+        const existingIndex = reactionCounts.findIndex(
+          (r) => r.emoji === oldReaction.emoji
+        );
+
+        if (existingIndex >= 0) {
+          const newCount = reactionCounts[existingIndex].count - 1;
+          if (newCount <= 0) {
+            reactionCounts.splice(existingIndex, 1);
+          } else {
+            reactionCounts[existingIndex] = {
+              emoji: oldReaction.emoji,
+              count: newCount,
+            };
+          }
+          await ctx.db.patch(oldReaction.postId, { reactionCounts });
+        }
+      }
       break;
     }
 

@@ -127,7 +127,10 @@
     "no-chats": "No chats yet.",
     "exercises": "Exercises",
     "search-country-placeholder": "Search country...",
-    "no-country-found": "No country found."
+    "no-country-found": "No country found.",
+    "reaction": "Reaction",
+    "emoji-picker-placeholder": "Select an emoji...",
+    "no-emoji-found": "No emoji found."
   },
   "Onboarding": {
     "title": "Welcome to Nakafa!",
@@ -500,7 +503,9 @@
       "resource": "Resource",
       "create-forum-failed": "Failed to create forum. Please try again.",
       "unknown-user": "Unknown user",
-      "original-message-deleted": "Original message was deleted."
+      "original-message-deleted": "Original message was deleted.",
+      "send-message-placeholder": "Send a message...",
+      "submit": "Submit"
     },
     "Onboarding": {
       "title": "Welcome to Nakafa School!",

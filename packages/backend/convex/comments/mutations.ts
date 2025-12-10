@@ -1,8 +1,12 @@
 import { ConvexError, v } from "convex/values";
 import { safeGetAppUser } from "../auth";
 import { mutation } from "../functions";
-import { cleanSlug } from "../utils/helper";
+import { cleanSlug, truncateText } from "../utils/helper";
 
+/**
+ * Add a comment to a slug (article, post, etc.).
+ * Note: Denormalized replyCount is updated via trigger in functions.ts
+ */
 export const addComment = mutation({
   args: {
     slug: v.string(),
@@ -23,22 +27,21 @@ export const addComment = mutation({
       ? await ctx.db.get(args.parentId)
       : null;
 
+    // Insert comment - trigger handles parent's replyCount update
     const newCommentId = await ctx.db.insert("comments", {
       slug: cleanSlug(args.slug),
       userId: user.appUser._id,
       text: args.text,
       parentId: args.parentId,
       replyToUserId: parentComment?.userId,
+      // Store preview snippet (truncated, like Discord)
+      replyToText: parentComment
+        ? truncateText({ text: parentComment.text })
+        : undefined,
       upvoteCount: 0,
       downvoteCount: 0,
       replyCount: 0,
     });
-
-    if (parentComment) {
-      await ctx.db.patch(parentComment._id, {
-        replyCount: parentComment.replyCount + 1,
-      });
-    }
 
     return newCommentId;
   },
@@ -47,6 +50,8 @@ export const addComment = mutation({
 /**
  * Vote on a comment (upvote, downvote, or remove vote).
  * Vote values: 1 = upvote, -1 = downvote, 0 = remove vote.
+ *
+ * Note: Denormalized vote counts are updated via trigger in functions.ts
  */
 export const voteOnComment = mutation({
   args: {
@@ -79,40 +84,19 @@ export const voteOnComment = mutation({
       )
       .unique();
 
-    let upvoteCount = comment.upvoteCount;
-    let downvoteCount = comment.downvoteCount;
-
-    // Remove existing vote
+    // Remove existing vote if any - trigger handles count update
     if (existingVote) {
-      if (existingVote.vote === 1) {
-        upvoteCount -= 1;
-      } else if (existingVote.vote === -1) {
-        downvoteCount -= 1;
-      }
       await ctx.db.delete(existingVote._id);
     }
 
-    // Add new vote if not removing
+    // Add new vote if not removing (vote=0 means remove) - trigger handles count update
     if (args.vote !== 0) {
       await ctx.db.insert("commentVotes", {
         commentId: args.commentId,
         userId: user.appUser._id,
         vote: args.vote as -1 | 1,
       });
-
-      if (args.vote === 1) {
-        upvoteCount += 1;
-      } else if (args.vote === -1) {
-        downvoteCount += 1;
-      }
     }
-
-    await ctx.db.patch(args.commentId, {
-      upvoteCount,
-      downvoteCount,
-    });
-
-    return { upvoteCount, downvoteCount };
   },
 });
 

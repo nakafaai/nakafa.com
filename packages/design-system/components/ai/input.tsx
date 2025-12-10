@@ -22,11 +22,11 @@ import { cn } from "@repo/design-system/lib/utils";
 import { IconSquareFilled } from "@tabler/icons-react";
 import type { ChatStatus, FileUIPart } from "ai";
 import {
+  ArrowUpIcon,
   ImageIcon,
   MicIcon,
   PaperclipIcon,
   PlusIcon,
-  SendIcon,
   XIcon,
 } from "lucide-react";
 import { nanoid } from "nanoid";
@@ -964,7 +964,7 @@ export const PromptInputSubmit = ({
   children,
   ...props
 }: PromptInputSubmitProps) => {
-  let Icon = <SendIcon className="size-4" />;
+  let Icon = <ArrowUpIcon className="size-4" />;
 
   if (status === "submitted" || isPending) {
     Icon = <SpinnerIcon />;

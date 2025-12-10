@@ -50,7 +50,7 @@ export function SchoolClassesPeopleList() {
   }
 
   return (
-    <section className="flex flex-col divide-y rounded-md border shadow-sm">
+    <section className="flex flex-col divide-y overflow-hidden rounded-md border shadow-sm">
       {results.map((person) => (
         <article
           className="flex items-center justify-between gap-4 p-4"
@@ -77,13 +77,7 @@ export function SchoolClassesPeopleList() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge
-              variant={
-                person.role === "teacher"
-                  ? "default-subtle"
-                  : "secondary-subtle"
-              }
-            >
+            <Badge variant="secondary">
               {person.role === "teacher" ? (
                 <SpeechIcon />
               ) : (

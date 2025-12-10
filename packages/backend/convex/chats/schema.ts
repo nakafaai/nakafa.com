@@ -9,14 +9,15 @@ export const tables = {
     visibility: v.union(v.literal("public"), v.literal("private")),
     type: v.union(v.literal("study"), v.literal("finance")),
   })
+    // Each index needed for different filter + _creationTime sorting:
+    // - userId: all chats sorted by _creationTime
+    // - userId_visibility: filter visibility, sort by _creationTime
+    // - userId_type: filter type, sort by _creationTime
+    // - userId_visibility_type: filter both, sort by _creationTime
     .index("userId", ["userId"])
-    .index("userId_updatedAt", ["userId", "updatedAt"]) // User's chats sorted by update time
     .index("userId_visibility", ["userId", "visibility"])
     .index("userId_type", ["userId", "type"])
     .index("userId_visibility_type", ["userId", "visibility", "type"])
-    .index("visibility", ["visibility"])
-    .index("type", ["type"])
-    .index("updatedAt", ["updatedAt"])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["userId", "visibility", "type"],
@@ -344,9 +345,8 @@ export const tables = {
       v.record(v.string(), v.record(v.string(), v.any()))
     ),
   })
-    .index("messageId", ["messageId"])
-    .index("messageId_order", ["messageId", "order"])
-    .index("type", ["type"]),
+    // Single index covers: eq("messageId") OR eq("messageId").eq("order")
+    .index("messageId_order", ["messageId", "order"]),
 };
 
 export default tables;

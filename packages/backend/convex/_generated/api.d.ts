@@ -33,6 +33,7 @@ import type * as functions from "../functions.js";
 import type * as http from "../http.js";
 import type * as lib_authHelpers from "../lib/authHelpers.js";
 import type * as lib_relationships from "../lib/relationships.js";
+import type * as lib_userHelpers from "../lib/userHelpers.js";
 import type * as migrations from "../migrations.js";
 import type * as polyfills from "../polyfills.js";
 import type * as routes_constants from "../routes/constants.js";
@@ -83,6 +84,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "lib/authHelpers": typeof lib_authHelpers;
   "lib/relationships": typeof lib_relationships;
+  "lib/userHelpers": typeof lib_userHelpers;
   migrations: typeof migrations;
   polyfills: typeof polyfills;
   "routes/constants": typeof routes_constants;

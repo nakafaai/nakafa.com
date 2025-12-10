@@ -2,7 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { AnyAppUser } from "@repo/backend/convex/auth";
+import type { UserData } from "@repo/backend/convex/lib/userHelpers";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -29,14 +29,14 @@ import {
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState, useTransition } from "react";
+import { CommentsAdd } from "@/components/comments/add";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
-import { CommentsAdd } from "./add";
 
 type Comment = Doc<"comments">;
 type CommentWithUser = Comment & {
-  user?: AnyAppUser | null;
-  replyToUser?: AnyAppUser | null;
+  user: UserData | null;
+  replyToUser: UserData | null;
 };
 
 type Props = {
@@ -100,12 +100,12 @@ function CommentContent({
   const locale = useLocale();
   const currentUser = useQuery(api.auth.getCurrentUser);
 
-  const userId = comment.user?.appUser._id;
-  const userName = comment.user?.authUser.name ?? t("anonymous");
-  const userImage = comment.user?.authUser.image ?? "";
+  const userId = comment.user?._id;
+  const userName = comment.user?.name ?? t("anonymous");
+  const userImage = comment.user?.image ?? "";
 
   const isReplyToMe =
-    currentUser && comment.replyToUser?.appUser._id === currentUser.appUser._id;
+    currentUser && comment.replyToUser?._id === currentUser.appUser._id;
 
   return (
     <div
@@ -137,7 +137,7 @@ function CommentContent({
                 {userName}
               </span>
             )}
-            <time className="min-w-0 truncate text-muted-foreground text-sm tracking-tight">
+            <time className="min-w-0 truncate text-muted-foreground text-xs tracking-tight">
               {formatDistanceToNow(comment._creationTime, {
                 locale: getLocale(locale),
                 addSuffix: true,
@@ -192,7 +192,7 @@ function CommentActions({
   }
 
   return (
-    <div className="-translate-x-2 flex items-center">
+    <div className="-translate-x-2 flex flex-wrap items-center">
       <Tooltip>
         <TooltipTrigger
           render={
@@ -291,37 +291,33 @@ function CommentActions({
 }
 
 function ReplyToIndicator({ comment }: { comment: CommentWithUser }) {
-  const t = useTranslations("Common");
-
-  const replyToUser = comment.replyToUser;
-  const parentId = comment.parentId;
+  const { replyToUser, parentId, replyToText } = comment;
 
   if (!(replyToUser && parentId)) {
     return null;
   }
 
+  const scrollToParent = (e: React.MouseEvent) => {
+    e.preventDefault();
+    document.getElementById(parentId)?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  };
+
   return (
-    <div className="flex items-center gap-1 text-muted-foreground text-xs">
-      <CornerDownRightIcon className="size-3" />
-      <span>
-        {t.rich("replying-to-user", {
-          name: () => (
-            <a
-              className="text-primary underline-offset-2 hover:underline"
-              href={`#${parentId}`}
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById(parentId)?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                });
-              }}
-            >
-              {replyToUser.authUser.name}
-            </a>
-          ),
-        })}
+    <a
+      className="flex min-w-0 items-center gap-1 text-muted-foreground text-xs transition-colors ease-out hover:text-foreground"
+      href={`#${parentId}`}
+      onClick={scrollToParent}
+    >
+      <CornerDownRightIcon className="size-3 shrink-0" />
+      <span className="max-w-32 shrink-0 truncate text-primary">
+        {replyToUser.name}
       </span>
-    </div>
+      <Activity mode={replyToText ? "visible" : "hidden"}>
+        <span className="min-w-0 flex-1 truncate">{replyToText}</span>
+      </Activity>
+    </a>
   );
 }

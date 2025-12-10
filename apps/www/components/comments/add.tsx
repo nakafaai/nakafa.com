@@ -16,7 +16,7 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link, usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation, useQuery } from "convex/react";
-import { LogInIcon, SendIcon, XIcon } from "lucide-react";
+import { ArrowUpIcon, LogInIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type FormEventHandler, useState, useTransition } from "react";
 import { getInitialName } from "@/lib/utils/helper";
@@ -105,7 +105,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
             size="icon"
             type="submit"
           >
-            {isPending ? <SpinnerIcon /> : <SendIcon />}
+            {isPending ? <SpinnerIcon /> : <ArrowUpIcon />}
             <span className="sr-only">{t("comment")}</span>
           </Button>
         </div>

@@ -8,6 +8,8 @@ const tables = {
     text: v.string(),
     parentId: v.optional(v.id("comments")),
     replyToUserId: v.optional(v.id("users")),
+    // Denormalized preview of parent comment (stored at reply time, like Discord)
+    replyToText: v.optional(v.string()),
     upvoteCount: v.number(),
     downvoteCount: v.number(),
     replyCount: v.number(),

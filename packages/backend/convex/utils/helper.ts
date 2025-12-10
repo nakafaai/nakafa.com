@@ -39,3 +39,20 @@ export function slugify(text: string): string {
 export function generateNanoId(length?: number): string {
   return nanoid(length ?? 10);
 }
+
+/**
+ * Truncate text to a maximum length, adding ellipsis if truncated.
+ * Used for reply previews (Discord-style).
+ */
+export function truncateText({
+  text,
+  maxLength = 200,
+}: {
+  text: string;
+  maxLength?: number;
+}): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return `${text.slice(0, maxLength).trim()}…`;
+}

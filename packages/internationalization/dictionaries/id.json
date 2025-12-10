@@ -127,7 +127,10 @@
     "no-chats": "Belum ada obrolan.",
     "exercises": "Latihan",
     "search-country-placeholder": "Cari negara...",
-    "no-country-found": "Negara tidak ditemukan."
+    "no-country-found": "Negara tidak ditemukan.",
+    "reaction": "Reaksi",
+    "emoji-picker-placeholder": "Pilih emoji...",
+    "no-emoji-found": "Tidak ada emoji yang ditemukan."
   },
   "Onboarding": {
     "title": "Selamat datang di Nakafa!",
@@ -500,7 +503,9 @@
       "resource": "Sumber",
       "create-forum-failed": "Gagal membuat forum. Silakan coba lagi.",
       "unknown-user": "Pengguna tidak dikenal",
-      "original-message-deleted": "Pesan asli telah dihapus."
+      "original-message-deleted": "Pesan asli telah dihapus.",
+      "send-message-placeholder": "Kirim pesan...",
+      "submit": "Kirim"
     },
     "Onboarding": {
       "title": "Selamat datang di Nakafa School!",

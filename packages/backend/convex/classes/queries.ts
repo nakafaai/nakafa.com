@@ -1,13 +1,14 @@
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { query } from "../_generated/server";
-import { getAnyAppUserById, safeGetAppUser } from "../auth";
+import { safeGetAppUser } from "../auth";
 import {
   checkClassAccess,
   requireAuth,
   requireClassAccess,
 } from "../lib/authHelpers";
 import { asyncMap } from "../lib/relationships";
+import { getUserMap } from "../lib/userHelpers";
 import { attachForumUsers } from "./utils";
 
 /**
@@ -38,9 +39,8 @@ export const getClasses = query({
         .paginate(paginationOpts);
     }
 
-    // Use the most specific index available based on filters
+    // Use compound index - can omit isArchived condition when not filtering
     if (isArchived !== undefined) {
-      // Use compound index for schoolId and isArchived
       return await ctx.db
         .query("schoolClasses")
         .withIndex("schoolId_isArchived", (q) =>
@@ -50,10 +50,10 @@ export const getClasses = query({
         .paginate(paginationOpts);
     }
 
-    // No filters, return all school's classes
+    // No filters - use same index, just omit isArchived condition
     return await ctx.db
       .query("schoolClasses")
-      .withIndex("schoolId", (q) => q.eq("schoolId", schoolId))
+      .withIndex("schoolId_isArchived", (q) => q.eq("schoolId", schoolId))
       .order("desc")
       .paginate(paginationOpts);
   },
@@ -198,41 +198,35 @@ export const getPeople = query({
       user.appUser._id
     );
 
-    // Paginate class members
+    // Use compound index, omit userId condition to get all members
     const membersPage = await ctx.db
       .query("schoolClassMembers")
-      .withIndex("classId", (idx) => idx.eq("classId", classId))
+      .withIndex("classId_userId", (idx) => idx.eq("classId", classId))
       .paginate(paginationOpts);
 
-    // Enrich with user data
-    const enrichedPeople = await asyncMap(membersPage.page, async (member) => {
-      const userData = await getAnyAppUserById(ctx, member.userId);
+    const userMap = await getUserMap(
+      ctx,
+      membersPage.page.map((m) => m.userId)
+    );
+
+    const people = membersPage.page.flatMap((member) => {
+      const userData = userMap.get(member.userId);
       if (!userData) {
-        return null;
+        return [];
       }
 
-      return {
-        ...member,
-        user: {
-          _id: userData.appUser._id,
-          name: userData.authUser.name,
-          email: userData.authUser.email,
-          image: userData.authUser.image,
-        },
-      };
+      if (q && q.trim().length > 0) {
+        const searchLower = q.toLowerCase().trim();
+        const matches =
+          userData.name.toLowerCase().includes(searchLower) ||
+          userData.email.toLowerCase().includes(searchLower);
+        if (!matches) {
+          return [];
+        }
+      }
+
+      return [{ ...member, user: userData }];
     });
-
-    // Filter nulls and apply search if provided
-    let people = enrichedPeople.filter((p) => p !== null);
-
-    if (q && q.trim().length > 0) {
-      const searchLower = q.toLowerCase().trim();
-      people = people.filter(
-        (p) =>
-          p.user.name.toLowerCase().includes(searchLower) ||
-          p.user.email.toLowerCase().includes(searchLower)
-      );
-    }
 
     return {
       ...membersPage,
@@ -270,10 +264,10 @@ export const getInviteCodes = query({
       user.appUser._id
     );
 
-    // Get all invite codes for the class
+    // Get all invite codes for the class (using compound index, omitting role)
     return await ctx.db
       .query("schoolClassInviteCodes")
-      .withIndex("classId", (idx) => idx.eq("classId", args.classId))
+      .withIndex("classId_role", (idx) => idx.eq("classId", args.classId))
       .collect();
   },
 });
@@ -336,6 +330,106 @@ export const getForums = query({
       page: forumsPage.page.map((forum) => ({
         ...forum,
         user: userMap.get(forum.createdBy) ?? null,
+      })),
+    };
+  },
+});
+
+/**
+ * Get a forum by its ID.
+ * Only accessible by authenticated users who have access to the class.
+ */
+export const getForum = query({
+  args: {
+    forumId: v.id("schoolClassForums"),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+
+    const forum = await ctx.db.get(args.forumId);
+    if (!forum) {
+      throw new ConvexError({
+        code: "FORUM_NOT_FOUND",
+        message: `Forum not found for forumId: ${args.forumId}`,
+      });
+    }
+
+    await requireClassAccess(
+      ctx,
+      forum.classId,
+      forum.schoolId,
+      user.appUser._id
+    );
+
+    const userMap = await getUserMap(ctx, [forum.createdBy]);
+
+    return {
+      ...forum,
+      user: userMap.get(forum.createdBy) ?? null,
+    };
+  },
+});
+
+export const getForumPosts = query({
+  args: {
+    forumId: v.id("schoolClassForums"),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    const { forumId, paginationOpts } = args;
+
+    const user = await requireAuth(ctx);
+
+    const forum = await ctx.db.get(forumId);
+    if (!forum) {
+      throw new ConvexError({
+        code: "FORUM_NOT_FOUND",
+        message: `Forum not found for forumId: ${forumId}`,
+      });
+    }
+
+    await requireClassAccess(
+      ctx,
+      forum.classId,
+      forum.schoolId,
+      user.appUser._id
+    );
+
+    const postsPage = await ctx.db
+      .query("schoolClassForumPosts")
+      .withIndex("forumId", (idx) => idx.eq("forumId", forumId))
+      .order("asc")
+      .paginate(paginationOpts);
+
+    // Collect all user IDs (authors + replyToUsers) for batch fetching
+    const allUserIds = postsPage.page.flatMap((p) =>
+      p.replyToUserId ? [p.createdBy, p.replyToUserId] : [p.createdBy]
+    );
+    const userMap = await getUserMap(ctx, allUserIds);
+
+    // Fetch user's reactions for all posts
+    const postIds = postsPage.page.map((p) => p._id);
+    const userReactions = await asyncMap(postIds, (postId) =>
+      ctx.db
+        .query("schoolClassForumPostReactions")
+        .withIndex("postId_userId_emoji", (idx) =>
+          idx.eq("postId", postId).eq("userId", user.appUser._id)
+        )
+        .collect()
+    );
+    const myReactionsMap = new Map(
+      postIds.map((id, i) => [id, userReactions[i].map((r) => r.emoji)])
+    );
+
+    return {
+      ...postsPage,
+      page: postsPage.page.map((post) => ({
+        ...post,
+        user: userMap.get(post.createdBy) ?? null,
+        replyToUser: post.replyToUserId
+          ? (userMap.get(post.replyToUserId) ?? null)
+          : null,
+        myReactions: myReactionsMap.get(post._id) ?? [],
       })),
     };
   },

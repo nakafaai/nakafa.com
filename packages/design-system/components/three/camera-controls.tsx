@@ -2,8 +2,7 @@
 
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useRef } from "react";
-import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+import { type ComponentRef, useRef } from "react";
 
 const DEFAULT_CAMERA_X = 12;
 const DEFAULT_CAMERA_Y = 8;
@@ -16,7 +15,7 @@ export function CameraControls({
   cameraPosition?: [number, number, number];
   autoRotate?: boolean;
 }) {
-  const controlsRef = useRef<OrbitControlsImpl>(null);
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
   const { invalidate, performance } = useThree();
 
   // Handle auto-rotation with proper invalidation for on-demand rendering

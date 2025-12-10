@@ -5,7 +5,7 @@ import {
   requireAuth,
   requireClassAccess,
 } from "../lib/authHelpers";
-import { generateNanoId } from "../utils/helper";
+import { generateNanoId, truncateText } from "../utils/helper";
 import { getRandomClassImage, PERMISSION_SETS } from "./constants";
 
 /**
@@ -292,5 +292,134 @@ export const createForum = mutation({
     });
 
     return forumId;
+  },
+});
+
+/**
+ * Create a new post in a forum.
+ */
+export const createForumPost = mutation({
+  args: {
+    forumId: v.id("schoolClassForums"),
+    body: v.string(),
+    mentions: v.optional(v.array(v.id("users"))),
+    parentId: v.optional(v.id("schoolClassForumPosts")),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+    const userId = user.appUser._id;
+
+    const forum = await ctx.db.get(args.forumId);
+    if (!forum) {
+      throw new ConvexError({
+        code: "FORUM_NOT_FOUND",
+        message: "Forum not found.",
+      });
+    }
+
+    if (forum.status !== "open") {
+      throw new ConvexError({
+        code: "FORUM_LOCKED",
+        message: "This forum is locked.",
+      });
+    }
+
+    await requireClassAccess(ctx, forum.classId, forum.schoolId, userId);
+
+    let replyToUserId: typeof args.parentId extends undefined
+      ? undefined
+      : typeof userId | undefined;
+    let replyToBody: string | undefined;
+
+    if (args.parentId) {
+      const parentPost = await ctx.db.get(args.parentId);
+      if (!parentPost || parentPost.forumId !== args.forumId) {
+        throw new ConvexError({
+          code: "PARENT_POST_NOT_FOUND",
+          message: "Parent post not found.",
+        });
+      }
+      replyToUserId = parentPost.createdBy;
+      // Store preview snippet (truncated, like Discord)
+      replyToBody = truncateText({ text: parentPost.body });
+    }
+
+    const now = Date.now();
+
+    const postId = await ctx.db.insert("schoolClassForumPosts", {
+      forumId: args.forumId,
+      classId: forum.classId,
+      body: args.body,
+      mentions: args.mentions ?? [],
+      parentId: args.parentId,
+      replyToUserId,
+      replyToBody,
+      replyCount: 0,
+      reactionCounts: [],
+      isDeleted: false,
+      createdBy: userId,
+      updatedAt: now,
+    });
+
+    return postId;
+  },
+});
+
+/**
+ * Toggle a reaction on a post (Discord-style).
+ * If the user already reacted with this emoji, remove it.
+ * If not, add it.
+ *
+ * Note: Denormalized reaction counts are updated via trigger in functions.ts
+ */
+export const togglePostReaction = mutation({
+  args: {
+    postId: v.id("schoolClassForumPosts"),
+    emoji: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+    const userId = user.appUser._id;
+
+    const post = await ctx.db.get(args.postId);
+    if (!post) {
+      throw new ConvexError({
+        code: "POST_NOT_FOUND",
+        message: "Post not found.",
+      });
+    }
+
+    const forum = await ctx.db.get(post.forumId);
+    if (!forum) {
+      throw new ConvexError({
+        code: "FORUM_NOT_FOUND",
+        message: "Forum not found.",
+      });
+    }
+
+    await requireClassAccess(ctx, post.classId, forum.schoolId, userId);
+
+    // Check if user already reacted with this emoji
+    const existingReaction = await ctx.db
+      .query("schoolClassForumPostReactions")
+      .withIndex("postId_userId_emoji", (q) =>
+        q.eq("postId", args.postId).eq("userId", userId).eq("emoji", args.emoji)
+      )
+      .unique();
+
+    if (existingReaction) {
+      // Remove reaction - trigger handles count update
+      await ctx.db.delete(existingReaction._id);
+      return { added: false };
+    }
+
+    // Add reaction - trigger handles count update
+    await ctx.db.insert("schoolClassForumPostReactions", {
+      postId: args.postId,
+      userId,
+      emoji: args.emoji,
+    });
+
+    return { added: true };
   },
 });

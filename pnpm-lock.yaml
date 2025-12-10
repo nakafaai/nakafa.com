@@ -162,7 +162,7 @@ importers:
         version: 13.8.0(react@19.2.1)
       '@lobehub/icons':
         specifier: ^2.45.0
-        version: 2.45.0(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        version: 2.45.0(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@mantine/hooks':
         specifier: ^8.3.10
         version: 8.3.10(react@19.2.1)
@@ -218,8 +218,8 @@ importers:
         specifier: ^4.1.17
         version: 4.1.17
       '@tanstack/react-form':
-        specifier: ^1.27.1
-        version: 1.27.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        specifier: ^1.27.2
+        version: 1.27.2(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@tanstack/react-query':
         specifier: ^5.90.12
         version: 5.90.12(react@19.2.1)
@@ -266,11 +266,11 @@ importers:
         specifier: ^1.14.1
         version: 1.14.1
       lucide-react:
-        specifier: ^0.556.0
-        version: 0.556.0(react@19.2.1)
+        specifier: ^0.559.0
+        version: 0.559.0(react@19.2.1)
       motion:
-        specifier: ^12.23.25
-        version: 12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        specifier: ^12.23.26
+        version: 12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next:
         specifier: 16.0.8
         version: 16.0.8(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.94.2)
@@ -281,8 +281,8 @@ importers:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       nuqs:
-        specifier: ^2.8.4
-        version: 2.8.4(next@16.0.8(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.94.2))(react@19.2.1)
+        specifier: ^2.8.5
+        version: 2.8.5(next@16.0.8(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.94.2))(react@19.2.1)
       pino:
         specifier: ^10.1.0
         version: 10.1.0
@@ -357,8 +357,8 @@ importers:
         specifier: ^2.0.45
         version: 2.0.45(zod@4.1.13)
       '@ai-sdk/google-vertex':
-        specifier: ^3.0.87
-        version: 3.0.87(zod@4.1.13)
+        specifier: ^3.0.88
+        version: 3.0.88(zod@4.1.13)
       '@ai-sdk/openai':
         specifier: ^2.0.80
         version: 2.0.80(zod@4.1.13)
@@ -502,11 +502,11 @@ importers:
         specifier: ^1.14.1
         version: 1.14.1
       lucide-react:
-        specifier: ^0.556.0
-        version: 0.556.0(react@19.2.1)
+        specifier: ^0.559.0
+        version: 0.559.0(react@19.2.1)
       motion:
-        specifier: ^12.23.25
-        version: 12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        specifier: ^12.23.26
+        version: 12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next-intl:
         specifier: ^4.5.8
         version: 4.5.8(@swc/helpers@0.5.17)(next@16.0.8(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.94.2))(react@19.2.1)(typescript@5.9.3)
@@ -546,7 +546,7 @@ importers:
         version: 13.8.0(react@19.2.1)
       '@lobehub/icons':
         specifier: ^2.45.0
-        version: 2.45.0(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        version: 2.45.0(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@mantine/hooks':
         specifier: ^8.3.10
         version: 8.3.10(react@19.2.1)
@@ -564,10 +564,10 @@ importers:
         version: 1.2.2(@types/react@19.2.7)(react@19.2.1)
       '@react-three/drei':
         specifier: ^10.7.7
-        version: 10.7.7(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.181.2))(@types/react@19.2.7)(@types/three@0.181.0)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(three@0.181.2)
+        version: 10.7.7(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.182.0))(@types/react@19.2.7)(@types/three@0.181.0)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(three@0.182.0)
       '@react-three/fiber':
         specifier: ^9.4.2
-        version: 9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.181.2)
+        version: 9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.182.0)
       '@repo/internationalization':
         specifier: workspace:*
         version: link:../internationalization
@@ -643,6 +643,9 @@ importers:
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.2.1)
+      frimousse:
+        specifier: ^0.3.0
+        version: 0.3.0(react@19.2.1)(typescript@5.9.3)
       geist:
         specifier: ^1.5.1
         version: 1.5.1(next@16.0.8(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.94.2))
@@ -659,8 +662,8 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
       lucide-react:
-        specifier: ^0.556.0
-        version: 0.556.0(react@19.2.1)
+        specifier: ^0.559.0
+        version: 0.559.0(react@19.2.1)
       marked:
         specifier: ^17.0.1
         version: 17.0.1
@@ -671,8 +674,8 @@ importers:
         specifier: 11.12.2
         version: 11.12.2
       motion:
-        specifier: ^12.23.25
-        version: 12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        specifier: ^12.23.26
+        version: 12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       nanoid:
         specifier: ^5.1.6
         version: 5.1.6
@@ -726,10 +729,13 @@ importers:
         version: 3.0.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       react-spring:
         specifier: ^10.0.3
-        version: 10.0.3(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.181.2))(konva@10.0.12)(react-dom@19.2.1(react@19.2.1))(react-konva@19.2.1(@types/react@19.2.7)(konva@10.0.12)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react-zdog@1.2.2)(react@19.2.1)(three@0.181.2)(zdog@1.1.3)
+        version: 10.0.3(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.182.0))(konva@10.0.12)(react-dom@19.2.1(react@19.2.1))(react-konva@19.2.1(@types/react@19.2.7)(konva@10.0.12)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react-zdog@1.2.2)(react@19.2.1)(three@0.182.0)(zdog@1.1.3)
       react-syntax-highlighter:
         specifier: ^16.1.0
         version: 16.1.0(react@19.2.1)
+      react-textarea-autosize:
+        specifier: ^8.5.9
+        version: 8.5.9(@types/react@19.2.7)(react@19.2.1)
       recharts:
         specifier: ^2.15.4
         version: 2.15.4(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -761,8 +767,8 @@ importers:
         specifier: ^4.1.17
         version: 4.1.17
       three:
-        specifier: ^0.181.2
-        version: 0.181.2
+        specifier: ^0.182.0
+        version: 0.182.0
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
@@ -902,8 +908,8 @@ packages:
   '@acemir/cssom@0.9.28':
     resolution: {integrity: sha512-LuS6IVEivI75vKN8S04qRD+YySP0RmU/cV8UNukhQZvprxF+76Z43TNo/a08eCodaGhT1Us8etqS1ZRY9/Or0A==}
 
-  '@ai-sdk/anthropic@2.0.53':
-    resolution: {integrity: sha512-ih7NV+OFSNWZCF+tYYD7ovvvM+gv7TRKQblpVohg2ipIwC9Y0TirzocJVREzZa/v9luxUwFbsPji++DUDWWxsg==}
+  '@ai-sdk/anthropic@2.0.54':
+    resolution: {integrity: sha512-6OSFMkt5NkAchH7o0W+dI2h6yR8EPXx7Yl6txyh0gadLlkf1UU/ScyoYlkxAW8UtGju/+apvwVTdLYEQuIsVVQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -914,8 +920,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google-vertex@3.0.87':
-    resolution: {integrity: sha512-RnpkLjY5ZG1Wntlb3zgZzmFr0firXEN4pE62Py6XHOFLcEUCx9t+m89gTAngoCabgmjp2F+8esdrSHnjwqibGA==}
+  '@ai-sdk/google-vertex@3.0.88':
+    resolution: {integrity: sha512-4wE+3b2f+GOzY0mOqGGYj/DDBrUFprr6DUwD1wx/UeNZpjKgvtqvl2GA2aPrSmcjhxEoV7qEoGdAhRlDyFfW5g==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -4628,8 +4634,8 @@ packages:
     resolution: {integrity: sha512-RL1f5ZlfZMpghrCIdzl6mLOFLTuhqmPNblZgBaeKfdtk5rfbjykurv+VfYydOFXj0vxVIoA2d/zT7xfD7Ph8fw==}
     engines: {node: '>=18'}
 
-  '@tanstack/form-core@1.27.1':
-    resolution: {integrity: sha512-hPM+0tUnZ2C2zb2TE1lar1JJ0S0cbnQHlUwFcCnVBpMV3rjtUzkoM766gUpWrlmTGCzNad0GbJ0aTxVsjT6J8g==}
+  '@tanstack/form-core@1.27.2':
+    resolution: {integrity: sha512-D8Xi/FOKkf0JpXp6ZZd9QV2NzjQjSUewfFVEoKGTNOqYK1KlpejDx+cQihC7Vl9r5i0ZZ6HrDBvCH6GOfPphaQ==}
 
   '@tanstack/pacer@0.15.4':
     resolution: {integrity: sha512-vGY+CWsFZeac3dELgB6UZ4c7OacwsLb8hvL2gLS6hTgy8Fl0Bm/aLokHaeDIP+q9F9HUZTnp360z9uv78eg8pg==}
@@ -4641,8 +4647,8 @@ packages:
   '@tanstack/query-devtools@5.91.1':
     resolution: {integrity: sha512-l8bxjk6BMsCaVQH6NzQEE/bEgFy1hAs5qbgXl0xhzezlaQbPk6Mgz9BqEg2vTLPOHD8N4k+w/gdgCbEzecGyNg==}
 
-  '@tanstack/react-form@1.27.1':
-    resolution: {integrity: sha512-HKP0Ew2ae9AL5vU1PkJ+oAC2p+xBtA905u0fiNLzlfn1vLkBxenfg5L6TOA+rZITHpQsSo10tqwc5Yw6qn8Mpg==}
+  '@tanstack/react-form@1.27.2':
+    resolution: {integrity: sha512-Sklshgv47WRnvb26IKaYNLIbHHhkY+BH+iBwK3ia7PNDPyz1yNLgyAAsLUejYbTsV/2wnSZ6dEmSA3PcvaxxYg==}
     peerDependencies:
       '@tanstack/react-start': '*'
       react: ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -6715,8 +6721,8 @@ packages:
   fraction.js@5.3.4:
     resolution: {integrity: sha512-1X1NTtiJphryn/uLQz3whtY6jK3fTqoE3ohKs0tT+Ujr1W59oopxmoEh7Lu5p6vBaPbgoM0bzveAW4Qi5RyWDQ==}
 
-  framer-motion@12.23.25:
-    resolution: {integrity: sha512-gUHGl2e4VG66jOcH0JHhuJQr6ZNwrET9g31ZG0xdXzT0CznP7fHX4P8Bcvuc4MiUB90ysNnWX2ukHRIggkl6hQ==}
+  framer-motion@12.23.26:
+    resolution: {integrity: sha512-cPcIhgR42xBn1Uj+PzOyheMtZ73H927+uWPDVhUMqxy8UHt6Okavb6xIz9J/phFUHUj0OncR6UvMfJTXoc/LKA==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -6739,6 +6745,15 @@ packages:
   fresh@2.0.0:
     resolution: {integrity: sha512-Rx/WycZ60HOaqLKAi6cHRKKI7zxWbJ31MhntmtwMoaTeF7XFH9hhBp8vITaMidfljRQ6eYWCKkaTK+ykVJHP2A==}
     engines: {node: '>= 0.8'}
+
+  frimousse@0.3.0:
+    resolution: {integrity: sha512-kO6LMoKY/cLAYEhXXtqLRaLIE6L/DagpFPrUZaLv3LsUa1/8Iza3HhwZcgN8eZ+weXnhv69eoclNUPohcCa/IQ==}
+    peerDependencies:
+      react: ^18 || ^19
+      typescript: '>=5.1.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   fs-extra@10.1.0:
     resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
@@ -7626,8 +7641,8 @@ packages:
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  lucide-react@0.556.0:
-    resolution: {integrity: sha512-iOb8dRk7kLaYBZhR2VlV1CeJGxChBgUthpSP8wom9jfj79qovgG6qcSdiy6vkoREKPnbUYzJsCn4o4PtG3Iy+A==}
+  lucide-react@0.559.0:
+    resolution: {integrity: sha512-3ymrkBPXWk3U2bwUDg6TdA6hP5iGDMgPEAMLhchEgTQmA+g0Zk24tOtKtXMx35w1PizTmsBC3RhP88QYm+7mHQ==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -8049,8 +8064,8 @@ packages:
   motion-utils@12.23.6:
     resolution: {integrity: sha512-eAWoPgr4eFEOFfg2WjIsMoqJTW6Z8MTUCgn/GZ3VRpClWBdnbjryiA3ZSNLyxCTmCQx4RmYX6jX1iWHbenUPNQ==}
 
-  motion@12.23.25:
-    resolution: {integrity: sha512-Fk5Y1kcgxYiTYOUjmwfXQAP7tP+iGqw/on1UID9WEL/6KpzxPr9jY2169OsjgZvXJdpraKXy0orkjaCVIl5fgQ==}
+  motion@12.23.26:
+    resolution: {integrity: sha512-Ll8XhVxY8LXMVYTCfme27WH2GjBrCIzY4+ndr5QKxsK+YwCtOi2B/oBi5jcIbik5doXuWT/4KKDOVAZJkeY5VQ==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -8197,8 +8212,8 @@ packages:
   numeral@2.0.6:
     resolution: {integrity: sha512-qaKRmtYPZ5qdw4jWJD6bxEf1FJEqllJrwxCLIm0sQU/A7v2/czigzOb+C2uSiFsa9lBUzeH7M1oK+Q+OLxL3kA==}
 
-  nuqs@2.8.4:
-    resolution: {integrity: sha512-jyMlfTRGYTyWqKonwTys0B+EITpL/ueWa/6mJ3lTHG1MCCevYUSMW2TOuS+NCYBpNtNyD7h1cw2HOlCEfuLghQ==}
+  nuqs@2.8.5:
+    resolution: {integrity: sha512-ndhnNB9eLX/bsiGFkBNsrfOWf3BCbzBMD+b5GkD5o2Q96Q+llHnoUlZsrO3tgJKZZV7LLlVCvFKdj+sjBITRzg==}
     peerDependencies:
       '@remix-run/react': '>=2'
       '@tanstack/react-router': ^1
@@ -9149,6 +9164,12 @@ packages:
     peerDependencies:
       react: '>= 0.14.0'
 
+  react-textarea-autosize@8.5.9:
+    resolution: {integrity: sha512-U1DGlIQN5AwgjTyOEnI1oCcMuEr1pv1qOtklB2l4nyMGbHzWrI0eFsYK0zos2YWqAolJyG0IWJaqWmWj5ETh0A==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   react-timeago@8.3.0:
     resolution: {integrity: sha512-BeR0hj/5qqTc2+zxzBSQZMky6MmqwOtKseU3CSmcjKR5uXerej2QY34v2d+cdz11PoeVfAdWLX+qjM/UdZkUUg==}
     peerDependencies:
@@ -9954,8 +9975,8 @@ packages:
     peerDependencies:
       three: '>=0.128.0'
 
-  three@0.181.2:
-    resolution: {integrity: sha512-k/CjiZ80bYss6Qs7/ex1TBlPD11whT9oKfT8oTGiHa34W4JRd1NiH/Tr1DbHWQ2/vMUypxksLnF2CfmlmM5XFQ==}
+  three@0.182.0:
+    resolution: {integrity: sha512-GbHabT+Irv+ihI1/f5kIIsZ+Ef9Sl5A1Y7imvS5RQjWgtTPfPnZ43JmlYI7NtCRDK9zir20lQpfg8/9Yd02OvQ==}
 
   throat@5.0.0:
     resolution: {integrity: sha512-fcwX4mndzpLQKBS1DVYhGAcYaYt7vsHNIvQV+WXMvnow5cgjPphq5CaayLaGsjRdSCKZFNGt7/GYAuXaNOiYCA==}
@@ -10315,6 +10336,15 @@ packages:
       '@types/react':
         optional: true
 
+  use-composed-ref@1.4.0:
+    resolution: {integrity: sha512-djviaxuOOh7wkj0paeO1Q/4wMZ8Zrnag5H6yBvzN7AKKe8beOaED9SF5/ByLqsku8NP4zQqsvM2u3ew/tJK8/w==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
   use-context-selector@2.0.0:
     resolution: {integrity: sha512-owfuSmUNd3eNp3J9CdDl0kMgfidV+MkDvHPpvthN5ThqM+ibMccNE0k+Iq7TWC6JPFvGZqanqiGCuQx6DyV24g==}
     peerDependencies:
@@ -10325,6 +10355,24 @@ packages:
     resolution: {integrity: sha512-rWPV2Sirw55BQbA/7ndUBtsikh8WXwBrUkZJ1mD35+emj/ogPPqgCZdv1DdrEFK42AjF1g5w8d3x8govhqPH6Q==}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0 || >=19.0.0-rc <19.0.0 || ^19.0.0
+
+  use-isomorphic-layout-effect@1.2.1:
+    resolution: {integrity: sha512-tpZZ+EX0gaghDAiFR37hj5MgY6ZN55kLiPkJsKxBMZ6GZdOSPJXiOzPM984oPYZ5AnehYx5WQp1+ME8I/P/pRA==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  use-latest@1.3.0:
+    resolution: {integrity: sha512-mhg3xdm9NaM8q+gLT8KryJPnRFOz1/5XPBhmDEVZK1webPzDjrPk7f/mbpeLqTgB9msytYWANxgALOCJKnLvcQ==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   use-merge-value@1.2.0:
     resolution: {integrity: sha512-DXgG0kkgJN45TcyoXL49vJnn55LehnrmoHc7MbKi+QDBvr8dsesqws8UlyIWGHMR+JXgxc1nvY+jDGMlycsUcw==}
@@ -10764,7 +10812,7 @@ snapshots:
 
   '@acemir/cssom@0.9.28': {}
 
-  '@ai-sdk/anthropic@2.0.53(zod@4.1.13)':
+  '@ai-sdk/anthropic@2.0.54(zod@4.1.13)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.18(zod@4.1.13)
@@ -10777,9 +10825,9 @@ snapshots:
       '@vercel/oidc': 3.0.5
       zod: 4.1.13
 
-  '@ai-sdk/google-vertex@3.0.87(zod@4.1.13)':
+  '@ai-sdk/google-vertex@3.0.88(zod@4.1.13)':
     dependencies:
-      '@ai-sdk/anthropic': 2.0.53(zod@4.1.13)
+      '@ai-sdk/anthropic': 2.0.54(zod@4.1.13)
       '@ai-sdk/google': 2.0.45(zod@4.1.13)
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.18(zod@4.1.13)
@@ -11999,10 +12047,10 @@ snapshots:
 
   '@lobehub/emojilib@1.0.0': {}
 
-  '@lobehub/fluent-emoji@2.0.0(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
+  '@lobehub/fluent-emoji@2.0.0(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
       '@lobehub/emojilib': 1.0.0
-      '@lobehub/ui': 2.18.4(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@lobehub/ui': 2.18.4(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       antd: 5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       antd-style: 3.7.1(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       emoji-regex: 10.6.0
@@ -12023,9 +12071,9 @@ snapshots:
       - supports-color
       - vue
 
-  '@lobehub/icons@2.45.0(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
+  '@lobehub/icons@2.45.0(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      '@lobehub/ui': 2.18.4(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@lobehub/ui': 2.18.4(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       antd: 5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       antd-style: 3.7.1(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       lucide-react: 0.469.0(react@19.2.1)
@@ -12044,7 +12092,7 @@ snapshots:
       - supports-color
       - vue
 
-  '@lobehub/ui@2.18.4(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
+  '@lobehub/ui@2.18.4(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
       '@ant-design/cssinjs': 1.24.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@dnd-kit/core': 6.3.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -12055,8 +12103,8 @@ snapshots:
       '@emoji-mart/react': 1.1.1(emoji-mart@5.6.0)(react@19.2.1)
       '@floating-ui/react': 0.27.16(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@giscus/react': 3.1.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      '@lobehub/fluent-emoji': 2.0.0(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      '@lobehub/icons': 2.45.0(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@lobehub/fluent-emoji': 2.0.0(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@lobehub/icons': 2.45.0(@babel/core@7.28.5)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(framer-motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@mdx-js/mdx': 3.1.1
       '@mdx-js/react': 3.1.1(@types/react@19.2.7)(react@19.2.1)
       '@radix-ui/react-slot': 1.2.4(@types/react@19.2.7)(react@19.2.1)
@@ -12071,7 +12119,7 @@ snapshots:
       dayjs: 1.11.19
       emoji-mart: 5.6.0
       fast-deep-equal: 3.1.3
-      framer-motion: 12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      framer-motion: 12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       immer: 10.2.0
       katex: 0.16.27
       leva: 0.10.1(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -12205,10 +12253,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@monogrid/gainmap-js@3.4.0(three@0.181.2)':
+  '@monogrid/gainmap-js@3.4.0(three@0.182.0)':
     dependencies:
       promise-worker-transferable: 1.0.4
-      three: 0.181.2
+      three: 0.182.0
 
   '@next/bundle-analyzer@16.0.8':
     dependencies:
@@ -14148,15 +14196,15 @@ snapshots:
       '@react-spring/types': 10.0.3
       react: 19.2.1
 
-  '@react-spring/three@10.0.3(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.181.2))(react@19.2.1)(three@0.181.2)':
+  '@react-spring/three@10.0.3(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.182.0))(react@19.2.1)(three@0.182.0)':
     dependencies:
       '@react-spring/animated': 10.0.3(react@19.2.1)
       '@react-spring/core': 10.0.3(react@19.2.1)
       '@react-spring/shared': 10.0.3(react@19.2.1)
       '@react-spring/types': 10.0.3
-      '@react-three/fiber': 9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.181.2)
+      '@react-three/fiber': 9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.182.0)
       react: 19.2.1
-      three: 0.181.2
+      three: 0.182.0
 
   '@react-spring/types@10.0.3': {}
 
@@ -14437,28 +14485,28 @@ snapshots:
       react: 19.2.1
       react-dom: 19.2.1(react@19.2.1)
 
-  '@react-three/drei@10.7.7(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.181.2))(@types/react@19.2.7)(@types/three@0.181.0)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(three@0.181.2)':
+  '@react-three/drei@10.7.7(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.182.0))(@types/react@19.2.7)(@types/three@0.181.0)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(three@0.182.0)':
     dependencies:
       '@babel/runtime': 7.28.4
       '@mediapipe/tasks-vision': 0.10.17
-      '@monogrid/gainmap-js': 3.4.0(three@0.181.2)
-      '@react-three/fiber': 9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.181.2)
+      '@monogrid/gainmap-js': 3.4.0(three@0.182.0)
+      '@react-three/fiber': 9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.182.0)
       '@use-gesture/react': 10.3.1(react@19.2.1)
-      camera-controls: 3.1.2(three@0.181.2)
+      camera-controls: 3.1.2(three@0.182.0)
       cross-env: 7.0.3
       detect-gpu: 5.0.70
       glsl-noise: 0.0.0
       hls.js: 1.6.15
-      maath: 0.10.8(@types/three@0.181.0)(three@0.181.2)
-      meshline: 3.3.1(three@0.181.2)
+      maath: 0.10.8(@types/three@0.181.0)(three@0.182.0)
+      meshline: 3.3.1(three@0.182.0)
       react: 19.2.1
-      stats-gl: 2.4.2(@types/three@0.181.0)(three@0.181.2)
+      stats-gl: 2.4.2(@types/three@0.181.0)(three@0.182.0)
       stats.js: 0.17.0
       suspend-react: 0.1.3(react@19.2.1)
-      three: 0.181.2
-      three-mesh-bvh: 0.8.3(three@0.181.2)
-      three-stdlib: 2.36.1(three@0.181.2)
-      troika-three-text: 0.52.4(three@0.181.2)
+      three: 0.182.0
+      three-mesh-bvh: 0.8.3(three@0.182.0)
+      three-stdlib: 2.36.1(three@0.182.0)
+      troika-three-text: 0.52.4(three@0.182.0)
       tunnel-rat: 0.1.2(@types/react@19.2.7)(immer@11.0.1)(react@19.2.1)
       use-sync-external-store: 1.6.0(react@19.2.1)
       utility-types: 3.11.0
@@ -14470,7 +14518,7 @@ snapshots:
       - '@types/three'
       - immer
 
-  '@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.181.2)':
+  '@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.182.0)':
     dependencies:
       '@babel/runtime': 7.28.4
       '@types/react-reconciler': 0.32.3(@types/react@19.2.7)
@@ -14483,7 +14531,7 @@ snapshots:
       react-use-measure: 2.1.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       scheduler: 0.25.0
       suspend-react: 0.1.3(react@19.2.1)
-      three: 0.181.2
+      three: 0.182.0
       use-sync-external-store: 1.6.0(react@19.2.1)
       zustand: 5.0.9(@types/react@19.2.7)(immer@11.0.1)(react@19.2.1)(use-sync-external-store@1.6.0(react@19.2.1))
     optionalDependencies:
@@ -15041,7 +15089,7 @@ snapshots:
 
   '@tanstack/devtools-event-client@0.3.5': {}
 
-  '@tanstack/form-core@1.27.1':
+  '@tanstack/form-core@1.27.2':
     dependencies:
       '@tanstack/devtools-event-client': 0.3.5
       '@tanstack/pacer': 0.15.4
@@ -15056,9 +15104,9 @@ snapshots:
 
   '@tanstack/query-devtools@5.91.1': {}
 
-  '@tanstack/react-form@1.27.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
+  '@tanstack/react-form@1.27.2(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      '@tanstack/form-core': 1.27.1
+      '@tanstack/form-core': 1.27.2
       '@tanstack/react-store': 0.8.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       react: 19.2.1
     transitivePeerDependencies:
@@ -16226,9 +16274,9 @@ snapshots:
 
   camelcase@6.3.0: {}
 
-  camera-controls@3.1.2(three@0.181.2):
+  camera-controls@3.1.2(three@0.182.0):
     dependencies:
-      three: 0.181.2
+      three: 0.182.0
 
   caniuse-lite@1.0.30001757: {}
 
@@ -17386,7 +17434,7 @@ snapshots:
 
   fraction.js@5.3.4: {}
 
-  framer-motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
+  framer-motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
       motion-dom: 12.23.23
       motion-utils: 12.23.6
@@ -17400,6 +17448,12 @@ snapshots:
   fresh@0.5.2: {}
 
   fresh@2.0.0: {}
+
+  frimousse@0.3.0(react@19.2.1)(typescript@5.9.3):
+    dependencies:
+      react: 19.2.1
+    optionalDependencies:
+      typescript: 5.9.3
 
   fs-extra@10.1.0:
     dependencies:
@@ -18430,14 +18484,14 @@ snapshots:
     dependencies:
       react: 19.2.1
 
-  lucide-react@0.556.0(react@19.2.1):
+  lucide-react@0.559.0(react@19.2.1):
     dependencies:
       react: 19.2.1
 
-  maath@0.10.8(@types/three@0.181.0)(three@0.181.2):
+  maath@0.10.8(@types/three@0.181.0)(three@0.182.0):
     dependencies:
       '@types/three': 0.181.0
-      three: 0.181.2
+      three: 0.182.0
 
   magic-string@0.30.21:
     dependencies:
@@ -18719,9 +18773,9 @@ snapshots:
       ts-dedent: 2.2.0
       uuid: 11.1.0
 
-  meshline@3.3.1(three@0.181.2):
+  meshline@3.3.1(three@0.182.0):
     dependencies:
-      three: 0.181.2
+      three: 0.182.0
 
   meshoptimizer@0.22.0: {}
 
@@ -19258,9 +19312,9 @@ snapshots:
 
   motion-utils@12.23.6: {}
 
-  motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
+  motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
-      framer-motion: 12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      framer-motion: 12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       tslib: 2.8.1
     optionalDependencies:
       react: 19.2.1
@@ -19399,7 +19453,7 @@ snapshots:
 
   numeral@2.0.6: {}
 
-  nuqs@2.8.4(next@16.0.8(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.94.2))(react@19.2.1):
+  nuqs@2.8.5(next@16.0.8(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.94.2))(react@19.2.1):
     dependencies:
       '@standard-schema/spec': 1.0.0
       react: 19.2.1
@@ -20682,12 +20736,12 @@ snapshots:
       react-dom: 19.2.1(react@19.2.1)
       react-transition-group: 4.4.5(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
 
-  react-spring@10.0.3(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.181.2))(konva@10.0.12)(react-dom@19.2.1(react@19.2.1))(react-konva@19.2.1(@types/react@19.2.7)(konva@10.0.12)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react-zdog@1.2.2)(react@19.2.1)(three@0.181.2)(zdog@1.1.3):
+  react-spring@10.0.3(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.182.0))(konva@10.0.12)(react-dom@19.2.1(react@19.2.1))(react-konva@19.2.1(@types/react@19.2.7)(konva@10.0.12)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react-zdog@1.2.2)(react@19.2.1)(three@0.182.0)(zdog@1.1.3):
     dependencies:
       '@react-spring/core': 10.0.3(react@19.2.1)
       '@react-spring/konva': 10.0.3(konva@10.0.12)(react-konva@19.2.1(@types/react@19.2.7)(konva@10.0.12)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react@19.2.1)
       '@react-spring/native': 10.0.3(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)
-      '@react-spring/three': 10.0.3(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.181.2))(react@19.2.1)(three@0.181.2)
+      '@react-spring/three': 10.0.3(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.0.1)(react-dom@19.2.1(react@19.2.1))(react-native@0.82.1(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.1))(react@19.2.1)(three@0.182.0))(react@19.2.1)(three@0.182.0)
       '@react-spring/web': 10.0.3(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@react-spring/zdog': 10.0.3(react-dom@19.2.1(react@19.2.1))(react-zdog@1.2.2)(react@19.2.1)(zdog@1.1.3)
       react: 19.2.1
@@ -20748,6 +20802,15 @@ snapshots:
       prismjs: 1.30.0
       react: 19.2.1
       refractor: 5.0.0
+
+  react-textarea-autosize@8.5.9(@types/react@19.2.7)(react@19.2.1):
+    dependencies:
+      '@babel/runtime': 7.28.4
+      react: 19.2.1
+      use-composed-ref: 1.4.0(@types/react@19.2.7)(react@19.2.1)
+      use-latest: 1.3.0(@types/react@19.2.7)(react@19.2.1)
+    transitivePeerDependencies:
+      - '@types/react'
 
   react-timeago@8.3.0(react@19.2.1):
     dependencies:
@@ -21542,10 +21605,10 @@ snapshots:
       '@stablelib/base64': 1.0.1
       fast-sha256: 1.3.0
 
-  stats-gl@2.4.2(@types/three@0.181.0)(three@0.181.2):
+  stats-gl@2.4.2(@types/three@0.181.0)(three@0.182.0):
     dependencies:
       '@types/three': 0.181.0
-      three: 0.181.2
+      three: 0.182.0
 
   stats.js@0.17.0: {}
 
@@ -21701,11 +21764,11 @@ snapshots:
     dependencies:
       real-require: 0.2.0
 
-  three-mesh-bvh@0.8.3(three@0.181.2):
+  three-mesh-bvh@0.8.3(three@0.182.0):
     dependencies:
-      three: 0.181.2
+      three: 0.182.0
 
-  three-stdlib@2.36.1(three@0.181.2):
+  three-stdlib@2.36.1(three@0.182.0):
     dependencies:
       '@types/draco3d': 1.4.10
       '@types/offscreencanvas': 2019.7.3
@@ -21713,9 +21776,9 @@ snapshots:
       draco3d: 1.5.7
       fflate: 0.6.10
       potpack: 1.0.2
-      three: 0.181.2
+      three: 0.182.0
 
-  three@0.181.2: {}
+  three@0.182.0: {}
 
   throat@5.0.0: {}
 
@@ -21796,17 +21859,17 @@ snapshots:
 
   trim-lines@3.0.1: {}
 
-  troika-three-text@0.52.4(three@0.181.2):
+  troika-three-text@0.52.4(three@0.182.0):
     dependencies:
       bidi-js: 1.0.3
-      three: 0.181.2
-      troika-three-utils: 0.52.4(three@0.181.2)
+      three: 0.182.0
+      troika-three-utils: 0.52.4(three@0.182.0)
       troika-worker-utils: 0.52.0
       webgl-sdf-generator: 1.1.1
 
-  troika-three-utils@0.52.4(three@0.181.2):
+  troika-three-utils@0.52.4(three@0.182.0):
     dependencies:
-      three: 0.181.2
+      three: 0.182.0
 
   troika-worker-utils@0.52.0: {}
 
@@ -22053,6 +22116,12 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.7
 
+  use-composed-ref@1.4.0(@types/react@19.2.7)(react@19.2.1):
+    dependencies:
+      react: 19.2.1
+    optionalDependencies:
+      '@types/react': 19.2.7
+
   use-context-selector@2.0.0(react@19.2.1)(scheduler@0.27.0):
     dependencies:
       react: 19.2.1
@@ -22064,6 +22133,19 @@ snapshots:
       '@schummar/icu-type-parser': 1.21.5
       intl-messageformat: 10.7.18
       react: 19.2.1
+
+  use-isomorphic-layout-effect@1.2.1(@types/react@19.2.7)(react@19.2.1):
+    dependencies:
+      react: 19.2.1
+    optionalDependencies:
+      '@types/react': 19.2.7
+
+  use-latest@1.3.0(@types/react@19.2.7)(react@19.2.1):
+    dependencies:
+      react: 19.2.1
+      use-isomorphic-layout-effect: 1.2.1(@types/react@19.2.7)(react@19.2.1)
+    optionalDependencies:
+      '@types/react': 19.2.7
 
   use-merge-value@1.2.0(react@19.2.1):
     dependencies:
