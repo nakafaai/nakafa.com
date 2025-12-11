@@ -169,7 +169,7 @@ export const safeGetAppUser = async (ctx: QueryCtx) => {
  * Get any app user by ID with auth data (bypasses session check).
  */
 export const getAnyAppUserById = async (ctx: QueryCtx, userId: Id<"users">) => {
-  const user = await ctx.db.get(userId);
+  const user = await ctx.db.get("users", userId);
   if (!user) {
     return null;
   }

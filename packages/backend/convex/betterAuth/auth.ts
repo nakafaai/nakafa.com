@@ -19,7 +19,7 @@ export const setUserId = mutation({
     userId: v.string(),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.authId, {
+    await ctx.db.patch("user", args.authId, {
       userId: args.userId,
     });
   },
@@ -34,7 +34,7 @@ export const updateUserName = mutation({
     name: v.string(),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.authId, {
+    await ctx.db.patch("user", args.authId, {
       name: args.name,
     });
   },
@@ -147,7 +147,7 @@ export const verifyApiKey = mutation({
       if (refillsDue > 0) {
         currentRemaining =
           (currentRemaining ?? 0) + refillsDue * apiKey.refillAmount;
-        await ctx.db.patch(apiKey._id, {
+        await ctx.db.patch("apikey", apiKey._id, {
           remaining: currentRemaining,
           lastRefillAt:
             apiKey.lastRefillAt + refillsDue * apiKey.refillInterval,
@@ -177,7 +177,10 @@ export const verifyApiKey = mutation({
       const requestCount = apiKey.requestCount ?? 0;
 
       if (now - lastRequest > apiKey.rateLimitTimeWindow) {
-        await ctx.db.patch(apiKey._id, { requestCount: 1, lastRequest: now });
+        await ctx.db.patch("apikey", apiKey._id, {
+          requestCount: 1,
+          lastRequest: now,
+        });
       } else if (requestCount >= apiKey.rateLimitMax) {
         return {
           valid: false,
@@ -188,18 +191,20 @@ export const verifyApiKey = mutation({
           },
         };
       } else {
-        await ctx.db.patch(apiKey._id, {
+        await ctx.db.patch("apikey", apiKey._id, {
           requestCount: requestCount + 1,
           lastRequest: now,
         });
       }
     } else {
-      await ctx.db.patch(apiKey._id, { lastRequest: now });
+      await ctx.db.patch("apikey", apiKey._id, { lastRequest: now });
     }
 
     // Decrement remaining count
     if (currentRemaining !== null) {
-      await ctx.db.patch(apiKey._id, { remaining: currentRemaining - 1 });
+      await ctx.db.patch("apikey", apiKey._id, {
+        remaining: currentRemaining - 1,
+      });
     }
 
     // Verify permissions

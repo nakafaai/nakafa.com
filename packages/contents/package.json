@@ -20,7 +20,7 @@
     "lucide-react": "^0.560.0",
     "motion": "^12.23.26",
     "next-intl": "^4.5.8",
-    "react": "19.2.1",
+    "react": "19.2.2",
     "react-aria-components": "^1.13.0",
     "recharts": "^2.15.4",
     "zod": "^4.1.13"

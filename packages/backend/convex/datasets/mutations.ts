@@ -77,7 +77,7 @@ export const addDatasetColumns = internalMutation({
   },
   handler: async (ctx, args) => {
     const { datasetId, columns } = args;
-    const dataset = await ctx.db.get(datasetId);
+    const dataset = await ctx.db.get("datasets", datasetId);
     if (!dataset) {
       throw new ConvexError({
         code: "DATASET_NOT_FOUND",
@@ -93,7 +93,7 @@ export const addDatasetColumns = internalMutation({
     }
 
     // Update dataset column count
-    await ctx.db.patch(datasetId, {
+    await ctx.db.patch("datasets", datasetId, {
       columnCount: dataset.columnCount + columns.length,
       updatedAt: Date.now(),
     });
@@ -111,7 +111,7 @@ export const addDatasetTask = internalMutation({
   },
   handler: async (ctx, args) => {
     const { task } = args;
-    const dataset = await ctx.db.get(task.datasetId);
+    const dataset = await ctx.db.get("datasets", task.datasetId);
     if (!dataset) {
       throw new ConvexError({
         code: "DATASET_NOT_FOUND",
@@ -145,7 +145,7 @@ export const updateDatasetTaskStatus = internalMutation({
   },
   handler: async (ctx, args) => {
     const { datasetTaskId, status, errorMessage } = args;
-    const datasetTask = await ctx.db.get(datasetTaskId);
+    const datasetTask = await ctx.db.get("datasetTasks", datasetTaskId);
     if (!datasetTask) {
       throw new ConvexError({
         code: "DATASET_TASK_NOT_FOUND",
@@ -171,7 +171,7 @@ export const updateDatasetTaskStatus = internalMutation({
       updates.completedAt = Date.now();
     }
 
-    await ctx.db.patch(datasetTaskId, updates);
+    await ctx.db.patch("datasetTasks", datasetTaskId, updates);
 
     return datasetTaskId;
   },
@@ -263,7 +263,7 @@ export const insertDatasetRows = internalMutation({
     }
 
     // Update dataset row count
-    await ctx.db.patch(args.datasetId, {
+    await ctx.db.patch("datasets", args.datasetId, {
       rowCount: args.rows.length,
       updatedAt: Date.now(),
     });
@@ -289,7 +289,7 @@ export const updateRowDescriptions = internalMutation({
     ][];
 
     for (const [rowId, description] of entries) {
-      const row = await ctx.db.get(rowId);
+      const row = await ctx.db.get("datasetRows", rowId);
 
       if (!row) {
         console.warn(`Row ${rowId} not found, skipping description update`);
@@ -299,7 +299,7 @@ export const updateRowDescriptions = internalMutation({
       // Type-safe access to dynamicData
       const currentDynamicData = row.dynamicData ?? {};
 
-      await ctx.db.patch(rowId, {
+      await ctx.db.patch("datasetRows", rowId, {
         dynamicData: {
           ...currentDynamicData,
           description,
@@ -342,7 +342,7 @@ export const updateRowCells = internalMutation({
     ),
   },
   handler: async (ctx, args) => {
-    const row = await ctx.db.get(args.rowId);
+    const row = await ctx.db.get("datasetRows", args.rowId);
     if (!row) {
       throw new ConvexError({
         code: "ROW_NOT_FOUND",
@@ -363,7 +363,7 @@ export const updateRowCells = internalMutation({
     }
 
     // Update row
-    await ctx.db.patch(args.rowId, {
+    await ctx.db.patch("datasetRows", args.rowId, {
       dynamicData: newDynamicData,
       updatedAt: Date.now(),
     });
@@ -423,9 +423,9 @@ export const completeRowResearch = internalMutation({
   },
   handler: async (ctx, args) => {
     // Update task progress
-    const task = await ctx.db.get(args.taskId);
+    const task = await ctx.db.get("datasetTasks", args.taskId);
     if (task) {
-      await ctx.db.patch(args.taskId, {
+      await ctx.db.patch("datasetTasks", args.taskId, {
         processedRows: task.processedRows + 1,
         successfulRows: args.successful
           ? task.successfulRows + 1
@@ -443,7 +443,7 @@ export const completeRowResearch = internalMutation({
       .first();
 
     if (lock) {
-      await ctx.db.patch(lock._id, {
+      await ctx.db.patch("datasetUrlLocks", lock._id, {
         status: "completed",
         completedAt: Date.now(),
       });

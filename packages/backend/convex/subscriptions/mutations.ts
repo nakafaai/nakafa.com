@@ -53,7 +53,7 @@ export const updateSubscription = internalMutation({
       return;
     }
 
-    await ctx.db.patch(existingSubscription._id, {
+    await ctx.db.patch("subscriptions", existingSubscription._id, {
       ...args.subscription,
       metadata: args.subscription.metadata,
     });

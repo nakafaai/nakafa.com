@@ -2,12 +2,19 @@
  * Class images
  */
 export const CLASS_IMAGES = new Map([
+  ["retro", "/classes/retro.png"],
+  ["time", "/classes/time.png"],
   ["stars", "/classes/stars.png"],
   ["chill", "/classes/chill.png"],
   ["puzzle", "/classes/puzzle.png"],
   ["line", "/classes/line.png"],
   ["shoot", "/classes/shoot.png"],
   ["virus", "/classes/virus.png"],
+  ["ball", "/classes/ball.png"],
+  ["duck", "/classes/duck.png"],
+  ["music", "/classes/music.png"],
+  ["nightly", "/classes/nightly.png"],
+  ["writer", "/classes/writer.png"],
 ] as const);
 
 /**

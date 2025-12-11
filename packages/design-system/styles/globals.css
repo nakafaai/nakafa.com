@@ -208,6 +208,10 @@
   }
 }
 
+@utility text-chat {
+  font-size: 15px;
+}
+
 @layer utilities {
   /* Style scrollbar for webkit browsers (Chrome, Safari, etc) */
   ::-webkit-scrollbar {

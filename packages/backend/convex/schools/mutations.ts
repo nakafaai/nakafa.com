@@ -151,7 +151,7 @@ export const joinSchool = mutation({
     }
 
     // Get school
-    const school = await ctx.db.get(inviteCode.schoolId);
+    const school = await ctx.db.get("schools", inviteCode.schoolId);
     if (!school) {
       throw new ConvexError({
         code: "SCHOOL_NOT_FOUND",

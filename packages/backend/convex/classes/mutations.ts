@@ -6,7 +6,13 @@ import {
   requireClassAccess,
 } from "../lib/authHelpers";
 import { generateNanoId, truncateText } from "../utils/helper";
-import { getRandomClassImage, PERMISSION_SETS } from "./constants";
+import {
+  CLASS_IMAGES,
+  getRandomClassImage,
+  PERMISSION_SETS,
+  TEACHER_PERMISSIONS,
+} from "./constants";
+import { loadClass, requireTeacherPermission } from "./utils";
 
 /**
  * Create a new class in a school and automatically add the creator as a primary teacher.
@@ -140,7 +146,7 @@ export const joinClass = mutation({
     }
 
     // Get class
-    const classData = await ctx.db.get(inviteCode.classId);
+    const classData = await ctx.db.get("schoolClasses", inviteCode.classId);
     if (!classData) {
       throw new ConvexError({
         code: "CLASS_NOT_FOUND",
@@ -220,6 +226,59 @@ export const joinClass = mutation({
 });
 
 /**
+ * Update the class image.
+ * Requires CLASS_MANAGE permission or school admin role.
+ * Note: Can update image even for archived classes.
+ */
+export const updateClassImage = mutation({
+  args: {
+    classId: v.id("schoolClasses"),
+    image: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+    const userId = user.appUser._id;
+
+    // Load class (allows archived classes to update image)
+    const classData = await loadClass(ctx, args.classId);
+
+    // Check access and permissions
+    const { classMembership, schoolMembership } = await requireClassAccess(
+      ctx,
+      args.classId,
+      classData.schoolId,
+      userId
+    );
+
+    requireTeacherPermission(
+      classMembership,
+      schoolMembership,
+      TEACHER_PERMISSIONS.CLASS_MANAGE
+    );
+
+    // Validate image is from allowed set
+    const validImages = new Set(CLASS_IMAGES.values());
+    if (
+      !validImages.has(
+        args.image as typeof validImages extends Set<infer T> ? T : never
+      )
+    ) {
+      throw new ConvexError({
+        code: "INVALID_IMAGE",
+        message: "Invalid class image. Please select a valid image.",
+      });
+    }
+
+    // Update class image
+    await ctx.db.patch("schoolClasses", args.classId, {
+      image: args.image,
+      updatedBy: userId,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+/**
  * Create a new forum in a class.
  */
 export const createForum = mutation({
@@ -240,7 +299,7 @@ export const createForum = mutation({
     const userId = user.appUser._id;
 
     // Get class to verify existence
-    const classData = await ctx.db.get(args.classId);
+    const classData = await ctx.db.get("schoolClasses", args.classId);
     if (!classData) {
       throw new ConvexError({
         code: "CLASS_NOT_FOUND",
@@ -310,7 +369,7 @@ export const createForumPost = mutation({
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
-    const forum = await ctx.db.get(args.forumId);
+    const forum = await ctx.db.get("schoolClassForums", args.forumId);
     if (!forum) {
       throw new ConvexError({
         code: "FORUM_NOT_FOUND",
@@ -333,7 +392,10 @@ export const createForumPost = mutation({
     let replyToBody: string | undefined;
 
     if (args.parentId) {
-      const parentPost = await ctx.db.get(args.parentId);
+      const parentPost = await ctx.db.get(
+        "schoolClassForumPosts",
+        args.parentId
+      );
       if (!parentPost || parentPost.forumId !== args.forumId) {
         throw new ConvexError({
           code: "PARENT_POST_NOT_FOUND",
@@ -382,7 +444,7 @@ export const togglePostReaction = mutation({
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
-    const post = await ctx.db.get(args.postId);
+    const post = await ctx.db.get("schoolClassForumPosts", args.postId);
     if (!post) {
       throw new ConvexError({
         code: "POST_NOT_FOUND",
@@ -390,7 +452,7 @@ export const togglePostReaction = mutation({
       });
     }
 
-    const forum = await ctx.db.get(post.forumId);
+    const forum = await ctx.db.get("schoolClassForums", post.forumId);
     if (!forum) {
       throw new ConvexError({
         code: "FORUM_NOT_FOUND",
@@ -410,7 +472,10 @@ export const togglePostReaction = mutation({
 
     if (existingReaction) {
       // Remove reaction - trigger handles count update
-      await ctx.db.delete(existingReaction._id);
+      await ctx.db.delete(
+        "schoolClassForumPostReactions",
+        existingReaction._id
+      );
       return { added: false };
     }
 
@@ -441,7 +506,7 @@ export const toggleForumReaction = mutation({
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
-    const forum = await ctx.db.get(args.forumId);
+    const forum = await ctx.db.get("schoolClassForums", args.forumId);
     if (!forum) {
       throw new ConvexError({
         code: "FORUM_NOT_FOUND",
@@ -464,7 +529,7 @@ export const toggleForumReaction = mutation({
 
     if (existingReaction) {
       // Remove reaction - trigger handles count update
-      await ctx.db.delete(existingReaction._id);
+      await ctx.db.delete("schoolClassForumReactions", existingReaction._id);
       return { added: false };
     }
 

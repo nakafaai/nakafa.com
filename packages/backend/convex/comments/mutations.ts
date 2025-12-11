@@ -24,7 +24,7 @@ export const addComment = mutation({
     }
 
     const parentComment = args.parentId
-      ? await ctx.db.get(args.parentId)
+      ? await ctx.db.get("comments", args.parentId)
       : null;
 
     // Insert comment - trigger handles parent's replyCount update
@@ -68,7 +68,7 @@ export const voteOnComment = mutation({
       });
     }
 
-    const comment = await ctx.db.get(args.commentId);
+    const comment = await ctx.db.get("comments", args.commentId);
 
     if (!comment) {
       throw new ConvexError({
@@ -86,7 +86,7 @@ export const voteOnComment = mutation({
 
     // Remove existing vote if any - trigger handles count update
     if (existingVote) {
-      await ctx.db.delete(existingVote._id);
+      await ctx.db.delete("commentVotes", existingVote._id);
     }
 
     // Add new vote if not removing (vote=0 means remove) - trigger handles count update
@@ -118,7 +118,7 @@ export const deleteComment = mutation({
       });
     }
 
-    const comment = await ctx.db.get(args.commentId);
+    const comment = await ctx.db.get("comments", args.commentId);
 
     if (!comment) {
       throw new ConvexError({
@@ -134,6 +134,6 @@ export const deleteComment = mutation({
       });
     }
 
-    await ctx.db.delete(args.commentId);
+    await ctx.db.delete("comments", args.commentId);
   },
 });

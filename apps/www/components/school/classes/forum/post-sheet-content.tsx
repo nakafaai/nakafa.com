@@ -56,7 +56,15 @@ import {
   XIcon,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity, Fragment, useState, useTransition } from "react";
+import {
+  Activity,
+  type ComponentRef,
+  Fragment,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import * as z from "zod/mini";
 import { useForum } from "@/lib/context/use-forum";
 import { getLocale } from "@/lib/utils/date";
@@ -111,7 +119,6 @@ function ForumPostList({ forumId }: { forumId: Id<"schoolClassForums"> }) {
 
           {results.map((post, index) => {
             const prevPost = results[index - 1];
-            const nextPost = results[index + 1];
 
             // Check if date changed from previous post
             const prevDate = prevPost
@@ -125,8 +132,6 @@ function ForumPostList({ forumId }: { forumId: Id<"schoolClassForums"> }) {
               showDateSeparator ||
               !prevPost ||
               prevPost.createdBy !== post.createdBy;
-            const isLastInGroup =
-              !nextPost || nextPost.createdBy !== post.createdBy;
 
             return (
               <Fragment key={post._id}>
@@ -135,11 +140,7 @@ function ForumPostList({ forumId }: { forumId: Id<"schoolClassForums"> }) {
                 >
                   <DateSeparator date={post._creationTime} />
                 </Activity>
-                <ForumPostItem
-                  isFirstInGroup={isFirstInGroup}
-                  isLastInGroup={isLastInGroup}
-                  post={post}
-                />
+                <ForumPostItem isFirstInGroup={isFirstInGroup} post={post} />
               </Fragment>
             );
           })}
@@ -184,7 +185,7 @@ function ForumHeader({ forum }: { forum: Forum }) {
             </time>
           </div>
 
-          <div className="wrap-break-word min-w-0">
+          <div className="wrap-break-word min-w-0 text-chat">
             <Response id={forum._id}>{forum.body}</Response>
           </div>
         </div>
@@ -304,11 +305,9 @@ function ForumActions({ forum }: { forum: Forum }) {
 function ForumPostItem({
   post,
   isFirstInGroup,
-  isLastInGroup,
 }: {
   post: ForumPost;
   isFirstInGroup: boolean;
-  isLastInGroup: boolean;
 }) {
   const t = useTranslations("Common");
   const locale = useLocale();
@@ -325,9 +324,8 @@ function ForumPostItem({
   return (
     <div
       className={cn(
-        "group relative flex items-start gap-3 border-l-2 border-l-transparent p-4 transition-colors ease-out hover:bg-accent/20",
-        isLastInGroup === false && "pb-1",
-        isFirstInGroup === false && "pt-1",
+        "group relative flex items-start gap-3 border-l-2 border-l-transparent px-4 py-2 transition-colors ease-out hover:bg-accent/20",
+
         isReplyToMe === true && "border-primary bg-primary/5",
         isReplyTo === true && "border-secondary bg-secondary/5"
       )}
@@ -345,7 +343,7 @@ function ForumPostItem({
       </Activity>
       <Activity mode={isFirstInGroup === true ? "hidden" : "visible"}>
         <time
-          className="mt-1 w-8 shrink-0 text-center text-muted-foreground text-xs opacity-0 transition-opacity ease-out group-hover:opacity-100"
+          className="mt-1 w-8 shrink-0 text-center text-muted-foreground text-xs"
           title={format(post._creationTime, "PPpp", {
             locale: getLocale(locale),
           })}
@@ -376,7 +374,7 @@ function ForumPostItem({
 
           <PostReplyIndicator post={post} />
 
-          <div className="wrap-break-word min-w-0">
+          <div className="wrap-break-word min-w-0 text-chat">
             <Response id={post._id}>{post.body}</Response>
           </div>
         </div>
@@ -555,7 +553,15 @@ function ForumPostInput({ forumId }: { forumId: Id<"schoolClassForums"> }) {
   const replyTo = useForum((f) => f.replyTo);
   const setReplyTo = useForum((f) => f.setReplyTo);
 
+  const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
   const createPost = useMutation(api.classes.mutations.createForumPost);
+
+  // Auto-focus textarea when replyTo changes
+  useEffect(() => {
+    if (replyTo) {
+      textareaRef.current?.focus();
+    }
+  }, [replyTo]);
 
   const form = useForm({
     defaultValues: {
@@ -605,6 +611,7 @@ function ForumPostInput({ forumId }: { forumId: Id<"schoolClassForums"> }) {
                     }
                   }}
                   placeholder={t("send-message-placeholder")}
+                  ref={textareaRef}
                   value={field.state.value}
                 />
                 <InputGroupAddon align="inline-end">
@@ -663,7 +670,7 @@ function DateSeparator({ date }: { date: number }) {
   const locale = useLocale();
 
   return (
-    <div className="flex items-center gap-3 py-4">
+    <div className="flex items-center gap-3 py-2">
       <div className="h-px flex-1 bg-border" />
       <time className="shrink-0 text-muted-foreground text-xs">
         {format(date, "d. MMMM yyyy", { locale: getLocale(locale) })}

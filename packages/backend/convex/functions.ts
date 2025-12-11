@@ -32,9 +32,9 @@ triggers.register("comments", async (ctx, change) => {
       }
 
       // Increment parent's reply count
-      const parentComment = await ctx.db.get(comment.parentId);
+      const parentComment = await ctx.db.get("comments", comment.parentId);
       if (parentComment) {
-        await ctx.db.patch(comment.parentId, {
+        await ctx.db.patch("comments", comment.parentId, {
           replyCount: parentComment.replyCount + 1,
         });
       }
@@ -53,7 +53,7 @@ triggers.register("comments", async (ctx, change) => {
         .collect();
 
       for (const vote of votes) {
-        await ctx.db.delete(vote._id);
+        await ctx.db.delete("commentVotes", vote._id);
       }
 
       // Delete all replies (cascading)
@@ -63,14 +63,14 @@ triggers.register("comments", async (ctx, change) => {
         .collect();
 
       for (const reply of replies) {
-        await ctx.db.delete(reply._id);
+        await ctx.db.delete("comments", reply._id);
       }
 
       // Decrement parent's reply count
       if (oldComment.parentId) {
-        const parentComment = await ctx.db.get(oldComment.parentId);
+        const parentComment = await ctx.db.get("comments", oldComment.parentId);
         if (parentComment) {
-          await ctx.db.patch(oldComment.parentId, {
+          await ctx.db.patch("comments", oldComment.parentId, {
             replyCount: Math.max(parentComment.replyCount - 1, 0),
           });
         }
@@ -95,14 +95,14 @@ triggers.register("commentVotes", async (ctx, change) => {
         break;
       }
 
-      const comment = await ctx.db.get(vote.commentId);
+      const comment = await ctx.db.get("comments", vote.commentId);
       if (comment) {
         if (vote.vote === 1) {
-          await ctx.db.patch(vote.commentId, {
+          await ctx.db.patch("comments", vote.commentId, {
             upvoteCount: comment.upvoteCount + 1,
           });
         } else if (vote.vote === -1) {
-          await ctx.db.patch(vote.commentId, {
+          await ctx.db.patch("comments", vote.commentId, {
             downvoteCount: comment.downvoteCount + 1,
           });
         }
@@ -115,14 +115,14 @@ triggers.register("commentVotes", async (ctx, change) => {
         break;
       }
 
-      const comment = await ctx.db.get(oldVote.commentId);
+      const comment = await ctx.db.get("comments", oldVote.commentId);
       if (comment) {
         if (oldVote.vote === 1) {
-          await ctx.db.patch(oldVote.commentId, {
+          await ctx.db.patch("comments", oldVote.commentId, {
             upvoteCount: Math.max(comment.upvoteCount - 1, 0),
           });
         } else if (oldVote.vote === -1) {
-          await ctx.db.patch(oldVote.commentId, {
+          await ctx.db.patch("comments", oldVote.commentId, {
             downvoteCount: Math.max(comment.downvoteCount - 1, 0),
           });
         }
@@ -156,10 +156,10 @@ triggers.register("chats", async (ctx, change) => {
       .collect();
 
     for (const part of parts) {
-      await ctx.db.delete(part._id);
+      await ctx.db.delete("parts", part._id);
     }
 
-    await ctx.db.delete(message._id);
+    await ctx.db.delete("messages", message._id);
   }
 });
 
@@ -298,9 +298,12 @@ triggers.register("schoolMembers", async (ctx, change) => {
 
       // Update invite code usage count if member joined via invite code
       if (member.inviteCodeId) {
-        const inviteCode = await ctx.db.get(member.inviteCodeId);
+        const inviteCode = await ctx.db.get(
+          "schoolInviteCodes",
+          member.inviteCodeId
+        );
         if (inviteCode) {
-          await ctx.db.patch(member.inviteCodeId, {
+          await ctx.db.patch("schoolInviteCodes", member.inviteCodeId, {
             currentUsage: inviteCode.currentUsage + 1,
             updatedAt: Date.now(),
           });
@@ -544,7 +547,7 @@ triggers.register("schoolClasses", async (ctx, change) => {
         .collect();
 
       for (const member of classMembers) {
-        await ctx.db.delete(member._id);
+        await ctx.db.delete("schoolClassMembers", member._id);
       }
       break;
     }
@@ -568,9 +571,12 @@ triggers.register("schoolClassMembers", async (ctx, change) => {
 
       // Update invite code usage count if member joined via invite code
       if (member.inviteCodeId) {
-        const inviteCode = await ctx.db.get(member.inviteCodeId);
+        const inviteCode = await ctx.db.get(
+          "schoolClassInviteCodes",
+          member.inviteCodeId
+        );
         if (inviteCode) {
-          await ctx.db.patch(member.inviteCodeId, {
+          await ctx.db.patch("schoolClassInviteCodes", member.inviteCodeId, {
             currentUsage: inviteCode.currentUsage + 1,
             updatedAt: Date.now(),
           });
@@ -690,9 +696,9 @@ triggers.register("schoolClassForumPosts", async (ctx, change) => {
         break;
       }
 
-      const forum = await ctx.db.get(post.forumId);
+      const forum = await ctx.db.get("schoolClassForums", post.forumId);
       if (forum) {
-        await ctx.db.patch(post.forumId, {
+        await ctx.db.patch("schoolClassForums", post.forumId, {
           postCount: forum.postCount + 1,
           lastPostAt: post._creationTime,
           lastPostBy: post.createdBy,
@@ -701,9 +707,12 @@ triggers.register("schoolClassForumPosts", async (ctx, change) => {
       }
 
       if (post.parentId) {
-        const parentPost = await ctx.db.get(post.parentId);
+        const parentPost = await ctx.db.get(
+          "schoolClassForumPosts",
+          post.parentId
+        );
         if (parentPost) {
-          await ctx.db.patch(post.parentId, {
+          await ctx.db.patch("schoolClassForumPosts", post.parentId, {
             replyCount: parentPost.replyCount + 1,
             updatedAt: Date.now(),
           });
@@ -717,18 +726,21 @@ triggers.register("schoolClassForumPosts", async (ctx, change) => {
         break;
       }
 
-      const forum = await ctx.db.get(oldPost.forumId);
+      const forum = await ctx.db.get("schoolClassForums", oldPost.forumId);
       if (forum) {
-        await ctx.db.patch(oldPost.forumId, {
+        await ctx.db.patch("schoolClassForums", oldPost.forumId, {
           postCount: Math.max(forum.postCount - 1, 0),
           updatedAt: Date.now(),
         });
       }
 
       if (oldPost.parentId) {
-        const parentPost = await ctx.db.get(oldPost.parentId);
+        const parentPost = await ctx.db.get(
+          "schoolClassForumPosts",
+          oldPost.parentId
+        );
         if (parentPost) {
-          await ctx.db.patch(oldPost.parentId, {
+          await ctx.db.patch("schoolClassForumPosts", oldPost.parentId, {
             replyCount: Math.max(parentPost.replyCount - 1, 0),
             updatedAt: Date.now(),
           });
@@ -754,7 +766,7 @@ triggers.register("schoolClassForumPostReactions", async (ctx, change) => {
         break;
       }
 
-      const post = await ctx.db.get(reaction.postId);
+      const post = await ctx.db.get("schoolClassForumPosts", reaction.postId);
       if (post) {
         const reactionCounts = [...post.reactionCounts];
         const existingIndex = reactionCounts.findIndex(
@@ -770,7 +782,9 @@ triggers.register("schoolClassForumPostReactions", async (ctx, change) => {
           reactionCounts.push({ emoji: reaction.emoji, count: 1 });
         }
 
-        await ctx.db.patch(reaction.postId, { reactionCounts });
+        await ctx.db.patch("schoolClassForumPosts", reaction.postId, {
+          reactionCounts,
+        });
       }
       break;
     }
@@ -780,7 +794,10 @@ triggers.register("schoolClassForumPostReactions", async (ctx, change) => {
         break;
       }
 
-      const post = await ctx.db.get(oldReaction.postId);
+      const post = await ctx.db.get(
+        "schoolClassForumPosts",
+        oldReaction.postId
+      );
       if (post) {
         const reactionCounts = [...post.reactionCounts];
         const existingIndex = reactionCounts.findIndex(
@@ -797,7 +814,9 @@ triggers.register("schoolClassForumPostReactions", async (ctx, change) => {
               count: newCount,
             };
           }
-          await ctx.db.patch(oldReaction.postId, { reactionCounts });
+          await ctx.db.patch("schoolClassForumPosts", oldReaction.postId, {
+            reactionCounts,
+          });
         }
       }
       break;
@@ -820,7 +839,7 @@ triggers.register("schoolClassForumReactions", async (ctx, change) => {
         break;
       }
 
-      const forum = await ctx.db.get(reaction.forumId);
+      const forum = await ctx.db.get("schoolClassForums", reaction.forumId);
       if (forum) {
         const reactionCounts = [...forum.reactionCounts];
         const existingIndex = reactionCounts.findIndex(
@@ -836,7 +855,9 @@ triggers.register("schoolClassForumReactions", async (ctx, change) => {
           reactionCounts.push({ emoji: reaction.emoji, count: 1 });
         }
 
-        await ctx.db.patch(reaction.forumId, { reactionCounts });
+        await ctx.db.patch("schoolClassForums", reaction.forumId, {
+          reactionCounts,
+        });
       }
       break;
     }
@@ -846,7 +867,7 @@ triggers.register("schoolClassForumReactions", async (ctx, change) => {
         break;
       }
 
-      const forum = await ctx.db.get(oldReaction.forumId);
+      const forum = await ctx.db.get("schoolClassForums", oldReaction.forumId);
       if (forum) {
         const reactionCounts = [...forum.reactionCounts];
         const existingIndex = reactionCounts.findIndex(
@@ -863,7 +884,9 @@ triggers.register("schoolClassForumReactions", async (ctx, change) => {
               count: newCount,
             };
           }
-          await ctx.db.patch(oldReaction.forumId, { reactionCounts });
+          await ctx.db.patch("schoolClassForums", oldReaction.forumId, {
+            reactionCounts,
+          });
         }
       }
       break;
@@ -882,17 +905,17 @@ async function updateClassMemberCount(
   role: "teacher" | "student",
   delta: number
 ) {
-  const classDoc = await ctx.db.get(classId);
+  const classDoc = await ctx.db.get("schoolClasses", classId);
   if (!classDoc) {
     return;
   }
 
   if (role === "teacher") {
-    await ctx.db.patch(classId, {
+    await ctx.db.patch("schoolClasses", classId, {
       teacherCount: Math.max(classDoc.teacherCount + delta, 0),
     });
   } else if (role === "student") {
-    await ctx.db.patch(classId, {
+    await ctx.db.patch("schoolClasses", classId, {
       studentCount: Math.max(classDoc.studentCount + delta, 0),
     });
   }
@@ -911,7 +934,7 @@ async function handleRoleChange(
   oldMember: { role: "teacher" | "student" }
 ) {
   // Update counts
-  const classDoc = await ctx.db.get(member.classId);
+  const classDoc = await ctx.db.get("schoolClasses", member.classId);
   if (classDoc) {
     let teacherDelta = 0;
     let studentDelta = 0;
@@ -924,7 +947,7 @@ async function handleRoleChange(
       studentDelta = -1;
     }
 
-    await ctx.db.patch(member.classId, {
+    await ctx.db.patch("schoolClasses", member.classId, {
       teacherCount: Math.max(classDoc.teacherCount + teacherDelta, 0),
       studentCount: Math.max(classDoc.studentCount + studentDelta, 0),
     });

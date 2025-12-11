@@ -23,7 +23,7 @@ export const updateUserRole = mutation({
         message: "You must be logged in to update your role.",
       });
     }
-    await ctx.db.patch(user.appUser._id, {
+    await ctx.db.patch("users", user.appUser._id, {
       role: args.role,
     });
   },

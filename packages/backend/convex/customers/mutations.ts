@@ -67,7 +67,7 @@ export const updateCustomer = internalMutation({
       updateFields.externalId = args.customer.externalId;
     }
 
-    await ctx.db.patch(customer._id, updateFields);
+    await ctx.db.patch("customers", customer._id, updateFields);
 
     return customer._id;
   },
@@ -94,7 +94,7 @@ export const deleteCustomerById = internalMutation({
       });
     }
 
-    await ctx.db.delete(customer._id);
+    await ctx.db.delete("customers", customer._id);
   },
 });
 
@@ -116,7 +116,7 @@ export const syncCustomerFromPolar = internalMutation({
 
     if (existingCustomer) {
       // Update existing customer
-      await ctx.db.patch(existingCustomer._id, {
+      await ctx.db.patch("customers", existingCustomer._id, {
         id: args.customer.id,
         externalId: args.customer.externalId,
         metadata: args.customer.metadata,

@@ -132,7 +132,8 @@
     "reacted-by": "{names}",
     "reacted-by-more": "{names} and {count} more",
     "emoji-picker-placeholder": "Select an emoji...",
-    "no-emoji-found": "No emoji found."
+    "no-emoji-found": "No emoji found.",
+    "customize": "Customize"
   },
   "Onboarding": {
     "title": "Welcome to Nakafa!",

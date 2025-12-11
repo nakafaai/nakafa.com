@@ -147,7 +147,10 @@ export const migrationConvertCommentsUserId = internalMutation({
 
       // Check if it's already converted (would be a valid user ID)
       try {
-        const existingUser = await ctx.db.get(comment.userId as Id<"users">);
+        const existingUser = await ctx.db.get(
+          "users",
+          comment.userId as Id<"users">
+        );
         if (existingUser) {
           skipped += 1;
           continue;
@@ -157,7 +160,7 @@ export const migrationConvertCommentsUserId = internalMutation({
       }
 
       // Update the comment with the app user ID
-      await ctx.db.patch(comment._id, {
+      await ctx.db.patch("comments", comment._id, {
         userId: appUser._id,
       });
 
@@ -192,7 +195,10 @@ export const migrationConvertCommentVotesUserId = internalMutation({
 
       // Check if it's already converted (would be a valid user ID)
       try {
-        const existingUser = await ctx.db.get(vote.userId as Id<"users">);
+        const existingUser = await ctx.db.get(
+          "users",
+          vote.userId as Id<"users">
+        );
         if (existingUser) {
           skipped += 1;
           continue;
@@ -202,7 +208,7 @@ export const migrationConvertCommentVotesUserId = internalMutation({
       }
 
       // Update the vote with the app user ID
-      await ctx.db.patch(vote._id, {
+      await ctx.db.patch("commentVotes", vote._id, {
         userId: appUser._id,
       });
 
@@ -242,7 +248,10 @@ export const migrationConvertChatsUserId = internalMutation({
 
       // Check if it's already converted (would be a valid user ID)
       try {
-        const existingUser = await ctx.db.get(chat.userId as Id<"users">);
+        const existingUser = await ctx.db.get(
+          "users",
+          chat.userId as Id<"users">
+        );
         if (existingUser) {
           skipped += 1;
           continue;
@@ -252,7 +261,7 @@ export const migrationConvertChatsUserId = internalMutation({
       }
 
       // Update the chat with the app user ID
-      await ctx.db.patch(chat._id, {
+      await ctx.db.patch("chats", chat._id, {
         userId: appUser._id,
       });
 

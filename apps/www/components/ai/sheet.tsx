@@ -122,7 +122,7 @@ export function AiSheet() {
         />
         <SheetHeader className="border-b p-3">
           <SheetTitle className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-2">
               <div className="flex items-center gap-2 text-base">
                 <SparklesIcon className="size-4" />
                 <span>Nina</span>

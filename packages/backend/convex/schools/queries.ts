@@ -13,7 +13,7 @@ export const getSchool = query({
   handler: async (ctx, args) => {
     await requireAuth(ctx);
 
-    const school = await ctx.db.get(args.schoolId);
+    const school = await ctx.db.get("schools", args.schoolId);
     if (!school) {
       throw new ConvexError({
         code: "SCHOOL_NOT_FOUND",

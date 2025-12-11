@@ -8,11 +8,11 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@next/mdx": "^16.0.8",
-    "next": "16.0.8"
+    "@next/mdx": "^16.0.9",
+    "next": "16.0.9"
   },
   "dependencies": {
-    "@next/bundle-analyzer": "16.0.8",
+    "@next/bundle-analyzer": "16.0.9",
     "@t3-oss/env-core": "^0.13.8",
     "@t3-oss/env-nextjs": "^0.13.8",
     "zod": "^4.1.13"

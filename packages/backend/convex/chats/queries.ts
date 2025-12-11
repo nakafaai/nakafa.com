@@ -18,7 +18,7 @@ export const getChat = query({
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
-    const chat = await ctx.db.get(args.chatId);
+    const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
       throw new ConvexError({
         code: "CHAT_NOT_FOUND",
@@ -120,7 +120,7 @@ export const getChatTitle = query({
     chatId: v.id("chats"),
   },
   handler: async (ctx, args) => {
-    const chat = await ctx.db.get(args.chatId);
+    const chat = await ctx.db.get("chats", args.chatId);
     return chat?.title;
   },
 });
@@ -141,7 +141,7 @@ export const loadMessages = query({
   handler: async (ctx, args): Promise<MyUIMessage[]> => {
     const user = await requireAuth(ctx);
 
-    const chat = await ctx.db.get(args.chatId);
+    const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
       throw new ConvexError({
         code: "CHAT_NOT_FOUND",

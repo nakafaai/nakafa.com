@@ -132,7 +132,8 @@
     "reacted-by": "{names}",
     "reacted-by-more": "{names} dan {count} lainnya",
     "emoji-picker-placeholder": "Pilih emoji...",
-    "no-emoji-found": "Tidak ada emoji yang ditemukan."
+    "no-emoji-found": "Tidak ada emoji yang ditemukan.",
+    "customize": "Kustomisasi"
   },
   "Onboarding": {
     "title": "Selamat datang di Nakafa!",

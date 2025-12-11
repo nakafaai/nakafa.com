@@ -61,7 +61,7 @@ export const getDatasetColumns = query({
     }
 
     // Verify dataset belongs to user
-    const dataset = await ctx.db.get(args.datasetId);
+    const dataset = await ctx.db.get("datasets", args.datasetId);
     if (!dataset) {
       throw new ConvexError({
         code: "NOT_FOUND",
@@ -104,7 +104,7 @@ export const getDatasetRows = query({
     }
 
     // Verify dataset belongs to user
-    const dataset = await ctx.db.get(args.datasetId);
+    const dataset = await ctx.db.get("datasets", args.datasetId);
     if (!dataset) {
       throw new ConvexError({
         code: "NOT_FOUND",

@@ -20,7 +20,7 @@ async function deletePartsForMessage(
     .collect();
 
   for (const part of parts) {
-    await ctx.db.delete(part._id);
+    await ctx.db.delete("parts", part._id);
   }
 }
 
@@ -42,7 +42,7 @@ async function deleteMessagesFromPoint(
 
   for (const message of messages) {
     await deletePartsForMessage(ctx, message._id);
-    await ctx.db.delete(message._id);
+    await ctx.db.delete("messages", message._id);
   }
 }
 
@@ -94,7 +94,7 @@ export const updateChatTitle = mutation({
       });
     }
 
-    const chat = await ctx.db.get(args.chatId);
+    const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
       throw new ConvexError({
         code: "CHAT_NOT_FOUND",
@@ -109,7 +109,7 @@ export const updateChatTitle = mutation({
       });
     }
 
-    await ctx.db.patch(chat._id, { title: args.title });
+    await ctx.db.patch("chats", chat._id, { title: args.title });
 
     return chat._id;
   },
@@ -133,7 +133,7 @@ export const updateChatVisibility = mutation({
       });
     }
 
-    const chat = await ctx.db.get(args.chatId);
+    const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
       throw new ConvexError({
         code: "CHAT_NOT_FOUND",
@@ -148,7 +148,7 @@ export const updateChatVisibility = mutation({
       });
     }
 
-    await ctx.db.patch(chat._id, { visibility: args.visibility });
+    await ctx.db.patch("chats", chat._id, { visibility: args.visibility });
 
     return chat._id;
   },
@@ -183,7 +183,7 @@ export const replaceMessageWithParts = mutation({
     }
 
     // Authorization check - verify user owns the chat
-    const chat = await ctx.db.get(message.chatId);
+    const chat = await ctx.db.get("chats", message.chatId);
     if (!chat) {
       throw new ConvexError({
         code: "CHAT_NOT_FOUND",
@@ -311,7 +311,7 @@ export const deleteChat = mutation({
       });
     }
 
-    const chat = await ctx.db.get(args.chatId);
+    const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
       throw new ConvexError({
         code: "CHAT_NOT_FOUND",
@@ -326,6 +326,6 @@ export const deleteChat = mutation({
       });
     }
 
-    await ctx.db.delete(args.chatId);
+    await ctx.db.delete("chats", args.chatId);
   },
 });

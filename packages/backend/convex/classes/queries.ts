@@ -68,7 +68,7 @@ export const getClassInfo = query({
     classId: v.id("schoolClasses"),
   },
   handler: async (ctx, args) => {
-    const classData = await ctx.db.get(args.classId);
+    const classData = await ctx.db.get("schoolClasses", args.classId);
 
     if (!classData) {
       return null;
@@ -101,7 +101,7 @@ export const verifyClassMembership = query({
     }
 
     // Get the class to verify it exists
-    const classData = await ctx.db.get(args.classId);
+    const classData = await ctx.db.get("schoolClasses", args.classId);
     if (!classData) {
       return { allow: false };
     }
@@ -141,7 +141,7 @@ export const getClass = query({
     const user = await requireAuth(ctx);
 
     // Get the class
-    const classData = await ctx.db.get(args.classId);
+    const classData = await ctx.db.get("schoolClasses", args.classId);
     if (!classData) {
       throw new ConvexError({
         code: "CLASS_NOT_FOUND",
@@ -182,7 +182,7 @@ export const getPeople = query({
     const user = await requireAuth(ctx);
 
     // Get the class to verify it exists
-    const classData = await ctx.db.get(classId);
+    const classData = await ctx.db.get("schoolClasses", classId);
     if (!classData) {
       throw new ConvexError({
         code: "CLASS_NOT_FOUND",
@@ -248,7 +248,7 @@ export const getInviteCodes = query({
     const user = await requireAuth(ctx);
 
     // Get the class to verify it exists
-    const classData = await ctx.db.get(args.classId);
+    const classData = await ctx.db.get("schoolClasses", args.classId);
     if (!classData) {
       throw new ConvexError({
         code: "CLASS_NOT_FOUND",
@@ -289,7 +289,7 @@ export const getForums = query({
     const user = await requireAuth(ctx);
 
     // Get the class to verify it exists
-    const classData = await ctx.db.get(classId);
+    const classData = await ctx.db.get("schoolClasses", classId);
     if (!classData) {
       throw new ConvexError({
         code: "CLASS_NOT_FOUND",
@@ -347,7 +347,7 @@ export const getForum = query({
     const user = await requireAuth(ctx);
     const currentUserId = user.appUser._id;
 
-    const forum = await ctx.db.get(args.forumId);
+    const forum = await ctx.db.get("schoolClassForums", args.forumId);
     if (!forum) {
       throw new ConvexError({
         code: "FORUM_NOT_FOUND",
@@ -407,7 +407,7 @@ export const getForumPosts = query({
 
     const user = await requireAuth(ctx);
 
-    const forum = await ctx.db.get(forumId);
+    const forum = await ctx.db.get("schoolClassForums", forumId);
     if (!forum) {
       throw new ConvexError({
         code: "FORUM_NOT_FOUND",
