@@ -9,13 +9,13 @@
   "dependencies": {
     "lodash.merge": "^4.6.2",
     "next-intl": "^4.5.8",
-    "react": "^19.2.2",
+    "react": "^19.2.3",
     "schema-dts": "^1.1.5",
     "zod": "^4.1.13"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/lodash.merge": "^4.6.9",
-    "next": "16.0.9"
+    "next": "16.0.10"
   }
 }
