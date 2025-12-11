@@ -1382,7 +1382,7 @@
   --sidebar-accent-foreground: oklch(0.4244 0.1809 265.6377);
   --sidebar-border: oklch(0.8823 0.0571 254.1284);
   --sidebar-ring: oklch(0.6231 0.188 259.8145);
-  --radius: 0.5rem;
+  --radius: 0.75rem;
   --shadow-2xs: 0px 0px 0px 0px hsl(0 0% 0% / 0);
   --shadow-xs: 0px 0px 0px 0px hsl(0 0% 0% / 0);
   --shadow-sm:

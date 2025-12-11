@@ -345,6 +345,7 @@ export const getForum = query({
   },
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
+    const currentUserId = user.appUser._id;
 
     const forum = await ctx.db.get(args.forumId);
     if (!forum) {
@@ -354,18 +355,44 @@ export const getForum = query({
       });
     }
 
-    await requireClassAccess(
-      ctx,
-      forum.classId,
-      forum.schoolId,
-      user.appUser._id
-    );
+    await requireClassAccess(ctx, forum.classId, forum.schoolId, currentUserId);
 
-    const userMap = await getUserMap(ctx, [forum.createdBy]);
+    // Fetch all reactions for this forum
+    const reactions = await ctx.db
+      .query("schoolClassForumReactions")
+      .withIndex("forumId_userId_emoji", (idx) => idx.eq("forumId", forum._id))
+      .collect();
+
+    // Collect all user IDs (author + reactors)
+    const reactorUserIds = reactions.map((r) => r.userId);
+    const allUserIds = [forum.createdBy, ...reactorUserIds];
+    const userMap = await getUserMap(ctx, allUserIds);
+
+    // Get current user's reactions
+    const myReactions = reactions
+      .filter((r) => r.userId === currentUserId)
+      .map((r) => r.emoji);
+
+    // Group reactions by emoji with reactor names (limit to 10 per emoji)
+    const reactorsByEmoji = new Map<string, string[]>();
+    for (const reaction of reactions) {
+      const userName = userMap.get(reaction.userId)?.name ?? "Unknown";
+      const existing = reactorsByEmoji.get(reaction.emoji) ?? [];
+      if (existing.length < 10) {
+        existing.push(userName);
+      }
+      reactorsByEmoji.set(reaction.emoji, existing);
+    }
 
     return {
       ...forum,
       user: userMap.get(forum.createdBy) ?? null,
+      myReactions,
+      reactionUsers: forum.reactionCounts.map(({ emoji, count }) => ({
+        emoji,
+        count,
+        reactors: reactorsByEmoji.get(emoji) ?? [],
+      })),
     };
   },
 });
@@ -401,36 +428,69 @@ export const getForumPosts = query({
       .order("asc")
       .paginate(paginationOpts);
 
-    // Collect all user IDs (authors + replyToUsers) for batch fetching
-    const allUserIds = postsPage.page.flatMap((p) =>
-      p.replyToUserId ? [p.createdBy, p.replyToUserId] : [p.createdBy]
-    );
-    const userMap = await getUserMap(ctx, allUserIds);
-
-    // Fetch user's reactions for all posts
     const postIds = postsPage.page.map((p) => p._id);
-    const userReactions = await asyncMap(postIds, (postId) =>
+
+    // Fetch all reactions for all posts (for showing who reacted)
+    const allReactions = await asyncMap(postIds, (postId) =>
       ctx.db
         .query("schoolClassForumPostReactions")
-        .withIndex("postId_userId_emoji", (idx) =>
-          idx.eq("postId", postId).eq("userId", user.appUser._id)
-        )
+        .withIndex("postId_userId_emoji", (idx) => idx.eq("postId", postId))
         .collect()
     );
-    const myReactionsMap = new Map(
-      postIds.map((id, i) => [id, userReactions[i].map((r) => r.emoji)])
+
+    // Collect all user IDs (authors + replyToUsers + reactors) for batch fetching
+    const reactorUserIds = allReactions.flat().map((r) => r.userId);
+    const allUserIds = [
+      ...postsPage.page.flatMap((p) =>
+        p.replyToUserId ? [p.createdBy, p.replyToUserId] : [p.createdBy]
+      ),
+      ...reactorUserIds,
+    ];
+    const userMap = await getUserMap(ctx, allUserIds);
+
+    // Build maps for each post
+    const currentUserId = user.appUser._id;
+    const reactionDataMap = new Map(
+      postIds.map((postId, i) => {
+        const reactions = allReactions[i];
+        const myReactions = reactions
+          .filter((r) => r.userId === currentUserId)
+          .map((r) => r.emoji);
+
+        // Group reactions by emoji with reactor names (limit to 10 per emoji)
+        const reactorsByEmoji = new Map<string, string[]>();
+        for (const reaction of reactions) {
+          const userName = userMap.get(reaction.userId)?.name ?? "Unknown";
+          const existing = reactorsByEmoji.get(reaction.emoji) ?? [];
+          if (existing.length < 10) {
+            existing.push(userName);
+          }
+          reactorsByEmoji.set(reaction.emoji, existing);
+        }
+
+        return [postId, { myReactions, reactorsByEmoji }] as const;
+      })
     );
 
     return {
       ...postsPage,
-      page: postsPage.page.map((post) => ({
-        ...post,
-        user: userMap.get(post.createdBy) ?? null,
-        replyToUser: post.replyToUserId
-          ? (userMap.get(post.replyToUserId) ?? null)
-          : null,
-        myReactions: myReactionsMap.get(post._id) ?? [],
-      })),
+      page: postsPage.page.map((post) => {
+        const reactionData = reactionDataMap.get(post._id);
+        return {
+          ...post,
+          user: userMap.get(post.createdBy) ?? null,
+          replyToUser: post.replyToUserId
+            ? (userMap.get(post.replyToUserId) ?? null)
+            : null,
+          myReactions: reactionData?.myReactions ?? [],
+          // Convert Map to array of { emoji, reactors } for serialization
+          reactionUsers: post.reactionCounts.map(({ emoji, count }) => ({
+            emoji,
+            count,
+            reactors: reactionData?.reactorsByEmoji.get(emoji) ?? [],
+          })),
+        };
+      }),
     };
   },
 });

@@ -22,7 +22,7 @@ import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import {
   CornerDownRightIcon,
-  MessageCircleIcon,
+  ReplyIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
   Trash2Icon,
@@ -252,7 +252,7 @@ function CommentActions({
               size={comment.replyCount === 0 ? "icon-sm" : "sm"}
               variant="ghost"
             >
-              <MessageCircleIcon />
+              <ReplyIcon />
               <NumberFormat
                 className={cn(
                   "font-mono text-muted-foreground text-xs tracking-tight",

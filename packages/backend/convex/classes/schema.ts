@@ -124,6 +124,13 @@ const tables = {
     isPinned: v.boolean(),
     postCount: v.number(),
     participantCount: v.number(),
+    // Array of reactions - emoji as value (not key) to support non-ASCII characters
+    reactionCounts: v.array(
+      v.object({
+        emoji: v.string(),
+        count: v.number(),
+      })
+    ),
     lastPostAt: v.number(),
     lastPostBy: v.optional(v.id("users")),
     createdBy: v.id("users"),
@@ -134,6 +141,17 @@ const tables = {
       searchField: "title",
       filterFields: ["classId", "status"],
     }),
+
+  // FORUM: Reactions (Children of Forums/Threads) - Discord-style emoji reactions
+  schoolClassForumReactions: defineTable({
+    forumId: v.id("schoolClassForums"),
+    userId: v.id("users"),
+    emoji: v.string(), // Any emoji: "👍", "🎉", "❤️", "🔥", etc.
+  })
+    // Single index covers both use cases:
+    // 1. Toggle: eq("forumId", x).eq("userId", y).eq("emoji", z)
+    // 2. Get my reactions: eq("forumId", x).eq("userId", y)
+    .index("forumId_userId_emoji", ["forumId", "userId", "emoji"]),
 
   // FORUM: Posts (Messages within a forum thread)
   schoolClassForumPosts: defineTable({

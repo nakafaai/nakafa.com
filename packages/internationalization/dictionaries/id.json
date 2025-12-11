@@ -129,6 +129,8 @@
     "search-country-placeholder": "Cari negara...",
     "no-country-found": "Negara tidak ditemukan.",
     "reaction": "Reaksi",
+    "reacted-by": "{names}",
+    "reacted-by-more": "{names} dan {count} lainnya",
     "emoji-picker-placeholder": "Pilih emoji...",
     "no-emoji-found": "Tidak ada emoji yang ditemukan."
   },

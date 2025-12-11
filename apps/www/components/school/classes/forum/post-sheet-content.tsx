@@ -22,6 +22,11 @@ import {
   EmojiPickerFooter,
   EmojiPickerSearch,
 } from "@repo/design-system/components/ui/emoji-picker";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@repo/design-system/components/ui/hover-card";
 import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import {
   InputGroup,
@@ -59,12 +64,21 @@ import { getInitialName } from "@/lib/utils/helper";
 
 type Forum = Doc<"schoolClassForums"> & {
   user: UserData | null;
+  myReactions: string[]; // Emojis the current user reacted with
+  reactionUsers: ReactionWithUsers[]; // Reactions with reactor names
+};
+
+type ReactionWithUsers = {
+  emoji: string;
+  count: number;
+  reactors: string[]; // User names who reacted (max 10)
 };
 
 type ForumPost = Doc<"schoolClassForumPosts"> & {
   user: UserData | null;
   replyToUser: UserData | null;
   myReactions: string[]; // Emojis the current user reacted with
+  reactionUsers: ReactionWithUsers[]; // Reactions with reactor names
 };
 
 export function SchoolClassesForumPostSheetContent() {
@@ -149,7 +163,7 @@ function ForumHeader({ forum }: { forum: Forum }) {
   const userImage = forum.user?.image ?? "";
 
   return (
-    <div className="flex items-start gap-3 border-primary border-l-2 bg-primary/5 p-4">
+    <div className="group flex items-start gap-3 border-primary border-l-2 bg-primary/5 p-4">
       <Avatar className="size-8 shrink-0 rounded-full">
         <AvatarImage alt={userName} src={userImage} />
         <AvatarFallback className="rounded-lg">
@@ -174,8 +188,116 @@ function ForumHeader({ forum }: { forum: Forum }) {
             <Response id={forum._id}>{forum.body}</Response>
           </div>
         </div>
+
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <ForumReactions forum={forum} />
+          <ForumActions forum={forum} />
+        </div>
       </div>
     </div>
+  );
+}
+
+function ForumReactions({ forum }: { forum: Forum }) {
+  const t = useTranslations("Common");
+
+  const [isPending, startTransition] = useTransition();
+  const toggleReaction = useMutation(api.classes.mutations.toggleForumReaction);
+
+  const handleToggleReaction = (emoji: string) => {
+    startTransition(async () => {
+      await toggleReaction({ forumId: forum._id, emoji });
+    });
+  };
+
+  if (forum.reactionUsers.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      {forum.reactionUsers.map(({ emoji, count, reactors }) => {
+        const isMyReaction = forum.myReactions.includes(emoji);
+        const moreCount = count - reactors.length;
+
+        return (
+          <HoverCard key={emoji}>
+            <HoverCardTrigger asChild>
+              <Button
+                disabled={isPending}
+                onClick={() => handleToggleReaction(emoji)}
+                size="sm"
+                variant={isMyReaction === true ? "default-outline" : "outline"}
+              >
+                {emoji}
+                <span className="tracking-tight">{count}</span>
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent
+              align="center"
+              className="w-auto max-w-64"
+              side="top"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-3xl">{emoji}</span>
+                <p className="line-clamp-2 text-sm leading-tight">
+                  {moreCount > 0
+                    ? t("reacted-by-more", {
+                        names: reactors.join(", "),
+                        count: moreCount,
+                      })
+                    : t("reacted-by", { names: reactors.join(", ") })}
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        );
+      })}
+    </div>
+  );
+}
+
+function ForumActions({ forum }: { forum: Forum }) {
+  const t = useTranslations("Common");
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const toggleReaction = useMutation(api.classes.mutations.toggleForumReaction);
+
+  const handleToggleReaction = (emoji: string) => {
+    startTransition(async () => {
+      await toggleReaction({ forumId: forum._id, emoji });
+    });
+  };
+
+  return (
+    <Popover onOpenChange={setIsOpen} open={isOpen}>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <PopoverTrigger asChild>
+              <Button disabled={isPending} size="icon-sm" variant="outline">
+                <SmilePlusIcon />
+              </Button>
+            </PopoverTrigger>
+          }
+        />
+        <TooltipContent side="top">{t("reaction")}</TooltipContent>
+      </Tooltip>
+      <PopoverContent className="w-fit p-0">
+        <EmojiPicker
+          className="h-80"
+          onEmojiSelect={({ emoji }) => {
+            handleToggleReaction(emoji);
+            setIsOpen(false);
+          }}
+        >
+          <EmojiPickerSearch />
+          <EmojiPickerContent />
+          <EmojiPickerFooter />
+        </EmojiPicker>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -266,6 +388,8 @@ function ForumPostItem({
 }
 
 function PostReactions({ post }: { post: ForumPost }) {
+  const t = useTranslations("Common");
+
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(api.classes.mutations.togglePostReaction);
 
@@ -276,26 +400,47 @@ function PostReactions({ post }: { post: ForumPost }) {
   };
 
   // Only show when there are reactions
-  if (post.reactionCounts.length === 0) {
+  if (post.reactionUsers.length === 0) {
     return null;
   }
 
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {post.reactionCounts.map(({ emoji, count }) => {
+      {post.reactionUsers.map(({ emoji, count, reactors }) => {
         const isMyReaction = post.myReactions.includes(emoji);
+        const moreCount = count - reactors.length;
 
         return (
-          <Button
-            disabled={isPending}
-            key={emoji}
-            onClick={() => handleToggleReaction(emoji)}
-            size="sm"
-            variant={isMyReaction === true ? "default-outline" : "outline"}
-          >
-            {emoji}
-            <span className="tracking-tight">{count}</span>
-          </Button>
+          <HoverCard key={emoji}>
+            <HoverCardTrigger asChild>
+              <Button
+                disabled={isPending}
+                onClick={() => handleToggleReaction(emoji)}
+                size="sm"
+                variant={isMyReaction === true ? "default-outline" : "outline"}
+              >
+                {emoji}
+                <span className="tracking-tight">{count}</span>
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent
+              align="center"
+              className="w-auto max-w-64"
+              side="top"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-3xl">{emoji}</span>
+                <p className="line-clamp-2 text-sm leading-tight">
+                  {moreCount > 0
+                    ? t("reacted-by-more", {
+                        names: reactors.join(", "),
+                        count: moreCount,
+                      })
+                    : t("reacted-by", { names: reactors.join(", ") })}
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         );
       })}
     </div>
@@ -352,35 +497,40 @@ function ForumPostItemActions({ post }: { post: ForumPost }) {
   };
 
   return (
-    <ButtonGroup className="-top-4 absolute right-4 opacity-0 shadow-xs transition-opacity ease-out group-hover:opacity-100 has-[[data-slot=popover-trigger][data-state=open]]:opacity-100">
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Popover onOpenChange={setIsOpen} open={isOpen}>
+    <ButtonGroup
+      className={cn(
+        "-top-4 absolute right-4 opacity-0 shadow-xs transition-opacity ease-out group-hover:opacity-100",
+        !!isOpen && "opacity-100"
+      )}
+    >
+      <Popover onOpenChange={setIsOpen} open={isOpen}>
+        <Tooltip>
+          <TooltipTrigger
+            render={
               <PopoverTrigger asChild>
                 <Button disabled={isPending} size="icon" variant="outline">
                   <SmilePlusIcon />
                   <span className="sr-only">{t("reaction")}</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-fit p-0">
-                <EmojiPicker
-                  className="h-80"
-                  onEmojiSelect={({ emoji }) => {
-                    handleToggleReaction(emoji);
-                    setIsOpen(false);
-                  }}
-                >
-                  <EmojiPickerSearch />
-                  <EmojiPickerContent />
-                  <EmojiPickerFooter />
-                </EmojiPicker>
-              </PopoverContent>
-            </Popover>
-          }
-        />
-        <TooltipContent side="top">{t("reaction")}</TooltipContent>
-      </Tooltip>
+            }
+          />
+          <TooltipContent side="top">{t("reaction")}</TooltipContent>
+        </Tooltip>
+        <PopoverContent align="end" className="w-fit p-0">
+          <EmojiPicker
+            className="h-80"
+            onEmojiSelect={({ emoji }) => {
+              handleToggleReaction(emoji);
+              setIsOpen(false);
+            }}
+          >
+            <EmojiPickerSearch />
+            <EmojiPickerContent />
+            <EmojiPickerFooter />
+          </EmojiPicker>
+        </PopoverContent>
+      </Popover>
       <Tooltip>
         <TooltipTrigger
           render={

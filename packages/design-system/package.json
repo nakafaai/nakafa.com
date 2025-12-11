@@ -35,7 +35,7 @@
     "@tiptap/react": "^3.13.0",
     "@tiptap/starter-kit": "^3.13.0",
     "@types/mdx": "^2.0.13",
-    "ai": "^5.0.108",
+    "ai": "^5.0.110",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -49,7 +49,7 @@
     "input-otp": "^1.4.2",
     "katex": "^0.16.27",
     "lodash.throttle": "^4.1.1",
-    "lucide-react": "^0.559.0",
+    "lucide-react": "^0.560.0",
     "marked": "^17.0.1",
     "mathjs": "^15.1.0",
     "mermaid": "11.12.2",
@@ -95,11 +95,11 @@
     "@repo/typescript-config": "workspace:*",
     "@tailwindcss/typography": "^0.5.19",
     "@types/lodash.throttle": "^4.1.9",
-    "@types/node": "^24.10.2",
+    "@types/node": "^25.0.0",
     "@types/react": "^19.2.7",
     "@types/react-katex": "^3.0.4",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@types/three": "^0.181.0",
+    "@types/three": "^0.182.0",
     "typescript": "^5.9.3"
   }
 }

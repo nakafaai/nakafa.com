@@ -809,6 +809,72 @@ triggers.register("schoolClassForumPostReactions", async (ctx, change) => {
   }
 });
 
+// Trigger for forum reactions - updates denormalized reaction counts on forums
+triggers.register("schoolClassForumReactions", async (ctx, change) => {
+  const reaction = change.newDoc;
+  const oldReaction = change.oldDoc;
+
+  switch (change.operation) {
+    case "insert": {
+      if (!reaction) {
+        break;
+      }
+
+      const forum = await ctx.db.get(reaction.forumId);
+      if (forum) {
+        const reactionCounts = [...forum.reactionCounts];
+        const existingIndex = reactionCounts.findIndex(
+          (r) => r.emoji === reaction.emoji
+        );
+
+        if (existingIndex >= 0) {
+          reactionCounts[existingIndex] = {
+            emoji: reaction.emoji,
+            count: reactionCounts[existingIndex].count + 1,
+          };
+        } else {
+          reactionCounts.push({ emoji: reaction.emoji, count: 1 });
+        }
+
+        await ctx.db.patch(reaction.forumId, { reactionCounts });
+      }
+      break;
+    }
+
+    case "delete": {
+      if (!oldReaction) {
+        break;
+      }
+
+      const forum = await ctx.db.get(oldReaction.forumId);
+      if (forum) {
+        const reactionCounts = [...forum.reactionCounts];
+        const existingIndex = reactionCounts.findIndex(
+          (r) => r.emoji === oldReaction.emoji
+        );
+
+        if (existingIndex >= 0) {
+          const newCount = reactionCounts[existingIndex].count - 1;
+          if (newCount <= 0) {
+            reactionCounts.splice(existingIndex, 1);
+          } else {
+            reactionCounts[existingIndex] = {
+              emoji: oldReaction.emoji,
+              count: newCount,
+            };
+          }
+          await ctx.db.patch(oldReaction.forumId, { reactionCounts });
+        }
+      }
+      break;
+    }
+
+    default: {
+      break;
+    }
+  }
+});
+
 // Helper function to update class member counts
 async function updateClassMemberCount(
   ctx: { db: DatabaseReader & DatabaseWriter },

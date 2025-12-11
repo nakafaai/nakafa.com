@@ -129,6 +129,8 @@
     "search-country-placeholder": "Search country...",
     "no-country-found": "No country found.",
     "reaction": "Reaction",
+    "reacted-by": "{names}",
+    "reacted-by-more": "{names} and {count} more",
     "emoji-picker-placeholder": "Select an emoji...",
     "no-emoji-found": "No emoji found."
   },

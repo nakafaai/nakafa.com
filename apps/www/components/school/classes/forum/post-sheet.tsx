@@ -2,6 +2,7 @@
 
 import { useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import {
   Sheet,
   SheetContent,
@@ -13,6 +14,7 @@ import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
 import { Maximize2Icon, Minimize2Icon, XIcon } from "lucide-react";
 import { SchoolClassesForumPostSheetContent } from "@/components/school/classes/forum/post-sheet-content";
+import { SchoolClassesForumPostSheetError } from "@/components/school/classes/forum/post-sheet-error";
 import { SchoolClassesForumPostSheetInfo } from "@/components/school/classes/forum/post-sheet-info";
 import { useForum } from "@/lib/context/use-forum";
 
@@ -60,39 +62,41 @@ export function SchoolClassesForumPostSheet() {
           onMouseDown={resizerProps.onMouseDown}
           type="button"
         />
-        <SheetHeader className="border-b p-3">
-          <SheetTitle className="flex items-center justify-between gap-2">
-            <SchoolClassesForumPostSheetInfo />
+        <ErrorBoundary fallback={<SchoolClassesForumPostSheetError />}>
+          <SheetHeader className="border-b p-3">
+            <SheetTitle className="flex items-center justify-between gap-2">
+              <SchoolClassesForumPostSheetInfo />
 
-            <div className="flex items-center">
-              <Button
-                onClick={() => {
-                  setWidth(
-                    width === MAX_WIDTH ? (MIN_WIDTH ?? 0) : (MAX_WIDTH ?? 0)
-                  );
-                }}
-                size="icon-sm"
-                variant="ghost"
-              >
-                {width === MAX_WIDTH ? <Minimize2Icon /> : <Maximize2Icon />}
-                <span className="sr-only">Resize</span>
-              </Button>
-              <Button
-                onClick={() => setActiveForumId(null)}
-                size="icon-sm"
-                variant="ghost"
-              >
-                <XIcon />
-                <span className="sr-only">Close</span>
-              </Button>
-            </div>
-          </SheetTitle>
-          <SheetDescription className="sr-only">
-            Discuss anything with everyone in the class.
-          </SheetDescription>
-        </SheetHeader>
+              <div className="flex items-center">
+                <Button
+                  onClick={() => {
+                    setWidth(
+                      width === MAX_WIDTH ? (MIN_WIDTH ?? 0) : (MAX_WIDTH ?? 0)
+                    );
+                  }}
+                  size="icon-sm"
+                  variant="ghost"
+                >
+                  {width === MAX_WIDTH ? <Minimize2Icon /> : <Maximize2Icon />}
+                  <span className="sr-only">Resize</span>
+                </Button>
+                <Button
+                  onClick={() => setActiveForumId(null)}
+                  size="icon-sm"
+                  variant="ghost"
+                >
+                  <XIcon />
+                  <span className="sr-only">Close</span>
+                </Button>
+              </div>
+            </SheetTitle>
+            <SheetDescription className="sr-only">
+              Discuss anything with everyone in the class.
+            </SheetDescription>
+          </SheetHeader>
 
-        <SchoolClassesForumPostSheetContent />
+          <SchoolClassesForumPostSheetContent />
+        </ErrorBoundary>
       </SheetContent>
     </Sheet>
   );

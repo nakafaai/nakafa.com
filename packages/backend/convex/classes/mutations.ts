@@ -285,6 +285,7 @@ export const createForum = mutation({
       isPinned: false,
       postCount: 0,
       participantCount: 1,
+      reactionCounts: [],
       lastPostAt: now,
       lastPostBy: userId,
       createdBy: userId,
@@ -416,6 +417,60 @@ export const togglePostReaction = mutation({
     // Add reaction - trigger handles count update
     await ctx.db.insert("schoolClassForumPostReactions", {
       postId: args.postId,
+      userId,
+      emoji: args.emoji,
+    });
+
+    return { added: true };
+  },
+});
+
+/**
+ * Toggle a reaction on a forum thread.
+ * If the user already reacted with this emoji, remove it.
+ * If not, add it.
+ *
+ * Note: Denormalized reaction counts are updated via trigger in functions.ts
+ */
+export const toggleForumReaction = mutation({
+  args: {
+    forumId: v.id("schoolClassForums"),
+    emoji: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+    const userId = user.appUser._id;
+
+    const forum = await ctx.db.get(args.forumId);
+    if (!forum) {
+      throw new ConvexError({
+        code: "FORUM_NOT_FOUND",
+        message: "Forum not found.",
+      });
+    }
+
+    await requireClassAccess(ctx, forum.classId, forum.schoolId, userId);
+
+    // Check if user already reacted with this emoji
+    const existingReaction = await ctx.db
+      .query("schoolClassForumReactions")
+      .withIndex("forumId_userId_emoji", (q) =>
+        q
+          .eq("forumId", args.forumId)
+          .eq("userId", userId)
+          .eq("emoji", args.emoji)
+      )
+      .unique();
+
+    if (existingReaction) {
+      // Remove reaction - trigger handles count update
+      await ctx.db.delete(existingReaction._id);
+      return { added: false };
+    }
+
+    // Add reaction - trigger handles count update
+    await ctx.db.insert("schoolClassForumReactions", {
+      forumId: args.forumId,
       userId,
       emoji: args.emoji,
     });

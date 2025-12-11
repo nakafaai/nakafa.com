@@ -7,16 +7,16 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^2.0.18",
+    "@ai-sdk/gateway": "^2.0.19",
     "@ai-sdk/google": "^2.0.45",
     "@ai-sdk/google-vertex": "^3.0.88",
     "@ai-sdk/openai": "^2.0.80",
-    "@ai-sdk/react": "^2.0.109",
+    "@ai-sdk/react": "^2.0.112",
     "@mendable/firecrawl-js": "^4.8.3",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
-    "ai": "^5.0.108",
-    "convex": "^1.30.0",
+    "ai": "^5.0.110",
+    "convex": "^1.31.0",
     "dedent": "^1.7.0",
     "gpt-tokenizer": "^3.4.0",
     "ky": "^1.14.1",
@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.10.2",
+    "@types/node": "25.0.0",
     "@types/react": "19.2.7",
     "@types/react-dom": "^19.2.3"
   }

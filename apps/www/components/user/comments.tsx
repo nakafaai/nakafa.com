@@ -23,7 +23,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import {
   EyeIcon,
-  MessageCircleIcon,
+  ReplyIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
   Trash2Icon,
@@ -170,7 +170,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                   size={comment.replyCount === 0 ? "icon-sm" : "sm"}
                   variant="ghost"
                 >
-                  <MessageCircleIcon />
+                  <ReplyIcon />
                   <NumberFormat
                     className={cn(
                       "font-mono text-muted-foreground text-xs tracking-tight",

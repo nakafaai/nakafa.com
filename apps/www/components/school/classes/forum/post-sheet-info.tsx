@@ -15,7 +15,7 @@ export function SchoolClassesForumPostSheetInfo() {
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2 px-2">
       <div className="flex min-w-0 items-center gap-2 text-base">
         <SchoolClassesForumPostSheetInfoTitle forumId={activeForumId} />
       </div>
