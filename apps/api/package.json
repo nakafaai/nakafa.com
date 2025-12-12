@@ -22,11 +22,11 @@
     "pino": "^10.1.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "shiki": "^3.19.0"
+    "shiki": "^3.20.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.0.0",
+    "@types/node": "25.0.1",
     "@types/react": "19.2.7",
     "typescript": "^5.9.3"
   }

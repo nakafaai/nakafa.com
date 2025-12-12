@@ -1,7 +1,6 @@
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
-import { Activity } from "react";
 import { Source, SourceContent, SourceTrigger } from "../ai/source";
 
 export function Anchor({
@@ -11,9 +10,13 @@ export function Anchor({
   className,
   ...props
 }: AnchorProps) {
-  const anchorOnlyProps = popover === undefined ? {} : { popover };
+  // No href - do not render anything
+  if (!href) {
+    return null;
+  }
 
-  if (href?.startsWith("/")) {
+  // Internal navigation
+  if (href.startsWith("/")) {
     return (
       <NavigationLink
         className={cn(
@@ -29,7 +32,12 @@ export function Anchor({
     );
   }
 
-  if (href?.startsWith("#")) {
+  // Hash anchors, mailto, and tel links
+  if (
+    href.startsWith("#") ||
+    href.startsWith("mailto:") ||
+    href.startsWith("tel:")
+  ) {
     return (
       <a
         className={cn(
@@ -38,7 +46,7 @@ export function Anchor({
         )}
         href={href}
         title={href}
-        {...anchorOnlyProps}
+        {...(popover !== undefined && { popover })}
         {...props}
       >
         {children}
@@ -46,12 +54,11 @@ export function Anchor({
     );
   }
 
+  // External link with source preview
   return (
-    <Source href={href ?? ""}>
+    <Source href={href}>
       <SourceTrigger showFavicon />
-      <Activity mode={href ? "visible" : "hidden"}>
-        <SourceContent title={href ?? ""} />
-      </Activity>
+      <SourceContent title={href} />
     </Source>
   );
 }

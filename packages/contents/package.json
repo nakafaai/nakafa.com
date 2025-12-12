@@ -17,9 +17,9 @@
     "@mantine/hooks": "^8.3.10",
     "date-fns": "^4.1.0",
     "ky": "^1.14.1",
-    "lucide-react": "^0.560.0",
+    "lucide-react": "^0.561.0",
     "motion": "^12.23.26",
-    "next-intl": "^4.5.8",
+    "next-intl": "^4.6.0",
     "react": "19.2.3",
     "react-aria-components": "^1.13.0",
     "recharts": "^2.15.4",
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.0.0",
+    "@types/node": "25.0.1",
     "@types/react": "^19.2.7"
   }
 }

@@ -21,6 +21,71 @@ export const internalMutation = customMutation(
   customCtx(triggers.wrapDB)
 );
 
+// =============================================================================
+// NO-OP TRIGGERS
+// Register no-op triggers for tables that are modified via wrapped ctx.db
+// but don't need custom trigger logic. This prevents "is not iterable" errors.
+// =============================================================================
+
+// Chat-related tables
+triggers.register("messages", async () => {
+  // No-op: messages are deleted by the chats trigger
+});
+
+triggers.register("parts", async () => {
+  // No-op: parts are deleted by the chats trigger and deletePartsForMessage helper
+});
+
+// School-related tables (modified in triggers)
+triggers.register("schoolInviteCodes", async () => {
+  // No-op: patched in schoolMembers trigger for usage tracking
+});
+
+triggers.register("schoolClassInviteCodes", async () => {
+  // No-op: patched in schoolClassMembers trigger for usage tracking
+});
+
+triggers.register("schoolClassForums", async () => {
+  // No-op: patched in schoolClassForumPosts trigger for post counts
+});
+
+triggers.register("schoolActivityLogs", async () => {
+  // No-op: inserted by various triggers for audit logging
+});
+
+// Dataset-related tables
+triggers.register("datasets", async () => {
+  // No-op: modified in datasets/mutations.ts
+});
+
+triggers.register("datasetColumns", async () => {
+  // No-op: inserted in datasets/mutations.ts
+});
+
+triggers.register("datasetTasks", async () => {
+  // No-op: modified in datasets/mutations.ts
+});
+
+triggers.register("datasetUrlLocks", async () => {
+  // No-op: modified in datasets/mutations.ts
+});
+
+triggers.register("datasetRows", async () => {
+  // No-op: modified in datasets/mutations.ts
+});
+
+triggers.register("datasetConfidences", async () => {
+  // No-op: inserted in datasets/mutations.ts
+});
+
+triggers.register("datasetCitations", async () => {
+  // No-op: inserted in datasets/mutations.ts
+});
+
+// =============================================================================
+// ACTIVE TRIGGERS
+// =============================================================================
+
 triggers.register("comments", async (ctx, change) => {
   const comment = change.newDoc;
   const oldComment = change.oldDoc;
