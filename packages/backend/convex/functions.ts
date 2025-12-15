@@ -599,7 +599,8 @@ triggers.register("schoolClasses", async (ctx, change) => {
       if (
         oldClassDoc.name !== classDoc.name ||
         oldClassDoc.subject !== classDoc.subject ||
-        oldClassDoc.year !== classDoc.year
+        oldClassDoc.year !== classDoc.year ||
+        oldClassDoc.visibility !== classDoc.visibility
       ) {
         await ctx.db.insert("schoolActivityLogs", {
           schoolId: classDoc.schoolId,
@@ -625,6 +626,14 @@ triggers.register("schoolClasses", async (ctx, change) => {
               oldClassDoc.year !== classDoc.year ? oldClassDoc.year : undefined,
             newYear:
               oldClassDoc.year !== classDoc.year ? classDoc.year : undefined,
+            oldVisibility:
+              oldClassDoc.visibility !== classDoc.visibility
+                ? oldClassDoc.visibility
+                : undefined,
+            newVisibility:
+              oldClassDoc.visibility !== classDoc.visibility
+                ? classDoc.visibility
+                : undefined,
           },
         });
       }

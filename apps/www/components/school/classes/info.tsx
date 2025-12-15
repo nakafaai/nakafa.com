@@ -29,14 +29,14 @@ export function SchoolClassesHeaderInfo() {
   if (!classInfo) {
     return (
       <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-3">
-        <div className="relative h-48 overflow-hidden rounded-md bg-[color-mix(in_oklch,var(--primary)_2.5%,var(--background))]" />
+        <div className="relative h-40 overflow-hidden rounded-md bg-[color-mix(in_oklch,var(--primary)_2.5%,var(--background))] sm:h-48" />
       </div>
     );
   }
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-3">
-      <div className="relative h-48 overflow-hidden rounded-md">
+      <div className="relative h-40 overflow-hidden rounded-md sm:h-48">
         <Image
           alt={classInfo.name}
           className="bg-[color-mix(in_oklch,var(--primary)_2.5%,var(--background))] object-cover"

@@ -17,17 +17,25 @@ import {
 
 /**
  * Get all classes for a school with optional search and filtering.
- * Supports full-text search by name and filtering by archived status.
+ * Supports full-text search by name and filtering by archived status and visibility.
+ * By default, returns both public and private classes.
  */
 export const getClasses = query({
   args: {
     schoolId: v.id("schools"),
     q: v.optional(v.string()),
     isArchived: v.optional(v.boolean()),
+    visibility: v.optional(v.union(v.literal("private"), v.literal("public"))),
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
-    const { schoolId, q: searchQuery, isArchived, paginationOpts } = args;
+    const {
+      schoolId,
+      q: searchQuery,
+      isArchived,
+      visibility,
+      paginationOpts,
+    } = args;
 
     // If search query is provided and not empty, use full-text search
     if (searchQuery && searchQuery.trim().length > 0) {
@@ -38,28 +46,62 @@ export const getClasses = query({
           if (isArchived !== undefined) {
             builder = builder.eq("isArchived", isArchived);
           }
+          if (visibility !== undefined) {
+            builder = builder.eq("visibility", visibility);
+          }
           return builder;
         })
         .paginate(paginationOpts);
     }
 
-    // Use compound index - can omit isArchived condition when not filtering
-    if (isArchived !== undefined) {
+    // Use compound index - can chain conditions based on provided filters
+    // Index order: ["schoolId", "isArchived", "visibility"]
+    // Must provide earlier conditions to use later ones in compound index
+
+    if (isArchived !== undefined && visibility !== undefined) {
+      // Both filters provided - use full index
       return await ctx.db
         .query("schoolClasses")
-        .withIndex("schoolId_isArchived", (q) =>
+        .withIndex("schoolId_isArchived_visibility", (q) =>
+          q
+            .eq("schoolId", schoolId)
+            .eq("isArchived", isArchived)
+            .eq("visibility", visibility)
+        )
+        .order("desc")
+        .paginate(paginationOpts);
+    }
+
+    if (isArchived !== undefined) {
+      // Only isArchived filter - use partial index
+      return await ctx.db
+        .query("schoolClasses")
+        .withIndex("schoolId_isArchived_visibility", (q) =>
           q.eq("schoolId", schoolId).eq("isArchived", isArchived)
         )
         .order("desc")
         .paginate(paginationOpts);
     }
 
-    // No filters - use same index, just omit isArchived condition
-    return await ctx.db
+    // No filters or only visibility filter - get all and filter in code if needed
+    // (Can't skip isArchived in compound index to filter by visibility alone)
+    const result = await ctx.db
       .query("schoolClasses")
-      .withIndex("schoolId_isArchived", (q) => q.eq("schoolId", schoolId))
+      .withIndex("schoolId_isArchived_visibility", (q) =>
+        q.eq("schoolId", schoolId)
+      )
       .order("desc")
       .paginate(paginationOpts);
+
+    // If visibility filter is provided but isArchived isn't, filter in code
+    if (visibility !== undefined) {
+      return {
+        ...result,
+        page: result.page.filter((c) => c.visibility === visibility),
+      };
+    }
+
+    return result;
   },
 });
 
@@ -83,6 +125,7 @@ export const getClassInfo = query({
       subject: classData.subject,
       year: classData.year,
       image: classData.image,
+      visibility: classData.visibility,
     };
   },
 });
@@ -171,7 +214,6 @@ export const getPeople = query({
     const user = await requireAuth(ctx);
     await loadClassWithAccess(ctx, classId, user.appUser._id);
 
-    // Use compound index, omit userId condition to get all members
     const membersPage = await ctx.db
       .query("schoolClassMembers")
       .withIndex("classId_userId", (idx) => idx.eq("classId", classId))
@@ -199,6 +241,17 @@ export const getPeople = query({
       }
 
       return [{ ...member, user: userData }];
+    });
+
+    // Sort in code: teachers first, then students
+    people.sort((a, b) => {
+      if (a.role === "teacher" && b.role === "student") {
+        return -1;
+      }
+      if (a.role === "student" && b.role === "teacher") {
+        return 1;
+      }
+      return 0;
     });
 
     return {

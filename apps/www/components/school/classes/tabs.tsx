@@ -3,7 +3,7 @@
 import { Highlight } from "@repo/design-system/components/animate-ui/primitives/effects/highlight";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { MessagesSquareIcon, UsersIcon } from "lucide-react";
+import { BookOpenIcon, MessagesSquareIcon, UsersIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
@@ -23,6 +23,11 @@ export function SchoolClassesTabs() {
         href: `/school/${slug}/classes/${id}/forum`,
       },
       {
+        icon: BookOpenIcon,
+        label: t("materials"),
+        href: `/school/${slug}/classes/${id}/materials`,
+      },
+      {
         icon: UsersIcon,
         label: t("people"),
         href: `/school/${slug}/classes/${id}/people`,
@@ -37,7 +42,7 @@ export function SchoolClassesTabs() {
   );
 
   return (
-    <div className="-mt-2 sticky top-0 z-10 flex h-12 w-full shrink-0 border-b bg-background">
+    <div className="sticky top-0 z-10 -mt-2 flex h-12 w-full shrink-0 border-b bg-background">
       <div className="mx-auto flex w-full max-w-3xl items-center">
         <div className="scrollbar-hide flex w-full overflow-x-auto px-6">
           <Highlight

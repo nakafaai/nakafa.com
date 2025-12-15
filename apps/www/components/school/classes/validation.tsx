@@ -15,13 +15,21 @@ export function SchoolClassesValidation({
   const result = useQuery(api.classes.queries.verifyClassMembership, {
     classId,
   });
+  const classInfo = useQuery(api.classes.queries.getClassInfo, {
+    classId,
+  });
 
-  if (!result) {
+  if (!(result && classInfo)) {
     return null;
   }
 
   if (!result.allow) {
-    return <SchoolClassesJoinForm />;
+    return (
+      <SchoolClassesJoinForm
+        classId={classId}
+        visibility={classInfo.visibility}
+      />
+    );
   }
 
   return children;

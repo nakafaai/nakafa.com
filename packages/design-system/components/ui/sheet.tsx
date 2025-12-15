@@ -46,10 +46,10 @@ const sheetPopupVariants = cva(
       side: {
         bottom:
           "inset-x-[var(--sheet-inset)] bottom-[var(--sheet-inset)] h-auto max-h-[calc(100dvh-var(--sheet-inset)*2)] border-t data-ending-style:translate-y-12 data-starting-style:translate-y-12",
-        left: "data-ending-style:-translate-x-12 data-starting-style:-translate-x-12 inset-y-[var(--sheet-inset)] left-[var(--sheet-inset)] h-dvh w-[calc(100%-(--spacing(12)))] max-w-sm border-r sm:h-[calc(100dvh-var(--sheet-inset)*2)]",
+        left: "inset-y-[var(--sheet-inset)] left-[var(--sheet-inset)] h-dvh w-[calc(100%-(--spacing(12)))] max-w-sm border-r data-ending-style:-translate-x-12 data-starting-style:-translate-x-12 sm:h-[calc(100dvh-var(--sheet-inset)*2)]",
         right:
           "inset-y-[var(--sheet-inset)] right-[var(--sheet-inset)] h-dvh w-[calc(100%-(--spacing(12)))] max-w-sm border-l data-ending-style:translate-x-12 data-starting-style:translate-x-12 sm:h-[calc(100dvh-var(--sheet-inset)*2)]",
-        top: "data-ending-style:-translate-y-12 data-starting-style:-translate-y-12 inset-x-[var(--sheet-inset)] top-[var(--sheet-inset)] h-auto max-h-[calc(100dvh-var(--sheet-inset)*2)] border-b",
+        top: "inset-x-[var(--sheet-inset)] top-[var(--sheet-inset)] h-auto max-h-[calc(100dvh-var(--sheet-inset)*2)] border-b data-ending-style:-translate-y-12 data-starting-style:-translate-y-12",
       },
     },
   }

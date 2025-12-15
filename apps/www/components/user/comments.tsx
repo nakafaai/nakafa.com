@@ -111,7 +111,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
           <Response id={comment._id}>{comment.text}</Response>
         </div>
 
-        <div className="-translate-x-2 flex items-center">
+        <div className="flex -translate-x-2 items-center">
           <Tooltip>
             <TooltipTrigger
               render={

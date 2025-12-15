@@ -514,7 +514,12 @@
       "original-message-deleted": "Pesan asli telah dihapus.",
       "send-message-placeholder": "Kirim pesan...",
       "submit": "Kirim",
-      "attachments": "Lampiran"
+      "attachments": "Lampiran",
+      "materials": "Materi",
+      "visibility-label": "Visibilitas",
+      "visibility-placeholder": "Pilih visibilitas...",
+      "public": "Publik",
+      "private": "Privat"
     },
     "Onboarding": {
       "title": "Selamat datang di Nakafa School!",

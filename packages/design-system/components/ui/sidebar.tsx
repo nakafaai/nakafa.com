@@ -237,8 +237,8 @@ function Sidebar({
         className={cn(
           "fixed inset-y-0 z-10 hidden h-svh w-64 transition-[left,right,width] duration-200 ease-out md:flex",
           side === "left"
-            ? "group-data-[collapsible=offcanvas]:-left-64 left-0"
-            : "group-data-[collapsible=offcanvas]:-right-64 right-0",
+            ? "left-0 group-data-[collapsible=offcanvas]:-left-64"
+            : "right-0 group-data-[collapsible=offcanvas]:-right-64",
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(3rem+(--spacing(4))+2px)]"
@@ -296,7 +296,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
     <button
       aria-label="Toggle Sidebar"
       className={cn(
-        "-translate-x-1/2 group-data-[side=left]:-right-4 absolute inset-y-0 z-20 hidden w-4 transition-all ease-out after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border group-data-[side=right]:left-0 sm:flex",
+        "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-out after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
         "group-data-[collapsible=offcanvas]:translate-x-0 hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:after:left-full",
@@ -436,7 +436,7 @@ function SidebarGroupAction({
       className={cn(
         "absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-hidden ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         // Increases the hit area of the button on mobile.
-        "after:-inset-2 after:absolute md:after:hidden",
+        "after:absolute after:-inset-2 md:after:hidden",
         "group-data-[collapsible=icon]:hidden",
         className
       )}
@@ -571,7 +571,7 @@ function SidebarMenuAction({
       className={cn(
         "absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-hidden ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 peer-hover/menu-button:text-sidebar-accent-foreground [&>svg]:size-4 [&>svg]:shrink-0",
         // Increases the hit area of the button on mobile.
-        "after:-inset-2 after:absolute md:after:hidden",
+        "after:absolute after:-inset-2 md:after:hidden",
         "peer-data-[size=sm]/menu-button:top-1",
         "peer-data-[size=default]/menu-button:top-1.5",
         "peer-data-[size=lg]/menu-button:top-2.5",
@@ -697,7 +697,7 @@ function SidebarMenuSubButton({
   return (
     <Comp
       className={cn(
-        "-translate-x-px flex h-7 min-w-0 items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-hidden ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
+        "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-hidden ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
         "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
         size === "sm" && "text-xs",
         size === "md" && "text-sm",

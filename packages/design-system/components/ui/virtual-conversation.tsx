@@ -194,7 +194,7 @@ export const VirtualConversationScrollButton = memo(
     return (
       <Button
         className={cn(
-          "-translate-x-1/2 absolute bottom-4 left-1/2 rounded-full",
+          "absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full",
           className
         )}
         onClick={scrollToBottom}

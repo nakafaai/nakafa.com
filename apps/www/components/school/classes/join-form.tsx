@@ -1,6 +1,8 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { SchoolClassVisibility } from "@repo/backend/convex/classes/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -16,6 +18,7 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { ArrowLeftIcon, MergeIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Activity, useTransition } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 import { useSchool } from "@/lib/context/use-school";
@@ -28,12 +31,32 @@ const defaultValues: z.infer<typeof formSchema> = {
   code: "",
 };
 
-export function SchoolClassesJoinForm() {
-  const t = useTranslations("School.Classes");
+type Props = {
+  classId: Id<"schoolClasses">;
+  visibility: SchoolClassVisibility;
+};
 
+export function SchoolClassesJoinForm({ classId, visibility }: Props) {
+  const t = useTranslations("School.Classes");
   const router = useRouter();
   const schoolSlug = useSchool((state) => state.school.slug);
+
+  const [isPending, startTransition] = useTransition();
   const joinClass = useMutation(api.classes.mutations.joinClass);
+  const joinPublicClass = useMutation(api.classes.mutations.joinPublicClass);
+
+  const isPublic = visibility === "public";
+
+  function handlePublicJoin() {
+    startTransition(async () => {
+      try {
+        await joinPublicClass({ classId });
+        router.refresh();
+      } catch {
+        toast.error(t("join-class-failed"));
+      }
+    });
+  }
 
   const form = useForm({
     defaultValues,
@@ -65,55 +88,67 @@ export function SchoolClassesJoinForm() {
           <h2 className="text-pretty font-medium text-lg">{t("join-class")}</h2>
         </header>
         <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <form
-            className="flex flex-col gap-6"
-            id="school-classes-join-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              form.handleSubmit();
-            }}
-          >
-            <FieldGroup>
-              <form.Field name="code">
-                {(field) => {
-                  const isInvalid =
-                    Boolean(field.state.meta.isTouched) &&
-                    Boolean(!field.state.meta.isValid);
+          <Activity mode={isPublic ? "visible" : "hidden"}>
+            <Button
+              className="w-full"
+              disabled={isPending}
+              onClick={handlePublicJoin}
+            >
+              {isPending ? <SpinnerIcon /> : <MergeIcon />}
+              {t("join")}
+            </Button>
+          </Activity>
+          <Activity mode={isPublic ? "hidden" : "visible"}>
+            <form
+              className="flex flex-col gap-6"
+              id="school-classes-join-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                form.handleSubmit();
+              }}
+            >
+              <FieldGroup>
+                <form.Field name="code">
+                  {(field) => {
+                    const isInvalid =
+                      Boolean(field.state.meta.isTouched) &&
+                      Boolean(!field.state.meta.isValid);
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor="school-classes-join-code">
+                          {t("code")}
+                        </FieldLabel>
+                        <Input
+                          aria-invalid={isInvalid}
+                          id="school-classes-join-code"
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          placeholder={t("code-placeholder")}
+                          value={field.state.value}
+                        />
+                      </Field>
+                    );
+                  }}
+                </form.Field>
+              </FieldGroup>
+
+              <form.Subscribe
+                selector={(state) => [state.isValid, state.isSubmitting]}
+              >
+                {([isValid, isSubmitting]) => {
+                  const canSubmit = Boolean(isValid);
+                  const isDisabled = !canSubmit || Boolean(isSubmitting);
                   return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor="school-classes-join-code">
-                        {t("code")}
-                      </FieldLabel>
-                      <Input
-                        aria-invalid={isInvalid}
-                        id="school-classes-join-code"
-                        name={field.name}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder={t("code-placeholder")}
-                        value={field.state.value}
-                      />
-                    </Field>
+                    <Button disabled={isDisabled} type="submit">
+                      {isSubmitting ? <SpinnerIcon /> : <MergeIcon />}
+                      {t("join")}
+                    </Button>
                   );
                 }}
-              </form.Field>
-            </FieldGroup>
-
-            <form.Subscribe
-              selector={(state) => [state.isValid, state.isSubmitting]}
-            >
-              {([isValid, isSubmitting]) => {
-                const canSubmit = Boolean(isValid);
-                const isDisabled = !canSubmit || Boolean(isSubmitting);
-                return (
-                  <Button disabled={isDisabled} type="submit">
-                    {isSubmitting ? <SpinnerIcon /> : <MergeIcon />}
-                    {t("join")}
-                  </Button>
-                );
-              }}
-            </form.Subscribe>
-          </form>
+              </form.Subscribe>
+            </form>
+          </Activity>
         </div>
       </div>
     </main>

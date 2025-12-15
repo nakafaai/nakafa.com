@@ -197,7 +197,7 @@ function CommentActions({
   }
 
   return (
-    <div className="-translate-x-2 flex flex-wrap items-center">
+    <div className="flex -translate-x-2 flex-wrap items-center">
       <Tooltip>
         <TooltipTrigger
           render={

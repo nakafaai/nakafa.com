@@ -86,7 +86,7 @@ export function CardMaterial({ material }: Props) {
                 title={item.title}
               >
                 <h3>{item.title}</h3>
-                <ArrowDownIcon className="-rotate-90 size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100" />
+                <ArrowDownIcon className="size-4 shrink-0 -rotate-90 opacity-0 transition-opacity ease-out group-hover:opacity-100" />
               </Link>
             ))}
           </CardContent>

@@ -41,6 +41,7 @@ import {
   CalendarIcon,
   CheckIcon,
   ChevronDownIcon,
+  EyeIcon,
   PlusIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -56,7 +57,15 @@ const formSchema = z.object({
   name: z.string().check(z.minLength(MIN_NAME_LENGTH), z.trim()),
   subject: z.string().check(z.minLength(MIN_NAME_LENGTH), z.trim()),
   year: z.string().check(z.minLength(MIN_NAME_LENGTH), z.trim()),
+  visibility: z.enum(["public", "private"]),
 });
+
+const defaultValues: z.infer<typeof formSchema> = {
+  name: "",
+  subject: "",
+  year: getCurrentAcademicYear(),
+  visibility: "private",
+};
 
 export function SchoolClassesHeaderAdd() {
   const t = useTranslations("School.Classes");
@@ -71,11 +80,7 @@ export function SchoolClassesHeaderAdd() {
   const createClass = useMutation(api.classes.mutations.createClass);
 
   const form = useForm({
-    defaultValues: {
-      name: "",
-      subject: "",
-      year: getCurrentAcademicYear(),
-    },
+    defaultValues,
     validators: {
       onChange: formSchema,
     },
@@ -280,11 +285,63 @@ export function SchoolClassesHeaderAdd() {
               );
             }}
           </form.Field>
+
+          <form.Field name="visibility">
+            {(field) => {
+              const isInvalid =
+                Boolean(field.state.meta.isTouched) &&
+                Boolean(!field.state.meta.isValid);
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor="school-classes-header-add-visibility">
+                    {t("visibility-label")}
+                  </FieldLabel>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        aria-invalid={isInvalid}
+                        className="w-full font-normal"
+                        id="school-classes-header-add-visibility"
+                        name={field.name}
+                        variant="outline"
+                      >
+                        <EyeIcon />
+                        {t(field.state.value)}
+                        <ChevronDownIcon className="ml-auto" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="w-(--radix-dropdown-menu-trigger-width)"
+                    >
+                      {visibilityList.map((visibility) => (
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          key={visibility}
+                          onSelect={() => field.handleChange(visibility)}
+                        >
+                          {t(visibility)}
+                          <CheckIcon
+                            className={cn(
+                              "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                              field.state.value === visibility && "opacity-100"
+                            )}
+                          />
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </Field>
+              );
+            }}
+          </form.Field>
         </FieldGroup>
       </ResponsiveDialog>
     </form>
   );
 }
+
+const visibilityList = ["private", "public"] as const;
 
 function getCurrentAcademicYear() {
   const date = new Date();

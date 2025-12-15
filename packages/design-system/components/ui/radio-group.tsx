@@ -26,7 +26,7 @@ function Radio({ className, ...props }: RadioPrimitive.Root.Props) {
       {...props}
     >
       <RadioPrimitive.Indicator
-        className="-inset-px absolute flex size-4 items-center justify-center rounded-full before:size-1.5 before:rounded-full before:bg-primary-foreground data-unchecked:hidden data-checked:bg-primary"
+        className="absolute -inset-px flex size-4 items-center justify-center rounded-full before:size-1.5 before:rounded-full before:bg-primary-foreground data-unchecked:hidden data-checked:bg-primary"
         data-slot="radio-indicator"
       />
     </RadioPrimitive.Root>

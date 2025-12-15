@@ -514,7 +514,12 @@
       "original-message-deleted": "Original message was deleted.",
       "send-message-placeholder": "Send a message...",
       "submit": "Submit",
-      "attachments": "Attachments"
+      "attachments": "Attachments",
+      "materials": "Materials",
+      "visibility-label": "Visibility",
+      "visibility-placeholder": "Select visibility...",
+      "public": "Public",
+      "private": "Private"
     },
     "Onboarding": {
       "title": "Welcome to Nakafa School!",

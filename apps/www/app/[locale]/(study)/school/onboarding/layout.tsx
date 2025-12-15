@@ -20,7 +20,7 @@ export default function Layout(
 
   return (
     <main className="relative flex min-h-svh">
-      <Particles className="-z-1 pointer-events-none absolute inset-0 opacity-80" />
+      <Particles className="pointer-events-none absolute inset-0 -z-1 opacity-80" />
       {children}
     </main>
   );

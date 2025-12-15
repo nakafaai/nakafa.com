@@ -25,6 +25,29 @@ export const getSchool = query({
   },
 });
 
+export const getSchoolInfoBySlug = query({
+  args: {
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const school = await ctx.db
+      .query("schools")
+      .withIndex("slug", (q) => q.eq("slug", args.slug))
+      .first();
+
+    if (!school) {
+      throw new ConvexError({
+        code: "SCHOOL_NOT_FOUND",
+        message: `School not found for slug: ${args.slug}`,
+      });
+    }
+
+    return {
+      name: school.name,
+    };
+  },
+});
+
 export const getSchoolBySlug = query({
   args: {
     slug: v.string(),

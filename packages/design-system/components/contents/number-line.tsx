@@ -120,7 +120,7 @@ export function NumberLine({
                 {!!segment.shaded && (
                   <div
                     className={cn(
-                      "-translate-y-1/2 absolute top-1/2 h-8",
+                      "absolute top-1/2 h-8 -translate-y-1/2",
                       !segment.bgColor && "bg-chart-1/80",
                       segment.roundedClass
                     )}
@@ -144,7 +144,7 @@ export function NumberLine({
               >
                 {!!segment.label && (
                   <div
-                    className="-translate-x-1/2 absolute top-0 font-medium text-sm"
+                    className="absolute top-0 -translate-x-1/2 font-medium text-sm"
                     style={{ left: `${segment.startPos + segment.width / 2}%` }}
                   >
                     {segment.label}
@@ -161,7 +161,7 @@ export function NumberLine({
                   <>
                     {Number.isFinite(segment.start) && (
                       <div
-                        className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2"
+                        className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
                         style={{ left: `${segment.startPos}%` }}
                       >
                         <div
@@ -172,7 +172,7 @@ export function NumberLine({
                               : "bg-background"
                           )}
                         />
-                        <div className="-translate-x-1/2 absolute top-6 left-1/2 whitespace-nowrap text-sm">
+                        <div className="absolute top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm">
                           {segment.startLabel ?? (
                             <InlineMath math={segment.start.toString()} />
                           )}
@@ -182,7 +182,7 @@ export function NumberLine({
 
                     {Number.isFinite(segment.end) && (
                       <div
-                        className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2"
+                        className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
                         style={{ left: `${segment.endPos}%` }}
                       >
                         <div
@@ -193,7 +193,7 @@ export function NumberLine({
                               : "bg-background"
                           )}
                         />
-                        <div className="-translate-x-1/2 absolute top-6 left-1/2 whitespace-nowrap text-sm">
+                        <div className="absolute top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm">
                           {segment.endLabel ?? (
                             <InlineMath math={segment.end.toString()} />
                           )}

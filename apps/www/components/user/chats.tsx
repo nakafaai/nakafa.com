@@ -87,7 +87,7 @@ export function UserChatsList({
                 <GlobeIcon className="size-4 shrink-0" />
               )}
               <span className="truncate text-sm">{chat.title}</span>
-              <ArrowDownIcon className="-rotate-90 size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100" />
+              <ArrowDownIcon className="size-4 shrink-0 -rotate-90 opacity-0 transition-opacity ease-out group-hover:opacity-100" />
             </div>
 
             <div className="flex shrink-0 items-center justify-between gap-2">

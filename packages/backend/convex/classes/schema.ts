@@ -9,6 +9,12 @@ const schoolClassMemberRoles = v.union(
 );
 export type SchoolClassMemberRole = Infer<typeof schoolClassMemberRoles>;
 
+const schoolClassVisibility = v.union(
+  v.literal("private"),
+  v.literal("public")
+);
+export type SchoolClassVisibility = Infer<typeof schoolClassVisibility>;
+
 const tables = {
   schoolClasses: defineTable({
     schoolId: v.id("schools"),
@@ -17,6 +23,8 @@ const tables = {
     year: v.string(),
     image: v.string(),
     isArchived: v.boolean(),
+    // Visibility: "private" (invite code required) or "public" (anyone in school can join)
+    visibility: schoolClassVisibility,
     studentCount: v.number(),
     teacherCount: v.number(),
     updatedAt: v.number(),
@@ -25,11 +33,18 @@ const tables = {
     archivedBy: v.optional(v.id("users")),
     archivedAt: v.optional(v.number()),
   })
-    // Single index covers: eq("schoolId") OR eq("schoolId").eq("isArchived")
-    .index("schoolId_isArchived", ["schoolId", "isArchived"])
+    // Single compound index covers all query patterns:
+    // - eq("schoolId") - all classes in school
+    // - eq("schoolId").eq("isArchived", false) - non-archived classes
+    // - eq("schoolId").eq("isArchived", false).eq("visibility", "public") - public classes
+    .index("schoolId_isArchived_visibility", [
+      "schoolId",
+      "isArchived",
+      "visibility",
+    ])
     .searchIndex("search_name", {
       searchField: "name",
-      filterFields: ["schoolId", "isArchived"],
+      filterFields: ["schoolId", "isArchived", "visibility"],
     }),
 
   schoolClassMembers: defineTable({
@@ -70,7 +85,8 @@ const tables = {
         v.literal("code"),
         v.literal("teacher"),
         v.literal("admin"),
-        v.literal("invite")
+        v.literal("invite"),
+        v.literal("public") // Joined via public class listing
       )
     ),
     inviteCodeId: v.optional(v.id("schoolClassInviteCodes")),
@@ -79,7 +95,7 @@ const tables = {
     removedBy: v.optional(v.id("users")),
     removedAt: v.optional(v.number()),
   })
-    // Single index covers: eq("classId") OR eq("classId").eq("userId")
+    // For membership lookup: eq("classId") OR eq("classId").eq("userId")
     .index("classId_userId", ["classId", "userId"])
     .index("userId", ["userId"])
     .index("schoolId", ["schoolId"]),

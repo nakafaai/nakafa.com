@@ -19,16 +19,16 @@ export function ReadingRoomProblem() {
           <div className="absolute right-0 bottom-0 aspect-square w-[12.5%] border-t border-l bg-chart-4" />
 
           {/* Red dots at corners */}
-          <div className="-translate-x-1 -translate-y-1 absolute top-0 left-0 size-2 transform rounded-full bg-border" />
-          <div className="-translate-y-1 absolute top-0 right-0 size-2 translate-x-1 transform rounded-full bg-border" />
-          <div className="-translate-x-1 absolute bottom-0 left-0 size-2 translate-y-1 transform rounded-full bg-border" />
+          <div className="absolute top-0 left-0 size-2 -translate-x-1 -translate-y-1 transform rounded-full bg-border" />
+          <div className="absolute top-0 right-0 size-2 translate-x-1 -translate-y-1 transform rounded-full bg-border" />
+          <div className="absolute bottom-0 left-0 size-2 -translate-x-1 translate-y-1 transform rounded-full bg-border" />
           <div className="absolute right-0 bottom-0 size-2 translate-x-1 translate-y-1 transform rounded-full bg-border" />
 
           {/* Dimension labels */}
-          <div className="-translate-x-1/2 -translate-y-2 absolute bottom-0 left-1/2 transform text-center">
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 -translate-y-2 transform text-center">
             <span>6 m</span>
           </div>
-          <div className="-translate-y-1/2 -right-1 -translate-x-4 absolute top-1/2 transform text-center">
+          <div className="absolute top-1/2 -right-1 -translate-x-4 -translate-y-1/2 transform text-center">
             <span>4 m</span>
           </div>
 

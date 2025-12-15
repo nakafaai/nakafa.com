@@ -26,6 +26,7 @@ export const createClass = mutation({
     name: v.string(),
     subject: v.string(),
     year: v.string(),
+    visibility: v.union(v.literal("private"), v.literal("public")),
   },
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
@@ -61,6 +62,7 @@ export const createClass = mutation({
       year: args.year,
       image: getRandomClassImage(now.toString()),
       isArchived: false,
+      visibility: args.visibility,
       studentCount: 0,
       teacherCount: 0,
       createdBy: userId,
@@ -209,6 +211,115 @@ export const joinClass = mutation({
         updatedAt: now,
       });
     }
+
+    return { classId: classData._id };
+  },
+});
+
+/**
+ * Update the class visibility.
+ * Requires CLASS_MANAGE permission or school admin role.
+ * Note: Can update visibility even for archived classes.
+ */
+export const updateClassVisibility = mutation({
+  args: {
+    classId: v.id("schoolClasses"),
+    visibility: v.union(v.literal("private"), v.literal("public")),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+    const userId = user.appUser._id;
+
+    // Load class and verify access (allows archived classes)
+    const { classMembership, schoolMembership } = await loadClassWithAccess(
+      ctx,
+      args.classId,
+      userId
+    );
+
+    requireTeacherPermission(
+      classMembership,
+      schoolMembership,
+      TEACHER_PERMISSIONS.CLASS_MANAGE
+    );
+
+    // Update class visibility
+    await ctx.db.patch("schoolClasses", args.classId, {
+      visibility: args.visibility,
+      updatedBy: userId,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+/**
+ * Join a public class directly.
+ * Only works for classes with visibility: "public".
+ * User must be a school member but not already a class member.
+ */
+export const joinPublicClass = mutation({
+  args: {
+    classId: v.id("schoolClasses"),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+    const userId = user.appUser._id;
+
+    // Load class and verify it's not archived
+    const classData = await loadActiveClass(ctx, args.classId);
+
+    // Verify class is public
+    if (classData.visibility !== "public") {
+      throw new ConvexError({
+        code: "CLASS_NOT_PUBLIC",
+        message: "This class is not public. Please use an invite code to join.",
+      });
+    }
+
+    const now = Date.now();
+
+    // Check if user is already a member
+    const existingMember = await ctx.db
+      .query("schoolClassMembers")
+      .withIndex("classId_userId", (q) =>
+        q.eq("classId", classData._id).eq("userId", userId)
+      )
+      .first();
+
+    if (existingMember) {
+      throw new ConvexError({
+        code: "ALREADY_MEMBER",
+        message: "You are already a member of this class.",
+      });
+    }
+
+    // Check if user is a member of the school
+    const schoolMember = await ctx.db
+      .query("schoolMembers")
+      .withIndex("schoolId_userId_status", (q) =>
+        q
+          .eq("schoolId", classData.schoolId)
+          .eq("userId", userId)
+          .eq("status", "active")
+      )
+      .first();
+
+    if (!schoolMember) {
+      throw new ConvexError({
+        code: "NOT_SCHOOL_MEMBER",
+        message: "You must be a member of the school to join this class.",
+      });
+    }
+
+    // Add user as student (public join always joins as student)
+    await ctx.db.insert("schoolClassMembers", {
+      classId: classData._id,
+      userId,
+      schoolId: classData.schoolId,
+      role: "student",
+      enrollMethod: "public",
+      updatedAt: now,
+    });
 
     return { classId: classData._id };
   },

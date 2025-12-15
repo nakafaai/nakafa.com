@@ -255,7 +255,7 @@ const PostItemActions = memo(({ post }: { post: ForumPost }) => {
   return (
     <ButtonGroup
       className={cn(
-        "-top-4 absolute right-4 opacity-0 shadow-xs transition-opacity ease-out group-hover:opacity-100",
+        "absolute -top-4 right-4 opacity-0 shadow-xs transition-opacity ease-out group-hover:opacity-100",
         !!isOpen && "opacity-100"
       )}
     >

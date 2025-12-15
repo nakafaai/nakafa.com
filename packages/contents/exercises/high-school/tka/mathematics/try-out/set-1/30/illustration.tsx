@@ -28,17 +28,17 @@ export function Illustration({ labels }: Props) {
               </p>
             </div>
 
-            <p className="-left-4 absolute bottom-4 text-center font-medium text-sm">
+            <p className="absolute bottom-4 -left-4 text-center font-medium text-sm">
               <InlineMath math="y" />
             </p>
-            <p className="-right-4 absolute bottom-4 text-center font-medium text-sm">
+            <p className="absolute -right-4 bottom-4 text-center font-medium text-sm">
               <InlineMath math="y" />
             </p>
-            <p className="-bottom-6 absolute inset-x-0 text-center font-medium text-sm">
+            <p className="absolute inset-x-0 -bottom-6 text-center font-medium text-sm">
               <InlineMath math="x" />
             </p>
 
-            <div className="-right-16 absolute flex items-center gap-2">
+            <div className="absolute -right-16 flex items-center gap-2">
               <ArrowRightIcon className="size-4" />
               <span className="font-medium text-sm">{labels.fence}</span>
             </div>
