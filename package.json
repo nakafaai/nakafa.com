@@ -22,6 +22,8 @@
     "analyze": "turbo analyze",
     "translate": "turbo translate",
     "boundaries": "turbo boundaries",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
     "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker,recharts,better-auth,@polar-sh/better-auth,pnpm",
     "bump-ui": "npx shadcn@latest add --all --overwrite -c packages/design-system",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/.turbo packages/*/.turbo .turbo .next apps/*/.next",
@@ -32,6 +34,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.9",
+    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/cli": "^2.29.8",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.6.3",
     "@types/node": "^25.0.2",
