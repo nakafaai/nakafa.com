@@ -4,21 +4,23 @@ import { fetchQuery } from "convex/nextjs";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { cache, use } from "react";
 import { FinanceChatPage } from "@/components/finance/chat/page";
 
 type Props = {
   params: Promise<{ locale: Locale; id: Id<"chats"> }>;
 };
 
+const getChatTitle = cache(async (id: Id<"chats">) =>
+  fetchQuery(api.chats.queries.getChatTitle, { chatId: id })
+);
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const defaultMetadata = {};
   // Use try-catch to handle errors gracefully when title is not found
   try {
-    const title = await fetchQuery(api.chats.queries.getChatTitle, {
-      chatId: id,
-    });
+    const title = await getChatTitle(id);
     if (!title) {
       return defaultMetadata;
     }

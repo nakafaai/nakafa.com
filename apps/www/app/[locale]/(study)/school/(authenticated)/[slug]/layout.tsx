@@ -6,9 +6,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { cache, use } from "react";
 import { SchoolNotFound } from "@/components/school/not-found";
 import { SchoolContextProvider } from "@/lib/context/use-school";
+
+const getSchoolInfo = cache(async (slug: string) =>
+  fetchQuery(api.schools.queries.getSchoolInfoBySlug, { slug })
+);
 
 export async function generateMetadata({
   params,
@@ -19,12 +23,7 @@ export async function generateMetadata({
   const defaultMetadata = {};
 
   try {
-    const schoolInfo = await fetchQuery(
-      api.schools.queries.getSchoolInfoBySlug,
-      {
-        slug,
-      }
-    );
+    const schoolInfo = await getSchoolInfo(slug);
     if (!schoolInfo) {
       return defaultMetadata;
     }

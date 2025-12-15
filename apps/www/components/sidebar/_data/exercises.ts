@@ -2,6 +2,15 @@ import { getCategoryIcon } from "@repo/contents/_lib/exercises/category";
 
 const data = [
   {
+    title: "middle-school",
+    items: [
+      {
+        title: "grade-9",
+        href: "/exercises/middle-school/grade-9",
+      },
+    ],
+  },
+  {
     title: "high-school",
     items: [
       {

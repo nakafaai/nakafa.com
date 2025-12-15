@@ -22,7 +22,7 @@
     "analyze": "turbo analyze",
     "translate": "turbo translate",
     "boundaries": "turbo boundaries",
-    "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker,recharts,better-auth,@polar-sh/better-auth,@polar-sh/sdk",
+    "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker,recharts,better-auth,@polar-sh/better-auth,pnpm",
     "bump-ui": "npx shadcn@latest add --all --overwrite -c packages/design-system",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/.turbo packages/*/.turbo .turbo .next apps/*/.next",
     "clean:ts": "find . -name '*.tsbuildinfo' -type f -delete && find . -name 'tsconfig.tsbuildinfo' -type f -delete",
@@ -45,6 +45,6 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@10.26.0",
+  "packageManager": "pnpm@10.25.0",
   "type": "module"
 }

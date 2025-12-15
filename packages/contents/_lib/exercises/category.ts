@@ -1,5 +1,5 @@
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import { BookCopyIcon, SwatchBookIcon } from "lucide-react";
+import { BookCopyIcon, NotebookIcon, SwatchBookIcon } from "lucide-react";
 
 /**
  * Gets the path to the category of the subject.
@@ -19,6 +19,8 @@ export function getCategoryIcon(category: ExercisesCategory) {
   switch (category) {
     case "high-school":
       return SwatchBookIcon;
+    case "middle-school":
+      return NotebookIcon;
     default:
       return BookCopyIcon;
   }
