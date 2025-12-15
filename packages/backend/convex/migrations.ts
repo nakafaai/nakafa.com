@@ -271,3 +271,41 @@ export const migrationConvertChatsUserId = internalMutation({
     return { updated, skipped, notFound, total: chats.length };
   },
 });
+
+// Migration to backfill notification preferences for existing users
+export const migrationBackfillNotificationPreferences = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db.query("users").collect();
+
+    let created = 0;
+    let skipped = 0;
+
+    for (const user of users) {
+      // Check if preferences already exist
+      const existingPrefs = await ctx.db
+        .query("notificationPreferences")
+        .withIndex("userId", (q) => q.eq("userId", user._id))
+        .unique();
+
+      if (existingPrefs) {
+        skipped += 1;
+        continue;
+      }
+
+      // Create default notification preferences
+      await ctx.db.insert("notificationPreferences", {
+        userId: user._id,
+        emailEnabled: true,
+        emailDigest: "weekly",
+        disabledTypes: [],
+        mutedEntities: [],
+        updatedAt: Date.now(),
+      });
+
+      created += 1;
+    }
+
+    return { created, skipped, total: users.length };
+  },
+});

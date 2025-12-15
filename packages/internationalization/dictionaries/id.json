@@ -118,6 +118,7 @@
     "delete": "Hapus",
     "reply": "Balas",
     "replying-to-user": "Membalas <name></name>",
+    "new-messages": "{count, plural, =1 {# pesan baru} other {# pesan baru}}",
     "cancel": "Batal",
     "like": "Suka",
     "dislike": "Tidak suka",
@@ -133,7 +134,8 @@
     "reacted-by-more": "{names} dan {count} lainnya",
     "emoji-picker-placeholder": "Pilih emoji...",
     "no-emoji-found": "Tidak ada emoji yang ditemukan.",
-    "customize": "Kustomisasi"
+    "customize": "Kustomisasi",
+    "back-to-latest": "Kembali ke terbaru"
   },
   "Onboarding": {
     "title": "Selamat datang di Nakafa!",
@@ -403,9 +405,12 @@
   },
   "School": {
     "Common": {
-      "dashboard": "Dasbor",
+      "home": "Beranda",
       "learning": "Belajar",
-      "classes": "Kelas"
+      "classes": "Kelas",
+      "nakafa-materials": "Materi Nakafa",
+      "yours": "Kamu",
+      "notifications": "Notifikasi"
     },
     "Classes": {
       "classes": "Kelas",
@@ -508,7 +513,8 @@
       "unknown-user": "Pengguna tidak dikenal",
       "original-message-deleted": "Pesan asli telah dihapus.",
       "send-message-placeholder": "Kirim pesan...",
-      "submit": "Kirim"
+      "submit": "Kirim",
+      "attachments": "Lampiran"
     },
     "Onboarding": {
       "title": "Selamat datang di Nakafa School!",

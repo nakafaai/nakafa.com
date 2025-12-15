@@ -10,6 +10,7 @@ import {
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import {
@@ -44,7 +45,7 @@ type Props = {
 };
 
 export function CommentsList({ slug }: Props) {
-  const { results } = usePaginatedQuery(
+  const { results, status, loadMore } = usePaginatedQuery(
     api.comments.queries.getCommentsBySlug,
     { slug },
     { initialNumItems: 25 }
@@ -59,6 +60,10 @@ export function CommentsList({ slug }: Props) {
       {results.map((comment) => (
         <CommentItem comment={comment} key={comment._id} slug={slug} />
       ))}
+
+      {status === "CanLoadMore" && (
+        <Intersection onIntersect={() => loadMore(25)} />
+      )}
     </div>
   );
 }

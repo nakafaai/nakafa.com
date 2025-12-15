@@ -1,10 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation } from "../functions";
-import {
-  isSchoolAdmin,
-  requireAuth,
-  requireClassAccess,
-} from "../lib/authHelpers";
+import { isSchoolAdmin, requireAuth } from "../lib/authHelpers";
 import { generateNanoId, truncateText } from "../utils/helper";
 import {
   CLASS_IMAGES,
@@ -12,7 +8,14 @@ import {
   PERMISSION_SETS,
   TEACHER_PERMISSIONS,
 } from "./constants";
-import { loadClass, requireTeacherPermission } from "./utils";
+import {
+  loadActiveClass,
+  loadActiveClassWithAccess,
+  loadClassWithAccess,
+  loadForumWithAccess,
+  loadOpenForumWithAccess,
+  requireTeacherPermission,
+} from "./utils";
 
 /**
  * Create a new class in a school and automatically add the creator as a primary teacher.
@@ -145,22 +148,8 @@ export const joinClass = mutation({
       });
     }
 
-    // Get class
-    const classData = await ctx.db.get("schoolClasses", inviteCode.classId);
-    if (!classData) {
-      throw new ConvexError({
-        code: "CLASS_NOT_FOUND",
-        message: "Class not found.",
-      });
-    }
-
-    // Check if class is archived
-    if (classData.isArchived) {
-      throw new ConvexError({
-        code: "CLASS_ARCHIVED",
-        message: "Cannot join an archived class.",
-      });
-    }
+    // Load class and verify it's not archived
+    const classData = await loadActiveClass(ctx, inviteCode.classId);
 
     const now = Date.now();
 
@@ -239,14 +228,10 @@ export const updateClassImage = mutation({
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
-    // Load class (allows archived classes to update image)
-    const classData = await loadClass(ctx, args.classId);
-
-    // Check access and permissions
-    const { classMembership, schoolMembership } = await requireClassAccess(
+    // Load class and verify access (allows archived classes to update image)
+    const { classMembership, schoolMembership } = await loadClassWithAccess(
       ctx,
       args.classId,
-      classData.schoolId,
       userId
     );
 
@@ -298,30 +283,9 @@ export const createForum = mutation({
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
-    // Get class to verify existence
-    const classData = await ctx.db.get("schoolClasses", args.classId);
-    if (!classData) {
-      throw new ConvexError({
-        code: "CLASS_NOT_FOUND",
-        message: "Class not found.",
-      });
-    }
-
-    // Check if class is archived
-    if (classData.isArchived) {
-      throw new ConvexError({
-        code: "CLASS_ARCHIVED",
-        message: "Cannot create a forum in an archived class.",
-      });
-    }
-
-    // Require class access and get membership
-    const { classMembership, schoolMembership } = await requireClassAccess(
-      ctx,
-      args.classId,
-      classData.schoolId,
-      userId
-    );
+    // Load active class and verify access
+    const { classData, classMembership, schoolMembership } =
+      await loadActiveClassWithAccess(ctx, args.classId, userId);
 
     // School admins can do anything, otherwise must be a class member
     const canCreateForum = isSchoolAdmin(schoolMembership) || classMembership;
@@ -369,22 +333,8 @@ export const createForumPost = mutation({
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
-    const forum = await ctx.db.get("schoolClassForums", args.forumId);
-    if (!forum) {
-      throw new ConvexError({
-        code: "FORUM_NOT_FOUND",
-        message: "Forum not found.",
-      });
-    }
-
-    if (forum.status !== "open") {
-      throw new ConvexError({
-        code: "FORUM_LOCKED",
-        message: "This forum is locked.",
-      });
-    }
-
-    await requireClassAccess(ctx, forum.classId, forum.schoolId, userId);
+    // Load open forum and verify access
+    const { forum } = await loadOpenForumWithAccess(ctx, args.forumId, userId);
 
     let replyToUserId: typeof args.parentId extends undefined
       ? undefined
@@ -424,6 +374,9 @@ export const createForumPost = mutation({
       updatedAt: now,
     });
 
+    // Note: Read state is updated via trigger in functions.ts
+    // to keep all post-creation side effects in one place
+
     return postId;
   },
 });
@@ -452,15 +405,8 @@ export const togglePostReaction = mutation({
       });
     }
 
-    const forum = await ctx.db.get("schoolClassForums", post.forumId);
-    if (!forum) {
-      throw new ConvexError({
-        code: "FORUM_NOT_FOUND",
-        message: "Forum not found.",
-      });
-    }
-
-    await requireClassAccess(ctx, post.classId, forum.schoolId, userId);
+    // Load forum and verify access (uses post.forumId)
+    await loadForumWithAccess(ctx, post.forumId, userId);
 
     // Check if user already reacted with this emoji
     const existingReaction = await ctx.db
@@ -506,15 +452,7 @@ export const toggleForumReaction = mutation({
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
-    const forum = await ctx.db.get("schoolClassForums", args.forumId);
-    if (!forum) {
-      throw new ConvexError({
-        code: "FORUM_NOT_FOUND",
-        message: "Forum not found.",
-      });
-    }
-
-    await requireClassAccess(ctx, forum.classId, forum.schoolId, userId);
+    await loadForumWithAccess(ctx, args.forumId, userId);
 
     // Check if user already reacted with this emoji
     const existingReaction = await ctx.db
@@ -541,5 +479,45 @@ export const toggleForumReaction = mutation({
     });
 
     return { added: true };
+  },
+});
+
+/**
+ * Mark a forum as read up to current time.
+ * Called when user opens/views a forum.
+ * Uses upsert pattern for efficiency.
+ */
+export const markForumRead = mutation({
+  args: {
+    forumId: v.id("schoolClassForums"),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+    const userId = user.appUser._id;
+
+    const { forum } = await loadForumWithAccess(ctx, args.forumId, userId);
+
+    const now = Date.now();
+
+    // Upsert pattern
+    const existing = await ctx.db
+      .query("schoolClassForumReadStates")
+      .withIndex("forumId_userId", (q) =>
+        q.eq("forumId", args.forumId).eq("userId", userId)
+      )
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch("schoolClassForumReadStates", existing._id, {
+        lastReadAt: now,
+      });
+    } else {
+      await ctx.db.insert("schoolClassForumReadStates", {
+        forumId: args.forumId,
+        classId: forum.classId,
+        userId,
+        lastReadAt: now,
+      });
+    }
   },
 });

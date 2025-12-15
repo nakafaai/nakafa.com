@@ -118,6 +118,7 @@
     "delete": "Delete",
     "reply": "Reply",
     "replying-to-user": "Replying to <name></name>",
+    "new-messages": "{count, plural, =1 {# new message} other {# new messages}}",
     "cancel": "Cancel",
     "like": "Like",
     "dislike": "Dislike",
@@ -133,7 +134,8 @@
     "reacted-by-more": "{names} and {count} more",
     "emoji-picker-placeholder": "Select an emoji...",
     "no-emoji-found": "No emoji found.",
-    "customize": "Customize"
+    "customize": "Customize",
+    "back-to-latest": "Back to latest"
   },
   "Onboarding": {
     "title": "Welcome to Nakafa!",
@@ -403,9 +405,12 @@
   },
   "School": {
     "Common": {
-      "dashboard": "Dashboard",
+      "home": "Home",
       "learning": "Learning",
-      "classes": "Classes"
+      "classes": "Classes",
+      "nakafa-materials": "Nakafa Materials",
+      "yours": "Yours",
+      "notifications": "Notifications"
     },
     "Classes": {
       "classes": "Classes",
@@ -508,7 +513,8 @@
       "unknown-user": "Unknown user",
       "original-message-deleted": "Original message was deleted.",
       "send-message-placeholder": "Send a message...",
-      "submit": "Submit"
+      "submit": "Submit",
+      "attachments": "Attachments"
     },
     "Onboarding": {
       "title": "Welcome to Nakafa School!",

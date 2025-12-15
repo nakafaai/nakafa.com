@@ -14,7 +14,7 @@
     "google-index": "node --env-file=.env.local --import tsx scripts/google-index.ts"
   },
   "dependencies": {
-    "@ai-sdk/react": "^2.0.114",
+    "@ai-sdk/react": "^2.0.115",
     "@convex-dev/better-auth": "^0.9.11",
     "@icons-pack/react-simple-icons": "^13.8.0",
     "@lobehub/icons": "^2.45.0",
@@ -34,13 +34,13 @@
     "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
-    "@tabler/icons-react": "^3.35.0",
+    "@tabler/icons-react": "^3.36.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@tanstack/react-form": "^1.27.3",
     "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-query-devtools": "^5.91.1",
     "@vercel/functions": "^3.3.4",
-    "ai": "^5.0.112",
+    "ai": "^5.0.113",
     "any-ascii": "^0.3.3",
     "babel-plugin-react-compiler": "^1.0.0",
     "better-auth": "1.3.34",
@@ -72,7 +72,7 @@
   "devDependencies": {
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.0.1",
+    "@types/node": "25.0.2",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "jsdom": "^27.3.0",

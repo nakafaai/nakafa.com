@@ -202,19 +202,13 @@ const tables = {
     .index("postId_userId_emoji", ["postId", "userId", "emoji"]),
 
   // FORUM: Read States (Children of Forums/Threads)
+  // Note: Per-forum notification preferences use notificationPreferences.mutedEntities
   schoolClassForumReadStates: defineTable({
     forumId: v.id("schoolClassForums"),
     classId: v.id("schoolClasses"),
     userId: v.id("users"),
     lastReadAt: v.number(),
-    notification: v.union(
-      v.literal("all"),
-      v.literal("mentions"),
-      v.literal("muted")
-    ),
-  })
-    .index("forumId_userId", ["forumId", "userId"])
-    .index("userId_notification", ["userId", "notification"]),
+  }).index("forumId_userId", ["forumId", "userId"]),
 };
 
 export default tables;

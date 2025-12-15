@@ -2,14 +2,16 @@ import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { query } from "../_generated/server";
 import { safeGetAppUser } from "../auth";
-import {
-  checkClassAccess,
-  requireAuth,
-  requireClassAccess,
-} from "../lib/authHelpers";
-import { asyncMap } from "../lib/relationships";
+import { checkClassAccess, requireAuth } from "../lib/authHelpers";
 import { getUserMap } from "../lib/userHelpers";
-import { attachForumUsers } from "./utils";
+import {
+  attachForumUsers,
+  buildReactorsByEmoji,
+  enrichForumPosts,
+  getMyForumReactions,
+  loadClassWithAccess,
+  loadForumWithAccess,
+} from "./utils";
 
 /**
  * Get all classes for a school with optional search and filtering.
@@ -140,22 +142,8 @@ export const getClass = query({
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
-    // Get the class
-    const classData = await ctx.db.get("schoolClasses", args.classId);
-    if (!classData) {
-      throw new ConvexError({
-        code: "CLASS_NOT_FOUND",
-        message: `Class not found for classId: ${args.classId}`,
-      });
-    }
-
-    // Use centralized access check (throws on access denied)
-    const { classMembership, schoolMembership } = await requireClassAccess(
-      ctx,
-      args.classId,
-      classData.schoolId,
-      user.appUser._id
-    );
+    const { classData, classMembership, schoolMembership } =
+      await loadClassWithAccess(ctx, args.classId, user.appUser._id);
 
     return {
       class: classData,
@@ -178,25 +166,8 @@ export const getPeople = query({
   handler: async (ctx, args) => {
     const { classId, q, paginationOpts } = args;
 
-    // Require authentication
     const user = await requireAuth(ctx);
-
-    // Get the class to verify it exists
-    const classData = await ctx.db.get("schoolClasses", classId);
-    if (!classData) {
-      throw new ConvexError({
-        code: "CLASS_NOT_FOUND",
-        message: `Class not found for classId: ${classId}`,
-      });
-    }
-
-    // Verify user has access to this class
-    await requireClassAccess(
-      ctx,
-      classId,
-      classData.schoolId,
-      user.appUser._id
-    );
+    await loadClassWithAccess(ctx, classId, user.appUser._id);
 
     // Use compound index, omit userId condition to get all members
     const membersPage = await ctx.db
@@ -244,25 +215,8 @@ export const getInviteCodes = query({
     classId: v.id("schoolClasses"),
   },
   handler: async (ctx, args) => {
-    // Require authentication
     const user = await requireAuth(ctx);
-
-    // Get the class to verify it exists
-    const classData = await ctx.db.get("schoolClasses", args.classId);
-    if (!classData) {
-      throw new ConvexError({
-        code: "CLASS_NOT_FOUND",
-        message: `Class not found for classId: ${args.classId}`,
-      });
-    }
-
-    // Verify user has access to this class
-    await requireClassAccess(
-      ctx,
-      args.classId,
-      classData.schoolId,
-      user.appUser._id
-    );
+    await loadClassWithAccess(ctx, args.classId, user.appUser._id);
 
     // Get all invite codes for the class (using compound index, omitting role)
     return await ctx.db
@@ -287,23 +241,7 @@ export const getForums = query({
     const { classId, q: searchQuery, paginationOpts } = args;
 
     const user = await requireAuth(ctx);
-
-    // Get the class to verify it exists
-    const classData = await ctx.db.get("schoolClasses", classId);
-    if (!classData) {
-      throw new ConvexError({
-        code: "CLASS_NOT_FOUND",
-        message: `Class not found for classId: ${classId}`,
-      });
-    }
-
-    // Verify user has access to this class
-    await requireClassAccess(
-      ctx,
-      classId,
-      classData.schoolId,
-      user.appUser._id
-    );
+    await loadClassWithAccess(ctx, classId, user.appUser._id);
 
     // If search query is provided, use full-text search
     const forumsPage =
@@ -322,14 +260,19 @@ export const getForums = query({
             .order("desc")
             .paginate(paginationOpts);
 
-    // Attach user data
-    const userMap = await attachForumUsers(ctx, forumsPage.page);
+    // Attach user data and reactions in parallel
+    const forumIds = forumsPage.page.map((f) => f._id);
+    const [userMap, myReactionsMap] = await Promise.all([
+      attachForumUsers(ctx, forumsPage.page),
+      getMyForumReactions(ctx, forumIds, user.appUser._id),
+    ]);
 
     return {
       ...forumsPage,
       page: forumsPage.page.map((forum) => ({
         ...forum,
         user: userMap.get(forum.createdBy) ?? null,
+        myReactions: myReactionsMap.get(forum._id) ?? [],
       })),
     };
   },
@@ -347,42 +290,29 @@ export const getForum = query({
     const user = await requireAuth(ctx);
     const currentUserId = user.appUser._id;
 
-    const forum = await ctx.db.get("schoolClassForums", args.forumId);
-    if (!forum) {
-      throw new ConvexError({
-        code: "FORUM_NOT_FOUND",
-        message: `Forum not found for forumId: ${args.forumId}`,
-      });
-    }
+    const { forum } = await loadForumWithAccess(
+      ctx,
+      args.forumId,
+      currentUserId
+    );
 
-    await requireClassAccess(ctx, forum.classId, forum.schoolId, currentUserId);
-
-    // Fetch all reactions for this forum
+    // Fetch reactions for this forum
     const reactions = await ctx.db
       .query("schoolClassForumReactions")
       .withIndex("forumId_userId_emoji", (idx) => idx.eq("forumId", forum._id))
       .collect();
 
-    // Collect all user IDs (author + reactors)
+    // Batch fetch all user data (author + reactors)
     const reactorUserIds = reactions.map((r) => r.userId);
-    const allUserIds = [forum.createdBy, ...reactorUserIds];
-    const userMap = await getUserMap(ctx, allUserIds);
+    const userMap = await getUserMap(ctx, [forum.createdBy, ...reactorUserIds]);
 
     // Get current user's reactions
     const myReactions = reactions
       .filter((r) => r.userId === currentUserId)
       .map((r) => r.emoji);
 
-    // Group reactions by emoji with reactor names (limit to 10 per emoji)
-    const reactorsByEmoji = new Map<string, string[]>();
-    for (const reaction of reactions) {
-      const userName = userMap.get(reaction.userId)?.name ?? "Unknown";
-      const existing = reactorsByEmoji.get(reaction.emoji) ?? [];
-      if (existing.length < 10) {
-        existing.push(userName);
-      }
-      reactorsByEmoji.set(reaction.emoji, existing);
-    }
+    // Build reactor names by emoji
+    const reactorsByEmoji = buildReactorsByEmoji(reactions, userMap);
 
     return {
       ...forum,
@@ -397,6 +327,10 @@ export const getForum = query({
   },
 });
 
+/**
+ * Get forum posts with pagination.
+ * Returns enriched posts with user data and reactions.
+ */
 export const getForumPosts = query({
   args: {
     forumId: v.id("schoolClassForums"),
@@ -406,91 +340,201 @@ export const getForumPosts = query({
     const { forumId, paginationOpts } = args;
 
     const user = await requireAuth(ctx);
-
-    const forum = await ctx.db.get("schoolClassForums", forumId);
-    if (!forum) {
-      throw new ConvexError({
-        code: "FORUM_NOT_FOUND",
-        message: `Forum not found for forumId: ${forumId}`,
-      });
-    }
-
-    await requireClassAccess(
-      ctx,
-      forum.classId,
-      forum.schoolId,
-      user.appUser._id
-    );
+    await loadForumWithAccess(ctx, forumId, user.appUser._id);
 
     const postsPage = await ctx.db
       .query("schoolClassForumPosts")
       .withIndex("forumId", (idx) => idx.eq("forumId", forumId))
-      .order("asc")
+      .order("desc")
       .paginate(paginationOpts);
 
-    const postIds = postsPage.page.map((p) => p._id);
-
-    // Fetch all reactions for all posts (for showing who reacted)
-    const allReactions = await asyncMap(postIds, (postId) =>
-      ctx.db
-        .query("schoolClassForumPostReactions")
-        .withIndex("postId_userId_emoji", (idx) => idx.eq("postId", postId))
-        .collect()
-    );
-
-    // Collect all user IDs (authors + replyToUsers + reactors) for batch fetching
-    const reactorUserIds = allReactions.flat().map((r) => r.userId);
-    const allUserIds = [
-      ...postsPage.page.flatMap((p) =>
-        p.replyToUserId ? [p.createdBy, p.replyToUserId] : [p.createdBy]
-      ),
-      ...reactorUserIds,
-    ];
-    const userMap = await getUserMap(ctx, allUserIds);
-
-    // Build maps for each post
-    const currentUserId = user.appUser._id;
-    const reactionDataMap = new Map(
-      postIds.map((postId, i) => {
-        const reactions = allReactions[i];
-        const myReactions = reactions
-          .filter((r) => r.userId === currentUserId)
-          .map((r) => r.emoji);
-
-        // Group reactions by emoji with reactor names (limit to 10 per emoji)
-        const reactorsByEmoji = new Map<string, string[]>();
-        for (const reaction of reactions) {
-          const userName = userMap.get(reaction.userId)?.name ?? "Unknown";
-          const existing = reactorsByEmoji.get(reaction.emoji) ?? [];
-          if (existing.length < 10) {
-            existing.push(userName);
-          }
-          reactorsByEmoji.set(reaction.emoji, existing);
-        }
-
-        return [postId, { myReactions, reactorsByEmoji }] as const;
-      })
+    const enrichedPosts = await enrichForumPosts(
+      ctx,
+      postsPage.page,
+      user.appUser._id
     );
 
     return {
       ...postsPage,
-      page: postsPage.page.map((post) => {
-        const reactionData = reactionDataMap.get(post._id);
-        return {
-          ...post,
-          user: userMap.get(post.createdBy) ?? null,
-          replyToUser: post.replyToUserId
-            ? (userMap.get(post.replyToUserId) ?? null)
-            : null,
-          myReactions: reactionData?.myReactions ?? [],
-          // Convert Map to array of { emoji, reactors } for serialization
-          reactionUsers: post.reactionCounts.map(({ emoji, count }) => ({
-            emoji,
-            count,
-            reactors: reactionData?.reactorsByEmoji.get(emoji) ?? [],
-          })),
-        };
-      }),
+      page: enrichedPosts,
+    };
+  },
+});
+
+/**
+ * Get read state for a forum.
+ * Returns lastReadAt timestamp (null if never opened).
+ */
+export const getForumReadState = query({
+  args: {
+    forumId: v.id("schoolClassForums"),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+
+    const readState = await ctx.db
+      .query("schoolClassForumReadStates")
+      .withIndex("forumId_userId", (q) =>
+        q.eq("forumId", args.forumId).eq("userId", user.appUser._id)
+      )
+      .unique();
+
+    return readState;
+  },
+});
+
+/**
+ * Get forum posts around a specific post (for "jump to message").
+ * Returns posts before and after the target post.
+ */
+export const getForumPostsAround = query({
+  args: {
+    forumId: v.id("schoolClassForums"),
+    targetPostId: v.id("schoolClassForumPosts"),
+    limit: v.optional(v.number()), // Posts to fetch before/after (default 15)
+  },
+  handler: async (ctx, args) => {
+    const { forumId, targetPostId, limit = 15 } = args;
+
+    const user = await requireAuth(ctx);
+    await loadForumWithAccess(ctx, forumId, user.appUser._id);
+
+    // Get the target post to find its creation time
+    const targetPost = await ctx.db.get("schoolClassForumPosts", targetPostId);
+    if (!targetPost || targetPost.forumId !== forumId) {
+      throw new ConvexError({
+        code: "POST_NOT_FOUND",
+        message: `Post not found for postId: ${targetPostId}`,
+      });
+    }
+
+    const targetTime = targetPost._creationTime;
+
+    // Fetch posts before and after in parallel for better performance
+    const [postsBefore, postsAfter] = await Promise.all([
+      // Posts before target (older) - order desc to get closest first
+      ctx.db
+        .query("schoolClassForumPosts")
+        .withIndex("forumId", (q) =>
+          q.eq("forumId", forumId).lt("_creationTime", targetTime)
+        )
+        .order("desc")
+        .take(limit),
+      // Posts after target (newer) - order asc to get closest first
+      ctx.db
+        .query("schoolClassForumPosts")
+        .withIndex("forumId", (q) =>
+          q.eq("forumId", forumId).gt("_creationTime", targetTime)
+        )
+        .order("asc")
+        .take(limit),
+    ]);
+
+    // Combine: before (reversed to asc) + target + after
+    const allPosts = [...postsBefore.reverse(), targetPost, ...postsAfter];
+    const hasMoreBefore = postsBefore.length === limit;
+    const hasMoreAfter = postsAfter.length === limit;
+
+    const enrichedPosts = await enrichForumPosts(
+      ctx,
+      allPosts,
+      user.appUser._id
+    );
+
+    const firstPost = allPosts[0];
+    const lastPostIdx = allPosts.length - 1;
+    const lastPost = lastPostIdx >= 0 ? allPosts[lastPostIdx] : undefined;
+
+    return {
+      posts: enrichedPosts,
+      targetIndex: postsBefore.length,
+      hasMoreBefore,
+      hasMoreAfter,
+      oldestTime: firstPost?._creationTime ?? targetTime,
+      newestTime: lastPost?._creationTime ?? targetTime,
+    };
+  },
+});
+
+/**
+ * Get older forum posts (before a given timestamp).
+ * Used for bidirectional pagination when viewing old messages.
+ */
+export const getForumPostsOlder = query({
+  args: {
+    forumId: v.id("schoolClassForums"),
+    beforeTime: v.number(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { forumId, beforeTime, limit = 15 } = args;
+
+    const user = await requireAuth(ctx);
+    await loadForumWithAccess(ctx, forumId, user.appUser._id);
+
+    // Use index condition instead of .filter() for better performance
+    // Index "forumId" implicitly includes _creationTime at the end
+    const posts = await ctx.db
+      .query("schoolClassForumPosts")
+      .withIndex("forumId", (q) =>
+        q.eq("forumId", forumId).lt("_creationTime", beforeTime)
+      )
+      .order("desc")
+      .take(limit);
+
+    const hasMore = posts.length === limit;
+    const orderedPosts = [...posts].reverse();
+
+    const enrichedPosts = await enrichForumPosts(
+      ctx,
+      orderedPosts,
+      user.appUser._id
+    );
+
+    return {
+      posts: enrichedPosts,
+      hasMore,
+      oldestTime: orderedPosts[0]?._creationTime,
+    };
+  },
+});
+
+/**
+ * Get newer forum posts (after a given timestamp).
+ * Used for bidirectional pagination when viewing old messages.
+ */
+export const getForumPostsNewer = query({
+  args: {
+    forumId: v.id("schoolClassForums"),
+    afterTime: v.number(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { forumId, afterTime, limit = 15 } = args;
+
+    const user = await requireAuth(ctx);
+    await loadForumWithAccess(ctx, forumId, user.appUser._id);
+
+    // Use index condition instead of .filter() for better performance
+    // Index "forumId" implicitly includes _creationTime at the end
+    const posts = await ctx.db
+      .query("schoolClassForumPosts")
+      .withIndex("forumId", (q) =>
+        q.eq("forumId", forumId).gt("_creationTime", afterTime)
+      )
+      .order("asc")
+      .take(limit);
+
+    const hasMore = posts.length === limit;
+    const enrichedPosts = await enrichForumPosts(ctx, posts, user.appUser._id);
+
+    const lastIdx = posts.length - 1;
+    const newestPost = lastIdx >= 0 ? posts[lastIdx] : undefined;
+
+    return {
+      posts: enrichedPosts,
+      hasMore,
+      newestTime: newestPost?._creationTime,
     };
   },
 });

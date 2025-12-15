@@ -9,17 +9,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
+          "bg-primary text-primary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--primary)_90%,var(--background))]",
         "default-outline":
           "border border-primary bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] text-primary shadow-xs hover:bg-[color-mix(in_oklch,var(--primary)_10%,var(--background))]",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20",
+          "bg-destructive text-destructive-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_90%,var(--background))] focus-visible:ring-destructive/20",
         "destructive-outline":
           "border border-destructive bg-[color-mix(in_oklch,var(--destructive)_5%,var(--background))] text-destructive shadow-xs hover:bg-[color-mix(in_oklch,var(--destructive)_10%,var(--background))]",
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_90%,var(--background))]",
         "secondary-outline":
           "border border-secondary bg-[color-mix(in_oklch,var(--secondary)_5%,var(--background))] text-secondary shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_10%,var(--background))]",
         ghost:

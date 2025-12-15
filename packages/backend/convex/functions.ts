@@ -1,15 +1,43 @@
+/**
+ * Convex Triggers - Central trigger management
+ *
+ * INFINITE LOOP PREVENTION:
+ * =========================
+ * When trigger A modifies table B, table B MUST have a trigger registered.
+ * If B doesn't need logic, register a no-op trigger to break the chain.
+ *
+ * DEPENDENCY GRAPH (verified safe):
+ * - comments → comments (self-patch replyCount) → update case empty ✅
+ * - comments → commentVotes (delete) → patches comments → update case empty ✅
+ * - commentVotes → comments (patch counts) → update case empty ✅
+ * - chats → messages, parts (delete) → no-op ✅
+ * - schools → schoolActivityLogs (insert) → no-op ✅
+ * - schoolMembers → schoolInviteCodes, schoolActivityLogs → no-op ✅
+ * - schoolClasses → schoolActivityLogs, schoolClassMembers → no-op, delete context ✅
+ * - schoolClassMembers → schoolClasses (patch counts) → update ignores counts ✅
+ * - schoolClassForumPosts → schoolClassForums, notifications, notificationCounts → no-op ✅
+ * - schoolClassForumPosts → schoolClassForumPosts (patch replyCount) → update empty ✅
+ * - schoolClassForumPostReactions → schoolClassForumPosts (patch) → update empty ✅
+ * - schoolClassForumReactions → schoolClassForums (patch) → no-op ✅
+ *
+ * RULE: Update cases should NOT trigger cascading modifications to avoid loops.
+ */
+
 /** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: Triggers are complex */
+
+import type { WithoutSystemFields } from "convex/server";
 import {
   customCtx,
   customMutation,
 } from "convex-helpers/server/customFunctions";
 import { Triggers } from "convex-helpers/server/triggers";
-import type { DataModel, Id } from "./_generated/dataModel";
+import type { DataModel, Doc, Id } from "./_generated/dataModel";
 import type { DatabaseReader, DatabaseWriter } from "./_generated/server";
 import {
   internalMutation as rawInternalMutation,
   mutation as rawMutation,
 } from "./_generated/server";
+import { truncateText } from "./utils/helper";
 
 const triggers = new Triggers<DataModel>();
 
@@ -49,6 +77,10 @@ triggers.register("schoolClassForums", async () => {
   // No-op: patched in schoolClassForumPosts trigger for post counts
 });
 
+triggers.register("schoolClassForumReadStates", async () => {
+  // No-op: upserted in classes/mutations.ts for read tracking
+});
+
 triggers.register("schoolActivityLogs", async () => {
   // No-op: inserted by various triggers for audit logging
 });
@@ -56,6 +88,19 @@ triggers.register("schoolActivityLogs", async () => {
 // Dataset-related tables
 triggers.register("datasets", async () => {
   // No-op: modified in datasets/mutations.ts
+});
+
+// Notification-related tables
+triggers.register("notifications", async () => {
+  // No-op: created by various triggers for user notifications
+});
+
+triggers.register("notificationCounts", async () => {
+  // No-op: updated atomically when notifications are created/read
+});
+
+triggers.register("notificationPreferences", async () => {
+  // No-op: modified in notifications/mutations.ts
 });
 
 triggers.register("datasetColumns", async () => {
@@ -750,7 +795,7 @@ triggers.register("schoolClassMembers", async (ctx, change) => {
   }
 });
 
-// Trigger for forum posts - updates forum stats and reply counts
+// Trigger for forum posts - updates forum stats, reply counts, read state, and creates notifications
 triggers.register("schoolClassForumPosts", async (ctx, change) => {
   const post = change.newDoc;
   const oldPost = change.oldDoc;
@@ -761,16 +806,69 @@ triggers.register("schoolClassForumPosts", async (ctx, change) => {
         break;
       }
 
+      // Get forum for context
       const forum = await ctx.db.get("schoolClassForums", post.forumId);
       if (forum) {
+        // Update forum stats
         await ctx.db.patch("schoolClassForums", post.forumId, {
           postCount: forum.postCount + 1,
           lastPostAt: post._creationTime,
           lastPostBy: post.createdBy,
           updatedAt: Date.now(),
         });
+
+        // === READ STATE ===
+        // Update author's read state so own messages are not shown as unread
+        await updateForumReadState(ctx, {
+          forumId: post.forumId,
+          classId: post.classId,
+          userId: post.createdBy,
+          lastReadAt: Date.now(),
+        });
+
+        // === NOTIFICATIONS ===
+        const truncatedBody = truncateText({ text: post.body });
+
+        // 1. Notify parent post author (post_reply) - don't notify yourself
+        if (
+          post.parentId &&
+          post.replyToUserId &&
+          post.replyToUserId !== post.createdBy
+        ) {
+          await createNotification(ctx, {
+            recipientId: post.replyToUserId,
+            actorId: post.createdBy,
+            type: "post_reply",
+            entityType: "schoolClassForumPosts",
+            entityId: change.id,
+            previewTitle: forum.title,
+            previewBody: truncatedBody,
+          });
+        }
+
+        // 2. Notify mentioned users (post_mention)
+        if (post.mentions.length > 0) {
+          for (const mentionedUserId of post.mentions) {
+            // Don't notify yourself or the person you're already replying to
+            if (
+              mentionedUserId !== post.createdBy &&
+              mentionedUserId !== post.replyToUserId
+            ) {
+              await createNotification(ctx, {
+                recipientId: mentionedUserId,
+                actorId: post.createdBy,
+                type: "post_mention",
+                entityType: "schoolClassForumPosts",
+                entityId: change.id,
+                previewTitle: forum.title,
+                previewBody: truncatedBody,
+              });
+            }
+          }
+        }
       }
 
+      // Update parent post reply count
       if (post.parentId) {
         const parentPost = await ctx.db.get(
           "schoolClassForumPosts",
@@ -963,7 +1061,10 @@ triggers.register("schoolClassForumReactions", async (ctx, change) => {
   }
 });
 
-// Helper function to update class member counts
+// =============================================================================
+// CLASS MEMBER HELPERS
+// =============================================================================
+
 async function updateClassMemberCount(
   ctx: { db: DatabaseReader & DatabaseWriter },
   classId: Id<"schoolClasses">,
@@ -986,7 +1087,6 @@ async function updateClassMemberCount(
   }
 }
 
-// Helper function to handle role changes
 async function handleRoleChange(
   ctx: { db: DatabaseReader & DatabaseWriter },
   memberId: Id<"schoolClassMembers">,
@@ -1031,4 +1131,101 @@ async function handleRoleChange(
       newRole: member.role,
     },
   });
+}
+
+// =============================================================================
+// FORUM HELPERS
+// =============================================================================
+
+/**
+ * Helper function to update forum read state (upsert pattern)
+ *
+ * Updates the lastReadAt timestamp for a user's forum read state.
+ * Creates a new record if one doesn't exist.
+ */
+async function updateForumReadState(
+  ctx: { db: DatabaseReader & DatabaseWriter },
+  args: {
+    forumId: Id<"schoolClassForums">;
+    classId: Id<"schoolClasses">;
+    userId: Id<"users">;
+    lastReadAt: number;
+  }
+) {
+  const existing = await ctx.db
+    .query("schoolClassForumReadStates")
+    .withIndex("forumId_userId", (q) =>
+      q.eq("forumId", args.forumId).eq("userId", args.userId)
+    )
+    .unique();
+
+  if (existing) {
+    await ctx.db.patch("schoolClassForumReadStates", existing._id, {
+      lastReadAt: args.lastReadAt,
+    });
+  } else {
+    await ctx.db.insert("schoolClassForumReadStates", {
+      forumId: args.forumId,
+      classId: args.classId,
+      userId: args.userId,
+      lastReadAt: args.lastReadAt,
+    });
+  }
+}
+
+// =============================================================================
+// NOTIFICATION HELPERS
+// =============================================================================
+
+/**
+ * Helper function to create a notification and update unread count
+ *
+ * This is the central place for creating notifications.
+ * It handles:
+ * 1. Creating the notification record (readAt = undefined means unread)
+ * 2. Updating the denormalized unread count
+ *
+ * Navigation URL is built at READ TIME by fetching the entity:
+ * - Post → post.forumId → forum.classId → class.schoolId → school.slug
+ * - Comment → comment.slug
+ * This ensures URLs are always correct even if routing changes.
+ *
+ * Future enhancements:
+ * - Check user preferences (disabledTypes, mutedEntities)
+ * - Send push notifications
+ * - Send email notifications based on digest settings
+ */
+async function createNotification(
+  ctx: { db: DatabaseReader & DatabaseWriter },
+  args: Omit<WithoutSystemFields<Doc<"notifications">>, "readAt">
+) {
+  // Create notification (readAt undefined = unread)
+  await ctx.db.insert("notifications", {
+    recipientId: args.recipientId,
+    actorId: args.actorId,
+    type: args.type,
+    entityType: args.entityType,
+    entityId: args.entityId,
+    previewTitle: args.previewTitle,
+    previewBody: args.previewBody,
+  });
+
+  // Update unread count (upsert pattern)
+  const existingCount = await ctx.db
+    .query("notificationCounts")
+    .withIndex("userId", (q) => q.eq("userId", args.recipientId))
+    .unique();
+
+  if (existingCount) {
+    await ctx.db.patch("notificationCounts", existingCount._id, {
+      unreadCount: existingCount.unreadCount + 1,
+      updatedAt: Date.now(),
+    });
+  } else {
+    await ctx.db.insert("notificationCounts", {
+      userId: args.recipientId,
+      unreadCount: 1,
+      updatedAt: Date.now(),
+    });
+  }
 }

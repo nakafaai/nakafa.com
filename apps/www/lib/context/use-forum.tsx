@@ -1,5 +1,6 @@
 "use client";
 
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { type ReactNode, useRef } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useStore } from "zustand";
@@ -10,11 +11,17 @@ type ForumStoreApi = ReturnType<typeof createForumStore>;
 
 export const ForumContext = createContext<ForumStoreApi | null>(null);
 
-export function ForumContextProvider({ children }: { children: ReactNode }) {
+export function ForumContextProvider({
+  children,
+  classId,
+}: {
+  children: ReactNode;
+  classId: Id<"schoolClasses">;
+}) {
   const storeRef = useRef<ForumStoreApi>(undefined);
 
   if (!storeRef.current) {
-    storeRef.current = createForumStore();
+    storeRef.current = createForumStore({ classId });
   }
 
   return (

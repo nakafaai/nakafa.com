@@ -35,10 +35,22 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
     triggers: {
       user: {
         onCreate: async (ctx, authUser) => {
+          // Create app user
           const userId = await ctx.db.insert("users", {
             email: authUser.email,
             authId: authUser._id,
           });
+
+          // Create default notification preferences
+          await ctx.db.insert("notificationPreferences", {
+            userId,
+            emailEnabled: true,
+            emailDigest: "weekly",
+            disabledTypes: [],
+            mutedEntities: [],
+            updatedAt: Date.now(),
+          });
+
           await ctx.runMutation(components.betterAuth.auth.setUserId, {
             authId: authUser._id,
             userId,
