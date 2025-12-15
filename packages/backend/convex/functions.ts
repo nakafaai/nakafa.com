@@ -819,11 +819,12 @@ triggers.register("schoolClassForumPosts", async (ctx, change) => {
 
         // === READ STATE ===
         // Update author's read state so own messages are not shown as unread
+        // Use _creationTime to match lastPostAt exactly (prevents flash of unread)
         await updateForumReadState(ctx, {
           forumId: post.forumId,
           classId: post.classId,
           userId: post.createdBy,
-          lastReadAt: Date.now(),
+          lastReadAt: post._creationTime,
         });
 
         // === NOTIFICATIONS ===
@@ -1142,6 +1143,7 @@ async function handleRoleChange(
  *
  * Updates the lastReadAt timestamp for a user's forum read state.
  * Creates a new record if one doesn't exist.
+ * Uses "high water mark" pattern: only updates if new value is greater.
  */
 async function updateForumReadState(
   ctx: { db: DatabaseReader & DatabaseWriter },
@@ -1160,9 +1162,12 @@ async function updateForumReadState(
     .unique();
 
   if (existing) {
-    await ctx.db.patch("schoolClassForumReadStates", existing._id, {
-      lastReadAt: args.lastReadAt,
-    });
+    // High water mark: only update if moving forward in time
+    if (args.lastReadAt > existing.lastReadAt) {
+      await ctx.db.patch("schoolClassForumReadStates", existing._id, {
+        lastReadAt: args.lastReadAt,
+      });
+    }
   } else {
     await ctx.db.insert("schoolClassForumReadStates", {
       forumId: args.forumId,

@@ -499,7 +499,7 @@ export const markForumRead = mutation({
 
     const now = Date.now();
 
-    // Upsert pattern
+    // Upsert pattern with high water mark: only update if moving forward
     const existing = await ctx.db
       .query("schoolClassForumReadStates")
       .withIndex("forumId_userId", (q) =>
@@ -508,9 +508,12 @@ export const markForumRead = mutation({
       .unique();
 
     if (existing) {
-      await ctx.db.patch("schoolClassForumReadStates", existing._id, {
-        lastReadAt: now,
-      });
+      // High water mark: only update if moving forward in time
+      if (now > existing.lastReadAt) {
+        await ctx.db.patch("schoolClassForumReadStates", existing._id, {
+          lastReadAt: now,
+        });
+      }
     } else {
       await ctx.db.insert("schoolClassForumReadStates", {
         forumId: args.forumId,

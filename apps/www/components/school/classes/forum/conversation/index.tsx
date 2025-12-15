@@ -72,10 +72,11 @@ export const ForumPostConversation = memo(
     const [isAtBottom, setIsAtBottom] = useState(true);
     const [isPrepending, setIsPrepending] = useState(false);
 
-    // Mark read strategy
+    // Mark read strategy - use lastPostTime to detect new posts (not pagination)
+    const lastPostTime = posts.at(-1)?._creationTime;
     useMarkRead({
       forumId: forum._id,
-      postsLength: posts.length,
+      lastPostTime,
       isAtBottom,
       isJumpMode,
     });

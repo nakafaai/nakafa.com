@@ -14,7 +14,7 @@
     "@ai-sdk/react": "^2.0.115",
     "@mendable/firecrawl-js": "^4.9.0",
     "@repo/utilities": "workspace:*",
-    "@t3-oss/env-nextjs": "^0.13.8",
+    "@t3-oss/env-nextjs": "^0.13.10",
     "ai": "^5.0.113",
     "convex": "^1.31.0",
     "dedent": "^1.7.0",
@@ -22,7 +22,7 @@
     "ky": "^1.14.1",
     "mathjs": "^15.1.0",
     "parse-domain": "^8.2.2",
-    "zod": "^4.1.13"
+    "zod": "^4.2.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

@@ -208,7 +208,11 @@ const tables = {
     classId: v.id("schoolClasses"),
     userId: v.id("users"),
     lastReadAt: v.number(),
-  }).index("forumId_userId", ["forumId", "userId"]),
+  })
+    // For single forum read state lookup
+    .index("forumId_userId", ["forumId", "userId"])
+    // For batch fetching all read states in a class (Discord-style unread badges)
+    .index("classId_userId", ["classId", "userId"]),
 };
 
 export default tables;

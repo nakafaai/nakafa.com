@@ -8,6 +8,8 @@ import {
   attachForumUsers,
   buildReactorsByEmoji,
   enrichForumPosts,
+  getForumLastReadAt,
+  getForumUnreadCounts,
   getMyForumReactions,
   loadClassWithAccess,
   loadForumWithAccess,
@@ -229,7 +231,7 @@ export const getInviteCodes = query({
 /**
  * Get all forums for a class with optional search and pagination.
  * Supports full-text search by title.
- * Returns enriched data with user info for createdBy.
+ * Returns enriched data with user info, reactions, and unread status.
  */
 export const getForums = query({
   args: {
@@ -260,11 +262,12 @@ export const getForums = query({
             .order("desc")
             .paginate(paginationOpts);
 
-    // Attach user data and reactions in parallel
+    // Fetch all enrichment data in parallel (single batch per type)
     const forumIds = forumsPage.page.map((f) => f._id);
-    const [userMap, myReactionsMap] = await Promise.all([
+    const [userMap, myReactionsMap, unreadCountMap] = await Promise.all([
       attachForumUsers(ctx, forumsPage.page),
       getMyForumReactions(ctx, forumIds, user.appUser._id),
+      getForumUnreadCounts(ctx, classId, user.appUser._id, forumsPage.page),
     ]);
 
     return {
@@ -273,14 +276,16 @@ export const getForums = query({
         ...forum,
         user: userMap.get(forum.createdBy) ?? null,
         myReactions: myReactionsMap.get(forum._id) ?? [],
+        unreadCount: unreadCountMap.get(forum._id) ?? 0,
       })),
     };
   },
 });
 
 /**
- * Get a forum by its ID.
+ * Get a forum by its ID with read state.
  * Only accessible by authenticated users who have access to the class.
+ * Includes lastReadAt for unread indicator (combined to avoid multiple queries).
  */
 export const getForum = query({
   args: {
@@ -296,11 +301,14 @@ export const getForum = query({
       currentUserId
     );
 
-    // Fetch reactions for this forum
-    const reactions = await ctx.db
-      .query("schoolClassForumReactions")
-      .withIndex("forumId_userId_emoji", (idx) => idx.eq("forumId", forum._id))
-      .collect();
+    // Fetch reactions and read state in parallel
+    const [reactions, lastReadAt] = await Promise.all([
+      ctx.db
+        .query("schoolClassForumReactions")
+        .withIndex("forumId_userId_emoji", (q) => q.eq("forumId", forum._id))
+        .collect(),
+      getForumLastReadAt(ctx, forum._id, currentUserId),
+    ]);
 
     // Batch fetch all user data (author + reactors)
     const reactorUserIds = reactions.map((r) => r.userId);
@@ -323,6 +331,7 @@ export const getForum = query({
         count,
         reactors: reactorsByEmoji.get(emoji) ?? [],
       })),
+      lastReadAt,
     };
   },
 });
@@ -358,28 +367,6 @@ export const getForumPosts = query({
       ...postsPage,
       page: enrichedPosts,
     };
-  },
-});
-
-/**
- * Get read state for a forum.
- * Returns lastReadAt timestamp (null if never opened).
- */
-export const getForumReadState = query({
-  args: {
-    forumId: v.id("schoolClassForums"),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
-
-    const readState = await ctx.db
-      .query("schoolClassForumReadStates")
-      .withIndex("forumId_userId", (q) =>
-        q.eq("forumId", args.forumId).eq("userId", user.appUser._id)
-      )
-      .unique();
-
-    return readState;
   },
 });
 

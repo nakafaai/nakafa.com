@@ -21,6 +21,7 @@ import { getLocale } from "@/lib/utils/date";
 type ForumListItem = Doc<"schoolClassForums"> & {
   user: UserData | null;
   myReactions: string[];
+  unreadCount: number;
 };
 
 const DEBOUNCE_TIME = 500;
@@ -80,7 +81,16 @@ export function SchoolClassesForumList() {
               </Badge>
 
               <div className="grid gap-1 text-left">
-                <h3 className="truncate font-medium">{forum.title}</h3>
+                <div className="flex min-w-0 items-center gap-2">
+                  <h3 className="min-w-0 truncate font-medium">
+                    {forum.title}
+                  </h3>
+                  <Activity mode={forum.unreadCount > 0 ? "visible" : "hidden"}>
+                    <Badge variant="destructive">
+                      {forum.unreadCount > 25 ? "25+" : forum.unreadCount}
+                    </Badge>
+                  </Activity>
+                </div>
 
                 <div className="flex min-w-0 flex-col items-start gap-1 text-muted-foreground text-sm sm:flex-row sm:items-center">
                   <div className="flex max-w-full items-center gap-1">

@@ -21,6 +21,82 @@ export function attachForumUsers(
 }
 
 // ============================================================================
+// Read State Helpers
+// ============================================================================
+
+/**
+ * Get read state for a single forum.
+ * Returns lastReadAt timestamp or null if never read.
+ * Used by getForum to include lastReadAt in the response.
+ */
+export async function getForumLastReadAt(
+  ctx: QueryCtx,
+  forumId: Id<"schoolClassForums">,
+  userId: Id<"users">
+): Promise<number | null> {
+  const readState = await ctx.db
+    .query("schoolClassForumReadStates")
+    .withIndex("forumId_userId", (q) =>
+      q.eq("forumId", forumId).eq("userId", userId)
+    )
+    .unique();
+
+  return readState?.lastReadAt ?? null;
+}
+
+/**
+ * Get unread counts for multiple forums (self-contained batch fetch).
+ * Fetches read states internally so it can run in parallel with other queries.
+ * Returns a Map of forumId -> unreadCount for efficient lookup.
+ * Counts posts after lastReadAt, capped at 26 (to show "25+").
+ *
+ * Uses index range query instead of .filter() per Convex best practices:
+ * - Index "forumId" is really ["forumId", "_creationTime"]
+ * - So we can use .gt() on _creationTime in the index query
+ */
+export async function getForumUnreadCounts(
+  ctx: QueryCtx,
+  classId: Id<"schoolClasses">,
+  userId: Id<"users">,
+  forums: Array<{ _id: Id<"schoolClassForums">; lastPostAt: number }>
+): Promise<Map<Id<"schoolClassForums">, number>> {
+  const MAX_COUNT = 26; // Cap at 26 to show "25+"
+
+  // Fetch all read states for this class/user in one query
+  const readStates = await ctx.db
+    .query("schoolClassForumReadStates")
+    .withIndex("classId_userId", (q) =>
+      q.eq("classId", classId).eq("userId", userId)
+    )
+    .collect();
+  const readStateMap = new Map(
+    readStates.map((rs) => [rs.forumId, rs.lastReadAt])
+  );
+
+  const counts = await asyncMap(forums, async (forum) => {
+    const lastReadAt = readStateMap.get(forum._id) ?? 0;
+
+    // Quick check: if no new posts, skip the query entirely
+    if (forum.lastPostAt <= lastReadAt) {
+      return { forumId: forum._id, count: 0 };
+    }
+
+    // Count posts after lastReadAt using index range query (capped at 26)
+    // Index "forumId" is ["forumId", "_creationTime"], so .gt() works on _creationTime
+    const posts = await ctx.db
+      .query("schoolClassForumPosts")
+      .withIndex("forumId", (q) =>
+        q.eq("forumId", forum._id).gt("_creationTime", lastReadAt)
+      )
+      .take(MAX_COUNT);
+
+    return { forumId: forum._id, count: posts.length };
+  });
+
+  return new Map(counts.map((c) => [c.forumId, c.count]));
+}
+
+// ============================================================================
 // Reaction Helpers
 // ============================================================================
 
