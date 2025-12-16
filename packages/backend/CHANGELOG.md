@@ -1,5 +1,18 @@
 # @repo/backend
 
+## 1.0.0
+
+### Major Changes
+
+- [`9ad9ff7`](https://github.com/nakafaai/nakafa.com/commit/9ad9ff78d7ca1feb73117dd5f7e78bdcee435592) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Removing datasets features, it was experimental features, probably will create a whole new products still under PT. Nakafa Tekno Kreatif
+
+- [`9ad9ff7`](https://github.com/nakafaai/nakafa.com/commit/9ad9ff78d7ca1feb73117dd5f7e78bdcee435592) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Removing schoolId in customer, now track schoolId in subscription level
+
+### Patch Changes
+
+- Updated dependencies [[`9ad9ff7`](https://github.com/nakafaai/nakafa.com/commit/9ad9ff78d7ca1feb73117dd5f7e78bdcee435592)]:
+  - @repo/ai@1.0.0
+
 ## 0.0.3
 
 ### Patch Changes
