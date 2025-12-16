@@ -71,6 +71,7 @@ jobs:
             // Collect changelogs from all packages
             const packagesDir = 'packages';
             let releaseNotes = `# Release ${tagName}\n\n`;
+            let hasContent = false;
             
             const packages = fs.readdirSync(packagesDir).filter(f => 
               fs.statSync(path.join(packagesDir, f)).isDirectory()
@@ -80,25 +81,37 @@ jobs:
               const changelogPath = path.join(packagesDir, pkg, 'CHANGELOG.md');
               if (fs.existsSync(changelogPath)) {
                 const changelog = fs.readFileSync(changelogPath, 'utf8');
-                // Extract latest version section
-                const match = changelog.match(/## 0\.\d+\.\d+\n([\s\S]*?)(?=## |$)/);
-                if (match) {
+                // Extract latest version section (matches any semver like ## 1.0.0, ## 0.0.2, etc)
+                const match = changelog.match(/## \d+\.\d+\.\d+\n([\s\S]*?)(?=\n## |\n# |$)/);
+                if (match && match[1].trim()) {
                   releaseNotes += `### @repo/${pkg}\n${match[1].trim()}\n\n`;
+                  hasContent = true;
                 }
               }
             }
             
-            // Create the release
-            await github.rest.repos.createRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: tagName,
-              name: tagName,
-              body: releaseNotes,
-              draft: false,
-              prerelease: false,
-              generate_release_notes: false
-            });
+            // If no changelog content, use auto-generated notes
+            if (!hasContent) {
+              await github.rest.repos.createRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_name: tagName,
+                name: tagName,
+                draft: false,
+                prerelease: false,
+                generate_release_notes: true
+              });
+            } else {
+              await github.rest.repos.createRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_name: tagName,
+                name: tagName,
+                body: releaseNotes,
+                draft: false,
+                prerelease: false
+              });
+            }
             
             console.log(`Created release ${tagName}`);
 
