@@ -1,5 +1,11 @@
 # @repo/security
 
+## 0.0.3
+
+### Patch Changes
+
+- [`ddb5d7b`](https://github.com/nakafaai/nakafa.com/commit/ddb5d7bb1d92e9b2463bf5171ea75331311c6989) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Exclude changeset
+
 ## 0.0.2
 
 ### Patch Changes
