@@ -5,5 +5,5 @@
       "changeset-release/main": false
     }
   },
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':!package.json' ':!CHANGELOG.md' ':!**/package.json' ':!**/CHANGELOG.md'"
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':!package.json' ':!CHANGELOG.md' ':!**/package.json' ':!**/CHANGELOG.md' ':!.changeset/**'"
 }
