@@ -85,11 +85,6 @@ triggers.register("schoolActivityLogs", async () => {
   // No-op: inserted by various triggers for audit logging
 });
 
-// Dataset-related tables
-triggers.register("datasets", async () => {
-  // No-op: modified in datasets/mutations.ts
-});
-
 // Notification-related tables
 triggers.register("notifications", async () => {
   // No-op: created by various triggers for user notifications
@@ -101,30 +96,6 @@ triggers.register("notificationCounts", async () => {
 
 triggers.register("notificationPreferences", async () => {
   // No-op: modified in notifications/mutations.ts
-});
-
-triggers.register("datasetColumns", async () => {
-  // No-op: inserted in datasets/mutations.ts
-});
-
-triggers.register("datasetTasks", async () => {
-  // No-op: modified in datasets/mutations.ts
-});
-
-triggers.register("datasetUrlLocks", async () => {
-  // No-op: modified in datasets/mutations.ts
-});
-
-triggers.register("datasetRows", async () => {
-  // No-op: modified in datasets/mutations.ts
-});
-
-triggers.register("datasetConfidences", async () => {
-  // No-op: inserted in datasets/mutations.ts
-});
-
-triggers.register("datasetCitations", async () => {
-  // No-op: inserted in datasets/mutations.ts
 });
 
 // =============================================================================

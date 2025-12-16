@@ -36,6 +36,7 @@ export const insertCustomer = internalMutation({
 /**
  * Update an existing customer record.
  * Internal function - called from actions and webhooks only.
+ * Polar is source of truth for metadata.
  * Throws error if customer doesn't exist.
  */
 export const updateCustomer = internalMutation({
@@ -57,7 +58,7 @@ export const updateCustomer = internalMutation({
       });
     }
 
-    // Update existing customer
+    // Update existing customer - Polar metadata overwrites local
     const updateFields: Partial<typeof args.customer> = {
       metadata: args.customer.metadata,
     };
@@ -101,6 +102,7 @@ export const deleteCustomerById = internalMutation({
 /**
  * Atomically sync customer data from Polar to local database.
  * Handles both insert and update in a single transaction.
+ * Polar is source of truth - metadata overwrites local.
  */
 export const syncCustomerFromPolar = internalMutation({
   args: {
@@ -115,7 +117,7 @@ export const syncCustomerFromPolar = internalMutation({
       .unique();
 
     if (existingCustomer) {
-      // Update existing customer
+      // Update existing customer - Polar metadata overwrites local
       await ctx.db.patch("customers", existingCustomer._id, {
         id: args.customer.id,
         externalId: args.customer.externalId,

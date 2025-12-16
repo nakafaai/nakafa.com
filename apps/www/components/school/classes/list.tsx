@@ -12,9 +12,14 @@ import {
   CardFooter,
 } from "@repo/design-system/components/ui/card";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { usePaginatedQuery } from "convex/react";
-import { CalendarIcon, EllipsisIcon, UsersIcon } from "lucide-react";
+import { BookOpenIcon, CalendarIcon, EllipsisIcon } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
@@ -69,6 +74,8 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
   const [imageError, setImageError] = useState(false);
   const imageSrc = imageError ? getRandomClassImage(`${cls._id}`) : cls.image;
 
+  const t = useTranslations("School.Classes");
+
   return (
     <Card className="relative gap-0 overflow-hidden p-0 transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))]">
       <NavigationLink
@@ -101,11 +108,19 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
         </Badge>
 
         <div className="flex items-center">
-          <Button asChild size="icon-sm" variant="ghost">
-            <NavigationLink href={`${pathname}/${cls._id}/people`}>
-              <UsersIcon />
-            </NavigationLink>
-          </Button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button asChild size="icon-sm" variant="ghost">
+                  <NavigationLink href={`${pathname}/${cls._id}/materials`}>
+                    <BookOpenIcon />
+                  </NavigationLink>
+                </Button>
+              }
+            />
+            <TooltipContent side="bottom">{t("materials")}</TooltipContent>
+          </Tooltip>
+
           <Button size="icon-sm" variant="ghost">
             <EllipsisIcon />
           </Button>

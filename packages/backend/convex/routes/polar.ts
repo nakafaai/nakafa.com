@@ -82,7 +82,13 @@ export function registerPolarRoutes(app: HonoWithConvex<ActionCtx>) {
           break;
         }
 
-        case "subscription.updated": {
+        // All subscription state changes use updateSubscription
+        // They all contain the full subscription object with updated status
+        case "subscription.updated":
+        case "subscription.active":
+        case "subscription.canceled":
+        case "subscription.uncanceled":
+        case "subscription.revoked": {
           await c.env.runMutation(
             internal.subscriptions.mutations.updateSubscription,
             {
@@ -91,6 +97,13 @@ export function registerPolarRoutes(app: HonoWithConvex<ActionCtx>) {
           );
           break;
         }
+
+        // Checkout events - optional, skip for now
+        // case "checkout.created":
+        // case "checkout.updated":
+
+        // Customer state changed - aggregated event, skip (we handle individual events)
+        // case "customer.state_changed":
 
         default:
           break;

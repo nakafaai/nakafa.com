@@ -53,7 +53,6 @@ export const tables = {
       v.literal("tool-calculator"),
       v.literal("tool-scrape"),
       v.literal("tool-webSearch"),
-      v.literal("tool-createDataset"),
       v.literal("dynamic-tool"),
 
       // Data Part type
@@ -63,8 +62,7 @@ export const tables = {
       v.literal("data-get-content"),
       v.literal("data-calculator"),
       v.literal("data-scrape-url"),
-      v.literal("data-web-search"),
-      v.literal("data-create-dataset")
+      v.literal("data-web-search")
     ),
     order: v.number(), // Order within message (0-based)
 
@@ -179,10 +177,6 @@ export const tables = {
 
     toolWebSearchInputQuery: v.optional(v.string()),
     toolWebSearchOutput: v.optional(v.string()),
-
-    toolCreateDatasetInputQuery: v.optional(v.string()),
-    toolCreateDatasetInputTargetRows: v.optional(v.number()),
-    toolCreateDatasetOutput: v.optional(v.string()),
 
     // Data part fields
     dataSuggestionsId: v.optional(v.string()),
@@ -330,15 +324,6 @@ export const tables = {
       v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
     ),
     dataWebSearchError: v.optional(v.string()),
-
-    dataCreateDatasetId: v.optional(v.string()),
-    dataCreateDatasetDatasetId: v.optional(v.string()),
-    dataCreateDatasetQuery: v.optional(v.string()),
-    dataCreateDatasetTargetRows: v.optional(v.number()),
-    dataCreateDatasetStatus: v.optional(
-      v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
-    ),
-    dataCreateDatasetError: v.optional(v.string()),
 
     // Provider metadata (flexible for AI provider-specific data)
     providerMetadata: v.optional(

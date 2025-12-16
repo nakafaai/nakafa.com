@@ -19,15 +19,15 @@
     "ky": "^1.14.1",
     "lucide-react": "^0.561.0",
     "motion": "^12.23.26",
-    "next-intl": "^4.6.0",
+    "next-intl": "^4.6.1",
     "react": "19.2.3",
-    "react-aria-components": "^1.13.0",
+    "react-aria-components": "^1.14.0",
     "recharts": "^2.15.4",
-    "zod": "^4.2.0"
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.0.2",
+    "@types/node": "25.0.3",
     "@types/react": "^19.2.7"
   }
 }

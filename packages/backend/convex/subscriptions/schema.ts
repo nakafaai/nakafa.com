@@ -5,6 +5,7 @@ const tables = {
   subscriptions: defineTable({
     id: v.string(),
     customerId: v.string(),
+    schoolId: v.optional(v.id("schools")), // For school subscriptions only (null = personal subscription)
     createdAt: v.string(),
     modifiedAt: v.union(v.string(), v.null()),
     amount: v.union(v.number(), v.null()),
@@ -29,10 +30,9 @@ const tables = {
     customerCancellationReason: v.optional(v.union(v.string(), v.null())),
     customerCancellationComment: v.optional(v.union(v.string(), v.null())),
   })
-    .index("id", ["id"]) // Query by Polar subscription ID
-    .index("customerId", ["customerId"]) // Query by customer
-    .index("customerId_status", ["customerId", "status"]) // Query active subscriptions
-    .index("customerId_endedAt", ["customerId", "endedAt"]), // Query subscription history
+    .index("id", ["id"]) // Lookup by Polar subscription ID (webhooks)
+    .index("customerId_status", ["customerId", "status"]) // Query by customer (omit status for all)
+    .index("schoolId_status", ["schoolId", "status"]), // Query by school (omit status for all)
 };
 
 export default tables;

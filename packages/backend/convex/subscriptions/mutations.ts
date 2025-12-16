@@ -5,6 +5,7 @@ import tables from "./schema";
 /**
  * Create a new subscription record.
  * Internal function - called by Polar webhooks only.
+ * Idempotent - safe to call multiple times with same subscription.
  */
 export const createSubscription = internalMutation({
   args: {
@@ -21,18 +22,14 @@ export const createSubscription = internalMutation({
       return existingSubscription._id;
     }
 
-    const subscriptionId = await ctx.db.insert("subscriptions", {
-      ...args.subscription,
-      metadata: args.subscription.metadata,
-    });
-
-    return subscriptionId;
+    return await ctx.db.insert("subscriptions", args.subscription);
   },
 });
 
 /**
  * Update an existing subscription record.
  * Internal function - called by Polar webhooks only.
+ * Creates subscription if not found (handles out-of-order webhooks).
  */
 export const updateSubscription = internalMutation({
   args: {
@@ -45,17 +42,15 @@ export const updateSubscription = internalMutation({
       .unique();
 
     if (!existingSubscription) {
-      // If not found, create a new subscription
-      await ctx.db.insert("subscriptions", {
-        ...args.subscription,
-        metadata: args.subscription.metadata,
-      });
+      // If not found, create (handles out-of-order webhooks)
+      await ctx.db.insert("subscriptions", args.subscription);
       return;
     }
 
-    await ctx.db.patch("subscriptions", existingSubscription._id, {
-      ...args.subscription,
-      metadata: args.subscription.metadata,
-    });
+    await ctx.db.patch(
+      "subscriptions",
+      existingSubscription._id,
+      args.subscription
+    );
   },
 });
