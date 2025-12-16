@@ -5,7 +5,9 @@ on:
     branches:
       - main
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   release:
@@ -32,86 +34,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Create Release Pull Request or Tag
+      - name: Create Release Pull Request
         id: changesets
         uses: changesets/action@v1
         with:
-          title: "chore: version packages"
-          commit: "chore: version packages"
+          title: "chore(release): version packages"
+          commit: "chore(release): version packages"
           version: pnpm changeset version
+          createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub Release
-        if: steps.changesets.outputs.hasChangesets == 'false'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-            
-            // Get the root package.json version
-            const rootPkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            const version = rootPkg.version;
-            const tagName = `v${version}`;
-            
-            // Check if release already exists
-            try {
-              await github.rest.repos.getReleaseByTag({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                tag: tagName
-              });
-              console.log(`Release ${tagName} already exists, skipping...`);
-              return;
-            } catch (e) {
-              if (e.status !== 404) throw e;
-            }
-            
-            // Collect changelogs from all packages
-            const packagesDir = 'packages';
-            let releaseNotes = `# Release ${tagName}\n\n`;
-            let hasContent = false;
-            
-            const packages = fs.readdirSync(packagesDir).filter(f => 
-              fs.statSync(path.join(packagesDir, f)).isDirectory()
-            );
-            
-            for (const pkg of packages) {
-              const changelogPath = path.join(packagesDir, pkg, 'CHANGELOG.md');
-              if (fs.existsSync(changelogPath)) {
-                const changelog = fs.readFileSync(changelogPath, 'utf8');
-                // Extract latest version section (matches any semver like ## 1.0.0, ## 0.0.2, etc)
-                const match = changelog.match(/## \d+\.\d+\.\d+\n([\s\S]*?)(?=\n## |\n# |$)/);
-                if (match && match[1].trim()) {
-                  releaseNotes += `### @repo/${pkg}\n${match[1].trim()}\n\n`;
-                  hasContent = true;
-                }
-              }
-            }
-            
-            // If no changelog content, use auto-generated notes
-            if (!hasContent) {
-              await github.rest.repos.createRelease({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                tag_name: tagName,
-                name: tagName,
-                draft: false,
-                prerelease: false,
-                generate_release_notes: true
-              });
-            } else {
-              await github.rest.repos.createRelease({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                tag_name: tagName,
-                name: tagName,
-                body: releaseNotes,
-                draft: false,
-                prerelease: false
-              });
-            }
-            
-            console.log(`Created release ${tagName}`);
 
