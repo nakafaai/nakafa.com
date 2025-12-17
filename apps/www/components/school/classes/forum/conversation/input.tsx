@@ -3,6 +3,7 @@
 import { useOs } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { AttachmentArg } from "@repo/backend/convex/classes/mutations";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -35,10 +36,11 @@ import {
 import { cn, formatFileSize } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import ky from "ky";
 import {
   ArrowUpIcon,
+  FileTextIcon,
   FileUpIcon,
-  PaperclipIcon,
   PlusIcon,
   ReplyIcon,
   SmilePlusIcon,
@@ -51,6 +53,7 @@ import {
   type ComponentProps,
   type ComponentRef,
   memo,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -69,14 +72,18 @@ export const ForumPostInput = memo(
     const forumScroll = useForumScrollContext();
 
     const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
+    const generateUploadUrl = useMutation(
+      api.classes.mutations.generateUploadUrl
+    );
     const createPost = useMutation(api.classes.mutations.createForumPost);
+
     const [
       { files },
       { removeFile, clearFiles, openFileDialog, getInputProps },
     ] = useFileUpload({
       multiple: true,
       accept: "image/*,.pdf,.doc,.docx,.txt",
-      maxSize: 10 * 1024 * 1024, // 10MB
+      maxSize: 10 * 1024 * 1024,
       maxFiles: 10,
       onError: (errors) => {
         for (const error of errors) {
@@ -89,28 +96,74 @@ export const ForumPostInput = memo(
     const os = useOs();
     const isMobile = os === "ios" || os === "android";
 
-    // Auto-focus textarea when replyTo changes
     useEffect(() => {
       if (replyTo) {
         textareaRef.current?.focus();
       }
     }, [replyTo]);
 
-    const form = useForm({
-      defaultValues: {
-        body: "",
+    const uploadFiles = useCallback(
+      (filesToUpload: FileWithPreview[]) => {
+        const promises: Promise<AttachmentArg>[] = [];
+
+        for (const f of filesToUpload) {
+          if (!(f.file instanceof File)) {
+            continue;
+          }
+          const file = f.file;
+
+          promises.push(
+            (async () => {
+              const uploadUrl = await generateUploadUrl({ forumId });
+              const { storageId } = await ky
+                .post(uploadUrl, {
+                  headers: { "Content-Type": file.type },
+                  body: file,
+                })
+                .json<{ storageId: Id<"_storage"> }>();
+
+              return {
+                storageId,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+              };
+            })()
+          );
+        }
+
+        return Promise.all(promises);
       },
+      [forumId, generateUploadUrl]
+    );
+
+    const form = useForm({
+      defaultValues: { body: "" },
       validators: {
-        onChange: z.object({
-          body: z.string().check(z.minLength(1), z.trim()),
+        onSubmit: z.object({
+          body: z.string(),
         }),
       },
       onSubmit: async ({ value }) => {
+        const hasBody = value.body.trim().length > 0;
+        const hasAttachments = files.length > 0;
+
+        if (!(hasBody || hasAttachments)) {
+          return;
+        }
+
+        let attachments: AttachmentArg[] = [];
+        if (files.length > 0) {
+          attachments = await uploadFiles(files);
+        }
+
         await createPost({
           forumId,
           body: value.body,
           parentId: replyTo?.postId,
+          attachments: attachments.length > 0 ? attachments : undefined,
         });
+
         form.reset();
         clearFiles();
         setReplyTo(null);
@@ -142,76 +195,85 @@ export const ForumPostInput = memo(
 
         <form.Field name="body">
           {(field) => (
-            <form.Subscribe selector={(state) => state.isSubmitting}>
-              {(isSubmitting) => (
-                <InputGroup
-                  className={cn(
-                    (!!replyTo || files.length > 0) && "rounded-t-none"
-                  )}
-                >
-                  <InputGroupAddon align="inline-start">
-                    <InputAttachments
+            <form.Subscribe
+              selector={(state) =>
+                [state.isSubmitting, state.values.body] as const
+              }
+            >
+              {([isSubmitting, body]) => {
+                const canSubmit = body.trim().length > 0 || files.length > 0;
+                const submitDisabled = isSubmitting || !canSubmit;
+                return (
+                  <InputGroup
+                    className={cn(
+                      (!!replyTo || files.length > 0) && "rounded-t-none"
+                    )}
+                  >
+                    <InputGroupAddon align="inline-start">
+                      <InputAttachments
+                        disabled={isSubmitting}
+                        onOpenFiles={openFileDialog}
+                      />
+                    </InputGroupAddon>
+                    <InputGroupTextarea
+                      autoFocus
+                      className="scrollbar-hide max-h-36 min-h-0"
                       disabled={isSubmitting}
-                      onOpenFiles={openFileDialog}
+                      name={field.name}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          form.handleSubmit();
+                        }
+                      }}
+                      placeholder={t("send-message-placeholder")}
+                      ref={textareaRef}
+                      value={field.state.value}
                     />
-                  </InputGroupAddon>
-                  <InputGroupTextarea
-                    autoFocus
-                    className="scrollbar-hide max-h-36 min-h-0"
-                    disabled={isSubmitting}
-                    name={field.name}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        form.handleSubmit();
-                      }
-                    }}
-                    placeholder={t("send-message-placeholder")}
-                    ref={textareaRef}
-                    value={field.state.value}
-                  />
-                  <InputGroupAddon align="inline-end">
-                    <Popover onOpenChange={setEmojiOpen} open={emojiOpen}>
-                      <PopoverTrigger asChild>
+                    <InputGroupAddon align="inline-end">
+                      <Popover onOpenChange={setEmojiOpen} open={emojiOpen}>
+                        <PopoverTrigger asChild>
+                          <InputGroupButton
+                            disabled={isSubmitting}
+                            size="icon"
+                            type="button"
+                            variant="ghost"
+                          >
+                            <SmilePlusIcon />
+                            <span className="sr-only">{t("emoji")}</span>
+                          </InputGroupButton>
+                        </PopoverTrigger>
+                        <PopoverContent align="end" className="w-fit p-0">
+                          <EmojiPicker
+                            className="h-80"
+                            onEmojiSelect={({ emoji }) => {
+                              field.handleChange(field.state.value + emoji);
+                              setEmojiOpen(false);
+                              textareaRef.current?.focus();
+                            }}
+                          >
+                            <EmojiPickerSearch />
+                            <EmojiPickerContent />
+                            <EmojiPickerFooter />
+                          </EmojiPicker>
+                        </PopoverContent>
+                      </Popover>
+                      <Activity mode={isMobile ? "visible" : "hidden"}>
                         <InputGroupButton
+                          disabled={submitDisabled}
                           size="icon"
-                          type="button"
-                          variant="ghost"
+                          type="submit"
+                          variant="default"
                         >
-                          <SmilePlusIcon />
-                          <span className="sr-only">{t("emoji")}</span>
+                          {isSubmitting ? <SpinnerIcon /> : <ArrowUpIcon />}
+                          <span className="sr-only">{t("submit")}</span>
                         </InputGroupButton>
-                      </PopoverTrigger>
-                      <PopoverContent align="end" className="w-fit p-0">
-                        <EmojiPicker
-                          className="h-80"
-                          onEmojiSelect={({ emoji }) => {
-                            field.handleChange(field.state.value + emoji);
-                            setEmojiOpen(false);
-                            textareaRef.current?.focus();
-                          }}
-                        >
-                          <EmojiPickerSearch />
-                          <EmojiPickerContent />
-                          <EmojiPickerFooter />
-                        </EmojiPicker>
-                      </PopoverContent>
-                    </Popover>
-                    <Activity mode={isMobile ? "visible" : "hidden"}>
-                      <InputGroupButton
-                        disabled={isSubmitting || !field.state.value.trim()}
-                        size="icon"
-                        type="submit"
-                        variant="default"
-                      >
-                        {isSubmitting ? <SpinnerIcon /> : <ArrowUpIcon />}
-                        <span className="sr-only">{t("submit")}</span>
-                      </InputGroupButton>
-                    </Activity>
-                  </InputGroupAddon>
-                </InputGroup>
-              )}
+                      </Activity>
+                    </InputGroupAddon>
+                  </InputGroup>
+                );
+              }}
             </form.Subscribe>
           )}
         </form.Field>
@@ -255,7 +317,7 @@ const AttachmentPreviews = memo(
             >
               <Activity mode={isImage ? "hidden" : "visible"}>
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-muted">
-                  <PaperclipIcon className="size-4 text-muted-foreground" />
+                  <FileTextIcon className="size-4 text-muted-foreground" />
                 </div>
               </Activity>
               <Activity mode={isImage ? "visible" : "hidden"}>
@@ -264,8 +326,6 @@ const AttachmentPreviews = memo(
                     alt={file.name || t("unknown-file")}
                     className="object-cover"
                     fill
-                    loading="eager"
-                    preload
                     src={preview || ""}
                   />
                 </div>

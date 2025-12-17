@@ -1,7 +1,6 @@
 import type { Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
-import { getAnyUserById } from "../auth";
-import { asyncMap, getAll } from "./relationships";
+import { getAll } from "./relationships";
 
 export type UserData = {
   _id: Id<"users">;
@@ -10,33 +9,33 @@ export type UserData = {
   image: string | null | undefined;
 };
 
+/**
+ * Batch fetch user data by IDs.
+ * Uses denormalized name/image from users table (synced via auth triggers).
+ * Single database read - no N+1 auth component calls.
+ */
 export async function getUserMap(ctx: QueryCtx, userIds: Id<"users">[]) {
   const uniqueUserIds = [...new Set(userIds)];
-  const appUsers = await getAll(ctx.db, uniqueUserIds);
+  const users = await getAll(ctx.db, uniqueUserIds);
 
   const entries: [Id<"users">, UserData][] = [];
 
-  await asyncMap(appUsers, async (appUser, index) => {
-    const userId = uniqueUserIds[index];
-    if (!appUser) {
-      return;
-    }
-
-    const authUser = await getAnyUserById(ctx, appUser.authId);
-    if (!authUser) {
-      return;
+  for (let i = 0; i < uniqueUserIds.length; i++) {
+    const user = users[i];
+    if (!user) {
+      continue;
     }
 
     entries.push([
-      userId,
+      uniqueUserIds[i],
       {
-        _id: appUser._id,
-        name: authUser.name,
-        email: authUser.email,
-        image: authUser.image,
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
       },
     ]);
-  });
+  }
 
   return new Map(entries);
 }

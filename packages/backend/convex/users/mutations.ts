@@ -1,7 +1,7 @@
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
 import { components } from "../_generated/api";
 import { mutation } from "../_generated/server";
-import { safeGetAppUser } from "../auth";
+import { requireAuthWithSession } from "../lib/authHelpers";
 
 /**
  * Update the app user's role.
@@ -16,13 +16,7 @@ export const updateUserRole = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to update your role.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
     await ctx.db.patch("users", user.appUser._id, {
       role: args.role,
     });
@@ -37,13 +31,7 @@ export const updateUserName = mutation({
     name: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to update your name.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
     await ctx.runMutation(components.betterAuth.auth.updateUserName, {
       authId: user.authUser._id,
       name: args.name,

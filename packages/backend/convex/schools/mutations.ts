@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
-import { safeGetAppUser } from "../auth";
 import { mutation } from "../functions";
+import { requireAuthWithSession } from "../lib/authHelpers";
 import { generateNanoId, slugify } from "../utils/helper";
 import { generateUniqueSlug } from "./utils";
 
@@ -26,13 +26,7 @@ export const createSchool = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to create a school.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
 
     // Check if school with same email already exists
     const existingSchoolByEmail = await ctx.db
@@ -105,13 +99,7 @@ export const joinSchool = mutation({
     code: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to join a school.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
 
     // Find invite code
     const inviteCode = await ctx.db

@@ -5,6 +5,9 @@ const tables = {
   users: defineTable({
     email: v.string(),
     authId: v.string(), // Better Auth user ID
+    // Denormalized from auth - synced via triggers for fast lookups
+    name: v.string(),
+    image: v.optional(v.string()),
     role: v.optional(
       v.union(
         v.null(),

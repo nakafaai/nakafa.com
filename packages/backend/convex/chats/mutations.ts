@@ -1,8 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
-import { safeGetAppUser } from "../auth";
 import { mutation } from "../functions";
+import { requireAuthWithSession } from "../lib/authHelpers";
 import tables from "./schema";
 
 /**
@@ -56,14 +56,7 @@ export const createChat = mutation({
     type: v.union(v.literal("study"), v.literal("finance")),
   },
   handler: async (ctx, args) => {
-    // Authentication check
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to create a chat.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
 
     const chatId = await ctx.db.insert("chats", {
       updatedAt: Date.now(),
@@ -86,13 +79,7 @@ export const updateChatTitle = mutation({
     title: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to update the chat title.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
@@ -125,13 +112,7 @@ export const updateChatVisibility = mutation({
     visibility: v.union(v.literal("public"), v.literal("private")),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to update the chat visibility.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
@@ -173,14 +154,7 @@ export const replaceMessageWithParts = mutation({
   },
   handler: async (ctx, args) => {
     const { message, parts } = args;
-    // Authentication check
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to add messages.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
 
     // Authorization check - verify user owns the chat
     const chat = await ctx.db.get("chats", message.chatId);
@@ -255,14 +229,7 @@ export const createChatWithMessage = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    // Authentication check
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to create a chat.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
 
     // Create chat
     const chatId = await ctx.db.insert("chats", {
@@ -303,13 +270,7 @@ export const deleteChat = mutation({
     chatId: v.id("chats"),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to delete a chat.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {

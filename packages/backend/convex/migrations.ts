@@ -37,6 +37,7 @@ export const migrationCreateAppUsers = internalMutation({
       await ctx.db.insert("users", {
         email: authUser.email,
         authId: authUser._id,
+        name: authUser.name,
       });
 
       created += 1;
@@ -283,5 +284,54 @@ export const migrationBackfillNotificationPreferences = internalMutation({
     }
 
     return { created, skipped, total: users.length };
+  },
+});
+
+// Migration to sync name/image from Better Auth to app users (batched to avoid timeout)
+// Run multiple times until remaining is 0
+export const migrationSyncUserData = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Get users needing sync
+    const allUsers = await ctx.db.query("users").collect();
+    const usersToSync = allUsers.filter((u) => !u.name).slice(0, 20);
+
+    if (usersToSync.length === 0) {
+      return { updated: 0, remaining: 0, total: allUsers.length };
+    }
+
+    // Batch fetch auth users
+    const authUsers = await ctx.runQuery(
+      components.betterAuth.adapter.findMany,
+      {
+        model: "user",
+        paginationOpts: { cursor: null, numItems: 1000 },
+      }
+    );
+
+    // Build lookup map with explicit types
+    type AuthUser = { _id: string; name: string; image?: string | null };
+    const authMap = new Map<string, AuthUser>(
+      authUsers.page.map((u: AuthUser) => [u._id, u])
+    );
+
+    let updated = 0;
+    for (const appUser of usersToSync) {
+      const authUser = authMap.get(appUser.authId);
+      if (!authUser) {
+        continue;
+      }
+
+      await ctx.db.patch("users", appUser._id, {
+        name: authUser.name,
+        image: authUser.image ?? undefined,
+      });
+
+      updated += 1;
+    }
+
+    const remaining = allUsers.filter((u) => !u.name).length - updated;
+
+    return { updated, remaining, total: allUsers.length };
   },
 });

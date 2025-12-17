@@ -1,8 +1,11 @@
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { query } from "../_generated/server";
-import { safeGetAppUser } from "../auth";
-import { checkClassAccess, requireAuth } from "../lib/authHelpers";
+import {
+  checkClassAccess,
+  requireAuth,
+  requireClassAccess,
+} from "../lib/authHelpers";
 import { getUserMap } from "../lib/userHelpers";
 import {
   attachForumUsers,
@@ -12,6 +15,7 @@ import {
   getForumUnreadCounts,
   getMyForumReactions,
   loadClassWithAccess,
+  loadForum,
   loadForumWithAccess,
 } from "./utils";
 
@@ -142,18 +146,13 @@ export const verifyClassMembership = query({
     classId: v.id("schoolClasses"),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    if (!user) {
-      return { allow: false };
-    }
+    const user = await requireAuth(ctx);
 
-    // Get the class to verify it exists
     const classData = await ctx.db.get("schoolClasses", args.classId);
     if (!classData) {
       return { allow: false };
     }
 
-    // Use centralized access check
     const { hasAccess, schoolMembership } = await checkClassAccess(
       ctx,
       args.classId,
@@ -161,11 +160,7 @@ export const verifyClassMembership = query({
       user.appUser._id
     );
 
-    if (!schoolMembership) {
-      return { allow: false };
-    }
-
-    return { allow: hasAccess };
+    return { allow: hasAccess && !!schoolMembership };
   },
 });
 
@@ -348,14 +343,12 @@ export const getForum = query({
     const user = await requireAuth(ctx);
     const currentUserId = user.appUser._id;
 
-    const { forum } = await loadForumWithAccess(
-      ctx,
-      args.forumId,
-      currentUserId
-    );
+    // Load forum first (needed for schoolId/classId)
+    const forum = await loadForum(ctx, args.forumId);
 
-    // Fetch reactions and read state in parallel
-    const [reactions, lastReadAt] = await Promise.all([
+    // Parallelize: access check + reactions + read state
+    const [, reactions, lastReadAt] = await Promise.all([
+      requireClassAccess(ctx, forum.classId, forum.schoolId, currentUserId),
       ctx.db
         .query("schoolClassForumReactions")
         .withIndex("forumId_userId_emoji", (q) => q.eq("forumId", forum._id))

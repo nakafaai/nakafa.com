@@ -385,8 +385,16 @@ export async function loadOpenForumWithAccess(
 // Post Enrichment Helper
 // ============================================================================
 
+export type PostAttachment = {
+  _id: Id<"schoolClassForumPostAttachments">;
+  name: string;
+  url: string | null;
+  mimeType: string;
+  size: number;
+};
+
 /**
- * Enrich posts with user data and reactions.
+ * Enrich posts with user data, reactions, and attachments.
  * Used by getForumPosts, getForumPostsAround, getForumPostsOlder, getForumPostsNewer.
  */
 export async function enrichForumPosts(
@@ -399,8 +407,12 @@ export async function enrichForumPosts(
   }
 
   const postIds = posts.map((p) => p._id);
+  // Compute postUserIds upfront since it only depends on `posts`
+  const postUserIds = posts.flatMap((p) =>
+    p.replyToUserId ? [p.createdBy, p.replyToUserId] : [p.createdBy]
+  );
 
-  const [allReactions, myReactionsMap] = await Promise.all([
+  const [allReactions, myReactionsMap, allAttachments] = await Promise.all([
     asyncMap(postIds, (postId) =>
       ctx.db
         .query("schoolClassForumPostReactions")
@@ -408,18 +420,42 @@ export async function enrichForumPosts(
         .collect()
     ),
     getMyPostReactions(ctx, postIds, currentUserId),
+    asyncMap(postIds, (postId) =>
+      ctx.db
+        .query("schoolClassForumPostAttachments")
+        .withIndex("postId", (idx) => idx.eq("postId", postId))
+        .collect()
+    ),
   ]);
 
   const reactorUserIds = allReactions.flat().map((r) => r.userId);
-  const postUserIds = posts.flatMap((p) =>
-    p.replyToUserId ? [p.createdBy, p.replyToUserId] : [p.createdBy]
-  );
-  const userMap = await getUserMap(ctx, [...postUserIds, ...reactorUserIds]);
+  const flatAttachments = allAttachments.flat();
+
+  // Parallelize userMap and attachment URLs since they're independent
+  const [userMap, urls] = await Promise.all([
+    getUserMap(ctx, [...postUserIds, ...reactorUserIds]),
+    asyncMap(flatAttachments, (att) => ctx.storage.getUrl(att.fileId)),
+  ]);
 
   const reactorMaps = new Map(
     postIds.map((postId, i) => [
       postId,
       buildReactorsByEmoji(allReactions[i], userMap),
+    ])
+  );
+
+  const urlMap = new Map(flatAttachments.map((att, i) => [att._id, urls[i]]));
+
+  const attachmentsByPost = new Map(
+    postIds.map((postId, idx) => [
+      postId,
+      allAttachments[idx].map((att) => ({
+        _id: att._id,
+        name: att.name,
+        url: urlMap.get(att._id) ?? null,
+        mimeType: att.mimeType,
+        size: att.size,
+      })),
     ])
   );
 
@@ -435,5 +471,6 @@ export async function enrichForumPosts(
       count,
       reactors: reactorMaps.get(post._id)?.get(emoji) ?? [],
     })),
+    attachments: attachmentsByPost.get(post._id) ?? [],
   }));
 }

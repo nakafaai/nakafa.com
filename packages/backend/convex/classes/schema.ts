@@ -199,10 +199,9 @@ const tables = {
     forumId: v.id("schoolClassForums"),
     classId: v.id("schoolClasses"),
     name: v.string(),
-    type: v.union(v.literal("file"), v.literal("link")),
-    fileId: v.optional(v.id("_storage")),
-    url: v.optional(v.string()),
-    size: v.optional(v.number()),
+    fileId: v.id("_storage"),
+    mimeType: v.string(),
+    size: v.number(),
     createdBy: v.id("users"),
   }).index("postId", ["postId"]),
 

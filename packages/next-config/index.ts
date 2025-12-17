@@ -26,6 +26,9 @@ export const config: NextConfig = {
       {
         hostname: "lh3.googleusercontent.com",
       },
+      {
+        hostname: "*.convex.cloud",
+      },
     ],
   },
 };

@@ -1,6 +1,6 @@
-import { ConvexError, v } from "convex/values";
+import { ConvexError, type Infer, v } from "convex/values";
 import { mutation } from "../functions";
-import { isSchoolAdmin, requireAuth } from "../lib/authHelpers";
+import { isSchoolAdmin, requireAuthWithSession } from "../lib/authHelpers";
 import { generateNanoId, truncateText } from "../utils/helper";
 import {
   CLASS_IMAGES,
@@ -18,6 +18,21 @@ import {
 } from "./utils";
 
 /**
+ * Generate an upload URL for file attachments.
+ * Verifies user has access to the forum before generating.
+ */
+export const generateUploadUrl = mutation({
+  args: {
+    forumId: v.id("schoolClassForums"),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuthWithSession(ctx);
+    await loadOpenForumWithAccess(ctx, args.forumId, user.appUser._id);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+/**
  * Create a new class in a school and automatically add the creator as a primary teacher.
  */
 export const createClass = mutation({
@@ -29,7 +44,7 @@ export const createClass = mutation({
     visibility: v.union(v.literal("private"), v.literal("public")),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
     // Verify school membership and permissions (admin or teacher can create classes)
@@ -110,7 +125,7 @@ export const joinClass = mutation({
     code: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
     // Find invite code
@@ -227,7 +242,7 @@ export const updateClassVisibility = mutation({
     visibility: v.union(v.literal("private"), v.literal("public")),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
     // Load class and verify access (allows archived classes)
@@ -262,7 +277,7 @@ export const joinPublicClass = mutation({
     classId: v.id("schoolClasses"),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
     // Load class and verify it's not archived
@@ -336,7 +351,7 @@ export const updateClassImage = mutation({
     image: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
     // Load class and verify access (allows archived classes to update image)
@@ -391,7 +406,7 @@ export const createForum = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
     // Load active class and verify access
@@ -430,8 +445,17 @@ export const createForum = mutation({
   },
 });
 
+const attachmentArg = v.object({
+  storageId: v.id("_storage"),
+  name: v.string(),
+  type: v.string(),
+  size: v.number(),
+});
+export type AttachmentArg = Infer<typeof attachmentArg>;
+
 /**
- * Create a new post in a forum.
+ * Create a new post in a forum with optional attachments.
+ * Body can be empty if attachments are provided (like WhatsApp/Discord).
  */
 export const createForumPost = mutation({
   args: {
@@ -439,12 +463,23 @@ export const createForumPost = mutation({
     body: v.string(),
     mentions: v.optional(v.array(v.id("users"))),
     parentId: v.optional(v.id("schoolClassForumPosts")),
+    attachments: v.optional(v.array(attachmentArg)),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
-    // Load open forum and verify access
+    const hasBody = args.body.trim().length > 0;
+    const attachments = args.attachments ?? [];
+    const hasAttachments = attachments.length > 0;
+
+    if (!(hasBody || hasAttachments)) {
+      throw new ConvexError({
+        code: "EMPTY_POST",
+        message: "Post must have either a message or attachments.",
+      });
+    }
+
     const { forum } = await loadOpenForumWithAccess(ctx, args.forumId, userId);
 
     let replyToUserId: typeof args.parentId extends undefined
@@ -464,7 +499,6 @@ export const createForumPost = mutation({
         });
       }
       replyToUserId = parentPost.createdBy;
-      // Store preview snippet (truncated, like Discord)
       replyToBody = truncateText({ text: parentPost.body });
     }
 
@@ -485,8 +519,18 @@ export const createForumPost = mutation({
       updatedAt: now,
     });
 
-    // Note: Read state is updated via trigger in functions.ts
-    // to keep all post-creation side effects in one place
+    for (const attachment of attachments) {
+      await ctx.db.insert("schoolClassForumPostAttachments", {
+        postId,
+        forumId: args.forumId,
+        classId: forum.classId,
+        name: attachment.name,
+        fileId: attachment.storageId,
+        mimeType: attachment.type,
+        size: attachment.size,
+        createdBy: userId,
+      });
+    }
 
     return postId;
   },
@@ -505,7 +549,7 @@ export const togglePostReaction = mutation({
     emoji: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
     const post = await ctx.db.get("schoolClassForumPosts", args.postId);
@@ -560,7 +604,7 @@ export const toggleForumReaction = mutation({
     emoji: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
     await loadForumWithAccess(ctx, args.forumId, userId);
@@ -603,7 +647,7 @@ export const markForumRead = mutation({
     forumId: v.id("schoolClassForums"),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
     const { forum } = await loadForumWithAccess(ctx, args.forumId, userId);

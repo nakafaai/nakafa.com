@@ -2,6 +2,12 @@
  * Centralized Auth Helpers
  *
  * Authentication and authorization patterns used across queries and mutations.
+ *
+ * Two auth strategies:
+ * 1. requireAuth() - Fast, uses JWT identity (for queries)
+ * 2. requireAuthWithSession() - Full session validation (for mutations)
+ *
+ * @see https://convex-better-auth.netlify.app/basic-usage/authorization
  */
 
 import { ConvexError } from "convex/values";
@@ -14,10 +20,49 @@ import { safeGetAppUser } from "../auth";
 // ============================================================================
 
 /**
- * Require authentication.
- * Throws UNAUTHORIZED error if user is not logged in.
+ * Fast authentication using JWT identity.
+ * Uses ctx.auth.getUserIdentity() which reads from JWT directly.
+ *
+ * Pros: ~700ms faster than session validation
+ * Cons: Won't catch revoked sessions until JWT expires
+ *
+ * Best for: Read-only queries where speed matters
  */
 export async function requireAuth(ctx: QueryCtx | MutationCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  const email = identity?.email;
+  if (!email) {
+    throw new ConvexError({
+      code: "UNAUTHORIZED",
+      message: "You must be logged in.",
+    });
+  }
+
+  const appUser = await ctx.db
+    .query("users")
+    .withIndex("email", (q) => q.eq("email", email))
+    .unique();
+
+  if (!appUser) {
+    throw new ConvexError({
+      code: "UNAUTHORIZED",
+      message: "User not found.",
+    });
+  }
+
+  return { appUser, identity };
+}
+
+/**
+ * Full authentication with session validation.
+ * Uses Better Auth component to validate session against database.
+ *
+ * Pros: Catches revoked sessions immediately
+ * Cons: ~700ms slower due to component overhead
+ *
+ * Best for: Mutations, sensitive operations, security-critical paths
+ */
+export async function requireAuthWithSession(ctx: QueryCtx | MutationCtx) {
   const user = await safeGetAppUser(ctx);
   if (!user) {
     throw new ConvexError({

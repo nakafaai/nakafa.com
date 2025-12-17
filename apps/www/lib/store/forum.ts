@@ -1,4 +1,5 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { PostAttachment } from "@repo/backend/convex/classes/utils";
 import type { UserData } from "@repo/backend/convex/lib/userHelpers";
 import * as z from "zod/mini";
 import { createStore } from "zustand";
@@ -27,6 +28,7 @@ export type ForumPost = Doc<"schoolClassForumPosts"> & {
   replyToUser: UserData | null;
   myReactions: string[];
   reactionUsers: ReactionWithUsers[];
+  attachments: PostAttachment[];
 };
 
 type ReplyTo = {

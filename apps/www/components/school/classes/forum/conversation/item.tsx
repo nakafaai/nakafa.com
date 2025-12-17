@@ -2,6 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { PostAttachment } from "@repo/backend/convex/classes/utils";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -31,10 +32,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { cn } from "@repo/design-system/lib/utils";
+import { cn, formatFileSize } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { format } from "date-fns";
-import { CornerDownRightIcon, ReplyIcon, SmilePlusIcon } from "lucide-react";
+import {
+  CornerDownRightIcon,
+  FileTextIcon,
+  ReplyIcon,
+  SmilePlusIcon,
+} from "lucide-react";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, memo, useState, useTransition } from "react";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/types";
@@ -115,9 +122,13 @@ export const ForumPostItem = memo(
 
             <PostReplyIndicator post={post} />
 
-            <div className="wrap-break-word min-w-0 text-chat">
-              <Response id={post._id}>{post.body}</Response>
-            </div>
+            <Activity mode={post.body.trim() ? "visible" : "hidden"}>
+              <div className="wrap-break-word min-w-0 text-chat">
+                <Response id={post._id}>{post.body}</Response>
+              </div>
+            </Activity>
+
+            <PostAttachments attachments={post.attachments} />
           </div>
 
           <PostReactions post={post} />
@@ -188,6 +199,66 @@ const PostReactions = memo(({ post }: { post: ForumPost }) => {
 });
 PostReactions.displayName = "PostReactions";
 
+const PostAttachments = memo(
+  ({ attachments }: { attachments: PostAttachment[] }) => {
+    if (attachments.length === 0) {
+      return null;
+    }
+
+    const images = attachments.filter((a) => a.mimeType.startsWith("image/"));
+    const files = attachments.filter((a) => !a.mimeType.startsWith("image/"));
+
+    return (
+      <div className="flex flex-col gap-1">
+        {images.map((attachment) => (
+          <a
+            className="group/image relative block h-40 w-full max-w-xs overflow-hidden rounded-sm border bg-muted sm:h-48"
+            href={attachment.url ?? "#"}
+            key={attachment._id}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <Image
+              alt={attachment.name}
+              className="object-cover transition-transform ease-out group-hover/image:scale-105"
+              fill
+              loading="eager"
+              preload
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              src={attachment.url ?? ""}
+            />
+          </a>
+        ))}
+
+        <div className="flex flex-wrap gap-1">
+          {files.map((attachment) => (
+            <a
+              className="group/file flex items-center gap-2 rounded-sm border bg-background p-2 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+              href={attachment.url ?? "#"}
+              key={attachment._id}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <div className="flex size-8 items-center justify-center rounded-sm bg-muted">
+                <FileTextIcon className="size-4 text-muted-foreground" />
+              </div>
+              <div className="flex min-w-0 flex-col">
+                <span className="max-w-30 truncate font-medium text-xs">
+                  {attachment.name}
+                </span>
+                <span className="text-[10px] text-muted-foreground group-hover/file:text-accent-foreground">
+                  {formatFileSize(attachment.size)}
+                </span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+  }
+);
+PostAttachments.displayName = "PostAttachments";
+
 const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
   const { parentId, replyToUser, replyToBody } = post;
   const forumScroll = useForumScrollContext();
@@ -239,7 +310,7 @@ const PostItemActions = memo(({ post }: { post: ForumPost }) => {
   return (
     <ButtonGroup
       className={cn(
-        "absolute -top-4 right-4 opacity-0 shadow-xs transition-opacity ease-out group-hover:opacity-100",
+        "absolute -top-4 right-4 z-1 opacity-0 shadow-xs transition-opacity ease-out group-hover:opacity-100",
         !!isOpen && "opacity-100"
       )}
     >

@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
-import { safeGetAppUser } from "../auth";
 import { mutation } from "../functions";
+import { requireAuthWithSession } from "../lib/authHelpers";
 import { cleanSlug, truncateText } from "../utils/helper";
 
 /**
@@ -14,14 +14,7 @@ export const addComment = mutation({
     parentId: v.optional(v.id("comments")),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to comment.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
 
     const parentComment = args.parentId
       ? await ctx.db.get("comments", args.parentId)
@@ -59,14 +52,7 @@ export const voteOnComment = mutation({
     vote: v.union(v.literal(-1), v.literal(0), v.literal(1)),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to vote.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
 
     const comment = await ctx.db.get("comments", args.commentId);
 
@@ -109,17 +95,9 @@ export const deleteComment = mutation({
     commentId: v.id("comments"),
   },
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-
-    if (!user) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to delete a comment.",
-      });
-    }
+    const user = await requireAuthWithSession(ctx);
 
     const comment = await ctx.db.get("comments", args.commentId);
-
     if (!comment) {
       throw new ConvexError({
         code: "COMMENT_NOT_FOUND",

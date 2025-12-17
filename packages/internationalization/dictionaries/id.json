@@ -405,7 +405,8 @@
     "max-files-exceeded": "Maksimal {maxFiles} file yang diperbolehkan.",
     "some-files-exceed-max-size": "Beberapa file melebihi ukuran maksimal {maxSizeFormatted}.",
     "file-exceeds-max-size": "File melebihi ukuran maksimal {maxSizeFormatted}.",
-    "unknown-file": "File tidak dikenal"
+    "unknown-file": "File tidak dikenal",
+    "unknown-file-size": "Ukuran file tidak dikenal"
   },
   "Legal": {
     "terms-and-policies": "Syarat dan Kebijakan",
@@ -531,7 +532,9 @@
       "visibility-placeholder": "Pilih visibilitas...",
       "public": "Publik",
       "private": "Privat",
-      "emoji": "Emoji"
+      "emoji": "Emoji",
+      "failed-to-send-message": "Gagal mengirim pesan.",
+      "failed-to-upload-file": "Gagal mengunggah {fileName}."
     },
     "Onboarding": {
       "title": "Selamat datang di Nakafa School!",

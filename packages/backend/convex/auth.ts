@@ -36,10 +36,12 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
     triggers: {
       user: {
         onCreate: async (ctx, authUser) => {
-          // Create app user
+          // Create app user with denormalized auth data
           const userId = await ctx.db.insert("users", {
             email: authUser.email,
             authId: authUser._id,
+            name: authUser.name,
+            image: authUser.image ?? undefined,
           });
 
           // Create default notification preferences
@@ -57,8 +59,20 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             userId,
           });
         },
-        onUpdate: async (_ctx, _newDoc, _oldDoc) => {
-          // TODO: Sync user updates if needed
+        onUpdate: async (ctx, newDoc, oldDoc) => {
+          // Sync name/image changes to app user
+          if (newDoc.name !== oldDoc.name || newDoc.image !== oldDoc.image) {
+            const appUser = await ctx.db
+              .query("users")
+              .withIndex("authId", (q) => q.eq("authId", newDoc._id))
+              .unique();
+            if (appUser) {
+              await ctx.db.patch("users", appUser._id, {
+                name: newDoc.name,
+                image: newDoc.image ?? undefined,
+              });
+            }
+          }
         },
         onDelete: async (_ctx, _authUser) => {
           // TODO: Clean up related data on user deletion
@@ -155,7 +169,6 @@ export const getAnyUserById = (ctx: QueryCtx, userId: string) =>
  */
 export const safeGetAppUser = async (ctx: QueryCtx) => {
   const authUser = await safeGetUser(ctx);
-
   if (!authUser) {
     return null;
   }
