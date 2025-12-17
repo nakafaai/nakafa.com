@@ -1,5 +1,5 @@
-import { nextJsHandler } from "@convex-dev/better-auth/nextjs";
+import { handler } from "@/lib/auth-server";
 
 // Proxy all /v1/* requests to Convex HTTP endpoints
-// Uses the same handler as Better Auth - simple and battle-tested
-export const { GET, POST } = nextJsHandler();
+// Uses the Better Auth handler for routing
+export const { GET, POST } = handler;

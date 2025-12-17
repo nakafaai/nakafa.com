@@ -398,6 +398,15 @@
     "about-us": "About Us",
     "events": "Events"
   },
+  "File": {
+    "exceeds-max-size": "{fileName} exceeds maximum size of {maxSizeFormatted}.",
+    "exceeds-max-size-multiple": "{fileName} exceeds maximum size of {maxSizeFormatted}.",
+    "not-accepted-file-type": "{fileName} is not an accepted file type.",
+    "max-files-exceeded": "Maximum of {maxFiles} files allowed.",
+    "some-files-exceed-max-size": "Some files exceed maximum size of {maxSizeFormatted}.",
+    "file-exceeds-max-size": "File exceeds maximum size of {maxSizeFormatted}.",
+    "unknown-file": "Unknown file"
+  },
   "Legal": {
     "terms-and-policies": "Terms and Policies",
     "terms-of-service": "Terms of Service",
@@ -521,7 +530,8 @@
       "visibility-label": "Visibility",
       "visibility-placeholder": "Select visibility...",
       "public": "Public",
-      "private": "Private"
+      "private": "Private",
+      "emoji": "Emoji"
     },
     "Onboarding": {
       "title": "Welcome to Nakafa School!",

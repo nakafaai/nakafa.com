@@ -105,6 +105,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               }
             | {
                 data: {
+                  createdAt: number;
                   email: string;
                   expiresAt: number;
                   inviterId: string;
@@ -142,6 +143,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 data: {
                   createdAt: number;
+                  expiresAt?: null | number;
                   privateKey: string;
                   publicKey: string;
                 };
@@ -378,6 +380,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "role"
                     | "status"
                     | "expiresAt"
+                    | "createdAt"
                     | "inviterId"
                     | "_id";
                   operator?:
@@ -452,7 +455,12 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 model: "jwks";
                 where?: Array<{
                   connector?: "AND" | "OR";
-                  field: "publicKey" | "privateKey" | "createdAt" | "_id";
+                  field:
+                    | "publicKey"
+                    | "privateKey"
+                    | "createdAt"
+                    | "expiresAt"
+                    | "_id";
                   operator?:
                     | "lt"
                     | "lte"
@@ -734,6 +742,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "role"
                     | "status"
                     | "expiresAt"
+                    | "createdAt"
                     | "inviterId"
                     | "_id";
                   operator?:
@@ -808,7 +817,12 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 model: "jwks";
                 where?: Array<{
                   connector?: "AND" | "OR";
-                  field: "publicKey" | "privateKey" | "createdAt" | "_id";
+                  field:
+                    | "publicKey"
+                    | "privateKey"
+                    | "createdAt"
+                    | "expiresAt"
+                    | "_id";
                   operator?:
                     | "lt"
                     | "lte"
@@ -954,13 +968,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               | null;
           }>;
         },
-        any,
-        Name
-      >;
-      migrationRemoveUserId: FunctionReference<
-        "mutation",
-        "internal",
-        { userId: string },
         any,
         Name
       >;
@@ -1234,6 +1241,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 model: "invitation";
                 update: {
+                  createdAt?: number;
                   email?: string;
                   expiresAt?: number;
                   inviterId?: string;
@@ -1249,6 +1257,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "role"
                     | "status"
                     | "expiresAt"
+                    | "createdAt"
                     | "inviterId"
                     | "_id";
                   operator?:
@@ -1345,12 +1354,18 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 model: "jwks";
                 update: {
                   createdAt?: number;
+                  expiresAt?: null | number;
                   privateKey?: string;
                   publicKey?: string;
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
-                  field: "publicKey" | "privateKey" | "createdAt" | "_id";
+                  field:
+                    | "publicKey"
+                    | "privateKey"
+                    | "createdAt"
+                    | "expiresAt"
+                    | "_id";
                   operator?:
                     | "lt"
                     | "lte"
@@ -1682,6 +1697,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 model: "invitation";
                 update: {
+                  createdAt?: number;
                   email?: string;
                   expiresAt?: number;
                   inviterId?: string;
@@ -1697,6 +1713,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "role"
                     | "status"
                     | "expiresAt"
+                    | "createdAt"
                     | "inviterId"
                     | "_id";
                   operator?:
@@ -1793,12 +1810,18 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 model: "jwks";
                 update: {
                   createdAt?: number;
+                  expiresAt?: null | number;
                   privateKey?: string;
                   publicKey?: string;
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
-                  field: "publicKey" | "privateKey" | "createdAt" | "_id";
+                  field:
+                    | "publicKey"
+                    | "privateKey"
+                    | "createdAt"
+                    | "expiresAt"
+                    | "_id";
                   operator?:
                     | "lt"
                     | "lte"

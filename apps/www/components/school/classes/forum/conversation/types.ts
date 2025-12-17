@@ -5,10 +5,6 @@ import type { ForumPost } from "@/lib/store/forum";
 // Re-export ForumPost for convenience
 export type { ForumPost } from "@/lib/store/forum";
 
-// ============================================================================
-// Types
-// ============================================================================
-
 type ReactionWithUsers = {
   emoji: string;
   count: number;

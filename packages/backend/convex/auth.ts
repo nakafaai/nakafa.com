@@ -17,6 +17,7 @@ import { v } from "convex/values";
 import { components, internal } from "./_generated/api";
 import type { DataModel, Id } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
+import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
 import { polarClient, products } from "./utils/polar";
 
@@ -67,15 +68,9 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
   }
 );
 
-export const createAuth = (
-  ctx: GenericCtx<DataModel>,
-  { optionsOnly } = { optionsOnly: true }
-) => {
-  const authConfig = {
+export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
+  ({
     baseURL: siteUrl,
-    logger: {
-      disabled: optionsOnly,
-    },
     database: authComponent.adapter(ctx),
     rateLimit: {
       enabled: true,
@@ -114,7 +109,10 @@ export const createAuth = (
       organization(),
       apiKey(),
       openAPI(),
-      convex(),
+      convex({
+        authConfig,
+        jwksRotateOnTokenGenerationError: true,
+      }),
       polar({
         client: polarClient,
         createCustomerOnSignUp: true,
@@ -134,10 +132,10 @@ export const createAuth = (
         ],
       }),
     ],
-  } satisfies BetterAuthOptions;
+  }) satisfies BetterAuthOptions;
 
-  return betterAuth(authConfig);
-};
+export const createAuth = (ctx: GenericCtx<DataModel>) =>
+  betterAuth(createAuthOptions(ctx));
 
 /**
  * Get Better Auth user from session.

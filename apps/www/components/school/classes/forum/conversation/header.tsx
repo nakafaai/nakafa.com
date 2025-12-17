@@ -38,10 +38,6 @@ import type { Forum } from "@/components/school/classes/forum/conversation/types
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
-// ============================================================================
-// ForumHeader
-// ============================================================================
-
 export const ForumHeader = memo(({ forum }: { forum: Forum }) => {
   const t = useTranslations("Common");
   const locale = useLocale();
@@ -50,7 +46,7 @@ export const ForumHeader = memo(({ forum }: { forum: Forum }) => {
   const userImage = forum.user?.image ?? "";
 
   return (
-    <div className="group flex items-start gap-3 border-primary border-l-2 bg-primary/5 p-4">
+    <div className="group flex items-start gap-3 border-primary border-l-2 bg-primary/10 p-4">
       <Avatar className="size-8 shrink-0 rounded-full">
         <AvatarImage alt={userName} src={userImage} />
         <AvatarFallback className="rounded-lg">
@@ -85,10 +81,6 @@ export const ForumHeader = memo(({ forum }: { forum: Forum }) => {
   );
 });
 ForumHeader.displayName = "ForumHeader";
-
-// ============================================================================
-// ForumReactions
-// ============================================================================
 
 const ForumReactions = memo(({ forum }: { forum: Forum }) => {
   const t = useTranslations("Common");
@@ -149,10 +141,6 @@ const ForumReactions = memo(({ forum }: { forum: Forum }) => {
   );
 });
 ForumReactions.displayName = "ForumReactions";
-
-// ============================================================================
-// ForumActions
-// ============================================================================
 
 const ForumActions = memo(({ forum }: { forum: Forum }) => {
   const t = useTranslations("Common");

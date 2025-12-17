@@ -43,10 +43,6 @@ import { useForumScrollContext } from "@/lib/context/use-forum-scroll";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
-// ============================================================================
-// ForumPostItem
-// ============================================================================
-
 export const ForumPostItem = memo(
   ({
     post,
@@ -71,8 +67,8 @@ export const ForumPostItem = memo(
       <div
         className={cn(
           "group relative flex items-start gap-3 border-l-2 border-l-transparent px-4 py-2 transition-colors ease-out hover:bg-accent/20",
-          isReplyToMe === true && "border-primary bg-primary/5",
-          isReplyTo === true && "border-secondary bg-secondary/5"
+          isReplyToMe === true && "border-primary bg-primary/10",
+          isReplyTo === true && "border-secondary bg-secondary/10"
         )}
         id={post._id}
       >
@@ -131,10 +127,6 @@ export const ForumPostItem = memo(
   }
 );
 ForumPostItem.displayName = "ForumPostItem";
-
-// ============================================================================
-// PostReactions
-// ============================================================================
 
 const PostReactions = memo(({ post }: { post: ForumPost }) => {
   const t = useTranslations("Common");
@@ -196,10 +188,6 @@ const PostReactions = memo(({ post }: { post: ForumPost }) => {
 });
 PostReactions.displayName = "PostReactions";
 
-// ============================================================================
-// PostReplyIndicator
-// ============================================================================
-
 const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
   const { parentId, replyToUser, replyToBody } = post;
   const forumScroll = useForumScrollContext();
@@ -230,10 +218,6 @@ const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
   );
 });
 PostReplyIndicator.displayName = "PostReplyIndicator";
-
-// ============================================================================
-// PostItemActions
-// ============================================================================
 
 const PostItemActions = memo(({ post }: { post: ForumPost }) => {
   const t = useTranslations("Common");

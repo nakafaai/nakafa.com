@@ -1,13 +1,14 @@
-import { getStaticAuth } from "@convex-dev/better-auth";
+import type { GenericCtx } from "@convex-dev/better-auth";
 import { v } from "convex/values";
 import { doc } from "convex-helpers/validators";
+import type { DataModel } from "../_generated/dataModel";
 import { createAuth } from "../auth";
 import { mutation, query } from "./_generated/server";
 import schema from "./schema";
 import { validatePermissions } from "./utils";
 
 // Export a static instance for Better Auth schema generation
-export const auth = getStaticAuth(createAuth);
+export const auth = createAuth({} as GenericCtx<DataModel>);
 
 /**
  * Link Better Auth user to app user.

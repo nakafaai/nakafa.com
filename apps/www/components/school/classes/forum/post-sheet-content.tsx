@@ -7,10 +7,6 @@ import { memo } from "react";
 import { ForumPostConversation } from "@/components/school/classes/forum/conversation";
 import { useForum } from "@/lib/context/use-forum";
 
-// ============================================================================
-// Main Export
-// ============================================================================
-
 export const SchoolClassesForumPostSheetContent = memo(() => {
   const activeForumId = useForum((f) => f.activeForumId);
 
@@ -22,10 +18,6 @@ export const SchoolClassesForumPostSheetContent = memo(() => {
 });
 SchoolClassesForumPostSheetContent.displayName =
   "SchoolClassesForumPostSheetContent";
-
-// ============================================================================
-// ForumPostList
-// ============================================================================
 
 const ForumPostList = memo(
   ({ forumId }: { forumId: Id<"schoolClassForums"> }) => {

@@ -1,7 +1,6 @@
 import { components } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation } from "./_generated/server";
-import { authComponent } from "./auth";
 
 // Migration to create app users from Better Auth users
 export const migrationCreateAppUsers = internalMutation({
@@ -44,29 +43,6 @@ export const migrationCreateAppUsers = internalMutation({
     }
 
     return { created, skipped, total: authUsers.page.length };
-  },
-});
-
-// Migration to remove userId from Better Auth users
-export const migrationRemoveUserId = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    // Get all app users
-    const appUsers = await ctx.db.query("users").collect();
-
-    let updated = 0;
-
-    for (const appUser of appUsers) {
-      if (!appUser.authId) {
-        continue;
-      }
-
-      // Remove userId from Better Auth user using the authId
-      await authComponent.migrationRemoveUserId(ctx, appUser.authId);
-      updated += 1;
-    }
-
-    return { updated, total: appUsers.length };
   },
 });
 

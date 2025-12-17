@@ -10,6 +10,7 @@ import {
   focusNextNode,
   isValidPosition,
 } from "@repo/design-system/lib/tiptap-utils";
+import { formatFileSize } from "@repo/design-system/lib/utils";
 
 const FILE_EXTENSION_REGEX = /\.[^/.]+$/;
 
@@ -365,61 +366,47 @@ type ImageUploadPreviewProps = {
 const ImageUploadPreview: React.FC<ImageUploadPreviewProps> = ({
   fileItem,
   onRemove,
-}) => {
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) {
-      return "0 Bytes";
-    }
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
-  };
+}) => (
+  <div className="tiptap-image-upload-preview">
+    {fileItem.status === "uploading" && (
+      <div
+        className="tiptap-image-upload-progress"
+        style={{ width: `${fileItem.progress}%` }}
+      />
+    )}
 
-  return (
-    <div className="tiptap-image-upload-preview">
-      {fileItem.status === "uploading" && (
-        <div
-          className="tiptap-image-upload-progress"
-          style={{ width: `${fileItem.progress}%` }}
-        />
-      )}
-
-      <div className="tiptap-image-upload-preview-content">
-        <div className="tiptap-image-upload-file-info">
-          <div className="tiptap-image-upload-file-icon">
-            <CloudUploadIcon />
-          </div>
-          <div className="tiptap-image-upload-details">
-            <span className="tiptap-image-upload-text">
-              {fileItem.file.name}
-            </span>
-            <span className="tiptap-image-upload-subtext">
-              {formatFileSize(fileItem.file.size)}
-            </span>
-          </div>
+    <div className="tiptap-image-upload-preview-content">
+      <div className="tiptap-image-upload-file-info">
+        <div className="tiptap-image-upload-file-icon">
+          <CloudUploadIcon />
         </div>
-        <div className="tiptap-image-upload-actions">
-          {fileItem.status === "uploading" && (
-            <span className="tiptap-image-upload-progress-text">
-              {fileItem.progress}%
-            </span>
-          )}
-          <Button
-            data-style="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-            type="button"
-          >
-            <CloseIcon className="tiptap-button-icon" />
-          </Button>
+        <div className="tiptap-image-upload-details">
+          <span className="tiptap-image-upload-text">{fileItem.file.name}</span>
+          <span className="tiptap-image-upload-subtext">
+            {formatFileSize(fileItem.file.size)}
+          </span>
         </div>
       </div>
+      <div className="tiptap-image-upload-actions">
+        {fileItem.status === "uploading" && (
+          <span className="tiptap-image-upload-progress-text">
+            {fileItem.progress}%
+          </span>
+        )}
+        <Button
+          data-style="ghost"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          type="button"
+        >
+          <CloseIcon className="tiptap-button-icon" />
+        </Button>
+      </div>
     </div>
-  );
-};
+  </div>
+);
 
 const DropZoneContent: React.FC<{ maxSize: number; limit: number }> = ({
   maxSize,

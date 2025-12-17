@@ -398,6 +398,15 @@
     "about-us": "Tentang Kami",
     "events": "Acara"
   },
+  "File": {
+    "exceeds-max-size": "{fileName} melebihi ukuran maksimal {maxSizeFormatted}.",
+    "exceeds-max-size-multiple": "{fileName} melebihi ukuran maksimal {maxSizeFormatted}.",
+    "not-accepted-file-type": "{fileName} bukan tipe file yang diterima.",
+    "max-files-exceeded": "Maksimal {maxFiles} file yang diperbolehkan.",
+    "some-files-exceed-max-size": "Beberapa file melebihi ukuran maksimal {maxSizeFormatted}.",
+    "file-exceeds-max-size": "File melebihi ukuran maksimal {maxSizeFormatted}.",
+    "unknown-file": "File tidak dikenal"
+  },
   "Legal": {
     "terms-and-policies": "Syarat dan Kebijakan",
     "terms-of-service": "Syarat dan Ketentuan",
@@ -521,7 +530,8 @@
       "visibility-label": "Visibilitas",
       "visibility-placeholder": "Pilih visibilitas...",
       "public": "Publik",
-      "private": "Privat"
+      "private": "Privat",
+      "emoji": "Emoji"
     },
     "Onboarding": {
       "title": "Selamat datang di Nakafa School!",

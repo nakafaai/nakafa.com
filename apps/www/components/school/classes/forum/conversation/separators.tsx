@@ -8,10 +8,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { memo } from "react";
 import { getLocale } from "@/lib/utils/date";
 
-// ============================================================================
-// JumpModeIndicator
-// ============================================================================
-
 export const JumpModeIndicator = memo(({ onExit }: { onExit: () => void }) => {
   const t = useTranslations("Common");
   return (
@@ -24,10 +20,6 @@ export const JumpModeIndicator = memo(({ onExit }: { onExit: () => void }) => {
   );
 });
 JumpModeIndicator.displayName = "JumpModeIndicator";
-
-// ============================================================================
-// DateSeparator
-// ============================================================================
 
 export const DateSeparator = memo(({ date }: { date: number }) => {
   const locale = useLocale();
@@ -43,10 +35,6 @@ export const DateSeparator = memo(({ date }: { date: number }) => {
   );
 });
 DateSeparator.displayName = "DateSeparator";
-
-// ============================================================================
-// UnreadSeparator
-// ============================================================================
 
 export const UnreadSeparator = memo(({ count }: { count: number }) => {
   const t = useTranslations("Common");
