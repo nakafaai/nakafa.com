@@ -5,14 +5,18 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@repo/design-system/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@repo/design-system/components/ui/popover";
 import { cn } from "@repo/design-system/lib/utils";
 import {
   usePathname,
@@ -101,12 +105,8 @@ export function AiChatModel() {
   };
 
   return (
-    <DropdownMenu
-      modal={false}
-      onOpenChange={setOpenModelMenu}
-      open={openModelMenu}
-    >
-      <DropdownMenuTrigger asChild disabled={isPending}>
+    <Popover onOpenChange={setOpenModelMenu} open={openModelMenu}>
+      <PopoverTrigger asChild>
         <Button disabled={isPending} variant="ghost">
           {!!Icon && <Icon />}
           {label}
@@ -117,52 +117,55 @@ export function AiChatModel() {
             )}
           />
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("premium-models")}</DropdownMenuLabel>
-          {premiumModels.map((m) => (
-            <DropdownMenuItem
-              className="cursor-pointer"
-              key={m.value}
-              onSelect={() => {
-                handleOnChange(m.value);
-              }}
-            >
-              <m.icon />
-              {m.label}
-              <CheckIcon
-                className={cn(
-                  "ml-auto size-4 opacity-0 transition-opacity ease-out",
-                  model === m.value && "opacity-100"
-                )}
-              />
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{t("free-models")}</DropdownMenuLabel>
-          {freeModels.map((m) => (
-            <DropdownMenuItem
-              className="cursor-pointer"
-              key={m.value}
-              onSelect={() => {
-                handleOnChange(m.value);
-              }}
-            >
-              <m.icon />
-              {m.label}
-              <CheckIcon
-                className={cn(
-                  "ml-auto size-4 opacity-0 transition-opacity ease-out",
-                  model === m.value && "opacity-100"
-                )}
-              />
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-fit p-0">
+        <Command>
+          <CommandInput placeholder={t("search-models-placeholder")} />
+          <CommandList>
+            <CommandEmpty>{t("no-models-found")}</CommandEmpty>
+            <CommandGroup heading={t("premium-models")}>
+              {premiumModels.map((m) => (
+                <CommandItem
+                  className="cursor-pointer"
+                  key={m.value}
+                  onSelect={() => {
+                    handleOnChange(m.value);
+                  }}
+                >
+                  <m.icon />
+                  {m.label}
+                  <CheckIcon
+                    className={cn(
+                      "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                      model === m.value && "opacity-100"
+                    )}
+                  />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandGroup heading={t("free-models")}>
+              {freeModels.map((m) => (
+                <CommandItem
+                  className="cursor-pointer"
+                  key={m.value}
+                  onSelect={() => {
+                    handleOnChange(m.value);
+                  }}
+                >
+                  <m.icon />
+                  {m.label}
+                  <CheckIcon
+                    className={cn(
+                      "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                      model === m.value && "opacity-100"
+                    )}
+                  />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

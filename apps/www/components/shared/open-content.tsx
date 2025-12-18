@@ -6,6 +6,7 @@ import {
   SiGooglegemini,
   SiOpenai,
 } from "@icons-pack/react-simple-icons";
+import { useClipboard } from "@mantine/hooks";
 import { api } from "@repo/connection/routes";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -14,17 +15,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
+  CheckIcon,
   ChevronDownIcon,
   CopyIcon,
   ExternalLinkIcon,
   MessageCircleIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { getGithubUrl } from "@/lib/utils/github";
 
@@ -39,55 +41,45 @@ export function OpenContent({ slug }: { slug: string }) {
 
 function LLmCopyButton({ slug }: { slug: string }) {
   const t = useTranslations("Common");
-  const [isPending, startTransition] = useTransition();
+
+  const clipboard = useClipboard({ timeout: 500 });
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["content", slug],
+    queryFn: () => api.contents.getContent({ slug }),
+  });
 
   function handleCopy() {
-    startTransition(async () => {
-      const { data, error } = await api.contents.getContent({
-        slug,
+    if (error) {
+      toast.error(error.message, {
+        position: "bottom-center",
       });
+      return;
+    }
 
-      if (error) {
-        toast.error(error.message, {
-          position: "bottom-center",
-        });
-        return;
-      }
+    const result = data?.data;
 
-      if (!data) {
-        toast.error(t("copy-error"), {
-          position: "bottom-center",
-        });
-        return;
-      }
+    if (!result) {
+      toast.error(t("copy-error"), {
+        position: "bottom-center",
+      });
+      return;
+    }
 
-      navigator.clipboard
-        .writeText(data.raw)
-        .then(() => {
-          toast.success(t("copy-success"), {
-            position: "bottom-center",
-          });
-        })
-        .catch((e) => {
-          toast.error(e.message, {
-            position: "bottom-center",
-          });
-        });
+    clipboard.copy(result.raw);
+    toast.success(t("copy-success"), {
+      position: "bottom-center",
     });
   }
 
   return (
     <Button
       className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10"
-      disabled={isPending}
+      disabled={isLoading}
       onClick={handleCopy}
       variant="secondary"
     >
-      {isPending ? (
-        <SpinnerIcon className="size-4" />
-      ) : (
-        <CopyIcon className="size-4" />
-      )}
+      {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
       {t("copy-content")}
     </Button>
   );

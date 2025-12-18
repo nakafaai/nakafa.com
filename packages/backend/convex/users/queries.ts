@@ -58,10 +58,10 @@ export const getCurrentUserApiKeys = query({
     const user = await requireAuth(ctx);
 
     const apiKeys = await ctx.runQuery(
-      components.betterAuth.auth.getApiKeysByUserId,
+      components.betterAuth.queries.getApiKeysByUserId,
       {
         // Use authId from appUser (same as authUser._id)
-        userId: user.appUser.authId as `${"user"}`,
+        userId: user.appUser.authId,
       }
     );
     return apiKeys;
@@ -78,5 +78,18 @@ export const getAllUserIds = query({
   handler: async (ctx) => {
     const userIds = await ctx.db.query("users").collect();
     return userIds.map((user) => user._id);
+  },
+});
+
+/**
+ * Get user role.
+ * Requires authentication.
+ * Returns user role.
+ */
+export const getUserRole = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await requireAuth(ctx);
+    return user.appUser.role;
   },
 });

@@ -1876,7 +1876,34 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
-    auth: {
+    mutations: {
+      setUserId: FunctionReference<
+        "mutation",
+        "internal",
+        { authId: string; userId: string },
+        any,
+        Name
+      >;
+      updateUserName: FunctionReference<
+        "mutation",
+        "internal",
+        { authId: string; name: string },
+        any,
+        Name
+      >;
+      verifyApiKey: FunctionReference<
+        "mutation",
+        "internal",
+        { key: string; permissions?: string },
+        {
+          error: null | { code: string; message: string };
+          userId: null | string;
+          valid: boolean;
+        },
+        Name
+      >;
+    };
+    queries: {
       getApiKeysByUserId: FunctionReference<
         "query",
         "internal",
@@ -1924,31 +1951,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           updatedAt: number;
           userId?: null | string;
           username?: null | string;
-        },
-        Name
-      >;
-      setUserId: FunctionReference<
-        "mutation",
-        "internal",
-        { authId: string; userId: string },
-        any,
-        Name
-      >;
-      updateUserName: FunctionReference<
-        "mutation",
-        "internal",
-        { authId: string; name: string },
-        any,
-        Name
-      >;
-      verifyApiKey: FunctionReference<
-        "mutation",
-        "internal",
-        { key: string; permissions?: string },
-        {
-          error: null | { code: string; message: string };
-          userId: null | string;
-          valid: boolean;
         },
         Name
       >;

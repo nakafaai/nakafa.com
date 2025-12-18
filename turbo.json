@@ -3,6 +3,22 @@
   "globalDependencies": ["**/.env.*local"],
   "ui": "tui",
   "envMode": "loose",
+  "globalEnv": ["ANALYZE", "NEXT_RUNTIME"],
+  "globalPassThroughEnv": [
+    "REDIS_URL",
+    "BING_WEBMASTER_API_KEY",
+    "AI_GATEWAY_API_KEY",
+    "FIRECRAWL_API_KEY",
+    "OPENWEATHER_API_KEY",
+    "SITE_URL",
+    "AUTH_GOOGLE_ID",
+    "AUTH_GOOGLE_SECRET",
+    "POLAR_ACCESS_TOKEN",
+    "POLAR_WEBHOOK_SECRET",
+    "CONVEX_URL",
+    "CONVEX_SITE_URL",
+    "BETTER_AUTH_SECRET"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build", "test"],

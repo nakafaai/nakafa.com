@@ -1,6 +1,6 @@
 "use client";
 
-import { Popover as PopoverPrimitive } from "@base-ui-components/react";
+import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { cn } from "@repo/design-system/lib/tiptap-utils";
 import "@repo/design-system/components/tiptap-ui-primitive/popover/popover.scss";
 

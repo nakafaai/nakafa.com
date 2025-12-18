@@ -380,7 +380,9 @@
     "copy-link": "Copy link",
     "link-copied": "Link copied to clipboard",
     "private-chat-error": "Access denied",
-    "private-chat-error-description": "You are not the owner of this chat. Please contact the owner to get access."
+    "private-chat-error-description": "You are not the owner of this chat. Please contact the owner to get access.",
+    "no-models-found": "No models found.",
+    "search-models-placeholder": "Search model..."
   },
   "About": {
     "meta-title": "Fck Closed Education, Enjoy Free Open Education",
@@ -422,7 +424,9 @@
       "classes": "Classes",
       "nakafa-materials": "Nakafa Materials",
       "yours": "Yours",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "preparing-school": "Preparing your school",
+      "preparing-school-description": "Please wait while we set things up for you."
     },
     "Classes": {
       "classes": "Classes",

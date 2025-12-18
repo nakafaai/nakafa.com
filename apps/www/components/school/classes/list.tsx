@@ -11,6 +11,7 @@ import {
   CardContent,
   CardFooter,
 } from "@repo/design-system/components/ui/card";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   Tooltip,
@@ -37,7 +38,7 @@ export function SchoolClassesList() {
 
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
-  const { results, status } = usePaginatedQuery(
+  const { results, status, loadMore } = usePaginatedQuery(
     api.classes.queries.getClasses,
     {
       schoolId,
@@ -65,6 +66,9 @@ export function SchoolClassesList() {
       {results.map((c) => (
         <ClassItem cls={c} key={c._id} />
       ))}
+      {status === "CanLoadMore" && (
+        <Intersection onIntersect={() => loadMore(25)} />
+      )}
     </section>
   );
 }

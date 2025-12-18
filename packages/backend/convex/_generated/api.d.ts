@@ -1968,7 +1968,31 @@ export declare const components: {
         any
       >;
     };
-    auth: {
+    mutations: {
+      setUserId: FunctionReference<
+        "mutation",
+        "internal",
+        { authId: string; userId: string },
+        any
+      >;
+      updateUserName: FunctionReference<
+        "mutation",
+        "internal",
+        { authId: string; name: string },
+        any
+      >;
+      verifyApiKey: FunctionReference<
+        "mutation",
+        "internal",
+        { key: string; permissions?: string },
+        {
+          error: null | { code: string; message: string };
+          userId: null | string;
+          valid: boolean;
+        }
+      >;
+    };
+    queries: {
       getApiKeysByUserId: FunctionReference<
         "query",
         "internal",
@@ -2015,28 +2039,6 @@ export declare const components: {
           updatedAt: number;
           userId?: null | string;
           username?: null | string;
-        }
-      >;
-      setUserId: FunctionReference<
-        "mutation",
-        "internal",
-        { authId: string; userId: string },
-        any
-      >;
-      updateUserName: FunctionReference<
-        "mutation",
-        "internal",
-        { authId: string; name: string },
-        any
-      >;
-      verifyApiKey: FunctionReference<
-        "mutation",
-        "internal",
-        { key: string; permissions?: string },
-        {
-          error: null | { code: string; message: string };
-          userId: null | string;
-          valid: boolean;
         }
       >;
     };

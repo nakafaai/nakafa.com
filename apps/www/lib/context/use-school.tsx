@@ -2,9 +2,9 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { useQuery } from "convex/react";
 import { createContext, useContextSelector } from "use-context-selector";
+import { SchoolLoader } from "@/components/school/loader";
 
 type SchoolContextValue = {
   school: Doc<"schools">;
@@ -26,14 +26,7 @@ export function SchoolContextProvider({
   const schoolMembership = results?.membership;
 
   if (!(school && schoolMembership)) {
-    return (
-      <div className="relative flex h-svh items-center justify-center">
-        <SpinnerIcon
-          aria-hidden="true"
-          className="size-6 shrink-0 text-primary"
-        />
-      </div>
-    );
+    return <SchoolLoader />;
   }
 
   return (

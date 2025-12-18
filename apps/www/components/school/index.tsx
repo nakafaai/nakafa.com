@@ -12,9 +12,8 @@ type Props = {
 
 export async function School({ children }: Props) {
   const token = await getToken();
-  const user = await fetchQuery(api.auth.getCurrentUser, {}, { token });
 
-  if (user) {
+  if (token) {
     const memberships = await fetchQuery(
       api.schools.queries.getSchoolMemberships,
       {},

@@ -23,6 +23,7 @@ const languageModels = {
   // Google
   "gemini-2.5-flash": gateway("google/gemini-2.5-flash"),
   "gemini-2.5-pro": gateway("google/gemini-2.5-pro"),
+  "gemini-3-flash": gateway("google/gemini-3-flash"),
   "gemini-3-pro": gateway("google/gemini-3-pro-preview"),
 
   // Meta

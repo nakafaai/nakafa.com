@@ -48,7 +48,7 @@ export const requireApiKey =
     const apiKey = authHeader.slice(BEARER_PREFIX_LENGTH);
 
     const result = await c.env.runMutation(
-      components.betterAuth.auth.verifyApiKey,
+      components.betterAuth.mutations.verifyApiKey,
       {
         key: apiKey,
         permissions: permissions ? JSON.stringify(permissions) : undefined,

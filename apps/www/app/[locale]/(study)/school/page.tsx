@@ -1,9 +1,9 @@
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { Suspense, use } from "react";
 import { School } from "@/components/school";
+import { SchoolLoader } from "@/components/school/loader";
 import { ComingSoon } from "@/components/shared/coming-soon";
 
 type Props = {
@@ -16,16 +16,7 @@ export default function Page({ params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <Suspense
-      fallback={
-        <div className="relative flex h-svh items-center justify-center">
-          <SpinnerIcon
-            aria-hidden="true"
-            className="size-6 shrink-0 text-primary"
-          />
-        </div>
-      }
-    >
+    <Suspense fallback={<SchoolLoader />}>
       <School>
         <div className="relative flex h-svh items-center justify-center">
           <Particles className="pointer-events-none absolute inset-0 opacity-80" />

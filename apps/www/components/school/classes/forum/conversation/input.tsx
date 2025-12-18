@@ -240,7 +240,16 @@ export const ForumPostInput = memo(
                             type="button"
                             variant="ghost"
                           >
-                            <SmilePlusIcon />
+                            <Activity mode={isMobile ? "hidden" : "visible"}>
+                              {isSubmitting ? (
+                                <SpinnerIcon />
+                              ) : (
+                                <SmilePlusIcon />
+                              )}
+                            </Activity>
+                            <Activity mode={isMobile ? "visible" : "hidden"}>
+                              <SmilePlusIcon />
+                            </Activity>
                             <span className="sr-only">{t("emoji")}</span>
                           </InputGroupButton>
                         </PopoverTrigger>

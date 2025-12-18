@@ -57,7 +57,7 @@ export async function findUserIdFromCustomer(
 
   // Try to find by email in Better Auth table
   const authUser = await ctx.runQuery(
-    components.betterAuth.auth.getUserByEmail,
+    components.betterAuth.queries.getUserByEmail,
     {
       email: customerData.email,
     }

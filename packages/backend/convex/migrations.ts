@@ -88,7 +88,7 @@ export const migrationAddUserId = internalMutation({
       }
 
       // Set userId in Better Auth user
-      await ctx.runMutation(components.betterAuth.auth.setUserId, {
+      await ctx.runMutation(components.betterAuth.mutations.setUserId, {
         authId: appUser.authId,
         userId: appUser._id,
       });

@@ -32,7 +32,7 @@ export const updateUserName = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
-    await ctx.runMutation(components.betterAuth.auth.updateUserName, {
+    await ctx.runMutation(components.betterAuth.mutations.updateUserName, {
       authId: user.authUser._id,
       name: args.name,
     });
@@ -48,7 +48,7 @@ export const verifyApiKey = mutation({
     permissions: v.optional(v.string()),
   },
   handler: async (ctx, args) =>
-    await ctx.runMutation(components.betterAuth.auth.verifyApiKey, {
+    await ctx.runMutation(components.betterAuth.mutations.verifyApiKey, {
       key: args.key,
       permissions: args.permissions,
     }),

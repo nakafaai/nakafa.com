@@ -380,7 +380,9 @@
     "copy-link": "Salin link",
     "link-copied": "Link berhasil disalin ke papan klip",
     "private-chat-error": "Akses ditolak",
-    "private-chat-error-description": "Anda bukan pemilik obrolan ini. Silakan hubungi pemilik obrolan untuk mendapatkan akses."
+    "private-chat-error-description": "Anda bukan pemilik obrolan ini. Silakan hubungi pemilik obrolan untuk mendapatkan akses.",
+    "no-models-found": "Tidak ada model yang ditemukan.",
+    "search-models-placeholder": "Cari model..."
   },
   "About": {
     "meta-title": "Fck Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",
@@ -422,7 +424,9 @@
       "classes": "Kelas",
       "nakafa-materials": "Materi Nakafa",
       "yours": "Kamu",
-      "notifications": "Notifikasi"
+      "notifications": "Notifikasi",
+      "preparing-school": "Menyiapkan sekolahmu",
+      "preparing-school-description": "Mohon tunggu, kami sedang menyiapkan semuanya untukmu."
     },
     "Classes": {
       "classes": "Kelas",

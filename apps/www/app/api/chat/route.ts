@@ -488,16 +488,12 @@ async function getVerified(url: string) {
 }
 
 async function getUserRole(token: string) {
-  const user = await fetchQuery(
-    convexApi.auth.getCurrentUser,
+  const role = await fetchQuery(
+    convexApi.users.queries.getUserRole,
     {},
     {
       token,
     }
   );
-  const userRole = user?.appUser?.role;
-  if (userRole === null) {
-    return;
-  }
-  return userRole;
+  return role ?? undefined;
 }

@@ -1,13 +1,13 @@
 "use client";
 
 import { Button } from "@repo/design-system/components/ui/button";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useTranslations } from "next-intl";
 import { AuthGoogle } from "@/components/auth/google";
+import { SchoolLoader } from "@/components/school/loader";
 
 export function LayoutAuth({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -31,12 +31,7 @@ export function LayoutAuth({ children }: { children: React.ReactNode }) {
       </Unauthenticated>
 
       <AuthLoading>
-        <div className="relative flex h-svh items-center justify-center">
-          <SpinnerIcon
-            aria-hidden="true"
-            className="size-6 shrink-0 text-primary"
-          />
-        </div>
+        <SchoolLoader />
       </AuthLoading>
     </>
   );

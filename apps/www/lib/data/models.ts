@@ -71,6 +71,11 @@ export const freeModels: Model[] = [
   },
   {
     icon: Gemini,
+    value: "gemini-3-flash",
+    label: "Gemini 3 Flash",
+  },
+  {
+    icon: Gemini,
     value: "gemini-2.5-flash",
     label: "Gemini 2.5 Flash",
   },
