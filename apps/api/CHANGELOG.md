@@ -1,5 +1,21 @@
 # api
 
+## 0.1.0
+
+### Minor Changes
+
+- [`f44d967`](https://github.com/nakafaai/nakafa.com/commit/f44d9675518b9d81302382ab8e51a4c44d5f5dc1) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Upgrade nextjs 16.1, update polar sdk to latest, introducing class materials features, adding schema to class and implementation to add materials
+
+- [`8466034`](https://github.com/nakafaai/nakafa.com/commit/84660348bf5dcfcf048db3f57d47a05cc18cd868) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Convex now support betterAuth 1.4, all migrate to that
+
+### Patch Changes
+
+- Updated dependencies [[`f44d967`](https://github.com/nakafaai/nakafa.com/commit/f44d9675518b9d81302382ab8e51a4c44d5f5dc1), [`f44d967`](https://github.com/nakafaai/nakafa.com/commit/f44d9675518b9d81302382ab8e51a4c44d5f5dc1), [`8466034`](https://github.com/nakafaai/nakafa.com/commit/84660348bf5dcfcf048db3f57d47a05cc18cd868), [`03c0655`](https://github.com/nakafaai/nakafa.com/commit/03c0655ad44cc34d85855d431d754fc52cd474e3), [`e0fb41c`](https://github.com/nakafaai/nakafa.com/commit/e0fb41c54d67b4e09193ba6c7b843b20b8a8ed8b)]:
+  - @repo/internationalization@0.1.0
+  - @repo/design-system@0.1.0
+  - @repo/next-config@0.1.0
+  - @repo/backend@1.1.0
+
 ## 0.0.2
 
 ### Patch Changes
