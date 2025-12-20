@@ -1,5 +1,16 @@
 # mcp
 
+## 0.1.0
+
+### Minor Changes
+
+- [`f44d967`](https://github.com/nakafaai/nakafa.com/commit/f44d9675518b9d81302382ab8e51a4c44d5f5dc1) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Upgrade nextjs 16.1, update polar sdk to latest, introducing class materials features, adding schema to class and implementation to add materials
+
+### Patch Changes
+
+- Updated dependencies [[`f44d967`](https://github.com/nakafaai/nakafa.com/commit/f44d9675518b9d81302382ab8e51a4c44d5f5dc1)]:
+  - @repo/next-config@0.1.0
+
 ## 0.0.1
 
 ### Patch Changes

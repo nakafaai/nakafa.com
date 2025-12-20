@@ -1,5 +1,19 @@
 # @repo/backend
 
+## 1.1.0
+
+### Minor Changes
+
+- [`f44d967`](https://github.com/nakafaai/nakafa.com/commit/f44d9675518b9d81302382ab8e51a4c44d5f5dc1) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Upgrade nextjs 16.1, update polar sdk to latest, introducing class materials features, adding schema to class and implementation to add materials
+
+- [`f44d967`](https://github.com/nakafaai/nakafa.com/commit/f44d9675518b9d81302382ab8e51a4c44d5f5dc1) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Updating polar sdk to use standalone function instead using whole sdk to fix convex ran out of memory
+
+- [`8466034`](https://github.com/nakafaai/nakafa.com/commit/84660348bf5dcfcf048db3f57d47a05cc18cd868) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Convex now support betterAuth 1.4, all migrate to that
+
+- [`03c0655`](https://github.com/nakafaai/nakafa.com/commit/03c0655ad44cc34d85855d431d754fc52cd474e3) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Adjust the convex functions for betterAuth components to have their own queries.ts and mutations.ts
+
+- [`e0fb41c`](https://github.com/nakafaai/nakafa.com/commit/e0fb41c54d67b4e09193ba6c7b843b20b8a8ed8b) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Implement validation without validate session for checking auth, resulting improvement on performance, query from 1s down to 200ms. mutation still use validation session tho to make it more secure
+
 ## 1.0.0
 
 ### Major Changes
