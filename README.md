@@ -41,6 +41,66 @@ pnpm test         # Run tests
 pnpm clean        # Clean dependencies
 ```
 
+## Architecture
+
+### Customer Sync Flow (Convex + Polar)
+
+The platform uses [Polar](https://polar.sh) for payments with bidirectional sync to Convex database.
+
+#### Signup Flow
+
+```mermaid
+flowchart LR
+    A[User Signup] --> B[Auth Trigger]
+    B --> C[syncCustomer]
+    C --> D[ensureCustomer]
+    D <--> E[(Polar API)]
+    D --> F[upsertCustomer]
+    F --> G[(Convex DB)]
+```
+
+#### Checkout Flow
+
+```mermaid
+flowchart LR
+    A[User Click] --> B[generateCheckoutLink]
+    B --> C[requireCustomer]
+    C --> D[ensureCustomer]
+    D <--> E[(Polar API)]
+    C --> F[upsertCustomer]
+    F --> G[(Convex DB)]
+    B --> H[createCheckoutSession]
+    H --> E
+    E --> I[Checkout URL]
+```
+
+#### Webhook Flow
+
+```mermaid
+flowchart LR
+    A[(Polar API)] -->|webhook| B[Webhook Handler]
+    B -->|created/updated| C[upsertCustomer]
+    B -->|deleted| D[deleteCustomerById]
+    C --> E[(Convex DB)]
+    D --> E
+```
+
+#### Flow Summary
+
+| Flow | Trigger | Steps |
+|------|---------|-------|
+| **Signup** | User registers | Auth trigger → `syncCustomer` → `ensureCustomer` → `upsertCustomer` |
+| **Checkout** | User clicks buy | `requireCustomer` → `createCheckoutSession` → Redirect to Polar |
+| **Portal** | User opens settings | `requireCustomer` → `createCustomerPortalSession` → Redirect |
+| **Webhook** | Polar event | `upsertCustomer` or `deleteCustomerById` |
+
+#### Key Design Decisions
+
+- **Polar is source of truth** - Local DB is cache for fast queries
+- **Idempotent operations** - All mutations safe to retry
+- **Race condition handling** - `ensureCustomer` retries on create failure
+- **Edge case recovery** - Deleted from Polar → recreated on next checkout
+
 ## Development
 
 ### Project Documentation

@@ -15,6 +15,14 @@ const schoolClassVisibility = v.union(
 );
 export type SchoolClassVisibility = Infer<typeof schoolClassVisibility>;
 
+export const schoolClassMaterialStatus = v.union(
+  v.literal("draft"),
+  v.literal("published"),
+  v.literal("scheduled"),
+  v.literal("archived")
+);
+export type SchoolClassMaterialStatus = Infer<typeof schoolClassMaterialStatus>;
+
 const tables = {
   schoolClasses: defineTable({
     schoolId: v.id("schools"),
@@ -224,9 +232,105 @@ const tables = {
     userId: v.id("users"),
     lastReadAt: v.number(),
   })
-    // For single forum read state lookup
     .index("forumId_userId", ["forumId", "userId"])
-    // For batch fetching all read states in a class (Discord-style unread badges)
+    .index("classId_userId", ["classId", "userId"]),
+
+  // MATERIALS: Groups (folders/modules with unlimited nesting)
+  schoolClassMaterialGroups: defineTable({
+    classId: v.id("schoolClasses"),
+    schoolId: v.id("schools"),
+    name: v.string(),
+    description: v.string(),
+    parentId: v.optional(v.id("schoolClassMaterialGroups")),
+    order: v.number(),
+    status: schoolClassMaterialStatus,
+    scheduledAt: v.optional(v.number()),
+    scheduledJobId: v.optional(v.id("_scheduled_functions")),
+    materialCount: v.number(),
+    childGroupCount: v.number(),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+    publishedAt: v.optional(v.number()),
+    publishedBy: v.optional(v.id("users")),
+  })
+    .index("classId_parentId_order", ["classId", "parentId", "order"])
+    .index("status_scheduledAt", ["status", "scheduledAt"])
+    .searchIndex("search_name", {
+      searchField: "name",
+      filterFields: ["classId", "status"],
+    }),
+
+  // MATERIALS: Content items
+  schoolClassMaterials: defineTable({
+    groupId: v.id("schoolClassMaterialGroups"),
+    classId: v.id("schoolClasses"),
+    schoolId: v.id("schools"),
+    title: v.string(),
+    body: v.optional(v.string()), // Tiptap JSON (stringified)
+    bodyPlainText: v.optional(v.string()), // Plain text for search and preview
+    order: v.number(),
+    status: schoolClassMaterialStatus,
+    scheduledAt: v.optional(v.number()),
+    isPinned: v.boolean(),
+    attachmentCount: v.number(),
+    viewCount: v.number(),
+    downloadCount: v.number(),
+    totalFileSize: v.number(),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+    publishedAt: v.optional(v.number()),
+    publishedBy: v.optional(v.id("users")),
+  })
+    .index("groupId_status_isPinned_order", [
+      "groupId",
+      "status",
+      "isPinned",
+      "order",
+    ])
+    .index("status_scheduledAt", ["status", "scheduledAt"])
+    .index("classId_status", ["classId", "status"])
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["classId", "groupId", "status"],
+    })
+    .searchIndex("search_body", {
+      searchField: "bodyPlainText",
+      filterFields: ["classId", "groupId", "status"],
+    }),
+
+  // MATERIALS: File attachments (inline media in content + downloadable files)
+  schoolClassMaterialAttachments: defineTable({
+    materialId: v.id("schoolClassMaterials"),
+    groupId: v.id("schoolClassMaterialGroups"),
+    classId: v.id("schoolClasses"),
+    fileId: v.id("_storage"),
+    name: v.string(),
+    mimeType: v.string(),
+    size: v.number(),
+    type: v.union(
+      v.literal("inline"), // Images in Tiptap content
+      v.literal("download") // Downloadable files in attachment list
+    ),
+    order: v.number(),
+    downloadCount: v.number(),
+    uploadedBy: v.id("users"),
+  })
+    .index("materialId_type_order", ["materialId", "type", "order"])
+    .index("classId", ["classId"]),
+
+  // MATERIALS: Per-user view tracking (upsert pattern)
+  schoolClassMaterialViews: defineTable({
+    materialId: v.id("schoolClassMaterials"),
+    classId: v.id("schoolClasses"),
+    userId: v.id("users"),
+    firstViewedAt: v.number(),
+    lastViewedAt: v.number(),
+    viewCount: v.number(),
+    hasDownloaded: v.boolean(),
+    lastDownloadedAt: v.optional(v.number()),
+  })
+    // eq("materialId").eq("userId") for unique lookup, eq("materialId") for analytics
+    .index("materialId_userId", ["materialId", "userId"])
     .index("classId_userId", ["classId", "userId"]),
 };
 

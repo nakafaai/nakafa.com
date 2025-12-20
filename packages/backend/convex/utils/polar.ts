@@ -1,4 +1,4 @@
-import { Polar } from "@polar-sh/sdk";
+import { PolarCore } from "@polar-sh/sdk/core.js";
 
 export const polarAccessToken = process.env.POLAR_ACCESS_TOKEN ?? "";
 export const polarWebhookSecret = process.env.POLAR_WEBHOOK_SECRET ?? "";
@@ -6,7 +6,7 @@ export const isProduction =
   process.env.NEXT_PUBLIC_POLAR_SERVER === "production";
 export const server = isProduction ? "production" : "sandbox";
 
-export const polarClient = new Polar({
+export const polarClient = new PolarCore({
   accessToken: polarAccessToken,
   server,
 });

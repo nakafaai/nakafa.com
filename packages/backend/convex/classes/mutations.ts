@@ -1,7 +1,7 @@
-import { ConvexError, type Infer, v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation } from "../functions";
-import { isSchoolAdmin, requireAuthWithSession } from "../lib/authHelpers";
-import { generateNanoId, truncateText } from "../utils/helper";
+import { requireAuthWithSession } from "../lib/authHelpers";
+import { generateNanoId } from "../utils/helper";
 import {
   CLASS_IMAGES,
   getRandomClassImage,
@@ -10,31 +10,10 @@ import {
 } from "./constants";
 import {
   loadActiveClass,
-  loadActiveClassWithAccess,
   loadClassWithAccess,
-  loadForumWithAccess,
-  loadOpenForumWithAccess,
   requireTeacherPermission,
 } from "./utils";
 
-/**
- * Generate an upload URL for file attachments.
- * Verifies user has access to the forum before generating.
- */
-export const generateUploadUrl = mutation({
-  args: {
-    forumId: v.id("schoolClassForums"),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    await loadOpenForumWithAccess(ctx, args.forumId, user.appUser._id);
-    return await ctx.storage.generateUploadUrl();
-  },
-});
-
-/**
- * Create a new class in a school and automatically add the creator as a primary teacher.
- */
 export const createClass = mutation({
   args: {
     schoolId: v.id("schools"),
@@ -47,7 +26,6 @@ export const createClass = mutation({
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
-    // Verify school membership and permissions (admin or teacher can create classes)
     const schoolMember = await ctx.db
       .query("schoolMembers")
       .withIndex("schoolId_userId_status", (q) =>
@@ -85,7 +63,6 @@ export const createClass = mutation({
       updatedAt: now,
     });
 
-    // Automatically add creator as primary teacher
     await ctx.db.insert("schoolClassMembers", {
       classId,
       userId,
@@ -97,7 +74,6 @@ export const createClass = mutation({
       addedBy: userId,
     });
 
-    // Generate invite codes for teacher and student roles
     const roles = ["teacher", "student"] as const;
     for (const role of roles) {
       await ctx.db.insert("schoolClassInviteCodes", {
@@ -117,9 +93,6 @@ export const createClass = mutation({
   },
 });
 
-/**
- * Join a class using an invite code.
- */
 export const joinClass = mutation({
   args: {
     code: v.string(),
@@ -128,7 +101,6 @@ export const joinClass = mutation({
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
-    // Find invite code
     const inviteCode = await ctx.db
       .query("schoolClassInviteCodes")
       .withIndex("code", (q) => q.eq("code", args.code))
@@ -141,7 +113,6 @@ export const joinClass = mutation({
       });
     }
 
-    // Check if code is enabled
     if (!inviteCode.enabled) {
       throw new ConvexError({
         code: "CODE_DISABLED",
@@ -149,7 +120,6 @@ export const joinClass = mutation({
       });
     }
 
-    // Check expiry
     if (inviteCode.expiresAt && inviteCode.expiresAt < Date.now()) {
       throw new ConvexError({
         code: "CODE_EXPIRED",
@@ -157,7 +127,6 @@ export const joinClass = mutation({
       });
     }
 
-    // Check usage limit
     if (inviteCode.maxUsage && inviteCode.currentUsage >= inviteCode.maxUsage) {
       throw new ConvexError({
         code: "CODE_LIMIT_REACHED",
@@ -165,12 +134,10 @@ export const joinClass = mutation({
       });
     }
 
-    // Load class and verify it's not archived
     const classData = await loadActiveClass(ctx, inviteCode.classId);
 
     const now = Date.now();
 
-    // Check if user is already a member
     const existingMember = await ctx.db
       .query("schoolClassMembers")
       .withIndex("classId_userId", (q) =>
@@ -185,7 +152,6 @@ export const joinClass = mutation({
       });
     }
 
-    // Check if user is a member of the school
     const schoolMember = await ctx.db
       .query("schoolMembers")
       .withIndex("schoolId_userId_status", (q) =>
@@ -203,7 +169,6 @@ export const joinClass = mutation({
       });
     }
 
-    // Add user as class member with role from invite code
     if (inviteCode.role === "teacher") {
       await ctx.db.insert("schoolClassMembers", {
         classId: classData._id,
@@ -231,11 +196,6 @@ export const joinClass = mutation({
   },
 });
 
-/**
- * Update the class visibility.
- * Requires CLASS_MANAGE permission or school admin role.
- * Note: Can update visibility even for archived classes.
- */
 export const updateClassVisibility = mutation({
   args: {
     classId: v.id("schoolClasses"),
@@ -245,7 +205,6 @@ export const updateClassVisibility = mutation({
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
-    // Load class and verify access (allows archived classes)
     const { classMembership, schoolMembership } = await loadClassWithAccess(
       ctx,
       args.classId,
@@ -258,7 +217,6 @@ export const updateClassVisibility = mutation({
       TEACHER_PERMISSIONS.CLASS_MANAGE
     );
 
-    // Update class visibility
     await ctx.db.patch("schoolClasses", args.classId, {
       visibility: args.visibility,
       updatedBy: userId,
@@ -267,11 +225,6 @@ export const updateClassVisibility = mutation({
   },
 });
 
-/**
- * Join a public class directly.
- * Only works for classes with visibility: "public".
- * User must be a school member but not already a class member.
- */
 export const joinPublicClass = mutation({
   args: {
     classId: v.id("schoolClasses"),
@@ -280,10 +233,8 @@ export const joinPublicClass = mutation({
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
-    // Load class and verify it's not archived
     const classData = await loadActiveClass(ctx, args.classId);
 
-    // Verify class is public
     if (classData.visibility !== "public") {
       throw new ConvexError({
         code: "CLASS_NOT_PUBLIC",
@@ -293,7 +244,6 @@ export const joinPublicClass = mutation({
 
     const now = Date.now();
 
-    // Check if user is already a member
     const existingMember = await ctx.db
       .query("schoolClassMembers")
       .withIndex("classId_userId", (q) =>
@@ -308,7 +258,6 @@ export const joinPublicClass = mutation({
       });
     }
 
-    // Check if user is a member of the school
     const schoolMember = await ctx.db
       .query("schoolMembers")
       .withIndex("schoolId_userId_status", (q) =>
@@ -326,7 +275,6 @@ export const joinPublicClass = mutation({
       });
     }
 
-    // Add user as student (public join always joins as student)
     await ctx.db.insert("schoolClassMembers", {
       classId: classData._id,
       userId,
@@ -340,11 +288,6 @@ export const joinPublicClass = mutation({
   },
 });
 
-/**
- * Update the class image.
- * Requires CLASS_MANAGE permission or school admin role.
- * Note: Can update image even for archived classes.
- */
 export const updateClassImage = mutation({
   args: {
     classId: v.id("schoolClasses"),
@@ -354,7 +297,6 @@ export const updateClassImage = mutation({
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
-    // Load class and verify access (allows archived classes to update image)
     const { classMembership, schoolMembership } = await loadClassWithAccess(
       ctx,
       args.classId,
@@ -367,7 +309,6 @@ export const updateClassImage = mutation({
       TEACHER_PERMISSIONS.CLASS_MANAGE
     );
 
-    // Validate image is from allowed set
     const validImages = new Set(CLASS_IMAGES.values());
     if (
       !validImages.has(
@@ -380,302 +321,10 @@ export const updateClassImage = mutation({
       });
     }
 
-    // Update class image
     await ctx.db.patch("schoolClasses", args.classId, {
       image: args.image,
       updatedBy: userId,
       updatedAt: Date.now(),
     });
-  },
-});
-
-/**
- * Create a new forum in a class.
- */
-export const createForum = mutation({
-  args: {
-    classId: v.id("schoolClasses"),
-    title: v.string(),
-    body: v.string(),
-    tag: v.union(
-      v.literal("general"),
-      v.literal("question"),
-      v.literal("announcement"),
-      v.literal("assignment"),
-      v.literal("resource")
-    ),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    const userId = user.appUser._id;
-
-    // Load active class and verify access
-    const { classData, classMembership, schoolMembership } =
-      await loadActiveClassWithAccess(ctx, args.classId, userId);
-
-    // School admins can do anything, otherwise must be a class member
-    const canCreateForum = isSchoolAdmin(schoolMembership) || classMembership;
-    if (!canCreateForum) {
-      throw new ConvexError({
-        code: "NOT_CLASS_MEMBER",
-        message: "You must be a member of the class to create a forum.",
-      });
-    }
-
-    const now = Date.now();
-
-    const forumId = await ctx.db.insert("schoolClassForums", {
-      classId: args.classId,
-      schoolId: classData.schoolId,
-      title: args.title,
-      body: args.body,
-      tag: args.tag,
-      status: "open",
-      isPinned: false,
-      postCount: 0,
-      participantCount: 1,
-      reactionCounts: [],
-      lastPostAt: now,
-      lastPostBy: userId,
-      createdBy: userId,
-      updatedAt: now,
-    });
-
-    return forumId;
-  },
-});
-
-const attachmentArg = v.object({
-  storageId: v.id("_storage"),
-  name: v.string(),
-  type: v.string(),
-  size: v.number(),
-});
-export type AttachmentArg = Infer<typeof attachmentArg>;
-
-/**
- * Create a new post in a forum with optional attachments.
- * Body can be empty if attachments are provided (like WhatsApp/Discord).
- */
-export const createForumPost = mutation({
-  args: {
-    forumId: v.id("schoolClassForums"),
-    body: v.string(),
-    mentions: v.optional(v.array(v.id("users"))),
-    parentId: v.optional(v.id("schoolClassForumPosts")),
-    attachments: v.optional(v.array(attachmentArg)),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    const userId = user.appUser._id;
-
-    const hasBody = args.body.trim().length > 0;
-    const attachments = args.attachments ?? [];
-    const hasAttachments = attachments.length > 0;
-
-    if (!(hasBody || hasAttachments)) {
-      throw new ConvexError({
-        code: "EMPTY_POST",
-        message: "Post must have either a message or attachments.",
-      });
-    }
-
-    const { forum } = await loadOpenForumWithAccess(ctx, args.forumId, userId);
-
-    let replyToUserId: typeof args.parentId extends undefined
-      ? undefined
-      : typeof userId | undefined;
-    let replyToBody: string | undefined;
-
-    if (args.parentId) {
-      const parentPost = await ctx.db.get(
-        "schoolClassForumPosts",
-        args.parentId
-      );
-      if (!parentPost || parentPost.forumId !== args.forumId) {
-        throw new ConvexError({
-          code: "PARENT_POST_NOT_FOUND",
-          message: "Parent post not found.",
-        });
-      }
-      replyToUserId = parentPost.createdBy;
-      replyToBody = truncateText({ text: parentPost.body });
-    }
-
-    const now = Date.now();
-
-    const postId = await ctx.db.insert("schoolClassForumPosts", {
-      forumId: args.forumId,
-      classId: forum.classId,
-      body: args.body,
-      mentions: args.mentions ?? [],
-      parentId: args.parentId,
-      replyToUserId,
-      replyToBody,
-      replyCount: 0,
-      reactionCounts: [],
-      isDeleted: false,
-      createdBy: userId,
-      updatedAt: now,
-    });
-
-    for (const attachment of attachments) {
-      await ctx.db.insert("schoolClassForumPostAttachments", {
-        postId,
-        forumId: args.forumId,
-        classId: forum.classId,
-        name: attachment.name,
-        fileId: attachment.storageId,
-        mimeType: attachment.type,
-        size: attachment.size,
-        createdBy: userId,
-      });
-    }
-
-    return postId;
-  },
-});
-
-/**
- * Toggle a reaction on a post (Discord-style).
- * If the user already reacted with this emoji, remove it.
- * If not, add it.
- *
- * Note: Denormalized reaction counts are updated via trigger in functions.ts
- */
-export const togglePostReaction = mutation({
-  args: {
-    postId: v.id("schoolClassForumPosts"),
-    emoji: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    const userId = user.appUser._id;
-
-    const post = await ctx.db.get("schoolClassForumPosts", args.postId);
-    if (!post) {
-      throw new ConvexError({
-        code: "POST_NOT_FOUND",
-        message: "Post not found.",
-      });
-    }
-
-    // Load forum and verify access (uses post.forumId)
-    await loadForumWithAccess(ctx, post.forumId, userId);
-
-    // Check if user already reacted with this emoji
-    const existingReaction = await ctx.db
-      .query("schoolClassForumPostReactions")
-      .withIndex("postId_userId_emoji", (q) =>
-        q.eq("postId", args.postId).eq("userId", userId).eq("emoji", args.emoji)
-      )
-      .unique();
-
-    if (existingReaction) {
-      // Remove reaction - trigger handles count update
-      await ctx.db.delete(
-        "schoolClassForumPostReactions",
-        existingReaction._id
-      );
-      return { added: false };
-    }
-
-    // Add reaction - trigger handles count update
-    await ctx.db.insert("schoolClassForumPostReactions", {
-      postId: args.postId,
-      userId,
-      emoji: args.emoji,
-    });
-
-    return { added: true };
-  },
-});
-
-/**
- * Toggle a reaction on a forum thread.
- * If the user already reacted with this emoji, remove it.
- * If not, add it.
- *
- * Note: Denormalized reaction counts are updated via trigger in functions.ts
- */
-export const toggleForumReaction = mutation({
-  args: {
-    forumId: v.id("schoolClassForums"),
-    emoji: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    const userId = user.appUser._id;
-
-    await loadForumWithAccess(ctx, args.forumId, userId);
-
-    // Check if user already reacted with this emoji
-    const existingReaction = await ctx.db
-      .query("schoolClassForumReactions")
-      .withIndex("forumId_userId_emoji", (q) =>
-        q
-          .eq("forumId", args.forumId)
-          .eq("userId", userId)
-          .eq("emoji", args.emoji)
-      )
-      .unique();
-
-    if (existingReaction) {
-      // Remove reaction - trigger handles count update
-      await ctx.db.delete("schoolClassForumReactions", existingReaction._id);
-      return { added: false };
-    }
-
-    // Add reaction - trigger handles count update
-    await ctx.db.insert("schoolClassForumReactions", {
-      forumId: args.forumId,
-      userId,
-      emoji: args.emoji,
-    });
-
-    return { added: true };
-  },
-});
-
-/**
- * Mark a forum as read up to current time.
- * Called when user opens/views a forum.
- * Uses upsert pattern for efficiency.
- */
-export const markForumRead = mutation({
-  args: {
-    forumId: v.id("schoolClassForums"),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    const userId = user.appUser._id;
-
-    const { forum } = await loadForumWithAccess(ctx, args.forumId, userId);
-
-    const now = Date.now();
-
-    // Upsert pattern with high water mark: only update if moving forward
-    const existing = await ctx.db
-      .query("schoolClassForumReadStates")
-      .withIndex("forumId_userId", (q) =>
-        q.eq("forumId", args.forumId).eq("userId", userId)
-      )
-      .unique();
-
-    if (existing) {
-      // High water mark: only update if moving forward in time
-      if (now > existing.lastReadAt) {
-        await ctx.db.patch("schoolClassForumReadStates", existing._id, {
-          lastReadAt: now,
-        });
-      }
-    } else {
-      await ctx.db.insert("schoolClassForumReadStates", {
-        forumId: args.forumId,
-        classId: forum.classId,
-        userId,
-        lastReadAt: now,
-      });
-    }
   },
 });

@@ -24,7 +24,11 @@ export const updateUserRole = mutation({
 });
 
 /**
- * Update Better Auth user's display name.
+ * Update user's display name.
+ * Updates both the Better Auth user and app user tables.
+ *
+ * Note: Triggers only fire for client-side Better Auth API calls.
+ * For server-side mutations, we sync manually.
  */
 export const updateUserName = mutation({
   args: {
@@ -32,8 +36,15 @@ export const updateUserName = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
+
+    // Update Better Auth user table
     await ctx.runMutation(components.betterAuth.mutations.updateUserName, {
       authId: user.authUser._id,
+      name: args.name,
+    });
+
+    // Sync to app user table (manual sync since triggers don't fire)
+    await ctx.db.patch("users", user.appUser._id, {
       name: args.name,
     });
   },

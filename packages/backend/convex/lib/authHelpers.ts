@@ -11,8 +11,9 @@
  */
 
 import { ConvexError } from "convex/values";
+import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
-import type { MutationCtx, QueryCtx } from "../_generated/server";
+import type { ActionCtx, MutationCtx, QueryCtx } from "../_generated/server";
 import { safeGetAppUser } from "../auth";
 
 // ============================================================================
@@ -71,6 +72,33 @@ export async function requireAuthWithSession(ctx: QueryCtx | MutationCtx) {
     });
   }
   return user;
+}
+
+/**
+ * Fast authentication for actions using JWT identity.
+ * Actions don't have ctx.db, so uses runQuery instead.
+ */
+export async function requireAuthForAction(ctx: ActionCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity?.email) {
+    throw new ConvexError({
+      code: "UNAUTHORIZED",
+      message: "You must be logged in.",
+    });
+  }
+
+  const appUser = await ctx.runQuery(internal.users.queries.getUserByEmail, {
+    email: identity.email,
+  });
+
+  if (!appUser) {
+    throw new ConvexError({
+      code: "UNAUTHORIZED",
+      message: "User not found.",
+    });
+  }
+
+  return { appUser, identity };
 }
 
 // ============================================================================

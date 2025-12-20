@@ -12,6 +12,7 @@ import {
   CommandItem,
   CommandList,
 } from "@repo/design-system/components/ui/command";
+import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import {
   Popover,
   PopoverContent,
@@ -23,10 +24,9 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useAction, useQuery } from "convex/react";
-import { CheckIcon, ChevronDownIcon } from "lucide-react";
+import { BrainIcon, CheckIcon, ChevronDownIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { authClient } from "@/lib/auth/client";
 import { useAi } from "@/lib/context/use-ai";
 import { freeModels, models, premiumModels } from "@/lib/data/models";
 
@@ -38,10 +38,14 @@ export function AiChatModel() {
 
   const [isPending, startTransition] = useTransition();
 
-  const syncCustomer = useAction(
-    api.customers.actions.syncPolarCustomerFromUserId
-  );
   const user = useQuery(api.auth.getCurrentUser);
+  const hasSubscription = useQuery(
+    api.subscriptions.queries.hasActiveSubscription,
+    user ? { productId: products.pro.id } : "skip"
+  );
+  const generateCheckoutLink = useAction(
+    api.customers.actions.generateCheckoutLink
+  );
 
   const model = useAi((state) => state.model);
   const setModel = useAi((state) => state.setModel);
@@ -49,47 +53,8 @@ export function AiChatModel() {
 
   const [openModelMenu, setOpenModelMenu] = useState(false);
 
-  const Icon = models.find((m) => m.value === model)?.icon;
+  const Icon = models.find((m) => m.value === model)?.icon ?? BrainIcon;
   const label = models.find((m) => m.value === model)?.label;
-
-  const handleCheckout = async ({ type }: { type: "premium" | "free" }) => {
-    if (type === "free" || !user) {
-      return;
-    }
-
-    try {
-      // Sync customer between Polar and local DB before checkout
-      // This is idempotent - safe to call multiple times
-      await syncCustomer({ userId: user.appUser._id });
-
-      // Check if user has active subscription
-      const { data: customerState } = await authClient.customer.state();
-      if (customerState) {
-        const subscription = customerState.activeSubscriptions.find(
-          (s) => s.productId === products.pro.id
-        );
-        if (subscription) {
-          return;
-        }
-      }
-
-      // Proceed to checkout
-      await authClient.checkout({
-        products: [products.pro.id],
-        slug: products.pro.slug,
-        // https://polar.sh/docs/features/checkout/links#prepopulate-fields
-        customFieldData: {
-          customer_email: user.authUser.email,
-          customer_name: user.authUser.name,
-        },
-      });
-    } catch {
-      // TODO: Add proper error handling and user notification
-      // You might want to show a toast notification here:
-      // toast.error("Failed to start checkout. Please try again.");
-      // Or log to your error tracking service
-    }
-  };
 
   const handleOnChange = (value: ModelId) => {
     if (!user) {
@@ -97,18 +62,29 @@ export function AiChatModel() {
       router.push(`/auth?redirect=${pathname}`);
       return;
     }
+
     const isPremium = premiumModels.some((m) => m.value === value);
+
+    if (isPremium && !hasSubscription) {
+      // Don't set premium model if no subscription, open checkout instead
+      startTransition(async () => {
+        const { url } = await generateCheckoutLink({
+          productIds: [products.pro.id],
+          successUrl: window.location.href,
+        });
+        window.open(url, "_blank");
+      });
+      return;
+    }
+
     setModel(value);
-    startTransition(async () => {
-      await handleCheckout({ type: isPremium ? "premium" : "free" });
-    });
   };
 
   return (
     <Popover onOpenChange={setOpenModelMenu} open={openModelMenu}>
       <PopoverTrigger asChild>
         <Button disabled={isPending} variant="ghost">
-          {!!Icon && <Icon />}
+          {isPending ? <SpinnerIcon /> : <Icon />}
           {label}
           <ChevronDownIcon
             className={cn(
@@ -118,7 +94,7 @@ export function AiChatModel() {
           />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-fit p-0">
+      <PopoverContent align="start" className="h-[300px] w-fit p-0">
         <Command>
           <CommandInput placeholder={t("search-models-placeholder")} />
           <CommandList>

@@ -55,3 +55,13 @@ export function getTagsByRole(
   }
   return tagList.filter((tag) => studentTags.includes(tag.value));
 }
+
+/**
+ * Gets the tag icon and label by value.
+ * @param value - The value of the tag.
+ * @returns The tag.
+ */
+export function getTag(value: TagValue) {
+  // Default to general if no tag is found
+  return tagList.find((t) => t.value === value) ?? tagList[0];
+}

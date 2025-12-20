@@ -23,8 +23,6 @@
  * RULE: Update cases should NOT trigger cascading modifications to avoid loops.
  */
 
-/** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: Triggers are complex */
-
 import type { WithoutSystemFields } from "convex/server";
 import {
   customCtx,
@@ -244,6 +242,38 @@ triggers.register("chats", async (ctx, change) => {
   }
 });
 
+// Helper to build changed fields metadata for school updates
+function buildSchoolChangesMetadata(
+  oldSchool: Doc<"schools">,
+  school: Doc<"schools">
+): Record<string, string | undefined> | null {
+  const fields = [
+    "name",
+    "email",
+    "phone",
+    "address",
+    "city",
+    "province",
+    "type",
+  ] as const;
+
+  const changes: Record<string, string | undefined> = {
+    schoolName: school.name,
+  };
+  let hasChanges = false;
+
+  for (const field of fields) {
+    if (oldSchool[field] !== school[field]) {
+      hasChanges = true;
+      const capitalized = field.charAt(0).toUpperCase() + field.slice(1);
+      changes[`old${capitalized}`] = oldSchool[field];
+      changes[`new${capitalized}`] = school[field];
+    }
+  }
+
+  return hasChanges ? changes : null;
+}
+
 // This is a trigger that creates activity logs when a school is created, updated, or deleted.
 triggers.register("schools", async (ctx, change) => {
   const school = change.newDoc;
@@ -285,56 +315,15 @@ triggers.register("schools", async (ctx, change) => {
         break;
       }
 
-      // General school update
-      if (
-        oldSchool.name !== school.name ||
-        oldSchool.email !== school.email ||
-        oldSchool.phone !== school.phone ||
-        oldSchool.address !== school.address ||
-        oldSchool.city !== school.city ||
-        oldSchool.province !== school.province ||
-        oldSchool.type !== school.type
-      ) {
+      const changesMetadata = buildSchoolChangesMetadata(oldSchool, school);
+      if (changesMetadata) {
         await ctx.db.insert("schoolActivityLogs", {
           schoolId,
           userId: school.updatedBy ?? school.createdBy,
           action: "school_updated",
           entityType: "schools",
           entityId: schoolId,
-          metadata: {
-            schoolName: school.name,
-            oldName:
-              oldSchool.name !== school.name ? oldSchool.name : undefined,
-            newName: oldSchool.name !== school.name ? school.name : undefined,
-            oldEmail:
-              oldSchool.email !== school.email ? oldSchool.email : undefined,
-            newEmail:
-              oldSchool.email !== school.email ? school.email : undefined,
-            oldPhone:
-              oldSchool.phone !== school.phone ? oldSchool.phone : undefined,
-            newPhone:
-              oldSchool.phone !== school.phone ? school.phone : undefined,
-            oldAddress:
-              oldSchool.address !== school.address
-                ? oldSchool.address
-                : undefined,
-            newAddress:
-              oldSchool.address !== school.address ? school.address : undefined,
-            oldCity:
-              oldSchool.city !== school.city ? oldSchool.city : undefined,
-            newCity: oldSchool.city !== school.city ? school.city : undefined,
-            oldProvince:
-              oldSchool.province !== school.province
-                ? oldSchool.province
-                : undefined,
-            newProvince:
-              oldSchool.province !== school.province
-                ? school.province
-                : undefined,
-            oldType:
-              oldSchool.type !== school.type ? oldSchool.type : undefined,
-            newType: oldSchool.type !== school.type ? school.type : undefined,
-          },
+          metadata: changesMetadata,
         });
       }
       break;
@@ -516,6 +505,30 @@ triggers.register("schoolMembers", async (ctx, change) => {
   }
 });
 
+// Helper to build changed fields metadata for class updates
+function buildClassChangesMetadata(
+  oldClassDoc: Doc<"schoolClasses">,
+  classDoc: Doc<"schoolClasses">
+): Record<string, string | number | undefined> | null {
+  const fields = ["name", "subject", "year", "visibility"] as const;
+
+  const changes: Record<string, string | number | undefined> = {
+    className: classDoc.name,
+  };
+  let hasChanges = false;
+
+  for (const field of fields) {
+    if (oldClassDoc[field] !== classDoc[field]) {
+      hasChanges = true;
+      const capitalized = field.charAt(0).toUpperCase() + field.slice(1);
+      changes[`old${capitalized}`] = oldClassDoc[field];
+      changes[`new${capitalized}`] = classDoc[field];
+    }
+  }
+
+  return hasChanges ? changes : null;
+}
+
 // This is a trigger that creates activity logs when a class is created, updated, archived, or deleted.
 triggers.register("schoolClasses", async (ctx, change) => {
   const classDoc = change.newDoc;
@@ -567,45 +580,15 @@ triggers.register("schoolClasses", async (ctx, change) => {
       }
 
       // General class update
-      if (
-        oldClassDoc.name !== classDoc.name ||
-        oldClassDoc.subject !== classDoc.subject ||
-        oldClassDoc.year !== classDoc.year ||
-        oldClassDoc.visibility !== classDoc.visibility
-      ) {
+      const changesMetadata = buildClassChangesMetadata(oldClassDoc, classDoc);
+      if (changesMetadata) {
         await ctx.db.insert("schoolActivityLogs", {
           schoolId: classDoc.schoolId,
           userId: classDoc.updatedBy ?? classDoc.createdBy,
           action: "class_updated",
           entityType: "classes",
           entityId: classId,
-          metadata: {
-            className: classDoc.name,
-            oldName:
-              oldClassDoc.name !== classDoc.name ? oldClassDoc.name : undefined,
-            newName:
-              oldClassDoc.name !== classDoc.name ? classDoc.name : undefined,
-            oldSubject:
-              oldClassDoc.subject !== classDoc.subject
-                ? oldClassDoc.subject
-                : undefined,
-            newSubject:
-              oldClassDoc.subject !== classDoc.subject
-                ? classDoc.subject
-                : undefined,
-            oldYear:
-              oldClassDoc.year !== classDoc.year ? oldClassDoc.year : undefined,
-            newYear:
-              oldClassDoc.year !== classDoc.year ? classDoc.year : undefined,
-            oldVisibility:
-              oldClassDoc.visibility !== classDoc.visibility
-                ? oldClassDoc.visibility
-                : undefined,
-            newVisibility:
-              oldClassDoc.visibility !== classDoc.visibility
-                ? classDoc.visibility
-                : undefined,
-          },
+          metadata: changesMetadata,
         });
       }
       break;

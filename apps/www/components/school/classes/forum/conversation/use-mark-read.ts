@@ -24,7 +24,7 @@ export function useMarkRead({
   isAtBottom: boolean;
   isJumpMode: boolean;
 }) {
-  const markRead = useMutation(api.classes.mutations.markForumRead);
+  const markRead = useMutation(api.classes.forums.mutations.markForumRead);
 
   // Store forumId in ref to avoid stale closure issues
   const forumIdRef = useRef(forumId);

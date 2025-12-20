@@ -11,6 +11,12 @@ import {
   CardContent,
   CardFooter,
 } from "@repo/design-system/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
@@ -20,7 +26,13 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { usePaginatedQuery } from "convex/react";
-import { BookOpenIcon, CalendarIcon, EllipsisIcon } from "lucide-react";
+import {
+  BookOpenIcon,
+  CalendarIcon,
+  EllipsisIcon,
+  MessagesSquareIcon,
+  UsersIcon,
+} from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
@@ -125,9 +137,27 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
             <TooltipContent side="bottom">{t("materials")}</TooltipContent>
           </Tooltip>
 
-          <Button size="icon-sm" variant="ghost">
-            <EllipsisIcon />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon-sm" variant="ghost">
+                <EllipsisIcon />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <NavigationLink href={`${pathname}/${cls._id}/forum`}>
+                  <MessagesSquareIcon />
+                  {t("forum")}
+                </NavigationLink>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <NavigationLink href={`${pathname}/${cls._id}/people`}>
+                  <UsersIcon />
+                  {t("people")}
+                </NavigationLink>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardFooter>
     </Card>

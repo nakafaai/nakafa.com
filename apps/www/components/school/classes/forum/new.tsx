@@ -31,8 +31,8 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
+import { getTag, getTagsByRole } from "@/components/school/classes/_data/tag";
 import { useClass } from "@/lib/context/use-class";
-import { getTagsByRole } from "../_data/tag";
 
 const MIN_LENGTH = 3;
 
@@ -62,7 +62,7 @@ export function SchoolClassesForumNew() {
   const classId = useClass((c) => c.class._id);
   const classMembership = useClass((c) => c.classMembership);
   const schoolMembership = useClass((c) => c.schoolMembership);
-  const createForum = useMutation(api.classes.mutations.createForum);
+  const createForum = useMutation(api.classes.forums.mutations.createForum);
 
   // Get available tags based on user role (school admins get all tags)
   const availableTags = getTagsByRole(
@@ -178,9 +178,7 @@ export function SchoolClassesForumNew() {
                   Boolean(field.state.meta.isTouched) &&
                   Boolean(!field.state.meta.isValid);
 
-                const Icon = availableTags.find(
-                  (tag) => tag.value === field.state.value
-                )?.icon;
+                const currentTag = getTag(field.state.value);
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor="school-classes-forum-new-tag">
@@ -195,8 +193,8 @@ export function SchoolClassesForumNew() {
                           name={field.name}
                           variant="outline"
                         >
-                          {!!Icon && <Icon />}
-                          {t(field.state.value)}
+                          <currentTag.icon />
+                          {t(currentTag.value)}
                           <ChevronDownIcon className="ml-auto" />
                         </Button>
                       </DropdownMenuTrigger>

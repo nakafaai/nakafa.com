@@ -30,22 +30,7 @@ export function registerPolarRoutes(app: HonoWithConvex<ActionCtx>) {
       const event = validateEvent(body, headers, polarWebhookSecret);
 
       switch (event.type) {
-        case "customer.created": {
-          const userId = await findUserIdFromCustomer(c.env, event.data);
-
-          if (!userId) {
-            return c.text("Bad Request: Missing User", HTTP_BAD_REQUEST);
-          }
-
-          await c.env.runMutation(internal.customers.mutations.insertCustomer, {
-            customer: convertToDatabaseCustomer({
-              ...event.data,
-              userId,
-            }),
-          });
-          break;
-        }
-
+        case "customer.created":
         case "customer.updated": {
           const userId = await findUserIdFromCustomer(c.env, event.data);
 
@@ -53,7 +38,7 @@ export function registerPolarRoutes(app: HonoWithConvex<ActionCtx>) {
             return c.text("Bad Request: Missing User", HTTP_BAD_REQUEST);
           }
 
-          await c.env.runMutation(internal.customers.mutations.updateCustomer, {
+          await c.env.runMutation(internal.customers.mutations.upsertCustomer, {
             customer: convertToDatabaseCustomer({
               ...event.data,
               userId,

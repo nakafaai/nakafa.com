@@ -221,10 +221,7 @@ export function UserSettingsApiKey() {
                     <Tooltip>
                       <TooltipTrigger
                         render={
-                          <Badge
-                            className="lowercase"
-                            variant="secondary-subtle"
-                          >
+                          <Badge className="lowercase" variant="muted-outline">
                             {apiKey.expiresAt
                               ? formatDistanceToNow(apiKey.expiresAt, {
                                   locale: getLocale(locale),

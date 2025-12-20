@@ -18,8 +18,8 @@ import {
   CheckIcon,
   CopyIcon,
   GraduationCapIcon,
-  PlusIcon,
   SpeechIcon,
+  UserPlusIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -58,7 +58,7 @@ export function SchoolClassesPeopleInvite() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button>
-            <PlusIcon />
+            <UserPlusIcon />
             {t("invite")}
           </Button>
         </DropdownMenuTrigger>

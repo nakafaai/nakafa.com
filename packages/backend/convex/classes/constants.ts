@@ -15,6 +15,16 @@ export const CLASS_IMAGES = new Map([
   ["music", "/classes/music.png"],
   ["nightly", "/classes/nightly.png"],
   ["writer", "/classes/writer.png"],
+  ["barbie", "/classes/barbie.png"],
+  ["fun", "/classes/fun.png"],
+  ["lamp", "/classes/lamp.png"],
+  ["lemon", "/classes/lemon.png"],
+  ["nighty", "/classes/nighty.png"],
+  ["rocket", "/classes/rocket.png"],
+  ["sakura", "/classes/sakura.png"],
+  ["sky", "/classes/sky.png"],
+  ["stamp", "/classes/stamp.png"],
+  ["vintage", "/classes/vintage.png"],
 ] as const);
 
 /**

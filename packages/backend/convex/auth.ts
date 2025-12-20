@@ -4,7 +4,6 @@ import {
   type GenericCtx,
 } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
-import { checkout, polar, portal, usage } from "@polar-sh/better-auth";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
 import {
   anonymous,
@@ -19,7 +18,6 @@ import type { DataModel, Id } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
 import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
-import { polarClient, products } from "./utils/polar";
 
 const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
@@ -58,6 +56,13 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             authId: authUser._id,
             userId,
           });
+
+          // Sync customer to Polar and local DB
+          await ctx.scheduler.runAfter(
+            0,
+            internal.customers.actions.syncCustomer,
+            { userId }
+          );
         },
         onUpdate: async (ctx, newDoc, oldDoc) => {
           // Sync name/image changes to app user
@@ -126,24 +131,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       convex({
         authConfig,
         jwksRotateOnTokenGenerationError: true,
-      }),
-      polar({
-        client: polarClient,
-        createCustomerOnSignUp: true,
-        use: [
-          checkout({
-            products: [
-              {
-                productId: products.pro.id,
-                slug: products.pro.slug,
-              },
-            ],
-            successUrl: `${siteUrl}/checkout/success?checkout_id={CHECKOUT_ID}`,
-            authenticatedUsersOnly: true,
-          }),
-          portal(),
-          usage(),
-        ],
       }),
     ],
   }) satisfies BetterAuthOptions;

@@ -1,0 +1,186 @@
+import { ConvexError, v } from "convex/values";
+import { internal } from "../../_generated/api";
+import { internalMutation, mutation } from "../../functions";
+import { requireAuthWithSession } from "../../lib/authHelpers";
+import { TEACHER_PERMISSIONS } from "../constants";
+import { schoolClassMaterialStatus } from "../schema";
+import { loadActiveClassWithAccess, requireTeacherPermission } from "../utils";
+import { validateScheduledStatus } from "./utils";
+
+export const createMaterialGroup = mutation({
+  args: {
+    classId: v.id("schoolClasses"),
+    name: v.string(),
+    description: v.string(),
+    status: schoolClassMaterialStatus,
+    scheduledAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuthWithSession(ctx);
+    const userId = user.appUser._id;
+
+    // Validate early before expensive operations
+    validateScheduledStatus(args.status, args.scheduledAt);
+
+    const { classData, classMembership, schoolMembership } =
+      await loadActiveClassWithAccess(ctx, args.classId, userId);
+
+    requireTeacherPermission(
+      classMembership,
+      schoolMembership,
+      TEACHER_PERMISSIONS.CONTENT_CREATE
+    );
+
+    // Get next order using index (efficient: uses .first() not .collect())
+    const lastGroup = await ctx.db
+      .query("schoolClassMaterialGroups")
+      .withIndex("classId_parentId_order", (q) =>
+        q.eq("classId", args.classId).eq("parentId", undefined)
+      )
+      .order("desc")
+      .first();
+
+    const order = (lastGroup?.order ?? -1) + 1;
+    const now = Date.now();
+    const isScheduled = args.status === "scheduled";
+    const isPublished = args.status === "published";
+
+    const groupId = await ctx.db.insert("schoolClassMaterialGroups", {
+      classId: args.classId,
+      schoolId: classData.schoolId,
+      name: args.name,
+      description: args.description,
+      order,
+      status: args.status,
+      scheduledAt: isScheduled ? args.scheduledAt : undefined,
+      // Set publishedAt/publishedBy immediately when creating as "published"
+      publishedAt: isPublished ? now : undefined,
+      publishedBy: isPublished ? userId : undefined,
+      materialCount: 0,
+      childGroupCount: 0,
+      createdBy: userId,
+      updatedAt: now,
+    });
+
+    // Schedule publish job if needed (requires groupId, so separate patch)
+    if (isScheduled && args.scheduledAt) {
+      const scheduledJobId = await ctx.scheduler.runAfter(
+        Math.max(args.scheduledAt - now, 0),
+        internal.classes.materials.mutations.publishMaterialGroup,
+        { groupId, publishedBy: userId }
+      );
+      await ctx.db.patch("schoolClassMaterialGroups", groupId, {
+        scheduledJobId,
+      });
+    }
+
+    return groupId;
+  },
+});
+
+export const updateMaterialGroup = mutation({
+  args: {
+    groupId: v.id("schoolClassMaterialGroups"),
+    name: v.optional(v.string()),
+    description: v.optional(v.string()),
+    status: v.optional(schoolClassMaterialStatus),
+    scheduledAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuthWithSession(ctx);
+    const userId = user.appUser._id;
+
+    const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
+    if (!group) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Material group not found.",
+      });
+    }
+
+    // Compute new values (use existing if not provided)
+    const newStatus = args.status ?? group.status;
+    const newScheduledAt = args.scheduledAt ?? group.scheduledAt;
+
+    // Validate early before expensive operations
+    validateScheduledStatus(newStatus, newScheduledAt);
+
+    const { classMembership, schoolMembership } =
+      await loadActiveClassWithAccess(ctx, group.classId, userId);
+
+    requireTeacherPermission(
+      classMembership,
+      schoolMembership,
+      TEACHER_PERMISSIONS.CONTENT_EDIT
+    );
+
+    const now = Date.now();
+    const wasPublished = group.status === "published";
+    const willBePublished = newStatus === "published";
+    const wasScheduled = group.status === "scheduled";
+    const willBeScheduled = newStatus === "scheduled";
+    const timeChanged = newScheduledAt !== group.scheduledAt;
+
+    // Determine scheduling changes
+    const needsCancel = wasScheduled && (!willBeScheduled || timeChanged);
+    const needsSchedule = willBeScheduled && (!wasScheduled || timeChanged);
+
+    let scheduledJobId = group.scheduledJobId;
+
+    // Cancel existing job if status changed or time changed
+    if (needsCancel && group.scheduledJobId) {
+      await ctx.scheduler.cancel(group.scheduledJobId);
+      scheduledJobId = undefined;
+    }
+
+    // Schedule new job if needed
+    if (needsSchedule && newScheduledAt) {
+      scheduledJobId = await ctx.scheduler.runAfter(
+        Math.max(newScheduledAt - now, 0),
+        internal.classes.materials.mutations.publishMaterialGroup,
+        { groupId: args.groupId, publishedBy: userId }
+      );
+    }
+
+    // Determine published fields
+    const isNewlyPublished = willBePublished && !wasPublished;
+
+    await ctx.db.patch("schoolClassMaterialGroups", args.groupId, {
+      name: args.name ?? group.name,
+      description: args.description ?? group.description,
+      status: newStatus,
+      scheduledAt: willBeScheduled ? newScheduledAt : undefined,
+      scheduledJobId: willBeScheduled ? scheduledJobId : undefined,
+      // Set publishedAt/publishedBy when changing to "published"
+      publishedAt: isNewlyPublished ? now : group.publishedAt,
+      publishedBy: isNewlyPublished ? userId : group.publishedBy,
+      updatedAt: now,
+    });
+
+    return args.groupId;
+  },
+});
+
+export const publishMaterialGroup = internalMutation({
+  args: {
+    groupId: v.id("schoolClassMaterialGroups"),
+    publishedBy: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
+
+    if (!group || group.status !== "scheduled") {
+      return;
+    }
+
+    const now = Date.now();
+
+    await ctx.db.patch("schoolClassMaterialGroups", args.groupId, {
+      status: "published",
+      scheduledJobId: undefined,
+      publishedAt: now,
+      publishedBy: args.publishedBy,
+      updatedAt: now,
+    });
+  },
+});

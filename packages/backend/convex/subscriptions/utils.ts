@@ -1,6 +1,24 @@
 import type { Subscription } from "@polar-sh/sdk/models/components/subscription.js";
 import type { WithoutSystemFields } from "convex/server";
 import type { Doc, Id } from "../_generated/dataModel";
+import type { SubscriptionRecurringInterval } from "./schema";
+
+const INTERVAL_MAP: Record<string, SubscriptionRecurringInterval> = {
+  day: "day",
+  week: "week",
+  month: "month",
+  year: "year",
+};
+
+/**
+ * Validate and normalize recurring interval from Polar SDK.
+ * SDK uses open enums that may include unrecognized values.
+ */
+function normalizeRecurringInterval(
+  interval: string | null | undefined
+): SubscriptionRecurringInterval | null {
+  return (interval && INTERVAL_MAP[interval]) || null;
+}
 
 /**
  * Extract and validate schoolId from metadata.
@@ -33,7 +51,9 @@ export function convertToDatabaseSubscription(
     checkoutId: subscription.checkoutId,
     amount: subscription.amount,
     currency: subscription.currency,
-    recurringInterval: subscription.recurringInterval,
+    recurringInterval: normalizeRecurringInterval(
+      subscription.recurringInterval
+    ),
     status: subscription.status,
     currentPeriodStart: subscription.currentPeriodStart.toISOString(),
     currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,

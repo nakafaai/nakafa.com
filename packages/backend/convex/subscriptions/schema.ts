@@ -1,5 +1,17 @@
 import { defineTable } from "convex/server";
+import type { Infer } from "convex/values";
 import { v } from "convex/values";
+
+const SubscriptionRecurringInterval = v.union(
+  v.literal("day"),
+  v.literal("week"),
+  v.literal("month"),
+  v.literal("year"),
+  v.null()
+);
+export type SubscriptionRecurringInterval = Infer<
+  typeof SubscriptionRecurringInterval
+>;
 
 const tables = {
   subscriptions: defineTable({
@@ -10,13 +22,7 @@ const tables = {
     modifiedAt: v.union(v.string(), v.null()),
     amount: v.union(v.number(), v.null()),
     currency: v.union(v.string(), v.null()),
-    recurringInterval: v.union(
-      v.literal("day"),
-      v.literal("week"),
-      v.literal("month"),
-      v.literal("year"),
-      v.null()
-    ),
+    recurringInterval: SubscriptionRecurringInterval,
     status: v.string(),
     currentPeriodStart: v.string(),
     currentPeriodEnd: v.union(v.string(), v.null()),

@@ -86,7 +86,9 @@ const ForumReactions = memo(({ forum }: { forum: Forum }) => {
   const t = useTranslations("Common");
 
   const [isPending, startTransition] = useTransition();
-  const toggleReaction = useMutation(api.classes.mutations.toggleForumReaction);
+  const toggleReaction = useMutation(
+    api.classes.forums.mutations.toggleForumReaction
+  );
 
   const handleToggleReaction = (emoji: string) => {
     startTransition(async () => {
@@ -147,7 +149,9 @@ const ForumActions = memo(({ forum }: { forum: Forum }) => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const toggleReaction = useMutation(api.classes.mutations.toggleForumReaction);
+  const toggleReaction = useMutation(
+    api.classes.forums.mutations.toggleForumReaction
+  );
 
   const handleToggleReaction = (emoji: string) => {
     startTransition(async () => {

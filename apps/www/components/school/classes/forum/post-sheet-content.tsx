@@ -23,7 +23,7 @@ const ForumPostList = memo(
   ({ forumId }: { forumId: Id<"schoolClassForums"> }) => {
     const currentUser = useQuery(api.auth.getCurrentUser);
     // getForum now includes lastReadAt - single query instead of two
-    const forum = useQuery(api.classes.queries.getForum, { forumId });
+    const forum = useQuery(api.classes.forums.queries.getForum, { forumId });
 
     if (!(forum && currentUser)) {
       return null;
