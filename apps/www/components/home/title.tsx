@@ -1,9 +1,9 @@
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 
-type Props = {
+interface Props {
   className?: string;
-};
+}
 
 export function HomeTitle({ className }: Props) {
   const t = useTranslations("Home");

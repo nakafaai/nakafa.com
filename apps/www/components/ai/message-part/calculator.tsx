@@ -17,9 +17,9 @@ import {
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
 
-type Props = {
+interface Props {
   message: DataPart["calculator"];
-};
+}
 
 export const CalculatorPart = memo(({ message }: Props) => {
   const t = useTranslations("Ai");

@@ -5,9 +5,9 @@ import { useTranslations } from "next-intl";
 import { CommentsAdd } from "./add";
 import { CommentsList } from "./list";
 
-type Props = {
+interface Props {
   slug: string;
-};
+}
 
 export function Comments({ slug }: Props) {
   const t = useTranslations("Common");

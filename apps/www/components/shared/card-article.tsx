@@ -16,10 +16,10 @@ import { Link } from "@repo/internationalization/src/navigation";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 
-type Props = {
+interface Props {
   category: string;
   article: Article;
-};
+}
 
 export function CardArticle({ category, article }: Props) {
   const t = useTranslations("Articles");

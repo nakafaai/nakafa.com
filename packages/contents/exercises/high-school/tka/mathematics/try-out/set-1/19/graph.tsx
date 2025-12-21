@@ -18,10 +18,10 @@ import {
   YAxis,
 } from "recharts";
 
-type Props = {
+interface Props {
   title: string;
   description: string;
-};
+}
 
 export function Graph({ title, description }: Props) {
   // Generate data points for y = sin(2x + 60°)

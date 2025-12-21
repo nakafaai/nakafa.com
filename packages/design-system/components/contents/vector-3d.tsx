@@ -13,12 +13,12 @@ const DEFAULT_CAMERA_POSITION_X = 10;
 const DEFAULT_CAMERA_POSITION_Y = 6;
 const DEFAULT_CAMERA_POSITION_Z = 10;
 
-type Props = {
+interface Props {
   title: ReactNode;
   description: ReactNode;
   vectors: ComponentProps<typeof Vector>[];
   cameraPosition?: [number, number, number];
-};
+}
 
 export function Vector3d({
   title,

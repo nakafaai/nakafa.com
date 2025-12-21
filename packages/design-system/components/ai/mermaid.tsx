@@ -32,11 +32,11 @@ async function initializeMermaid(customConfig?: MermaidConfig) {
   return mermaid;
 }
 
-type MermaidProps = {
+interface MermaidProps {
   chart: string;
   className?: string;
   config?: MermaidConfig;
-};
+}
 
 export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);

@@ -8,7 +8,7 @@ export type UploadFunction = (
   abortSignal?: AbortSignal
 ) => Promise<string>;
 
-export type ImageUploadNodeOptions = {
+export interface ImageUploadNodeOptions {
   /**
    * The type of the node.
    * @default 'image'
@@ -47,10 +47,9 @@ export type ImageUploadNodeOptions = {
    * @example { class: 'foo' }
    */
   HTMLAttributes: Record<string, unknown>;
-};
+}
 
 declare module "@tiptap/react" {
-  // biome-ignore lint/style/useConsistentTypeDefinitions: Must use interface
   interface Commands<ReturnType> {
     imageUpload: {
       setImageUploadNode: (options?: ImageUploadNodeOptions) => ReturnType;

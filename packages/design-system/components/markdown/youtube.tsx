@@ -11,9 +11,9 @@ import { Link } from "@repo/internationalization/src/navigation";
 import { ExternalLinkIcon, HandHeartIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-type Props = {
+interface Props {
   videoId: string;
-};
+}
 
 export function Youtube({ videoId }: Props) {
   const t = useTranslations("Common");

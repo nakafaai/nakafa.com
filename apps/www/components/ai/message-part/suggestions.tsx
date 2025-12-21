@@ -5,9 +5,9 @@ import { PlusIcon, QuoteIcon } from "lucide-react";
 import { memo } from "react";
 import { useChat } from "@/lib/context/use-chat";
 
-type Props = {
+interface Props {
   message: DataPart["suggestions"];
-};
+}
 
 export const SuggestionsPart = memo(({ message }: Props) => {
   const suggestions = message.data;

@@ -31,10 +31,10 @@ const defaultValues: z.infer<typeof formSchema> = {
   code: "",
 };
 
-type Props = {
+interface Props {
   classId: Id<"schoolClasses">;
   visibility: SchoolClassVisibility;
-};
+}
 
 export function SchoolClassesJoinForm({ classId, visibility }: Props) {
   const t = useTranslations("School.Classes");

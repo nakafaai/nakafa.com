@@ -10,9 +10,9 @@ import { Weather } from "@/components/home/weather";
 
 export const revalidate = false;
 
-type Props = {
+interface Props {
   params: Promise<{ locale: Locale }>;
-};
+}
 
 export default function Page({ params }: Props) {
   const { locale } = use(params);

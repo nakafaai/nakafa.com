@@ -28,11 +28,11 @@ import {
 
 const TICK_LABEL_CHAR_LIMIT = 3;
 
-type Props = {
+interface Props {
   title: string;
   description: string;
   footnote: string;
-};
+}
 
 const CabinetChartData = [
   { name: "Reformasi Pembangunan", cabinet: 37 },

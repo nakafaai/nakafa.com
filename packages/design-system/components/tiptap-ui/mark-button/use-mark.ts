@@ -30,7 +30,7 @@ export type Mark =
 /**
  * Configuration for the mark functionality
  */
-export type UseMarkConfig = {
+export interface UseMarkConfig {
   /**
    * The Tiptap editor instance.
    */
@@ -48,7 +48,7 @@ export type UseMarkConfig = {
    * Callback function called after a successful mark toggle.
    */
   onToggled?: () => void;
-};
+}
 
 export const markIcons = {
   bold: BoldIcon,

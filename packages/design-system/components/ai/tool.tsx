@@ -31,12 +31,12 @@ export const Tool = memo(({ className, ...props }: ToolProps) => (
 ));
 Tool.displayName = "Tool";
 
-export type ToolHeaderProps = {
+export interface ToolHeaderProps {
   type: string;
   state: ToolUIPart["state"];
   icon?: ReactNode;
   className?: string;
-};
+}
 
 function getStatusBadge(status: ToolUIPart["state"]) {
   const labels = {

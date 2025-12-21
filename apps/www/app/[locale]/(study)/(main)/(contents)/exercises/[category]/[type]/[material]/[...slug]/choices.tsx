@@ -12,11 +12,11 @@ import { cn } from "@repo/design-system/lib/utils";
 import type { ComponentProps } from "react";
 import { useExercise } from "@/lib/context/use-exercise";
 
-type Props = {
+interface Props {
   id: string;
   exerciseNumber: number;
   choices: ExercisesChoices[keyof ExercisesChoices];
-};
+}
 
 export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
   const selectAnswer = useExercise((state) => state.selectAnswer);

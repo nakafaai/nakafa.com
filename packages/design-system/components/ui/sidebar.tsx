@@ -41,7 +41,7 @@ export const SIDEBAR_COOKIE_MAX_AGE =
 export const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 export const SIDEBAR_DESKTOP = 1024;
 
-type SidebarContextProps = {
+interface SidebarContextProps {
   state: "expanded" | "collapsed";
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -49,7 +49,7 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
-};
+}
 
 const SidebarContext = createContext<SidebarContextProps | null>(null);
 

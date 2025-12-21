@@ -3,9 +3,9 @@ import { TypingLoader } from "@repo/design-system/components/ui/icons";
 import { memo } from "react";
 import { useChat } from "@/lib/context/use-chat";
 
-type Props = {
+interface Props {
   force?: boolean;
-};
+}
 
 export const AIChatLoading = memo(({ force = false }: Props) => {
   const status = useChat((state) => state.chat.status);

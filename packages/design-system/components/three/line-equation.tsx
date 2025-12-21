@@ -78,7 +78,7 @@ function getSharedMaterial(color: string | Color): MeshBasicMaterial {
   return material;
 }
 
-export type Props = {
+export interface Props {
   points: {
     x: number;
     y: number;
@@ -125,7 +125,7 @@ export type Props = {
     /** Size of the arrowhead */
     size?: number;
   };
-};
+}
 
 export function LineEquation({
   points,

@@ -1,8 +1,8 @@
 import type { Thing, WithContext } from "schema-dts";
 
-type JsonLdProps = {
+interface JsonLdProps {
   jsonLd: WithContext<Thing>;
-};
+}
 
 export function JsonLd({ jsonLd }: JsonLdProps) {
   return (

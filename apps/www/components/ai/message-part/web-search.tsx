@@ -12,9 +12,9 @@ import { FrownIcon, GlobeIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
-type Props = {
+interface Props {
   message: DataPart["web-search"];
-};
+}
 
 export const WebSearchPart = memo(({ message }: Props) => {
   const t = useTranslations("Ai");

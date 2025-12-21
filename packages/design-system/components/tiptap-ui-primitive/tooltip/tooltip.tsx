@@ -30,7 +30,7 @@ import {
 } from "react";
 import "@repo/design-system/components/tiptap-ui-primitive/tooltip/tooltip.scss";
 
-type TooltipProviderProps = {
+interface TooltipProviderProps {
   children: React.ReactNode;
   initialOpen?: boolean;
   placement?: Placement;
@@ -40,7 +40,7 @@ type TooltipProviderProps = {
   closeDelay?: number;
   timeout?: number;
   useDelayGroup?: boolean;
-};
+}
 
 interface TooltipTriggerProps
   extends Omit<React.HTMLProps<HTMLElement>, "ref"> {

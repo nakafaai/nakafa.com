@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 
 export type RectState = Omit<DOMRect, "toJSON">;
 
-export type ElementRectOptions = {
+export interface ElementRectOptions {
   /**
    * The element to track. Can be an Element, ref, or selector string.
    * Defaults to document.body if not provided.
@@ -23,7 +23,7 @@ export type ElementRectOptions = {
    * Whether to use ResizeObserver for more accurate tracking
    */
   useResizeObserver?: boolean;
-};
+}
 
 const initialRect: RectState = {
   x: 0,

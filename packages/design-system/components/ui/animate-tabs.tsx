@@ -12,7 +12,7 @@ import {
   useState,
 } from "react";
 
-type Props = {
+interface Props {
   tabs: {
     label: string;
     href: string;
@@ -20,7 +20,7 @@ type Props = {
   }[];
   id?: string;
   className?: string;
-};
+}
 
 export function AnimateTabs({ id, tabs, className }: Props) {
   const pathname = usePathname();

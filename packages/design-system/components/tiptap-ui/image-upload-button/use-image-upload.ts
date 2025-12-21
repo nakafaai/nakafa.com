@@ -16,7 +16,7 @@ export const IMAGE_UPLOAD_SHORTCUT_KEY = "mod+shift+i";
 /**
  * Configuration for the image upload functionality
  */
-export type UseImageUploadConfig = {
+export interface UseImageUploadConfig {
   /**
    * The Tiptap editor instance.
    */
@@ -30,7 +30,7 @@ export type UseImageUploadConfig = {
    * Callback function called after a successful image insertion.
    */
   onInserted?: () => void;
-};
+}
 
 /**
  * Checks if image can be inserted in the current editor state

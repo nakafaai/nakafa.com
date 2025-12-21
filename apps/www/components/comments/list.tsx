@@ -40,9 +40,9 @@ type CommentWithUser = Comment & {
   replyToUser: UserData | null;
 };
 
-type Props = {
+interface Props {
   slug: string;
-};
+}
 
 export function CommentsList({ slug }: Props) {
   const { results, status, loadMore } = usePaginatedQuery(

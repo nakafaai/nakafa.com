@@ -2,9 +2,9 @@ import { type Locale, useTranslations } from "next-intl";
 import type { WebSite, WithContext } from "schema-dts";
 import { JsonLd } from ".";
 
-type Props = {
+interface Props {
   locale: Locale;
-};
+}
 
 export function WebsiteJsonLd({ locale }: Props) {
   const t = useTranslations("Metadata");

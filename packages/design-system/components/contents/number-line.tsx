@@ -9,7 +9,7 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
 
-type NumberLineSegment = {
+interface NumberLineSegment {
   /** The start value of the segment */
   start: number;
   /** The end value of the segment */
@@ -30,15 +30,15 @@ type NumberLineSegment = {
   showPoints?: boolean;
   /** The background color of the segment */
   backgroundColor?: string;
-};
+}
 
-type NumberLineProps = {
+interface NumberLineProps {
   min?: number;
   max?: number;
   segments: NumberLineSegment[];
   title: ReactNode;
   description: ReactNode;
-};
+}
 
 export function NumberLine({
   min,

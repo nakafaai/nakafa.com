@@ -26,7 +26,7 @@ const CAMERA_POSITION_X = 12;
 const CAMERA_POSITION_Y = 8;
 const CAMERA_POSITION_Z = 12;
 
-type Props = {
+interface Props {
   /** Show the grid planes */
   showGrid?: boolean;
   /** Show the coordinate axes */
@@ -58,7 +58,7 @@ type Props = {
   children?: ReactNode;
   /** Additional class name */
   className?: string;
-};
+}
 
 export function CoordinateSystem({
   showGrid: initialShowGrid = true,

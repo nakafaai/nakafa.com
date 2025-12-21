@@ -18,11 +18,11 @@ const TEXT_PADDING = 15;
 const LINE_OFFSET = 0.3;
 const SLOT_CENTER_OFFSET = 0.5;
 
-type DiagramProps = {
+interface DiagramProps {
   title: string;
   description: string;
   children: React.ReactNode;
-};
+}
 
 export function Diagram({ title, description, children }: DiagramProps) {
   return (
@@ -36,23 +36,23 @@ export function Diagram({ title, description, children }: DiagramProps) {
   );
 }
 
-type Element = {
+interface Element {
   id: string;
   label: string;
-};
+}
 
-type Mapping = {
+interface Mapping {
   from: string; // Corresponds to Element id in domain
   to: string; // Corresponds to Element id in codomain
-};
+}
 
-type RelationVisualizerProps = {
+interface RelationVisualizerProps {
   domain: Element[];
   codomain: Element[];
   mappings: Mapping[];
   domainLabel?: string;
   codomainLabel?: string;
-};
+}
 
 // --- SVG Configuration ---
 const svgWidth = 2 * ELLIPSE_RX * 2 + ELLIPSE_GAP + 2 * SVG_PADDING;

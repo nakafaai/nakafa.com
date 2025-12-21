@@ -4,22 +4,22 @@ import { createStore } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-type State = {
+interface State {
   open: boolean;
   text: string;
   model: ModelId;
   query: string;
   activeChatId: Id<"chats"> | null;
-};
+}
 
-type Actions = {
+interface Actions {
   setOpen: (open: boolean) => void;
   setText: (text: string) => void;
   setModel: (model: ModelId) => void;
   getModel: () => ModelId;
   setQuery: (query: string) => void;
   setActiveChatId: (activeChatId: Id<"chats"> | null) => void;
-};
+}
 
 export type AiStore = State & Actions;
 

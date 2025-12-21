@@ -1,9 +1,9 @@
-export type FetchError = {
+export interface FetchError {
   status: number;
   message: string;
-};
+}
 
-export type FetchResult<T> = {
+export interface FetchResult<T> {
   data: T;
   error: FetchError | null;
-};
+}

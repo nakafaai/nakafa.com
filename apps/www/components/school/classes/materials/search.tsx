@@ -26,7 +26,7 @@ export function SchoolClassesMaterialsSearch() {
         </InputGroupAddon>
         <InputGroupInput
           onChange={(e) => setSearch({ q: e.target.value })}
-          placeholder={t("materials-search-placeholder")}
+          placeholder={t("modules-search-placeholder")}
           value={q}
         />
         <InputGroupAddon

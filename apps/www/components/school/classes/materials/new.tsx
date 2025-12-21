@@ -27,108 +27,37 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import { startOfDay } from "date-fns";
 import {
-  addDays,
-  format,
-  getHours,
-  getMinutes,
-  isToday,
-  set,
-  startOfDay,
-} from "date-fns";
-import {
-  BookPlusIcon,
   CalendarIcon,
   CheckIcon,
   ChevronDownIcon,
   Clock2Icon,
+  FolderPlusIcon,
   PlusIcon,
 } from "lucide-react";
-import type { Locale } from "next-intl";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState } from "react";
 import { toast } from "sonner";
-import * as z from "zod/mini";
 import { useClass } from "@/lib/context/use-class";
-import { getLocale } from "@/lib/utils/date";
 import {
   getMaterialStatus,
   materialStatusList,
 } from "../_data/material-status";
+import {
+  type MaterialGroupFormValues,
+  materialGroupFormSchema,
+} from "./schema";
+import {
+  formatScheduledAt,
+  getDefaultScheduledAt,
+  getMinTime,
+  getTimeString,
+  updateDate,
+  updateTime,
+} from "./utils";
 
-const materialStatus = z.union([
-  z.literal("draft"),
-  z.literal("published"),
-  z.literal("scheduled"),
-]);
-
-const formSchema = z
-  .object({
-    name: z.string().check(z.minLength(1), z.trim()),
-    description: z.string().check(z.minLength(1), z.trim()),
-    status: materialStatus,
-    scheduledAt: z.optional(z.number()),
-  })
-  .check(
-    z.refine((data) => {
-      if (data.status !== "scheduled") {
-        return true;
-      }
-      if (!data.scheduledAt) {
-        return false;
-      }
-      return data.scheduledAt > Date.now();
-    })
-  );
-
-function formatDateTime(timestamp: number, locale: Locale) {
-  return format(timestamp, "PP, HH:mm", { locale: getLocale(locale) });
-}
-
-function getTimeString(timestamp: number) {
-  return format(timestamp, "HH:mm");
-}
-
-function updateTime(timestamp: number, timeString: string) {
-  const [hours, minutes] = timeString.split(":").map(Number);
-  const newTimestamp = set(timestamp, { hours, minutes, seconds: 0 }).getTime();
-  // Prevent setting past times
-  if (newTimestamp <= Date.now()) {
-    return timestamp;
-  }
-  return newTimestamp;
-}
-
-function updateDate(timestamp: number | undefined, newDate: Date) {
-  const hours = timestamp ? getHours(timestamp) : 8;
-  const minutes = timestamp ? getMinutes(timestamp) : 0;
-  const newTimestamp = set(newDate, { hours, minutes, seconds: 0 }).getTime();
-  // If selecting today with past time, use current time + 1 hour
-  if (newTimestamp <= Date.now()) {
-    return set(newDate, {
-      hours: getHours(new Date()) + 1,
-      minutes: 0,
-      seconds: 0,
-    }).getTime();
-  }
-  return newTimestamp;
-}
-
-function getDefaultScheduledAt() {
-  return set(addDays(new Date(), 1), {
-    hours: 8,
-    minutes: 0,
-    seconds: 0,
-  }).getTime();
-}
-
-function getMinTime(timestamp: number | undefined) {
-  if (timestamp && isToday(timestamp)) {
-    return format(new Date(), "HH:mm");
-  }
-}
-
-const defaultValues: z.infer<typeof formSchema> = {
+const defaultValues: MaterialGroupFormValues = {
   name: "",
   description: "",
   status: "published",
@@ -150,7 +79,7 @@ export function SchoolClassesMaterialsNew() {
   const form = useForm({
     defaultValues,
     validators: {
-      onChange: formSchema,
+      onChange: materialGroupFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -179,12 +108,12 @@ export function SchoolClassesMaterialsNew() {
     >
       <ButtonGroup>
         <Button onClick={() => setOpenDialog(true)}>
-          <BookPlusIcon />
-          {t("new-material")}
+          <FolderPlusIcon />
+          {t("new-module")}
         </Button>
 
         <ResponsiveDialog
-          description={t("new-material-description")}
+          description={t("new-module-description")}
           footer={
             <form.Subscribe
               selector={(state) => [state.isValid, state.isSubmitting]}
@@ -203,7 +132,7 @@ export function SchoolClassesMaterialsNew() {
           }
           open={openDialog}
           setOpen={setOpenDialog}
-          title={t("new-material-title")}
+          title={t("new-module-title")}
         >
           <FieldGroup>
             <form.Field name="name">
@@ -333,7 +262,7 @@ export function SchoolClassesMaterialsNew() {
                               >
                                 <CalendarIcon />
                                 {field.state.value
-                                  ? formatDateTime(field.state.value, locale)
+                                  ? formatScheduledAt(field.state.value, locale)
                                   : t("material-scheduled-at-placeholder")}
                                 <ChevronDownIcon className="ml-auto" />
                               </Button>
@@ -366,7 +295,7 @@ export function SchoolClassesMaterialsNew() {
                                   <div className="relative flex w-full items-center">
                                     <Clock2Icon className="pointer-events-none absolute left-3 size-4 select-none text-muted-foreground" />
                                     <Input
-                                      className="appearance-none pl-9 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                                      className="cursor-text appearance-none pl-9 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                                       id="school-classes-materials-new-scheduled-time"
                                       min={getMinTime(field.state.value)}
                                       onChange={(e) => {

@@ -6,9 +6,9 @@ import { useAnchorObserver } from "@repo/design-system/hooks/use-anchor-observer
 import { type ReactNode, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
-type TocContextType = {
+interface TocContextType {
   activeHeadings: string[];
-};
+}
 
 const TocContext = createContext<TocContextType | undefined>(undefined);
 

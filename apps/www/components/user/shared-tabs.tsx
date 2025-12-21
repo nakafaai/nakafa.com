@@ -2,14 +2,14 @@ import { Highlight } from "@repo/design-system/components/animate-ui/primitives/
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ComponentType, SVGProps } from "react";
 
-type Props = {
+interface Props {
   tabs: {
     label: string;
     href: string;
     icon: ComponentType<SVGProps<SVGSVGElement>>;
   }[];
   defaultValue: string;
-};
+}
 
 export function SharedTabs({ tabs, defaultValue }: Props) {
   return (

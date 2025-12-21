@@ -32,7 +32,7 @@ import {
 
 const CAMERA_Z_POSITION = 4;
 
-type Props = {
+interface Props {
   title: ReactNode;
   description: ReactNode;
   angle?: number;
@@ -42,7 +42,7 @@ type Props = {
     cos?: string;
     tan?: string;
   };
-};
+}
 
 export function UnitCircle({
   title,

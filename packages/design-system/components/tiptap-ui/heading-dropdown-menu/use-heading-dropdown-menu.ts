@@ -19,7 +19,7 @@ import { useEffect, useState } from "react";
 /**
  * Configuration for the heading dropdown menu functionality
  */
-export type UseHeadingDropdownMenuConfig = {
+export interface UseHeadingDropdownMenuConfig {
   /**
    * The Tiptap editor instance.
    */
@@ -34,7 +34,7 @@ export type UseHeadingDropdownMenuConfig = {
    * @default false
    */
   hideWhenUnavailable?: boolean;
-};
+}
 
 /**
  * Gets the currently active heading level from the available levels

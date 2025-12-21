@@ -2,10 +2,10 @@ import { useUnmount } from "@repo/design-system/hooks/use-unmount";
 import throttle from "lodash.throttle";
 import { useMemo } from "react";
 
-type ThrottleSettings = {
+interface ThrottleSettings {
   leading?: boolean | undefined;
   trailing?: boolean | undefined;
-};
+}
 
 const defaultOptions: ThrottleSettings = {
   leading: false,

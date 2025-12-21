@@ -17,7 +17,7 @@ import {
 import { Fragment, type ReactNode, useMemo } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
-type Vector = {
+interface Vector {
   /**
    * Unique identifier for the vector
    */
@@ -46,9 +46,9 @@ type Vector = {
    * @default "monotone"
    */
   type?: "monotone" | "step" | "linear";
-};
+}
 
-type Props = {
+interface Props {
   /**
    * Title of the chart
    */
@@ -76,7 +76,7 @@ type Props = {
      */
     yAxis: string;
   };
-};
+}
 
 export function VectorChart({
   title,

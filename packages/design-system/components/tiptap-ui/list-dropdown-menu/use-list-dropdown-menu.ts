@@ -21,7 +21,7 @@ import { useEffect, useMemo, useState } from "react";
 /**
  * Configuration for the list dropdown menu functionality
  */
-export type UseListDropdownMenuConfig = {
+export interface UseListDropdownMenuConfig {
   /**
    * The Tiptap editor instance.
    */
@@ -36,13 +36,13 @@ export type UseListDropdownMenuConfig = {
    * @default false
    */
   hideWhenUnavailable?: boolean;
-};
+}
 
-export type ListOption = {
+export interface ListOption {
   label: string;
   type: ListType;
   icon: React.ElementType;
-};
+}
 
 export const listOptions: ListOption[] = [
   {

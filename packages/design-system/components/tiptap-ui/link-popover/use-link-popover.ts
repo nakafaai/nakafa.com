@@ -16,7 +16,7 @@ import { useCallback, useEffect, useState } from "react";
 /**
  * Configuration for the link popover functionality
  */
-export type UseLinkPopoverConfig = {
+export interface UseLinkPopoverConfig {
   /**
    * The Tiptap editor instance.
    */
@@ -30,12 +30,12 @@ export type UseLinkPopoverConfig = {
    * Callback function called when the link is set.
    */
   onSetLink?: () => void;
-};
+}
 
 /**
  * Configuration for the link handler functionality
  */
-export type LinkHandlerProps = {
+export interface LinkHandlerProps {
   /**
    * The Tiptap editor instance.
    */
@@ -44,7 +44,7 @@ export type LinkHandlerProps = {
    * Callback function called when the link is set.
    */
   onSetLink?: () => void;
-};
+}
 
 /**
  * Checks if a link can be set in the current editor state

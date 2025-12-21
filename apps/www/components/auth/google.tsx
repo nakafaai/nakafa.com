@@ -6,9 +6,9 @@ import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
 import { authClient } from "@/lib/auth/client";
 
-type Props = {
+interface Props {
   redirect?: string;
-};
+}
 
 export function AuthGoogle({ redirect }: Props) {
   const t = useTranslations("Auth");

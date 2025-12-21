@@ -133,7 +133,7 @@ function InfoCustomizeButton() {
           <div className="scrollbar-hide grid grid-cols-2 gap-3 overflow-y-auto p-6">
             {getImageList().map((image) => (
               <button
-                className="relative aspect-video size-full cursor-pointer overflow-hidden rounded-sm border border-transparent transition-[opacity,border-color] ease-out hover:border-primary disabled:pointer-events-none disabled:opacity-50"
+                className="relative size-full min-h-22 cursor-pointer overflow-hidden rounded-sm border border-transparent transition-[opacity,border-color] ease-out hover:border-primary disabled:pointer-events-none disabled:opacity-50"
                 disabled={isPending}
                 key={image.value}
                 onClick={() => handleImageClick(image.src)}

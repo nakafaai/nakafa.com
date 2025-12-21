@@ -26,7 +26,7 @@ export type Level = 1 | 2 | 3 | 4 | 5 | 6;
 /**
  * Configuration for the heading functionality
  */
-export type UseHeadingConfig = {
+export interface UseHeadingConfig {
   /**
    * The Tiptap editor instance.
    */
@@ -44,7 +44,7 @@ export type UseHeadingConfig = {
    * Callback function called after a successful heading toggle.
    */
   onToggled?: () => void;
-};
+}
 
 export const headingIcons = {
   1: HeadingOneIcon,

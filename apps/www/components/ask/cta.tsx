@@ -10,9 +10,9 @@ import { useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useAi } from "@/lib/context/use-ai";
 
-type Props = {
+interface Props {
   title: string;
-};
+}
 
 export function AskCta({ title }: Props) {
   const t = useTranslations("Ai");

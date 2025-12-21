@@ -14,9 +14,9 @@ import {
 } from "@repo/design-system/components/ui/stepper";
 import { useTranslations } from "next-intl";
 
-type Props = {
+interface Props {
   title: string;
-};
+}
 
 export function Stage({ title }: Props) {
   const t = useTranslations("Common");

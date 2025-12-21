@@ -18,7 +18,7 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
 
-type Props = {
+interface Props {
   open: boolean;
   setOpen: (open: boolean) => void;
   title: ReactNode;
@@ -41,7 +41,7 @@ type Props = {
       content?: string;
     };
   };
-};
+}
 
 export function ResponsiveDialog({
   open,

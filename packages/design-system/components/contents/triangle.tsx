@@ -33,7 +33,7 @@ import {
 
 const CAMERA_Z_POSITION = 4;
 
-type Props = {
+interface Props {
   title: ReactNode;
   description: ReactNode;
   angle?: number;
@@ -43,7 +43,7 @@ type Props = {
     adjacent: string;
     hypotenuse: string;
   };
-};
+}
 
 export function Triangle({
   title,

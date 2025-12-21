@@ -39,7 +39,7 @@ const Q2 = 2;
 const Q3 = 3;
 const Q4 = 4;
 
-type Props = {
+interface Props {
   /** Angle in degrees */
   angle?: number;
   /** Size of the triangle (scale factor) */
@@ -54,7 +54,7 @@ type Props = {
   useMonoFont?: boolean;
   /** Additional props */
   [key: string]: unknown;
-};
+}
 
 // Singleton geometry instances for reuse
 let sharedSphereGeometry: SphereGeometry | null = null;

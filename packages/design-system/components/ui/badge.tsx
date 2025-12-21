@@ -12,10 +12,14 @@ const badgeVariants = cva(
           "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
         "default-subtle":
           "border-primary bg-primary/10 text-primary [a&]:hover:bg-primary/20",
+        "default-outline":
+          "border-border bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
         secondary:
           "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
         "secondary-subtle":
           "border-secondary bg-secondary/10 text-secondary [a&]:hover:bg-secondary/20",
+        "secondary-outline":
+          "border-border bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
         muted:
           "border-transparent bg-muted text-muted-foreground [a&]:hover:bg-muted/90",
         "muted-outline":
@@ -24,6 +28,10 @@ const badgeVariants = cva(
           "border-muted bg-muted/10 text-muted [a&]:hover:bg-muted/20",
         destructive:
           "border-transparent bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90",
+        "destructive-subtle":
+          "border-destructive bg-destructive/10 text-destructive [a&]:hover:bg-destructive/20",
+        "destructive-outline":
+          "border-border bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
       },

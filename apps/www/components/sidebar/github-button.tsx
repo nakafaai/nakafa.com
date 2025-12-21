@@ -6,9 +6,9 @@ import {
 import { ExternalLinkIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-type Props = {
+interface Props {
   githubUrl: string;
-};
+}
 
 export function GithubButton({ githubUrl }: Props) {
   const t = useTranslations("Common");

@@ -4,10 +4,10 @@ import { type RefObject, useCallback, useMemo, useRef } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import type { WindowVirtualizerHandle } from "virtua";
 
-type VirtualContextType = {
+interface VirtualContextType {
   virtualRef: RefObject<WindowVirtualizerHandle | null>;
   scrollToIndex: (index: number) => void;
-};
+}
 
 const VirtualContext = createContext<VirtualContextType | undefined>(undefined);
 

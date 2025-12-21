@@ -18,10 +18,10 @@ const fontBold = readFileSync(
   `${process.cwd()}/public/fonts/GeistMono-Bold.ttf`
 );
 
-type GenerateProps = {
+interface GenerateProps {
   title: ReactNode;
   description?: ReactNode;
-};
+}
 
 export function generateOGImage(
   options: GenerateProps & ImageResponseOptions

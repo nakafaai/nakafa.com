@@ -2,7 +2,7 @@
  * CORS validation utilities for API security
  */
 
-export type CorsValidatorConfig = {
+export interface CorsValidatorConfig {
   /** Primary domain to allow (e.g., "nakafa.com") */
   allowedDomain?: string;
   /** Additional allowed origins (e.g., localhost for development) */
@@ -11,7 +11,7 @@ export type CorsValidatorConfig = {
   allowSubdomains?: boolean;
   /** SEO domains that should be allowed */
   seoDomains?: string[];
-};
+}
 
 export class CorsValidator {
   private readonly allowedDomain: string;

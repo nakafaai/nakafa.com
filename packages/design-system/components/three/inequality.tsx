@@ -47,7 +47,7 @@ const DEFAULT_LABEL_FONT_SIZE = 0.5;
 
 type Point = [number, number, number];
 
-type Props = {
+interface Props {
   /** Function that determines the boundary of the inequality (where the inequality becomes equality) */
   boundaryFunction?: (x: number, y: number) => number;
   /** Indicates if this is a 2D inequality (like x + y <= 10) that should be extruded along z-axis */
@@ -86,7 +86,7 @@ type Props = {
   };
   /** Whether to use the mono font for the labels */
   useMonoFont?: boolean;
-};
+}
 
 // Performance optimization: Adaptive resolution based on device capabilities
 function getAdaptiveResolution(requestedResolution: number): number {

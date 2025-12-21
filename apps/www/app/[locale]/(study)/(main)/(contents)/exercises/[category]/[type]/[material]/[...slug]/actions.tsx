@@ -6,9 +6,9 @@ import { ChevronDownIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useExercise } from "@/lib/context/use-exercise";
 
-type Props = {
+interface Props {
   exerciseNumber: number;
-};
+}
 
 export function ExerciseAnswerAction({ exerciseNumber }: Props) {
   const t = useTranslations("Exercises");

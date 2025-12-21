@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { CalendarIcon, type LucideIcon, UserPenIcon } from "lucide-react";
 import { OpenContent } from "@/components/shared/open-content";
 
-type Props = {
+interface Props {
   /** The title of the content */
   title: string;
   /** The link to go some where, it will be shown as a button on top of the title */
@@ -32,7 +32,7 @@ type Props = {
   slug?: string;
   /** The github url of the content */
   githubUrl?: string;
-};
+}
 
 export function HeaderContent({
   title,

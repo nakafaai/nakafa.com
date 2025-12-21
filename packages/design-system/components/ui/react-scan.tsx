@@ -5,7 +5,6 @@ export function ReactScan() {
   }
 
   return (
-    // biome-ignore lint/nursery/noSyncScripts: we need to sync this script
     <script
       crossOrigin="anonymous"
       src="https://unpkg.com/react-scan/dist/auto.global.js"

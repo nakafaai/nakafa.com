@@ -7,10 +7,10 @@ import { AIChatMessageActions } from "./chat-actions";
 import { AIChatLoading } from "./chat-loading";
 import { AiMessagePart } from "./message-part";
 
-type Props = {
+interface Props {
   message: MyUIMessage;
   showActions?: ComponentProps<typeof AIChatMessageActions>["showActions"];
-};
+}
 
 export const AiChatMessage = memo(({ message, showActions }: Props) => {
   // We are not showing the reasoning parts in the chat message, and not include step-start

@@ -10,9 +10,9 @@ import SchoolJoinImage from "@/public/school-join.png";
 const IMAGE_WIDTH = 238;
 const IMAGE_HEIGHT = 134;
 
-type Props = {
+interface Props {
   params: Promise<{ locale: Locale }>;
-};
+}
 
 export default function Page({ params }: Props) {
   const { locale } = use(params);

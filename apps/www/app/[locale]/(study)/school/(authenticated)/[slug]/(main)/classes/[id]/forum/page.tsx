@@ -5,9 +5,9 @@ import { SchoolClassesForumHeader } from "@/components/school/classes/forum/head
 import { SchoolClassesForumList } from "@/components/school/classes/forum/list";
 import { SchoolLayoutContent } from "@/components/school/layout-content";
 
-type Props = {
+interface Props {
   params: Promise<{ locale: Locale }>;
-};
+}
 
 export default function Page({ params }: Props) {
   const { locale } = use(params);

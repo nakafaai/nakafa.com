@@ -3,7 +3,7 @@ import { Card, CardContent } from "@repo/design-system/components/ui/card";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { ArrowDownIcon, ArrowRightIcon } from "lucide-react";
 
-type Props = {
+interface Props {
   labels: {
     wall: string;
     landArea: string;
@@ -11,7 +11,7 @@ type Props = {
     fenceShape: string;
     barbedWire: string;
   };
-};
+}
 
 export function Illustration({ labels }: Props) {
   return (

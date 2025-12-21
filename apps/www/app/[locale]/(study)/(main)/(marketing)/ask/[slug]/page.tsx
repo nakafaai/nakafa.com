@@ -18,12 +18,12 @@ export const revalidate = false;
 
 const askData = askSeo();
 
-type Props = {
+interface Props {
   params: Promise<{
     locale: Locale;
     slug: string;
   }>;
-};
+}
 
 export async function generateMetadata({
   params,

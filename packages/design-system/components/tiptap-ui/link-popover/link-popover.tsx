@@ -36,7 +36,7 @@ import type { Editor } from "@tiptap/react";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 
-export type LinkMainProps = {
+export interface LinkMainProps {
   /**
    * The URL to set for the link.
    */
@@ -61,7 +61,7 @@ export type LinkMainProps = {
    * Whether the link is currently active in the editor.
    */
   isActive: boolean;
-};
+}
 
 export interface LinkPopoverProps
   extends Omit<ButtonProps, "type">,

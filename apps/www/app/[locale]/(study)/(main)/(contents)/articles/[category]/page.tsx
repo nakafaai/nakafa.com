@@ -21,9 +21,9 @@ import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
-type Props = {
+interface Props {
   params: Promise<{ locale: Locale; category: ArticleCategory }>;
-};
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, category } = await params;

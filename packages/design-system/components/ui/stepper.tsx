@@ -6,18 +6,18 @@ import { Slot as SlotPrimitive } from "radix-ui";
 import { createContext, useCallback, useContext, useState } from "react";
 
 // Types
-type StepperContextValue = {
+interface StepperContextValue {
   activeStep: number;
   setActiveStep: (step: number) => void;
   orientation: "horizontal" | "vertical";
-};
+}
 
-type StepItemContextValue = {
+interface StepItemContextValue {
   step: number;
   state: StepState;
   isDisabled: boolean;
   isLoading: boolean;
-};
+}
 
 type StepState = "active" | "completed" | "inactive" | "loading";
 

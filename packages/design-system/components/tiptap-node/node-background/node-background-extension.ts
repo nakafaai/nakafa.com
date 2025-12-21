@@ -4,16 +4,15 @@ import type { EditorState, Transaction } from "@tiptap/pm/state";
 import type { NodeWithPos } from "@tiptap/react";
 import { Extension } from "@tiptap/react";
 
-export type NodeBackgroundOptions = {
+export interface NodeBackgroundOptions {
   /**
    * The types of nodes that can have background color applied.
    * @default ['paragraph', 'heading']
    */
   types?: string[];
-};
+}
 
 declare module "@tiptap/react" {
-  // biome-ignore lint/style/useConsistentTypeDefinitions: Must use interface
   interface Commands<ReturnType> {
     nodeBackground: {
       /**

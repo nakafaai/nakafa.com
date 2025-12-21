@@ -4,9 +4,9 @@ import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
 import { useSearchQuery } from "@/lib/react-query/use-search";
 import { SearchResults } from "../shared/search-results";
 
-type Props = {
+interface Props {
   query: string;
-};
+}
 
 export function AskListItems({ query }: Props) {
   const pagefindError = usePagefind((context) => context.error);

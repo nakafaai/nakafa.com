@@ -3,12 +3,12 @@ import { fetchQuery } from "convex/nextjs";
 import { redirect } from "next/navigation";
 import { getToken } from "@/lib/auth/server";
 
-type Props = {
+interface Props {
   /**
    * The children is the landing page for Nakafa School.
    */
   children: React.ReactNode;
-};
+}
 
 export async function School({ children }: Props) {
   const token = await getToken();

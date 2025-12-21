@@ -6,10 +6,10 @@ import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
-type Props = {
+interface Props {
   pagination: ContentPagination;
   className?: string;
-};
+}
 
 function PaginationButton({
   href,

@@ -7,9 +7,9 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";
 
-type Params = {
+interface Params {
   writer: UIMessageStreamWriter<MyUIMessage>;
-};
+}
 
 export const createScrape = ({ writer }: Params) => {
   return tool({

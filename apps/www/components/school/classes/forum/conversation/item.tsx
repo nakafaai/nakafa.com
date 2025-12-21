@@ -2,7 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { PostAttachment } from "@repo/backend/convex/classes/utils";
+import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,

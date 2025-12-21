@@ -64,21 +64,21 @@ const STOP_WORDS = new Set([
   "being",
 ]);
 
-type ContentParagraph = {
+interface ContentParagraph {
   text: string;
   score: number;
   index: number;
   length: number;
-};
+}
 
-type SelectRelevantContentParams = {
+interface SelectRelevantContentParams {
   content: string;
   query?: string;
   maxLength?: number;
   preserveStructure?: boolean;
   minRelevantParagraphs?: number;
   maxRelevantParagraphs?: number;
-};
+}
 
 /**
  * Extract meaningful keywords from a query string

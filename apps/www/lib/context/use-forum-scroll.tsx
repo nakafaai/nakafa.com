@@ -4,11 +4,11 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ReactNode } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
-type ForumScrollContextValue = {
+interface ForumScrollContextValue {
   scrollToPostId: (postId: Id<"schoolClassForumPosts">) => void;
   jumpToPostId: (postId: Id<"schoolClassForumPosts">) => void;
   scrollToBottom: () => void;
-};
+}
 
 const ForumScrollContext = createContext<ForumScrollContextValue | null>(null);
 

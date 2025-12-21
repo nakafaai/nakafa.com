@@ -15,21 +15,21 @@ const BASE36_RADIX = 36;
 const RANDOM_STRING_START = 2;
 const RANDOM_STRING_END = 9;
 
-export type FileMetadata = {
+export interface FileMetadata {
   name: string;
   size: number;
   type: string;
   url: string;
   id: string;
-};
+}
 
-export type FileWithPreview = {
+export interface FileWithPreview {
   file: File | FileMetadata;
   id: string;
   preview?: string;
-};
+}
 
-export type FileUploadOptions = {
+export interface FileUploadOptions {
   maxFiles?: number; // Only used when multiple is true, defaults to Infinity
   maxSize?: number; // in bytes
   accept?: string;
@@ -38,15 +38,15 @@ export type FileUploadOptions = {
   onFilesChange?: (files: FileWithPreview[]) => void; // Callback when files change
   onFilesAdded?: (addedFiles: FileWithPreview[]) => void; // Callback when new files are added
   onError?: (errors: string[]) => void; // Callback when errors occur
-};
+}
 
-export type FileUploadState = {
+export interface FileUploadState {
   files: FileWithPreview[];
   isDragging: boolean;
   errors: string[];
-};
+}
 
-export type FileUploadActions = {
+export interface FileUploadActions {
   addFiles: (files: FileList | File[]) => void;
   removeFile: (id: string) => void;
   clearFiles: () => void;
@@ -62,7 +62,7 @@ export type FileUploadActions = {
   ) => InputHTMLAttributes<HTMLInputElement> & {
     ref: React.Ref<HTMLInputElement>;
   };
-};
+}
 
 export const useFileUpload = (
   options: FileUploadOptions = {}

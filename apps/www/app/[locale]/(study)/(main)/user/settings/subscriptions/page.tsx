@@ -4,9 +4,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { UserSettingsSubscriptionsPage } from "@/components/user/settings/subscriptions-page";
 
-type Props = {
+interface Props {
   params: Promise<{ locale: Locale }>;
-};
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;

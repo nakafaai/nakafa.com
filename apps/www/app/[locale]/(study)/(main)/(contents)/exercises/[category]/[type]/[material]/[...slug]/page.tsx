@@ -37,17 +37,17 @@ import { ExerciseChoices } from "./choices";
 
 export const revalidate = false;
 
-type Params = {
+interface Params {
   locale: Locale;
   category: ExercisesCategory;
   type: ExercisesType;
   material: ExercisesMaterial;
   slug: string[];
-};
+}
 
-type Props = {
+interface Props {
   params: Promise<Params>;
-};
+}
 
 export async function generateMetadata({
   params,

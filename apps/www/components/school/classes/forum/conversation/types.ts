@@ -5,11 +5,11 @@ import type { ForumPost } from "@/lib/store/forum";
 // Re-export ForumPost for convenience
 export type { ForumPost } from "@/lib/store/forum";
 
-type ReactionWithUsers = {
+interface ReactionWithUsers {
   emoji: string;
   count: number;
   reactors: string[];
-};
+}
 
 export type Forum = Doc<"schoolClassForums"> & {
   user: UserData | null;

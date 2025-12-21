@@ -3,6 +3,7 @@ import { ConvexError, v } from "convex/values";
 import { query } from "../../_generated/server";
 import { requireAuth, requireClassAccess } from "../../lib/authHelpers";
 import { getUserMap } from "../../lib/userHelpers";
+import { loadClassWithAccess } from "../utils";
 import {
   attachForumUsers,
   buildReactorsByEmoji,
@@ -10,10 +11,9 @@ import {
   getForumLastReadAt,
   getForumUnreadCounts,
   getMyForumReactions,
-  loadClassWithAccess,
   loadForum,
   loadForumWithAccess,
-} from "../utils";
+} from "./utils";
 
 export const getForums = query({
   args: {

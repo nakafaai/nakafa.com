@@ -53,12 +53,12 @@ function Phone({ className, ...props }: React.ComponentProps<"input">) {
   );
 }
 
-type CountrySelectProps = {
+interface CountrySelectProps {
   disabled?: boolean;
   value: RpnInput.Country;
   onChange: (value: RpnInput.Country) => void;
   options: { label: string; value: RpnInput.Country | undefined }[];
-};
+}
 
 const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
   const t = useTranslations("Common");

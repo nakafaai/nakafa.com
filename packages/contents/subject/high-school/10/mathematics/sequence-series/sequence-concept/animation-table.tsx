@@ -35,28 +35,28 @@ const CHAIR_SIZE = 24;
 const Z_INDEX_TABLE = 10;
 const Z_INDEX_CHAIR = 20;
 
-type TableChairsProps = {
+interface TableChairsProps {
   labels?: {
     title?: string;
     table?: string;
     chair?: string;
   };
-};
+}
 
-type TableItem = {
+interface TableItem {
   id: number;
   x: number;
   y: number;
   width: number;
   height: number;
-};
+}
 
-type ChairItem = {
+interface ChairItem {
   id: number;
   x: number;
   y: number;
   side: "left" | "right" | "top" | "bottom";
-};
+}
 
 export default function TableChairsAnimation({
   labels = {

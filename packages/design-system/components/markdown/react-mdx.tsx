@@ -26,12 +26,18 @@ import type { BundledLanguage } from "shiki";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
-type MarkdownPoint = { line?: number; column?: number };
-type MarkdownPosition = { start?: MarkdownPoint; end?: MarkdownPoint };
-type MarkdownNode = {
+interface MarkdownPoint {
+  line?: number;
+  column?: number;
+}
+interface MarkdownPosition {
+  start?: MarkdownPoint;
+  end?: MarkdownPoint;
+}
+interface MarkdownNode {
   position?: MarkdownPosition;
   properties?: { className?: string };
-};
+}
 
 function sameNodePosition(prev?: MarkdownNode, next?: MarkdownNode): boolean {
   if (!(prev?.position || next?.position)) {

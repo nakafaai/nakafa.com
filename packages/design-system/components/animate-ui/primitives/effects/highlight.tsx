@@ -9,14 +9,14 @@ const RANDOM_KEY_RADIX = 36;
 
 type HighlightMode = "children" | "parent";
 
-type Bounds = {
+interface Bounds {
   top: number;
   left: number;
   width: number;
   height: number;
-};
+}
 
-type HighlightContextType<T extends string> = {
+interface HighlightContextType<T extends string> {
   as?: keyof HTMLElementTagNameMap;
   mode: HighlightMode;
   activeValue: T | null;
@@ -35,7 +35,7 @@ type HighlightContextType<T extends string> = {
   enabled?: boolean;
   exitDelay?: number;
   forceUpdateBounds?: boolean;
-};
+}
 
 const HighlightContext = React.createContext<
   HighlightContextType<string> | undefined
@@ -49,7 +49,7 @@ function useHighlight<T extends string>(): HighlightContextType<T> {
   return context as unknown as HighlightContextType<T>;
 }
 
-type BaseHighlightProps<T extends React.ElementType = "div"> = {
+interface BaseHighlightProps<T extends React.ElementType = "div"> {
   as?: T;
   ref?: React.Ref<HTMLDivElement>;
   mode?: HighlightMode;
@@ -64,13 +64,13 @@ type BaseHighlightProps<T extends React.ElementType = "div"> = {
   disabled?: boolean;
   enabled?: boolean;
   exitDelay?: number;
-};
+}
 
-type ParentModeHighlightProps = {
+interface ParentModeHighlightProps {
   boundsOffset?: Partial<Bounds>;
   containerClassName?: string;
   forceUpdateBounds?: boolean;
-};
+}
 
 type ControlledParentModeHighlightProps<T extends React.ElementType = "div"> =
   BaseHighlightProps<T> &

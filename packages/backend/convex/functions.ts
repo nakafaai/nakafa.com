@@ -19,6 +19,8 @@
  * - schoolClassForumPosts → schoolClassForumPosts (patch replyCount) → update empty ✅
  * - schoolClassForumPostReactions → schoolClassForumPosts (patch) → update empty ✅
  * - schoolClassForumReactions → schoolClassForums (patch) → no-op ✅
+ * - schoolClassMaterialGroups → schoolClassMaterialGroups (children), schoolClassMaterials → cascades ✅
+ * - schoolClassMaterials → schoolClassMaterialAttachments, schoolClassMaterialViews → no-op ✅
  *
  * RULE: Update cases should NOT trigger cascading modifications to avoid loops.
  */
@@ -94,6 +96,15 @@ triggers.register("notificationCounts", async () => {
 
 triggers.register("notificationPreferences", async () => {
   // No-op: modified in notifications/mutations.ts
+});
+
+// Material-related tables
+triggers.register("schoolClassMaterialAttachments", async () => {
+  // No-op: deleted by schoolClassMaterials trigger
+});
+
+triggers.register("schoolClassMaterialViews", async () => {
+  // No-op: deleted by schoolClassMaterials trigger
 });
 
 // =============================================================================
@@ -1013,6 +1024,109 @@ triggers.register("schoolClassForumReactions", async (ctx, change) => {
           }
           await ctx.db.patch("schoolClassForums", oldReaction.forumId, {
             reactionCounts,
+          });
+        }
+      }
+      break;
+    }
+
+    default: {
+      break;
+    }
+  }
+});
+
+// Trigger for materials - cascades delete to attachments and views
+triggers.register("schoolClassMaterials", async (ctx, change) => {
+  const oldMaterial = change.oldDoc;
+
+  switch (change.operation) {
+    case "delete": {
+      if (!oldMaterial) {
+        break;
+      }
+
+      // Delete all attachments for this material
+      const attachments = await ctx.db
+        .query("schoolClassMaterialAttachments")
+        .withIndex("materialId_type_order", (q) =>
+          q.eq("materialId", change.id)
+        )
+        .collect();
+
+      for (const attachment of attachments) {
+        // Delete the file from storage
+        await ctx.storage.delete(attachment.fileId);
+        await ctx.db.delete("schoolClassMaterialAttachments", attachment._id);
+      }
+
+      // Delete all view records for this material
+      const views = await ctx.db
+        .query("schoolClassMaterialViews")
+        .withIndex("materialId_userId", (q) => q.eq("materialId", change.id))
+        .collect();
+
+      for (const view of views) {
+        await ctx.db.delete("schoolClassMaterialViews", view._id);
+      }
+      break;
+    }
+
+    default: {
+      break;
+    }
+  }
+});
+
+// Trigger for material groups - cascades delete to children and materials
+triggers.register("schoolClassMaterialGroups", async (ctx, change) => {
+  const oldGroup = change.oldDoc;
+
+  switch (change.operation) {
+    case "delete": {
+      if (!oldGroup) {
+        break;
+      }
+
+      // Cancel scheduled job if exists
+      if (oldGroup.scheduledJobId) {
+        await ctx.scheduler.cancel(oldGroup.scheduledJobId);
+      }
+
+      // Delete all child groups (recursive via trigger)
+      const childGroups = await ctx.db
+        .query("schoolClassMaterialGroups")
+        .withIndex("classId_parentId_order", (q) =>
+          q.eq("classId", oldGroup.classId).eq("parentId", change.id)
+        )
+        .collect();
+
+      for (const child of childGroups) {
+        await ctx.db.delete("schoolClassMaterialGroups", child._id);
+      }
+
+      // Delete all materials in this group (cascades to attachments/views via trigger)
+      const materials = await ctx.db
+        .query("schoolClassMaterials")
+        .withIndex("groupId_status_isPinned_order", (q) =>
+          q.eq("groupId", change.id)
+        )
+        .collect();
+
+      for (const material of materials) {
+        await ctx.db.delete("schoolClassMaterials", material._id);
+      }
+
+      // Update parent's childGroupCount
+      if (oldGroup.parentId) {
+        const parent = await ctx.db.get(
+          "schoolClassMaterialGroups",
+          oldGroup.parentId
+        );
+        if (parent) {
+          await ctx.db.patch("schoolClassMaterialGroups", oldGroup.parentId, {
+            childGroupCount: Math.max(0, parent.childGroupCount - 1),
+            updatedAt: Date.now(),
           });
         }
       }

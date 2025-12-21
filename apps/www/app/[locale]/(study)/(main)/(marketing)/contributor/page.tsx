@@ -12,9 +12,9 @@ import { contributors } from "@/lib/data/contributor";
 
 export const revalidate = false;
 
-type Props = {
+interface Props {
   params: Promise<{ locale: Locale }>;
-};
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;

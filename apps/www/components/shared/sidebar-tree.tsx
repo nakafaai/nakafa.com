@@ -22,10 +22,10 @@ import { useTranslations } from "next-intl";
 import { TocProvider, useToc } from "@/lib/context/use-toc";
 import { useVirtual } from "@/lib/context/use-virtual";
 
-type Props = {
+interface Props {
   data: ParsedHeading[];
   title?: string;
-};
+}
 
 /**
  * Recursive component to render nested headings

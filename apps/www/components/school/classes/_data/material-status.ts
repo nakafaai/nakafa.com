@@ -1,10 +1,15 @@
-import { ClockIcon, FileEditIcon, SendIcon } from "lucide-react";
+import {
+  ArchiveIcon,
+  ArrowUpFromLineIcon,
+  ClockIcon,
+  FileEditIcon,
+} from "lucide-react";
 
 export const materialStatusList = [
   {
     value: "published",
     labelKey: "status-publish-now",
-    icon: SendIcon,
+    icon: ArrowUpFromLineIcon,
   },
   {
     value: "draft",
@@ -15,6 +20,11 @@ export const materialStatusList = [
     value: "scheduled",
     labelKey: "status-schedule",
     icon: ClockIcon,
+  },
+  {
+    value: "archived",
+    labelKey: "status-archived",
+    icon: ArchiveIcon,
   },
 ] as const;
 

@@ -13,14 +13,14 @@ import { ArrowUpRightIcon, NewspaperIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
-type Props = {
+interface Props {
   status:
     | "input-streaming"
     | "input-available"
     | "output-available"
     | "output-error";
   output?: GetArticlesOutput;
-};
+}
 
 export const ArticlesTool = memo(({ status, output }: Props) => {
   const t = useTranslations("Ai");

@@ -6,10 +6,10 @@ import { Mermaid } from "@repo/design-system/components/ai/mermaid";
 import { languageIconMap } from "@repo/design-system/lib/programming";
 import { cn } from "@repo/design-system/lib/utils";
 
-type Props = {
+interface Props {
   chart: string;
   className?: string;
-};
+}
 
 export function MermaidMdx({ chart, className }: Props) {
   const Icon = languageIconMap.mermaid;

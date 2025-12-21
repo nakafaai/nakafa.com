@@ -58,7 +58,7 @@ const BOLD_CHROMA = 0.2;
 const MEDIUM_LIGHTNESS = 0.7;
 const MEDIUM_CHROMA = 0.15;
 
-type Props = {
+interface Props {
   keyString: string;
   className?: HTMLAttributes<HTMLDivElement>["className"];
   style?: CSSProperties;
@@ -71,7 +71,7 @@ type Props = {
     | "vibrant";
   intensity?: "soft" | "medium" | "bold";
   gradientType?: "linear" | "radial" | "conic";
-};
+}
 
 // Helper function to convert our color to OKLCH string
 function oklch(lightness: number, chroma: number, hue: number): string {

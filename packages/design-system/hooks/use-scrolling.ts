@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 type ScrollTarget = RefObject<HTMLElement> | Window | null | undefined;
 type EventTargetWithScroll = Window | HTMLElement | Document;
 
-type UseScrollingOptions = {
+interface UseScrollingOptions {
   debounce?: number;
   fallbackToDocument?: boolean;
-};
+}
 
 export function useScrolling(
   target?: ScrollTarget,

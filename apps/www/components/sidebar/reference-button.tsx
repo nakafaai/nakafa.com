@@ -33,10 +33,10 @@ import {
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-type Props = {
+interface Props {
   references: Reference[];
   title: string;
-};
+}
 
 export function ReferenceButton({ references, title }: Props) {
   const t = useTranslations("Common");

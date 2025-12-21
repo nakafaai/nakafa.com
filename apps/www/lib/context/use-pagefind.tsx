@@ -10,10 +10,10 @@ import {
 } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
-type PagefindContextType = {
+interface PagefindContextType {
   ready: boolean;
   error: ReactElement | string;
-};
+}
 
 const PagefindContext = createContext<PagefindContextType | undefined>(
   undefined

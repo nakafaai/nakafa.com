@@ -9,9 +9,9 @@ import {
 import { BookOpenIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-type Props = {
+interface Props {
   interpretation: string;
-};
+}
 
 export function QuranInterpretation({ interpretation }: Props) {
   const t = useTranslations("Holy");

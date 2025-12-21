@@ -32,7 +32,7 @@ const SPEED_VALUES = Array.from(
 
 type FormulaType = "geometric" | "exponential" | "custom";
 
-type BacterialGrowthProps = {
+interface BacterialGrowthProps {
   /**
    * The ratio of bacterial growth.
    * @default 2
@@ -79,7 +79,7 @@ type BacterialGrowthProps = {
     bacterial?: string;
     initialBacteria?: string;
   };
-};
+}
 
 export function BacterialGrowth({
   ratio = 2,

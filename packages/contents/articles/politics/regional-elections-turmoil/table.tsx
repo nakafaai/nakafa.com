@@ -8,14 +8,14 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 
-export type TableRowData = {
+export interface TableRowData {
   category: string;
   electionLaw: string;
   courtDecision: string;
   dprDecision: string;
-};
+}
 
-type Props = {
+interface Props {
   caption: string;
   tableData: TableRowData[];
   headers?: {
@@ -24,7 +24,7 @@ type Props = {
     courtDecision: string;
     dprDecision: string;
   };
-};
+}
 
 export function RulingTable({
   caption,

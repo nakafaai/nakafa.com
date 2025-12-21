@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-type UseResizableOptions = {
+interface UseResizableOptions {
   initialWidth: number;
   minWidth: number;
   maxWidth: number;
   onResize?: (width: number) => void;
-};
+}
 
 export function useResizable({
   initialWidth,

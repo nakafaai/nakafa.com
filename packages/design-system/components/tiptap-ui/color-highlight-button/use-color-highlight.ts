@@ -75,7 +75,7 @@ export type HighlightMode = "mark" | "node";
 /**
  * Configuration for the color highlight functionality
  */
-export type UseColorHighlightConfig = {
+export interface UseColorHighlightConfig {
   /**
    * The Tiptap editor instance.
    */
@@ -112,7 +112,7 @@ export type UseColorHighlightConfig = {
     label: string;
     mode: HighlightMode;
   }) => void;
-};
+}
 
 export function pickHighlightColorsByValue(values: string[]) {
   const colorMap = new Map(

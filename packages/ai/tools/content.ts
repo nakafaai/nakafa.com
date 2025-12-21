@@ -17,9 +17,9 @@ import * as z from "zod";
 
 const QURAN_SLUG_PARTS_COUNT = 2;
 
-type Params = {
+interface Params {
   writer: UIMessageStreamWriter<MyUIMessage>;
-};
+}
 
 export const createGetContent = ({ writer }: Params) => {
   return tool({

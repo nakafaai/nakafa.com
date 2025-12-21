@@ -9,9 +9,9 @@ import { api } from "@repo/connection/routes";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";
 
-type Params = {
+interface Params {
   writer: UIMessageStreamWriter<MyUIMessage>;
-};
+}
 
 export const createGetArticles = ({ writer }: Params) =>
   tool({

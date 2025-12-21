@@ -2,14 +2,14 @@ import { getAppUrl } from "@repo/design-system/lib/utils";
 import { JsonLd } from "@repo/seo/json-ld";
 import type { Article, Person, WithContext } from "schema-dts";
 
-type Props = {
+interface Props {
   headline: string;
   datePublished: string;
   dateModified?: string;
   author: Person | Person[];
   image?: string;
   description: string;
-};
+}
 
 export function ArticleJsonLd({
   headline,

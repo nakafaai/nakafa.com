@@ -29,12 +29,12 @@ import {
   YAxis,
 } from "recharts";
 
-type Props = {
+interface Props {
   title: string;
   description: string;
   footnote: string;
   yLabel: string;
-};
+}
 
 const BudgetChartData = [
   {

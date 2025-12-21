@@ -39,8 +39,8 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       ultracite:
-        specifier: ^6.4.2
-        version: 6.4.2(typescript@5.9.3)
+        specifier: ^6.5.0
+        version: 6.5.0(typescript@5.9.3)
       vitest:
         specifier: ^4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@25.0.3)(jiti@2.6.1)(jsdom@27.3.0(postcss@8.5.6))(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
@@ -728,8 +728,8 @@ importers:
         specifier: ^3.4.14
         version: 3.4.14(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-resizable-panels:
-        specifier: ^4.0.13
-        version: 4.0.13(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^4.0.14
+        version: 4.0.14(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-spring:
         specifier: ^10.0.3
         version: 10.0.3(@react-three/fiber@9.4.2(@types/react@19.2.7)(immer@11.1.0)(react-dom@19.2.3(react@19.2.3))(react-native@0.83.0(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.3))(react@19.2.3)(three@0.182.0))(konva@10.0.12)(react-dom@19.2.3(react@19.2.3))(react-konva@19.2.1(@types/react@19.2.7)(konva@10.0.12)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.83.0(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.3))(react-zdog@1.2.2)(react@19.2.3)(three@0.182.0)(zdog@1.1.3)
@@ -9043,8 +9043,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-resizable-panels@4.0.13:
-    resolution: {integrity: sha512-tG6cPUARl8p8lAkRYFbYvoqiVNBatAMCair/wngBoHKfnHRYTFmgPa97mSrImKDmU0Go3friFCVbOtvbDMhzJA==}
+  react-resizable-panels@4.0.14:
+    resolution: {integrity: sha512-507w2CtETmntAIzU+eAnCjw1ogxIB7XRvVPPU/FkPAyg7hKRuU/o3Q2tRyUfKAPbPEQZB4QIBx+GynZBjo48eQ==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
@@ -10052,8 +10052,8 @@ packages:
     engines: {node: '>=0.8.0'}
     hasBin: true
 
-  ultracite@6.4.2:
-    resolution: {integrity: sha512-Xa6DoPQ9ay7j1H9lNH0SAeiJAgMSEv8zQPlEO+lK8xerQLtVhkTJj6rPkdnVuGSZff7FuPmdyoP8wr2cUfQW9A==}
+  ultracite@6.5.0:
+    resolution: {integrity: sha512-HrXvM0CX/S3t5HEoepWQ6kpMVD9mzNB5X0k/T7zvNObQ6X9+s1pAE4efDR3Nc4KwqDiemK/bwI7pgPApT7Fktw==}
     hasBin: true
 
   undici-types@7.16.0:
@@ -20541,7 +20541,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.7
 
-  react-resizable-panels@4.0.13(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  react-resizable-panels@4.0.14(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
@@ -21717,7 +21717,7 @@ snapshots:
   uglify-js@3.19.3:
     optional: true
 
-  ultracite@6.4.2(typescript@5.9.3):
+  ultracite@6.5.0(typescript@5.9.3):
     dependencies:
       '@clack/prompts': 0.11.0
       '@trpc/server': 11.8.0(typescript@5.9.3)

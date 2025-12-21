@@ -11,9 +11,9 @@ import { createContext, useContextSelector } from "use-context-selector";
 import { getLocale, getPathname } from "@/lib/utils/browser";
 import { useAi } from "./use-ai";
 
-type ChatContextValue = {
+interface ChatContextValue {
   chat: UseChatHelpers<MyUIMessage>;
-};
+}
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 

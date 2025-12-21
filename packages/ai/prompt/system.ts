@@ -1,6 +1,6 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 
-type SystemPromptProps = {
+interface SystemPromptProps {
   /**
    * The URL of the current page.
    */
@@ -55,7 +55,7 @@ type SystemPromptProps = {
    * The role of the user.
    */
   userRole?: "teacher" | "student" | "parent" | "administrator" | undefined;
-};
+}
 
 export function nakafaPrompt({
   url,

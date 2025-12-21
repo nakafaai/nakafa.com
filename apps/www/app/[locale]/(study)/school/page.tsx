@@ -6,9 +6,9 @@ import { School } from "@/components/school";
 import { SchoolLoader } from "@/components/school/loader";
 import { ComingSoon } from "@/components/shared/coming-soon";
 
-type Props = {
+interface Props {
   params: Promise<{ locale: Locale }>;
-};
+}
 
 export default function Page({ params }: Props) {
   const { locale } = use(params);

@@ -9,9 +9,9 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { useTranslations } from "next-intl";
 
-type Props = {
+interface Props {
   caption: string;
-};
+}
 
 export function StateTable({ caption }: Props) {
   const t = useTranslations("Common");

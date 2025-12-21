@@ -18,9 +18,9 @@ import { Link } from "@repo/internationalization/src/navigation";
 import { ArrowDownIcon, ChevronDownIcon, LinkIcon } from "lucide-react";
 import { useState } from "react";
 
-type Props = {
+interface Props {
   material: MaterialList[number];
-};
+}
 
 export function CardMaterial({ material }: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(true);

@@ -22,13 +22,13 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 const THRESHOLD_VALUE = 1000;
 const THRESHOLD_VALUE_DECIMAL_PLACES = 0;
 
-type Props = {
+interface Props {
   p: number;
   a: number;
   title: ReactNode;
   description: ReactNode;
   n?: number;
-};
+}
 
 export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
   const data = useMemo(

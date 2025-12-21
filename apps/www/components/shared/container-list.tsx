@@ -1,10 +1,10 @@
 import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
 
-type Props = {
+interface Props {
   children: ReactNode;
   className?: string;
-};
+}
 
 export function ContainerList({ children, className }: Props) {
   return (

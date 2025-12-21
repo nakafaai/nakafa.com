@@ -13,13 +13,13 @@ import { RefContent } from "@/components/shared/ref-content";
 
 export const revalidate = false;
 
-type Params = {
+interface Params {
   locale: Locale;
-};
+}
 
-type Props = {
+interface Props {
   params: Promise<Params>;
-};
+}
 
 export async function generateMetadata({
   params,

@@ -6,9 +6,9 @@ import { SchoolClassesHeader } from "@/components/school/classes/header";
 import { SchoolClassesList } from "@/components/school/classes/list";
 import { SchoolLayoutContent } from "@/components/school/layout-content";
 
-type Props = {
+interface Props {
   params: Promise<{ locale: Locale }>;
-};
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;

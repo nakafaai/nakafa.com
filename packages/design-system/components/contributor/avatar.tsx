@@ -17,10 +17,10 @@ import {
 } from "../ui/drawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
-type Props = {
+interface Props {
   contributor: Contributor;
   size?: "sm" | "md" | "lg";
-};
+}
 
 export function Avatar({ contributor, size = "md" }: Props) {
   const t = useTranslations("Common");

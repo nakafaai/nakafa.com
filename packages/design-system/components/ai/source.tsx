@@ -22,10 +22,10 @@ function useSourceContext() {
   return ctx;
 }
 
-export type SourceProps = {
+export interface SourceProps {
   href: string;
   children: React.ReactNode;
-};
+}
 
 export function Source({ href, children }: SourceProps) {
   let domain = "";
@@ -44,11 +44,11 @@ export function Source({ href, children }: SourceProps) {
   );
 }
 
-export type SourceTriggerProps = {
+export interface SourceTriggerProps {
   label?: string | number;
   showFavicon?: boolean;
   className?: string;
-};
+}
 
 export function SourceTrigger({
   label,
@@ -89,11 +89,11 @@ export function SourceTrigger({
   );
 }
 
-export type SourceContentProps = {
+export interface SourceContentProps {
   title: string;
   description?: string;
   className?: string;
-};
+}
 
 export function SourceContent({
   title,

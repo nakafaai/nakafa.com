@@ -5,10 +5,10 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { useExercise } from "@/lib/context/use-exercise";
 
-type Props = {
+interface Props {
   children: React.ReactNode;
   exerciseNumber: number;
-};
+}
 
 export function ExerciseAnswer({ children, exerciseNumber }: Props) {
   const t = useTranslations("Exercises");

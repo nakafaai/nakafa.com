@@ -38,7 +38,7 @@ import type { Editor } from "@tiptap/react";
 import type React from "react";
 import { useMemo, useRef, useState } from "react";
 
-export type ColorHighlightPopoverContentProps = {
+export interface ColorHighlightPopoverContentProps {
   /**
    * The Tiptap editor instance.
    */
@@ -48,7 +48,7 @@ export type ColorHighlightPopoverContentProps = {
    * If not provided, defaults to a predefined set of colors.
    */
   colors?: HighlightColor[];
-};
+}
 
 export interface ColorHighlightPopoverProps
   extends Omit<ButtonProps, "type">,

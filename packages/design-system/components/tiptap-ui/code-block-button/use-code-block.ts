@@ -21,7 +21,7 @@ export const CODE_BLOCK_SHORTCUT_KEY = "mod+alt+c";
 /**
  * Configuration for the code block functionality
  */
-export type UseCodeBlockConfig = {
+export interface UseCodeBlockConfig {
   /**
    * The Tiptap editor instance.
    */
@@ -35,7 +35,7 @@ export type UseCodeBlockConfig = {
    * Callback function called after a successful code block toggle.
    */
   onToggled?: () => void;
-};
+}
 
 /**
  * Checks if code block can be toggled in the current editor state

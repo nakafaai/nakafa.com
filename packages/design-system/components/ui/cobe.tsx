@@ -82,12 +82,12 @@ const MAX_CANVAS_WIDTH = 500;
 
 // --- Component ---
 
-type Props = {
+interface Props {
   baseColor?: COBEOptions["baseColor"];
   markerColor?: COBEOptions["markerColor"];
   glowColor?: COBEOptions["glowColor"];
   markers?: COBEOptions["markers"];
-};
+}
 
 const defaultMarkers: Marker[] = [
   MARKER_LOCATIONS.MUNICH,

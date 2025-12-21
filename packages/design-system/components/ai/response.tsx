@@ -14,7 +14,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkRehype from "remark-rehype";
 
-export type HardenedMarkdownProps = {
+export interface HardenedMarkdownProps {
   allowedImagePrefixes?: ComponentProps<
     ReturnType<typeof hardenReactMarkdown>
   >["allowedImagePrefixes"];
@@ -24,7 +24,7 @@ export type HardenedMarkdownProps = {
   defaultOrigin?: ComponentProps<
     ReturnType<typeof hardenReactMarkdown>
   >["defaultOrigin"];
-};
+}
 
 export type ResponseProps = {
   id: string;

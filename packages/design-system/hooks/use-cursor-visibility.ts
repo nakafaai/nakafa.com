@@ -5,7 +5,7 @@ import { useWindowSize } from "@repo/design-system/hooks/use-window-size";
 import type { Editor } from "@tiptap/react";
 import { useEffect } from "react";
 
-export type CursorVisibilityOptions = {
+export interface CursorVisibilityOptions {
   /**
    * The Tiptap editor instance
    */
@@ -14,7 +14,7 @@ export type CursorVisibilityOptions = {
    * Reference to the toolbar element that may obscure the cursor
    */
   overlayHeight?: number;
-};
+}
 
 /**
  * Custom hook that ensures the cursor remains visible when typing in a Tiptap editor.

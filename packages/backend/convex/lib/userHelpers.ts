@@ -2,12 +2,12 @@ import type { Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { getAll } from "./relationships";
 
-export type UserData = {
+export interface UserData {
   _id: Id<"users">;
   name: string;
   email: string;
   image: string | null | undefined;
-};
+}
 
 /**
  * Batch fetch user data by IDs.

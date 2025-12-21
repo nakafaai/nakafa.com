@@ -9,13 +9,13 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
 
-type Props = {
+interface Props {
   title: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
   variant?: "default" | "destructive";
   description: ReactNode;
-};
+}
 
 export function FormBlock({
   title,

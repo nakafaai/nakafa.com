@@ -32,9 +32,9 @@ type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   preClassName?: string;
 };
 
-type CodeBlockContextType = {
+interface CodeBlockContextType {
   code: string;
-};
+}
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
   "github-light" as BundledTheme,

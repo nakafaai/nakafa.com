@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
 
-type MousePosition = {
+interface MousePosition {
   x: number;
   y: number;
-};
+}
 
 export function useMousePosition() {
   const mousePosition = useRef<MousePosition>({

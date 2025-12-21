@@ -4,9 +4,9 @@ import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { getStaticParams } from "@/lib/utils/system";
 
-type Props = {
+interface Props {
   params: Promise<{ locale: Locale }>;
-};
+}
 
 export function generateStaticParams() {
   return getStaticParams({

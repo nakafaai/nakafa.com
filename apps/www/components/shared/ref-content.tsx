@@ -36,7 +36,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-type Props = {
+interface Props {
   /** The URL of the GitHub repository. */
   githubUrl?: string;
   /** The title of the references (sheet title) */
@@ -45,7 +45,7 @@ type Props = {
   references?: Reference[];
   /** The className of the references. */
   className?: string;
-};
+}
 
 export function RefContent({ title, references, githubUrl, className }: Props) {
   const t = useTranslations("Common");

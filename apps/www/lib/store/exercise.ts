@@ -2,14 +2,14 @@ import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-type State = {
+interface State {
   setId: string;
   totalExercises: number;
   answers: Record<number, { selected: string; isCorrect: boolean } | null>;
   visibleExplanations: Record<number, boolean>;
-};
+}
 
-type Actions = {
+interface Actions {
   selectAnswer: ({
     exerciseNumber,
     choice,
@@ -23,7 +23,7 @@ type Actions = {
   toggleAnswer: (exerciseNumber: number) => void;
   getScore: () => { correct: number; total: number; percentage: number };
   reset: () => void;
-};
+}
 
 export type ExerciseStore = State & Actions;
 

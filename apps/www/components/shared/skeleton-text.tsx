@@ -6,10 +6,10 @@ const WIDTH_PERCENTAGE_MIN = 10;
 const WIDTH_PERCENTAGE_MAX = 100;
 const WIDTH_PERCENTAGE_DIFFERENCE = 20;
 
-type Props = {
+interface Props {
   lines?: number;
   className?: string;
-};
+}
 
 export function SkeletonText({
   lines = DEFAULT_LINES_COUNT,

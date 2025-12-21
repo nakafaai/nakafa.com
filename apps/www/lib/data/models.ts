@@ -14,11 +14,11 @@ import {
 import type { ModelId } from "@repo/ai/lib/providers";
 import type { ComponentType } from "react";
 
-type Model = {
+interface Model {
   icon: ComponentType;
   value: ModelId;
   label: string;
-};
+}
 
 export const premiumModels: Model[] = [
   {

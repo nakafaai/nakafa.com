@@ -4,12 +4,12 @@ import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { UserChats } from "@/components/user/chats";
 
-type Props = {
+interface Props {
   params: Promise<{
     locale: Locale;
     id: Id<"users">;
   }>;
-};
+}
 
 export default function Page({ params }: Props) {
   const { locale, id } = use(params);

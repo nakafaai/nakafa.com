@@ -2,15 +2,15 @@ import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-type State = {
+interface State {
   query: string;
   open: boolean;
-};
+}
 
-type Actions = {
+interface Actions {
   setQuery: (query: string) => void;
   setOpen: (open: boolean) => void;
-};
+}
 
 export type SearchStore = State & Actions;
 

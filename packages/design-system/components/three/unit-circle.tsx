@@ -15,7 +15,7 @@ import { useMemo, useRef } from "react";
 import { type Group, MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
 import { FONT_PATH, MONO_FONT_PATH, ORIGIN_COLOR } from "./_data";
 
-type Props = {
+interface Props {
   /** Angle in degrees */
   angle?: number;
   /** Show labels for trig functions */
@@ -34,7 +34,7 @@ type Props = {
   };
   /** Additional props */
   [key: string]: unknown;
-};
+}
 
 // Optimized settings for performance
 const UNIT_CIRCLE_SEGMENTS = 48; // Reduced from 64

@@ -1,5 +1,5 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { PostAttachment } from "@repo/backend/convex/classes/utils";
+import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils";
 import type { UserData } from "@repo/backend/convex/lib/userHelpers";
 import * as z from "zod/mini";
 import { createStore } from "zustand";
@@ -17,11 +17,11 @@ const stateSchema = z.object({
   ),
 });
 
-type ReactionWithUsers = {
+interface ReactionWithUsers {
   emoji: string;
   count: number;
   reactors: string[];
-};
+}
 
 export type ForumPost = Doc<"schoolClassForumPosts"> & {
   user: UserData | null;
@@ -31,10 +31,10 @@ export type ForumPost = Doc<"schoolClassForumPosts"> & {
   attachments: PostAttachment[];
 };
 
-type ReplyTo = {
+interface ReplyTo {
   postId: Id<"schoolClassForumPosts">;
   userName: string;
-};
+}
 
 // Jump mode state for bidirectional pagination
 type JumpModeState = {
@@ -49,18 +49,18 @@ type JumpModeState = {
   isLoadingNewer: boolean;
 } | null;
 
-type PersistedState = {
+interface PersistedState {
   activeForumId: Id<"schoolClassForums"> | null;
   replyTo: ReplyTo | null;
-};
+}
 
-type TransientState = {
+interface TransientState {
   jumpMode: JumpModeState;
-};
+}
 
 type State = PersistedState & TransientState;
 
-type Actions = {
+interface Actions {
   setActiveForumId: (activeForumId: Id<"schoolClassForums"> | null) => void;
   setReplyTo: (replyTo: ReplyTo | null) => void;
   // Jump mode actions
@@ -86,7 +86,7 @@ type Actions = {
     hasMore: boolean,
     newestTime?: number
   ) => void;
-};
+}
 
 export type ForumStore = State & Actions;
 

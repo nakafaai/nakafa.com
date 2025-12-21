@@ -12,13 +12,13 @@ import { useTranslations } from "next-intl";
 import { Fragment, type ReactElement } from "react";
 import type { PagefindResult } from "@/types/pagefind";
 
-type Props = {
+interface Props {
   results: PagefindResult[];
   query: string;
   isLoading: boolean;
   isError: boolean;
   error: string | ReactElement;
-};
+}
 
 export function SearchResults({
   results,

@@ -7,11 +7,11 @@ import { useTranslations } from "next-intl";
 import { memo } from "react";
 import { useChat } from "@/lib/context/use-chat";
 
-type Props = {
+interface Props {
   messageId: string;
   text: string;
   showActions?: boolean;
-};
+}
 
 export const AIChatMessageActions = memo(
   ({ messageId, text, showActions = true }: Props) => {

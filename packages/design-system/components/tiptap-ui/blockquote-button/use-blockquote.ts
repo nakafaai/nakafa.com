@@ -21,7 +21,7 @@ export const BLOCKQUOTE_SHORTCUT_KEY = "mod+shift+b";
 /**
  * Configuration for the blockquote functionality
  */
-export type UseBlockquoteConfig = {
+export interface UseBlockquoteConfig {
   /**
    * The Tiptap editor instance.
    */
@@ -35,7 +35,7 @@ export type UseBlockquoteConfig = {
    * Callback function called after a successful toggle.
    */
   onToggled?: () => void;
-};
+}
 
 /**
  * Checks if blockquote can be toggled in the current editor state

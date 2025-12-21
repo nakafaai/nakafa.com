@@ -22,10 +22,10 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { env } from "@/env";
 
-type Props = {
+interface Props {
   open: boolean;
   action: (open: boolean) => void;
-};
+}
 
 function AboutDialogContent({
   onOpenChange,

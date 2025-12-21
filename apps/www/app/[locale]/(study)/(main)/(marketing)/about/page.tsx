@@ -9,9 +9,9 @@ import { Hero } from "@/components/about/hero";
 
 export const revalidate = false;
 
-type Props = {
+interface Props {
   params: Promise<{ locale: Locale }>;
-};
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;

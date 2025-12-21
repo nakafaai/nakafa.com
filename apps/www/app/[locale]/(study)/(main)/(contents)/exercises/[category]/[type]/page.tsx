@@ -24,15 +24,15 @@ import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
-type Params = {
+interface Params {
   locale: Locale;
   category: ExercisesCategory;
   type: ExercisesType;
-};
+}
 
-type Props = {
+interface Props {
   params: Promise<Params>;
-};
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, category, type } = await params;

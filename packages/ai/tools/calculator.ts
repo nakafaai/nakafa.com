@@ -9,9 +9,9 @@ import { tool, type UIMessageStreamWriter } from "ai";
 import * as math from "mathjs";
 import * as z from "zod";
 
-type Params = {
+interface Params {
   writer: UIMessageStreamWriter<MyUIMessage>;
-};
+}
 
 export const createCalculator = ({ writer }: Params) =>
   tool({

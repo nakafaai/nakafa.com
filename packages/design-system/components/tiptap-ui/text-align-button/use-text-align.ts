@@ -20,7 +20,7 @@ export type TextAlign = "left" | "center" | "right" | "justify";
 /**
  * Configuration for the text align functionality
  */
-export type UseTextAlignConfig = {
+export interface UseTextAlignConfig {
   /**
    * The Tiptap editor instance.
    */
@@ -38,7 +38,7 @@ export type UseTextAlignConfig = {
    * Callback function called after a successful alignment change.
    */
   onAligned?: () => void;
-};
+}
 
 export const TEXT_ALIGN_SHORTCUT_KEYS: Record<TextAlign, string> = {
   left: "mod+shift+l",

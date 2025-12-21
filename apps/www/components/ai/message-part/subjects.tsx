@@ -31,9 +31,9 @@ import { memo, useMemo, useState } from "react";
 
 const MAX_SHOWN_SUBJECTS = 5;
 
-type Props = {
+interface Props {
   message: DataPart["get-subjects"];
-};
+}
 
 export const SubjectsPart = memo(({ message }: Props) => {
   const t = useTranslations("Ai");

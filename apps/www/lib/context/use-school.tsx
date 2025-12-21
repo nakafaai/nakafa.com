@@ -6,10 +6,10 @@ import { useQuery } from "convex/react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { SchoolLoader } from "@/components/school/loader";
 
-type SchoolContextValue = {
+interface SchoolContextValue {
   school: Doc<"schools">;
   schoolMembership: Doc<"schoolMembers">;
-};
+}
 
 const SchoolContext = createContext<SchoolContextValue | null>(null);
 

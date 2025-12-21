@@ -17,7 +17,7 @@ export type UndoRedoAction = "undo" | "redo";
 /**
  * Configuration for the history functionality
  */
-export type UseUndoRedoConfig = {
+export interface UseUndoRedoConfig {
   /**
    * The Tiptap editor instance.
    */
@@ -35,7 +35,7 @@ export type UseUndoRedoConfig = {
    * Callback function called after a successful action execution.
    */
   onExecuted?: () => void;
-};
+}
 
 export const UNDO_REDO_SHORTCUT_KEYS: Record<UndoRedoAction, string> = {
   undo: "mod+z",

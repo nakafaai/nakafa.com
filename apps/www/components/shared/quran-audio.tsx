@@ -7,9 +7,9 @@ import { PlayIcon } from "lucide-react";
 import { useState } from "react";
 import useSound from "use-sound";
 
-type Props = {
+interface Props {
   audio: Verse["audio"];
-};
+}
 
 export function QuranAudio({ audio }: Props) {
   const [isPlaying, setIsPlaying] = useState(false);

@@ -24,7 +24,7 @@ const LOGARITHMIC_SCALING_FACTOR = 20;
 const THRESHOLD_VALUE = 1000;
 const THRESHOLD_VALUE_DECIMAL_PLACES = 0;
 
-type Props = {
+interface Props {
   labels: {
     title?: string;
     description?: string;
@@ -35,7 +35,7 @@ type Props = {
     caption?: string;
     phase?: string;
   };
-};
+}
 
 const data = Array.from({ length: 5 }, (_, i) => {
   const phase = i + 1;

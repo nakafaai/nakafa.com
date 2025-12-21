@@ -6,12 +6,12 @@ import {
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 
-type ParamConfig = {
+interface ParamConfig {
   basePath: string;
   paramNames: string[];
   slugParam?: string;
   isDeep?: boolean;
-};
+}
 
 /**
  * Generates static params for Next.js pages based on folder structure

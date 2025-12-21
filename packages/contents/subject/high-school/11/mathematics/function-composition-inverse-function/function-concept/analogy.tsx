@@ -27,10 +27,10 @@ import {
 
 const DEFAULT_INPUT = 5;
 
-type Props = {
+interface Props {
   title: string;
   description: string;
-};
+}
 
 export function FunctionAnalogy({ title, description }: Props) {
   return (

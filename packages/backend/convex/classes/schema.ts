@@ -254,6 +254,12 @@ const tables = {
     publishedBy: v.optional(v.id("users")),
   })
     .index("classId_parentId_order", ["classId", "parentId", "order"])
+    .index("classId_parentId_status_order", [
+      "classId",
+      "parentId",
+      "status",
+      "order",
+    ])
     .index("status_scheduledAt", ["status", "scheduledAt"])
     .searchIndex("search_name", {
       searchField: "name",

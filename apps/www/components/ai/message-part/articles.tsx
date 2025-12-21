@@ -27,9 +27,9 @@ import { memo, useState } from "react";
 
 const MAX_SHOWN_ARTICLES = 5;
 
-type Props = {
+interface Props {
   message: DataPart["get-articles"];
-};
+}
 
 export const ArticlesPart = memo(({ message }: Props) => {
   const t = useTranslations("Ai");

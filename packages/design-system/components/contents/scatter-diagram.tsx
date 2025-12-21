@@ -26,20 +26,23 @@ import {
   YAxis,
 } from "recharts";
 
-type Point = { x: number; y: number };
+interface Point {
+  x: number;
+  y: number;
+}
 
-type Dataset = {
+interface Dataset {
   name: string;
   color: string;
   points: Point[];
-};
+}
 
-type RegressionLineStyle = {
+interface RegressionLineStyle {
   color?: string;
   strokeDasharray?: string;
-};
+}
 
-type Props = {
+interface Props {
   title: ReactNode;
   description: ReactNode;
   xAxisLabel?: string;
@@ -49,7 +52,7 @@ type Props = {
   calculateRegressionLine?: boolean;
   regressionLineStyle?: RegressionLineStyle;
   showResiduals?: boolean;
-};
+}
 
 export function ScatterDiagram({
   title,

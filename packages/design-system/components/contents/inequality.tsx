@@ -9,11 +9,11 @@ import {
 } from "@repo/design-system/components/ui/card";
 import type { ComponentProps, ReactNode } from "react";
 
-type Props = {
+interface Props {
   title: ReactNode;
   description: ReactNode;
   data: ComponentProps<typeof Inequality3D>[];
-};
+}
 
 export function Inequality({ title, description, data }: Props) {
   return (

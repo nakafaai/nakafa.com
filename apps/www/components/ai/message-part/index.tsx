@@ -16,11 +16,11 @@ import { SubjectsPart } from "./subjects";
 import { SuggestionsPart } from "./suggestions";
 import { WebSearchPart } from "./web-search";
 
-type Props = {
+interface Props {
   part: MyUIMessage["parts"][number];
   partIndex: number;
   messageId: string;
-};
+}
 
 export const AiMessagePart = memo(({ part, partIndex, messageId }: Props) => {
   switch (part.type) {

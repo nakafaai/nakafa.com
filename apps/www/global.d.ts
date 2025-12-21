@@ -1,7 +1,6 @@
 import type { PagefindSearchOptions } from "./types/pagefind";
 
 declare global {
-  // biome-ignore lint/style/useConsistentTypeDefinitions: Must use interface
   interface Window {
     pagefind:
       | {

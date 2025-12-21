@@ -3,7 +3,7 @@
 import { useThrottledCallback } from "@repo/design-system/hooks/use-throttled-callback";
 import { useEffect, useState } from "react";
 
-export type WindowSizeState = {
+export interface WindowSizeState {
   /**
    * The width of the window's visual viewport in pixels.
    */
@@ -26,7 +26,7 @@ export type WindowSizeState = {
    * This is useful for scaling elements based on the current zoom level.
    */
   scale: number;
-};
+}
 
 /**
  * Hook that tracks the window's visual viewport dimensions, position, and provides

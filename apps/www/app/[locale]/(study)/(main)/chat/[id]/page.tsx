@@ -7,12 +7,12 @@ import { setRequestLocale } from "next-intl/server";
 import { cache, use } from "react";
 import { AiChatPage } from "@/components/ai/chat-page";
 
-type Props = {
+interface Props {
   params: Promise<{
     locale: Locale;
     id: Id<"chats">;
   }>;
-};
+}
 
 const getChatTitle = cache(async (id: Id<"chats">) =>
   fetchQuery(api.chats.queries.getChatTitle, { chatId: id })

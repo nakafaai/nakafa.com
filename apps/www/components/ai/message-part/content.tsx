@@ -12,9 +12,9 @@ import { BookOpenIcon, ChevronDownIcon, FrownIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, type PropsWithChildren, useState } from "react";
 
-type Props = {
+interface Props {
   message: DataPart["get-content"];
-};
+}
 
 export const ContentPart = memo(({ message }: Props) => {
   const t = useTranslations("Ai");

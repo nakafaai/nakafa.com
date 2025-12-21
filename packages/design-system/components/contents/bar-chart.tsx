@@ -21,7 +21,7 @@ import {
   YAxis,
 } from "recharts";
 
-type Props = {
+interface Props {
   title: string;
   description: string;
   data: {
@@ -30,7 +30,7 @@ type Props = {
   }[];
   chartConfig: ChartConfig;
   yAxisLabel: string;
-};
+}
 
 export function HistogramChart({
   title,

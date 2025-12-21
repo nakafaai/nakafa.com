@@ -184,3 +184,103 @@ export const publishMaterialGroup = internalMutation({
     });
   },
 });
+
+export const deleteMaterialGroup = mutation({
+  args: {
+    groupId: v.id("schoolClassMaterialGroups"),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuthWithSession(ctx);
+    const userId = user.appUser._id;
+
+    const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
+    if (!group) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Material group not found.",
+      });
+    }
+
+    const { classMembership, schoolMembership } =
+      await loadActiveClassWithAccess(ctx, group.classId, userId);
+
+    requireTeacherPermission(
+      classMembership,
+      schoolMembership,
+      TEACHER_PERMISSIONS.CONTENT_DELETE
+    );
+
+    // Delete triggers cascade: children, materials, attachments, views, parent count
+    await ctx.db.delete("schoolClassMaterialGroups", args.groupId);
+  },
+});
+
+export const reorderMaterialGroup = mutation({
+  args: {
+    groupId: v.id("schoolClassMaterialGroups"),
+    direction: v.union(v.literal("up"), v.literal("down")),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuthWithSession(ctx);
+    const userId = user.appUser._id;
+
+    const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
+    if (!group) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Material group not found.",
+      });
+    }
+
+    const { classMembership, schoolMembership } =
+      await loadActiveClassWithAccess(ctx, group.classId, userId);
+
+    requireTeacherPermission(
+      classMembership,
+      schoolMembership,
+      TEACHER_PERMISSIONS.CONTENT_EDIT
+    );
+
+    // Find adjacent group to swap with using index range query
+    const adjacentGroup =
+      args.direction === "up"
+        ? await ctx.db
+            .query("schoolClassMaterialGroups")
+            .withIndex("classId_parentId_order", (q) =>
+              q
+                .eq("classId", group.classId)
+                .eq("parentId", group.parentId)
+                .lt("order", group.order)
+            )
+            .order("desc")
+            .first()
+        : await ctx.db
+            .query("schoolClassMaterialGroups")
+            .withIndex("classId_parentId_order", (q) =>
+              q
+                .eq("classId", group.classId)
+                .eq("parentId", group.parentId)
+                .gt("order", group.order)
+            )
+            .order("asc")
+            .first();
+
+    if (!adjacentGroup) {
+      // Already at the edge, nothing to do
+      return;
+    }
+
+    // Swap orders
+    const now = Date.now();
+    await Promise.all([
+      ctx.db.patch("schoolClassMaterialGroups", group._id, {
+        order: adjacentGroup.order,
+        updatedAt: now,
+      }),
+      ctx.db.patch("schoolClassMaterialGroups", adjacentGroup._id, {
+        order: group.order,
+        updatedAt: now,
+      }),
+    ]);
+  },
+});

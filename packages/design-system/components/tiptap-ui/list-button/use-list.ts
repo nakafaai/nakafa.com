@@ -24,7 +24,7 @@ export type ListType = "bulletList" | "orderedList" | "taskList";
 /**
  * Configuration for the list functionality
  */
-export type UseListConfig = {
+export interface UseListConfig {
   /**
    * The Tiptap editor instance.
    */
@@ -42,7 +42,7 @@ export type UseListConfig = {
    * Callback function called after a successful toggle.
    */
   onToggled?: () => void;
-};
+}
 
 export const listIcons = {
   bulletList: ListIcon,

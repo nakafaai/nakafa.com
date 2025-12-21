@@ -7,14 +7,14 @@ import { useQuery } from "convex/react";
 import type { PropsWithChildren } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
-type Props = {
+interface Props {
   chatId: Id<"chats">;
-};
+}
 
-type ChatContextValue = {
+interface ChatContextValue {
   chat: Doc<"chats"> | undefined;
   messages: MyUIMessage[] | undefined;
-};
+}
 
 const CurrentChatContext = createContext<ChatContextValue | null>(null);
 

@@ -6,11 +6,11 @@ import {
 import { Link } from "@repo/internationalization/src/navigation";
 import type { LucideIcon } from "lucide-react";
 
-type Props = {
+interface Props {
   icon: LucideIcon;
   label: string;
   href: string;
-};
+}
 
 export function CardSubject({ icon: Icon, label, href }: Props) {
   return (

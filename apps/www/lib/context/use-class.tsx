@@ -5,11 +5,11 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { createContext, useContextSelector } from "use-context-selector";
 
-type ClassContextValue = {
+interface ClassContextValue {
   class: Doc<"schoolClasses">;
   classMembership: Doc<"schoolClassMembers"> | null;
   schoolMembership: Doc<"schoolMembers"> | null;
-};
+}
 
 const ClassContext = createContext<ClassContextValue | null>(null);
 

@@ -14,7 +14,7 @@ import { formatFileSize } from "@repo/design-system/lib/utils";
 
 const FILE_EXTENSION_REGEX = /\.[^/.]+$/;
 
-export type FileItem = {
+export interface FileItem {
   /**
    * Unique identifier for the file item
    */
@@ -43,9 +43,9 @@ export type FileItem = {
    * @optional
    */
   abortController?: AbortController;
-};
+}
 
-export type UploadOptions = {
+export interface UploadOptions {
   /**
    * Maximum allowed file size in bytes
    */
@@ -83,7 +83,7 @@ export type UploadOptions = {
    * @optional
    */
   onError?: (error: Error) => void;
-};
+}
 
 /**
  * Custom hook for managing multiple file uploads with progress tracking and cancellation
@@ -278,7 +278,7 @@ const FileCornerIcon: React.FC = () => (
   </svg>
 );
 
-type ImageUploadDragAreaProps = {
+interface ImageUploadDragAreaProps {
   /**
    * Callback function triggered when files are dropped or selected
    * @param {File[]} files - Array of File objects that were dropped or selected
@@ -290,7 +290,7 @@ type ImageUploadDragAreaProps = {
    * @default undefined
    */
   children?: React.ReactNode;
-};
+}
 
 /**
  * A component that creates a drag-and-drop area for image uploads
@@ -349,7 +349,7 @@ const ImageUploadDragArea: React.FC<ImageUploadDragAreaProps> = ({
   );
 };
 
-type ImageUploadPreviewProps = {
+interface ImageUploadPreviewProps {
   /**
    * The file item to preview
    */
@@ -358,7 +358,7 @@ type ImageUploadPreviewProps = {
    * Callback to remove this file from upload queue
    */
   onRemove: () => void;
-};
+}
 
 /**
  * Component that displays a preview of an uploading file with progress

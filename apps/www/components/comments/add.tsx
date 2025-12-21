@@ -21,14 +21,14 @@ import { useTranslations } from "next-intl";
 import { type FormEventHandler, useState, useTransition } from "react";
 import { getInitialName } from "@/lib/utils/helper";
 
-type Props = {
+interface Props {
   slug: string;
   /* If comment is provided, the comment will be replied to */
   comment?: Doc<"comments">;
   closeButton?: {
     onClick: () => void;
   };
-};
+}
 
 export function CommentsAdd({ slug, comment, closeButton }: Props) {
   const t = useTranslations("Comments");

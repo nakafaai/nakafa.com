@@ -26,11 +26,11 @@ import {
   YAxis,
 } from "recharts";
 
-type Props = {
+interface Props {
   title: string;
   description: string;
   footnote: string;
-};
+}
 
 export function ElectabilityChart({ title, description, footnote }: Props) {
   const t = useTranslations("Common");

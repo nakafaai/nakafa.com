@@ -19,7 +19,7 @@ const MAX_MAGNETISM = 4.1;
 const REMAP_EDGE_END = 20;
 const ALPHA_FADE_IN_SPEED = 0.02;
 
-type Circle = {
+interface Circle {
   x: number;
   y: number;
   translateX: number;
@@ -30,22 +30,22 @@ type Circle = {
   dx: number;
   dy: number;
   magnetism: number;
-};
+}
 
-type ParticlesProps = {
+interface ParticlesProps {
   className?: string;
   quantity?: number;
   staticity?: number;
   ease?: number;
-};
+}
 
-type RemapValueProps = {
+interface RemapValueProps {
   value: number;
   start1: number;
   end1: number;
   start2: number;
   end2: number;
-};
+}
 
 function ParticlesComponent({
   className = "",

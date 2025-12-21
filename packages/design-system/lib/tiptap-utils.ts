@@ -400,7 +400,7 @@ export const handleImageUpload = async (
   return "/images/tiptap-ui-placeholder-image.jpg";
 };
 
-type ProtocolOptions = {
+interface ProtocolOptions {
   /**
    * The protocol scheme to be registered.
    * @default '''
@@ -415,7 +415,7 @@ type ProtocolOptions = {
    * @example true
    */
   optionalSlashes?: boolean;
-};
+}
 
 type ProtocolConfig = Array<ProtocolOptions | string>;
 

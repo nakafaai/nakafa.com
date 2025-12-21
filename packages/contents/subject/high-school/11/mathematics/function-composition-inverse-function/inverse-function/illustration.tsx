@@ -11,7 +11,7 @@ import {
 import { ArrowDownIcon, ArrowRightIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-type Props = {
+interface Props {
   title: ReactNode;
   description: ReactNode;
   machineLabel: string;
@@ -19,7 +19,7 @@ type Props = {
     input: string;
     output: string;
   };
-};
+}
 
 export function FunctionIllustration({
   title,

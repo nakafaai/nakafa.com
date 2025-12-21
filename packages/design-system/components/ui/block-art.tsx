@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 
-type Props = {
+interface Props {
   gridCols?: number;
   gridRows?: number;
   className?: string;
@@ -21,14 +21,14 @@ type Props = {
   waveColor?: string;
   waveDuration?: number;
   onCellClick?: () => void;
-};
+}
 
-type Ripple = {
+interface Ripple {
   x: number;
   y: number;
   startTime: number;
   id: number;
-};
+}
 
 const DEFAULT_ANIMATION_COLOR = "bg-secondary";
 const DEFAULT_ANIMATED_CELL_COUNT = 15;

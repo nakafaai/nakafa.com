@@ -37,16 +37,16 @@ import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
-type Params = {
+interface Params {
   locale: Locale;
   category: SubjectCategory;
   grade: Grade;
   material: Material;
-};
+}
 
-type Props = {
+interface Props {
   params: Promise<Params>;
-};
+}
 
 export async function generateMetadata({
   params,

@@ -2,11 +2,8 @@ import { ConvexError, type Infer, v } from "convex/values";
 import { mutation } from "../../functions";
 import { isSchoolAdmin, requireAuthWithSession } from "../../lib/authHelpers";
 import { truncateText } from "../../utils/helper";
-import {
-  loadActiveClassWithAccess,
-  loadForumWithAccess,
-  loadOpenForumWithAccess,
-} from "../utils";
+import { loadActiveClassWithAccess } from "../utils";
+import { loadForumWithAccess, loadOpenForumWithAccess } from "./utils";
 
 export const generateUploadUrl = mutation({
   args: {

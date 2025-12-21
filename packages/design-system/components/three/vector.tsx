@@ -3,7 +3,7 @@
 import type * as Three from "three";
 import { ArrowHelper } from "./arrow-helper";
 
-type VectorProps = {
+interface VectorProps {
   /** Starting point of the vector [x, y, z] */
   from?: [number, number, number];
   /** End point of the vector [x, y, z] */
@@ -24,7 +24,7 @@ type VectorProps = {
   useMonoFont?: boolean;
   /** Additional props */
   [key: string]: unknown;
-};
+}
 
 export function Vector(props: VectorProps) {
   return <ArrowHelper {...props} />;

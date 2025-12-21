@@ -1,13 +1,13 @@
 import type { LearningResource, Person, WithContext } from "schema-dts";
 import { JsonLd } from ".";
 
-type Props = {
+interface Props {
   name: string;
   description: string;
   educationalLevel: string;
   datePublished: string;
   author: Person | Person[];
-};
+}
 
 export function LearningResourceJsonLd({
   name,

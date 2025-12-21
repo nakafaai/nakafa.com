@@ -144,17 +144,17 @@ function highlight(
   });
 }
 
-export type CodeBlockData = {
+export interface CodeBlockData {
   language: string;
   filename: string;
   code: string;
-};
+}
 
-type CodeBlockContextType = {
+interface CodeBlockContextType {
   value: string | undefined;
   onValueChange: ((value: string) => void) | undefined;
   data: CodeBlockData[];
-};
+}
 
 const CodeBlockContext = createContext<CodeBlockContextType>({
   value: undefined,

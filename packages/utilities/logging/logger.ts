@@ -1,9 +1,9 @@
 import pino from "pino";
 
-export type LoggerConfig = {
+export interface LoggerConfig {
   level?: "trace" | "debug" | "info" | "warn" | "error" | "fatal";
   service?: string;
-};
+}
 
 /**
  * Creates a logger instance with configurable options

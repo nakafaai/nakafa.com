@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 type Orientation = "horizontal" | "vertical" | "both";
 
-type MenuNavigationOptions<T> = {
+interface MenuNavigationOptions<T> {
   /**
    * The Tiptap editor instance, if using with a Tiptap editor.
    */
@@ -40,7 +40,7 @@ type MenuNavigationOptions<T> = {
    * @default true
    */
   autoSelectFirstItem?: boolean;
-};
+}
 
 /**
  * Hook that implements keyboard navigation for dropdown menus and command palettes.

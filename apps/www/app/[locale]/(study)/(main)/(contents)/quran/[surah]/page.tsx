@@ -23,12 +23,12 @@ import { WindowVirtualized } from "@/components/shared/window-virtualized";
 
 export const revalidate = false;
 
-type Props = {
+interface Props {
   params: Promise<{
     locale: Locale;
     surah: string;
   }>;
-};
+}
 
 export async function generateMetadata({
   params,

@@ -54,7 +54,7 @@ function getSharedMaterial(color: string | Color): MeshBasicMaterial {
   return material;
 }
 
-type Props = {
+interface Props {
   /** Starting point of the vector [x, y, z] */
   from?: [number, number, number];
   /** End point of the vector [x, y, z] */
@@ -75,7 +75,7 @@ type Props = {
   useMonoFont?: boolean;
   /** Additional props */
   [key: string]: unknown;
-};
+}
 
 export function ArrowHelper({
   from = [0, 0, 0],

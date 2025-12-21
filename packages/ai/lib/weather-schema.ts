@@ -180,9 +180,9 @@ export const airPollutionResponseSchema = z.object({
  * Geographic Data Type
  * Contains location information from reverse geocoding
  */
-export type GeoData = {
+export interface GeoData {
   city: string; // City/location name
   country: string; // Country code (ISO 3166)
   latitude: string; // Latitude coordinate
   longitude: string; // Longitude coordinate
-};
+}

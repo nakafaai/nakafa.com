@@ -2,7 +2,7 @@ import type { ContentMetadata } from "@repo/contents/_types/content";
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 import type { createElement } from "react";
 
-export type Exercise = {
+export interface Exercise {
   number: number;
   choices: ExercisesChoices;
   question: {
@@ -15,7 +15,7 @@ export type Exercise = {
     default: ReturnType<typeof createElement>;
     raw: string;
   };
-};
+}
 
 export type ExerciseWithoutDefaults = Omit<Exercise, "question" | "answer"> & {
   question: Omit<Exercise["question"], "default">;
