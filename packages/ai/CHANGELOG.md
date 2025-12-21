@@ -1,5 +1,16 @@
 # @repo/ai
 
+## 1.1.0
+
+### Minor Changes
+
+- [`c50d754`](https://github.com/nakafaai/nakafa.com/commit/c50d75406a756286ee038066c541752c8d9d10c5) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Migrate to use interface instead of type
+
+### Patch Changes
+
+- Updated dependencies [[`c50d754`](https://github.com/nakafaai/nakafa.com/commit/c50d75406a756286ee038066c541752c8d9d10c5)]:
+  - @repo/utilities@0.1.0
+
 ## 1.0.0
 
 ### Major Changes
