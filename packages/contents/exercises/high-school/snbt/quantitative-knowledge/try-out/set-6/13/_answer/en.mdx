@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Solution to Problem 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We will analyze quantities <InlineMath math="P" /> and <InlineMath math="Q" /> separately.
+
+#### Analyzing Quantity P
+
+The expression for <InlineMath math="P" /> can be simplified as follows:
+
+<MathContainer>
+  <BlockMath math="P = \frac{1-x^4}{1-x^2}" />
+  <BlockMath math="P = \frac{(1-x^2)(1+x^2)}{1-x^2}" />
+  <BlockMath math="P = 1+x^2" />
+</MathContainer>
+
+Given <InlineMath math="0 < x < 1" />. Thus:
+
+<MathContainer>
+  <BlockMath math="0 < x^2 < 1" />
+  <BlockMath math="1 < 1+x^2 < 2" />
+  <BlockMath math="1 < P < 2" />
+</MathContainer>
+
+#### Analyzing Quantity Q
+
+Given <InlineMath math="Q = 2+x" />.
+Since <InlineMath math="0 < x < 1" />, then:
+
+<MathContainer>
+  <BlockMath math="2 < 2+x < 3" />
+  <BlockMath math="2 < Q < 3" />
+</MathContainer>
+
+#### Comparing P and Q
+
+From the analysis above, we have:
+*   <InlineMath math="1 < P < 2" />
+*   <InlineMath math="2 < Q < 3" />
+
+It is clear that the maximum value of <InlineMath math="P" /> is less than the minimum value of <InlineMath math="Q" />.
+
+Thus, <InlineMath math="P < Q" />.

@@ -1,0 +1,38 @@
+export const metadata = {
+  title: "Pembahasan Soal 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Diketahui:
+*   Total remaja (<InlineMath math="S" />) = <InlineMath math="300" />
+*   Kegiatan olahraga (<InlineMath math="O" />) = <InlineMath math="135" />
+*   Kegiatan cinta alam (<InlineMath math="C" />) = <InlineMath math="255" />
+
+Kita diminta mencari selisih antara nilai maksimum (<InlineMath math="B" />) dan minimum (<InlineMath math="A" />) dari irisan kedua himpunan tersebut (<InlineMath math="O \cap C" />).
+
+#### Menentukan Nilai Minimum A
+Irisan minimum terjadi ketika gabungan kedua himpunan tersebut maksimal, yaitu sama dengan total semesta (<InlineMath math="300" />). Artinya, setiap orang setidaknya mengikuti satu kegiatan.
+<MathContainer>
+  <BlockMath math="n(O \cup C) = n(O) + n(C) - n(O \cap C)" />
+  <BlockMath math="300 = 135 + 255 - A" />
+  <BlockMath math="300 = 390 - A" />
+  <BlockMath math="A = 390 - 300" />
+  <BlockMath math="A = 90" />
+</MathContainer>
+
+#### Menentukan Nilai Maksimum B
+Irisan maksimum terjadi ketika himpunan yang lebih kecil merupakan himpunan bagian dari himpunan yang lebih besar. Dalam kasus ini, semua peserta olahraga juga mengikuti kegiatan cinta alam.
+<MathContainer>
+  <BlockMath math="B = \min(n(O), n(C))" />
+  <BlockMath math="B = \min(135, 255)" />
+  <BlockMath math="B = 135" />
+</MathContainer>
+
+#### Menghitung Selisih
+<MathContainer>
+  <BlockMath math="B - A = 135 - 90" />
+  <BlockMath math="B - A = 45" />
+</MathContainer>
+
+Jadi, selisih <InlineMath math="B" /> dan <InlineMath math="A" /> adalah <InlineMath math="45" /> orang.

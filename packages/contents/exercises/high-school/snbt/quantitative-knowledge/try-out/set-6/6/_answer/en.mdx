@@ -1,0 +1,34 @@
+export const metadata = {
+  title: "Solution for Question 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We are given the function <InlineMath math="f(x) = 2x - 3" /> and the composite function <InlineMath math="(g \circ f)(x) = 4x^2 - 12x + 10" />. We are asked to find the value of <InlineMath math="g(1)" />.
+
+The definition of a composite function is <InlineMath math="(g \circ f)(x) = g(f(x))" />. Let <InlineMath math="u = f(x) = 2x - 3" />. We rearrange this equation to express <InlineMath math="x" /> in terms of <InlineMath math="u" />:
+
+<MathContainer>
+  <BlockMath math="2x = u + 3" />
+  <BlockMath math="x = \frac{u + 3}{2}" />
+</MathContainer>
+
+Substitute <InlineMath math="x" /> into the equation <InlineMath math="(g \circ f)(x)" />:
+
+<MathContainer>
+  <BlockMath math="g(u) = 4\left(\frac{u + 3}{2}\right)^2 - 12\left(\frac{u + 3}{2}\right) + 10" />
+  <BlockMath math="g(u) = 4\left(\frac{u^2 + 6u + 9}{4}\right) - 6(u + 3) + 10" />
+  <BlockMath math="g(u) = (u^2 + 6u + 9) - (6u + 18) + 10" />
+  <BlockMath math="g(u) = u^2 + 6u - 6u + 9 - 18 + 10" />
+  <BlockMath math="g(u) = u^2 + 1" />
+</MathContainer>
+
+Thus, we have <InlineMath math="g(x) = x^2 + 1" />.
+
+Then the value of <InlineMath math="g(1)" /> is:
+
+<MathContainer>
+  <BlockMath math="g(1) = 1^2 + 1 = 1 + 1 = 2" />
+</MathContainer>
+
+So, the value of <InlineMath math="g(1)" /> is <InlineMath math="2" />.

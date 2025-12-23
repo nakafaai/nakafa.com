@@ -35,7 +35,10 @@ For each exercise set (e.g., `set-4`), each number (e.g., `1`) has its own direc
   - Use `InlineMath` for all mathematical expressions, **including standalone numbers** in the text (e.g., use `<InlineMath math="2" />` instead of just `2` if it represents a value).
   - Ensure variable names are consistent (e.g., if image uses $x_1$, use $x_1$).
   - **Clarification**: If the question text in the image is ambiguous, rephrase it to be clear and precise.
-  - **Lists**: Use standard Markdown ordered lists (e.g., `1. `, `2. `) for numbered items instead of manual numbering like `(1)`.
+  - **Numbered References**: ALWAYS use `InlineMath` for numbered references with parentheses included.
+    - Correct: `<InlineMath math="(1)" />`, `<InlineMath math="(2)" />`
+    - Incorrect: `(1)`, `(2)`, `(<InlineMath math="1" />)`
+  - **Lists**: Use standard Markdown ordered lists (e.g., `1.`, `2.`) for numbered items instead of manual numbering like `(1)`.
   - **Graph Descriptions**: If using a graph component, ensure the `description` prop always ends with a period `.`.
 
 **Example:**
@@ -60,6 +63,12 @@ Jika <InlineMath math="f(x) = 2x - 1" /> dan nilai <InlineMath math="x = 5" /> .
   - **Continuous Flow**: Write as a coherent narrative.
   - **No "Step 1"**: Avoid generic step labels. Use descriptive text or H4 headings if absolutely necessary.
   - **Headings**: If used, start at **H4** (`####`), be concise, and **NO symbols or Math**. MUST use plain text only (e.g., "Finding the Value of x", NOT "Finding `<InlineMath math='x' />`").
+    - **Numbered References in Headings**: Use plain text `1`, `2`. Do NOT use parentheses `(1)` or `InlineMath` in headings.
+      - Incorrect: "Analisis Pernyataan (1)"
+      - Correct: "Analisis Pernyataan 1"
+  - **No Option Letters**: NEVER refer to options as (A), (B), (C), etc. in the explanation text or conclusion. The UI does not display letter labels.
+    - Incorrect: "Therefore, the answer is (C)."
+    - Correct: "Therefore, **statement (1) is sufficient**."
   - **Concise but Detailed**: Explain *why*, not just *what*. Make it easy for a student to follow.
   - **Math Formatting**:
     - Use `MathContainer` to wrap `BlockMath` elements.

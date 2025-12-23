@@ -1,0 +1,59 @@
+export const metadata = {
+  title: "Problem 4 Solution",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Sort the data from smallest to largest:
+
+<MathContainer>
+  <BlockMath math="1, 2, 3, 4, 5, 5, 6" />
+</MathContainer>
+
+Number of data points <InlineMath math="n = 7" />.
+
+#### Statement 1 Analysis
+
+The median is the <InlineMath math="\frac{n+1}{2} = \frac{8}{2} = 4" />-th value.
+The <InlineMath math="4" />-th value is <InlineMath math="4" />.
+
+<MathContainer>
+  <BlockMath math="Me = 4" />
+</MathContainer>
+
+Statement <InlineMath math="1" /> is **CORRECT**.
+
+#### Statement 2 Analysis
+
+The range is the difference between the maximum and minimum values.
+
+<MathContainer>
+  <BlockMath math="Range = x_{max} - x_{min} = 6 - 1 = 5" />
+</MathContainer>
+
+Statement <InlineMath math="2" /> is **INCORRECT** (should be <InlineMath math="5" />, not <InlineMath math="6" />).
+
+#### Statement 3 Analysis
+
+Difference between range and median:
+
+<MathContainer>
+  <BlockMath math="Range - Me = 5 - 4 = 1" />
+</MathContainer>
+
+Statement <InlineMath math="3" /> is **CORRECT**.
+
+#### Statement 4 Analysis
+
+The mean (<InlineMath math="\bar{x}" />) is the sum of all data divided by the number of data points.
+
+<MathContainer>
+  <BlockMath math="\bar{x} = \frac{1 + 2 + 3 + 4 + 5 + 5 + 6}{7} = \frac{26}{7} = 3\frac{5}{7}" />
+</MathContainer>
+
+The value <InlineMath math="3\frac{5}{7}" /> is not equal to <InlineMath math="4.5" />.
+Statement <InlineMath math="4" /> is **INCORRECT**.
+
+#### Conclusion
+
+The correct statements are **<InlineMath math="(1)" /> and <InlineMath math="(3)" />**.

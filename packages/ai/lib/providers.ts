@@ -37,11 +37,13 @@ const languageModels = {
   "gpt-oss-120b": gateway("openai/gpt-oss-120b"),
   "gpt-5": gateway("openai/gpt-5"),
   "gpt-5-nano": gateway("openai/gpt-5-nano"),
+  "gpt-5.2": gateway("openai/gpt-5.2"),
 
   // Meituan
   "longcat-flash": gateway("meituan/longcat-flash-chat"),
 
   // Minimax
+  "minimax-m2.1": gateway("minimax/minimax-m2.1"),
   "minimax-m2": gateway("minimax/minimax-m2"),
 
   // Alibaba

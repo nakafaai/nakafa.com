@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Problem 5 Solution",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Given the equation <InlineMath math="x^2 + y^2 = 169" /> where <InlineMath math="x" /> and <InlineMath math="y" /> are integers. The value <InlineMath math="169" /> is the square of <InlineMath math="13" /> (<InlineMath math="13^2 = 169" />). The integer pairs <InlineMath math="(x, y)" /> satisfying this circle equation can be found using Pythagorean triples or properties of perfect squares.
+
+The possible pairs are:
+
+1. If one variable is <InlineMath math="0" />, then the other is <InlineMath math="\pm 13" />. Pairs: <InlineMath math="(13, 0), (-13, 0), (0, 13), (0, -13)" />. Possible values for <InlineMath math="x + y" />:
+   <MathContainer>
+     <BlockMath math="\pm 13 + 0 = \pm 13" />
+   </MathContainer>
+
+2. If both variables are non-zero, we look for combinations of squares summing to <InlineMath math="169" />. The Pythagorean triple involving <InlineMath math="13" /> as the hypotenuse is <InlineMath math="(5, 12, 13)" /> because <InlineMath math="5^2 + 12^2 = 25 + 144 = 169" />. Possible pairs <InlineMath math="(x, y)" /> (including negative values): <InlineMath math="(\pm 5, \pm 12)" /> and <InlineMath math="(\pm 12, \pm 5)" />. Possible values for <InlineMath math="x + y" /> from these combinations:
+   <MathContainer>
+     <BlockMath math="\begin{aligned} 5 + 12 &= 17 \\ 5 + (-12) &= -7 \\ -5 + 12 &= 7 \\ -5 + (-12) &= -17 \end{aligned}" />
+   </MathContainer>
+   Thus, <InlineMath math="x + y" /> can be <InlineMath math="\pm 17" /> or <InlineMath math="\pm 7" />.
+
+The set of all possible values for <InlineMath math="x + y" /> is <InlineMath math="\{\pm 13, \pm 17, \pm 7\}" />.
+
+#### Statement 1 Analysis
+
+The value <InlineMath math="\pm 7" /> is in the solution set. Statement <InlineMath math="1" /> is **CORRECT**.
+
+#### Statement 2 Analysis
+
+The value <InlineMath math="\pm 10" /> is **NOT** in the solution set. Statement <InlineMath math="2" /> is **INCORRECT**.
+
+#### Statement 3 Analysis
+
+The value <InlineMath math="\pm 13" /> is in the solution set. Statement <InlineMath math="3" /> is **CORRECT**.
+
+#### Statement 4 Analysis
+
+The value <InlineMath math="\pm 14" /> is **NOT** in the solution set. Statement <InlineMath math="4" /> is **INCORRECT**.
+
+#### Conclusion
+
+The correct statements are **<InlineMath math="(1)" /> and <InlineMath math="(3)" />**.

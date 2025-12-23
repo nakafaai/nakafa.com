@@ -1,0 +1,41 @@
+export const metadata = {
+  title: "Pembahasan Soal 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Misalkan <InlineMath math="L" /> adalah anak laki-laki dan <InlineMath math="P" /> adalah anak perempuan.
+
+Ruang sampel untuk keluarga dengan <InlineMath math="3" /> orang anak (tanpa syarat) memiliki <InlineMath math="2^3 = 8" /> kemungkinan:
+
+<MathContainer>
+  <BlockMath math="S_{total} = \{LLL, LLP, LPL, LPP, PLL, PLP, PPL, PPP\}" />
+</MathContainer>
+
+Diketahui syarat "salah satu anak berjenis kelamin perempuan". Artinya, kejadian "semua anak laki-laki" (<InlineMath math="LLL" />) tidak mungkin terjadi.
+
+Ruang sampel baru (<InlineMath math="S" />) adalah semua kemungkinan kecuali <InlineMath math="LLL" />:
+
+<MathContainer>
+  <BlockMath math="S = \{LLP, LPL, LPP, PLL, PLP, PPL, PPP\}" />
+</MathContainer>
+
+Banyaknya anggota ruang sampel adalah <InlineMath math="n(S) = 7" />.
+
+Kejadian yang diharapkan (<InlineMath math="A" />) adalah memiliki <InlineMath math="2" /> anak perempuan dan <InlineMath math="1" /> anak laki-laki.
+
+Dari ruang sampel <InlineMath math="S" />, kemungkinan yang memenuhi syarat tersebut adalah:
+
+<MathContainer>
+  <BlockMath math="A = \{LPP, PLP, PPL\}" />
+</MathContainer>
+
+Banyaknya kejadian yang diharapkan adalah <InlineMath math="n(A) = 3" />.
+
+Peluang kejadian tersebut adalah:
+
+<MathContainer>
+  <BlockMath math="P(A) = \frac{n(A)}{n(S)} = \frac{3}{7}" />
+</MathContainer>
+
+Jadi, peluang keluarga tersebut memiliki <InlineMath math="2" /> anak perempuan dan <InlineMath math="1" /> anak laki-laki adalah <InlineMath math="\frac{3}{7}" />.

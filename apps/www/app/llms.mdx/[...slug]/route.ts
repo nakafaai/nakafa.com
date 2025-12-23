@@ -1,9 +1,18 @@
+import {
+  getCurrentMaterial,
+  getMaterialPath,
+  getMaterials,
+} from "@repo/contents/_lib/exercises/material";
 import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
 import {
   getContent,
+  getExercisesContent,
   getFolderChildNames,
   getNestedSlugs,
 } from "@repo/contents/_lib/utils";
+import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
+import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
+import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { routing } from "@repo/internationalization/src/routing";
 import ky from "ky";
 import type { NextRequest } from "next/server";
@@ -42,6 +51,17 @@ export async function GET(
     });
     if (quranResponse) {
       return quranResponse;
+    }
+  }
+
+  // Handle Exercises content
+  if (cleanSlug.startsWith("exercises")) {
+    const exercisesResponse = await handleExercisesContent({
+      cleanSlug,
+      locale,
+    });
+    if (exercisesResponse) {
+      return exercisesResponse;
     }
   }
 
@@ -185,6 +205,126 @@ function handleQuranContent({
   }
 
   return null;
+}
+
+async function handleExercisesContent({
+  cleanSlug,
+  locale,
+}: {
+  cleanSlug: string;
+  locale: Locale;
+}): Promise<Response | null> {
+  const parts = cleanSlug.split("/");
+  let exerciseNumber: number | null = null;
+  let path = cleanSlug;
+
+  // Check if last part is a number (specific exercise request)
+  const lastPart = parts.at(-1);
+  if (lastPart) {
+    const parsedNumber = Number.parseInt(lastPart, 10);
+    if (!Number.isNaN(parsedNumber)) {
+      exerciseNumber = parsedNumber;
+      path = parts.slice(0, -1).join("/");
+    }
+  }
+
+  // Fetch exercises
+  const exercises = await getExercisesContent(locale, path);
+
+  if (!exercises || exercises.length === 0) {
+    return null;
+  }
+
+  // If specific exercise requested, filter it
+  let targetExercises = exercises;
+  if (exerciseNumber !== null) {
+    targetExercises = exercises.filter((ex) => ex.number === exerciseNumber);
+    if (targetExercises.length === 0) {
+      return null;
+    }
+  }
+
+  const url = `${BASE_URL}/${locale}/${cleanSlug}`;
+
+  let description = "Exercises Content";
+  const pathParts = path.split("/");
+  const category = pathParts.at(1);
+  const type = pathParts.at(2);
+  const material = pathParts.at(3);
+
+  if (category && type && material) {
+    const materialPath = getMaterialPath(
+      category as ExercisesCategory,
+      type as ExercisesType,
+      material as ExercisesMaterial
+    );
+    const materialsList = await getMaterials(materialPath, locale);
+    const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
+      `/${path}`,
+      materialsList
+    );
+
+    if (currentMaterial && currentMaterialItem) {
+      description = currentMaterial.description
+        ? `Exercises: ${currentMaterial.title} - ${currentMaterialItem.title}: ${currentMaterial.description}`
+        : `Exercises: ${currentMaterial.title} - ${currentMaterialItem.title}`;
+    }
+  }
+
+  // If specific exercise, append its info
+  if (exerciseNumber !== null) {
+    const exerciseTitle = targetExercises[0]?.question.metadata.title;
+    if (exerciseTitle) {
+      description = `${description} - ${exerciseTitle}`;
+    } else {
+      description = `${description} - Question ${exerciseNumber}`;
+    }
+  }
+
+  const scanned: string[] = [];
+  scanned.push(
+    ...buildHeader({
+      url,
+      description,
+    })
+  );
+
+  for (const exercise of targetExercises) {
+    scanned.push(`## Exercise ${exercise.number}`);
+    scanned.push("");
+
+    // Question
+    scanned.push("### Question");
+    scanned.push("");
+    scanned.push(exercise.question.raw);
+    scanned.push("");
+
+    // Choices
+    scanned.push("### Choices");
+    scanned.push("");
+    // Fallback to English if locale specific choices are missing (though schema requires them)
+    const choices =
+      (locale === "id" ? exercise.choices.id : exercise.choices.en) ||
+      exercise.choices.en;
+
+    if (choices) {
+      for (const choice of choices) {
+        const mark = choice.value ? "x" : " ";
+        scanned.push(`- [${mark}] ${choice.label}`);
+      }
+    }
+    scanned.push("");
+
+    // Answer (Explanation)
+    scanned.push("### Answer & Explanation");
+    scanned.push("");
+    scanned.push(exercise.answer.raw);
+    scanned.push("");
+    scanned.push("---");
+    scanned.push("");
+  }
+
+  return new Response(scanned.join("\n"));
 }
 
 function buildMdxResponse({

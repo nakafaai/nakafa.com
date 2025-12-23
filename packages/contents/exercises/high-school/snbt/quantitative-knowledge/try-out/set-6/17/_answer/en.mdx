@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Solution to Problem 17",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Given the conditions for integer <InlineMath math="m" />:
+*   <InlineMath math="m \equiv 3 \pmod{7}" /> (If divided by <InlineMath math="7" />, remainder is <InlineMath math="3" />)
+*   <InlineMath math="m \equiv 2 \pmod{3}" /> (If divided by <InlineMath math="3" />, remainder is <InlineMath math="2" />)
+
+Let's check each statement:
+
+#### Analysis of Statement 1
+Value <InlineMath math="m = 52" />. Divided by <InlineMath math="7" />: <InlineMath math="52 = 7 \times 7 + 3" />. Remainder <InlineMath math="3" /> (Satisfied). Divided by <InlineMath math="3" />: <InlineMath math="52 = 17 \times 3 + 1" />. Remainder <InlineMath math="1" /> (**Not satisfied**, should be <InlineMath math="2" />). Thus, statement <InlineMath math="1" /> is **incorrect**.
+
+#### Analysis of Statement 2
+Value <InlineMath math="m = 59" />. Divided by <InlineMath math="7" />: <InlineMath math="59 = 8 \times 7 + 3" />. Remainder <InlineMath math="3" /> (Satisfied). Divided by <InlineMath math="3" />: <InlineMath math="59 = 19 \times 3 + 2" />. Remainder <InlineMath math="2" /> (Satisfied). Thus, statement <InlineMath math="2" /> is **correct**.
+
+#### Analysis of Statement 3
+Value <InlineMath math="m = 42" />. Divided by <InlineMath math="7" />: <InlineMath math="42 = 6 \times 7 + 0" />. Remainder <InlineMath math="0" /> (**Not satisfied**, should be <InlineMath math="3" />). Divided by <InlineMath math="3" />: <InlineMath math="42 = 14 \times 3 + 0" />. Remainder <InlineMath math="0" /> (**Not satisfied**, should be <InlineMath math="2" />). Thus, statement <InlineMath math="3" /> is **incorrect**.
+
+#### Analysis of Statement 4
+Value <InlineMath math="m = 38" />. Divided by <InlineMath math="7" />: <InlineMath math="38 = 5 \times 7 + 3" />. Remainder <InlineMath math="3" /> (Satisfied). Divided by <InlineMath math="3" />: <InlineMath math="38 = 12 \times 3 + 2" />. Remainder <InlineMath math="2" /> (Satisfied). Thus, statement <InlineMath math="4" /> is **correct**.
+
+Since statements <InlineMath math="2" /> and <InlineMath math="4" /> are correct, the correct answer is **If <InlineMath math="(2)" /> and <InlineMath math="(4)" /> are correct**.

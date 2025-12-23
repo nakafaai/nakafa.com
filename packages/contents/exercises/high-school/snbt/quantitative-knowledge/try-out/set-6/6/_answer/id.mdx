@@ -1,0 +1,34 @@
+export const metadata = {
+  title: "Pembahasan Soal 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Kita diberikan fungsi <InlineMath math="f(x) = 2x - 3" /> dan fungsi komposisi <InlineMath math="(g \circ f)(x) = 4x^2 - 12x + 10" />. Kita diminta untuk mencari nilai dari <InlineMath math="g(1)" />.
+
+Definisi fungsi komposisi adalah <InlineMath math="(g \circ f)(x) = g(f(x))" />. Misalkan <InlineMath math="u = f(x) = 2x - 3" />. Kita ubah persamaan ini untuk menyatakan <InlineMath math="x" /> dalam <InlineMath math="u" />:
+
+<MathContainer>
+  <BlockMath math="2x = u + 3" />
+  <BlockMath math="x = \frac{u + 3}{2}" />
+</MathContainer>
+
+Substitusikan <InlineMath math="x" /> ke dalam persamaan <InlineMath math="(g \circ f)(x)" />:
+
+<MathContainer>
+  <BlockMath math="g(u) = 4\left(\frac{u + 3}{2}\right)^2 - 12\left(\frac{u + 3}{2}\right) + 10" />
+  <BlockMath math="g(u) = 4\left(\frac{u^2 + 6u + 9}{4}\right) - 6(u + 3) + 10" />
+  <BlockMath math="g(u) = (u^2 + 6u + 9) - (6u + 18) + 10" />
+  <BlockMath math="g(u) = u^2 + 6u - 6u + 9 - 18 + 10" />
+  <BlockMath math="g(u) = u^2 + 1" />
+</MathContainer>
+
+Sehingga, diperoleh <InlineMath math="g(x) = x^2 + 1" />.
+
+Maka nilai <InlineMath math="g(1)" /> adalah:
+
+<MathContainer>
+  <BlockMath math="g(1) = 1^2 + 1 = 1 + 1 = 2" />
+</MathContainer>
+
+Jadi, nilai <InlineMath math="g(1)" /> adalah <InlineMath math="2" />.

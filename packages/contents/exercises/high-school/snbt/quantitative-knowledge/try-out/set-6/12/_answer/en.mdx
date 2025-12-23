@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Solution to Problem 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+import { Graph } from "../graph";
+
+<Graph title="Triangle" description="Geometric illustration with labeled angles." />
+
+Consider the small triangle at the bottom. The sum of angles in a triangle is <InlineMath math="180^\circ" />. Given the top vertex angle is <InlineMath math="100^\circ" />. So, the sum of the two base angles is:
+
+<MathContainer>
+  <BlockMath math="x + y = 180^\circ - 100^\circ = 80^\circ" />
+</MathContainer>
+
+Next, consider the large triangle. Its base angles are <InlineMath math="(x+y)" /> and <InlineMath math="(y+x)" />. Since <InlineMath math="x+y = 80^\circ" />, both base angles of the large triangle are <InlineMath math="80^\circ" />. The sum of angles in the large triangle is <InlineMath math="180^\circ" />:
+
+<MathContainer>
+  <BlockMath math="a + (x+y) + (y+x) = 180^\circ" />
+  <BlockMath math="a + 80^\circ + 80^\circ = 180^\circ" />
+  <BlockMath math="a + 160^\circ = 180^\circ" />
+  <BlockMath math="a = 20^\circ" />
+</MathContainer>
+
+Thus, the value of <InlineMath math="a" /> is <InlineMath math="20^\circ" />.

@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Pembahasan Soal 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Diketahui fungsi:
+
+<MathContainer>
+  <BlockMath math="f(x) = 5 - 4x^2" />
+  <BlockMath math="g(x) = \frac{3x - 5}{2}" />
+</MathContainer>
+
+Kita diminta untuk mencari fungsi komposisi <InlineMath math="(f \circ g)(x)" />.
+
+Definisi fungsi komposisi adalah <InlineMath math="(f \circ g)(x) = f(g(x))" />. Artinya, kita mensubstitusikan seluruh fungsi <InlineMath math="g(x)" /> ke dalam variabel <InlineMath math="x" /> pada fungsi <InlineMath math="f(x)" />.
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} (f \circ g)(x) &= f\left(\frac{3x - 5}{2}\right) \\ &= 5 - 4\left(\frac{3x - 5}{2}\right)^2 \end{aligned}" />
+</MathContainer>
+
+Selanjutnya, kita kuadratkan bentuk pecahan tersebut:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} &= 5 - 4\left(\frac{(3x - 5)^2}{2^2}\right) \\ &= 5 - 4\left(\frac{9x^2 - 30x + 25}{4}\right) \end{aligned}" />
+</MathContainer>
+
+Perhatikan bahwa angka <InlineMath math="4" /> di pembilang dan penyebut dapat dicoret:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} &= 5 - (9x^2 - 30x + 25) \end{aligned}" />
+</MathContainer>
+
+Jangan lupa mengalikan tanda negatif ke dalam kurung:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} &= 5 - 9x^2 + 30x - 25 \\ &= -9x^2 + 30x - 20 \end{aligned}" />
+</MathContainer>
+
+Jadi, <InlineMath math="(f \circ g)(x) = -9x^2 + 30x - 20" />.

@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Solution to Problem 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Given the function <InlineMath math="g(x) = 3x + 2" />. We will substitute this function into the given equation.
+
+<MathContainer>
+  <BlockMath math="2g^2(x) - g(x^2) - 5g(x) - 7 = 0" />
+</MathContainer>
+
+First, determine the forms of <InlineMath math="g^2(x)" /> and <InlineMath math="g(x^2)" />:
+
+<MathContainer>
+  <BlockMath math="g^2(x) = (3x + 2)^2 = 9x^2 + 12x + 4" />
+  <BlockMath math="g(x^2) = 3(x^2) + 2 = 3x^2 + 2" />
+</MathContainer>
+
+Substitute these forms into the initial equation:
+
+<MathContainer>
+  <BlockMath math="2(9x^2 + 12x + 4) - (3x^2 + 2) - 5(3x + 2) - 7 = 0" />
+  <BlockMath math="(18x^2 + 24x + 8) - (3x^2 + 2) - (15x + 10) - 7 = 0" />
+</MathContainer>
+
+Group like terms:
+
+<MathContainer>
+  <BlockMath math="(18 - 3)x^2 + (24 - 15)x + (8 - 2 - 10 - 7) = 0" />
+  <BlockMath math="15x^2 + 9x - 11 = 0" />
+</MathContainer>
+
+This quadratic equation has roots <InlineMath math="x_1" /> and <InlineMath math="x_2" />.
+The sum of the roots of a quadratic equation <InlineMath math="ax^2 + bx + c = 0" /> is <InlineMath math="x_1 + x_2 = -\frac{b}{a}" />.
+
+<MathContainer>
+  <BlockMath math="x_1 + x_2 = -\frac{9}{15}" />
+  <BlockMath math="x_1 + x_2 = -\frac{3}{5}" />
+</MathContainer>
+
+Thus, the value of <InlineMath math="x_1 + x_2" /> is <InlineMath math="-\frac{3}{5}" />.

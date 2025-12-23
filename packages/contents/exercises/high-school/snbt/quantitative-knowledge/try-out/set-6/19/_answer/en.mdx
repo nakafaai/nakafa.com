@@ -1,0 +1,49 @@
+export const metadata = {
+  title: "Solution for Problem 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We will check the validity of each statement based on the given graph. The graph consists of the line <InlineMath math="y = 2x + 6" /> and the exponential curve <InlineMath math="y = (1/2)^x - 3" />.
+
+#### Analysis of Statement 1
+
+Point A is the y-intercept of the curve <InlineMath math="y = (1/2)^x - 3" />. Substitute <InlineMath math="x = 0" />:
+
+<BlockMath math="y = \left(\frac{1}{2}\right)^0 - 3 = 1 - 3 = -2" />
+
+So, point A is <InlineMath math="(0, -2)" />. Statement <InlineMath math="1" /> is **correct**.
+
+#### Analysis of Statement 2
+
+Point B is the y-intercept of the line <InlineMath math="y = 2x + 6" />. Substitute <InlineMath math="x = 0" />:
+
+<BlockMath math="y = 2(0) + 6 = 6" />
+
+So, point B is <InlineMath math="(0, 6)" />. Statement <InlineMath math="2" /> is **correct**.
+
+#### Analysis of Statement 3
+
+Point C is the x-intercept of the line <InlineMath math="y = 2x + 6" />. Substitute <InlineMath math="y = 0" />:
+
+<BlockMath math="\begin{aligned} 2x + 6 &= 0 \\ 2x &= -6 \\ x &= -3 \end{aligned}" />
+
+So, point C is <InlineMath math="(-3, 0)" />. Statement <InlineMath math="3" /> is **correct**.
+
+#### Analysis of Statement 4
+
+Statement <InlineMath math="4" /> states that point D is <InlineMath math="(-2, 2)" />. On the graph, D is the intersection point of the line and the curve. We check if the point <InlineMath math="(-2, 2)" /> lies on both functions.
+
+For the line <InlineMath math="y = 2x + 6" />:
+
+<BlockMath math="y = 2(-2) + 6 = -4 + 6 = 2" />
+
+Point <InlineMath math="(-2, 2)" /> is on the line.
+
+For the curve <InlineMath math="y = (1/2)^x - 3" />:
+
+<BlockMath math="y = \left(\frac{1}{2}\right)^{-2} - 3 = 2^2 - 3 = 4 - 3 = 1" />
+
+Since <InlineMath math="y = 1 \neq 2" />, point <InlineMath math="(-2, 2)" /> is not on the curve. Therefore, D is not <InlineMath math="(-2, 2)" />. Statement <InlineMath math="4" /> is **incorrect**.
+
+Thus, the correct statements are <InlineMath math="1" />, <InlineMath math="2" />, and <InlineMath math="3" />.

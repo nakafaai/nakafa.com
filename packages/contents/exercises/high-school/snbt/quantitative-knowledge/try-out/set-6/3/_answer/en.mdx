@@ -1,0 +1,41 @@
+export const metadata = {
+  title: "Problem 3 Solution",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Let <InlineMath math="B" /> be a boy and <InlineMath math="G" /> be a girl.
+
+The sample space for a family with <InlineMath math="3" /> children (without conditions) has <InlineMath math="2^3 = 8" /> possibilities:
+
+<MathContainer>
+  <BlockMath math="S_{total} = \{BBB, BBG, BGB, BGG, GBB, GBG, GGB, GGG\}" />
+</MathContainer>
+
+It is given that "at least one child is a girl". This means the event "all children are boys" (<InlineMath math="BBB" />) is impossible.
+
+The new sample space (<InlineMath math="S" />) consists of all possibilities except <InlineMath math="BBB" />:
+
+<MathContainer>
+  <BlockMath math="S = \{BBG, BGB, BGG, GBB, GBG, GGB, GGG\}" />
+</MathContainer>
+
+The number of elements in the sample space is <InlineMath math="n(S) = 7" />.
+
+The expected event (<InlineMath math="A" />) is having <InlineMath math="2" /> girls and <InlineMath math="1" /> boy.
+
+From the sample space <InlineMath math="S" />, the outcomes that satisfy this condition are:
+
+<MathContainer>
+  <BlockMath math="A = \{BGG, GBG, GGB\}" />
+</MathContainer>
+
+The number of expected outcomes is <InlineMath math="n(A) = 3" />.
+
+The probability of the event is:
+
+<MathContainer>
+  <BlockMath math="P(A) = \frac{n(A)}{n(S)} = \frac{3}{7}" />
+</MathContainer>
+
+Therefore, the probability that the family has <InlineMath math="2" /> girls and <InlineMath math="1" /> boy is <InlineMath math="\frac{3}{7}" />.

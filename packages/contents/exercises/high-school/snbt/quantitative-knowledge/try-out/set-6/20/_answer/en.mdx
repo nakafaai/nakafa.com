@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Problem 20 Solution",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Given the functions:
+
+<MathContainer>
+  <BlockMath math="f(x) = 5 - 4x^2" />
+  <BlockMath math="g(x) = \frac{3x - 5}{2}" />
+</MathContainer>
+
+We are asked to find the composition function <InlineMath math="(f \circ g)(x)" />.
+
+By definition, <InlineMath math="(f \circ g)(x) = f(g(x))" />. This means we substitute the entire function <InlineMath math="g(x)" /> into the variable <InlineMath math="x" /> in function <InlineMath math="f(x)" />.
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} (f \circ g)(x) &= f\left(\frac{3x - 5}{2}\right) \\ &= 5 - 4\left(\frac{3x - 5}{2}\right)^2 \end{aligned}" />
+</MathContainer>
+
+Next, expand the squared fraction:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} &= 5 - 4\left(\frac{(3x - 5)^2}{2^2}\right) \\ &= 5 - 4\left(\frac{9x^2 - 30x + 25}{4}\right) \end{aligned}" />
+</MathContainer>
+
+Notice that the <InlineMath math="4" /> in the numerator and denominator cancel out:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} &= 5 - (9x^2 - 30x + 25) \end{aligned}" />
+</MathContainer>
+
+Distribute the negative sign:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} &= 5 - 9x^2 + 30x - 25 \\ &= -9x^2 + 30x - 20 \end{aligned}" />
+</MathContainer>
+
+Thus, <InlineMath math="(f \circ g)(x) = -9x^2 + 30x - 20" />.

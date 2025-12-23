@@ -1,0 +1,46 @@
+export const metadata = {
+  title: "Solution for Question 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Given the recursive equation:
+
+<MathContainer>
+  <BlockMath math="a_{n+1} = a_{n+2} - 4a_n" />
+</MathContainer>
+
+We can rearrange the equation to find <InlineMath math="a_{n+2}" />:
+
+<MathContainer>
+  <BlockMath math="a_{n+2} = a_{n+1} + 4a_n" />
+</MathContainer>
+
+**Step 1**: Find the value of <InlineMath math="a_3" /> by substituting <InlineMath math="n = 1" />. Given <InlineMath math="a_1 = 8" /> and <InlineMath math="a_2 = -5" />.
+
+<MathContainer>
+  <BlockMath math="a_{1+2} = a_{1+1} + 4a_1" />
+  <BlockMath math="a_3 = a_2 + 4a_1" />
+  <BlockMath math="a_3 = -5 + 4(8)" />
+  <BlockMath math="a_3 = -5 + 32" />
+  <BlockMath math="a_3 = 27" />
+</MathContainer>
+
+**Step 2**: Find the value of <InlineMath math="a_4" /> by substituting <InlineMath math="n = 2" />.
+
+<MathContainer>
+  <BlockMath math="a_{2+2} = a_{2+1} + 4a_2" />
+  <BlockMath math="a_4 = a_3 + 4a_2" />
+  <BlockMath math="a_4 = 27 + 4(-5)" />
+  <BlockMath math="a_4 = 27 - 20" />
+  <BlockMath math="a_4 = 7" />
+</MathContainer>
+
+**Step 3**: Calculate the sum <InlineMath math="a_3 + a_4" />.
+
+<MathContainer>
+  <BlockMath math="a_3 + a_4 = 27 + 7" />
+  <BlockMath math="a_3 + a_4 = 34" />
+</MathContainer>
+
+So, the value of <InlineMath math="a_3 + a_4" /> is <InlineMath math="34" />.

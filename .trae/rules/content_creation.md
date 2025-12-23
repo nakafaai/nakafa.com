@@ -17,6 +17,9 @@
     - Example: `$x^2 + y^2 = r^2$`
 2. **Clarity**: Ensure variables are italicized in text if they refer to math symbols (e.g., *x* and *y*).
 3. **Decimals**: Use comma `,` for decimals in Indonesian text (e.g., `3,14`).
+4. **Numbered References**: Use math mode including parentheses for numbered references like (1), (2).
+    - MDX: `<InlineMath math="(1)" />`
+    - TS/Labels: `$$(1)$$`
 
 ## Language Guidelines (Indonesian)
 

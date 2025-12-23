@@ -1,0 +1,65 @@
+export const metadata = {
+  title: "Pembahasan Soal 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Kita diminta untuk menentukan titik persekutuan (titik potong) antara dua garis:
+
+1. <InlineMath math="y = 2x + 3" />
+2. <InlineMath math="y = ax + b" />
+
+Agar kita bisa menentukan titik potong yang unik <InlineMath math="(x, y)" />, kita harus bisa menyelesaikan sistem persamaan tersebut. Mari kita samakan kedua persamaan:
+
+<MathContainer>
+  <BlockMath math="2x + 3 = ax + b" />
+  <BlockMath math="2x - ax = b - 3" />
+  <BlockMath math="(2 - a)x = b - 3" />
+</MathContainer>
+
+Dari persamaan di atas, nilai <InlineMath math="x" /> dapat ditentukan jika dan hanya jika koefisien <InlineMath math="x" /> tidak nol, yaitu <InlineMath math="2 - a \neq 0" /> atau <InlineMath math="a \neq 2" />. Jika <InlineMath math="a \neq 2" />, maka:
+
+<MathContainer>
+  <BlockMath math="x = \frac{b - 3}{2 - a}" />
+</MathContainer>
+
+Setelah mendapatkan <InlineMath math="x" />, kita bisa mencari <InlineMath math="y" /> dengan mensubstitusi ke salah satu persamaan. Jadi, untuk menentukan titik potong secara spesifik, kita perlu mengetahui:
+
+1. Bahwa <InlineMath math="a \neq 2" /> (agar garis berpotongan di satu titik).
+2. Nilai <InlineMath math="b" /> (untuk menghitung nilai koordinatnya).
+
+#### Analisis Pernyataan 1
+
+Pernyataan <InlineMath math="(1)" /> memberikan informasi <InlineMath math="a \neq 2" />. Ini menjamin bahwa kedua garis memiliki gradien yang berbeda (<InlineMath math="m_1 = 2" /> dan <InlineMath math="m_2 = a \neq 2" />), sehingga mereka pasti berpotongan di satu titik. Namun, kita tidak mengetahui nilai <InlineMath math="b" />. Tanpa nilai <InlineMath math="b" />, kita tidak bisa menentukan koordinat titik potong tersebut (nilai <InlineMath math="x" /> dan <InlineMath math="y" /> masih bergantung pada <InlineMath math="b" />). Oleh karena itu, pernyataan <InlineMath math="(1)" /> saja **tidak cukup**.
+
+#### Analisis Pernyataan 2
+
+Pernyataan <InlineMath math="(2)" /> memberikan informasi <InlineMath math="b = 3" />. Persamaan kedua menjadi <InlineMath math="y = ax + 3" />. Kita tidak mengetahui nilai <InlineMath math="a" />.
+
+- Jika <InlineMath math="a = 2" />, maka garisnya menjadi <InlineMath math="y = 2x + 3" />, yang berimpit dengan garis pertama (titik potong tak hingga banyaknya).
+- Jika <InlineMath math="a \neq 2" />, garis berpotongan di satu titik.
+
+Karena <InlineMath math="a" /> tidak diketahui, kita tidak bisa memastikan apakah ada satu titik potong, dan kita juga tidak bisa menentukan koordinatnya. Oleh karena itu, pernyataan <InlineMath math="(2)" /> saja **tidak cukup**.
+
+#### Analisis Kedua Pernyataan Bersama-sama
+
+Jika kita menggabungkan kedua pernyataan:
+
+1. <InlineMath math="a \neq 2" />
+2. <InlineMath math="b = 3" />
+
+Kita substitusi ke dalam persamaan untuk mencari <InlineMath math="x" />:
+
+<MathContainer>
+  <BlockMath math="x = \frac{3 - 3}{2 - a} = \frac{0}{2 - a} = 0" />
+</MathContainer>
+
+(Pembagian dengan <InlineMath math="2 - a" /> valid karena <InlineMath math="a \neq 2" />). Kemudian kita cari <InlineMath math="y" />:
+
+<MathContainer>
+  <BlockMath math="y = 2(0) + 3 = 3" />
+</MathContainer>
+
+Kita mendapatkan titik potong yang unik yaitu <InlineMath math="(0, 3)" />. Karena kita bisa menentukan titik potongnya, maka kedua pernyataan bersama-sama **cukup**.
+
+Jadi, **dua pernyataan bersama-sama cukup untuk menjawab pertanyaan, tetapi satu pernyataan saja tidak cukup**.

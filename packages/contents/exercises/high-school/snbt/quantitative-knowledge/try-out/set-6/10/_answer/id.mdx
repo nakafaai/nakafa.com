@@ -1,0 +1,46 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Diketahui persamaan rekursif:
+
+<MathContainer>
+  <BlockMath math="a_{n+1} = a_{n+2} - 4a_n" />
+</MathContainer>
+
+Kita dapat mengubah bentuk persamaan tersebut untuk mencari <InlineMath math="a_{n+2}" />:
+
+<MathContainer>
+  <BlockMath math="a_{n+2} = a_{n+1} + 4a_n" />
+</MathContainer>
+
+**Langkah 1**: Cari nilai <InlineMath math="a_3" /> dengan substitusi <InlineMath math="n = 1" />. Diketahui <InlineMath math="a_1 = 8" /> dan <InlineMath math="a_2 = -5" />.
+
+<MathContainer>
+  <BlockMath math="a_{1+2} = a_{1+1} + 4a_1" />
+  <BlockMath math="a_3 = a_2 + 4a_1" />
+  <BlockMath math="a_3 = -5 + 4(8)" />
+  <BlockMath math="a_3 = -5 + 32" />
+  <BlockMath math="a_3 = 27" />
+</MathContainer>
+
+**Langkah 2**: Cari nilai <InlineMath math="a_4" /> dengan substitusi <InlineMath math="n = 2" />.
+
+<MathContainer>
+  <BlockMath math="a_{2+2} = a_{2+1} + 4a_2" />
+  <BlockMath math="a_4 = a_3 + 4a_2" />
+  <BlockMath math="a_4 = 27 + 4(-5)" />
+  <BlockMath math="a_4 = 27 - 20" />
+  <BlockMath math="a_4 = 7" />
+</MathContainer>
+
+**Langkah 3**: Hitung jumlah <InlineMath math="a_3 + a_4" />.
+
+<MathContainer>
+  <BlockMath math="a_3 + a_4 = 27 + 7" />
+  <BlockMath math="a_3 + a_4 = 34" />
+</MathContainer>
+
+Jadi, nilai <InlineMath math="a_3 + a_4" /> adalah <InlineMath math="34" />.

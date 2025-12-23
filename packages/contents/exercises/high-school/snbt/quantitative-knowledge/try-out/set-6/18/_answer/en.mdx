@@ -1,0 +1,38 @@
+export const metadata = {
+  title: "Solution to Problem 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Given:
+*   Total teenagers (<InlineMath math="S" />) = <InlineMath math="300" />
+*   Sports activities (<InlineMath math="O" />) = <InlineMath math="135" />
+*   Nature lover activities (<InlineMath math="C" />) = <InlineMath math="255" />
+
+We are asked to find the difference between the maximum value (<InlineMath math="B" />) and the minimum value (<InlineMath math="A" />) of the intersection of these two sets (<InlineMath math="O \cap C" />).
+
+#### Finding Minimum Value A
+The minimum intersection occurs when the union of the two sets is maximized, which equals the total universe (<InlineMath math="300" />). This means everyone participates in at least one activity.
+<MathContainer>
+  <BlockMath math="n(O \cup C) = n(O) + n(C) - n(O \cap C)" />
+  <BlockMath math="300 = 135 + 255 - A" />
+  <BlockMath math="300 = 390 - A" />
+  <BlockMath math="A = 390 - 300" />
+  <BlockMath math="A = 90" />
+</MathContainer>
+
+#### Finding Maximum Value B
+The maximum intersection occurs when the smaller set is a subset of the larger set. In this case, all sports participants also participate in nature lover activities.
+<MathContainer>
+  <BlockMath math="B = \min(n(O), n(C))" />
+  <BlockMath math="B = \min(135, 255)" />
+  <BlockMath math="B = 135" />
+</MathContainer>
+
+#### Calculating the Difference
+<MathContainer>
+  <BlockMath math="B - A = 135 - 90" />
+  <BlockMath math="B - A = 45" />
+</MathContainer>
+
+Thus, the difference between <InlineMath math="B" /> and <InlineMath math="A" /> is <InlineMath math="45" /> people.

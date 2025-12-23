@@ -1,5 +1,12 @@
+import {
+  getMaterialPath,
+  getMaterials,
+} from "@repo/contents/_lib/exercises/material";
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
-import { getContents } from "@repo/contents/_lib/utils";
+import { getContents, getFolderChildNames } from "@repo/contents/_lib/utils";
+import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
+import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
+import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { routing } from "@repo/internationalization/src/routing";
 
 const BASE_URL = "https://nakafa.com";
@@ -46,6 +53,33 @@ export async function GET() {
     }
   }
 
+  // Handle Exercises
+  const exercisesList: string[] = [];
+  const exerciseMaterials = getAllExerciseMaterials();
+
+  for (const locale of locales) {
+    for (const { category, type, material } of exerciseMaterials) {
+      const materialPath = getMaterialPath(category, type, material);
+      const materialsList = await getMaterials(materialPath, locale);
+
+      const context = `${category}/${type}/${material}`;
+
+      for (const group of materialsList) {
+        for (const item of group.items) {
+          const href = item.href.startsWith("/") ? item.href : `/${item.href}`;
+          const url = `${BASE_URL}/${locale}${href}`;
+          const title = `${group.title} - ${item.title} (${context})`;
+          const description = group.description ?? group.title;
+          exercisesList.push(`- [${title}](${url}): ${description}`);
+        }
+      }
+    }
+  }
+
+  if (exercisesList.length > 0) {
+    map.set("Exercises", exercisesList);
+  }
+
   // Build final output
   for (const [key, value] of map) {
     scanned.push(`## ${key}`);
@@ -71,4 +105,34 @@ export async function GET() {
   scanned.push(quranEntries.join("\n"));
 
   return new Response(scanned.join("\n\n"));
+}
+
+function getAllExerciseMaterials(): {
+  category: ExercisesCategory;
+  type: ExercisesType;
+  material: ExercisesMaterial;
+}[] {
+  const root = "exercises";
+  const categories = getFolderChildNames(root);
+  const result: {
+    category: ExercisesCategory;
+    type: ExercisesType;
+    material: ExercisesMaterial;
+  }[] = [];
+
+  for (const category of categories) {
+    const types = getFolderChildNames(`${root}/${category}`);
+    for (const type of types) {
+      const materials = getFolderChildNames(`${root}/${category}/${type}`);
+      for (const material of materials) {
+        result.push({
+          category: category as ExercisesCategory,
+          type: type as ExercisesType,
+          material: material as ExercisesMaterial,
+        });
+      }
+    }
+  }
+
+  return result;
 }

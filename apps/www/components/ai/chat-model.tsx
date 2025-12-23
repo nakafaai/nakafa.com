@@ -28,7 +28,7 @@ import { BrainIcon, CheckIcon, ChevronDownIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useAi } from "@/lib/context/use-ai";
-import { freeModels, models, premiumModels } from "@/lib/data/models";
+import { aiModels, getFreeModels, getPremiumModels } from "@/lib/data/models";
 
 export function AiChatModel() {
   const t = useTranslations("Ai");
@@ -53,8 +53,8 @@ export function AiChatModel() {
 
   const [openModelMenu, setOpenModelMenu] = useState(false);
 
-  const Icon = models.find((m) => m.value === model)?.icon ?? BrainIcon;
-  const label = models.find((m) => m.value === model)?.label;
+  const Icon = aiModels.find((m) => m.value === model)?.icon ?? BrainIcon;
+  const label = aiModels.find((m) => m.value === model)?.label;
 
   const handleOnChange = (value: ModelId) => {
     if (!user) {
@@ -63,7 +63,9 @@ export function AiChatModel() {
       return;
     }
 
-    const isPremium = premiumModels.some((m) => m.value === value);
+    const isPremium = aiModels.some(
+      (m) => m.value === value && m.type === "premium"
+    );
 
     if (isPremium && !hasSubscription) {
       // Don't set premium model if no subscription, open checkout instead
@@ -94,13 +96,13 @@ export function AiChatModel() {
           />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="h-[300px] w-fit p-0">
+      <PopoverContent align="start" className="h-75 w-fit p-0">
         <Command>
           <CommandInput placeholder={t("search-models-placeholder")} />
           <CommandList>
             <CommandEmpty>{t("no-models-found")}</CommandEmpty>
             <CommandGroup heading={t("premium-models")}>
-              {premiumModels.map((m) => (
+              {getPremiumModels().map((m) => (
                 <CommandItem
                   className="cursor-pointer"
                   key={m.value}
@@ -120,7 +122,7 @@ export function AiChatModel() {
               ))}
             </CommandGroup>
             <CommandGroup heading={t("free-models")}>
-              {freeModels.map((m) => (
+              {getFreeModels().map((m) => (
                 <CommandItem
                   className="cursor-pointer"
                   key={m.value}
