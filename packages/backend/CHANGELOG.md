@@ -1,5 +1,16 @@
 # @repo/backend
 
+## 1.3.0
+
+### Minor Changes
+
+- [`1832a10`](https://github.com/nakafaai/nakafa.com/commit/1832a10d49ebcaa5b88e5fa96a71974e80915b1b) Thanks [@nabilfatih](https://github.com/nabilfatih)! - New try out exercise snbt, imporving DX, bump version, fix some styling, and trae rules
+
+### Patch Changes
+
+- Updated dependencies [[`1832a10`](https://github.com/nakafaai/nakafa.com/commit/1832a10d49ebcaa5b88e5fa96a71974e80915b1b)]:
+  - @repo/ai@1.2.0
+
 ## 1.2.0
 
 ### Minor Changes

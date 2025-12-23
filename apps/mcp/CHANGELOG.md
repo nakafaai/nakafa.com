@@ -1,5 +1,19 @@
 # mcp
 
+## 0.2.0
+
+### Minor Changes
+
+- [`1832a10`](https://github.com/nakafaai/nakafa.com/commit/1832a10d49ebcaa5b88e5fa96a71974e80915b1b) Thanks [@nabilfatih](https://github.com/nabilfatih)! - New try out exercise snbt, imporving DX, bump version, fix some styling, and trae rules
+
+- [`9c66625`](https://github.com/nakafaai/nakafa.com/commit/9c666253d6acf6af8618b0f985a4f13a4666f194) Thanks [@nabilfatih](https://github.com/nabilfatih)! - bump version
+
+### Patch Changes
+
+- Updated dependencies [[`1832a10`](https://github.com/nakafaai/nakafa.com/commit/1832a10d49ebcaa5b88e5fa96a71974e80915b1b)]:
+  - @repo/next-config@0.2.0
+  - @repo/contents@0.2.0
+
 ## 0.1.1
 
 ### Patch Changes
