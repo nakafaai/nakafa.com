@@ -121,6 +121,11 @@ export const freeModels: Model[] = [
   },
   {
     icon: ZAI,
+    value: "glm-4.7",
+    label: "GLM 4.7",
+  },
+  {
+    icon: ZAI,
     value: "glm-4.6",
     label: "GLM 4.6",
   },

@@ -99,7 +99,10 @@ export const tables = {
         v.literal("input-streaming"),
         v.literal("input-available"),
         v.literal("output-available"),
-        v.literal("output-error")
+        v.literal("output-error"),
+        v.literal("output-denied"),
+        v.literal("approval-requested"),
+        v.literal("approval-responded")
       )
     ),
     toolErrorText: v.optional(v.string()),

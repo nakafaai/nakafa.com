@@ -1,0 +1,71 @@
+export const metadata = {
+  title: "Solution to Problem 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We will find the value of the added numbers, determine the new median, and then compare the values of <InlineMath math="P" /> and <InlineMath math="Q" />.
+
+#### Finding the Added Numbers
+
+Let the two added natural numbers be <InlineMath math="x" />.
+The initial data consists of <InlineMath math="7" /> numbers: <InlineMath math="2, 3, 5, 7, 8, 9, 11" />.
+Sum of initial data:
+<MathContainer>
+  <BlockMath math="2 + 3 + 5 + 7 + 8 + 9 + 11 = 45" />
+</MathContainer>
+
+After adding <InlineMath math="2" /> numbers of value <InlineMath math="x" />, the count of data becomes <InlineMath math="7 + 2 = 9" />.
+The new average is given as <InlineMath math="9" />.
+
+<MathContainer>
+  <BlockMath math="\bar{x}_{new} = \frac{\text{Sum of Initial Data} + 2x}{\text{Count of New Data}}" />
+  <BlockMath math="9 = \frac{45 + 2x}{9}" />
+  <BlockMath math="81 = 45 + 2x" />
+  <BlockMath math="2x = 81 - 45" />
+  <BlockMath math="2x = 36" />
+  <BlockMath math="x = 18" />
+</MathContainer>
+
+So, the added number is <InlineMath math="18" />.
+
+#### Determining the New Median
+
+The new data after adding <InlineMath math="18" /> and <InlineMath math="18" /> is:
+<InlineMath math="2, 3, 5, 7, 8, 9, 11, 18, 18" />
+
+The data is already sorted. Since the number of data points <InlineMath math="n = 9" /> (odd), the median is the <InlineMath math="\frac{9+1}{2} = 5" />-th data point.
+
+<MathContainer>
+  <BlockMath math="\text{Median} = \text{5th Data} = 8" />
+</MathContainer>
+
+#### Calculating P Value
+
+The value of <InlineMath math="P" /> is defined as the difference between the new median and the new mean.
+The new mean is known to be <InlineMath math="9" />.
+
+<MathContainer>
+  <BlockMath math="P = \text{Median} - \text{Mean}" />
+  <BlockMath math="P = 8 - 9" />
+  <BlockMath math="P = -1" />
+</MathContainer>
+
+#### Comparing P and Q
+
+Given <InlineMath math="Q = -12" />.
+
+<MathContainer>
+  <BlockMath math="P = -1" />
+  <BlockMath math="Q = -12" />
+</MathContainer>
+
+Since <InlineMath math="-1 > -12" />, then:
+
+<MathContainer>
+  <BlockMath math="P > Q" />
+</MathContainer>
+
+#### Conclusion
+
+Thus, the correct relationship is <InlineMath math="P > Q" />.

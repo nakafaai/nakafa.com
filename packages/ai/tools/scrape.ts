@@ -13,7 +13,6 @@ interface Params {
 
 export const createScrape = ({ writer }: Params) => {
   return tool({
-    name: "scrape",
     description: nakafaScrape(),
     inputSchema: scrapeInputSchema,
     outputSchema: z.string(),

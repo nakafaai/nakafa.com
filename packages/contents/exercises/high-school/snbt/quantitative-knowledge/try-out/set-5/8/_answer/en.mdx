@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Solution to Problem 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We can solve this problem using the concept of inverse proportion or total workload (man-days).
+
+#### Calculating Workload
+
+The total planned workload is:
+<MathContainer>
+  <BlockMath math="\text{Total Workload} = 24 \text{ workers} \times 35 \text{ days}" />
+</MathContainer>
+
+The work is divided into two phases:
+1. First phase: <InlineMath math="24" /> workers work for <InlineMath math="8" /> days.
+2. Second phase: Half of the workers stop, so <InlineMath math="24 / 2 = 12" /> workers remain working for <InlineMath math="P" /> days.
+
+The equation is:
+
+<MathContainer>
+  <BlockMath math="24 \times 35 = (24 \times 8) + (12 \times P)" />
+</MathContainer>
+
+#### Finding the Value of P
+
+We solve the equation above to find <InlineMath math="P" /> (the duration for the remaining project).
+
+<MathContainer>
+  <BlockMath math="840 = 192 + 12P" />
+  <BlockMath math="840 - 192 = 12P" />
+  <BlockMath math="648 = 12P" />
+  <BlockMath math="P = \frac{648}{12}" />
+  <BlockMath math="P = 54" />
+</MathContainer>
+
+So, the time needed to complete the remaining work with <InlineMath math="12" /> workers is <InlineMath math="54" /> days.
+
+#### Calculating Additional Time
+
+Based on the provided solution, the additional time is calculated as the difference between the duration of the remaining work (<InlineMath math="P" />) and the total initial target (<InlineMath math="35" /> days).
+
+<MathContainer>
+  <BlockMath math="\text{Additional days} = 54 - 35 = 19 \text{ days}" />
+</MathContainer>
+
+Thus, <InlineMath math="19" /> additional days are needed.

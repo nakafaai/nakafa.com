@@ -155,15 +155,15 @@ function MaterialGroupCard({
   function getBadgeVariant(): ComponentProps<typeof Badge>["variant"] {
     switch (group.status) {
       case "published":
-        return "secondary-outline";
+        return "secondary";
       case "draft":
-        return "muted-outline";
+        return "muted";
       case "scheduled":
-        return "muted-outline";
+        return "muted";
       case "archived":
-        return "destructive-outline";
+        return "destructive";
       default:
-        return "muted-outline";
+        return "muted";
     }
   }
 

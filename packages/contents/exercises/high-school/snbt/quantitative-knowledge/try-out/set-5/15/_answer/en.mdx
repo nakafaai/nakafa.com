@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Solution to Problem 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Given the matrix determinant equation <InlineMath math="\begin{vmatrix} x^2 & x \\ 2 & 1 \end{vmatrix} = 8" />.
+
+Recall that the determinant of a <InlineMath math="2 \times 2" /> matrix is the difference between the product of the main diagonal and the secondary diagonal: <InlineMath math="\begin{vmatrix} a & b \\ c & d \end{vmatrix} = ad - bc" />.
+
+So, we expand the equation:
+<MathContainer>
+  <BlockMath math="(x^2)(1) - (x)(2) = 8" />
+  <BlockMath math="x^2 - 2x = 8" />
+</MathContainer>
+
+Move all terms to the left side to form a quadratic equation:
+<MathContainer>
+  <BlockMath math="x^2 - 2x - 8 = 0" />
+</MathContainer>
+
+Factor the quadratic equation. We look for two numbers that multiply to <InlineMath math="-8" /> and add up to <InlineMath math="-2" />. These numbers are <InlineMath math="-4" /> and <InlineMath math="2" />.
+<MathContainer>
+  <BlockMath math="(x - 4)(x + 2) = 0" />
+</MathContainer>
+
+The zeros are:
+<MathContainer>
+  <BlockMath math="x - 4 = 0 \Rightarrow x = 4" />
+  <BlockMath math="x + 2 = 0 \Rightarrow x = -2" />
+</MathContainer>
+
+So, the possible values of <InlineMath math="x" /> are <InlineMath math="4" /> or <InlineMath math="-2" />.

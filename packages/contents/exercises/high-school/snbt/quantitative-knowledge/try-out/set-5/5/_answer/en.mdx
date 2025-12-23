@@ -1,0 +1,49 @@
+export const metadata = {
+  title: "Solution to Problem 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We want to find the composite function <InlineMath math="(g \circ f)(x)" />.
+
+#### Understanding Function Composition
+
+The composite function <InlineMath math="(g \circ f)(x)" /> is defined as:
+
+<MathContainer>
+  <BlockMath math="(g \circ f)(x) = g(f(x))" />
+</MathContainer>
+
+This means we will substitute the entire function <InlineMath math="f(x)" /> into the variable <InlineMath math="x" /> in the function <InlineMath math="g(x)" />.
+
+#### Function Substitution
+
+Given:
+- <InlineMath math="f(x) = x^2 + 4x - 5" />
+- <InlineMath math="g(x) = 2x - 1" />
+
+We substitute <InlineMath math="f(x)" /> into <InlineMath math="g(x)" />:
+
+<MathContainer>
+  <BlockMath math="(g \circ f)(x) = g(x^2 + 4x - 5)" />
+</MathContainer>
+
+Since <InlineMath math="g(x) = 2x - 1" />, we replace every <InlineMath math="x" /> in <InlineMath math="g(x)" /> with <InlineMath math="(x^2 + 4x - 5)" />:
+
+<MathContainer>
+  <BlockMath math="(g \circ f)(x) = 2(x^2 + 4x - 5) - 1" />
+</MathContainer>
+
+#### Simplifying the Result
+
+Now we distribute the multiplication and simplify:
+
+<MathContainer>
+  <BlockMath math="(g \circ f)(x) = (2 \cdot x^2) + (2 \cdot 4x) - (2 \cdot 5) - 1" />
+  <BlockMath math="(g \circ f)(x) = 2x^2 + 8x - 10 - 1" />
+  <BlockMath math="(g \circ f)(x) = 2x^2 + 8x - 11" />
+</MathContainer>
+
+#### Conclusion
+
+Thus, the composite function is <InlineMath math="2x^2 + 8x - 11" />.

@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Solution to Problem 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Given the quadratic function <InlineMath math="y = -2x^2 - 5x + 7" />. We need to find the equation of the tangent line at the point with abscissa <InlineMath math="x_1 = 2" />.
+
+First, we find the ordinate (<InlineMath math="y_1" />) of the tangent point by substituting <InlineMath math="x_1 = 2" /> into the curve equation:
+<MathContainer>
+  <BlockMath math="y_1 = -2(2)^2 - 5(2) + 7" />
+  <BlockMath math="y_1 = -2(4) - 10 + 7" />
+  <BlockMath math="y_1 = -8 - 10 + 7" />
+  <BlockMath math="y_1 = -11" />
+</MathContainer>
+So, the tangent point is <InlineMath math="(2, -11)" />.
+
+Second, we find the gradient of the tangent line (<InlineMath math="m" />) using the first derivative (<InlineMath math="y'" />):
+<MathContainer>
+  <BlockMath math="y' = -4x - 5" />
+</MathContainer>
+Substitute <InlineMath math="x = 2" /> into the first derivative to get the gradient:
+<MathContainer>
+  <BlockMath math="m = -4(2) - 5" />
+  <BlockMath math="m = -8 - 5" />
+  <BlockMath math="m = -13" />
+</MathContainer>
+
+Third, we determine the tangent line equation using the formula <InlineMath math="y - y_1 = m(x - x_1)" />:
+<MathContainer>
+  <BlockMath math="y - (-11) = -13(x - 2)" />
+  <BlockMath math="y + 11 = -13x + 26" />
+</MathContainer>
+Move all terms to the left side to get the form <InlineMath math="Ax + By + C = 0" />:
+<MathContainer>
+  <BlockMath math="13x + y + 11 - 26 = 0" />
+  <BlockMath math="13x + y - 15 = 0" />
+</MathContainer>
+
+So, the equation of the tangent line is <InlineMath math="13x + y - 15 = 0" />.

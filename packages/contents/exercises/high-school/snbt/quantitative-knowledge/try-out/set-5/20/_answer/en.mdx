@@ -1,0 +1,30 @@
+export const metadata = {
+  title: "Answer to Question 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We are asked to simplify the following algebraic fraction:
+
+<MathContainer>
+  <BlockMath math="\frac{3x}{x^2 - 4} - \frac{2}{x - 2}" />
+</MathContainer>
+
+Notice the denominator of the first fraction, <InlineMath math="x^2 - 4" />. This can be factored into <InlineMath math="(x - 2)(x + 2)" />.
+
+Thus, we make the denominators of both fractions the same, which is <InlineMath math="x^2 - 4" /> or <InlineMath math="(x - 2)(x + 2)" />:
+
+<MathContainer>
+  <BlockMath math="= \frac{3x}{x^2 - 4} - \frac{2(x + 2)}{(x - 2)(x + 2)}" />
+  <BlockMath math="= \frac{3x}{x^2 - 4} - \frac{2(x + 2)}{x^2 - 4}" />
+</MathContainer>
+
+Now we can combine the numerators:
+
+<MathContainer>
+  <BlockMath math="= \frac{3x - 2(x + 2)}{x^2 - 4}" />
+  <BlockMath math="= \frac{3x - 2x - 4}{x^2 - 4}" />
+  <BlockMath math="= \frac{x - 4}{x^2 - 4}" />
+</MathContainer>
+
+So, the simplified result is <InlineMath math="\frac{x - 4}{x^2 - 4}" />.

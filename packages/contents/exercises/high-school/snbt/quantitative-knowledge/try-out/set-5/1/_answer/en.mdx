@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Solution to Problem 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We are given the first two terms of the sequence, <InlineMath math="a_1 = -6" /> and <InlineMath math="a_2 = -8" />, and the recursive equation:
+
+<MathContainer>
+  <BlockMath math="a_{n+1} = 2a_{n+2} + 3a_n" />
+</MathContainer>
+
+Our goal is to find the value of <InlineMath math="a_3 + 2a_4" />. We will find the values of <InlineMath math="a_3" /> and <InlineMath math="2a_4" /> step by step.
+
+#### Finding the Third Term
+
+We use the recursive equation by substituting <InlineMath math="n = 1" />:
+
+<MathContainer>
+  <BlockMath math="a_{1+1} = 2a_{1+2} + 3a_1" />
+  <BlockMath math="a_2 = 2a_3 + 3a_1" />
+</MathContainer>
+
+Substitute the known values of <InlineMath math="a_1" /> and <InlineMath math="a_2" />:
+
+<MathContainer>
+  <BlockMath math="-8 = 2a_3 + 3(-6)" />
+  <BlockMath math="-8 = 2a_3 - 18" />
+</MathContainer>
+
+Move <InlineMath math="-18" /> to the left side:
+
+<MathContainer>
+  <BlockMath math="2a_3 = -8 + 18" />
+  <BlockMath math="2a_3 = 10" />
+  <BlockMath math="a_3 = 5" />
+</MathContainer>
+
+#### Finding Two Times the Fourth Term
+
+Next, we use the recursive equation again with <InlineMath math="n = 2" /> to introduce the term <InlineMath math="a_4" />:
+
+<MathContainer>
+  <BlockMath math="a_{2+1} = 2a_{2+2} + 3a_2" />
+  <BlockMath math="a_3 = 2a_4 + 3a_2" />
+</MathContainer>
+
+Substitute the values <InlineMath math="a_3 = 5" /> and <InlineMath math="a_2 = -8" />:
+
+<MathContainer>
+  <BlockMath math="5 = 2a_4 + 3(-8)" />
+  <BlockMath math="5 = 2a_4 - 24" />
+</MathContainer>
+
+We can directly solve for <InlineMath math="2a_4" /> (since the question asks for <InlineMath math="a_3 + 2a_4" />):
+
+<MathContainer>
+  <BlockMath math="2a_4 = 5 + 24" />
+  <BlockMath math="2a_4 = 29" />
+</MathContainer>
+
+#### Final Result
+
+Now we sum the obtained values:
+
+<MathContainer>
+  <BlockMath math="a_3 + 2a_4 = 5 + 29 = 34" />
+</MathContainer>
+
+Thus, the value of <InlineMath math="a_3 + 2a_4" /> is 34.

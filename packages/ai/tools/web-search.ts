@@ -16,7 +16,6 @@ interface Params {
 
 export const createWebSearch = ({ writer }: Params) => {
   return tool({
-    name: "webSearch",
     description: nakafaWebSearch(),
     inputSchema: webSearchInputSchema,
     outputSchema: z.string(),

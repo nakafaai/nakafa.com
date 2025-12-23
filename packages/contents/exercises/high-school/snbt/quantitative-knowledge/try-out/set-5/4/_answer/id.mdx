@@ -1,0 +1,53 @@
+export const metadata = {
+  title: "Pembahasan Soal 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Kita akan menyederhanakan bentuk <InlineMath math="P" /> dan <InlineMath math="Q" /> terlebih dahulu untuk membandingkan nilainya.
+
+#### Menyederhanakan Nilai P
+
+Diketahui <InlineMath math="P = \frac{1 - x^6}{1 - x^3}" />.
+Ingat bentuk selisih kuadrat <InlineMath math="a^2 - b^2 = (a - b)(a + b)" />. Kita bisa memandang <InlineMath math="1 - x^6" /> sebagai <InlineMath math="1^2 - (x^3)^2" />.
+
+<MathContainer>
+  <BlockMath math="P = \frac{(1 - x^3)(1 + x^3)}{1 - x^3}" />
+  <BlockMath math="P = 1 + x^3" />
+</MathContainer>
+
+#### Menyederhanakan Nilai Q
+
+Diketahui <InlineMath math="Q = (1 + x)^3" />.
+Kita jabarkan menggunakan ekspansi binomial:
+
+<MathContainer>
+  <BlockMath math="Q = 1 + 3x + 3x^2 + x^3" />
+</MathContainer>
+
+#### Membandingkan P dan Q
+
+Kita cari selisih antara <InlineMath math="Q" /> dan <InlineMath math="P" />:
+
+<MathContainer>
+  <BlockMath math="Q - P = (1 + 3x + 3x^2 + x^3) - (1 + x^3)" />
+  <BlockMath math="Q - P = 3x + 3x^2" />
+</MathContainer>
+
+Diketahui syarat <InlineMath math="0 < x < 1" />.
+Karena <InlineMath math="x" /> positif (<InlineMath math="x > 0" />), maka:
+- <InlineMath math="3x > 0" />
+- <InlineMath math="3x^2 > 0" />
+
+Sehingga, penjumlahan keduanya pasti positif:
+<MathContainer>
+  <BlockMath math="3x + 3x^2 > 0" />
+  <BlockMath math="Q - P > 0" />
+  <BlockMath math="Q > P" />
+</MathContainer>
+
+Atau dapat ditulis <InlineMath math="P < Q" />.
+
+#### Kesimpulan
+
+Jadi, hubungan yang benar adalah <InlineMath math="P < Q" />.

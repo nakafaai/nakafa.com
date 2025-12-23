@@ -15,7 +15,6 @@ interface Params {
 
 export const createGetArticles = ({ writer }: Params) =>
   tool({
-    name: "getArticles",
     description: nakafaArticles(),
     inputSchema: getArticlesInputSchema,
     outputSchema: z.string(),

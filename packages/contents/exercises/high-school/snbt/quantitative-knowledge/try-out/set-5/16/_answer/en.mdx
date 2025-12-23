@@ -1,0 +1,27 @@
+export const metadata = {
+  title: "Solution to Problem 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+The given number series is <InlineMath math="72, x, 65, 60, 30, 27, y, 8" />. Let's analyze the pattern:
+
+<MathContainer>
+  <BlockMath math="72 \xrightarrow{-7} 65" />
+  <BlockMath math="65 \xrightarrow{\div 1} 65" />
+  <BlockMath math="65 \xrightarrow{-5} 60" />
+  <BlockMath math="60 \xrightarrow{\div 2} 30" />
+  <BlockMath math="30 \xrightarrow{-3} 27" />
+  <BlockMath math="27 \xrightarrow{\div 3} 9" />
+  <BlockMath math="9 \xrightarrow{-1} 8" />
+</MathContainer>
+
+The pattern involves alternating operations of subtraction and division.
+1. Subtraction by decreasing odd numbers: <InlineMath math="-7, -5, -3, -1" />.
+2. Division by increasing integers: <InlineMath math="\div 1, \div 2, \div 3" />.
+
+Based on this pattern:
+- The value of <InlineMath math="x" /> is obtained from <InlineMath math="72 - 7 = 65" />.
+- The value of <InlineMath math="y" /> is obtained from <InlineMath math="27 \div 3 = 9" />.
+
+So, the values of <InlineMath math="x" /> and <InlineMath math="y" /> respectively are <InlineMath math="65" /> and <InlineMath math="9" />.

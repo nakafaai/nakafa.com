@@ -15,7 +15,6 @@ interface Params {
 
 export const createCalculator = ({ writer }: Params) =>
   tool({
-    name: "calculator",
     description: nakafaCalculator(),
     inputSchema: calculatorInputSchema,
     outputSchema: z.string(),

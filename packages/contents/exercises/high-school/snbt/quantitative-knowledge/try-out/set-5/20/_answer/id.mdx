@@ -1,0 +1,30 @@
+export const metadata = {
+  title: "Pembahasan Soal 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Kita diminta untuk menyederhanakan bentuk pecahan aljabar berikut:
+
+<MathContainer>
+  <BlockMath math="\frac{3x}{x^2 - 4} - \frac{2}{x - 2}" />
+</MathContainer>
+
+Perhatikan penyebut pada pecahan pertama, yaitu <InlineMath math="x^2 - 4" />. Bentuk ini dapat difaktorkan menjadi <InlineMath math="(x - 2)(x + 2)" />.
+
+Maka, kita samakan penyebut kedua pecahan menjadi <InlineMath math="x^2 - 4" /> atau <InlineMath math="(x - 2)(x + 2)" />:
+
+<MathContainer>
+  <BlockMath math="= \frac{3x}{x^2 - 4} - \frac{2(x + 2)}{(x - 2)(x + 2)}" />
+  <BlockMath math="= \frac{3x}{x^2 - 4} - \frac{2(x + 2)}{x^2 - 4}" />
+</MathContainer>
+
+Sekarang kita dapat menggabungkan pembilangnya:
+
+<MathContainer>
+  <BlockMath math="= \frac{3x - 2(x + 2)}{x^2 - 4}" />
+  <BlockMath math="= \frac{3x - 2x - 4}{x^2 - 4}" />
+  <BlockMath math="= \frac{x - 4}{x^2 - 4}" />
+</MathContainer>
+
+Jadi, hasil penyederhanaannya adalah <InlineMath math="\frac{x - 4}{x^2 - 4}" />.

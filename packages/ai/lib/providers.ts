@@ -54,6 +54,7 @@ const languageModels = {
   "grok-4": gateway("xai/grok-4"),
 
   // ZAI
+  "glm-4.7": gateway("zai/glm-4.7"),
   "glm-4.6": gateway("zai/glm-4.6"),
 };
 

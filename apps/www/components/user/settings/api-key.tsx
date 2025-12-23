@@ -263,7 +263,7 @@ export function UserSettingsApiKey() {
             )}
           </div>
         ) : (
-          <Skeleton className="h-[54px] w-full border" />
+          <Skeleton className="h-13.5 w-full border" />
         )}
       </FormBlock>
 

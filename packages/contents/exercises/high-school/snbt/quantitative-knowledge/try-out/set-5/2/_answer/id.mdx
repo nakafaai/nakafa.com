@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Pembahasan Soal 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Kita diberikan persamaan determinan matriks ordo <InlineMath math="2 \times 2" />. Ingat bahwa rumus determinan matriks <InlineMath math="\begin{vmatrix} a & b \\ c & d \end{vmatrix}" /> adalah <InlineMath math="ad - bc" />.
+
+#### Menghitung Determinan Ruas Kiri
+
+Pertama, kita hitung nilai determinan matriks di ruas kiri:
+
+<MathContainer>
+  <BlockMath math="\begin{vmatrix} -6 & 3 \\ 2 & 4 \end{vmatrix} = (-6)(4) - (3)(2)" />
+  <BlockMath math="= -24 - 6" />
+  <BlockMath math="= -30" />
+</MathContainer>
+
+#### Menghitung Determinan Ruas Kanan
+
+Selanjutnya, kita hitung nilai determinan matriks di ruas kanan yang mengandung variabel <InlineMath math="x" />:
+
+<MathContainer>
+  <BlockMath math="\begin{vmatrix} 2x & 3 \\ -4x & -1 \end{vmatrix} = (2x)(-1) - (3)(-4x)" />
+  <BlockMath math="= -2x - (-12x)" />
+  <BlockMath math="= -2x + 12x" />
+  <BlockMath math="= 10x" />
+</MathContainer>
+
+#### Menentukan Nilai Variabel
+
+Sekarang kita samakan kedua hasil determinan tersebut sesuai persamaan awal:
+
+<MathContainer>
+  <BlockMath math="-30 = 10x" />
+</MathContainer>
+
+Bagi kedua ruas dengan 10 untuk mendapatkan nilai <InlineMath math="x" />:
+
+<MathContainer>
+  <BlockMath math="x = \frac{-30}{10}" />
+  <BlockMath math="x = -3" />
+</MathContainer>
+
+Jadi, nilai <InlineMath math="x" /> yang memenuhi adalah -3.

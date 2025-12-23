@@ -24,15 +24,15 @@ import {
   convertToModelMessages,
   createUIMessageStream,
   createUIMessageStreamResponse,
-  generateObject,
+  generateText,
   NoSuchToolError,
+  Output,
   smoothStream,
   stepCountIs,
-  streamObject,
   streamText,
+  type Tool,
 } from "ai";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
-import { jsonrepair } from "jsonrepair";
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
 import { getToken } from "@/lib/auth/server";
@@ -198,7 +198,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const finalMessages = convertToModelMessages(compressedMessages);
+  const finalMessages = await convertToModelMessages(compressedMessages);
 
   // Log chat session start
   sessionLogger.info("Chat session started");
@@ -295,12 +295,14 @@ export async function POST(req: Request) {
             return null; // do not attempt to fix invalid tool names
           }
 
-          const tool =
+          const tool: Tool =
             availableTools[toolCall.toolName as keyof typeof availableTools];
 
-          const { object: repairedArgs } = await generateObject({
+          const { output: repairedArgs } = await generateText({
             model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
-            schema: tool.inputSchema,
+            output: Output.object({
+              schema: tool.inputSchema,
+            }),
             prompt: [
               `The model tried to call the tool "${toolCall.toolName}"` +
                 " with the following arguments:",
@@ -309,7 +311,6 @@ export async function POST(req: Request) {
               JSON.stringify(inputSchema(toolCall), null, 2),
               "Please fix the arguments.",
             ].join("\n"),
-            experimental_repairText: async ({ text }) => jsonrepair(text),
             providerOptions: {
               gateway: { order },
               google: {
@@ -395,15 +396,18 @@ export async function POST(req: Request) {
         await streamTextResult.response
       ).messages.filter((m) => m.role === "assistant");
 
-      const streamObjectResult = streamObject({
+      const suggestionsStream = streamText({
         model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
         system: nakafaSuggestions(),
         messages: [...finalMessages, ...messagesFromResponse],
-        schemaName: "Suggestions",
-        schemaDescription:
-          "An array of suggested questions or statements that a user would want to ask or tell next",
-        schema: z.object({
-          suggestions: z.array(z.string()),
+        output: Output.object({
+          schema: z.object({
+            suggestions: z
+              .array(z.string())
+              .describe(
+                "An array of suggested questions or statements that a user would want to ask or tell next"
+              ),
+          }),
         }),
         providerOptions: {
           gateway: { order } satisfies GatewayProvider,
@@ -422,7 +426,7 @@ export async function POST(req: Request) {
       const dataPartId = crypto.randomUUID();
 
       // Read the suggestions from the stream
-      for await (const chunk of streamObjectResult.partialObjectStream) {
+      for await (const chunk of suggestionsStream.partialOutputStream) {
         // Write the suggestions to the UIMessageStream
         writer.write({
           id: dataPartId,

@@ -1,0 +1,28 @@
+export const metadata = {
+  title: "Solution to Problem 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+First, we find the actual width of the field.
+Given the area of the field <InlineMath math="L = 384\text{ m}^2" /> and length <InlineMath math="p = 32\text{ m}" />.
+Then the actual width (<InlineMath math="l" />) is:
+<MathContainer>
+  <BlockMath math="l = \frac{L}{p}" />
+  <BlockMath math="l = \frac{384}{32} = 12\text{ m}" />
+</MathContainer>
+
+Next, we convert the actual width to cm to match the drawing unit.
+<MathContainer>
+  <BlockMath math="12\text{ m} = 12 \times 100\text{ cm} = 1200\text{ cm}" />
+</MathContainer>
+
+Finally, we calculate the width of the field in the drawing using the scale ratio <InlineMath math="3 : 600" />.
+<MathContainer>
+  <BlockMath math="\text{Drawing width} = \frac{3}{600} \times \text{Actual width}" />
+  <BlockMath math="\text{Drawing width} = \frac{3}{600} \times 1200" />
+  <BlockMath math="\text{Drawing width} = \frac{1}{200} \times 1200" />
+  <BlockMath math="\text{Drawing width} = 6\text{ cm}" />
+</MathContainer>
+
+So, the width of the field in the drawing is <InlineMath math="6\text{ cm}" />.

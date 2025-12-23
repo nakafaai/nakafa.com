@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Solution to Problem 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We are given two conditions for the integer <InlineMath math="n" />:
+1. <InlineMath math="n \equiv 2 \pmod{4}" /> (remainder is <InlineMath math="2" /> when divided by <InlineMath math="4" />)
+2. <InlineMath math="n \equiv 2 \pmod{6}" /> (remainder is <InlineMath math="2" /> when divided by <InlineMath math="6" />)
+
+We will check each statement to see if the value of <InlineMath math="n" /> satisfies both conditions.
+
+#### Checking Statement 1
+
+Value <InlineMath math="n = 18" />.
+- Divided by <InlineMath math="4" />: <InlineMath math="18 \div 4 = 4" /> remainder <InlineMath math="2" />. (Satisfied)
+- Divided by <InlineMath math="6" />: <InlineMath math="18 \div 6 = 3" /> remainder <InlineMath math="0" />. (Not Satisfied)
+
+Thus, statement <InlineMath math="(1)" /> is **incorrect**.
+
+#### Checking Statement 2
+
+Value <InlineMath math="n = 24" />.
+- Divided by <InlineMath math="4" />: <InlineMath math="24 \div 4 = 6" /> remainder <InlineMath math="0" />. (Not Satisfied)
+
+Thus, statement <InlineMath math="(2)" /> is **incorrect**.
+
+#### Checking Statement 3
+
+Value <InlineMath math="n = 36" />.
+- Divided by <InlineMath math="4" />: <InlineMath math="36 \div 4 = 9" /> remainder <InlineMath math="0" />. (Not Satisfied)
+
+Thus, statement <InlineMath math="(3)" /> is **incorrect**.
+
+#### Checking Statement 4
+
+Value <InlineMath math="n = 38" />.
+- Divided by <InlineMath math="4" />: <InlineMath math="38 \div 4 = 9" /> remainder <InlineMath math="2" />. (Satisfied)
+- Divided by <InlineMath math="6" />: <InlineMath math="38 \div 6 = 6" /> remainder <InlineMath math="2" />. (Satisfied)
+
+Thus, statement <InlineMath math="(4)" /> is **correct**.
+
+#### Conclusion
+
+Of the four options, only statement <InlineMath math="(4)" /> satisfies both conditions.

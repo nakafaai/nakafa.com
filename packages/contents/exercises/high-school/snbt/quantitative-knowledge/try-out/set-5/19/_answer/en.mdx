@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Answer to Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We are given the functions <InlineMath math="f(x) = 2x - 3" /> and <InlineMath math="g(x) = x^2 + 4x - 1" />. We need to find the value of <InlineMath math="a + b + c" /> from the composite function <InlineMath math="(g \circ f)(x) = ax^2 + bx + c" />.
+
+First, let's determine the composite function <InlineMath math="(g \circ f)(x)" />:
+
+<MathContainer>
+  <BlockMath math="(g \circ f)(x) = g(f(x))" />
+  <BlockMath math="= g(2x - 3)" />
+  <BlockMath math="= (2x - 3)^2 + 4(2x - 3) - 1" />
+</MathContainer>
+
+Expand the squared term and the product:
+
+<MathContainer>
+  <BlockMath math="= (4x^2 - 12x + 9) + (8x - 12) - 1" />
+</MathContainer>
+
+Combine like terms:
+
+<MathContainer>
+  <BlockMath math="= 4x^2 - 12x + 8x + 9 - 12 - 1" />
+  <BlockMath math="= 4x^2 - 4x - 4" />
+</MathContainer>
+
+From the form <InlineMath math="ax^2 + bx + c" />, we obtain:
+
+<MathContainer>
+  <BlockMath math="a = 4, \quad b = -4, \quad c = -4" />
+</MathContainer>
+
+So the value of <InlineMath math="a + b + c" /> is:
+
+<MathContainer>
+  <BlockMath math="a + b + c = 4 + (-4) + (-4)" />
+  <BlockMath math="= 4 - 4 - 4" />
+  <BlockMath math="= -4" />
+</MathContainer>
+
+Thus, the value of <InlineMath math="a + b + c = -4" />.

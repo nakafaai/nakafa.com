@@ -1,0 +1,49 @@
+export const metadata = {
+    title: "Pembahasan Soal 5",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "12/23/2025",
+};
+
+Kita akan mencari fungsi komposisi <InlineMath math="(g \circ f)(x)" />.
+
+#### Memahami Komposisi Fungsi
+
+Komposisi fungsi <InlineMath math="(g \circ f)(x)" /> didefinisikan sebagai:
+
+<MathContainer>
+  <BlockMath math="(g \circ f)(x) = g(f(x))" />
+</MathContainer>
+
+Ini berarti kita akan memasukkan seluruh fungsi <InlineMath math="f(x)" /> ke dalam variabel <InlineMath math="x" /> pada fungsi <InlineMath math="g(x)" />.
+
+#### Substitusi Fungsi
+
+Diketahui:
+- <InlineMath math="f(x) = x^2 + 4x - 5" />
+- <InlineMath math="g(x) = 2x - 1" />
+
+Kita substitusikan <InlineMath math="f(x)" /> ke dalam <InlineMath math="g(x)" />:
+
+<MathContainer>
+  <BlockMath math="(g \circ f)(x) = g(x^2 + 4x - 5)" />
+</MathContainer>
+
+Karena <InlineMath math="g(x) = 2x - 1" />, maka kita ganti setiap <InlineMath math="x" /> di <InlineMath math="g(x)" /> dengan <InlineMath math="(x^2 + 4x - 5)" />:
+
+<MathContainer>
+  <BlockMath math="(g \circ f)(x) = 2(x^2 + 4x - 5) - 1" />
+</MathContainer>
+
+#### Menyederhanakan Hasil
+
+Sekarang kita distribusikan perkalian dan sederhanakan:
+
+<MathContainer>
+  <BlockMath math="(g \circ f)(x) = (2 \cdot x^2) + (2 \cdot 4x) - (2 \cdot 5) - 1" />
+  <BlockMath math="(g \circ f)(x) = 2x^2 + 8x - 10 - 1" />
+  <BlockMath math="(g \circ f)(x) = 2x^2 + 8x - 11" />
+</MathContainer>
+
+#### Kesimpulan
+
+Jadi, hasil komposisi fungsi tersebut adalah <InlineMath math="2x^2 + 8x - 11" />.

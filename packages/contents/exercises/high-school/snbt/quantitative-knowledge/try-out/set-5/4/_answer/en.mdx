@@ -1,0 +1,53 @@
+export const metadata = {
+  title: "Solution to Problem 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We will simplify the forms of <InlineMath math="P" /> and <InlineMath math="Q" /> first to compare their values.
+
+#### Simplifying P Value
+
+Given <InlineMath math="P = \frac{1 - x^6}{1 - x^3}" />.
+Recall the difference of squares <InlineMath math="a^2 - b^2 = (a - b)(a + b)" />. We can view <InlineMath math="1 - x^6" /> as <InlineMath math="1^2 - (x^3)^2" />.
+
+<MathContainer>
+  <BlockMath math="P = \frac{(1 - x^3)(1 + x^3)}{1 - x^3}" />
+  <BlockMath math="P = 1 + x^3" />
+</MathContainer>
+
+#### Simplifying Q Value
+
+Given <InlineMath math="Q = (1 + x)^3" />.
+We expand it using binomial expansion:
+
+<MathContainer>
+  <BlockMath math="Q = 1 + 3x + 3x^2 + x^3" />
+</MathContainer>
+
+#### Comparing P and Q
+
+We find the difference between <InlineMath math="Q" /> and <InlineMath math="P" />:
+
+<MathContainer>
+  <BlockMath math="Q - P = (1 + 3x + 3x^2 + x^3) - (1 + x^3)" />
+  <BlockMath math="Q - P = 3x + 3x^2" />
+</MathContainer>
+
+Given the condition <InlineMath math="0 < x < 1" />.
+Since <InlineMath math="x" /> is positive (<InlineMath math="x > 0" />), then:
+- <InlineMath math="3x > 0" />
+- <InlineMath math="3x^2 > 0" />
+
+Thus, their sum must be positive:
+<MathContainer>
+  <BlockMath math="3x + 3x^2 > 0" />
+  <BlockMath math="Q - P > 0" />
+  <BlockMath math="Q > P" />
+</MathContainer>
+
+Or it can be written as <InlineMath math="P < Q" />.
+
+#### Conclusion
+
+Thus, the correct relationship is <InlineMath math="P < Q" />.

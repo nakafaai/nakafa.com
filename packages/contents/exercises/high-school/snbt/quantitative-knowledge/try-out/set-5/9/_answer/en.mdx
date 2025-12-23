@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Solution to Problem 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We verify each statement based on the functions provided in the graph:
+Exponential function: <InlineMath math="y = 2^x - 2" />
+Linear function: <InlineMath math="y = -2x + 4" />
+
+#### Checking Point A
+
+Point <InlineMath math="A" /> is the y-intercept of the exponential curve (<InlineMath math="x=0" />).
+<MathContainer>
+  <BlockMath math="y = 2^0 - 2 = 1 - 2 = -1" />
+</MathContainer>
+So, <InlineMath math="A(0, -1)" />. Statement <InlineMath math="(1)" /> is **TRUE**.
+
+#### Checking Point B
+
+Point <InlineMath math="B" /> is the x-intercept of the exponential curve (<InlineMath math="y=0" />).
+<MathContainer>
+  <BlockMath math="0 = 2^x - 2 \Rightarrow 2^x = 2 \Rightarrow x = 1" />
+</MathContainer>
+So, <InlineMath math="B(1, 0)" />. Statement <InlineMath math="(2)" /> is **TRUE**.
+
+#### Checking Point C
+
+Point <InlineMath math="C" /> is the x-intercept of the linear line (<InlineMath math="y=0" />).
+<MathContainer>
+  <BlockMath math="0 = -2x + 4 \Rightarrow 2x = 4 \Rightarrow x = 2" />
+</MathContainer>
+So, <InlineMath math="C(2, 0)" />. Statement <InlineMath math="(3)" /> is **TRUE**.
+
+#### Checking Point D
+
+Point <InlineMath math="D" /> is the intersection point or a point on the line. The statement claims <InlineMath math="D(2, 2)" />.
+If we test coordinate <InlineMath math="(2, 2)" /> into the line equation <InlineMath math="y = -2x + 4" />:
+<MathContainer>
+  <BlockMath math="y = -2(2) + 4 = -4 + 4 = 0" />
+</MathContainer>
+The result is <InlineMath math="y = 0" />, not <InlineMath math="2" />. Thus, point <InlineMath math="(2, 2)" /> does not lie on the line <InlineMath math="y = -2x + 4" />.
+Statement <InlineMath math="(4)" /> is **FALSE**.
+
+Conclusion: Statements <InlineMath math="(1)" />, <InlineMath math="(2)" />, and <InlineMath math="(3)" /> are correct.

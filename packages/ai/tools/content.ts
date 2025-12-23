@@ -23,7 +23,6 @@ interface Params {
 
 export const createGetContent = ({ writer }: Params) => {
   return tool({
-    name: "getContent",
     description: nakafaContent(),
     inputSchema: getContentInputSchema,
     outputSchema: z.string(),

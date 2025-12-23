@@ -1,0 +1,55 @@
+export const metadata = {
+  title: "Solution to Problem 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+We are given the function <InlineMath math="f(x) = 2x + 3" /> and the equation <InlineMath math="3f^2(x) = f(x) + 7" />.
+We want to find the sum of the roots of the equation, which is <InlineMath math="x_1 + x_2" />.
+
+#### Substituting the Function
+
+The first step is to substitute <InlineMath math="f(x)" /> into the given equation.
+
+<MathContainer>
+  <BlockMath math="3(2x + 3)^2 = (2x + 3) + 7" />
+</MathContainer>
+
+#### Simplifying the Equation
+
+Next, we expand the square and simplify the equation into the general quadratic form <InlineMath math="ax^2 + bx + c = 0" />.
+
+<MathContainer>
+  <BlockMath math="3(4x^2 + 12x + 9) = 2x + 10" />
+  <BlockMath math="12x^2 + 36x + 27 = 2x + 10" />
+</MathContainer>
+
+Move all terms to the left side:
+
+<MathContainer>
+  <BlockMath math="12x^2 + 36x - 2x + 27 - 10 = 0" />
+  <BlockMath math="12x^2 + 34x + 17 = 0" />
+</MathContainer>
+
+#### Using the Sum of Roots Formula
+
+From the quadratic equation <InlineMath math="12x^2 + 34x + 17 = 0" />, we obtain the coefficients:
+- <InlineMath math="a = 12" />
+- <InlineMath math="b = 34" />
+- <InlineMath math="c = 17" />
+
+The sum of the roots of a quadratic equation can be calculated using the formula <InlineMath math="x_1 + x_2 = -\frac{b}{a}" />.
+
+<MathContainer>
+  <BlockMath math="x_1 + x_2 = -\frac{34}{12}" />
+</MathContainer>
+
+Simplify the fraction by dividing the numerator and denominator by <InlineMath math="2" />:
+
+<MathContainer>
+  <BlockMath math="x_1 + x_2 = -\frac{17}{6}" />
+</MathContainer>
+
+#### Conclusion
+
+Thus, the value of <InlineMath math="x_1 + x_2" /> is <InlineMath math="-\frac{17}{6}" />.

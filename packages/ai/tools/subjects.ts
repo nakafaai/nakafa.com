@@ -15,7 +15,6 @@ interface Params {
 
 export const createGetSubjects = ({ writer }: Params) =>
   tool({
-    name: "getSubjects",
     description: nakafaSubjects(),
     inputSchema: getSubjectsInputSchema,
     outputSchema: z.string(),

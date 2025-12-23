@@ -1,0 +1,71 @@
+export const metadata = {
+  title: "Pembahasan Soal 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Kita akan mencari nilai bilangan yang ditambahkan, menentukan median baru, dan kemudian membandingkan nilai <InlineMath math="P" /> dan <InlineMath math="Q" />.
+
+#### Mencari Nilai Bilangan Tambahan
+
+Misalkan dua bilangan asli yang ditambahkan adalah <InlineMath math="x" />.
+Total data awal adalah <InlineMath math="7" /> bilangan: <InlineMath math="2, 3, 5, 7, 8, 9, 11" />.
+Jumlah data awal:
+<MathContainer>
+  <BlockMath math="2 + 3 + 5 + 7 + 8 + 9 + 11 = 45" />
+</MathContainer>
+
+Setelah ditambahkan <InlineMath math="2" /> bilangan <InlineMath math="x" />, banyak data menjadi <InlineMath math="7 + 2 = 9" />.
+Diketahui rata-rata baru adalah <InlineMath math="9" />.
+
+<MathContainer>
+  <BlockMath math="\bar{x}_{baru} = \frac{\text{Jumlah Data Awal} + 2x}{\text{Banyak Data Baru}}" />
+  <BlockMath math="9 = \frac{45 + 2x}{9}" />
+  <BlockMath math="81 = 45 + 2x" />
+  <BlockMath math="2x = 81 - 45" />
+  <BlockMath math="2x = 36" />
+  <BlockMath math="x = 18" />
+</MathContainer>
+
+Jadi, bilangan yang ditambahkan adalah <InlineMath math="18" />.
+
+#### Menentukan Median Data Baru
+
+Data baru setelah ditambahkan <InlineMath math="18" /> dan <InlineMath math="18" /> adalah:
+<InlineMath math="2, 3, 5, 7, 8, 9, 11, 18, 18" />
+
+Data sudah terurut. Karena banyak data <InlineMath math="n = 9" /> (ganjil), median adalah data ke-<InlineMath math="\frac{9+1}{2} = 5" />.
+
+<MathContainer>
+  <BlockMath math="\text{Median} = \text{Data ke-5} = 8" />
+</MathContainer>
+
+#### Menghitung Nilai P
+
+Nilai <InlineMath math="P" /> didefinisikan sebagai selisih median data baru dengan rata-rata data baru.
+Rata-rata data baru sudah diketahui <InlineMath math="= 9" />.
+
+<MathContainer>
+  <BlockMath math="P = \text{Median} - \text{Rata-rata}" />
+  <BlockMath math="P = 8 - 9" />
+  <BlockMath math="P = -1" />
+</MathContainer>
+
+#### Membandingkan P dan Q
+
+Diketahui <InlineMath math="Q = -12" />.
+
+<MathContainer>
+  <BlockMath math="P = -1" />
+  <BlockMath math="Q = -12" />
+</MathContainer>
+
+Karena <InlineMath math="-1 > -12" />, maka:
+
+<MathContainer>
+  <BlockMath math="P > Q" />
+</MathContainer>
+
+#### Kesimpulan
+
+Jadi, hubungan yang benar adalah <InlineMath math="P > Q" />.

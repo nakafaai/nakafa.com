@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Pembahasan Soal 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/23/2025",
+};
+
+Kita diberikan fungsi <InlineMath math="f(x) = 2x - 3" /> dan <InlineMath math="g(x) = x^2 + 4x - 1" />. Kita diminta untuk mencari nilai <InlineMath math="a + b + c" /> dari fungsi komposisi <InlineMath math="(g \circ f)(x) = ax^2 + bx + c" />.
+
+Pertama, kita tentukan fungsi komposisi <InlineMath math="(g \circ f)(x)" />:
+
+<MathContainer>
+  <BlockMath math="(g \circ f)(x) = g(f(x))" />
+  <BlockMath math="= g(2x - 3)" />
+  <BlockMath math="= (2x - 3)^2 + 4(2x - 3) - 1" />
+</MathContainer>
+
+Jabarkan bentuk kuadrat dan perkaliannya:
+
+<MathContainer>
+  <BlockMath math="= (4x^2 - 12x + 9) + (8x - 12) - 1" />
+</MathContainer>
+
+Gabungkan suku-suku yang sejenis:
+
+<MathContainer>
+  <BlockMath math="= 4x^2 - 12x + 8x + 9 - 12 - 1" />
+  <BlockMath math="= 4x^2 - 4x - 4" />
+</MathContainer>
+
+Dari bentuk <InlineMath math="ax^2 + bx + c" />, kita peroleh:
+
+<MathContainer>
+  <BlockMath math="a = 4, \quad b = -4, \quad c = -4" />
+</MathContainer>
+
+Maka nilai <InlineMath math="a + b + c" /> adalah:
+
+<MathContainer>
+  <BlockMath math="a + b + c = 4 + (-4) + (-4)" />
+  <BlockMath math="= 4 - 4 - 4" />
+  <BlockMath math="= -4" />
+</MathContainer>
+
+Jadi, nilai <InlineMath math="a + b + c = -4" />.

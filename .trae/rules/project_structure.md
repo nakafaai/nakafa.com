@@ -1,0 +1,43 @@
+# Project Structure
+
+Nakafa is an open-source educational platform built as a monorepo using Next.js and pnpm. The project is organized into apps and packages for modularity.
+
+## Root Directory
+
+- `README.md`: Main project documentation, installation, and quick start guide.
+- `biome.json`: Configuration for Biome linter and formatter.
+- `tsconfig.json`: Base TypeScript configuration.
+
+## Apps Directory
+
+Contains the main applications:
+
+- **api**: REST API for content delivery. Key files: `apps/api/app/contents/[...slug]/route.ts`
+- **math**: Math-related application. Includes internationalization support.
+- **mcp**: Possibly a management or control panel app.
+- **www**: Main web application. Handles frontend routing, components, and pages. Key entry: `apps/www/app/[locale]/page.tsx`
+
+## Packages Directory
+
+Shared packages used across apps:
+
+- **analytics**: Analytics integration, e.g., Vercel analytics.
+- **connection**: API connection utilities.
+- **contents**: Core educational content. This is where MDX files for subjects and articles are stored.
+  - Articles: `packages/contents/articles/`
+  - Subjects: `packages/contents/subject/`
+- **design-system**: Shared UI components and styles. Components in `packages/design-system/components/`
+- **internationalization**: i18n support with dictionaries for en and id.
+- **next-config**: Next.js configuration helpers.
+- **seo**: SEO components like JSON-LD schemas.
+- **testing**: Testing utilities.
+- **typescript-config**: Shared TS configs.
+
+## Key Development Notes
+
+- Use pnpm for package management and scripts.
+- Development server: pnpm dev
+- Content is written in MDX files within packages/contents.
+- The platform supports English and Indonesian locales.
+
+For more details, refer to the [DeepWiki documentation](https://deepwiki.com/nakafaai/nakafa.com).
