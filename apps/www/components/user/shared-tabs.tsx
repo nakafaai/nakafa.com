@@ -13,7 +13,7 @@ interface Props {
 
 export function SharedTabs({ tabs, defaultValue }: Props) {
   return (
-    <div className="scrollbar-hide flex overflow-x-auto rounded-xl border p-1 shadow-xs">
+    <div className="scrollbar-hide sticky top-18 z-40 flex overflow-x-auto rounded-xl border bg-card p-1 shadow-xs lg:top-2">
       <Highlight
         className="inset-0 rounded-md bg-accent"
         defaultValue={defaultValue}
