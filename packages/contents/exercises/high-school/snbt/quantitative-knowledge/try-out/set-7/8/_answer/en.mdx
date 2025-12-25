@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Question 8 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/24/2025",
+};
+
+We have two groups:
+- People raising goats: <InlineMath math="K = 450" />
+- People raising chickens: <InlineMath math="A = 300" />
+- Total population: <InlineMath math="S = 600" />
+
+#### Maximum Number of People Raising Both
+
+The maximum number of people raising both animals is the size of the smaller group. This happens if all members of the smaller group are also members of the larger group.
+
+<MathContainer>
+  <BlockMath math="\text{Maximum} = \min(K, A) = \min(450, 300) = 300" />
+</MathContainer>
+
+#### Minimum Number of People Raising Both
+
+The minimum number of people raising both animals occurs when the two groups are spread out as much as possible, minimizing their intersection. The formula is:
+
+<MathContainer>
+  <BlockMath math="\text{Minimum} = (K + A) - S" />
+</MathContainer>
+
+Substitute the known values:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} \text{Minimum} &= (450 + 300) - 600 \\ &= 750 - 600 \\ &= 150 \end{align*}" />
+</MathContainer>
+
+#### Sum of Maximum and Minimum
+
+We are asked to find the sum of these maximum and minimum values.
+
+<MathContainer>
+  <BlockMath math="\text{Total} = 300 + 150 = 450" />
+</MathContainer>
+
+Thus, the sum of the maximum and minimum number of people raising both animals is <InlineMath math="450" />.

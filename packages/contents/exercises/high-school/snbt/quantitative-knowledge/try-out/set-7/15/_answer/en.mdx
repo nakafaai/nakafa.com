@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Explanation for Problem 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+Given:
+- Initial water volume = <InlineMath math="86" /> liters.
+- Leakage per hour (<InlineMath math="x" />) is between <InlineMath math="0.3" /> and <InlineMath math="0.7" /> liters. This means <InlineMath math="0.3 < x < 0.7" />.
+- The observation time is from <InlineMath math="07.00" /> to <InlineMath math="11.00" />, which is <InlineMath math="4" /> hours.
+
+We calculate the range of water leaked over <InlineMath math="4" /> hours:
+
+<MathContainer>
+  <BlockMath math="4(0.3) < 4x < 4(0.7)" />
+  <BlockMath math="1.2 < 4x < 2.8" />
+</MathContainer>
+
+So, the total water leaked is between <InlineMath math="1.2" /> liters and <InlineMath math="2.8" /> liters.
+
+Next, we calculate the remaining water volume (<InlineMath math="Q" />) at <InlineMath math="11.00" />. The volume <InlineMath math="Q" /> is the initial volume minus the total leakage:
+
+<MathContainer>
+  <BlockMath math="Q = 86 - 4x" />
+</MathContainer>
+
+Since the total leakage is between <InlineMath math="1.2" /> and <InlineMath math="2.8" /> liters, the range for <InlineMath math="Q" /> is:
+- Lower bound of <InlineMath math="Q" /> (maximum leakage): <InlineMath math="86 - 2.8 = 83.2" /> liters.
+- Upper bound of <InlineMath math="Q" /> (minimum leakage): <InlineMath math="86 - 1.2 = 84.8" /> liters.
+
+Thus, <InlineMath math="83.2 < Q < 84.8" />.
+
+Now we compare <InlineMath math="P" /> and <InlineMath math="Q" />:
+- <InlineMath math="P = 83.1" /> liters.
+- The minimum value of <InlineMath math="Q" /> is greater than <InlineMath math="83.2" /> liters.
+
+Since <InlineMath math="83.1 < 83.2" />, the value of <InlineMath math="P" /> is always smaller than the minimum possible value of <InlineMath math="Q" />.
+
+Therefore, <InlineMath math="P < Q" />.

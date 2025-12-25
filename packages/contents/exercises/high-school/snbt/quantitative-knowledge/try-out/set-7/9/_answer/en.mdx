@@ -1,0 +1,60 @@
+export const metadata = {
+  title: "Solution for Problem 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/24/2025",
+};
+
+We need to form a code with the pattern **Letter - Digit - Letter - Digit**.
+
+Let the slots for the code be:
+<MathContainer>
+  <BlockMath math="\underline{L_1} \times \underline{D_1} \times \underline{L_2} \times \underline{D_2}" />
+</MathContainer>
+
+Available sets:
+- Vowels: <InlineMath math="\{A, I, U, E, O\}" /> (<InlineMath math="5" /> letters).
+- Odd digits for <InlineMath math="D_1" />: <InlineMath math="\{1, 3, 5, 7, 9\}" /> (<InlineMath math="5" /> digits).
+- Choice digits for <InlineMath math="D_2" />: <InlineMath math="\{0, 1, 2, 4, 6\}" /> (<InlineMath math="5" /> digits).
+
+Rules and Constraints:
+1. <InlineMath math="L_1 \neq A" />.
+2. <InlineMath math="L_2 = O" />.
+3. No repetition of letters or digits is allowed.
+
+Since <InlineMath math="D_1" /> must be odd and <InlineMath math="D_2" /> is chosen from a specific set, there is an overlap at the digit <InlineMath math="1" />. We need to split the calculation into cases based on the value of <InlineMath math="D_2" />.
+
+#### Case 1 If The Second Digit Is 1
+If we choose the digit <InlineMath math="1" /> for position <InlineMath math="D_2" />:
+1. <InlineMath math="L_2" /> (Second letter): Must be <InlineMath math="O" /> (<InlineMath math="1" /> way).
+2. <InlineMath math="D_2" /> (Second digit): Must be <InlineMath math="1" /> (<InlineMath math="1" /> way).
+3. <InlineMath math="L_1" /> (First letter): Vowel other than <InlineMath math="A" /> and other than <InlineMath math="O" /> (since <InlineMath math="O" /> is used in <InlineMath math="L_2" />).
+   - Choices: <InlineMath math="\{I, U, E\}" /> (<InlineMath math="3" /> ways).
+4. <InlineMath math="D_1" /> (First digit): Odd digit other than <InlineMath math="1" /> (since <InlineMath math="1" /> is used in <InlineMath math="D_2" />).
+   - Choices: <InlineMath math="\{3, 5, 7, 9\}" /> (<InlineMath math="4" /> ways).
+
+Total ways for Case <InlineMath math="1" />:
+<MathContainer>
+  <BlockMath math="3 \times 4 \times 1 \times 1 = 12 \text{ ways}" />
+</MathContainer>
+
+#### Case 2 If The Second Digit Is Not 1
+If we choose a digit other than <InlineMath math="1" /> for position <InlineMath math="D_2" /> (which means it is even):
+1. <InlineMath math="L_2" /> (Second letter): Must be <InlineMath math="O" /> (<InlineMath math="1" /> way).
+2. <InlineMath math="D_2" /> (Second digit): Chosen from <InlineMath math="\{0, 2, 4, 6\}" /> (<InlineMath math="4" /> ways).
+3. <InlineMath math="L_1" /> (First letter): Vowel other than <InlineMath math="A" /> and other than <InlineMath math="O" />.
+   - Choices: <InlineMath math="\{I, U, E\}" /> (<InlineMath math="3" /> ways).
+4. <InlineMath math="D_1" /> (First digit): Odd digit <InlineMath math="\{1, 3, 5, 7, 9\}" />. Since <InlineMath math="D_2" /> is even, there is no conflict. All odd digits can be chosen.
+   - Choices: <InlineMath math="5" /> ways.
+
+Total ways for Case <InlineMath math="2" />:
+<MathContainer>
+  <BlockMath math="3 \times 5 \times 1 \times 4 = 60 \text{ ways}" />
+</MathContainer>
+
+#### Total Combinations
+Sum the results from both cases:
+<MathContainer>
+  <BlockMath math="12 + 60 = 72" />
+</MathContainer>
+
+Therefore, the number of codes that can be formed is <InlineMath math="72" />.

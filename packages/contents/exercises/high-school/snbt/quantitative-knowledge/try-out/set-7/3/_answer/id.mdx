@@ -1,0 +1,49 @@
+export const metadata = {
+  title: "Pembahasan Soal 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/24/2025",
+};
+
+Kita akan memeriksa setiap bilangan apakah memenuhi dua syarat berikut:
+1. Jika dibagi <InlineMath math="5" /> bersisa <InlineMath math="4" /> (<InlineMath math="n \equiv 4 \pmod 5" />).
+2. Jika dibagi <InlineMath math="4" /> bersisa <InlineMath math="3" /> (<InlineMath math="n \equiv 3 \pmod 4" />).
+
+#### Cek Bilangan 19
+
+<MathContainer>
+  <BlockMath math="19 = 3 \times 5 + 4 \quad (\text{sisa } 4)" />
+  <BlockMath math="19 = 4 \times 4 + 3 \quad (\text{sisa } 3)" />
+</MathContainer>
+
+Bilangan <InlineMath math="19" /> memenuhi kedua syarat. (Benar)
+
+#### Cek Bilangan 29
+
+<MathContainer>
+  <BlockMath math="29 = 5 \times 5 + 4 \quad (\text{sisa } 4)" />
+  <BlockMath math="29 = 7 \times 4 + 1 \quad (\text{sisa } 1)" />
+</MathContainer>
+
+Bilangan <InlineMath math="29" /> tidak memenuhi syarat kedua karena bersisa <InlineMath math="1" /> saat dibagi <InlineMath math="4" />. (Salah)
+
+#### Cek Bilangan 39
+
+<MathContainer>
+  <BlockMath math="39 = 7 \times 5 + 4 \quad (\text{sisa } 4)" />
+  <BlockMath math="39 = 9 \times 4 + 3 \quad (\text{sisa } 3)" />
+</MathContainer>
+
+Bilangan <InlineMath math="39" /> memenuhi kedua syarat. (Benar)
+
+#### Cek Bilangan 49
+
+<MathContainer>
+  <BlockMath math="49 = 9 \times 5 + 4 \quad (\text{sisa } 4)" />
+  <BlockMath math="49 = 12 \times 4 + 1 \quad (\text{sisa } 1)" />
+</MathContainer>
+
+Bilangan <InlineMath math="49" /> tidak memenuhi syarat kedua karena bersisa <InlineMath math="1" /> saat dibagi <InlineMath math="4" />. (Salah)
+
+#### Kesimpulan
+
+Bilangan yang memenuhi syarat adalah <InlineMath math="19" /> dan <InlineMath math="39" /> (Pernyataan <InlineMath math="1" /> dan <InlineMath math="3" />).

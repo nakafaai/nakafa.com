@@ -1,0 +1,55 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+Data terurut yang diberikan adalah <InlineMath math="4, 4, a, b, c" />. Karena data sudah terurut dan berjumlah ganjil (<InlineMath math="5" /> data), maka mediannya adalah data ke-<InlineMath math="3" />, yaitu <InlineMath math="a" />.
+
+Diketahui data terbesar adalah <InlineMath math="c" /> dan nilainya <InlineMath math="3" /> kali median, sehingga:
+<MathContainer>
+  <BlockMath math="c = 3a" />
+</MathContainer>
+
+Rata-rata kelima bilangan adalah <InlineMath math="8" />:
+<MathContainer>
+  <BlockMath math="\frac{4 + 4 + a + b + c}{5} = 8" />
+  <BlockMath math="8 + a + b + c = 40" />
+  <BlockMath math="a + b + c = 32" />
+</MathContainer>
+
+Substitusikan <InlineMath math="c = 3a" /> ke dalam persamaan:
+<MathContainer>
+  <BlockMath math="a + b + 3a = 32" />
+  <BlockMath math="b + 4a = 32" />
+  <BlockMath math="b = 32 - 4a" />
+</MathContainer>
+
+Karena data terurut, maka berlaku <InlineMath math="4 \le a \le b \le c" />. Kita akan mencari batas nilai <InlineMath math="a" />.
+
+#### Batas Atas Nilai a
+Dari ketidaksamaan <InlineMath math="a \le b" />:
+<MathContainer>
+  <BlockMath math="a \le 32 - 4a" />
+  <BlockMath math="5a \le 32" />
+  <BlockMath math="a \le 6,4" />
+</MathContainer>
+
+#### Batas Bawah Nilai a
+Dari ketidaksamaan <InlineMath math="b \le c" />:
+<MathContainer>
+  <BlockMath math="32 - 4a \le 3a" />
+  <BlockMath math="32 \le 7a" />
+  <BlockMath math="a \ge \frac{32}{7}" />
+  <BlockMath math="a \ge 4,57" />
+</MathContainer>
+
+Perhatikan juga bahwa <InlineMath math="a \ge 4" /> (dari urutan data). Karena <InlineMath math="4,57 > 4" />, maka syarat terkuat adalah <InlineMath math="a \ge 4,57" />.
+
+#### Kesimpulan
+Rentang nilai <InlineMath math="a" /> adalah <InlineMath math="4,57 \le a \le 6,4" />.
+
+Nilai <InlineMath math="P" /> adalah median (<InlineMath math="a" />) dan nilai <InlineMath math="Q" /> adalah <InlineMath math="4" />.
+Karena nilai minimum <InlineMath math="a" /> adalah <InlineMath math="4,57" /> yang lebih besar dari <InlineMath math="4" />, maka pasti <InlineMath math="P > Q" />.
+
+Jadi, hubungan yang benar adalah <InlineMath math="P > Q" />.

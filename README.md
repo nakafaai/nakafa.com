@@ -88,7 +88,7 @@ flowchart LR
 #### Flow Summary
 
 | Flow | Trigger | Steps |
-|------|---------|-------|
+| ------ | --------- | ------- |
 | **Signup** | User registers | Auth trigger → `syncCustomer` → `ensureCustomer` → `upsertCustomer` |
 | **Checkout** | User clicks buy | `requireCustomer` → `createCheckoutSession` → Redirect to Polar |
 | **Portal** | User opens settings | `requireCustomer` → `createCustomerPortalSession` → Redirect |
@@ -113,6 +113,78 @@ Detailed technical documentation available on [DeepWiki](https://deepwiki.com/na
 2. Create MDX files following existing structure
 3. Update data files in `_data/` directories
 4. Test locally with `pnpm dev`
+
+### Testing
+
+All tests use **Vitest** with jsdom environment and **global test functions** (no imports needed).
+
+#### Getting Started
+
+```bash
+# Run all tests
+pnpm test
+
+# Test specific app
+pnpm --filter www test
+```
+
+#### Test Commands
+
+| Command | Description |
+| --------- | ------------- |
+| `pnpm test` | Run all tests across all apps/packages |
+| `pnpm --filter www test` | Run tests for www app only |
+| `pnpm --filter www test:watch` | Watch mode - re-run on file changes |
+| `pnpm --filter www test:ui` | Open Vitest UI in browser |
+| `pnpm --filter www test:coverage` | Run tests with coverage report |
+
+#### Coverage
+
+Coverage reports are generated in terminal and HTML format:
+
+- Thresholds: 60% lines/functions, 50% branches, 60% statements
+- HTML report: `apps/www/coverage/index.html`
+- View locally after running `pnpm --filter www test:coverage`
+
+#### Writing Tests
+
+Tests are located in `**/__tests__/` or `**/*.test.ts|tsx` files.
+
+**Example test file:**
+
+```typescript
+import { describe, expect, it } from "vitest";
+import { getInitialName } from "./helper";
+
+describe("getInitialName", () => {
+  it("returns 'NF' for undefined", () => {
+    expect(getInitialName()).toBe("NF");
+  });
+
+  it("returns initials for full name", () => {
+    expect(getInitialName("John Doe")).toBe("JD");
+  });
+});
+```
+
+#### Best Practices
+
+- **Test location**: Place tests next to source files in `__tests__/` directory
+- **One test file per source file**: Use descriptive names matching the source
+- **Arrange-Act-Assert**: Structure each test clearly
+- **Test behavior, not implementation**: Focus on what the function does
+- **Use globals**: No need to import `describe`, `it`, `expect` from vitest
+- **Mock external dependencies**: Use setup file for common mocks
+
+#### Test Setup
+
+Common mocks for Next.js routing, i18n, and browser APIs are pre-configured in `packages/testing/setup.ts`:
+
+- `useRouter()` - Mocked router with all methods
+- `usePathname()` - Returns `/`
+- `useSearchParams()` - Returns empty URLSearchParams
+- `useTranslations()` - Returns key as translation
+- `matchMedia()` - Mocked MediaQueryList
 
 ### Contributing
 

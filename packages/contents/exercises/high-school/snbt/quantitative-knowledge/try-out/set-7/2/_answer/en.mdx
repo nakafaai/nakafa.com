@@ -1,0 +1,55 @@
+export const metadata = {
+  title: "Question 2 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/24/2025",
+};
+
+Given the function <InlineMath math="y = -x^2 - 2x + 8" />. We want to find the equation of the tangent line at the point with abscissa <InlineMath math="x = -2" />.
+
+#### Finding the Ordinate
+
+Substitute <InlineMath math="x = -2" /> into the curve equation:
+
+<MathContainer>
+  <BlockMath math="y = -(-2)^2 - 2(-2) + 8" />
+  <BlockMath math="y = -4 + 4 + 8" />
+  <BlockMath math="y = 8" />
+</MathContainer>
+
+So, the point of tangency is <InlineMath math="(-2, 8)" />.
+
+#### Finding the Gradient of the Tangent Line
+
+The gradient of the tangent line <InlineMath math="m" /> is the value of the first derivative <InlineMath math="y'" /> at the abscissa of the point of tangency.
+
+<MathContainer>
+  <BlockMath math="y' = -2x - 2" />
+</MathContainer>
+
+Substitute <InlineMath math="x = -2" />:
+
+<MathContainer>
+  <BlockMath math="m = -2(-2) - 2" />
+  <BlockMath math="m = 4 - 2" />
+  <BlockMath math="m = 2" />
+</MathContainer>
+
+#### Determining the Equation of the Tangent Line
+
+Use the point-slope form for the equation of a line passing through <InlineMath math="(x_1, y_1)" /> with gradient <InlineMath math="m" />:
+
+<MathContainer>
+  <BlockMath math="y - y_1 = m(x - x_1)" />
+</MathContainer>
+
+Substitute <InlineMath math="x_1 = -2" />, <InlineMath math="y_1 = 8" />, and <InlineMath math="m = 2" />:
+
+<MathContainer>
+  <BlockMath math="y - 8 = 2(x - (-2))" />
+  <BlockMath math="y - 8 = 2(x + 2)" />
+  <BlockMath math="y - 8 = 2x + 4" />
+  <BlockMath math="y = 2x + 4 + 8" />
+  <BlockMath math="y = 2x + 12" />
+</MathContainer>
+
+Thus, the equation of the tangent line is <InlineMath math="y = 2x + 12" />.

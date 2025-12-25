@@ -9,6 +9,10 @@ const config = defineConfig({
   plugins: [react()],
   test: {
     environment: "jsdom",
+    coverage: {
+      enabled: true,
+      provider: "istanbul",
+    },
   },
   resolve: {
     alias: {

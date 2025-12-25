@@ -1,0 +1,41 @@
+export const metadata = {
+  title: "Pembahasan Soal 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+Kita akan menyederhanakan bentuk <InlineMath math="P" /> terlebih dahulu.
+Ingat bahwa <InlineMath math="4^x = (2^2)^x = (2^x)^2" />. Maka bentuk <InlineMath math="4^x - 1" /> adalah selisih kuadrat yang dapat difaktorkan menjadi <InlineMath math="(2^x - 1)(2^x + 1)" />.
+
+<MathContainer>
+  <BlockMath math="P = \frac{4^x - 1}{2^x - 1}" />
+  <BlockMath math="P = \frac{(2^x - 1)(2^x + 1)}{2^x - 1}" />
+  <BlockMath math="P = 2^x + 1" />
+</MathContainer>
+
+Selanjutnya, kita perhatikan bentuk <InlineMath math="Q" />:
+<MathContainer>
+  <BlockMath math="Q = \frac{2^x + 1}{2^x}" />
+</MathContainer>
+
+Kita bisa melihat hubungan antara <InlineMath math="P" /> dan <InlineMath math="Q" /> dengan mensubstitusi <InlineMath math="P = 2^x + 1" /> ke dalam persamaan <InlineMath math="Q" />:
+<MathContainer>
+  <BlockMath math="Q = \frac{P}{2^x}" />
+  <BlockMath math="P = Q \cdot 2^x" />
+</MathContainer>
+
+Diketahui <InlineMath math="0 < x < 1" />. Kita analisis nilai <InlineMath math="2^x" /> pada rentang tersebut:
+- Jika <InlineMath math="x > 0" />, maka <InlineMath math="2^x > 2^0 \implies 2^x > 1" />.
+- Jika <InlineMath math="x < 1" />, maka <InlineMath math="2^x < 2^1 \implies 2^x < 2" />.
+
+Sehingga, <InlineMath math="1 < 2^x < 2" />.
+
+Kembali ke persamaan <InlineMath math="P = Q \cdot 2^x" />:
+Karena <InlineMath math="2^x > 1" /> dan <InlineMath math="Q" /> bernilai positif (karena <InlineMath math="2^x > 0" />), maka hasil kali <InlineMath math="Q" /> dengan bilangan yang lebih besar dari <InlineMath math="1" /> akan menghasilkan nilai yang lebih besar dari <InlineMath math="Q" /> itu sendiri.
+
+<MathContainer>
+  <BlockMath math="P = Q \cdot (\text{bilangan} > 1)" />
+  <BlockMath math="P > Q" />
+</MathContainer>
+
+Jadi, hubungan yang benar adalah <InlineMath math="P > Q" />.

@@ -18,8 +18,10 @@ export function getInitialName(name?: string) {
   }
 
   // Multiple names: return first and last initials
-  const firstInitial = nameParts[0][0];
-  const lastInitial = nameParts.at(-1)?.[0] ?? "";
+  const firstIndex = 0;
+  const lastIndex = nameParts.length - 1;
+  const firstInitial = nameParts[firstIndex][0];
+  const lastInitial = nameParts[lastIndex][0];
 
   return `${firstInitial}${lastInitial}`.toUpperCase();
 }
@@ -58,10 +60,24 @@ export function convertSlugToTitle(slug: string): string {
  * @returns The truncated text
  */
 export function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) {
-    return text;
+  const trimmed = text.trim();
+
+  if (trimmed.length === 0) {
+    return "";
   }
-  return `${text.substring(0, maxLength).trim()}...`;
+
+  if (maxLength <= 0) {
+    return "...";
+  }
+
+  if (text.length > maxLength) {
+    if (trimmed.length > maxLength) {
+      return `${trimmed.substring(0, maxLength).trimEnd()}...`;
+    }
+    return `${trimmed}...`;
+  }
+
+  return trimmed;
 }
 
 /**

@@ -1,0 +1,49 @@
+export const metadata = {
+  title: "Question 3 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/24/2025",
+};
+
+We will check each number to see if it satisfies the following two conditions:
+1. When divided by <InlineMath math="5" />, the remainder is <InlineMath math="4" /> (<InlineMath math="n \equiv 4 \pmod 5" />).
+2. When divided by <InlineMath math="4" />, the remainder is <InlineMath math="3" /> (<InlineMath math="n \equiv 3 \pmod 4" />).
+
+#### Checking Number 19
+
+<MathContainer>
+  <BlockMath math="19 = 3 \times 5 + 4 \quad (\text{remainder } 4)" />
+  <BlockMath math="19 = 4 \times 4 + 3 \quad (\text{remainder } 3)" />
+</MathContainer>
+
+The number <InlineMath math="19" /> satisfies both conditions. (Correct)
+
+#### Checking Number 29
+
+<MathContainer>
+  <BlockMath math="29 = 5 \times 5 + 4 \quad (\text{remainder } 4)" />
+  <BlockMath math="29 = 7 \times 4 + 1 \quad (\text{remainder } 1)" />
+</MathContainer>
+
+The number <InlineMath math="29" /> does not satisfy the second condition because the remainder is <InlineMath math="1" /> when divided by <InlineMath math="4" />. (Incorrect)
+
+#### Checking Number 39
+
+<MathContainer>
+  <BlockMath math="39 = 7 \times 5 + 4 \quad (\text{remainder } 4)" />
+  <BlockMath math="39 = 9 \times 4 + 3 \quad (\text{remainder } 3)" />
+</MathContainer>
+
+The number <InlineMath math="39" /> satisfies both conditions. (Correct)
+
+#### Checking Number 49
+
+<MathContainer>
+  <BlockMath math="49 = 9 \times 5 + 4 \quad (\text{remainder } 4)" />
+  <BlockMath math="49 = 12 \times 4 + 1 \quad (\text{remainder } 1)" />
+</MathContainer>
+
+The number <InlineMath math="49" /> does not satisfy the second condition because the remainder is <InlineMath math="1" /> when divided by <InlineMath math="4" />. (Incorrect)
+
+#### Conclusion
+
+The numbers that satisfy the conditions are <InlineMath math="19" /> and <InlineMath math="39" /> (Statements <InlineMath math="1" /> and <InlineMath math="3" />).

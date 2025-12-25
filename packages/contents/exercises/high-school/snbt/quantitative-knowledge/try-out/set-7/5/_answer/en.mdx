@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Question 5 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/24/2025",
+};
+
+Given the recursive formula for the sequence:
+
+<MathContainer>
+  <BlockMath math="a_{n+1} = a_{n+2} + 2a_n" />
+</MathContainer>
+
+We are given <InlineMath math="a_3 = -1" /> and <InlineMath math="a_5 = 3" />. We need to find the value of <InlineMath math="a_2" />.
+
+First, we find the value of <InlineMath math="a_4" /> by using the recursive formula and substituting <InlineMath math="n = 3" /> to relate <InlineMath math="a_3" />, <InlineMath math="a_4" />, and <InlineMath math="a_5" />.
+
+<MathContainer>
+  <BlockMath math="\begin{align*} a_{3+1} &= a_{3+2} + 2a_3 \\ a_4 &= a_5 + 2a_3 \end{align*}" />
+</MathContainer>
+
+Substitute the values <InlineMath math="a_5 = 3" /> and <InlineMath math="a_3 = -1" />:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} a_4 &= 3 + 2(-1) \\ a_4 &= 3 - 2 \\ a_4 &= 1 \end{align*}" />
+</MathContainer>
+
+Next, we find the value of <InlineMath math="a_2" />. Since we now have the values of <InlineMath math="a_3" /> and <InlineMath math="a_4" />, we can use the recursive formula with <InlineMath math="n = 2" /> to relate <InlineMath math="a_2" />, <InlineMath math="a_3" />, and <InlineMath math="a_4" />.
+
+<MathContainer>
+  <BlockMath math="\begin{align*} a_{2+1} &= a_{2+2} + 2a_2 \\ a_3 &= a_4 + 2a_2 \end{align*}" />
+</MathContainer>
+
+Substitute the values <InlineMath math="a_3 = -1" /> and <InlineMath math="a_4 = 1" />:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} -1 &= 1 + 2a_2 \\ -1 - 1 &= 2a_2 \\ -2 &= 2a_2 \\ a_2 &= -1 \end{align*}" />
+</MathContainer>
+
+Thus, the value of <InlineMath math="a_2" /> is <InlineMath math="-1" />.

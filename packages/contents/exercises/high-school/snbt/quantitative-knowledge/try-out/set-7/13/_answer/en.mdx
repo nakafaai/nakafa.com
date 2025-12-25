@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Solution for Problem 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+We are asked to determine the measure of angle <InlineMath math="\angle BPC" /> in an isosceles triangle <InlineMath math="ABC" /> with <InlineMath math="AC = BC" />.
+
+#### Analysis of Statement 1
+
+Given <InlineMath math="\angle CAB = 40^\circ" />. Since <InlineMath math="\triangle ABC" /> is isosceles with <InlineMath math="AC = BC" />, the base angles are equal:
+
+<MathContainer>
+  <BlockMath math="\angle CBA = \angle CAB = 40^\circ" />
+</MathContainer>
+
+We can calculate the vertex angle <InlineMath math="\angle ACB" />:
+
+<MathContainer>
+  <BlockMath math="\angle ACB = 180^\circ - (40^\circ + 40^\circ) = 100^\circ" />
+</MathContainer>
+
+However, this information does not specify the position of point <InlineMath math="P" /> on side <InlineMath math="AB" />. Point <InlineMath math="P" /> can be anywhere along the segment <InlineMath math="AB" />. Consequently, the measure of <InlineMath math="\angle BPC" /> varies depending on the position of <InlineMath math="P" />. Therefore, statement <InlineMath math="(1)" /> ALONE is not sufficient to answer the question.
+
+#### Analysis of Statement 2
+
+Given <InlineMath math="PC" /> is the angle bisector of triangle <InlineMath math="ABC" />. In this context, <InlineMath math="PC" /> is the bisector of angle <InlineMath math="C" /> intersecting side <InlineMath math="AB" /> at point <InlineMath math="P" />.
+
+In an isosceles triangle with <InlineMath math="AC = BC" />, the angle bisector drawn from the vertex (the angle between the equal sides) to the base has special properties. It is also:
+
+1. An altitude (perpendicular to the base).
+2. A median (bisects the base).
+
+Since <InlineMath math="PC" /> is an altitude, <InlineMath math="PC \perp AB" />. Thus, the angle formed is a right angle:
+
+<MathContainer>
+  <BlockMath math="\angle BPC = 90^\circ" />
+</MathContainer>
+
+We obtain a definite value for <InlineMath math="\angle BPC" />. Therefore, statement <InlineMath math="(2)" /> ALONE is sufficient to answer the question.
+
+#### Conclusion
+
+Statement <InlineMath math="(1)" /> is not sufficient, while statement <InlineMath math="(2)" /> is sufficient. Thus, **statement <InlineMath math="(2)" /> ALONE is sufficient, but statement <InlineMath math="(1)" /> ALONE is not sufficient**.

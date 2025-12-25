@@ -1,0 +1,60 @@
+export const metadata = {
+  title: "Pembahasan Soal 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/24/2025",
+};
+
+Kita akan menyusun sandi dengan pola **Huruf - Angka - Huruf - Angka**.
+
+Misalkan slot untuk sandi tersebut adalah:
+<MathContainer>
+  <BlockMath math="\underline{H_1} \times \underline{A_1} \times \underline{H_2} \times \underline{A_2}" />
+</MathContainer>
+
+Diketahui himpunan yang tersedia:
+- Huruf Vokal: <InlineMath math="\{A, I, U, E, O\}" /> (<InlineMath math="5" /> huruf).
+- Angka Ganjil untuk <InlineMath math="A_1" />: <InlineMath math="\{1, 3, 5, 7, 9\}" /> (<InlineMath math="5" /> angka).
+- Angka Pilihan untuk <InlineMath math="A_2" />: <InlineMath math="\{0, 1, 2, 4, 6\}" /> (<InlineMath math="5" /> angka).
+
+Aturan dan Batasan:
+1. <InlineMath math="H_1 \neq A" />.
+2. <InlineMath math="H_2 = O" />.
+3. Tidak boleh ada pengulangan huruf maupun angka.
+
+Karena <InlineMath math="A_1" /> harus ganjil dan <InlineMath math="A_2" /> dipilih dari himpunan tertentu, terdapat irisan pada angka <InlineMath math="1" />. Kita perlu membagi kasus berdasarkan nilai <InlineMath math="A_2" />.
+
+#### Kasus 1 Jika Angka Kedua Adalah 1
+Jika kita memilih angka <InlineMath math="1" /> untuk posisi <InlineMath math="A_2" />:
+1. <InlineMath math="H_2" /> (Huruf kedua): Harus <InlineMath math="O" /> (<InlineMath math="1" /> cara).
+2. <InlineMath math="A_2" /> (Angka kedua): Harus <InlineMath math="1" /> (<InlineMath math="1" /> cara).
+3. <InlineMath math="H_1" /> (Huruf pertama): Vokal selain <InlineMath math="A" /> dan selain <InlineMath math="O" /> (karena <InlineMath math="O" /> sudah dipakai di <InlineMath math="H_2" />).
+   - Pilihan: <InlineMath math="\{I, U, E\}" /> (<InlineMath math="3" /> cara).
+4. <InlineMath math="A_1" /> (Angka pertama): Angka ganjil selain <InlineMath math="1" /> (karena <InlineMath math="1" /> sudah dipakai di <InlineMath math="A_2" />).
+   - Pilihan: <InlineMath math="\{3, 5, 7, 9\}" /> (<InlineMath math="4" /> cara).
+
+Total cara untuk Kasus <InlineMath math="1" />:
+<MathContainer>
+  <BlockMath math="3 \times 4 \times 1 \times 1 = 12 \text{ cara}" />
+</MathContainer>
+
+#### Kasus 2 Jika Angka Kedua Bukan 1
+Jika kita memilih angka selain <InlineMath math="1" /> untuk posisi <InlineMath math="A_2" /> (yaitu genap):
+1. <InlineMath math="H_2" /> (Huruf kedua): Harus <InlineMath math="O" /> (<InlineMath math="1" /> cara).
+2. <InlineMath math="A_2" /> (Angka kedua): Dipilih dari <InlineMath math="\{0, 2, 4, 6\}" /> (<InlineMath math="4" /> cara).
+3. <InlineMath math="H_1" /> (Huruf pertama): Vokal selain <InlineMath math="A" /> dan selain <InlineMath math="O" />.
+   - Pilihan: <InlineMath math="\{I, U, E\}" /> (<InlineMath math="3" /> cara).
+4. <InlineMath math="A_1" /> (Angka pertama): Angka ganjil <InlineMath math="\{1, 3, 5, 7, 9\}" />. Karena <InlineMath math="A_2" /> adalah genap, tidak ada konflik. Semua angka ganjil bisa dipilih.
+   - Pilihan: <InlineMath math="5" /> cara.
+
+Total cara untuk Kasus <InlineMath math="2" />:
+<MathContainer>
+  <BlockMath math="3 \times 5 \times 1 \times 4 = 60 \text{ cara}" />
+</MathContainer>
+
+#### Total Kombinasi
+Jumlahkan hasil dari kedua kasus tersebut:
+<MathContainer>
+  <BlockMath math="12 + 60 = 72" />
+</MathContainer>
+
+Jadi, banyak sandi yang dapat dibentuk adalah <InlineMath math="72" />.

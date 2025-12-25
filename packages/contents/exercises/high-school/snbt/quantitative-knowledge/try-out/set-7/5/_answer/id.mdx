@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Pembahasan Soal 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/24/2025",
+};
+
+Diketahui rumus rekursif barisan bilangan:
+
+<MathContainer>
+  <BlockMath math="a_{n+1} = a_{n+2} + 2a_n" />
+</MathContainer>
+
+Kita diberikan nilai <InlineMath math="a_3 = -1" /> dan <InlineMath math="a_5 = 3" />. Kita diminta untuk mencari nilai <InlineMath math="a_2" />.
+
+Pertama, kita mencari nilai <InlineMath math="a_4" /> menggunakan rumus rekursif dengan mensubstitusi <InlineMath math="n = 3" /> untuk menghubungkan <InlineMath math="a_3" />, <InlineMath math="a_4" />, dan <InlineMath math="a_5" />.
+
+<MathContainer>
+  <BlockMath math="\begin{align*} a_{3+1} &= a_{3+2} + 2a_3 \\ a_4 &= a_5 + 2a_3 \end{align*}" />
+</MathContainer>
+
+Substitusikan nilai <InlineMath math="a_5 = 3" /> dan <InlineMath math="a_3 = -1" />:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} a_4 &= 3 + 2(-1) \\ a_4 &= 3 - 2 \\ a_4 &= 1 \end{align*}" />
+</MathContainer>
+
+Selanjutnya, kita mencari nilai <InlineMath math="a_2" />. Karena kita sudah memiliki nilai <InlineMath math="a_3" /> dan <InlineMath math="a_4" />, kita bisa menggunakan rumus rekursif dengan <InlineMath math="n = 2" /> untuk menghubungkan <InlineMath math="a_2" />, <InlineMath math="a_3" />, dan <InlineMath math="a_4" />.
+
+<MathContainer>
+  <BlockMath math="\begin{align*} a_{2+1} &= a_{2+2} + 2a_2 \\ a_3 &= a_4 + 2a_2 \end{align*}" />
+</MathContainer>
+
+Substitusikan nilai <InlineMath math="a_3 = -1" /> dan <InlineMath math="a_4 = 1" />:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} -1 &= 1 + 2a_2 \\ -1 - 1 &= 2a_2 \\ -2 &= 2a_2 \\ a_2 &= -1 \end{align*}" />
+</MathContainer>
+
+Jadi, nilai <InlineMath math="a_2" /> adalah <InlineMath math="-1" />.

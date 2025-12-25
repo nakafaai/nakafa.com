@@ -108,6 +108,7 @@ export function AiChatModel() {
                   key={m.value}
                   onSelect={() => {
                     handleOnChange(m.value);
+                    setOpenModelMenu(false);
                   }}
                 >
                   <m.icon />
@@ -128,6 +129,7 @@ export function AiChatModel() {
                   key={m.value}
                   onSelect={() => {
                     handleOnChange(m.value);
+                    setOpenModelMenu(false);
                   }}
                 >
                   <m.icon />

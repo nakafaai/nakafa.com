@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Solution for Problem 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+Given the operation rule:
+<MathContainer>
+  <BlockMath math="\beta(w \oplus x \ominus y \otimes z) = 2w + x \cdot y - (-z)" />
+</MathContainer>
+
+We are asked to find the value of:
+<MathContainer>
+  <BlockMath math="\beta(2 \oplus 3 \ominus 4 \otimes (-2))" />
+</MathContainer>
+
+By comparing variable positions, we get:
+- <InlineMath math="w = 2" />
+- <InlineMath math="x = 3" />
+- <InlineMath math="y = 4" />
+- <InlineMath math="z = -2" />
+
+Substitute these values into the formula:
+<MathContainer>
+  <BlockMath math="\beta(2 \oplus 3 \ominus 4 \otimes (-2)) = 2(2) + 3 \cdot 4 - (-(-2))" />
+  <BlockMath math="= 4 + 12 - (2)" />
+  <BlockMath math="= 16 - 2" />
+  <BlockMath math="= 14" />
+</MathContainer>
+
+Therefore, the value of the operation is <InlineMath math="14" />.

@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/coverage-istanbul": "^4.0.16",
     "vitest": "^4.0.16"
   }
 }

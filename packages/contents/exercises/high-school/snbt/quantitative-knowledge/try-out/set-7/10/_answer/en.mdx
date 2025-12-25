@@ -1,0 +1,55 @@
+export const metadata = {
+  title: "Solution for Problem 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+The given ordered data set is <InlineMath math="4, 4, a, b, c" />. Since the data is already ordered and there are an odd number of values (<InlineMath math="5" /> values), the median is the <InlineMath math="3" />rd value, which is <InlineMath math="a" />.
+
+The largest data value is <InlineMath math="c" />, and it is <InlineMath math="3" /> times the median, so:
+<MathContainer>
+  <BlockMath math="c = 3a" />
+</MathContainer>
+
+The average of the five numbers is <InlineMath math="8" />:
+<MathContainer>
+  <BlockMath math="\frac{4 + 4 + a + b + c}{5} = 8" />
+  <BlockMath math="8 + a + b + c = 40" />
+  <BlockMath math="a + b + c = 32" />
+</MathContainer>
+
+Substitute <InlineMath math="c = 3a" /> into the equation:
+<MathContainer>
+  <BlockMath math="a + b + 3a = 32" />
+  <BlockMath math="b + 4a = 32" />
+  <BlockMath math="b = 32 - 4a" />
+</MathContainer>
+
+Since the data is ordered, <InlineMath math="4 \le a \le b \le c" /> holds true. We will find the bounds for the value of <InlineMath math="a" />.
+
+#### Upper Bound of a
+From the inequality <InlineMath math="a \le b" />:
+<MathContainer>
+  <BlockMath math="a \le 32 - 4a" />
+  <BlockMath math="5a \le 32" />
+  <BlockMath math="a \le 6.4" />
+</MathContainer>
+
+#### Lower Bound of a
+From the inequality <InlineMath math="b \le c" />:
+<MathContainer>
+  <BlockMath math="32 - 4a \le 3a" />
+  <BlockMath math="32 \le 7a" />
+  <BlockMath math="a \ge \frac{32}{7}" />
+  <BlockMath math="a \ge 4.57" />
+</MathContainer>
+
+Note also that <InlineMath math="a \ge 4" /> (from the data order). Since <InlineMath math="4.57 > 4" />, the stronger condition is <InlineMath math="a \ge 4.57" />.
+
+#### Conclusion
+The range of values for <InlineMath math="a" /> is <InlineMath math="4.57 \le a \le 6.4" />.
+
+The value of <InlineMath math="P" /> is the median (<InlineMath math="a" />) and the value of <InlineMath math="Q" /> is <InlineMath math="4" />.
+Since the minimum value of <InlineMath math="a" /> is <InlineMath math="4.57" />, which is greater than <InlineMath math="4" />, it is certain that <InlineMath math="P > Q" />.
+
+Therefore, the correct relationship is <InlineMath math="P > Q" />.

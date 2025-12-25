@@ -1,0 +1,41 @@
+export const metadata = {
+  title: "Solution for Problem 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+We will simplify the form of <InlineMath math="P" /> first.
+Recall that <InlineMath math="4^x = (2^2)^x = (2^x)^2" />. Thus, the form <InlineMath math="4^x - 1" /> is a difference of squares which can be factored into <InlineMath math="(2^x - 1)(2^x + 1)" />.
+
+<MathContainer>
+  <BlockMath math="P = \frac{4^x - 1}{2^x - 1}" />
+  <BlockMath math="P = \frac{(2^x - 1)(2^x + 1)}{2^x - 1}" />
+  <BlockMath math="P = 2^x + 1" />
+</MathContainer>
+
+Next, let's look at the form of <InlineMath math="Q" />:
+<MathContainer>
+  <BlockMath math="Q = \frac{2^x + 1}{2^x}" />
+</MathContainer>
+
+We can see the relationship between <InlineMath math="P" /> and <InlineMath math="Q" /> by substituting <InlineMath math="P = 2^x + 1" /> into the equation for <InlineMath math="Q" />:
+<MathContainer>
+  <BlockMath math="Q = \frac{P}{2^x}" />
+  <BlockMath math="P = Q \cdot 2^x" />
+</MathContainer>
+
+Given <InlineMath math="0 < x < 1" />. Let's analyze the value of <InlineMath math="2^x" /> in that range:
+- If <InlineMath math="x > 0" />, then <InlineMath math="2^x > 2^0 \implies 2^x > 1" />.
+- If <InlineMath math="x < 1" />, then <InlineMath math="2^x < 2^1 \implies 2^x < 2" />.
+
+Thus, <InlineMath math="1 < 2^x < 2" />.
+
+Back to the equation <InlineMath math="P = Q \cdot 2^x" />:
+Since <InlineMath math="2^x > 1" /> and <InlineMath math="Q" /> is positive (because <InlineMath math="2^x > 0" />), multiplying <InlineMath math="Q" /> by a number greater than <InlineMath math="1" /> will result in a value greater than <InlineMath math="Q" /> itself.
+
+<MathContainer>
+  <BlockMath math="P = Q \cdot (\text{number} > 1)" />
+  <BlockMath math="P > Q" />
+</MathContainer>
+
+Therefore, the correct relationship is <InlineMath math="P > Q" />.

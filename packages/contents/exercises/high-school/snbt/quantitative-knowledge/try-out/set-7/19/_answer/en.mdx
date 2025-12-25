@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Explanation for Problem 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+We are given a recursive formula for a sequence of numbers:
+
+<MathContainer>
+  <BlockMath math="a_n = a_{n+1} + 3a_{n+3}" />
+</MathContainer>
+
+We also know that <InlineMath math="a_1 = -1" /> and <InlineMath math="a_2 = 2" />. We are asked to find the value of <InlineMath math="a_4 + a_1" />.
+
+#### Determining the Value of the Fourth Term
+
+To find <InlineMath math="a_4" />, we can use the given equation by substituting <InlineMath math="n = 1" />:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} a_1 &= a_{1+1} + 3a_{1+3} \\ a_1 &= a_2 + 3a_4 \end{aligned}" />
+</MathContainer>
+
+Next, we substitute the values <InlineMath math="a_1 = -1" /> and <InlineMath math="a_2 = 2" /> into the equation:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} -1 &= 2 + 3a_4 \\ 3a_4 &= -1 - 2 \\ 3a_4 &= -3 \\ a_4 &= \frac{-3}{3} \\ a_4 &= -1 \end{aligned}" />
+</MathContainer>
+
+#### Calculating the Sum
+
+Now that we have found <InlineMath math="a_4 = -1" />, we can calculate <InlineMath math="a_4 + a_1" />:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} a_4 + a_1 &= (-1) + (-1) \\ &= -2 \end{aligned}" />
+</MathContainer>
+
+So, the value of <InlineMath math="a_4 + a_1" /> is <InlineMath math="-2" />.
