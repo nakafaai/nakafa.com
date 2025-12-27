@@ -1,0 +1,35 @@
+export const metadata = {
+  title: "Barisan Bilangan",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Barisan bilangan ini terdiri dari dua pola yang berselang-seling.
+
+Pola pertama (posisi ganjil):
+
+<MathContainer>
+  <BlockMath math="4 \xrightarrow{\times 2} 8 \xrightarrow{\times 2} \mathbf{16} \xrightarrow{\times 2} 32 \xrightarrow{\times 2} 64" />
+</MathContainer>
+
+Pola kedua (posisi genap):
+
+<MathContainer>
+  <BlockMath math="5 \xrightarrow{-3} 2 \xrightarrow{-3} \mathbf{-1} \xrightarrow{-3} -4 \xrightarrow{-3} -7" />
+</MathContainer>
+
+Suku yang hilang adalah suku ke-<InlineMath math="5" /> (dari pola pertama) dan suku ke-<InlineMath math="6" /> (dari pola kedua).
+
+Untuk suku ke-<InlineMath math="5" />:
+
+<MathContainer>
+  <BlockMath math="8 \times 2 = 16" />
+</MathContainer>
+
+Untuk suku ke-<InlineMath math="6" />:
+
+<MathContainer>
+  <BlockMath math="2 - 3 = -1" />
+</MathContainer>
+
+Jadi, nilai yang tepat untuk melengkapi barisan adalah <InlineMath math="16" /> dan <InlineMath math="-1" />.

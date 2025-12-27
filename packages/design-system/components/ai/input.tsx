@@ -277,6 +277,7 @@ export function PromptInputAttachment({
         <Image
           alt={data.filename || "attachment"}
           className="size-full rounded-md object-cover"
+          fetchPriority="high"
           height={56}
           loading="eager"
           preload
@@ -294,7 +295,7 @@ export function PromptInputAttachment({
             </TooltipTrigger>
             <TooltipContent>
               <div className="text-muted-foreground text-xs">
-                <h4 className="wrap-break-word max-w-[240px] overflow-hidden whitespace-normal text-left font-semibold text-sm">
+                <h4 className="wrap-break-word max-w-60 overflow-hidden whitespace-normal text-left font-semibold text-sm">
                   {data.filename || "Unknown file"}
                 </h4>
                 {!!data.mediaType && <div>{data.mediaType}</div>}

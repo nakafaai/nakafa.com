@@ -15,6 +15,7 @@ import type { Material } from "@repo/contents/_types/subject/material";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -154,6 +155,15 @@ async function PageContent({
           item: `https://nakafa.com/${locale}${mat.href}`,
         }))}
         locale={locale}
+      />
+      <CollectionPageJsonLd
+        description={t(getGradeNonNumeric(grade) ?? "grade", { grade })}
+        items={materials.map((mat) => ({
+          url: `https://nakafa.com/${locale}${mat.href}`,
+          name: mat.title,
+        }))}
+        name={`${t(material)} - ${t(getGradeNonNumeric(grade) ?? "grade", { grade })}`}
+        url={`https://nakafa.com/${locale}${FilePath}`}
       />
       <LayoutMaterial>
         <LayoutMaterialContent>

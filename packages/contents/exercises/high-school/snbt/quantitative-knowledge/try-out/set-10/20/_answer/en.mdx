@@ -1,0 +1,38 @@
+export const metadata = {
+  title: "x and y Value Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+First, we find the value of <InlineMath math="x" /> from the first equation:
+
+<MathContainer>
+  <BlockMath math="4x - 16 = 24" />
+  <BlockMath math="4x = 24 + 16" />
+  <BlockMath math="4x = 40" />
+  <BlockMath math="x = \frac{40}{4} = 10" />
+</MathContainer>
+
+After finding that <InlineMath math="x = 10" />, we substitute it into the second equation to find the value of <InlineMath math="y" />:
+
+<MathContainer>
+  <BlockMath math="2x + y - 16 = 12" />
+  <BlockMath math="2(10) + y - 16 = 12" />
+  <BlockMath math="20 + y - 16 = 12" />
+  <BlockMath math="y + 4 = 12" />
+  <BlockMath math="y = 12 - 4" />
+  <BlockMath math="y = 8" />
+</MathContainer>
+
+Finally, we compare the values of <InlineMath math="x" /> and <InlineMath math="y" />:
+
+<MathContainer>
+  <BlockMath math="x = 10" />
+  <BlockMath math="y = 8" />
+</MathContainer>
+
+Since <InlineMath math="10 > 8" />, then:
+
+<MathContainer>
+  <BlockMath math="x > y" />
+</MathContainer>

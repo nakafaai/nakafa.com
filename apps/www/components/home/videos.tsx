@@ -28,8 +28,9 @@ function VideoCard({ children }: { children: React.ReactNode }) {
       target="_blank"
     >
       <Image
-        alt="Video Thumbnail"
+        alt="Nakafa YouTube Channel"
         className="absolute inset-0 object-cover transition-transform duration-300 group-hover:scale-105"
+        fetchPriority="high"
         fill
         loading="eager"
         preload

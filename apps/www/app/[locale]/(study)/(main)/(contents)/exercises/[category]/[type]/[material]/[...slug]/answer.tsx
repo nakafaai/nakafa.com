@@ -20,7 +20,12 @@ export function ExerciseAnswer({ children, exerciseNumber }: Props) {
     <section className={cn("space-y-6", showAnswer ? "visible" : "hidden")}>
       <Separator orientation="horizontal" />
       <div className="space-y-6">
-        <h3 className="font-medium text-lg">{t("explanation")}</h3>
+        <h3
+          className="font-medium text-lg"
+          id={`explanation-${exerciseNumber}`}
+        >
+          {t("explanation")}
+        </h3>
         {children}
       </div>
     </section>

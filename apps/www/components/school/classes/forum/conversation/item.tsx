@@ -83,7 +83,7 @@ export const ForumPostItem = memo(
 
         <Activity mode={isFirstInGroup === true ? "visible" : "hidden"}>
           <Avatar className="size-8 shrink-0 rounded-full">
-            <AvatarImage alt={userName} src={userImage} />
+            <AvatarImage alt={userName} role="presentation" src={userImage} />
             <AvatarFallback className="rounded-lg">
               {getInitialName(userName)}
             </AvatarFallback>
@@ -223,6 +223,7 @@ const PostAttachments = memo(
             <Image
               alt={attachment.name}
               className="object-cover transition-transform ease-out group-hover/image:scale-105"
+              fetchPriority="high"
               fill
               loading="eager"
               preload

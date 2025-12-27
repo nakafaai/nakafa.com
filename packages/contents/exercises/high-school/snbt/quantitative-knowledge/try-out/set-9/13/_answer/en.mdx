@@ -1,0 +1,41 @@
+export const metadata = {
+  title: "Solution for Problem 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+#### Properties of Average and Range
+
+-   **Average**: Its value changes if each data point is added, subtracted, multiplied, or divided.
+-   **Range**: Its value **only** changes if each data point is multiplied or divided (it does not change if added or subtracted).
+
+#### Finding the Value of <InlineMath math="b" />
+
+The initial range is <InlineMath math="12" />. Then, each data value is subtracted by <InlineMath math="a" /> and divided by <InlineMath math="b" />. Since the range only changes when multiplied or divided, the new range becomes:
+
+<MathContainer>
+  <BlockMath math="j_{new} = \frac{j_{initial}}{b}" />
+  <BlockMath math="6 = \frac{12}{b}" />
+  <BlockMath math="b = \frac{12}{6}" />
+  <BlockMath math="b = 2" />
+</MathContainer>
+
+#### Finding the Value of <InlineMath math="a" />
+
+The initial average is <InlineMath math="24" />. Then, each data value is subtracted by <InlineMath math="a" /> and divided by <InlineMath math="b" />, so the new average becomes:
+
+<MathContainer>
+  <BlockMath math="\bar{x}_{new} = \frac{\bar{x}_{initial} - a}{b}" />
+  <BlockMath math="10 = \frac{24 - a}{b}" />
+</MathContainer>
+
+Substitute the value <InlineMath math="b = 2" />:
+
+<MathContainer>
+  <BlockMath math="10 = \frac{24 - a}{2}" />
+  <BlockMath math="20 = 24 - a" />
+  <BlockMath math="a = 24 - 20" />
+  <BlockMath math="a = 4" />
+</MathContainer>
+
+Thus, the values are <InlineMath math="a = 4" /> and <InlineMath math="b = 2" />.

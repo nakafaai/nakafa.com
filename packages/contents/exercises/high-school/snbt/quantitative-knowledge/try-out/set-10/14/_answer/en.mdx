@@ -1,0 +1,23 @@
+export const metadata = {
+  title: "Recurring Decimal Numbers",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Let <InlineMath math="a = 1.5454545454..." />
+
+Multiply <InlineMath math="a" /> by <InlineMath math="100" />, so:
+
+<MathContainer>
+  <BlockMath math="100a = 154.54545454..." />
+</MathContainer>
+
+Subtract <InlineMath math="a" /> from <InlineMath math="100a" />, so:
+
+<MathContainer>
+  <BlockMath math="100a - a = 154.54545454... - 1.5454545454..." />
+  <BlockMath math="99a = 153" />
+  <BlockMath math="a = \frac{153}{99} = \frac{17}{11}" />
+</MathContainer>
+
+Therefore, the fraction form is <InlineMath math="\frac{17}{11}" />.

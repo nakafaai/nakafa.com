@@ -1,0 +1,47 @@
+export const metadata = {
+  title: "Pembahasan Soal 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+Urutan anggota dalam himpunan tidak diperhatikan, sehingga kita menggunakan konsep kombinasi.
+
+Total banyaknya himpunan bagian dari suatu himpunan dengan <InlineMath math="n" /> anggota adalah <InlineMath math="2^n" />. Diketahui <InlineMath math="n = 10" />, maka total himpunan bagian adalah:
+
+<BlockMath math="2^{10} = 1024" />
+
+Kita diminta mencari banyaknya himpunan bagian yang memiliki anggota **lebih dari <InlineMath math="3" />**. Artinya, kita mencari jumlah himpunan bagian dengan <InlineMath math="4" />, <InlineMath math="5" />, <InlineMath math="6" />, ..., <InlineMath math="10" /> anggota.
+
+Cara yang lebih mudah adalah dengan menggunakan prinsip komplemen: Total himpunan bagian dikurangi himpunan bagian dengan anggota **<InlineMath math="0" />, <InlineMath math="1" />, <InlineMath math="2" />, atau <InlineMath math="3" />**.
+
+Rumus kombinasi adalah:
+
+<BlockMath math="C(n, r) = \binom{n}{r} = \frac{n!}{r!(n-r)!}" />
+
+Mari kita hitung satu per satu.
+
+#### Himpunan bagian dengan 0 anggota
+
+<BlockMath math="C(10, 0) = \frac{10!}{0!10!} = 1" />
+
+#### Himpunan bagian dengan 1 anggota
+
+<BlockMath math="C(10, 1) = \frac{10!}{1!9!} = 10" />
+
+#### Himpunan bagian dengan 2 anggota
+
+<BlockMath math="C(10, 2) = \frac{10!}{2!8!} = \frac{10 \times 9}{2 \times 1} = 45" />
+
+#### Himpunan bagian dengan 3 anggota
+
+<BlockMath math="C(10, 3) = \frac{10!}{3!7!} = \frac{10 \times 9 \times 8}{3 \times 2 \times 1} = 120" />
+
+Jumlah himpunan bagian dengan anggota <InlineMath math="\leq 3" /> adalah:
+
+<BlockMath math="1 + 10 + 45 + 120 = 176" />
+
+Maka, banyaknya himpunan bagian dengan anggota **lebih dari <InlineMath math="3" />** adalah:
+
+<BlockMath math="\begin{aligned} \text{Total} - (\leq 3) &= 1024 - 176 \\ &= 848 \end{aligned}" />
+
+Jadi, banyaknya himpunan bagian dari <InlineMath math="A" /> yang memiliki anggota lebih dari <InlineMath math="3" /> adalah <InlineMath math="848" />.

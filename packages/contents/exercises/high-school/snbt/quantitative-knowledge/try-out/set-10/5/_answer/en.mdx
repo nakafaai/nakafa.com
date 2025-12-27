@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Maximum Value Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Given the system of inequalities:
+
+<MathContainer>
+  <BlockMath math="\begin{cases} x \ge 0 \\ y \ge 0 \\ x + 5y \le 10 \\ 5x + y \le a^2 - 5 \end{cases}" />
+</MathContainer>
+
+We can sum the two main inequalities to find the bound for <InlineMath math="x + y" />:
+
+<MathContainer>
+  <BlockMath math="(x + 5y) + (5x + y) \le 10 + (a^2 - 5)" />
+  <BlockMath math="6x + 6y \le 5 + a^2" />
+  <BlockMath math="6(x + y) \le 5 + a^2" />
+</MathContainer>
+
+It is given that the maximum value of <InlineMath math="x + y" /> is <InlineMath math="5" />. Therefore, we substitute this maximum value into the inequality:
+
+<MathContainer>
+  <BlockMath math="6(5) = 5 + a^2" />
+  <BlockMath math="30 = 5 + a^2" />
+  <BlockMath math="a^2 = 25" />
+</MathContainer>
+
+Thus, the value of <InlineMath math="a" /> is:
+
+<MathContainer>
+  <BlockMath math="a = 5" />
+</MathContainer>
+
+(We take the positive value since the options are positive).
+
+So, the value of <InlineMath math="a" /> is <InlineMath math="5" />.

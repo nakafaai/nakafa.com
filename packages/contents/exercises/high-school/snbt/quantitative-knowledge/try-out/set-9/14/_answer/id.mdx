@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Pembahasan Soal 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+#### Mengubah ke Bentuk Pecahan
+
+Untuk mengetahui urutan terkecil ke terbesar, kita ubah semua bilangan menjadi bentuk pecahan dengan penyebut yang sama.
+
+<MathContainer>
+  <BlockMath math="1,45 = \frac{145}{100}" />
+  <BlockMath math="\frac{17}{14}" />
+  <BlockMath math="123\% = \frac{123}{100}" />
+  <BlockMath math="\frac{5}{3}" />
+  <BlockMath math="\sqrt{12} \approx 3,46" />
+</MathContainer>
+
+#### Menyamakan Penyebut
+
+Kita samakan penyebutnya menjadi <InlineMath math="2100" /> (KPK dari <InlineMath math="100" />, <InlineMath math="14" />, dan <InlineMath math="3" />).
+
+<MathContainer>
+  <BlockMath math="1,45 = \frac{145 \times 21}{2100} = \frac{3045}{2100}" />
+  <BlockMath math="\frac{17}{14} = \frac{17 \times 150}{2100} = \frac{2550}{2100}" />
+  <BlockMath math="123\% = \frac{123 \times 21}{2100} = \frac{2583}{2100}" />
+  <BlockMath math="\frac{5}{3} = \frac{5 \times 700}{2100} = \frac{3500}{2100}" />
+</MathContainer>
+
+Untuk <InlineMath math="\sqrt{12}" />, karena nilainya sekitar <InlineMath math="3,46" />, jika dijadikan pecahan per 2100 akan menjadi sangat besar (jauh lebih besar dari yang lain yang nilainya di bawah 2).
+
+<MathContainer>
+  <BlockMath math="\sqrt{12} \approx \frac{7274}{2100}" />
+</MathContainer>
+
+#### Kesimpulan
+
+Berdasarkan pembilang yang telah disamakan penyebutnya:
+
+<MathContainer>
+  <BlockMath math="2550 < 2583 < 3045 < 3500 < 7274" />
+</MathContainer>
+
+Maka urutannya adalah:
+
+<MathContainer>
+  <BlockMath math="\frac{2550}{2100}; \frac{2583}{2100}; \frac{3045}{2100}; \frac{3500}{2100}; \sqrt{12}" />
+</MathContainer>
+
+Kembali ke bentuk awal:
+
+<MathContainer>
+  <BlockMath math="\frac{17}{14}; 123\%; 1,45; \frac{5}{3}; \sqrt{12}" />
+</MathContainer>

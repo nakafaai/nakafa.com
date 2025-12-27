@@ -56,7 +56,10 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
 
   return (
     <>
-      <div className={cn("space-y-4", className)}>
+      <section
+        aria-labelledby={t("references")}
+        className={cn("space-y-4", className)}
+      >
         <h2
           className="scroll-mt-28 font-medium text-2xl leading-tight tracking-tight"
           id={t("references")}
@@ -64,7 +67,10 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
           {t("references")}
         </h2>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <nav
+          aria-label="Reference actions"
+          className="flex flex-wrap items-center gap-2"
+        >
           {!!showSheet && (
             <Tooltip>
               <TooltipTrigger
@@ -153,8 +159,8 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
               <p>{t("community")}</p>
             </TooltipContent>
           </Tooltip>
-        </div>
-      </div>
+        </nav>
+      </section>
 
       {!!showSheet && (
         <Sheet modal={false} onOpenChange={setOpen} open={open}>

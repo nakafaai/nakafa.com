@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Pembahasan Soal 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+Kita akan menghitung peluang terambilnya dua bola biru terlebih dahulu. Total bola dalam kotak adalah jumlah bola kuning dan bola biru.
+
+<MathContainer>
+  <BlockMath math="n(S) = 8 + 3 = 11" />
+</MathContainer>
+
+Banyaknya cara mengambil <InlineMath math="2" /> bola dari total <InlineMath math="11" /> bola dapat dihitung menggunakan kombinasi.
+
+<MathContainer>
+  <BlockMath math="C^{11}_2 = \frac{11!}{2!(11-2)!} = \frac{11 \times 10 \times 9!}{2 \times 1 \times 9!} = \frac{110}{2} = 55" />
+</MathContainer>
+
+Selanjutnya, kita menghitung banyaknya cara mengambil <InlineMath math="2" /> bola biru dari total <InlineMath math="3" /> bola biru yang tersedia.
+
+<MathContainer>
+  <BlockMath math="n(A) = C^3_2 = \frac{3!}{2!(3-2)!} = \frac{3 \times 2!}{2! \times 1!} = 3" />
+</MathContainer>
+
+Peluang mendapatkan dua bola biru (<InlineMath math="P(2B)" />) adalah perbandingan antara banyaknya cara mengambil dua bola biru dengan total cara pengambilan.
+
+<MathContainer>
+  <BlockMath math="P(2B) = \frac{n(A)}{n(S)} = \frac{3}{55}" />
+</MathContainer>
+
+Frekuensi harapan (<InlineMath math="F_h" />) adalah hasil kali antara peluang kejadian dengan banyaknya percobaan. Diketahui banyaknya percobaan adalah <InlineMath math="110" /> kali.
+
+<MathContainer>
+  <BlockMath math="F_h = P(2B) \times N" />
+  <BlockMath math="F_h = \frac{3}{55} \times 110" />
+  <BlockMath math="F_h = 3 \times 2 = 6" />
+</MathContainer>
+
+Jadi, frekuensi harapan mendapatkan dua bola biru adalah <InlineMath math="6" /> kali.

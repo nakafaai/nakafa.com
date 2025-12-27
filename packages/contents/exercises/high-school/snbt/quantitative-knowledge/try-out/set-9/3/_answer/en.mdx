@@ -1,0 +1,52 @@
+export const metadata = {
+  title: "Solution to Problem 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+import { Graph } from "../graph";
+
+<Graph
+  mode="answer"
+  title="Solution Visualization"
+  description={
+    <>
+      Auxiliary line divides angle <InlineMath math="\alpha" /> into{" "}
+      <InlineMath math="\beta" /> and <InlineMath math="\gamma" />.
+    </>
+  }
+/>
+
+We draw an auxiliary line parallel to lines <InlineMath math="PQ" /> and <InlineMath math="RS" /> passing through the vertex of angle <InlineMath math="\alpha" />.
+This line divides angle <InlineMath math="\alpha" /> into two parts, <InlineMath math="\beta" /> and <InlineMath math="\gamma" />.
+
+#### Finding the Value of <InlineMath math="\beta" />
+
+Notice that angle <InlineMath math="\beta" /> and the <InlineMath math="25^\circ" /> angle are alternate interior angles.
+Since the lines are parallel, their measures are equal:
+
+<MathContainer>
+  <BlockMath math="\beta = 25^\circ" />
+</MathContainer>
+
+#### Finding the Value of <InlineMath math="\gamma" />
+
+Angle <InlineMath math="\gamma" /> and the <InlineMath math="135^\circ" /> angle are consecutive interior angles.
+The sum of these two angles is <InlineMath math="180^\circ" />:
+
+<MathContainer>
+  <BlockMath math="\gamma + 135^\circ = 180^\circ" />
+  <BlockMath math="\gamma = 180^\circ - 135^\circ = 45^\circ" />
+</MathContainer>
+
+#### Calculating the Value of <InlineMath math="\alpha" />
+
+The value of <InlineMath math="\alpha" /> is the sum of <InlineMath math="\beta" /> and <InlineMath math="\gamma" />:
+
+<MathContainer>
+  <BlockMath math="\alpha = \beta + \gamma" />
+  <BlockMath math="\alpha = 25^\circ + 45^\circ" />
+  <BlockMath math="\alpha = 70^\circ" />
+</MathContainer>
+
+Therefore, the value of <InlineMath math="\alpha" /> is <InlineMath math="70^\circ" />.

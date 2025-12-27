@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Quadratic Function Maximum Value Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Given the quadratic function:
+
+<MathContainer>
+  <BlockMath math="y = kx^2 + 8x + (k-1)" />
+</MathContainer>
+
+The axis of symmetry for a quadratic function <InlineMath math="ax^2 + bx + c" /> is given by the formula <InlineMath math="x = -\frac{b}{2a}" />. In this case, <InlineMath math="a = k" /> and <InlineMath math="b = 8" />.
+
+Given the axis of symmetry <InlineMath math="x = 4" />, then:
+
+<MathContainer>
+  <BlockMath math="4 = -\frac{8}{2k}" />
+  <BlockMath math="8k = -8" />
+  <BlockMath math="k = -1" />
+</MathContainer>
+
+After finding the value of <InlineMath math="k" />, we substitute it back into the original function:
+
+<MathContainer>
+  <BlockMath math="y = -1x^2 + 8x + (-1 - 1)" />
+  <BlockMath math="y = -x^2 + 8x - 2" />
+</MathContainer>
+
+To find the maximum value, we substitute the axis of symmetry value <InlineMath math="x = 4" /> into the function (since the optimum value is always at the axis of symmetry):
+
+<MathContainer>
+  <BlockMath math="y = -(4^2) + 8(4) - 2" />
+  <BlockMath math="y = -16 + 32 - 2" />
+  <BlockMath math="y = 16 - 2" />
+  <BlockMath math="y = 14" />
+</MathContainer>
+
+Thus, the maximum value of the function is <InlineMath math="14" />.

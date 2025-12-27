@@ -120,7 +120,7 @@ function CommentContent({
       )}
     >
       <Avatar className="size-10 rounded-full">
-        <AvatarImage alt={userName} src={userImage} />
+        <AvatarImage alt={userName} role="presentation" src={userImage} />
         <AvatarFallback className="rounded-lg">
           {getInitialName(userName)}
         </AvatarFallback>

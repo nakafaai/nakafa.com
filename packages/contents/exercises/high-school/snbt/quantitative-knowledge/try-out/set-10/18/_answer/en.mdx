@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Set Intersection Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+First, let's list the members of set <InlineMath math="A" />. Set <InlineMath math="A" /> contains integers between <InlineMath math="-3" /> and <InlineMath math="8" /> (exclusive):
+
+<MathContainer>
+  <BlockMath math="A = \{-2, -1, 0, 1, 2, 3, 4, 5, 6, 7\}" />
+</MathContainer>
+
+Next, set <InlineMath math="B" /> contains all integers less than or equal to <InlineMath math="7" />:
+
+<MathContainer>
+  <BlockMath math="B = \{..., -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7\}" />
+</MathContainer>
+
+The intersection of two sets (<InlineMath math="A \cap B" />) is the set containing elements that are present in both sets.
+
+Since all members of set <InlineMath math="A" /> (from <InlineMath math="-2" /> to <InlineMath math="7" />) are also contained in set <InlineMath math="B" />, the intersection is set <InlineMath math="A" /> itself:
+
+<MathContainer>
+  <BlockMath math="A \cap B = \{-2, -1, 0, 1, 2, 3, 4, 5, 6, 7\}" />
+</MathContainer>
+
+Converting this back to set-builder notation, the elements are integers greater than <InlineMath math="-3" /> and less than or equal to <InlineMath math="7" />:
+
+<MathContainer>
+  <BlockMath math="A \cap B = \{x | -3 < x \leq 7, x \in \text{integers}\}" />
+</MathContainer>

@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Solution to Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+Let:
+- <InlineMath math="n(S)" /> = Total number of students in the class
+- <InlineMath math="n(P)" /> = Number of students in scouts
+- <InlineMath math="n(F)" /> = Number of students in futsal
+
+Given:
+
+<MathContainer>
+  <BlockMath math="n(S) = 30" />
+  <BlockMath math="n(P) = 12" />
+  <BlockMath math="n(F) = 15" />
+  <BlockMath math="n(P \cap F) = 7" />
+</MathContainer>
+
+The number of students who do not participate in either (<InlineMath math="n(P \cup F)^c" />) can be found using the universal set formula:
+
+<MathContainer>
+  <BlockMath math="n(S) = n(P) + n(F) - n(P \cap F) + n(P \cup F)^c" />
+</MathContainer>
+
+Substitute the known values:
+
+<MathContainer>
+  <BlockMath math="30 = 12 + 15 - 7 + n(P \cup F)^c" />
+  <BlockMath math="30 = 20 + n(P \cup F)^c" />
+  <BlockMath math="n(P \cup F)^c = 30 - 20" />
+  <BlockMath math="n(P \cup F)^c = 10" />
+</MathContainer>
+
+Thus, the number of students who do not join scouts and futsal extracurriculars is <InlineMath math="10" />.

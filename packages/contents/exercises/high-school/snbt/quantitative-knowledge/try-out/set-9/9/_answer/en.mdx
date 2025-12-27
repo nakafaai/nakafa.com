@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Solution for Problem 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+To find the domain of the function, we need to ensure that all components of the function are defined (values inside square roots must be non-negative, and the denominator cannot be zero).
+
+The function <InlineMath math="f(x) = \frac{\sqrt{5 - x}}{\sqrt{x^2 + x - 6}}" /> has two main conditions:
+
+#### Condition 1: Numerator
+
+The value inside the square root in the numerator must be non-negative:
+
+<MathContainer>
+  <BlockMath math="5 - x \geq 0" />
+  <BlockMath math="-x \geq -5" />
+  <BlockMath math="x \leq 5" />
+</MathContainer>
+
+#### Condition 2: Denominator
+
+The value inside the square root in the denominator must be positive (since the square root in the denominator cannot be zero):
+
+<MathContainer>
+  <BlockMath math="x^2 + x - 6 > 0" />
+  <BlockMath math="(x + 3)(x - 2) > 0" />
+</MathContainer>
+
+The zeros of this inequality are <InlineMath math="x = -3" /> and <InlineMath math="x = 2" />.
+
+Using test points, we find the solution region for the denominator: <InlineMath math="x < -3" /> or <InlineMath math="x > 2" />.
+
+#### Domain Intersection
+
+The domain of function <InlineMath math="f" /> is the intersection of the two conditions above:
+1.  <InlineMath math="x \leq 5" />
+2.  <InlineMath math="x < -3" /> or <InlineMath math="x > 2" />
+
+The intersection is:
+-   For <InlineMath math="x < -3" />, it satisfies <InlineMath math="x \leq 5" />.
+-   For <InlineMath math="x > 2" />, it is bounded by <InlineMath math="x \leq 5" />, becoming <InlineMath math="2 < x \leq 5" />.
+
+Therefore, the domain of function <InlineMath math="f" /> is:
+
+<MathContainer>
+  <BlockMath math="Df = \{x | x < -3 \text{ or } 2 < x \leq 5\}" />
+</MathContainer>

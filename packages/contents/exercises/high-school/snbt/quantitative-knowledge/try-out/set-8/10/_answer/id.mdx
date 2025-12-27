@@ -1,0 +1,46 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+Diketahui pertidaksamaan:
+
+<BlockMath math="(2m + 1)x^2 - 4(m + 1)x + m > -4" />
+
+Kita ubah ke bentuk umum fungsi kuadrat dengan memindahkan <InlineMath math="-4" /> ke ruas kiri:
+
+<BlockMath math="(2m + 1)x^2 - 4(m + 1)x + (m + 4) > 0" />
+
+Agar fungsi kuadrat selalu bernilai positif (definit positif) untuk setiap <InlineMath math="x" /> real, maka grafik fungsi harus seluruhnya berada di atas sumbu-<InlineMath math="x" />. Syarat yang harus dipenuhi adalah:
+
+1. Koefisien <InlineMath math="x^2" /> harus positif (<InlineMath math="a > 0" />).
+2. Diskriminan harus negatif (<InlineMath math="D < 0" />).
+
+**Syarat 1: <InlineMath math="a > 0" />**
+
+<BlockMath math="\begin{aligned} 2m + 1 &> 0 \\ 2m &> -1 \\ m &> -\frac{1}{2} \quad \dots \text{(1)} \end{aligned}" />
+
+**Syarat 2: <InlineMath math="D < 0" />**
+
+Ingat bahwa <InlineMath math="D = b^2 - 4ac" />. Dengan <InlineMath math="a = 2m + 1" />, <InlineMath math="b = -4(m + 1)" />, dan <InlineMath math="c = m + 4" />:
+
+<BlockMath math="\begin{aligned} (-4(m + 1))^2 - 4(2m + 1)(m + 4) &< 0 \\ 16(m^2 + 2m + 1) - 4(2m^2 + 9m + 4) &< 0 \end{aligned}" />
+
+Bagi kedua ruas dengan <InlineMath math="4" /> untuk menyederhanakan:
+
+<BlockMath math="\begin{aligned} 4(m^2 + 2m + 1) - (2m^2 + 9m + 4) &< 0 \\ 4m^2 + 8m + 4 - 2m^2 - 9m - 4 &< 0 \\ 2m^2 - m &< 0 \\ m(2m - 1) &< 0 \end{aligned}" />
+
+Pembuat nol adalah <InlineMath math="m = 0" /> dan <InlineMath math="m = \frac{1}{2}" />. Karena tandanya "&lt;", maka penyelesaiannya berada di antara pembuat nol:
+
+<BlockMath math="0 < m < \frac{1}{2} \quad \dots \text{(2)}" />
+
+**Kesimpulan**
+
+Kita cari irisan dari syarat <InlineMath math="(1)" /> dan <InlineMath math="(2)" />:
+- Syarat <InlineMath math="(1)" />: <InlineMath math="m > -\frac{1}{2}" />
+- Syarat <InlineMath math="(2)" />: <InlineMath math="0 < m < \frac{1}{2}" />
+
+Irisan dari kedua daerah tersebut adalah:
+
+<BlockMath math="0 < m < \frac{1}{2}" />

@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Average Speed Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+We know that:
+
+<MathContainer>
+  <BlockMath math="\text{speed} \times \text{time} = \text{distance}" />
+</MathContainer>
+
+Then:
+
+| | Speed | Time | Distance |
+| :--- | :--- | :--- | :--- |
+| Run | <InlineMath math="5 \text{ km/h}" /> | <InlineMath math="x \text{ hours}" /> | <InlineMath math="5x \text{ km}" /> |
+| Walk | <InlineMath math="1 \text{ km/h}" /> | <InlineMath math="x \text{ hours}" /> | <InlineMath math="x \text{ km}" /> |
+
+Nina travels a distance of <InlineMath math="3 \text{ km}" />.
+
+<MathContainer>
+  <BlockMath math="\text{running} + \text{walking} = 3 \text{ km}" />
+</MathContainer>
+
+<MathContainer>
+  <BlockMath math="5x \text{ km/h} + x \text{ km/h} = 3 \text{ km}" />
+</MathContainer>
+
+<MathContainer>
+  <BlockMath math="6x \frac{\text{km}}{\text{h}} = 3 \text{ km}" />
+</MathContainer>
+
+<MathContainer>
+  <BlockMath math="x = \frac{1}{2} \text{ hour}" />
+</MathContainer>
+
+The total time taken by Nina is the sum of the time spent running and walking, which is:
+
+<MathContainer>
+  <BlockMath math="\text{Total time} = x + x = 2x" />
+</MathContainer>
+
+<MathContainer>
+  <BlockMath math="\text{Total time} = 2 \left(\frac{1}{2}\right) = 1 \text{ hour}" />
+</MathContainer>
+
+Convert to minutes:
+
+<MathContainer>
+  <BlockMath math="1 \text{ hour} = 60 \text{ minutes}" />
+</MathContainer>
+
+Thus, the total time taken by Nina is <InlineMath math="60" /> minutes.

@@ -76,19 +76,22 @@ export function CardMaterial({ material }: Props) {
       </CardHeader>
       <Collapsible onOpenChange={setIsOpen} open={isOpen}>
         <CollapsibleContent>
-          <CardContent className="divide-y border-t px-0">
-            {material.items.map((item) => (
-              <Link
-                className="group flex w-full scroll-mt-28 items-center gap-2 px-6 py-3 transition-colors ease-out last:pb-6 hover:bg-accent hover:text-accent-foreground"
-                href={item.href}
-                key={item.href}
-                prefetch
-                title={item.title}
-              >
-                <h3>{item.title}</h3>
-                <ArrowDownIcon className="size-4 shrink-0 -rotate-90 opacity-0 transition-opacity ease-out group-hover:opacity-100" />
-              </Link>
-            ))}
+          <CardContent className="border-t px-0">
+            <ul className="divide-y">
+              {material.items.map((item) => (
+                <li className="group/list" key={item.href}>
+                  <Link
+                    className="group flex w-full scroll-mt-28 items-center gap-2 px-6 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground group-last/list:pb-6"
+                    href={item.href}
+                    prefetch
+                    title={item.title}
+                  >
+                    <h3>{item.title}</h3>
+                    <ArrowDownIcon className="size-4 shrink-0 -rotate-90 opacity-0 transition-opacity ease-out group-hover:opacity-100" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </CollapsibleContent>
       </Collapsible>

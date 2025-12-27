@@ -1,0 +1,59 @@
+export const metadata = {
+  title: "Solution for Problem 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+Let <InlineMath math="n_A" /> be the number of students in class A and <InlineMath math="n_B" /> be the number of students in class B.
+
+Given the ratio of the average scores of class A and class B is:
+
+<MathContainer>
+  <BlockMath math="\frac{\bar{X}_A}{\bar{X}_B} = \frac{9}{10} \iff \bar{X}_B = \frac{10}{9} \bar{X}_A" />
+</MathContainer>
+
+And the ratio of the combined average to the average of class <InlineMath math="A" /> is:
+
+<MathContainer>
+  <BlockMath math="\frac{\bar{X}}{\bar{X}_A} = \frac{84}{81} \iff \bar{X} = \frac{84}{81} \bar{X}_A" />
+</MathContainer>
+
+The ratio of the number of students in class A to class B can be found using the combined average formula:
+
+<MathContainer>
+  <BlockMath math="\bar{X} = \frac{\bar{X}_A \cdot n_A + \bar{X}_B \cdot n_B}{n_A + n_B}" />
+</MathContainer>
+
+Substitute the values of <InlineMath math="\bar{X}" /> and <InlineMath math="\bar{X}_B" /> in terms of <InlineMath math="\bar{X}_A" />:
+
+<MathContainer>
+  <BlockMath math="\frac{84}{81} \bar{X}_A = \frac{\bar{X}_A \cdot n_A + \left(\frac{10}{9} \bar{X}_A\right) \cdot n_B}{n_A + n_B}" />
+</MathContainer>
+
+Divide both sides by <InlineMath math="\bar{X}_A" /> (since <InlineMath math="\bar{X}_A \neq 0" />):
+
+<MathContainer>
+  <BlockMath math="\frac{84}{81} = \frac{n_A + \frac{10}{9} n_B}{n_A + n_B}" />
+</MathContainer>
+
+Cross-multiply:
+
+<MathContainer>
+  <BlockMath math="84(n_A + n_B) = 81\left(n_A + \frac{10}{9} n_B\right)" />
+  <BlockMath math="84n_A + 84n_B = 81n_A + 90n_B" />
+</MathContainer>
+
+Group like terms:
+
+<MathContainer>
+  <BlockMath math="84n_A - 81n_A = 90n_B - 84n_B" />
+  <BlockMath math="3n_A = 6n_B" />
+</MathContainer>
+
+Simplify the equation to find the ratio <InlineMath math="n_A : n_B" />:
+
+<MathContainer>
+  <BlockMath math="\frac{n_A}{n_B} = \frac{6}{3} = \frac{2}{1}" />
+</MathContainer>
+
+Therefore, the ratio of the number of students in class A to class B is **2 : 1**.

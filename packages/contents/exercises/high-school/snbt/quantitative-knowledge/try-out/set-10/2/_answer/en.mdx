@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Solution for Question 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+import { Graph } from "../graph";
+
+<Graph
+  id="question-2"
+  title="Angle Analysis"
+  description="Relationship between intersecting angles."
+/>
+
+From the figure, we can see that the angle vertically opposite to <InlineMath math="z^\circ" /> is the angle between the two diagonal lines at the top. The measure of that angle is equal to <InlineMath math="z^\circ" />.
+
+Since the angles on a straight line sum to <InlineMath math="180^\circ" />, the sum of angle <InlineMath math="x^\circ" />, vertical angle <InlineMath math="z^\circ" />, and <InlineMath math="y^\circ" /> is <InlineMath math="180^\circ" />:
+
+<MathContainer>
+  <BlockMath math="x^\circ + z^\circ + y^\circ = 180^\circ" />
+</MathContainer>
+
+Given that <InlineMath math="x^\circ = y^\circ" />, we can substitute <InlineMath math="y" /> with <InlineMath math="x" />:
+
+<MathContainer>
+  <BlockMath math="x^\circ + z^\circ + x^\circ = 180^\circ" />
+  <BlockMath math="z^\circ + 2x^\circ = 180^\circ" />
+  <BlockMath math="z^\circ = 180^\circ - 2x^\circ" />
+</MathContainer>
+
+Therefore, the measure of angle <InlineMath math="z" /> is <InlineMath math="180 - 2x" />.

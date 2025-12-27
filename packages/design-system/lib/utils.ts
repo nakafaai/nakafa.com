@@ -65,6 +65,20 @@ export function slugify(text: string): string {
   return text.toLowerCase().replace(/\s+/g, "-");
 }
 
+export function createHeadingId(text: string): string {
+  return slugify(createHeadingLabel(text));
+}
+
+export function createHeadingLabel(text: string): string {
+  return text
+    .replace(/<InlineMath[^>]*math="([^"]*)"[^>]*\/>/g, "$1")
+    .replace(/<BlockMath[^>]*math="([^"]*)"[^>]*\/>/g, "$1")
+    .replace(/<CodeBlock[^>]*\/>/g, "[Code]")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\\([a-zA-Z]+)/g, "$1")
+    .trim();
+}
+
 /**
  * Filters whitespace text nodes from the given children to prevent hydration errors.
  * @param children - The children to filter.

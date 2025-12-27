@@ -1,0 +1,49 @@
+export const metadata = {
+    title: "Pembahasan Soal 11",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "12/26/2025",
+};
+
+Misalkan:
+-   <InlineMath math="P(A)" /> = Peluang Ali lulus UN
+-   <InlineMath math="P(B)" /> = Peluang Bima lulus UN
+-   <InlineMath math="P(D)" /> = Peluang Dika lulus UN
+
+Diketahui:
+
+<MathContainer>
+  <BlockMath math="P(A) = 0,75 \rightarrow P(A^c) = 1 - 0,75 = 0,25" />
+  <BlockMath math="P(B) = 0,8 \rightarrow P(B^c) = 1 - 0,8 = 0,2" />
+  <BlockMath math="P(D) = 0,85 \rightarrow P(D^c) = 1 - 0,85 = 0,15" />
+</MathContainer>
+
+Jika yang lulus hanya satu orang, maka terdapat tiga kemungkinan kejadian saling lepas:
+
+#### Ali lulus, Bima dan Dika tidak lulus
+
+<MathContainer>
+  <BlockMath math="P(A) \cdot P(B^c) \cdot P(D^c) = 0,75 \cdot 0,2 \cdot 0,15" />
+  <BlockMath math="= 0,0225" />
+</MathContainer>
+
+#### 2. Bima lulus, Ali dan Dika tidak lulus
+
+<MathContainer>
+  <BlockMath math="P(B) \cdot P(A^c) \cdot P(D^c) = 0,8 \cdot 0,25 \cdot 0,15" />
+  <BlockMath math="= 0,03" />
+</MathContainer>
+
+#### Dika lulus, Ali dan Bima tidak lulus
+
+<MathContainer>
+  <BlockMath math="P(D) \cdot P(A^c) \cdot P(B^c) = 0,85 \cdot 0,25 \cdot 0,2" />
+  <BlockMath math="= 0,0425" />
+</MathContainer>
+
+#### Total Peluang
+
+Jadi, peluang hanya satu yang lulus adalah jumlah dari ketiga kemungkinan tersebut:
+
+<MathContainer>
+  <BlockMath math="0,0225 + 0,03 + 0,0425 = 0,095" />
+</MathContainer>

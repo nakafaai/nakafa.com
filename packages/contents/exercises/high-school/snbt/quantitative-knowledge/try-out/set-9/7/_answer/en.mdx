@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Solution for Problem 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+Let:
+-   <InlineMath math="a =" /> current age of the younger sibling
+-   <InlineMath math="k =" /> current age of the older sibling
+
+#### First Condition Analysis
+
+Seven years ago, the sum of the ages of the older sibling and the younger sibling was <InlineMath math="26" /> years.
+
+The mathematical model is:
+
+<MathContainer>
+  <BlockMath math="(k - 7) + (a - 7) = 26" />
+  <BlockMath math="k + a - 14 = 26" />
+  <BlockMath math="k + a = 40 \quad \dots (1)" />
+</MathContainer>
+
+#### Second Condition Analysis
+
+Four years from now, twice the age of the older sibling is equal to twice the age of the younger sibling plus eight years.
+
+The mathematical model is:
+
+<MathContainer>
+  <BlockMath math="2(k + 4) = 2(a + 4) + 8" />
+  <BlockMath math="2k + 8 = 2a + 8 + 8" />
+  <BlockMath math="2k - 2a = 8" />
+  <BlockMath math="k - a = 4 \quad \dots (2)" />
+</MathContainer>
+
+#### Finding the Younger Sibling's Age
+
+We eliminate equation <InlineMath math="(1)" /> and <InlineMath math="(2)" /> to find the value of <InlineMath math="a" />.
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} k + a &= 40 \\ k - a &= 4 \\ \hline 2a &= 36 \\ a &= 18 \end{aligned}" />
+</MathContainer>
+
+> We subtract the second equation from the first: <InlineMath math="(k+a) - (k-a) = 2a" /> and <InlineMath math="40 - 4 = 36" />.
+
+Thus, the current age of the younger sibling is <InlineMath math="18" /> years.
+
+Therefore, the younger sibling is <InlineMath math="18" /> years old.

@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Solution 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+First, we calculate the probability of picking two blue balls. The total number of balls in the box is the sum of yellow and blue balls.
+
+<MathContainer>
+  <BlockMath math="n(S) = 8 + 3 = 11" />
+</MathContainer>
+
+The number of ways to choose <InlineMath math="2" /> balls from a total of <InlineMath math="11" /> balls can be calculated using combinations.
+
+<MathContainer>
+  <BlockMath math="C^{11}_2 = \frac{11!}{2!(11-2)!} = \frac{11 \times 10 \times 9!}{2 \times 1 \times 9!} = \frac{110}{2} = 55" />
+</MathContainer>
+
+Next, we calculate the number of ways to choose <InlineMath math="2" /> blue balls from the <InlineMath math="3" /> available blue balls.
+
+<MathContainer>
+  <BlockMath math="n(A) = C^3_2 = \frac{3!}{2!(3-2)!} = \frac{3 \times 2!}{2! \times 1!} = 3" />
+</MathContainer>
+
+The probability of obtaining two blue balls (<InlineMath math="P(2B)" />) is the ratio of the number of ways to pick two blue balls to the total number of ways to pick any two balls.
+
+<MathContainer>
+  <BlockMath math="P(2B) = \frac{n(A)}{n(S)} = \frac{3}{55}" />
+</MathContainer>
+
+The expected frequency (<InlineMath math="F_h" />) is the product of the probability of the event and the number of trials. The number of trials is <InlineMath math="110" />.
+
+<MathContainer>
+  <BlockMath math="F_h = P(2B) \times N" />
+  <BlockMath math="F_h = \frac{3}{55} \times 110" />
+  <BlockMath math="F_h = 3 \times 2 = 6" />
+</MathContainer>
+
+Thus, the expected frequency of obtaining two blue balls is <InlineMath math="6" />.

@@ -99,7 +99,7 @@ export function AnimateTabs({ id, tabs, className }: Props) {
       >
         {/* Hover Highlight */}
         <div
-          className="absolute flex h-[32px] items-center rounded-md bg-accent transition-all duration-300 ease-out"
+          className="absolute flex h-8 items-center rounded-md bg-accent transition-all duration-300 ease-out"
           style={{
             ...hoverStyle,
             opacity: hoveredIndex !== null ? 1 : 0,

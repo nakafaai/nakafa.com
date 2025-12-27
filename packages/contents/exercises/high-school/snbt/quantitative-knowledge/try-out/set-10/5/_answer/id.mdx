@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Pembahasan Nilai Maksimum",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Diketahui sistem pertidaksamaan:
+
+<MathContainer>
+  <BlockMath math="\begin{cases} x \ge 0 \\ y \ge 0 \\ x + 5y \le 10 \\ 5x + y \le a^2 - 5 \end{cases}" />
+</MathContainer>
+
+Kita dapat menjumlahkan kedua pertidaksamaan utama untuk mendapatkan batas nilai <InlineMath math="x + y" />:
+
+<MathContainer>
+  <BlockMath math="(x + 5y) + (5x + y) \le 10 + (a^2 - 5)" />
+  <BlockMath math="6x + 6y \le 5 + a^2" />
+  <BlockMath math="6(x + y) \le 5 + a^2" />
+</MathContainer>
+
+Diketahui bahwa nilai maksimum dari <InlineMath math="x + y" /> adalah <InlineMath math="5" />. Maka, kita substitusikan nilai maksimum tersebut ke dalam pertidaksamaan:
+
+<MathContainer>
+  <BlockMath math="6(5) = 5 + a^2" />
+  <BlockMath math="30 = 5 + a^2" />
+  <BlockMath math="a^2 = 25" />
+</MathContainer>
+
+Maka, nilai <InlineMath math="a" /> adalah:
+
+<MathContainer>
+  <BlockMath math="a = 5" />
+</MathContainer>
+
+(Kita ambil nilai positif karena opsi jawaban positif, meskipun secara matematis bisa <InlineMath math="\pm 5" />).
+
+Jadi, nilai <InlineMath math="a" /> adalah <InlineMath math="5" />.

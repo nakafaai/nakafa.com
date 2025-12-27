@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Solution to Question 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+The given number sequence is:
+
+<BlockMath math="0.5, \ 3, \ 8, \ 18, \ 38, \ 78, \ \dots, \ 318" />
+
+Let's analyze the difference between consecutive terms:
+
+<MathContainer>
+  <BlockMath math="3 - 0.5 = 2.5" />
+  <BlockMath math="8 - 3 = 5" />
+  <BlockMath math="18 - 8 = 10" />
+  <BlockMath math="38 - 18 = 20" />
+  <BlockMath math="78 - 38 = 40" />
+</MathContainer>
+
+Observing the pattern of differences (<InlineMath math="2.5, \ 5, \ 10, \ 20, \ 40" />), we can see that each difference is obtained by multiplying the previous difference by <InlineMath math="2" /> (a common ratio of <InlineMath math="2" />).
+
+Therefore, the next difference after <InlineMath math="40" /> is:
+
+<BlockMath math="40 \times 2 = 80" />
+
+Thus, the number that fills the blank is:
+
+<BlockMath math="78 + 80 = 158" />
+
+To verify this pattern, let's calculate the subsequent term and check if it matches the last known term (<InlineMath math="318" />). The next difference after <InlineMath math="80" /> would be <InlineMath math="80 \times 2 = 160" />.
+
+<BlockMath math="158 + 160 = 318" />
+
+The calculation matches the last term in the problem.
+
+Therefore, the correct number to complete the pattern is <InlineMath math="158" />.

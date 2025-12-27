@@ -30,7 +30,11 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
       <header className="flex items-start justify-between gap-4">
         <section className="flex flex-1 items-start gap-4 text-left">
           <Avatar className="size-12 rounded-full border sm:size-16">
-            <AvatarImage alt={tCommon("anonymous")} src="" />
+            <AvatarImage
+              alt={tCommon("anonymous")}
+              role="presentation"
+              src=""
+            />
             <AvatarFallback className="rounded-lg">
               {getInitialName(tCommon("anonymous"))}
             </AvatarFallback>
@@ -52,7 +56,11 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
     <header className="flex items-start justify-between gap-4">
       <section className="flex flex-1 items-start gap-4 text-left">
         <Avatar className="size-12 rounded-full border sm:size-16">
-          <AvatarImage alt={authUser.name} src={authUser.image ?? ""} />
+          <AvatarImage
+            alt={authUser.name}
+            role="presentation"
+            src={authUser.image ?? ""}
+          />
           <AvatarFallback className="rounded-lg">
             {getInitialName(authUser.name)}
           </AvatarFallback>

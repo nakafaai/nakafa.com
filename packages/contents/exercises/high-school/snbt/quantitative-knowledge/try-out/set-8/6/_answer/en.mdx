@@ -1,0 +1,47 @@
+export const metadata = {
+  title: "Solution for Problem 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+The order of members in a set does not matter, so we use the concept of combinations.
+
+The total number of subsets of a set with <InlineMath math="n" /> members is <InlineMath math="2^n" />. Given <InlineMath math="n = 10" />, the total number of subsets is:
+
+<BlockMath math="2^{10} = 1024" />
+
+We are asked to find the number of subsets with **more than <InlineMath math="3" />** members. This means we are looking for the sum of subsets with 4, 5, 6, ..., 10 members.
+
+An easier way is to use the complement principle: Total subsets minus subsets with **<InlineMath math="0" />, <InlineMath math="1" />, <InlineMath math="2" />, or <InlineMath math="3" />** members.
+
+The combination formula is:
+
+<BlockMath math="C(n, r) = \binom{n}{r} = \frac{n!}{r!(n-r)!}" />
+
+Let's calculate them one by one.
+
+#### Subsets with 0 members
+
+<BlockMath math="C(10, 0) = \frac{10!}{0!10!} = 1" />
+
+#### Subsets with 1 member
+
+<BlockMath math="C(10, 1) = \frac{10!}{1!9!} = 10" />
+
+#### Subsets with 2 members
+
+<BlockMath math="C(10, 2) = \frac{10!}{2!8!} = \frac{10 \times 9}{2 \times 1} = 45" />
+
+#### Subsets with 3 members
+
+<BlockMath math="C(10, 3) = \frac{10!}{3!7!} = \frac{10 \times 9 \times 8}{3 \times 2 \times 1} = 120" />
+
+The number of subsets with <InlineMath math="\leq 3" /> members is:
+
+<BlockMath math="1 + 10 + 45 + 120 = 176" />
+
+Thus, the number of subsets with **more than <InlineMath math="3" />** members is:
+
+<BlockMath math="\begin{aligned} \text{Total} - (\leq 3) &= 1024 - 176 \\ &= 848 \end{aligned}" />
+
+So, the number of subsets of <InlineMath math="A" /> that have more than <InlineMath math="3" /> members is <InlineMath math="848" />.

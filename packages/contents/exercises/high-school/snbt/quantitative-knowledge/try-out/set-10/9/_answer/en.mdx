@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Construction Probability Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Defined:
+
+-   <InlineMath math="A =" /> event construction finishes on time
+-   <InlineMath math="A^c =" /> event construction does not finish on time
+-   <InlineMath math="B =" /> event a protest occurs
+-   <InlineMath math="B^c =" /> event no protest occurs
+-   <InlineMath math="A|B =" /> event construction finishes on time given a protest
+-   <InlineMath math="A|B^c =" /> event construction finishes on time given no protest
+
+The probability that construction finishes on time is the sum of the probability of a protest multiplied by the probability of finishing on time given a protest, plus the probability of no protest multiplied by the probability of finishing on time given no protest.
+
+<MathContainer>
+  <BlockMath math="P(A) = P(B)P(A|B) + P(B^c)P(A|B^c)" />
+</MathContainer>
+
+We know that:
+
+<MathContainer>
+  <BlockMath math="P(B) = 0.7, \quad P(B^c) = 1 - 0.7 = 0.3" />
+</MathContainer>
+
+<MathContainer>
+  <BlockMath math="P(A|B^c) = 0.8, \quad P(A|B) = 0.4" />
+</MathContainer>
+
+Then:
+
+<MathContainer>
+  <BlockMath math="P(A) = (0.7)(0.4) + (0.3)(0.8)" />
+</MathContainer>
+
+<MathContainer>
+  <BlockMath math="P(A) = 0.28 + 0.24 = 0.52" />
+</MathContainer>
+
+Thus, the probability that the construction finishes on time is <InlineMath math="0.52" />.

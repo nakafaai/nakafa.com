@@ -1,5 +1,6 @@
 import { getAppUrl } from "@repo/design-system/lib/utils";
 import { JsonLd } from "@repo/seo/json-ld";
+import { ORGANIZATION } from "@repo/seo/json-ld/constants";
 import type { Article, Person, WithContext } from "schema-dts";
 
 interface Props {
@@ -34,18 +35,8 @@ export function ArticleJsonLd({
     author: Array.isArray(author) ? author : [author],
     image: image ? [image] : undefined,
     description,
-    publisher: {
-      "@type": "Organization",
-      name: "PT. Nakafa Tekno Kreatif",
-      logo: "https://nakafa.com/logo.svg",
-      url: "https://nakafa.com",
-    },
-    maintainer: {
-      "@type": "Organization",
-      name: "PT. Nakafa Tekno Kreatif",
-      logo: "https://nakafa.com/logo.svg",
-      url: "https://nakafa.com",
-    },
+    publisher: ORGANIZATION,
+    maintainer: ORGANIZATION,
   };
 
   return <JsonLd jsonLd={articleJsonLd} />;

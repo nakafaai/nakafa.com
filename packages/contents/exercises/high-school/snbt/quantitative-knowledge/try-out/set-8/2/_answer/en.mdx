@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Solution for Problem 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+The sequence above consists of two alternating sub-sequences (skipping one number).
+
+#### Pattern 1 (Odd positions)
+
+<InlineMath math="42, 39, 34, 27, ..." />
+
+The differences between consecutive terms are:
+
+<BlockMath math="\begin{aligned} 39 - 42 &= -3 \\ 34 - 39 &= -5 \\ 27 - 34 &= -7 \end{aligned}" />
+
+The pattern is subtracting consecutive odd numbers (<InlineMath math="-3, -5, -7" />). Thus, the next difference is <InlineMath math="-9" />. Next term: <InlineMath math="27 - 9 = 18" />.
+
+#### Pattern 2 (Even positions)
+
+<InlineMath math="40, 36, 30, 22, ..." />
+
+The differences between consecutive terms are:
+
+<BlockMath math="\begin{aligned} 36 - 40 &= -4 \\ 30 - 36 &= -6 \\ 22 - 30 &= -8 \end{aligned}" />
+
+The pattern is subtracting consecutive even numbers (<InlineMath math="-4, -6, -8" />). Thus, the next difference is <InlineMath math="-10" />. Next term: <InlineMath math="22 - 10 = 12" />.
+
+So, the next two numbers are <InlineMath math="18" /> and <InlineMath math="12" />.

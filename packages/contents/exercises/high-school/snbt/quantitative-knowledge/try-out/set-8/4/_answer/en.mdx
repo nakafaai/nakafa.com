@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Solution for Problem 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+The new data follows the pattern:
+
+<MathContainer>
+  <BlockMath math="\frac{x_1}{2} + 3, \frac{x_2}{2} + 5, \frac{x_3}{2} + 7, ..." />
+</MathContainer>
+
+The new average can be obtained by:
+
+<MathContainer>
+  <BlockMath math="\bar{x} = \frac{\left(\frac{x_1}{2} + 3\right) + \left(\frac{x_2}{2} + 5\right) + \left(\frac{x_3}{2} + 7\right) + ... + \left(\frac{x_{10}}{2} + (2(10)+1)\right)}{10}" />
+</MathContainer>
+
+First, let's find the sum of the arithmetic series <InlineMath math="3, 5, 7, ..." />. This sequence has the first term <InlineMath math="a = 3" /> and difference <InlineMath math="b = 2" />. The 10th term is:
+
+<MathContainer>
+  <BlockMath math="U_{10} = 3 + 9(2) = 21" />
+</MathContainer>
+
+The sum of the first 10 terms is:
+
+<MathContainer>
+  <BlockMath math="S_{10} = \frac{10}{2}(3 + 21) = 5(24) = 120" />
+</MathContainer>
+
+The new average can be written as:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} \bar{x} &= \frac{\frac{1}{2}(x_1 + x_2 + ... + x_{10}) + 120}{10} \\ &= \frac{1}{2}\frac{(x_1 + x_2 + ... + x_{10})}{10} + \frac{120}{10} \\ &= \frac{1}{2}x_0 + 12 \end{aligned}" />
+</MathContainer>
+
+Thus, the new average is <InlineMath math="\frac{1}{2}x_0 + 12" />.

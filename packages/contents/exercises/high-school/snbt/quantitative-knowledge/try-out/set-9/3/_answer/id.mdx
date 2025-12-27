@@ -1,0 +1,52 @@
+export const metadata = {
+  title: "Pembahasan Soal 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+import { Graph } from "../graph";
+
+<Graph
+  mode="answer"
+  title="Visualisasi Pembahasan"
+  description={
+    <>
+      Garis bantu membagi sudut <InlineMath math="\alpha" /> menjadi{" "}
+      <InlineMath math="\beta" /> dan <InlineMath math="\gamma" />.
+    </>
+  }
+/>
+
+Kita buat garis bantu yang sejajar dengan garis <InlineMath math="PQ" /> dan <InlineMath math="RS" /> yang melalui titik sudut <InlineMath math="\alpha" />.
+Garis ini membagi sudut <InlineMath math="\alpha" /> menjadi dua bagian, yaitu <InlineMath math="\beta" /> dan <InlineMath math="\gamma" />.
+
+#### Mencari Nilai <InlineMath math="\beta" />
+
+Perhatikan bahwa sudut <InlineMath math="\beta" /> dan sudut <InlineMath math="25^\circ" /> adalah pasangan sudut dalam berseberangan.
+Karena garis-garis tersebut sejajar, maka besar sudutnya sama:
+
+<MathContainer>
+  <BlockMath math="\beta = 25^\circ" />
+</MathContainer>
+
+#### Mencari Nilai <InlineMath math="\gamma" />
+
+Sudut <InlineMath math="\gamma" /> dan sudut <InlineMath math="135^\circ" /> adalah pasangan sudut dalam sepihak (consecutive interior angles).
+Jumlah kedua sudut ini adalah <InlineMath math="180^\circ" />:
+
+<MathContainer>
+  <BlockMath math="\gamma + 135^\circ = 180^\circ" />
+  <BlockMath math="\gamma = 180^\circ - 135^\circ = 45^\circ" />
+</MathContainer>
+
+#### Menghitung Nilai <InlineMath math="\alpha" />
+
+Nilai <InlineMath math="\alpha" /> adalah jumlah dari <InlineMath math="\beta" /> dan <InlineMath math="\gamma" />:
+
+<MathContainer>
+  <BlockMath math="\alpha = \beta + \gamma" />
+  <BlockMath math="\alpha = 25^\circ + 45^\circ" />
+  <BlockMath math="\alpha = 70^\circ" />
+</MathContainer>
+
+Jadi, nilai <InlineMath math="\alpha" /> adalah <InlineMath math="70^\circ" />.

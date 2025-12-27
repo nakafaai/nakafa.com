@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Pembahasan Soal 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+Diketahui data baru mengikuti pola:
+
+<MathContainer>
+  <BlockMath math="\frac{x_1}{2} + 3, \frac{x_2}{2} + 5, \frac{x_3}{2} + 7, ..." />
+</MathContainer>
+
+Maka rata-rata barunya dapat diperoleh dengan:
+
+<MathContainer>
+  <BlockMath math="\bar{x} = \frac{\left(\frac{x_1}{2} + 3\right) + \left(\frac{x_2}{2} + 5\right) + \left(\frac{x_3}{2} + 7\right) + ... + \left(\frac{x_{10}}{2} + (2(10)+1)\right)}{10}" />
+</MathContainer>
+
+Akan dicari terlebih dahulu jumlah dari deret aritmatika <InlineMath math="3, 5, 7, ..." />. Barisan ini memiliki suku pertama <InlineMath math="a = 3" /> dan beda <InlineMath math="b = 2" />. Suku ke-10 adalah:
+
+<MathContainer>
+  <BlockMath math="U_{10} = 3 + 9(2) = 21" />
+</MathContainer>
+
+Jumlah 10 suku pertama adalah:
+
+<MathContainer>
+  <BlockMath math="S_{10} = \frac{10}{2}(3 + 21) = 5(24) = 120" />
+</MathContainer>
+
+Rata-rata data baru dapat ditulis sebagai berikut:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} \bar{x} &= \frac{\frac{1}{2}(x_1 + x_2 + ... + x_{10}) + 120}{10} \\ &= \frac{1}{2}\frac{(x_1 + x_2 + ... + x_{10})}{10} + \frac{120}{10} \\ &= \frac{1}{2}x_0 + 12 \end{aligned}" />
+</MathContainer>
+
+Jadi, rata-rata barunya adalah <InlineMath math="\frac{1}{2}x_0 + 12" />.

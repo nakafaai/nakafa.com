@@ -74,6 +74,7 @@ export function SourceTrigger({
           <Image
             alt="favicon"
             className="size-3.5 rounded-full"
+            fetchPriority="high"
             height={14}
             loading="eager"
             preload

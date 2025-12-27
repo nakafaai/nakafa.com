@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Pembahasan Soal 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+Misalkan:
+
+- <InlineMath math="P(h_1) =" /> Peluang hitam pada kotak 1
+- <InlineMath math="P(h_2) =" /> Peluang hitam pada kotak 2
+- <InlineMath math="P(p_1) =" /> Peluang putih pada kotak 1
+- <InlineMath math="P(p_2) =" /> Peluang putih pada kotak 2
+
+Diketahui peluang bola hitam dari kedua kotak adalah <InlineMath math="\frac{3}{10}" />. Karena pengambilan bola dari kotak 1 dan kotak 2 adalah kejadian saling bebas, maka:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} P(h_1 \cap h_2) &= P(h_1) \times P(h_2) \\ \frac{3}{10} &= \frac{n(h_1)}{20} \times \frac{n(h_2)}{20} \\ \frac{3}{10} &= \frac{n(h_1) \times n(h_2)}{400} \\ n(h_1) \times n(h_2) &= 120 \end{aligned}" />
+</MathContainer>
+
+Kita perlu mencari pasangan faktor dari <InlineMath math="120" /> yang keduanya kurang dari atau sama dengan <InlineMath math="20" /> (jumlah maksimal bola). Pasangan yang mungkin adalah <InlineMath math="12" /> dan <InlineMath math="10" /> (atau sebaliknya). Misalkan <InlineMath math="n(h_1) = 12" /> dan <InlineMath math="n(h_2) = 10" />.
+
+Maka jumlah bola putih adalah:
+
+- Kotak 1: <InlineMath math="20 - 12 = 8" /> bola putih
+- Kotak 2: <InlineMath math="20 - 10 = 10" /> bola putih
+
+Peluang kedua bola berwarna putih adalah:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} P(p_1 \cap p_2) &= P(p_1) \times P(p_2) \\ &= \frac{8}{20} \times \frac{10}{20} \\ &= \frac{2}{5} \times \frac{1}{2} \\ &= \frac{1}{5} \end{aligned}" />
+</MathContainer>
+
+Diketahui <InlineMath math="\frac{m}{n} = \frac{1}{5}" />. Sehingga <InlineMath math="m = 1" /> dan <InlineMath math="n = 5" />. Nilai <InlineMath math="m + n = 1 + 5 = 6" />.

@@ -1,0 +1,55 @@
+export const metadata = {
+  title: "Pembahasan Soal 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+import { Graph } from "../graph";
+
+<Graph
+    mode="answer"
+    title="Visualisasi Pembahasan"
+    description={
+        <>
+            Lingkaran dengan titik pusat <InlineMath math="F" />, jari-jari{" "}
+            <InlineMath math="r" />, dan garis bantu untuk menghitung jari-jari.
+        </>
+    }
+/>
+
+Misalkan <InlineMath math="F" /> adalah titik pusat lingkaran, sehingga <InlineMath math="AF = FD = FG = r" /> (jari-jari lingkaran).
+
+Diketahui panjang sisi persegi <InlineMath math="AD = 24 \text{ cm}" />. Karena <InlineMath math="E" /> adalah titik tengah <InlineMath math="AD" /> (berdasarkan simetri lingkaran yang melalui <InlineMath math="A" /> dan <InlineMath math="D" />), maka:
+
+<MathContainer>
+  <BlockMath math="AE = ED = \frac{1}{2} AD = 12 \text{ cm}" />
+</MathContainer>
+
+#### Mencari Jari-jari Lingkaran
+
+Kita akan mencari jari-jari lingkaran (<InlineMath math="r" />) dengan menggunakan teorema Pythagoras pada segitiga siku-siku <InlineMath math="AEF" />.
+Perhatikan bahwa panjang <InlineMath math="EF" /> adalah jarak dari pusat lingkaran ke sisi <InlineMath math="AD" />.
+Karena lingkaran menyinggung sisi <InlineMath math="BC" /> di titik <InlineMath math="G" />, dan jarak total dari sisi <InlineMath math="AD" /> ke sisi <InlineMath math="BC" /> adalah panjang sisi persegi (<InlineMath math="24 \text{ cm}" />), maka <InlineMath math="EF = AB - r = 24 - r" />.
+
+Berdasarkan teorema Pythagoras pada <InlineMath math="\triangle AEF" />:
+
+<MathContainer>
+  <BlockMath math="AF^2 = AE^2 + EF^2" />
+  <BlockMath math="r^2 = 12^2 + (24 - r)^2" />
+  <BlockMath math="r^2 = 144 + (576 - 48r + r^2)" />
+  <BlockMath math="r^2 = r^2 - 48r + 720" />
+  <BlockMath math="48r = 720" />
+  <BlockMath math="r = \frac{720}{48} = 15 \text{ cm}" />
+</MathContainer>
+
+#### Menghitung Luas Lingkaran
+
+Setelah mengetahui jari-jari lingkaran <InlineMath math="r = 15 \text{ cm}" />, kita dapat menghitung luasnya:
+
+<MathContainer>
+  <BlockMath math="L_o = \pi r^2" />
+  <BlockMath math="L_o = \pi (15)^2" />
+  <BlockMath math="L_o = 225\pi \text{ cm}^2" />
+</MathContainer>
+
+Jadi, luas lingkaran tersebut adalah <InlineMath math="225\pi \text{ cm}^2" />.

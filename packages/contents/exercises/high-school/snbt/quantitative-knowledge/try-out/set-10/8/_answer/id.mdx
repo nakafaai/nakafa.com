@@ -1,0 +1,50 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Pembahasan Pertidaksamaan Kuadrat",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Kita akan menyelesaikan pertidaksamaan:
+
+<MathContainer>
+  <BlockMath math="x^2 + x - 6 > 0" />
+</MathContainer>
+
+Faktorkan persamaan kuadrat tersebut:
+
+<MathContainer>
+  <BlockMath math="(x - 2)(x + 3) > 0" />
+</MathContainer>
+
+Pembuat nol (akar-akar) dari persamaan adalah:
+
+<MathContainer>
+  <BlockMath math="x = 2 \quad \text{atau} \quad x = -3" />
+</MathContainer>
+
+Kita uji titik pada garis bilangan:
+
+<Graph
+  title="Garis Bilangan"
+  description="Visualisasi daerah penyelesaian pertidaksamaan."
+/>
+
+-   Untuk <InlineMath math="x < -3" /> (misal <InlineMath math="-4" />): <InlineMath math="(-4-2)(-4+3) = (-6)(-1) = 6" /> (Positif)
+-   Untuk <InlineMath math="-3 < x < 2" /> (misal <InlineMath math="0" />): <InlineMath math="(0-2)(0+3) = (-2)(3) = -6" /> (Negatif)
+-   Untuk <InlineMath math="x > 2" /> (misal <InlineMath math="3" />): <InlineMath math="(3-2)(3+3) = (1)(6) = 6" /> (Positif)
+
+Karena tanda pertidaksamaan adalah <InlineMath math="> 0" /> (positif), maka daerah penyelesaiannya adalah:
+
+<MathContainer>
+  <BlockMath math="x < -3 \quad \text{atau} \quad x > 2" />
+</MathContainer>
+
+Berdasarkan pernyataan yang diketahui:
+1.  <InlineMath math="x > 2" /> (Sesuai)
+2.  <InlineMath math="-3 < x < 2" /> (Tidak sesuai)
+3.  <InlineMath math="x < -3" /> (Sesuai)
+4.  <InlineMath math="x > -3" /> (Tidak sesuai)
+
+Jadi, pertidaksamaan dipenuhi oleh pernyataan <InlineMath math="1" /> dan <InlineMath math="3" />.

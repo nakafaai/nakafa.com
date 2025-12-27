@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Pembahasan Soal 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+Untuk menentukan daerah asal fungsi, kita perlu memastikan bahwa semua komponen fungsi terdefinisi (bilangan di dalam akar tidak boleh negatif dan penyebut tidak boleh nol).
+
+Fungsi <InlineMath math="f(x) = \frac{\sqrt{5 - x}}{\sqrt{x^2 + x - 6}}" /> memiliki dua syarat utama:
+
+#### Syarat 1: Pembilang
+
+Bilangan di dalam akar pada pembilang harus non-negatif:
+
+<MathContainer>
+  <BlockMath math="5 - x \geq 0" />
+  <BlockMath math="-x \geq -5" />
+  <BlockMath math="x \leq 5" />
+</MathContainer>
+
+#### Syarat 2: Penyebut
+
+Bilangan di dalam akar pada penyebut harus positif (karena akar di penyebut tidak boleh nol):
+
+<MathContainer>
+  <BlockMath math="x^2 + x - 6 > 0" />
+  <BlockMath math="(x + 3)(x - 2) > 0" />
+</MathContainer>
+
+Pembuat nol dari pertidaksamaan ini adalah <InlineMath math="x = -3" /> dan <InlineMath math="x = 2" />.
+
+Dengan uji titik, kita mendapatkan daerah penyelesaian untuk penyebut: <InlineMath math="x < -3" /> atau <InlineMath math="x > 2" />.
+
+#### Irisan Daerah Asal
+
+Daerah asal fungsi <InlineMath math="f" /> adalah irisan dari kedua syarat di atas:
+1.  <InlineMath math="x \leq 5" />
+2.  <InlineMath math="x < -3" /> atau <InlineMath math="x > 2" />
+
+Irisannya adalah:
+-   Untuk <InlineMath math="x < -3" />, memenuhi <InlineMath math="x \leq 5" />.
+-   Untuk <InlineMath math="x > 2" />, dibatasi oleh <InlineMath math="x \leq 5" />, sehingga menjadi <InlineMath math="2 < x \leq 5" />.
+
+Jadi, daerah asal fungsi <InlineMath math="f" /> adalah:
+
+<MathContainer>
+  <BlockMath math="Df = \{x | x < -3 \text{ atau } 2 < x \leq 5\}" />
+</MathContainer>

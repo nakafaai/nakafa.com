@@ -12,6 +12,7 @@ import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -57,7 +58,7 @@ export async function generateMetadata({
 
   let ogUrl: string = getOgUrl(locale, FilePath);
 
-  const publicPath = `/open-graph/exercises/${locale}-${material}.png` as const;
+  const publicPath = `/open-graph/subject/${locale}-${material}.png` as const;
   const fullPathToCheck = path.join(process.cwd(), `public${publicPath}`);
 
   // if the og image exists in public directory, use it
@@ -152,6 +153,15 @@ async function PageContent({
           item: `https://nakafa.com/${locale}${mat.href}`,
         }))}
         locale={locale}
+      />
+      <CollectionPageJsonLd
+        description={t(type)}
+        items={materials.map((mat) => ({
+          url: `https://nakafa.com/${locale}${mat.href}`,
+          name: mat.title,
+        }))}
+        name={`${t(material)} - ${t(type)}`}
+        url={`https://nakafa.com/${locale}${FilePath}`}
       />
       <LayoutMaterial>
         <LayoutMaterialContent>

@@ -1,0 +1,55 @@
+export const metadata = {
+  title: "Solution to Problem 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+import { Graph } from "../graph";
+
+<Graph
+    mode="answer"
+    title="Solution Visualization"
+    description={
+        <>
+            Circle with center <InlineMath math="F" />, radius{" "}
+            <InlineMath math="r" />, and auxiliary lines to calculate the radius.
+        </>
+    }
+/>
+
+Let <InlineMath math="F" /> be the center of the circle, so <InlineMath math="AF = FD = FG = r" /> (the radius of the circle).
+
+Given the side length of the square <InlineMath math="AD = 24 \text{ cm}" />. Since <InlineMath math="E" /> is the midpoint of <InlineMath math="AD" /> (based on the symmetry of the circle passing through <InlineMath math="A" /> and <InlineMath math="D" />), then:
+
+<MathContainer>
+  <BlockMath math="AE = ED = \frac{1}{2} AD = 12 \text{ cm}" />
+</MathContainer>
+
+#### Finding the Radius of the Circle
+
+We will find the radius of the circle (<InlineMath math="r" />) using the Pythagorean theorem on the right-angled triangle <InlineMath math="\triangle AEF" />.
+Note that the length <InlineMath math="EF" /> is the distance from the center of the circle to side <InlineMath math="AD" />.
+Since the circle is tangent to side <InlineMath math="BC" /> at point <InlineMath math="G" />, and the total distance from side <InlineMath math="AD" /> to side <InlineMath math="BC" /> is the side length of the square (<InlineMath math="24 \text{ cm}" />), then <InlineMath math="EF = AB - r = 24 - r" />.
+
+Using the Pythagorean theorem on <InlineMath math="\triangle AEF" />:
+
+<MathContainer>
+  <BlockMath math="AF^2 = AE^2 + EF^2" />
+  <BlockMath math="r^2 = 12^2 + (24 - r)^2" />
+  <BlockMath math="r^2 = 144 + (576 - 48r + r^2)" />
+  <BlockMath math="r^2 = r^2 - 48r + 720" />
+  <BlockMath math="48r = 720" />
+  <BlockMath math="r = \frac{720}{48} = 15 \text{ cm}" />
+</MathContainer>
+
+#### Calculating the Area of the Circle
+
+After finding the radius <InlineMath math="r = 15 \text{ cm}" />, we can calculate the area:
+
+<MathContainer>
+  <BlockMath math="A_o = \pi r^2" />
+  <BlockMath math="A_o = \pi (15)^2" />
+  <BlockMath math="A_o = 225\pi \text{ cm}^2" />
+</MathContainer>
+
+Therefore, the area of the circle is <InlineMath math="225\pi \text{ cm}^2" />.

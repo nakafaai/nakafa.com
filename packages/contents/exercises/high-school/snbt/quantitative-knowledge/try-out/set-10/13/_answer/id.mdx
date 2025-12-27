@@ -1,0 +1,27 @@
+export const metadata = {
+   title: "Mengurutkan Bilangan",
+   authors: [{ name: "Nabil Akbarazzima Fatih" }],
+   date: "12/27/2025",
+};
+
+Untuk mengurutkan bilangan-bilangan tersebut, kita dapat mengubah semua bentuk bilangan menjadi bentuk desimal agar lebih mudah dibandingkan.
+
+<MathContainer>
+  <BlockMath math="1\frac{1}{8} = 1 + 0,125 = 1,125" />
+  <BlockMath math="0,875 = 0,875" />
+  <BlockMath math="\frac{3}{4} = 0,75" />
+  <BlockMath math="\frac{1}{\sqrt{2}} = \frac{1}{1,414} \approx 0,707" />
+  <BlockMath math="12,5\% = \frac{12,5}{100} = 0,125" />
+</MathContainer>
+
+Sekarang kita urutkan dari yang terbesar ke yang terkecil:
+
+<MathContainer>
+  <BlockMath math="1,125 > 0,875 > 0,75 > 0,707 > 0,125" />
+</MathContainer>
+
+Maka urutannya adalah:
+
+<MathContainer>
+  <BlockMath math="1\frac{1}{8}; 0,875; \frac{3}{4}; \frac{1}{\sqrt{2}}; 12,5\%" />
+</MathContainer>

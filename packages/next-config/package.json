@@ -7,14 +7,15 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
     "@next/mdx": "^16.1.1",
+    "@repo/typescript-config": "workspace:*",
     "next": "16.1.1"
   },
   "dependencies": {
     "@next/bundle-analyzer": "16.1.1",
     "@t3-oss/env-core": "^0.13.10",
     "@t3-oss/env-nextjs": "^0.13.10",
+    "@vercel/config": "^0.0.24",
     "zod": "^4.2.1"
   }
 }

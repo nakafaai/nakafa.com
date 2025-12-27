@@ -262,7 +262,7 @@ export function BacterialGrowth({
                       animate={{
                         scale: [1, SCALE_INCREASE, 1],
                       }}
-                      className="aspect-square h-full max-h-[20px] w-full max-w-[20px] rounded-full bg-cyan-300 transition-colors hover:bg-cyan-400 sm:max-h-[32px] sm:max-w-[32px] dark:bg-cyan-500"
+                      className="aspect-square h-full max-h-5 w-full max-w-5 rounded-full bg-cyan-300 transition-colors hover:bg-cyan-400 sm:max-h-8 sm:max-w-8 dark:bg-cyan-500"
                       transition={{
                         duration: 1,
                         repeat: Number.POSITIVE_INFINITY,

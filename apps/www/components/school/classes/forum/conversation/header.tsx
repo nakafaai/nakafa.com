@@ -48,7 +48,7 @@ export const ForumHeader = memo(({ forum }: { forum: Forum }) => {
   return (
     <div className="group flex items-start gap-3 border-primary border-l-2 bg-primary/10 p-4">
       <Avatar className="size-8 shrink-0 rounded-full">
-        <AvatarImage alt={userName} src={userImage} />
+        <AvatarImage alt={userName} role="presentation" src={userImage} />
         <AvatarFallback className="rounded-lg">
           {getInitialName(userName)}
         </AvatarFallback>

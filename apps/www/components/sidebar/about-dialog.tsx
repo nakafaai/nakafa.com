@@ -47,6 +47,7 @@ function AboutDialogContent({
         <Image
           alt="Nakafa"
           className="object-contain"
+          fetchPriority="high"
           fill
           loading="eager"
           preload
@@ -85,7 +86,7 @@ export function AboutDialog({ open, action }: Props) {
   if (isDesktop) {
     return (
       <Dialog onOpenChange={action} open={open}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-106.25">
           <DialogHeader className="sm:text-center">
             <DialogTitle>{t("about")}</DialogTitle>
             <DialogDescription>

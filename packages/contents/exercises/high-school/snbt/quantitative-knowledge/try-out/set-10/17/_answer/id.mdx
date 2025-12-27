@@ -1,0 +1,57 @@
+export const metadata = {
+  title: "Pembahasan Peluang Telur",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Kita definisikan kejadian-kejadian sebagai berikut:
+- <InlineMath math="S" /> = Ruang sampel (total telur)
+- <InlineMath math="B" /> = Kejadian terambil telur bebek
+- <InlineMath math="A" /> = Kejadian terambil telur ayam
+- <InlineMath math="P" /> = Kejadian terambil telur pecah
+
+Pertama, kita hitung jumlah total telur dalam keranjang:
+
+<MathContainer>
+  <BlockMath math="n(S) = n(B) + n(A) = 10 + 20 = 30" />
+</MathContainer>
+
+Selanjutnya, kita hitung jumlah telur yang pecah:
+- Telur bebek pecah: <InlineMath math="\frac{1}{2} \times 10 = 5" />
+- Telur ayam pecah: <InlineMath math="\frac{1}{4} \times 20 = 5" />
+
+Total telur pecah (<InlineMath math="n(P)" />) adalah:
+
+<MathContainer>
+  <BlockMath math="n(P) = 5 + 5 = 10" />
+</MathContainer>
+
+Kita diminta mencari peluang terambil telur bebek **atau** telur pecah (<InlineMath math="B \cup P" />). Rumus peluang gabungan dua kejadian adalah:
+
+<MathContainer>
+  <BlockMath math="P(B \cup P) = \frac{n(B \cup P)}{n(S)}" />
+</MathContainer>
+
+Dimana <InlineMath math="n(B \cup P)" /> dapat dihitung dengan prinsip inklusi-eksklusi:
+
+<MathContainer>
+  <BlockMath math="n(B \cup P) = n(B) + n(P) - n(B \cap P)" />
+</MathContainer>
+
+- <InlineMath math="n(B) = 10" /> (jumlah telur bebek)
+- <InlineMath math="n(P) = 10" /> (jumlah total telur pecah)
+- <InlineMath math="n(B \cap P)" /> adalah jumlah telur yang merupakan telur bebek **dan** pecah. Dari perhitungan di atas, telur bebek yang pecah ada <InlineMath math="5" /> butir.
+
+Maka:
+
+<MathContainer>
+  <BlockMath math="n(B \cup P) = 10 + 10 - 5 = 15" />
+</MathContainer>
+
+Sehingga peluangnya adalah:
+
+<MathContainer>
+  <BlockMath math="P(B \cup P) = \frac{15}{30} = \frac{1}{2} = 0,5" />
+</MathContainer>
+
+Jadi, peluang terambil telur bebek atau telur pecah adalah <InlineMath math="0,5" />.

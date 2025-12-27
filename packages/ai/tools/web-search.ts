@@ -30,8 +30,13 @@ export const createWebSearch = ({ writer }: Params) => {
         const response = await firecrawlApp.search(query, {
           limit: 5,
           sources: ["web", "news"],
-          scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
-          timeout: 5000, // 5 second timeout
+          scrapeOptions: {
+            formats: ["markdown"],
+            onlyMainContent: true,
+            // https://docs.firecrawl.dev/features/search#cost-implications
+            parsers: [], // no need pdf parsers
+          },
+          timeout: 10_000, // 10 second timeout
         });
 
         // Process web results first (higher priority)

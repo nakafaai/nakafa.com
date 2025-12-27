@@ -1,0 +1,57 @@
+export const metadata = {
+  title: "Egg Probability Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Let's define the events as follows:
+- <InlineMath math="S" /> = Sample space (total eggs)
+- <InlineMath math="D" /> = Event of picking a duck egg
+- <InlineMath math="C" /> = Event of picking a chicken egg
+- <InlineMath math="B" /> = Event of picking a broken egg
+
+First, we calculate the total number of eggs in the basket:
+
+<MathContainer>
+  <BlockMath math="n(S) = n(D) + n(C) = 10 + 20 = 30" />
+</MathContainer>
+
+Next, we calculate the number of broken eggs:
+- Broken duck eggs: <InlineMath math="\frac{1}{2} \times 10 = 5" />
+- Broken chicken eggs: <InlineMath math="\frac{1}{4} \times 20 = 5" />
+
+The total number of broken eggs (<InlineMath math="n(B)" />) is:
+
+<MathContainer>
+  <BlockMath math="n(B) = 5 + 5 = 10" />
+</MathContainer>
+
+We are asked to find the probability of picking a duck egg **or** a broken egg (<InlineMath math="D \cup B" />). The formula for the probability of the union of two events is:
+
+<MathContainer>
+  <BlockMath math="P(D \cup B) = \frac{n(D \cup B)}{n(S)}" />
+</MathContainer>
+
+Where <InlineMath math="n(D \cup B)" /> can be calculated using the inclusion-exclusion principle:
+
+<MathContainer>
+  <BlockMath math="n(D \cup B) = n(D) + n(B) - n(D \cap B)" />
+</MathContainer>
+
+- <InlineMath math="n(D) = 10" /> (number of duck eggs)
+- <InlineMath math="n(B) = 10" /> (total number of broken eggs)
+- <InlineMath math="n(D \cap B)" /> is the number of eggs that are both duck eggs **and** broken. From the calculation above, there are <InlineMath math="5" /> broken duck eggs.
+
+Thus:
+
+<MathContainer>
+  <BlockMath math="n(D \cup B) = 10 + 10 - 5 = 15" />
+</MathContainer>
+
+So the probability is:
+
+<MathContainer>
+  <BlockMath math="P(D \cup B) = \frac{15}{30} = \frac{1}{2} = 0.5" />
+</MathContainer>
+
+Therefore, the probability of picking a duck egg or a broken egg is <InlineMath math="0.5" />.

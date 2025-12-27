@@ -100,7 +100,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
   return (
     <div className="flex items-start gap-3 text-left">
       <Avatar className="size-10 rounded-full">
-        <AvatarImage alt={userName} src={userImage} />
+        <AvatarImage alt={userName} role="presentation" src={userImage} />
         <AvatarFallback className="rounded-lg">
           {getInitialName(userName)}
         </AvatarFallback>

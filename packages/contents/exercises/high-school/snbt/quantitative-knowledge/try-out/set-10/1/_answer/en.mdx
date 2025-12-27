@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Solution for Question 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+import { Graph } from "../graph";
+
+Define the letters according to their alphabetical order:
+
+- <InlineMath math="A = 1" />
+- <InlineMath math="B = 2" />
+- <InlineMath math="C = 3" />
+- ...
+- <InlineMath math="Z = 26" />
+
+Thus, we can convert the letters in the triangles into numbers:
+
+<Graph mode="explanation-numbers" title="Conversion to Numbers" description="Letters are converted to numbers based on alphabetical order." />
+
+Observe that the first triangle follows a pattern:
+
+<MathContainer>
+  <BlockMath math="(\text{Left} + \text{Right}) \times (\text{Top} + \text{Bottom}) = \text{Center}" />
+  <BlockMath math="(4 + 6) \times (1 + 1) = 10 \times 2 = 20" />
+</MathContainer>
+
+The number <InlineMath math="20" /> corresponds to the letter <InlineMath math="T" /> (the <InlineMath math="20" />th letter).
+
+Using the same pattern, the number in the second triangle is:
+
+<MathContainer>
+  <BlockMath math="(1 + 4) \times (2 + 3) = 5 \times 5 = 25" />
+</MathContainer>
+
+<Graph mode="explanation-result" title="Pattern Calculation" description={<>The calculated result for the second triangle is <InlineMath math="25" />.</>} />
+
+Substitute the number back to the letter sequence. The <InlineMath math="25" />th letter is <InlineMath math="Y" />.
+
+<Graph mode="explanation-final" title="Final Result" description={<>Number <InlineMath math="25" /> is converted back to letter <InlineMath math="Y" />.</>} />
+
+Therefore, the answer is <InlineMath math="Y" />.

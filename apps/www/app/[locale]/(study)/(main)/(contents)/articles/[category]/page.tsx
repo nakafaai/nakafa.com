@@ -5,6 +5,7 @@ import {
 import { getArticles } from "@repo/contents/_lib/articles/slug";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import type { Metadata } from "next";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -101,6 +102,7 @@ async function PageArticles({
   header: React.ReactNode;
 }) {
   const articles = await getArticles(category, locale);
+  const t = await getTranslations({ locale, namespace: "Articles" });
 
   return (
     <>
@@ -113,6 +115,15 @@ async function PageArticles({
           item: `https://nakafa.com/${locale}${FilePath}/${article.slug}`,
         }))}
         locale={locale}
+      />
+      <CollectionPageJsonLd
+        description={t("description")}
+        items={articles.map((article) => ({
+          url: `https://nakafa.com/${locale}${FilePath}/${article.slug}`,
+          name: article.title,
+        }))}
+        name={t(category)}
+        url={`https://nakafa.com/${locale}${FilePath}`}
       />
 
       {header}

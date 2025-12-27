@@ -312,7 +312,7 @@ const AiSheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
               }}
             >
               {isPrivate ? <LockIcon /> : <GlobeIcon />}
-              <span className="max-w-[250px] truncate">{chat.title}</span>
+              <span className="max-w-62.5 truncate">{chat.title}</span>
               <DropdownMenuShortcut>
                 <CheckIcon
                   className={cn(

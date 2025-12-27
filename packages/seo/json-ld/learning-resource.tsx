@@ -1,5 +1,6 @@
 import type { LearningResource, Person, WithContext } from "schema-dts";
 import { JsonLd } from ".";
+import { ORGANIZATION } from "./constants";
 
 interface Props {
   name: string;
@@ -24,18 +25,8 @@ export function LearningResourceJsonLd({
     educationalLevel,
     datePublished,
     author: Array.isArray(author) ? author : [author],
-    publisher: {
-      "@type": "Organization",
-      name: "PT. Nakafa Tekno Kreatif",
-      logo: "https://nakafa.com/logo.svg",
-      url: "https://nakafa.com",
-    },
-    maintainer: {
-      "@type": "Organization",
-      name: "PT. Nakafa Tekno Kreatif",
-      logo: "https://nakafa.com/logo.svg",
-      url: "https://nakafa.com",
-    },
+    publisher: ORGANIZATION,
+    maintainer: ORGANIZATION,
   };
 
   return <JsonLd jsonLd={learningResourceJsonLd} />;

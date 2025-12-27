@@ -4,12 +4,14 @@ import type { ReactNode } from "react";
 interface Props {
   children: ReactNode;
   className?: string;
+  as?: React.ElementType;
 }
 
-export function LayoutContent({ children, className }: Props) {
+export function LayoutContent({ children, className, as = "article" }: Props) {
+  const Component = as || "article";
   return (
-    <article className={cn("mx-auto max-w-3xl px-6", className)}>
+    <Component className={cn("mx-auto max-w-3xl px-6", className)}>
       {children}
-    </article>
+    </Component>
   );
 }

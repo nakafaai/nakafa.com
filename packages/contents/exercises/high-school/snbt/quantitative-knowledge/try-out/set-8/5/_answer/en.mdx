@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Solution for Problem 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+Let:
+
+- <InlineMath math="P(h_1) =" /> Probability of black in box 1
+- <InlineMath math="P(h_2) =" /> Probability of black in box 2
+- <InlineMath math="P(p_1) =" /> Probability of white in box 1
+- <InlineMath math="P(p_2) =" /> Probability of white in box 2
+
+Given the probability of getting black balls from both boxes is <InlineMath math="\frac{3}{10}" />. Since taking balls from box 1 and box 2 are independent events:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} P(h_1 \cap h_2) &= P(h_1) \times P(h_2) \\ \frac{3}{10} &= \frac{n(h_1)}{20} \times \frac{n(h_2)}{20} \\ \frac{3}{10} &= \frac{n(h_1) \times n(h_2)}{400} \\ n(h_1) \times n(h_2) &= 120 \end{aligned}" />
+</MathContainer>
+
+We need to find a pair of factors of <InlineMath math="120" /> where both are less than or equal to <InlineMath math="20" /> (maximum number of balls). The possible pair is <InlineMath math="12" /> and <InlineMath math="10" /> (or vice versa). Let <InlineMath math="n(h_1) = 12" /> and <InlineMath math="n(h_2) = 10" />.
+
+Then the number of white balls is:
+
+- Box 1: <InlineMath math="20 - 12 = 8" /> white balls
+- Box 2: <InlineMath math="20 - 10 = 10" /> white balls
+
+The probability that both balls are white is:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} P(p_1 \cap p_2) &= P(p_1) \times P(p_2) \\ &= \frac{8}{20} \times \frac{10}{20} \\ &= \frac{2}{5} \times \frac{1}{2} \\ &= \frac{1}{5} \end{aligned}" />
+</MathContainer>
+
+Given <InlineMath math="\frac{m}{n} = \frac{1}{5}" />. So <InlineMath math="m = 1" /> and <InlineMath math="n = 5" />. The value of <InlineMath math="m + n = 1 + 5 = 6" />.

@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Solution for Problem 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+Let:
+- <InlineMath math="\bar{x}_K =" /> Class average score
+- <InlineMath math="n_L =" /> Number of male students
+- <InlineMath math="n_P =" /> Number of female students
+- <InlineMath math="\bar{x}_L =" /> Average score of male students
+- <InlineMath math="\bar{x}_P =" /> Average score of female students
+
+Given:
+- <InlineMath math="\bar{x}_K = 7.5" />
+- <InlineMath math="\frac{n_L}{n_P} = \frac{3}{4} \implies n_L = 0.75 n_P" />
+- <InlineMath math="\bar{x}_P = 1.75 + \bar{x}_L" />
+
+The class average score can be obtained as follows:
+
+<BlockMath math="\bar{x}_K = \frac{\bar{x}_P \cdot n_P + \bar{x}_L \cdot n_L}{n_P + n_L}" />
+
+Substitute the known values:
+
+<BlockMath math="\begin{aligned} 7.5 &= \frac{(1.75 + \bar{x}_L)n_P + \bar{x}_L \cdot 0.75n_P}{n_P + 0.75n_P} \\ 7.5 &= \frac{1.75n_P + \bar{x}_L n_P + 0.75\bar{x}_L n_P}{1.75n_P} \\ 7.5 &= \frac{1.75n_P + 1.75\bar{x}_L n_P}{1.75n_P} \\ 7.5 &= \frac{1.75n_P(1 + \bar{x}_L)}{1.75n_P} \\ 7.5 &= 1 + \bar{x}_L \\ \bar{x}_L &= 6.5 \end{aligned}" />
+
+Therefore, the average score of female students is:
+
+<BlockMath math="\bar{x}_P = 1.75 + 6.5 = 8.25" />

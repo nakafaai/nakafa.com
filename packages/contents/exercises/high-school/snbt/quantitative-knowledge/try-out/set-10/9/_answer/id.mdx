@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Pembahasan Peluang Pembangunan",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Didefinisikan:
+
+-   <InlineMath math="A =" /> kejadian pembangunan tepat waktu
+-   <InlineMath math="A^c =" /> kejadian pembangunan tidak tepat waktu
+-   <InlineMath math="B =" /> kejadian terjadi protes
+-   <InlineMath math="B^c =" /> kejadian tidak ada protes
+-   <InlineMath math="A|B =" /> kejadian pembangunan tepat waktu dan diprotes masyarakat
+-   <InlineMath math="A|B^c =" /> kejadian pembangunan tepat waktu dan tidak diprotes masyarakat
+
+Peluang pembangunan tepat waktu adalah jumlah dari peluang protes dikali peluang pembangunan tepat waktu jika diprotes, ditambah peluang tidak diprotes dikali peluang pembangunan tepat waktu jika tidak diprotes.
+
+<MathContainer>
+  <BlockMath math="P(A) = P(B)P(A|B) + P(B^c)P(A|B^c)" />
+</MathContainer>
+
+Kita ketahui bahwa:
+
+<MathContainer>
+  <BlockMath math="P(B) = 0.7, \quad P(B^c) = 1 - 0.7 = 0.3" />
+</MathContainer>
+
+<MathContainer>
+  <BlockMath math="P(A|B^c) = 0.8, \quad P(A|B) = 0.4" />
+</MathContainer>
+
+Maka:
+
+<MathContainer>
+  <BlockMath math="P(A) = (0.7)(0.4) + (0.3)(0.8)" />
+</MathContainer>
+
+<MathContainer>
+  <BlockMath math="P(A) = 0.28 + 0.24 = 0.52" />
+</MathContainer>
+
+Jadi, peluang pembangunan selesai tepat waktu adalah <InlineMath math="0.52" />.

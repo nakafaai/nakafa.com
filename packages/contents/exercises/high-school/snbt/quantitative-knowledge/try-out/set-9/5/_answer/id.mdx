@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Pembahasan Soal 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+Misalkan <InlineMath math="A" /> adalah kejadian bola hijau dua kali bola putih.
+
+**Diketahui:**
+
+Terdapat <InlineMath math="9" /> bola di dalam sebuah kotak (<InlineMath math="1" /> merah + <InlineMath math="6" /> hijau + <InlineMath math="2" /> putih = <InlineMath math="9" />).
+Akan diambil <InlineMath math="7" /> bola secara acak. Total banyaknya cara pengambilan bola adalah:
+
+<MathContainer>
+  <BlockMath math="n(S) = C^9_7 = \frac{9!}{7!(9-7)!} = \frac{9 \times 8}{2 \times 1} = 36" />
+</MathContainer>
+
+Yang akan dicari adalah peluang terambilnya bola hijau dua kali banyak bola putih. Kita bagi dalam dua kasus.
+
+**Kasus <InlineMath math="1" />**
+
+Jika terambil <InlineMath math="1" /> bola putih, maka bola hijau harus <InlineMath math="2" /> (karena banyak bola hijau = <InlineMath math="2" /> kali banyak bola putih).
+Untuk mencapai total <InlineMath math="7" /> bola yang diambil, maka sisa bola yang harus diambil adalah <InlineMath math="7 - 1 - 2 = 4" /> bola. Sisa bola ini haruslah bola merah.
+Namun, bola merah hanya tersedia <InlineMath math="1" /> buah. Sehingga **kasus <InlineMath math="1" /> tidak mungkin terjadi**.
+
+**Kasus <InlineMath math="2" />**
+
+Jika terambil <InlineMath math="2" /> bola putih, maka bola hijau harus <InlineMath math="4" />.
+Untuk mencapai total <InlineMath math="7" /> bola yang diambil, maka sisa bola yang harus diambil adalah <InlineMath math="7 - 2 - 4 = 1" /> bola. Sisa bola ini adalah bola merah.
+Kasus ini mungkin terjadi karena tersedia <InlineMath math="2" /> bola putih, <InlineMath math="6" /> bola hijau, dan <InlineMath math="1" /> bola merah.
+
+Banyaknya cara mengambil untuk kasus ini adalah:
+
+<MathContainer>
+  <BlockMath math="n(A) = C^2_2 \cdot C^6_4 \cdot C^1_1" />
+  <BlockMath math="= 1 \cdot 15 \cdot 1" />
+  <BlockMath math="= 15" />
+</MathContainer>
+
+**Kesimpulan**
+
+Sehingga peluang kejadian <InlineMath math="A" /> adalah:
+
+<MathContainer>
+  <BlockMath math="P(A) = \frac{n(A)}{n(S)} = \frac{15}{36} = \frac{5}{12}" />
+</MathContainer>
+
+Jadi, peluang terambilnya bola hijau dua kali banyak bola putih yang terambil adalah <InlineMath math="\frac{5}{12}" />.

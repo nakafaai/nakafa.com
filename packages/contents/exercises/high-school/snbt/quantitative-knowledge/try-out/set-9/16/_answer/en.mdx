@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Solution 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+Let <InlineMath math="x = 3.15931593..." />.
+
+Since there are <InlineMath math="4" /> repeating digits (which are <InlineMath math="1593" />), we multiply <InlineMath math="x" /> by <InlineMath math="10000" />:
+
+<MathContainer>
+  <BlockMath math="10000x = 31593.15931593..." />
+</MathContainer>
+
+Next, we subtract the original equation <InlineMath math="x" /> from this equation:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 10000x &= 31593.1593... \\ x &= \phantom{3159}3.1593... \\ \hline 9999x &= 31590 \end{aligned}" />
+</MathContainer>
+
+Thus, we obtain:
+
+<MathContainer>
+  <BlockMath math="x = \frac{31590}{9999}" />
+</MathContainer>
+
+We simplify the fraction by dividing both the numerator and the denominator by <InlineMath math="9" />:
+
+<MathContainer>
+  <BlockMath math="x = \frac{31590 \div 9}{9999 \div 9} = \frac{3510}{1111}" />
+</MathContainer>

@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Diagram Venn",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Misalkan <InlineMath math="x" /> adalah jumlah siswa yang menyukai ketiga mata pelajaran (matematika, fisika, dan biologi).
+
+Kita dapat menggunakan prinsip inklusi-eksklusi untuk himpunan:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} n(M \cup B \cup F) &= n(M) + n(B) + n(F) \\ &- (n(M \cap B) + n(M \cap F) + n(B \cap F)) \\ &+ n(M \cap B \cap F) \end{aligned}" />
+</MathContainer>
+
+Diketahui:
+
+<MathContainer>
+  <BlockMath math="n(M \cup B \cup F) = 50" />
+  <BlockMath math="n(M) = 35" />
+  <BlockMath math="n(B) = 20" />
+  <BlockMath math="n(F) = 15" />
+  <BlockMath math="n(M \cap B) = 13" />
+  <BlockMath math="n(M \cap F) = 7" />
+  <BlockMath math="n(B \cap F) = 5" />
+  <BlockMath math="n(M \cap B \cap F) = x" />
+</MathContainer>
+
+Substitusikan nilai-nilai tersebut ke dalam rumus:
+
+<MathContainer>
+  <BlockMath math="50 = 35 + 20 + 15 - (13 + 7 + 5) + x" />
+  <BlockMath math="50 = 70 - 25 + x" />
+  <BlockMath math="50 = 45 + x" />
+  <BlockMath math="x = 5" />
+</MathContainer>
+
+Jadi, jumlah siswa yang menyukai ketiga mata pelajaran tersebut adalah <InlineMath math="5" /> orang.

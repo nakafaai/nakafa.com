@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Solution for Problem 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+Let <InlineMath math="A" /> be the event that the number of green balls drawn is twice the number of white balls drawn.
+
+**Given:**
+
+There are <InlineMath math="9" /> balls in a box (<InlineMath math="1" /> red + <InlineMath math="6" /> green + <InlineMath math="2" /> white = <InlineMath math="9" />).
+<InlineMath math="7" /> balls will be drawn at random. The total number of ways to draw the balls is:
+
+<MathContainer>
+  <BlockMath math="n(S) = C^9_7 = \frac{9!}{7!(9-7)!} = \frac{9 \times 8}{2 \times 1} = 36" />
+</MathContainer>
+
+We want to find the probability that the number of green balls is twice the number of white balls. We divide this into two cases.
+
+**Case 1**
+
+If <InlineMath math="1" /> white ball is drawn, then there must be <InlineMath math="2" /> green balls (since green = 2 times white).
+To reach a total of <InlineMath math="7" /> balls drawn, the remaining balls to be drawn must be <InlineMath math="7 - 1 - 2 = 4" /> balls. These must be red balls.
+However, there is only <InlineMath math="1" /> red ball available. Therefore, **Case 1 is impossible**.
+
+**Case <InlineMath math="2" />**
+
+If <InlineMath math="2" /> white balls are drawn, then there must be <InlineMath math="4" /> green balls.
+To reach a total of <InlineMath math="7" /> balls drawn, the remaining balls to be drawn must be <InlineMath math="7 - 2 - 4 = 1" /> ball. This must be a red ball.
+This case is possible because there are <InlineMath math="2" /> white balls, <InlineMath math="6" /> green balls, and <InlineMath math="1" /> red ball available.
+
+The number of ways to draw for this case is:
+
+<MathContainer>
+  <BlockMath math="n(A) = C^2_2 \cdot C^6_4 \cdot C^1_1" />
+  <BlockMath math="= 1 \cdot 15 \cdot 1" />
+  <BlockMath math="= 15" />
+</MathContainer>
+
+**Conclusion**
+
+Thus, the probability of event <InlineMath math="A" /> is:
+
+<MathContainer>
+  <BlockMath math="P(A) = \frac{n(A)}{n(S)} = \frac{15}{36} = \frac{5}{12}" />
+</MathContainer>
+
+Therefore, the probability that the number of green balls drawn is twice the number of white balls drawn is <InlineMath math="\frac{5}{12}" />.

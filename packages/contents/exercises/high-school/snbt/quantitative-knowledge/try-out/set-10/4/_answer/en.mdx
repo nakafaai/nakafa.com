@@ -1,0 +1,64 @@
+export const metadata = {
+    title: "Set Operations Explanation",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "12/27/2025",
+};
+
+Let's define the members of each set:
+
+<MathContainer>
+  <BlockMath math="A = \{-1, -2, -3, \dots\}" />
+  <BlockMath math="B = \{2, 4, 6, \dots\}" />
+  <BlockMath math="C = \{3, 6, 9, \dots\}" />
+</MathContainer>
+
+We will check each option to see if the number can be formed by multiplying two members of these sets.
+
+#### Analysis of Options
+
+1.  **Option A**: <InlineMath math="-14" />
+
+    <MathContainer>
+       <BlockMath math="-14 = (-7) \times 2" />
+    </MathContainer>
+
+    Here, <InlineMath math="-7 \in A" /> and <InlineMath math="2 \in B" />. So, <InlineMath math="-14" /> is possible.
+
+2.  **Option B**: <InlineMath math="-15" />
+
+    <MathContainer>
+       <BlockMath math="-15 = (-5) \times 3" />
+    </MathContainer>
+
+    Here, <InlineMath math="-5 \in A" /> and <InlineMath math="3 \in C" />. So, <InlineMath math="-15" /> is possible.
+
+3.  **Option C**: <InlineMath math="-18" />
+
+    <MathContainer>
+       <BlockMath math="-18 = (-3) \times 6" />
+    </MathContainer>
+
+    Here, <InlineMath math="-3 \in A" /> and <InlineMath math="6 \in B" /> (also <InlineMath math="6 \in C" />). So, <InlineMath math="-18" /> is possible.
+
+4.  **Option D**: <InlineMath math="14" />
+
+    <MathContainer>
+       <BlockMath math="14 = 2 \times 7" />
+    </MathContainer>
+
+    Here, <InlineMath math="2 \in B" />. However, <InlineMath math="7" /> is a positive odd integer that is not divisible by <InlineMath math="3" />. This means:
+    -   <InlineMath math="7 \notin A" /> (since <InlineMath math="A" /> contains negative integers).
+    -   <InlineMath math="7 \notin B" /> (since <InlineMath math="7" /> is odd).
+    -   <InlineMath math="7 \notin C" /> (since <InlineMath math="7" /> is not divisible by <InlineMath math="3" />).
+
+    Since one of the factors (<InlineMath math="7" />) is not present in sets <InlineMath math="A" />, <InlineMath math="B" />, or <InlineMath math="C" />, <InlineMath math="14" /> cannot be formed (assuming the pattern involves factors from different sets or positive factors).
+
+5.  **Option E**: <InlineMath math="18" />
+
+    <MathContainer>
+       <BlockMath math="18 = 2 \times 9" />
+    </MathContainer>
+
+    Here, <InlineMath math="2 \in B" /> and <InlineMath math="9 \in C" />. So, <InlineMath math="18" /> is possible.
+
+Therefore, the number that is NOT included in the product is <InlineMath math="14" />.

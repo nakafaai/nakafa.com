@@ -1,0 +1,57 @@
+export const metadata = {
+  title: "Solution 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+#### Finding the Number of Male and Female Students
+
+It is known that the total number of students is <InlineMath math="50" />.
+Let <InlineMath math="n_L" /> be the number of male students and <InlineMath math="n_P" /> be the number of female students.
+It is also known that the number of female students is <InlineMath math="4" /> more than the number of male students, so:
+
+<MathContainer>
+  <BlockMath math="n_P = n_L + 4" />
+</MathContainer>
+
+Since the total number of students is <InlineMath math="50" />, then:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} n_L + n_P &= 50 \\ n_L + (n_L + 4) &= 50 \\ 2n_L + 4 &= 50 \\ 2n_L &= 46 \\ n_L &= 23 \end{aligned}" />
+</MathContainer>
+
+So the number of female students is:
+
+<MathContainer>
+  <BlockMath math="n_P = 23 + 4 = 27" />
+</MathContainer>
+
+#### Calculating Total Scores
+
+Given that the average score of male students (<InlineMath math="\bar{x}_L" />) is <InlineMath math="76" />. Then the total score of male students is:
+
+<MathContainer>
+  <BlockMath math="\sum x_L = n_L \times \bar{x}_L = 23 \times 76 = 1748" />
+</MathContainer>
+
+Given that the average score of the entire class (<InlineMath math="\bar{x}_{total}" />) is <InlineMath math="70" />. Then the total score of the entire class is:
+
+<MathContainer>
+  <BlockMath math="\sum x_{total} = 50 \times 70 = 3500" />
+</MathContainer>
+
+#### Calculating the Average Score of Female Students
+
+The total score of female students can be found by subtracting the total score of male students from the total score of the class:
+
+<MathContainer>
+  <BlockMath math="\sum x_P = 3500 - 1748 = 1752" />
+</MathContainer>
+
+Thus, the average score of female students (<InlineMath math="\bar{x}_P" />) is:
+
+<MathContainer>
+  <BlockMath math="\bar{x}_P = \frac{\sum x_P}{n_P} = \frac{1752}{27} \approx 64.88" />
+</MathContainer>
+
+So, the average score of female students is <InlineMath math="64.88" />.

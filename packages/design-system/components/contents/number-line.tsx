@@ -136,7 +136,7 @@ export function NumberLine({
               </div>
             ))}
 
-            <div className="absolute top-1/2 h-0.25 w-full bg-foreground" />
+            <div className="absolute top-1/2 h-px w-full bg-foreground" />
 
             {processedSegments.map((segment) => (
               <div
@@ -157,13 +157,13 @@ export function NumberLine({
               <div
                 key={`points-${segment.start}-${segment.end}-${segment.index}`}
               >
-                {!!segment.showPoints && (
-                  <>
-                    {Number.isFinite(segment.start) && (
-                      <div
-                        className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
-                        style={{ left: `${segment.startPos}%` }}
-                      >
+                {Number.isFinite(segment.start) &&
+                  (segment.showPoints || segment.startLabel) && (
+                    <div
+                      className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
+                      style={{ left: `${segment.startPos}%` }}
+                    >
+                      {!!segment.showPoints && (
                         <div
                           className={cn(
                             "size-4 rounded-full border border-foreground",
@@ -172,19 +172,22 @@ export function NumberLine({
                               : "bg-background"
                           )}
                         />
-                        <div className="absolute top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm">
-                          {segment.startLabel ?? (
-                            <InlineMath math={segment.start.toString()} />
-                          )}
-                        </div>
+                      )}
+                      <div className="absolute top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm">
+                        {segment.startLabel ?? (
+                          <InlineMath math={segment.start.toString()} />
+                        )}
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    {Number.isFinite(segment.end) && (
-                      <div
-                        className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
-                        style={{ left: `${segment.endPos}%` }}
-                      >
+                {Number.isFinite(segment.end) &&
+                  (segment.showPoints || segment.endLabel) && (
+                    <div
+                      className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
+                      style={{ left: `${segment.endPos}%` }}
+                    >
+                      {!!segment.showPoints && (
                         <div
                           className={cn(
                             "size-4 rounded-full border border-foreground",
@@ -193,15 +196,14 @@ export function NumberLine({
                               : "bg-background"
                           )}
                         />
-                        <div className="absolute top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm">
-                          {segment.endLabel ?? (
-                            <InlineMath math={segment.end.toString()} />
-                          )}
-                        </div>
+                      )}
+                      <div className="absolute top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm">
+                        {segment.endLabel ?? (
+                          <InlineMath math={segment.end.toString()} />
+                        )}
                       </div>
-                    )}
-                  </>
-                )}
+                    </div>
+                  )}
               </div>
             ))}
           </div>

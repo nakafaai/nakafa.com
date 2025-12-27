@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Pembahasan Nilai Maksimum Fungsi Kuadrat",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Diketahui fungsi kuadrat:
+
+<MathContainer>
+  <BlockMath math="y = kx^2 + 8x + (k-1)" />
+</MathContainer>
+
+Sumbu simetri fungsi kuadrat <InlineMath math="ax^2 + bx + c" /> diberikan oleh rumus <InlineMath math="x = -\frac{b}{2a}" />. Dalam kasus ini, <InlineMath math="a = k" /> dan <InlineMath math="b = 8" />.
+
+Diketahui sumbu simetri <InlineMath math="x = 4" />, maka:
+
+<MathContainer>
+  <BlockMath math="4 = -\frac{8}{2k}" />
+  <BlockMath math="8k = -8" />
+  <BlockMath math="k = -1" />
+</MathContainer>
+
+Setelah mendapatkan nilai <InlineMath math="k" />, kita substitusikan kembali ke fungsi awal:
+
+<MathContainer>
+  <BlockMath math="y = -1x^2 + 8x + (-1 - 1)" />
+  <BlockMath math="y = -x^2 + 8x - 2" />
+</MathContainer>
+
+Untuk mencari nilai maksimum, kita substitusikan nilai sumbu simetri <InlineMath math="x = 4" /> ke dalam fungsi (karena nilai optimum selalu berada pada sumbu simetri):
+
+<MathContainer>
+  <BlockMath math="y = -(4^2) + 8(4) - 2" />
+  <BlockMath math="y = -16 + 32 - 2" />
+  <BlockMath math="y = 16 - 2" />
+  <BlockMath math="y = 14" />
+</MathContainer>
+
+Jadi, nilai maksimum fungsi adalah <InlineMath math="14" />.

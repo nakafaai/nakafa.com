@@ -1,5 +1,8 @@
 import type { ParsedHeading } from "@repo/contents/_types/toc";
-import { slugify } from "@repo/design-system/lib/utils";
+import {
+  createHeadingId,
+  createHeadingLabel,
+} from "@repo/design-system/lib/utils";
 
 const HEADING_LEVELS = 6;
 
@@ -30,10 +33,10 @@ export function getHeadings(content: string): ParsedHeading[] {
       for (const match of markdownMatches) {
         const level = match[1].length; // Number of # symbols
         const text = match[2].trim();
-        const slug = slugify(text);
+        const slug = createHeadingId(text);
 
         const heading: ParsedHeading = {
-          label: text,
+          label: createHeadingLabel(text),
           href: `#${slug}`,
           children: [],
         };
@@ -97,7 +100,7 @@ export function extractAllHeadingIds(headings: ParsedHeading[]): string[] {
   const ids: string[] = [];
 
   for (const heading of headings) {
-    ids.push(slugify(heading.label));
+    ids.push(createHeadingId(heading.label));
 
     if (heading.children && heading.children.length > 0) {
       ids.push(...extractAllHeadingIds(heading.children));

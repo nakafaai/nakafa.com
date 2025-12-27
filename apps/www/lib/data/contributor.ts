@@ -111,4 +111,9 @@ export const contributors: Contributor[] = [
       linkedin: "https://www.linkedin.com/in/zidananandika/",
     },
   },
+  {
+    name: "Keefa Abian Wijdan",
+    username: "keefa",
+    type: "community",
+  },
 ];

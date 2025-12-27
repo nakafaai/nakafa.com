@@ -1,0 +1,50 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Quadratic Inequality Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+We will solve the inequality:
+
+<MathContainer>
+  <BlockMath math="x^2 + x - 6 > 0" />
+</MathContainer>
+
+Factor the quadratic equation:
+
+<MathContainer>
+  <BlockMath math="(x - 2)(x + 3) > 0" />
+</MathContainer>
+
+The zeros (roots) of the equation are:
+
+<MathContainer>
+  <BlockMath math="x = 2 \quad \text{or} \quad x = -3" />
+</MathContainer>
+
+We test points on the number line:
+
+<Graph
+  title="Number Line"
+  description="Visualization of the inequality solution region."
+/>
+
+-   For <InlineMath math="x < -3" /> (e.g., <InlineMath math="-4" />): <InlineMath math="(-4-2)(-4+3) = (-6)(-1) = 6" /> (Positive)
+-   For <InlineMath math="-3 < x < 2" /> (e.g., <InlineMath math="0" />): <InlineMath math="(0-2)(0+3) = (-2)(3) = -6" /> (Negative)
+-   For <InlineMath math="x > 2" /> (e.g., <InlineMath math="3" />): <InlineMath math="(3-2)(3+3) = (1)(6) = 6" /> (Positive)
+
+Since the inequality sign is <InlineMath math="> 0" /> (positive), the solution region is:
+
+<MathContainer>
+  <BlockMath math="x < -3 \quad \text{or} \quad x > 2" />
+</MathContainer>
+
+Based on the given statements:
+1.  <InlineMath math="x > 2" /> (Matches)
+2.  <InlineMath math="-3 < x < 2" /> (Does not match)
+3.  <InlineMath math="x < -3" /> (Matches)
+4.  <InlineMath math="x > -3" /> (Does not match)
+
+Thus, the inequality is satisfied by statements <InlineMath math="1" /> and <InlineMath math="3" />.

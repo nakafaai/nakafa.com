@@ -40,6 +40,7 @@ export function SchoolClassesHeaderInfo() {
         <Image
           alt={classInfo.name}
           className="bg-[color-mix(in_oklch,var(--primary)_2.5%,var(--background))] object-cover"
+          fetchPriority="high"
           fill
           loading="eager"
           preload
@@ -142,6 +143,7 @@ function InfoCustomizeButton() {
                 <Image
                   alt={image.value}
                   className="object-cover"
+                  fetchPriority="high"
                   fill
                   loading="eager"
                   preload

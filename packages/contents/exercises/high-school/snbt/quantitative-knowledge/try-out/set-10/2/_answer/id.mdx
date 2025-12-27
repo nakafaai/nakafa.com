@@ -1,0 +1,30 @@
+export const metadata = {
+  title: "Pembahasan Soal 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+import { Graph } from "../graph";
+
+<Graph
+  title="Analisis Sudut"
+  description="Hubungan antara sudut bertolak belakang dan sudut pelurus."
+/>
+
+Dari gambar tersebut, kita dapat melihat bahwa sudut yang bertolak belakang dengan <InlineMath math="z^\circ" /> adalah sudut di antara dua garis diagonal di bagian atas. Besar sudut tersebut sama dengan <InlineMath math="z^\circ" />.
+
+Karena sudut-sudut pada garis lurus (sudut pelurus) berjumlah <InlineMath math="180^\circ" />, maka jumlah sudut <InlineMath math="x^\circ" />, sudut vertikal <InlineMath math="z^\circ" />, dan <InlineMath math="y^\circ" /> adalah <InlineMath math="180^\circ" />:
+
+<MathContainer>
+  <BlockMath math="x^\circ + z^\circ + y^\circ = 180^\circ" />
+</MathContainer>
+
+Diketahui bahwa <InlineMath math="x^\circ = y^\circ" />, sehingga kita dapat mensubstitusi <InlineMath math="y" /> dengan <InlineMath math="x" />:
+
+<MathContainer>
+  <BlockMath math="x^\circ + z^\circ + x^\circ = 180^\circ" />
+  <BlockMath math="z^\circ + 2x^\circ = 180^\circ" />
+  <BlockMath math="z^\circ = 180^\circ - 2x^\circ" />
+</MathContainer>
+
+Jadi, besar sudut <InlineMath math="z" /> adalah <InlineMath math="180 - 2x" />.

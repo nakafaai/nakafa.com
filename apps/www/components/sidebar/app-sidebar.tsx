@@ -42,6 +42,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                   <Image
                     alt="Nakafa"
                     className="rounded-sm border object-contain"
+                    fetchPriority="high"
                     fill
                     loading="eager"
                     preload

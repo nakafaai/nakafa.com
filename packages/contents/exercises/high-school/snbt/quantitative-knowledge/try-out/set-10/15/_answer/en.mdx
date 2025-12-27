@@ -1,0 +1,35 @@
+export const metadata = {
+  title: "Number Sequence",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+This sequence consists of two alternating patterns.
+
+First pattern (odd positions):
+
+<MathContainer>
+  <BlockMath math="4 \xrightarrow{\times 2} 8 \xrightarrow{\times 2} \mathbf{16} \xrightarrow{\times 2} 32 \xrightarrow{\times 2} 64" />
+</MathContainer>
+
+Second pattern (even positions):
+
+<MathContainer>
+  <BlockMath math="5 \xrightarrow{-3} 2 \xrightarrow{-3} \mathbf{-1} \xrightarrow{-3} -4 \xrightarrow{-3} -7" />
+</MathContainer>
+
+The missing terms are the <InlineMath math="5" />th term (from the first pattern) and the <InlineMath math="6" />th term (from the second pattern).
+
+For the <InlineMath math="5" />th term:
+
+<MathContainer>
+  <BlockMath math="8 \times 2 = 16" />
+</MathContainer>
+
+For the <InlineMath math="6" />th term:
+
+<MathContainer>
+  <BlockMath math="2 - 3 = -1" />
+</MathContainer>
+
+Therefore, the correct values to complete the sequence are <InlineMath math="16" /> and <InlineMath math="-1" />.

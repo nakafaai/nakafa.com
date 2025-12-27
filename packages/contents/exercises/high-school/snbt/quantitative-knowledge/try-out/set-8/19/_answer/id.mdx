@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Pembahasan Soal 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/25/2025",
+};
+
+Misalkan:
+- <InlineMath math="n(S)" /> = Banyaknya siswa dalam kelas
+- <InlineMath math="n(P)" /> = Banyaknya yang mengikuti pramuka
+- <InlineMath math="n(F)" /> = Banyaknya yang mengikuti futsal
+
+Diketahui:
+
+<MathContainer>
+  <BlockMath math="n(S) = 30" />
+  <BlockMath math="n(P) = 12" />
+  <BlockMath math="n(F) = 15" />
+  <BlockMath math="n(P \cap F) = 7" />
+</MathContainer>
+
+Banyaknya orang yang tidak mengikuti keduanya (<InlineMath math="n(P \cup F)^c" />) dapat diperoleh dengan rumus himpunan semesta:
+
+<MathContainer>
+  <BlockMath math="n(S) = n(P) + n(F) - n(P \cap F) + n(P \cup F)^c" />
+</MathContainer>
+
+Substitusikan nilai yang diketahui:
+
+<MathContainer>
+  <BlockMath math="30 = 12 + 15 - 7 + n(P \cup F)^c" />
+  <BlockMath math="30 = 20 + n(P \cup F)^c" />
+  <BlockMath math="n(P \cup F)^c = 30 - 20" />
+  <BlockMath math="n(P \cup F)^c = 10" />
+</MathContainer>
+
+Jadi, banyaknya siswa yang tidak mengikuti ekstrakurikuler pramuka dan futsal adalah <InlineMath math="10" />.

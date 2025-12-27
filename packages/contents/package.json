@@ -16,7 +16,7 @@
   "dependencies": {
     "@mantine/hooks": "^8.3.10",
     "date-fns": "^4.1.0",
-    "ky": "^1.14.1",
+    "ky": "^1.14.2",
     "lucide-react": "^0.562.0",
     "motion": "^12.23.26",
     "next-intl": "^4.6.1",

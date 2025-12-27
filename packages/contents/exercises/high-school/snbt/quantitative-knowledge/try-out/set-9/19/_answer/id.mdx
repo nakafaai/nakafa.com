@@ -1,0 +1,57 @@
+export const metadata = {
+  title: "Pembahasan Soal 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+#### Mencari Jumlah Siswa Laki-laki dan Perempuan
+
+Diketahui jumlah total siswa adalah <InlineMath math="50" />.
+Misalkan <InlineMath math="n_L" /> adalah jumlah siswa laki-laki dan <InlineMath math="n_P" /> adalah jumlah siswa perempuan.
+Diketahui juga jumlah siswa perempuan <InlineMath math="4" /> lebih banyak dari siswa laki-laki, sehingga:
+
+<MathContainer>
+  <BlockMath math="n_P = n_L + 4" />
+</MathContainer>
+
+Karena total siswa adalah <InlineMath math="50" />, maka:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} n_L + n_P &= 50 \\ n_L + (n_L + 4) &= 50 \\ 2n_L + 4 &= 50 \\ 2n_L &= 46 \\ n_L &= 23 \end{aligned}" />
+</MathContainer>
+
+Sehingga jumlah siswa perempuan adalah:
+
+<MathContainer>
+  <BlockMath math="n_P = 23 + 4 = 27" />
+</MathContainer>
+
+#### Menghitung Total Nilai
+
+Diketahui rata-rata nilai siswa laki-laki (<InlineMath math="\bar{x}_L" />) adalah <InlineMath math="76" />. Maka total nilai siswa laki-laki adalah:
+
+<MathContainer>
+  <BlockMath math="\sum x_L = n_L \times \bar{x}_L = 23 \times 76 = 1748" />
+</MathContainer>
+
+Diketahui rata-rata seluruh kelas (<InlineMath math="\bar{x}_{gab}" />) adalah <InlineMath math="70" />. Maka total nilai seluruh kelas adalah:
+
+<MathContainer>
+  <BlockMath math="\sum x_{gab} = 50 \times 70 = 3500" />
+</MathContainer>
+
+#### Menghitung Rata-rata Siswa Perempuan
+
+Total nilai siswa perempuan dapat dicari dengan mengurangi total nilai kelas dengan total nilai siswa laki-laki:
+
+<MathContainer>
+  <BlockMath math="\sum x_P = 3500 - 1748 = 1752" />
+</MathContainer>
+
+Maka, rata-rata nilai siswa perempuan (<InlineMath math="\bar{x}_P" />) adalah:
+
+<MathContainer>
+  <BlockMath math="\bar{x}_P = \frac{\sum x_P}{n_P} = \frac{1752}{27} \approx 64,88" />
+</MathContainer>
+
+Jadi, rata-rata ulangan siswa perempuan adalah <InlineMath math="64,88" />.

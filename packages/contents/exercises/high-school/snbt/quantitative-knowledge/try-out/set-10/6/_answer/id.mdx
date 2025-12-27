@@ -1,0 +1,43 @@
+export const metadata = {
+  title: "Pembahasan Diskon Buku",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Diketahui:
+-   Harga awal buku matematika = <InlineMath math="85.000" />
+-   Harga buku matematika setelah diskon = <InlineMath math="28.900" />
+-   Harga awal buku biologi = <InlineMath math="40.000" />
+
+Kita perlu mencari persentase harga yang harus dibayar (harga setelah diskon) dari harga awal. Misalkan persentase harga yang dibayar adalah <InlineMath math="p\%" /> (di mana <InlineMath math="p = 100 - x" /> jika <InlineMath math="x" /> adalah persentase potongan harga, namun soal menyiratkan hubungan langsung dengan persentase harga akhir).
+
+Berdasarkan harga buku matematika:
+
+<MathContainer>
+  <BlockMath math="\frac{\text{Harga Akhir}}{\text{Harga Awal}} = \frac{28.900}{85.000}" />
+</MathContainer>
+
+Sederhanakan pecahan tersebut:
+
+<MathContainer>
+  <BlockMath math="\frac{28.900}{85.000} = \frac{289}{850} = \frac{17 \times 17}{17 \times 50} = \frac{17}{50}" />
+</MathContainer>
+
+Atau dalam bentuk persentase:
+
+<MathContainer>
+  <BlockMath math="\frac{17}{50} \times 100\% = 34\%" />
+</MathContainer>
+
+Artinya, harga buku pada hari itu adalah <InlineMath math="34\%" /> dari harga awal.
+
+Sekarang kita hitung harga buku biologi dengan persentase yang sama:
+
+<MathContainer>
+  <BlockMath math="\text{Harga Biologi} = 34\% \times 40.000" />
+  <BlockMath math="\text{Harga Biologi} = \frac{34}{100} \times 40.000" />
+  <BlockMath math="\text{Harga Biologi} = 34 \times 400" />
+  <BlockMath math="\text{Harga Biologi} = 13.600" />
+</MathContainer>
+
+Jadi, harga buku biologi pada hari itu adalah <InlineMath math="13.600" /> rupiah.

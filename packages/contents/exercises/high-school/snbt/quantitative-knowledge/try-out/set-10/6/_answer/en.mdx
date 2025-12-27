@@ -1,0 +1,43 @@
+export const metadata = {
+  title: "Book Discount Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+Given:
+-   Original price of math book = <InlineMath math="85,000" />
+-   Price of math book after discount = <InlineMath math="28,900" />
+-   Original price of biology book = <InlineMath math="40,000" />
+
+We need to find the percentage of the price to be paid (price after discount) relative to the original price. Let's find this ratio.
+
+Based on the math book price:
+
+<MathContainer>
+  <BlockMath math="\frac{\text{Final Price}}{\text{Original Price}} = \frac{28,900}{85,000}" />
+</MathContainer>
+
+Simplify the fraction:
+
+<MathContainer>
+  <BlockMath math="\frac{28,900}{85,000} = \frac{289}{850} = \frac{17 \times 17}{17 \times 50} = \frac{17}{50}" />
+</MathContainer>
+
+Or as a percentage:
+
+<MathContainer>
+  <BlockMath math="\frac{17}{50} \times 100\% = 34\%" />
+</MathContainer>
+
+This means the price on that day is <InlineMath math="34\%" /> of the original price.
+
+Now, we calculate the price of the biology book using the same percentage:
+
+<MathContainer>
+  <BlockMath math="\text{Biology Price} = 34\% \times 40,000" />
+  <BlockMath math="\text{Biology Price} = \frac{34}{100} \times 40,000" />
+  <BlockMath math="\text{Biology Price} = 34 \times 400" />
+  <BlockMath math="\text{Biology Price} = 13,600" />
+</MathContainer>
+
+So, the price of the biology book on that day is <InlineMath math="13,600" /> rupiah.

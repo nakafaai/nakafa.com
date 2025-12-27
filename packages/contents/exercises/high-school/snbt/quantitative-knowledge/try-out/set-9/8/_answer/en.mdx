@@ -1,0 +1,27 @@
+export const metadata = {
+  title: "Solution for Problem 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/26/2025",
+};
+
+#### Simplifying Algebraic Expression
+
+We simplify the numerator by grouping like terms (integers with integers, radicals with radicals).
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} \frac{(8 + \sqrt{5}) + (2\sqrt{5} + 1)}{\sqrt{5} + 3} &= \frac{(8 + 1) + (\sqrt{5} + 2\sqrt{5})}{\sqrt{5} + 3} \\ &= \frac{9 + 3\sqrt{5}}{\sqrt{5} + 3} \end{aligned}" />
+</MathContainer>
+
+Next, we factor the numerator by taking out the number <InlineMath math="3" />:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} \frac{9 + 3\sqrt{5}}{\sqrt{5} + 3} &= \frac{3(3 + \sqrt{5})}{\sqrt{5} + 3} \end{aligned}" />
+</MathContainer>
+
+Notice that <InlineMath math="(3 + \sqrt{5})" /> is equal to <InlineMath math="(\sqrt{5} + 3)" />. Thus, we can divide both the numerator and the denominator by this value:
+
+<MathContainer>
+  <BlockMath math="\frac{3(3 + \sqrt{5})}{\sqrt{5} + 3} = 3" />
+</MathContainer>
+
+Therefore, the final result is <InlineMath math="3" />.

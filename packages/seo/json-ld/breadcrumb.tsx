@@ -1,6 +1,7 @@
 import { type Locale, useTranslations } from "next-intl";
 import type { BreadcrumbList, WithContext } from "schema-dts";
 import { JsonLd } from ".";
+import { ORGANIZATION_URL } from "./constants";
 
 interface Props {
   locale: Locale;
@@ -20,15 +21,15 @@ export function BreadcrumbJsonLd({
   const breadcrumbJsonLd: WithContext<BreadcrumbList> = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    "@id": `https://nakafa.com/${locale}#breadcrumb`,
-    url: `https://nakafa.com/${locale}`,
+    "@id": `${ORGANIZATION_URL}/${locale}#breadcrumb`,
+    url: `${ORGANIZATION_URL}/${locale}`,
     name: name ?? t("title"),
     description: description ?? t("description"),
     potentialAction: [
       {
         "@type": "SearchAction",
-        "@id": `https://nakafa.com/${locale}/search`,
-        target: `https://nakafa.com/${locale}/search?q={search_term_string}`,
+        "@id": `${ORGANIZATION_URL}/${locale}/search`,
+        target: `${ORGANIZATION_URL}/${locale}/search?q={search_term_string}`,
         query: "search_term_string",
       },
     ],

@@ -91,6 +91,7 @@ export function NavUser() {
             <Avatar className="size-6 rounded-lg">
               <AvatarImage
                 alt={user.authUser.name}
+                role="presentation"
                 src={user.authUser.image ?? ""}
               />
               <AvatarFallback className="rounded-lg text-xs">
@@ -114,6 +115,7 @@ export function NavUser() {
               <Avatar className="size-8 rounded-lg">
                 <AvatarImage
                   alt={user.authUser.name}
+                  role="presentation"
                   src={user.authUser.image ?? ""}
                 />
                 <AvatarFallback className="rounded-lg">

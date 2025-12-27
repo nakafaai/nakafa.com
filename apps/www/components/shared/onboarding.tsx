@@ -74,6 +74,7 @@ function OnboardingContent({ user }: { user: AppUser }) {
           <Image
             alt="Nakafa"
             className="w-full rounded-md"
+            fetchPriority="high"
             height={216}
             loading="eager"
             preload

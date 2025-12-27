@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Pembahasan Soal 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/27/2025",
+};
+
+import { Graph } from "../graph";
+
+Definisikan huruf sesuai urutan alfabet:
+
+- <InlineMath math="A = 1" />
+- <InlineMath math="B = 2" />
+- <InlineMath math="C = 3" />
+- ...
+- <InlineMath math="Z = 26" />
+
+Maka, kita dapat mengubah huruf-huruf pada segitiga menjadi angka:
+
+<Graph mode="explanation-numbers" title="Konversi ke Angka" description="Huruf diubah menjadi angka sesuai urutan alfabet." />
+
+Perhatikan bahwa segitiga pertama memiliki pola:
+
+<MathContainer>
+  <BlockMath math="(\text{Kiri} + \text{Kanan}) \times (\text{Atas} + \text{Bawah}) = \text{Tengah}" />
+  <BlockMath math="(4 + 6) \times (1 + 1) = 10 \times 2 = 20" />
+</MathContainer>
+
+Angka <InlineMath math="20" /> sesuai dengan huruf <InlineMath math="T" /> (huruf ke-<InlineMath math="20" />).
+
+Dengan menggunakan pola yang sama, angka dalam segitiga pada segitiga kedua adalah:
+
+<MathContainer>
+  <BlockMath math="(1 + 4) \times (2 + 3) = 5 \times 5 = 25" />
+</MathContainer>
+
+<Graph mode="explanation-result" title="Perhitungan Pola" description={<>Hasil perhitungan pola pada segitiga kedua adalah <InlineMath math="25" />.</>} />
+
+Substitusi kembali angka pada urutan huruf. Huruf ke-<InlineMath math="25" /> adalah <InlineMath math="Y" />.
+
+<Graph mode="explanation-final" title="Hasil Akhir" description={<>Angka <InlineMath math="25" /> dikonversi kembali menjadi huruf <InlineMath math="Y" />.</>} />
+
+Jadi, jawabannya adalah <InlineMath math="Y" />.

@@ -228,7 +228,7 @@ async function PageContent({
             title={currentMaterialItem.title}
           />
 
-          <LayoutMaterialMain className="space-y-12">
+          <LayoutMaterialMain as="section" className="space-y-12">
             <ExerciseContextProvider
               setId={FilePath}
               totalExercises={exercises.length}
@@ -238,7 +238,10 @@ async function PageContent({
                   t("number-count", { count: exercise.number })
                 );
                 return (
-                  <section key={exercise.number}>
+                  <article
+                    aria-labelledby={`exercise-${id}-title`}
+                    key={exercise.number}
+                  >
                     <div className="flex items-center gap-4">
                       <a
                         className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
@@ -249,7 +252,7 @@ async function PageContent({
                           <span className="font-mono text-xs tracking-tighter">
                             {exercise.number}
                           </span>
-                          <h2 className="sr-only">
+                          <h2 className="sr-only" id={`exercise-${id}-title`}>
                             {t("number-count", { count: exercise.number })}
                           </h2>
                         </div>
@@ -272,7 +275,7 @@ async function PageContent({
                     <ExerciseAnswer exerciseNumber={exercise.number}>
                       {exercise.answer.default}
                     </ExerciseAnswer>
-                  </section>
+                  </article>
                 );
               })}
             </ExerciseContextProvider>
@@ -355,7 +358,7 @@ async function SingleExerciseContent({
 
           <LayoutMaterialMain>
             <ExerciseContextProvider setId={FilePath} totalExercises={1}>
-              <section>
+              <article aria-labelledby={`exercise-${id}-title`}>
                 <div className="flex items-center gap-4">
                   <a
                     className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
@@ -366,7 +369,7 @@ async function SingleExerciseContent({
                       <span className="font-mono text-xs tracking-tighter">
                         {exercise.number}
                       </span>
-                      <h2 className="sr-only">
+                      <h2 className="sr-only" id={`exercise-${id}-title`}>
                         {t("number-count", { count: exercise.number })}
                       </h2>
                     </div>
@@ -387,7 +390,7 @@ async function SingleExerciseContent({
                 <ExerciseAnswer exerciseNumber={exercise.number}>
                   {exercise.answer.default}
                 </ExerciseAnswer>
-              </section>
+              </article>
             </ExerciseContextProvider>
           </LayoutMaterialMain>
           <LayoutMaterialFooter>
