@@ -1,1 +1,3 @@
-export { default } from "@repo/next-config/vercel";
+import { config as vercelConfig } from "@repo/next-config/vercel";
+
+export const config = vercelConfig;
