@@ -1,5 +1,18 @@
 # @repo/backend
 
+## 1.4.0
+
+### Minor Changes
+
+- [`8743029`](https://github.com/nakafaai/nakafa.com/commit/87430293f82dd666543ea9722289ed68d318aefa) Thanks [@nabilfatih](https://github.com/nabilfatih)! - New set of try out snbt, use semantic html, fix tailwind css lint
+
+- [`e6778d2`](https://github.com/nakafaai/nakafa.com/commit/e6778d2db6a60557ae222b2e1b975002339577e4) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Add unit testing for utils functions, proper testing coverage, bump version, add new try out for snbt
+
+### Patch Changes
+
+- Updated dependencies [[`8743029`](https://github.com/nakafaai/nakafa.com/commit/87430293f82dd666543ea9722289ed68d318aefa)]:
+  - @repo/ai@1.3.0
+
 ## 1.3.0
 
 ### Minor Changes

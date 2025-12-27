@@ -1,5 +1,11 @@
 # @repo/ai
 
+## 1.3.0
+
+### Minor Changes
+
+- [`8743029`](https://github.com/nakafaai/nakafa.com/commit/87430293f82dd666543ea9722289ed68d318aefa) Thanks [@nabilfatih](https://github.com/nabilfatih)! - New set of try out snbt, use semantic html, fix tailwind css lint
+
 ## 1.2.0
 
 ### Minor Changes
