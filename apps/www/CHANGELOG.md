@@ -1,5 +1,28 @@
 # www
 
+## 1.4.0
+
+### Minor Changes
+
+- [`727a480`](https://github.com/nakafaai/nakafa.com/commit/727a480db92a0f95be982ce3a10b5b86e38b2b30) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Add sticky and remove backdrop
+
+- [`058989c`](https://github.com/nakafaai/nakafa.com/commit/058989cb329c018b58a3f1e15ba71d8433db0d9f) Thanks [@nabilfatih](https://github.com/nabilfatih)! - remove node options
+
+- [`8743029`](https://github.com/nakafaai/nakafa.com/commit/87430293f82dd666543ea9722289ed68d318aefa) Thanks [@nabilfatih](https://github.com/nabilfatih)! - New set of try out snbt, use semantic html, fix tailwind css lint
+
+- [`e6778d2`](https://github.com/nakafaai/nakafa.com/commit/e6778d2db6a60557ae222b2e1b975002339577e4) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Add unit testing for utils functions, proper testing coverage, bump version, add new try out for snbt
+
+### Patch Changes
+
+- Updated dependencies [[`8743029`](https://github.com/nakafaai/nakafa.com/commit/87430293f82dd666543ea9722289ed68d318aefa), [`e6778d2`](https://github.com/nakafaai/nakafa.com/commit/e6778d2db6a60557ae222b2e1b975002339577e4)]:
+  - @repo/design-system@0.4.0
+  - @repo/next-config@0.3.0
+  - @repo/connection@0.2.0
+  - @repo/contents@0.3.0
+  - @repo/backend@1.4.0
+  - @repo/seo@0.4.0
+  - @repo/ai@1.3.0
+
 ## 1.3.0
 
 ### Minor Changes
