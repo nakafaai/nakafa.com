@@ -1,8 +1,9 @@
 "use client";
 
+import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { ArrowDownIcon } from "lucide-react";
 import React, {
   type ComponentProps,
   createContext,
@@ -203,7 +204,7 @@ export const VirtualConversationScrollButton = memo(
         variant="outline"
         {...props}
       >
-        <ArrowDownIcon className="size-4" />
+        <HugeIcons icon={ArrowDown02Icon} />
       </Button>
     );
   }

@@ -1,7 +1,11 @@
 "use client";
 
+import {
+  HeartAddIcon,
+  SourceCodeIcon,
+  UserIcon,
+} from "@hugeicons/core-free-icons";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { CodeIcon, HeartPlusIcon, UserRoundIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { SharedTabs } from "@/components/user/shared-tabs";
@@ -14,17 +18,17 @@ export function UserSettingsTabs() {
   const tabs = useMemo(
     () => [
       {
-        icon: UserRoundIcon,
+        icon: UserIcon,
         label: t("account"),
         href: "/user/settings",
       },
       {
-        icon: HeartPlusIcon,
+        icon: HeartAddIcon,
         label: t("subscriptions"),
         href: "/user/settings/subscriptions",
       },
       {
-        icon: CodeIcon,
+        icon: SourceCodeIcon,
         label: t("developers"),
         href: "/user/settings/developers",
       },

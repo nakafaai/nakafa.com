@@ -1,5 +1,6 @@
 "use client";
 
+import { StudentIcon, TeacherIcon } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
@@ -8,8 +9,8 @@ import {
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import { Badge } from "@repo/design-system/components/ui/badge";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { usePaginatedQuery } from "convex/react";
-import { GraduationCapIcon, SpeechIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { useClass } from "@/lib/context/use-class";
@@ -79,11 +80,9 @@ export function SchoolClassesPeopleList() {
 
           <div className="flex items-center gap-2">
             <Badge variant="secondary">
-              {person.role === "teacher" ? (
-                <SpeechIcon />
-              ) : (
-                <GraduationCapIcon />
-              )}
+              <HugeIcons
+                icon={person.role === "teacher" ? TeacherIcon : StudentIcon}
+              />
               {t(person.role)}
             </Badge>
           </div>

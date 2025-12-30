@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  ArrowDown01Icon,
+  BrainIcon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import type { ModelId } from "@repo/ai/lib/providers";
 import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar";
@@ -12,19 +17,19 @@ import {
   CommandItem,
   CommandList,
 } from "@repo/design-system/components/ui/command";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useAction, useQuery } from "convex/react";
-import { BrainIcon, CheckIcon, ChevronDownIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useAi } from "@/lib/context/use-ai";
@@ -53,7 +58,7 @@ export function AiChatModel() {
 
   const [openModelMenu, setOpenModelMenu] = useState(false);
 
-  const Icon = aiModels.find((m) => m.value === model)?.icon ?? BrainIcon;
+  const Icon = aiModels.find((m) => m.value === model)?.icon;
   const label = aiModels.find((m) => m.value === model)?.label;
 
   const handleOnChange = (value: ModelId) => {
@@ -86,13 +91,16 @@ export function AiChatModel() {
     <Popover onOpenChange={setOpenModelMenu} open={openModelMenu}>
       <PopoverTrigger asChild>
         <Button disabled={isPending} variant="ghost">
-          {isPending ? <SpinnerIcon /> : <Icon />}
+          {isPending && <Spinner />}
+          {!isPending && Icon && <Icon />}
+          {!(isPending || Icon) && <HugeIcons icon={BrainIcon} />}
           {label}
-          <ChevronDownIcon
+          <HugeIcons
             className={cn(
               "ml-auto size-4 transition-transform ease-out",
               !!openModelMenu && "rotate-180"
             )}
+            icon={ArrowDown01Icon}
           />
         </Button>
       </PopoverTrigger>
@@ -113,11 +121,12 @@ export function AiChatModel() {
                 >
                   <m.icon />
                   {m.label}
-                  <CheckIcon
+                  <HugeIcons
                     className={cn(
                       "ml-auto size-4 opacity-0 transition-opacity ease-out",
                       model === m.value && "opacity-100"
                     )}
+                    icon={Tick01Icon}
                   />
                 </CommandItem>
               ))}
@@ -134,11 +143,12 @@ export function AiChatModel() {
                 >
                   <m.icon />
                   {m.label}
-                  <CheckIcon
+                  <HugeIcons
                     className={cn(
                       "ml-auto size-4 opacity-0 transition-opacity ease-out",
                       model === m.value && "opacity-100"
                     )}
+                    icon={Tick01Icon}
                   />
                 </CommandItem>
               ))}

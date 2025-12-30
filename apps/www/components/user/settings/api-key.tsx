@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  Add01Icon,
+  ArrowDown01Icon,
+  Copy01Icon,
+  Delete02Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
@@ -16,10 +23,11 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   Tooltip,
   TooltipContent,
@@ -29,13 +37,6 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  CopyIcon,
-  PlusIcon,
-  Trash2Icon,
-} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -193,7 +194,7 @@ export function UserSettingsApiKey() {
               size="sm"
               type="button"
             >
-              <PlusIcon />
+              <HugeIcons icon={Add01Icon} />
               {t("new-api-key")}
             </Button>
           </div>
@@ -221,7 +222,7 @@ export function UserSettingsApiKey() {
                     <Tooltip>
                       <TooltipTrigger
                         render={
-                          <Badge className="lowercase" variant="muted-outline">
+                          <Badge className="lowercase" variant="muted">
                             {apiKey.expiresAt
                               ? formatDistanceToNow(apiKey.expiresAt, {
                                   locale: getLocale(locale),
@@ -241,7 +242,9 @@ export function UserSettingsApiKey() {
                       type="button"
                       variant="secondary"
                     >
-                      {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
+                      <HugeIcons
+                        icon={clipboard.copied ? Tick01Icon : Copy01Icon}
+                      />
                       <span className="sr-only">Copy API Key</span>
                     </Button>
                     <Button
@@ -250,7 +253,7 @@ export function UserSettingsApiKey() {
                       type="button"
                       variant="destructive"
                     >
-                      <Trash2Icon />
+                      <HugeIcons icon={Delete02Icon} />
                       <span className="sr-only">Delete API Key</span>
                     </Button>
                   </div>
@@ -279,7 +282,7 @@ export function UserSettingsApiKey() {
             }}
             variant="destructive"
           >
-            {isPending ? <SpinnerIcon /> : <Trash2Icon />}
+            <Spinner icon={Delete02Icon} />
             {t("delete")}
           </Button>
         }
@@ -309,7 +312,7 @@ export function UserSettingsApiKey() {
                   form="user-settings-api-key-form"
                   type="submit"
                 >
-                  {isSubmitting ? <SpinnerIcon /> : <PlusIcon />}
+                  <Spinner icon={Add01Icon} isLoading={isSubmitting} />
                   {t("create")}
                 </Button>
               );
@@ -372,7 +375,7 @@ export function UserSettingsApiKey() {
                             (item) => item.value === field.state.value
                           )?.label ?? "never"
                         )}
-                        <ChevronDownIcon className="size-4" />
+                        <HugeIcons icon={ArrowDown01Icon} />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -391,13 +394,14 @@ export function UserSettingsApiKey() {
                           >
                             {t(item.label)}
 
-                            <CheckIcon
+                            <HugeIcons
                               className={cn(
                                 "ml-auto size-4 opacity-0 transition-opacity ease-out",
                                 field.state.value === item.value &&
                                   "opacity-100",
                                 field.state.value === 0 && "text-secondary!"
                               )}
+                              icon={Tick01Icon}
                             />
                           </DropdownMenuItem>
                         ))}

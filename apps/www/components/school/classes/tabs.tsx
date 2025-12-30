@@ -1,9 +1,14 @@
 "use client";
 
+import {
+  BookOpen02Icon,
+  MessageMultiple02Icon,
+  UserMultipleIcon,
+} from "@hugeicons/core-free-icons";
 import { Highlight } from "@repo/design-system/components/animate-ui/primitives/effects/highlight";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { BookOpenIcon, MessagesSquareIcon, UsersIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
@@ -18,17 +23,17 @@ export function SchoolClassesTabs() {
   const tabs = useMemo(
     () => [
       {
-        icon: MessagesSquareIcon,
+        icon: MessageMultiple02Icon,
         label: t("forum"),
         href: `/school/${slug}/classes/${id}/forum`,
       },
       {
-        icon: BookOpenIcon,
+        icon: BookOpen02Icon,
         label: t("materials"),
         href: `/school/${slug}/classes/${id}/materials`,
       },
       {
-        icon: UsersIcon,
+        icon: UserMultipleIcon,
         label: t("people"),
         href: `/school/${slug}/classes/${id}/people`,
       },
@@ -56,7 +61,7 @@ export function SchoolClassesTabs() {
                 href={tab.href}
                 key={tab.href}
               >
-                <tab.icon className="size-4 shrink-0" />
+                <HugeIcons className="size-4" icon={tab.icon} />
                 {tab.label}
               </NavigationLink>
             ))}

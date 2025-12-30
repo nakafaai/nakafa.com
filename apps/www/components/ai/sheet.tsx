@@ -1,5 +1,17 @@
 "use client";
 
+import {
+  Add01Icon,
+  Cancel01Icon,
+  ChatSearch01Icon,
+  GeometricShapes01Icon,
+  Globe02Icon,
+  Maximize03Icon,
+  Minimize03Icon,
+  SparklesIcon,
+  SquareLock01Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -29,6 +41,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
   SheetContent,
@@ -50,18 +63,6 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "convex/react";
-import {
-  CheckIcon,
-  GlobeIcon,
-  HistoryIcon,
-  LockIcon,
-  Maximize2Icon,
-  Minimize2Icon,
-  PlusIcon,
-  ShapesIcon,
-  SparklesIcon,
-  XIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   Activity,
@@ -124,7 +125,7 @@ export function AiSheet() {
           <SheetTitle className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 px-2">
               <div className="flex items-center gap-2 text-base">
-                <SparklesIcon className="size-4" />
+                <HugeIcons className="size-4" icon={SparklesIcon} />
                 <span>Nina</span>
               </div>
               <Badge variant="secondary">Beta</Badge>
@@ -137,7 +138,7 @@ export function AiSheet() {
                   size="icon-sm"
                   variant="ghost"
                 >
-                  <PlusIcon />
+                  <HugeIcons icon={Add01Icon} />
                   <span className="sr-only">New Chat</span>
                 </Button>
               </Activity>
@@ -151,7 +152,9 @@ export function AiSheet() {
                 size="icon-sm"
                 variant="ghost"
               >
-                {width === MAX_WIDTH ? <Minimize2Icon /> : <Maximize2Icon />}
+                <HugeIcons
+                  icon={width === MAX_WIDTH ? Minimize03Icon : Maximize03Icon}
+                />
                 <span className="sr-only">Resize</span>
               </Button>
               <Button
@@ -159,7 +162,7 @@ export function AiSheet() {
                 size="icon-sm"
                 variant="ghost"
               >
-                <XIcon />
+                <HugeIcons icon={Cancel01Icon} />
                 <span className="sr-only">Close</span>
               </Button>
             </div>
@@ -244,7 +247,7 @@ const AiSheetNewChat = memo(() => {
         <ConversationContent>
           <ConversationEmptyState
             description={t("new-chat-description")}
-            icon={<ShapesIcon className="size-8 shrink-0" />}
+            icon={<HugeIcons className="size-6" icon={GeometricShapes01Icon} />}
             title={t("new-chat-title")}
           />
         </ConversationContent>
@@ -273,7 +276,7 @@ const AiSheetHistory = memo(() => {
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button size="icon-sm" variant="ghost">
-          <HistoryIcon />
+          <HugeIcons icon={ChatSearch01Icon} />
           <span className="sr-only">History</span>
         </Button>
       </DropdownMenuTrigger>
@@ -311,13 +314,15 @@ const AiSheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
                 setActiveChatId(chat._id);
               }}
             >
-              {isPrivate ? <LockIcon /> : <GlobeIcon />}
+              <HugeIcons icon={isPrivate ? SquareLock01Icon : Globe02Icon} />
               <span className="max-w-62.5 truncate">{chat.title}</span>
               <DropdownMenuShortcut>
-                <CheckIcon
+                <HugeIcons
                   className={cn(
+                    "transition-opacity ease-out",
                     activeChatId === chat._id ? "opacity-100" : "opacity-0"
                   )}
+                  icon={Tick01Icon}
                 />
               </DropdownMenuShortcut>
             </DropdownMenuItem>

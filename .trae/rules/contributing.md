@@ -1,3 +1,6 @@
+---
+alwaysApply: false
+---
 # Contributing to Nakafa
 
 Follow these steps to contribute:

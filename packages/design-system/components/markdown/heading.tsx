@@ -1,9 +1,10 @@
+import { Link05Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn, createHeadingId } from "@repo/design-system/lib/utils";
 import type {
   HeadingProps,
   HeadingTag,
 } from "@repo/design-system/types/markdown";
-import { Link2Icon } from "lucide-react";
 import type { ReactNode } from "react";
 
 function extractTextFromNode(node: ReactNode): string {
@@ -82,7 +83,10 @@ export function Heading({
       >
         <span className="text-pretty">{props.children}</span>
         <div className="rounded-sm border p-2 opacity-0 transition-opacity ease-out group-hover/heading:opacity-100">
-          <Link2Icon className="size-4 shrink-0 text-muted-foreground" />
+          <HugeIcons
+            className="size-4 shrink-0 text-muted-foreground"
+            icon={Link05Icon}
+          />
         </div>
       </a>
     </Tag>

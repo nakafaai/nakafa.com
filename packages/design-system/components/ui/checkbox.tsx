@@ -1,7 +1,8 @@
 "use client";
 
+import { Tick01Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { CheckIcon } from "lucide-react";
 import { Checkbox as CheckboxPrimitive } from "radix-ui";
 import type * as React from "react";
 
@@ -22,7 +23,7 @@ function Checkbox({
         className="grid place-content-center text-current transition-none"
         data-slot="checkbox-indicator"
       >
-        <CheckIcon className="size-3.5" />
+        <HugeIcons className="size-3.5" icon={Tick01Icon} />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   );

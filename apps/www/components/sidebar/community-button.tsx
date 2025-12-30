@@ -1,9 +1,9 @@
-import { SiDiscord } from "@icons-pack/react-simple-icons";
+import { DiscordIcon, LinkSquare02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
-import { ExternalLinkIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 export function CommunityButton() {
@@ -17,10 +17,13 @@ export function CommunityButton() {
           target="_blank"
           title={t("community")}
         >
-          <SiDiscord className="size-4 shrink-0" />
+          <HugeIcons className="size-4 shrink-0" icon={DiscordIcon} />
           <span className="truncate">{t("community")}</span>
 
-          <ExternalLinkIcon className="ml-auto size-4 shrink-0" />
+          <HugeIcons
+            className="ml-auto size-4 shrink-0"
+            icon={LinkSquare02Icon}
+          />
         </a>
       </SidebarMenuButton>
     </SidebarMenuItem>

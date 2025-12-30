@@ -1,3 +1,15 @@
+import {
+  Cancel01Icon,
+  Copy01Icon,
+  Delete02Icon,
+  Edit01Icon,
+  Globe02Icon,
+  Link04Icon,
+  LinkForwardIcon,
+  MoreHorizontalIcon,
+  SquareLock01Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
@@ -10,24 +22,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn, getAppUrl } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation, useQuery } from "convex/react";
-import {
-  CheckIcon,
-  CopyIcon,
-  EllipsisIcon,
-  ForwardIcon,
-  GlobeIcon,
-  LinkIcon,
-  LockIcon,
-  PenLineIcon,
-  Trash2Icon,
-  XIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   Activity,
@@ -153,11 +154,10 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
       </Activity>
       <Activity mode={isEditing ? "hidden" : "visible"}>
         <h1 className="flex items-center gap-2 px-1.5">
-          {isPrivate ? (
-            <LockIcon className="size-4 shrink-0" />
-          ) : (
-            <GlobeIcon className="size-4 shrink-0" />
-          )}
+          <HugeIcons
+            className="size-4 shrink-0"
+            icon={isPrivate ? SquareLock01Icon : Globe02Icon}
+          />
           <span className="line-clamp-1 font-medium">{chat.title}</span>
         </h1>
       </Activity>
@@ -170,7 +170,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
             size="icon-sm"
             variant="destructive"
           >
-            <XIcon />
+            <HugeIcons icon={Cancel01Icon} />
             <span className="sr-only">Cancel</span>
           </Button>
           <Button
@@ -179,7 +179,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
             size="icon-sm"
             variant="secondary"
           >
-            {isPending ? <SpinnerIcon /> : <CheckIcon />}
+            <Spinner icon={Tick01Icon} isLoading={isPending} />
             <span className="sr-only">Save</span>
           </Button>
         </HeaderGroup>
@@ -190,7 +190,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button disabled={isPending} size="icon-sm" variant="ghost">
-                <EllipsisIcon />
+                <HugeIcons icon={MoreHorizontalIcon} />
                 <span className="sr-only">More actions</span>
               </Button>
             </DropdownMenuTrigger>
@@ -200,14 +200,14 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
                   className="cursor-pointer"
                   onSelect={handleEdit}
                 >
-                  <PenLineIcon />
+                  <HugeIcons icon={Edit01Icon} />
                   {t("rename-chat")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer"
                   onSelect={() => setConfirmShare(true)}
                 >
-                  <ForwardIcon />
+                  <HugeIcons icon={LinkForwardIcon} />
                   {t("share-chat")}
                 </DropdownMenuItem>
               </DropdownMenuGroup>
@@ -218,7 +218,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
                   onSelect={() => setConfirmDelete(true)}
                   variant="destructive"
                 >
-                  <Trash2Icon />
+                  <HugeIcons icon={Delete02Icon} />
                   {t("delete-chat")}
                 </DropdownMenuItem>
               </DropdownMenuGroup>
@@ -235,7 +235,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
               disabled={isPending}
               onClick={() => handleUpdateVisibility("public")}
             >
-              {isPending ? <SpinnerIcon /> : <LinkIcon />}
+              <Spinner icon={Link04Icon} isLoading={isPending} />
               {t("create-link")}
             </Button>
           ) : (
@@ -248,7 +248,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
                 });
               }}
             >
-              {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
+              <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
               {t("copy-link")}
             </Button>
           )
@@ -272,11 +272,10 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
               >
                 <div className="flex flex-1 flex-col items-start justify-start gap-1">
                   <div className="flex items-center gap-2">
-                    {isPublic ? (
-                      <GlobeIcon className="size-4 shrink-0" />
-                    ) : (
-                      <LockIcon className="size-4 shrink-0" />
-                    )}
+                    <HugeIcons
+                      className="size-4 shrink-0"
+                      icon={isPublic ? Globe02Icon : SquareLock01Icon}
+                    />
                     <span className="text-sm">{t(visibility)}</span>
                   </div>
                   <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground/80">
@@ -284,11 +283,12 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
                   </p>
                 </div>
 
-                <CheckIcon
+                <HugeIcons
                   className={cn(
                     "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out",
                     !!isSelected && "opacity-100"
                   )}
+                  icon={Tick01Icon}
                 />
               </button>
             );
@@ -304,7 +304,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
             onClick={handleDelete}
             variant="destructive"
           >
-            {isPending ? <SpinnerIcon /> : <Trash2Icon />}
+            <Spinner icon={Delete02Icon} isLoading={isPending} />
             {t("confirm")}
           </Button>
         }

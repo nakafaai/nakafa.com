@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  ArrowDown02Icon,
+  ArrowRight02Icon,
+  MinusSignIcon,
+  PlusSignIcon,
+} from "@hugeicons/core-free-icons";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Button as UiButton } from "@repo/design-system/components/ui/button";
 import {
@@ -10,12 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ArrowDownIcon,
-  ArrowRightIcon,
-  MinusIcon,
-  PlusIcon,
-} from "lucide-react";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useMemo, useState } from "react";
 import {
   Button,
@@ -60,15 +61,27 @@ function Machine() {
             <InlineMath math={`x = ${input}`} />
           </UiButton>
 
-          <ArrowRightIcon className="hidden size-4 sm:block" />
-          <ArrowDownIcon className="block size-4 sm:hidden" />
+          <HugeIcons
+            className="hidden size-4 sm:block"
+            icon={ArrowRight02Icon}
+          />
+          <HugeIcons
+            className="block size-4 sm:hidden"
+            icon={ArrowDown02Icon}
+          />
 
           <div className="flex items-center justify-center rounded-md bg-accent p-8 text-accent-foreground shadow-xs">
             <InlineMath math="f(x) = 2x + 1" />
           </div>
 
-          <ArrowDownIcon className="block size-4 sm:hidden" />
-          <ArrowRightIcon className="hidden size-4 sm:block" />
+          <HugeIcons
+            className="block size-4 sm:hidden"
+            icon={ArrowDown02Icon}
+          />
+          <HugeIcons
+            className="hidden size-4 sm:block"
+            icon={ArrowRight02Icon}
+          />
 
           <UiButton className="pointer-events-none" variant="secondary">
             <InlineMath math={`f(x) = ${output}`} />
@@ -89,14 +102,22 @@ function Machine() {
               className="-ms-px flex aspect-square h-[inherit] cursor-pointer items-center justify-center rounded-s-md border border-[color-mix(in_oklch,var(--input)_5%,var(--border))] bg-background text-muted-foreground/80 text-sm transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
               slot="decrement"
             >
-              <MinusIcon aria-hidden="true" className="size-4" />
+              <HugeIcons
+                aria-hidden="true"
+                className="size-4"
+                icon={MinusSignIcon}
+              />
             </Button>
             <Input className="w-full grow bg-background px-3 py-2 text-center font-mono text-foreground tabular-nums" />
             <Button
               className="-me-px flex aspect-square h-[inherit] cursor-pointer items-center justify-center rounded-e-md border border-[color-mix(in_oklch,var(--input)_5%,var(--border))] bg-background text-muted-foreground/80 text-sm transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
               slot="increment"
             >
-              <PlusIcon aria-hidden="true" className="size-4" />
+              <HugeIcons
+                aria-hidden="true"
+                className="size-4"
+                icon={PlusSignIcon}
+              />
             </Button>
           </Group>
         </NumberField>

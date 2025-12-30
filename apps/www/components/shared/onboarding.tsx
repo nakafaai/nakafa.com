@@ -1,5 +1,6 @@
 "use client";
 
+import { PartyIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { AppUser } from "@repo/backend/convex/auth";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -11,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@repo/design-system/components/ui/dialog";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
@@ -20,8 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useMutation, useQuery } from "convex/react";
-import { PartyPopperIcon } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -97,7 +98,7 @@ function OnboardingContent({ user }: { user: AppUser }) {
               <SelectGroup>
                 {roles.map((role) => (
                   <SelectItem key={role.value} value={role.value}>
-                    <role.icon />
+                    <HugeIcons icon={role.icon} />
                     {t(role.value)}
                   </SelectItem>
                 ))}
@@ -110,7 +111,7 @@ function OnboardingContent({ user }: { user: AppUser }) {
               disabled={!selectedRole || isPending}
               onClick={handleStartLearning}
             >
-              {isPending ? <SpinnerIcon /> : <PartyPopperIcon />}
+              <Spinner icon={PartyIcon} isLoading={isPending} />
               {t("button")}
             </Button>
           </DialogFooter>

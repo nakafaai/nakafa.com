@@ -1,10 +1,12 @@
 "use client";
 
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,
@@ -18,7 +20,6 @@ import {
   SidebarMenuSubItem,
 } from "@repo/design-system/components/ui/sidebar";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { ChevronRightIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { subjectMenu } from "./_data/subject";
 
@@ -31,7 +32,6 @@ function MenuItem() {
       {subjectMenu.map((item) => {
         return (
           <Collapsible
-            defaultOpen
             key={item.title}
             render={
               <SidebarMenuItem>
@@ -41,9 +41,12 @@ function MenuItem() {
                       className="group"
                       tooltip={t(item.title)}
                     >
-                      {!!item.icon && <item.icon />}
+                      {!!item.icon && <HugeIcons icon={item.icon} />}
                       <span className="truncate">{t(item.title)}</span>
-                      <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-panel-open:rotate-90" />
+                      <HugeIcons
+                        className="ml-auto transition-transform duration-200 group-data-panel-open:rotate-90"
+                        icon={ArrowRight01Icon}
+                      />
                     </SidebarMenuButton>
                   }
                 />

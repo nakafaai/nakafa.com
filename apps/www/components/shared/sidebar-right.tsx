@@ -1,3 +1,4 @@
+import { Menu02Icon } from "@hugeicons/core-free-icons";
 import type { Reference } from "@repo/contents/_types/content";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
@@ -16,7 +17,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { MenuIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { CommentsButton } from "../sidebar/comments-button";
 import { GithubButton } from "../sidebar/github-button";
@@ -126,7 +126,7 @@ export function SidebarRight({
         {/* Mobile trigger button */}
         <SidebarTrigger
           className="fixed top-20 right-6 size-9 bg-background/80 backdrop-blur-xs xl:hidden"
-          icon={<MenuIcon />}
+          icon={Menu02Icon}
           size="icon"
           variant="outline"
         />

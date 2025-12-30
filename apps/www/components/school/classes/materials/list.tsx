@@ -1,5 +1,20 @@
 "use client";
 
+import {
+  ArrowDown01Icon,
+  ArrowDown02Icon,
+  ArrowTurnForwardIcon,
+  ArrowUp02Icon,
+  Calendar03Icon,
+  Delete02Icon,
+  Edit01Icon,
+  File01Icon,
+  Folder01Icon,
+  MoreHorizontalIcon,
+  SentIcon,
+  Tick01Icon,
+  Time04Icon,
+} from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
@@ -18,7 +33,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
@@ -28,6 +43,7 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import { usePathname } from "@repo/internationalization/src/navigation";
@@ -35,22 +51,6 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { formatDistanceToNow, startOfDay } from "date-fns";
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  CalendarIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  Clock2Icon,
-  CornerDownRightIcon,
-  DotIcon,
-  EllipsisIcon,
-  FileTextIcon,
-  FolderIcon,
-  PenLineIcon,
-  SaveIcon,
-  Trash2Icon,
-} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import type { ComponentProps } from "react";
@@ -191,7 +191,7 @@ function MaterialGroupCard({
       >
         <Activity mode={canManage ? "visible" : "hidden"}>
           <Badge className="w-fit" variant={getBadgeVariant()}>
-            <StatusIcon className="size-3" />
+            <HugeIcons className="size-3" icon={StatusIcon} />
             {group.status === "scheduled" && group.scheduledAt
               ? formatScheduledAt(group.scheduledAt, locale)
               : t(statusInfo.value)}
@@ -202,24 +202,24 @@ function MaterialGroupCard({
           <h3 className="min-w-0 truncate font-medium">{group.name}</h3>
 
           <div className="flex min-w-0 items-center gap-1 text-muted-foreground text-sm">
-            <CornerDownRightIcon className="size-3 shrink-0" />
+            <HugeIcons
+              className="size-3 shrink-0"
+              icon={ArrowTurnForwardIcon}
+            />
             <p className="min-w-0 truncate">{group.description}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 text-muted-foreground text-sm">
+        <div className="flex items-center gap-3 text-muted-foreground text-sm">
           <div className="flex items-center gap-1">
-            <FileTextIcon className="size-3.5" />
+            <HugeIcons className="size-3.5" icon={File01Icon} />
             <span className="tracking-tight">{group.materialCount}</span>
           </div>
 
-          <DotIcon className="size-3.5 shrink-0" />
           <div className="flex items-center gap-1">
-            <FolderIcon className="size-3.5" />
+            <HugeIcons className="size-3.5" icon={Folder01Icon} />
             <span className="tracking-tight">{group.childGroupCount}</span>
           </div>
-
-          <DotIcon className="size-3.5 shrink-0" />
 
           <time className="min-w-0 truncate tracking-tight">
             {formatDistanceToNow(group.updatedAt, {
@@ -280,7 +280,7 @@ function MaterialGroupActions({
             size="icon-sm"
             variant="ghost"
           >
-            <EllipsisIcon />
+            <HugeIcons icon={MoreHorizontalIcon} />
             <span className="sr-only">{t("more-actions")}</span>
           </Button>
         </DropdownMenuTrigger>
@@ -291,7 +291,7 @@ function MaterialGroupActions({
               disabled={isPending}
               onSelect={() => setEditOpen(true)}
             >
-              <PenLineIcon />
+              <HugeIcons icon={Edit01Icon} />
               {t("edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -299,7 +299,7 @@ function MaterialGroupActions({
               disabled={isPending}
               onSelect={handleMoveUp}
             >
-              <ArrowUpIcon />
+              <HugeIcons icon={ArrowUp02Icon} />
               {t("move-up")}
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -307,7 +307,7 @@ function MaterialGroupActions({
               disabled={isPending}
               onSelect={handleMoveDown}
             >
-              <ArrowDownIcon />
+              <HugeIcons icon={ArrowDown02Icon} />
               {t("move-down")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
@@ -319,7 +319,7 @@ function MaterialGroupActions({
               onSelect={handleDelete}
               variant="destructive"
             >
-              <Trash2Icon />
+              <HugeIcons icon={Delete02Icon} />
               {t("delete")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
@@ -400,7 +400,7 @@ function EditMaterialGroupDialog({
                 form={`edit-material-group-${group._id}`}
                 type="submit"
               >
-                {isSubmitting ? <SpinnerIcon /> : <SaveIcon />}
+                <Spinner icon={SentIcon} isLoading={isSubmitting} />
                 {t("save")}
               </Button>
             )}
@@ -482,9 +482,9 @@ function EditMaterialGroupDialog({
                         name={field.name}
                         variant="outline"
                       >
-                        <currentStatus.icon />
+                        <HugeIcons icon={currentStatus.icon} />
                         {t(currentStatus.labelKey)}
-                        <ChevronDownIcon className="ml-auto" />
+                        <HugeIcons className="ml-auto" icon={ArrowDown01Icon} />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -497,14 +497,15 @@ function EditMaterialGroupDialog({
                           key={status.value}
                           onSelect={() => field.handleChange(status.value)}
                         >
-                          <status.icon />
+                          <HugeIcons icon={status.icon} />
                           {t(status.labelKey)}
-                          <CheckIcon
+                          <HugeIcons
                             className={cn(
                               "ml-auto size-4 opacity-0 transition-opacity ease-out",
                               field.state.value === status.value &&
                                 "opacity-100"
                             )}
+                            icon={Tick01Icon}
                           />
                         </DropdownMenuItem>
                       ))}
@@ -539,11 +540,14 @@ function EditMaterialGroupDialog({
                               name={field.name}
                               variant="outline"
                             >
-                              <CalendarIcon />
+                              <HugeIcons icon={Calendar03Icon} />
                               {field.state.value
                                 ? formatScheduledAt(field.state.value, locale)
                                 : t("material-scheduled-at-placeholder")}
-                              <ChevronDownIcon className="ml-auto" />
+                              <HugeIcons
+                                className="ml-auto"
+                                icon={ArrowDown01Icon}
+                              />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent
@@ -574,7 +578,10 @@ function EditMaterialGroupDialog({
                                   {t("material-scheduled-time-label")}
                                 </FieldLabel>
                                 <div className="relative flex w-full items-center">
-                                  <Clock2Icon className="pointer-events-none absolute left-3 size-4 select-none text-muted-foreground" />
+                                  <HugeIcons
+                                    className="pointer-events-none absolute left-3 size-4 select-none text-muted-foreground"
+                                    icon={Time04Icon}
+                                  />
                                   <Input
                                     className="cursor-text appearance-none pl-9 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                                     id={`edit-material-scheduled-time-${group._id}`}

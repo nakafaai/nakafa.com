@@ -1,5 +1,7 @@
 "use client";
 
+import { Home07Icon, Notification01Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,
@@ -9,7 +11,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
-import { BellIcon, HomeIcon } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -28,7 +29,7 @@ export function SchoolSidebarNavYours() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={pathname.includes("/home")}>
               <NavigationLink href={`/school/${slug}/home`} title={t("home")}>
-                <HomeIcon />
+                <HugeIcons icon={Home07Icon} />
                 {t("home")}
               </NavigationLink>
             </SidebarMenuButton>
@@ -42,7 +43,7 @@ export function SchoolSidebarNavYours() {
                 href={`/school/${slug}/notifications`}
                 title={t("notifications")}
               >
-                <BellIcon />
+                <HugeIcons icon={Notification01Icon} />
                 {t("notifications")}
               </NavigationLink>
             </SidebarMenuButton>

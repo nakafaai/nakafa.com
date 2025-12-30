@@ -1,8 +1,10 @@
 "use client";
 
+import { Copy01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { type IconType, SiGnometerminal } from "@icons-pack/react-simple-icons";
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
@@ -21,7 +23,6 @@ import {
   transformerNotationHighlight,
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
-import { CheckIcon, CopyIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type {
   ComponentProps,
@@ -390,7 +391,7 @@ export const CodeBlockCopyButton = ({
     });
   }
 
-  const Icon = isCopied ? CheckIcon : CopyIcon;
+  const icon = isCopied ? Tick01Icon : Copy01Icon;
 
   return (
     <Button
@@ -400,7 +401,9 @@ export const CodeBlockCopyButton = ({
       variant="ghost"
       {...props}
     >
-      {children ?? <Icon className="text-muted-foreground" size={14} />}
+      {children ?? (
+        <HugeIcons className="text-muted-foreground" icon={icon} size={14} />
+      )}
     </Button>
   );
 };

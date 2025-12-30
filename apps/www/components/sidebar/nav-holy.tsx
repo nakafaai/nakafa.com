@@ -1,5 +1,6 @@
 "use client";
 
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,
@@ -27,7 +28,7 @@ function MenuItem() {
             tooltip={t(item.title)}
           >
             <NavigationLink href={item.href} title={t(item.title)}>
-              {!!item.icon && <item.icon />}
+              {!!item.icon && <HugeIcons icon={item.icon} />}
               <span className="truncate">{t(item.title)}</span>
             </NavigationLink>
           </SidebarMenuButton>

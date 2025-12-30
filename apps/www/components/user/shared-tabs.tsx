@@ -1,12 +1,13 @@
+import type { IconSvgElement } from "@hugeicons/react";
 import { Highlight } from "@repo/design-system/components/animate-ui/primitives/effects/highlight";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import type { ComponentType, SVGProps } from "react";
 
 interface Props {
   tabs: {
     label: string;
     href: string;
-    icon: ComponentType<SVGProps<SVGSVGElement>>;
+    icon: IconSvgElement;
   }[];
   defaultValue: string;
 }
@@ -25,7 +26,7 @@ export function SharedTabs({ tabs, defaultValue }: Props) {
             href={tab.href}
             key={tab.href}
           >
-            <tab.icon className="size-4 shrink-0" />
+            <HugeIcons className="size-4 shrink-0" icon={tab.icon} />
             {tab.label}
           </NavigationLink>
         ))}

@@ -1,5 +1,5 @@
+import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
 import { Avatar } from "@repo/design-system/components/contributor/avatar";
-import { HeartHandshakeIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -58,7 +58,7 @@ function PageHeader() {
   return (
     <HeaderContent
       description={t("description")}
-      icon={HeartHandshakeIcon}
+      icon={LoveKoreanFingerIcon}
       title={t("title")}
     />
   );

@@ -1,10 +1,21 @@
 "use client";
 
+import {
+  GridIcon,
+  GridOffIcon,
+  PauseIcon,
+  PlayIcon,
+} from "@hugeicons/core-free-icons";
 import { GizmoHelper, GizmoViewport, Grid } from "@react-three/drei";
+import { ORIGIN_COLOR } from "@repo/design-system/components/three/_data";
+import { Axes } from "@repo/design-system/components/three/axes";
+import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
+import { Origin } from "@repo/design-system/components/three/origin";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { COLORS } from "@repo/design-system/lib/color";
 import { cn } from "@repo/design-system/lib/utils";
-import { Grid2X2XIcon, Grid2x2Icon, PauseIcon, PlayIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
   type CSSProperties,
@@ -14,11 +25,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { ORIGIN_COLOR } from "./_data";
-import { Axes } from "./axes";
-import { CameraControls } from "./camera-controls";
-import { ThreeCanvas } from "./canvas";
-import { Origin } from "./origin";
 
 const GIZMO_MARGIN = 56;
 const SCENE_READY_DELAY = 100;
@@ -215,11 +221,7 @@ export function CoordinateSystem({
         )}
       >
         <Button onClick={handleGridToggle} size="icon" variant="secondary">
-          {showGrid ? (
-            <Grid2x2Icon className="size-4" />
-          ) : (
-            <Grid2X2XIcon className="size-4" />
-          )}
+          <HugeIcons icon={showGrid ? GridIcon : GridOffIcon} />
           <span className="sr-only">Toggle Grid</span>
         </Button>
         <Button
@@ -227,11 +229,7 @@ export function CoordinateSystem({
           size="icon"
           variant={play ? "secondary" : "default"}
         >
-          {play ? (
-            <PauseIcon className="size-4" />
-          ) : (
-            <PlayIcon className="size-4" />
-          )}
+          <HugeIcons icon={play ? PauseIcon : PlayIcon} />
           <span className="sr-only">Toggle Play</span>
         </Button>
       </div>

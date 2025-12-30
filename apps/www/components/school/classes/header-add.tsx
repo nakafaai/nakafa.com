@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  Add01Icon,
+  ArrowDown01Icon,
+  Calendar03Icon,
+  Tick01Icon,
+  ViewIcon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -22,7 +29,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Popover,
@@ -30,6 +37,7 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import {
   usePathname,
@@ -37,13 +45,6 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import {
-  CalendarIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  EyeIcon,
-  PlusIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -109,7 +110,7 @@ export function SchoolClassesHeaderAdd() {
     >
       <ButtonGroup>
         <Button onClick={() => setOpen(true)}>
-          <PlusIcon />
+          <HugeIcons icon={Add01Icon} />
           <span className="hidden sm:inline">{t("create-class")}</span>
         </Button>
       </ButtonGroup>
@@ -126,7 +127,7 @@ export function SchoolClassesHeaderAdd() {
                 form="school-classes-header-add-form"
                 type="submit"
               >
-                {isSubmitting ? <SpinnerIcon /> : <PlusIcon />}
+                <Spinner icon={Add01Icon} isLoading={isSubmitting} />
                 {t("create")}
               </Button>
             )}
@@ -188,11 +189,12 @@ export function SchoolClassesHeaderAdd() {
                     >
                       <PopoverTrigger asChild>
                         <Button aria-label="Select subject" variant="outline">
-                          <ChevronDownIcon
+                          <HugeIcons
                             className={cn(
                               "transition-transform ease-out",
                               !!subjectPopoverOpen && "rotate-180"
                             )}
+                            icon={ArrowDown01Icon}
                           />
                         </Button>
                       </PopoverTrigger>
@@ -216,12 +218,13 @@ export function SchoolClassesHeaderAdd() {
                                   }}
                                 >
                                   <span>{t(subject)}</span>
-                                  <CheckIcon
+                                  <HugeIcons
                                     className={cn(
                                       "ml-auto size-4 opacity-0 transition-opacity ease-out",
                                       field.state.value === t(subject) &&
                                         "opacity-100"
                                     )}
+                                    icon={Tick01Icon}
                                   />
                                 </CommandItem>
                               ))}
@@ -255,9 +258,9 @@ export function SchoolClassesHeaderAdd() {
                         name={field.name}
                         variant="outline"
                       >
-                        <CalendarIcon />
+                        <HugeIcons icon={Calendar03Icon} />
                         {field.state.value || t("year-placeholder")}
-                        <ChevronDownIcon className="ml-auto" />
+                        <HugeIcons className="ml-auto" icon={ArrowDown01Icon} />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -271,11 +274,12 @@ export function SchoolClassesHeaderAdd() {
                           onSelect={() => field.handleChange(year)}
                         >
                           {year}
-                          <CheckIcon
+                          <HugeIcons
                             className={cn(
                               "ml-auto size-4 opacity-0 transition-opacity ease-out",
                               field.state.value === year && "opacity-100"
                             )}
+                            icon={Tick01Icon}
                           />
                         </DropdownMenuItem>
                       ))}
@@ -305,9 +309,9 @@ export function SchoolClassesHeaderAdd() {
                         name={field.name}
                         variant="outline"
                       >
-                        <EyeIcon />
+                        <HugeIcons icon={ViewIcon} />
                         {t(field.state.value)}
-                        <ChevronDownIcon className="ml-auto" />
+                        <HugeIcons className="ml-auto" icon={ArrowDown01Icon} />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -321,11 +325,12 @@ export function SchoolClassesHeaderAdd() {
                           onSelect={() => field.handleChange(visibility)}
                         >
                           {t(visibility)}
-                          <CheckIcon
+                          <HugeIcons
                             className={cn(
                               "ml-auto size-4 opacity-0 transition-opacity ease-out",
                               field.state.value === visibility && "opacity-100"
                             )}
+                            icon={Tick01Icon}
                           />
                         </DropdownMenuItem>
                       ))}

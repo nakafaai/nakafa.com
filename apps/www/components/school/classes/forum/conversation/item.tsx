@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  ArrowTurnBackwardIcon,
+  ArrowTurnForwardIcon,
+  FileIcon,
+  WinkIcon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils";
@@ -22,6 +28,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
   PopoverContent,
@@ -35,12 +42,6 @@ import {
 import { cn, formatFileSize } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { format } from "date-fns";
-import {
-  CornerDownRightIcon,
-  FileTextIcon,
-  ReplyIcon,
-  SmilePlusIcon,
-} from "lucide-react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, memo, useState, useTransition } from "react";
@@ -243,7 +244,10 @@ const PostAttachments = memo(
               target="_blank"
             >
               <div className="flex size-8 items-center justify-center rounded-sm bg-muted">
-                <FileTextIcon className="size-4 text-muted-foreground" />
+                <HugeIcons
+                  className="size-4 text-muted-foreground"
+                  icon={FileIcon}
+                />
               </div>
               <div className="flex min-w-0 flex-col">
                 <span className="max-w-30 truncate font-medium text-xs">
@@ -281,7 +285,7 @@ const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
       onClick={handleClick}
       type="button"
     >
-      <CornerDownRightIcon className="size-3 shrink-0" />
+      <HugeIcons className="size-3 shrink-0" icon={ArrowTurnForwardIcon} />
       <span className="max-w-32 shrink-0 truncate text-primary">
         {replyToUser.name}
       </span>
@@ -325,7 +329,7 @@ const PostItemActions = memo(({ post }: { post: ForumPost }) => {
             render={
               <PopoverTrigger asChild>
                 <Button disabled={isPending} size="icon" variant="outline">
-                  <SmilePlusIcon />
+                  <HugeIcons icon={WinkIcon} />
                   <span className="sr-only">{t("reaction")}</span>
                 </Button>
               </PopoverTrigger>
@@ -355,7 +359,7 @@ const PostItemActions = memo(({ post }: { post: ForumPost }) => {
               size="icon"
               variant="outline"
             >
-              <ReplyIcon />
+              <HugeIcons icon={ArrowTurnBackwardIcon} />
               <span className="sr-only">{t("reply")}</span>
             </Button>
           }

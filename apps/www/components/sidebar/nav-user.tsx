@@ -1,5 +1,15 @@
 "use client";
 
+import {
+  FileValidationIcon,
+  LockIcon,
+  Login01Icon,
+  Logout01Icon,
+  MessageMultiple02Icon,
+  MoreVerticalIcon,
+  Settings01Icon,
+  UserIcon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   Avatar,
@@ -15,6 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -25,16 +36,6 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useQuery } from "convex/react";
-import {
-  EarthLockIcon,
-  EllipsisVerticalIcon,
-  FileIcon,
-  LogInIcon,
-  LogOutIcon,
-  MessageCircleIcon,
-  SettingsIcon,
-  UserRoundIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
@@ -76,7 +77,7 @@ export function NavUser() {
         <SidebarMenuButton
           onClick={() => router.push(`/auth?redirect=${pathname}`)}
         >
-          <LogInIcon />
+          <HugeIcons icon={Login01Icon} />
           {t("login")}
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -101,7 +102,7 @@ export function NavUser() {
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate">{user.authUser.name}</span>
             </div>
-            <EllipsisVerticalIcon className="ml-auto size-4" />
+            <HugeIcons className="ml-auto size-4" icon={MoreVerticalIcon} />
           </SidebarMenuButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -138,21 +139,21 @@ export function NavUser() {
               className="cursor-pointer"
               onSelect={() => router.push(`/user/${user.appUser._id}`)}
             >
-              <UserRoundIcon />
+              <HugeIcons icon={UserIcon} />
               {t("profile")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
               onSelect={() => router.push(`/user/${user.appUser._id}/chat`)}
             >
-              <MessageCircleIcon />
+              <HugeIcons icon={MessageMultiple02Icon} />
               {t("chat")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
               onSelect={() => router.push("/user/settings")}
             >
-              <SettingsIcon />
+              <HugeIcons icon={Settings01Icon} />
               {t("settings")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
@@ -162,14 +163,14 @@ export function NavUser() {
               className="cursor-pointer"
               onSelect={() => router.push("/terms-of-service")}
             >
-              <FileIcon />
+              <HugeIcons icon={FileValidationIcon} />
               {tLegal("terms-of-service")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
               onSelect={() => router.push("/privacy-policy")}
             >
-              <EarthLockIcon />
+              <HugeIcons icon={LockIcon} />
               {tLegal("privacy-policy")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
@@ -179,7 +180,7 @@ export function NavUser() {
               className="cursor-pointer"
               onSelect={handleSignOut}
             >
-              <LogOutIcon />
+              <HugeIcons icon={Logout01Icon} />
               {t("logout")}
             </DropdownMenuItem>
           </DropdownMenuGroup>

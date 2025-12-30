@@ -1,24 +1,25 @@
+import type { IconSvgElement } from "@hugeicons/react";
 import {
   Card,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Link } from "@repo/internationalization/src/navigation";
-import type { LucideIcon } from "lucide-react";
 
 interface Props {
-  icon: LucideIcon;
+  icon: IconSvgElement;
   label: string;
   href: string;
 }
 
-export function CardSubject({ icon: Icon, label, href }: Props) {
+export function CardSubject({ icon, label, href }: Props) {
   return (
     <Link className="group" href={href} prefetch title={label}>
       <Card className="relative overflow-hidden">
         <CardHeader className="gap-0">
           <div className="flex items-center gap-2">
-            <Icon className="size-5 shrink-0" />
+            <HugeIcons className="size-5" icon={icon} />
             <CardTitle
               className="line-clamp-1 pr-9 font-medium tracking-tight"
               title={label}

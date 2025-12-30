@@ -1,8 +1,9 @@
 "use client";
 
+import { Logout01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { LogOutIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 
@@ -23,7 +24,7 @@ export function AuthLogout() {
 
   return (
     <Button onClick={handleSignOut}>
-      <LogOutIcon />
+      <HugeIcons icon={Logout01Icon} />
       {t("logout")}
     </Button>
   );

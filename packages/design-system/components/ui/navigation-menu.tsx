@@ -1,6 +1,7 @@
+import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { cva } from "class-variance-authority";
-import { ChevronDownIcon } from "lucide-react";
 import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui";
 import type * as React from "react";
 
@@ -73,9 +74,10 @@ function NavigationMenuTrigger({
       {...props}
     >
       {children}
-      <ChevronDownIcon
+      <HugeIcons
         aria-hidden="true"
         className="relative top-px ml-1 size-3 transition duration-200 group-data-[state=open]:rotate-180"
+        icon={ArrowDown01Icon}
       />
     </NavigationMenuPrimitive.Trigger>
   );

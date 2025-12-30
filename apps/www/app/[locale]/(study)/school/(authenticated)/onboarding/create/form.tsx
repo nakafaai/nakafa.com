@@ -1,5 +1,6 @@
 "use client";
 
+import { PartyIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -7,7 +8,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import PhoneInput from "@repo/design-system/components/ui/phone-input";
 import {
@@ -17,10 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { PartyPopperIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import * as z from "zod/mini";
@@ -291,7 +291,7 @@ export function SchoolOnboardingCreateForm() {
           const isDisabled = !canSubmit || Boolean(isSubmitting);
           return (
             <Button disabled={isDisabled} type="submit">
-              {isSubmitting ? <SpinnerIcon /> : <PartyPopperIcon />}
+              <Spinner icon={PartyIcon} isLoading={isSubmitting} />
               {t("create")}
             </Button>
           );

@@ -1,6 +1,7 @@
 "use client";
 
-import { MessagesSquareIcon } from "lucide-react";
+import { MessageMultiple01Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { CommentsAdd } from "./add";
 import { CommentsList } from "./list";
@@ -18,7 +19,7 @@ export function Comments({ slug }: Props) {
         className="flex scroll-mt-28 items-center gap-2 font-medium text-2xl leading-tight tracking-tight"
         id="comments"
       >
-        <MessagesSquareIcon className="size-5 shrink-0" />
+        <HugeIcons className="size-5" icon={MessageMultiple01Icon} />
         {t("comments")}
       </h2>
       <div className="flex flex-col gap-6">

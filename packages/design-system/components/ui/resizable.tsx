@@ -1,7 +1,8 @@
 "use client";
 
+import { DragDropVerticalIcon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { GripVerticalIcon } from "lucide-react";
 import type * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
 
@@ -45,7 +46,7 @@ function ResizableHandle({
     >
       {!!withHandle && (
         <div className="z-10 flex h-4 w-3 items-center justify-center rounded-xs border bg-border">
-          <GripVerticalIcon className="size-2.5" />
+          <HugeIcons className="size-2.5" icon={DragDropVerticalIcon} />
         </div>
       )}
     </ResizablePrimitive.Separator>

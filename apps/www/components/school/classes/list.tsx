@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  BookOpen02Icon,
+  Calendar03Icon,
+  MessageMultiple02Icon,
+  MoreHorizontalIcon,
+  UserMultipleIcon,
+} from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
@@ -17,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
@@ -26,13 +34,6 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { usePaginatedQuery } from "convex/react";
-import {
-  BookOpenIcon,
-  CalendarIcon,
-  EllipsisIcon,
-  MessagesSquareIcon,
-  UsersIcon,
-} from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
@@ -120,7 +121,7 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
       </CardContent>
       <CardFooter className="z-2 justify-between border-t px-4 pb-2 [.border-t]:pt-2">
         <Badge className="min-w-0 shrink-0" variant="muted">
-          <CalendarIcon className="size-4 shrink-0" />
+          <HugeIcons icon={Calendar03Icon} />
           <span className="truncate">{cls.year}</span>
         </Badge>
 
@@ -130,7 +131,7 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
               render={
                 <Button asChild size="icon-sm" variant="ghost">
                   <NavigationLink href={`${pathname}/${cls._id}/materials`}>
-                    <BookOpenIcon />
+                    <HugeIcons icon={BookOpen02Icon} />
                   </NavigationLink>
                 </Button>
               }
@@ -141,19 +142,19 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="icon-sm" variant="ghost">
-                <EllipsisIcon />
+                <HugeIcons icon={MoreHorizontalIcon} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild className="cursor-pointer">
                 <NavigationLink href={`${pathname}/${cls._id}/forum`}>
-                  <MessagesSquareIcon />
+                  <HugeIcons icon={MessageMultiple02Icon} />
                   {t("forum")}
                 </NavigationLink>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="cursor-pointer">
                 <NavigationLink href={`${pathname}/${cls._id}/people`}>
-                  <UsersIcon />
+                  <HugeIcons icon={UserMultipleIcon} />
                   {t("people")}
                 </NavigationLink>
               </DropdownMenuItem>

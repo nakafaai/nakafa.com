@@ -1,12 +1,13 @@
 "use client";
 
+import { CommandIcon, Search02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
-import { IconCommand, IconLetterK } from "@tabler/icons-react";
-import { SearchIcon } from "lucide-react";
+import { IconLetterK } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { useSearch } from "@/lib/context/use-search";
 
@@ -27,12 +28,12 @@ export function SearchMenu() {
           variant="outline"
         >
           <div className="flex items-center gap-2">
-            <SearchIcon className="size-4" />
+            <HugeIcons className="size-4" icon={Search02Icon} />
             <span>{t("search-bar-placeholder")}</span>
           </div>
           <div className="hidden items-center lg:flex">
             <kbd className="rounded">
-              <IconCommand className="size-3.5 shrink-0" />
+              <HugeIcons className="size-3.5 shrink-0" icon={CommandIcon} />
               <span className="sr-only">Command/Ctrl</span>
             </kbd>
             <kbd className="rounded">

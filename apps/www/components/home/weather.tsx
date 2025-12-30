@@ -1,67 +1,67 @@
 "use client";
 
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { cn, getCountryName } from "@repo/design-system/lib/utils";
 import {
-  CloudFogIcon,
+  CloudAngledZapIcon,
+  CloudFastWindIcon,
   CloudIcon,
-  CloudLightningIcon,
-  CloudMoonIcon,
-  CloudMoonRainIcon,
-  CloudRainWindIcon,
-  CloudSnowIcon,
-  CloudSunIcon,
-  CloudSunRainIcon,
-  CloudyIcon,
-  MoonIcon,
-  SunIcon,
-} from "lucide-react";
+  CloudMidRainIcon,
+  Moon01Icon,
+  MoonCloudLittleRainIcon,
+  MoonCloudSlowWindIcon,
+  SnowIcon,
+  Sun01Icon,
+  SunCloudLittleRainIcon,
+  SunCloudSlowWindIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Skeleton } from "@repo/design-system/components/ui/skeleton";
+import { getCountryName } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
+import type { ComponentProps } from "react";
 import { useWeather } from "@/lib/react-query/use-weather";
 
-// Constants
 const KELVIN_TO_CELSIUS = 273.15;
 
-// Convert Kelvin to Celsius
 function kelvinToCelsius(kelvin: number): number {
   return Math.round(kelvin - KELVIN_TO_CELSIUS);
 }
 
-// Get weather icon based on condition
-function getWeatherIcon(iconCode: string, className?: string) {
+function getWeatherIcon(
+  iconCode: string
+): ComponentProps<typeof HugeIcons>["icon"] {
   switch (iconCode) {
     case "01d":
-      return <SunIcon className={cn("shrink-0", className)} />;
+      return Sun01Icon;
     case "01n":
-      return <MoonIcon className={cn("shrink-0", className)} />;
+      return Moon01Icon;
     case "02d":
-      return <CloudSunIcon className={cn("shrink-0", className)} />;
+      return SunCloudSlowWindIcon;
     case "02n":
-      return <CloudMoonIcon className={cn("shrink-0", className)} />;
+      return MoonCloudSlowWindIcon;
     case "03d":
     case "03n":
-      return <CloudIcon className={cn("shrink-0", className)} />;
+      return CloudIcon;
     case "04d":
     case "04n":
-      return <CloudyIcon className={cn("shrink-0", className)} />;
+      return CloudFastWindIcon;
     case "09d":
     case "09n":
-      return <CloudRainWindIcon className={cn("shrink-0", className)} />;
+      return CloudMidRainIcon;
     case "10d":
-      return <CloudSunRainIcon className={cn("shrink-0", className)} />;
+      return SunCloudLittleRainIcon;
     case "10n":
-      return <CloudMoonRainIcon className={cn("shrink-0", className)} />;
+      return MoonCloudLittleRainIcon;
     case "11d":
     case "11n":
-      return <CloudLightningIcon className={cn("shrink-0", className)} />;
+      return CloudAngledZapIcon;
     case "13d":
     case "13n":
-      return <CloudSnowIcon className={cn("shrink-0", className)} />;
+      return SnowIcon;
     case "50d":
     case "50n":
-      return <CloudFogIcon className={cn("shrink-0", className)} />;
+      return CloudIcon;
     default:
-      return <CloudIcon className={cn("shrink-0", className)} />;
+      return CloudIcon;
   }
 }
 
@@ -96,6 +96,7 @@ export function Weather() {
   const currentTemp = kelvinToCelsius(currentWeather.main.temp);
   const condition = currentWeather.weather[0]?.description || "Clear";
   const conditionTitle = condition.charAt(0).toUpperCase() + condition.slice(1);
+  const iconCode = currentWeather.weather[0]?.icon || "01d";
 
   return (
     <WeatherCard>
@@ -105,7 +106,7 @@ export function Weather() {
           <p className="text-card-foreground/80 text-xs">{conditionTitle}</p>
         </div>
 
-        {getWeatherIcon(currentWeather.weather[0]?.icon || "01d", "size-8")}
+        <HugeIcons className="size-8" icon={getWeatherIcon(iconCode)} />
       </WeatherCardHeader>
 
       <p className="text-pretty text-xs">

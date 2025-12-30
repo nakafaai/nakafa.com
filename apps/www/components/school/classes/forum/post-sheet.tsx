@@ -1,8 +1,14 @@
 "use client";
 
+import {
+  Cancel01Icon,
+  Maximize03Icon,
+  Minimize03Icon,
+} from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
   SheetContent,
@@ -12,7 +18,6 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
-import { Maximize2Icon, Minimize2Icon, XIcon } from "lucide-react";
 import { SchoolClassesForumPostSheetContent } from "@/components/school/classes/forum/post-sheet-content";
 import { SchoolClassesForumPostSheetError } from "@/components/school/classes/forum/post-sheet-error";
 import { SchoolClassesForumPostSheetInfo } from "@/components/school/classes/forum/post-sheet-info";
@@ -77,7 +82,9 @@ export function SchoolClassesForumPostSheet() {
                   size="icon-sm"
                   variant="ghost"
                 >
-                  {width === MAX_WIDTH ? <Minimize2Icon /> : <Maximize2Icon />}
+                  <HugeIcons
+                    icon={width === MAX_WIDTH ? Minimize03Icon : Maximize03Icon}
+                  />
                   <span className="sr-only">Resize</span>
                 </Button>
                 <Button
@@ -85,7 +92,7 @@ export function SchoolClassesForumPostSheet() {
                   size="icon-sm"
                   variant="ghost"
                 >
-                  <XIcon />
+                  <HugeIcons icon={Cancel01Icon} />
                   <span className="sr-only">Close</span>
                 </Button>
               </div>

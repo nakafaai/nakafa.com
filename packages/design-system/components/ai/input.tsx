@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  Add01Icon,
+  ArrowUp02Icon,
+  Attachment01Icon,
+  Cancel01Icon,
+  Image02Icon,
+  Mic01Icon,
+  StopIcon,
+} from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -19,16 +28,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
-import { IconSquareFilled } from "@tabler/icons-react";
 import type { ChatStatus, FileUIPart } from "ai";
-import {
-  ArrowUpIcon,
-  ImageIcon,
-  MicIcon,
-  PaperclipIcon,
-  PlusIcon,
-  XIcon,
-} from "lucide-react";
 import { nanoid } from "nanoid";
 import Image from "next/image";
 import {
@@ -54,7 +54,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { SpinnerIcon } from "../ui/icons";
+import { HugeIcons } from "../ui/huge-icons";
+import { Spinner } from "../ui/spinner";
 // ============================================================================
 // Provider Context & Types
 // ============================================================================
@@ -286,7 +287,7 @@ export function PromptInputAttachment({
         />
       ) : (
         <div className="flex size-full max-w-full cursor-pointer items-center justify-start gap-2 overflow-hidden px-2 text-muted-foreground">
-          <PaperclipIcon className="size-4 shrink-0" />
+          <HugeIcons className="size-4 shrink-0" icon={Attachment01Icon} />
           <Tooltip>
             <TooltipTrigger className="min-w-0 flex-1">
               <h4 className="w-full truncate text-left font-medium text-sm">
@@ -312,7 +313,7 @@ export function PromptInputAttachment({
         type="button"
         variant="outline"
       >
-        <XIcon className="h-3 w-3" />
+        <HugeIcons className="size-3" icon={Cancel01Icon} />
       </Button>
     </div>
   );
@@ -411,7 +412,8 @@ export const PromptInputActionAddAttachments = ({
         attachments.openFileDialog();
       }}
     >
-      <ImageIcon className="mr-2 size-4" /> {label}
+      <HugeIcons className="mr size-4" icon={Image02Icon} />
+      {label}
     </DropdownMenuItem>
   );
 };
@@ -923,7 +925,7 @@ export const PromptInputActionMenuTrigger = ({
 }: PromptInputActionMenuTriggerProps) => (
   <DropdownMenuTrigger asChild>
     <PromptInputButton className={className} {...props}>
-      {children ?? <PlusIcon className="size-4" />}
+      {children ?? <HugeIcons className="size-4" icon={Add01Icon} />}
     </PromptInputButton>
   </DropdownMenuTrigger>
 );
@@ -965,12 +967,12 @@ export const PromptInputSubmit = ({
   children,
   ...props
 }: PromptInputSubmitProps) => {
-  let Icon = <ArrowUpIcon className="size-4" />;
+  let Icon = <HugeIcons className="size-4" icon={ArrowUp02Icon} />;
 
   if (status === "submitted" || isPending) {
-    Icon = <SpinnerIcon />;
+    Icon = <Spinner />;
   } else if (status === "streaming") {
-    Icon = <IconSquareFilled className="size-4" />;
+    Icon = <HugeIcons className="size-4" icon={StopIcon} />;
   }
 
   return (
@@ -1139,7 +1141,10 @@ export const PromptInputSpeechButton = ({
       onClick={toggleListening}
       {...props}
     >
-      <MicIcon className="size-4" />
+      <HugeIcons className="size-4" icon={Mic01Icon} />
+      <span className="sr-only">
+        {isListening ? "Stop Listening" : "Start Listening"}
+      </span>
     </PromptInputButton>
   );
 };

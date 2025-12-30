@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  ArrowDown01Icon,
+  Calculator01Icon,
+  EqualSignIcon,
+  Sad02Icon,
+} from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/ai/types/data-parts";
 import { BlockMathKatex } from "@repo/design-system/components/markdown/math";
 import {
@@ -7,13 +13,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import {
-  CalculatorIcon,
-  ChevronDownIcon,
-  EqualIcon,
-  FrownIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
 
@@ -36,24 +37,24 @@ export const CalculatorPart = memo(({ message }: Props) => {
     >
       <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between bg-muted/80 px-4 py-3">
         <div className="flex items-center gap-2">
-          {error ? (
-            <FrownIcon className="size-4 text-destructive" />
-          ) : (
-            <CalculatorIcon className="size-4" />
-          )}
+          <HugeIcons
+            className={cn("size-4", error && "text-destructive")}
+            icon={error ? Sad02Icon : Calculator01Icon}
+          />
           <span className="text-sm">{t("calculator")}</span>
         </div>
-        <ChevronDownIcon
+        <HugeIcons
           className={cn(
             "size-4 transition-transform",
             open ? "rotate-180" : "rotate-0"
           )}
+          icon={ArrowDown01Icon}
         />
       </CollapsibleTrigger>
       <CollapsibleContent className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t bg-muted/40 px-4 text-sm">
         <BlockMathKatex>{message.original.latex}</BlockMathKatex>
 
-        <EqualIcon className="size-4" />
+        <HugeIcons className="size-4" icon={EqualSignIcon} />
 
         <BlockMathKatex>{message.result.latex}</BlockMathKatex>
       </CollapsibleContent>

@@ -1,3 +1,4 @@
+import { ArrowUpRight01Icon, InLoveIcon } from "@hugeicons/core-free-icons";
 import { SiYoutube } from "@icons-pack/react-simple-icons";
 import { YouTubeEmbed } from "@next/third-parties/google";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -7,8 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Link } from "@repo/internationalization/src/navigation";
-import { ExternalLinkIcon, HandHeartIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 interface Props {
@@ -35,7 +36,7 @@ export function Youtube({ videoId }: Props) {
             target="_blank"
           >
             {t("see-on-youtube")}
-            <ExternalLinkIcon />
+            <HugeIcons icon={ArrowUpRight01Icon} />
           </Link>
         </Button>
         <Button asChild>
@@ -44,7 +45,7 @@ export function Youtube({ videoId }: Props) {
             target="_blank"
           >
             {t("subscribe")}
-            <HandHeartIcon />
+            <HugeIcons icon={InLoveIcon} />
           </Link>
         </Button>
       </CardFooter>

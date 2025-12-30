@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  ArrowTurnBackwardIcon,
+  ArrowUpRight01Icon,
+  Delete02Icon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { Response } from "@repo/design-system/components/ai/response";
@@ -12,6 +19,7 @@ import {
   Button,
   buttonVariants,
 } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import {
@@ -21,13 +29,6 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
-import {
-  EyeIcon,
-  ReplyIcon,
-  ThumbsDownIcon,
-  ThumbsUpIcon,
-  Trash2Icon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { getInitialName } from "@/lib/utils/helper";
@@ -122,7 +123,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                   size={comment.upvoteCount === 0 ? "icon-sm" : "sm"}
                   variant="ghost"
                 >
-                  <ThumbsUpIcon />
+                  <HugeIcons icon={ThumbsUpIcon} />
                   <NumberFormat
                     className={cn(
                       "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
@@ -147,7 +148,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                   size={comment.downvoteCount === 0 ? "icon-sm" : "sm"}
                   variant="ghost"
                 >
-                  <ThumbsDownIcon />
+                  <HugeIcons icon={ThumbsDownIcon} />
                   <NumberFormat
                     className={cn(
                       "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
@@ -170,7 +171,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                   size={comment.replyCount === 0 ? "icon-sm" : "sm"}
                   variant="ghost"
                 >
-                  <ReplyIcon />
+                  <HugeIcons icon={ArrowTurnBackwardIcon} />
                   <NumberFormat
                     className={cn(
                       "font-mono text-muted-foreground text-xs tracking-tight",
@@ -195,7 +196,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                   href={comment.slug}
                   target="_blank"
                 >
-                  <EyeIcon />
+                  <HugeIcons icon={ArrowUpRight01Icon} />
                   <span className="sr-only">{t("see")}</span>
                 </NavigationLink>
               }
@@ -215,7 +216,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                   size="icon-sm"
                   variant="ghost"
                 >
-                  <Trash2Icon />
+                  <HugeIcons icon={Delete02Icon} />
                   <span className="sr-only">{t("delete")}</span>
                 </Button>
               }

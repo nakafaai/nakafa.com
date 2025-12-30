@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  Add01Icon,
+  ArrowDown01Icon,
+  Calendar03Icon,
+  FolderAddIcon,
+  Tick01Icon,
+  Time04Icon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -15,7 +23,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Popover,
@@ -23,19 +31,12 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { startOfDay } from "date-fns";
-import {
-  CalendarIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  Clock2Icon,
-  FolderPlusIcon,
-  PlusIcon,
-} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState } from "react";
 import { toast } from "sonner";
@@ -108,7 +109,7 @@ export function SchoolClassesMaterialsNew() {
     >
       <ButtonGroup>
         <Button onClick={() => setOpenDialog(true)}>
-          <FolderPlusIcon />
+          <HugeIcons icon={FolderAddIcon} />
           {t("new-module")}
         </Button>
 
@@ -124,7 +125,7 @@ export function SchoolClassesMaterialsNew() {
                   form="school-classes-materials-new-form"
                   type="submit"
                 >
-                  {isSubmitting ? <SpinnerIcon /> : <PlusIcon />}
+                  <Spinner icon={Add01Icon} isLoading={isSubmitting} />
                   {t("create")}
                 </Button>
               )}
@@ -205,9 +206,12 @@ export function SchoolClassesMaterialsNew() {
                           name={field.name}
                           variant="outline"
                         >
-                          <currentStatus.icon />
+                          <HugeIcons icon={currentStatus.icon} />
                           {t(currentStatus.labelKey)}
-                          <ChevronDownIcon className="ml-auto" />
+                          <HugeIcons
+                            className="ml-auto"
+                            icon={ArrowDown01Icon}
+                          />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
@@ -220,14 +224,15 @@ export function SchoolClassesMaterialsNew() {
                             key={status.value}
                             onSelect={() => field.handleChange(status.value)}
                           >
-                            <status.icon />
+                            <HugeIcons icon={status.icon} />
                             {t(status.labelKey)}
-                            <CheckIcon
+                            <HugeIcons
                               className={cn(
                                 "ml-auto size-4 opacity-0 transition-opacity ease-out",
                                 field.state.value === status.value &&
                                   "opacity-100"
                               )}
+                              icon={Tick01Icon}
                             />
                           </DropdownMenuItem>
                         ))}
@@ -260,11 +265,14 @@ export function SchoolClassesMaterialsNew() {
                                 name={field.name}
                                 variant="outline"
                               >
-                                <CalendarIcon />
+                                <HugeIcons icon={Calendar03Icon} />
                                 {field.state.value
                                   ? formatScheduledAt(field.state.value, locale)
                                   : t("material-scheduled-at-placeholder")}
-                                <ChevronDownIcon className="ml-auto" />
+                                <HugeIcons
+                                  className="ml-auto"
+                                  icon={ArrowDown01Icon}
+                                />
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent
@@ -293,7 +301,10 @@ export function SchoolClassesMaterialsNew() {
                                     {t("material-scheduled-time-label")}
                                   </FieldLabel>
                                   <div className="relative flex w-full items-center">
-                                    <Clock2Icon className="pointer-events-none absolute left-3 size-4 select-none text-muted-foreground" />
+                                    <HugeIcons
+                                      className="pointer-events-none absolute left-3 size-4 select-none text-muted-foreground"
+                                      icon={Time04Icon}
+                                    />
                                     <Input
                                       className="cursor-text appearance-none pl-9 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                                       id="school-classes-materials-new-scheduled-time"

@@ -18,8 +18,18 @@ const tables = {
       )
     ),
   })
-    .index("email", ["email"]) // Query by email
-    .index("authId", ["authId"]), // Query by Better Auth ID
+    .index("email", ["email"])
+    .index("authId", ["authId"]),
+  userDevices: defineTable({
+    userId: v.id("users"),
+    deviceId: v.string(),
+    deviceName: v.optional(v.string()),
+    lastSeenAt: v.number(),
+    isActive: v.boolean(),
+  })
+    .index("deviceId", ["deviceId"])
+    .index("userId_lastSeenAt", ["userId", "lastSeenAt"])
+    .index("userId_isActive", ["userId", "isActive"]),
 };
 
 export default tables;

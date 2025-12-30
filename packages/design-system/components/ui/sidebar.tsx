@@ -1,7 +1,9 @@
 "use client";
 
+import { PanelLeftIcon } from "@hugeicons/core-free-icons";
 import { useHotkeys, useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
@@ -20,9 +22,9 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { PanelLeftIcon } from "lucide-react";
 import { Slot as SlotPrimitive } from "radix-ui";
 import {
+  type ComponentProps,
   createContext,
   useCallback,
   useContext,
@@ -266,7 +268,7 @@ function SidebarTrigger({
   icon,
   ...props
 }: React.ComponentProps<typeof Button> & {
-  icon?: React.ReactNode;
+  icon?: ComponentProps<typeof HugeIcons>["icon"];
 }) {
   const { toggleSidebar } = useSidebar();
 
@@ -283,7 +285,7 @@ function SidebarTrigger({
       variant="ghost"
       {...props}
     >
-      {icon ?? <PanelLeftIcon />}
+      <HugeIcons icon={icon ?? PanelLeftIcon} />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );

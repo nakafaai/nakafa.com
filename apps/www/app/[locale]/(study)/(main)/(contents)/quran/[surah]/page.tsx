@@ -1,6 +1,6 @@
+import { AllahIcon } from "@hugeicons/core-free-icons";
 import { getSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { cn, slugify } from "@repo/design-system/lib/utils";
-import { MoonStarIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
@@ -145,7 +145,7 @@ function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
       <LayoutMaterialContent showAskButton>
         <LayoutMaterialHeader
           description={translation}
-          icon={MoonStarIcon}
+          icon={AllahIcon}
           link={{
             href: "/quran",
             label: t("quran"),

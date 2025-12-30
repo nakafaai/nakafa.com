@@ -1,5 +1,6 @@
 "use client";
 
+import { InLoveIcon, Rocket01Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -8,16 +9,16 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { MergeIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -68,7 +69,7 @@ export function SchoolClassesHeaderJoin() {
     >
       <ButtonGroup>
         <Button onClick={() => setOpen(true)}>
-          <MergeIcon />
+          <HugeIcons icon={Rocket01Icon} />
           <span className="hidden sm:inline">{t("join-class")}</span>
         </Button>
       </ButtonGroup>
@@ -85,7 +86,7 @@ export function SchoolClassesHeaderJoin() {
                 form="school-classes-header-join-form"
                 type="submit"
               >
-                {isSubmitting ? <SpinnerIcon /> : <MergeIcon />}
+                <Spinner icon={InLoveIcon} isLoading={isSubmitting} />
                 {t("join")}
               </Button>
             )}

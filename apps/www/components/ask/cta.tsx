@@ -1,10 +1,11 @@
 "use client";
 
+import { SparklesIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useQuery } from "convex/react";
-import { SparklesIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
@@ -44,7 +45,7 @@ export function AskCta({ title }: Props) {
 
   return (
     <Button onClick={handleAsk}>
-      <SparklesIcon />
+      <HugeIcons icon={SparklesIcon} />
       {t("ask-ai")}
     </Button>
   );

@@ -1,3 +1,6 @@
+---
+alwaysApply: false
+---
 # Content Creation Guidelines
 
 **Language**: Indonesian (Bahasa Indonesia) is the primary language for content.

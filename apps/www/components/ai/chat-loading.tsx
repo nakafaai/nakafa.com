@@ -1,5 +1,5 @@
 import { Message } from "@repo/design-system/components/ai/message";
-import { TypingLoader } from "@repo/design-system/components/ui/icons";
+import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { memo } from "react";
 import { useChat } from "@/lib/context/use-chat";
 

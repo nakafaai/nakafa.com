@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  Copy01Icon,
+  StudentIcon,
+  TeacherIcon,
+  Tick01Icon,
+  UserAdd01Icon,
+} from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -12,15 +19,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useQuery } from "convex/react";
-import {
-  CheckIcon,
-  CopyIcon,
-  GraduationCapIcon,
-  SpeechIcon,
-  UserPlusIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -58,7 +59,7 @@ export function SchoolClassesPeopleInvite() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button>
-            <UserPlusIcon />
+            <HugeIcons icon={UserAdd01Icon} />
             {t("invite")}
           </Button>
         </DropdownMenuTrigger>
@@ -74,7 +75,7 @@ export function SchoolClassesPeopleInvite() {
                   setOpenInviteDialog(true);
                 }}
               >
-                <role.icon />
+                <HugeIcons icon={role.icon} />
                 {t(role.value)}
               </DropdownMenuItem>
             ))}
@@ -95,7 +96,7 @@ export function SchoolClassesPeopleInvite() {
               }
             }}
           >
-            {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
+            <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
             {t("copy")}
           </Button>
         }
@@ -112,7 +113,7 @@ export function SchoolClassesPeopleInvite() {
 }
 
 const roles = [
-  { value: "teacher", icon: SpeechIcon },
-  { value: "student", icon: GraduationCapIcon },
+  { value: "teacher", icon: TeacherIcon },
+  { value: "student", icon: StudentIcon },
 ] as const;
 type Role = (typeof roles)[number]["value"];

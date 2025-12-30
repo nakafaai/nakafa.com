@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  ArrowDown02Icon,
+  Delete02Icon,
+  Globe02Icon,
+  MoreHorizontalIcon,
+  SquareLock01Icon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -9,17 +16,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
-import {
-  ArrowDownIcon,
-  EllipsisIcon,
-  GlobeIcon,
-  LockIcon,
-  Trash2Icon,
-} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { getLocale } from "@/lib/utils/date";
@@ -81,13 +82,15 @@ export function UserChatsList({
               href={`/chat/${chat._id}`}
             />
             <div className="flex flex-1 items-center gap-2">
-              {isPrivate ? (
-                <LockIcon className="size-4 shrink-0" />
-              ) : (
-                <GlobeIcon className="size-4 shrink-0" />
-              )}
+              <HugeIcons
+                className="size-4 shrink-0"
+                icon={isPrivate ? SquareLock01Icon : Globe02Icon}
+              />
               <span className="truncate text-sm">{chat.title}</span>
-              <ArrowDownIcon className="size-4 shrink-0 -rotate-90 opacity-0 transition-opacity ease-out group-hover:opacity-100" />
+              <HugeIcons
+                className="size-4 shrink-0 -rotate-90 opacity-0 transition-opacity ease-out group-hover:opacity-100"
+                icon={ArrowDown02Icon}
+              />
             </div>
 
             <div className="flex shrink-0 items-center justify-between gap-2">
@@ -128,7 +131,7 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
           size="icon-sm"
           variant="ghost"
         >
-          <EllipsisIcon className="size-4" />
+          <HugeIcons icon={MoreHorizontalIcon} />
           <span className="sr-only">More actions</span>
         </Button>
       </DropdownMenuTrigger>
@@ -139,7 +142,7 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
           onSelect={handleDelete}
           variant="destructive"
         >
-          <Trash2Icon className="size-4" />
+          <HugeIcons icon={Delete02Icon} />
           {t("delete")}
         </DropdownMenuItem>
       </DropdownMenuContent>

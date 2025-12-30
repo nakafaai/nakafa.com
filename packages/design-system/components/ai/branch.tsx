@@ -1,9 +1,10 @@
 "use client";
 
+import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
 
@@ -161,7 +162,7 @@ export const BranchPrevious = ({
       variant="ghost"
       {...props}
     >
-      {children ?? <ChevronLeftIcon size={14} />}
+      {children ?? <HugeIcons icon={ArrowLeft01Icon} size={14} />}
     </Button>
   );
 };
@@ -191,7 +192,7 @@ export const BranchNext = ({
       variant="ghost"
       {...props}
     >
-      {children ?? <ChevronRightIcon size={14} />}
+      {children ?? <HugeIcons icon={ArrowRight01Icon} size={14} />}
     </Button>
   );
 };

@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  Book03Icon,
+  BookOpen02Icon,
+  Calendar03Icon,
+  Globe02Icon,
+  LayerIcon,
+  QuillWrite01Icon,
+} from "@hugeicons/core-free-icons";
 import type { Reference } from "@repo/contents/_types/content";
 import {
   Card,
@@ -8,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
@@ -22,14 +31,6 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
 import { cleanupUrl, formatUrl } from "@repo/design-system/lib/utils";
-import {
-  BookIcon,
-  BookOpenIcon,
-  CalendarIcon,
-  GlobeIcon,
-  Layers2Icon,
-  PencilIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -50,7 +51,7 @@ export function ReferenceButton({ references, title }: Props) {
           onClick={() => setOpen(!open)}
           tooltip={t("bibliography")}
         >
-          <Layers2Icon className="size-4 shrink-0" />
+          <HugeIcons className="size-4 shrink-0" icon={LayerIcon} />
           <span className="truncate">{t("bibliography")}</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -86,7 +87,10 @@ export function ReferenceButton({ references, title }: Props) {
                             {reference.title.toLowerCase()}
                           </CardTitle>
                           <CardDescription className="flex items-center gap-1">
-                            <GlobeIcon className="size-4 shrink-0" />
+                            <HugeIcons
+                              className="size-4 shrink-0"
+                              icon={Globe02Icon}
+                            />
                             {reference.url ? (
                               <a
                                 className="underline-offset-4 hover:underline"
@@ -104,20 +108,29 @@ export function ReferenceButton({ references, title }: Props) {
 
                         <CardContent className="space-y-2">
                           <div className="flex items-center gap-1">
-                            <PencilIcon className="size-4 shrink-0" />
+                            <HugeIcons
+                              className="size-4 shrink-0"
+                              icon={QuillWrite01Icon}
+                            />
                             <span className="line-clamp-1 text-sm">
                               {reference.authors}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-1">
-                            <CalendarIcon className="size-4 shrink-0" />
+                            <HugeIcons
+                              className="size-4 shrink-0"
+                              icon={Calendar03Icon}
+                            />
                             <span className="text-sm">{reference.year}</span>
                           </div>
 
                           {!!reference.publication && (
                             <div className="flex items-center gap-1">
-                              <BookOpenIcon className="size-4 shrink-0" />
+                              <HugeIcons
+                                className="size-4 shrink-0"
+                                icon={BookOpen02Icon}
+                              />
                               <span className="line-clamp-1 text-sm">
                                 {reference.publication}
                               </span>
@@ -126,7 +139,10 @@ export function ReferenceButton({ references, title }: Props) {
 
                           {!!reference.details && (
                             <div className="flex items-center gap-1">
-                              <BookIcon className="size-4 shrink-0" />
+                              <HugeIcons
+                                className="size-4 shrink-0"
+                                icon={Book03Icon}
+                              />
                               <span className="text-sm">
                                 {reference.details}
                               </span>

@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  ArrowDown01Icon,
+  Copy01Icon,
+  LinkSquare02Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
+import {
   SiClaude,
   SiGithub,
   SiGooglegemini,
@@ -15,16 +21,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { useQuery } from "@tanstack/react-query";
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  CopyIcon,
-  ExternalLinkIcon,
-  MessageCircleIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -79,7 +79,7 @@ function LLmCopyButton({ slug }: { slug: string }) {
       onClick={handleCopy}
       variant="secondary"
     >
-      {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
+      <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
       {t("copy-content")}
     </Button>
   );
@@ -104,9 +104,6 @@ function ViewOptions({ slug }: { slug: string }) {
   const gemini = `https://gemini.google.com/app?${new URLSearchParams({
     q,
   })}`;
-  const t3 = `https://t3.chat/new?${new URLSearchParams({
-    q,
-  })}`;
 
   const githubUrl = getGithubUrl({
     path: `/packages/contents${path}/${locale}.mdx`,
@@ -123,11 +120,12 @@ function ViewOptions({ slug }: { slug: string }) {
           variant="secondary"
         >
           <span className="sr-only">{t("open")}</span>
-          <ChevronDownIcon
+          <HugeIcons
             className={cn(
               "size-4 transition-transform",
               !!open && "rotate-180"
             )}
+            icon={ArrowDown01Icon}
           />
         </Button>
       </DropdownMenuTrigger>
@@ -153,18 +151,13 @@ function ViewOptions({ slug }: { slug: string }) {
             href: claude,
             icon: <SiClaude />,
           },
-          {
-            title: t("open-in-t3-chat"),
-            href: t3,
-            icon: <MessageCircleIcon />,
-          },
         ].map((item) => (
           <DropdownMenuItem asChild className="cursor-pointer" key={item.title}>
             <Link href={item.href} target="_blank">
               {item.icon}
               {item.title}
 
-              <ExternalLinkIcon className="ms-auto size-3.5" />
+              <HugeIcons className="ms-auto size-3.5" icon={LinkSquare02Icon} />
             </Link>
           </DropdownMenuItem>
         ))}

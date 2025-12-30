@@ -1,32 +1,32 @@
+import {
+  ChatIcon,
+  ChatQuestionIcon,
+  ClipboardIcon,
+  InternetIcon,
+  NewsIcon,
+} from "@hugeicons/core-free-icons";
 import type { SchoolClassMemberRole } from "@repo/backend/convex/classes/schema";
 import type { SchoolMemberRole } from "@repo/backend/convex/schools/schema";
-import {
-  CircleQuestionMarkIcon,
-  HandIcon,
-  LightbulbIcon,
-  NotebookTabsIcon,
-  SmileIcon,
-} from "lucide-react";
 
 export const tagList = [
   {
-    icon: SmileIcon,
+    icon: ChatIcon,
     value: "general",
   },
   {
-    icon: CircleQuestionMarkIcon,
+    icon: ChatQuestionIcon,
     value: "question",
   },
   {
-    icon: HandIcon,
+    icon: NewsIcon,
     value: "announcement",
   },
   {
-    icon: NotebookTabsIcon,
+    icon: ClipboardIcon,
     value: "assignment",
   },
   {
-    icon: LightbulbIcon,
+    icon: InternetIcon,
     value: "resource",
   },
 ] as const;
@@ -37,7 +37,7 @@ export type TagValue = (typeof tagList)[number]["value"];
 const studentTags: TagValue[] = ["general", "question"];
 
 export function getTagIcon(tag: TagValue) {
-  return tagList.find((t) => t.value === tag)?.icon ?? SmileIcon;
+  return tagList.find((t) => t.value === tag)?.icon ?? ChatIcon;
 }
 
 /**

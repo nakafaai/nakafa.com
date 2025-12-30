@@ -1,5 +1,5 @@
+import { EvilIcon, News01Icon } from "@hugeicons/core-free-icons";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
-import { DramaIcon, NewspaperIcon } from "lucide-react";
 
 /**
  * Gets the icon for the category of the article.
@@ -9,9 +9,9 @@ import { DramaIcon, NewspaperIcon } from "lucide-react";
 export function getCategoryIcon(category: ArticleCategory) {
   switch (category) {
     case "politics":
-      return DramaIcon;
+      return EvilIcon;
     default:
-      return NewspaperIcon;
+      return News01Icon;
   }
 }
 

@@ -1,10 +1,15 @@
 "use client";
 
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import {
+  ArrowDownLeftIcon,
+  Cancel01Icon,
+  Search02Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Label } from "@repo/design-system/components/ui/label";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
-import { CornerDownLeftIcon, SearchIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type HTMLAttributes, useId } from "react";
 
@@ -51,7 +56,7 @@ export function SearchInput({
         {...props}
       />
       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3 text-muted-foreground">
-        <SearchIcon className="size-4" />
+        <HugeIcons className="size-4" icon={Search02Icon} />
       </div>
       <button
         aria-label="Clear search"
@@ -64,7 +69,11 @@ export function SearchInput({
         onClick={() => setValue("")}
         type="button"
       >
-        <XIcon aria-hidden="true" className="size-4 shrink-0" />
+        <HugeIcons
+          aria-hidden="true"
+          className="size-4 shrink-0"
+          icon={Cancel01Icon}
+        />
         <span className="sr-only">Clear search</span>
       </button>
 
@@ -76,11 +85,11 @@ export function SearchInput({
           type="button"
         >
           <kbd className="flex size-6 items-center justify-center rounded-md border bg-primary text-primary-foreground">
-            {loading ? (
-              <SpinnerIcon aria-hidden="true" className="size-3" />
-            ) : (
-              <CornerDownLeftIcon className="size-3" />
-            )}
+            <Spinner
+              aria-hidden="true"
+              className="size-3"
+              icon={ArrowDownLeftIcon}
+            />
             <span className="sr-only">Search</span>
           </kbd>
         </button>

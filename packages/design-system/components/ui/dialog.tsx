@@ -1,8 +1,9 @@
 "use client";
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { CancelIcon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { XIcon } from "lucide-react";
 
 function Dialog(props: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
@@ -62,7 +63,7 @@ function DialogPopup({
             {children}
             {!!showCloseButton && (
               <DialogPrimitive.Close className="absolute end-2 top-2 inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent opacity-72 outline-none transition-[color,background-color,box-shadow,opacity] pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0">
-                <XIcon />
+                <HugeIcons icon={CancelIcon} />
                 <span className="sr-only">Close</span>
               </DialogPrimitive.Close>
             )}

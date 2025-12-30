@@ -1,12 +1,16 @@
 import {
+  ArrowRight01Icon,
+  LanguageSkillIcon,
+} from "@hugeicons/core-free-icons";
+import {
   DropdownMenu,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
-import { ChevronRightIcon, LanguagesIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { LangMenuSwitcher } from "./lang-menu-switcher";
 
@@ -18,10 +22,10 @@ export function LangMenu() {
       <SidebarMenuItem>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton tooltip={t("language")}>
-            <LanguagesIcon className="size-4 shrink-0" />
+            <HugeIcons icon={LanguageSkillIcon} />
             <span className="truncate">{t("language")}</span>
 
-            <ChevronRightIcon className="ml-auto size-4" />
+            <HugeIcons className="ml-auto" icon={ArrowRight01Icon} />
           </SidebarMenuButton>
         </DropdownMenuTrigger>
 

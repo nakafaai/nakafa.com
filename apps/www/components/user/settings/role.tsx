@@ -4,6 +4,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { AppUser } from "@repo/backend/convex/auth";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
@@ -110,7 +111,7 @@ export function UserSettingsRole({ user }: { user: AppUser }) {
                 <SelectContent>
                   {roles.map((role) => (
                     <SelectItem key={role.value} value={role.value}>
-                      <role.icon />
+                      <HugeIcons icon={role.icon} />
                       {t(role.value)}
                     </SelectItem>
                   ))}

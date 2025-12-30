@@ -1,15 +1,19 @@
 "use client";
 
+import {
+  ArrowTurnForwardIcon,
+  MessageMultiple02Icon,
+} from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { UserData } from "@repo/backend/convex/lib/userHelpers";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
-import { CornerDownRightIcon, DotIcon, MessageSquareIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { Activity, useTransition } from "react";
@@ -78,7 +82,7 @@ export function SchoolClassesForumList() {
 
               <div className="pointer-events-none flex flex-col gap-3 p-4 transition-colors ease-out group-hover:bg-accent/20">
                 <Badge variant="muted">
-                  <Icon />
+                  <HugeIcons icon={Icon} />
                   {t(forum.tag)}
                 </Badge>
 
@@ -98,7 +102,10 @@ export function SchoolClassesForumList() {
 
                   <div className="flex min-w-0 flex-col items-start gap-1 text-muted-foreground text-sm sm:flex-row sm:items-center">
                     <div className="flex max-w-full items-center gap-1">
-                      <CornerDownRightIcon className="size-3 shrink-0" />
+                      <HugeIcons
+                        className="size-3 shrink-0"
+                        icon={ArrowTurnForwardIcon}
+                      />
                       <span className="truncate text-primary">
                         {forum.user?.name ?? t("unknown-user")}
                       </span>
@@ -109,22 +116,22 @@ export function SchoolClassesForumList() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 text-muted-foreground text-sm">
+                <div className="flex items-center gap-3 text-muted-foreground text-sm">
                   <Activity
                     mode={
                       forum.reactionCounts.length > 0 ? "visible" : "hidden"
                     }
                   >
                     <TopReaction forum={forum} />
-                    <DotIcon className="size-3.5 shrink-0" />
                   </Activity>
 
                   <div className="flex items-center gap-1">
-                    <MessageSquareIcon className="size-3.5" />
+                    <HugeIcons
+                      className="size-3.5"
+                      icon={MessageMultiple02Icon}
+                    />
                     <span className="tracking-tight">{forum.postCount}</span>
                   </div>
-
-                  <DotIcon className="size-3.5 shrink-0" />
 
                   <time className="min-w-0 truncate tracking-tight">
                     {formatDistanceToNow(forum.lastPostAt, {

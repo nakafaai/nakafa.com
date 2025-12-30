@@ -1,3 +1,9 @@
+import {
+  ArrowUpRight01Icon,
+  Book03Icon,
+  LayersIcon,
+  Sad02Icon,
+} from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/ai/types/data-parts";
 import type {
   NonNumericGrade,
@@ -8,7 +14,7 @@ import {
   Button,
   buttonVariants,
 } from "@repo/design-system/components/ui/button";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Separator } from "@repo/design-system/components/ui/separator";
@@ -19,13 +25,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
-import {
-  ArrowUpRightIcon,
-  BookIcon,
-  FrownIcon,
-  Layers2Icon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, useMemo, useState } from "react";
 
@@ -47,7 +48,7 @@ export const SubjectsPart = memo(({ message }: Props) => {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
-        <SpinnerIcon className="size-4 text-muted-foreground" />
+        <Spinner className="text-muted-foreground" />
         <p className="text-muted-foreground text-sm">
           {t("get-subjects-loading")}
         </p>
@@ -58,7 +59,7 @@ export const SubjectsPart = memo(({ message }: Props) => {
   if (isError) {
     return (
       <div className="flex items-center gap-2">
-        <FrownIcon className="size-4 shrink-0 text-destructive" />
+        <HugeIcons className="text-destructive" icon={Sad02Icon} />
         <span className="text-muted-foreground text-sm">
           {t("get-subjects-error")}
         </span>
@@ -70,7 +71,7 @@ export const SubjectsPart = memo(({ message }: Props) => {
     <>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <BookIcon className="size-4 shrink-0 text-muted-foreground" />
+          <HugeIcons className="text-muted-foreground" icon={Book03Icon} />
           <span className="text-muted-foreground text-sm">
             {t("get-subjects-title")}
           </span>
@@ -112,14 +113,14 @@ const SubjectsPartPreview = memo(
             target="_blank"
           >
             {subject.title}
-            <ArrowUpRightIcon />
+            <HugeIcons icon={ArrowUpRight01Icon} />
           </NavigationLink>
         ))}
 
         {subjects.length > MAX_SHOWN_SUBJECTS && (
           <Button onClick={() => setOpen(true)} size="sm" variant="outline">
             {t("view-all")}
-            <Layers2Icon />
+            <HugeIcons icon={LayersIcon} />
           </Button>
         )}
       </div>
@@ -179,7 +180,10 @@ const SubjectsPartSheet = memo(
                       target="_blank"
                     >
                       {subject.title}
-                      <ArrowUpRightIcon className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity ease-out group-hover:text-accent-foreground group-hover:opacity-100" />
+                      <HugeIcons
+                        className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity ease-out group-hover:text-accent-foreground group-hover:opacity-100"
+                        icon={ArrowUpRight01Icon}
+                      />
                     </NavigationLink>
                   ))}
                 </div>

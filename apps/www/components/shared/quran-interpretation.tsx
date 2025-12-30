@@ -1,3 +1,4 @@
+import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Drawer,
@@ -6,7 +7,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@repo/design-system/components/ui/drawer";
-import { BookOpenIcon } from "lucide-react";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 
 interface Props {
@@ -20,7 +21,7 @@ export function QuranInterpretation({ interpretation }: Props) {
     <Drawer>
       <DrawerTrigger asChild className="cursor-pointer">
         <Button size="icon" variant="outline">
-          <BookOpenIcon />
+          <HugeIcons icon={BookOpen02Icon} />
           <span className="sr-only">{t("interpretation")}</span>
         </Button>
       </DrawerTrigger>

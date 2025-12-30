@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  Add01Icon,
+  ArrowDown01Icon,
+  ChatAdd01Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -14,19 +20,14 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  MessageSquarePlusIcon,
-  PlusIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -96,7 +97,7 @@ export function SchoolClassesForumNew() {
     >
       <ButtonGroup>
         <Button onClick={() => setOpenDialog(true)}>
-          <MessageSquarePlusIcon />
+          <HugeIcons icon={ChatAdd01Icon} />
           {t("new-forum")}
         </Button>
 
@@ -112,7 +113,7 @@ export function SchoolClassesForumNew() {
                   form="school-classes-forum-new-form"
                   type="submit"
                 >
-                  {isSubmitting ? <SpinnerIcon /> : <PlusIcon />}
+                  <Spinner icon={Add01Icon} isLoading={isSubmitting} />
                   {t("create")}
                 </Button>
               )}
@@ -193,9 +194,12 @@ export function SchoolClassesForumNew() {
                           name={field.name}
                           variant="outline"
                         >
-                          <currentTag.icon />
+                          <HugeIcons icon={currentTag.icon} />
                           {t(currentTag.value)}
-                          <ChevronDownIcon className="ml-auto" />
+                          <HugeIcons
+                            className="ml-auto"
+                            icon={ArrowDown01Icon}
+                          />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
@@ -208,13 +212,14 @@ export function SchoolClassesForumNew() {
                             key={tag.value}
                             onSelect={() => field.handleChange(tag.value)}
                           >
-                            <tag.icon />
+                            <HugeIcons icon={tag.icon} />
                             {t(tag.value)}
-                            <CheckIcon
+                            <HugeIcons
                               className={cn(
                                 "ml-auto size-4 opacity-0 transition-opacity ease-out",
                                 field.state.value === tag.value && "opacity-100"
                               )}
+                              icon={Tick01Icon}
                             />
                           </DropdownMenuItem>
                         ))}

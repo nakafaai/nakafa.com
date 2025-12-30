@@ -1,8 +1,15 @@
 "use client";
 
+import {
+  Globe02Icon,
+  MessageMultiple02Icon,
+  Search02Icon,
+  SquareLock01Icon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   InputGroup,
   InputGroupAddon,
@@ -22,7 +29,6 @@ import {
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar";
 import { usePaginatedQuery, useQuery } from "convex/react";
-import { GlobeIcon, HistoryIcon, LockIcon, SearchIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useState } from "react";
@@ -39,7 +45,7 @@ export function AiChatSidebar({ ...props }: Props) {
       >
         <SidebarTrigger
           className="fixed top-32 left-2 size-9 bg-card/80 backdrop-blur-xs sm:left-6 lg:hidden"
-          icon={<HistoryIcon />}
+          icon={MessageMultiple02Icon}
           size="icon"
           variant="outline"
         />
@@ -87,7 +93,7 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
                 value={q}
               />
               <InputGroupAddon>
-                <SearchIcon />
+                <HugeIcons icon={Search02Icon} />
               </InputGroupAddon>
             </InputGroup>
           </SidebarMenuItem>
@@ -148,7 +154,7 @@ function AiChatSidebarChats({
           <SidebarMenuItem key={chat._id}>
             <SidebarMenuButton asChild isActive={id === chat._id}>
               <NavigationLink href={`/chat/${chat._id}`} title={chat.title}>
-                {isPrivate ? <LockIcon /> : <GlobeIcon />}
+                <HugeIcons icon={isPrivate ? SquareLock01Icon : Globe02Icon} />
                 <span className="truncate">{chat.title}</span>
               </NavigationLink>
             </SidebarMenuButton>

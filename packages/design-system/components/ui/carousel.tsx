@@ -1,11 +1,12 @@
 "use client";
 
+import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import {
   createContext,
   useCallback,
@@ -208,7 +209,7 @@ function CarouselPrevious({
       variant={variant}
       {...props}
     >
-      <ArrowLeft />
+      <HugeIcons icon={ArrowLeft02Icon} />
       <span className="sr-only">Previous slide</span>
     </Button>
   );
@@ -238,7 +239,7 @@ function CarouselNext({
       variant={variant}
       {...props}
     >
-      <ArrowRight />
+      <HugeIcons icon={ArrowRight02Icon} />
       <span className="sr-only">Next slide</span>
     </Button>
   );

@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  ArrowDown01Icon,
+  ArrowRight02Icon,
+  Link04Icon,
+} from "@hugeicons/core-free-icons";
 import type { MaterialList } from "@repo/contents/_types/subject/material";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -13,9 +18,9 @@ import {
   Collapsible,
   CollapsibleContent,
 } from "@repo/design-system/components/ui/collapsible";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn, slugify } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
-import { ArrowDownIcon, ChevronDownIcon, LinkIcon } from "lucide-react";
 import { useState } from "react";
 
 interface Props {
@@ -46,7 +51,7 @@ export function CardMaterial({ material }: Props) {
                 href={`#${id}`}
                 title={material.title}
               >
-                <LinkIcon className="size-4" />
+                <HugeIcons className="size-4" icon={Link04Icon} />
               </a>
             </CardTitle>
             {!!material.description && (
@@ -65,11 +70,12 @@ export function CardMaterial({ material }: Props) {
             <span className="sr-only">
               {isOpen ? "Close content" : "Open content"}
             </span>
-            <ChevronDownIcon
+            <HugeIcons
               className={cn(
                 "size-4 text-muted-foreground transition-transform",
                 isOpen ? "" : "rotate-180"
               )}
+              icon={ArrowDown01Icon}
             />
           </Button>
         </div>
@@ -87,7 +93,10 @@ export function CardMaterial({ material }: Props) {
                     title={item.title}
                   >
                     <h3>{item.title}</h3>
-                    <ArrowDownIcon className="size-4 shrink-0 -rotate-90 opacity-0 transition-opacity ease-out group-hover:opacity-100" />
+                    <HugeIcons
+                      className="size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
+                      icon={ArrowRight02Icon}
+                    />
                   </Link>
                 </li>
               ))}

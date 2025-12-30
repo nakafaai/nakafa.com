@@ -1,10 +1,11 @@
+import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
 import type { ContentPagination } from "@repo/contents/_types/content";
 import { buttonVariants } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
-import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
 
 interface Props {
   pagination: ContentPagination;
@@ -22,7 +23,7 @@ function PaginationButton({
   href: string;
   title: string;
   label: string;
-  icon: ReactNode;
+  icon: IconSvgElement;
   className?: string;
   iconPosition?: "left" | "right";
 }) {
@@ -38,9 +39,13 @@ function PaginationButton({
       title={title}
     >
       <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">
-        {iconPosition === "left" && icon}
+        {iconPosition === "left" && (
+          <HugeIcons className="size-4 shrink-0" icon={icon} />
+        )}
         {label}
-        {iconPosition === "right" && icon}
+        {iconPosition === "right" && (
+          <HugeIcons className="size-4 shrink-0" icon={icon} />
+        )}
       </div>
       <p
         className={cn(
@@ -66,7 +71,7 @@ export function PaginationContent({ pagination, className }: Props) {
         <PaginationButton
           className="items-start"
           href={pagination.prev.href}
-          icon={<ArrowLeftIcon className="size-4 shrink-0" />}
+          icon={ArrowLeft02Icon}
           iconPosition="left"
           label={t("previous")}
           title={pagination.prev.title}
@@ -75,7 +80,7 @@ export function PaginationContent({ pagination, className }: Props) {
         <PaginationButton
           className="items-end"
           href={pagination.next.href}
-          icon={<ArrowRightIcon className="size-4 shrink-0" />}
+          icon={ArrowRight02Icon}
           iconPosition="right"
           label={t("next")}
           title={pagination.next.title}

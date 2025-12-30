@@ -1,9 +1,10 @@
+import { LinkSquare02Icon } from "@hugeicons/core-free-icons";
 import { SiGithub } from "@icons-pack/react-simple-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
-import { ExternalLinkIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 interface Props {
@@ -24,7 +25,10 @@ export function GithubButton({ githubUrl }: Props) {
           <SiGithub className="size-4 shrink-0" />
           <span className="truncate">{t("source-code")}</span>
 
-          <ExternalLinkIcon className="ml-auto size-4 shrink-0" />
+          <HugeIcons
+            className="ml-auto size-4 shrink-0"
+            icon={LinkSquare02Icon}
+          />
         </a>
       </SidebarMenuButton>
     </SidebarMenuItem>

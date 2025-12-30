@@ -1,7 +1,8 @@
+import { ArrowDown02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Card, CardContent } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
-import { ArrowDownIcon, ArrowRightIcon } from "lucide-react";
 
 interface Props {
   labels: {
@@ -39,7 +40,7 @@ export function Illustration({ labels }: Props) {
             </p>
 
             <div className="absolute -right-16 flex items-center gap-2">
-              <ArrowRightIcon className="size-4" />
+              <HugeIcons className="size-4" icon={ArrowRight02Icon} />
               <span className="font-medium text-sm">{labels.fence}</span>
             </div>
           </div>
@@ -57,7 +58,7 @@ export function Illustration({ labels }: Props) {
             </div>
 
             <div className="flex flex-col items-center gap-2">
-              <ArrowDownIcon className="size-4" />
+              <HugeIcons className="size-4" icon={ArrowDown02Icon} />
               <span className="font-medium text-sm">{labels.barbedWire}</span>
             </div>
           </div>

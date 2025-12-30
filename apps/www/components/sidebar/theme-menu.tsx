@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight01Icon, PaintBoardIcon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
 import {
   DropdownMenu,
@@ -9,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -16,7 +18,6 @@ import {
 import { themes } from "@repo/design-system/lib/theme";
 import { cn } from "@repo/design-system/lib/utils";
 import { IconCircleFilled } from "@tabler/icons-react";
-import { ChevronRightIcon, PaletteIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 
@@ -48,10 +49,10 @@ export function ThemeMenu() {
       <SidebarMenuItem>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton tooltip={t("theme")}>
-            <PaletteIcon className="size-4 shrink-0" />
+            <HugeIcons icon={PaintBoardIcon} />
             <span className="truncate">{t("theme")}</span>
 
-            <ChevronRightIcon className="ml-auto size-4" />
+            <HugeIcons className="ml-auto" icon={ArrowRight01Icon} />
           </SidebarMenuButton>
         </DropdownMenuTrigger>
 
@@ -67,7 +68,7 @@ export function ThemeMenu() {
                 key={theme.value}
                 onSelect={() => setTheme(theme.value)}
               >
-                <theme.icon className="size-4 shrink-0" />
+                <HugeIcons className="shrink-0" icon={theme.icon} />
                 <span className="truncate">{t(theme.value)}</span>
                 <CheckerBadge isActive={isActive(theme.value)} />
               </DropdownMenuItem>
@@ -83,7 +84,7 @@ export function ThemeMenu() {
                 key={theme.value}
                 onSelect={() => setTheme(theme.value)}
               >
-                <theme.icon className="size-4 shrink-0" />
+                <HugeIcons className="shrink-0" icon={theme.icon} />
                 <span className="truncate">{t(theme.value)}</span>
                 <CheckerBadge isActive={isActive(theme.value)} />
               </DropdownMenuItem>

@@ -1,5 +1,6 @@
 "use client";
 
+import { LanguageSkillIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -7,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
 import {
@@ -15,7 +17,6 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { LanguagesIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -63,7 +64,7 @@ export function LangSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">
-          <LanguagesIcon />
+          <HugeIcons icon={LanguageSkillIcon} />
           <span className="truncate">{t("language")}</span>
         </Button>
       </DropdownMenuTrigger>

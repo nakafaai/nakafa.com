@@ -1,7 +1,10 @@
 "use client";
 
+import {
+  MessageMultiple01Icon,
+  MessageMultiple02Icon,
+} from "@hugeicons/core-free-icons";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { MessageCircleIcon, MessagesSquareIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { SharedTabs } from "@/components/user/shared-tabs";
@@ -14,12 +17,12 @@ export function UserTabs({ userId }: { userId: string }) {
   const tabs = useMemo(
     () => [
       {
-        icon: MessagesSquareIcon,
+        icon: MessageMultiple01Icon,
         label: t("comments"),
         href: `/user/${userId}`,
       },
       {
-        icon: MessageCircleIcon,
+        icon: MessageMultiple02Icon,
         label: t("chat"),
         href: `/user/${userId}/chat`,
       },

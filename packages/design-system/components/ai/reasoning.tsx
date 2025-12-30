@@ -1,18 +1,19 @@
 "use client";
 
+import { ArrowDown01Icon, BrainIcon } from "@hugeicons/core-free-icons";
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
+import { Response } from "@repo/design-system/components/ai/response";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
-import { BrainIcon, ChevronDownIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
-import { SpinnerIcon } from "../ui/icons";
-import { Response } from "./response";
 
 interface ReasoningContextValue {
   isStreaming: boolean;
@@ -142,17 +143,14 @@ export const ReasoningTrigger = memo(
       >
         {children ?? (
           <>
-            {isStreaming ? (
-              <SpinnerIcon className="size-4" />
-            ) : (
-              <BrainIcon className="size-4" />
-            )}
+            <Spinner icon={BrainIcon} isLoading={isStreaming} />
             <ThinkingMessage duration={duration} isStreaming={isStreaming} />
-            <ChevronDownIcon
+            <HugeIcons
               className={cn(
                 "size-4 transition-transform",
                 isOpen ? "rotate-180" : "rotate-0"
               )}
+              icon={ArrowDown01Icon}
             />
           </>
         )}

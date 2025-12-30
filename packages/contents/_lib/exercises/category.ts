@@ -1,5 +1,9 @@
+import {
+  PropertyEditIcon,
+  StudyLampIcon,
+  SwatchIcon,
+} from "@hugeicons/core-free-icons";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import { BookCopyIcon, NotebookIcon, SwatchBookIcon } from "lucide-react";
 
 /**
  * Gets the path to the category of the subject.
@@ -17,11 +21,11 @@ export function getCategoryPath(category: ExercisesCategory) {
  */
 export function getCategoryIcon(category: ExercisesCategory) {
   switch (category) {
-    case "high-school":
-      return SwatchBookIcon;
     case "middle-school":
-      return NotebookIcon;
+      return StudyLampIcon;
+    case "high-school":
+      return SwatchIcon;
     default:
-      return BookCopyIcon;
+      return PropertyEditIcon;
   }
 }

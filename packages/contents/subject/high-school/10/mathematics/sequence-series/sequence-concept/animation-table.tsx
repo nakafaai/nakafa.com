@@ -1,5 +1,6 @@
 "use client";
 
+import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -10,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { PauseIcon, PlayIcon, TimerResetIcon } from "lucide-react";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import {
   useCallback,
@@ -331,7 +332,7 @@ export default function TableChairsAnimation({
               size="icon"
               variant="outline"
             >
-              <TimerResetIcon className="size-4 shrink-0" />
+              <HugeIcons icon={Clock04Icon} />
               <span className="sr-only">Reset</span>
             </Button>
             <Button
@@ -340,11 +341,7 @@ export default function TableChairsAnimation({
               size="icon"
               variant={isPlaying ? "outline" : "default"}
             >
-              {isPlaying ? (
-                <PauseIcon className="size-4 shrink-0" />
-              ) : (
-                <PlayIcon className="size-4 shrink-0" />
-              )}
+              <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
               <span className="sr-only">{isPlaying ? "Pause" : "Play"}</span>
             </Button>
           </div>

@@ -1,14 +1,11 @@
 "use client";
 
-import { cn } from "@repo/design-system/lib/utils";
-import { CheckIcon, ChevronDownIcon, PhoneIcon } from "lucide-react";
-import { useTranslations } from "next-intl";
-import type React from "react";
-import { useMemo, useState } from "react";
-import * as RpnInput from "react-phone-number-input";
-import flags from "react-phone-number-input/flags";
-import { VList } from "virtua";
-import { Button } from "./button";
+import {
+  ArrowDown01Icon,
+  Call02Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
+import { Button } from "@repo/design-system/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -16,9 +13,21 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "./command";
-import { Input } from "./input";
-import { Popover, PopoverContent, PopoverTrigger } from "./popover";
+} from "@repo/design-system/components/ui/command";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Input } from "@repo/design-system/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@repo/design-system/components/ui/popover";
+import { cn } from "@repo/design-system/lib/utils";
+import { useTranslations } from "next-intl";
+import type React from "react";
+import { useMemo, useState } from "react";
+import * as RpnInput from "react-phone-number-input";
+import flags from "react-phone-number-input/flags";
+import { VList } from "virtua";
 
 type PhoneInputProps = {
   className?: string;
@@ -103,9 +112,10 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
             countryName={value}
           />
           <span className="text-muted-foreground">
-            <ChevronDownIcon
+            <HugeIcons
               aria-hidden="true"
               className="ml-auto h-4 w-4 shrink-0 opacity-50"
+              icon={ArrowDown01Icon}
             />
           </span>
         </Button>
@@ -144,11 +154,13 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
                   >
                     <span className="truncate">{c.label}</span>
 
-                    <CheckIcon
+                    <HugeIcons
+                      aria-hidden="true"
                       className={cn(
                         "ml-auto size-4 shrink-0 text-primary",
                         c.value === value ? "opacity-100" : "opacity-0"
                       )}
+                      icon={Tick01Icon}
                     />
                   </CommandItem>
                 )}
@@ -169,7 +181,7 @@ const FlagComponent = ({ country, countryName }: RpnInput.FlagProps) => {
       {Flag ? (
         <Flag title={countryName} />
       ) : (
-        <PhoneIcon aria-hidden="true" className="size-3.5" />
+        <HugeIcons aria-hidden="true" className="size-3.5" icon={Call02Icon} />
       )}
     </span>
   );

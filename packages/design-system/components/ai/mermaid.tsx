@@ -1,6 +1,6 @@
 "use client";
 
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import type { MermaidConfig } from "mermaid";
 import { useTheme } from "next-themes";
@@ -96,7 +96,7 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
     return (
       <div className={cn("my-4 aspect-video p-4", className)}>
         <div className="flex size-full items-center justify-center">
-          <SpinnerIcon className="size-4" />
+          <Spinner />
         </div>
       </div>
     );

@@ -2,6 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { useQuery } from "convex/react";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
@@ -40,7 +41,7 @@ function SchoolClassesForumPostSheetInfoTitle({
 
   return (
     <>
-      <Icon className="size-4 shrink-0" />
+      <HugeIcons className="size-4 shrink-0" icon={Icon} />
       <span className="truncate font-medium">{forum.title}</span>
     </>
   );

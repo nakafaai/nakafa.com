@@ -1,5 +1,6 @@
 "use client";
 
+import { AiWebBrowsingIcon, Sad02Icon } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/ai/types/data-parts";
 import {
   Source,
@@ -7,8 +8,8 @@ import {
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
-import { FrownIcon, GlobeIcon } from "lucide-react";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -27,7 +28,7 @@ export const WebSearchPart = memo(({ message }: Props) => {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
-        <SpinnerIcon className="size-4 text-muted-foreground" />
+        <Spinner className="text-muted-foreground" />
         <p className="text-muted-foreground text-sm">
           {t("web-search-loading")}
         </p>
@@ -38,7 +39,7 @@ export const WebSearchPart = memo(({ message }: Props) => {
   if (isError) {
     return (
       <div className="flex items-center gap-2">
-        <FrownIcon className="size-4 shrink-0 text-destructive" />
+        <HugeIcons className="size-4 text-destructive" icon={Sad02Icon} />
         <span className="text-muted-foreground text-sm">
           {t("web-search-error")}
         </span>
@@ -49,7 +50,10 @@ export const WebSearchPart = memo(({ message }: Props) => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <GlobeIcon className="size-4 shrink-0 text-muted-foreground" />
+        <HugeIcons
+          className="size-4 text-muted-foreground"
+          icon={AiWebBrowsingIcon}
+        />
         <span className="text-muted-foreground text-sm">{t("web-search")}</span>
         <Badge variant="muted">{results.length}</Badge>
       </div>

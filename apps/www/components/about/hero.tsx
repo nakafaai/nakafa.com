@@ -1,6 +1,10 @@
+import {
+  ArrowUpRight01Icon,
+  LoveKoreanFingerIcon,
+} from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { ArrowUpRightIcon, HeartHandshakeIcon } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { HeroArt } from "./hero-art";
@@ -21,13 +25,13 @@ export function Hero() {
         <div className="flex w-full max-w-lg items-center gap-4">
           <Button asChild variant="secondary">
             <Link href="https://github.com/nakafaai/nakafa.com" target="_blank">
-              <HeartHandshakeIcon />
+              <HugeIcons icon={LoveKoreanFingerIcon} />
               {t("contribute")}
             </Link>
           </Button>
           <Button asChild>
             <NavigationLink href="/">
-              <ArrowUpRightIcon />
+              <HugeIcons icon={ArrowUpRight01Icon} />
               {t("start-learning")}
             </NavigationLink>
           </Button>

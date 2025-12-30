@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  Login01Icon,
+  Logout01Icon,
+  MoreVerticalIcon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   Avatar,
@@ -15,6 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -25,7 +31,6 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useQuery } from "convex/react";
-import { EllipsisVerticalIcon, LogInIcon, LogOutIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
 import { getInitialName } from "@/lib/utils/helper";
@@ -51,7 +56,7 @@ export function SchoolSidebarNavUser() {
         <SidebarMenuButton
           onClick={() => router.push(`/auth?redirect=${pathname}`)}
         >
-          <LogInIcon />
+          <HugeIcons icon={Login01Icon} />
           {t("login")}
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -76,7 +81,7 @@ export function SchoolSidebarNavUser() {
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate">{user.authUser.name}</span>
             </div>
-            <EllipsisVerticalIcon className="ml-auto size-4" />
+            <HugeIcons className="ml-auto size-4" icon={MoreVerticalIcon} />
           </SidebarMenuButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -113,7 +118,7 @@ export function SchoolSidebarNavUser() {
               className="cursor-pointer"
               onSelect={handleSignOut}
             >
-              <LogOutIcon />
+              <HugeIcons icon={Logout01Icon} />
               {t("logout")}
             </DropdownMenuItem>
           </DropdownMenuGroup>

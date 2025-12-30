@@ -1,8 +1,9 @@
 "use client";
 
+import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { ArrowDownIcon } from "lucide-react";
 import { type ComponentProps, memo, useCallback } from "react";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 
@@ -99,7 +100,8 @@ export const ConversationScrollButton = memo(
           variant="outline"
           {...props}
         >
-          <ArrowDownIcon className="size-4" />
+          <HugeIcons className="size-4" icon={ArrowDown02Icon} />
+          <span className="sr-only">Scroll to bottom</span>
         </Button>
       )
     );

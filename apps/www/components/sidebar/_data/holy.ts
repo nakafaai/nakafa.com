@@ -1,9 +1,9 @@
-import { MoonStarIcon } from "lucide-react";
+import { AllahIcon } from "@hugeicons/core-free-icons";
 
 export const holyMenu = [
   {
     title: "quran",
-    icon: MoonStarIcon,
+    icon: AllahIcon,
     href: "/quran",
   },
 ] as const;

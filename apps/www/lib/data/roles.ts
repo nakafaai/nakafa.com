@@ -1,13 +1,13 @@
 import {
-  GraduationCapIcon,
-  SchoolIcon,
-  SpeechIcon,
-  UsersIcon,
-} from "lucide-react";
+  ChildIcon,
+  ManagerIcon,
+  StudentIcon,
+  TeacherIcon,
+} from "@hugeicons/core-free-icons";
 
 export const roles = [
-  { value: "teacher", icon: SpeechIcon },
-  { value: "student", icon: GraduationCapIcon },
-  { value: "parent", icon: UsersIcon },
-  { value: "administrator", icon: SchoolIcon },
+  { value: "teacher", icon: TeacherIcon },
+  { value: "student", icon: StudentIcon },
+  { value: "parent", icon: ChildIcon },
+  { value: "administrator", icon: ManagerIcon },
 ] as const;

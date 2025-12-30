@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  ArrowUp02Icon,
+  Cancel01Icon,
+  Login01Icon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
@@ -11,12 +16,12 @@ import {
   Button,
   buttonVariants,
 } from "@repo/design-system/components/ui/button";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link, usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation, useQuery } from "convex/react";
-import { ArrowUpIcon, LogInIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type FormEventHandler, useState, useTransition } from "react";
 import { getInitialName } from "@/lib/utils/helper";
@@ -95,7 +100,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
               type="button"
               variant="secondary"
             >
-              <XIcon />
+              <HugeIcons icon={Cancel01Icon} />
               <span className="sr-only">{tCommon("cancel")}</span>
             </Button>
           )}
@@ -105,7 +110,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
             size="icon"
             type="submit"
           >
-            {isPending ? <SpinnerIcon /> : <ArrowUpIcon />}
+            <Spinner icon={ArrowUp02Icon} isLoading={isPending} />
             <span className="sr-only">{t("comment")}</span>
           </Button>
         </div>
@@ -127,7 +132,7 @@ function UserAvatar() {
         className={cn(buttonVariants({ variant: "ghost" }), "rounded-lg")}
         href={`/auth?redirect=${pathname}`}
       >
-        <LogInIcon />
+        <HugeIcons icon={Login01Icon} />
         {t("login")}
       </Link>
     );

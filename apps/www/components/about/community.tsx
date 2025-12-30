@@ -1,7 +1,7 @@
-import { SiDiscord } from "@icons-pack/react-simple-icons";
+import { DiscordIcon, LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
 import { Avatar } from "@repo/design-system/components/contributor/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HeartHandshakeIcon } from "lucide-react";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { contributors } from "@/lib/data/contributor";
@@ -22,13 +22,13 @@ export function Community() {
         <div className="flex w-full items-center justify-center gap-4">
           <Button asChild variant="secondary">
             <Link href="https://github.com/nakafaai/nakafa.com" target="_blank">
-              <HeartHandshakeIcon />
+              <HugeIcons icon={LoveKoreanFingerIcon} />
               {t("contribute")}
             </Link>
           </Button>
           <Button asChild>
             <Link href="https://discord.gg/CPCSfKhvfQ" target="_blank">
-              <SiDiscord />
+              <HugeIcons icon={DiscordIcon} />
               {t("join-community")}
             </Link>
           </Button>

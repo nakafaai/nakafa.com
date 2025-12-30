@@ -1,6 +1,8 @@
 "use client";
 
+import { Menu02Icon } from "@hugeicons/core-free-icons";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,
@@ -17,7 +19,6 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { slugify } from "@repo/design-system/lib/utils";
-import { AlignLeftIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { TocProvider, useToc } from "@/lib/context/use-toc";
 import { useVirtual } from "@/lib/context/use-virtual";
@@ -109,7 +110,7 @@ export function SidebarTree({ data, title }: Props) {
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="gap-2">
-        <AlignLeftIcon />
+        <HugeIcons icon={Menu02Icon} />
         {title ?? t("on-this-page")}
       </SidebarGroupLabel>
       <SidebarGroupContent>

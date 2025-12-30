@@ -1,15 +1,16 @@
 "use client";
 
 import {
+  ArrowDown01Icon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+} from "@hugeicons/core-free-icons";
+import {
   Button,
   buttonVariants,
 } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import {
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-} from "lucide-react";
 import * as React from "react";
 import {
   type DayButton,
@@ -41,14 +42,32 @@ function CalendarChevron({
   orientation?: "left" | "right" | "up" | "down";
 }) {
   if (orientation === "left") {
-    return <ChevronLeftIcon className={cn("size-4", className)} {...props} />;
+    return (
+      <HugeIcons
+        className={cn("size-4", className)}
+        icon={ArrowLeft01Icon}
+        {...props}
+      />
+    );
   }
 
   if (orientation === "right") {
-    return <ChevronRightIcon className={cn("size-4", className)} {...props} />;
+    return (
+      <HugeIcons
+        className={cn("size-4", className)}
+        icon={ArrowRight01Icon}
+        {...props}
+      />
+    );
   }
 
-  return <ChevronDownIcon className={cn("size-4", className)} {...props} />;
+  return (
+    <HugeIcons
+      className={cn("size-4", className)}
+      icon={ArrowDown01Icon}
+      {...props}
+    />
+  );
 }
 
 function CalendarWeekNumber({

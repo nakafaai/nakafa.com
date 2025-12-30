@@ -1,11 +1,11 @@
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import {
-  BackpackIcon,
-  GraduationCapIcon,
+  Backpack01Icon,
+  GraduationScrollIcon,
   LibraryIcon,
-  NotebookIcon,
+  Notebook01Icon,
   UniversityIcon,
-} from "lucide-react";
+} from "@hugeicons/core-free-icons";
+import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 
 /**
  * Gets the path to the category of the subject.
@@ -24,14 +24,14 @@ export function getCategoryPath(category: SubjectCategory) {
 export function getCategoryIcon(category: SubjectCategory) {
   switch (category) {
     case "elementary-school":
-      return BackpackIcon;
+      return Backpack01Icon;
     case "middle-school":
-      return NotebookIcon;
+      return Notebook01Icon;
     case "high-school":
       return LibraryIcon;
     case "university":
       return UniversityIcon;
     default:
-      return GraduationCapIcon;
+      return GraduationScrollIcon;
   }
 }

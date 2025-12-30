@@ -1,25 +1,25 @@
 import {
   ArchiveIcon,
-  ArrowUpFromLineIcon,
-  ClockIcon,
-  FileEditIcon,
-} from "lucide-react";
+  NoteEditIcon,
+  Rocket01Icon,
+  TimeScheduleIcon,
+} from "@hugeicons/core-free-icons";
 
 export const materialStatusList = [
   {
     value: "published",
     labelKey: "status-publish-now",
-    icon: ArrowUpFromLineIcon,
+    icon: Rocket01Icon,
   },
   {
     value: "draft",
     labelKey: "status-draft",
-    icon: FileEditIcon,
+    icon: NoteEditIcon,
   },
   {
     value: "scheduled",
     labelKey: "status-schedule",
-    icon: ClockIcon,
+    icon: TimeScheduleIcon,
   },
   {
     value: "archived",

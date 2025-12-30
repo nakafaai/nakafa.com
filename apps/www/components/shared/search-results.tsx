@@ -1,13 +1,14 @@
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import {
+  FileIcon,
+  InformationCircleIcon,
+  Rocket01Icon,
+  Sad02Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Separator } from "@repo/design-system/components/ui/separator";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
-import {
-  FileTextIcon,
-  HeartCrackIcon,
-  InfoIcon,
-  RocketIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Fragment, type ReactElement } from "react";
 import type { PagefindResult } from "@/types/pagefind";
@@ -32,7 +33,7 @@ export function SearchResults({
   if (isError) {
     return (
       <div className="flex items-center justify-center gap-1 text-muted-foreground text-sm">
-        <InfoIcon className="size-4" />
+        <HugeIcons className="size-4" icon={InformationCircleIcon} />
         <div className="mt-1">{t("search-error")}</div>
         {typeof error === "string" || typeof error === "object" ? (
           <div className="wrap-break-word mt-2 max-w-xs text-xs">{error}</div>
@@ -44,7 +45,7 @@ export function SearchResults({
   if (!query) {
     return (
       <div className="flex items-center justify-center gap-1 text-muted-foreground text-sm">
-        <RocketIcon className="size-4" />
+        <HugeIcons className="size-4" icon={Rocket01Icon} />
         <p>{t("search-help")}</p>
       </div>
     );
@@ -53,7 +54,7 @@ export function SearchResults({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center gap-1 text-muted-foreground text-sm">
-        <SpinnerIcon className="size-4" />
+        <Spinner />
         <p>{t("search-loading")}</p>
       </div>
     );
@@ -62,7 +63,7 @@ export function SearchResults({
   if (results.length === 0 && query) {
     return (
       <div className="flex items-center justify-center gap-1 text-muted-foreground text-sm">
-        <HeartCrackIcon className="size-4" />
+        <HugeIcons className="size-4" icon={Sad02Icon} />
         <p>{t("search-not-found")}</p>
       </div>
     );
@@ -87,7 +88,10 @@ export function SearchResults({
                   title={subResult.title}
                 >
                   <div className="flex items-center gap-2">
-                    <FileTextIcon className="size-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground" />
+                    <HugeIcons
+                      className="size-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground"
+                      icon={FileIcon}
+                    />
                     <span className="line-clamp-1">{subResult.title}</span>
                   </div>
                   <p

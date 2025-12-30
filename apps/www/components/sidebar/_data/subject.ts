@@ -2,6 +2,26 @@ import { getCategoryIcon } from "@repo/contents/_lib/subject/category";
 
 const data = [
   {
+    title: "middle-school",
+    items: [
+      {
+        title: "grade",
+        value: 7,
+        href: "/subject/middle-school/7",
+      },
+      {
+        title: "grade",
+        value: 8,
+        href: "/subject/middle-school/8",
+      },
+      {
+        title: "grade",
+        value: 9,
+        href: "/subject/middle-school/9",
+      },
+    ],
+  },
+  {
     title: "high-school",
     items: [
       {

@@ -1,5 +1,6 @@
+import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { ArrowLeftIcon } from "lucide-react";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
@@ -24,7 +25,7 @@ export default function Page({ params }: Props) {
           className="flex items-center gap-2 text-primary text-sm underline-offset-4 hover:underline"
           href="/school/onboarding"
         >
-          <ArrowLeftIcon className="size-4" />
+          <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
           {t("back")}
         </NavigationLink>
         <h1 className="text-pretty font-medium text-lg">{t("create")}</h1>

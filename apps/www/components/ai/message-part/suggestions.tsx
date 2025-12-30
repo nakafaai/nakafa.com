@@ -1,7 +1,9 @@
 "use client";
 
+import { Add01Icon, QuoteDownIcon } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/ai/types/data-parts";
-import { PlusIcon, QuoteIcon } from "lucide-react";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { useTranslations } from "next-intl";
 import { memo } from "react";
 import { useChat } from "@/lib/context/use-chat";
 
@@ -10,13 +12,14 @@ interface Props {
 }
 
 export const SuggestionsPart = memo(({ message }: Props) => {
+  const t = useTranslations("Ai");
   const suggestions = message.data;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
-        <QuoteIcon className="size-4" />
-        <span>Related</span>
+        <HugeIcons className="size-4" icon={QuoteDownIcon} />
+        <span>{t("related")}</span>
       </div>
       <div className="flex flex-col">
         {suggestions.map((suggestion) => (
@@ -42,7 +45,7 @@ const SuggestionsPartButton = memo(
         type="button"
       >
         {suggestion}
-        <PlusIcon className="size-4 shrink-0 text-primary" />
+        <HugeIcons className="size-4 text-primary" icon={Add01Icon} />
       </button>
     );
   }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Settings01Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
@@ -8,10 +9,10 @@ import {
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
 import { useQuery } from "convex/react";
-import { SettingsIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getInitialName } from "@/lib/utils/helper";
 
@@ -84,7 +85,7 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
         variant="outline"
       >
         <NavigationLink href="/user/settings">
-          <SettingsIcon />
+          <HugeIcons icon={Settings01Icon} />
           <span className="hidden sm:inline">{t("settings")}</span>
         </NavigationLink>
       </Button>

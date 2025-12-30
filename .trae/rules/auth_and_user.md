@@ -1,3 +1,6 @@
+---
+alwaysApply: false
+---
 # User & Authentication Rules
 
 ## Authentication Standards

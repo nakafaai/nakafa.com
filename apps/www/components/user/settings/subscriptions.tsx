@@ -1,11 +1,11 @@
 "use client";
 
+import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar";
 import { Button } from "@repo/design-system/components/ui/button";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useAction, useQuery } from "convex/react";
-import { PartyPopperIcon, Settings2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { FormBlock } from "@/components/shared/form-block";
@@ -50,22 +50,14 @@ export function UserSettingsSubscriptions() {
     >
       <div className="flex items-center gap-4">
         <Activity mode={hasSubscription ? "visible" : "hidden"}>
-          <Button
-            disabled={isPending}
-            onClick={handleManageSubscription}
-            variant="outline"
-          >
-            {isPending ? <SpinnerIcon /> : <Settings2Icon />}
+          <Button disabled={isPending} onClick={handleManageSubscription}>
+            <Spinner icon={Settings01Icon} isLoading={isPending} />
             {t("manage")}
           </Button>
         </Activity>
         <Activity mode={hasSubscription ? "hidden" : "visible"}>
-          <Button
-            disabled={isPending}
-            onClick={handleCheckout}
-            variant="default"
-          >
-            {isPending ? <SpinnerIcon /> : <PartyPopperIcon />}
+          <Button disabled={isPending} onClick={handleCheckout}>
+            <Spinner icon={PartyIcon} isLoading={isPending} />
             {t("get-pro")}
           </Button>
         </Activity>

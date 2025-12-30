@@ -1,41 +1,41 @@
-import { IconBrandTwitter } from "@tabler/icons-react";
 import {
+  AlphabetJapaneseIcon,
   AsteriskIcon,
-  BeanIcon,
-  CandyIcon,
-  CatIcon,
-  CitrusIcon,
-  CloudyIcon,
-  CoffeeIcon,
+  CloudIcon,
+  CottonCandyIcon,
   CpuIcon,
-  CupSodaIcon,
-  Disc3Icon,
-  EclipseIcon,
+  DrinkIcon,
+  FastWindIcon,
+  FlowerIcon,
+  GameIcon,
   GemIcon,
-  HeartIcon,
+  HappyIcon,
   HourglassIcon,
-  JapaneseYenIcon,
+  InLoveIcon,
+  KnightShieldIcon,
   LaptopIcon,
-  LeafIcon,
+  MoonEclipseIcon,
   MoonIcon,
-  NotebookPenIcon,
-  PandaIcon,
-  PopsicleIcon,
-  RabbitIcon,
-  ShellIcon,
-  SparkleIcon,
-  SunIcon,
+  NotebookIcon,
+  OrangeIcon,
+  PineTreeIcon,
+  RadioIcon,
+  RecordIcon,
+  ShellfishIcon,
+  SnailIcon,
+  SnowIcon,
+  StarIcon,
+  Sun01Icon,
   SunsetIcon,
-  SwordIcon,
-  TreePineIcon,
-  TvIcon,
-  WindIcon,
-} from "lucide-react";
+  TeaIcon,
+  TwitterIcon,
+  YenIcon,
+} from "@hugeicons/core-free-icons";
 
 export const themes = [
   {
     value: "light",
-    icon: SunIcon,
+    icon: Sun01Icon,
   },
   {
     value: "dark",
@@ -45,18 +45,17 @@ export const themes = [
     value: "system",
     icon: LaptopIcon,
   },
-  // Custom
   {
     value: "bean",
-    icon: BeanIcon,
+    icon: SnailIcon,
   },
   {
     value: "bubblegum",
-    icon: CandyIcon,
+    icon: CottonCandyIcon,
   },
   {
     value: "caffeine",
-    icon: CoffeeIcon,
+    icon: TeaIcon,
   },
   {
     value: "claude",
@@ -64,19 +63,19 @@ export const themes = [
   },
   {
     value: "cosmic",
-    icon: SparkleIcon,
+    icon: StarIcon,
   },
   {
     value: "cute",
-    icon: RabbitIcon,
+    icon: HappyIcon,
   },
   {
     value: "dreamy",
-    icon: CloudyIcon,
+    icon: CloudIcon,
   },
   {
     value: "ghibli",
-    icon: CatIcon,
+    icon: AlphabetJapaneseIcon,
   },
   {
     value: "luxury",
@@ -84,11 +83,11 @@ export const themes = [
   },
   {
     value: "matcha",
-    icon: CupSodaIcon,
+    icon: DrinkIcon,
   },
   {
     value: "nature",
-    icon: LeafIcon,
+    icon: PineTreeIcon,
   },
   {
     value: "neo",
@@ -96,11 +95,11 @@ export const themes = [
   },
   {
     value: "notebook",
-    icon: NotebookPenIcon,
+    icon: NotebookIcon,
   },
   {
     value: "pacman",
-    icon: PandaIcon,
+    icon: GameIcon,
   },
   {
     value: "perpetuity",
@@ -108,23 +107,23 @@ export const themes = [
   },
   {
     value: "pinky",
-    icon: HeartIcon,
+    icon: InLoveIcon,
   },
   {
     value: "popsicle",
-    icon: PopsicleIcon,
+    icon: SnowIcon,
   },
   {
     value: "retro",
-    icon: TvIcon,
+    icon: RadioIcon,
   },
   {
     value: "shell",
-    icon: ShellIcon,
+    icon: ShellfishIcon,
   },
   {
     value: "solar",
-    icon: EclipseIcon,
+    icon: MoonEclipseIcon,
   },
   {
     value: "sunset",
@@ -132,30 +131,30 @@ export const themes = [
   },
   {
     value: "tangerine",
-    icon: CitrusIcon,
+    icon: OrangeIcon,
   },
   {
     value: "tokyo",
-    icon: JapaneseYenIcon,
+    icon: YenIcon,
   },
   {
     value: "tree",
-    icon: TreePineIcon,
+    icon: FlowerIcon,
   },
   {
     value: "twitter",
-    icon: IconBrandTwitter,
+    icon: TwitterIcon,
   },
   {
     value: "vintage",
-    icon: Disc3Icon,
+    icon: RecordIcon,
   },
   {
     value: "windy",
-    icon: WindIcon,
+    icon: FastWindIcon,
   },
   {
     value: "zelda",
-    icon: SwordIcon,
+    icon: KnightShieldIcon,
   },
 ] as const;

@@ -1,7 +1,8 @@
 "use client";
 
+import { ArrowUpRight01Icon, SparklesIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ArrowUpRightIcon, SparklesIcon } from "lucide-react";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   AnimatePresence,
   motion,
@@ -63,11 +64,11 @@ export function AiSheetOpen() {
               variant="default-outline"
             >
               <div className="flex items-center gap-2">
-                <SparklesIcon className="size-4" />
+                <HugeIcons icon={SparklesIcon} />
                 <span>{t("ask-nina")}</span>
               </div>
 
-              <ArrowUpRightIcon className="size-4" />
+              <HugeIcons icon={ArrowUpRight01Icon} />
             </Button>
           </div>
         </motion.aside>

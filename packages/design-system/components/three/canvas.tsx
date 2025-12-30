@@ -1,18 +1,19 @@
 "use client";
 
+import { Sad02Icon } from "@hugeicons/core-free-icons";
 import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, type CanvasProps } from "@react-three/fiber";
 import {
   Button,
   buttonVariants,
 } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
-import { FrownIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { SpinnerIcon } from "../ui/icons";
 
 function ErrorFallback({
   error,
@@ -73,7 +74,11 @@ function ThreeCanvasComponent({
       <Canvas
         fallback={
           <div className="flex h-full w-full items-center justify-center">
-            <FrownIcon aria-hidden="true" className="size-6 shrink-0" />
+            <HugeIcons
+              aria-hidden="true"
+              className="size-6 shrink-0"
+              icon={Sad02Icon}
+            />
           </div>
         }
         frameloop={frameloop}
@@ -103,7 +108,7 @@ export const ThreeCanvas = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex h-full w-full items-center justify-center">
-        <SpinnerIcon aria-hidden="true" className="size-6 shrink-0" />
+        <Spinner aria-hidden="true" className="size-6" />
       </div>
     ),
   }

@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  ArrowUpRight01Icon,
+  GeometricShapes01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,
@@ -9,7 +14,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
-import { ArrowUpRightIcon, ShapesIcon } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -32,7 +36,7 @@ export function SchoolSidebarNavLearning() {
                 target="_blank"
                 title={t("nakafa-materials")}
               >
-                <ArrowUpRightIcon />
+                <HugeIcons icon={ArrowUpRight01Icon} />
                 {t("nakafa-materials")}
               </NavigationLink>
             </SidebarMenuButton>
@@ -43,7 +47,7 @@ export function SchoolSidebarNavLearning() {
                 href={`/school/${slug}/classes`}
                 title={t("classes")}
               >
-                <ShapesIcon />
+                <HugeIcons icon={GeometricShapes01Icon} />
                 {t("classes")}
               </NavigationLink>
             </SidebarMenuButton>

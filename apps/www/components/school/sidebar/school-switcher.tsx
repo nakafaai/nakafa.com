@@ -1,5 +1,16 @@
 "use client";
 
+import {
+  Add01Icon,
+  Backpack01Icon,
+  Briefcase01Icon,
+  LibraryIcon,
+  Notebook01Icon,
+  SchoolIcon,
+  Tick01Icon,
+  UnfoldMoreIcon,
+  UniversityIcon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
@@ -10,6 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarMenu,
@@ -19,17 +31,6 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { cn } from "@repo/design-system/lib/utils";
 import { useQuery } from "convex/react";
-import {
-  BackpackIcon,
-  BriefcaseIcon,
-  CheckIcon,
-  ChevronsUpDown,
-  LibraryIcon,
-  NotebookIcon,
-  Plus,
-  SchoolIcon,
-  UniversityIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { useSchool } from "@/lib/context/use-school";
@@ -44,7 +45,7 @@ export function SchoolSwitcher() {
 
   const mySchools = useMemo(() => schools ?? [], [schools]);
 
-  const CurrentSchoolIcon = getSchoolIcon(currentSchool.type);
+  const currentSchoolIcon = getSchoolIcon(currentSchool.type);
 
   return (
     <SidebarMenu>
@@ -53,7 +54,7 @@ export function SchoolSwitcher() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg">
               <div className="flex aspect-square size-8 items-center justify-center rounded-sm border bg-foreground text-background">
-                <CurrentSchoolIcon className="size-4" />
+                <HugeIcons className="size-4" icon={currentSchoolIcon} />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <p className="truncate font-medium">{currentSchool.name}</p>
@@ -61,7 +62,7 @@ export function SchoolSwitcher() {
                   {t(currentSchool.type)}
                 </span>
               </div>
-              <ChevronsUpDown className="ml-auto" />
+              <HugeIcons className="ml-auto" icon={UnfoldMoreIcon} />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -74,7 +75,7 @@ export function SchoolSwitcher() {
               {t("schools")}
             </DropdownMenuLabel>
             {mySchools.map((school) => {
-              const SchoolIconItem = getSchoolIcon(school.type);
+              const schoolIconItem = getSchoolIcon(school.type);
 
               return (
                 <DropdownMenuItem
@@ -83,13 +84,14 @@ export function SchoolSwitcher() {
                   key={school._id}
                 >
                   <NavigationLink href={`/school/${school.slug}`}>
-                    <SchoolIconItem className="shrink-0" />
+                    <HugeIcons className="shrink-0" icon={schoolIconItem} />
                     <span className="truncate">{school.name}</span>
-                    <CheckIcon
+                    <HugeIcons
                       className={cn(
                         "ml-auto size-4 opacity-0 transition-opacity ease-out",
                         currentSchool._id === school._id && "opacity-100"
                       )}
+                      icon={Tick01Icon}
                     />
                   </NavigationLink>
                 </DropdownMenuItem>
@@ -98,7 +100,7 @@ export function SchoolSwitcher() {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild className="cursor-pointer">
               <NavigationLink href="/school/onboarding">
-                <Plus className="shrink-0" />
+                <HugeIcons className="shrink-0" icon={Add01Icon} />
                 <span className="truncate">{t("add-school")}</span>
               </NavigationLink>
             </DropdownMenuItem>
@@ -112,13 +114,13 @@ export function SchoolSwitcher() {
 function getSchoolIcon(type: Doc<"schools">["type"]) {
   switch (type) {
     case "elementary-school":
-      return BackpackIcon;
+      return Backpack01Icon;
     case "middle-school":
-      return NotebookIcon;
+      return Notebook01Icon;
     case "high-school":
       return LibraryIcon;
     case "vocational-school":
-      return BriefcaseIcon;
+      return Briefcase01Icon;
     case "university":
       return UniversityIcon;
     default:

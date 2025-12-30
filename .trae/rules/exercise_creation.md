@@ -1,3 +1,6 @@
+---
+alwaysApply: false
+---
 # Exercise Creation Guidelines
 
 When creating exercises, you are converting visual content (images of questions, choices, and explanations) into structured MDX and TypeScript code.

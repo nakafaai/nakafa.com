@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowLeft02Icon, InLoveIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { SchoolClassVisibility } from "@repo/backend/convex/classes/schema";
@@ -9,14 +10,14 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Particles } from "@repo/design-system/components/ui/particles";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { ArrowLeftIcon, MergeIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { toast } from "sonner";
@@ -82,7 +83,7 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
             className="flex items-center gap-2 text-primary text-sm underline-offset-4 hover:underline"
             href={`/school/${schoolSlug}/classes`}
           >
-            <ArrowLeftIcon className="size-4" />
+            <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
             {t("classes")}
           </NavigationLink>
           <h2 className="text-pretty font-medium text-lg">{t("join-class")}</h2>
@@ -94,7 +95,7 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
               disabled={isPending}
               onClick={handlePublicJoin}
             >
-              {isPending ? <SpinnerIcon /> : <MergeIcon />}
+              <Spinner icon={InLoveIcon} isLoading={isPending} />
               {t("join")}
             </Button>
           </Activity>
@@ -141,7 +142,7 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
                   const isDisabled = !canSubmit || Boolean(isSubmitting);
                   return (
                     <Button disabled={isDisabled} type="submit">
-                      {isSubmitting ? <SpinnerIcon /> : <MergeIcon />}
+                      <Spinner icon={InLoveIcon} isLoading={isSubmitting} />
                       {t("join")}
                     </Button>
                   );

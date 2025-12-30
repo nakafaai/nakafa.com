@@ -1,11 +1,12 @@
 "use client";
 
+import { Search02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
-import { SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { searchParsers } from "@/lib/nuqs/search";
@@ -18,7 +19,7 @@ export function SchoolClassesHeaderSearch() {
   return (
     <InputGroup>
       <InputGroupAddon>
-        <SearchIcon />
+        <HugeIcons icon={Search02Icon} />
       </InputGroupAddon>
       <InputGroupInput
         onChange={(e) => setSearch({ q: e.target.value })}

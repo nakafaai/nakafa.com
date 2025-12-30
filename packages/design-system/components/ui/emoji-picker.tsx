@@ -1,5 +1,8 @@
 "use client";
 
+import { Search02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import {
   type EmojiPickerListCategoryHeaderProps,
@@ -7,7 +10,6 @@ import {
   type EmojiPickerListRowProps,
   EmojiPicker as EmojiPickerPrimitive,
 } from "frimousse";
-import { LoaderIcon, SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type * as React from "react";
 
@@ -36,7 +38,11 @@ function EmojiPickerSearch({
       className={cn("flex h-9 items-center gap-2 border-b px-3", className)}
       data-slot="emoji-picker-search-wrapper"
     >
-      <SearchIcon className="size-4 shrink-0 opacity-50" />
+      <HugeIcons
+        aria-hidden="true"
+        className="size-4 shrink-0 opacity-50"
+        icon={Search02Icon}
+      />
       <EmojiPickerPrimitive.Search
         className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
         data-slot="emoji-picker-search"
@@ -103,7 +109,7 @@ function EmojiPickerContent({
         className="absolute inset-0 flex items-center justify-center text-muted-foreground"
         data-slot="emoji-picker-loading"
       >
-        <LoaderIcon className="size-4 animate-spin" />
+        <Spinner className="size-4" />
       </EmojiPickerPrimitive.Loading>
       <EmojiPickerPrimitive.Empty
         className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm"

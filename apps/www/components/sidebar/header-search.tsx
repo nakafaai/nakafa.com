@@ -1,10 +1,11 @@
 "use client";
 
+import { Search02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Label } from "@repo/design-system/components/ui/label";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { IconCommand, IconLetterK } from "@tabler/icons-react";
-import { SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
 import { useSearch } from "@/lib/context/use-search";
@@ -35,7 +36,10 @@ export function HeaderSearch() {
       </Label>
       <div className="relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3">
-          <SearchIcon className="size-4 text-muted-foreground" />
+          <HugeIcons
+            className="size-4 text-muted-foreground"
+            icon={Search02Icon}
+          />
         </div>
         <Input
           className="pointer-events-none h-8 border border-border bg-background pl-9 shadow-xs transition-colors placeholder:text-sm hover:bg-accent hover:text-accent-foreground focus-visible:ring-0 sm:w-80 dark:hover:bg-input/50"
@@ -50,7 +54,7 @@ export function HeaderSearch() {
               <span className="sr-only">Command/Ctrl</span>
             </kbd>
             <kbd className="rounded border bg-background p-0.75">
-              <IconLetterK className="size-3 shrink-0" />
+              <IconLetterK className="size-3 shrink-0" strokeWidth={2} />
               <span className="sr-only">K</span>
             </kbd>
           </div>

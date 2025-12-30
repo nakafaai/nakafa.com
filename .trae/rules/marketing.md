@@ -1,3 +1,6 @@
+---
+alwaysApply: false
+---
 # Marketing Guidelines
 
 ## LinkedIn Marketing Strategy

@@ -1,5 +1,6 @@
 "use client";
 
+import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { Triangle as Triangle3D } from "@repo/design-system/components/three/triangle";
 import { Badge } from "@repo/design-system/components/ui/badge";
@@ -11,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Label as LabelUi } from "@repo/design-system/components/ui/label";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
@@ -19,7 +21,6 @@ import {
   getSin,
   getTan,
 } from "@repo/design-system/lib/math";
-import { MinusIcon, PlusIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -130,14 +131,22 @@ function Content({
                   className="-ms-px flex aspect-square h-[inherit] cursor-pointer items-center justify-center rounded-s-md border border-[color-mix(in_oklch,var(--input)_5%,var(--border))] bg-background text-muted-foreground/80 text-sm transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                   slot="decrement"
                 >
-                  <MinusIcon aria-hidden="true" className="size-4" />
+                  <HugeIcons
+                    aria-hidden="true"
+                    className="size-4"
+                    icon={MinusSignIcon}
+                  />
                 </Button>
                 <Input className="w-full grow bg-background px-3 py-2 text-center font-mono text-foreground tabular-nums" />
                 <Button
                   className="-me-px flex aspect-square h-[inherit] cursor-pointer items-center justify-center rounded-e-md border border-[color-mix(in_oklch,var(--input)_5%,var(--border))] bg-background text-muted-foreground/80 text-sm transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                   slot="increment"
                 >
-                  <PlusIcon aria-hidden="true" className="size-4" />
+                  <HugeIcons
+                    aria-hidden="true"
+                    className="size-4"
+                    icon={PlusSignIcon}
+                  />
                 </Button>
               </Group>
             </NumberField>

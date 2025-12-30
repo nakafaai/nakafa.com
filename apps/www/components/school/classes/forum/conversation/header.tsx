@@ -1,5 +1,6 @@
 "use client";
 
+import { WinkIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
@@ -19,6 +20,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
   PopoverContent,
@@ -31,7 +33,6 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { useMutation } from "convex/react";
 import { format } from "date-fns";
-import { SmilePlusIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { memo, useState, useTransition } from "react";
 import type { Forum } from "@/components/school/classes/forum/conversation/types";
@@ -166,7 +167,8 @@ const ForumActions = memo(({ forum }: { forum: Forum }) => {
           render={
             <PopoverTrigger asChild>
               <Button disabled={isPending} size="icon-sm" variant="outline">
-                <SmilePlusIcon />
+                <HugeIcons icon={WinkIcon} />
+                <span className="sr-only">{t("reaction")}</span>
               </Button>
             </PopoverTrigger>
           }

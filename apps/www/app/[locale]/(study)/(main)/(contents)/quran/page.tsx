@@ -1,7 +1,7 @@
+import { AllahIcon } from "@hugeicons/core-free-icons";
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { Link } from "@repo/internationalization/src/navigation";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { MoonStarIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -90,7 +90,7 @@ function PageContent({ locale }: { locale: Locale }) {
       />
       <HeaderContent
         description={t("quran-description")}
-        icon={MoonStarIcon}
+        icon={AllahIcon}
         title={t("quran")}
       />
       <LayoutContent>

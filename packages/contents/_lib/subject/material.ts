@@ -1,3 +1,25 @@
+import {
+  AbsoluteIcon,
+  AiProgrammingIcon,
+  BankIcon,
+  BulbIcon,
+  CourtLawIcon,
+  DnaIcon,
+  ElectricWireIcon,
+  GameIcon,
+  GlobalIcon,
+  GlobeIcon,
+  LaptopIcon,
+  MapPinIcon,
+  NeuralNetworkIcon,
+  PhysicsIcon,
+  PiIcon,
+  PuzzleIcon,
+  ScrollIcon,
+  SourceCodeIcon,
+  TestTubeIcon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
@@ -6,28 +28,6 @@ import type {
   MaterialList,
 } from "@repo/contents/_types/subject/material";
 import { MaterialListSchema } from "@repo/contents/_types/subject/material";
-import {
-  BrainCircuitIcon,
-  CableIcon,
-  ChartPieIcon,
-  CodeIcon,
-  CodeXmlIcon,
-  ComputerIcon,
-  DraftingCompassIcon,
-  EarthIcon,
-  FlaskConicalIcon,
-  Gamepad2Icon,
-  HandshakeIcon,
-  HourglassIcon,
-  LightbulbIcon,
-  MapPinIcon,
-  PawPrintIcon,
-  PercentIcon,
-  PiIcon,
-  ScaleIcon,
-  SigmaIcon,
-  SpeechIcon,
-} from "lucide-react";
 import type { Locale } from "next-intl";
 
 /**
@@ -81,42 +81,42 @@ export function getMaterialIcon(material: Material | ExercisesMaterial) {
     case "mathematics":
       return PiIcon;
     case "physics":
-      return DraftingCompassIcon;
+      return PhysicsIcon;
     case "chemistry":
-      return FlaskConicalIcon;
+      return TestTubeIcon;
     case "biology":
-      return PawPrintIcon;
+      return DnaIcon;
     case "geography":
-      return EarthIcon;
+      return GlobeIcon;
     case "economy":
-      return ChartPieIcon;
+      return BankIcon;
     case "history":
-      return HourglassIcon;
+      return ScrollIcon;
     case "sociology":
-      return SpeechIcon;
+      return UserGroupIcon;
     case "informatics":
-      return CodeIcon;
+      return SourceCodeIcon;
     case "geospatial":
       return MapPinIcon;
     case "ai-ds":
-      return BrainCircuitIcon;
+      return NeuralNetworkIcon;
     case "game-engineering":
-      return Gamepad2Icon;
+      return GameIcon;
     case "political-science":
-      return ScaleIcon;
+      return CourtLawIcon;
     case "computer-science":
-      return CodeXmlIcon;
+      return AiProgrammingIcon;
     case "technology-electro-medical":
-      return CableIcon;
+      return ElectricWireIcon;
     case "informatics-engineering":
-      return ComputerIcon;
+      return LaptopIcon;
     case "international-relations":
-      return HandshakeIcon;
+      return GlobalIcon;
     case "quantitative-knowledge":
-      return SigmaIcon;
+      return AbsoluteIcon;
     case "mathematical-reasoning":
-      return PercentIcon;
+      return PuzzleIcon;
     default:
-      return LightbulbIcon;
+      return BulbIcon;
   }
 }

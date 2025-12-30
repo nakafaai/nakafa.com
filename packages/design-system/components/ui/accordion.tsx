@@ -1,9 +1,10 @@
 "use client";
 
+import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { ChevronDownIcon } from "lucide-react";
 import { Accordion as AccordionPrimitive } from "radix-ui";
 import type * as React from "react";
+import { HugeIcons } from "./huge-icons";
 
 function Accordion({
   ...props
@@ -40,7 +41,10 @@ function AccordionTrigger({
         {...props}
       >
         {children}
-        <ChevronDownIcon className="pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform duration-200" />
+        <HugeIcons
+          className="pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform duration-200"
+          icon={ArrowDown01Icon}
+        />
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   );

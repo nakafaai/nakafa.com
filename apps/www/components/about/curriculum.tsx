@@ -1,3 +1,4 @@
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useTranslations } from "next-intl";
 import { articlesMenu } from "@/components/sidebar/_data/articles";
@@ -36,7 +37,9 @@ export function Curriculum() {
               key={subject.title}
             >
               <div className="flex items-center gap-2 border-b p-6">
-                {!!subject.icon && <subject.icon className="size-5 shrink-0" />}
+                {!!subject.icon && (
+                  <HugeIcons className="size-5 shrink-0" icon={subject.icon} />
+                )}
                 <h4>{tSubject(subject.title)}</h4>
               </div>
               <div className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
@@ -78,7 +81,9 @@ export function Curriculum() {
                   className="flex cursor-pointer items-center gap-2 p-6 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
                   href={item.href}
                 >
-                  {!!item.icon && <item.icon className="size-5 shrink-0" />}
+                  {!!item.icon && (
+                    <HugeIcons className="size-5 shrink-0" icon={item.icon} />
+                  )}
                   <h4>{tHoly(item.title)}</h4>
                 </NavigationLink>
               </div>
@@ -100,7 +105,9 @@ export function Curriculum() {
                   className="flex cursor-pointer items-center gap-2 p-6 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
                   href={item.href}
                 >
-                  {!!item.icon && <item.icon className="size-5 shrink-0" />}
+                  {!!item.icon && (
+                    <HugeIcons className="size-5 shrink-0" icon={item.icon} />
+                  )}
                   <h4>{tArticles(item.title)}</h4>
                 </NavigationLink>
               </div>

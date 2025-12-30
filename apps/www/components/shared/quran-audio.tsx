@@ -1,9 +1,9 @@
 "use client";
 
+import { PlayIcon, StopIcon } from "@hugeicons/core-free-icons";
 import type { Verse } from "@repo/contents/_types/quran";
 import { Button } from "@repo/design-system/components/ui/button";
-import { IconSquareFilled } from "@tabler/icons-react";
-import { PlayIcon } from "lucide-react";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useState } from "react";
 import useSound from "use-sound";
 
@@ -36,7 +36,7 @@ export function QuranAudio({ audio }: Props) {
       size="icon"
       variant={isPlaying ? "destructive" : "outline"}
     >
-      {isPlaying ? <IconSquareFilled /> : <PlayIcon />}
+      <HugeIcons icon={isPlaying ? StopIcon : PlayIcon} />
       <span className="sr-only">{isPlaying ? "Stop audio" : "Play audio"}</span>
     </Button>
   );

@@ -1,9 +1,15 @@
 "use client";
 
+import {
+  Copy01Icon,
+  Download01Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import { SiGnometerminal } from "@icons-pack/react-simple-icons";
+import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { languageIconMap } from "@repo/design-system/lib/programming";
 import { cn, save } from "@repo/design-system/lib/utils";
-import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
 import {
   type ComponentProps,
   createContext,
@@ -22,7 +28,6 @@ import {
   type SpecialLanguage,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
-import { Button } from "../ui/button";
 
 const PRE_TAG_REGEX = /<pre(\s|>)/;
 
@@ -644,7 +649,9 @@ export const CodeBlockDownloadButton = ({
       variant="ghost"
       {...props}
     >
-      {children ?? <DownloadIcon className="size-4 shrink-0" />}
+      {children ?? (
+        <HugeIcons className="size-4 shrink-0" icon={Download01Icon} />
+      )}
     </Button>
   );
 };
@@ -691,7 +698,7 @@ export const CodeBlockCopyButton = ({
     []
   );
 
-  const Icon = isCopied ? CheckIcon : CopyIcon;
+  const icon = isCopied ? Tick01Icon : Copy01Icon;
 
   return (
     <Button
@@ -701,7 +708,7 @@ export const CodeBlockCopyButton = ({
       variant="ghost"
       {...props}
     >
-      {children ?? <Icon className="size-4 shrink-0" />}
+      {children ?? <HugeIcons className="size-4 shrink-0" icon={icon} />}
     </Button>
   );
 };

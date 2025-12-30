@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  ArrowTurnBackwardIcon,
+  ArrowTurnForwardIcon,
+  Delete02Icon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { UserData } from "@repo/backend/convex/lib/userHelpers";
@@ -10,6 +17,7 @@ import {
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
@@ -21,13 +29,6 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
-import {
-  CornerDownRightIcon,
-  ReplyIcon,
-  ThumbsDownIcon,
-  ThumbsUpIcon,
-  Trash2Icon,
-} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState, useTransition } from "react";
 import { CommentsAdd } from "@/components/comments/add";
@@ -208,7 +209,7 @@ function CommentActions({
               size={comment.upvoteCount === 0 ? "icon-sm" : "sm"}
               variant="ghost"
             >
-              <ThumbsUpIcon />
+              <HugeIcons icon={ThumbsUpIcon} />
               <NumberFormat
                 className={cn(
                   "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
@@ -233,7 +234,7 @@ function CommentActions({
               size={comment.downvoteCount === 0 ? "icon-sm" : "sm"}
               variant="ghost"
             >
-              <ThumbsDownIcon />
+              <HugeIcons icon={ThumbsDownIcon} />
               <NumberFormat
                 className={cn(
                   "font-mono text-muted-foreground text-xs tracking-tight group-hover:text-accent-foreground",
@@ -257,7 +258,7 @@ function CommentActions({
               size={comment.replyCount === 0 ? "icon-sm" : "sm"}
               variant="ghost"
             >
-              <ReplyIcon />
+              <HugeIcons icon={ArrowTurnBackwardIcon} />
               <NumberFormat
                 className={cn(
                   "font-mono text-muted-foreground text-xs tracking-tight",
@@ -284,7 +285,7 @@ function CommentActions({
               size="icon-sm"
               variant="ghost"
             >
-              <Trash2Icon />
+              <HugeIcons icon={Delete02Icon} />
               <span className="sr-only">{t("delete")}</span>
             </Button>
           }
@@ -316,7 +317,7 @@ function ReplyToIndicator({ comment }: { comment: CommentWithUser }) {
       href={`#${parentId}`}
       onClick={scrollToParent}
     >
-      <CornerDownRightIcon className="size-3 shrink-0" />
+      <HugeIcons className="size-3 shrink-0" icon={ArrowTurnForwardIcon} />
       <span className="max-w-32 shrink-0 truncate text-primary">
         {replyToUser.name}
       </span>

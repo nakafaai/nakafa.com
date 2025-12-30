@@ -1,6 +1,15 @@
 "use client";
 
-import { SiDiscord, SiGithub, SiYoutube } from "@icons-pack/react-simple-icons";
+import {
+  Book03Icon,
+  BookOpen02Icon,
+  Calendar03Icon,
+  DiscordIcon,
+  Globe02Icon,
+  LayerIcon,
+  QuillWrite01Icon,
+} from "@hugeicons/core-free-icons";
+import { SiGithub, SiYoutube } from "@icons-pack/react-simple-icons";
 import type { Reference } from "@repo/contents/_types/content";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -10,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
@@ -25,14 +35,6 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cleanupUrl, cn, formatUrl } from "@repo/design-system/lib/utils";
-import {
-  BookIcon,
-  BookOpenIcon,
-  CalendarIcon,
-  GlobeIcon,
-  LayersIcon,
-  PencilIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -82,7 +84,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                     variant="outline"
                   >
                     <span className="sr-only">{t("bibliography")}</span>
-                    <LayersIcon className="size-4" />
+                    <HugeIcons className="size-4" icon={LayerIcon} />
                   </Button>
                 }
               />
@@ -150,7 +152,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                     title={t("community")}
                   >
                     <span className="sr-only">{t("community")}</span>
-                    <SiDiscord className="size-4" />
+                    <HugeIcons className="size-4" icon={DiscordIcon} />
                   </a>
                 </Button>
               }
@@ -194,7 +196,10 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                               {reference.title.toLowerCase()}
                             </CardTitle>
                             <CardDescription className="flex items-center gap-1">
-                              <GlobeIcon className="size-4 shrink-0" />
+                              <HugeIcons
+                                className="size-4 shrink-0"
+                                icon={Globe02Icon}
+                              />
                               {reference.url ? (
                                 <a
                                   className="underline-offset-4 hover:underline"
@@ -212,20 +217,29 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
 
                           <CardContent className="space-y-2">
                             <div className="flex items-center gap-1">
-                              <PencilIcon className="size-4 shrink-0" />
+                              <HugeIcons
+                                className="size-4 shrink-0"
+                                icon={QuillWrite01Icon}
+                              />
                               <span className="line-clamp-1 text-sm">
                                 {reference.authors}
                               </span>
                             </div>
 
                             <div className="flex items-center gap-1">
-                              <CalendarIcon className="size-4 shrink-0" />
+                              <HugeIcons
+                                className="size-4 shrink-0"
+                                icon={Calendar03Icon}
+                              />
                               <span className="text-sm">{reference.year}</span>
                             </div>
 
                             {!!reference.publication && (
                               <div className="flex items-center gap-1">
-                                <BookOpenIcon className="size-4 shrink-0" />
+                                <HugeIcons
+                                  className="size-4 shrink-0"
+                                  icon={BookOpen02Icon}
+                                />
                                 <span className="line-clamp-1 text-sm">
                                   {reference.publication}
                                 </span>
@@ -234,7 +248,10 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
 
                             {!!reference.details && (
                               <div className="flex items-center gap-1">
-                                <BookIcon className="size-4 shrink-0" />
+                                <HugeIcons
+                                  className="size-4 shrink-0"
+                                  icon={Book03Icon}
+                                />
                                 <span className="text-sm">
                                   {reference.details}
                                 </span>

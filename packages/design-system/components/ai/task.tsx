@@ -1,13 +1,15 @@
 "use client";
 
+import { ArrowDown01Icon, BlockGameIcon } from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
 import { cn } from "@repo/design-system/lib/utils";
-import { BlocksIcon, ChevronDownIcon } from "lucide-react";
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps } from "react";
+import { HugeIcons } from "../ui/huge-icons";
 
 export type TaskItemFileProps = ComponentProps<"div">;
 
@@ -54,7 +56,7 @@ export const Task = ({
 
 export type TaskTriggerProps = ComponentProps<typeof CollapsibleTrigger> & {
   title: string;
-  icon?: ReactNode;
+  icon?: IconSvgElement;
 };
 
 export const TaskTrigger = ({
@@ -75,11 +77,14 @@ export const TaskTrigger = ({
               {...triggerProps}
               className="flex cursor-pointer items-center gap-2 text-muted-foreground hover:text-foreground [&_svg]:shrink-0"
             >
-              {icon ?? <BlocksIcon className="size-4" />}
+              <HugeIcons className="size-4" icon={icon ?? BlockGameIcon} />
               <p className="line-clamp-1 text-sm" title={title}>
                 {title}
               </p>
-              <ChevronDownIcon className="size-4 transition-transform group-data-panel-open:rotate-180" />
+              <HugeIcons
+                className="size-4 transition-transform group-data-panel-open:rotate-180"
+                icon={ArrowDown01Icon}
+              />
             </div>
           )
     }

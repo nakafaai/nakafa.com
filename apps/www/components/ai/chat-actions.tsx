@@ -1,8 +1,13 @@
 "use client";
 
+import {
+  Copy01Icon,
+  Refresh03Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
 import { Action, Actions } from "@repo/design-system/components/ai/actions";
-import { CheckIcon, CopyIcon, RefreshCcwIcon } from "lucide-react";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 import { useChat } from "@/lib/context/use-chat";
@@ -36,14 +41,14 @@ export const AIChatMessageActions = memo(
           onClick={() => regenerate({ messageId })}
           tooltip={t("retry-message")}
         >
-          <RefreshCcwIcon />
+          <HugeIcons icon={Refresh03Icon} />
         </Action>
         <Action
           label={t("copy-message")}
           onClick={() => clipboard.copy(text)}
           tooltip={t("copy-message")}
         >
-          {clipboard.copied ? <CheckIcon /> : <CopyIcon />}
+          <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
         </Action>
       </Actions>
     );

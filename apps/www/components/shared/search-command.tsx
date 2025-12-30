@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  ArrowDown02Icon,
+  ArrowMoveDownLeftIcon,
+  ArrowUp02Icon,
+  FileIcon,
+  InformationCircleIcon,
+  Sad02Icon,
+} from "@hugeicons/core-free-icons";
 import { useDebouncedValue, useHotkeys } from "@mantine/hooks";
 import {
   CommandDialog,
@@ -10,17 +18,10 @@ import {
   CommandList,
   CommandSeparator,
 } from "@repo/design-system/components/ui/command";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  CornerDownLeftIcon,
-  FileTextIcon,
-  HeartCrackIcon,
-  InfoIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
 import { Fragment, useEffect, useTransition } from "react";
@@ -136,7 +137,7 @@ function SearchListItems({
   if (error) {
     return (
       <CommandEmpty className="flex flex-col items-center justify-center gap-1 p-7.5 text-center text-muted-foreground text-sm">
-        <InfoIcon className="size-4" />
+        <HugeIcons className="size-4" icon={InformationCircleIcon} />
         <div className="mt-1">{t("search-error")}</div>
         {typeof error === "string" || typeof error === "object" ? (
           <div className="wrap-break-word mt-2 max-w-xs text-xs">{error}</div>
@@ -152,7 +153,7 @@ function SearchListItems({
   if (isLoading) {
     return (
       <CommandEmpty className="flex items-center justify-center gap-1 p-7.5 text-muted-foreground text-sm">
-        <SpinnerIcon />
+        <Spinner className="size-4" />
         <p>{t("search-loading")}</p>
       </CommandEmpty>
     );
@@ -161,7 +162,7 @@ function SearchListItems({
   if (results.length === 0 && search) {
     return (
       <CommandEmpty className="flex items-center justify-center gap-1 p-7.5 text-muted-foreground text-sm">
-        <HeartCrackIcon className="size-4" />
+        <HugeIcons className="size-4" icon={Sad02Icon} />
         <p>{t("search-not-found")}</p>
       </CommandEmpty>
     );
@@ -184,7 +185,7 @@ function SearchListItems({
             value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
           >
             <div className="flex items-center gap-2">
-              <FileTextIcon />
+              <HugeIcons icon={FileIcon} />
               <span className="line-clamp-1">{subResult.title}</span>
             </div>
             <p
@@ -254,7 +255,7 @@ function DefaultItems() {
                 }}
                 value={title}
               >
-                <item.icon />
+                <HugeIcons icon={item.icon} />
                 <span className="line-clamp-1">{title}</span>
               </CommandItem>
             );
@@ -277,7 +278,7 @@ function DefaultItems() {
             }}
             value={tArticles(item.title)}
           >
-            <item.icon />
+            <HugeIcons icon={item.icon} />
             <span className="line-clamp-1">{tArticles(item.title)}</span>
           </CommandItem>
         ))}
@@ -298,7 +299,7 @@ function DefaultItems() {
             }}
             value={tHoly(item.title)}
           >
-            <item.icon />
+            <HugeIcons icon={item.icon} />
             <span className="line-clamp-1">{tHoly(item.title)}</span>
           </CommandItem>
         ))}
@@ -314,16 +315,25 @@ function Footer() {
     <div className="flex items-center justify-between border-t p-3 text-muted-foreground text-sm">
       <div className="flex items-center gap-1">
         <FooterKbd>
-          <CornerDownLeftIcon className="size-3 text-muted-foreground" />
+          <HugeIcons
+            className="size-3 text-muted-foreground"
+            icon={ArrowMoveDownLeftIcon}
+          />
         </FooterKbd>
         <span>{t("select")}</span>
       </div>
       <div className="flex items-center gap-1">
         <FooterKbd>
-          <ArrowUpIcon className="size-3 text-muted-foreground" />
+          <HugeIcons
+            className="size-3 text-muted-foreground"
+            icon={ArrowUp02Icon}
+          />
         </FooterKbd>
         <FooterKbd>
-          <ArrowDownIcon className="size-3 text-muted-foreground" />
+          <HugeIcons
+            className="size-3 text-muted-foreground"
+            icon={ArrowDown02Icon}
+          />
         </FooterKbd>
         <span>{t("navigate")}</span>
       </div>

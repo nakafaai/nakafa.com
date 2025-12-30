@@ -1,14 +1,19 @@
 "use client";
 
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
 import {
-  CircleCheckIcon,
-  InfoIcon,
-  OctagonXIcon,
-  TriangleAlertIcon,
-} from "lucide-react";
+  Alert02Icon,
+  InformationCircleIcon,
+  SadDizzyIcon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
+
+function Icon({ className, ...props }: React.ComponentProps<typeof HugeIcons>) {
+  return <HugeIcons className="size-4" {...props} />;
+}
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme();
@@ -17,11 +22,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       className="toaster group"
       icons={{
-        success: <CircleCheckIcon className="size-4" />,
-        info: <InfoIcon className="size-4" />,
-        warning: <TriangleAlertIcon className="size-4" />,
-        error: <OctagonXIcon className="size-4" />,
-        loading: <SpinnerIcon className="size-4" />,
+        success: <Icon icon={Tick01Icon} />,
+        info: <Icon icon={InformationCircleIcon} />,
+        warning: <Icon icon={Alert02Icon} />,
+        error: <Icon icon={SadDizzyIcon} />,
+        loading: <Spinner className="size-4" />,
       }}
       style={
         {

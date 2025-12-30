@@ -1,12 +1,13 @@
 "use client";
 
+import { Share01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
 import { getAppUrl } from "@repo/design-system/lib/utils";
-import { CheckIcon, Share2Icon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -31,7 +32,7 @@ export function ShareButton() {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton onClick={handleShare} tooltip={t("share")}>
-        {clipboard.copied ? <CheckIcon /> : <Share2Icon />}
+        <HugeIcons icon={clipboard.copied ? Tick01Icon : Share01Icon} />
         <span className="truncate">{t("share")}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>

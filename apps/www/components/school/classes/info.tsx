@@ -1,11 +1,13 @@
 "use client";
 
+import { Cancel01Icon, PaintBrush04Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   CLASS_IMAGES,
   TEACHER_PERMISSIONS,
 } from "@repo/backend/convex/classes/constants";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
   SheetContent,
@@ -14,7 +16,6 @@ import {
   SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
 import { useMutation, useQuery } from "convex/react";
-import { PaintbrushIcon, XIcon } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -104,7 +105,7 @@ function InfoCustomizeButton() {
       <SheetTrigger
         render={
           <Button size="sm" variant="outline">
-            <PaintbrushIcon />
+            <HugeIcons icon={PaintBrush04Icon} />
             {t("customize")}
           </Button>
         }
@@ -113,7 +114,7 @@ function InfoCustomizeButton() {
         <SheetHeader className="border-b p-3">
           <SheetTitle className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 px-2">
-              <PaintbrushIcon className="size-4" />
+              <HugeIcons className="size-4" icon={PaintBrush04Icon} />
               {t("customize")}
             </div>
 
@@ -123,7 +124,7 @@ function InfoCustomizeButton() {
                 size="icon-sm"
                 variant="ghost"
               >
-                <XIcon />
+                <HugeIcons className="size-4" icon={Cancel01Icon} />
                 <span className="sr-only">Close</span>
               </Button>
             </div>

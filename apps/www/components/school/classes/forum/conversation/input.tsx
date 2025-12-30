@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  Add01Icon,
+  ArrowTurnBackwardIcon,
+  ArrowUp01Icon,
+  Cancel01Icon,
+  FileAttachmentIcon,
+  FileIcon,
+  WinkIcon,
+} from "@hugeicons/core-free-icons";
 import { useOs } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -17,7 +26,7 @@ import {
   EmojiPickerFooter,
   EmojiPickerSearch,
 } from "@repo/design-system/components/ui/emoji-picker";
-import { SpinnerIcon } from "@repo/design-system/components/ui/icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   InputGroup,
   InputGroupAddon,
@@ -29,6 +38,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   type FileWithPreview,
   useFileUpload,
@@ -37,15 +47,6 @@ import { cn, formatFileSize } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import ky from "ky";
-import {
-  ArrowUpIcon,
-  FileTextIcon,
-  FileUpIcon,
-  PlusIcon,
-  ReplyIcon,
-  SmilePlusIcon,
-  XIcon,
-} from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import {
@@ -243,14 +244,13 @@ export const ForumPostInput = memo(
                             variant="ghost"
                           >
                             <Activity mode={isMobile ? "hidden" : "visible"}>
-                              {isSubmitting ? (
-                                <SpinnerIcon />
-                              ) : (
-                                <SmilePlusIcon />
-                              )}
+                              <Spinner
+                                icon={WinkIcon}
+                                isLoading={isSubmitting}
+                              />
                             </Activity>
                             <Activity mode={isMobile ? "visible" : "hidden"}>
-                              <SmilePlusIcon />
+                              <HugeIcons icon={WinkIcon} />
                             </Activity>
                             <span className="sr-only">{t("emoji")}</span>
                           </InputGroupButton>
@@ -277,7 +277,10 @@ export const ForumPostInput = memo(
                           type="submit"
                           variant="default"
                         >
-                          {isSubmitting ? <SpinnerIcon /> : <ArrowUpIcon />}
+                          <Spinner
+                            icon={ArrowUp01Icon}
+                            isLoading={isSubmitting}
+                          />
                           <span className="sr-only">{t("submit")}</span>
                         </InputGroupButton>
                       </Activity>
@@ -328,7 +331,10 @@ const AttachmentPreviews = memo(
             >
               <Activity mode={isImage ? "hidden" : "visible"}>
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-muted">
-                  <FileTextIcon className="size-4 text-muted-foreground" />
+                  <HugeIcons
+                    className="size-4 text-muted-foreground"
+                    icon={FileIcon}
+                  />
                 </div>
               </Activity>
               <Activity mode={isImage ? "visible" : "hidden"}>
@@ -358,7 +364,8 @@ const AttachmentPreviews = memo(
                 type="button"
                 variant="outline"
               >
-                <XIcon />
+                <HugeIcons icon={Cancel01Icon} />
+                <span className="sr-only">Remove attachment</span>
               </Button>
             </div>
           );
@@ -387,14 +394,14 @@ const InputAttachments = memo(
             variant="ghost"
             {...props}
           >
-            <PlusIcon />
+            <HugeIcons icon={Add01Icon} />
             <span className="sr-only">{t("attachments")}</span>
           </InputGroupButton>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="start">
           <DropdownMenuItem className="cursor-pointer" onSelect={onOpenFiles}>
-            <FileUpIcon />
+            <HugeIcons icon={FileAttachmentIcon} />
             {t("attachments")}
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -415,7 +422,10 @@ const ReplyIndicator = memo(() => {
 
   return (
     <div className="flex items-center gap-2 overflow-hidden rounded-t-md border-x border-t bg-[color-mix(in_oklch,var(--secondary)_10%,var(--background))] px-3 py-2 text-sm">
-      <ReplyIcon className="size-4 text-muted-foreground" />
+      <HugeIcons
+        className="size-4 text-muted-foreground"
+        icon={ArrowTurnBackwardIcon}
+      />
       <p className="min-w-0 flex-1 truncate text-muted-foreground">
         {t.rich("replying-to-user", {
           name: () => (
@@ -430,7 +440,7 @@ const ReplyIndicator = memo(() => {
         variant="ghost"
       >
         <span className="sr-only">{t("cancel")}</span>
-        <XIcon />
+        <HugeIcons icon={Cancel01Icon} />
       </Button>
     </div>
   );
