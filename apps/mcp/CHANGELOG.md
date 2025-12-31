@@ -1,5 +1,20 @@
 # mcp
 
+## 0.3.0
+
+### Minor Changes
+
+- [`8743029`](https://github.com/nakafaai/nakafa.com/commit/87430293f82dd666543ea9722289ed68d318aefa) Thanks [@nabilfatih](https://github.com/nabilfatih)! - New set of try out snbt, use semantic html, fix tailwind css lint
+
+### Patch Changes
+
+- [`e746ef6`](https://github.com/nakafaai/nakafa.com/commit/e746ef6441de79a219289eafef653492b6172685) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Migrate lucide react to hugeicons
+
+- Updated dependencies [[`e746ef6`](https://github.com/nakafaai/nakafa.com/commit/e746ef6441de79a219289eafef653492b6172685), [`8743029`](https://github.com/nakafaai/nakafa.com/commit/87430293f82dd666543ea9722289ed68d318aefa), [`e6778d2`](https://github.com/nakafaai/nakafa.com/commit/e6778d2db6a60557ae222b2e1b975002339577e4)]:
+  - @repo/next-config@0.3.0
+  - @repo/contents@0.3.0
+  - @repo/connection@0.2.0
+
 ## 0.2.0
 
 ### Minor Changes

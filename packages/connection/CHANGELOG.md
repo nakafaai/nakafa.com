@@ -1,5 +1,11 @@
 # @repo/connection
 
+## 0.2.0
+
+### Minor Changes
+
+- [`8743029`](https://github.com/nakafaai/nakafa.com/commit/87430293f82dd666543ea9722289ed68d318aefa) Thanks [@nabilfatih](https://github.com/nabilfatih)! - New set of try out snbt, use semantic html, fix tailwind css lint
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @repo/internationalization
 
+## 0.3.1
+
+### Patch Changes
+
+- [`e746ef6`](https://github.com/nakafaai/nakafa.com/commit/e746ef6441de79a219289eafef653492b6172685) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Migrate lucide react to hugeicons
+
 ## 0.3.0
 
 ### Minor Changes
