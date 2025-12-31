@@ -162,7 +162,7 @@ export const BranchPrevious = ({
       variant="ghost"
       {...props}
     >
-      {children ?? <HugeIcons icon={ArrowLeft01Icon} size={14} />}
+      {children ?? <HugeIcons icon={ArrowLeft01Icon} />}
     </Button>
   );
 };
@@ -192,7 +192,7 @@ export const BranchNext = ({
       variant="ghost"
       {...props}
     >
-      {children ?? <HugeIcons icon={ArrowRight01Icon} size={14} />}
+      {children ?? <HugeIcons icon={ArrowRight01Icon} />}
     </Button>
   );
 };

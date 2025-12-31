@@ -401,9 +401,7 @@ export const CodeBlockCopyButton = ({
       variant="ghost"
       {...props}
     >
-      {children ?? (
-        <HugeIcons className="text-muted-foreground" icon={icon} size={14} />
-      )}
+      {children ?? <HugeIcons className="text-muted-foreground" icon={icon} />}
     </Button>
   );
 };

@@ -143,7 +143,11 @@ export const ReasoningTrigger = memo(
       >
         {children ?? (
           <>
-            <Spinner icon={BrainIcon} isLoading={isStreaming} />
+            <Spinner
+              className="size-4"
+              icon={BrainIcon}
+              isLoading={isStreaming}
+            />
             <ThinkingMessage duration={duration} isStreaming={isStreaming} />
             <HugeIcons
               className={cn(

@@ -1,7 +1,7 @@
 import {
   ArrowUpRight01Icon,
-  Book03Icon,
-  LayersIcon,
+  Books02Icon,
+  LayerIcon,
   Sad02Icon,
 } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/ai/types/data-parts";
@@ -71,7 +71,7 @@ export const SubjectsPart = memo(({ message }: Props) => {
     <>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <HugeIcons className="text-muted-foreground" icon={Book03Icon} />
+          <HugeIcons className="text-muted-foreground" icon={Books02Icon} />
           <span className="text-muted-foreground text-sm">
             {t("get-subjects-title")}
           </span>
@@ -120,7 +120,7 @@ const SubjectsPartPreview = memo(
         {subjects.length > MAX_SHOWN_SUBJECTS && (
           <Button onClick={() => setOpen(true)} size="sm" variant="outline">
             {t("view-all")}
-            <HugeIcons icon={LayersIcon} />
+            <HugeIcons icon={LayerIcon} />
           </Button>
         )}
       </div>
