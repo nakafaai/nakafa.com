@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Solution to Problem 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/30/2025",
+};
+
+Let's order the cooking times from the **fastest** (least time) to the **slowest** (most time).
+
+1.  "Beef takes longer to cook than lamb."
+    -   Meaning: <InlineMath math="\text{Time(Beef)} > \text{Time(Lamb)}" />.
+    -   Current order: <InlineMath math="\text{Lamb} < \text{Beef}" />.
+
+2.  "...but not longer than duck" (referring to Beef).
+    -   Meaning: <InlineMath math="\text{Time(Beef)} < \text{Time(Duck)}" />.
+    -   Current order: <InlineMath math="\text{Lamb} < \text{Beef} < \text{Duck}" />.
+
+3.  "Rabbit cooks faster than chicken."
+    -   Meaning: <InlineMath math="\text{Time(Rabbit)} < \text{Time(Chicken)}" />.
+    -   Current order: <InlineMath math="\text{Rabbit} < \text{Chicken}" />.
+
+4.  "...but takes longer than duck" (referring to Rabbit).
+    -   Meaning: <InlineMath math="\text{Time(Rabbit)} > \text{Time(Duck)}" />.
+    -   Current order: <InlineMath math="\text{Duck} < \text{Rabbit} < \text{Chicken}" />.
+
+If we combine all the information, the order of cooking time from fastest to slowest is:
+
+<MathContainer>
+  <BlockMath math="\text{Lamb} \rightarrow \text{Beef} \rightarrow \text{Duck} \rightarrow \text{Rabbit} \rightarrow \text{Chicken}" />
+</MathContainer>
+
+Therefore, the meat that cooks the fastest is **lamb**.

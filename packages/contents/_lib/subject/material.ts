@@ -2,13 +2,18 @@ import {
   AbsoluteIcon,
   AiProgrammingIcon,
   BankIcon,
+  BookEditIcon,
+  Brain02Icon,
   BulbIcon,
+  ChatQuestionIcon,
   CourtLawIcon,
   DnaIcon,
   ElectricWireIcon,
+  File01Icon,
   GameIcon,
-  GlobalIcon,
+  Globe02Icon,
   GlobeIcon,
+  LanguageSkillIcon,
   LaptopIcon,
   MapPinIcon,
   NeuralNetworkIcon,
@@ -111,11 +116,21 @@ export function getMaterialIcon(material: Material | ExercisesMaterial) {
     case "informatics-engineering":
       return LaptopIcon;
     case "international-relations":
-      return GlobalIcon;
+      return Globe02Icon;
     case "quantitative-knowledge":
       return AbsoluteIcon;
     case "mathematical-reasoning":
       return PuzzleIcon;
+    case "general-reasoning":
+      return Brain02Icon;
+    case "indonesian-language":
+      return ChatQuestionIcon;
+    case "english-language":
+      return LanguageSkillIcon;
+    case "general-knowledge":
+      return BookEditIcon;
+    case "reading-and-writing-skills":
+      return File01Icon;
     default:
       return BulbIcon;
   }

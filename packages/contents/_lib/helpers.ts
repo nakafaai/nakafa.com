@@ -3,6 +3,5 @@
  * @param slug - The slug to clean, example: "/hello/world" -> "hello/world"
  * @returns The cleaned slug
  */
-export function cleanSlug(slug: string): string {
-  return slug.replace(/^\/+|\/+$/g, "");
-}
+export const cleanSlug = (slug: string): string =>
+  slug.replace(/^\/+|\/+$/g, "");

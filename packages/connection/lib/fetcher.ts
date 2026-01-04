@@ -1,10 +1,40 @@
 import type { FetchResult } from "@repo/connection/lib/types";
 import ky, { HTTPError, TimeoutError } from "ky";
 
-const defaultBaseUrl =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:3002"
-    : "https://api.nakafa.com";
+const LOCAL_API_URL = "http://localhost:3002";
+const PRODUCTION_API_URL = "https://api.nakafa.com";
+
+/**
+ * Checks if the local API is available by performing a HEAD request.
+ * Times out after 1 second.
+ * @returns {Promise<boolean>} True if local API is available, false otherwise
+ */
+async function isLocalApiAvailable(): Promise<boolean> {
+  try {
+    const response = await fetch(LOCAL_API_URL, {
+      method: "HEAD",
+      signal: AbortSignal.timeout(1000),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Determines the base URL to use for API requests.
+ * In development, defaults to http://localhost:3002.
+ * In production, checks if the local API is available and uses it if so.
+ * Falls back to https://api.nakafa.com.
+ * @returns {Promise<string>} The base URL to use for API requests
+ */
+async function getBaseUrl(): Promise<string> {
+  if (process.env.NODE_ENV === "development") {
+    return LOCAL_API_URL;
+  }
+  const isAvailable = await isLocalApiAvailable();
+  return isAvailable ? LOCAL_API_URL : PRODUCTION_API_URL;
+}
 
 const URL_DETAILS_REGEX = /:.*$/;
 
@@ -37,7 +67,7 @@ const URL_DETAILS_REGEX = /:.*$/;
  * });
  */
 export async function fetcher<T>({
-  url = defaultBaseUrl,
+  url,
   endpoint,
   options,
 }: {
@@ -45,8 +75,9 @@ export async function fetcher<T>({
   endpoint: string;
   options: RequestInit;
 }): Promise<FetchResult<T | null>> {
+  const baseUrl = url ?? (await getBaseUrl());
   try {
-    const response = await ky<T>(`${url}${endpoint}`, {
+    const response = await ky<T>(`${baseUrl}${endpoint}`, {
       ...options,
     }).json();
 

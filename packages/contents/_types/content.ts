@@ -1,3 +1,4 @@
+import type React from "react";
 import * as z from "zod";
 
 export const ArticleSchema = z.object({
@@ -53,3 +54,11 @@ export const ContentSchema = z.object({
   slug: z.string(),
 });
 export type Content = z.infer<typeof ContentSchema>;
+
+export type ContentWithMDX = Omit<Content, "url" | "locale" | "slug"> & {
+  default?: React.ReactElement;
+};
+
+export type ContentListWithMDX = Content & {
+  default?: React.ReactElement;
+};

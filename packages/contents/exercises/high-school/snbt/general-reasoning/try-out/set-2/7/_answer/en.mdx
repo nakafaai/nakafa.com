@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Explanation for Problem 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/01/2026",
+};
+
+We will determine the number of password arrangements based on the position rules shown in the following table:
+
+| Even Digit | First Letter (Not E) | Digit from <InlineMath math="\{5, 6, 7\}" /> | Second Letter (U) |
+| :---: | :---: | :---: | :---: |
+| <InlineMath math="2, 4, 6, 8" /> | A, I, U, O | <InlineMath math="5, 6, 7" /> | U |
+| <InlineMath math="4" /> | <InlineMath math="4" /> | <InlineMath math="3" /> | <InlineMath math="1" /> |
+
+From the table above, we get the number of choices for each position:
+- **Position 1**: Even digits (2, 4, 6, 8) have <InlineMath math="4" /> choices.
+- **Position 2**: Vowels except E (A, I, U, O) have <InlineMath math="4" /> choices.
+- **Position 3**: Digits from set <InlineMath math="\{5, 6, 7\}" /> have <InlineMath math="3" /> choices.
+- **Position 4**: Letter U has only <InlineMath math="1" /> choice.
+
+Since each position must be filled simultaneously, we use the multiplication rule:
+
+<MathContainer>
+  <BlockMath math="4 \times 4 \times 3 \times 1 = 48" />
+</MathContainer>
+
+Thus, there are <InlineMath math="48" /> possible password arrangements.

@@ -1,46 +1,23 @@
+import { getContents } from "@repo/contents/_lib/content";
 import {
-  getContents,
-  getFolderChildNames,
-  getNestedSlugs,
-} from "@repo/contents/_lib/utils";
-import { routing } from "@repo/internationalization/src/routing";
+  FileReadError,
+  GitHubFetchError,
+  InvalidPathError,
+  MetadataParseError,
+} from "@repo/contents/_shared/error";
 import { createServiceLogger, logError } from "@repo/utilities/logging";
+import { Effect } from "effect";
 import { NextResponse } from "next/server";
+import { generateStaticParamsForContent } from "@/lib/static-params";
 
 export const revalidate = false;
 
 const logger = createServiceLogger("api-contents");
 
 export function generateStaticParams() {
-  // Top level directories in contents
-  const topDirs = getFolderChildNames("subject");
-  const result: { locale: string; slug: string[] }[] = [];
-  const locales = routing.locales;
-
-  // For each locale
-  for (const locale of locales) {
-    // For each top directory (subject)
-    for (const topDir of topDirs) {
-      // Get all nested paths starting from this folder
-      const nestedPaths = getNestedSlugs(`subject/${topDir}`);
-
-      // Add the top-level folder itself
-      result.push({
-        locale,
-        slug: [topDir],
-      });
-
-      // Add each nested path
-      for (const path of nestedPaths) {
-        result.push({
-          locale,
-          slug: [topDir, ...path],
-        });
-      }
-    }
-  }
-
-  return result;
+  return generateStaticParamsForContent({
+    basePath: "subject",
+  });
 }
 
 export async function GET(
@@ -53,28 +30,42 @@ export async function GET(
 
   const cleanPath = `subject/${basePath}` as const;
 
-  try {
-    const content = await getContents({
-      locale,
-      basePath: cleanPath,
-    });
+  const program = getContents({
+    locale,
+    basePath: cleanPath,
+    includeMDX: false,
+  });
 
-    return NextResponse.json(content);
-  } catch (error) {
-    logError(
-      logger,
-      error instanceof Error ? error : new Error(String(error)),
-      {
-        locale,
-        basePath: basePath || "/",
-        slugLength: slug.length,
-        message: "Failed to fetch contents.",
-      }
-    );
+  const response = await Effect.runPromise(
+    Effect.match(program, {
+      onFailure: (error: unknown) => {
+        logError(
+          logger,
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            locale,
+            basePath: basePath || "/",
+            slugLength: slug.length,
+            message: "Failed to fetch contents.",
+          }
+        );
 
-    return NextResponse.json(
-      { error: "Failed to fetch contents." },
-      { status: 500 }
-    );
-  }
+        const statusCode =
+          error instanceof InvalidPathError ||
+          error instanceof FileReadError ||
+          error instanceof MetadataParseError ||
+          error instanceof GitHubFetchError
+            ? 404
+            : 500;
+
+        return NextResponse.json(
+          { error: "Failed to fetch contents." },
+          { status: statusCode }
+        );
+      },
+      onSuccess: (data) => NextResponse.json(data),
+    })
+  );
+
+  return response;
 }

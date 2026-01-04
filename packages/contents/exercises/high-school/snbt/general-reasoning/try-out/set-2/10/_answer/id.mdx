@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/01/2026",
+};
+
+Pertama, kita hitung total buah di setiap kotak:
+- **Kotak 1**: <InlineMath math="1 + 2 + 4 + 5 = 12" /> buah.
+- **Kotak 2**: <InlineMath math="4 + 2 + 3 + 3 = 12" /> buah.
+- **Total Kemungkinan**: <InlineMath math="12 \times 12 = 144" /> kombinasi.
+
+Kita akan menghitung peluang untuk setiap pilihan jawaban. Ingat bahwa peluang kejadian saling bebas adalah hasil kali peluang masing-masing kejadian.
+
+| Kejadian | Perhitungan | Hasil |
+| :--- | :--- | :--- |
+| **2 Apel Besar** | <InlineMath math="\frac{1}{12} \times \frac{4}{12}" /> | <InlineMath math="\frac{4}{144}" /> |
+| **2 Apel Kecil** | <InlineMath math="\frac{2}{12} \times \frac{2}{12}" /> | <InlineMath math="\frac{4}{144}" /> |
+| **2 Jeruk Besar** | <InlineMath math="\frac{4}{12} \times \frac{3}{12}" /> | <InlineMath math="\frac{12}{144}" /> |
+| **2 Jeruk Kecil** | <InlineMath math="\frac{5}{12} \times \frac{3}{12}" /> | <InlineMath math="\frac{15}{144}" /> |
+| **1 Apel Besar & 1 Jeruk Kecil** | <InlineMath math="(\frac{1}{12} \times \frac{3}{12}) + (\frac{5}{12} \times \frac{4}{12})" /> | <InlineMath math="\frac{23}{144}" /> |
+
+> Untuk kejadian **1 Apel Besar & 1 Jeruk Kecil**, terdapat dua kemungkinan cara mendapatkannya:
+>
+> 1. Apel Besar dari Kotak 1 dan Jeruk Kecil dari Kotak 2 (<InlineMath math="\frac{1}{12} \times \frac{3}{12}" />).
+> 2. Jeruk Kecil dari Kotak 1 dan Apel Besar dari Kotak 2 (<InlineMath math="\frac{5}{12} \times \frac{4}{12}" />).
+>
+> Kedua peluang ini dijumlahkan.
+
+Dari tabel di atas, kita dapat melihat bahwa peluang terbesar adalah mendapatkan **1 apel besar dan 1 jeruk kecil** dengan peluang <InlineMath math="\frac{23}{144}" />.
+
+Jadi, jawaban yang paling mungkin adalah **1 apel besar dan 1 jeruk kecil**.

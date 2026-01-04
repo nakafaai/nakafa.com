@@ -1,5 +1,7 @@
-import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/utils";
+import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
 import { routing } from "@repo/internationalization/src/routing";
+import { Effect } from "effect";
 import type { NextRequest } from "next/server";
 import { hasLocale, type Locale } from "next-intl";
 import { generateOGImage } from "@/app/[locale]/og/[...slug]/og";
@@ -8,33 +10,43 @@ import { getMetadataFromSlug } from "@/lib/utils/system";
 export const revalidate = false;
 
 export function generateStaticParams() {
-  // Top level directories in contents
-  const topDirs = getFolderChildNames(".");
-  const result: { locale: string; slug: string[] }[] = [];
+  const topDirs = Effect.runSync(
+    Effect.match(getFolderChildNames("."), {
+      onFailure: () => [],
+      onSuccess: (names) => names,
+    })
+  );
+  const result: { slug: string[] }[] = [];
   const locales = routing.locales;
 
-  // For each locale
   for (const locale of locales) {
-    // Add both with and without image.png
-    result.push({ locale, slug: ["image.png"] });
+    result.push({ slug: [locale, "image.png"] });
+    const slugs = getMDXSlugsForLocale(locale);
+    const localeCache = new Set(slugs);
 
-    // For each top directory (articles, subject, etc)
+    if (!localeCache) {
+      continue;
+    }
+
     for (const topDir of topDirs) {
-      // Get all nested paths starting from this folder
+      if (localeCache.has(topDir)) {
+        result.push(
+          { slug: [locale, topDir] },
+          { slug: [locale, topDir, "image.png"] }
+        );
+      }
+
       const nestedPaths = getNestedSlugs(topDir);
 
-      // Add the top-level folder itself (with and without image.png)
-      result.push(
-        { locale, slug: [topDir] },
-        { locale, slug: [topDir, "image.png"] }
-      );
-
-      // Add each nested path (with and without image.png)
       for (const path of nestedPaths) {
-        result.push(
-          { locale, slug: [topDir, ...path] },
-          { locale, slug: [topDir, ...path, "image.png"] }
-        );
+        const fullPath = `${topDir}/${path.join("/")}`;
+
+        if (localeCache.has(fullPath)) {
+          result.push(
+            { slug: [locale, topDir, ...path] },
+            { slug: [locale, topDir, ...path, "image.png"] }
+          );
+        }
       }
     }
   }
@@ -48,7 +60,6 @@ export async function GET(
 ) {
   const { slug } = await ctx.params;
 
-  // Parse locale from slug
   const locale: Locale = hasLocale(routing.locales, slug[0])
     ? slug[0]
     : routing.defaultLocale;
@@ -56,13 +67,12 @@ export async function GET(
     ? slug.slice(1)
     : slug;
 
-  // If last element is "image.png", remove it
-  // The rest of the path is the content path
   const contentSlug =
     cleanSlug.at(-1) === "image.png" ? cleanSlug.slice(0, -1) : cleanSlug;
 
-  // Get metadata from the content path
-  const { title, description } = await getMetadataFromSlug(locale, contentSlug);
+  const { title, description } = await Effect.runPromise(
+    getMetadataFromSlug(locale, contentSlug)
+  );
 
   return generateOGImage({
     title,

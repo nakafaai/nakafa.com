@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Solution for Problem 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/01/2026",
+};
+
+We can solve this problem using a system of linear inequalities.
+
+#### Defining Variables
+
+Let:
+- <InlineMath math="F =" /> Father's age
+- <InlineMath math="M =" /> Mother's age
+- <InlineMath math="C =" /> Child's age
+
+#### Translating Information into Mathematical Model
+
+1. "The difference between Mother's and Father's ages is not more than 5 years":
+
+   <MathContainer>
+     <BlockMath math="|F - M| \le 5" />
+   </MathContainer>
+
+   This can be written as:
+
+   <MathContainer>
+     <BlockMath math="-5 \le F - M \le 5" />
+   </MathContainer>
+
+2. "The difference between Father's and their child's age is 35 years":
+
+   <MathContainer>
+     <BlockMath math="F - C = 35 \Rightarrow F = C + 35" />
+   </MathContainer>
+
+3. "The difference between Mother's and the child's age is x":
+
+   <MathContainer>
+     <BlockMath math="x = M - C" />
+   </MathContainer>
+
+   (We assume <InlineMath math="M > C" /> since Mother is definitely older than the child).
+
+#### Solving the Inequality
+
+Substitute <InlineMath math="F = C + 35" /> into the inequality:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} -5 &\le F - M \le 5 \\ -5 &\le (C + 35) - M \le 5 \\ -5 &\le 35 - (M - C) \le 5 \end{aligned}" />
+</MathContainer>
+
+Since <InlineMath math="x = M - C" />, the equation becomes:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} -5 &\le 35 - x \le 5 \end{aligned}" />
+</MathContainer>
+
+Subtract <InlineMath math="35" /> from all sides:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} -5 - 35 &\le -x \le 5 - 35 \\ -40 &\le -x \le -30 \end{aligned}" />
+</MathContainer>
+
+Multiply all sides by <InlineMath math="-1" /> (remember, inequality signs reverse):
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 40 &\ge x \ge 30 \\ 30 &\le x \le 40 \end{aligned}" />
+</MathContainer>
+
+Thus, the correct value of <InlineMath math="x" /> is <InlineMath math="30 \le x \le 40" />.

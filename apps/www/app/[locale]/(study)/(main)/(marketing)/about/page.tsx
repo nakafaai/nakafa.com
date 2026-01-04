@@ -1,3 +1,6 @@
+import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
+import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -6,6 +9,8 @@ import { Community } from "@/components/about/community";
 import { Curriculum } from "@/components/about/curriculum";
 import { Footer } from "@/components/about/footer";
 import { Hero } from "@/components/about/hero";
+import { exercisesMenu } from "@/components/sidebar/_data/exercises";
+import { subjectMenu } from "@/components/sidebar/_data/subject";
 
 export const revalidate = false;
 
@@ -65,15 +70,81 @@ export default function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
+  return <AboutPageContent locale={locale} />;
+}
+
+async function AboutPageContent({ locale }: { locale: Locale }) {
+  const [t, tCommon, tSubject, tExercises] = await Promise.all([
+    getTranslations({ locale, namespace: "About" }),
+    getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "Subject" }),
+    getTranslations({ locale, namespace: "Exercises" }),
+  ]);
+
+  const breadcrumbItems = [
+    {
+      "@type": "ListItem",
+      "@id": `https://nakafa.com/${locale}`,
+      position: 1,
+      name: tCommon("home"),
+      item: `https://nakafa.com/${locale}`,
+    },
+    {
+      "@type": "ListItem",
+      "@id": `https://nakafa.com/${locale}/about`,
+      position: 2,
+      name: t("meta-title"),
+      item: `https://nakafa.com/${locale}/about`,
+    },
+  ];
+
+  const collectionItems = [
+    ...subjectMenu.flatMap((category) =>
+      category.items.map((item) => {
+        const name =
+          item.title === "grade"
+            ? `${tSubject(category.title)} ${tSubject("grade", { grade: item.value })}`
+            : `${tSubject(category.title)} ${tSubject(item.title)}`;
+        const description = tSubject("grade-description");
+        return {
+          url: `https://nakafa.com/${locale}${item.href}`,
+          name,
+          description,
+        };
+      })
+    ),
+    ...exercisesMenu.flatMap((category) =>
+      category.items.map((item) => {
+        const name = `${tExercises(item.title)}`;
+        const description = tExercises("type-description");
+        return {
+          url: `https://nakafa.com/${locale}${item.href}`,
+          name,
+          description,
+        };
+      })
+    ),
+  ];
+
   return (
-    <main
-      className="relative mx-auto grid max-w-5xl gap-24 px-6 py-16 sm:gap-32"
-      data-pagefind-ignore
-    >
-      <Hero />
-      <Curriculum />
-      <Community />
-      <Footer />
-    </main>
+    <>
+      <BreadcrumbJsonLd breadcrumbItems={breadcrumbItems} locale={locale} />
+      <EducationalOrgJsonLd />
+      <CollectionPageJsonLd
+        description={t("description")}
+        items={collectionItems}
+        name={t("meta-title")}
+        url={`https://nakafa.com/${locale}/about`}
+      />
+      <main
+        className="relative mx-auto grid max-w-5xl gap-24 px-6 py-16 sm:gap-32"
+        data-pagefind-ignore
+      >
+        <Hero />
+        <Curriculum />
+        <Community />
+        <Footer />
+      </main>
+    </>
   );
 }

@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Solution to Problem 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "12/30/2025",
+};
+
+Drawing a conclusion using Syllogism.
+
+Let:
+- <InlineMath math="p" /> = Activity has been carried out.
+- <InlineMath math="q" /> = Activity report is submitted.
+- <InlineMath math="r" /> = Employee honorarium is paid.
+
+Premise 1: If the activity has been carried out, then the activity report is submitted (<InlineMath math="p \rightarrow q" />).
+
+Premise 2: If the activity report is submitted, then the employee honorarium is paid (<InlineMath math="q \rightarrow r" />).
+
+The conclusion from these two premises is <InlineMath math="p \rightarrow r" />. The statement <InlineMath math="p \rightarrow r" /> is equivalent to its contrapositive, which is <InlineMath math="\sim r \rightarrow \sim p" />.
+
+<MathContainer>
+  <BlockMath math="\begin{aligned}
+  \text{Premise 1} &: p \rightarrow q \\
+  \text{Premise 2} &: q \rightarrow r \\
+  \hline
+  \text{Conclusion} &: p \rightarrow r \equiv \sim r \rightarrow \sim p
+  \end{aligned}" />
+</MathContainer>
+
+Meaning: "If the employee honorarium is not paid, it means the activity has not been carried out."
+
+Therefore, the most appropriate conclusion is **if the employee's honorarium is not paid, it means the activity has not been carried out**.

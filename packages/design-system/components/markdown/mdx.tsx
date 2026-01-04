@@ -86,13 +86,17 @@ export const components = {
   MathContainer,
   InlineMath,
   BlockMath,
-  table: ({ children, ...props }: TableProps) => (
-    <Table containerClassName="my-4 rounded-xl border" {...props}>
+  table: ({ children, className, ...props }: TableProps) => (
+    <Table
+      className={cn("has-[tbody]:[&_thead]:border-b", className)}
+      containerClassName="my-4 rounded-xl border"
+      {...props}
+    >
       {filterWhitespaceNodes(children)}
     </Table>
   ),
   thead: ({ children, ...props }: TableHeaderProps) => (
-    <TableHeader className="border-b bg-muted/80" {...props}>
+    <TableHeader className="bg-muted/80" {...props}>
       {filterWhitespaceNodes(children)}
     </TableHeader>
   ),

@@ -32,7 +32,7 @@ export const ContentPart = memo(({ message }: Props) => {
   if (isLoading) {
     return (
       <ContentCard>
-        <Spinner />
+        <Spinner className="size-4" />
         <p className="text-sm">{t("get-content-loading")}</p>
       </ContentCard>
     );

@@ -9,6 +9,7 @@ const withNextIntl = createNextIntlPlugin(
 
 let nextConfig: NextConfig = {
   ...config,
+  serverExternalPackages: ["@takumi-rs/image-response"],
   async rewrites() {
     await Promise.resolve();
     const llmSource = [

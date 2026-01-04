@@ -5,11 +5,12 @@ import {
   BookOpen02Icon,
   Calendar03Icon,
   DiscordIcon,
+  Github01Icon,
   Globe02Icon,
   LayerIcon,
   QuillWrite01Icon,
+  YoutubeIcon,
 } from "@hugeicons/core-free-icons";
-import { SiGithub, SiYoutube } from "@icons-pack/react-simple-icons";
 import type { Reference } from "@repo/contents/_types/content";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -110,7 +111,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                     title={t("source-code")}
                   >
                     <span className="sr-only">{t("source-code")}</span>
-                    <SiGithub className="size-4" />
+                    <HugeIcons className="size-4" icon={Github01Icon} />
                   </a>
                 </Button>
               }
@@ -131,7 +132,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                     title={t("videos")}
                   >
                     <span className="sr-only">{t("videos")}</span>
-                    <SiYoutube className="size-4" />
+                    <HugeIcons className="size-4" icon={YoutubeIcon} />
                   </a>
                 </Button>
               }

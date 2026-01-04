@@ -15,6 +15,26 @@ const subjects = [
     type: ["snbt"],
     label: "mathematical-reasoning",
   },
+  {
+    type: ["snbt"],
+    label: "general-reasoning",
+  },
+  {
+    type: ["snbt"],
+    label: "indonesian-language",
+  },
+  {
+    type: ["snbt"],
+    label: "english-language",
+  },
+  {
+    type: ["snbt"],
+    label: "general-knowledge",
+  },
+  {
+    type: ["snbt"],
+    label: "reading-and-writing-skills",
+  },
 ] as const;
 
 export function getSubjects(type: ExercisesType) {

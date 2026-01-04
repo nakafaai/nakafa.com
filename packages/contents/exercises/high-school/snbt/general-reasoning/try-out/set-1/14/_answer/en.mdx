@@ -1,0 +1,79 @@
+export const metadata = {
+  title: "Solution for Problem 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/01/2026",
+};
+
+We need to find the value of <InlineMath math="x" /> that does **not** satisfy the inequality <InlineMath math="\frac{144}{29} < x < 5" />.
+
+#### Analyzing the Lower Bound
+
+First, let's rewrite the lower bound <InlineMath math="\frac{144}{29}" /> to make it easier to compare with the number 5.
+
+<MathContainer>
+  <BlockMath math="\frac{144}{29} = \frac{145 - 1}{29} = \frac{145}{29} - \frac{1}{29} = 5 - \frac{1}{29}" />
+</MathContainer>
+
+So, the given inequality is:
+
+<MathContainer>
+  <BlockMath math="5 - \frac{1}{29} < x < 5" />
+</MathContainer>
+
+This means that for <InlineMath math="x" /> to satisfy the condition, it must lie between <InlineMath math="5 - \frac{1}{29}" /> and <InlineMath math="5" />.
+
+#### Analyzing the Options
+
+We will convert each option into the form <InlineMath math="5 - \frac{1}{n}" /> and compare them.
+
+1.  **Analyzing** <InlineMath math="\frac{139}{28}" />
+
+    <MathContainer>
+      <BlockMath math="\frac{139}{28} = \frac{140 - 1}{28} = 5 - \frac{1}{28}" />
+    </MathContainer>
+
+    Let's compare <InlineMath math="5 - \frac{1}{28}" /> with the lower bound <InlineMath math="5 - \frac{1}{29}" />.
+    Since <InlineMath math="28 < 29" />, we have <InlineMath math="\frac{1}{28} > \frac{1}{29}" />.
+    Consequently, <InlineMath math="5 - \frac{1}{28} < 5 - \frac{1}{29}" />.
+    
+    This value is **smaller** than the lower bound, so it **does not satisfy** the inequality.
+
+2.  **Analyzing** <InlineMath math="\frac{149}{30}" />
+
+    <MathContainer>
+      <BlockMath math="\frac{149}{30} = \frac{150 - 1}{30} = 5 - \frac{1}{30}" />
+    </MathContainer>
+
+    Since <InlineMath math="30 > 29" />, we have <InlineMath math="\frac{1}{30} < \frac{1}{29}" />.
+    Therefore, <InlineMath math="5 - \frac{1}{30} > 5 - \frac{1}{29}" />.
+    This value **satisfies** the inequality.
+
+3.  **Analyzing** <InlineMath math="\frac{154}{31}" />
+
+    <MathContainer>
+      <BlockMath math="\frac{154}{31} = \frac{155 - 1}{31} = 5 - \frac{1}{31}" />
+    </MathContainer>
+
+    Since <InlineMath math="31 > 29" />, this value **satisfies** the inequality.
+
+4.  **Analyzing** <InlineMath math="\frac{159}{32}" />
+
+    <MathContainer>
+      <BlockMath math="\frac{159}{32} = \frac{160 - 1}{32} = 5 - \frac{1}{32}" />
+    </MathContainer>
+
+    Since <InlineMath math="32 > 29" />, this value **satisfies** the inequality.
+
+5.  **Analyzing** <InlineMath math="\frac{164}{33}" />
+
+    <MathContainer>
+      <BlockMath math="\frac{164}{33} = \frac{165 - 1}{33} = 5 - \frac{1}{33}" />
+    </MathContainer>
+
+    Since <InlineMath math="33 > 29" />, this value **satisfies** the inequality.
+
+#### Conclusion
+
+The only value that is **not** within the range <InlineMath math="\frac{144}{29} < x < 5" /> is <InlineMath math="\frac{139}{28}" /> because it is less than the lower bound.
+
+Thus, the answer is <InlineMath math="\frac{139}{28}" />.

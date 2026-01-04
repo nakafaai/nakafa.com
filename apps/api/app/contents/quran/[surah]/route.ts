@@ -1,5 +1,7 @@
 import { getSurah } from "@repo/contents/_lib/quran";
+import { SurahNotFoundError } from "@repo/contents/_shared/error";
 import { createServiceLogger, logError } from "@repo/utilities/logging";
+import { Effect, Option } from "effect";
 import { NextResponse } from "next/server";
 
 export const revalidate = false;
@@ -21,23 +23,38 @@ export async function GET(
 
   const surahNumber = Number.parseInt(surah, 10);
 
-  try {
-    const surahData = getSurah(surahNumber);
+  const program = Effect.gen(function* () {
+    const surahData = Option.fromNullable(getSurah(surahNumber));
 
-    return NextResponse.json(surahData);
-  } catch (error) {
-    logError(
-      logger,
-      error instanceof Error ? error : new Error(String(error)),
-      {
-        surah: surahNumber,
-        message: "Failed to fetch surah.",
-      }
-    );
+    if (Option.isNone(surahData)) {
+      return yield* Effect.fail(new SurahNotFoundError({ surahNumber }));
+    }
 
-    return NextResponse.json(
-      { error: "Failed to fetch surah." },
-      { status: 500 }
-    );
-  }
+    return surahData.value;
+  });
+
+  const response = await Effect.runPromise(
+    Effect.match(program, {
+      onFailure: (error: unknown) => {
+        logError(
+          logger,
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            surah: surahNumber,
+            message: "Failed to fetch surah.",
+          }
+        );
+
+        const statusCode = error instanceof SurahNotFoundError ? 404 : 500;
+
+        return NextResponse.json(
+          { error: "Failed to fetch surah." },
+          { status: statusCode }
+        );
+      },
+      onSuccess: (data) => NextResponse.json(data),
+    })
+  );
+
+  return response;
 }

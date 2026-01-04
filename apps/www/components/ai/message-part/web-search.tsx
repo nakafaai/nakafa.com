@@ -28,7 +28,7 @@ export const WebSearchPart = memo(({ message }: Props) => {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
-        <Spinner className="text-muted-foreground" />
+        <Spinner className="size-4 text-muted-foreground" />
         <p className="text-muted-foreground text-sm">
           {t("web-search-loading")}
         </p>

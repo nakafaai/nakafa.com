@@ -1,11 +1,12 @@
-import { SiGithub, SiX } from "@icons-pack/react-simple-icons";
+import {
+  Github01Icon,
+  Linkedin02Icon,
+  NewTwitterIcon,
+} from "@hugeicons/core-free-icons";
 import type { Contributor } from "@repo/contents/_types/contributor";
+import { Badge } from "@repo/design-system/components/ui/badge";
+import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { Character } from "@repo/design-system/components/ui/character";
-import { cn } from "@repo/design-system/lib/utils";
-import { IconBrandLinkedin } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
-import { Badge } from "../ui/badge";
-import { buttonVariants } from "../ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -14,8 +15,15 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "../ui/drawer";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+} from "@repo/design-system/components/ui/drawer";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
+import { cn } from "@repo/design-system/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface Props {
   contributor: Contributor;
@@ -72,7 +80,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
                   target="_blank"
                   title="Twitter"
                 >
-                  <SiX className="size-4" />
+                  <HugeIcons className="size-4" icon={NewTwitterIcon} />
                   <span className="sr-only">Twitter</span>
                 </a>
               )}
@@ -87,7 +95,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
                   target="_blank"
                   title="GitHub"
                 >
-                  <SiGithub className="size-4" />
+                  <HugeIcons className="size-4" icon={Github01Icon} />
                   <span className="sr-only">GitHub</span>
                 </a>
               )}
@@ -102,7 +110,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
                   target="_blank"
                   title="LinkedIn"
                 >
-                  <IconBrandLinkedin className="size-4" />
+                  <HugeIcons className="size-4" icon={Linkedin02Icon} />
                   <span className="sr-only">LinkedIn</span>
                 </a>
               )}

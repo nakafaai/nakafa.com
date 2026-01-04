@@ -1,10 +1,18 @@
-import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/utils";
-import {
-  type ContentMetadata,
-  ContentMetadataSchema,
-} from "@repo/contents/_types/content";
+import { getContentMetadata } from "@repo/contents/_lib/content";
+import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
+import type { ContentMetadata } from "@repo/contents/_types/content";
+import { Data, Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+
+class TranslationLoadError extends Data.TaggedError("TranslationLoadError")<{
+  readonly namespace: string;
+  readonly locale: string;
+}> {}
+
+class MetadataNotFoundError extends Data.TaggedError("MetadataNotFoundError")<{
+  readonly slug: string;
+}> {}
 
 interface ParamConfig {
   basePath: string;
@@ -29,7 +37,12 @@ export function getStaticParams(
 
   // Get first level folders
   const firstParam = paramNames[0];
-  const firstLevelFolders = getFolderChildNames(basePath);
+  const firstLevelFolders = Effect.runSync(
+    Effect.match(getFolderChildNames(basePath), {
+      onFailure: () => [],
+      onSuccess: (names) => names,
+    })
+  );
 
   if (paramNames.length === 1) {
     // Simple case: just return the first level folder names
@@ -45,32 +58,45 @@ export function getStaticParams(
     // For the last param level
     if (restParams.length === 1) {
       const lastParam = restParams[0];
-      const folders = getFolderChildNames(nextBasePath);
+      const folders = Effect.runSync(
+        Effect.match(getFolderChildNames(nextBasePath), {
+          onFailure: () => [],
+          onSuccess: (names) => names,
+        })
+      );
 
-      // If this is a catch-all slug parameter
+      // If this is a catch-all slug parameter with deep nesting
       if (slugParam === lastParam && isDeep) {
         // For each entry at this level, we need to explore all possible nested paths
         const result: Record<string, string | string[]>[] = [];
 
         for (const folder of folders) {
-          // Get all nested paths starting from this folder
           const slugBasePath = `${nextBasePath}/${folder}`;
+
+          // Get all nested paths starting from this folder
           const nestedPaths = getNestedSlugs(slugBasePath);
 
-          // Include the folder itself in the slug path
-          // For example: "vectors/coordinate-system" becomes ["vectors", "coordinate-system"]
-          for (const nestedPath of nestedPaths) {
+          if (nestedPaths.length === 0) {
+            // If no nested paths, include the folder itself as a valid path
             result.push({
               [firstParam]: firstFolder,
-              [lastParam]: [folder, ...nestedPath],
+              [lastParam]: [folder],
             });
-          }
+          } else {
+            // Include the folder itself as a valid path
+            result.push({
+              [firstParam]: firstFolder,
+              [lastParam]: [folder],
+            });
 
-          // Also include the folder itself as a valid path
-          result.push({
-            [firstParam]: firstFolder,
-            [lastParam]: [folder],
-          });
+            // Include nested paths with the folder as the first element
+            for (const nestedPath of nestedPaths) {
+              result.push({
+                [firstParam]: firstFolder,
+                [lastParam]: [folder, ...nestedPath],
+              });
+            }
+          }
         }
 
         return result;
@@ -105,41 +131,58 @@ export function getStaticParams(
  * Gets the title and description from an MDX file based on the slug
  * @param locale - The locale for the content
  * @param slug - The slug parts as an array of strings (e.g. ["articles", "politics", "nepotism"])
- * @returns An object containing the title and description, or default values if not found
+ * @returns Effect that resolves to ContentMetadata with title and description
  */
-export async function getMetadataFromSlug(
+export function getMetadataFromSlug(
   locale: Locale,
   slug: string[]
-): Promise<ContentMetadata> {
-  const [tCommon, tMetadata] = await Promise.all([
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Metadata" }),
-  ]);
-  const defaultTitle = tCommon("made-with-love");
-  try {
-    // Build the path to the MDX file
-    const slugPath = slug.join("/");
-
-    // Dynamically import the MDX file to get its metadata
-    const contentModule = await import(
-      `@repo/contents/${slugPath}/${locale}.mdx`
+): Effect.Effect<
+  ContentMetadata,
+  TranslationLoadError | MetadataNotFoundError
+> {
+  return Effect.gen(function* () {
+    const [tCommon, tMetadata] = yield* Effect.all(
+      [
+        Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Common" }),
+          catch: () =>
+            new TranslationLoadError({ namespace: "Common", locale }),
+        }),
+        Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Metadata" }),
+          catch: () =>
+            new TranslationLoadError({ namespace: "Metadata", locale }),
+        }),
+      ],
+      { concurrency: "unbounded" }
     );
 
-    const parsed = ContentMetadataSchema.parse(contentModule.metadata);
+    const defaultTitle = tCommon("made-with-love");
+    const shortDescription = tMetadata("short-description");
+    const slugPath = slug.join("/");
 
-    // Get the title and description from the metadata
-    const title = parsed.title || defaultTitle;
-    const description =
-      parsed.description || parsed.subject || tMetadata("short-description");
-
-    return { ...parsed, title, description };
-  } catch {
-    // Return default values if there's an error
-    return {
+    const defaultMetadata: ContentMetadata = {
       title: defaultTitle,
-      description: tMetadata("short-description"),
+      description: shortDescription,
       authors: [{ name: "Nakafa" }],
       date: "",
     };
-  }
+
+    const contentMetadata = yield* Effect.catchAll(
+      getContentMetadata(slugPath, locale),
+      () => Effect.succeed(null)
+    );
+    const metadata = Option.fromNullable(contentMetadata);
+
+    if (Option.isNone(metadata)) {
+      return defaultMetadata;
+    }
+
+    const metadataValue = metadata.value;
+    const title = metadataValue.title || defaultTitle;
+    const description =
+      metadataValue.description || metadataValue.subject || shortDescription;
+
+    return { ...metadataValue, title, description };
+  });
 }

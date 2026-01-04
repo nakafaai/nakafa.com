@@ -1,46 +1,26 @@
+import { getContent } from "@repo/contents/_lib/content";
+import { getExercisesContent } from "@repo/contents/_lib/exercises";
 import {
-  getExercisesContent,
-  getFolderChildNames,
-  getNestedSlugs,
-} from "@repo/contents/_lib/utils";
-import { routing } from "@repo/internationalization/src/routing";
+  ChoicesValidationError,
+  ExerciseLoadError,
+  FileReadError,
+  GitHubFetchError,
+  InvalidPathError,
+  MetadataParseError,
+} from "@repo/contents/_shared/error";
 import { createServiceLogger, logError } from "@repo/utilities/logging";
+import { Effect } from "effect";
 import { NextResponse } from "next/server";
+import { generateStaticParamsForContent } from "@/lib/static-params";
 
 export const revalidate = false;
 
 const logger = createServiceLogger("api-exercises");
 
 export function generateStaticParams() {
-  // Top level directories in contents
-  const topDirs = getFolderChildNames("exercises");
-  const result: { locale: string; slug: string[] }[] = [];
-  const locales = routing.locales;
-
-  // For each locale
-  for (const locale of locales) {
-    // For each top directory (exercises)
-    for (const topDir of topDirs) {
-      // Get all nested paths starting from this folder
-      const nestedPaths = getNestedSlugs(`exercises/${topDir}`);
-
-      // Add the top-level folder itself
-      result.push({
-        locale,
-        slug: [topDir],
-      });
-
-      // Add each nested path
-      for (const path of nestedPaths) {
-        result.push({
-          locale,
-          slug: [topDir, ...path],
-        });
-      }
-    }
-  }
-
-  return result;
+  return generateStaticParamsForContent({
+    basePath: "exercises",
+  });
 }
 
 export async function GET(
@@ -51,6 +31,16 @@ export async function GET(
 
   let exerciseNumber: number | null = null;
   let rest = [...slug];
+  let isQuestionOrAnswer = false;
+
+  // Check if the last segment is _question or _answer
+  if (rest.length > 0) {
+    const lastSegment = rest.at(-1);
+    if (lastSegment === "_question" || lastSegment === "_answer") {
+      isQuestionOrAnswer = true;
+      rest = rest.slice(0, -1);
+    }
+  }
 
   // Capture and remove trailing number if it exists (exercise number like 1, 2, 3)
   if (rest.length > 0) {
@@ -67,48 +57,109 @@ export async function GET(
 
   const basePath = rest.join("/");
 
+  // If requesting _question or _answer MDX content directly
+  if (isQuestionOrAnswer && exerciseNumber !== null) {
+    const mdxPath = `exercises/${basePath}/${exerciseNumber}/${slug.at(-1)}`;
+
+    const program = Effect.match(getContent(locale, mdxPath), {
+      onFailure: (error: unknown) => {
+        logError(
+          logger,
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            locale,
+            mdxPath,
+            message: "Failed to fetch MDX content.",
+          }
+        );
+
+        const statusCode =
+          error instanceof InvalidPathError ||
+          error instanceof FileReadError ||
+          error instanceof MetadataParseError ||
+          error instanceof GitHubFetchError
+            ? 404
+            : 500;
+
+        return NextResponse.json(
+          { error: "Failed to fetch MDX content." },
+          { status: statusCode }
+        );
+      },
+      onSuccess: (data) => {
+        if (!data) {
+          return NextResponse.json(
+            { error: "MDX content not found." },
+            { status: 404 }
+          );
+        }
+        return NextResponse.json([data]);
+      },
+    });
+
+    return Effect.runPromise(program);
+  }
+
+  // Otherwise, fetch exercises data using the original logic
   const cleanPath = `exercises/${basePath}` as const;
 
-  try {
-    const content = await getExercisesContent(locale, cleanPath);
+  const program = Effect.match(
+    getExercisesContent({
+      locale,
+      filePath: cleanPath,
+      includeMDX: false,
+    }),
+    {
+      onFailure: (error: unknown) => {
+        logError(
+          logger,
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            locale,
+            basePath: basePath || "/",
+            slugLength: slug.length,
+            message: "Failed to fetch content.",
+          }
+        );
 
-    if (!content) {
-      return NextResponse.json(
-        { error: "Exercises content not found." },
-        { status: 404 }
-      );
+        const statusCode =
+          error instanceof ExerciseLoadError ||
+          error instanceof ChoicesValidationError
+            ? 500
+            : 500;
+
+        return NextResponse.json(
+          { error: "Failed to fetch exercises content." },
+          { status: statusCode }
+        );
+      },
+      onSuccess: (content) => {
+        if (content.length === 0) {
+          return NextResponse.json(
+            { error: "Exercises content not found." },
+            { status: 404 }
+          );
+        }
+
+        const result =
+          exerciseNumber !== null
+            ? content.filter(
+                (exercise: { number: number }) =>
+                  exercise.number === exerciseNumber
+              )
+            : content;
+
+        if (exerciseNumber !== null && result.length === 0) {
+          return NextResponse.json(
+            { error: "Exercise not found." },
+            { status: 404 }
+          );
+        }
+
+        return NextResponse.json(result);
+      },
     }
+  );
 
-    // Filter to specific exercise if number was provided
-    const result =
-      exerciseNumber !== null
-        ? content.filter((exercise) => exercise.number === exerciseNumber)
-        : content;
-
-    // Always return an array, even if filtered result is empty
-    if (exerciseNumber !== null && result.length === 0) {
-      return NextResponse.json(
-        { error: "Exercise not found." },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(result);
-  } catch (error) {
-    logError(
-      logger,
-      error instanceof Error ? error : new Error(String(error)),
-      {
-        locale,
-        basePath: basePath || "/",
-        slugLength: slug.length,
-        message: "Failed to fetch content.",
-      }
-    );
-
-    return NextResponse.json(
-      { error: "Failed to fetch exercises content." },
-      { status: 500 }
-    );
-  }
+  return Effect.runPromise(program);
 }

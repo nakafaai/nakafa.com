@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Pembahasan Soal 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/01/2026",
+};
+
+Kita dapat menyelesaikan masalah ini menggunakan sistem pertidaksamaan linear.
+
+#### Mendefinisikan Variabel
+
+Misalkan:
+- <InlineMath math="A =" /> Umur Ayah
+- <InlineMath math="I =" /> Umur Ibu
+- <InlineMath math="K =" /> Umur Anak
+
+#### Menerjemahkan Informasi ke Model Matematika
+
+1. "Selisih umur Ibu dan Ayah tidak lebih dari 5 tahun":
+
+   <MathContainer>
+     <BlockMath math="|A - I| \le 5" />
+   </MathContainer>
+
+   Ini dapat ditulis sebagai:
+
+   <MathContainer>
+     <BlockMath math="-5 \le A - I \le 5" />
+   </MathContainer>
+
+2. "Selisih umur Ayah dan anaknya adalah 35 tahun":
+
+   <MathContainer>
+     <BlockMath math="A - K = 35 \Rightarrow A = K + 35" />
+   </MathContainer>
+
+3. "Selisih umur Ibu dan anak adalah x":
+
+   <MathContainer>
+     <BlockMath math="x = I - K" />
+   </MathContainer>
+
+   (Kita asumsikan <InlineMath math="I > K" /> karena Ibu pasti lebih tua dari anak).
+
+#### Menyelesaikan Pertidaksamaan
+
+Substitusikan <InlineMath math="A = K + 35" /> ke dalam pertidaksamaan:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} -5 &\le A - I \le 5 \\ -5 &\le (K + 35) - I \le 5 \\ -5 &\le 35 - (I - K) \le 5 \end{aligned}" />
+</MathContainer>
+
+Karena <InlineMath math="x = I - K" />, maka persamaan menjadi:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} -5 &\le 35 - x \le 5 \end{aligned}" />
+</MathContainer>
+
+Kurangkan semua ruas dengan <InlineMath math="35" />:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} -5 - 35 &\le -x \le 5 - 35 \\ -40 &\le -x \le -30 \end{aligned}" />
+</MathContainer>
+
+Kalikan semua ruas dengan <InlineMath math="-1" /> (ingat, tanda pertidaksamaan berbalik):
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 40 &\ge x \ge 30 \\ 30 &\le x \le 40 \end{aligned}" />
+</MathContainer>
+
+Jadi, nilai <InlineMath math="x" /> yang benar adalah <InlineMath math="30 \le x \le 40" />.

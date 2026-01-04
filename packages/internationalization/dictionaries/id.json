@@ -221,7 +221,12 @@
     "type-description": "Persiapkan diri kamu untuk ujian dengan latihan nyata.",
     "mathematics": "Matematika",
     "quantitative-knowledge": "Pengetahuan Kuantitatif",
-    "mathematical-reasoning": "Penalaran Matematika"
+    "mathematical-reasoning": "Penalaran Matematika",
+    "general-reasoning": "Penalaran Umum",
+    "indonesian-language": "Bahasa Indonesia",
+    "english-language": "Bahasa Inggris",
+    "general-knowledge": "Pengetahuan Umum",
+    "reading-and-writing-skills": "Keterampilan Membaca dan Menulis"
   },
   "Utils": {
     "search": "Cari",

@@ -221,7 +221,12 @@
     "type-description": "Prepare yourself for the exam with real-world practice.",
     "mathematics": "Mathematics",
     "quantitative-knowledge": "Quantitative Knowledge",
-    "mathematical-reasoning": "Mathematical Reasoning"
+    "mathematical-reasoning": "Mathematical Reasoning",
+    "general-reasoning": "General Reasoning",
+    "indonesian-language": "Indonesian Language",
+    "english-language": "English Language",
+    "general-knowledge": "General Knowledge",
+    "reading-and-writing-skills": "Reading and Writing Skills"
   },
   "Utils": {
     "search": "Search",
@@ -401,7 +406,7 @@
     "start-learning": "Start learning",
     "join-our-community": "Join our community",
     "join-community": "Join community",
-    "join-our-community-description": "Community is the heart of Nakafa. Join hundreds of people contributing to shape the future of education.",
+    "join-our-community-description": "Community is heart of Nakafa. Join hundreds of people contributing to shape future of education.",
     "curriculum-title": "Learn exactly <mark>what you need</mark>, <mark>when you need it</mark>",
     "curriculum-description": "Pick your grade, dive into any subject, or search for what you're stuck on. No endless scrolling.",
     "company": "Company",

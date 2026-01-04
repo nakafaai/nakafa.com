@@ -1,19 +1,18 @@
+import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import { getContent } from "@repo/contents/_lib/content";
+import { getExercisesContent } from "@repo/contents/_lib/exercises";
 import {
   getCurrentMaterial,
   getMaterialPath,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
+import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
 import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
-import {
-  getContent,
-  getExercisesContent,
-  getFolderChildNames,
-  getNestedSlugs,
-} from "@repo/contents/_lib/utils";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { routing } from "@repo/internationalization/src/routing";
+import { Effect, Option } from "effect";
 import ky from "ky";
 import type { NextRequest } from "next/server";
 import { hasLocale, type Locale } from "next-intl";
@@ -66,7 +65,12 @@ export async function GET(
   }
 
   // Handle MDX content
-  const content = await getContent(locale, cleanSlug);
+  const content = await Effect.runPromise(
+    Effect.match(getContent(locale, cleanSlug), {
+      onFailure: () => null,
+      onSuccess: (data) => data,
+    })
+  );
   if (content) {
     return buildMdxResponse({ content, locale, cleanSlug });
   }
@@ -148,11 +152,19 @@ function handleQuranContent({
   // Show specific surah
   if (parts.length === 2) {
     const surahNumber = Number(parts[1]);
-    const surahData = getSurah(surahNumber);
+    const surahData = Option.fromNullable(
+      Effect.runSync(
+        Effect.match(getSurah(surahNumber), {
+          onFailure: () => null,
+          onSuccess: (data) => data,
+        })
+      )
+    );
 
-    if (surahData) {
-      const title = getSurahName({ locale, name: surahData.name });
-      const translation = getTranslation(surahData.name.translation, locale);
+    if (Option.isSome(surahData)) {
+      const surahValue = Option.getOrThrow(surahData);
+      const title = getSurahName({ locale, name: surahValue.name });
+      const translation = getTranslation(surahValue.name.translation, locale);
       const url = `${BASE_URL}/${locale}/quran/${surahNumber}`;
 
       scanned.push(
@@ -165,18 +177,18 @@ function handleQuranContent({
       scanned.push(`## ${title}`);
       scanned.push("");
       scanned.push(`**Translation:** ${translation}`);
-      scanned.push(`**Revelation:** ${surahData.revelation.en}`);
-      scanned.push(`**Number of Verses:** ${surahData.numberOfVerses}`);
+      scanned.push(`**Revelation:** ${surahValue.revelation.en}`);
+      scanned.push(`**Number of Verses:** ${surahValue.numberOfVerses}`);
       scanned.push("");
 
       // Add pre-bismillah if exists
-      if (surahData.preBismillah) {
+      if (surahValue.preBismillah) {
         scanned.push("### Pre-Bismillah");
         scanned.push("");
-        scanned.push(surahData.preBismillah.text.arab);
+        scanned.push(surahValue.preBismillah.text.arab);
         scanned.push("");
         const preBismillahTranslation = getTranslation(
-          surahData.preBismillah.translation,
+          surahValue.preBismillah.translation,
           locale
         );
         scanned.push(`*${preBismillahTranslation}*`);
@@ -187,7 +199,7 @@ function handleQuranContent({
       scanned.push("### Verses");
       scanned.push("");
 
-      for (const verse of surahData.verses) {
+      for (const verse of surahValue.verses) {
         scanned.push(`#### Verse ${verse.number.inSurah}`);
         scanned.push("");
         scanned.push(verse.text.arab);
@@ -229,9 +241,11 @@ async function handleExercisesContent({
   }
 
   // Fetch exercises
-  const exercises = await getExercisesContent(locale, path);
+  const exercises = await Effect.runPromise(
+    getExercisesContent({ locale, filePath: path })
+  );
 
-  if (!exercises || exercises.length === 0) {
+  if (exercises.length === 0) {
     return null;
   }
 
@@ -332,7 +346,17 @@ function buildMdxResponse({
   locale,
   cleanSlug,
 }: {
-  content: NonNullable<Awaited<ReturnType<typeof getContent>>>;
+  content: {
+    metadata: {
+      title: string;
+      authors: { name: string }[];
+      date: string;
+      description?: string;
+      subject?: string;
+    };
+    default?: React.ReactElement;
+    raw: string;
+  };
   locale: Locale;
   cleanSlug: string;
 }): Response {
@@ -355,7 +379,12 @@ function buildMdxResponse({
 
 export function generateStaticParams() {
   // Top level directories in contents
-  const topDirs = getFolderChildNames(".");
+  const topDirs = Effect.runSync(
+    Effect.match(getFolderChildNames("."), {
+      onFailure: () => [],
+      onSuccess: (names) => names,
+    })
+  );
   const result: { slug: string[] }[] = [];
   const locales = routing.locales;
 
@@ -365,21 +394,32 @@ export function generateStaticParams() {
       slug: [locale],
     });
 
+    const slugs = getMDXSlugsForLocale(locale);
+    const localeCache = new Set(slugs);
+
+    if (!localeCache) {
+      continue;
+    }
+
     // For each top directory (articles, subject, etc)
     for (const topDir of topDirs) {
-      // Get all nested paths starting from this folder
+      if (localeCache.has(topDir)) {
+        result.push({
+          slug: [locale, topDir],
+        });
+      }
+
       const nestedPaths = getNestedSlugs(topDir);
 
-      // Add the top-level folder itself
-      result.push({
-        slug: [locale, topDir],
-      });
-
-      // Add each nested path
+      // Add each nested path if it exists in locale
       for (const path of nestedPaths) {
-        result.push({
-          slug: [locale, topDir, ...path],
-        });
+        const fullPath = `${topDir}/${path.join("/")}`;
+
+        if (localeCache.has(fullPath)) {
+          result.push({
+            slug: [locale, topDir, ...path],
+          });
+        }
       }
     }
 

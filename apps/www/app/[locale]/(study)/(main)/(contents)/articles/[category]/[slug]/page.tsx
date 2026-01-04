@@ -1,11 +1,12 @@
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
+import { getContent, getReferences } from "@repo/contents/_lib/content";
 import { getHeadings } from "@repo/contents/_lib/toc";
-import { getContent, getReferences } from "@repo/contents/_lib/utils";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { formatISO } from "date-fns";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -45,7 +46,12 @@ export async function generateMetadata({
 
   const FilePath = getSlugPath(category, slug);
 
-  const content = await getContent(locale, FilePath);
+  const content = await Effect.runPromise(
+    Effect.match(getContent(locale, FilePath), {
+      onFailure: () => null,
+      onSuccess: (data) => data,
+    })
+  );
 
   const path = `/${locale}${FilePath}`;
   const alternates = {
@@ -129,10 +135,14 @@ async function PageContent({
   const FilePath = getSlugPath(category, slug);
 
   try {
-    // Get the file, headings
     const [content, references] = await Promise.all([
-      getContent(locale, FilePath),
-      getReferences(FilePath),
+      Effect.runPromise(
+        Effect.match(getContent(locale, FilePath), {
+          onFailure: () => null,
+          onSuccess: (data) => data,
+        })
+      ),
+      Effect.runPromise(getReferences(FilePath)),
     ]);
 
     if (!content) {
@@ -158,7 +168,7 @@ async function PageContent({
           name={metadata.title}
         />
         <ArticleJsonLd
-          author={metadata.authors.map((author) => ({
+          author={metadata.authors.map((author: { name: string }) => ({
             "@type": "Person",
             name: author.name,
             url: `https://nakafa.com/${locale}/contributor`,
@@ -169,7 +179,7 @@ async function PageContent({
           image={getOgUrl(locale, FilePath)}
         />
         <LearningResourceJsonLd
-          author={metadata.authors.map((author) => ({
+          author={metadata.authors.map((author: { name: string }) => ({
             "@type": "Person",
             name: author.name,
             url: `https://nakafa.com/${locale}/contributor`,

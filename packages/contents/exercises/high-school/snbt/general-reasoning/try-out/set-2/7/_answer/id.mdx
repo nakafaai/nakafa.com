@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Pembahasan Soal 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/01/2026",
+};
+
+Kita akan menentukan banyaknya susunan *password* berdasarkan aturan posisi yang diberikan dalam tabel berikut:
+
+| Angka Genap | Huruf Pertama (Bukan E) | Angka dari <InlineMath math="\{5, 6, 7\}" /> | Huruf Kedua (U) |
+| :---: | :---: | :---: | :---: |
+| <InlineMath math="2, 4, 6, 8" /> | A, I, U, O | <InlineMath math="5, 6, 7" /> | U |
+| <InlineMath math="4" /> | <InlineMath math="4" /> | <InlineMath math="3" /> | <InlineMath math="1" /> |
+
+Dari tabel di atas, kita peroleh jumlah pilihan untuk setiap posisi:
+- **Posisi 1**: Angka genap (2, 4, 6, 8) ada <InlineMath math="4" /> pilihan.
+- **Posisi 2**: Huruf vokal selain E (A, I, U, O) ada <InlineMath math="4" /> pilihan.
+- **Posisi 3**: Angka dari himpunan <InlineMath math="\{5, 6, 7\}" /> ada <InlineMath math="3" /> pilihan.
+- **Posisi 4**: Huruf U hanya ada <InlineMath math="1" /> pilihan.
+
+Karena setiap posisi harus diisi secara bersamaan, kita gunakan aturan perkalian:
+
+<MathContainer>
+  <BlockMath math="4 \times 4 \times 3 \times 1 = 48" />
+</MathContainer>
+
+Jadi, terdapat <InlineMath math="48" /> susunan *password* yang mungkin.

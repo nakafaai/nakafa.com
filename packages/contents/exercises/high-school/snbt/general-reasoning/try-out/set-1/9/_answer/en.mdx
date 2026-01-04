@@ -1,0 +1,47 @@
+export const metadata = {
+  title: "Solution for Problem 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/01/2026",
+};
+
+We can solve this problem using the concept of work rate. Let the total job of painting the house be <InlineMath math="1" /> unit of work.
+
+#### Determining Uncle Udin's Work Rate
+
+It is known that Father alone takes <InlineMath math="20" /> hours, so Father's work rate (<InlineMath math="V_F" />) is:
+
+<MathContainer>
+  <BlockMath math="V_F = \frac{1}{20} \text{ job/hour}" />
+</MathContainer>
+
+It is known that working together takes <InlineMath math="4" /> hours. If <InlineMath math="V_U" /> is Uncle Udin's work rate, then:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} V_{total} &= V_F + V_U \\ \frac{1}{4} &= \frac{1}{20} + V_U \\ V_U &= \frac{1}{4} - \frac{1}{20} \\ V_U &= \frac{5}{20} - \frac{1}{20} \\ V_U &= \frac{4}{20} = \frac{1}{5} \text{ job/hour} \end{aligned}" />
+</MathContainer>
+
+So, Uncle Udin can complete the job alone in <InlineMath math="5" /> hours.
+
+#### Calculating Remaining Work
+
+Father works alone for the first <InlineMath math="8" /> hours. The portion of work completed by Father is:
+
+<MathContainer>
+  <BlockMath math="\text{Father's Work} = 8 \times \frac{1}{20} = \frac{8}{20} = \frac{2}{5} \text{ part}" />
+</MathContainer>
+
+The remaining work to be done by Uncle Udin is:
+
+<MathContainer>
+  <BlockMath math="\text{Remaining} = 1 - \frac{2}{5} = \frac{3}{5} \text{ part}" />
+</MathContainer>
+
+#### Calculating Uncle Udin's Time
+
+The time required for Uncle Udin to complete the remaining work is:
+
+<MathContainer>
+  <BlockMath math="\text{Time} = \frac{\text{Remaining Work}}{\text{Udin's Rate}} = \frac{\frac{3}{5}}{\frac{1}{5}} = 3 \text{ hours}" />
+</MathContainer>
+
+Thus, Uncle Udin needs **3 hours** to complete the remaining work.

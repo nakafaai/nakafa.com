@@ -1,8 +1,10 @@
-import { getContent, getFolderChildNames } from "@repo/contents/_lib/utils";
+import { getContentMetadata } from "@repo/contents/_lib/content";
+import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { askSeo } from "@repo/seo/ask";
+import { Effect } from "effect";
 import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
 
@@ -39,10 +41,15 @@ async function getContentLastModified(
   locale: Locale = "en"
 ): Promise<Date> {
   try {
-    const content = await getContent(locale, contentPath);
-    if (content?.metadata.date) {
+    const metadata = await Effect.runPromise(
+      Effect.match(getContentMetadata(contentPath, locale), {
+        onFailure: () => null,
+        onSuccess: (data) => data,
+      })
+    );
+    if (metadata?.date) {
       // Parse the metadata date (format: MM/DD/YYYY)
-      const [month, day, year] = content.metadata.date.split("/");
+      const [month, day, year] = metadata.date.split("/");
       const metadataDate = new Date(
         Number(year),
         Number(month) - 1,
@@ -150,7 +157,12 @@ export function getLlmRoutes(routes: string[]): string[] {
 
 // Function to recursively get all directories
 export function getContentRoutes(currentPath = ""): string[] {
-  const children = getFolderChildNames(currentPath || ".");
+  const children = Effect.runSync(
+    Effect.match(getFolderChildNames(currentPath || "."), {
+      onFailure: () => [],
+      onSuccess: (data) => data,
+    })
+  );
 
   let routes = currentPath ? [`/${currentPath.replace(/\\/g, "/")}`] : ["/"];
 

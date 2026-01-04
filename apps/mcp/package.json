@@ -18,12 +18,12 @@
     "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",
     "express": "^5.2.1",
-    "mcp-handler": "1.0.4",
+    "mcp-handler": "1.0.5",
     "next": "16.1.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "redis": "^5.10.0",
-    "zod": "^4.2.1"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

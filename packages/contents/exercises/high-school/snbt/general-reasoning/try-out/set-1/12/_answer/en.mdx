@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Solution for Problem 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/01/2026",
+};
+
+An analog clock (12-hour format) will show the same time as a normal clock again when the time difference reaches a multiple of 12 hours.
+
+#### Converting Units to Minutes
+
+Since the delay is given in minutes, we convert 12 hours into minutes:
+
+<MathContainer>
+  <BlockMath math="12 \text{ hours} = 12 \times 60 \text{ minutes} = 720 \text{ minutes}" />
+</MathContainer>
+
+#### Calculating the Required Time
+
+It is known that the clock loses <InlineMath math="5" /> minutes every hour. We want to find how many hours (<InlineMath math="n" />) it takes for the total delay to reach <InlineMath math="720" /> minutes.
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 5n &= 720 \\ n &= \frac{720}{5} \\ n &= 144 \text{ hours} \end{aligned}" />
+</MathContainer>
+
+Thus, the clock will show the same time as a normal clock after **144 hours**.

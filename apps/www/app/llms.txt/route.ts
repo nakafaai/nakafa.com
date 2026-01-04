@@ -1,13 +1,15 @@
+import { getContents } from "@repo/contents/_lib/content";
 import {
   getMaterialPath,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
+import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
-import { getContents, getFolderChildNames } from "@repo/contents/_lib/utils";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { routing } from "@repo/internationalization/src/routing";
+import { Effect } from "effect";
 
 const BASE_URL = "https://nakafa.com";
 
@@ -24,16 +26,20 @@ export async function GET() {
 
   // Fetch all articles and subjects for all locales in parallel
   const contentPromises = locales.flatMap((locale) => [
-    getContents({ locale, basePath: "articles" }).then((contents) => ({
-      section: "Articles",
-      locale,
-      contents,
-    })),
-    getContents({ locale, basePath: "subject" }).then((contents) => ({
-      section: "Subjects",
-      locale,
-      contents,
-    })),
+    Effect.runPromise(getContents({ locale, basePath: "articles" })).then(
+      (contents) => ({
+        section: "Articles",
+        locale,
+        contents,
+      })
+    ),
+    Effect.runPromise(getContents({ locale, basePath: "subject" })).then(
+      (contents) => ({
+        section: "Subjects",
+        locale,
+        contents,
+      })
+    ),
   ]);
 
   const results = await Promise.all(contentPromises);
@@ -43,6 +49,10 @@ export async function GET() {
 
   for (const result of results) {
     for (const content of result.contents) {
+      if (!content) {
+        continue;
+      }
+
       const entry = `- [${content.metadata.title}](${content.url}): ${
         content.metadata.description ?? content.metadata.title
       }`;
@@ -113,7 +123,12 @@ function getAllExerciseMaterials(): {
   material: ExercisesMaterial;
 }[] {
   const root = "exercises";
-  const categories = getFolderChildNames(root);
+  const categories = Effect.runSync(
+    Effect.match(getFolderChildNames(root), {
+      onFailure: () => [],
+      onSuccess: (names) => names,
+    })
+  );
   const result: {
     category: ExercisesCategory;
     type: ExercisesType;
@@ -121,9 +136,19 @@ function getAllExerciseMaterials(): {
   }[] = [];
 
   for (const category of categories) {
-    const types = getFolderChildNames(`${root}/${category}`);
+    const types = Effect.runSync(
+      Effect.match(getFolderChildNames(`${root}/${category}`), {
+        onFailure: () => [],
+        onSuccess: (names) => names,
+      })
+    );
     for (const type of types) {
-      const materials = getFolderChildNames(`${root}/${category}/${type}`);
+      const materials = Effect.runSync(
+        Effect.match(getFolderChildNames(`${root}/${category}/${type}`), {
+          onFailure: () => [],
+          onSuccess: (names) => names,
+        })
+      );
       for (const material of materials) {
         result.push({
           category: category as ExercisesCategory,

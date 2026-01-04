@@ -17,10 +17,18 @@ export function getExercisesPath(
 }
 
 /**
- * Gets the subjects for a grade.
- * @param category - The category to get the subjects for.
- * @param grade - The grade to get the subjects for.
- * @returns The subjects for the grade.
+ * Gets the subjects (materials) for a given category and type.
+ * Imports and calls the getSubjects function from the category's _data/subject.ts.
+ *
+ * @param category - Exercise category (e.g., "high-school")
+ * @param type - Exercise type (e.g., "tka", "tkb")
+ * @returns Array of subject objects with label and href
+ *
+ * @example
+ * ```ts
+ * const subjects = await getSubjects("high-school", "tka");
+ * // Returns: [{ label: "mathematics", href: "/exercises/high-school/tka/mathematics" }, ...]
+ * ```
  */
 export async function getSubjects(
   category: ExercisesCategory,

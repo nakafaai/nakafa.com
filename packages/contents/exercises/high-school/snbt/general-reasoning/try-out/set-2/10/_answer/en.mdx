@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Explanation for Problem 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/01/2026",
+};
+
+First, let's calculate the total number of fruits in each box:
+- **Box 1**: <InlineMath math="1 + 2 + 4 + 5 = 12" /> fruits.
+- **Box 2**: <InlineMath math="4 + 2 + 3 + 3 = 12" /> fruits.
+- **Total Possibilities**: <InlineMath math="12 \times 12 = 144" /> combinations.
+
+We will calculate the probability for each option. Recall that the probability of independent events occurring together is the product of their individual probabilities.
+
+| Event | Calculation | Result |
+| :--- | :--- | :--- |
+| **2 Large Apples** | <InlineMath math="\frac{1}{12} \times \frac{4}{12}" /> | <InlineMath math="\frac{4}{144}" /> |
+| **2 Small Apples** | <InlineMath math="\frac{2}{12} \times \frac{2}{12}" /> | <InlineMath math="\frac{4}{144}" /> |
+| **2 Large Oranges** | <InlineMath math="\frac{4}{12} \times \frac{3}{12}" /> | <InlineMath math="\frac{12}{144}" /> |
+| **2 Small Oranges** | <InlineMath math="\frac{5}{12} \times \frac{3}{12}" /> | <InlineMath math="\frac{15}{144}" /> |
+| **1 Large Apple & 1 Small Orange** | <InlineMath math="(\frac{1}{12} \times \frac{3}{12}) + (\frac{5}{12} \times \frac{4}{12})" /> | <InlineMath math="\frac{23}{144}" /> |
+
+> For the event **1 Large Apple & 1 Small Orange**, there are two possible ways to obtain it:
+>
+> 1. Large Apple from Box 1 and Small Orange from Box 2 (<InlineMath math="\frac{1}{12} \times \frac{3}{12}" />).
+> 2. Small Orange from Box 1 and Large Apple from Box 2 (<InlineMath math="\frac{5}{12} \times \frac{4}{12}" />).
+>
+> These two probabilities are added together.
+
+From the table above, we can see that the highest probability is obtaining **1 large apple and 1 small orange** with a probability of <InlineMath math="\frac{23}{144}" />.
+
+Thus, the most likely result is **1 large apple and 1 small orange**.

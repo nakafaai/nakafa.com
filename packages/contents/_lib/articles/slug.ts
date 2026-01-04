@@ -1,5 +1,5 @@
 import { teams } from "@repo/contents/_data/team";
-import { getFolderChildNames } from "@repo/contents/_lib/utils";
+import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import {
   type Article,
@@ -11,13 +11,27 @@ import type { Locale } from "next-intl";
 /**
  * Gets the path to an article based on its category and slug.
  * @param category - The category of the article.
- * @param slug - The slug of the article.
+ * @param slug - The slug of article.
  * @returns The path to the article.
  */
 export function getSlugPath(category: ArticleCategory, slug: string) {
   return `/articles/${category}/${slug}` as const;
 }
 
+/**
+ * Retrieves all articles for a given category, sorted by date (newest first).
+ * Uses the MDX cache for efficient slug lookup and imports metadata directly.
+ *
+ * @param category - Article category (can be full path or category name)
+ * @param locale - Target locale
+ * @returns Array of article metadata with title, description, date, slug, and official status
+ *
+ * @example
+ * ```ts
+ * const articles = await getArticles("politics", "en");
+ * // Returns: [{ title, description, date, slug, official }, ...]
+ * ```
+ */
 export async function getArticles(
   category: ArticleCategory,
   locale: Locale
@@ -31,12 +45,20 @@ export async function getArticles(
     return [];
   }
 
-  // Get all article directories under the specified category using the utility function
-  const slugs = getFolderChildNames(`articles/${categoryName}`);
+  // Get all article directories under the specified category using cache
+  const allSlugs = getMDXSlugsForLocale(locale);
+  const categoryPrefix = `articles/${categoryName}/`;
+
+  const slugs = allSlugs
+    .filter((slug: string) => slug.startsWith(categoryPrefix))
+    .map((slug: string) => slug.slice(categoryPrefix.length).split("/")[0]);
+
+  // Remove duplicates while preserving order
+  const uniqueSlugs = Array.from(new Set(slugs));
 
   // Process the article data in a single pass
   const articles = await Promise.all(
-    slugs.map(async (slug) => {
+    uniqueSlugs.map(async (slug: string) => {
       try {
         // Import the metadata directly
         const { metadata } = await import(
@@ -51,7 +73,7 @@ export async function getArticles(
 
         return {
           title: parsedMetadata.title,
-          description: parsedMetadata.description,
+          description: parsedMetadata.description || "",
           date: formatISO(parsedMetadata.date),
           slug,
           official: authors.some((author) => teams.has(author)),
@@ -65,6 +87,6 @@ export async function getArticles(
 
   // Filter out any null values and sort by date (newest first)
   return articles
-    .filter((article): article is Article => article !== null)
+    .filter((article) => article !== null)
     .sort((a, b) => b.date.localeCompare(a.date));
 }

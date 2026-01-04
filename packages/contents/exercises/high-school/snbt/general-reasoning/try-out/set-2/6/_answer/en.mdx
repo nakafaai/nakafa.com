@@ -1,0 +1,35 @@
+export const metadata = {
+  title: "Solution Problem 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/01/2026",
+};
+
+We need to determine the sales pattern for each item to predict the sales volume in 2016.
+
+#### Pattern Analysis
+
+1. **Shirts**: Sales data is <InlineMath math="50, 35, 20, 70, 55" />.
+   - The pattern shows a consistent decrease of <InlineMath math="15" /> (<InlineMath math="50 \xrightarrow{-15} 35 \xrightarrow{-15} 20" /> and <InlineMath math="70 \xrightarrow{-15} 55" />).
+   - Prediction for 2016: <InlineMath math="55 - 15 = 40" />.
+
+2. **Pants**: Sales data is <InlineMath math="60, 60, 50, 40, 40" />.
+   - The changes are <InlineMath math="0, -10, -10, 0" />.
+   - The pattern repeats the cycle of "constant, decrease, decrease". Following this, the next change is a decrease of <InlineMath math="10" />.
+   - Prediction for 2016: <InlineMath math="40 - 10 = 30" />.
+
+3. **Suits**: Sales data is <InlineMath math="40, 55, 45, 60, 50" />.
+   - The changes are <InlineMath math="+15, -10, +15, -10" />.
+   - The pattern alternates between adding <InlineMath math="15" /> and subtracting <InlineMath math="10" />. The next step is adding <InlineMath math="15" />.
+   - Prediction for 2016: <InlineMath math="50 + 15 = 65" />.
+
+#### Evaluating the Options
+
+Using the predictions (Shirts = <InlineMath math="40" />, Pants = <InlineMath math="30" />, Suits = <InlineMath math="65" />):
+
+1. **Pants sales are 10 fewer than shirts**: <InlineMath math="30 = 40 - 10" /> (Correct).
+2. **Suits sales are 35 more than pants**: <InlineMath math="65 = 30 + 35" /> (Correct).
+3. **The total sales of shirts and pants is less than 70**: <InlineMath math="40 + 30 = 70" />. Since <InlineMath math="70" /> is not less than <InlineMath math="70" />, this statement is **incorrect**.
+4. **Shirts sales are 10 more than pants**: <InlineMath math="40 = 30 + 10" /> (Correct).
+5. **Pants sales are 35 less than suits**: <InlineMath math="30 = 65 - 35" /> (Correct).
+
+The question asks for the **incorrect** prediction. Therefore, the answer is **The total sales of shirts and pants is less than 70**.

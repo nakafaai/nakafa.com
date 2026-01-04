@@ -1,0 +1,35 @@
+export const metadata = {
+  title: "Pembahasan Soal 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/01/2026",
+};
+
+Kita perlu menentukan pola penjualan setiap barang untuk memprediksi jumlah penjualan pada tahun 2016.
+
+#### Analisis Pola Penjualan
+
+1. **Baju**: Data penjualan adalah <InlineMath math="50, 35, 20, 70, 55" />.
+   - Pola menunjukkan penurunan konsisten sebesar <InlineMath math="15" /> (<InlineMath math="50 \xrightarrow{-15} 35 \xrightarrow{-15} 20" /> dan <InlineMath math="70 \xrightarrow{-15} 55" />).
+   - Prediksi tahun 2016: <InlineMath math="55 - 15 = 40" />.
+
+2. **Celana**: Data penjualan adalah <InlineMath math="60, 60, 50, 40, 40" />.
+   - Perubahannya adalah <InlineMath math="0, -10, -10, 0" />.
+   - Pola berulang dengan siklus "tetap, turun, turun". Maka selanjutnya adalah penurunan sebesar <InlineMath math="10" />.
+   - Prediksi tahun 2016: <InlineMath math="40 - 10 = 30" />.
+
+3. **Jas**: Data penjualan adalah <InlineMath math="40, 55, 45, 60, 50" />.
+   - Perubahannya adalah <InlineMath math="+15, -10, +15, -10" />.
+   - Pola berselang-seling tambah <InlineMath math="15" /> dan kurang <InlineMath math="10" />. Langkah berikutnya adalah tambah <InlineMath math="15" />.
+   - Prediksi tahun 2016: <InlineMath math="50 + 15 = 65" />.
+
+#### Evaluasi Pilihan
+
+Menggunakan hasil prediksi (Baju = <InlineMath math="40" />, Celana = <InlineMath math="30" />, Jas = <InlineMath math="65" />):
+
+1. **Penjualan celana 10 lebih sedikit dari baju**: <InlineMath math="30 = 40 - 10" /> (Benar).
+2. **Penjualan jas 35 lebih banyak dari celana**: <InlineMath math="65 = 30 + 35" /> (Benar).
+3. **Jumlah penjualan baju dan celana kurang dari 70**: <InlineMath math="40 + 30 = 70" />. Karena <InlineMath math="70" /> tidak kurang dari <InlineMath math="70" />, pernyataan ini **salah**.
+4. **Penjualan baju 10 lebih banyak dari celana**: <InlineMath math="40 = 30 + 10" /> (Benar).
+5. **Penjualan celana 35 lebih sedikit dari jas**: <InlineMath math="30 = 65 - 35" /> (Benar).
+
+Soal meminta prediksi yang **salah**. Jadi, jawabannya adalah **Jumlah penjualan baju dan celana kurang dari 70**.

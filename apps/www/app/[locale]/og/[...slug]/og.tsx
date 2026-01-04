@@ -1,252 +1,178 @@
-import { readFileSync } from "node:fs";
+import type { PersistentImage } from "@takumi-rs/core";
+import { ImageResponse } from "@takumi-rs/image-response";
 import anyAscii from "any-ascii";
-import type { ImageResponseOptions } from "next/dist/compiled/@vercel/og/types";
-import { ImageResponse } from "next/og";
 import type { ReactNode } from "react";
-import { truncateText } from "@/lib/utils/helper";
-
-const MAX_TITLE_FIRST_LENGTH = 30;
-const MAX_TITLE_SECOND_LENGTH = 60;
-const MAX_DESCRIPTION_LENGTH = 80;
-const MAX_DESCRIPTION_TRUNCATED_LENGTH = 100;
-
-// Load fonts at module level (once at build time)
-const fontRegular = readFileSync(
-  `${process.cwd()}/public/fonts/GeistMono-Regular.ttf`
-);
-const fontBold = readFileSync(
-  `${process.cwd()}/public/fonts/GeistMono-Bold.ttf`
-);
 
 interface GenerateProps {
   title: ReactNode;
   description?: ReactNode;
+  icon?: ReactNode;
+  primaryColor?: string;
+  primaryTextColor?: string;
+  site?: ReactNode;
 }
 
+const [logo] = await Promise.all([
+  fetch("https://nakafa.com/logo.svg").then((res) => res.arrayBuffer()),
+]);
+
+const persistentImages: PersistentImage[] = [
+  {
+    src: "logo",
+    data: logo,
+  },
+];
+
 export function generateOGImage(
-  options: GenerateProps & ImageResponseOptions
-): ImageResponse {
-  const { title, description, ...rest } = options;
+  options: GenerateProps & { width?: number; height?: number }
+): Response {
+  const { title, description, width = 1200, height = 630 } = options;
 
   return new ImageResponse(
     <OgImage description={description} title={title} />,
     {
-      width: 1200,
-      height: 630,
-      fonts: [
-        {
-          name: "Mono",
-          data: fontRegular,
-          weight: 400,
-        },
-        {
-          name: "Mono",
-          data: fontBold,
-          weight: 600,
-        },
-      ],
-      ...rest,
+      width,
+      height,
+      persistentImages,
     }
   );
 }
 
 export function OgImage(props: GenerateProps) {
-  // Sanitize text to ensure all characters are supported by GeistMono font
-  const sanitizedTitle = anyAscii(String(props.title));
-  const sanitizedDescription = props.description
-    ? anyAscii(String(props.description))
-    : undefined;
+  const {
+    title,
+    description,
+    icon = (
+      <div
+        style={{
+          width: 48,
+          height: 48,
+          backgroundImage: "url(logo)",
+          backgroundSize: "contain",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          borderRadius: "50%",
+        }}
+      />
+    ),
+    primaryColor = "hsla(21.74, 66%, 55%, 1)",
+    primaryTextColor = "hsla(21.74, 66%, 55%, 1)",
+    site = "Nakafa",
+  } = props;
 
-  // Calculate dynamic font sizes based on content length
-  const titleLength = sanitizedTitle.length;
-  const descriptionLength = sanitizedDescription?.length ?? 0;
-
-  // Dynamic title font size (larger for shorter titles)
-  let titleFontSize = "56px";
-  if (titleLength < MAX_TITLE_FIRST_LENGTH) {
-    titleFontSize = "72px";
-  } else if (titleLength < MAX_TITLE_SECOND_LENGTH) {
-    titleFontSize = "64px";
-  }
-
-  // Dynamic description font size
-  const descriptionFontSize =
-    descriptionLength < MAX_DESCRIPTION_LENGTH ? "32px" : "28px";
-
-  // Dynamic gap based on content amount
-  const contentGap =
-    titleLength < MAX_TITLE_FIRST_LENGTH &&
-    descriptionLength < MAX_DESCRIPTION_LENGTH
-      ? "32px"
-      : "24px";
-
-  const truncatedDescription = sanitizedDescription
-    ? truncateText(sanitizedDescription, MAX_DESCRIPTION_TRUNCATED_LENGTH)
+  const sanitizedTitle = anyAscii(String(title));
+  const sanitizedDescription = description
+    ? anyAscii(String(description))
     : undefined;
 
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
         width: "100%",
         height: "100%",
-        backgroundColor: "#ffffff",
+        backgroundColor: "hsl(300 50% 100%)",
         position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        color: "hsl(220.91 39% 11%)",
+        backgroundImage: `linear-gradient(to bottom right, ${primaryColor}, transparent)`,
       }}
     >
-      {/* Subtle border frame */}
-      <div
-        style={{
-          position: "absolute",
-          top: "24px",
-          left: "24px",
-          right: "24px",
-          bottom: "24px",
-          border: "1px solid #e5e5e5",
-          borderRadius: "16px",
-        }}
-      />
-
-      {/* Inner subtle border */}
-      <div
-        style={{
-          position: "absolute",
-          top: "32px",
-          left: "32px",
-          right: "32px",
-          bottom: "32px",
-          border: "1px solid #f5f5f5",
-          borderRadius: "12px",
-        }}
-      />
-
       <div
         style={{
           display: "flex",
           flexDirection: "column",
           width: "100%",
           height: "100%",
-          padding: "60px 80px",
+          padding: "60px",
           position: "relative",
+          justifyContent: "space-between",
         }}
       >
-        {/* Content area with controlled spacing */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: contentGap,
-            flex: "1",
-            minHeight: "0",
+            gap: "32px",
+            marginBottom: "40px",
+            textWrap: "pretty",
           }}
         >
-          {/* Simple accent line */}
-          <div
+          <span
             style={{
-              width: "48px",
-              height: "2px",
-              backgroundColor: "#000000",
-              marginBottom: "16px",
-              flexShrink: 0,
-            }}
-          />
-
-          <h1
-            style={{
+              fontSize: 72,
               fontWeight: 600,
-              fontSize: titleFontSize,
-              margin: 0,
-              lineHeight: 1.2,
-              letterSpacing: "-0.03em",
-              color: "#000000",
-              wordWrap: "break-word",
-              overflowWrap: "break-word",
-              fontFamily: "Mono",
+              lineHeight: 1.1,
+              letterSpacing: "-0.04em",
+              color: "hsl(220.91 39% 11%)",
+              lineClamp: 3,
+              textOverflow: "ellipsis",
+              overflow: "hidden",
             }}
           >
             {sanitizedTitle}
-          </h1>
-
-          {!!truncatedDescription && (
-            <p
+          </span>
+          {!!sanitizedDescription && (
+            <span
               style={{
-                fontSize: descriptionFontSize,
-                color: "#666666",
-                margin: 0,
-                lineHeight: 1.4,
+                fontSize: 36,
+                color: "hsl(220.91 39% 11%)",
+                opacity: 0.8,
                 fontWeight: 400,
-                flexShrink: 0,
-                wordWrap: "break-word",
-                overflowWrap: "break-word",
-                fontFamily: "Mono",
+                lineHeight: 1.4,
+                maxWidth: "95%",
+                letterSpacing: "-0.01em",
+                lineClamp: 2,
+                textOverflow: "ellipsis",
+                overflow: "hidden",
               }}
             >
-              {truncatedDescription}
-            </p>
+              {sanitizedDescription}
+            </span>
           )}
         </div>
 
-        {/* Fixed footer that always stays at bottom */}
         <div
           style={{
             display: "flex",
-            flexDirection: "row",
             alignItems: "center",
-            justifyContent: "space-between",
-            marginTop: "40px",
-            flexShrink: 0,
+            gap: "28px",
           }}
         >
-          <div
+          {icon}
+          <span
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
+              fontSize: 32,
+              fontWeight: 600,
+              letterSpacing: "-0.02em",
+              color: "hsl(220.91 39% 11%)",
+              opacity: 0.9,
             }}
           >
-            {/* Minimal logo mark */}
-            <div
-              style={{
-                width: "40px",
-                height: "40px",
-                backgroundColor: "#000000",
-                borderRadius: "8px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "20px",
-                fontWeight: 600,
-                color: "#ffffff",
-                fontFamily: "Mono",
-              }}
-            >
-              N
-            </div>
-
-            <p
-              style={{
-                fontSize: "28px",
-                fontWeight: 500,
-                margin: 0,
-                color: "#000000",
-                letterSpacing: "-0.01em",
-                fontFamily: "Mono",
-              }}
-            >
-              Nakafa
-            </p>
-          </div>
-
-          {/* Simple dot accent */}
+            {site}
+          </span>
+          <div style={{ flexGrow: 1 }} />
           <div
             style={{
-              width: "4px",
-              height: "4px",
-              borderRadius: "50%",
-              backgroundColor: "#cccccc",
+              height: 4,
+              width: 60,
+              backgroundColor: primaryColor,
+              borderRadius: 2,
             }}
           />
+          <span
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.2em",
+              color: primaryTextColor,
+              opacity: 0.8,
+            }}
+          >
+            Copyright © {new Date().getFullYear()} Nakafa
+          </span>
         </div>
       </div>
     </div>

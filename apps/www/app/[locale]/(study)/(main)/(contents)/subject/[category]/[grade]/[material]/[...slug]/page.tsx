@@ -1,3 +1,4 @@
+import { getContent, getContentMetadata } from "@repo/contents/_lib/content";
 import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
 import {
   getMaterialIcon,
@@ -9,7 +10,6 @@ import {
   getSlugPath,
 } from "@repo/contents/_lib/subject/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
-import { getContent } from "@repo/contents/_lib/utils";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import type { Material } from "@repo/contents/_types/subject/material";
@@ -18,6 +18,7 @@ import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { formatISO } from "date-fns";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -62,7 +63,12 @@ export async function generateMetadata({
 
   const FilePath = getSlugPath(category, grade, material, slug);
 
-  const content = await getContent(locale, FilePath);
+  const metadata = await Effect.runPromise(
+    Effect.match(getContentMetadata(FilePath, locale), {
+      onFailure: () => null,
+      onSuccess: (data) => data,
+    })
+  );
 
   const path = `/${locale}${FilePath}`;
   const alternates = {
@@ -86,7 +92,7 @@ export async function generateMetadata({
 
   const defaultTitle = `${t(material)} - ${t(getGradeNonNumeric(grade) ?? "grade", { grade })} - ${t(category)}`;
 
-  if (!content) {
+  if (!metadata) {
     return {
       title: {
         absolute: defaultTitle,
@@ -96,8 +102,6 @@ export async function generateMetadata({
       twitter,
     };
   }
-
-  const { metadata } = content;
 
   return {
     title: {
@@ -171,11 +175,14 @@ async function PageContent({
   }
 
   try {
-    const [content, pagination] = await Promise.all([
-      getContent(locale, FilePath),
-      getMaterials(materialPath, locale).then((materials) =>
-        getMaterialsPagination(FilePath, materials)
+    const [content, materials] = await Promise.all([
+      Effect.runPromise(
+        Effect.match(getContent(locale, FilePath), {
+          onFailure: () => null,
+          onSuccess: (data) => data,
+        })
       ),
+      getMaterials(materialPath, locale),
     ]);
 
     if (!content) {
@@ -183,6 +190,8 @@ async function PageContent({
     }
 
     const { metadata, default: Content } = content;
+
+    const pagination = getMaterialsPagination(FilePath, materials);
 
     const headings = getHeadings(content.raw);
 
@@ -201,7 +210,7 @@ async function PageContent({
           name={metadata.title}
         />
         <ArticleJsonLd
-          author={metadata.authors.map((author) => ({
+          author={metadata.authors.map((author: { name: string }) => ({
             "@type": "Person",
             name: author.name,
             url: `https://nakafa.com/${locale}/contributor`,
@@ -212,7 +221,7 @@ async function PageContent({
           image={getOgUrl(locale, FilePath)}
         />
         <LearningResourceJsonLd
-          author={metadata.authors.map((author) => ({
+          author={metadata.authors.map((author: { name: string }) => ({
             "@type": "Person",
             name: author.name,
             url: `https://nakafa.com/${locale}/contributor`,

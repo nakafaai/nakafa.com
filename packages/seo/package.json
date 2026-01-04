@@ -8,10 +8,10 @@
   },
   "dependencies": {
     "lodash.merge": "^4.6.2",
-    "next-intl": "^4.6.1",
+    "next-intl": "^4.7.0",
     "react": "^19.2.3",
     "schema-dts": "^1.1.5",
-    "zod": "^4.2.1"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

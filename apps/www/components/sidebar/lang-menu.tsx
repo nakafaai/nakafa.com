@@ -1,7 +1,4 @@
-import {
-  ArrowRight01Icon,
-  LanguageSkillIcon,
-} from "@hugeicons/core-free-icons";
+import { ArrowRight01Icon, TranslateIcon } from "@hugeicons/core-free-icons";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -22,7 +19,7 @@ export function LangMenu() {
       <SidebarMenuItem>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton tooltip={t("language")}>
-            <HugeIcons icon={LanguageSkillIcon} />
+            <HugeIcons icon={TranslateIcon} />
             <span className="truncate">{t("language")}</span>
 
             <HugeIcons className="ml-auto" icon={ArrowRight01Icon} />

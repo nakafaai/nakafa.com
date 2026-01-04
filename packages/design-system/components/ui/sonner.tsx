@@ -21,6 +21,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       className="toaster group"
+      closeButton
       icons={{
         success: <Icon icon={Tick01Icon} />,
         info: <Icon icon={InformationCircleIcon} />,
@@ -40,6 +41,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           description: "text-muted-foreground!",
+          closeButton:
+            "bg-popover! text-popover-foreground! hover:border-border! transition-colors! ease-out! hover:bg-accent! hover:text-accent-foreground!",
         },
       }}
       {...props}

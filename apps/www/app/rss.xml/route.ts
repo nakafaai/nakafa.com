@@ -1,6 +1,7 @@
+import { getContents } from "@repo/contents/_lib/content";
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
-import { getContents } from "@repo/contents/_lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
+import { Effect } from "effect";
 import { Feed, type Item } from "feed";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
@@ -25,14 +26,18 @@ export async function GET() {
 
   // Fetch all articles and subjects for all locales in parallel
   const contentPromises = locales.flatMap((locale) => [
-    getContents({ locale, basePath: "articles" }).then((contents) => ({
-      locale,
-      contents,
-    })),
-    getContents({ locale, basePath: "subject" }).then((contents) => ({
-      locale,
-      contents,
-    })),
+    Effect.runPromise(getContents({ locale, basePath: "articles" })).then(
+      (contents) => ({
+        locale,
+        contents,
+      })
+    ),
+    Effect.runPromise(getContents({ locale, basePath: "subject" })).then(
+      (contents) => ({
+        locale,
+        contents,
+      })
+    ),
   ]);
 
   const results = await Promise.all(contentPromises);
@@ -53,6 +58,10 @@ export async function GET() {
 
   for (const result of results) {
     for (const content of result.contents) {
+      if (!content) {
+        continue;
+      }
+
       feedItems.push({
         title: content.metadata.title,
         description: content.metadata.description ?? content.metadata.title,

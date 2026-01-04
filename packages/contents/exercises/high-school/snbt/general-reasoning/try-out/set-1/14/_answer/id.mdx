@@ -1,0 +1,79 @@
+export const metadata = {
+  title: "Pembahasan Soal 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/01/2026",
+};
+
+Kita perlu mencari nilai <InlineMath math="x" /> yang **tidak** memenuhi pertidaksamaan <InlineMath math="\frac{144}{29} < x < 5" />.
+
+#### Analisis Batas Bawah
+
+Pertama, mari kita ubah bentuk batas bawah <InlineMath math="\frac{144}{29}" /> agar lebih mudah dibandingkan dengan angka 5.
+
+<MathContainer>
+  <BlockMath math="\frac{144}{29} = \frac{145 - 1}{29} = \frac{145}{29} - \frac{1}{29} = 5 - \frac{1}{29}" />
+</MathContainer>
+
+Jadi, pertidaksamaan yang diberikan adalah:
+
+<MathContainer>
+  <BlockMath math="5 - \frac{1}{29} < x < 5" />
+</MathContainer>
+
+Artinya, agar nilai <InlineMath math="x" /> memenuhi syarat, nilai tersebut harus berada di antara <InlineMath math="5 - \frac{1}{29}" /> dan <InlineMath math="5" />.
+
+#### Analisis Pilihan Jawaban
+
+Kita akan mengubah setiap pilihan jawaban ke dalam bentuk <InlineMath math="5 - \frac{1}{n}" /> dan membandingkannya.
+
+1.  **Analisis** <InlineMath math="\frac{139}{28}" />
+
+    <MathContainer>
+      <BlockMath math="\frac{139}{28} = \frac{140 - 1}{28} = 5 - \frac{1}{28}" />
+    </MathContainer>
+
+    Kita bandingkan <InlineMath math="5 - \frac{1}{28}" /> dengan batas bawah <InlineMath math="5 - \frac{1}{29}" />.
+    Karena <InlineMath math="28 < 29" />, maka <InlineMath math="\frac{1}{28} > \frac{1}{29}" />.
+    Akibatnya, <InlineMath math="5 - \frac{1}{28} < 5 - \frac{1}{29}" />.
+    
+    Nilai ini **lebih kecil** dari batas bawah, sehingga **tidak memenuhi** pertidaksamaan.
+
+2.  **Analisis** <InlineMath math="\frac{149}{30}" />
+
+    <MathContainer>
+      <BlockMath math="\frac{149}{30} = \frac{150 - 1}{30} = 5 - \frac{1}{30}" />
+    </MathContainer>
+
+    Karena <InlineMath math="30 > 29" />, maka <InlineMath math="\frac{1}{30} < \frac{1}{29}" />.
+    Sehingga <InlineMath math="5 - \frac{1}{30} > 5 - \frac{1}{29}" />.
+    Nilai ini **memenuhi** pertidaksamaan.
+
+3.  **Analisis** <InlineMath math="\frac{154}{31}" />
+
+    <MathContainer>
+      <BlockMath math="\frac{154}{31} = \frac{155 - 1}{31} = 5 - \frac{1}{31}" />
+    </MathContainer>
+
+    Karena <InlineMath math="31 > 29" />, nilai ini **memenuhi** pertidaksamaan.
+
+4.  **Analisis** <InlineMath math="\frac{159}{32}" />
+
+    <MathContainer>
+      <BlockMath math="\frac{159}{32} = \frac{160 - 1}{32} = 5 - \frac{1}{32}" />
+    </MathContainer>
+
+    Karena <InlineMath math="32 > 29" />, nilai ini **memenuhi** pertidaksamaan.
+
+5.  **Analisis** <InlineMath math="\frac{164}{33}" />
+
+    <MathContainer>
+      <BlockMath math="\frac{164}{33} = \frac{165 - 1}{33} = 5 - \frac{1}{33}" />
+    </MathContainer>
+
+    Karena <InlineMath math="33 > 29" />, nilai ini **memenuhi** pertidaksamaan.
+
+#### Kesimpulan
+
+Satu-satunya nilai yang **tidak** berada dalam rentang <InlineMath math="\frac{144}{29} < x < 5" /> adalah <InlineMath math="\frac{139}{28}" /> karena nilainya kurang dari batas bawah.
+
+Jadi, jawabannya adalah <InlineMath math="\frac{139}{28}" />.

@@ -48,7 +48,7 @@ export const SubjectsPart = memo(({ message }: Props) => {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
-        <Spinner className="text-muted-foreground" />
+        <Spinner className="size-4 text-muted-foreground" />
         <p className="text-muted-foreground text-sm">
           {t("get-subjects-loading")}
         </p>
@@ -59,7 +59,7 @@ export const SubjectsPart = memo(({ message }: Props) => {
   if (isError) {
     return (
       <div className="flex items-center gap-2">
-        <HugeIcons className="text-destructive" icon={Sad02Icon} />
+        <HugeIcons className="size-4 text-destructive" icon={Sad02Icon} />
         <span className="text-muted-foreground text-sm">
           {t("get-subjects-error")}
         </span>
@@ -71,7 +71,10 @@ export const SubjectsPart = memo(({ message }: Props) => {
     <>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <HugeIcons className="text-muted-foreground" icon={Books02Icon} />
+          <HugeIcons
+            className="size-4 text-muted-foreground"
+            icon={Books02Icon}
+          />
           <span className="text-muted-foreground text-sm">
             {t("get-subjects-title")}
           </span>

@@ -16,6 +16,11 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2022",
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "plugins": [
+      {
+        "name": "@effect/language-service"
+      }
+    ]
   }
 }

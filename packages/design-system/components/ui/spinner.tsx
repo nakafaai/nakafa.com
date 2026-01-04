@@ -12,7 +12,7 @@ function Spinner({ className, isLoading, icon, ...props }: SpinnerProps) {
   return (
     <HugeIcons
       className={cn(
-        "size-4 shrink-0",
+        "shrink-0",
         (isLoading || !icon) && "animate-spin",
         className
       )}

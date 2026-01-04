@@ -1,23 +1,14 @@
-import type { ContentMetadata } from "@repo/contents/_types/content";
+import type { ContentWithMDX } from "@repo/contents/_types/content";
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
-import type { createElement } from "react";
 
 export interface Exercise {
   number: number;
   choices: ExercisesChoices;
-  question: {
-    metadata: ContentMetadata;
-    default: ReturnType<typeof createElement>;
-    raw: string;
-  };
-  answer: {
-    metadata: ContentMetadata;
-    default: ReturnType<typeof createElement>;
-    raw: string;
-  };
+  question: ContentWithMDX;
+  answer: ContentWithMDX;
 }
 
 export type ExerciseWithoutDefaults = Omit<Exercise, "question" | "answer"> & {
-  question: Omit<Exercise["question"], "default">;
-  answer: Omit<Exercise["answer"], "default">;
+  question: Omit<ContentWithMDX, "default">;
+  answer: Omit<ContentWithMDX, "default">;
 };

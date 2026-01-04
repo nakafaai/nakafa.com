@@ -7,104 +7,98 @@ import {
 const HEADING_LEVELS = 6;
 
 /**
- * Parses the headings from the content.
- * @param content - Markdown content to parse.
- * @returns The parsed headings.
+ * Extracts heading hierarchy from markdown content.
+ * Parses markdown headings (h1-h6) and builds a nested structure for TOC generation.
+ * Removes code blocks before parsing to avoid false matches.
+ *
+ * @param content - Raw markdown content
+ * @returns Array of parsed headings with nested children
+ *
+ * @example
+ * ```ts
+ * const headings = getHeadings("# Introduction\\n## Getting Started");
+ * // Returns: [{ label: "Introduction", href: "#introduction", children: [...] }]
+ * ```
  */
 export function getHeadings(content: string): ParsedHeading[] {
-  try {
-    // Remove content within <CodeBlock ... /> components and markdown code
-    // fences to prevent headings inside code examples from being added to the TOC.
-    const cleanedContent = content
-      .replace(/<CodeBlock[\s\S]*?\/>/gm, "")
-      .replace(/```[\s\S]*?```/g, "");
+  const cleanedContent = content
+    .replace(/<CodeBlock[\s\S]*?\/>/gm, "")
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/~~~[\s\S]*?~~~/g, "");
 
-    // Handle markdown style headings (# Heading)
-    const markdownHeadingRegex = /^(#{1,6})\s+(.*)$/gm;
-    const markdownMatches = Array.from(
-      cleanedContent.matchAll(markdownHeadingRegex)
-    );
+  const markdownHeadingRegex = /^\s*(#{1,6})(?:\s+(.*))?$/gm;
+  const markdownMatches = Array.from(
+    cleanedContent.matchAll(markdownHeadingRegex)
+  );
 
-    if (markdownMatches && markdownMatches.length > 0) {
-      const headings: ParsedHeading[] = [];
-      // Keep track of the last heading seen at each level
-      const lastHeadingAtLevel: ParsedHeading[] = new Array(HEADING_LEVELS + 1); // 0-6 levels (0 unused)
+  if (markdownMatches && markdownMatches.length > 0) {
+    const headings: ParsedHeading[] = [];
+    const lastHeadingAtLevel: ParsedHeading[] = new Array(HEADING_LEVELS + 1);
 
-      for (const match of markdownMatches) {
-        const level = match[1].length; // Number of # symbols
-        const text = match[2].trim();
-        const slug = createHeadingId(text);
+    for (const match of markdownMatches) {
+      const level = match[1].length;
+      const text = match[2] ? match[2].trim() : "";
+      const slug = createHeadingId(text);
 
-        const heading: ParsedHeading = {
-          label: createHeadingLabel(text),
-          href: `#${slug}`,
-          children: [],
-        };
+      const heading: ParsedHeading = {
+        label: createHeadingLabel(text),
+        href: `#${slug}`,
+        children: [],
+      };
 
-        // Store the current heading at its level
-        lastHeadingAtLevel[level] = heading;
+      lastHeadingAtLevel[level] = heading;
 
-        if (level === 1) {
-          // Top level headings
-          headings.push(heading);
+      if (level === 1) {
+        headings.push(heading);
+      } else {
+        let parentLevel = level - 1;
+        while (parentLevel > 0 && !lastHeadingAtLevel[parentLevel]) {
+          parentLevel -= 1;
+        }
+
+        if (parentLevel > 0 && lastHeadingAtLevel[parentLevel]) {
+          lastHeadingAtLevel[parentLevel].children.push(heading);
         } else {
-          // Find the parent heading (the closest heading with a lower level)
-          let parentLevel = level - 1;
-          while (parentLevel > 0 && !lastHeadingAtLevel[parentLevel]) {
-            parentLevel -= 1;
-          }
-
-          // If a parent was found, add this heading as its child
-          if (parentLevel > 0 && lastHeadingAtLevel[parentLevel]) {
-            const parent = lastHeadingAtLevel[parentLevel];
-            if (!parent.children) {
-              parent.children = [];
-            }
-            parent.children.push(heading);
-          } else {
-            // No parent found, add to top level
-            headings.push(heading);
-          }
+          headings.push(heading);
         }
       }
-
-      // Clean up empty children arrays
-      function cleanupChildren(items: ParsedHeading[]): void {
-        for (const item of items) {
-          if (item.children && item.children.length === 0) {
-            // Set to undefined instead of using delete
-            item.children = undefined;
-          } else if (item.children) {
-            cleanupChildren(item.children);
-          }
-        }
-      }
-
-      cleanupChildren(headings);
-      return headings;
     }
 
-    // If we reach here, no headings found with markdown regex
-    return [];
-  } catch {
-    return [];
+    return headings;
   }
+
+  return [];
 }
 
 /**
- * Extracts all heading IDs from the given headings.
- * @param headings - The headings to extract IDs from.
- * @returns The extracted IDs.
+ * Extracts all heading IDs from a parsed heading hierarchy.
+ * Uses iterative DFS traversal to collect all heading slugs including nested children.
+ *
+ * @param headings - Array of parsed headings with potential nested children
+ * @returns Array of heading slugs/IDs
+ *
+ * @example
+ * ```ts
+ * const ids = extractAllHeadingIds(headings);
+ * // Returns: ["introduction", "getting-started", "installation"]
+ * ```
  */
 export function extractAllHeadingIds(headings: ParsedHeading[]): string[] {
   const ids: string[] = [];
+  const stack: ParsedHeading[] = [...headings].reverse();
+  let stackIndex = stack.length - 1;
 
-  for (const heading of headings) {
+  while (stackIndex >= 0) {
+    const heading = stack[stackIndex];
+    stack.splice(stackIndex, 1);
+
     ids.push(createHeadingId(heading.label));
 
     if (heading.children && heading.children.length > 0) {
-      ids.push(...extractAllHeadingIds(heading.children));
+      stack.splice(stackIndex, 0, ...heading.children.reverse());
     }
+
+    stackIndex = stack.length - 1;
   }
 
   return ids;

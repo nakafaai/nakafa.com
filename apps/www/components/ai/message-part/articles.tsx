@@ -44,7 +44,7 @@ export const ArticlesPart = memo(({ message }: Props) => {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
-        <Spinner className="text-muted-foreground" />
+        <Spinner className="size-4 text-muted-foreground" />
         <p className="text-muted-foreground text-sm">
           {t("get-articles-loading")}
         </p>

@@ -1,13 +1,14 @@
 import {
-  SiDiscord,
-  SiGithub,
-  SiInstagram,
-  SiYoutube,
-} from "@icons-pack/react-simple-icons";
+  DiscordIcon,
+  Github01Icon,
+  InstagramIcon,
+  Linkedin02Icon,
+  YoutubeIcon,
+} from "@hugeicons/core-free-icons";
 import { buttonVariants } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
-import { IconBrandLinkedin } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { holyMenu } from "@/components/sidebar/_data/holy";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
@@ -147,7 +148,7 @@ export function Footer() {
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  <social.icon className="size-4" />
+                  <HugeIcons className="size-4" icon={social.icon} />
                   <span className="sr-only">{social.label}</span>
                 </a>
               ))}
@@ -177,27 +178,27 @@ function LinkItem({ href, label }: { href: string; label: string }) {
 const socialMedia = [
   {
     href: "https://www.youtube.com/@nakafaa",
-    icon: SiYoutube,
+    icon: YoutubeIcon,
     label: "YouTube",
   },
   {
     href: "https://discord.gg/CPCSfKhvfQ",
-    icon: SiDiscord,
+    icon: DiscordIcon,
     label: "Discord",
   },
   {
     href: "https://github.com/nakafaai",
-    icon: SiGithub,
+    icon: Github01Icon,
     label: "GitHub",
   },
   {
     href: "https://www.linkedin.com/company/nakafa",
-    icon: IconBrandLinkedin,
+    icon: Linkedin02Icon,
     label: "LinkedIn",
   },
   {
     href: "https://www.instagram.com/nakafa.tv/",
-    icon: SiInstagram,
+    icon: InstagramIcon,
     label: "Instagram",
   },
 ];

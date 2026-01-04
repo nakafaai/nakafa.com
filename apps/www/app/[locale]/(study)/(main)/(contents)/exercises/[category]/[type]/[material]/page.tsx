@@ -140,6 +140,7 @@ async function PageContent({
   const chapters: ParsedHeading[] = materials.map((mat) => ({
     label: mat.title,
     href: `#${slugify(mat.title)}`,
+    children: [],
   }));
 
   return (

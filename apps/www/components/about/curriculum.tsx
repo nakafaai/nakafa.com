@@ -2,6 +2,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useTranslations } from "next-intl";
 import { articlesMenu } from "@/components/sidebar/_data/articles";
+import { exercisesMenu } from "@/components/sidebar/_data/exercises";
 import { holyMenu } from "@/components/sidebar/_data/holy";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
 
@@ -10,6 +11,7 @@ export function Curriculum() {
   const tCommon = useTranslations("Common");
   const tSubject = useTranslations("Subject");
   const tArticles = useTranslations("Articles");
+  const tExercises = useTranslations("Exercises");
 
   const t = useTranslations("About");
 
@@ -60,6 +62,38 @@ export function Curriculum() {
                     </NavigationLink>
                   );
                 })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-4">
+        <h3 className="font-medium text-2xl tracking-tight">
+          {tCommon("exercises")}
+        </h3>
+        <div className="overflow-hidden rounded-xl border shadow-sm">
+          {exercisesMenu.map((exercise) => (
+            <div
+              className="flex flex-col border-b last:border-b-0"
+              key={exercise.title}
+            >
+              <div className="flex items-center gap-2 border-b p-6">
+                {!!exercise.icon && (
+                  <HugeIcons className="size-5 shrink-0" icon={exercise.icon} />
+                )}
+                <h4>{tExercises(exercise.title)}</h4>
+              </div>
+              <div className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                {exercise.items.map((item) => (
+                  <NavigationLink
+                    className="cursor-pointer p-6 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+                    href={item.href}
+                    key={item.title}
+                  >
+                    <h4>{tExercises(item.title)}</h4>
+                  </NavigationLink>
+                ))}
               </div>
             </div>
           ))}
