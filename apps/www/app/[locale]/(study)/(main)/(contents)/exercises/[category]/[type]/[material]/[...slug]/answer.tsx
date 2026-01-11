@@ -5,6 +5,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { cn, slugify } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
+import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
 interface Props {
@@ -18,10 +19,18 @@ export function ExerciseAnswer({ children, exerciseNumber }: Props) {
     (state) => state.visibleExplanations[exerciseNumber] ?? false
   );
 
+  const mode = useAttempt((state) => state.attempt?.mode);
+
   const id = slugify(`${t("explanation")}-${exerciseNumber}`);
 
   return (
-    <section className={cn("space-y-6", showAnswer ? "visible" : "hidden")}>
+    <section
+      className={cn(
+        "space-y-6",
+        showAnswer ? "visible" : "hidden",
+        mode === "simulation" && "hidden"
+      )}
+    >
       <Separator orientation="horizontal" />
       <div className="space-y-6">
         <h3 className="scroll-mt-44 font-medium text-lg" id={id}>

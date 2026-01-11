@@ -22,16 +22,17 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { useUser } from "@/lib/context/use-user";
 import { roles } from "@/lib/data/roles";
 
 type Role = (typeof roles)[number]["value"];
 
 export function Onboarding() {
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((state) => state.user);
 
   if (!user) {
     return null;

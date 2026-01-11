@@ -2,7 +2,6 @@ import { promises as fsPromises } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
-import { cleanSlug } from "@repo/contents/_lib/helpers";
 import {
   FileReadError,
   GitHubFetchError,
@@ -18,6 +17,7 @@ import {
   type Reference,
   ReferenceSchema,
 } from "@repo/contents/_types/content";
+import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Either, Option } from "effect";
 import ky from "ky";
 import type { Locale } from "next-intl";

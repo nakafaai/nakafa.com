@@ -10,7 +10,6 @@ import {
   Settings01Icon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
 import {
   Avatar,
   AvatarFallback,
@@ -35,10 +34,10 @@ import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
-import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
+import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 
 const prefetchLinks = [
@@ -55,7 +54,7 @@ export function NavUser() {
   const pathname = usePathname();
 
   const router = useRouter();
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((state) => state.user);
 
   const { isMobile } = useSidebar();
 

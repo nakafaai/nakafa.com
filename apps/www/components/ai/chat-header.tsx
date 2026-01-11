@@ -28,7 +28,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn, getAppUrl } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import {
   Activity,
@@ -40,6 +40,7 @@ import {
   useTransition,
 } from "react";
 import { toast } from "sonner";
+import { useUser } from "@/lib/context/use-user";
 import { useCurrentChat } from "./chat-provider";
 
 export function AiChatHeader() {
@@ -77,7 +78,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
 
   const clipboard = useClipboard({ timeout: 500 });
 
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((s) => s.user);
   const isOwner = user?.appUser._id === chat.userId;
 
   const updateChatTitle = useMutation(api.chats.mutations.updateChatTitle);

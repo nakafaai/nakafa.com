@@ -1,11 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { cleanSlug } from "@repo/contents/_lib/helpers";
 import {
   DirectoryReadError,
   InvalidPathError,
 } from "@repo/contents/_shared/error";
+import { cleanSlug } from "@repo/utilities/helper";
 import { Effect } from "effect";
 
 const __filename = fileURLToPath(import.meta.url);

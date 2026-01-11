@@ -23,13 +23,13 @@ interface ReactionWithUsers {
   reactors: string[];
 }
 
-export type ForumPost = Doc<"schoolClassForumPosts"> & {
+export interface ForumPost extends Doc<"schoolClassForumPosts"> {
   user: UserData | null;
   replyToUser: UserData | null;
   myReactions: string[];
   reactionUsers: ReactionWithUsers[];
   attachments: PostAttachment[];
-};
+}
 
 interface ReplyTo {
   postId: Id<"schoolClassForumPosts">;
@@ -37,7 +37,7 @@ interface ReplyTo {
 }
 
 // Jump mode state for bidirectional pagination
-type JumpModeState = {
+interface JumpModeState {
   targetPostId: Id<"schoolClassForumPosts">;
   posts: ForumPost[];
   targetIndex: number;
@@ -47,7 +47,9 @@ type JumpModeState = {
   newestTime: number;
   isLoadingOlder: boolean;
   isLoadingNewer: boolean;
-} | null;
+}
+
+type JumpModeStateOrNull = JumpModeState | null;
 
 interface PersistedState {
   activeForumId: Id<"schoolClassForums"> | null;
@@ -55,7 +57,7 @@ interface PersistedState {
 }
 
 interface TransientState {
-  jumpMode: JumpModeState;
+  jumpMode: JumpModeStateOrNull;
 }
 
 type State = PersistedState & TransientState;

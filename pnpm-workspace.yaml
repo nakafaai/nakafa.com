@@ -5,6 +5,7 @@ packages:
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - '@swc/core'
+  - core-js
   - core-js-pure
   - esbuild
   - sharp

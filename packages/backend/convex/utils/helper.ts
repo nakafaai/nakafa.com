@@ -18,6 +18,27 @@ export function cleanSlug(slug: string): string {
 }
 
 /**
+ * Clamp a number within an inclusive range.
+ * @param value - The number to clamp.
+ * @param min - Inclusive lower bound.
+ * @param max - Inclusive upper bound.
+ * @returns The clamped number.
+ */
+export function clampNumber({
+  value,
+  min,
+  max,
+}: {
+  value: number;
+  min: number;
+  max: number;
+}): number {
+  const low = Math.min(min, max);
+  const high = Math.max(min, max);
+  return Math.min(Math.max(value, low), high);
+}
+
+/**
  * Slugifies a text
  * @param text - The text to slugify
  * @returns The slugified text, example: "Hello World" -> "hello-world"

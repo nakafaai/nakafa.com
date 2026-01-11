@@ -33,6 +33,7 @@ import { useAction, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useAi } from "@/lib/context/use-ai";
+import { useUser } from "@/lib/context/use-user";
 import { aiModels, getFreeModels, getPremiumModels } from "@/lib/data/models";
 
 export function AiChatModel() {
@@ -43,7 +44,7 @@ export function AiChatModel() {
 
   const [isPending, startTransition] = useTransition();
 
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((s) => s.user);
   const hasSubscription = useQuery(
     api.subscriptions.queries.hasActiveSubscription,
     user ? { productId: products.pro.id } : "skip"

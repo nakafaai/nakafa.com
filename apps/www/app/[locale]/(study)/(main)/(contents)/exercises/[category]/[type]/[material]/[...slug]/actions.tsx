@@ -5,6 +5,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn, slugify } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
+import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
 interface Props {
@@ -18,9 +19,12 @@ export function ExerciseAnswerAction({ exerciseNumber }: Props) {
     (state) => state.visibleExplanations[exerciseNumber] ?? false
   );
 
+  const mode = useAttempt((state) => state.attempt?.mode);
+
   return (
     <div className="flex items-center gap-2">
       <Button
+        disabled={mode && mode === "simulation"}
         onClick={() => {
           const isClosing = showAnswer;
           toggleAnswer(exerciseNumber);

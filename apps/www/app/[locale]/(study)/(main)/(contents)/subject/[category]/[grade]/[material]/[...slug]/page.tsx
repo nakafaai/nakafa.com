@@ -1,10 +1,5 @@
-import { getContent, getContentMetadata } from "@repo/contents/_lib/content";
 import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
-import {
-  getMaterialIcon,
-  getMaterialPath,
-  getMaterials,
-} from "@repo/contents/_lib/subject/material";
+import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import {
   getMaterialsPagination,
   getSlugPath,
@@ -37,6 +32,7 @@ import {
 } from "@/components/shared/layout-material";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
+import { getContentContext } from "@/lib/utils/pages/subject";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -61,14 +57,17 @@ export async function generateMetadata({
   const { locale, category, grade, material, slug } = await params;
   const t = await getTranslations({ locale, namespace: "Subject" });
 
-  const FilePath = getSlugPath(category, grade, material, slug);
-
-  const metadata = await Effect.runPromise(
-    Effect.match(getContentMetadata(FilePath, locale), {
-      onFailure: () => null,
-      onSuccess: (data) => data,
-    })
+  const { content, FilePath } = await Effect.runPromise(
+    Effect.match(
+      getContentContext({ locale, category, grade, material, slug }),
+      {
+        onFailure: () => ({ content: null, FilePath: "" }),
+        onSuccess: (data) => data,
+      }
+    )
   );
+
+  const metadata = content?.metadata ?? null;
 
   const path = `/${locale}${FilePath}`;
   const alternates = {
@@ -114,7 +113,7 @@ export async function generateMetadata({
     keywords: metadata.title
       .split(" ")
       .concat(metadata.description?.split(" ") ?? [])
-      .filter((keyword) => keyword.length > 0),
+      .filter((keyword: string) => keyword.length > 0),
     openGraph,
     twitter,
   };
@@ -164,114 +163,113 @@ async function PageContent({
     getTranslations({ locale, namespace: "Subject" }),
   ]);
 
-  const materialPath = getMaterialPath(category, grade, material);
-  const FilePath = getSlugPath(category, grade, material, slug);
-
   if (slug.length === 1) {
     // Means it only contains the chapter name, not the section name
     // The slugs usually have 2 items, chapter and section
     // In the future, we can add a new page specifically for the section
+    const materialPath = getSlugPath(category, grade, material, []);
     redirect(materialPath);
   }
 
-  try {
-    const [content, materials] = await Promise.all([
-      Effect.runPromise(
-        Effect.match(getContent(locale, FilePath), {
-          onFailure: () => null,
-          onSuccess: (data) => data,
+  const result = await Effect.runPromise(
+    Effect.catchAll(
+      getContentContext({ locale, category, grade, material, slug }),
+      () =>
+        Effect.succeed({
+          content: null,
+          materials: null,
+          materialPath: "",
+          FilePath: "",
         })
-      ),
-      getMaterials(materialPath, locale),
-    ]);
+    )
+  );
 
-    if (!content) {
-      notFound();
-    }
+  const { content, materials, materialPath, FilePath } = result;
 
-    const { metadata, default: Content } = content;
-
-    const pagination = getMaterialsPagination(FilePath, materials);
-
-    const headings = getHeadings(content.raw);
-
-    return (
-      <>
-        <BreadcrumbJsonLd
-          breadcrumbItems={headings.map((heading, index) => ({
-            "@type": "ListItem",
-            "@id": `https://nakafa.com/${locale}${FilePath}${heading.href}`,
-            position: index + 1,
-            name: heading.label,
-            item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
-          }))}
-          locale={locale}
-          // this will only work for the first heading, not for the nested headings
-          name={metadata.title}
-        />
-        <ArticleJsonLd
-          author={metadata.authors.map((author: { name: string }) => ({
-            "@type": "Person",
-            name: author.name,
-            url: `https://nakafa.com/${locale}/contributor`,
-          }))}
-          datePublished={formatISO(metadata.date)}
-          description={metadata.description ?? metadata.subject ?? ""}
-          headline={metadata.title}
-          image={getOgUrl(locale, FilePath)}
-        />
-        <LearningResourceJsonLd
-          author={metadata.authors.map((author: { name: string }) => ({
-            "@type": "Person",
-            name: author.name,
-            url: `https://nakafa.com/${locale}/contributor`,
-          }))}
-          datePublished={formatISO(metadata.date)}
-          description={metadata.description ?? metadata.subject ?? ""}
-          educationalLevel={tSubject(getGradeNonNumeric(grade) ?? "grade", {
-            grade,
-          })}
-          name={metadata.title}
-        />
-        <LayoutMaterial>
-          <LayoutMaterialContent showAskButton>
-            <LayoutMaterialHeader
-              icon={getMaterialIcon(material)}
-              link={{
-                href: `${materialPath}#${slugify(metadata.subject ?? "")}`,
-                label: metadata.subject ?? "",
-              }}
-              slug={`/${locale}${FilePath}`}
-              title={metadata.title}
-            />
-            <LayoutMaterialMain>
-              {headings.length === 0 && <ComingSoon />}
-              {headings.length > 0 && Content}
-            </LayoutMaterialMain>
-            <LayoutMaterialPagination pagination={pagination} />
-            <LayoutMaterialFooter>
-              <Comments slug={FilePath} />
-            </LayoutMaterialFooter>
-          </LayoutMaterialContent>
-          <LayoutMaterialToc
-            chapters={{
-              label: tCommon("on-this-page"),
-              data: headings,
-            }}
-            githubUrl={getGithubUrl({
-              path: `/packages/contents${FilePath}`,
-            })}
-            header={{
-              title: metadata.title,
-              href: FilePath,
-              description: metadata.description ?? metadata.subject,
-            }}
-            showComments
-          />
-        </LayoutMaterial>
-      </>
-    );
-  } catch {
+  if (!(content && materials)) {
     notFound();
   }
+
+  const { metadata, default: Content } = content;
+
+  const pagination = getMaterialsPagination(FilePath, materials);
+
+  const headings = getHeadings(content.raw);
+
+  return (
+    <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={headings.map((heading, index) => ({
+          "@type": "ListItem",
+          "@id": `https://nakafa.com/${locale}${FilePath}${heading.href}`,
+          position: index + 1,
+          name: heading.label,
+          item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
+        }))}
+        locale={locale}
+        // this will only work for the first heading, not for the nested headings
+        name={metadata.title}
+      />
+      <ArticleJsonLd
+        author={metadata.authors.map((author: { name: string }) => ({
+          "@type": "Person",
+          name: author.name,
+          url: `https://nakafa.com/${locale}/contributor`,
+        }))}
+        datePublished={formatISO(metadata.date)}
+        description={metadata.description ?? metadata.subject ?? ""}
+        headline={metadata.title}
+        image={getOgUrl(locale, FilePath)}
+      />
+      <LearningResourceJsonLd
+        author={metadata.authors.map((author: { name: string }) => ({
+          "@type": "Person",
+          name: author.name,
+          url: `https://nakafa.com/${locale}/contributor`,
+        }))}
+        datePublished={formatISO(metadata.date)}
+        description={metadata.description ?? metadata.subject ?? ""}
+        educationalLevel={tSubject(getGradeNonNumeric(grade) ?? "grade", {
+          grade,
+        })}
+        name={metadata.title}
+      />
+      <LayoutMaterial>
+        <LayoutMaterialContent showAskButton>
+          <LayoutMaterialHeader
+            icon={getMaterialIcon(material)}
+            link={{
+              href: `${materialPath}#${slugify(metadata.subject ?? "")}`,
+              label: metadata.subject ?? "",
+            }}
+            slug={`/${locale}${FilePath}`}
+            title={metadata.title}
+          />
+          <LayoutMaterialMain>
+            {headings.length === 0 && <ComingSoon />}
+            {headings.length > 0 && Content}
+          </LayoutMaterialMain>
+          <LayoutMaterialPagination pagination={pagination} />
+          <LayoutMaterialFooter>
+            <Comments slug={FilePath} />
+          </LayoutMaterialFooter>
+        </LayoutMaterialContent>
+        <LayoutMaterialToc
+          chapters={{
+            label: tCommon("on-this-page"),
+            data: headings,
+          }}
+          githubUrl={getGithubUrl({
+            path: `/packages/contents${FilePath}`,
+          })}
+          header={{
+            title: metadata.title,
+            href: FilePath,
+            description: metadata.description ?? metadata.subject,
+          }}
+          showComments
+        />
+      </LayoutMaterial>
+    </>
+  );
 }

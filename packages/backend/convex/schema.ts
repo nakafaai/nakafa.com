@@ -5,6 +5,7 @@ import classesSchema from "./classes/schema";
 import commentsSchema from "./comments/schema";
 import contentsSchema from "./contents/schema";
 import customersSchema from "./customers/schema";
+import exercisesSchema from "./exercises/schema";
 import notificationsSchema from "./notifications/schema";
 import schoolsSchema from "./schools/schema";
 import subscriptionsSchema from "./subscriptions/schema";
@@ -22,6 +23,7 @@ export default defineSchema(
     ...notificationsSchema,
     ...bookmarksSchema,
     ...contentsSchema,
+    ...exercisesSchema,
   },
   {
     schemaValidation: true,

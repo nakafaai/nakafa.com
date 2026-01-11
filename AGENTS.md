@@ -28,8 +28,12 @@
 - Check existing patterns before creating new components
 - Use shared packages (`@repo/design-system`, `@repo/ai`, etc.) instead of duplicating code
 - For MDX content: use `InlineMath` for numbers and math, inline code for programming elements
-- Convex backend in `packages/backend/convex/`, use auth helpers never `ctx.auth` directly
+- Convex backend in `packages/backend/convex/`, use auth helpers never `ctx.auth` directly, see `packages/backend/convex/lib` folder for shared utils functions
 - Run lint/test after all changes
+
+# TypeScript Style
+
+NEVER USE ASSERTION! Good typescript is when you can write code like javascript but still type safe.
 
 # Ultracite Code Standards
 

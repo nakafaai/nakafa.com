@@ -28,10 +28,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar";
-import { usePaginatedQuery, useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useState } from "react";
+import { useUser } from "@/lib/context/use-user";
 
 type Props = ComponentProps<typeof Sidebar>;
 
@@ -108,7 +109,7 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
 }
 
 function AiChatSidebarHistory({ q }: { q?: string }) {
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((s) => s.user);
 
   if (!user) {
     return null;

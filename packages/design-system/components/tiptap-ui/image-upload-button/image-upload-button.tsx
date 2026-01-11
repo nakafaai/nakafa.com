@@ -17,7 +17,7 @@ import { parseShortcutKeys } from "@repo/design-system/lib/tiptap-utils";
 import type React from "react";
 import { useCallback } from "react";
 
-type IconProps = React.SVGProps<SVGSVGElement>;
+interface IconProps extends React.SVGProps<SVGSVGElement> {}
 type IconComponent = ({ className, ...props }: IconProps) => React.ReactElement;
 
 export interface ImageUploadButtonProps

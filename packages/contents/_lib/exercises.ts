@@ -1,12 +1,12 @@
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getContent } from "@repo/contents/_lib/content";
-import { cleanSlug } from "@repo/contents/_lib/helpers";
 import {
   type ChoicesValidationError,
   ExerciseLoadError,
 } from "@repo/contents/_shared/error";
 import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
 import type { Exercise } from "@repo/contents/_types/exercises/shared";
+import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 

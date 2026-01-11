@@ -1,15 +1,14 @@
 "use client";
 
 import { SparklesIcon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useAi } from "@/lib/context/use-ai";
+import { useUser } from "@/lib/context/use-user";
 
 interface Props {
   title: string;
@@ -17,7 +16,7 @@ interface Props {
 
 export function AskCta({ title }: Props) {
   const t = useTranslations("Ai");
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((s) => s.user);
   const router = useRouter();
 
   const setText = useAi((state) => state.setText);

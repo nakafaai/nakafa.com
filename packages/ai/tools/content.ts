@@ -1,4 +1,4 @@
-import { cleanSlug, dedentString } from "@repo/ai/lib/utils";
+import { dedentString } from "@repo/ai/lib/utils";
 import { nakafaContent } from "@repo/ai/prompt/content";
 import {
   type GetContentOutput,
@@ -12,6 +12,7 @@ import {
 } from "@repo/contents/_lib/exercises/material";
 import type { ExerciseWithoutDefaults } from "@repo/contents/_types/exercises/shared";
 import type { Surah } from "@repo/contents/_types/quran";
+import { cleanSlug } from "@repo/utilities/helper";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";
 

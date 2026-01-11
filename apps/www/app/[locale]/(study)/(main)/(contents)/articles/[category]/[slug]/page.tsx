@@ -1,5 +1,3 @@
-import { getSlugPath } from "@repo/contents/_lib/articles/slug";
-import { getContent, getReferences } from "@repo/contents/_lib/content";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
@@ -24,6 +22,10 @@ import {
 } from "@/components/shared/layout-material";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
+import {
+  fetchArticleContext,
+  fetchArticleMetadataContext,
+} from "@/lib/utils/pages/article";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -44,14 +46,18 @@ export async function generateMetadata({
   const { locale, category, slug } = await params;
   const t = await getTranslations({ locale, namespace: "Articles" });
 
-  const FilePath = getSlugPath(category, slug);
-
-  const content = await Effect.runPromise(
-    Effect.match(getContent(locale, FilePath), {
-      onFailure: () => null,
-      onSuccess: (data) => data,
-    })
+  const result = await Effect.runPromise(
+    Effect.catchAll(
+      fetchArticleMetadataContext({ locale, category, slug }),
+      () =>
+        Effect.succeed({
+          content: null,
+          FilePath: `/${category}/${slug}`,
+        })
+    )
   );
+
+  const { content, FilePath } = result;
 
   const path = `/${locale}${FilePath}`;
   const alternates = {
@@ -95,7 +101,7 @@ export async function generateMetadata({
     keywords: metadata.title
       .split(" ")
       .concat(metadata.description?.split(" ") ?? [])
-      .filter((keyword) => keyword.length > 0),
+      .filter((keyword: string) => keyword.length > 0),
     openGraph,
     twitter,
   };
@@ -132,105 +138,98 @@ async function PageContent({
     getTranslations({ locale, namespace: "Articles" }),
   ]);
 
-  const FilePath = getSlugPath(category, slug);
+  const result = await Effect.runPromise(
+    Effect.catchAll(fetchArticleContext({ locale, category, slug }), () =>
+      Effect.succeed({ content: null, references: null })
+    )
+  );
 
-  try {
-    const [content, references] = await Promise.all([
-      Effect.runPromise(
-        Effect.match(getContent(locale, FilePath), {
-          onFailure: () => null,
-          onSuccess: (data) => data,
-        })
-      ),
-      Effect.runPromise(getReferences(FilePath)),
-    ]);
+  const { content, references } = result;
 
-    if (!content) {
-      notFound();
-    }
-
-    const { metadata, default: Content } = content;
-
-    const headings = getHeadings(content.raw);
-
-    return (
-      <>
-        <BreadcrumbJsonLd
-          breadcrumbItems={headings.map((heading, index) => ({
-            "@type": "ListItem",
-            "@id": `https://nakafa.com/${locale}${FilePath}${heading.href}`,
-            position: index + 1,
-            name: heading.label,
-            item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
-          }))}
-          description={metadata.description ?? ""}
-          locale={locale}
-          name={metadata.title}
-        />
-        <ArticleJsonLd
-          author={metadata.authors.map((author: { name: string }) => ({
-            "@type": "Person",
-            name: author.name,
-            url: `https://nakafa.com/${locale}/contributor`,
-          }))}
-          datePublished={formatISO(metadata.date)}
-          description={metadata.description ?? ""}
-          headline={metadata.title}
-          image={getOgUrl(locale, FilePath)}
-        />
-        <LearningResourceJsonLd
-          author={metadata.authors.map((author: { name: string }) => ({
-            "@type": "Person",
-            name: author.name,
-            url: `https://nakafa.com/${locale}/contributor`,
-          }))}
-          datePublished={formatISO(metadata.date)}
-          description={metadata.description ?? ""}
-          educationalLevel={tArticles(category)}
-          name={metadata.title}
-        />
-        <LayoutMaterial>
-          <LayoutMaterialContent showAskButton>
-            <LayoutMaterialHeader
-              description={metadata.description}
-              link={{
-                href: `/articles/${category}`,
-                label: tArticles(category),
-              }}
-              slug={`/${locale}${FilePath}`}
-              title={metadata.title}
-            />
-            <LayoutMaterialMain>
-              {headings.length === 0 && <ComingSoon />}
-              {headings.length > 0 && Content}
-            </LayoutMaterialMain>
-            <LayoutMaterialFooter>
-              <Comments slug={FilePath} />
-            </LayoutMaterialFooter>
-          </LayoutMaterialContent>
-          <LayoutMaterialToc
-            chapters={{
-              label: tCommon("on-this-page"),
-              data: headings,
-            }}
-            githubUrl={getGithubUrl({
-              path: `/packages/contents${FilePath}`,
-            })}
-            header={{
-              title: metadata.title,
-              href: FilePath,
-              description: metadata.description,
-            }}
-            references={{
-              title: metadata.title,
-              data: references,
-            }}
-            showComments
-          />
-        </LayoutMaterial>
-      </>
-    );
-  } catch {
+  if (!content) {
     notFound();
   }
+
+  const FilePath = `/${category}/${slug}`;
+  const { metadata, default: Content } = content;
+
+  const headings = getHeadings(content.raw);
+
+  return (
+    <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={headings.map((heading, index) => ({
+          "@type": "ListItem",
+          "@id": `https://nakafa.com/${locale}${FilePath}${heading.href}`,
+          position: index + 1,
+          name: heading.label,
+          item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
+        }))}
+        description={metadata.description ?? ""}
+        locale={locale}
+        name={metadata.title}
+      />
+      <ArticleJsonLd
+        author={metadata.authors.map((author: { name: string }) => ({
+          "@type": "Person",
+          name: author.name,
+          url: `https://nakafa.com/${locale}/contributor`,
+        }))}
+        datePublished={formatISO(metadata.date)}
+        description={metadata.description ?? ""}
+        headline={metadata.title}
+        image={getOgUrl(locale, FilePath)}
+      />
+      <LearningResourceJsonLd
+        author={metadata.authors.map((author: { name: string }) => ({
+          "@type": "Person",
+          name: author.name,
+          url: `https://nakafa.com/${locale}/contributor`,
+        }))}
+        datePublished={formatISO(metadata.date)}
+        description={metadata.description ?? ""}
+        educationalLevel={tArticles(category)}
+        name={metadata.title}
+      />
+      <LayoutMaterial>
+        <LayoutMaterialContent showAskButton>
+          <LayoutMaterialHeader
+            description={metadata.description}
+            link={{
+              href: `/articles/${category}`,
+              label: tArticles(category),
+            }}
+            slug={`/${locale}${FilePath}`}
+            title={metadata.title}
+          />
+          <LayoutMaterialMain>
+            {headings.length === 0 && <ComingSoon />}
+            {headings.length > 0 && Content}
+          </LayoutMaterialMain>
+          <LayoutMaterialFooter>
+            <Comments slug={FilePath} />
+          </LayoutMaterialFooter>
+        </LayoutMaterialContent>
+        <LayoutMaterialToc
+          chapters={{
+            label: tCommon("on-this-page"),
+            data: headings,
+          }}
+          githubUrl={getGithubUrl({
+            path: `/packages/contents${FilePath}`,
+          })}
+          header={{
+            title: metadata.title,
+            href: FilePath,
+            description: metadata.description,
+          }}
+          references={{
+            title: metadata.title,
+            data: references,
+          }}
+          showComments
+        />
+      </LayoutMaterial>
+    </>
+  );
 }

@@ -1,4 +1,3 @@
-import { cleanSlug } from "@repo/contents/_lib/helpers";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type {
   ExercisesMaterial,
@@ -6,6 +5,7 @@ import type {
 } from "@repo/contents/_types/exercises/material";
 import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import { cleanSlug } from "@repo/utilities/helper";
 import type { Locale } from "next-intl";
 
 /**

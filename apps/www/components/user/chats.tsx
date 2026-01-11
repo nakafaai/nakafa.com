@@ -19,14 +19,15 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { useUser } from "@/lib/context/use-user";
 import { getLocale } from "@/lib/utils/date";
 
 export function UserChats({ userId }: { userId: Id<"users"> }) {
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((state) => state.user);
 
   // Determine if viewing own profile or someone else's
   const isOwnProfile = user?.appUser._id === userId;

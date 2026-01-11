@@ -1,4 +1,4 @@
-import { cleanSlug } from "@repo/contents/_lib/helpers";
+import { cleanSlug } from "@repo/utilities/helper";
 import { describe, expect, it } from "vitest";
 
 describe("cleanSlug", () => {

@@ -1,7 +1,7 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
-import { getSurah, getSurahName } from "@repo/contents/_lib/quran";
+import { getSurahName } from "@repo/contents/_lib/quran";
 import { cn, slugify } from "@repo/design-system/lib/utils";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
@@ -21,6 +21,11 @@ import { QuranInterpretation } from "@/components/shared/quran-interpretation";
 import { QuranText } from "@/components/shared/quran-text";
 import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
+import {
+  fetchSurahContext,
+  fetchSurahMetadataContext,
+  getQuranPagination,
+} from "@/lib/utils/pages/quran";
 
 export const revalidate = false;
 
@@ -42,15 +47,6 @@ export async function generateMetadata({
 
   const path = `/${locale}/quran/${surah}`;
 
-  const surahData = Option.fromNullable(
-    Effect.runSync(
-      Effect.match(getSurah(Number(surah)), {
-        onFailure: () => null,
-        onSuccess: (data) => data,
-      })
-    )
-  );
-
   const alternates = {
     canonical: path,
   };
@@ -70,16 +66,31 @@ export async function generateMetadata({
     locale,
   };
 
-  if (Option.isNone(surahData)) {
+  const surahNumber = Number(surah);
+
+  if (Number.isNaN(surahNumber)) {
     return {
       alternates,
     };
   }
 
-  const surahValue = Option.getOrThrow(surahData);
-  const title = getSurahName({ locale, name: surahValue.name });
+  const surahMetadataContext = await Effect.runPromise(
+    Effect.match(fetchSurahMetadataContext({ surah: surahNumber }), {
+      onFailure: () => null,
+      onSuccess: (data) => data,
+    })
+  );
 
-  const description = surahValue.name.translation[locale];
+  if (!surahMetadataContext) {
+    return {
+      alternates,
+    };
+  }
+
+  const { surahData } = surahMetadataContext;
+  const title = getSurahName({ locale, name: surahData.name });
+
+  const description = surahData.name.translation[locale];
 
   return {
     title: {
@@ -112,72 +123,63 @@ export default function Page({ params }: Props) {
 function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
   const t = useTranslations("Holy");
 
-  if (Number.isNaN(Number(surah))) {
+  const surahNumber = Number(surah);
+
+  if (Number.isNaN(surahNumber)) {
     notFound();
   }
 
-  const surahData = Option.fromNullable(
-    Effect.runSync(
-      Effect.match(getSurah(Number(surah)), {
-        onFailure: () => null,
-        onSuccess: (data) => data,
-      })
+  const result = use(
+    Effect.runPromise(
+      Effect.catchAll(fetchSurahContext({ surah: surahNumber }), () =>
+        Effect.succeed({
+          surahData: null,
+          prevSurah: null,
+          nextSurah: null,
+        })
+      )
     )
   );
 
-  const prevSurah = Option.fromNullable(
-    Effect.runSync(
-      Effect.match(getSurah(Number(surah) - 1), {
-        onFailure: () => null,
-        onSuccess: (data) => data,
-      })
-    )
-  );
+  const { surahData, prevSurah, nextSurah } = result;
 
-  const nextSurah = Option.fromNullable(
-    Effect.runSync(
-      Effect.match(getSurah(Number(surah) + 1), {
-        onFailure: () => null,
-        onSuccess: (data) => data,
-      })
-    )
-  );
-
-  if (Option.isNone(surahData)) {
+  if (!surahData) {
     notFound();
   }
 
-  const surahValue = Option.getOrThrow(surahData);
+  const translation = surahData.name.translation[locale];
 
-  const translation = surahValue.name.translation[locale];
+  const preBismillah = surahData.preBismillah;
 
-  const preBismillah = surahValue.preBismillah;
+  const title = getSurahName({ locale, name: surahData.name });
 
-  const title = getSurahName({ locale, name: surahValue.name });
-
-  const headings = surahValue.verses.map((verse, index) => ({
+  const headings = surahData.verses.map((verse, index) => ({
     label: t("verse-count", { count: verse.number.inSurah }),
     index,
     href: `/quran/${surah}#${slugify(t("verse-count", { count: verse.number.inSurah }))}`,
     children: [],
   }));
 
-  const pagination = {
+  const pagination = getQuranPagination({
+    prevSurah,
+    nextSurah,
+  });
+
+  const prevTitle = prevSurah
+    ? getSurahName({ locale, name: prevSurah.name })
+    : "";
+  const nextTitle = nextSurah
+    ? getSurahName({ locale, name: nextSurah.name })
+    : "";
+
+  const paginationWithLocalizedTitles = {
     prev: {
-      href: Option.isSome(prevSurah)
-        ? `/quran/${Option.getOrThrow(prevSurah).number}`
-        : "",
-      title: Option.isSome(prevSurah)
-        ? getSurahName({ locale, name: Option.getOrThrow(prevSurah).name })
-        : "",
+      href: pagination.prev.href,
+      title: prevTitle,
     },
     next: {
-      href: Option.isSome(nextSurah)
-        ? `/quran/${Option.getOrThrow(nextSurah).number}`
-        : "",
-      title: Option.isSome(nextSurah)
-        ? getSurahName({ locale, name: Option.getOrThrow(nextSurah).name })
-        : "",
+      href: pagination.next.href,
+      title: nextTitle,
     },
   };
 
@@ -204,8 +206,8 @@ function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
             </div>
           )}
 
-          <WindowVirtualized ssrCount={surahValue.verses.length}>
-            {surahValue.verses.map((verse, index) => {
+          <WindowVirtualized ssrCount={surahData.verses.length}>
+            {surahData.verses.map((verse, index) => {
               const transliteration = verse.text.transliteration.en;
               const translate =
                 verse.translation[locale] ?? verse.translation.en;
@@ -218,7 +220,7 @@ function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
                 <div
                   className={cn(
                     "mb-6 space-y-6 border-b pb-6",
-                    index === surahValue.verses.length - 1 &&
+                    index === surahData.verses.length - 1 &&
                       "mb-0 border-b-0 pb-0"
                   )}
                   key={verse.number.inQuran}
@@ -261,7 +263,7 @@ function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
             })}
           </WindowVirtualized>
         </LayoutMaterialMain>
-        <LayoutMaterialPagination pagination={pagination} />
+        <LayoutMaterialPagination pagination={paginationWithLocalizedTitles} />
         <LayoutMaterialFooter>
           <RefContent />
         </LayoutMaterialFooter>

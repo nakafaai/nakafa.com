@@ -14,6 +14,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
 import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
+import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 
 export function UserHeader({ userId }: { userId: Id<"users"> }) {
@@ -21,7 +22,7 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
   const tCommon = useTranslations("Common");
 
   const user = useQuery(api.auth.getUserById, { userId });
-  const currentUser = useQuery(api.auth.getCurrentUser);
+  const currentUser = useUser((state) => state.user);
 
   const authUser = user?.authUser;
   const appUser = user?.appUser;

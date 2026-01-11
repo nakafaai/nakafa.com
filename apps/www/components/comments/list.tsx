@@ -27,11 +27,12 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState, useTransition } from "react";
 import { CommentsAdd } from "@/components/comments/add";
+import { useUser } from "@/lib/context/use-user";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
@@ -104,14 +105,13 @@ function CommentContent({
 }) {
   const t = useTranslations("Common");
   const locale = useLocale();
-  const currentUser = useQuery(api.auth.getCurrentUser);
+  const user = useUser((s) => s.user);
 
   const userId = comment.user?._id;
   const userName = comment.user?.name ?? t("anonymous");
   const userImage = comment.user?.image ?? "";
 
-  const isReplyToMe =
-    currentUser && comment.replyToUser?._id === currentUser.appUser._id;
+  const isReplyToMe = user && comment.replyToUser?._id === user.appUser._id;
 
   return (
     <div
@@ -172,7 +172,7 @@ function CommentActions({
   onReplyToggle: () => void;
 }) {
   const t = useTranslations("Common");
-  const currentUser = useQuery(api.auth.getCurrentUser);
+  const user = useUser((s) => s.user);
 
   const [isPending, startTransition] = useTransition();
 
@@ -180,7 +180,7 @@ function CommentActions({
   const deleteComment = useMutation(api.comments.mutations.deleteComment);
 
   function handleVote(vote: -1 | 1) {
-    if (!currentUser) {
+    if (!user) {
       return;
     }
     startTransition(async () => {
@@ -189,7 +189,7 @@ function CommentActions({
   }
 
   function handleDelete() {
-    if (!currentUser) {
+    if (!user) {
       return;
     }
     startTransition(async () => {
@@ -277,9 +277,7 @@ function CommentActions({
         <TooltipTrigger
           render={
             <Button
-              className={cn(
-                comment.userId !== currentUser?.appUser._id && "hidden"
-              )}
+              className={cn(comment.userId !== user?.appUser._id && "hidden")}
               disabled={isPending}
               onClick={handleDelete}
               size="icon-sm"

@@ -16,7 +16,7 @@ import {
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
 import { cn } from "@repo/design-system/lib/utils";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
   open: boolean;
@@ -27,18 +27,18 @@ interface Props {
   footer?: ReactNode;
   styleClassName?: {
     dialog?: {
-      header?: string;
-      title?: string;
-      description?: string;
-      footer?: string;
-      content?: string;
+      header?: ComponentProps<typeof DialogHeader>["className"];
+      title?: ComponentProps<typeof DialogTitle>["className"];
+      description?: ComponentProps<typeof DialogDescription>["className"];
+      footer?: ComponentProps<typeof DialogFooter>["className"];
+      content?: ComponentProps<typeof DialogContent>["className"];
     };
     drawer?: {
-      header?: string;
-      title?: string;
-      description?: string;
-      footer?: string;
-      content?: string;
+      header?: ComponentProps<typeof DrawerHeader>["className"];
+      title?: ComponentProps<typeof DrawerTitle>["className"];
+      description?: ComponentProps<typeof DrawerDescription>["className"];
+      footer?: ComponentProps<typeof DrawerFooter>["className"];
+      content?: ComponentProps<typeof DrawerContent>["className"];
     };
   };
 }

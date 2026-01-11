@@ -1,12 +1,12 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { Authenticated, useQuery } from "convex/react";
+import { Authenticated } from "convex/react";
 import { UserSettingsName } from "@/components/user/settings/name";
 import { UserSettingsRole } from "@/components/user/settings/role";
+import { useUser } from "@/lib/context/use-user";
 
 export function UserSettingsProfilePage() {
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((state) => state.user);
 
   if (!user) {
     return null;

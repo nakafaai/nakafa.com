@@ -188,7 +188,11 @@ export function SchoolClassesHeaderAdd() {
                       open={subjectPopoverOpen}
                     >
                       <PopoverTrigger asChild>
-                        <Button aria-label="Select subject" variant="outline">
+                        <Button
+                          aria-label="Select subject"
+                          size="icon"
+                          variant="outline"
+                        >
                           <HugeIcons
                             className={cn(
                               "transition-transform ease-out",

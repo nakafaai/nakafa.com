@@ -3,6 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { AiContextProvider } from "@/lib/context/use-ai";
 import { PagefindProvider } from "@/lib/context/use-pagefind";
 import { SearchContextProvider } from "@/lib/context/use-search";
+import { UserContextProvider } from "@/lib/context/use-user";
 import { ConvexProvider } from "./convex";
 import { ReactQueryProviders } from "./react-query";
 
@@ -15,15 +16,17 @@ export function AppProviders({
 }) {
   return (
     <ConvexProvider initialToken={initialToken}>
-      <SearchContextProvider>
-        <NuqsAdapter>
-          <ReactQueryProviders>
-            <PagefindProvider>
-              <AiContextProvider>{children}</AiContextProvider>
-            </PagefindProvider>
-          </ReactQueryProviders>
-        </NuqsAdapter>
-      </SearchContextProvider>
+      <UserContextProvider>
+        <SearchContextProvider>
+          <NuqsAdapter>
+            <ReactQueryProviders>
+              <PagefindProvider>
+                <AiContextProvider>{children}</AiContextProvider>
+              </PagefindProvider>
+            </ReactQueryProviders>
+          </NuqsAdapter>
+        </SearchContextProvider>
+      </UserContextProvider>
     </ConvexProvider>
   );
 }

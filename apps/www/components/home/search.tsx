@@ -10,11 +10,12 @@ import {
   PromptInputTools,
 } from "@repo/design-system/components/ai/input";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { AiChatModel } from "@/components/ai/chat-model";
 import { useAi } from "@/lib/context/use-ai";
+import { useUser } from "@/lib/context/use-user";
 
 export function HomeSearch() {
   const t = useTranslations("Ai");
@@ -25,7 +26,7 @@ export function HomeSearch() {
   const setText = useAi((state) => state.setText);
   const setQuery = useAi((state) => state.setQuery);
 
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((state) => state.user);
   const createChat = useMutation(api.chats.mutations.createChat);
 
   const [isPending, startTransition] = useTransition();

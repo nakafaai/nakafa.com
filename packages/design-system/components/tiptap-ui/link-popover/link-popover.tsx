@@ -273,20 +273,22 @@ export const LinkPopover = ({
 
   return (
     <Popover onOpenChange={handleOnOpenChange} open={isOpen}>
-      <PopoverTrigger asChild>
-        <LinkButton
-          aria-label={label}
-          aria-pressed={isActive}
-          data-active-state={isActive ? "on" : "off"}
-          data-disabled={!canSet}
-          disabled={!canSet}
-          onClick={handleClick}
-          {...buttonProps}
-          ref={ref}
-        >
-          {children ?? <Icon className="tiptap-button-icon" />}
-        </LinkButton>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <LinkButton
+            aria-label={label}
+            aria-pressed={isActive}
+            data-active-state={isActive ? "on" : "off"}
+            data-disabled={!canSet}
+            disabled={!canSet}
+            onClick={handleClick}
+            {...buttonProps}
+            ref={ref}
+          >
+            {children ?? <Icon className="tiptap-button-icon" />}
+          </LinkButton>
+        }
+      />
 
       <PopoverContent>
         <LinkMain

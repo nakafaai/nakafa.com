@@ -6,6 +6,7 @@ import { useQuery } from "convex/react";
 import { memo } from "react";
 import { ForumPostConversation } from "@/components/school/classes/forum/conversation";
 import { useForum } from "@/lib/context/use-forum";
+import { useUser } from "@/lib/context/use-user";
 
 export const SchoolClassesForumPostSheetContent = memo(() => {
   const activeForumId = useForum((f) => f.activeForumId);
@@ -21,17 +22,17 @@ SchoolClassesForumPostSheetContent.displayName =
 
 const ForumPostList = memo(
   ({ forumId }: { forumId: Id<"schoolClassForums"> }) => {
-    const currentUser = useQuery(api.auth.getCurrentUser);
+    const user = useUser((state) => state.user);
     // getForum now includes lastReadAt - single query instead of two
     const forum = useQuery(api.classes.forums.queries.getForum, { forumId });
 
-    if (!(forum && currentUser)) {
+    if (!(forum && user)) {
       return null;
     }
 
     return (
       <ForumPostConversation
-        currentUserId={currentUser.appUser._id}
+        currentUserId={user.appUser._id}
         forum={forum}
         lastReadAt={forum.lastReadAt ?? 0}
       />

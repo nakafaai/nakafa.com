@@ -1,6 +1,6 @@
 import "@/styles/globals.css";
 
-import { VercelAnalytics } from "@repo/analytics/vercel";
+import { AnalyticsProvider } from "@repo/analytics/provider";
 import { DesignSystemProvider } from "@repo/design-system";
 import { ReactScan } from "@repo/design-system/components/ui/react-scan";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
@@ -167,15 +167,15 @@ export default function Layout(props: LayoutProps<"/[locale]">) {
           <WebsiteJsonLd locale={locale} />
         </head>
         <body className="relative">
-          <div className="isolate">
-            <AppProviders>
-              <DesignSystemProvider>{children}</DesignSystemProvider>
-            </AppProviders>
-          </div>
+          <AnalyticsProvider>
+            <div className="isolate">
+              <AppProviders>
+                <DesignSystemProvider>{children}</DesignSystemProvider>
+              </AppProviders>
+            </div>
 
-          <Toaster />
-
-          <VercelAnalytics />
+            <Toaster />
+          </AnalyticsProvider>
           <TailwindIndicator />
         </body>
       </NextIntlClientProvider>

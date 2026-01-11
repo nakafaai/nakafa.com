@@ -1,6 +1,5 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
 import {
   Conversation,
   ConversationContent,
@@ -16,11 +15,11 @@ import {
 } from "@repo/design-system/components/ai/input";
 import { Message } from "@repo/design-system/components/ai/message";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 import { useAi } from "@/lib/context/use-ai";
 import { useChat } from "@/lib/context/use-chat";
+import { useUser } from "@/lib/context/use-user";
 import { AiChatHeader } from "./chat-header";
 import { AIChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
@@ -42,7 +41,7 @@ export function AiChat() {
 const AiChatConversation = memo(() => {
   const chat = useCurrentChat((s) => s.chat);
 
-  const currentUser = useQuery(api.auth.getCurrentUser);
+  const currentUser = useUser((s) => s.user);
   const showActions = chat?.userId === currentUser?.appUser._id;
 
   const messages = useChat((state) => state.chat.messages);
@@ -74,11 +73,10 @@ const AiChatToolbar = memo(() => {
 
   const chat = useCurrentChat((s) => s.chat);
 
-  const currentUser = useQuery(api.auth.getCurrentUser);
+  const user = useUser((s) => s.user);
+
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
-
-  const user = useQuery(api.auth.getCurrentUser);
 
   const { sendMessage, status } = useChat((state) => state.chat);
 
@@ -100,7 +98,7 @@ const AiChatToolbar = memo(() => {
   }
 
   // only show when user is the owner of the chat
-  if (chat?.userId !== currentUser?.appUser._id) {
+  if (chat?.userId !== user?.appUser._id) {
     return null;
   }
 

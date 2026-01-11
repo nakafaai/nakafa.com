@@ -12,19 +12,16 @@ export const ExerciseContext = createContext<ExerciseStoreApi | null>(null);
 
 export function ExerciseContextProvider({
   children,
-  setId,
-  totalExercises,
+  slug,
 }: {
   children: ReactNode;
-  setId: string;
-  totalExercises: number;
+  slug: string;
 }) {
   const storeRef = useRef<ExerciseStoreApi>(undefined);
 
   if (!storeRef.current) {
     storeRef.current = createExerciseStore({
-      setId,
-      totalExercises,
+      slug,
     });
   }
 

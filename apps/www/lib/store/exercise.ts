@@ -1,69 +1,36 @@
+import * as z from "zod/mini";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-interface State {
-  setId: string;
-  totalExercises: number;
-  answers: Record<number, { selected: string; isCorrect: boolean } | null>;
-  visibleExplanations: Record<number, boolean>;
-}
+const StateSchema = z.object({
+  slug: z.string(),
+  visibleExplanations: z.record(z.number(), z.boolean()),
+  timeSpent: z.record(z.number(), z.number()),
+  showStats: z.boolean(),
+});
+type State = z.infer<typeof StateSchema>;
 
 interface Actions {
-  selectAnswer: ({
-    exerciseNumber,
-    choice,
-    correctAnswer,
-  }: {
-    exerciseNumber: number;
-    choice: string;
-    correctAnswer: string;
-  }) => void;
-  clearAnswer: (exerciseNumber: number) => void;
   toggleAnswer: (exerciseNumber: number) => void;
-  getScore: () => { correct: number; total: number; percentage: number };
-  reset: () => void;
+  setTimeSpent: (exerciseNumber: number, time: number) => void;
+  setShowStats: (showStats: boolean) => void;
 }
 
 export type ExerciseStore = State & Actions;
 
-const initialState = ({
-  setId,
-  totalExercises,
-}: {
-  setId: string;
-  totalExercises: number;
-}): State => ({
-  setId,
-  totalExercises,
-  answers: {},
+const initialState = ({ slug }: { slug: string }): State => ({
+  slug,
   visibleExplanations: {},
+  timeSpent: {},
+  showStats: true,
 });
 
-export const createExerciseStore = ({
-  setId,
-  totalExercises,
-}: {
-  setId: string;
-  totalExercises: number;
-}) =>
+export const createExerciseStore = ({ slug }: { slug: string }) =>
   createStore<ExerciseStore>()(
     persist(
-      immer((set, get) => ({
-        ...initialState({ setId, totalExercises }),
-
-        selectAnswer: ({ exerciseNumber, choice, correctAnswer }) =>
-          set((state) => {
-            state.answers[exerciseNumber] = {
-              selected: choice,
-              isCorrect: choice === correctAnswer,
-            };
-          }),
-
-        clearAnswer: (exerciseNumber) =>
-          set((state) => {
-            state.answers[exerciseNumber] = null;
-          }),
+      immer((set) => ({
+        ...initialState({ slug }),
 
         toggleAnswer: (exerciseNumber) =>
           set((state) => {
@@ -71,37 +38,29 @@ export const createExerciseStore = ({
               !state.visibleExplanations[exerciseNumber];
           }),
 
-        getScore: () => {
-          const answers = get().answers;
-          const allAnswers = Object.values(answers).filter(
-            (answer) => answer !== null
-          );
-          const correct = allAnswers.filter(
-            (answer) => answer.isCorrect
-          ).length;
-          const total = get().totalExercises;
-          const percentage = total > 0 ? (correct / total) * 100 : 0;
-
-          return { correct, total, percentage };
-        },
-
-        reset: () =>
+        setTimeSpent: (exerciseNumber, time) =>
           set((state) => {
-            state.answers = {};
-            state.visibleExplanations = {};
+            state.timeSpent[exerciseNumber] = time;
+          }),
+
+        setShowStats: (showStats) =>
+          set((state) => {
+            state.showStats = showStats;
           }),
       })),
       {
-        name: `nakafa-exercise-${setId}`,
+        name: `nakafa-exercise-${slug}`,
         storage: createJSONStorage(() => sessionStorage),
-        version: 1,
+        version: 3,
         migrate: (persistedState) => {
-          const state = persistedState as State;
-          // Validate the persisted state matches our current structure
-          if (!(state?.setId && state?.totalExercises)) {
-            return initialState({ setId, totalExercises });
+          const { data } = StateSchema.safeParse(persistedState);
+          if (!data?.slug) {
+            return initialState({ slug });
           }
-          return state;
+          if (!data.timeSpent) {
+            return { ...data, timeSpent: {} };
+          }
+          return data;
         },
       }
     )

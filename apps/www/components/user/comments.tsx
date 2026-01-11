@@ -31,6 +31,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 
 export function UserComments({ userId }: { userId: Id<"users"> }) {
@@ -63,7 +64,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
   const t = useTranslations("Common");
 
   const user = useQuery(api.auth.getUserById, { userId: comment.userId });
-  const currentUser = useQuery(api.auth.getCurrentUser);
+  const currentUser = useUser((state) => state.user);
 
   const userName = user?.authUser.name ?? t("anonymous");
   const userImage = user?.authUser.image ?? "";

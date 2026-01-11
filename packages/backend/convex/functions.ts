@@ -37,6 +37,11 @@ import {
   internalMutation as rawInternalMutation,
   mutation as rawMutation,
 } from "./_generated/server";
+import {
+  applyAttemptAggregatesDelta,
+  computeAttemptDurationSeconds,
+  computeAttemptStatsUpsert,
+} from "./exercises/utils";
 import { truncateText } from "./utils/helper";
 
 const triggers = new Triggers<DataModel>();
@@ -107,9 +112,186 @@ triggers.register("schoolClassMaterialViews", async () => {
   // No-op: deleted by schoolClassMaterials trigger
 });
 
+triggers.register("exerciseAttemptStats", async () => {
+  // No-op
+});
+
 // =============================================================================
 // ACTIVE TRIGGERS
 // =============================================================================
+
+triggers.register("exerciseAnswers", async (ctx, change) => {
+  const now = Date.now();
+  const answer = change.newDoc;
+  const oldAnswer = change.oldDoc;
+
+  const applyDelta = async ({
+    attemptId,
+    deltaAnsweredCount,
+    deltaCorrectAnswers,
+    deltaTotalTime,
+  }: {
+    attemptId: Id<"exerciseAttempts">;
+    deltaAnsweredCount: number;
+    deltaCorrectAnswers: number;
+    deltaTotalTime: number;
+  }) => {
+    const attempt = await ctx.db.get("exerciseAttempts", attemptId);
+    if (!attempt) {
+      return;
+    }
+
+    // Delta = how much the aggregates change for this write (retry-safe).
+    const next = applyAttemptAggregatesDelta({
+      attempt,
+      deltaAnsweredCount,
+      deltaCorrectAnswers,
+      deltaTotalTime,
+    });
+
+    await ctx.db.patch("exerciseAttempts", attemptId, {
+      ...next,
+      lastActivityAt: now,
+      updatedAt: now,
+    });
+  };
+
+  const toDelta = (doc: Doc<"exerciseAnswers">) => ({
+    deltaAnsweredCount: 1,
+    deltaCorrectAnswers: doc.isCorrect ? 1 : 0,
+    deltaTotalTime: doc.timeSpent,
+  });
+
+  const toNegativeDelta = (doc: Doc<"exerciseAnswers">) => ({
+    deltaAnsweredCount: -1,
+    deltaCorrectAnswers: doc.isCorrect ? -1 : 0,
+    deltaTotalTime: -doc.timeSpent,
+  });
+
+  switch (change.operation) {
+    case "insert": {
+      if (!answer) {
+        break;
+      }
+      await applyDelta({ attemptId: answer.attemptId, ...toDelta(answer) });
+      break;
+    }
+
+    case "update": {
+      if (!(answer && oldAnswer)) {
+        break;
+      }
+
+      if (answer.attemptId !== oldAnswer.attemptId) {
+        await applyDelta({
+          attemptId: oldAnswer.attemptId,
+          ...toNegativeDelta(oldAnswer),
+        });
+        await applyDelta({ attemptId: answer.attemptId, ...toDelta(answer) });
+        break;
+      }
+
+      const deltaCorrectAnswers =
+        (answer.isCorrect ? 1 : 0) - (oldAnswer.isCorrect ? 1 : 0);
+      const deltaTotalTime = answer.timeSpent - oldAnswer.timeSpent;
+
+      await applyDelta({
+        attemptId: answer.attemptId,
+        deltaAnsweredCount: 0,
+        deltaCorrectAnswers,
+        deltaTotalTime,
+      });
+      break;
+    }
+
+    case "delete": {
+      if (!oldAnswer) {
+        break;
+      }
+      await applyDelta({
+        attemptId: oldAnswer.attemptId,
+        ...toNegativeDelta(oldAnswer),
+      });
+      break;
+    }
+
+    default: {
+      break;
+    }
+  }
+});
+
+triggers.register("exerciseAttempts", async (ctx, change) => {
+  const attempt = change.newDoc;
+  const oldAttempt = change.oldDoc;
+
+  if (!attempt) {
+    return;
+  }
+
+  const completedAt = attempt.completedAt;
+
+  // Only record stats once per attempt (first transition into completed).
+  const shouldRecordCompletion =
+    attempt.status === "completed" &&
+    completedAt != null &&
+    !(oldAttempt?.status === "completed" && oldAttempt.completedAt != null);
+
+  if (!shouldRecordCompletion) {
+    return;
+  }
+
+  if (attempt.scope !== "set") {
+    // Avoid polluting set-level stats with single-question practice.
+    return;
+  }
+
+  const scorePercentage = attempt.scorePercentage;
+  const durationSeconds = computeAttemptDurationSeconds({
+    totalTimeSeconds: attempt.totalTime,
+    startedAtMs: attempt.startedAt,
+    completedAtMs: completedAt,
+  });
+
+  const existing = await ctx.db
+    .query("exerciseAttemptStats")
+    .withIndex("userId_slug", (q) =>
+      q.eq("userId", attempt.userId).eq("slug", attempt.slug)
+    )
+    .unique();
+
+  const now = Date.now();
+
+  if (!existing) {
+    const stats = computeAttemptStatsUpsert({
+      existing: null,
+      scorePercentage,
+      durationSeconds,
+      completedAtMs: completedAt,
+      mode: attempt.mode,
+      now,
+    });
+    await ctx.db.insert("exerciseAttemptStats", {
+      userId: attempt.userId,
+      slug: attempt.slug,
+      ...stats,
+    });
+    return;
+  }
+
+  const stats = computeAttemptStatsUpsert({
+    existing,
+    scorePercentage,
+    durationSeconds,
+    completedAtMs: completedAt,
+    mode: attempt.mode,
+    now,
+  });
+
+  await ctx.db.patch("exerciseAttemptStats", existing._id, {
+    ...stats,
+  });
+});
 
 triggers.register("comments", async (ctx, change) => {
   const comment = change.newDoc;

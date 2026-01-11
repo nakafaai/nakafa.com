@@ -21,9 +21,10 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link, usePathname } from "@repo/internationalization/src/navigation";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { type FormEventHandler, useState, useTransition } from "react";
+import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 
 interface Props {
@@ -41,7 +42,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
 
   const [commentText, setCommentText] = useState("");
 
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((s) => s.user);
   const addComment = useMutation(api.comments.mutations.addComment);
 
   const [isPending, startTransition] = useTransition();
@@ -124,7 +125,7 @@ function UserAvatar() {
 
   const t = useTranslations("Auth");
 
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((s) => s.user);
 
   if (!user) {
     return (

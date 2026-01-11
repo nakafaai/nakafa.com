@@ -7,7 +7,7 @@ import {
   order,
 } from "@repo/ai/lib/providers";
 import { generateTitle } from "@repo/ai/lib/title";
-import { cleanSlug, compressMessages } from "@repo/ai/lib/utils";
+import { compressMessages } from "@repo/ai/lib/utils";
 import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from "@repo/ai/lib/weather";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
@@ -18,6 +18,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/utils";
 import { api } from "@repo/connection/routes";
 import { CorsValidator } from "@repo/security";
+import { cleanSlug } from "@repo/utilities/helper";
 import { createChildLogger, logError } from "@repo/utilities/logging";
 import { geolocation } from "@vercel/functions";
 import {

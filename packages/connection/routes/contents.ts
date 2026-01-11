@@ -1,12 +1,12 @@
 import { fetcher } from "@repo/connection/lib/fetcher";
 import type { FetchResult } from "@repo/connection/lib/types";
-import { cleanSlug } from "@repo/connection/lib/utils";
 import type { Content } from "@repo/contents/_types/content";
 import type {
   Exercise,
   ExerciseWithoutDefaults,
 } from "@repo/contents/_types/exercises/shared";
 import type { Surah } from "@repo/contents/_types/quran";
+import { cleanSlug } from "@repo/utilities/helper";
 
 const PREFIX = "/contents";
 

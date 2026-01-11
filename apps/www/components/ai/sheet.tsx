@@ -61,7 +61,6 @@ import {
   Unauthenticated,
   useMutation,
   usePaginatedQuery,
-  useQuery,
 } from "convex/react";
 import { useTranslations } from "next-intl";
 import {
@@ -74,6 +73,7 @@ import {
 } from "react";
 import { useAi } from "@/lib/context/use-ai";
 import { ChatProvider, useChat } from "@/lib/context/use-chat";
+import { useUser } from "@/lib/context/use-user";
 import { AIChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
@@ -214,7 +214,7 @@ const AiSheetNewChat = memo(() => {
   const setQuery = useAi((state) => state.setQuery);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
 
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((s) => s.user);
   const createChat = useMutation(api.chats.mutations.createChat);
 
   const [isPending, startTransition] = useTransition();
@@ -266,7 +266,7 @@ const AiSheetNewChat = memo(() => {
 AiSheetNewChat.displayName = "AiSheetNewChat";
 
 const AiSheetHistory = memo(() => {
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((s) => s.user);
 
   if (!user) {
     return null;
@@ -404,7 +404,7 @@ const AiSheetContent = memo(() => {
   const messages = useChat((state) => state.chat.messages);
   const setText = useAi((state) => state.setText);
 
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useUser((s) => s.user);
   const { sendMessage, status, stop } = useChat((state) => state.chat);
 
   function handleSubmit(message: PromptInputMessage) {
