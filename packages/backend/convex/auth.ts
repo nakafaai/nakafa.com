@@ -91,11 +91,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
   ({
     baseURL: siteUrl,
     database: authComponent.adapter(ctx),
-    rateLimit: {
-      enabled: true,
-      storage: "database",
-      modelName: "rateLimit",
-    },
     account: {
       accountLinking: {
         enabled: true,

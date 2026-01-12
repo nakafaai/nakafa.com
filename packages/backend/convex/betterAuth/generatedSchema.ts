@@ -5,7 +5,7 @@
  *
  * To customize the schema, generate to an alternate file and import
  * the table definitions to your schema file. See
- * https://convex-better-auth.netlify.app/features/local-install#adding-custom-indexes.
+ * https://labs.convex.dev/better-auth/features/local-install#adding-custom-indexes.
  */
 
 import { defineSchema, defineTable } from "convex/server";
@@ -129,11 +129,6 @@ export const tables = {
     createdAt: v.number(),
     expiresAt: v.optional(v.union(v.null(), v.number())),
   }),
-  rateLimit: defineTable({
-    key: v.string(),
-    count: v.number(),
-    lastRequest: v.number(),
-  }).index("key", ["key"]),
 };
 
 const schema = defineSchema(tables);
