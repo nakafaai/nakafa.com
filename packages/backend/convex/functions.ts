@@ -37,11 +37,7 @@ import {
   internalMutation as rawInternalMutation,
   mutation as rawMutation,
 } from "./_generated/server";
-import {
-  applyAttemptAggregatesDelta,
-  computeAttemptDurationSeconds,
-  computeAttemptStatsUpsert,
-} from "./exercises/utils";
+import { applyAttemptAggregatesDelta } from "./exercises/utils";
 import { truncateText } from "./utils/helper";
 
 const triggers = new Triggers<DataModel>();
@@ -110,10 +106,6 @@ triggers.register("schoolClassMaterialAttachments", async () => {
 
 triggers.register("schoolClassMaterialViews", async () => {
   // No-op: deleted by schoolClassMaterials trigger
-});
-
-triggers.register("exerciseAttemptStats", async () => {
-  // No-op
 });
 
 // =============================================================================
@@ -219,78 +211,6 @@ triggers.register("exerciseAnswers", async (ctx, change) => {
       break;
     }
   }
-});
-
-triggers.register("exerciseAttempts", async (ctx, change) => {
-  const attempt = change.newDoc;
-  const oldAttempt = change.oldDoc;
-
-  if (!attempt) {
-    return;
-  }
-
-  const completedAt = attempt.completedAt;
-
-  // Only record stats once per attempt (first transition into completed).
-  const shouldRecordCompletion =
-    attempt.status === "completed" &&
-    completedAt != null &&
-    !(oldAttempt?.status === "completed" && oldAttempt.completedAt != null);
-
-  if (!shouldRecordCompletion) {
-    return;
-  }
-
-  if (attempt.scope !== "set") {
-    // Avoid polluting set-level stats with single-question practice.
-    return;
-  }
-
-  const scorePercentage = attempt.scorePercentage;
-  const durationSeconds = computeAttemptDurationSeconds({
-    totalTimeSeconds: attempt.totalTime,
-    startedAtMs: attempt.startedAt,
-    completedAtMs: completedAt,
-  });
-
-  const existing = await ctx.db
-    .query("exerciseAttemptStats")
-    .withIndex("userId_slug", (q) =>
-      q.eq("userId", attempt.userId).eq("slug", attempt.slug)
-    )
-    .unique();
-
-  const now = Date.now();
-
-  if (!existing) {
-    const stats = computeAttemptStatsUpsert({
-      existing: null,
-      scorePercentage,
-      durationSeconds,
-      completedAtMs: completedAt,
-      mode: attempt.mode,
-      now,
-    });
-    await ctx.db.insert("exerciseAttemptStats", {
-      userId: attempt.userId,
-      slug: attempt.slug,
-      ...stats,
-    });
-    return;
-  }
-
-  const stats = computeAttemptStatsUpsert({
-    existing,
-    scorePercentage,
-    durationSeconds,
-    completedAtMs: completedAt,
-    mode: attempt.mode,
-    now,
-  });
-
-  await ctx.db.patch("exerciseAttemptStats", existing._id, {
-    ...stats,
-  });
 });
 
 triggers.register("comments", async (ctx, change) => {

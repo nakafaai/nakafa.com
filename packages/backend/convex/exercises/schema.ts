@@ -82,21 +82,6 @@ const tables = {
     answeredAt: v.number(),
     updatedAt: v.number(),
   }).index("attemptId_exerciseNumber", ["attemptId", "exerciseNumber"]),
-
-  exerciseAttemptStats: defineTable({
-    userId: v.id("users"),
-    slug: v.string(),
-    totalAttempts: v.number(),
-    bestScore: v.number(),
-    averageScore: v.number(),
-    bestTimeSeconds: v.number(),
-    averageTimeSeconds: v.number(),
-    lastAttemptAt: v.number(),
-    lastAttemptMode: exerciseAttemptMode,
-    updatedAt: v.number(),
-  })
-    .index("userId_slug", ["userId", "slug"])
-    .index("userId_lastAttemptAt", ["userId", "lastAttemptAt"]),
 };
 
 export default tables;

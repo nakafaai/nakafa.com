@@ -1,7 +1,6 @@
 import type { WithoutSystemFields } from "convex/server";
 import type { Doc } from "../_generated/dataModel";
 import { clampNumber } from "../utils/helper";
-import type { ExerciseAttemptMode } from "./schema";
 
 type ExerciseAttemptAggregates = Pick<
   Doc<"exerciseAttempts">,
@@ -13,27 +12,9 @@ type ExerciseAttemptAggregatesPatch = Pick<
   "answeredCount" | "correctAnswers" | "totalTime" | "scorePercentage"
 >;
 
-type ExerciseAttemptStatsCore = Pick<
-  Doc<"exerciseAttemptStats">,
-  | "totalAttempts"
-  | "bestScore"
-  | "averageScore"
-  | "bestTimeSeconds"
-  | "averageTimeSeconds"
->;
-
-type ExerciseAttemptStatsPatch = Pick<
-  WithoutSystemFields<Doc<"exerciseAttemptStats">>,
-  | "totalAttempts"
-  | "bestScore"
-  | "averageScore"
-  | "bestTimeSeconds"
-  | "averageTimeSeconds"
-  | "lastAttemptAt"
-  | "lastAttemptMode"
-  | "updatedAt"
->;
-
+/**
+ * Calculate the score percentage for an exercise attempt.
+ */
 export function calculateScorePercentage({
   correctAnswers,
   totalExercises,
@@ -104,60 +85,4 @@ export function computeAttemptDurationSeconds({
     return Math.max(0, Math.round(totalTimeSeconds));
   }
   return Math.max(0, Math.round((completedAtMs - startedAtMs) / 1000));
-}
-
-/**
- * Incrementally update stats averages (O(1), no unbounded reads).
- */
-export function computeAttemptStatsUpsert({
-  existing,
-  scorePercentage,
-  durationSeconds,
-  completedAtMs,
-  mode,
-  now,
-}: {
-  existing: ExerciseAttemptStatsCore | null;
-  scorePercentage: number;
-  durationSeconds: number;
-  completedAtMs: number;
-  mode: ExerciseAttemptMode;
-  now: number;
-}): ExerciseAttemptStatsPatch {
-  if (!existing) {
-    return {
-      totalAttempts: 1,
-      bestScore: scorePercentage,
-      averageScore: scorePercentage,
-      bestTimeSeconds: durationSeconds,
-      averageTimeSeconds: durationSeconds,
-      lastAttemptAt: completedAtMs,
-      lastAttemptMode: mode,
-      updatedAt: now,
-    };
-  }
-
-  const totalAttempts = existing.totalAttempts + 1;
-  const averageScore =
-    (existing.averageScore * existing.totalAttempts + scorePercentage) /
-    totalAttempts;
-  const averageTimeSeconds =
-    (existing.averageTimeSeconds * existing.totalAttempts + durationSeconds) /
-    totalAttempts;
-
-  const bestTimeSeconds =
-    existing.bestTimeSeconds > 0
-      ? Math.min(existing.bestTimeSeconds, durationSeconds)
-      : durationSeconds;
-
-  return {
-    totalAttempts,
-    bestScore: Math.max(existing.bestScore, scorePercentage),
-    averageScore,
-    bestTimeSeconds,
-    averageTimeSeconds,
-    lastAttemptAt: completedAtMs,
-    lastAttemptMode: mode,
-    updatedAt: now,
-  };
 }

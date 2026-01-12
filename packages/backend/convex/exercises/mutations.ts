@@ -245,8 +245,7 @@ export const submitAnswer = mutation({
  * Completes an in-progress exercise attempt.
  *
  * This is the authoritative end-of-session event used by the UI (Finish button
- * or timer expiry flow). It triggers the `exerciseAttempts` database trigger
- * to upsert aggregated stats into `exerciseAttemptStats`.
+ * or timer expiry flow).
  *
  * Idempotent behavior:
  * - If the attempt is already completed, it returns `{ status: "completed" }`.

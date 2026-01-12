@@ -1,4 +1,3 @@
-import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { query } from "../_generated/server";
 import { requireAuth } from "../lib/authHelpers";
@@ -86,51 +85,5 @@ export const getAttempt = query({
     );
 
     return { attempt, answers };
-  },
-});
-
-/**
- * Get aggregated stats for a user on a specific exercise slug.
- *
- * This is backed by the `exerciseAttemptStats` table, which is updated
- * incrementally by triggers when an attempt is completed.
- */
-export const getAttemptStats = query({
-  args: {
-    slug: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-    const userId = appUser._id;
-
-    const stats = await ctx.db
-      .query("exerciseAttemptStats")
-      .withIndex("userId_slug", (q) =>
-        q.eq("userId", userId).eq("slug", args.slug)
-      )
-      .unique();
-
-    return stats;
-  },
-});
-
-/**
- * Get a user's exercise stats (one row per slug), ordered by last attempt.
- *
- * Used for dashboards like "Recent exercises" without scanning all attempts.
- */
-export const listAttemptStatsByRecency = query({
-  args: {
-    paginationOpts: paginationOptsValidator,
-  },
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-    const userId = appUser._id;
-
-    return await ctx.db
-      .query("exerciseAttemptStats")
-      .withIndex("userId_lastAttemptAt", (q) => q.eq("userId", userId))
-      .order("desc")
-      .paginate(args.paginationOpts);
   },
 });

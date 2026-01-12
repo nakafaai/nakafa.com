@@ -1,24 +1,24 @@
 {
-  "name": "@repo/analytics",
-  "version": "0.0.3",
+  "name": "@repo/email",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@react-email/components": "1.0.4",
     "@t3-oss/env-nextjs": "^0.13.10",
-    "@vercel/analytics": "^1.6.1",
-    "posthog-js": "^1.319.0",
-    "posthog-node": "^5.20.0",
-    "react": "^19.2.3",
-    "server-only": "^0.0.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "resend": "^6.7.0",
     "zod": "^4.3.5"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "25.0.6",
     "@types/react": "19.2.8",
-    "@types/react-dom": "19.2.3"
+    "@types/react-dom": "19.2.3",
+    "typescript": "^5.9.3"
   }
 }

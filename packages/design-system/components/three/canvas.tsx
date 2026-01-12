@@ -87,11 +87,6 @@ function ThreeCanvasComponent({
   const powerPreference = getPowerPreference();
   const deviceInfo = getDeviceInfoForAnalytics();
 
-  analytics.capture("webgl_capability_check", {
-    supported: checkWebGL2Support(),
-    ...deviceInfo,
-  });
-
   return (
     <ErrorBoundary
       fallbackRender={({ error, resetErrorBoundary }) => (
@@ -101,6 +96,7 @@ function ThreeCanvasComponent({
         analytics.capture("webgl_error", {
           error: error.message,
           component: "ThreeCanvas",
+          supported: checkWebGL2Support(),
           ...deviceInfo,
         });
       }}

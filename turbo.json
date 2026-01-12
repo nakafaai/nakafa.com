@@ -25,15 +25,9 @@
       "outputs": [
         ".next/**",
         "!.next/cache/**",
-        ".basehub/**",
         "**/generated/**",
         "storybook-static/**",
-        ".react-email/**",
-        "**/subject/**",
-        "**/articles/**",
-        "**/_components/**",
-        "**/_lib/**",
-        "**/_types/**"
+        ".react-email/**"
       ]
     },
     "test": {

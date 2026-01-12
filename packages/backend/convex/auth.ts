@@ -63,6 +63,16 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             internal.customers.actions.syncCustomer,
             { userId }
           );
+
+          // Send welcome email
+          await ctx.scheduler.runAfter(
+            0,
+            internal.emails.mutations.sendWelcomeEmail,
+            {
+              name: authUser.name,
+              email: authUser.email,
+            }
+          );
         },
         onUpdate: async (ctx, newDoc, oldDoc) => {
           // Sync name/image changes to app user
