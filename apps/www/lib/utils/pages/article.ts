@@ -1,3 +1,4 @@
+import { getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { getContent, getReferences } from "@repo/contents/_lib/content";
 import {
   type FileReadError,
@@ -40,7 +41,7 @@ export interface FetchArticleMetadataContextOutput {
   /** The content data with MDX component, or null if not found */
   content: ContentWithMDX | null;
   /** The full file path to the content file */
-  FilePath: string;
+  FilePath: ReturnType<typeof getSlugPath>;
 }
 
 /**
@@ -65,7 +66,7 @@ export function fetchArticleContext({
   | MetadataParseError
   | ModuleLoadError
 > {
-  const FilePath = `/${category}/${slug}`;
+  const FilePath = getSlugPath(category, slug);
 
   return Effect.gen(function* () {
     const content = yield* getContent(locale, FilePath);
@@ -107,7 +108,7 @@ export function fetchArticleMetadataContext({
   | MetadataParseError
   | ModuleLoadError
 > {
-  const FilePath = `/${category}/${slug}`;
+  const FilePath = getSlugPath(category, slug);
 
   return Effect.all({
     content: Effect.orElse(getContent(locale, FilePath), () =>

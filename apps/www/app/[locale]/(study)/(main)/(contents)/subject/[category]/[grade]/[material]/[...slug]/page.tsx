@@ -1,5 +1,8 @@
 import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
-import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
+import {
+  getMaterialIcon,
+  getMaterialPath,
+} from "@repo/contents/_lib/subject/material";
 import {
   getMaterialsPagination,
   getSlugPath,
@@ -32,7 +35,10 @@ import {
 } from "@/components/shared/layout-material";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
-import { getContentContext } from "@/lib/utils/pages/subject";
+import {
+  getContentContext,
+  getContentMetadataContext,
+} from "@/lib/utils/pages/subject";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -59,9 +65,12 @@ export async function generateMetadata({
 
   const { content, FilePath } = await Effect.runPromise(
     Effect.match(
-      getContentContext({ locale, category, grade, material, slug }),
+      getContentMetadataContext({ locale, category, grade, material, slug }),
       {
-        onFailure: () => ({ content: null, FilePath: "" }),
+        onFailure: () => ({
+          content: null,
+          FilePath: getSlugPath(category, grade, material, slug),
+        }),
         onSuccess: (data) => data,
       }
     )
@@ -171,20 +180,25 @@ async function PageContent({
     redirect(materialPath);
   }
 
+  const FilePath = getSlugPath(category, grade, material, slug);
+  const materialPath = getMaterialPath(category, grade, material);
+
   const result = await Effect.runPromise(
-    Effect.catchAll(
+    Effect.match(
       getContentContext({ locale, category, grade, material, slug }),
-      () =>
-        Effect.succeed({
+      {
+        onFailure: () => ({
           content: null,
           materials: null,
-          materialPath: "",
-          FilePath: "",
-        })
+          materialPath,
+          FilePath,
+        }),
+        onSuccess: (data) => data,
+      }
     )
   );
 
-  const { content, materials, materialPath, FilePath } = result;
+  const { content, materials } = result;
 
   if (!(content && materials)) {
     notFound();

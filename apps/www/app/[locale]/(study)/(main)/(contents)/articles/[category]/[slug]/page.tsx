@@ -1,3 +1,4 @@
+import { getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
@@ -46,18 +47,15 @@ export async function generateMetadata({
   const { locale, category, slug } = await params;
   const t = await getTranslations({ locale, namespace: "Articles" });
 
-  const result = await Effect.runPromise(
-    Effect.catchAll(
-      fetchArticleMetadataContext({ locale, category, slug }),
-      () =>
-        Effect.succeed({
-          content: null,
-          FilePath: `/${category}/${slug}`,
-        })
-    )
+  const { content, FilePath } = await Effect.runPromise(
+    Effect.match(fetchArticleMetadataContext({ locale, category, slug }), {
+      onFailure: () => ({
+        content: null,
+        FilePath: getSlugPath(category, slug),
+      }),
+      onSuccess: (data) => data,
+    })
   );
-
-  const { content, FilePath } = result;
 
   const path = `/${locale}${FilePath}`;
   const alternates = {
@@ -138,10 +136,13 @@ async function PageContent({
     getTranslations({ locale, namespace: "Articles" }),
   ]);
 
+  const FilePath = getSlugPath(category, slug);
+
   const result = await Effect.runPromise(
-    Effect.catchAll(fetchArticleContext({ locale, category, slug }), () =>
-      Effect.succeed({ content: null, references: null })
-    )
+    Effect.match(fetchArticleContext({ locale, category, slug }), {
+      onFailure: () => ({ content: null, references: null }),
+      onSuccess: (data) => data,
+    })
   );
 
   const { content, references } = result;
@@ -150,7 +151,6 @@ async function PageContent({
     notFound();
   }
 
-  const FilePath = `/${category}/${slug}`;
   const { metadata, default: Content } = content;
 
   const headings = getHeadings(content.raw);

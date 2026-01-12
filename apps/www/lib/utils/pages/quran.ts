@@ -27,8 +27,8 @@ export interface FetchSurahContextOutput {
  * Output data containing fetched Quran surah metadata context.
  */
 export interface FetchSurahMetadataContextOutput {
-  /** The surah data for metadata generation (guaranteed to be defined) */
-  surahData: Surah;
+  /** The surah data for metadata generation, or null if not found */
+  surahData: Surah | null;
 }
 
 /**
@@ -63,28 +63,20 @@ export function fetchSurahContext({
 
 /**
  * Fetches the Quran surah metadata context.
- * Returns an error if the surah number is invalid or not found.
+ * Returns null for surah data if not found, allowing for graceful handling.
  *
  * @param input - The input parameters for fetching surah metadata context
  * @param input.surah - The surah number (1-114)
- * @returns An Effect that resolves to the surah metadata context or fails with an Error
+ * @returns An Effect that resolves to the surah metadata context
  */
 export function fetchSurahMetadataContext({
   surah,
 }: FetchSurahContextInput): Effect.Effect<
   FetchSurahMetadataContextOutput,
-  Error
+  never
 > {
-  return Effect.gen(function* () {
-    const surahData = yield* Effect.orElse(getSurah(surah), () =>
-      Effect.succeed(null)
-    );
-
-    if (surahData === null) {
-      return yield* Effect.fail(new Error("Surah not found"));
-    }
-
-    return { surahData };
+  return Effect.all({
+    surahData: Effect.orElse(getSurah(surah), () => Effect.succeed(null)),
   });
 }
 

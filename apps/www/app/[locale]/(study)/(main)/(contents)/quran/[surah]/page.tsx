@@ -81,13 +81,13 @@ export async function generateMetadata({
     })
   );
 
-  if (!surahMetadataContext) {
+  const surahData = surahMetadataContext?.surahData ?? null;
+  if (!surahData) {
     return {
       alternates,
     };
   }
 
-  const { surahData } = surahMetadataContext;
   const title = getSurahName({ locale, name: surahData.name });
 
   const description = surahData.name.translation[locale];
@@ -131,13 +131,14 @@ function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
 
   const result = use(
     Effect.runPromise(
-      Effect.catchAll(fetchSurahContext({ surah: surahNumber }), () =>
-        Effect.succeed({
+      Effect.match(fetchSurahContext({ surah: surahNumber }), {
+        onFailure: () => ({
           surahData: null,
           prevSurah: null,
           nextSurah: null,
-        })
-      )
+        }),
+        onSuccess: (data) => data,
+      })
     )
   );
 

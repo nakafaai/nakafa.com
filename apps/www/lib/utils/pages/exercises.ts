@@ -53,7 +53,7 @@ interface FetchExerciseMetadataContextOutput {
   /** The exercise title if it's a specific exercise, undefined otherwise */
   exerciseTitle: string | undefined;
   /** The full file path to the content file */
-  FilePath: string;
+  FilePath: ReturnType<typeof getSlugPath>;
   /** All available materials for the given category/type/material */
   materials: Awaited<ReturnType<typeof getMaterials>>;
   /** The current material being accessed (can be undefined for metadata generation) */

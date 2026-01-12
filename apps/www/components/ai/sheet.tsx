@@ -302,7 +302,7 @@ const AiSheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
   }
 
   return (
-    <DropdownMenuContent align="end">
+    <DropdownMenuContent align="end" className="max-h-64">
       <DropdownMenuGroup>
         {results.map((chat) => {
           const isPrivate = chat.visibility === "private";

@@ -17,7 +17,7 @@
     "date-fns": "^4.1.0",
     "effect": "^3.19.14",
     "ky": "^1.14.2",
-    "motion": "^12.25.0",
+    "motion": "^12.26.0",
     "next-intl": "^4.7.0",
     "react": "19.2.3",
     "react-aria-components": "^1.14.0",

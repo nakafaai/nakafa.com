@@ -38,7 +38,17 @@ interface GetContentContextOutput {
   /** The file path to the material directory */
   materialPath: string;
   /** The full file path to the content file */
-  FilePath: string;
+  FilePath: ReturnType<typeof getSlugPath>;
+}
+
+/**
+ * Output data containing fetched subject metadata context.
+ */
+interface GetContentMetadataContextOutput {
+  /** The content data with MDX component, or null if not found */
+  content: ContentWithMDX | null;
+  /** The full file path to the content file */
+  FilePath: ReturnType<typeof getSlugPath>;
 }
 
 /**
@@ -81,5 +91,37 @@ export function getContentContext({
       materialPath,
       FilePath,
     };
+  });
+}
+
+/**
+ * Fetches the subject metadata context for generating page metadata.
+ * Returns null for content if not found, allowing for graceful handling.
+ *
+ * @param input - The input parameters for fetching subject metadata context
+ * @param input.locale - The locale for localized content
+ * @param input.category - The subject category
+ * @param input.grade - The grade level
+ * @param input.material - The material type
+ * @param input.slug - The slug path segments for the specific content
+ * @returns An Effect that resolves to the subject metadata context
+ */
+export function getContentMetadataContext({
+  locale,
+  category,
+  grade,
+  material,
+  slug,
+}: GetContentContextInput): Effect.Effect<
+  GetContentMetadataContextOutput,
+  Error
+> {
+  const FilePath = getSlugPath(category, grade, material, slug);
+
+  return Effect.all({
+    content: Effect.orElse(getContent(locale, FilePath), () =>
+      Effect.succeed(null)
+    ),
+    FilePath: Effect.succeed(FilePath),
   });
 }
