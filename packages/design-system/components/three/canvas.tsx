@@ -3,12 +3,18 @@
 import { Sad02Icon } from "@hugeicons/core-free-icons";
 import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, type CanvasProps } from "@react-three/fiber";
+import { analytics } from "@repo/analytics/posthog";
 import {
   Button,
   buttonVariants,
 } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import {
+  checkWebGL2Support,
+  getDeviceInfoForAnalytics,
+  getPowerPreference,
+} from "@repo/design-system/lib/device";
 import { cn } from "@repo/design-system/lib/utils";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
@@ -57,6 +63,19 @@ function ErrorFallback({
   );
 }
 
+/**
+ * ThreeCanvas component with WebGL capability detection and error tracking
+ *
+ * Automatically detects WebGL2 support, selects appropriate GPU power preference,
+ * and tracks initialization status to PostHog. Uses Canvas fallback for WebGL
+ * unsupported devices.
+ *
+ * @param children - React Three.js children to render
+ * @param frameloop - Frame update strategy ("always" | "demand" | "never")
+ * @param props - Additional CanvasProps passed to @react-three/fiber Canvas
+ *
+ * @returns JSX element with WebGL detection and error handling
+ */
 function ThreeCanvasComponent({
   children,
   frameloop = "demand",
@@ -65,11 +84,26 @@ function ThreeCanvasComponent({
   children: ReactNode;
   frameloop?: "always" | "demand" | "never";
 } & CanvasProps) {
+  const powerPreference = getPowerPreference();
+  const deviceInfo = getDeviceInfoForAnalytics();
+
+  analytics.capture("webgl_capability_check", {
+    supported: checkWebGL2Support(),
+    ...deviceInfo,
+  });
+
   return (
     <ErrorBoundary
       fallbackRender={({ error, resetErrorBoundary }) => (
         <ErrorFallback error={error} resetErrorBoundary={resetErrorBoundary} />
       )}
+      onError={(error) => {
+        analytics.capture("webgl_error", {
+          error: error.message,
+          component: "ThreeCanvas",
+          ...deviceInfo,
+        });
+      }}
     >
       <Canvas
         fallback={
@@ -84,8 +118,11 @@ function ThreeCanvasComponent({
         frameloop={frameloop}
         gl={{
           antialias: true,
-          powerPreference: "high-performance",
+          powerPreference,
           alpha: true,
+        }}
+        onCreated={() => {
+          analytics.capture("webgl_init_success", deviceInfo);
         }}
         performance={{
           min: 0.8,

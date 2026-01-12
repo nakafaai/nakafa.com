@@ -42,12 +42,13 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
 
   function handleSubmit(choice: ExercisesChoices[keyof ExercisesChoices][0]) {
     if (!attempt) {
+      toast.info(t("attempt-not-found"), { position: "bottom-center" });
       return;
     }
 
     // If the attempt is not in progress, tell user to start new attempt
     if (attempt.status !== "in-progress") {
-      toast.info(t("attempt-not-in-progress"));
+      toast.info(t("attempt-not-in-progress"), { position: "bottom-center" });
       return;
     }
 

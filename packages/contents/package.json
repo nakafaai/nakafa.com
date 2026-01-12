@@ -17,7 +17,7 @@
     "date-fns": "^4.1.0",
     "effect": "^3.19.14",
     "ky": "^1.14.2",
-    "motion": "^12.26.0",
+    "motion": "^12.26.1",
     "next-intl": "^4.7.0",
     "react": "19.2.3",
     "react-aria-components": "^1.14.0",
@@ -28,7 +28,7 @@
     "@repo/typescript-config": "workspace:*",
     "@types/node": "25.0.6",
     "@types/react": "^19.2.8",
-    "@vitest/coverage-istanbul": "^4.0.16",
-    "vitest": "^4.0.16"
+    "@vitest/coverage-istanbul": "^4.0.17",
+    "vitest": "^4.0.17"
   }
 }

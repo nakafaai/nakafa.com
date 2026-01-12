@@ -245,7 +245,8 @@
     "time-limit-placeholder": "Select time limit",
     "time": "Time",
     "answered": "Answered",
-    "attempt-not-in-progress": "Please start a new session to continue practicing."
+    "attempt-not-in-progress": "Please start a new session to continue practicing.",
+    "attempt-not-found": "Please start the exercise first."
   },
   "Utils": {
     "search": "Search",

@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -54,7 +57,7 @@
     "marked": "^17.0.1",
     "mathjs": "^15.1.0",
     "mermaid": "11.12.2",
-    "motion": "^12.26.0",
+    "motion": "^12.26.1",
     "nanoid": "^5.1.6",
     "next": "^16.1.1",
     "next-intl": "^4.7.0",
@@ -101,6 +104,8 @@
     "@types/react-katex": "^3.0.4",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/three": "^0.182.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@vitest/coverage-istanbul": "^4.0.17",
+    "vitest": "^4.0.17"
   }
 }

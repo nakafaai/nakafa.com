@@ -14,6 +14,7 @@
   "dependencies": {
     "@convex-dev/better-auth": "^0.10.10",
     "@convex-dev/migrations": "^0.3.1",
+    "@convex-dev/resend": "^0.2.3",
     "@convex-dev/workflow": "^0.3.3",
     "@polar-sh/sdk": "^0.42.1",
     "@repo/ai": "workspace:*",

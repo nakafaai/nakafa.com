@@ -245,7 +245,8 @@
     "time-limit-placeholder": "Pilih batas waktu",
     "time": "Waktu",
     "answered": "Dijawab",
-    "attempt-not-in-progress": "Silakan mulai sesi baru untuk lanjut berlatih."
+    "attempt-not-in-progress": "Silakan mulai sesi baru untuk lanjut berlatih.",
+    "attempt-not-found": "Mulai latihan terlebih dahulu ya."
   },
   "Utils": {
     "search": "Cari",
