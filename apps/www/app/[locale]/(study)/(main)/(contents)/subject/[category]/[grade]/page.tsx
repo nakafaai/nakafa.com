@@ -47,7 +47,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   let ogUrl: string = getOgUrl(locale, FilePath);
 
   // Currently only available for grade 10, 11, and 12
-  if (grade === "10" || grade === "11" || grade === "12") {
+  if (
+    grade === "10" ||
+    grade === "11" ||
+    grade === "12" ||
+    grade === "bachelor"
+  ) {
     ogUrl = `/open-graph/grade/${locale}-${grade}.png`;
   }
 

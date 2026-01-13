@@ -30,9 +30,9 @@ app.get("/.well-known/openid-configuration", (c) =>
 );
 
 // Register better-auth routes (internal - not exposed in API docs)
-app.all("/api/auth/*", async (c) => {
+app.on(["POST", "GET"], "/api/auth/*", (c) => {
   const auth = createAuth(c.env);
-  return await auth.handler(c.req.raw);
+  return auth.handler(c.req.raw);
 });
 
 // Register public API v1 routes

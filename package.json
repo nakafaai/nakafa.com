@@ -27,7 +27,7 @@
     "boundaries": "turbo boundaries",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "bump-deps": "pnpm dlx npm-check-updates --deep -u -x recharts,better-auth,react-email,@react-email/preview-server",
+    "bump-deps": "pnpm dlx npm-check-updates --deep -u -x recharts,better-auth",
     "bump-ui": "pnpm dlx shadcn@latest add --all --overwrite -c packages/design-system",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/.turbo packages/*/.turbo .turbo .next apps/*/.next apps/*/.react-email packages/*/.react-email",
     "clean:ts": "find . -name '*.tsbuildinfo' -type f -delete && find . -name 'tsconfig.tsbuildinfo' -type f -delete",
