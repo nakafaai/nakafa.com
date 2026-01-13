@@ -40,8 +40,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps["theme"]}
       toastOptions={{
         classNames: {
-          title: "line-clamp-1",
-          description: "text-muted-foreground! line-clamp-2",
+          description: "text-muted-foreground!",
           closeButton:
             "bg-popover! text-popover-foreground! hover:border-border! transition-colors! ease-out! hover:bg-accent! hover:text-accent-foreground!",
         },
