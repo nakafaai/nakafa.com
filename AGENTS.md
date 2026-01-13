@@ -2,6 +2,11 @@
 
 **Tech Stack**: Next.js 16, React 19, TypeScript, Convex, Biome linter
 
+## Agent Tools
+
+- **Context7**: When you need to search docs, use `context7` tools.
+- **ultracite**: Returns Ultracite's core coding standards covering type safety, modern JavaScript/TypeScript patterns, React/JSX best practices, error handling, security, performance, and testing guidelines. use `ultracite` to get the rules.
+
 ## Commands
 
 - `pnpm dev` - Start all apps (www:3000, mcp:3001, api:3002)
