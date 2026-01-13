@@ -26,7 +26,7 @@ export type AiStore = State & Actions;
 const initialState: State = {
   open: false,
   text: "",
-  model: "xai/grok-4.1-fast-reasoning",
+  model: "gemini-3-flash",
   query: "",
   activeChatId: null,
 };

@@ -53,8 +53,8 @@ export function ChatProvider({
         };
       },
     }),
-    onError: ({ message }) => {
-      toast.error(message || t("error-message"), { position: "bottom-center" });
+    onError: () => {
+      toast.error(t("error-message"), { position: "bottom-center" });
     },
   });
 

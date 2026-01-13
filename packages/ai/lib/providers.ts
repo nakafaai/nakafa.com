@@ -68,7 +68,7 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "xai/grok-4.1-fast-reasoning";
+export const defaultModel: ModelId = "gemini-3-flash";
 
 export const order = ["cerebras", "groq", "baseten", "azure", "vertex"];
 

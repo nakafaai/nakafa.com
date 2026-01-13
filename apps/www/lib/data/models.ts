@@ -77,12 +77,6 @@ export const aiModels: Model[] = [
     type: "premium",
   },
   {
-    icon: XAI,
-    value: "xai/grok-4.1-fast-reasoning",
-    label: "Grok 4.1 Fast",
-    type: "free",
-  },
-  {
     icon: Gemini,
     value: "gemini-3-flash",
     label: "Gemini 3 Flash",
@@ -92,6 +86,12 @@ export const aiModels: Model[] = [
     icon: Gemini,
     value: "gemini-2.5-flash",
     label: "Gemini 2.5 Flash",
+    type: "free",
+  },
+  {
+    icon: XAI,
+    value: "xai/grok-4.1-fast-reasoning",
+    label: "Grok 4.1 Fast",
     type: "free",
   },
   {
