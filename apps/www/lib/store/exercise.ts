@@ -11,20 +11,24 @@ const StateSchema = z.object({
 });
 type State = z.infer<typeof StateSchema>;
 
-interface Actions {
-  toggleAnswer: (exerciseNumber: number) => void;
-  setTimeSpent: (exerciseNumber: number, time: number) => void;
-  setShowStats: (showStats: boolean) => void;
-}
-
-export type ExerciseStore = State & Actions;
-
+/**
+ * Actions available in the exercise store.
+ */
 const initialState = ({ slug }: { slug: string }): State => ({
   slug,
   visibleExplanations: {},
   timeSpent: {},
   showStats: true,
 });
+
+interface Actions {
+  toggleAnswer: (exerciseNumber: number) => void;
+  setTimeSpent: (exerciseNumber: number, time: number) => void;
+  setShowStats: (showStats: boolean) => void;
+  resetTimeSpent: () => void;
+}
+
+export type ExerciseStore = State & Actions;
 
 export const createExerciseStore = ({ slug }: { slug: string }) =>
   createStore<ExerciseStore>()(
@@ -46,6 +50,11 @@ export const createExerciseStore = ({ slug }: { slug: string }) =>
         setShowStats: (showStats) =>
           set((state) => {
             state.showStats = showStats;
+          }),
+
+        resetTimeSpent: () =>
+          set((state) => {
+            state.timeSpent = {};
           }),
       })),
       {

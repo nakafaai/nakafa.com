@@ -40,7 +40,13 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
     (a) => a.exerciseNumber === exerciseNumber
   );
 
-  function handleSubmit(choice: ExercisesChoices[keyof ExercisesChoices][0]) {
+  function handleSubmit({
+    choice,
+    index,
+  }: {
+    choice: ExercisesChoices[keyof ExercisesChoices][number];
+    index: number;
+  }) {
     if (!attempt) {
       toast.info(t("attempt-not-found"), { position: "bottom-center" });
       return;
@@ -57,7 +63,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
         await submitAttempt({
           attemptId: attempt._id,
           exerciseNumber,
-          selectedOptionId: choice.label,
+          selectedOptionId: index.toString(),
           textAnswer: choice.label,
           isCorrect: choice.value,
           timeSpent,
@@ -70,9 +76,12 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
 
   return (
     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-      {choices.map((choice) => {
+      {choices.map((choice, index) => {
         let variant: ComponentProps<typeof Button>["variant"] = "outline";
-        const checked = currentAnswer?.selectedOptionId === choice.label;
+
+        const checked =
+          currentAnswer?.selectedOptionId === index.toString() ||
+          currentAnswer?.textAnswer === choice.label;
 
         if (checked) {
           variant = "default-outline";
@@ -97,12 +106,12 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
             key={choice.label}
           >
             <Checkbox
-              checked={currentAnswer?.selectedOptionId === choice.label}
+              checked={checked}
               className="cursor-pointer"
               disabled={isPending}
               onCheckedChange={(checked) => {
                 if (checked) {
-                  handleSubmit(choice);
+                  handleSubmit({ choice, index });
                 }
               }}
             />

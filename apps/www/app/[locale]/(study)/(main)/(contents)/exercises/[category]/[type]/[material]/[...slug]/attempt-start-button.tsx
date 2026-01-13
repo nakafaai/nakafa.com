@@ -74,6 +74,7 @@ export function StartExerciseButton({
   const slug = useExercise((state) => state.slug);
   const showStats = useExercise((state) => state.showStats);
   const setShowStats = useExercise((state) => state.setShowStats);
+  const resetTimeSpent = useExercise((state) => state.resetTimeSpent);
 
   const user = useUser((state) => state.user);
   const startAttempt = useMutation(api.exercises.mutations.startAttempt);
@@ -103,6 +104,7 @@ export function StartExerciseButton({
           timeLimit,
         });
         setOpen(false);
+        resetTimeSpent();
         setShowStats(true);
         toast.success(t("start-exercise-success"), {
           position: "bottom-center",
@@ -123,7 +125,7 @@ export function StartExerciseButton({
         form.handleSubmit();
       }}
     >
-      <ButtonGroup>
+      <ButtonGroup className="divide-x divide-primary-foreground/20">
         <Button onClick={() => setOpen(true)} type="button">
           <HugeIcons icon={StartUp02Icon} />
           {t("start-exercise-title")}

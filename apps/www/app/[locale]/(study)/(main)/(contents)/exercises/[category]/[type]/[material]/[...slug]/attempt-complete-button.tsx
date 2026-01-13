@@ -24,6 +24,7 @@ export function CompleteExerciseButton() {
 
   const showStats = useExercise((state) => state.showStats);
   const setShowStats = useExercise((state) => state.setShowStats);
+  const resetTimeSpent = useExercise((state) => state.resetTimeSpent);
 
   const user = useUser((state) => state.user);
   const attempt = useAttempt((state) => state.attempt);
@@ -52,6 +53,7 @@ export function CompleteExerciseButton() {
       try {
         await completeAttempt({ attemptId: attempt._id });
         setOpen(false);
+        resetTimeSpent();
         setShowStats(true);
       } catch {
         toast.error(t("complete-exercise-error"), {
@@ -62,7 +64,7 @@ export function CompleteExerciseButton() {
   };
 
   return (
-    <ButtonGroup>
+    <ButtonGroup className="divide-x divide-primary-foreground/20">
       <Button
         disabled={isPending}
         onClick={() => setOpen(true)}

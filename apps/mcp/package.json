@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.0.7",
+    "@types/node": "25.0.8",
     "@types/react": "19.2.8",
     "typescript": "^5.9.3"
   }

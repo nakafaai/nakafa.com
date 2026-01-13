@@ -95,6 +95,9 @@ export const startAttempt = mutation({
       scorePercentage: 0,
     });
 
+    // NOTE: totalTime starts at 0 and accumulates through submitAnswer calls.
+    // Final duration is calculated from wall-clock time when attempt completes.
+
     if (args.timeLimit > 0) {
       const expiresAtMs = now + args.timeLimit * 1000;
       const schedulerId = await ctx.scheduler.runAfter(
@@ -115,11 +118,20 @@ export const startAttempt = mutation({
 /**
  * Submits an answer for a specific exercise within an attempt.
  *
- * Updates the attempt's progress (answered count, score, total time).
+ * BUSINESS LOGIC: Creates or updates an answer record for a question.
  *
- * `timeSpent` is the total time spent on this question (seconds). If the user
- * re-submits an answer for the same question, the previous answer is overwritten
- * and the attempt totals are adjusted by the difference.
+ * AGGREGATE UPDATES: All attempt aggregates (answeredCount, correctAnswers,
+ * totalTime, scorePercentage) are managed by the trigger system in `functions.ts`.
+ * This mutation only handles the answer record - triggers handle the rest.
+ *
+ * ARCHITECTURE BENEFITS:
+ * - Single source of truth for aggregates (trigger system)
+ * - Retry-safe (triggers use newDoc/oldDoc pattern)
+ * - Clean separation of concerns (mutation = operations, triggers = aggregates)
+ * - No race conditions or double-updates
+ *
+ * `timeSpent` is the total time spent on this question (seconds).
+ * If the user re-submits an answer, the trigger calculates the delta correctly.
  *
  * @param attemptId - The ID of the attempt.
  * @param exerciseNumber - The 1-based index of the exercise in the set.
@@ -218,6 +230,9 @@ export const submitAnswer = mutation({
       )
       .first();
 
+    // Create or update the answer record.
+    // All aggregate updates (answeredCount, correctAnswers, totalTime, scorePercentage)
+    // are handled by the trigger system in functions.ts.
     if (existingAnswer) {
       await ctx.db.patch("exerciseAnswers", existingAnswer._id, {
         selectedOptionId: args.selectedOptionId,
@@ -244,13 +259,15 @@ export const submitAnswer = mutation({
 /**
  * Completes an in-progress exercise attempt.
  *
- * This is the authoritative end-of-session event used by the UI (Finish button
+ * This is the authoritative end-of-session event used by UI (Finish button
  * or timer expiry flow).
  *
- * Idempotent behavior:
- * - If the attempt is already completed, it returns `{ status: "completed" }`.
+ * Final duration is calculated from wall-clock time (completedAt - startedAt)
+ * to capture all time periods including idle time. See `computeAttemptDurationSeconds`
+ * in exercises/utils.ts for detailed rationale.
  *
- * @param attemptId - The attempt to complete.
+ * Idempotent behavior:
+ * - If attempt is already completed, it returns `{ status: "completed" }`.
  */
 export const completeAttempt = mutation({
   args: {
@@ -302,7 +319,6 @@ export const completeAttempt = mutation({
     const expiresAtMs = attempt.startedAt + attempt.timeLimit * 1000;
 
     const finalTotalTime = computeAttemptDurationSeconds({
-      totalTimeSeconds: attempt.totalTime,
       startedAtMs: attempt.startedAt,
       completedAtMs: now,
     });
@@ -361,7 +377,6 @@ export const expireAttemptInternal = internalMutation({
     }
 
     const finalTotalTime = computeAttemptDurationSeconds({
-      totalTimeSeconds: attempt.totalTime,
       startedAtMs: attempt.startedAt,
       completedAtMs: expiresAtMs,
     });
@@ -427,7 +442,6 @@ export const abandonAttempt = mutation({
     }
 
     const finalTotalTime = computeAttemptDurationSeconds({
-      totalTimeSeconds: attempt.totalTime,
       startedAtMs: attempt.startedAt,
       completedAtMs: now,
     });

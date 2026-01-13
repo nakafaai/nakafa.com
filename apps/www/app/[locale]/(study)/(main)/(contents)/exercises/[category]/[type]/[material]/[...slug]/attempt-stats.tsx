@@ -49,7 +49,7 @@ function StatsResult({ attempt }: { attempt: Doc<"exerciseAttempts"> }) {
   const t = useTranslations("Exercises");
 
   return (
-    <section className="space-y-3 rounded-md bg-muted/20 p-4">
+    <section className="space-y-3 rounded-lg border border-border/50 bg-muted/20 p-4">
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
           <div className="text-muted-foreground text-sm">{t("score")}</div>
@@ -120,7 +120,7 @@ function StatsProgress({
   const progress = totalCount > 0 ? (answeredCount / totalCount) * 100 : 0;
 
   return (
-    <div className="flex flex-col gap-4 rounded-md bg-muted/20 p-4">
+    <div className="flex flex-col gap-4 rounded-lg border border-border/50 bg-muted/20 p-4">
       <div className="flex items-center justify-between text-sm">
         <Badge variant="default-subtle">
           <HugeIcons

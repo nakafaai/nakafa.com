@@ -8,7 +8,8 @@
 - `pnpm --filter www dev` - Start single app
 - `pnpm build` - Build all packages/apps
 - `pnpm test` - Run all tests (Vitest)
-- `pnpm --filter www test` - Run www tests, use `vitest run <file>` for single test
+- `pnpm --filter www test` - Run www tests
+- `pnpm --filter www exec vitest run <file-path>` - Run single test file
 - `pnpm lint` - Ultracite check
 - `pnpm format` - Ultracite fix
 
@@ -27,15 +28,30 @@
 
 - Check existing patterns before creating new components
 - Use shared packages (`@repo/design-system`, `@repo/ai`, etc.) instead of duplicating code
-- For MDX content: use `InlineMath` for numbers and math, inline code for programming elements
+- For MDX content: use `InlineMath` for numbers/math, inline code for programming
 - Convex backend in `packages/backend/convex/`, use auth helpers never `ctx.auth` directly, see `packages/backend/convex/lib` folder for shared utils functions
+- MDX components available without import: `BlockMath`, `InlineMath`, `CodeBlock`, `MathContainer`, `Mermaid`
+- Import required for: `NumberLine`, `LineEquation` from `@repo/design-system/components/contents/*`
+- Import aliases: `@/` for app-level imports, `@repo/*` for workspace packages
+- Allowed Biome exceptions: namespace imports, barrel files, higher cognitive complexity (40)
 - Run lint/test after all changes
 
-# TypeScript Style
+## MDX Content Guidelines
+
+- Headings: start from h2 only, max h3 depth, descriptive (not "Step 1"), no symbols, no InlineMath
+- Code vs Math: inline code (`print()`, `const x`) for programming, InlineMath (`<InlineMath math="5" />`) for math
+- Math formatting: all math in InlineMath/BlockMath, use `MathContainer` to wrap consecutive blocks, units in `\text{}`
+- CodeBlock: required `data` prop with unique languages per component, supports multiple file tabs
+- NumberLine: import required, use InlineMath for all numbers, `startLabel`/`endLabel` for fractions
+- 3D visualizations: generate points via Array.from() with math calculations (never hard-code), use `getColor()` for colors (not randomColor)
+- Lists: use hyphens `-`, no nested lists, proper indentation
+- Line breaks: blank line between text paragraphs and math blocks
+
+## TypeScript Style
 
 NEVER USE ASSERTION! Good typescript is when you can write code like javascript but still type safe.
 
-# Ultracite Code Standards
+## Ultracite Code Standards
 
 This project uses **Ultracite**, a zero-config Biome preset that enforces strict code quality standards through automated formatting and linting.
 
@@ -124,28 +140,20 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 
 ### Framework-Specific Guidance
 
-**Next.js:**
-
-- Use Next.js `<Image>` component for images
-- Use `next/head` or App Router metadata API for head elements
-- Use Server Components for async data fetching instead of async Client Components
-
-**React 19+:**
-
-- Use ref as a prop instead of `React.forwardRef`
-
-**Solid/Svelte/Vue/Qwik:**
-
-- Use `class` and `for` attributes (not `className` or `htmlFor`)
+- **Next.js**: Use `<Image>` component, App Router metadata API, Server Components for async data
+- **React 19+**: Use ref as prop instead of `React.forwardRef`
 
 ---
 
 ## Testing
 
+- Framework: Vitest with shared config from `@repo/testing`
 - Write assertions inside `it()` or `test()` blocks
+- Use `describe()` for grouping related tests
 - Avoid done callbacks in async tests - use async/await instead
 - Don't use `.only` or `.skip` in committed code
 - Keep test suites reasonably flat - avoid excessive `describe` nesting
+- Test files: `__tests__/` directories or `.test.ts`/.tsx naming
 
 ## When Biome Can't Help
 

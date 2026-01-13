@@ -1,12 +1,9 @@
 "use client";
 
-import {
-  useDebouncedCallback,
-  useIntersection,
-  useInterval,
-} from "@mantine/hooks";
+import { useIntersection, useInterval } from "@mantine/hooks";
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
+import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
 export function QuestionAnalytics({
@@ -16,36 +13,30 @@ export function QuestionAnalytics({
   exerciseNumber: number;
   children: ReactNode;
 }) {
+  const attempt = useAttempt((state) => state.attempt);
+
   const ref = useIntersection({ threshold: 0.75 });
   const isActive = ref.entry?.isIntersecting ?? false;
   const timeCounterRef = useRef(0);
 
   const setTimeSpent = useExercise((state) => state.setTimeSpent);
 
-  const debouncedPersist = useDebouncedCallback((time: number) => {
-    setTimeSpent(exerciseNumber, time);
-  }, 1000);
+  const hasActiveAttempt = attempt?.status === "in-progress";
 
   const interval = useInterval(() => {
-    if (isActive) {
+    if (isActive && hasActiveAttempt) {
       timeCounterRef.current += 1;
-      debouncedPersist(timeCounterRef.current);
+      setTimeSpent(exerciseNumber, timeCounterRef.current);
     }
   }, 1000);
 
   useEffect(() => {
-    if (isActive) {
+    if (isActive && hasActiveAttempt) {
       interval.start();
     } else {
       interval.stop();
     }
-  }, [isActive, interval]);
-
-  useEffect(() => {
-    return () => {
-      debouncedPersist.flush();
-    };
-  }, [debouncedPersist]);
+  }, [isActive, hasActiveAttempt, interval]);
 
   return <div ref={ref.ref}>{children}</div>;
 }

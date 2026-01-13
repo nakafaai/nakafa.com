@@ -32,7 +32,7 @@ import { getGithubUrl } from "@/lib/utils/github";
 
 export function OpenContent({ slug }: { slug: string }) {
   return (
-    <div className="inline-flex divide-x divide-secondary-foreground/10 rounded-md shadow-xs rtl:space-x-reverse">
+    <div className="inline-flex divide-x divide-secondary-foreground/20 rounded-md shadow-xs rtl:space-x-reverse">
       <LLmCopyButton slug={slug} />
       <ViewOptions slug={slug} />
     </div>
