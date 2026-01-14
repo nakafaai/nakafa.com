@@ -1,5 +1,4 @@
 import { Context, Data, Effect, Layer } from "effect";
-import { env } from "../env";
 
 class MissingAuthHeader extends Data.TaggedError("MissingAuthHeader")<{
   readonly message: "Missing Authorization header";
@@ -117,10 +116,10 @@ export function requireInternalApiKey(
  * @param apiKey - The internal API key to use, or undefined
  * @returns A Layer that provides InternalAuthService with given key
  */
-export const createAuthLayer = (
+export function createAuthLayer(
   apiKey?: string
-): Layer.Layer<InternalAuthService> =>
-  Layer.effect(
+): Layer.Layer<InternalAuthService> {
+  return Layer.effect(
     InternalAuthService,
     Effect.succeed({
       getInternalKey:
@@ -134,15 +133,4 @@ export const createAuthLayer = (
           : Effect.succeed(apiKey),
     })
   );
-
-const InternalAuthServiceLive = createAuthLayer(env.INTERNAL_CONTENT_API_KEY);
-
-export type { AuthError };
-export {
-  MissingAuthHeader,
-  InvalidAuthFormat,
-  InvalidApiKey,
-  InternalKeyNotConfigured,
-  InternalAuthService,
-  InternalAuthServiceLive,
-};
+}
