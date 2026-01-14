@@ -1,5 +1,5 @@
 import { CorsValidator } from "@repo/security";
-import { type NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse, type ProxyConfig } from "next/server";
 
 const corsValidator = new CorsValidator();
 
@@ -30,6 +30,6 @@ export function proxy(request: NextRequest) {
   return response;
 }
 
-export const config = {
+export const config: ProxyConfig = {
   matcher: ["/health", "/contents/:path*"],
 };
