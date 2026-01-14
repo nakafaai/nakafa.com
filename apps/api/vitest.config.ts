@@ -1,12 +1,12 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { loadEnv } from "vite";
 import { defineConfig } from "vitest/config";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const config = defineConfig({
+export default defineConfig(({ mode }) => ({
   test: {
     environment: "node",
+    // mode defines what ".env.{mode}" file to choose if exists
+    env: loadEnv(mode, process.cwd(), ""),
     coverage: {
       enabled: true,
       provider: "istanbul",
@@ -18,6 +18,4 @@ const config = defineConfig({
       "@repo": path.resolve(__dirname, "../../packages"),
     },
   },
-});
-
-export default config;
+}));

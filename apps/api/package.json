@@ -33,8 +33,9 @@
     "@repo/typescript-config": "workspace:*",
     "@types/node": "25.0.8",
     "@types/react": "19.2.8",
-    "typescript": "^5.9.3",
     "@vitest/coverage-istanbul": "^4.0.17",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
     "vitest": "^4.0.17"
   }
 }

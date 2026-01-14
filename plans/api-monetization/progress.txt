@@ -1,5 +1,83 @@
 # API Monetization Progress Log
 
+## [2026-01-14] Task 1.1 Completed
+
+### Subtasks Completed
+
+- ✅ Created internal auth utility with timing-safe comparison
+- ✅ Created comprehensive unit tests (8 tests passing)
+- ✅ All lint checks passing
+- ✅ Typecheck passing
+- ✅ 100% test coverage
+
+### Files Created
+
+- `apps/api/lib/internal-auth.ts` - Core authentication function
+- `apps/api/lib/__tests__/internal-auth.test.ts` - Unit tests
+
+### Key Features
+
+- Timing-safe string comparison for key validation
+- Format validation (Bearer token requirement)
+- Proper error responses (401 for auth failures, 500 for config errors)
+- Synchronous function (no async/await needed)
+
+### Tests
+
+All 8 tests passing with 100% coverage:
+- ✅ Valid key acceptance
+- ✅ Missing header rejection
+- ✅ Invalid format rejection
+- ✅ Wrong key rejection
+- ✅ Empty header handling
+- ✅ Empty key handling
+- ✅ Config error handling
+
+### Next Task
+
+Task 1.2: Apply Internal Auth to Content Routes
+
+---
+
+## [2026-01-14] Task 0.1 Completed
+
+### Subtasks Completed
+
+- ✅ Subtask 0.1.1: Generated secure API key (32-byte base64url)
+- ✅ Subtask 0.1.2: Added to Vercel environment variables (by user)
+- ✅ Subtask 0.1.3: Added to Convex environment variables (by user)
+- ✅ Subtask 0.1.4: Created rotation documentation
+- ✅ Subtask 0.1.5: Created and verified tests
+
+### Files Created
+
+- `plans/api-monetization/docs/internal-key-rotation.md` - Rotation procedure
+- `apps/api/__tests__/env.test.ts` - Verification tests
+- `apps/api/vitest.config.ts` - Updated with test env variable
+
+### Tests
+
+All 7 tests passing:
+- ✅ INTERNAL_CONTENT_API_KEY in environment
+- ✅ Key length greater than 32 characters
+- ✅ Base64url encoded
+- ✅ At least 32 chars
+- ✅ Contains uppercase letters
+- ✅ Contains lowercase letters
+- ✅ Contains numbers
+
+### Key Decisions
+
+- 32-byte random base64url encoded key
+- Dual storage in Vercel and Convex for redundancy
+- Quarterly rotation per security best practices
+
+### Next Task
+
+Task 0.2: Extend Better Auth Schema
+
+---
+
 ## [2026-01-14] Schema Architecture Fixed
 
 ### Critical Discovery
