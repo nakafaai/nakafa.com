@@ -12,6 +12,7 @@ export const keys = () =>
       POLAR_ACCESS_TOKEN: z.string().min(1),
       POLAR_WEBHOOK_SECRET: z.string().min(1),
       BETTER_AUTH_SECRET: z.string().min(1),
+      INTERNAL_CONTENT_API_KEY: z.string().min(1),
     },
     client: {
       NEXT_PUBLIC_CONVEX_URL: z.string(),
@@ -30,5 +31,6 @@ export const keys = () =>
       NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
       NEXT_PUBLIC_POLAR_SERVER: process.env.NEXT_PUBLIC_POLAR_SERVER,
       BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+      INTERNAL_CONTENT_API_KEY: process.env.INTERNAL_CONTENT_API_KEY,
     },
   });
