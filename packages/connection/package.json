@@ -7,9 +7,12 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@repo/utilities": "workspace:*",
+    "@t3-oss/env-nextjs": "^0.13.10",
     "effect": "^3.19.14",
     "ky": "^1.14.2",
-    "@repo/utilities": "workspace:*"
+    "server-only": "^0.0.1",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*"

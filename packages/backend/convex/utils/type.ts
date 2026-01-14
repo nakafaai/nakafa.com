@@ -1,5 +1,10 @@
 /**
- * Helper to safely construct objects with required fields
+ * Safely constructs an object with all required fields.
+ * Throws an error if any field is undefined.
+ *
+ * @param obj - The object to check
+ * @returns The same object with `undefined` types removed from values
+ * @throws Error if any value is undefined
  */
 export function buildRequiredObject<T extends Record<string, unknown>>(
   obj: T
@@ -13,7 +18,11 @@ export function buildRequiredObject<T extends Record<string, unknown>>(
 }
 
 /**
- * Type predicate to check if value is not undefined
+ * Type predicate to filter out undefined values.
+ * Useful in `Array.filter()`.
+ *
+ * @example
+ * const items = [1, undefined, 2].filter(isNotUndefined); // [1, 2]
  */
 export function isNotUndefined<T>(value: T): value is Exclude<T, undefined> {
   return value !== undefined;

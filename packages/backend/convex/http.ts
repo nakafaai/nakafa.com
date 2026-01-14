@@ -8,10 +8,14 @@ import { logger } from "hono/logger";
 import stripAnsi from "strip-ansi";
 import type { ActionCtx } from "./_generated/server";
 import { createAuth } from "./auth";
+import { requestId } from "./routes/middleware/requestId";
 import { registerPolarRoutes } from "./routes/polar";
 import v1 from "./routes/v1";
 
 const app: HonoWithConvex<ActionCtx> = new Hono();
+
+// Request ID middleware - must be first for distributed tracing
+app.use("*", requestId);
 
 // Logging middleware - strip ANSI for Convex dashboard
 app.use(

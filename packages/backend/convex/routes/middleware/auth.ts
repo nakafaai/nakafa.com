@@ -1,27 +1,21 @@
 import type { MiddlewareHandler } from "hono";
 import { components } from "../../_generated/api";
 import type { ActionCtx } from "../../_generated/server";
-import { HTTP_UNAUTHORIZED } from "../constants";
+import { logger } from "../../utils/logger";
+import { HTTP_INTERNAL_ERROR, HTTP_UNAUTHORIZED } from "../constants";
 
 const BEARER_PREFIX = "Bearer ";
 const BEARER_PREFIX_LENGTH = BEARER_PREFIX.length;
 
 /**
- * Verify API key and optionally check permissions.
- * Stores userId in context after successful verification.
+ * Middleware to require a valid API key for protected routes.
  *
- * @example
- * // Basic usage
- * app.get("/v1/me", requireApiKey(), (c) => {
- *   const userId = c.get("userId");
- * });
+ * Verifies the `Authorization: Bearer <token>` header against the database.
+ * If valid, adds the `userId` to the context.
+ * Optionally checks for specific permissions.
  *
- * @example
- * // With permissions
- * app.delete("/v1/contents/:id",
- *   requireApiKey({ contents: ["delete"] }),
- *   handler
- * );
+ * @param permissions - Optional map of resource to required permissions (e.g. `{ contents: ["read"] }`)
+ * @returns Hono middleware handler
  */
 export const requireApiKey =
   (
@@ -30,12 +24,17 @@ export const requireApiKey =
     Bindings: ActionCtx;
     Variables: {
       userId: string;
+      requestId: string;
     };
   }> =>
   async (c, next) => {
+    const requestId = c.get("requestId");
     const authHeader = c.req.header("Authorization");
 
     if (!authHeader?.startsWith(BEARER_PREFIX)) {
+      logger.warn("Auth failed: Missing or invalid Authorization header", {
+        requestId,
+      });
       return c.json(
         {
           error: "Missing or invalid Authorization header",
@@ -47,24 +46,45 @@ export const requireApiKey =
 
     const apiKey = authHeader.slice(BEARER_PREFIX_LENGTH);
 
-    const result = await c.env.runMutation(
-      components.betterAuth.mutations.verifyApiKey,
-      {
-        key: apiKey,
-        permissions: permissions ? JSON.stringify(permissions) : undefined,
-      }
-    );
+    try {
+      const result = await c.env.runMutation(
+        components.betterAuth.mutations.verifyApiKey,
+        {
+          key: apiKey,
+          permissions: permissions ? JSON.stringify(permissions) : undefined,
+        }
+      );
 
-    if (!(result.valid && result.userId)) {
+      if (!(result.valid && result.userId)) {
+        logger.warn(
+          `Auth failed: ${result.error?.code ?? "INVALID_API_KEY"} - ${result.error?.message ?? "Invalid API key"}`,
+          {
+            requestId,
+          }
+        );
+        return c.json(
+          {
+            error: result.error?.code ?? "INVALID_API_KEY",
+            message: result.error?.message ?? "Invalid API key",
+          },
+          HTTP_UNAUTHORIZED
+        );
+      }
+
+      c.set("userId", result.userId);
+      logger.info("Auth success", {
+        requestId,
+        userId: result.userId,
+      });
+      await next();
+    } catch (error) {
+      logger.error("Auth error", { requestId }, error);
       return c.json(
         {
-          error: result.error?.code ?? "INVALID_API_KEY",
-          message: result.error?.message ?? "Invalid API key",
+          error: "INTERNAL_ERROR",
+          message: "An error occurred during authentication",
         },
-        HTTP_UNAUTHORIZED
+        HTTP_INTERNAL_ERROR
       );
     }
-
-    c.set("userId", result.userId);
-    await next();
   };

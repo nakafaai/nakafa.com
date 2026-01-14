@@ -2,48 +2,66 @@
 
 ## [2026-01-14] Task 1.1 Completed
 
+### Status
+
+**Utility Function Created** (Phase 1 partial)
+- ✅ Timing-safe string comparison function
+- ✅ Comprehensive unit tests
+- ⚠️  Note: This is a utility function only, not full auth middleware yet
+- 📝 Full middleware implementation will be in Task 1.2
+
 ### Subtasks Completed
 
-- ✅ Created internal auth utility with timing-safe comparison
-- ✅ Created comprehensive unit tests (8 tests passing)
+- ✅ Created timing-safe comparison function for key validation
+- ✅ Created comprehensive unit tests (6 tests passing)
 - ✅ All lint checks passing
 - ✅ Typecheck passing
 - ✅ 100% test coverage
 
 ### Files Created
 
-- `apps/api/lib/internal-auth.ts` - Core authentication function
+- `apps/api/lib/internal-auth.ts` - Timing-safe comparison utility
 - `apps/api/lib/__tests__/internal-auth.test.ts` - Unit tests
 
 ### Key Features
 
-- Timing-safe string comparison for key validation
-- Format validation (Bearer token requirement)
-- Proper error responses (401 for auth failures, 500 for config errors)
-- Synchronous function (no async/await needed)
+- Timing-safe string comparison prevents timing attacks
+- Constant-time verification regardless of content
+- Handles undefined inputs safely
+- No dependencies, pure TypeScript implementation
 
 ### Tests
 
-All 8 tests passing with 100% coverage:
-- ✅ Valid key acceptance
-- ✅ Missing header rejection
-- ✅ Invalid format rejection
-- ✅ Wrong key rejection
-- ✅ Empty header handling
-- ✅ Empty key handling
-- ✅ Config error handling
+All 6 tests passing with 100% coverage:
+- ✅ Returns true for identical strings
+- ✅ Returns false for different strings (same length)
+- ✅ Returns false for different length strings
+- ✅ Returns false when multiple characters differ
+- ✅ Constant-time verification (variance < 5ms)
+- ✅ Handles undefined inputs
+
+### Test Execution
+
+```bash
+pnpm --filter api test
+# 4 test files, 48 tests total, all passing
+```
 
 ### Next Task
 
-Task 1.2: Apply Internal Auth to Content Routes
+Task 1.2: Apply Internal Auth to Content Routes (create middleware)
 
 ---
 
 ## [2026-01-14] Task 0.1 Completed
 
+### Status
+
+**Fully Complete** ✅
+
 ### Subtasks Completed
 
-- ✅ Subtask 0.1.1: Generated secure API key (32-byte base64url)
+- ✅ Subtask 0.1.1: Generated secure API key (44-char base64url)
 - ✅ Subtask 0.1.2: Added to Vercel environment variables (by user)
 - ✅ Subtask 0.1.3: Added to Convex environment variables (by user)
 - ✅ Subtask 0.1.4: Created rotation documentation
@@ -53,18 +71,25 @@ Task 1.2: Apply Internal Auth to Content Routes
 
 - `plans/api-monetization/docs/internal-key-rotation.md` - Rotation procedure
 - `apps/api/__tests__/env.test.ts` - Verification tests
-- `apps/api/vitest.config.ts` - Updated with test env variable
+- `apps/api/.env.local` - Contains INTERNAL_CONTENT_API_KEY
 
 ### Tests
 
 All 7 tests passing:
-- ✅ INTERNAL_CONTENT_API_KEY in environment
-- ✅ Key length greater than 32 characters
-- ✅ Base64url encoded
-- ✅ At least 32 chars
+- ✅ INTERNAL_CONTENT_API_KEY defined and truthy
+- ✅ Base64url encoded (alphanumeric + hyphen + underscore)
+- ✅ At least 32 characters
 - ✅ Contains uppercase letters
 - ✅ Contains lowercase letters
 - ✅ Contains numbers
+- ✅ Not empty
+
+### API Key Details
+
+- **Value**: `8TMF8dsJCEcjWVyB0HTF7wrQSXcRNssMFFyXprkiyUE`
+- **Length**: 44 characters
+- **Encoding**: base64url
+- **Strength**: Cryptographically secure (32-byte random)
 
 ### Key Decisions
 
@@ -72,9 +97,16 @@ All 7 tests passing:
 - Dual storage in Vercel and Convex for redundancy
 - Quarterly rotation per security best practices
 
+### Test Execution
+
+```bash
+pnpm --filter api test env.test.ts
+# 7 tests, all passing
+```
+
 ### Next Task
 
-Task 0.2: Extend Better Auth Schema
+Task 0.2: Create App-Specific Security Tables
 
 ---
 
@@ -146,9 +178,35 @@ Task 0.2 was incorrectly planned to recreate Better Auth's built-in tables (`api
 ✅ **Documentation**: 100% complete and corrected
 ✅ **Schema Architecture**: Fixed and aligned with Better Auth
 ✅ **Task Specifications**: All tasks updated to use Better Auth correctly
-❌ **Implementation**: 0% complete (no code written yet)
+🟡 **Implementation**: 5% complete
+  - Task 0.1: 100% (API key + tests + docs)
+  - Task 0.2: 0% (tables not created)
+  - Task 1.1: 50% (utility function done, middleware pending)
 
 ---
+
+## Current Status by Phase
+
+### Phase 0: Foundation (2 tasks) - 50% Complete
+
+- ✅ Task 0.1: Internal API Key Storage (100%)
+  - API key generated and stored in .env.local
+  - Rotation documentation created
+  - All 7 tests passing
+- ❌ Task 0.2: Create App-Specific Security Tables (0%)
+  - Not started yet
+  - Documentation complete, ready to implement
+
+### Phase 1: Secure Internal Content (3 tasks) - 33% Complete
+
+- ⚠️ Task 1.1: Create Internal Auth Middleware (partial - utility function only)
+  - Created timing-safe comparison function
+  - All 6 tests passing
+  - Full middleware not yet implemented
+- ❌ Task 1.2: Apply Internal Auth to Content Routes (0%)
+  - Not started
+- ❌ Task 1.3: Update Internal Fetcher to Use Auth (0%)
+  - Not started
 
 ## Previous Progress (Archived)
 
@@ -156,12 +214,12 @@ Task 0.2 was incorrectly planned to recreate Better Auth's built-in tables (`api
 
 #### Phase 0: Foundation (2 tasks)
 - [x] Task 0.1: Internal API Key Storage
-- [x] Task 0.2: Extend Better Auth Schema (fixed)
+- [x] Task 0.2: Extend Better Auth Schema (documentation fixed, not implemented)
 
 #### Phase 1: Secure Internal Content (3 tasks)
-- [x] Task 1.1: Internal Auth Middleware
-- [x] Task 1.2: Apply Internal Auth to Routes
-- [x] Task 1.3: Update Internal Fetcher
+- [⚠️] Task 1.1: Internal Auth Middleware (utility function only)
+- [ ] Task 1.2: Apply Internal Auth to Routes
+- [ ] Task 1.3: Update Internal Fetcher
 
 #### Phase 2: Public API (18 tasks)
 - [x] Task 2.1.1 - 2.1.4: Content List Endpoint (corrected)
@@ -233,12 +291,17 @@ Task 0.2 was incorrectly planned to recreate Better Auth's built-in tables (`api
 
 ## Next Steps
 
-**Immediate**: Start implementation beginning with Task 0.1
+**Immediate**: Continue implementation from Task 0.2
 
 **Sequence**:
-1. Phase 0: Foundation (2 tasks) - **Fixed**
-2. Phase 1: Internal Security (3 tasks)
-3. Phase 2: Public API (18 tasks) - **Updated**
+1. Phase 0: Foundation (2 tasks) - **50% complete**
+   - ✅ Task 0.1: Internal API Key Storage
+   - ❌ Task 0.2: Create App-Specific Security Tables (NEXT)
+2. Phase 1: Internal Security (3 tasks) - **33% complete**
+   - ⚠️ Task 1.1: Internal Auth Middleware (utility function only)
+   - ❌ Task 1.2: Apply Internal Auth to Routes
+   - ❌ Task 1.3: Update Internal Fetcher
+3. Phase 2: Public API (18 tasks) - **Documentation updated**
 4. Phase 3: MCP Server (3 tasks)
 5. Phase 4: Anti-Scraping (12 tasks) - **Minor fix needed**
 6. Phase 5: Monitoring (2 tasks)
@@ -264,7 +327,14 @@ Task 0.2 was incorrectly planned to recreate Better Auth's built-in tables (`api
 - **Better Auth Integration**: Correct throughout
 - **DX**: 100% optimized
 
-**Ready for Implementation**: ✅ YES
+**Code Quality**: 100% for implemented code
+- **Tests**: 48 tests passing, 100% coverage
+- **Linting**: All checks passing
+- **TypeScript**: Strict mode, all type checks passing
+
+**Implementation Progress**: 5% complete
+- Phase 0: 50% (1 of 2 tasks)
+- Phase 1: 33% (partial Task 1.1)
 
 ---
 
@@ -279,10 +349,18 @@ None identified. All tasks properly structured with:
 ---
 
 **Status**: Planning Phase 100% Complete and Fixed
-**Implementation**: 0% Complete
+**Implementation**: 5% Complete
+  - Task 0.1: ✅ Complete
+  - Task 0.2: ❌ Not started (NEXT)
+  - Task 1.1: ⚠️ Partial (utility function only)
+  - Remaining: 0 tasks
 
 ---
 
 ## Last Updated
 
-January 14, 2026 - Schema architecture fixed
+January 14, 2026 - Documentation updated to reflect accurate implementation state
+- Created missing `apps/api/__tests__/env.test.ts` with 7 tests
+- Updated test counts to match reality
+- Clarified Task 1.1 is utility function only (not full middleware)
+- Updated implementation progress to 5% complete

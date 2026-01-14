@@ -1,3 +1,6 @@
+import "server-only";
+
+import { keys } from "@repo/connection/keys";
 import type { FetchResult } from "@repo/connection/lib/types";
 import ky, { HTTPError, TimeoutError } from "ky";
 
@@ -76,9 +79,14 @@ export async function fetcher<T>({
   options: RequestInit;
 }): Promise<FetchResult<T | null>> {
   const baseUrl = url ?? (await getBaseUrl());
+  const { INTERNAL_CONTENT_API_KEY } = keys();
   try {
     const response = await ky<T>(`${baseUrl}${endpoint}`, {
       ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${INTERNAL_CONTENT_API_KEY}`,
+      },
     }).json();
 
     return { data: response, error: null };

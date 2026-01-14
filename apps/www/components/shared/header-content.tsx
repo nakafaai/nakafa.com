@@ -34,6 +34,8 @@ interface Props {
   slug?: string;
   /** The github url of the content */
   githubUrl?: string;
+  /** The raw content, used for copying */
+  content?: string;
 }
 
 export function HeaderContent({
@@ -45,6 +47,7 @@ export function HeaderContent({
   authors,
   date,
   slug,
+  content,
 }: Props) {
   const showFooter = authors || date;
   return (
@@ -122,7 +125,7 @@ export function HeaderContent({
           </div>
         )}
 
-        {!!slug && <OpenContent slug={slug} />}
+        {!!slug && <OpenContent content={content} slug={slug} />}
       </div>
     </header>
   );

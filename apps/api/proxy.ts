@@ -1,35 +1,41 @@
-import { CorsValidator } from "@repo/security";
-import { type NextRequest, NextResponse, type ProxyConfig } from "next/server";
+import { Effect } from "effect";
+import type { NextRequest, ProxyConfig } from "next/server";
+import { NextResponse } from "next/server";
+import { timingSafeEqual } from "@/lib/internal-auth";
 
-const corsValidator = new CorsValidator();
-
+/**
+ * Middleware for securing the Contents API.
+ *
+ * Security model: Server-side only.
+ * - No CORS headers (blocks browser access)
+ * - Requires valid Bearer token for all requests
+ * - Uses timing-safe comparison to prevent timing attacks
+ *
+ * @param request - The incoming Next.js request
+ * @returns NextResponse to continue or 401 error
+ */
 export function proxy(request: NextRequest) {
-  // Check the origin from the request
-  const origin = request.headers.get("origin") ?? "";
-  const isAllowedOrigin = corsValidator.isOriginAllowed(origin);
+  const authHeader = request.headers.get("Authorization");
 
-  // Handle preflight requests
-  const isPreflight = request.method === "OPTIONS";
-
-  if (isPreflight) {
-    const corsHeaders = corsValidator.getCorsHeaders(origin);
-    return NextResponse.json({}, { headers: corsHeaders });
+  if (!authHeader?.startsWith("Bearer ")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Handle simple requests
-  const response = NextResponse.next();
+  const providedKey = authHeader.slice(7);
+  const validKey = process.env.INTERNAL_CONTENT_API_KEY;
 
-  // Set CORS headers for allowed origins
-  if (isAllowedOrigin) {
-    const corsHeaders = corsValidator.getCorsHeaders(origin);
-    for (const [key, value] of Object.entries(corsHeaders)) {
-      response.headers.set(key, value);
-    }
+  if (!(validKey && Effect.runSync(timingSafeEqual(providedKey, validKey)))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  return response;
+  return NextResponse.next();
 }
 
+/**
+ * Middleware configuration for route matching.
+ *
+ * Only applies to /contents/* routes.
+ */
 export const config: ProxyConfig = {
-  matcher: ["/health", "/contents/:path*"],
+  matcher: ["/contents/:path*"],
 };

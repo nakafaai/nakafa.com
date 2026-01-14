@@ -151,9 +151,9 @@ async function PageContent({
     notFound();
   }
 
-  const { metadata, default: Content } = content;
+  const { metadata, default: Content, raw } = content;
 
-  const headings = getHeadings(content.raw);
+  const headings = getHeadings(raw);
 
   return (
     <>
@@ -194,6 +194,7 @@ async function PageContent({
       <LayoutMaterial>
         <LayoutMaterialContent showAskButton>
           <LayoutMaterialHeader
+            content={raw}
             description={metadata.description}
             link={{
               href: `/articles/${category}`,
