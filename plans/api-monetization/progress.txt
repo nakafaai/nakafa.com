@@ -65,24 +65,93 @@ Task 1.2: Apply Internal Auth to Content Routes (create middleware)
 - ✅ Subtask 0.1.2: Added to Vercel environment variables (by user)
 - ✅ Subtask 0.1.3: Added to Convex environment variables (by user)
 - ✅ Subtask 0.1.4: Created rotation documentation
-- ✅ Subtask 0.1.5: Created and verified tests
 
 ### Files Created
 
 - `plans/api-monetization/docs/internal-key-rotation.md` - Rotation procedure
-- `apps/api/__tests__/env.test.ts` - Verification tests
 - `apps/api/.env.local` - Contains INTERNAL_CONTENT_API_KEY
+- `apps/api/lib/__tests__/setup.ts` - Test setup file for mocking env
+
+### Files Modified
+
+- `apps/api/proxy.ts` - Updated to use `env.INTERNAL_CONTENT_API_KEY` from `@/env`
+- `apps/api/lib/__tests__/proxy.test.ts` - Clean tests without helper functions
+- `apps/api/vitest.config.ts` - Added setupFiles for global test mocking
+
+### Files Deleted
+
+- `apps/api/__tests__/env.test.ts` - Removed (testing env vars is not unit test responsibility)
+
+### Environment Management & Testing
+
+**Decision: Use centralized `env.ts` from `@t3-oss/env-nextjs`**
+
+Why env.test.ts is **NOT needed**:
+- `apps/api/env.ts` provides type-safe environment variable access via `@t3-oss/env-nextjs`
+- Type validation happens at build time (TypeScript), not runtime
+- `@t3-oss/env-nextjs` validates env vars on app startup
+- No need for additional Zod validation or unit tests for env vars
+- Unit tests should verify business logic, not infrastructure configuration
+
+**Environment variable access pattern:**
+```typescript
+// ✅ CORRECT: Use centralized env
+import { env } from "@/env";
+const apiKey = env.INTERNAL_CONTENT_API_KEY;
+
+// ❌ WRONG: Use raw process.env
+const apiKey = process.env.INTERNAL_CONTENT_API_KEY;
+```
+
+### Test Setup Architecture
+
+**Problem Solved:** Clean test DX without helper functions
+
+**Why test setup file is needed:**
+- `env.ts` validates env vars at **module import time** (synchronously)
+- Standard static imports load modules **before** test code runs
+- Vitest needs to mock env **before** `@/env` is imported
+- `setup.ts` runs automatically before all tests
+
+**Solution: Global mock in setup file**
+```typescript
+// apps/api/lib/__tests__/setup.ts
+import { vi } from "vitest";
+
+vi.mock("@/env", () => ({
+  env: {
+    INTERNAL_CONTENT_API_KEY: "test-api-key-12345",
+  },
+}));
+```
+
+**Benefits:**
+- ✅ Clean test files (no getProxy() helper functions)
+- ✅ Standard Vitest pattern (setupFiles)
+- ✅ Tests remain explicit about what's mocked
+- ✅ One-time setup for all tests
+- ✅ Best DX: write tests like production code
+
+**Why `loadEnv` removed from vitest.config.ts:**
+- No `process.env` usage in codebase (only use `env` from `@/env`)
+- `loadEnv` loads `.env` files into `process.env` (not needed)
+- Tests use mocked `env` from setup.ts (doesn't need real env files)
+- Simpler config: remove unused `loadEnv` and `mode` parameter
+
+**Test execution flow:**
+1. Vitest starts
+2. Loads `vitest.config.ts` (no longer loads env files)
+3. Runs `setup.ts` (mocks @/env)
+4. Imports test files (now safe to use @/env)
+5. Runs all tests with mocked env
 
 ### Tests
 
-All 7 tests passing:
-- ✅ INTERNAL_CONTENT_API_KEY defined and truthy
-- ✅ Base64url encoded (alphanumeric + hyphen + underscore)
-- ✅ At least 32 characters
-- ✅ Contains uppercase letters
-- ✅ Contains lowercase letters
-- ✅ Contains numbers
-- ✅ Not empty
+All 41 tests passing (3 test files):
+- `setup.ts`: Global test setup (mocks env)
+- `proxy.test.ts`: 9 tests (auth middleware)
+- `internal-auth.test.ts`: 6 tests (timing-safe comparison)
+- `static-params.test.ts`: 26 tests (existing tests)
 
 ### API Key Details
 
@@ -90,18 +159,23 @@ All 7 tests passing:
 - **Length**: 44 characters
 - **Encoding**: base64url
 - **Strength**: Cryptographically secure (32-byte random)
+- **Access**: Via `env.INTERNAL_CONTENT_API_KEY` from `@/env` (type-safe)
 
 ### Key Decisions
 
 - 32-byte random base64url encoded key
 - Dual storage in Vercel and Convex for redundancy
 - Quarterly rotation per security best practices
+- Always use `env` from `@/env.ts` instead of raw `process.env`
+- `@t3-oss/env-nextjs` provides type safety and validation
+- Use Vitest `setupFiles` for global mocking (cleaner DX)
 
 ### Test Execution
 
 ```bash
-pnpm --filter api test env.test.ts
-# 7 tests, all passing
+pnpm --filter api test
+# Test Files: 3 passed
+# Tests: 41 passed (100% coverage)
 ```
 
 ### Next Task

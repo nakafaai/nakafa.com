@@ -1,19 +1,8 @@
 import { NextRequest } from "next/server";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { proxy } from "@/proxy";
 
-const VALID_API_KEY = "test-api-key-12345";
-const INVALID_API_KEY = "wrong-api-key";
-
 describe("proxy middleware", () => {
-  beforeAll(() => {
-    vi.stubEnv("INTERNAL_CONTENT_API_KEY", VALID_API_KEY);
-  });
-
-  afterAll(() => {
-    vi.unstubAllEnvs();
-  });
-
   describe("authentication", () => {
     it("should reject request without Authorization header", async () => {
       const request = new NextRequest(
@@ -47,7 +36,7 @@ describe("proxy middleware", () => {
         "http://localhost:3000/contents/en/articles",
         {
           headers: {
-            Authorization: `Bearer ${INVALID_API_KEY}`,
+            Authorization: "Bearer wrong-api-key",
           },
         }
       );
@@ -63,7 +52,7 @@ describe("proxy middleware", () => {
         "http://localhost:3000/contents/en/articles",
         {
           headers: {
-            Authorization: `Bearer ${VALID_API_KEY}`,
+            Authorization: "Bearer test-api-key-12345",
           },
         }
       );
@@ -79,7 +68,7 @@ describe("proxy middleware", () => {
         {
           method: "OPTIONS",
           headers: {
-            Authorization: `Bearer ${VALID_API_KEY}`,
+            Authorization: "Bearer test-api-key-12345",
           },
         }
       );
@@ -139,7 +128,7 @@ describe("proxy middleware", () => {
         "http://localhost:3000/contents/en/articles",
         {
           headers: {
-            Authorization: `Bearer ${VALID_API_KEY}`,
+            Authorization: "Bearer test-api-key-12345",
             origin: "https://nakafa.com",
           },
         }

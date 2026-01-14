@@ -1,10 +1,11 @@
 import { Effect } from "effect";
 import type { NextRequest, ProxyConfig } from "next/server";
 import { NextResponse } from "next/server";
+import { env } from "@/env";
 import { timingSafeEqual } from "@/lib/internal-auth";
 
 /**
- * Middleware for securing the Contents API.
+ * Middleware for securing Contents API.
  *
  * Security model: Server-side only.
  * - No CORS headers (blocks browser access)
@@ -22,7 +23,7 @@ export function proxy(request: NextRequest) {
   }
 
   const providedKey = authHeader.slice(7);
-  const validKey = process.env.INTERNAL_CONTENT_API_KEY;
+  const validKey = env.INTERNAL_CONTENT_API_KEY;
 
   if (!(validKey && Effect.runSync(timingSafeEqual(providedKey, validKey)))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -1,12 +1,10 @@
 import path from "node:path";
-import { loadEnv } from "vite";
 import { defineConfig } from "vitest/config";
 
-export default defineConfig(({ mode }) => ({
+const config = defineConfig({
   test: {
     environment: "node",
-    // mode defines what ".env.{mode}" file to choose if exists
-    env: loadEnv(mode, process.cwd(), ""),
+    setupFiles: ["./lib/__tests__/setup.ts"],
     coverage: {
       enabled: true,
       provider: "istanbul",
@@ -18,4 +16,6 @@ export default defineConfig(({ mode }) => ({
       "@repo": path.resolve(__dirname, "../../packages"),
     },
   },
-}));
+});
+
+export default config;
