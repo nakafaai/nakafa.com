@@ -6,16 +6,42 @@ Transform Nakafa's educational content into a secure, monetizable API that preve
 
 ## 📍 Current State
 
-### ✅ Completed
-- [x] Phase 0: Foundation (2 tasks)
+### ✅ Documentation Complete
+- [x] Phase 0: Foundation (2 tasks) - **Schema architecture fixed**
 - [x] Phase 1: Secure Internal Content (3 tasks)
-- [x] Phase 2: Build Public Content API (18 tasks)
+- [x] Phase 2: Build Public Content API (18 tasks) - **Updated to use Better Auth**
 - [x] Phase 3: Secure MCP Server (3 tasks)
 - [x] Phase 4: Anti-Scraping Layers (12 tasks)
 - [x] Phase 5: Monitoring & Analytics (2 tasks)
 - [x] Phase 6: Testing & Validation (2 tasks)
 
 **Total**: 40 tasks (all refactored with Convex best practices)
+
+### 🔄 Schema Architecture Update
+
+**Critical Fix Applied**: Task 0.2 was incorrectly planned to recreate Better Auth's built-in tables.
+
+**Now Correctly Uses Better Auth**:
+- ✅ `apikey` table (built-in) - API key management
+- ✅ Built-in rate limiting (`rateLimitMax`, `remaining`, `requestCount`)
+- ✅ Refill mechanism (`refillInterval`, `refillAmount`)
+- ✅ `metadata` field (for `subscriptionTier`)
+
+**App-Specific Tables Only (4 tables)**:
+- `contentAccessLog` - Track content access
+- `scrapingAlerts` - Security alerts
+- `securityEvents` - Audit trail
+- `contentLeaks` - Track leaks
+
+**Tasks Rewritten**:
+- Task 0.2: Fixed to create only 4 app-specific tables
+- Task 2.4.1: Fixed to use Better Auth's built-in rate limiting
+- Task 2.4.2: Fixed to query Better Auth's apikey table
+- Task 2.5.1: Fixed to use Better Auth's createApiKey
+- Task 2.5.2: Fixed to query Better Auth's apikey table
+- Task 2.6.1: Fixed to use Better Auth's usage tracking
+
+**See**: `SCHEMA_REWRITE_SUMMARY.md` for detailed changes.
 
 ---
 

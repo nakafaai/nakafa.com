@@ -9,6 +9,7 @@ export const keys = () =>
       ANALYZE: z.string().optional(),
       // Added by Vercel
       NEXT_RUNTIME: z.enum(["nodejs", "edge"]).optional(),
+      INTERNAL_CONTENT_API_KEY: z.string(),
     },
     client: {
       NEXT_PUBLIC_VERSION: z.string(),
@@ -17,6 +18,7 @@ export const keys = () =>
       NEXT_PUBLIC_MCP_URL: z.url(),
     },
     runtimeEnv: {
+      INTERNAL_CONTENT_API_KEY: process.env.INTERNAL_CONTENT_API_KEY,
       ANALYZE: process.env.ANALYZE,
       NEXT_PUBLIC_VERSION: process.env.NEXT_PUBLIC_VERSION,
       NEXT_RUNTIME: process.env.NEXT_RUNTIME,
