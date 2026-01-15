@@ -55,6 +55,55 @@ Task 1.2: Apply Internal Auth to Content Routes (create middleware)
 
 ## [2026-01-14] Task 0.1 Completed
 
+### Environment Variable Standardization (Option B Applied)
+
+**Decision: Use centralized `env` from `env.ts` / `keys.ts` for configuration values**
+
+**Files Modified:**
+
+1. **packages/backend/convex/auth.ts**
+   - ✅ Added import: `import { keys as backendKeys } from "@repo/backend/keys";`
+   - ✅ Replaced: `process.env.SITE_URL` → `backendKeys().SITE_URL`
+   - ✅ Replaced: `process.env.AUTH_GOOGLE_ID` → `backendKeys().AUTH_GOOGLE_ID`
+   - ✅ Replaced: `process.env.AUTH_GOOGLE_SECRET` → `backendKeys().AUTH_GOOGLE_SECRET`
+
+2. **packages/backend/convex/utils/polar.ts**
+   - ✅ Added import: `import { keys as backendKeys } from "@repo/backend/keys";`
+   - ✅ Replaced: `process.env.POLAR_ACCESS_TOKEN` → `backendKeys().POLAR_ACCESS_TOKEN`
+   - ✅ Replaced: `process.env.POLAR_WEBHOOK_SECRET` → `backendKeys().POLAR_WEBHOOK_SECRET`
+   - ✅ Replaced: `process.env.NEXT_PUBLIC_POLAR_SERVER` → `backendKeys().NEXT_PUBLIC_POLAR_SERVER`
+
+3. **packages/design-system/lib/utils.ts**
+   - ✅ Added import: `import { keys as coreKeys } from "@repo/next-config/keys";`
+   - ✅ Replaced: `process.env.NEXT_PUBLIC_APP_URL` → `coreKeys().NEXT_PUBLIC_APP_URL`
+
+4. **packages/next-config/keys.ts**
+   - ✅ Added: `VERCEL_PROJECT_PRODUCTION_URL` to `client` section for SEO metadata
+
+5. **packages/seo/metadata.ts**
+   - ✅ Removed unused import: `keys as coreKeys`
+   - ✅ Kept: `process.env.VERCEL_PROJECT_PRODUCTION_URL` (acceptable for runtime access)
+
+**NODE_ENV Checks (Option B - Kept as-is):**
+- ✅ All `process.env.NODE_ENV` checks kept (acceptable pattern for runtime detection)
+- ✅ All `process.env.VERCEL_TARGET_ENV` checks kept
+- ✅ All other runtime `process.env` checks kept
+
+**Files Left Unchanged (Acceptable):**
+- `packages/connection/lib/fetcher.ts` - Runtime environment check
+- `packages/security/lib/cors-validator.ts` - Development/Target env checks
+- `packages/design-system/components/ui/tailwind-indicator.tsx` - Production check
+- `packages/design-system/components/ui/react-scan.tsx` - Vercel env check
+- `apps/www/app/api/weather/route.ts` - Development check
+- `apps/www/lib/context/use-pagefind.tsx` - Development check
+- `apps/email/.react-email/src/app/env.ts` - Server-only paths
+- `apps/www/scripts/index-now.ts` - API keys for scripts
+- All test files - Test setup
+
+---
+
+## [2026-01-14] Task 0.1 Completed
+
 ### Status
 
 **Fully Complete** ✅
