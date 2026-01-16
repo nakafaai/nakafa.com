@@ -42,7 +42,7 @@
     "@effect/language-service": "^0.65.0",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.7.4",
-    "@types/node": "^25.0.8",
+    "@types/node": "^25.0.9",
     "depcheck": "^1.4.7",
     "tsup": "^8.5.1",
     "turbo": "^2.7.4",
