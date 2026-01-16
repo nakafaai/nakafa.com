@@ -1,4 +1,4 @@
-// TODO: PERMISSION MIGHT NEED TO CHANGE WITH THIS FORMAT: [feature]: ["permission"] , eg: class: ["read", "write", "delete", "update"]
+// TODO: PERMISSION MIGHT NEED TO CHANGE WITH CONVEX BEST PRACTICE SECURITY PERMISSION
 
 /**
  * Class images
