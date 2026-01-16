@@ -1,8 +1,11 @@
+import { components } from "@repo/backend/convex/_generated/api";
+import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import {
+  HTTP_INTERNAL_ERROR,
+  HTTP_UNAUTHORIZED,
+} from "@repo/backend/convex/routes/constants";
+import { logger } from "@repo/backend/convex/utils/logger";
 import type { MiddlewareHandler } from "hono";
-import { components } from "../../_generated/api";
-import type { ActionCtx } from "../../_generated/server";
-import { logger } from "../../utils/logger";
-import { HTTP_INTERNAL_ERROR, HTTP_UNAUTHORIZED } from "../constants";
 
 const BEARER_PREFIX = "Bearer ";
 const BEARER_PREFIX_LENGTH = BEARER_PREFIX.length;

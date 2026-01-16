@@ -1,7 +1,7 @@
+import { components } from "@repo/backend/convex/_generated/api";
+import { mutation } from "@repo/backend/convex/_generated/server";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
 import { v } from "convex/values";
-import { components } from "../_generated/api";
-import { mutation } from "../_generated/server";
-import { requireAuthWithSession } from "../lib/authHelpers";
 
 /**
  * Update the app user's role.

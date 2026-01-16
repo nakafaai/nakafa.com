@@ -1,6 +1,9 @@
 import type { MyUIMessage, MyUIMessagePart } from "@repo/ai/types/message";
-import type { Doc } from "../_generated/dataModel";
-import { buildRequiredObject, isNotUndefined } from "../utils/type";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import {
+  buildRequiredObject,
+  isNotUndefined,
+} from "@repo/backend/convex/utils/type";
 
 type DBPart = Omit<Doc<"parts">, "_id" | "_creationTime" | "messageId">;
 

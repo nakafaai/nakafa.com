@@ -1,9 +1,12 @@
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
+import { requireClassAccess } from "@repo/backend/convex/lib/authHelpers";
+import { getUserMap } from "@repo/backend/convex/lib/userHelpers";
 import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
-import type { Doc, Id } from "../../_generated/dataModel";
-import type { MutationCtx, QueryCtx } from "../../_generated/server";
-import { requireClassAccess } from "../../lib/authHelpers";
-import { getUserMap } from "../../lib/userHelpers";
 
 /**
  * Batch fetch user data for forum creators.

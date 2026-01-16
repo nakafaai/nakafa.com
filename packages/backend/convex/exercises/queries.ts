@@ -1,7 +1,7 @@
+import { query } from "@repo/backend/convex/_generated/server";
+import { requireAuth } from "@repo/backend/convex/lib/authHelpers";
+import { getManyFrom } from "@repo/backend/convex/lib/relationships";
 import { ConvexError, v } from "convex/values";
-import { query } from "../_generated/server";
-import { requireAuth } from "../lib/authHelpers";
-import { getManyFrom } from "../lib/relationships";
 
 /**
  * Get the latest attempt for a specific exercise/set.

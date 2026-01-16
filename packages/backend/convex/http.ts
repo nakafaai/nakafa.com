@@ -1,4 +1,9 @@
-import "./polyfills";
+import "@repo/backend/convex/polyfills";
+import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import { createAuth } from "@repo/backend/convex/auth";
+import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
+import { registerPolarRoutes } from "@repo/backend/convex/routes/polar";
+import v1 from "@repo/backend/convex/routes/v1";
 import {
   type HonoWithConvex,
   HttpRouterWithHono,
@@ -6,11 +11,6 @@ import {
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import stripAnsi from "strip-ansi";
-import type { ActionCtx } from "./_generated/server";
-import { createAuth } from "./auth";
-import { requestId } from "./routes/middleware/requestId";
-import { registerPolarRoutes } from "./routes/polar";
-import v1 from "./routes/v1";
 
 const app: HonoWithConvex<ActionCtx> = new Hono();
 

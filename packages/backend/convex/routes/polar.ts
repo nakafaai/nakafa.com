@@ -2,21 +2,21 @@ import {
   validateEvent,
   WebhookVerificationError,
 } from "@polar-sh/sdk/webhooks";
-import type { HonoWithConvex } from "convex-helpers/server/hono";
-import { internal } from "../_generated/api";
-import type { ActionCtx } from "../_generated/server";
+import { internal } from "@repo/backend/convex/_generated/api";
+import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
   convertToDatabaseCustomer,
   findUserIdFromCustomer,
-} from "../customers/utils";
-import { convertToDatabaseSubscription } from "../subscriptions/utils";
-import { polarWebhookSecret } from "../utils/polar";
+} from "@repo/backend/convex/customers/utils";
 import {
   HTTP_ACCEPTED,
   HTTP_BAD_REQUEST,
   HTTP_FORBIDDEN,
   HTTP_INTERNAL_ERROR,
-} from "./constants";
+} from "@repo/backend/convex/routes/constants";
+import { convertToDatabaseSubscription } from "@repo/backend/convex/subscriptions/utils";
+import { polarWebhookSecret } from "@repo/backend/convex/utils/polar";
+import type { HonoWithConvex } from "convex-helpers/server/hono";
 
 /**
  * Register Polar webhook routes on the Hono app.

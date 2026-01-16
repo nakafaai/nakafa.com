@@ -1,9 +1,12 @@
+import { internal } from "@repo/backend/convex/_generated/api";
+import {
+  exerciseAttemptMode,
+  exerciseAttemptScope,
+} from "@repo/backend/convex/exercises/schema";
+import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
+import { internalMutation, mutation } from "@repo/backend/convex/functions";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
 import { ConvexError, v } from "convex/values";
-import { internal } from "../_generated/api";
-import { internalMutation, mutation } from "../functions";
-import { requireAuthWithSession } from "../lib/authHelpers";
-import { exerciseAttemptMode, exerciseAttemptScope } from "./schema";
-import { computeAttemptDurationSeconds } from "./utils";
 
 /**
  * Starts a new exercise attempt for the authenticated user.

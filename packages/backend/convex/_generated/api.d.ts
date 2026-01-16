@@ -38,7 +38,6 @@ import type * as functions from "../functions.js";
 import type * as http from "../http.js";
 import type * as lib_authHelpers from "../lib/authHelpers.js";
 import type * as lib_relationships from "../lib/relationships.js";
-import type * as lib_timing from "../lib/timing.js";
 import type * as lib_userHelpers from "../lib/userHelpers.js";
 import type * as migrations from "../migrations.js";
 import type * as polyfills from "../polyfills.js";
@@ -58,6 +57,7 @@ import type * as users_queries from "../users/queries.js";
 import type * as utils_helper from "../utils/helper.js";
 import type * as utils_logger from "../utils/logger.js";
 import type * as utils_polar from "../utils/polar.js";
+import type * as utils_timing from "../utils/timing.js";
 import type * as utils_type from "../utils/type.js";
 import type * as workflow from "../workflow.js";
 
@@ -98,7 +98,6 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "lib/authHelpers": typeof lib_authHelpers;
   "lib/relationships": typeof lib_relationships;
-  "lib/timing": typeof lib_timing;
   "lib/userHelpers": typeof lib_userHelpers;
   migrations: typeof migrations;
   polyfills: typeof polyfills;
@@ -118,6 +117,7 @@ declare const fullApi: ApiFromModules<{
   "utils/helper": typeof utils_helper;
   "utils/logger": typeof utils_logger;
   "utils/polar": typeof utils_polar;
+  "utils/timing": typeof utils_timing;
   "utils/type": typeof utils_type;
   workflow: typeof workflow;
 }>;

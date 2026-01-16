@@ -1,6 +1,6 @@
-import { components } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
-import { internalMutation } from "./_generated/server";
+import { components } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { internalMutation } from "@repo/backend/convex/_generated/server";
 
 // Migration to create app users from Better Auth users
 export const migrationCreateAppUsers = internalMutation({

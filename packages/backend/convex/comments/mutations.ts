@@ -1,7 +1,7 @@
+import { mutation } from "@repo/backend/convex/functions";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { cleanSlug, truncateText } from "@repo/backend/convex/utils/helper";
 import { ConvexError, v } from "convex/values";
-import { mutation } from "../functions";
-import { requireAuthWithSession } from "../lib/authHelpers";
-import { cleanSlug, truncateText } from "../utils/helper";
 
 /**
  * Add a comment to a slug (article, post, etc.).

@@ -1,8 +1,11 @@
+import { query } from "@repo/backend/convex/_generated/server";
+import {
+  attachReplyToUsers,
+  attachUsers,
+} from "@repo/backend/convex/comments/utils";
+import { cleanSlug } from "@repo/backend/convex/utils/helper";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import { query } from "../_generated/server";
-import { cleanSlug } from "../utils/helper";
-import { attachReplyToUsers, attachUsers } from "./utils";
 
 export const getCommentsBySlug = query({
   args: {

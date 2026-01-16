@@ -1,13 +1,13 @@
 import type { Customer } from "@polar-sh/sdk/models/components/customer.js";
+import { api, components, internal } from "@repo/backend/convex/_generated/api";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type {
   GenericActionCtx,
   GenericDataModel,
   WithoutSystemFields,
 } from "convex/server";
 import { ConvexError } from "convex/values";
-import { api, components, internal } from "../_generated/api";
-import type { Doc, Id } from "../_generated/dataModel";
-import type { ActionCtx } from "../_generated/server";
 
 /**
  * Convert Polar customer to database format.

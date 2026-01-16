@@ -1,5 +1,5 @@
+import { tables } from "@repo/backend/convex/betterAuth/generatedSchema";
 import { defineSchema } from "convex/server";
-import { tables } from "./generatedSchema";
 
 // Don't add custom fields or change types to the generated schema
 // here, use Better Auth's schema config for that:

@@ -1,7 +1,7 @@
+import { query } from "@repo/backend/convex/betterAuth/_generated/server";
+import schema from "@repo/backend/convex/betterAuth/schema";
 import { v } from "convex/values";
 import { doc } from "convex-helpers/validators";
-import { query } from "./_generated/server";
-import schema from "./schema";
 
 /**
  * Get Better Auth user by email address.

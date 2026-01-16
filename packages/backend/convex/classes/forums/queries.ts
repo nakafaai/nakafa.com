@@ -1,9 +1,4 @@
-import { paginationOptsValidator } from "convex/server";
-import { ConvexError, v } from "convex/values";
-import { query } from "../../_generated/server";
-import { requireAuth, requireClassAccess } from "../../lib/authHelpers";
-import { getUserMap } from "../../lib/userHelpers";
-import { loadClassWithAccess } from "../utils";
+import { query } from "@repo/backend/convex/_generated/server";
 import {
   attachForumUsers,
   buildReactorsByEmoji,
@@ -13,7 +8,15 @@ import {
   getMyForumReactions,
   loadForum,
   loadForumWithAccess,
-} from "./utils";
+} from "@repo/backend/convex/classes/forums/utils";
+import { loadClassWithAccess } from "@repo/backend/convex/classes/utils";
+import {
+  requireAuth,
+  requireClassAccess,
+} from "@repo/backend/convex/lib/authHelpers";
+import { getUserMap } from "@repo/backend/convex/lib/userHelpers";
+import { paginationOptsValidator } from "convex/server";
+import { ConvexError, v } from "convex/values";
 
 export const getForums = query({
   args: {

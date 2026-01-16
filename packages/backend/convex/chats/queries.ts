@@ -1,10 +1,13 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
+import { query } from "@repo/backend/convex/_generated/server";
+import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/utils";
+import {
+  requireAuth,
+  requireChatAccess,
+} from "@repo/backend/convex/lib/authHelpers";
+import { asyncMap, getManyFrom } from "@repo/backend/convex/lib/relationships";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
-import { query } from "../_generated/server";
-import { requireAuth, requireChatAccess } from "../lib/authHelpers";
-import { asyncMap, getManyFrom } from "../lib/relationships";
-import { mapDBPartToUIMessagePart } from "./utils";
 
 /**
  * Get a chat by its ID.

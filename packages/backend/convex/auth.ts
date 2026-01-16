@@ -4,6 +4,11 @@ import {
   type GenericCtx,
 } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
+import { components, internal } from "@repo/backend/convex/_generated/api";
+import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
+import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
+import authConfig from "@repo/backend/convex/auth.config";
+import authSchema from "@repo/backend/convex/betterAuth/schema";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import {
   anonymous,
@@ -13,11 +18,6 @@ import {
   username,
 } from "better-auth/plugins";
 import { v } from "convex/values";
-import { components, internal } from "./_generated/api";
-import type { DataModel, Id } from "./_generated/dataModel";
-import { type QueryCtx, query } from "./_generated/server";
-import authConfig from "./auth.config";
-import authSchema from "./betterAuth/schema";
 
 const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 

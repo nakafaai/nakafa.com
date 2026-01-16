@@ -1,11 +1,14 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { query } from "@repo/backend/convex/_generated/server";
+import { enrichMaterialGroups } from "@repo/backend/convex/classes/materials/utils";
+import { loadClassWithAccess } from "@repo/backend/convex/classes/utils";
+import {
+  isSchoolAdmin,
+  requireAuth,
+} from "@repo/backend/convex/lib/authHelpers";
 import type { PaginationResult } from "convex/server";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import type { Doc } from "../../_generated/dataModel";
-import { query } from "../../_generated/server";
-import { isSchoolAdmin, requireAuth } from "../../lib/authHelpers";
-import { loadClassWithAccess } from "../utils";
-import { enrichMaterialGroups } from "./utils";
 
 /**
  * Get paginated material groups for a class.

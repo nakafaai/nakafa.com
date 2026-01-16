@@ -1,7 +1,7 @@
+import { components } from "@repo/backend/convex/_generated/api";
+import { internalQuery, query } from "@repo/backend/convex/_generated/server";
+import { requireAuth } from "@repo/backend/convex/lib/authHelpers";
 import { v } from "convex/values";
-import { components } from "../_generated/api";
-import { internalQuery, query } from "../_generated/server";
-import { requireAuth } from "../lib/authHelpers";
 
 /**
  * Get app user by Better Auth user ID.

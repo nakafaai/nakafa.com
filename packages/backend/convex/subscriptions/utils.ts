@@ -1,7 +1,7 @@
 import type { Subscription } from "@polar-sh/sdk/models/components/subscription.js";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { SubscriptionRecurringInterval } from "@repo/backend/convex/subscriptions/schema";
 import type { WithoutSystemFields } from "convex/server";
-import type { Doc, Id } from "../_generated/dataModel";
-import type { SubscriptionRecurringInterval } from "./schema";
 
 const INTERVAL_MAP: Record<string, SubscriptionRecurringInterval> = {
   day: "day",

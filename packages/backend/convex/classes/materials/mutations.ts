@@ -1,11 +1,14 @@
+import { internal } from "@repo/backend/convex/_generated/api";
+import { TEACHER_PERMISSIONS } from "@repo/backend/convex/classes/constants";
+import { validateScheduledStatus } from "@repo/backend/convex/classes/materials/utils";
+import { schoolClassMaterialStatus } from "@repo/backend/convex/classes/schema";
+import {
+  loadActiveClassWithAccess,
+  requireTeacherPermission,
+} from "@repo/backend/convex/classes/utils";
+import { internalMutation, mutation } from "@repo/backend/convex/functions";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
 import { ConvexError, v } from "convex/values";
-import { internal } from "../../_generated/api";
-import { internalMutation, mutation } from "../../functions";
-import { requireAuthWithSession } from "../../lib/authHelpers";
-import { TEACHER_PERMISSIONS } from "../constants";
-import { schoolClassMaterialStatus } from "../schema";
-import { loadActiveClassWithAccess, requireTeacherPermission } from "../utils";
-import { validateScheduledStatus } from "./utils";
 
 export const createMaterialGroup = mutation({
   args: {

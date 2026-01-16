@@ -1,9 +1,12 @@
+import { query } from "@repo/backend/convex/_generated/server";
+import { loadClassWithAccess } from "@repo/backend/convex/classes/utils";
+import {
+  checkClassAccess,
+  requireAuth,
+} from "@repo/backend/convex/lib/authHelpers";
+import { getUserMap } from "@repo/backend/convex/lib/userHelpers";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import { query } from "../_generated/server";
-import { checkClassAccess, requireAuth } from "../lib/authHelpers";
-import { getUserMap } from "../lib/userHelpers";
-import { loadClassWithAccess } from "./utils";
 
 export const getClasses = query({
   args: {

@@ -1,6 +1,6 @@
+import { internalMutation } from "@repo/backend/convex/_generated/server";
+import tables from "@repo/backend/convex/subscriptions/schema";
 import { v } from "convex/values";
-import { internalMutation } from "../_generated/server";
-import tables from "./schema";
 
 /**
  * Create a new subscription record.

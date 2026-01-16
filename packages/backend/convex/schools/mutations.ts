@@ -1,8 +1,8 @@
+import { mutation } from "@repo/backend/convex/_generated/server";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { generateUniqueSlug } from "@repo/backend/convex/schools/utils";
+import { generateNanoId, slugify } from "@repo/backend/convex/utils/helper";
 import { ConvexError, v } from "convex/values";
-import { mutation } from "../functions";
-import { requireAuthWithSession } from "../lib/authHelpers";
-import { generateNanoId, slugify } from "../utils/helper";
-import { generateUniqueSlug } from "./utils";
 
 /**
  * Create a new school and automatically add the creator as an admin member.

@@ -1,6 +1,6 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { clampNumber } from "@repo/backend/convex/utils/helper";
 import type { WithoutSystemFields } from "convex/server";
-import type { Doc } from "../_generated/dataModel";
-import { clampNumber } from "../utils/helper";
 
 type ExerciseAttemptAggregates = Pick<
   Doc<"exerciseAttempts">,

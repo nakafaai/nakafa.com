@@ -10,11 +10,15 @@
  * @see https://convex-better-auth.netlify.app/basic-usage/authorization
  */
 
+import { internal } from "@repo/backend/convex/_generated/api";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type {
+  ActionCtx,
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
+import { safeGetAppUser } from "@repo/backend/convex/auth";
 import { ConvexError } from "convex/values";
-import { internal } from "../_generated/api";
-import type { Doc, Id } from "../_generated/dataModel";
-import type { ActionCtx, MutationCtx, QueryCtx } from "../_generated/server";
-import { safeGetAppUser } from "../auth";
 
 // ============================================================================
 // Authentication

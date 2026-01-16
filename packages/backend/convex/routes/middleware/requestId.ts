@@ -1,7 +1,7 @@
+import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import { generateId } from "@repo/backend/convex/utils/helper";
+import { REQUEST_ID_HEADER } from "@repo/backend/convex/utils/logger";
 import type { MiddlewareHandler } from "hono";
-import type { ActionCtx } from "../../_generated/server";
-import { generateId } from "../../utils/helper";
-import { REQUEST_ID_HEADER } from "../../utils/logger";
 
 /**
  * Middleware to ensure every request has a unique correlation ID.

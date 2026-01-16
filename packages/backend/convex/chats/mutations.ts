@@ -1,9 +1,9 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import tables from "@repo/backend/convex/chats/schema";
+import { mutation } from "@repo/backend/convex/functions";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
 import { ConvexError, v } from "convex/values";
-import type { Id } from "../_generated/dataModel";
-import type { MutationCtx } from "../_generated/server";
-import { mutation } from "../functions";
-import { requireAuthWithSession } from "../lib/authHelpers";
-import tables from "./schema";
 
 /**
  * Helper: Delete all parts for a message.

@@ -25,20 +25,27 @@
  * RULE: Update cases should NOT trigger cascading modifications to avoid loops.
  */
 
+import type {
+  DataModel,
+  Doc,
+  Id,
+} from "@repo/backend/convex/_generated/dataModel";
+import type {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/convex/_generated/server";
+import {
+  internalMutation as rawInternalMutation,
+  mutation as rawMutation,
+} from "@repo/backend/convex/_generated/server";
+import { applyAttemptAggregatesDelta } from "@repo/backend/convex/exercises/utils";
+import { truncateText } from "@repo/backend/convex/utils/helper";
 import type { WithoutSystemFields } from "convex/server";
 import {
   customCtx,
   customMutation,
 } from "convex-helpers/server/customFunctions";
 import { Triggers } from "convex-helpers/server/triggers";
-import type { DataModel, Doc, Id } from "./_generated/dataModel";
-import type { DatabaseReader, DatabaseWriter } from "./_generated/server";
-import {
-  internalMutation as rawInternalMutation,
-  mutation as rawMutation,
-} from "./_generated/server";
-import { applyAttemptAggregatesDelta } from "./exercises/utils";
-import { truncateText } from "./utils/helper";
 
 const triggers = new Triggers<DataModel>();
 

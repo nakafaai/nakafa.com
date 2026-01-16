@@ -1,5 +1,5 @@
+import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { v } from "convex/values";
-import { internalQuery } from "../_generated/server";
 
 /**
  * Get customer record by user ID.

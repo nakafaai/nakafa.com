@@ -1,8 +1,14 @@
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
+import { requireClassAccess } from "@repo/backend/convex/lib/authHelpers";
+import {
+  getUserMap,
+  type UserData,
+} from "@repo/backend/convex/lib/userHelpers";
 import { ConvexError } from "convex/values";
-import type { Doc, Id } from "../../_generated/dataModel";
-import type { MutationCtx, QueryCtx } from "../../_generated/server";
-import { requireClassAccess } from "../../lib/authHelpers";
-import { getUserMap, type UserData } from "../../lib/userHelpers";
 
 /**
  * Validate scheduled status has a future scheduledAt timestamp.

@@ -1,4 +1,4 @@
-import type { MutationCtx } from "../_generated/server";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 
 /**
  * Generate a unique slug by appending a number if the slug already exists.

@@ -1,7 +1,7 @@
+import { TEACHER_PERMISSIONS } from "@repo/backend/convex/classes/constants";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
-import { TEACHER_PERMISSIONS } from "./constants";
 
 const schoolClassMemberRoles = v.union(
   v.literal("teacher"),

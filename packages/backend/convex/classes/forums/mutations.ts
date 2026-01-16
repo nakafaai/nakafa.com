@@ -1,9 +1,15 @@
+import {
+  loadForumWithAccess,
+  loadOpenForumWithAccess,
+} from "@repo/backend/convex/classes/forums/utils";
+import { loadActiveClassWithAccess } from "@repo/backend/convex/classes/utils";
+import { mutation } from "@repo/backend/convex/functions";
+import {
+  isSchoolAdmin,
+  requireAuthWithSession,
+} from "@repo/backend/convex/lib/authHelpers";
+import { truncateText } from "@repo/backend/convex/utils/helper";
 import { ConvexError, type Infer, v } from "convex/values";
-import { mutation } from "../../functions";
-import { isSchoolAdmin, requireAuthWithSession } from "../../lib/authHelpers";
-import { truncateText } from "../../utils/helper";
-import { loadActiveClassWithAccess } from "../utils";
-import { loadForumWithAccess, loadOpenForumWithAccess } from "./utils";
 
 export const generateUploadUrl = mutation({
   args: {

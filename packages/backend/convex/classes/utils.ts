@@ -1,8 +1,14 @@
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
+import type { TeacherPermission } from "@repo/backend/convex/classes/constants";
+import {
+  isSchoolAdmin,
+  requireClassAccess,
+} from "@repo/backend/convex/lib/authHelpers";
 import { ConvexError } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
-import type { MutationCtx, QueryCtx } from "../_generated/server";
-import { isSchoolAdmin, requireClassAccess } from "../lib/authHelpers";
-import type { TeacherPermission } from "./constants";
 
 /**
  * Check if user has a specific teacher permission.

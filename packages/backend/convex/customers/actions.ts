@@ -1,9 +1,12 @@
+import { api, internal } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { action, internalAction } from "@repo/backend/convex/_generated/server";
+import {
+  convertToDatabaseCustomer,
+  requireCustomer,
+} from "@repo/backend/convex/customers/utils";
+import { requireAuthForAction } from "@repo/backend/convex/lib/authHelpers";
 import { ConvexError, v } from "convex/values";
-import { api, internal } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
-import { action, internalAction } from "../_generated/server";
-import { requireAuthForAction } from "../lib/authHelpers";
-import { convertToDatabaseCustomer, requireCustomer } from "./utils";
 
 /**
  * Sync customer between Polar and local database.

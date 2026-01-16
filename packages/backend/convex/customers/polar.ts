@@ -4,9 +4,9 @@ import { customersCreate } from "@polar-sh/sdk/funcs/customersCreate.js";
 import { customersGet } from "@polar-sh/sdk/funcs/customersGet.js";
 import { customersGetExternal } from "@polar-sh/sdk/funcs/customersGetExternal.js";
 import { customersUpdate } from "@polar-sh/sdk/funcs/customersUpdate.js";
+import { internalAction } from "@repo/backend/convex/_generated/server";
+import { polarClient } from "@repo/backend/convex/utils/polar";
 import { ConvexError, v } from "convex/values";
-import { internalAction } from "../_generated/server";
-import { polarClient } from "../utils/polar";
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T/;
 

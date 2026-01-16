@@ -1,6 +1,6 @@
-import type { Id } from "../_generated/dataModel";
-import type { QueryCtx } from "../_generated/server";
-import { getAll } from "./relationships";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { getAll } from "@repo/backend/convex/lib/relationships";
 
 export interface UserData {
   _id: Id<"users">;

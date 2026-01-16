@@ -1,6 +1,6 @@
+import { HTTP_OK } from "@repo/backend/convex/routes/constants";
+import { requireApiKey } from "@repo/backend/convex/routes/middleware/auth";
 import { Hono } from "hono";
-import { HTTP_OK } from "../constants";
-import { requireApiKey } from "../middleware/auth";
 
 // Create v1 app - all routes here automatically get /v1 prefix
 const v1 = new Hono();

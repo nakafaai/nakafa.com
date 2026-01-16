@@ -1,15 +1,15 @@
+import bookmarksSchema from "@repo/backend/convex/bookmarks/schema";
+import chatsSchema from "@repo/backend/convex/chats/schema";
+import classesSchema from "@repo/backend/convex/classes/schema";
+import commentsSchema from "@repo/backend/convex/comments/schema";
+import contentsSchema from "@repo/backend/convex/contents/schema";
+import customersSchema from "@repo/backend/convex/customers/schema";
+import exercisesSchema from "@repo/backend/convex/exercises/schema";
+import notificationsSchema from "@repo/backend/convex/notifications/schema";
+import schoolsSchema from "@repo/backend/convex/schools/schema";
+import subscriptionsSchema from "@repo/backend/convex/subscriptions/schema";
+import usersSchema from "@repo/backend/convex/users/schema";
 import { defineSchema } from "convex/server";
-import bookmarksSchema from "./bookmarks/schema";
-import chatsSchema from "./chats/schema";
-import classesSchema from "./classes/schema";
-import commentsSchema from "./comments/schema";
-import contentsSchema from "./contents/schema";
-import customersSchema from "./customers/schema";
-import exercisesSchema from "./exercises/schema";
-import notificationsSchema from "./notifications/schema";
-import schoolsSchema from "./schools/schema";
-import subscriptionsSchema from "./subscriptions/schema";
-import usersSchema from "./users/schema";
 
 export default defineSchema(
   {

@@ -1,18 +1,18 @@
-import { ConvexError, v } from "convex/values";
-import { mutation } from "../functions";
-import { requireAuthWithSession } from "../lib/authHelpers";
-import { generateNanoId } from "../utils/helper";
 import {
   CLASS_IMAGES,
   getRandomClassImage,
   PERMISSION_SETS,
   TEACHER_PERMISSIONS,
-} from "./constants";
+} from "@repo/backend/convex/classes/constants";
 import {
   loadActiveClass,
   loadClassWithAccess,
   requireTeacherPermission,
-} from "./utils";
+} from "@repo/backend/convex/classes/utils";
+import { mutation } from "@repo/backend/convex/functions";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { generateNanoId } from "@repo/backend/convex/utils/helper";
+import { ConvexError, v } from "convex/values";
 
 export const createClass = mutation({
   args: {
