@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { validateScheduledStatus } from "@repo/backend/convex/classes/materials/utils";
 import { schoolClassMaterialStatus } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
@@ -20,6 +21,8 @@ export const createMaterialGroup = mutation({
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
+
+    validateScheduledStatus(args.status, args.scheduledAt);
 
     const classData = await loadActiveClass(ctx, args.classId);
 
@@ -96,6 +99,11 @@ export const updateMaterialGroup = mutation({
       });
     }
 
+    const newStatus = args.status ?? group.status;
+    const newScheduledAt = args.scheduledAt ?? group.scheduledAt;
+
+    validateScheduledStatus(newStatus, newScheduledAt);
+
     const classData = await loadActiveClass(ctx, group.classId);
 
     await requirePermission(ctx, PERMISSIONS.CONTENT_EDIT, {
@@ -103,9 +111,6 @@ export const updateMaterialGroup = mutation({
       classId: group.classId,
       schoolId: classData.schoolId,
     });
-
-    const newStatus = args.status ?? group.status;
-    const newScheduledAt = args.scheduledAt ?? group.scheduledAt;
 
     const now = Date.now();
     const wasPublished = group.status === "published";
