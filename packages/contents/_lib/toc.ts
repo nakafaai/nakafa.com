@@ -95,7 +95,7 @@ export function extractAllHeadingIds(headings: ParsedHeading[]): string[] {
     ids.push(createHeadingId(heading.label));
 
     if (heading.children && heading.children.length > 0) {
-      stack.splice(stackIndex, 0, ...heading.children.reverse());
+      stack.splice(stackIndex, 0, ...[...heading.children].reverse());
     }
 
     stackIndex = stack.length - 1;

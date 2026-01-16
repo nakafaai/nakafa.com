@@ -902,4 +902,25 @@ describe("extractAllHeadingIds", () => {
       expect(ids).toHaveLength(2);
     });
   });
+
+  describe("Immutability", () => {
+    it("should not mutate the original headings structure", () => {
+      const headings = [
+        {
+          label: "Parent",
+          href: "#parent",
+          children: [
+            { label: "Child 1", href: "#child-1", children: [] },
+            { label: "Child 2", href: "#child-2", children: [] },
+          ],
+        },
+      ];
+
+      extractAllHeadingIds(headings);
+
+      expect(headings[0].children).toHaveLength(2);
+      expect(headings[0].children[0].label).toBe("Child 1");
+      expect(headings[0].children[1].label).toBe("Child 2");
+    });
+  });
 });
