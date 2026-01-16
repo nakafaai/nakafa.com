@@ -2,7 +2,10 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import tables from "@repo/backend/convex/chats/schema";
 import { mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import {
+  requireAuth,
+  requireAuthWithSession,
+} from "@repo/backend/convex/lib/authHelpers";
 import { ConvexError, v } from "convex/values";
 
 /**
@@ -79,7 +82,8 @@ export const updateChatTitle = mutation({
     title: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    // We need fast access, so we use requireAuth instead of requireAuthWithSession
+    const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
@@ -154,7 +158,9 @@ export const replaceMessageWithParts = mutation({
   },
   handler: async (ctx, args) => {
     const { message, parts } = args;
-    const user = await requireAuthWithSession(ctx);
+
+    // We need fast access, so we use requireAuth instead of requireAuthWithSession
+    const user = await requireAuth(ctx);
 
     // Authorization check - verify user owns the chat
     const chat = await ctx.db.get("chats", message.chatId);
@@ -229,7 +235,8 @@ export const createChatWithMessage = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    // We need fast access, so we use requireAuth instead of requireAuthWithSession
+    const user = await requireAuth(ctx);
 
     // Create chat
     const chatId = await ctx.db.insert("chats", {
