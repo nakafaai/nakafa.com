@@ -111,7 +111,7 @@ export async function getMyForumReactions(
  * Get current user's emoji reactions for multiple posts.
  * Returns Map of postId -> emoji array.
  */
-export async function getMyPostReactions(
+async function getMyPostReactions(
   ctx: QueryCtx,
   postIds: Id<"schoolClassForumPosts">[],
   userId: Id<"users">
@@ -181,7 +181,7 @@ export async function loadForum(
  * Load a forum and validate it's open (not locked/archived).
  * @throws FORUM_NOT_FOUND or FORUM_LOCKED.
  */
-export async function loadOpenForum(
+async function loadOpenForum(
   ctx: QueryCtx | MutationCtx,
   forumId: Id<"schoolClassForums">
 ) {

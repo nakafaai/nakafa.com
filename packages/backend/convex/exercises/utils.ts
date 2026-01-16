@@ -19,7 +19,7 @@ type ExerciseAttemptAggregatesPatch = Pick<
  * @param totalExercises - Total number of exercises in the set
  * @returns Score as percentage (0-100)
  */
-export function calculateScorePercentage({
+function calculateScorePercentage({
   correctAnswers,
   totalExercises,
 }: {

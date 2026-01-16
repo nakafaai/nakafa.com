@@ -3,7 +3,6 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { requireClassAccess } from "@repo/backend/convex/lib/authHelpers";
 import {
   getUserMap,
   type UserData,
@@ -66,41 +65,6 @@ export async function loadMaterialGroup(
 }
 
 /**
- * Load material group and verify user has access to its class.
- * Fetches the group and validates the user is a member of the associated class.
- *
- * @param ctx - The Convex query or mutation context
- * @param groupId - The ID of material group to load
- * @param userId - The ID of the user to check access for
- * @returns Object containing the group document and class membership details
- * @throws ConvexError with code "GROUP_NOT_FOUND" if group doesn't exist
- * @throws ConvexError with code "ACCESS_DENIED" if user is not a member of the class
- */
-export async function loadMaterialGroupWithAccess(
-  ctx: QueryCtx | MutationCtx,
-  groupId: Id<"schoolClassMaterialGroups">,
-  userId: Id<"users">
-) {
-  const group = await loadMaterialGroup(ctx, groupId);
-  const access = await requireClassAccess(
-    ctx,
-    group.classId,
-    group.schoolId,
-    userId
-  );
-  return { group, ...access };
-}
-
-/**
- * Material group enriched with user data for display.
- * Includes creator and publisher user information.
- */
-export type EnrichedMaterialGroup = Doc<"schoolClassMaterialGroups"> & {
-  user: UserData | null;
-  publishedByUser: UserData | null;
-};
-
-/**
  * Enrich material groups with creator and publisher user data.
  * Fetches users in a single batch query for performance.
  *
@@ -111,7 +75,14 @@ export type EnrichedMaterialGroup = Doc<"schoolClassMaterialGroups"> & {
 export async function enrichMaterialGroups(
   ctx: QueryCtx,
   groups: Doc<"schoolClassMaterialGroups">[]
-): Promise<EnrichedMaterialGroup[]> {
+): Promise<
+  Array<
+    Doc<"schoolClassMaterialGroups"> & {
+      user: UserData | null;
+      publishedByUser: UserData | null;
+    }
+  >
+> {
   if (groups.length === 0) {
     return [];
   }

@@ -2,7 +2,7 @@
  * Permissions structure: Record<string, string[]>
  * Maps resource names to arrays of allowed actions.
  */
-export type Permissions = Record<string, string[]>;
+type Permissions = Record<string, string[]>;
 
 /**
  * Validate API key permissions against required permissions.
