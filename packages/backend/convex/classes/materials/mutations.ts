@@ -1,5 +1,8 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import { validateScheduledStatus } from "@repo/backend/convex/classes/materials/utils";
+import {
+  loadMaterialGroup,
+  validateScheduledStatus,
+} from "@repo/backend/convex/classes/materials/utils";
 import { schoolClassMaterialStatus } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
@@ -8,7 +11,7 @@ import {
   PERMISSIONS,
   requirePermission,
 } from "@repo/backend/convex/lib/permissions";
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
 
 export const createMaterialGroup = mutation({
   args: {
@@ -91,13 +94,7 @@ export const updateMaterialGroup = mutation({
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
 
-    const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
-    if (!group) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Material group not found.",
-      });
-    }
+    const group = await loadMaterialGroup(ctx, args.groupId);
 
     const newStatus = args.status ?? group.status;
     const newScheduledAt = args.scheduledAt ?? group.scheduledAt;
@@ -191,13 +188,7 @@ export const deleteMaterialGroup = mutation({
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
 
-    const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
-    if (!group) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Material group not found.",
-      });
-    }
+    const group = await loadMaterialGroup(ctx, args.groupId);
 
     const classData = await loadActiveClass(ctx, group.classId);
 
@@ -221,13 +212,7 @@ export const reorderMaterialGroup = mutation({
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
 
-    const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
-    if (!group) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Material group not found.",
-      });
-    }
+    const group = await loadMaterialGroup(ctx, args.groupId);
 
     const classData = await loadActiveClass(ctx, group.classId);
 
