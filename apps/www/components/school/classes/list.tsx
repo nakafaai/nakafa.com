@@ -10,7 +10,10 @@ import {
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { getRandomClassImage } from "@repo/backend/convex/classes/constants";
+import {
+  getClassImageUrl,
+  getRandomClassImage,
+} from "@repo/backend/convex/lib/images";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -89,7 +92,9 @@ export function SchoolClassesList() {
 function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
   const pathname = usePathname();
   const [imageError, setImageError] = useState(false);
-  const imageSrc = imageError ? getRandomClassImage(`${cls._id}`) : cls.image;
+  const imageSrc = imageError
+    ? getClassImageUrl(getRandomClassImage(`${cls._id}`))
+    : cls.image;
 
   const t = useTranslations("School.Classes");
 

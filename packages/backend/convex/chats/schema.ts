@@ -1,12 +1,17 @@
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
+export const chatVisibility = v.union(
+  v.literal("private"),
+  v.literal("public")
+);
+
 export const tables = {
   chats: defineTable({
     updatedAt: v.number(), // Unix timestamp for last message
     title: v.optional(v.string()), // Optional chat title
     userId: v.id("users"), // Optional user association
-    visibility: v.union(v.literal("public"), v.literal("private")),
+    visibility: chatVisibility,
     type: v.union(v.literal("study"), v.literal("finance")),
   })
     // Each index needed for different filter + _creationTime sorting:

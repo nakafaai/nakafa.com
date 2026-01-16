@@ -9,7 +9,7 @@ import {
   loadForum,
   loadForumWithAccess,
 } from "@repo/backend/convex/classes/forums/utils";
-import { loadClassWithAccess } from "@repo/backend/convex/classes/utils";
+import { loadClass } from "@repo/backend/convex/classes/utils";
 import {
   requireAuth,
   requireClassAccess,
@@ -28,7 +28,13 @@ export const getForums = query({
     const { classId, q: searchQuery, paginationOpts } = args;
 
     const user = await requireAuth(ctx);
-    await loadClassWithAccess(ctx, classId, user.appUser._id);
+    const classData = await loadClass(ctx, classId);
+    await requireClassAccess(
+      ctx,
+      classId,
+      classData.schoolId,
+      user.appUser._id
+    );
 
     const forumsPage =
       searchQuery && searchQuery.trim().length > 0

@@ -17,6 +17,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import { PERMISSIONS } from "@repo/backend/convex/lib/permissions";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
@@ -61,6 +62,7 @@ import {
   materialStatusList,
 } from "@/components/school/classes/_data/material-status";
 import { useClass } from "@/lib/context/use-class";
+import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getLocale } from "@/lib/utils/date";
 import {
@@ -87,8 +89,7 @@ export function SchoolClassesMaterialsList() {
   const [{ q }] = useQueryStates(searchParsers);
 
   const classId = useClass((state) => state.class._id);
-  const classMembership = useClass((state) => state.classMembership);
-  const schoolMembership = useClass((state) => state.schoolMembership);
+  const { can } = useClassPermissions();
 
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
@@ -101,9 +102,7 @@ export function SchoolClassesMaterialsList() {
     { initialNumItems: 50 }
   );
 
-  const isTeacher = classMembership?.role === "teacher";
-  const isAdmin = schoolMembership?.role === "admin";
-  const canManage = isTeacher || isAdmin;
+  const canManage = can(PERMISSIONS.CONTENT_EDIT);
 
   if (status === "LoadingFirstPage") {
     return null;

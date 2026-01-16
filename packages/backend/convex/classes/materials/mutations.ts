@@ -1,13 +1,12 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import { TEACHER_PERMISSIONS } from "@repo/backend/convex/classes/constants";
-import { validateScheduledStatus } from "@repo/backend/convex/classes/materials/utils";
 import { schoolClassMaterialStatus } from "@repo/backend/convex/classes/schema";
-import {
-  loadActiveClassWithAccess,
-  requireTeacherPermission,
-} from "@repo/backend/convex/classes/utils";
+import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import {
+  PERMISSIONS,
+  requirePermission,
+} from "@repo/backend/convex/lib/permissions";
 import { ConvexError, v } from "convex/values";
 
 export const createMaterialGroup = mutation({
@@ -19,20 +18,16 @@ export const createMaterialGroup = mutation({
     scheduledAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    const userId = user.appUser._id;
+    const { appUser } = await requireAuthWithSession(ctx);
+    const userId = appUser._id;
 
-    // Validate early before expensive operations
-    validateScheduledStatus(args.status, args.scheduledAt);
+    const classData = await loadActiveClass(ctx, args.classId);
 
-    const { classData, classMembership, schoolMembership } =
-      await loadActiveClassWithAccess(ctx, args.classId, userId);
-
-    requireTeacherPermission(
-      classMembership,
-      schoolMembership,
-      TEACHER_PERMISSIONS.CONTENT_CREATE
-    );
+    await requirePermission(ctx, PERMISSIONS.CONTENT_CREATE, {
+      userId,
+      classId: args.classId,
+      schoolId: classData.schoolId,
+    });
 
     // Get next order using index (efficient: uses .first() not .collect())
     const lastGroup = await ctx.db
@@ -90,8 +85,8 @@ export const updateMaterialGroup = mutation({
     scheduledAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    const userId = user.appUser._id;
+    const { appUser } = await requireAuthWithSession(ctx);
+    const userId = appUser._id;
 
     const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
     if (!group) {
@@ -101,21 +96,16 @@ export const updateMaterialGroup = mutation({
       });
     }
 
-    // Compute new values (use existing if not provided)
+    const classData = await loadActiveClass(ctx, group.classId);
+
+    await requirePermission(ctx, PERMISSIONS.CONTENT_EDIT, {
+      userId,
+      classId: group.classId,
+      schoolId: classData.schoolId,
+    });
+
     const newStatus = args.status ?? group.status;
     const newScheduledAt = args.scheduledAt ?? group.scheduledAt;
-
-    // Validate early before expensive operations
-    validateScheduledStatus(newStatus, newScheduledAt);
-
-    const { classMembership, schoolMembership } =
-      await loadActiveClassWithAccess(ctx, group.classId, userId);
-
-    requireTeacherPermission(
-      classMembership,
-      schoolMembership,
-      TEACHER_PERMISSIONS.CONTENT_EDIT
-    );
 
     const now = Date.now();
     const wasPublished = group.status === "published";
@@ -193,8 +183,8 @@ export const deleteMaterialGroup = mutation({
     groupId: v.id("schoolClassMaterialGroups"),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    const userId = user.appUser._id;
+    const { appUser } = await requireAuthWithSession(ctx);
+    const userId = appUser._id;
 
     const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
     if (!group) {
@@ -204,14 +194,13 @@ export const deleteMaterialGroup = mutation({
       });
     }
 
-    const { classMembership, schoolMembership } =
-      await loadActiveClassWithAccess(ctx, group.classId, userId);
+    const classData = await loadActiveClass(ctx, group.classId);
 
-    requireTeacherPermission(
-      classMembership,
-      schoolMembership,
-      TEACHER_PERMISSIONS.CONTENT_DELETE
-    );
+    await requirePermission(ctx, PERMISSIONS.CONTENT_DELETE, {
+      userId,
+      classId: group.classId,
+      schoolId: classData.schoolId,
+    });
 
     // Delete triggers cascade: children, materials, attachments, views, parent count
     await ctx.db.delete("schoolClassMaterialGroups", args.groupId);
@@ -224,8 +213,8 @@ export const reorderMaterialGroup = mutation({
     direction: v.union(v.literal("up"), v.literal("down")),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    const userId = user.appUser._id;
+    const { appUser } = await requireAuthWithSession(ctx);
+    const userId = appUser._id;
 
     const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
     if (!group) {
@@ -235,14 +224,13 @@ export const reorderMaterialGroup = mutation({
       });
     }
 
-    const { classMembership, schoolMembership } =
-      await loadActiveClassWithAccess(ctx, group.classId, userId);
+    const classData = await loadActiveClass(ctx, group.classId);
 
-    requireTeacherPermission(
-      classMembership,
-      schoolMembership,
-      TEACHER_PERMISSIONS.CONTENT_EDIT
-    );
+    await requirePermission(ctx, PERMISSIONS.CONTENT_EDIT, {
+      userId,
+      classId: group.classId,
+      schoolId: classData.schoolId,
+    });
 
     // Find adjacent group to swap with using index range query
     const adjacentGroup =

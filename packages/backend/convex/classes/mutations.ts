@@ -1,16 +1,18 @@
 import {
-  CLASS_IMAGES,
-  getRandomClassImage,
-  PERMISSION_SETS,
-  TEACHER_PERMISSIONS,
-} from "@repo/backend/convex/classes/constants";
-import {
-  loadActiveClass,
-  loadClassWithAccess,
-  requireTeacherPermission,
-} from "@repo/backend/convex/classes/utils";
+  schoolClassImages,
+  schoolClassVisibility,
+} from "@repo/backend/convex/classes/schema";
+import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import {
+  getRandomClassImage,
+  isValidClassImage,
+} from "@repo/backend/convex/lib/images";
+import {
+  PERMISSIONS,
+  requirePermission,
+} from "@repo/backend/convex/lib/permissions";
 import { generateNanoId } from "@repo/backend/convex/utils/helper";
 import { ConvexError, v } from "convex/values";
 
@@ -20,7 +22,7 @@ export const createClass = mutation({
     name: v.string(),
     subject: v.string(),
     year: v.string(),
-    visibility: v.union(v.literal("private"), v.literal("public")),
+    visibility: schoolClassVisibility,
   },
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
@@ -69,7 +71,6 @@ export const createClass = mutation({
       schoolId: args.schoolId,
       role: "teacher",
       teacherRole: "primary",
-      teacherPermissions: PERMISSION_SETS.PRIMARY,
       updatedAt: now,
       addedBy: userId,
     });
@@ -176,7 +177,6 @@ export const joinClass = mutation({
         schoolId: classData.schoolId,
         role: "teacher",
         teacherRole: "co-teacher",
-        teacherPermissions: PERMISSION_SETS.CO_TEACHER,
         inviteCodeId: inviteCode._id,
         updatedAt: now,
       });
@@ -199,23 +199,19 @@ export const joinClass = mutation({
 export const updateClassVisibility = mutation({
   args: {
     classId: v.id("schoolClasses"),
-    visibility: v.union(v.literal("private"), v.literal("public")),
+    visibility: schoolClassVisibility,
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    const userId = user.appUser._id;
+    const { appUser } = await requireAuthWithSession(ctx);
+    const userId = appUser._id;
 
-    const { classMembership, schoolMembership } = await loadClassWithAccess(
-      ctx,
-      args.classId,
-      userId
-    );
+    const classData = await loadActiveClass(ctx, args.classId);
 
-    requireTeacherPermission(
-      classMembership,
-      schoolMembership,
-      TEACHER_PERMISSIONS.CLASS_MANAGE
-    );
+    await requirePermission(ctx, PERMISSIONS.CLASS_WRITE, {
+      userId,
+      classId: args.classId,
+      schoolId: classData.schoolId,
+    });
 
     await ctx.db.patch("schoolClasses", args.classId, {
       visibility: args.visibility,
@@ -291,30 +287,21 @@ export const joinPublicClass = mutation({
 export const updateClassImage = mutation({
   args: {
     classId: v.id("schoolClasses"),
-    image: v.string(),
+    image: schoolClassImages,
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    const userId = user.appUser._id;
+    const { appUser } = await requireAuthWithSession(ctx);
+    const userId = appUser._id;
 
-    const { classMembership, schoolMembership } = await loadClassWithAccess(
-      ctx,
-      args.classId,
-      userId
-    );
+    const classData = await loadActiveClass(ctx, args.classId);
 
-    requireTeacherPermission(
-      classMembership,
-      schoolMembership,
-      TEACHER_PERMISSIONS.CLASS_MANAGE
-    );
+    await requirePermission(ctx, PERMISSIONS.CLASS_WRITE, {
+      userId,
+      classId: args.classId,
+      schoolId: classData.schoolId,
+    });
 
-    const validImages = new Set(CLASS_IMAGES.values());
-    if (
-      !validImages.has(
-        args.image as typeof validImages extends Set<infer T> ? T : never
-      )
-    ) {
+    if (!isValidClassImage(args.image)) {
       throw new ConvexError({
         code: "INVALID_IMAGE",
         message: "Invalid class image. Please select a valid image.",

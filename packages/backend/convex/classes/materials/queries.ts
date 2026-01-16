@@ -1,10 +1,11 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
 import { enrichMaterialGroups } from "@repo/backend/convex/classes/materials/utils";
-import { loadClassWithAccess } from "@repo/backend/convex/classes/utils";
+import { loadClass } from "@repo/backend/convex/classes/utils";
 import {
-  isSchoolAdmin,
+  isAdmin,
   requireAuth,
+  requireClassAccess,
 } from "@repo/backend/convex/lib/authHelpers";
 import type { PaginationResult } from "convex/server";
 import { paginationOptsValidator } from "convex/server";
@@ -28,15 +29,17 @@ export const getMaterialGroups = query({
     const user = await requireAuth(ctx);
     const currentUserId = user.appUser._id;
 
-    const { classMembership, schoolMembership } = await loadClassWithAccess(
+    const classData = await loadClass(ctx, classId);
+    const { classMembership, schoolMembership } = await requireClassAccess(
       ctx,
       classId,
+      classData.schoolId,
       currentUserId
     );
 
+    const isAdminSchool = isAdmin(schoolMembership);
     const isTeacher = classMembership?.role === "teacher";
-    const isAdmin = isSchoolAdmin(schoolMembership);
-    const canSeeAllStatuses = isTeacher || isAdmin;
+    const canSeeAllStatuses = isTeacher || isAdminSchool;
 
     let groupsPage: PaginationResult<Doc<"schoolClassMaterialGroups">>;
 

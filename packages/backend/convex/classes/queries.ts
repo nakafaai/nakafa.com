@@ -1,8 +1,10 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { loadClassWithAccess } from "@repo/backend/convex/classes/utils";
+import { schoolClassVisibility } from "@repo/backend/convex/classes/schema";
+import { loadClass } from "@repo/backend/convex/classes/utils";
 import {
   checkClassAccess,
   requireAuth,
+  requireClassAccess,
 } from "@repo/backend/convex/lib/authHelpers";
 import { getUserMap } from "@repo/backend/convex/lib/userHelpers";
 import { paginationOptsValidator } from "convex/server";
@@ -13,7 +15,7 @@ export const getClasses = query({
     schoolId: v.id("schools"),
     q: v.optional(v.string()),
     isArchived: v.optional(v.boolean()),
-    visibility: v.optional(v.union(v.literal("private"), v.literal("public"))),
+    visibility: v.optional(schoolClassVisibility),
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
@@ -134,8 +136,13 @@ export const getClass = query({
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
-    const { classData, classMembership, schoolMembership } =
-      await loadClassWithAccess(ctx, args.classId, user.appUser._id);
+    const classData = await loadClass(ctx, args.classId);
+    const { classMembership, schoolMembership } = await requireClassAccess(
+      ctx,
+      args.classId,
+      classData.schoolId,
+      user.appUser._id
+    );
 
     return {
       class: classData,
@@ -155,7 +162,13 @@ export const getPeople = query({
     const { classId, q, paginationOpts } = args;
 
     const user = await requireAuth(ctx);
-    await loadClassWithAccess(ctx, classId, user.appUser._id);
+    const classData = await loadClass(ctx, classId);
+    await requireClassAccess(
+      ctx,
+      classId,
+      classData.schoolId,
+      user.appUser._id
+    );
 
     const membersPage = await ctx.db
       .query("schoolClassMembers")
@@ -209,7 +222,13 @@ export const getInviteCodes = query({
   },
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
-    await loadClassWithAccess(ctx, args.classId, user.appUser._id);
+    const classData = await loadClass(ctx, args.classId);
+    await requireClassAccess(
+      ctx,
+      args.classId,
+      classData.schoolId,
+      user.appUser._id
+    );
 
     return await ctx.db
       .query("schoolClassInviteCodes")

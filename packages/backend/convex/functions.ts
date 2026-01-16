@@ -39,6 +39,7 @@ import {
   mutation as rawMutation,
 } from "@repo/backend/convex/_generated/server";
 import { applyAttemptAggregatesDelta } from "@repo/backend/convex/exercises/utils";
+import { isAdmin } from "@repo/backend/convex/lib/authHelpers";
 import { truncateText } from "@repo/backend/convex/utils/helper";
 import type { WithoutSystemFields } from "convex/server";
 import {
@@ -413,7 +414,7 @@ triggers.register("schools", async (ctx, change) => {
           q.eq("schoolId", schoolId).eq("userId", school.createdBy)
         )
         .first();
-      const adminMember = member?.role === "admin" ? member : null;
+      const adminMember = isAdmin(member) ? member : null;
 
       // Create activity log entry
       await ctx.db.insert("schoolActivityLogs", {
@@ -822,25 +823,6 @@ triggers.register("schoolClassMembers", async (ctx, change) => {
             classId: member.classId,
             oldTeacherRole: oldMember.teacherRole,
             newTeacherRole: member.teacherRole,
-          },
-        });
-      }
-
-      // Handle permissions change
-      if (
-        JSON.stringify(oldMember.teacherPermissions) !==
-        JSON.stringify(member.teacherPermissions)
-      ) {
-        await ctx.db.insert("schoolActivityLogs", {
-          schoolId: member.schoolId,
-          userId: member.userId,
-          action: "class_member_permissions_changed",
-          entityType: "classMembers",
-          entityId: change.id,
-          metadata: {
-            classId: member.classId,
-            oldPermissions: oldMember.teacherPermissions,
-            newPermissions: member.teacherPermissions,
           },
         });
       }

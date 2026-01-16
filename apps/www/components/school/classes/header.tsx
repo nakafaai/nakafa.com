@@ -1,10 +1,12 @@
 "use client";
 
+import { PERMISSIONS } from "@repo/backend/convex/lib/permissions";
 import { SchoolClassesHeaderAdd } from "@/components/school/classes/header-add";
 import { SchoolClassesHeaderJoin } from "@/components/school/classes/header-join";
 import { SchoolClassesHeaderSearch } from "@/components/school/classes/header-search";
 import { HeaderContainer } from "@/components/school/header-container";
 import { useSchool } from "@/lib/context/use-school";
+import { useSchoolPermissions } from "@/lib/hooks/use-school-permissions";
 
 export function SchoolClassesHeader() {
   return (
@@ -18,13 +20,10 @@ export function SchoolClassesHeader() {
 }
 
 function SchoolClassesHeaderAction() {
+  const { can } = useSchoolPermissions();
   const schoolMembership = useSchool((s) => s.schoolMembership);
 
-  if (
-    schoolMembership.role === "admin" ||
-    schoolMembership.role === "teacher" ||
-    schoolMembership.role === "demo"
-  ) {
+  if (can(PERMISSIONS.CLASS_CREATE)) {
     return <SchoolClassesHeaderAdd />;
   }
 

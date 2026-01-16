@@ -2,11 +2,12 @@ import {
   loadForumWithAccess,
   loadOpenForumWithAccess,
 } from "@repo/backend/convex/classes/forums/utils";
-import { loadActiveClassWithAccess } from "@repo/backend/convex/classes/utils";
+import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { mutation } from "@repo/backend/convex/functions";
 import {
-  isSchoolAdmin,
+  isAdmin,
   requireAuthWithSession,
+  requireClassAccess,
 } from "@repo/backend/convex/lib/authHelpers";
 import { truncateText } from "@repo/backend/convex/utils/helper";
 import { ConvexError, type Infer, v } from "convex/values";
@@ -39,10 +40,15 @@ export const createForum = mutation({
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
-    const { classData, classMembership, schoolMembership } =
-      await loadActiveClassWithAccess(ctx, args.classId, userId);
+    const classData = await loadActiveClass(ctx, args.classId);
+    const { classMembership, schoolMembership } = await requireClassAccess(
+      ctx,
+      args.classId,
+      classData.schoolId,
+      userId
+    );
 
-    const canCreateForum = isSchoolAdmin(schoolMembership) || classMembership;
+    const canCreateForum = isAdmin(schoolMembership) || classMembership;
     if (!canCreateForum) {
       throw new ConvexError({
         code: "NOT_CLASS_MEMBER",

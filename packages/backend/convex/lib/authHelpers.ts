@@ -113,10 +113,46 @@ export async function requireAuthForAction(ctx: ActionCtx) {
  * Check if user is a school admin.
  * Admin can do anything in their school.
  */
-export function isSchoolAdmin(
+export function isAdmin(
   membership: Doc<"schoolMembers"> | null | undefined
 ): boolean {
   return membership?.role === "admin";
+}
+
+/**
+ * Check if user is a teacher in school.
+ */
+export function isTeacher(
+  membership: Doc<"schoolMembers"> | null | undefined
+): boolean {
+  return membership?.role === "teacher";
+}
+
+/**
+ * Check if user is a student in school.
+ */
+export function isStudent(
+  membership: Doc<"schoolMembers"> | null | undefined
+): boolean {
+  return membership?.role === "student";
+}
+
+/**
+ * Check if user is a teacher in a class.
+ */
+export function isClassTeacher(
+  membership: Doc<"schoolClassMembers"> | null | undefined
+): boolean {
+  return membership?.role === "teacher";
+}
+
+/**
+ * Check if user is a student in a class.
+ */
+export function isClassStudent(
+  membership: Doc<"schoolClassMembers"> | null | undefined
+): boolean {
+  return membership?.role === "student";
 }
 
 /**
@@ -193,7 +229,7 @@ export async function checkClassAccess(
     getClassMembership(ctx, classId, userId),
   ]);
 
-  const hasAccess = classMembership !== null || isSchoolAdmin(schoolMembership);
+  const hasAccess = classMembership !== null || isAdmin(schoolMembership);
 
   return { hasAccess, classMembership, schoolMembership };
 }

@@ -2,10 +2,9 @@
 
 import { Cancel01Icon, PaintBrush04Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import {
-  CLASS_IMAGES,
-  TEACHER_PERMISSIONS,
-} from "@repo/backend/convex/classes/constants";
+import type { SchoolClassImage } from "@repo/backend/convex/classes/schema";
+import { CLASS_IMAGES } from "@repo/backend/convex/lib/images";
+import { PERMISSIONS } from "@repo/backend/convex/lib/permissions";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -20,6 +19,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useClass } from "@/lib/context/use-class";
+import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 
 export function SchoolClassesHeaderInfo() {
   const classId = useClass((state) => state.class._id);
@@ -72,31 +72,26 @@ function InfoCustomizeButton() {
   const [open, setOpen] = useState(false);
 
   const [isPending, startTransition] = useTransition();
+  const { can } = useClassPermissions();
 
-  // only show if the user is a teacher that has the CLASS_MANAGE permission
-  const classMembership = useClass((state) => state.classMembership);
   const classId = useClass((state) => state.class._id);
 
   const updateClassImage = useMutation(api.classes.mutations.updateClassImage);
 
-  const handleImageClick = (image: string) => {
+  const handleImageClick = (image: SchoolClassImage) => {
     startTransition(async () => {
       try {
         await updateClassImage({
           classId,
           image,
         });
-      } catch (error) {
-        console.error(error);
+      } catch {
+        // handle error here
       }
     });
   };
 
-  if (
-    !classMembership?.teacherPermissions?.includes(
-      TEACHER_PERMISSIONS.CLASS_MANAGE
-    )
-  ) {
+  if (!can(PERMISSIONS.CLASS_WRITE)) {
     return null;
   }
 
@@ -138,7 +133,7 @@ function InfoCustomizeButton() {
                 className="relative size-full min-h-22 cursor-pointer overflow-hidden rounded-sm border border-transparent transition-[opacity,border-color] ease-out hover:border-primary disabled:pointer-events-none disabled:opacity-50"
                 disabled={isPending}
                 key={image.value}
-                onClick={() => handleImageClick(image.src)}
+                onClick={() => handleImageClick(image.value)}
                 type="button"
               >
                 <Image
@@ -161,8 +156,8 @@ function InfoCustomizeButton() {
 }
 
 function getImageList() {
-  return Array.from(CLASS_IMAGES.entries()).map(([key, image]) => ({
+  return Array.from(CLASS_IMAGES.entries()).map(([key, src]) => ({
     value: key,
-    src: image,
+    src,
   }));
 }

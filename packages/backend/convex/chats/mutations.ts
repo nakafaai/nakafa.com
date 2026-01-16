@@ -1,6 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import tables from "@repo/backend/convex/chats/schema";
+import tables, { chatVisibility } from "@repo/backend/convex/chats/schema";
 import { mutation } from "@repo/backend/convex/functions";
 import {
   requireAuth,
@@ -113,7 +113,7 @@ export const updateChatTitle = mutation({
 export const updateChatVisibility = mutation({
   args: {
     chatId: v.id("chats"),
-    visibility: v.union(v.literal("public"), v.literal("private")),
+    visibility: chatVisibility,
   },
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);

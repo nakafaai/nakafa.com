@@ -1,4 +1,3 @@
-import { TEACHER_PERMISSIONS } from "@repo/backend/convex/classes/constants";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -9,7 +8,7 @@ const schoolClassMemberRoles = v.union(
 );
 export type SchoolClassMemberRole = Infer<typeof schoolClassMemberRoles>;
 
-const schoolClassVisibility = v.union(
+export const schoolClassVisibility = v.union(
   v.literal("private"),
   v.literal("public")
 );
@@ -23,13 +22,44 @@ export const schoolClassMaterialStatus = v.union(
 );
 export type SchoolClassMaterialStatus = Infer<typeof schoolClassMaterialStatus>;
 
+export const schoolClassImages = v.union(
+  v.literal("retro"),
+  v.literal("time"),
+  v.literal("stars"),
+  v.literal("chill"),
+  v.literal("puzzle"),
+  v.literal("line"),
+  v.literal("shoot"),
+  v.literal("virus"),
+  v.literal("bacteria"),
+  v.literal("cooking"),
+  v.literal("disco"),
+  v.literal("logic"),
+  v.literal("ball"),
+  v.literal("duck"),
+  v.literal("music"),
+  v.literal("nightly"),
+  v.literal("writer"),
+  v.literal("barbie"),
+  v.literal("fun"),
+  v.literal("lamp"),
+  v.literal("lemon"),
+  v.literal("nighty"),
+  v.literal("rocket"),
+  v.literal("sakura"),
+  v.literal("sky"),
+  v.literal("stamp"),
+  v.literal("vintage")
+);
+export type SchoolClassImage = Infer<typeof schoolClassImages>;
+
 const tables = {
   schoolClasses: defineTable({
     schoolId: v.id("schools"),
     name: v.string(),
     subject: v.string(),
     year: v.string(),
-    image: v.string(),
+    image: schoolClassImages,
     isArchived: v.boolean(),
     // Visibility: "private" (invite code required) or "public" (anyone in school can join)
     visibility: schoolClassVisibility,
@@ -65,27 +95,6 @@ const tables = {
         v.literal("primary"),
         v.literal("co-teacher"),
         v.literal("assistant")
-      )
-    ),
-    teacherPermissions: v.optional(
-      v.array(
-        v.union(
-          v.literal(TEACHER_PERMISSIONS.CLASS_MANAGE),
-          v.literal(TEACHER_PERMISSIONS.CLASS_ARCHIVE),
-          v.literal(TEACHER_PERMISSIONS.CLASS_DELETE),
-          v.literal(TEACHER_PERMISSIONS.MEMBER_MANAGE),
-          v.literal(TEACHER_PERMISSIONS.CONTENT_CREATE),
-          v.literal(TEACHER_PERMISSIONS.CONTENT_EDIT),
-          v.literal(TEACHER_PERMISSIONS.CONTENT_DELETE),
-          v.literal(TEACHER_PERMISSIONS.CONTENT_PUBLISH),
-          v.literal(TEACHER_PERMISSIONS.GRADE_VIEW),
-          v.literal(TEACHER_PERMISSIONS.GRADE_SCORE),
-          v.literal(TEACHER_PERMISSIONS.GRADE_SETUP),
-          v.literal(TEACHER_PERMISSIONS.COMM_ANNOUNCE),
-          v.literal(TEACHER_PERMISSIONS.COMM_MODERATE),
-          v.literal(TEACHER_PERMISSIONS.COMM_MESSAGE),
-          v.literal(TEACHER_PERMISSIONS.STATS_VIEW)
-        )
       )
     ),
     enrollMethod: v.optional(
