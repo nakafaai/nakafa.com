@@ -18,8 +18,8 @@ importers:
         specifier: ^2.29.8
         version: 2.29.8(@types/node@25.0.9)
       '@effect/language-service':
-        specifier: ^0.66.1
-        version: 0.66.1
+        specifier: ^0.67.0
+        version: 0.67.0
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:packages/typescript-config
@@ -1682,8 +1682,8 @@ packages:
     resolution: {integrity: sha512-NKBGBSIKUG584qrS1tyxVpX/AKJKQw5HgjYEnPLC0QsTw79JrGn+qUr8CXFb955Iy7GUdiiUv1rJ6JBGvaKb6w==}
     engines: {node: '>=18'}
 
-  '@effect/language-service@0.66.1':
-    resolution: {integrity: sha512-zrH1EQvp+SrDGk245UcVP+jQgsbZmmKmeZEM2EkAkJhldlwucu9EAHufQZWg5cvAwyMBh+9j7p//1wEDdXWwrA==}
+  '@effect/language-service@0.67.0':
+    resolution: {integrity: sha512-8yTlGnKbayq37sM523A98tZzxXmLaizAa/sNN2BpqnXz9aa0DgVN9gon5xmvWSb6jNbK8J6xNtOYrFFKSJRpIg==}
     hasBin: true
 
   '@egjs/agent@2.4.4':
@@ -12449,7 +12449,7 @@ snapshots:
     dependencies:
       '@edge-runtime/primitives': 6.0.0
 
-  '@effect/language-service@0.66.1': {}
+  '@effect/language-service@0.67.0': {}
 
   '@egjs/agent@2.4.4': {}
 
