@@ -29,7 +29,7 @@ import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
-import { useAction, useQuery } from "convex/react";
+import { useAction, useConvex } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useAi } from "@/lib/context/use-ai";
@@ -39,16 +39,15 @@ import { aiModels, getFreeModels, getPremiumModels } from "@/lib/data/models";
 export function AiChatModel() {
   const t = useTranslations("Ai");
 
+  const convex = useConvex();
+
   const pathname = usePathname();
   const router = useRouter();
 
   const [isPending, startTransition] = useTransition();
 
   const user = useUser((s) => s.user);
-  const hasSubscription = useQuery(
-    api.subscriptions.queries.hasActiveSubscription,
-    user ? { productId: products.pro.id } : "skip"
-  );
+
   const generateCheckoutLink = useAction(
     api.customers.actions.generateCheckoutLink
   );
@@ -73,16 +72,23 @@ export function AiChatModel() {
       (m) => m.value === value && m.type === "premium"
     );
 
-    if (isPremium && !hasSubscription) {
+    if (isPremium) {
       // Don't set premium model if no subscription, open checkout instead
       startTransition(async () => {
-        const { url } = await generateCheckoutLink({
-          productIds: [products.pro.id],
-          successUrl: window.location.href,
-        });
-        window.open(url, "_blank");
+        const hasSubscription = await convex.query(
+          api.subscriptions.queries.hasActiveSubscription,
+          { productId: products.pro.id }
+        );
+
+        if (!hasSubscription) {
+          const { url } = await generateCheckoutLink({
+            productIds: [products.pro.id],
+            successUrl: window.location.href,
+          });
+          window.open(url, "_blank");
+          return;
+        }
       });
-      return;
     }
 
     setModel(value);

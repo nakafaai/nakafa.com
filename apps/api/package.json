@@ -23,7 +23,7 @@
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",
     "effect": "^3.19.14",
-    "next": "16.1.2",
+    "next": "16.1.3",
     "pino": "^10.2.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

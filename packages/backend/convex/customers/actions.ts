@@ -83,3 +83,24 @@ export const generateCustomerPortalUrl = action({
     );
   },
 });
+
+/**
+ * Clean up all user-related data when user is deleted.
+ * Called from auth trigger when Better Auth user is deleted.
+ * Deletes Polar customer to prevent orphaned customers that cause email conflicts.
+ */
+export const cleanupUserData = internalAction({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const customer = await ctx.runQuery(
+      internal.customers.queries.getCustomerByUserId,
+      { userId: args.userId }
+    );
+
+    if (customer?.id) {
+      await ctx.runAction(internal.customers.polar.deleteCustomer, {
+        id: customer.id,
+      });
+    }
+  },
+});

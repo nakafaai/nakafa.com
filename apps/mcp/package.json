@@ -19,7 +19,7 @@
     "@t3-oss/env-nextjs": "^0.13.10",
     "express": "^5.2.1",
     "mcp-handler": "1.0.7",
-    "next": "16.1.2",
+    "next": "16.1.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "redis": "^5.10.0",

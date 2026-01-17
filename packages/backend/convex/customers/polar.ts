@@ -1,6 +1,7 @@
 import { checkoutsCreate } from "@polar-sh/sdk/funcs/checkoutsCreate.js";
 import { customerSessionsCreate } from "@polar-sh/sdk/funcs/customerSessionsCreate.js";
 import { customersCreate } from "@polar-sh/sdk/funcs/customersCreate.js";
+import { customersDelete } from "@polar-sh/sdk/funcs/customersDelete.js";
 import { customersGet } from "@polar-sh/sdk/funcs/customersGet.js";
 import { customersGetExternal } from "@polar-sh/sdk/funcs/customersGetExternal.js";
 import { customersUpdate } from "@polar-sh/sdk/funcs/customersUpdate.js";
@@ -180,5 +181,25 @@ export const createCustomerPortalSession = internalAction({
       });
     }
     return { url: result.value.customerPortalUrl };
+  },
+});
+
+/**
+ * Delete customer from Polar.
+ * Used when user account is deleted to clean up orphaned customers.
+ */
+export const deleteCustomer = internalAction({
+  args: {
+    id: v.string(),
+  },
+  handler: async (_ctx, args) => {
+    const result = await customersDelete(polarClient, { id: args.id });
+    if (!result.ok) {
+      throw new ConvexError({
+        code: "POLAR_DELETE_ERROR",
+        message: "Failed to delete customer from Polar",
+        detail: String(result.error),
+      });
+    }
   },
 });

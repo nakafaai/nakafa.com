@@ -89,8 +89,23 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             }
           }
         },
-        onDelete: async (_ctx, _authUser) => {
-          // TODO: Clean up related data on user deletion
+        onDelete: async (ctx, authUser) => {
+          const userApp = await ctx.db
+            .query("users")
+            .withIndex("authId", (q) => q.eq("authId", authUser._id))
+            .unique();
+
+          if (userApp) {
+            // Delete customer in Polar to prevent email conflicts
+            await ctx.scheduler.runAfter(
+              0,
+              internal.customers.actions.cleanupUserData,
+              { userId: userApp._id }
+            );
+
+            // Delete user data in local DB
+            await ctx.db.delete("users", userApp._id);
+          }
         },
       },
     },

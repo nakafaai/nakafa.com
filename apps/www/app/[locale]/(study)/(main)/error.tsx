@@ -31,7 +31,7 @@ export default function ErrorPage({
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />
       <div className="mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
         <div className="space-y-4 text-center">
-          <h1 className="font-bold font-mono text-6xl text-primary">5XX</h1>
+          <h1 className="font-bold font-mono text-6xl text-destructive">5XX</h1>
 
           <div className="space-y-2">
             <h2 className="font-mono font-semibold text-lg tracking-tight">
@@ -44,9 +44,7 @@ export default function ErrorPage({
           </div>
 
           <div className="mx-auto grid w-fit grid-cols-2 gap-2">
-            <Button onClick={reset} variant="secondary">
-              {t("retry")}
-            </Button>
+            <Button onClick={reset}>{t("retry")}</Button>
             <a
               className={cn(buttonVariants({ variant: "secondary" }))}
               href="https://github.com/nakafaai/nakafa.com/issues"

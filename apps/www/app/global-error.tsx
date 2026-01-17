@@ -37,7 +37,7 @@ export default function GlobalError({
               <Particles className="pointer-events-none absolute inset-0 opacity-80" />
               <div className="mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
                 <div className="space-y-4 text-center">
-                  <h1 className="font-bold font-mono text-6xl text-primary">
+                  <h1 className="font-bold font-mono text-6xl text-destructive">
                     5XX
                   </h1>
 
@@ -52,9 +52,7 @@ export default function GlobalError({
                   </div>
 
                   <div className="mx-auto grid w-fit grid-cols-2 gap-2">
-                    <Button onClick={reset} variant="secondary">
-                      Retry
-                    </Button>
+                    <Button onClick={reset}>Retry</Button>
                     <a
                       className={cn(buttonVariants({ variant: "secondary" }))}
                       href="https://github.com/nakafaai/nakafa.com/issues"
