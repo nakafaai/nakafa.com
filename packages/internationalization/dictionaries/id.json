@@ -415,7 +415,8 @@
     "private-chat-error": "Akses ditolak",
     "private-chat-error-description": "Ini bukan obrolanmu. Minta akses ke pemiliknya dulu ya.",
     "no-models-found": "Tidak ada model yang ditemukan.",
-    "search-models-placeholder": "Cari model..."
+    "search-models-placeholder": "Cari model...",
+    "change-model-error": "Waduh, ada kesalahan! Silakan hubungi kami."
   },
   "About": {
     "meta-title": "Fck Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",

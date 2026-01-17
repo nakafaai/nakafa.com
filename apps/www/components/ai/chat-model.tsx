@@ -30,8 +30,10 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useAction, useConvex } from "convex/react";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { useAi } from "@/lib/context/use-ai";
 import { useUser } from "@/lib/context/use-user";
 import { aiModels, getFreeModels, getPremiumModels } from "@/lib/data/models";
@@ -73,25 +75,48 @@ export function AiChatModel() {
     );
 
     if (isPremium) {
-      // Don't set premium model if no subscription, open checkout instead
-      startTransition(async () => {
-        const hasSubscription = await convex.query(
-          api.subscriptions.queries.hasActiveSubscription,
-          { productId: products.pro.id }
-        );
+      const program = Effect.gen(function* () {
+        const hasSubscription = yield* Effect.tryPromise({
+          try: () =>
+            convex.query(api.subscriptions.queries.hasActiveSubscription, {
+              productId: products.pro.id,
+            }),
+          catch: (error) =>
+            new Error(error instanceof Error ? error.message : String(error)),
+        });
 
         if (!hasSubscription) {
-          const { url } = await generateCheckoutLink({
-            productIds: [products.pro.id],
-            successUrl: window.location.href,
+          const { url } = yield* Effect.tryPromise({
+            try: () =>
+              generateCheckoutLink({
+                productIds: [products.pro.id],
+                successUrl: window.location.href,
+              }),
+            catch: (error) =>
+              new Error(error instanceof Error ? error.message : String(error)),
           });
-          window.open(url, "_blank");
+
+          router.push(url);
           return;
         }
-      });
-    }
 
-    setModel(value);
+        setModel(value);
+      });
+
+      startTransition(() =>
+        Effect.runPromise(
+          Effect.catchAll(program, () =>
+            Effect.sync(() => {
+              toast.error(t("change-model-error"), {
+                position: "bottom-center",
+              });
+            })
+          )
+        )
+      );
+    } else {
+      setModel(value);
+    }
   };
 
   return (

@@ -415,7 +415,8 @@
     "private-chat-error": "Access denied",
     "private-chat-error-description": "This isn't your chat. Ask the owner for access.",
     "no-models-found": "No models found.",
-    "search-models-placeholder": "Search model..."
+    "search-models-placeholder": "Search model...",
+    "change-model-error": "Oops, something went wrong! Please contact us."
   },
   "About": {
     "meta-title": "Fck Closed Education, Enjoy Free Open Education",
